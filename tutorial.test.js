@@ -1,0 +1,11 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');const {createScenario,act}=require('./tutorial');
+const begin=(s,die,extra={})=>act(s,'begin',{car:s.car.id,die,...extra});const move=(s,x,y)=>act(s,'move',{x,y});
+test('lesson 1: safe detour succeeds; rock kills; mud makes route fall short',()=>{let s=createScenario(0);begin(s,0);move(s,3,1);move(s,3,2);move(s,2,3);assert.equal(s.result.ok,true);
+ s=createScenario(0);begin(s,0);move(s,2,2);assert.equal(s.car.dead,true);assert.equal(s.result.ok,false);
+ s=createScenario(0);begin(s,0);move(s,1,1);assert.equal(s.r.active.remaining,1);move(s,1,2);assert.equal(s.result.ok,false);});
+test('lesson 2: road bonus reaches goal; leaving road loses bonus',()=>{let s=createScenario(1);begin(s,0);move(s,2,2);move(s,2,3);assert.equal(s.r.phase,'bonus');act(s,'bonus',{use:true});move(s,2,4);move(s,2,5);assert.equal(s.result.ok,true);
+ s=createScenario(1);begin(s,0);move(s,3,1);move(s,3,2);assert.equal(s.result.ok,false);});
+test('lesson 3: collision stops movement and requires reroll choice',()=>{for(const reroll of [false,true]){const s=createScenario(2);begin(s,0);move(s,2,2);assert.ok(s.r.pending);assert.equal(s.r.active.remaining,0);assert.equal(s.result,null);act(s,'slam',{reroll});assert.equal(s.result.ok,true);assert.notDeepEqual({x:s.car.x,y:s.car.y},{x:s.target.x,y:s.target.y});}});
+test('lesson 4: movement creates shot target, then engine assigns damage',()=>{const s=createScenario(3);assert.equal(s.r.targets(s.car).length,0);begin(s,0);move(s,2,2);assert.equal(s.r.phase,'shoot');assert.ok(s.r.targets(s.car).includes(s.target));act(s,'shoot',{target:s.target.id});assert.equal(s.target.damage.length,1);assert.equal(s.result.ok,true);});
+test('lesson 5: disabled car cannot move; repair before movement restores it',()=>{const s=createScenario(4);assert.throws(()=>act(s,'begin',{car:s.ally.id,die:0}));begin(s,0,{command:'repair',commandDie:1,repairCar:s.ally.id});assert.equal(s.ally.damage.length,1);assert.equal(s.result,null);move(s,2,2);move(s,2,3);assert.equal(s.result.ok,true);});
+test('lesson 6: nitro gives the exact five movement points',()=>{const s=createScenario(5);begin(s,0,{command:'nitro',commandDie:1});assert.equal(s.r.active.remaining,5);for(let y=2;y<=6;y++)move(s,2,y);assert.equal(s.result.ok,true);});

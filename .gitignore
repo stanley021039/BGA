@@ -1,0 +1,14 @@
+# Runtime player data and logs
+/data/
+*.log
+# Local tools, exports and reference-only materials
+/work/
+/reference-assets/
+node_modules/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store
+Thumbs.db
