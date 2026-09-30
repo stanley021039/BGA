@@ -1,42 +1,7 @@
-const {loadEnv,settings}=require('./config');loadEnv();const config=settings();
-const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
-const {randomBytes}=require('node:crypto');const {Room}=require('./engine');const {ThunderRoom}=require('./thunder');const {MajorityRoom}=require('./majority');const rooms=new Map();const removedTokens=new WeakMap();
-const {HistoryStore}=require('./history');const history=new HistoryStore(config.historyDir);process.on('exit',()=>history.close());
-const {CommunityStore}=require('./community');const community=new CommunityStore(config.communityDir);
-const communityRate=new Map();function limitCommunity(req){const key=req.socket.remoteAddress,now=Date.now(),recent=(communityRate.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=40)throw Error('操作太頻繁，請稍後再試');recent.push(now);communityRate.set(key,recent);if(communityRate.size>2000)for(const [k,v]of communityRate)if(now-v.at(-1)>60000)communityRate.delete(k);}
-const port=config.port;
-const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');try{
- const url=new URL(req.url,'http://localhost');
- if(url.pathname.startsWith('/api/')){
- res.setHeader('Content-Type','application/json; charset=utf-8');let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');let body='';for await(const chunk of req){body+=chunk;if(body.length>(url.pathname==='/api/community/avatars'?450000:8192))throw Error('請求過大');}data=JSON.parse(body||'{}');}
- const send=x=>res.end(JSON.stringify(x));
- if(url.pathname.startsWith('/api/community/')){const resource=url.pathname.split('/')[3];if(req.method==='GET'){if(resource==='avatars')return send(community.avatars());if(resource==='issues')return send(community.issues());if(resource==='questions')return send({topics:require('./majority-questions').TOPICS,questions:[...require('./majority-questions').QUESTIONS,...community.data.questions]});}if(req.method==='POST'){limitCommunity(req);if(resource==='avatars')return send(community.upload(data));if(resource==='questions')return send(community.question(data));if(resource==='issues')return send(data.id?community.updateIssue(data):community.issue(data));}throw Error('未知共用資源');}
- if(url.pathname==='/api/history')return send(history.list());
- if(url.pathname.startsWith('/api/history/'))return send(history.read(url.pathname.split('/')[3]));
- if(url.pathname==='/api/info'){const addresses=Object.values(os.networkInterfaces()).flat().filter(x=>x.family==='IPv4'&&!x.internal).map(x=>`${protocol}://${x.address}:${port}`);const preferred=config.publicUrl||addresses.find(a=>a.includes('://26.'))||null;return send({preferred,addresses:config.publicUrl?[config.publicUrl,...addresses.filter(a=>a!==config.publicUrl)]:addresses});}
- if(url.pathname==='/api/create'&&req.method==='POST'){if(rooms.size>=100)throw Error('房間數已達上限');let code;do{code=randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));const thunder=data.type==='thunder',majority=data.type==='majority';const room=new (majority?MajorityRoom:thunder?ThunderRoom:Room)(code,String(data.roomName||(majority?'同頻俱樂部':thunder?'末路狂飆好友局':'深夜好友局')).slice(0,24));if(majority)Object.defineProperty(room,'questionProvider',{value:()=>community.data.questions});history.attach(room);const p=history.transact(room,{action:'create',source:'player',name:String(data.name||'玩家')},()=>room.add(String(data.name||'玩家')));p.avatar=community.avatar(data.avatar);rooms.set(code,room);return send({code,token:p.secret,type:room.type||'poker'});}
- const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw Error('找不到房間，請確認房間代碼');
- if(url.pathname==='/api/join'&&req.method==='POST'){const p=history.transact(room,{action:'join',source:'player',name:String(data.name||'玩家')},()=>room.add(String(data.name||'玩家')));p.avatar=community.avatar(data.avatar);return send({code:room.code,token:p.secret,type:room.type||'poker'});}
- const token=req.headers.authorization?.replace('Bearer ','');if(removedTokens.get(room)?.has(token)){res.writeHead(403);return send({error:'你已被房主踢出房間',code:'KICKED'});}const p=room.players.find(p=>p.secret===token&&!p.bot);if(!p)throw Error('連線已失效，請重新加入');p.lastSeen=Date.now();
- if(url.pathname==='/api/state')return send(room.view(p.id));
- if(req.method!=='POST')throw Error('不支援的請求');
- if(url.pathname==='/api/start'&&room.host!==p.id)throw Error('只有房主可以開始');
- history.transact(room,{action:url.pathname.slice(5),source:'player',actor:p.id,input:data},()=>{
- if(url.pathname==='/api/action')room.act(p.id,data.action,['thunder','majority'].includes(room.type)?data:data.amount);
- else if(url.pathname==='/api/kick'){if(data.confirmed!==true)throw Error('請先確認踢出玩家');const target=room.players.find(q=>q.id===data.playerId);if(!target)throw Error('找不到玩家');const targetToken=target.secret;room.kick(p.id,target.id);if(!removedTokens.has(room))removedTokens.set(room,new Set());removedTokens.get(room).add(targetToken);}
- else if(url.pathname==='/api/settings'){if(!['thunder','majority'].includes(room.type))throw Error('此遊戲沒有此設定');room.configure(p.id,data);}
- else if(url.pathname==='/api/start'){if(room.host!==p.id)throw Error('只有房主可以發牌');room.start();}
- else if(url.pathname==='/api/bot'){if(room.host!==p.id)throw Error('只有房主可以加入電腦');room.add(['River','Clover','Atlas','Nova','Juno'][room.players.filter(p=>p.bot).length%5],true);}
- else if(url.pathname==='/api/rebuy'){if(['thunder','majority'].includes(room.type)||!['waiting','showdown'].includes(room.phase)||p.stack>0)throw Error('籌碼用完且本局結束後才能補充');p.stack=2000;}
- else throw Error('未知請求');
- });return send(room.view(p.id));
- }
- if(url.pathname.startsWith('/uploads/avatars/')){const file=url.pathname.slice('/uploads/avatars/'.length);if(!/^[a-f0-9-]{36}\.(png|jpeg|webp)$/.test(file)||!community.data.avatars.some(a=>a.url===url.pathname)){res.writeHead(404);return res.end();}res.setHeader('Content-Type','image/'+file.split('.').pop());res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(community.avatarDir,file)));}
- const files={'/room-host.js':'room-host.js','/room-host.css':'room-host.css','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/avatar-picker.js':'avatar-picker.js','/avatar-picker.css':'avatar-picker.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png'};const roomPath=url.pathname.match(/^\/(race|poker|majority)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'public',file)));
- }catch(e){res.writeHead(400,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify({error:e.message}));}};
-setInterval(()=>{for(const [code,r]of rooms){if(Date.now()-Math.max(...r.players.map(p=>p.lastSeen))>86400000){history.interrupt(r,'房間閒置逾 24 小時');rooms.delete(code);continue;}if(r.type==='majority'){if(r.phase==='answering'&&r.deadline&&Date.now()>r.deadline)try{history.transact(r,{action:'auto',source:'timeout'},()=>r.auto());}catch(e){console.error(e);}continue;}const p=r.type==='thunder'?r.player(r.actor()):r.players[r.turn];if(!p||['waiting','finished'].includes(r.phase))continue;if((p.bot&&Date.now()>r.botAt)||Date.now()>r.deadline){try{if(r.type==='thunder'){history.transact(r,{action:'auto',source:p.bot?'bot':'timeout',actor:p.id},()=>r.auto());continue;}let due=r.currentBet-p.bet;let action=due===0?'check':'call';if(!p.bot)action=due===0?'check':'fold';else if(due>150&&Math.random()<.4)action='fold';history.transact(r,{action,source:p.bot?'bot':'timeout',actor:p.id},()=>r.act(p.id,action));}catch(e){console.error(e);}}}},400).unref();
-const protocol='http';const server=http.createServer(handler);
-server.listen(port,config.host,()=>console.log(`Afterhours listening on ${protocol}://localhost:${port}`));
-
-
-
+const {loadEnv,settings}=require('./config');
+const {createApp}=require('./app');
+loadEnv();
+const config=settings();
+const app=createApp(config);
+app.listen().then(()=>console.log(`Afterhours listening on http://localhost:${config.port}`)).catch(error=>{console.error(error);process.exitCode=1;app.close().catch(console.error);});
+for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>app.close().then(()=>process.exit()).catch(error=>{console.error(error);process.exitCode=1;}));

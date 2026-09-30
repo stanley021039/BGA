@@ -1,0 +1,9 @@
+const labels={hair:'髮型',face:'臉型',outfit:'服裝',skinColor:'膚色',hairColor:'髮色',outfitColor:'衣服顏色'};
+const partLabels={short:'短髮',long:'長髮',curly:'捲髮',bun:'包頭',round:'圓臉',oval:'橢圓臉',square:'方臉',hoodie:'帽T',jacket:'外套',dress:'洋裝',shirt:'上衣'};
+const $=selector=>document.querySelector(selector);
+let appearance;
+async function json(url,options){const response=await fetch(url,options),value=await response.json();if(!response.ok)throw Error(value.error);return value;}
+function preview(){const params=new URLSearchParams(appearance);$('#preview').src='/api/profile/preview.svg?'+params;}
+async function init(){const [me,options]=await Promise.all([json('/api/auth/me'),json('/api/profile/options')]);appearance=me.appearance||options.defaults;const choices={...options.parts,skinColor:options.colors.skin,hairColor:options.colors.hair,outfitColor:options.colors.outfit};for(const [key,values] of Object.entries(choices)){const label=document.createElement('label');label.textContent=labels[key];const select=document.createElement('select');select.name=key;for(const value of values){const item=document.createElement('option');item.value=value;item.textContent=partLabels[value]||value;select.append(item);}select.value=appearance[key];select.onchange=()=>{appearance={...appearance,[key]:select.value};preview();};label.append(select);$('#editor').append(label);}preview();}
+$('#save').onclick=async()=>{const button=$('#save');button.disabled=true;try{const result=await json('/api/profile/appearance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(appearance)});appearance=result.appearance;$('#message').textContent='角色已保存，遊戲座位會更新。';}catch(error){$('#message').textContent=error.message;}finally{button.disabled=false;}};
+init().catch(error=>$('#message').textContent=error.message);

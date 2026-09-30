@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>登入｜Afterhours</title><link rel="stylesheet" href="/style.css">
+ <style>.auth-wrap{max-width:520px;margin:8vh auto;padding:24px}.auth-wrap form{display:grid;gap:14px}.auth-wrap label{display:grid;gap:6px}.auth-wrap input{width:100%;padding:12px}.auth-wrap button{cursor:pointer}.auth-tabs{display:flex;gap:12px;margin:20px 0}.auth-tabs button[aria-selected=true]{font-weight:700;text-decoration:underline}#message{min-height:1.5em}</style>
+</head>
+<body><main class="auth-wrap"><h1>Afterhours</h1><p>登入後就能與朋友玩桌遊和留言。</p>
+ <div class="auth-tabs"><button type="button" data-mode="login" aria-selected="true">登入</button><button type="button" data-mode="register">邀請碼註冊</button></div>
+ <form id="loginForm"><label>帳號<input name="username" autocomplete="username" required></label><label>密碼<input name="password" type="password" autocomplete="current-password" required></label><button class="button">登入</button></form>
+ <form id="registerForm" hidden><label>邀請碼<input name="invite" required></label><label>帳號<input name="username" pattern="[A-Za-z0-9_]{3,24}" required></label><label>顯示暱稱<input name="displayName" maxlength="16" required></label><label>密碼（至少 10 字）<input name="password" type="password" minlength="10" autocomplete="new-password" required></label><button class="button">建立帳號</button></form>
+ <form id="resetForm" hidden><p>透過管理者提供的一次性連結設定新密碼。</p><label>新密碼（至少 10 字）<input name="password" type="password" minlength="10" autocomplete="new-password" required></label><button class="button">重設密碼</button></form>
+ <p id="message" role="status"></p>
+ </main><script src="/login.js"></script></body>
+</html>
