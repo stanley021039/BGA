@@ -1,7 +1,26 @@
 <!doctype html>
-<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>管理｜Afterhours</title><link rel="stylesheet" href="/style.css"><style>.admin-wrap{max-width:900px;margin:4vh auto;padding:24px}.admin-wrap section{margin:24px 0;padding:20px;border:1px solid #7775}.admin-wrap label{display:block;margin:10px 0}.admin-wrap input{padding:8px}.admin-wrap button{cursor:pointer}.admin-wrap table{width:100%;border-collapse:collapse}.admin-wrap td,.admin-wrap th{padding:8px;text-align:left;border-bottom:1px solid #7775}.admin-wrap td button{margin:2px}#output{white-space:pre-wrap;overflow-wrap:anywhere}</style></head>
-<body><main class="admin-wrap"><a href="/">← 回大廳</a><h1>管理者工具</h1><p>邀請碼及密碼重設連結僅顯示一次，請安全地交給對方。</p>
-<section><h2>產生邀請碼</h2><form id="inviteForm"><label>有效天數 <input name="days" type="number" min="1" max="90" value="7" required></label><button class="button">產生</button></form><form id="revokeForm"><label>撤銷未使用的邀請碼 <input name="code" required></label><button class="button">撤銷</button></form></section>
-<section><h2>會員</h2><table><thead><tr><th>帳號</th><th>暱稱</th><th>狀態</th><th>操作</th></tr></thead><tbody id="users"></tbody></table></section>
-<section><h2>GitHub 待確認提交</h2><p>結果不明時請先到 GitHub 查核；確認尚未建立後才能重試。</p><button id="refreshSubmissions" class="button">更新清單</button><div id="submissions"></div></section>
-<section><h2>操作結果</h2><pre id="output" role="status"></pre></section></main><script src="/admin.js"></script></body></html>
+<html lang="zh-Hant">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>管理｜Afterhours</title>
+ <link rel="stylesheet" href="/club.css"><link rel="stylesheet" href="/club-pages.css">
+</head>
+<body class="club-page admin-page">
+ <div class="club">
+  <header class="club-header page-header"><a class="wordmark" href="/">a<span>♠</span><b>AFTERHOURS<small>好友桌遊俱樂部</small></b></a><a class="quiet" href="/">← 回遊戲大廳</a></header>
+  <main class="inner-page">
+   <div class="page-heading"><div class="kicker">THE CLUB / CONTROL ROOM</div><h1>管理者工具<span>♠</span></h1><p>管理會員與邀請，確認留言板的 GitHub 同步狀態。</p></div>
+   <div class="admin-grid">
+    <section class="page-panel invite-panel"><div class="panel-heading"><span class="panel-number">01 / INVITATIONS</span><h2>邀朋友入座</h2><p>邀請碼與密碼重設連結只顯示一次，請安全地交給對方。</p></div>
+     <form id="inviteForm" class="inline-form"><label>邀請碼有效天數<input name="days" type="number" min="1" max="90" value="7" required></label><button class="page-button">產生邀請碼 <span>↗</span></button></form>
+     <form id="revokeForm" class="inline-form secondary-form"><label>撤銷未使用的邀請碼<input name="code" placeholder="貼上邀請碼" required></label><button class="page-button page-button-outline">撤銷邀請碼</button></form>
+     <div class="result-box"><div class="panel-number">操作結果</div><pre id="output" role="status" aria-live="polite">產生邀請碼後會顯示在這裡。</pre></div>
+    </section>
+    <section class="page-panel sync-panel"><div class="panel-heading"><span class="panel-number">02 / GITHUB SYNC</span><h2>待確認提交</h2><p>結果不明時，請先到 GitHub 查核；確認沒有建立後才能重試。</p></div><button id="refreshSubmissions" class="page-button page-button-outline">更新清單 ↻</button><div id="submissions" class="submission-list"></div></section>
+   </div>
+   <section class="page-panel members-panel"><div class="panel-heading"><span class="panel-number">03 / MEMBERS</span><h2>會員名單</h2><p>可為會員建立密碼重設連結，或停用與重新啟用帳號。</p></div><div class="table-scroll"><table><thead><tr><th>帳號</th><th>暱稱</th><th>狀態</th><th>操作</th></tr></thead><tbody id="users"></tbody></table></div></section>
+  </main>
+ </div>
+ <script src="/admin.js"></script>
+</body>
+</html>

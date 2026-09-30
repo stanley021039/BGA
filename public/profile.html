@@ -1,1 +1,21 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>我的角色｜Afterhours</title><link rel="stylesheet" href="/style.css"><style>.profile-wrap{max-width:760px;margin:5vh auto;padding:24px}.profile-wrap form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px}.profile-wrap label{display:grid;gap:7px}.profile-wrap select{padding:10px}.preview{width:240px;height:240px;display:block;margin:24px auto}.profile-wrap button{cursor:pointer}</style></head><body><main class="profile-wrap"><a href="/">← 回大廳</a><h1>我的 2D 角色</h1><p>選擇髮型、臉型、服裝與顏色。保存後會顯示在你的遊戲座位。</p><img id="preview" class="preview" alt="角色預覽"><form id="editor"></form><p><button id="save" class="button">保存角色</button></p><p id="message" role="status"></p></main><script src="/profile.js"></script></body></html>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>我的角色｜Afterhours</title>
+ <link rel="stylesheet" href="/club.css"><link rel="stylesheet" href="/club-pages.css">
+</head>
+<body class="club-page profile-page">
+ <div class="club">
+  <header class="club-header page-header"><a class="wordmark" href="/">a<span>♠</span><b>AFTERHOURS<small>好友桌遊俱樂部</small></b></a><a class="quiet" href="/">← 回遊戲大廳</a></header>
+  <main class="inner-page">
+   <div class="page-heading"><div class="kicker">YOUR LOOK / YOUR SEAT</div><h1>我的 2D 角色<span>✦</span></h1><p>挑一套今晚的造型。保存後，你的角色會出現在遊戲座位上。</p></div>
+   <div class="profile-layout">
+    <section class="avatar-stage" aria-label="角色預覽"><div class="stage-glow"></div><div class="stage-orbit"></div><div class="avatar-frame"><img id="preview" class="preview" alt="角色預覽"></div><div class="stage-caption"><span>AFTERHOURS CHARACTER</span><strong>這就是今晚的你</strong></div></section>
+    <section class="page-panel editor-panel"><div class="panel-heading"><span class="panel-number">CHARACTER STUDIO / 01</span><h2>調整造型</h2><p>自由搭配髮型、臉型、服裝與顏色。</p></div><form id="editor"></form><div class="editor-actions"><button id="save" class="page-button">保存角色 <span>↗</span></button><p id="message" class="form-message" role="status" aria-live="polite"></p></div></section>
+   </div>
+  </main>
+ </div>
+ <script src="/profile.js"></script>
+</body>
+</html>
