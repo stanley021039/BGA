@@ -1,5 +1,7 @@
 # 公開部署安全檢查（2026-10-02）
 
+本次修正已部署至 `https://shhuang.cc`；公開 `/robots.txt` 回傳全站 `Disallow: /`，登入頁帶 `X-Robots-Tag`，VM 的應用程式埠無法從 Windows 直連。
+
 ## 已檢查與修正
 
 - Linux 服務只監聽 `127.0.0.1:3000`，網域經 Cloudflare Tunnel 轉送。UFW 預設拒絕入站，只允許 `192.168.232.0/24` 連入 SSH 22；SSH 停用密碼、互動式密碼及 root 登入，改以專用金鑰登入。Tunnel 憑證、`.env` 和 SQLite 資料目錄僅允許擁有者讀寫。
