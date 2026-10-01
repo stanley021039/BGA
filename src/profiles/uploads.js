@@ -25,7 +25,7 @@ function imageOf(data){
   }
   mime='image/webp';
  }
- if(!mime||width<16||height<16||width>512||height>512)invalid('僅接受 16–512 像素的 PNG、GIF 或 WebP');
+ if(!mime||!Number.isInteger(width)||!Number.isInteger(height)||width<1||height<1)invalid('僅接受有效的 PNG、GIF 或 WebP 圖片');
  if(data.mime&&data.mime!==mime)invalid('圖片類型與檔案內容不符');
  return {bytes,mime,width,height};
 }
@@ -54,7 +54,6 @@ function addExpression(db,ownerId,id,data){
  const name=typeof data.name==='string'?data.name.trim():'';
  if(!name||[...name].length>20||/[\u0000-\u001f\u007f]/.test(name))throw new HttpError(400,'INVALID_EXPRESSION_NAME','表情名稱需為 1–20 字');
  const image=imageOf(data);
- if(image.mime!=='image/gif')throw new HttpError(400,'INVALID_EXPRESSION_IMAGE','表情只接受 GIF 圖片');
  const uuid=id.replace(/^user:/,'');
  db.exec('BEGIN IMMEDIATE');
  try{

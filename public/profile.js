@@ -44,9 +44,9 @@ function render(){
  $('#upload-expression').hidden=!character.id.startsWith('user:');
  $('#emote-target').textContent=character.id.startsWith('user:')?`正在為「${character.name}」新增表情（最多 6 個）。`:'先從角色圖庫選擇自己上傳的角色。';
 }
-async function imagePayload(file,form,gifOnly=false){
+async function imagePayload(file,form){
  if(!file||file.size>1024*1024)throw Error('請選擇不超過 1 MB 的圖片');
- if(file.type&&!(gifOnly?['image/gif']:['image/png','image/gif','image/webp']).includes(file.type))throw Error(gifOnly?'表情只接受 GIF 圖片':'僅接受 PNG、GIF 或 WebP 圖片');
+ if(file.type&&!['image/png','image/gif','image/webp'].includes(file.type))throw Error('僅接受 PNG、GIF 或 WebP 圖片');
  status(form,'正在讀取圖片…');
  const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('讀取圖片失敗'));reader.readAsDataURL(file);});
  return {base64,mime:file.type};
@@ -67,10 +67,10 @@ $('#create-character').onsubmit=async event=>{event.preventDefault();const form=
  form.reset();uploads.delete('#character-file');status(form,'主角色已上傳');$('#message').textContent='主角色已上傳。可繼續新增表情；按「保存角色」後會顯示在遊戲座位。';render();
  }catch(error){status(form,error.message);}finally{button.disabled=false;}};
 $('#upload-expression').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;try{
- const id=selected().id.slice(5),name=$('#expression-name').value.trim(),image=await imagePayload(uploads.get('#expression-file')||$('#expression-file').files[0],form,true);
+ const id=selected().id.slice(5),name=$('#expression-name').value.trim(),image=await imagePayload(uploads.get('#expression-file')||$('#expression-file').files[0],form);
  status(form,'正在上傳表情…');
  const result=await json(`/api/profile/characters/${id}/emotes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,...image})});
  const options=await json('/api/profile/options');characters=options.characters;appearance.expression=result.expression;
- form.reset();uploads.delete('#expression-file');status(form,'表情 GIF 已新增');$('#message').textContent='表情已新增到角色。若要將它設為預設外觀，再按「保存角色」。';render();
+ form.reset();uploads.delete('#expression-file');status(form,'表情圖片已新增');$('#message').textContent='表情已新增到角色。若要將它設為預設外觀，再按「保存角色」。';render();
  }catch(error){status(form,error.message);}finally{button.disabled=false;}};
 init().catch(error=>$('#message').textContent=error.message);

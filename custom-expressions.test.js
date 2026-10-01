@@ -26,7 +26,7 @@ test('v3 character images migrate without losing existing expression bytes',()=>
  }finally{fs.rmSync(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}
 });
 
-test('custom named GIF expressions appear in profile, avatar, and room interactions',async()=>{
+test('custom named image expressions appear in profile, avatar, and room interactions',async()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-custom-emote-'));
  const config={port:0,host:'127.0.0.1',historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite')};
  const db=openDatabase(config.dbFile);
@@ -55,7 +55,7 @@ test('custom named GIF expressions appear in profile, avatar, and room interacti
   const expression=upload.body.expression;
   assert.match(expression,/^emote-[a-f0-9-]{36}$/);
   assert.equal((await request(`profile/characters/${id}/emotes`,cookie,{name:'開'.repeat(21),mime:'image/gif',base64:gif.toString('base64')})).body.code,'INVALID_EXPRESSION_NAME');
-  assert.equal((await request(`profile/characters/${id}/emotes`,cookie,{name:'非 GIF',mime:'image/png',base64:png.toString('base64')})).body.code,'INVALID_EXPRESSION_IMAGE');
+  assert.equal((await request(`profile/characters/${id}/emotes`,cookie,{name:'不支援的格式',mime:'image/png',base64:Buffer.from('<svg/>').toString('base64')})).body.code,'INVALID_CHARACTER_IMAGE');
   assert.equal((await request(`profile/characters/${id}/emotes`,cookie,{name,mime:'image/gif',base64:gif.toString('base64')})).body.code,'DUPLICATE_EXPRESSION_NAME');
   const options=await (await fetch(base+'/api/profile/options',{headers:{Cookie:cookie}})).json();
   const character=options.characters.find(item=>item.id===main.body.id);
@@ -88,10 +88,20 @@ test('custom named GIF expressions appear in profile, avatar, and room interacti
   const adminView=await (await fetch(base+'/api/state?code='+room.code,{headers:{Cookie:cookie}})).json();
   assert.equal(adminView.barrages[0].name,'測試朋友');
   assert.equal(adminView.social.length,0);
+  const still=await request(`profile/characters/${id}/emotes`,cookie,{name:'平靜',mime:'image/png',base64:png.toString('base64')});
+  assert.equal(still.status,200);
+  const stillOptions=await (await fetch(base+'/api/profile/options',{headers:{Cookie:cookie}})).json();
+  const stillCharacter=stillOptions.characters.find(item=>item.id===main.body.id);
+  assert.equal(stillCharacter.labels[still.body.expression],'平靜');
+  const stillMedia=await fetch(base+stillCharacter.expressions[still.body.expression],{headers:{Cookie:cookie}});
+  assert.equal(stillMedia.headers.get('content-type'),'image/png');
+  assert.equal((await request('profile/appearance',cookie,{...appearance,expression:still.body.expression})).status,200);
+  assert.equal((await fetch(base+'/characters/'+login.body.id,{headers:{Cookie:cookie}})).headers.get('content-type'),'image/png');
   await app.close();
   app=createApp(config);
   const restarted=await app.listen();
   const saved=await (await fetch(`http://127.0.0.1:${restarted.port}/api/profile/options`,{headers:{Cookie:cookie}})).json();
   assert.equal(saved.characters.find(item=>item.id===main.body.id).labels[expression],name);
+  assert.equal(saved.characters.find(item=>item.id===main.body.id).labels[still.body.expression],'平靜');
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}
 });

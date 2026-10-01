@@ -30,12 +30,21 @@ test('old appearance versions migrate to image characters',()=>{
  assert.throws(()=>normalizeAppearance({...v1,outfitColor:'<script>'}),{code:'INVALID_APPEARANCE'});
 });
 
-test('uploads inspect image bytes, MIME and dimensions',()=>{
+test('uploads inspect image bytes and MIME without a pixel-size limit',()=>{
  for(const filename of ['traveler-neutral.png','traveler-happy.gif']){
   const bytes=fs.readFileSync(path.join(__dirname,'public/assets/characters',filename));
   const image=imageOf({base64:bytes.toString('base64')});
   assert.equal(image.width,256);assert.equal(image.height,256);
   assert.equal(image.mime,filename.endsWith('.gif')?'image/gif':'image/png');
  }
+ const tinyGif=Buffer.from('R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=','base64');
+ const tiny=imageOf({base64:tinyGif.toString('base64')});
+ assert.deepEqual([tiny.width,tiny.height],[1,1]);
+ const largeGif=Buffer.from(tinyGif);
+ largeGif.writeUInt16LE(1024,6);largeGif.writeUInt16LE(768,8);
+ const large=imageOf({base64:largeGif.toString('base64')});
+ assert.deepEqual([large.width,large.height],[1024,768]);
+ largeGif.writeUInt16LE(0,6);
+ assert.throws(()=>imageOf({base64:largeGif.toString('base64')}),{code:'INVALID_CHARACTER_IMAGE'});
  assert.throws(()=>imageOf({base64:Buffer.from('<svg/>').toString('base64'),mime:'image/png'}),{code:'INVALID_CHARACTER_IMAGE'});
 });
