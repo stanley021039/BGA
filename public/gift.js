@@ -20,7 +20,7 @@ function playerRow(item){return `<div class="player"><img src="${esc(item.avatar
 function progress(){const label=$('#progress');if(label&&state)label.textContent=`${state.submittedIds.length} / ${state.players.length} 人已完成`;}
 
 function entry(){
- $('#stage').innerHTML=`<div class="card hero"><div class="hero-mark">✦ 🎁 ✦</div><span class="eyebrow">THE GIFT CLUB</span><h1>你真的知道，<br>朋友想要什麼嗎？</h1><p class="sub">挑一件禮物給每位朋友，再猜猜大家的心願。送得好，也要收得開心。</p><form id="enterForm"><label for="nickname">你的暱稱</label><input id="nickname" maxlength="16" required placeholder="朋友怎麼稱呼你？" value="${esc(localStorage.getItem('ah-name')||'')}">${code?`<p>加入房間 <b>${esc(code)}</b></p><button class="button wide">加入這一桌 →</button>`:'<button class="button wide">開一桌送禮達人 →</button>'}</form></div>`;
+ $('#stage').innerHTML=`<div class="card hero"><div class="hero-mark">✦ 🎁 ✦</div><span class="eyebrow">THE GIFT CLUB</span><h1>你真的知道，<br>朋友想要什麼嗎？</h1><p class="sub">挑一件禮物給每位朋友，再猜猜大家的心願。送得好，也要收得開心。</p><form id="enterForm"><p id="entryIdentity" class="entry-identity">將以你的角色名稱入座</p>${code?`<p>加入房間 <b>${esc(code)}</b></p><button class="button wide">加入這一桌 →</button>`:'<button class="button wide">開一桌送禮達人 →</button>'}</form></div>`;
 }
 function receive(next){
  if(!next||next.type!=='gift')throw Error('這不是送禮達人房間');
@@ -61,7 +61,7 @@ $('#stage').addEventListener('submit',async event=>{
  if(event.target.id==='wishForm'){const ranking=Object.fromEntries([...event.target.querySelectorAll('[data-rank]')].map(select=>[select.dataset.rank,select.value]));if(new Set(Object.values(ranking)).size!==4)return toast('四種評價請選四件不同的禮物');return action('wish',{ranking});}
  if(event.target.id==='enterForm'){
   if(busy)return;busy=true;
-  try{const name=$('#nickname').value.trim(),result=await api(code?'join':'create',{name,type:'gift',code});if(result.type!=='gift')throw Error('這是其他遊戲房間，請從大廳加入');save(result);localStorage.setItem('ah-name',name);receive(await api('state'));$('#connection').textContent='';}catch(error){toast(error.message);}finally{busy=false;}
+  try{const result=await api(code?'join':'create',{type:'gift',code});if(result.type!=='gift')throw Error('這是其他遊戲房間，請從大廳加入');save(result);receive(await api('state'));$('#connection').textContent='';}catch(error){toast(error.message);}finally{busy=false;}
  }
 });
 async function action(name,data={}){if(busy)return;busy=true;try{receive(await api('action',{action:name,...data}));$('#connection').textContent='';}catch(error){toast(error.message);}finally{busy=false;}}
@@ -72,4 +72,4 @@ async function poll(){if(!session||busy||polling)return;polling=true;try{receive
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||info.addresses.find(address=>address.includes('://26.'))||location.origin).catch(()=>{});
 entry();if(session)poll();else if(code)RoomReconnect.restore(code,'gift','#connection').then(restored=>{if(restored){save(restored);poll();}});
 setInterval(poll,1000);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
-fetch('/api/auth/me').then(response=>response.json()).then(me=>{const nickname=$('#nickname');if(nickname){nickname.value=me.displayName;nickname.readOnly=true;}}).catch(()=>{});
+fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#entryIdentity');if(identity&&me.displayName)identity.textContent=`以「${me.displayName}」入座`;}).catch(()=>{});

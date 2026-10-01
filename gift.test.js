@@ -119,7 +119,7 @@ test('authenticated players can create, join and reconnect to a gift room withou
   assert.equal(Buffer.from(await imageResponse.arrayBuffer()).toString('base64'),imageBase64);
   assert.equal((await post('community/gifts',friend,{title:'壞圖',category:'奇想',image:{mime:'image/png',base64:'AA=='}})).status,400);
   assert.equal((await post('community/gifts',friend,{title:'朋友送的星光瓶',category:'奇想'})).status,409);
-  const created=await post('create',host,{type:'gift',roomName:'送禮測試'});
+  const created=await post('create',host,{type:'gift',roomName:'送禮測試',name:'不能覆蓋角色名稱'});
   assert.equal(created.status,200);assert.equal(created.body.type,'gift');
   const code=created.body.code;
   const unauthorized=await fetch(base+'/gift/'+code,{redirect:'manual'});
@@ -127,10 +127,11 @@ test('authenticated players can create, join and reconnect to a gift room withou
   assert.equal((await fetch(base+'/gift/'+code,{headers:{Cookie:host}})).status,200);
   assert.equal((await fetch(base+'/gift.js',{headers:{Cookie:host}})).status,200);
   assert.equal((await fetch(base+GIFTS.find(gift=>gift.image).image,{headers:{Cookie:host}})).status,200);
-  assert.equal((await post('join',friend,{code})).status,200);
+  assert.equal((await post('join',friend,{code,name:'不能覆蓋角色名稱'})).status,200);
   assert.equal((await post('join',other,{code})).status,200);
   const getState=async (cookie=host)=>(await (await fetch(base+'/api/state?code='+code,{headers:{Cookie:cookie}})).json());
   let state=await getState();assert.equal(state.phase,'waiting');
+  assert.deepEqual(state.players.map(player=>player.name),['giftadmin','giftfriend','giftother']);
   assert.equal((await post('start',friend,{code})).status,403);
   assert.equal((await post('start',host,{code})).status,200);
   state=await getState();assert.equal(state.gifts.length,4);
