@@ -7,6 +7,6 @@
     "test": "node --test *.test.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.13"
   }
 }
