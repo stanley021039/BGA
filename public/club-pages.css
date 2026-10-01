@@ -73,6 +73,9 @@
 .result-box{margin-top:25px;padding:18px;border:1px solid #5c613f;border-radius:10px;background:#161f19}
 .result-box .panel-number{color:#cedba1}
 .result-box pre{margin:11px 0 0;min-height:40px;color:#e4e9d2;font:13px/1.65 "Segoe UI","Microsoft JhengHei",sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
+#inviteLinkActions:not([hidden]){display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:15px}
+#inviteLinkActions a{color:#f6ba75;font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+#inviteLinkActions .page-button{min-height:40px;padding:8px 12px;font-size:12px}
 .submission-list{margin-top:22px;color:#c2ceb8;font-size:13px}
 .submission-list p{padding:15px;border:1px solid #3c4b3b;border-radius:8px;background:#162019;overflow-wrap:anywhere;line-height:1.7}
 .submission-list button,.members-panel td button{margin:3px 5px 3px 0;padding:7px 11px;border:1px solid #617252;border-radius:6px;background:#2a3a2c;color:#e9eddb;font-size:12px;cursor:pointer}

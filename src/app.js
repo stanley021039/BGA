@@ -1,15 +1,15 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {randomBytes}=require('node:crypto');
-const {Room}=require('./engine'),{ThunderRoom}=require('./thunder'),{MajorityRoom}=require('./majority');
-const {HistoryStore}=require('./history'),{CommunityStore}=require('./community');
-const {startRoomScheduler}=require('./rooms');
-const {HttpError,writeError}=require('./http-errors');
-const {openDatabase}=require('./db');
-const {createAuth}=require('./auth');
-const {BoardStore}=require('./board');
-const {createGitHubClient}=require('./github');
-const {SubmissionService}=require('./submissions');
-const {parts,colors,defaults,validateAppearance,renderAppearance}=require('./appearance');
+const {Room}=require('./games/poker'),{ThunderRoom}=require('./games/thunder'),{MajorityRoom}=require('./games/majority');
+const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
+const {startRoomScheduler}=require('./rooms/scheduler');
+const {HttpError,writeError}=require('./http/errors');
+const {openDatabase}=require('./db/index');
+const {createAuth}=require('./auth/index');
+const {BoardStore}=require('./community/board');
+const {createGitHubClient}=require('./integrations/github/client');
+const {SubmissionService}=require('./integrations/github/submissions');
+const {parts,colors,defaults,validateAppearance,renderAppearance}=require('./profiles/appearance');
 function createApp(config){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map();
  const history=new HistoryStore(config.historyDir);
@@ -49,7 +49,7 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
   if(url.pathname==='/api/admin/users/disable'&&req.method==='POST'){auth.disableUser(user,data.userId,!!data.disabled);return send({ok:true});}
   throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  }
- if(url.pathname.startsWith('/api/community/')){const resource=url.pathname.split('/')[3];if(req.method==='GET'){if(resource==='avatars')return send(community.avatars());if(resource==='issues')return send(board.list());if(resource==='questions')return send({topics:require('./majority-questions').TOPICS,questions:[...require('./majority-questions').QUESTIONS,...community.data.questions]});}if(req.method==='POST'){limitCommunity(req);limitAccount(user);if(resource==='avatars')return send(community.upload(data));if(resource==='questions')return send(community.question({...data,name:user.display_name}));if(resource==='issues'){const kind=data.id?data.action==='comment'?'comment':'status':'issue';const result=await submissions.submit(kind,data,user);if(result.state==='needs_review')res.statusCode=202;else if(result.state==='failed')res.statusCode=502;return send(result);}}throw Error('未知共用資源');}
+ if(url.pathname.startsWith('/api/community/')){const resource=url.pathname.split('/')[3];if(req.method==='GET'){if(resource==='avatars')return send(community.avatars());if(resource==='issues')return send(board.list());if(resource==='questions')return send({topics:require('./games/majority-questions').TOPICS,questions:[...require('./games/majority-questions').QUESTIONS,...community.data.questions]});}if(req.method==='POST'){limitCommunity(req);limitAccount(user);if(resource==='avatars')return send(community.upload(data));if(resource==='questions')return send(community.question({...data,name:user.display_name}));if(resource==='issues'){const kind=data.id?data.action==='comment'?'comment':'status':'issue';const result=await submissions.submit(kind,data,user);if(result.state==='needs_review')res.statusCode=202;else if(result.state==='failed')res.statusCode=502;return send(result);}}throw Error('未知共用資源');}
  if(url.pathname==='/api/history')return send(history.list());
  if(url.pathname.startsWith('/api/history/'))return send(history.read(url.pathname.split('/')[3]));
  if(url.pathname==='/api/info'){const addresses=Object.values(os.networkInterfaces()).flat().filter(x=>x.family==='IPv4'&&!x.internal).map(x=>`${protocol}://${x.address}:${port}`);const preferred=config.publicUrl||addresses.find(a=>a.includes('://26.'))||null;return send({preferred,addresses:config.publicUrl?[config.publicUrl,...addresses.filter(a=>a!==config.publicUrl)]:addresses});}
@@ -74,7 +74,7 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
  }
  if(url.pathname.startsWith('/uploads/avatars/')){const file=url.pathname.slice('/uploads/avatars/'.length);if(!/^[a-f0-9-]{36}\.(png|jpeg|webp)$/.test(file)||!community.data.avatars.some(a=>a.url===url.pathname)){res.writeHead(404);return res.end();}res.setHeader('Content-Type','image/'+file.split('.').pop());res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(community.avatarDir,file)));}
  const avatarId=url.pathname.match(/^\/avatars\/([a-f0-9-]{36})\.svg$/)?.[1];if(avatarId){auth.requireUser(req);const appearance=db.prepare('SELECT appearance FROM users WHERE id=? AND disabled=0').get(avatarId)?.appearance;if(!appearance)throw new HttpError(404,'AVATAR_NOT_FOUND','找不到角色外觀');res.setHeader('Content-Type','image/svg+xml');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(renderAppearance(JSON.parse(appearance)));}
- const files={'/profile':'profile.html','/profile.js':'profile.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/avatar-picker.js':'avatar-picker.js','/avatar-picker.css':'avatar-picker.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/room-host.js':'room-host.js','/room-host.css':'room-host.css'};const roomPath=url.pathname.match(/^\/(race|poker|majority)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'public',file)));
+ const files={'/profile':'profile.html','/profile.js':'profile.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/avatar-picker.js':'avatar-picker.js','/avatar-picker.css':'avatar-picker.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/room-host.js':'room-host.js','/room-host.css':'room-host.css'};const roomPath=url.pathname.match(/^\/(race|poker|majority)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);

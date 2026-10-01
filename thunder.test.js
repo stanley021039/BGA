@@ -1,4 +1,4 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const {ThunderRoom,neighbor}=require('./thunder');
+const {test}=require('node:test');const assert=require('node:assert/strict');const {ThunderRoom,neighbor}=require('./src/games/thunder');
 function room(n=2){const r=new ThunderRoom('TEST','測試');for(let i=0;i<n;i++)r.add('P'+i,true);r.start();return r;}
 function clear(r){for(const t of r.tiles)for(const row of t.cells)for(const c of row){c.kind='R';delete c.hazard;}}
 test('setup and hidden state',()=>{const r=room(4);assert.equal(r.cars.length,12);assert.equal(r.tiles.length,3);assert.ok(r.players.every(p=>p.dice.length===4));const view=r.view(r.players[0].id);assert.ok(view.tiles.flatMap(t=>t.cells.flat()).filter(c=>c.hazard).every(c=>c.hazard.kind==='unknown'));assert.ok(!JSON.stringify(view).includes(r.players[1].secret));assert.throws(()=>r.add('late'));assert.throws(()=>r.act(r.players[(r.turn+1)%4].id,'begin',{}));});

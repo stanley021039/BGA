@@ -24,10 +24,10 @@ class HistoryStore{
   const ctx=this.records.get(room);if(!ctx)throw Error('缺少對局記錄器');
   if(ctx.failed)throw Error('歷史寫入失敗，已暫停操作以免遺失記錄');
   if(operation.action==='start'&&['waiting','finished','showdown'].includes(room.phase)){
-   const id=crypto.randomUUID(),type=room.type||'poker',source=fs.readFileSync(path.join(__dirname,type==='majority'?'majority.js':type==='thunder'?'thunder.js':'engine.js'),'utf8');
+   const id=crypto.randomUUID(),type=room.type||'poker',source=fs.readFileSync(path.join(__dirname,'..','games',type==='majority'?'majority.js':type==='thunder'?'thunder.js':'poker.js'),'utf8');
    const m={id,type,room:room.code,name:room.name,startedAt:new Date().toISOString(),status:'playing',players:room.players.map(p=>p.name),count:0};
    ctx.current=m;this.metas.set(id,m);this.saveMeta(m);
-   this.append(id,{kind:'header',schema:1,id,session:ctx.session,meta:m,initial:snapshot(room),engine:{sha256:crypto.createHash('sha256').update(source).digest('hex'),source,...(type==='majority'?{questionBank:fs.readFileSync(path.join(__dirname,'majority-questions.js'),'utf8')}:{})},setup:fs.readFileSync(path.join(this.dir,ctx.session+'.jsonl'),'utf8').trim().split('\n').map(JSON.parse)});
+   this.append(id,{kind:'header',schema:1,id,session:ctx.session,meta:m,initial:snapshot(room),engine:{sha256:crypto.createHash('sha256').update(source).digest('hex'),source,...(type==='majority'?{questionBank:fs.readFileSync(path.join(__dirname,'..','games','majority-questions.js'),'utf8')}:{})},setup:fs.readFileSync(path.join(this.dir,ctx.session+'.jsonl'),'utf8').trim().split('\n').map(JSON.parse)});
   }
   const m=ctx.current,id=m?.id||ctx.session,seq=++ctx.seq;
   try{this.append(id,{kind:'intent',seq,at:new Date().toISOString(),operation:clone(operation),before:snapshot(room)});}catch(e){ctx.failed=true;throw e;}

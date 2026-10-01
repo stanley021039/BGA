@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),{randomUUID,timingSafeEqual}=require('node:crypto');
-const {TOPICS}=require('./majority-questions');
+const {TOPICS}=require('../games/majority-questions');
 const clean=(v,max,label)=>{if(typeof v!=='string'||!v.trim()||v.trim().length>max)throw Error(`${label}需為 1 至 ${max} 字`);return v.trim();};
 function validateQuestion(data){const type=data.type;if(!['two','three','blank'].includes(type))throw Error('題型不正確');const prompt=clean(data.prompt,160,'題目');let options=[];if(type!=='blank'){const count=type==='two'?2:3;if(!Array.isArray(data.options)||data.options.length!==count)throw Error('選項數量不正確');options=data.options.map(v=>clean(v,60,'選項'));if(new Set(options.map(v=>v.normalize('NFKC').toLowerCase())).size!==count)throw Error('選項不可重複');}return {type,prompt,options,topic:TOPICS.some(t=>t.id===data.topic)?data.topic:'daily'};}
 class CommunityStore{

@@ -1,6 +1,6 @@
 const {randomInt,randomUUID}=require('node:crypto');
 const {TOPICS,QUESTIONS}=require('./majority-questions');
-const {validateQuestion}=require('./community');
+const {validateQuestion}=require('../community/store');
 const copy=value=>JSON.parse(JSON.stringify(value));
 // Only Unicode compatibility, case and whitespace are normalized; no fuzzy matching.
 const normalize=value=>value.normalize('NFKC').toLowerCase().trim().replace(/\s+/gu,' ');

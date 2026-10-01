@@ -1,6 +1,6 @@
 const crypto=require('node:crypto');
-const {transaction}=require('./db');
-const {HttpError}=require('./http-errors');
+const {transaction}=require('../../db/index');
+const {HttpError}=require('../../http/errors');
 
 class SubmissionService{
  constructor(db,board,github){this.db=db;this.board=board;this.github=github;this.inFlight=new Map();}

@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');const {MajorityRoom}=require('./majority'),{CommunityStore}=require('./community');
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');const {MajorityRoom}=require('./src/games/majority'),{CommunityStore}=require('./src/community/store');
 function setup(n=3,start=true){const r=new MajorityRoom('T','test',()=>0);for(let i=0;i<n;i++)r.add('P'+i);if(start)r.start();return r;}
 function ask(r,type='blank'){r.act(r.presenterId,'ask',{type,prompt:'早餐想到什麼？',options:type==='blank'?[]:['A','B']});}
 function answers(r,a){a.forEach((answer,i)=>r.act(r.players[i].id,'answer',{answer}));if(r.phase==='review')r.act(r.host,'score');}

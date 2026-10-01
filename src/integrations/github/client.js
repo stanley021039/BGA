@@ -1,4 +1,4 @@
-const {HttpError}=require('./http-errors');
+const {HttpError}=require('../../http/errors');
 
 function createGitHubClient({token,repository='stanley021039/BGA',fetchImpl=fetch,baseUrl='https://api.github.com'}={}){
  if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository))throw Error('Invalid GitHub repository');

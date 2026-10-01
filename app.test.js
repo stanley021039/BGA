@@ -3,9 +3,9 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
-const {createApp}=require('./app');
-const {openDatabase}=require('./db');
-const {createAuth}=require('./auth');
+const {createApp}=require('./src/app');
+const {openDatabase}=require('./src/db/index');
+const {createAuth}=require('./src/auth/index');
 
 test('independent app instances can start, serve, and release their history locks',async()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-app-'));

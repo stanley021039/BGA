@@ -1,4 +1,4 @@
-const {HttpError}=require('./http-errors');
+const {HttpError}=require('../http/errors');
 
 const parts={hair:['short','long','curly','bun'],face:['round','oval','square'],outfit:['hoodie','jacket','dress','shirt']};
 const colors={skin:['#f6d6b8','#dca77c','#b87955','#8b583e','#5d392d'],hair:['#2b2020','#60432c','#ab7043','#d3ae70','#5a4b72','#a74c55'],outfit:['#557bb5','#be665f','#6b9a74','#9a78ae','#c0934f','#506773']};
