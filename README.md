@@ -2,6 +2,8 @@
 
 架構決策、實作紀錄與尚待部署驗證的項目請見 [架構改善與功能實作計畫](ARCHITECTURE-PLAN.md)。
 
+動畫、音效、UI/UX、玩家互動與美術風格的研究提案及原始來源見[遊戲互動與沉浸感設計研究](docs/IMMERSIVE-EXPERIENCE-RESEARCH.md)；目前僅為設計文件，尚未實作。
+
 部署請見 [Windows／Linux × 直接連線／Cloudflare 網域指南](docs/DEPLOYMENT.md)。目前 `shhuang.cc` 由 Linux 的 Cloudflare Tunnel 提供服務；原本的 Radmin VPN／區網直連方式仍可依指南切換。
 
 ## 帳號與留言板
