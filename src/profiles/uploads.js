@@ -30,7 +30,7 @@ function imageOf(data){
  return {bytes,mime,width,height};
 }
 function expressionOf(value){if(!Object.hasOwn(expressionLabels,value))throw new HttpError(400,'INVALID_EXPRESSION','不支援的表情');return value;}
-function nameOf(value){const name=String(value||'').trim();if(!name||name.length>32)throw new HttpError(400,'INVALID_CHARACTER_NAME','角色名稱需為 1–32 字');return name;}
+function nameOf(value){const name=String(value||'').trim();if(!name||[...name].length>32||/[\u0000-\u001f\u007f]/.test(name))throw new HttpError(400,'INVALID_CHARACTER_NAME','角色名稱需為 1–32 字，且不能換行');return name;}
 function createCharacter(db,ownerId,data){
  const name=nameOf(data.name),image=imageOf(data),id=randomUUID(),now=new Date().toISOString();
  const count=db.prepare('SELECT COUNT(*) AS count FROM player_characters WHERE owner_id=?').get(ownerId).count;

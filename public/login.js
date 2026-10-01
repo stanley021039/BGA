@@ -2,7 +2,7 @@ const $=selector=>document.querySelector(selector);
 const params=new URLSearchParams(location.search);
 const resetToken=params.get('reset');
 const next=params.get('next');
-const returnTo=/^\/(?:poker|race|majority)\/[A-Fa-f0-9]{6}\/?$/.test(next||'')?next:'/';
+const returnTo=/^\/(?:poker|race|majority|gift)\/[A-Fa-f0-9]{6}\/?$/.test(next||'')?next:'/';
 const forms={login:$('#loginForm'),register:$('#registerForm'),reset:$('#resetForm')};
 function mode(value){
  for(const [name,form] of Object.entries(forms))form.hidden=name!==value;

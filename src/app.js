@@ -7,6 +7,7 @@ const {startRoomScheduler}=require('./rooms/scheduler');
 const {reconnectPlayer}=require('./rooms/reconnect');
 const {listRooms}=require('./rooms/listing');
 const {HttpError,writeError}=require('./http/errors');
+const {clientAddress,setSecurityHeaders}=require('./http/security');
 const {openDatabase}=require('./db/index');
 const {createAuth}=require('./auth/index');
 const {BoardStore}=require('./community/board');
@@ -26,15 +27,18 @@ function createApp(config){
  let community,db,auth,board,submissions,giftStore;
  try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}));}
  catch(error){history.close();db?.close();throw error;}
- const communityRate=new Map();
- function limitCommunity(req){const key=req.socket.remoteAddress,now=Date.now(),recent=(communityRate.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=40)throw Error('操作太頻繁，請稍後再試');recent.push(now);communityRate.set(key,recent);if(communityRate.size>2000)for(const [k,v]of communityRate)if(now-v.at(-1)>60000)communityRate.delete(k);}
- const accountRate=new Map();
- function limitAccount(user){const key=user.id,now=Date.now(),recent=(accountRate.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=10)throw new HttpError(429,'RATE_LIMITED','請稍後再試');recent.push(now);accountRate.set(key,recent);}
+ const communityRate=new Map(),accountRate=new Map(),authRate=new Map();
+ const trustCloudflare=config.host==='127.0.0.1'&&config.publicUrl?.startsWith('https://');
+ const clientKey=req=>clientAddress(req,trustCloudflare);
+ const robots=fs.readFileSync(path.join(__dirname,'..','public','robots.txt'));
+ function limitRate(map,key,max){const now=Date.now(),recent=(map.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=max)throw new HttpError(429,'RATE_LIMITED','操作太頻繁，請稍後再試');recent.push(now);map.set(key,recent);if(map.size>2000)for(const [address,times]of map)if(!times.some(t=>now-t<60000))map.delete(address);}
+ function limitCommunity(req){limitRate(communityRate,clientKey(req),40);}
+ function limitAccount(user){limitRate(accountRate,user.id,10);}
  const port=config.port,protocol='http';
- const authRate=new Map();
- function limitAuth(req){const key=req.socket.remoteAddress,now=Date.now(),recent=(authRate.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=20)throw new HttpError(429,'RATE_LIMITED','請稍後再試');recent.push(now);authRate.set(key,recent);}
-const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');try{
+ function limitAuth(req){limitRate(authRate,clientKey(req),20);}
+const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  const url=new URL(req.url,'http://localhost');
+ if(url.pathname==='/robots.txt'&&req.method==='GET'){res.setHeader('Content-Type','text/plain; charset=utf-8');return res.end(robots);}
  if(url.pathname.startsWith('/api/')){
  res.setHeader('Content-Type','application/json; charset=utf-8');let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
  const send=x=>res.end(JSON.stringify(x));
@@ -130,6 +134,9 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);
+ server.headersTimeout=10000;
+ server.requestTimeout=30000;
+ server.keepAliveTimeout=5000;
  let stopScheduler,closed=false;
  async function listen(){
   if(closed)throw Error('Application has been closed');
