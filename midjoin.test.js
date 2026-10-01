@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {MajorityRoom}=require('./majority');
+const {MajorityRoom}=require('./src/games/majority');
 function room(){const r=new MajorityRoom('TEST','Test');for(let i=0;i<3;i++)r.add('P'+i);r.start();return r;}
 function ask(r,type='two'){r.act(r.presenterId,'ask',{type,prompt:'早餐？',options:type==='blank'?[]:['A','B']});}
 function answerAll(r,answers){r.participantIds.forEach((id,i)=>r.act(id,'answer',{answer:answers[i]}));}
