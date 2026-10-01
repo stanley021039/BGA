@@ -2,20 +2,20 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；原有 Cloudflare 遠端管理 Tunnel 已設定 `shhuang.cc → http://localhost:3000`，這次復用該路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日更新至 `9d13d4c`（大廳房間列表）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；原有 Cloudflare 遠端管理 Tunnel 已設定 `shhuang.cc → http://localhost:3000`，這次復用該路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/59cf2cd` |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/9d13d4c`；前一版 `59cf2cd` 保留可回退 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
 | Tunnel 服務 | `afterhours-tunnel.service`，以 `ccc` 執行，憑證存於 `~/.config/cloudflared/afterhours.token` |
 | 初始管理者 | 帳號 `ccc`；初始密碼僅存於 `shared/admin-bootstrap.txt`，首次登入後應立即重設並刪除該檔 |
 
-兩個 systemd 服務均已設為開機自啟。部署前 VM 系統時鐘落後約 19 小時；已依硬體時鐘校正，`timedatectl` 顯示 NTP 同步。Linux Node.js 22.22.1 的測試結果為 80/80；公開 HTTPS 的登入頁、管理者登入、Secure cookie 與 session 已驗證。
+兩個 systemd 服務均已設為開機自啟。部署前 VM 系統時鐘落後約 19 小時；已依硬體時鐘校正，`timedatectl` 顯示 NTP 同步。Linux Node.js 22.22.1 更新後的測試結果為 81/81。Linux 主機本機登入後的 `/api/rooms` 回 200；從 Windows 測得公開 HTTPS 登入頁與新 CSS 回 200、未登入房間 API 回 401，登入 POST 也到達應用程式。VM 自身呼叫公開網域的登入 POST 被 Cloudflare 回應 1010，因此更新後尚未從公開入口完成有效帳號的端到端登入驗證；舊版曾驗證管理者登入、Secure cookie 與 session。
 
 ## 尚待正式設定
 
