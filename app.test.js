@@ -14,6 +14,12 @@ test('independent app instances can start, serve, and release their history lock
  try{
   const {port}=await app.listen();
   assert.equal((await fetch(`http://127.0.0.1:${port}/`)).status,200);
+  for(const asset of ['api.js','room-reconnect.js','room-host.js','room-host.css','game-shell.js','game-shell.css']){
+   const response=await fetch(`http://127.0.0.1:${port}/shared/${asset}`);
+   assert.equal(response.status,200,asset);
+   assert.match(response.headers.get('content-type'),asset.endsWith('.css')?/text\/css/:/text\/javascript/);
+  }
+  assert.equal((await fetch(`http://127.0.0.1:${port}/room-reconnect.js`)).status,200);
   await app.close();
   await app.close();
   assert.equal(fs.existsSync(path.join(root,'history','.lock')),false);

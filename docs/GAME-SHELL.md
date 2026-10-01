@@ -1,6 +1,6 @@
 # 遊戲共用介面與個別遊戲畫面
 
-四款遊戲共用 `public/game-shell.js` 和 `public/game-shell.css`。共用區塊整合在各遊戲原有側欄或賽道下方，提供明顯的操作提示、玩家自身角色可用的表情、文字彈幕輸入與回大廳入口。遊戲內沒有留言紀錄區。`public/room-host.js` 在各遊戲狀態更新時呼叫 `GameShell.update(state)`；牌桌、賽道、題目、禮物與各自操作仍留在 `public/app.js`、`public/race.js`、`public/majority.js`、`public/gift.js`。
+四款遊戲共用 `public/shared/game-shell.js` 和 `public/shared/game-shell.css`。共用區塊整合在各遊戲原有側欄或賽道下方，提供明顯的操作提示、玩家自身角色可用的表情、文字彈幕輸入與回大廳入口。遊戲內沒有留言紀錄區。`public/shared/room-host.js` 在各遊戲狀態更新時呼叫 `GameShell.update(state)`；`public/shared/room-reconnect.js` 與 `public/shared/api.js` 分別處理重連及共用請求／登入失效。牌桌、賽道、題目、禮物與各自操作仍留在 `public/app.js`、`public/race.js`、`public/majority.js`、`public/gift.js`。
 
 共用層只讀取各遊戲回傳的標準欄位：`code`、`phase`、`me`、`players`。操作提示依遊戲適配：撲克用 `turn` 玩家索引；末路狂飆用 `actor` 玩家 ID；同頻俱樂部用 `presenterId` 與 `phase`；送禮達人用 `phase` 及本階段 `submittedIds` 提示自己是否已送出。遊戲特有回合規則不放入共用層。
 

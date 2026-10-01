@@ -9,14 +9,7 @@ try{session=JSON.parse(localStorage.getItem(code?'ah-gift:'+code:'ah-gift')||'nu
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
 async function api(route,data){
- const response=await fetch('/api/'+route+(data===undefined&&route==='state'?'?code='+code:''),{method:data===undefined?'GET':'POST',headers:{'Content-Type':'application/json'},body:data===undefined?undefined:JSON.stringify({...data,code:data.code||code})});
- const result=await response.json();
- if(!response.ok){
-  if(response.status===401&&session)location.replace('/login?next='+encodeURIComponent('/gift/'+code));
-  if(result.code==='KICKED'&&session){RoomHost.kicked(session);session=null;}
-  throw Error(result.error||'連線失敗');
- }
- return result;
+ return RoomApi.request(route,data,{code,room:'gift',session,onKicked:()=>{RoomHost.kicked(session);session=null;}});
 }
 function save(result){session=result;code=result.code;localStorage.setItem('ah-gift',JSON.stringify(result));localStorage.setItem('ah-gift:'+code,JSON.stringify(result));history.replaceState(null,'','/gift/'+code);}
 function player(id){return state?.players.find(item=>item.id===id);}

@@ -2,6 +2,7 @@ const crypto=require('node:crypto');
 const {promisify}=require('node:util');
 const {transaction}=require('../db/index');
 const {HttpError}=require('../http/errors');
+const {displayNameOf}=require('../profiles/name');
 const scrypt=promisify(crypto.scrypt);
 const SESSION_SECONDS=60*60*24*30;
 const sha256=value=>crypto.createHash('sha256').update(value).digest('hex');
@@ -10,7 +11,6 @@ const after=seconds=>new Date(Date.now()+seconds*1000).toISOString();
 const publicUser=user=>({id:user.id,username:user.username,displayName:user.display_name,role:user.role,appearance:user.appearance?JSON.parse(user.appearance):null});
 
 function usernameOf(value){const name=String(value||'').trim().toLowerCase();if(!/^[a-z0-9_]{3,24}$/.test(name))throw new HttpError(400,'INVALID_USERNAME','帳號需為 3–24 個英文字母、數字或底線');return name;}
-function displayNameOf(value){const name=String(value||'').trim();if(!name||name.length>16)throw new HttpError(400,'INVALID_DISPLAY_NAME','暱稱需為 1–16 字');return name;}
 function passwordOf(value){if(typeof value!=='string'||value.length<8||value.length>128)throw new HttpError(400,'INVALID_PASSWORD','密碼需為 8–128 字');return value;}
 function confirmedPassword(data){const password=passwordOf(data.password);if(data.confirmPassword!==password)throw new HttpError(400,'PASSWORD_MISMATCH','兩次密碼輸入不一致');return password;}
 async function hashPassword(password){const salt=crypto.randomBytes(16);const key=await scrypt(password,salt,64);return `scrypt:${salt.toString('hex')}:${key.toString('hex')}`;}

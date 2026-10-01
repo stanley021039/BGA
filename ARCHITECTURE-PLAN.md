@@ -91,7 +91,7 @@ src/
   community/              留言、回覆、處理狀態
   integrations/github/    API client、提交派送、結果查核
   rooms/                  帳號與座位對應、操作協調、排程
-  games/                  三款遊戲引擎
+  games/                  各款遊戲引擎
   history/                歷史寫入與查詢
   db/                     SQLite、遷移、資料存取
 public/
@@ -175,7 +175,7 @@ public/
 - 在正式伺服器執行 `node admin.js init <帳號>` 建立第一位管理者；配置正式網址與適用的 HTTPS 終止。
 - 備份既有 `data/community/community.json`、`data/history/` 及其他資料後，再首次啟動新版本。舊留言會以無帳號作者匯入 SQLite，不自動回補到 GitHub。
 
-共用前端 API client 與歷史模組明確快照介面仍屬後續整理項目；本次優先完成登入、GitHub 同步及靜態角色。第 7 節保留原規劃，實際完成項目以第 10 節紀錄為準。
+共用前端 API client 已在步驟 33 完成；歷史模組明確快照介面仍屬後續整理項目。第 7 節保留原規劃，實際完成項目以第 10 節紀錄為準。
 
 ## 9. 技術參考
 
@@ -217,3 +217,4 @@ public/
 - **步驟 30：依最終功能整理 PR 提交歷史（完成）。** 將 PR #8 原有 18 筆提交整理為 8 筆：過渡用的固定身形、方塊造型與後續圖片角色合併為圖片角色功能；各功能的文件及驗證紀錄併入對應提交。整理前後的最終程式樹一致，Windows `npm test` 再次通過 90/90，`git diff --check` 通過。送禮達人遊戲依使用者要求暫緩，未包含在此 PR。
 - **步驟 31：送禮達人獨立功能分支（完成本機實作與實測）。** 從 PR #8 的提交建立 `feature/gift-expert`，不改動 PR #8。參考 GiftTRAP 的送禮／收禮核心流程，以 64 個原創文字禮物實作 3–8 人遊戲：秘密挑禮、秘密標記四種喜好、同時計算兩條分數、一輪結束後判定達標；支援房主設定目標、下一輪、踢人、帳號重連及已結束對局回看。大廳、房間列表、登入頁、角色表情與文字彈幕已整合；本版不含進階道具卡，進行中不能新加入，詳細規則與差異見 `docs/GIFT-GAME.md`。Windows `npm test` 通過 93/93，前端腳本語法與 `git diff --check` 通過；另用隔離的本機 3012 埠及三個測試帳號，在 Chrome 驗證開房、入座、秘密送禮、標喜好、揭曉計分與下一輪。既有 `localhost:3000` 程序未重啟，Linux 未部署。`GITHUB_TOKEN` 正式部署交接仍依步驟 29。
 - **步驟 32：玩家共編禮物與選填圖片（完成本機實作與實測）。** 新增 `/gifts` 題庫頁與 SQLite `community_gifts` 表，會員可投稿禮物名稱、分類及選填的 PNG／GIF／WebP 圖片；圖片限 1 MB、不限制像素，資料與圖片會在重啟後保留。新禮物從下一輪開始參與抽選，已抽出的本輪內容維持不變。64 件內建禮物中有 15 件對應 [Kenney Generic Items](https://kenney.nl/assets/generic-items) 的 12 張 CC0 插圖，其餘保留文字卡。遊戲卡與揭曉畫面都能顯示圖片；大廳與遊戲頁加入題庫入口，留言板亦可標記送禮達人。Windows `npm test` 通過 95/95、前端語法與 `git diff --check` 通過；隔離的 Chrome／3012 預覽已驗證無圖投稿、有圖投稿與遊戲內混合圖片卡。既有 `localhost:3000` 未重啟，Linux 尚未部署。
+- **步驟 33：核對並完成規劃的檔案架構（完成本機實作與驗證）。** `src/app.js`、`src/server.js`、`auth/`、`profiles/`、`community/`、`integrations/github/`、`rooms/`、`games/`、`history/`、`db/` 已於步驟 11 實作；本次把暱稱驗證從 `auth/` 移入 `profiles/`，將房間重連、房主操作及遊戲共用介面移到 `public/shared/`，並新增四款遊戲共用的 API 請求工具，統一房號傳遞、登入過期導回原房間及被踢出處理。四款遊戲頁改用新路徑，舊腳本路徑保留相容；雷霆之路教學模式仍使用原本的模擬 API。Windows `npm test` 通過 96/96，前端／伺服器語法檢查與 `git diff --check` 通過；Linux 與既有服務尚未套用本次修改。
