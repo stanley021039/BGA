@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>送禮達人｜Afterhours</title>
+  <link rel="stylesheet" href="/gift.css">
+  <link rel="stylesheet" href="/room-host.css">
+  <link rel="stylesheet" href="/game-shell.css">
+</head>
+<body>
+  <div class="gift-shell">
+    <header class="gift-header">
+      <a class="gift-brand" href="/"><span class="brand-mark">✦</span><span>送禮達人<small>AFTERHOURS / GIFT CLUB</small></span></a>
+      <nav><span id="roomTag">今晚，送什麼好？</span><button id="invite" class="quiet" hidden>邀請朋友 ↗</button><button id="help" class="quiet">怎麼玩？</button><a class="quiet" href="/">回大廳</a></nav>
+    </header>
+    <div id="connection" role="status"></div>
+    <div class="gift-layout">
+      <main>
+        <div class="stage-head"><span id="roundTag" class="eyebrow">送到心坎裡</span><span id="phaseTag" class="phase-pill">準備開桌</span></div>
+        <div id="steps" class="steps"><span>01 挑禮物</span><i></i><span>02 標喜好</span><i></i><span>03 揭曉計分</span></div>
+        <section id="stage" aria-live="polite"></section>
+        <p class="footnote">每輪禮物數＝玩家數＋1。送對喜好，雙方加分；兩條分數都到達目標，才算送禮達人。</p>
+      </main>
+      <aside>
+        <div class="aside-head"><div><span class="eyebrow">THE GUEST LIST</span><h2>這桌的朋友</h2></div><span id="count">0 / 8</span></div>
+        <div class="score-legend"><span>🎁 送禮</span><span>♡ 收禮</span></div>
+        <div id="players"></div>
+        <p class="aside-note">真正的難題，<br>是猜中朋友想收到什麼。</p>
+        <a class="history-link" href="/history">查看對局歷史 ↗</a>
+      </aside>
+    </div>
+  </div>
+  <dialog id="rules"><button id="closeHelp" class="quiet close">關閉 ×</button><span class="eyebrow">HOW TO PLAY</span><h2>送得好，也要收得開心。</h2><ol><li>3–8 位玩家入座，房主設定目標分數並開始。</li><li>每輪展示「玩家數＋1」件禮物。每人秘密為其他玩家各選一件，自己不能送相同禮物兩次。</li><li>所有人送完後，各自秘密標記最想要（+3）、想要（+2）、還可以（+1）和最不想要（−4）的四件不同禮物；沒標到的禮物為 −1。</li><li>全員標記後一起揭曉。每件禮物的分數同時加到送禮者的「送禮」及收禮者的「收禮」軌；分數不低於 0，也不超過目標。</li><li>一輪結束時，兩條分數都達到目標的玩家獲勝；若多人同時達標，則共同獲勝。未達標就由房主開始下一輪。</li></ol><p>使用原創文字禮物題庫；此版本不含進階道具卡。</p></dialog>
+  <div id="toast" role="status" hidden></div>
+  <script src="/room-reconnect.js"></script>
+  <script src="/room-host.js"></script>
+  <script src="/game-shell.js"></script>
+  <script src="/gift.js"></script>
+</body>
+</html>
