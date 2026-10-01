@@ -39,7 +39,7 @@
    const row=element('div','shared-message','');row.dataset.id=item.id;
    row.append(element('strong','',item.name));
    if(item.kind==='message')row.append(element('span','',item.message));
-   else{const img=document.createElement('img');img.src=item.image;img.alt=item.expression+' 表情';row.append(img);}
+   else{const img=document.createElement('img');img.src=item.image;img.alt=(item.label||item.expression)+' 表情';row.append(img);}
    messages.append(row);
   }
   if(messages.lastElementChild?.dataset.id!==prior)messages.scrollTop=messages.scrollHeight;
@@ -51,8 +51,9 @@
    myExpressions=character.expressions;
    const holder=q('#shared-expressions');holder.replaceChildren();
    for(const [key,url] of Object.entries(myExpressions)){
-    const button=document.createElement('button');button.type='button';button.title=options.expressionLabels[key];
-    const img=document.createElement('img');img.src=url;img.alt=options.expressionLabels[key];button.append(img);
+    const label=character.labels?.[key]||options.expressionLabels[key]||key;
+    const button=document.createElement('button');button.type='button';button.title=label;
+    const img=document.createElement('img');img.src=url;img.alt=label;button.append(img);
     button.onclick=()=>send({kind:'expression',expression:key});holder.append(button);
    }
   }catch(error){q('#shared-error').textContent=error.message;}

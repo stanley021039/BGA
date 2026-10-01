@@ -3,6 +3,7 @@ const {HttpError}=require('../http/errors');
 const {expressionLabels}=require('./appearance');
 
 const MAX_BYTES=1024*1024;
+const MAX_CUSTOM_EXPRESSIONS=6;
 function invalid(message='圖片格式不正確'){throw new HttpError(400,'INVALID_CHARACTER_IMAGE',message);}
 function imageOf(data){
  if(typeof data.base64!=='string'||data.base64.length>Math.ceil(MAX_BYTES*4/3)+16||!/^[A-Za-z0-9+/]+={0,2}$/.test(data.base64))invalid();
@@ -49,4 +50,23 @@ function setExpression(db,ownerId,id,data){
  db.prepare('INSERT INTO character_images(character_id,expression,mime,bytes) VALUES(?,?,?,?) ON CONFLICT(character_id,expression) DO UPDATE SET mime=excluded.mime,bytes=excluded.bytes').run(uuid,expression,image.mime,image.bytes);
  return {id:'user:'+uuid,expression};
 }
-module.exports={MAX_BYTES,imageOf,createCharacter,setExpression};
+function addExpression(db,ownerId,id,data){
+ const name=typeof data.name==='string'?data.name.trim():'';
+ if(!name||[...name].length>20||/[\u0000-\u001f\u007f]/.test(name))throw new HttpError(400,'INVALID_EXPRESSION_NAME','表情名稱需為 1–20 字');
+ const image=imageOf(data);
+ if(image.mime!=='image/gif')throw new HttpError(400,'INVALID_EXPRESSION_IMAGE','表情只接受 GIF 圖片');
+ const uuid=id.replace(/^user:/,'');
+ db.exec('BEGIN IMMEDIATE');
+ try{
+  const owned=db.prepare('SELECT id FROM player_characters WHERE id=? AND owner_id=?').get(uuid,ownerId);
+  if(!owned)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到你的角色');
+  const count=db.prepare("SELECT COUNT(*) AS count FROM character_images WHERE character_id=? AND expression LIKE 'emote-%'").get(uuid).count;
+  if(count>=MAX_CUSTOM_EXPRESSIONS)throw new HttpError(400,'EXPRESSION_LIMIT','每個角色最多新增 6 個表情');
+  if(db.prepare('SELECT 1 FROM character_images WHERE character_id=? AND label=?').get(uuid,name))throw new HttpError(400,'DUPLICATE_EXPRESSION_NAME','這個表情名稱已經使用');
+  const expression='emote-'+randomUUID();
+  db.prepare('INSERT INTO character_images(character_id,expression,mime,bytes,label) VALUES(?,?,?,?,?)').run(uuid,expression,image.mime,image.bytes,name);
+  db.exec('COMMIT');
+  return {id:'user:'+uuid,expression,name};
+ }catch(error){db.exec('ROLLBACK');throw error;}
+}
+module.exports={MAX_BYTES,imageOf,createCharacter,setExpression,addExpression};

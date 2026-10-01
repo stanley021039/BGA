@@ -1,0 +1,78 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const os=require('node:os');
+const path=require('node:path');
+const {DatabaseSync}=require('node:sqlite');
+const {createApp}=require('./src/app');
+const {openDatabase}=require('./src/db/index');
+const {createAuth}=require('./src/auth/index');
+
+test('v3 character images migrate without losing existing expression bytes',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-character-migration-'));
+ const file=path.join(root,'app.sqlite');
+ try{
+  const old=new DatabaseSync(file);
+  old.exec("CREATE TABLE character_images(character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,PRIMARY KEY(character_id,expression)); PRAGMA user_version=3");
+  old.prepare('INSERT INTO character_images VALUES(?,?,?,?)').run('legacy','happy','image/gif',Buffer.from('GIF89a'));
+  old.close();
+  const upgraded=openDatabase(file);
+  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version,4);
+  const row=upgraded.prepare('SELECT expression,label,bytes FROM character_images').get();
+  assert.equal(row.expression,'happy');
+  assert.equal(row.label,null);
+  assert.equal(Buffer.from(row.bytes).toString(),'GIF89a');
+  upgraded.close();
+ }finally{fs.rmSync(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}
+});
+
+test('custom named GIF expressions appear in profile, avatar, and room interactions',async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-custom-emote-'));
+ const config={port:0,host:'127.0.0.1',historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite')};
+ const db=openDatabase(config.dbFile);
+ await createAuth(db).bootstrap('emoteadmin','test-password-123');
+ db.close();
+ let app=createApp(config);
+ try{
+  const {port}=await app.listen(),base=`http://127.0.0.1:${port}`;
+  const request=async(route,cookie,data)=>{
+   const response=await fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(data)});
+   return {status:response.status,body:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};
+  };
+  const login=await request('auth/login',null,{username:'emoteadmin',password:'test-password-123'});
+  assert.equal(login.status,200);
+  const cookie=login.cookie;
+  const png=fs.readFileSync(path.join(__dirname,'public/assets/characters/traveler-neutral.png'));
+  const gif=fs.readFileSync(path.join(__dirname,'public/assets/characters/traveler-happy.gif'));
+  const main=await request('profile/characters',cookie,{name:'測試角色',mime:'image/png',base64:png.toString('base64')});
+  assert.equal(main.status,200);
+  const id=main.body.id.slice(5),name='開'.repeat(20);
+  const upload=await request(`profile/characters/${id}/emotes`,cookie,{name,mime:'image/gif',base64:gif.toString('base64')});
+  assert.equal(upload.status,200);
+  const expression=upload.body.expression;
+  assert.match(expression,/^emote-[a-f0-9-]{36}$/);
+  assert.equal((await request(`profile/characters/${id}/emotes`,cookie,{name:'開'.repeat(21),mime:'image/gif',base64:gif.toString('base64')})).body.code,'INVALID_EXPRESSION_NAME');
+  assert.equal((await request(`profile/characters/${id}/emotes`,cookie,{name:'非 GIF',mime:'image/png',base64:png.toString('base64')})).body.code,'INVALID_EXPRESSION_IMAGE');
+  assert.equal((await request(`profile/characters/${id}/emotes`,cookie,{name,mime:'image/gif',base64:gif.toString('base64')})).body.code,'DUPLICATE_EXPRESSION_NAME');
+  const options=await (await fetch(base+'/api/profile/options',{headers:{Cookie:cookie}})).json();
+  const character=options.characters.find(item=>item.id===main.body.id);
+  assert.equal(character.labels[expression],name);
+  assert.equal(character.labels.neutral,'平常');
+  const media=await fetch(base+character.expressions[expression],{headers:{Cookie:cookie}});
+  assert.equal(media.status,200);
+  assert.equal(media.headers.get('content-type'),'image/gif');
+  const appearance={version:5,characterId:main.body.id,expression};
+  assert.equal((await request('profile/appearance',cookie,appearance)).status,200);
+  assert.equal((await fetch(base+'/characters/'+login.body.id,{headers:{Cookie:cookie}})).headers.get('content-type'),'image/gif');
+  const room=(await request('create',cookie,{type:'poker',roomName:'表情測試'})).body;
+  const social=await request('social',cookie,{code:room.code,kind:'expression',expression});
+  assert.equal(social.status,200);
+  assert.equal(social.body.social[0].label,name);
+  assert.equal(social.body.social[0].image,character.expressions[expression]);
+  await app.close();
+  app=createApp(config);
+  const restarted=await app.listen();
+  const saved=await (await fetch(`http://127.0.0.1:${restarted.port}/api/profile/options`,{headers:{Cookie:cookie}})).json();
+  assert.equal(saved.characters.find(item=>item.id===main.body.id).labels[expression],name);
+ }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}
+});

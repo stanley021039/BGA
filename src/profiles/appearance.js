@@ -10,7 +10,7 @@ const builtinCharacters=slugs.map((slug,index)=>{
   const extension=expression==='happy'?'gif':'png';
   expressions[expression]=`/assets/characters/${slug}-${expression}.${extension}`;
  }
- return {id:`builtin:${slug}`,name:names[index],expressions,source:'Kenney',appearance:{version:5,characterId:`builtin:${slug}`,expression:'neutral'}};
+ return {id:`builtin:${slug}`,name:names[index],expressions,labels:expressionLabels,source:'Kenney',appearance:{version:5,characterId:`builtin:${slug}`,expression:'neutral'}};
 });
 const defaults={...builtinCharacters[0].appearance};
 const legacyColors={skin:['#f6d6b8','#dca77c','#b87955','#8b583e','#5d392d','#9ab483','#a6acd0'],hair:['#2b2020','#60432c','#ab7043','#d3ae70','#5a4b72','#a74c55'],clothing:['#557bb5','#be665f','#6b9a74','#9a78ae','#c0934f','#506773','#60432c','#e4dfd0']};
@@ -47,7 +47,7 @@ function normalizeAppearance(input){
 }
 function validateAppearance(input){
  const value=normalizeAppearance(input);
- if(typeof value.characterId!=='string'||!(/^(?:builtin:[a-z]+|user:[a-f0-9-]{36})$/.test(value.characterId))||!Object.hasOwn(expressionLabels,value.expression))invalid();
+ if(typeof value.characterId!=='string'||!(/^(?:builtin:[a-z]+|user:[a-f0-9-]{36})$/.test(value.characterId))||typeof value.expression!=='string'||!(Object.hasOwn(expressionLabels,value.expression)||/^emote-[a-f0-9-]{36}$/.test(value.expression)))invalid();
  return value;
 }
 function characterFor(db,userId,id){
@@ -56,14 +56,17 @@ function characterFor(db,userId,id){
  if(!/^user:[a-f0-9-]{36}$/.test(id||''))return null;
  const row=db.prepare('SELECT id,name FROM player_characters WHERE id=? AND owner_id=?').get(id.slice(5),userId);
  if(!row)return null;
- const expressions={};
- for(const {expression} of db.prepare('SELECT expression FROM character_images WHERE character_id=?').all(row.id))expressions[expression]=`/assets/characters/user/${row.id}/${expression}`;
- return {id,name:row.name,expressions,source:'玩家上傳',appearance:{version:5,characterId:id,expression:'neutral'}};
+ const expressions={},labels={};
+ for(const {expression,label} of db.prepare('SELECT expression,label FROM character_images WHERE character_id=?').all(row.id)){
+  expressions[expression]=`/assets/characters/user/${row.id}/${expression}`;
+  labels[expression]=label||expressionLabels[expression];
+ }
+ return {id,name:row.name,expressions,labels,source:'玩家上傳',appearance:{version:5,characterId:id,expression:'neutral'}};
 }
 function selectedImage(db,userId,input){
  const appearance=validateAppearance(input),character=characterFor(db,userId,appearance.characterId);
  if(!character)invalid();
  const expression=character.expressions[appearance.expression]?appearance.expression:'neutral';
- return {appearance:{...appearance,expression},url:character.expressions[expression]};
+ return {appearance:{...appearance,expression},url:character.expressions[expression],label:character.labels[expression]};
 }
 module.exports={expressionLabels,builtinCharacters,defaults,normalizeAppearance,validateAppearance,characterFor,selectedImage};

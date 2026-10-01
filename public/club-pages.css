@@ -122,6 +122,9 @@
 .editor-actions .page-button{min-width:195px}
 .artist-templates{margin-top:20px;padding-top:18px;border-top:1px solid var(--page-line);color:#bacab2;font-size:13px;line-height:1.65}
 .artist-templates summary{cursor:pointer;color:#e9d7af;font-weight:700}
+.artist-templates .upload-group{margin-top:18px;padding:18px;border:1px solid #53654d;border-radius:10px;background:#142019}
+.artist-templates .upload-group h3{margin:0;color:#f4d19a;font-size:17px}
+.artist-templates .upload-group>p{margin:5px 0 10px;color:#b9c9b1}
 .artist-templates p{margin:12px 0}
 .artist-templates div{display:flex;flex-wrap:wrap;gap:8px}
 .artist-templates a{padding:7px 10px;border:1px solid #617252;border-radius:6px;color:#f6ba75;text-decoration:none}

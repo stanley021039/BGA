@@ -42,6 +42,12 @@ test('room directory shows current join choices and respects game, capacity, and
   const race=(await post('create',admin,{type:'thunder',roomName:'賽車桌'})).body;
   const poker=(await post('create',admin,{type:'poker',roomName:'撲克桌'})).body;
   const majority=(await post('create',admin,{type:'majority',roomName:'派對桌'})).body;
+  const anonymousReconnect=await post('reconnect',null,{code:race.code});
+  assert.equal(anonymousReconnect.status,401);
+  assert.equal((await post('reconnect',guest,{code:race.code})).body.code,'NOT_SEATED');
+  const redirect=await fetch(base+'/race/'+race.code,{redirect:'manual'});
+  assert.equal(redirect.status,302);
+  assert.equal(redirect.headers.get('location'),'/login?next=%2Frace%2F'+race.code);
   let rooms=(await list(guest)).body.rooms;
   assert.equal(rooms.length,3);
   assert.deepEqual(new Set(rooms.map(room=>room.type)),new Set(['thunder','poker','majority']));
@@ -49,6 +55,11 @@ test('room directory shows current join choices and respects game, capacity, and
   assert.ok(rooms.every(room=>!('players' in room)&&!('secret' in room)));
   assert.equal((await post('join',guest,{code:race.code})).status,200);
   assert.equal((await post('join',guest,{code:poker.code})).status,200);
+  const raceBefore=await (await fetch(base+'/api/state?code='+race.code,{headers:{Cookie:guest}})).json();
+  assert.equal((await post('reconnect',guest,{code:race.code})).body.reconnected,true);
+  const raceAfter=await (await fetch(base+'/api/state?code='+race.code,{headers:{Cookie:guest}})).json();
+  assert.equal(raceAfter.me,raceBefore.me);
+  assert.equal(raceAfter.players.length,raceBefore.players.length);
   assert.equal((await post('start',admin,{code:race.code})).status,200);
   assert.equal((await post('start',admin,{code:poker.code})).status,200);
   rooms=(await list(outsider)).body.rooms;
@@ -65,6 +76,7 @@ test('room directory shows current join choices and respects game, capacity, and
   assert.equal(kicked.kicked,true);
   assert.equal(kicked.joinable,false);
   assert.equal((await post('join',guest,{code:race.code})).status,403);
+  assert.equal((await post('reconnect',guest,{code:race.code})).body.code,'KICKED');
   for(let i=0;i<5;i++)assert.equal((await post('bot',admin,{code:poker.code})).status,i<3?200:400);
   const full=(await list(observer)).body.rooms.find(room=>room.code===poker.code);
   assert.equal(full.playerCount,6);
