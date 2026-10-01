@@ -14,11 +14,11 @@ const {SubmissionService}=require('./integrations/github/submissions');
 const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,characterFor,selectedImage}=require('./profiles/appearance');
 const {createCharacter,setExpression,addExpression}=require('./profiles/uploads');
 function createApp(config){
- const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map();
+ const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map();
  const withSocial=(room,view)=>{
-  const social=socialEvents.get(room.code)||[],recent=new Map(),now=Date.now();
-  for(const event of social)if(event.kind==='expression'&&now-event.at<5000)recent.set(event.playerId,event.image);
-  return {...view,players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social};
+  const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
+  for(const event of expressions)recent.set(event.playerId,event.image);
+  return {...view,players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir);
@@ -92,6 +92,10 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
    const message=String(data.message||'').trim();
    if(!message||message.length>160)throw new HttpError(400,'INVALID_MESSAGE','留言需為 1–160 字');
    event={id:randomBytes(8).toString('hex'),kind:'message',name:user.display_name,message,at:now};
+  }else if(data.kind==='barrage'){
+   const message=typeof data.message==='string'?data.message.trim():'';
+   if(!message||[...message].length>40||/[\u0000-\u001f\u007f]/.test(message))throw new HttpError(400,'INVALID_BARRAGE','文字彈幕需為 1–40 字，且不能換行');
+   event={id:randomBytes(8).toString('hex'),kind:'barrage',playerId:p.id,name:user.display_name,message,at:now};
   }else if(data.kind==='expression'){
    const saved=user.appearance?JSON.parse(user.appearance):defaults;
    const selected=selectedImage(db,user.id,{...normalizeAppearance(saved),expression:data.expression});
@@ -99,7 +103,8 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
    event={id:randomBytes(8).toString('hex'),kind:'expression',playerId:p.id,name:user.display_name,expression:data.expression,label:selected.label,image:selected.url,at:now};
   }else throw new HttpError(400,'INVALID_SOCIAL_KIND','不支援的互動');
   socialRate.set(rateKey,now);
-  const events=socialEvents.get(room.code)||[];events.push(event);if(events.length>50)events.shift();socialEvents.set(room.code,events);
+  const events=data.kind==='message'?socialEvents:data.kind==='expression'?expressionEvents:barrageEvents;
+  const roomEvents=events.get(room.code)||[];roomEvents.push(event);if(roomEvents.length>50)roomEvents.shift();events.set(room.code,roomEvents);
   return send(withSocial(room,room.view(p.id)));
  }
  if(url.pathname==='/api/start'&&room.host!==p.id)throw new HttpError(403,'HOST_ONLY','只有房主可以開始');
@@ -126,7 +131,7 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
   if(closed)throw Error('Application has been closed');
   if(server.listening)return server.address();
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
-  stopScheduler=startRoomScheduler({rooms,history,onDelete:code=>{seats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);}});
+  stopScheduler=startRoomScheduler({rooms,history,onDelete:code=>{seats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);}});
   submissions.recover();
   return server.address();
  }
