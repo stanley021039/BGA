@@ -52,11 +52,12 @@ class GiftRoom{
  }
  newRound(){
   const players=this.activePlayers();
+  const pool=[...GIFTS,...(this.giftProvider?.()||[])];
   this.round++;this.dealerId=players[(this.round-1)%players.length].id;
   this.gifts=[];
   while(this.gifts.length<players.length+1){
-   let available=GIFTS.filter(gift=>!this.usedGiftIds.includes(gift.id)&&!this.gifts.some(chosen=>chosen.id===gift.id));
-   if(!available.length){this.usedGiftIds=this.gifts.map(gift=>gift.id);available=GIFTS.filter(gift=>!this.usedGiftIds.includes(gift.id));}
+   let available=pool.filter(gift=>!this.usedGiftIds.includes(gift.id)&&!this.gifts.some(chosen=>chosen.id===gift.id));
+   if(!available.length){this.usedGiftIds=this.gifts.map(gift=>gift.id);available=pool.filter(gift=>!this.usedGiftIds.includes(gift.id));}
    const gift=available[this.rng(available.length)];this.gifts.push(gift);this.usedGiftIds.push(gift.id);
   }
   this.assignments={};this.rankings={};this.result=null;this.phase='giving';

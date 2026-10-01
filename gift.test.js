@@ -7,6 +7,35 @@ const {GiftRoom}=require('./src/games/gift');
 const {createApp}=require('./src/app');
 const {openDatabase}=require('./src/db/index');
 const {createAuth}=require('./src/auth/index');
+const {GiftStore}=require('./src/games/gift-store');
+const {GIFTS}=require('./src/games/gift-catalog');
+
+test('illustrated default gifts have bundled artwork',()=>{
+ const illustrated=GIFTS.filter(gift=>gift.image);
+ assert.equal(illustrated.length,15);
+ for(const gift of illustrated)assert.ok(fs.existsSync(path.join(__dirname,'public',gift.image.slice(1))));
+});
+
+test('custom gifts persist in SQLite and become eligible for the next draw',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-gift-catalog-'));
+ const file=path.join(root,'app.sqlite');
+ try{
+  let db=openDatabase(file),store=new GiftStore(db);
+  const user={id:'test-user',display_name:'測試玩家'};
+  db.prepare("INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)").run(user.id,'tester',user.display_name,'unused','member',new Date().toISOString());
+  const gift=store.add(user,{title:' 一張雲端野餐地圖 ',category:'奇想'});
+  assert.equal(gift.title,'一張雲端野餐地圖');assert.equal(gift.image,null);
+  assert.throws(()=>store.add(user,{title:'一張雲端野餐地圖',category:'奇想'}),/同名/);
+  assert.throws(()=>store.add(user,{title:'無效',category:'未知'}),/分類/);
+  db.close();db=openDatabase(file);store=new GiftStore(db);
+  assert.equal(store.list()[0].id,gift.id);
+  const room=new GiftRoom('CAT123','共編房',n=>n-1);
+  room.giftProvider=()=>store.list();
+  for(const name of ['甲','乙','丙'])room.add(name);
+  room.start();assert.ok(room.gifts.some(item=>item.id===gift.id));
+  db.close();
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
 
 test('gift rounds keep choices secret, score both tracks, and finish only after a complete round',()=>{
  const room=new GiftRoom('ABC123','送禮達人',()=>0);
@@ -80,6 +109,16 @@ test('authenticated players can create, join and reconnect to a gift room withou
   const host=(await post('auth/login',null,{username:'giftadmin',password:'test-password-123'})).cookie;
   const register=async username=>{const invite=await post('admin/invites',host,{days:1});return (await post('auth/register',null,{username,displayName:username,password:'test-password-123',confirmPassword:'test-password-123',invite:invite.body.code})).cookie;};
   const friend=await register('giftfriend'),other=await register('giftother'),outsider=await register('giftoutside');
+  const imageBase64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/rv0AAAAASUVORK5CYII=';
+  const custom=await post('community/gifts',friend,{title:'朋友送的星光瓶',category:'奇想',image:{mime:'image/png',base64:imageBase64}});
+  assert.equal(custom.status,200);assert.equal(custom.body.author,'giftfriend');
+  const giftList=await (await fetch(base+'/api/community/gifts',{headers:{Cookie:host}})).json();
+  assert.ok(giftList.gifts.some(gift=>gift.id===custom.body.id&&gift.image===custom.body.image));
+  const imageResponse=await fetch(base+custom.body.image,{headers:{Cookie:host}});
+  assert.equal(imageResponse.status,200);assert.equal(imageResponse.headers.get('content-type'),'image/png');
+  assert.equal(Buffer.from(await imageResponse.arrayBuffer()).toString('base64'),imageBase64);
+  assert.equal((await post('community/gifts',friend,{title:'壞圖',category:'奇想',image:{mime:'image/png',base64:'AA=='}})).status,400);
+  assert.equal((await post('community/gifts',friend,{title:'朋友送的星光瓶',category:'奇想'})).status,409);
   const created=await post('create',host,{type:'gift',roomName:'送禮測試'});
   assert.equal(created.status,200);assert.equal(created.body.type,'gift');
   const code=created.body.code;
@@ -87,6 +126,7 @@ test('authenticated players can create, join and reconnect to a gift room withou
   assert.equal(unauthorized.status,302);
   assert.equal((await fetch(base+'/gift/'+code,{headers:{Cookie:host}})).status,200);
   assert.equal((await fetch(base+'/gift.js',{headers:{Cookie:host}})).status,200);
+  assert.equal((await fetch(base+GIFTS.find(gift=>gift.image).image,{headers:{Cookie:host}})).status,200);
   assert.equal((await post('join',friend,{code})).status,200);
   assert.equal((await post('join',other,{code})).status,200);
   const getState=async (cookie=host)=>(await (await fetch(base+'/api/state?code='+code,{headers:{Cookie:cookie}})).json());

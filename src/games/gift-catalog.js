@@ -6,8 +6,17 @@ const categories={
   冒險:['潛水尋找沉船寶藏','穿越山谷的高空滑索','在極光下露營','獨自駕駛帆船一天','走進火山地底的導覽','與專家追蹤野生鯨魚','在古堡解開一場實境謎題','從高空跳傘看海岸','騎單車翻越一座山','在沙漠尋找星星','夜間探訪熱帶雨林','搭雪橇穿越冰原','去深海研究站住一晚','在峽谷裡學攀岩','參加神祕城市尋寶賽','與朋友完成一條長途步道']
 };
 
-const GIFTS=Object.entries(categories).flatMap(([category,titles],group)=>titles.map((title,index)=>({
- id:`g${group+1}-${String(index+1).padStart(2,'0')}`,category,title
-})));
+// Selected illustrations from Kenney Generic Items (CC0). Gifts without a close
+// visual match deliberately remain text-only rather than using misleading art.
+const illustrations={
+ 'g1-01':156,'g1-04':124,'g1-07':154,'g1-08':149,'g1-09':126,
+ 'g1-13':84,'g1-14':35,'g2-04':116,'g2-08':118,'g2-11':45,
+ 'g3-03':33,'g3-05':84,'g3-08':53,'g3-10':45,'g4-07':154
+};
+const GIFTS=Object.entries(categories).flatMap(([category,titles],group)=>titles.map((title,index)=>{
+ const id=`g${group+1}-${String(index+1).padStart(2,'0')}`;
+ const number=illustrations[id];
+ return {id,category,title,...(number?{image:`/assets/gifts/kenney/genericItem_color_${String(number).padStart(3,'0')}.png`}:{})};
+}));
 
-module.exports={GIFTS};
+module.exports={GIFTS,CATEGORIES:Object.keys(categories)};

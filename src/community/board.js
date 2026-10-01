@@ -2,7 +2,7 @@ const crypto=require('node:crypto');
 const {transaction}=require('../db/index');
 const {HttpError}=require('../http/errors');
 
-const games=new Set(['general','majority','thunder','poker']);
+const games=new Set(['general','majority','thunder','poker','gift']);
 function required(value,max,label){if(typeof value!=='string'||!value.trim()||value.trim().length>max)throw new HttpError(400,'INVALID_CONTENT',`${label}需為 1–${max} 字`);return value.trim();}
 
 class BoardStore{
