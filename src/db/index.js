@@ -7,7 +7,7 @@ function openDatabase(file){
  const db=new DatabaseSync(file,{timeout:5000});
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
- if(version>2)throw Error(`Unsupported database version ${version}`);
+ if(version>3)throw Error(`Unsupported database version ${version}`);
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -33,6 +33,18 @@ function openDatabase(file){
     CREATE INDEX board_comments_issue ON board_comments(issue_id);
     CREATE INDEX submissions_user ON submissions(user_id);
     PRAGMA user_version=2;
+   `);
+   db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<3){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    CREATE TABLE player_characters(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,created_at TEXT NOT NULL);
+    CREATE TABLE character_images(character_id TEXT NOT NULL REFERENCES player_characters(id) ON DELETE CASCADE,expression TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,PRIMARY KEY(character_id,expression));
+    CREATE INDEX player_characters_owner ON player_characters(owner_id);
+    PRAGMA user_version=3;
    `);
    db.exec('COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}

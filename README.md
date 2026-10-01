@@ -8,7 +8,7 @@
 
 留言板的新主留言會建立 `stanley021039/BGA` 的 GitHub Issue；回覆與管理者狀態變更也會送到同一張 Issue。正式服務須在伺服器的 `.env` 或環境變數設定 `GITHUB_TOKEN`，權限至少包含該倉庫的 Issues 讀寫。GitHub 確認成功後網站才顯示送出成功；結果不明會保留待確認提交，管理者可在 `/admin` 查核。舊版留言會匯入 SQLite，但不自動回補 GitHub。
 
-會員可到 `/profile` 編輯靜態 2D 角色；保存後角色圖會顯示在遊戲座位。使用 Windows 開發與 Linux 部署可共用程式碼，但兩邊需各自安裝相同 Node.js 主版本。正式部署若讓帳密經公開網路傳輸，應在服務前配置 HTTPS；`PUBLIC_URL` 不會自行啟用 HTTPS。
+會員可到 `/profile` 選用 10 位圖片角色，切換角色可用的表情或動畫，也能上傳自己的 PNG、GIF、WebP 角色與表情。遊戲座位顯示保存的角色圖片，未設定者使用預設角色。三款遊戲共用固定側欄，顯示角色、回合提示、表情、房間留言與返回大廳入口；遊戲畫面仍各自實作。規格見 [圖片角色](docs/CHARACTER-ASSET-TEMPLATE.md)與[遊戲共用介面](docs/GAME-SHELL.md)。免費素材來源見 [素材來源備忘](docs/GAME-ASSET-SOURCES.md)。使用 Windows 開發與 Linux 部署可共用程式碼，但兩邊需各自安裝相同 Node.js 主版本。正式部署若讓帳密經公開網路傳輸，應在服務前配置 HTTPS；`PUBLIC_URL` 不會自行啟用 HTTPS。
 
 ## 目前包含的遊戲
 

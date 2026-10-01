@@ -1,21 +1,69 @@
 const {HttpError}=require('../http/errors');
 
-const parts={hair:['short','long','curly','bun'],face:['round','oval','square'],outfit:['hoodie','jacket','dress','shirt']};
-const colors={skin:['#f6d6b8','#dca77c','#b87955','#8b583e','#5d392d'],hair:['#2b2020','#60432c','#ab7043','#d3ae70','#5a4b72','#a74c55'],outfit:['#557bb5','#be665f','#6b9a74','#9a78ae','#c0934f','#506773']};
-const defaults={version:1,hair:'short',face:'round',outfit:'hoodie',skinColor:colors.skin[0],hairColor:colors.hair[0],outfitColor:colors.outfit[0]};
-
+const expressionLabels={neutral:'平常',happy:'開心',sad:'難過',surprised:'驚訝',thinking:'思考',angry:'生氣'};
+const slugs=['traveler','woods','mage','knight','sunny','harbor','bloom','ember','starlight','meadow'];
+const names=['藍衣冒險者','綠衣旅人','城市旅人','街頭夥伴','小機器人','綠皮殭屍','飛躍少年','敏捷女孩','綠衫玩家','荒野士兵'];
+const builtinCharacters=slugs.map((slug,index)=>{
+ const expressions={};
+ for(const expression of Object.keys(expressionLabels)){
+  if(index>=6&&['surprised','thinking'].includes(expression))continue;
+  const extension=expression==='happy'?'gif':'png';
+  expressions[expression]=`/assets/characters/${slug}-${expression}.${extension}`;
+ }
+ return {id:`builtin:${slug}`,name:names[index],expressions,source:'Kenney',appearance:{version:5,characterId:`builtin:${slug}`,expression:'neutral'}};
+});
+const defaults={...builtinCharacters[0].appearance};
+const legacyColors={skin:['#f6d6b8','#dca77c','#b87955','#8b583e','#5d392d','#9ab483','#a6acd0'],hair:['#2b2020','#60432c','#ab7043','#d3ae70','#5a4b72','#a74c55'],clothing:['#557bb5','#be665f','#6b9a74','#9a78ae','#c0934f','#506773','#60432c','#e4dfd0']};
+const oldDesigns=[
+ ['traveler','#f6d6b8','#2b2020','#557bb5','#506773','#60432c'],
+ ['woods','#dca77c','#60432c','#6b9a74','#60432c','#60432c'],
+ ['mage','#f6d6b8','#5a4b72','#9a78ae','#506773','#60432c'],
+ ['knight','#dca77c','#2b2020','#506773','#506773','#60432c'],
+ ['sunny','#f6d6b8','#d3ae70','#be665f','#e4dfd0','#60432c'],
+ ['harbor','#b87955','#60432c','#557bb5','#506773','#60432c'],
+ ['bloom','#dca77c','#ab7043','#6b9a74','#be665f','#60432c'],
+ ['ember','#8b583e','#2b2020','#be665f','#60432c','#60432c'],
+ ['starlight','#a6acd0','#5a4b72','#506773','#9a78ae','#60432c'],
+ ['meadow','#9ab483','#a74c55','#c0934f','#6b9a74','#60432c']
+];
+function invalid(){throw new HttpError(400,'INVALID_APPEARANCE','角色設定不正確');}
+function legacyId(input){
+ const version=Number(input.version);
+ const skin=input.skinColor,hair=input.hairColor,shirt=version===1?input.outfitColor:input.topColor,pants=input.bottomColor,boots=input.shoeColor;
+ if(!legacyColors.skin.includes(skin)||!legacyColors.hair.includes(hair)||!legacyColors.clothing.includes(shirt))invalid();
+ if(pants!==undefined&&!legacyColors.clothing.includes(pants))invalid();
+ if(boots!==undefined&&!legacyColors.clothing.includes(boots))invalid();
+ if(version===1&&!['hoodie','jacket','dress','shirt'].includes(input.outfit))invalid();
+ const score=design=>Number(design[1]===skin)*5+Number(design[2]===hair)*2+Number(design[3]===shirt)*4+Number(design[4]===pants)*2+Number(design[5]===boots);
+ return 'builtin:'+oldDesigns.reduce((best,design)=>score(design)>score(best)?design:best,oldDesigns[0])[0];
+}
+function normalizeAppearance(input){
+ if(!input||typeof input!=='object'||Array.isArray(input))invalid();
+ const version=Number(input.version);
+ if(version===5)return {version:5,characterId:input.characterId,expression:input.expression};
+ if(version===4)return {version:5,characterId:input.skinId,expression:'neutral'};
+ if([1,2,3].includes(version))return {version:5,characterId:legacyId(input),expression:'neutral'};
+ invalid();
+}
 function validateAppearance(input){
- if(!input||typeof input!=='object'||Array.isArray(input)||Number(input.version)!==1)throw new HttpError(400,'INVALID_APPEARANCE','角色資料版本不正確');
- for(const key of Object.keys(parts))if(!parts[key].includes(input[key]))throw new HttpError(400,'INVALID_APPEARANCE','角色部件不正確');
- for(const [key,palette] of [['skinColor',colors.skin],['hairColor',colors.hair],['outfitColor',colors.outfit]])if(!palette.includes(input[key]))throw new HttpError(400,'INVALID_APPEARANCE','角色顏色不正確');
- return {version:1,hair:input.hair,face:input.face,outfit:input.outfit,skinColor:input.skinColor,hairColor:input.hairColor,outfitColor:input.outfitColor};
+ const value=normalizeAppearance(input);
+ if(typeof value.characterId!=='string'||!(/^(?:builtin:[a-z]+|user:[a-f0-9-]{36})$/.test(value.characterId))||!Object.hasOwn(expressionLabels,value.expression))invalid();
+ return value;
 }
-
-function renderAppearance(value){
- const a=validateAppearance(value),face={round:'<ellipse cx="80" cy="69" rx="31" ry="35"/>',oval:'<ellipse cx="80" cy="70" rx="27" ry="39"/>',square:'<rect x="50" y="35" width="60" height="72" rx="17"/>'}[a.face];
- const outfit={hoodie:'<path d="M23 160v-26q4-32 43-37h28q39 5 43 37v26z"/><path d="M61 103q19 28 38 0" fill="none" stroke="#ffffff66" stroke-width="4"/>',jacket:'<path d="M20 160v-27q7-33 45-36h30q38 3 45 36v27z"/><path d="M80 101v59" fill="none" stroke="#ffffff99" stroke-width="4"/>',dress:'<path d="M48 102h64l32 58H16z"/>',shirt:'<path d="M17 160v-42l37-20 26 15 26-15 37 20v42z"/>'}[a.outfit];
- const hair={short:'<path d="M48 62q-5-47 33-49 42-2 32 49-9-25-21-26-10 12-44 26z"/>',long:'<path d="M47 60q-4-46 34-47 41-1 34 48l6 62-23 5-2-77q-12-10-30 0l-3 77-23-5z"/>',curly:'<path d="M42 63q-12-12 1-22-2-17 16-20 9-17 26-11 17-8 29 8 20 1 18 20 14 10 1 24l-16 5q0-28-18-29-22 12-41 4l-1 25z"/>',bun:'<circle cx="81" cy="13" r="17"/><path d="M46 65q-4-47 36-48 40-1 34 48-8-25-18-28-13 11-52 28z"/>'}[a.hair];
- return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="角色外觀"><rect width="160" height="160" rx="25" fill="#ede5d6"/><path d="M48 105q32 16 64 0v55H48z" fill="${a.skinColor}"/><g fill="${a.outfitColor}">${outfit}</g><g fill="${a.skinColor}">${face}</g><path d="M65 72h1m28 0h1" stroke="#332a29" stroke-width="5" stroke-linecap="round"/><path d="M72 87q8 7 16 0" fill="none" stroke="#8a514b" stroke-width="2.5" stroke-linecap="round"/><g fill="${a.hairColor}">${hair}</g></svg>`;
+function characterFor(db,userId,id){
+ const builtin=builtinCharacters.find(character=>character.id===id);
+ if(builtin)return builtin;
+ if(!/^user:[a-f0-9-]{36}$/.test(id||''))return null;
+ const row=db.prepare('SELECT id,name FROM player_characters WHERE id=? AND owner_id=?').get(id.slice(5),userId);
+ if(!row)return null;
+ const expressions={};
+ for(const {expression} of db.prepare('SELECT expression FROM character_images WHERE character_id=?').all(row.id))expressions[expression]=`/assets/characters/user/${row.id}/${expression}`;
+ return {id,name:row.name,expressions,source:'玩家上傳',appearance:{version:5,characterId:id,expression:'neutral'}};
 }
-
-module.exports={parts,colors,defaults,validateAppearance,renderAppearance};
+function selectedImage(db,userId,input){
+ const appearance=validateAppearance(input),character=characterFor(db,userId,appearance.characterId);
+ if(!character)invalid();
+ const expression=character.expressions[appearance.expression]?appearance.expression:'neutral';
+ return {appearance:{...appearance,expression},url:character.expressions[expression]};
+}
+module.exports={expressionLabels,builtinCharacters,defaults,normalizeAppearance,validateAppearance,characterFor,selectedImage};

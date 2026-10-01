@@ -9,9 +9,15 @@ const {createAuth}=require('./auth/index');
 const {BoardStore}=require('./community/board');
 const {createGitHubClient}=require('./integrations/github/client');
 const {SubmissionService}=require('./integrations/github/submissions');
-const {parts,colors,defaults,validateAppearance,renderAppearance}=require('./profiles/appearance');
+const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,selectedImage}=require('./profiles/appearance');
+const {createCharacter,setExpression}=require('./profiles/uploads');
 function createApp(config){
- const rooms=new Map(),seats=new Map(),kickedUsers=new Map();
+ const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),socialRate=new Map();
+ const withSocial=(room,view)=>{
+  const social=socialEvents.get(room.code)||[],recent=new Map(),now=Date.now();
+  for(const event of social)if(event.kind==='expression'&&now-event.at<5000)recent.set(event.playerId,event.image);
+  return {...view,players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social};
+ };
  const history=new HistoryStore(config.historyDir);
  let community,db,auth,board,submissions;
  try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}));}
@@ -26,17 +32,30 @@ function createApp(config){
 const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');try{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname.startsWith('/api/')){
- res.setHeader('Content-Type','application/json; charset=utf-8');let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');let body='';for await(const chunk of req){body+=chunk;if(body.length>(url.pathname==='/api/community/avatars'?450000:8192))throw Error('請求過大');}data=JSON.parse(body||'{}');}
+ res.setHeader('Content-Type','application/json; charset=utf-8');let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
  const send=x=>res.end(JSON.stringify(x));
  if(url.pathname==='/api/auth/login'&&req.method==='POST'){limitAuth(req);return send(await auth.login(data,res));}
  if(url.pathname==='/api/auth/register'&&req.method==='POST'){limitAuth(req);return send(await auth.register(data,res));}
  if(url.pathname==='/api/auth/reset'&&req.method==='POST'){limitAuth(req);await auth.resetPassword(data);return send({ok:true});}
  if(url.pathname==='/api/auth/logout'&&req.method==='POST'){auth.logout(req,res);return send({ok:true});}
  const user=auth.requireUser(req);
- if(url.pathname==='/api/auth/me'&&req.method==='GET')return send(auth.publicUser(user));
- if(url.pathname==='/api/profile/options'&&req.method==='GET')return send({parts,colors,defaults});
- if(url.pathname==='/api/profile/preview.svg'&&req.method==='GET'){res.setHeader('Content-Type','image/svg+xml');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(renderAppearance(Object.fromEntries(url.searchParams)));}
- if(url.pathname==='/api/profile/appearance'&&req.method==='POST'){const appearance=validateAppearance(data);db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify(appearance),user.id);for(const room of rooms.values()){const playerId=seats.get(room.code)?.get(user.id);const player=room.players.find(p=>p.id===playerId);if(player)player.avatar=`/avatars/${user.id}.svg`;}return send({appearance});}
+ if(url.pathname==='/api/auth/me'&&req.method==='GET'){const me=auth.publicUser(user);if(me.appearance)me.appearance=normalizeAppearance(me.appearance);return send(me);}
+ if(url.pathname==='/api/profile/options'&&req.method==='GET'){
+  const owned=db.prepare('SELECT id,name FROM player_characters WHERE owner_id=? ORDER BY created_at DESC').all(user.id).map(row=>{
+   const expressions={};for(const image of db.prepare('SELECT expression FROM character_images WHERE character_id=?').all(row.id))expressions[image.expression]=`/assets/characters/user/${row.id}/${image.expression}`;
+   return {id:'user:'+row.id,name:row.name,source:'你的上傳',expressions,appearance:{version:5,characterId:'user:'+row.id,expression:'neutral'}};
+  });
+  return send({defaults,expressionLabels,characters:[...builtinCharacters,...owned]});
+ }
+ if(url.pathname==='/api/profile/characters'&&req.method==='POST'){limitAccount(user);return send(createCharacter(db,user.id,data));}
+ const expressionUpload=url.pathname.match(/^\/api\/profile\/characters\/([a-f0-9-]{36})\/expressions$/);
+ if(expressionUpload&&req.method==='POST'){limitAccount(user);return send(setExpression(db,user.id,expressionUpload[1],data));}
+ if(url.pathname==='/api/profile/appearance'&&req.method==='POST'){
+  const {appearance}=selectedImage(db,user.id,data);
+  db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify(appearance),user.id);
+  for(const room of rooms.values()){const playerId=seats.get(room.code)?.get(user.id);const player=room.players.find(p=>p.id===playerId);if(player)player.avatar=`/characters/${user.id}`;}
+  return send({appearance});
+ }
  if(url.pathname.startsWith('/api/submissions/')&&req.method==='GET')return send(submissions.visible(url.pathname.split('/')[3],user));
  if(url.pathname.startsWith('/api/admin/')){
   if(user.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');
@@ -49,18 +68,36 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
   if(url.pathname==='/api/admin/users/disable'&&req.method==='POST'){auth.disableUser(user,data.userId,!!data.disabled);return send({ok:true});}
   throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  }
- if(url.pathname.startsWith('/api/community/')){const resource=url.pathname.split('/')[3];if(req.method==='GET'){if(resource==='avatars')return send(community.avatars());if(resource==='issues')return send(board.list());if(resource==='questions')return send({topics:require('./games/majority-questions').TOPICS,questions:[...require('./games/majority-questions').QUESTIONS,...community.data.questions]});}if(req.method==='POST'){limitCommunity(req);limitAccount(user);if(resource==='avatars')return send(community.upload(data));if(resource==='questions')return send(community.question({...data,name:user.display_name}));if(resource==='issues'){const kind=data.id?data.action==='comment'?'comment':'status':'issue';const result=await submissions.submit(kind,data,user);if(result.state==='needs_review')res.statusCode=202;else if(result.state==='failed')res.statusCode=502;return send(result);}}throw Error('未知共用資源');}
+ if(url.pathname.startsWith('/api/community/')){const resource=url.pathname.split('/')[3];if(req.method==='GET'){if(resource==='issues')return send(board.list());if(resource==='questions')return send({topics:require('./games/majority-questions').TOPICS,questions:[...require('./games/majority-questions').QUESTIONS,...community.data.questions]});}if(req.method==='POST'){limitCommunity(req);limitAccount(user);if(resource==='questions')return send(community.question({...data,name:user.display_name}));if(resource==='issues'){const kind=data.id?data.action==='comment'?'comment':'status':'issue';const result=await submissions.submit(kind,data,user);if(result.state==='needs_review')res.statusCode=202;else if(result.state==='failed')res.statusCode=502;return send(result);}}throw new HttpError(404,'NOT_FOUND','找不到請求路徑');}
  if(url.pathname==='/api/history')return send(history.list());
  if(url.pathname.startsWith('/api/history/'))return send(history.read(url.pathname.split('/')[3]));
  if(url.pathname==='/api/info'){const addresses=Object.values(os.networkInterfaces()).flat().filter(x=>x.family==='IPv4'&&!x.internal).map(x=>`${protocol}://${x.address}:${port}`);const preferred=config.publicUrl||addresses.find(a=>a.includes('://26.'))||null;return send({preferred,addresses:config.publicUrl?[config.publicUrl,...addresses.filter(a=>a!==config.publicUrl)]:addresses});}
- if(url.pathname==='/api/create'&&req.method==='POST'){if(rooms.size>=100)throw Error('房間數已達上限');let code;do{code=randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));const thunder=data.type==='thunder',majority=data.type==='majority';const room=new (majority?MajorityRoom:thunder?ThunderRoom:Room)(code,String(data.roomName||(majority?'同頻俱樂部':thunder?'末路狂飆好友局':'深夜好友局')).slice(0,24));if(majority)Object.defineProperty(room,'questionProvider',{value:()=>community.data.questions});history.attach(room);const p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=user.appearance?`/avatars/${user.id}.svg`:community.avatar(data.avatar);rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});}
- if(!['/api/join','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
+ if(url.pathname==='/api/create'&&req.method==='POST'){if(rooms.size>=100)throw Error('房間數已達上限');let code;do{code=randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));const thunder=data.type==='thunder',majority=data.type==='majority';const room=new (majority?MajorityRoom:thunder?ThunderRoom:Room)(code,String(data.roomName||(majority?'同頻俱樂部':thunder?'末路狂飆好友局':'深夜好友局')).slice(0,24));if(majority)Object.defineProperty(room,'questionProvider',{value:()=>community.data.questions});history.attach(room);const p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});}
+ if(!['/api/join','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
- if(url.pathname==='/api/join'&&req.method==='POST'){const previous=seats.get(room.code)?.get(user.id);if(previous)return send({code:room.code,type:room.type||'poker'});const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=user.appearance?`/avatars/${user.id}.svg`:community.avatar(data.avatar);seats.get(room.code).set(user.id,p.id);return send({code:room.code,type:room.type||'poker'});}
+ if(url.pathname==='/api/join'&&req.method==='POST'){const previous=seats.get(room.code)?.get(user.id);if(previous)return send({code:room.code,type:room.type||'poker'});const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=`/characters/${user.id}`;seats.get(room.code).set(user.id,p.id);return send({code:room.code,type:room.type||'poker'});}
  const playerId=seats.get(room.code)?.get(user.id);const p=room.players.find(p=>p.id===playerId&&!p.bot);if(!p)throw new HttpError(403,'NOT_SEATED','尚未加入此房間');p.lastSeen=Date.now();
- if(url.pathname==='/api/state')return send(room.view(p.id));
+ if(url.pathname==='/api/state')return send(withSocial(room,room.view(p.id)));
  if(req.method!=='POST')throw Error('不支援的請求');
+ if(url.pathname==='/api/social'){
+  const now=Date.now(),rateKey=user.id+':'+String(data.kind),last=socialRate.get(rateKey)||0;
+  if(now-last<1500)throw new HttpError(429,'SOCIAL_RATE_LIMIT','請稍後再傳送');
+  let event;
+  if(data.kind==='message'){
+   const message=String(data.message||'').trim();
+   if(!message||message.length>160)throw new HttpError(400,'INVALID_MESSAGE','留言需為 1–160 字');
+   event={id:randomBytes(8).toString('hex'),kind:'message',name:user.display_name,message,at:now};
+  }else if(data.kind==='expression'){
+   const saved=user.appearance?JSON.parse(user.appearance):defaults;
+   const selected=selectedImage(db,user.id,{...normalizeAppearance(saved),expression:data.expression});
+   if(selected.appearance.expression!==data.expression)throw new HttpError(400,'INVALID_EXPRESSION','這個角色沒有此表情');
+   event={id:randomBytes(8).toString('hex'),kind:'expression',playerId:p.id,name:user.display_name,expression:data.expression,image:selected.url,at:now};
+  }else throw new HttpError(400,'INVALID_SOCIAL_KIND','不支援的互動');
+  socialRate.set(rateKey,now);
+  const events=socialEvents.get(room.code)||[];events.push(event);if(events.length>50)events.shift();socialEvents.set(room.code,events);
+  return send(withSocial(room,room.view(p.id)));
+ }
  if(url.pathname==='/api/start'&&room.host!==p.id)throw new HttpError(403,'HOST_ONLY','只有房主可以開始');
  history.transact(room,{action:url.pathname.slice(5),source:'player',actor:p.id,input:data},()=>{
  if(url.pathname==='/api/action')room.act(p.id,data.action,['thunder','majority'].includes(room.type)?data:data.amount);
@@ -70,11 +107,13 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
  else if(url.pathname==='/api/bot'){if(room.host!==p.id)throw Error('只有房主可以加入電腦');room.add(['River','Clover','Atlas','Nova','Juno'][room.players.filter(p=>p.bot).length%5],true);}
  else if(url.pathname==='/api/rebuy'){if(['thunder','majority'].includes(room.type)||!['waiting','showdown'].includes(room.phase)||p.stack>0)throw Error('籌碼用完且本局結束後才能補充');p.stack=2000;}
  else throw Error('未知請求');
- });return send(room.view(p.id));
+ });return send(withSocial(room,room.view(p.id)));
  }
- if(url.pathname.startsWith('/uploads/avatars/')){const file=url.pathname.slice('/uploads/avatars/'.length);if(!/^[a-f0-9-]{36}\.(png|jpeg|webp)$/.test(file)||!community.data.avatars.some(a=>a.url===url.pathname)){res.writeHead(404);return res.end();}res.setHeader('Content-Type','image/'+file.split('.').pop());res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(community.avatarDir,file)));}
- const avatarId=url.pathname.match(/^\/avatars\/([a-f0-9-]{36})\.svg$/)?.[1];if(avatarId){auth.requireUser(req);const appearance=db.prepare('SELECT appearance FROM users WHERE id=? AND disabled=0').get(avatarId)?.appearance;if(!appearance)throw new HttpError(404,'AVATAR_NOT_FOUND','找不到角色外觀');res.setHeader('Content-Type','image/svg+xml');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(renderAppearance(JSON.parse(appearance)));}
- const files={'/profile':'profile.html','/profile.js':'profile.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/avatar-picker.js':'avatar-picker.js','/avatar-picker.css':'avatar-picker.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/room-host.js':'room-host.js','/room-host.css':'room-host.css'};const roomPath=url.pathname.match(/^\/(race|poker|majority)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
+ const media=url.pathname.match(/^\/assets\/characters\/user\/([a-f0-9-]{36})\/(neutral|happy|sad|surprised|thinking|angry)$/);
+ if(media){auth.requireUser(req);const row=db.prepare('SELECT character_images.mime,character_images.bytes FROM character_images JOIN player_characters ON player_characters.id=character_images.character_id JOIN users ON users.id=player_characters.owner_id WHERE character_id=? AND expression=? AND users.disabled=0').get(media[1],media[2]);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',row.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(row.bytes);}
+ if(url.pathname.startsWith('/assets/characters/')){auth.requireUser(req);const asset=builtinCharacters.flatMap(character=>Object.values(character.expressions)).find(value=>value===url.pathname);if(!asset)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',asset.endsWith('.gif')?'image/gif':'image/png');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(__dirname,'..','public',asset)));}
+ const characterId=url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];if(characterId){auth.requireUser(req);const record=db.prepare('SELECT appearance FROM users WHERE id=? AND disabled=0').get(characterId);if(!record)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到角色外觀');const selected=selectedImage(db,characterId,record.appearance?JSON.parse(record.appearance):defaults);const userMedia=selected.url.match(/^\/assets\/characters\/user\/([a-f0-9-]{36})\/(neutral|happy|sad|surprised|thinking|angry)$/);let bytes,mime;if(userMedia){const row=db.prepare('SELECT mime,bytes FROM character_images WHERE character_id=? AND expression=?').get(userMedia[1],userMedia[2]);bytes=row.bytes;mime=row.mime;}else{bytes=fs.readFileSync(path.join(__dirname,'..','public',selected.url));mime=selected.url.endsWith('.gif')?'image/gif':'image/png';}res.setHeader('Content-Type',mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(bytes);}
+ const files={'/profile':'profile.html','/profile.js':'profile.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/room-host.js':'room-host.js','/room-host.css':'room-host.css','/game-shell.js':'game-shell.js','/game-shell.css':'game-shell.css'};const roomPath=url.pathname.match(/^\/(race|poker|majority)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);
@@ -83,7 +122,7 @@ const handler=async(req,res)=>{res.setHeader('Cache-Control','no-store');res.set
   if(closed)throw Error('Application has been closed');
   if(server.listening)return server.address();
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
-  stopScheduler=startRoomScheduler({rooms,history,onDelete:code=>{seats.delete(code);kickedUsers.delete(code);}});
+  stopScheduler=startRoomScheduler({rooms,history,onDelete:code=>{seats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);}});
   submissions.recover();
   return server.address();
  }
