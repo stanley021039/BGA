@@ -132,6 +132,8 @@ test('authenticated players can create, join and reconnect to a gift room withou
   const getState=async (cookie=host)=>(await (await fetch(base+'/api/state?code='+code,{headers:{Cookie:cookie}})).json());
   let state=await getState();assert.equal(state.phase,'waiting');
   assert.deepEqual(state.players.map(player=>player.name),['giftadmin','giftfriend','giftother']);
+  assert.equal((await post('settings',friend,{code,target:8})).status,400);
+  assert.equal((await post('settings',host,{code,target:8})).status,200);
   assert.equal((await post('start',friend,{code})).status,403);
   assert.equal((await post('start',host,{code})).status,200);
   state=await getState();assert.equal(state.gifts.length,4);
@@ -153,5 +155,21 @@ test('authenticated players can create, join and reconnect to a gift room withou
   state=await getState();assert.equal(state.phase,'reveal');assert.equal(state.result.entries.length,6);
   const history=await (await fetch(base+'/api/history',{headers:{Cookie:host}})).json();
   assert.equal(history[0].type,'gift');assert.equal(history[0].status,'playing');
+  assert.equal((await post('action',friend,{code,action:'next'})).status,400);
+  assert.equal((await post('action',host,{code,action:'next'})).status,200);
+  state=await getState();assert.equal(state.phase,'giving');assert.equal(state.round,2);
+  const [h0,h1,h2,h3]=state.gifts.map(gift=>gift.id);
+  assert.ok(state.gifts.every(gift=>![g0,g1,g2,g3].includes(gift.id)));
+  assert.equal((await post('action',host,{code,action:'give',assignments:{[b]:h0,[c]:h1}})).status,200);
+  assert.equal((await post('action',friend,{code,action:'give',assignments:{[a]:h0,[c]:h2}})).status,200);
+  assert.equal((await post('action',other,{code,action:'give',assignments:{[a]:h1,[b]:h2}})).status,200);
+  assert.equal((await post('action',host,{code,action:'wish',ranking:rank(h0,h1,h2,h3)})).status,200);
+  assert.equal((await post('action',friend,{code,action:'wish',ranking:rank(h0,h2,h1,h3)})).status,200);
+  assert.equal((await post('action',other,{code,action:'wish',ranking:rank(h2,h1,h0,h3)})).status,200);
+  state=await getState();assert.equal(state.phase,'finished');
+  assert.equal(state.result.entries.length,6);
+  assert.equal(state.winner.ids.length,3);
+  const finishedHistory=await (await fetch(base+'/api/history',{headers:{Cookie:host}})).json();
+  assert.equal(finishedHistory[0].status,'finished');
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}
 });

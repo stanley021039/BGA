@@ -21,6 +21,8 @@ Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平
 
 VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 22/tcp；SSH 停用密碼、互動式密碼與 root 登入，管理者須使用已安裝的 SSH 金鑰。`.env` 和 Tunnel token 權限為 600，資料目錄為 700。詳見[安全檢查](SECURITY-REVIEW.md)。部署重啟會清除記憶體房間；本次無法以未知的現有管理者密碼查詢重啟前房間數，也未用正式帳號從公開入口驗證遊戲操作。
 
+2026-10-02 在目前正式版本的程式碼上，以隔離測試資料庫執行送禮達人三帳號 HTTP 驗收，`gift.test.js` 5/5 通過；涵蓋自訂圖片禮物、兩輪遊戲、隱藏選擇、重連、計分、勝利及歷史。沒有更動正式帳號、題庫或房間。
+
 ## 尚待正式設定
 
 伺服器 `shared/.env` 的 `PUBLIC_URL` 是 `https://shhuang.cc`，資料目錄位於 `shared/data`。**尚未設定 `GITHUB_TOKEN`**。管理者或後續部署 AI 須提供對 `stanley021039/BGA` Issues 具讀寫權限的憑證，放在只允許擁有者讀取的 `shared/.env`，重啟 `afterhours.service`，再以真實授權驗證建立、回覆、關閉及重開 Issue。此憑證不得提交到 Git 或寫入 MR 內容。
