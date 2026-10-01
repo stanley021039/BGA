@@ -2,6 +2,8 @@
 
 架構決策、實作紀錄與尚待部署驗證的項目請見 [架構改善與功能實作計畫](ARCHITECTURE-PLAN.md)。
 
+部署請見 [Windows／Linux × 直接連線／Cloudflare 網域指南](docs/DEPLOYMENT.md)。目前 `shhuang.cc` 由 Linux 的 Cloudflare Tunnel 提供服務；原本的 Radmin VPN／區網直連方式仍可依指南切換。
+
 ## 帳號與留言板
 
 需使用 **Node.js 22.13 或更新版**。首次啟動前，在伺服器執行 `node admin.js init <管理者帳號>`，終端機會顯示一次性初始密碼；登入 `/login` 後可在 `/admin` 產生單次邀請碼與可分享的註冊連結、停用會員或提供密碼重設連結。邀請連結會自動開啟註冊表單並填入邀請碼。註冊不要求 Email 驗證。遊戲、留言與角色頁面都需要登入。帳號和留言存在 `data/afterhours.sqlite`，房間仍只存在記憶體。
@@ -16,7 +18,7 @@
 - 雷霆之路：2–4 人，含教學與可選擴充。
 - 同頻俱樂部：3–12 人，多數答案得分；支援二選一、三選一、填空，以及生活／台灣題庫與自訂題目。詳見 `MAJORITY.md`。
 
-執行 `npm start` 或 Windows 的 `start.bat`，開啟 `http://localhost:3000`。朋友透過同一個 Radmin VPN 連到主機的 3000 埠。這是需要 Node.js 伺服器的專案，不能只用 GitHub Pages 執行多人遊戲。
+本機可執行 `npm start` 或 Windows 的 `start.bat`。直接連線模式讓朋友透過同一個 VPN／區網連到主機的 3000 埠；Cloudflare 模式則使用 HTTPS 網域。兩種模式的 `HOST`、`PUBLIC_URL` 與驗證方式見[部署指南](docs/DEPLOYMENT.md)。這是需要 Node.js 伺服器的專案，不能只用 GitHub Pages 執行多人遊戲。
 
 Git 僅保存程式與執行所需資源；`data/`（玩家對局歷史）、`work/`（本機工具與暫存）、`reference-assets/`（整理用素材）、日誌與環境設定不會上傳。下方為各階段功能記錄；參考素材索引需搭配本機素材使用。
 
@@ -44,7 +46,7 @@ Git 僅保存程式與執行所需資源；`data/`（玩家對局歷史）、`wo
 
 ## 連線問題
 
-伺服器監聽所有網路介面的 TCP 3000。若本機能開、朋友無法連線，先確認雙方 Radmin VPN 已在同一網路且對方顯示在線，再檢查 Windows 防火牆是否允許 Node.js 的 TCP 3000 入站。右鍵 `allow-vpn.bat` 選「以系統管理員身分執行」，僅需設定一次；規則只允許遠端 26.0.0.0/8 連到本機 Radmin 位址的 3000 埠。如果 VPN 位址變動，可在管理員 PowerShell 使用 `allow-vpn-firewall.ps1` 自動讀取新位址。不要關閉整個防火牆。不需要路由器轉發。
+**Windows 直接連線模式**的伺服器監聽所有網路介面的 TCP 3000。若本機能開、朋友無法連線，先確認雙方 Radmin VPN 已在同一網路且對方顯示在線，再檢查 Windows 防火牆是否允許 Node.js 的 TCP 3000 入站。右鍵 `allow-vpn.bat` 選「以系統管理員身分執行」，僅需設定一次；規則只允許遠端 26.0.0.0/8 連到本機 Radmin 位址的 3000 埠。如果 VPN 位址變動，可在管理員 PowerShell 使用 `allow-vpn-firewall.ps1` 自動讀取新位址。不要關閉整個防火牆。不需要路由器轉發。**Cloudflare 網域模式**的 BGA 只監聽 `127.0.0.1`，由 Tunnel 對外連線，不需開放 TCP 3000 入站。
 
 ## 開發與驗證
 
