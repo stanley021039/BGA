@@ -32,9 +32,12 @@ function createApp(config){
  const trustCloudflare=config.host==='127.0.0.1'&&config.publicUrl?.startsWith('https://');
  const clientKey=req=>clientAddress(req,trustCloudflare);
  const achievementWarnings=new WeakSet();
- const awardGiftAchievements=room=>{
-  try{achievementStore.awardGiftRound(room,seats.get(room.code));}
-  catch(error){if(!achievementWarnings.has(room)){achievementWarnings.add(room);console.error('Gift achievement update failed:',error);}}
+ const awardRoomAchievements=room=>{
+  try{
+   if(room.type==='gift')achievementStore.awardGiftRound(room,seats.get(room.code));
+   if(room.type==='majority')achievementStore.awardMajorityRound(room,seats.get(room.code));
+  }
+  catch(error){if(!achievementWarnings.has(room)){achievementWarnings.add(room);console.error('Achievement update failed:',error);}}
  };
  const robots=fs.readFileSync(path.join(__dirname,'..','public','robots.txt'));
  function limitRate(map,key,max){const now=Date.now(),recent=(map.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=max)throw new HttpError(429,'RATE_LIMITED','操作太頻繁，請稍後再試');recent.push(now);map.set(key,recent);if(map.size>2000)for(const [address,times]of map)if(!times.some(t=>now-t<60000))map.delete(address);}
@@ -94,7 +97,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/reconnect'&&req.method==='POST'){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker',reconnected:true});}
  if(url.pathname==='/api/join'&&req.method==='POST'){const previous=seats.get(room.code)?.get(user.id);if(previous){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker'});}const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=`/characters/${user.id}`;seats.get(room.code).set(user.id,p.id);return send({code:room.code,type:room.type||'poker'});}
  const p=resumeSeat(room,user);
- if(url.pathname==='/api/state'){if(room.type==='gift')awardGiftAchievements(room);return send(withSocial(room,room.view(p.id)));}
+ if(url.pathname==='/api/state'){awardRoomAchievements(room);return send(withSocial(room,room.view(p.id)));}
  if(req.method!=='POST')throw Error('不支援的請求');
  if(url.pathname==='/api/social'){
   const now=Date.now(),rateKey=user.id+':'+String(data.kind),last=socialRate.get(rateKey)||0;
@@ -128,7 +131,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  else if(url.pathname==='/api/bot'){if(room.host!==p.id)throw Error('只有房主可以加入電腦');room.add(['River','Clover','Atlas','Nova','Juno'][room.players.filter(p=>p.bot).length%5],true);}
  else if(url.pathname==='/api/rebuy'){if(['thunder','majority','gift'].includes(room.type)||!['waiting','showdown'].includes(room.phase)||p.stack>0)throw Error('籌碼用完且本局結束後才能補充');p.stack=2000;}
  else throw Error('未知請求');
- });if(room.type==='gift')awardGiftAchievements(room);return send(withSocial(room,room.view(p.id)));
+ });awardRoomAchievements(room);return send(withSocial(room,room.view(p.id)));
  }
  const sharedGift=url.pathname.match(/^\/assets\/gifts\/shared\/([a-f0-9-]{36})$/);
  if(sharedGift){auth.requireUser(req);const image=giftStore.image(sharedGift[1]);if(!image?.bytes)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到禮物圖片');res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(image.bytes);}
