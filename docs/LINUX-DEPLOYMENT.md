@@ -2,13 +2,13 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化），目前切換至 `5525fad`（好友角色分享與帳號繪畫圖庫）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化）、`5525fad`（好友角色分享與帳號繪畫圖庫）、`ac2d7e0`（撲克與末路狂飆沉浸感及入門成就），目前切換至 `7fcb436`（末路狂飆碰撞與特殊事件視窗）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/5525fad`；舊版仍保留，回退前須先確認資料庫 v8 相容性 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/7fcb436`；舊版仍保留，回退前須先確認資料庫 v8 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
@@ -34,6 +34,10 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 使用者明確指示新版都同步到 shhuang.cc，且不需檢查是否有人正在玩，可直接重啟。最終封存 `92e7725` 已獨立放入 `releases/92e7725`，Linux 全套再次通過 106/106，ZIP SHA-256 為 `f84dfced84471ae2d92cfc9356abe7b272a62b79780aaef6860b04fad7660fbc`。切換前以 SQLite 線上備份建立 `shared/backups/pre-92e7725-20261002-105515.sqlite`，完整性 `ok`、schema v6、帳號 4 筆；切換 `current` 並重啟 `afterhours.service` 後，網站及 Tunnel 都是 `active`，正式資料庫完整性仍為 `ok`、帳號 4 筆。公開 HTTPS 的 `/login`、`/majority.js`、`/majority.css`、音檔及 `/robots.txt` 回 200，腳本與正式提交內容相符（只有 CRLF／LF 差異）；robots 繼續全站 `Disallow: /`，回應含 `X-Robots-Tag`。重啟會清除所有當時的記憶體房間；公開多人實際完成一局與短音主觀聽感仍待確認。
 
 好友角色分享與帳號繪畫圖庫封存為 `5525fad`，獨立放入 `releases/5525fad`。Windows／Linux 全套各 108/108；切換前以 SQLite 線上備份建立 `shared/backups/pre-5525fad-20261002-034828.sqlite`，完整性 `ok`、schema v6、帳號 4 筆。備份複本預演遷移至 v8 也為 `ok`，正式切換並重啟後 schema v8、完整性 `ok`、帳號仍為 4 筆，服務與 Tunnel 皆為 `active`。從 Windows 經公開 HTTPS 驗證 `/login`、新版 `/studio.js`、`/profile.js`、`/gifts.js`、`/robots.txt`；匿名 `/studio` 導向登入、圖庫 API／圖片回 401，robots 仍 `Disallow: /`。本機隔離瀏覽器已驗證繪畫、存入圖庫及選用為角色／禮物；公開帳號端到端實際操作尚待驗收。依使用者指示，重啟前沒有檢查進行中的房間。
+
+撲克與末路狂飆沉浸感版本 `ac2d7e0` 獨立放入 `releases/ac2d7e0`；Windows／Linux 全套各 111/111。切換前以 SQLite 線上備份建立 `shared/backups/pre-ac2d7e0-20261002-041206.sqlite`，完整性 `ok`、schema v8、帳號 4 筆。切換並重啟後正式資料庫完整性仍為 `ok`、帳號 4 筆，網站與 Tunnel 均為 `active`。從 Windows 經公開 HTTPS 驗證 `/login`、`/shared/immersion.js`、`/app.js`、`/race.js`、共用樣式、Kenney 短音及 `/robots.txt` 均回 200；robots 仍 `Disallow: /`，匿名遊戲頁導向登入、成就 API 回 401。隔離背景 Chrome 已驗證動畫與控制；公開多人實玩及主觀聽感尚待確認。依使用者指示直接重啟，原記憶體房間隨之清除。
+
+末路狂飆事件視窗版本 `7fcb436` 獨立放入 `releases/7fcb436`；Windows／Linux 全套各 114/114。切換前以 SQLite 線上備份建立 `shared/backups/pre-7fcb436-20261002-044319.sqlite`，完整性 `ok`、schema v8、帳號 4 筆。切換並重啟後完整性仍為 `ok`，服務與 Tunnel 均為 `active`。公開 HTTPS 驗證 `/login`、新版 `/race.js`、`/race.css`、`/shared/race-event-cues.js`、`/robots.txt` 均回 200；robots 仍 `Disallow: /`，匿名賽車頁導向登入。390px 背景瀏覽器確認事件卡在畫面內、無橫向溢出；公開多人實玩及動畫節奏、音效聽感待確認。依使用者指示直接重啟，原記憶體房間隨之清除。
 
 ## 尚待正式設定
 

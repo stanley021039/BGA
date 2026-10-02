@@ -33,7 +33,7 @@ test('first vote badge is private, settled, and idempotent across a second round
   assert.equal(store.awardMajorityRound(r,seats).length,3);
   assert.deepEqual(store.awardMajorityRound(r,seats),[]);
   assert.equal(store.list('user-丁').achievements.find(item=>item.id==='majority-first-vote').unlockedAt,null);
-  for(const name of ['甲','乙','丙'])assert.ok(store.list('user-'+name).achievements.find(item=>item.id==='majority-first-vote').unlockedAt);
+  for(const name of ['甲','乙','丙']){assert.ok(store.list('user-'+name).achievements.find(item=>item.id==='majority-first-vote').unlockedAt);assert.ok(store.list('user-'+name).achievements.find(item=>item.id==='all-first-table').unlockedAt);}
   r.act(r.host,'next');ask(r,'two');r.participantIds.forEach((id,index)=>r.act(id,'answer',{answer:index===2?1:0}));
   assert.deepEqual(store.awardMajorityRound(r,seats),[]);
   db.close();

@@ -25,12 +25,13 @@ class Room{
  start(){if(!['waiting','showdown'].includes(this.phase))throw Error('本局尚未結束');if(this.players.filter(p=>p.stack>0).length<2)throw Error('至少需要兩位有籌碼的玩家');
  this.deck=Array.from({length:52},(_,i)=>i);for(let i=51;i>0;i--){let j=this.rng(i+1);[this.deck[i],this.deck[j]]=[this.deck[j],this.deck[i]];}
  this.board=[];this.results=[];this.hand++;this.phase='preflop';this.currentBet=20;this.minRaise=20;
- for(const p of this.players){p.bet=0;p.total=0;p.folded=p.stack===0;p.cards=p.folded?[]:[this.deck.pop(),this.deck.pop()];p.acted=false;p.actedAt=null;p.action='';}
+ for(const p of this.players){p.bet=0;p.total=0;p.folded=p.stack===0;p.cards=p.folded?[]:[this.deck.pop(),this.deck.pop()];p.acted=false;p.actedAt=null;p.action='';p.handDecision=false;}
  this.button=this.next(this.button,p=>!p.folded);let sb=this.players.filter(p=>!p.folded).length===2?this.button:this.next(this.button,p=>!p.folded);let bb=this.next(sb,p=>!p.folded);
  this.pay(this.players[sb],10);this.pay(this.players[bb],20);this.note(`第 ${this.hand} 局 · 盲注 10 / 20`);this.setTurn(this.next(bb,p=>!p.folded&&p.stack>0));this.advance();
  }
  setTurn(i){this.turn=i;this.deadline=Date.now()+45000;this.botAt=Date.now()+1200;}
  canRaise(p){return p.actedAt===null||this.currentBet-p.actedAt>=this.minRaise;}
+ humanAct(id,type,amount){this.act(id,type,amount);const player=this.players.find(p=>p.id===id);if(player)player.handDecision=true;}
  act(id,type,amount){const p=this.players[this.turn];if(!p||p.id!==id||['waiting','showdown'].includes(this.phase))throw Error('還沒輪到你');let due=this.currentBet-p.bet;
  if(type==='fold'){p.folded=true;p.action='棄牌';}
  else if(type==='check'){if(due>0)throw Error('需要跟注或棄牌');p.action='過牌';}
