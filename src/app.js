@@ -7,6 +7,7 @@ const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./comm
 const {startRoomScheduler}=require('./rooms/scheduler');
 const {reconnectPlayer}=require('./rooms/reconnect');
 const {listRooms}=require('./rooms/listing');
+const {createLobby}=require('./rooms/lobby');
 const {HttpError,writeError}=require('./http/errors');
 const {clientAddress,setSecurityHeaders}=require('./http/security');
 const {openDatabase}=require('./db/index');
@@ -19,6 +20,7 @@ const {createCharacter,setExpression,addExpression,setSharing}=require('./profil
 const {ArtworkStore}=require('./artworks/store');
 function createApp(config){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map();
+ const lobby=createLobby();
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
   for(const event of expressions)recent.set(event.playerId,event.image);
@@ -60,6 +62,8 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/auth/logout'&&req.method==='POST'){auth.logout(req,res);return send({ok:true});}
  const user=auth.requireUser(req);
  if(url.pathname==='/api/auth/me'&&req.method==='GET'){const me=auth.publicUser(user);if(me.appearance)me.appearance=normalizeAppearance(me.appearance);return send(me);}
+ if(url.pathname==='/api/lobby'&&req.method==='GET')return send(lobby.view(user));
+ if(url.pathname==='/api/lobby/move'&&req.method==='POST')return send(lobby.move(user,data));
  if(url.pathname==='/api/artworks'&&req.method==='GET')return send({artworks:artworkStore.list(user.id)});
  if(url.pathname==='/api/artworks'&&req.method==='POST'){limitAccount(user);return send(artworkStore.add(user.id,data));}
  const artworkDelete=url.pathname.match(/^\/api\/artworks\/([a-f0-9-]{36})\/delete$/);
@@ -140,6 +144,11 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  else if(url.pathname==='/api/rebuy'){if(['thunder','majority','gift'].includes(room.type)||!['waiting','showdown'].includes(room.phase)||p.stack>0)throw Error('籌碼用完且本局結束後才能補充');p.stack=2000;}
  else throw Error('未知請求');
  });awardRoomAchievements(room);return send(withSocial(room,room.view(p.id)));
+ }
+ if(url.pathname==='/lobby.js'||url.pathname==='/lobby.css'){
+  const file=url.pathname.slice(1);
+  res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript; charset=utf-8');
+  return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  const artworkAsset=url.pathname.match(/^\/assets\/artworks\/([a-f0-9-]{36})$/);
  if(artworkAsset){const viewer=auth.requireUser(req),image=artworkStore.image(viewer.id,artworkAsset[1]);if(!image)throw new HttpError(404,'ARTWORK_NOT_FOUND','找不到你的作品');res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(image.bytes);}
