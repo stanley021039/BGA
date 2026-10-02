@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>禮物題庫｜Afterhours</title>
+  <link rel="stylesheet" href="/gift.css">
+  <link rel="stylesheet" href="/gifts.css">
+</head>
+<body>
+  <div class="gift-shell">
+    <header class="gift-header">
+      <a class="gift-brand" href="/"><span class="brand-mark">✦</span><span>送禮達人<small>AFTERHOURS / GIFT CLUB</small></span></a>
+      <nav><a class="quiet" href="/community?tab=questions">同頻題庫</a><a class="quiet" href="/">回大廳</a></nav>
+    </header>
+    <main class="library-page">
+      <div class="library-intro"><span class="eyebrow">MADE BY FRIENDS</span><h1>把你想送的禮物，<br>放進大家的題庫。</h1><p>寫下禮物名稱，圖片可以不放。投稿後，新的遊戲輪次就有機會抽到它。</p></div>
+      <div class="library-layout">
+        <section class="card submit-card" aria-labelledby="submitTitle">
+          <span class="eyebrow">ADD A GIFT</span><h2 id="submitTitle">新增禮物</h2>
+          <form id="giftForm">
+            <label for="giftTitle">禮物名稱</label><input id="giftTitle" required maxlength="60" placeholder="例如：會自動煮咖啡的馬克杯">
+            <label for="giftCategory">分類</label><select id="giftCategory" required></select>
+            <label for="giftImage">禮物圖片（選填）</label><input id="giftImage" type="file" accept="image/png,image/gif,image/webp">
+            <p class="small">支援 PNG、GIF、WebP，單張最多 1 MB；沒有像素尺寸限制。</p>
+            <div class="gift-artwork-picker"><div class="gift-artwork-heading"><strong>或從我的圖庫選圖</strong><a href="/studio">開啟繪畫圖庫 ↗</a></div><div id="giftArtworkList" class="gift-artwork-list"></div></div>
+            <div id="imagePreview" class="image-preview" hidden><img id="previewArt" alt="待上傳的禮物圖片預覽"><button id="removeImage" type="button" class="quiet">移除圖片</button></div>
+            <button id="submitGift" class="button wide">加入共用禮物題庫 →</button>
+          </form>
+          <p class="small">投稿會保存於主機的 SQLite 資料庫，所有登入朋友都能在遊戲中抽到。</p>
+        </section>
+        <section class="library-results" aria-labelledby="browseTitle">
+          <div class="results-head"><div><span class="eyebrow">THE GIFT SHELF</span><h2 id="browseTitle">大家的禮物</h2></div><span id="resultCount"></span></div>
+          <div class="filters"><input id="search" type="search" placeholder="搜尋禮物名稱" aria-label="搜尋禮物"><select id="filter" aria-label="禮物分類"><option value="">全部分類</option></select></div>
+          <div id="giftList" class="library-gifts"></div>
+          <button id="more" class="button outline" type="button" hidden>載入更多</button>
+          <p class="small credit">內建禮物圖片取自 <a href="https://github.com/googlefonts/noto-emoji" target="_blank" rel="noopener noreferrer">Noto Emoji</a>（Google，<a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener noreferrer">Apache 2.0</a>）與 <a href="https://kenney.nl/assets/generic-items" target="_blank" rel="noopener noreferrer">Kenney Generic Items</a>（CC0）；禮物名稱為本站原創。</p>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div id="toast" role="status" hidden></div>
+  <script src="/gifts.js"></script>
+</body>
+</html>

@@ -71,3 +71,42 @@ body{background:#141714}.race-header{display:flex;gap:30px;align-items:center;pa
 .assign-controls .command-wrap:has(#repairCar){grid-template-columns:minmax(180px,240px) minmax(160px,200px) minmax(150px,200px)}
 .assign-controls .command-wrap select{font-size:13px}
 @media(max-width:900px){.assign-controls .command-wrap{flex:1 1 100%;grid-template-columns:repeat(2,minmax(0,1fr))}.assign-controls .command-wrap:has(#repairCar){grid-template-columns:repeat(3,minmax(0,1fr))}.assign-controls .command-wrap label{font-size:11px}.assign-controls .command-wrap select{padding:8px;font-size:12px}}
+.crew-avatar{display:inline-block;width:27px;height:40px;object-fit:contain;vertical-align:middle;margin-right:6px;border-radius:5px;background:#ede5d6}
+
+/* A brief, non-modal view of confirmed race events. The event feed remains the full record. */
+.race-stage{position:relative}
+.race-event-popup{position:absolute;z-index:4;top:52px;right:14px;width:min(340px,calc(100% - 28px));padding:13px 15px 15px;border:1px solid #e6a668;border-left:4px solid #ffb66f;border-radius:12px;background:linear-gradient(145deg,#293225f5,#172019f7);color:#f7e7c8;box-shadow:0 14px 35px #090e0ac9;animation:race-event-enter .25s ease-out both}
+.race-event-popup[hidden]{display:none}
+.race-event-top{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#e9ae6b;font-size:10px;font-weight:800;letter-spacing:2px}
+.race-event-top button{border:0;background:transparent;color:#ffe0ab;font-family:inherit;font-size:12px;font-weight:600;letter-spacing:0;cursor:pointer;padding:4px}
+.race-event-top button:focus-visible{outline:2px solid #ffe0ab;border-radius:4px}
+.race-event-popup strong{display:block;margin-top:8px;font-size:19px;line-height:1.25;color:#ffe0aa}
+.race-event-popup p{margin:5px 0 0;font-size:12px;line-height:1.5;color:#dfdbc6;overflow-wrap:anywhere}
+.race-event-scene{position:relative;overflow:hidden;height:74px;margin-top:8px;border-radius:7px;background:linear-gradient(#34412f 0 67%,#735b3b 67% 74%,#34382d 74%)}
+.race-event-line{position:absolute;left:8%;right:8%;bottom:14px;border-top:2px dashed #d8c59580}
+.race-event-car{position:absolute;bottom:19px;left:15%;width:68px;height:25px;border-radius:8px 13px 5px 5px;background:#e09b54;border:2px solid #ffcd8b;box-shadow:inset 0 4px #ffdaaa55,0 3px 6px #0007}
+.race-event-car::before,.race-event-car::after{content:"";position:absolute;bottom:-8px;width:15px;height:12px;border-radius:4px;background:#111b17;border:2px solid #677166}
+.race-event-car::before{left:6px}.race-event-car::after{right:6px}
+.race-event-car-two{display:none;left:auto;right:15%;background:#7fc2b5;border-color:#b6e8d8;transform:scaleX(-1)}
+.race-event-symbol{position:absolute;left:50%;top:7px;transform:translateX(-50%);color:#fff1b0;font-size:39px;font-weight:900;line-height:1;text-shadow:0 0 15px #ffa153;animation:race-event-flash .85s ease-out both}
+.race-event-popup[data-kind="slam"] .race-event-car-one{animation:race-car-hit-left .55s ease-out both}
+.race-event-popup[data-kind="slam"] .race-event-car-two{display:block;animation:race-car-hit-right .55s ease-out both}
+.race-event-popup[data-kind="shot"] .race-event-car-one{animation:race-car-shot .75s ease-out both}
+.race-event-popup[data-kind="shot"] .race-event-symbol{animation:race-event-shot .8s ease-out both}
+.race-event-popup[data-kind="shot"][data-hit="miss"] .race-event-symbol{color:#d8e8dc;text-shadow:none}
+.race-event-popup[data-kind="jump"] .race-event-car-one{animation:race-car-jump 1s ease-in-out both}
+.race-event-popup[data-kind="hazard"] .race-event-car-one,.race-event-popup[data-kind="damage"] .race-event-car-one,.race-event-popup[data-kind="trap"] .race-event-car-one{animation:race-car-shake .55s ease-out both}
+.race-event-popup[data-kind="quake"] .race-event-scene{animation:race-car-shake .65s ease-out both}
+.race-event-popup[data-kind="eliminated"] .race-event-car-one{animation:race-car-fade .9s ease-in both}
+.race-event-popup[data-kind="fire"] .race-event-symbol,.race-event-popup[data-kind="fireDie"] .race-event-symbol{color:#ff9e60;text-shadow:0 0 18px #fb6939;animation:race-event-flash .8s ease-out 2}
+@keyframes race-event-enter{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes race-car-hit-left{from{transform:translateX(-42px)}70%{transform:translateX(45px)}to{transform:translateX(32px)}}
+@keyframes race-car-hit-right{from{transform:translateX(42px) scaleX(-1)}70%{transform:translateX(-45px) scaleX(-1)}to{transform:translateX(-32px) scaleX(-1)}}
+@keyframes race-car-shot{from{transform:translateX(-15px)}to{transform:translateX(12px)}}
+@keyframes race-event-shot{from{opacity:0;transform:translate(-110px,12px) scale(.4)}60%{opacity:1}to{opacity:1;transform:translateX(-50%) scale(1)}}
+@keyframes race-car-jump{0%,100%{transform:translate(0,0)}50%{transform:translate(45px,-27px)}}
+@keyframes race-car-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes race-car-fade{from{opacity:1;transform:none}to{opacity:.2;transform:translate(55px,18px) rotate(20deg)}}
+@keyframes race-event-flash{from{opacity:0;transform:translateX(-50%) scale(.4)}55%{opacity:1;transform:translateX(-50%) scale(1.22)}to{opacity:1;transform:translateX(-50%) scale(1)}}
+@media(max-width:650px){.race-event-popup{top:45px;right:8px;width:min(300px,calc(100% - 16px));padding:10px 12px}.race-event-scene{height:58px}.race-event-popup strong{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.race-event-popup,.race-event-popup *, .race-event-popup::before,.race-event-popup::after{animation:none!important}}

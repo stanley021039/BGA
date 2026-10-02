@@ -1,0 +1,11 @@
+# 遊戲共用介面與個別遊戲畫面
+
+四款遊戲共用 `public/shared/game-shell.js` 和 `public/shared/game-shell.css`。共用區塊整合在各遊戲原有側欄或賽道下方，提供明顯的操作提示、玩家自身角色可用的表情、文字彈幕輸入與回大廳入口。遊戲內沒有留言紀錄區。`public/shared/room-host.js` 在各遊戲狀態更新時呼叫 `GameShell.update(state)`；`public/shared/room-reconnect.js` 與 `public/shared/api.js` 分別處理重連及共用請求／登入失效。牌桌、賽道、題目、禮物與各自操作仍留在 `public/app.js`、`public/race.js`、`public/majority.js`、`public/gift.js`。
+
+共用層只讀取各遊戲回傳的標準欄位：`code`、`phase`、`me`、`players`。操作提示依遊戲適配：撲克用 `turn` 玩家索引；末路狂飆用 `actor` 玩家 ID；同頻俱樂部用 `presenterId` 與 `phase`；送禮達人用 `phase` 及本階段 `submittedIds` 提示自己是否已送出。遊戲特有回合規則不放入共用層。
+
+`POST /api/social` 接收同房間已入座會員的角色表情或文字彈幕。彈幕限 1–40 字、不可換行，伺服器檢查房間歸屬、登入狀態與傳送間隔；最近八秒的彈幕隨房間狀態輪詢回傳，在遊戲畫面飄過後消失。文字只作短暫顯示，不進留言板或 GitHub issue。表情必須是自己已保存角色具備的表情；送出後，該玩家在遊戲座位與共用角色列的圖片會暫時切換約五秒。舊版 `kind: message` API 暫留供既有用戶端相容，新介面不提供入口也不顯示其內容。離開入口目前是返回大廳，原座位保留以便重連；若要真正退出房間需另行定義各遊戲的中途退出規則。
+
+沒有瀏覽器本機房間紀錄時，四款遊戲頁可憑登入帳號與房號呼叫 `POST /api/reconnect` 找回座位。既有頁面斷線後會持續輪詢並顯示重連狀態；被踢出的玩家不能透過此 API 恢復座位。自訂表情圖片的名稱隨角色選項提供，表情按鈕及角色提示使用該名稱。
+
+頁面配置參考 [Board Game Arena](https://zh.boardgamearena.com/)「在瀏覽器遊玩多種桌遊」的產品方向，採專案自行設計的共用側欄與遊戲獨立舞台，沒有複製其介面或素材。

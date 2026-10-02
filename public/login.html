@@ -23,7 +23,7 @@
      <div class="art-chip">AH</div>
      <span class="art-caption">PULL UP A CHAIR. THE NIGHT IS YOUNG.</span>
     </div>
-    <div class="auth-points"><span>♠ 德州撲克</span><span>↗ 雷霆之路</span><span>◒ 同頻俱樂部</span></div>
+    <div class="auth-points"><span>♠ 德州撲克</span><span>↗ 雷霆之路</span><span>◒ 同頻俱樂部</span><span>🎁 送禮達人</span></div>
    </section>
    <section class="auth-card" aria-label="會員登入與註冊">
     <div class="card-topline"><span class="card-symbol">♠</span><span>AFTERHOURS / MEMBER ACCESS</span></div>
@@ -41,14 +41,16 @@
     </form>
     <form id="registerForm" class="auth-form" hidden>
      <label>邀請碼<input name="invite" placeholder="輸入朋友給你的邀請碼" required></label>
-     <label>帳號<input name="username" pattern="[A-Za-z0-9_]{3,24}" autocomplete="username" placeholder="3–24 個英數字或底線" required></label>
      <label>顯示暱稱<input name="displayName" maxlength="16" placeholder="朋友怎麼稱呼你？" required></label>
-     <label>密碼（至少 10 字）<input name="password" type="password" minlength="10" autocomplete="new-password" placeholder="設定登入密碼" required></label>
+     <label>帳號<input name="username" pattern="[A-Za-z0-9_]{3,24}" autocomplete="username" placeholder="3–24 個英數字或底線" required></label>
+     <label>密碼（至少 8 字）<input name="password" type="password" minlength="8" autocomplete="new-password" placeholder="設定登入密碼" required></label>
+     <label>確認密碼<input name="confirmPassword" type="password" minlength="8" autocomplete="new-password" placeholder="再次輸入密碼" required></label>
      <button class="page-button">建立帳號 <span>↗</span></button>
     </form>
     <form id="resetForm" class="auth-form" hidden>
      <p class="form-note">透過管理者提供的一次性連結設定新密碼。</p>
-     <label>新密碼（至少 10 字）<input name="password" type="password" minlength="10" autocomplete="new-password" placeholder="設定新密碼" required></label>
+     <label>新密碼（至少 8 字）<input name="password" type="password" minlength="8" autocomplete="new-password" placeholder="設定新密碼" required></label>
+     <label>確認新密碼<input name="confirmPassword" type="password" minlength="8" autocomplete="new-password" placeholder="再次輸入新密碼" required></label>
      <button class="page-button">重設密碼 <span>↗</span></button>
     </form>
     <p id="message" class="form-message" role="status" aria-live="polite"></p>

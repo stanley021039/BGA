@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict');const {createScenario,act}=require('./tutorial');
+const {test}=require('node:test'),assert=require('node:assert/strict');const {createScenario,act}=require('./src/games/tutorial');
 const begin=(s,die,extra={})=>act(s,'begin',{car:s.car.id,die,...extra});const move=(s,x,y)=>act(s,'move',{x,y});
 test('lesson 1: safe detour succeeds; rock kills; mud makes route fall short',()=>{let s=createScenario(0);begin(s,0);move(s,3,1);move(s,3,2);move(s,2,3);assert.equal(s.result.ok,true);
  s=createScenario(0);begin(s,0);move(s,2,2);assert.equal(s.car.dead,true);assert.equal(s.result.ok,false);

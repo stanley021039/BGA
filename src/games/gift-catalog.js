@@ -1,0 +1,34 @@
+// Original gift prompts for Afterhours. No commercial card art or card text is used.
+const additions=require('./gift-additions');
+const categories={
+  日常:['一年份早餐券','會自動摺衣服的衣櫃','一整天不用排隊的通行證','手沖咖啡入門組','窗邊的迷你香草園','每週送達的神祕甜點','能找到遺失物的鑰匙圈','一張不限次數的電影票','自動保持溫度的馬克杯','整套舒服的居家服','替你整理桌面的機器人','雨天專用的暖心便當','永遠不會打結的耳機','每月一本驚喜新書','一晚深度睡眠體驗','一箱各地特色零食'],
+  體驗:['在天文台過一夜','自己設計一款香水','搭熱氣球看日出','跟甜點師學做蛋糕','在海邊住一週','一對一舞蹈課','在無人島野餐','親手製作玻璃杯','乘小船探索祕密海灣','學會一首完整的鋼琴曲','在森林裡拍一套寫真','搭火車環島一週','在屋頂辦露天電影夜','體驗一天動物保育員','跟朋友包下一間桌遊店','親自為家人做一桌料理'],
+  奇想:['能暫停時間五分鐘的懷錶','會講冷笑話的盆栽','一扇通往任何書店的門','永遠找得到停車位的地圖','可以翻譯貓語的小耳機','一座雲朵形狀的私人小島','讓人瞬間學會新語言的糖果','可以重看夢境的投影機','每晚不同星空的天花板','能把回憶裝進瓶子的相機','會替你寫詩的信箱','穿上就能在水面散步的鞋','一隻會幫忙做家事的小龍','能把烏雲吹走的口袋風扇','可以借用一天好運的硬幣','一趟只在月光下行駛的列車'],
+  冒險:['潛水尋找沉船寶藏','穿越山谷的高空滑索','在極光下露營','獨自駕駛帆船一天','走進火山地底的導覽','與專家追蹤野生鯨魚','在古堡解開一場實境謎題','從高空跳傘看海岸','騎單車翻越一座山','在沙漠尋找星星','夜間探訪熱帶雨林','搭雪橇穿越冰原','去深海研究站住一晚','在峽谷裡學攀岩','參加神祕城市尋寶賽','與朋友完成一條長途步道']
+};
+
+// Preserve the existing Kenney Generic Items illustrations and all original gift IDs.
+const illustrations={
+ 'g1-01':156,'g1-04':124,'g1-07':154,'g1-08':149,'g1-09':126,
+ 'g1-13':84,'g1-14':35,'g2-04':116,'g2-08':118,'g2-11':45,
+ 'g3-03':33,'g3-05':84,'g3-08':53,'g3-10':45,'g4-07':154
+};
+const legacySymbols={
+ 日常:['🍳','👕','🎟','☕','🌿','🍰','🔑','🎟','☕','👚','🤖','🍱','🎧','📚','🌙','🍿'],
+ 體驗:['🔭','🧴','🎈','🎂','🏖','💃','🧺','🥛','⛵','🎹','📷','🚂','🎬','🐾','🎲','🍳'],
+ 奇想:['⌚','🪴','🚪','🗺','🐈','☁','🍬','🎥','✨','📷','📮','👟','🐉','🌬','🪙','🚆'],
+ 冒險:['🤿','🧗','🌌','⛵','🌋','🐋','🏰','🪂','🚲','🏜','🌴','🛷','🐠','🧗','🗺','🥾']
+};
+const notoImage=symbol=>'/assets/gifts/noto/emoji_u'+[...symbol].filter(char=>!['\ufe0f','\ufe0e'].includes(char)).map(char=>char.codePointAt(0).toString(16)).join('_')+'.png';
+const GIFTS=Object.entries(categories).flatMap(([category,titles],group)=>{
+ const rows=[...titles.map((title,index)=>[legacySymbols[category][index],title]),...additions[category]];
+ return rows.map(([symbol,title],index)=>{
+  const id=`g${group+1}-${String(index+1).padStart(2,'0')}`;
+  const number=illustrations[id];
+  return {id,category,title,image:number
+   ?`/assets/gifts/kenney/genericItem_color_${String(number).padStart(3,'0')}.png`
+   :notoImage(symbol)};
+ });
+});
+
+module.exports={GIFTS,CATEGORIES:Object.keys(categories)};

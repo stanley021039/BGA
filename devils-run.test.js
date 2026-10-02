@@ -1,5 +1,5 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');
-const {ThunderRoom,neighbor,FIRE_DIE}=require('./thunder');
+const {ThunderRoom,neighbor,FIRE_DIE}=require('./src/games/thunder');
 function setup(expansion=true){const r=new ThunderRoom('TEST','擴充測試');const p=r.add('A'),q=r.add('B');r.configure(p.id,{devilsRun:expansion});r.start();for(const t of r.tiles)for(const row of t.cells)for(const c of row){c.kind='R';delete c.hazard;}r.turn=0;r.round=2;for(const c of r.cars){c.x=c.size*2;c.y=c.owner===p.id?3:18;}const c=r.cars[0];p.dice=[{value:3},{value:2},{value:6},{value:1}].map(d=>({...d,used:false}));return {r,p,q,c};}
 function move(r,p,c,point,die=0){r.act(p.id,'begin',{car:c.id,die});r.act(p.id,'move',point);}
 test('expansion setting is host-only, boolean, locked in play and shared',()=>{const r=new ThunderRoom('T','T'),a=r.add('A'),b=r.add('B');assert.throws(()=>r.configure(b.id,{devilsRun:true}));assert.throws(()=>r.configure(a.id,{devilsRun:'true'}));r.configure(a.id,{devilsRun:true});assert.equal(r.view(b.id).options.devilsRun,true);r.start();assert.throws(()=>r.configure(a.id,{devilsRun:false}));assert.equal(r.tileDeck.length+r.tiles.length,10);assert.ok(r.damageDeck.includes('fire'));});
