@@ -4,7 +4,7 @@ const {drawContent,validCustomPercent}=require('./content-draw');
 
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalize=value=>value.normalize('NFKC').toLocaleLowerCase('zh-Hant').trim().replace(/\s+/gu,' ');
-const CONTROLS=new Set(['brush','erase','line','rect','ellipse']);
+const CONTROLS=new Set(['brush','erase','line','rect','ellipse','fill']);
 const MAX_BATCHES=1000,MAX_POINTS=30000;
 const validTopic=topic=>topic==='all'||TOPICS.some(item=>item.id===topic);
 
@@ -145,7 +145,7 @@ class DrawGuessRoom{
   const points=data.points;
   if(!CONTROLS.has(data.tool)||!/^#[0-9a-f]{6}$/i.test(data.color)||!Number.isInteger(data.size)||data.size<1||data.size>40||
     !Array.isArray(points)||points.length<1||points.length>64||points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255)||
-    (data.tool!=='brush'&&data.tool!=='erase'&&points.length!==2))throw Error('筆畫格式不正確');
+    (data.tool==='fill'?points.length!==1:data.tool!=='brush'&&data.tool!=='erase'&&points.length!==2))throw Error('筆畫格式不正確');
   const now=this.now();this.canvas.recent=this.canvas.recent.filter(time=>now-time<1000);
   if(this.canvas.recent.length>=10)throw Error('畫得太快，請稍後再試');
   if(this.canvas.strokes.length>=MAX_BATCHES||this.canvas.points+points.length>MAX_POINTS)throw Error('這輪畫布已達筆畫上限');

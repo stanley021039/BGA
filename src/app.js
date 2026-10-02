@@ -20,13 +20,10 @@ const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,character
 const {createCharacter,setExpression,addExpression,setSharing,removeCharacter}=require('./profiles/uploads');
 const {USER_IMAGE_PATH,createCharacterMediaAccess}=require('./profiles/media');
 const {ArtworkStore}=require('./artworks/store');
-<<<<<<< HEAD
 const {MusicStore,MAX_BYTES}=require('./music/store');
 const {RoomMusic}=require('./music/room');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
-=======
 const {ROOM_EMOJIS}=require('./social/emojis');
->>>>>>> 6294dcd (Unify game controls and reveal gifts by recipient confirmation)
 function createApp(config){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};

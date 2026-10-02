@@ -21,8 +21,7 @@
  const manage=document.querySelector('#managePlayers');if(manage)dock.append(manage);document.body.append(dock);
  if(majorityAside){majorityAside.querySelector('#players').after(panel);panel.classList.add('integrated','majority-ui');}
  else if(giftAside){giftAside.querySelector('#players').after(panel);panel.classList.add('integrated','gift-ui');}
-<<<<<<< HEAD
- else if(drawAside){drawAside.querySelector('#players').after(panel);panel.classList.add('integrated','draw-ui');panel.querySelector('.shared-barrage-heading').hidden=true;panel.querySelector('#shared-barrage').hidden=true;}
+ else if(drawAside){drawAside.querySelector('#players').after(panel);panel.classList.add('integrated','draw-ui');drawAside.append(document.querySelector('#guessChat'));}
  else if(pokerAside){
   const controls=pokerAside.querySelector('#hostControls');controls.after(panel);panel.classList.add('integrated','poker-ui');
   const info=document.createElement('details');info.className='room-game-info';const summary=document.createElement('summary');summary.textContent='牌桌資訊';info.append(summary);
@@ -30,10 +29,6 @@
   panel.after(info);panel.querySelector('.shared-players-heading').textContent='這桌的朋友';
   panel.querySelector('#shared-turn').before(panel.querySelector('.shared-players-heading'),panel.querySelector('#shared-players'));
  }
- else if(raceCrews){raceCrews.after(panel);panel.classList.add('integrated','race-ui');}
-=======
- else if(drawAside){drawAside.querySelector('#players').after(panel);panel.classList.add('integrated','draw-ui');drawAside.append(document.querySelector('#guessChat'));}
- else if(pokerAside){pokerAside.querySelector('#hostControls').after(panel);panel.classList.add('integrated','poker-ui');}
  else if(raceCrews){
   const controls=document.createElement('aside');controls.className='race-controls';document.querySelector('.race-main').append(controls);
   controls.append(raceCrews,document.querySelector('.dashboard'),panel,document.querySelector('.race-feed'),document.querySelector('.race-immersion-controls'));
@@ -41,7 +36,7 @@
   document.querySelector('.race-heading').append(controls.querySelector('.race-immersion-controls'));
   panel.classList.add('integrated','race-ui');
  }
->>>>>>> 6294dcd (Unify game controls and reveal gifts by recipient confirmation)
+
  else document.body.append(panel);
  if(sidebar){
   const toggle=panel.querySelector('#shared-toggle');toggle.className='room-interaction-toggle';toggle.textContent='表情／互動';panel.querySelector('#shared-turn').after(toggle);

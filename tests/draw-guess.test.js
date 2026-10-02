@@ -37,6 +37,13 @@ test('drawing game keeps the answer private, validates strokes, scores aliases, 
  assert.equal(room.addStroke(host.id,{round:1,batchId,strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}).duplicate,true);
  assert.equal(room.canvasSnapshot().strokes.length,1);
  room.canvasCommand(host.id,{round:1,command:'undo'});assert.equal(room.canvasSnapshot().strokes.length,0);
+ const fill={round:1,batchId:randomUUID(),strokeId:randomUUID(),tool:'fill',color:'#e88751',size:5,points:[[100,80]]};
+ assert.throws(()=>room.addStroke(guest.id,fill),/畫者/);
+ assert.throws(()=>room.addStroke(host.id,{...fill,points:[[100,80],[200,90]]}),/格式/);
+ room.addStroke(host.id,fill);
+ assert.equal(room.canvasSnapshot().strokes[0].tool,'fill');
+ assert.deepEqual(room.canvasSnapshot().strokes[0].points,[[100,80]]);
+ room.canvasCommand(host.id,{round:1,command:'undo'});assert.equal(room.canvasSnapshot().strokes.length,0);
  assert.throws(()=>room.addStroke(host.id,{round:0,batchId:randomUUID(),strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}),/舊回合/);
  room.act(guest.id,'guess',{answer:'猜錯'});assert.equal(room.view(guest.id).guesses.at(-1).answer,'猜錯');
  time+=800;

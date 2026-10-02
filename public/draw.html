@@ -12,11 +12,11 @@
    <div class="canvas-frame"><canvas id="drawCanvas" width="512" height="256" tabindex="0" aria-label="你畫我猜畫布；畫者可用滑鼠、觸控或方向鍵移動與空白鍵落筆"></canvas><div id="canvasStage" class="canvas-stage" aria-live="polite" hidden></div></div>
    <div id="tools" class="tools" hidden><div class="tool-row" role="group" aria-label="繪畫工具">
     <button type="button" data-tool="brush" class="selected" title="畫筆" aria-label="畫筆">✎</button><button type="button" data-tool="erase" title="橡皮擦" aria-label="橡皮擦">⌫</button>
-    <button type="button" data-tool="line" title="直線" aria-label="直線">╱</button><button type="button" data-tool="rect" title="矩形" aria-label="矩形">▢</button><button type="button" data-tool="ellipse" title="圓形" aria-label="圓形">◯</button>
+    <button type="button" data-tool="line" title="直線" aria-label="直線">╱</button><button type="button" data-tool="rect" title="空心矩形" aria-label="空心矩形">▢</button><button type="button" data-tool="ellipse" title="空心橢圓" aria-label="空心橢圓">◯</button><button type="button" data-tool="rect" data-filled="true" title="實心矩形" aria-label="實心矩形">■</button><button type="button" data-tool="ellipse" data-filled="true" title="實心橢圓" aria-label="實心橢圓">●</button><button type="button" data-tool="fill" title="油漆桶：填滿點選的連續區域" aria-label="油漆桶">填色</button>
     <button id="undo" type="button" title="復原上一筆" aria-label="復原上一筆">↶</button><button id="clear" type="button" title="清空畫布" aria-label="清空畫布">▤</button></div>
     <div class="color-row"><label class="color-pick" title="選擇顏色">色彩 <input id="color" type="color" value="#273942"></label><div id="swatches" class="swatches" aria-label="常用顏色"></div>
     <label class="size-pick">筆刷 <input id="size" type="range" min="1" max="40" value="6"><output id="sizeValue">6</output></label>
-    <label class="fill-pick"><input id="filled" type="checkbox"> 填滿形狀</label></div></div>
+    </div></div>
     <div id="guessChat" class="guess-chat"><div class="guess-chat-head"><strong>猜題聊天室</strong><span>猜錯可以再猜；越早答對，分數越高</span></div>
      <form id="guessForm" hidden><label for="guessInput">你猜這是什麼？</label><div><input id="guessInput" maxlength="40" autocomplete="off" placeholder="輸入答案，按 Enter 送出" required><button type="submit">送出猜測 →</button></div></form>
      <div id="guessFeed" class="guess-feed" role="log" aria-label="這輪的猜測" aria-live="polite" aria-relevant="additions"></div></div>
