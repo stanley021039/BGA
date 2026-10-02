@@ -5,7 +5,7 @@ const customPercentOptions=[['','依題庫比例'],['0','0% · 只抽內建'],['
 const customPercentLabel=value=>value===null?'依題庫比例':value+'%';
 const customPercentSelect=value=>customPercentOptions.map(([number,label])=>`<option value="${number}" ${(value===null?'':String(value))===number?'selected':''}>${label}</option>`).join('');
 let code=(location.pathname.match(/\/majority\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'',session=null,state=null,busy=false,polling=false,disconnected=false,signature='',topic='food',type='two',source='bank',choice=null,draft='',custom={prompt:'',options:['','','']},inviteBase=location.origin;
-let focusTimer=null,motionEnabled=true,soundEnabled=false,soundVolume=0.25,knownAchievements=null,achievementNoticeRound=null;
+let focusTimer=null,motionEnabled=true,soundEnabled=false,soundVolume=0.25,knownAchievements=null,achievementNoticeRound=null,achievementNoticeNames='';
 const soundFiles={confirm:'/assets/gift-sounds/confirmation_001.wav',reveal:'/assets/gift-sounds/open_001.wav'},playingSounds=new Set();
 try{motionEnabled=localStorage.getItem('ah-majority-motion')!=='off';}catch{}
 try{const saved=localStorage.getItem('ah-majority-volume');if(saved!==null&&Number.isFinite(Number(saved))&&Number(saved)>=0&&Number(saved)<=1)soundVolume=Number(saved);}catch{}
@@ -39,11 +39,12 @@ function startFocus(){
 }
 async function checkNewAchievement(){
  try{const response=await fetch('/api/achievements');if(!response.ok)return;const data=await response.json(),unlocked=new Set(data.achievements.filter(item=>item.unlockedAt).map(item=>item.id));
-  if(knownAchievements&&!knownAchievements.has('majority-first-vote')&&unlocked.has('majority-first-vote')){achievementNoticeRound=state?.round;const notice=$('#majorityAchievementNotice');if(notice){notice.textContent='解鎖成就：第一次舉牌。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}}
+  const names=knownAchievements?[['majority-first-vote','第一次舉牌'],['all-first-table','第一桌']].filter(([id])=>!knownAchievements.has(id)&&unlocked.has(id)).map(([,name])=>name):[];
+  if(names.length){achievementNoticeRound=state?.round;achievementNoticeNames=names.join('、');const notice=$('#majorityAchievementNotice');if(notice){notice.textContent='解鎖成就：'+achievementNoticeNames+'。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}}
   knownAchievements=unlocked;
  }catch{}
 }
-function restoreAchievementNotice(){if(achievementNoticeRound!==state?.round)return;const notice=$('#majorityAchievementNotice');if(!notice)return;notice.textContent='解鎖成就：第一次舉牌。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}
+function restoreAchievementNotice(){if(achievementNoticeRound!==state?.round)return;const notice=$('#majorityAchievementNotice');if(!notice)return;notice.textContent='解鎖成就：'+achievementNoticeNames+'。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}
 function resultMarkup(s,reviewing){
  const total=Math.max(1,s.participantIds.length),groups=[...s.groups].sort((a,b)=>b.count-a.count),winners=groups.filter(group=>group.winner);
  const groupRows=groups.map(group=>{

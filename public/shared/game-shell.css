@@ -41,3 +41,26 @@
 .race-ui .shared-barrage-heading{grid-column:3;grid-row:1}.race-ui #shared-barrage{grid-column:3;grid-row:2;align-self:start}.race-ui #shared-error{grid-column:1/-1;grid-row:3}
 @media(max-width:1000px){.shared-game-ui.race-ui{grid-template-columns:1fr 1fr}.race-ui .shared-turn{grid-column:1/-1;grid-row:1}.race-ui .shared-expressions-heading{grid-column:1;grid-row:2}.race-ui .shared-expressions{grid-column:1;grid-row:3}.race-ui .shared-barrage-heading{grid-column:2;grid-row:2}.race-ui #shared-barrage{grid-column:2;grid-row:3}.race-ui #shared-error{grid-column:1/-1;grid-row:4}}
 @media(max-width:650px){.shared-game-ui.race-ui{display:flex;padding:14px}.race-ui .shared-expressions{width:100%}}
+
+/* Small, optional event cues for the card table and racetrack. */
+.immersion-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0;padding:12px 0;border-top:1px solid #ffffff22;border-bottom:1px solid #ffffff22}
+.immersion-controls button{font-size:12px;min-height:36px}
+.immersion-controls label{display:flex;align-items:center;gap:7px;font-size:12px;white-space:nowrap}
+.immersion-controls input{width:100px;accent-color:#e8ba75}
+.immersion-result-tools{text-align:center;margin:5px 0}
+.immersion-result-tools button{font-size:12px}
+.immersion-spotlight{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 18px;margin:8px 0;border:1px solid #d7bb7a;border-radius:12px;background:#e8c47920;color:#f8e7b7;box-shadow:0 0 22px #e4bd6230}
+.immersion-spotlight strong{font-size:16px;line-height:1.5;overflow-wrap:anywhere}
+.immersion-spotlight button{flex:none}
+.immersion-achievement{padding:10px 14px;margin:8px 0;border:1px solid #cdb784;border-radius:10px;background:#fff8df;color:#604b2c;font-size:13px;font-weight:700}
+.immersion-achievement a{color:#6b4b83;margin-left:8px}
+.race-immersion-controls{justify-content:flex-end;margin:0 0 12px}
+.race-immersion-controls button{padding:8px 12px}
+#board .newly-revealed{animation:card-deal .45s ease-out both}
+@keyframes card-deal{from{transform:translateY(-13px) rotate(-5deg);opacity:.25}to{transform:none;opacity:1}}
+.race-move-trail{stroke:#ffe39a;stroke-width:5;stroke-linecap:round;stroke-dasharray:6 5;pointer-events:none;animation:trail-fade 1.1s ease-out forwards}
+.race-collision-ring{stroke:#ffbc76;stroke-width:3;fill:none;pointer-events:none;animation:collision-ring .9s ease-out forwards}
+@keyframes trail-fade{from{opacity:.9}to{opacity:0}}
+@keyframes collision-ring{from{r:9;opacity:1}to{r:34;opacity:0}}
+@media(max-width:650px){.immersion-controls{justify-content:flex-start}.immersion-controls input{width:80px}.immersion-spotlight{align-items:flex-start;flex-direction:column}.race-immersion-controls{margin-top:12px}}
+@media(prefers-reduced-motion:reduce){#board .newly-revealed,.race-move-trail,.race-collision-ring{animation:none}.race-move-trail,.race-collision-ring{display:none}}

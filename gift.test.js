@@ -127,7 +127,7 @@ test('gift badge requires an active player to submit both choices and settle a r
   assert.equal(store.awardGiftRound(room,seats).length,3);
   assert.deepEqual(store.awardGiftRound(room,seats),[]);
   assert.equal(store.list('user-丁').achievements[0].unlockedAt,null);
-  for(const name of ['甲','乙','丙'])assert.ok(store.list('user-'+name).achievements[0].unlockedAt);
+  for(const name of ['甲','乙','丙']){assert.ok(store.list('user-'+name).achievements[0].unlockedAt);assert.ok(store.list('user-'+name).achievements.find(item=>item.id==='all-first-table').unlockedAt);}
   db.close();
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });

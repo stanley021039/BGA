@@ -67,9 +67,10 @@ async function checkNewAchievement(){
  try{
   const response=await fetch('/api/achievements');if(!response.ok)return;
   const data=await response.json(),unlocked=new Set(data.achievements.filter(item=>item.unlockedAt).map(item=>item.id));
-  if(knownAchievements&&!knownAchievements.has('gift-first-gift')&&unlocked.has('gift-first-gift')){
+  const names=knownAchievements?[['gift-first-gift','第一份心意'],['all-first-table','第一桌']].filter(([id])=>!knownAchievements.has(id)&&unlocked.has(id)).map(([,name])=>name):[];
+  if(names.length){
    const notice=$('#giftAchievementNotice');
-   if(notice){notice.textContent='解鎖成就：第一份心意。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}
+   if(notice){notice.textContent='解鎖成就：'+names.join('、')+'。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}
   }
   knownAchievements=unlocked;
  }catch{}
