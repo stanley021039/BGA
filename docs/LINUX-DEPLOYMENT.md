@@ -2,20 +2,32 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；原有 Cloudflare 遠端管理 Tunnel 已設定 `shhuang.cc → http://localhost:3000`，這次復用該路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好），最後切換至 `b5da6f0`（300 件內建禮物及房主設定投稿比例）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/8153da0`；前版 `9d13d4c`、`59cf2cd` 仍保留，但資料庫 v4 不可直接用舊版程式開啟 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/b5da6f0`；舊版仍保留，回退前須先確認資料庫 v6 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
 | Tunnel 服務 | `afterhours-tunnel.service`，以 `ccc` 執行，憑證存於 `~/.config/cloudflared/afterhours.token` |
-| 初始管理者 | 帳號 `ccc`；初始密碼僅存於 `shared/admin-bootstrap.txt`，首次登入後應立即重設並刪除該檔 |
+| 管理者 | 帳號 `ccc`；舊的初始密碼已失效，`shared/admin-bootstrap.txt` 已移除；以現有密碼登入 |
 
 兩個 systemd 服務均已設為開機自啟。部署前 VM 系統時鐘落後約 19 小時；已依硬體時鐘校正，`timedatectl` 顯示 NTP 同步。Linux Node.js 22.22.1 對 `8153da0` 執行 `npm test` 為 85/85。更新前兩次確認進行中房間數為零；以 Python SQLite `Connection.backup` 對運作中的資料庫建立一致性備份 `shared/backups/afterhours-pre-v4-20261001-225056.sqlite`（版本 3、完整性 `ok`）。更新後 SQLite 為版本 4、完整性 `ok`；Linux 主機本機登入與 `/api/rooms`、`/api/profile/options`、`/profile`、`/room-reconnect.js` 均回 200，無效房號重連回 404；從 Windows 測得公開 HTTPS 登入頁及重連腳本均回 200。VM 自身呼叫公開網域的登入 POST 被 Cloudflare 回應 1010，因此本次尚未從公開入口完成有效帳號的端到端登入驗證；舊版曾驗證管理者登入、Secure cookie 與 session。
+
+2026-10-02 在新版本目錄執行 Linux `npm test` 通過 99/99；切換前用 SQLite 線上備份保存 v4 資料庫及其他資料於 `shared/backups/pre-bd3e51c-20261002-014458`，完整性 `ok`。切換 `current` 並重啟 `afterhours.service` 後，資料庫升至 v5，完整性 `ok`。網站與 Tunnel 均運行且開機自啟；程式只監聽 `127.0.0.1:3000`，從 Windows 無法直連 VM 的 3000 埠。從 Windows 經公開 HTTPS 測得 `/login`、`/robots.txt` 回 200，首頁及 `/gifts` 未登入時導向登入，`/gift/ABC123` 保留登入後回房路徑。公開 `/robots.txt` 回 `User-agent: *` 與 `Disallow: /`；登入頁及 robots 回應含 `X-Robots-Tag: noindex, nofollow, noarchive`，HTTPS 回應含 HSTS。
+
+VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 22/tcp；SSH 停用密碼、互動式密碼與 root 登入，管理者須使用已安裝的 SSH 金鑰。`.env` 和 Tunnel token 權限為 600，資料目錄為 700。詳見[安全檢查](SECURITY-REVIEW.md)。部署重啟會清除記憶體房間；本次無法以未知的現有管理者密碼查詢重啟前房間數，也未用正式帳號從公開入口驗證遊戲操作。
+
+2026-10-02 在目前正式版本的程式碼上，以隔離測試資料庫執行送禮達人三帳號 HTTP 驗收，`gift.test.js` 5/5 通過；涵蓋自訂圖片禮物、兩輪遊戲、隱藏選擇、重連、計分、勝利及歷史。沒有更動正式帳號、題庫或房間。
+
+2026-10-02 新版 `33d5ebe` 已放入獨立的 `releases/33d5ebe`，Linux `npm test` 通過 102/102。切換前再以 SQLite 線上備份建立 `shared/backups/pre-33d5ebe-20261002-013904.sqlite`，完整性 `ok`、schema v5、帳號 4 筆。使用者同意清除揭曉中的舊房後，切換 `current` 並重啟 `afterhours.service`；舊房 `F5C5B2` 隨重啟清除。網站與 Tunnel 均為 `active`，本機 `/login` 回 200。正式 SQLite 升至 v6，完整性 `ok`、帳號仍為 4 筆。從 Windows 經公開 HTTPS 驗證 `/login`、`/gift.js`、`/robots.txt` 均回 200，新腳本含圖示送禮與喜好選擇；三組測試帳號逐一登入並讀取 `/api/auth/me` 和送禮頁皆成功，成就 API 可讀。驗證時已有其他新房建立，未再次重啟。
+
+300 件內建禮物的候選版 `3283617` 曾獨立放入 `releases/3283617`；壓縮檔 SHA-256 為 `27c0f4208741eb575123c4a6e7e3f50f1152f44513c93de7c443698a8400b8a6`，Windows 與 Linux 當時全套測試各 102/102。正式 SQLite 當時另以線上備份保存為 `shared/backups/pre-3283617-20261002-020020.sqlite`，完整性 `ok`、schema v6、帳號 4 筆。該候選版沒有單獨切換到正式服務；300 件禮物後來隨 `b5da6f0` 一起上線。
+
+房主設定投稿比例的新版 `b5da6f0` 已獨立放入 `releases/b5da6f0`，包含前述 300 件禮物；Windows／Linux 全套測試各 105/105。房主可在等待室選依題庫比例或 0／25／50／75／100%，送禮達人每輪禮物與同頻俱樂部每次三張候選題分別套用。使用者同意清除所有現有房間後，以 SQLite 線上備份建立 `shared/backups/pre-b5da6f0-20261002-101814.sqlite`，完整性 `ok`、schema v6、帳號 4 筆；隨後切換 `current` 至 `releases/b5da6f0` 並重啟。`afterhours.service`、`afterhours-tunnel.service` 皆為 `active`，正式 SQLite 再檢查完整性 `ok`。從 Windows 經公開 HTTPS 驗證登入頁、兩款遊戲腳本與 robots 均回 200，兩款腳本皆含 `customPercent`，robots 仍全站 `Disallow: /`。新禮物圖檔只允許登入會員讀取，公開匿名要求回 `LOGIN_REQUIRED`；本次尚未以公開帳號實際進房確認房主設定或抽到新圖。
 
 ## 尚待正式設定
 

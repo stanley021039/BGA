@@ -7,7 +7,7 @@ function openDatabase(file){
  const db=new DatabaseSync(file,{timeout:5000});
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
- if(version>4)throw Error(`Unsupported database version ${version}`);
+ if(version>6)throw Error(`Unsupported database version ${version}`);
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -56,6 +56,28 @@ function openDatabase(file){
     ALTER TABLE character_images ADD COLUMN label TEXT;
     CREATE UNIQUE INDEX character_images_label ON character_images(character_id,label) WHERE label IS NOT NULL;
     PRAGMA user_version=4;
+   `);
+   db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<5){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    CREATE TABLE community_gifts(id TEXT PRIMARY KEY,author_id TEXT NOT NULL REFERENCES users(id),author_name TEXT NOT NULL,title TEXT NOT NULL,title_key TEXT NOT NULL UNIQUE,category TEXT NOT NULL,image_mime TEXT,image_bytes BLOB,created_at TEXT NOT NULL, CHECK((image_mime IS NULL AND image_bytes IS NULL) OR (image_mime IS NOT NULL AND image_bytes IS NOT NULL)));
+    CREATE INDEX community_gifts_author ON community_gifts(author_id);
+    PRAGMA user_version=5;
+   `);
+   db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<6){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    CREATE TABLE user_achievements(user_id TEXT NOT NULL REFERENCES users(id),achievement_id TEXT NOT NULL,source_key TEXT NOT NULL,unlocked_at TEXT NOT NULL,PRIMARY KEY(user_id,achievement_id));
+    CREATE INDEX user_achievements_unlocked ON user_achievements(user_id,unlocked_at);
+    PRAGMA user_version=6;
    `);
    db.exec('COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}

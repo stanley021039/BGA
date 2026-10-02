@@ -1,8 +1,8 @@
 window.RoomReconnect={
  async restore(code,type,statusSelector){
   const status=document.querySelector(statusSelector);
-  const key=type==='majority'?'ah-majority':type==='thunder'?'ah-thunder':'ah-session';
-  const path=type==='majority'?'/majority/':type==='thunder'?'/race/':'/poker/';
+  const key=type==='majority'?'ah-majority':type==='thunder'?'ah-thunder':type==='gift'?'ah-gift':'ah-session';
+  const path=type==='majority'?'/majority/':type==='thunder'?'/race/':type==='gift'?'/gift/':'/poker/';
   for(;;){
    try{
     if(status)status.textContent='正在找回原座位…';
@@ -15,7 +15,7 @@ window.RoomReconnect={
      }
      throw Error(result.error||'無法重新連線');
     }
-    if(result.type!==type){location.replace((result.type==='majority'?'/majority/':result.type==='thunder'?'/race/':'/poker/')+code);return null;}
+    if(result.type!==type){location.replace((result.type==='majority'?'/majority/':result.type==='thunder'?'/race/':result.type==='gift'?'/gift/':'/poker/')+code);return null;}
     localStorage.setItem(key,JSON.stringify(result));
     localStorage.setItem(key+':'+code,JSON.stringify(result));
     if(status)status.textContent='已重新連線，恢復原座位';
