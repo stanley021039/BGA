@@ -2,13 +2,13 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化）、`5525fad`（好友角色分享與帳號繪畫圖庫）、`ac2d7e0`（撲克與末路狂飆沉浸感及入門成就）、`7fcb436`（末路狂飆碰撞與特殊事件視窗），目前切換至 `ff7e13a`（可自訂畫布與桌機繪畫工作區）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化）、`5525fad`（好友角色分享與帳號繪畫圖庫）、`ac2d7e0`（撲克與末路狂飆沉浸感及入門成就）、`7fcb436`（末路狂飆碰撞與特殊事件視窗），目前切換至 `5a3cdc1`（修正繪畫提示與畫作按鈕遮擋）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/ff7e13a`；舊版仍保留，回退前須先確認資料庫 v8 相容性 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/5a3cdc1`；舊版仍保留，回退前須先確認資料庫 v8 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
@@ -42,6 +42,8 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 帳號繪畫編輯器版本 `e040927` 獨立放入 `releases/e040927`；Windows／Linux 全套各 116/116。切換前以 SQLite 線上備份建立 `shared/backups/pre-e040927-20261002-051221.sqlite`，完整性 `ok`、schema v8、帳號 4 筆；切換後資料狀態一致，網站與 Tunnel 均為 `active`。公開 HTTPS 的 `/login`、新版 `/studio-editor.js`、`/studio.js`、`/club-pages.css` 和 `/robots.txt` 均回 200；robots 仍 `Disallow: /`，匿名 `/studio` 導向登入、圖庫 API 回 401。390px 背景 Chrome 已操作色輪、疊圖、繪製、去背和圖庫儲存，無橫向溢出；公開帳號實際操作待驗收。依使用者指示直接重啟，原記憶體房間隨之清除。
 
 自訂畫布與桌機工作區版本 `ff7e13a` 獨立放入 `releases/ff7e13a`，ZIP SHA-256 為 `4f4c38713cbc4f201bc1b743c302831d1200c96454bfcbf95b7111f1856fac0e`；Windows／Linux 全套各 116/116，390px 與 1365 × 768 的隔離背景 Chrome 驗證尺寸、工具、圖層、去背及 PNG／WebP 儲存。切換前以 SQLite 線上備份建立 `shared/backups/pre-ff7e13a-20261002-134400.sqlite`，完整性 `ok`、schema v8、帳號 4 筆；切換後資料狀態一致，網站與 Tunnel 均為 `active`。公開 HTTPS 的 `/login`、新版 `/studio-editor.js`、`/studio.js`、`/club-pages.css`、`/robots.txt` 回 200，robots 仍 `Disallow: /`；匿名 `/studio` 導向登入，圖庫 API 回 401。公開帳號實際繪畫與選圖尚待驗收。依使用者指示直接重啟，原記憶體房間隨之清除。
+
+繪畫提示與畫作按鈕遮擋修正版 `5a3cdc1` 獨立放入 `releases/5a3cdc1`，ZIP SHA-256 為 `482b94d6dc947b477c51c6e7829b04c37ce88b89458784601b04df4f88ac0630`；Windows／Linux 全套各 116/116。隔離背景 Chrome 驗證畫筆與照片圖層的提示不再被捲動區裁切，並實際點擊確認畫作「儲存」與「加入照片」各自執行正確動作。切換前 SQLite 線上備份 `shared/backups/pre-5a3cdc1-20261002-135602.sqlite`，備份及切換後完整性均為 `ok`、schema v8、帳號 4 筆；網站和 Tunnel 均為 `active`。公開 HTTPS 的新版 `/studio-editor.js`、`/club-pages.css` 與 `/robots.txt` 回 200，robots 仍 `Disallow: /`。公開帳號實際操作待驗收。依使用者指示直接重啟，原記憶體房間隨之清除。
 
 ## 尚待正式設定
 
