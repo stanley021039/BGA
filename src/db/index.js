@@ -7,7 +7,7 @@ function openDatabase(file){
  const db=new DatabaseSync(file,{timeout:5000});
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
- if(version>6)throw Error(`Unsupported database version ${version}`);
+ if(version>7)throw Error(`Unsupported database version ${version}`);
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -78,6 +78,17 @@ function openDatabase(file){
     CREATE TABLE user_achievements(user_id TEXT NOT NULL REFERENCES users(id),achievement_id TEXT NOT NULL,source_key TEXT NOT NULL,unlocked_at TEXT NOT NULL,PRIMARY KEY(user_id,achievement_id));
     CREATE INDEX user_achievements_unlocked ON user_achievements(user_id,unlocked_at);
     PRAGMA user_version=6;
+   `);
+   db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<7){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    ALTER TABLE player_characters ADD COLUMN shared INTEGER NOT NULL DEFAULT 0 CHECK(shared IN (0,1));
+    CREATE INDEX player_characters_shared ON player_characters(shared,created_at);
+    PRAGMA user_version=7;
    `);
    db.exec('COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}

@@ -23,14 +23,17 @@ function render(){
  if(!character.expressions[appearance.expression])appearance.expression='neutral';
  $('#preview').src=character.expressions[appearance.expression];
  $('#preview').alt=character.name+'－'+expressionLabel(character,appearance.expression);
- $('#characters').replaceChildren();
+ for(const group of ['#builtin-characters','#my-characters','#shared-characters'])$(group).replaceChildren();
+ $('#my-empty').hidden=characters.some(item=>item.owned);
+ $('#shared-empty').hidden=characters.some(item=>item.id.startsWith('user:')&&!item.owned);
  for(const item of characters){
   const button=document.createElement('button'),img=document.createElement('img'),name=document.createElement('span');
   button.type='button';button.className='preset-card';button.setAttribute('aria-pressed',String(item.id===character.id));
-  button.classList.toggle('active',item.id===character.id);button.setAttribute('aria-label','選擇'+item.name);
+  button.classList.toggle('active',item.id===character.id);button.setAttribute('aria-label','選擇'+item.name+'，'+item.source);
   img.src=item.expressions.neutral;img.alt='';name.textContent=item.name;button.append(img,name);
+  if(item.id.startsWith('user:')){const source=document.createElement('small');source.textContent=item.owned?(item.shared?'已分享':'僅自己可選'):item.source;button.append(source);}
   button.onclick=()=>{appearance={version:5,characterId:item.id,expression:'neutral'};$('#message').textContent='已選擇角色，按「保存角色」才會套用。';render();};
-  $('#characters').append(button);
+  $(item.id.startsWith('builtin:')?'#builtin-characters':item.owned?'#my-characters':'#shared-characters').append(button);
  }
  $('#expressions').replaceChildren();
  for(const [expression,url] of Object.entries(character.expressions)){
@@ -41,9 +44,14 @@ function render(){
   button.onclick=()=>{appearance.expression=expression;$('#message').textContent='已選擇表情，按「保存角色」才會套用。';render();};
   $('#expressions').append(button);
  }
- $('#upload-expression').hidden=!character.id.startsWith('user:');
- $('#emote-target').textContent=character.id.startsWith('user:')?`正在為「${character.name}」新增表情（最多 6 個）。`:'先從角色圖庫選擇自己上傳的角色。';
+ $('#sharing-controls').hidden=!character.owned;
+ $('#sharing-description').textContent=character.shared?'好友可在圖庫選用這位角色與表情。':'目前只有你可以選用這位角色。';
+ $('#toggle-sharing').textContent=character.shared?'停止分享':'分享給會員';
+ $('#upload-expression').hidden=!character.owned;
+ $('#emote-target').textContent=character.owned?`正在為「${character.name}」新增表情（最多 6 個）。`:'先從「我的作品」選擇自己的角色。';
+ $('#open-studio').href=character.owned?'/studio?character='+encodeURIComponent(character.id):'/studio';
 }
+async function refreshGallery(){const options=await json('/api/profile/options');characters=options.characters;render();}
 async function imagePayload(file,form){
  if(!file||file.size>1024*1024)throw Error('請選擇不超過 1 MB 的圖片');
  if(file.type&&!['image/png','image/gif','image/webp'].includes(file.type))throw Error('僅接受 PNG、GIF 或 WebP 圖片');
@@ -54,23 +62,27 @@ async function imagePayload(file,form){
 async function init(){
  const [me,options]=await Promise.all([json('/api/auth/me'),json('/api/profile/options')]);
  appearance=me.appearance||options.defaults;characters=options.characters;labels=options.expressionLabels;
+ if(!characters.some(item=>item.id===appearance.characterId))appearance=options.defaults;
+ const query=new URLSearchParams(location.search),requested=characters.find(item=>item.id===query.get('character'));
+ if(requested)appearance={version:5,characterId:requested.id,expression:requested.expressions[query.get('expression')]?query.get('expression'):'neutral'};
  render();
 }
 $('#save').onclick=async()=>{const button=$('#save');button.disabled=true;try{const result=await json('/api/profile/appearance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(appearance)});appearance=result.appearance;$('#message').textContent='角色已保存，遊戲座位會更新。';}catch(error){$('#message').textContent=error.message;}finally{button.disabled=false;}};
+$('#toggle-sharing').onclick=async()=>{const character=selected(),button=$('#toggle-sharing');if(!character.owned)return;button.disabled=true;try{await json(`/api/profile/characters/${character.id.slice(5)}/sharing`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shared:!character.shared})});await refreshGallery();$('#message').textContent=character.shared?'已停止分享；選用這位角色的好友會恢復預設角色。':'已分享到好友圖庫。';}catch(error){$('#message').textContent=error.message;}finally{button.disabled=false;}};
 bindUpload('#create-character','#character-file');
 bindUpload('#upload-expression','#expression-file');
 $('#create-character').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;try{
  const image=await imagePayload(uploads.get('#character-file')||$('#character-file').files[0],form);
  status(form,'正在上傳角色…');
  const result=await json('/api/profile/characters',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('#character-name').value,...image})});
- const options=await json('/api/profile/options');characters=options.characters;appearance={version:5,characterId:result.id,expression:'neutral'};
+ appearance={version:5,characterId:result.id,expression:'neutral'};await refreshGallery();
  form.reset();uploads.delete('#character-file');status(form,'主角色已上傳');$('#message').textContent='主角色已上傳。可繼續新增表情；按「保存角色」後會顯示在遊戲座位。';render();
  }catch(error){status(form,error.message);}finally{button.disabled=false;}};
 $('#upload-expression').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;try{
  const id=selected().id.slice(5),name=$('#expression-name').value.trim(),image=await imagePayload(uploads.get('#expression-file')||$('#expression-file').files[0],form);
  status(form,'正在上傳表情…');
  const result=await json(`/api/profile/characters/${id}/emotes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,...image})});
- const options=await json('/api/profile/options');characters=options.characters;appearance.expression=result.expression;
+ appearance.expression=result.expression;await refreshGallery();
  form.reset();uploads.delete('#expression-file');status(form,'表情圖片已新增');$('#message').textContent='表情已新增到角色。若要將它設為預設外觀，再按「保存角色」。';render();
  }catch(error){status(form,error.message);}finally{button.disabled=false;}};
 init().catch(error=>$('#message').textContent=error.message);

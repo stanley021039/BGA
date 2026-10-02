@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>角色繪畫室｜Afterhours</title>
+ <link rel="stylesheet" href="/club.css"><link rel="stylesheet" href="/club-pages.css">
+</head>
+<body class="club-page studio-page">
+ <div class="club">
+  <header class="club-header page-header"><a class="wordmark" href="/">a<span>♠</span><b>AFTERHOURS<small>好友桌遊俱樂部</small></b></a><a class="quiet" href="/profile">← 回我的角色</a></header>
+  <main class="inner-page">
+   <div class="page-heading"><div class="kicker">CHARACTER STUDIO / PIXEL ART</div><h1>角色繪畫室<span>✦</span></h1><p>在獨立畫布畫完整角色或表情。完成後回到角色頁選用或分享給好友。</p></div>
+   <div class="studio-layout">
+    <section class="page-panel studio-board" aria-label="繪圖畫布"><h2>畫布</h2><p>64 × 64 像素、透明背景；滑鼠或觸控拖曳繪製。畫布也支援方向鍵移動與空白鍵落筆。</p>
+     <div class="studio-tools"><label>顏色 <input id="paint-color" type="color" value="#557bb5"></label><label>筆刷 <select id="paint-size"><option value="1">1 格</option><option value="2">2 格</option><option value="4">4 格</option></select></label><button id="paint-erase" type="button" aria-pressed="false">橡皮擦</button><button id="paint-undo" type="button">復原</button><button id="paint-clear" type="button">清空</button></div>
+     <div class="studio-canvas-frame"><canvas id="paint-canvas" width="64" height="64" tabindex="0" aria-label="64 乘 64 像素繪圖畫布；可使用滑鼠、觸控或方向鍵與空白鍵繪製"></canvas></div>
+     <p class="studio-hint">畫布會儲存成 PNG；若要使用 GIF 或較高解析度圖片，請回角色頁使用圖片上傳。</p>
+    </section>
+    <section class="page-panel studio-sidebar"><span class="panel-number">SAVE YOUR ART</span><h2>儲存畫作</h2><p>主角色與表情使用同一張畫布，但各自存成獨立圖片。表情只會加入你自己的角色。</p>
+     <div class="studio-save"><label>作品類型<select id="paint-target"><option value="character">新主角色</option><option value="expression">現有角色的新表情</option></select></label><label id="character-target-label" hidden>加入到哪位角色<select id="paint-character"></select></label><label><span id="paint-name-label">角色名稱（最多 32 字）</span><input id="paint-name" type="text" maxlength="32" placeholder="我的畫作"></label><button id="paint-save" type="button" class="page-button">儲存畫作</button></div>
+     <p id="paint-status" class="upload-status" role="status" aria-live="polite"></p>
+     <a id="back-to-profile" class="quiet studio-return" href="/profile">回角色圖庫選用或分享 →</a>
+    </section>
+   </div>
+  </main>
+ </div>
+ <script src="/studio.js"></script>
+</body>
+</html>

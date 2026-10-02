@@ -1,6 +1,7 @@
 const {randomUUID}=require('node:crypto');
 const {HttpError}=require('../http/errors');
 const {expressionLabels}=require('./appearance');
+const {defaults}=require('./appearance');
 
 const MAX_BYTES=1024*1024;
 const MAX_CUSTOM_EXPRESSIONS=6;
@@ -68,4 +69,23 @@ function addExpression(db,ownerId,id,data){
   return {id:'user:'+uuid,expression,name};
  }catch(error){db.exec('ROLLBACK');throw error;}
 }
-module.exports={MAX_BYTES,imageOf,createCharacter,setExpression,addExpression};
+function setSharing(db,ownerId,id,shared){
+ if(typeof shared!=='boolean')throw new HttpError(400,'INVALID_SHARING','分享設定不正確');
+ db.exec('BEGIN IMMEDIATE');
+ try{
+  const row=db.prepare('SELECT id FROM player_characters WHERE id=? AND owner_id=?').get(id,ownerId);
+  if(!row)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到你的角色');
+  db.prepare('UPDATE player_characters SET shared=? WHERE id=?').run(shared?1:0,id);
+  if(!shared){
+   const chosen='user:'+id;
+   for(const user of db.prepare('SELECT id,appearance FROM users WHERE id!=? AND appearance IS NOT NULL').all(ownerId)){
+    let appearance;
+    try{appearance=JSON.parse(user.appearance);}catch{continue;}
+    if(appearance?.characterId===chosen)db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify(defaults),user.id);
+   }
+  }
+  db.exec('COMMIT');
+  return {id:'user:'+id,shared};
+ }catch(error){db.exec('ROLLBACK');throw error;}
+}
+module.exports={MAX_BYTES,imageOf,createCharacter,setExpression,addExpression,setSharing};
