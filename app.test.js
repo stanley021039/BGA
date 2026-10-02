@@ -48,9 +48,16 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
   const lobby=await (await fetch(base+'/api/lobby',{headers})).json();
   assert.equal(lobby.visitors.length,1);
   assert.equal(lobby.visitors[0].id,lobby.selfId);
-  const lobbyMove=await fetch(base+'/api/lobby/move',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({dx:1,dy:0})});
+  const lobbyMove=await fetch(base+'/api/lobby/move',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({x:60,y:60})});
   assert.equal(lobbyMove.status,200);
-  assert.equal((await fetch(base+'/api/lobby/move',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({dx:999,dy:0})})).status,400);
+  assert.equal((await fetch(base+'/api/lobby/move',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({x:999,y:0})})).status,400);
+  assert.equal((await fetch(base+'/api/lobby/emotes')).status,401);
+  const emoteOptions=await (await fetch(base+'/api/lobby/emotes',{headers})).json();
+  assert.ok(emoteOptions.emotes.some(emote=>emote.expression==='happy'&&emote.image.endsWith('happy.gif')));
+  const lobbyEmote=await fetch(base+'/api/lobby/emote',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({expression:'happy'})});
+  assert.equal(lobbyEmote.status,200);
+  assert.equal((await lobbyEmote.json()).visitors[0].emote.label,'開心');
+  assert.equal((await fetch(base+'/api/lobby/emote',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({expression:'made-up'})})).status,400);
   const unknown=await fetch(base+'/api/missing',{headers});
   assert.equal(unknown.status,404);
   assert.equal((await unknown.json()).code,'NOT_FOUND');

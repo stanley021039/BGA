@@ -15,7 +15,7 @@ const {createAuth}=require('./auth/index');
 const {BoardStore}=require('./community/board');
 const {createGitHubClient}=require('./integrations/github/client');
 const {SubmissionService}=require('./integrations/github/submissions');
-const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,galleryFor,selectedImage}=require('./profiles/appearance');
+const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,characterFor,galleryFor,selectedImage}=require('./profiles/appearance');
 const {createCharacter,setExpression,addExpression,setSharing}=require('./profiles/uploads');
 const {ArtworkStore}=require('./artworks/store');
 function createApp(config){
@@ -48,6 +48,11 @@ function createApp(config){
  function limitRate(map,key,max){const now=Date.now(),recent=(map.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=max)throw new HttpError(429,'RATE_LIMITED','操作太頻繁，請稍後再試');recent.push(now);map.set(key,recent);if(map.size>2000)for(const [address,times]of map)if(!times.some(t=>now-t<60000))map.delete(address);}
  function limitCommunity(req){limitRate(communityRate,clientKey(req),40);}
  function limitAccount(user){limitRate(accountRate,user.id,10);}
+ const lobbyCharacter=user=>{
+  let appearance;
+  try{appearance=normalizeAppearance(user.appearance?JSON.parse(user.appearance):defaults);}catch{appearance=defaults;}
+  return characterFor(db,user.id,appearance.characterId)||characterFor(db,user.id,defaults.characterId);
+ };
  const port=config.port,protocol='http';
  function limitAuth(req){limitRate(authRate,clientKey(req),20);}
 const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
@@ -64,6 +69,15 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/auth/me'&&req.method==='GET'){const me=auth.publicUser(user);if(me.appearance)me.appearance=normalizeAppearance(me.appearance);return send(me);}
  if(url.pathname==='/api/lobby'&&req.method==='GET')return send(lobby.view(user));
  if(url.pathname==='/api/lobby/move'&&req.method==='POST')return send(lobby.move(user,data));
+ if(url.pathname==='/api/lobby/emotes'&&req.method==='GET'){
+  const character=lobbyCharacter(user);
+  return send({emotes:Object.entries(character.expressions).filter(([key])=>key!=='neutral').map(([expression,image])=>({expression,image,label:character.labels[expression]||expressionLabels[expression]||expression}))});
+ }
+ if(url.pathname==='/api/lobby/emote'&&req.method==='POST'){
+  const character=lobbyCharacter(user),expression=data.expression;
+  if(typeof expression!=='string'||expression==='neutral'||!Object.hasOwn(character.expressions,expression))throw new HttpError(400,'INVALID_EXPRESSION','這個角色沒有該表情');
+  return send(lobby.emote(user,{image:character.expressions[expression],label:character.labels[expression]||expressionLabels[expression]||expression}));
+ }
  if(url.pathname==='/api/artworks'&&req.method==='GET')return send({artworks:artworkStore.list(user.id)});
  if(url.pathname==='/api/artworks'&&req.method==='POST'){limitAccount(user);return send(artworkStore.add(user.id,data));}
  const artworkDelete=url.pathname.match(/^\/api\/artworks\/([a-f0-9-]{36})\/delete$/);

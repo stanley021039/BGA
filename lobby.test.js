@@ -2,26 +2,32 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {createLobby}=require('./src/rooms/lobby');
 
-test('lobby syncs authenticated identities, bounds movement, and expires inactive visitors',()=>{
+test('click destinations advance at bounded speed and emotes expire for other visitors',()=>{
  let time=1000;const lobby=createLobby(()=>time);
  const alice={id:'alice',display_name:'小明'},bob={id:'bob',display_name:'小美'};
- const first=lobby.view(alice);
- assert.equal(first.selfId,'alice');
- assert.deepEqual(first.visitors.map(visitor=>visitor.name),['小明']);
- const before=first.visitors[0];
+ const first=lobby.view(alice).visitors[0];
  lobby.view(bob);
- time+=100;
- const moved=lobby.move(alice,{dx:1,dy:1});
- assert.equal(moved.visitors.length,2);
- assert.ok(moved.visitors[0].x>before.x);
- assert.ok(moved.visitors[0].y>before.y);
- assert.equal(moved.visitors[0].image,'/characters/alice');
- assert.equal(moved.visitors[0].moving,true);
- assert.throws(()=>lobby.move(alice,{dx:100,dy:0}),error=>error.code==='INVALID_MOVEMENT');
- assert.throws(()=>lobby.move(alice,{dx:'1',dy:0}),error=>error.code==='INVALID_MOVEMENT');
- time+=16000;
+ const ordered=lobby.move(alice,{x:90,y:95});
+ assert.equal(ordered.visitors[0].x,first.x);
+ assert.equal(ordered.visitors[0].moving,true);
+ time+=500;
+ const moved=lobby.view(bob).visitors[0];
+ assert.ok(moved.x>first.x&&moved.x-first.x<=12);
+ assert.ok(moved.y>first.y&&moved.y-first.y<=16);
+ assert.equal(moved.image,'/characters/alice');
+ assert.throws(()=>lobby.move(alice,{x:'90',y:50}),error=>error.code==='INVALID_MOVEMENT');
+ assert.throws(()=>lobby.move(alice,{x:101,y:50}),error=>error.code==='INVALID_MOVEMENT');
+ assert.throws(()=>lobby.move(alice,{x:NaN,y:50}),error=>error.code==='INVALID_MOVEMENT');
+ const expressed=lobby.emote(alice,{image:'/assets/characters/example-happy.gif',label:'開心'});
+ assert.equal(expressed.visitors[0].emote.label,'開心');
+ assert.equal(lobby.view(bob).visitors[0].emote.image,'/assets/characters/example-happy.gif');
+ assert.throws(()=>lobby.emote(alice,{image:'/another.png',label:'難過'}),error=>error.code==='EMOTE_RATE_LIMIT');
+ time+=5001;
+ assert.equal(lobby.view(bob).visitors[0].emote,null);
+ time+=11000;
  assert.deepEqual(lobby.view(bob).visitors.map(visitor=>visitor.id),['bob']);
- for(let i=0;i<100;i++){time+=200;lobby.move(bob,{dx:1,dy:-1});}
+ lobby.move(bob,{x:100,y:0});
+ time+=10000;
  const atEdge=lobby.view(bob).visitors[0];
  assert.ok(atEdge.x<=85&&atEdge.y>=32);
 });
