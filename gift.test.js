@@ -10,6 +10,20 @@ const {createAuth}=require('./src/auth/index');
 const {GiftStore}=require('./src/games/gift-store');
 const {AchievementStore}=require('./src/achievements/store');
 const {GIFTS}=require('./src/games/gift-catalog');
+const {drawContent}=require('./src/games/content-draw');
+
+test('0% custom content stays built-in even after the built-in draw cycle resets',()=>{
+ const builtin=Array.from({length:3},(_,index)=>({id:'built-in-'+index}));
+ const custom=[{id:'custom-0'}];
+ let usedIds=[];
+ for(let round=0;round<3;round++){
+  const draw=drawContent({builtin,custom,count:2,customPercent:0,usedIds,rng:()=>0});
+  assert.equal(draw.items.length,2);
+  assert.ok(draw.items.every(item=>item.id.startsWith('built-in-')));
+  assert.equal(new Set(draw.items.map(item=>item.id)).size,2);
+  usedIds=draw.usedIds;
+ }
+});
 
 test('300 default gifts keep legacy IDs and have bundled PNG artwork',()=>{
  assert.equal(GIFTS.length,300);
@@ -46,6 +60,36 @@ test('custom gifts persist in SQLite and become eligible for the next draw',()=>
   room.start();assert.ok(room.gifts.some(item=>item.id===gift.id));
   db.close();
  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('gift host controls the custom share with unique cards and built-in fallback',()=>{
+ const room=new GiftRoom('MIX123','混合題庫',()=>0);
+ const host=room.add('房主'),guest=room.add('朋友'),third=room.add('另一位');
+ const custom=Array.from({length:5},(_,index)=>({id:'shared-gift-'+index,title:'投稿'+index,category:'日常'}));
+ room.giftProvider=()=>custom;
+ assert.equal(room.view(host.id).customPercent,null);
+ assert.throws(()=>room.configure(guest.id,{target:15,customPercent:50}),/房主/);
+ for(const invalid of ['50',10,-25,125])assert.throws(()=>room.configure(host.id,{target:15,customPercent:invalid}),/比例/);
+ room.configure(host.id,{target:15,customPercent:50});
+ assert.equal(room.view(third.id).customPercent,50);
+ room.start();
+ assert.equal(room.gifts.filter(gift=>gift.id.startsWith('shared-')).length,2);
+ assert.equal(new Set(room.gifts.map(gift=>gift.id)).size,4);
+ assert.throws(()=>room.configure(host.id,{target:15,customPercent:100}),/遊戲中/);
+
+ const few=new GiftRoom('FEW123','少量投稿',()=>0);
+ const owner=few.add('甲');few.add('乙');few.add('丙');
+ few.giftProvider=()=>custom.slice(0,1);
+ few.configure(owner.id,{target:15,customPercent:100});
+ few.start();
+ assert.equal(few.gifts.filter(gift=>gift.id.startsWith('shared-')).length,1);
+ assert.equal(new Set(few.gifts.map(gift=>gift.id)).size,4);
+ few.newRound();
+ assert.equal(few.gifts.filter(gift=>gift.id.startsWith('shared-')).length,0);
+ const none=new GiftRoom('NONE12','只抽內建',()=>0),noneHost=none.add('甲');
+ none.add('乙');none.add('丙');none.giftProvider=()=>custom;
+ none.configure(noneHost.id,{target:15,customPercent:0});none.start();
+ assert.equal(none.gifts.filter(gift=>gift.id.startsWith('shared-')).length,0);
 });
 
 test('existing v5 data survives the achievement migration',()=>{
@@ -217,10 +261,13 @@ test('authenticated players can create, join and reconnect to a gift room withou
   let state=await getState();assert.equal(state.phase,'waiting');
   assert.deepEqual(state.players.map(player=>player.name),['giftadmin','giftfriend','giftother']);
   assert.equal((await post('settings',friend,{code,target:8})).status,400);
-  assert.equal((await post('settings',host,{code,target:8})).status,200);
+  const configured=await post('settings',host,{code,target:8,customPercent:75});
+  assert.equal(configured.status,200);
+  assert.equal(configured.body.customPercent,75);
   assert.equal((await post('start',friend,{code})).status,403);
   assert.equal((await post('start',host,{code})).status,200);
   state=await getState();assert.equal(state.gifts.length,4);
+  assert.equal(state.gifts.filter(gift=>gift.shared).length,1);
   const [a,b,c]=state.players.map(player=>player.id),[g0,g1,g2,g3]=state.gifts.map(gift=>gift.id);
   assert.equal((await post('join',outsider,{code})).status,400);
   const visible=(await (await fetch(base+'/api/rooms',{headers:{Cookie:outsider}})).json()).rooms.find(room=>room.code===code);

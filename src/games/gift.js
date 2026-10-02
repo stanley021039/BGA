@@ -1,5 +1,6 @@
 const {randomInt,randomUUID}=require('node:crypto');
 const {GIFTS}=require('./gift-catalog');
+const {validCustomPercent,drawContent}=require('./content-draw');
 
 const copy=value=>JSON.parse(JSON.stringify(value));
 const rankPoints={great:3,good:2,ok:1,noWay:-4};
@@ -9,7 +10,7 @@ class GiftRoom{
  constructor(code,name,rng=randomInt){
   this.type='gift';this.code=code;this.name=name;this.rng=rng;
   this.players=[];this.host=null;this.phase='waiting';this.version=0;this.updated=Date.now();
-  this.round=0;this.target=15;this.dealerId=null;this.gifts=[];this.usedGiftIds=[];
+  this.round=0;this.target=15;this.customPercent=null;this.dealerId=null;this.gifts=[];this.usedGiftIds=[];
   this.assignments={};this.rankings={};this.result=null;this.winner=null;this.events=[];
  }
  player(id){return this.players.find(player=>player.id===id);}
@@ -40,7 +41,9 @@ class GiftRoom{
   if(id!==this.host)throw Error('只有房主可以更改設定');
   if(!['waiting','finished'].includes(this.phase))throw Error('遊戲中不能更改設定');
   if(!Number.isInteger(data.target)||data.target<8||data.target>30)throw Error('目標分數必須是 8 至 30 的整數');
-  this.target=data.target;this.event('settings',`目標分數改為 ${this.target}`);
+  if(data.customPercent!==undefined&&!validCustomPercent(data.customPercent))throw Error('自訂禮物比例請選擇自動、0%、25%、50%、75% 或 100%');
+  this.target=data.target;if(data.customPercent!==undefined)this.customPercent=data.customPercent;
+  this.event('settings',`目標分數改為 ${this.target}；自訂禮物${this.customPercent===null?'依題庫比例':this.customPercent+'%'}`);
  }
  start(){
   if(!['waiting','finished'].includes(this.phase))throw Error('遊戲已開始');
@@ -51,14 +54,10 @@ class GiftRoom{
  }
  newRound(){
   const players=this.activePlayers();
-  const pool=[...GIFTS,...(this.giftProvider?.()||[])];
+  const custom=this.giftProvider?.()||[];
   this.round++;this.dealerId=players[(this.round-1)%players.length].id;
-  this.gifts=[];
-  while(this.gifts.length<players.length+1){
-   let available=pool.filter(gift=>!this.usedGiftIds.includes(gift.id)&&!this.gifts.some(chosen=>chosen.id===gift.id));
-   if(!available.length){this.usedGiftIds=this.gifts.map(gift=>gift.id);available=pool.filter(gift=>!this.usedGiftIds.includes(gift.id));}
-   const gift=available[this.rng(available.length)];this.gifts.push(gift);this.usedGiftIds.push(gift.id);
-  }
+  const draw=drawContent({builtin:GIFTS,custom,count:players.length+1,customPercent:this.customPercent,usedIds:this.usedGiftIds,rng:this.rng});
+  this.gifts=draw.items;this.usedGiftIds=draw.usedIds;
   this.assignments={};this.rankings={};this.result=null;this.phase='choosing';
   this.event('round',`第 ${this.round} 輪開始，請為朋友挑禮物並標記喜好`);
  }
@@ -122,7 +121,7 @@ class GiftRoom{
   const revealed=['reveal','finished'].includes(this.phase);
   return copy({
    type:this.type,code:this.code,name:this.name,phase:this.phase,version:this.version,
-   host:id===this.host,hostId:this.host,me:id,round:this.round,target:this.target,
+   host:id===this.host,hostId:this.host,me:id,round:this.round,target:this.target,customPercent:this.customPercent,
    dealerId:this.dealerId,gifts:this.gifts,
    players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,bot:false,giveScore:player.giveScore,getScore:player.getScore,online:Date.now()-player.lastSeen<15000})),
    submittedIds:this.phase==='choosing'?this.activePlayers().filter(player=>Object.hasOwn(this.assignments,player.id)&&Object.hasOwn(this.rankings,player.id)).map(player=>player.id):[],

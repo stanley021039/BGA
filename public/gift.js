@@ -4,6 +4,9 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&
 const rankLabels={great:'最想要 · +3',good:'想要 · +2',ok:'還可以 · +1',noWay:'最不想要 · −4',unranked:'沒標記 · −1'};
 const rankKeys=['great','good','ok','noWay'];
 const categoryGlyphs={日常:'☕',體驗:'✧',奇想:'✦',冒險:'◆'};
+const customPercentOptions=[['','依題庫比例'],['0','0% · 只抽內建'],['25','25% · 偶爾投稿'],['50','50% · 均衡'],['75','75% · 投稿優先'],['100','100% · 盡量投稿']];
+const customPercentLabel=value=>value===null?'依題庫比例':value+'%';
+const customPercentSelect=value=>customPercentOptions.map(([number,label])=>`<option value="${number}" ${(value===null?'':String(value))===number?'selected':''}>${label}</option>`).join('');
 let code=(location.pathname.match(/\/gift\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
 let session=null,state=null,busy=false,polling=false,disconnected=false,signature='',inviteBase=location.origin;
 let draftGifts={},draftLikes=[];
@@ -111,7 +114,7 @@ function receive(next){
  $('#count').textContent=next.players.length+' / 8';
  $('#steps').querySelectorAll('span').forEach((element,index)=>element.classList.toggle('active',next.phase==='choosing'?index<2:index===({reveal:2,finished:2}[next.phase]??0)));
  GameShell.stableMarkup($('#players'),next.players.map(playerRow).join(''));
- const nextSignature=JSON.stringify([next.phase,next.round,next.target,next.gifts,next.players.map(item=>item.id),next.ownAssignments,next.ownRanking,next.result,next.winner]);
+ const nextSignature=JSON.stringify([next.phase,next.round,next.target,next.customPercent,next.gifts,next.players.map(item=>item.id),next.ownAssignments,next.ownRanking,next.result,next.winner]);
  if(nextSignature!==signature){signature=nextSignature;render();if(shouldFocus){startFocus();playSound('reveal');checkNewAchievement();}}
  progress();
 }
@@ -119,12 +122,12 @@ function render(){
  const s=state;let html='';
  stopFocus();
  if(s.phase==='waiting'){
-  html=`<div class="card hero"><div class="hero-mark">🎁</div><span class="eyebrow">MAKE A WISH</span><h1>禮物擺好，<br>朋友來了就開桌。</h1><p class="sub">3–8 人一起玩。每輪可以自由安排先送禮或先標喜好，大家兩項都完成後一起揭曉。</p><div class="banner">房間代碼 <b>${esc(s.code)}</b>　<button class="quiet" data-do="invite">複製邀請連結 ↗</button></div>${s.host?`<div class="field-row"><div><label for="target">兩條分數的目標（8–30）</label><input id="target" type="number" min="8" max="30" value="${s.target}"></div><button class="button outline" data-do="settings">儲存</button></div><button class="button wide" data-do="start" ${s.players.length<3?'disabled':''}>${s.players.length<3?'還差 '+(3-s.players.length)+' 位朋友':'開始挑禮物 →'}</button>`:'<p>等房主開始，就可以幫朋友挑禮物。</p>'}</div>`;
+  html=`<div class="card hero"><div class="hero-mark">🎁</div><span class="eyebrow">MAKE A WISH</span><h1>禮物擺好，<br>朋友來了就開桌。</h1><p class="sub">3–8 人一起玩。每輪可以自由安排先送禮或先標喜好，大家兩項都完成後一起揭曉。</p><div class="banner">房間代碼 <b>${esc(s.code)}</b>　<button class="quiet" data-do="invite">複製邀請連結 ↗</button></div>${s.host?`<div class="room-settings"><div><label for="target">兩條分數的目標（8–30）</label><input id="target" type="number" min="8" max="30" value="${s.target}"></div><div><label for="customPercent">玩家投稿禮物比例</label><select id="customPercent">${customPercentSelect(s.customPercent)}</select></div><button class="button outline" data-do="settings">儲存房間設定</button></div><p class="small">比例依每輪禮物數取近似值；投稿不足或尚未輪到重複抽取時，會用內建禮物補足。選 0% 則只抽內建。</p><button class="button wide" data-do="start" ${s.players.length<3?'disabled':''}>${s.players.length<3?'還差 '+(3-s.players.length)+' 位朋友':'開始挑禮物 →'}</button>`:`<p>等房主開始，先看看這桌的禮物吧。投稿禮物設定：${customPercentLabel(s.customPercent)}。</p>`}</div>`;
  }else if(s.phase==='choosing'){
   const recipients=s.players.filter(item=>item.id!==s.me);
   const assignments=s.ownAssignments?recipients.map(item=>`<li>${esc(item.name)}：${esc(s.gifts.find(gift=>gift.id===s.ownAssignments[item.id])?.title||'禮物')}</li>`).join(''):'';
   const ranking=s.ownRanking?rankKeys.map(key=>`<li>${esc(rankLabels[key])}：${esc(s.gifts.find(gift=>gift.id===s.ownRanking[key])?.title||'禮物')}</li>`).join(''):'';
-  html=`<div class="card choosing-intro"><span class="eyebrow">CHOOSE TOGETHER</span><h1>送禮與心願，同時開始。</h1><p class="sub">先做哪一項都可以；兩項各自鎖定，所有人完成後才公開答案。三人局有四件禮物，更多人會有「玩家數＋1」件。</p></div>`+
+  html=`<div class="card choosing-intro"><span class="eyebrow">CHOOSE TOGETHER</span><h1>送禮與心願，同時開始。</h1><p class="sub">先做哪一項都可以；兩項各自鎖定，所有人完成後才公開答案。三人局有四件禮物，更多人會有「玩家數＋1」件。本房投稿禮物設定：${customPercentLabel(s.customPercent)}。</p></div>`+
    `<section class="card choice-section" aria-labelledby="giveHeading"><span class="eyebrow">01 / GIVE</span><h2 id="giveHeading">送給誰？直接點禮物</h2><p class="sub">每位朋友選一件，同一件不能送兩人；再點已選禮物可取消。</p>${s.ownAssignments?`<div class="locked"><strong>送禮已鎖定 ✓</strong><ul>${assignments}</ul></div>`:`<form id="giveForm"><div class="assignment-list">${recipients.map(item=>`<div class="assignment-row"><div class="assignment-person"><img src="${esc(item.avatar||'')}" alt=""><strong>送給 ${esc(item.name)}</strong></div><div class="choice-grid" role="group" aria-label="送給 ${esc(item.name)} 的禮物">${s.gifts.map((gift,index)=>giveChoice(gift,index,item)).join('')}</div></div>`).join('')}</div><p id="giveStatus" class="choice-status" role="status"></p><button id="giveSubmit" class="button wide" disabled>鎖定送禮選擇 →</button></form>`}</section>`+
    `<section class="card choice-section" aria-labelledby="wishHeading"><span class="eyebrow">02 / WISH</span><h2 id="wishHeading">你的心願排序</h2><p class="sub">依順序點四件：最想要、想要、還可以、最不想要。再點已選禮物會取消，後面的順位自動往前補；沒選中的禮物是 −1 分。</p>${s.ownRanking?`<div class="locked"><strong>喜好已鎖定 ✓</strong><ol>${ranking}</ol></div>`:`<form id="wishForm"><p id="likeNext" class="choice-status" role="status"></p><div class="choice-grid like-grid" role="group" aria-label="依喜好順序點選禮物">${s.gifts.map(likeChoice).join('')}</div><div id="likeOrder" class="like-order" aria-label="目前喜好順序"></div><button id="wishSubmit" class="button wide" disabled>鎖定喜好順序 →</button></form>`}</section><p id="progress" class="progress"></p>`;
  }else if(s.phase==='reveal'){
@@ -151,7 +154,7 @@ $('#stage').addEventListener('click',event=>{
   else return toast('已選四件；先點一件已選禮物取消，再挑新的。');
   syncChoices();return;
  }
- switch(button.dataset.do){case'invite':invite();break;case'settings':roomAction('settings',{target:Number($('#target').value)});break;case'start':roomAction('start');break;case'next':action('next');break;case'replay-focus':startFocus();break;case'skip-focus':stopFocus();break;}
+ switch(button.dataset.do){case'invite':invite();break;case'settings':roomAction('settings',{target:Number($('#target').value),customPercent:$('#customPercent').value===''?null:Number($('#customPercent').value)});break;case'start':roomAction('start');break;case'next':action('next');break;case'replay-focus':startFocus();break;case'skip-focus':stopFocus();break;}
 });
 $('#stage').addEventListener('error',event=>{if(event.target.matches('.choice-art img')){event.target.hidden=true;event.target.nextElementSibling.hidden=false;}},true);
 $('#stage').addEventListener('submit',async event=>{
