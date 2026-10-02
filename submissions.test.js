@@ -4,10 +4,10 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const crypto=require('node:crypto');
-const {openDatabase}=require('./db');
-const {createAuth}=require('./auth');
-const {BoardStore}=require('./board');
-const {SubmissionService}=require('./submissions');
+const {openDatabase}=require('./src/db/index');
+const {createAuth}=require('./src/auth/index');
+const {BoardStore}=require('./src/community/board');
+const {SubmissionService}=require('./src/integrations/github/submissions');
 
 test('GitHub submissions publish once, preserve operation order, and reconcile an accepted timeout',async()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-submissions-'));

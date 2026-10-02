@@ -1,4 +1,4 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const {MajorityRoom}=require('./majority');const {TOPICS,QUESTIONS}=require('./majority-questions');
+const {test}=require('node:test');const assert=require('node:assert/strict');const {MajorityRoom}=require('./src/games/majority');const {TOPICS,QUESTIONS}=require('./src/games/majority-questions');
 function room(n=3){const r=new MajorityRoom('TEST','測試',()=>0);for(let i=0;i<n;i++)r.add('P'+i);r.start();return r;}
 function ask(r,type='two'){r.act(r.presenterId,'ask',{type,prompt:'選什麼？',options:type==='three'?['A','B','C']:['A','B']});}
 function answerAll(r,answers){answers.forEach((answer,i)=>r.act(r.players[i].id,'answer',{answer}));}

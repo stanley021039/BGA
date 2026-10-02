@@ -14,7 +14,7 @@
     <section class="page-panel invite-panel"><div class="panel-heading"><span class="panel-number">01 / INVITATIONS</span><h2>邀朋友入座</h2><p>邀請碼與密碼重設連結只顯示一次，請安全地交給對方。</p></div>
      <form id="inviteForm" class="inline-form"><label>邀請碼有效天數<input name="days" type="number" min="1" max="90" value="7" required></label><button class="page-button">產生邀請碼 <span>↗</span></button></form>
      <form id="revokeForm" class="inline-form secondary-form"><label>撤銷未使用的邀請碼<input name="code" placeholder="貼上邀請碼" required></label><button class="page-button page-button-outline">撤銷邀請碼</button></form>
-     <div class="result-box"><div class="panel-number">操作結果</div><pre id="output" role="status" aria-live="polite">產生邀請碼後會顯示在這裡。</pre></div>
+     <div class="result-box"><div class="panel-number">操作結果</div><pre id="output" role="status" aria-live="polite">產生邀請碼後會顯示在這裡。</pre><div id="inviteLinkActions" hidden><a id="inviteLink" target="_blank" rel="noopener noreferrer">開啟邀請連結 ↗</a> <button id="copyInviteLink" type="button" class="page-button page-button-outline">複製邀請連結</button></div></div>
     </section>
     <section class="page-panel sync-panel"><div class="panel-heading"><span class="panel-number">02 / GITHUB SYNC</span><h2>待確認提交</h2><p>結果不明時，請先到 GitHub 查核；確認沒有建立後才能重試。</p></div><button id="refreshSubmissions" class="page-button page-button-outline">更新清單 ↻</button><div id="submissions" class="submission-list"></div></section>
    </div>

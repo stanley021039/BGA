@@ -1,10 +1,76 @@
-const labels={hair:'髮型',face:'臉型',outfit:'服裝',skinColor:'膚色',hairColor:'髮色',outfitColor:'衣服顏色'};
-const partLabels={short:'短髮',long:'長髮',curly:'捲髮',bun:'包頭',round:'圓臉',oval:'橢圓臉',square:'方臉',hoodie:'帽T',jacket:'外套',dress:'洋裝',shirt:'上衣'};
-const colorNames={'#f6d6b8':'奶油白','#dca77c':'暖杏','#b87955':'焦糖','#8b583e':'深棕','#5d392d':'可可','#2b2020':'黑褐','#60432c':'深栗','#ab7043':'橘棕','#d3ae70':'金棕','#5a4b72':'霧紫','#a74c55':'酒紅','#557bb5':'靛藍','#be665f':'磚紅','#6b9a74':'草綠','#9a78ae':'薰衣草','#c0934f':'琥珀','#506773':'灰藍'};
 const $=selector=>document.querySelector(selector);
-let appearance;
+let appearance,characters=[],labels={};
+const uploads=new Map();
 async function json(url,options){const response=await fetch(url,options),value=await response.json();if(!response.ok)throw Error(value.error);return value;}
-function preview(){const params=new URLSearchParams(appearance);$('#preview').src='/api/profile/preview.svg?'+params;}
-async function init(){const [me,options]=await Promise.all([json('/api/auth/me'),json('/api/profile/options')]);appearance=me.appearance||options.defaults;const choices={...options.parts,skinColor:options.colors.skin,hairColor:options.colors.hair,outfitColor:options.colors.outfit};for(const [key,values] of Object.entries(choices)){const label=document.createElement('label');label.textContent=labels[key];const select=document.createElement('select');select.name=key;const isColor=key.endsWith('Color');const swatch=isColor?document.createElement('span'):null;if(swatch){label.className='color-field';swatch.className='color-swatch';swatch.setAttribute('aria-hidden','true');swatch.style.backgroundColor=appearance[key];}for(const value of values){const item=document.createElement('option');item.value=value;item.textContent=partLabels[value]||colorNames[value]||value;select.append(item);}select.value=appearance[key];select.onchange=()=>{appearance={...appearance,[key]:select.value};if(swatch)swatch.style.backgroundColor=select.value;preview();};label.append(select);if(swatch)label.append(swatch);$('#editor').append(label);}preview();}
+function status(form,message){form.querySelector('.upload-status').textContent=message;}
+function bindUpload(formId,inputId){
+ const form=$(formId),input=$(inputId),drop=form.querySelector('.upload-drop');
+ input.addEventListener('change',()=>{uploads.set(inputId,input.files[0]);status(form,input.files[0]?`已選取：${input.files[0].name}`:'尚未選取圖片');});
+ drop.addEventListener('dragover',event=>{event.preventDefault();event.dataTransfer.dropEffect='copy';drop.classList.add('dragging');});
+ drop.addEventListener('dragleave',()=>drop.classList.remove('dragging'));
+ drop.addEventListener('drop',event=>{
+  event.preventDefault();drop.classList.remove('dragging');
+  const file=event.dataTransfer.files[0];
+  if(!file)return;
+  input.value='';uploads.set(inputId,file);status(form,`已拖入：${file.name}`);
+ });
+}
+function selected(){return characters.find(character=>character.id===appearance.characterId)||characters[0];}
+function expressionLabel(character,expression){return character.labels?.[expression]||labels[expression]||expression;}
+function render(){
+ const character=selected();
+ if(!character)return;
+ if(!character.expressions[appearance.expression])appearance.expression='neutral';
+ $('#preview').src=character.expressions[appearance.expression];
+ $('#preview').alt=character.name+'－'+expressionLabel(character,appearance.expression);
+ $('#characters').replaceChildren();
+ for(const item of characters){
+  const button=document.createElement('button'),img=document.createElement('img'),name=document.createElement('span');
+  button.type='button';button.className='preset-card';button.setAttribute('aria-pressed',String(item.id===character.id));
+  button.classList.toggle('active',item.id===character.id);button.setAttribute('aria-label','選擇'+item.name);
+  img.src=item.expressions.neutral;img.alt='';name.textContent=item.name;button.append(img,name);
+  button.onclick=()=>{appearance={version:5,characterId:item.id,expression:'neutral'};$('#message').textContent='已選擇角色，按「保存角色」才會套用。';render();};
+  $('#characters').append(button);
+ }
+ $('#expressions').replaceChildren();
+ for(const [expression,url] of Object.entries(character.expressions)){
+  const button=document.createElement('button'),img=document.createElement('img'),name=document.createElement('span');
+  button.type='button';button.className='expression-card';button.setAttribute('aria-pressed',String(expression===appearance.expression));
+  button.classList.toggle('active',expression===appearance.expression);button.setAttribute('aria-label','顯示'+expressionLabel(character,expression)+'表情');
+  img.src=url;img.alt='';name.textContent=expressionLabel(character,expression);button.append(img,name);
+  button.onclick=()=>{appearance.expression=expression;$('#message').textContent='已選擇表情，按「保存角色」才會套用。';render();};
+  $('#expressions').append(button);
+ }
+ $('#upload-expression').hidden=!character.id.startsWith('user:');
+ $('#emote-target').textContent=character.id.startsWith('user:')?`正在為「${character.name}」新增表情（最多 6 個）。`:'先從角色圖庫選擇自己上傳的角色。';
+}
+async function imagePayload(file,form){
+ if(!file||file.size>1024*1024)throw Error('請選擇不超過 1 MB 的圖片');
+ if(file.type&&!['image/png','image/gif','image/webp'].includes(file.type))throw Error('僅接受 PNG、GIF 或 WebP 圖片');
+ status(form,'正在讀取圖片…');
+ const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('讀取圖片失敗'));reader.readAsDataURL(file);});
+ return {base64,mime:file.type};
+}
+async function init(){
+ const [me,options]=await Promise.all([json('/api/auth/me'),json('/api/profile/options')]);
+ appearance=me.appearance||options.defaults;characters=options.characters;labels=options.expressionLabels;
+ render();
+}
 $('#save').onclick=async()=>{const button=$('#save');button.disabled=true;try{const result=await json('/api/profile/appearance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(appearance)});appearance=result.appearance;$('#message').textContent='角色已保存，遊戲座位會更新。';}catch(error){$('#message').textContent=error.message;}finally{button.disabled=false;}};
+bindUpload('#create-character','#character-file');
+bindUpload('#upload-expression','#expression-file');
+$('#create-character').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;try{
+ const image=await imagePayload(uploads.get('#character-file')||$('#character-file').files[0],form);
+ status(form,'正在上傳角色…');
+ const result=await json('/api/profile/characters',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('#character-name').value,...image})});
+ const options=await json('/api/profile/options');characters=options.characters;appearance={version:5,characterId:result.id,expression:'neutral'};
+ form.reset();uploads.delete('#character-file');status(form,'主角色已上傳');$('#message').textContent='主角色已上傳。可繼續新增表情；按「保存角色」後會顯示在遊戲座位。';render();
+ }catch(error){status(form,error.message);}finally{button.disabled=false;}};
+$('#upload-expression').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget,button=form.querySelector('button');button.disabled=true;try{
+ const id=selected().id.slice(5),name=$('#expression-name').value.trim(),image=await imagePayload(uploads.get('#expression-file')||$('#expression-file').files[0],form);
+ status(form,'正在上傳表情…');
+ const result=await json(`/api/profile/characters/${id}/emotes`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,...image})});
+ const options=await json('/api/profile/options');characters=options.characters;appearance.expression=result.expression;
+ form.reset();uploads.delete('#expression-file');status(form,'表情圖片已新增');$('#message').textContent='表情已新增到角色。若要將它設為預設外觀，再按「保存角色」。';render();
+ }catch(error){status(form,error.message);}finally{button.disabled=false;}};
 init().catch(error=>$('#message').textContent=error.message);
