@@ -98,7 +98,7 @@ class ThunderRoom{
  if(knownKind==='X'){this.eliminate(c,'撞上不可通行地形');return;}
  this.queue.unshift({type:'collision',id:c.id,normal:e.normal,x:c.x,y:c.y,seq:c.moveSeq});
  if(cell.hazard){const h=cell.hazard;h.face=true;
- this.event('hazard',`${this.label(c)}遇到${HAZARD_NAMES[h.kind]}`,{car:c.id});
+ this.event('hazard',`${this.label(c)}遇到${HAZARD_NAMES[h.kind]}`,{car:c.id,hazard:h.kind});
  if(['mine','wreck','quake','worm'].includes(h.kind)){this.hazardDiscard.push(h.kind);delete cell.hazard;}
  if(h.kind==='mine'){this.stop(c);this.queue.unshift({type:'damage',id:c.id});}
  if(h.kind==='wreck'){if(this.cars.filter(c=>c.wreck&&!c.dead).length<4)this.cars.push({id:randomUUID(),owner:null,size:0,x:c.x,y:c.y,damage:[],dead:false,wreck:true});this.stop(c);}
