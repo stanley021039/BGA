@@ -29,6 +29,8 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 
 房主設定投稿比例的新版 `b5da6f0` 已獨立放入 `releases/b5da6f0`，包含前述 300 件禮物；Windows／Linux 全套測試各 105/105。房主可在等待室選依題庫比例或 0／25／50／75／100%，送禮達人每輪禮物與同頻俱樂部每次三張候選題分別套用。使用者同意清除所有現有房間後，以 SQLite 線上備份建立 `shared/backups/pre-b5da6f0-20261002-101814.sqlite`，完整性 `ok`、schema v6、帳號 4 筆；隨後切換 `current` 至 `releases/b5da6f0` 並重啟。`afterhours.service`、`afterhours-tunnel.service` 皆為 `active`，正式 SQLite 再檢查完整性 `ok`。從 Windows 經公開 HTTPS 驗證登入頁、兩款遊戲腳本與 robots 均回 200，兩款腳本皆含 `customPercent`，robots 仍全站 `Disallow: /`。新禮物圖檔只允許登入會員讀取，公開匿名要求回 `LOGIN_REQUIRED`；本次尚未以公開帳號實際進房確認房主設定或抽到新圖。
 
+同頻俱樂部體驗改版 `001e967` 已放入獨立的 `releases/001e967` 候選目錄，未切換 `current`。Windows 與 Linux 全套測試各 106/106；包含倒扣交卷便箋、完整票數／得分、可跳過焦點、個人音效與「第一次舉牌」成就，詳細驗證見[同頻進度](MAJORITY-IMMERSION-PROGRESS.md)。候選 ZIP SHA-256 為 `82295c7d859c5eb24afdec861e19b06a0d8ea32a86d3e6ad3a92a692d48ef42d`。正式 SQLite 已線上備份至 `shared/backups/pre-001e967-20261002-104410.sqlite`，完整性 `ok`、schema v6、帳號 4 筆。正式站目前仍在 `b5da6f0`；切換需重啟並清除記憶體房間，當前沒有可用公開測試帳號憑證核對房間數，因此尚未重啟。
+
 ## 尚待正式設定
 
 伺服器 `shared/.env` 的 `PUBLIC_URL` 是 `https://shhuang.cc`，資料目錄位於 `shared/data`。**尚未設定 `GITHUB_TOKEN`**。管理者或後續部署 AI 須提供對 `stanley021039/BGA` Issues 具讀寫權限的憑證，放在只允許擁有者讀取的 `shared/.env`，重啟 `afterhours.service`，再以真實授權驗證建立、回覆、關閉及重開 Issue。此憑證不得提交到 Git 或寫入 MR 內容。
