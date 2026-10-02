@@ -44,10 +44,29 @@ window.StudioEditor=(()=>{
   person:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3-7 8-7s8 3 8 7"/>',
   gift:'<rect x="4" y="10" width="16" height="11"/><path d="M3 7h18v3H3zM12 7v14M12 7C6 7 6 2 9 2c2 0 3 3 3 5Zm0 0c6 0 6-5 3-5-2 0-3 3-3 5Z"/>'
  };
+ let tooltip,tooltipOwner;
+ function tooltipElement(){
+  if(tooltip)return tooltip;
+  tooltip=document.createElement('div');tooltip.className='studio-floating-tooltip';tooltip.id='studio-floating-tooltip';tooltip.setAttribute('role','tooltip');tooltip.hidden=true;document.body.append(tooltip);
+  const dismiss=()=>{tooltip.hidden=true;tooltipOwner=null;};
+  window.addEventListener('scroll',dismiss,true);window.addEventListener('resize',dismiss);
+  return tooltip;
+ }
+ function showTooltip(element){
+  const bubble=tooltipElement(),rect=element.getBoundingClientRect();if(!rect.width||!rect.height)return;
+  bubble.textContent=element.dataset.tooltip;bubble.hidden=false;bubble.style.left='0px';bubble.style.top='0px';
+  const gap=8,width=bubble.offsetWidth,height=bubble.offsetHeight;
+  const left=clamp(rect.left+rect.width/2-width/2,gap,Math.max(gap,innerWidth-width-gap));
+  let top=rect.top-height-gap;if(top<gap)top=rect.bottom+gap;
+  bubble.style.left=left+'px';bubble.style.top=clamp(top,gap,Math.max(gap,innerHeight-height-gap))+'px';tooltipOwner=element;
+ }
+ function hideTooltip(element){if(tooltip&&tooltipOwner===element){tooltip.hidden=true;tooltipOwner=null;}}
  function iconize(element,key,label){
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.8');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');svg.setAttribute('aria-hidden','true');svg.innerHTML=ICONS[key]||ICONS.photo;
   const input=element.querySelector('input[type=file]');element.replaceChildren(svg);if(input){input.setAttribute('aria-label',label);element.append(input);}
-  element.classList.add('studio-icon-button');element.setAttribute('aria-label',label);element.setAttribute('title',label);element.dataset.tooltip=label;
+  element.classList.add('studio-icon-button');element.setAttribute('aria-label',label);element.dataset.tooltip=label;
+  element.addEventListener('pointerenter',()=>showTooltip(element));element.addEventListener('pointerleave',()=>{if(!element.matches(':focus-within'))hideTooltip(element);});
+  element.addEventListener('focusin',()=>showTooltip(element));element.addEventListener('focusout',()=>{if(!element.matches(':hover'))hideTooltip(element);});
   return element;
  }
  function mount(){
