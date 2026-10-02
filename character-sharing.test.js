@@ -59,7 +59,7 @@ test('friends can choose shared characters, while private art and editing stay w
   app=createApp(config);
   await app.listen();
   const persisted=openDatabase(config.dbFile);
-  assert.equal(persisted.prepare('PRAGMA user_version').get().user_version,8);
+  assert.equal(persisted.prepare('PRAGMA user_version').get().user_version,9);
   assert.equal(persisted.prepare('SELECT shared FROM player_characters WHERE id=?').get(uuid).shared,0);
   persisted.close();
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}

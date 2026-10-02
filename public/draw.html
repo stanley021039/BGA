@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>你畫我猜｜Afterhours</title>
+<link rel="stylesheet" href="/draw.css"><link rel="stylesheet" href="/shared/room-host.css"><link rel="stylesheet" href="/shared/game-shell.css"></head>
+<body><div class="draw-shell">
+ <header class="draw-header"><a class="draw-brand" href="/?game=draw"><span>✎</span><b>你畫我猜<small>AFTERHOURS / DRAW & GUESS</small></b></a>
+ <nav><span id="roomTag">畫一筆，猜一題</span><button id="invite" class="quiet" hidden>邀請朋友 ↗</button><a class="quiet" href="/draw-words">共編題庫 ↗</a><button id="help" class="quiet">怎麼玩？</button><a class="quiet" href="/">回大廳</a></nav></header>
+ <p id="connection" role="status"></p>
+ <div class="draw-layout"><main>
+  <div class="stage-head"><span id="roundTag">準備開桌</span><strong id="phaseTag">等待玩家</strong></div>
+  <section id="stage" aria-live="polite"></section>
+  <section id="boardSection" class="board-section" hidden>
+   <div class="board-head"><div><strong id="boardTitle">本輪畫布</strong><span id="boardHint"></span></div><b id="timer" role="timer">–</b></div>
+   <div class="canvas-frame"><canvas id="drawCanvas" width="512" height="256" tabindex="0" aria-label="你畫我猜畫布；畫者可用滑鼠、觸控或方向鍵移動與空白鍵落筆"></canvas></div>
+   <div id="tools" class="tools" hidden><div class="tool-row" role="group" aria-label="繪畫工具">
+    <button type="button" data-tool="brush" class="selected" title="畫筆" aria-label="畫筆">✎</button><button type="button" data-tool="erase" title="橡皮擦" aria-label="橡皮擦">⌫</button>
+    <button type="button" data-tool="line" title="直線" aria-label="直線">╱</button><button type="button" data-tool="rect" title="矩形" aria-label="矩形">▢</button><button type="button" data-tool="ellipse" title="圓形" aria-label="圓形">◯</button>
+    <button id="undo" type="button" title="復原上一筆" aria-label="復原上一筆">↶</button><button id="clear" type="button" title="清空畫布" aria-label="清空畫布">▤</button></div>
+    <div class="color-row"><label class="color-pick" title="選擇顏色">色彩 <input id="color" type="color" value="#273942"></label><div id="swatches" class="swatches" aria-label="常用顏色"></div>
+    <label class="size-pick">筆刷 <input id="size" type="range" min="1" max="40" value="6"><output id="sizeValue">6</output></label>
+    <label class="fill-pick"><input id="filled" type="checkbox"> 填滿形狀</label></div></div>
+   <form id="guessForm" hidden><label for="guessInput">你猜這是什麼？</label><div><input id="guessInput" maxlength="40" autocomplete="off" placeholder="輸入答案，按 Enter 送出" required><button type="submit">送出猜測 →</button></div></form>
+   <div id="guessFeed" class="guess-feed" aria-live="polite"></div>
+  </section>
+ </main><aside><div class="aside-head"><div><span>THE ART TABLE</span><h2>這桌的朋友</h2></div><span id="count">0 / 8</span></div><div id="players"></div><a class="history-link" href="/history">查看對局歷史 ↗</a></aside></div>
+</div>
+<dialog id="rules"><button id="closeHelp" class="quiet close">關閉 ×</button><h2>你畫，我們猜。</h2><ol>
+ <li>2–8 位玩家入座，每人輪流當一次畫者；房主可選 60、90 或 120 秒作畫。</li>
+ <li>畫者有 15 秒從三題選一。只有畫者知道答案；其他人看題材與字數。</li>
+ <li>畫者用畫筆、橡皮擦與形狀即時作畫；不能匯入照片。猜題者輸入答案，可重複猜，但每輪只計第一次答對。</li>
+ <li>越早猜中分數越高（30–100）；每位朋友猜中，畫者另得 15 分。時間到或全部猜中後揭曉。</li>
+ <li>新加入的朋友從下一輪開始猜題；當局畫者順序不變。每人畫完後比總分，同分共同獲勝。</li></ol><p>本輪畫者可在揭曉後手動把畫作存入自己的私人圖庫。</p></dialog>
+<div id="toast" role="status" hidden></div>
+<script src="/shared/room-reconnect.js"></script><script src="/shared/room-host.js"></script><script src="/shared/game-shell.js"></script><script src="/shared/api.js"></script><script src="/shared/stroke-canvas.js"></script><script src="/draw.js"></script></body></html>
