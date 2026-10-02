@@ -2,6 +2,7 @@
 const $=selector=>document.querySelector(selector);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const rankLabels={great:'最想要 · +3',good:'想要 · +2',ok:'還可以 · +1',noWay:'最不想要 · −4',unranked:'沒標記 · −1'};
+const storyRankLabels={great:'最想要',good:'想要',ok:'還可以',noWay:'最不想要',unranked:'沒標記'};
 const rankKeys=['great','good','ok','noWay'];
 const categoryGlyphs={日常:'☕',體驗:'✧',奇想:'✦',冒險:'◆'};
 const customPercentOptions=[['','依題庫比例'],['0','0% · 只抽內建'],['25','25% · 偶爾投稿'],['50','50% · 均衡'],['75','75% · 投稿優先'],['100','100% · 盡量投稿']];
@@ -49,6 +50,16 @@ function syncChoices(){
 }
 function playerRow(item){return GameShell.playerRow(item,{me:state.me,status:(item.id===state.hostId?'房主 · ':'')+(item.online?'在線':'暫時離線'),metrics:[{value:item.giveScore,label:'送禮分數'},{value:item.getScore,label:'收禮分數'}]});}
 function progress(){const label=$('#progress');if(label&&state?.phase==='choosing')label.textContent=`全桌進度：送禮 ${state.gaveIds.length} / ${state.players.length} 人 · 喜好 ${state.wishedIds.length} / ${state.players.length} 人已鎖定。兩項都完成才會揭曉。`;}
+function storyAvatar(item){return item?.avatar?`<img src="${esc(item.avatar)}" alt="" loading="eager"><span class="story-avatar-fallback" aria-hidden="true" hidden>✦</span>`:'<span class="story-avatar-fallback" aria-hidden="true">✦</span>';}
+function giftStoryStage(s){
+ if(!s.result)return '';
+ return `<div class="gift-story" role="group" aria-label="禮物揭曉舞台"><div class="gift-story-rest">${s.phase==='finished'?winnerStage(s):'<span class="gift-story-seal" aria-hidden="true">✦ 🎁 ✦</span>'}<p>本輪 ${s.result.entries.length} 件禮物已揭曉；每份心意與分數都列在下方。</p></div><div id="giftSpotlight" class="gift-spotlight" hidden><div id="giftFocusContent" class="gift-focus-content" aria-live="off"></div><button type="button" class="quiet" data-do="skip-focus">跳過演出</button></div><button type="button" class="quiet spotlight-control" data-do="replay-focus" ${allowsMotion()?'':'hidden'}>重播焦點禮物 ↻</button></div>`;
+}
+function winnerStage(s){
+ const winners=s.winner?.ids||[];
+ if(!winners.length)return '';
+ return `<div id="giftVictory" class="gift-victory" role="group" aria-label="本局得勝者">${winners.map(id=>{const item=s.players.find(player=>player.id===id);return `<div class="gift-victory-player">${storyAvatar(item)}<b>${esc(item?.name||'玩家')}</b><span aria-hidden="true">✦</span></div>`;}).join('')}</div>`;
+}
 function resultPanel(s){
  if(!s.result)return '';
  const gifts=new Map(s.gifts.map(gift=>[gift.id,gift]));
@@ -61,7 +72,7 @@ function resultPanel(s){
    return `<div class="reveal-entry" data-reveal-entry="${index}"><span class="reveal-gift">${gift?.image?`<img src="${esc(gift.image)}" alt="" loading="lazy">`:''}<span><b>${esc(player(entry.giverId)?.name||'玩家')}</b> 送了「${esc(gift?.title||'禮物')}」<small> · ${esc(rankLabels[entry.rank]||entry.rank)}</small></span></span><b class="${entry.points>=0?'positive':'negative'}">${entry.points>0?'+':''}${entry.points}</b></div>`;
   }).join('')}</section>`;
  }).join('');
- return `<section class="card result-card" aria-label="第 ${s.result.round} 輪完整結果"><span class="eyebrow">ROUND ${s.result.round} / FULL RESULT</span><h2>這輪的完整結果</h2><p class="sub">所有禮物和分數已公開，可以直接往下閱讀。</p><button type="button" class="quiet spotlight-control" data-do="replay-focus" ${allowsMotion()?'':'hidden'}>重播 3 件焦點禮物 ↻</button><div id="giftSpotlight" class="gift-spotlight" hidden><div id="giftFocusContent" aria-hidden="true"></div><button type="button" class="quiet" data-do="skip-focus">跳過演出</button></div><div class="result-totals" aria-label="送禮與收禮總分">${scores}</div><p id="giftAchievementNotice" class="achievement-notice" role="status" hidden></p><div class="reveal-groups">${groups}</div></section>`;
+ return `<section class="card result-card" aria-label="第 ${s.result.round} 輪完整結果"><span class="eyebrow">ROUND ${s.result.round} / FULL RESULT</span><h2>這輪的完整結果</h2><p class="sub">所有禮物和分數已公開，可以直接往下閱讀。</p><div class="result-totals" aria-label="送禮與收禮總分">${scores}</div><p id="giftAchievementNotice" class="achievement-notice" role="status" hidden></p><div class="reveal-groups">${groups}</div></section>`;
 }
 async function checkNewAchievement(){
  try{
@@ -83,20 +94,21 @@ function playSound(kind){
 }
 function stopSound(){for(const clip of playingSounds)clip.pause();playingSounds.clear();}
 function updateSoundButton(){const button=$('#soundToggle');button.textContent=soundEnabled?'關閉音效':'開啟音效';button.setAttribute('aria-pressed',String(soundEnabled));$('#soundControl').hidden=!soundEnabled;$('#soundVolume').value=String(Math.round(soundVolume*100));}
-function stopFocus(){clearTimeout(focusTimer);focusTimer=null;const panel=$('#giftSpotlight'),hadFocus=panel?.contains(document.activeElement);if(panel)panel.hidden=true;if(hadFocus)$('#stage [data-do="replay-focus"]')?.focus();}
+function stopFocus(){clearTimeout(focusTimer);focusTimer=null;const panel=$('#giftSpotlight'),hadFocus=panel?.contains(document.activeElement);if(panel)panel.hidden=true;panel?.closest('.gift-story')?.classList.remove('is-playing');if(hadFocus)$('#stage [data-do="replay-focus"]')?.focus();}
 function focusIndices(entries){return [...new Set([0,Math.floor((entries.length-1)/2),entries.length-1])].filter(index=>index>=0&&index<entries.length);}
+function celebrateVictory(){if(allowsMotion()&&!document.hidden)$('#giftVictory')?.classList.add('celebrate');}
 function startFocus(){
  if(!allowsMotion()||!state?.result||document.hidden)return;
  const entries=state.result.entries,indexes=focusIndices(entries),panel=$('#giftSpotlight'),content=$('#giftFocusContent');
  if(!indexes.length||!panel||!content)return;
- stopFocus();panel.hidden=false;
+ stopFocus();$('#giftVictory')?.classList.remove('celebrate');panel.hidden=false;panel.closest('.gift-story')?.classList.add('is-playing');
  let step=0;
  const show=()=>{
-  if(step>=indexes.length){stopFocus();return;}
-  const entry=entries[indexes[step]],gift=state.gifts.find(item=>item.id===entry.giftId);
-  content.innerHTML=`<span class="eyebrow">FOCUS ${step+1} / ${indexes.length}</span><div class="focus-gift">${gift?.image?`<img src="${esc(gift.image)}" alt="">`:'<span aria-hidden="true">✦</span>'}<div><strong>${esc(gift?.title||'禮物')}</strong><p>${esc(player(entry.giverId)?.name||'玩家')} 送給 ${esc(player(entry.recipientId)?.name||'玩家')}</p><b>${esc(rankLabels[entry.rank]||entry.rank)}　${entry.points>0?'+':''}${entry.points}</b></div></div>`;
+  if(step>=indexes.length){stopFocus();celebrateVictory();return;}
+  const entry=entries[indexes[step]],gift=state.gifts.find(item=>item.id===entry.giftId),giver=player(entry.giverId),recipient=player(entry.recipientId);
+  content.innerHTML=`<span class="eyebrow">FOCUS ${step+1} / ${indexes.length}</span><div class="gift-story-line"><div class="story-person story-giver">${storyAvatar(giver)}<small>送禮</small><b>${esc(giver?.name||'玩家')}</b></div><div class="story-flight"><div class="story-gift-card">${gift?.image?`<img src="${esc(gift.image)}" alt=""><span class="story-gift-fallback" aria-hidden="true" hidden>✦</span>`:'<span class="story-gift-fallback" aria-hidden="true">✦</span>'}<strong>${esc(gift?.title||'禮物')}</strong></div></div><div class="story-person story-recipient">${storyAvatar(recipient)}<small>收禮</small><b>${esc(recipient?.name||'玩家')}</b></div></div><div class="story-verdict"><span>${esc(storyRankLabels[entry.rank]||'沒標記')}</span><b class="${entry.points>=0?'positive':'negative'}">本件評分 ${entry.points>0?'+':''}${entry.points}</b></div>`;
   content.classList.remove('focus-enter');void content.offsetWidth;content.classList.add('focus-enter');
-  step++;focusTimer=setTimeout(show,850);
+  step++;focusTimer=setTimeout(show,1400);
  };
  show();
 }
@@ -132,10 +144,10 @@ function render(){
    `<section class="card choice-section" aria-labelledby="giveHeading"><span class="eyebrow">01 / GIVE</span><h2 id="giveHeading">送給誰？直接點禮物</h2><p class="sub">每位朋友選一件，同一件不能送兩人；再點已選禮物可取消。</p>${s.ownAssignments?`<div class="locked"><strong>送禮已鎖定 ✓</strong><ul>${assignments}</ul></div>`:`<form id="giveForm"><div class="assignment-list">${recipients.map(item=>`<div class="assignment-row"><div class="assignment-person"><img src="${esc(item.avatar||'')}" alt=""><strong>送給 ${esc(item.name)}</strong></div><div class="choice-grid" role="group" aria-label="送給 ${esc(item.name)} 的禮物">${s.gifts.map((gift,index)=>giveChoice(gift,index,item)).join('')}</div></div>`).join('')}</div><p id="giveStatus" class="choice-status" role="status"></p><button id="giveSubmit" class="button wide" disabled>鎖定送禮選擇 →</button></form>`}</section>`+
    `<section class="card choice-section" aria-labelledby="wishHeading"><span class="eyebrow">02 / WISH</span><h2 id="wishHeading">你的心願排序</h2><p class="sub">依順序點四件：最想要、想要、還可以、最不想要。再點已選禮物會取消，後面的順位自動往前補；沒選中的禮物是 −1 分。</p>${s.ownRanking?`<div class="locked"><strong>喜好已鎖定 ✓</strong><ol>${ranking}</ol></div>`:`<form id="wishForm"><p id="likeNext" class="choice-status" role="status"></p><div class="choice-grid like-grid" role="group" aria-label="依喜好順序點選禮物">${s.gifts.map(likeChoice).join('')}</div><div id="likeOrder" class="like-order" aria-label="目前喜好順序"></div><button id="wishSubmit" class="button wide" disabled>鎖定喜好順序 →</button></form>`}</section><p id="progress" class="progress"></p>`;
  }else if(s.phase==='reveal'){
-  html=`<div class="card reveal-intro"><span class="eyebrow">STEP 03 / REVEAL</span><h1>拆禮物囉！</h1><p class="sub">每件禮物同時影響送禮者與收禮者；這輪的所有結果都已公開。</p>${s.host?'<button class="button" data-do="next">下一輪，換一批禮物 →</button>':'<p>等房主開始下一輪。</p>'}</div>${resultPanel(s)}`;
+  html=`<div class="card reveal-intro"><span class="eyebrow">STEP 03 / REVEAL</span><h1>拆禮物囉！</h1><p class="sub">每件禮物同時影響送禮者與收禮者；這輪的所有結果都已公開。</p>${giftStoryStage(s)}${s.host?'<button class="button" data-do="next">下一輪，換一批禮物 →</button>':'<p>等房主開始下一輪。</p>'}</div>${resultPanel(s)}`;
  }else if(s.phase==='finished'){
   const hasWinner=!!s.winner?.ids?.length;
-  html=`<div class="card hero"><div class="hero-mark">✦</div><span class="eyebrow">THE GIFTED</span><h1>${hasWinner?'今晚的送禮達人':'本局結束'}</h1><p class="winner-names">${s.winner?.ids?.map(id=>esc(player(id)?.name||'玩家')).join('、')||esc(s.winner?.reason||'')}</p>${hasWinner?`<p class="sub">${s.round} 輪後，送禮與收禮都達到 ${s.target} 分。</p>`:''}<div class="standings">${[...s.players].sort((a,b)=>Math.min(b.giveScore,b.getScore)-Math.min(a.giveScore,a.getScore)).map(item=>`<div class="standing"><b>${esc(item.name)}</b><span>🎁 ${item.giveScore}</span><span>♡ ${item.getScore}</span></div>`).join('')}</div>${s.host?'<button class="button wide" data-do="start">再玩一局 ↻</button>':''}</div>${resultPanel(s)}`;
+  html=`<div class="card hero gift-final"><span class="eyebrow">THE GIFTED</span><h1>${hasWinner?'今晚的送禮達人':'本局結束'}</h1><p class="winner-names">${s.winner?.ids?.map(id=>esc(player(id)?.name||'玩家')).join('、')||esc(s.winner?.reason||'')}</p>${hasWinner?`<p class="sub">${s.round} 輪後，送禮與收禮都達到 ${s.target} 分。</p>`:''}${giftStoryStage(s)}<div class="standings">${[...s.players].sort((a,b)=>Math.min(b.giveScore,b.getScore)-Math.min(a.giveScore,a.getScore)).map(item=>`<div class="standing"><b>${esc(item.name)}</b><span>🎁 ${item.giveScore}</span><span>♡ ${item.getScore}</span></div>`).join('')}</div>${s.host?'<button class="button wide" data-do="start">再玩一局 ↻</button>':''}</div>${resultPanel(s)}`;
  }
  $('#stage').innerHTML=html;syncChoices();progress();
 }
@@ -157,7 +169,7 @@ $('#stage').addEventListener('click',event=>{
  }
  switch(button.dataset.do){case'invite':invite();break;case'settings':roomAction('settings',{target:Number($('#target').value),customPercent:$('#customPercent').value===''?null:Number($('#customPercent').value)});break;case'start':roomAction('start');break;case'next':action('next');break;case'replay-focus':startFocus();break;case'skip-focus':stopFocus();break;}
 });
-$('#stage').addEventListener('error',event=>{if(event.target.matches('.choice-art img')){event.target.hidden=true;event.target.nextElementSibling.hidden=false;}},true);
+$('#stage').addEventListener('error',event=>{if(event.target.matches('.choice-art img,.story-gift-card img,.story-person img,.gift-victory-player img')){event.target.hidden=true;event.target.nextElementSibling.hidden=false;}},true);
 $('#stage').addEventListener('submit',async event=>{
  event.preventDefault();
  if(event.target.id==='giveForm'){const assignments={...draftGifts};if(Object.keys(assignments).length!==state.players.length-1)return toast('請先為每位朋友選一件禮物');return action('give',{assignments});}

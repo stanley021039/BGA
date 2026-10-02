@@ -111,3 +111,14 @@ body{background:#141714}.race-header{display:flex;gap:30px;align-items:center;pa
 @keyframes race-car-fade{from{opacity:1;transform:none}to{opacity:.2;transform:translate(55px,18px) rotate(20deg)}}
 @keyframes race-event-flash{from{opacity:0;transform:translateX(-50%) scale(.4)}55%{opacity:1;transform:translateX(-50%) scale(1.22)}to{opacity:1;transform:translateX(-50%) scale(1)}}
 @media(max-width:650px){.race-event-popup{top:45px;right:8px;width:min(300px,calc(100% - 16px));padding:10px 12px}.race-event-scene{height:58px}.race-event-popup strong{font-size:16px}}
+
+/* Physical impacts happen on the cars; the finish uses the track itself as the result stage. */
+.race-car-impact{transform-box:fill-box;transform-origin:center;animation:race-car-impact .65s ease-out both}
+@keyframes race-car-impact{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-7px) rotate(-10deg)}55%{transform:translateX(5px) rotate(7deg)}75%{transform:translateX(-2px) rotate(-3deg)}}
+#raceSpotlight{position:absolute;z-index:5;top:50%;left:50%;transform:translate(-50%,-50%);width:min(540px,calc(100% - 30px));min-height:180px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;text-align:center;margin:0;padding:25px 28px;background:linear-gradient(140deg,#343321f5,#17231cf7);border:2px solid #ffcb7b;border-radius:16px;box-shadow:0 20px 50px #0b110bd9,0 0 0 8px #f4c06e26;animation:race-finish-enter .35s ease-out both}
+#raceSpotlight[hidden]{display:none}
+#raceSpotlight::before{content:'⚑  FINISH LINE';display:block;color:#ffc373;font-size:16px;font-weight:900;letter-spacing:3px;margin-bottom:15px}
+#raceSpotlight strong{display:block;font-size:clamp(20px,2.8vw,30px);line-height:1.35;color:#fff0ce}
+#raceSpotlight button{margin-top:18px;align-self:center}
+@keyframes race-finish-enter{from{opacity:0;transform:translate(-50%,-42%) scale(.93)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@media(max-width:650px){#raceSpotlight{min-height:150px;padding:18px}#raceSpotlight::before{font-size:13px}}

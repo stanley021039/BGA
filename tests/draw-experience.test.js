@@ -10,7 +10,7 @@ const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'draw.js'), 
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 function browserHarness() {
- const elements = new Map(), listeners = new Map(), frames = [], strokeRequests = [], commandRequests = [];
+ const elements = new Map(), listeners = new Map(), frames = [], animations = [], strokeRequests = [], commandRequests = [];
  let snapshot = {round: 1, version: 0, strokes: []};
  function element(selector) {
   if (!elements.has(selector)) {
@@ -26,7 +26,7 @@ function browserHarness() {
     remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); },
     querySelector(selector) { return selector === '.feed-empty' ? this.children.find(child => child.className === 'feed-empty') || null : null; },
     querySelectorAll() { return []; },
-    animate() { return {cancel() {}}; }, showModal() {}, close() {}, focus() {},
+    animate() { animations.push(selector); return {cancel() {}}; }, showModal() {}, close() {}, focus() {},
    };
    elements.set(selector, node);
   }
@@ -42,7 +42,17 @@ function browserHarness() {
   Date, crypto: {getRandomValues: bytes=>randomFillSync(bytes)}, confirm: () => true,
   fetch: async route => ({json: async () => route === '/api/info' ? {preferred: null} : {}}),
   RoomHost: {update() {}, kicked() {}}, RoomReconnect: {restore: async () => null},
-  GameShell: {stableMarkup(node, html) { node.innerHTML = html; },playerRow:()=>''},
+  GameShell: {playerRow:(p)=>`<div class="player" data-player-id="${p.id}"></div>`,stableMarkup(node, html) {
+   node.innerHTML = html;
+   if (node === element('#players')) {
+    node.playerRows = [...html.matchAll(/data-player-id="([^"]+)"/g)].map(([, id]) => {
+     const row = element('row:' + id + ':' + randomUUID());
+     row.dataset.playerId = id;
+     return row;
+    });
+    node.querySelectorAll = selector => selector === '.player' ? node.playerRows : [];
+   }
+  }},
   StrokeCanvas: {
    pointFrom(event) { return event.point; },
    redraw(_canvas, strokes, preview) {
@@ -68,7 +78,7 @@ function browserHarness() {
   context.injectedState = state;
   vm.runInContext('session={code:"ABC123"};receive(injectedState)', context);
  }
- return {context, element, listeners, frames, strokeRequests, commandRequests, receive, setSnapshot(value) { snapshot = value; }};
+ return {context, element, listeners, frames, animations, strokeRequests, commandRequests, receive, setSnapshot(value) { snapshot = value; }};
 }
 
 function drawingState(me, guesses = []) {
@@ -200,6 +210,66 @@ test('chat drops only its oldest node after fifty guesses',()=>{
  assert.equal(after.length,50);
  assert.equal(after[0],before[1],'existing chat nodes remain instead of being announced again');
  assert.match(after.at(-1).textContent,/新猜測/);
+});
+
+test('phase scenes stay in one canvas frame without replacing the drawing canvas', async () => {
+ const ui=browserHarness(),base=drawingState('guest');
+ const choosing={...base,phase:'choosing',question:null,hint:null,candidates:[],deadline:Date.now()+15_000};
+ ui.receive(choosing);await pause(0);
+ const canvas=ui.element('#drawCanvas'),frameCount=ui.frames.length;
+ assert.equal(ui.element('#boardSection').hidden,false);
+ assert.match(ui.element('#canvasStage').innerHTML,/畫者正在挑題/);
+ assert.doesNotMatch(ui.element('#canvasStage').innerHTML,/貓咪/,'the guessing player does not see the answer');
+ ui.receive(base);await pause(0);
+ assert.equal(ui.element('#canvasStage').hidden,true);
+ assert.equal(ui.element('#drawCanvas'),canvas);
+ assert.equal(ui.frames.length,frameCount,'entering the drawing phase does not clear or repaint the canvas');
+ const reveal={...base,phase:'reveal',question:{title:'貓咪'},result:{answer:'貓咪',reason:'時間到',guessedIds:[]},deadline:Date.now()+8000};
+ ui.receive(reveal);await pause(0);
+ assert.match(ui.element('#canvasStage').innerHTML,/答案揭曉/);
+ assert.match(ui.element('#canvasStage').innerHTML,/貓咪/);
+ assert.equal(ui.element('#drawCanvas'),canvas);
+ assert.equal(ui.frames.length,frameCount,'the reveal stage does not repaint the source canvas');
+ ui.receive({...reveal,phase:'finished',winner:{ids:['artist'],score:0},deadline:null});
+ assert.match(ui.element('#canvasStage').innerHTML,/今晚的畫猜高手/);
+ assert.equal(ui.element('#drawCanvas'),canvas);
+});
+
+test('only a newly confirmed correct guess receives a local score reaction', () => {
+ const ui=browserHarness(),before=drawingState('guest');
+ ui.receive(before);
+ const at=Date.now();
+ const after={...before,serverNow:at+120,guessedIds:['guest'],guesses:[{id:'guest',name:'猜者',correct:true,points:84,at}],players:[before.players[0],{...before.players[1],score:84}]};
+ ui.receive(after);
+ const row=ui.element('#players').playerRows.find(item=>item.dataset.playerId==='guest');
+ assert.equal(row.children.at(-1).textContent,'✓ +84 分');
+ const reconnected=browserHarness();reconnected.receive(after);
+ const newRow=reconnected.element('#players').playerRows.find(item=>item.dataset.playerId==='guest');
+ assert.equal(newRow.children.length,0,'the first state after reconnect does not replay past reactions');
+});
+
+test('correct-guess reaction uses server time when client and server clocks differ', () => {
+ const ui=browserHarness(),before=drawingState('guest');
+ ui.receive(before);
+ const serverNow=Date.now()-60_000;
+ const after={...before,serverNow,guessedIds:['guest'],guesses:[{id:'guest',name:'猜者',correct:true,points:81,at:serverNow-100}],players:[before.players[0],{...before.players[1],score:81}]};
+ ui.receive(after);
+ const row=ui.element('#players').playerRows.find(item=>item.dataset.playerId==='guest');
+ assert.equal(row.children.at(-1).textContent,'✓ +81 分');
+});
+
+test('a brief failed poll suppresses phase and score animations on reconnect', async () => {
+ const ui=browserHarness(),before=drawingState('guest');
+ ui.receive(before);await pause(0);
+ await vm.runInContext('poll()',ui.context);
+ assert.equal(vm.runInContext('disconnected',ui.context),true);
+ const count=ui.animations.length,at=Date.now();
+ const after={...before,serverNow:at+120,phase:'reveal',guessedIds:['guest'],guesses:[{id:'guest',name:'猜者',correct:true,points:80,at}],result:{answer:'貓咪',reason:'所有猜題者已完成',guessedIds:['guest']},players:[before.players[0],{...before.players[1],score:80}]};
+ ui.receive(after);
+ assert.equal(ui.animations.length,count,'reconnecting within five seconds does not replay the reveal transition');
+ const row=ui.element('#players').playerRows.find(item=>item.dataset.playerId==='guest');
+ assert.equal(row.children.length,0,'past correct guesses do not show a new score badge');
+ assert.equal(vm.runInContext('disconnected',ui.context),false);
 });
 
 test('multiple guesses are public and earlier correct guesses earn more points', () => {
