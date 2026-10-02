@@ -2,7 +2,7 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化）、`5525fad`（好友角色分享與帳號繪畫圖庫）、`ac2d7e0`（撲克與末路狂飆沉浸感及入門成就）、`7fcb436`（末路狂飆碰撞與特殊事件視窗），再更新至 `5a3cdc1`（修正繪畫提示與畫作按鈕遮擋），再更新至 `eee416e`（可移動角色的好友大廳），再切換至 `5870a48`（你畫我猜第一版），其後切換至 `e6dd38f`（整合最新主線圖片權限修補及根目錄整理）、`8b32222`（雷霆之路動畫預設顯示），目前為 `2eae852`（你畫我猜畫筆、猜題聊天室、題材與轉場）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化）、`5525fad`（好友角色分享與帳號繪畫圖庫）、`ac2d7e0`（撲克與末路狂飆沉浸感及入門成就）、`7fcb436`（末路狂飆碰撞與特殊事件視窗），再更新至 `5a3cdc1`（修正繪畫提示與畫作按鈕遮擋），再更新至 `eee416e`（可移動角色的好友大廳），再切換至 `5870a48`（你畫我猜第一版），其後切換至 `e6dd38f`（整合最新主線圖片權限修補及根目錄整理）、`8b32222`（雷霆之路動畫預設顯示），其後為 `2eae852`（你畫我猜畫筆、猜題聊天室、題材與轉場），目前為 `d480c18`（五款遊戲的原位過場舞台）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 你畫我猜最終版 `e6dd38f` 放在獨立版本目錄 `releases/e6dd38f`，Windows／Linux 全套測試各 130/130。升級前先以 SQLite 線上備份保存 v8（完整性 `ok`、帳號 4 筆），以備份複本預演 v9 遷移；初版切換後正式 DB 為 v9。切換最終版前再備份 v9，切換後完整性 `ok`、帳號仍為 4 筆。`afterhours.service` 與 `afterhours-tunnel.service` 都是 `active`，公開 `/login`、`/draw`、腳本、樣式及 `/robots.txt` 回 200，robots 保持全站 `Disallow: /`。三個現有測試帳號從 Windows 經 shhuang.cc 開房，驗證答案保密、即時畫布、重連補圖、計分及換畫者；測試在背景 Chrome 執行。依使用者指示直接重啟，記憶體房間隨之清除。
 
@@ -10,11 +10,13 @@ Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平
 
 你畫我猜體驗版 `2eae852` 放在 `releases/2eae852`，封存 SHA-256 為 `f3495e9f3475e8cf6b7c76556a99bb0ff054a3d17f9770fe9bd43bc7a7b68e52`；Linux 全套測試 142/142。Windows 的本次功能測試 15/15，當地全套執行有 4 項既有測試在刪除 SQLite 暫存目錄時遇到 `EPERM`。正式 SQLite 線上備份 `shared/backups/pre-draw-guess-20261002T104729Z.sqlite` 為 v9、完整性 `ok`、帳號 4 筆；先在備份副本預演 v10 遷移，再切換 `current` 並重啟 `afterhours.service`。正式資料庫 v10 完整性 `ok`、帳號仍 4 筆，網站和 Tunnel 均為 `active`。公開 HTTPS 的登入頁、畫猜腳本、樣式與 robots 回 200；匿名 `/draw` 導向登入，robots 保持全站 `Disallow: /`，公開腳本與本地封存內容一致。背景 Chrome 在本機兩人局完成題材過濾、兩輪遊戲、500 毫秒延遲筆畫不閃、錯答保留超過 8 秒、快猜計分和階段轉場；公開網域的登入後多人實玩仍待使用者驗收。依使用者指示直接重啟，當時記憶體房間隨之清除。
 
+五款遊戲原位過場版 `d480c18` 封存 SHA-256 為 `c8f8ae323918d1c1194f0f5a8cefe2ad53f1ac1ec96ed614224c9775ee5cb7af`，獨立放在 `releases/d480c18`；Windows／Linux 全套 `npm test` 各 146/146。切換前以 SQLite 線上備份建立 `shared/backups/pre-d480c18-20261002T122253Z.sqlite`，完整性 `ok`、schema v10。依使用者指示直接切換 `current` 並重啟 `afterhours.service`，當時記憶體房間隨之清除；BGA 服務與 Tunnel 均為 `active`，正式 SQLite 切換後完整性 `ok`、schema v10、帳號 4 筆。Windows 經公開 HTTPS 驗證 `/login`、五款遊戲的新腳本與樣式、共用演出模組及 `/robots.txt` 均回 200；不帶測試參數的 `/draw.js` 回應有 `Cache-Control: no-store` 且內容是新版，robots 仍為全站 `Disallow: /`。撲克與賽車中央焦點已在隱藏 Chrome 確認落在遊戲框內；公開網域登入後的多人遊玩與主觀動畫節奏待玩家驗收。正式 `GITHUB_TOKEN` 再確認為未設定，仍由接手部署 AI 在保護的 `shared/.env` 完成設定與實測。
+
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/c49bb7c`；舊版仍保留，回退前須先確認資料庫 v8 相容性 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/d480c18`；舊版仍保留，回退前須先確認資料庫 v10 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
