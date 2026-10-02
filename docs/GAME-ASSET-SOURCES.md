@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | [Kenney](https://kenney.nl/assets) | 2D 角色、介面與場景；目前角色使用 [Toon Characters](https://kenney.nl/assets/toon-characters) 與 [Platformer Characters](https://kenney.nl/assets/platformer-characters) | 兩套素材頁及下載包 `License.txt` 均標示 CC0；已擷取姿勢 PNG 並製作 GIF，來源與轉檔規格見 [圖片角色文件](CHARACTER-ASSET-TEMPLATE.md)。 |
 | [Kenney Generic Items](https://kenney.nl/assets/generic-items) | 送禮達人的部分預設禮物插圖（12 張 PNG） | 官方素材頁與下載包的 `License.txt` 均標示 CC0；專案保留原檔名與 [授權文字](../public/assets/gifts/kenney/LICENSE.txt)，題庫以禮物 ID 對應插圖。 |
+| [Noto Emoji](https://github.com/googlefonts/noto-emoji) | 送禮達人內建禮物的象徵圖示（190 張 72px PNG，供 285 件禮物使用） | 官方 README 說明多數圖像資源採 [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)；固定使用 commit `e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e` 的 `2D/png/72` 圖檔。專案保留 [原始授權聲明](../public/assets/gifts/noto/LICENSE-SOURCE.txt)與 [Apache 2.0 全文](../public/assets/gifts/noto/LICENSE-2.0.txt)，未使用旗幟等特殊授權素材。 |
 | [OpenGameArt](https://opengameart.org/) | 像素角色、服飾、地圖和音效；[LPC 角色底圖](https://opengameart.org/content/lpc-character-bases) 可參考分層與動作 | 各素材授權不同；LPC 範例標示 CC BY-SA 3.0／GPL 3.0，需留意署名、改作分享與素材間相容性。詳見 [官方 FAQ](https://opengameart.org/content/faq)。 |
 | [itch.io 免費素材](https://itch.io/game-assets/free) | 各種 2D、3D、像素、動畫素材 | 平台提供免費篩選，但授權由作者／素材頁決定；選定單一套件後再確認可修改、可商用及可否供玩家再創作。 |
 | [Game-icons.net](https://game-icons.net/) | 道具、職業、介面圖示 | [官方說明](https://game-icons.net/about.html)標示 CC BY 3.0，使用時需標示原作者。 |

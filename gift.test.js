@@ -11,10 +11,20 @@ const {GiftStore}=require('./src/games/gift-store');
 const {AchievementStore}=require('./src/achievements/store');
 const {GIFTS}=require('./src/games/gift-catalog');
 
-test('illustrated default gifts have bundled artwork',()=>{
- const illustrated=GIFTS.filter(gift=>gift.image);
- assert.equal(illustrated.length,15);
- for(const gift of illustrated)assert.ok(fs.existsSync(path.join(__dirname,'public',gift.image.slice(1))));
+test('300 default gifts keep legacy IDs and have bundled PNG artwork',()=>{
+ assert.equal(GIFTS.length,300);
+ assert.deepEqual(Object.entries(GIFTS.reduce((counts,gift)=>(counts[gift.category]=(counts[gift.category]||0)+1,counts),{})),[
+  ['日常',75],['體驗',75],['奇想',75],['冒險',75]
+ ]);
+ assert.equal(new Set(GIFTS.map(gift=>gift.id)).size,300);
+ assert.equal(new Set(GIFTS.map(gift=>gift.title.normalize('NFKC'))).size,300);
+ assert.equal(GIFTS.find(gift=>gift.id==='g1-01').title,'一年份早餐券');
+ assert.equal(GIFTS.find(gift=>gift.id==='g4-16').title,'與朋友完成一條長途步道');
+ for(const gift of GIFTS){
+  assert.match(gift.image,/^\/assets\/gifts\/(?:kenney|noto)\/[a-zA-Z0-9_]+\.png$/);
+  const bytes=fs.readFileSync(path.join(__dirname,'public',gift.image.slice(1)));
+  assert.ok(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),gift.id);
+ }
 });
 
 test('custom gifts persist in SQLite and become eligible for the next draw',()=>{
@@ -194,7 +204,11 @@ test('authenticated players can create, join and reconnect to a gift room withou
    assert.equal(sound.headers.get('content-type'),'audio/wav');
    assert.equal(Buffer.from(await sound.arrayBuffer()).toString('ascii',0,4),'RIFF');
   }
-  assert.equal((await fetch(base+GIFTS.find(gift=>gift.image).image,{headers:{Cookie:host}})).status,200);
+  for(const gift of [GIFTS.find(gift=>gift.image.includes('/kenney/')),GIFTS.find(gift=>gift.image.includes('/noto/'))]){
+   const image=await fetch(base+gift.image,{headers:{Cookie:host}});
+   assert.equal(image.status,200);
+   assert.match(image.headers.get('content-type'),/^image\/png/);
+  }
   assert.equal((await post('join',friend,{code,name:'不能覆蓋角色名稱'})).status,200);
   assert.equal((await post('join',other,{code})).status,200);
   const getState=async (cookie=host)=>(await (await fetch(base+'/api/state?code='+code,{headers:{Cookie:cookie}})).json());
