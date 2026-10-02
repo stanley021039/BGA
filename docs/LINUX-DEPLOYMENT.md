@@ -2,13 +2,13 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好），最後切換至 `b5da6f0`（300 件內建禮物及房主設定投稿比例）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/33d5ebe`；舊版仍保留，回退前須先確認資料庫 v6 相容性 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/b5da6f0`；舊版仍保留，回退前須先確認資料庫 v6 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
@@ -25,9 +25,9 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 
 2026-10-02 新版 `33d5ebe` 已放入獨立的 `releases/33d5ebe`，Linux `npm test` 通過 102/102。切換前再以 SQLite 線上備份建立 `shared/backups/pre-33d5ebe-20261002-013904.sqlite`，完整性 `ok`、schema v5、帳號 4 筆。使用者同意清除揭曉中的舊房後，切換 `current` 並重啟 `afterhours.service`；舊房 `F5C5B2` 隨重啟清除。網站與 Tunnel 均為 `active`，本機 `/login` 回 200。正式 SQLite 升至 v6，完整性 `ok`、帳號仍為 4 筆。從 Windows 經公開 HTTPS 驗證 `/login`、`/gift.js`、`/robots.txt` 均回 200，新腳本含圖示送禮與喜好選擇；三組測試帳號逐一登入並讀取 `/api/auth/me` 和送禮頁皆成功，成就 API 可讀。驗證時已有其他新房建立，未再次重啟。
 
-300 件內建禮物的候選版 `3283617` 已獨立放入 `releases/3283617`；壓縮檔 SHA-256 為 `27c0f4208741eb575123c4a6e7e3f50f1152f44513c93de7c443698a8400b8a6`，Windows 與 Linux 全套測試各 102/102。正式 SQLite 已另以線上備份保存為 `shared/backups/pre-3283617-20261002-020020.sqlite`，完整性 `ok`、schema v6、帳號 4 筆。**目前尚未切換正式服務**：公開站仍為 `33d5ebe`，房間 `3FD78B` 仍在揭曉階段，切換需重啟並清除記憶體房間。正式站未更新前，不可宣稱網域已有 300 件禮物。
+300 件內建禮物的候選版 `3283617` 曾獨立放入 `releases/3283617`；壓縮檔 SHA-256 為 `27c0f4208741eb575123c4a6e7e3f50f1152f44513c93de7c443698a8400b8a6`，Windows 與 Linux 當時全套測試各 102/102。正式 SQLite 當時另以線上備份保存為 `shared/backups/pre-3283617-20261002-020020.sqlite`，完整性 `ok`、schema v6、帳號 4 筆。該候選版沒有單獨切換到正式服務；300 件禮物後來隨 `b5da6f0` 一起上線。
 
-房主設定投稿比例的新版 `b5da6f0` 已獨立放入 `releases/b5da6f0`，包含前述 300 件禮物；Windows／Linux 全套測試各 105/105。房主可在等待室選依題庫比例或 0／25／50／75／100%，送禮達人每輪禮物與同頻俱樂部每次三張候選題分別套用。正式服務仍指向 `33d5ebe`；要讓網域顯示新功能，須切換 `current` 並重啟，這會清除當時全部記憶體房間。前次已知房間 `3FD78B` 尚在揭曉階段；尚未取得本次清除房間的同意，也未以正式帳號重新查詢最新房況。切換前應再建立一致性 SQLite 備份並驗證完整性。
+房主設定投稿比例的新版 `b5da6f0` 已獨立放入 `releases/b5da6f0`，包含前述 300 件禮物；Windows／Linux 全套測試各 105/105。房主可在等待室選依題庫比例或 0／25／50／75／100%，送禮達人每輪禮物與同頻俱樂部每次三張候選題分別套用。使用者同意清除所有現有房間後，以 SQLite 線上備份建立 `shared/backups/pre-b5da6f0-20261002-101814.sqlite`，完整性 `ok`、schema v6、帳號 4 筆；隨後切換 `current` 至 `releases/b5da6f0` 並重啟。`afterhours.service`、`afterhours-tunnel.service` 皆為 `active`，正式 SQLite 再檢查完整性 `ok`。從 Windows 經公開 HTTPS 驗證登入頁、兩款遊戲腳本與 robots 均回 200，兩款腳本皆含 `customPercent`，robots 仍全站 `Disallow: /`。新禮物圖檔只允許登入會員讀取，公開匿名要求回 `LOGIN_REQUIRED`；本次尚未以公開帳號實際進房確認房主設定或抽到新圖。
 
 ## 尚待正式設定
 
