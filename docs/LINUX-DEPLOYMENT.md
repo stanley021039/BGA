@@ -2,13 +2,13 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好），最後切換至 `b5da6f0`（300 件內建禮物及房主設定投稿比例）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例），最後切換至 `92e7725`（同頻俱樂部體驗優化）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/b5da6f0`；舊版仍保留，回退前須先確認資料庫 v6 相容性 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/92e7725`；舊版仍保留，回退前須先確認資料庫 v6 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
@@ -28,6 +28,10 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 300 件內建禮物的候選版 `3283617` 曾獨立放入 `releases/3283617`；壓縮檔 SHA-256 為 `27c0f4208741eb575123c4a6e7e3f50f1152f44513c93de7c443698a8400b8a6`，Windows 與 Linux 當時全套測試各 102/102。正式 SQLite 當時另以線上備份保存為 `shared/backups/pre-3283617-20261002-020020.sqlite`，完整性 `ok`、schema v6、帳號 4 筆。該候選版沒有單獨切換到正式服務；300 件禮物後來隨 `b5da6f0` 一起上線。
 
 房主設定投稿比例的新版 `b5da6f0` 已獨立放入 `releases/b5da6f0`，包含前述 300 件禮物；Windows／Linux 全套測試各 105/105。房主可在等待室選依題庫比例或 0／25／50／75／100%，送禮達人每輪禮物與同頻俱樂部每次三張候選題分別套用。使用者同意清除所有現有房間後，以 SQLite 線上備份建立 `shared/backups/pre-b5da6f0-20261002-101814.sqlite`，完整性 `ok`、schema v6、帳號 4 筆；隨後切換 `current` 至 `releases/b5da6f0` 並重啟。`afterhours.service`、`afterhours-tunnel.service` 皆為 `active`，正式 SQLite 再檢查完整性 `ok`。從 Windows 經公開 HTTPS 驗證登入頁、兩款遊戲腳本與 robots 均回 200，兩款腳本皆含 `customPercent`，robots 仍全站 `Disallow: /`。新禮物圖檔只允許登入會員讀取，公開匿名要求回 `LOGIN_REQUIRED`；本次尚未以公開帳號實際進房確認房主設定或抽到新圖。
+
+同頻俱樂部體驗改版 `001e967` 先放入獨立的 `releases/001e967` 候選目錄，Windows／Linux 全套測試各 106/106；包含倒扣交卷便箋、完整票數／得分、可跳過焦點、個人音效與「第一次舉牌」成就，詳細驗證見[同頻進度](MAJORITY-IMMERSION-PROGRESS.md)。候選 ZIP SHA-256 為 `82295c7d859c5eb24afdec861e19b06a0d8ea32a86d3e6ad3a92a692d48ef42d`，當時 SQLite 線上備份 `shared/backups/pre-001e967-20261002-104410.sqlite` 完整性 `ok`。
+
+使用者明確指示新版都同步到 shhuang.cc，且不需檢查是否有人正在玩，可直接重啟。最終封存 `92e7725` 已獨立放入 `releases/92e7725`，Linux 全套再次通過 106/106，ZIP SHA-256 為 `f84dfced84471ae2d92cfc9356abe7b272a62b79780aaef6860b04fad7660fbc`。切換前以 SQLite 線上備份建立 `shared/backups/pre-92e7725-20261002-105515.sqlite`，完整性 `ok`、schema v6、帳號 4 筆；切換 `current` 並重啟 `afterhours.service` 後，網站及 Tunnel 都是 `active`，正式資料庫完整性仍為 `ok`、帳號 4 筆。公開 HTTPS 的 `/login`、`/majority.js`、`/majority.css`、音檔及 `/robots.txt` 回 200，腳本與正式提交內容相符（只有 CRLF／LF 差異）；robots 繼續全站 `Disallow: /`，回應含 `X-Robots-Tag`。重啟會清除所有當時的記憶體房間；公開多人實際完成一局與短音主觀聽感仍待確認。
 
 ## 尚待正式設定
 

@@ -1,4 +1,4 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const {MajorityRoom}=require('./src/games/majority');const {TOPICS,QUESTIONS}=require('./src/games/majority-questions');
+const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const os=require('node:os');const path=require('node:path');const {MajorityRoom}=require('./src/games/majority');const {TOPICS,QUESTIONS}=require('./src/games/majority-questions');const {openDatabase}=require('./src/db/index');const {AchievementStore}=require('./src/achievements/store');
 function room(n=3){const r=new MajorityRoom('TEST','測試',()=>0);for(let i=0;i<n;i++)r.add('P'+i);r.start();return r;}
 function ask(r,type='two'){r.act(r.presenterId,'ask',{type,prompt:'選什麼？',options:type==='three'?['A','B','C']:['A','B']});}
 function answerAll(r,answers){answers.forEach((answer,i)=>r.act(r.players[i].id,'answer',{answer}));}
@@ -15,3 +15,27 @@ test('blank answers remain hidden until review, normalization, merge, reset and 
 test('rotation, pass recovery, round limit, final standings and restart',()=>{const r=room();assert.throws(()=>r.act(r.players[1].id,'pass'));const presenter=r.presenterId;r.act(r.host,'pass');assert.notEqual(r.presenterId,presenter);assert.equal(r.round,1);r.roundLimit=3;for(let round=1;round<=3;round++){const idx=r.players.findIndex(p=>p.id===r.presenterId);ask(r);answerAll(r,[0,0,1]);assert.equal(r.phase,'reveal');r.act(r.host,'next');if(round<3)assert.equal(r.presenterId,r.players[(idx+1)%3].id);}assert.equal(r.phase,'finished');assert.equal(r.results.length,3);assert.equal(r.winner.ids.length,2);r.configure(r.host,{rounds:4});r.start();assert.equal(r.round,1);assert.ok(r.players.every(p=>p.score===0));assert.equal(r.roundLimit,4);});
 test('timeout never silently excludes offline players; missing answers score zero',()=>{const r=room();ask(r);r.players[2].lastSeen=0;r.act(r.players[0].id,'answer',{answer:0});r.act(r.players[1].id,'answer',{answer:0});r.auto();assert.equal(r.phase,'answering');r.deadline=Date.now()-1;r.auto();assert.equal(r.phase,'reveal');assert.deepEqual(r.players.map(p=>p.score),[1,1,0]);assert.deepEqual(r.result.missingIds,[r.players[2].id]);assert.equal(r.result.reason,'timeout');r.auto();assert.deepEqual(r.players.map(p=>p.score),[1,1,0]);});
 test('host close handles empty and single answers; blank close requires review',()=>{for(const type of ['two','blank']){const r=room();ask(r,type);assert.throws(()=>r.act(r.players[1].id,'close'));r.act(r.host,'close');if(type==='blank'){assert.equal(r.phase,'review');r.act(r.host,'score');}assert.equal(r.phase,'reveal');assert.deepEqual(r.result.groups,[]);assert.deepEqual(r.players.map(p=>p.score),type==='blank'?[-1,0,0]:[0,0,0]);}const r=room();ask(r);r.act(r.host,'answer',{answer:0});r.act(r.host,'close');assert.ok(r.players.every(p=>p.score===0));});
+
+test('first vote badge is private, settled, and idempotent across a second round',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-majority-achievement-'));
+ try{
+  const db=openDatabase(path.join(root,'app.sqlite')),store=new AchievementStore(db),r=new MajorityRoom('BADGE2','舉牌測試',()=>0),seats=new Map();
+  for(const name of ['甲','乙','丙','丁']){
+   const userId='user-'+name;
+   db.prepare("INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)").run(userId,userId,name,'unused','member',new Date().toISOString());
+   seats.set(userId,r.add(name).id);
+  }
+  r.start();ask(r,'three');
+  const [a,b,c,d]=[...seats.values()];r.act(a,'answer',{answer:0});r.act(b,'answer',{answer:1});
+  assert.deepEqual(store.awardMajorityRound(r,seats),[]);
+  r.kick(a,d);r.act(c,'answer',{answer:2});
+  assert.equal(r.phase,'reveal');assert.deepEqual(r.players.filter(player=>!player.kicked).map(player=>player.score),[0,0,0]);
+  assert.equal(store.awardMajorityRound(r,seats).length,3);
+  assert.deepEqual(store.awardMajorityRound(r,seats),[]);
+  assert.equal(store.list('user-丁').achievements.find(item=>item.id==='majority-first-vote').unlockedAt,null);
+  for(const name of ['甲','乙','丙'])assert.ok(store.list('user-'+name).achievements.find(item=>item.id==='majority-first-vote').unlockedAt);
+  r.act(r.host,'next');ask(r,'two');r.participantIds.forEach((id,index)=>r.act(id,'answer',{answer:index===2?1:0}));
+  assert.deepEqual(store.awardMajorityRound(r,seats),[]);
+  db.close();
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
