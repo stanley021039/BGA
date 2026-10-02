@@ -282,6 +282,7 @@
 .studio-controls .studio-tools{gap:5px;margin:0 0 5px}
 .studio-controls .studio-tools .studio-icon-button{width:39px;min-width:39px;height:39px;min-height:39px}
 .studio-drawing .studio-save .studio-photo-import{display:inline-flex;align-items:center;justify-content:center;width:44px;height:42px;min-height:42px;margin:0;padding:8px}
+.studio-drawing .studio-save .studio-photo-import input[type=file]{position:absolute;left:0;bottom:0;width:1px;min-width:0;height:1px;min-height:0;padding:0;opacity:0;pointer-events:none}
 .studio-advanced,.studio-layer-panel{border:1px solid #52684d;border-radius:8px;background:#14231a}
 .studio-advanced{padding:8px 10px}
 .studio-advanced summary,.studio-layer-panel summary{cursor:pointer;color:#e8d6ad;font-size:12px;font-weight:700}
