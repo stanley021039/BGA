@@ -2,7 +2,7 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const {randomBytes}=require('node:crypto');
 const {Room}=require('./games/poker'),{ThunderRoom}=require('./games/thunder'),{MajorityRoom}=require('./games/majority'),{GiftRoom}=require('./games/gift');
 const {GiftStore}=require('./games/gift-store'),{GIFTS,CATEGORIES}=require('./games/gift-catalog');
-const {DrawGuessRoom}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{WORDS}=require('./games/draw-guess-words');
+const {DrawGuessRoom,validTopic}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{WORDS,TOPICS}=require('./games/draw-guess-words');
 const {AchievementStore}=require('./achievements/store');
 const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
 const {startRoomScheduler}=require('./rooms/scheduler');
@@ -130,14 +130,28 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  }
  if(url.pathname.startsWith('/api/community/')){const resource=url.pathname.split('/')[3];if(req.method==='GET'){if(resource==='issues')return send(board.list());if(resource==='questions')return send({topics:require('./games/majority-questions').TOPICS,questions:[...require('./games/majority-questions').QUESTIONS,...community.data.questions]});if(resource==='gifts')return send({categories:CATEGORIES,gifts:[...GIFTS,...giftStore.list()]});}if(req.method==='POST'){limitCommunity(req);limitAccount(user);if(resource==='questions')return send(community.question({...data,name:user.display_name}));if(resource==='gifts')return send(giftStore.add(user,data));if(resource==='issues'){const kind=data.id?data.action==='comment'?'comment':'status':'issue';const result=await submissions.submit(kind,data,user);if(result.state==='needs_review')res.statusCode=202;else if(result.state==='failed')res.statusCode=502;return send(result);}}throw new HttpError(404,'NOT_FOUND','找不到請求路徑');}
- if(url.pathname==='/api/draw/words'&&req.method==='GET')return send({builtin:WORDS,custom:drawWordStore.list()});
+ if(url.pathname==='/api/draw/words'&&req.method==='GET')return send({topics:TOPICS,builtin:WORDS,custom:drawWordStore.list()});
  if(url.pathname==='/api/draw/words'&&req.method==='POST'){limitCommunity(req);limitAccount(user);return send(drawWordStore.add(user,data));}
  if(url.pathname==='/api/achievements'&&req.method==='GET')return send(achievementStore.list(user.id));
  if(url.pathname==='/api/history')return send(history.list());
  if(url.pathname.startsWith('/api/history/'))return send(history.read(url.pathname.split('/')[3]));
  if(url.pathname==='/api/info'){const addresses=Object.values(os.networkInterfaces()).flat().filter(x=>x.family==='IPv4'&&!x.internal).map(x=>`${protocol}://${x.address}:${port}`);const preferred=config.publicUrl||addresses.find(a=>a.includes('://26.'))||null;return send({preferred,addresses:config.publicUrl?[config.publicUrl,...addresses.filter(a=>a!==config.publicUrl)]:addresses});}
  if(url.pathname==='/api/rooms'&&req.method==='GET')return send({rooms:listRooms(rooms,seats,kickedUsers,user.id)});
- if(url.pathname==='/api/create'&&req.method==='POST'){if(rooms.size>=100)throw Error('房間數已達上限');if(!['poker','thunder','majority','gift','draw'].includes(data.type))throw new HttpError(400,'INVALID_GAME','不支援的遊戲');let code;do{code=randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));const thunder=data.type==='thunder',majority=data.type==='majority',gift=data.type==='gift',draw=data.type==='draw';const room=new (draw?DrawGuessRoom:gift?GiftRoom:majority?MajorityRoom:thunder?ThunderRoom:Room)(code,String(data.roomName||(draw?'你畫我猜好友局':gift?'送禮達人好友局':majority?'同頻俱樂部':thunder?'末路狂飆好友局':'深夜好友局')).slice(0,24));if(majority)Object.defineProperty(room,'questionProvider',{value:()=>community.data.questions});if(gift)Object.defineProperty(room,'giftProvider',{value:()=>giftStore.list()});if(draw)Object.defineProperty(room,'wordProvider',{value:()=>drawWordStore.list()});history.attach(room);const p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});}
+ if(url.pathname==='/api/create'&&req.method==='POST'){
+  if(rooms.size>=100)throw Error('房間數已達上限');
+  if(!['poker','thunder','majority','gift','draw'].includes(data.type))throw new HttpError(400,'INVALID_GAME','不支援的遊戲');
+  const draw=data.type==='draw';
+  if(draw&&data.topic!==undefined&&!validTopic(data.topic))throw new HttpError(400,'INVALID_DRAW_TOPIC','題目類別不正確');
+  let code;do{code=randomBytes(3).toString('hex').toUpperCase();}while(rooms.has(code));
+  const thunder=data.type==='thunder',majority=data.type==='majority',gift=data.type==='gift';
+  const room=new (draw?DrawGuessRoom:gift?GiftRoom:majority?MajorityRoom:thunder?ThunderRoom:Room)(code,String(data.roomName||(draw?'你畫我猜好友局':gift?'送禮達人好友局':majority?'同頻俱樂部':thunder?'末路狂飆好友局':'深夜好友局')).slice(0,24));
+  if(majority)Object.defineProperty(room,'questionProvider',{value:()=>community.data.questions});
+  if(gift)Object.defineProperty(room,'giftProvider',{value:()=>giftStore.list()});
+  if(draw){room.options.topic=data.topic||'all';Object.defineProperty(room,'wordProvider',{value:()=>drawWordStore.list()});}
+  history.attach(room);
+  const p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));
+  p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
+ }
  if(!['/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
