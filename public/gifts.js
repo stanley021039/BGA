@@ -1,7 +1,7 @@
 'use strict';
 const $=selector=>document.querySelector(selector);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-let gifts=[],categories=[],limit=32,busy=false,previewUrl=null;
+let gifts=[],categories=[],limit=32,busy=false,previewUrl=null,artworks=[],selectedArtworkId=null;
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
 async function api(data){
@@ -23,8 +23,23 @@ async function reload(){
  render();
 }
 function clearPreview(){if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;$('#imagePreview').hidden=true;$('#previewArt').removeAttribute('src');}
-$('#giftImage').onchange=()=>{clearPreview();const file=$('#giftImage').files[0];if(!file)return;if(file.size>1024*1024){$('#giftImage').value='';return toast('圖片不得超過 1 MB');}previewUrl=URL.createObjectURL(file);$('#previewArt').src=previewUrl;$('#imagePreview').hidden=false;};
-$('#removeImage').onclick=()=>{$('#giftImage').value='';clearPreview();};
+function renderArtworkPicker(){
+ const list=$('#giftArtworkList');list.replaceChildren();
+ if(!artworks.length){const empty=document.createElement('p');empty.textContent='圖庫還沒有圖片。';list.append(empty);return;}
+ for(const artwork of artworks){
+  const button=document.createElement('button'),image=document.createElement('img'),name=document.createElement('span');button.type='button';button.className='gift-artwork-choice';button.setAttribute('aria-pressed',String(selectedArtworkId===artwork.id));button.setAttribute('aria-label','選擇圖庫圖片 '+artwork.name);
+  image.src=artwork.url;image.alt='';name.textContent=artwork.name;button.append(image,name);
+  button.onclick=()=>{selectedArtworkId=selectedArtworkId===artwork.id?null:artwork.id;$('#giftImage').value='';clearPreview();if(selectedArtworkId){$('#previewArt').src=artwork.url;$('#imagePreview').hidden=false;}renderArtworkPicker();};list.append(button);
+ }
+}
+async function loadArtworks(){
+ const response=await fetch('/api/artworks');if(!response.ok)throw Error('暫時無法載入我的圖庫');artworks=(await response.json()).artworks;
+ const requested=new URLSearchParams(location.search).get('artwork'),chosen=artworks.find(item=>item.id===requested);
+ if(chosen){selectedArtworkId=chosen.id;$('#previewArt').src=chosen.url;$('#imagePreview').hidden=false;}
+ renderArtworkPicker();
+}
+$('#giftImage').onchange=()=>{selectedArtworkId=null;renderArtworkPicker();clearPreview();const file=$('#giftImage').files[0];if(!file)return;if(file.size>1024*1024){$('#giftImage').value='';return toast('圖片不得超過 1 MB');}previewUrl=URL.createObjectURL(file);$('#previewArt').src=previewUrl;$('#imagePreview').hidden=false;};
+$('#removeImage').onclick=()=>{$('#giftImage').value='';selectedArtworkId=null;clearPreview();renderArtworkPicker();};
 $('#search').oninput=$('#filter').onchange=()=>{limit=32;render();};
 $('#more').onclick=()=>{limit+=32;render();};
 function base64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('無法讀取圖片'));reader.readAsDataURL(file);});}
@@ -32,8 +47,8 @@ $('#giftForm').onsubmit=async event=>{
  event.preventDefault();if(busy)return;busy=true;$('#submitGift').disabled=true;
  try{
   const file=$('#giftImage').files[0];if(file&&file.size>1024*1024)throw Error('圖片不得超過 1 MB');
-  const data={title:$('#giftTitle').value,category:$('#giftCategory').value,image:file?{mime:file.type,base64:await base64(file)}:null};
-  await api(data);$('#giftForm').reset();clearPreview();limit=32;await reload();toast('禮物已加入共用題庫');
+  const data={title:$('#giftTitle').value,category:$('#giftCategory').value,image:selectedArtworkId?{artworkId:selectedArtworkId}:file?{mime:file.type,base64:await base64(file)}:null};
+  await api(data);$('#giftForm').reset();selectedArtworkId=null;clearPreview();renderArtworkPicker();limit=32;await reload();toast('禮物已加入共用題庫');
  }catch(error){toast(error.message);}finally{busy=false;$('#submitGift').disabled=false;}
 };
-reload().catch(error=>toast(error.message));
+Promise.all([reload(),loadArtworks()]).catch(error=>toast(error.message));

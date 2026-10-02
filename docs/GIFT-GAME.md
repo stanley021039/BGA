@@ -16,7 +16,7 @@
 
 禮物內容由 `src/games/gift-catalog.js` 提供 300 個原創項目，每類 75 件。原有 64 件的名稱及 ID 不變，既有 15 件插圖仍使用 [Kenney Generic Items](https://kenney.nl/assets/generic-items) 的 CC0 圖片；其餘內建禮物配對 [Noto Emoji](https://github.com/googlefonts/noto-emoji) 72px 彩色 PNG 作為**象徵圖示**，不是每件禮物的寫實插畫。Noto 圖像依官方 README 的 [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) 授權使用，原始版本、來源與授權檔保存在 `public/assets/gifts/noto/`。投稿禮物仍可不附圖片；圖片載入失敗時名稱仍可閱讀。本站沒有使用原版商標或卡牌美術。
 
-登入會員可在 `/gifts` 投稿禮物名稱（1–60 字）、分類與選填圖片（PNG／GIF／WebP，最多 1 MB，無像素尺寸限制）。所有投稿立即加入共用題庫，與同頻俱樂部的自訂題目相同；投稿名稱不得與現有禮物重複，每人最多 100 件、全站最多 5000 件。資料與圖片保存在 SQLite 的 `community_gifts` 表，備份 `data/afterhours.sqlite` 時會一起保存。房間在**下一輪抽禮物**時讀取最新題庫；進行中的本輪禮物不會更動。抽過的禮物會先避開，題庫用盡才重新循環。
+登入會員可在 `/gifts` 投稿禮物名稱（1–60 字）、分類與選填圖片（PNG／GIF／WebP，最多 1 MB，無像素尺寸限制）。圖片可以直接上傳，也可以從本人 `/studio` 繪畫圖庫點選；圖庫圖片會複製到禮物題庫，刪除圖庫原圖不影響禮物。所有投稿立即加入共用題庫，與同頻俱樂部的自訂題目相同；投稿名稱不得與現有禮物重複，每人最多 100 件、全站最多 5000 件。資料與圖片保存在 SQLite 的 `community_gifts` 表，備份 `data/afterhours.sqlite` 時會一起保存。房間在**下一輪抽禮物**時讀取最新題庫；進行中的本輪禮物不會更動。抽過的禮物會先避開，題庫用盡才重新循環。
 
 房間只存於服務記憶體，重啟會清空；結束的對局可於 `/history` 回看。送禮與喜好在伺服器保存，其他玩家在揭曉前看不到選擇；歷史記錄在對局結束或中斷前不對會員開放。
 

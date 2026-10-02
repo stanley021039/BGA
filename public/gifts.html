@@ -23,6 +23,7 @@
             <label for="giftCategory">分類</label><select id="giftCategory" required></select>
             <label for="giftImage">禮物圖片（選填）</label><input id="giftImage" type="file" accept="image/png,image/gif,image/webp">
             <p class="small">支援 PNG、GIF、WebP，單張最多 1 MB；沒有像素尺寸限制。</p>
+            <div class="gift-artwork-picker"><div class="gift-artwork-heading"><strong>或從我的圖庫選圖</strong><a href="/studio">開啟繪畫圖庫 ↗</a></div><div id="giftArtworkList" class="gift-artwork-list"></div></div>
             <div id="imagePreview" class="image-preview" hidden><img id="previewArt" alt="待上傳的禮物圖片預覽"><button id="removeImage" type="button" class="quiet">移除圖片</button></div>
             <button id="submitGift" class="button wide">加入共用禮物題庫 →</button>
           </form>

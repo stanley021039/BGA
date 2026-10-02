@@ -16,6 +16,7 @@ const {createGitHubClient}=require('./integrations/github/client');
 const {SubmissionService}=require('./integrations/github/submissions');
 const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,galleryFor,selectedImage}=require('./profiles/appearance');
 const {createCharacter,setExpression,addExpression,setSharing}=require('./profiles/uploads');
+const {ArtworkStore}=require('./artworks/store');
 function createApp(config){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map();
  const withSocial=(room,view)=>{
@@ -25,8 +26,8 @@ function createApp(config){
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir);
- let community,db,auth,board,submissions,giftStore,achievementStore;
- try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);achievementStore=new AchievementStore(db);submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}));}
+ let community,db,auth,board,submissions,giftStore,achievementStore,artworkStore;
+ try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}));}
  catch(error){history.close();db?.close();throw error;}
  const communityRate=new Map(),accountRate=new Map(),authRate=new Map();
  const trustCloudflare=config.host==='127.0.0.1'&&config.publicUrl?.startsWith('https://');
@@ -49,7 +50,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname==='/robots.txt'&&req.method==='GET'){res.setHeader('Content-Type','text/plain; charset=utf-8');return res.end(robots);}
  if(url.pathname.startsWith('/api/')){
- res.setHeader('Content-Type','application/json; charset=utf-8');let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
+ res.setHeader('Content-Type','application/json; charset=utf-8');let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/artworks'||url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
  const send=x=>res.end(JSON.stringify(x));
  if(url.pathname==='/api/auth/login'&&req.method==='POST'){limitAuth(req);return send(await auth.login(data,res));}
  if(url.pathname==='/api/auth/register'&&req.method==='POST'){limitAuth(req);return send(await auth.register(data,res));}
@@ -57,6 +58,10 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/auth/logout'&&req.method==='POST'){auth.logout(req,res);return send({ok:true});}
  const user=auth.requireUser(req);
  if(url.pathname==='/api/auth/me'&&req.method==='GET'){const me=auth.publicUser(user);if(me.appearance)me.appearance=normalizeAppearance(me.appearance);return send(me);}
+ if(url.pathname==='/api/artworks'&&req.method==='GET')return send({artworks:artworkStore.list(user.id)});
+ if(url.pathname==='/api/artworks'&&req.method==='POST'){limitAccount(user);return send(artworkStore.add(user.id,data));}
+ const artworkDelete=url.pathname.match(/^\/api\/artworks\/([a-f0-9-]{36})\/delete$/);
+ if(artworkDelete&&req.method==='POST'){limitAccount(user);return send(artworkStore.remove(user.id,artworkDelete[1]));}
  if(url.pathname==='/api/profile/options'&&req.method==='GET'){
   return send({defaults,expressionLabels,characters:galleryFor(db,user.id)});
  }
@@ -134,6 +139,8 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  else throw Error('未知請求');
  });awardRoomAchievements(room);return send(withSocial(room,room.view(p.id)));
  }
+ const artworkAsset=url.pathname.match(/^\/assets\/artworks\/([a-f0-9-]{36})$/);
+ if(artworkAsset){const viewer=auth.requireUser(req),image=artworkStore.image(viewer.id,artworkAsset[1]);if(!image)throw new HttpError(404,'ARTWORK_NOT_FOUND','找不到你的作品');res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(image.bytes);}
  const sharedGift=url.pathname.match(/^\/assets\/gifts\/shared\/([a-f0-9-]{36})$/);
  if(sharedGift){auth.requireUser(req);const image=giftStore.image(sharedGift[1]);if(!image?.bytes)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到禮物圖片');res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(image.bytes);}
  if(GIFTS.some(gift=>gift.image===url.pathname)){auth.requireUser(req);res.setHeader('Content-Type','image/png');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(__dirname,'..','public',url.pathname)));}

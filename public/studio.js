@@ -1,13 +1,28 @@
 const $=selector=>document.querySelector(selector);
 const canvas=$('#paint-canvas'),paint=canvas.getContext('2d',{willReadFrequently:true});
 const snapshots=[];
-let drawing=false,lastPoint=null,erasing=false,cursor={x:32,y:32};
+const palette=['#202a32','#faf4df','#8b6043','#dca77c','#f6d6b8','#ad4f4e','#e88751','#f0c866','#557bb5','#69acc1','#567c5e','#94ba70','#7b5a9d','#c886ae','#738079','#b7bdb0'];
+let drawing=false,lastPoint=null,erasing=false,cursor={x:32,y:32},selectedColor='#557bb5';
 
 async function json(url,options){const response=await fetch(url,options),value=await response.json();if(!response.ok)throw Error(value.error);return value;}
+function showPalette(){
+ const group=$('#paint-palette');group.replaceChildren();
+ for(const color of palette){const button=document.createElement('button');button.type='button';button.className='paint-swatch';button.style.backgroundColor=color;button.setAttribute('aria-label',`選擇顏色 ${color}`);button.setAttribute('aria-pressed',String(selectedColor===color));button.onclick=()=>{selectedColor=color;$('#paint-custom-color').value=color;showPalette();};group.append(button);}
+}
+$('#paint-custom-color').oninput=event=>{selectedColor=event.target.value;showPalette();};
+function setSlider(selector,output,unit){const input=$(selector);const update=()=>{$(output).textContent=input.value+unit;};input.addEventListener('input',update);update();}
+setSlider('#paint-size','#paint-size-value',' 格');
+setSlider('#paint-brightness','#paint-brightness-value','%');
+setSlider('#paint-opacity','#paint-opacity-value','%');
+showPalette();
 function remember(){snapshots.push(paint.getImageData(0,0,64,64));if(snapshots.length>20)snapshots.shift();$('#paint-undo').disabled=false;}
 function paintPoint(x,y){
  const size=Number($('#paint-size').value),left=Math.max(0,Math.min(64-size,Math.floor(x-(size-1)/2))),top=Math.max(0,Math.min(64-size,Math.floor(y-(size-1)/2)));
- if(erasing)paint.clearRect(left,top,size,size);else{paint.fillStyle=$('#paint-color').value;paint.fillRect(left,top,size,size);}
+ if(erasing){paint.clearRect(left,top,size,size);return;}
+ const brightness=Number($('#paint-brightness').value)/100,opacity=Number($('#paint-opacity').value)/100;
+ const channels=[1,3,5].map(index=>parseInt(selectedColor.slice(index,index+2),16));
+ const adjusted=channels.map(value=>Math.round(brightness<=1?value*brightness:value+(255-value)*(brightness-1)));
+ paint.fillStyle=`rgba(${adjusted.join(',')},${opacity})`;paint.fillRect(left,top,size,size);
 }
 function paintLine(from,to){
  const steps=Math.max(Math.abs(to.x-from.x),Math.abs(to.y-from.y),1);
@@ -28,42 +43,46 @@ $('#paint-undo').onclick=()=>{const previous=snapshots.pop();if(previous)paint.p
 $('#paint-clear').onclick=()=>{remember();paint.clearRect(0,0,64,64);$('#paint-status').textContent='畫布已清空。';};
 $('#paint-erase').onclick=()=>{erasing=!erasing;$('#paint-erase').setAttribute('aria-pressed',String(erasing));$('#paint-erase').classList.toggle('active',erasing);};
 
-function updateTarget(){
- const expression=$('#paint-target').value==='expression';
- $('#character-target-label').hidden=!expression;
- $('#paint-name-label').textContent=expression?'表情名稱（最多 20 字）':'角色名稱（最多 32 字）';
- $('#paint-name').maxLength=expression?20:32;
- $('#paint-name').placeholder=expression?'例如：開心大笑':'我的畫作';
+let artworks=[];
+function renderArtworks(){
+ const list=$('#artwork-list');list.replaceChildren();
+ $('#artwork-count').textContent=`${artworks.length} 件作品`;
+ $('#artwork-empty').hidden=artworks.length>0;
+ for(const artwork of artworks){
+  const card=document.createElement('article'),img=document.createElement('img'),name=document.createElement('strong'),actions=document.createElement('div');
+  card.className='artwork-card';img.src=artwork.url;img.alt='';img.loading='lazy';name.textContent=artwork.name;
+  const use=(label,href)=>{const link=document.createElement('a');link.href=href;link.textContent=label;actions.append(link);};
+  use('用作角色／表情','/profile?artwork='+encodeURIComponent(artwork.id));
+  use('用作禮物','/gifts?artwork='+encodeURIComponent(artwork.id));
+  const remove=document.createElement('button');remove.type='button';remove.textContent='刪除';remove.onclick=async()=>{
+   if(!confirm(`要從我的圖庫刪除「${artwork.name}」嗎？已用於角色或禮物的圖片會保留。`))return;
+   remove.disabled=true;
+   try{await json(`/api/artworks/${artwork.id}/delete`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});await loadArtworks();$('#paint-status').textContent='作品已從圖庫刪除。';}catch(error){remove.disabled=false;$('#paint-status').textContent=error.message;}
+  };actions.append(remove);card.append(img,name,actions);list.append(card);
+ }
 }
-$('#paint-target').onchange=updateTarget;
-async function init(){
- const options=await json('/api/profile/options');
- const own=options.characters.filter(character=>character.owned);
- const target=$('#paint-character');
- for(const character of own){const option=document.createElement('option');option.value=character.id;option.textContent=character.name;target.append(option);}
- if(!own.length)$('#paint-target option[value="expression"]').disabled=true;
- const requested=new URLSearchParams(location.search).get('character');
- if(own.some(character=>character.id===requested)){target.value=requested;$('#paint-target').value='expression';}
- updateTarget();
-}
+async function loadArtworks(){const data=await json('/api/artworks');artworks=data.artworks;renderArtworks();}
 $('#paint-save').onclick=async()=>{
- const button=$('#paint-save'),target=$('#paint-target').value,name=$('#paint-name').value.trim(),message=$('#paint-status');
+ const button=$('#paint-save'),name=$('#paint-name').value.trim(),message=$('#paint-status');
  if(!name){message.textContent='請填入作品名稱。';return;}
  const pixels=paint.getImageData(0,0,64,64).data;
  if(!pixels.some((value,index)=>index%4===3&&value>0)){message.textContent='先在畫布上畫一些內容。';return;}
- const id=$('#paint-character').value;
- if(target==='expression'&&!/^user:[a-f0-9-]{36}$/.test(id)){message.textContent='請先選擇自己的角色。';return;}
  button.disabled=true;message.textContent='正在儲存畫作…';
  try{
   const data={name,mime:'image/png',base64:canvas.toDataURL('image/png').split(',')[1]};
-  const route=target==='character'?'/api/profile/characters':`/api/profile/characters/${id.slice(5)}/emotes`;
-  const result=await json(route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-  const characterId=target==='character'?result.id:id;
-  const params=new URLSearchParams({character:characterId});
-  if(target==='expression')params.set('expression',result.expression);
-  $('#back-to-profile').href='/profile?'+params;
-  $('#back-to-profile').focus();
-  message.textContent=target==='character'?'畫作已建立。回角色頁保存外觀，並可選擇分享給好友。':'表情已加入角色。回角色頁可預覽並保存為預設表情。';
+  await json('/api/artworks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  await loadArtworks();message.textContent='畫作已存入我的圖庫。可以在下方選擇用作角色或禮物。';
  }catch(error){message.textContent=error.message;}finally{button.disabled=false;}
 };
-init().catch(error=>$('#paint-status').textContent=error.message);
+$('#artwork-upload').onsubmit=async event=>{
+ event.preventDefault();const form=event.currentTarget,button=form.querySelector('button'),file=$('#artwork-file').files[0],message=$('#upload-status');
+ if(!file||file.size>1024*1024){message.textContent='請選擇不超過 1 MB 的圖片。';return;}
+ if(file.type&&!['image/png','image/gif','image/webp'].includes(file.type)){message.textContent='僅接受 PNG、GIF 或 WebP 圖片。';return;}
+ button.disabled=true;message.textContent='正在上傳…';
+ try{
+  const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('無法讀取圖片'));reader.readAsDataURL(file);});
+  await json('/api/artworks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('#artwork-name').value,mime:file.type,base64})});
+  form.reset();await loadArtworks();message.textContent='圖片已存入我的圖庫。';
+ }catch(error){message.textContent=error.message;}finally{button.disabled=false;}
+};
+loadArtworks().catch(error=>$('#paint-status').textContent=error.message);

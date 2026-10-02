@@ -7,7 +7,7 @@ function openDatabase(file){
  const db=new DatabaseSync(file,{timeout:5000});
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
- if(version>7)throw Error(`Unsupported database version ${version}`);
+ if(version>8)throw Error(`Unsupported database version ${version}`);
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -89,6 +89,17 @@ function openDatabase(file){
     ALTER TABLE player_characters ADD COLUMN shared INTEGER NOT NULL DEFAULT 0 CHECK(shared IN (0,1));
     CREATE INDEX player_characters_shared ON player_characters(shared,created_at);
     PRAGMA user_version=7;
+   `);
+   db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<8){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    CREATE TABLE user_artworks(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,created_at TEXT NOT NULL);
+    CREATE INDEX user_artworks_owner ON user_artworks(owner_id,created_at);
+    PRAGMA user_version=8;
    `);
    db.exec('COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}
