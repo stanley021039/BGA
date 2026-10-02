@@ -1,18 +1,19 @@
 const {randomInt,randomUUID}=require('node:crypto');
-const {WORDS}=require('./draw-guess-words');
+const {WORDS,TOPICS,topicLabels}=require('./draw-guess-words');
 const {drawContent,validCustomPercent}=require('./content-draw');
 
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalize=value=>value.normalize('NFKC').toLocaleLowerCase('zh-Hant').trim().replace(/\s+/gu,' ');
 const CONTROLS=new Set(['brush','erase','line','rect','ellipse']);
 const MAX_BATCHES=1000,MAX_POINTS=30000;
+const validTopic=topic=>topic==='all'||TOPICS.some(item=>item.id===topic);
 
 class DrawGuessRoom{
  constructor(code,name,rng=randomInt,now=Date.now){
   this.type='draw';this.code=code;this.name=name;this.rng=rng;this.now=now;
   this.players=[];this.host=null;this.phase='waiting';this.version=0;this.updated=now();
   this.round=0;this.roundLimit=0;this.pendingArtists=[];this.presenterId=null;
-  this.options={seconds:90,customPercent:null};this.candidates=[];this.question=null;
+  this.options={seconds:90,customPercent:null,topic:'all'};this.candidates=[];this.question=null;
   this.usedWordIds=[];this.participantIds=[];this.guessedIds=[];this.guesses=[];this.result=null;this.results=[];this.winner=null;this.deadline=null;this.events=[];
   Object.defineProperty(this,'canvas',{value:{version:0,strokes:[],batchIds:new Set(),points:0,recent:[]},enumerable:false});
  }
@@ -45,8 +46,9 @@ class DrawGuessRoom{
   if(!['waiting','finished'].includes(this.phase))throw Error('遊戲中不能更改設定');
   if(!Number.isInteger(data.seconds)||![60,90,120].includes(data.seconds))throw Error('作畫時間請選 60、90 或 120 秒');
   if(data.customPercent!==undefined&&!validCustomPercent(data.customPercent))throw Error('投稿比例不正確');
-  this.options={seconds:data.seconds,customPercent:data.customPercent===undefined?this.options.customPercent:data.customPercent};
-  this.event('settings','房主已更新作畫時間與投稿比例');
+  if(data.topic!==undefined&&!validTopic(data.topic))throw Error('題目類別不正確');
+  this.options={seconds:data.seconds,customPercent:data.customPercent===undefined?this.options.customPercent:data.customPercent,topic:data.topic===undefined?this.options.topic:data.topic};
+  this.event('settings','房主已更新作畫時間、題目類別與投稿比例');
  }
  start(){
   if(!['waiting','finished'].includes(this.phase))throw Error('本局已開始');
@@ -63,7 +65,8 @@ class DrawGuessRoom{
   if(!this.pendingArtists.length){this.finish();return;}
   this.round++;this.presenterId=this.pendingArtists.shift();
   this.participantIds=this.activePlayers().filter(player=>player.id!==this.presenterId).map(player=>player.id);
-  const draw=drawContent({builtin:WORDS,custom:this.wordProvider?.()||[],count:3,customPercent:this.options.customPercent,usedIds:this.usedWordIds,rng:this.rng});
+  const inTopic=word=>this.options.topic==='all'||word.topic===this.options.topic;
+  const draw=drawContent({builtin:WORDS.filter(inTopic),custom:(this.wordProvider?.()||[]).filter(inTopic),count:3,customPercent:this.options.customPercent,usedIds:this.usedWordIds,rng:this.rng});
   this.candidates=draw.items.map(clone);this.usedWordIds=draw.usedIds;
   this.phase='choosing';this.question=null;this.guessedIds=[];this.guesses=[];this.result=null;
   this.deadline=this.now()+15000;
@@ -94,12 +97,13 @@ class DrawGuessRoom{
    const remaining=Math.max(0,this.deadline-now),points=30+Math.floor(70*remaining/(this.options.seconds*1000));
    player.score+=points;this.player(this.presenterId).score+=15;
    this.guessedIds.push(id);this.guesses.push({id,name:player.name,correct:true,points,at:now});
+   this.guesses=this.guesses.slice(-50);
    this.event('correct',player.name+' 猜對了');
    if(this.allGuessed())this.reveal('所有猜題者已完成');
    return {correct:true,points};
   }
   this.guesses.push({id,name:player.name,answer:answer.trim(),correct:false,at:now});
-  this.guesses=this.guesses.slice(-20);this.event('guess',player.name+' 提出猜測');
+  this.guesses=this.guesses.slice(-50);this.event('guess',player.name+' 提出猜測');
   return {correct:false};
  }
  reveal(reason='時間到'){
@@ -166,12 +170,12 @@ class DrawGuessRoom{
    type:this.type,code:this.code,name:this.name,phase:this.phase,version:this.version,host:id===this.host,hostId:this.host,me:id,
    round:this.round,roundLimit:this.roundLimit,presenterId:this.presenterId,options:this.options,deadline:this.deadline,serverNow:this.now(),
    candidates:this.phase==='choosing'&&id===this.presenterId?this.candidates:[],
-   question:this.question&&(id===this.presenterId||revealed)?{title:this.question.title,aliases:this.question.aliases,category:this.question.category,difficulty:this.question.difficulty}:null,
-   hint:this.question?{category:this.question.category,length:[...this.question.title].length}:null,
+   question:this.question&&(id===this.presenterId||revealed)?{title:this.question.title,aliases:this.question.aliases,category:this.question.category,difficulty:this.question.difficulty,topic:this.question.topic,topicLabel:this.question.topicLabel}:null,
+   hint:this.question?{category:this.question.category,topicLabel:this.question.topicLabel||topicLabels[this.question.topic]||topicLabels.misc,length:[...this.question.title].length}:null,
    players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,online:this.now()-player.lastSeen<15000,waitingForNextRound:player.waitingForNextRound})),
    participantIds:this.participantIds,guessedIds:this.guessedIds,guesses:this.guesses.map(item=>item.correct?{id:item.id,name:item.name,correct:true,points:item.points,at:item.at}:item),
    result:revealed?this.result:null,winner:this.winner,strokeVersion:this.canvas.version,events:this.events
   });
  }
 }
-module.exports={DrawGuessRoom,normalize};
+module.exports={DrawGuessRoom,normalize,validTopic};

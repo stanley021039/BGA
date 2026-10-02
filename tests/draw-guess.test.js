@@ -27,7 +27,7 @@ test('drawing game keeps the answer private, validates strokes, scores aliases, 
  assert.equal(room.view(host.id).candidates.length,3);
  const selected=room.candidates[0];room.act(host.id,'choose',{questionId:selected.id});
  assert.equal(room.view(guest.id).question,null);
- assert.deepEqual(room.view(guest.id).hint,{category:'簡單',length:[...selected.title].length});
+ assert.deepEqual(room.view(guest.id).hint,{category:'簡單',topicLabel:'綜合',length:[...selected.title].length});
  assert.throws(()=>room.act(host.id,'guess',{answer:selected.title}),/下一輪|不能猜/);
  const strokeId=randomUUID(),batchId=randomUUID();
  assert.throws(()=>room.addStroke(guest.id,{round:1,batchId,strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}),/畫者/);
@@ -62,6 +62,17 @@ test('late joiners wait one round, and timeout preserves the original seat',()=>
  assert.equal(room.participantIds.includes(newcomer.id),true);
 });
 
+test('host category limits all three drawing candidates and rejects unknown categories',()=>{
+ const room=new DrawGuessRoom('TOPIC1','題材試玩',()=>0),host=room.add('甲');room.add('乙');
+ assert.throws(()=>room.configure(host.id,{seconds:90,topic:'invalid'}),/題目類別/);
+ room.configure(host.id,{seconds:90,customPercent:100,topic:'animals'});
+ room.start();
+ assert.equal(room.view(host.id).options.topic,'animals');
+ assert.equal(room.candidates.length,3);
+ assert.ok(room.candidates.every(word=>word.topic==='animals'));
+ assert.throws(()=>room.configure(host.id,{seconds:90,topic:'food'}),/遊戲中/);
+});
+
 test('custom words persist in SQLite and reject malformed aliases',()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-draw-words-')),file=path.join(root,'app.sqlite');
  let db;
@@ -87,10 +98,14 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
   async function login(username){const response=await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password:'test-password-88888888'})});assert.equal(response.status,200);return {Cookie:response.headers.get('set-cookie').split(';')[0]};}
   const host=await login('drawadmin'),guest=await login('drawguest');
   async function post(route,headers,data){const response=await fetch(base+'/api/'+route,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify(data)});return {status:response.status,body:await response.json()};}
-  const created=await post('create',host,{type:'draw'});assert.equal(created.status,200);
+  assert.equal((await post('create',host,{type:'draw',topic:'wrong'})).status,400);
+  const created=await post('create',host,{type:'draw',topic:'food'});assert.equal(created.status,200);
   const code=created.body.code;assert.equal((await post('join',guest,{code})).status,200);
+  const initial=await (await fetch(base+'/api/state?code='+code,{headers:host})).json();assert.equal(initial.options.topic,'food');
+  assert.equal((await post('settings',host,{code,seconds:90,customPercent:null,topic:'animals'})).status,200);
   assert.equal((await post('start',host,{code})).status,200);
   const chooser=await (await fetch(base+'/api/state?code='+code,{headers:host})).json();
+  assert.equal(chooser.options.topic,'animals');assert.ok(chooser.candidates.every(word=>word.topic==='animals'));
   const hidden=await (await fetch(base+'/api/state?code='+code,{headers:guest})).json();
   assert.equal(chooser.candidates.length,3);assert.equal(hidden.candidates.length,0);
   assert.equal((await post('action',host,{code,action:'choose',questionId:chooser.candidates[0].id})).status,200);
