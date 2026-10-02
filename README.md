@@ -6,6 +6,8 @@
 
 部署請見 [Windows／Linux × 直接連線／Cloudflare 網域指南](docs/DEPLOYMENT.md)。目前 `shhuang.cc` 由 Linux 的 Cloudflare Tunnel 提供服務；原本的 Radmin VPN／區網直連方式仍可依指南切換。
 
+程式依用途放在 `src/`（帳號、角色、社群、GitHub、房間、各遊戲與資料庫）、`public/`（頁面與共用 UI）、`tests/`（自動測試）及 `docs/`（專題文件）。根目錄的 `server.js`、`admin.js` 是沿用 `npm start` 與管理指令的相容入口。
+
 ## 帳號與留言板
 
 需使用 **Node.js 22.13 或更新版**。首次啟動前，在伺服器執行 `node admin.js init <管理者帳號>`，終端機會顯示一次性初始密碼；登入 `/login` 後可在 `/admin` 產生單次邀請碼與可分享的註冊連結、停用會員或提供密碼重設連結。邀請連結會自動開啟註冊表單並填入邀請碼。註冊不要求 Email 驗證。遊戲、留言與角色頁面都需要登入。帳號和留言存在 `data/afterhours.sqlite`，房間仍只存在記憶體。
