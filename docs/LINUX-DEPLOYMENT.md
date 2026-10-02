@@ -23,6 +23,8 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 
 2026-10-02 在目前正式版本的程式碼上，以隔離測試資料庫執行送禮達人三帳號 HTTP 驗收，`gift.test.js` 5/5 通過；涵蓋自訂圖片禮物、兩輪遊戲、隱藏選擇、重連、計分、勝利及歷史。沒有更動正式帳號、題庫或房間。
 
+2026-10-02 新版 `33d5ebe` 已放入獨立的 `releases/33d5ebe`，Linux `npm test` 通過 102/102。正式資料庫已用 SQLite 線上備份建立 `shared/backups/pre-33d5ebe-20261002-013131.sqlite`，完整性 `ok`；公開站尚未切換，服務仍使用 `bd3e51c`。原因是公開站當時仍有一間三人送禮房停在揭曉階段，重啟會清除記憶體房間。待該局結束或使用者同意中止後，才可切換 `current`、重啟服務並透過公開 HTTPS 驗收新版。
+
 ## 尚待正式設定
 
 伺服器 `shared/.env` 的 `PUBLIC_URL` 是 `https://shhuang.cc`，資料目錄位於 `shared/data`。**尚未設定 `GITHUB_TOKEN`**。管理者或後續部署 AI 須提供對 `stanley021039/BGA` Issues 具讀寫權限的憑證，放在只允許擁有者讀取的 `shared/.env`，重啟 `afterhours.service`，再以真實授權驗證建立、回覆、關閉及重開 Issue。此憑證不得提交到 Git 或寫入 MR 內容。
