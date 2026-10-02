@@ -21,7 +21,7 @@ function createLobby(now=()=>Date.now()){
    if(visitors.size>=MAX_VISITORS)throw new HttpError(503,'LOBBY_FULL','大廳目前已滿');
    const seed=[...user.id].reduce((sum,char)=>sum+char.charCodeAt(0),0);
    const x=22+(seed%7)*9,y=37+(seed%3)*15;
-   visitor={id:user.id,x,y,targetX:x,targetY:y,updatedAt:time,facing:'right'};
+   visitor={id:user.id,x,y,targetX:x,targetY:y,moveId:0,updatedAt:time,facing:'right'};
    visitors.set(user.id,visitor);
   }
   visitor.name=user.display_name;
@@ -33,7 +33,8 @@ function createLobby(now=()=>Date.now()){
   const time=now();
   for(const visitor of visitors.values())advance(visitor,time);
   return {selfId:user.id,visitors:[...visitors.values()].map(visitor=>({
-   id:visitor.id,name:visitor.name,x:visitor.x,y:visitor.y,facing:visitor.facing,
+   id:visitor.id,name:visitor.name,x:visitor.x,y:visitor.y,targetX:visitor.targetX,targetY:visitor.targetY,moveId:visitor.moveId,
+   remainingMs:Math.ceil(Math.hypot((visitor.targetX-visitor.x)/24,(visitor.targetY-visitor.y)/32)*1000),facing:visitor.facing,
    moving:Math.hypot(visitor.targetX-visitor.x,visitor.targetY-visitor.y)>.05,
    image:`/characters/${visitor.id}`,
    emote:visitor.emote&&visitor.emote.until>time?visitor.emote:null
@@ -44,6 +45,7 @@ function createLobby(now=()=>Date.now()){
   const visitor=enter(user),time=now();advance(visitor,time);
   visitor.targetX=Math.max(MIN_X,Math.min(MAX_X,input.x));
   visitor.targetY=Math.max(MIN_Y,Math.min(MAX_Y,input.y));
+  visitor.moveId+=1;
   if(visitor.targetX<visitor.x-.1)visitor.facing='left';
   if(visitor.targetX>visitor.x+.1)visitor.facing='right';
   return view(user);

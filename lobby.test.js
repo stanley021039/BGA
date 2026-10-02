@@ -10,10 +10,15 @@ test('click destinations advance at bounded speed and emotes expire for other vi
  const ordered=lobby.move(alice,{x:90,y:95});
  assert.equal(ordered.visitors[0].x,first.x);
  assert.equal(ordered.visitors[0].moving,true);
+ assert.equal(ordered.visitors[0].moveId,1);
+ assert.equal(ordered.visitors[0].targetX,85);
+ assert.ok(ordered.visitors[0].remainingMs>500);
  time+=500;
  const moved=lobby.view(bob).visitors[0];
  assert.ok(moved.x>first.x&&moved.x-first.x<=12);
  assert.ok(moved.y>first.y&&moved.y-first.y<=16);
+ assert.equal(moved.moveId,1);
+ assert.ok(moved.remainingMs<ordered.visitors[0].remainingMs);
  assert.equal(moved.image,'/characters/alice');
  assert.throws(()=>lobby.move(alice,{x:'90',y:50}),error=>error.code==='INVALID_MOVEMENT');
  assert.throws(()=>lobby.move(alice,{x:101,y:50}),error=>error.code==='INVALID_MOVEMENT');

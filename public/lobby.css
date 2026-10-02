@@ -12,7 +12,8 @@
 .lobby-lamp{position:absolute;top:10%;font-size:27px;color:#edc27f;text-shadow:0 0 22px #efbf75,0 0 44px #e2ad5c;pointer-events:none}.lamp-left{left:7%}.lamp-right{right:7%}
 .lobby-destination{position:absolute;width:25px;height:13px;border:2px solid #f8bd75;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 0 5px #f8bd7530,0 0 18px #f8bd7580;pointer-events:none}
 .lobby-visitors{position:absolute;inset:0;pointer-events:none}
-.lobby-avatar{position:absolute;width:72px;display:flex;flex-direction:column;align-items:center;gap:1px;transform:translate(-50%,-78%);transition:left .5s linear,top .5s linear;filter:drop-shadow(0 5px 4px #091911bb)}
+.lobby-avatar{position:absolute;width:72px;display:flex;flex-direction:column;align-items:center;gap:1px;transform:translate(-50%,-78%);transition:left var(--lobby-move-duration,0ms) linear,top var(--lobby-move-duration,0ms) linear;filter:drop-shadow(0 5px 4px #091911bb)}
+.lobby-avatar.is-placing{transition:none!important}
 .lobby-avatar img{width:54px;height:58px;object-fit:contain;filter:drop-shadow(0 2px 3px #07160eaa)}
 .lobby-speech{position:absolute;bottom:calc(100% + 4px);max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:3px 9px;border:1px solid #e9bd7f;border-radius:12px;background:#f6e6cc;color:#3b2b1f;font-size:11px;font-weight:700;box-shadow:0 5px 12px #0a130b77}
 .lobby-avatar.is-emoting .lobby-speech{animation:lobby-emote-pop .35s ease-out both}

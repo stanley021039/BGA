@@ -5,22 +5,36 @@
  const marker=document.querySelector('#lobbyDestination'),toggle=document.querySelector('#lobbyEmoteToggle');
  const menu=document.querySelector('#lobbyEmoteMenu'),choices=document.querySelector('#lobbyEmoteChoices');
  const visitors=new Map();
- let inFlight=false,ready=false,queuedTarget=null,destination=null,emotesLoaded=false;
+ let inFlight=false,ready=false,queuedTarget=null,destination=null,emotesLoaded=false,positionReset=true;
  function closeMenu(){menu.hidden=true;toggle.setAttribute('aria-expanded','false');}
  function render(data){
   if(!data||!Array.isArray(data.visitors))throw Error('大廳資料格式不正確');
+  const resetPositions=positionReset;positionReset=false;
   const active=new Set();
   for(const visitor of data.visitors){
    if(typeof visitor.id!=='string'||!Number.isFinite(visitor.x)||!Number.isFinite(visitor.y))continue;
    active.add(visitor.id);
    let node=visitors.get(visitor.id);
+   const isNew=!node;
    if(!node){
     node=document.createElement('div');node.className='lobby-avatar';
     const bubble=document.createElement('div');bubble.className='lobby-speech';bubble.hidden=true;
     const image=document.createElement('img');image.alt='';image.draggable=false;
     const label=document.createElement('span');node.append(bubble,image,label);layer.append(node);visitors.set(visitor.id,node);
    }
-   node.style.left=visitor.x+'%';node.style.top=visitor.y+'%';node.style.zIndex=String(Math.round(visitor.y));
+   if(isNew||resetPositions){
+    node.classList.add('is-placing');
+    node.style.left=visitor.x+'%';node.style.top=visitor.y+'%';
+    void node.offsetWidth;
+   }
+   if(isNew||resetPositions||node.dataset.moveId!==String(visitor.moveId)){
+    node.style.setProperty('--lobby-move-duration',Math.max(0,visitor.remainingMs)+'ms');
+    node.classList.remove('is-placing');
+    node.style.left=(visitor.moving?visitor.targetX:visitor.x)+'%';
+    node.style.top=(visitor.moving?visitor.targetY:visitor.y)+'%';
+    node.dataset.moveId=String(visitor.moveId);
+   }
+   node.style.zIndex=String(Math.round(visitor.y));
    node.classList.toggle('is-self',visitor.id===data.selfId);
    node.classList.toggle('is-moving',!!visitor.moving);
    node.classList.toggle('facing-left',visitor.facing==='left');
@@ -92,6 +106,6 @@
  });
  document.addEventListener('click',event=>{if(!event.target.closest('.lobby-emote-wrap'))closeMenu();});
  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeMenu();});
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync();else closeMenu();});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){positionReset=true;sync();}else closeMenu();});
  sync();setInterval(()=>sync(),500);
 })();
