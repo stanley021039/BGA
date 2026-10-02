@@ -63,4 +63,4 @@
 @keyframes trail-fade{from{opacity:.9}to{opacity:0}}
 @keyframes collision-ring{from{r:9;opacity:1}to{r:34;opacity:0}}
 @media(max-width:650px){.immersion-controls{justify-content:flex-start}.immersion-controls input{width:80px}.immersion-spotlight{align-items:flex-start;flex-direction:column}.race-immersion-controls{margin-top:12px}}
-@media(prefers-reduced-motion:reduce){#board .newly-revealed,.race-move-trail,.race-collision-ring{animation:none}.race-move-trail,.race-collision-ring{display:none}}
+@media(prefers-reduced-motion:reduce){#board .newly-revealed{animation:none}}

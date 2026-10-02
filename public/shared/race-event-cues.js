@@ -21,9 +21,7 @@ window.RaceEventCues={mount(immersion){
   timer=setTimeout(hide,2200);
  }
  skip.addEventListener('click',hide);
- document.getElementById('raceMotionToggle').addEventListener('click',()=>{if(!immersion.allowsMotion())hide();});
  document.addEventListener('keydown',event=>{if(event.key==='Escape')hide();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)hide();});
- window.matchMedia?.('(prefers-reduced-motion: reduce)')?.addEventListener?.('change',()=>{if(!immersion.allowsMotion())hide();});
  return {show,hide};
 }};
