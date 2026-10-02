@@ -8,6 +8,7 @@ const {createApp}=require('./src/app');
 const {openDatabase}=require('./src/db/index');
 const {createAuth}=require('./src/auth/index');
 const {GiftStore}=require('./src/games/gift-store');
+const {AchievementStore}=require('./src/achievements/store');
 const {GIFTS}=require('./src/games/gift-catalog');
 
 test('illustrated default gifts have bundled artwork',()=>{
@@ -33,6 +34,46 @@ test('custom gifts persist in SQLite and become eligible for the next draw',()=>
   room.giftProvider=()=>store.list();
   for(const name of ['甲','乙','丙'])room.add(name);
   room.start();assert.ok(room.gifts.some(item=>item.id===gift.id));
+  db.close();
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('existing v5 data survives the achievement migration',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-gift-achievements-')),file=path.join(root,'app.sqlite');
+ try{
+  let db=openDatabase(file);
+  db.prepare("INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)").run('existing-user','existing','原有會員','unused','member',new Date().toISOString());
+  db.exec('DROP TABLE user_achievements; PRAGMA user_version=5;');db.close();
+  db=openDatabase(file);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,6);
+  assert.equal(db.prepare('SELECT display_name FROM users WHERE id=?').get('existing-user').display_name,'原有會員');
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM user_achievements').get().count,0);
+  db.close();
+ }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
+test('gift badge requires an active player to submit both choices and settle a round',()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-gift-award-')),file=path.join(root,'app.sqlite');
+ try{
+  const db=openDatabase(file),store=new AchievementStore(db),room=new GiftRoom('BADGE1','徽章測試',()=>0);
+  const seats=new Map();
+  for(const name of ['甲','乙','丙','丁']){
+   const userId='user-'+name;
+   db.prepare("INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)").run(userId,userId,name,'unused','member',new Date().toISOString());
+   seats.set(userId,room.add(name).id);
+  }
+  const [a,b,c,d]=[...seats.values()];room.kick(a,d);room.start();
+  assert.deepEqual(store.awardGiftRound(room,seats),[]);
+  const [g0,g1,g2,g3]=room.gifts.map(gift=>gift.id);
+  room.give(a,{[b]:g0,[c]:g1});room.give(b,{[a]:g0,[c]:g2});room.give(c,{[a]:g1,[b]:g2});
+  assert.deepEqual(store.awardGiftRound(room,seats),[]);
+  const ranking={great:g0,good:g1,ok:g2,noWay:g3};
+  for(const id of [a,b,c])room.wish(id,ranking);
+  assert.equal(room.phase,'reveal');
+  assert.equal(store.awardGiftRound(room,seats).length,3);
+  assert.deepEqual(store.awardGiftRound(room,seats),[]);
+  assert.equal(store.list('user-丁').achievements[0].unlockedAt,null);
+  for(const name of ['甲','乙','丙'])assert.ok(store.list('user-'+name).achievements[0].unlockedAt);
   db.close();
  }finally{fs.rmSync(root,{recursive:true,force:true});}
 });
@@ -124,12 +165,23 @@ test('authenticated players can create, join and reconnect to a gift room withou
   const code=created.body.code;
   const unauthorized=await fetch(base+'/gift/'+code,{redirect:'manual'});
   assert.equal(unauthorized.status,302);
+  assert.equal((await fetch(base+'/api/achievements')).status,401);
   assert.equal((await fetch(base+'/gift/'+code,{headers:{Cookie:host}})).status,200);
   assert.equal((await fetch(base+'/gift.js',{headers:{Cookie:host}})).status,200);
+  assert.equal((await fetch(base+'/achievements',{redirect:'manual'})).status,302);
+  assert.equal((await fetch(base+'/achievements',{headers:{Cookie:host}})).status,200);
+  for(const name of ['open_001','confirmation_001']){
+   const sound=await fetch(base+'/assets/gift-sounds/'+name+'.wav');
+   assert.equal(sound.status,200);
+   assert.equal(sound.headers.get('content-type'),'audio/wav');
+   assert.equal(Buffer.from(await sound.arrayBuffer()).toString('ascii',0,4),'RIFF');
+  }
   assert.equal((await fetch(base+GIFTS.find(gift=>gift.image).image,{headers:{Cookie:host}})).status,200);
   assert.equal((await post('join',friend,{code,name:'不能覆蓋角色名稱'})).status,200);
   assert.equal((await post('join',other,{code})).status,200);
   const getState=async (cookie=host)=>(await (await fetch(base+'/api/state?code='+code,{headers:{Cookie:cookie}})).json());
+  const getAchievements=async cookie=>(await (await fetch(base+'/api/achievements',{headers:{Cookie:cookie}})).json()).achievements;
+  assert.equal((await getAchievements(host))[0].unlockedAt,null);
   let state=await getState();assert.equal(state.phase,'waiting');
   assert.deepEqual(state.players.map(player=>player.name),['giftadmin','giftfriend','giftother']);
   assert.equal((await post('settings',friend,{code,target:8})).status,400);
@@ -153,6 +205,11 @@ test('authenticated players can create, join and reconnect to a gift room withou
   await post('action',friend,{code,action:'wish',ranking:rank(g0,g2,g1,g3)});
   await post('action',other,{code,action:'wish',ranking:rank(g2,g1,g0,g3)});
   state=await getState();assert.equal(state.phase,'reveal');assert.equal(state.result.entries.length,6);
+  const unlockedAt=(await getAchievements(host))[0].unlockedAt;
+  assert.ok(unlockedAt);
+  assert.equal((await getAchievements(friend))[0].unlockedAt,unlockedAt);
+  assert.equal((await getAchievements(other))[0].unlockedAt,unlockedAt);
+  assert.equal((await getAchievements(outsider))[0].unlockedAt,null);
   const history=await (await fetch(base+'/api/history',{headers:{Cookie:host}})).json();
   assert.equal(history[0].type,'gift');assert.equal(history[0].status,'playing');
   assert.equal((await post('action',friend,{code,action:'next'})).status,400);
@@ -169,6 +226,7 @@ test('authenticated players can create, join and reconnect to a gift room withou
   state=await getState();assert.equal(state.phase,'finished');
   assert.equal(state.result.entries.length,6);
   assert.equal(state.winner.ids.length,3);
+  assert.equal((await getAchievements(host))[0].unlockedAt,unlockedAt);
   const finishedHistory=await (await fetch(base+'/api/history',{headers:{Cookie:host}})).json();
   assert.equal(finishedHistory[0].status,'finished');
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}
