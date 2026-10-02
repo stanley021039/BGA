@@ -7,7 +7,7 @@ window.RaceEventCues={mount(immersion){
  const symbols={slam:'✦',eliminated:'×',fire:'♨',damage:'⚙',shot:'➤',hazard:'⚠',trap:'⊗',quake:'≋',jump:'↟',fireDie:'♨',airstrike:'✣',road:'↗'};
  let timer=null;
  function hide(){clearTimeout(timer);timer=null;panel.hidden=true;}
- function show(events){
+ function show(events,cars=[]){
   if(!immersion.allowsMotion()||document.hidden)return hide();
   const event=events.filter(item=>Object.hasOwn(priority,item.kind)).sort((a,b)=>priority[b.kind]-priority[a.kind]||b.id-a.id)[0];
   if(!event)return;
@@ -18,6 +18,18 @@ window.RaceEventCues={mount(immersion){
   detail.textContent=String(event.text||'');
   symbol.textContent=event.kind==='hazard'?(hazardSymbols[event.hazard]||symbols.hazard):symbols[event.kind];
   panel.hidden=false;
+  const stage=panel.closest('.race-stage');
+  const carId=event.car||event.target||event.top||event.bottom;
+  const affected=cars.find(car=>car.id===carId);
+  const xCell=Number.isInteger(event.x)?event.x:affected?.x,yCell=Number.isInteger(event.y)?event.y:affected?.y;
+  const cell=Number.isInteger(xCell)&&Number.isInteger(yCell)?document.querySelector(`#track [data-x="${xCell}"][data-y="${yCell}"]`):null;
+  const car=Array.from(document.querySelectorAll('#track [data-car]')).find(node=>node.dataset.car===carId)||cell||document.querySelector('#track .active-car');
+  const bounds=stage.getBoundingClientRect(),anchor=car?.getBoundingClientRect();
+  const x=anchor?anchor.left+anchor.width/2-bounds.left:bounds.width/2;
+  const y=anchor?anchor.top+anchor.height/2-bounds.top:bounds.height/2;
+  panel.style.left=Math.max(8,Math.min(bounds.width-panel.offsetWidth-8,x-panel.offsetWidth/2))+'px';
+  panel.style.top=Math.max(8,Math.min(bounds.height-panel.offsetHeight-8,y-panel.offsetHeight/2))+'px';
+  panel.style.right='auto';
   timer=setTimeout(hide,2200);
  }
  skip.addEventListener('click',hide);

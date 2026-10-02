@@ -45,9 +45,9 @@ function render(live=false){
   if(!eligible&&!artist)html='<div class="card stage-controls"><p>你是中途加入的朋友，下一輪起可以猜題。</p></div>';
   else if(guessed)html='<div class="card stage-controls"><p>你已猜中！等其他朋友完成或時間到。</p></div>';
  }else if(s.phase==='reveal'){
-  html=`<div class="card stage-controls"><p>本輪畫作與猜測紀錄可在上方回看。</p>${s.host?'<button data-do="next">下一位畫者 →</button>':''}${s.presenterId===s.me&&s.result?.answer?'<button data-do="save">存入我的繪畫圖庫</button>':''}</div>`;
+  html=`<div class="card stage-controls"><p>本輪畫作與猜測紀錄可在上方回看。</p>${s.host?'<button data-do="next">下一位畫者 →</button>':''}${s.result?.answer?'<button data-do="save">加入我的素材庫</button>':''}</div>`;
  }else{
-  html=`<div class="card stage-controls"><p>本局完成，名次與分數已列在上方。</p>${s.host?'<button data-do="start">再玩一局 ↻</button>':''}${s.presenterId===s.me&&s.result?.answer?'<button data-do="save">存下最後一張畫</button>':''}</div>`;
+  html=`<div class="card stage-controls"><p>本局完成，名次與分數已列在上方。</p>${s.host?'<button data-do="start">再玩一局 ↻</button>':''}${s.result?.answer?'<button data-do="save">加入我的素材庫</button>':''}</div>`;
  }
  $('#stage').innerHTML=html;$('#stage').hidden=!html;
  $('#canvasStage').innerHTML=s.phase==='drawing'?'':stageScene(s);
@@ -189,7 +189,8 @@ async function roomAction(route,data={}){if(busy)return;busy=true;try{receive(aw
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
 async function saveArtwork(){
  try{
-  const base64=canvas.toDataURL('image/png').split(',')[1],name='你畫我猜：'+(state.question?.title||'我的畫');
+  await syncCanvas();
+  const base64=canvas.toDataURL('image/png').split(',')[1],name='你畫我猜：'+(state.result?.answer||state.question?.title||'我的畫');
   const response=await fetch('/api/artworks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,base64,mime:'image/png'})});
   const result=await response.json();if(!response.ok)throw Error(result.error||'儲存失敗');
   toast('已存入我的繪畫圖庫');

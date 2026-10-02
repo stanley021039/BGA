@@ -20,9 +20,13 @@ const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,character
 const {createCharacter,setExpression,addExpression,setSharing,removeCharacter}=require('./profiles/uploads');
 const {USER_IMAGE_PATH,createCharacterMediaAccess}=require('./profiles/media');
 const {ArtworkStore}=require('./artworks/store');
+<<<<<<< HEAD
 const {MusicStore,MAX_BYTES}=require('./music/store');
 const {RoomMusic}=require('./music/room');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
+=======
+const {ROOM_EMOJIS}=require('./social/emojis');
+>>>>>>> 6294dcd (Unify game controls and reveal gifts by recipient confirmation)
 function createApp(config){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
@@ -82,6 +86,10 @@ function createApp(config){
  function limitAuth(req){limitRate(authRate,clientKey(req),20);}
 const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  const url=new URL(req.url,'http://localhost');
+ if(req.method==='GET'&&url.searchParams.get('embed')==='1'&&['/gifts','/draw-words','/community'].includes(url.pathname)){
+  res.setHeader('X-Frame-Options','SAMEORIGIN');
+  res.setHeader('Content-Security-Policy',"frame-ancestors 'self'; base-uri 'none'; object-src 'none'");
+ }
  if(url.pathname==='/robots.txt'&&req.method==='GET'){res.setHeader('Content-Type','text/plain; charset=utf-8');return res.end(robots);}
  if(url.pathname.startsWith('/api/')){
  res.setHeader('Content-Type','application/json; charset=utf-8');
@@ -137,6 +145,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/profile/options'&&req.method==='GET'){
   return send({defaults,expressionLabels,characters:galleryFor(db,user.id)});
  }
+ if(url.pathname==='/api/social/options'&&req.method==='GET')return send({emojis:ROOM_EMOJIS});
  if(url.pathname==='/api/profile/characters'&&req.method==='POST'){limitAccount(user);return send(createCharacter(db,user.id,data));}
  const characterDelete=url.pathname.match(/^\/api\/profile\/characters\/([a-f0-9-]{36})\/delete$/);
  if(characterDelete&&req.method==='POST'){limitAccount(user);return send(removeCharacter(db,user.id,characterDelete[1]));}
@@ -236,6 +245,9 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    const message=typeof data.message==='string'?data.message.trim():'';
    if(!message||[...message].length>40||/[\u0000-\u001f\u007f]/.test(message))throw new HttpError(400,'INVALID_BARRAGE','文字彈幕需為 1–40 字，且不能換行');
    event={id:randomBytes(8).toString('hex'),kind:'barrage',playerId:p.id,name:user.display_name,message,at:now};
+  }else if(data.kind==='emoji'){
+   if(typeof data.emoji!=='string'||!ROOM_EMOJIS.includes(data.emoji))throw new HttpError(400,'INVALID_EMOJI','請選擇選單中的 emoji');
+   event={id:randomBytes(8).toString('hex'),kind:'emoji',playerId:p.id,name:user.display_name,emoji:data.emoji,at:now};
   }else if(data.kind==='expression'){
    const saved=user.appearance?JSON.parse(user.appearance):defaults;
    const selected=selectedImage(db,user.id,{...normalizeAppearance(saved),expression:data.expression});

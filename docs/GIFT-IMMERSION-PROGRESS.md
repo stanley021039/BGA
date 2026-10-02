@@ -36,3 +36,16 @@ Noto 圖示來自 [googlefonts/noto-emoji](https://github.com/googlefonts/noto-e
 每完成一個步驟即更新本表與[架構進度](../ARCHITECTURE-PLAN.md)。步驟 1–6 隨 `33d5ebe`、步驟 7–8 隨 `b5da6f0` 上線。表內保留各項驗證證據與仍待實機確認的事項。
 
 審查用的 [PR #9](https://github.com/stanley021039/BGA/pull/9) 已更新至本表最終功能，並明確交接正式 `GITHUB_TOKEN` 的設定與驗證；PR 以 [PR #8](https://github.com/stanley021039/BGA/pull/8) 為基底。
+
+## 2026-10-02 前景正式站實玩
+
+已以 shhuang.cc 專用 animation_demo_1–3 帳號透過瀏覽器實玩；完整房號、触發項目、未觸發項目及截圖在本機已忽略的 work/SESSION-HANDOFF-2026-10-02.md。沒有改碼、部署或更新 PR。憑證另存 work/animation-demo-credentials.json，勿提交 Git。
+送禮 FA3588 三人兩輪，焦點揭曉／重播及勝利舞台，三人雙分數均 8。
+
+## 2026-10-02 使用者介面修正
+
+新增伺服器 delivering 階段：同一收禮者同時收到全桌禮物，僅本人能確認；確認後才切換下一位。收完前不變動總分、不公開完整結果或勝利。全部確認才計分並顯示分數條、每位朋友收到的禮物分頁；移除自動跳過收禮者的三份焦點演出。桌面雙欄選禮／喜好，收禮朋友使用分頁，八人名單雙欄。背景 1280×720 八人局確認頁面高度 720、主要面板 clientHeight/scrollHeight 都為 610，兩個提交按鈕直接可見。
+
+驗證：Windows 全套 npm test 148/148，涵蓋收禮確認權限、錯誤／重複确认、計分順序、八人 56 件禮物、收禮中踢人，以及事件定位與題庫嵌入的安全回應標頭。依使用者最新要求，後續測試全在背景進行；停止前景遊玩展示。未發 PR/MR。
+
+使用者補充：新增的「表情」指 emoji 彈幕，角色表情不用改。已分開 emoji 與角色廣播，並驗證五款遊戲 emoji 都不變動 avatar 或角色表情。測試全在背景，沒有切換前景視窗。

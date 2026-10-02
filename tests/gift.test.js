@@ -12,6 +12,22 @@ const {AchievementStore}=require('../src/achievements/store');
 const {GIFTS}=require('../src/games/gift-catalog');
 const {drawContent}=require('../src/games/content-draw');
 
+function receiveAll(room){
+ assert.equal(room.phase,'delivering');
+ const before=room.players.map(player=>[player.giveScore,player.getScore]);
+ while(room.phase==='delivering'){
+  const recipientId=room.delivery.order[room.delivery.index],other=room.activePlayers().find(player=>player.id!==recipientId).id;
+  const view=room.view(other);
+  assert.equal(view.result,null);assert.equal(view.winner,null);
+  assert.ok(view.delivery.entries.every(entry=>entry.recipientId===recipientId));
+  assert.deepEqual(room.players.map(player=>[player.giveScore,player.getScore]),before);
+  assert.throws(()=>room.act(other,'accept',{recipientId}),/收禮者/);
+  assert.throws(()=>room.act(recipientId,'accept',{recipientId:'stale'}),/重新整理/);
+  assert.throws(()=>room.act(room.host,'next'),/階段/);
+  room.act(recipientId,'accept',{recipientId});
+ }
+}
+
 test('0% custom content stays built-in even after the built-in draw cycle resets',()=>{
  const builtin=Array.from({length:3},(_,index)=>({id:'built-in-'+index}));
  const custom=[{id:'custom-0'}];
@@ -123,7 +139,7 @@ test('gift badge requires an active player to submit both choices and settle a r
   assert.deepEqual(store.awardGiftRound(room,seats),[]);
   const ranking={great:g0,good:g1,ok:g2,noWay:g3};
   for(const id of [a,b,c])room.wish(id,ranking);
-  assert.equal(room.phase,'reveal');
+  receiveAll(room);assert.equal(room.phase,'reveal');
   assert.equal(store.awardGiftRound(room,seats).length,3);
   assert.deepEqual(store.awardGiftRound(room,seats),[]);
   assert.equal(store.list('user-丁').achievements[0].unlockedAt,null);
@@ -153,7 +169,7 @@ test('gift rounds keep choices secret, score both tracks, and finish only after 
   assert.equal(room.view(b).ownRanking,null);
   assert.equal(room.view(b).result,null);
   room.act(b,'wish',{ranking:{great:g0,good:g2,ok:g1,noWay:g3}});
-  room.act(c,'wish',{ranking:{great:g2,good:g1,ok:g0,noWay:g3}});
+  room.act(c,'wish',{ranking:{great:g2,good:g1,ok:g0,noWay:g3}});receiveAll(room);
  };
  runRound();
  assert.equal(room.phase,'reveal');
@@ -189,11 +205,20 @@ test('invalid input cannot leak choices or alter a locked round; kicking a playe
  assert.throws(()=>room.add('晚到'),/已開始/);
  assert.throws(()=>room.act(host.id,'wish',{ranking:{great:g0,good:g0,ok:g1,noWay:g2}}),/四件不同/);
  for(const player of [host,other])room.act(player.id,'wish',{ranking});
- assert.equal(room.phase,'reveal');
+ receiveAll(room);assert.equal(room.phase,'reveal');
  assert.equal(room.result.entries.length,6);
  assert.ok(room.result.entries.every(entry=>entry.giverId!==leaving.id&&entry.recipientId!==leaving.id));
  assert.ok(room.result.entries.some(entry=>entry.points===-1));
  assert.ok(room.result.entries.some(entry=>entry.points===-4));
+});
+
+test('kicking the current recipient advances delivery without publishing scores early',()=>{
+ const room=new GiftRoom('KICK88','收禮中踢人',()=>0),players=['甲','乙','丙','丁'].map(name=>room.add(name));room.start();
+ const gifts=room.gifts.map(gift=>gift.id);
+ for(const player of players){room.give(player.id,Object.fromEntries(players.filter(other=>other!==player).map((other,index)=>[other.id,gifts[index]])));room.wish(player.id,{great:gifts[0],good:gifts[1],ok:gifts[2],noWay:gifts[3]});}
+ room.act(players[0].id,'accept',{recipientId:players[0].id});room.kick(players[0].id,players[1].id);
+ assert.equal(room.view(players[0].id).delivery.recipientId,players[2].id);assert.equal(room.result,null);
+ receiveAll(room);assert.equal(room.result.entries.length,6);assert.ok(room.result.entries.every(entry=>entry.giverId!==players[1].id&&entry.recipientId!==players[1].id));
 });
 
 test('eight players can rank before gifting and reveal all 56 gifts only after both choices',()=>{
@@ -208,7 +233,7 @@ test('eight players can rank before gifting and reveal all 56 gifts only after b
   const assignments=Object.fromEntries(recipients.map((recipient,index)=>[recipient.id,room.gifts[index].id]));
   room.give(player.id,assignments);
  }
- assert.equal(room.phase,'reveal');assert.equal(room.result.entries.length,56);
+ receiveAll(room);assert.equal(room.phase,'reveal');assert.equal(room.result.entries.length,56);
 });
 
 test('authenticated players can create, join and reconnect to a gift room without seeing hidden choices',async()=>{
@@ -285,7 +310,15 @@ test('authenticated players can create, join and reconnect to a gift room withou
   await post('action',host,{code,action:'wish',ranking:rank(g0,g1,g2,g3)});
   assert.equal((await getState(other)).ownRanking,null);
   await post('action',other,{code,action:'wish',ranking:rank(g2,g1,g0,g3)});
-  state=await getState();assert.equal(state.phase,'reveal');assert.equal(state.result.entries.length,6);
+  state=await getState();assert.equal(state.phase,'delivering');assert.equal(state.result,null);
+  while(state.phase==='delivering'){
+   const recipientId=state.delivery.recipientId,cookie=recipientId===a?host:recipientId===b?friend:other;
+   const wrong=recipientId===a?friend:host;
+   assert.equal((await post('action',wrong,{code,action:'accept',recipientId})).status,400);
+   assert.equal((await post('action',cookie,{code,action:'accept',recipientId})).status,200);
+   state=await getState();
+  }
+  assert.equal(state.phase,'reveal');assert.equal(state.result.entries.length,6);
   const unlockedAt=(await getAchievements(host))[0].unlockedAt;
   assert.ok(unlockedAt);
   assert.equal((await getAchievements(friend))[0].unlockedAt,unlockedAt);
@@ -304,7 +337,15 @@ test('authenticated players can create, join and reconnect to a gift room withou
   assert.equal((await post('action',host,{code,action:'wish',ranking:rank(h0,h1,h2,h3)})).status,200);
   assert.equal((await post('action',friend,{code,action:'wish',ranking:rank(h0,h2,h1,h3)})).status,200);
   assert.equal((await post('action',other,{code,action:'wish',ranking:rank(h2,h1,h0,h3)})).status,200);
-  state=await getState();assert.equal(state.phase,'finished');
+  state=await getState();assert.equal(state.phase,'delivering');assert.equal(state.result,null);
+  while(state.phase==='delivering'){
+   const recipientId=state.delivery.recipientId,cookie=recipientId===a?host:recipientId===b?friend:other;
+   const wrong=recipientId===a?friend:host;
+   assert.equal((await post('action',wrong,{code,action:'accept',recipientId})).status,400);
+   assert.equal((await post('action',cookie,{code,action:'accept',recipientId})).status,200);
+   state=await getState();
+  }
+  assert.equal(state.phase,'finished');
   assert.equal(state.result.entries.length,6);
   assert.equal(state.winner.ids.length,3);
   assert.equal((await getAchievements(host))[0].unlockedAt,unlockedAt);

@@ -21,6 +21,7 @@
  const manage=document.querySelector('#managePlayers');if(manage)dock.append(manage);document.body.append(dock);
  if(majorityAside){majorityAside.querySelector('#players').after(panel);panel.classList.add('integrated','majority-ui');}
  else if(giftAside){giftAside.querySelector('#players').after(panel);panel.classList.add('integrated','gift-ui');}
+<<<<<<< HEAD
  else if(drawAside){drawAside.querySelector('#players').after(panel);panel.classList.add('integrated','draw-ui');panel.querySelector('.shared-barrage-heading').hidden=true;panel.querySelector('#shared-barrage').hidden=true;}
  else if(pokerAside){
   const controls=pokerAside.querySelector('#hostControls');controls.after(panel);panel.classList.add('integrated','poker-ui');
@@ -30,6 +31,17 @@
   panel.querySelector('#shared-turn').before(panel.querySelector('.shared-players-heading'),panel.querySelector('#shared-players'));
  }
  else if(raceCrews){raceCrews.after(panel);panel.classList.add('integrated','race-ui');}
+=======
+ else if(drawAside){drawAside.querySelector('#players').after(panel);panel.classList.add('integrated','draw-ui');drawAside.append(document.querySelector('#guessChat'));}
+ else if(pokerAside){pokerAside.querySelector('#hostControls').after(panel);panel.classList.add('integrated','poker-ui');}
+ else if(raceCrews){
+  const controls=document.createElement('aside');controls.className='race-controls';document.querySelector('.race-main').append(controls);
+  controls.append(raceCrews,document.querySelector('.dashboard'),panel,document.querySelector('.race-feed'),document.querySelector('.race-immersion-controls'));
+  const radio=document.createElement('details');radio.className='race-feed';const summary=document.createElement('summary');summary.textContent='賽道電台 · 事件紀錄';radio.append(summary,controls.querySelector('#feed'));controls.querySelector('.race-feed').replaceWith(radio);
+  document.querySelector('.race-heading').append(controls.querySelector('.race-immersion-controls'));
+  panel.classList.add('integrated','race-ui');
+ }
+>>>>>>> 6294dcd (Unify game controls and reveal gifts by recipient confirmation)
  else document.body.append(panel);
  if(sidebar){
   const toggle=panel.querySelector('#shared-toggle');toggle.className='room-interaction-toggle';toggle.textContent='表情／互動';panel.querySelector('#shared-turn').after(toggle);
@@ -39,10 +51,17 @@
  const barrageLayer=document.createElement('div');barrageLayer.className='game-barrage-layer';barrageLayer.setAttribute('aria-hidden','true');
  arena.classList.add('game-barrage-host');arena.append(barrageLayer);
  const q=selector=>panel.querySelector(selector);
+ const emojiPicker=document.createElement('div');emojiPicker.id='shared-emoji-picker';emojiPicker.className='shared-emoji-picker';emojiPicker.hidden=true;emojiPicker.setAttribute('role','group');emojiPicker.setAttribute('aria-label','emoji 彈幕選單');q('#shared-barrage').after(emojiPicker);
+ const emoteButton=document.createElement('button');emoteButton.type='button';emoteButton.id='shared-emote-toggle';emoteButton.textContent='☺';emoteButton.setAttribute('aria-label','選擇 emoji 彈幕');emoteButton.setAttribute('aria-expanded','false');emoteButton.setAttribute('aria-controls','shared-emoji-picker');q('#shared-barrage').append(emoteButton);
+ emoteButton.onclick=()=>{const expanded=emojiPicker.hidden;emojiPicker.hidden=!expanded;emoteButton.setAttribute('aria-expanded',String(expanded));};
+ document.addEventListener('click',event=>{if(!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target)){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');}});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!emojiPicker.hidden){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');emoteButton.focus();}});
+ fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`)){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');}};emojiPicker.append(button);}}).catch(error=>{emojiPicker.textContent=error.message;});
  let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false,barrageRoom='',seenBarrages=new Set(),nextLane=0;
  function turnOf(s){
   if(['waiting','finished','showdown'].includes(s.phase))return s.phase==='waiting'?'等待房主開始':s.phase==='finished'?'本局結束':'本手結算中';
   if(s.type==='gift'){
+   if(s.phase==='delivering'){const recipient=s.players.find(player=>player.id===s.delivery.recipientId);return s.me===s.delivery.recipientId?'輪到你確認收到禮物！':'等待 '+(recipient?.name||'朋友')+' 確認收禮';}
    if(s.phase!=='choosing')return '這輪禮物已揭曉';
    const gave=!!s.ownAssignments,wished=!!s.ownRanking;
    return gave&&wished?'兩項已鎖定，等待朋友完成':gave?'送禮已鎖定，輪到你標喜好！':wished?'喜好已鎖定，輪到你選禮物！':'輪到你選禮物與標喜好！';
@@ -98,7 +117,9 @@
    if(seenBarrages.has(item.id)||now-item.at>=8000)continue;
    seenBarrages.add(item.id);
    const bubble=element('div','game-barrage','');bubble.style.top=`${12+(nextLane++%4)*18}%`;
-   bubble.append(element('strong','',item.name+'：'),document.createTextNode(item.message));
+   bubble.append(element('strong','',item.name+'：'));
+   if(item.kind==='emoji'){bubble.classList.add('game-emoji-barrage');bubble.append(element('span','game-emoji-glyph',item.emoji));}
+   else bubble.append(document.createTextNode(item.message));
    barrageLayer.append(bubble);
    bubble.style.setProperty('--barrage-travel',`-${barrageLayer.clientWidth+bubble.offsetWidth+24}px`);
    bubble.addEventListener('animationend',()=>bubble.remove(),{once:true});
@@ -134,6 +155,11 @@
  q('#shared-barrage').onsubmit=async event=>{event.preventDefault();const input=q('#shared-barrage input'),message=input.value.trim();if(!message)return;if([...message].length>40){q('#shared-error').classList.remove('ok');q('#shared-error').textContent='文字彈幕最多 40 字';return;}if(await send({kind:'barrage',message},'文字彈幕已送出'))input.value='';};
  q('#shared-toggle').onclick=()=>{const expanded=panel.classList.toggle('expanded');q('#shared-toggle').setAttribute('aria-expanded',String(expanded));q('#shared-toggle').textContent=expanded?'收合互動':'表情／彈幕';};
  window.addEventListener('focus',()=>{if(state){nextLoad=0;loadExpressions();}});
+ const library=document.createElement('dialog');library.className='game-library-dialog';library.innerHTML='<div class="library-dialog-head"><strong>新增題庫素材</strong><button type="button" aria-label="關閉題庫">關閉 ×</button></div><iframe title="新增題庫素材"></iframe>';document.body.append(library);
+ library.querySelector('button').onclick=()=>library.close();
+ document.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(!link)return;const url=new URL(link.href);if(url.origin!==location.origin||!['/gifts','/draw-words','/community'].includes(url.pathname))return;event.preventDefault();url.searchParams.set('embed','1');library.querySelector('iframe').src=url.pathname+url.search;library.showModal();});
+ library.querySelector('iframe').onload=()=>{const doc=library.querySelector('iframe').contentDocument;if(!doc)return;const style=doc.createElement('style');style.textContent='header{display:none!important}body{padding:0!important}main{margin-top:12px!important}.gift-shell,.draw-shell,.shell{padding:0 16px!important}';doc.head.append(style);doc.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(link&&new URL(link.href).pathname==='/'){event.preventDefault();library.close();}});};
+ if(majorityAside){const link=document.createElement('a');link.href='/community?tab=questions';link.className='quiet';link.textContent='新增題庫素材';document.querySelector('.shell header nav')?.append(link);}
  function stableMarkup(target,markup){if(target._gameMarkup!==markup){target.innerHTML=markup;target._gameMarkup=markup;}}
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function playerRow(player,{me,status='',metrics=[{value:player.score??player.stack??0,label:'分數'}]}={}){

@@ -7,8 +7,11 @@ const vm=require('node:vm');
 function presenter(){
  const listeners=new Map(),elements=new Map();
  for(const id of ['raceEventPopup','raceEventTitle','raceEventDetail','raceEventSymbol','raceEventSkip'])elements.set(id,{hidden:id==='raceEventPopup',dataset:{},textContent:'',addEventListener(type,fn){listeners.set(id+':'+type,fn);}});
+ const stage={getBoundingClientRect:()=>({left:100,top:50,width:800,height:400})};
+ const car={dataset:{car:'car-1'},getBoundingClientRect:()=>({left:600,top:230,width:40,height:30})};
+ Object.assign(elements.get('raceEventPopup'),{style:{},offsetWidth:290,offsetHeight:180,closest:()=>stage});
  let hidden=false,nextTimer=0;
- const timers=new Map(),document={getElementById:id=>elements.get(id),addEventListener(type,fn){listeners.set('document:'+type,fn);},get hidden(){return hidden;}};
+ const timers=new Map(),document={getElementById:id=>elements.get(id),querySelectorAll:()=>[car],querySelector:()=>car,addEventListener(type,fn){listeners.set('document:'+type,fn);},get hidden(){return hidden;}};
  const window={};
  const context={window,document,setTimeout(fn){const id=++nextTimer;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);}};
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','public/shared/race-event-cues.js'),'utf8'),context);
@@ -18,9 +21,9 @@ function presenter(){
 
 test('race event card prefers a collision and treats event text as text',()=>{
  const ui=presenter(),panel=ui.elements.get('raceEventPopup');
- ui.cues.show([{id:1,kind:'hazard',hazard:'mine',text:'地雷'},{id:2,kind:'shot',hit:true,text:'射擊命中'},{id:3,kind:'slam',text:'<img src=x onerror=alert(1)>'}]);
+ ui.cues.show([{id:1,kind:'hazard',hazard:'mine',text:'地雷'},{id:2,kind:'shot',hit:true,text:'射擊命中'},{id:3,kind:'slam',car:'car-1',text:'<img src=x onerror=alert(1)>'}]);
  assert.equal(panel.hidden,false);
- assert.equal(panel.dataset.kind,'slam');
+ assert.equal(panel.dataset.kind,'slam');assert.equal(panel.style.left,'375px');assert.equal(panel.style.top,'105px');assert.equal(panel.style.right,'auto');
  assert.equal(ui.elements.get('raceEventTitle').textContent,'車輛碰撞');
  assert.equal(ui.elements.get('raceEventDetail').textContent,'<img src=x onerror=alert(1)>');
  assert.equal(ui.timers.size,1);
