@@ -34,8 +34,7 @@ class GiftRoom{
   this.event('kick',`${player.name} 已被房主踢出`);
   if(this.phase==='waiting'||this.phase==='finished')return;
   if(this.activePlayers().length<3){this.phase='finished';this.winner={ids:[],reason:'玩家不足，本局提前結束'};this.event('finish','玩家不足，本局提前結束');return;}
-  if(this.phase==='giving'&&this.allSubmitted(this.assignments))this.beginWishing();
-  if(this.phase==='wishing'&&this.allSubmitted(this.rankings))this.reveal();
+  if(this.phase==='choosing'&&this.readyToReveal())this.reveal();
  }
  configure(id,data={}){
   if(id!==this.host)throw Error('只有房主可以更改設定');
@@ -60,12 +59,13 @@ class GiftRoom{
    if(!available.length){this.usedGiftIds=this.gifts.map(gift=>gift.id);available=pool.filter(gift=>!this.usedGiftIds.includes(gift.id));}
    const gift=available[this.rng(available.length)];this.gifts.push(gift);this.usedGiftIds.push(gift.id);
   }
-  this.assignments={};this.rankings={};this.result=null;this.phase='giving';
-  this.event('round',`第 ${this.round} 輪開始，請為朋友挑禮物`);
+  this.assignments={};this.rankings={};this.result=null;this.phase='choosing';
+  this.event('round',`第 ${this.round} 輪開始，請為朋友挑禮物並標記喜好`);
  }
  allSubmitted(records){return this.activePlayers().every(player=>Object.hasOwn(records,player.id));}
+ readyToReveal(){return this.allSubmitted(this.assignments)&&this.allSubmitted(this.rankings);}
  give(id,assignments){
-  if(this.phase!=='giving')throw Error('現在不能送禮');
+  if(this.phase!=='choosing')throw Error('現在不能送禮');
   if(Object.hasOwn(this.assignments,id))throw Error('你的禮物已鎖定');
   const recipients=this.activePlayers().filter(player=>player.id!==id).map(player=>player.id);
   const validIds=new Set(this.gifts.map(gift=>gift.id));
@@ -74,11 +74,10 @@ class GiftRoom{
    new Set(Object.values(assignments)).size!==recipients.length)throw Error('每位朋友都要收到一件不同的有效禮物');
   this.assignments[id]=Object.fromEntries(recipients.map(recipient=>[recipient,assignments[recipient]]));
   this.event('give',`${this.player(id).name} 已選好禮物`);
-  if(this.allSubmitted(this.assignments))this.beginWishing();
+  if(this.readyToReveal())this.reveal();
  }
- beginWishing(){this.phase='wishing';this.event('wishing','所有禮物已鎖定，請秘密標記自己的喜好');}
  wish(id,ranking){
-  if(this.phase!=='wishing')throw Error('現在不能標記喜好');
+  if(this.phase!=='choosing')throw Error('現在不能標記喜好');
   if(Object.hasOwn(this.rankings,id))throw Error('你的喜好已鎖定');
   const keys=Object.keys(rankPoints),validIds=new Set(this.gifts.map(gift=>gift.id));
   if(!ranking||typeof ranking!=='object'||Array.isArray(ranking)||Object.keys(ranking).length!==keys.length||
@@ -86,7 +85,7 @@ class GiftRoom{
    new Set(Object.values(ranking)).size!==keys.length)throw Error('請為四件不同禮物標記最想要、想要、還可以與不想要');
   this.rankings[id]=Object.fromEntries(keys.map(key=>[key,ranking[key]]));
   this.event('wish',`${this.player(id).name} 已標記喜好`);
-  if(this.allSubmitted(this.rankings))this.reveal();
+  if(this.readyToReveal())this.reveal();
  }
  reveal(){
   const players=this.activePlayers();
@@ -126,7 +125,8 @@ class GiftRoom{
    host:id===this.host,hostId:this.host,me:id,round:this.round,target:this.target,
    dealerId:this.dealerId,gifts:this.gifts,
    players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,bot:false,giveScore:player.giveScore,getScore:player.getScore,online:Date.now()-player.lastSeen<15000})),
-   submittedIds:this.phase==='giving'?Object.keys(this.assignments):this.phase==='wishing'?Object.keys(this.rankings):[],
+   submittedIds:this.phase==='choosing'?this.activePlayers().filter(player=>Object.hasOwn(this.assignments,player.id)&&Object.hasOwn(this.rankings,player.id)).map(player=>player.id):[],
+   gaveIds:this.phase==='choosing'?Object.keys(this.assignments):[],wishedIds:this.phase==='choosing'?Object.keys(this.rankings):[],
    ownAssignments:this.assignments[id]||null,ownRanking:this.rankings[id]||null,
    result:revealed?this.result:null,winner:this.winner,events:this.events
   });

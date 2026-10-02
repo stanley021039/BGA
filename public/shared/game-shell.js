@@ -19,7 +19,11 @@
  let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false,barrageRoom='',seenBarrages=new Set(),nextLane=0;
  function turnOf(s){
   if(['waiting','finished','showdown'].includes(s.phase))return s.phase==='waiting'?'等待房主開始':s.phase==='finished'?'本局結束':'本手結算中';
-  if(s.type==='gift')return s.phase==='giving'?(s.submittedIds?.includes(s.me)?'等待朋友選禮物':'輪到你挑禮物！'):s.phase==='wishing'?(s.submittedIds?.includes(s.me)?'等待朋友標喜好':'輪到你標喜好！'):'這輪禮物已揭曉';
+  if(s.type==='gift'){
+   if(s.phase!=='choosing')return '這輪禮物已揭曉';
+   const gave=!!s.ownAssignments,wished=!!s.ownRanking;
+   return gave&&wished?'兩項已鎖定，等待朋友完成':gave?'送禮已鎖定，輪到你標喜好！':wished?'喜好已鎖定，輪到你選禮物！':'輪到你選禮物與標喜好！';
+  }
   if(s.type==='majority'){
    if(s.phase==='answering')return s.answeredIds?.includes(s.me)?'等待其他人作答':'輪到你作答！';
    if(s.phase==='review')return s.host?'輪到你確認答案！':'等待房主確認答案';

@@ -86,14 +86,16 @@ test('gift rounds keep choices secret, score both tracks, and finish only after 
  assert.equal(room.gifts.length,4);
  const runRound=()=>{
   const [a,b,c]=players.map(player=>player.id),[g0,g1,g2,g3]=room.gifts.map(gift=>gift.id);
+  room.act(a,'wish',{ranking:{great:g0,good:g1,ok:g2,noWay:g3}});
+  assert.equal(room.phase,'choosing');
+  assert.equal(room.view(b).ownRanking,null);
   room.act(a,'give',{assignments:{[b]:g0,[c]:g1}});
   assert.equal(room.view(b).ownAssignments,null);
   assert.equal(room.view(b).result,null);
   assert.throws(()=>room.act(b,'give',{assignments:{[a]:g0,[c]:g0}}),/不同/);
   room.act(b,'give',{assignments:{[a]:g0,[c]:g2}});
   room.act(c,'give',{assignments:{[a]:g1,[b]:g2}});
-  assert.equal(room.phase,'wishing');
-  room.act(a,'wish',{ranking:{great:g0,good:g1,ok:g2,noWay:g3}});
+  assert.equal(room.phase,'choosing');
   assert.equal(room.view(b).ownRanking,null);
   assert.equal(room.view(b).result,null);
   room.act(b,'wish',{ranking:{great:g0,good:g2,ok:g1,noWay:g3}});
@@ -113,7 +115,7 @@ test('gift rounds keep choices secret, score both tracks, and finish only after 
  assert.equal(room.phase,'finished');
  assert.deepEqual(room.winner.ids,players.map(player=>player.id));
  assert.ok(room.players.every(player=>player.giveScore===8&&player.getScore===8));
- room.start();assert.equal(room.phase,'giving');assert.equal(room.round,1);
+ room.start();assert.equal(room.phase,'choosing');assert.equal(room.round,1);
 });
 
 test('invalid input cannot leak choices or alter a locked round; kicking a player cannot stall it',()=>{
@@ -124,19 +126,35 @@ test('invalid input cannot leak choices or alter a locked round; kicking a playe
  assert.throws(()=>room.act(host.id,'give',{assignments:{[friend.id]:g0}}),/每位朋友/);
  room.act(host.id,'give',{assignments:{[friend.id]:g0,[other.id]:g1,[leaving.id]:g2}});
  assert.throws(()=>room.act(host.id,'give',{assignments:{[friend.id]:g0,[other.id]:g1,[leaving.id]:g2}}),/鎖定/);
+ const ranking={great:g0,good:g1,ok:g2,noWay:g3};
+ room.act(friend.id,'wish',{ranking});
  room.act(friend.id,'give',{assignments:{[host.id]:g4,[other.id]:g2,[leaving.id]:g3}});
  room.act(other.id,'give',{assignments:{[host.id]:g1,[friend.id]:g3,[leaving.id]:g4}});
  room.kick(host.id,leaving.id);
- assert.equal(room.phase,'wishing');
+ assert.equal(room.phase,'choosing');
  assert.throws(()=>room.add('晚到'),/已開始/);
  assert.throws(()=>room.act(host.id,'wish',{ranking:{great:g0,good:g0,ok:g1,noWay:g2}}),/四件不同/);
- const ranking={great:g0,good:g1,ok:g2,noWay:g3};
- for(const player of [host,friend,other])room.act(player.id,'wish',{ranking});
+ for(const player of [host,other])room.act(player.id,'wish',{ranking});
  assert.equal(room.phase,'reveal');
  assert.equal(room.result.entries.length,6);
  assert.ok(room.result.entries.every(entry=>entry.giverId!==leaving.id&&entry.recipientId!==leaving.id));
  assert.ok(room.result.entries.some(entry=>entry.points===-1));
  assert.ok(room.result.entries.some(entry=>entry.points===-4));
+});
+
+test('eight players can rank before gifting and reveal all 56 gifts only after both choices',()=>{
+ const room=new GiftRoom('EIGHT8','八人試玩',()=>0);
+ const players=Array.from({length:8},(_,index)=>room.add(`玩家${index+1}`));
+ room.start();assert.equal(room.phase,'choosing');assert.equal(room.gifts.length,9);
+ const [g0,g1,g2,g3]=room.gifts.map(gift=>gift.id);
+ for(const player of players)room.wish(player.id,{great:g0,good:g1,ok:g2,noWay:g3});
+ assert.equal(room.phase,'choosing');assert.equal(room.view(players[0].id).result,null);
+ for(const player of players){
+  const recipients=players.filter(other=>other.id!==player.id);
+  const assignments=Object.fromEntries(recipients.map((recipient,index)=>[recipient.id,room.gifts[index].id]));
+  room.give(player.id,assignments);
+ }
+ assert.equal(room.phase,'reveal');assert.equal(room.result.entries.length,56);
 });
 
 test('authenticated players can create, join and reconnect to a gift room without seeing hidden choices',async()=>{
@@ -195,14 +213,16 @@ test('authenticated players can create, join and reconnect to a gift room withou
   assert.equal(visible.joinable,false);
   assert.equal((await post('action',host,{code,action:'give',assignments:{[b]:g0,[c]:g1}})).status,200);
   state=await getState(friend);assert.equal(state.ownAssignments,null);assert.equal(state.result,null);
-  assert.deepEqual(state.submittedIds,[a]);
+  assert.deepEqual(state.submittedIds,[]);assert.deepEqual(state.gaveIds,[a]);assert.deepEqual(state.wishedIds,[]);
   assert.equal((await post('reconnect',friend,{code})).body.reconnected,true);
+  assert.equal((await post('action',friend,{code,action:'wish',ranking:{great:g0,good:g2,ok:g1,noWay:g3}})).status,200);
+  state=await getState();assert.equal(state.phase,'choosing');assert.deepEqual(state.wishedIds,[b]);assert.equal(state.ownRanking,null);
   await post('action',friend,{code,action:'give',assignments:{[a]:g0,[c]:g2}});
   await post('action',other,{code,action:'give',assignments:{[a]:g1,[b]:g2}});
+  state=await getState();assert.equal(state.phase,'choosing');assert.deepEqual(state.gaveIds,[a,b,c]);assert.equal(state.result,null);
   const rank=(great,good,ok,noWay)=>({great,good,ok,noWay});
   await post('action',host,{code,action:'wish',ranking:rank(g0,g1,g2,g3)});
   assert.equal((await getState(other)).ownRanking,null);
-  await post('action',friend,{code,action:'wish',ranking:rank(g0,g2,g1,g3)});
   await post('action',other,{code,action:'wish',ranking:rank(g2,g1,g0,g3)});
   state=await getState();assert.equal(state.phase,'reveal');assert.equal(state.result.entries.length,6);
   const unlockedAt=(await getAchievements(host))[0].unlockedAt;
@@ -214,7 +234,7 @@ test('authenticated players can create, join and reconnect to a gift room withou
   assert.equal(history[0].type,'gift');assert.equal(history[0].status,'playing');
   assert.equal((await post('action',friend,{code,action:'next'})).status,400);
   assert.equal((await post('action',host,{code,action:'next'})).status,200);
-  state=await getState();assert.equal(state.phase,'giving');assert.equal(state.round,2);
+  state=await getState();assert.equal(state.phase,'choosing');assert.equal(state.round,2);
   const [h0,h1,h2,h3]=state.gifts.map(gift=>gift.id);
   assert.ok(state.gifts.every(gift=>![g0,g1,g2,g3].includes(gift.id)));
   assert.equal((await post('action',host,{code,action:'give',assignments:{[b]:h0,[c]:h1}})).status,200);
