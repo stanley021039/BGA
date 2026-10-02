@@ -2,13 +2,13 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化）、`5525fad`（好友角色分享與帳號繪畫圖庫）、`ac2d7e0`（撲克與末路狂飆沉浸感及入門成就）、`7fcb436`（末路狂飆碰撞與特殊事件視窗），再更新至 `5a3cdc1`（修正繪畫提示與畫作按鈕遮擋），再更新至 `eee416e`（可移動角色的好友大廳），目前切換至 `e9b8e97`（大廳平滑、慢速行走與角色表情）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化）、`5525fad`（好友角色分享與帳號繪畫圖庫）、`ac2d7e0`（撲克與末路狂飆沉浸感及入門成就）、`7fcb436`（末路狂飆碰撞與特殊事件視窗），再更新至 `5a3cdc1`（修正繪畫提示與畫作按鈕遮擋），再更新至 `eee416e`（可移動角色的好友大廳），目前切換至 `c49bb7c`（大廳在減少動態偏好下仍平滑行走）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/6bcd5bd`；舊版仍保留，回退前須先確認資料庫 v8 相容性 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/c49bb7c`；舊版仍保留，回退前須先確認資料庫 v8 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
@@ -65,3 +65,5 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 2026-10-02 將大廳連續平滑移動版本 `1360519` 放入獨立版本目錄，Windows／Linux `npm test` 各 117/117。首次切換時舊 Node 程序接到 SIGTERM 後未立即退出，健康檢查超時而自動回退；調整重啟程序後再次切換成功。正式 SQLite 備份 `shared/backups/pre-1360519-20261002-143720.sqlite` 完整性 `ok`、schema v8，公開 HTTPS 新腳本與樣式回 200，匿名大廳 API 回 401。
 
 同日依使用者回饋把走路速度減半，短距離至少播放 350 毫秒；版本 `e9b8e97` 的 Windows／Linux `npm test` 各 117/117。切換前備份 `shared/backups/pre-e9b8e97-20261002-144337.sqlite` 與切換後資料庫完整性皆為 `ok`、schema v8。正式 `current` 指向 `releases/e9b8e97`，網站和 Tunnel 為 `active`；公開 HTTPS 的 `/login`、新版 `/lobby.js`、`/lobby.css`、`/robots.txt` 回 200，匿名 `/api/lobby` 回 401。公開站主觀速度與雙人同步仍待使用者驗收。
+
+使用者在另一台電腦的公開網站確認 `prefers-reduced-motion: reduce` 為 `true`，原 CSS 因此將角色行走轉場關閉。依使用者指示不加開關，改在大廳持續播放行走與表情動畫。`c49bb7c` 的 Windows／Linux `npm test` 各 117/117；背景 Chrome 強制減少動態時仍測得 2 秒轉場。封存 SHA-256 為 `2aad2e540d15f3d3e62a9485cae7928647ecae36ec143e21da1b6219ef0d4a62`，切換前 SQLite 線上備份 `shared/backups/pre-c49bb7c-20261002-152632.sqlite` 完整性 `ok`、schema v8、帳號 4 筆。正式 `current` 指向 `releases/c49bb7c`，網站與 Tunnel 均為 `active`，切換後 SQLite 完整性 `ok`；公開 HTTPS 的新版 `/lobby.css` 含行走轉場且無減少動態覆寫，`/login` 回 200，`/robots.txt` 保持全站 `Disallow: /`。此版公開帳號實際體感待使用者驗收。
