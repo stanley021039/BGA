@@ -5,14 +5,16 @@
  panel.innerHTML='<div class="shared-head"><span>AFTERHOURS / ROOM</span><button id="shared-toggle" type="button" aria-expanded="false">表情／彈幕</button><a href="/" aria-label="返回遊戲大廳">離開畫面 ↗</a></div><div id="shared-turn" class="shared-turn" role="status" aria-live="polite">等待開局</div><h2 class="shared-players-heading">這一桌的角色</h2><div id="shared-players" class="shared-players"></div><h2 class="shared-expressions-heading">使用角色表情</h2><div id="shared-expressions" class="shared-expressions" aria-label="我的角色表情"></div><h2 class="shared-barrage-heading">文字彈幕</h2><form id="shared-barrage"><input name="message" maxlength="40" placeholder="輸入彈幕（最多 40 字）" aria-label="文字彈幕" required><button type="submit">發送</button></form><p id="shared-error" role="status"></p>';
  const majorityAside=document.querySelector('.play-layout > aside');
  const giftAside=document.querySelector('.gift-layout > aside');
+ const drawAside=document.querySelector('.draw-layout > aside');
  const pokerAside=document.querySelector('#game .table-sidebar');
  const raceCrews=document.querySelector('.race-main #crews');
  if(majorityAside){majorityAside.querySelector('#players').after(panel);panel.classList.add('integrated','majority-ui');}
  else if(giftAside){giftAside.querySelector('#players').after(panel);panel.classList.add('integrated','gift-ui');}
+ else if(drawAside){drawAside.querySelector('#players').after(panel);panel.classList.add('integrated','draw-ui');panel.querySelector('.shared-barrage-heading').hidden=true;panel.querySelector('#shared-barrage').hidden=true;}
  else if(pokerAside){pokerAside.querySelector('#hostControls').after(panel);panel.classList.add('integrated','poker-ui');}
  else if(raceCrews){raceCrews.after(panel);panel.classList.add('integrated','race-ui');}
  else document.body.append(panel);
- const arena=majorityAside?.previousElementSibling||giftAside?.previousElementSibling||document.querySelector('#game .play-area')||document.querySelector('.race-main')||document.body;
+ const arena=majorityAside?.previousElementSibling||giftAside?.previousElementSibling||drawAside?.previousElementSibling||document.querySelector('#game .play-area')||document.querySelector('.race-main')||document.body;
  const barrageLayer=document.createElement('div');barrageLayer.className='game-barrage-layer';barrageLayer.setAttribute('aria-hidden','true');
  arena.classList.add('game-barrage-host');arena.append(barrageLayer);
  const q=selector=>panel.querySelector(selector);
@@ -23,6 +25,12 @@
    if(s.phase!=='choosing')return '這輪禮物已揭曉';
    const gave=!!s.ownAssignments,wished=!!s.ownRanking;
    return gave&&wished?'兩項已鎖定，等待朋友完成':gave?'送禮已鎖定，輪到你標喜好！':wished?'喜好已鎖定，輪到你選禮物！':'輪到你選禮物與標喜好！';
+  }
+  if(s.type==='draw'){
+   const artist=s.players.find(player=>player.id===s.presenterId);
+   if(s.phase==='choosing')return s.presenterId===s.me?'輪到你選題！':'等待 '+(artist?.name||'畫者')+' 選題';
+   if(s.phase==='drawing')return s.presenterId===s.me?'輪到你畫圖！':s.participantIds.includes(s.me)?s.guessedIds.includes(s.me)?'已猜中，等朋友完成':'輪到你猜題！':'下一輪開始猜題';
+   return '本輪答案已揭曉';
   }
   if(s.type==='majority'){
    if(s.phase==='answering')return s.answeredIds?.includes(s.me)?'等待其他人作答':'輪到你作答！';
@@ -38,7 +46,7 @@
  function update(s){
   if(window.RaceLesson)return;
   state=s;panel.hidden=false;if(!panel.classList.contains('integrated'))document.body.classList.add('has-game-shell');
-  const current=s.type==='majority'?s.presenterId:s.type==='thunder'?s.actor:s.type==='gift'?null:s.players[s.turn]?.id;
+  const current=s.type==='majority'||s.type==='draw'?s.presenterId:s.type==='thunder'?s.actor:s.type==='gift'?null:s.players[s.turn]?.id;
   const turn=q('#shared-turn');turn.textContent=turnOf(s);turn.classList.toggle('mine',turn.textContent.includes('輪到你'));
   const social=s.social||[],recent=new Map(),now=Date.now();
   for(const item of [...(s.expressions||[]),...social.filter(item=>item.kind==='expression')])if(now-item.at<5000)recent.set(item.playerId,item);

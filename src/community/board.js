@@ -2,7 +2,7 @@ const crypto=require('node:crypto');
 const {transaction}=require('../db/index');
 const {HttpError}=require('../http/errors');
 
-const games=new Set(['general','majority','thunder','poker','gift']);
+const games=new Set(['general','majority','thunder','poker','gift','draw']);
 function issueUrl(value){
  if(typeof value!=='string')return null;
  try{

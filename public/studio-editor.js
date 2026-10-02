@@ -177,7 +177,7 @@ window.StudioEditor=(()=>{
    else if(mode==='ellipse'){paint.beginPath();paint.ellipse(left+width/2,top+height/2,Math.max(.5,width/2),Math.max(.5,height/2),0,0,Math.PI*2);filled?paint.fill():paint.stroke();}
    paint.restore();
   }
-  function pointFrom(event){const box=canvas.getBoundingClientRect();return {x:clamp(Math.floor((event.clientX-box.left)*WIDTH/box.width),0,WIDTH-1),y:clamp(Math.floor((event.clientY-box.top)*HEIGHT/box.height),0,HEIGHT-1)};}
+  function pointFrom(event){const [x,y]=StrokeCanvas.pointFrom(event,canvas,WIDTH,HEIGHT);return {x,y};}
   function flatten(){const output=document.createElement('canvas');output.width=WIDTH;output.height=HEIGHT;const context=output.getContext('2d',{willReadFrequently:true});context.drawImage(photoCanvas,0,0);context.drawImage(canvas,0,0);return output;}
   function pickColor(point){const pixels=flatten().getContext('2d').getImageData(point.x,point.y,1,1).data;if(!pixels[3]){status('該位置是透明的，請點選有顏色的地方。');return;}const picked='#'+[...pixels].slice(0,3).map(value=>value.toString(16).padStart(2,'0')).join('');setColor(picked,true);opacity.value=String(Math.round(pixels[3]/255*100));$('#paint-opacity-value').textContent=opacity.value+'%';renderColor();setMode('brush');status(`已從畫布取色 ${picked}。`);}
   function endStroke(event){if(!drawing)return;if(isShape()){paint.putImageData(shapeBase,0,0);drawShape(shapeStart,pointFrom(event));rememberColor(selectedColor);}drawing=false;lastPoint=null;shapeStart=null;shapeBase=null;}

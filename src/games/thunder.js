@@ -1,4 +1,4 @@
-// Thunder Road: Vendetta core rules. See RULES-SOURCES.md for reference and variant details.
+// Thunder Road: Vendetta core rules. See docs/RULES-SOURCES.md for reference and variant details.
 const {randomInt,randomUUID}=require('node:crypto');
 const COLORS=['#ec9b35','#43c6cd','#c4d3c0','#c260b6'];
 const DIRS=['前左','前方','前右','後左','後方','後右'];
