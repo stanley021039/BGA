@@ -1,6 +1,6 @@
 const {randomUUID}=require('node:crypto');
 const {HttpError}=require('../http/errors');
-const {imageOf}=require('../profiles/uploads');
+const {imageForRequest}=require('../profiles/uploads');
 const {GIFTS,CATEGORIES}=require('./gift-catalog');
 
 const keyOf=title=>title.normalize('NFKC').trim().replace(/\s+/gu,' ').toLowerCase();
@@ -21,7 +21,7 @@ class GiftStore{
   if(GIFTS.some(gift=>keyOf(gift.title)===key)||this.db.prepare('SELECT 1 FROM community_gifts WHERE title_key=?').get(key))throw new HttpError(409,'DUPLICATE_GIFT','題庫已有同名禮物');
   if(this.db.prepare('SELECT COUNT(*) AS count FROM community_gifts').get().count>=5000)throw new HttpError(400,'GIFT_LIMIT','共用禮物題庫已達上限');
   if(this.db.prepare('SELECT COUNT(*) AS count FROM community_gifts WHERE author_id=?').get(user.id).count>=100)throw new HttpError(400,'GIFT_AUTHOR_LIMIT','每位玩家最多投稿 100 件禮物');
-  const image=data.image==null?null:imageOf(data.image);
+  const image=data.image==null?null:imageForRequest(this.db,user.id,data.image);
   const row={id:randomUUID(),title,title_key:key,category:data.category,author_name:user.display_name,created_at:new Date().toISOString()};
   this.db.prepare('INSERT INTO community_gifts(id,author_id,author_name,title,title_key,category,image_mime,image_bytes,created_at) VALUES(?,?,?,?,?,?,?,?,?)')
    .run(row.id,user.id,row.author_name,row.title,row.title_key,row.category,image?.mime||null,image?.bytes||null,row.created_at);

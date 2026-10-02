@@ -13,11 +13,11 @@ test('v3 character images migrate without losing existing expression bytes',()=>
  const file=path.join(root,'app.sqlite');
  try{
   const old=new DatabaseSync(file);
-  old.exec("CREATE TABLE character_images(character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,PRIMARY KEY(character_id,expression)); PRAGMA user_version=3");
+  old.exec("CREATE TABLE player_characters(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL,name TEXT NOT NULL,created_at TEXT NOT NULL); CREATE TABLE character_images(character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,PRIMARY KEY(character_id,expression)); PRAGMA user_version=3");
   old.prepare('INSERT INTO character_images VALUES(?,?,?,?)').run('legacy','happy','image/gif',Buffer.from('GIF89a'));
   old.close();
   const upgraded=openDatabase(file);
-  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version,6);
+  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version,8);
   const row=upgraded.prepare('SELECT expression,label,bytes FROM character_images').get();
   assert.equal(row.expression,'happy');
   assert.equal(row.label,null);
@@ -78,6 +78,7 @@ test('custom named image expressions appear in profile, avatar, and room interac
   assert.equal(friendView.social.length,0);
   assert.equal(friendView.expressions[0].label,name);
   assert.equal(friendView.players.find(player=>player.name==='emoteadmin').avatar,character.expressions[expression]);
+  assert.equal((await fetch(base+character.expressions[expression],{headers:{Cookie:friend.cookie}})).status,200);
   assert.equal((await request('social',friend.cookie,{code:room.code,kind:'barrage',message:'   '})).body.code,'INVALID_BARRAGE');
   assert.equal((await request('social',friend.cookie,{code:room.code,kind:'barrage',message:'超過'.repeat(21)})).body.code,'INVALID_BARRAGE');
   assert.equal((await request('social',friend.cookie,{code:room.code,kind:'barrage',message:'下一行\n文字'})).body.code,'INVALID_BARRAGE');

@@ -2,13 +2,13 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例），最後切換至 `92e7725`（同頻俱樂部體驗優化）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化），目前切換至 `5525fad`（好友角色分享與帳號繪畫圖庫）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/92e7725`；舊版仍保留，回退前須先確認資料庫 v6 相容性 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/5525fad`；舊版仍保留，回退前須先確認資料庫 v8 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
@@ -33,11 +33,13 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 
 使用者明確指示新版都同步到 shhuang.cc，且不需檢查是否有人正在玩，可直接重啟。最終封存 `92e7725` 已獨立放入 `releases/92e7725`，Linux 全套再次通過 106/106，ZIP SHA-256 為 `f84dfced84471ae2d92cfc9356abe7b272a62b79780aaef6860b04fad7660fbc`。切換前以 SQLite 線上備份建立 `shared/backups/pre-92e7725-20261002-105515.sqlite`，完整性 `ok`、schema v6、帳號 4 筆；切換 `current` 並重啟 `afterhours.service` 後，網站及 Tunnel 都是 `active`，正式資料庫完整性仍為 `ok`、帳號 4 筆。公開 HTTPS 的 `/login`、`/majority.js`、`/majority.css`、音檔及 `/robots.txt` 回 200，腳本與正式提交內容相符（只有 CRLF／LF 差異）；robots 繼續全站 `Disallow: /`，回應含 `X-Robots-Tag`。重啟會清除所有當時的記憶體房間；公開多人實際完成一局與短音主觀聽感仍待確認。
 
+好友角色分享與帳號繪畫圖庫封存為 `5525fad`，獨立放入 `releases/5525fad`。Windows／Linux 全套各 108/108；切換前以 SQLite 線上備份建立 `shared/backups/pre-5525fad-20261002-034828.sqlite`，完整性 `ok`、schema v6、帳號 4 筆。備份複本預演遷移至 v8 也為 `ok`，正式切換並重啟後 schema v8、完整性 `ok`、帳號仍為 4 筆，服務與 Tunnel 皆為 `active`。從 Windows 經公開 HTTPS 驗證 `/login`、新版 `/studio.js`、`/profile.js`、`/gifts.js`、`/robots.txt`；匿名 `/studio` 導向登入、圖庫 API／圖片回 401，robots 仍 `Disallow: /`。本機隔離瀏覽器已驗證繪畫、存入圖庫及選用為角色／禮物；公開帳號端到端實際操作尚待驗收。依使用者指示，重啟前沒有檢查進行中的房間。
+
 ## 尚待正式設定
 
 伺服器 `shared/.env` 的 `PUBLIC_URL` 是 `https://shhuang.cc`，資料目錄位於 `shared/data`。**尚未設定 `GITHUB_TOKEN`**。管理者或後續部署 AI 須提供對 `stanley021039/BGA` Issues 具讀寫權限的憑證，放在只允許擁有者讀取的 `shared/.env`，重啟 `afterhours.service`，再以真實授權驗證建立、回覆、關閉及重開 Issue。此憑證不得提交到 Git 或寫入 MR 內容。
 
-玩家上傳角色只有作者可選用，但其他已登入玩家可看到使用中的角色圖片。公開共享作品前仍須加入授權審查、檢舉與移除機制。房間及桌邊即時留言存在記憶體，重啟後會清空；帳號、角色圖片與永久留言板存在 SQLite。
+帳號繪畫圖庫僅作者可讀取及選用；被選作角色、表情或禮物後，該用途的圖片副本依原有會員／遊戲權限顯示。好友角色分享由作者控制。本站是受邀好友使用，依使用者決定不加入內容審核或檢舉流程。房間及桌邊即時留言存在記憶體，重啟後會清空；帳號、圖庫、角色圖片與永久留言板存在 SQLite。
 
 ## 維護與復原
 

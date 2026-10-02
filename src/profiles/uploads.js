@@ -1,6 +1,7 @@
 const {randomUUID}=require('node:crypto');
 const {HttpError}=require('../http/errors');
 const {expressionLabels}=require('./appearance');
+const {defaults}=require('./appearance');
 
 const MAX_BYTES=1024*1024;
 const MAX_CUSTOM_EXPRESSIONS=6;
@@ -29,10 +30,19 @@ function imageOf(data){
  if(data.mime&&data.mime!==mime)invalid('圖片類型與檔案內容不符');
  return {bytes,mime,width,height};
 }
+function imageForRequest(db,ownerId,data){
+ if(data?.artworkId!==undefined){
+  if(typeof data.artworkId!=='string'||!/^([a-f0-9-]{36})$/.test(data.artworkId)||data.base64!==undefined)throw new HttpError(400,'INVALID_ARTWORK','作品選擇不正確');
+  const artwork=db.prepare('SELECT mime,bytes FROM user_artworks WHERE id=? AND owner_id=?').get(data.artworkId,ownerId);
+  if(!artwork)throw new HttpError(404,'ARTWORK_NOT_FOUND','找不到你的作品');
+  return artwork;
+ }
+ return imageOf(data);
+}
 function expressionOf(value){if(!Object.hasOwn(expressionLabels,value))throw new HttpError(400,'INVALID_EXPRESSION','不支援的表情');return value;}
 function nameOf(value){const name=String(value||'').trim();if(!name||[...name].length>32||/[\u0000-\u001f\u007f]/.test(name))throw new HttpError(400,'INVALID_CHARACTER_NAME','角色名稱需為 1–32 字，且不能換行');return name;}
 function createCharacter(db,ownerId,data){
- const name=nameOf(data.name),image=imageOf(data),id=randomUUID(),now=new Date().toISOString();
+ const name=nameOf(data.name),image=imageForRequest(db,ownerId,data),id=randomUUID(),now=new Date().toISOString();
  const count=db.prepare('SELECT COUNT(*) AS count FROM player_characters WHERE owner_id=?').get(ownerId).count;
  if(count>=10)throw new HttpError(400,'CHARACTER_LIMIT','每個帳號最多上傳 10 個角色');
  db.exec('BEGIN IMMEDIATE');
@@ -44,7 +54,7 @@ function createCharacter(db,ownerId,data){
  return {id:'user:'+id,name};
 }
 function setExpression(db,ownerId,id,data){
- const expression=expressionOf(data.expression),image=imageOf(data),uuid=id.replace(/^user:/,'');
+ const expression=expressionOf(data.expression),image=imageForRequest(db,ownerId,data),uuid=id.replace(/^user:/,'');
  const owned=db.prepare('SELECT id FROM player_characters WHERE id=? AND owner_id=?').get(uuid,ownerId);
  if(!owned)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到你的角色');
  db.prepare('INSERT INTO character_images(character_id,expression,mime,bytes) VALUES(?,?,?,?) ON CONFLICT(character_id,expression) DO UPDATE SET mime=excluded.mime,bytes=excluded.bytes').run(uuid,expression,image.mime,image.bytes);
@@ -53,7 +63,7 @@ function setExpression(db,ownerId,id,data){
 function addExpression(db,ownerId,id,data){
  const name=typeof data.name==='string'?data.name.trim():'';
  if(!name||[...name].length>20||/[\u0000-\u001f\u007f]/.test(name))throw new HttpError(400,'INVALID_EXPRESSION_NAME','表情名稱需為 1–20 字');
- const image=imageOf(data);
+ const image=imageForRequest(db,ownerId,data);
  const uuid=id.replace(/^user:/,'');
  db.exec('BEGIN IMMEDIATE');
  try{
@@ -68,4 +78,23 @@ function addExpression(db,ownerId,id,data){
   return {id:'user:'+uuid,expression,name};
  }catch(error){db.exec('ROLLBACK');throw error;}
 }
-module.exports={MAX_BYTES,imageOf,createCharacter,setExpression,addExpression};
+function setSharing(db,ownerId,id,shared){
+ if(typeof shared!=='boolean')throw new HttpError(400,'INVALID_SHARING','分享設定不正確');
+ db.exec('BEGIN IMMEDIATE');
+ try{
+  const row=db.prepare('SELECT id FROM player_characters WHERE id=? AND owner_id=?').get(id,ownerId);
+  if(!row)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到你的角色');
+  db.prepare('UPDATE player_characters SET shared=? WHERE id=?').run(shared?1:0,id);
+  if(!shared){
+   const chosen='user:'+id;
+   for(const user of db.prepare('SELECT id,appearance FROM users WHERE id!=? AND appearance IS NOT NULL').all(ownerId)){
+    let appearance;
+    try{appearance=JSON.parse(user.appearance);}catch{continue;}
+    if(appearance?.characterId===chosen)db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify(defaults),user.id);
+   }
+  }
+  db.exec('COMMIT');
+  return {id:'user:'+id,shared};
+ }catch(error){db.exec('ROLLBACK');throw error;}
+}
+module.exports={MAX_BYTES,imageOf,imageForRequest,createCharacter,setExpression,addExpression,setSharing};
