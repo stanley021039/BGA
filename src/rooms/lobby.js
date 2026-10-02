@@ -2,6 +2,7 @@ const {HttpError}=require('../http/errors');
 
 const MIN_X=15,MAX_X=85,MIN_Y=32,MAX_Y=92;
 const PRESENCE_MS=15000,EMOTE_MS=5000,MAX_VISITORS=80;
+const WALK_X_PER_SECOND=12,WALK_Y_PER_SECOND=16;
 
 function createLobby(now=()=>Date.now()){
  const visitors=new Map();
@@ -9,7 +10,7 @@ function createLobby(now=()=>Date.now()){
  function advance(visitor,time){
   const elapsed=Math.max(0,(time-visitor.updatedAt)/1000);
   const dx=visitor.targetX-visitor.x,dy=visitor.targetY-visitor.y;
-  const duration=Math.hypot(dx/24,dy/32);
+  const duration=Math.hypot(dx/WALK_X_PER_SECOND,dy/WALK_Y_PER_SECOND);
   const ratio=duration?Math.min(1,elapsed/duration):1;
   visitor.x+=dx*ratio;visitor.y+=dy*ratio;
   visitor.updatedAt=time;
@@ -34,7 +35,7 @@ function createLobby(now=()=>Date.now()){
   for(const visitor of visitors.values())advance(visitor,time);
   return {selfId:user.id,visitors:[...visitors.values()].map(visitor=>({
    id:visitor.id,name:visitor.name,x:visitor.x,y:visitor.y,targetX:visitor.targetX,targetY:visitor.targetY,moveId:visitor.moveId,
-   remainingMs:Math.ceil(Math.hypot((visitor.targetX-visitor.x)/24,(visitor.targetY-visitor.y)/32)*1000),facing:visitor.facing,
+   remainingMs:Math.ceil(Math.hypot((visitor.targetX-visitor.x)/WALK_X_PER_SECOND,(visitor.targetY-visitor.y)/WALK_Y_PER_SECOND)*1000),facing:visitor.facing,
    moving:Math.hypot(visitor.targetX-visitor.x,visitor.targetY-visitor.y)>.05,
    image:`/characters/${visitor.id}`,
    emote:visitor.emote&&visitor.emote.until>time?visitor.emote:null

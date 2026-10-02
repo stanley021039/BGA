@@ -28,7 +28,9 @@
     void node.offsetWidth;
    }
    if(isNew||resetPositions||node.dataset.moveId!==String(visitor.moveId)){
-    node.style.setProperty('--lobby-move-duration',Math.max(0,visitor.remainingMs)+'ms');
+    // Even a short move should remain visible after network and polling delay.
+    const duration=visitor.moveId===0?0:Math.max(350,Number(visitor.remainingMs)||0);
+    node.style.setProperty('--lobby-move-duration',duration+'ms');
     node.classList.remove('is-placing');
     node.style.left=(visitor.moving?visitor.targetX:visitor.x)+'%';
     node.style.top=(visitor.moving?visitor.targetY:visitor.y)+'%';

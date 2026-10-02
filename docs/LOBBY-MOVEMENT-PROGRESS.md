@@ -12,6 +12,7 @@
 | Linux 與 shhuang.cc | 已部署，公開帳號操作待驗收 | Linux 獨立版本目錄 `npm test` 117/117；切換前 SQLite 線上備份完整性 `ok`、schema v8、帳號 4 筆。正式站切換至 `eee416e` 後狀態一致，網站與 Tunnel 為 `active`。公開 HTTPS 的新 JS／CSS、登入頁及 robots 回 200；匿名大廳 API 回 401，robots 仍全站 `Disallow: /`。 |
 | 點擊與表情新版 Linux／shhuang.cc | 已部署，公開好友同時在線待驗收 | Linux 獨立版本目錄 `npm test` 117/117；正式 SQLite 線上備份及切換後完整性均為 `ok`、schema v8、帳號 4 筆。站點切換至 `6bcd5bd`，網站與 Tunnel 為 `active`；公開 HTTPS 的新 JS、CSS、登入頁與 robots 回 200，腳本含點擊移動和表情 API、已無方向鍵程式碼。匿名大廳及表情 API 回 401，robots 保持 `Disallow: /`。 |
 | 連續平滑移動 | 已部署，公開好友同時在線待驗收 | 伺服器回傳目的地、移動序號與剩餘時間；瀏覽器收到新目的地便以一段連續位移走完，不再每次 500 毫秒輪詢都重新開始動畫。回到背景分頁後先校正位置；偏好減少動態效果時維持無位移動畫。Windows／Linux `npm test` 各 117/117；隔離背景 Chrome 逐幀讀到連續座標變化，並確認減少動態效果。正式站切換至 `1360519`，SQLite 備份與切換後完整性均為 `ok`、schema v8；網站與 Tunnel 為 `active`，公開 HTTPS 新 JS／CSS 與 robots 回 200，匿名大廳 API 回 401。 |
+| 正式站回饋：移動太快 | Windows 已修正，Linux 待部署 | 水平／垂直行走速度降為原先一半；即使短距離在 API 回覆時已完成，也至少播放 350 毫秒的位移。Windows `npm test` 117/117、前端語法與 diff 檢查通過。 |
 
 此版是可行走的共用場地。家具碰撞、房間入口互動、表情或聊天與更高頻的多人同步尚未加入；目前角色會穿越其他角色。若將來同時在線人數增加，可依實測連線量評估 WebSocket，現階段維持短輪詢以沿用既有部署。
 
