@@ -114,7 +114,7 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
   const emoteState=await emote.json();
   assert.equal(emoteState.social.at(-1).kind,'message');
   assert.equal(emoteState.expressions.at(-1).kind,'expression');
-  assert.match(emoteState.players[0].avatar,/\/assets\/characters\/user\/.*\/happy$/);
+  assert.match(emoteState.players[0].avatar,/\/assets\/characters\/user\/.*\/happy\?v=[a-f0-9]{64}$/);
   const other=await fetch(base+'/api/state?code='+code);
   assert.equal(other.status,401);
   assert.equal((await other.json()).code,'LOGIN_REQUIRED');

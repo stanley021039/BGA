@@ -58,7 +58,12 @@ function createLobby(now=()=>Date.now()){
   visitor.emote={image:selected.image,label:selected.label,at:time,until:time+EMOTE_MS};
   return view(user);
  }
- return {view,move,emote};
+ function mediaAudience(viewerId){
+  const time=now(),present=[...visitors.values()].filter(visitor=>time-visitor.seenAt<=PRESENCE_MS);
+  if(!present.some(visitor=>visitor.id===viewerId))return null;
+  return {id:'lobby',userIds:new Set(present.map(visitor=>visitor.id)),expressions:present.filter(visitor=>visitor.emote&&visitor.emote.until>time).map(visitor=>({userId:visitor.id,...visitor.emote}))};
+ }
+ return {view,move,emote,mediaAudience};
 }
 
 module.exports={createLobby};

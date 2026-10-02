@@ -36,3 +36,21 @@ test('click destinations advance at bounded speed and emotes expire for other vi
  const atEdge=lobby.view(bob).visitors[0];
  assert.ok(atEdge.x<=85&&atEdge.y>=32);
 });
+
+test('media audience checks neither enter the lobby nor refresh visitor presence',()=>{
+ let time=1000;const lobby=createLobby(()=>time);
+ const alice={id:'alice',display_name:'Alice'},bob={id:'bob',display_name:'Bob'};
+ lobby.view(alice);
+ assert.equal(lobby.mediaAudience(bob.id),null);
+ assert.deepEqual([...lobby.mediaAudience(alice.id).userIds],['alice']);
+ lobby.view(bob);
+ lobby.emote(alice,{image:'/happy.png',label:'Happy'});
+ assert.equal(lobby.mediaAudience(bob.id).expressions[0].image,'/happy.png');
+ time+=5001;
+ assert.deepEqual(lobby.mediaAudience(bob.id).expressions,[]);
+ time+=9999;
+ assert.ok(lobby.mediaAudience(bob.id));
+ time++;
+ assert.equal(lobby.mediaAudience(bob.id),null);
+ assert.deepEqual(lobby.view(alice).visitors.map(visitor=>visitor.id),['alice']);
+});

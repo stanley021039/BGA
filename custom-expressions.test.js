@@ -73,11 +73,14 @@ test('custom named image expressions appear in profile, avatar, and room interac
   assert.equal(social.status,200);
   assert.equal(social.body.social.length,0);
   assert.equal(social.body.expressions[0].label,name);
-  assert.equal(social.body.expressions[0].image,character.expressions[expression]);
+  const broadcastImage=social.body.expressions[0].image;
+  assert.equal(broadcastImage.split('?')[0],character.expressions[expression]);
+  assert.match(broadcastImage,/\?v=[a-f0-9]{64}$/);
   const friendView=await (await fetch(base+'/api/state?code='+room.code,{headers:{Cookie:friend.cookie}})).json();
   assert.equal(friendView.social.length,0);
   assert.equal(friendView.expressions[0].label,name);
-  assert.equal(friendView.players.find(player=>player.name==='emoteadmin').avatar,character.expressions[expression]);
+  assert.equal(friendView.players.find(player=>player.name==='emoteadmin').avatar,broadcastImage);
+  assert.equal((await fetch(base+broadcastImage,{headers:{Cookie:friend.cookie}})).status,200);
   assert.equal((await fetch(base+character.expressions[expression],{headers:{Cookie:friend.cookie}})).status,200);
   assert.equal((await request('social',friend.cookie,{code:room.code,kind:'barrage',message:'   '})).body.code,'INVALID_BARRAGE');
   assert.equal((await request('social',friend.cookie,{code:room.code,kind:'barrage',message:'超過'.repeat(21)})).body.code,'INVALID_BARRAGE');
