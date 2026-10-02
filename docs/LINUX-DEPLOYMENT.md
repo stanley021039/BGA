@@ -2,13 +2,13 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
-2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
+2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 ## 目前配置
 
 | 項目 | 位置或服務 |
 | --- | --- |
-| 版本目錄 | `/home/ccc/apps/afterhours/releases/bd3e51c`；舊版仍保留，但資料庫 v5 不可直接用舊版程式開啟 |
+| 版本目錄 | `/home/ccc/apps/afterhours/releases/33d5ebe`；舊版仍保留，回退前須先確認資料庫 v6 相容性 |
 | 執行入口 | `/home/ccc/apps/afterhours/current` 符號連結 |
 | 持久資料與設定 | `/home/ccc/apps/afterhours/shared`，只有擁有者可讀寫 |
 | BGA 服務 | `afterhours.service`，以 `ccc` 執行，只監聽 `127.0.0.1:3000` |
@@ -23,7 +23,7 @@ VM 的 UFW 已啟用，預設拒絕入站，只允許 `192.168.232.0/24` 連入 
 
 2026-10-02 在目前正式版本的程式碼上，以隔離測試資料庫執行送禮達人三帳號 HTTP 驗收，`gift.test.js` 5/5 通過；涵蓋自訂圖片禮物、兩輪遊戲、隱藏選擇、重連、計分、勝利及歷史。沒有更動正式帳號、題庫或房間。
 
-2026-10-02 新版 `33d5ebe` 已放入獨立的 `releases/33d5ebe`，Linux `npm test` 通過 102/102。正式資料庫已用 SQLite 線上備份建立 `shared/backups/pre-33d5ebe-20261002-013131.sqlite`，完整性 `ok`；公開站尚未切換，服務仍使用 `bd3e51c`。原因是公開站當時仍有一間三人送禮房停在揭曉階段，重啟會清除記憶體房間。待該局結束或使用者同意中止後，才可切換 `current`、重啟服務並透過公開 HTTPS 驗收新版。
+2026-10-02 新版 `33d5ebe` 已放入獨立的 `releases/33d5ebe`，Linux `npm test` 通過 102/102。切換前再以 SQLite 線上備份建立 `shared/backups/pre-33d5ebe-20261002-013904.sqlite`，完整性 `ok`、schema v5、帳號 4 筆。使用者同意清除揭曉中的舊房後，切換 `current` 並重啟 `afterhours.service`；舊房 `F5C5B2` 隨重啟清除。網站與 Tunnel 均為 `active`，本機 `/login` 回 200。正式 SQLite 升至 v6，完整性 `ok`、帳號仍為 4 筆。從 Windows 經公開 HTTPS 驗證 `/login`、`/gift.js`、`/robots.txt` 均回 200，新腳本含圖示送禮與喜好選擇；三組測試帳號逐一登入並讀取 `/api/auth/me` 和送禮頁皆成功，成就 API 可讀。驗證時已有其他新房建立，未再次重啟。
 
 ## 尚待正式設定
 
