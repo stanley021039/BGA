@@ -7,6 +7,7 @@ const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./comm
 const {startRoomScheduler}=require('./rooms/scheduler');
 const {reconnectPlayer}=require('./rooms/reconnect');
 const {listRooms}=require('./rooms/listing');
+const {createLobby}=require('./rooms/lobby');
 const {HttpError,writeError}=require('./http/errors');
 const {clientAddress,setSecurityHeaders}=require('./http/security');
 const {openDatabase}=require('./db/index');
@@ -14,11 +15,12 @@ const {createAuth}=require('./auth/index');
 const {BoardStore}=require('./community/board');
 const {createGitHubClient}=require('./integrations/github/client');
 const {SubmissionService}=require('./integrations/github/submissions');
-const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,galleryFor,selectedImage}=require('./profiles/appearance');
+const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,characterFor,galleryFor,selectedImage}=require('./profiles/appearance');
 const {createCharacter,setExpression,addExpression,setSharing}=require('./profiles/uploads');
 const {ArtworkStore}=require('./artworks/store');
 function createApp(config){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map();
+ const lobby=createLobby();
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
   for(const event of expressions)recent.set(event.playerId,event.image);
@@ -46,6 +48,11 @@ function createApp(config){
  function limitRate(map,key,max){const now=Date.now(),recent=(map.get(key)||[]).filter(t=>now-t<60000);if(recent.length>=max)throw new HttpError(429,'RATE_LIMITED','操作太頻繁，請稍後再試');recent.push(now);map.set(key,recent);if(map.size>2000)for(const [address,times]of map)if(!times.some(t=>now-t<60000))map.delete(address);}
  function limitCommunity(req){limitRate(communityRate,clientKey(req),40);}
  function limitAccount(user){limitRate(accountRate,user.id,10);}
+ const lobbyCharacter=user=>{
+  let appearance;
+  try{appearance=normalizeAppearance(user.appearance?JSON.parse(user.appearance):defaults);}catch{appearance=defaults;}
+  return characterFor(db,user.id,appearance.characterId)||characterFor(db,user.id,defaults.characterId);
+ };
  const port=config.port,protocol='http';
  function limitAuth(req){limitRate(authRate,clientKey(req),20);}
 const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
@@ -60,6 +67,17 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/auth/logout'&&req.method==='POST'){auth.logout(req,res);return send({ok:true});}
  const user=auth.requireUser(req);
  if(url.pathname==='/api/auth/me'&&req.method==='GET'){const me=auth.publicUser(user);if(me.appearance)me.appearance=normalizeAppearance(me.appearance);return send(me);}
+ if(url.pathname==='/api/lobby'&&req.method==='GET')return send(lobby.view(user));
+ if(url.pathname==='/api/lobby/move'&&req.method==='POST')return send(lobby.move(user,data));
+ if(url.pathname==='/api/lobby/emotes'&&req.method==='GET'){
+  const character=lobbyCharacter(user);
+  return send({emotes:Object.entries(character.expressions).filter(([key])=>key!=='neutral').map(([expression,image])=>({expression,image,label:character.labels[expression]||expressionLabels[expression]||expression}))});
+ }
+ if(url.pathname==='/api/lobby/emote'&&req.method==='POST'){
+  const character=lobbyCharacter(user),expression=data.expression;
+  if(typeof expression!=='string'||expression==='neutral'||!Object.hasOwn(character.expressions,expression))throw new HttpError(400,'INVALID_EXPRESSION','這個角色沒有該表情');
+  return send(lobby.emote(user,{image:character.expressions[expression],label:character.labels[expression]||expressionLabels[expression]||expression}));
+ }
  if(url.pathname==='/api/artworks'&&req.method==='GET')return send({artworks:artworkStore.list(user.id)});
  if(url.pathname==='/api/artworks'&&req.method==='POST'){limitAccount(user);return send(artworkStore.add(user.id,data));}
  const artworkDelete=url.pathname.match(/^\/api\/artworks\/([a-f0-9-]{36})\/delete$/);
@@ -140,6 +158,11 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  else if(url.pathname==='/api/rebuy'){if(['thunder','majority','gift'].includes(room.type)||!['waiting','showdown'].includes(room.phase)||p.stack>0)throw Error('籌碼用完且本局結束後才能補充');p.stack=2000;}
  else throw Error('未知請求');
  });awardRoomAchievements(room);return send(withSocial(room,room.view(p.id)));
+ }
+ if(url.pathname==='/lobby.js'||url.pathname==='/lobby.css'){
+  const file=url.pathname.slice(1);
+  res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript; charset=utf-8');
+  return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  const artworkAsset=url.pathname.match(/^\/assets\/artworks\/([a-f0-9-]{36})$/);
  if(artworkAsset){const viewer=auth.requireUser(req),image=artworkStore.image(viewer.id,artworkAsset[1]);if(!image)throw new HttpError(404,'ARTWORK_NOT_FOUND','找不到你的作品');res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(image.bytes);}

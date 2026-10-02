@@ -20,6 +20,8 @@ test('independent app instances can start, serve, and release their history lock
    assert.match(response.headers.get('content-type'),asset.endsWith('.css')?/text\/css/:/text\/javascript/);
   }
   assert.equal((await fetch(`http://127.0.0.1:${port}/room-reconnect.js`)).status,200);
+  assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.js`)).status,200);
+  assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.css`)).status,200);
   await app.close();
   await app.close();
   assert.equal(fs.existsSync(path.join(root,'history','.lock')),false);
@@ -42,6 +44,20 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
   const login=await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'testadmin',password:'test-password-123'})});
   assert.equal(login.status,200);
   const headers={Cookie:login.headers.get('set-cookie').split(';')[0]};
+  assert.equal((await fetch(base+'/api/lobby')).status,401);
+  const lobby=await (await fetch(base+'/api/lobby',{headers})).json();
+  assert.equal(lobby.visitors.length,1);
+  assert.equal(lobby.visitors[0].id,lobby.selfId);
+  const lobbyMove=await fetch(base+'/api/lobby/move',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({x:60,y:60})});
+  assert.equal(lobbyMove.status,200);
+  assert.equal((await fetch(base+'/api/lobby/move',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({x:999,y:0})})).status,400);
+  assert.equal((await fetch(base+'/api/lobby/emotes')).status,401);
+  const emoteOptions=await (await fetch(base+'/api/lobby/emotes',{headers})).json();
+  assert.ok(emoteOptions.emotes.some(emote=>emote.expression==='happy'&&emote.image.endsWith('happy.gif')));
+  const lobbyEmote=await fetch(base+'/api/lobby/emote',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({expression:'happy'})});
+  assert.equal(lobbyEmote.status,200);
+  assert.equal((await lobbyEmote.json()).visitors[0].emote.label,'開心');
+  assert.equal((await fetch(base+'/api/lobby/emote',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({expression:'made-up'})})).status,400);
   const unknown=await fetch(base+'/api/missing',{headers});
   assert.equal(unknown.status,404);
   assert.equal((await unknown.json()).code,'NOT_FOUND');
