@@ -165,4 +165,15 @@ body[data-game-kind="race"].ui-large-text .race-roster{grid-column:1;grid-row:au
 
 .terrain-legend .legend{align-items:center;gap:4px}.terrain-help-button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:44px;min-height:44px;padding:4px 6px;border:1px solid #677259;border-radius:6px;background:#253022;color:#e4d6b6;font-family:inherit;cursor:help}.terrain-help-button:hover,.terrain-help-button:focus-visible{border-color:#ffd48a;background:#35402a}.terrain-help-icon{display:inline-grid;place-items:center;flex:none;width:20px;height:24px;font-size:24px;line-height:1}.terrain-help-icon i{width:16px;height:16px;margin:0}.terrain-help-label{font-size:var(--ui-text-small,.875rem);line-height:1.5;white-space:nowrap}
 #raceTerrainLegendTooltip{position:fixed;z-index:1000;pointer-events:none;box-sizing:border-box;width:20rem;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:12px 16px;border:1px solid #ad945c;border-radius:10px;background:#17231af5;color:#ece3ce;box-shadow:0 8px 24px #0005}#raceTerrainLegendTooltip[hidden]{display:none}#raceTerrainLegendTooltip strong{display:block;color:#ffda98;font-size:var(--ui-text-body,1rem)}#raceTerrainLegendTooltip p{margin:8px 0 0;font-size:var(--ui-text-small,.875rem);line-height:1.6}
-.terrain-legend .legal-key{display:inline-flex;align-items:center;gap:6px;min-height:44px;font-size:var(--ui-text-small,.875rem);white-space:nowrap}.terrain-legend .legal-key-icon{display:block;flex:none;width:28px;height:34px;color:#ffe7a0}
+.terrain-legend .legal-key{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:4px 6px;border:1px solid #677259;border-radius:6px;background:#253022;font-size:var(--ui-text-small,.875rem);white-space:nowrap}.terrain-legend .legal-key-icon{display:block;flex:none;width:28px;height:34px;color:#ffe7a0}
+
+/* Portrait spans both information rows without hiding the fleet or dice. */
+.race-roster .crew-pill{grid-template-columns:64px minmax(0,1fr);gap:4px 12px}
+.race-roster .crew-avatar{grid-column:1;grid-row:1/3;width:64px;height:80px;align-self:center}
+.race-roster .crew-identity,.race-roster .crew-board{grid-column:2}
+.race-roster .crew-board{flex-wrap:wrap}
+.race-roster .crew-avatar-fallback{font-size:2rem}
+.die-button,.race-controls .die-button{display:inline-flex;align-items:center;justify-content:center;position:relative;flex:none;padding:7px;width:48px;height:48px}
+.die-button .race-die-icon{display:block;width:32px;height:32px;flex:none}
+@media(min-width:1440px){.race-roster .crew-pill{grid-template-columns:72px minmax(0,1fr)}.race-roster .crew-avatar{width:72px;height:90px}}
+@media(min-width:1001px) and (min-height:720px){body[data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .board-scroll svg{max-height:calc(100dvh - 572px)}}

@@ -1,5 +1,15 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=fs.readFileSync(path.join(__dirname,'../public/shared/race-dice-dialog.js'),'utf8');
+test('shared dice artwork has exactly one to six separated pips and rejects invalid faces',()=>{
+ const window={};vm.runInNewContext(source,{window});
+ for(let value=1;value<=6;value++){
+  const svg=window.RaceDiceDialog.faceMarkup(value);
+  assert.equal((svg.match(/<circle /g)||[]).length,value);
+  assert.match(svg,/<svg[^>]*aria-hidden="true"/);
+  assert.match(svg,/<rect[^>]*fill="#fffaf0"/);
+ }
+ for(const value of [0,7,1.5,'1',null])assert.equal(window.RaceDiceDialog.faceMarkup(value),'');
+});
 function harness({reduced=false,time=10000,onAction=()=>{}}={}){
  let clock=time,nextTimer=0;const timers=new Map();let document;
  class Element{
