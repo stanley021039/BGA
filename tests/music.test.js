@@ -8,6 +8,19 @@ const {createAuth}=require('../src/auth');
 const {createApp}=require('../src/app');
 const mp3=Buffer.concat([Buffer.from([255,251,144,100]),Buffer.alloc(830)]);
 
+test('room transport and shuffle advance once on the server for every listener',()=>{
+ let now=0;const tracks=[{id:'a',title:'A',duration:10},{id:'b',title:'B',duration:20},{id:'c',title:'C',duration:30}],store={list:()=>tracks,get:id=>tracks.find(t=>t.id===id)},room=new RoomMusic(()=>now,store,()=>0);
+ room.act('select',{trackId:'a'},store);room.act('next',{},store);assert.equal(room.snapshot().track.id,'b');
+ room.act('previous',{},store);assert.equal(room.snapshot().track.id,'a');room.act('previous',{},store);assert.equal(room.snapshot().track.id,'c');
+ room.act('mode',{mode:'repeat'},store);now=31000;assert.equal(room.snapshot().position,1);assert.equal(room.snapshot().track.id,'c');
+ room.act('mode',{mode:'shuffle'},store);now=61000;const first=room.snapshot();assert.equal(first.track.id,'a');assert.equal(first.position,0);assert.equal(first.playing,true);
+ assert.equal(room.snapshot().track.id,first.track.id);assert.equal(room.snapshot().version,first.version);
+ room.act('pause',{},store);now+=60000;assert.equal(room.snapshot().track.id,'a');assert.equal(room.snapshot().playing,false);
+ room.act('mode',{mode:'none'},store);room.act('play',{},store);now+=11000;assert.equal(room.snapshot().playing,false);
+ assert.throws(()=>room.act('mode',{mode:'bad'},store),/模式/);
+ const empty=new RoomMusic(()=>now,{list:()=>[]});assert.throws(()=>empty.act('next',{},empty.store),/沒有歌曲/);
+});
+
 test('room music uses elapsed server time, pauses, seeks, loops, and restarts ended tracks',()=>{
  let now=100000;const room=new RoomMusic(()=>now),store={get:()=>({id:'a',title:'音樂',duration:10})};
  room.act('select',{trackId:'a'},store);now+=3200;assert.equal(room.snapshot().position,3.2);
@@ -70,6 +83,7 @@ test('authenticated streaming ranges, shared library, host controls, isolation, 
   const b=(await post('create',friend,{type:'poker',roomName:'另一桌'})).body.code;
   await post('join',friend,{code:a});
   assert.equal((await post('room-music',friend,{code:a,action:'select',trackId:owned.id})).status,403);
+  for(const action of ['previous','next','mode'])assert.equal((await post('room-music',friend,{code:a,action,mode:'shuffle'})).status,403);
   const stream=await fetch(base+'/api/room-music/events?code='+a,{headers:{Cookie:friend}});reader=stream.body.getReader();
   assert.match(new TextDecoder().decode((await reader.read()).value),/event: music/);
   const selected=await post('room-music',host,{code:a,action:'select',trackId:owned.id});assert.equal(selected.body.playing,true);
