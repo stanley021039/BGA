@@ -20,9 +20,14 @@ const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,character
 const {createCharacter,setExpression,addExpression,setSharing}=require('./profiles/uploads');
 const {USER_IMAGE_PATH,createCharacterMediaAccess}=require('./profiles/media');
 const {ArtworkStore}=require('./artworks/store');
+const {MusicStore,MAX_BYTES}=require('./music/store');
+const {RoomMusic}=require('./music/room');
 function createApp(config){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
+ const musicRooms=new Map(),musicStreams=new Map();
+ const roomMusic=room=>{if(!musicRooms.has(room.code))musicRooms.set(room.code,new RoomMusic());return musicRooms.get(room.code);};
+ const publishMusic=code=>{const state=musicRooms.get(code)?.snapshot();for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
  const lobby=createLobby();
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
@@ -34,8 +39,8 @@ function createApp(config){
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir);
- let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore;
- try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}));}
+ let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore;
+ try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}));}
  catch(error){history.close();db?.close();throw error;}
  const characterMedia=createCharacterMediaAccess(db,viewerId=>{
   const audiences=[];
@@ -78,7 +83,17 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  const url=new URL(req.url,'http://localhost');
  if(url.pathname==='/robots.txt'&&req.method==='GET'){res.setHeader('Content-Type','text/plain; charset=utf-8');return res.end(robots);}
  if(url.pathname.startsWith('/api/')){
- res.setHeader('Content-Type','application/json; charset=utf-8');let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/artworks'||url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
+ res.setHeader('Content-Type','application/json; charset=utf-8');
+ if(url.pathname==='/api/music/upload'&&req.method==='POST'){
+  if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw new HttpError(403,'CROSS_ORIGIN','不允許跨站請求');
+  const user=auth.requireUser(req);limitAccount(user);
+  if(!['audio/mpeg','audio/mp4','audio/ogg','application/octet-stream'].includes(req.headers['content-type']?.split(';')[0]))throw new HttpError(400,'INVALID_AUDIO','需要音樂檔案');
+  if(Number(req.headers['content-length'])>MAX_BYTES)throw new HttpError(413,'MUSIC_TOO_LARGE','每首最多 20 MB');
+  const chunks=[];let length=0;for await(const chunk of req){length+=chunk.length;if(length>MAX_BYTES)throw new HttpError(413,'MUSIC_TOO_LARGE','每首最多 20 MB');chunks.push(chunk);}
+  let title;try{title=decodeURIComponent(req.headers['x-music-title']||'');}catch{throw new HttpError(400,'INVALID_TITLE','曲名不正確');}
+  return res.end(JSON.stringify(musicStore.add(user,{title,duration:Number(req.headers['x-music-duration'])},Buffer.concat(chunks))));
+ }
+ let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/artworks'||url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
  const send=x=>res.end(JSON.stringify(x));
  if(url.pathname==='/api/auth/login'&&req.method==='POST'){limitAuth(req);return send(await auth.login(data,res));}
  if(url.pathname==='/api/auth/register'&&req.method==='POST'){limitAuth(req);return send(await auth.register(data,res));}
@@ -97,6 +112,9 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(typeof expression!=='string'||expression==='neutral'||!Object.hasOwn(character.expressions,expression))throw new HttpError(400,'INVALID_EXPRESSION','這個角色沒有該表情');
   return send(withLobbyMedia(user,lobby.emote(user,{image:characterMedia.broadcastImage(character.expressions[expression]),label:character.labels[expression]||expressionLabels[expression]||expression})));
  }
+ if(url.pathname==='/api/music'&&req.method==='GET')return send({tracks:musicStore.list(),me:user.id,admin:user.role==='admin'});
+ const musicDelete=url.pathname.match(/^\/api\/music\/([a-f0-9-]{36})\/delete$/);
+ if(musicDelete&&req.method==='POST'){limitAccount(user);const result=musicStore.remove(user,musicDelete[1]);for(const [code,state]of musicRooms)if(state.track?.id===musicDelete[1]){state.act('stop',{},musicStore);publishMusic(code);}return send(result);}
  if(url.pathname==='/api/artworks'&&req.method==='GET')return send({artworks:artworkStore.list(user.id)});
  if(url.pathname==='/api/artworks'&&req.method==='POST'){limitAccount(user);return send(artworkStore.add(user.id,data));}
  const artworkDelete=url.pathname.match(/^\/api\/artworks\/([a-f0-9-]{36})\/delete$/);
@@ -152,12 +170,25 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   const p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
- if(!['/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
+ if(!['/api/room-music','/api/room-music/events','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
  if(url.pathname==='/api/reconnect'&&req.method==='POST'){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker',reconnected:true});}
  if(url.pathname==='/api/join'&&req.method==='POST'){const previous=seats.get(room.code)?.get(user.id);if(previous){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker'});}const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=`/characters/${user.id}`;seats.get(room.code).set(user.id,p.id);return send({code:room.code,type:room.type||'poker'});}
  const p=resumeSeat(room,user);
+ if(url.pathname==='/api/room-music'){
+  if(req.method==='GET')return send(roomMusic(room).snapshot());
+  if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
+  if(p.id!==room.host)throw new HttpError(403,'HOST_ONLY','只有房主可以控制全桌音樂');
+  limitRate(socialRate,'music:'+user.id,60);const result=roomMusic(room).act(data.action,data,musicStore);publishMusic(room.code);return send(result);
+ }
+ if(url.pathname==='/api/room-music/events'&&req.method==='GET'){
+  const subscribers=musicStreams.get(room.code)||new Set();if(subscribers.size>=32||[...subscribers].filter(e=>e.userId===user.id).length>=3)throw new HttpError(429,'STREAM_LIMIT','音樂連線太多，請關閉舊分頁');
+  const entry={res,userId:user.id};subscribers.add(entry);musicStreams.set(room.code,subscribers);
+  res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('Cache-Control','no-cache, no-transform');res.setHeader('X-Accel-Buffering','no');res.flushHeaders();
+  const sendState=()=>{if(!auth.sessionFrom(req)||kickedUsers.get(room.code)?.has(user.id))return res.end();res.write('event: music\ndata: '+JSON.stringify(roomMusic(room).snapshot())+'\n\n');};sendState();
+  const timer=setInterval(sendState,10000);timer.unref();req.on('close',()=>{clearInterval(timer);subscribers.delete(entry);if(!subscribers.size)musicStreams.delete(room.code);});return;
+ }
  if(url.pathname.startsWith('/api/draw/')){
   if(room.type!=='draw')throw new HttpError(400,'WRONG_GAME','這不是你畫我猜房間');
   if(url.pathname==='/api/draw/canvas'&&req.method==='GET')return send(room.canvasSnapshot());
@@ -202,7 +233,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/start'&&room.host!==p.id)throw new HttpError(403,'HOST_ONLY','只有房主可以開始');
  history.transact(room,{action:url.pathname.slice(5),source:'player',actor:p.id,input:data},()=>{
  if(url.pathname==='/api/action'){if(room.type==='thunder'||!room.type)room.humanAct(p.id,data.action,room.type==='thunder'?data:data.amount);else room.act(p.id,data.action,data);}
- else if(url.pathname==='/api/kick'){if(data.confirmed!==true)throw new HttpError(400,'CONFIRM_REQUIRED','請先確認踢出玩家');const target=room.players.find(q=>q.id===data.playerId);if(!target)throw new HttpError(404,'PLAYER_NOT_FOUND','找不到玩家');room.kick(p.id,target.id);const account=[...seats.get(room.code)].find(([,id])=>id===target.id)?.[0];if(account){seats.get(room.code).delete(account);if(!kickedUsers.has(room.code))kickedUsers.set(room.code,new Set());kickedUsers.get(room.code).add(account);for(const entry of drawStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();}}
+ else if(url.pathname==='/api/kick'){if(data.confirmed!==true)throw new HttpError(400,'CONFIRM_REQUIRED','請先確認踢出玩家');const target=room.players.find(q=>q.id===data.playerId);if(!target)throw new HttpError(404,'PLAYER_NOT_FOUND','找不到玩家');room.kick(p.id,target.id);const account=[...seats.get(room.code)].find(([,id])=>id===target.id)?.[0];if(account){seats.get(room.code).delete(account);if(!kickedUsers.has(room.code))kickedUsers.set(room.code,new Set());kickedUsers.get(room.code).add(account);for(const entry of drawStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();for(const entry of musicStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();}}
  else if(url.pathname==='/api/settings'){if(!['thunder','majority','gift','draw'].includes(room.type))throw Error('此遊戲沒有此設定');room.configure(p.id,data);}
  else if(url.pathname==='/api/start'){if(room.host!==p.id)throw Error('只有房主可以發牌');room.start();}
  else if(url.pathname==='/api/bot'){if(room.host!==p.id)throw Error('只有房主可以加入電腦');room.add(['River','Clover','Atlas','Nova','Juno'][room.players.filter(p=>p.bot).length%5],true);}
@@ -215,6 +246,8 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript; charset=utf-8');
   return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
+ const musicAsset=url.pathname.match(/^\/assets\/music\/([a-f0-9-]{36})$/);
+ if(musicAsset){auth.requireUser(req);if(!['GET','HEAD'].includes(req.method))throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');return musicStore.stream(req,res,musicAsset[1]);}
  const artworkAsset=url.pathname.match(/^\/assets\/artworks\/([a-f0-9-]{36})$/);
  if(artworkAsset){const viewer=auth.requireUser(req),image=artworkStore.image(viewer.id,artworkAsset[1]);if(!image)throw new HttpError(404,'ARTWORK_NOT_FOUND','找不到你的作品');res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(image.bytes);}
  const sharedGift=url.pathname.match(/^\/assets\/gifts\/shared\/([a-f0-9-]{36})$/);
@@ -224,7 +257,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(media){const viewer=auth.requireUser(req),row=characterMedia.image(viewer.id,url.href);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',row.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(row.bytes);}
  if(url.pathname.startsWith('/assets/characters/')){auth.requireUser(req);const asset=builtinCharacters.flatMap(character=>Object.values(character.expressions)).find(value=>value===url.pathname);if(!asset)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',asset.endsWith('.gif')?'image/gif':'image/png');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(__dirname,'..','public',asset)));}
  const characterId=url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];if(characterId){const viewer=auth.requireUser(req),selected=characterMedia.avatar(characterId);if(!selected)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到角色外觀');let bytes,mime;if(USER_IMAGE_PATH.test(selected.url)){const row=characterMedia.image(viewer.id,selected.url);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');bytes=row.bytes;mime=row.mime;}else{bytes=fs.readFileSync(path.join(__dirname,'..','public',selected.url));mime=selected.url.endsWith('.gif')?'image/gif':'image/png';}res.setHeader('Content-Type',mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(bytes);}
- const files={'/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
+ const files={'/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);
@@ -236,7 +269,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(closed)throw Error('Application has been closed');
   if(server.listening)return server.address();
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
-  stopScheduler=startRoomScheduler({rooms,history,onDelete:code=>{seats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);}});
+  stopScheduler=startRoomScheduler({rooms,history,onDelete:code=>{seats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);}});
   submissions.recover();
   return server.address();
  }
@@ -244,6 +277,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(closed)return;
   closed=true;
   stopScheduler?.();
+  for(const entries of musicStreams.values())for(const entry of entries)entry.res.end();
   for(const entries of drawStreams.values())for(const entry of entries)entry.res.end();
   if(server.listening)await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
   history.close();
