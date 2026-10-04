@@ -8,3 +8,17 @@
 .game-room .table-music:not(.collapsed){bottom:64px;max-height:calc(100dvh - 80px);overflow:auto}
 .table-music header{height:auto;box-sizing:border-box;background:transparent;letter-spacing:normal}
 .table-music.collapsed header{height:36px}
+/* Game-only size/focus contract. Music stays dark in light game rooms. */
+body[data-game-kind] .table-music{--ui-focus:#f0c784;--ui-error:#ffc2b0;--ui-muted:#bdc8bd;max-height:calc(100dvh - 80px);font:var(--ui-text-body)/1.5 var(--ui-font-family)}
+body[data-game-kind] .table-music :is(button,select){font-size:var(--ui-text-body)}
+body[data-game-kind] .table-music :is(#music-time,#music-volume-label,footer a,#music-error){font-size:var(--ui-text-small)}
+body[data-game-kind] .table-music .music-controls :is(button,#music-mode),body[data-game-kind] .table-music #music-refresh,body[data-game-kind] .table-music .music-listen{width:44px;height:44px;min-width:44px;min-height:44px;flex:0 0 44px;padding:10px;border-radius:8px}
+body[data-game-kind] .table-music .music-transport{gap:8px}
+body[data-game-kind] .table-music .music-controls{gap:12px;flex-wrap:wrap}
+body[data-game-kind] .table-music .music-row{gap:8px}
+body[data-game-kind] .table-music svg{width:24px;height:24px}
+body[data-game-kind] .table-music input[type=range]{min-height:44px}
+body[data-game-kind] .table-music .music-listen svg{width:24px;height:24px}
+body[data-game-kind] .table-music.collapsed,body[data-game-kind] .table-music.collapsed header{min-height:44px}
+body[data-game-kind] .table-music.collapsed #music-expand{width:50px;height:44px;min-height:44px}
+body[data-game-kind] .table-music #music-error{color:#ffc2b0}

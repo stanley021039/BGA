@@ -104,6 +104,38 @@ function frameContainsStroke(frame) {
  return all.some(stroke => stroke.points?.some(point => point[0] === 25 && point[1] === 25));
 }
 
+test('choosing keeps selection actions separate from finished game actions',()=>{
+ const ui=browserHarness(),s=drawingState('artist');
+ s.phase='choosing';s.candidates=[{id:'cat',title:'貓咪',category:'簡單',topicLabel:'動物'}];
+ ui.receive(s);
+ assert.match(ui.element('#canvasStage').innerHTML,/選一張題卡/);
+ assert.doesNotMatch(ui.element('#drawActions').innerHTML,/本局完成|再玩一局|data-do="save"/);
+ assert.equal(ui.element('#guessForm').hidden,true);
+ s.phase='finished';s.winner={ids:['artist'],reason:'完成'};
+ ui.receive(s);
+ assert.match(ui.element('#drawActions').innerHTML,/本局完成/);
+ assert.match(ui.element('#drawActions').innerHTML,/再玩一局/);
+});
+
+test('pending guess is visible, prevents duplicate writes and preserves input on failure',async()=>{
+ const ui=browserHarness();ui.receive(drawingState('guest'));
+ ui.element('#guessInput').value='我的猜測';
+ let rejectWrite,writes=0;
+ ui.context.RoomApi.request=async route=>{
+  if(route==='draw/canvas')return {round:1,version:0,strokes:[]};
+  writes++;return new Promise((_resolve,reject)=>{rejectWrite=reject;});
+ };
+ const pending=vm.runInContext('action("guess",{answer:"我的猜測"})',ui.context);
+ assert.match(ui.element('#drawStatus').textContent,/正在送出/);
+ assert.equal(await vm.runInContext('action("guess",{answer:"我的猜測"})',ui.context),false);
+ assert.equal(writes,1);
+ rejectWrite(Error('暫時無法送出'));
+ assert.equal(await pending,false);
+ assert.equal(ui.element('#drawStatus').textContent,'暫時無法送出');
+ assert.equal(ui.element('#guessInput').value,'我的猜測');
+ assert.equal(vm.runInContext('busy',ui.context),false);
+});
+
 test('non-host presenter can draw over HTTP without crypto.randomUUID',async()=>{
  const ui=browserHarness(),state=drawingState('artist');state.host=false;state.hostId='guest';
  ui.receive(state);await pause(0);

@@ -36,20 +36,27 @@ function stageScene(s){
  return `<div class="stage-scene stage-finished"><div class="stage-copy"><span class="stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p><div class="stage-winners">${rankings.filter(player=>winners.includes(player.id)).map(player=>`<div class="stage-winner">${stageAvatar(player)}<b>${esc(player.name)}</b><strong>${player.score} 分</strong><span aria-hidden="true">✦</span></div>`).join('')}</div></div><ol class="stage-ranking">${rankings.map((player,index)=>`<li><span>${index+1}. ${esc(player.name)}</span><b>${player.score} 分</b></li>`).join('')}</ol></div>`;
 }
 function render(live=false){
- const s=state;let html='';
+ const s=state;let html='',actions='';
+ document.body.dataset.drawPhase=s.phase;
  document.body.classList.toggle('drawing-active',s.phase==='drawing');
  if(s.phase==='waiting'){
-  html=`<div class="card stage-controls"><p>房間代碼 <b>${esc(s.code)}</b>　<button class="quiet" data-do="invite">複製邀請連結 ↗</button></p>${s.host?`<div class="settings">${options('題目類別',topicChoices,s.options.topic||'all','topic')}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}${options('玩家投稿比例',percentChoices,s.options.customPercent,'percent')}</div><button data-do="settings">儲存設定</button><button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲 →</button>`:`<p>本桌題目：${esc(topicChoices.find(([id])=>id===s.options.topic)?.[1]||'所有類別')}。等房主開始；你可以先到共編題庫看看題目。</p>`}</div>`;
+  html=s.host?`<details class="card stage-controls"><summary>房間設定</summary><div class="settings">${options('題目類別',topicChoices,s.options.topic||'all','topic')}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}${options('玩家投稿比例',percentChoices,s.options.customPercent,'percent')}</div></details>`:'';
+  actions=s.host?`<p>${s.players.length<2?'等朋友入座，至少需要兩人。':'朋友已入座，可以開始。'}</p><button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲</button><button data-do="settings">儲存房間設定</button>`:'<p>等待房主開始遊戲。</p>';
  }else if(s.phase==='drawing'){
   const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me),guessed=s.guessedIds.includes(s.me);
-  if(!eligible&&!artist)html='<div class="card stage-controls"><p>你是中途加入的朋友，下一輪起可以猜題。</p></div>';
-  else if(guessed)html='<div class="card stage-controls"><p>你已猜中！等其他朋友完成或時間到。</p></div>';
+   if(!eligible&&!artist)actions='<p>下一輪起可以猜題。</p>';
+   else if(guessed)actions='<p>你已猜中！等待本輪揭曉。</p>';
+   else if(artist)actions='<p>輪到你畫圖，朋友正在猜題。</p>';
+  }else if(s.phase==='choosing'){
+   actions=`<p>${s.presenterId===s.me?'在舞台選一題開始作畫。':'等待 '+esc(nameOf(s.presenterId))+' 選題。'}</p>`;
  }else if(s.phase==='reveal'){
-  html=`<div class="card stage-controls"><p>本輪畫作與猜測紀錄可在上方回看。</p>${s.host?'<button data-do="next">下一位畫者 →</button>':''}${s.result?.answer?'<button data-do="save">加入我的素材庫</button>':''}</div>`;
- }else{
-  html=`<div class="card stage-controls"><p>本局完成，名次與分數已列在上方。</p>${s.host?'<button data-do="start">再玩一局 ↻</button>':''}${s.result?.answer?'<button data-do="save">加入我的素材庫</button>':''}</div>`;
+   actions=`<p>本輪已揭曉。</p>${s.host?'<button data-do="next">下一位畫者</button>':'<p>等待房主開始下一輪。</p>'}${s.result?.answer?'<button data-do="save">加入素材庫</button>':''}`;
+  }else if(s.phase==='finished'){
+   actions=`<p>本局完成。</p>${s.host?'<button data-do="start">再玩一局</button>':'<p>等待房主再開一局。</p>'}${s.result?.answer?'<button data-do="save">加入素材庫</button>':''}`;
  }
  $('#stage').innerHTML=html;$('#stage').hidden=!html;
+  GameShell.stableMarkup($('#drawActions'),actions);
+  for(const button of $('#drawActions').querySelectorAll('button'))window.GameUI?.decorateButton(button,({start:s.phase==='finished'?'replay':'play',next:'next',save:'save',settings:'settings'})[button.dataset.do]);
  $('#canvasStage').innerHTML=s.phase==='drawing'?'':stageScene(s);
  $('#canvasStage').hidden=s.phase==='drawing';
  $('#boardSection').hidden=false;$('#boardSection').classList.toggle('is-drawing',s.phase==='drawing');
@@ -184,17 +191,22 @@ function connectEvents(){
  stream.addEventListener('reset',event=>{try{const data=JSON.parse(event.data);if(data.round===state?.round&&data.version>=canvasVersion){strokes=data.strokes;canvasVersion=data.version;localStrokes.clear();active=null;pending=[];redrawCanvas();}}catch{syncCanvas();}});
  stream.addEventListener('ready',()=>{if(state?.strokeVersion!==canvasVersion)syncCanvas();});
 }
-async function action(name,data={}){if(busy)return false;busy=true;try{receive(await api('action',{action:name,...data}));$('#connection').textContent='';return true;}catch(error){toast(error.message);return false;}finally{busy=false;}}
-async function roomAction(route,data={}){if(busy)return;busy=true;try{receive(await api(route,data));$('#connection').textContent='';}catch(error){toast(error.message);}finally{busy=false;}}
+function drawFeedback(message,kind='info'){const node=$('#drawStatus');node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});}
+let pendingDrawButton=null;
+function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
+async function action(name,data={}){if(busy)return false;busy=true;drawBusy(true);drawFeedback('正在送出…');try{receive(await api('action',{action:name,...data}));$('#connection').textContent='';drawFeedback(name==='guess'?'猜測已送出。':'操作已完成。','success');return true;}catch(error){drawFeedback(error.message,'error');toast(error.message);return false;}finally{busy=false;drawBusy(false);}}
+async function roomAction(route,data={}){if(busy)return;busy=true;drawBusy(true);drawFeedback('正在送出…');try{receive(await api(route,data));$('#connection').textContent='';drawFeedback('設定已完成。','success');}catch(error){drawFeedback(error.message,'error');toast(error.message);}finally{busy=false;drawBusy(false);}}
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
 async function saveArtwork(){
+ if(busy)return;busy=true;drawBusy(true);drawFeedback('正在儲存畫作…');
  try{
   await syncCanvas();
   const base64=canvas.toDataURL('image/png').split(',')[1],name='你畫我猜：'+(state.result?.answer||state.question?.title||'我的畫');
   const response=await fetch('/api/artworks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,base64,mime:'image/png'})});
   const result=await response.json();if(!response.ok)throw Error(result.error||'儲存失敗');
   toast('已存入我的繪畫圖庫');
- }catch(error){toast(error.message);}
+  drawFeedback('已加入素材庫。','success');
+ }catch(error){drawFeedback(error.message,'error');toast(error.message);}finally{busy=false;drawBusy(false);}
 }
 function stageClick(event){
  const button=event.target.closest('button');if(!button||button.disabled)return;
@@ -206,6 +218,7 @@ function stageClick(event){
  }
 }
 $('#stage').addEventListener('click',stageClick);
+$('#drawActions').addEventListener('click',stageClick);
 $('#canvasStage').addEventListener('click',stageClick);
 $('#stage').addEventListener('submit',async event=>{
  if(event.target.id!=='enterForm')return;event.preventDefault();if(busy)return;busy=true;
@@ -213,12 +226,16 @@ $('#stage').addEventListener('submit',async event=>{
  catch(error){toast(error.message);}finally{busy=false;}
 });
 $('#guessForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('#guessInput'),answer=input.value.trim();if(!answer)return;const accepted=await action('guess',{answer});if(accepted&&input.value.trim()===answer)input.value='';input.focus();});
-$('#invite').onclick=invite;$('#help').onclick=()=>$('#rules').showModal();$('#closeHelp').onclick=()=>$('#rules').close();
+$('#invite').onclick=invite;$('#help').onclick=()=>window.GameUI?.openDialog?GameUI.openDialog($('#rules'),$('#help')):$('#rules').showModal();$('#closeHelp').onclick=()=>$('#rules').close();
+window.GameUI?.decorateButton($('#guessForm button'),'send',{iconOnly:true,label:'送出猜測'});
+window.GameUI?.decorateButton($('#help'),'help',{iconOnly:true,label:'遊戲說明'});
+window.GameUI?.decorateButton($('#closeHelp'),'close',{iconOnly:true,label:'關閉說明'});
 
-for(const button of $('#tools').querySelectorAll('[data-tool],#undo,#clear')){const key=button.dataset.tool?button.dataset.tool+(button.dataset.filled==='true'?'Filled':''):button.id;button.innerHTML=StrokeCanvas.iconMarkup(key);}
-const swatches=$('#swatches');for(const color of colors){const button=document.createElement('button');button.type='button';button.style.background=color;button.title='選擇 '+color;button.setAttribute('aria-label','選擇 '+color);button.onclick=()=>$('#color').value=color;swatches.append(button);}
+for(const button of $('#tools').querySelectorAll('[data-tool],#undo,#clear')){const key=button.dataset.tool?button.dataset.tool+(button.dataset.filled==='true'?'Filled':''):button.id;button.innerHTML=StrokeCanvas.iconMarkup(key);if(button.dataset.tool)button.setAttribute('aria-pressed',String(button.classList.contains('selected')));}
+const swatches=$('#swatches');for(const color of colors){const button=document.createElement('button');button.type='button';button.style.background=color;button.title='選擇 '+color;button.setAttribute('aria-label','選擇 '+color);button.onclick=()=>{$('#color').value=color;$('#colorMenu').open=false;$('#colorMenu').querySelector('summary')?.focus();};swatches.append(button);}
+$('#colorMenu').addEventListener('keydown',event=>{if(event.key==='Escape'){$('#colorMenu').open=false;$('#colorMenu').querySelector('summary')?.focus();event.preventDefault();}});
 $('#size').oninput=event=>$('#sizeValue').textContent=event.target.value;
-$('#tools').addEventListener('click',event=>{const button=event.target.closest('[data-tool]');if(!button)return;tool=button.dataset.tool;filled=button.dataset.filled==='true';for(const item of $('#tools').querySelectorAll('[data-tool]'))item.classList.toggle('selected',item===button);});
+$('#tools').addEventListener('click',event=>{const button=event.target.closest('[data-tool]');if(!button)return;tool=button.dataset.tool;filled=button.dataset.filled==='true';for(const item of $('#tools').querySelectorAll('[data-tool]')){item.classList.toggle('selected',item===button);item.setAttribute('aria-pressed',String(item===button));}});
 async function command(name){
  if(active){toast('請先完成這一筆');return;}
  if(canvasCommandBusy)return;
