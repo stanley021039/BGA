@@ -45,6 +45,9 @@ test('drawing game keeps the answer private, validates strokes, scores aliases, 
  assert.ok(guest.score>=30&&guest.score<=100);assert.equal(host.score,15);
  room.act(host.id,'next');assert.equal(room.presenterId,guest.id);
  const second=room.candidates[0];room.act(guest.id,'choose',{questionId:second.id});
+ assert.equal(room.view(guest.id).host,false);
+ room.addStroke(guest.id,{round:2,batchId:randomUUID(),strokeId:randomUUID(),tool:'brush',color:'#123456',size:5,points:[[10,20],[30,40]]});
+ assert.equal(room.canvasSnapshot().strokes.length,1);
  room.act(host.id,'guess',{answer:second.title});room.act(host.id,'next');
  assert.equal(room.phase,'finished');assert.equal(room.round,2);
 });

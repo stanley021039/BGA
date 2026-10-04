@@ -187,7 +187,7 @@ function queueStroke(points,strokeId,mode=tool){
   localStrokes.set(strokeId,draft);redrawCanvas();
  }
  draft.pendingBatches++;
- const data={round:state.round,batchId:crypto.randomUUID(),strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points};
+ const data={round:state.round,batchId:StrokeCanvas.strokeId(),strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points};
  sendQueue=sendQueue.then(async()=>{
   const delay=Math.max(0,115-(Date.now()-lastSentAt));if(delay)await new Promise(resolve=>setTimeout(resolve,delay));lastSentAt=Date.now();
   try{
@@ -208,7 +208,7 @@ function flush(final=false){
 canvas.addEventListener('pointerdown',event=>{
  if(!canDraw()||active||event.button!==0)return;event.preventDefault();canvas.setPointerCapture(event.pointerId);
  const point=StrokeCanvas.pointFrom(event,canvas,512,256);cursor=point;
- active={strokeId:crypto.randomUUID(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled:$('#filled').checked,points:[point],sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
+ active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled:$('#filled').checked,points:[point],sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
  localStrokes.set(active.strokeId,active);pending=[point];redrawCanvas();
 });
 canvas.addEventListener('pointermove',event=>{
@@ -228,7 +228,7 @@ canvas.addEventListener('pointerup',finishPointer);canvas.addEventListener('poin
 canvas.addEventListener('keydown',event=>{
  if(!canDraw())return;const moves={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
  if(moves[event.key]){event.preventDefault();cursor=[Math.max(0,Math.min(511,cursor[0]+moves[event.key][0])),Math.max(0,Math.min(255,cursor[1]+moves[event.key][1]))];toast('畫布位置 '+(cursor[0]+1)+'，'+(cursor[1]+1)+'；按空白鍵落筆');}
- if(event.key===' '){event.preventDefault();queueStroke([cursor],crypto.randomUUID(),'brush');}
+ if(event.key===' '){event.preventDefault();queueStroke([cursor],StrokeCanvas.strokeId(),'brush');}
 });
 async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));$('#connection').textContent='';}catch(error){$('#connection').textContent='連線暫停，正在重試：'+error.message;}finally{polling=false;}}
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||location.origin).catch(()=>{});
