@@ -38,7 +38,7 @@ window.RaceEventCues={mount(immersion){
    panel.style.top=(Math.max(minY,Math.min(maxY-panel.offsetHeight,preferredY))-offsetY)+'px';panel.style.right='auto';
   };
   reposition();
-  timer=setTimeout(hide,2200);
+  timer=setTimeout(hide,3200);
  }
  skip.addEventListener('click',hide);
  document.addEventListener('keydown',event=>{if(event.key==='Escape')hide();});
