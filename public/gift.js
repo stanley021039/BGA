@@ -47,7 +47,7 @@ function syncChoices(){
  const next=$('#likeNext');if(next)next.textContent=draftLikes.length<4?`下一個：${rankLabels[rankKeys[draftLikes.length]]}（${draftLikes.length+1} / 4）`:'四件已選好；再點已選禮物可取消並重新排序。';
  const order=$('#likeOrder');if(order)order.innerHTML=rankKeys.map((key,index)=>`<span class="like-slot ${draftLikes[index]?'filled':''}"><b>${index+1}. ${esc(rankLabels[key])}</b><small>${esc(state.gifts.find(gift=>gift.id===draftLikes[index])?.title||'尚未選擇')}</small></span>`).join('');
 }
-function playerRow(item){return `<div class="player"><img src="${esc(item.avatar||'')}" alt=""><div class="player-name">${esc(item.name)}${item.id===state.me?' · 你':''}<small>${item.id===state.hostId?'房主 · ':''}${item.online?'在線':'暫時離線'}</small></div><div class="player-scores" title="送禮／收禮"><span>${item.giveScore}</span><span>${item.getScore}</span></div></div>`;}
+function playerRow(item){return GameShell.playerRow(item,{me:state.me,status:(item.id===state.hostId?'房主 · ':'')+(item.online?'在線':'暫時離線'),metrics:[{value:item.giveScore,label:'送禮分數'},{value:item.getScore,label:'收禮分數'}]});}
 function progress(){const label=$('#progress');if(label&&state?.phase==='choosing')label.textContent=`全桌進度：送禮 ${state.gaveIds.length} / ${state.players.length} 人 · 喜好 ${state.wishedIds.length} / ${state.players.length} 人已鎖定。兩項都完成才會揭曉。`;}
 function resultPanel(s){
  if(!s.result)return '';

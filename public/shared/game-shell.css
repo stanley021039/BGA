@@ -23,18 +23,8 @@
 .shared-game-ui.integrated h2{margin:8px 0 0;font-size:12px}
 .shared-game-ui.integrated .shared-turn{font-size:13px;padding:9px}
 .shared-game-ui.integrated #shared-error{margin:0}
-.shared-game-ui.majority-ui{margin:18px 0 0;padding-top:18px;border-top:1px solid var(--line);color:var(--ink);font-family:"Segoe UI","Microsoft JhengHei",sans-serif}
-.majority-ui h2{color:var(--green);letter-spacing:0}
-.majority-ui .shared-turn{border-color:#d3c8df;background:var(--lav);color:var(--green);box-shadow:none}
-.majority-ui .shared-turn.mine{border-color:#8e719f;background:#dcd0eb;color:#463454}
-.majority-ui .shared-expressions button{border-color:#cfd7ca;background:#fffdf8;color:var(--ink)}
-.majority-ui #shared-barrage input{border-color:#c4ccbd;background:#fffefb;color:var(--ink)}
-.majority-ui #shared-barrage button{background:var(--green);color:#fff}
-.majority-ui #shared-error{color:#a34f39}
-.majority-ui #shared-error.ok{color:var(--green)}
 .play-layout .game-barrage{border-color:#cbb8dd;background:#fffdf8ec;color:var(--ink);box-shadow:0 6px 18px #263b3629}
 .play-layout .game-barrage strong{color:#745a8b}
-.shared-game-ui.poker-ui{margin:14px 0 18px;padding-top:16px;border-top:1px solid var(--line)}
 .shared-game-ui.race-ui{display:grid;grid-template-columns:200px minmax(0,290px) minmax(0,1fr);grid-template-rows:auto auto;gap:8px 16px;margin:0 0 20px;padding:14px 18px;border-top:1px solid #3b4235;border-bottom:1px solid #3b4235;background:#1c241c}
 .race-ui .shared-turn{grid-column:1;grid-row:1/3;align-self:stretch;display:grid;place-items:center}
 .race-ui .shared-expressions-heading{grid-column:2;grid-row:1}.race-ui .shared-expressions{grid-column:2;grid-row:2;max-height:158px}
@@ -64,3 +54,43 @@
 @keyframes collision-ring{from{r:9;opacity:1}to{r:34;opacity:0}}
 @media(max-width:650px){.immersion-controls{justify-content:flex-start}.immersion-controls input{width:80px}.immersion-spotlight{align-items:flex-start;flex-direction:column}.race-immersion-controls{margin-top:12px}}
 @media(prefers-reduced-motion:reduce){#board .newly-revealed{animation:none}}
+
+/* Shared room geometry. The game only chooses light or dark theme. */
+body.game-room{--room-text:#eee9d8;--room-muted:#aab7aa;--room-surface:#19251e;--room-card:#f9f6ee;--room-border:#52634f;--room-status:#314332;--room-status-text:#eee9d8;--room-active:#f1d99e;--room-active-text:#4a3924;--room-accent:#e8bd77;--room-sidebar-width:300px;--room-gap:24px}
+body.game-room.room-light{--room-text:#263b36;--room-muted:#66756c;--room-surface:#f9f8f2;--room-card:#fffdf8;--room-border:#ccd5c7;--room-status:#eee8f3;--room-status-text:#574665;--room-accent:#745b88}
+body.game-room .room-layout{grid-template-columns:minmax(0,1fr) var(--room-sidebar-width);gap:var(--room-gap);align-items:start}
+body.game-room .room-sidebar{box-sizing:border-box;min-width:0;align-self:start;padding:20px;border:1px solid var(--room-border);border-radius:16px;background:var(--room-surface);color:var(--room-text);font:14px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}
+body.game-room .room-sidebar .aside-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px;padding:0}
+body.game-room .room-sidebar .aside-head h2{font:700 18px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif;margin:0;color:var(--room-text)}
+body.game-room .room-sidebar .aside-head #count{font-size:12px;color:var(--room-muted)}
+body.game-room .room-sidebar #players{display:grid;grid-template-columns:1fr;gap:0}
+.room-player{display:flex;align-items:center;gap:10px;min-width:0;padding:14px 0;border-bottom:1px solid var(--room-border);color:var(--room-text)}
+.room-player-avatar{width:46px;height:46px;flex:0 0 46px;display:grid;place-items:center;border-radius:10px;background:#ebe6dc;overflow:hidden}
+.room-player-avatar img{width:100%;height:100%;object-fit:contain}.room-avatar-fallback{font-size:18px;color:#294e43;font-weight:700}
+.room-player-info{flex:1;min-width:0}.room-player-info b{display:block;overflow-wrap:anywhere;font-size:14px;font-weight:700}.room-player-info small{display:block;font-size:12px;line-height:1.5;color:var(--room-muted);margin-top:3px}
+.room-player-metrics{display:flex;gap:12px;flex:none;align-items:center}.room-player-metrics strong{font:700 22px/1.2 "Segoe UI","Microsoft JhengHei",sans-serif;color:var(--room-accent)}
+body.game-room .shared-game-ui.integrated:not(.race-ui){margin:18px 0 0;padding:0;border:0;gap:12px;color:var(--room-text);font:14px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}
+body.game-room .shared-game-ui.integrated h2{margin:0;font-size:12px;line-height:1.5;font-weight:700;letter-spacing:0;color:var(--room-muted)}
+body.game-room .shared-game-ui .shared-turn{padding:12px;min-height:44px;display:grid;place-items:center;font-size:14px;line-height:1.5;font-weight:600;border-radius:10px;border:1px solid var(--room-border);background:var(--room-status);color:var(--room-status-text);box-shadow:none}
+body.game-room .shared-game-ui .shared-turn.mine{background:var(--room-active);color:var(--room-active-text);border-color:#c9a668;box-shadow:none}
+body.game-room .shared-game-ui .shared-expressions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-height:0;max-height:200px;overflow:auto}
+body.game-room .shared-game-ui .shared-expressions button{box-sizing:border-box;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;min-width:0;height:78px;padding:6px;border:1px solid var(--room-border);border-radius:9px;background:var(--room-card);color:#263b36;font:12px/1.4 "Segoe UI","Microsoft JhengHei",sans-serif;transform:none}
+body.game-room .shared-game-ui .shared-expressions img{width:100%;height:44px;object-fit:contain}body.game-room .shared-game-ui .shared-expressions span{font-size:12px;font-weight:500}
+body.game-room .shared-game-ui .shared-expressions button:hover,body.game-room .shared-game-ui .shared-expressions button:focus-visible{border-color:var(--room-accent);outline:2px solid var(--room-accent);outline-offset:0}
+body.game-room #shared-barrage{gap:8px;margin:0}body.game-room #shared-barrage input{height:40px;padding:8px;border-radius:9px;background:var(--room-surface);color:var(--room-text);border:1px solid var(--room-border);font-size:12px}body.game-room #shared-barrage button{height:40px;padding:8px 12px;border-radius:9px;background:#294e43;color:#fff;font-size:12px}
+body.game-room #shared-error:empty{display:none}body.game-room #shared-error{min-height:0;color:#b96b54}body.game-room #shared-error.ok{color:var(--room-muted)}
+body.game-room .room-sidebar .aside-note{display:none}body.game-room .room-sidebar .history-link{display:block;margin:20px 0 0;padding-top:16px;border-top:1px solid var(--room-border);font-size:12px;color:var(--room-muted)}
+.room-action-dock{position:fixed;right:72px;bottom:16px;z-index:86;display:flex;gap:8px;align-items:center}.room-action-dock:empty{display:none}
+.room-action-dock .host-manage{position:static;margin:0;height:36px;padding:6px 12px;border-radius:9px;font:12px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}
+@media(max-width:1000px){body.game-room{--room-sidebar-width:280px;--room-gap:20px}}
+@media(max-width:900px){body.game-room .room-layout{grid-template-columns:1fr}body.game-room .room-sidebar{padding:18px}body.game-room .room-sidebar #players{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}body.game-room .shared-game-ui.integrated:not(.race-ui){max-width:420px}.room-action-dock{right:64px;bottom:16px}}
+@media(max-width:480px){body.game-room .room-sidebar #players{grid-template-columns:1fr}body.game-room .room-sidebar{padding:16px}.room-player{padding:12px 0}}
+body.game-room .shared-game-ui.integrated.poker-ui .shared-players-heading{display:block;font:700 18px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif;color:var(--room-text)}
+body.game-room .poker-ui .shared-players{display:block;max-height:none;overflow:visible}
+body.game-room .poker-ui .room-player-metrics strong{font-size:18px}
+body.game-room .room-game-info{margin:20px 0;border:1px solid var(--room-border);border-radius:10px;padding:12px}
+body.game-room .room-game-info summary{font-size:12px;cursor:pointer;font-weight:700}
+body.game-room .room-game-info .section-label,body.game-room .room-game-info h3{display:none}
+body.game-room .room-sidebar #hostControls{margin:0 0 16px}
+.room-interaction-toggle{display:none}
+@media(max-width:900px){body.game-room .room-sidebar .room-interaction-toggle{display:block;min-height:40px;border:1px solid var(--room-border);border-radius:9px;background:var(--room-surface);color:var(--room-text);font:inherit;cursor:pointer}body.game-room .room-sidebar .shared-game-ui:not(.expanded) .shared-expressions-heading,body.game-room .room-sidebar .shared-game-ui:not(.expanded) .shared-expressions,body.game-room .room-sidebar .shared-game-ui:not(.expanded) .shared-barrage-heading,body.game-room .room-sidebar .shared-game-ui:not(.expanded) #shared-barrage,body.game-room .room-sidebar .shared-game-ui:not(.expanded) #shared-error{display:none}}
