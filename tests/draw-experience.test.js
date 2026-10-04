@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
-const {randomUUID} = require('node:crypto');
+const {randomUUID,randomFillSync} = require('node:crypto');
 const {DrawGuessRoom} = require('../src/games/draw-guess');
 
 const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'draw.js'), 'utf8');
@@ -39,7 +39,7 @@ function browserHarness() {
   localStorage: {getItem: () => null, setItem() {}},
   history: {replaceState() {}}, navigator: {clipboard: {writeText: async () => {}}},
   URLSearchParams, setTimeout, clearTimeout, setInterval: () => 0, clearInterval: () => {},
-  Date, crypto: {randomUUID}, confirm: () => true,
+  Date, crypto: {getRandomValues: bytes=>randomFillSync(bytes)}, confirm: () => true,
   fetch: async route => ({json: async () => route === '/api/info' ? {preferred: null} : {}}),
   RoomHost: {update() {}, kicked() {}}, RoomReconnect: {restore: async () => null},
   GameShell: {stableMarkup(node, html) { node.innerHTML = html; }},
@@ -61,6 +61,8 @@ function browserHarness() {
    },
   },
  });
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/shared/stroke-canvas.js'),'utf8'),context);
+ context.StrokeCanvas.strokeId=context.window.StrokeCanvas.strokeId;
  vm.runInContext(script, context, {filename: 'public/draw.js'});
  function receive(state) {
   context.injectedState = state;
@@ -91,6 +93,19 @@ function frameContainsStroke(frame) {
  const all = [...frame.strokes, ...(frame.preview ? [frame.preview] : [])];
  return all.some(stroke => stroke.points?.some(point => point[0] === 25 && point[1] === 25));
 }
+
+test('non-host presenter can draw over HTTP without crypto.randomUUID',async()=>{
+ const ui=browserHarness(),state=drawingState('artist');state.host=false;state.hostId='guest';
+ ui.receive(state);await pause(0);
+ ui.listeners.get('#drawCanvas:pointerdown')({button:0,pointerId:1,point:[20,20],preventDefault(){}});
+ ui.listeners.get('#drawCanvas:pointermove')({pointerId:1,point:[25,25],preventDefault(){}});
+ ui.listeners.get('#drawCanvas:pointerup')({pointerId:1,preventDefault(){}});
+ await pause(0);assert.equal(ui.strokeRequests.length,1);
+ const request=ui.strokeRequests[0];
+ for(const id of [request.data.strokeId,request.data.batchId])assert.match(id,/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
+ assert.ok(frameContainsStroke(ui.frames.at(-1)));
+ request.resolve({version:1});await pause(0);
+});
 
 test('artist stroke remains visible while the server accepts a delayed write', async () => {
  const ui = browserHarness();
