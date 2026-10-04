@@ -59,6 +59,14 @@ test('mouse hover is delayed, survives travel across the help text and dismisses
  h.fire('document:pointermove',{target:null,clientX:0,clientY:0});h.flush(180);assert.equal(h.tip.hidden,true);
 });
 
+test('scrolling a focused button into view preserves its help; leaving the viewport closes it',()=>{
+ const h=legendHelp();h.document.activeElement=h.glass;h.fire('legend:focusin',{target:h.glass});
+ h.fire('document:scroll');assert.equal(h.tip.hidden,false);assert.equal(h.tip.children[0].textContent,'玻璃');
+ h.glass.getBoundingClientRect=()=>({left:300,top:-100,right:344,bottom:-56});
+ h.fire('document:scroll');assert.equal(h.tip.hidden,true);assert.equal(h.glass.getAttribute('aria-describedby'),null);
+ h.document.activeElement=null;h.fire('legend:click',{target:h.poison});h.fire('document:scroll');assert.equal(h.tip.hidden,true);
+});
+
 test('touch opens help by activation and outside presses stay available to the board',()=>{
  const h=legendHelp();h.fire('legend:pointerover',{target:h.unknown,pointerType:'touch',buttons:0});h.flush(400);assert.equal(h.tip.hidden,true);
  h.fire('legend:click',{target:h.unknown});assert.equal(h.tip.hidden,false);assert.equal(h.tip.children[0].textContent,'未知危險');assert.match(h.tip.children[1].textContent,/屆時揭露/);

@@ -24,3 +24,11 @@ test('airstrike bullet originates at the helicopter, without inventing a car sou
  act(s,'shoot',{target:s.target.id});const shot=s.r.events.find(e=>e.kind==='shot');
  assert.equal(shot.air,true);assert.equal(shot.source,null);assert.deepEqual(shot.from,{x:2,y:2});assert.deepEqual(shot.to,{x:2,y:3});
 });
+test('accepted event snapshots preserve shot deltas when the browser lesson mutates its engine',()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),source=fs.readFileSync(require.resolve('../public/race.js'),'utf8'),scope={};
+ const start=source.indexOf('function snapshotRaceState('),end=source.indexOf('\nfunction render(',start);vm.runInNewContext(source.slice(start,end),scope);
+ const s=createScenario(3);act(s,'begin',{car:s.car.id,die:0});act(s,'move',{x:2,y:2});
+ const previous=scope.snapshotRaceState(s.r.view(s.p.id)),latestId=previous.events.at(-1).id;
+ act(s,'shoot',{target:s.target.id});const next=s.r.view(s.p.id),delta=next.events.filter(e=>e.id>previous.events.at(-1).id);
+ assert.equal(previous.events.at(-1).id,latestId);assert.ok(delta.some(e=>e.kind==='shot'));assert.ok(delta.some(e=>e.kind==='damage'));
+});

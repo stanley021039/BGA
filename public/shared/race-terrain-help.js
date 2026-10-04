@@ -49,5 +49,12 @@
  document.addEventListener('pointermove',event=>{if(!anchor)return;if(anchor.contains(event.target)||withinTip(event))root.clearTimeout(leaveTimer);else leave();});
  document.addEventListener('pointerdown',event=>{if(anchor&&!anchor.contains(event.target))hide();});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'){dismissed=anchor;hide();}});
- document.addEventListener('scroll',hide,true);root.addEventListener('resize',hide);root.addEventListener('blur',hide);
+ document.addEventListener('scroll',()=>{
+  // Focusing an offscreen button can scroll it into view after focusin.
+  if(!tip.hidden&&anchor===document.activeElement){
+   const r=anchor.getBoundingClientRect(),view=root.visualViewport,left=view?.offsetLeft||0,top=view?.offsetTop||0,width=view?.width||root.innerWidth,height=view?.height||root.innerHeight;
+   if(r.bottom>top&&r.top<top+height&&r.right>left&&r.left<left+width)return show(anchor);
+  }
+  hide();
+ },true);root.addEventListener('resize',hide);root.addEventListener('blur',hide);
 })(typeof window==='object'?window:globalThis);
