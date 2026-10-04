@@ -142,8 +142,8 @@ body[data-game-kind="race"] .game-toolbar{max-width:1600px;width:100%;margin:0 a
 @media(max-width:1000px){body[data-game-kind="race"] .game-toolbar{flex-wrap:wrap;padding:0 16px}.game-toolbar .race-heading{flex-basis:100%!important;flex-wrap:wrap}.race-roster{margin:16px 0}.race-controls{margin-top:16px}.race-controls #feed{max-height:144px}}
 @media(max-width:600px){.race-roster .crew-strip{grid-template-columns:1fr}.race-stats{flex-wrap:wrap}}
 body[data-game-kind="race"].ui-large-text .race-roster{grid-column:1;grid-row:auto}body[data-game-kind="race"].ui-large-text .game-toolbar{flex-wrap:wrap}
-/* Reserve two visible roster rows before using extra height for track artwork. */
-@media(min-width:1001px) and (min-height:720px){body[data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .board-scroll svg{max-height:calc(100dvh - 500px)}body[data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .garage{min-height:340px}}
+/* Reserve the full terrain legend and two roster rows before enlarging track artwork. */
+@media(min-width:1001px) and (min-height:720px){body[data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .board-scroll svg{max-height:calc(100dvh - 556px)}body[data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .garage{min-height:340px}}
 .race-controls .race-feed[data-persistent]{display:block}
 .lesson-readonly .race-command-options>summary,.lesson-readonly .race-command-options>.command-wrap{pointer-events:auto}
 .game-toolbar .race-stats>div{flex-direction:row}
