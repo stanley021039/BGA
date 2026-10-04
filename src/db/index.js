@@ -7,7 +7,7 @@ function openDatabase(file){
  const db=new DatabaseSync(file,{timeout:5000});
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
- if(version>8)throw Error(`Unsupported database version ${version}`);
+ if(version>9)throw Error(`Unsupported database version ${version}`);
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -100,6 +100,17 @@ function openDatabase(file){
     CREATE TABLE user_artworks(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,created_at TEXT NOT NULL);
     CREATE INDEX user_artworks_owner ON user_artworks(owner_id,created_at);
     PRAGMA user_version=8;
+   `);
+   db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<9){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    CREATE TABLE IF NOT EXISTS draw_words(id TEXT PRIMARY KEY,author_id TEXT NOT NULL REFERENCES users(id),author_name TEXT NOT NULL,title TEXT NOT NULL,title_key TEXT NOT NULL UNIQUE,aliases TEXT NOT NULL,difficulty TEXT NOT NULL CHECK(difficulty IN ('easy','medium','hard')),category TEXT NOT NULL,created_at TEXT NOT NULL);
+    CREATE INDEX IF NOT EXISTS draw_words_author ON draw_words(author_id,created_at);
+    PRAGMA user_version=9;
    `);
    db.exec('COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}
