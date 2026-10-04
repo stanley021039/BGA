@@ -79,5 +79,7 @@ test('every public terrain legend is a named native button and loads the dedicat
  const buttons=[...html.matchAll(/<button\b[^>]*data-race-terrain="([^"]+)"[^>]*>/g)];
  assert.deepEqual(buttons.map(match=>match[1]),['R','O','M','X','?','G','V','J','F','S']);
  for(const [markup,code]of buttons){assert.match(markup,/type="button"/);assert.ok(markup.includes(`aria-label="${helpFor(code).name}地形說明"`));}
+ const labels=[...html.matchAll(/data-race-terrain="([^"]+)"[^>]*>[\s\S]*?<span class="terrain-help-label">([^<]+)<\/span>/g)];
+ for(const [,code,label]of labels)assert.equal(label,helpFor(code).name);
  assert.ok(html.includes('<script src="/shared/race-terrain-help.js"></script>'));
 });

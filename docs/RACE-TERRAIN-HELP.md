@@ -4,7 +4,7 @@
 
 ## 介面與規則
 
-`public/race.html` 的十項公開地形是原生 `type="button"`，使用 `data-race-terrain="R/O/M/X/?/G/V/J/F/S"`。每項保留圖示與短名稱，`aria-label` 提供完整地形名稱。既有「亮框可前往」標記保留。
+`public/race.html` 的十項公開地形是原生 `type="button"`，使用 `data-race-terrain="R/O/M/X/?/G/V/J/F/S"`。每項保留圖示與完整名稱（毒液、玻璃、跳台等），可見文字不縮成單字；不足寬度時換行，不縮字級。`aria-label` 同樣提供完整地形名稱。既有「亮框可前往」標記保留。
 
 `public/shared/race-terrain-help.js` 建立 `#raceTerrainLegendTooltip[role=tooltip]`，文字取自固定公開規則，不讀房間、危險標記或未翻開的種類。未知危險只提示進入後才翻開；不預告結果。
 
@@ -24,13 +24,15 @@
 ## 操作與定位
 
 - 滑鼠停留 400ms 開啟；鍵盤 focus 立即開啟，觸控可點擊開啟。
-- 移到字卡範圍仍可閱讀。移開、失去焦點、外部點擊、捲動、縮放尺寸變更或視窗失焦會關閉。
+- 移到字卡範圍仍可閱讀。移開、失去焦點、外部點擊、縮放尺寸變更或視窗失焦會關閉；捲動時鍵盤焦點入口仍可見則重新定位，其他情況關閉。
 - Escape 關閉並保留按鈕焦點；游標未離開前不再次自動彈出。
 - 開啟時添加 `aria-describedby`；關閉時保留其他既有描述。
 - 以 visual viewport 邊界留 8px，空間不足時放在按鈕上方。字卡為 `pointer-events:none`，不取消棋盤點擊。
 - 顯示圖例說明前呼叫既有 `hideTrackHover()`，避免和棋盤說明同時顯示。
 
 44px 按鈕、14/16 字級與字卡 CSS 由地圖版面負責的 agent 整合到 `public/race.css`；資源 whitelist、教學內嵌引擎同步由 root 整合。
+
+依後續回饋，「亮框可前往」改用28×34px的六角SVG亮框，替代小型文字菱形，外形與棋盤可移動格一致，文字仍完整顯示。
 
 ## 驗證
 
