@@ -149,3 +149,19 @@ body[data-game-kind="race"].ui-large-text .race-roster{grid-column:1;grid-row:au
 .game-toolbar .race-stats>div{flex-direction:row}
 #raceSpotlight{overflow:auto;animation:race-finish-visible .2s ease-out both}#raceSpotlight button{flex-shrink:0;min-height:44px}
 @keyframes race-finish-visible{from{opacity:0}to{opacity:1}}
+
+/* Vehicle-local effects are separate from the map and movement transforms. */
+.race-vehicle-effect,.race-vehicle-effect *{pointer-events:none}
+.race-vehicle-label rect{fill:#17231af2;stroke:#edc88c;stroke-width:1.2}.race-vehicle-label text{fill:#ffe4ab;font:700 24px var(--ui-font-family);paint-order:stroke;stroke:#17231a;stroke-width:2px}
+.race-vehicle-exhaust{animation:race-vehicle-thrust .16s ease-in-out infinite alternate;animation-delay:var(--vehicle-effect-delay,0ms);transform-origin:0 0}.race-vehicle-flame-outer{fill:#ed814b;filter:drop-shadow(0 0 5px #faad58)}.race-vehicle-flame-inner{fill:#ffe39c}
+.race-vehicle-skid-wrapper{transform-origin:0 0;animation:race-vehicle-spin .85s ease-out both;animation-delay:var(--vehicle-effect-delay,0ms)}.race-vehicle-skid-marks{fill:none;stroke:#141c14;stroke-width:3;stroke-linecap:round;opacity:.85}
+.race-vehicle-shot-trail{stroke:#ffdd8b;stroke-width:2;stroke-dasharray:4 7;opacity:.45}.race-vehicle-shot-bullet{fill:#fff4b0;filter:drop-shadow(0 0 6px #ffbd5c);animation:race-vehicle-bullet .55s linear both;animation-delay:var(--vehicle-effect-delay,0ms)}.race-vehicle-bullet-glow{fill:#ffb35c55}.race-vehicle-shot-hit{fill:none;stroke:#ffde8e;stroke-width:3;animation:race-vehicle-hit .45s ease-out both;animation-delay:calc(var(--vehicle-effect-delay,0ms) + .55s)}.race-vehicle-shot-hit.is-miss{stroke:#bdcbbf;stroke-dasharray:4 4}
+.race-vehicle-projectile[data-reduced="true"] .race-vehicle-shot-hit{animation:none;opacity:.8}
+@keyframes race-vehicle-thrust{from{transform:scaleX(.78);opacity:.8}to{transform:scaleX(1.12);opacity:1}}
+@keyframes race-vehicle-spin{0%{transform:rotate(0)}38%{transform:rotate(170deg)}74%{transform:rotate(330deg)}100%{transform:rotate(360deg)}}
+@keyframes race-vehicle-bullet{0%{transform:translate(var(--shot-from-x),var(--shot-from-y));opacity:1}92%{opacity:1}100%{transform:translate(var(--shot-to-x),var(--shot-to-y));opacity:0}}
+@keyframes race-vehicle-hit{from{opacity:0;stroke-width:7}35%{opacity:1}to{opacity:.3;stroke-width:1}}
+@media(prefers-reduced-motion:reduce){.race-vehicle-skid-wrapper,.race-vehicle-exhaust,.race-vehicle-shot-bullet,.race-vehicle-shot-hit{animation:none!important}.race-vehicle-shot-bullet,.race-vehicle-exhaust{display:none}}
+
+.terrain-legend .legend{align-items:center;gap:4px}.terrain-help-button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:44px;min-height:44px;padding:4px 6px;border:1px solid #677259;border-radius:6px;background:#253022;color:#e4d6b6;font-family:inherit;cursor:help}.terrain-help-button:hover,.terrain-help-button:focus-visible{border-color:#ffd48a;background:#35402a}.terrain-help-icon{display:inline-grid;place-items:center;flex:none;width:20px;height:24px;font-size:24px;line-height:1}.terrain-help-icon i{width:16px;height:16px;margin:0}.terrain-help-label{font-size:var(--ui-text-small,.875rem);line-height:1.5;white-space:nowrap}
+#raceTerrainLegendTooltip{position:fixed;z-index:1000;pointer-events:none;box-sizing:border-box;width:20rem;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:12px 16px;border:1px solid #ad945c;border-radius:10px;background:#17231af5;color:#ece3ce;box-shadow:0 8px 24px #0005}#raceTerrainLegendTooltip[hidden]{display:none}#raceTerrainLegendTooltip strong{display:block;color:#ffda98;font-size:var(--ui-text-body,1rem)}#raceTerrainLegendTooltip p{margin:8px 0 0;font-size:var(--ui-text-small,.875rem);line-height:1.6}
