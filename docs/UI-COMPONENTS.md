@@ -71,3 +71,5 @@ UIPopover.bind(button, panel, { align: 'end', onClose: closeMenu });
 雷霆擲骰使用 `/shared/race-dice-dialog.js` 的 `RaceDiceDialog.mount({onAction})`，以 `show(state)` 同步公開 `diceCheck`；`reset()`／`destroy()`清理動畫與返焦。dialog常駐顯示判定條件及參與車隊，只有owner能擲骰／確認，碰撞結果依server的rerollAllowed提供一次重擲。CSS與style只載入一次，原生top layer限制視窗內高度；四隊桌機精簡重複說明以完整顯示17顆骰與結果，窄屏局部捲動且操作44px。首次rolling遮蔽至少1000ms、同check輪詢保留焦點與起始時間，減少動態保留等待但不旋轉。此dialog屬必要遊戲步驟，Esc不能跳過；確認後遊戲儀表板接回焦點。詳見 [擲骰流程與驗收](RACE-DICE-INTERACTION.md)。
 
 數字骰圖案共用 `RaceDiceDialog.faceMarkup(value)`，僅接受整數1–6，輸出不依賴字型的 SVG 白色骰面與深色點數。父元件負責提供完整點數／已用狀態的輔助名稱；SVG本身 aria-hidden。檢定骰面56px，移動選擇的48px按鈕內留7px邊距、骰面32px；外層卡片與骰面用不同底色，避免邊框黏在一起。角色圖案保持原表情來源，車隊跨兩列顯示64×80或寬螢幕72×90，其他重要資料常駐。
+
+混合標題、標籤、數字與按鈕的橫列使用 `align-items:center`，包含共用 `game-toolbar`、雷霆標題與狀態組、畫猜統計／聊天標頭、同頻答案標頭。每個標籤／數值組也置中，保留各字級的正常行高；窄畫面允許換行，按每一行對齊。長提示保持可讀與完整，控制維持44px以上，不以隱藏重要資訊換取同一行排列。

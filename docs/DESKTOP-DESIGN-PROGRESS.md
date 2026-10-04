@@ -178,4 +178,6 @@ Chrome仍為原分頁2019458507，背景DOM操作，沒有提高視窗。測試�
 | 對齊 | 你畫我猜 | 統計橫列、聊天標頭使用center。 | 本機揭曉大數字與補充說明中心均484.39px；長聊天提示保留換行。 |
 | 對齊 | 同頻俱樂部 | 答案舞台標頭使用center。 | 本機揭曉標頭兩種字級中心均338.89px，工具列中心90px。 |
 
-本機完整226/226，原Chrome背景驗收未置前，临時viewport已reset。正式部署與驗收待完成。
+來源9f041d3已部署shhuang.cc，本機與Linux完整226/226，23份公開資源一致。正式Chrome實測標題、ROUND／ROAD BONUS／ROOM的六個標籤與數值，以及邀請／教學／提示／音效四按鈕的垂直中心全部90px。證據work/chrome-ui-centered-prod.json、work/chrome-ui-centered-prod.jpg。原Chrome背景驗收未置前，臨時viewport已reset，保留第1章教學。
+
+備份pre-draw-guess-20261004T164650Z.sqlite；DB v12 integrity ok、7人，服務及tunnel active。封裝SHA256 16EBFE0BACDF49B59C10AE19C4945D3F3254DFF4749DFFC2CB337F5BA9A28962。臨時正式房47D220清理後404，本機3104 QA服務停止；未push或MR。
