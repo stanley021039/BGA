@@ -71,7 +71,7 @@ body[data-game-kind] .shared-player-name{font-size:var(--ui-text-body)}
 body[data-game-kind] .shared-player :is(b,.shared-emote-label){font-size:var(--ui-text-small)}
 body[data-game-kind] .room-sidebar .history-link{margin:var(--ui-space-3) 0 0;padding-top:var(--ui-space-3);font-size:var(--ui-text-small)}
 body[data-game-kind] .room-sidebar>.history-link{display:none}
-body[data-game-kind] .game-toolbar{margin-bottom:var(--ui-space-2);gap:var(--ui-space-3)}
+body[data-game-kind] .game-toolbar{align-items:center;margin-bottom:var(--ui-space-2);gap:var(--ui-space-3)}
 body[data-game-kind] .site-header :is(.site-submenu,.site-account-menu){--ui-focus:#f0c784}
 body[data-game-kind] .room-action-dock{right:72px;bottom:var(--ui-space-4);gap:var(--ui-space-3)}
 body[data-game-kind] .room-action-dock.in-sidebar{position:static;display:flex;justify-content:flex-start;align-items:center;flex:none;flex-wrap:wrap;padding:0;margin-top:var(--ui-space-2);border:0}
