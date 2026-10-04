@@ -67,3 +67,5 @@ UIPopover.bind(button, panel, { align: 'end', onClose: closeMenu });
 `UIPopover.bindOverlay(panel, container)` 用於賽車／撲克結束演出，以舞台與 viewport 交集置中；交集過小則置中於 viewport，長內容內捲、確認控制保留。保留 translate 的進場動畫。動態 renderer 移除節點時清理 observers／frames，避免重複 binding。原生 dialog 開啟時共用 Escape handler 不攔截，dialog 的關閉及返焦優先。
 
 賽道地形 tooltip 是純閱讀提示，`pointer-events:none`，不能攔截相鄰路格或車輛。pointerdown只收提示，原click正常處理；長內容在提示矩形範圍內支援wheel與PageUp／PageDown，Escape關閉。定位後以viewport剩餘高度限制內容，仍維持8px邊界。
+
+雷霆擲骰使用 `/shared/race-dice-dialog.js` 的 `RaceDiceDialog.mount({onAction})`，以 `show(state)` 同步公開 `diceCheck`；`reset()`／`destroy()`清理動畫與返焦。dialog常駐顯示判定條件及參與車隊，只有owner能擲骰／確認，碰撞結果依server的rerollAllowed提供一次重擲。CSS與style只載入一次，原生top layer限制視窗內高度；四隊桌機精簡重複說明以完整顯示17顆骰與結果，窄屏局部捲動且操作44px。首次rolling遮蔽至少1000ms、同check輪詢保留焦點與起始時間，減少動態保留等待但不旋轉。此dialog屬必要遊戲步驟，Esc不能跳過；確認後遊戲儀表板接回焦點。詳見 [擲骰流程與驗收](RACE-DICE-INTERACTION.md)。

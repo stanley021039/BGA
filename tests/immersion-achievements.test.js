@@ -32,7 +32,7 @@ test('first poker hand needs a settled hand and a real player decision',()=>fixt
 test('race badge needs a completed human-operated turn and a finished race',()=>fixture(({store,addUser})=>{
  let seed=73;const rng=n=>((seed=(seed*1664525+1013904223)>>>0)%n);
  const room=new ThunderRoom('RACE01','賽道',rng),seats=new Map(),a=room.add('甲'),b=room.add('乙');
- seats.set(addUser('甲'),a.id);seats.set(addUser('乙'),b.id);room.start();
+ seats.set(addUser('甲'),a.id);seats.set(addUser('乙'),b.id);room.start();require('./helpers/race-dice').settleDice(room);
  const actor=room.player(room.actor()),other=room.players.find(player=>player!==actor);
  assert.throws(()=>room.humanAct(actor.id,'begin',{car:'invalid',die:0}),/可用車輛/);
  assert.equal(actor.humanActionThisTurn,false);
