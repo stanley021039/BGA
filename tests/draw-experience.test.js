@@ -42,7 +42,7 @@ function browserHarness() {
   Date, crypto: {getRandomValues: bytes=>randomFillSync(bytes)}, confirm: () => true,
   fetch: async route => ({json: async () => route === '/api/info' ? {preferred: null} : {}}),
   RoomHost: {update() {}, kicked() {}}, RoomReconnect: {restore: async () => null},
-  GameShell: {stableMarkup(node, html) { node.innerHTML = html; }},
+  GameShell: {stableMarkup(node, html) { node.innerHTML = html; },playerRow:()=>''},
   StrokeCanvas: {
    pointFrom(event) { return event.point; },
    redraw(_canvas, strokes, preview) {

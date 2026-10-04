@@ -8,12 +8,33 @@
  const drawAside=document.querySelector('.draw-layout > aside');
  const pokerAside=document.querySelector('#game .table-sidebar');
  const raceCrews=document.querySelector('.race-main #crews');
+ const sidebar=majorityAside||giftAside||drawAside||pokerAside;
+ document.body.classList.add('game-room');
+ document.body.classList.toggle('room-light',!!(majorityAside||giftAside||drawAside));
+ if(sidebar){
+  sidebar.classList.add('room-sidebar');sidebar.parentElement.classList.add('room-layout');
+  const heading=sidebar.querySelector('.aside-head');
+  if(heading){const count=heading.querySelector('#count');heading.replaceChildren();const title=document.createElement('h2');title.textContent='這桌的朋友';heading.append(title);if(count)heading.append(count);}
+  const history=sidebar.querySelector('.history-link');if(history)history.textContent='對局歷史 ↗';
+ }
+ const dock=document.createElement('div');dock.className='room-action-dock';dock.setAttribute('aria-label','房間工具');
+ const manage=document.querySelector('#managePlayers');if(manage)dock.append(manage);document.body.append(dock);
  if(majorityAside){majorityAside.querySelector('#players').after(panel);panel.classList.add('integrated','majority-ui');}
  else if(giftAside){giftAside.querySelector('#players').after(panel);panel.classList.add('integrated','gift-ui');}
  else if(drawAside){drawAside.querySelector('#players').after(panel);panel.classList.add('integrated','draw-ui');panel.querySelector('.shared-barrage-heading').hidden=true;panel.querySelector('#shared-barrage').hidden=true;}
- else if(pokerAside){pokerAside.querySelector('#hostControls').after(panel);panel.classList.add('integrated','poker-ui');}
+ else if(pokerAside){
+  const controls=pokerAside.querySelector('#hostControls');controls.after(panel);panel.classList.add('integrated','poker-ui');
+  const info=document.createElement('details');info.className='room-game-info';const summary=document.createElement('summary');summary.textContent='牌桌資訊';info.append(summary);
+  for(const item of [...pokerAside.children]){if(item===controls)break;info.append(item);}
+  panel.after(info);panel.querySelector('.shared-players-heading').textContent='這桌的朋友';
+  panel.querySelector('#shared-turn').before(panel.querySelector('.shared-players-heading'),panel.querySelector('#shared-players'));
+ }
  else if(raceCrews){raceCrews.after(panel);panel.classList.add('integrated','race-ui');}
  else document.body.append(panel);
+ if(sidebar){
+  const toggle=panel.querySelector('#shared-toggle');toggle.className='room-interaction-toggle';toggle.textContent='表情／互動';panel.querySelector('#shared-turn').after(toggle);
+  if(!sidebar.querySelector('.history-link')){const history=document.createElement('a');history.className='history-link';history.href='/history';history.textContent='對局歷史 ↗';panel.after(history);}
+ }
  const arena=majorityAside?.previousElementSibling||giftAside?.previousElementSibling||drawAside?.previousElementSibling||document.querySelector('#game .play-area')||document.querySelector('.race-main')||document.body;
  const barrageLayer=document.createElement('div');barrageLayer.className='game-barrage-layer';barrageLayer.setAttribute('aria-hidden','true');
  arena.classList.add('game-barrage-host');arena.append(barrageLayer);
@@ -51,10 +72,12 @@
   const social=s.social||[],recent=new Map(),now=Date.now();
   for(const item of [...(s.expressions||[]),...social.filter(item=>item.kind==='expression')])if(now-item.at<5000)recent.set(item.playerId,item);
   const visible=s.players.filter(player=>!player.kicked);
-  const playersKey=JSON.stringify(visible.map(player=>[player.id,player.name,player.avatar,player.id===current,player.id===s.me,recent.get(player.id)?.id]));
+  const playersKey=JSON.stringify(visible.map(player=>[player.id,player.name,player.avatar,player.stack,player.online,player.folded,player.action,player.id===current,player.id===s.me,recent.get(player.id)?.id]));
   if(playersKey!==lastPlayers){
    lastPlayers=playersKey;
    const players=q('#shared-players');players.replaceChildren();
+   if(pokerAside){players.innerHTML=visible.map(player=>playerRow(player,{me:s.me,status:player.bot?'練習電腦':s.phase==='waiting'?(player.online===false?'暫時離線':'已入座'):player.folded?'已棄牌':player.id===current?'操作中':player.online===false?'暫時離線':'已入座',metrics:[{value:Number(player.stack||0).toLocaleString('zh-TW'),label:'籌碼'}]})).join('');}
+   else{
    for(const player of visible){
     const row=element('div','shared-player','');row.classList.toggle('active',player.id===current);
     if(player.avatar){const img=document.createElement('img');img.src=player.avatar;img.alt='';row.append(img);}
@@ -63,6 +86,7 @@
     if(expression){const badge=element('span','shared-emote-label',expression.label||expression.expression);badge.title=`${player.name} 使用了「${badge.textContent}」`;row.append(badge);}
     if(player.id===current)row.append(element('b','','◀ 操作中'));
     players.append(row);
+   }
    }
   }
   showBarrages(s,now);
@@ -111,5 +135,10 @@
  q('#shared-toggle').onclick=()=>{const expanded=panel.classList.toggle('expanded');q('#shared-toggle').setAttribute('aria-expanded',String(expanded));q('#shared-toggle').textContent=expanded?'收合互動':'表情／彈幕';};
  window.addEventListener('focus',()=>{if(state){nextLoad=0;loadExpressions();}});
  function stableMarkup(target,markup){if(target._gameMarkup!==markup){target.innerHTML=markup;target._gameMarkup=markup;}}
- window.GameShell={update(s){window.TableMusic?.update(s);return update(s);},stableMarkup};
+ const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function playerRow(player,{me,status='',metrics=[{value:player.score??player.stack??0,label:'分數'}]}={}){
+  const avatar=player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
+  return '<div class="room-player"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b>'+escape(player.name)+(player.id===me?' · 你':'')+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
+ }
+ window.GameShell={update(s){window.TableMusic?.update(s);return update(s);},stableMarkup,playerRow};
 })();
