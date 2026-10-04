@@ -69,3 +69,5 @@ UIPopover.bind(button, panel, { align: 'end', onClose: closeMenu });
 賽道地形 tooltip 是純閱讀提示，`pointer-events:none`，不能攔截相鄰路格或車輛。pointerdown只收提示，原click正常處理；長內容在提示矩形範圍內支援wheel與PageUp／PageDown，Escape關閉。定位後以viewport剩餘高度限制內容，仍維持8px邊界。
 
 雷霆擲骰使用 `/shared/race-dice-dialog.js` 的 `RaceDiceDialog.mount({onAction})`，以 `show(state)` 同步公開 `diceCheck`；`reset()`／`destroy()`清理動畫與返焦。dialog常駐顯示判定條件及參與車隊，只有owner能擲骰／確認，碰撞結果依server的rerollAllowed提供一次重擲。CSS與style只載入一次，原生top layer限制視窗內高度；四隊桌機精簡重複說明以完整顯示17顆骰與結果，窄屏局部捲動且操作44px。首次rolling遮蔽至少1000ms、同check輪詢保留焦點與起始時間，減少動態保留等待但不旋轉。此dialog屬必要遊戲步驟，Esc不能跳過；確認後遊戲儀表板接回焦點。詳見 [擲骰流程與驗收](RACE-DICE-INTERACTION.md)。
+
+數字骰圖案共用 `RaceDiceDialog.faceMarkup(value)`，僅接受整數1–6，輸出不依賴字型的 SVG 白色骰面與深色點數。父元件負責提供完整點數／已用狀態的輔助名稱；SVG本身 aria-hidden。檢定骰面56px，移動選擇的48px按鈕內留7px邊距、骰面32px；外層卡片與骰面用不同底色，避免邊框黏在一起。角色圖案保持原表情來源，車隊跨兩列顯示64×80或寬螢幕72×90，其他重要資料常駐。

@@ -41,3 +41,5 @@
 | 背景與收尾 | 所有瀏覽器操作沿用原Chrome DOM控制，未置前；1280尺寸驗收後恢復1767×1196。兩個測試房已到期刪除，清理查詢皆404；本機3104測試server已停止。 |
 
 證據在忽略目錄work/dice-prod-check.json、work/chrome-dice-qa.json、work/chrome-dice-round-prod.jpg、work/chrome-dice-shot-prod.jpg、work/chrome-dice-collision-rolling-prod.jpg及work/chrome-dice-collision-prod.jpg。Chrome記錄仍有既有的message-channel listener錯誤，沒有遊戲script呼叫堆疊；不將此宣稱為瀏覽器零error。未push、未開MR。
+
+2026-10-05追加66b2091：數字骰改為固定幾何SVG，不再使用Unicode骰字；56px白骰面與深色外卡片分離，移動骰共用相同圖案。正式四隊17骰的點數與各自輔助名稱一致，960×612.6 dialog內文443px無內捲；一秒動畫、權限及揭曉流程維持。完整測試226/226（新增一至六點圖案驗證），23份正式資源一致。Chrome證據work/chrome-dice-artwork-prod.jpg。
