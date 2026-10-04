@@ -179,7 +179,14 @@
  });
  const library=document.createElement('dialog');library.className='game-library-dialog';library.setAttribute('aria-labelledby','game-library-title');library.innerHTML='<div class="library-dialog-head"><strong id="game-library-title">新增題庫素材</strong><button type="button" aria-label="關閉題庫">關閉</button></div><iframe title="新增題庫素材"></iframe><p class="ui-status" id="game-library-status" role="status"></p>';document.body.append(library);let libraryTrigger=null;
  window.GameUI?.decorateButton(library.querySelector('button'),'close',{iconOnly:true,label:'關閉題庫'});
- library.addEventListener('close',()=>{if(libraryTrigger?.isConnected)libraryTrigger.focus();});
+ library.addEventListener('close',()=>{
+  if(window.GameUI?.openDialog||!libraryTrigger?.isConnected)return;
+  let target=libraryTrigger;
+  for(let ancestor=libraryTrigger.parentElement;ancestor;ancestor=ancestor.parentElement){
+   if(ancestor.tagName==='DETAILS'&&!ancestor.open){const summary=ancestor.querySelector(':scope > summary');if(summary&&!summary.contains(target))target=summary;}
+  }
+  target.focus();
+ });
  library.querySelector('button').onclick=()=>library.close();
  document.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(!link||event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;const url=new URL(link.href);if(url.origin!==location.origin||!['/gifts','/draw-words','/community'].includes(url.pathname))return;event.preventDefault();libraryTrigger=link;url.searchParams.set('embed','1');library.querySelector('iframe').src=url.pathname+url.search;const status=library.querySelector('#game-library-status');if(window.GameUI)window.GameUI.setStatus(status,'載入素材庫…');else status.textContent='載入素材庫…';if(window.GameUI)window.GameUI.openDialog(library,link);else library.showModal();});
  library.querySelector('iframe').onload=()=>{const doc=library.querySelector('iframe').contentDocument;if(!doc)return;const status=library.querySelector('#game-library-status');if(window.GameUI)window.GameUI.setStatus(status,'');else status.textContent='';const style=doc.createElement('style');style.textContent='header{display:none!important}body{padding:0!important}main{margin-top:12px!important}.gift-shell,.draw-shell,.shell{padding:0 16px!important}';doc.head.append(style);doc.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(link&&new URL(link.href).pathname==='/'){event.preventDefault();library.close();}});};

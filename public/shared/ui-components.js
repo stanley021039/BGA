@@ -47,7 +47,14 @@
   if(!dialogs.has(dialog)){
    dialogs.set(dialog,{trigger:null});dialog.classList.add('ui-dialog');
    if(!dialog.hasAttribute('aria-label')&&!dialog.hasAttribute('aria-labelledby')){const title=dialog.querySelector('[data-dialog-title],h1,h2,h3,strong');if(title){if(!title.id)title.id='ui-dialog-title-'+(++dialogNumber);dialog.setAttribute('aria-labelledby',title.id);}}
-   dialog.addEventListener('close',()=>{const target=dialogs.get(dialog).trigger;if(target?.isConnected&&typeof target.focus==='function')target.focus();});
+   dialog.addEventListener('close',()=>{
+    const trigger=dialogs.get(dialog).trigger;if(!trigger?.isConnected)return;
+    let target=trigger;
+    for(let ancestor=trigger.parentElement;ancestor;ancestor=ancestor.parentElement){
+     if(ancestor.tagName==='DETAILS'&&!ancestor.open){const summary=ancestor.querySelector(':scope > summary');if(summary&&!summary.contains(target))target=summary;}
+    }
+    if(typeof target.focus==='function')target.focus();
+   });
   }
   dialogs.get(dialog).trigger=trigger;if(!dialog.open)dialog.showModal();
  }

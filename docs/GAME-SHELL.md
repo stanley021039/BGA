@@ -18,4 +18,4 @@
 
 `#shared-emote-toggle` 開啟 `#shared-emoji-picker` 時焦點到第一個 emoji；選取成功或 Escape 返入口，外部點擊保留新目標焦點。角色與 emoji 選單互斥。社交傳送有可見 pending、disabled、aria-busy；失敗保 draft，成功僅清本次送出的文字。原 reduced-motion 可讀時間保留。
 
-同來源 `/gifts`、`/draw-words`、`/community` 在具標題的原生題庫 dialog 中開啟，保留原存取權限；Escape／關閉返 trigger。房主管理 dialogs 亦有標題。詳見 [UI 元件合約](UI-COMPONENTS.md) 及 [桌機設計規格](DESKTOP-DESIGN-SPEC.md)。
+同來源 `/gifts`、`/draw-words`、`/community` 在具標題的原生題庫 dialog 中開啟，保留原存取權限；Escape／關閉返 trigger，若原連結已藏在收合的 details 中則返焦到可見祖先 summary。GameUI 管理返焦時，shell 不再重複聚焦隱藏連結。房主管理 dialogs 亦有標題。詳見 [UI 元件合約](UI-COMPONENTS.md) 及 [桌機設計規格](DESKTOP-DESIGN-SPEC.md)。
