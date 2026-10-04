@@ -7,7 +7,7 @@ function openDatabase(file){
  const db=new DatabaseSync(file,{timeout:5000});
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
- if(version>9)throw Error(`Unsupported database version ${version}`);
+ if(version>10)throw Error(`Unsupported database version ${version}`);
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -113,6 +113,14 @@ function openDatabase(file){
     PRAGMA user_version=9;
    `);
    db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<10){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   if(!db.prepare('PRAGMA table_info(draw_words)').all().some(column=>column.name==='topic'))
+    db.exec("ALTER TABLE draw_words ADD COLUMN topic TEXT NOT NULL DEFAULT 'misc'");
+   db.exec('PRAGMA user_version=10; COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
  return db;
