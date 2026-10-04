@@ -38,7 +38,7 @@ GameUI.openDialog(dialog, trigger);
 
 各遊戲提供常駐 `.game-action-slot[data-game-action-slot]` 於右 sidebar 上方，renderer 只更新其內容；button 可以 form 屬性提交原舞台表單。GameShell 不搬 runtime button，不把 dock 掛進玩家 details。共用 ID：`shared-barrage`、`shared-error`、`shared-emote-toggle`、`shared-emoji-picker`、`shared-expressions`。
 
-順序為主操作、玩家／紀錄摘要、文字＋emoji、固定 status、角色／離房／管理 row。utility 控制常規44高、布局內單列；窄螢幕／文字放大可換行捲頁，不能裁切或覆蓋 submit。角色仍 kind:expression，emoji 仍 kind:emoji；focus／loading 改善不修改規則或 API 語意。
+順序為主操作、常駐紀錄、文字＋emoji、固定 status、角色／離房／管理／音樂 row；重要玩家卡另在全寬舞台下方呈現。utility 控制常規44高、布局內單列，音樂入口44×44，不能固定覆蓋玩家分數；窄螢幕／文字放大可換行捲頁，不能裁切或覆蓋 submit。角色仍 kind:expression，emoji 仍 kind:emoji；focus／loading 改善不修改規則或 API 語意。
 
 ## 本批進度與證據（2026-10-04）
 
@@ -49,3 +49,19 @@ GameUI.openDialog(dialog, trigger);
 - 題庫返焦回歸：頁首「遊戲題庫」details 開啟 `/gifts` 後，選單因 focusout 收合；Escape 與關閉按鈕皆應回到可見 summary，而不是嘗試聚焦隱藏連結。背景驗證記錄 `work/agent-dialog-focus-check.json`。
 
 背景測試使用隔離開發 cookies／資料庫，無正式帳密，不影響使用者前景。work證據被Git忽略。
+
+## 按鈕旁的偶爾使用選單
+
+全頁在其他 UI scripts 前載入 `/shared/popovers.js`。重要遊玩資訊保持 inline；只有完整色盤、選用指令、角色／emoji 選擇與導覽等按需內容使用此 helper。
+
+```js
+GameUI.bindPopover(details, panel, { align: 'start', width: 360 });
+UIPopover.bindDetails(details, panel, { align: 'end' });
+UIPopover.bind(button, panel, { align: 'end', onClose: closeMenu });
+```
+
+`bindDetails` 以 details.open 同步；`bind` 預設以 panel.hidden 同步，caller 的 `onClose` 必須更新原本 open／hidden／aria-expanded。預設 placement=bottom、gap=8、padding=8，空間不足時 flip／shift／限制內部捲動；width 可為 px number 或 `trigger`。`inlineBelow` 可讓窄畫面保留文內 details，需由遊戲 CSS 定義 inline 狀態。可用原生 popover 時保留原 DOM 及 CSS 繼承，進入 top layer；不用把節點搬到 body。觸發元件 resize／隱藏、捲頁及動態 panel resize 會更新位置。
+
+持續「已連線」不顯示，失敗／重試文字才顯示。頁首／牌桌房號使用系統字體及 lining／tabular 數字；牌面有語意的字體不受此規則覆寫。
+
+`UIPopover.bindOverlay(panel, container)` 用於賽車／撲克結束演出，以舞台與 viewport 交集置中；交集過小則置中於 viewport，長內容內捲、確認控制保留。保留 translate 的進場動畫。動態 renderer 移除節點時清理 observers／frames，避免重複 binding。原生 dialog 開啟時共用 Escape handler 不攔截，dialog 的關閉及返焦優先。

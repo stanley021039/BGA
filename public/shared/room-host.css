@@ -5,3 +5,4 @@ body[data-game-kind] :is(#hostPlayers,#kickWarning,#kickedNotice) h2{font-size:v
 body[data-game-kind] :is(#hostPlayers,#kickWarning) button,body[data-game-kind] .host-return{min-height:44px;font:var(--ui-text-body)/1.5 var(--ui-font-family)}
 body[data-game-kind] #kickError{min-height:1.5em;color:#a23526;font-size:var(--ui-text-small)}
 body[data-game-kind] .host-dialog-actions{gap:12px;margin-top:24px}
+.host-cancel{position:sticky;top:0;z-index:1;background:#fffdf8}

@@ -58,7 +58,9 @@
   }
   dialogs.get(dialog).trigger=trigger;if(!dialog.open)dialog.showModal();
  }
- window.GameUI={icon,decorateButton,setBusy,setStatus,openDialog};
+ window.GameUI={icon,decorateButton,setBusy,setStatus,openDialog,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
+ /* A healthy connection is background information; failures still need a visible notice. */
+ for(const connection of document.querySelectorAll('#connection,#network')){const indicator=connection.closest('.connection')||connection;const syncConnection=()=>{const text=connection.textContent.trim();indicator.hidden=!text||/^(?:●\s*)?已連線(?:[。.]|\s*·.*)?$/.test(text);};syncConnection();if(typeof MutationObserver==='function')new MutationObserver(syncConnection).observe(connection,{childList:true,subtree:true,characterData:true});}
  /* Root text enlargement needs reflow even when the viewport has not changed. */
  if(typeof getComputedStyle==='function'&&document.documentElement&&document.body){
   const syncTextScale=()=>document.body.classList.toggle('ui-large-text',parseFloat(getComputedStyle(document.documentElement).fontSize)>20);

@@ -72,3 +72,25 @@ Windows／Linux 全套 `npm test` 各 146/146、前端語法及 diff 檢查通�
 
 
 2026-10-04 正式背景整合驗收：賽車真人與兩支AI移動11次，實際DOM看見移動、碰撞、淘汰、受損及危險演出。撲克相容性另通過開局、文字／emoji、角色avatar維持與題庫dialog兩種關閉方式返焦。正式最終程式`49a5dab`，Windows／Linux各173/173；各測試房最後離席清除。實玩／版本及具體範圍見[桌機設計進度](DESKTOP-DESIGN-PROGRESS.md)。未操作前景或建立MR。
+
+## 2026-10-04 車隊資訊常駐與浮層位置修正
+
+依使用者最新資訊優先順序，取消前節「車隊、提示與紀錄」外層details。玩家姓名／角色／在線狀態、逐車可用／失能／淘汰／損傷／已動狀態、四顆骰子的點數與已用狀態都評為高重要性且影響當下決策，放回左側賽道下方常駐2×2車隊卡。可用車數依既有規則計算 `!dead && damage.length < 2`，明確標示「可用」，不混稱所有存活車。核心地形圖例、最新事件與有界近期紀錄也常駐。舊版本完整log在runtime就曾被共用shell收合；這次取消新增的外層收合，並以 `data-persistent` 讓共享shell保留常駐近期log，完整內容在紀錄區局部捲動。
+
+ROUND、ROAD BONUS、ROOM改為同一系統字體20px／600／26px，採 `lining-nums tabular-nums`，去除房碼的monospace與額外頂邊距；標籤與數值按文字基線對齊。完整指令設定與長操作提示仍按需展開，已选指令名稱／已使用摘要常駐；兩者透過共用popover自動跟隨入口、翻向和夾限視窗。教學read-only仍可展開看指令設定，主要動作沿用原教學guard；氮氣操作章可實際變更指令並出現另一顆骰子的欄位。
+
+車旁事件演出增加「賽道與可見視窗交集」夾限，捲動、resize後重算目前車輛節點，無可見賽道時收起，略過與Escape保持可用。地形hover提示也夾限visualViewport，可把滑鼠移入閱讀及捲動；未知危險僅顯示公開警告，未洩漏未揭露的危險種類。
+
+| 驗收 | 本機背景證據 |
+| --- | --- |
+| 四隊1280×720 | 四隊每隊角色、3車、4骰全可見，姓名16px、狀態14px；名單底672px、彈幕底596.8px、頁面高720px。 |
+| SVG與文字 | 1280桌機賽道SVG保比例且最高220px；圖內道路名稱／裝飾標籤随圖縮放，實際約8.5px，屬圖示例外，不能以CSS宣稱14px。所有決策資訊另在14／16px常駐車隊卡、圖例、主操作與紀錄提供。較高桌機增加舞台高度；手機／200%文字允許重排與捲動。 |
+| 選單矩陣 | 1280×720、1440×900、2492×945、390×844、640×360及200%文字下色盤／指令／提示共17組正常夾限、原生top layer與hit test通過；維修三欄位展開184px高，無遮擋。 |
+| 教學 | `/race?learn=1&from=game`氮氣章实际click指令入口、選氮氣、出現commandDie；導覽章入口也可展開查看，無dashboard攔截。 |
+| 基線 | 使用0尺寸baseline probe量測01、+2、818596，各標籤／值均baseline88px；A1B2C3同基線。同font family、size、weight、line-height與数字variant，非只比較bounding box中心。 |
+| 專用浮層 | 未知危險hover文本只揭露公開資訊，200%提示可移入閱讀並Escape關閉；1280／640／390的前端事件fixture在賽道與視窗交集內，略過按鈕實際可點。此項是定位fixture，並非本批實玩觸發事件。 |
+| 終點短演出 | 查到舞台捲出視窗時舊absolute演出也跟著不可見；整合agent新增共用 `UIPopover.bindOverlay`。本遊戲以同一helper按可見舞台交集置中，不足時改視窗中央，保留原進場動畫；640×360／390、scroll／resize與200%長文字fixture均可見，長內容344px局部捲動、略過至少44px並實際可點。 |
+| 碰撞／射擊 | 原前端派送fixture再驗側欄底693.8／702.8px、頁面高720，保留／重擲／射擊／略過四項派送正確；主按鈕44px，無JS錯誤。 |
+| 回歸 | 41/41相關測試通過，含新增事件viewport交集／scroll／resize及車旁上方空間測試；前端語法與diff檢查通過。 |
+
+截圖及DOM報告在忽略目錄 `work/essential-race-1280.jpg`、`work/essential-game-ui-report.json`、`work/race-popup-detail-report.json`、`work/desktop-race-phase-metrics.json`。本機背景測試房最後離席清除，未操作前景、commit、push或部署；整合版本與正式站驗收由主agent另記。

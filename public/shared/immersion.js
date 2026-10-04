@@ -19,6 +19,7 @@ window.GameImmersion={mount(prefix,{alwaysAnimate=false,focusDuration=720}={}){
  volumeSlider.oninput=()=>{volume=Number(volumeSlider.value)/100;try{localStorage.setItem('ah-'+prefix+'-volume',String(volume));}catch{}for(const clip of clips)clip.volume=volume;};
  replayButton.onclick=()=>startFocus(items);
  skipButton.onclick=stopFocus;
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!document.querySelector('dialog[open]'))stopFocus();});
  if(!alwaysAnimate)window.matchMedia?.('(prefers-reduced-motion: reduce)')?.addEventListener?.('change',()=>{if(!allowsMotion())stopFocus();update();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){stopFocus();stopSound();}});
  update();return {allowsMotion,prepareFocus,startFocus,stopFocus,playSound};

@@ -125,3 +125,15 @@ body[data-game-kind].ui-large-text .room-sidebar #players{min-height:4rem;max-he
 body[data-game-kind].ui-large-text .room-action-dock.in-sidebar :is(.room-leave,.host-manage,.shared-expression-menu summary){height:auto;min-height:var(--ui-control-height)}
 body[data-game-kind].ui-large-text .shared-emoji-picker{grid-template-columns:repeat(3,var(--ui-control-height))}
 @media(prefers-reduced-motion:reduce){body[data-game-kind] button.is-pending::after{animation:none}}
+body[data-game-kind="poker"] #codeLabel{font-family:var(--ui-font-family);font-size:var(--ui-text-body);line-height:1.5;font-variant-numeric:lining-nums tabular-nums;letter-spacing:normal;vertical-align:baseline}
+body[data-game-kind="poker"] .room-game-info h2{display:block;margin:0 0 var(--ui-space-2);font-size:var(--ui-text-body);line-height:1.5}
+/* Keep the music opener in the utility row so it cannot cover a player's score. */
+body[data-game-kind] .room-action-dock.in-sidebar{gap:8px}
+body[data-game-kind] .room-action-dock.in-sidebar :is(.room-leave,.host-manage,.shared-expression-menu summary){padding-inline:5px;gap:4px}
+body[data-game-kind] .room-music-slot{flex:0 0 var(--ui-control-height);width:var(--ui-control-height);height:var(--ui-control-height)}
+body[data-game-kind] .room-music-slot:has(.table-music[hidden]){display:none}
+body[data-game-kind] .room-music-slot .table-music.collapsed{position:static;width:100%;max-width:none;min-height:var(--ui-control-height);border:0;border-radius:8px;box-shadow:inset 0 0 0 1px #667859}
+body[data-game-kind] .room-music-slot .table-music.collapsed header{height:var(--ui-control-height)}
+body[data-game-kind] .room-music-slot .table-music.collapsed #music-expand{width:100%;height:var(--ui-control-height);min-height:var(--ui-control-height)}
+body[data-game-kind] .immersion-spotlight strong{min-height:0;flex:1 1 auto;overflow:auto;overflow-wrap:anywhere}
+body[data-game-kind] .immersion-spotlight button{flex:none;min-height:var(--ui-control-height);position:sticky;bottom:0;z-index:1}

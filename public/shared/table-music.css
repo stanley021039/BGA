@@ -8,6 +8,8 @@
 .game-room .table-music:not(.collapsed){bottom:64px;max-height:calc(100dvh - 80px);overflow:auto}
 .table-music header{height:auto;box-sizing:border-box;background:transparent;letter-spacing:normal}
 .table-music.collapsed header{height:36px}
+.table-music:not(.collapsed){z-index:120}
+.table-music:not(.collapsed)>header{position:sticky;top:-12px;z-index:1;background:#18271e;padding-block:4px}
 /* Game-only size/focus contract. Music stays dark in light game rooms. */
 body[data-game-kind] .table-music{--ui-focus:#f0c784;--ui-error:#ffc2b0;--ui-muted:#bdc8bd;max-height:calc(100dvh - 80px);font:var(--ui-text-body)/1.5 var(--ui-font-family)}
 body[data-game-kind] .table-music :is(button,select){font-size:var(--ui-text-body)}

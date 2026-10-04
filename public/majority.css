@@ -61,7 +61,8 @@
 /* Desktop game stage and explicit action slot. */
 .shell { max-width:1600px; padding:0 24px }
 #roomTag { font-size:var(--ui-text-small,.875rem) }
-.play-layout { --ui-sidebar-height:calc(100dvh - 160px); grid-template-columns:minmax(0,1fr) 320px; gap:24px; margin:8px 0; align-items:start }
+.play-layout { --ui-sidebar-height:calc(100dvh - 160px); grid-template-columns:minmax(0,1fr) 320px; column-gap:24px; row-gap:12px; margin:8px 0 0; align-items:start }
+.play-layout.room-layout:has(#gameSidebar) { --room-sidebar-width:360px; row-gap:12px }
 .play-layout main { min-width:0; min-height:0 }
 .play-layout .card { padding:16px; border-radius:16px }
 .play-layout h1 { font-size:var(--ui-text-page,1.75rem); line-height:1.5; margin:0 0 12px }
@@ -79,17 +80,22 @@
 .play-layout label { margin:8px 0 4px }
 .play-layout .banner { padding:12px; margin:12px 0 }
 #gameActions { display:grid; gap:12px }
+.play-layout .game-action-slot { gap:8px }
+#gameActions:has(.merge-controls) { gap:8px }
 #gameActions h2,#gameActions p { margin:0 }
 #gameActions .button { width:100% }
 #gameActionFeedback { min-height:21px; font-size:var(--ui-text-small,.875rem); margin:0 }
+#gameActionFeedback:empty { display:none }
 .action-progress { display:flex; justify-content:space-between; gap:12px; font-size:var(--ui-text-small,.875rem) }
 #timer { min-width:7ch; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap }
 .merge-controls { display:grid; grid-template-columns:1fr 1fr; gap:8px 12px }
-.merge-controls label { min-width:0; font-size:var(--ui-text-small,.875rem) }
+.merge-controls label { min-width:0; margin:0; font-size:var(--ui-text-small,.875rem) }
+.merge-controls select { padding:8px 12px; min-height:var(--ui-control-height,2.75rem); line-height:1.5 }
 .merge-controls button,.merge-controls p { grid-column:1/-1 }
 .review-actions { display:grid; grid-template-columns:1fr 1fr; gap:12px }
 .review-actions button { min-width:0; padding:8px }
 #mergeHint { min-height:21px; font-size:var(--ui-text-small,.875rem) }
+#mergeHint:empty { display:none }
 .end-answering { font-size:var(--ui-text-small,.875rem) }
 .end-answering summary { min-height:var(--ui-control-height,2.75rem); cursor:pointer; display:flex; align-items:center }
 .question-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:12px 0 }
@@ -115,8 +121,6 @@
 .answer-stage .result-title h3 { font-size:var(--ui-text-section,1.25rem); overflow-wrap:anywhere }
 .group-player { font-size:var(--ui-text-body,1rem); gap:8px; padding:4px 8px; min-height:36px }
 .group-player-avatar { width:28px; height:28px }
-.score-details { margin-top:12px }
-.score-details summary { min-height:var(--ui-control-height,2.75rem); display:flex; align-items:center; cursor:pointer; font-size:var(--ui-text-body,1rem) }
 .round-scores { max-height:260px; overflow:auto }
 .round-score,.round-score small { font-size:var(--ui-text-body,1rem) }
 .round-score { padding:8px 0 }
@@ -124,15 +128,17 @@
 #socialBar { gap:8px; margin:0; flex-wrap:nowrap }
 #socialBar .button { min-height:var(--ui-control-height,2.75rem); padding:8px 12px; font-size:var(--ui-text-body,1rem) }
 #queueCount { font-size:var(--ui-text-small,.875rem) }
-.play-layout .player-list-panel { margin-top:12px }
-.play-layout .player-list-panel summary { cursor:pointer; min-height:var(--ui-control-height,2.75rem); list-style:none }
-.play-layout .player-list-panel summary::-webkit-details-marker { display:none }
-.play-layout .player-list-panel summary h2 { font-size:var(--ui-text-body,1rem) }
-.play-layout .player-list-panel summary #count::after { content:" ▾" }
-.play-layout .player-list-panel[open] summary #count::after { content:" ▴" }
-.play-layout .player-list-panel #players { max-height:208px }
-#prepareDialog { width:min(1000px,94vw); max-height:90dvh; padding:24px; font-size:var(--ui-text-body,1rem) }
-#prepareDialog h2 { font-size:var(--ui-text-page,1.75rem); padding-right:80px }
+#gameSidebar { height:auto; max-height:none; min-height:0; padding-bottom:8px }
+.game-roster { grid-column:1/-1; padding:12px; border:1px solid var(--room-border,var(--line)); border-radius:12px; background:var(--room-surface,var(--paper)); color:var(--room-text,var(--ink)) }
+.game-roster .aside-head { margin-bottom:8px }
+.game-roster .aside-head h2 { flex:1 }
+.play-layout .game-roster .aside-head h2 { font-size:var(--ui-text-body,1rem); margin:0 }
+.game-roster #count { font-size:var(--ui-text-small,.875rem) }
+.game-roster #players { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; min-height:0; max-height:none; overflow:visible }
+.game-roster #players .room-player { display:grid; grid-template-columns:32px minmax(0,1fr) auto; gap:12px; padding:8px; min-width:0; border:1px solid var(--room-border,var(--line)); border-radius:8px }
+.game-roster #players .room-player-avatar { width:32px; height:32px; min-width:32px }
+.play-layout .game-roster .score-legend { margin:0; font-size:var(--ui-text-small,.875rem); color:var(--room-muted,var(--muted)) }
+#prepareDialog { width:min(1000px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); padding:0; font-size:var(--ui-text-body,1rem); overscroll-behavior:contain }
 #prepareDialog h3 { font-size:var(--ui-text-section,1.25rem) }
 #prepareDialog .small,#prepareDialog small { font-size:var(--ui-text-small,.875rem) }
 #prepareDialog button,#prepareDialog input,#prepareDialog select,#prepareDialog textarea { font-size:var(--ui-text-body,1rem); min-height:var(--ui-control-height,2.75rem) }
@@ -142,19 +148,33 @@
 #ownQueue { max-height:180px; overflow:auto }
 .prepare-feedback { min-height:24px; margin:8px 0; font-size:var(--ui-text-small,.875rem) }
 .play-layout .setting-details summary { min-height:var(--ui-control-height,2.75rem); cursor:pointer; display:flex; align-items:center; font-size:var(--ui-text-small,.875rem) }
+dialog#rules { padding:0; width:min(650px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overscroll-behavior:contain }
+.game-dialog-header { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--paper) }
+.game-dialog-header h2 { margin:0; font-size:var(--ui-text-section,1.25rem); line-height:1.5 }
+.game-dialog-header .close { float:none; flex:none; width:var(--ui-control-height,2.75rem); min-height:var(--ui-control-height,2.75rem); padding:8px }
+.game-dialog-body { padding:16px; overflow-wrap:anywhere }
+.game-dialog-body :is(p,li,button,input,select,textarea) { font-size:var(--ui-text-body,1rem) }
+.game-dialog-body :is(.small,.eyebrow) { font-size:var(--ui-text-small,.875rem) }
+.game-popover-panel { padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--paper); color:var(--ink); box-shadow:0 8px 28px #0002; font-size:var(--ui-text-body,1rem) }
+.game-popover-panel p { margin:0 0 12px; font-size:var(--ui-text-body,1rem) }
+.game-popover-panel .button { min-height:var(--ui-control-height,2.75rem); font-size:var(--ui-text-body,1rem); padding:8px 12px; width:100% }
+.own-answer { margin:8px 0 0; overflow-wrap:anywhere }
+@media(max-width:600px) { #prepareDialog .fields { grid-template-columns:1fr } }
 body.ui-large-text .play-layout { grid-template-columns:1fr }
 body.ui-large-text .play-layout main { max-height:none; overflow:visible }
+body.ui-large-text #gameSidebar { min-height:0 }
+body.ui-large-text .game-roster #players { grid-template-columns:repeat(2,minmax(0,1fr)) }
 body.ui-large-text .answer-stage-groups { max-height:none; overflow:visible }
 @media(min-width:1001px) and (min-height:680px) {
- .play-layout main { max-height:calc(100dvh - 160px); overflow:auto; scrollbar-gutter:stable }
-}
-@media(min-width:1001px) and (max-height:800px) {
- .play-layout .player-list-panel #players { max-height:105px }
+ .play-layout main { max-height:clamp(300px,calc(100dvh - 400px),540px); overflow:auto; scrollbar-gutter:stable }
 }
 @media(max-width:1000px) {
  .play-layout { grid-template-columns:1fr }
+ .play-layout.room-layout:has(#gameSidebar) { grid-template-columns:1fr }
  .play-layout main { max-height:none; overflow:visible }
  .play-layout aside { padding:16px; border:0 }
+ #gameSidebar { min-height:0 }
+ .game-roster #players { grid-template-columns:repeat(2,minmax(0,1fr)) }
  .question-list,.answer-stage-groups { grid-template-columns:repeat(2,minmax(0,1fr)) }
 }
 @media(max-width:600px) {
@@ -162,4 +182,7 @@ body.ui-large-text .answer-stage-groups { max-height:none; overflow:visible }
  .question-list,.answer-stage-groups,.answer-grid.three { grid-template-columns:1fr }
  .answer-grid .answer { min-height:100px }
  .play-layout .fields { grid-template-columns:1fr }
+ .game-roster #players { grid-template-columns:1fr }
+ body.ui-large-text .game-roster #players { grid-template-columns:1fr }
+ .game-roster .aside-head { flex-wrap:wrap }
 }

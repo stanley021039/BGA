@@ -36,7 +36,8 @@ dialog{border:1px solid var(--line);border-radius:18px;background:var(--paper);m
 /* Desktop task panels replace the previous per-player micro-sizing rules. */
 .gift-shell { max-width:1600px; padding:0 24px }
 #roomTag { font-size:var(--ui-text-small,.875rem) }
-.gift-layout { --ui-sidebar-height:calc(100dvh - 160px); gap:24px; margin:8px 0; grid-template-columns:minmax(0,1fr) 320px; align-items:start }
+.gift-layout { --ui-sidebar-height:calc(100dvh - 160px); column-gap:24px; row-gap:12px; margin:8px 0; grid-template-columns:minmax(0,1fr) 320px; align-items:start }
+.gift-layout.room-layout:has(#gameSidebar) { --room-sidebar-width:360px; row-gap:12px }
 .gift-layout main { min-width:0; min-height:0 }
 .gift-layout aside { min-width:0 }
 .gift-layout .card { padding:16px; border-radius:16px }
@@ -55,19 +56,23 @@ dialog{border:1px solid var(--line);border-radius:18px;background:var(--paper);m
 .gift-layout .room-settings { display:grid; grid-template-columns:1fr 1fr; gap:16px }
 .gift-layout .room-settings label { font-size:var(--ui-text-small,.875rem) }
 .gift-layout .banner { padding:12px; margin:12px 0 }
-#gameActions { display:grid; gap:12px }
+#gameActions { display:grid; gap:8px }
+.gift-layout .game-action-slot { gap:8px }
 #gameActions h2,#gameActions p { margin:0 }
-.gift-task-progress { display:grid; gap:12px }
-.gift-task-progress>div { display:grid; grid-template-columns:1fr 136px; gap:8px; align-items:center }
-.gift-task-progress span { display:grid; font-size:var(--ui-text-body,1rem) }
+.gift-layout #gameActions h2 { font-size:var(--ui-text-body,1rem) }
+.gift-task-progress { display:grid; grid-template-columns:1fr 1fr; gap:12px }
+.gift-task-progress>div { display:grid; grid-template-columns:1fr; gap:8px; align-items:center }
+.gift-task-progress span { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:var(--ui-text-body,1rem) }
 .gift-task-progress b { font-size:var(--ui-text-small,.875rem); font-weight:600; font-variant-numeric:tabular-nums }
 #gameActionFeedback { min-height:21px; font-size:var(--ui-text-small,.875rem); margin:0 }
+#gameActionFeedback:empty { display:none }
 .choice-panel-tabs { display:flex; gap:12px; margin-bottom:12px }
 .choice-panel-tabs button { flex:1; padding:8px 16px; border:1px solid var(--plum); border-radius:10px; background:#fff; color:var(--plum); font-size:var(--ui-text-body,1rem) }
 .choice-panel-tabs [aria-pressed=true] { background:var(--plum); color:white }
 .choice-section { margin:0 }
 .choice-section>.eyebrow { display:none }
 .choice-section .sub { font-size:var(--ui-text-small,.875rem); margin:4px 0 8px }
+.choice-section :is(h2,.sub) { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
 .recipient-tabs { display:flex; gap:8px; margin:8px 0 12px; overflow-x:auto; overscroll-behavior-x:contain; padding:0 0 4px }
 .recipient-tabs button { flex:none; min-width:112px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:8px 12px; border:1px solid #aa899f; border-radius:8px; background:white; color:var(--plum); font-size:var(--ui-text-body,1rem); line-height:1.5 }
 .recipient-tabs [aria-pressed=true] { background:var(--plum); color:#fff }
@@ -82,9 +87,14 @@ dialog{border:1px solid var(--line);border-radius:18px;background:var(--paper);m
 .choice-badge { font-size:var(--ui-text-small,.875rem); line-height:1.5; min-height:21px; margin:0 }
 .gift-choice.selected { border-color:var(--plum); box-shadow:inset 0 0 0 1px var(--plum) }
 .choice-status { margin:8px 0 0; font-size:var(--ui-text-small,.875rem); min-height:21px }
-.like-order { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:12px }
-.like-slot { display:grid; gap:4px; padding:8px 12px; font-size:var(--ui-text-small,.875rem); min-width:0 }
-.like-slot small { font-size:var(--ui-text-small,.875rem) }
+.choice-summaries { display:grid; grid-template-columns:1fr; gap:16px; padding:12px 16px; margin-bottom:12px; background:var(--paper); border:1px solid var(--line); border-radius:12px }
+.gift-layout .choice-summaries h3 { font-size:var(--ui-text-body,1rem); margin:0 0 8px }
+.choice-summaries dl { display:grid; gap:8px 12px; margin:0; min-width:0 }
+.wish-summary { grid-template-columns:repeat(4,minmax(0,1fr)) }
+.choice-summaries dl>div { min-width:0 }
+.choice-summaries dt { font-size:var(--ui-text-small,.875rem); color:var(--muted) }
+.choice-summaries dd { margin:0; font-size:var(--ui-text-body,1rem); line-height:1.5; overflow-wrap:anywhere }
+.wish-summary .filled dd { color:var(--plum); font-weight:600 }
 .locked { margin:12px 0; padding:16px }
 .locked ul,.locked ol { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 24px; padding-left:24px }
 .delivery-stage { text-align:left }
@@ -111,36 +121,55 @@ dialog{border:1px solid var(--line);border-radius:18px;background:var(--paper);m
 .result-score meter { grid-column:1/-1; display:block; width:100%; height:10px }
 .result-tabs { grid-template-columns:repeat(4,minmax(0,1fr)) }
 .result-details { margin-top:12px }
-.result-details summary { cursor:pointer; min-height:var(--ui-control-height,2.75rem); display:flex; align-items:center; font-size:var(--ui-text-body,1rem) }
+.result-details h3 { font-size:var(--ui-text-body,1rem) }
 .reveal-groups { max-height:280px; overflow:auto; scrollbar-gutter:stable }
 .reveal-group { padding:12px; margin:0 }
 .reveal-entry { font-size:var(--ui-text-body,1rem); padding:8px 0 }
 .reveal-entry small { font-size:var(--ui-text-small,.875rem) }
 .gift-motion-off .delivery-gift { animation:none }
-.gift-layout .player-list-panel { margin-top:12px }
-.gift-layout .player-list-panel summary { cursor:pointer; min-height:var(--ui-control-height,2.75rem); list-style:none }
-.gift-layout .player-list-panel summary::-webkit-details-marker { display:none }
-.gift-layout .player-list-panel summary h2 { font-size:var(--ui-text-body,1rem) }
-.gift-layout .player-list-panel summary #count::after { content:" ▾" }
-.gift-layout .player-list-panel[open] summary #count::after { content:" ▴" }
+#gameSidebar { height:auto; max-height:none; min-height:0 }
+.game-roster { grid-column:1/-1; padding:8px; border:1px solid var(--room-border,var(--line)); border-radius:12px; background:var(--room-surface,var(--paper)); color:var(--room-text,var(--ink)) }
+.game-roster .aside-head { margin-bottom:8px }
+.game-roster .aside-head h2 { flex:1 }
+.gift-layout .game-roster .score-legend { display:flex; gap:12px; margin:0 }
+.gift-layout .game-roster .aside-head h2 { font-size:var(--ui-text-body,1rem); margin:0 }
+.game-roster #count { font-size:var(--ui-text-small,.875rem) }
+.game-roster #players { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; min-height:0; max-height:none; overflow:visible }
+.game-roster #players .room-player { display:grid; grid-template-columns:32px minmax(0,1fr) auto; gap:4px 12px; padding:8px; min-width:0; border:1px solid var(--room-border,var(--line)); border-radius:8px }
+.game-roster #players .room-player-avatar { width:32px; height:32px; min-width:32px }
+.game-roster #players .player-private-gift { display:block; grid-column:1/-1; font-size:var(--ui-text-body,1rem); line-height:1.5; overflow-wrap:anywhere; color:var(--plum) }
+.game-roster #players .roster-player-status { grid-column:1/-1; font-size:var(--ui-text-small,.875rem); line-height:1.5; overflow-wrap:anywhere; color:var(--room-muted,var(--muted)) }
 .gift-layout .score-legend { font-size:var(--ui-text-small,.875rem); margin-bottom:8px }
-.gift-layout .player-list-panel #players { max-height:208px }
 .gift-layout .setting-details summary { min-height:var(--ui-control-height,2.75rem); cursor:pointer; display:flex; align-items:center; font-size:var(--ui-text-small,.875rem) }
+dialog#rules { padding:0; width:min(640px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overscroll-behavior:contain }
+.game-dialog-header { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--paper) }
+.game-dialog-header h2 { margin:0; font-size:var(--ui-text-section,1.25rem); line-height:1.5 }
+.game-dialog-header .close { float:none; flex:none; width:var(--ui-control-height,2.75rem); min-height:var(--ui-control-height,2.75rem); padding:8px }
+.game-dialog-body { padding:16px; overflow-wrap:anywhere }
+.game-dialog-body :is(p,li,button,input,select,textarea) { font-size:var(--ui-text-body,1rem) }
+.game-dialog-body :is(.small,.eyebrow) { font-size:var(--ui-text-small,.875rem) }
+.game-popover-panel { padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--paper); color:var(--ink); box-shadow:0 8px 28px #0002; font-size:var(--ui-text-body,1rem) }
+.game-popover-panel p { margin:0 0 12px; font-size:var(--ui-text-body,1rem) }
+.game-popover-panel .button { min-height:var(--ui-control-height,2.75rem); font-size:var(--ui-text-body,1rem); padding:8px 12px; width:100% }
 body.ui-large-text .gift-layout { grid-template-columns:1fr }
 body.ui-large-text .gift-layout main { max-height:none; overflow:visible }
+body.ui-large-text .choice-summaries { position:static }
+body.ui-large-text #gameSidebar { min-height:0 }
+body.ui-large-text .game-roster #players { grid-template-columns:repeat(2,minmax(0,1fr)) }
 body.ui-large-text .choice-grid { max-height:none; overflow:visible }
 body.ui-large-text .gift-task-progress>div { grid-template-columns:minmax(0,1fr) minmax(220px,320px) }
 @media(max-width:800px) { body.ui-large-text .gift-task-progress>div { grid-template-columns:1fr } }
 @media(min-width:1001px) and (min-height:680px) {
- .gift-layout main { max-height:calc(100dvh - 160px); overflow:auto; scrollbar-gutter:stable }
-}
-@media(min-width:1001px) and (max-height:800px) {
- .gift-layout .player-list-panel #players { max-height:105px }
+ .gift-layout main { max-height:clamp(300px,calc(100dvh - 420px),560px); overflow:auto; scrollbar-gutter:stable }
+ .choice-summaries { position:sticky; top:0; z-index:1; background:var(--paper) }
 }
 @media(max-width:1000px) {
  .gift-layout { grid-template-columns:1fr }
+ .gift-layout.room-layout:has(#gameSidebar) { grid-template-columns:1fr }
  .gift-layout main { max-height:none; overflow:visible }
  .gift-layout aside { padding:16px; border:0 }
+ #gameSidebar { min-height:0 }
+ .game-roster #players { grid-template-columns:repeat(2,minmax(0,1fr)) }
  .choice-grid,.like-grid { max-height:none; overflow:visible; padding:0 }
  .delivery-gifts,.result-totals { grid-template-columns:repeat(2,minmax(0,1fr)) }
 }
@@ -150,5 +179,9 @@ body.ui-large-text .gift-task-progress>div { grid-template-columns:minmax(0,1fr)
  .gift-choice { grid-template-columns:36px minmax(0,1fr); gap:4px 8px; padding:8px }
  .choice-art,.choice-art img { width:36px; height:36px }
  .gift-layout .room-settings,.locked ul,.locked ol { grid-template-columns:1fr }
- .like-order { grid-template-columns:repeat(2,minmax(0,1fr)) }
+ .choice-summaries { grid-template-columns:1fr }
+ .wish-summary { grid-template-columns:repeat(2,minmax(0,1fr)) }
+ .game-roster #players { grid-template-columns:1fr }
+ body.ui-large-text .game-roster #players { grid-template-columns:1fr }
+ .game-roster .aside-head { flex-wrap:wrap }
 }

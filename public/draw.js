@@ -15,7 +15,7 @@ function toast(message){$('#toast').textContent=message;$('#toast').hidden=false
 async function api(route,data){return RoomApi.request(route,data,{code,room:'draw',session,onKicked:()=>{RoomHost.kicked(session);session=null;stream?.close();}});}
 function save(result){session=result;code=result.code;localStorage.setItem('ah-draw',JSON.stringify(result));localStorage.setItem('ah-draw:'+code,JSON.stringify(result));history.replaceState(null,'','/draw/'+code);}
 function nameOf(id){return state?.players.find(player=>player.id===id)?.name||'朋友';}
-function playerRow(player){return GameShell.playerRow(player,{me:state.me,status:(player.id===state.presenterId?'本輪畫者 · ':'')+(player.waitingForNextRound?'下輪加入 · ':'')+(player.online?'在線':'暫時離線')});}
+function playerRow(player){return GameShell.playerRow(player,{me:state.me,status:player.waitingForNextRound?'下輪加入':player.id===state.presenterId?'本輪畫者':state.guessedIds?.includes(player.id)?'已猜中':player.online?'在線':'暫時離線'});}
 function options(group,choices,current,inputName){return `<fieldset><legend>${group}</legend><div class="option-row">${choices.map(([value,label])=>`<label><input type="radio" name="${inputName}" value="${value}" ${String(current??'')===value?'checked':''}><span>${label}</span></label>`).join('')}</div></fieldset>`;}
 function entry(){
  $('#stage').innerHTML=`<div class="card hero"><div class="hero-mark">✎</div><span class="eyebrow">DRAW TOGETHER</span><h1>畫一筆，<br>讓朋友猜一猜。</h1><p id="identity">將以你的角色名稱入座</p><form id="enterForm">${code?`<p>加入房間 <b>${esc(code)}</b></p><button class="button wide">加入這一桌 →</button>`:`<div class="entry-topic">${options('這桌畫什麼？',topicChoices,'all','topic')}</div><button class="button wide">開一桌你畫我猜 →</button>`}</form></div>`;
@@ -233,6 +233,7 @@ window.GameUI?.decorateButton($('#closeHelp'),'close',{iconOnly:true,label:'關�
 
 for(const button of $('#tools').querySelectorAll('[data-tool],#undo,#clear')){const key=button.dataset.tool?button.dataset.tool+(button.dataset.filled==='true'?'Filled':''):button.id;button.innerHTML=StrokeCanvas.iconMarkup(key);if(button.dataset.tool)button.setAttribute('aria-pressed',String(button.classList.contains('selected')));}
 const swatches=$('#swatches');for(const color of colors){const button=document.createElement('button');button.type='button';button.style.background=color;button.title='選擇 '+color;button.setAttribute('aria-label','選擇 '+color);button.onclick=()=>{$('#color').value=color;$('#colorMenu').open=false;$('#colorMenu').querySelector('summary')?.focus();};swatches.append(button);}
+window.GameUI?.bindPopover?.($('#colorMenu'),swatches,{align:'start'});
 $('#colorMenu').addEventListener('keydown',event=>{if(event.key==='Escape'){$('#colorMenu').open=false;$('#colorMenu').querySelector('summary')?.focus();event.preventDefault();}});
 $('#size').oninput=event=>$('#sizeValue').textContent=event.target.value;
 $('#tools').addEventListener('click',event=>{const button=event.target.closest('[data-tool]');if(!button)return;tool=button.dataset.tool;filled=button.dataset.filled==='true';for(const item of $('#tools').querySelectorAll('[data-tool]')){item.classList.toggle('selected',item===button);item.setAttribute('aria-pressed',String(item===button));}});

@@ -28,7 +28,7 @@
  else if(drawAside){if(drawAside.querySelector('[data-game-action-slot]'))drawAside.append(panel);else{drawAside.querySelector('#players').after(panel);const guesses=document.querySelector('#guessChat');if(guesses)drawAside.append(guesses);}panel.classList.add('integrated','draw-ui');}
  else if(pokerAside){
   const controls=pokerAside.querySelector('#hostControls');controls.after(panel);panel.classList.add('integrated','poker-ui');
-  const info=document.createElement('details');info.className='room-game-info';const summary=document.createElement('summary');summary.textContent='牌桌資訊';info.append(summary);
+  const info=document.createElement('section');info.className='room-game-info';info.setAttribute('aria-label','牌桌資訊');const summary=document.createElement('h2');summary.textContent='牌桌資訊';info.append(summary);
   for(const item of [...pokerAside.children]){if(item===controls)break;info.append(item);}
   panel.after(info);panel.querySelector('.shared-players-heading').textContent='這桌的朋友';
   panel.querySelector('#shared-turn').before(panel.querySelector('.shared-players-heading'),panel.querySelector('#shared-players'));
@@ -37,7 +37,7 @@
   const controls=staticRaceControls||document.createElement('aside');
   if(!staticRaceControls){controls.className='race-controls';document.querySelector('.race-main').append(controls);for(const item of [raceCrews,document.querySelector('.dashboard'),document.querySelector('.race-feed'),document.querySelector('.race-immersion-controls')])if(item)controls.append(item);}
   controls.append(panel);
-  const feed=controls.querySelector('.race-feed');if(feed&&feed.tagName!=='DETAILS'){const radio=document.createElement('details');radio.className='race-feed';const summary=document.createElement('summary');summary.textContent='賽道事件紀錄';const entries=feed.querySelector('#feed');if(entries){radio.append(summary,entries);feed.replaceWith(radio);}}
+  const feed=controls.querySelector('.race-feed');if(feed&&!feed.hasAttribute('data-persistent')&&feed.tagName!=='DETAILS'){const radio=document.createElement('details');radio.className='race-feed';const summary=document.createElement('summary');summary.textContent='賽道事件紀錄';const entries=feed.querySelector('#feed');if(entries){radio.append(summary,entries);feed.replaceWith(radio);}}
   const sound=controls.querySelector('.race-immersion-controls'),heading=document.querySelector('.race-heading');if(sound&&heading)heading.append(sound);
   panel.classList.add('integrated','race-ui');
  }
@@ -47,11 +47,12 @@
   const toggle=panel.querySelector('#shared-toggle');toggle.className='room-interaction-toggle';toggle.textContent='表情／互動';panel.querySelector('#shared-turn').after(toggle);
   if(!sidebar.querySelector('.history-link')){const history=document.createElement('a');history.className='history-link';history.href='/history';history.textContent='對局歷史 ↗';panel.after(history);}
  }
- const toolsHost=sidebar||document.querySelector('.race-controls');if(toolsHost){dock.classList.add('in-sidebar');toolsHost.append(dock);}
+ const toolsHost=sidebar||document.querySelector('.race-controls');if(toolsHost){dock.classList.add('in-sidebar');toolsHost.append(dock);const music=document.querySelector('.table-music');if(music){const slot=document.createElement('div');slot.className='room-music-slot';slot.append(music);dock.append(slot);}}
  const arena=majorityAside?.previousElementSibling||giftAside?.previousElementSibling||drawAside?.previousElementSibling||document.querySelector('#game .play-area')||document.querySelector('.race-main')||document.body;
  const barrageLayer=document.createElement('div');barrageLayer.className='game-barrage-layer';barrageLayer.setAttribute('aria-hidden','true');
  arena.classList.add('game-barrage-host');arena.append(barrageLayer);
  const q=selector=>panel.querySelector(selector)||dock.querySelector(selector);
+ for(const [selector,container] of [['#raceSpotlight','.race-stage'],['#pokerSpotlight','.table-wrap']])window.UIPopover?.bindOverlay(document.querySelector(selector),document.querySelector(container));
  const expressionMenu=document.createElement('details');expressionMenu.className='shared-expression-menu';
  const expressionSummary=document.createElement('summary');expressionSummary.textContent='角色表情';window.GameUI?.decorateButton(expressionSummary,'users',{label:'角色表情'});
  const expressions=q('#shared-expressions');expressions.before(expressionMenu);expressionMenu.append(expressionSummary,expressions);
@@ -62,10 +63,12 @@
  const emojiPicker=document.createElement('div');emojiPicker.id='shared-emoji-picker';emojiPicker.className='shared-emoji-picker';emojiPicker.hidden=true;emojiPicker.setAttribute('role','group');emojiPicker.setAttribute('aria-label','emoji 彈幕選單');q('#shared-barrage').after(emojiPicker);
  const emoteButton=document.createElement('button');emoteButton.type='button';emoteButton.id='shared-emote-toggle';emoteButton.textContent='☺';emoteButton.setAttribute('aria-label','選擇 emoji 彈幕');emoteButton.setAttribute('aria-expanded','false');emoteButton.setAttribute('aria-controls','shared-emoji-picker');window.GameUI?.decorateButton(emoteButton,'emoji',{iconOnly:true,label:'選擇 emoji 彈幕'});q('#shared-barrage').append(emoteButton);
  function closeEmoji(restoreFocus=false){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');if(restoreFocus)emoteButton.focus();}
- emoteButton.onclick=()=>{if(!emojiPicker.hidden){closeEmoji();return;}expressionMenu.open=false;emojiPicker.hidden=false;emoteButton.setAttribute('aria-expanded','true');emojiPicker.querySelector('button:not(:disabled)')?.focus();};
+ window.UIPopover?.bindDetails(expressionMenu,expressions,{align:'start'});
+ const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',onClose:()=>closeEmoji()});
+ emoteButton.onclick=()=>{if(!emojiPicker.hidden){closeEmoji();return;}expressionMenu.open=false;emojiPicker.hidden=false;emoteButton.setAttribute('aria-expanded','true');emojiPopover?.sync();emojiPicker.querySelector('button:not(:disabled)')?.focus();};
  expressionMenu.addEventListener('toggle',()=>{if(expressionMenu.open)closeEmoji();});
  document.addEventListener('click',event=>{if(!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();if(expressionMenu.open&&!expressionMenu.contains(event.target))expressionMenu.open=false;});
- document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}else if(expressionMenu.open){expressionMenu.open=false;expressionSummary.focus();event.preventDefault();}});
+ document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}else if(expressionMenu.open){expressionMenu.open=false;expressionSummary.focus();event.preventDefault();}});
  fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiPicker.append(button);}}).catch(error=>{emojiPicker.textContent=error.message;});
  let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false,barrageRoom='',seenBarrages=new Set(),nextLane=0;
  function turnOf(s){
