@@ -25,14 +25,14 @@ class GiftRoom{
   this.players.push(player);if(!this.host)this.host=player.id;
   this.event('join',`${player.name} 加入房間`);return player;
  }
- kick(id,target){
+ kick(id,target,leaving=false){
   if(id!==this.host)throw Error('只有房主可以踢人');
   const player=this.player(target);
   if(!player||player.kicked)throw Error('找不到玩家');
   if(target===this.host)throw Error('不能踢出自己');
   player.kicked=true;delete this.assignments[target];delete this.rankings[target];
   for(const gifts of Object.values(this.assignments))delete gifts[target];
-  this.event('kick',`${player.name} 已被房主踢出`);
+  this.event(leaving?'leave':'kick',player.name+(leaving?' 已離開房間':' 已被房主踢出'));
   if(this.phase==='waiting'||this.phase==='finished')return;
   if(this.activePlayers().length<3){this.phase='finished';this.winner={ids:[],reason:'玩家不足，本局提前結束'};this.event('finish','玩家不足，本局提前結束');return;}
   if(this.phase==='choosing'&&this.readyToReveal())this.reveal();

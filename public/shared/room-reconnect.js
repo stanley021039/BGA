@@ -1,4 +1,10 @@
 window.RoomReconnect={
+ forget(code){
+  for(const key of ['ah-draw','ah-gift','ah-majority','ah-thunder','ah-session']){
+   localStorage.removeItem(key+':'+code);
+   try{if(JSON.parse(localStorage.getItem(key)||'null')?.code===code)localStorage.removeItem(key);}catch{localStorage.removeItem(key);}
+  }
+ },
  async restore(code,type,statusSelector){
   const status=document.querySelector(statusSelector);
   const key=type==='draw'?'ah-draw':type==='majority'?'ah-majority':type==='thunder'?'ah-thunder':type==='gift'?'ah-gift':'ah-session';
@@ -11,7 +17,7 @@ window.RoomReconnect={
     if(!response.ok){
      if(response.status===401){location.replace('/login?next='+encodeURIComponent(path+code));return null;}
      if(['NOT_SEATED','KICKED','ROOM_NOT_FOUND'].includes(result.code)){
-      location.replace('/?room='+code+'&game='+type);return null;
+      this.forget(code);location.replace(result.code==='ROOM_NOT_FOUND'?'/?closedRoom='+code+'&game='+type:'/?room='+code+'&game='+type);return null;
      }
      throw Error(result.error||'無法重新連線');
     }

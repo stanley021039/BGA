@@ -35,7 +35,7 @@ class ThunderRoom{
  note(text){this.log.unshift(text);this.log=this.log.slice(0,60);this.updated=Date.now();}
  event(kind,text,extra={}){this.events.push({id:++this.version,kind,text,...extra});this.events=this.events.slice(-12);this.note(text);}
  add(name,bot=false){if(this.phase!=='waiting')throw Error('比賽已開始，請等下一場或建立新房間');if(this.players.length===4)throw Error('主遊戲最多四支車隊');const p={id:randomUUID(),secret:randomUUID(),name:name.slice(0,16),bot,color:COLORS.find(color=>!this.players.some(p=>p.color===color)),lastSeen:Date.now(),out:false,dice:[],turns:0};this.players.push(p);if(!this.host)this.host=p.id;this.event('join',`${p.name} 加入車隊`);return p;}
- kick(id,target){if(id!==this.host)throw Error('只有房主可以踢人');const p=this.player(target);if(!p||p.kicked)throw Error('找不到玩家');if(target===this.host)throw Error('不能踢出自己');if(this.phase==='waiting'){this.players.splice(this.players.indexOf(p),1);this.event('kick',p.name+' 已被房主踢出');}else{p.kicked=true;p.bot=true;this.botAt=Date.now();this.event('kick',p.name+' 已被房主踢出，由電腦接手');}}
+ kick(id,target,leaving=false){if(id!==this.host)throw Error('只有房主可以踢人');const p=this.player(target);if(!p||p.kicked)throw Error('找不到玩家');if(target===this.host)throw Error('不能踢出自己');if(this.phase==='waiting'){this.players.splice(this.players.indexOf(p),1);this.event('kick',p.name+(leaving?' 已離開房間':' 已被房主踢出'));}else{p.kicked=true;p.bot=true;this.botAt=Date.now();this.event('kick',p.name+(leaving?' 已離開房間，由電腦接手':' 已被房主踢出，由電腦接手'));}}
  car(id){return this.cars.find(c=>c.id===id);}
  player(id){return this.players.find(p=>p.id===id);}
  label(c){return c.wreck?'殘骸':`${this.player(c.owner)?.name}的${SIZES[c.size]}車`;}

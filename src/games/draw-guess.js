@@ -29,13 +29,13 @@ class DrawGuessRoom{
   this.event('join',player.name+' 加入房間'+(player.waitingForNextRound?'，下一輪開始猜題':''));
   return player;
  }
- kick(id,target){
+ kick(id,target,leaving=false){
   if(id!==this.host)throw Error('只有房主可以踢人');
   const player=this.player(target);if(!player||player.kicked)throw Error('找不到玩家');
   if(target===this.host)throw Error('不能踢出自己');
   player.kicked=true;this.pendingArtists=this.pendingArtists.filter(item=>item!==target);
   this.participantIds=this.participantIds.filter(item=>item!==target);
-  this.event('kick',player.name+' 已被房主踢出');
+  this.event(leaving?'leave':'kick',player.name+(leaving?' 已離開房間':' 已被房主踢出'));
   if(this.phase==='waiting'||this.phase==='finished')return;
   if(this.activePlayers().length<2){this.finish('玩家不足，本局提前結束');return;}
   if(this.presenterId===target){this.reveal('畫者已離開');return;}

@@ -7,6 +7,7 @@ const {AchievementStore}=require('./achievements/store');
 const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
 const {startRoomScheduler}=require('./rooms/scheduler');
 const {reconnectPlayer}=require('./rooms/reconnect');
+const {leavePlayer,expireEmptyRooms}=require('./rooms/lifecycle');
 const {listRooms}=require('./rooms/listing');
 const {createLobby}=require('./rooms/lobby');
 const {HttpError,writeError}=require('./http/errors');
@@ -31,6 +32,8 @@ function createApp(config){
  const roomMusic=room=>{if(!musicRooms.has(room.code))musicRooms.set(room.code,new RoomMusic(Date.now,musicStore));return musicRooms.get(room.code);};
  const publishMusic=code=>{const state=musicRooms.get(code)?.snapshot();for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
  const lobby=createLobby();
+ const cleanupRoom=code=>{seats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);};
+ const expireRooms=()=>expireEmptyRooms({rooms,history,onDelete:cleanupRoom});
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
   for(const event of expressions)recent.set(event.playerId,event.image);
@@ -177,7 +180,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/history')return send(history.list());
  if(url.pathname.startsWith('/api/history/'))return send(history.read(url.pathname.split('/')[3]));
  if(url.pathname==='/api/info'){const addresses=Object.values(os.networkInterfaces()).flat().filter(x=>x.family==='IPv4'&&!x.internal).map(x=>`${protocol}://${x.address}:${port}`);const preferred=config.publicUrl||addresses.find(a=>a.includes('://26.'))||null;return send({preferred,addresses:config.publicUrl?[config.publicUrl,...addresses.filter(a=>a!==config.publicUrl)]:addresses});}
- if(url.pathname==='/api/rooms'&&req.method==='GET')return send({rooms:listRooms(rooms,seats,kickedUsers,user.id)});
+ if(url.pathname==='/api/rooms'&&req.method==='GET'){expireRooms();return send({rooms:listRooms(rooms,seats,kickedUsers,user.id)});}
  if(url.pathname==='/api/create'&&req.method==='POST'){
   if(rooms.size>=100)throw Error('房間數已達上限');
   if(!['poker','thunder','majority','gift','draw'].includes(data.type))throw new HttpError(400,'INVALID_GAME','不支援的遊戲');
@@ -193,12 +196,21 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   const p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
- if(!['/api/room-music','/api/room-music/events','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
+ if(!['/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
+ expireRooms();
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
  if(url.pathname==='/api/reconnect'&&req.method==='POST'){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker',reconnected:true});}
  if(url.pathname==='/api/join'&&req.method==='POST'){const previous=seats.get(room.code)?.get(user.id);if(previous){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker'});}const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=`/characters/${user.id}`;seats.get(room.code).set(user.id,p.id);return send({code:room.code,type:room.type||'poker'});}
  const p=resumeSeat(room,user);
+ if(url.pathname==='/api/leave'&&req.method==='POST'){
+  const result=history.transact(room,{action:'leave',source:'player',actor:p.id},()=>leavePlayer(room,p.id));
+  seats.get(room.code)?.delete(user.id);
+  for(const entry of drawStreams.get(room.code)||[])if(entry.userId===user.id)entry.res.end();
+  for(const entry of musicStreams.get(room.code)||[])if(entry.userId===user.id)entry.res.end();
+  if(result.deleted){history.interrupt(room,'最後一位玩家已離開房間');rooms.delete(room.code);cleanupRoom(room.code);}
+  return send({code:room.code,left:true,deleted:result.deleted});
+ }
  if(url.pathname==='/api/room-music'){
   if(req.method==='GET')return send(roomMusic(room).snapshot());
   if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
@@ -295,7 +307,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(closed)throw Error('Application has been closed');
   if(server.listening)return server.address();
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
-  stopScheduler=startRoomScheduler({rooms,history,onDelete:code=>{seats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);}});
+  stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom});
   submissions.recover();
   return server.address();
  }

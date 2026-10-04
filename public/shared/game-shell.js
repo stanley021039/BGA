@@ -2,7 +2,7 @@
  const panel=document.createElement('aside');
  panel.className='shared-game-ui';
  panel.hidden=true;
- panel.innerHTML='<div class="shared-head"><span>AFTERHOURS / ROOM</span><button id="shared-toggle" type="button" aria-expanded="false">表情／彈幕</button><a href="/" aria-label="返回遊戲大廳">離開畫面 ↗</a></div><div id="shared-turn" class="shared-turn" role="status" aria-live="polite">等待開局</div><h2 class="shared-players-heading">這一桌的角色</h2><div id="shared-players" class="shared-players"></div><h2 class="shared-expressions-heading">使用角色表情</h2><div id="shared-expressions" class="shared-expressions" aria-label="我的角色表情"></div><h2 class="shared-barrage-heading">文字彈幕</h2><form id="shared-barrage"><input name="message" maxlength="40" placeholder="輸入彈幕（最多 40 字）" aria-label="文字彈幕" required><button type="submit">發送</button></form><p id="shared-error" role="status"></p>';
+ panel.innerHTML='<div class="shared-head"><span>AFTERHOURS / ROOM</span><button id="shared-toggle" type="button" aria-expanded="false">表情／彈幕</button><a href="/" aria-label="返回遊戲大廳">離開房間 ↗</a></div><div id="shared-turn" class="shared-turn" role="status" aria-live="polite">等待開局</div><h2 class="shared-players-heading">這一桌的角色</h2><div id="shared-players" class="shared-players"></div><h2 class="shared-expressions-heading">使用角色表情</h2><div id="shared-expressions" class="shared-expressions" aria-label="我的角色表情"></div><h2 class="shared-barrage-heading">文字彈幕</h2><form id="shared-barrage"><input name="message" maxlength="40" placeholder="輸入彈幕（最多 40 字）" aria-label="文字彈幕" required><button type="submit">發送</button></form><p id="shared-error" role="status"></p>';
  const majorityAside=document.querySelector('.play-layout > aside');
  const giftAside=document.querySelector('.gift-layout > aside');
  const drawAside=document.querySelector('.draw-layout > aside');
@@ -18,6 +18,7 @@
   const history=sidebar.querySelector('.history-link');if(history)history.textContent='對局歷史 ↗';
  }
  const dock=document.createElement('div');dock.className='room-action-dock';dock.setAttribute('aria-label','房間工具');
+ const leaveLink=document.createElement('a');leaveLink.href='/';leaveLink.className='room-leave';leaveLink.textContent='離開房間';leaveLink.hidden=true;dock.append(leaveLink);
  const manage=document.querySelector('#managePlayers');if(manage)dock.append(manage);document.body.append(dock);
  if(majorityAside){majorityAside.querySelector('#players').after(panel);panel.classList.add('integrated','majority-ui');}
  else if(giftAside){giftAside.querySelector('#players').after(panel);panel.classList.add('integrated','gift-ui');}
@@ -79,6 +80,7 @@
  }
  function element(tag,className,text){const node=document.createElement(tag);node.className=className;node.textContent=text;return node;}
  function update(s){
+  leaveLink.hidden=false;
   if(window.RaceLesson)return;
   state=s;panel.hidden=false;if(!panel.classList.contains('integrated'))document.body.classList.add('has-game-shell');
   const current=s.type==='majority'||s.type==='draw'?s.presenterId:s.type==='thunder'?s.actor:s.type==='gift'?null:s.players[s.turn]?.id;
@@ -150,6 +152,17 @@
  q('#shared-barrage').onsubmit=async event=>{event.preventDefault();const input=q('#shared-barrage input'),message=input.value.trim();if(!message)return;if([...message].length>40){q('#shared-error').classList.remove('ok');q('#shared-error').textContent='文字彈幕最多 40 字';return;}if(await send({kind:'barrage',message},'文字彈幕已送出'))input.value='';};
  q('#shared-toggle').onclick=()=>{const expanded=panel.classList.toggle('expanded');q('#shared-toggle').setAttribute('aria-expanded',String(expanded));q('#shared-toggle').textContent=expanded?'收合互動':'表情／彈幕';};
  window.addEventListener('focus',()=>{if(state){nextLoad=0;loadExpressions();}});
+ let leaving=false;
+ document.addEventListener('click',async event=>{
+  const link=event.target.closest('a[href]');if(!state||!link||event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  const url=new URL(link.href);if(url.origin!==location.origin||url.pathname!=='/'||link.closest('.game-library-dialog'))return;
+  event.preventDefault();if(leaving)return;leaving=true;
+  try{
+   const response=await fetch('/api/leave',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code})});
+   const result=await response.json();if(!response.ok&&!['ROOM_NOT_FOUND','NOT_SEATED','KICKED'].includes(result.code))throw Error(result.error||'無法離開房間');
+   window.RoomReconnect?.forget(state.code);location.href=link.href;
+  }catch(error){q('#shared-error').textContent=error.message;leaving=false;}
+ });
  const library=document.createElement('dialog');library.className='game-library-dialog';library.innerHTML='<div class="library-dialog-head"><strong>新增題庫素材</strong><button type="button" aria-label="關閉題庫">關閉 ×</button></div><iframe title="新增題庫素材"></iframe>';document.body.append(library);
  library.querySelector('button').onclick=()=>library.close();
  document.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(!link)return;const url=new URL(link.href);if(url.origin!==location.origin||!['/gifts','/draw-words','/community'].includes(url.pathname))return;event.preventDefault();url.searchParams.set('embed','1');library.querySelector('iframe').src=url.pathname+url.search;library.showModal();});

@@ -12,6 +12,7 @@
   if(!response.ok){
    if(response.status===401&&session)location.replace('/login?next='+encodeURIComponent('/'+room+'/'+code));
    if(result.code==='KICKED'&&session)onKicked?.();
+   if(['ROOM_NOT_FOUND','NOT_SEATED'].includes(result.code)&&session){window.RoomReconnect?.forget(code);location.replace('/?closedRoom='+encodeURIComponent(code)+'&game='+(room==='race'?'thunder':room));}
    throw Error(result.error||'連線失敗');
   }
   return result;
