@@ -162,3 +162,9 @@ Chrome仍為原分頁2019458507，背景DOM操作，沒有提高視窗。測試�
 上述三項均已完成正式驗收，來源66b2091已部署shhuang.cc。Windows／Linux完整226/226，23份公開資源一致。原Chrome背景四隊實際開始後17骰的SVG點數與公開輔助名稱全部一致；確認後12車16骰及三個實際角色圖片完整顯示。正式1280×720頁高720、名單底685px，角色64×80，移動骰48px按鈕內保留32px骰面及間隔。圖例外框均1px #677259、底色#253022、高44px。手機390×844車隊卡片不橫溢，碰撞dialog358×571、確認166×44可見。
 
 證據：work/chrome-dice-artwork-prod.jpg、work/chrome-race-portrait-prod-1280.jpg及race-release-assets.json。備份pre-draw-guess-20261004T160337Z.sqlite，DB v12 integrity ok、7人，服務及tunnel active。封装SHA256 FABED6EF3F0DE32E8E4669148DF5B745230FE469E10C051D31E77D4664336489。臨時正式房5107E7清理後404，本機3104服務停止；Chrome尺寸已reset且保留第6章骰子教學，未置前。沒有push或MR。
+
+### 2026-10-05 道路事件文字閱讀時間
+
+賽道事件字卡的自動收合從2200ms改為3200ms，多停留一秒供閱讀；仍能手動略過。來源5aba6b3已部署shhuang.cc，本機事件／動作相關9/9、正式Linux226/226，23份公開資源一致。原Chrome背景實際輕型車駛入未知危險，觸發「危險揭露／動畫測試1的輕型車遇到泥地」：首次可見後2523ms仍顯示完整文字、3522ms已自動收合。證據work/chrome-race-event-hold-qa.json、work/chrome-race-event-hold-prod.jpg。
+
+備份pre-draw-guess-20261004T163133Z.sqlite；DB v12 integrity ok、7人，服務及tunnel active。封裝SHA256 0D733C881BAA9683D8D47C6CCF365B56FE8C97656DAE9D99C30F1A542F911639。兩個測試房C12553／5DD430收尾查詢404，Chrome仍在原分頁的第6章教學、正常1767×1196大小，未置前。未push或MR。
