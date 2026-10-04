@@ -54,7 +54,7 @@ body{background:#141714}.race-header{display:flex;gap:30px;align-items:center;pa
 
 /* Read-only teaching boards still expose terrain help; board actions stay guarded. */
 .lesson-readonly #track{pointer-events:auto}
-#trackTooltip{position:fixed;z-index:1000;pointer-events:auto;width:20rem;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;box-sizing:border-box;padding:13px 16px;border:1px solid #ad945c;border-radius:10px;background:#17231af5;box-shadow:0 8px 24px #0005;color:#ece3ce}
+#trackTooltip{position:fixed;z-index:1000;pointer-events:none;width:20rem;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;box-sizing:border-box;padding:13px 16px;border:1px solid #ad945c;border-radius:10px;background:#17231af5;box-shadow:0 8px 24px #0005;color:#ece3ce}
 #trackTooltip small{display:block;color:#aebca3;font-size:var(--ui-text-small,.875rem);margin-bottom:5px}
 #trackTooltip strong{display:block;color:#ffda98;font-size:var(--ui-text-body,1rem)}
 #trackTooltip p{font-size:var(--ui-text-small,.875rem);line-height:1.65;margin:7px 0 0}

@@ -77,6 +77,7 @@ $('#track').onclick=boardClick;$('#track').onkeydown=e=>{if(e.key==='Enter'||e.k
  let timer,leaveTimer,anchor=null;
  const terrain={R:['公路','進入花 1 點移動。全程行駛公路，可取得公路加速資格。'],O:['荒地','進入花 1 點移動。'],M:['泥地','進入花 2 點移動。'],X:['岩壁','進入就淘汰，不能用損傷槽抵擋。'],G:['毒液','進入花 1 點移動，並停止移動。'],V:['玻璃','進入花 1 點移動，再沿原方向滑行一格。'],J:['跳台','進入花 1 點移動。只能從正後方進入；其他方向進入會淘汰。'],F:['火焰','進入花 1 點移動，車輛會著火。'],S:['鹽灘','進入花 1 點移動，可取得公路骰加速資格（滑行除外）。']};
  function hide(){clearTimeout(timer);clearTimeout(leaveTimer);if(anchor)anchor.removeAttribute('aria-describedby');anchor=null;tip.hidden=true;}
+ function withinTip(e){const r=tip.getBoundingClientRect();return !tip.hidden&&e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;}
  window.hideTrackHover=hide;
  function cellAt(el){const car=el.dataset.car&&state?.cars.find(c=>c.id===el.dataset.car);return car?{x:car.x,y:car.y}:{x:Number(el.dataset.x),y:Number(el.dataset.y)};}
  function show(el){
@@ -92,16 +93,20 @@ $('#track').onclick=boardClick;$('#track').onkeydown=e=>{if(e.key==='Enter'||e.k
   tip.style.maxHeight=Math.max(0,height-16)+'px';
   const r=el.getBoundingClientRect(),w=tip.offsetWidth,hgt=tip.offsetHeight,preferred=r.right+12+w<=left+width-8?r.right+12:r.left-w-12;
   tip.style.left=Math.max(left+8,Math.min(preferred,left+width-w-8))+'px';
-  tip.style.top=Math.max(top+8,Math.min(r.top,top+height-hgt-8))+'px';
+  const positionTop=Math.max(top+8,Math.min(r.top,top+height-hgt-8));tip.style.top=positionTop+'px';
+  tip.style.maxHeight=Math.max(0,top+height-8-positionTop)+'px';
  }
- function enter(e){clearTimeout(leaveTimer);if(e.pointerType==='touch'||e.buttons)return;const el=e.target.closest?.('[data-x],[data-car]');if(el===anchor)return;hide();if(!el||!track.contains(el))return;anchor=el;timer=setTimeout(()=>show(el),500);}
+ function enter(e){clearTimeout(leaveTimer);if(e.pointerType==='touch'||e.buttons||withinTip(e))return;const el=e.target.closest?.('[data-x],[data-car]');if(el===anchor)return;hide();if(!el||!track.contains(el))return;anchor=el;timer=setTimeout(()=>show(el),500);}
  track.addEventListener('pointerover',enter);
- track.addEventListener('pointerout',e=>{if(anchor&&!anchor.contains(e.relatedTarget)&&!tip.contains(e.relatedTarget))leaveTimer=setTimeout(hide,180);});
- tip.addEventListener('pointerenter',()=>clearTimeout(leaveTimer));
- tip.addEventListener('pointerleave',e=>{if(!anchor?.contains(e.relatedTarget))hide();});
+ track.addEventListener('pointerout',e=>{if(anchor&&!anchor.contains(e.relatedTarget)&&!withinTip(e))leaveTimer=setTimeout(hide,180);});
+ track.addEventListener('pointerdown',hide);
+ document.addEventListener('pointermove',e=>{if(withinTip(e))clearTimeout(leaveTimer);else if(!tip.hidden&&!anchor?.contains(e.target)){clearTimeout(leaveTimer);leaveTimer=setTimeout(hide,180);}});
+ // The tooltip is transparent to clicks. Coordinate-based scrolling keeps long
+ // help readable without placing an interactive overlay over the next track cell.
+ document.addEventListener('wheel',e=>{if(!withinTip(e)||tip.scrollHeight<=tip.clientHeight)return;const delta=e.deltaY*(e.deltaMode===1?24:e.deltaMode===2?tip.clientHeight:1),next=Math.max(0,Math.min(tip.scrollHeight-tip.clientHeight,tip.scrollTop+delta));if(next===tip.scrollTop)return;tip.scrollTop=next;clearTimeout(leaveTimer);e.preventDefault();},{passive:false});
  track.addEventListener('focusin',enter);track.addEventListener('focusout',hide);
  document.addEventListener('scroll',e=>{if(e.target!==tip)hide();},true);
- document.addEventListener('keydown',e=>{if(e.key==='Escape')hide();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')hide();else if(!tip.hidden&&anchor?.contains(document.activeElement)&&['PageUp','PageDown'].includes(e.key)&&tip.scrollHeight>tip.clientHeight){tip.scrollTop+=tip.clientHeight*(e.key==='PageDown'?1:-1);e.preventDefault();}});
  window.addEventListener?.('blur',hide);
  window.addEventListener?.('resize',hide);
 })();

@@ -65,3 +65,5 @@ UIPopover.bind(button, panel, { align: 'end', onClose: closeMenu });
 持續「已連線」不顯示，失敗／重試文字才顯示。頁首／牌桌房號使用系統字體及 lining／tabular 數字；牌面有語意的字體不受此規則覆寫。
 
 `UIPopover.bindOverlay(panel, container)` 用於賽車／撲克結束演出，以舞台與 viewport 交集置中；交集過小則置中於 viewport，長內容內捲、確認控制保留。保留 translate 的進場動畫。動態 renderer 移除節點時清理 observers／frames，避免重複 binding。原生 dialog 開啟時共用 Escape handler 不攔截，dialog 的關閉及返焦優先。
+
+賽道地形 tooltip 是純閱讀提示，`pointer-events:none`，不能攔截相鄰路格或車輛。pointerdown只收提示，原click正常處理；長內容在提示矩形範圍內支援wheel與PageUp／PageDown，Escape關閉。定位後以viewport剩餘高度限制內容，仍維持8px邊界。
