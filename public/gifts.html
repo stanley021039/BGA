@@ -6,13 +6,10 @@
   <title>禮物題庫｜Afterhours</title>
   <link rel="stylesheet" href="/gift.css">
   <link rel="stylesheet" href="/gifts.css">
-</head>
+<link rel="stylesheet" href="/shared/site-header.css"></head>
 <body>
   <div class="gift-shell">
-    <header class="gift-header">
-      <a class="gift-brand" href="/"><span class="brand-mark">✦</span><span>送禮達人<small>AFTERHOURS / GIFT CLUB</small></span></a>
-      <nav><a class="quiet" href="/community?tab=questions">同頻題庫</a><a class="quiet" href="/">回大廳</a></nav>
-    </header>
+    <header class="site-header" data-site-header aria-label="網站導覽"><nav class="site-links" aria-label="主要導覽" hidden><a href="/community?tab=issues">留言板</a><details><summary>遊戲題庫</summary><div class="site-submenu"><a href="/community?tab=questions">同頻俱樂部</a><a href="/gifts">送禮達人</a></div></details><a href="/history">對局歷史</a></nav><a class="site-title" href="/">302捉猶團</a><div class="site-account" hidden><button id="site-account-button" class="site-avatar-button" type="button" aria-label="帳號選單" aria-expanded="false" aria-controls="site-account-menu"><img id="site-avatar" alt="我的頭像"></button><span id="site-account-id" class="site-account-id" aria-hidden="true"></span><div id="site-account-menu" class="site-account-menu" hidden><a href="/settings">形象設定</a><a href="/collection">收藏庫</a><a href="/achievements">成就收藏冊</a><button id="site-logout" type="button">登出</button></div></div><p id="site-header-error" role="status"></p></header>
     <main class="library-page">
       <div class="library-intro"><span class="eyebrow">MADE BY FRIENDS</span><h1>把你想送的禮物，<br>放進大家的題庫。</h1><p>寫下禮物名稱，圖片可以不放。投稿後，新的遊戲輪次就有機會抽到它。</p></div>
       <div class="library-layout">
@@ -41,5 +38,5 @@
   </div>
   <div id="toast" role="status" hidden></div>
   <script src="/gifts.js"></script>
-</body>
+<script src="/shared/site-header.js"></script></body>
 </html>

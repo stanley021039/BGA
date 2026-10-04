@@ -26,18 +26,19 @@ test('SQLite v9 custom words migrate to misc without losing their difficulty or 
   db=new DatabaseSync(file);
   db.exec(`
    CREATE TABLE users(id TEXT PRIMARY KEY,display_name TEXT NOT NULL);
+   CREATE TABLE user_artworks(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL REFERENCES users(id),name TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,created_at TEXT NOT NULL);
    CREATE TABLE draw_words(id TEXT PRIMARY KEY,author_id TEXT NOT NULL REFERENCES users(id),author_name TEXT NOT NULL,title TEXT NOT NULL,title_key TEXT NOT NULL UNIQUE,aliases TEXT NOT NULL,difficulty TEXT NOT NULL CHECK(difficulty IN ('easy','medium','hard')),category TEXT NOT NULL,created_at TEXT NOT NULL);
    INSERT INTO users VALUES('u1','朋友');
    INSERT INTO draw_words VALUES('shared-old','u1','朋友','舊投稿','舊投稿','["別名"]','medium','一般','2026-01-01T00:00:00.000Z');
    PRAGMA user_version=9;
   `);
   db.close();db=openDatabase(file);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version,10);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,12);
   const stored=new DrawWordStore(db).list()[0];
   assert.equal(stored.topic,'misc');assert.equal(stored.topicLabel,'綜合');
   assert.equal(stored.category,'一般');assert.deepEqual(stored.aliases,['別名']);
   db.exec('PRAGMA user_version=9');db.close();db=openDatabase(file);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version,10);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,12);
   assert.equal(db.prepare('PRAGMA table_info(draw_words)').all().filter(column=>column.name==='topic').length,1);
  }finally{db?.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
@@ -47,7 +48,7 @@ test('new custom words save a topic and reject unrecognized topic IDs',()=>{
  let db;
  try{
   db=openDatabase(file);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version,10);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,12);
   db.prepare("INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)")
    .run('u1','draw-friend','朋友','unused','member','2026-01-01T00:00:00.000Z');
   const store=new DrawWordStore(db),user={id:'u1',display_name:'朋友'};
