@@ -65,3 +65,6 @@
 | 真實多人流程 | 整合任務已以三帳號實際通過三選一、收回答案、填空合併／還原／計分；正式站完整流程由整合任務追蹤。 |
 
 本機證據保存在已忽略的 `work/desktop-gift-majority-state-qa.json`、`work/desktop-gift-majority-eight-results-qa.json`、`work/desktop-qa-majority-*.jpg`；測試使用隔離的 3104 服務與背景 headless Chrome，沒有開啟或切換前景視窗。正式部署、全站測試與帳號交接由整合任務記錄；本次未建立 MR／PR。
+
+
+2026-10-04 正式背景整合驗收：以dialog實際出三選一／填空、鍵盤作答、撤回重送、合併／還原／計分；重播與略過答案焦點通過，最終分數3/3/0。正式最終程式`49a5dab`，Windows／Linux各173/173；各測試房最後離席清除。實玩／版本及具體範圍見[桌機設計進度](DESKTOP-DESIGN-PROGRESS.md)。未操作前景或建立MR。

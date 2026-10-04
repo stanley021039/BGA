@@ -69,3 +69,6 @@ Windows／Linux 全套 `npm test` 各 146/146、前端語法及 diff 檢查通�
 | 回歸測試 | 畫猜、題庫、筆畫、賽道事件與動畫及雷霆引擎相關39/39通過；前端語法與所屬檔案 diff 檢查通過。 |
 
 保留車旁事件錨定、賽道內夾限、原本音效及動畫設定；未新增動畫開關。此批實玩確認一般移動，沒有宣稱本次已觸發所有碰撞／射擊／危險種類；相關已存在的引擎與事件測試仍通過，正式站整合實玩由整合 agent 接續記錄。所有測試在背景，測試房最後離房清理。截圖與幾何在已忽略的 `work/desktop-live-*.jpg`、`work/desktop-live-metrics.json`，碰撞／射擊fixture另在 `work/desktop-race-*-fixture.jpg`、`work/desktop-race-phase-metrics.json`；本節是本機實作紀錄，沒有push或建立MR。
+
+
+2026-10-04 正式背景整合驗收：賽車真人與兩支AI移動11次，實際DOM看見移動、碰撞、淘汰、受損及危險演出。撲克相容性另通過開局、文字／emoji、角色avatar維持與題庫dialog兩種關閉方式返焦。正式最終程式`49a5dab`，Windows／Linux各173/173；各測試房最後離席清除。實玩／版本及具體範圍見[桌機設計進度](DESKTOP-DESIGN-PROGRESS.md)。未操作前景或建立MR。

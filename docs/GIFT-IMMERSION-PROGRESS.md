@@ -68,3 +68,6 @@ Noto 圖示來自 [googlefonts/noto-emoji](https://github.com/googlefonts/noto-e
 | 真實多人流程 | 整合任務已以三帳號實際通過兩項鎖定、三位收禮者逐人確認與六筆完整結果；正式站完整流程由整合任務追蹤。 |
 
 本機證據保存在已忽略的 `work/desktop-gift-majority-state-qa.json`、`work/desktop-gift-majority-eight-results-qa.json`、`work/desktop-qa-gift-*.jpg`，不含提交到 Git 的帳號密碼。測試使用隔離的 3104 服務與背景 headless Chrome，没有開啟或切換前景視窗。本段只記錄本機實作及驗證，不宣稱已部署；本次未建立 MR／PR。
+
+
+2026-10-04 正式背景整合驗收：三個正式測試帳號選禮／心願、三位收禮者各自確認後才公布六筆結果；禮物到達動畫可見。正式最終程式`49a5dab`，Windows／Linux各173/173；各測試房最後離席清除。實玩／版本及具體範圍見[桌機設計進度](DESKTOP-DESIGN-PROGRESS.md)。未操作前景或建立MR。
