@@ -4,13 +4,10 @@
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
  <title>登入｜Afterhours</title>
  <link rel="stylesheet" href="/club.css"><link rel="stylesheet" href="/club-pages.css">
-</head>
+<link rel="stylesheet" href="/shared/site-header.css"></head>
 <body class="club-page auth-page">
  <div class="club">
-  <header class="club-header page-header">
-   <a class="wordmark" href="/">a<span>♠</span><b>AFTERHOURS<small>好友桌遊俱樂部</small></b></a>
-   <span class="header-note"><i></i> PRIVATE TABLES · MEMBERS ONLY</span>
-  </header>
+  <header class="site-header" data-site-header aria-label="網站導覽"><nav class="site-links" aria-label="主要導覽" hidden><a href="/community?tab=issues">留言板</a><details><summary>遊戲題庫</summary><div class="site-submenu"><a href="/community?tab=questions">同頻俱樂部</a><a href="/gifts">送禮達人</a></div></details><a href="/history">對局歷史</a></nav><a class="site-title" href="/">302捉猶團</a><div class="site-account" hidden><button id="site-account-button" class="site-avatar-button" type="button" aria-label="帳號選單" aria-expanded="false" aria-controls="site-account-menu"><img id="site-avatar" alt="我的頭像"></button><span id="site-account-id" class="site-account-id" aria-hidden="true"></span><div id="site-account-menu" class="site-account-menu" hidden><a href="/settings">形象設定</a><a href="/studio">收藏庫</a><a href="/achievements">成就收藏冊</a><button id="site-logout" type="button">登出</button></div></div><p id="site-header-error" role="status"></p></header>
   <main class="auth-layout">
    <section class="auth-story" aria-label="Afterhours 俱樂部介紹">
     <div class="kicker">YOUR TABLE. YOUR PEOPLE.</div>
@@ -59,5 +56,5 @@
   </main>
  </div>
  <script src="/login.js"></script>
-</body>
+<script src="/shared/site-header.js"></script></body>
 </html>

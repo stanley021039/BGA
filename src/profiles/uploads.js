@@ -90,7 +90,7 @@ function setSharing(db,ownerId,id,shared){
    for(const user of db.prepare('SELECT id,appearance FROM users WHERE id!=? AND appearance IS NOT NULL').all(ownerId)){
     let appearance;
     try{appearance=JSON.parse(user.appearance);}catch{continue;}
-    if(appearance?.characterId===chosen)db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify(defaults),user.id);
+    if(appearance?.characterId===chosen)db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify(appearance.avatar?{...defaults,avatar:appearance.avatar}:defaults),user.id);
    }
   }
   db.exec('COMMIT');

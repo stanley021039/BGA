@@ -13,7 +13,7 @@ if(new URLSearchParams(location.search).get('game')==='gift')document.querySelec
 
 
 
-fetch('/api/auth/me').then(r=>{if(!r.ok)throw Error('需要登入');return r.json();}).then(me=>{const name=$('#name');name.value=me.displayName;name.readOnly=true;const nav=document.querySelector('.club-header');const profile=document.createElement('a');profile.href='/profile';profile.className='quiet account-link';profile.textContent='我的角色';nav.append(profile);if(me.role==='admin'){const admin=document.createElement('a');admin.href='/admin';admin.className='quiet account-link';admin.textContent='管理';nav.append(admin);}const logout=document.createElement('button');logout.className='quiet account-logout';logout.textContent=me.displayName+' · 登出';logout.onclick=async()=>{await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});for(const key of Object.keys(localStorage))if(/^ah-(session|thunder|majority|gift|draw)(:|$)/.test(key))localStorage.removeItem(key);location.href='/login';};nav.append(logout);}).catch(()=>location.href='/login');
+fetch('/api/auth/me').then(r=>{if(!r.ok)throw Error('需要登入');return r.json();}).then(me=>{const name=$('#name');name.value=me.displayName;name.readOnly=true;}).catch(()=>location.href='/login');
 
 function roomElement(room){
  const card=document.createElement('article');card.className='room-card';
