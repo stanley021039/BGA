@@ -126,3 +126,21 @@ M-GIFT驗收文字對齊使用者指定的逐人確認流程：保留既有演�
 最終程式 `dcf6ecb` 已部署，Windows／Linux181/181。備份 `shared/backups/pre-draw-guess-20261004T130454Z.sqlite`；DB v12／integrity ok／7帳號、網站及Tunnel active。封存SHA-256 `021E6C0B23D1317EA7CB02692606B7D72BE45DA2B9E1BFD879720A573032FAB5`。19份正式資源與本機一致，檢查改用HTTP讀取，沒有另開瀏覽器。
 
 使用者最新偏好為同一Chrome分頁背景測試、不叫到最上層。依此完成正式修正版的提示覆蓋時連續移動、管理dialog關閉返焦、emoji展開位置／hit test／返焦；證據 `work/chrome-final-qa.json`。Chrome展示房保留，本機3104 QA服務關閉。未push、MR或PR；帳密及房間接手資訊仍只保存在Git忽略的本機交接文件。
+
+### 2026-10-04 雷霆之路行動與地形圖例追加完成
+
+正式最終程式 `cbfd5a9`（前序 `e778bad`／`dd1e453`／`0b42797`）已上線。新增指令不可用時禁用與原因、十種公開地形 hover／focus／點擊說明、車上射擊子彈、油漬／失控滑移旋轉、氮氣尾焰及短動作名稱。圖例保留完整名稱，亮框標記改為28×34px六角SVG；桌機插圖讓出空間給完整圖例與重要車隊資料。
+
+| 驗收 | 正式背景證據 |
+| --- | --- |
+| 指令 | 教學與正式UI均看到無受損車／無6點時維修 disabled；唯一相符骰與移動骰交換及狀態失效由引擎交叉測試驗證。 |
+| 射擊 | 同一Chrome教學實際移動後射擊，DOM取得 `race-vehicle-bullet`、座標136/169→180/169及中途transform；目標受損，射手上方顯示「射擊」。教學共用事件陣列造成漏動畫的問題已補快照與回歸。 |
+| 氮氣 | 教學32秒後移動與正式四隊出車均看到尾焰；車庫尚未上路時沒有假定位，上路才開始。正式下一步transform48→92，67秒後仍保原動畫時間並扣點。 |
+| 打滑／維修 | SVG節點與計時測試確認油漬、射擊推動的對手skid旋轉實際車身、修理名稱出現在受修車；沒有把這些單元場景冒稱本批Chrome實玩觸發。 |
+| 1280×720四隊 | 最終頁高720px、車隊底687px，4隊每隊3車／4骰完整可見；完整地形名稱兩列108px，亮框圖示實際28×34px。 |
+| 地形提示 | Chrome實際focus／點擊毒液及玻璃，玻璃字卡範圍489/382～809/484.8，`pointer-events:none`，Escape關閉。focus自動捲動會重新定位；滑鼠延遲與移入字卡以專用事件測試驗證。 |
+| 回歸與資源 | Windows核心206/206，後續圖例／CSS補修相關16/16；正式Linux206/206。22份正式資源與本機一致。 |
+
+備份 `shared/backups/pre-draw-guess-20261004T140150Z.sqlite`，DB v12／integrity ok／7帳號、服務與Tunnel active。封存SHA-256 `222840452B43DF976B9F61F5736679F9FF2A4BB770C295AC349E09670DD63BDC`。證據 `work/chrome-race-action-qa.json`、`race-release-assets.json`、`chrome-race-full-legend-1280.jpg`、`chrome-race-live-nitro-1280.jpg`、`chrome-race-shot-action.jpg`、`chrome-race-final-animation.jpg`。
+
+Chrome仍為原分頁2019458507，背景DOM操作，沒有提高視窗。測試房最後離房清理；臨時1280×720 viewport已恢復1767×1196，保留 `/race?learn=1` 氮氣教學示範，可繼續點亮框。未push、MR或PR。

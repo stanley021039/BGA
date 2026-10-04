@@ -39,3 +39,9 @@ Outside click、Escape、重新按入口可關閉；Escape 返回可見入口。
 使用者後續指定繼續在同一個Chrome測試、不要把視窗叫到最上層，後續複查只用既有分頁的DOM操作。未建立MR。
 
 最後正式版 `dcf6ecb` 已部署，Windows／Linux各181/181，19份公开JS／CSS與本機一致。同一Chrome分頁1767×1196背景複查：鍵盤focus顯示地形提示，確認提示覆蓋下一格且hit target仍是原格；連續點擊後重型車transform從114→158，剩餘移動點同步減少。管理dialog的關閉控制hit test及Escape回到managePlayers、emoji位置及Escape回入口皆通過，4隊卡片完整常駐。證據 `work/chrome-final-qa.json`、`chrome-background-race.jpg`。背景整合測試房均清理，Chrome展示房刻意保留供使用者查看；本機QA服務已關閉。
+
+## 2026-10-04 地形圖例新增說明
+
+`cbfd5a9` 為追加最終正式版。十項圖例保留完整名称与44px入口，滑鼠hover／鍵盤focus／點擊說明不讀未翻開危險；未知危險只顯示公開規則。獨立字卡留8px視窗邊界、保持click-through。Chrome背景實測毒液／玻璃的focus與點擊、Escape及1280×720邊界；focus自動捲動造成即關的問題已改成入口仍可見就重定位，並加回歸。
+
+亮框圖示為28×34px六角SVG，完整名稱與大圖示讓圖例可自然換行。正式四隊1280×720頁高720、車隊底687，不收合重要資訊。車上動畫節點亦為pointer-events:none；教學及正式氮氣行動與下一格移動正常。滑鼠延遲／跨字卡保留、窄短視窗及未知安全回退由7項專用測試驗證，不將DOM鍵盤聚焦稱為native滑鼠hover實測。證據見 `work/chrome-race-action-qa.json` 與 [桌機設計進度](DESKTOP-DESIGN-PROGRESS.md)。
