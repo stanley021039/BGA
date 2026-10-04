@@ -84,3 +84,7 @@
 | 回歸 | 所屬畫猜／題庫／筆畫／雷霆相關41/41通過；前端語法與diff檢查通過。 |
 
 截圖與DOM報告：忽略目錄 `work/essential-draw-1280.jpg`、`work/essential-game-ui-report.json`、`work/race-popup-detail-report.json`。此節是本機修正紀錄；測試均headless、最後離席清房，未操作前景、commit、push或部署。整合版本由主agent另記。
+
+## 2026-10-05 發出 PR 後正式試玩
+
+本批修改已提交 GitHub PR #30，尚未合併。沿用原 Chrome 背景分頁與三個專用測試帳號，完成熱氣球／飛機／公車三輪，驗證區域填色與復原、錯答後重猜、別名答對、畫作收藏、emoji／文字彈幕、畫者輪替與最後排名。三席結算一致為 170／135／103；正式收藏 API 確認熱氣球畫作已保存。720p 名單與排名完整可見，說明／管理／emoji 浮層都在視窗內，Escape 返焦成功。完整驗收及 API／瀏覽器操作範圍見 [正式站畫猜驗收](DRAW-GUESS-PLAYTEST.md)。

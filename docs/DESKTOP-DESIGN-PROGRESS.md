@@ -181,3 +181,7 @@ Chrome仍為原分頁2019458507，背景DOM操作，沒有提高視窗。測試�
 來源9f041d3已部署shhuang.cc，本機與Linux完整226/226，23份公開資源一致。正式Chrome實測標題、ROUND／ROAD BONUS／ROOM的六個標籤與數值，以及邀請／教學／提示／音效四按鈕的垂直中心全部90px。證據work/chrome-ui-centered-prod.json、work/chrome-ui-centered-prod.jpg。原Chrome背景驗收未置前，臨時viewport已reset，保留第1章教學。
 
 備份pre-draw-guess-20261004T164650Z.sqlite；DB v12 integrity ok、7人，服務及tunnel active。封裝SHA256 16EBFE0BACDF49B59C10AE19C4945D3F3254DFF4749DFFC2CB337F5BA9A28962。臨時正式房47D220清理後404，本機3104 QA服務停止；未push或MR。
+
+### 2026-10-05 MR 發布與畫猜驗收
+
+使用者授權本部分完成後先發 MR；已推送 `feature/game-stage-local` 並建立 [GitHub PR #30](https://github.com/stanley021039/BGA/pull/30)，尚未合併。其後在原 Chrome 分頁以背景操作完成三人三輪你畫我猜，驗證區域填色、同步、復原、重猜、別名、收藏、彈幕與總排名。1280×720 頁面無溢出，名單底625px；emoji／說明／管理浮層完整可見。詳細結果記於 [正式站畫猜驗收](DRAW-GUESS-PLAYTEST.md)。本次只補驗收文件，沒有改動正式程式或重新部署。
