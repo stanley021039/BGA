@@ -120,3 +120,9 @@ M-GIFT驗收文字對齊使用者指定的逐人確認流程：保留既有演�
 `1db9e1b` 上線，Windows／Linux179/179、19份公開資源一致、17頁272次展開檢查通過。備份 `shared/backups/pre-draw-guess-20261004T124514Z.sqlite`；DB v12／integrity ok／7帳號，網站及Tunnel active。封存SHA-256 `AF523AAE78113AE2CD935E6BB1723437CDE5AB07E79D0FFF3C1AF29523859A9B`。
 
 四款正式多帳號背景實玩與撲克共用smoke通過，0頁面錯誤、測試房均清理。賽車實際觀察移動與危險／碰撞／淘汰／射擊／受損演出，報告 `work/desktop-public-playtest.json`。前景 Chrome 四隊示範完成整輪並進入第2輪，補抓到地形提示攔住相鄰路格，已修復提示click-through、長文捲動及定位後高度限制，並增加2項回歸；實際覆蓋相鄰格仍可連續移動、覆蓋車仍可選。詳見 [展開內容驗收](UI-POPOVER-AUDIT.md)。
+
+### 浮層補修封版
+
+最終程式 `dcf6ecb` 已部署，Windows／Linux181/181。備份 `shared/backups/pre-draw-guess-20261004T130454Z.sqlite`；DB v12／integrity ok／7帳號、網站及Tunnel active。封存SHA-256 `021E6C0B23D1317EA7CB02692606B7D72BE45DA2B9E1BFD879720A573032FAB5`。19份正式資源與本機一致，檢查改用HTTP讀取，沒有另開瀏覽器。
+
+使用者最新偏好為同一Chrome分頁背景測試、不叫到最上層。依此完成正式修正版的提示覆蓋時連續移動、管理dialog關閉返焦、emoji展開位置／hit test／返焦；證據 `work/chrome-final-qa.json`。Chrome展示房保留，本機3104 QA服務關閉。未push、MR或PR；帳密及房間接手資訊仍只保存在Git忽略的本機交接文件。

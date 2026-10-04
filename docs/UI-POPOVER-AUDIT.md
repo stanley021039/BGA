@@ -37,3 +37,5 @@ Outside click、Escape、重新按入口可關閉；Escape 返回可見入口。
 提示改為 click-through，pointerdown只關提示而不取消原操作，長內容以提示矩形範圍接收wheel／PageUp／PageDown；以定位後剩餘高度限制內容，避免後續增長越界。1767×1252實際重現提示覆蓋下一格，連續點擊lane3/y1→y2後端位置均更新；1280×720同樣通過，覆蓋車輛仍可選。390×360／200%公開地形加未知警告長文維持8px邊界、wheel可捲、Escape可關。證據 `work/race-tooltip-click-report.json`；新增2項unit回歸。
 
 使用者後續指定繼續在同一個Chrome測試、不要把視窗叫到最上層，後續複查只用既有分頁的DOM操作。未建立MR。
+
+最後正式版 `dcf6ecb` 已部署，Windows／Linux各181/181，19份公开JS／CSS與本機一致。同一Chrome分頁1767×1196背景複查：鍵盤focus顯示地形提示，確認提示覆蓋下一格且hit target仍是原格；連續點擊後重型車transform從114→158，剩餘移動點同步減少。管理dialog的關閉控制hit test及Escape回到managePlayers、emoji位置及Escape回入口皆通過，4隊卡片完整常駐。證據 `work/chrome-final-qa.json`、`chrome-background-race.jpg`。背景整合測試房均清理，Chrome展示房刻意保留供使用者查看；本機QA服務已關閉。
