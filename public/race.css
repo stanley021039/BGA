@@ -99,6 +99,8 @@ body{background:#141714}.race-header{display:flex;gap:30px;align-items:center;pa
 .race-event-popup[data-kind="quake"] .race-event-scene{animation:race-car-shake .65s ease-out both}
 .race-event-popup[data-kind="eliminated"] .race-event-car-one{animation:race-car-fade .9s ease-in both}
 .race-event-popup[data-kind="fire"] .race-event-symbol,.race-event-popup[data-kind="fireDie"] .race-event-symbol{color:#ff9e60;text-shadow:0 0 18px #fb6939;animation:race-event-flash .8s ease-out 2}
+.race-car-moving{animation:race-car-drive .7s cubic-bezier(.18,.8,.28,1) both}
+@keyframes race-car-drive{from{transform:translate(var(--race-dx),var(--race-dy));filter:drop-shadow(0 0 9px #ffe39a)}to{transform:translate(0,0);filter:none}}
 @keyframes race-event-enter{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @keyframes race-car-hit-left{from{transform:translateX(-42px)}70%{transform:translateX(45px)}to{transform:translateX(32px)}}
 @keyframes race-car-hit-right{from{transform:translateX(42px) scaleX(-1)}70%{transform:translateX(-45px) scaleX(-1)}to{transform:translateX(-32px) scaleX(-1)}}
@@ -109,4 +111,3 @@ body{background:#141714}.race-header{display:flex;gap:30px;align-items:center;pa
 @keyframes race-car-fade{from{opacity:1;transform:none}to{opacity:.2;transform:translate(55px,18px) rotate(20deg)}}
 @keyframes race-event-flash{from{opacity:0;transform:translateX(-50%) scale(.4)}55%{opacity:1;transform:translateX(-50%) scale(1.22)}to{opacity:1;transform:translateX(-50%) scale(1)}}
 @media(max-width:650px){.race-event-popup{top:45px;right:8px;width:min(300px,calc(100% - 16px));padding:10px 12px}.race-event-scene{height:58px}.race-event-popup strong{font-size:16px}}
-@media(prefers-reduced-motion:reduce){.race-event-popup,.race-event-popup *, .race-event-popup::before,.race-event-popup::after{animation:none!important}}
