@@ -27,7 +27,7 @@ function createApp(config){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
  const musicRooms=new Map(),musicStreams=new Map();
- const roomMusic=room=>{if(!musicRooms.has(room.code))musicRooms.set(room.code,new RoomMusic());return musicRooms.get(room.code);};
+ const roomMusic=room=>{if(!musicRooms.has(room.code))musicRooms.set(room.code,new RoomMusic(Date.now,musicStore));return musicRooms.get(room.code);};
  const publishMusic=code=>{const state=musicRooms.get(code)?.snapshot();for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
  const lobby=createLobby();
  const withSocial=(room,view)=>{
