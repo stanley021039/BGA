@@ -144,3 +144,9 @@ M-GIFT驗收文字對齊使用者指定的逐人確認流程：保留既有演�
 備份 `shared/backups/pre-draw-guess-20261004T140150Z.sqlite`，DB v12／integrity ok／7帳號、服務與Tunnel active。封存SHA-256 `222840452B43DF976B9F61F5736679F9FF2A4BB770C295AC349E09670DD63BDC`。證據 `work/chrome-race-action-qa.json`、`race-release-assets.json`、`chrome-race-full-legend-1280.jpg`、`chrome-race-live-nitro-1280.jpg`、`chrome-race-shot-action.jpg`、`chrome-race-final-animation.jpg`。
 
 Chrome仍為原分頁2019458507，背景DOM操作，沒有提高視窗。測試房最後離房清理；臨時1280×720 viewport已恢復1767×1196，保留 `/race?learn=1` 氮氣教學示範，可繼續點亮框。未push、MR或PR。
+
+## 2026-10-04 全員擲骰dialog與一秒動畫
+
+雷霆之路新增全員同步檢定：條件預告、由指定玩家按擲骰、一秒動畫、結果確認；碰撞保留特殊骰及大車一次重擲。每輪四骰／公路骰以同一dialog動畫揭曉，結果確認前不從常駐名單或選骰控制提前顯示。桌機四隊17骰完整可見，手機內捲並保留44px確認。完整規格、機制與定位驗收見 [擲骰流程](RACE-DICE-INTERACTION.md)。
+
+來源70ec687已更新shhuang.cc，Windows與Linux均225/225，23份公開資源一致。原Chrome背景操作通過四隊結果、射擊條件／動畫／傷害及碰撞特殊骰，三個登入座位結果相同。暫時viewport已reset，Chrome留在可重擲的碰撞教學。部署前SQLite備份pre-draw-guess-20261004T144649Z.sqlite；服務active、v12 integrity ok、7人。兩個臨時房間已到期刪除。本批沒有MR或push。

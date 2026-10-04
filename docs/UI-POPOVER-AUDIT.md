@@ -45,3 +45,7 @@ Outside click、Escape、重新按入口可關閉；Escape 返回可見入口。
 `cbfd5a9` 為追加最終正式版。十項圖例保留完整名称与44px入口，滑鼠hover／鍵盤focus／點擊說明不讀未翻開危險；未知危險只顯示公開規則。獨立字卡留8px視窗邊界、保持click-through。Chrome背景實測毒液／玻璃的focus與點擊、Escape及1280×720邊界；focus自動捲動造成即關的問題已改成入口仍可見就重定位，並加回歸。
 
 亮框圖示為28×34px六角SVG，完整名稱與大圖示讓圖例可自然換行。正式四隊1280×720頁高720、車隊底687，不收合重要資訊。車上動畫節點亦為pointer-events:none；教學及正式氮氣行動與下一格移動正常。滑鼠延遲／跨字卡保留、窄短視窗及未知安全回退由7項專用測試驗證，不將DOM鍵盤聚焦稱為native滑鼠hover實測。證據見 `work/chrome-race-action-qa.json` 與 [桌機設計進度](DESKTOP-DESIGN-PROGRESS.md)。
+
+## 2026-10-04 雷霆擲骰dialog
+
+新增原生top-layer dialog，必要檢定不能Escape跳過，僅owner操作。1280×720四隊：960×570.2、內文scrollHeight=clientHeight=400、完整17骰與結果、44px確認；390×844：374×828、確認340×44並hit test可點；640×360：608×328、確認146×44且在視窗內。碰撞／射擊為704px寬桌機視窗，兩車參與資訊對齊，沒有原始車ID。初次rolling至少一秒、輪詢不重建焦點；確認後返焦遊戲儀表板。詳見 [擲骰驗收](RACE-DICE-INTERACTION.md)。
