@@ -7,7 +7,7 @@ function openDatabase(file){
  const db=new DatabaseSync(file,{timeout:5000});
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
- if(version>10)throw Error(`Unsupported database version ${version}`);
+ if(version>12)throw Error(`Unsupported database version ${version}`);
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -122,6 +122,10 @@ function openDatabase(file){
     db.exec("ALTER TABLE draw_words ADD COLUMN topic TEXT NOT NULL DEFAULT 'misc'");
    db.exec('PRAGMA user_version=10; COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<12){
+  db.exec('BEGIN IMMEDIATE');
+  try{if(!db.prepare('PRAGMA table_info(user_artworks)').all().some(column=>column.name==='shared'))db.exec('ALTER TABLE user_artworks ADD COLUMN shared INTEGER NOT NULL DEFAULT 0 CHECK(shared IN (0,1))');db.exec('PRAGMA user_version=12; COMMIT');}catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
  return db;
 }

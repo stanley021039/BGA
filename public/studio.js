@@ -51,4 +51,6 @@ $('#artwork-upload').onsubmit=async event=>{
   form.reset();await loadArtworks();message.textContent='圖片已存入我的圖庫。';
  }catch(error){message.textContent=error.message;}finally{button.disabled=false;}
 };
-loadArtworks().catch(error=>$('#paint-status').textContent=error.message);
+const studioQuery=new URLSearchParams(location.search),returnLink=$('#collection-return');
+if(returnLink)returnLink.href='/collection?section='+(studioQuery.get('section')==='characters'?'characters':'avatars');
+loadArtworks().then(async()=>{const artwork=artworks.find(a=>a.id===studioQuery.get('artwork'));if(!artwork)return;const response=await fetch(artwork.url);if(!response.ok)throw Error('無法讀取收藏圖片');const blob=await response.blob();await editor.importFiles([new File([blob],artwork.name,{type:artwork.mime})]);$('#paint-name').value=artwork.name;$('#paint-status').textContent='已載入收藏圖片，儲存會建立新的圖片，保留原圖。';}).catch(error=>$('#paint-status').textContent=error.message);

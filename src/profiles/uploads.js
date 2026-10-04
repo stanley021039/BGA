@@ -97,4 +97,9 @@ function setSharing(db,ownerId,id,shared){
   return {id:'user:'+id,shared};
  }catch(error){db.exec('ROLLBACK');throw error;}
 }
-module.exports={MAX_BYTES,imageOf,imageForRequest,createCharacter,setExpression,addExpression,setSharing};
+function removeCharacter(db,ownerId,id){
+ const result=db.prepare('DELETE FROM player_characters WHERE id=? AND owner_id=?').run(id,ownerId);
+ if(!result.changes)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到你的角色');
+ return {ok:true};
+}
+module.exports={MAX_BYTES,imageOf,imageForRequest,createCharacter,setExpression,addExpression,setSharing,removeCharacter};

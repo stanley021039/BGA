@@ -17,7 +17,7 @@ test('v3 character images migrate without losing existing expression bytes',()=>
   old.prepare('INSERT INTO character_images VALUES(?,?,?,?)').run('legacy','happy','image/gif',Buffer.from('GIF89a'));
   old.close();
   const upgraded=openDatabase(file);
-  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version,10);
+  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version,12);
   const row=upgraded.prepare('SELECT expression,label,bytes FROM character_images').get();
   assert.equal(row.expression,'happy');
   assert.equal(row.label,null);
