@@ -1,8 +1,8 @@
 # 雷霆之路：多格移動與路徑預覽
 
-日期：2026-10-05。分支 `feat/party-content-and-race-paths`；本地實作，未 push／PR／部署。此項承接使用者「一次走多格、滑鼠移過去先顯示路線、盡量避開障礙，仍能一格一格走」要求。主 agent 背景Chrome已完成單步＋連續五步、hover零命令／遠格一個POST、键盤焦點及狀態重繪保留；不是真人樂趣或GPU效能量測。詳 [整合驗收](PARTY-UPGRADE-PROGRESS.md)。
+初始日期：2026-10-05。分支 `feat/party-content-and-race-paths`；最新正式狀態見下方按版本排列的紀錄。此項承接使用者「一次走多格、滑鼠移過去先顯示路線、盡量避開障礙，仍能一格一格走」要求。主 agent 背景Chrome已完成單步＋連續五步、hover零命令／遠格一個POST、键盤焦點及狀態重繪保留；不是真人樂趣或GPU效能量測。詳 [整合驗收](PARTY-UPGRADE-PROGRESS.md)。
 
-## 2026-10-06：途中事件checkpoint，v1.1.3候選，未部署
+## 2026-10-06：途中事件checkpoint，正式 v1.1.3
 
 使用者要求確認移動中遇到事件時先處理事件、再繼續位移。本增量為呈現加入定位metadata：`event()`統一帶`afterMotion`，指向事件發生時最後確認的motion group；由引擎最後寫入，extra不可覆寫。car／target事件捕捉當下公開x／y，既有顯式x／y保留；車輛稍後移動不改寫舊事件位置。Thunder公開events由12筆增至最多64筆，與有界motions分開保存，供前端在連續位移之間定位事件。玻璃排入下一個forced move前新增`glass`事件，checkpoint位於剛進入玻璃的那段位移後；新增紀錄沿用既有event的version／log機制。既有回覆與輪詢的事件payload增加，但沒有新增HTTP、伺服器timer或DB欄位。
 
@@ -14,7 +14,11 @@
 
 本地引擎增量新增6項真回歸：必經火焰首格afterMotion1、其後普通位移2／3；玻璃1→地雷／損傷2→打滑落點火焰3；未知油漬先awaiting、accept後只滑移並記新落點事件、不偷偷續原route；checkpoint不可覆寫／位置及隱私；16格事件全保留與64筆上限；玻璃同敵車的原語義。嵌入教學引擎一致性亦在測試內。整合後Windows完整 **625/625** 通過（失敗／取消／跳過0，約13秒），證據`work/race-event-order-windows-tests.log`；控制器／呈現 **43/43**，新增22項涵蓋自動／手動事件、尾端沒有motion的等待、presence、略過、取消及舊callback隔離。
 
-主agent背景Chrome在隔離localhost3199、正常1794×1010 viewport、兩個合成帳戶及受控地形，實際點擊並觀察火焰抵達→「事件處理中」停住→續走，以及玻璃提示→滑移→地雷／損傷同批提示→打滑→火焰提示。油漬案例先顯示擲骰dialog，約1秒骰子動畫後才可確認；另直接進油漬格，確認方向後先滑至跳台，再顯示跳台檢定，確認後弧線跳躍抵達才換下一位。遠目標油漬案例停下並提示重新選路；直接油漬→跳台案例用鄰格操作，完整遠目標連鎖另由真引擎／控制器回歸驗證。頁面沒有新console error。真控制器／render回歸抓到at0與presence重繪隱藏當前事件卡，以及舊撞擊CSS在抵達前播放，均已修正；後續Chrome實測亦確認提示正常。私有截圖`work/event-order-*.jpg`、時間紀錄`work/event-order-frames.json`，35張真截圖匯出`work/race-event-order-demo.gif`。本機測試服務已正常停止；這不是GPU／FPS量測，Linux及正式站部署／驗收待補。
+主agent背景Chrome在隔離localhost3199、正常1794×1010 viewport、兩個合成帳戶及受控地形，實際點擊並觀察火焰抵達→「事件處理中」停住→續走，以及玻璃提示→滑移→地雷／損傷同批提示→打滑→火焰提示。油漬案例先顯示擲骰dialog，約1秒骰子動畫後才可確認；另直接進油漬格，確認方向後先滑至跳台，再顯示跳台檢定，確認後弧線跳躍抵達才換下一位。遠目標油漬案例停下並提示重新選路；直接油漬→跳台案例用鄰格操作，完整遠目標連鎖另由真引擎／控制器回歸驗證。頁面沒有新console error。真控制器／render回歸抓到at0與presence重繪隱藏當前事件卡，以及舊撞擊CSS在抵達前播放，均已修正；後續Chrome實測亦確認提示正常。私有截圖`work/event-order-*.jpg`、時間紀錄`work/event-order-frames.json`，35張真截圖匯出`work/race-event-order-demo.gif`。本機測試服務已正常停止；這不是GPU／FPS量測；雙平台與正式站結果見下方正式驗收。
+
+正式驗收（2026-10-06）：受測程式提交`22a9d6fd71ba0523a456321567fc71d6a856e171`，Windows／Linux Node22.22.1各 **625/625**（失敗／取消／跳過0，Linux約115秒）。乾淨提交建立本地annotated `v1.1.3`，未push／新PR；後續純驗收文件不移動tag。隔離副本schema13、15表逐列一致、完整性ok、外鍵0、啟動成功。發布包SHA-256 `1c84f65ecbed1598f21fd7d2933b4788ae28c9b764bff6f8d3037f2511e980c0`，未包含本機私人偏好與QA檔案。備份`shared/backups/pre-party-22a9d6f-20261005T181838Z`（UTC）另存SQLite及持久檔案，不宣稱同一原子時間點。
+
+切換前再次確認零房間；正式current `releases/22a9d6f`，PID40729→42200，service與tunnel active。schema13、7帳戶全欄位逐列一致、既有session有效；公開/api/version為1.1.3且no-store，race HTML及7資源（race.js、movement、dice dialog、event cues、vehicle effects、header JS／CSS）與受測程式一致。背景Chrome正式設定顯示「版本 v1.1.3」，截圖`work/race-event-order-production-version.jpg`；正式未新建遊戲房間。本機錄影與正式資源驗收分開記錄，不把受控本機動畫冒稱正式實玩。Linux證據`work/race-event-order-linux-tests.log`，公開驗證`work/version-production-verification.json`。
 
 ## 2026-10-06：所有位移與操作順序，正式 v1.1.2
 

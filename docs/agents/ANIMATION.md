@@ -1,6 +1,6 @@
 # 動畫角色記憶
 
-2026-10-06 v1.1.3候選，未部署：雷霆公開事件以`afterMotion`定位於已確認位移之後，最多64筆；一般checkpoint停留1600ms、道路3200ms，同checkpoint批次保留全部連鎖文字。位移FX只在`onMove`開始該段時觸發，presence重繪不隱藏事件、不重播或延長停留。event-only亦可hold；略過／Escape只縮短事件停留，不跳移動或dice。全部位移／事件結束才呈現下一步，鎖遊戲動作但poll／roster／chat不中斷；hidden／reduced／停用／重連不補播。dice／pending後舊route仍丟棄，需重新選路。既有回覆payload增加，沒有新HTTP、伺服器timer或DB。Windows625/625及背景Chrome火焰抵達→停住顯示事件→續走已證實；其他連鎖、Linux與正式驗收待補，配置時長不是FPS證據。詳 [候選進度及證據](../RACE-MULTI-MOVE-PROGRESS.md)。
+2026-10-06正式 v1.1.3：雷霆公開事件以`afterMotion`定位於已確認位移之後，最多64筆；一般checkpoint停留1600ms、道路3200ms，同checkpoint批次保留全部連鎖文字。位移FX只在`onMove`開始該段時觸發，presence重繪不隱藏事件、不重播或延長停留。event-only亦可hold；略過／Escape只縮短事件停留，不跳移動或dice。全部位移／事件結束才呈現下一步，鎖遊戲動作但poll／roster／chat不中斷；hidden／reduced／停用／重連不補播。dice／pending後舊route仍丟棄，需重新選路。既有回覆payload增加，沒有新HTTP、伺服器timer或DB。Windows／Linux各625/625；背景Chrome火焰、玻璃→地雷→打滑及油漬→跳台順序已驗。正式受測22a9d6f／本地v1.1.3 tag，current releases/22a9d6f；版本／資源／帳戶驗收通過。配置時長不是FPS證據。詳 [進度及證據](../RACE-MULTI-MOVE-PROGRESS.md)。
 
 2026-10-06 v1.1.2正式，已更新shhuang.cc：雷霆改以公開motions還原所有確認位移，普通／多格／玻璃／油漬／推撞／打滑／暈頭轉向按group順序每格240ms，地震同group車輛並行；跳台／爆炸弧線、淘汰motion ghost、終點視覺落點及直升機部署，車輛抵達後道路平移480ms。移動完成才呈現dice／下一步controls／winner／教學；依使用者指示等待期間鎖遊戲動作，輪詢、名單與聊天繼續更新。hidden／reduced／停用／重連直接同步，不補播。取代v1.1.1及更早「不鎖操作、淘汰不回放、強制位移僅末點」的限制；伺服器規則照常結算。Windows／Linux591/591及引擎／控制器回歸已通過，主agent背景Chrome確認碰撞／推移／玻璃／六車地震出界／道路換片／終點；跳躍、拋飛、直升機仍以回歸驗證。正式API／資源／設定與7帳戶已核對。配置秒數與截圖不是FPS證據，詳 [最新正式進度及證據](../RACE-MULTI-MOVE-PROGRESS.md)。
 
