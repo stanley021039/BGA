@@ -1,5 +1,11 @@
 # Server／資料 agent 記憶
 
+## 最新：共看暫存資料（2026-10-05）
+
+`631eabf`在本地提供YouTube共看，沒有DB schema／備份範圍變動。registry綁實際room物件與UUID，不因六碼重用繼承影片；最後真人離房及app.close清空。提案8／每人2、request ledger128及10分鐘TTL有界，帳戶限流、seat／控權／版本驗證沿用同源API。server只解析YouTube白名單URL取ID，不出站取metadata／影片、不加SSE／timer／心跳，也不記觀看log。
+
+控權離線30秒借既有房間活動reconcile：先撤銷過期控制，再刷新seat；全員離線後第一席直接GET須恢復控制，host換人但controller不變也要更新marker權限。外部素材直接由YouTube到client，本機影片位置不移轉。後端18項、完整Windows／Linux各503項與限制見 [共看進度](../YOUTUBE-WATCH-PROGRESS.md)；未正式部署，冷移轉不包含記憶體房間續局的政策不變。
+
 ## 2026-10-05 追加：schema 13 禁題資料
 
 程式 `2cf8a44` 新增 `draw_word_exclusions`，保存內建／共編題目 ID、正規化題名、首次通過的房間／result／gameRun、至多八名選民與票者、過半門檻及時間；不存帳密或畫布。移轉驗證的 schema 必備表同步至 v13。完整備份還原原樣保存已通過禁題，v12 來源只在還原副本建立空 ledger；來源不變，v13 缺表拒絕。
