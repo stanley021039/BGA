@@ -1,5 +1,7 @@
 # 畫猜回看、等待狀態與共用動效
 
+後續更新：2026-10-05 U28 的揭曉過半禁題已實作於 `2cf8a44`，同一 PR #34 接續；Windows／Linux 各431項及背景 Chrome 驗收見 [禁題進度](DRAW-WORD-BAN-PROGRESS.md)。下文402項保留為原批次的歷史證據。
+
 日期：2026-10-05。狀態：程式 `93d7a84` 已完成本地與隔離 Linux 驗收，未部署。本批以 `3233ed4` 為基線；先前移轉功能已送 [PR #31](https://github.com/stanley021039/BGA/pull/31)，新工作位於 `feat/draw-review-motion`。使用者明確要求接續新動效、共用動畫規則、畫猜等待／離線提示及跨輪回看／收藏，並追加已猜中角色卡的圖示或高亮。
 
 依據：[玩家試玩 PL-01／PL-02](research/PLAYER-PLAYTEST-ASSESSMENT.md)、[動效與素材方案](specs/ANIMATION-ASSET-PLAN.md)。桌機優先，重要名單、角色、比分維持可見；背景 Chrome 操作，不提高視窗。

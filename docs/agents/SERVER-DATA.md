@@ -1,5 +1,11 @@
 # Server／資料 agent 記憶
 
+## 2026-10-05 追加：schema 13 禁題資料
+
+程式 `2cf8a44` 新增 `draw_word_exclusions`，保存內建／共編題目 ID、正規化題名、首次通過的房間／result／gameRun、至多八名選民與票者、過半門檻及時間；不存帳密或畫布。移轉驗證的 schema 必備表同步至 v13。完整備份還原原樣保存已通過禁題，v12 來源只在還原副本建立空 ledger；來源不變，v13 缺表拒絕。
+
+未過半 ballot 與最近八輪結果只存在 room 記憶體，不屬於資料包。Windows／Linux 各431項，其中移轉26項及3項新禁題相容性回歸通過，詳 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)。尚未操作正式資料，沒有解除禁題 UI；不要把 soft exclusion 說成已刪除歷史作品。
+
 更新：2026-10-05。主規格：[多環境資料移轉](../specs/MULTI-ENV-DATA-MIGRATION.md)。第一版工具已完成實作與隔離驗收，操作入口：[完整備份還原](../SERVER-DATA-TRANSFER.md)，最新送審與證據：[驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)。未備份、切換或遷移正式資料。
 
 ## 責任
@@ -10,7 +16,7 @@
 
 | 項目 | 現況 |
 | --- | --- |
-| DB | `src/db/index.js` v12、Node sqlite DatabaseSync、WAL、foreign_keys/busy_timeout、BEGIN IMMEDIATE |
+| DB | `src/db/index.js` v13、Node sqlite DatabaseSync、WAL、foreign_keys/busy_timeout、BEGIN IMMEDIATE |
 | users/media | 帳號、角色表情／gift／artwork bytes在DB BLOB；users.appearance有JSON引用 |
 | music | metadata在music_tracks，實音檔在`MUSIC_DIR || dirname(DB_FILE)/music`；settings 已映射 MUSIC_DIR |
 | community | `COMMUNITY_DIR/community.json`存majority題庫與舊issue；BoardStore啟動legacy import |

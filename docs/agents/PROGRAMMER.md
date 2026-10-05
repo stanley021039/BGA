@@ -1,5 +1,13 @@
 # 程式架構 agent 記憶
 
+## 2cf8a44：畫猜過半禁題
+
+2026-10-05 U28 已實作。`publicResults` entry 的 mutable ballot 與 immutable snapshot 分開；揭曉時固定 active 席位，含畫者及暫時離線者。`POST /api/draw/result/ban` 依 resultId 投一票，state 另帶 resultVotes；跨輪八份快照仍可補投，未公開／淘汰／晚加入／踢出不可投。最後一票先 DB transaction 成功才接受；503 可重試，不先發成功事件。
+
+DrawWordStore 以題目 ID 或 normalized title 排除，內建列表、共編列表、後續候選與舊候選選取都要套用，空池安全結束。跨房禁題不一定增加本房 version，前端不可只依版本或快照 ID cache；同版本已知 banned 不因舊 poll 倒退。前端 pending、generation、跨輪 ACK 及獨立收藏狀態已測。
+
+揭曉與結束側欄要讓工具列參與自然高度，不能溢出覆蓋玩家卡；新增投票只改 reveal 排版，原猜題作畫 canvas 規則保留。Windows／Linux 各431項及 Chrome 背景驗收見 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)，未部署；schema 13 及移轉規則與 SERVER-DATA 同步。
+
 更新：2026-10-05；角色文件是可更新的專案知識，不授權對正式服務操作。
 
 ## 93d7a84：公開結果與共用動效
@@ -17,7 +25,7 @@
 ## 已確認架構
 
 - `src/app.js`建立rooms、seats與music/social maps。users UUID、room seat UUID、6位room code是三種身份；永久結果用match UUID／result unit，不能從名字回推canonical user。
-- `src/db/index.js`Node DatabaseSync、WAL、同步BEGIN IMMEDIATE migration／transaction，schema上限12。async repository升級要重設transaction契約。
+- `src/db/index.js`Node DatabaseSync、WAL、同步BEGIN IMMEDIATE migration／transaction，schema上限13。async repository升級要重設transaction契約。
 - 遊戲state由server裁決；client report是非權威。重送API靠requestId／revision／epoch與永久結果ledger，不只client busy或WeakSet。
 - `src/history/store.js`記before/trace/after與enginehash、rng；進行中archive拒讀。不要把秘密歷史預設公開，新增state transition納入transact。
 - 成就以玩家spec的server證據判定，不從UI文字／瞬時events判定：poker每個sidepot需winnerIds/refund/tie；race維修僅己方。骰運候選採本人4顆原始移動骰全1的accepted round metric，加上有效manual turn與正常完賽；相同結果重擲候選已否決，不能誘導為成就額外重擲。首次權威finalize凍結winner/participants，rules_completed與timeout等quality_flags分離。
