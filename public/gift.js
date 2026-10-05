@@ -49,13 +49,13 @@ function syncChoices(){
  const next=$('#likeNext');if(next)next.textContent=draftLikes.length<4?`下一個：${rankLabels[rankKeys[draftLikes.length]]}（${draftLikes.length+1} / 4）`:'四件已選好；再點已選禮物可取消並重新排序。';
 }
 function playerRow(item){const giftId=(state.ownAssignments||draftGifts)[item.id],chosenGift=state.gifts.find(gift=>gift.id===giftId),privateGift=state.phase==='choosing'&&item.id!==state.me?'<span class="player-private-gift">你送：'+esc(chosenGift?.title||'尚未選擇')+'</span>':'';const task=state.phase==='choosing'?` · 送禮${state.gaveIds.includes(item.id)?'已鎖定':'未鎖定'} · 心願${state.wishedIds.includes(item.id)?'已鎖定':'未鎖定'}`:state.phase==='delivering'&&item.id===state.delivery.recipientId?' · 確認收禮中':'';return GameShell.playerRow(item,{me:state.me,status:(item.id===state.hostId?'房主 · ':'')+(item.online?'在線':'暫時離線')+task,metrics:[{value:item.giveScore,label:'送禮分數'},{value:item.getScore,label:'收禮分數'}]}).replace(/<small>(.*?)<\/small>/, '').replace(/<\/div>$/, '<small class="roster-player-status">'+esc((item.id===state.hostId?'房主 · ':'')+(item.online?'在線':'暫時離線')+task)+'</small>'+privateGift+'</div>');}
-function actionFeedback(message,kind='info'){
- const node=$('#gameActionFeedback');if(!node)return;
+function actionFeedback(message,kind='info',settings=false){
+ const node=$(settings?'#roomSettingsFeedback':'#gameActionFeedback')||$('#gameActionFeedback');if(!node)return;
  if(window.GameUI)GameUI.setStatus(node,message,{kind});else{node.textContent=message;node.dataset.kind=kind;}
 }
 function syncActionBusy(){
  const slot=$('[data-game-action-slot]');if(!slot)return;slot.setAttribute('aria-busy',String(busy));
- for(const button of slot.querySelectorAll('button')){
+ for(const button of [...slot.querySelectorAll('button'),...document.querySelectorAll('.room-settings-save')]){
   if(busy){if(!button.hasAttribute('data-idle-disabled'))button.dataset.idleDisabled=String(button.disabled);button.disabled=true;}
   else if(button.hasAttribute('data-idle-disabled')){button.disabled=button.dataset.idleDisabled==='true';delete button.dataset.idleDisabled;}
  }
@@ -69,7 +69,7 @@ function bindGamePopovers(container){
 }
 function renderAction(){
  if(!state)return;const s=state;let html='';
- if(s.phase==='waiting')html='<h2>準備開桌</h2>'+(s.host?'<button class="button outline" data-do="settings">儲存設定</button><button class="button" data-do="start" '+(s.players.length<3?'disabled':'')+'>'+(s.players.length<3?'還差 '+(3-s.players.length)+' 位朋友':'開始送禮')+'</button>':'<p>等待房主開始</p>');
+ if(s.phase==='waiting')html='<h2>準備開桌</h2>'+(s.host?'<button class="button" data-do="start" '+(s.players.length<3?'disabled':'')+'>'+(s.players.length<3?'還差 '+(3-s.players.length)+' 位朋友':'開始送禮')+'</button>':'<p>等待房主開始</p>');
  else if(s.phase==='choosing')html='<h2>第 '+s.round+' 輪 · 目標 '+s.target+' 分</h2><div class="gift-task-progress"><div><span>送禮 <b id="giveTaskProgress"></b></span><button id="giveSubmit" class="button" type="submit" form="giveForm" '+(s.ownAssignments?'disabled':'')+'>'+(s.ownAssignments?'已鎖定 ✓':'鎖定送禮')+'</button></div><div><span>心願 <b id="wishTaskProgress"></b></span><button id="wishSubmit" class="button" type="submit" form="wishForm" '+(s.ownRanking?'disabled':'')+'>'+(s.ownRanking?'已鎖定 ✓':'鎖定心願')+'</button></div></div><p id="progress" class="small"></p>';
  else if(s.phase==='delivering'){const recipient=player(s.delivery.recipientId);html='<h2>收禮 '+(s.delivery.index+1)+' / '+s.delivery.total+'</h2>'+(s.me===s.delivery.recipientId?'<button class="button" data-do="accept">確認收禮</button>':'<p>等待 '+esc(recipient?.name||'朋友')+' 確認收禮</p>')+'<p class="small">所有人收完才公布分數</p>';}
  else html='<h2>'+(s.phase==='finished'?'本局完成':'本輪完成')+'</h2>'+(s.host?'<button class="button" data-do="'+(s.phase==='finished'?'start':'next')+'">'+(s.phase==='finished'?'再玩一局':'開始下一輪')+'</button>':'<p>等待房主'+(s.phase==='finished'?'開新局':'開始下一輪')+'</p>');
@@ -165,7 +165,7 @@ function render(){
  const s=state;let html='';
  stopFocus();
  if(s.phase==='waiting'){
-  html=`<div class="card hero"><div class="hero-mark">🎁</div><span class="eyebrow">MAKE A WISH</span><h1>禮物擺好，<br>朋友來了就開桌。</h1><p class="sub">3–8 人一起玩。每輪可以自由安排先送禮或先標喜好，大家兩項都完成後一起揭曉。</p><div class="banner">房間代碼 <b>${esc(s.code)}</b>　<button class="quiet" data-do="invite">複製邀請連結 ↗</button></div>${s.host?`<div class="room-settings"><div><label for="target">兩條分數的目標（8–30）</label><input id="target" type="number" min="8" max="30" value="${s.target}"></div><div><label for="customPercent">玩家投稿禮物比例</label><select id="customPercent">${customPercentSelect(s.customPercent)}</select></div></div><details class="setting-details"><summary>投稿比例說明</summary><p class="small">比例依每輪禮物數取近似值；投稿不足或尚未輪到重複抽取時，會用內建禮物補足。選 0% 則只抽內建。</p></details>`:`<p>等房主開始，先看看這桌的禮物吧。投稿禮物設定：${customPercentLabel(s.customPercent)}。</p>`}</div>`;
+  html=`<div class="card hero"><div class="hero-mark">🎁</div><span class="eyebrow">MAKE A WISH</span><h1>禮物擺好，<br>朋友來了就開桌。</h1><p class="sub">3–8 人一起玩。每輪可以自由安排先送禮或先標喜好，大家兩項都完成後一起揭曉。</p><div class="banner">房間代碼 <b>${esc(s.code)}</b>　<button class="quiet" data-do="invite">複製邀請連結 ↗</button></div>${s.host?`<section class="room-settings-panel" aria-label="房間設定"><h2>房間設定</h2><div class="room-settings"><div><label for="target">兩條分數的目標（8–30）</label><input id="target" type="number" min="8" max="30" value="${s.target}"></div><div><label for="customPercent">玩家投稿禮物比例</label><select id="customPercent">${customPercentSelect(s.customPercent)}</select></div></div><details class="setting-details"><summary>投稿比例說明</summary><p class="small">比例依每輪禮物數取近似值；投稿不足或尚未輪到重複抽取時，會用內建禮物補足。選 0% 則只抽內建。</p></details>${GameShell.settingsActions()}</section>`:`<p>等房主開始，先看看這桌的禮物吧。投稿禮物設定：${customPercentLabel(s.customPercent)}。</p>`}</div>`;
  }else if(s.phase==='choosing'){
   const recipients=s.players.filter(item=>item.id!==s.me);
   if(!recipients.some(item=>item.id===activeGiftRecipient))activeGiftRecipient=recipients[0]?.id;
@@ -181,7 +181,7 @@ function render(){
   const finished=s.phase==='finished',hasWinner=!!s.winner?.ids?.length;
   html=`<div class="card result-heading"><div><span class="eyebrow">${finished?'THE GIFTED':'ROUND COMPLETE'}</span><h1>${finished?(hasWinner?'今晚的送禮達人':'本局結束'):'大家都收到禮物了！'}</h1>${finished?`<p class="winner-names">${s.winner?.ids?.map(id=>esc(player(id)?.name||'玩家')).join('、')||esc(s.winner?.reason||'')}</p>`:''}</div>${s.host?(finished?'':''):(finished?'':'<p>等房主開始下一輪。</p>')}</div>${resultPanel(s)}`;
  }
- $('#stage').innerHTML=html;bindGamePopovers($('#stage'));$('#stage').classList.toggle('many-gifts',s.gifts.length>6);renderAction();showChoicePanel(activeChoicePanel);syncChoices();progress();
+ $('#stage').innerHTML=html;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');bindGamePopovers($('#stage'));$('#stage').classList.toggle('many-gifts',s.gifts.length>6);renderAction();showChoicePanel(activeChoicePanel);syncChoices();progress();
 }
 
 document.addEventListener('click',event=>{
@@ -212,11 +212,11 @@ $('#stage').addEventListener('submit',async event=>{
  if(event.target.id==='wishForm'){if(draftLikes.length!==4)return toast('請依序選好四件不同的禮物');const ranking=Object.fromEntries(rankKeys.map((key,index)=>[key,draftLikes[index]]));return action('wish',{ranking});}
  if(event.target.id==='enterForm'){
   if(busy)return;busy=true;
-  try{const result=await api(code?'join':'create',{type:'gift',code});if(result.type!=='gift')throw Error('這是其他遊戲房間，請從大廳加入');save(result);receive(await api('state'));$('#connection').textContent='';}catch(error){toast(error.message);}finally{busy=false;}
+  try{const result=await api(code?'join':'create',{type:'gift',code});if(result.type!=='gift')throw Error('這是其他遊戲房間，請從大廳加入');save(result);receive(await api('state'));$('#connection').textContent='';}catch(error){toast(error.message);}finally{busy=false;syncActionBusy();}
  }
 });
 async function action(name,data={}){if(busy)return;busy=true;actionFeedback('送出中…');syncActionBusy();try{const result=await api('action',{action:name,...data});receive(result);if(['give','wish'].includes(name)&&!['reveal','finished'].includes(result.phase))playSound('confirm');actionFeedback(name==='give'?'送禮已鎖定 ✓':name==='wish'?'心願已鎖定 ✓':name==='accept'?'已確認收禮':'已完成','success');$('#connection').textContent='';}catch(error){actionFeedback(error.message,'error');}finally{busy=false;syncActionBusy();syncChoices();}}
-async function roomAction(route,data={}){if(busy)return;busy=true;actionFeedback('送出中…');syncActionBusy();try{receive(await api(route,data));actionFeedback(route==='settings'?'設定已儲存':'已完成','success');}catch(error){actionFeedback(error.message,'error');}finally{busy=false;syncActionBusy();syncChoices();}}
+async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;actionFeedback('送出中…','info',settings);syncActionBusy();try{receive(await api(route,data));actionFeedback(settings?'房間設定已儲存。':'已完成','success',settings);}catch(error){actionFeedback(error.message,'error',settings);}finally{busy=false;syncActionBusy();syncChoices();if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/gift/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製給朋友',url);}}
 window.GameUI?.decorateButton($('#closeHelp'),'close',{iconOnly:true,label:'關閉遊戲規則'});
 $('#invite').onclick=invite;$('#help').onclick=()=>window.GameUI?GameUI.openDialog($('#rules'),$('#help')):$('#rules').showModal();$('#closeHelp').onclick=()=>$('#rules').close();

@@ -31,7 +31,7 @@ function readTopics(){
  if(!topics.length)throw Error('請至少選擇一個題目類別');
  return topics;
 }
-function waitingActions(s){return s.host?`<p>${s.players.length<2?'等朋友入座，至少需要兩人。':'朋友已入座，可以開始。'}</p><button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲</button><button data-do="settings">儲存房間設定</button>`:'<p>等待房主開始遊戲。</p>';}
+function waitingActions(s){return s.host?`<p>${s.players.length<2?'等朋友入座，至少需要兩人。':'朋友已入座，可以開始。'}</p><button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲</button>`:'<p>等待房主開始遊戲。</p>';}
 function decorateActions(){for(const button of $('#drawActions').querySelectorAll('button'))window.GameUI?.decorateButton(button,({start:state.phase==='finished'?'replay':'play',next:'next',save:'save',settings:'settings'})[button.dataset.do]);}
 function entry(){
  $('#stage').innerHTML=`<div class="card hero"><div class="hero-mark">✎</div><span class="eyebrow">DRAW TOGETHER</span><h1>畫一筆，<br>讓朋友猜一猜。</h1><p id="identity">將以你的角色名稱入座</p><form id="enterForm">${code?`<p>加入房間 <b>${esc(code)}</b></p><button class="button wide">加入這一桌 →</button>`:`<div class="entry-topic">${topicOptions('這桌畫什麼？',selectedTopics())}</div><button class="button wide">開一桌你畫我猜 →</button>`}</form></div>`;
@@ -52,11 +52,11 @@ function stageScene(s){
  return `<div class="stage-scene stage-finished"><div class="stage-copy"><span class="stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p><div class="stage-winners">${rankings.filter(player=>winners.includes(player.id)).map(player=>`<div class="stage-winner">${stageAvatar(player)}<b>${esc(player.name)}</b><strong>${player.score} 分</strong><span aria-hidden="true">✦</span></div>`).join('')}</div></div><ol class="stage-ranking">${rankings.map((player,index)=>`<li><span>${index+1}. ${esc(player.name)}</span><b>${player.score} 分</b></li>`).join('')}</ol></div>`;
 }
 function render(live=false){
- const s=state;let html='',actions='';
+ const s=state,settingsOpen=$('#stage .stage-controls')?.open;let html='',actions='';
  document.body.dataset.drawPhase=s.phase;
  document.body.classList.toggle('drawing-active',s.phase==='drawing');
  if(s.phase==='waiting'){
-  html=s.host?`<details class="card stage-controls"><summary>房間設定</summary><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}</div></details>`:'';
+  html=s.host?`<details class="card stage-controls room-settings-panel"><summary>房間設定</summary><div class="room-settings-body" role="group" aria-label="房間設定欄位"><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}</div>${GameShell.settingsActions()}</div></details>`:'';
   actions=waitingActions(s);
  }else if(s.phase==='drawing'){
   const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me),guessed=s.guessedIds.includes(s.me);
@@ -70,7 +70,8 @@ function render(live=false){
   }else if(s.phase==='finished'){
    actions=`<p>本局完成。</p>${s.host?'<button data-do="start">再玩一局</button>':'<p>等待房主再開一局。</p>'}${s.result?.answer?'<button data-do="save">加入素材庫</button>':''}`;
  }
- $('#stage').innerHTML=html;$('#stage').hidden=!html;
+ $('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&s.phase==='waiting'&&s.host)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
+ if(s.phase==='waiting'&&s.host){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
   GameShell.stableMarkup($('#drawActions'),actions);
  decorateActions();
  $('#canvasStage').innerHTML=s.phase==='drawing'?'':stageScene(s);
@@ -214,11 +215,11 @@ function connectEvents(){
  stream.addEventListener('reset',event=>{try{const data=JSON.parse(event.data);if(data.round===state?.round&&data.version>=canvasVersion){strokes=data.strokes;canvasVersion=data.version;localStrokes.clear();active=null;pending=[];redrawCanvas();}}catch{syncCanvas();}});
  stream.addEventListener('ready',()=>{if(state?.strokeVersion!==canvasVersion)syncCanvas();});
 }
-function drawFeedback(message,kind='info'){const node=$('#drawStatus');node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});}
+function drawFeedback(message,kind='info',settings=false){const node=$(settings?'#roomSettingsFeedback':'#drawStatus')||$('#drawStatus');node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});}
 let pendingDrawButton=null;
 function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
 async function action(name,data={}){if(busy)return false;busy=true;drawBusy(true);drawFeedback('正在送出…');try{receive(await api('action',{action:name,...data}));$('#connection').textContent='';drawFeedback(name==='guess'?'猜測已送出。':'操作已完成。','success');return true;}catch(error){drawFeedback(error.message,'error');toast(error.message);return false;}finally{busy=false;drawBusy(false);}}
-async function roomAction(route,data={}){if(busy)return;busy=true;drawBusy(true);drawFeedback('正在送出…');try{receive(await api(route,data));$('#connection').textContent='';drawFeedback('設定已完成。','success');}catch(error){drawFeedback(error.message,'error');toast(error.message);}finally{busy=false;drawBusy(false);}}
+async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));$('#connection').textContent='';drawFeedback(settings?'房間設定已儲存。':'操作已完成。','success',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
 async function saveArtwork(){
  if(busy)return;busy=true;drawBusy(true);drawFeedback('正在儲存畫作…');
@@ -237,7 +238,7 @@ function stageClick(event){
  if(button.dataset.word)return action('choose',{questionId:button.dataset.word});
  switch(button.dataset.do){
   case 'start':return roomAction('start');case 'next':return action('next');
-   case 'settings':try{return roomAction('settings',{seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()});}catch(error){drawFeedback(error.message,'error');toast(error.message);return;}
+   case 'settings':try{return roomAction('settings',{seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()});}catch(error){drawFeedback(error.message,'error',true);toast(error.message);return;}
   case 'save':return saveArtwork();case 'invite':return invite();
  }
 }

@@ -42,7 +42,7 @@ function browserHarness() {
   Date, crypto: {getRandomValues: bytes=>randomFillSync(bytes)}, confirm: () => true,
   fetch: async route => ({json: async () => route === '/api/info' ? {preferred: null} : {}}),
   RoomHost: {update() {}, kicked() {}}, RoomReconnect: {restore: async () => null},
-  GameShell: {playerRow:(p)=>`<div class="player" data-player-id="${p.id}"></div>`,stableMarkup(node, html) {
+  GameShell: {settingsActions:()=>'<button class="room-settings-save" data-do="settings">儲存房間設定</button>',playerRow:(p)=>`<div class="player" data-player-id="${p.id}"></div>`,stableMarkup(node, html) {
    node.innerHTML = html;
    if (node === element('#players')) {
     node.playerRows = [...html.matchAll(/data-player-id="([^"]+)"/g)].map(([, id]) => {

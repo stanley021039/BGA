@@ -88,6 +88,13 @@ body[data-game-kind] .ui-dialog :is(h1,h2){font-size:var(--ui-text-section)}
 body[data-game-kind] .immersion-controls{gap:var(--ui-space-3);margin:var(--ui-space-3) 0;padding:0;border:0}
 body[data-game-kind] .immersion-controls :is(button,label){font-size:var(--ui-text-body);min-height:var(--ui-control-height)}
 body[data-game-kind] .game-barrage-layer{pointer-events:none}
+body[data-game-kind] .room-settings-panel{margin-top:16px;padding:16px;border:1px solid var(--room-border,#b9c2b3);border-radius:12px;text-align:left}
+body[data-game-kind] .room-settings-panel>h2{margin:0 0 16px;font-size:var(--ui-text-section);line-height:1.5}
+body[data-game-kind] .room-settings-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--room-border,#b9c2b3)}
+body[data-game-kind] .room-settings-actions .room-settings-save{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:auto;min-height:var(--ui-control-height);margin:0;padding:8px 16px;font:600 var(--ui-text-body)/1.5 var(--ui-font-family)}
+body[data-game-kind] .room-settings-actions .ui-status{flex:1;min-width:160px;margin:0;font-size:var(--ui-text-small)}
+body[data-game-kind] .room-settings-body{padding:16px;border:1px solid var(--room-border,#b9c2b3);border-radius:12px;background:var(--room-surface,#fffdf8);color:var(--room-text,#273942);box-shadow:0 14px 40px #0003}
+body[data-game-kind] .room-settings-body .room-settings-actions{position:sticky;bottom:0;background:var(--room-surface,#fffdf8)}
 @media(min-width:960px){
  body[data-game-kind] [data-site-header].site-header{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(44px,1fr);min-height:56px;height:auto;padding:4px 0;margin-bottom:var(--ui-space-3);gap:var(--ui-space-4)}
  body[data-game-kind] .site-header .site-title{grid-column:2;grid-row:1;font-size:var(--ui-text-page);line-height:1.3;letter-spacing:normal}
