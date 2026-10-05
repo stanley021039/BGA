@@ -1,6 +1,6 @@
 # 多環境伺服器資料與移轉規格
 
-狀態：2026-10-05，使用者確認第一版採「完整移轉／備份還原」並保留帳戶資料；加密 export／verify／restore CLI 已在本地實作，來源 `c831e87`，Windows／Linux 各255項及雙向合成資料恢復通過。操作契約見 [資料移轉工具](../SERVER-DATA-TRANSFER.md)，證據與未完成項目見 [驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md)。尚未備份或遷移正式 DB、切換正式服務；merge／PostgreSQL 等後續內容仍是提案。正式主機路徑是既有部署文件的紀錄，切換前仍须重新確認，不把本文當即時服務狀態。
+狀態：2026-10-05，使用者確認第一版採「完整移轉／備份還原」並保留帳戶資料；加密 export／verify／restore CLI 已在本地實作，核心 `c831e87`，後續管理員本機 UI `2618c4b`。Windows／Linux 最新各259項及雙向合成資料恢復通過。操作契約見 [独立資料移轉文件](../SERVER-DATA-TRANSFER.md)，證據與未完成項目見 [驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md)。尚未備份或遷移正式 DB、切換正式服務；merge／PostgreSQL 等後續內容仍是提案。正式主機路徑是既有部署文件的紀錄，切換前仍须重新確認，不把本文當即時服務狀態。
 
 ## 建議決策
 
@@ -124,6 +124,6 @@ Postgres後續備援用`pg_dump`/`pg_restore`；restore可用`--single-transacti
 
 ## 本階段完成與未完成
 
-完成：source audit、官方研究、bundle／結果 identity 提案；第一版 JSON CLI keygen／inspect／export／verify／新代 restore、完整帳戶及原密碼保存、冷資料鎖、加密／認證與安全還原政策，及 [隔離驗收](../SERVER-DATA-TRANSFER-PROGRESS.md)。此文 manifest JSON 是研究草案；實際格式以工具契約／format `afterhours-encrypted-data-v1` 為準。
+完成：source audit、官方研究、bundle／結果 identity 提案；第一版 JSON CLI keygen／inspect／export／verify／新代 restore、完整帳戶及原密碼保存、冷資料鎖、加密／認證與安全還原政策；後續 localhost 管理員表單（同源／token／串行工作／預設預演），及 [隔離驗收](../SERVER-DATA-TRANSFER-PROGRESS.md)。此文 manifest JSON 是研究草案；實際格式以工具契約／format `afterhours-encrypted-data-v1` 為準。
 
 未完成：online maintenance API、正式備份／路由／資料代切換、三台獨立主機演練、新結果 schema、Postgres adapter、物件儲存、真正雙向 merge、匿名化正式副本；未拿正式資料演練。fixture 故障驗證包括損壞、缺檔、版本／FK／引用／history、鎖與發布間隙、注入 ENOSPC 與容量不足；未做真實物理掉電、實際填滿磁碟、TB 包或跨主機 ACL 環境驗收。正式執行前需具體停寫窗口及來源／目標、依操作文件驗收新代再切換。

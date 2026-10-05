@@ -1,6 +1,6 @@
 # 完整伺服器資料移轉與備份還原
 
-狀態：2026-10-05，第一版已在本地實作，程式來源 `c831e87`；Windows／Linux 合成資料驗收通過。這是一支給 AI 或管理者操作的 JSON CLI，產生加密備份並還原到**全新資料目錄**。實際正式資料、服務切換及部署尚未執行。詳細證據見 [驗收進度](SERVER-DATA-TRANSFER-PROGRESS.md)，架構邊界見 [原規格](specs/MULTI-ENV-DATA-MIGRATION.md)。
+狀態：2026-10-05，第一版已在本地實作，移轉核心 `c831e87`，管理員本機 UI `2618c4b`（結果收合／對齊補充至 `31c91dd`）；Windows／Linux 合成資料與 HTTP、原 Chrome 背景表單驗收通過。可使用 JSON CLI 或表單，產生加密備份並還原到**全新資料目錄**。實際正式資料、服務切換及部署尚未執行。詳細證據见 [驗收進度](SERVER-DATA-TRANSFER-PROGRESS.md)，架構邊界見 [原規格](specs/MULTI-ENV-DATA-MIGRATION.md)。
 
 ## 保留的資料
 
@@ -52,6 +52,31 @@ Node 的 SQLite experimental warning 可能出現在 stderr；AI 應解析 stdou
 `source` 必須有 dbFile、historyDir、communityDir；musicDir 可省略，預設 DB 旁的 music/。三個外部目錄須存在且彼此獨立，不能包住 DB。空目錄可先由管理者建立。sourceStopped 不是停止服務的指令；呼叫者必須先實際停止所有 writer。
 
 可選參數：maxBytes 預設 10 GiB，最大 1 TiB；verify 的 tempDir 可指定絕對暫存目錄；forceVacuum:true 可強制 SQLite `VACUUM INTO` 備份分支。最多 20,000 個檔案。history 單列上限 16 MiB，JSON 文件及 manifest 也有讀取限制。容量檢查留足 staging／驗證空間；磁碟滿仍可能在寫入時失敗。
+
+## 管理員本機介面
+
+不熟 JSON 的管理員可使用獨立網頁工具。在**實際擁有資料的主機**、對應專案目錄執行：
+
+```text
+npm run data:transfer:ui
+```
+
+終端顯示 `http://127.0.0.1:3170`，自行在瀏覽器開啟；不會自動搶前景。如該 port 已使用，可指定 `npm run data:transfer:ui -- --port 3171`。工具固定只綁 127.0.0.1，不接受任意 host；不能直接由另一台電腦輸入伺服器 IP 存取。如經 SSH port forwarding，兩端使用同一 port 且瀏覽器沿用印出的 127.0.0.1 URL，才符合 Host／Origin 防護；表單路徑仍是執行工具那台主機的絕對路徑。
+
+網頁依序選擇「建立備份金鑰 → 盤點來源資料 → 匯出加密備份 → 驗證備份包 → 還原到新資料目錄」。各操作只顯示適用欄位，旁邊提供可複製的 CLI JSON 預覽；所有路徑手動填入，沒有讀取或上傳 key bytes 的 UI。進階選項有容量上限、驗包暫存位置、接受未完對局中斷及 VACUUM INTO 備份分支。
+
+JSON 預覽與完整結果預設收合，複製按鈕常駐；成功狀態、統計、新資料代重要設定及下一步直接顯示。展開 JSON 使用最多200px的局部捲動，避免除錯明細佔滿桌機版面。
+
+| 操作 | UI 操作條件 |
+| --- | --- |
+| 盘點／匯出 | 先自行停止來源服務及所有 writer，再勾「來源已停寫」。後端仍執行既有資料鎖及完整驗證，勾選不能繞過運作中的 server。 |
+| 還原預演 | 預設「先預演」，只回報檢查及預計變動，不發布 destination。 |
+| 建立新資料代 | 明確選「正式建立新資料代」，勾目標 writer 已停止、全新路徑與保留舊代；既有目錄仍拒絕覆寫。工具不停止或切換服務。 |
+| 結果 | 顯示帳戶／歷史／音樂／題目數量、撤銷認證與待查核投稿數，以及可複製的去敏 JSON。原密碼／token／key 内容不顯示。 |
+
+UI 不是遊戲內的 `/admin` 頁面，遊戲服務停止時也能獨立運作；本機 OS 使用者的權限即操作權限，沒有沿用遊戲管理員登入 session。服務驗 Host、同源 Origin、每次啟動隨機 token，拒絕跨站操作；勿把這個管理埠交給公開 Tunnel／反向代理。這些保護不隔離同一台主機上已能讀管理頁的其他本機程序。
+
+每次只執行一個工作；執行時欄位鎖住。重新整理會查詢目前工作及最近結果，不重送 request；最近結果只在這個 UI 程序記憶體內，正式 restore receipt 仍在新代中。若連線中斷，先重新查狀態／核對 bundle 或 receipt，再決定是否重試。關閉 terminal 前等待工作結束；Ctrl+C 正常等待目前工作收尾，強制終止可能留下 staging 或 publication lock／marker，依下方失敗章節處理。key 仍須與 bundle 分開備援，來源／目標停寫不是 UI 自動完成的步驟。
 
 ## 一次完整操作
 

@@ -48,3 +48,11 @@ AES-256-GCM payload＋HKDF/HMAC manifest、hash／size／rowcount／FK／appeara
 restore 預設 dry run，只有 literal apply:true 發布全新 destination；existing 即空目錄也拒絕。migration、BoardStore legacy import、token 刪除、pending／sending→needs_review 只在副本執行。returned config 明確 EXTERNAL_SIDE_EFFECTS_ENABLED=false；操作方須真的套到服務，這支程式不改 .env／systemd／Tunnel。publication lock／marker 阻止半份新代開啟；失敗不要手刪 marker 啟動，保留舊代並另選新代重試。
 
 未執行正式資料搬移／部署／MR；未做 merge、Postgres、匿名化 prod→dev、記憶體房間續局、TB 包、第三主機或真實掉電。後續正式移轉需來源／目標／停寫窗口及部署流程，新代接受寫入後不能直接退舊 snapshot。
+
+## 管理員本機 UI 補充
+
+2026-10-05、來源2618c4b：`npm run data:transfer:ui` 啟動獨立 server，只綁127.0.0.1，不能透過公開站 `/admin` 做冷移轉。管理者填 OS 絕對路徑、keyFile 及操作，JSON 預覽可交AI使用；預設 dryrun、apply 明確選擇並勾目標停寫，改資料路徑重新確認。API 重用同一 transfer.run，不削弱資料鎖、publication fence 或新代限制。
+
+Host／Origin／每次啟動随机 token 保護端點，操作串行，重整只查正在跑的工作與最近去敏結果，不重送。這是本機 OS 使用者工具，沒有用停掉的遊戲服務 session 認證，不能拿去公開 Tunnel；同機能讀本機頁面的程序不在此權限隔離範圍。Ctrl+C 等現有工作收尾，強殺仍依 lock／marker 回復流程。
+
+Windows／Linux 各259項通過（移轉16＋UI HTTP4）；完整 HTTP workflow 原密碼登入、active source拒絕、錯origin/token/host、忙碌與刷新已驗。主agent原Chrome背景keygen→inspect→export→verify→dryrun→apply→reload通過，只合成帳戶1筆。收合版31c91dd預設隱藏完整JSON，重要統計/config/下一步可見；1767×1196仍可小捲，未驗手機，證據見進度文件。

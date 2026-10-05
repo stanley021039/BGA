@@ -8,6 +8,8 @@
 
 完整伺服器資料移轉／備份還原可用 [AI JSON CLI](docs/SERVER-DATA-TRANSFER.md)：一起保存帳戶原密碼、權限、素材、音樂、題庫及歷史，使用加密 bundle 還原至全新資料代。先停止所有 writer，預設 dry run；成功後需重新登入並在隔離環境驗收。這支工具不會自行切換正式服務，驗證範圍見 [實作進度](docs/SERVER-DATA-TRANSFER-PROGRESS.md)。
 
+管理員可執行 `npm run data:transfer:ui`，依終端顯示的本機 URL 開啟 [表單操作介面](docs/SERVER-DATA-TRANSFER.md#管理員本機介面)，不需手寫 JSON；只綁 127.0.0.1，仍須先停止資料 writer。
+
 程式依用途放在 `src/`（帳號、角色、社群、GitHub、房間、各遊戲與資料庫）、`public/`（頁面與共用 UI）、`tests/`（自動測試）及 `docs/`（專題文件）。根目錄的 `server.js`、`admin.js` 是沿用 `npm start` 與管理指令的相容入口。
 
 ## 帳號與留言板

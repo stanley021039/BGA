@@ -18,3 +18,5 @@
 2026-10-05後續已實作項目另有 [畫猜房間](../DRAW-ROOM-SETUP-PROGRESS.md)、[共用聲音](../SHARED-AUDIO-PROGRESS.md)及 [彈幕／房間設定整合](../BARRAGE-ROOM-SETTINGS-PROGRESS.md)驗收文件；最新正式程式來源 `15af1dd`。研究提案維持各自狀態，下一輪仍需查當前Git及部署版本。
 
 2026-10-05 完整資料移轉第一版程式 `c831e87` 已本地驗收（Windows／Linux 各255项及兩方向 restore／登入），包括原帳戶密碼與權限，未執行正式 migration／部署。最新使用者決策 U17 及接手流程見 SERVER-DATA、MEMORY-LEDGER；研究 spec 中 merge／Postgres 等項目不能混稱完成。
+
+使用者追加 U18 獨立移轉文件及管理員 UI。`2618c4b` 提供 `npm run data:transfer:ui` localhost 表單，結果收合／對齊補充至31c91dd，仍沿用冷移轉與防覆寫政策；Windows／Linux 各259項（UI HTTP4項）與原Chrome背景完整表單流程／重新整理通過，見同一操作文件及進度。

@@ -1,6 +1,6 @@
 # Server 資料移轉實作與驗收
 
-更新：2026-10-05。使用者選擇「完整移轉／備份還原」，並要求帳戶資料也搬移。程式來源 `c831e87`，分支 `feat/server-data-transfer`。本批只建立工具及隔離驗收，未 push、MR、部署或操作正式 DB。操作文件：[SERVER-DATA-TRANSFER](SERVER-DATA-TRANSFER.md)。
+更新：2026-10-05。使用者選擇「完整移轉／備份還原」，要求帳戶也搬移，以及獨立操作文件和方便管理員的 UI。移轉核心 `c831e87`，本機管理 UI `2618c4b`、結果收合／對齊至 `31c91dd`，分支 `feat/server-data-transfer`。本批只建立工具及隔離驗收，未 push、MR、部署或操作正式 DB。獨立操作文件：[SERVER-DATA-TRANSFER](SERVER-DATA-TRANSFER.md)。
 
 | 原規格項目 | 完成內容 | 證據／限制 |
 | --- | --- | --- |
@@ -14,15 +14,25 @@
 | 恢復安全政策 | target 刪 sessions／invites／resets；pending／sending 改 needs_review；returned config 禁外部投稿 | 舊 cookie／邀請／reset 失效；已配置 remote client 也無 recover／retry／new submission 出站。 |
 | 進行中歷史 | 預設拒絕；明確 acknowledge 才在 target 追加 interruption 及最後已落盤 state | 來源 playing 不變，不偽造輸贏；未配對 intent 與截斷 JSONL 仍拒絕。 |
 | 共編舊留言 | 在 restored DB 依 BoardStore 既有規則匯入 legacy issues／comments | 原 DB 筆數不變；returned restoredSummary 反映匯入，啟動不再造成未列出的首次 import。 |
+| 管理員表單 | `npm run data:transfer:ui`，獨立 localhost 介面，keygen／inspect／export／verify／預演及 apply；JSON 預覽與結果統計／複製 | 不依賴運作中的遊戲服務，仍需操作方停 source／target writer。修改路徑清除停寫確認；預設預演。 |
+| 管理 UI 防護 | 固定 bind127.0.0.1，驗 Host／Origin／隨機 token、JSON／容量上限、一次一工作，刷新查狀態不重送 | HTTP 驗惡意 Host／Origin／錯 token／非JSON／超額／併發、刷新保存結果及錯誤去敏。不是隔離其他本機 OS 使用者的權限系統。 |
 
 ## 最後自動驗證
 
 | 環境 | Runtime | 結果 |
 | --- | --- | --- |
-| Windows | Node 24.14.0、SQLite 3.51.2 | `npm test`：255／255，0 fail／skip；其中移轉 16 項。 |
-| Linux 隔離目錄 | Node 22.22.1、SQLite 3.46.1 | 同版 source `npm test`：255／255，0 fail／skip；未改 afterhours 正式服務。 |
+| Windows | Node 24.14.0、SQLite 3.51.2 | `npm test`：259／259，0 fail／skip；移轉16項＋UI HTTP4項。 |
+| Linux 隔離目錄 | Node 22.22.1、SQLite 3.46.1 | 同版 source `npm test`：259／259，0 fail／skip；未改 afterhours 正式服務。 |
 
 原始 log 存在 Git 忽略的 `work/data-transfer-final-windows-tests.log` 與 `work/data-transfer-final-linux-tests.log`。初版為1e0809f；c831e87 補發布失敗時持續保留 publication fence，含 marker 寫入本身 ENOSPC 分支。Linux 初跑隔離 archive 遺漏根 admin.js，使最後一項缺檔失敗；補足打包後重跑全套通過，沒有以忽略失敗代替驗證。工具在最低 22.13 的 fallback 由 forceVacuum 分支驗證，未在 22.13 runtime 上執行；支援目前兩個 runtime 的跨版本資料搬移。
+
+核心255項證據保留以上 logs；含 UI 的259項 logs 為 `work/data-transfer-ui-windows-tests.log`、`work/data-transfer-ui-linux-tests.log`。UI HTTP 實際 keygen→active source拒絕→inspect→export→verify→default dryrun→明確 apply→新服務原密碼登入成功；相同 destination 重試仍拒絕覆寫。結果收合版只改前端呈現，另重跑UI HTTP4項與JS syntax通過，未無理由重跑整套。
+
+## 原 Chrome 背景管理 UI 驗收
+
+主 agent 在原 Chrome 背景完成 keygen→inspect→export→verify→restore dryrun→apply→reload；合成来源帳戶1筆，bundleId `dc33ba2e-3ef3-4e4b-9f27-6766c32d3398`，不含正式資料。重新整理顯示最近結果，沒有重送還原。截圖 `work/data-transfer-admin-ui.png` 由主 agent 保存。
+
+初版完成後完整JSON造成側欄過長；改為操作／結果JSON預設details收合、複製常駐，統計、回傳config與下一步常駐。新收合版1767×1196實測body1324，管理工具仍可少量捲動；成功狀態及重要設定可讀。COMMUNITY_DIR字尾折行再以140px label欄與nowrap修正。未驗手機版與所有瀏覽器，不宣稱每種視窗完全無捲動。
 
 ## 跨 OS／SQLite 雙向恢復
 
