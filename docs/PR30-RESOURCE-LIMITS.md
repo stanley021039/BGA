@@ -73,3 +73,17 @@ Windows Node 24.14.0、Linux Node 22.22.1 全套各 **260/260 通過**；新增 
 BGA 已有 POST stroke／SSE stroke 增量傳輸與缺版快照恢復；本次證據支持命令增量方向，不能證明 Gartic 的 CPU、checkpoint、server 配額或資料保留策略。未測另一席接收／重連，亦未另錄 BGA HAR。PR 的資源與 renderer 修正仍以自身回歸測試和 Chrome 工作量量測驗證。
 
 HAR 的 1,035 entries、57 則 WS 訊息通過格式檢查，另外 127 個不完整觀察保存在擴充欄位；匯出器 10/10 合成測試通過，未執行 Chrome Import UI。原始內容與截圖只在 `BGA-draw-guess/work/`，檔案、雜湊及限制見 [完整網路參考](research/GARTIC-NETWORK-REFERENCE.md)。
+
+## 追蹤回覆：新對局第 1 輪的配額隔離
+
+再次核對回覆後確認：第 1 輪用完配額、因玩家離席提前結束、重新加入並再開第 1 輪，原 client 只比較 round，因而保留上一局配額。原 server 也只驗 round，同畫者延遲的舊 POST 可能寫入新局。
+
+修正來源 `e60f853`：每次新畫布由 server 產生 `canvasEpoch`，state、snapshot、ACK、SSE stroke／reset／ready 和修改請求都攜帶它。新 epoch 清零 client 配額、草稿、繪圖工作與發送佇列；clear／undo 保持相同 epoch，不退回額度。舊 ACK／SSE／snapshot／較舊 state 不可恢復舊配額；排隊筆畫在實際發出前再次驗 epoch。舊 command 的回覆或 finally 不會清空新畫布或解除新操作鎖。素材庫儲存同時驗 round＋epoch，避免等待期間重開同輪號而誤存新局畫布。
+
+Server 在去重、配額及畫布修改前拒絕缺少／過期 epoch 的 stroke／command。這是必要的新 client／server 契約，部署時須一起更新，已開啟的舊版畫猜頁面須重新整理；不能為相容 round-only 請求而繞過隔離。
+
+新增 7 項回歸涵蓋 48 fill／1,000 batch／30,000 point 全額耗盡後離席／復座／重開、同 batch ID 跨 epoch、延遲 POST／ACK／SSE／snapshot／state／command finally、先收到新 SSE 後才收到 state，以及儲存等待期間重開第 1 輪。PR Windows Node 24.14.0、Linux Node 22.22.1 完整各 **286/286 通過**，無失敗／跳過／取消。Linux source-only 包含 445 檔，SHA-256 `758b8d3aedaefc1d27ceebc5101bdfea04c8c1e3277ec2968320cc401c4bb2e5`。
+
+1280 × 720 隱藏內建瀏覽器隔離驗收：舊局 48 次填色及另一席離房／加入由正常本機 API 準備；房主實際 UI 登入、返回房間、按「再玩一局」、選題及填色。舊 round 1 的油漆桶 disabled，新 round 1 恢復 enabled 且填色成功，server 配額為 1／1／1。另送舊 epoch 的 stroke 與 clear 均回 400，快照及新局配額保持不變。瀏覽器無 console warning／error；未把合成測試的延遲訊息注入冒稱真人操作。
+
+私有證據：`work/pr30-epoch-windows-tests.log`、`work/pr30-epoch-linux-tests.log`、`work/pr30-epoch-linux-source-manifest.json`、`work/pr30-epoch-browser-evidence.json`、`work/pr30-epoch-stale-result.json`、`work/pr30-epoch-exhausted.png`、`work/pr30-epoch-new-round.png`。本機 3124 已停止、測試分頁已關閉；未部署或修改正式資料。

@@ -27,6 +27,8 @@
 | U21 | 為繼續測試，可以安裝 Codex 擴充功能或使用不同瀏覽器。 | 放寬 U10 的瀏覽器選擇，保留背景操作偏好。Chrome 擴充已連線，內建瀏覽器可在隱藏分頁開啟 Gartic；目前兩者未提供 CDP／HAR API。官方 Developer mode 開關已告知使用者，等待其回覆與實際能力開放，不代表已取得 HAR 或允許提高視窗。 |
 | U22 | 直接用 Computer Use 開啟上述完整 CDP 存取權限。 | 已依明確指示透過 Codex 設定 UI 開啟；重新建立 CUA 工作階段後，官方 tab `cdp` capability 出現且 `Network.enable` 成功。隱藏內建瀏覽器已完成單席 Gartic Masterpiece 畫筆、區域／全畫布填色、undo／redo及相簿，原始紀錄保存在 ignored work；有效作畫採樣區間無 truncated，早期載入／進房有缺漏標記，詳 [網路參考](../research/GARTIC-NETWORK-REFERENCE.md)。這筆取代 U21 的設定等待狀態；背景測試偏好保留。 |
 
+U20 後續驗收補充：最新 PR 追蹤回覆另有「同房重開第 1 輪沿用舊配額」，已由 `e60f853`／本地整合 `7c25c7b` 以 canvasEpoch 修正，舊 POST／ACK／SSE／snapshot／儲存等待均隔離。PR Windows／Linux各286項、本地整合Windows330項及背景新局填色通過；PR已推送至文件提交 `7f44f20`，未部署。證據見 [修正文件](../PR30-RESOURCE-LIMITS.md)。此筆取代「只補歷史與冷恢復即涵蓋全部追蹤回覆」的理解。
+
 已驗收程式基線：公開站來源 `9f041d3`；PR #30 包含後續文件提交 `0aa6c75`。這是本輪的歷史基線，未來不能不查核就當作目前正式版本。完整前輪驗收見 [桌機進度](../DESKTOP-DESIGN-PROGRESS.md) 與 [畫猜三人試玩](../DRAW-GUESS-PLAYTEST.md)。
 
 本輪開始時的程式缺口：`src/achievements/store.js` 只有送禮、同頻、撲克、雷霆四款入門徽章及共用第一桌，沒有畫猜入門徽章，沒有持久勝場總計；此項由本輪成就 spec 提案，不表示已修正。
