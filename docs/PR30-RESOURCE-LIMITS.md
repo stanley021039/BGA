@@ -33,3 +33,33 @@ Windows Node 24.14.0、Linux Node 22.22.1 全套各 **260/260 通過**；新增 
 **效能限制：**載入 48 次全畫布填色的初次快照仍同步執行一次，實測約 486–524 ms，尚未使用 Worker 或預先合成快照。此修正消除逐次接收的重複全歷史重繪，不能宣稱任何重連都無停頓。背景 Chrome 的 rAF 有約一秒節流間隔，本次不把它當成畫面 FPS 或其他電腦硬體問題的證據。工作次數、快取大小與像素一致性是此輪主要證據。
 
 私有證據：`work/pr30-tests.log`、`pr30-linux-tests.log`、`pr30-live-stress.json`、`pr30-browser-evidence.json` 及 Chrome 截圖。既有 PR 更新此批修正；**尚未部署**，舊版本的部署記錄不能當成本次驗收。
+
+## 後續複查：失敗開局與重連恢復
+
+2026-10-05 使用者要求繼續 HAR 與 PR 修正。重新讀取 PR #30 回覆後，既有玩家紀錄上限仍成立；獨立複查另外重現並修正以下缺口。
+
+| 缺口 | 行為與限制 | 驗證 |
+| --- | --- | --- |
+| 單人房重複開局失敗，產生不能淘汰的 `playing` archive | 未真正進入遊戲的失敗開局標為 `interrupted`，保留失敗 intent/result，不沿用上一局 winner。 | 五款遊戲各 12 次失敗開局，在 archive 上限 2 下仍有界；補足玩家後可正常開局，其他房間可運作。 |
+| 寫入成功但 fsync 失敗、或 metadata rename 失敗，容量帳面少計 | 故障後讀實體大小，包含遺留 `.tmp`；仍暫停操作並回報錯誤，不把未完成 fsync 說成已可靠保存。 | 故障注入後記帳與實體 bytes 相同；不偽造缺少的歷史結果。 |
+| 首次重連同步重播 48 次填色，主執行緒約半秒不能回應 | 大量恢復透過 MessageChannel 分批，每批最多 1 次 fill、16 筆 stroke 或約 8 ms 軟預算。新快照、復原與換輪可取消舊工作；背景不依賴 rAF。 | 真像素、取消／替換、active draft、快取及儲存時序回歸；單次 fill 仍不可搶占，不宣稱零停頓。 |
+
+恢復期間暫停新增作畫，猜題與玩家資訊仍可使用；素材庫儲存等最新畫布完成。回復失敗或已換輪會保留錯誤，禁止把部分畫布或下一輪空畫布當原作品上傳。原同步 renderer 與 studio 契約保留。
+
+同一台原 Chrome、512 × 256、48 次交替整張填色，舊／新各依序 3 次：
+
+| 量測 | 舊版 `1b8c85d` | 本次分批恢復 |
+| --- | --- | --- |
+| 恢復總時間 | 477.3–505.9 ms | 474.1–552.2 ms |
+| PerformanceObserver 長任務 | 每次各 1 筆，483／513／486 ms | 3 次均未觀察到大於 50 ms 長任務 |
+| 每批最大實際工作時間 | 完整恢復同步執行 | 15.7–18.4 ms；每批 1 fill |
+| 填色應用次數／快取 | 48 次／8 MiB | 48 次／8 MiB |
+| 最終像素 hash | `29d49dc5` | `29d49dc5` |
+
+首次 MessageChannel 探針等待 0.1–56.8 ms，含瀏覽器排程，不能等同每批 CPU 時間或實際呈現 FPS。改進是將工作拆開讓主執行緒可處理其他工作，總填色成本沒有消失。以上取代前節「完整重連仍全部同步」的現況描述，前節保留作為基線。
+
+真實遊戲本機隔離驗收：兩席由 Chrome UI 登入並重連完整 48 fill，兩席各 48 次 yield、hash 相同。房主用 UI 復原與畫筆作畫後，兩席 hash 同為 `2f93ce38`；填色第 49 次仍回 429，brush 可用。後續回合由受控本機 API 準備完整畫作，結束後 Chrome 重連並以 UI 加入素材庫成功，hash `29d49dc5`。沒有將 API 準備步驟冒稱真人 UI 作畫。
+
+本次程式來源 `3b19720`：Windows Node 24.14.0、Linux Node 22.22.1 完整測試各 **279/279 通過**，無失敗／跳過／取消；新增畫布 11 項及 history 8 項。Linux source-only 包 444 檔，SHA-256 `e0a8e0fd5354ce5db533d27c660e85832a5377f4fb5b351f6c293524feb7e3df`，兩端及測試後 manifest 一致，隔離目錄已清理。語法／diff 檢查通過，Chrome 兩席無 console error。
+
+本次私有證據：`work/pr30-followup-windows-tests.log`、`work/pr30-followup-linux-tests.log`、`work/pr30-cold-recovery-metrics.json`、`work/pr30-recovery-browser-evidence.json`、`work/pr30-recovery-browser.png`、`work/pr30-finished-state.json`。本機 3122／3123 測試服務與測試分頁已關閉。HAR 仍待錄製，官方方法與證據邊界見 [Gartic 網路參考](research/GARTIC-NETWORK-REFERENCE.md)；這些 BGA 測試不是 Gartic 封包證據。未部署或修改正式資料。

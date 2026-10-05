@@ -22,3 +22,5 @@
 使用者追加 U18 獨立移轉文件及管理員 UI。`2618c4b` 提供 `npm run data:transfer:ui` localhost 表單，結果收合／對齊補充至31c91dd，仍沿用冷移轉與防覆寫政策；Windows／Linux 各259項（UI HTTP4項）與原Chrome背景完整表單流程／重新整理通過，見同一操作文件及進度。
 
 同日最終來源至 `215f82c`：移轉UI及過期狀態競態修正、PR資源修正與最新遊戲功能已整合，Windows／Linux各304項及背景Chrome驗收通過；PR #30更新至1b8c85d，未部署。接手優先讀 [獨立移轉指南](../SERVER-DATA-TRANSFER.md)、[最終進度](../SERVER-DATA-TRANSFER-PROGRESS.md) 與 [PR修正](../PR30-RESOURCE-LIMITS.md)。Gartic無HAR證據，不能推測其協議。
+
+同日後續來源 `e71989e` 整合 PR 程式 `3b19720`：補失敗開局歷史淘汰／故障容量記帳與分批畫布恢復。PR Windows／Linux各279項，本地完整整合Windows323項；沒有本次Linux323項證據。Chrome多人重連／復原／儲存通過，HAR仍待取得；接手讀 [後續複查](../PR30-RESOURCE-LIMITS.md#後續複查失敗開局與重連恢復) 與 [錄製方法](../research/GARTIC-NETWORK-REFERENCE.md)。

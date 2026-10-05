@@ -61,3 +61,5 @@ Linux包456檔，SHA256 `7eb9cdadde6cdbb7a1b66e1b0cfd13dc2ccf3bf450186195201bdd7
 最終 Chrome 刷新恢復成功結果、JSON 收合、完整設定與下一步可見，無 console error；截圖 `work/data-transfer-admin-ui.png`。本機3122、3187測試服務與測試分頁已關閉。正式站未部署此批程式，未發新的移轉 MR，未搬正式資料。
 
 尚未執行真實 server 資料搬移、路由切換、停止正式 writer 或啟用新正式資料代。工具不代做 SSH、systemd、active symlink、Tunnel、GitHub 人工 reconcile、帳戶 merge、雙端資料合併、PostgreSQL／object store、房間續局、匿名化 prod→dev；上述原規格保持提案狀態。日後若執行正式切換，須先取得具體來源／目標與停寫窗口，再在新代驗收及保留相容舊代，不能把本批 fixture 成功宣稱已完成正式遷移。
+
+2026-10-05 後續整合 `e71989e`：加入 PR #30 的失敗開局歷史淘汰、I/O fault 容量記帳與分批畫布恢復，移轉 CLI／UI 契約未修改。Windows Node24.14.0 完整 **323/323** 通過；對應 PR source `3b19720` 在 Windows／Linux 各279/279。本次未重跑整合分支的Linux全套，舊304項仍只代表215f82c當時版本。原始記錄 `work/pr30-followup-combined-windows-tests.log`，詳 [PR 後續複查](PR30-RESOURCE-LIMITS.md#後續複查失敗開局與重連恢復)。
