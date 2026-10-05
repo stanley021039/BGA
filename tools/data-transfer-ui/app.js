@@ -39,8 +39,9 @@
  function status(message, kind) { $('status').textContent = message; $('status').dataset.kind = kind; }
  function setBusy(value) { busy = value; $('controls').disabled = value; if (value) status('正在執行，請等待完整結果。重新整理後會查詢目前工作，不會自動重送。','busy'); }
  function result(response) {
-  lastResponse = response; $('copyResult').disabled = false; $('resultOutput').hidden = false; $('resultOutput').textContent = JSON.stringify(response,null,2);
+  lastResponse = response; $('copyResult').disabled = false; $('resultDetails').hidden = false; $('resultDetails').open = false; $('resultOutput').textContent = JSON.stringify(response,null,2);
   $('resultSummary').replaceChildren(); $('resultSummary').hidden = true;
+  $('configPanel').hidden = true; $('nextStepsPanel').hidden = true; $('bootConfig').replaceChildren(); $('nextSteps').replaceChildren();
   if (!response.ok) { status(errors[response.error.code] || `操作失敗（${response.error.code}）：${response.error.message}`,'error'); return; }
   const r = response.result, label = r.action === 'restore' ? (r.dryRun ? '預演完成，新目錄尚未建立。' : '新資料代已建立，請使用回傳設定隔離驗收。') : names[r.action]+'完成。'; status(label,'success');
   const data = r.restoredSummary || r.summary || r, counts = data.database?.tableCounts;
@@ -48,6 +49,12 @@
   if (r.changes) items.push(['撤銷舊認證',Object.values(r.changes.revoked).reduce((a,b)=>a+b,0)],['待查核投稿',r.changes.heldSubmissions]);
   for (const [name,value] of items) { const box=document.createElement('div'), number=document.createElement('strong'), caption=document.createElement('span');number.textContent=String(value ?? 0);caption.textContent=name;box.append(number,caption);$('resultSummary').append(box); }
   $('resultSummary').hidden = !items.length;
+  if(r.action==='restore'&&r.config){
+   $('configPanel').hidden=false;$('nextStepsPanel').hidden=false;$('configHeading').textContent=r.dryRun?'預計設定（預演，先勿啟動）':'新資料代設定';
+   for(const [key,value] of Object.entries(r.config)){const label=document.createElement('dt'),field=document.createElement('dd');label.textContent=key==='EXTERNAL_SIDE_EFFECTS_ENABLED'?'外部投稿':key;field.textContent=key==='EXTERNAL_SIDE_EFFECTS_ENABLED'?'停用（false）':value;$('bootConfig').append(label,field);}
+   const steps=r.dryRun?['確認預演結果，再明確選擇建立新資料代。']:['以這份設定與獨立 port 隔離啟動，驗原密碼登入、權限及素材。','保留舊程式與資料，停舊 writer 後再切流量。','查核待確認投稿後，再決定是否啟用外部投稿。'];
+   for(const text of steps){const item=document.createElement('li');item.textContent=text;$('nextSteps').append(item);}
+  }
  }
  async function state() {
   clearTimeout(polling);
