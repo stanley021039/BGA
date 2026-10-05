@@ -13,6 +13,7 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
   if (!elements.has(selector)) {
    const handlers = new Map();
    const node = {
+    id:/^#[\w-]+$/.test(selector)?selector.slice(1):'',
     hidden: false, open:false, value: selector === '#color' ? '#273942' : selector === '#size' ? '5' : '', checked: false,
     innerHTML: '', textContent: '', dataset: {}, style: {}, children: [], scrollHeight: 0, scrollTop: 0, clientHeight: 0,
     classList: {toggle() {}, add() {}, remove() {}},
@@ -23,7 +24,7 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
     remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); },
     querySelector(selector) { return selector === '.feed-empty' ? this.children.find(child => child.className === 'feed-empty') || null : null; },
     querySelectorAll() { return []; },
-    animate() { animations.push(selector); return {cancel() {}}; }, showModal() {this.open=true;}, close() {this.open=false;handlers.get('close')?.();}, focus() {},
+    animate() { animations.push(selector); return {cancel() {}}; }, showModal() {this.open=true;}, close() {this.open=false;handlers.get('close')?.();}, focus() {context.document.activeElement=this;},
    };
    elements.set(selector, node);
   }

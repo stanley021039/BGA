@@ -5,7 +5,7 @@ const os=require('node:os');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
 const {createApp}=require('../src/app');
-const {openDatabase}=require('../src/db/index');
+const {openDatabase,SCHEMA_VERSION}=require('../src/db/index');
 const {createAuth}=require('../src/auth/index');
 
 test('v3 character images migrate without losing existing expression bytes',()=>{
@@ -17,7 +17,7 @@ test('v3 character images migrate without losing existing expression bytes',()=>
   old.prepare('INSERT INTO character_images VALUES(?,?,?,?)').run('legacy','happy','image/gif',Buffer.from('GIF89a'));
   old.close();
   const upgraded=openDatabase(file);
-  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(upgraded.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   const row=upgraded.prepare('SELECT expression,label,bytes FROM character_images').get();
   assert.equal(row.expression,'happy');
   assert.equal(row.label,null);

@@ -65,11 +65,11 @@ class DrawGuessRoom{
   this.event('settings','房主已更新作畫時間與題目類別');
  }
  wordPools(){
-  const custom=this.wordProvider?.()||[];
-  if(Array.isArray(this.options.topics))return {builtin:WORDS.filter(word=>this.options.topics.includes(word.topic)),custom:this.options.topics.includes('custom')?custom:[]};
+  const allowed=word=>!this.wordExclusionProvider?.(word),builtin=WORDS.filter(allowed),custom=(this.wordProvider?.()||[]).filter(allowed);
+  if(Array.isArray(this.options.topics))return {builtin:builtin.filter(word=>this.options.topics.includes(word.topic)),custom:this.options.topics.includes('custom')?custom:[]};
   // Keep recorded rooms and older clients using their original topic/ratio rules.
   const inTopic=word=>this.options.topic==='all'||word.topic===this.options.topic;
-  return {builtin:WORDS.filter(inTopic),custom:custom.filter(inTopic)};
+  return {builtin:builtin.filter(inTopic),custom:custom.filter(inTopic)};
  }
  start(){
   if(!['waiting','finished'].includes(this.phase))throw Error('本局已開始');
@@ -86,21 +86,35 @@ class DrawGuessRoom{
   for(const player of this.activePlayers())player.waitingForNextRound=false;
   while(this.pendingArtists.length&&!this.activePlayers().some(player=>player.id===this.pendingArtists[0]))this.pendingArtists.shift();
   if(!this.pendingArtists.length){this.finish();return;}
+  const draw=drawContent({...this.wordPools(),count:3,customPercent:this.options.customPercent,usedIds:this.usedWordIds,rng:this.rng});
+  if(!draw.items.length){this.finish('所選類別已沒有可用題目，本局結束');return;}
   this.round++;this.presenterId=this.pendingArtists.shift();
   this.roundStartScores.clear();for(const player of this.players)this.roundStartScores.set(player.id,player.score);
   this.participantIds=this.activePlayers().filter(player=>player.id!==this.presenterId).map(player=>player.id);
-  const draw=drawContent({...this.wordPools(),count:3,customPercent:this.options.customPercent,usedIds:this.usedWordIds,rng:this.rng});
   this.candidates=draw.items.map(clone);this.usedWordIds=draw.usedIds;
   this.phase='choosing';this.question=null;this.guessedIds=[];this.guesses=[];this.result=null;
   this.deadline=this.now()+15000;
   this.canvas.epoch=randomUUID();this.canvas.strokes=[];this.canvas.batchIds.clear();this.canvas.points=0;this.canvas.acceptedPoints=0;this.canvas.recent=[];this.canvas.fills=0;this.canvas.fillRecent=[];this.canvas.commandRecent=[];this.canvas.version++;
   this.event('round','第 '+this.round+' 輪，由 '+this.player(this.presenterId).name+' 選題');
  }
- choose(id,questionId){
+ refreshCandidates(){
+  const draw=drawContent({...this.wordPools(),count:3,customPercent:this.options.customPercent,usedIds:this.usedWordIds,rng:this.rng});
+  this.candidates=draw.items.map(clone);this.usedWordIds=draw.usedIds;
+  if(!this.candidates.length){this.finish('所選類別已沒有可用題目，本局結束');return false;}
+  this.deadline=this.now()+15000;this.event('candidates','候選題已停用，已重新抽題');return true;
+ }
+ choose(id,questionId,automatic=false){
   if(this.phase!=='choosing'||id!==this.presenterId)throw Error('現在不是你選題');
-  if(this.now()>=this.deadline)questionId=this.candidates[0].id;
+  if(automatic||this.now()>=this.deadline){
+   let available=this.candidates.find(word=>!this.wordExclusionProvider?.(word));
+   if(!available){if(!this.refreshCandidates())return;available=this.candidates[0];}
+   questionId=available.id;
+  }
   const question=this.candidates.find(item=>item.id===questionId);
   if(!question)throw Error('請選擇本輪三個題目之一');
+  if(this.wordExclusionProvider?.(question)){
+   this.refreshCandidates();throw new HttpError(409,'DRAW_WORD_BANNED','這個題目已被玩家停用，請選擇更新後的題目');
+  }
   this.question=clone(question);this.candidates=[];this.phase='drawing';
   this.deadline=this.now()+this.options.seconds*1000;
   this.event('draw','畫者已選好題目，開始作畫');
@@ -135,7 +149,8 @@ class DrawGuessRoom{
   this.result=freeze(clone({resultId:randomUUID(),gameRunId:this.gameRunId,canvasEpoch:this.canvas.epoch,revealedAt:this.now(),round:this.round,presenterId:this.presenterId,artist:{id:this.presenterId,name:artist?.name||'畫者',avatar:artist?.avatar||null},answer:this.question?.title||null,aliases:this.question?.aliases||[],reason,guessedIds:[...this.guessedIds],guesses:this.guesses,scores:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,roundPoints:player.score-(this.roundStartScores.get(player.id)||0)}))}));
   this.results.push(this.result);
   const {guesses,...metadata}=this.result;
-  this.publicResults.set(this.result.resultId,{snapshot:freeze({result:metadata,canvas:this.canvasSnapshot()}),artworks:new Map()});
+  const electorate=freeze(this.activePlayers().map(player=>player.id));
+  this.publicResults.set(this.result.resultId,{snapshot:freeze({result:metadata,canvas:this.canvasSnapshot()}),artworks:new Map(),ballot:{electorate,required:Math.floor(electorate.length/2)+1,votes:new Set(),word:this.question?freeze({id:this.question.id,title:this.question.title}):null,banned:false}});
   while(this.publicResults.size>MAX_PUBLIC_RESULTS)this.publicResults.delete(this.publicResults.keys().next().value);
   this.phase='reveal';this.deadline=this.now()+8000;this.event('reveal',reason+'，本輪揭曉');
  }
@@ -156,6 +171,30 @@ class DrawGuessRoom{
   return entry.artworks.get(userId)||null;
  }
  rememberResultArtwork(resultId,userId,artworkId){this.savedResultArtwork(resultId,userId);this.publicResults.get(resultId).artworks.set(userId,artworkId);}
+ resultVote(resultId,id){
+  const ballot=this.publicResults.get(resultId)?.ballot;
+  if(!ballot)throw new HttpError(404,'DRAW_RESULT_NOT_FOUND','這輪結果尚未公開或已不在最近八輪內');
+  const banned=!!(ballot.banned||ballot.word&&this.wordExclusionProvider?.(ballot.word)),voted=ballot.votes.has(id),player=this.player(id);
+  return {resultId,votes:ballot.votes.size,total:ballot.electorate.length,required:ballot.required,voted,canVote:!!ballot.word&&!!player&&!player.kicked&&ballot.electorate.includes(id)&&!voted&&!banned,banned};
+ }
+ voteWordBan(id,resultId){
+  const player=this.player(id);if(!player||player.kicked)throw new HttpError(403,'NOT_SEATED','尚未加入此房間');
+  const entry=this.publicResults.get(resultId);
+  if(!entry)throw new HttpError(404,'DRAW_RESULT_NOT_FOUND','這輪結果尚未公開或已不在最近八輪內');
+  const ballot=entry.ballot;
+  if(!ballot.word)throw new HttpError(400,'DRAW_WORD_NOT_SELECTED','這輪尚未選定題目，無法投票');
+  if(!ballot.electorate.includes(id))throw new HttpError(403,'DRAW_BAN_NOT_ELIGIBLE','只有這輪揭曉時已在房間內的玩家可以投票');
+  if(ballot.votes.has(id)||ballot.banned||this.wordExclusionProvider?.(ballot.word))return this.resultVote(resultId,id);
+  const votes=[...ballot.votes,id],passed=votes.length>=ballot.required;
+  if(passed){
+   if(typeof this.wordBanWriter!=='function')throw new HttpError(503,'DRAW_BAN_UNAVAILABLE','暫時無法保存禁題投票，請稍後重試');
+   // The deciding vote becomes visible only after durable exclusion succeeds.
+   this.wordBanWriter(ballot.word,{roomCode:this.code,resultId,gameRunId:entry.snapshot.result.gameRunId,electorate:[...ballot.electorate],votes,required:ballot.required});
+  }
+  ballot.votes.add(id);if(passed)ballot.banned=true;
+  this.event(passed?'word-banned':'word-ban-vote',passed?'「'+ballot.word.title+'」已獲過半同意，從題庫停用':player.name+' 已投票停用「'+ballot.word.title+'」');
+  return this.resultVote(resultId,id);
+ }
  finish(reason=null){
   this.phase='finished';this.deadline=null;
   const players=this.activePlayers(),high=Math.max(0,...players.map(player=>player.score));
@@ -168,7 +207,7 @@ class DrawGuessRoom{
  }
  auto(){
   const now=this.now(),artist=this.player(this.presenterId);
-  if(this.phase==='choosing'&&(now>=this.deadline||now-artist?.lastSeen>15000)){this.choose(this.presenterId,this.candidates[0].id);return true;}
+  if(this.phase==='choosing'&&(now>=this.deadline||now-artist?.lastSeen>15000)){this.choose(this.presenterId,undefined,true);return true;}
   if(this.phase==='drawing'&&(now>=this.deadline||artist?.kicked||now-artist?.lastSeen>15000)){this.reveal(now>=this.deadline?'時間到':'畫者斷線');return true;}
   if(this.phase==='reveal'&&now>=this.deadline){this.newRound();return true;}
   return false;
@@ -227,12 +266,12 @@ class DrawGuessRoom{
   return clone({
    type:this.type,code:this.code,name:this.name,phase:this.phase,version:this.version,host:id===this.host,hostId:this.host,me:id,
    round:this.round,roundLimit:this.roundLimit,gameRunId:this.gameRunId,presenterId:this.presenterId,options:this.options,deadline:this.deadline,serverNow:this.now(),
-   candidates:this.phase==='choosing'&&id===this.presenterId?this.candidates:[],
+   candidates:this.phase==='choosing'&&id===this.presenterId?this.candidates.filter(word=>!this.wordExclusionProvider?.(word)):[],
    question:this.question&&(id===this.presenterId||revealed)?{title:this.question.title,aliases:this.question.aliases,category:this.question.category,difficulty:this.question.difficulty,topic:this.question.topic,topicLabel:this.question.topicLabel}:null,
    hint:this.question?{category:this.question.category,topicLabel:this.question.topicLabel||topicLabels[this.question.topic]||topicLabels.misc,length:[...this.question.title].length}:null,
    players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,online:this.now()-player.lastSeen<15000,waitingForNextRound:player.waitingForNextRound})),
    participantIds:this.participantIds,guessedIds:this.guessedIds,guesses:this.guesses.map(item=>item.correct?{id:item.id,name:item.name,correct:true,points:item.points,at:item.at}:item),
-   result:revealed?this.result:null,recentResults:[...this.publicResults.values()].reverse().map(entry=>entry.snapshot.result),winner:this.winner,canvasEpoch:this.canvas.epoch,strokeVersion:this.canvas.version,events:this.events
+   result:revealed?this.result:null,recentResults:[...this.publicResults.values()].reverse().map(entry=>entry.snapshot.result),resultVotes:[...this.publicResults.keys()].reverse().map(resultId=>this.resultVote(resultId,id)),winner:this.winner,canvasEpoch:this.canvas.epoch,strokeVersion:this.canvas.version,events:this.events
   });
  }
 }
