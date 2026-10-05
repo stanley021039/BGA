@@ -1,5 +1,9 @@
 # Server／資料 agent 記憶
 
+## 正式版本核對（2026-10-06）
+
+正式 `current` 為 `releases/8fcda4d`，本批Windows／Linux完整各543/543。部署前SQLite線上一致性備份及持久檔案另存，副本預演schema12→13後14張既有表全部一致；正式切換後schema13、完整性ok、外鍵錯誤0、7帳戶全欄位保留。既有公開session可用，網站與Tunnel active。部署加入共看及派對擴充，不是其他站資料匯入；共看仍在記憶體，沒有新增影音轉送或同步計時器。來源、備份及限制見 [本批部署驗證](../PARTY-UPGRADE-PROGRESS.md#正式部署驗證2026-10-06)。舊正式版15af1dd僅支援schema12，不能在v13資料上直接切回啟動。下列較早「未部署」為歷史狀態。
+
 ## 最新：共看暫存資料（2026-10-05）
 
 `631eabf`在本地提供YouTube共看，沒有DB schema／備份範圍變動。registry綁實際room物件與UUID，不因六碼重用繼承影片；最後真人離房及app.close清空。提案8／每人2、request ledger128及10分鐘TTL有界，帳戶限流、seat／控權／版本驗證沿用同源API。server只解析YouTube白名單URL取ID，不出站取metadata／影片、不加SSE／timer／心跳，也不記觀看log。

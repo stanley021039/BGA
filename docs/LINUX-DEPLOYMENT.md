@@ -2,6 +2,8 @@
 
 Windows／Linux 的直接連線與 Cloudflare 兩種完整操作方式見[跨平台部署指南](DEPLOYMENT.md)；本頁只記錄目前 Linux 正式主機的實際狀態。
 
+最新核對（2026-10-06）：`current → releases/8fcda4d`，取代本次開始時的`15af1dd`。Windows／Linux各543/543，正式SQLite為schema13、完整性ok、外鍵錯誤0、7帳戶內容保留，網站及Tunnel active。YouTube共看、改名、1000畫猜題／meme、多格路線、成人禮物及大廳入場已在發布版；彈幕框僅規格。線上一致性SQLite與檔案備份為`shared/backups/pre-party-8fcda4d-20261005T165102Z`（UTC），副本預演14張既有表一致；切換前公開房間0。舊程序SIGTERM正常退出，由systemd自動重啟。公開15份資源內容一致、既有session可用、login／robots200。完整證據及限制見 [本批部署驗證](PARTY-UPGRADE-PROGRESS.md#正式部署驗證2026-10-06)。以下為歷史部署紀錄，較早「目前版本」不代表最新狀態。
+
 2026-10-01 將 commit `59cf2cd` 部署到 `192.168.232.128`，同日依序更新至 `9d13d4c`（大廳房間列表）及 `8153da0`（主角色／自訂 GIF 表情與斷線重連）。2026-10-02 先更新至 `bd3e51c`（送禮達人、自訂禮物、檔案架構及公開安全修正），再更新至 `33d5ebe`（送禮揭曉與成就、圖示選禮及同步標喜好）、`b5da6f0`（300 件內建禮物及房主設定投稿比例）、`92e7725`（同頻俱樂部體驗優化）、`5525fad`（好友角色分享與帳號繪畫圖庫）、`ac2d7e0`（撲克與末路狂飆沉浸感及入門成就）、`7fcb436`（末路狂飆碰撞與特殊事件視窗），再更新至 `5a3cdc1`（修正繪畫提示與畫作按鈕遮擋），再更新至 `eee416e`（可移動角色的好友大廳），再切換至 `5870a48`（你畫我猜第一版），其後切換至 `e6dd38f`（整合最新主線圖片權限修補及根目錄整理）、`8b32222`（雷霆之路動畫預設顯示），其後為 `2eae852`（你畫我猜畫筆、猜題聊天室、題材與轉場），其後為 `d480c18`（五款遊戲的原位過場舞台），其後為 `6294dcd`（遊戲控制與逐人收禮修正），其後為 `014c113`（油漆桶與獨立形狀工具），目前為 `50e1819`（整合主線及空房清理）。原本的 `~/Desktop/splitwise`、其 SQLite 資料庫及舊 `~/Desktop/BGA` 均未覆蓋。公開入口是 <https://shhuang.cc>；沿用 Cloudflare Tunnel 的 `shhuang.cc → http://localhost:3000` 路由，沒有修改 DNS。
 
 你畫我猜最終版 `e6dd38f` 放在獨立版本目錄 `releases/e6dd38f`，Windows／Linux 全套測試各 130/130。升級前先以 SQLite 線上備份保存 v8（完整性 `ok`、帳號 4 筆），以備份複本預演 v9 遷移；初版切換後正式 DB 為 v9。切換最終版前再備份 v9，切換後完整性 `ok`、帳號仍為 4 筆。`afterhours.service` 與 `afterhours-tunnel.service` 都是 `active`，公開 `/login`、`/draw`、腳本、樣式及 `/robots.txt` 回 200，robots 保持全站 `Disallow: /`。三個現有測試帳號從 Windows 經 shhuang.cc 開房，驗證答案保密、即時畫布、重連補圖、計分及換畫者；測試在背景 Chrome 執行。依使用者指示直接重啟，記憶體房間隨之清除。

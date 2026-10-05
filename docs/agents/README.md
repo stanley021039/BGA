@@ -1,6 +1,6 @@
 # Agent 長期記憶索引
 
-本批最新遊戲程式來源 **4bab53a**，Windows整合 **543/543** 通過；其後提交為文件補充。這是本地U33來源，沒有Linux本批或正式部署證據。
+本批最新遊戲程式來源 **4bab53a**，Windows／Linux整合各 **543/543** 通過。2026-10-06正式站已切換發布版 **8fcda4d**：schema13、完整性ok、7帳戶全欄位保留，公開15份資源及既有session驗證通過。新功能未push／未新PR；以下較早「未部署」為歷史狀態，最新範圍與限制以 [整合進度末節](../PARTY-UPGRADE-PROGRESS.md#正式部署驗證2026-10-06)為準。
 
 2026-10-05 U33 最新：YouTube已發 [PR #36](https://github.com/stanley021039/BGA/pull/36)（head2eeb398，接續#34，未部署），取代下段「未PR」。另六項需求在本地 `feat/party-content-and-race-paths`，前五項程式／背景Chrome已驗；彈幕框僅規格評估。接手先讀 [整合進度](../PARTY-UPGRADE-PROGRESS.md)、[改名](../PLAYER-RENAME-PROGRESS.md)、[內容及來源](../PARTY-CONTENT-PROGRESS.md)、[多格路線](../RACE-MULTI-MOVE-PROGRESS.md)和 [框規格](../specs/CUSTOM-BARRAGE-FRAMES.md)，以整合文件最後測試／commit狀態為準。這六項未push／PR／部署，正常Chrome viewport未覆寫；帳密仍只在核准私有交接。
 

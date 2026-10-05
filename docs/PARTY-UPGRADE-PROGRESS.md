@@ -1,6 +1,6 @@
 # 遊戲內容與操作擴充進度
 
-2026-10-05，使用者 U33。YouTube共看已發 [PR #36](https://github.com/stanley021039/BGA/pull/36)，head `2eeb398`、base `feat/draw-review-motion`（接續#34）。下列新需求在本地 `feat/party-content-and-race-paths`，不推送、不發PR、未部署。
+2026-10-05，使用者 U33。YouTube共看已發 [PR #36](https://github.com/stanley021039/BGA/pull/36)，head `2eeb398`、base `feat/draw-review-motion`（接續#34）。下列新需求在 `feat/party-content-and-race-paths`，未推送、未發新PR；2026-10-06已部署，驗證見末節。
 
 最終遊戲程式本地提交 **`4bab53a`**；此前 `3780e6d` 合入main至`b843a3f`，保留PR#31鎖修正及角色記憶。PR#36仍停在2eeb398，這六項不進該PR。
 
@@ -23,7 +23,7 @@
 
 ## 整合驗收（2026-10-05）
 
-Windows Node 24.14.0 `npm test` 最終整合 **543/543** 通過，包含 main 的 PR #31 殘留鎖修正、新改名／內容／路線回歸及原五款功能。大廳舊 VM harness 已補上真實瀏覽器原有的 window／document 事件介面。路線組獨立94/94；內容63/63；共用motion8/8。沒有本批 Linux 完整測試證據。
+Windows Node 24.14.0 `npm test` 最終整合 **543/543** 通過，包含 main 的 PR #31 殘留鎖修正、新改名／內容／路線回歸及原五款功能。大廳舊 VM harness 已補上真實瀏覽器原有的 window／document 事件介面。路線組獨立94/94；內容63/63；共用motion8/8。2026-10-06補上Linux完整測試及正式部署驗證，見末節。
 
 原 Chrome 兩個登入身分、三個合成席位，正常 **3440×1271** 視窗、不加 viewport override、不將 Chrome 提到 OS 最上層；隔離 SQLite 與房間位於 localhost:3195，無正式資料或外部投稿副作用。其他席位部分操作由 HTTP 控制完成，不是三位真人。
 
@@ -38,3 +38,15 @@ Windows Node 24.14.0 `npm test` 最終整合 **543/543** 通過，包含 main �
 後續Chrome重繪驗收：第二玩家選遠格5步／5點預覽後，第三合成帳號修改暱稱促成狀態重繪；新名出現且線仍在、焦點恢復原格。補三項回歸：presence-only重建恢復hover、keyboard恢復、骰dialog／過期版本不搶焦點或誤清線。真正移出／隱藏仍清除；不為自動化工具游標實際移開而硬保留。
 
 證據及截圖在核准私有QA位置 `work/party-chrome-evidence.json`、`work/party-upgrade-windows-tests.log` 及 `work/party-*-ui.*`；不提交合成帳密／cookie。測試頁保留給使用者檢視，不沿用房碼當正式站。
+
+## 正式部署驗證（2026-10-06）
+
+正式 `current` 已從實際核對的 `releases/15af1dd` 切換至 `releases/8fcda4d`。此發布版遊戲程式仍為 `4bab53a`，包含YouTube共看及前五項擴充；客製彈幕框仍僅評估。Windows Node 24.14.0／Linux Node 22.22.1完整測試各 **543/543**，Linux沒有失敗、取消或跳過。
+
+切換前建立 `shared/backups/pre-party-8fcda4d-20261005T165102Z`，包含SQLite線上一致性備份及history／community／music檔案；時間名稱為UTC。當時schema12、7帳戶。用備份副本在隔離3196埠預演schema13及啟動，14張既有表全部逐列一致、完整性ok、外鍵錯誤0；未以副本覆寫正式資料。這是線上備份，不宣稱檔案與SQLite具有共同的原子時間點。
+
+切換前再次查公開房間數0，原服務收到SIGTERM後正常退出；systemd自動啟動新版，網站及Tunnel均active。正式DB升至13、完整性ok、外鍵錯誤0；7帳戶全欄位與部署前備份一致，包含UUID／username／密碼hash／role／暱稱等。舊版僅支援schema12，不能只切回舊連結作資料庫回退。
+
+公開HTTPS既有測試session仍有效，改名設定頁200；內建畫猜1000題／meme100題、禮物350件／成人50件可讀。15份新腳本與樣式均200且內容與發布版一致（正規化CRLF／LF）；login及robots200。這輪為公開HTTP驗證，前五項實際Chrome操作證據為上述隔離環境，沒有宣稱重新跑過正式多人完整遊戲。
+
+發布tar SHA-256：`951303b566127d019a0f1bc61d071ddb66b67945daf2b67e799ab1563ff3a799`。Linux測試與公開驗證證據保存在核准私有QA位置 `work/party-upgrade-linux-tests.log`、`work/party-production-verification.json`。新批功能未push／未新PR，PR#36內容保持原head。
