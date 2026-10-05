@@ -18,6 +18,12 @@ DrawWordStore 以題目 ID 或 normalized title 排除，內建列表、共編�
 
 揭曉與結束側欄要讓工具列參與自然高度，不能溢出覆蓋玩家卡；新增投票只改 reveal 排版，原猜題作畫 canvas 規則保留。Windows／Linux 各431項及 Chrome 背景驗收見 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)，未部署；schema 13 及移轉規則與 SERVER-DATA 同步。
 
+## 2026-10-05：PR #31 鎖競態修正
+
+`0682e43`：`src/data/locks.js` 的資料／發布／legacy PID 鎖只以 `wx` 取得，既有檔一律 `DATA_IN_USE`，不讀 PID 或刪舊鎖。`HistoryStore` 共用 legacy 取得函式；release 冪等，舊實例重複 close 不會刪掉同程序後來取得的鎖。讀取比對後 unlink 不能安全回收另一程序的 stale lock，不能以多一次比對或同步函式當跨程序修復。
+
+`tests/data-locks.test.js`／`helpers/data-lock-worker.cjs` 用兩個 OS 程序在舊 unlink 前加屏障，重現共用 DB、其他目錄不同時仍雙重取得鎖；發布／legacy／HistoryStore 也重現。修後11項回歸及 Windows 完整374項通過。新版 writer 不可與仍自動回收 stale lock 的舊 writer 混跑；人工清理只在全部 writer 停止後進行，詳 [證據及限制](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。本次沒有 Linux、真實資料夾 chooser 或整合後多人實玩證據。
+
 更新：2026-10-05；角色文件是可更新的專案知識，不授權對正式服務操作。
 
 ## 93d7a84：公開結果與共用動效

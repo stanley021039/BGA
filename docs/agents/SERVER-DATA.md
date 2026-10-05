@@ -12,6 +12,12 @@
 
 未過半 ballot 與最近八輪結果只存在 room 記憶體，不屬於資料包。Windows／Linux 各431項，其中移轉26項及3項新禁題相容性回歸通過，詳 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)。尚未操作正式資料，沒有解除禁題 UI；不要把 soft exclusion 說成已刪除歷史作品。
 
+## 2026-10-05：殘留鎖政策更新
+
+PR #31 修正 `0682e43` 取代先前自動回收 dead-PID 鎖的行為。server／admin／transfer／HistoryStore 拒絕任何既有資料或 legacy 鎖；publication 同樣不回收。正常 owner 釋放冪等，仍保留 legacy 純 PID 格式供舊程式辨識，但不能同時運行仍自動回收鎖的舊 writer。
+
+異常終止後先停所有 writer 及自動重啟，再核對實際 DB／history／community／music 鎖與內容，保存證據後人工處理；不能只憑 PID 已結束刪檔。發布鎖與 restore marker 可能代表半份還原，保留現場並另選新目錄重試，不能當一般資料鎖刪掉後啟動。操作流程見 [人工檢查](../SERVER-DATA-TRANSFER.md#殘留鎖的人工檢查)。Windows Node24.14.0 完整374/374與11項鎖回歸通過，本次未重跑Linux，未操作正式資料；詳 [進度](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。
+
 更新：2026-10-05。主規格：[多環境資料移轉](../specs/MULTI-ENV-DATA-MIGRATION.md)。第一版工具已完成實作與隔離驗收，操作入口：[完整備份還原](../SERVER-DATA-TRANSFER.md)，最新送審與證據：[驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)。未備份、切換或遷移正式資料。
 
 ## 責任
