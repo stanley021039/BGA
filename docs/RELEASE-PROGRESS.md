@@ -1,5 +1,7 @@
 # 版本管理實作與驗收
 
+2026-10-06候選 **v1.1.3**：雷霆途中事件先呈現、再續移動的相容修正。Windows完整625/625、背景Chrome火焰／玻璃／地雷／打滑／油漬與跳台順序驗收通過；Linux與正式發布待補。詳 [事件與位移进度](RACE-MULTI-MOVE-PROGRESS.md)。
+
 2026-10-06正式 **v1.1.2**：雷霆完整位移與抵達後下一步修正；Windows／Linux各591/591，背景Chrome碰撞／玻璃／地震／道路換片／終點驗收通過。受測程式a27dd1fec3b98f07365b3911a2a10f6c87304d67及本地annotated tag v1.1.2，正式current releases/a27dd1f。零房間切換、7帳戶全欄位保留、schema13／15表副本逐列一致；公開API、受影響資源及Chrome設定顯示1.1.2。備份與完整證據詳 [位移進度](RACE-MULTI-MOVE-PROGRESS.md)。無新PR／push；純驗收文件不移動tag。
 
 2026-10-06後續正式 **v1.1.1**：相容修正雷霆多格逐格滑動及重繪接續，Windows／Linux各554/554、背景Chrome八格及一次POST驗收通過，詳 [移動進度](RACE-MULTI-MOVE-PROGRESS.md)。固定程式提交`2eb4104d3732325ac68d2981fadc09826b1c5f55`及本地annotated tag `v1.1.1`；正式站已切至`releases/2eb4104`，公开API及Chrome設定顯示1.1.1。7帳戶完整保留、schema13未變、15表副本逐列一致，服務及tunnel active。備份與完整驗收見同一移動文件；無新PR／push。

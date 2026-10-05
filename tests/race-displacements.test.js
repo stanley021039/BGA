@@ -136,3 +136,70 @@ test('removed, dead and stale preplaced cars cannot add misleading journal entri
  s.r.moveEffect({id:s.car.id,x:2,y:2,preplaced:true,expectedSeq:3});
  s.car.dead=true;s.r.moveEffect({id:s.car.id,x:2,y:2});assert.deepEqual(s.r.motions,[]);assert.equal(s.r.motionSerial,0);
 });
+
+test('a mandatory fire cell checkpoints its confirmed first landing before the remaining route movements',()=>{
+ const s=scenario();for(let x=0;x<6;x++)s.r.terrain(x,2).kind='F';begin(s);
+ s.r.act(s.p.id,'movePath',{version:s.r.version,car:s.car.id,x:2,y:4});
+ const fire=s.r.events.find(event=>event.kind==='fire');
+ assert.equal(fire.afterMotion,1);assert.equal(fire.car,s.car.id);assert.deepEqual({x:fire.x,y:fire.y},{x:2,y:2});
+ assert.deepEqual(s.r.motions.map(group=>group.id),[1,2,3]);assert.ok(s.r.motions.every(group=>group.kind==='move'));
+ assert.equal(s.car.burning,true);assert.deepEqual(point(s.car),{x:2,y:4});
+ // The engine has already settled the whole route; checkpoint metadata lets
+ // the client present fire between confirmed movements without changing rules.
+ assert.equal(s.r.events.at(-1).afterMotion,3);
+});
+
+test('glass, mine damage and skid landing events keep their original positions and movement checkpoints throughout one effect chain',()=>{
+ const s=scenario();s.r.terrain(2,2).kind='V';s.r.terrain(2,3).hazard={kind:'mine',face:false};s.r.terrain(2,4).kind='F';s.r.damageDeck=['skid1'];
+ begin(s);act(s,'move',{x:2,y:2});
+ const checkpoints=s.r.events.filter(event=>['glass','hazard','damage','fire'].includes(event.kind)).map(event=>({kind:event.kind,afterMotion:event.afterMotion,x:event.x,y:event.y,...(event.hazard?{hazard:event.hazard}:{}),...(event.damage?{damage:event.damage}:{})}));
+ assert.deepEqual(checkpoints,[
+  {kind:'glass',afterMotion:1,x:2,y:2},
+  {kind:'hazard',afterMotion:2,x:2,y:3,hazard:'mine'},
+  {kind:'damage',afterMotion:2,x:2,y:3,damage:'skid'},
+  {kind:'fire',afterMotion:3,x:2,y:4}
+ ]);
+ assert.deepEqual(s.r.motions.map(group=>group.kind),['move','glass','skid']);
+ assert.deepEqual(point(s.car),{x:2,y:4});assert.deepEqual(s.car.damage,['skid1']);assert.equal(s.car.burning,true);
+});
+
+test('multi-cell oil interruption checkpoints the event before acceptance, then only its forced landing event without secretly resuming the route',()=>{
+ const s=scenario();for(let x=0;x<6;x++)s.r.terrain(x,2).hazard={kind:'oil',face:false};s.r.terrain(2,3).kind='F';
+ s.r.roll=faces=>faces.includes('前方')?'前方':faces[0];begin(s);
+ s.r.act(s.p.id,'movePath',{version:s.r.version,car:s.car.id,x:2,y:4});
+ assert.equal(s.r.diceCheck.kind,'oil');assert.equal(s.r.diceCheck.status,'awaiting');assert.deepEqual(point(s.car),{x:2,y:2});
+ const oil=s.r.events.find(event=>event.kind==='hazard'&&event.hazard==='oil');assert.equal(oil.afterMotion,1);assert.deepEqual({x:oil.x,y:oil.y},{x:2,y:2});
+ assert.equal(s.r.events.some(event=>event.kind==='fire'),false);revealDice(s.r);assert.equal(s.r.motions.length,1);
+ act(s,'acceptDice',{check:s.r.diceCheck.id});
+ const fire=s.r.events.find(event=>event.kind==='fire');assert.equal(fire.afterMotion,2);assert.deepEqual({x:fire.x,y:fire.y},{x:2,y:3});
+ assert.deepEqual(s.r.motions.map(group=>group.kind),['move','oil']);assert.deepEqual(point(s.car),{x:2,y:3});assert.equal(s.r.active.remaining,2);assert.equal(s.r.queue.length,0);
+ assert.equal(s.r.events.filter(event=>event.kind==='movePath').length,1);
+ act(s,'move',{x:2,y:4});assert.deepEqual(s.r.motions.map(group=>group.kind),['move','oil','move']);assert.deepEqual(point(s.car),{x:2,y:4});
+});
+
+test('event checkpoint cannot be overridden and captures only confirmed public vehicle coordinates while preserving explicit endpoints',()=>{
+ const s=scenario();s.r.moveEffect({id:s.car.id,x:2,y:2,direction:1});
+ s.r.event('damage','metadata',{target:s.car.id,afterMotion:999});const target=s.r.events.at(-1);
+ assert.equal(target.afterMotion,1);assert.deepEqual({x:target.x,y:target.y},{x:2,y:2});
+ s.r.event('shot','explicit',{car:s.car.id,x:4,y:8,afterMotion:-1});const explicit=s.r.events.at(-1);
+ assert.equal(explicit.afterMotion,1);assert.deepEqual({x:explicit.x,y:explicit.y},{x:4,y:8});
+ s.car.x=3;s.car.y=3;assert.deepEqual({x:target.x,y:target.y},{x:2,y:2});
+ assert.ok(!JSON.stringify(s.r.view(s.p.id).events).includes(s.p.secret));assert.ok(!JSON.stringify(s.r.view(s.q.id).events).includes(s.q.secret));
+});
+
+test('a full 16-cell route retains every event checkpoint and the enlarged event history remains bounded at 64',()=>{
+ const s=scenario();for(const t of s.r.tiles)for(const row of t.cells)for(const cell of row)cell.hazard={kind:'road',face:true};
+ Object.assign(s.target,{x:4,y:20});
+ s.p.dice[0].value=16;begin(s);s.r.act(s.p.id,'movePath',{version:s.r.version,car:s.car.id,x:2,y:17});
+ const hazards=s.r.events.filter(event=>event.kind==='hazard');assert.equal(hazards.length,16);assert.deepEqual(hazards.map(event=>event.afterMotion),Array.from({length:16},(_,i)=>i+1));
+ assert.equal(hazards[0].afterMotion,1);assert.deepEqual({x:hazards[0].x,y:hazards[0].y},{x:2,y:2});assert.equal(s.r.motions.length,16);
+ for(let i=0;i<80;i++)s.r.event('note','entry '+i);
+ assert.equal(s.r.events.length,64);assert.equal(s.r.events[0].text,'entry 16');assert.equal(s.r.events.at(-1).text,'entry 79');assert.ok(s.r.events.every(event=>event.afterMotion===16));
+});
+
+test('glass checkpoint metadata preserves the existing terrain-first behavior when a vehicle occupies the glass cell',()=>{
+ const s=scenario();s.r.terrain(2,2).kind='V';Object.assign(s.target,{x:2,y:2});begin(s);act(s,'move',{x:2,y:2});
+ assert.equal(s.r.diceCheck,null);assert.deepEqual(point(s.car),{x:2,y:3});assert.deepEqual(point(s.target),{x:2,y:2});
+ assert.deepEqual(s.r.motions.map(group=>group.kind),['move','glass']);const glass=s.r.events.find(event=>event.kind==='glass');
+ assert.equal(glass.afterMotion,1);assert.deepEqual({x:glass.x,y:glass.y},{x:2,y:2});assert.equal(s.r.events.some(event=>event.kind==='slam'),false);
+});

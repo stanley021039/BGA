@@ -41,7 +41,9 @@ class ThunderRoom{
  clearDice(){this.diceCheck=null;this._diceRoll=null;}
  shuffle(a){for(let i=a.length-1;i>0;i--){const j=this.rng(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
  note(text){this.log.unshift(text);this.log=this.log.slice(0,60);this.updated=Date.now();}
- event(kind,text,extra={}){this.events.push({id:++this.version,kind,text,...extra});this.events=this.events.slice(-12);this.note(text);}
+ // Presentation checkpoints refer only to confirmed movement; they do not
+ // pause or reorder terrain, collision, damage or any other engine rules.
+ event(kind,text,extra={}){const c=this.car(extra.car)||this.car(extra.target);this.events.push({id:++this.version,kind,text,...(c?{x:c.x,y:c.y}:{}),...extra,afterMotion:this.motionSerial});this.events=this.events.slice(-64);this.note(text);}
  // Public displacement journal is independent of decorative/log events. A
  // group is simultaneous (quake); groups are applied in their recorded order.
  // Copy only public identity and coordinates, never vehicle/player objects.
@@ -152,7 +154,7 @@ class ThunderRoom{
  if(kind==='M'&&knownKind!=='M'){if(e.normal&&this.active?.car===c.id)this.active.remaining=Math.max(0,this.active.remaining-1);if(e.dazedStep){const next=this.queue.find(v=>v.type==='dazed'&&v.id===c.id);if(next)next.remaining--;}}
  if(kind==='G')this.stop(c);
  if(kind==='F')this.ignite(c);
- if(kind==='V'&&direction!==undefined)this.queue.unshift({type:'move',id:c.id,...neighbor(c.x,c.y,direction),direction,motionKind:'glass'});
+ if(kind==='V'&&direction!==undefined){this.event('glass',`${this.label(c)}玻璃滑移一格`,{car:c.id});this.queue.unshift({type:'move',id:c.id,...neighbor(c.x,c.y,direction),direction,motionKind:'glass'});}
  if(kind==='J'){if(direction!==1){this.eliminate(c,'從跳台側面或前方進入');return;}this.stop(c);this.queue.unshift({type:'dice',run:()=>this.offerDice({kind:'jump',title:'跳台距離',condition:'特技骰決定跳躍 1–4 格；跳過中間地形，落點仍需處理地形與碰撞。',owner:c.owner,participants:this.dicePlayers([c]),labels:['特技骰']},[STUNT_DIE],([amount])=>({text:`跳躍 ${amount} 格`,apply:()=>{this.event('jump',`${this.label(c)}跳躍 ${amount} 格`,{car:c.id});this.queue.unshift({type:'move',id:c.id,x:c.x,y:c.y+amount,direction:1,motionKind:'jump'});}}))});}
  if(this.active?.car===c.id){if(kind==='S'&&!this.active.coast)this.active.saltBonus=true;if(!this.road(c.x,c.y))this.active.roadEligible=false;}
  }

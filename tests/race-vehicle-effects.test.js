@@ -40,14 +40,35 @@ test('shared motion preference cancels effects, preserves future static labels a
  ui.effects.show([{id:2,kind:'shot',source:'source',target:'target'}],ui.state);assert.equal(ui.nodes('race-vehicle-shot-bullet').length,0);assert.equal(ui.nodes('race-vehicle-label')[0].children[1].textContent,'射擊');
  ui.effects.destroy();assert.equal(ui.prefs.size,0);assert.equal(ui.timers.size,0);
 });
-test('oil and shot-induced skid spin the affected sprite without replacing car placement or movement',()=>{
- for(const event of [{id:1,kind:'hazard',hazard:'oil',car:'source'},{id:1,kind:'damage',damage:'skid',car:'target'}]){
+test('oil and shot-induced skid spin only when their motion starts, preserving placement and synthetic-ID elapsed time',()=>{
+ for(const event of [{id:'motion:40:source',kind:'motion',motion:'oil',car:'source'},{id:'motion:40:target',kind:'motion',motion:'skid',car:'target'}]){
   const ui=fixture(),outer=ui.car(event.car),body=ui.body(event.car),graphics=body.children.find(node=>node.classList.contains('race-car-impact')),position=outer.getAttribute('transform');
+  const outcome=event.motion==='oil'?{id:40,kind:'hazard',hazard:'oil',car:event.car}:{id:40,kind:'damage',damage:'skid',car:event.car};
+  ui.effects.show([outcome],ui.state);assert.equal(ui.nodes('race-vehicle-skid-wrapper').length,0);assert.equal(ui.nodes('race-vehicle-effect').length,0);assert.equal(ui.timers.size,0);
+  ui.tick(500);
   ui.effects.show([event],ui.state);const wrapper=ui.nodes('race-vehicle-skid-wrapper')[0];assert.ok(wrapper);assert.equal(wrapper.firstChild,graphics);assert.equal(wrapper.parentNode,body);assert.equal(outer.getAttribute('transform'),position);assert.equal(body.style.getPropertyValue('--race-dx'),'-44px');
+  assert.equal(wrapper.style.getPropertyValue('--vehicle-effect-delay'),'0ms');assert.equal(ui.nodes('race-vehicle-label')[0].children[1].textContent,event.motion==='oil'?'油漬滑移':'失控打滑');
   assert.match(css,/\.race-vehicle-skid-wrapper\{[^}]*animation:race-vehicle-spin \.85s/);assert.match(css,/@keyframes race-vehicle-spin\{[^\n]*rotate\(360deg\)/);
-  ui.tick(700);ui.replace();ui.effects.show([],ui.state);assert.equal(ui.nodes('race-vehicle-skid-wrapper')[0].style.getPropertyValue('--vehicle-effect-delay'),'-700ms');
+  ui.tick(700);ui.replace();ui.effects.show([event],ui.state);assert.equal(ui.nodes('race-vehicle-skid-wrapper').length,1);assert.equal(ui.nodes('race-vehicle-skid-wrapper')[0].style.getPropertyValue('--vehicle-effect-delay'),'-700ms');
   const currentBody=ui.body(event.car),currentGraphics=ui.nodes('race-vehicle-skid-wrapper')[0].firstChild;ui.tick(400);assert.equal(ui.nodes('race-vehicle-skid-wrapper').length,0);assert.equal(currentGraphics.parentNode,currentBody);assert.equal(currentBody.style.getPropertyValue('--race-dx'),'-44px');
+  ui.effects.show([event],ui.state);assert.equal(ui.nodes('race-vehicle-skid-wrapper').length,0);assert.equal(ui.timers.size,0);
+  ui.effects.show([{...event,id:'motion:41:'+event.car}],ui.state);assert.equal(ui.nodes('race-vehicle-skid-wrapper').length,1);assert.equal(ui.nodes('race-vehicle-skid-wrapper')[0].style.getPropertyValue('--vehicle-effect-delay'),'0ms');
  }
+});
+
+test('every forced movement has its own readable motion label and duration without an unrelated spin',()=>{
+ const {describe}=require('../public/shared/race-vehicle-effects');
+ const names={glass:'玻璃滑移',slam:'碰撞推移',jump:'跳躍',blast:'爆炸拋飛',quake:'地震推移',dazed:'失控移動'};
+ for(const [motion,name]of Object.entries(names)){
+  const event={id:'motion:9:source',kind:'motion',motion,car:'source'},ui=fixture();
+  assert.deepEqual(describe(event),{type:'command',car:'source',name,duration:1600});
+  ui.effects.show([event],ui.state);assert.equal(ui.nodes('race-vehicle-label')[0].children[1].textContent,name);assert.equal(ui.nodes('race-vehicle-skid-wrapper').length,0);
+  ui.tick(1599);assert.equal(ui.nodes('race-vehicle-label').length,1);ui.tick(1);assert.equal(ui.nodes('race-vehicle-label').length,0);
+ }
+ assert.equal(describe({kind:'motion',motion:'unknown',car:'source'}),null);
+ assert.equal(describe({kind:'hazard',hazard:'oil',car:'source'}),null);
+ assert.equal(describe({kind:'damage',damage:'skid',car:'source'}),null);
+ for(const [motion,name]of [['oil','油漬滑移'],['skid','失控打滑']])assert.deepEqual(describe({kind:'motion',motion,car:'source'}),{type:'skid',car:'source',name,duration:1100});
 });
 test('nitro waits for a garage car, keeps thrust throughout its movement and does not restart after polling',()=>{
  const ui=fixture({garage:true}),event={id:1,kind:'command',command:'nitro',car:'source'};
@@ -73,9 +94,10 @@ test('assign and command use one name per car, while repair names the repaired t
  ui.effects.show([{id:4,kind:'command',command:'repair',car:'source',target:'target'}],ui.state);assert.equal(ui.nodes('race-vehicle-label').find(node=>node.children[1].textContent==='維修').parentNode,ui.body('target'));
 });
 test('airstrike uses helicopter endpoints and reduced motion retains text and a static target marker',()=>{
- const ui=fixture({reduced:true});ui.effects.show([{id:1,kind:'command',command:'nitro',car:'source'},{id:2,kind:'damage',damage:'skid',car:'target'},{id:3,kind:'shot',source:null,target:'target',air:true,from:{x:2,y:10},to:{x:2,y:11}}],ui.state);
+ const ui=fixture({reduced:true});ui.effects.show([{id:1,kind:'command',command:'nitro',car:'source'},{id:'motion:2:target',kind:'motion',motion:'skid',car:'target'},{id:3,kind:'shot',source:null,target:'target',air:true,from:{x:2,y:10},to:{x:2,y:11}}],ui.state);
  assert.equal(ui.nodes('race-vehicle-exhaust').length,0);assert.equal(ui.nodes('race-vehicle-skid-wrapper').length,0);assert.equal(ui.nodes('race-vehicle-shot-bullet').length,0);assert.equal(ui.nodes('race-vehicle-projectile')[0].dataset.reduced,'true');assert.equal(ui.nodes('race-vehicle-shot-hit').length,1);
  assert.equal(ui.nodes('race-vehicle-label').find(node=>node.children[1].textContent==='空襲射擊').parentNode.tagName,'svg');assert.match(css,/\.race-vehicle-projectile\[data-reduced="true"\] \.race-vehicle-shot-hit\{animation:none/);
+ assert.equal(ui.nodes('race-vehicle-label').find(node=>node.children[1].textContent==='失控打滑').parentNode,ui.body('target'));
 });
 test('backgrounding discards pending and active effects, remembers hidden events, and cleans up listeners',()=>{
  const ui=fixture({garage:true}),event={id:1,kind:'command',command:'nitro',car:'source'};ui.effects.show([event],ui.state);ui.hide(true);ui.effects.show([{id:2,kind:'damage',damage:'skid',car:'target'}],ui.state);ui.hide(false);

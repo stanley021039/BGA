@@ -2,7 +2,7 @@
 
 架構決策、實作紀錄與尚待部署驗證的項目請見 [架構改善與功能實作計畫](ARCHITECTURE-PLAN.md)。
 
-雷霆之路多格移動的逐格滑動與重繪接續，最新驗收見 [移動進度](docs/RACE-MULTI-MOVE-PROGRESS.md)；版本與部署狀態见 [打版進度](docs/RELEASE-PROGRESS.md)。
+雷霆之路多格移動、所有位移及途中事件的呈現順序，最新驗收見 [移動進度](docs/RACE-MULTI-MOVE-PROGRESS.md)；版本與部署狀態见 [打版進度](docs/RELEASE-PROGRESS.md)。
 
 動畫、音效、UI/UX、玩家互動與美術風格的研究提案及原始來源見[遊戲互動與沉浸感設計研究](docs/IMMERSIVE-EXPERIENCE-RESEARCH.md)；送禮達人已開始實作的項目、素材授權查核與暫緩項目見[送禮達人素材與實作進度](docs/GIFT-IMMERSION-PROGRESS.md)。
 
