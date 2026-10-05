@@ -236,6 +236,18 @@ function restorePolicy(stage, validated) {
   }
   return { revoked, heldSubmissions, interruptedMatches: validated.playing.length };
 }
+function binaryAssetsPreserved(before, after) {
+  // Migrations 3, 5 and 8 introduce empty BLOB tables; existing assets must remain exact.
+  const introduced = { character_images: 3, community_gifts: 5, user_artworks: 8 }, emptyDigest = sha('');
+  for (const [table, digest] of Object.entries(before.blobDigests)) {
+    if (after.blobDigests[table] !== digest) return false;
+  }
+  for (const [table, digest] of Object.entries(after.blobDigests)) {
+    if (Object.hasOwn(before.blobDigests, table)) continue;
+    if (!Object.hasOwn(introduced, table) || before.schemaVersion >= introduced[table] || Object.hasOwn(before.tableCounts, table) || after.tableCounts[table] !== 0 || digest !== emptyDigest) return false;
+  }
+  return true;
+}
 async function restore(request) {
   const destination = absolute(request.destinationDir, 'destinationDir'); fresh(destination);
   const bundle = absolute(request.bundleDir, 'bundleDir'), keyFile = absolute(request.keyFile, 'keyFile');
@@ -245,8 +257,8 @@ async function restore(request) {
     if (checked.validated.playing.length && request.acknowledgeInterruptedMatches !== true) fail('UNFINISHED_MATCHES', 'Set acknowledgeInterruptedMatches=true to mark unfinished matches interrupted');
     const changes = restorePolicy(checked.stage, checked.validated), after = validateData(generationPaths(checked.stage));
     // Account UUIDs and credential hashes must survive the migration and restore policy exactly.
-    const accountCount = checked.manifest.summary.database.tableCounts.users;
-    if (after.summary.database.tableCounts.users !== accountCount || after.summary.database.accountsSha256 !== checked.manifest.summary.database.accountsSha256 || canonical(after.summary.database.blobDigests) !== canonical(checked.manifest.summary.database.blobDigests)) fail('VALIDATION_FAILED', 'Accounts or binary assets changed unexpectedly');
+    const beforeDatabase = checked.manifest.summary.database, afterDatabase = after.summary.database;
+    if (afterDatabase.tableCounts.users !== beforeDatabase.tableCounts.users || afterDatabase.accountsSha256 !== beforeDatabase.accountsSha256 || !binaryAssetsPreserved(beforeDatabase, afterDatabase)) fail('VALIDATION_FAILED', 'Accounts or binary assets changed unexpectedly');
     const result = { action: 'restore', dryRun: request.apply !== true, destinationDir: destination, ...publicManifest(checked.manifest), changes, restoredSummary: after.summary, config: bootConfig(destination),
       nextSteps: ['Start this generation on an isolated port with the returned configuration', 'Verify login, permissions, music, history and assets', 'Stop the old writer before switching traffic; retain the old code and data for rollback', 'Reconcile held remote submissions before explicitly enabling external side effects'] };
     if (request.apply !== true) return result;

@@ -62,6 +62,32 @@ async function fixture(t, { playing = false, minimal = false } = {}) {
   const exportRequest = {action:'export',sourceStopped:true,source,keyFile,outputDir:bundleDir};
   return {root,source,keyFile,bundleDir,destinationDir,exportRequest,member,adminId,oldCookie,newInvitation,reset,expectedUsers,track,characterId,artworkId,historyId};
 }
+async function legacyFixture(t, version) {
+  const f = await fixture(t, { minimal: true }), db = new DatabaseSync(f.source.dbFile);
+  try {
+    db.exec('DROP TABLE music_tracks; DROP TABLE draw_words; DROP TABLE user_artworks');
+    if (version < 7) db.exec('DROP INDEX player_characters_shared; ALTER TABLE player_characters DROP COLUMN shared');
+    if (version < 6) db.exec('DROP TABLE user_achievements');
+    if (version < 5) db.exec('DROP TABLE community_gifts');
+    if (version < 4) db.exec('DROP INDEX character_images_label; ALTER TABLE character_images DROP COLUMN label');
+    if (version < 3) db.exec('DROP TABLE character_images; DROP TABLE player_characters');
+    if (version < 2) db.exec('DROP TABLE board_comments; DROP TABLE submissions; DROP TABLE board_issues');
+    const at = new Date().toISOString();
+    if (version >= 3) {
+      f.characterId = crypto.randomUUID();
+      db.prepare('INSERT INTO player_characters(id,owner_id,name,created_at) VALUES(?,?,?,?)').run(f.characterId,f.member.id,'舊版私有角色',at);
+      db.prepare('INSERT INTO character_images(character_id,expression,mime,bytes) VALUES(?,?,?,?)').run(f.characterId,'neutral','image/png',png);
+      db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify({characterId:'user:'+f.characterId,expression:'neutral'}),f.member.id);
+    }
+    if (version >= 5) {
+      f.giftId = crypto.randomUUID();
+      db.prepare('INSERT INTO community_gifts(id,author_id,author_name,title,title_key,category,image_mime,image_bytes,created_at) VALUES(?,?,?,?,?,?,?,?,?)').run(f.giftId,f.member.id,'搬家玩家','舊版禮物','舊版禮物','misc','image/png',png,at);
+    }
+    db.exec('PRAGMA user_version=' + version);
+    f.expectedUsers = db.prepare('SELECT * FROM users ORDER BY id').all();
+  } finally { db.close(); }
+  return f;
+}
 const restoreRequest = f => ({action:'restore',bundleDir:f.bundleDir,keyFile:f.keyFile,destinationDir:f.destinationDir});
 function editManifest(f, change) {
   const file = path.join(f.bundleDir,'manifest.json'), m = JSON.parse(fs.readFileSync(file)); change(m); delete m.authentication;
@@ -201,6 +227,65 @@ test('old supported schema migrates only the restored copy and preserves account
   try{db.exec('DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
   await run(f.exportRequest); const result=await run({...restoreRequest(f),apply:true});assert.equal(result.restoredSummary.database.schemaVersion,12);
   const old=new DatabaseSync(f.source.dbFile,{readOnly:true});try{assert.equal(old.prepare('PRAGMA user_version').get().user_version,10);assert.equal(old.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name='music_tracks'").get().n,0);}finally{old.close();}
+});
+
+for (const version of [1,3,5,7]) test(`schema ${version} backup restores through BLOB-table migrations without changing accounts or existing assets`, async t => {
+  const f = await legacyFixture(t, version), initial = validateData(f.source).summary.database;
+  await run(f.exportRequest);
+  const dry = await run(restoreRequest(f));
+  assert.equal(dry.dryRun,true); assert.equal(fs.existsSync(f.destinationDir),false);
+  const restored = await run({...restoreRequest(f),apply:true}), after = restored.restoredSummary.database;
+  assert.equal(after.schemaVersion,12); assert.equal(after.accountsSha256,initial.accountsSha256);
+  for (const [table,digest] of Object.entries(initial.blobDigests)) assert.equal(after.blobDigests[table],digest);
+  for (const [table,introduced] of Object.entries({character_images:3,community_gifts:5,user_artworks:8})) {
+    if (version < introduced) assert.equal(after.tableCounts[table],0);
+  }
+  const target = settings(restored.config), check = openDatabase(target.dbFile);
+  try {
+    assert.deepEqual(check.prepare('SELECT * FROM users ORDER BY id').all(),f.expectedUsers);
+    for (const table of ['sessions','invites','password_resets']) assert.equal(check.prepare(`SELECT COUNT(*) AS n FROM ${table}`).get().n,0);
+    if (f.characterId) assert.deepEqual(Buffer.from(check.prepare('SELECT bytes FROM character_images WHERE character_id=?').get(f.characterId).bytes),png);
+    if (f.giftId) assert.deepEqual(Buffer.from(check.prepare('SELECT image_bytes FROM community_gifts WHERE id=?').get(f.giftId).image_bytes),png);
+  } finally { check.close(); }
+  const app = createApp({...target,port:0,host:'127.0.0.1',githubClient:{configured:false}});
+  try {
+    const {port} = await app.listen(), base = 'http://127.0.0.1:' + port;
+    assert.equal((await fetch(base+'/api/profile/settings',{headers:{Cookie:f.oldCookie}})).status,401);
+    for (const username of ['transfer_admin','transfer_member']) {
+      const login = await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+      assert.equal(login.status,200);
+      const user = await login.json(), expected = f.expectedUsers.find(item=>item.username===username);
+      assert.equal(user.id,expected.id); assert.equal(user.role,expected.role);
+    }
+  } finally { await app.close(); }
+  const original = validateData(f.source).summary.database;
+  assert.deepEqual(original,initial);
+  const source = new DatabaseSync(f.source.dbFile,{readOnly:true});
+  try { assert.deepEqual(source.prepare('SELECT * FROM users ORDER BY id').all(),f.expectedUsers); }
+  finally { source.close(); }
+});
+
+test('migration allowances still reject changed accounts, changed existing BLOBs and unexpected new BLOB contents', async t => {
+  const f = await legacyFixture(t,5); await run(f.exportRequest);
+  const initial = validateData(f.source).summary.database;
+  const mutations = [
+    db => db.prepare('UPDATE users SET display_name=? WHERE id=?').run('Unexpected change',f.member.id),
+    db => db.prepare('UPDATE character_images SET bytes=? WHERE character_id=?').run(Buffer.from('changed'),f.characterId),
+    db => db.prepare('INSERT INTO user_artworks(id,owner_id,name,mime,bytes,created_at) VALUES(?,?,?,?,?,?)').run(crypto.randomUUID(),f.member.id,'Unexpected asset','image/png',png,new Date().toISOString()),
+    db => db.exec('CREATE TABLE unexpected_assets(id TEXT PRIMARY KEY,bytes BLOB)'),
+  ];
+  for (const mutate of mutations) {
+    const exec = DatabaseSync.prototype.exec; let injected = false;
+    DatabaseSync.prototype.exec = function(sql) {
+      const result = exec.call(this,sql);
+      if (sql === 'PRAGMA wal_checkpoint(TRUNCATE)') { mutate(this); injected = true; }
+      return result;
+    };
+    try { await assert.rejects(run({...restoreRequest(f),apply:true}),errorCode('VALIDATION_FAILED')); }
+    finally { DatabaseSync.prototype.exec = exec; }
+    assert.equal(injected,true); assert.equal(fs.existsSync(f.destinationDir),false);
+    assert.deepEqual(validateData(f.source).summary.database,initial);
+  }
 });
 
 test('existing destinations, nested source/output and configured size limits fail without touching old data', async t => {
