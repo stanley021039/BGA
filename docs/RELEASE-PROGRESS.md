@@ -1,5 +1,7 @@
 # 版本管理實作與驗收
 
+2026-10-06後續候選 **v1.1.1**：相容修正雷霆多格逐格滑動及重繪接續，Windows554/554、背景Chrome八格及一次POST驗收通過，詳 [移動進度](RACE-MULTI-MOVE-PROGRESS.md)。既有v1.1.0 tag保持原提交；本候選尚待Linux、固定程式提交／新tag及正式切換，下列v1.1.0紀錄保留作歷史。
+
 2026-10-06：候選 **v1.1.0**，從現有package基線1.0.0升minor。annotated tag `v1.1.0`指向受測程式提交 `238da0e22438ab3264107bf13115bc1c13906b5a`。正式站當前發布目錄仍為8fcda4d；尚未把候選當作上線。打版規則見 [規範](RELEASE-POLICY.md)，功能紀錄在根目錄CHANGELOG。
 
 ## 已完成

@@ -126,7 +126,7 @@ function frontendHarness(f){
  vm.createContext(scope);vm.runInContext(source.slice(source.indexOf('let movementRoutes='),source.indexOf('const requestedRoom=')),scope);
  scope.routes=RacePaths.routes(scope.state);vm.runInContext('movementRoutes=routes;',scope);
  scope.bindMovementPreview(track);
- Object.assign(scope,{window:{},esc:String,sizes:['輕型','中型','重型'],vehicle:()=>'',heli:()=>'',snapshotRaceState:s=>({...s,events:s.events.slice()}),motionGate:{update:()=>false},disconnected:false,immersion:{allowsMotion:()=>false,prepareFocus(){}},RoomHost:{update(){}},GameShell:{stableMarkup(){}},crewCard:()=>'',diceDialog:{show(s){if(s.diceCheck)document.activeElement={dialog:true};}},eventCues:{hide(){}},vehicleEffects:{reset(){},show(){}},renderDash(){hint.textContent='預設提示';},tick(){},toast(){}});
+ Object.assign(scope,{window:{},esc:String,sizes:['輕型','中型','重型'],vehicle:()=>'',heli:()=>'',snapshotRaceState:s=>({...s,events:s.events.slice()}),motionGate:{update:()=>false},disconnected:false,immersion:{allowsMotion:()=>false,prepareFocus(){}},RoomHost:{update(){}},GameShell:{stableMarkup(){}},crewCard:()=>'',diceDialog:{show(s){if(s.diceCheck)document.activeElement={dialog:true};}},eventCues:{hide(){}},vehicleEffects:{reset(){},show(){}},raceMovement:{reset(){},prepare(){},attach(){}},renderDash(){hint.textContent='預設提示';},tick(){},toast(){}});
  // Exercise the real render frame and board rebuild, with isolated shell/audio
  // dependencies; these VM nodes do not claim browser layout measurements.
  vm.runInContext(source.slice(source.indexOf('function render(s)'),source.indexOf('function commandAccepts(')),scope);
