@@ -2,6 +2,8 @@
 
 ## 最新：YouTube 共看（2026-10-05）
 
+U32 後續 `400cb6d`：使用者要求非房主隱藏「在這裡開始播放」。初始 hidden、render 依 snapshot.isHost 決定，handler 也核對身分；不能用 canControl 代替房主判斷。自動播放阻擋／對齊提示按角色提供可見入口。Windows 前端52項及原 Chrome 兩帳號可見性／實播驗收通過；本增量沒有重跑Linux／全套，未push／PR／部署。
+
 已本地實作 `631eabf`、U29／U30，未push／PR／部署。`RoomWatch`僅在明確操作改anchor，用既有game state的watch marker通知；閉窗零watch請求，開窗穩態無輪詢／回報。native callbacks只更新本機，requestId去重及instance／session／revision／controllerEpoch隔離舊操作；GET衝突回覆要合併，不能每個game poll重抓失敗marker。初始paused必須cue→pause，unstarted的seek可能自行播放。
 
 TableMusic與TableWatch同媒體入口，加入影片只在本機suspend音樂。非modal浮窗拖曳頂端toolbar，buttons及nested SVG不能起drag；方向鍵位置、preferred與clamped分開，viewport／控制展開不覆寫偏好，關閉釋放pointer capture且晚GET不返焦隱藏按鈕。位置／個人關閉不POST。前端52、後端18、音訊11項，Windows／Linux完整各503項；實播62秒零新增watch請求，詳 [驗收／限制](../YOUTUBE-WATCH-PROGRESS.md)。

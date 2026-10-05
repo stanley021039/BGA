@@ -1,6 +1,6 @@
 # Agent 長期記憶索引
 
-最新本地增量：`631eabf`、U29／U30的YouTube共看及共用媒體浮窗，Windows／Linux各503項通過，未push／PR／部署。接手先讀 [共看進度與操作](../YOUTUBE-WATCH-PROGRESS.md)，再读PROGRAMMER／SERVER-DATA／PLAYER；舊共看spec的SSE、輪詢及固定modal方案被取代。測試viewport已逐tab還原，後续尺寸測完立即reset，不留左上角模擬區。隔離預覽／合成帳密／cookie只在ignored work私人交接，不能沿用房號當正式站資料。
+最新本地增量：`400cb6d`、U32「在這裡開始播放」只給房主顯示，Windows前端52項及兩個背景Chrome帳號驗收通過。原 `631eabf`、U29／U30的YouTube共看及共用媒體浮窗基線曾通過Windows／Linux各503項；本增量未重跑兩平台全套，未push／PR／部署。接手先讀 [共看進度與操作](../YOUTUBE-WATCH-PROGRESS.md)，再读PROGRAMMER／SERVER-DATA／PLAYER；舊共看spec的SSE、輪詢及固定modal方案被取代。測試viewport已逐tab還原，後续尺寸測完立即reset，不留左上角模擬區。隔離預覽／合成帳密／cookie只在ignored work私人交接，不能沿用房號當正式站資料。
 
 2026-10-05 最新追加 U28：程式 **2cf8a44** 已加入畫猜揭曉後的禁止題目投票。揭曉固定選民、嚴格過半、最近八輪補投，通過後內建／共編題目全站持久停用；schema 13 與完整備份還原相容。Windows／Linux 各 **431/431**、原 Chrome 背景按鈕及版面驗收通過，接續 PR #34，未部署。詳細規則、限制與證據見 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)。這是以下 U26／U27 的後續版本。
 
