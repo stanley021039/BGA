@@ -9,6 +9,10 @@
 5. 未經明確授權，不合併、不部署、不操作正式資料；不提交密鑰
 6. Reviewer 與貢獻者如有疑問、建議或不同意見，應在該 PR 下留言、逐項回覆並溝通，讓討論與決策可追溯
 
+## 版號與打版
+
+有新功能必須升版並更新 `CHANGELOG.md`；相容新功能升 minor、相容修正升 patch、不相容變更升 major。同一批發行依最高影響升一次；純文件不升版。遵循 [打版規範](docs/RELEASE-POLICY.md)，使用 `npm run release:bump` 與 `npm run release:check`。完成測試後才在乾淨程式提交上建立不可覆寫的 `vX.Y.Z` tag；打版不代替 PR、合併或部署授權。
+
 ## 角色知識與研究
 
 開始工作時，如有 `.local/USER-PREFERENCES.md`，先讀取本機偏好。此檔僅限本機使用，不納入 Git、發布包或上傳；公開文件不得抄錄其內容。

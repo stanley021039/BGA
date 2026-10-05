@@ -11,10 +11,17 @@
   MotionPolicy.subscribe(prefs=>{settings.querySelector('#site-motion-enabled').checked=prefs.enabled;settings.querySelector('#site-barrages-enabled').checked=prefs.barrages;settings.querySelector('#site-motion-status').textContent=prefs.reduced?'系統已減少動態；結果保留，彈幕改為靜態。':'關閉動畫仍保留結果；彈幕可另外隱藏。';});
   settings.querySelector('#site-motion-enabled').onchange=event=>MotionPolicy.set({enabled:event.target.checked});settings.querySelector('#site-barrages-enabled').onchange=event=>MotionPolicy.set({barrages:event.target.checked});
  }
+ const versionInfo=document.createElement('p');versionInfo.id='site-version';versionInfo.className='site-version';versionInfo.textContent='版本資訊';settings.append(versionInfo);
+ let versionLoaded=false,versionLoading=false;
+ async function loadVersion(){
+  if(versionLoaded||versionLoading)return;versionLoading=true;versionInfo.textContent='版本載入中…';
+  try{const response=await fetch('/api/version',{cache:'no-store'});if(!response.ok)throw Error('version unavailable');const data=await response.json();if(typeof data.version!=='string'||data.version.length>30||!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(data.version))throw Error('invalid version');versionInfo.textContent='版本 v'+data.version;versionLoaded=true;}
+  catch{versionInfo.textContent='版本暫時無法取得';}finally{versionLoading=false;}
+ }
  account.insertBefore(settingsButton,button);account.append(settings);
  function closeSettings(focus=false){settings.hidden=true;settingsButton.setAttribute('aria-expanded','false');if(focus)settingsButton.focus();}
  const audioPopover=window.UIPopover?.bind(settingsButton,settings,{align:'end',width:320,onClose:()=>closeSettings()});
- settingsButton.onclick=()=>{const open=settings.hidden;close();closeSettings();if(open){settings.hidden=false;settingsButton.setAttribute('aria-expanded','true');audioPopover?.sync();settings.querySelector('input').focus();}};
+ settingsButton.onclick=()=>{const open=settings.hidden;close();closeSettings();if(open){settings.hidden=false;settingsButton.setAttribute('aria-expanded','true');audioPopover?.sync();settings.querySelector('input').focus();loadVersion();}};
  settings.querySelector('#site-settings-close').onclick=()=>closeSettings(true);
  settings.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeSettings(true);}});
  window.AudioSettings.subscribe(prefs=>{for(const kind of ['music','effects']){settings.querySelector('#site-'+kind+'-enabled').checked=prefs[kind].enabled;settings.querySelector('#site-'+kind+'-volume').value=Math.round(prefs[kind].volume*100);settings.querySelector('#site-'+kind+'-value').textContent=Math.round(prefs[kind].volume*100)+'%';}settings.querySelector('#site-effects-preview').disabled=!prefs.effects.enabled||!prefs.effects.volume;});

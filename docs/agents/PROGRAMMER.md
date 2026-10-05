@@ -1,5 +1,9 @@
 # 程式架構 agent 記憶
 
+## 版號規則（2026-10-06）
+
+新功能必須升minor、相容修正升patch、不相容契約升major，純文件不升。唯一来源package.version；匿名/api/version僅回版號且no-store。共用設定首次開啟讀取，成功後同頁不再請求；沒有新poll。`release:bump`同步package／lock／CHANGELOG，`release:check --base <正式版ref> --type minor`阻止忘記打版或幅度不足；npm test自動基本check。工具不自動commit／tag／push／部署，正式tag不可覆寫；本批候選1.1.0與最新驗收見 [版本進度](../RELEASE-PROGRESS.md)，規範見 [打版規範](../RELEASE-POLICY.md)。下列較早部署狀態依最新驗收文件為準。
+
 ## U33：改名、擴題與路徑（2026-10-05）
 
 `POST /api/profile/name`只改持久display_name，同步現有五款座位及大廳；username／UUID／session／歷史結果保留。使用Unicode code point驗1–16字，create／join不可再次UTF-16截斷合法emoji；header／大廳回焦點讀最新本人，序號隔離晚回覆，不加帳戶timer。共看只刷新既有revision，不改時間錨點／控權。

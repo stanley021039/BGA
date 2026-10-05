@@ -1,9 +1,12 @@
 {
   "name": "afterhours-poker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "start": "node server.js",
+    "release:bump": "node tools/release.cjs bump",
+    "release:check": "node tools/release.cjs check",
+    "pretest": "npm run release:check",
     "test": "node --test tests/*.test.js",
     "data:transfer": "node tools/server-data.cjs",
     "data:transfer:ui": "node tools/server-data-ui.cjs"

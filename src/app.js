@@ -28,6 +28,7 @@ const {RoomWatchRegistry}=require('./watch/room');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
 const {ROOM_EMOJIS}=require('./social/emojis');
 const {acquireDataLocks}=require('./data/locks');
+const {version:applicationVersion}=require('../package.json');
 function createApp(config){
  const lock=acquireDataLocks(config);
  try{return initializeApp(config,lock);}catch(error){lock.release();throw error;}
@@ -105,6 +106,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   res.setHeader('Content-Security-Policy',"frame-ancestors 'self'; base-uri 'none'; object-src 'none'");
  }
  if(url.pathname==='/robots.txt'&&req.method==='GET'){res.setHeader('Content-Type','text/plain; charset=utf-8');return res.end(robots);}
+ if(url.pathname==='/api/version'&&req.method==='GET'){res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');return res.end(JSON.stringify({version:applicationVersion}));}
  if(url.pathname.startsWith('/api/')){
  res.setHeader('Content-Type','application/json; charset=utf-8');
  if(url.pathname==='/api/music/upload'&&req.method==='POST'){

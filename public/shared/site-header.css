@@ -17,6 +17,7 @@ body>[data-site-header].site-header{width:calc(100% - 8vw);margin-inline:4vw}bod
 .site-settings #site-settings-close{width:44px;flex:none;font-size:24px;padding:0;background:transparent}
 .site-settings .site-settings-note{font-size:14px;color:#c1cdbd;margin:8px 0 20px}
 .site-settings .site-audio-group{border-top:1px solid #50614e;padding:12px 0;margin:0}
+.site-settings .site-version{border-top:1px solid #50614e;padding-top:12px;margin:8px 0 0;font-size:14px;line-height:1.5;color:#c1cdbd;font-variant-numeric:tabular-nums}
 .site-settings .site-audio-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin:0;font:inherit;color:inherit;cursor:pointer}
 .site-settings .site-audio-switch input{appearance:auto;accent-color:#f3b95f;width:22px;height:22px;margin:11px;cursor:pointer}
 .site-settings .site-audio-volume{display:grid;grid-template-columns:minmax(0,1fr) 48px;align-items:center;gap:16px;min-height:44px}
