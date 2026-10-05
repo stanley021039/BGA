@@ -1,5 +1,13 @@
 # 程式架構 agent 記憶
 
+## U33：改名、擴題與路徑（2026-10-05）
+
+`POST /api/profile/name`只改持久display_name，同步現有五款座位及大廳；username／UUID／session／歷史結果保留。使用Unicode code point驗1–16字，create／join不可再次UTF-16截斷合法emoji；header／大廳回焦點讀最新本人，序號隔離晚回覆，不加帳戶timer。共看只刷新既有revision，不改時間錨點／控權。
+
+`public/shared/race-paths.js`讓Node及瀏覽器只用masked地形共同規劃；遠目標只送car/version/x/y，server重算逐步drain，任何揭露／dice／位置意外／道路切換就丟掉後續，不能acceptDice後自動續跑。原move逐格照常。限制16點／3000狀態；hover不送請求；靜態route白名單及教學引擎副本一致性要保留。
+
+內建draw1000／meme100（50模板、50原創情境），原120ID不重排；gift350，成人50另組、includeAdult預設false且同步過濾投稿，原300ID不改。以上無新schema；框收藏方案將需要成熟PNG解碼器、schema／受眾／移轉驗證，尚未實作。來源、Chrome觀察及最新整合測試见 [本批進度](../PARTY-UPGRADE-PROGRESS.md)。U29共看已依新授權發PR#36；本批六項仍本地未PR／部署。
+
 ## 最新：YouTube 共看（2026-10-05）
 
 U32 後續 `400cb6d`：使用者要求非房主隱藏「在這裡開始播放」。初始 hidden、render 依 snapshot.isHost 決定，handler 也核對身分；不能用 canControl 代替房主判斷。自動播放阻擋／對齊提示按角色提供可見入口。Windows 前端52項及原 Chrome 兩帳號可見性／實播驗收通過；本增量沒有重跑Linux／全套，未push／PR／部署。

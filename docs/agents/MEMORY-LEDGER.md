@@ -36,6 +36,7 @@
 | U30 | 影片跟播放音樂做在一起，各client自行調影片位置；移除移動按鈕，像視窗直接拖曳最上方tool bar。 | `631eabf`同一媒體入口、非modal浮窗；拖曳工具列／方向鍵／重設只寫個人localStorage，不回報server。控權仍依U29，兩client位置及個人退出互不影響。 |
 | U31 | 測試時使用者看到頁面集中左上角，要求修正。 | 因agent臨時viewport尺寸模擬未即時還原；已對兩個owned tabs清除。後續尺寸測完立即reset每個tab並查實際viewport，不等整輪測完、不改正式CSS來掩蓋測試設定。背景測試偏好仍有效。 |
 | U32 | 非房主隱藏「在這裡開始播放」。 | `400cb6d` 以快照 isHost 判斷顯示及 handler，未知身分預設隱藏；觀看者自動播放阻擋提示改指向 YouTube 原生播放按鈕。Windows 共看前端52項及兩個背景 Chrome 帳號驗收通過，未push／PR／部署；其他共看控制權仍依U29。 |
+| U33 | 先發PR，再做可改名、meme及約1000畫猜題、多格移動避障預覽、成人禮物、入大廳過場；彈幕框／收藏／上傳先評估，這六項先不PR。 | 前批已發PR#36（2eeb398，接續#34），取代U29/U32未PR狀態。新六項在本地feat/party-content-and-race-paths：前五項已實作及背景Chrome受控驗收，框評估獨立spec；測試／source／限制见 [進度](../PARTY-UPGRADE-PROGRESS.md)。新功能未push／PR／部署。改名為暱稱；成人風格未回覆，採曖昧惡搞＋夜生活、房主opt-in預設關。 |
 
 U20 後續驗收補充：最新 PR 追蹤回覆另有「同房重開第 1 輪沿用舊配額」，已由 `e60f853`／本地整合 `7c25c7b` 以 canvasEpoch 修正，舊 POST／ACK／SSE／snapshot／儲存等待均隔離。PR Windows／Linux各286項、本地整合Windows330項及背景新局填色通過；PR已推送至文件提交 `7f44f20`，未部署。證據見 [修正文件](../PR30-RESOURCE-LIMITS.md)。此筆取代「只補歷史與冷恢復即涵蓋全部追蹤回覆」的理解。
 
