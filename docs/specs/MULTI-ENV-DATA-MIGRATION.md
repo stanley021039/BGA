@@ -1,6 +1,6 @@
 # 多環境伺服器資料與移轉規格
 
-狀態：2026-10-05研究／待實作，未連線、備份或遷移正式DB。現況依 `src/db/index.js` schema v12、`src/app.js`、`src/music/store.js`、`src/history/store.js` 與部署文件盤點。正式主機路徑是既有部署文件的紀錄，切換前仍须重新確認，不把本文當即時服務狀態。
+狀態：2026-10-05，使用者確認第一版採「完整移轉／備份還原」並保留帳戶資料；加密 export／verify／restore CLI 已在本地實作，來源 `c831e87`，Windows／Linux 各255項及雙向合成資料恢復通過。操作契約見 [資料移轉工具](../SERVER-DATA-TRANSFER.md)，證據與未完成項目見 [驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md)。尚未備份或遷移正式 DB、切換正式服務；merge／PostgreSQL 等後續內容仍是提案。正式主機路徑是既有部署文件的紀錄，切換前仍须重新確認，不把本文當即時服務狀態。
 
 ## 建議決策
 
@@ -30,7 +30,7 @@ SQLite WAL要求同一host共享記憶體，不能把`.sqlite`放SMB/NFS让跨�
 | 自訂禮物／猜題 | community_gifts.image_bytes、title_key；draw_words.aliases/topic/title_key | BLOB、JSON文字、唯一title_key与owner FK皆需驗證 |
 | 留言／遠端投稿 | board_issues、board_comments、submissions.payload/state/remote_id | 維持GitHub remote identity；還原後禁止自動再發pending投稿；人工reconcile避免外部重複Issue |
 | 成就 | user_achievements(user_id,achievement_id,source_key,unlocked_at) | DB唯一解鎖；目前處理結果WeakSet不跨restart，未有持久勝場aggregate |
-| 音樂 | music_tracks metadata＋`config.musicDir || dirname(DB_FILE)/music/{id}.{ext}` | 音訊不在SQLite；settings目前沒有MUSIC_DIR環境映射，不能以為搬DB就有音樂 |
+| 音樂 | music_tracks metadata＋`MUSIC_DIR` 或 `dirname(DB_FILE)/music/{id}.{ext}` | 音訊不在SQLite；第一版工具連同實檔驗證／加密，settings 已映射 MUSIC_DIR |
 | 共編題库／舊留言 | `COMMUNITY_DIR`預設`data/community/community.json` | majority題庫仍JSON；BoardStore啟動時會import legacy issues，不能丟掉或重複誤判 |
 | 歷史 | `HISTORY_DIR`預設`data/history/*.jsonl`、`*.meta.json` | session與match UUID、engine source/hash、隨機trace、before/after；秘題／喜好完整內容屬敏感資料，非預設公開資產 |
 | 內建素材／目錄 | `public/assets`、內建character/gift目錄及game catalogs | 跟對應code release一起部署；manifest保存release hash，不把public圖片當user BLOB |
@@ -41,7 +41,7 @@ SQLite WAL要求同一host共享記憶體，不能把`.sqlite`放SMB/NFS让跨�
 
 ## 環境隔離與外部副作用
 
-規劃 `APP_ENV=development|staging|production`、永久`ENV_ID`與`DATA_INSTANCE_ID`，三者納入manifest／result provenance。現行settings只提供PORT/HOST/PUBLIC_URL/DB_FILE/HISTORY_DIR/COMMUNITY_DIR，新增變數仍待實作。
+後續規劃 `APP_ENV=development|staging|production` 與 result provenance。第一版 source.envId 由 CLI request 提供，dataInstanceId 存 DB 旁 identity JSON 並納入 manifest；沒有新增 APP_ENV／ENV_ID／DATA_INSTANCE_ID 啟動環境變數。settings 已新增 MUSIC_DIR 與 EXTERNAL_SIDE_EFFECTS_ENABLED，其他既有 PORT/HOST/PUBLIC_URL/DB_FILE/HISTORY_DIR/COMMUNITY_DIR 保留。
 
 - 不同環境必須有不同DB、history/music/community目录、port与origin。若同hostname不同port，現在cookie名`ah-session`可能互相覆蓋，localStorage也不能当登入隔離；优先用不同hostname，仍規劃環境特定cookie名。不同DB令相同cookie不可被驗證不等於使用者不會被登出。
 - prod→dev預設合成fixture；若需真實副本，先於封閉環境去除sessions/invites/password_resets、禁用／替換password_hash、管理者身份、外部投稿queue与GitHub凭证，再匿名化users／題目自由文字／圖片／音訊與歷史。不把原歷史中的帳號／秘密答案遗漏在JSONL。
@@ -124,4 +124,6 @@ Postgres後續備援用`pg_dump`/`pg_restore`；restore可用`--single-transacti
 
 ## 本階段完成與未完成
 
-完成：source audit、官方研究、建議取捨、bundle与结果identity提案、驗收及rollback程序。未完成：maintenance/export/import工具、schema變更、Postgres adapter、物件儲存、真正雙向merge；未拿正式資料演練。正式執行前需完成上述本地fixture失敗演練與具體切換窗口。
+完成：source audit、官方研究、bundle／結果 identity 提案；第一版 JSON CLI keygen／inspect／export／verify／新代 restore、完整帳戶及原密碼保存、冷資料鎖、加密／認證與安全還原政策，及 [隔離驗收](../SERVER-DATA-TRANSFER-PROGRESS.md)。此文 manifest JSON 是研究草案；實際格式以工具契約／format `afterhours-encrypted-data-v1` 為準。
+
+未完成：online maintenance API、正式備份／路由／資料代切換、三台獨立主機演練、新結果 schema、Postgres adapter、物件儲存、真正雙向 merge、匿名化正式副本；未拿正式資料演練。fixture 故障驗證包括損壞、缺檔、版本／FK／引用／history、鎖與發布間隙、注入 ENOSPC 與容量不足；未做真實物理掉電、實際填滿磁碟、TB 包或跨主機 ACL 環境驗收。正式執行前需具體停寫窗口及來源／目標、依操作文件驗收新代再切換。

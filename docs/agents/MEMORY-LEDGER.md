@@ -20,6 +20,7 @@
 | U14 | 畫猜開房的共編題庫要跟旁邊文字對齊；類別可多選，自定義也是一類；等待畫面的主要區域改放已入座的人。 | 開房／房間設定共用checkbox；自定義是獨立來源，不能偷偷抽未勾的內建類別。完整名單及角色優先於大幅插圖，入座更新不清掉設定草稿。 |
 | U15 | 音效控制全遊戲共用，放右上角設定圖案；背景音樂與音效音量各自可調。 | 使用共用AudioSettings，保留跨遊戲偏好；房主桌上選曲／播放控制與個人收聽分開。驗收見 [共用聲音進度](../SHARED-AUDIO-PROGRESS.md)。 |
 | U16 | 文字彈幕要飄過畫面，不能原地淡出；房間設定與儲存房間設定放在一起。 | 共用彈幕右向左移動；畫猜／送禮／同頻的欄位、儲存與結果提示同區。畫猜設定浮層保持名單常駐與視窗邊界。實作來源15af1dd，驗收見 [本批進度](../BARRAGE-ROOM-SETTINGS-PROGRESS.md)。 |
+| U17 | Server 資料轉移做成 AI 可操作程式；第一版選「完整移轉／備份還原」，帳戶資料也必須搬。 | 全量帳戶 UUID／原密碼 hash／role／disabled／appearance 保存，target 只撤銷 session／邀請／reset。程式c831e87 已在 Windows／Linux 隔離驗收，未實際遷移正式資料；[操作文件](../SERVER-DATA-TRANSFER.md)、[證據](../SERVER-DATA-TRANSFER-PROGRESS.md)。merge／Postgres 不在第一版。 |
 
 已驗收程式基線：公開站來源 `9f041d3`；PR #30 包含後續文件提交 `0aa6c75`。這是本輪的歷史基線，未來不能不查核就當作目前正式版本。完整前輪驗收見 [桌機進度](../DESKTOP-DESIGN-PROGRESS.md) 與 [畫猜三人試玩](../DRAW-GUESS-PLAYTEST.md)。
 
