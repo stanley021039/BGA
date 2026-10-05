@@ -11,7 +11,7 @@
  <p id="watchStatus" class="ui-status" role="status" aria-live="polite"></p>
  <div class="table-watch-body"><div class="table-watch-view">
  <section class="table-watch-screen" aria-label="本機 YouTube 播放器"><div id="watchConsent"><strong id="watchVideoLabel">這一桌還沒選影片</strong><p>自行加入才會連線到 YouTube。關閉只影響自己，其他人繼續觀看。</p><button id="watchJoin" type="button">加入觀看</button><p class="table-watch-privacy"><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google 隱私權政策 ↗</a></p></div><div id="watchPlayer" hidden></div></section>
- <div id="watchLocal" class="table-watch-local" hidden><button id="watchRejoin" type="button">返回全桌進度</button><button id="watchLocalPlay" type="button">在這裡開始播放</button><button id="watchExit" type="button">關閉自己的影片</button><p>影片內的播放、暫停與拖曳只影響自己。</p><div class="table-watch-volume"><button id="watchSound" type="button" aria-pressed="false">開啟影片聲音</button><label for="watchVolume">音量</label><input id="watchVolume" type="range" min="0" max="100" step="1" value="30"><span id="watchVolumeValue">30%</span></div></div>
+ <div id="watchLocal" class="table-watch-local" hidden><button id="watchRejoin" type="button">返回全桌進度</button><button id="watchLocalPlay" type="button" hidden>在這裡開始播放</button><button id="watchExit" type="button">關閉自己的影片</button><p>影片內的播放、暫停與拖曳只影響自己。</p><div class="table-watch-volume"><button id="watchSound" type="button" aria-pressed="false">開啟影片聲音</button><label for="watchVolume">音量</label><input id="watchVolume" type="range" min="0" max="100" step="1" value="30"><span id="watchVolumeValue">30%</span></div></div>
  </div><div id="watchRoomControls" class="table-watch-controls"><section id="watchTransport" class="table-watch-transport" aria-label="全桌播放控制" hidden><div class="table-watch-control-heading"><strong>全桌進度</strong><output id="watchClock">0:00</output></div><div class="table-watch-buttons"><button id="watchPlay" type="button">全桌播放</button><button id="watchPause" type="button">全桌暫停</button><button id="watchReplay" type="button">從頭共看</button><button id="watchStop" type="button">停止共看</button></div><form id="watchSeekForm" class="table-watch-seek"><label for="watchSeek">跳至秒數</label><input id="watchSeek" type="number" min="0" max="86400" step="1" value="0" inputmode="numeric" required><button id="watchSeekSubmit" type="submit">全桌跳轉</button></form><p id="watchPermission"></p><button id="watchTakeover" type="button" hidden>房主接管控制</button></section>
  <form id="watchPropose" class="table-watch-propose"><label for="watchUrl">提議 YouTube 影片</label><div><input id="watchUrl" type="url" inputmode="url" maxlength="2048" placeholder="貼上 YouTube 網址" autocomplete="off" required><button id="watchProposeSubmit" type="submit">送出影片</button></div><p>第一部直接選用；之後由控制者或房主選用。選用後由提案者控制。</p></form>
  <section id="watchProposalsSection" hidden><h3>朋友提議的影片</h3><ul id="watchProposals"></ul></section>
@@ -42,6 +42,7 @@
  function signature(s){return s?JSON.stringify([s.roomInstanceId,s.watchSessionId,s.video?.id,s.playback.state,s.playback.anchorPositionSec,s.playback.anchorServerMs]):null;}
  function markerKey(m){return m?m.roomInstanceId+':'+m.revision:null;}
  function label(){const hasVideo=marker?marker.hasVideo:!!snapshot?.video,name=marker?marker.controllerName:snapshot?.controllerName;opener.classList.toggle('has-video',!!hasVideo);opener.title=hasVideo?'YouTube 共看 · '+(name||'朋友')+' 控制':'YouTube 共看';opener.setAttribute('aria-label',opener.title);}
+ function localPlayPrompt(){return snapshot?.isHost?'請按「在這裡開始播放」。':'請直接按 YouTube 播放器裡的播放按鈕。';}
  function render(){
   label();if(!dialog.open)return;
   const video=!!snapshot?.video,can=!!snapshot?.canControl,host=!!snapshot?.isHost;
@@ -50,6 +51,7 @@
   q('#watchVideoLabel').textContent=video?'已選影片 · '+snapshot.video.id:'這一桌還沒選影片';
   q('#watchJoin').disabled=!video||!!fetching||submitting;q('#watchJoin').textContent=video?'加入觀看':'先提議影片';
   q('#watchConsent').hidden=joined;q('#watchPlayer').hidden=!joined;q('#watchLocal').hidden=!joined;q('#watchTransport').hidden=!video;
+  q('#watchLocalPlay').hidden=!host;
   q('#watchClock').textContent=format(position())+' · '+(snapshot?.playback.state==='playing'?'播放中':'已暫停');
   for(const id of ['#watchPlay','#watchPause','#watchReplay','#watchSeek','#watchSeekSubmit'])q(id).disabled=!can||submitting||!snapshot;
   q('#watchPlay').disabled||=snapshot?.playback.state==='playing';q('#watchPause').disabled||=snapshot?.playback.state==='paused';
@@ -83,7 +85,7 @@
  function applyPlayback(force=false){
   if(!joined||!ready||!player||!snapshot?.video||document.hidden)return;const key=signature(snapshot);if(!force&&appliedPlayback===key)return;appliedPlayback=key;localEnded=false;
   if(!isVisibleEnough()){exitLocal('播放器目前不可完整觀看；捲回播放器後再按加入觀看。');return;}
-  try{if(snapshot.playback.state==='paused'){player.cueVideoById({videoId:snapshot.video.id,startSeconds:position()});player.pauseVideo();}else{player.seekTo(position(),true);player.playVideo();}status(snapshot.playback.state==='playing'?'已對齊全桌進度；若沒有播放，請按「在這裡開始播放」。':'全桌已暫停。');}catch{status('影片尚未準備好，請按「返回全桌進度」重試。');}
+  try{if(snapshot.playback.state==='paused'){player.cueVideoById({videoId:snapshot.video.id,startSeconds:position()});player.pauseVideo();}else{player.seekTo(position(),true);player.playVideo();}status(snapshot.playback.state==='playing'?'已對齊全桌進度；若沒有播放，'+localPlayPrompt():'全桌已暫停。');}catch{status('影片尚未準備好，請按「返回全桌進度」重試。');}
  }
  async function mountPlayer(){
   destroyPlayer();if(!joined||!dialog.open||!snapshot?.video)return;
@@ -94,7 +96,7 @@
    if(!isVisibleEnough()){exitLocal('播放器至少需要 200 × 200 的可見空間，請放大視窗後再加入。');return;}
    const iframe=document.createElement('iframe');iframe.title='YouTube 共看影片';iframe.setAttribute('referrerpolicy','strict-origin-when-cross-origin');iframe.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');iframe.setAttribute('allowfullscreen','');iframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(video)+'?enablejsapi=1&controls=1&playsinline=1&origin='+encodeURIComponent(location.origin);q('#watchPlayer').replaceChildren(iframe);
    const valid=()=>token===playerGeneration&&view===viewGeneration&&joined&&dialog.open&&!document.hidden;
-   player=new yt.Player(iframe,{events:{onReady:()=>{if(!valid())return;ready=true;volume();applyPlayback(true);},onStateChange:event=>{if(!valid())return;if(event.data===0){localEnded=true;status('此端已播放完畢，可等控制者換片，或自行返回全桌進度。');}else if(event.data===3)status('此端正在緩衝；不會改變其他人的播放。');else if(event.data===1)status('自己的影片正在播放；影片內的操作只影響自己。');else if(event.data===2)status('自己的影片已暫停；可返回全桌進度。');},onAutoplayBlocked:()=>{if(valid())status('瀏覽器需要你允許播放，請按「在這裡開始播放」。');},onError:event=>{if(!valid())return;const messages={2:'這部影片的網址或識別碼無效。',5:'此瀏覽器無法播放這部影片。',100:'這部影片不存在、已移除或設為私人。',101:'這部影片不允許嵌入觀看。',150:'這部影片不允許嵌入觀看。',153:'YouTube 未能確認網站來源，請重新整理後重試。'};status((messages[event.data]||'這部影片目前無法嵌入播放。')+' 可改選其他影片；其他人的播放不受影響。');}}});
+   player=new yt.Player(iframe,{events:{onReady:()=>{if(!valid())return;ready=true;volume();applyPlayback(true);},onStateChange:event=>{if(!valid())return;if(event.data===0){localEnded=true;status('此端已播放完畢，可等控制者換片，或自行返回全桌進度。');}else if(event.data===3)status('此端正在緩衝；不會改變其他人的播放。');else if(event.data===1)status('自己的影片正在播放；影片內的操作只影響自己。');else if(event.data===2)status('自己的影片已暫停；可返回全桌進度。');},onAutoplayBlocked:()=>{if(valid())status('瀏覽器需要你允許播放，'+localPlayPrompt());},onError:event=>{if(!valid())return;const messages={2:'這部影片的網址或識別碼無效。',5:'此瀏覽器無法播放這部影片。',100:'這部影片不存在、已移除或設為私人。',101:'這部影片不允許嵌入觀看。',150:'這部影片不允許嵌入觀看。',153:'YouTube 未能確認網站來源，請重新整理後重試。'};status((messages[event.data]||'這部影片目前無法嵌入播放。')+' 可改選其他影片；其他人的播放不受影響。');}}});
    if(typeof IntersectionObserver==='function'){intersection=new IntersectionObserver(entries=>{if(valid()&&entries.some(entry=>entry.intersectionRatio<.5))exitLocal('影片已離開可見範圍；需要時再加入觀看。');},{threshold:[.5]});intersection.observe(iframe);}
    if(typeof ResizeObserver==='function'){resize=new ResizeObserver(()=>{if(valid()&&!isVisibleEnough())exitLocal('播放器空間不足；放大視窗後再加入觀看。');});resize.observe(q('#watchPlayer'));}
   }catch(error){if(token===playerGeneration&&view===viewGeneration&&dialog.open){exitLocal('');status(error.message);}}
@@ -132,7 +134,7 @@
  opener.onclick=open;q('#watchClose').onclick=close;dialog.addEventListener('close',cleanup);dialog.addEventListener('cancel',()=>{joined=false;destroyPlayer();});
  q('#watchJoin').onclick=async()=>{if(!snapshot?.video)return;const view=viewGeneration;if(!await requestSnapshot({force:true})||view!==viewGeneration||!dialog.open||!snapshot?.video)return;joined=true;render();mountPlayer();};
  q('#watchRejoin').onclick=async()=>{const view=viewGeneration;if(await requestSnapshot({force:true})&&view===viewGeneration)applyPlayback(true);};
- q('#watchLocalPlay').onclick=()=>{if(!joined||!ready||!player)return;try{localEnded=false;player.playVideo();status('這裡已允許播放；原生控制只影響自己。');}catch{status('請直接按 YouTube 播放器裡的播放按鈕。');}};
+ q('#watchLocalPlay').onclick=()=>{if(!snapshot?.isHost||!joined||!ready||!player)return;try{localEnded=false;player.playVideo();status('這裡已允許播放；原生控制只影響自己。');}catch{status('請直接按 YouTube 播放器裡的播放按鈕。');}};
  q('#watchExit').onclick=()=>exitLocal();q('#watchSound').onclick=()=>{const settings=window.AudioSettings?.get();if(settings)window.AudioSettings.set('music',{enabled:!settings.music.enabled},{gesture:true});};
  q('#watchVolume').oninput=()=>window.AudioSettings?.set('music',{volume:Number(q('#watchVolume').value)/100},{gesture:true});
  for(const [id,action] of [['#watchPlay','play'],['#watchPause','pause'],['#watchReplay','replay'],['#watchStop','stop'],['#watchTakeover','takeover']])q(id).onclick=()=>command(action);
