@@ -2,9 +2,9 @@
 
 日期：2026-10-05。分支 `feat/party-content-and-race-paths`；本地實作，未 push／PR／部署。此項承接使用者「一次走多格、滑鼠移過去先顯示路線、盡量避開障礙，仍能一格一格走」要求。主 agent 背景Chrome已完成單步＋連續五步、hover零命令／遠格一個POST、键盤焦點及狀態重繪保留；不是真人樂趣或GPU效能量測。詳 [整合驗收](PARTY-UPGRADE-PROGRESS.md)。
 
-## 2026-10-06：逐格滑動修正，候選 v1.1.1
+## 2026-10-06：逐格滑動修正，正式 v1.1.1
 
-多格規則先前已沿各格結算，但視覺動畫被總長900ms上限壓縮，SVG重繪又取消動畫；從起跑區出發也缺少原座標。這一筆取代上述動畫完成狀態的實作說明；尚未把候選當作正式上線。
+多格規則先前已沿各格結算，但視覺動畫被總長900ms上限壓縮，SVG重繪又取消動畫；從起跑區出發也缺少原座標。這一筆取代上述動畫完成狀態的實作說明，程式提交`2eb4104d3732325ac68d2981fadc09826b1c5f55`、本地annotated tag `v1.1.1`已發布至shhuang.cc，未push／未發新PR。
 
 `public/shared/race-movement.js`以伺服器確認的movePath步驟建立WAAPI關鍵影格，每格240ms，八格配置1.92秒；取消總長上限。SVG重建保留起始時間，在同一繪製前恢復elapsed，連續指令接到尚未完成的路徑後方。從起跑區滑入第一格、路線中斷則停在確認位置；消失／淘汰、權威位置衝突、換房、等待、隱藏頁面或關動畫會清理，不重播重連時的舊事件。一般单格也沿用同一移動控制器。
 
@@ -12,7 +12,11 @@
 
 Windows完整 **554/554**，新增6項回歸涵蓋每格時長及座標、presence重繪elapsed、連續指令接續、中斷與起跑、hydration／重送／隱藏／停用及權威衝突／換房。`release:check --base v1.1.0 --type patch`通過。
 
-背景Chrome在隔離localhost3198用合成帳號、正常1794×1010viewport操作八格路線；真實畫面截圖可見中間位置，觀眾改名造成重繪後仍可見後续移動，終點與剩4點正確。被動Network觀察一次`/api/action` POST，無截斷／待分頁，沒有逐格網路。證據為核准私有QA位置 `work/race-motion-frames/`、`race-motion-frame-times.json`、`race-motion-demo.gif`及`race-motion-network-proof.json`。GIF由實際截圖縮小匯出，截圖間隔約100–150ms，不能當作GPU／FPS量測。DOM只讀工具同批的矩形快照未持續刷新，捨棄該數字，不用它宣稱平滑度。Linux與正式公開驗收待補。
+背景Chrome在隔離localhost3198用合成帳號、正常1794×1010viewport操作八格路線；真實畫面截圖可見中間位置，觀眾改名造成重繪後仍可見後续移動，終點與剩4點正確。被動Network觀察一次`/api/action` POST，無截斷／待分頁，沒有逐格網路。證據為核准私有QA位置 `work/race-motion-frames/`、`race-motion-frame-times.json`、`race-motion-demo.gif`及`race-motion-network-proof.json`。GIF由實際截圖縮小匯出，動畫中的截圖間隔約100–150ms，不能當作GPU／FPS量測。DOM只讀工具同批的矩形快照未持續刷新，捨棄該數字，不用它宣稱平滑度。
+
+Linux Node22.22.1完整 **554/554**（失敗／取消／跳過0，約114秒）。副本schema13、15張既有表逐列不變、完整性ok、外鍵錯誤0、隔離啟動成功。發布包SHA-256 `13843878858c4b0a19b6175c36d643b9cfdb427fbb5e1ae8e673f7195ec419a5`，無本機私人偏好或QA檔案。備份`shared/backups/pre-party-2eb4104-20261005T172809Z`（UTC）；SQLite線上備份與持久檔案分别保存，不宣稱同一原子時間點。
+
+切換前確認唯一房間只有核准測試帳號與電腦玩家；經正常leave、保存歷史後房間數0。正式目錄`releases/2eb4104`、服務及tunnel active；schema仍13、7帳戶完整逐列一致、外鍵0及integrity ok，既有session有效。公開`/api/version`匿名200且no-store，race HTML、race.js、race-movement.js及共用header與發布包內容一致。背景Chrome正式設定實際顯示「版本 v1.1.1」，證據`work/race-motion-production-version.jpg`。逐格行為的實玩證據來自上述隔離本機房間，正式站做版本／資源與帳戶驗證，未把本機GIF冒稱正式站錄影。
 
 | 分類 | 適用遊戲 | 行為與實作 | 狀態 |
 | --- | --- | --- | --- |

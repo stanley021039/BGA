@@ -1,6 +1,6 @@
 # 程式架構 agent 記憶
 
-2026-10-06候選v1.1.1修正雷霆逐格動畫：共用race-movement控制器只演確認步驟、每格240ms，保留elapsed跨SVG重建，排接連續指令。新靜態檔必須同時接race.html及app白名單；快照深複製cars，避免教學引擎原物件變更令差異判斷失效。6項控制器回歸、Windows554項及背景Chrome證據見 [移動進度](../RACE-MULTI-MOVE-PROGRESS.md)，Linux與部署狀態依該文件末節。v1.1.0 tag不移動，修正版另打patch。
+2026-10-06 v1.1.1修正雷霆逐格動畫：共用race-movement控制器只演確認步驟、每格240ms，保留elapsed跨SVG重建，排接連續指令。新靜態檔必須同時接race.html及app白名單；快照深複製cars，避免教學引擎原物件變更令差異判斷失效。6項控制器回歸、Windows／Linux各554項及背景Chrome證據見 [移動進度](../RACE-MULTI-MOVE-PROGRESS.md)。程式2eb4104／本地annotated v1.1.1已更新shhuang.cc，正式API／資源／設定及7帳戶核對完成，無新PR／push。v1.1.0 tag不移動，後續純驗收文件不改tag。
 
 ## 版號規則（2026-10-06）
 

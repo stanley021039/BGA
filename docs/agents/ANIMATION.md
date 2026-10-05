@@ -1,6 +1,6 @@
 # 動畫角色記憶
 
-2026-10-06逐格滑動修正候選v1.1.1：雷霆movePath每格240ms，移除900ms總長上限；SVG presence重繪恢復elapsed、連續指令接續既有路線，起跑滑入／實際中斷點有回歸。背景／停用／減動不補播，不增加逐格網路或用動畫推進規則。Windows554項及背景Chrome八格截圖／改名重繪／一次POST證據見 [移動進度](../RACE-MULTI-MOVE-PROGRESS.md)；不是FPS量測，Linux及正式站尚待驗收。此項取代下方舊多格動畫實作說明。
+2026-10-06逐格滑動修正v1.1.1：雷霆movePath每格240ms，移除900ms總長上限；SVG presence重繪恢復elapsed、連續指令接續既有路線，起跑滑入／實際中斷點有回歸。背景／停用／減動不補播，不增加逐格網路或用動畫推進規則。Windows／Linux各554項及背景Chrome八格截圖／改名重繪／一次POST證據見 [移動進度](../RACE-MULTI-MOVE-PROGRESS.md)；不是FPS量測。已更新shhuang.cc並驗版號／資源／帳戶；動畫GIF來自隔離本機實玩。此項取代下方舊多格動畫實作說明。
 
 2026-10-05 U33 實作補充：大廳首次auth成功後對可見標題／大廳／遊戲插圖播放420ms、最多165ms錯開的opacity／translateY入場；無遮罩、不等動畫解鎖。沿用MotionPolicy，背景或減動／停用跳過，一頁一次、回焦／輪詢不補播。Chrome重新整理實際讀到Y9.47→2.03px及opacity0.7347→0.9430；停用後8次皆none／1，再還原偏好未補播。這是DOM樣式觀察，不是GPU/FPS證據。雷霆多格動畫只演server實際走過的步驟、不推進規則；框圖建議靜態九宮格沿用原彈幕移動、僅評估。狀態见 [整合進度](../PARTY-UPGRADE-PROGRESS.md)，未PR／部署。
 
