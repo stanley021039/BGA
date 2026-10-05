@@ -1,69 +1,82 @@
-/* Replay confirmed movement locally; never advance game rules or send steps. */
+/* Present confirmed displacements in order. Rules and polling never wait here. */
 ((root)=>{
  'use strict';
- const STEP_MS=240,MAX_POINTS=65;
- const cell=value=>value&&Number.isInteger(value.x)&&value.x>=0&&value.x<6&&Number.isInteger(value.y)?{x:value.x,y:value.y}:null;
+ const STEP_MS=240,PAN_MS=480,MAX_GROUPS=128;
+ const point=p=>p&&Number.isInteger(p.x)&&Number.isInteger(p.y)&&Math.abs(p.x)<=64&&Math.abs(p.y)<=1000000?{x:p.x,y:p.y}:null;
  const same=(a,b)=>a?.x===b?.x&&a?.y===b?.y;
- const position=(point,min)=>({x:48+(point.y-min)*44+(point.x%2)*22,y:81+point.x*44});
- function mount({document:doc=root.document,policy=root.MotionPolicy,now=()=>root.performance.now()}={}){
-  const records=new Map(),seen=new Set();let room=null,destroyed=false;
-  function detach(record){if(record.animation){record.animation.onfinish=null;record.animation.cancel();record.animation=null;}record.node=null;}
-  function clear(){for(const record of records.values())detach(record);records.clear();}
-  function reset(){clear();seen.clear();room=null;}
-  function remember(event){if(event.id===undefined||event.id===null)return false;const id=String(event.id);if(seen.has(id))return false;seen.add(id);while(seen.size>256)seen.delete(seen.values().next().value);return true;}
-  function add(id,cells,car,time){
-   if(cells.length<2||cells.length>MAX_POINTS)return;
-   const previous=records.get(id);
-   if(previous&&time<previous.start+previous.duration&&same(previous.cells.at(-1),cells[0])&&previous.cells.length+cells.length-1<=MAX_POINTS){
-    previous.cells.push(...cells.slice(1));previous.duration=(previous.cells.length-1)*STEP_MS;previous.car={...car};return;
+ const position=(p,min)=>({x:48+(p.y-min)*44+(Math.abs(p.x)%2)*22,y:81+p.x*44});
+ function distance(a,b){const q=p=>p.y-(p.x-(Math.abs(p.x)%2))/2,dq=q(b)-q(a),dr=b.x-a.x;return Math.max(Math.abs(dq),Math.abs(dr),Math.abs(dq+dr));}
+ function mount({document:doc=root.document,policy=root.MotionPolicy,now=()=>root.performance.now(),onSettled=()=>{}}={}){
+  const tracks=new Map(),legacySeen=new Set(),finishedLandings=new Map();let room=null,serial=0,start=0,end=0,groups=0,generation=0,pinnedMin=null,tiles=[],pans=[],worldAnimation=null,destroyed=false;
+  function detach(){generation++;for(const track of tracks.values()){if(track.animation){track.animation.onfinish=null;track.animation.cancel();track.animation=null;}}if(worldAnimation){worldAnimation.onfinish=null;worldAnimation.cancel();worldAnimation=null;}}
+  function clear(notify=false){const had=end>0;detach();tracks.clear();start=end=groups=0;pinnedMin=null;tiles=[];pans=[];if(had&&notify&&!destroyed)onSettled({cancelled:true});}
+  function reset(){clear();serial=0;legacySeen.clear();finishedLandings.clear();room=null;}
+  function locked(){return end>now()&&!doc.hidden&&policy.allowsMotion();}
+  function key(move){return move.car?'car:'+move.car:move.player?'player:'+move.player:null;}
+  function normalize(move){const to=point(move.to),from=point(move.from)||(move.from?.x===null&&to?{x:to.x,y:to.y-1}:null),id=key(move);return id&&from&&to&&!same(from,to)?{id,car:move.car,player:move.player,from,to}:null;}
+  function append(group,time){
+   const moves=(group.moves||[]).map(normalize).filter(Boolean);if(!moves.length||groups>=MAX_GROUPS)return false;
+   if(!end){start=time;end=time;}
+   const duration=STEP_MS*Math.max(...moves.map(m=>Math.max(1,Math.min(4,distance(m.from,m.to))))),at=end;
+   const extra=moves.some(move=>{const track=tracks.get(move.id);return track&&!same(track.segments.at(-1)?.to||track.initial,move.from);})?STEP_MS:0;
+   for(const move of moves){
+    let track=tracks.get(move.id);if(!track){track={car:move.car,player:move.player,initial:move.from,segments:[],animation:null};tracks.set(move.id,track);}
+    const previous=track.segments.at(-1)?.to||track.initial;
+    if(!same(previous,move.from))track.segments.push({from:previous,to:move.from,start:at,end:at+extra,kind:'move'});
+    track.segments.push({from:move.from,to:move.to,start:at+extra,end:at+extra+duration,kind:group.kind});
    }
-   if(previous)detach(previous);
-   records.set(id,{cells,car:{...car},start:time,duration:(cells.length-1)*STEP_MS,animation:null,node:null});
+   end=at+duration+extra;groups++;return true;
   }
-  function prepare(state,events=[],moves=[],{live=false}={}){
+  function prepare(state,events=[],fallback=[],{live=false,previous=null}={}){
    if(destroyed)return;
    if(room!==state.code){reset();room=state.code;}
-   const time=now(),fresh=events.filter(remember);
-   if(!live||doc.hidden||!policy.allowsMotion()||state.phase==='waiting'){clear();return;}
-   for(const [id,record]of records){if(time>=record.start+record.duration){detach(record);records.delete(id);}else detach(record);}
-   const cars=new Map(state.cars.map(car=>[car.id,car])),pathCars=new Set();
-   for(const event of fresh){
-    const car=cars.get(event.car);
-    if(event.kind!=='movePath'||!car||car.dead||!Array.isArray(event.steps)||!event.steps.length||event.steps.length>16)continue;
-    const steps=event.steps.map(cell),to=cell(event.to);
-    if(steps.some(point=>!point)||!to)continue;
-    // Garage entry has no board coordinates. Slide in through the first lane's
-    // entrance, then visit every confirmed step, including an interrupted route.
-    const from=cell(event.from)||(event.from?.x===null?{x:steps[0].x,y:steps[0].y-1}:null);
-    if(!from)continue;
-    const cells=[from,...steps];if(!same(cells.at(-1),to))cells.push(to);
-    add(car.id,cells,car,time);pathCars.add(car.id);
+   const time=now(),journal=Array.isArray(state.motions)?state.motions:[],fresh=journal.filter(g=>Number.isSafeInteger(g.id)&&g.id>serial);
+   if(state.phase==='finished'){const alive=new Set(state.cars.filter(c=>!c.dead).map(c=>c.id));for(const group of journal)for(const move of group.moves||[])if(alive.has(move.car)&&point(move.to))finishedLandings.set(move.car,point(move.to));}else finishedLandings.clear();
+   for(const group of journal)if(Number.isSafeInteger(group.id))serial=Math.max(serial,group.id);
+   const legacy=events.filter(event=>{if(event.id==null||legacySeen.has(event.id))return false;legacySeen.add(event.id);while(legacySeen.size>256)legacySeen.delete(legacySeen.values().next().value);return true;});
+   if(!live||doc.hidden||!policy.allowsMotion()||state.phase==='waiting'){clear(true);return;}
+   if(end&&time>=end)clear();else detach();
+   const added=new Set();
+   for(const group of fresh){if(append(group,time))for(const move of group.moves||[])if(key(move))added.add(key(move));}
+   // Compatibility for an old server; the canonical journal wins when present.
+   if(!Array.isArray(state.motions))for(const event of legacy){
+    if(event.kind!=='movePath'||!Array.isArray(event.steps)||!event.steps.length||event.steps.length>16)continue;
+    let from=event.from;for(const to of event.steps){append({kind:'move',moves:[{car:event.car,from,to}]},time);from=to;}if(point(event.to)&&!same(from,event.to))append({kind:'move',moves:[{car:event.car,from,to:event.to}]},time);added.add('car:'+event.car);
    }
-   for(const movement of moves){
-    if(pathCars.has(movement.to.id))continue;
-    const from=cell(movement.from),to=cell(movement.to);if(from&&to&&!same(from,to))add(movement.to.id,[from,to],movement.to,time);
-   }
-   // State remains authoritative. Do not finish a stale path after the car was
-   // eliminated, moved by another effect, or changed rooms.
-   for(const [id,record]of records){const car=cars.get(id);if(!car||car.dead||!same(record.cells.at(-1),car)){detach(record);records.delete(id);}}
+   for(const move of fallback){if(added.has('car:'+move.to.id))continue;append({kind:'move',moves:[{car:move.to.id,from:move.from,to:move.to}]},time);}
+   const cars=new Map(state.cars.map(c=>[c.id,c]));
+   for(const [id,track]of tracks){if(!track.car)continue;const car=cars.get(track.car),last=track.segments.at(-1).to;if(!car||(!car.dead&&state.phase!=='finished'&&!same(last,car)))tracks.delete(id);}
+   if(!tracks.size){clear();return;}
+   if(pinnedMin===null)pinnedMin=previous?.tiles?.[0]?.start??state.tiles?.[0]?.start??0;
+   const tileMap=new Map([...tiles,...(previous?.tiles||[]),...(state.tiles||[])].map(tile=>[tile.start,tile]));tiles=[...tileMap.values()].filter(t=>t.start>=pinnedMin).sort((a,b)=>a.start-b.start).slice(-8);
+   const min=state.tiles?.[0]?.start??pinnedMin,current=pans.at(-1)?.to??pinnedMin;
+   if(min!==current){pans.push({from:current,to:min,start:end,end:end+PAN_MS});end+=PAN_MS;}
+  }
+  function view(state){
+   const cars=state.cars.map(car=>{const track=tracks.get('car:'+car.id),last=track?.segments.at(-1)?.to||finishedLandings.get(car.id);return last?{...car,...last,motionGhost:!!car.dead}:car;});
+   const players=(state.players||[]).map(player=>{const last=tracks.get('player:'+player.id)?.segments.at(-1)?.to;return last?{...player,chopper:{...player.chopper,...last}}:player;});
+   return {min:pinnedMin??state.tiles?.[0]?.start??0,tiles:tiles.length?tiles:state.tiles,cars,players};
+  }
+  function frames(track,min){
+   const last=track.segments.at(-1).to,base=position(last,min),result=[],total=end-start;
+   const add=(v,at)=>result.push({transform:'translate('+(v.x-base.x)+'px,'+(v.y-base.y)+'px)',offset:Math.max(0,Math.min(1,(at-start)/total)),easing:'ease-in-out'});
+   add(position(track.initial,min),start);let cursor=start;
+   for(const segment of track.segments){if(segment.start>cursor)add(position(segment.from,min),segment.start);if(['jump','blast'].includes(segment.kind)){const a=position(segment.from,min),b=position(segment.to,min);add({x:(a.x+b.x)/2,y:(a.y+b.y)/2-24},(segment.start+segment.end)/2);}add(position(segment.to,min),segment.end);cursor=segment.end;}
+   if(cursor<end)add(position(last,min),end);return result;
   }
   function attach(svg,min){
    if(destroyed||!svg||doc.hidden||!policy.allowsMotion()){clear();return;}
-   const nodes=new Map(Array.from(svg.querySelectorAll('.map-car')).map(node=>[node.dataset.car,node]));
-   for(const [id,record]of records){
-    const elapsed=Math.max(0,now()-record.start);if(elapsed>=record.duration){records.delete(id);continue;}
-    const node=nodes.get(id)?.querySelector('.race-car-motion');if(!node)continue;
-    const final=position(record.cells.at(-1),min),frames=record.cells.map((point,index)=>{const p=position(point,min);return {transform:'translate('+(p.x-final.x)+'px,'+(p.y-final.y)+'px)',offset:index/(record.cells.length-1),easing:'ease-in-out'};});
-    const animation=policy.animate(node,frames,{duration:record.duration,easing:'linear',fill:'both'});if(!animation)continue;
-    // A presence/poll redraw replaces SVG nodes. Restore elapsed time in this
-    // same task, before paint, rather than replaying or snapping to the last cell.
-    animation.currentTime=elapsed;record.animation=animation;record.node=node;
-    animation.onfinish=()=>{if(records.get(id)!==record||record.animation!==animation)return;record.animation=null;records.delete(id);animation.cancel();};
-   }
+   if(!end)return;const elapsed=Math.max(0,now()-start),duration=end-start;
+   if(elapsed>=duration){clear();return;}
+   const token=generation,deadline=end,finished=()=>{if(token!==generation||deadline!==end||destroyed)return;clear();onSettled({cancelled:false});};
+   const carNodes=new Map(Array.from(svg.querySelectorAll('.map-car')).map(n=>['car:'+n.dataset.car,n])),airNodes=new Map(Array.from(svg.querySelectorAll('.map-chopper')).map(n=>['player:'+n.dataset.player,n]));
+   let attached=0;
+   for(const [id,track]of tracks){const node=(carNodes.get(id)||airNodes.get(id))?.querySelector('.race-car-motion');if(!node)continue;const animation=policy.animate(node,frames(track,min),{duration,easing:'linear',fill:'both'});if(!animation)continue;animation.currentTime=elapsed;animation.onfinish=finished;track.animation=animation;attached++;}
+   if(pans.length){const node=svg.querySelector?.('.race-world'),f=[{transform:'translate(0px,0px)',offset:0,easing:'ease-in-out'}];let cursor=start;for(const pan of pans){if(pan.start>cursor)f.push({transform:'translate('+(-(pan.from-pinnedMin)*44)+'px,0px)',offset:(pan.start-start)/duration,easing:'ease-in-out'});f.push({transform:'translate('+(-(pan.to-pinnedMin)*44)+'px,0px)',offset:(pan.end-start)/duration,easing:'ease-in-out'});cursor=pan.end;}if(cursor<end)f.push({...f.at(-1),offset:1});worldAnimation=policy.animate(node,f,{duration,easing:'linear',fill:'both'});if(worldAnimation){worldAnimation.currentTime=elapsed;worldAnimation.onfinish=finished;attached++;}}
+   if(!attached){clear();onSettled({cancelled:true});}
   }
-  const visibility=()=>{if(doc.hidden)clear();},unsubscribe=policy.subscribe(()=>{if(!policy.allowsMotion())clear();});
-  doc.addEventListener('visibilitychange',visibility);
-  return {prepare,attach,reset,destroy(){reset();destroyed=true;unsubscribe?.();doc.removeEventListener('visibilitychange',visibility);}};
+  const visibility=()=>{if(doc.hidden)clear(true);},unsubscribe=policy.subscribe(()=>{if(!policy.allowsMotion())clear(true);});doc.addEventListener('visibilitychange',visibility);
+  return {prepare,attach,view,locked,cancel(){clear(true);},reset,destroy(){destroyed=true;reset();unsubscribe?.();doc.removeEventListener('visibilitychange',visibility);}};
  }
- const api={mount,STEP_MS};if(typeof module==='object'&&module.exports)module.exports=api;else root.RaceMovement=api;
+ const api={mount,STEP_MS,PAN_MS};if(typeof module==='object'&&module.exports)module.exports=api;else root.RaceMovement=api;
 })(typeof window==='object'?window:globalThis);

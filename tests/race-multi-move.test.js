@@ -113,25 +113,39 @@ test('planner work is bounded and frontend/server share the exact deterministic 
  f.r.active.remaining=17;assert.equal(RacePaths.routes(f.r.view(f.p.id)).size,0);
 });
 
-function frontendHarness(f){
+function frontendHarness(f,{nested=false}={}){
  const source=fs.readFileSync(require.resolve('../public/race.js'),'utf8'),hint={textContent:''},calls=[],layers=new Map(),listeners=new Map(),body={dataset:{}},cells=new Map();
  let generation=0,scope;
- const document={body,activeElement:body,hidden:false,querySelectorAll:()=>[],createElementNS(){return {setAttribute(){},remove(){layers.delete(this.id);}};},elementFromPoint(){return scope.hitTarget?cell(scope.hitTarget.x,scope.hitTarget.y):body;}};
+ const document={body,activeElement:body,hidden:false,querySelectorAll:()=>[],createElementNS(){return {setAttribute(){},remove(){layers.delete(this.id);if(this.parentNode){this.parentNode.children.splice(this.parentNode.children.indexOf(this),1);this.parentNode=null;}}};},elementFromPoint(){return scope.hitTarget?cell(scope.hitTarget.x,scope.hitTarget.y):body;}};
  const cell=(x,y)=>{
   const key=x+':'+y;if(!cells.has(key))cells.set(key,{generation,dataset:{x:String(x),y:String(y)},closest(selector){return selector==='[data-x]'?this:null;},focus(){document.activeElement=this;listeners.get('focusin')?.({target:this});}});return cells.get(key);
  };
  const track={contains:node=>node?.generation===generation,addEventListener(type,fn){listeners.set(type,fn);},querySelector(selector){const match=selector.match(/^\[data-x="(-?\d+)"\]\[data-y="(-?\d+)"\]$/);return match?cell(Number(match[1]),Number(match[2])):null;},set innerHTML(value){this.html=value;generation++;cells.clear();layers.clear();if(document.activeElement?.generation!==undefined)document.activeElement=body;}};
- const svg={querySelector:()=>null,insertBefore(layer){layers.set(layer.id,layer);}},nodes={'#raceRouteHint':hint,'#track svg':svg,'#track':track};
+ // Match the native insertBefore parent requirement. A descendant returned by
+ // svg.querySelector cannot be used as a direct child of the root SVG.
+ function insertBefore(layer,reference){if(reference&&!this.children.includes(reference)){const error=Error('The reference node is not a child of this parent');error.name='NotFoundError';throw error;}layer.parentNode=this;this.children.splice(reference?this.children.indexOf(reference):this.children.length,0,layer);layers.set(layer.id,layer);}
+ const mapCar={},world={children:[mapCar],insertBefore},svg={children:[],querySelector:selector=>selector==='.race-world'&&nested?world:selector==='.map-car'?mapCar:null,insertBefore};
+ svg.children=nested?[world]:[mapCar];world.parentNode=svg;mapCar.parentNode=nested?world:svg;
+ const nodes={'#raceRouteHint':hint,'#track svg':svg,'#track':track};
  scope={state:f.r.view(f.p.id),busy:false,RacePaths,run:(route,data)=>calls.push({route,data}),$:selector=>selector==='#raceRoutePreview'?layers.get('raceRoutePreview'):nodes[selector]||(nodes[selector]={}),document};
  vm.createContext(scope);vm.runInContext(source.slice(source.indexOf('let movementRoutes='),source.indexOf('const requestedRoom=')),scope);
  scope.routes=RacePaths.routes(scope.state);vm.runInContext('movementRoutes=routes;',scope);
  scope.bindMovementPreview(track);
- Object.assign(scope,{window:{},esc:String,sizes:['輕型','中型','重型'],vehicle:()=>'',heli:()=>'',snapshotRaceState:s=>({...s,events:s.events.slice()}),motionGate:{update:()=>false},disconnected:false,immersion:{allowsMotion:()=>false,prepareFocus(){}},RoomHost:{update(){}},GameShell:{stableMarkup(){}},crewCard:()=>'',diceDialog:{show(s){if(s.diceCheck)document.activeElement={dialog:true};}},eventCues:{hide(){}},vehicleEffects:{reset(){},show(){}},raceMovement:{reset(){},prepare(){},attach(){}},renderDash(){hint.textContent='預設提示';},tick(){},toast(){}});
+ Object.assign(scope,{window:{},esc:String,sizes:['輕型','中型','重型'],vehicle:()=>'',heli:()=>'',snapshotRaceState:s=>({...s,events:s.events.slice()}),motionGate:{update:()=>false},disconnected:false,immersion:{allowsMotion:()=>false,prepareFocus(){}},RoomHost:{update(){}},GameShell:{stableMarkup(){}},crewCard:()=>'',diceDialog:{show(s){if(s.diceCheck)document.activeElement={dialog:true};}},eventCues:{hide(){}},vehicleEffects:{reset(){},show(){}},raceMovement:{reset(){},prepare(){},attach(){},locked:()=>false,view:s=>({...s,min:s.tiles[0].start})},renderDash(){hint.textContent='預設提示';},tick(){},toast(){}});
  // Exercise the real render frame and board rebuild, with isolated shell/audio
  // dependencies; these VM nodes do not claim browser layout measurements.
  vm.runInContext(source.slice(source.indexOf('function render(s)'),source.indexOf('function commandAccepts(')),scope);
- return Object.assign(scope,{hint,calls,layers,listeners,cell});
+ return Object.assign(scope,{hint,calls,layers,listeners,cell,svg,world,mapCar});
 }
+
+test('route previews share the race-world parent with nested cars and remain valid after a presence redraw',()=>{
+ const f=fixture(),ui=frontendHarness(f,{nested:true});assert.equal(ui.mapCar.parentNode,ui.world);assert.equal(ui.world.parentNode,ui.svg);
+ assert.throws(()=>ui.svg.insertBefore({},ui.mapCar),{name:'NotFoundError'},'the harness must reject the root insertion that failed in Chrome');
+ assert.doesNotThrow(()=>ui.previewMovement(ui.cell(2,4)));const layer=ui.layers.get('raceRoutePreview');assert.equal(layer.parentNode,ui.world);assert.equal(layer.parentNode,ui.mapCar.parentNode);assert.ok(ui.world.children.indexOf(layer)<ui.world.children.indexOf(ui.mapCar));assert.equal(ui.calls.length,0);
+ ui.hitTarget={x:2,y:4};ui.listeners.get('pointermove')({target:ui.cell(2,4),pointerType:'mouse',buttons:0,clientX:110,clientY:210});ui.render({...ui.state,players:ui.state.players.map(player=>({...player,online:!player.online}))});
+ const restored=ui.layers.get('raceRoutePreview');assert.notEqual(restored,layer);assert.equal(restored.parentNode,ui.world);assert.equal(restored.parentNode,ui.mapCar.parentNode);assert.match(ui.hint.textContent,/3 格 · 消耗 3 點/);assert.equal(ui.calls.length,0);
+ ui.clearMovementPreview();assert.equal(ui.layers.size,0);assert.equal(ui.world.children.includes(restored),false);
+});
 
 test('hover preview draws a local path and readable cost without issuing a command; moving to a neighbor preserves one-cell API',()=>{
  const f=fixture(),ui=frontendHarness(f);ui.previewMovement(ui.cell(2,4));
