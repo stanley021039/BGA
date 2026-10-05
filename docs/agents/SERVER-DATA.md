@@ -60,3 +60,11 @@ Windows／Linux 各259項通過（移轉16＋UI HTTP4）；完整 HTTP workflow 
 後續 `215f82c` 補 localSubmitting／stateEpoch，避免舊查詢解鎖新移轉與不明狀態重送；11項UI VM回歸已驗。PR資源修正backport `db9d0b6` 後，Windows／Linux完整整合各304項通過，取代259項作為最新總數，詳 [進度](../SERVER-DATA-TRANSFER-PROGRESS.md)。新服務啟動前須核對 `HISTORY_*`：預設30天／512MiB／1000份 archive 會淘汰舊已完成歷史，完整包仍保存原始資料。保留期與容量要依需要先設定，不可把驗包成功解釋成服務永不淘汰。
 
 2026-10-05 送審複查修正 `6e655de`：不能比較升級前後整個 BLOB digest map 是否相同，因 schema 3／5／8 會新增資料表。既有表 digest、帳戶 digest 必須完全一致；新表只限明確 migration 表且為空，其餘差異仍阻止發布。schema 1／3／5／7 完整還原與原密碼登入、來源不變及破壞注入回歸已驗；完整 Windows／Linux 各 **335/335**，取代此前整合測試數字，詳同一進度末節。這不是正式搬移驗收。
+
+## 管理者從其他站匯入
+
+2026-10-05，`47d79c7`：UI 預設選取瀏覽器本機的加密備份資料夾＋32-byte key，上傳到管理工具主機，再驗包、預演、發布全新目錄。目的地仍是工具主機的絕對路徑；SSH 同埠轉發可供遠端操作，沒有公開站 `/admin` 路由或自動部署。手填伺服器路徑及來源站 keygen／inspect／export 仍保留。使用者沒有要求兩站合併，實際來源尚未提供。
+
+新增 `ui-uploads.js`：token／Origin／Host 後逐檔串流，manifest 先傳且只允許其 payload 白名單、精確 bytes；10 GiB／20,000 payload／5 MiB manifest／四批次上限。API 與 transfer 共用 busy，finish 呼叫真正 verify；已驗證 entry 封存。GET state 回安全摘要讓刷新恢复／清理，不回傳 key bytes。正常關閉等待工作完成再清理 owned temp；強殺不保證清理，也不自動刪其他程序的暫存。永久 key／backup／destination 禁止落入受管暫存根目錄。
+
+審查以 A→B 同 key 換包重現 path 指紋不足；restore 新增可選 `expectedBundleId`，完整驗包後、policy／publish 前比較，不符 `BUNDLE_CHANGED`。UI 自動從 verify 帶到 dryrun 與 apply；AI 也應帶入。CLI 未帶此欄位保留舊契約，不能宣稱所有 CLI 操作都要求先預演。合成資料與背景 Chrome 證據、完整最新測試總數见 [進度末節](../SERVER-DATA-TRANSFER-PROGRESS.md#管理者匯入流程與背景-chrome-驗收)。

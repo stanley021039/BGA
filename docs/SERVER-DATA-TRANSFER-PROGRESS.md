@@ -80,3 +80,43 @@ Linux包456檔，SHA256 `7eb9cdadde6cdbb7a1b66e1b0cfd13dc2ccf3bf450186195201bdd7
 Linux 包 SHA-256 `31ac2c5ea9d6d185858aa2070d9371a7cbe9b86b620ee069c27dbae11efdfe55`，上傳前、Linux 測試前後及本機測試後的逐檔 manifest 一致。下載 log 後，驗證臨時目錄絕對路徑及擁有者標記再清理；未碰正式服務。原始 log、manifest 及打包程式只在 ignored `work/pr-publish-*`。`git diff --check`、敏感檔案／新增內容檢查通過；沒有提交帳密、raw HAR、私有 DB 或交接檔。
 
 上述取代舊 304／323／330 項作為此整合版本的最新完整測試數字。既有背景 Chrome 驗收仍按各功能文件記載的版本與範圍解讀，本次未重新進行多人完整遊戲。YouTube、成就擴充與動畫研究仍依 spec 狀態處理，不能當作已實作或部署。
+
+## 管理者匯入流程與背景 Chrome 驗收
+
+2026-10-05，使用者澄清要「把別的站點資料匯入目前站點」，並要求提供管理者 UI、自行測試。程式 `47d79c7` 將首頁改為選取加密備份資料夾及金鑰 → 驗證 → 預演 → 建立全新目錄；保留本機路徑與來源站備份操作。帳戶、作品、題庫、音樂、歷史五類統計常駐，目的地屬於管理工具主機的路徑，與瀏覽器的選檔位置清楚區分。
+
+上傳採同源 token 與全域 busy，manifest 白名單、精確 byte 數及有界串流；完成後由真正 verify 驗包。刷新可看見已驗證／未完成批次，使用或清理，不會重送還原。正常結束等待目前工作再刪 owned upload 與金鑰；強殺留下暫存的界線見操作文件。UI 仍是獨立 localhost 工具，不是正式站公開 `/admin` 功能。
+
+獨立 agent 找到並重現兩個問題，已修正：
+
+| 問題 | 修正與證據 |
+| --- | --- |
+| A 包預演後，同路徑被換成同 key 的 B 包，仍能套用 B | UI 帶 verify 的 `expectedBundleId`；core 完整驗包後、policy／publish 前比對。A／B 合成包回歸確認 dryrun 與 apply 均回 BUNDLE_CHANGED，未建立目標或殘留 staging。 |
+| DELETE 已完成但回應遺失，殘留 upload ID 讓後續上傳永久重試 404 | 以 idle server 清單校正 pending ID；DELETE 404 視為已清理。可直接重新選檔開始新批次，VM 重排回應驗證。 |
+
+### 自動測試
+
+| 環境 | 程式 | 結果 |
+| --- | --- | --- |
+| Windows Node 24.14.0 | `47d79c7` 程式內容 | **363/363 通過**，0 fail／skip／cancel，約 11 秒。 |
+| Linux Node 22.22.1，獨立 `/tmp` | 同一份 462 檔 source-only 包 | **363/363 通過**，0 fail／skip／cancel，約 84 秒。 |
+
+上傳 HTTP 新增 10 項、core 身分 2 項、前端 VM 由 11 增至 27 項；本節取代 335 作為最新完整總數。涵蓋真 GCM 與錯 key／竄改、缺檔／額外檔／路徑／大小／總配額、並行 PUT／DELETE／run、Host／Origin／token、正常關閉等待／清理、刷新及回應次序。另有真實 socket 傳半檔後斷線，busy 解除、failed 可見並可清理。獨立複查的相關 43 項全過，無未解阻擋 finding。
+
+Linux 包 SHA-256 `8d64ca6aaddffea0a64fb0d58f2ae47c430aa09668dd73da99ba60521f38dbab`；測試前後與本機逐檔 manifest 一致，只有文件在程式凍結後更新。下載測試 log 後，檢查固定絕對路徑、owner marker 及非 symlink 再清理該隔離目錄。未操作正式服務。
+
+### 背景 Chrome 與隔離資料驗收
+
+全程使用原 Chrome 背景分頁，未提高視窗。合成來源有管理員、會員、停用帳號共 3 個帳戶；1 張私人作品、1 自訂角色／表情、1 禮物、畫猜／共編各 1 題、1 首音樂、1 份已完成歷史。另一個測試站持有自己的帳戶與作品，作為既有資料保留對照。
+
+- 透過本機路徑表單驗證錯 key 拒絕、正確 key 統計、既有目的地拒絕、dryrun 不建立目的地，以及變更目的地後撤銷 apply 資格。
+- 上傳真實加密包由 HTTP fixture 準備，再由 Chrome 重新整理找回批次，按「使用此備份」→ 預演 → 勾確認 → 建立新目錄。確認 JSON 帶 expectedBundleId；成功後重新整理只顯示結果。UI 清理上傳暫存後，新資料與來源備份仍存在。
+- 使用測試 helper 依 receipt 明確啟動隔離新站，Chrome 以來源站原帳密登入並在收藏庫看到「我的・私人」作品。啟動由 helper 完成，不能宣稱管理 UI 會自動啟動或切換正式服務。
+- 另外 12 項 HTTP／資料檢核全過：來源與原測試站帳戶／BLOB digest 不變；新站 UUID、密碼 hash、role、disabled、appearance 保留；停用帳號拒登、私人作品無法被另一帳號讀取；圖片 hash、音樂原檔與 Range 206、題庫、歷史與外部投稿 false 正確。
+- 1280×720 桌機、390×844 手機無水平溢出；內容仍需垂直捲動，未宣稱一屏顯示全部。測後已 reset viewport。
+
+**選檔驗收限制：**Chrome 金鑰單檔選擇成功；自動化工具的資料夾 chooser 在传入目錄或其檔案清單後均未帶入檔案，沒有完成「真實 Chrome 資料夾選檔→上傳」端到端驗收。前端 WebKit 相對路徑、manifest 先傳及缺／額外檔由 VM 驗證，實際串流及加密驗包由 HTTP 驗證；不能把後者當成瀏覽器選檔成功。沒有為繞過工具限制修改瀏覽器權限或提高視窗。讀到一筆重新整理時的 extension message-channel 訊息，未帶 app stack，不當成應用程式崩潰證據。
+
+證據只在 ignored `work/migration-ui-*`：成功 UI、收藏庫、桌機／手機截圖，fixture、12 項報告、Windows／Linux logs 與 source manifest。合成帳密、金鑰及實際私有路徑不放公開文件。測試用 3188／3189／3190 服務與暫存上傳已關閉／清理；另開一般 localhost 管理 UI 供使用者操作，實際 port／process 只記私有交接。
+
+本批更新既有 PR #31，不另開重複 PR。未合併、部署、停止正式 writer、切换路由或匯入正式資料。來源站備份尚未提供；此版仍為完整還原、不合併兩站資料。若正式使用，需取得完整來源包及分開保存的 key，依獨立指南做隔離驗收及部署切換。

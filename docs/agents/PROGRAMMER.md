@@ -78,6 +78,8 @@ Live StrokeCanvas.createRenderer保留前綴，最多16張／8MiB快取。fill�
 
 本機移轉UI是獨立工具，不依賴遊戲登入／運作；同源token防護不是隔離本機OS程序。審查發現舊state回應可能解鎖新的POST，須以localSubmitting與查詢epoch忽略過期回應；網路狀態未知時保持鎖住並重新查，不自動重送可能已執行的移轉。
 
+2026-10-05、`47d79c7` 管理 UI 後續：同一 busy／stateEpoch 契約延伸到串流上傳。刷新使用 server uploads 清單恢復或清理；DELETE 可能已成功但 response 遺失，故 idle 清單校正 pending ID，404 視為已清理，不能讓重試永久卡住。預演資格綁 verified bundle UUID 與來源／目的地／選項，改欄位即撤銷；core 在發布前驗 expectedBundleId，不能僅比較 path 或事後檢查 response。五類統計常駐，JSON 除錯資訊收合；手填本機來源驗證成功清掉選檔草稿並顯示實際來源。27 項 VM 測試覆蓋 race、WebKit 相對檔路徑映射、身份與失聯清理，瀏覽器及全套證據見 [移轉進度](../SERVER-DATA-TRANSFER-PROGRESS.md#管理者匯入流程與背景-chrome-驗收)。
+
 上述UI競態已在 `215f82c` 修正，11項VM回歸＋4項HTTP通過；PR／移轉／最新遊戲功能完整整合後 Windows、Linux 各304項通過，詳 [整合證據](../SERVER-DATA-TRANSFER-PROGRESS.md)。移轉工具與UI只在本地分支，PR資源修正已推送，兩者均未部署；不可沿用舊259項數量當作最新總數。
 
 2026-10-05 後續複查，PR 程式 `3b19720`／本地整合 `e71989e`：失敗開局不能留下 `playing` archive；fsync／rename 錯誤後仍需將實際 JSONL／tmp bytes 計入配額。大量 canvas 恢復使用 `renderCooperatively`＋MessageChannel，每批最多 1 fill／16 strokes／約8ms軟預算，最新 snapshot／undo／換輪取消舊 job。`render` 同步契約保留；save 等最新 render，失敗或換輪禁止上傳部分／錯輪畫作。PR Windows／Linux 各279項，本地整合 Windows323項通過；本次沒有重跑整合分支Linux全套，不能寫成Linux323項。Chrome cold48fill三次皆無>50ms長任務，maxBatch15.7–18.4ms、cache8MiB、hash相同；單fill不可搶占，首次排程仍可能56.8ms。詳 [修正證據](../PR30-RESOURCE-LIMITS.md)。
