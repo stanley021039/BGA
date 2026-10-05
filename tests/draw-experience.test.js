@@ -29,6 +29,18 @@ test('choosing keeps selection actions separate from finished game actions',()=>
  assert.match(ui.element('#drawActions').innerHTML,/再玩一局/);
 });
 
+test('joining the waiting room updates the roster and start action without discarding the settings draft',()=>{
+ const ui=browserHarness(),s=drawingState('artist');s.phase='waiting';s.players=s.players.slice(0,1);s.presenterId=null;
+ ui.receive(s);
+ assert.match(ui.element('#drawActions').innerHTML,/data-do="start" disabled/);
+ const settings=ui.element('#stage');settings.innerHTML='UNSAVED TOPIC SELECTION';
+ const joined={...s,players:[...s.players,{id:'guest',name:'朋友',online:true,score:0}]};ui.receive(joined);
+ assert.equal(settings.innerHTML,'UNSAVED TOPIC SELECTION');
+ assert.doesNotMatch(ui.element('#drawActions').innerHTML,/data-do="start" disabled/);
+ assert.equal(ui.element('#waitingCount').textContent,'2 / 8 位');
+ assert.match(ui.element('#waitingPlayers').innerHTML,/data-player-id="guest"/);
+});
+
 test('pending guess is visible, prevents duplicate writes and preserves input on failure',async()=>{
  const ui=browserHarness();ui.receive(drawingState('guest'));
  ui.element('#guessInput').value='我的猜測';

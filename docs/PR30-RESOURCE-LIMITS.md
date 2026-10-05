@@ -87,3 +87,16 @@ Server 在去重、配額及畫布修改前拒絕缺少／過期 epoch 的 strok
 1280 × 720 隱藏內建瀏覽器隔離驗收：舊局 48 次填色及另一席離房／加入由正常本機 API 準備；房主實際 UI 登入、返回房間、按「再玩一局」、選題及填色。舊 round 1 的油漆桶 disabled，新 round 1 恢復 enabled 且填色成功，server 配額為 1／1／1。另送舊 epoch 的 stroke 與 clear 均回 400，快照及新局配額保持不變。瀏覽器無 console warning／error；未把合成測試的延遲訊息注入冒稱真人操作。
 
 私有證據：`work/pr30-epoch-windows-tests.log`、`work/pr30-epoch-linux-tests.log`、`work/pr30-epoch-linux-source-manifest.json`、`work/pr30-epoch-browser-evidence.json`、`work/pr30-epoch-stale-result.json`、`work/pr30-epoch-exhausted.png`、`work/pr30-epoch-new-round.png`。本機 3124 已停止、測試分頁已關閉；未部署或修改正式資料。
+
+## 發出接續 PR 前的獨立複查
+
+2026-10-05 再次讀取 PR #30 最新回覆（最後更新 05:09:28 UTC），四項問題皆已有對應修正。獨立 agent 在固定 PR head `7f44f20` 重跑八個相關測試檔，Windows Node 24.14.0 **65/65 通過**，沒有失敗、跳過或取消：
+
+| 回覆項目 | 複查結果與回歸 |
+| --- | --- |
+| 反覆進出造成玩家及歷史無界 | 等待階段移除、進行中重用身份與 64 筆上限、HTTP 限流、history 配額／輪替／淘汰；`server-resource-limits.test.js`。 |
+| 填色重播成本放大 | 增量 renderer、有界 checkpoint、分批恢復、每秒／每輪 fill 限額；stroke-canvas、cooperative、renderer-sync 及 recovery 測試。 |
+| 開局失敗留下 playing archive | 未成功開局改為 interrupted 並清 current；低配額、其他房間及寫入故障回歸；`history-failed-start.test.js`。 |
+| 新局同為 round 1 沿用舊配額 | canvasEpoch 隔離請求、ACK、SSE、snapshot、queue、command 及儲存；`draw-canvas-epoch.test.js` 與 recovery 測試。 |
+
+整合提交 `cc02b56` 將 PR #30 接入 `feat/server-data-transfer`；其檔案內容與原整合 `22d02c3` 完全相同，沒有覆蓋後續畫猜／音效／移轉修改。此處的 65 項是本次固定 PR head 的針對測試；接續分支的完整 Windows／Linux 驗收另見 [移轉整合進度](SERVER-DATA-TRANSFER-PROGRESS.md)。這是程式與測試複查，不能當作 GitHub reviewer 已批准或正式部署完成。

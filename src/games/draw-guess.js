@@ -9,13 +9,15 @@ const normalize=value=>value.normalize('NFKC').toLocaleLowerCase('zh-Hant').trim
 const CONTROLS=new Set(['brush','erase','line','rect','ellipse','fill']);
 const MAX_BATCHES=1000,MAX_POINTS=30000,MAX_FILLS=48;
 const validTopic=topic=>topic==='all'||TOPICS.some(item=>item.id===topic);
+const DRAW_CATEGORIES=[...TOPICS.map(item=>item.id),'custom'];
+const validTopics=topics=>Array.isArray(topics)&&topics.length>0&&topics.length<=DRAW_CATEGORIES.length&&new Set(topics).size===topics.length&&topics.every(topic=>DRAW_CATEGORIES.includes(topic));
 
 class DrawGuessRoom{
  constructor(code,name,rng=randomInt,now=Date.now){
   this.type='draw';this.code=code;this.name=name;this.rng=rng;this.now=now;
   this.players=[];this.host=null;this.phase='waiting';this.version=0;this.updated=now();
   this.round=0;this.roundLimit=0;this.pendingArtists=[];this.presenterId=null;
-  this.options={seconds:90,customPercent:null,topic:'all'};this.candidates=[];this.question=null;
+  this.options={seconds:90,customPercent:null,topic:'all',topics:[...DRAW_CATEGORIES]};this.candidates=[];this.question=null;
   this.usedWordIds=[];this.participantIds=[];this.guessedIds=[];this.guesses=[];this.result=null;this.results=[];this.winner=null;this.deadline=null;this.events=[];
   Object.defineProperty(this,'canvas',{value:{epoch:randomUUID(),version:0,strokes:[],batchIds:new Set(),points:0,acceptedPoints:0,recent:[],fills:0,fillRecent:[],commandRecent:[]},enumerable:false});
  }
@@ -50,13 +52,26 @@ class DrawGuessRoom{
   if(!Number.isInteger(data.seconds)||![60,90,120].includes(data.seconds))throw Error('作畫時間請選 60、90 或 120 秒');
   if(data.customPercent!==undefined&&!validCustomPercent(data.customPercent))throw Error('投稿比例不正確');
   if(data.topic!==undefined&&!validTopic(data.topic))throw Error('題目類別不正確');
-  this.options={seconds:data.seconds,customPercent:data.customPercent===undefined?this.options.customPercent:data.customPercent,topic:data.topic===undefined?this.options.topic:data.topic};
-  this.event('settings','房主已更新作畫時間、題目類別與投稿比例');
+  if(data.topics!==undefined&&!validTopics(data.topics))throw Error('請至少選擇一個有效的題目類別');
+  const options={...this.options,seconds:data.seconds,customPercent:data.customPercent===undefined?this.options.customPercent:data.customPercent};
+  if(data.topics!==undefined){options.topics=DRAW_CATEGORIES.filter(topic=>data.topics.includes(topic));options.topic='all';options.customPercent=null;}
+  else if(data.topic!==undefined){options.topic=data.topic;delete options.topics;}
+  this.options=options;
+  this.event('settings','房主已更新作畫時間與題目類別');
+ }
+ wordPools(){
+  const custom=this.wordProvider?.()||[];
+  if(Array.isArray(this.options.topics))return {builtin:WORDS.filter(word=>this.options.topics.includes(word.topic)),custom:this.options.topics.includes('custom')?custom:[]};
+  // Keep recorded rooms and older clients using their original topic/ratio rules.
+  const inTopic=word=>this.options.topic==='all'||word.topic===this.options.topic;
+  return {builtin:WORDS.filter(inTopic),custom:custom.filter(inTopic)};
  }
  start(){
   if(!['waiting','finished'].includes(this.phase))throw Error('本局已開始');
   this.players=this.activePlayers();
   if(this.players.length<2||this.players.length>8)throw Error('需要 2 至 8 位玩家');
+  const pools=this.wordPools();
+  if(!pools.builtin.length&&(!pools.custom.length||this.options.customPercent===0))throw Error('所選類別還沒有題目，請到共編題庫新增自定義題目，或勾選其他類別');
   for(const player of this.players){player.score=0;player.waitingForNextRound=false;}
   this.round=0;this.roundLimit=this.players.length;this.pendingArtists=this.players.map(player=>player.id);
   this.results=[];this.winner=null;this.usedWordIds=[];
@@ -68,8 +83,7 @@ class DrawGuessRoom{
   if(!this.pendingArtists.length){this.finish();return;}
   this.round++;this.presenterId=this.pendingArtists.shift();
   this.participantIds=this.activePlayers().filter(player=>player.id!==this.presenterId).map(player=>player.id);
-  const inTopic=word=>this.options.topic==='all'||word.topic===this.options.topic;
-  const draw=drawContent({builtin:WORDS.filter(inTopic),custom:(this.wordProvider?.()||[]).filter(inTopic),count:3,customPercent:this.options.customPercent,usedIds:this.usedWordIds,rng:this.rng});
+  const draw=drawContent({...this.wordPools(),count:3,customPercent:this.options.customPercent,usedIds:this.usedWordIds,rng:this.rng});
   this.candidates=draw.items.map(clone);this.usedWordIds=draw.usedIds;
   this.phase='choosing';this.question=null;this.guessedIds=[];this.guesses=[];this.result=null;
   this.deadline=this.now()+15000;
@@ -195,4 +209,4 @@ class DrawGuessRoom{
   });
  }
 }
-module.exports={DrawGuessRoom,normalize,validTopic};
+module.exports={DrawGuessRoom,normalize,validTopic,validTopics,DRAW_CATEGORIES};

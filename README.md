@@ -6,6 +6,10 @@
 
 部署請見 [Windows／Linux × 直接連線／Cloudflare 網域指南](docs/DEPLOYMENT.md)。目前 `shhuang.cc` 由 Linux 的 Cloudflare Tunnel 提供服務；原本的 Radmin VPN／區網直連方式仍可依指南切換。
 
+完整伺服器資料移轉／備份還原可用 [AI JSON CLI](docs/SERVER-DATA-TRANSFER.md)：一起保存帳戶原密碼、權限、素材、音樂、題庫及歷史，使用加密 bundle 還原至全新資料代。先停止所有 writer，預設 dry run；成功後需重新登入並在隔離環境驗收。這支工具不會自行切換正式服務，驗證範圍見 [實作進度](docs/SERVER-DATA-TRANSFER-PROGRESS.md)。
+
+管理員可執行 `npm run data:transfer:ui`，依終端顯示的本機 URL 開啟 [表單操作介面](docs/SERVER-DATA-TRANSFER.md#管理員本機介面)，不需手寫 JSON；只綁 127.0.0.1，仍須先停止資料 writer。
+
 程式依用途放在 `src/`（帳號、角色、社群、GitHub、房間、各遊戲與資料庫）、`public/`（頁面與共用 UI）、`tests/`（自動測試）及 `docs/`（專題文件）。根目錄的 `server.js`、`admin.js` 是沿用 `npm start` 與管理指令的相容入口。
 
 ## 帳號與留言板
@@ -64,7 +68,7 @@ Git 僅保存程式與執行所需資源；`data/`（玩家對局歷史）、`wo
 
 ## 對局歷史與房間網址
 
-大廳與遊戲頁的「對局歷史」可開啟 `/history`。雷霆之路每場比賽、德州撲克每手牌各自一份記錄，保存在 `data/history/`，不因開新局、房間過期或伺服器重啟刪除。備份請複製整個資料夾。舊版未記錄的對局無法追溯補回。
+大廳與遊戲頁的「對局歷史」可開啟 `/history`。雷霆之路每場比賽、德州撲克每手牌各自一份記錄，保存在 `data/history/`，不因開新局、房間過期或伺服器重啟刪除。整站備份須停止 writer 後保存 DB、音樂、community 與歷史，請使用 [完整資料工具](docs/SERVER-DATA-TRANSFER.md)。舊版未記錄的對局無法追溯補回。
 
 格式為版本 1 JSONL，包含開局前完整狀態、設定與入房記錄、遊戲引擎版本雜湊及原始碼、每次操作的來源／玩家／輸入／成功或失敗、操作前後狀態、內部結算順序、隨機抽樣與部分中間棋局。伺服器在執行操作前後同步寫入；底牌、完整牌堆、隱藏危險及損傷標記保存在本機記錄中，不保存登入 token。寫入失敗會暫停該房間後續操作。這些檔案是回看資料，不是恢復房間登入用的存檔。
 
@@ -84,7 +88,7 @@ HTTP 連線位址由主機自動偵測，或在 `.env` 設定 `PUBLIC_URL`。各
 
 桌內面板依序顯示曲名、選曲、時間、進度條、圖示控制、個人音量與音樂庫連結。房主選曲後直接播放；上一首／下一首依音樂庫順序切換。播放模式按鈕依序切換無循環、單曲循環、隨機播放，隨機模式由伺服器選下一首並同步整桌。一般玩家的桌內控制停用，仍可透過音量旁的喇叭圖示開啟或暫停自己的收聽。進度條只在拖曳期間暫停自動更新，保有鍵盤焦點不會阻止重播歸零或結束時到達底端。
 
-音樂透過需要登入的 HTTP Range 串流播放，玩家不用另存完整檔案；瀏覽器仍會暫存播放片段。音樂原檔放在 SQLite 資料庫所在目錄的 `music/` 子目錄，預設為 `data/music/`，不納入 Git。備份需同時保存 SQLite 資料庫與這個目錄。歌曲資料會跨服務重啟保留，每桌播放狀態隨記憶體房間清空。
+音樂透過需要登入的 HTTP Range 串流播放，玩家不用另存完整檔案；瀏覽器仍會暫存播放片段。音樂原檔預設放在 SQLite 資料庫所在目錄的 `music/` 子目錄（`data/music/`），也可用 `MUSIC_DIR` 指定，不納入 Git。備份需同時保存 SQLite 資料庫與實際音樂目錄。歌曲資料會跨服務重啟保留，每桌播放狀態隨記憶體房間清空。
 
 ## 遊戲共用介面
 
@@ -102,6 +106,6 @@ HTTP 連線位址由主機自動偵測，或在 `.env` 設定 `PUBLIC_URL`。各
 
 收藏圖片的分享欄位使用資料庫版本 12；整合分支同時包含版本 11 的音樂資料表。啟動時會自動升級，既有圖片預設私人。`test/collection-suite` 整合 PR #21、#24、#26 與音樂面板、管理入口、邀請連結修正；這些功能均納入 `main`。
 
-可將 `.env.example` 複製為 `.env`，設定 `PORT`、`HOST`、`PUBLIC_URL`、`HISTORY_DIR`、`COMMUNITY_DIR`、`DB_FILE` 與 `GITHUB_TOKEN`。`.env` 及資料目錄不納入 Git；系統環境變數優先於 `.env`。未設定 `PUBLIC_URL` 時自動偵測 VPN 位址，邀請按鈕使用偵測結果。Windows 防火牆工具同樣自動偵測網卡位址，不需將私人 IP 寫進程式。
+可將 `.env.example` 複製為 `.env`，設定 `PORT`、`HOST`、`PUBLIC_URL`、`HISTORY_DIR`、`COMMUNITY_DIR`、`DB_FILE`、`MUSIC_DIR`、`EXTERNAL_SIDE_EFFECTS_ENABLED` 與 `GITHUB_TOKEN`。隔離 restore 驗收須明確設定 `EXTERNAL_SIDE_EFFECTS_ENABLED=false`，封鎖 GitHub recover／新投稿／重試。`.env` 及資料目錄不納入 Git；系統環境變數優先於 `.env`。未設定 `PUBLIC_URL` 時自動偵測 VPN 位址，邀請按鈕使用偵測結果。Windows 防火牆工具同樣自動偵測網卡位址，不需將私人 IP 寫進程式。
 
 `PUBLIC_URL` 僅設定邀請連結來源，不會自行啟用 HTTPS。更改 `.env` 後重啟服務才會生效；重啟會清空記憶體中的房間，已保存的歷史、留言與題庫會保留。

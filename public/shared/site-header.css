@@ -7,3 +7,22 @@
 body>[data-site-header].site-header{width:calc(100% - 8vw);margin-inline:4vw}body>[data-site-header]+h1{margin-left:4vw;font-size:28px}
 @media(max-width:1180px){[data-site-header].site-header{grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:18px 0}.site-header .site-title{grid-column:1/-1;grid-row:1;justify-self:center;font-size:34px}.site-header .site-links{grid-column:1;grid-row:2;gap:18px}.site-header .site-account{grid-column:2;grid-row:2}.site-header .site-avatar-button{width:44px;height:44px}}
 @media(max-width:430px){.site-header .site-links{gap:12px;font-size:13px}.site-header .site-title{font-size:30px}.site-header .site-avatar-button{width:40px;height:40px}}
+.site-header .site-account{display:flex;align-items:center;gap:12px}
+.site-header .site-settings-button{display:grid;place-items:center;flex:none;width:44px;height:44px;padding:10px;margin:0;border:1px solid #7f9672;border-radius:12px;background:#26372d;color:#f2eee2;cursor:pointer}
+.site-settings-button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.site-header .site-settings{position:absolute;right:0;top:calc(100% + 8px);width:320px;padding:20px;border:1px solid #64765f;border-radius:16px;background:#202d25;color:#f2eee2;box-shadow:0 14px 40px #0005;font:16px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif;text-align:left;letter-spacing:normal}
+.site-settings .site-settings-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0}
+.site-settings .site-settings-heading h2{font:700 20px/1.4 "Segoe UI","Microsoft JhengHei",sans-serif;margin:0;color:inherit;letter-spacing:normal}
+.site-settings button{font:inherit;color:inherit;cursor:pointer;min-height:44px;margin:0;border:1px solid #64765f;border-radius:8px;background:#344a3b;padding:8px 12px}
+.site-settings #site-settings-close{width:44px;flex:none;font-size:24px;padding:0;background:transparent}
+.site-settings .site-settings-note{font-size:14px;color:#c1cdbd;margin:8px 0 20px}
+.site-settings .site-audio-group{border-top:1px solid #50614e;padding:12px 0;margin:0}
+.site-settings .site-audio-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin:0;font:inherit;color:inherit;cursor:pointer}
+.site-settings .site-audio-switch input{appearance:auto;accent-color:#f3b95f;width:22px;height:22px;margin:11px;cursor:pointer}
+.site-settings .site-audio-volume{display:grid;grid-template-columns:minmax(0,1fr) 48px;align-items:center;gap:16px;min-height:44px}
+.site-settings input[type=range]{appearance:auto;width:100%;min-width:0;height:44px;margin:0;padding:0;border:0;background:transparent;accent-color:#f3b95f;cursor:pointer}
+.site-settings output{font-size:14px;font-variant-numeric:tabular-nums;text-align:right;color:inherit}
+.site-settings .site-effects-preview{width:100%;margin-top:8px}.site-settings button:disabled{opacity:.5;cursor:default}
+.site-settings :is(button,input):focus-visible{outline:2px solid #efb760;outline-offset:3px}
+.site-settings #site-audio-status{font-size:14px;margin:12px 0 0;color:#edba77}.site-settings #site-audio-status:empty{display:none}
+@media(max-width:430px){.site-header .site-account{gap:6px}.site-header .site-settings{padding:16px}.site-header .site-links{flex-wrap:wrap;gap:0 8px}}

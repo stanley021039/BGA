@@ -1,13 +1,14 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
+const SCHEMA_VERSION=12;
 
 function openDatabase(file){
  fs.mkdirSync(path.dirname(file),{recursive:true});
  const db=new DatabaseSync(file,{timeout:5000});
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
- if(version>12)throw Error(`Unsupported database version ${version}`);
+ if(version>SCHEMA_VERSION){db.close();throw Error(`Unsupported database version ${version}`);}
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -140,4 +141,4 @@ function transaction(db,run){
  catch(error){db.exec('ROLLBACK');throw error;}
 }
 
-module.exports={openDatabase,transaction};
+module.exports={openDatabase,transaction,SCHEMA_VERSION};
