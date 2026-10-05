@@ -3,14 +3,14 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=file=>fs.readFileSync(path.join(__dirname,'../public/shared',file),'utf8');
 function harness(saved={},blocked=false,storageBlocked=false){
- const storage=new Map(Object.entries(saved)),listeners=new Map(),clips=[],nodes=new Map();
+ const storage=new Map(Object.entries(saved)),listeners=new Map(),clips=[],nodes=new Map(),requests=[];
  const node=id=>{if(!nodes.has(id))nodes.set(id,{hidden:false,value:'',dataset:{},textContent:'',innerHTML:'',attributes:{},classList:{toggle(){}},querySelector:node,append(){},replaceChildren(){},setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];}});return nodes.get(id);};
  const document={hidden:false,createElement:()=>node('panel'),body:{append(){}},querySelector:()=>null,addEventListener(type,fn){const key='document:'+type;listeners.set(key,[...(listeners.get(key)||[]),fn]);}};
  const window={addEventListener(type,fn){listeners.set('window:'+type,[...(listeners.get('window:'+type)||[]),fn]);}};
  class Audio {constructor(src){this.src=src;this.volume=1;this.paused=true;this.currentTime=0;this.readyState=1;this.plays=0;this.pauses=0;clips.push(this);}play(){this.plays++;if(blocked)return Promise.reject(Error('autoplay'));this.paused=false;return Promise.resolve();}pause(){this.pauses++;this.paused=true;}load(){}removeAttribute(key){delete this[key];}}
- const context={window,document,Audio,localStorage:{getItem(k){if(storageBlocked)throw Error('storage blocked');return storage.get(k)??null;},setItem(k,v){if(storageBlocked)throw Error('storage blocked');storage.set(k,String(v));}},Date,setInterval(){},MutationObserver:class{observe(){}},Option:class{},fetch:async url=>({ok:true,json:async()=>url.includes('room-music')?{version:1,serverNow:Date.now(),playing:true,position:0,loop:false,track:{id:'sample',title:'測試',duration:60}}:{tracks:[]}})};
+ const context={window,document,Audio,localStorage:{getItem(k){if(storageBlocked)throw Error('storage blocked');return storage.get(k)??null;},setItem(k,v){if(storageBlocked)throw Error('storage blocked');storage.set(k,String(v));}},Date,setInterval(){},MutationObserver:class{observe(){}},Option:class{},fetch:async url=>{requests.push(url);return {ok:true,json:async()=>url.includes('room-music')?{version:1,serverNow:Date.now(),playing:true,position:0,loop:false,track:{id:'sample',title:'測試',duration:60}}:{tracks:[]}};}};
  vm.runInNewContext(source('audio-settings.js'),context);
- return {api:window.AudioSettings,storage,clips,nodes,document,window,loadMusic(){vm.runInNewContext(source('table-music.js'),context);window.TableMusic.update({code:'ABC123',host:false});},fire(key,event={}){for(const fn of listeners.get(key)||[])fn(event);}};
+ return {api:window.AudioSettings,storage,clips,nodes,requests,document,window,loadMusic(){vm.runInNewContext(source('table-music.js'),context);window.TableMusic.update({code:'ABC123',host:false});},fire(key,event={}){for(const fn of listeners.get(key)||[])fn(event);}};
 }
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 test('preferences keep independent music/effect levels across navigation; one migration for old levels',()=>{
@@ -53,6 +53,29 @@ test('music waits for a real gesture, uses shared volume, and personal mute neve
  ui.api.set('music',{enabled:false});assert.equal(audio.paused,true);assert.equal(ui.nodes.get('#music-global').attributes['aria-label'],'暫停');
  ui.api.set('music',{enabled:true},{gesture:true});await tick();assert.equal(audio.paused,false);ui.window.TableMusic.stop();assert.equal(audio.paused,true);assert.equal(audio.src,undefined);
 });
+
+test('local watch suspensions are nested and idempotent, keep music paused across updates, and never send room commands',async()=>{
+ const ui=harness();ui.loadMusic();await tick();ui.api.set('music',{enabled:true,volume:.4},{gesture:true});await tick();
+ const audio=ui.clips[0],preferences=JSON.stringify(ui.api.get()),requestCount=ui.requests.length;
+ assert.equal(audio.paused,false);
+ const releaseFirst=ui.window.TableMusic.suspendLocal(),releaseSecond=ui.window.TableMusic.suspendLocal();assert.equal(audio.paused,true);
+ audio.onloadedmetadata();ui.api.set('effects',{volume:.6});await tick();assert.equal(audio.paused,true);
+ releaseFirst();releaseFirst();await tick();assert.equal(audio.paused,true);
+ assert.equal(ui.requests.length,requestCount);assert.equal(JSON.stringify(ui.api.get().music),JSON.stringify(JSON.parse(preferences).music));
+ releaseSecond();await tick();assert.equal(audio.paused,false);const plays=audio.plays;
+ releaseSecond();await tick();assert.equal(audio.plays,plays);assert.equal(ui.requests.length,requestCount);
+});
+
+test('releasing local watch suspension respects personal mute, hidden pages, room changes and stopped music',async()=>{
+ const ui=harness();ui.loadMusic();await tick();ui.api.set('music',{enabled:true},{gesture:true});await tick();const audio=ui.clips[0];
+ let release=ui.window.TableMusic.suspendLocal();ui.api.set('music',{enabled:false});release();await tick();assert.equal(audio.paused,true);assert.equal(ui.api.get().music.enabled,false);
+ ui.api.set('music',{enabled:true},{gesture:true});await tick();release=ui.window.TableMusic.suspendLocal();ui.document.hidden=true;release();await tick();assert.equal(audio.paused,true);
+ ui.document.hidden=false;ui.fire('document:visibilitychange');await tick();assert.equal(audio.paused,false);
+ release=ui.window.TableMusic.suspendLocal();ui.window.TableMusic.update({code:'DEF456',host:false});await tick();assert.equal(audio.paused,true);assert.equal(ui.api.get().music.enabled,true);
+ release();await tick();assert.equal(audio.paused,false);
+ release=ui.window.TableMusic.suspendLocal();ui.window.TableMusic.stop();release();await tick();assert.equal(audio.paused,true);assert.equal(audio.src,undefined);
+});
+
 test('blocked music and sound report a recoverable error without unhandled promises',async()=>{
  const ui=harness({},true);ui.loadMusic();await tick();ui.api.set('music',{enabled:true},{gesture:true});await tick();assert.match(ui.nodes.get('#music-error').textContent,/右上角設定/);
  let errors=0;ui.api.set('effects',{enabled:true});ui.api.playEffect('confirm',{onError:()=>errors++});await tick();assert.equal(errors,1);assert.equal(ui.clips.at(-1).plays,1);

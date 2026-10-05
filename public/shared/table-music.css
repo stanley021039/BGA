@@ -24,3 +24,14 @@ body[data-game-kind] .table-music .music-listen svg{width:24px;height:24px}
 body[data-game-kind] .table-music.collapsed,body[data-game-kind] .table-music.collapsed header{min-height:44px}
 body[data-game-kind] .table-music.collapsed #music-expand{width:50px;height:44px;min-height:44px}
 body[data-game-kind] .table-music #music-error{color:#ffc2b0}
+/* One room media entry; the video opens separately and keeps its local position. */
+.table-music .table-media-video{padding-block:8px 14px;border-bottom:1px solid #52634f}
+.table-music :is(.table-media-video,.table-media-music)>h3{margin:0 0 8px;font:600 16px/1.5 system-ui;color:#f4e4bc;letter-spacing:normal;text-transform:none}
+.table-music .table-media-music{padding-top:14px}
+.table-music .music-current{margin:0;color:#bdc8bd;overflow-wrap:anywhere}
+.table-music #table-media-watch-slot .table-watch-open{width:100%;min-height:44px;justify-content:flex-start;gap:8px;padding:8px 12px;background:#2e4035;border:1px solid #687c5d;border-radius:8px}
+.table-music.collapsed #music-expand{font-size:16px;line-height:1.5;padding:0;letter-spacing:normal}
+body[data-game-kind] .table-music :is(.table-media-video,.table-media-music)>h3{font-size:var(--ui-text-body);font-family:var(--ui-font-family)}
+body[data-game-kind] .table-music .music-current{font-size:var(--ui-text-small)}
+body[data-game-kind] .table-music.collapsed #music-expand{font-size:var(--ui-text-body)}
+body[data-game-kind].ui-large-text .room-music-slot{width:max(var(--ui-control-height),2.5em);flex-basis:max(var(--ui-control-height),2.5em)}

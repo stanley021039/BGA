@@ -24,6 +24,7 @@ const {USER_IMAGE_PATH,createCharacterMediaAccess}=require('./profiles/media');
 const {ArtworkStore}=require('./artworks/store');
 const {MusicStore,MAX_BYTES}=require('./music/store');
 const {RoomMusic}=require('./music/room');
+const {RoomWatchRegistry}=require('./watch/room');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
 const {ROOM_EMOJIS}=require('./social/emojis');
 const {acquireDataLocks}=require('./data/locks');
@@ -35,10 +36,16 @@ function initializeApp(config,dataLock){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map(),departedSeats=new Map(),roomRate=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
  const musicRooms=new Map(),musicStreams=new Map();
+ const watchRooms=new RoomWatchRegistry();
+ const watchContext=room=>{
+  const activeSeats=new Set(seats.get(room.code)?.values()||[]);
+  return {hostId:room.host,members:room.players.filter(player=>activeSeats.has(player.id)&&!player.bot&&!player.kicked).map(player=>({id:player.id,name:player.name,lastSeen:player.lastSeen}))};
+ };
+ const reconcileWatch=room=>{const watch=watchRooms.get(room);if(watch)watch.reconcile(watchContext(room));return watch;};
  const roomMusic=room=>{if(!musicRooms.has(room.code))musicRooms.set(room.code,new RoomMusic(Date.now,musicStore));return musicRooms.get(room.code);};
  const publishMusic=code=>{const state=musicRooms.get(code)?.snapshot();for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
  const lobby=createLobby();
- const cleanupRoom=code=>{seats.delete(code);departedSeats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);};
+ const cleanupRoom=code=>{seats.delete(code);departedSeats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);watchRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);};
  const expireRooms=()=>expireEmptyRooms({rooms,history,onDelete:cleanupRoom});
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
@@ -46,7 +53,8 @@ function initializeApp(config,dataLock){
   const accounts=new Map([...(seats.get(room.code)||[])].map(([userId,playerId])=>[playerId,userId]));
   const viewerId=accounts.get(view.me);
   if(viewerId)characterMedia.rememberExpressions(viewerId,'room:'+room.code,expressions.map(event=>({userId:accounts.get(event.playerId),image:event.image,until:event.at+5000})));
-  return {...view,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages};
+  const watch=reconcileWatch(room);
+  return {...view,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages,watch:watch?watch.summary(watchContext(room)):null};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir,config.historyLimits);
@@ -210,10 +218,12 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
- if(!['/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
+ if(!['/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  expireRooms();
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
+ // Revoke an expired controller before this request refreshes their seat lease.
+ reconcileWatch(room);
  if(url.pathname==='/api/reconnect'&&req.method==='POST'){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker',reconnected:true});}
  if(url.pathname==='/api/join'&&req.method==='POST'){
   const previous=seats.get(room.code)?.get(user.id);if(previous){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker'});}
@@ -236,6 +246,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    historyPersisted=false;history.markUnrecorded(room);if(!applied)result=leavePlayer(room,p.id);
   }
   seats.get(room.code)?.delete(user.id);
+  reconcileWatch(room);
   if(room.players.some(q=>q.id===p.id&&q.kicked)){
    if(!departedSeats.has(room.code))departedSeats.set(room.code,new Map());
    const departed=departedSeats.get(room.code);for(const [account,id]of departed)if(!room.players.some(q=>q.id===id))departed.delete(account);
@@ -246,6 +257,15 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   const historyWarning=history.warning(room);
   if(result.deleted){historyPersisted=endRoomHistory(history,room,'最後一位玩家已離開房間')&&historyPersisted;rooms.delete(room.code);cleanupRoom(room.code);}
   return send({code:room.code,left:true,deleted:result.deleted,...(!historyPersisted?{historyPersisted:false,historyWarning:historyWarning||{code:'HISTORY_WRITE_FAILED',message:'已離開房間，但對局記錄未完整保存'}}:{})});
+ }
+ if(url.pathname==='/api/room-watch'){
+  if(req.method!=='GET'&&req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
+  const watch=watchRooms.get(room,{create:true}),context=watchContext(room);
+  watch.reconcile(context);
+  if(req.method==='GET'){limitRate(roomRate,'watch-read:'+user.id,120);return send(watch.snapshot(p.id,context));}
+  limitRate(roomRate,'watch-command:'+user.id,60);
+  try{return send(watch.act(p.id,data,context));}
+  catch(error){if(error.watchState){res.statusCode=error.status;return send({code:error.code,error:error.message,state:error.watchState});}throw error;}
  }
  if(url.pathname==='/api/room-music'){
   if(req.method==='GET')return send(roomMusic(room).snapshot());
@@ -352,7 +372,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(media){const viewer=auth.requireUser(req),row=characterMedia.image(viewer.id,url.href);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',row.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(row.bytes);}
  if(url.pathname.startsWith('/assets/characters/')){auth.requireUser(req);const asset=builtinCharacters.flatMap(character=>Object.values(character.expressions)).find(value=>value===url.pathname);if(!asset)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',asset.endsWith('.gif')?'image/gif':'image/png');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(__dirname,'..','public',asset)));}
  const characterId=url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];if(characterId){const viewer=auth.requireUser(req),selected=characterMedia.avatar(characterId);if(!selected)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到角色外觀');let bytes,mime;if(USER_IMAGE_PATH.test(selected.url)){const row=characterMedia.image(viewer.id,selected.url);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');bytes=row.bytes;mime=row.mime;}else{bytes=fs.readFileSync(path.join(__dirname,'..','public',selected.url));mime=selected.url.endsWith('.gif')?'image/gif':'image/png';}res.setHeader('Content-Type',mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(bytes);}
- const files={'/shared/draw-results.js':'shared/draw-results.js','/shared/motion-policy.js':'shared/motion-policy.js','/shared/audio-settings.js':'shared/audio-settings.js','/shared/popovers.js':'shared/popovers.js','/shared/ui-foundation.css':'shared/ui-foundation.css','/shared/ui-components.js':'shared/ui-components.js','/collection':'collection.html','/collection.js':'collection.js','/collection.css':'collection.css','/settings':'settings.html','/settings.js':'settings.js','/settings.css':'settings.css','/shared/site-header.js':'shared/site-header.js','/shared/site-header.css':'shared/site-header.css','/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/race-vehicle-effects.js':'shared/race-vehicle-effects.js','/shared/race-dice-dialog.js':'shared/race-dice-dialog.js','/shared/race-terrain-help.js':'shared/race-terrain-help.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
+ const files={'/shared/table-watch.js':'shared/table-watch.js','/shared/table-watch.css':'shared/table-watch.css','/shared/draw-results.js':'shared/draw-results.js','/shared/motion-policy.js':'shared/motion-policy.js','/shared/audio-settings.js':'shared/audio-settings.js','/shared/popovers.js':'shared/popovers.js','/shared/ui-foundation.css':'shared/ui-foundation.css','/shared/ui-components.js':'shared/ui-components.js','/collection':'collection.html','/collection.js':'collection.js','/collection.css':'collection.css','/settings':'settings.html','/settings.js':'settings.js','/settings.css':'settings.css','/shared/site-header.js':'shared/site-header.js','/shared/site-header.css':'shared/site-header.css','/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/race-vehicle-effects.js':'shared/race-vehicle-effects.js','/shared/race-dice-dialog.js':'shared/race-dice-dialog.js','/shared/race-terrain-help.js':'shared/race-terrain-help.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);
@@ -372,6 +392,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(closed)return;
   closed=true;
   stopScheduler?.();
+  watchRooms.clear();
   for(const entries of musicStreams.values())for(const entry of entries)entry.res.end();
   for(const entries of drawStreams.values())for(const entry of entries)entry.res.end();
   if(server.listening)await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));

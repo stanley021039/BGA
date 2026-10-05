@@ -48,6 +48,7 @@
   if(!sidebar.querySelector('.history-link')){const history=document.createElement('a');history.className='history-link';history.href='/history';history.textContent='對局歷史 ↗';panel.after(history);}
  }
  const toolsHost=sidebar||document.querySelector('.race-controls');if(toolsHost){dock.classList.add('in-sidebar');toolsHost.append(dock);const music=document.querySelector('.table-music');if(music){const slot=document.createElement('div');slot.className='room-music-slot';slot.append(music);dock.append(slot);}}
+ const mediaWatchSlot=window.TableMusic?.getWatchSlot();if(mediaWatchSlot)window.TableWatch?.mount(mediaWatchSlot);
  const arena=majorityAside?.previousElementSibling||giftAside?.previousElementSibling||drawAside?.previousElementSibling||document.querySelector('#game .play-area')||document.querySelector('.race-main')||document.body;
  const barrageLayer=document.createElement('div');barrageLayer.className='game-barrage-layer';barrageLayer.setAttribute('aria-hidden','true');
  arena.classList.add('game-barrage-host');arena.append(barrageLayer);
@@ -209,5 +210,5 @@
   historyNotice.hidden=!message;
   if(window.GameUI)window.GameUI.setStatus(historyNotice,message,{kind:'error'});else if(historyNotice.textContent!==message)historyNotice.textContent=message;
  }
- window.GameShell={update(s){window.TableMusic?.update(s);return update(s);},disconnected:()=>barrages.disconnect(),stableMarkup,playerRow,settingsActions,showHistoryWarning};
+ window.GameShell={update(s){window.TableMusic?.update(s);window.TableWatch?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();window.TableWatch?.disconnected();},stableMarkup,playerRow,settingsActions,showHistoryWarning};
 })();
