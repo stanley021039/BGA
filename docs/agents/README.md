@@ -29,4 +29,4 @@
 
 最新程式 `e60f853`／本地整合 `7c25c7b` 另修新局 round 1 沿用舊配額：每輪畫布有獨立 canvasEpoch，隔離所有延遲操作／回覆。PR Windows／Linux各286項、本地整合Windows330項及背景重開／填色驗收通過；PR #30已推至 `7f44f20`，未部署。詳 [PR 修正文件](../PR30-RESOURCE-LIMITS.md)。本次沒有重跑本地整合Linux330項。
 
-同日送審前最終程式 `6e655de`：已接上 PR #30，新增舊 schema BLOB 表相容修正與回歸，完整整合 **Windows／Linux 各335/335 通過**，取代先前整合版本測試數字。PR #30 四項回覆另經獨立 agent 複查及65項回歸確認。最新送審與隔離驗收狀態見 [移轉進度末節](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)，未部署或搬移正式資料。
+同日送審前最終程式 `6e655de`：已接上 PR #30，新增舊 schema BLOB 表相容修正與回歸，完整整合 **Windows／Linux 各335/335 通過**，取代先前整合版本測試數字。PR #30 四項回覆另經獨立 agent 複查及65項回歸確認。已發出非 draft [PR #31](https://github.com/stanley021039/BGA/pull/31)，base 為 #30 的 `feature/game-stage-local`；先合 #30，再調整 #31 base 至 main。詳 [移轉進度末節](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)，未部署或搬移正式資料。

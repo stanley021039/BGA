@@ -66,6 +66,8 @@ Linux包456檔，SHA256 `7eb9cdadde6cdbb7a1b66e1b0cfd13dc2ccf3bf450186195201bdd7
 
 ## 送審前最終複查
 
+已發出 [PR #31：完整資料備份還原與管理 UI、畫猜及共用操作改善](https://github.com/stanley021039/BGA/pull/31)，狀態 open、非 draft，接續 [PR #30](https://github.com/stanley021039/BGA/pull/30)。base 為 `feature/game-stage-local`；先合併 #30，再將 #31 改以 `main` 為 base。本次只送審，未合併、部署或搬移正式資料；此筆取代前述各批「未發新的移轉 MR」狀態。
+
 2026-10-05 使用者要求確認 PR 問題全部修正後發出 PR。獨立 agent 確認 PR #30 四項回覆，固定 head `7f44f20` 的相關八檔測試 **65/65 通過**，詳 [PR 複查](PR30-RESOURCE-LIMITS.md#發出接續-pr-前的獨立複查)。整合提交 `cc02b56` 接上 PR #30，tree 與 `22d02c3` 相同；畫猜多類別、共用音效、彈幕、房間設定、猜題者畫布與移轉工具皆保留。
 
 移轉獨立審查另找到 schema 1–7 升級新增空 BLOB 表會誤判 digest 不同。修正 `6e655de` 逐表核對來源既有 BLOB，只允許 migration 3／5／8 新增空表，帳戶 digest 仍完全比對。四個 schema 1／3／5／7 回歸在修正前均重現失敗，修正後完整加密匯出、預演、還原、原密碼登入及來源不變皆通過。帳戶改動、既有 BLOB 改動、非空新表及未知新 BLOB 表仍拒絕發布；相關移轉／UI／設定／出站測試 **39/39 通過**。
