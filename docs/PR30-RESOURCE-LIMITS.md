@@ -20,7 +20,7 @@ Live 畫布仍為 512 × 256；最多 16 個 RGBA checkpoint，圖片快取上�
 
 ## Gartic Phone 參考範圍
 
-在使用者原 Chrome 的背景分頁，以單一匿名席完成 Masterpiece 填色、復原及相簿流程。確認填色與復原的介面行為；未加入陌生人的房間。背景瀏覽器工具沒有 HAR／Network 匯出能力，因此沒有封包紀錄，也不能宣稱參考過 Gartic 的傳輸頻率、訊息格式或伺服器實作。
+初次在使用者原 Chrome 的背景分頁，以單一匿名席完成 Masterpiece 填色、復原及相簿流程，當時只確認介面行為，未取得 HAR。後續使用者明確要求開啟完整 CDP，已透過設定 UI 啟用，並在隱藏內建瀏覽器完成新的單席錄製；詳下節及 [Gartic 網路參考](research/GARTIC-NETWORK-REFERENCE.md)。沒有加入陌生人的房間。
 
 私有截圖與本機測試帳戶只保存在 Git 忽略的 `work/`。正式帳戶、正式 DB 與正式服務未修改。
 
@@ -62,4 +62,14 @@ Windows Node 24.14.0、Linux Node 22.22.1 全套各 **260/260 通過**；新增 
 
 本次程式來源 `3b19720`：Windows Node 24.14.0、Linux Node 22.22.1 完整測試各 **279/279 通過**，無失敗／跳過／取消；新增畫布 11 項及 history 8 項。Linux source-only 包 444 檔，SHA-256 `e0a8e0fd5354ce5db533d27c660e85832a5377f4fb5b351f6c293524feb7e3df`，兩端及測試後 manifest 一致，隔離目錄已清理。語法／diff 檢查通過，Chrome 兩席無 console error。
 
-本次私有證據：`work/pr30-followup-windows-tests.log`、`work/pr30-followup-linux-tests.log`、`work/pr30-cold-recovery-metrics.json`、`work/pr30-recovery-browser-evidence.json`、`work/pr30-recovery-browser.png`、`work/pr30-finished-state.json`。本機 3122／3123 測試服務與測試分頁已關閉。HAR 仍待錄製，官方方法與證據邊界見 [Gartic 網路參考](research/GARTIC-NETWORK-REFERENCE.md)；這些 BGA 測試不是 Gartic 封包證據。未部署或修改正式資料。
+本次私有證據：`work/pr30-followup-windows-tests.log`、`work/pr30-followup-linux-tests.log`、`work/pr30-cold-recovery-metrics.json`、`work/pr30-recovery-browser-evidence.json`、`work/pr30-recovery-browser.png`、`work/pr30-finished-state.json`。本機 3122／3123 測試服務與測試分頁已關閉。這些 BGA 測試不是 Gartic 封包證據；後續實錄另列於下節。未部署或修改正式資料。
+
+## 後續實錄：Gartic 畫具與完成送圖
+
+2026-10-05 透過官方 tab CDP `Network` 在隱藏內建瀏覽器正常遊玩單席 Masterpiece，記錄畫筆、外框、區域／全畫布填色、復原／重做、Done 及相簿，返回首頁後停止錄製並關閉分頁。User-Agent 回報 Chrome 154.0.0.0、1280 × 720。6,943 事件去重為 6,129；早期載入有 6 批 truncated，穩定作畫觀察窗 273.703 秒、24 批無 truncated。HAR 是離線轉換官方 CDP 事件，並非 Chrome DevTools 匯出按鈕的產物。
+
+本次 brush 送出 57＋100 bytes、區域填色 64 bytes、全畫布填色 61 bytes，內容是含顏色／數值的操作向量；undo 每次 27 bytes，為 scalar 控制訊號。後一筆 brush 含當前筆畫的前綴，不能宣稱每次只送新點。Done 是 13 bytes 的 boolean 完成訊號；相簿收到剩餘繪圖命令，與最後保留的填色一致。這些是邏輯 payload 大小，不含 TLS／壓縮等線上成本。
+
+BGA 已有 POST stroke／SSE stroke 增量傳輸與缺版快照恢復；本次證據支持命令增量方向，不能證明 Gartic 的 CPU、checkpoint、server 配額或資料保留策略。未測另一席接收／重連，亦未另錄 BGA HAR。PR 的資源與 renderer 修正仍以自身回歸測試和 Chrome 工作量量測驗證。
+
+HAR 的 1,035 entries、57 則 WS 訊息通過格式檢查，另外 127 個不完整觀察保存在擴充欄位；匯出器 10/10 合成測試通過，未執行 Chrome Import UI。原始內容與截圖只在 `BGA-draw-guess/work/`，檔案、雜湊及限制見 [完整網路參考](research/GARTIC-NETWORK-REFERENCE.md)。

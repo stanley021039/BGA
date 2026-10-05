@@ -78,4 +78,6 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 
 同日 U21 允許換瀏覽器／安裝官方擴充，背景偏好保留。Chrome 擴充已連線，內建瀏覽器隱藏開頁成功；目前官方工具未列出 CDP／HAR 能力，已告知使用者官方 Developer mode 設定並等候回覆。下次先核對設定回覆與實際 capabilities，不能重複安裝、擅自提高視窗或把官方文件能力當成已錄製證據。
 
+後續 U22 明確指示直接開啟；已用設定 UI 啟用完整 CDP，重建 CUA 工作階段後官方 `cdp` capability 可用，取代上一段的等待狀態。Gartic 背景單席採樣已完成，原始事件與截圖只存 ignored work。持久 REPL 跨 cell 的採樣游標使用單一可變物件欄位，避免不同函式保存舊 binding；匯出仍須檢查 sequence 去重、順序、truncated 和時鐘映射，不把設定成功當作資料完整的證據。詳細結果見同一 [網路參考](../research/GARTIC-NETWORK-REFERENCE.md)。
+
 2026-10-05、2618c4b 管理UI：`src/data/ui.js` 是獨立localhost HTTP wrapper，static UI 位於tools/data-transfer-ui/，不加入遊戲路由；`tools/server-data-ui.cjs`／npm data:transfer:ui為入口。驗Host/Origin/隨機token、64KiB JSON、source/target停寫ack，互斥工作与記憶體lastResponse。只回傳run/safeError去敏結果，不能寫rawSQLite錯誤／key bytes／users到UI。前端原生required、textContent更新、預演預設、改路徑取消確認，刷新GET state不重送POST。HTTP4項與全套259項在Windows/Linux通過；主agent原Chrome背景完整合成表單流程／reload通過。收合版31c91dd以details隱藏JSON，保留config/nextSteps DOM常駐，統計三欄及140px nowrap標籤；詳進度，無正式資料與服務變更。
