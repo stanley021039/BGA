@@ -1,6 +1,20 @@
 # Server 資料移轉實作與驗收
 
-更新：2026-10-05。使用者選擇「完整移轉／備份還原」，要求帳戶也搬移，以及獨立操作文件和方便管理員的 UI。移轉核心 `c831e87`，本機管理 UI `2618c4b`、結果收合／對齊至 `31c91dd`，分支 `feat/server-data-transfer`。以下保留歷史驗收，最新程式 `6e655de` 與送審狀態以末節「送審前最終複查」為準；未部署或操作正式 DB。獨立操作文件：[SERVER-DATA-TRANSFER](SERVER-DATA-TRANSFER.md)。
+更新：2026-10-05。使用者選擇「完整移轉／備份還原」，要求帳戶也搬移，以及獨立操作文件和方便管理員的 UI。本文保留歷史驗收；最新鎖修正 `0682e43` 以本節為準，管理者匯入流程的既有證據仍在末節。未部署或操作正式 DB。獨立操作文件：[SERVER-DATA-TRANSFER](SERVER-DATA-TRANSFER.md)。
+
+## PR #31：殘留鎖競態修正
+
+2026-10-05，使用者要求修復 [PR #31 的鎖回覆](https://github.com/stanley021039/BGA/pull/31#issuecomment-5993394421)。基線 `3233ed4`，程式修正 `0682e43`，修復工作目錄為獨立 `fix/pr31-stale-lock`；PR base 仍為 #30 的 `feature/game-stage-local`。
+
+- 已實際重現：兩個受控 OS 程序使用 `tests/helpers/data-lock-worker.cjs`，將 B 暫停在舊程式內容比對後的 unlink 前；A 回收舊鎖並取得新鎖，再允許 B 繼續。基線上資料鎖、發布鎖、legacy 歷史鎖及 HistoryStore 均回報 A、B 同時取得鎖。資料鎖情境共用 DB，history／community／music 各自不同，後續目錄鎖未攔住問題。
+- 修正：`src/data/locks.js` 移除 dead-PID 自動回收及重試；任何既有鎖均以 `DATA_IN_USE` 拒絕，保留原檔。HistoryStore 共用 legacy 排他建立。release 冪等，重複 close 不再刪同程序後來取得的新鎖；保留純 PID 相容格式。
+- 回歸：新增11項，包含上述4項雙程序殘留鎖測試、3項跨程序 live-lock 排他及正常釋放後再取得、取得中途失敗回收本次已持有鎖、同程序重複 close、symlink／junction 不改目標及錯誤去敏／人工清理提示。基線回歸失敗，修後全部通過。
+- 完整驗證：Windows Node **24.14.0** 的 `npm test` **374/374** 通過，fail／cancelled／skipped 均0（約16.5秒）；包含既有備份還原、發布中斷、admin 互斥、app 重新啟動與 UI HTTP／VM 測試。`git diff --check` 通過。原始測試 log 只在 ignored `work/pr31-lock-windows-tests.log`。
+- 操作改變：異常終止後可能需要停全部 writer／自動重啟、保存鎖內容再人工清理，詳 [流程](SERVER-DATA-TRANSFER.md#殘留鎖的人工檢查)。發布鎖與 restore marker 保留現場、另選新代重試；不能直接刪掉啟動。不能混跑仍自動回收 stale lock 的舊 writer。
+
+本次未重跑 Linux；前批 Linux363項是基線證據，不能寫成此修正的Linux374項。真實 Chrome「選備份資料夾→上傳」及整合後多人完整遊戲仍待驗收。本批未合併 #30／#31、調整 base、修改 AGENTS 規則、部署或操作正式資料，也未代使用者回覆 PR 評論。
+
+## 既有功能與歷史驗收
 
 | 原規格項目 | 完成內容 | 證據／限制 |
 | --- | --- | --- |
