@@ -4,7 +4,7 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&
 const rankLabels={great:'最想要 · +3',good:'想要 · +2',ok:'還可以 · +1',noWay:'最不想要 · −4',unranked:'沒標記 · −1'};
 const storyRankLabels={great:'最想要',good:'想要',ok:'還可以',noWay:'最不想要',unranked:'沒標記'};
 const rankKeys=['great','good','ok','noWay'];
-const categoryGlyphs={日常:'☕',體驗:'✧',奇想:'✦',冒險:'◆'};
+const categoryGlyphs={日常:'☕',體驗:'✧',奇想:'✦',冒險:'◆',成人派對:'☾'};
 const customPercentOptions=[['','依題庫比例'],['0','0% · 只抽內建'],['25','25% · 偶爾投稿'],['50','50% · 均衡'],['75','75% · 投稿優先'],['100','100% · 盡量投稿']];
 const customPercentLabel=value=>value===null?'依題庫比例':value+'%';
 const customPercentSelect=value=>customPercentOptions.map(([number,label])=>`<option value="${number}" ${(value===null?'':String(value))===number?'selected':''}>${label}</option>`).join('');
@@ -162,7 +162,7 @@ function receive(next){
  $('#count').textContent=next.players.length+' / 8';
  $('#steps').querySelectorAll('span').forEach((element,index)=>element.classList.toggle('active',next.phase==='choosing'?index<2:index===({delivering:2,reveal:2,finished:2}[next.phase]??0)));
  GameShell.stableMarkup($('#players'),next.players.map(playerRow).join(''));
- const nextSignature=JSON.stringify([next.phase,next.round,next.target,next.customPercent,next.gifts,next.players.map(item=>item.id),next.ownAssignments,next.ownRanking,next.delivery,next.result,next.winner]);
+ const nextSignature=JSON.stringify([next.phase,next.round,next.host,next.me,next.target,next.customPercent,next.includeAdult,next.gifts,next.players.map(item=>item.id),next.ownAssignments,next.ownRanking,next.delivery,next.result,next.winner]);
  if(nextSignature!==signature){signature=nextSignature;render({arrival,score:shouldFocus});if(shouldFocus){celebrateVictory();playSound('reveal');checkNewAchievement();}}
  progress();return live;
 }
@@ -170,7 +170,7 @@ function render({arrival=false,score=false}={}){
  const s=state;let html='';
  for(const animation of stageAnimations)animation.cancel();stageAnimations=[];stopFocus();
  if(s.phase==='waiting'){
-  html=`<div class="card hero"><div class="hero-mark">🎁</div><span class="eyebrow">MAKE A WISH</span><h1>禮物擺好，<br>朋友來了就開桌。</h1><p class="sub">3–8 人一起玩。每輪可以自由安排先送禮或先標喜好，大家兩項都完成後一起揭曉。</p><div class="banner">房間代碼 <b>${esc(s.code)}</b>　<button class="quiet" data-do="invite">複製邀請連結 ↗</button></div>${s.host?`<section class="room-settings-panel" aria-label="房間設定"><h2>房間設定</h2><div class="room-settings"><div><label for="target">兩條分數的目標（8–30）</label><input id="target" type="number" min="8" max="30" value="${s.target}"></div><div><label for="customPercent">玩家投稿禮物比例</label><select id="customPercent">${customPercentSelect(s.customPercent)}</select></div></div><details class="setting-details"><summary>投稿比例說明</summary><p class="small">比例依每輪禮物數取近似值；投稿不足或尚未輪到重複抽取時，會用內建禮物補足。選 0% 則只抽內建。</p></details>${GameShell.settingsActions()}</section>`:`<p>等房主開始，先看看這桌的禮物吧。投稿禮物設定：${customPercentLabel(s.customPercent)}。</p>`}</div>`;
+  html=`<div class="card hero"><div class="hero-mark">🎁</div><span class="eyebrow">MAKE A WISH</span><h1>禮物擺好，<br>朋友來了就開桌。</h1><p class="sub">3–8 人一起玩。每輪可以自由安排先送禮或先標喜好，大家兩項都完成後一起揭曉。</p><div class="banner">房間代碼 <b>${esc(s.code)}</b>　<button class="quiet" data-do="invite">複製邀請連結 ↗</button></div>${s.host?`<section class="room-settings-panel" aria-label="房間設定"><h2>房間設定</h2><div class="room-settings"><div><label for="target">兩條分數的目標（8–30）</label><input id="target" type="number" min="8" max="30" value="${s.target}"></div><div><label for="customPercent">玩家投稿禮物比例</label><select id="customPercent">${customPercentSelect(s.customPercent)}</select></div></div><label class="adult-gift-option"><input id="includeAdult" type="checkbox" ${s.includeAdult?'checked':''}><span>加入成人派對禮物</span></label><p class="small">曖昧惡搞、約會與夜生活；開啟後內建及投稿成人分類都可能抽到。</p><details class="setting-details"><summary>投稿比例說明</summary><p class="small">比例依每輪禮物數取近似值；投稿不足或尚未輪到重複抽取時，會用內建禮物補足。選 0% 則只抽內建。</p></details>${GameShell.settingsActions()}</section>`:`<p>等房主開始，先看看這桌的禮物吧。投稿禮物設定：${customPercentLabel(s.customPercent)}。成人派對${s.includeAdult?'開啟':'關閉'}。</p>`}</div>`;
  }else if(s.phase==='choosing'){
   const recipients=s.players.filter(item=>item.id!==s.me);
   if(!recipients.some(item=>item.id===activeGiftRecipient))activeGiftRecipient=recipients[0]?.id;
@@ -210,7 +210,7 @@ document.addEventListener('click',event=>{
   else return toast('已選四件；先點一件已選禮物取消，再挑新的。');
   syncChoices();return;
  }
- switch(button.dataset.do){case'invite':invite();break;case'settings':roomAction('settings',{target:Number($('#target').value),customPercent:$('#customPercent').value===''?null:Number($('#customPercent').value)});break;case'start':roomAction('start');break;case'next':action('next');break;case'accept':action('accept',{recipientId:state.delivery.recipientId});break;case'replay-focus':startFocus();break;case'skip-focus':stopFocus();break;}
+ switch(button.dataset.do){case'invite':invite();break;case'settings':roomAction('settings',{target:Number($('#target').value),customPercent:$('#customPercent').value===''?null:Number($('#customPercent').value),includeAdult:$('#includeAdult').checked});break;case'start':roomAction('start');break;case'next':action('next');break;case'accept':action('accept',{recipientId:state.delivery.recipientId});break;case'replay-focus':startFocus();break;case'skip-focus':stopFocus();break;}
 });
 $('#stage').addEventListener('error',event=>{if(event.target.matches('.choice-art img,.story-gift-card img,.story-person img,.gift-victory-player img')){event.target.hidden=true;event.target.nextElementSibling.hidden=false;}},true);
 $('#stage').addEventListener('submit',async event=>{

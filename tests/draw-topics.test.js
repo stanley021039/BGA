@@ -6,17 +6,41 @@ const {WORDS,TOPICS,topicLabels}=require('../src/games/draw-guess-words');
 const {DrawWordStore,validateWord}=require('../src/games/draw-guess-store');
 const {openDatabase,SCHEMA_VERSION}=require('../src/db/index');
 
-test('all 120 drawing words have one recognized thematic category independent of difficulty',()=>{
- assert.equal(WORDS.length,120);
- assert.equal(TOPICS.length,8);
- assert.equal(new Set(TOPICS.map(topic=>topic.id)).size,8);
- assert.equal(new Set(WORDS.map(word=>word.title)).size,120);
+test('all 1000 drawing words are unique, drawable-length prompts in nine thematic categories',()=>{
+ assert.equal(WORDS.length,1000);
+ assert.equal(TOPICS.length,9);
+ assert.equal(new Set(TOPICS.map(topic=>topic.id)).size,9);
+ const {normalize}=require('../src/games/draw-guess');
+ assert.equal(new Set(WORDS.map(word=>normalize(word.title))).size,1000);
+ assert.equal(new Set(WORDS.map(word=>word.id)).size,1000);
  for(const word of WORDS){
   assert.ok(TOPICS.some(topic=>topic.id===word.topic),word.title);
   assert.equal(word.topicLabel,topicLabels[word.topic]);
   assert.ok(['簡單','一般','挑戰'].includes(word.category));
+  assert.ok([...word.title].length>0&&[...word.title].length<=24,word.title);
+  assert.ok(word.aliases.length<=5&&word.aliases.every(alias=>[...alias].length<=24),word.title);
+  assert.equal(new Set([word.title,...word.aliases].map(normalize)).size,word.aliases.length+1,word.title);
  }
  for(const topic of TOPICS)assert.ok(WORDS.filter(word=>word.topic===topic.id).length>=3,topic.id);
+});
+
+test('all original 120 word identities, aliases and category metadata stay byte-for-byte compatible',()=>{
+ const {createHash}=require('node:crypto'),legacy=WORDS.filter(word=>/^builtin-(easy|medium|hard)-\d+$/.test(word.id));
+ assert.equal(legacy.length,120);
+ assert.equal(createHash('sha256').update(JSON.stringify(legacy)).digest('hex'),'1259e50c1a00a7364b1ca93874bbca61932862ff6871bbb4b906f8d0bab64082');
+});
+
+test('meme is a selectable builtin category while custom submissions remain an independent source',()=>{
+ const {DrawGuessRoom,validTopic,validTopics}=require('../src/games/draw-guess');
+ assert.ok(validTopic('meme'));assert.ok(validTopics(['meme','custom']));
+ const memes=WORDS.filter(word=>word.topic==='meme');assert.equal(memes.length,100);
+ assert.equal(memes.filter(word=>word.memeKind==='template').length,50);assert.equal(memes.filter(word=>word.memeKind==='original').length,50);
+ const room=new DrawGuessRoom('MEME12','迷因試玩',n=>n-1),host=room.add('甲');room.add('乙');
+ room.wordProvider=()=>[{id:'shared-food',title:'自訂食物',topic:'food',custom:true},{id:'shared-meme',title:'自訂迷因',topic:'meme',custom:true}];
+ room.configure(host.id,{seconds:90,topics:['meme']});room.start();assert.ok(room.candidates.every(word=>word.topic==='meme'&&!word.custom));
+ room.choose(host.id,room.candidates[0].id);assert.equal(room.view(room.players[1].id).question,null);assert.equal(room.view(room.players[1].id).hint.topicLabel,'迷因 Meme');
+ const old=new DrawGuessRoom('OLD123','舊客戶端',n=>n-1),owner=old.add('甲');old.add('乙');old.wordProvider=room.wordProvider;
+ old.configure(owner.id,{seconds:90,topic:'meme',customPercent:100});old.start();assert.equal(old.candidates[0].id,'shared-meme');
 });
 
 test('SQLite v9 custom words migrate to misc without losing their difficulty or aliases',()=>{
@@ -57,5 +81,7 @@ test('new custom words save a topic and reject unrecognized topic IDs',()=>{
   assert.equal(store.list()[0].topic,'food');
   assert.equal(validateWord({title:'舊客戶端題目',aliases:[],difficulty:'hard'}).topic,'misc');
   assert.throws(()=>validateWord({title:'壞題目',aliases:[],difficulty:'easy',topic:'__proto__'}),/題材/);
+  const meme=store.add(user,{title:'我的原創迷因',aliases:['我的梗圖'],difficulty:'hard',topic:'meme'});
+  assert.equal(meme.topicLabel,'迷因 Meme');assert.equal(store.list().find(word=>word.id===meme.id).topic,'meme');
  }finally{db?.close();fs.rmSync(dir,{recursive:true,force:true});}
 });

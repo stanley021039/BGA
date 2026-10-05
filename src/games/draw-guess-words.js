@@ -1,4 +1,5 @@
-// Original, drawable everyday words. Each group has forty entries.
+// The original 120 IDs must remain stable for votes, collections and history.
+const additions=require('./draw-guess-additions');
 const groups={
  easy:'蘋果|香蕉|西瓜|草莓|鳳梨|麵包|蛋糕|冰淇淋|珍珠奶茶|披薩|漢堡|便當|雨傘|帽子|眼鏡|鞋子|手錶|牙刷|杯子|椅子|桌子|床|枕頭|書包|鉛筆|剪刀|手機|電腦|電視|相機|腳踏車|汽車|公車|火車|飛機|船|貓|狗|兔子|魚',
  medium:'長頸鹿|大象|企鵝|章魚|蝴蝶|蜜蜂|烏龜|恐龍|機器人|太空人|消防員|醫生|廚師|郵差|魔術師|農夫|生日蛋糕|聖誕樹|摩天輪|溜滑梯|盪鞦韆|電梯|紅綠燈|斑馬線|望遠鏡|顯微鏡|指南針|地球儀|熱氣球|潛水艇|火山|瀑布|彩虹|閃電|雪人|沙堡|帳篷|釣魚竿|吉他|鋼琴',
@@ -20,7 +21,8 @@ const TOPICS=[
  {id:'people',label:'人物職業'},
  {id:'nature',label:'自然奇幻'},
  {id:'places',label:'場所娛樂'},
- {id:'activities',label:'運動音樂'}
+ {id:'activities',label:'運動音樂'},
+ {id:'meme',label:'迷因 Meme'}
 ];
 const topicLabels=Object.fromEntries([...TOPICS,{id:'misc',label:'綜合'}].map(topic=>[topic.id,topic.label]));
 const topicWords={
@@ -38,8 +40,15 @@ for(const [topic,titles] of Object.entries(topicWords))for(const title of titles
  if(topicByTitle.has(title))throw Error('題材重複分類：'+title);
  topicByTitle.set(title,topic);
 }
-const WORDS=Object.entries(groups).flatMap(([difficulty,words])=>words.split('|').map((title,index)=>({
+const legacyWords=Object.entries(groups).flatMap(([difficulty,words])=>words.split('|').map((title,index)=>({
  id:`builtin-${difficulty}-${index+1}`,title,aliases:aliases[title]||[],difficulty,category:labels[difficulty],topic:topicByTitle.get(title),topicLabel:topicLabels[topicByTitle.get(title)],custom:false
 })));
-if(WORDS.some(word=>!word.topic)||topicByTitle.size!==WORDS.length)throw Error('內建題目題材分類不完整');
+if(legacyWords.some(word=>!word.topic)||topicByTitle.size!==legacyWords.length)throw Error('原有題目題材分類不完整');
+const WORDS=[...legacyWords,...TOPICS.flatMap(({id:topic})=>Object.entries(additions[topic]||{}).flatMap(([difficulty,titles])=>titles.split('|').map((title,index)=>({
+ id:`builtin-${topic}-${difficulty}-${index+1}`,title,aliases:additions.memeAliases[title]||[],difficulty,category:labels[difficulty],topic,topicLabel:topicLabels[topic],custom:false,
+ ...(topic==='meme'?{memeKind:difficulty==='medium'?'template':'original'}:{})
+}))))];
+const titleKey=title=>title.normalize('NFKC').toLocaleLowerCase('zh-Hant').trim().replace(/\s+/gu,' ');
+if(new Set(WORDS.map(word=>word.id)).size!==WORDS.length||new Set(WORDS.map(word=>titleKey(word.title))).size!==WORDS.length)throw Error('內建題目重複');
+if(WORDS.some(word=>!word.topic||!word.title||[...word.title].length>24||!labels[word.difficulty]))throw Error('內建題目格式不正確');
 module.exports={WORDS,labels,TOPICS,topicLabels};

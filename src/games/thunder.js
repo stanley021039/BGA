@@ -1,5 +1,6 @@
 // Thunder Road: Vendetta core rules. See docs/RULES-SOURCES.md for reference and variant details.
 const {randomInt,randomUUID}=require('node:crypto');
+const RacePaths=require('../../public/shared/race-paths');
 const COLORS=['#ec9b35','#43c6cd','#c4d3c0','#c260b6'];
 const DIRS=['前左','前方','前右','後左','後方','後右'];
 const SIZES=['輕型','中型','重型'];
@@ -87,10 +88,34 @@ class ThunderRoom{
  ignite(c){if(this.operable(c)&&!c.burning){c.burning=true;this.event('fire',`${this.label(c)}著火！`,{car:c.id});}}
  humanAct(id,action,data={}){const player=this.player(id),previous=player?.humanActionThisTurn;if(player&&this.diceCheck?.kind!=='round')player.humanActionThisTurn=true;try{this.act(id,action,data);}catch(error){if(player)player.humanActionThisTurn=previous;throw error;}}
  startMove(){this.phase='move';const c=this.car(this.active?.car);if(c?.burning&&this.operable(c)){this.offerDice({kind:'fire',title:'火焰檢定',condition:'火焰骰可能增加 1／2 點、熄滅，或淘汰車輛（試玩配比）。',owner:c.owner,participants:this.dicePlayers([c]),labels:['火焰骰']},[FIRE_DIE],([face])=>({text:face==='out'?'火焰熄滅':face==='eliminate'?'車輛淘汰':'加速 +'+face,apply:()=>{this.event('fireDie',`${this.label(c)}火焰骰（試玩配比）：${face==='out'?'熄滅':face==='eliminate'?'淘汰':'加速 +'+face}`,{car:c.id,face});if(face==='out')c.burning=false;else if(face==='eliminate')this.eliminate(c,'火焰骰');else this.active.remaining+=face;}}));return;}this.drain();}
+ movePath(id,data){
+  if(!Number.isSafeInteger(data.version)||data.version!==this.version||data.car!==this.active?.car)throw Error('路線已變更，請依目前車輛與點數重新選擇');
+  if(!Number.isInteger(data.x)||!Number.isInteger(data.y)||data.x<0||data.x>=6||Object.hasOwn(data,'path')||Object.hasOwn(data,'route'))throw Error('移動目標不正確；請選擇目前亮起的格子');
+  const route=RacePaths.routes(this.view(id)).get(RacePaths.key(data.x,data.y));
+  if(!route)throw Error('目前點數無法到達這個格子');
+  const active=this.active,c=this.car(active.car),turn=this.turn,from={x:c.x,y:c.y},steps=[];
+  let reason='已到達目標',spent=0;
+  for(const step of route.path){
+   if(this.active!==active||this.turn!==turn||this.phase!=='move'||this.pending||this.diceCheck||!this.operable(c)||active.remaining<=0){reason='移動已結束';break;}
+   if(!this.legalMoves().some(v=>v.x===step.x&&v.y===step.y)){reason='位置已改變';break;}
+   const cell=this.terrain(step.x,step.y),hidden=!!cell?.hazard&&!cell.hazard.face,remaining=active.remaining,seq=c.moveSeq||0,min=this.boardMin();
+   active.remaining=Math.max(0,remaining-this.cost(step.x,step.y));
+   this.queue.push({type:'move',id:c.id,x:step.x,y:step.y,normal:true});this.drain();
+   spent+=remaining-active.remaining;steps.push({...step});
+   if(this.diceCheck||this.pending){reason='請完成擲骰／決定後重新選路';break;}
+   if(hidden){reason='已揭露危險，請重新選路';break;}
+   if(c.dead||active.stopped){reason='車輛已停止';break;}
+   if(this.boardMin()!==min){reason='道路已更新，請重新選路';break;}
+   if(c.x!==step.x||c.y!==step.y||(c.moveSeq||0)!==seq+1){reason='地形改變了位置，請重新選路';break;}
+   if(this.active!==active||this.turn!==turn||this.phase!=='move'){if(steps.length<route.path.length)reason='移動已結束';break;}
+  }
+  this.event('movePath',`${this.label(c)}連續移動 ${steps.length} 格 · ${reason}`,{car:c.id,from,to:{x:c.x,y:c.y},steps,cost:spent,target:{x:data.x,y:data.y},reason});
+ }
  act(id,action,data={}){if(this.phase==='waiting'||this.phase==='finished')throw Error('比賽尚未開始或已結束');if(this.actor()!==id)throw Error('尚未輪到你操作');const p=this.player(id);
  if(this.diceCheck){const d=this.diceCheck;if(data.check!==d.id)throw Error('這次擲骰已變更，請依目前畫面操作');if(action==='rollDice'&&d.status==='awaiting'){this.rollDice();return;}if(action==='rerollDice'&&d.status==='result'&&d.rerollAllowed){this._diceRoll.rerolls++;d.rerollAllowed=false;this.rollDice();return;}if(action==='acceptDice'&&d.status==='result'){this.acceptDice();return;}throw Error('請先完成擲骰與結果確認');}
  if(this.pending){if(action!=='slam')throw Error('請先選擇是否重擲碰撞骰');const pending=this.pending;this.pending=null;if(data.reroll){pending.topMoves=this.rng(6)<2;pending.direction=this.rng(6);this.event('dice',`${p.name} 重擲碰撞骰：${pending.topMoves?'進入車':'原位車'}向${DIRS[pending.direction]}`);}this.resolveSlam(pending);this.drain();this.touch();return;}
  if(this.phase==='assign'&&action==='begin')this.begin(p,data);
+ else if(this.phase==='move'&&action==='movePath')this.movePath(id,data);
  else if(this.phase==='move'&&action==='move'){if(!this.legalMoves().some(v=>v.x===data.x&&v.y===data.y))throw Error('只能前往亮起的前方格子');const c=this.car(this.active.car);this.active.remaining=Math.max(0,this.active.remaining-this.cost(data.x,data.y));this.queue.push({type:'move',id:c.id,x:data.x,y:data.y,normal:true});this.drain();}
  else if(this.phase==='bonus'&&action==='bonus'){if(data.use){this.active.bonusUsed=true;this.active.remaining=this.roadDie;this.phase='move';}else{this.active.bonusUsed=true;this.prepareShot();}}
  else if(this.phase==='airplace'&&action==='airplace'){if(!Number.isInteger(data.x)||!Number.isInteger(data.y)||!this.empty(data.x,data.y))throw Error('直升機只能放在沒有障礙的空格');p.chopper={x:data.x,y:data.y,chopper:true};this.event('airstrike',`${p.name} 的直升機抵達戰場`);this.phase='airshoot';if(!this.targets(p.chopper).length)this.startMove();}

@@ -41,6 +41,16 @@ test('joining the waiting room updates the roster and start action without disca
  assert.match(ui.element('#waitingPlayers').innerHTML,/data-player-id="guest"/);
 });
 
+test('meme appears beside the existing topics in both create and host settings without changing saved topic choices',()=>{
+ const ui=browserHarness();vm.runInContext('code="";entry()',ui.context);
+ assert.match(ui.element('#stage').innerHTML,/name="topics" value="meme" checked/);
+ assert.match(ui.element('#stage').innerHTML,/迷因 Meme/);
+ const s=drawingState('artist');s.phase='waiting';s.presenterId=null;s.options.topics=['food','meme','custom'];ui.receive(s);
+ assert.match(ui.element('#stage').innerHTML,/name="topics" value="meme" checked/);
+ assert.match(ui.element('#stage').innerHTML,/name="topics" value="animals" ><span>/);
+ assert.match(ui.element('#stage').innerHTML,/儲存房間設定/);
+});
+
 test('pending guess is visible, prevents duplicate writes and preserves input on failure',async()=>{
  const ui=browserHarness();ui.receive(drawingState('guest'));
  ui.element('#guessInput').value='我的猜測';

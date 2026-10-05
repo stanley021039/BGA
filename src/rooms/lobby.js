@@ -63,7 +63,8 @@ function createLobby(now=()=>Date.now()){
   if(!present.some(visitor=>visitor.id===viewerId))return null;
   return {id:'lobby',userIds:new Set(present.map(visitor=>visitor.id)),expressions:present.filter(visitor=>visitor.emote&&visitor.emote.until>time).map(visitor=>({userId:visitor.id,...visitor.emote}))};
  }
- return {view,move,emote,mediaAudience};
+ function rename(userId,name){const visitor=visitors.get(userId);if(visitor)visitor.name=name;}
+ return {view,move,emote,mediaAudience,rename};
 }
 
 module.exports={createLobby};

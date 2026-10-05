@@ -37,3 +37,28 @@ test('single-use invite, session revocation, and one-time password reset survive
   assert.throws(()=>auth.requireUser({headers:{cookie:headers['Set-Cookie']}}),{code:'LOGIN_REQUIRED'});
  }finally{db.close();fs.rmSync(root,{recursive:true,force:true});}
 });
+
+test('renaming persists the nickname without changing credentials, roles or live sessions',async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-auth-rename-')),file=path.join(root,'app.sqlite');
+ let db=openDatabase(file),auth=createAuth(db);const headers={},res={setHeader:(key,value)=>headers[key]=value};
+ try{
+  const id=await auth.bootstrap('rename_owner','rename-password-123');
+  await auth.login({username:'rename_owner',password:'rename-password-123'},res);
+  const first=headers['Set-Cookie'];await auth.login({username:'rename_owner',password:'rename-password-123'},res);const second=headers['Set-Cookie'];
+  const before=db.prepare('SELECT * FROM users WHERE id=?').get(id),user=auth.requireUser({headers:{cookie:first}});
+  for(const displayName of ['', '   ', '一'.repeat(17), '名字\n換行', '名字\u0000', 42, {}, null, undefined]){
+   assert.throws(()=>auth.rename(user,{displayName}),{code:'INVALID_DISPLAY_NAME'});
+   assert.equal(db.prepare('SELECT display_name FROM users WHERE id=?').get(id).display_name,before.display_name);
+  }
+  const expected='😀'.repeat(16),result=auth.rename(user,{displayName:' '+expected+' ',id:'someone-else',username:'replaced',role:'member'});
+  assert.equal(result.displayName,expected);assert.equal(result.id,id);assert.equal(result.username,'rename_owner');assert.equal(result.role,'admin');
+  const after=db.prepare('SELECT * FROM users WHERE id=?').get(id);
+  for(const key of Object.keys(before))if(key!=='display_name')assert.deepEqual(after[key],before[key]);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM sessions WHERE revoked_at IS NULL').get().n,2);
+  assert.equal(auth.requireUser({headers:{cookie:first}}).display_name,expected);assert.equal(auth.requireUser({headers:{cookie:second}}).display_name,expected);
+  db.close();db=openDatabase(file);auth=createAuth(db);
+  assert.equal(auth.requireUser({headers:{cookie:first}}).display_name,expected);
+  assert.equal((await auth.login({username:'rename_owner',password:'rename-password-123'},res)).displayName,expected);
+  await assert.rejects(auth.login({username:'replaced',password:'rename-password-123'},res),{code:'INVALID_CREDENTIALS'});
+ }finally{db.close();fs.rmSync(root,{recursive:true,force:true,maxRetries:5});}
+});

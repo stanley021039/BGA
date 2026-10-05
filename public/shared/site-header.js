@@ -28,8 +28,18 @@
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(header.contains(document.activeElement)||!menu.hidden)){const target=document.activeElement.closest('details')?.querySelector(':scope > summary')||button;close();target.focus();}});
  header.addEventListener('focusout',e=>{if(e.relatedTarget&&!header.contains(e.relatedTarget)){close();closeSettings();}});
  function refreshAvatar(){header.querySelector('#site-avatar').src='/api/profile/avatar?v='+Date.now();}
- window.addEventListener('profile-updated',refreshAvatar);
- fetch('/api/auth/me').then(async r=>{if(!r.ok)return;const me=await r.json();button.title=me.username;button.setAttribute('aria-label',me.username+' 的帳號選單');header.querySelector('#site-account-id').textContent=me.username;if(me.role==='admin'){const link=document.createElement('a');link.id='site-admin';link.href='/admin';link.textContent='管理';menu.insertBefore(link,header.querySelector('#site-logout'));}account.hidden=false;header.querySelector('.site-links').hidden=false;refreshAvatar();}).catch(()=>{});
+ let identityRequest=0;
+ async function refreshIdentity(){
+  const request=++identityRequest;
+  try{const response=await fetch('/api/auth/me');if(!response.ok)return;const me=await response.json();if(request!==identityRequest)return;
+   button.title=me.displayName+'（'+me.username+'）';button.setAttribute('aria-label',me.displayName+' 的帳號選單');header.querySelector('#site-account-id').textContent=me.displayName;
+   const profileLink=menu.querySelector('a[href="/settings"]');if(profileLink)profileLink.textContent='帳號與形象設定';
+   if(me.role==='admin'&&!header.querySelector('#site-admin')){const link=document.createElement('a');link.id='site-admin';link.href='/admin';link.textContent='管理';menu.insertBefore(link,header.querySelector('#site-logout'));}
+   account.hidden=false;header.querySelector('.site-links').hidden=false;refreshAvatar();
+  }catch{}
+ }
+ window.addEventListener('profile-updated',refreshIdentity);window.addEventListener('focus',refreshIdentity);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshIdentity();});refreshIdentity();
  header.querySelector('#site-logout').onclick=async()=>{
   const logout=header.querySelector('#site-logout');logout.disabled=true;
   try{const r=await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!r.ok)throw Error('登出失敗，請再試一次');try{for(const key of Object.keys(localStorage))if(/^ah-(session|thunder|majority|gift|draw)(:|$)/.test(key))localStorage.removeItem(key);}catch{}location.href='/login';}

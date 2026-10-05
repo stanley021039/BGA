@@ -9,7 +9,7 @@ const {openDatabase,SCHEMA_VERSION}=require('../src/db/index');
 const {createAuth}=require('../src/auth/index');
 const {GiftStore}=require('../src/games/gift-store');
 const {AchievementStore}=require('../src/achievements/store');
-const {GIFTS}=require('../src/games/gift-catalog');
+const {GIFTS,ADULT_CATEGORY}=require('../src/games/gift-catalog');
 const {drawContent}=require('../src/games/content-draw');
 
 function receiveAll(room){
@@ -41,13 +41,13 @@ test('0% custom content stays built-in even after the built-in draw cycle resets
  }
 });
 
-test('300 default gifts keep legacy IDs and have bundled PNG artwork',()=>{
- assert.equal(GIFTS.length,300);
+test('350 gifts keep all legacy IDs and have bundled PNG artwork',()=>{
+ assert.equal(GIFTS.length,350);
  assert.deepEqual(Object.entries(GIFTS.reduce((counts,gift)=>(counts[gift.category]=(counts[gift.category]||0)+1,counts),{})),[
-  ['日常',75],['體驗',75],['奇想',75],['冒險',75]
+  ['日常',75],['體驗',75],['奇想',75],['冒險',75],[ADULT_CATEGORY,50]
  ]);
- assert.equal(new Set(GIFTS.map(gift=>gift.id)).size,300);
- assert.equal(new Set(GIFTS.map(gift=>gift.title.normalize('NFKC'))).size,300);
+ assert.equal(new Set(GIFTS.map(gift=>gift.id)).size,350);
+ assert.equal(new Set(GIFTS.map(gift=>gift.title.normalize('NFKC'))).size,350);
  assert.equal(GIFTS.find(gift=>gift.id==='g1-01').title,'一年份早餐券');
  assert.equal(GIFTS.find(gift=>gift.id==='g4-16').title,'與朋友完成一條長途步道');
  for(const gift of GIFTS){
@@ -55,6 +55,21 @@ test('300 default gifts keep legacy IDs and have bundled PNG artwork',()=>{
   const bytes=fs.readFileSync(path.join(__dirname,'..','public',gift.image.slice(1)));
   assert.ok(bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),gift.id);
  }
+});
+
+test('adult builtins and submissions only draw after a host explicitly enables the category',()=>{
+ const room=new GiftRoom('ADULT1','成人分類',n=>n-1),host=room.add('甲'),guest=room.add('乙');room.add('丙');
+ room.giftProvider=()=>[{id:'shared-adult',title:'朋友的成人禮物',category:ADULT_CATEGORY},{id:'shared-safe',title:'朋友的日常禮物',category:'日常'}];
+ assert.equal(room.view(guest.id).includeAdult,false);
+ assert.throws(()=>room.configure(guest.id,{target:8,includeAdult:true}),/房主/);
+ for(const includeAdult of ['true',1,null,[]])assert.throws(()=>room.configure(host.id,{target:8,includeAdult}),/成人派對/);
+ assert.equal(room.target,15,'invalid option must not partially save settings');
+ room.configure(host.id,{target:8,customPercent:100});room.start();
+ assert.ok(room.gifts.every(gift=>gift.category!==ADULT_CATEGORY));assert.ok(room.gifts.some(gift=>gift.id==='shared-safe'));
+ assert.throws(()=>room.configure(host.id,{target:8,includeAdult:true}),/遊戲中/);
+ room.phase='finished';room.configure(host.id,{target:8,includeAdult:true,customPercent:100});assert.equal(room.view(guest.id).includeAdult,true);room.start();
+ assert.ok(room.gifts.some(gift=>gift.id==='shared-adult'));assert.ok(room.gifts.some(gift=>gift.id.startsWith('adult-')));
+ room.phase='finished';room.configure(host.id,{target:8,includeAdult:false});room.start();assert.ok(room.gifts.every(gift=>gift.category!==ADULT_CATEGORY));
 });
 
 test('custom gifts persist in SQLite and become eligible for the next draw',()=>{
@@ -68,8 +83,9 @@ test('custom gifts persist in SQLite and become eligible for the next draw',()=>
   assert.equal(gift.title,'一張雲端野餐地圖');assert.equal(gift.image,null);
   assert.throws(()=>store.add(user,{title:'一張雲端野餐地圖',category:'奇想'}),/同名/);
   assert.throws(()=>store.add(user,{title:'無效',category:'未知'}),/分類/);
+  const adult=store.add(user,{title:'朋友自編的約會派對禮物',category:ADULT_CATEGORY});
   db.close();db=openDatabase(file);store=new GiftStore(db);
-  assert.equal(store.list()[0].id,gift.id);
+  assert.ok(store.list().some(item=>item.id===gift.id));assert.equal(store.list().find(item=>item.id===adult.id).category,ADULT_CATEGORY);
   const room=new GiftRoom('CAT123','共編房',n=>n-1);
   room.giftProvider=()=>store.list();
   for(const name of ['甲','乙','丙'])room.add(name);
@@ -252,6 +268,8 @@ test('authenticated players can create, join and reconnect to a gift room withou
   assert.equal(custom.status,200);assert.equal(custom.body.author,'giftfriend');
   const giftList=await (await fetch(base+'/api/community/gifts',{headers:{Cookie:host}})).json();
   assert.ok(giftList.gifts.some(gift=>gift.id===custom.body.id&&gift.image===custom.body.image));
+  assert.ok(giftList.categories.includes(ADULT_CATEGORY));assert.equal(giftList.gifts.filter(gift=>gift.category===ADULT_CATEGORY).length,50);
+  const adult=await post('community/gifts',friend,{title:'好友投稿的成人笑話禮盒',category:ADULT_CATEGORY});assert.equal(adult.status,200);
   const imageResponse=await fetch(base+custom.body.image,{headers:{Cookie:host}});
   assert.equal(imageResponse.status,200);assert.equal(imageResponse.headers.get('content-type'),'image/png');
   assert.equal(Buffer.from(await imageResponse.arrayBuffer()).toString('base64'),imageBase64);
@@ -284,14 +302,19 @@ test('authenticated players can create, join and reconnect to a gift room withou
   const getAchievements=async cookie=>(await (await fetch(base+'/api/achievements',{headers:{Cookie:cookie}})).json()).achievements;
   assert.equal((await getAchievements(host))[0].unlockedAt,null);
   let state=await getState();assert.equal(state.phase,'waiting');
+  assert.equal(state.includeAdult,false);
   assert.deepEqual(state.players.map(player=>player.name),['giftadmin','giftfriend','giftother']);
   assert.equal((await post('settings',friend,{code,target:8})).status,400);
-  const configured=await post('settings',host,{code,target:8,customPercent:75});
+  assert.equal((await post('settings',friend,{code,target:8,includeAdult:true})).status,400);
+  assert.equal((await post('settings',host,{code,target:8,includeAdult:'true'})).status,400);
+  assert.equal((await post('settings',host,{code,target:8,includeAdult:true})).body.includeAdult,true);
+  const configured=await post('settings',host,{code,target:8,customPercent:75,includeAdult:false});
   assert.equal(configured.status,200);
   assert.equal(configured.body.customPercent,75);
   assert.equal((await post('start',friend,{code})).status,403);
   assert.equal((await post('start',host,{code})).status,200);
   state=await getState();assert.equal(state.gifts.length,4);
+  assert.ok(state.gifts.every(gift=>gift.category!==ADULT_CATEGORY));
   assert.equal(state.gifts.filter(gift=>gift.shared).length,1);
   const [a,b,c]=state.players.map(player=>player.id),[g0,g1,g2,g3]=state.gifts.map(gift=>gift.id);
   assert.equal((await post('join',outsider,{code})).status,400);

@@ -1,7 +1,7 @@
 'use strict';
 const $=selector=>document.querySelector(selector);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transport','交通工具'],['objects','生活物品'],['people','人物職業'],['nature','自然奇幻'],['places','場所娛樂'],['activities','運動音樂'],['custom','自定義']];
+const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transport','交通工具'],['objects','生活物品'],['people','人物職業'],['nature','自然奇幻'],['places','場所娛樂'],['activities','運動音樂'],['meme','迷因 Meme'],['custom','自定義']];
 let code=(location.pathname.match(/\/draw\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
 let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,clockOffset=0,inviteBase=location.origin;
 let filled=false,tool='brush',active=null,pending=[],lastSentAt=0,lastFillSentAt=0,sendQueue=Promise.resolve(),canvasCommandBusy=false,canvasCommandEpoch=0,cursor=[256,128];

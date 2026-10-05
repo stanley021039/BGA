@@ -45,3 +45,10 @@ test('gift state polling forwards remote barrages even when the game version and
  h.tick(1000);await h.poll(delivery(12,'C',{barrages:[barrage,{id:'REMOTE-2',kind:'emoji',name:'B',emoji:'🎉',at:h.now}]}));assert.equal(h.barrages.length,2);
  h.tick(1000);await h.poll(delivery(12,'C',{barrages:[barrage]}));assert.equal(h.barrages.length,2,'repeated poll snapshots cannot replay a message');
 });
+
+test('adult gifts have a host setting and a visible guest summary, and changing the setting rerenders its checkbox',()=>{
+ const h=setup(),waiting=delivery(1,'A',{phase:'waiting',round:0,gifts:[],delivery:null,includeAdult:false});h.receive(waiting);
+ assert.match(h.nodes.get('#stage').innerHTML,/id="includeAdult" type="checkbox" >/);
+ h.receive({...waiting,version:2,includeAdult:true});assert.match(h.nodes.get('#stage').innerHTML,/id="includeAdult" type="checkbox" checked/);
+ h.receive({...waiting,version:3,host:false,me:'B',includeAdult:true});assert.doesNotMatch(h.nodes.get('#stage').innerHTML,/id="includeAdult"/);assert.match(h.nodes.get('#stage').innerHTML,/成人派對開啟/);
+});
