@@ -4,6 +4,8 @@
 
 依據：[玩家試玩 PL-01／PL-02](research/PLAYER-PLAYTEST-ASSESSMENT.md)、[動效與素材方案](specs/ANIMATION-ASSET-PLAN.md)。桌機優先，重要名單、角色、比分維持可見；背景 Chrome 操作，不提高視窗。
 
+已送審 [PR #34](https://github.com/stanley021039/BGA/pull/34)，base 為 `feat/server-data-transfer`；請先依序處理 #30／#31，再調整本批 base。未合併或部署。
+
 ## 實作與驗收表
 
 | 分類 | 遊戲 | 內容與驗收條件 | 進度 |
@@ -51,5 +53,7 @@
 過程修正：原得分者離席再復座不再把舊累計算入當輪分；未揭曉而提前結束不洩露答案；BFCache 不永久停用 gate 或留空白揭曉畫；舊猜測 ACK 不覆蓋新輪草稿／提示；late join 在結束時標本輪未參與。
 
 私人證據位於 ignored `work/`：`draw-review-motion-tests-{windows,linux}.log`、`draw-review-motion-source-manifest.json`、`draw-waiting-offline.png`、`draw-review-full.png`、`draw-collection-proof.json`、`draw-guessed-card.png`、`gift-confirm-animations.json`、`gift-static-barrage.png`。帳密只在私有 fixture／交接，公開文件不附短期房碼。
+
+收尾：Chrome 另確認最後收禮者接受後才出現全桌總分及完整禮物明細。3192 合成測試服務與心跳已停止，Linux source-only 臨時目錄再次驗 SHA 後清除；保留私有帳戶 fixture／證據及原有管理者 UI 3170。未更動正式房間或使用者原 Chrome 分頁。
 
 採用前重新核對 [MDN Animation.cancel](https://developer.mozilla.org/en-US/docs/Web/API/Animation/cancel)、[Page Visibility](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API)、[prefers-reduced-motion](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion) 及 [W3C Pause, Stop, Hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide.html)。本批重用既有美術與共用 SVG，沒有新下載／購買素材或圖片模型輸出，也不宣稱全站 WCAG 合規。
