@@ -11,12 +11,9 @@ const customPercentSelect=value=>customPercentOptions.map(([number,label])=>`<op
 let code=(location.pathname.match(/\/gift\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
 let session=null,state=null,busy=false,polling=false,disconnected=false,signature='',inviteBase=location.origin;
 let draftGifts={},draftLikes=[],activeGiftRecipient=null,activeResultRecipient=null,activeChoicePanel="give";
-let focusTimer=null,motionEnabled=true,soundEnabled=false,soundVolume=0.25,knownAchievements=null;
-const soundFiles={confirm:'/assets/gift-sounds/confirmation_001.wav',reveal:'/assets/gift-sounds/open_001.wav'};
-const playingSounds=new Set();
+let focusTimer=null,motionEnabled=true,knownAchievements=null;
 try{session=JSON.parse(localStorage.getItem(code?'ah-gift:'+code:'ah-gift')||'null');if(session&&!code)code=session.code;}catch{}
 try{motionEnabled=localStorage.getItem('ah-gift-motion')!=='off';}catch{}
-try{const storedVolume=localStorage.getItem('ah-gift-volume'),savedVolume=Number(storedVolume);if(storedVolume!==null&&Number.isFinite(savedVolume)&&savedVolume>=0&&savedVolume<=1)soundVolume=savedVolume;}catch{}
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
 async function api(route,data){
@@ -125,12 +122,8 @@ async function checkNewAchievement(){
 }
 function allowsMotion(){return motionEnabled&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;}
 function updateMotionButton(){const button=$('#motionToggle');button.textContent=allowsMotion()?'關閉演出':motionEnabled?'系統已減少動態':'開啟演出';button.setAttribute('aria-pressed',String(allowsMotion()));document.body.classList.toggle('gift-motion-off',!allowsMotion());}
-function playSound(kind){
- if(!soundEnabled||!soundVolume||document.hidden||!soundFiles[kind])return;
- try{const clip=new Audio(soundFiles[kind]);clip.volume=soundVolume;playingSounds.add(clip);clip.onended=()=>playingSounds.delete(clip);clip.onerror=()=>playingSounds.delete(clip);clip.play().catch(()=>playingSounds.delete(clip));}catch{}
-}
-function stopSound(){for(const clip of playingSounds)clip.pause();playingSounds.clear();}
-function updateSoundButton(){const button=$('#soundToggle');button.textContent=soundEnabled?'關閉音效':'開啟音效';button.setAttribute('aria-pressed',String(soundEnabled));$('#soundControl').hidden=!soundEnabled;$('#soundVolume').value=String(Math.round(soundVolume*100));}
+function playSound(kind){window.AudioSettings.playEffect(kind);}
+function stopSound(){window.AudioSettings.stopEffects();}
 function stopFocus(){clearTimeout(focusTimer);focusTimer=null;const panel=$('#giftSpotlight'),hadFocus=panel?.contains(document.activeElement);if(panel)panel.hidden=true;panel?.closest('.gift-story')?.classList.remove('is-playing');if(hadFocus)$('#stage [data-do="replay-focus"]')?.focus();}
 function focusIndices(entries){return [...new Set([0,Math.floor((entries.length-1)/2),entries.length-1])].filter(index=>index>=0&&index<entries.length);}
 function celebrateVictory(){if(allowsMotion()&&!document.hidden)$('#giftVictory')?.classList.add('celebrate');}
@@ -228,13 +221,11 @@ async function invite(){const url=inviteBase+'/gift/'+code;try{await navigator.c
 window.GameUI?.decorateButton($('#closeHelp'),'close',{iconOnly:true,label:'關閉遊戲規則'});
 $('#invite').onclick=invite;$('#help').onclick=()=>window.GameUI?GameUI.openDialog($('#rules'),$('#help')):$('#rules').showModal();$('#closeHelp').onclick=()=>$('#rules').close();
 $('#motionToggle').onclick=()=>{motionEnabled=!motionEnabled;try{localStorage.setItem('ah-gift-motion',motionEnabled?'on':'off');}catch{}updateMotionButton();if(!allowsMotion())stopFocus();if(state?.result)render();};
-$('#soundToggle').onclick=()=>{soundEnabled=!soundEnabled;updateSoundButton();if(soundEnabled)playSound('confirm');else stopSound();};
-$('#soundVolume').oninput=event=>{soundVolume=Number(event.target.value)/100;try{localStorage.setItem('ah-gift-volume',String(soundVolume));}catch{}for(const clip of playingSounds)clip.volume=soundVolume;};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopFocus();stopSound();}});
 async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));$('#connection').textContent='';if(disconnected){toast('已重新連線，恢復原座位');disconnected=false;}}catch(error){disconnected=true;$('#connection').textContent='連線暫停：'+error.message+'。正在重試…';}finally{polling=false;}}
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||info.addresses.find(address=>address.includes('://26.'))||location.origin).catch(()=>{});
 entry();if(session)poll();else if(code)RoomReconnect.restore(code,'gift','#connection').then(restored=>{if(restored){save(restored);poll();}});
-updateMotionButton();updateSoundButton();
+updateMotionButton();
 checkNewAchievement();
 setInterval(poll,1000);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#entryIdentity');if(identity&&me.displayName)identity.textContent=`以「${me.displayName}」入座`;}).catch(()=>{});

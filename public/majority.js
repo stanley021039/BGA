@@ -5,10 +5,8 @@ const customPercentOptions=[['','依題庫比例'],['0','0% · 只抽內建'],['
 const customPercentLabel=value=>value===null?'依題庫比例':value+'%';
 const customPercentSelect=value=>customPercentOptions.map(([number,label])=>`<option value="${number}" ${(value===null?'':String(value))===number?'selected':''}>${label}</option>`).join('');
 let code=(location.pathname.match(/\/majority\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'',session=null,state=null,busy=false,polling=false,disconnected=false,signature='',topic='food',type='two',source='bank',choice=null,draft='',custom={prompt:'',options:['','','']},inviteBase=location.origin;
-let focusTimer=null,gatherAnimations=[],motionEnabled=true,soundEnabled=false,soundVolume=0.25,knownAchievements=null,achievementNoticeRound=null,achievementNoticeNames='';
-const soundFiles={confirm:'/assets/gift-sounds/confirmation_001.wav',reveal:'/assets/gift-sounds/open_001.wav'},playingSounds=new Set();
+let focusTimer=null,gatherAnimations=[],motionEnabled=true,knownAchievements=null,achievementNoticeRound=null,achievementNoticeNames='';
 try{motionEnabled=localStorage.getItem('ah-majority-motion')!=='off';}catch{}
-try{const saved=localStorage.getItem('ah-majority-volume');if(saved!==null&&Number.isFinite(Number(saved))&&Number(saved)>=0&&Number(saved)<=1)soundVolume=Number(saved);}catch{}
 try{session=JSON.parse(localStorage.getItem(code?'ah-majority:'+code:'ah-majority')||'null');if(session&&!code)code=session.code;}catch{}
 function toast(t){$('#toast').textContent=t;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
 async function api(route,data){return RoomApi.request(route,data,{code,room:'majority',session,onKicked:()=>{RoomHost.kicked(session);session=null;}});}
@@ -71,9 +69,8 @@ function renderAction(){
 const playerName=id=>state?.players.find(p=>p.id===id)?.name||state?.departed?.find(p=>p.id===id)?.name||'玩家';
 function allowsMotion(){return motionEnabled&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;}
 function updateMotionButton(){const button=$('#motionToggle');button.textContent=allowsMotion()?'關閉演出':motionEnabled?'系統已減少動態':'開啟演出';button.setAttribute('aria-pressed',String(allowsMotion()));}
-function updateSoundButton(){const button=$('#soundToggle');button.textContent=soundEnabled?'關閉音效':'開啟音效';button.setAttribute('aria-pressed',String(soundEnabled));$('#soundControl').hidden=!soundEnabled;$('#soundVolume').value=String(Math.round(soundVolume*100));}
-function playSound(kind){if(!soundEnabled||!soundVolume||document.hidden)return;try{const clip=new Audio(soundFiles[kind]);clip.volume=soundVolume;playingSounds.add(clip);clip.onended=()=>playingSounds.delete(clip);clip.onerror=()=>playingSounds.delete(clip);clip.play().catch(()=>playingSounds.delete(clip));}catch{}}
-function stopSound(){for(const clip of playingSounds)clip.pause();playingSounds.clear();}
+function playSound(kind){window.AudioSettings.playEffect(kind);}
+function stopSound(){window.AudioSettings.stopEffects();}
 function stopFocus(){clearTimeout(focusTimer);focusTimer=null;const panel=$('#majoritySpotlight'),hadFocus=panel?.contains(document.activeElement);if(panel)panel.hidden=true;document.querySelectorAll('.result-group.is-focused').forEach(group=>group.classList.remove('is-focused'));if(hadFocus)$('#stage [data-do="replay-focus"]')?.focus();}
 function stopGather(){for(const animation of gatherAnimations)animation.cancel();gatherAnimations=[];}
 function gatherPlayers(){
@@ -151,15 +148,13 @@ document.addEventListener('click',e=>{if(!e.target.closest('#stage,[data-game-ac
 $('#stage').addEventListener('submit',async e=>{e.preventDefault();if(e.target.id==='blankForm')return action('answer',{answer:$('#blankAnswer').value});if(e.target.id==='customForm')return action('ask',{type,prompt:custom.prompt,options:type==='blank'?[]:custom.options.slice(0,type==='two'?2:3)});if(e.target.id==='enterForm'){if(busy)return;busy=true;try{const name=$('#nickname').value.trim(),s=await api(code?'join':'create',{name,type:'majority',code});if(s.type!=='majority')throw Error('這是其他遊戲的房間，請由大廳加入');save(s);localStorage.setItem('ah-name',name);receive(await api('state'));$('#connection').textContent='';}catch(err){toast(err.message);}finally{busy=false;}}});
 async function invite(){const url=inviteBase+'/majority/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製給同一個 VPN 的朋友',url);}}
 $('#motionToggle').onclick=()=>{motionEnabled=!motionEnabled;try{localStorage.setItem('ah-majority-motion',motionEnabled?'on':'off');}catch{}updateMotionButton();if(!allowsMotion()){stopFocus();stopGather();}const replay=$('#stage [data-do="replay-focus"]');if(replay)replay.hidden=!allowsMotion();};
-$('#soundToggle').onclick=()=>{soundEnabled=!soundEnabled;updateSoundButton();if(soundEnabled)playSound('confirm');else stopSound();};
-$('#soundVolume').oninput=event=>{soundVolume=Number(event.target.value)/100;try{localStorage.setItem('ah-majority-volume',String(soundVolume));}catch{}for(const clip of playingSounds)clip.volume=soundVolume;};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopFocus();stopGather();stopSound();}});
 window.matchMedia?.('(prefers-reduced-motion: reduce)')?.addEventListener?.('change',()=>{updateMotionButton();if(!allowsMotion()){stopFocus();stopGather();}const replay=$('#stage [data-do="replay-focus"]');if(replay)replay.hidden=!allowsMotion();});
 window.GameUI?.decorateButton($('#closeHelp'),'close',{iconOnly:true,label:'關閉遊戲規則'});
 $('#invite').onclick=invite;$('#help').onclick=()=>window.GameUI?GameUI.openDialog($('#rules'),$('#help')):$('#rules').showModal();$('#closeHelp').onclick=()=>$('#rules').close();
 async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));$('#connection').textContent='';if(disconnected){toast('已重新連線，恢復原座位');disconnected=false;}}catch(e){disconnected=true;$('#connection').textContent='連線暫停：'+e.message+'。正在重試…';}finally{polling=false;}}
 fetch('/api/info').then(r=>r.json()).then(s=>inviteBase=s.preferred||s.addresses.find(a=>a.includes('://26.'))||location.origin).catch(()=>{});
-entry();updateMotionButton();updateSoundButton();checkNewAchievement();if(session)poll();else if(code)RoomReconnect.restore(code,'majority','#connection').then(restored=>{if(restored){save(restored);poll();}});setInterval(poll,900);setInterval(progress,500);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
+entry();updateMotionButton();checkNewAchievement();if(session)poll();else if(code)RoomReconnect.restore(code,'majority','#connection').then(restored=>{if(restored){save(restored);poll();}});setInterval(poll,900);setInterval(progress,500);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
 
 
 fetch('/api/auth/me').then(r=>r.json()).then(me=>{const nickname=document.querySelector('#nickname');if(nickname){nickname.value=me.displayName;nickname.readOnly=true;}}).catch(()=>{});
