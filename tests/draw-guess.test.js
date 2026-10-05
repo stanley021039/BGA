@@ -83,6 +83,46 @@ test('host category limits all three drawing candidates and rejects unknown cate
  assert.throws(()=>room.configure(host.id,{seconds:90,topic:'food'}),/遊戲中/);
 });
 
+test('multiple built-in categories draw only their union, without custom or unselected topics',()=>{
+ const room=new DrawGuessRoom('MULTI1','多類別',()=>0),host=room.add('甲');
+ for(let i=1;i<8;i++)room.add('朋友'+i);
+ room.wordProvider=()=>[{id:'custom-other',title:'自訂動物',topic:'animals',custom:true}];
+ room.configure(host.id,{seconds:90,topics:['food','transport']});
+ room.start();const seen=new Set();
+ while(room.phase==='choosing'){
+  assert.equal(room.candidates.length,3);
+  assert.equal(new Set(room.candidates.map(word=>word.id)).size,3);
+  for(const word of room.candidates){assert.ok(['food','transport'].includes(word.topic));assert.equal(word.custom,false);seen.add(word.topic);}
+  room.choose(room.presenterId,room.candidates[0].id);room.reveal('時間到');room.next(host.id);
+ }
+ assert.deepEqual([...seen].sort(),['food','transport']);
+});
+
+test('custom is an independent category including submissions from every thematic category',()=>{
+ const room=new DrawGuessRoom('CUSTOM','自定義',max=>max-1),host=room.add('甲');room.add('乙');
+ room.wordProvider=()=>['food','animals','misc'].map((topic,index)=>({id:'custom-'+index,title:'投稿'+index,topic,custom:true}));
+ room.configure(host.id,{seconds:90,topics:['custom']});room.start();
+ assert.equal(room.candidates.length,3);assert.ok(room.candidates.every(word=>word.custom));
+ assert.deepEqual(room.candidates.map(word=>word.topic).sort(),['animals','food','misc']);
+ const mixed=new DrawGuessRoom('MIXED1','混合',max=>max-1),owner=mixed.add('甲');mixed.add('乙');mixed.wordProvider=room.wordProvider;
+ mixed.configure(owner.id,{seconds:90,topics:['food','custom']});mixed.start();
+ assert.equal(mixed.candidates.length,3);assert.ok(mixed.candidates.every(word=>word.custom||word.topic==='food'));
+ assert.ok(mixed.candidates.some(word=>word.custom&&word.topic==='animals'));
+});
+
+test('empty and invalid selections cannot change settings, and an empty custom bank cannot start a broken round',()=>{
+ const room=new DrawGuessRoom('EMPTY1','空題庫',()=>0),host=room.add('甲');room.add('乙');
+ const original=structuredClone(room.options);
+ for(const topics of [[],['unknown'],['food','food'],'food',null]){
+  assert.throws(()=>room.configure(host.id,{seconds:60,topics}),/題目類別/);assert.deepEqual(room.options,original);
+ }
+ room.configure(host.id,{seconds:90,topics:['custom']});
+ assert.throws(()=>room.start(),/還沒有題目/);assert.equal(room.phase,'waiting');assert.equal(room.round,0);
+ room.wordProvider=()=>[{id:'custom-one',title:'第一道自訂題',topic:'misc',custom:true}];
+ room.start();assert.equal(room.phase,'choosing');assert.equal(room.candidates[0].id,'custom-one');
+ assert.throws(()=>room.configure(host.id,{seconds:90,topics:['food']}),/遊戲中/);
+});
+
 test('custom words persist in SQLite and reject malformed aliases',()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-draw-words-')),file=path.join(root,'app.sqlite');
  let db;
@@ -109,6 +149,13 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
   const host=await login('drawadmin'),guest=await login('drawguest');
   async function post(route,headers,data){const response=await fetch(base+'/api/'+route,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify(data)});return {status:response.status,body:await response.json()};}
   assert.equal((await post('create',host,{type:'draw',topic:'wrong'})).status,400);
+  for(const topics of [[],['wrong'],['food','food'],'food'])assert.equal((await post('create',host,{type:'draw',topics})).status,400);
+  const multi=await post('create',host,{type:'draw',topics:['transport','food','custom']});assert.equal(multi.status,200);
+  const multiState=await (await fetch(base+'/api/state?code='+multi.body.code,{headers:host})).json();
+  assert.deepEqual(multiState.options.topics,['food','transport','custom']);
+  assert.equal((await post('settings',host,{code:multi.body.code,seconds:90,topics:[]})).status,400);
+  const unchanged=await (await fetch(base+'/api/state?code='+multi.body.code,{headers:host})).json();assert.deepEqual(unchanged.options.topics,multiState.options.topics);
+  assert.equal((await post('leave',host,{code:multi.body.code})).status,200);
   const created=await post('create',host,{type:'draw',topic:'food'});assert.equal(created.status,200);
   const code=created.body.code;assert.equal((await post('join',guest,{code})).status,200);
   const initial=await (await fetch(base+'/api/state?code='+code,{headers:host})).json();assert.equal(initial.options.topic,'food');
