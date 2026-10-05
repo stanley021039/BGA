@@ -1,13 +1,13 @@
 # Server 資料移轉實作與驗收
 
-更新：2026-10-05。使用者選擇「完整移轉／備份還原」，要求帳戶也搬移，以及獨立操作文件和方便管理員的 UI。移轉核心 `c831e87`，本機管理 UI `2618c4b`、結果收合／對齊至 `31c91dd`，分支 `feat/server-data-transfer`。本批只建立工具及隔離驗收，未 push、MR、部署或操作正式 DB。獨立操作文件：[SERVER-DATA-TRANSFER](SERVER-DATA-TRANSFER.md)。
+更新：2026-10-05。使用者選擇「完整移轉／備份還原」，要求帳戶也搬移，以及獨立操作文件和方便管理員的 UI。移轉核心 `c831e87`，本機管理 UI `2618c4b`、結果收合／對齊至 `31c91dd`，分支 `feat/server-data-transfer`。以下保留歷史驗收，最新程式 `6e655de` 與送審狀態以末節「送審前最終複查」為準；未部署或操作正式 DB。獨立操作文件：[SERVER-DATA-TRANSFER](SERVER-DATA-TRANSFER.md)。
 
 | 原規格項目 | 完成內容 | 證據／限制 |
 | --- | --- | --- |
 | AI 可操作程式 | `tools/server-data.cjs` 提供 keygen／inspect／export／verify／restore，JSON request／stdout、退出碼與去敏錯誤 | CLI stdin／file／錯誤測試；npm script data:transfer。 |
 | 完整帳戶 | users 全欄位相等，包括 UUID、原密碼 hash、role、disabled、appearance；原密碼重新登入 | 全量帳戶 digest、DB 深比較、admin／member HTTP 登入及停用帳號拒登。 |
 | 持久資料完整包 | SQLite、BLOB、音檔、community.json、歷史 JSONL/meta 與 engine hash | digest、表筆數、外鍵與引用；私人 artwork 權限、music HEAD／Range、歷史 HTTP 回看。 |
-| SQLite 一致快照 | feature-detect sqlite.backup，或 VACUUM INTO；schema 前置檢查，舊 schema 只遷移副本 | committed WAL 在兩條 snapshot 分支保存；v10→v12、副本遷移而來源維持 v10。 |
+| SQLite 一致快照 | feature-detect sqlite.backup，或 VACUUM INTO；schema 前置檢查，舊 schema 只遷移副本 | committed WAL 在兩條 snapshot 分支保存；v1／3／5／7／10→v12，來源版本、帳戶及既有圖片保持不變。 |
 | 停寫及鎖 | app／admin CLI 共用 DB／history／community／music 鎖；export 加取得 legacy history PID 鎖 | running app／第二 app／admin CLI 拒絕；仍要求操作方停全部外部 writer，無跨主機 fence。 |
 | 加密與驗包 | 每檔 AES-256-GCM，manifest HMAC，SHA-256／大小；白名單與檔數／容量限制 | 錯 key、改 manifest／cipher、missing／extra、symlink、traversal、case collision 均拒絕。 |
 | 新資料代及 dry run | 預設 dry run；apply:true 只建立不存在的 destination；publication lock＋marker＋receipt | 既有資料不動；發布缺口啟動被擋。搬檔 ENOSPC 留 marker；連 marker 都無法建立時仍保留 publication lock 阻止啟動。容量不足清 staging，未真的填滿磁碟。 |
@@ -63,3 +63,18 @@ Linux包456檔，SHA256 `7eb9cdadde6cdbb7a1b66e1b0cfd13dc2ccf3bf450186195201bdd7
 尚未執行真實 server 資料搬移、路由切換、停止正式 writer 或啟用新正式資料代。工具不代做 SSH、systemd、active symlink、Tunnel、GitHub 人工 reconcile、帳戶 merge、雙端資料合併、PostgreSQL／object store、房間續局、匿名化 prod→dev；上述原規格保持提案狀態。日後若執行正式切換，須先取得具體來源／目標與停寫窗口，再在新代驗收及保留相容舊代，不能把本批 fixture 成功宣稱已完成正式遷移。
 
 2026-10-05 後續整合 `e71989e`：加入 PR #30 的失敗開局歷史淘汰、I/O fault 容量記帳與分批畫布恢復，移轉 CLI／UI 契約未修改。Windows Node24.14.0 完整 **323/323** 通過；對應 PR source `3b19720` 在 Windows／Linux 各279/279。本次未重跑整合分支的Linux全套，舊304項仍只代表215f82c當時版本。原始記錄 `work/pr30-followup-combined-windows-tests.log`，詳 [PR 後續複查](PR30-RESOURCE-LIMITS.md#後續複查失敗開局與重連恢復)。
+
+## 送審前最終複查
+
+2026-10-05 使用者要求確認 PR 問題全部修正後發出 PR。獨立 agent 確認 PR #30 四項回覆，固定 head `7f44f20` 的相關八檔測試 **65/65 通過**，詳 [PR 複查](PR30-RESOURCE-LIMITS.md#發出接續-pr-前的獨立複查)。整合提交 `cc02b56` 接上 PR #30，tree 與 `22d02c3` 相同；畫猜多類別、共用音效、彈幕、房間設定、猜題者畫布與移轉工具皆保留。
+
+移轉獨立審查另找到 schema 1–7 升級新增空 BLOB 表會誤判 digest 不同。修正 `6e655de` 逐表核對來源既有 BLOB，只允許 migration 3／5／8 新增空表，帳戶 digest 仍完全比對。四個 schema 1／3／5／7 回歸在修正前均重現失敗，修正後完整加密匯出、預演、還原、原密碼登入及來源不變皆通過。帳戶改動、既有 BLOB 改動、非空新表及未知新 BLOB 表仍拒絕發布；相關移轉／UI／設定／出站測試 **39/39 通過**。
+
+| 本次完整驗收 | 程式來源 | 結果 |
+| --- | --- | --- |
+| Windows Node 24.14.0 | `6e655de` | **335/335 通過**，0 fail／skip／cancel，約 10 秒。 |
+| Linux Node 22.22.1 獨立臨時目錄 | 同一份 460 檔 source-only 包 | **335/335 通過**，0 fail／skip／cancel，約 80 秒。 |
+
+Linux 包 SHA-256 `31ac2c5ea9d6d185858aa2070d9371a7cbe9b86b620ee069c27dbae11efdfe55`，上傳前、Linux 測試前後及本機測試後的逐檔 manifest 一致。下載 log 後，驗證臨時目錄絕對路徑及擁有者標記再清理；未碰正式服務。原始 log、manifest 及打包程式只在 ignored `work/pr-publish-*`。`git diff --check`、敏感檔案／新增內容檢查通過；沒有提交帳密、raw HAR、私有 DB 或交接檔。
+
+上述取代舊 304／323／330 項作為此整合版本的最新完整測試數字。既有背景 Chrome 驗收仍按各功能文件記載的版本與範圍解讀，本次未重新進行多人完整遊戲。YouTube、成就擴充與動畫研究仍依 spec 狀態處理，不能當作已實作或部署。

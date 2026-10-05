@@ -44,6 +44,8 @@ waiting舞台顯示完整玩家角色卡；開局切回原本常駐比分名單�
 
 兩個隔離帳號、隱藏內建瀏覽器驗收：1280×720 外框仍 854×427，玩家名單 y634–705，頁面 scrollHeight 720；1920×1080 外框 1174×587，無頁面捲動；390×844 正常垂直排列、無水平溢出，手機仍需捲動。畫者標題與畫具保留；自然換至選題後資訊列恢復。證據只存 ignored `work/draw-guesser-before.png`、`draw-guesser-after.png`、`draw-guesser-layout-results.json`。本次只修版面與說明，未部署、未更新 PR，未重跑遊戲引擎測試或完成多人完整遊戲。
 
+2026-10-05 送審整合補充：上述 CSS 修正 `22d02c3` 已保留於接續分支；`cc02b56` 接上 PR #30 時 tree 完全不變。最新程式 `6e655de` 另補移轉舊 schema 相容性，完整 Windows／Linux 各335項通過；PR 四項回覆經獨立65項回歸複查。此筆取代上段「未更新 PR」的後续追蹤入口，實際 PR 與驗收狀態見 [最新進度](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)，未部署。
+
 ## 共用聲音接手補充
 
 2026-10-05、來源 `2e8dc4d`：`AudioSettings.get/set/subscribe/playEffect/stopEffects/bindPreview`集中個人music/effects偏好與音效生命週期。所有頁面先載入模組，靜態路由白名單也要更新。不要再加入遊戲自己的sound flag、volume或下方控制；右上角site-header設定是共用入口。

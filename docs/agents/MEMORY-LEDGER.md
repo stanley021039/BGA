@@ -27,6 +27,7 @@
 | U21 | 為繼續測試，可以安裝 Codex 擴充功能或使用不同瀏覽器。 | 放寬 U10 的瀏覽器選擇，保留背景操作偏好。Chrome 擴充已連線，內建瀏覽器可在隱藏分頁開啟 Gartic；目前兩者未提供 CDP／HAR API。官方 Developer mode 開關已告知使用者，等待其回覆與實際能力開放，不代表已取得 HAR 或允許提高視窗。 |
 | U22 | 直接用 Computer Use 開啟上述完整 CDP 存取權限。 | 已依明確指示透過 Codex 設定 UI 開啟；重新建立 CUA 工作階段後，官方 tab `cdp` capability 出現且 `Network.enable` 成功。隱藏內建瀏覽器已完成單席 Gartic Masterpiece 畫筆、區域／全畫布填色、undo／redo及相簿，原始紀錄保存在 ignored work；有效作畫採樣區間無 truncated，早期載入／進房有缺漏標記，詳 [網路參考](../research/GARTIC-NETWORK-REFERENCE.md)。這筆取代 U21 的設定等待狀態；背景測試偏好保留。 |
 | U23 | 猜題者畫布蓋到資訊列時，維持畫布大小，把被蓋住的元件隱藏即可。 | 作畫期間猜題者隱藏標題、題材／字數及倒數列，容器依畫布自然高度排列；玩家名單仍顯示，畫者與選題／揭曉資訊列保留。這是該列的明確例外，不是普遍隱藏玩家資訊的授權。背景本地驗收見 PROGRAMMER 的「猜題者畫布排版」。 |
+| U24 | 確認 PR 問題都修整後發出 PR。 | PR #30 四項回覆已獨立複查，接續分支保留後續遊戲與移轉修改；另補舊 schema 還原問題，程式 `6e655de` 完整 Windows／Linux 各335項通過。送審狀態見 [最新進度](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)；發 PR 不代表授權合併或正式部署。 |
 
 U20 後續驗收補充：最新 PR 追蹤回覆另有「同房重開第 1 輪沿用舊配額」，已由 `e60f853`／本地整合 `7c25c7b` 以 canvasEpoch 修正，舊 POST／ACK／SSE／snapshot／儲存等待均隔離。PR Windows／Linux各286項、本地整合Windows330項及背景新局填色通過；PR已推送至文件提交 `7f44f20`，未部署。證據見 [修正文件](../PR30-RESOURCE-LIMITS.md)。此筆取代「只補歷史與冷恢復即涵蓋全部追蹤回覆」的理解。
 

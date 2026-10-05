@@ -1,6 +1,6 @@
 # Server／資料 agent 記憶
 
-更新：2026-10-05。主規格：[多環境資料移轉](../specs/MULTI-ENV-DATA-MIGRATION.md)。第一版工具已本地實作，操作入口：[完整備份還原](../SERVER-DATA-TRANSFER.md)，證據：[驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md)。未備份、切換或遷移正式資料。
+更新：2026-10-05。主規格：[多環境資料移轉](../specs/MULTI-ENV-DATA-MIGRATION.md)。第一版工具已完成實作與隔離驗收，操作入口：[完整備份還原](../SERVER-DATA-TRANSFER.md)，最新送審與證據：[驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)。未備份、切換或遷移正式資料。
 
 ## 責任
 
@@ -47,7 +47,7 @@ AES-256-GCM payload＋HKDF/HMAC manifest、hash／size／rowcount／FK／appeara
 
 restore 預設 dry run，只有 literal apply:true 發布全新 destination；existing 即空目錄也拒絕。migration、BoardStore legacy import、token 刪除、pending／sending→needs_review 只在副本執行。returned config 明確 EXTERNAL_SIDE_EFFECTS_ENABLED=false；操作方須真的套到服務，這支程式不改 .env／systemd／Tunnel。publication lock／marker 阻止半份新代開啟；失敗不要手刪 marker 啟動，保留舊代並另選新代重試。
 
-未執行正式資料搬移／部署／MR；未做 merge、Postgres、匿名化 prod→dev、記憶體房間續局、TB 包、第三主機或真實掉電。後續正式移轉需來源／目標／停寫窗口及部署流程，新代接受寫入後不能直接退舊 snapshot。
+初版當時未發 MR，最新送審狀態見驗收進度；未執行正式資料搬移／部署，未做 merge、Postgres、匿名化 prod→dev、記憶體房間續局、TB 包、第三主機或真實掉電。後續正式移轉需來源／目標／停寫窗口及部署流程，新代接受寫入後不能直接退舊 snapshot。
 
 ## 管理員本機 UI 補充
 
@@ -58,3 +58,5 @@ Host／Origin／每次啟動随机 token 保護端點，操作串行，重整只
 Windows／Linux 各259項通過（移轉16＋UI HTTP4）；完整 HTTP workflow 原密碼登入、active source拒絕、錯origin/token/host、忙碌與刷新已驗。主agent原Chrome背景keygen→inspect→export→verify→dryrun→apply→reload通過，只合成帳戶1筆。收合版31c91dd預設隱藏完整JSON，重要統計/config/下一步可見；1767×1196仍可小捲，未驗手機，證據見進度文件。
 
 後續 `215f82c` 補 localSubmitting／stateEpoch，避免舊查詢解鎖新移轉與不明狀態重送；11項UI VM回歸已驗。PR資源修正backport `db9d0b6` 後，Windows／Linux完整整合各304項通過，取代259項作為最新總數，詳 [進度](../SERVER-DATA-TRANSFER-PROGRESS.md)。新服務啟動前須核對 `HISTORY_*`：預設30天／512MiB／1000份 archive 會淘汰舊已完成歷史，完整包仍保存原始資料。保留期與容量要依需要先設定，不可把驗包成功解釋成服務永不淘汰。
+
+2026-10-05 送審複查修正 `6e655de`：不能比較升級前後整個 BLOB digest map 是否相同，因 schema 3／5／8 會新增資料表。既有表 digest、帳戶 digest 必須完全一致；新表只限明確 migration 表且為空，其餘差異仍阻止發布。schema 1／3／5／7 完整還原與原密碼登入、來源不變及破壞注入回歸已驗；完整 Windows／Linux 各 **335/335**，取代此前整合測試數字，詳同一進度末節。這不是正式搬移驗收。

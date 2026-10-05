@@ -1,6 +1,6 @@
 # 完整伺服器資料移轉與備份還原
 
-狀態：2026-10-05，第一版已在本地實作，移轉核心 `c831e87`、管理員本機 UI 與競態修正至 `215f82c`；整合 PR 修正後 Windows／Linux 各304項及背景 Chrome 表單驗收通過。可使用 JSON CLI 或表單，產生加密備份並還原到**全新資料目錄**。實際正式資料、服務切換及部署尚未執行。詳細證據見 [驗收進度](SERVER-DATA-TRANSFER-PROGRESS.md)，架構邊界見 [原規格](specs/MULTI-ENV-DATA-MIGRATION.md)。
+狀態：2026-10-05，第一版已完成實作及隔離驗收；最新程式 `6e655de` 包含管理 UI 競態、PR #30 修正與舊 schema 還原相容性，Windows／Linux 完整各 **335/335 通過**。可使用 JSON CLI 或表單，產生加密備份並還原到**全新資料目錄**。實際正式資料、服務切換及部署尚未執行。送審狀態、背景 Chrome 表單與各批證據見 [驗收進度](SERVER-DATA-TRANSFER-PROGRESS.md)，架構邊界見 [原規格](specs/MULTI-ENV-DATA-MIGRATION.md)。
 
 ## 保留的資料
 
@@ -169,4 +169,4 @@ EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核�
 
 新 writer 尚未接受任何寫入時，可停新服務並切回相容的舊 code＋舊資料代；若已接受新登入或其他寫入，先冷備份新代再做受控前向修復，直接回舊 snapshot 會丟新資料。GitHub 外部操作不能由本地 DB rollback 撤銷。
 
-第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。schema 目前仍 v12。
+第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。schema 目前仍 v12。支援的舊 schema 只升級還原副本；schema 1／3／5／7／10 已有回歸。帳戶及來源既有 BLOB digest 必須相同，只允許 migration 3／5／8 明確新增的空 BLOB 表，非空新表或未知新表仍拒絕。
