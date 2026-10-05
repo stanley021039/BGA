@@ -16,10 +16,13 @@ window.StrokeCanvas=(()=>{
  function iconMarkup(key){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[key]||''}</svg>`;}
  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
  // Four-connected fill: disconnected regions with the same color stay unchanged.
- function fillRegion(source,output,x,y,color,tolerance=24){
+ function fillRegion(source,output,x,y,color,tolerance=24,workspace){
   const {width,height,data}=source,seed=y*width+x,reference=seed*4;
   if(x<0||y<0||x>=width||y>=height)return 0;
-  const visited=new Uint8Array(width*height),queue=new Int32Array(width*height);
+  const length=width*height;
+  const visited=workspace?.visited?.length===length?workspace.visited:new Uint8Array(length),queue=workspace?.queue?.length===length?workspace.queue:new Int32Array(length);
+  visited.fill(0);
+  if(workspace){workspace.visited=visited;workspace.queue=queue;}
   let head=0,tail=0,count=0;queue[tail++]=seed;visited[seed]=1;
   const matches=offset=>{
    if(Math.abs(data[offset+3]-data[reference+3])>tolerance)return false;
@@ -30,17 +33,21 @@ window.StrokeCanvas=(()=>{
    const index=queue[head++],offset=index*4;if(!matches(offset))continue;
    output.data.set(color,offset);count++;
    const px=index%width,py=Math.floor(index/width);
-   for(const next of [px>0?index-1:-1,px<width-1?index+1:-1,py>0?index-width:-1,py<height-1?index+width:-1]){
-    if(next>=0&&!visited[next]){visited[next]=1;queue[tail++]=next;}
-   }
+   // No temporary neighbour array per pixel (a full fill visits 131,072 pixels).
+   if(px>0&&!visited[index-1]){visited[index-1]=1;queue[tail++]=index-1;}
+   if(px<width-1&&!visited[index+1]){visited[index+1]=1;queue[tail++]=index+1;}
+   if(py>0&&!visited[index-width]){visited[index-width]=1;queue[tail++]=index-width;}
+   if(py<height-1&&!visited[index+width]){visited[index+width]=1;queue[tail++]=index+width;}
   }
   return count;
  }
+ const fillWorkspaces=new WeakMap();
  function floodFill(ctx,point,color,alpha=255,source){
   source=source||ctx.getImageData(0,0,ctx.canvas.width,ctx.canvas.height);
   const output=ctx.getImageData(0,0,ctx.canvas.width,ctx.canvas.height);
   const rgba=[1,3,5].map(index=>parseInt(color.slice(index,index+2),16));rgba.push(alpha);
-  const count=fillRegion(source,output,point[0],point[1],rgba);ctx.putImageData(output,0,0);return count;
+  let workspace=fillWorkspaces.get(ctx);if(!workspace){workspace={};fillWorkspaces.set(ctx,workspace);}
+  const count=fillRegion(source,output,point[0],point[1],rgba,24,workspace);ctx.putImageData(output,0,0);return count;
  }
  function pointFrom(event,canvas,width,height){
   const box=canvas.getBoundingClientRect();
@@ -48,7 +55,7 @@ window.StrokeCanvas=(()=>{
  }
  function drawStroke(ctx,stroke){
   const points=stroke.points;if(!points?.length)return;
-  if(stroke.tool==='fill'){floodFill(ctx,points[0],stroke.color);return;}
+  if(stroke.tool==='fill')return floodFill(ctx,points[0],stroke.color);
   ctx.save();
   ctx.lineWidth=stroke.size;ctx.lineCap='round';ctx.lineJoin='round';
   ctx.strokeStyle=stroke.tool==='erase'?'#fff':stroke.color;
@@ -73,6 +80,70 @@ window.StrokeCanvas=(()=>{
   for(const stroke of strokes)drawStroke(ctx,stroke);
   if(preview)drawStroke(ctx,preview);
  }
+ // Live drawing keeps the painted prefix instead of replaying every fill on SSE.
+ // Checkpoints are distributed by drawing cost, with a pinned mutable-tail base.
+ // At 512x256 the default cache is <=8 MiB; recovery work is bounded by input limits.
+ function createRenderer(canvas,options={}){
+  const maxCheckpoints=options.maxCheckpoints??16,checkpointEvery=options.checkpointEvery??32;
+  const maxStrokes=options.maxStrokes??1016,maxPoints=options.maxPoints??31024,maxFills=options.maxFills??49;
+  if(!Number.isInteger(maxCheckpoints)||maxCheckpoints<2||maxCheckpoints>32||!Number.isInteger(checkpointEvery)||checkpointEvery<1)throw Error('Invalid canvas checkpoint limits');
+  const context=canvas.getContext('2d');
+  let keys=[],costs=[0],checkpoints=[],revision=0;
+  const stats={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,checkpointBytes:0};
+  function clear(){context.clearRect(0,0,canvas.width,canvas.height);context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}
+  function remember(index,pinned){
+   if(!index||checkpoints.some(point=>point.index===index))return;
+   const point={index,cost:costs[index],image:null};checkpoints.push(point);
+   checkpoints.sort((a,b)=>a.index-b.index);
+   while(checkpoints.length>maxCheckpoints){
+    let remove=-1,smallest=Infinity;
+    for(let i=0;i<checkpoints.length-1;i++){
+     if(checkpoints[i].index===pinned)continue;
+     const gap=checkpoints[i+1].cost-(checkpoints[i-1]?.cost||0);
+     if(gap<smallest){smallest=gap;remove=i;}
+    }
+    checkpoints.splice(remove<0?0:remove,1);
+   }
+   if(checkpoints.includes(point))point.image=context.getImageData(0,0,canvas.width,canvas.height);
+   stats.checkpointBytes=checkpoints.length*canvas.width*canvas.height*4;
+  }
+  function render(strokes,{keys:nextKeys,mutableFrom=strokes.length}={}){
+   if(!Array.isArray(strokes)||strokes.length>maxStrokes)throw Error('Canvas stroke limit exceeded');
+   let pointCount=0,fillCount=0;
+   for(const stroke of strokes){
+    if(!Array.isArray(stroke.points)||!stroke.points.length)throw Error('Invalid canvas stroke');
+    pointCount+=stroke.points.length;if(stroke.tool==='fill')fillCount++;
+   }
+   if(pointCount>maxPoints||fillCount>maxFills)throw Error('Canvas work limit exceeded');
+   nextKeys=nextKeys||strokes.map(stroke=>JSON.stringify(stroke));
+   if(nextKeys.length!==strokes.length)throw Error('Invalid canvas keys');
+   let common=0;while(common<keys.length&&common<nextKeys.length&&keys[common]===nextKeys[common])common++;
+   if(common===keys.length&&common===nextKeys.length)return false;
+   let from=common;
+   if(common<keys.length){
+    checkpoints=checkpoints.filter(point=>point.index<=common);
+    const base=checkpoints.at(-1);
+    if(base){context.putImageData(base.image,0,0);from=base.index;}else{clear();from=0;}
+    stats.restores++;
+   }
+   costs=costs.slice(0,from+1);
+   for(let index=from;index<strokes.length;index++){
+    if(index===mutableFrom)remember(index,mutableFrom);
+    const stroke=strokes[index],filledPixels=drawStroke(context,stroke)||0;
+    stats.strokeApplications++;
+    if(stroke.tool==='fill'){stats.fillApplications++;stats.filledPixels+=filledPixels;}
+    costs.push(costs[index]+(stroke.tool==='fill'?32:1));
+    if(index<mutableFrom&&(stroke.tool==='fill'||(index+1)%checkpointEvery===0))remember(index+1,mutableFrom);
+   }
+   keys=nextKeys.slice();revision++;
+   stats.checkpointBytes=checkpoints.length*canvas.width*canvas.height*4;
+   return true;
+  }
+  function reset(){keys=[];costs=[0];checkpoints=[];stats.checkpointBytes=0;clear();revision++;}
+  function metrics(){return {...stats,revision,checkpoints:checkpoints.length,strokes:keys.length};}
+  clear();
+  return {render,reset,metrics};
+ }
  function strokeId(){
   if(typeof globalThis.crypto?.randomUUID==='function')return globalThis.crypto.randomUUID();
   const bytes=new Uint8Array(16);globalThis.crypto.getRandomValues(bytes);
@@ -80,5 +151,5 @@ window.StrokeCanvas=(()=>{
   const hex=Array.from(bytes,n=>n.toString(16).padStart(2,'0')).join('');
   return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
  }
- return {pointFrom,drawStroke,redraw,strokeId,fillRegion,floodFill,icons,iconMarkup};
+ return {pointFrom,drawStroke,redraw,createRenderer,strokeId,fillRegion,floodFill,icons,iconMarkup};
 })();

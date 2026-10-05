@@ -7,8 +7,9 @@ const {AchievementStore}=require('./achievements/store');
 const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
 const {startRoomScheduler}=require('./rooms/scheduler');
 const {reconnectPlayer}=require('./rooms/reconnect');
-const {leavePlayer,expireEmptyRooms}=require('./rooms/lifecycle');
+const {leavePlayer,expireEmptyRooms,endRoomHistory}=require('./rooms/lifecycle');
 const {listRooms}=require('./rooms/listing');
+const {rejoinPlayer}=require('./rooms/membership');
 const {createLobby}=require('./rooms/lobby');
 const {HttpError,writeError}=require('./http/errors');
 const {clientAddress,setSecurityHeaders}=require('./http/security');
@@ -26,13 +27,13 @@ const {RoomMusic}=require('./music/room');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
 const {ROOM_EMOJIS}=require('./social/emojis');
 function createApp(config){
- const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map();
+ const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map(),departedSeats=new Map(),roomRate=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
  const musicRooms=new Map(),musicStreams=new Map();
  const roomMusic=room=>{if(!musicRooms.has(room.code))musicRooms.set(room.code,new RoomMusic(Date.now,musicStore));return musicRooms.get(room.code);};
  const publishMusic=code=>{const state=musicRooms.get(code)?.snapshot();for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
  const lobby=createLobby();
- const cleanupRoom=code=>{seats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);};
+ const cleanupRoom=code=>{seats.delete(code);departedSeats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);};
  const expireRooms=()=>expireEmptyRooms({rooms,history,onDelete:cleanupRoom});
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
@@ -40,10 +41,10 @@ function createApp(config){
   const accounts=new Map([...(seats.get(room.code)||[])].map(([userId,playerId])=>[playerId,userId]));
   const viewerId=accounts.get(view.me);
   if(viewerId)characterMedia.rememberExpressions(viewerId,'room:'+room.code,expressions.map(event=>({userId:accounts.get(event.playerId),image:event.image,until:event.at+5000})));
-  return {...view,players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages};
+  return {...view,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
- const history=new HistoryStore(config.historyDir);
+ const history=new HistoryStore(config.historyDir,config.historyLimits);
  let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore;
  try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}));}
  catch(error){history.close();db?.close();throw error;}
@@ -182,6 +183,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/info'){const addresses=Object.values(os.networkInterfaces()).flat().filter(x=>x.family==='IPv4'&&!x.internal).map(x=>`${protocol}://${x.address}:${port}`);const preferred=config.publicUrl||addresses.find(a=>a.includes('://26.'))||null;return send({preferred,addresses:config.publicUrl?[config.publicUrl,...addresses.filter(a=>a!==config.publicUrl)]:addresses});}
  if(url.pathname==='/api/rooms'&&req.method==='GET'){expireRooms();return send({rooms:listRooms(rooms,seats,kickedUsers,user.id)});}
  if(url.pathname==='/api/create'&&req.method==='POST'){
+  limitRate(roomRate,'create:'+user.id,20);limitRate(roomRate,'create-ip:'+clientKey(req),60);
   if(rooms.size>=100)throw Error('房間數已達上限');
   if(!['poker','thunder','majority','gift','draw'].includes(data.type))throw new HttpError(400,'INVALID_GAME','不支援的遊戲');
   const draw=data.type==='draw';
@@ -193,7 +195,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(gift)Object.defineProperty(room,'giftProvider',{value:()=>giftStore.list()});
   if(draw){room.options.topic=data.topic||'all';Object.defineProperty(room,'wordProvider',{value:()=>drawWordStore.list()});}
   history.attach(room);
-  const p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));
+  let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
  if(!['/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
@@ -201,15 +203,37 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
  if(url.pathname==='/api/reconnect'&&req.method==='POST'){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker',reconnected:true});}
- if(url.pathname==='/api/join'&&req.method==='POST'){const previous=seats.get(room.code)?.get(user.id);if(previous){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker'});}const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>room.add(user.display_name));p.avatar=`/characters/${user.id}`;seats.get(room.code).set(user.id,p.id);return send({code:room.code,type:room.type||'poker'});}
+ if(url.pathname==='/api/join'&&req.method==='POST'){
+  const previous=seats.get(room.code)?.get(user.id);if(previous){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker'});}
+  limitRate(roomRate,'join:'+user.id,30);limitRate(roomRate,'join-ip:'+clientKey(req),120);
+  if((kickedUsers.get(room.code)?.size||0)>=256)throw new HttpError(429,'ROOM_RECORD_LIMIT','這間房的離席紀錄已達上限，請建立新房間');
+  const departed=departedSeats.get(room.code);if(departed)for(const [account,id]of departed)if(!room.players.some(p=>p.id===id))departed.delete(account);
+  const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>rejoinPlayer(room,departed?.get(user.id),user.display_name)||room.add(user.display_name));
+  departed?.delete(user.id);p.avatar=`/characters/${user.id}`;seats.get(room.code).set(user.id,p.id);return send({code:room.code,type:room.type||'poker'});
+ }
  const p=resumeSeat(room,user);
  if(url.pathname==='/api/leave'&&req.method==='POST'){
-  const result=history.transact(room,{action:'leave',source:'player',actor:p.id},()=>leavePlayer(room,p.id));
+  limitRate(roomRate,'leave:'+user.id,30);limitRate(roomRate,'leave-ip:'+clientKey(req),120);
+  let result,applied=false,historyPersisted=true;
+  try{history.transact(room,{action:'leave',source:'player',actor:p.id},()=>{result=leavePlayer(room,p.id);applied=true;return result;});}
+  catch(error){
+   if(error.code!=='HISTORY_QUOTA'&&!history.isPaused(room))throw error;
+   // Leaving is always possible even when the recorder cannot accept writes.
+   // Do not run a partially applied leave twice or report an unrecorded match
+   // as safely persisted. Remaining players can exit this paused room too.
+   historyPersisted=false;history.markUnrecorded(room);if(!applied)result=leavePlayer(room,p.id);
+  }
   seats.get(room.code)?.delete(user.id);
+  if(room.players.some(q=>q.id===p.id&&q.kicked)){
+   if(!departedSeats.has(room.code))departedSeats.set(room.code,new Map());
+   const departed=departedSeats.get(room.code);for(const [account,id]of departed)if(!room.players.some(q=>q.id===id))departed.delete(account);
+   departed.set(user.id,p.id);
+  }
   for(const entry of drawStreams.get(room.code)||[])if(entry.userId===user.id)entry.res.end();
   for(const entry of musicStreams.get(room.code)||[])if(entry.userId===user.id)entry.res.end();
-  if(result.deleted){history.interrupt(room,'最後一位玩家已離開房間');rooms.delete(room.code);cleanupRoom(room.code);}
-  return send({code:room.code,left:true,deleted:result.deleted});
+  const historyWarning=history.warning(room);
+  if(result.deleted){historyPersisted=endRoomHistory(history,room,'最後一位玩家已離開房間')&&historyPersisted;rooms.delete(room.code);cleanupRoom(room.code);}
+  return send({code:room.code,left:true,deleted:result.deleted,...(!historyPersisted?{historyPersisted:false,historyWarning:historyWarning||{code:'HISTORY_WRITE_FAILED',message:'已離開房間，但對局記錄未完整保存'}}:{})});
  }
  if(url.pathname==='/api/room-music'){
   if(req.method==='GET')return send(roomMusic(room).snapshot());
@@ -269,6 +293,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   return send(withSocial(room,room.view(p.id)));
  }
  if(url.pathname==='/api/start'&&room.host!==p.id)throw new HttpError(403,'HOST_ONLY','只有房主可以開始');
+ limitRate(roomRate,'mutation:'+user.id,120);
  history.transact(room,{action:url.pathname.slice(5),source:'player',actor:p.id,input:data},()=>{
  if(url.pathname==='/api/action'){if(room.type==='thunder'||!room.type)room.humanAct(p.id,data.action,room.type==='thunder'?data:data.amount);else room.act(p.id,data.action,data);}
  else if(url.pathname==='/api/kick'){if(data.confirmed!==true)throw new HttpError(400,'CONFIRM_REQUIRED','請先確認踢出玩家');const target=room.players.find(q=>q.id===data.playerId);if(!target)throw new HttpError(404,'PLAYER_NOT_FOUND','找不到玩家');room.kick(p.id,target.id);const account=[...seats.get(room.code)].find(([,id])=>id===target.id)?.[0];if(account){seats.get(room.code).delete(account);if(!kickedUsers.has(room.code))kickedUsers.set(room.code,new Set());kickedUsers.get(room.code).add(account);for(const entry of drawStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();for(const entry of musicStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();}}

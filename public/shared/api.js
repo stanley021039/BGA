@@ -15,6 +15,7 @@
    if(['ROOM_NOT_FOUND','NOT_SEATED'].includes(result.code)&&session){window.RoomReconnect?.forget(code);location.replace('/?closedRoom='+encodeURIComponent(code)+'&game='+(room==='race'?'thunder':room));}
    throw Error(result.error||'連線失敗');
   }
+  if(route==='state'||Array.isArray(result.players)&&result.phase)window.GameShell?.showHistoryWarning?.(result.historyWarning);
   return result;
  }
 

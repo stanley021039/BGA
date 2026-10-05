@@ -1,3 +1,4 @@
+const {assertRecordCapacity}=require('../rooms/membership');
 const {randomInt,randomUUID}=require('node:crypto');
 const {GIFTS}=require('./gift-catalog');
 const {validCustomPercent,drawContent}=require('./content-draw');
@@ -17,6 +18,7 @@ class GiftRoom{
  activePlayers(){return this.players.filter(player=>!player.kicked);}
  event(kind,text){this.events.push({id:++this.version,kind,text});this.events=this.events.slice(-16);this.updated=Date.now();}
  add(name,bot=false){
+  assertRecordCapacity(this);
   if(bot)throw Error('送禮達人只接受真人玩家');
   if(!['waiting','finished'].includes(this.phase))throw Error('本局已開始，請等待下一局');
   if(this.activePlayers().length>=8)throw Error('最多 8 位玩家');
@@ -30,7 +32,7 @@ class GiftRoom{
   const player=this.player(target);
   if(!player||player.kicked)throw Error('找不到玩家');
   if(target===this.host)throw Error('不能踢出自己');
-  player.kicked=true;delete this.assignments[target];delete this.rankings[target];
+  if(this.phase==='waiting')this.players.splice(this.players.indexOf(player),1);else player.kicked=true;delete this.assignments[target];delete this.rankings[target];
   for(const gifts of Object.values(this.assignments))delete gifts[target];
   this.event(leaving?'leave':'kick',player.name+(leaving?' 已離開房間':' 已被房主踢出'));
   if(this.phase==='waiting'||this.phase==='finished')return;
