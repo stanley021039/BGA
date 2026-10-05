@@ -1,16 +1,15 @@
-# Gartic Phone 網路錄製方法與待驗證對照
+# Gartic Phone 網路錄製與 BGA 對照
 
-查核日期：2026-10-05。角色：玩家研究／程式協作。範圍：Chrome DevTools 的 Network UI、HAR 與 WebSocket 訊息；尚未分析 Gartic Phone 的實際協議。
+查核日期：2026-10-05。角色：主 agent 實玩與核對、玩家研究 agent 匯出與分析。已透過官方 CDP 在隱藏的內建瀏覽器實玩單席 Masterpiece（傑作），取得 WebSocket 訊息並離線匯出 HAR。本文件區分實際觀察、官方方法及未測項目。
 
 | 記錄欄位 | 現況 |
 | --- | --- |
-| 工作目錄／基線 | `BGA-pr30-review`；`fix/pr30-resource-limits`；查核時 HEAD `1b8c85dda17bb50ac86cc96193d11f54ec020c5e`。這是本機基線，不是正式部署證據。 |
-| 結論類型 | 官方外部資料與官方程式事實；採樣方式是研究建議；Gartic 傳輸行為待驗證。 |
-| 實測狀態 | **待錄製，尚未取得 Gartic HAR 或 WebSocket 訊息證據。** |
-| 操作條件 | 使用者先前要求原 Chrome 在背景操作、不提高視窗。主 agent 正等待是否允許短暫提高 Chrome 前景的確認；尚未收到的確認不得當成授權。本文件不啟動瀏覽器操作。 |
-| 已有觀察邊界 | 前輪曾在原 Chrome 背景單席觀察 Masterpiece 填色、復原與相簿；那是介面觀察，不能據此宣稱知道傳輸頻率、命令格式、上傳內容或 server 實作。見 [PR #30 修正驗收](../PR30-RESOURCE-LIMITS.md)。 |
-| 後續 owner／驗收 | 主 agent 在操作條件具備後錄製；研究／程式角色以實際檔案確認 coverage、訊息欄位與操作對應，再填入本文件的結果表。 |
-| 舊結論替代 | 「背景工具當時沒有取得 HAR」仍成立；若曾將此解讀成「Chrome HAR 一定不包含 WebSocket 訊息」，應由下列官方 exporter 證據取代。未取得檔案前仍不能宣稱 Gartic 封包研究完成。 |
+| 工作目錄／基線 | 私有錄製在 `BGA-draw-guess/work/`；BGA 程式對照為 PR #30 的 `3b19720`，本地整合為 `e71989e`。不是正式部署證據。 |
+| 環境 | 隱藏內建瀏覽器、1280 × 720、單席匿名 Masterpiece。request User-Agent 回報 Chrome **154.0.0.0**；未取得獨立 Browser.getVersion 結果。 |
+| 實測狀態 | **已錄製、匯出並分析。** 來源是官方 tab CDP `Network` 事件；HAR 由私有 Node 工具轉換，並非點 Chrome DevTools 的 Export HAR。 |
+| 操作條件 | 使用者明確要求用 Computer Use 開啟完整 CDP；設定 UI 已開啟，重建工具連線後 capability 出現。遊戲全程在隱藏分頁，結束後返回首頁、停錄並關閉測試分頁。 |
+| 有效範圍 | 穩定游標起點 **05:42:35.175 UTC**，結束 **05:47:08.878 UTC**，24 個採樣批次均無 `truncated`。早期載入／進房有 6 個標為 `truncated` 的批次，該段覆蓋不可靠，不能宣稱整段完整。 |
+| 舊結論替代 | 本次證據取代「尚未取得 HAR／等待設定」的現況；前輪 Chrome 單席操作仍只屬 UI 觀察。多人接收、重連及 server 內部策略仍未驗證。 |
 
 ## 官方已查核內容
 
@@ -24,22 +23,32 @@ Sanitized HAR 會去除指定的 Cookie／Set-Cookie／Authorization 標頭。**
 
 DevTools 協議的 WebSocketFrame 表示完整邏輯訊息，不是單一碎片或完整網路封包。文字內容是 UTF-8；非文字 payload 以 Base64 表示。計算 binary payload bytes 應使用解碼後長度，不能直接使用 Base64 字串長度，也不能把訊息大小當作包含 TLS、壓縮與協議 overhead 的線上傳輸量。[官方協議定義](https://github.com/ChromeDevTools/devtools-protocol/blob/master/json/browser_protocol.json)
 
+## 本次背景錄製方式
+
+2026-10-05 初次能力檢查只有 `visibility`／`viewport` 與 `pageAssets`／`webmcp`。使用者接著明確要求直接開啟設定；透過 Windows Computer Use 在 Codex 的 Settings → Browser → Developer mode 啟用 **Enable full CDP access**。重設 CUA 工作階段並重新連線後，官方 tab `cdp` capability 出現且 `Network.enable` 成功。Chrome 原有擴充已連線，本次不需重新安裝。[官方 Browser 說明](https://learn.chatgpt.com/docs/browser#developer-mode)、[官方擴充說明](https://learn.chatgpt.com/docs/chrome-extension)
+
+正常 UI 建立自己的匿名房間與作畫，不改遊戲內部狀態。每次操作記錄 wall time，讀取 `Network.*` 事件、保存 cursor 並處理分頁。早期跨 cell 採樣重用了舊游標；穩定階段改用單一可變物件保存游標。分析以 source＋sequence 去重並依 sequence 排序，時鐘採同 source 的 monotonic／wall anchor 對齊，不能把工具回傳時間當封包發送時間。
+
+原始 6,943 個事件去除 814 個重複後為 6,129 個，sequence 衝突為 0。轉換保存 1,162 個請求／連線觀察：1,035 個放入 `log.entries`，缺少必要資料的 127 個保留在 `_partialEntries`。WebSocket 為 1 條，保留 31 則送出、26 則收到的 `_webSocketMessages`。沒有另外擷取 HTTP response body；沒有做 Chrome HAR 匯入 UI 驗收。這是可檢查的捕獲紀錄，不是完整頁面重播包。
+
+匯出器 10/10 合成測試通過；實際 HAR 的 1,035 entries 依 [HAR 原作者的 Viewer schema](https://github.com/janodvarko/harviewer/blob/master/webapp/scripts/preview/harSchema.js)、必要 timing 及 57 則 WS 格式檢查，錯誤為 0。未取得的 bytes 仍為 `-1`；採用 Chrome 官方無 ResourceTiming 的相容表示時，`send=0` 明標為佔位，原始未知值留在 `_observedTimings`，不可用來宣稱實際發送耗時為零。WS 的 GET method 採 [官方 NetworkManager 的握手慣例](https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/core/sdk/NetworkManager.ts)，HTTP/1.1 由捕獲的握手文字取得。
+
 ## 透過 Chrome UI 錄製與匯出
 
-以下是官方方法整理，**目前尚未在本輪執行**；實際 UI 名稱以已安裝 Chrome 為準。
+以下保留官方 Chrome UI 方法，供日後錄製使用；**本輪使用上節的官方 CDP，而未執行此匯出 UI**。實際 UI 名稱以已安裝 Chrome 為準。
 
 1. 在允許的 Chrome 分頁按 Windows **F12** 或 **Ctrl+Shift+I**，切換至 Network。也可使用 Chrome 選單的開發人員工具入口。[開啟 DevTools](https://developer.chrome.com/docs/devtools/open/)、[開啟 Network](https://developer.chrome.com/docs/devtools/network/overview#open)
 2. 在建立測試連線前開啟 DevTools，確認 Network 正在錄製，勾選 **Preserve log**；開始前清除舊紀錄。DevTools 開啟前的請求不會補錄。若需 reload 才重新建立連線，先確認房間流程允許，避免中斷正在進行的操作。
 3. 執行短而可辨識的操作，記下每次操作時間與畫面狀態；等待對應網路活動完成。需要跨頁保存時保持 Preserve log。查看 WebSocket 時選 WS、點連線、開 Messages；串流事件用 EventStream。
 4. 準備匯出時選 **All**，清除文字／時間等篩選，確認完成送圖的 Fetch/XHR 與相關連線沒有被排除。只選 WS 匯出可能漏掉 HTTP 上傳。
 5. 點 Network 的 **Export HAR (sanitized)**，或使用請求表右鍵的 HAR 儲存選項。將檔案保存到私有 `work/`；先檢查訊息與 payload 再產生公開摘要。
-6. 若任務確實需要原始認證資訊或 sanitized 省略的串流 payload，官方提供 Settings → Preferences → Network 的敏感 HAR 選項；本次比較預設使用 sanitized，是否追加原始私有錄製應由實際所缺證據決定。不要為了看 WS 訊息就假定必須匯出敏感標頭。
+6. 若任務確實需要原始認證資訊或 sanitized 省略的串流 payload，官方提供 Settings → Preferences → Network 的敏感 HAR 選項；未來 Chrome UI 採樣預設使用 sanitized，是否追加原始私有錄製應由實際所缺證據決定。本次 CDP 原始 HAR 未去敏。不要為了看 WS 訊息就假定必須匯出敏感標頭。
 
 步驟 2–6 來源：[Chrome Network reference：錄製／保留](https://developer.chrome.com/docs/devtools/network/reference/#record)、[匯出 HAR](https://developer.chrome.com/docs/devtools/network/reference/#save-as-har)。匯出成功本身不證明 payload 或所需 WebSocket 訊息完整，必須讀取檔案確認。
 
-## 建議採樣與對照欄位
+## 採樣與對照欄位
 
-以下是研究方案，不是 Gartic 已觀測到的行為。先做短時間空閒基線，再以正常操作分別錄製畫筆、填色、復原與完成送圖；不做正式站高頻壓力測試。每個步驟留少量間隔，區分 heartbeat 與操作訊息。只有工具確實支援且操作已授權時，才加入另一個受控席觀察接收；單席 Masterpiece 的結果不能推廣成其他多人模式。
+本次按正常操作分別錄製畫筆、填色、復原及完成送圖，步驟間保留可辨識的時間窗；未做第三方正式站壓力測試。下列欄位是重現與後續比較規格，實際結果另列於下一節；單席 Masterpiece 不能推廣成其他多人模式。
 
 | 對照欄位 | 如何記錄／用途 |
 | --- | --- |
@@ -58,24 +67,50 @@ DevTools 協議的 WebSocketFrame 表示完整邏輯訊息，不是單一碎片�
 
 HAR 可支持瀏覽器側的傳輸觀察，不能單獨證明 Gartic server 如何存圖、合併筆畫、限制資源或重繪畫布。BGA 的 CPU／canvas 工作仍用自己的 renderer metrics 與畫面一致性測試判斷，不能拿 HAR bytes 推導填色演算法複雜度。
 
-## 實測結果預留
+## 實測結果
 
-本表保持待錄製；之後必須以實際證據替代狀態，不追加推測數字。
+以下 bytes 是 UTF-8 WebSocket **邏輯訊息內容**，包含 Engine.IO／Socket.IO 文字封套，排除可辨識的 1-byte ping／pong；不是 TLS、壓縮、frame overhead 或實際線上流量。操作窗到下一個 action 為止，大小是這一次樣本，不能當成平均傳送率。
 
-| 樣本 | 狀態／預期操作 | 實際訊息與結果 | 私有證據／coverage |
+| 樣本 | 正常 UI 操作 | 實際訊息與結果 | 證據邊界 |
 | --- | --- | --- | --- |
-| G0 | 待錄製：空閒基線與連線建立 | 未觀察 | 未取得 HAR。 |
-| G1 | 待錄製：普通畫筆 | 未觀察 | 未取得 HAR。 |
-| G2 | 待錄製：全區及封閉區域填色 | 未觀察 | 未取得 HAR。 |
-| G3 | 待錄製：復原上一步 | 未觀察 | 未取得 HAR。 |
-| G4 | 待錄製：完成送圖／進入相簿 | 未觀察 | 未取得 HAR。 |
-| B0 | 待另記錄：BGA 同等操作的傳輸對照 | 既有 renderer／兩席一致性驗收見 PR 文件；那不是本次 HAR 對照 | 不把既有 UI／API 測試當成本次新錄製。 |
+| G0 | 穩定游標起點至畫筆的 25.69 秒空閒觀察窗 | 0 則遊戲操作訊息；1 次 ping／pong。 | 顯式 idle 採樣約 3 秒，其餘是操作前的等待；早期握手捕獲不能補足所有載入缺漏。 |
+| G1 | 畫一條黑色筆畫 | 2 則，57＋100 bytes，`{t,d,v}` 含顏色／座標向量。第二則包含第一則向量前綴及更多座標。 | 是目前筆畫的更新；不能宣稱每則只傳全新的點。 |
+| G2 | 畫黑色外框矩形，再填藍色 | 外框 1 則 66 bytes；封閉區填色 1 則 64 bytes。 | 填色為短命令／向量；畫面確認只有框內變藍。 |
+| G2 | 清回空白後，填滿全畫布 | 1 則 61 bytes，短命令／向量。 | 本次沒有每次填色附上全部筆畫歷史。 |
+| G3 | 復原區域填色、逐步復原外框／筆畫、復原全畫布填色 | 每次 1 則 27 bytes，`v` 為 scalar；全畫布填色 redo 1 則 61 bytes，向量與原 fill 相同。 | 沒有由 undo 推論重連還原方式。 |
+| G4 | 按 Done，再進入相簿 | Done 1 則 13 bytes，完成狀態為 boolean；相簿收到的畫作 `data` 為 1 個繪圖命令，與最後保留的 fill 向量相同。 | 已觀察訊息中不是圖片 payload。完成／相簿窗的遊戲相關 HTTP 為 GET／HEAD，未見 POST；未抓 response body，不能擴大為所有模式或 server 儲存方式。 |
+| B0 | BGA 同等操作的比較 | 程式檢查確認已用 POST stroke＋SSE stroke 增量；既有 renderer／兩席一致性見 PR 文件。 | **未另錄 BGA HAR**；不能比較兩者實際延遲或頻寬。 |
 
-後續每份證據至少記錄：操作者、實際日期／版本／模式、捕獲開始與結束、對應 action time、HAR 文件是否存在及其 SHA-256、`_webSocketMessages` 數量／方向／opcode、是否有 HTTP 完成上傳、payload 缺失、去敏方式與結論限制。可復現的行為先寫觀察，協議含義推論另外標示；未驗項目保持待驗證。
+文字封套的判讀對照 [Socket.IO protocol](https://github.com/socketio/socket.io-protocol) 與 [Engine.IO protocol](https://github.com/socketio/engine.io-protocol)；未替 Gartic 的數字事件 ID 或 `t`／`d`／`v` 杜撰完整規格。單席沒有另一位玩家的接收證據，未測重連、未量 CPU，也不能由 HAR 推斷 server 的填色演算法、快照或資料保留策略。
+
+## 對 BGA 修正的意義
+
+本次命令與座標內容支持以操作更新畫作的方向。BGA 在 `src/app.js` 的 `draw/stroke` 已只 publish 新 stroke；`public/draw.js` 接到連續版本時追加，缺版再取 `draw/canvas` 快照。因此 PR #30 的重點是 **收到增量後不重播全部歷史**、恢復分批處理，以及對身份／歷史／昂貴填色設定上限。不能把這份 HAR 當成 BGA 必須換 WebSocket 的證據，也不能拿小 payload 宣稱填色沒有 CPU 成本。既有量測與限制見 [PR 修正驗收](../PR30-RESOURCE-LIMITS.md)。
+
+## 私有證據與重現
+
+原始事件、HAR、圖像與轉換器均在 `BGA-draw-guess/work/`，不加入 Git。HAR **未去敏**，不能直接公開；此文件只保存去敏的結構、數量與結論。
+
+| 私有檔案 | 用途 |
+| --- | --- |
+| `gartic-cdp-capture-2026-10-05.json` | 原始事件、action 時間及批次 coverage。 |
+| `gartic-cdp-capture-2026-10-05.har` | 官方 CDP 事件的離線 HAR 匯出，包含 WS 擴充與 partial observations。 |
+| `gartic-cdp-capture-2026-10-05-summary.json`、`gartic-cdp-analysis-2026-10-05.json`、`gartic-cdp-validation-2026-10-05.json` | 整體 coverage、操作窗、訊息結構、格式驗證與檔案雜湊。 |
+| `cdp-network-to-har.cjs`、`cdp-network-to-har.test.cjs`、`gartic-cdp-analysis.cjs`、`validate-cdp-har.cjs` | 私有離線匯出／分析工具及合成回歸測試。 |
+| `codex-cdp-enabled.png`、`gartic-har-region-fill.png`、`gartic-har-album.png` | 設定已開啟、區域填色、完成相簿的畫面證據。 |
+
+從專案根目錄重現匯出：
+
+```sh
+node work/cdp-network-to-har.cjs work/gartic-cdp-capture-2026-10-05.json work/gartic-cdp-capture-2026-10-05.har work/gartic-cdp-capture-2026-10-05-summary.json
+node --test work/cdp-network-to-har.test.cjs
+```
+
+SHA-256：原始 JSON `b51db57831d9c2d95ed3fd2adedac7226950f37f9388f8b81024652ac3a2e97f`；HAR `15bc95375b8073368d670fb251c0edbddb7c179f45610c1441fe7aaca34e2a20`。主 agent 已重新核對這兩個檔案雜湊並重跑 10 項匯出器測試。
 
 ## 來源與更新紀錄
 
-所有外部來源皆為 Chrome 官方文件或 ChromeDevTools 官方程式／協議，查核日 **2026-10-05**。原碼連結使用 `main`／`master`，不是保證未來不變的 release snapshot；下一次實際採用或 Chrome 版本變動時重查。
+外部來源包括 Chrome 官方文件、ChromeDevTools 官方程式／協議及 OpenAI 官方瀏覽器文件，查核日 **2026-10-05**。原碼連結使用 `main`／`master`，不是保證未來不變的 release snapshot；下一次實際採用或 Chrome 版本變動時重查。
 
 | 來源 | 查核用途 |
 | --- | --- |
@@ -87,4 +122,4 @@ HAR 可支持瀏覽器側的傳輸觀察，不能單獨證明 Gartic server 如�
 | [NetworkLogView.ts](https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/panels/network/NetworkLogView.ts) | 匯出篩選與尚未關閉 WS 的納入條件。 |
 | [DevTools browser protocol](https://github.com/ChromeDevTools/devtools-protocol/blob/master/json/browser_protocol.json) | 完整邏輯訊息、文字／Base64 的含義。 |
 
-2026-10-05：首次建立官方方法與待驗證欄位；未操作瀏覽器、未錄製 Gartic 流量、未修改遊戲協議或正式服務。後續錄製者在本節追加日期、證據與替代結論，不把本輪研究狀態覆寫成沒有來源的「完成」。
+2026-10-05 初版只整理官方方法，當時未錄製。後續依使用者明確指示開啟 CDP，完成本文件列出的背景單席實錄；原始缺漏保留並標明穩定採樣窗，取代先前待錄製狀態。沒有修改第三方遊戲、BGA 正式服務或正式資料。

@@ -20,7 +20,7 @@ Live 畫布仍為 512 × 256；最多 16 個 RGBA checkpoint，圖片快取上�
 
 ## Gartic Phone 參考範圍
 
-在使用者原 Chrome 的背景分頁，以單一匿名席完成 Masterpiece 填色、復原及相簿流程。確認填色與復原的介面行為；未加入陌生人的房間。背景瀏覽器工具沒有 HAR／Network 匯出能力，因此沒有封包紀錄，也不能宣稱參考過 Gartic 的傳輸頻率、訊息格式或伺服器實作。
+初次在使用者原 Chrome 的背景分頁，以單一匿名席完成 Masterpiece 填色、復原及相簿流程，當時只確認介面行為，未取得 HAR。後續使用者明確要求開啟完整 CDP，已透過設定 UI 啟用，並在隱藏內建瀏覽器完成新的單席錄製；詳下節及 [Gartic 網路參考](research/GARTIC-NETWORK-REFERENCE.md)。沒有加入陌生人的房間。
 
 私有截圖與本機測試帳戶只保存在 Git 忽略的 `work/`。正式帳戶、正式 DB 與正式服務未修改。
 
@@ -62,4 +62,28 @@ Windows Node 24.14.0、Linux Node 22.22.1 全套各 **260/260 通過**；新增 
 
 本次程式來源 `3b19720`：Windows Node 24.14.0、Linux Node 22.22.1 完整測試各 **279/279 通過**，無失敗／跳過／取消；新增畫布 11 項及 history 8 項。Linux source-only 包 444 檔，SHA-256 `e0a8e0fd5354ce5db533d27c660e85832a5377f4fb5b351f6c293524feb7e3df`，兩端及測試後 manifest 一致，隔離目錄已清理。語法／diff 檢查通過，Chrome 兩席無 console error。
 
-本次私有證據：`work/pr30-followup-windows-tests.log`、`work/pr30-followup-linux-tests.log`、`work/pr30-cold-recovery-metrics.json`、`work/pr30-recovery-browser-evidence.json`、`work/pr30-recovery-browser.png`、`work/pr30-finished-state.json`。本機 3122／3123 測試服務與測試分頁已關閉。HAR 仍待錄製，官方方法與證據邊界見 [Gartic 網路參考](research/GARTIC-NETWORK-REFERENCE.md)；這些 BGA 測試不是 Gartic 封包證據。未部署或修改正式資料。
+本次私有證據：`work/pr30-followup-windows-tests.log`、`work/pr30-followup-linux-tests.log`、`work/pr30-cold-recovery-metrics.json`、`work/pr30-recovery-browser-evidence.json`、`work/pr30-recovery-browser.png`、`work/pr30-finished-state.json`。本機 3122／3123 測試服務與測試分頁已關閉。這些 BGA 測試不是 Gartic 封包證據；後續實錄另列於下節。未部署或修改正式資料。
+
+## 後續實錄：Gartic 畫具與完成送圖
+
+2026-10-05 透過官方 tab CDP `Network` 在隱藏內建瀏覽器正常遊玩單席 Masterpiece，記錄畫筆、外框、區域／全畫布填色、復原／重做、Done 及相簿，返回首頁後停止錄製並關閉分頁。User-Agent 回報 Chrome 154.0.0.0、1280 × 720。6,943 事件去重為 6,129；早期載入有 6 批 truncated，穩定作畫觀察窗 273.703 秒、24 批無 truncated。HAR 是離線轉換官方 CDP 事件，並非 Chrome DevTools 匯出按鈕的產物。
+
+本次 brush 送出 57＋100 bytes、區域填色 64 bytes、全畫布填色 61 bytes，內容是含顏色／數值的操作向量；undo 每次 27 bytes，為 scalar 控制訊號。後一筆 brush 含當前筆畫的前綴，不能宣稱每次只送新點。Done 是 13 bytes 的 boolean 完成訊號；相簿收到剩餘繪圖命令，與最後保留的填色一致。這些是邏輯 payload 大小，不含 TLS／壓縮等線上成本。
+
+BGA 已有 POST stroke／SSE stroke 增量傳輸與缺版快照恢復；本次證據支持命令增量方向，不能證明 Gartic 的 CPU、checkpoint、server 配額或資料保留策略。未測另一席接收／重連，亦未另錄 BGA HAR。PR 的資源與 renderer 修正仍以自身回歸測試和 Chrome 工作量量測驗證。
+
+HAR 的 1,035 entries、57 則 WS 訊息通過格式檢查，另外 127 個不完整觀察保存在擴充欄位；匯出器 10/10 合成測試通過，未執行 Chrome Import UI。原始內容與截圖只在 `BGA-draw-guess/work/`，檔案、雜湊及限制見 [完整網路參考](research/GARTIC-NETWORK-REFERENCE.md)。
+
+## 追蹤回覆：新對局第 1 輪的配額隔離
+
+再次核對回覆後確認：第 1 輪用完配額、因玩家離席提前結束、重新加入並再開第 1 輪，原 client 只比較 round，因而保留上一局配額。原 server 也只驗 round，同畫者延遲的舊 POST 可能寫入新局。
+
+修正來源 `e60f853`：每次新畫布由 server 產生 `canvasEpoch`，state、snapshot、ACK、SSE stroke／reset／ready 和修改請求都攜帶它。新 epoch 清零 client 配額、草稿、繪圖工作與發送佇列；clear／undo 保持相同 epoch，不退回額度。舊 ACK／SSE／snapshot／較舊 state 不可恢復舊配額；排隊筆畫在實際發出前再次驗 epoch。舊 command 的回覆或 finally 不會清空新畫布或解除新操作鎖。素材庫儲存同時驗 round＋epoch，避免等待期間重開同輪號而誤存新局畫布。
+
+Server 在去重、配額及畫布修改前拒絕缺少／過期 epoch 的 stroke／command。這是必要的新 client／server 契約，部署時須一起更新，已開啟的舊版畫猜頁面須重新整理；不能為相容 round-only 請求而繞過隔離。
+
+新增 7 項回歸涵蓋 48 fill／1,000 batch／30,000 point 全額耗盡後離席／復座／重開、同 batch ID 跨 epoch、延遲 POST／ACK／SSE／snapshot／state／command finally、先收到新 SSE 後才收到 state，以及儲存等待期間重開第 1 輪。PR Windows Node 24.14.0、Linux Node 22.22.1 完整各 **286/286 通過**，無失敗／跳過／取消。Linux source-only 包含 445 檔，SHA-256 `758b8d3aedaefc1d27ceebc5101bdfea04c8c1e3277ec2968320cc401c4bb2e5`。
+
+1280 × 720 隱藏內建瀏覽器隔離驗收：舊局 48 次填色及另一席離房／加入由正常本機 API 準備；房主實際 UI 登入、返回房間、按「再玩一局」、選題及填色。舊 round 1 的油漆桶 disabled，新 round 1 恢復 enabled 且填色成功，server 配額為 1／1／1。另送舊 epoch 的 stroke 與 clear 均回 400，快照及新局配額保持不變。瀏覽器無 console warning／error；未把合成測試的延遲訊息注入冒稱真人操作。
+
+私有證據：`work/pr30-epoch-windows-tests.log`、`work/pr30-epoch-linux-tests.log`、`work/pr30-epoch-linux-source-manifest.json`、`work/pr30-epoch-browser-evidence.json`、`work/pr30-epoch-stale-result.json`、`work/pr30-epoch-exhausted.png`、`work/pr30-epoch-new-round.png`。本機 3124 已停止、測試分頁已關閉；未部署或修改正式資料。
