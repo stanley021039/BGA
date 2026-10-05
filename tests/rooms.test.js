@@ -82,5 +82,21 @@ test('room directory shows current join choices and respects game, capacity, and
   assert.equal(full.playerCount,6);
   assert.equal(full.joinable,false);
   assert.equal((await list(guest)).body.rooms.find(room=>room.code===poker.code).joinable,true);
+  for(const type of ['draw','gift','majority','thunder','poker']){
+   const room=(await post('create',admin,{type})).body;
+   assert.equal((await post('leave',outsider,{code:room.code})).body.code,'NOT_SEATED');
+   assert.equal((await post('join',guest,{code:room.code})).status,200);
+   const leaving=await post('leave',admin,{code:room.code});assert.equal(leaving.status,200);assert.equal(leaving.body.deleted,false);
+   assert.equal((await list(admin)).body.rooms.find(r=>r.code===room.code).seated,false);
+   assert.equal((await post('reconnect',admin,{code:room.code})).body.code,'NOT_SEATED');
+   const remaining=await (await fetch(base+'/api/state?code='+room.code,{headers:{Cookie:guest}})).json();assert.equal(remaining.host,true);
+   assert.equal((await post('leave',guest,{code:room.code})).body.deleted,true);
+   assert.ok(!(await list(guest)).body.rooms.some(r=>r.code===room.code));
+   assert.equal((await post('reconnect',guest,{code:room.code})).body.code,'ROOM_NOT_FOUND');
+  }
+  const botOnly=(await post('create',admin,{type:'poker'})).body;
+  assert.equal((await post('bot',admin,{code:botOnly.code})).status,200);
+  assert.equal((await post('leave',admin,{code:botOnly.code})).body.deleted,true);
+  assert.ok(!(await list(admin)).body.rooms.some(r=>r.code===botOnly.code));
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}
 });

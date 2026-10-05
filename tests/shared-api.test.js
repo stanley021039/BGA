@@ -28,3 +28,15 @@ test('shared room API preserves room codes, login return paths, and kicked handl
  await assert.rejects(context.window.RoomApi.request('state',undefined,options),/已被移出房間/);
  assert.equal(kicked,1);
 });
+
+test('history warnings survive unchanged state polls and clear after recovery, without canvas acknowledgments clearing them',async()=>{
+ const notices=[];let body={phase:'drawing',players:[],historyWarning:{code:'HISTORY_QUOTA',message:'已暫停操作'}};
+ const context={window:{GameShell:{showHistoryWarning:warning=>notices.push(warning)}},location:{},fetch:async()=>({ok:true,json:async()=>body})};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','public','shared','api.js'),'utf8'),context);
+ const options={code:'ABC123',room:'draw'};
+ await context.window.RoomApi.request('state',undefined,options);
+ await context.window.RoomApi.request('state',undefined,options);
+ assert.equal(notices.length,2);assert.equal(notices[1].code,'HISTORY_QUOTA');
+ body={round:1,version:3};await context.window.RoomApi.request('draw/canvas',undefined,options);assert.equal(notices.length,2);
+ body={phase:'drawing',players:[]};await context.window.RoomApi.request('state',undefined,options);assert.equal(notices.length,3);assert.equal(notices[2],undefined);
+});

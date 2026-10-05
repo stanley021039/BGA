@@ -1,5 +1,5 @@
 'use strict';
-window.GameImmersion={mount(prefix,{alwaysAnimate=false}={}){
+window.GameImmersion={mount(prefix,{alwaysAnimate=false,focusDuration=720}={}){
  const byId=id=>document.getElementById(id);
  const motionButton=byId(prefix+'MotionToggle'),soundButton=byId(prefix+'SoundToggle'),soundControl=byId(prefix+'SoundControl'),volumeSlider=byId(prefix+'SoundVolume');
  const focus=byId(prefix+'Spotlight'),focusContent=byId(prefix+'FocusContent'),replayButton=byId(prefix+'ReplayFocus'),skipButton=byId(prefix+'SkipFocus');
@@ -9,7 +9,7 @@ window.GameImmersion={mount(prefix,{alwaysAnimate=false}={}){
  function allowsMotion(){return alwaysAnimate||motion&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;}
  function update(){if(motionButton){motionButton.textContent=allowsMotion()?'關閉演出':motion?'系統已減少動態':'開啟演出';motionButton.setAttribute('aria-pressed',String(allowsMotion()));}soundButton.textContent=sound?'關閉音效':'開啟音效';soundButton.setAttribute('aria-pressed',String(sound));soundControl.hidden=!sound;volumeSlider.value=String(Math.round(volume*100));replayButton.hidden=!allowsMotion()||!items.length;}
  function stopFocus(){clearTimeout(timer);timer=null;focus.hidden=true;focusContent.textContent='';}
- function show(){if(step>=items.length){stopFocus();return;}focus.hidden=false;focusContent.textContent=items[step++];timer=setTimeout(show,720);}
+ function show(){if(step>=items.length){stopFocus();return;}focus.hidden=false;focusContent.textContent=items[step++];timer=setTimeout(show,focusDuration);}
  function prepareFocus(nextItems){items=nextItems.slice(0,3).map(String);update();}
  function startFocus(nextItems){items=nextItems.slice(0,3).map(String);stopFocus();step=0;update();if(!allowsMotion()||document.hidden||!items.length)return;show();}
  function playSound(kind){if(!sound||!volume||document.hidden||!files[kind])return;try{const clip=new Audio(files[kind]);clip.volume=volume;clips.add(clip);clip.onended=clip.onerror=()=>clips.delete(clip);clip.play().catch(()=>clips.delete(clip));}catch{}}
@@ -19,6 +19,7 @@ window.GameImmersion={mount(prefix,{alwaysAnimate=false}={}){
  volumeSlider.oninput=()=>{volume=Number(volumeSlider.value)/100;try{localStorage.setItem('ah-'+prefix+'-volume',String(volume));}catch{}for(const clip of clips)clip.volume=volume;};
  replayButton.onclick=()=>startFocus(items);
  skipButton.onclick=stopFocus;
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!document.querySelector('dialog[open]'))stopFocus();});
  if(!alwaysAnimate)window.matchMedia?.('(prefers-reduced-motion: reduce)')?.addEventListener?.('change',()=>{if(!allowsMotion())stopFocus();update();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){stopFocus();stopSound();}});
  update();return {allowsMotion,prepareFocus,startFocus,stopFocus,playSound};

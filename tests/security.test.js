@@ -24,6 +24,15 @@ test('public crawler rules, response headers, and Cloudflare login limits',async
   assert.equal(robots.headers.get('x-robots-tag'),'noindex, nofollow, noarchive');
   assert.equal(robots.headers.get('x-content-type-options'),'nosniff');
   assert.equal(robots.headers.get('strict-transport-security'),'max-age=31536000');
+  for(const route of ['/gifts','/draw-words','/community?tab=questions']){
+   const separator=route.includes('?')?'&':'?';
+   const embedded=await fetch(base+route+separator+'embed=1',{redirect:'manual'});
+   assert.equal(embedded.headers.get('x-frame-options'),'SAMEORIGIN');
+   assert.match(embedded.headers.get('content-security-policy'),/frame-ancestors 'self'/);
+  }
+  const protectedPage=await fetch(base+'/login?embed=1');
+  assert.equal(protectedPage.headers.get('x-frame-options'),'DENY');
+  assert.match(protectedPage.headers.get('content-security-policy'),/frame-ancestors 'none'/);
   const post=ip=>fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json','CF-Connecting-IP':ip},body:JSON.stringify({username:'absent',password:'invalid'})});
   for(let n=0;n<20;n++)assert.equal((await post('203.0.113.1')).status,401);
   assert.equal((await post('203.0.113.1')).status,429);
