@@ -2,6 +2,12 @@
 
 更新：2026-10-05；角色文件是可更新的專案知識，不授權對正式服務操作。
 
+## 93d7a84：公開結果與共用動效
+
+2026-10-05 已實作，取代本批以前的 PL-01／PL-02 提案狀態。DrawGuessRoom 的 `publicResults`、`roundStartScores` 為 non-enumerable Map，最多八份凍結結果＋畫布，view 僅 metadata；收藏依 user/resultId 去重，不能再取 live canvas。當輪基準收錄所有保留座位，避免復座者重算舊分；early finish 不自動公開秘密。完整權限、配額與 PNG 客端信任邊界見 [契約與驗收](../DRAW-REVIEW-MOTION-PROGRESS.md)。這不是 persistent match ledger，尚不支援新勝場統計。
+
+`MotionPolicy` 的同版本 snapshot 仍更新 live heartbeat（social 不一定加 game version），但首次／重連／visibility 恢復先建基準；seen／Animation／lane 必須有界。BFCache persisted pagehide 只暫停、重建基準及 preview，不能永久 dispose gate；離頁清 renderer 時也要清對應 job 指標。新 DrawResults generation/selection 隔離晚到載入，獨立 encoder 保存固定 snapshot，關 dialog 不取消已送出的收藏。Windows／Linux 各402項＋Chrome背景驗收，細節及未測限制見同一進度文件。
+
 ## 責任與接手入口
 
 此角色負責API/state、server權威／身份／同步、功能模組邊界、資料與效果的時序、可測性。先讀root AGENTS與角色索引，再按任務讀檔；與玩家agent確認遊戲規則／判定，與美術agent協商資訊階層和原創圖示，與server/data agent確認持久化及切換。

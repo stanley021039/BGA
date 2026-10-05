@@ -27,4 +27,6 @@
 
 ## 後續
 
+2026-10-05／93d7a84：本批畫猜猜中標記重用共用24 viewBox check SVG，頭像角落20px章＋靜態淺綠邊框，不修改角色圖片或表情。送禮沿用已有圖像，以原創 transform/opacity 動作表達到達；沒有採購／下載新素材，也未把研究的成就／共看原型宣稱已整合。Chrome已看勾章、14px狀態與offline並列；詳 [驗收](../DRAW-REVIEW-MOTION-PROGRESS.md)。
+
 程式方 owner `tools/prototypes/generate-motion-art.cjs` 及 `docs/prototypes/motion-art.html`；美術方唯讀對照原型語意與單次/reduced static。若後续採用新包，先保存實際license與asset manifest，再整合；此研究沒有採購／部署。角色記憶保留方法和取捨，詳細候選及license evidence留spec，避免無限抄滿來源首頁。
