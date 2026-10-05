@@ -4,10 +4,13 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&
 const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transport','交通工具'],['objects','生活物品'],['people','人物職業'],['nature','自然奇幻'],['places','場所娛樂'],['activities','運動音樂'],['custom','自定義']];
 let code=(location.pathname.match(/\/draw\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
 let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,clockOffset=0,inviteBase=location.origin;
-let filled=false,tool='brush',active=null,pending=[],lastSentAt=0,sendQueue=Promise.resolve(),canvasCommandBusy=false,cursor=[256,128];
+let filled=false,tool='brush',active=null,pending=[],lastSentAt=0,lastFillSentAt=0,sendQueue=Promise.resolve(),canvasCommandBusy=false,cursor=[256,128];
 const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
+const canvasRenderer=StrokeCanvas.createRenderer(canvas);
 let feedEntries=[],lastReceivedAt=0,lastTimerSeconds=null,lastTimerRound=-1,disconnected=false;
+let canvasQuota={usedFills:0,usedBatches:0,usedPoints:0};
+let canvasTotals={points:0,fills:0};
 try{session=JSON.parse(localStorage.getItem(code?'ah-draw:'+code:'ah-draw')||'null');if(session&&!code)code=session.code;}catch{}
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4000);}
@@ -169,8 +172,8 @@ function receive(next){
   const waitingCount=$('#waitingCount');if(waitingCount)waitingCount.textContent=next.players.length+' / 8 位';
  }
  showCorrectFeedback(previous,next,live);
- if(oldRound!==next.round){strokes=[];localStrokes.clear();active=null;pending=[];canvasRound=next.round;canvasVersion=-1;redrawCanvas();}
- if(next.strokeVersion!==canvasVersion||canvasRound!==next.round)syncCanvas();
+ if(oldRound!==next.round){strokes=[];localStrokes.clear();active=null;pending=[];canvasQuota={usedFills:0,usedBatches:0,usedPoints:0};canvasTotals={points:0,fills:0};canvasRound=next.round;canvasVersion=-1;canvasRenderer.reset();updateFillAvailability();updateStagePreview();}
+ if(next.strokeVersion>canvasVersion||canvasRound!==next.round)syncCanvas();
  connectEvents();tick();
 }
 function tick(){
@@ -183,9 +186,17 @@ function tick(){
  lastTimerRound=state.round;lastTimerSeconds=seconds;
 }
 function redrawCanvas(){
- const confirmed=strokes.filter(stroke=>!localStrokes.has(stroke.strokeId));
- StrokeCanvas.redraw(canvas,[...confirmed,...localStrokes.values()]);
- updateStagePreview();
+ const visible=[],keys=[],placed=new Set();let mutableFrom=Infinity;
+ const key=stroke=>['fill','rect','ellipse','line'].includes(stroke.tool)?JSON.stringify([stroke.strokeId,stroke.tool,stroke.color,stroke.size,!!stroke.filled,stroke.points]):'server:'+stroke.version+':'+stroke.strokeId;
+ function placeDraft(draft){
+  if(placed.has(draft.strokeId))return;placed.add(draft.strokeId);
+  if(draft.hiddenByReset)return;
+  mutableFrom=Math.min(mutableFrom,visible.length);visible.push(draft);
+  keys.push(['fill','rect','ellipse','line'].includes(draft.tool)?key(draft):'local:'+draft.strokeId+':'+draft.revision);
+ }
+ for(const stroke of strokes){const draft=localStrokes.get(stroke.strokeId);if(draft)placeDraft(draft);else{visible.push(stroke);keys.push(key(stroke));}}
+ for(const draft of localStrokes.values())placeDraft(draft);
+ if(canvasRenderer.render(visible,{keys,mutableFrom}))updateStagePreview();
 }
 function settleLocalStrokes(){
  let changed=false;
@@ -200,19 +211,73 @@ function syncCanvas(){
  if(!session)return Promise.resolve();
  if(syncPromise)return syncPromise;
  syncPromise=(async()=>{
+  const requestedRound=state?.round;
   try{
-   const snapshot=await api('draw/canvas');if(!state||snapshot.round!==state.round)return;
-   if(snapshot.version>=canvasVersion){strokes=snapshot.strokes;canvasVersion=snapshot.version;canvasRound=snapshot.round;settleLocalStrokes();redrawCanvas();}
+   const snapshot=await api('draw/canvas');if(!state||snapshot.round!==state.round||requestedRound!==state.round)return;
+   applyCanvasSnapshot(snapshot);
   }catch(error){$('#connection').textContent='畫布同步中：'+error.message;}
-  finally{syncPromise=null;}
+  finally{syncPromise=null;if(state&&requestedRound!==state.round)syncCanvas();}
  })();
  return syncPromise;
+}
+function validCanvasSnapshot(snapshot){
+ if(!Number.isSafeInteger(snapshot?.round)||!Number.isSafeInteger(snapshot.version)||snapshot.version<0||!Array.isArray(snapshot.strokes)||snapshot.strokes.length>1000)return false;
+ let points=0,fills=0,previous=0;
+ for(const stroke of snapshot.strokes){
+  if(!validCanvasStroke(stroke,previous,snapshot.version))return false;
+  previous=stroke.version;points+=stroke.points.length;if(stroke.tool==='fill')fills++;
+ }
+ return points<=30000&&fills<=48;
+}
+function validCanvasStroke(stroke,previous,version){
+ if(!Number.isSafeInteger(stroke?.version)||stroke.version<=previous||stroke.version>version||typeof stroke.strokeId!=='string'||!/^[a-f0-9-]{8,36}$/i.test(stroke.strokeId)||!['brush','erase','line','rect','ellipse','fill'].includes(stroke.tool)||!/^#[a-f0-9]{6}$/i.test(stroke.color)||!Number.isInteger(stroke.size)||stroke.size<1||stroke.size>40||!Array.isArray(stroke.points)||stroke.points.length<1||stroke.points.length>64)return false;
+ if(stroke.points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255))return false;
+ return !(stroke.tool==='fill'?stroke.points.length!==1:!['brush','erase'].includes(stroke.tool)&&stroke.points.length!==2);
+}
+function updateFillAvailability(){
+ const button=$('#tools [data-tool="fill"]');if(!button)return;
+ button.disabled=canvasQuota.usedFills>=48;
+ button.title=button.disabled?'本輪填色額度已用完，可用畫筆或形狀繼續':'填滿連續區域';
+}
+function updateCanvasQuota(snapshot){
+ const quota=snapshot.quota;
+ const fills=quota?.usedFills??strokes.filter(stroke=>stroke.tool==='fill').length,batches=quota?.usedBatches??strokes.length,points=quota?.usedPoints??strokes.reduce((sum,stroke)=>sum+stroke.points.length,0);
+ if(Number.isInteger(fills)&&fills>=0&&fills<=48)canvasQuota.usedFills=Math.max(canvasQuota.usedFills,fills);
+ if(Number.isInteger(batches)&&batches>=0&&batches<=1000)canvasQuota.usedBatches=Math.max(canvasQuota.usedBatches,batches);
+ if(Number.isInteger(points)&&points>=0&&points<=30000)canvasQuota.usedPoints=Math.max(canvasQuota.usedPoints,points);
+ updateFillAvailability();
+}
+function applyCanvasSnapshot(snapshot,reset=false){
+ if(snapshot.round!==state?.round||snapshot.version<canvasVersion)return false;
+ if(!validCanvasSnapshot(snapshot))throw Error('畫布資料超過同步上限');
+ strokes=snapshot.strokes;canvasVersion=snapshot.version;canvasRound=snapshot.round;
+ canvasTotals={points:strokes.reduce((sum,stroke)=>sum+stroke.points.length,0),fills:strokes.filter(stroke=>stroke.tool==='fill').length};
+ updateCanvasQuota(snapshot);
+ if(reset){
+  for(const [id,draft] of localStrokes){
+   if(draft.pendingBatches>0){draft.finished=true;draft.resetVersion=Math.max(draft.resetVersion||0,snapshot.version);draft.hiddenByReset=!strokes.some(stroke=>stroke.strokeId===id);}
+   else localStrokes.delete(id);
+  }
+  active=null;pending=[];
+ }
+ settleLocalStrokes();redrawCanvas();return true;
+}
+function receiveCanvasStroke(data){
+ if(data.round!==state?.round)return;
+ if(data.quota)updateCanvasQuota(data);
+ if(data.version<=canvasVersion)return;
+ if(data.version!==canvasVersion+1){syncCanvas();return;}
+ if(data.stroke?.version!==data.version||!validCanvasStroke(data.stroke,canvasVersion,data.version)||strokes.length>=1000||canvasTotals.points+data.stroke.points.length>30000||canvasTotals.fills+(data.stroke.tool==='fill'?1:0)>48){syncCanvas();return;}
+ // Existing entries were validated when accepted; an event validates only its new batch.
+ strokes.push(data.stroke);canvasVersion=data.version;canvasTotals.points+=data.stroke.points.length;if(data.stroke.tool==='fill')canvasTotals.fills++;
+ updateCanvasQuota(data);
+ settleLocalStrokes();redrawCanvas();
 }
 function connectEvents(){
  if(stream||!session||!window.EventSource)return;
  stream=new EventSource('/api/draw/events?code='+encodeURIComponent(code));
- stream.addEventListener('stroke',event=>{try{const data=JSON.parse(event.data);if(data.round!==state?.round)return;if(data.version===canvasVersion+1){strokes.push(data.stroke);canvasVersion=data.version;settleLocalStrokes();redrawCanvas();}else if(data.version>canvasVersion)syncCanvas();}catch{syncCanvas();}});
- stream.addEventListener('reset',event=>{try{const data=JSON.parse(event.data);if(data.round===state?.round&&data.version>=canvasVersion){strokes=data.strokes;canvasVersion=data.version;localStrokes.clear();active=null;pending=[];redrawCanvas();}}catch{syncCanvas();}});
+ stream.addEventListener('stroke',event=>{try{receiveCanvasStroke(JSON.parse(event.data));}catch{syncCanvas();}});
+ stream.addEventListener('reset',event=>{try{const data=JSON.parse(event.data);if(data.version>canvasVersion)applyCanvasSnapshot(data,true);}catch{syncCanvas();}});
  stream.addEventListener('ready',()=>{if(state?.strokeVersion!==canvasVersion)syncCanvas();});
 }
 function drawFeedback(message,kind='info',settings=false){const node=$(settings?'#roomSettingsFeedback':'#drawStatus')||$('#drawStatus');node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});}
@@ -266,32 +331,44 @@ async function command(name){
  if(active){toast('請先完成這一筆');return;}
  if(canvasCommandBusy)return;
  canvasCommandBusy=true;canvas.setAttribute('aria-busy','true');canvas.classList.add('canvas-busy');
+ const round=state.round;
  try{
   await sendQueue;await syncCanvas();
-  const snapshot=await api('draw/command',{round:state.round,command:name});
-  strokes=snapshot.strokes;canvasVersion=snapshot.version;localStrokes.clear();redrawCanvas();
- }catch(error){toast(error.message);}
+  if(state?.round!==round)throw Error('這輪已結束，請依目前畫布操作');
+  const snapshot=await api('draw/command',{round,command:name});
+  applyCanvasSnapshot(snapshot,true);
+ }catch(error){drawFeedback(error.message,'error');toast(error.message);}
  finally{canvasCommandBusy=false;canvas.setAttribute('aria-busy','false');canvas.classList.remove('canvas-busy');}
 }
 $('#undo').onclick=()=>command('undo');$('#clear').onclick=()=>{if(confirm('清空這輪畫布？'))command('clear');};
 function canDraw(){return !canvasCommandBusy&&state?.phase==='drawing'&&state.presenterId===state.me;}
 function queueStroke(points,strokeId,mode=tool){
+ if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+points.length>30000){const draft=localStrokes.get(strokeId);if(draft)draft.failed=true;drawFeedback('本輪筆畫額度已用完，請等待下一輪。','error');return sendQueue;}
+ if(mode==='fill'&&canvasQuota.usedFills>=48){drawFeedback('本輪填色額度已用完，可用畫筆或形狀繼續。','error');return sendQueue;}
+ if(mode==='fill'&&[...localStrokes.values()].some(draft=>draft.tool==='fill'&&!draft.failed)){drawFeedback('填色正在同步，請稍候再填下一區。');return sendQueue;}
  let draft=localStrokes.get(strokeId);
  if(!draft){
-  draft={strokeId,tool:mode,color:$('#color').value,size:Number($('#size').value),filled,points:[...points],finished:true,pendingBatches:0,ackVersion:0,failed:false};
+  if(!localCanvasCapacity(points.length)){drawFeedback('畫布同步中的筆畫已達上限，請稍候。','error');return sendQueue;}
+  draft={strokeId,tool:mode,color:$('#color').value,size:Number($('#size').value),filled,points:[...points],revision:1,finished:true,pendingBatches:0,ackVersion:0,failed:false};
   localStrokes.set(strokeId,draft);redrawCanvas();
  }
  draft.pendingBatches++;
  const data={round:state.round,batchId:StrokeCanvas.strokeId(),strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points};
  sendQueue=sendQueue.then(async()=>{
-  const delay=Math.max(0,115-(Date.now()-lastSentAt));if(delay)await new Promise(resolve=>setTimeout(resolve,delay));lastSentAt=Date.now();
+  const delay=Math.max(0,115-(Date.now()-lastSentAt),mode==='fill'?500-(Date.now()-lastFillSentAt):0);if(delay)await new Promise(resolve=>setTimeout(resolve,delay));lastSentAt=Date.now();if(mode==='fill')lastFillSentAt=lastSentAt;
   try{
    const result=await api('draw/stroke',data);
-   if(localStrokes.get(strokeId)===draft){draft.ackVersion=Math.max(draft.ackVersion,result.version);if(result.version>canvasVersion)syncCanvas();}
-  }catch(error){if(localStrokes.get(strokeId)===draft){draft.failed=true;toast(error.message);syncCanvas();}}
+   if(localStrokes.get(strokeId)===draft){updateCanvasQuota(result);draft.ackVersion=Math.max(draft.ackVersion,result.version);if(draft.ackVersion>(draft.resetVersion||0))draft.hiddenByReset=false;if(result.stroke)receiveCanvasStroke(result);if(result.version>canvasVersion)syncCanvas();}
+  }catch(error){if(localStrokes.get(strokeId)===draft){draft.failed=true;drawFeedback(error.message,'error');toast(error.message);syncCanvas();}}
   finally{if(localStrokes.get(strokeId)===draft){draft.pendingBatches--;settleLocalStrokes();}}
  }).catch(error=>{toast(error.message);});
  return sendQueue;
+}
+function localCanvasCapacity(extraPoints=0){
+ let count=localStrokes.size,points=extraPoints;
+ for(const stroke of strokes)if(!localStrokes.has(stroke.strokeId)){count++;points+=stroke.points.length;}
+ for(const draft of localStrokes.values())points+=draft.points.length;
+ return count<1016&&points<=31024;
 }
 function flush(final=false){
  if(!active||!['brush','erase'].includes(active.tool))return;
@@ -302,15 +379,18 @@ function flush(final=false){
 }
 canvas.addEventListener('pointerdown',event=>{
  if(!canDraw()||active||event.button!==0)return;event.preventDefault();canvas.setPointerCapture(event.pointerId);
+ if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints>=30000||!localCanvasCapacity(1)){drawFeedback('本輪筆畫額度已用完或仍在同步，請稍候。','error');return;}
  const point=StrokeCanvas.pointFrom(event,canvas,512,256);cursor=point;
  if(tool==='fill'){queueStroke([point],StrokeCanvas.strokeId(),'fill');return;}
- active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
+ active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],revision:1,sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
  localStrokes.set(active.strokeId,active);pending=[point];redrawCanvas();
 });
 canvas.addEventListener('pointermove',event=>{
  if(!active||event.pointerId!==active.pointerId)return;const point=StrokeCanvas.pointFrom(event,canvas,512,256),last=active.points.at(-1);
  if(point[0]===last[0]&&point[1]===last[1])return;
- active.points.push(point);pending.push(point);cursor=point;
+ if(active.points.length>=30000||!localCanvasCapacity(1)){drawFeedback('這一筆已達畫布上限，請放開後再操作。','error');return;}
+ if(['brush','erase'].includes(active.tool))active.points.push(point);else active.points=[active.points[0],point];
+ active.revision++;if(['brush','erase'].includes(active.tool))pending.push(point);else pending=[active.points[0],point];cursor=point;
  if(['brush','erase'].includes(active.tool)&&pending.length>=40)flush();
  redrawCanvas();
 });
@@ -328,6 +408,6 @@ canvas.addEventListener('keydown',event=>{
 });
 async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));$('#connection').textContent='';}catch(error){disconnected=true;$('#connection').textContent='連線暫停，正在重試：'+error.message;}finally{polling=false;}}
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||location.origin).catch(()=>{});
-entry();StrokeCanvas.redraw(canvas,[]);if(session)poll();else if(code)RoomReconnect.restore(code,'draw','#connection').then(restored=>{if(restored){save(restored);poll();}});
+entry();if(session)poll();else if(code)RoomReconnect.restore(code,'draw','#connection').then(restored=>{if(restored){save(restored);poll();}});
 setInterval(poll,1000);setInterval(tick,250);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});

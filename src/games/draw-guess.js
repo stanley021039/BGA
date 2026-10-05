@@ -1,11 +1,13 @@
+const {assertRecordCapacity}=require('../rooms/membership');
 const {randomInt,randomUUID}=require('node:crypto');
 const {WORDS,TOPICS,topicLabels}=require('./draw-guess-words');
 const {drawContent,validCustomPercent}=require('./content-draw');
+const {HttpError}=require('../http/errors');
 
 const clone=value=>JSON.parse(JSON.stringify(value));
 const normalize=value=>value.normalize('NFKC').toLocaleLowerCase('zh-Hant').trim().replace(/\s+/gu,' ');
 const CONTROLS=new Set(['brush','erase','line','rect','ellipse','fill']);
-const MAX_BATCHES=1000,MAX_POINTS=30000;
+const MAX_BATCHES=1000,MAX_POINTS=30000,MAX_FILLS=48;
 const validTopic=topic=>topic==='all'||TOPICS.some(item=>item.id===topic);
 const DRAW_CATEGORIES=[...TOPICS.map(item=>item.id),'custom'];
 const validTopics=topics=>Array.isArray(topics)&&topics.length>0&&topics.length<=DRAW_CATEGORIES.length&&new Set(topics).size===topics.length&&topics.every(topic=>DRAW_CATEGORIES.includes(topic));
@@ -17,12 +19,13 @@ class DrawGuessRoom{
   this.round=0;this.roundLimit=0;this.pendingArtists=[];this.presenterId=null;
   this.options={seconds:90,customPercent:null,topic:'all',topics:[...DRAW_CATEGORIES]};this.candidates=[];this.question=null;
   this.usedWordIds=[];this.participantIds=[];this.guessedIds=[];this.guesses=[];this.result=null;this.results=[];this.winner=null;this.deadline=null;this.events=[];
-  Object.defineProperty(this,'canvas',{value:{version:0,strokes:[],batchIds:new Set(),points:0,recent:[]},enumerable:false});
+  Object.defineProperty(this,'canvas',{value:{version:0,strokes:[],batchIds:new Set(),points:0,acceptedPoints:0,recent:[],fills:0,fillRecent:[],commandRecent:[]},enumerable:false});
  }
  player(id){return this.players.find(player=>player.id===id);}
  activePlayers(){return this.players.filter(player=>!player.kicked);}
  event(kind,text){this.events.push({id:++this.version,kind,text});this.events=this.events.slice(-16);this.updated=this.now();}
  add(name,bot=false){
+  assertRecordCapacity(this);
   if(bot)throw Error('你畫我猜只接受真人玩家');
   if(this.activePlayers().length>=8)throw Error('最多 8 位玩家');
   if(typeof name!=='string'||!name.trim())throw Error('請輸入名字');
@@ -35,7 +38,7 @@ class DrawGuessRoom{
   if(id!==this.host)throw Error('只有房主可以踢人');
   const player=this.player(target);if(!player||player.kicked)throw Error('找不到玩家');
   if(target===this.host)throw Error('不能踢出自己');
-  player.kicked=true;this.pendingArtists=this.pendingArtists.filter(item=>item!==target);
+  if(this.phase==='waiting')this.players.splice(this.players.indexOf(player),1);else player.kicked=true;this.pendingArtists=this.pendingArtists.filter(item=>item!==target);
   this.participantIds=this.participantIds.filter(item=>item!==target);
   this.event(leaving?'leave':'kick',player.name+(leaving?' 已離開房間':' 已被房主踢出'));
   if(this.phase==='waiting'||this.phase==='finished')return;
@@ -84,7 +87,7 @@ class DrawGuessRoom{
   this.candidates=draw.items.map(clone);this.usedWordIds=draw.usedIds;
   this.phase='choosing';this.question=null;this.guessedIds=[];this.guesses=[];this.result=null;
   this.deadline=this.now()+15000;
-  this.canvas.strokes=[];this.canvas.batchIds.clear();this.canvas.points=0;this.canvas.recent=[];this.canvas.version++;
+  this.canvas.strokes=[];this.canvas.batchIds.clear();this.canvas.points=0;this.canvas.acceptedPoints=0;this.canvas.recent=[];this.canvas.fills=0;this.canvas.fillRecent=[];this.canvas.commandRecent=[];this.canvas.version++;
   this.event('round','第 '+this.round+' 輪，由 '+this.player(this.presenterId).name+' 選題');
  }
  choose(id,questionId){
@@ -155,29 +158,41 @@ class DrawGuessRoom{
   if(this.now()>=this.deadline)throw Error('作畫時間已結束');
   if(data.round!==this.round)throw Error('筆畫屬於舊回合');
   if(typeof data.batchId!=='string'||!/^[a-f0-9-]{8,36}$/i.test(data.batchId)||typeof data.strokeId!=='string'||!/^[a-f0-9-]{8,36}$/i.test(data.strokeId))throw Error('筆畫識別碼不正確');
-  if(this.canvas.batchIds.has(data.batchId))return {round:this.round,version:this.canvas.version,duplicate:true};
+  if(this.canvas.batchIds.has(data.batchId))return {round:this.round,version:this.canvas.version,duplicate:true,quota:this.canvasQuota()};
   const points=data.points;
   if(!CONTROLS.has(data.tool)||!/^#[0-9a-f]{6}$/i.test(data.color)||!Number.isInteger(data.size)||data.size<1||data.size>40||
     !Array.isArray(points)||points.length<1||points.length>64||points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255)||
     (data.tool==='fill'?points.length!==1:data.tool!=='brush'&&data.tool!=='erase'&&points.length!==2))throw Error('筆畫格式不正確');
   const now=this.now();this.canvas.recent=this.canvas.recent.filter(time=>now-time<1000);
-  if(this.canvas.recent.length>=10)throw Error('畫得太快，請稍後再試');
-  if(this.canvas.strokes.length>=MAX_BATCHES||this.canvas.points+points.length>MAX_POINTS)throw Error('這輪畫布已達筆畫上限');
-  this.canvas.recent.push(now);this.canvas.points+=points.length;
+  if(this.canvas.recent.length>=10)throw new HttpError(429,'DRAW_RATE_LIMIT','畫得太快，請稍後再試');
+  // Accepted batch IDs survive undo/clear; otherwise these operations could
+  // bypass the round quota and grow the deduplication set indefinitely.
+  if(this.canvas.batchIds.size>=MAX_BATCHES||this.canvas.acceptedPoints+points.length>MAX_POINTS)throw new HttpError(429,'DRAW_WORK_LIMIT','這輪畫布已達筆畫上限');
+  if(data.tool==='fill'){
+   this.canvas.fillRecent=this.canvas.fillRecent.filter(time=>now-time<1000);
+   if(this.canvas.fillRecent.length>=2)throw new HttpError(429,'DRAW_RATE_LIMIT','填滿操作太快，請稍後再試');
+   if(this.canvas.fills>=MAX_FILLS)throw new HttpError(429,'DRAW_WORK_LIMIT','這輪已達填滿操作上限');
+   this.canvas.fillRecent.push(now);this.canvas.fills++;
+  }
+  this.canvas.recent.push(now);this.canvas.points+=points.length;this.canvas.acceptedPoints+=points.length;
   const stroke={version:++this.canvas.version,strokeId:data.strokeId,tool:data.tool,color:data.color.toLowerCase(),size:data.size,filled:data.filled===true,points:clone(points)};
   this.canvas.strokes.push(stroke);this.canvas.batchIds.add(data.batchId);
-  return {round:this.round,version:this.canvas.version,stroke};
+  return {round:this.round,version:this.canvas.version,stroke,quota:this.canvasQuota()};
  }
  canvasCommand(id,data){
   if(this.phase!=='drawing'||id!==this.presenterId)throw Error('只有當輪畫者能修改畫布');
   if(this.now()>=this.deadline)throw Error('作畫時間已結束');
   if(data.round!==this.round||!['undo','clear'].includes(data.command))throw Error('畫布操作不正確');
+  const now=this.now();this.canvas.commandRecent=this.canvas.commandRecent.filter(time=>now-time<1000);
+  if(this.canvas.commandRecent.length>=2)throw new HttpError(429,'DRAW_COMMAND_RATE_LIMIT','畫布操作太快，請稍後再試');
+  this.canvas.commandRecent.push(now);
   if(data.command==='clear'){this.canvas.strokes=[];this.canvas.points=0;}
   else{const last=this.canvas.strokes.at(-1)?.strokeId;if(last){while(this.canvas.strokes.at(-1)?.strokeId===last)this.canvas.points-=this.canvas.strokes.pop().points.length;}}
   this.canvas.version++;
   return this.canvasSnapshot();
  }
- canvasSnapshot(){return {round:this.round,version:this.canvas.version,strokes:clone(this.canvas.strokes)};}
+ canvasQuota(){return {usedFills:this.canvas.fills,usedBatches:this.canvas.batchIds.size,usedPoints:this.canvas.acceptedPoints};}
+ canvasSnapshot(){return {round:this.round,version:this.canvas.version,strokes:clone(this.canvas.strokes),limits:{maxBatches:MAX_BATCHES,maxPoints:MAX_POINTS,maxFills:MAX_FILLS},quota:this.canvasQuota()};}
  view(id){
   const revealed=['reveal','finished'].includes(this.phase);
   return clone({
