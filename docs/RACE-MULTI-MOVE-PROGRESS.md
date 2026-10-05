@@ -23,6 +23,8 @@
 
 切換前確認房間數0，正式current為`releases/a27dd1f`，PID39316→40729；service及tunnel active。schema仍13、7帳戶全欄位逐列一致，既有session有效；匿名/api/version 200且no-store，race HTML、race.js、race-movement.js、race-dice-dialog.js及共用header資源一致。背景Chrome正式設定實際顯示「版本 v1.1.2」，證據`work/race-displacements-production-version.jpg`。位移GIF及受控遊戲截圖來自隔離localhost3199，正式站驗版本／資源／帳戶，不把本機動畫錄影冒稱正式站實玩。Linux證據`work/race-displacements-linux-tests.log`；後續純驗收文件提交不移動tag。
 
+本機QA收尾：隔離fixture曾將未入場車的y設成null，與正式引擎的-1不同，留下的房間在90秒閒置代走時產生terrain錯誤。錄製階段操作車位置有效，位移證據與全套測試不受此fixture問題影響；私有fixture已改回y:-1，測試服務已正常關閉。此錯誤沒有據以改動正式規則，也不把隔離環境宣稱完全零伺服器錯誤。
+
 ## 2026-10-06：逐格滑動修正，正式 v1.1.1
 
 多格規則先前已沿各格結算，但視覺動畫被總長900ms上限壓縮，SVG重繪又取消動畫；從起跑區出發也缺少原座標。這一筆在v1.1.1發布時取代2026-10-05的動畫實作說明；其後續限制已由上節v1.1.2候選修正。程式提交`2eb4104d3732325ac68d2981fadc09826b1c5f55`、本地annotated tag `v1.1.1`已發布至shhuang.cc，未push／未發新PR。
