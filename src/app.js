@@ -256,7 +256,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    if(subscribers.size>=32||[...subscribers].filter(item=>item.userId===user.id).length>=3)throw new HttpError(429,'DRAW_STREAM_LIMIT','畫布連線太多，請先關閉舊分頁');
    res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('Cache-Control','no-cache, no-transform');res.setHeader('X-Accel-Buffering','no');res.setHeader('Connection','keep-alive');res.flushHeaders();
    subscribers.add(entry);drawStreams.set(room.code,subscribers);
-   res.write('event: ready\ndata: '+JSON.stringify({round:room.round,version:room.canvas.version})+'\n\n');
+   res.write('event: ready\ndata: '+JSON.stringify({canvasEpoch:room.canvas.epoch,round:room.round,version:room.canvas.version})+'\n\n');
    const keepAlive=setInterval(()=>res.write(': keepalive\n\n'),25000);keepAlive.unref();
    req.on('close',()=>{clearInterval(keepAlive);subscribers.delete(entry);if(!subscribers.size)drawStreams.delete(room.code);});return;
   }

@@ -96,12 +96,12 @@ test('room cleanup proceeds after interruption I/O failure and timer callbacks d
 
 test('canvas fill and command cost budgets do not reset on undo/clear or duplicate requests',()=>{
  let now=1000000;const r=new DrawGuessRoom('A0A131','canvas',()=>0,()=>now),host=r.add('host');r.add('guest');r.start();r.choose(host.id,r.candidates[0].id);
- const fill=()=>({round:1,batchId:randomUUID(),strokeId:randomUUID(),tool:'fill',color:'#123456',size:4,points:[[5,5]]});
+ const fill=()=>({canvasEpoch:r.canvas.epoch,round:1,batchId:randomUUID(),strokeId:randomUUID(),tool:'fill',color:'#123456',size:4,points:[[5,5]]});
  const first=fill(),accepted=r.addStroke(host.id,first);assert.equal(accepted.quota.usedFills,1);assert.equal(r.addStroke(host.id,first).duplicate,true);assert.equal(r.canvasQuota().usedFills,1);
  r.addStroke(host.id,fill());assert.throws(()=>r.addStroke(host.id,fill()),e=>e.code==='DRAW_RATE_LIMIT');
- r.canvasCommand(host.id,{round:1,command:'undo'});r.canvasCommand(host.id,{round:1,command:'clear'});assert.throws(()=>r.canvasCommand(host.id,{round:1,command:'clear'}),e=>e.code==='DRAW_COMMAND_RATE_LIMIT');
+ r.canvasCommand(host.id,{canvasEpoch:r.canvas.epoch,round:1,command:'undo'});r.canvasCommand(host.id,{canvasEpoch:r.canvas.epoch,round:1,command:'clear'});assert.throws(()=>r.canvasCommand(host.id,{canvasEpoch:r.canvas.epoch,round:1,command:'clear'}),e=>e.code==='DRAW_COMMAND_RATE_LIMIT');
  assert.equal(r.canvasQuota().usedFills,2);
- for(let i=2;i<48;i++){now+=1001;r.addStroke(host.id,fill());r.canvasCommand(host.id,{round:1,command:'clear'});}
+ for(let i=2;i<48;i++){now+=1001;r.addStroke(host.id,fill());r.canvasCommand(host.id,{canvasEpoch:r.canvas.epoch,round:1,command:'clear'});}
  now+=1001;assert.throws(()=>r.addStroke(host.id,fill()),e=>e.code==='DRAW_WORK_LIMIT');assert.equal(r.canvas.strokes.length,0);assert.equal(r.canvasQuota().usedBatches,48);
  const brush=fill();brush.tool='brush';r.addStroke(host.id,brush);assert.equal(r.canvasSnapshot().limits.maxFills,48);
 });
@@ -109,8 +109,8 @@ test('canvas fill and command cost budgets do not reset on undo/clear or duplica
 test('canvas total point and deduplication budgets survive clearing every batch',()=>{
  let now=1000000;const r=new DrawGuessRoom('A0A132','canvas',()=>0,()=>now),host=r.add('host');r.add('guest');r.start();r.choose(host.id,r.candidates[0].id);
  r.deadline=now+600000;
- const batch=()=>({round:1,batchId:randomUUID(),strokeId:randomUUID(),tool:'brush',color:'#123456',size:4,points:Array.from({length:64},()=>[5,5])});
- for(let i=0;i<468;i++){now+=1001;r.addStroke(host.id,batch());r.canvasCommand(host.id,{round:1,command:'clear'});}
+ const batch=()=>({canvasEpoch:r.canvas.epoch,round:1,batchId:randomUUID(),strokeId:randomUUID(),tool:'brush',color:'#123456',size:4,points:Array.from({length:64},()=>[5,5])});
+ for(let i=0;i<468;i++){now+=1001;r.addStroke(host.id,batch());r.canvasCommand(host.id,{canvasEpoch:r.canvas.epoch,round:1,command:'clear'});}
  now+=1001;assert.throws(()=>r.addStroke(host.id,batch()),e=>e.code==='DRAW_WORK_LIMIT');assert.equal(r.canvasQuota().usedPoints,29952);assert.equal(r.canvas.strokes.length,0);
 });
 

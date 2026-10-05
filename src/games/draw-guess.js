@@ -17,7 +17,7 @@ class DrawGuessRoom{
   this.round=0;this.roundLimit=0;this.pendingArtists=[];this.presenterId=null;
   this.options={seconds:90,customPercent:null,topic:'all'};this.candidates=[];this.question=null;
   this.usedWordIds=[];this.participantIds=[];this.guessedIds=[];this.guesses=[];this.result=null;this.results=[];this.winner=null;this.deadline=null;this.events=[];
-  Object.defineProperty(this,'canvas',{value:{version:0,strokes:[],batchIds:new Set(),points:0,acceptedPoints:0,recent:[],fills:0,fillRecent:[],commandRecent:[]},enumerable:false});
+  Object.defineProperty(this,'canvas',{value:{epoch:randomUUID(),version:0,strokes:[],batchIds:new Set(),points:0,acceptedPoints:0,recent:[],fills:0,fillRecent:[],commandRecent:[]},enumerable:false});
  }
  player(id){return this.players.find(player=>player.id===id);}
  activePlayers(){return this.players.filter(player=>!player.kicked);}
@@ -73,7 +73,7 @@ class DrawGuessRoom{
   this.candidates=draw.items.map(clone);this.usedWordIds=draw.usedIds;
   this.phase='choosing';this.question=null;this.guessedIds=[];this.guesses=[];this.result=null;
   this.deadline=this.now()+15000;
-  this.canvas.strokes=[];this.canvas.batchIds.clear();this.canvas.points=0;this.canvas.acceptedPoints=0;this.canvas.recent=[];this.canvas.fills=0;this.canvas.fillRecent=[];this.canvas.commandRecent=[];this.canvas.version++;
+  this.canvas.epoch=randomUUID();this.canvas.strokes=[];this.canvas.batchIds.clear();this.canvas.points=0;this.canvas.acceptedPoints=0;this.canvas.recent=[];this.canvas.fills=0;this.canvas.fillRecent=[];this.canvas.commandRecent=[];this.canvas.version++;
   this.event('round','第 '+this.round+' 輪，由 '+this.player(this.presenterId).name+' 選題');
  }
  choose(id,questionId){
@@ -143,8 +143,9 @@ class DrawGuessRoom{
   if(this.phase!=='drawing'||id!==this.presenterId)throw Error('只有當輪畫者能作畫');
   if(this.now()>=this.deadline)throw Error('作畫時間已結束');
   if(data.round!==this.round)throw Error('筆畫屬於舊回合');
+  if(data.canvasEpoch!==this.canvas.epoch)throw Error('畫布已更新，請重新同步後作畫');
   if(typeof data.batchId!=='string'||!/^[a-f0-9-]{8,36}$/i.test(data.batchId)||typeof data.strokeId!=='string'||!/^[a-f0-9-]{8,36}$/i.test(data.strokeId))throw Error('筆畫識別碼不正確');
-  if(this.canvas.batchIds.has(data.batchId))return {round:this.round,version:this.canvas.version,duplicate:true,quota:this.canvasQuota()};
+  if(this.canvas.batchIds.has(data.batchId))return {canvasEpoch:this.canvas.epoch,round:this.round,version:this.canvas.version,duplicate:true,quota:this.canvasQuota()};
   const points=data.points;
   if(!CONTROLS.has(data.tool)||!/^#[0-9a-f]{6}$/i.test(data.color)||!Number.isInteger(data.size)||data.size<1||data.size>40||
     !Array.isArray(points)||points.length<1||points.length>64||points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255)||
@@ -163,12 +164,13 @@ class DrawGuessRoom{
   this.canvas.recent.push(now);this.canvas.points+=points.length;this.canvas.acceptedPoints+=points.length;
   const stroke={version:++this.canvas.version,strokeId:data.strokeId,tool:data.tool,color:data.color.toLowerCase(),size:data.size,filled:data.filled===true,points:clone(points)};
   this.canvas.strokes.push(stroke);this.canvas.batchIds.add(data.batchId);
-  return {round:this.round,version:this.canvas.version,stroke,quota:this.canvasQuota()};
+  return {canvasEpoch:this.canvas.epoch,round:this.round,version:this.canvas.version,stroke,quota:this.canvasQuota()};
  }
  canvasCommand(id,data){
   if(this.phase!=='drawing'||id!==this.presenterId)throw Error('只有當輪畫者能修改畫布');
   if(this.now()>=this.deadline)throw Error('作畫時間已結束');
   if(data.round!==this.round||!['undo','clear'].includes(data.command))throw Error('畫布操作不正確');
+  if(data.canvasEpoch!==this.canvas.epoch)throw Error('畫布已更新，請重新同步後操作');
   const now=this.now();this.canvas.commandRecent=this.canvas.commandRecent.filter(time=>now-time<1000);
   if(this.canvas.commandRecent.length>=2)throw new HttpError(429,'DRAW_COMMAND_RATE_LIMIT','畫布操作太快，請稍後再試');
   this.canvas.commandRecent.push(now);
@@ -178,7 +180,7 @@ class DrawGuessRoom{
   return this.canvasSnapshot();
  }
  canvasQuota(){return {usedFills:this.canvas.fills,usedBatches:this.canvas.batchIds.size,usedPoints:this.canvas.acceptedPoints};}
- canvasSnapshot(){return {round:this.round,version:this.canvas.version,strokes:clone(this.canvas.strokes),limits:{maxBatches:MAX_BATCHES,maxPoints:MAX_POINTS,maxFills:MAX_FILLS},quota:this.canvasQuota()};}
+ canvasSnapshot(){return {canvasEpoch:this.canvas.epoch,round:this.round,version:this.canvas.version,strokes:clone(this.canvas.strokes),limits:{maxBatches:MAX_BATCHES,maxPoints:MAX_POINTS,maxFills:MAX_FILLS},quota:this.canvasQuota()};}
  view(id){
   const revealed=['reveal','finished'].includes(this.phase);
   return clone({
@@ -189,7 +191,7 @@ class DrawGuessRoom{
    hint:this.question?{category:this.question.category,topicLabel:this.question.topicLabel||topicLabels[this.question.topic]||topicLabels.misc,length:[...this.question.title].length}:null,
    players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,online:this.now()-player.lastSeen<15000,waitingForNextRound:player.waitingForNextRound})),
    participantIds:this.participantIds,guessedIds:this.guessedIds,guesses:this.guesses.map(item=>item.correct?{id:item.id,name:item.name,correct:true,points:item.points,at:item.at}:item),
-   result:revealed?this.result:null,winner:this.winner,strokeVersion:this.canvas.version,events:this.events
+   result:revealed?this.result:null,winner:this.winner,canvasEpoch:this.canvas.epoch,strokeVersion:this.canvas.version,events:this.events
   });
  }
 }

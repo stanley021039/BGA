@@ -9,7 +9,7 @@ const {DrawGuessRoom} = require('../src/games/draw-guess');
 const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'draw.js'), 'utf8');
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const {browserHarness,drawingState}=require('./helpers/draw-browser.cjs');
+const {browserHarness,drawingState,CANVAS_EPOCH}=require('./helpers/draw-browser.cjs');
 
 function frameContainsStroke(frame) {
  const all = [...frame.strokes, ...(frame.preview ? [frame.preview] : [])];
@@ -34,7 +34,7 @@ test('pending guess is visible, prevents duplicate writes and preserves input on
  ui.element('#guessInput').value='我的猜測';
  let rejectWrite,writes=0;
  ui.context.RoomApi.request=async route=>{
-  if(route==='draw/canvas')return {round:1,version:0,strokes:[]};
+  if(route==='draw/canvas')return {canvasEpoch:CANVAS_EPOCH,round:1,version:0,strokes:[]};
   writes++;return new Promise((_resolve,reject)=>{rejectWrite=reject;});
  };
  const pending=vm.runInContext('action("guess",{answer:"我的猜測"})',ui.context);
@@ -77,8 +77,8 @@ test('artist stroke remains visible while the server accepts a delayed write', a
  assert.equal(ui.strokeRequests.length, 1, 'the write has reached the delayed server');
  assert.ok(ui.frames.slice(beforeFinish).every(frameContainsStroke), 'no repaint removes the stroke before acknowledgement');
  const posted = ui.strokeRequests[0].data;
- ui.setSnapshot({round: 1, version: 1, strokes: [{version: 1, strokeId: posted.strokeId, tool: posted.tool, color: posted.color, size: posted.size, points: posted.points}]});
- ui.strokeRequests[0].resolve({round: 1, version: 1});
+ ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round: 1, version: 1, strokes: [{version: 1, strokeId: posted.strokeId, tool: posted.tool, color: posted.color, size: posted.size, points: posted.points}]});
+ ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round: 1, version: 1});
  await pause(0);
  await vm.runInContext('syncCanvas()', ui.context);
  assert.ok(frameContainsStroke(ui.frames.at(-1)), 'the confirmed stroke stays visible');
@@ -101,8 +101,8 @@ test('undo waits for a queued stroke before sending the canvas command', async (
  ui.listeners.get('#drawCanvas:pointerdown')({button: 0, pointerId: 2, point: [40, 40], preventDefault() {}});
  assert.equal(vm.runInContext('active', ui.context), null, 'a new stroke cannot start while undo is pending');
  const posted = ui.strokeRequests[0].data;
- ui.setSnapshot({round: 1, version: 1, strokes: [{version: 1, strokeId: posted.strokeId, tool: posted.tool, color: posted.color, size: posted.size, points: posted.points}]});
- ui.strokeRequests[0].resolve({round: 1, version: 1});
+ ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round: 1, version: 1, strokes: [{version: 1, strokeId: posted.strokeId, tool: posted.tool, color: posted.color, size: posted.size, points: posted.points}]});
+ ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round: 1, version: 1});
  await undo;
  assert.deepEqual(ui.commandRequests.map(item => item.command), ['undo']);
  assert.equal(ui.frames.at(-1).strokes.length, 0, 'the completed stroke is undone');
@@ -123,8 +123,8 @@ test('a second touch cannot steal or leave behind the first pointer stroke', asy
  up({pointerId:1,point:[25,25],preventDefault(){}});await pause(250);
  assert.equal(ui.strokeRequests.length,1);
  const posted=ui.strokeRequests[0].data;
- ui.setSnapshot({round:1,version:1,strokes:[{version:1,strokeId:posted.strokeId,tool:posted.tool,color:posted.color,size:posted.size,points:posted.points}]});
- ui.strokeRequests[0].resolve({round:1,version:1});await vm.runInContext('sendQueue',ui.context);
+ ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:1,strokes:[{version:1,strokeId:posted.strokeId,tool:posted.tool,color:posted.color,size:posted.size,points:posted.points}]});
+ ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round:1,version:1});await vm.runInContext('sendQueue',ui.context);
  assert.equal(vm.runInContext('localStrokes.size',ui.context),0);
 });
 

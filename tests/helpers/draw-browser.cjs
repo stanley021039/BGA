@@ -3,9 +3,10 @@ const {randomUUID,randomFillSync}=require('node:crypto');
 const {rasterCanvas}=require('./raster-canvas.cjs');
 const script=fs.readFileSync(path.join(__dirname,'../../public/draw.js'),'utf8');
 const sharedScript=fs.readFileSync(path.join(__dirname,'../../public/shared/stroke-canvas.js'),'utf8');
+const CANVAS_EPOCH='00000000-0000-4000-8000-000000000001';
 function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
  const sources=[],elements = new Map(), listeners = new Map(), frames = [], animations = [], strokeRequests = [], commandRequests = [];
- let snapshot = {round: 1, version: 0, strokes: []};
+ let snapshot = {canvasEpoch:CANVAS_EPOCH,round: 1, version: 0, strokes: []};
  function element(selector) {
   if (!elements.has(selector)) {
    const handlers = new Map();
@@ -66,7 +67,7 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
     if (route === 'draw/stroke') return new Promise((resolve,reject) => strokeRequests.push({data, resolve,reject}));
     if (route === 'draw/command') {
      commandRequests.push(data);
-     return {round: 1, version: snapshot.version + 1, strokes: []};
+     return {canvasEpoch:snapshot.canvasEpoch,round: snapshot.round, version: snapshot.version + 1, strokes: []};
     }
     throw Error('Unexpected API call: ' + route);
    },
@@ -99,8 +100,8 @@ function drawingState(me, guesses = []) {
    {id: 'guest', name: '猜者', score: 0, online: true},
   ],
   participantIds: ['guest'], guessedIds: [], guesses, result: null, winner: null,
-  strokeVersion: 0, events: [],
+  canvasEpoch:CANVAS_EPOCH,strokeVersion: 0, events: [],
  };
 }
 
-module.exports={browserHarness,drawingState};
+module.exports={browserHarness,drawingState,CANVAS_EPOCH};
