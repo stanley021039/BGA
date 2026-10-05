@@ -56,3 +56,5 @@ restore 預設 dry run，只有 literal apply:true 發布全新 destination；ex
 Host／Origin／每次啟動随机 token 保護端點，操作串行，重整只查正在跑的工作與最近去敏結果，不重送。這是本機 OS 使用者工具，沒有用停掉的遊戲服務 session 認證，不能拿去公開 Tunnel；同機能讀本機頁面的程序不在此權限隔離範圍。Ctrl+C 等現有工作收尾，強殺仍依 lock／marker 回復流程。
 
 Windows／Linux 各259項通過（移轉16＋UI HTTP4）；完整 HTTP workflow 原密碼登入、active source拒絕、錯origin/token/host、忙碌與刷新已驗。主agent原Chrome背景keygen→inspect→export→verify→dryrun→apply→reload通過，只合成帳戶1筆。收合版31c91dd預設隱藏完整JSON，重要統計/config/下一步可見；1767×1196仍可小捲，未驗手機，證據見進度文件。
+
+後續 `215f82c` 補 localSubmitting／stateEpoch，避免舊查詢解鎖新移轉與不明狀態重送；11項UI VM回歸已驗。PR資源修正backport `db9d0b6` 後，Windows／Linux完整整合各304項通過，取代259項作為最新總數，詳 [進度](../SERVER-DATA-TRANSFER-PROGRESS.md)。新服務啟動前須核對 `HISTORY_*`：預設30天／512MiB／1000份 archive 會淘汰舊已完成歷史，完整包仍保存原始資料。保留期與容量要依需要先設定，不可把驗包成功解釋成服務永不淘汰。

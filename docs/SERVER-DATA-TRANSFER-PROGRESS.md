@@ -47,4 +47,17 @@
 
 ## 後續邊界
 
+最終 PR／管理 UI 整合：PR #30 資源修正 `1b8c85d` 已推送至既有 PR；移轉分支 backport `db9d0b6` 保留新的多類別、共用聲音、設定動作及移轉鎖。合併衝突逐項保留契約，沒有整檔覆蓋較新的功能。
+
+獨立 review 找到 UI 舊狀態回應可能在新 POST 等待期間解鎖表單；`215f82c` 加本地提交旗標與查詢 epoch，POST 完整回應前不解鎖，過期 idle／busy／error／result 不覆蓋新工作。未知狀態維持鎖住並只重試 GET，不自動重送移轉。新增11項 VM 回歸与原4項 HTTP 共15/15；競態使用可控制的回應次序驗證，普通 Chrome 流程不當作競態重現證據。
+
+| 最終環境 | Runtime | 完整整合結果 |
+| --- | --- | --- |
+| Windows | Node 24.14.0 | **304/304 通過**，0 fail／skip／cancel；約9秒。 |
+| Linux 獨立臨時目錄 | Node 22.22.1 | **304/304 通過**，0 fail／skip／cancel；約67秒。 |
+
+Linux包456檔，SHA256 `7eb9cdadde6cdbb7a1b66e1b0cfd13dc2ccf3bf450186195201bdd7a692aca92`；完成後逐檔 manifest 與 `215f82c` 工作樹一致。測試目錄已驗絕對路徑及擁有者後清除，未碰正式服務。原始log為 `work/data-transfer-combined-windows-tests.log` 與 `work/data-transfer-combined-linux-tests.log`。
+
+最終 Chrome 刷新恢復成功結果、JSON 收合、完整設定與下一步可見，無 console error；截圖 `work/data-transfer-admin-ui.png`。本機3122、3187測試服務與測試分頁已關閉。正式站未部署此批程式，未發新的移轉 MR，未搬正式資料。
+
 尚未執行真實 server 資料搬移、路由切換、停止正式 writer 或啟用新正式資料代。工具不代做 SSH、systemd、active symlink、Tunnel、GitHub 人工 reconcile、帳戶 merge、雙端資料合併、PostgreSQL／object store、房間續局、匿名化 prod→dev；上述原規格保持提案狀態。日後若執行正式切換，須先取得具體來源／目標與停寫窗口，再在新代驗收及保留相容舊代，不能把本批 fixture 成功宣稱已完成正式遷移。

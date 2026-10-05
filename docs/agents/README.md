@@ -20,3 +20,5 @@
 2026-10-05 完整資料移轉第一版程式 `c831e87` 已本地驗收（Windows／Linux 各255项及兩方向 restore／登入），包括原帳戶密碼與權限，未執行正式 migration／部署。最新使用者決策 U17 及接手流程見 SERVER-DATA、MEMORY-LEDGER；研究 spec 中 merge／Postgres 等項目不能混稱完成。
 
 使用者追加 U18 獨立移轉文件及管理員 UI。`2618c4b` 提供 `npm run data:transfer:ui` localhost 表單，結果收合／對齊補充至31c91dd，仍沿用冷移轉與防覆寫政策；Windows／Linux 各259項（UI HTTP4項）與原Chrome背景完整表單流程／重新整理通過，見同一操作文件及進度。
+
+同日最終來源至 `215f82c`：移轉UI及過期狀態競態修正、PR資源修正與最新遊戲功能已整合，Windows／Linux各304項及背景Chrome驗收通過；PR #30更新至1b8c85d，未部署。接手優先讀 [獨立移轉指南](../SERVER-DATA-TRANSFER.md)、[最終進度](../SERVER-DATA-TRANSFER-PROGRESS.md) 與 [PR修正](../PR30-RESOURCE-LIMITS.md)。Gartic無HAR證據，不能推測其協議。
