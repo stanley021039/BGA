@@ -24,6 +24,7 @@
 | U18 | 移轉方法必須放獨立doc，可以的話提供管理員方便操作的UI。 | docs/SERVER-DATA-TRANSFER.md 是獨立指南；2618c4b 提供localhost表單、JSON預覽及預設dryrun，結果收合／對齊至31c91dd。需自行停writer、不得將管理埠公開；Windows/Linux259項及原Chrome背景完整合成表單流程通過。 |
 | U19 | 先修最新 PR 的回覆，可實玩 Gartic Phone／錄 HAR 參考；可平行的工作分配 agent。 | PR #30 回覆的玩家紀錄／歷史及填色成本已修正，來源1b8c85d、兩平台各260項及背景Chrome通過；尚未部署。Gartic單席實玩已觀察填色／復原，工具無HAR匯出，未取得封包。修正已backport至移轉分支db9d0b6，保留較新的類別／聲音／房間設定。 |
 | U20 | 繼續透過 computer use 錄製 HAR，並再次修 PR 提到的問題。 | 後續程式3b19720／整合e71989e補失敗開局淘汰、故障容量記帳、分批重連及安全儲存；PR兩平台279項、本地整合Windows323項通過。HAR錄製仍受U10背景偏好限制，前景確認未回覆前不能自行提高視窗；未取得封包不能宣稱Gartic協議已驗證。 |
+| U21 | 為繼續測試，可以安裝 Codex 擴充功能或使用不同瀏覽器。 | 放寬 U10 的瀏覽器選擇，保留背景操作偏好。Chrome 擴充已連線，內建瀏覽器可在隱藏分頁開啟 Gartic；目前兩者未提供 CDP／HAR API。官方 Developer mode 開關已告知使用者，等待其回覆與實際能力開放，不代表已取得 HAR 或允許提高視窗。 |
 
 已驗收程式基線：公開站來源 `9f041d3`；PR #30 包含後續文件提交 `0aa6c75`。這是本輪的歷史基線，未來不能不查核就當作目前正式版本。完整前輪驗收見 [桌機進度](../DESKTOP-DESIGN-PROGRESS.md) 與 [畫猜三人試玩](../DRAW-GUESS-PLAYTEST.md)。
 

@@ -7,7 +7,7 @@
 | 工作目錄／基線 | `BGA-pr30-review`；`fix/pr30-resource-limits`；查核時 HEAD `1b8c85dda17bb50ac86cc96193d11f54ec020c5e`。這是本機基線，不是正式部署證據。 |
 | 結論類型 | 官方外部資料與官方程式事實；採樣方式是研究建議；Gartic 傳輸行為待驗證。 |
 | 實測狀態 | **待錄製，尚未取得 Gartic HAR 或 WebSocket 訊息證據。** |
-| 操作條件 | 使用者先前要求原 Chrome 在背景操作、不提高視窗。主 agent 正等待是否允許短暫提高 Chrome 前景的確認；尚未收到的確認不得當成授權。本文件不啟動瀏覽器操作。 |
+| 操作條件 | 使用者最新允許安裝官方擴充或改用其他瀏覽器，背景測試偏好仍有效。已確認 Chrome 擴充連線，並在隱藏的內建瀏覽器開啟 Gartic 首頁；兩者目前都未暴露網路錄製能力。已請使用者啟用官方 Developer mode，待其回覆與工具能力實際出現後再录製。 |
 | 已有觀察邊界 | 前輪曾在原 Chrome 背景單席觀察 Masterpiece 填色、復原與相簿；那是介面觀察，不能據此宣稱知道傳輸頻率、命令格式、上傳內容或 server 實作。見 [PR #30 修正驗收](../PR30-RESOURCE-LIMITS.md)。 |
 | 後續 owner／驗收 | 主 agent 在操作條件具備後錄製；研究／程式角色以實際檔案確認 coverage、訊息欄位與操作對應，再填入本文件的結果表。 |
 | 舊結論替代 | 「背景工具當時沒有取得 HAR」仍成立；若曾將此解讀成「Chrome HAR 一定不包含 WebSocket 訊息」，應由下列官方 exporter 證據取代。未取得檔案前仍不能宣稱 Gartic 封包研究完成。 |
@@ -23,6 +23,14 @@ HAR 候選請求會沿用 Network 篩選。握手已收到回應的 WebSocket �
 Sanitized HAR 會去除指定的 Cookie／Set-Cookie／Authorization 標頭。**目前 exporter 仍保存 WebSocket `data`，不能把 sanitized 解讀為訊息內容已匿名化。** 同一原碼對 `_eventSourceMessages` 則會在 sanitized 模式省略 `data`；BGA 的 SSE payload 比較需要另核對 EventStream 或私有原始證據。原始 HAR、訊息、房碼與可能的身份／認證資料只存 Git 忽略的 `work/`，公開文件只放去敏摘要。[去敏及串流匯出原碼](https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/models/har/Log.ts#L129-L181)
 
 DevTools 協議的 WebSocketFrame 表示完整邏輯訊息，不是單一碎片或完整網路封包。文字內容是 UTF-8；非文字 payload 以 Base64 表示。計算 binary payload bytes 應使用解碼後長度，不能直接使用 Base64 字串長度，也不能把訊息大小當作包含 TLS、壓縮與協議 overhead 的線上傳輸量。[官方協議定義](https://github.com/ChromeDevTools/devtools-protocol/blob/master/json/browser_protocol.json)
+
+## Codex 背景錄製的能力前提
+
+2026-10-05 使用者追加允許使用其他瀏覽器或安裝官方擴充。Chrome 的現有擴充已連線；內建瀏覽器可用 `visible: false` 開啟 Gartic 首頁，沒有提高 Chrome。當時列出的 browser capabilities 是 `visibility`／`viewport`，tab capabilities 是 `pageAssets`／`webmcp`，未提供 CDP、Network 或 HAR API，因此尚未建立測試房間或錄製封包。
+
+OpenAI 官方文件提供 Settings → Browser → Developer mode → **Enable full CDP access**，可用於 Chrome 或內建瀏覽器的網路檢查；使用網站的完整 CDP 前仍有明確授權步驟。已向使用者說明這個設定，等待啟用或回報選項不存在。能力未列出不等於能確定開關關閉，也可能受版本或管理政策影響；不能把文件中有功能寫成目前工具已可使用。[官方 Browser 說明](https://learn.chatgpt.com/docs/browser#developer-mode)、[官方擴充說明](https://learn.chatgpt.com/docs/chrome-extension)
+
+接手時先確認使用者最新回覆，再透過官方工具重新列出 capabilities 並讀取實際 API 文件。若具備錄製能力，從新連線建立前開始記錄，依下列採樣表遊玩、保存私有檔案並核對 payload；不要靠任意腳本、其他連線方式或修改應用設定繞過未開放的權限。尚未取得 HAR 的狀態維持不變。
 
 ## 透過 Chrome UI 錄製與匯出
 
@@ -75,7 +83,7 @@ HAR 可支持瀏覽器側的傳輸觀察，不能單獨證明 Gartic server 如�
 
 ## 來源與更新紀錄
 
-所有外部來源皆為 Chrome 官方文件或 ChromeDevTools 官方程式／協議，查核日 **2026-10-05**。原碼連結使用 `main`／`master`，不是保證未來不變的 release snapshot；下一次實際採用或 Chrome 版本變動時重查。
+外部來源包括 Chrome 官方文件、ChromeDevTools 官方程式／協議及 OpenAI 官方瀏覽器文件，查核日 **2026-10-05**。原碼連結使用 `main`／`master`，不是保證未來不變的 release snapshot；下一次實際採用或 Chrome 版本變動時重查。
 
 | 來源 | 查核用途 |
 | --- | --- |
