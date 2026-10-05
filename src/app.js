@@ -25,7 +25,12 @@ const {MusicStore,MAX_BYTES}=require('./music/store');
 const {RoomMusic}=require('./music/room');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
 const {ROOM_EMOJIS}=require('./social/emojis');
+const {acquireDataLocks}=require('./data/locks');
 function createApp(config){
+ const lock=acquireDataLocks(config);
+ try{return initializeApp(config,lock);}catch(error){lock.release();throw error;}
+}
+function initializeApp(config,dataLock){
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
  const musicRooms=new Map(),musicStreams=new Map();
@@ -45,7 +50,7 @@ function createApp(config){
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir);
  let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore;
- try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}));}
+ try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
  catch(error){history.close();db?.close();throw error;}
  const characterMedia=createCharacterMediaAccess(db,viewerId=>{
   const audiences=[];
@@ -325,7 +330,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(server.listening)await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
   history.close();
   await Promise.allSettled([...submissions.inFlight.values()]);
-  db.close();
+  try{db.close();}finally{dataLock.release();}
  }
  return {server,listen,close};
 }
