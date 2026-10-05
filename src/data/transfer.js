@@ -249,11 +249,14 @@ function binaryAssetsPreserved(before, after) {
   return true;
 }
 async function restore(request) {
+  const expectedBundleId = request.expectedBundleId;
+  if (expectedBundleId !== undefined && (typeof expectedBundleId !== 'string' || !uuid.test(expectedBundleId))) fail('INVALID_REQUEST', 'expectedBundleId must be a UUID from verification or a restore preview');
   const destination = absolute(request.destinationDir, 'destinationDir'); fresh(destination);
   const bundle = absolute(request.bundleDir, 'bundleDir'), keyFile = absolute(request.keyFile, 'keyFile');
   if (inside(destination, bundle) || inside(bundle, destination) || inside(destination, keyFile)) fail('UNSAFE_PATH', 'Restore destination must be separate from bundle and keyFile');
   const checked = await unpack(request, path.dirname(destination)); let claimed = false, published = false, releasePublication;
   try {
+    if (expectedBundleId !== undefined && checked.manifest.bundleId.toLowerCase() !== expectedBundleId.toLowerCase()) fail('BUNDLE_CHANGED', 'The backup changed since verification or preview; verify and preview the selected backup again');
     if (checked.validated.playing.length && request.acknowledgeInterruptedMatches !== true) fail('UNFINISHED_MATCHES', 'Set acknowledgeInterruptedMatches=true to mark unfinished matches interrupted');
     const changes = restorePolicy(checked.stage, checked.validated), after = validateData(generationPaths(checked.stage));
     // Account UUIDs and credential hashes must survive the migration and restore policy exactly.
@@ -305,7 +308,7 @@ function safeError(error) {
     ENOENT: 'Required file or directory is missing', EACCES: 'Access denied', EPERM: 'Operation is not permitted', ENOSPC: 'Disk is full',
     EEXIST: 'Destination or lock already exists', DATA_IN_USE: 'Data is in use; stop all writers first', RESTORE_IN_PROGRESS: 'Restore generation is incomplete',
   };
-  const known = new Set(['INVALID_REQUEST','INVALID_KEY','UNSAFE_PATH','INVALID_DATA','INVALID_DATABASE','INVALID_ACCOUNTS','UNSUPPORTED_SCHEMA','INTEGRITY_FAILED','FOREIGN_KEY_FAILED','BROKEN_REFERENCE','UNEXPECTED_FILE','INVALID_MUSIC','MISSING_MUSIC','INVALID_COMMUNITY','INVALID_HISTORY','UNFINISHED_MATCHES','DESTINATION_EXISTS','INSUFFICIENT_SPACE','ORIGIN_CONFLICT','CORRUPT_BUNDLE','AUTHENTICATION_FAILED','UNSUPPORTED_BUNDLE','BUNDLE_LIMIT','ASSET_VERSION_MISMATCH','VALIDATION_FAILED','SOURCE_NOT_STOPPED','MISSING_SOURCE','PARTIAL_RESTORE']);
+  const known = new Set(['INVALID_REQUEST','INVALID_KEY','UNSAFE_PATH','INVALID_DATA','INVALID_DATABASE','INVALID_ACCOUNTS','UNSUPPORTED_SCHEMA','INTEGRITY_FAILED','FOREIGN_KEY_FAILED','BROKEN_REFERENCE','UNEXPECTED_FILE','INVALID_MUSIC','MISSING_MUSIC','INVALID_COMMUNITY','INVALID_HISTORY','UNFINISHED_MATCHES','DESTINATION_EXISTS','INSUFFICIENT_SPACE','ORIGIN_CONFLICT','CORRUPT_BUNDLE','AUTHENTICATION_FAILED','UNSUPPORTED_BUNDLE','BUNDLE_LIMIT','BUNDLE_CHANGED','ASSET_VERSION_MISMATCH','VALIDATION_FAILED','SOURCE_NOT_STOPPED','MISSING_SOURCE','PARTIAL_RESTORE']);
   if (messages[error.code]) return { code: error.code, message: messages[error.code] };
   if (known.has(error.code)) return { code: error.code, message: error.message };
   return { code: 'TRANSFER_FAILED', message: 'Transfer failed; inspect filesystem permissions, SQLite compatibility and stopped-writer state without publishing secrets' };

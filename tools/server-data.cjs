@@ -10,7 +10,7 @@ const contract = {
     verify: { action: 'verify', keyFile: '/private/backup.key', bundleDir: '/backups/fresh-bundle' },
     restore: { action: 'restore', keyFile: '/private/backup.key', bundleDir: '/backups/fresh-bundle', destinationDir: '/new/generation', apply: false },
   },
-  options: { apply: 'Only literal true publishes a restore; default is a fully validated dry run', acknowledgeInterruptedMatches: 'Explicitly permit unfinished matches to become interrupted on restore', maxBytes: 'Default 10 GiB, maximum 1 TiB', tempDir: 'Optional absolute scratch directory for verify', forceVacuum: 'Force the compatible SQLite VACUUM INTO snapshot method' },
+  options: { apply: 'Only literal true publishes a restore; default is a fully validated dry run', expectedBundleId: 'Optional verified bundle UUID for restore; rejects a different backup at the same path before publication', acknowledgeInterruptedMatches: 'Explicitly permit unfinished matches to become interrupted on restore', maxBytes: 'Default 10 GiB, maximum 1 TiB', tempDir: 'Optional absolute scratch directory for verify', forceVacuum: 'Force the compatible SQLite VACUUM INTO snapshot method' },
   safeguards: ['Full account data is encrypted, including password hashes; original passwords still work', 'Old sessions, invitations and reset links are revoked on restore', 'Every writer must be stopped before inspect/export', 'Restore only creates a new destination; never merges or overwrites', 'Deployment secrets and live rooms are excluded; first boot disables external submissions'],
   output: { ok: true, result: 'action-specific JSON' }, errorOutput: { ok: false, error: { code: 'stable error code', message: 'redacted description' } },
 };

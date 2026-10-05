@@ -178,6 +178,41 @@ test('wrong keys and modified manifest or ciphertext are rejected without publis
   await assert.rejects(run({...restoreRequest(f),apply:true}),errorCode('CORRUPT_BUNDLE')); assert.equal(fs.existsSync(f.destinationDir),false);
 });
 
+test('restore pins the verified bundle identity across same-key replacements of a local bundle path', async t => {
+  const f = await fixture(t,{minimal:true}), original = await run(f.exportRequest);
+  const verified = await run({action:'verify',bundleDir:f.bundleDir,keyFile:f.keyFile});
+  assert.equal(verified.bundleId,original.bundleId);
+  const pinned = {...restoreRequest(f),expectedBundleId:verified.bundleId};
+  const preview = await run({...pinned,expectedBundleId:verified.bundleId.toUpperCase()});
+  assert.equal(preview.dryRun,true); assert.equal(preview.bundleId,verified.bundleId); assert.equal(preview.restoredSummary.database.tableCounts.users,2);
+  const source = openDatabase(f.source.dbFile);
+  try { source.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)').run(crypto.randomUUID(),'replacement_user','Different backup',f.expectedUsers[0].password_hash,'member',new Date().toISOString()); }
+  finally { source.close(); }
+  const secondDir = path.join(f.root,'second-bundle'), savedOriginal = path.join(f.root,'original-bundle');
+  const replacement = await run({...f.exportRequest,outputDir:secondDir});
+  assert.notEqual(replacement.bundleId,verified.bundleId); assert.equal(replacement.summary.database.tableCounts.users,3);
+  for (const directory of [f.bundleDir,secondDir,savedOriginal]) assert.equal(path.dirname(path.resolve(directory)),path.resolve(f.root));
+  fs.renameSync(f.bundleDir,savedOriginal); fs.renameSync(secondDir,f.bundleDir);
+  for (const apply of [false,true]) await assert.rejects(run({...pinned,apply}),error=>{
+    assert.equal(error.code,'BUNDLE_CHANGED'); assert.equal(safeError(error).code,'BUNDLE_CHANGED'); return true;
+  });
+  assert.equal(fs.existsSync(f.destinationDir),false);
+  assert.equal(fs.readdirSync(f.root).some(name=>name.startsWith('.afterhours-transfer-')),false);
+  const cli = path.join(__dirname,'../tools/server-data.cjs');
+  const rejected = spawnSync(process.execPath,[cli,'--request','-'],{input:JSON.stringify({...pinned,apply:true}),encoding:'utf8'});
+  assert.equal(rejected.status,1); assert.equal(JSON.parse(rejected.stdout).error.code,'BUNDLE_CHANGED'); assert.equal(fs.existsSync(f.destinationDir),false);
+  // Omitting the optional pin retains the existing explicit CLI restore contract.
+  const legacy = spawnSync(process.execPath,[cli,'--request','-'],{input:JSON.stringify({...restoreRequest(f),apply:true}),encoding:'utf8'});
+  assert.equal(legacy.status,0); const result = JSON.parse(legacy.stdout).result;
+  assert.equal(result.bundleId,replacement.bundleId); assert.equal(result.restoredSummary.database.tableCounts.users,3);
+});
+
+test('restore rejects malformed expected bundle identities before unpacking or publishing', async t => {
+  const f = await fixture(t,{minimal:true});
+  for (const expectedBundleId of [null,'',42,{},'not-a-uuid']) await assert.rejects(run({...restoreRequest(f),expectedBundleId,apply:true}),errorCode('INVALID_REQUEST'));
+  assert.equal(fs.existsSync(f.destinationDir),false);
+});
+
 test('authenticated path traversal, case collisions and unsupported application versions are still rejected', async t => {
   const f=await fixture(t,{minimal:true}); await run(f.exportRequest); const file=path.join(f.bundleDir,'manifest.json'), original=fs.readFileSync(file);
   for (const logical of ['../outside.sqlite','C:/outside.sqlite','history/../../outside.jsonl','db\\afterhours.sqlite']) {

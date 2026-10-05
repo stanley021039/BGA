@@ -2,18 +2,32 @@
 <html lang="zh-Hant">
 <head>
  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
- <meta name="transfer-token" content="@@TRANSFER_TOKEN@@"><title>伺服器資料移轉</title>
+ <meta name="transfer-token" content="@@TRANSFER_TOKEN@@"><title>從其他站匯入 · BGA 資料移轉</title>
  <link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
 </head>
 <body>
- <header><div><span class="tag">本機管理員工具</span><h1>伺服器資料移轉</h1></div><span class="local-badge">127.0.0.1 · 本機限定</span></header>
- <p class="intro">完整保留帳戶原密碼、權限、素材、題庫、音樂與歷史。先備份驗包，再預演還原到全新資料目錄。</p>
+ <header><div><span class="tag">BGA · 本機管理者工具</span><h1>從其他站匯入資料</h1></div><span class="local-badge">127.0.0.1 · 本機限定</span></header>
+ <div class="scope-note"><strong>完整匯入，不合併現有資料</strong><span>保留原帳戶、密碼、權限與內容。建立全新資料目錄後，仍需隔離驗收與部署切換。</span></div>
  <div class="workspace">
   <section class="panel"><form id="transferForm">
-   <fieldset id="controls"><legend>1. 選擇操作</legend>
-    <label for="action">操作項目</label><select id="action" name="action"><option value="keygen">建立備份金鑰</option><option value="inspect">盤點來源資料</option><option value="export">匯出加密備份</option><option value="verify">驗證備份包</option><option value="restore">還原到新資料目錄</option></select>
-    <p id="actionHelp" class="hint"></p>
-    <div id="keyFields" class="group"><label for="keyFile">金鑰檔案的完整路徑</label><input id="keyFile" name="keyFile" autocomplete="off" spellcheck="false" placeholder="C:/private/backup.key"><p class="hint">二進位 key 與備份分開保存；這裡只填檔案路徑，不貼 key 內容。</p></div>
+   <fieldset id="controls"><legend class="sr-only">資料移轉操作</legend>
+    <section id="importGuide" aria-label="匯入流程">
+     <ol class="steps"><li id="stepVerify" data-state="current"><span>1</span><div><strong>選擇與驗證</strong><small>備份資料夾與金鑰</small></div></li><li id="stepRehearse"><span>2</span><div><strong>預演還原</strong><small>檢查全新目錄</small></div></li><li id="stepCreate"><span>3</span><div><strong>建立資料</strong><small>完成後另行切換</small></div></li></ol>
+     <div id="uploadSelection">
+      <p class="hint">先在來源站匯出完整加密備份，再從目前瀏覽器這台電腦選取整個備份資料夾與分開保存的 32-byte 金鑰檔。</p>
+      <div class="row file-row"><div><label for="bundlePicker">加密備份資料夾</label><input id="bundlePicker" type="file" webkitdirectory multiple aria-describedby="bundleSelection"><p id="bundleSelection" class="selection">尚未選擇 · 內含 manifest.json 與 payload/</p></div><div><label for="keyPicker">備份金鑰檔</label><input id="keyPicker" type="file" aria-describedby="keySelection"><p id="keySelection" class="selection">尚未選擇 · 必須為 32 bytes</p></div></div>
+      <button id="uploadButton" class="primary" type="button" disabled>上傳並驗證備份</button>
+     </div>
+     <div id="uploadedBundle" class="uploaded-bundle" hidden><div><strong id="selectedBundleHeading">備份已上傳並驗證</strong><p id="uploadedDescription" class="hint"></p></div><button id="clearUpload" type="button">清除暫存／重選</button></div>
+     <div id="uploadProgressPanel" hidden><progress id="uploadProgress" max="100" value="0" aria-label="備份上傳進度"></progress><p id="uploadStatus" class="hint" role="status" aria-live="polite"></p></div>
+     <button id="cleanupUpload" type="button" hidden>清理未完成的上傳</button>
+     <section id="savedUploadsPanel" class="saved-uploads" hidden><h3>管理工具保留的上傳暫存</h3><p class="hint">重新整理只查詢狀態。可使用已驗證備份，或清理未完成的批次。</p><div id="savedUploads"></div></section>
+    </section>
+    <p id="actionHelp" class="hint action-help"></p>
+    <details id="localPaths"><summary id="localPathsHeading">備份已在這台電腦？使用本機完整路徑</summary>
+     <div id="keyFields" class="group"><label for="keyFile">金鑰檔案的完整路徑</label><input id="keyFile" name="keyFile" autocomplete="off" spellcheck="false" placeholder="C:/private/backup.key"><p class="hint">只填本機檔案路徑；金鑰內容不會顯示或存進瀏覽器儲存空間。</p></div>
+     <div id="bundleFields" class="group"><label for="bundleDir">本機備份包目錄</label><input id="bundleDir" name="bundleDir" autocomplete="off" spellcheck="false" placeholder="C:/backups/new-bundle"></div>
+    </details>
     <div id="sourceFields" class="group" hidden>
      <div class="row"><div><label for="dbFile">來源 SQLite</label><input id="dbFile" name="dbFile" autocomplete="off" spellcheck="false" placeholder="C:/old-data/afterhours.sqlite"></div><div><label for="envId">來源環境名稱</label><input id="envId" name="envId" value="production" spellcheck="false" maxlength="64"></div></div>
      <div class="row"><div><label for="historyDir">歷史目錄</label><input id="historyDir" name="historyDir" autocomplete="off" spellcheck="false" placeholder="C:/old-data/history"></div><div><label for="communityDir">共編題庫目錄</label><input id="communityDir" name="communityDir" autocomplete="off" spellcheck="false" placeholder="C:/old-data/community"></div></div>
@@ -21,22 +35,23 @@
      <label class="check requirement"><input id="sourceStopped" type="checkbox">我已停止來源遊戲服務及所有 writer，並完成或明確中斷對局。</label>
     </div>
     <div id="outputFields" class="group" hidden><label for="outputDir">新的備份包目錄</label><input id="outputDir" name="outputDir" autocomplete="off" spellcheck="false" placeholder="C:/backups/new-bundle"><p class="hint">必須不存在，且與來源資料、金鑰分開。</p></div>
-    <div id="bundleFields" class="group" hidden><label for="bundleDir">備份包目錄</label><input id="bundleDir" name="bundleDir" autocomplete="off" spellcheck="false" placeholder="C:/backups/new-bundle"></div>
     <div id="restoreFields" class="group" hidden>
-     <label for="destinationDir">全新的資料目錄</label><input id="destinationDir" name="destinationDir" autocomplete="off" spellcheck="false" placeholder="C:/data-generations/new-generation">
-     <div class="mode"><label class="check"><input type="radio" name="restoreMode" value="dry" checked>先預演（預設，不建立新資料代）</label><label class="check"><input type="radio" name="restoreMode" value="apply">正式建立新資料代</label></div>
+     <label for="destinationDir">管理工具主機上的全新資料目錄</label><input id="destinationDir" name="destinationDir" autocomplete="off" spellcheck="false" placeholder="C:/data-generations/import-2026-10-05"><p class="hint">填工具執行主機上尚不存在的完整路徑；透過 SSH 轉發連線時，這是遠端主機路徑。即使是空資料夾，也不能作為目標。</p>
+     <div class="mode"><label class="check"><input id="dryMode" type="radio" name="restoreMode" value="dry" checked>預演還原</label><label class="check"><input id="applyMode" type="radio" name="restoreMode" value="apply" disabled>建立新資料目錄</label></div>
      <label id="targetRequirement" class="check requirement" hidden><input id="targetStopped" type="checkbox">我已停止目標 writer，確認這是全新目錄，並保留舊程式與資料供回退。</label>
-     <p class="hint">建立資料代後仍須隔離啟動驗收；這個工具不會切換正式服務或路由。</p>
+     <p id="restoreGate" class="hint">先成功驗證備份，再預演同一組目錄；預演成功後才能建立資料。</p>
     </div>
-    <details id="advanced"><summary>進階選項</summary><div class="group"><label for="maxBytes">容量上限（bytes，可留空，預設 10 GiB）</label><input id="maxBytes" type="number" min="1" max="1099511627776" step="1"><div id="tempFields"><label for="tempDir">驗包暫存目錄（可留空）</label><input id="tempDir" autocomplete="off" spellcheck="false" placeholder="C:/private/scratch"></div><label id="acknowledgeLabel" class="check"><input id="acknowledgeInterruptedMatches" type="checkbox">接受未完對局在還原時標為中斷；不產生分數或勝負。</label><label id="vacuumLabel" class="check"><input id="forceVacuum" type="checkbox">使用 VACUUM INTO 備份分支</label></div></details>
-    <button id="runButton" class="primary" type="submit">建立備份金鑰</button>
+    <details id="advanced"><summary>容量與還原選項</summary><div class="group"><label for="maxBytes">容量上限（bytes，可留空，預設 10 GiB）</label><input id="maxBytes" type="number" min="1" max="1099511627776" step="1"><div id="tempFields"><label for="tempDir">驗包暫存目錄（可留空）</label><input id="tempDir" autocomplete="off" spellcheck="false" placeholder="C:/private/scratch"></div><label id="acknowledgeLabel" class="check"><input id="acknowledgeInterruptedMatches" type="checkbox">接受未完對局在還原時標為中斷；不產生分數或勝負。</label><label id="vacuumLabel" class="check"><input id="forceVacuum" type="checkbox">使用 VACUUM INTO 備份分支</label></div></details>
+    <button id="runButton" class="primary" type="submit">驗證本機備份</button>
+    <details id="operationDetails"><summary>來源站備份／進階操作</summary><label for="action">操作項目</label><select id="action" name="action"><option value="verify" selected>匯入：驗證本機備份</option><option value="restore">匯入：預演／建立新資料目錄</option><option value="keygen">來源站：建立備份金鑰</option><option value="inspect">來源站：盤點來源資料</option><option value="export">來源站：匯出加密備份</option></select><p class="hint">在來源站本機執行 keygen → 盤點 → 匯出。匯出前須自行停止來源服務。</p></details>
    </fieldset>
   </form></section>
   <aside class="side">
-   <section class="panel"><div class="result-heading"><h2>2. 操作預覽</h2><button id="copyRequest" type="button">複製 JSON</button></div><p class="hint">可複製給 AI 執行，不含金鑰 bytes 或帳戶資料。</p><details class="json-details"><summary>查看操作 JSON</summary><pre id="requestPreview" tabindex="0"></pre></details></section>
-   <section class="panel result"><div class="result-heading"><h2>3. 操作結果</h2><button id="copyResult" type="button" disabled>複製結果</button></div><p id="status" role="status" aria-live="polite">尚未執行。請先確認完整路徑與操作。</p><div id="resultSummary" class="summary" hidden></div><section id="configPanel" hidden><h3 id="configHeading">新資料代設定</h3><dl id="bootConfig"></dl></section><section id="nextStepsPanel" hidden><h3>接下來</h3><ul id="nextSteps"></ul></section><details id="resultDetails" class="json-details" hidden><summary>完整 JSON 結果</summary><pre id="resultOutput" tabindex="0"></pre></details></section>
+   <section class="panel result"><div class="result-heading"><h2>目前進度與資料</h2><button id="copyResult" type="button" disabled>複製結果</button></div><p id="status" role="status" aria-live="polite">選擇來源站的備份資料夾與金鑰，開始驗證。</p><p id="inventoryLabel" class="inventory-label">驗證後顯示資料數量</p><div id="resultSummary" class="summary"><div><strong>—</strong><span>帳戶</span></div><div><strong>—</strong><span>作品</span></div><div><strong>—</strong><span>題庫題目</span></div><div><strong>—</strong><span>音樂檔案</span></div><div><strong>—</strong><span>歷史對局</span></div></div><p id="inventoryDetail" class="hint"></p>
+    <div class="result-extra"><section id="configPanel" hidden><h3 id="configHeading">新資料目錄設定</h3><dl id="bootConfig"></dl></section><section id="nextStepsPanel" hidden><h3>接下來</h3><ul id="nextSteps"></ul></section><details id="resultDetails" class="json-details" hidden><summary>完整 JSON 結果</summary><pre id="resultOutput" tabindex="0"></pre></details><details class="json-details"><summary>操作 JSON 預覽</summary><div class="result-heading"><p class="hint">可複製給 AI 執行，不含金鑰內容。</p><button id="copyRequest" type="button">複製 JSON</button></div><pre id="requestPreview" tabindex="0"></pre></details></div>
+   </section>
   </aside>
  </div>
- <footer>只接受本機同源操作，每次一個工作。來源停寫後匯出；還原預設停在預演，舊資料不覆寫。關閉工具前請等待工作結束。</footer>
+ <footer>每次執行一個工作。重新整理只查詢狀態，不會重送操作。工具不會啟動遊戲服務或切換正式站。</footer>
 </body>
 </html>
