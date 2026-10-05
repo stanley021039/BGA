@@ -240,7 +240,7 @@ async function restore(request) {
   const destination = absolute(request.destinationDir, 'destinationDir'); fresh(destination);
   const bundle = absolute(request.bundleDir, 'bundleDir'), keyFile = absolute(request.keyFile, 'keyFile');
   if (inside(destination, bundle) || inside(bundle, destination) || inside(destination, keyFile)) fail('UNSAFE_PATH', 'Restore destination must be separate from bundle and keyFile');
-  const checked = await unpack(request, path.dirname(destination)); let claimed = false, releasePublication;
+  const checked = await unpack(request, path.dirname(destination)); let claimed = false, published = false, releasePublication;
   try {
     if (checked.validated.playing.length && request.acknowledgeInterruptedMatches !== true) fail('UNFINISHED_MATCHES', 'Set acknowledgeInterruptedMatches=true to mark unfinished matches interrupted');
     const changes = restorePolicy(checked.stage, checked.validated), after = validateData(generationPaths(checked.stage));
@@ -262,9 +262,11 @@ async function restore(request) {
     syncDir(destination);
     fs.unlinkSync(path.join(destination, '.afterhours-restore-in-progress'));
     syncDir(destination);
+    published = true;
     return result;
-  } catch (error) { if (claimed) { error.code = 'PARTIAL_RESTORE'; error.message = 'Restore publication failed; the new destination is blocked by its marker. Keep using the previous generation and inspect this new directory'; } throw error; }
-  finally { if (releasePublication) releasePublication(); cleanup(checked.stage); }
+  } catch (error) { if (claimed) { error.code = 'PARTIAL_RESTORE'; error.message = 'Restore publication failed; the new destination is blocked by its publication lock or marker. Keep using the previous generation and inspect this new directory'; } throw error; }
+  // Keep the publication fence on any failure after reservation, including failure to write the marker itself.
+  finally { if (releasePublication && (!claimed || published)) releasePublication(); cleanup(checked.stage); }
 }
 async function run(request) {
   if (!request || typeof request !== 'object' || Array.isArray(request)) fail('INVALID_REQUEST', 'Request must be a JSON object');

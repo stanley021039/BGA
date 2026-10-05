@@ -219,6 +219,12 @@ test('partial publication keeps a blocking marker; disk-space failure cleans sta
   try{await assert.rejects(run({...restoreRequest(f),apply:true}),errorCode('PARTIAL_RESTORE'));}finally{fs.renameSync=rename;}
   assert.equal(fs.existsSync(path.join(f.destinationDir,'.afterhours-restore-in-progress')),true);
   assert.throws(()=>createApp({...settings({DB_FILE:path.join(f.destinationDir,'db','afterhours.sqlite'),HISTORY_DIR:path.join(f.destinationDir,'history'),COMMUNITY_DIR:path.join(f.destinationDir,'community')}),port:0}),errorCode('RESTORE_IN_PROGRESS'));
+  const beforeMarker=path.join(f.root,'before-marker'),write=fs.writeFileSync;
+  fs.writeFileSync=(file,...args)=>{if(file===path.join(beforeMarker,'.afterhours-restore-in-progress')){const e=Error('injected marker failure');e.code='ENOSPC';throw e;}return write(file,...args);};
+  try{await assert.rejects(run({...restoreRequest(f),destinationDir:beforeMarker,apply:true}),errorCode('PARTIAL_RESTORE'));}finally{fs.writeFileSync=write;}
+  assert.equal(fs.existsSync(path.join(beforeMarker,'.afterhours-restore-in-progress')),false);
+  assert.equal(fs.existsSync(path.join(f.root,'.before-marker.afterhours-publish-lock')),true);
+  assert.throws(()=>createApp({...settings({DB_FILE:path.join(beforeMarker,'db','afterhours.sqlite'),HISTORY_DIR:path.join(beforeMarker,'history'),COMMUNITY_DIR:path.join(beforeMarker,'community')}),port:0}),errorCode('RESTORE_IN_PROGRESS'));
   const statfs=fs.statfsSync;fs.statfsSync=()=>({bavail:0n,bsize:4096n});
   try{await assert.rejects(run({...f.exportRequest,outputDir:path.join(f.root,'disk-full')}),errorCode('INSUFFICIENT_SPACE'));}finally{fs.statfsSync=statfs;}
   assert.equal(fs.existsSync(path.join(f.root,'disk-full')),false);assert.equal(fs.readdirSync(f.root).some(n=>n.startsWith('.afterhours-transfer-')),false);
