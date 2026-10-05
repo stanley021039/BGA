@@ -22,7 +22,9 @@ class HistoryStore{
  close(){if(fs.existsSync(this.lock)&&fs.readFileSync(this.lock,'utf8')===String(process.pid))fs.unlinkSync(this.lock);}
  encode(row,max=this.limits.maxRowBytes){const text=JSON.stringify(row)+'\n';if(Buffer.byteLength(text)>max)throw new HttpError(429,'HISTORY_ROW_LIMIT','對局記錄過大，請建立新房間');return text;}
  account(name,bytes){this.totalBytes+=bytes-(this.sizes.get(name)||0);this.sizes.set(name,bytes);}
- remove(name){if(!this.sizes.has(name))return;fs.unlinkSync(path.join(this.dir,name));this.totalBytes-=this.sizes.get(name);this.sizes.delete(name);}
+ forget(name){this.totalBytes-=this.sizes.get(name)||0;this.sizes.delete(name);}
+ reconcileSize(name){try{const stat=fs.statSync(path.join(this.dir,name));if(stat.isFile())this.account(name,stat.size);}catch(error){if(error.code==='ENOENT')this.forget(name);}}
+ remove(name){if(!this.sizes.has(name))return;fs.unlinkSync(path.join(this.dir,name));this.forget(name);}
  removeArchive(id){this.remove(id+'.jsonl');this.remove(id+'.meta.json');this.metas.delete(id);}
  prune(required,protectedIds=new Set(),extraFiles=0){
   const expired=Date.now()-this.limits.retentionDays*86400000;
@@ -38,8 +40,17 @@ class HistoryStore{
   this.prune(bytes,new Set([id]),extraFiles);
   if(this.totalBytes+bytes>this.limits.maxTotalBytes||this.sizes.size+extraFiles>this.limits.maxFiles)throw new HttpError(429,'HISTORY_QUOTA','歷史記錄容量已滿，請稍後再試或聯絡管理者');
  }
- saveMeta(m){const name=m.id+'.meta.json',file=path.join(this.dir,name),text=JSON.stringify(m);fs.writeFileSync(file+'.tmp',text);fs.renameSync(file+'.tmp',file);this.account(name,Buffer.byteLength(text));}
- appendText(id,text){const name=id+'.jsonl',fd=fs.openSync(path.join(this.dir,name),'a');try{fs.writeFileSync(fd,text);fs.fsyncSync(fd);this.account(name,(this.sizes.get(name)||0)+Buffer.byteLength(text));}finally{fs.closeSync(fd);}}
+ saveMeta(m){
+  const name=m.id+'.meta.json',file=path.join(this.dir,name),text=JSON.stringify(m);
+  try{fs.writeFileSync(file+'.tmp',text);fs.renameSync(file+'.tmp',file);this.forget(name+'.tmp');this.account(name,Buffer.byteLength(text));}
+  catch(error){this.reconcileSize(name);this.reconcileSize(name+'.tmp');throw error;}
+ }
+ appendText(id,text){
+  const name=id+'.jsonl',fd=fs.openSync(path.join(this.dir,name),'a');
+  try{fs.writeFileSync(fd,text);fs.fsyncSync(fd);this.account(name,(this.sizes.get(name)||0)+Buffer.byteLength(text));}
+  catch(error){this.reconcileSize(name);throw error;}
+  finally{fs.closeSync(fd);}
+ }
  append(id,row){const text=this.encode(row);this.ensureCapacity(id,Buffer.byteLength(text),{match:this.metas.has(id),extraFiles:this.sizes.has(id+'.jsonl')?0:1});this.appendText(id,text);}
  trace(ctx,makeRow){if(!ctx.trace||ctx.traceTruncated)return;const row=makeRow(),bytes=Buffer.byteLength(JSON.stringify(row));if(ctx.traceBytes+bytes>this.limits.maxTraceBytes){ctx.traceTruncated=true;return;}ctx.traceBytes+=bytes;ctx.trace.push(row);}
  newSession(room,ctx,previous){
@@ -78,7 +89,14 @@ class HistoryStore{
   const row={kind:'result',seq,at:new Date().toISOString(),operation:clone(operation),ok:!error,...(error?{error:error.message}:{}),trace:ctx.trace,...(ctx.traceTruncated?{traceTruncated:true}:{}),after:snapshot(room)};ctx.trace=null;
   try{
    this.appendText(id,this.encode(row,this.limits.maxResultBytes));
-   if(m){m.count++;m.players=room.players.map(p=>p.name);if(finished(room)){m.status='finished';m.endedAt=row.at;m.result=clone(room.winner||room.results||[]);ctx.current=null;}this.saveMeta(m);}
+   if(m){
+    m.count++;m.players=room.players.map(p=>p.name);
+    // A rejected start never acquired an active match. Leaving the new
+    // archive "playing" here would make every failed retry unevictable.
+    if(header&&error&&['waiting','finished','showdown'].includes(room.phase)){m.status='interrupted';m.endedAt=row.at;m.reason='開局未完成';ctx.current=null;}
+    else if(finished(room)){m.status='finished';m.endedAt=row.at;m.result=clone(room.winner||room.results||[]);ctx.current=null;}
+    this.saveMeta(m);
+   }
    this.prune(0,new Set([id]));
   }catch(e){ctx.failed=true;throw e;}
   if(error)throw error;return result;

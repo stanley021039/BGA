@@ -83,13 +83,23 @@ window.StrokeCanvas=(()=>{
  // Live drawing keeps the painted prefix instead of replaying every fill on SSE.
  // Checkpoints are distributed by drawing cost, with a pinned mutable-tail base.
  // At 512x256 the default cache is <=8 MiB; recovery work is bounded by input limits.
+ let yieldChannel=null,yieldQueue=[];
+ function yieldToMain(){
+  // MessageChannel remains usable in a background tab; rAF would pause recovery.
+  if(typeof globalThis.MessageChannel==='function'){
+   if(!yieldChannel){yieldChannel=new globalThis.MessageChannel();yieldChannel.port1.onmessage=()=>yieldQueue.shift()?.();}
+   return new Promise(resolve=>{yieldQueue.push(resolve);yieldChannel.port2.postMessage(0);});
+  }
+  return new Promise(resolve=>setTimeout(resolve,0));
+ }
  function createRenderer(canvas,options={}){
   const maxCheckpoints=options.maxCheckpoints??16,checkpointEvery=options.checkpointEvery??32;
   const maxStrokes=options.maxStrokes??1016,maxPoints=options.maxPoints??31024,maxFills=options.maxFills??49;
   if(!Number.isInteger(maxCheckpoints)||maxCheckpoints<2||maxCheckpoints>32||!Number.isInteger(checkpointEvery)||checkpointEvery<1)throw Error('Invalid canvas checkpoint limits');
   const context=canvas.getContext('2d');
-  let keys=[],costs=[0],checkpoints=[],revision=0;
-  const stats={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,checkpointBytes:0};
+  const yieldMain=options.yieldToMain||yieldToMain,now=()=>globalThis.performance?.now?.()??Date.now();
+  let keys=[],costs=[0],checkpoints=[],revision=0,epoch=0,pendingRender=null;
+  const stats={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,checkpointBytes:0,yields:0,cancelledRenders:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
   function clear(){context.clearRect(0,0,canvas.width,canvas.height);context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}
   function remember(index,pinned){
    if(!index||checkpoints.some(point=>point.index===index))return;
@@ -107,7 +117,7 @@ window.StrokeCanvas=(()=>{
    if(checkpoints.includes(point))point.image=context.getImageData(0,0,canvas.width,canvas.height);
    stats.checkpointBytes=checkpoints.length*canvas.width*canvas.height*4;
   }
-  function render(strokes,{keys:nextKeys,mutableFrom=strokes.length}={}){
+  function plan(strokes,{keys:nextKeys,mutableFrom=strokes.length}={}){
    if(!Array.isArray(strokes)||strokes.length>maxStrokes)throw Error('Canvas stroke limit exceeded');
    let pointCount=0,fillCount=0;
    for(const stroke of strokes){
@@ -118,31 +128,77 @@ window.StrokeCanvas=(()=>{
    nextKeys=nextKeys||strokes.map(stroke=>JSON.stringify(stroke));
    if(nextKeys.length!==strokes.length)throw Error('Invalid canvas keys');
    let common=0;while(common<keys.length&&common<nextKeys.length&&keys[common]===nextKeys[common])common++;
-   if(common===keys.length&&common===nextKeys.length)return false;
-   let from=common;
+   const base=common<keys.length?checkpoints.filter(point=>point.index<=common).at(-1):null;
+   return {strokes,nextKeys:nextKeys.slice(),mutableFrom,common,from:common<keys.length?(base?.index||0):common,base,unchanged:common===keys.length&&common===nextKeys.length};
+  }
+  function cancelPending(){
+   if(pendingRender){pendingRender.cancelled=true;pendingRender.plan.strokes=null;pendingRender.plan.nextKeys=null;pendingRender=null;stats.cancelledRenders++;}
+  }
+  function begin(job){
+   cancelPending();const token=++epoch;
+   if(job.unchanged)return token;
+   const {common,from,base}=job;
    if(common<keys.length){
     checkpoints=checkpoints.filter(point=>point.index<=common);
-    const base=checkpoints.at(-1);
-    if(base){context.putImageData(base.image,0,0);from=base.index;}else{clear();from=0;}
+    if(base)context.putImageData(base.image,0,0);else clear();
     stats.restores++;
    }
-   costs=costs.slice(0,from+1);
-   for(let index=from;index<strokes.length;index++){
-    if(index===mutableFrom)remember(index,mutableFrom);
-    const stroke=strokes[index],filledPixels=drawStroke(context,stroke)||0;
+   costs=costs.slice(0,from+1);keys=job.nextKeys.slice(0,from);
+   stats.checkpointBytes=checkpoints.length*canvas.width*canvas.height*4;
+   job.base=null;
+   return token;
+  }
+  function paint(job,index){
+    if(index===job.mutableFrom)remember(index,job.mutableFrom);
+    const stroke=job.strokes[index],filledPixels=drawStroke(context,stroke)||0;
     stats.strokeApplications++;
     if(stroke.tool==='fill'){stats.fillApplications++;stats.filledPixels+=filledPixels;}
     costs.push(costs[index]+(stroke.tool==='fill'?32:1));
-    if(index<mutableFrom&&(stroke.tool==='fill'||(index+1)%checkpointEvery===0))remember(index+1,mutableFrom);
-   }
-   keys=nextKeys.slice();revision++;
-   stats.checkpointBytes=checkpoints.length*canvas.width*canvas.height*4;
-   return true;
+    keys.push(job.nextKeys[index]);
+    if(index<job.mutableFrom&&(stroke.tool==='fill'||(index+1)%checkpointEvery===0))remember(index+1,job.mutableFrom);
   }
-  function reset(){keys=[];costs=[0];checkpoints=[];stats.checkpointBytes=0;clear();revision++;}
-  function metrics(){return {...stats,revision,checkpoints:checkpoints.length,strokes:keys.length};}
+  function renderPlan(job){
+   begin(job);if(job.unchanged)return false;
+   for(let index=job.from;index<job.strokes.length;index++)paint(job,index);
+   revision++;return true;
+  }
+  function render(strokes,settings){return renderPlan(plan(strokes,settings));}
+  function renderCooperatively(strokes,settings){
+   const job=plan(strokes,settings);
+   if(pendingRender&&job.mutableFrom===pendingRender.plan.mutableFrom&&job.nextKeys.length===pendingRender.plan.nextKeys.length&&job.nextKeys.every((key,index)=>key===pendingRender.plan.nextKeys[index]))return pendingRender.promise;
+   let work=0;for(let index=job.from;index<strokes.length;index++)work+=strokes[index].tool==='fill'?32:1;
+   if(job.unchanged||work<=32&&strokes.length-job.from<=16)return renderPlan(job);
+   const token=begin(job);
+   // Freeze mutable drafts, then retain only one recovery target when newer data arrives.
+   job.strokes=strokes.map(stroke=>({...stroke,points:stroke.points.map(point=>point.slice())}));
+   const current={plan:job,cancelled:false,promise:null};pendingRender=current;
+   current.promise=(async()=>{
+    let index=job.from;
+    try{
+     while(index<job.strokes.length){
+      stats.yields++;await yieldMain();
+      if(token!==epoch||current.cancelled)return false;
+      const started=now();let batchCost=0,batchStrokes=0,batchFills=0;
+      while(index<job.strokes.length){
+       const cost=job.strokes[index].tool==='fill'?32:1;
+       if(batchStrokes&&(batchCost+cost>32||batchStrokes>=16||now()-started>=8))break;
+       paint(job,index++);batchCost+=cost;batchStrokes++;if(cost===32)batchFills++;
+      }
+      stats.maxBatchStrokes=Math.max(stats.maxBatchStrokes,batchStrokes);stats.maxBatchFills=Math.max(stats.maxBatchFills,batchFills);stats.maxBatchMs=Math.max(stats.maxBatchMs,now()-started);
+     }
+     revision++;return true;
+    }finally{if(pendingRender===current)pendingRender=null;}
+   })();
+   return current.promise;
+  }
+  function whenIdle(){
+   const promise=pendingRender?.promise;
+   return promise?promise.then(whenIdle):Promise.resolve();
+   }
+  function reset(){cancelPending();epoch++;keys=[];costs=[0];checkpoints=[];stats.checkpointBytes=0;clear();revision++;}
+  function metrics(){return {...stats,revision,checkpoints:checkpoints.length,strokes:keys.length,rendering:!!pendingRender,targetStrokes:pendingRender?.plan.strokes.length??keys.length};}
   clear();
-  return {render,reset,metrics};
+  return {render,renderCooperatively,whenIdle,reset,metrics};
  }
  function strokeId(){
   if(typeof globalThis.crypto?.randomUUID==='function')return globalThis.crypto.randomUUID();

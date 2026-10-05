@@ -3,7 +3,7 @@ const {randomUUID,randomFillSync}=require('node:crypto');
 const {rasterCanvas}=require('./raster-canvas.cjs');
 const script=fs.readFileSync(path.join(__dirname,'../../public/draw.js'),'utf8');
 const sharedScript=fs.readFileSync(path.join(__dirname,'../../public/shared/stroke-canvas.js'),'utf8');
-function browserHarness({realRenderer=false,events=false}={}) {
+function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
  const sources=[],elements = new Map(), listeners = new Map(), frames = [], animations = [], strokeRequests = [], commandRequests = [];
  let snapshot = {round: 1, version: 0, strokes: []};
  function element(selector) {
@@ -75,7 +75,7 @@ function browserHarness({realRenderer=false,events=false}={}) {
  if(realRenderer){const raster=rasterCanvas(512,256);Object.assign(element('#drawCanvas'),raster);element('#stagePreview').getContext=()=>({clearRect(){},drawImage(){}});}
  if(events){class EventSource{constructor(){this.handlers=new Map();sources.push(this);}addEventListener(type,fn){this.handlers.set(type,fn);}close(){}emit(type,data){this.handlers.get(type)?.({data:JSON.stringify(data)});}}context.EventSource=EventSource;context.window.EventSource=EventSource;}
  vm.runInContext(sharedScript,context);
- if(realRenderer){context.StrokeCanvas=context.window.StrokeCanvas;context.StrokeCanvas.pointFrom=event=>event.point;}
+ if(realRenderer){context.StrokeCanvas=context.window.StrokeCanvas;context.StrokeCanvas.pointFrom=event=>event.point;if(rendererOptions){const factory=context.StrokeCanvas.createRenderer;context.StrokeCanvas.createRenderer=(canvas,options)=>factory(canvas,{...options,...rendererOptions});}}
  context.StrokeCanvas.strokeId=context.window.StrokeCanvas.strokeId;
  vm.runInContext(script, context, {filename: 'public/draw.js'});
  function receive(state) {

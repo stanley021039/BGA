@@ -50,7 +50,9 @@ test('48 SSE fills take linear work; undo and reconnect retain the consumed fill
  ui.sources[0].emit('reset',{round:1,version:49,strokes:strokes.slice(0,47),quota:{usedFills:48,usedBatches:48,usedPoints:48}});
  const state=drawingState('artist');state.strokeVersion=49;ui.receive(state);
  ui.setSnapshot({round:1,version:49,strokes:strokes.slice(0,47),quota:{usedFills:48,usedBatches:48,usedPoints:48}});
+ await run(ui,'waitForCanvasRender()');
  const before=run(ui,'canvasRenderer.metrics().fillApplications');await run(ui,'syncCanvas()');
+ await run(ui,'waitForCanvasRender()');
  assert.equal(run(ui,'canvasRenderer.metrics().fillApplications'),before,'identical reconnect does no pixel replay');
  await beginFill(ui);assert.equal(ui.strokeRequests.length,0);
  assert.equal(run(ui,'canvasQuota.usedFills'),48);assert.equal(run(ui,'strokes.length'),47);
@@ -106,7 +108,7 @@ test('a delayed snapshot from the old round is discarded and the new round is fe
 test('an excessive fill snapshot or SSE batch is rejected before changing accepted history',async t=>{
  const ui=await setup(t,'guest'),strokes=Array.from({length:48},(_,index)=>fill(index+1));
  ui.context.injected={round:1,version:48,strokes,quota:{usedFills:48,usedBatches:48,usedPoints:48}};
- run(ui,'applyCanvasSnapshot(injected)');const before=run(ui,'canvasRenderer.metrics().fillApplications');
+ run(ui,'applyCanvasSnapshot(injected)');await run(ui,'waitForCanvasRender()');const before=run(ui,'canvasRenderer.metrics().fillApplications');
  ui.sources[0].emit('stroke',event(fill(49)));await pause();
  assert.equal(run(ui,'canvasVersion'),48);assert.equal(run(ui,'strokes.length'),48);
  assert.equal(run(ui,'canvasRenderer.metrics().fillApplications'),before);
@@ -146,7 +148,7 @@ test('confirmed partial brush batches preserve the active optimistic tail withou
 test('an SSE batch exceeding the aggregate point budget is rejected before painting',async t=>{
  const ui=await setup(t,'guest');
  const strokes=Array.from({length:469},(_,index)=>({...fill(index+1),tool:'brush',points:Array.from({length:index===468?48:64},()=>[10,10])}));
- ui.context.injected={round:1,version:469,strokes};run(ui,'applyCanvasSnapshot(injected)');
+ ui.context.injected={round:1,version:469,strokes};run(ui,'applyCanvasSnapshot(injected)');await run(ui,'waitForCanvasRender()');
  const before=run(ui,'canvasRenderer.metrics().strokeApplications');
  ui.sources[0].emit('stroke',event({...fill(470),tool:'brush',points:[[11,11]]},{usedFills:0,usedBatches:470,usedPoints:30000}));await pause();
  assert.equal(run(ui,'canvasVersion'),469);assert.equal(run(ui,'canvasTotals.points'),30000);
