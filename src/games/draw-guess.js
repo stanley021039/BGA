@@ -5,9 +5,11 @@ const {drawContent,validCustomPercent}=require('./content-draw');
 const {HttpError}=require('../http/errors');
 
 const clone=value=>JSON.parse(JSON.stringify(value));
+const freeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value)){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;};
 const normalize=value=>value.normalize('NFKC').toLocaleLowerCase('zh-Hant').trim().replace(/\s+/gu,' ');
 const CONTROLS=new Set(['brush','erase','line','rect','ellipse','fill']);
 const MAX_BATCHES=1000,MAX_POINTS=30000,MAX_FILLS=48;
+const MAX_PUBLIC_RESULTS=8,MAX_RESULT_SAVES=256;
 const validTopic=topic=>topic==='all'||TOPICS.some(item=>item.id===topic);
 const DRAW_CATEGORIES=[...TOPICS.map(item=>item.id),'custom'];
 const validTopics=topics=>Array.isArray(topics)&&topics.length>0&&topics.length<=DRAW_CATEGORIES.length&&new Set(topics).size===topics.length&&topics.every(topic=>DRAW_CATEGORIES.includes(topic));
@@ -16,10 +18,13 @@ class DrawGuessRoom{
  constructor(code,name,rng=randomInt,now=Date.now){
   this.type='draw';this.code=code;this.name=name;this.rng=rng;this.now=now;
   this.players=[];this.host=null;this.phase='waiting';this.version=0;this.updated=now();
-  this.round=0;this.roundLimit=0;this.pendingArtists=[];this.presenterId=null;
+  this.round=0;this.roundLimit=0;this.pendingArtists=[];this.presenterId=null;this.gameRunId=null;
   this.options={seconds:90,customPercent:null,topic:'all',topics:[...DRAW_CATEGORIES]};this.candidates=[];this.question=null;
   this.usedWordIds=[];this.participantIds=[];this.guessedIds=[];this.guesses=[];this.result=null;this.results=[];this.winner=null;this.deadline=null;this.events=[];
   Object.defineProperty(this,'canvas',{value:{epoch:randomUUID(),version:0,strokes:[],batchIds:new Set(),points:0,acceptedPoints:0,recent:[],fills:0,fillRecent:[],commandRecent:[]},enumerable:false});
+  // These bounded, in-memory snapshots must not enter every history row or poll.
+  Object.defineProperty(this,'publicResults',{value:new Map(),enumerable:false});
+  Object.defineProperty(this,'roundStartScores',{value:new Map(),enumerable:false});
  }
  player(id){return this.players.find(player=>player.id===id);}
  activePlayers(){return this.players.filter(player=>!player.kicked);}
@@ -73,7 +78,7 @@ class DrawGuessRoom{
   const pools=this.wordPools();
   if(!pools.builtin.length&&(!pools.custom.length||this.options.customPercent===0))throw Error('所選類別還沒有題目，請到共編題庫新增自定義題目，或勾選其他類別');
   for(const player of this.players){player.score=0;player.waitingForNextRound=false;}
-  this.round=0;this.roundLimit=this.players.length;this.pendingArtists=this.players.map(player=>player.id);
+  this.gameRunId=randomUUID();this.round=0;this.roundLimit=this.players.length;this.pendingArtists=this.players.map(player=>player.id);
   this.results=[];this.winner=null;this.usedWordIds=[];
   this.newRound();
  }
@@ -82,6 +87,7 @@ class DrawGuessRoom{
   while(this.pendingArtists.length&&!this.activePlayers().some(player=>player.id===this.pendingArtists[0]))this.pendingArtists.shift();
   if(!this.pendingArtists.length){this.finish();return;}
   this.round++;this.presenterId=this.pendingArtists.shift();
+  this.roundStartScores.clear();for(const player of this.players)this.roundStartScores.set(player.id,player.score);
   this.participantIds=this.activePlayers().filter(player=>player.id!==this.presenterId).map(player=>player.id);
   const draw=drawContent({...this.wordPools(),count:3,customPercent:this.options.customPercent,usedIds:this.usedWordIds,rng:this.rng});
   this.candidates=draw.items.map(clone);this.usedWordIds=draw.usedIds;
@@ -125,10 +131,31 @@ class DrawGuessRoom{
  }
  reveal(reason='時間到'){
   if(!['drawing','choosing'].includes(this.phase))return;
-  this.result={round:this.round,presenterId:this.presenterId,answer:this.question?.title||null,aliases:this.question?.aliases||[],reason,guessedIds:[...this.guessedIds],guesses:clone(this.guesses),scores:this.activePlayers().map(player=>({id:player.id,score:player.score}))};
+  const artist=this.player(this.presenterId);
+  this.result=freeze(clone({resultId:randomUUID(),gameRunId:this.gameRunId,canvasEpoch:this.canvas.epoch,revealedAt:this.now(),round:this.round,presenterId:this.presenterId,artist:{id:this.presenterId,name:artist?.name||'畫者',avatar:artist?.avatar||null},answer:this.question?.title||null,aliases:this.question?.aliases||[],reason,guessedIds:[...this.guessedIds],guesses:this.guesses,scores:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,roundPoints:player.score-(this.roundStartScores.get(player.id)||0)}))}));
   this.results.push(this.result);
+  const {guesses,...metadata}=this.result;
+  this.publicResults.set(this.result.resultId,{snapshot:freeze({result:metadata,canvas:this.canvasSnapshot()}),artworks:new Map()});
+  while(this.publicResults.size>MAX_PUBLIC_RESULTS)this.publicResults.delete(this.publicResults.keys().next().value);
   this.phase='reveal';this.deadline=this.now()+8000;this.event('reveal',reason+'，本輪揭曉');
  }
+ resultSnapshot(resultId){
+  const entry=this.publicResults.get(resultId);
+  if(!entry)throw new HttpError(404,'DRAW_RESULT_NOT_FOUND','這輪結果尚未公開或已不在最近八輪內');
+  return clone(entry.snapshot);
+ }
+ resultMetadata(resultId){
+  const entry=this.publicResults.get(resultId);
+  if(!entry)throw new HttpError(404,'DRAW_RESULT_NOT_FOUND','這輪結果尚未公開或已不在最近八輪內');
+  return clone(entry.snapshot.result);
+ }
+ savedResultArtwork(resultId,userId){
+  const entry=this.publicResults.get(resultId);
+  if(!entry)throw new HttpError(404,'DRAW_RESULT_NOT_FOUND','這輪結果尚未公開或已不在最近八輪內');
+  if(!entry.artworks.has(userId)&&entry.artworks.size>=MAX_RESULT_SAVES)throw new HttpError(429,'DRAW_RESULT_SAVE_LIMIT','這輪的收藏紀錄已達上限');
+  return entry.artworks.get(userId)||null;
+ }
+ rememberResultArtwork(resultId,userId,artworkId){this.savedResultArtwork(resultId,userId);this.publicResults.get(resultId).artworks.set(userId,artworkId);}
  finish(reason=null){
   this.phase='finished';this.deadline=null;
   const players=this.activePlayers(),high=Math.max(0,...players.map(player=>player.score));
@@ -196,17 +223,17 @@ class DrawGuessRoom{
  canvasQuota(){return {usedFills:this.canvas.fills,usedBatches:this.canvas.batchIds.size,usedPoints:this.canvas.acceptedPoints};}
  canvasSnapshot(){return {canvasEpoch:this.canvas.epoch,round:this.round,version:this.canvas.version,strokes:clone(this.canvas.strokes),limits:{maxBatches:MAX_BATCHES,maxPoints:MAX_POINTS,maxFills:MAX_FILLS},quota:this.canvasQuota()};}
  view(id){
-  const revealed=['reveal','finished'].includes(this.phase);
+  const revealed=['reveal','finished'].includes(this.phase)&&this.result?.canvasEpoch===this.canvas.epoch;
   return clone({
    type:this.type,code:this.code,name:this.name,phase:this.phase,version:this.version,host:id===this.host,hostId:this.host,me:id,
-   round:this.round,roundLimit:this.roundLimit,presenterId:this.presenterId,options:this.options,deadline:this.deadline,serverNow:this.now(),
+   round:this.round,roundLimit:this.roundLimit,gameRunId:this.gameRunId,presenterId:this.presenterId,options:this.options,deadline:this.deadline,serverNow:this.now(),
    candidates:this.phase==='choosing'&&id===this.presenterId?this.candidates:[],
    question:this.question&&(id===this.presenterId||revealed)?{title:this.question.title,aliases:this.question.aliases,category:this.question.category,difficulty:this.question.difficulty,topic:this.question.topic,topicLabel:this.question.topicLabel}:null,
    hint:this.question?{category:this.question.category,topicLabel:this.question.topicLabel||topicLabels[this.question.topic]||topicLabels.misc,length:[...this.question.title].length}:null,
    players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,online:this.now()-player.lastSeen<15000,waitingForNextRound:player.waitingForNextRound})),
    participantIds:this.participantIds,guessedIds:this.guessedIds,guesses:this.guesses.map(item=>item.correct?{id:item.id,name:item.name,correct:true,points:item.points,at:item.at}:item),
-   result:revealed?this.result:null,winner:this.winner,canvasEpoch:this.canvas.epoch,strokeVersion:this.canvas.version,events:this.events
+   result:revealed?this.result:null,recentResults:[...this.publicResults.values()].reverse().map(entry=>entry.snapshot.result),winner:this.winner,canvasEpoch:this.canvas.epoch,strokeVersion:this.canvas.version,events:this.events
   });
  }
 }
-module.exports={DrawGuessRoom,normalize,validTopic,validTopics,DRAW_CATEGORIES};
+module.exports={DrawGuessRoom,normalize,validTopic,validTopics,DRAW_CATEGORIES,MAX_PUBLIC_RESULTS,MAX_RESULT_SAVES};

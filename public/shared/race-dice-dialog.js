@@ -11,6 +11,7 @@
  .race-dice-dialog:not([data-kind=round]){width:min(44rem,calc(100vw - 32px))}.race-dice-participants[data-count="1"]{grid-template-columns:1fr}.race-dice-participants[data-count="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}.race-dice-dialog[data-stage=result] .race-dice-face[data-symbol=true]+.race-dice-value-label{display:none}
  @keyframes race-dice-tumble{0%{transform:rotate(-18deg) translateY(-3px)}20%{transform:rotate(20deg) translateY(2px)}40%{transform:rotate(-14deg) translateY(-2px)}65%{transform:rotate(10deg)}85%{transform:rotate(-5deg)}100%{transform:none}}
  @media(max-width:800px){.race-dice-participants{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.race-dice-dialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:10px}.race-dice-header,.race-dice-footer,.race-dice-body{padding:12px 16px}.race-dice-participants{grid-template-columns:1fr;gap:12px}.race-dice-actions{width:100%}.race-dice-action{flex:1 1 auto}}
+ .motion-reduced .race-dice-dialog[data-stage=rolling] .race-dice-face,.race-dice-dialog[data-motion=false] .race-dice-face{animation:none}
  @media(prefers-reduced-motion:reduce){.race-dice-dialog[data-stage=rolling] .race-dice-face{animation:none}.race-dice-dialog::backdrop{backdrop-filter:none}}
  `;
  // Fixed geometry keeps the face and pips legible regardless of the installed font.
@@ -29,7 +30,7 @@
   const icons={rollDice:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/>',rerollDice:'<path d="M3 4v6h6M3 10a9 9 0 1 1 1 8"/>',acceptDice:'<path d="m5 12 4 4L19 6"/>'};
   const buttons={};for(const [action,label]of [['rollDice','擲骰'],['rerollDice','重擲兩顆'],['acceptDice','確認，繼續']]){const button=node('button','race-dice-action',actions);button.type='button';button.dataset.diceAction=action;const icon=node('span','',button);icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">'+icons[action]+'</svg>';node('span','',button,label);button.addEventListener('click',()=>act(action));buttons[action]=button;}
   let state=null,check=null,checkId=null,cycle=null,pending=null,requestNumber=0,destroyed=false,returnFocus=null,timer=null,animationTimer=null,tiles=[],cards=new Map(),layoutKey='',lastStage='',displayDeadline=0;
-  const now=()=>Date.now(),reduced=()=>!!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const now=()=>Date.now(),reduced=()=>!!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches||root.MotionPolicy?.get().enabled===false||!!document.hidden||cycle?.animate===false;
   function write(el,text){const value=String(text??'');if(el.textContent!==value)el.textContent=value;}
   function clearTimers(){root.clearTimeout(timer);root.clearTimeout(animationTimer);timer=null;animationTimer=null;}
   function ownerName(){return check?.participants?.find(p=>p.id===check.owner)?.name||state?.players?.find(p=>p.id===check.owner)?.name||'負責玩家';}
@@ -67,7 +68,7 @@
   }
   function render(){
    if(!check||destroyed)return;root.clearTimeout(timer);timer=null;const currentStage=stage(),changed=currentStage!==lastStage;
-   dialog.dataset.stage=currentStage;dialog.dataset.kind=check.kind||'';write(title,check.title||'同步擲骰');write(condition,check.condition||'依本次骰子結果結算。');updateParticipants();
+   dialog.dataset.stage=currentStage;dialog.dataset.motion=String(!reduced());dialog.dataset.kind=check.kind||'';write(title,check.title||'同步擲骰');write(condition,check.condition||'依本次骰子結果結算。');updateParticipants();
    if(changed&&currentStage==='rolling'){const elapsed=Math.max(0,now()-cycle.seenAt);dialog.style.setProperty('--race-dice-duration',Math.max(1000,displayDeadline-cycle.seenAt)+'ms');dialog.style.setProperty('--race-dice-delay',-elapsed+'ms');}
    if(currentStage==='result'){root.clearTimeout(animationTimer);animationTimer=null;tiles.forEach((tile,index)=>paintFace(tile,check.result.faces[index],'result',index));write(result,check.result.text||'擲骰完成。');}
    else{write(result,'');if(currentStage!=='rolling'||reduced())tiles.forEach((tile,index)=>paintFace(tile,'?',currentStage==='awaiting'?'awaiting':'rolling',index));if(currentStage==='rolling'&&animationTimer===null)cosmeticTick();}
@@ -84,12 +85,12 @@
    lastStage=currentStage;if(cycle?.observed&&now()<displayDeadline)timer=root.setTimeout(render,Math.max(1,displayDeadline-now()));
   }
   function open(){if(!dialog.open){dialog.showModal();title.focus({preventScroll:true});}}
-  function show(nextState){
+  function show(nextState,{live=true}={}){
    if(destroyed)return;const next=nextState?.diceCheck;if(next?.id==null||!['awaiting','rolling','result'].includes(next.status)){reset();return;}
    const different=next.id!==checkId;state=nextState;check=next;
    if(different){clearTimers();checkId=next.id;cycle=null;pending=null;layoutKey='';lastStage='';displayDeadline=0;error.textContent='';if(!dialog.open)returnFocus=document.activeElement;}
    else if(pending&&pending.key!==fingerprint(next)){pending=null;error.textContent='';}
-   const key=cycleKey(next);if(next.status==='rolling'&&cycle?.key!==key){clearTimers();cycle={key,observed:true,seenAt:now()};displayDeadline=Math.max(serverDeadline(next),cycle.seenAt+1000);lastStage='';pending=null;error.textContent='';}
+   const key=cycleKey(next);if(next.status==='rolling'&&cycle?.key!==key){clearTimers();cycle={key,observed:true,seenAt:now(),animate:live&&!document.hidden};displayDeadline=Math.max(serverDeadline(next),cycle.seenAt+1000);lastStage='';pending=null;error.textContent='';}
    else if(cycle?.observed&&cycle.key===key&&Number.isFinite(next.serverNow)&&Number.isFinite(next.readyAt))displayDeadline=Math.max(cycle.seenAt+1000,serverDeadline(next));
    const nextLayout=JSON.stringify([(next.participants||[]).map(participantKey),(next.dice||[]).map(d=>[d.participant,d.label])]);if(layoutKey!==nextLayout){layoutKey=nextLayout;buildBoard();}
    render();open();
@@ -102,8 +103,10 @@
    catch(failure){if(!destroyed&&pending?.request===request&&check?.id===id&&fingerprint(check)===key){pending=null;error.textContent=failure?.message||'操作未完成，請再試一次。';render();}}
   }
   function reset(){clearTimers();state=null;check=null;checkId=null;cycle=null;pending=null;layoutKey='';lastStage='';displayDeadline=0;error.textContent='';result.textContent='';if(dialog.open)dialog.close();if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});returnFocus=null;}
-  function destroy(){if(destroyed)return;reset();destroyed=true;dialog.remove();}
+  function destroy(){if(destroyed)return;reset();destroyed=true;unsubscribe?.();document.removeEventListener?.('visibilitychange',visibility);dialog.remove();}
   dialog.addEventListener('cancel',event=>event.preventDefault());dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();}});dialog.addEventListener('close',()=>{if(check&&!destroyed)open();});
+  const preference=()=>{if(check){if(cycle&&(document.hidden||!root.MotionPolicy?.allowsMotion()))cycle.animate=false;root.clearTimeout(animationTimer);animationTimer=null;render();}},visibility=()=>{if(document.hidden)preference();};
+  const unsubscribe=root.MotionPolicy?.subscribe(preference);document.addEventListener?.('visibilitychange',visibility);
   return{show,reset,destroy};
  }
  root.RaceDiceDialog={mount,faceMarkup};

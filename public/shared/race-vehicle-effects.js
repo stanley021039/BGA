@@ -34,7 +34,7 @@
    group.append(svgNode('rect',{x:-width/2,y:-fontSize-1,width,height:fontSize+10,rx:7}));const text=svgNode('text',{x:0,y:0,'text-anchor':'middle'});text.style.setProperty('font-size',fontSize+'px');text.textContent=record.name;group.append(text);parent.append(group);record.art.push(group);record.labels.push(group);
   }
   function render(record,state,svg,min,now){
-   const event=record.event,car=state.cars?.find(car=>car.id===record.car),node=carNode(record.car),body=carrier(node),reduced=!!media?.matches;
+   const event=record.event,car=state.cars?.find(car=>car.id===record.car),node=carNode(record.car),body=carrier(node),reduced=!!media?.matches||root.MotionPolicy?.get().enabled===false;
    if(record.type!=='shot'&&(!body||car?.x===null))return false;
    const from=position(event.from,min)||position(state.cars?.find(car=>car.id===event.source),min),to=position(event.to,min)||position(state.cars?.find(car=>car.id===event.target),min);
    if(record.type==='shot'&&(!from||!to))return false;
@@ -79,7 +79,8 @@
    schedule();
   }
   const visibility=()=>{if(doc.hidden)clear();},preference=()=>clear();doc.addEventListener('visibilitychange',visibility);media?.addEventListener?.('change',preference);
-  return{show,reset,destroy(){reset();destroyed=true;doc.removeEventListener('visibilitychange',visibility);media?.removeEventListener?.('change',preference);}};
+  const unsubscribe=root.MotionPolicy?.subscribe(()=>{if(!root.MotionPolicy.allowsMotion())clear();});
+  return{show,reset,destroy(){reset();destroyed=true;unsubscribe?.();doc.removeEventListener('visibilitychange',visibility);media?.removeEventListener?.('change',preference);}};
  }
  root.RaceVehicleEffects={mount};
 })(typeof window==='object'?window:globalThis);

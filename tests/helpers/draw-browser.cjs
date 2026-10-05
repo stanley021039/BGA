@@ -3,6 +3,8 @@ const {randomUUID,randomFillSync}=require('node:crypto');
 const {rasterCanvas}=require('./raster-canvas.cjs');
 const script=fs.readFileSync(path.join(__dirname,'../../public/draw.js'),'utf8');
 const sharedScript=fs.readFileSync(path.join(__dirname,'../../public/shared/stroke-canvas.js'),'utf8');
+const resultsScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-results.js'),'utf8');
+const motionScript=fs.readFileSync(path.join(__dirname,'../../public/shared/motion-policy.js'),'utf8');
 const CANVAS_EPOCH='00000000-0000-4000-8000-000000000001';
 function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
  const sources=[],elements = new Map(), listeners = new Map(), frames = [], animations = [], strokeRequests = [], commandRequests = [];
@@ -11,7 +13,7 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
   if (!elements.has(selector)) {
    const handlers = new Map();
    const node = {
-    hidden: false, value: selector === '#color' ? '#273942' : selector === '#size' ? '5' : '', checked: false,
+    hidden: false, open:false, value: selector === '#color' ? '#273942' : selector === '#size' ? '5' : '', checked: false,
     innerHTML: '', textContent: '', dataset: {}, style: {}, children: [], scrollHeight: 0, scrollTop: 0, clientHeight: 0,
     classList: {toggle() {}, add() {}, remove() {}},
     addEventListener(type, fn) { handlers.set(type, fn); listeners.set(selector + ':' + type, fn); },
@@ -21,15 +23,15 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
     remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); },
     querySelector(selector) { return selector === '.feed-empty' ? this.children.find(child => child.className === 'feed-empty') || null : null; },
     querySelectorAll() { return []; },
-    animate() { animations.push(selector); return {cancel() {}}; }, showModal() {}, close() {}, focus() {},
+    animate() { animations.push(selector); return {cancel() {}}; }, showModal() {this.open=true;}, close() {this.open=false;handlers.get('close')?.();}, focus() {},
    };
    elements.set(selector, node);
   }
   return elements.get(selector);
  }
  const context = vm.createContext({
-  window: {matchMedia: () => ({matches: false})},
-  document: {body: element('body'), querySelector: element, createElement: () => element('created:' + randomUUID())},
+  window: {matchMedia: () => ({matches: false}),addEventListener(type,fn){const key='window:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});}},
+  document: {body: element('body'),documentElement:element('html'),hidden:false,visibilityState:'visible',querySelector: element,getElementById:id=>element('#'+id),addEventListener(type,fn){listeners.set('document:'+type,fn);},createElement: tag => {const node=element('created:'+randomUUID());if(tag==='canvas'){Object.assign(node,rasterCanvas(512,256));node.toDataURL=()=> 'data:image/png;base64,c3ludGhldGlj';}return node;}},
   location: {pathname: '/draw/ABC123', origin: 'http://localhost:3000', search: ''},
   localStorage: {getItem: () => null, setItem() {}},
   history: {replaceState() {}}, navigator: {clipboard: {writeText: async () => {}}},
@@ -37,7 +39,8 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
   Date, crypto: {getRandomValues: bytes=>randomFillSync(bytes)}, confirm: () => true,
   fetch: async route => ({json: async () => route === '/api/info' ? {preferred: null} : {}}),
   RoomHost: {update() {}, kicked() {}}, RoomReconnect: {restore: async () => null},
-  GameShell: {settingsActions:()=>'<button class="room-settings-save" data-do="settings">儲存房間設定</button>',playerRow:(p)=>`<div class="player" data-player-id="${p.id}"></div>`,stableMarkup(node, html) {
+  GameShell: {settingsActions:()=>'<button class="room-settings-save" data-do="settings">儲存房間設定</button>',playerRow:(p,{status=''})=>`<div class="room-player player" data-player-id="${p.id}"><div class="room-player-avatar"></div><small>${status}</small></div>`,stableMarkup(node, html) {
+   if(node._gameMarkup===html)return;node._gameMarkup=html;
    node.innerHTML = html;
    if (node === element('#players')) {
     node.playerRows = [...html.matchAll(/data-player-id="([^"]+)"/g)].map(([, id]) => {
@@ -73,11 +76,14 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
    },
   },
  });
- if(realRenderer){const raster=rasterCanvas(512,256);Object.assign(element('#drawCanvas'),raster);element('#stagePreview').getContext=()=>({clearRect(){},drawImage(){}});}
+ Object.assign(element('#drawResultCanvas'),rasterCanvas(512,256));Object.assign(element('#stagePreview'),rasterCanvas(512,256));
+ if(realRenderer){const raster=rasterCanvas(512,256);Object.assign(element('#drawCanvas'),raster);}
  if(events){class EventSource{constructor(){this.handlers=new Map();sources.push(this);}addEventListener(type,fn){this.handlers.set(type,fn);}close(){}emit(type,data){this.handlers.get(type)?.({data:JSON.stringify(data)});}}context.EventSource=EventSource;context.window.EventSource=EventSource;}
  vm.runInContext(sharedScript,context);
  if(realRenderer){context.StrokeCanvas=context.window.StrokeCanvas;context.StrokeCanvas.pointFrom=event=>event.point;if(rendererOptions){const factory=context.StrokeCanvas.createRenderer;context.StrokeCanvas.createRenderer=(canvas,options)=>factory(canvas,{...options,...rendererOptions});}}
  context.StrokeCanvas.strokeId=context.window.StrokeCanvas.strokeId;
+ vm.runInContext(motionScript,context,{filename:'public/shared/motion-policy.js'});
+ vm.runInContext(resultsScript,context,{filename:'public/shared/draw-results.js'});
  vm.runInContext(script, context, {filename: 'public/draw.js'});
  function receive(state) {
   context.injectedState = state;
