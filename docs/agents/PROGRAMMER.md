@@ -38,6 +38,12 @@
 
 waiting舞台顯示完整玩家角色卡；開局切回原本常駐比分名單。入座／離席用局部更新，保留房主未儲存設定草稿，同時更新開始按鈕；host移交仍需重建權限。共用foundation可能覆蓋遊戲樣式，尺寸必須量實際computed layout，不能僅憑CSS文字。驗收與版本见 [房間修正進度](../DRAW-ROOM-SETUP-PROGRESS.md)。
 
+## 猜題者畫布排版
+
+2026-10-05，基線 `5d1776f` 的本地後續修正：1280×720 猜題者畫布外框 854×427，原本置中於固定高 366 的 board，向上蓋住標題／題材字數／倒數，向下壓到玩家名單。使用者 U23 明確選擇維持畫布大小並隱藏該列；`public/draw.css` 以 `.is-drawing:has(.tools[hidden])` 限定猜題狀態，隱藏 `.board-head`，board 改自然高度，桌機列距 12px。不要改成縮小畫布，也不要靠提高 z-index 疊回提示。遊戲說明同步改為看畫布猜答案。
+
+兩個隔離帳號、隱藏內建瀏覽器驗收：1280×720 外框仍 854×427，玩家名單 y634–705，頁面 scrollHeight 720；1920×1080 外框 1174×587，無頁面捲動；390×844 正常垂直排列、無水平溢出，手機仍需捲動。畫者標題與畫具保留；自然換至選題後資訊列恢復。證據只存 ignored `work/draw-guesser-before.png`、`draw-guesser-after.png`、`draw-guesser-layout-results.json`。本次只修版面與說明，未部署、未更新 PR，未重跑遊戲引擎測試或完成多人完整遊戲。
+
 ## 共用聲音接手補充
 
 2026-10-05、來源 `2e8dc4d`：`AudioSettings.get/set/subscribe/playEffect/stopEffects/bindPreview`集中個人music/effects偏好與音效生命週期。所有頁面先載入模組，靜態路由白名單也要更新。不要再加入遊戲自己的sound flag、volume或下方控制；右上角site-header設定是共用入口。
