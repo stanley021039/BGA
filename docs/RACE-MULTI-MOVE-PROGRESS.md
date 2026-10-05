@@ -2,9 +2,9 @@
 
 日期：2026-10-05。分支 `feat/party-content-and-race-paths`；本地實作，未 push／PR／部署。此項承接使用者「一次走多格、滑鼠移過去先顯示路線、盡量避開障礙，仍能一格一格走」要求。主 agent 背景Chrome已完成單步＋連續五步、hover零命令／遠格一個POST、键盤焦點及狀態重繪保留；不是真人樂趣或GPU效能量測。詳 [整合驗收](PARTY-UPGRADE-PROGRESS.md)。
 
-## 2026-10-06：所有位移與操作順序，v1.1.2 候選，未部署
+## 2026-10-06：所有位移與操作順序，正式 v1.1.2
 
-使用者要求撞車時先在地圖平滑移動、抵達後再進下一步，推移／交換位置等有位移的動作都需動畫。本節是後續本地實作與驗收記錄，**取代下方 v1.1.1「不鎖操作」、「淘汰車不回放」、「強制位移僅接末點」的行為說明**。v1.1.1 的既有發布證據保留；本節候選尚未部署，Linux驗收及正式站切換待後續補充。
+使用者要求撞車時先在地圖平滑移動、抵達後再進下一步，推移／交換位置等有位移的動作都需動畫。本節是後續實作與正式驗收記錄，**取代下方 v1.1.1「不鎖操作」、「淘汰車不回放」、「強制位移僅接末點」的行為說明**。v1.1.1 的既有發布證據保留；本節v1.1.2已部署至shhuang.cc，Linux與正式切換證據見本節末。
 
 原先只從前後快照推算位移，會漏掉連續玻璃的中間格、碰撞推回原點、出界淘汰及跨終點；撞入占用格時骰子modal又先於地圖動畫開啟。引擎現在另提供公開 `motions` journal，每個group含單調遞增id、原因kind及公開car／player ID與from／to座標。同group同時位移，group之間按順序演出；最多64 groups／128 transfers，超限移除完整最舊group。起跑from允許x:null；出界／終點保留嘗試落點，地震預置座標不重複記錄，重開清journal但serial不歸零。view逐層深拷貝，沒有secret。journal不新增HTTP、伺服器timer、log事件或額外game version增量，沿用原操作回覆及輪詢，規則結算仍由伺服器裁決。
 
@@ -17,7 +17,11 @@
 | 下一步與必要資訊 | 移動結束後才開dice dialog、顯示下一步controls／winner及推進教學畫面。等待期間鎖遊戲動作，保留輪詢、玩家名單與聊天更新；沒有延遲伺服器規則或靠動畫回呼推進引擎。 | render／教學與骰子回歸通過；主agent背景Chrome已截圖觀察碰撞接近後才出現modal，Chrome另驗碰撞推移、玻璃連滑、六車地震（含一車出界）、道路换片及終點。 |
 | 重連及個人動畫設定 | hydration／重連、頁面隱藏、reduced-motion及停用動畫直接同步最新呈現，不補播舊journal；取消等待時解除本機操作鎖並清理動畫。 | 控制器及render回歸通過；不把來源／VM斷言當作所有瀏覽器情境實測。 |
 
-截至候選驗收，Windows完整 **591/591** 通過（失敗／取消／跳過0，約13秒）。新引擎回歸 `tests/race-displacements.test.js` 11項，另有控制器、render順序、教學及延後骰子呈現的回歸；完整計數之後如有增量，以後續驗收記錄為準。背景Chrome在隔離localhost3199、正常1794×1010 viewport用合成帳號與受控地形，實際點擊並錄製碰撞接近→modal→擲骰→推移→下一步、玻璃三段滑動、六車地震含出界、車先前進再道路換片及抵達終點才顯示勝利。私有QA截圖為 `work/displacement-*.jpg`，時間紀錄 `work/displacement-frames.json`，29張實際碰撞截圖匯出 `work/race-displacements-demo.gif`。Chrome抓到route preview插入非直接父層的NotFoundError；已改為同一race-world父層並補真巢狀DOM限制回歸，後續頁面不再出現新錯誤。這是受控本機真畫面觀察，不代表正式站已更新，也不是GPU／FPS量測。
+截至候選驗收，Windows完整 **591/591** 通過（失敗／取消／跳過0，約13秒）。新引擎回歸 `tests/race-displacements.test.js` 11項，另有控制器、render順序、教學及延後骰子呈現的回歸；完整計數之後如有增量，以後續驗收記錄為準。背景Chrome在隔離localhost3199、正常1794×1010 viewport用合成帳號與受控地形，實際點擊並錄製碰撞接近→modal→擲骰→推移→下一步、玻璃三段滑動、六車地震含出界、車先前進再道路換片及抵達終點才顯示勝利。私有QA截圖為 `work/displacement-*.jpg`，時間紀錄 `work/displacement-frames.json`，29張實際碰撞截圖匯出 `work/race-displacements-demo.gif`。Chrome抓到route preview插入非直接父層的NotFoundError；已改為同一race-world父層並補真巢狀DOM限制回歸，後續頁面不再出現新錯誤。這是受控本機真畫面觀察，正式站另驗版本及資源；不是GPU／FPS量測。
+
+正式驗收補充（2026-10-06）：程式提交`a27dd1fec3b98f07365b3911a2a10f6c87304d67`，乾淨受測提交建立本地annotated `v1.1.2`；未push／未發新PR。Windows／Linux Node22.22.1均 **591/591**（失敗／取消／跳過0，Linux約114秒）。隔離副本schema13、15表逐列一致、integrity ok、外鍵0、啟動成功。發布包SHA-256 `26549b8bf8ec1a332a795fa049436d5e42ab7c44a053eeb62e26f5ffe0585a8b`，排除本機私人偏好與QA檔案。SQLite線上備份及持久檔案另存`shared/backups/pre-party-a27dd1f-20261005T175523Z`（UTC），不宣稱同一原子時間點。
+
+切換前確認房間數0，正式current為`releases/a27dd1f`，PID39316→40729；service及tunnel active。schema仍13、7帳戶全欄位逐列一致，既有session有效；匿名/api/version 200且no-store，race HTML、race.js、race-movement.js、race-dice-dialog.js及共用header資源一致。背景Chrome正式設定實際顯示「版本 v1.1.2」，證據`work/race-displacements-production-version.jpg`。位移GIF及受控遊戲截圖來自隔離localhost3199，正式站驗版本／資源／帳戶，不把本機動畫錄影冒稱正式站實玩。Linux證據`work/race-displacements-linux-tests.log`；後續純驗收文件提交不移動tag。
 
 ## 2026-10-06：逐格滑動修正，正式 v1.1.1
 
