@@ -38,7 +38,7 @@ node tools/server-data.cjs --request -
 ```
 
 ```json
-{"ok":false,"error":{"code":"DATA_IN_USE","message":"Data is in use; stop all writers first"}}
+{"ok":false,"error":{"code":"DATA_IN_USE","message":"Data is already in use or has a residual lock; stop all writers and inspect locks before manual cleanup"}}
 ```
 
 Node 的 SQLite experimental warning 可能出現在 stderr；AI 應解析 stdout JSON 與退出碼，不把 stderr 當 JSON。錯誤回應不輸出原始 SQLite 錯誤、stack、密碼 hash、cookie 或 JSON 自由文字。request 上限 1 MiB。
@@ -168,9 +168,21 @@ EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核�
 
 ## 失敗與回退
 
+### 殘留鎖的人工檢查
+
+伺服器、admin、移轉及歷史記錄器只用排他建立取得鎖；既有鎖一律拒絕，不會依 PID 已結束而自動刪除。異常終止後可能需要人工清理；正常關閉只移除本次取得的鎖，重複關閉不會刪除後來取得的新鎖。
+
+1. 停止使用同一組資料的全部 server、admin、inspect／export／restore 程序，暫停服務自動重啟，確認沒有其他 writer。不能只憑 PID 不存在判定可以刪除；PID 可能重用，另一主機也可能仍在使用資料。
+2. 依實際設定核對鎖的位置，保存原內容及終止原因後再判斷：DB 旁的 `.<DB 檔名>.afterhours-lock`、history／community／music 目錄的 `.afterhours-data-lock`，以及 history 的純 PID `.lock`。JSON 鎖的 hostname／pid／purpose 只供調查，不代表可自動回收。
+3. 確認所有 writer 停止後，人工移除已核實的上述資料鎖，再啟動單一 writer 或重試冷備份。無法辨認的內容、不同主機或 symlink／junction 先調查，不要使用批次萬用字元清理。
+
+還原發布鎖位於 destination 旁的 `.<destination 目錄名>.afterhours-publish-lock`。殘留發布鎖或 `.afterhours-restore-in-progress` 可能代表半份還原；依下方 `PARTIAL_RESTORE` 流程保留現場、另選全新目錄重試，不能套用一般資料鎖清理流程後直接啟動新代。舊版程式仍可能自動回收鎖，停寫及清理期間也不能混跑舊版 writer。
+
+### 錯誤與還原政策
+
 | error.code | 操作方應做的事 |
 | --- | --- |
-| SOURCE_NOT_STOPPED／DATA_IN_USE | 確認所有 writer 停止；不同主機或无法辨認的鎖不要直接刪掉。 |
+| SOURCE_NOT_STOPPED／DATA_IN_USE | 確認所有 writer 停止；工具不自動回收殘留鎖，依下方流程人工檢查。不同主機或無法辨認的鎖不要直接刪掉。 |
 | DESTINATION_EXISTS／UNSAFE_PATH | 選新目錄；拒絕來源／輸出相互包含、symlink／junction、路徑穿越與大小寫撞名。 |
 | BUNDLE_CHANGED | 同一路徑的備份身分與驗證／預演時不同；重新核對來源、驗包與預演，不要移除 ID 比對繼續套用。 |
 | AUTHENTICATION_FAILED／CORRUPT_BUNDLE | 查 key 與傳輸是否完整；不啟用不完整資料。 |

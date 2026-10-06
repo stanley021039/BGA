@@ -1,5 +1,15 @@
 # 程式架構 agent 記憶
 
+## 2026-10-06：PR #34 整合 main
+
+原 head `585eb63` 接上 main `b843a3f`，保留 #31 鎖修正、新版 AGENTS 及 #34 回看／收藏／禁題／動效。程式檔無文字衝突，本轮未修改功能邏輯；三份角色記憶檔首保留兩方新增內容。Windows Node 26.2.0 完整 **442/442** 與隔離 HTTP 四輪流程通過，前端測試是 VM harness；本次無真正 browser／Linux 證據。版本、驗收腳本時序限制及複審入口見 [整合驗證](../PR34-MAIN-INTEGRATION.md)，PR 維持 Draft，未核准／合併／部署。
+
+## 2026-10-05：PR #31 鎖競態修正
+
+`0682e43`：`src/data/locks.js` 的資料／發布／legacy PID 鎖只以 `wx` 取得，既有檔一律 `DATA_IN_USE`，不讀 PID 或刪舊鎖。`HistoryStore` 共用 legacy 取得函式；release 冪等，舊實例重複 close 不會刪掉同程序後來取得的鎖。讀取比對後 unlink 不能安全回收另一程序的 stale lock，不能以多一次比對或同步函式當跨程序修復。
+
+`tests/data-locks.test.js`／`helpers/data-lock-worker.cjs` 用兩個 OS 程序在舊 unlink 前加屏障，重現共用 DB、其他目錄不同時仍雙重取得鎖；發布／legacy／HistoryStore 也重現。修後11項回歸及 Windows 完整374項通過。新版 writer 不可與仍自動回收 stale lock 的舊 writer 混跑；人工清理只在全部 writer 停止後進行，詳 [證據及限制](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。本次沒有 Linux、真實資料夾 chooser 或整合後多人實玩證據。
+
 ## 2cf8a44：畫猜過半禁題
 
 2026-10-05 U28 已實作。`publicResults` entry 的 mutable ballot 與 immutable snapshot 分開；揭曉時固定 active 席位，含畫者及暫時離線者。`POST /api/draw/result/ban` 依 resultId 投一票，state 另帶 resultVotes；跨輪八份快照仍可補投，未公開／淘汰／晚加入／踢出不可投。最後一票先 DB transaction 成功才接受；503 可重試，不先發成功事件。

@@ -306,7 +306,7 @@ async function run(request) {
 function safeError(error) {
   const messages = {
     ENOENT: 'Required file or directory is missing', EACCES: 'Access denied', EPERM: 'Operation is not permitted', ENOSPC: 'Disk is full',
-    EEXIST: 'Destination or lock already exists', DATA_IN_USE: 'Data is in use; stop all writers first', RESTORE_IN_PROGRESS: 'Restore generation is incomplete',
+    EEXIST: 'Destination or lock already exists', DATA_IN_USE: 'Data is already in use or has a residual lock; stop all writers and inspect locks before manual cleanup', RESTORE_IN_PROGRESS: 'Restore generation is incomplete',
   };
   const known = new Set(['INVALID_REQUEST','INVALID_KEY','UNSAFE_PATH','INVALID_DATA','INVALID_DATABASE','INVALID_ACCOUNTS','UNSUPPORTED_SCHEMA','INTEGRITY_FAILED','FOREIGN_KEY_FAILED','BROKEN_REFERENCE','UNEXPECTED_FILE','INVALID_MUSIC','MISSING_MUSIC','INVALID_COMMUNITY','INVALID_HISTORY','UNFINISHED_MATCHES','DESTINATION_EXISTS','INSUFFICIENT_SPACE','ORIGIN_CONFLICT','CORRUPT_BUNDLE','AUTHENTICATION_FAILED','UNSUPPORTED_BUNDLE','BUNDLE_LIMIT','BUNDLE_CHANGED','ASSET_VERSION_MISMATCH','VALIDATION_FAILED','SOURCE_NOT_STOPPED','MISSING_SOURCE','PARTIAL_RESTORE']);
   if (messages[error.code]) return { code: error.code, message: messages[error.code] };

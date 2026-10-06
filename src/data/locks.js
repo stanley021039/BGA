@@ -15,34 +15,27 @@ function dataPaths(config) {
   };
 }
 
-function isAlive(pid) {
-  if (!Number.isSafeInteger(pid) || pid <= 0) return true;
-  try { process.kill(pid, 0); return true; }
-  catch (error) { return error.code !== 'ESRCH'; }
+function acquireExclusiveFile(file, contents) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  try { fs.writeFileSync(file, contents, { flag: 'wx', mode: 0o600 }); }
+  catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+    // Comparing contents before unlink cannot prevent another process replacing
+    // the file in between. Never reclaim an existing lock, even for a dead PID.
+    const busy = Error('Data is already in use or has a residual lock; stop all writers and inspect locks before manual cleanup');
+    busy.code = 'DATA_IN_USE'; throw busy;
+  }
+  let released = false;
+  return () => {
+    if (released) return;
+    if (fs.existsSync(file) && !fs.lstatSync(file).isSymbolicLink() && fs.readFileSync(file, 'utf8') === contents) fs.unlinkSync(file);
+    released = true;
+  };
 }
 
 function acquireFile(file, purpose) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
   const owner = { version: 1, pid: process.pid, hostname: os.hostname(), purpose, nonce: randomUUID() };
-  const contents = JSON.stringify(owner);
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      fs.writeFileSync(file, contents, { flag: 'wx', mode: 0o600 });
-      return () => {
-        if (fs.existsSync(file) && !fs.lstatSync(file).isSymbolicLink() && fs.readFileSync(file, 'utf8') === contents) fs.unlinkSync(file);
-      };
-    } catch (error) {
-      if (error.code !== 'EEXIST') throw error;
-      if (fs.lstatSync(file).isSymbolicLink()) throw Error('Data lock cannot be a symbolic link');
-      const previous = fs.readFileSync(file, 'utf8');
-      let saved; try { saved = JSON.parse(previous); } catch { throw Error('Unrecognized data lock; inspect the stopped writer first'); }
-      if (saved.hostname !== os.hostname() || isAlive(saved.pid)) {
-        const busy = Error('Data is already in use by a server or transfer'); busy.code = 'DATA_IN_USE'; throw busy;
-      }
-      if (fs.readFileSync(file, 'utf8') === previous) fs.unlinkSync(file);
-    }
-  }
-  const busy = Error('Data lock changed during acquisition'); busy.code = 'DATA_IN_USE'; throw busy;
+  return acquireExclusiveFile(file, JSON.stringify(owner));
 }
 
 function acquireDataLocks(config, purpose = 'server') {
@@ -68,17 +61,7 @@ function acquirePublishLock(root) {
 
 // The previous server also checks this PID file, so it cannot start during a cold export.
 function acquireLegacyHistoryLock(historyDir) {
-  const file = path.join(historyDir, '.lock');
-  if (fs.existsSync(file)) {
-    if (fs.lstatSync(file).isSymbolicLink()) throw Error('History lock cannot be a symbolic link');
-    const previous = fs.readFileSync(file, 'utf8');
-    if (!/^\d+$/.test(previous.trim()) || isAlive(Number(previous))) {
-      const error = Error('History is in use; stop the source server first'); error.code = 'DATA_IN_USE'; throw error;
-    }
-    if (fs.readFileSync(file, 'utf8') === previous) fs.unlinkSync(file);
-  }
-  fs.writeFileSync(file, String(process.pid), { flag: 'wx', mode: 0o600 });
-  return () => { if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === String(process.pid)) fs.unlinkSync(file); };
+  return acquireExclusiveFile(path.join(historyDir, '.lock'), String(process.pid));
 }
 
 module.exports = { dataPaths, acquireDataLocks, acquireLegacyHistoryLock, acquirePublishLock };
