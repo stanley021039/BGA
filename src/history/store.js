@@ -1,5 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {HttpError}=require('../http/errors');
+const {acquireLegacyHistoryLock}=require('../data/locks');
 const clone=x=>JSON.parse(JSON.stringify(x,(key,value)=>['secret','lastSeen'].includes(key)||typeof value==='function'?undefined:value));
 const snapshot=room=>clone(room);
 const finished=r=>['thunder','majority','gift','draw'].includes(r.type)?r.phase==='finished':r.phase==='showdown';
@@ -11,15 +12,14 @@ class HistoryStore{
   for(const [key,value]of Object.entries(this.limits))if(!Number.isSafeInteger(value)||value<1)throw Error('歷史配額設定不正確：'+key);
   this.dir=dir;fs.mkdirSync(dir,{recursive:true});this.records=new WeakMap();this.metas=new Map();this.activeSessions=new Set();this.sizes=new Map();this.totalBytes=0;
   this.lock=path.join(dir,'.lock');
-  if(fs.existsSync(this.lock)){const pid=Number(fs.readFileSync(this.lock,'utf8'));let live=false;try{process.kill(pid,0);live=true;}catch{}if(live)throw Error('歷史資料夾已由另一個伺服器使用');fs.unlinkSync(this.lock);}
-  fs.writeFileSync(this.lock,String(process.pid),{flag:'wx'});
+  this.releaseLock=acquireLegacyHistoryLock(dir);
   try{
    for(const name of fs.readdirSync(dir)){const stat=fs.lstatSync(path.join(dir,name));if(!stat.isFile()||name==='.lock')continue;this.sizes.set(name,stat.size);this.totalBytes+=stat.size;}
    for(const name of [...this.sizes.keys()].filter(f=>f.endsWith('.meta.json'))){const m=JSON.parse(fs.readFileSync(path.join(dir,name),'utf8'));if(!UUID.test(m.id)||name!==m.id+'.meta.json')throw Error('歷史識別碼不正確');this.metas.set(m.id,m);if(m.status==='playing'){m.status='interrupted';this.saveMeta(m);}}
    this.prune(0,new Set());
   }catch(error){this.close();throw error;}
  }
- close(){if(fs.existsSync(this.lock)&&fs.readFileSync(this.lock,'utf8')===String(process.pid))fs.unlinkSync(this.lock);}
+ close(){this.releaseLock();}
  encode(row,max=this.limits.maxRowBytes){const text=JSON.stringify(row)+'\n';if(Buffer.byteLength(text)>max)throw new HttpError(429,'HISTORY_ROW_LIMIT','對局記錄過大，請建立新房間');return text;}
  account(name,bytes){this.totalBytes+=bytes-(this.sizes.get(name)||0);this.sizes.set(name,bytes);}
  forget(name){this.totalBytes-=this.sizes.get(name)||0;this.sizes.delete(name);}
