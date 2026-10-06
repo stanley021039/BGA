@@ -18,8 +18,7 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 /* Opt-in countdown track; the caller owns duration, value, and placement. */
 .ui-timebar{display:block;box-sizing:border-box;width:100%;height:var(--ui-timebar-height,.875rem);margin:0;appearance:none;border:1px solid #bc701b;border-radius:999px;overflow:hidden;background:var(--ui-timebar-track,#fff1d3);color:var(--ui-timebar-color,#d77918);accent-color:var(--ui-timebar-color,#d77918)}
 .ui-timebar::-webkit-progress-bar{background:var(--ui-timebar-track,#fff1d3);border-radius:999px}
-.ui-timebar::-webkit-progress-value{background:var(--ui-timebar-color,#d77918);border-radius:999px;transition:width .25s linear}
+.ui-timebar::-webkit-progress-value{background:var(--ui-timebar-color,#d77918);border-radius:999px;transition:none}
 .ui-timebar::-moz-progress-bar{background:var(--ui-timebar-color,#d77918);border-radius:999px}
 .ui-timebar.urgent{--ui-timebar-color:#ba3e38;border-color:#993e36}
 .ui-timebar[hidden]{display:none!important}
-@media(prefers-reduced-motion:reduce){.ui-timebar::-webkit-progress-value{transition:none}}

@@ -15,7 +15,7 @@
 | 元件／合約 | 責任 | 不負責的內容 |
 | --- | --- | --- |
 | `.ui-center-content` | 明確使用 grid，`place-content:center;place-items:center`，置中一個內容群組。 | 不決定卡片大小、padding、顏色；不套到需分佈標題／說明／按鈕的整張卡片。 |
-| `.ui-timebar`（2026-10-07追加） | 共用progress軌道、可調高度／顏色token、urgent色與減少動態；opt-in使用。 | 不計算deadline、不增加timer／poll、不決定所在欄位；畫猜与畫布同寬的布局由draw.css處理，實作證據見[倒數進度](../DRAW-TIMER-VISIBILITY-PROGRESS.md)。 |
+| `.ui-timebar`（2026-10-07追加） | 共用progress軌道、可調高度／顏色token、urgent色；opt-in使用，原生value層不做width transition，避免快更新時的背景繪製滯後。 | 不計算deadline、不增加timer／poll、不決定所在欄位；畫猜與畫布同寬的布局由draw.css處理，實作及瀏覽器界線見[倒數進度](../DRAW-TIMER-VISIBILITY-PROGRESS.md)。 |
 | `.ui-symbol` | 獨立文字／圖示槽，inline-grid、雙軸置中、`flex:none`、`margin:0;padding:0`、`line-height:1`、`letter-spacing:normal`、`text-indent:0`。 | 不強制 44px，不取代姓名、長文、角色圖、emoji、禮物素材或場景插圖。 |
 | `.ui-symbol > .ui-icon` | SVG `display:block`，尺寸為 `--ui-symbol-size` 或 `1em`；保留 24 viewBox 與現有 stroke 風格。 | 不為每個字形加 translate／top／margin 偏移；不重畫 Paint 工具、骰點、地形或牌面。 |
 | `.ui-icon`／`.ui-button-icon` | SVG 固定槽、`currentColor`、1.8 stroke、round cap/join；wrapper 使用明確 flex 置中與 `margin:0;padding:0`。 | 圖示尺寸不等於操作命中區；不規定所有遊戲內容素材都使用同一圖示庫。 |
