@@ -2,7 +2,7 @@
    Closed viewers never fetch, and native player events never become room commands. */
 (()=>{
  'use strict';
- const maxPosition=86400,clock=()=>performance.now();
+ const maxPosition=86400,snapshotAttempts=3,snapshotRetryDelays=[1000,4000],clock=()=>performance.now();
  const opener=document.createElement('button');opener.type='button';opener.className='table-watch-open';opener.hidden=true;opener.id='tableWatchOpen';
  opener.setAttribute('aria-haspopup','dialog');opener.setAttribute('aria-controls','tableWatch');
  window.GameUI?.decorateButton(opener,'video',{label:'YouTube 共看'});
@@ -21,7 +21,7 @@
  for(const [id,icon,label] of [['#watchClose','close','關閉自己的影片'],['#watchPlay','play','全桌播放'],['#watchPause','pause','全桌暫停'],['#watchReplay','replay','從頭共看'],['#watchStop','ban','停止共看'],['#watchRejoin','refresh','返回全桌進度'],['#watchExit','close','關閉自己的影片']])window.GameUI?.decorateButton(q(id),icon,{iconOnly:id==='#watchClose',label});
  for(const [id,icon,label] of [['#watchResetPosition','refresh','重設影片位置'],['#watchControlsToggle','settings','顯示全桌播放與選片']])window.GameUI?.decorateButton(q(id),icon,{iconOnly:true,label});
  let room=null,snapshot=null,generation=0,viewGeneration=0,playerGeneration=0,requestSequence=0,acceptedSequence=0;
- let marker=null,pendingMarker=null,lastRequestedMarker=null,fetching=null,submitting=false,pendingRetry=null,interval=null,apiPromise=null,apiScript=null,apiTimer=null,apiCancel=null;
+ let marker=null,pendingMarker=null,snapshotRetry=null,fetching=null,submitting=false,pendingRetry=null,interval=null,apiPromise=null,apiScript=null,apiTimer=null,apiCancel=null;
  let joined=false,player=null,ready=false,playerVideo=null,unlisten=null,releaseMusic=null,intersection=null,resize=null,observedAt=0,serverAt=0,appliedPlayback=null,localEnded=false;
  const requests=new Set();
  const positionKey='bga.watch.window.v1';let windowPosition=null,preferredPosition=null,drag=null,controlsOpen=false;
@@ -41,6 +41,12 @@
  function position(){if(!snapshot)return 0;const p=snapshot.playback;return Math.max(0,Math.min(maxPosition,p.anchorPositionSec+(p.state==='playing'?Math.max(0,serverAt+clock()-observedAt-p.anchorServerMs)/1000:0)));}
  function signature(s){return s?JSON.stringify([s.roomInstanceId,s.watchSessionId,s.video?.id,s.playback.state,s.playback.anchorPositionSec,s.playback.anchorServerMs]):null;}
  function markerKey(m){return m?m.roomInstanceId+':'+m.revision:null;}
+ function requestId(){
+  const random=globalThis.crypto;if(typeof random?.randomUUID==='function')return random.randomUUID();
+  if(typeof random?.getRandomValues!=='function')throw Error('此瀏覽器無法安全建立操作識別碼，請改用支援安全亂數的瀏覽器。');
+  const bytes=random.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+  const hex=Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');
+ }
  function label(){const hasVideo=marker?marker.hasVideo:!!snapshot?.video,name=marker?marker.controllerName:snapshot?.controllerName;opener.classList.toggle('has-video',!!hasVideo);opener.title=hasVideo?'YouTube 共看 · '+(name||'朋友')+' 控制':'YouTube 共看';opener.setAttribute('aria-label',opener.title);}
  function localPlayPrompt(){return snapshot?.isHost?'請按「在這裡開始播放」。':'請直接按 YouTube 播放器裡的播放按鈕。';}
  function render(){
@@ -111,15 +117,47 @@
  }
  async function requestSnapshot({force=false}={}){
   if(!room||!dialog.open)return false;if(fetching&&!force)return fetching.promise;
+  const key=markerKey(marker);
+  // Only existing game updates retry failures: one initial attempt plus two bounded retries.
+  // Explicit open/join/rejoin starts a fresh budget; there is no watch network timer.
+  if(!force&&snapshotRetry?.key===key&&(snapshotRetry.attempts>=snapshotAttempts||clock()<snapshotRetry.notBefore))return false;
+  if(force||snapshotRetry?.key!==key)snapshotRetry={key,attempts:0,notBefore:0};
+  const retry=snapshotRetry;retry.attempts++;
   const tag={roomGeneration:generation,view:viewGeneration,sequence:++requestSequence,sent:clock()},controller=new AbortController();requests.add(controller);
-  const task={key:markerKey(marker),promise:null};lastRequestedMarker=task.key;fetching=task;render();
-  task.promise=(async()=>{try{const response=await fetch('/api/room-watch?code='+encodeURIComponent(room.code),{signal:controller.signal,cache:'no-store'}),body=await response.json();if(!response.ok)throw Error(body.error||'共看狀態暫時無法載入。');const accepted=receive(body,tag);if(accepted&&!joined)status(body.video?'可自行加入觀看；關閉只影響自己。':'貼上 YouTube 網址，邀朋友一起看。');return accepted;}catch(error){if(error.name!=='AbortError'&&tag.roomGeneration===generation&&tag.view===viewGeneration&&dialog.open)status(error.message);return false;}finally{requests.delete(controller);if(fetching===task){fetching=null;render();const next=pendingMarker;pendingMarker=null;if(dialog.open&&next&&next!==markerKey(snapshot)&&next!==lastRequestedMarker)requestSnapshot();}}})();return task.promise;
+  const task={key,instance:marker?.roomInstanceId,revision:marker?.revision,promise:null};fetching=task;render();
+  task.promise=(async()=>{
+   let accepted=false;
+   try{
+    const response=await fetch('/api/room-watch?code='+encodeURIComponent(room.code),{signal:controller.signal,cache:'no-store'});
+    const terminal=response.status>=400&&response.status<500&&![408,429].includes(response.status);let body;
+    try{body=await response.json();}catch(error){error.terminal=terminal;throw error;}
+    if(!response.ok){const error=Error(body.error||'共看狀態暫時無法載入。');error.terminal=terminal;throw error;}
+    if(task.instance&&(body.roomInstanceId!==task.instance||body.revision<task.revision))throw Error('共看狀態尚未更新，請稍後再試。');
+    accepted=receive(body,tag);
+    if(accepted&&!joined)status(body.video?'可自行加入觀看；關閉只影響自己。':'貼上 YouTube 網址，邀朋友一起看。');
+    return accepted;
+   }catch(error){
+    if(error.name!=='AbortError'&&fetching===task&&tag.roomGeneration===generation&&tag.view===viewGeneration&&dialog.open){
+     if(error.terminal)retry.attempts=snapshotAttempts;
+     status(error.message+(retry.attempts>=snapshotAttempts?' 可關閉後重開，或按「返回全桌進度」再試。':''));
+    }
+    return false;
+   }finally{
+    requests.delete(controller);
+    if(fetching===task){
+     fetching=null;
+     if(snapshotRetry===retry){if(accepted)snapshotRetry=null;else retry.notBefore=clock()+(snapshotRetryDelays[retry.attempts-1]??Infinity);}
+     render();const next=pendingMarker;pendingMarker=null;
+     if(dialog.open&&markerKey(marker)!==markerKey(snapshot)&&next&&next!==markerKey(snapshot)&&next!==task.key)requestSnapshot();
+    }
+   }
+  })();return task.promise;
  }
  async function command(action,extra={}){
   if(!room||!snapshot||submitting||!dialog.open)return false;
-  const body={code:room.code,roomInstanceId:snapshot.roomInstanceId,watchSessionId:snapshot.watchSessionId,requestId:crypto.randomUUID(),expectedRevision:snapshot.revision,controllerEpoch:snapshot.controllerEpoch,action,...extra};
   // An uncertain network outcome can be retried by the same explicit gesture without reapplying it.
-  const shape=JSON.stringify([action,extra]);if(pendingRetry?.shape===shape&&pendingRetry.body.roomInstanceId===body.roomInstanceId)Object.assign(body,pendingRetry.body);
+  const shape=JSON.stringify([action,extra]);let body;
+  try{body=pendingRetry?.shape===shape&&pendingRetry.body.roomInstanceId===snapshot.roomInstanceId?pendingRetry.body:{code:room.code,roomInstanceId:snapshot.roomInstanceId,watchSessionId:snapshot.watchSessionId,requestId:requestId(),expectedRevision:snapshot.revision,controllerEpoch:snapshot.controllerEpoch,action,...extra};}catch(error){status(error.message||'無法建立操作識別碼，請稍後再試。');return false;}
   const tag={roomGeneration:generation,view:viewGeneration,sequence:++requestSequence,sent:clock()},controller=new AbortController();requests.add(controller);submitting=true;status('送出全桌操作…');render();
   try{const response=await fetch('/api/room-watch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:controller.signal}),result=await response.json();
    if(tag.roomGeneration!==generation||tag.view!==viewGeneration||!dialog.open)return false;
@@ -128,8 +166,8 @@
   }catch(error){if(tag.roomGeneration===generation&&tag.view===viewGeneration&&dialog.open&&error.name!=='AbortError'){pendingRetry={shape,body};status('未收到操作結果；再按同一操作可安全重試，或關閉後重開查看最新狀態。');}return false;
   }finally{requests.delete(controller);if(tag.roomGeneration===generation&&tag.view===viewGeneration){submitting=false;render();}}
  }
- async function open(){if(!room||window.RaceLesson||dialog.open)return;window.TableMusic?.collapseLocal?.();const view=++viewGeneration;snapshot=null;acceptedSequence=0;pendingRetry=null;lastRequestedMarker=null;controlsOpen=false;status('載入這一桌的共看狀態…');dialog.show();if(interval===null)interval=setInterval(()=>{if(dialog.open&&snapshot)q('#watchClock').textContent=format(position())+' · '+(snapshot.playback.state==='playing'?'播放中':'已暫停');},1000);volume();render();await requestSnapshot();if(dialog.open&&view===viewGeneration)q('#watchClose').focus();}
- function cleanup(){viewGeneration++;joined=false;if(drag){windowBar.releasePointerCapture?.(drag.id);drag=null;}destroyPlayer();for(const controller of requests)controller.abort();requests.clear();fetching=null;pendingMarker=null;submitting=false;pendingRetry=null;if(interval!==null)clearInterval(interval);interval=null;apiCancel?.();render();}
+ async function open(){if(!room||window.RaceLesson||dialog.open)return;window.TableMusic?.collapseLocal?.();const view=++viewGeneration;snapshot=null;acceptedSequence=0;pendingRetry=null;snapshotRetry=null;controlsOpen=false;status('載入這一桌的共看狀態…');dialog.show();if(interval===null)interval=setInterval(()=>{if(dialog.open&&snapshot)q('#watchClock').textContent=format(position())+' · '+(snapshot.playback.state==='playing'?'播放中':'已暫停');},1000);volume();render();await requestSnapshot();if(dialog.open&&view===viewGeneration)q('#watchClose').focus();}
+ function cleanup(){viewGeneration++;joined=false;if(drag){windowBar.releasePointerCapture?.(drag.id);drag=null;}destroyPlayer();for(const controller of requests)controller.abort();requests.clear();fetching=null;pendingMarker=null;snapshotRetry=null;submitting=false;pendingRetry=null;if(interval!==null)clearInterval(interval);interval=null;apiCancel?.();render();}
  function close(){cleanup();if(dialog.open){dialog.close();document.getElementById('music-expand')?.focus();}}
  opener.onclick=open;q('#watchClose').onclick=close;dialog.addEventListener('close',cleanup);dialog.addEventListener('cancel',()=>{joined=false;destroyPlayer();});
  q('#watchJoin').onclick=async()=>{if(!snapshot?.video)return;const view=viewGeneration;if(!await requestSnapshot({force:true})||view!==viewGeneration||!dialog.open||!snapshot?.video)return;joined=true;render();mountPlayer();};
@@ -143,7 +181,7 @@
  function update(next){
   if(window.RaceLesson){opener.hidden=true;close();return;}if(!next?.code){stop();return;}
   if(room?.code!==next.code||room?.me!==next.me){close();generation++;room=next;snapshot=null;marker=next.watch||null;acceptedSequence=0;}else{room=next;const incoming=next.watch||null;if(incoming&&(!marker||incoming.roomInstanceId!==marker.roomInstanceId||incoming.revision>=marker.revision)){if(marker&&incoming.roomInstanceId!==marker.roomInstanceId){close();generation++;snapshot=null;}marker=incoming;}}
-  opener.hidden=false;label();if(dialog.open&&marker&&markerKey(marker)!==markerKey(snapshot)&&markerKey(marker)!==lastRequestedMarker){if(fetching)pendingMarker=markerKey(marker);else requestSnapshot();}
+  opener.hidden=false;label();if(dialog.open&&(!snapshot||markerKey(marker)!==markerKey(snapshot))){if(fetching)pendingMarker=markerKey(marker);else requestSnapshot();}
  }
  function stop(){close();generation++;room=null;snapshot=null;marker=null;opener.hidden=true;}
  document.addEventListener('visibilitychange',()=>{if(document.hidden&&dialog.open)close();});window.addEventListener('pagehide',close);
