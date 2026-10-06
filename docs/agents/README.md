@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07最新正式 **v1.5.3**／`0609c01`：全站20HTML載入共享primitives／GameUI；題卡背面unknown、settings close與D徽章修正，history header span auto-margin污染也已隔離。20入口背景Chrome、桌機／390手機／200%文字與hidden／pending已驗，Windows／Linux各863；正式3席題卡與25份資源通過，8帳戶及schema15保留、PID68975／service／tunnel正常，測試房間已離开及session登出。與程式設計師的實際討論、逐頁表及長期契約見 [規格](../specs/SHARED-UI-ALIGNMENT.md)，部署證據／未驗界線見 [進度](../SHARED-UI-ALIGNMENT-PROGRESS.md)。下方v1.5.2為歷史；原PR43保持Ready未合併，沒有新PR或UI push，外站資料仍未啟用。
+
 2026-10-07最新正式 **v1.5.2**／`7939090`：PR43 Stanley 兩項 P2（跳台方向風險／表情音效時鐘）已修正，原 PR 已更新且 Ready、未合併。原 PR v1.4.1 雙平台各808；保留畫猜版面及附件相容性的正式 v1.5.2 雙平台各863。零房間切換，schema15／21表及8帳戶全欄位保留、PID66841／service／tunnel正常，公開7份資源及五款遊戲／大廳 serverNow通過。外站資料未啟用；下方 v1.5.1 為歷史。詳細證據見 [審查修正與正式同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，tag固定受測程式、後續文件不移動tag。
 
 2026-10-07最新正式 **v1.5.1**／`d4e3b4a`：畫猜左側玩家、框線及畫具對齊、底部直列聊天室與最後輸入框、倒數進度及緊湊結算已上線；Windows／Linux完整各845項，背景Chrome多角色／八席／手機及正式3席驗收通過。正式schema15、8帳戶全欄位保留，切換前0房間，PID62990／service／tunnel正常；外站資料仍未匯入，取代／合併範圍仍待選擇。完整證據見 [畫猜最新進度](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)。下方v1.5.0候選／v1.4.0整合／v1.3.0正式為歷史；來源ZIP、金鑰與shadow資料代保留但未啟用。PR43沒有加入本輪，無新PR／push，受測tag不隨文件提交移動。

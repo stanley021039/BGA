@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-07最新正式v1.5.3／`0609c01`／PID68975：只同步共用UI對齊；schema15／21表，8帳戶全欄位、.env／原路徑保留，integrity ok／FK0，service／tunnel正常。副本啟動前後21表schema／rows／BLOB一致，0房間切換，公開25資源及正式3席題卡確認；測試席位離开及session登出後0房間。備份不是跨檔原子冷快照，外站資料代未啟用。不要沿用下方7939090／PID66841盤點作下一次發布或匯入guard；詳 [最新同步](../SHARED-UI-ALIGNMENT-PROGRESS.md)。
+
 2026-10-07最新正式v1.5.2／`7939090`／PID66841：只同步PR43跳台與音效時鐘修正，schema15不變。新鮮8帳戶備份及隔離啟動前後21表schema／rows／BLOB一致；零房間切換後8帳戶全欄位與備份相同、integrity ok／FK0，.env／原資料路徑不變，service／tunnel正常。SQLite一致性備份與持久檔另備並非原子冷快照；原PR43 Ready未合併，受測本地tag固定7939090，双平台各863及公開API／資源已驗。外站shadow仍未啟用；後續匯入必須重新盤點，不沿用歷史PID／版本／帳戶數。證據見 [正式同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，下方v1.5.1為歷史。
 
 2026-10-07最新正式v1.5.1／`d4e3b4a`／PID62990：原shhuang.cc資料升schema15，切換前0房間，service／tunnel正常。以最新8帳戶備份預演，16個舊表schema／rows／BLOB完全保留，只新增5個空市場表；正式8帳戶全欄位（含近期重設雜湊）一致、integrity ok／FK0。現站原資料路徑及.env不變，外站shadow仍未啟用，原ZIP／移轉key及副本保留。外站來源3帳戶要取代／合併現在8帳戶仍待使用者決定；後續不得沿用舊4732450／schema14／7帳戶guard，須重新盤點並使用最新UI程式避免倒退。備份不是跨檔原子冷快照；完整記錄見 [畫猜发布](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)，下方1.5.0shadow及1.3.0正式為歷史。
