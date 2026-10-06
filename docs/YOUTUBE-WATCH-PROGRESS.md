@@ -13,6 +13,10 @@
 
 Windows Node 24.14.0：`node --test tests/table-watch*.test.js` **90/90 通過**（原 52 項，加 38 項回歸，包含子測試）；併同 `room-watch`、`audio-settings`、`music` 的 focused **123/123 通過**。測試執行真正 `table-watch.js` 模組，以 VM DOM／fake monotonic clock／deferred GET 驗證遠端 pause／stop 失聯恢復、重試上限與門檻、初次無 marker、latest pending、換房／關窗／舊回覆、原生與 fallback UUID、缺安全亂數及相同操作重送。這一筆未宣稱本次 Linux、真正 Chrome 或正式站驗收；完整整合驗證由父任務另記。
 
+整合驗收補充（2026-10-06）：修正程式`d4020ef00e4054263d1329d3e030f7053d784959`包含main `1447430`（#34在驗收期間由另一端合併）；Windows Node24.14.0／隔離Linux Node22.22.1完整各 **552/552**，失敗／取消／跳過0，Linux約112秒。archive SHA-256 `4d9369fd86bd588929c529cd338de39a85b0ba34b2510b669faddf7fb94f244d`，只在專用source目錄測試，不帶.env/work/私人資料、不碰正式服務與DB。後續帶入#34 `cc771b8`僅驗收文件；文件首段衝突保留watch修正與main鎖／draw驗收，runtime/tests沒有改變。獨立複查另抓到response已超過pending marker仍多GET，先重現3GET再修至2GET，已含於d4020ef及新增第38項回歸。
+
+原Chrome背景、正常1794×1010、隔離非loopbackHTTP：只讀CDP驗secure=false、randomUUID未提供、getRandomValues可用，實際影片提案／播放POST200，加入影片後原生YouTube播放。由同帳戶另端API發暫停與停止，各預置下一GET503；同revision下一GET200後原生播放器paused／iframe移除，不須手動重開或新revision。被動CDP後續穩態watch事件0、無truncated或剩餘page；受控失敗只在私有server request wrapper，不改產品碼。未以一席UI＋另端API宣稱兩名真人設備或GPU/弱網驗收。證據在ignored `work/pr36-full-{windows,linux}.log`；Chrome圖及去敏網路證據在主QA的`work/pr36-http-*-recovered.jpg`、`pr36-*-retry-network.json`。正式部署使用另一本地整合分支，不將本PR的歷史1.0.0整包覆蓋現有站點；部署結果獨立記錄。
+
 日期：2026-10-05。使用者 U29 要求開始實作，以最低伺服器負擔優先，其他玩家能自行關閉影片，先不要 PR。後續 U30 要求整合音樂入口、每個 client 自行調位置，直接拖曳頂端工具列，移除移動按鈕。基線 `585eb63`，已驗收本地程式 `631eabf`，分支 `feat/youtube-watch`。未推送、未建立或更新 PR、未部署；測試使用隔離資料與原 Chrome 背景。
 
 ## 本批設計
