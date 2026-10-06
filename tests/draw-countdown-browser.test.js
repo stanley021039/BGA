@@ -95,3 +95,17 @@ test('incomplete timing metadata cannot publish NaN progress or an invalid time 
   assert.ok(Number.isFinite(ui.element('#timerProgress').value));
  }
 });
+
+test('drawing hides topic, difficulty and length hints for both roles without hiding waiting room categories',()=>{
+ const ui=fixture(),base=ui.state({hint:{topicLabel:'動物生物',category:'挑戰',length:3}});
+ for(const [version,me]of [[2,'guest'],[3,'artist']]){
+  ui.receive({...base,version,me});
+  assert.equal(ui.element('#boardHint').textContent,'');
+  assert.equal(ui.element('#boardHint').hidden,true);
+  assert.equal(ui.element('#drawCountdown').hidden,false);
+  assert.equal(ui.element('#timer').textContent,'30 秒');
+ }
+ ui.receive({...base,version:4,phase:'waiting',deadline:null,presenterId:null});
+ assert.match(ui.element('#boardHint').textContent,/^題目類別：/);
+ assert.equal(ui.element('#boardHint').hidden,false);
+});

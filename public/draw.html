@@ -10,7 +10,8 @@
   <section class="draw-roster" aria-label="玩家角色、目前狀態與比分" hidden><h2>這桌的朋友</h2><div id="players"></div></section>
   <main>
   <section id="boardSection" class="board-section" hidden>
-   <div class="board-head"><div class="board-heading"><strong id="boardTitle">本輪畫布</strong><span id="boardHint"></span></div><div id="drawCountdown" class="draw-countdown" hidden><span id="timerCaption">作畫剩餘</span><b id="timer" role="timer">–</b><progress id="timerProgress" max="1" value="1" aria-label="本輪剩餘時間"></progress></div></div>
+   <div class="board-head"><div class="board-heading"><strong id="boardTitle">本輪畫布</strong><span id="boardHint" hidden></span></div></div>
+   <div id="drawCountdown" class="draw-countdown" hidden><span id="timerCaption">作畫剩餘</span><b id="timer" role="timer">–</b><progress id="timerProgress" class="ui-timebar" max="1" value="1" aria-label="本輪剩餘時間"></progress></div>
    <div class="canvas-frame"><canvas id="drawCanvas" width="512" height="256" tabindex="0" aria-label="你畫我猜畫布；畫者可用滑鼠、觸控或方向鍵移動與空白鍵落筆"></canvas><div id="canvasStage" class="canvas-stage" aria-live="polite" hidden></div></div>
    <div id="tools" class="tools" hidden><div class="tool-row" role="group" aria-label="繪畫工具">
     <button type="button" data-tool="brush" class="selected" title="畫筆" aria-label="畫筆">✎</button><button type="button" data-tool="erase" title="橡皮擦" aria-label="橡皮擦">⌫</button>

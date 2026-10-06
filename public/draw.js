@@ -129,7 +129,8 @@ function render(live=false){
  $('#drawGuessPanel').hidden=$('#guessChat').hidden;
  $('#guessForm').hidden=!(s.phase==='drawing'&&s.participantIds.includes(s.me)&&!s.guessedIds.includes(s.me));
  $('#boardTitle').textContent=s.phase==='drawing'?(s.presenterId===s.me?s.question?.title||'本輪畫布':'猜猜畫者畫什麼？'):{waiting:'今晚的畫猜桌',choosing:'第 '+s.round+' 輪，'+nameOf(s.presenterId)+' 選題',reveal:'本輪答案與畫作',finished:'本局成績'}[s.phase];
- $('#boardHint').textContent=s.phase==='drawing'&&s.hint?'題材：'+s.hint.topicLabel+' · '+s.hint.category+' · '+s.hint.length+' 字':s.phase==='drawing'?'跟著畫布一起猜':s.phase==='reveal'?'答案與畫作已揭曉':s.phase==='waiting'?'題目類別：'+topicChoices.filter(([value])=>selectedTopics(s.options).includes(value)).map(([,label])=>label).join('、'):'';
+ $('#boardHint').textContent=s.phase==='reveal'?'答案與畫作已揭曉':s.phase==='waiting'?'題目類別：'+topicChoices.filter(([value])=>selectedTopics(s.options).includes(value)).map(([,label])=>label).join('、'):'';
+ $('#boardHint').hidden=!$('#boardHint').textContent;
  $('#drawCountdown').hidden=!Number.isFinite(s.deadline)||!['choosing','drawing','reveal'].includes(s.phase);
  $('#timerCaption').textContent={choosing:'選題剩餘',drawing:'作畫剩餘',reveal:'下一輪'}[s.phase]||'';
  updateStagePreview();
