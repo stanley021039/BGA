@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-06最新v1.5.0本地候選／`723fbe4`：legacy附件typed allowlist與HISTORY_PRESERVE_IMPORTED_SESSIONS旗標，完整兩平台834項、實際來源本機／server shadow 49logs／3帳戶／1作品／2音樂／5PNG及backfill保全通過。來源ZIP不執行程式，WAL讀入consistent SQLite snapshot；來源跨檔原子性只有來源宣稱，沒有自動重啟獨立證據。正式未改，待使用者決定來源3帳戶是否整份取代現站7帳戶，尚未做切換完整冷備份。下列舊schema14／候選驗收為歷史，以 [最新進度](../LEGACY-IMPORT-PROGRESS.md)為準。
+
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。

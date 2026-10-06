@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-06最新本地候選v1.5.0／`723fbe4`：舊版community PNG／GitHub對應檔完整移轉與可選保留匯入session logs，Windows／Linux各834項通過；實際來源在兩端shadow資料代first boot後49logs與全部檔／帳戶／BLOB核對一致。正式仍v1.3.0；來源3帳戶與現站7帳戶有同名異UUID，等待取代／合併選擇，未切正式或push新分支，PR43保持原範圍。詳 [最新相容性與匯入狀態](../LEGACY-IMPORT-PROGRESS.md)。
+
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。
