@@ -2,6 +2,8 @@
 
 最新本地增量：`400cb6d`、U32「在這裡開始播放」只給房主顯示，Windows前端52項及兩個背景Chrome帳號驗收通過。原 `631eabf`、U29／U30的YouTube共看及共用媒體浮窗基線曾通過Windows／Linux各503項；本增量未重跑兩平台全套，未push／PR／部署。接手先讀 [共看進度與操作](../YOUTUBE-WATCH-PROGRESS.md)，再读PROGRAMMER／SERVER-DATA／PLAYER；舊共看spec的SSE、輪詢及固定modal方案被取代。測試viewport已逐tab還原，後续尺寸測完立即reset，不留左上角模擬區。隔離預覽／合成帳密／cookie只在ignored work私人交接，不能沿用房號當正式站資料。
 
+2026-10-06 PR #34 最新整合提交 `3dde6a4` 已由隔離 checkout 複驗：包含 main `b843a3f`，Windows Node 24.14.0／Linux Node 22.22.1 完整各 **442/442**，失敗／取消／跳過 0；main 鎖程式與 11 項回歸完整保留，未帶入 PR #36 或後續六項功能。Linux 為乾淨 archive 的獨立測試副本，未操作正式服務或 DB。父任務背景Chrome一席UI配合合成API走完四輪，跨輪／完局回看、收藏及3/4禁題通過；真人多設備、手機與弱網／GPU仍未重驗。詳 [最新複驗](../PR34-MAIN-INTEGRATION.md#2026-10-06最新整合提交複驗)。此筆取代下一段「沒有 Linux」的缺口，未核准／合併／部署。
+
 2026-10-06 PR #34 已在隔離 clone 整合 main `b843a3f`，保留新版 AGENTS、#31 殘留鎖修正及 #34 全功能；三份角色記憶新增段落衝突保留雙方。Windows Node 26.2.0 完整 **442/442** 與合成 HTTP 四輪／禁題／收藏權限通過；本次沒有 Linux 或真正瀏覽器 UI 證據。Draft／main base，待父任務獨立複審，未核准／合併／部署。詳 [整合驗證](../PR34-MAIN-INTEGRATION.md)。此筆取代以下兩批分開的測試數字作為本輪整合證據。
 
 2026-10-05 PR #31 鎖修正：程式 `0682e43` 停止自動回收殘留資料／發布／歷史鎖，HistoryStore 共用排他鎖且關閉冪等。受控雙程序已在舊程式重現兩者同時取得鎖；Windows Node 24.14.0 完整 **374/374** 通過（新增11項），本次未重跑 Linux。人工清理與半份還原處理見 [操作指南](../SERVER-DATA-TRANSFER.md#殘留鎖的人工檢查)，證據與剩餘驗收見 [PR #31 修正進度](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。此筆更新鎖行為及本次測試數字，不代表正式服務已更新。

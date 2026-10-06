@@ -16,6 +16,10 @@ TableMusic與TableWatch同媒體入口，加入影片只在本機suspend音樂�
 
 使用者因暫留720p模擬看到頁面只在左上；已逐tab清除metrics並驗normal viewport。官方browser viewport capability reset只還原當次目標，不可假設所有owned tabs都還原；每一尺寸測完即reset並DOM查核。測試截圖只證明當次尺寸，不能把fake DOM rect當實際CSS證據。
 
+## 2026-10-06：PR #34 最新提交雙平台複驗
+
+固定來源 `3dde6a4` 包含 main `b843a3f`；Windows Node 24.14.0 與隔離 Linux Node 22.22.1 完整各 **442/442** 通過，失敗／取消／跳過皆 0。鎖程式、移轉及 11 項鎖回歸與 main 完全一致，對 main 的 77 個變更檔未帶入 PR #36 或後續六項功能。Linux 僅展開乾淨 archive 執行測試，未操作正式資料、服務或 current；package 仍為本 PR 的 1.0.0，不能混稱另一開發分支已部署的 v1.1.3。父任務背景Chrome一席UI配合四合成帳戶API已走完四輪，跨輪及完局回看第一輪、收藏及3/4禁題均通過；沒有宣稱多人真機／弱網或GPU驗收。證據與來源 SHA 見 [整合驗證](../PR34-MAIN-INTEGRATION.md#2026-10-06最新整合提交複驗)。本段取代下方「本次無 Linux 證據」的現況，沒有核准／合併／部署。
+
 ## 2026-10-06：PR #34 整合 main
 
 原 head `585eb63` 接上 main `b843a3f`，保留 #31 鎖修正、新版 AGENTS 及 #34 回看／收藏／禁題／動效。程式檔無文字衝突，本轮未修改功能邏輯；三份角色記憶檔首保留兩方新增內容。Windows Node 26.2.0 完整 **442/442** 與隔離 HTTP 四輪流程通過，前端測試是 VM harness；本次無真正 browser／Linux 證據。版本、驗收腳本時序限制及複審入口見 [整合驗證](../PR34-MAIN-INTEGRATION.md)，PR 維持 Draft，未核准／合併／部署。

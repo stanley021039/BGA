@@ -2,13 +2,27 @@
 
 日期：2026-10-06。原 head `585eb631e34f2867305e4ad38eef797b5000d0a1`，整合 main `b843a3f59c9ac520818e4d9c55f09cb51d421c29`（已合併 #30／#31）。本輪使用獨立 clone，未修改原開發工作樹、備份工具或其他整合工作；未帶入 PR #36，未合併、核准或部署。
 
+## 2026-10-06：最新整合提交複驗
+
+來源固定為 `3dde6a4f82c25738337904281863e09e7b649cc0`，是包含 main `b843a3f` 的隔離 detached checkout；package 仍為此 PR 的 `1.0.0`。以下實證取代後文「本次未跑 Linux」的驗收缺口；沒有將另一開發分支已部署的 v1.1.3 或 PR #36 視為本批來源。
+
+| 環境／檢查 | 本輪結果 |
+| --- | --- |
+| Windows Node 24.14.0 | 完整 `npm test` **442/442**，失敗／取消／跳過 0，18.1 秒。來源程式與測試未修改。 |
+| Linux Node 22.22.1 | 由同一乾淨 commit 的 `git archive` 在專用 staging/source 目錄展開，完整 `npm test` **442/442**，失敗／取消／跳過 0，106.9 秒。未帶 `.env`、私人偏好、work 或玩家資料；未切换 current、重啟服務或操作正式 DB。 |
+| main 與鎖回歸 | `git merge-base --is-ancestor` 通過。`AGENTS.md`、資料鎖／HistoryStore／transfer 及兩份鎖測試的 blob 均與 main 相同；全套包含 11 項雙程序／排他／release／失敗釋放／symlink 回歸。 |
+| PR 範圍 | 對 main 共 77 個變更檔案，runtime 新增行無 YouTube／watch API。改名程式、原內建畫猜題庫、雷霆引擎、禮物資料與既有 watch 研究原型均與 main 相同。profile／題庫／禮物管理頁僅新增本批共用 MotionPolicy 載入，未帶入 PR #36 或後續六項功能。 |
+| 真正 Chrome UI | 正常1794×1010、隔離localhost3202、四個合成帳戶，一席Chrome實際開局／鍵盤落筆／猜題／收藏／投票，其他席用API選題、筆畫及猜題。完成四輪至finished；跨輪與完局後均可選第一輪，保留畫作／原得分／已收藏狀態；第一票由UI，其他席投至2/4不通過、3/4通過，後續停抽而畫作仍保留。所有公開快照逐欄hash於後續操作重新比對。UI只操作一席，不冒稱四名真人、多設備或弱網／GPU測試；本輪沒有重測手機。 |
+
+來源 archive SHA-256：`66ec5fd10bf804d7f56894843e5748e47c425b0ec1a25e2a767129b988007806`，Linux 展開前 `sha256sum -c` 通過。本地證據為 ignored `work/pr34-integration-windows-rerun.log`、`work/pr34-integration-linux-rerun.log`、`work/pr34-linux-runtime.txt`、`work/pr34-integration-scope.json`及`work/pr34-integration-finished-review.jpg`；帳密、cookie、DB 和環境設定均未加入版本控制。本次獨立源碼複查另跑62/62及八席八輪引擎流程，未找到可重現P1/P2。複驗只更新驗收文件，沒有修改程式或測試、核准、合併或部署此PR歷史程式；本機QA已正常停止。送審狀態與最終文件提交依GitHub PR為準。
+
 ## 衝突解法
 
 - `docs/agents/README.md`、`PROGRAMMER.md`、`SERVER-DATA.md` 只有檔首新增段落重疊；保留 main 的 PR #31 殘留鎖政策與 #34 禁題／schema 13 紀錄，沒有擇一刪除。
 - `AGENTS.md`、`src/data/locks.js`、`src/history/store.js`、`src/data/transfer.js` 及兩份新增鎖測試與 main 完全一致。資料、發布與 legacy 鎖拒絕任何既有檔案，不自動 reclaim；HistoryStore 關閉仍冪等。
 - 本輪未修改 #34 程式或測試邏輯。回看／收藏、固定選民嚴格過半禁題、schema 13 備份還原與共用 MotionPolicy 保留。未改已撤回的 gift replay 意見。
 
-## 本次實際驗證
+## 前次整合驗證（歷史證據）
 
 | 環境／範圍 | 證據與結果 |
 | --- | --- |
