@@ -9,20 +9,26 @@ const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
 const canvasRenderer=StrokeCanvas.createRenderer(canvas);
 // Measure the remaining grid row instead of subtracting a fixed header height.
-function fitDrawingWidth({width,height,overhead,chatHeight,gap}){
- return Math.max(0,Math.min(width,2*Math.max(0,height-overhead-chatHeight-gap)));
+function fitDrawingWidth({width,height,overhead,chatHeight,gap,toolHeight=0}){
+ const available=height-overhead-chatHeight-gap;
+ if(available<toolHeight||available<120||width<240)return null;
+ return Math.min(width,2*available);
 }
 let drawingFitFrame=null;
 function fitDrawingViewport(){
  drawingFitFrame=null;
  const board=$('#boardSection'),main=board.parentElement,frame=board.querySelector('.canvas-frame');
- if(!frame||!window.matchMedia('(min-width:1200px) and (min-height:680px)').matches||document.body.classList.contains('ui-large-text')||!board.classList.contains('is-drawing')){board.style.removeProperty('--draw-canvas-width');return;}
+ if(!frame||!window.matchMedia('(min-width:1200px) and (min-height:680px)').matches||document.body.classList.contains('ui-large-text')||!board.classList.contains('is-drawing')){board.style.removeProperty('--draw-canvas-width');if(document.body.classList.contains('draw-viewport-overflow'))document.body.classList.remove('draw-viewport-overflow');return;}
  const css=getComputedStyle(board),mainCss=getComputedStyle(main),chatCss=getComputedStyle($('#drawGuessPanel'));
  const number=value=>parseFloat(value)||0,tools=$('#tools'),toolHeight=tools.hidden?0:tools.getBoundingClientRect().height;
  const overhead=board.getBoundingClientRect().height-Math.max(frame.getBoundingClientRect().height,toolHeight);
  const width=main.clientWidth-number(css.paddingLeft)-number(css.paddingRight)-number(css.borderLeftWidth)-number(css.borderRightWidth)-(tools.hidden?0:tools.getBoundingClientRect().width+number(css.columnGap));
- const gap=number(mainCss.rowGap),chatHeight=Math.max(number(chatCss.minHeight),Math.min(260,main.clientHeight*.25,main.clientHeight-overhead-gap-toolHeight));
- const fitted=fitDrawingWidth({width,height:main.clientHeight,overhead,chatHeight,gap});
+ // This budget stays stable even when an oversized board returns to natural flow.
+ const height=window.innerHeight-(main.getBoundingClientRect().top+window.scrollY)-number(getComputedStyle($('.draw-shell')).paddingBottom);
+ const gap=number(mainCss.rowGap),chatHeight=Math.max(number(chatCss.minHeight),Math.min(260,height*.25,height-overhead-gap-toolHeight));
+ const fitted=fitDrawingWidth({width,height,overhead,chatHeight,gap,toolHeight});
+ document.body.classList.toggle('draw-viewport-overflow',fitted===null);
+ if(fitted===null){board.style.removeProperty('--draw-canvas-width');return;}
  const value=Math.floor(fitted)+'px';if(board.style.getPropertyValue('--draw-canvas-width')!==value)board.style.setProperty('--draw-canvas-width',value);
 }
 function scheduleDrawingFit(){if(drawingFitFrame===null)drawingFitFrame=requestAnimationFrame(fitDrawingViewport);}

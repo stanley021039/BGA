@@ -1,6 +1,6 @@
 # 程式架構 agent 記憶
 
-2026-10-07画猜候選v1.5.6：shell flex及layout剩餘列共同管理高度，玩家/main同列stretch，chat伸展、feed局部scroll、輸入最後。Canvas只改CSS width，backing512×256不改，倒數共用width；ResizeObserver量實際overhead／tools、合併rAF、相同值不寫style，不追加poll。≥1200／680正常字級採fit，手機／大字自然流；8席短屏保留完整名單/排名並局部scroll。設計師建議及驗收見 [進度](../DRAW-VIEWPORT-FIT-PROGRESS.md)。
+2026-10-07畫猜候選v1.5.6：shell flex及layout剩餘列共同管理高度，玩家/main同列stretch，chat伸展、feed局部scroll、輸入最後。Canvas只改CSS width，backing512×256不改，倒數共用width；ResizeObserver量實際overhead／tools、合併rAF、相同值不寫style，不追加poll。≥1200／680正常字級採fit，手機／大字自然流；工具／聊天室最低高度或240×120canvas放不下就退出fit，budget仍用viewport＋main文件座標避免震盪；125%字級已驗。8席短屏保留完整名單/排名並局部scroll。設計師獨立review及驗收見 [進度](../DRAW-VIEWPORT-FIT-PROGRESS.md)。
 
 2026-10-07正式v1.5.5／`18d21ae`：共用opt-in ui-timebar負責軌道樣式與urgent色，caller沿用server deadline／clockOffset計算value。避免在頻繁更新的原生progress-value做width transition；本機背景Chrome已重現DOM值更新但繪製滿格的滯後，停用後像素與native比例對得上。畫猜將倒數移到畫布欄上方，保留工具／畫布上緣及512×256原生尺寸；drawing hint空且hidden、等待分類保留。小螢幕放大時countdown分行，聊天grid用minmax(0,1fr)避免min-content撐寬。雙平台各864、正式26資源／3席已驗；跨平台字型與其他瀏覽器不可沿用為已驗。詳 [倒數發布](../DRAW-TIMER-VISIBILITY-PROGRESS.md)，下方v1.5.3為共用元件導入歷史。
 

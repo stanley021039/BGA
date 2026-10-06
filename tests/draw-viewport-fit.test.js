@@ -12,5 +12,11 @@ test('a short viewport scales both drawing dimensions before it would displace t
  const size={width:686,height:532,overhead:152,chatHeight:156,gap:12};
  assert.equal(fitted(size),424);
  assert.equal(fitted(size)/2+size.overhead+size.chatHeight+size.gap,size.height);
- assert.equal(fitted({...size,height:250}),0,'insufficient space never produces a negative canvas size');
+ assert.equal(fitted({...size,height:250}),null,'insufficient space requests natural flow instead of hiding the drawing');
+});
+
+test('an oversized tool rail requests natural flow even if a smaller canvas would fit',()=>{
+ const size={width:686,height:532,overhead:152,chatHeight:156,gap:12,toolHeight:280};
+ assert.equal(fitted(size),null);
+ assert.equal(fitted({...size,height:700}),686);
 });
