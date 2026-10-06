@@ -6,16 +6,47 @@ const snapshot=room=>clone(room);
 const finished=r=>['thunder','majority','gift','draw'].includes(r.type)?r.phase==='finished':r.phase==='showdown';
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,MiB=1024*1024;
 const DEFAULT_LIMITS=Object.freeze({maxRowBytes:3*MiB,maxResultBytes:512*1024,maxTraceBytes:256*1024,maxSessionBytes:2*MiB,maxMatchBytes:64*MiB,maxTotalBytes:512*MiB,maxArchives:1000,maxFiles:2200,retentionDays:30});
+const MAX_IMPORTED_SESSION_HEADER_BYTES=16*1024;
+function importedSessionHeader(file){
+ const stat=fs.lstatSync(file);
+ if(!stat.isFile()||stat.isSymbolicLink())throw Error('匯入歷史必須是一般檔案');
+ const fd=fs.openSync(file,fs.constants.O_RDONLY|(fs.constants.O_NOFOLLOW||0));
+ try{
+  const opened=fs.fstatSync(fd);
+  if(!opened.isFile()||opened.dev!==stat.dev||opened.ino!==stat.ino)throw Error('匯入歷史檔案已變更');
+  // Inspect only a bounded first line. Never load or evaluate archived engines.
+  const chunks=[];let bytes=0;
+  while(bytes<=MAX_IMPORTED_SESSION_HEADER_BYTES){
+   const buffer=Buffer.alloc(Math.min(4096,MAX_IMPORTED_SESSION_HEADER_BYTES+1-bytes)),read=fs.readSync(fd,buffer,0,buffer.length,null);
+   if(!read)break;
+   const part=buffer.subarray(0,read),newline=part.indexOf(10);
+   chunks.push(newline<0?part:part.subarray(0,newline));bytes+=newline<0?read:newline;
+   if(newline>=0)break;
+  }
+  if(!bytes||bytes>MAX_IMPORTED_SESSION_HEADER_BYTES)return false;
+  let header;try{header=JSON.parse(Buffer.concat(chunks).toString('utf8'));}catch{return false;}
+  const allowed=new Set(['kind','schema','at','type','room','continuationOf','initial']);
+  return header&&typeof header==='object'&&!Array.isArray(header)&&header.kind==='session'&&header.schema===1&&
+   Object.keys(header).every(key=>allowed.has(key))&&typeof header.at==='string'&&Number.isFinite(Date.parse(header.at))&&
+   ['poker','thunder','majority','gift','draw'].includes(header.type)&&typeof header.room==='string'&&/^[a-f0-9]{6}$/i.test(header.room)&&
+   (header.continuationOf===undefined||UUID.test(header.continuationOf))&&
+   (header.initial===undefined||(header.initial&&typeof header.initial==='object'&&!Array.isArray(header.initial)));
+ }finally{fs.closeSync(fd);}
+}
 class HistoryStore{
- constructor(dir,limits={}){
+ constructor(dir,limits={},options={}){
   this.limits={...DEFAULT_LIMITS,...limits};
   for(const [key,value]of Object.entries(this.limits))if(!Number.isSafeInteger(value)||value<1)throw Error('歷史配額設定不正確：'+key);
+  this.preserveImportedSessions=options.preserveImportedSessions??false;
+  if(typeof this.preserveImportedSessions!=='boolean')throw Error('匯入歷史保留設定必須是布林值');
+  this.importedSessions=new Set();
   this.dir=dir;fs.mkdirSync(dir,{recursive:true});this.records=new WeakMap();this.metas=new Map();this.activeSessions=new Set();this.sizes=new Map();this.totalBytes=0;
   this.lock=path.join(dir,'.lock');
   this.releaseLock=acquireLegacyHistoryLock(dir);
   try{
-   for(const name of fs.readdirSync(dir)){const stat=fs.lstatSync(path.join(dir,name));if(!stat.isFile()||name==='.lock')continue;this.sizes.set(name,stat.size);this.totalBytes+=stat.size;}
+   for(const name of fs.readdirSync(dir)){const stat=fs.lstatSync(path.join(dir,name));if(this.preserveImportedSessions&&name.endsWith('.jsonl')&&UUID.test(name.slice(0,-6))&&stat.isSymbolicLink())throw Error('匯入歷史不可使用符號連結');if(!stat.isFile()||name==='.lock')continue;this.sizes.set(name,stat.size);this.totalBytes+=stat.size;}
    for(const name of [...this.sizes.keys()].filter(f=>f.endsWith('.meta.json'))){const m=JSON.parse(fs.readFileSync(path.join(dir,name),'utf8'));if(!UUID.test(m.id)||name!==m.id+'.meta.json')throw Error('歷史識別碼不正確');this.metas.set(m.id,m);if(m.status==='playing'){m.status='interrupted';this.saveMeta(m);}}
+   if(this.preserveImportedSessions)for(const name of this.sizes.keys()){const id=name.slice(0,-6);if(name.endsWith('.jsonl')&&UUID.test(id)&&!this.metas.has(id)&&importedSessionHeader(path.join(dir,name)))this.importedSessions.add(id);}
    this.prune(0,new Set());
   }catch(error){this.close();throw error;}
  }
@@ -32,7 +63,7 @@ class HistoryStore{
   for(const m of archives)if(Date.parse(m.endedAt||m.startedAt)<expired||this.metas.size>this.limits.maxArchives||this.totalBytes+required>this.limits.maxTotalBytes||this.sizes.size+extraFiles>this.limits.maxFiles)this.removeArchive(m.id);
   // Completed headers embed setup; an unattached session need not live forever.
   // Active match JSONL is never trimmed or removed to make space.
-  for(const name of [...this.sizes.keys()]){const id=name.replace(/\.jsonl$/,'');if(name.endsWith('.jsonl')&&UUID.test(id)&&!this.metas.has(id)&&!this.activeSessions.has(id)&&!protectedIds.has(id))this.remove(name);}
+  for(const name of [...this.sizes.keys()]){const id=name.replace(/\.jsonl$/,'');if(name.endsWith('.jsonl')&&UUID.test(id)&&!this.metas.has(id)&&!this.activeSessions.has(id)&&!this.importedSessions.has(id)&&!protectedIds.has(id))this.remove(name);}
  }
  ensureCapacity(id,bytes,{match=false,extraFiles=0}={}){
   const limit=match?this.limits.maxMatchBytes:this.limits.maxSessionBytes;

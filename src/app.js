@@ -60,7 +60,7 @@ function initializeApp(config,dataLock){
   return {...view,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages,watch:watch?watch.summary(watchContext(room)):null};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
- const history=new HistoryStore(config.historyDir,config.historyLimits);
+ const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});
  let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore,marketStore;
  try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
  catch(error){history.close();db?.close();throw error;}

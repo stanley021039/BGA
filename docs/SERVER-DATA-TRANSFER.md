@@ -25,6 +25,10 @@ inspect／export／verify／restore 沿用同一來源驗證：音效仍逐筆�
 
 ## 保留的資料
 
+v1.5.0 增加已知舊版community附件相容性：`community.json.avatars` 的有效UUID、`/uploads/avatars/<UUID>.png` 引用與 `community/avatars/` PNG必須一一對應；圖片驗大小／signature／IHDR，未知檔案、巢狀目錄及連結拒絕。`github-backfill.json` 只接受對應現有issue UUID、有效本站GitHub issue number／URL、空comments及有效時間，原bytes隨加密包保存，不擅自回填DB或出站。CLI與管理UI共用logical白名單，沒有這些附件的舊bundle摘要不變。
+
+要讓匯入的無對局索引session日誌在啟動後保留，可明確設定 `HISTORY_PRESERVE_IMPORTED_SESSIONS=true`，預設false。只保留啟動時已存在、UUID檔名、首列≤16KiB且schema1／kind=session的有效日誌；不執行歷史引擎。不符合者仍按原政策處理，session仍計入byte／file配額，完成對局仍依30天等保留設定淘汰。啟動預演必須比對來源全部歷史檔digest，不可只查對局meta筆數。
+
 | 資料 | 第一版行為 |
 | --- | --- |
 | 帳戶 | 完整保留 `users`，包括 UUID、登入名稱、顯示名稱、原密碼 hash、管理者／會員權限、停用狀態、appearance 與建立時間；玩家用**原帳號及原密碼**重新登入。 |
