@@ -1,5 +1,7 @@
 # 版本管理實作與驗收
 
+2026-10-06候選 **v1.1.4**：共看GET短暫失聯由既有遊戲state有界重試、HTTP區網用安全亂數UUIDfallback，以及合併marker已追上時不多抓一次。PR #36來源`d4020ef`Windows／Linux各552項；現有正式分支整合Windows663項及真HTTP背景Chrome播放／503恢復通過，Linux正式候選及切換待補。詳 [共看驗收](YOUTUBE-WATCH-PROGRESS.md)。
+
 2026-10-06正式 **v1.1.3**：雷霆途中事件先呈現、再續移動的相容修正。Windows／Linux各625/625，背景Chrome火焰／玻璃／地雷／打滑／油漬與跳台順序通過。受測提交`22a9d6fd71ba0523a456321567fc71d6a856e171`及本地annotated tag `v1.1.3`；正式current `releases/22a9d6f`，零房間切換，service／tunnel active。7帳戶完整保留、schema13、15表副本逐列一致；公開版本API、race HTML、7資源及Chrome設定已驗1.1.3。備份與錄影詳 [事件與位移进度](RACE-MULTI-MOVE-PROGRESS.md)。無新PR／push，後續纯驗收文件不移動tag。
 
 2026-10-06正式 **v1.1.2**：雷霆完整位移與抵達後下一步修正；Windows／Linux各591/591，背景Chrome碰撞／玻璃／地震／道路換片／終點驗收通過。受測程式a27dd1fec3b98f07365b3911a2a10f6c87304d67及本地annotated tag v1.1.2，正式current releases/a27dd1f。零房間切換、7帳戶全欄位保留、schema13／15表副本逐列一致；公開API、受影響資源及Chrome設定顯示1.1.2。備份與完整證據詳 [位移進度](RACE-MULTI-MOVE-PROGRESS.md)。無新PR／push；純驗收文件不移動tag。

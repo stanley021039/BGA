@@ -1,5 +1,24 @@
 # YouTube 共看實作進度
 
+2026-10-06發布候選 **v1.1.4**：將PR #36相容修正`d4020ef`只取runtime與三份回歸／helper檔整合至現有遊戲分支，不用PR的1.0.0歷史整包覆蓋目前版。PR來源Windows／Linux各552/552；正式候選Windows **663/663**，Linux與正式切換待補。新增38項，前端90/90、共看／音訊focused123/123。PR #34另補Windows／Linux442/442及背景Chrome四席四輪、跨輪／完局回看與收藏、3/4禁題；#34在驗收期間由另一端合併main，沒有由本任務合併。
+
+背景Chrome在隔離非loopback `http://192.168.232.1:3203`、正常1794×1010，用合成帳戶實際送出影片與全桌播放。CDP只讀驗`isSecureContext=false`、`randomUUID`未提供、`getRandomValues`可用；提案與播放POST200。加入YouTube後原生播放器實際播放，同帳戶另一端API暫停及停止，各預置單次GET503；同revision下一次GET200恢復，暫停時原生播放器paused，停止後本機iframe移除。沒有手動重開／返回進度或新revision；永久失敗／上限、關窗／晚回應等另由真模組VM測。受控故障只在私有QA server request wrapper，不改產品source或正式站。私有畫面`work/pr36-http-pause-recovered.jpg`、`pr36-http-stop-recovered.jpg`及去敏CDP紀錄`pr36-pause-retry-network.json`、`pr36-stop-retry-network.json`。這是同帳戶另端API＋一席UI，不宣稱兩台真人設備／弱網／GPU測試。
+
+## 2026-10-06：PR #36 審查修正（本地驗證）
+
+在隔離 checkout 整合最新 `feat/draw-review-motion`／main 後修正 [兩項 P2](https://github.com/stanley021039/BGA/pull/36#issuecomment-6007722283)。下列是本次修正的證據，不取代後文原實播紀錄，也不代表已推送或部署。
+
+| 問題 | 修正與驗收 |
+| --- | --- |
+| 開窗後新 marker 的 GET 暫時失敗，使同 revision 永遠無法重新同步 | 每個 room instance／revision 最多首取加兩次自動重試；第一次失敗後至少 1 秒、第二次後至少 4 秒，只有既有遊戲 state 的 `update` 到來才會重試。成功穩態零額外 watch GET，沒有新增 watch 網路 timer、polling 或 heartbeat。初始無快照／無 watch marker 也能恢復；同時抵達的 marker 合併並追最新 revision。 |
+| 重複失敗與失效請求 | 網路、5xx、408、429、回覆解析錯誤及落後於所請 marker 的快照使用同一有界預算；其他 4xx 立即停止自動重試。額度耗盡顯示重開／返回全桌進度的復原入口，明確重開或重新加入可重置預算。關閉、換房、換 instance 清掉預算與 pending，abort 舊 GET；晚到失敗不能改掉新視窗的狀態或重試額度。 |
+| 非 loopback HTTP 缺少 `crypto.randomUUID`，操作在送出前拋錯 | 優先使用原生 `randomUUID`；缺少時由 `getRandomValues` 產生 16 bytes 並設定 UUID v4 version／variant。沒有安全亂數源或 API 拋錯時，在共看狀態區提示，不送 POST、不留下 rejected command promise；不使用 `Math.random`。 |
+| 不確定網路結果的安全重送 | 同一明確操作復用原命令及 UUID，重試不要求再產生安全亂數；不同操作或收到 HTTP 拒絕後的新操作建立新 UUID。維持原 server 去重及 revision／epoch 驗證。 |
+
+Windows Node 24.14.0：`node --test tests/table-watch*.test.js` **90/90 通過**（原 52 項，加 38 項回歸，包含子測試）；併同 `room-watch`、`audio-settings`、`music` 的 focused **123/123 通過**。測試執行真正 `table-watch.js` 模組，以 VM DOM／fake monotonic clock／deferred GET 驗證遠端 pause／stop 失聯恢復、重試上限與門檻、初次無 marker、latest pending、換房／關窗／舊回覆、原生與 fallback UUID、缺安全亂數及相同操作重送。這一筆未宣稱本次 Linux、真正 Chrome 或正式站驗收；完整整合驗證由父任務另記。
+
+
+
 2026-10-05 使用者U33已要求發PR：[PR #36](https://github.com/stanley021039/BGA/pull/36)，head `2eeb398`、base `feat/draw-review-motion`（接續待合#34）。本次送審前Windows focused81項及背景Chrome兩帳號驗收；未合併／部署。下文「未PR」是早期U29實作階段紀錄；新六項需求另在本地 `feat/party-content-and-race-paths`，不包含在#36，見 [進度](PARTY-UPGRADE-PROGRESS.md)。
 
 日期：2026-10-05。使用者 U29 要求開始實作，以最低伺服器負擔優先，其他玩家能自行關閉影片，先不要 PR。後續 U30 要求整合音樂入口、每個 client 自行調位置，直接拖曳頂端工具列，移除移動按鈕。基線 `585eb63`，已驗收本地程式 `631eabf`，分支 `feat/youtube-watch`。未推送、未建立或更新 PR、未部署；測試使用隔離資料與原 Chrome 背景。
