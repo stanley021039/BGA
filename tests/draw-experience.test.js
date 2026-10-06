@@ -37,8 +37,9 @@ test('joining the waiting room updates the roster and start action without disca
  const joined={...s,players:[...s.players,{id:'guest',name:'朋友',online:true,score:0}]};ui.receive(joined);
  assert.equal(settings.innerHTML,'UNSAVED TOPIC SELECTION');
  assert.doesNotMatch(ui.element('#drawActions').innerHTML,/data-do="start" disabled/);
- assert.equal(ui.element('#waitingCount').textContent,'2 / 8 位');
- assert.match(ui.element('#waitingPlayers').innerHTML,/data-player-id="guest"/);
+ assert.equal(ui.element('#waitingCount').textContent,'2 / 8 位入座');
+ assert.match(ui.element('#players').innerHTML,/data-player-id="guest"/);
+ assert.equal(ui.element('.draw-roster').hidden,false,'the room roster remains available during setup');
 });
 
 test('meme appears beside the existing topics in both create and host settings without changing saved topic choices',()=>{
@@ -60,12 +61,13 @@ test('pending guess is visible, prevents duplicate writes and preserves input on
   writes++;return new Promise((_resolve,reject)=>{rejectWrite=reject;});
  };
  const pending=vm.runInContext('action("guess",{answer:"我的猜測"})',ui.context);
- assert.match(ui.element('#drawStatus').textContent,/正在送出/);
+ assert.match(ui.element('#drawGuessStatus').textContent,/正在送出/);
+ assert.equal(ui.element('#drawStatus').textContent,'','guess status is attached to the guessing controls');
  assert.equal(await vm.runInContext('action("guess",{answer:"我的猜測"})',ui.context),false);
  assert.equal(writes,1);
  rejectWrite(Error('暫時無法送出'));
  assert.equal(await pending,false);
- assert.equal(ui.element('#drawStatus').textContent,'暫時無法送出');
+ assert.equal(ui.element('#drawGuessStatus').textContent,'暫時無法送出');
  assert.equal(ui.element('#guessInput').value,'我的猜測');
  assert.equal(vm.runInContext('busy',ui.context),false);
 });
@@ -176,6 +178,25 @@ test('chat drops only its oldest node after fifty guesses',()=>{
  assert.equal(after.length,50);
  assert.equal(after[0],before[1],'existing chat nodes remain instead of being announced again');
  assert.match(after.at(-1).textContent,/新猜測/);
+});
+
+test('correct chat messages name the player without revealing a supplied answer',()=>{
+ const ui=browserHarness(),secret='秘密答案不得提前出現';
+ ui.receive(drawingState('guest',[
+  {id:'guest',name:'猜者',answer:'小狗',correct:false,at:Date.now()-1000},
+  {id:'friend',name:'朋友',answer:secret,correct:true,points:82,at:Date.now()},
+ ]));
+ const lines=ui.element('#guessFeed').children.map(line=>line.textContent);
+ assert.deepEqual(lines,['猜者：小狗','朋友：猜對了答案！ +82 分']);
+ assert.ok(lines.every(line=>!line.includes(secret)),'correct-answer metadata must stay out of the public guessing chat');
+});
+
+test('a correct guess stays visible on the player card without a duplicate sidebar summary',()=>{
+ const ui=browserHarness();ui.receive({...drawingState('guest'),guessedIds:['guest']});
+ assert.match(ui.element('#players').innerHTML,/draw-player-correct/);
+ assert.match(ui.element('#players').innerHTML,/已猜中/);
+ assert.equal(ui.element('#drawActions').innerHTML,'');
+ assert.equal(ui.element('#drawWaiting').hidden,true);
 });
 
 test('phase scenes stay in one canvas frame without replacing the drawing canvas', async () => {

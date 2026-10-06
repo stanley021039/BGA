@@ -28,6 +28,7 @@ function nameOf(id){return state?.players.find(player=>player.id===id)?.name||'�
 function playerStatus(player,s=state){
  const didNotPlay=['reveal','finished'].includes(s.phase)&&player.id!==s.presenterId&&!s.participantIds?.includes(player.id);
  let role=didNotPlay?'本輪未參與':player.waitingForNextRound?'下輪加入':player.id===s.presenterId?(s.phase==='choosing'?'選題中':s.phase==='drawing'?'畫圖中':'本輪畫者'):s.guessedIds?.includes(player.id)?'已猜中':s.phase==='waiting'?'已入座':'尚未猜中';
+ if(s.phase==='waiting'&&player.id===s.hostId)role='房主 · '+role;
  if(player.id===s.me&&(disconnected||streamDisconnected))role+=' · 正在重連';else if(player.online===false)role+=' · 暫時離線';
  return role;
 }
@@ -39,22 +40,19 @@ function playerRow(player){
 }
 function waitingSummary(s=state){
  if(!s)return {title:'',detail:''};
- const artist=s.players.find(player=>player.id===s.presenterId),participants=s.participantIds||[],correct=participants.filter(id=>s.guessedIds?.includes(id)),remaining=participants.filter(id=>!correct.includes(id)).map(id=>s.players.find(player=>player.id===id)).filter(Boolean);
- if(s.phase==='choosing')return {title:'等待畫者選題',detail:(artist?.name||'畫者')+(artist?.online===false?' · 暫時離線':' 正在選題')};
- if(s.phase==='drawing')return {title:'已猜中 '+correct.length+' / '+participants.length,detail:remaining.length?'還在猜：'+remaining.map(player=>player.name+(player.online===false?'（離線）':'')).join('、'):'全部猜中，等待揭曉。'};
- return {title:'本輪已猜中 '+correct.length+' / '+participants.length,detail:'已公開的答案與畫作，可從「最近畫作」回看。'};
+ const artist=s.players.find(player=>player.id===s.presenterId);
+ if(['choosing','drawing'].includes(s.phase)&&artist?.online===false)return {title:'畫者暫時離線',detail:artist.name+' 正在重新連線；倒數仍照常進行。'};
+ return {title:'',detail:''};
 }
 function updatePresence(){
  if(!state)return;
  GameShell.stableMarkup($('#players'),state.players.map(playerRow).join(''));
- if(state.phase==='waiting'&&$('#waitingPlayers'))GameShell.stableMarkup($('#waitingPlayers'),state.players.map(waitingPlayerRow).join(''));
- const waiting=waitingSummary();$('#drawWaiting').hidden=state.phase==='waiting';$('#drawWaitingTitle').textContent=waiting.title;$('#drawWaitingNames').textContent=waiting.detail;
+ const waiting=waitingSummary();$('#drawWaiting').hidden=!waiting.title;$('#drawWaitingTitle').textContent=waiting.title;$('#drawWaitingNames').textContent=waiting.detail;
 }
 function updateConnection(){
  const message=disconnected?'你的連線暫停，正在重新連線；目前顯示最後同步的狀態。':streamDisconnected?'畫布連線正在重連，仍可猜題與查看玩家。':canvasConnectionError;
  $('#connection').textContent=message;updatePresence();
 }
-function waitingPlayerRow(player){return GameShell.playerRow(player,{me:state.me,status:[player.id===state.hostId?'房主':null,playerStatus(player)].filter(Boolean).join(' · '),metrics:[]});}
 function options(group,choices,current,inputName){return `<fieldset><legend>${group}</legend><div class="option-row">${choices.map(([value,label])=>`<label><input type="radio" name="${inputName}" value="${value}" ${String(current??'')===value?'checked':''}><span>${label}</span></label>`).join('')}</div></fieldset>`;}
 function selectedTopics(settings={}){
  if(Array.isArray(settings.topics))return settings.topics;
@@ -85,7 +83,7 @@ function updateStageVote(){
 }
 function stageScene(s){
  const artist=s.players.find(player=>player.id===s.presenterId);
- if(s.phase==='waiting')return `<section class="stage-scene stage-waiting" aria-label="房間內的玩家"><div class="waiting-head"><h1>這桌的朋友</h1><span id="waitingCount">${s.players.length} / 8 位</span></div><div id="waitingPlayers" class="waiting-players">${s.players.map(waitingPlayerRow).join('')}</div></section>`;
+ if(s.phase==='waiting')return `<section class="stage-scene stage-waiting" aria-label="開畫準備"><div class="waiting-head"><h1>準備開畫</h1><span id="waitingCount">${s.players.length} / 8 位入座</span></div></section>`;
  if(s.phase==='choosing'){
   const mine=s.presenterId===s.me;
   return `<div class="stage-scene stage-choosing"><div class="stage-lead">${stageAvatar(artist)}<span>${esc(artist?.name||'畫者')} 的回合</span></div><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} / ${s.roundLimit}</span><h1>${mine?'選一張題卡，準備開畫':'畫者正在挑題'}</h1><p>${mine?'只有你看得到題目，選好就能立即畫。':'題目選好後，畫作會出現在同一塊畫布。'}</p><div class="stage-picks">${mine?s.candidates.map(word=>`<button type="button" class="stage-pick" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong><span>畫這題 ↗</span></button>`).join(''):'<span class="stage-pick-back">?</span><span class="stage-pick-back">?</span><span class="stage-pick-back">?</span>'}</div></div></div>`;
@@ -93,7 +91,8 @@ function stageScene(s){
  if(s.phase==='reveal')return `<div class="stage-scene stage-reveal"><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} · 答案揭曉</span><h1 class="stage-answer">${esc(s.result?.answer||'這輪沒有選定題目')}</h1><p class="stage-reason">${esc(s.result?.reason||'')}</p><div class="stage-stat"><b>${s.result?.guessedIds?.length||0}</b> 位朋友猜中 <span>· 畫者每猜中一人 +15 分</span></div>${stageVotePanel(s)}</div><div class="stage-art"><canvas id="stagePreview" width="512" height="256" role="img" aria-label="本輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取本輪畫作…</small></div></div>`;
  const rankings=[...s.players].sort((a,b)=>b.score-a.score);
  const winners=s.winner?.ids||[];
- return `<div class="stage-scene stage-finished"><div class="stage-copy"><span class="stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p><div class="stage-winners">${rankings.filter(player=>winners.includes(player.id)).map(player=>`<div class="stage-winner">${stageAvatar(player)}<b>${esc(player.name)}</b><strong>${player.score} 分</strong><span aria-hidden="true">✦</span></div>`).join('')}</div></div><ol class="stage-ranking">${rankings.map((player,index)=>`<li><span>${index+1}. ${esc(player.name)}</span><b>${player.score} 分</b></li>`).join('')}</ol></div>`;
+ const podium=winners.length>3?`<p class="stage-tie-summary"><span aria-hidden="true">✦</span> ${winners.length} 位玩家共同獲勝</p>`:`<div class="stage-winners">${rankings.filter(player=>winners.includes(player.id)).map(player=>`<div class="stage-winner">${stageAvatar(player)}<b>${esc(player.name)}</b><strong>${player.score} 分</strong><span aria-hidden="true">✦</span></div>`).join('')}</div>`;
+ return `<div class="stage-scene stage-finished"><div class="stage-copy finished-heading"><span class="stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p></div><section class="stage-podium" aria-label="本局排名">${podium}<ol class="stage-ranking">${rankings.map((player,index)=>`<li${winners.includes(player.id)?' class="stage-ranking-winner"':''}><span>${index+1}. ${esc(player.name)}${winners.includes(player.id)?'<span class="ranking-win-mark" role="img" aria-label="本局獲勝" title="本局獲勝">✦</span>':''}</span><b>${player.score} 分</b></li>`).join('')}</ol></section>${s.result?.resultId?`<section class="stage-art finished-art" aria-label="最後一輪畫作"><h2>最後一幅畫${s.result.answer?' · '+esc(s.result.answer):''}</h2><canvas id="stagePreview" width="512" height="256" role="img" aria-label="最後一輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取畫作…</small></section>`:''}</div>`;
 }
 function render(live=false){
  const s=state,settingsOpen=$('#stage .stage-controls')?.open,voteFocus=document.activeElement?.id==='stageBan'?document.activeElement.dataset.resultId:null;let html='',actions='';
@@ -103,9 +102,8 @@ function render(live=false){
   html=s.host?`<details class="card stage-controls room-settings-panel"><summary>房間設定</summary><div class="room-settings-body" role="group" aria-label="房間設定欄位"><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}</div>${GameShell.settingsActions()}</div></details>`:'';
   actions=waitingActions(s);
  }else if(s.phase==='drawing'){
-  const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me),guessed=s.guessedIds.includes(s.me);
+  const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me);
    if(!eligible&&!artist)actions='<p>下一輪起可以猜題。</p>';
-   else if(guessed)actions='<p>你已猜中！等待本輪揭曉。</p>';
    else if(artist)actions='<p>輪到你畫圖，朋友正在猜題。</p>';
   }else if(s.phase==='choosing'){
    actions=`<p>${s.presenterId===s.me?'在舞台選一題開始作畫。':'等待 '+esc(nameOf(s.presenterId))+' 選題。'}</p>`;
@@ -122,15 +120,17 @@ function render(live=false){
  const sceneKey=s.canvasEpoch+':'+s.phase;if($('#canvasStage').dataset.sceneKey!==sceneKey){$('#canvasStage').scrollTop=0;$('#canvasStage').scrollLeft=0;$('#canvasStage').dataset.sceneKey=sceneKey;}
  $('#canvasStage').hidden=s.phase==='drawing';
  $('#boardSection').hidden=false;$('#boardSection').classList.toggle('is-drawing',s.phase==='drawing');
- $('.draw-roster').hidden=s.phase==='waiting';
+ $('.draw-roster').hidden=false;
  canvas.tabIndex=s.phase==='drawing'&&s.presenterId===s.me?0:-1;
  canvas.setAttribute('aria-hidden',s.phase==='drawing'?'false':'true');
  $('#tools').hidden=!(s.phase==='drawing'&&s.presenterId===s.me);
  $('#guessChat').hidden=!['drawing','reveal','finished'].includes(s.phase);
+ $('#drawGuessPanel').hidden=$('#guessChat').hidden;
  $('#guessForm').hidden=!(s.phase==='drawing'&&s.participantIds.includes(s.me)&&!s.guessedIds.includes(s.me));
  $('#boardTitle').textContent=s.phase==='drawing'?(s.presenterId===s.me?s.question?.title||'本輪畫布':'猜猜畫者畫什麼？'):{waiting:'今晚的畫猜桌',choosing:'第 '+s.round+' 輪，'+nameOf(s.presenterId)+' 選題',reveal:'本輪答案與畫作',finished:'本局成績'}[s.phase];
  $('#boardHint').textContent=s.phase==='drawing'&&s.hint?'題材：'+s.hint.topicLabel+' · '+s.hint.category+' · '+s.hint.length+' 字':s.phase==='drawing'?'跟著畫布一起猜':s.phase==='reveal'?'答案與畫作已揭曉':s.phase==='waiting'?'題目類別：'+topicChoices.filter(([value])=>selectedTopics(s.options).includes(value)).map(([,label])=>label).join('、'):'';
- $('#timer').hidden=!s.deadline;
+ $('#drawCountdown').hidden=!Number.isFinite(s.deadline)||!['choosing','drawing','reveal'].includes(s.phase);
+ $('#timerCaption').textContent={choosing:'選題剩餘',drawing:'作畫剩餘',reveal:'下一輪'}[s.phase]||'';
  updateStagePreview();
  updateStageVote();
  if(voteFocus&&voteFocus===s.result?.resultId){const button=$('#stageBan');(button?.disabled?$('#stageBanStatus'):button)?.focus({preventScroll:true});}
@@ -157,7 +157,7 @@ function updateFeed(live=false){
   for(let index=feedEntries.length;index<guesses.length;index++){
    const item=guesses[index],line=document.createElement('p');
    line.className=item.correct?'correct':'wrong';
-   line.textContent=item.correct?`${item.name} 猜對了！ +${item.points} 分`:`${item.name}：${item.answer}`;
+   line.textContent=item.correct?`${item.name}：猜對了答案！ +${item.points} 分`:`${item.name}：${item.answer}`;
    feed.append(line);
    const fresh=motionGate?motionGate.take('feed:'+state.canvasEpoch+':'+JSON.stringify(item),live):live;
    if(fresh&&hadState&&index===guesses.length-1)animate(line,[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});
@@ -169,7 +169,7 @@ function updateFeed(live=false){
 function motionAllowed(){return window.MotionPolicy?window.MotionPolicy.allowsMotion():!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;}
 function animate(node,keyframes,options){if(window.MotionPolicy)return window.MotionPolicy.animate(node,keyframes,options);if(motionAllowed())return node?.animate?.(keyframes,options);return null;}
 function updateStagePreview(){
- const id=state?.phase==='reveal'?state.result?.resultId:null,preview=id?$('#stagePreview'):null;
+ const id=['reveal','finished'].includes(state?.phase)?state.result?.resultId:null,preview=id?$('#stagePreview'):null;
  if(!id||!preview?.getContext||!resultsView){stageResultPreview?.renderer.reset();stageResultPreview=null;return;}
  if(stageResultPreview?.id===id&&stageResultPreview.node===preview)return;
  stageResultPreview?.renderer.reset();
@@ -236,8 +236,7 @@ function receive(next){
  else{updateFeed(live);updateStagePreview();}
  if(next.phase==='waiting'){
   if(!changed&&previous?.players.length!==next.players.length){GameShell.stableMarkup($('#drawActions'),waitingActions(next));decorateActions();}
-  const waitingPlayers=$('#waitingPlayers');if(waitingPlayers)GameShell.stableMarkup(waitingPlayers,next.players.map(waitingPlayerRow).join(''));
-  const waitingCount=$('#waitingCount');if(waitingCount)waitingCount.textContent=next.players.length+' / 8 位';
+  const waitingCount=$('#waitingCount');if(waitingCount)waitingCount.textContent=next.players.length+' / 8 位入座';
  }
  showCorrectFeedback(previous,next,live);
  playDrawSounds(previous,next,soundLive);
@@ -246,10 +245,16 @@ function receive(next){
  connectEvents();tick();
 }
 function tick(){
- const label=$('#timer');if(!state?.deadline){label.textContent='–';$('#drawWaitingTime').textContent='';label.classList.remove('urgent');lastTimerSeconds=null;return;}
- const seconds=Math.max(0,Math.ceil((state.deadline-(Date.now()-clockOffset))/1000));
- label.textContent=seconds+' 秒';label.classList.toggle('urgent',state.phase==='drawing'&&seconds<=10);
- $('#drawWaitingTime').textContent=['drawing','choosing'].includes(state.phase)?'剩 '+seconds+' 秒':'';
+ const label=$('#timer'),progress=$('#timerProgress'),countdown=$('#drawCountdown');
+ const timed=state&&['choosing','drawing','reveal'].includes(state.phase)&&Number.isFinite(state.deadline);
+ countdown.hidden=!timed;
+ if(!timed){label.textContent='–';progress.value=1;progress.classList.remove('urgent');progress.removeAttribute?.('aria-valuetext');$('#drawWaitingTime').textContent='';label.classList.remove('urgent');lastTimerSeconds=null;return;}
+ const remaining=Math.max(0,state.deadline-(Date.now()-clockOffset)),seconds=Math.ceil(remaining/1000);
+ const configured=Number(state.options?.seconds),duration=state.phase==='choosing'?15000:state.phase==='reveal'?8000:(Number.isFinite(configured)&&configured>0?configured:90)*1000;
+ const text=seconds+' 秒';if(label.textContent!==text)label.textContent=text;
+ const urgent=state.phase==='drawing'&&seconds<=10;
+ label.classList.toggle('urgent',urgent);progress.classList.toggle('urgent',urgent);
+ progress.value=Math.min(1,remaining/duration);progress.setAttribute('aria-valuetext','剩餘 '+seconds+' 秒');
  if(state.phase==='drawing'&&lastTimerRound===state.round&&lastTimerSeconds>10&&seconds<=10&&motionAllowed()&&document.visibilityState!=='hidden'){
   if(!motionGate||motionGate.take('timeout:'+state.canvasEpoch,lastLiveState))animate($('.canvas-frame'),[{borderColor:'#a6b8a5'},{borderColor:'#b34b50'},{borderColor:'#a6b8a5'}],{duration:530,easing:'ease-out'});
  }
@@ -360,10 +365,14 @@ function connectEvents(){
  stream.addEventListener('ready',event=>{streamDisconnected=false;updateConnection();try{const data=JSON.parse(event.data);if(sameCanvas(data)&&data.version!==canvasVersion)syncCanvas();}catch{syncCanvas();}});
  stream.addEventListener('error',()=>{streamDisconnected=true;motionNeedsBaseline=true;gameSounds?.disconnect();updateConnection();});
 }
-function drawFeedback(message,kind='info',settings=false){const node=$(settings?'#roomSettingsFeedback':'#drawStatus')||$('#drawStatus');node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});}
+function drawFeedback(message,kind='info',settings=false,guess=false){
+ const node=$(settings?'#roomSettingsFeedback':guess?'#drawGuessStatus':'#drawStatus')||$('#drawStatus');
+ node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});
+ if(!message&&!settings){const other=$(guess?'#drawStatus':'#drawGuessStatus');other.textContent='';other.dataset.kind='info';window.GameUI?.setStatus(other,'',{kind:'info'});}
+}
 let pendingDrawButton=null;
-function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
-async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch;busy=true;drawBusy(true);drawFeedback('正在送出…');try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback(name==='guess'?'猜測已送出。':'操作已完成。','success');return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error');toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
+function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));$('#drawGuessPanel').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
+async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch,guess=name==='guess';busy=true;drawBusy(true);drawFeedback('正在送出…','info',false,guess);try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback(guess?'猜測已送出。':'操作已完成。','success',false,guess);return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error',false,guess);toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
 async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));updateConnection();drawFeedback(settings?'房間設定已儲存。':'操作已完成。','success',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
 async function saveArtwork(resultId=state?.result?.resultId){

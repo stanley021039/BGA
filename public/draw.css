@@ -50,3 +50,120 @@ body[data-game-kind="draw"] .waiting-players .room-player{grid-template-columns:
 @media(min-width:1101px) and (min-height:640px){body[data-draw-phase="reveal"]:not(.ui-large-text) .board-section{height:calc(100dvh - 268px)}}
 /* Results must include the footer tools in the grid row instead of overflowing onto players. */
 @media(min-width:1101px){body[data-game-kind="draw"]:is([data-draw-phase="reveal"],[data-draw-phase="finished"]) .draw-layout>.room-sidebar{height:auto;max-height:none;gap:10px}body[data-game-kind="draw"]:is([data-draw-phase="reveal"],[data-draw-phase="finished"]) :is(#drawStatus,#shared-error):empty{display:none}}
+
+/* Keep the public roster, canvas, and common controls visible in separate desktop columns. */
+body[data-game-kind="draw"] .draw-shell{max-width:1800px}
+body[data-game-kind="draw"] .draw-layout.room-layout{grid-template-columns:200px minmax(0,1fr) 280px;column-gap:16px;row-gap:12px;align-items:start}
+body[data-game-kind="draw"] .draw-layout>.stage-head{grid-column:1/-1;grid-row:1;margin:0;min-height:32px}
+body[data-game-kind="draw"] .draw-layout>main{grid-column:2;grid-row:2;display:grid;gap:16px;min-width:0}
+body[data-game-kind="draw"] .draw-layout>.draw-roster{grid-column:1;grid-row:2;display:grid;gap:12px;align-content:start;min-width:0;padding:12px;border:1px solid var(--line);border-radius:16px;background:#fffdf8;max-height:calc(100dvh - 180px);overflow:auto;overscroll-behavior:contain}
+body[data-game-kind="draw"] .draw-roster h2{margin:0;font-size:var(--ui-text-body,1rem);line-height:1.5}
+body[data-game-kind="draw"] .draw-roster #players{display:grid;grid-template-columns:1fr;gap:8px}
+body[data-game-kind="draw"] .draw-roster .room-player{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;min-width:0;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fffdf9}
+body[data-game-kind="draw"] .draw-roster .room-player-avatar{grid-column:1;grid-row:1/3;width:44px;height:56px;min-width:44px}
+body[data-game-kind="draw"] .draw-roster .room-player-info{grid-column:2;grid-row:1}
+body[data-game-kind="draw"] .draw-roster .room-player-info b{font-size:var(--ui-text-small,.875rem);line-height:1.5}
+body[data-game-kind="draw"] .draw-roster .room-player-info small{padding:0;font-size:var(--ui-text-small,.875rem);line-height:1.5}
+body[data-game-kind="draw"] .draw-roster .room-player-metrics{position:static;grid-column:2;grid-row:2;justify-self:start}
+body[data-game-kind="draw"] .draw-roster .room-player-metrics strong{font-size:var(--ui-text-body,1rem);line-height:1.25}
+body[data-game-kind="draw"] .draw-roster .room-player.draw-player-correct{border-color:#6d9473;background:#edf5e7}
+body[data-game-kind="draw"] .draw-roster .correct-pop{position:absolute;left:8px;bottom:8px;z-index:2}
+body[data-game-kind="draw"] .draw-layout>.room-sidebar{grid-column:3;grid-row:2;height:auto!important;max-height:none!important;min-height:0;padding:12px;gap:12px;align-self:start}
+body[data-game-kind="draw"] .draw-layout>.room-sidebar .shared-game-ui.integrated{margin-top:0}
+body[data-game-kind="draw"] #drawStatus:empty,body[data-game-kind="draw"] #drawGuessStatus:empty{display:none}
+
+/* Both sides begin below the common phase row; the tool rail begins at the canvas edge. */
+body[data-game-kind="draw"] .board-section{height:auto;min-height:0;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;gap:12px}
+body[data-game-kind="draw"] .board-head{display:flex;align-items:center;gap:16px;min-width:0}
+body[data-game-kind="draw"] .board-section.is-drawing:has(.tools[hidden]) .board-head{display:flex}
+body[data-game-kind="draw"] .board-head>.board-heading{flex:1;min-width:0}
+body[data-game-kind="draw"] .board-head>.draw-countdown{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:8px;row-gap:4px;flex:0 0 180px}
+body[data-game-kind="draw"] #timerCaption{font-size:var(--ui-text-small,.875rem);color:var(--muted);white-space:nowrap}
+body[data-game-kind="draw"] #timer{width:7ch;min-width:7ch;font-family:inherit;font-variant-numeric:lining-nums tabular-nums;font-size:var(--ui-text-section,1.25rem);line-height:1.5;padding:2px 6px}
+body[data-game-kind="draw"] #timerProgress{grid-column:1/-1;width:100%;height:8px;appearance:none;border:0;border-radius:8px;overflow:hidden;background:#e3e8dc;color:var(--green);accent-color:var(--green)}
+body[data-game-kind="draw"] #timerProgress::-webkit-progress-bar{background:#e3e8dc;border-radius:8px}
+body[data-game-kind="draw"] #timerProgress::-webkit-progress-value{background:var(--green);border-radius:8px;transition:width .25s linear}
+body[data-game-kind="draw"] #timerProgress::-moz-progress-bar{background:var(--green);border-radius:8px}
+body[data-game-kind="draw"] #timerProgress.urgent{color:#a63f49;accent-color:#a63f49}
+body[data-game-kind="draw"] #timerProgress.urgent::-webkit-progress-value{background:#a63f49}
+body[data-game-kind="draw"] #timerProgress.urgent::-moz-progress-bar{background:#a63f49}
+body[data-game-kind="draw"] .board-section.is-drawing:has(.tools:not([hidden])){grid-template-columns:160px minmax(0,1fr)}
+body[data-game-kind="draw"] .board-section.is-drawing .canvas-frame{align-self:start;aspect-ratio:2/1;min-height:0}
+body[data-game-kind="draw"] .board-section.is-drawing .tools{align-self:start;grid-column:1;grid-row:2;padding:8px;gap:12px}
+body[data-game-kind="draw"] .tool-row{grid-template-columns:repeat(3,minmax(44px,1fr));gap:4px}
+body[data-game-kind="draw"] .color-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body[data-game-kind="draw"] .color-pick{justify-content:center}
+body[data-game-kind="draw"] .color-menu summary{font-size:var(--ui-text-small,.875rem)}
+body[data-game-kind="draw"] .size-pick{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px}
+body[data-game-kind="draw"] .size-pick input{width:100%;min-width:0}
+body[data-game-kind="draw"] .board-section:not(.is-drawing) .canvas-frame{aspect-ratio:auto;min-height:0;overflow:visible}
+body[data-game-kind="draw"] .board-section:not(.is-drawing) .canvas-stage{position:relative;inset:auto;overflow:visible;border-radius:10px}
+body[data-game-kind="draw"] .stage-scene{min-height:0;padding:16px;gap:16px}
+body[data-game-kind="draw"] .waiting-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 0;padding:0;list-style:none}
+body[data-game-kind="draw"] .waiting-steps li{display:grid;gap:8px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fffdf8}
+body[data-game-kind="draw"] .waiting-steps span{font-size:var(--ui-text-small,.875rem);color:var(--muted)}
+body[data-game-kind="draw"] .stage-finished{grid-template-columns:minmax(180px,.65fr) minmax(0,1.35fr);align-items:start}
+body[data-game-kind="draw"] .finished-heading{grid-column:1/-1}
+body[data-game-kind="draw"] .finished-heading h1{margin:8px 0}
+body[data-game-kind="draw"] .stage-podium{display:grid;gap:16px;min-width:0}
+body[data-game-kind="draw"] .stage-podium .stage-winners{margin:0}
+body[data-game-kind="draw"] .stage-podium .stage-winner{grid-template-columns:36px minmax(0,1fr);justify-items:start;align-items:center;flex:1 1 114px;min-width:0;gap:2px 8px;padding:8px}
+body[data-game-kind="draw"] .stage-podium .stage-winner .stage-avatar{grid-column:1;grid-row:1/3;width:36px;height:44px}
+body[data-game-kind="draw"] .stage-podium .stage-winner b{grid-column:2;grid-row:1;font-size:var(--ui-text-small,.875rem);overflow-wrap:anywhere}
+body[data-game-kind="draw"] .stage-podium .stage-winner strong{grid-column:2;grid-row:2;font-size:var(--ui-text-body,1rem)}
+body[data-game-kind="draw"] .stage-podium .stage-winner>span:last-child{display:none}
+body[data-game-kind="draw"] .stage-ranking{max-height:none;padding:0}
+body[data-game-kind="draw"] .stage-tie-summary{margin:0;padding:10px 12px;border:1px solid #d3b36f;border-radius:10px;background:#fff9e9;font-weight:700;color:#735022}
+body[data-game-kind="draw"] .stage-ranking .stage-ranking-winner{background:#fff7df}
+body[data-game-kind="draw"] .ranking-win-mark{margin-left:8px;color:#956225}
+body[data-game-kind="draw"] .finished-art{min-width:0;align-self:start}
+body[data-game-kind="draw"] .finished-art h2{font-size:var(--ui-text-body,1rem);margin:0 0 12px;overflow-wrap:anywhere}
+
+/* Guess entry and the round feed share the space directly beneath the drawing. */
+body[data-game-kind="draw"] .draw-guess-panel{display:grid;gap:12px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fffdf8;min-width:0}
+body[data-game-kind="draw"] .draw-guess-panel .guess-feed{display:flex;flex-direction:column;align-items:stretch;gap:4px;min-height:32px;max-height:120px;margin-top:8px;padding:0;scrollbar-gutter:stable}
+body[data-game-kind="draw"] .guess-feed p{flex:0 0 auto;width:100%;max-width:100%;padding:4px 0;border-radius:0;background:transparent}
+body[data-game-kind="draw"] .guess-feed .correct{background:transparent;color:var(--green);font-weight:700}
+@media(min-width:801px){body[data-game-kind="draw"] #guessForm{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px}body[data-game-kind="draw"] #guessForm label{margin:0}}
+body[data-game-kind="draw"]:not([data-draw-phase]) .draw-layout.room-layout{grid-template-columns:minmax(0,1fr)}
+body[data-game-kind="draw"]:not([data-draw-phase]) .draw-layout>main{grid-column:1}
+body[data-game-kind="draw"]:not([data-draw-phase]) .draw-layout>aside{display:none}
+
+@media(min-width:1600px){body[data-game-kind="draw"] .draw-layout.room-layout{grid-template-columns:220px minmax(0,1fr) 300px}}
+@media(max-width:1199px){
+ body[data-game-kind="draw"] .draw-layout.room-layout{grid-template-columns:190px minmax(0,1fr)}
+ body[data-game-kind="draw"] .draw-layout>.draw-roster{grid-row:2/4}
+ body[data-game-kind="draw"] .draw-layout>.room-sidebar{grid-column:2;grid-row:3}
+ body[data-game-kind="draw"] .draw-layout>.room-sidebar .shared-game-ui.integrated{max-width:none}
+}
+@media(max-width:800px){
+ body[data-game-kind="draw"] .draw-layout.room-layout{grid-template-columns:minmax(0,1fr);gap:12px}
+ body[data-game-kind="draw"] .draw-layout>.draw-roster{grid-column:1;grid-row:2;max-height:none;overflow:visible}
+ body[data-game-kind="draw"] .draw-roster #players{grid-template-columns:repeat(2,minmax(0,1fr))}
+ body[data-game-kind="draw"] .draw-layout>main{grid-column:1;grid-row:3}
+ body[data-game-kind="draw"] .draw-layout>.room-sidebar{grid-column:1;grid-row:4}
+ body[data-game-kind="draw"] .board-head{flex-wrap:wrap;gap:8px}
+ body[data-game-kind="draw"] .board-head>.board-heading{flex-basis:100%}
+ body[data-game-kind="draw"] .board-head>.draw-countdown{flex-basis:100%}
+ body[data-game-kind="draw"] .stage-finished,body[data-game-kind="draw"] .stage-reveal{grid-template-columns:1fr}
+ body[data-game-kind="draw"] .stage-winners{flex-wrap:nowrap;overflow:auto}
+}
+@media(max-width:600px){
+ body[data-game-kind="draw"] .draw-roster #players{grid-template-columns:1fr}
+ body[data-game-kind="draw"] .board-section.is-drawing:has(.tools:not([hidden])){grid-template-columns:minmax(0,1fr)}
+ body[data-game-kind="draw"] .board-section.is-drawing:has(.tools:not([hidden])) .canvas-frame{grid-column:1;grid-row:3}
+ body[data-game-kind="draw"] .board-section.is-drawing .tools{grid-column:1;grid-row:2}
+ body[data-game-kind="draw"] .tool-row{grid-template-columns:repeat(5,minmax(44px,1fr));gap:4px}
+ body[data-game-kind="draw"] .color-row{grid-template-columns:44px minmax(80px,.5fr) minmax(120px,1fr);align-items:center}
+ body[data-game-kind="draw"] .size-pick{grid-column:auto}
+ body[data-game-kind="draw"] .waiting-steps{grid-template-columns:1fr}
+ body[data-game-kind="draw"] #guessForm>div{flex-wrap:wrap}
+ body[data-game-kind="draw"] #guessForm button{flex:1}
+}
+@media(max-width:380px){body[data-game-kind="draw"] .color-row{grid-template-columns:44px minmax(80px,1fr)}body[data-game-kind="draw"] .size-pick{grid-column:1/-1}}
+body[data-game-kind="draw"].ui-large-text .draw-layout.room-layout{grid-template-columns:minmax(0,1fr)}
+body[data-game-kind="draw"].ui-large-text .draw-layout>.draw-roster{grid-column:1;grid-row:2;max-height:none}
+body[data-game-kind="draw"].ui-large-text .draw-roster #players{grid-template-columns:repeat(2,minmax(0,1fr))}
+body[data-game-kind="draw"].ui-large-text .draw-layout>main{grid-column:1;grid-row:3}
+body[data-game-kind="draw"].ui-large-text .draw-layout>.room-sidebar{grid-column:1;grid-row:4}
+@media(prefers-reduced-motion:reduce){body[data-game-kind="draw"] #timerProgress::-webkit-progress-value{transition:none}}
