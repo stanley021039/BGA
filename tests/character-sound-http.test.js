@@ -53,3 +53,31 @@ test('lobby emotes transport sound without granting access through an unobserved
  const sent=await f.post('lobby/emote',f.owner,{expression:f.expression});assert.equal(sent.status,200);
  const state=await (await f.get('/api/lobby',f.peer)).json(),emote=state.visitors.find(v=>v.emote)?.emote;assert.equal(emote.sound.durationMs,1000);assert.ok(emote.id);assert.equal((await f.get(emote.sound.url,f.peer)).status,200);assert.equal((await f.get(emote.sound.url,f.outsider)).status,404);
 });
+function assertServerClock(state,start,end,label){
+ assert.ok(Number.isSafeInteger(state.serverNow),label+' supplies a numeric server timestamp');
+ assert.ok(state.serverNow>=start&&state.serverNow<=end,label+' timestamp is captured during the server response');
+}
+test('room clocks accompany state and start acknowledgements for all five games and age sound events',async t=>{
+ const f=await fixture(t);await f.select();await f.post(f.route,f.owner,{base64:wave().toString('base64')});
+ for(const type of ['poker','gift','majority','thunder','draw']){
+  const created=await f.post('create',f.owner,{type}),code=created.body.code;assert.equal(created.status,200);
+  assert.equal((await f.post('join',f.peer,{code})).status,200);assert.equal((await f.post('join',f.outsider,{code})).status,200);
+  let start=Date.now(),response=await f.get('/api/state?code='+code,f.peer),state=await response.json();assert.equal(response.status,200);assertServerClock(state,start,Date.now(),type+' state');
+  start=Date.now();const started=await f.post('start',f.owner,{code});assert.equal(started.status,200);assertServerClock(started.body,start,Date.now(),type+' start');
+  if(type==='poker'){
+   start=Date.now();const sent=await f.post('social',f.owner,{code,kind:'expression',expression:f.expression});assert.equal(sent.status,200);assertServerClock(sent.body,start,Date.now(),'poker expression ACK');
+   const event=sent.body.expressions.find(item=>item.expression===f.expression);assert.equal(event.sound.durationMs,1000);assert.ok(sent.body.serverNow-event.at>=0&&sent.body.serverNow-event.at<5000);
+   start=Date.now();response=await f.get('/api/state?code='+code,f.peer);state=await response.json();assert.equal(response.status,200);assertServerClock(state,start,Date.now(),'received poker expression');
+   const received=state.expressions.find(item=>item.id===event.id);assert.ok(received);assert.equal(received.at,event.at);assert.ok(state.serverNow-received.at>=0&&state.serverNow-received.at<5000);
+  }
+ }
+});
+test('lobby clocks accompany GET, movement and sound-emote responses in the same server event timeline',async t=>{
+ const f=await fixture(t);await f.select();await f.post(f.route,f.owner,{base64:wave().toString('base64')});
+ let start=Date.now(),response=await f.get('/api/lobby',f.owner),state=await response.json();assert.equal(response.status,200);assertServerClock(state,start,Date.now(),'lobby GET');
+ start=Date.now();const moved=await f.post('lobby/move',f.owner,{x:80,y:60});assert.equal(moved.status,200);assertServerClock(moved.body,start,Date.now(),'lobby move ACK');
+ start=Date.now();const sent=await f.post('lobby/emote',f.owner,{expression:f.expression});assert.equal(sent.status,200);assertServerClock(sent.body,start,Date.now(),'lobby emote ACK');
+ const emote=sent.body.visitors.find(visitor=>visitor.emote)?.emote;assert.equal(emote.sound.durationMs,1000);assert.ok(sent.body.serverNow-emote.at>=0&&sent.body.serverNow-emote.at<5000);
+ start=Date.now();response=await f.get('/api/lobby',f.peer);state=await response.json();assert.equal(response.status,200);assertServerClock(state,start,Date.now(),'lobby peer GET');
+ assert.equal(state.visitors.find(visitor=>visitor.emote)?.emote.id,emote.id);
+});

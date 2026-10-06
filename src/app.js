@@ -57,7 +57,7 @@ function initializeApp(config,dataLock){
   const viewerId=accounts.get(view.me);
   if(viewerId)characterMedia.rememberExpressions(viewerId,'room:'+room.code,expressions.map(event=>({userId:accounts.get(event.playerId),image:event.image,at:event.at,until:event.at+5000,sound:event.sound,soundUntil:event.at+10000})));
   const watch=reconcileWatch(room);
-  return {...view,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages,watch:watch?watch.summary(watchContext(room)):null};
+  return {...view,serverNow:now,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages,watch:watch?watch.summary(watchContext(room)):null};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});
@@ -76,7 +76,7 @@ function initializeApp(config,dataLock){
   if(lobbyAudience)audiences.push(lobbyAudience);
   return audiences;
  });
- const withLobbyMedia=(user,view)=>{characterMedia.rememberExpressions(user.id,'lobby',view.visitors.filter(visitor=>visitor.emote).map(visitor=>({userId:visitor.id,...visitor.emote})));return view;};
+ const withLobbyMedia=(user,view)=>{const serverNow=Date.now();characterMedia.rememberExpressions(user.id,'lobby',view.visitors.filter(visitor=>visitor.emote).map(visitor=>({userId:visitor.id,...visitor.emote})));return {...view,serverNow};};
  const communityRate=new Map(),accountRate=new Map(),authRate=new Map();
  const trustCloudflare=config.host==='127.0.0.1'&&config.publicUrl?.startsWith('https://');
  const clientKey=req=>clientAddress(req,trustCloudflare);

@@ -11,7 +11,7 @@
  window.UIPopover?.bind(toggle,menu,{align:'end',onClose:closeMenu});
  function render(data){
   if(!data||!Array.isArray(data.visitors))throw Error('大廳資料格式不正確');
-  expressionSounds?.update({contextId:typeof data.selfId==='string'?`lobby:${data.selfId}`:'',events:data.visitors.filter(visitor=>visitor.emote).map(visitor=>({id:visitor.emote.id||`${visitor.id}:${visitor.emote.at}`,at:visitor.emote.at,sound:visitor.emote.sound}))});
+  expressionSounds?.update({contextId:typeof data.selfId==='string'?`lobby:${data.selfId}`:'',serverNow:data.serverNow,events:data.visitors.filter(visitor=>visitor.emote).map(visitor=>({id:visitor.emote.id||`${visitor.id}:${visitor.emote.at}`,at:visitor.emote.at,sound:visitor.emote.sound}))});
   const resetPositions=positionReset;positionReset=false;
   const active=new Set();
   for(const visitor of data.visitors){

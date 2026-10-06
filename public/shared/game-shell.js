@@ -116,7 +116,7 @@
   const current=s.type==='majority'||s.type==='draw'?s.presenterId:s.type==='thunder'?s.actor:s.type==='gift'?null:s.players[s.turn]?.id;
   const turn=q('#shared-turn'),turnText=turnOf(s);if(turn.textContent!==turnText)turn.textContent=turnText;turn.classList.toggle('mine',turnText.includes('輪到你'));
   const social=s.social||[],recent=new Map(),now=Date.now();
-  expressionSounds?.update({contextId:`${s.type}:${s.code}:${s.me}`,events:[...(s.expressions||[]),...social.filter(item=>item.kind==='expression')]});
+  expressionSounds?.update({contextId:`${s.type}:${s.code}:${s.me}`,serverNow:s.serverNow,events:[...(s.expressions||[]),...social.filter(item=>item.kind==='expression')]});
   for(const item of [...(s.expressions||[]),...social.filter(item=>item.kind==='expression')])if(now-item.at<5000)recent.set(item.playerId,item);
   const visible=s.players.filter(player=>!player.kicked);
   const playersKey=JSON.stringify(visible.map(player=>[player.id,player.name,player.avatar,player.stack,player.online,player.folded,player.action,player.id===current,player.id===s.me,recent.get(player.id)?.id]));
