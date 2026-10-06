@@ -1,6 +1,6 @@
 # Agent 長期記憶索引
 
-2026-10-06候選 **v1.3.1**：送禮等待區補16px最小間距；Chrome桌機／手機及Windows／Linux各761項通過，受測提交／本地tag `2bdb30e`。發布包已準備，等待正式一人房離開或更新時機確認；以 [間距驗收及發布狀態](../GIFT-WAITING-SPACING-PROGRESS.md)為準。
+2026-10-06候選 **v1.3.2**：送禮主區改依實際剩餘視窗高度伸展，包含v1.3.1的16px間距；Chrome高視窗／720p／八席等待及選禮／手機通過，Windows／Linux各761項，備份及16表副本預演通過，受測來源／本地tag `df7846d`。正式仍v1.3.0；v1.3.1未單獨部署，tag保持不動。以 [高度驗收及發布狀態](../GIFT-VIEWPORT-HEIGHT-PROGRESS.md)為準。
 
 2026-10-06正式 **v1.3.0**：畫猜本人猜中／畫者輪次及雷霆骰聲／shot／slam／nitro／skid已接共用事件音效。Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。schema14不變、integrity ok、外鍵錯誤0，原7帳戶全欄位保留；預演副本16張既有表逐列一致。匿名no-store版號、既有session、7份HTML、24份資源（含7WAV的精確bytes及MIME）一致，背景Chrome設定顯示「版本 v1.3.0」。7短音（2Kenney CC0改作＋5固定seed原創）、兩個新聲音模組、遊戲2／總4段上限及1秒載入timeout已驗；Chromeplaying／清理／靜音及所有限制見 [音效實證](../GAME-SOUNDS-PROGRESS.md)。第二批遊戲候選仍為規格，沒有真人聽感／喇叭測試；無新PR／push，純驗收文件不移動tag。
 
