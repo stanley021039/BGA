@@ -10,6 +10,7 @@
   <header class="site-header" data-site-header aria-label="網站導覽"><nav class="site-links" aria-label="主要導覽" hidden><a href="/community?tab=issues">留言板</a><details><summary>遊戲題庫</summary><div class="site-submenu"><a href="/community?tab=questions">同頻俱樂部</a><a href="/gifts">送禮達人</a></div></details><a href="/history">對局歷史</a></nav><a class="site-title" href="/">302捉猶團</a><div class="site-account" hidden><button id="site-account-button" class="site-avatar-button" type="button" aria-label="帳號選單" aria-expanded="false" aria-controls="site-account-menu"><img id="site-avatar" alt="我的頭像"></button><span id="site-account-id" class="site-account-id" aria-hidden="true"></span><div id="site-account-menu" class="site-account-menu" hidden><a href="/settings">形象設定</a><a href="/collection">收藏庫</a><a href="/achievements">成就收藏冊</a><button id="site-logout" type="button">登出</button></div></div><p id="site-header-error" role="status"></p></header>
   <main class="inner-page">
    <div class="page-heading"><div class="kicker">THE CLUB / CONTROL ROOM</div><h1>管理者工具<span>♠</span></h1><p>管理會員與邀請，確認留言板的 GitHub 同步狀態。</p></div>
+   <p><a class="page-button page-button-outline" href="/market#admin">股市冥燈：建立交易日與結算 ↗</a></p>
    <div class="admin-grid">
     <section class="page-panel invite-panel"><div class="panel-heading"><span class="panel-number">01 / INVITATIONS</span><h2>邀朋友入座</h2><p>邀請碼與密碼重設連結只顯示一次，請安全地交給對方。</p></div>
      <form id="inviteForm" class="inline-form"><label>邀請碼有效天數<input name="days" type="number" min="1" max="90" value="7" required></label><button class="page-button">產生邀請碼 <span>↗</span></button></form>
@@ -21,6 +22,6 @@
    <section class="page-panel members-panel"><div class="panel-heading"><span class="panel-number">03 / MEMBERS</span><h2>會員名單</h2><p>可為會員建立密碼重設連結，或停用與重新啟用帳號。</p></div><div class="table-scroll"><table><thead><tr><th>帳號</th><th>暱稱</th><th>狀態</th><th>操作</th></tr></thead><tbody id="users"></tbody></table></div></section>
   </main>
  </div>
- <script src="/admin.js"></script>
+ <script src="/shared/motion-policy.js"></script><script src="/shared/audio-settings.js"></script><script src="/shared/popovers.js"></script><script src="/admin.js"></script>
 <script src="/shared/site-header.js"></script></body>
 </html>

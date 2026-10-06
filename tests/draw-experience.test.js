@@ -9,90 +9,56 @@ const {DrawGuessRoom} = require('../src/games/draw-guess');
 const script = fs.readFileSync(path.join(__dirname, '..', 'public', 'draw.js'), 'utf8');
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-function browserHarness() {
- const elements = new Map(), listeners = new Map(), frames = [], strokeRequests = [], commandRequests = [];
- let snapshot = {round: 1, version: 0, strokes: []};
- function element(selector) {
-  if (!elements.has(selector)) {
-   const handlers = new Map();
-   const node = {
-    hidden: false, value: selector === '#color' ? '#273942' : selector === '#size' ? '5' : '', checked: false,
-    innerHTML: '', textContent: '', dataset: {}, style: {}, children: [], scrollHeight: 0, scrollTop: 0, clientHeight: 0,
-    classList: {toggle() {}, add() {}, remove() {}},
-    addEventListener(type, fn) { handlers.set(type, fn); listeners.set(selector + ':' + type, fn); },
-    setPointerCapture() {}, setAttribute() {},
-    append(...children) { for (const child of children) { child.parent = this; this.children.push(child); } },
-    replaceChildren(...children) { this.children = []; this.append(...children); },
-    remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); },
-    querySelector(selector) { return selector === '.feed-empty' ? this.children.find(child => child.className === 'feed-empty') || null : null; },
-    querySelectorAll() { return []; },
-    animate() { return {cancel() {}}; }, showModal() {}, close() {}, focus() {},
-   };
-   elements.set(selector, node);
-  }
-  return elements.get(selector);
- }
- const context = vm.createContext({
-  window: {matchMedia: () => ({matches: false})},
-  document: {body: element('body'), querySelector: element, createElement: () => element('created:' + randomUUID())},
-  location: {pathname: '/draw/ABC123', origin: 'http://localhost:3000', search: ''},
-  localStorage: {getItem: () => null, setItem() {}},
-  history: {replaceState() {}}, navigator: {clipboard: {writeText: async () => {}}},
-  URLSearchParams, setTimeout, clearTimeout, setInterval: () => 0, clearInterval: () => {},
-  Date, crypto: {getRandomValues: bytes=>randomFillSync(bytes)}, confirm: () => true,
-  fetch: async route => ({json: async () => route === '/api/info' ? {preferred: null} : {}}),
-  RoomHost: {update() {}, kicked() {}}, RoomReconnect: {restore: async () => null},
-  GameShell: {stableMarkup(node, html) { node.innerHTML = html; },playerRow:()=>''},
-  StrokeCanvas: {
-   pointFrom(event) { return event.point; },
-   redraw(_canvas, strokes, preview) {
-    frames.push(JSON.parse(JSON.stringify({strokes, preview: preview || null})));
-   },
-  },
-  RoomApi: {
-   async request(route, data) {
-    if (route === 'draw/canvas') return JSON.parse(JSON.stringify(snapshot));
-    if (route === 'draw/stroke') return new Promise(resolve => strokeRequests.push({data, resolve}));
-    if (route === 'draw/command') {
-     commandRequests.push(data);
-     return {round: 1, version: snapshot.version + 1, strokes: []};
-    }
-    throw Error('Unexpected API call: ' + route);
-   },
-  },
- });
- vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/shared/stroke-canvas.js'),'utf8'),context);
- context.StrokeCanvas.strokeId=context.window.StrokeCanvas.strokeId;
- vm.runInContext(script, context, {filename: 'public/draw.js'});
- function receive(state) {
-  context.injectedState = state;
-  vm.runInContext('session={code:"ABC123"};receive(injectedState)', context);
- }
- return {context, element, listeners, frames, strokeRequests, commandRequests, receive, setSnapshot(value) { snapshot = value; }};
-}
-
-function drawingState(me, guesses = []) {
- const now = Date.now();
- return {
-  type: 'draw', code: 'ABC123', name: '朋友試玩', phase: 'drawing', version: 2,
-  host: me === 'artist', hostId: 'artist', me, round: 1, roundLimit: 2,
-  presenterId: 'artist', options: {seconds: 90, customPercent: null},
-  deadline: now + 90_000, serverNow: now,
-  candidates: [], question: me === 'artist' ? {title: '貓咪', category: '簡單', difficulty: 'easy'} : null,
-  hint: {category: '簡單', length: 2},
-  players: [
-   {id: 'artist', name: '畫者', score: 0, online: true},
-   {id: 'guest', name: '猜者', score: 0, online: true},
-  ],
-  participantIds: ['guest'], guessedIds: [], guesses, result: null, winner: null,
-  strokeVersion: 0, events: [],
- };
-}
+const {browserHarness,drawingState,CANVAS_EPOCH}=require('./helpers/draw-browser.cjs');
 
 function frameContainsStroke(frame) {
  const all = [...frame.strokes, ...(frame.preview ? [frame.preview] : [])];
  return all.some(stroke => stroke.points?.some(point => point[0] === 25 && point[1] === 25));
 }
+
+test('choosing keeps selection actions separate from finished game actions',()=>{
+ const ui=browserHarness(),s=drawingState('artist');
+ s.phase='choosing';s.candidates=[{id:'cat',title:'貓咪',category:'簡單',topicLabel:'動物'}];
+ ui.receive(s);
+ assert.match(ui.element('#canvasStage').innerHTML,/選一張題卡/);
+ assert.doesNotMatch(ui.element('#drawActions').innerHTML,/本局完成|再玩一局|data-do="save"/);
+ assert.equal(ui.element('#guessForm').hidden,true);
+ s.phase='finished';s.winner={ids:['artist'],reason:'完成'};
+ ui.receive(s);
+ assert.match(ui.element('#drawActions').innerHTML,/本局完成/);
+ assert.match(ui.element('#drawActions').innerHTML,/再玩一局/);
+});
+
+test('joining the waiting room updates the roster and start action without discarding the settings draft',()=>{
+ const ui=browserHarness(),s=drawingState('artist');s.phase='waiting';s.players=s.players.slice(0,1);s.presenterId=null;
+ ui.receive(s);
+ assert.match(ui.element('#drawActions').innerHTML,/data-do="start" disabled/);
+ const settings=ui.element('#stage');settings.innerHTML='UNSAVED TOPIC SELECTION';
+ const joined={...s,players:[...s.players,{id:'guest',name:'朋友',online:true,score:0}]};ui.receive(joined);
+ assert.equal(settings.innerHTML,'UNSAVED TOPIC SELECTION');
+ assert.doesNotMatch(ui.element('#drawActions').innerHTML,/data-do="start" disabled/);
+ assert.equal(ui.element('#waitingCount').textContent,'2 / 8 位');
+ assert.match(ui.element('#waitingPlayers').innerHTML,/data-player-id="guest"/);
+});
+
+test('pending guess is visible, prevents duplicate writes and preserves input on failure',async()=>{
+ const ui=browserHarness();ui.receive(drawingState('guest'));
+ ui.element('#guessInput').value='我的猜測';
+ let rejectWrite,writes=0;
+ ui.context.RoomApi.request=async route=>{
+  if(route==='draw/canvas')return {canvasEpoch:CANVAS_EPOCH,round:1,version:0,strokes:[]};
+  writes++;return new Promise((_resolve,reject)=>{rejectWrite=reject;});
+ };
+ const pending=vm.runInContext('action("guess",{answer:"我的猜測"})',ui.context);
+ assert.match(ui.element('#drawStatus').textContent,/正在送出/);
+ assert.equal(await vm.runInContext('action("guess",{answer:"我的猜測"})',ui.context),false);
+ assert.equal(writes,1);
+ rejectWrite(Error('暫時無法送出'));
+ assert.equal(await pending,false);
+ assert.equal(ui.element('#drawStatus').textContent,'暫時無法送出');
+ assert.equal(ui.element('#guessInput').value,'我的猜測');
+ assert.equal(vm.runInContext('busy',ui.context),false);
+});
 
 test('non-host presenter can draw over HTTP without crypto.randomUUID',async()=>{
  const ui=browserHarness(),state=drawingState('artist');state.host=false;state.hostId='guest';
@@ -123,8 +89,8 @@ test('artist stroke remains visible while the server accepts a delayed write', a
  assert.equal(ui.strokeRequests.length, 1, 'the write has reached the delayed server');
  assert.ok(ui.frames.slice(beforeFinish).every(frameContainsStroke), 'no repaint removes the stroke before acknowledgement');
  const posted = ui.strokeRequests[0].data;
- ui.setSnapshot({round: 1, version: 1, strokes: [{version: 1, strokeId: posted.strokeId, tool: posted.tool, color: posted.color, size: posted.size, points: posted.points}]});
- ui.strokeRequests[0].resolve({round: 1, version: 1});
+ ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round: 1, version: 1, strokes: [{version: 1, strokeId: posted.strokeId, tool: posted.tool, color: posted.color, size: posted.size, points: posted.points}]});
+ ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round: 1, version: 1});
  await pause(0);
  await vm.runInContext('syncCanvas()', ui.context);
  assert.ok(frameContainsStroke(ui.frames.at(-1)), 'the confirmed stroke stays visible');
@@ -147,8 +113,8 @@ test('undo waits for a queued stroke before sending the canvas command', async (
  ui.listeners.get('#drawCanvas:pointerdown')({button: 0, pointerId: 2, point: [40, 40], preventDefault() {}});
  assert.equal(vm.runInContext('active', ui.context), null, 'a new stroke cannot start while undo is pending');
  const posted = ui.strokeRequests[0].data;
- ui.setSnapshot({round: 1, version: 1, strokes: [{version: 1, strokeId: posted.strokeId, tool: posted.tool, color: posted.color, size: posted.size, points: posted.points}]});
- ui.strokeRequests[0].resolve({round: 1, version: 1});
+ ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round: 1, version: 1, strokes: [{version: 1, strokeId: posted.strokeId, tool: posted.tool, color: posted.color, size: posted.size, points: posted.points}]});
+ ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round: 1, version: 1});
  await undo;
  assert.deepEqual(ui.commandRequests.map(item => item.command), ['undo']);
  assert.equal(ui.frames.at(-1).strokes.length, 0, 'the completed stroke is undone');
@@ -169,8 +135,8 @@ test('a second touch cannot steal or leave behind the first pointer stroke', asy
  up({pointerId:1,point:[25,25],preventDefault(){}});await pause(250);
  assert.equal(ui.strokeRequests.length,1);
  const posted=ui.strokeRequests[0].data;
- ui.setSnapshot({round:1,version:1,strokes:[{version:1,strokeId:posted.strokeId,tool:posted.tool,color:posted.color,size:posted.size,points:posted.points}]});
- ui.strokeRequests[0].resolve({round:1,version:1});await vm.runInContext('sendQueue',ui.context);
+ ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:1,strokes:[{version:1,strokeId:posted.strokeId,tool:posted.tool,color:posted.color,size:posted.size,points:posted.points}]});
+ ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round:1,version:1});await vm.runInContext('sendQueue',ui.context);
  assert.equal(vm.runInContext('localStrokes.size',ui.context),0);
 });
 
@@ -200,6 +166,66 @@ test('chat drops only its oldest node after fifty guesses',()=>{
  assert.equal(after.length,50);
  assert.equal(after[0],before[1],'existing chat nodes remain instead of being announced again');
  assert.match(after.at(-1).textContent,/新猜測/);
+});
+
+test('phase scenes stay in one canvas frame without replacing the drawing canvas', async () => {
+ const ui=browserHarness(),base=drawingState('guest');
+ const choosing={...base,phase:'choosing',question:null,hint:null,candidates:[],deadline:Date.now()+15_000};
+ ui.receive(choosing);await pause(0);
+ const canvas=ui.element('#drawCanvas'),frameCount=ui.frames.length;
+ assert.equal(ui.element('#boardSection').hidden,false);
+ assert.match(ui.element('#canvasStage').innerHTML,/畫者正在挑題/);
+ assert.doesNotMatch(ui.element('#canvasStage').innerHTML,/貓咪/,'the guessing player does not see the answer');
+ ui.receive(base);await pause(0);
+ assert.equal(ui.element('#canvasStage').hidden,true);
+ assert.equal(ui.element('#drawCanvas'),canvas);
+ assert.equal(ui.frames.length,frameCount,'entering the drawing phase does not clear or repaint the canvas');
+ const reveal={...base,phase:'reveal',question:{title:'貓咪'},result:{answer:'貓咪',reason:'時間到',guessedIds:[]},deadline:Date.now()+8000};
+ ui.receive(reveal);await pause(0);
+ assert.match(ui.element('#canvasStage').innerHTML,/答案揭曉/);
+ assert.match(ui.element('#canvasStage').innerHTML,/貓咪/);
+ assert.equal(ui.element('#drawCanvas'),canvas);
+ assert.equal(ui.frames.length,frameCount,'the reveal stage does not repaint the source canvas');
+ ui.receive({...reveal,phase:'finished',winner:{ids:['artist'],score:0},deadline:null});
+ assert.match(ui.element('#canvasStage').innerHTML,/今晚的畫猜高手/);
+ assert.equal(ui.element('#drawCanvas'),canvas);
+});
+
+test('only a newly confirmed correct guess receives a local score reaction', () => {
+ const ui=browserHarness(),before=drawingState('guest');
+ ui.receive(before);
+ const at=Date.now();
+ const after={...before,serverNow:at+120,guessedIds:['guest'],guesses:[{id:'guest',name:'猜者',correct:true,points:84,at}],players:[before.players[0],{...before.players[1],score:84}]};
+ ui.receive(after);
+ const row=ui.element('#players').playerRows.find(item=>item.dataset.playerId==='guest');
+ assert.equal(row.children.at(-1).textContent,'✓ +84 分');
+ const reconnected=browserHarness();reconnected.receive(after);
+ const newRow=reconnected.element('#players').playerRows.find(item=>item.dataset.playerId==='guest');
+ assert.equal(newRow.children.length,0,'the first state after reconnect does not replay past reactions');
+});
+
+test('correct-guess reaction uses server time when client and server clocks differ', () => {
+ const ui=browserHarness(),before=drawingState('guest');
+ ui.receive(before);
+ const serverNow=Date.now()-60_000;
+ const after={...before,serverNow,guessedIds:['guest'],guesses:[{id:'guest',name:'猜者',correct:true,points:81,at:serverNow-100}],players:[before.players[0],{...before.players[1],score:81}]};
+ ui.receive(after);
+ const row=ui.element('#players').playerRows.find(item=>item.dataset.playerId==='guest');
+ assert.equal(row.children.at(-1).textContent,'✓ +81 分');
+});
+
+test('a brief failed poll suppresses phase and score animations on reconnect', async () => {
+ const ui=browserHarness(),before=drawingState('guest');
+ ui.receive(before);await pause(0);
+ await vm.runInContext('poll()',ui.context);
+ assert.equal(vm.runInContext('disconnected',ui.context),true);
+ const count=ui.animations.length,at=Date.now();
+ const after={...before,serverNow:at+120,phase:'reveal',guessedIds:['guest'],guesses:[{id:'guest',name:'猜者',correct:true,points:80,at}],result:{answer:'貓咪',reason:'所有猜題者已完成',guessedIds:['guest']},players:[before.players[0],{...before.players[1],score:80}]};
+ ui.receive(after);
+ assert.equal(ui.animations.length,count,'reconnecting within five seconds does not replay the reveal transition');
+ const row=ui.element('#players').playerRows.find(item=>item.dataset.playerId==='guest');
+ assert.equal(row.children.length,0,'past correct guesses do not show a new score badge');
+ assert.equal(vm.runInContext('disconnected',ui.context),false);
 });
 
 test('multiple guesses are public and earlier correct guesses earn more points', () => {

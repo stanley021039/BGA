@@ -7,6 +7,7 @@
  const visitors=new Map();
  let inFlight=false,ready=false,queuedTarget=null,destination=null,emotesLoaded=false,positionReset=true;
  function closeMenu(){menu.hidden=true;toggle.setAttribute('aria-expanded','false');}
+ window.UIPopover?.bind(toggle,menu,{align:'end',onClose:closeMenu});
  function render(data){
   if(!data||!Array.isArray(data.visitors))throw Error('大廳資料格式不正確');
   const resetPositions=positionReset;positionReset=false;

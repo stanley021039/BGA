@@ -1,3 +1,4 @@
+const {assertRecordCapacity}=require('../rooms/membership');
 const {randomInt,randomUUID}=require('node:crypto');
 const {GIFTS}=require('./gift-catalog');
 const {validCustomPercent,drawContent}=require('./content-draw');
@@ -17,6 +18,7 @@ class GiftRoom{
  activePlayers(){return this.players.filter(player=>!player.kicked);}
  event(kind,text){this.events.push({id:++this.version,kind,text});this.events=this.events.slice(-16);this.updated=Date.now();}
  add(name,bot=false){
+  assertRecordCapacity(this);
   if(bot)throw Error('送禮達人只接受真人玩家');
   if(!['waiting','finished'].includes(this.phase))throw Error('本局已開始，請等待下一局');
   if(this.activePlayers().length>=8)throw Error('最多 8 位玩家');
@@ -25,17 +27,23 @@ class GiftRoom{
   this.players.push(player);if(!this.host)this.host=player.id;
   this.event('join',`${player.name} 加入房間`);return player;
  }
- kick(id,target){
+ kick(id,target,leaving=false){
   if(id!==this.host)throw Error('只有房主可以踢人');
   const player=this.player(target);
   if(!player||player.kicked)throw Error('找不到玩家');
   if(target===this.host)throw Error('不能踢出自己');
-  player.kicked=true;delete this.assignments[target];delete this.rankings[target];
+  if(this.phase==='waiting')this.players.splice(this.players.indexOf(player),1);else player.kicked=true;delete this.assignments[target];delete this.rankings[target];
   for(const gifts of Object.values(this.assignments))delete gifts[target];
-  this.event('kick',`${player.name} 已被房主踢出`);
+  this.event(leaving?'leave':'kick',player.name+(leaving?' 已離開房間':' 已被房主踢出'));
   if(this.phase==='waiting'||this.phase==='finished')return;
   if(this.activePlayers().length<3){this.phase='finished';this.winner={ids:[],reason:'玩家不足，本局提前結束'};this.event('finish','玩家不足，本局提前結束');return;}
   if(this.phase==='choosing'&&this.readyToReveal())this.reveal();
+  if(this.phase==='delivering'){
+   const current=this.delivery.order[this.delivery.index];
+   this.delivery.order=this.delivery.order.filter(playerId=>playerId!==target);
+   if(current===target){if(this.delivery.index>=this.delivery.order.length)this.finishDelivery();}
+   else this.delivery.index=this.delivery.order.indexOf(current);
+  }
  }
  configure(id,data={}){
   if(id!==this.host)throw Error('只有房主可以更改設定');
@@ -58,7 +66,7 @@ class GiftRoom{
   this.round++;this.dealerId=players[(this.round-1)%players.length].id;
   const draw=drawContent({builtin:GIFTS,custom,count:players.length+1,customPercent:this.customPercent,usedIds:this.usedGiftIds,rng:this.rng});
   this.gifts=draw.items;this.usedGiftIds=draw.usedIds;
-  this.assignments={};this.rankings={};this.result=null;this.phase='choosing';
+  this.assignments={};this.rankings={};this.result=null;this.delivery=null;this.pendingResult=null;this.phase='choosing';
   this.event('round',`第 ${this.round} 輪開始，請為朋友挑禮物並標記喜好`);
  }
  allSubmitted(records){return this.activePlayers().every(player=>Object.hasOwn(records,player.id));}
@@ -96,12 +104,33 @@ class GiftRoom{
     const giftId=this.assignments[giver.id]?.[recipient.id];
     const rank=Object.keys(rankPoints).find(key=>this.rankings[recipient.id][key]===giftId)||'unranked';
     const points=rankPoints[rank]??-1;
-    giver.giveScore=clamp(giver.giveScore+points,this.target);
-    recipient.getScore=clamp(recipient.getScore+points,this.target);
-    entries.push({giverId:giver.id,recipientId:recipient.id,giftId,rank,points,giveAfter:giver.giveScore,getAfter:recipient.getScore});
+    entries.push({giverId:giver.id,recipientId:recipient.id,giftId,rank,points});
    }
   }
-  this.result={round:this.round,assignments:copy(this.assignments),rankings:copy(this.rankings),entries};
+  this.pendingResult={round:this.round,assignments:copy(this.assignments),rankings:copy(this.rankings),entries};
+  this.delivery={order:order.map(player=>player.id),index:0};
+  this.phase='delivering';this.event('delivery','大家一起送禮，等待收禮者確認');
+ }
+ accept(id,recipientId){
+  if(this.phase!=='delivering')throw Error('現在沒有待確認的禮物');
+  const current=this.delivery.order[this.delivery.index];
+  if(id!==current)throw Error('只有目前的收禮者可以確認');
+  if(recipientId!==current)throw Error('這份禮物已確認，請重新整理');
+  this.event('accept',`${this.player(id).name} 已收到禮物`);
+  this.delivery.index++;
+  if(this.delivery.index<this.delivery.order.length)return;
+  this.finishDelivery();
+ }
+ finishDelivery(){
+  const players=this.activePlayers();
+  const entries=this.pendingResult.entries.filter(entry=>players.some(player=>player.id===entry.giverId)&&players.some(player=>player.id===entry.recipientId));
+  for(const entry of entries){
+   const giver=this.player(entry.giverId),recipient=this.player(entry.recipientId);
+   giver.giveScore=clamp(giver.giveScore+entry.points,this.target);
+   recipient.getScore=clamp(recipient.getScore+entry.points,this.target);
+   entry.giveAfter=giver.giveScore;entry.getAfter=recipient.getScore;
+  }
+  this.result={...this.pendingResult,entries};this.pendingResult=null;this.delivery=null;
   const winners=players.filter(player=>player.giveScore===this.target&&player.getScore===this.target);
   this.phase=winners.length?'finished':'reveal';
   if(winners.length)this.winner={ids:winners.map(player=>player.id),round:this.round};
@@ -111,6 +140,7 @@ class GiftRoom{
   if(!this.player(id)||this.player(id).kicked)throw Error('找不到玩家');
   if(action==='give')return this.give(id,data.assignments);
   if(action==='wish')return this.wish(id,data.ranking);
+  if(action==='accept')return this.accept(id,data.recipientId);
   if(action==='next'&&this.phase==='reveal'){
    if(id!==this.host)throw Error('只有房主可以開始下一輪');
    return this.newRound();
@@ -127,6 +157,7 @@ class GiftRoom{
    submittedIds:this.phase==='choosing'?this.activePlayers().filter(player=>Object.hasOwn(this.assignments,player.id)&&Object.hasOwn(this.rankings,player.id)).map(player=>player.id):[],
    gaveIds:this.phase==='choosing'?Object.keys(this.assignments):[],wishedIds:this.phase==='choosing'?Object.keys(this.rankings):[],
    ownAssignments:this.assignments[id]||null,ownRanking:this.rankings[id]||null,
+   delivery:this.phase==='delivering'?{recipientId:this.delivery.order[this.delivery.index],index:this.delivery.index,total:this.delivery.order.length,entries:this.pendingResult.entries.filter(entry=>entry.recipientId===this.delivery.order[this.delivery.index]&&!this.player(entry.giverId).kicked).map(({giverId,recipientId,giftId,rank,points})=>({giverId,recipientId,giftId,rank,points}))}:null,
    result:revealed?this.result:null,winner:this.winner,events:this.events
   });
  }

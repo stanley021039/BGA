@@ -30,14 +30,21 @@ test('drawing game keeps the answer private, validates strokes, scores aliases, 
  assert.deepEqual(room.view(guest.id).hint,{category:'簡單',topicLabel:'綜合',length:[...selected.title].length});
  assert.throws(()=>room.act(host.id,'guess',{answer:selected.title}),/下一輪|不能猜/);
  const strokeId=randomUUID(),batchId=randomUUID();
- assert.throws(()=>room.addStroke(guest.id,{round:1,batchId,strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}),/畫者/);
- assert.throws(()=>room.addStroke(host.id,{round:1,batchId,strokeId,tool:'brush',color:'red',size:5,points:[[1,2]]}),/格式/);
- const stroke=room.addStroke(host.id,{round:1,batchId,strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2],[3,4]]});
+ assert.throws(()=>room.addStroke(guest.id,{canvasEpoch:room.canvas.epoch,round:1,batchId,strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}),/畫者/);
+ assert.throws(()=>room.addStroke(host.id,{canvasEpoch:room.canvas.epoch,round:1,batchId,strokeId,tool:'brush',color:'red',size:5,points:[[1,2]]}),/格式/);
+ const stroke=room.addStroke(host.id,{canvasEpoch:room.canvas.epoch,round:1,batchId,strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2],[3,4]]});
  assert.equal(stroke.stroke.points.length,2);
- assert.equal(room.addStroke(host.id,{round:1,batchId,strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}).duplicate,true);
+ assert.equal(room.addStroke(host.id,{canvasEpoch:room.canvas.epoch,round:1,batchId,strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}).duplicate,true);
  assert.equal(room.canvasSnapshot().strokes.length,1);
- room.canvasCommand(host.id,{round:1,command:'undo'});assert.equal(room.canvasSnapshot().strokes.length,0);
- assert.throws(()=>room.addStroke(host.id,{round:0,batchId:randomUUID(),strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}),/舊回合/);
+ room.canvasCommand(host.id,{canvasEpoch:room.canvas.epoch,round:1,command:'undo'});assert.equal(room.canvasSnapshot().strokes.length,0);
+ const fill={canvasEpoch:room.canvas.epoch,round:1,batchId:randomUUID(),strokeId:randomUUID(),tool:'fill',color:'#e88751',size:5,points:[[100,80]]};
+ assert.throws(()=>room.addStroke(guest.id,fill),/畫者/);
+ assert.throws(()=>room.addStroke(host.id,{...fill,points:[[100,80],[200,90]]}),/格式/);
+ room.addStroke(host.id,fill);
+ assert.equal(room.canvasSnapshot().strokes[0].tool,'fill');
+ assert.deepEqual(room.canvasSnapshot().strokes[0].points,[[100,80]]);
+ room.canvasCommand(host.id,{canvasEpoch:room.canvas.epoch,round:1,command:'undo'});assert.equal(room.canvasSnapshot().strokes.length,0);
+ assert.throws(()=>room.addStroke(host.id,{canvasEpoch:room.canvas.epoch,round:0,batchId:randomUUID(),strokeId,tool:'brush',color:'#123456',size:5,points:[[1,2]]}),/舊回合/);
  room.act(guest.id,'guess',{answer:'猜錯'});assert.equal(room.view(guest.id).guesses.at(-1).answer,'猜錯');
  time+=800;
  room.act(guest.id,'guess',{answer:selected.aliases[0]});
@@ -46,7 +53,7 @@ test('drawing game keeps the answer private, validates strokes, scores aliases, 
  room.act(host.id,'next');assert.equal(room.presenterId,guest.id);
  const second=room.candidates[0];room.act(guest.id,'choose',{questionId:second.id});
  assert.equal(room.view(guest.id).host,false);
- room.addStroke(guest.id,{round:2,batchId:randomUUID(),strokeId:randomUUID(),tool:'brush',color:'#123456',size:5,points:[[10,20],[30,40]]});
+ room.addStroke(guest.id,{canvasEpoch:room.canvas.epoch,round:2,batchId:randomUUID(),strokeId:randomUUID(),tool:'brush',color:'#123456',size:5,points:[[10,20],[30,40]]});
  assert.equal(room.canvasSnapshot().strokes.length,1);
  room.act(host.id,'guess',{answer:second.title});room.act(host.id,'next');
  assert.equal(room.phase,'finished');assert.equal(room.round,2);
@@ -76,6 +83,46 @@ test('host category limits all three drawing candidates and rejects unknown cate
  assert.throws(()=>room.configure(host.id,{seconds:90,topic:'food'}),/遊戲中/);
 });
 
+test('multiple built-in categories draw only their union, without custom or unselected topics',()=>{
+ const room=new DrawGuessRoom('MULTI1','多類別',()=>0),host=room.add('甲');
+ for(let i=1;i<8;i++)room.add('朋友'+i);
+ room.wordProvider=()=>[{id:'custom-other',title:'自訂動物',topic:'animals',custom:true}];
+ room.configure(host.id,{seconds:90,topics:['food','transport']});
+ room.start();const seen=new Set();
+ while(room.phase==='choosing'){
+  assert.equal(room.candidates.length,3);
+  assert.equal(new Set(room.candidates.map(word=>word.id)).size,3);
+  for(const word of room.candidates){assert.ok(['food','transport'].includes(word.topic));assert.equal(word.custom,false);seen.add(word.topic);}
+  room.choose(room.presenterId,room.candidates[0].id);room.reveal('時間到');room.next(host.id);
+ }
+ assert.deepEqual([...seen].sort(),['food','transport']);
+});
+
+test('custom is an independent category including submissions from every thematic category',()=>{
+ const room=new DrawGuessRoom('CUSTOM','自定義',max=>max-1),host=room.add('甲');room.add('乙');
+ room.wordProvider=()=>['food','animals','misc'].map((topic,index)=>({id:'custom-'+index,title:'投稿'+index,topic,custom:true}));
+ room.configure(host.id,{seconds:90,topics:['custom']});room.start();
+ assert.equal(room.candidates.length,3);assert.ok(room.candidates.every(word=>word.custom));
+ assert.deepEqual(room.candidates.map(word=>word.topic).sort(),['animals','food','misc']);
+ const mixed=new DrawGuessRoom('MIXED1','混合',max=>max-1),owner=mixed.add('甲');mixed.add('乙');mixed.wordProvider=room.wordProvider;
+ mixed.configure(owner.id,{seconds:90,topics:['food','custom']});mixed.start();
+ assert.equal(mixed.candidates.length,3);assert.ok(mixed.candidates.every(word=>word.custom||word.topic==='food'));
+ assert.ok(mixed.candidates.some(word=>word.custom&&word.topic==='animals'));
+});
+
+test('empty and invalid selections cannot change settings, and an empty custom bank cannot start a broken round',()=>{
+ const room=new DrawGuessRoom('EMPTY1','空題庫',()=>0),host=room.add('甲');room.add('乙');
+ const original=structuredClone(room.options);
+ for(const topics of [[],['unknown'],['food','food'],'food',null]){
+  assert.throws(()=>room.configure(host.id,{seconds:60,topics}),/題目類別/);assert.deepEqual(room.options,original);
+ }
+ room.configure(host.id,{seconds:90,topics:['custom']});
+ assert.throws(()=>room.start(),/還沒有題目/);assert.equal(room.phase,'waiting');assert.equal(room.round,0);
+ room.wordProvider=()=>[{id:'custom-one',title:'第一道自訂題',topic:'misc',custom:true}];
+ room.start();assert.equal(room.phase,'choosing');assert.equal(room.candidates[0].id,'custom-one');
+ assert.throws(()=>room.configure(host.id,{seconds:90,topics:['food']}),/遊戲中/);
+});
+
 test('custom words persist in SQLite and reject malformed aliases',()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-draw-words-')),file=path.join(root,'app.sqlite');
  let db;
@@ -102,6 +149,13 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
   const host=await login('drawadmin'),guest=await login('drawguest');
   async function post(route,headers,data){const response=await fetch(base+'/api/'+route,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify(data)});return {status:response.status,body:await response.json()};}
   assert.equal((await post('create',host,{type:'draw',topic:'wrong'})).status,400);
+  for(const topics of [[],['wrong'],['food','food'],'food'])assert.equal((await post('create',host,{type:'draw',topics})).status,400);
+  const multi=await post('create',host,{type:'draw',topics:['transport','food','custom']});assert.equal(multi.status,200);
+  const multiState=await (await fetch(base+'/api/state?code='+multi.body.code,{headers:host})).json();
+  assert.deepEqual(multiState.options.topics,['food','transport','custom']);
+  assert.equal((await post('settings',host,{code:multi.body.code,seconds:90,topics:[]})).status,400);
+  const unchanged=await (await fetch(base+'/api/state?code='+multi.body.code,{headers:host})).json();assert.deepEqual(unchanged.options.topics,multiState.options.topics);
+  assert.equal((await post('leave',host,{code:multi.body.code})).status,200);
   const created=await post('create',host,{type:'draw',topic:'food'});assert.equal(created.status,200);
   const code=created.body.code;assert.equal((await post('join',guest,{code})).status,200);
   const initial=await (await fetch(base+'/api/state?code='+code,{headers:host})).json();assert.equal(initial.options.topic,'food');
@@ -114,10 +168,23 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
   assert.equal((await post('action',host,{code,action:'choose',questionId:chooser.candidates[0].id})).status,200);
   const drawing=await (await fetch(base+'/api/state?code='+code,{headers:guest})).json();
   assert.equal(drawing.question,null);assert.ok(drawing.hint);
-  const batch={code,round:1,batchId:randomUUID(),strokeId:randomUUID(),tool:'brush',color:'#123456',size:4,points:[[10,10],[12,12]]};
+  const batch={code,canvasEpoch:drawing.canvasEpoch,round:1,batchId:randomUUID(),strokeId:randomUUID(),tool:'brush',color:'#123456',size:4,points:[[10,10],[12,12]]};
   assert.equal((await post('draw/stroke',guest,batch)).status,400);
   assert.equal((await post('draw/stroke',host,batch)).status,200);
   const snapshot=await (await fetch(base+'/api/draw/canvas?code='+code,{headers:guest})).json();assert.equal(snapshot.strokes.length,1);
+  assert.equal(snapshot.canvasEpoch,drawing.canvasEpoch);
+  assert.equal((await post('draw/stroke',host,{...batch,canvasEpoch:undefined,batchId:randomUUID()})).status,400);
+  assert.equal((await post('leave',guest,{code})).status,200);assert.equal((await post('join',guest,{code})).status,200);assert.equal((await post('start',host,{code})).status,200);
+  const reopened=await (await fetch(base+'/api/state?code='+code,{headers:host})).json();assert.equal(reopened.round,1);assert.notEqual(reopened.canvasEpoch,drawing.canvasEpoch);
+  assert.equal((await post('action',host,{code,action:'choose',questionId:reopened.candidates[0].id})).status,200);
+  assert.equal((await post('draw/stroke',host,batch)).status,400);
+  assert.equal((await post('draw/command',host,{code,canvasEpoch:drawing.canvasEpoch,round:1,command:'clear'})).status,400);
+  const accepted=await post('draw/stroke',host,{...batch,canvasEpoch:reopened.canvasEpoch});assert.equal(accepted.status,200);assert.equal(accepted.body.canvasEpoch,reopened.canvasEpoch);assert.deepEqual(accepted.body.quota,{usedFills:0,usedBatches:1,usedPoints:2});
+  const abort=new AbortController();
+  try{
+   const response=await fetch(base+'/api/draw/events?code='+code,{headers:guest,signal:abort.signal}),reader=response.body.getReader();const ready=new TextDecoder().decode((await reader.read()).value),payload=JSON.parse(ready.split('\ndata: ')[1].trim());
+   assert.equal(response.status,200);assert.equal(payload.canvasEpoch,reopened.canvasEpoch);assert.equal(payload.round,1);assert.equal(payload.version,accepted.body.version);
+  }finally{abort.abort();}
   assert.equal((await fetch(base+'/api/draw/canvas?code='+code)).status,401);
   for(const asset of ['draw','draw.js','draw.css','draw-words','shared/stroke-canvas.js'])assert.equal((await fetch(base+'/'+asset,{headers:guest})).status,200,asset);
  }finally{await app.close();try{fs.rmSync(root,{recursive:true,force:true});}catch{}}

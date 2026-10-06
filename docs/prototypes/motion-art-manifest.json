@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "kind": "isolated-original-study",
+  "generator": "tools/prototypes/generate-motion-art.cjs",
+  "generatorSha256": "2137ff563c8062a97c44851f8b6b0a18e45583687f4dc18e199605b61560f6e6",
+  "thirdPartyAssets": [],
+  "provenance": "Original handwritten SVG shapes and CSS keyframes; no copied third-party images or geometry.",
+  "design": {
+    "viewBox": "0 0 24 24",
+    "strokeWidth": 1.8,
+    "color": "currentColor",
+    "durationMs": 700,
+    "autoplay": false,
+    "infiniteLoop": false,
+    "reducedMotion": "static"
+  },
+  "files": [
+    {
+      "path": "gift-coincidence.svg",
+      "bytes": 774,
+      "sha256": "b0fa18ae04c266cea4e61c0897818a95d34d651a207f3165342076d10d57dfd9"
+    },
+    {
+      "path": "watch-sync.svg",
+      "bytes": 802,
+      "sha256": "631eb703b80c92572bac973ea15c25bf0b3e0eb85cd20ba4a19af79cbb2284eb"
+    },
+    {
+      "path": "motion-art.html",
+      "bytes": 8610,
+      "sha256": "832b10ac9fbcc98fe2dc7a6db0618196975fdebd2266fff2d2aa21fb62ead6f1"
+    }
+  ]
+}

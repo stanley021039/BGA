@@ -17,7 +17,7 @@ function createScenario(index){
  const own=r.cars.filter(c=>c.owner===p.id),enemy=r.cars.filter(c=>c.owner===q.id);
  const car=index===2?own[2]:own[0],target=index===2?enemy[0]:enemy[2],ally=own[2];
  Object.assign(car,{dead:false,x:2,y:1});Object.assign(target,{dead:false,x:2,y:index===2?2:index===3?3:7});
- r.turn=0;r.first=0;r.round=index===3?2:1;r.phase='assign';r.active=null;r.queue=[];r.pending=null;r.finishAt=null;r.winner=null;r.log=[];r.events=[];r.damageDeck=Array(20).fill('dent');r.roadDie=2;
+ r.clearDice();r.turn=0;r.first=0;r.round=index===3?2:1;r.phase='assign';r.active=null;r.queue=[];r.pending=null;r.finishAt=null;r.winner=null;r.log=[];r.events=[];r.damageDeck=Array(20).fill('dent');r.roadDie=2;
  for(const player of r.players){player.out=false;player.turns=0;player.commandUsed=false;player.chopper=null;}
  p.dice=missions[index].dice.map(value=>({value,used:false}));
  if(index===0){r.terrain(2,2).kind='X';r.terrain(1,1).kind='M';r.terrain(1,2).kind='M';}
@@ -30,7 +30,7 @@ function createScenario(index){
 function outcome(s){
  const {r,car,target,ally,index}=s,flag=missions[index].flag,atFlag=flag&&car.x===flag.x&&car.y===flag.y;
  if(car.dead)return {ok:false,text:'車撞上障礙或離開道路，已淘汰。看看最後落點，重試這一關。'};
- if(r.pending)return null;
+ if(r.pending||r.diceCheck)return null;
  const ended=s.p.turns>0||r.phase==='finished';
  if(index===2&&r.events.some(e=>e.kind==='slam'))return {ok:true,text:'碰撞已結算。即使原本有 3 點，撞車後也不會繼續正常移動；較大車的優勢是能選擇重擲。'};
  if(index===3&&target.damage.length)return {ok:true,text:'你先駛入射界，再擲出 L 命中重型車。傷害已顯示在敵車上；第一輪則不能射擊。'};
