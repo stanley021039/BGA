@@ -7,6 +7,8 @@ const {openDatabase}=require('../src/db');
 const {createAuth}=require('../src/auth');
 const {createApp}=require('../src/app');
 const mp3=Buffer.concat([Buffer.from([255,251,144,100]),Buffer.alloc(830)]);
+function musicTemp(prefix){return fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),prefix));}
+function removeMusicTemp(root,prefix){const absolute=fs.realpathSync(root);assert.equal(absolute,path.resolve(root));assert.equal(path.dirname(absolute),fs.realpathSync(os.tmpdir()));assert.ok(path.basename(absolute).startsWith(prefix));fs.rmSync(absolute,{recursive:true,force:true,maxRetries:5});}
 
 test('room transport and shuffle advance once on the server for every listener',()=>{
  let now=0;const tracks=[{id:'a',title:'A',duration:10},{id:'b',title:'B',duration:20},{id:'c',title:'C',duration:30}],store={list:()=>tracks,get:id=>tracks.find(t=>t.id===id)},room=new RoomMusic(()=>now,store,()=>0);
@@ -35,7 +37,7 @@ test('room music uses elapsed server time, pauses, seeks, loops, and restarts en
 });
 
 test('music storage validates content, metadata, ownership, quotas, and persists files',async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-music-store-')),db=openDatabase(path.join(root,'app.sqlite'));
+ const root=musicTemp('bga-music-store-'),db=openDatabase(path.join(root,'app.sqlite'));
  try{
   const auth=createAuth(db);await auth.bootstrap('musicadmin','test-password-123');
   const user=db.prepare('SELECT * FROM users').get(),store=new MusicStore(db,path.join(root,'music'));
@@ -51,12 +53,12 @@ test('music storage validates content, metadata, ownership, quotas, and persists
   assert.throws(()=>store.add(user,{title:'滿了',duration:2},mp3),/20 首/);
   store.remove(user,track.id);assert.equal(store.list().length,19);
   assert.equal(fs.existsSync(path.join(root,'music',track.id+'.mp3')),false);
- }finally{db.close();fs.rmSync(root,{recursive:true,force:true,maxRetries:5});}
+ }finally{db.close();removeMusicTemp(root,'bga-music-store-');}
 });
 
 test('authenticated streaming ranges, shared library, host controls, isolation, SSE and kicking',async()=>{
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-music-http-'));
- const config={port:0,host:'127.0.0.1',historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite')};
+ const root=musicTemp('bga-music-http-');
+ const config={port:0,host:'127.0.0.1',externalSideEffectsEnabled:false,historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite')};
  const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('musicadmin','test-password-123');db.close();
  const app=createApp(config);let reader;
  try{
@@ -82,11 +84,11 @@ test('authenticated streaming ranges, shared library, host controls, isolation, 
   const a=(await post('create',host,{type:'poker',roomName:'音樂測試'})).body.code;
   const b=(await post('create',friend,{type:'poker',roomName:'另一桌'})).body.code;
   await post('join',friend,{code:a});
-  assert.equal((await post('room-music',friend,{code:a,action:'select',trackId:owned.id})).status,403);
-  for(const action of ['previous','next','mode'])assert.equal((await post('room-music',friend,{code:a,action,mode:'shuffle'})).status,403);
+  assert.equal((await post('room-music',friend,{code:a,action:'select',trackId:owned.id})).status,200);
+  for(const action of ['pause','play','stop','seek','previous','next','mode','loop'])assert.equal((await post('room-music',friend,{code:a,action,mode:'shuffle',loop:true,position:1})).status,403);
   const stream=await fetch(base+'/api/room-music/events?code='+a,{headers:{Cookie:friend}});reader=stream.body.getReader();
   assert.match(new TextDecoder().decode((await reader.read()).value),/event: music/);
-  const selected=await post('room-music',host,{code:a,action:'select',trackId:owned.id});assert.equal(selected.body.playing,true);
+  const selected=await post('room-music',friend,{code:a,action:'select',trackId:owned.id});assert.equal(selected.status,200);assert.equal(selected.body.playing,true);
   assert.match(new TextDecoder().decode((await reader.read()).value),new RegExp(owned.id));
   const state=await (await fetch(base+'/api/room-music?code='+a,{headers:{Cookie:friend}})).json();assert.equal(state.track.id,owned.id);
   assert.equal((await (await fetch(base+'/api/room-music?code='+b,{headers:{Cookie:friend}})).json()).track,null);
@@ -96,5 +98,46 @@ test('authenticated streaming ranges, shared library, host controls, isolation, 
   assert.equal((await post('kick',host,{code:a,playerId:view.me,confirmed:true})).status,200);
   assert.equal((await fetch(base+'/api/room-music?code='+a,{headers:{Cookie:friend}})).status,403);
   for(const game of ['poker','race','majority','gift','draw']){const html=await (await fetch(base+'/'+game,{headers:{Cookie:host}})).text();assert.match(html,/shared\/table-music.js/);}
- }finally{await reader?.cancel();await app.close();fs.rmSync(root,{recursive:true,force:true,maxRetries:5});}
+ }finally{await reader?.cancel();await app.close();removeMusicTemp(root,'bga-music-http-');}
+});
+
+async function sharedMusicFixture(t){
+ const prefix='bga-music-members-',root=musicTemp(prefix),config={port:0,host:'127.0.0.1',externalSideEffectsEnabled:false,dbFile:path.join(root,'app.sqlite'),historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),musicDir:path.join(root,'music')};let app;
+ t.after(async()=>{await app?.close();removeMusicTemp(root,prefix);});
+ const db=openDatabase(config.dbFile),auth=createAuth(db),password='synthetic-shared-music-password';
+ try{const id=await auth.bootstrap('music_host',password),admin=db.prepare('SELECT * FROM users WHERE id=?').get(id);for(const username of ['music_uploader','music_selector'])await auth.register({username,password,confirmPassword:password,invite:auth.createInvite(admin).code},{setHeader(){}});}finally{db.close();}
+ app=createApp(config);const{port}=await app.listen(),base=`http://127.0.0.1:${port}`;
+ async function post(route,user,data){const response=await fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',...(user?{Cookie:user.cookie}:{})},body:JSON.stringify(data)});return{status:response.status,body:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};}
+ async function get(route,user){const response=await fetch(base+'/api/'+route,{headers:user?{Cookie:user.cookie}:{}});return{status:response.status,body:await response.json()};}
+ const host=await post('auth/login',null,{username:'music_host',password}),uploader=await post('auth/login',null,{username:'music_uploader',password}),selector=await post('auth/login',null,{username:'music_selector',password});
+ for(const user of [host,uploader,selector])assert.equal(user.status,200);
+ const upload=await fetch(base+'/api/music/upload',{method:'POST',headers:{Cookie:uploader.cookie,'Content-Type':'audio/mpeg','X-Music-Title':encodeURIComponent('另一位會員的歌曲'),'X-Music-Duration':'60'},body:mp3});assert.equal(upload.status,200);const track=await upload.json();
+ return{post,get,host,uploader,selector,track};
+}
+
+test('members select another account’s uploaded song in all five games with shared state and isolated rooms',async t=>{
+ const f=await sharedMusicFixture(t),rooms=[];
+ for(const user of [f.host,f.uploader,f.selector])assert.ok((await f.get('music',user)).body.tracks.some(track=>track.id===f.track.id));
+ for(const type of ['poker','thunder','majority','gift','draw']){const created=await f.post('create',f.host,{type,roomName:'共享歌曲 '+type});assert.equal(created.status,200);rooms.push(created.body.code);for(const user of [f.uploader,f.selector])assert.equal((await f.post('join',user,{code:created.body.code})).status,200);}
+ for(const [index,code]of rooms.entries()){
+  const selected=await f.post('room-music',f.selector,{code,action:'select',trackId:f.track.id,mode:'shuffle',loop:true,position:12});assert.equal(selected.status,200);assert.equal(selected.body.track.id,f.track.id);assert.equal(selected.body.playing,true);assert.equal(selected.body.mode,'none');assert.equal(selected.body.loop,false);
+  for(const user of [f.host,f.uploader,f.selector]){const state=await f.get('room-music?code='+code,user);assert.equal(state.status,200);assert.deepEqual(state.body.track,selected.body.track);assert.equal(state.body.playing,true);assert.equal(state.body.version,selected.body.version);}
+  for(const other of rooms.slice(index+1))assert.equal((await f.get('room-music?code='+other,f.host)).body.track,null);
+  for(const action of ['pause','play','stop','seek','previous','next','mode','loop']){const denied=await f.post('room-music',f.selector,{code,action,position:1,mode:'shuffle',loop:true});assert.equal(denied.status,403);assert.equal(denied.body.code,'HOST_ONLY');}
+  const unchanged=(await f.get('room-music?code='+code,f.host)).body;assert.equal(unchanged.version,selected.body.version);assert.equal(unchanged.playing,true);assert.equal(unchanged.mode,'none');assert.equal(unchanged.loop,false);
+ }
+ const denied=await f.post('music/'+f.track.id+'/delete',f.selector,{});assert.equal(denied.status,403);assert.equal(denied.body.code,'FORBIDDEN');assert.ok((await f.get('music',f.selector)).body.tracks.some(track=>track.id===f.track.id));
+ assert.equal((await f.post('music/'+f.track.id+'/delete',f.host,{})).status,200,'the existing admin exception still applies');for(const code of rooms)assert.equal((await f.get('room-music?code='+code,f.uploader)).body.track,null);
+});
+
+test('selection still requires an authenticated active same-room seat, including after leaving or being kicked',async t=>{
+ const f=await sharedMusicFixture(t),created=await f.post('create',f.host,{type:'poker'});assert.equal(created.status,200);const code=created.body.code,data={code,action:'select',trackId:f.track.id};
+ const other=await f.post('create',f.uploader,{type:'poker'});assert.equal(other.status,200);
+ assert.equal((await f.post('room-music',null,data)).status,401);
+ const outsider=await f.post('room-music',f.uploader,data);assert.equal(outsider.status,403);assert.equal(outsider.body.code,'NOT_SEATED');assert.equal((await f.get('room-music?code='+code,f.host)).body.track,null);
+ assert.equal((await f.post('join',f.selector,{code})).status,200);assert.equal((await f.post('room-music',f.selector,data)).status,200);assert.equal((await f.get('room-music?code='+other.body.code,f.uploader)).body.track,null);
+ const foreign=await f.post('room-music',f.selector,{...data,code:other.body.code});assert.equal(foreign.status,403);assert.equal(foreign.body.code,'NOT_SEATED');
+ assert.equal((await f.post('leave',f.selector,{code})).status,200);const left=await f.post('room-music',f.selector,data);assert.equal(left.status,403);assert.equal(left.body.code,'NOT_SEATED');
+ assert.equal((await f.post('join',f.selector,{code})).status,200);const view=await f.get('state?code='+code,f.selector);assert.equal((await f.post('kick',f.host,{code,playerId:view.body.me,confirmed:true})).status,200);
+ const kicked=await f.post('room-music',f.selector,data);assert.equal(kicked.status,403);assert.equal(kicked.body.code,'KICKED');
 });

@@ -315,7 +315,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/room-music'){
   if(req.method==='GET')return send(roomMusic(room).snapshot());
   if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
-  if(p.id!==room.host)throw new HttpError(403,'HOST_ONLY','只有房主可以控制全桌音樂');
+  if(data.action!=='select'&&p.id!==room.host)throw new HttpError(403,'HOST_ONLY','只有房主可以控制全桌音樂');
   limitRate(socialRate,'music:'+user.id,60);const result=roomMusic(room).act(data.action,data,musicStore);publishMusic(room.code);return send(result);
  }
  if(url.pathname==='/api/room-music/events'&&req.method==='GET'){
