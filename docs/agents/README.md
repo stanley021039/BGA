@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07最新正式 **v1.6.0**／`74372ed`：上傳歌曲供登入會員共用，同房玩家皆可選曲，guest開始以select重播同曲；每次展開取新歌庫，個人收聽／音量及YouTube規則保留。Windows／Linux各896、背景Chrome跨會員真上傳／非房主選播／兩位實際Audio通過。schema15／8帳戶全欄位保留、20非session表所有rows／BLOB與新鮮備份相同，PID83301／service／tunnel正常；own曲目／房間／session／proxy／tab清理後rooms0。詳細來源及未驗範圍見 [最新歌曲驗收](../MUSIC-SHARING-PROGRESS.md)。下方v1.5.8及更早為歷史，沒有新PR／push，外站資料代未啟用。
+
 2026-10-07最新正式 **v1.5.8**／`470ab26`：角色主圖、固定及自訂表情每張4MiB，角色頁／收藏庫同步；其他圖片仍1MiB，三route JSON cap5,600,600、schema15不變。Windows／Linux各889、背景Chrome三表單及公開4MiB真上傳／三route／+1拒且原圖保留、加密備份還原已驗。own測試角色／session／tab／proxy已清理，0房間；8帳戶全欄位及20非session表所有rows／BLOB與備份一致，PID80949／service／tunnel正常。詳 [最新圖片上限驗收](../CHARACTER-IMAGE-SIZE-PROGRESS.md)；下方v1.5.7及更早為歷史，沒有新PR／push，外站資料代未啟用。
 
 2026-10-07最新正式 **v1.5.7**／`4c5b5e7`：畫猜名單／結算卡等尺寸，所有玩家以同一排名卡格線呈現；GameUI.playerName單文字／完整title／只超寬才跑馬燈，suffix固定在外，五款重用，hover／focus暫停及MotionPolicy／reduce／hidden停動。八席桌機／手機／200%已驗，Windows／Linux各883；正式30資源／3席尺寸、長名實際位移及hover通過。測試暱稱還原、own席位及proxy清理後0房間；8帳戶全欄位／schema15保留，PID78591／service／tunnel正常。詳細來源／備份／限制見 [姓名驗收](../DRAW-PLAYER-NAME-PROGRESS.md)。下方v1.5.6及更早為歷史，外站資料未啟用，本輪沒有新PR／push。

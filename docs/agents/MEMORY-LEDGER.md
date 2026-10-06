@@ -22,7 +22,7 @@
 | U12 | 本批完成後發MR，再試玩畫猜。 | PR #30已建立且未合併；後續研究另在本地分支，不能混稱既有MR的新實作。 |
 | U13 | agents 研究玩家評論、動效與素材、共享YouTube、趣味成就／勝利紀錄及多環境DB轉移，保存在本地docs長期延續。 | 本輪產角色記憶、實玩評估、spec及孤立原型；後续實作需遵守文件狀態與使用者最新範圍。 |
 | U14 | 畫猜開房的共編題庫要跟旁邊文字對齊；類別可多選，自定義也是一類；等待畫面的主要區域改放已入座的人。 | 開房／房間設定共用checkbox；自定義是獨立來源，不能偷偷抽未勾的內建類別。完整名單及角色優先於大幅插圖，入座更新不清掉設定草稿。 |
-| U15 | 音效控制全遊戲共用，放右上角設定圖案；背景音樂與音效音量各自可調。 | 使用共用AudioSettings，保留跨遊戲偏好；房主桌上選曲／播放控制與個人收聽分開。驗收見 [共用聲音進度](../SHARED-AUDIO-PROGRESS.md)。 |
+| U15 | 音效控制全遊戲共用，放右上角設定圖案；背景音樂與音效音量各自可調。 | 使用共用AudioSettings，保留跨遊戲偏好及個人收聽。2026-10-07最新歌曲要求已取代原僅房主選曲：正式v1.6.0同房玩家皆可選他人上傳歌曲及重播，其他transport及YouTube控權保留。兩平台896與公開兩會員實播驗收見 [共用歌曲進度](../MUSIC-SHARING-PROGRESS.md)；先前音量基線見 [共用聲音進度](../SHARED-AUDIO-PROGRESS.md)。 |
 | U16 | 文字彈幕要飄過畫面，不能原地淡出；房間設定與儲存房間設定放在一起。 | 共用彈幕右向左移動；畫猜／送禮／同頻的欄位、儲存與結果提示同區。畫猜設定浮層保持名單常駐與視窗邊界。實作來源15af1dd，驗收見 [本批進度](../BARRAGE-ROOM-SETTINGS-PROGRESS.md)。 |
 | U17 | Server 資料轉移做成 AI 可操作程式；第一版選「完整移轉／備份還原」，帳戶資料也必須搬。 | 全量帳戶 UUID／原密碼 hash／role／disabled／appearance 保存，target 只撤銷 session／邀請／reset。程式c831e87 已在 Windows／Linux 隔離驗收，未實際遷移正式資料；[操作文件](../SERVER-DATA-TRANSFER.md)、[證據](../SERVER-DATA-TRANSFER-PROGRESS.md)。merge／Postgres 不在第一版。 |
 | U18 | 移轉方法必須放獨立doc，可以的話提供管理員方便操作的UI。 | docs/SERVER-DATA-TRANSFER.md 是獨立指南；2618c4b 提供localhost表單、JSON預覽及預設dryrun，結果收合／對齊至31c91dd。需自行停writer、不得將管理埠公開；Windows/Linux259項及原Chrome背景完整合成表單流程通過。 |
