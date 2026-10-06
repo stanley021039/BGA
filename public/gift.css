@@ -58,7 +58,7 @@ dialog{border:1px solid var(--line);border-radius:18px;background:var(--paper);m
 .gift-layout .room-settings label { font-size:var(--ui-text-small,.875rem) }
 .gift-layout .banner { padding:12px; margin:12px 0 }
 #gameActions { display:grid; gap:8px }
-.gift-layout .game-action-slot { gap:8px }
+.gift-layout .game-action-slot { gap:8px; margin-bottom:var(--ui-space-4,16px) }
 #gameActions h2,#gameActions p { margin:0 }
 .gift-layout #gameActions h2 { font-size:var(--ui-text-body,1rem) }
 .gift-task-progress { display:grid; grid-template-columns:1fr 1fr; gap:12px }
