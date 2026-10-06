@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-07正式v1.7.1／`3d82e3f`：social ACK走RoomHost.acceptSnapshot→目前game callback，不能只更新被隱藏的GameShell角色列；race receive same-version更新snapshot／renderCrews，保留track、movement及dice。RoomHost.isStaleSnapshot共用較低version／same-context-version較舊finite serverNow判斷，五game入口重用，避免舊GET在ACK後把圖蓋回；higher version優先，沒有加網路traffic。原faker GIF隔離真UI、正式五款雙席及两平台各940已驗，详 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。角色表情仍5秒臨時，重送同GIF動畫起點沒有改；全部phase或真人弱網未實玩。下方v1.7.0為歷史。
+
 2026-10-07正式v1.7.0／`82149a4`：TableWatch右下把手及keyboard縮放，size key獨立、舊position key格式保留；viewport暫時clamp不寫偏好，reset移除size。尺寸計算量測header／status／footer／首local button，加210pxplayer餘量；header flex basis160允許工具換行，watch-narrow依窗寬850切換。RO觀察chrome／player、經rAF合併，close釋放capture及frame；CSS高度上限與JS都扣16px。正常resize不重建iframe或呼叫player／watchAPI，權限不變。Windows／Linux各914；公开2會員實播及320／200%／雙欄通過，詳 [尺寸验收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。驗identity以保留Runtime物件與當前iframe嚴格相等，重取DOM frontend ID可能變，不能據此推斷churn。下方v1.6.0為歷史。
 
 2026-10-07正式v1.6.0／`74372ed`：歌庫本來全會員共用，本輪將room-music的select開放同房有效座位；其他transport仍host，auth／leave／kick／rate60／SSE沿用。TableMusic picker所有人可選、guest開始以select當前track重播；每次open明確GET歌庫、request sequence＋roomEpoch擋晚回覆，沒有新增歌庫poll。Windows／Linux各896、Chrome會員上傳→另非房主選播／個人mute／同曲重播、公開兩會員Audio readyState4且時間前進已驗。schema15／8帳戶保留，詳細範圍與來源見 [共用歌曲驗收](../MUSIC-SHARING-PROGRESS.md)。下方v1.5.8及舊僅房主選曲描述為歷史，YouTube控權不隨本次開放。

@@ -1,5 +1,7 @@
 # 共用偏好與已知決策
 
+2026-10-07 U36-expression-switch：使用者回報上傳faker後遊戲角色表情無法切換。原圖片有效；已重現雷霆same-version只改hidden共享角色列。v1.7.1／`3d82e3f`將ACK交回game callback、same-version只更新crew／state，並以共用RoomHost freshness拒舊poll覆蓋；表情仍5秒，不修改預設外觀或分享設定。原GIF隔離雙席／正式五款雙席及Windows／Linux各940通過。未收到原遊戲／房號，不宣稱觀看過原玩家操作；完整證據及界線見 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。
+
 2026-10-07 U35-watch-resize：使用者要求YouTube播放窗可調整大小，避免200×200限制。已在v1.7.0／`82149a4`提供右下拖曳、方向鍵／Shift及Home恢復，尺寸只記個人localStorage；保護實際player210px高、字級變動重新量測，正常resize不換iframe、不增watch請求或更改其他人。公開兩會員實播／320px／200%字級／雙欄及Windows／Linux各914通過，完整證據與未驗範圍見 [尺寸驗收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。這筆不改原生YouTube控件、房主本機播放按鈕或既有全桌控制者權限。
 
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。

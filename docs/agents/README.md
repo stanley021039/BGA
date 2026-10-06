@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07最新正式 **v1.7.1**／`3d82e3f`：修角色表情ACK只改隱藏列、雷霆同version漏crew及舊poll蓋新表情；RoomHost共用snapshot freshness與callback，雷霆same-version只改crew／state不重畫track。原faker GIF副本重現並驗雙席／還原，正式五款雙席用既有測試角色通過，兩平台各940。原faker／8帳戶／schema15保留、20非session表所有rows／BLOB相同、PID88602／service／tunnel正常，own五桌／session／proxy／tab清理後rooms0。來源與限制見 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)；下方v1.7.0及更早為歷史，沒有新PR或push，外站資料代未啟用。
+
 2026-10-07最新正式 **v1.7.0**／`82149a4`：YouTube影片窗可拖曳縮放、鍵盤微調、恢復大小及個人尺寸記憶，依實際字級／chrome保護210px播放器；正常resize零watch流量且保持iframe。Windows／Linux各914、公開兩會員實播／窄屏／200%文字及雙欄通過；8帳戶／schema15保留，20非session表所有rows／BLOB相同，PID85927／service／tunnel正常。own席位／session／proxy／tab及臨時設定清理，rooms0。完整證據及邊界見 [影片尺寸验收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)；下方v1.6.0及更早為歷史，外站資料代未啟用，沒有新PR或push。
 
 2026-10-07最新正式 **v1.6.0**／`74372ed`：上傳歌曲供登入會員共用，同房玩家皆可選曲，guest開始以select重播同曲；每次展開取新歌庫，個人收聽／音量及YouTube規則保留。Windows／Linux各896、背景Chrome跨會員真上傳／非房主選播／兩位實際Audio通過。schema15／8帳戶全欄位保留、20非session表所有rows／BLOB與新鮮備份相同，PID83301／service／tunnel正常；own曲目／房間／session／proxy／tab清理後rooms0。詳細來源及未驗範圍見 [最新歌曲驗收](../MUSIC-SHARING-PROGRESS.md)。下方v1.5.8及更早為歷史，沒有新PR／push，外站資料代未啟用。
