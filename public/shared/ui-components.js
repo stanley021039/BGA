@@ -15,6 +15,7 @@
   sound:'<path d="M4 9h4l5-4v14l-5-4H4Z M17 8a6 6 0 0 1 0 8M20 5a10 10 0 0 1 0 14"/>',
   muted:'<path d="M4 9h4l5-4v14l-5-4H4Z M17 9l5 6M22 9l-5 6"/>',
   play:'<path d="m8 5 11 7-11 7Z"/>',
+  video:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 6 4-6 4Z"/>',
   pause:'<path d="M8 5v14M16 5v14"/>',
   help:'<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 4M12 17h.01"/>',
   users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5"/>',
@@ -45,6 +46,7 @@
  }
  function openDialog(dialog,trigger=document.activeElement){
   if(!dialog)return;
+  window.TableWatch?.closeForDialog(dialog);
   if(!dialogs.has(dialog)){
    dialogs.set(dialog,{trigger:null});dialog.classList.add('ui-dialog');
    if(!dialog.hasAttribute('aria-label')&&!dialog.hasAttribute('aria-labelledby')){const title=dialog.querySelector('[data-dialog-title],h1,h2,h3,strong');if(title){if(!title.id)title.id='ui-dialog-title-'+(++dialogNumber);dialog.setAttribute('aria-labelledby',title.id);}}

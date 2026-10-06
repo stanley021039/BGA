@@ -1,5 +1,27 @@
 # 程式架構 agent 記憶
 
+2026-10-06 PR #36 合併準備：整合最新 main `9dd6282`（含 #38），靜態資源衝突保留 YouTube 與 market 路由及 market 登入返回路徑；記憶保留雙方決策，重複編號以 U29-market 區分。Windows Node 26.2.0 完整 573/573 通過，失敗／取消／跳過 0。本輪未重跑 Linux 或瀏覽器；使用者已明確授權推送與合併 main，未部署。
+
+## 2026-10-06：PR #36 共看失聯與 HTTP 安全亂數
+
+`table-watch.js` 的 failed marker 不能記成永遠已取得。新契約以同 instance／revision 的首取加兩次 update-driven retry，失敗後 1 秒／4 秒門檻、無新增網路 timer；成功同 marker 不發 GET。4xx（408／429 除外）立即停自動重試，明確 open／join／rejoin 可再啟動。cleanup 清預算與 pending，舊 task 的失敗／finally 不能消耗新 task 額度；飛行中接到較新 marker 必須合併追最新。無 watch marker 的首次開窗 GET 失敗也需由既有遊戲 update 恢復。
+
+UUID 優先原生 `crypto.randomUUID`，HTTP 非 loopback 缺少時使用 `getRandomValues` 的 UUID v4 fallback；不降級到 `Math.random`。安全亂數不存在或拋錯需在 async command 內可控回報，不能在 try 外失敗。uncertain retry 先比對同操作／instance 並復用舊 body，不先產生新 UUID；HTTP 拒絕後才建立新操作 ID。Windows 真模組 VM **90/90** 通過；本次 Linux／真瀏覽器／發布由父任務另驗，細節見 [共看進度](../YOUTUBE-WATCH-PROGRESS.md#2026-10-06pr-36-審查修正本地驗證)。
+
+## 最新：YouTube 共看（2026-10-05）
+
+U32 後續 `400cb6d`：使用者要求非房主隱藏「在這裡開始播放」。初始 hidden、render 依 snapshot.isHost 決定，handler 也核對身分；不能用 canControl 代替房主判斷。自動播放阻擋／對齊提示按角色提供可見入口。Windows 前端52項及原 Chrome 兩帳號可見性／實播驗收通過；本增量沒有重跑Linux／全套，未push／PR／部署。
+
+已本地實作 `631eabf`、U29／U30，未push／PR／部署。`RoomWatch`僅在明確操作改anchor，用既有game state的watch marker通知；閉窗零watch請求，開窗穩態無輪詢／回報。native callbacks只更新本機，requestId去重及instance／session／revision／controllerEpoch隔離舊操作；GET衝突回覆要合併，不能每個game poll重抓失敗marker。初始paused必須cue→pause，unstarted的seek可能自行播放。
+
+TableMusic與TableWatch同媒體入口，加入影片只在本機suspend音樂。非modal浮窗拖曳頂端toolbar，buttons及nested SVG不能起drag；方向鍵位置、preferred與clamped分開，viewport／控制展開不覆寫偏好，關閉釋放pointer capture且晚GET不返焦隱藏按鈕。位置／個人關閉不POST。前端52、後端18、音訊11項，Windows／Linux完整各503項；實播62秒零新增watch請求，詳 [驗收／限制](../YOUTUBE-WATCH-PROGRESS.md)。
+
+使用者因暫留720p模擬看到頁面只在左上；已逐tab清除metrics並驗normal viewport。官方browser viewport capability reset只還原當次目標，不可假設所有owned tabs都還原；每一尺寸測完即reset並DOM查核。測試截圖只證明當次尺寸，不能把fake DOM rect當實際CSS證據。
+
+## 2026-10-06：PR #34 最新提交雙平台複驗
+
+固定來源 `3dde6a4` 包含 main `b843a3f`；Windows Node 24.14.0 與隔離 Linux Node 22.22.1 完整各 **442/442** 通過，失敗／取消／跳過皆 0。鎖程式、移轉及 11 項鎖回歸與 main 完全一致，對 main 的 77 個變更檔未帶入 PR #36 或後續六項功能。Linux 僅展開乾淨 archive 執行測試，未操作正式資料、服務或 current；package 仍為本 PR 的 1.0.0，不能混稱另一開發分支已部署的 v1.1.3。父任務背景Chrome一席UI配合四合成帳戶API已走完四輪，跨輪及完局回看第一輪、收藏及3/4禁題均通過；沒有宣稱多人真機／弱網或GPU驗收。證據與來源 SHA 見 [整合驗證](../PR34-MAIN-INTEGRATION.md#2026-10-06最新整合提交複驗)。本段取代下方「本次無 Linux 證據」的現況，沒有核准／合併／部署。
+
 ## 2026-10-06：PR #34 整合 main
 
 原 head `585eb63` 接上 main `b843a3f`，保留 #31 鎖修正、新版 AGENTS 及 #34 回看／收藏／禁題／動效。程式檔無文字衝突，本轮未修改功能邏輯；三份角色記憶檔首保留兩方新增內容。Windows Node 26.2.0 完整 **442/442** 與隔離 HTTP 四輪流程通過，前端測試是 VM harness；本次無真正 browser／Linux 證據。版本、驗收腳本時序限制及複審入口見 [整合驗證](../PR34-MAIN-INTEGRATION.md)，PR 維持 Draft，未核准／合併／部署。

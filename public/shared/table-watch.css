@@ -1,0 +1,58 @@
+/* The optional player has its own dialog; essential game/player information keeps its place. */
+body[data-game-kind] .table-watch-open{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--ui-border,#667859);border-radius:8px;background:transparent;color:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+body[data-game-kind] .table-watch-open.has-video{border-color:var(--ui-accent,#ca852b);box-shadow:inset 0 -3px var(--ui-accent,#ca852b)}
+body[data-game-kind] .table-watch-dialog{position:fixed;z-index:180;inset:auto;margin:0;box-sizing:border-box;width:min(1040px,calc(100vw - 24px));max-width:none;max-height:calc(100dvh - 24px);padding:0;overflow:hidden;background:var(--ui-panel,#faf8f1);color:var(--ui-ink,#273b33);border:1px solid var(--ui-border,#788778);border-radius:16px;box-shadow:0 8px 32px #0006;font:16px/1.5 var(--ui-font-family,"Segoe UI","Microsoft JhengHei",sans-serif)}
+body[data-game-kind] .table-watch-dialog[open]{display:flex;flex-direction:column}
+body[data-game-kind] .table-watch-dialog::backdrop{background:#0e171ac2}
+body[data-game-kind] .table-watch-dialog [hidden]{display:none!important}
+body[data-game-kind] .table-watch-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:none;padding:12px 16px;border-bottom:1px solid #82958c66;background:inherit;margin:0}
+body[data-game-kind] .table-watch-header h2{margin:0;font-size:20px;line-height:1.4;font-family:inherit}
+body[data-game-kind] .table-watch-header p{margin:4px 0 0;font-size:14px;line-height:1.5}
+body[data-game-kind] .table-watch-window-tools{display:flex;gap:6px;align-items:center;flex:none}
+body[data-game-kind] .table-watch-window-tools button{width:44px;height:44px;padding:8px;flex:none}
+body[data-game-kind] #watchWindowBar{touch-action:none;cursor:move;user-select:none}
+body[data-game-kind] #watchWindowBar:focus-visible{outline:3px solid #c68a30;outline-offset:-3px}
+body[data-game-kind] #watchWindowBar button{touch-action:auto;cursor:pointer}
+body[data-game-kind] .table-watch-dialog.watch-compact{width:min(560px,calc(100vw - 24px))}
+body[data-game-kind] .watch-compact .table-watch-body{display:flex;flex-direction:column}
+body[data-game-kind] .table-watch-body{min-height:0;overflow:hidden;padding:12px 16px 20px;display:grid;grid-template-columns:minmax(480px,1.7fr) minmax(280px,1fr);gap:20px}
+body[data-game-kind] .table-watch-view{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain}
+body[data-game-kind] .table-watch-controls{display:flex;flex-direction:column;gap:16px;min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 4px 4px 0}
+body[data-game-kind] .table-watch-body p{margin:0;font-size:14px;line-height:1.5}
+body[data-game-kind] #watchStatus{margin:0;padding:8px 16px;font-size:14px;line-height:1.5;flex:none}
+body[data-game-kind] #watchStatus:empty{display:none}
+body[data-game-kind] .table-watch-screen{margin:0;min-width:0;border-radius:8px;background:#17251f;color:#faf8f1}
+body[data-game-kind] #watchConsent{padding:20px;display:flex;flex-direction:column;align-items:flex-start;gap:12px;min-height:180px;justify-content:center}
+body[data-game-kind] #watchConsent a{color:#fbd498}
+body[data-game-kind] #watchPlayer{width:100%;height:auto;aspect-ratio:16/9;min-width:200px;min-height:200px;overflow:visible;background:#000}
+body[data-game-kind] #watchPlayer iframe{display:block;border:0;width:100%;height:100%;min-width:200px;min-height:200px}
+body[data-game-kind] .table-watch-dialog button{font-family:inherit;font-size:16px;line-height:1.4;min-height:44px;padding:8px 12px;cursor:pointer;border:1px solid #657c6d;border-radius:8px;background:#e8eee7;color:#223b2c;white-space:normal;letter-spacing:normal}
+body[data-game-kind] .table-watch-dialog button:disabled{opacity:.5;cursor:not-allowed}
+body[data-game-kind] .table-watch-dialog button:focus-visible,body[data-game-kind] .table-watch-dialog input:focus-visible{outline:3px solid #c68a30;outline-offset:3px}
+body[data-game-kind] .table-watch-dialog #watchClose{flex:none;width:44px;height:44px;padding:8px}
+body[data-game-kind] .table-watch-dialog input{font:inherit;letter-spacing:normal;min-height:44px;padding:8px 10px;border:1px solid #7c8b80;border-radius:8px;min-width:0;background:#fff;color:#23372b;box-sizing:border-box}
+body[data-game-kind] .table-watch-dialog label{font:inherit;letter-spacing:normal;text-transform:none;margin:0;color:inherit}
+body[data-game-kind] .table-watch-local,body[data-game-kind] .table-watch-buttons{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+body[data-game-kind] .table-watch-local>p{flex-basis:100%}
+body[data-game-kind] .table-watch-volume{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%}
+body[data-game-kind] .table-watch-volume input{padding:0;flex:1 1 100px;width:100px;min-width:60px;max-width:240px}
+body[data-game-kind] .table-watch-volume span{font-variant-numeric:tabular-nums;min-width:4ch}
+body[data-game-kind] .table-watch-transport{display:flex;flex-direction:column;gap:12px;padding:0}
+body[data-game-kind] .table-watch-control-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+body[data-game-kind] #watchClock{font-variant-numeric:lining-nums tabular-nums;font-size:16px;letter-spacing:normal}
+body[data-game-kind] .table-watch-seek{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0}
+body[data-game-kind] #watchSeek{width:100px}
+body[data-game-kind] .table-watch-propose{display:flex;flex-direction:column;gap:8px;border-top:1px solid #82958c66;padding-top:16px;margin:0}
+body[data-game-kind] .table-watch-propose>div{display:flex;gap:8px;align-items:center}
+body[data-game-kind] #watchUrl{flex:1;width:100%}
+body[data-game-kind] #watchProposeSubmit{flex:none}
+body[data-game-kind] #watchProposalsSection h3{font-size:16px;margin:0 0 8px}
+body[data-game-kind] #watchProposals{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+body[data-game-kind] #watchProposals li{display:flex;align-items:center;gap:12px;justify-content:space-between}
+body[data-game-kind] #watchProposals li span{overflow-wrap:anywhere;min-width:0}
+body[data-game-kind] #watchProposals li button{flex:none}
+@media(max-width:880px){body[data-game-kind] .table-watch-dialog{width:min(640px,calc(100vw - 16px));max-height:calc(100dvh - 16px)}body[data-game-kind] .table-watch-body{padding:8px 8px 12px;display:flex;flex-direction:column;gap:12px}body[data-game-kind] .table-watch-view{flex:none}body[data-game-kind] .table-watch-controls{min-height:100px;border-top:1px solid #82958c66;padding-top:12px}body[data-game-kind] .table-watch-header{padding:10px 12px}body[data-game-kind] .table-watch-propose>div{flex-wrap:wrap}body[data-game-kind] #watchUrl{flex-basis:100%}body[data-game-kind] .table-watch-local{gap:6px}body[data-game-kind] .table-watch-local button{padding:8px}body[data-game-kind] #watchPlayer{height:200px;aspect-ratio:auto}body[data-game-kind] #watchStatus{padding:6px 12px}}
+@media(max-height:580px){body[data-game-kind] .table-watch-dialog{max-height:calc(100dvh - 12px)}body[data-game-kind] .table-watch-body{overflow:auto}body[data-game-kind] .table-watch-view,body[data-game-kind] .table-watch-controls{overflow:visible}body[data-game-kind] #watchPlayer{height:200px;aspect-ratio:auto}}
+body[data-game-kind].ui-large-text .table-watch-dialog{font-size:1rem}
+body[data-game-kind].ui-large-text .table-watch-dialog :is(button,input,label){font-size:1rem}
+body[data-game-kind].ui-large-text .table-watch-body p,body[data-game-kind].ui-large-text .table-watch-header p{font-size:.875rem}

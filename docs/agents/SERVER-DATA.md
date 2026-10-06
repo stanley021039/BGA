@@ -1,5 +1,11 @@
 # Server／資料 agent 記憶
 
+## 最新：共看暫存資料（2026-10-05）
+
+`631eabf`在本地提供YouTube共看，沒有DB schema／備份範圍變動。registry綁實際room物件與UUID，不因六碼重用繼承影片；最後真人離房及app.close清空。提案8／每人2、request ledger128及10分鐘TTL有界，帳戶限流、seat／控權／版本驗證沿用同源API。server只解析YouTube白名單URL取ID，不出站取metadata／影片、不加SSE／timer／心跳，也不記觀看log。
+
+控權離線30秒借既有房間活動reconcile：先撤銷過期控制，再刷新seat；全員離線後第一席直接GET須恢復控制，host換人但controller不變也要更新marker權限。外部素材直接由YouTube到client，本機影片位置不移轉。後端18項、完整Windows／Linux各503項與限制見 [共看進度](../YOUTUBE-WATCH-PROGRESS.md)；未正式部署，冷移轉不包含記憶體房間續局的政策不變。
+
 ## 2026-10-06：schema 13 與拒絕殘留鎖整合
 
 PR #34 接上 main `b843a3f`，schema 13 禁題資料與 #31 拒絕殘留鎖／HistoryStore 冪等 close 同時保留；鎖程式與 main 完全一致。Windows Node 26.2.0 完整 **442/442** 包含完整還原、v12 副本升級／v13 缺表拒絕及 11 項鎖回歸。本次沒有 Linux、正式資料或真正 browser 驗收，詳 [整合驗證](../PR34-MAIN-INTEGRATION.md)；早期 v12 敘述為歷史基線，現 PR schema 為 13。維持 Draft，待獨立複審。
