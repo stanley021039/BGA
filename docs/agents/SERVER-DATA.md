@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-07最新正式v1.5.5／`18d21ae`／PID73168：倒數UI及原生軌道繪製修正，schema15／21表不變，8帳戶全欄位／.env／原資料路徑保留，integrity ok／FK0、service／tunnel正常。新鮮備份副本21表schema／rows／BLOB一致，0房間切換；正式3席／26資源與進度像素比例已驗，測試席位離開及session登出後0房間，沒有啟用外站資料。SQLite與持久檔另備而非原子冷快照；新發布／匯入須重新盤點，不沿用下方舊PID／版本guard。詳 [最新倒數發布](../DRAW-TIMER-VISIBILITY-PROGRESS.md)。
+
 2026-10-07最新正式v1.5.3／`0609c01`／PID68975：只同步共用UI對齊；schema15／21表，8帳戶全欄位、.env／原路徑保留，integrity ok／FK0，service／tunnel正常。副本啟動前後21表schema／rows／BLOB一致，0房間切換，公開25資源及正式3席題卡確認；測試席位離开及session登出後0房間。備份不是跨檔原子冷快照，外站資料代未啟用。不要沿用下方7939090／PID66841盤點作下一次發布或匯入guard；詳 [最新同步](../SHARED-UI-ALIGNMENT-PROGRESS.md)。
 
 2026-10-07最新正式v1.5.2／`7939090`／PID66841：只同步PR43跳台與音效時鐘修正，schema15不變。新鮮8帳戶備份及隔離啟動前後21表schema／rows／BLOB一致；零房間切換後8帳戶全欄位與備份相同、integrity ok／FK0，.env／原資料路徑不變，service／tunnel正常。SQLite一致性備份與持久檔另備並非原子冷快照；原PR43 Ready未合併，受測本地tag固定7939090，双平台各863及公開API／資源已驗。外站shadow仍未啟用；後續匯入必須重新盤點，不沿用歷史PID／版本／帳戶數。證據見 [正式同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，下方v1.5.1為歷史。
