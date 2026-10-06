@@ -1,5 +1,7 @@
 # 舊版原始資料匯入相容性
 
+2026-10-07最新正式v1.5.7／`4c5b5e7`／PID78591、schema15／8帳戶；只更新姓名／卡片，外站資料未啟用、來源ZIP／shadow及取代／合併待選範圍不變。下方v1.5.6／76509為歷史；下一次重新盤點，詳 [最新發布](DRAW-PLAYER-NAME-PROGRESS.md)。
+
 2026-10-07最新正式v1.5.6／`5941c03`／PID76509、schema15／8帳戶；只更新畫猜高度，外站資料未啟用、原ZIP／shadow及取代／合併待選範圍不變。下方v1.5.5／73168為歷史，下一次重新盤點，不沿用舊guard。詳 [最新發布](DRAW-VIEWPORT-FIT-PROGRESS.md)。
 
 2026-10-07最新正式v1.5.5／`18d21ae`／PID73168、schema15／8帳戶；畫猜倒數可見度已修正，仍未啟用外站匯入，原來源ZIP／shadow及待選取代／合併範圍不變。後續不得用下方v1.5.3或v1.5.2的code／PID做guard；需重新盤點，完整新證據見 [倒數發布](DRAW-TIMER-VISIBILITY-PROGRESS.md)。

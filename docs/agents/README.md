@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07最新正式 **v1.5.7**／`4c5b5e7`：畫猜名單／結算卡等尺寸，所有玩家以同一排名卡格線呈現；GameUI.playerName單文字／完整title／只超寬才跑馬燈，suffix固定在外，五款重用，hover／focus暫停及MotionPolicy／reduce／hidden停動。八席桌機／手機／200%已驗，Windows／Linux各883；正式30資源／3席尺寸、長名實際位移及hover通過。測試暱稱還原、own席位及proxy清理後0房間；8帳戶全欄位／schema15保留，PID78591／service／tunnel正常。詳細來源／備份／限制見 [姓名驗收](../DRAW-PLAYER-NAME-PROGRESS.md)。下方v1.5.6及更早為歷史，外站資料未啟用，本輪沒有新PR／push。
+
 2026-10-07最新正式 **v1.5.6**／`5941c03`：畫猜玩家／聊天室共用剩高、底邊對齊，桌機單屏、input最後；canvas512×256及比例保留、倒數同寬，8席重要資訊保留並必要局部scroll，125%不足空間自然流／加高恢復fit已驗。Windows／Linux各867，公開26資源／3席720p／1440／1920通過；8帳戶／schema15保留，PID76509／service／tunnel正常，測試席位及proxy清理後0房間。詳細來源／備份／邊界見 [高度驗收](../DRAW-VIEWPORT-FIT-PROGRESS.md)。下方v1.5.5及更早為歷史，外站資料仍未啟用，本輪沒有新PR／push。
 
 2026-10-07最新正式 **v1.5.5**／`18d21ae`：畫猜倒數文字32px／軌道14px較亮橙色，與畫布同寬；畫者工具仍對齊畫布，作畫題材／難度／字數行移除。手機及320px／200%文字通過；原生progress停用width transition後，正式截圖像素68.9573%與native值68.9625%相符。Windows／Linux各864、正式26資源及3席通過，8帳戶／schema15保留、PID73168／service／tunnel正常；測試席位／session與preview已清理。詳細證據與v1.5.4歷史見 [倒數進度](../DRAW-TIMER-VISIBILITY-PROGRESS.md)。下方v1.5.3及更早為歷史，外站資料仍未啟用、沒有新PR／push。

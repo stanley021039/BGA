@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-07姓名修正已正式v1.5.7／`4c5b5e7`：Windows／Linux各883，五款本機姓名欄及八席等卡／手機／200%已驗；公開30資源與3席等卡、16字位移及hover／reduce通過，暱稱與測試席位清理後8帳戶全欄位相同。角色卡尺寸由各頁格線管理，姓名用共用單份text／title，suffix在外；動態不新增poll。下段候選描述仍有效，完整證據及未驗範圍見 [正式姓名驗收](../DRAW-PLAYER-NAME-PROGRESS.md)。
+
 2026-10-07候選v1.5.7：姓名用GameUI.playerName單文字／escaped原生title，超出實際slot才transform；自己／AI後綴在外。RO＋MO單rAF讀寫、同值不寫，hover／focus暫停，MotionPolicy／reduce／hidden停止，移除及BFCache清理。GameShell四款／通用角色及雷霆車隊重用；畫猜名單／排名卡用格線等尺寸，保留全部玩家及分數、56×64結算頭像。12元件＋整合回歸，Windows883及五款背景UI通過，詳細契約、尺寸及正式狀態見 [姓名驗收](../DRAW-PLAYER-NAME-PROGRESS.md)。
 
 2026-10-07已正式v1.5.6／`5941c03`：Windows／Linux各867、公開3席多尺寸／26資源通過。設計師指出不可fit縮到0px的風險由guard修正，125%自然流及恢復已驗；大字／手機不承諾單屏，完整名單／排名不能裁掉。下一段候選描述仍有效，完成證據與限制見 [正式驗收](../DRAW-VIEWPORT-FIT-PROGRESS.md)。

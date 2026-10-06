@@ -1,6 +1,6 @@
 # 等大角色卡與共用姓名槽
 
-2026-10-07：候選v1.5.7，Windows完整883通過；Linux與正式發布待下節更新。
+2026-10-07：正式 **v1.5.7**／`4c5b5e7`，Windows／Linux各883、公開30資源及3席姓名／卡片驗收通過。
 
 | 分類 | 實作 | 驗收方式 |
 | --- | --- | --- |
@@ -31,4 +31,18 @@
 
 ## 發布與正式驗收
 
-待凍結來源的Linux全套、備份副本預演及零房間切換。沒有新PR／push；外站匯入資料代不切換。
+受測程式及不可覆寫本地tag `v1.5.7`：`4c5b5e795fe63525b07a0c8222fd2f720eeba958`。Windows Node24.14.0 **883/883**／29175.0563ms，Linux Node22.22.1 **883/883**／145549.619768ms；失敗／取消／跳過均0。Linux為乾淨Git archive，SHA256 `681e1ef0de17685da1ccd3a75606ebc0234a567594d2d99462a9b04ee5fe70c2`；release:check patch基準v1.5.6及syntax／diff檢查通過，私人檔案、work與env未納發布包。
+
+新鮮備份 `pre-draw-names-fixes-4c5b5e7-20261006T193336Z-cd8522e2-08c2-48ed-9978-0fc591d2ef92`：SQLite一致性備份與持久檔另備，非跨檔原子冷快照。副本隔離啟動前後21表schema／rows／BLOB一致，8帳戶全欄位保留。正式0房間切換至 `releases/4c5b5e7`；核對舊PID76509後SIGTERM，既有Restart=always啟動78591，service／tunnel active，schema15／21表、env與資料路徑不變，integrity ok／FK0。
+
+公開v1.5.7／no-store、19HTML＋11模組共30資源逐字及MIME核對，測試會員/admin仍403。正式3席用暫時短名及16字長名驗布局（系統自動完局、0分；主動八輪／798分證據來自上方本機八席），1440×1000結果：
+
+| 項目 | 實測 |
+| --- | --- |
+| 結算卡 | 三張均189.75×162；左側三張均174×88。 |
+| 畫面 | page1440×1000，沒有整頁捲軸；必要結果局部scroll仍保留。 |
+| 跑馬燈 | 長名text256／slot162，shift−94px；實際transform x−94，motion=on；短名overflow=false／motion=off。 |
+| hover／減少動態 | Chrome mouseMoved後hover=true／paused，title完整16字；force系統reduce後animation=none／motion=off，再還原。 |
+| 影像與錯誤 | 7张頭像decode成功，全頁PNG保存；console無error／warn。 |
+
+臨時viewport／media及本機字級／motion設定還原，own3帳戶原暱稱核對復原、席位離房／session登出後0房間。所有preview／presence／proxy停止、自己的Chrome測試tab關閉；使用者原正式登入未改。最後再次核對8帳戶全欄位與新鮮備份完全相同，schema15／21表／integrity ok／FK0／PID78591正常。沒有新PR／push，外站匯入資料代仍未啟用；後續純證據文件不移動tag。
