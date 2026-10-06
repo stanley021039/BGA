@@ -1,0 +1,264 @@
+{
+  "verifiedOn": "2026-10-06",
+  "scope": "isolated local synthetic data; no production data",
+  "game": {
+    "passed": true,
+    "browser": "fresh headless Chrome",
+    "measurements": [
+      {
+        "width": 1280,
+        "scrollWidth": 1265,
+        "scrollHeight": 870,
+        "cards": [
+          {
+            "w": 178.65625,
+            "h": 72
+          },
+          {
+            "w": 178.671875,
+            "h": 72
+          },
+          {
+            "w": 178.671875,
+            "h": 72
+          },
+          {
+            "w": 178.65625,
+            "h": 72
+          },
+          {
+            "w": 178.671875,
+            "h": 72
+          },
+          {
+            "w": 178.671875,
+            "h": 72
+          }
+        ],
+        "button": {
+          "x": 1082.09375,
+          "y": 655.671875,
+          "width": 122.40625,
+          "height": 44,
+          "top": 655.671875,
+          "right": 1204.5,
+          "bottom": 699.671875,
+          "left": 1082.09375
+        }
+      },
+      {
+        "width": 390,
+        "scrollWidth": 390,
+        "scrollHeight": 1530,
+        "cards": [
+          {
+            "w": 172,
+            "h": 92
+          },
+          {
+            "w": 172,
+            "h": 92
+          },
+          {
+            "w": 172,
+            "h": 92
+          },
+          {
+            "w": 172,
+            "h": 92
+          },
+          {
+            "w": 172,
+            "h": 92
+          },
+          {
+            "w": 172,
+            "h": 92
+          }
+        ],
+        "button": {
+          "x": 16,
+          "y": 1285.015625,
+          "width": 358,
+          "height": 44,
+          "top": 1285.015625,
+          "right": 374,
+          "bottom": 1329.015625,
+          "left": 16
+        }
+      },
+      {
+        "width": 320,
+        "scrollWidth": 320,
+        "scrollHeight": 1615,
+        "cards": [
+          {
+            "w": 137,
+            "h": 92
+          },
+          {
+            "w": 137,
+            "h": 92
+          },
+          {
+            "w": 137,
+            "h": 92
+          },
+          {
+            "w": 137,
+            "h": 92
+          },
+          {
+            "w": 137,
+            "h": 92
+          },
+          {
+            "w": 137,
+            "h": 92
+          }
+        ],
+        "button": {
+          "x": 16,
+          "y": 1369.578125,
+          "width": 288,
+          "height": 44,
+          "top": 1369.578125,
+          "right": 304,
+          "bottom": 1413.578125,
+          "left": 16
+        }
+      }
+    ],
+    "adminWidth": {
+      "width": 320,
+      "scrollWidth": 320
+    },
+    "errors": [],
+    "flows": [
+      "existing login / next return",
+      "empty state",
+      "create manually confirmed date",
+      "vote / modify / reload",
+      "exact cutoff",
+      "preview / settle / correction",
+      "own ledger and admin audit",
+      "lobby entry",
+      "member role and nonvoter score"
+    ]
+  },
+  "navigation": {
+    "passed": true,
+    "account": "synthetic member",
+    "mutations": "login session only; no game data changed",
+    "route": "BGA homepage -> sixth Market Jinx card -> /market -> common site title -> BGA homepage",
+    "results": [
+      {
+        "entry": {
+          "position": 6,
+          "total": 6,
+          "title": "股市冥燈明天，你看哪邊？",
+          "label": "進入遊戲 ↗",
+          "href": "/market",
+          "roomTrigger": false,
+          "width": 1280,
+          "scrollWidth": 1265,
+          "card": {
+            "x": 838.25,
+            "y": 108.65625,
+            "width": 363.5,
+            "height": 502.65625,
+            "top": 108.65625,
+            "right": 1201.75,
+            "bottom": 611.3125,
+            "left": 838.25
+          }
+        },
+        "game": {
+          "path": "/market",
+          "width": 1280,
+          "scrollWidth": 1265,
+          "returnText": "302捉猶團",
+          "returnHref": "/",
+          "adminHidden": true
+        },
+        "returned": {
+          "path": "/",
+          "cardCount": 6
+        }
+      },
+      {
+        "entry": {
+          "position": 6,
+          "total": 6,
+          "title": "股市冥燈明天，你看哪邊？",
+          "label": "進入遊戲 ↗",
+          "href": "/market",
+          "roomTrigger": false,
+          "width": 390,
+          "scrollWidth": 390,
+          "card": {
+            "x": 15.59375,
+            "y": 197.3125,
+            "width": 358.8125,
+            "height": 449,
+            "top": 197.3125,
+            "right": 374.40625,
+            "bottom": 646.3125,
+            "left": 15.59375
+          }
+        },
+        "game": {
+          "path": "/market",
+          "width": 390,
+          "scrollWidth": 390,
+          "returnText": "302捉猶團",
+          "returnHref": "/",
+          "adminHidden": true
+        },
+        "returned": {
+          "path": "/",
+          "cardCount": 6
+        }
+      },
+      {
+        "entry": {
+          "position": 6,
+          "total": 6,
+          "title": "股市冥燈明天，你看哪邊？",
+          "label": "進入遊戲 ↗",
+          "href": "/market",
+          "roomTrigger": false,
+          "width": 320,
+          "scrollWidth": 320,
+          "card": {
+            "x": 12.796875,
+            "y": 145.25,
+            "width": 294.40625,
+            "height": 449,
+            "top": 145.25,
+            "right": 307.203125,
+            "bottom": 594.25,
+            "left": 12.796875
+          }
+        },
+        "game": {
+          "path": "/market",
+          "width": 320,
+          "scrollWidth": 320,
+          "returnText": "302捉猶團",
+          "returnHref": "/",
+          "adminHidden": true
+        },
+        "returned": {
+          "path": "/",
+          "cardCount": 6
+        }
+      }
+    ],
+    "errors": []
+  },
+  "additionalAssertions": {
+    "randomUUIDAbsentStillOperational": true,
+    "radioFocusPreservedAfterRefresh": true
+  }
+}

@@ -19,6 +19,8 @@
 
 2026-10-05 後續程式 `2cf8a44` 支援 schema 13 禁題表；schema 12 備份還原時只升級目標副本，新增空禁題表，來源不變。已通過的禁題會在還原後繼續從題庫與抽題排除，詳 [相容性驗收](DRAW-WORD-BAN-PROGRESS.md)。
 
+2026-10-06 PR #38 整合後目前支援至 schema 14，同時保留禁題表與市場五表。兩種先前 schema 13（main 禁題版、PR #38 市場版）只有完整表布局可備份，還原副本升至 14、來源維持原樣；已有禁題稽核、投票、積分及收據保留。14 缺任一方表、13 部分市場表或損壞市場歷史拒絕，詳 [整合相容性](MARKET-JINX-MAIN-INTEGRATION.md)。這是本地驗收，PR #38 尚未合併或部署。
+
 ## 執行介面
 
 需 Node.js 22.13 以上，無額外 npm 套件。使用對應程式版本，在專案根目錄執行：
@@ -196,4 +198,4 @@ EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核�
 
 新 writer 尚未接受任何寫入時，可停新服務並切回相容的舊 code＋舊資料代；若已接受新登入或其他寫入，先冷備份新代再做受控前向修復，直接回舊 snapshot 會丟新資料。GitHub 外部操作不能由本地 DB rollback 撤銷。
 
-第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。schema 目前仍 v12。支援的舊 schema 只升級還原副本；schema 1／3／5／7／10 已有回歸。帳戶及來源既有 BLOB digest 必須相同，只允許 migration 3／5／8 明確新增的空 BLOB 表，非空新表或未知新表仍拒絕。
+第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。目前本分支 schema v14。支援的舊 schema 只升級還原副本；schema 1／3／5／7／10／12／兩種13已有回歸。帳戶及來源既有 BLOB digest 必須相同，只允許 migration 3／5／8 明確新增的空 BLOB 表，非空新表或未知新表仍拒絕。

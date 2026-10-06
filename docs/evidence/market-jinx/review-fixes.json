@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-06",
+  "reviewedHead": "29945a6d90cebef44b69b06df54f65a5e5fd2107",
+  "scope": "Draft PR #38; synthetic local data; no merge or deployment",
+  "reproduction": {
+    "client": "shipped market.js executed in isolated VM DOM; actual MarketStore and SQLite; response snapshot delays",
+    "staleVote": { "reproduced": true, "serverRevisionAfter409": 2, "oldDraftRevisionAfter409": 1, "secondAttemptStatus": 409, "manualRefreshRecovered": true },
+    "clockRollback": { "reproduced": true, "milliseconds": -1000, "oldUpdatedBeforeCreated": true, "oldValidationCode": "INVALID_DATABASE", "oldExportCode": "INVALID_DATABASE" },
+    "refreshOverlap": { "reproduced": true, "oldGETDiscarded": true, "oldCleanupUnlockedPendingMutation": true, "oldCleanupReplacedDraft": true, "extraWriteStatus": 409, "databaseWasNotCorrupted": true }
+  },
+  "regressions": {
+    "beforeFix": { "tests": 4, "pass": 1, "fail": 3 },
+    "staleVote": { "pendingChoicePreserved": true, "refreshedDraftRevision": 2, "automaticResubmitCount": 0, "explicitRetryStatus": 200, "finalVoteRevision": 3 },
+    "manualRefresh": { "blocksOverlappingWrites": true, "blocksDuplicateRefresh": true, "successUnlocks": true, "failureUnlocks": true, "uncertainMutationCanRecover": true },
+    "clockRollback": { "existingUpdatedTimePreserved": true, "createdTimePreserved": true, "exactCutoffStillRejects": true, "databaseValidationPasses": true, "completeExportAndVerifyPass": true },
+    "marketTests": { "pass": 17, "fail": 0 },
+    "fullTests": { "platform": "Windows", "node": "26.2.0", "pass": 391, "fail": 0 }
+  },
+  "browser": {
+    "kind": "installed headless Chrome; fresh temporary profile; localhost synthetic member",
+    "heldActualFetchResponse": true,
+    "refreshDisabledWhilePending": true,
+    "allSixRadiosDisabledWhilePending": true,
+    "saveDisabledWhilePending": true,
+    "writesFromBlockedSubmit": 0,
+    "updateAndOptionFocusRestored": true,
+    "navigationAndNoHorizontalOverflowWidths": [1280, 390, 320],
+    "javascriptExceptions": 0
+  },
+  "limitations": ["No Linux or Safari run", "No real market data or public load test", "Full settlement UI not replayed this review round; automated settlement and backup/restore regressions passed"]
+}
