@@ -1,5 +1,11 @@
 # 設計師角色記憶
 
+2026-10-07：單一內容群組的置中要同時定義 items 與 content 分佈；畫猜未公開題卡的 `place-items:center` 仍承接正面 `align-content:space-between`，不能用逐glyph像素偏移修正。與程式方討論後採全頁共用 primitives、独立symbol槽及不帶help圓圈的未知問號SVG；正面題卡、禮物圖文卡與其他多區內容保留原布局。小D徽章不等於44px按鈕，文字／圖示槽也不替換人物表情或emoji內容。
+
+本輪唯讀盘點20HTML／23CSS／46JS及實際提案、質疑、收斂見 [共用對齊規格](../specs/SHARED-UI-ALIGNMENT.md)。送禮fallback沒有同類space-between衝突，但布局utility必須維持明確hidden；基礎元件的幾何槽與字形ink／素材透明邊界分開驗。此筆是已採用契約與source盤點，程式及背景畫面驗收由主agent記錄；不宣稱本輪已上線，studio小尺寸控制與跨平台字型仍待驗。
+
+同日後續：主agent背景Chrome發現history全域 `header span{margin-left:auto}` 直接污染設定close的symbol；18px是computed margin，圖示中心因此右偏9px。symbol／button-icon／button-label採 `margin:0;padding:0` 中性預設，间距交給parent gap與控制padding，不能全局清掉所有span或內容布局。重載後全20入口close中心0，題卡正常桌機／390手機中心0，D仍21×21且Range偏差(0,-0.5px)，200%文字close88×88中心與四個象限內部採樣命中；完整來源及範圍見同一規格。這是入口與特定元件驗證，不是全玩法／壞圖／所有emoji驗收；/rules實際導向/race教學，字體及viewport已還原，未在此宣稱正式部署。
+
 2026-10-06：可捲動工作區不應使用固定560px上限或估算扣420px，否則高視窗仍出現捲軸。送禮桌機改為flex扣實際導覽列、grid保留實際玩家列，再分配剩餘高度；窄高差異測試須檢查操作區不與玩家列重疊。高視窗、八席與手機證據見 [高度驗收](../GIFT-VIEWPORT-HEIGHT-PROGRESS.md)。
 
 2026-10-06：重要操作區與輸入框需要最小間距，不可只依靠 flex 的 `margin-top:auto`；視窗較矮時剩餘空間會變成0。送禮側欄已用共用16px spacing token補操作區後的 margin，並在矮桌機、一般桌機及手機量測，見 [實際驗收](../GIFT-WAITING-SPACING-PROGRESS.md)。

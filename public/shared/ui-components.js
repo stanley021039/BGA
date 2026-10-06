@@ -18,6 +18,7 @@
   video:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 6 4-6 4Z"/>',
   pause:'<path d="M8 5v14M16 5v14"/>',
   help:'<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 4M12 17h.01"/>',
+  unknown:'<path d="M8 8a4 4 0 0 1 8 0c0 3-4 3-4 6"/><circle cx="12" cy="19" r=".6"/>',
   users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5"/>',
   chevron:'<path d="m6 9 6 6 6-6"/>',
   undo:'<path d="M3 4v6h6M3 10a8 8 0 0 1 16 4v5"/>',
@@ -25,6 +26,7 @@
  };
  const pending=new WeakMap(),dialogs=new WeakMap();let dialogNumber=0;
  function icon(name){const path=paths[name];return path?'<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+path+'</svg>':'';}
+ function symbol(name){const image=icon(name);return image?'<span class="ui-symbol" aria-hidden="true">'+image+'</span>':'';}
  function decorateButton(button,name,{iconOnly=false,label}={}){
   if(!button||!paths[name])return button;
   const text=label??button.getAttribute('aria-label')??button.textContent.trim();
@@ -61,7 +63,7 @@
   }
   dialogs.get(dialog).trigger=trigger;if(!dialog.open)dialog.showModal();
  }
- window.GameUI={icon,decorateButton,setBusy,setStatus,openDialog,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
+ window.GameUI={icon,symbol,decorateButton,setBusy,setStatus,openDialog,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
  /* A healthy connection is background information; failures still need a visible notice. */
  for(const connection of document.querySelectorAll('#connection,#network')){const indicator=connection.closest('.connection')||connection;const syncConnection=()=>{const text=connection.textContent.trim();indicator.hidden=!text||/^(?:●\s*)?已連線(?:[。.]|\s*·.*)?$/.test(text);};syncConnection();if(typeof MutationObserver==='function')new MutationObserver(syncConnection).observe(connection,{childList:true,subtree:true,characterData:true});}
  /* Root text enlargement needs reflow even when the viewport has not changed. */

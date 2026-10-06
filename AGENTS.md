@@ -13,6 +13,10 @@
 
 有新功能必須升版並更新 `CHANGELOG.md`；相容新功能升 minor、相容修正升 patch、不相容變更升 major。同一批發行依最高影響升一次；純文件不升版。遵循 [打版規範](docs/RELEASE-POLICY.md)，使用 `npm run release:bump` 與 `npm run release:check`。完成測試後才在乾淨程式提交上建立不可覆寫的 `vX.Y.Z` tag；打版不代替 PR、合併或部署授權。
 
+## 共用 UI 元件
+
+全站圖示、單字元槽與操作按鈕使用 `public/shared/ui-primitives.css` 及 `GameUI` 的 registry／symbol／decorateButton；遊戲配色與版面由 `ui-foundation.css` tokens 及各頁樣式處理。相同問題先檢查共用契約與全站呼叫端，不以每個字元的個別位移修補。內容置中同時處理內容群組與格內對齊，正面多區資訊卡不套單圖示置中。圖示槽不承擔外部間距；改動須驗 `[hidden]`、disabled／pending、可讀名稱、桌機／手機及非遊戲頁。詳細邊界與逐頁盤點見 [共用對齊規格](docs/specs/SHARED-UI-ALIGNMENT.md)。
+
 ## 角色知識與研究
 
 開始工作時，如有 `.local/USER-PREFERENCES.md`，先讀取本機偏好。此檔僅限本機使用，不納入 Git、發布包或上傳；公開文件不得抄錄其內容。
