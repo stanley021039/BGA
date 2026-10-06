@@ -1,5 +1,7 @@
 # 設計師角色記憶
 
+2026-10-06：重要操作區與輸入框需要最小間距，不可只依靠 flex 的 `margin-top:auto`；視窗較矮時剩餘空間會變成0。送禮側欄已用共用16px spacing token補操作區後的 margin，並在矮桌機、一般桌機及手機量測，見 [實際驗收](../GIFT-WAITING-SPACING-PROGRESS.md)。
+
 2026-10-05 U33：成人禮物以獨立可選分類開局，非房主能看摘要；迷因題庫区分既有模板與本站原創情境，既有ID和品質禁題功能保留。改名是帳戶外觀資訊，設定页就地反馈、1–16字，不能把username跟著改掉。大廳小幅入場不遮內容／阻擋按鈕，尊重共用個人動畫設定。框收藏首選單張靜態PNG＋九宮格表單，DOM文字与圖框分離；可分享／私人受眾、壞圖回退、個人隱藏及移轉都在 [規格評估](../specs/CUSTOM-BARRAGE-FRAMES.md)，尚未接入遊戲。前五項及觀察限制见 [整合進度](../PARTY-UPGRADE-PROGRESS.md)，本批未PR／部署。
 
 更新：2026-10-05。先讀 [共用偏好](MEMORY-LEDGER.md)、[記憶協議](MEMORY-PROTOCOL.md)、[玩家成就spec](../specs/ACHIEVEMENTS-AND-RECORDS.md)及 [實際攻防](../research/AGENT-DESIGN-DEBATE.md)。玩家方執筆正式候選採否，設計方提出樂趣、反例修訂、圖案與可判定事件。
