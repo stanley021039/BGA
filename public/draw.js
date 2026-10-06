@@ -8,6 +8,30 @@ let filled=false,tool='brush',active=null,pending=[],lastSentAt=0,lastFillSentAt
 const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
 const canvasRenderer=StrokeCanvas.createRenderer(canvas);
+// Measure the remaining grid row instead of subtracting a fixed header height.
+function fitDrawingWidth({width,height,overhead,chatHeight,gap}){
+ return Math.max(0,Math.min(width,2*Math.max(0,height-overhead-chatHeight-gap)));
+}
+let drawingFitFrame=null;
+function fitDrawingViewport(){
+ drawingFitFrame=null;
+ const board=$('#boardSection'),main=board.parentElement,frame=board.querySelector('.canvas-frame');
+ if(!frame||!window.matchMedia('(min-width:1200px) and (min-height:680px)').matches||document.body.classList.contains('ui-large-text')||!board.classList.contains('is-drawing')){board.style.removeProperty('--draw-canvas-width');return;}
+ const css=getComputedStyle(board),mainCss=getComputedStyle(main),chatCss=getComputedStyle($('#drawGuessPanel'));
+ const number=value=>parseFloat(value)||0,tools=$('#tools'),toolHeight=tools.hidden?0:tools.getBoundingClientRect().height;
+ const overhead=board.getBoundingClientRect().height-Math.max(frame.getBoundingClientRect().height,toolHeight);
+ const width=main.clientWidth-number(css.paddingLeft)-number(css.paddingRight)-number(css.borderLeftWidth)-number(css.borderRightWidth)-(tools.hidden?0:tools.getBoundingClientRect().width+number(css.columnGap));
+ const gap=number(mainCss.rowGap),chatHeight=Math.max(number(chatCss.minHeight),Math.min(260,main.clientHeight*.25,main.clientHeight-overhead-gap-toolHeight));
+ const fitted=fitDrawingWidth({width,height:main.clientHeight,overhead,chatHeight,gap});
+ const value=Math.floor(fitted)+'px';if(board.style.getPropertyValue('--draw-canvas-width')!==value)board.style.setProperty('--draw-canvas-width',value);
+}
+function scheduleDrawingFit(){if(drawingFitFrame===null)drawingFitFrame=requestAnimationFrame(fitDrawingViewport);}
+if(typeof ResizeObserver==='function'){
+ const observer=new ResizeObserver(scheduleDrawingFit);
+ for(const node of [$('.draw-shell'),$('.draw-layout'),$('#boardSection').parentElement,$('.board-head'),$('#drawCountdown'),$('#tools'),$('#drawGuessPanel')])observer.observe(node);
+ window.addEventListener('resize',scheduleDrawingFit);
+ new MutationObserver(scheduleDrawingFit).observe(document.body,{attributes:true,attributeFilter:['class']});
+}
 const motionGate=window.MotionPolicy?.createGate();
 const gameSounds=window.GameSounds?.create();
 const resultsView=window.DrawResults?.mount({trigger:$('#reviewResults'),dialog:$('#drawResults'),validateCanvas:validCanvasSnapshot,onState:receive,onVoteChange:updateStageVote,onUnauthorized:()=>location.replace('/login?next='+encodeURIComponent('/draw/'+code))});
@@ -137,6 +161,7 @@ function render(live=false){
  updateStageVote();
  if(voteFocus&&voteFocus===s.result?.resultId){const button=$('#stageBan');(button?.disabled?$('#stageBanStatus'):button)?.focus({preventScroll:true});}
  updateFeed(live);
+ if(typeof ResizeObserver==='function')scheduleDrawingFit();
 }
 function updateFeed(live=false){
  if(!state)return;
