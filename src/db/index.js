@@ -1,7 +1,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
-const SCHEMA_VERSION=12;
+const SCHEMA_VERSION=13;
 
 function openDatabase(file){
  fs.mkdirSync(path.dirname(file),{recursive:true});
@@ -131,6 +131,28 @@ function openDatabase(file){
  if(version<12){
   db.exec('BEGIN IMMEDIATE');
   try{if(!db.prepare('PRAGMA table_info(user_artworks)').all().some(column=>column.name==='shared'))db.exec('ALTER TABLE user_artworks ADD COLUMN shared INTEGER NOT NULL DEFAULT 0 CHECK(shared IN (0,1))');db.exec('PRAGMA user_version=12; COMMIT');}catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<13){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    CREATE TABLE IF NOT EXISTS draw_word_exclusions(
+     title_key TEXT PRIMARY KEY CHECK(length(title_key) BETWEEN 1 AND 512),
+     word_id TEXT NOT NULL UNIQUE CHECK(length(word_id) BETWEEN 1 AND 64),
+     title TEXT NOT NULL CHECK(length(title) BETWEEN 1 AND 24),
+     room_code TEXT NOT NULL CHECK(length(room_code)=6),
+     result_id TEXT NOT NULL UNIQUE CHECK(length(result_id)=36),
+     game_run_id TEXT NOT NULL CHECK(length(game_run_id)=36),
+     electorate_json TEXT NOT NULL CHECK(length(electorate_json)<=400 AND json_valid(electorate_json) AND json_type(electorate_json)='array' AND json_array_length(electorate_json) BETWEEN 1 AND 8),
+     votes_json TEXT NOT NULL CHECK(length(votes_json)<=400 AND json_valid(votes_json) AND json_type(votes_json)='array' AND json_array_length(votes_json) BETWEEN 1 AND 8),
+     required INTEGER NOT NULL CHECK(required=CAST(json_array_length(electorate_json)/2 AS INTEGER)+1),
+     created_at TEXT NOT NULL,
+     CHECK(json_array_length(votes_json)>=required AND json_array_length(votes_json)<=json_array_length(electorate_json))
+    );
+    PRAGMA user_version=13;
+    COMMIT;
+   `);
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
  return db;
 }

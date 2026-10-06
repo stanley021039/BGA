@@ -8,11 +8,11 @@ window.RaceEventCues={mount(immersion){
  let timer=null,reposition=null;
  function hide(){clearTimeout(timer);timer=null;reposition=null;panel.hidden=true;}
  function show(events,cars=[]){
-  if(!immersion.allowsMotion()||document.hidden)return hide();
+  if(document.hidden)return hide();
   const event=events.filter(item=>Object.hasOwn(priority,item.kind)).sort((a,b)=>priority[b.kind]-priority[a.kind]||b.id-a.id)[0];
   if(!event)return;
   hide();
-  panel.dataset.kind=event.kind;
+  panel.dataset.kind=event.kind;panel.dataset.motion=String(immersion.allowsMotion());
   panel.dataset.hit=event.hit===false?'miss':'hit';
   title.textContent=event.kind==='shot'&&!event.hit?'射擊落空':labels[event.kind];
   detail.textContent=String(event.text||'');
@@ -40,6 +40,7 @@ window.RaceEventCues={mount(immersion){
   reposition();
   timer=setTimeout(hide,3200);
  }
+ window.MotionPolicy?.subscribe(()=>{if(!immersion.allowsMotion())panel.dataset.motion='false';});
  skip.addEventListener('click',hide);
  document.addEventListener('keydown',event=>{if(event.key==='Escape')hide();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)hide();});

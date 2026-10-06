@@ -1,5 +1,7 @@
 # 動效與素材採用方案
 
+**後續實作狀態（2026-10-05，93d7a84）**：D01／A00、D02收藏確認、A01四軌及開關、A02確認政策、G01收禮去重與G02結算入場、R02減動共用已落地；既有同頻／撲克動效接同一規則。畫猜等待／離線及猜中卡勾選同步完成。Windows／Linux各402項、背景Chrome結果與限制見 [實作進度](../DRAW-REVIEW-MOTION-PROGRESS.md)。本段取代下方歷史研究對這些子項的「尚未實作」描述；成就徽章／勝場ledger、YouTube、粒子素材與孤立原型仍維持研究狀態，未部署。
+
 查核：2026-10-05。狀態：**研究與孤立原型；沒有改正式遊戲程式、採購新包、commit、push或部署**。設計／美術／動畫owner `typography_design`，Node原型owner `layout_design`，成就spec owner `player_research`，整合／實玩owner主agent。程式基線本地HEAD `0aa6c75`；後續採用要重查當時source與部署版本。
 
 已讀 [素材備忘](../GAME-ASSET-SOURCES.md)、[2026-10-02沉浸研究](../IMMERSIVE-EXPERIENCE-RESEARCH.md)、[資訊優先級](../UI-INFORMATION-PRIORITY.md)、`src/achievements/store.js`與下列現行renderer/effects。既有研究的送禮「立即完整結果＋自動2–3焦點」被使用者的**逐位收禮者確認、全部收完才結算**取代；本文件不沿用舊提案改規則。

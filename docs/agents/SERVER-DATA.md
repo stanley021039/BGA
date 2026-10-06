@@ -1,10 +1,20 @@
 # Server／資料 agent 記憶
 
+## 2026-10-06：schema 13 與拒絕殘留鎖整合
+
+PR #34 接上 main `b843a3f`，schema 13 禁題資料與 #31 拒絕殘留鎖／HistoryStore 冪等 close 同時保留；鎖程式與 main 完全一致。Windows Node 26.2.0 完整 **442/442** 包含完整還原、v12 副本升級／v13 缺表拒絕及 11 項鎖回歸。本次沒有 Linux、正式資料或真正 browser 驗收，詳 [整合驗證](../PR34-MAIN-INTEGRATION.md)；早期 v12 敘述為歷史基線，現 PR schema 為 13。維持 Draft，待獨立複審。
+
 ## 2026-10-05：殘留鎖政策更新
 
 PR #31 修正 `0682e43` 取代先前自動回收 dead-PID 鎖的行為。server／admin／transfer／HistoryStore 拒絕任何既有資料或 legacy 鎖；publication 同樣不回收。正常 owner 釋放冪等，仍保留 legacy 純 PID 格式供舊程式辨識，但不能同時運行仍自動回收鎖的舊 writer。
 
 異常終止後先停所有 writer 及自動重啟，再核對實際 DB／history／community／music 鎖與內容，保存證據後人工處理；不能只憑 PID 已結束刪檔。發布鎖與 restore marker 可能代表半份還原，保留現場並另選新目錄重試，不能當一般資料鎖刪掉後啟動。操作流程見 [人工檢查](../SERVER-DATA-TRANSFER.md#殘留鎖的人工檢查)。Windows Node24.14.0 完整374/374與11項鎖回歸通過，本次未重跑Linux，未操作正式資料；詳 [進度](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。
+
+## 2026-10-05 追加：schema 13 禁題資料
+
+程式 `2cf8a44` 新增 `draw_word_exclusions`，保存內建／共編題目 ID、正規化題名、首次通過的房間／result／gameRun、至多八名選民與票者、過半門檻及時間；不存帳密或畫布。移轉驗證的 schema 必備表同步至 v13。完整備份還原原樣保存已通過禁題，v12 來源只在還原副本建立空 ledger；來源不變，v13 缺表拒絕。
+
+未過半 ballot 與最近八輪結果只存在 room 記憶體，不屬於資料包。Windows／Linux 各431項，其中移轉26項及3項新禁題相容性回歸通過，詳 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)。尚未操作正式資料，沒有解除禁題 UI；不要把 soft exclusion 說成已刪除歷史作品。
 
 更新：2026-10-05。主規格：[多環境資料移轉](../specs/MULTI-ENV-DATA-MIGRATION.md)。第一版工具已完成實作與隔離驗收，操作入口：[完整備份還原](../SERVER-DATA-TRANSFER.md)，最新送審與證據：[驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)。未備份、切換或遷移正式資料。
 
@@ -16,7 +26,7 @@ PR #31 修正 `0682e43` 取代先前自動回收 dead-PID 鎖的行為。server�
 
 | 項目 | 現況 |
 | --- | --- |
-| DB | `src/db/index.js` v12、Node sqlite DatabaseSync、WAL、foreign_keys/busy_timeout、BEGIN IMMEDIATE |
+| DB | `src/db/index.js` v13、Node sqlite DatabaseSync、WAL、foreign_keys/busy_timeout、BEGIN IMMEDIATE |
 | users/media | 帳號、角色表情／gift／artwork bytes在DB BLOB；users.appearance有JSON引用 |
 | music | metadata在music_tracks，實音檔在`MUSIC_DIR || dirname(DB_FILE)/music`；settings 已映射 MUSIC_DIR |
 | community | `COMMUNITY_DIR/community.json`存majority題庫與舊issue；BoardStore啟動legacy import |

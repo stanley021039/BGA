@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const {createApp}=require('../src/app');
-const {openDatabase}=require('../src/db/index');
+const {openDatabase,SCHEMA_VERSION}=require('../src/db/index');
 const {createAuth}=require('../src/auth/index');
 
 test('private account artwork can be copied into a character, expression, and gift',async()=>{
@@ -44,7 +44,7 @@ test('private account artwork can be copied into a character, expression, and gi
   assert.ok(options.characters.find(item=>item.id===character.body.id).expressions[emote.body.expression]);
   await app.close();app=createApp(config);await app.listen();
   const saved=openDatabase(config.dbFile);
-  assert.equal(saved.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(saved.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(saved.prepare('SELECT COUNT(*) AS n FROM user_artworks').get().n,0);
   saved.close();
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}

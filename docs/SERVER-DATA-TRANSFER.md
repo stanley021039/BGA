@@ -9,13 +9,15 @@
 | 帳戶 | 完整保留 `users`，包括 UUID、登入名稱、顯示名稱、原密碼 hash、管理者／會員權限、停用狀態、appearance 與建立時間；玩家用**原帳號及原密碼**重新登入。 |
 | 登入／邀請／重設連結 | 備份包含來源資料；只在還原副本刪除 sessions、invites、password_resets。舊 cookie、邀請與重設連結不能在新環境沿用。 |
 | 角色、表情、作品、禮物 | SQLite BLOB、所有權、分享欄位及 profile 引用原樣保存；還原前驗證外鍵、引用與 BLOB digest。 |
-| 題庫、留言、成就 | 保存 SQLite 資料、共編 `community.json`；舊 JSON 留言及回覆在還原副本依現有 BoardStore 規則匯入。未新增勝場統計。 |
+| 題庫、留言、成就 | 保存 SQLite 資料、共編 `community.json`，包含 schema 13 已通過的畫猜禁題及投票稽核；舊 JSON 留言及回覆在還原副本依現有 BoardStore 規則匯入。未過半的房間記憶體投票不搬移，未新增勝場統計。 |
 | 音樂 | SQLite metadata 與外部原始音檔一起保存；驗證 metadata、大小、音訊格式。符合檔名規則的孤立音檔也保留並報告數量。 |
 | 歷史 | 保存 session／match JSONL、meta、引擎原碼及 hash；嚴格拒絕缺檔、截斷、未配對操作或 hash 不符。 |
 | 外部投稿 | 保留 payload、remote identity 及完成狀態；pending／sending 改為 needs_review，需管理者查核 GitHub 後決定重試。 |
 | 來源身份 | `source.envId` 與永久 `dataInstanceId` 放入 manifest。首次 export 在 DB 旁建立 `.<DB檔名>.data-instance.json`，後續沿用。 |
 
 `.env`、GitHub／Tunnel token、SSH key、部署程式與當前記憶體房間不放進包。內建 `public/assets` 跟程式部署，bundle 記錄其 fingerprint 並在還原前比對；不會自動下載或切換程式。帳戶 hash、素材及完整歷史仍是敏感資料，`accountCredentialsIncluded` 明確為 true；這不是匿名化開發副本。
+
+2026-10-05 後續程式 `2cf8a44` 支援 schema 13 禁題表；schema 12 備份還原時只升級目標副本，新增空禁題表，來源不變。已通過的禁題會在還原後繼續從題庫與抽題排除，詳 [相容性驗收](DRAW-WORD-BAN-PROGRESS.md)。
 
 ## 執行介面
 

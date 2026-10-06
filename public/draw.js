@@ -8,6 +8,9 @@ let filled=false,tool='brush',active=null,pending=[],lastSentAt=0,lastFillSentAt
 const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
 const canvasRenderer=StrokeCanvas.createRenderer(canvas);
+const motionGate=window.MotionPolicy?.createGate();
+const resultsView=window.DrawResults?.mount({trigger:$('#reviewResults'),dialog:$('#drawResults'),validateCanvas:validCanvasSnapshot,onState:receive,onVoteChange:updateStageVote,onUnauthorized:()=>location.replace('/login?next='+encodeURIComponent('/draw/'+code))});
+let stageResultPreview=null,streamDisconnected=false,canvasConnectionError='',lastLiveState=false,motionNeedsBaseline=false;
 let canvasRenderPromise=Promise.resolve(false),canvasRenderEpoch=0,canvasRecovering=false,canvasRenderError=null;
 function updateCanvasBusy(){const value=canvasCommandBusy||canvasRecovering;canvas.setAttribute('aria-busy',String(value));canvas.classList.toggle('canvas-busy',value);}
 async function waitForCanvasRender(){let render;do{render=canvasRenderPromise;await render;}while(render!==canvasRenderPromise);if(canvasRenderError)throw canvasRenderError;}
@@ -18,11 +21,39 @@ let canvasTotals={points:0,fills:0};
 try{session=JSON.parse(localStorage.getItem(code?'ah-draw:'+code:'ah-draw')||'null');if(session&&!code)code=session.code;}catch{}
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4000);}
-async function api(route,data){return RoomApi.request(route,data,{code,room:'draw',session,onKicked:()=>{RoomHost.kicked(session);session=null;stream?.close();}});}
+async function api(route,data){return RoomApi.request(route,data,{code,room:'draw',session,onKicked:()=>{RoomHost.kicked(session);session=null;stream?.close();resultsView?.reset();}});}
 function save(result){session=result;code=result.code;localStorage.setItem('ah-draw',JSON.stringify(result));localStorage.setItem('ah-draw:'+code,JSON.stringify(result));history.replaceState(null,'','/draw/'+code);}
 function nameOf(id){return state?.players.find(player=>player.id===id)?.name||'朋友';}
-function playerRow(player){return GameShell.playerRow(player,{me:state.me,status:player.waitingForNextRound?'下輪加入':player.id===state.presenterId?'本輪畫者':state.guessedIds?.includes(player.id)?'已猜中':player.online?'在線':'暫時離線'});}
-function waitingPlayerRow(player){return GameShell.playerRow(player,{me:state.me,status:[player.id===state.hostId?'房主':null,player.online?'已入座':'暫時離線'].filter(Boolean).join(' · '),metrics:[]});}
+function playerStatus(player,s=state){
+ const didNotPlay=['reveal','finished'].includes(s.phase)&&player.id!==s.presenterId&&!s.participantIds?.includes(player.id);
+ let role=didNotPlay?'本輪未參與':player.waitingForNextRound?'下輪加入':player.id===s.presenterId?(s.phase==='choosing'?'選題中':s.phase==='drawing'?'畫圖中':'本輪畫者'):s.guessedIds?.includes(player.id)?'已猜中':s.phase==='waiting'?'已入座':'尚未猜中';
+ if(player.id===s.me&&(disconnected||streamDisconnected))role+=' · 正在重連';else if(player.online===false)role+=' · 暫時離線';
+ return role;
+}
+function playerRow(player){
+ const row=GameShell.playerRow(player,{me:state.me,status:playerStatus(player)}),correct=['drawing','reveal','finished'].includes(state.phase)&&state.participantIds?.includes(player.id)&&state.guessedIds?.includes(player.id)&&!player.waitingForNextRound;
+ if(!correct)return row;
+ const icon=window.GameUI?.icon('check')||'<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 4 4L19 6"/></svg>';
+ return row.replace('class="room-player player"','class="room-player player draw-player-correct"').replace('<div class="room-player-avatar">','<div class="room-player-avatar"><span class="draw-correct-mark" aria-hidden="true">'+icon+'</span>');
+}
+function waitingSummary(s=state){
+ if(!s)return {title:'',detail:''};
+ const artist=s.players.find(player=>player.id===s.presenterId),participants=s.participantIds||[],correct=participants.filter(id=>s.guessedIds?.includes(id)),remaining=participants.filter(id=>!correct.includes(id)).map(id=>s.players.find(player=>player.id===id)).filter(Boolean);
+ if(s.phase==='choosing')return {title:'等待畫者選題',detail:(artist?.name||'畫者')+(artist?.online===false?' · 暫時離線':' 正在選題')};
+ if(s.phase==='drawing')return {title:'已猜中 '+correct.length+' / '+participants.length,detail:remaining.length?'還在猜：'+remaining.map(player=>player.name+(player.online===false?'（離線）':'')).join('、'):'全部猜中，等待揭曉。'};
+ return {title:'本輪已猜中 '+correct.length+' / '+participants.length,detail:'已公開的答案與畫作，可從「最近畫作」回看。'};
+}
+function updatePresence(){
+ if(!state)return;
+ GameShell.stableMarkup($('#players'),state.players.map(playerRow).join(''));
+ if(state.phase==='waiting'&&$('#waitingPlayers'))GameShell.stableMarkup($('#waitingPlayers'),state.players.map(waitingPlayerRow).join(''));
+ const waiting=waitingSummary();$('#drawWaiting').hidden=state.phase==='waiting';$('#drawWaitingTitle').textContent=waiting.title;$('#drawWaitingNames').textContent=waiting.detail;
+}
+function updateConnection(){
+ const message=disconnected?'你的連線暫停，正在重新連線；目前顯示最後同步的狀態。':streamDisconnected?'畫布連線正在重連，仍可猜題與查看玩家。':canvasConnectionError;
+ $('#connection').textContent=message;updatePresence();
+}
+function waitingPlayerRow(player){return GameShell.playerRow(player,{me:state.me,status:[player.id===state.hostId?'房主':null,playerStatus(player)].filter(Boolean).join(' · '),metrics:[]});}
 function options(group,choices,current,inputName){return `<fieldset><legend>${group}</legend><div class="option-row">${choices.map(([value,label])=>`<label><input type="radio" name="${inputName}" value="${value}" ${String(current??'')===value?'checked':''}><span>${label}</span></label>`).join('')}</div></fieldset>`;}
 function selectedTopics(settings={}){
  if(Array.isArray(settings.topics))return settings.topics;
@@ -46,6 +77,11 @@ function entry(){
 function stageAvatar(player,extraClass=''){
  return player?.avatar?`<img class="stage-avatar ${extraClass}" src="${esc(player.avatar)}" alt="">`:`<span class="stage-avatar stage-avatar-fallback ${extraClass}" aria-hidden="true">✎</span>`;
 }
+function stageVotePanel(s){return `<section class="draw-ban-panel" aria-label="這輪題目投票"><div class="draw-ban-control"><button id="stageBan" type="button" class="draw-ban-button" data-do="ban" data-result-id="${esc(s.result?.resultId||'')}" aria-describedby="stageBanSummary stageBanStatus" disabled>禁止題目</button><p id="stageBanSummary" class="draw-ban-summary" aria-live="polite"></p></div><p id="stageBanStatus" class="draw-ban-status" role="status" tabindex="-1"></p></section>`;}
+function updateStageVote(){
+ const button=$('#stageBan');if(!button||state?.phase!=='reveal'||!resultsView)return;
+ window.DrawResults.renderVote(button,$('#stageBanSummary'),$('#stageBanStatus'),resultsView.votePresentation(state.result?.resultId||null));
+}
 function stageScene(s){
  const artist=s.players.find(player=>player.id===s.presenterId);
  if(s.phase==='waiting')return `<section class="stage-scene stage-waiting" aria-label="房間內的玩家"><div class="waiting-head"><h1>這桌的朋友</h1><span id="waitingCount">${s.players.length} / 8 位</span></div><div id="waitingPlayers" class="waiting-players">${s.players.map(waitingPlayerRow).join('')}</div></section>`;
@@ -53,13 +89,13 @@ function stageScene(s){
   const mine=s.presenterId===s.me;
   return `<div class="stage-scene stage-choosing"><div class="stage-lead">${stageAvatar(artist)}<span>${esc(artist?.name||'畫者')} 的回合</span></div><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} / ${s.roundLimit}</span><h1>${mine?'選一張題卡，準備開畫':'畫者正在挑題'}</h1><p>${mine?'只有你看得到題目，選好就能立即畫。':'題目選好後，畫作會出現在同一塊畫布。'}</p><div class="stage-picks">${mine?s.candidates.map(word=>`<button type="button" class="stage-pick" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong><span>畫這題 ↗</span></button>`).join(''):'<span class="stage-pick-back">?</span><span class="stage-pick-back">?</span><span class="stage-pick-back">?</span>'}</div></div></div>`;
  }
- if(s.phase==='reveal')return `<div class="stage-scene stage-reveal"><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} / REVEAL</span><h1>答案揭曉</h1><p class="stage-answer">${esc(s.result?.answer||'這輪沒有選定題目')}</p><p class="stage-reason">${esc(s.result?.reason||'')}</p><div class="stage-stat"><b>${s.result?.guessedIds?.length||0}</b> 位朋友猜中 <span>· 畫者每猜中一人 +15 分</span></div></div><div class="stage-art"><canvas id="stagePreview" width="512" height="256" role="img" aria-label="本輪完成的畫作"></canvas><small>本輪畫作</small></div></div>`;
+ if(s.phase==='reveal')return `<div class="stage-scene stage-reveal"><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} · 答案揭曉</span><h1 class="stage-answer">${esc(s.result?.answer||'這輪沒有選定題目')}</h1><p class="stage-reason">${esc(s.result?.reason||'')}</p><div class="stage-stat"><b>${s.result?.guessedIds?.length||0}</b> 位朋友猜中 <span>· 畫者每猜中一人 +15 分</span></div>${stageVotePanel(s)}</div><div class="stage-art"><canvas id="stagePreview" width="512" height="256" role="img" aria-label="本輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取本輪畫作…</small></div></div>`;
  const rankings=[...s.players].sort((a,b)=>b.score-a.score);
  const winners=s.winner?.ids||[];
  return `<div class="stage-scene stage-finished"><div class="stage-copy"><span class="stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p><div class="stage-winners">${rankings.filter(player=>winners.includes(player.id)).map(player=>`<div class="stage-winner">${stageAvatar(player)}<b>${esc(player.name)}</b><strong>${player.score} 分</strong><span aria-hidden="true">✦</span></div>`).join('')}</div></div><ol class="stage-ranking">${rankings.map((player,index)=>`<li><span>${index+1}. ${esc(player.name)}</span><b>${player.score} 分</b></li>`).join('')}</ol></div>`;
 }
 function render(live=false){
- const s=state,settingsOpen=$('#stage .stage-controls')?.open;let html='',actions='';
+ const s=state,settingsOpen=$('#stage .stage-controls')?.open,voteFocus=document.activeElement?.id==='stageBan'?document.activeElement.dataset.resultId:null;let html='',actions='';
  document.body.dataset.drawPhase=s.phase;
  document.body.classList.toggle('drawing-active',s.phase==='drawing');
  if(s.phase==='waiting'){
@@ -73,15 +109,16 @@ function render(live=false){
   }else if(s.phase==='choosing'){
    actions=`<p>${s.presenterId===s.me?'在舞台選一題開始作畫。':'等待 '+esc(nameOf(s.presenterId))+' 選題。'}</p>`;
  }else if(s.phase==='reveal'){
-   actions=`<p>本輪已揭曉。</p>${s.host?'<button data-do="next">下一位畫者</button>':'<p>等待房主開始下一輪。</p>'}${s.result?.answer?'<button data-do="save">加入素材庫</button>':''}`;
+   actions=`<p>本輪已揭曉。</p>${s.host?'<button data-do="next">下一位畫者</button>':'<p>等待房主開始下一輪。</p>'}${s.result?.resultId?'<button data-do="save" data-result-id="'+esc(s.result.resultId)+'">收藏這幅畫</button>':''}`;
   }else if(s.phase==='finished'){
-   actions=`<p>本局完成。</p>${s.host?'<button data-do="start">再玩一局</button>':'<p>等待房主再開一局。</p>'}${s.result?.answer?'<button data-do="save">加入素材庫</button>':''}`;
+   actions=`<p>本局完成。</p>${s.host?'<button data-do="start">再玩一局</button>':'<p>等待房主再開一局。</p>'}${s.result?.resultId?'<button data-do="save" data-result-id="'+esc(s.result.resultId)+'">收藏這幅畫</button>':''}`;
  }
  $('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&s.phase==='waiting'&&s.host)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
  if(s.phase==='waiting'&&s.host){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
   GameShell.stableMarkup($('#drawActions'),actions);
  decorateActions();
  $('#canvasStage').innerHTML=s.phase==='drawing'?'':stageScene(s);
+ const sceneKey=s.canvasEpoch+':'+s.phase;if($('#canvasStage').dataset.sceneKey!==sceneKey){$('#canvasStage').scrollTop=0;$('#canvasStage').scrollLeft=0;$('#canvasStage').dataset.sceneKey=sceneKey;}
  $('#canvasStage').hidden=s.phase==='drawing';
  $('#boardSection').hidden=false;$('#boardSection').classList.toggle('is-drawing',s.phase==='drawing');
  $('.draw-roster').hidden=s.phase==='waiting';
@@ -94,6 +131,8 @@ function render(live=false){
  $('#boardHint').textContent=s.phase==='drawing'&&s.hint?'題材：'+s.hint.topicLabel+' · '+s.hint.category+' · '+s.hint.length+' 字':s.phase==='drawing'?'跟著畫布一起猜':s.phase==='reveal'?'答案與畫作已揭曉':s.phase==='waiting'?'題目類別：'+topicChoices.filter(([value])=>selectedTopics(s.options).includes(value)).map(([,label])=>label).join('、'):'';
  $('#timer').hidden=!s.deadline;
  updateStagePreview();
+ updateStageVote();
+ if(voteFocus&&voteFocus===s.result?.resultId){const button=$('#stageBan');(button?.disabled?$('#stageBanStatus'):button)?.focus({preventScroll:true});}
  updateFeed(live);
 }
 function updateFeed(live=false){
@@ -119,39 +158,46 @@ function updateFeed(live=false){
    line.className=item.correct?'correct':'wrong';
    line.textContent=item.correct?`${item.name} 猜對了！ +${item.points} 分`:`${item.name}：${item.answer}`;
    feed.append(line);
-   if(live&&hadState&&index===guesses.length-1&&motionAllowed())line.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});
+   const fresh=motionGate?motionGate.take('feed:'+state.canvasEpoch+':'+JSON.stringify(item),live):live;
+   if(fresh&&hadState&&index===guesses.length-1)animate(line,[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});
   }
  }
  feedEntries=keys;feed.dataset.ready='true';
  if(stickToBottom)feed.scrollTop=feed.scrollHeight;
 }
-function motionAllowed(){return !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;}
+function motionAllowed(){return window.MotionPolicy?window.MotionPolicy.allowsMotion():!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;}
+function animate(node,keyframes,options){if(window.MotionPolicy)return window.MotionPolicy.animate(node,keyframes,options);if(motionAllowed())return node?.animate?.(keyframes,options);return null;}
 function updateStagePreview(){
- if(state?.phase!=='reveal')return;
- const preview=$('#stagePreview');if(!preview?.getContext)return;
- const context=preview.getContext('2d');context?.drawImage(canvas,0,0,512,256);
+ const id=state?.phase==='reveal'?state.result?.resultId:null,preview=id?$('#stagePreview'):null;
+ if(!id||!preview?.getContext||!resultsView){stageResultPreview?.renderer.reset();stageResultPreview=null;return;}
+ if(stageResultPreview?.id===id&&stageResultPreview.node===preview)return;
+ stageResultPreview?.renderer.reset();
+ const job={id,node:preview,renderer:window.StrokeCanvas.createRenderer(preview,{maxCheckpoints:2})};stageResultPreview=job;
+ preview.hidden=true;
+ resultsView.store.load(id).then(snapshot=>{if(stageResultPreview!==job)return;return job.renderer.renderCooperatively(snapshot.canvas.strokes);}).then(()=>{if(stageResultPreview!==job)return;preview.hidden=false;$('#stagePreviewStatus').textContent='本輪畫作 · 可從最近畫作回看與收藏';}).catch(()=>{if(stageResultPreview===job)$('#stagePreviewStatus').textContent='畫作暫時無法載入，可從最近畫作重試。';});
 }
 function animatePhase(from,to){
  if(!from||from===to||!motionAllowed())return;
  const scene=$('#canvasStage .stage-scene');
- scene?.animate([{opacity:.4,transform:'translateY(12px) scale(.985)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:360,easing:'cubic-bezier(.2,.75,.25,1)'});
- if(to==='choosing')$('#canvasStage').querySelectorAll('.stage-pick, .stage-pick-back').forEach((item,index)=>item.animate([{opacity:0,transform:'translateY(15px) rotate(-3deg)'},{opacity:1,transform:'translateY(0) rotate(0)'}],{duration:300,delay:index*70,easing:'ease-out'}));
- if(to==='drawing')$('.canvas-frame').animate([{boxShadow:'inset 0 0 0 8px #e7ad63'},{boxShadow:'inset 0 0 0 0 #e7ad6300'}],{duration:450,easing:'ease-out'});
+ animate(scene,[{opacity:.4,transform:'translateY(12px) scale(.985)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:360,easing:'cubic-bezier(.2,.75,.25,1)'});
+ if(to==='choosing')$('#canvasStage').querySelectorAll('.stage-pick, .stage-pick-back').forEach((item,index)=>animate(item,[{opacity:0,transform:'translateY(15px) rotate(-3deg)'},{opacity:1,transform:'translateY(0) rotate(0)'}],{duration:300,delay:index*70,easing:'ease-out'}));
+ if(to==='drawing')animate($('.canvas-frame'),[{boxShadow:'inset 0 0 0 8px #e7ad63'},{boxShadow:'inset 0 0 0 0 #e7ad6300'}],{duration:450,easing:'ease-out'});
  if(to==='reveal'){
-  $('#canvasStage .stage-answer')?.animate([{opacity:0,transform:'translateY(12px) scale(.9)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:450,easing:'cubic-bezier(.2,.75,.25,1)'});
-  $('#canvasStage .stage-art')?.animate([{opacity:0,transform:'translateX(20px) rotate(8deg)'},{opacity:1,transform:'translateX(0) rotate(2deg)'}],{duration:470,easing:'ease-out'});
+  animate($('#canvasStage .stage-answer'),[{opacity:0,transform:'translateY(12px) scale(.9)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:450,easing:'cubic-bezier(.2,.75,.25,1)'});
+  animate($('#canvasStage .stage-art'),[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'translateY(0)'}],{duration:470,easing:'ease-out'});
  }
- if(to==='finished')$('#canvasStage').querySelectorAll('.stage-winner').forEach((item,index)=>item.animate([{opacity:0,transform:'translateY(18px) scale(.9)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:380,delay:index*90,easing:'ease-out'}));
+ if(to==='finished')$('#canvasStage').querySelectorAll('.stage-winner').forEach((item,index)=>animate(item,[{opacity:0,transform:'translateY(18px) scale(.9)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:380,delay:index*90,easing:'ease-out'}));
 }
 function showCorrectFeedback(previous,next,live){
- if(!live||!motionAllowed()||previous?.round!==next.round||previous.phase!=='drawing'||!['drawing','reveal'].includes(next.phase))return;
- const oldCorrect=new Set((previous.guesses||[]).filter(item=>item.correct).map(item=>item.id));
- for(const guess of (next.guesses||[]).filter(item=>item.correct&&!oldCorrect.has(item.id)&&next.serverNow-item.at>=0&&next.serverNow-item.at<5000).slice(-3)){
+ const oldCorrect=new Set((previous?.guesses||[]).filter(item=>item.correct).map(item=>item.id));
+ for(const guess of (next.guesses||[]).filter(item=>item.correct).slice(-3)){
+  const fresh=motionGate?motionGate.take('correct:'+next.canvasEpoch+':'+guess.id,live):live;
+  if(!fresh||!motionAllowed()||previous?.canvasEpoch!==next.canvasEpoch||previous?.phase!=='drawing'||!['drawing','reveal'].includes(next.phase)||oldCorrect.has(guess.id)||next.serverNow-guess.at<0||next.serverNow-guess.at>=5000)continue;
   const row=[...$('#players').querySelectorAll('.player')].find(item=>item.dataset.playerId===guess.id);
   if(!row)continue;
   row.classList.add('just-correct');
   const badge=document.createElement('span');badge.className='correct-pop';badge.textContent='✓ +'+guess.points+' 分';row.append(badge);
-  badge.animate([{opacity:0,transform:'translateY(8px) scale(.8)'},{opacity:1,transform:'translateY(0) scale(1)'},{opacity:1,transform:'translateY(-2px)'},{opacity:0,transform:'translateY(-12px)'}],{duration:1700,easing:'ease-out'});
+  animate(badge,[{opacity:0,transform:'translateY(8px) scale(.8)'},{opacity:1,transform:'translateY(0) scale(1)'},{opacity:1,transform:'translateY(-2px)'},{opacity:0,transform:'translateY(-12px)'}],{duration:1700,easing:'ease-out'});
   setTimeout(()=>{badge.remove();row.classList.remove('just-correct');},1700);
  }
 }
@@ -159,18 +205,23 @@ function receive(next){
  if(!next||next.type!=='draw')throw Error('這不是你畫我猜房間');
  const previous=state,oldRound=state?.round,oldPhase=state?.phase;
  if(previous&&next.version<previous.version)return;
- const live=!!previous&&!disconnected&&Date.now()-lastReceivedAt<5000&&document.visibilityState!=='hidden';
+ const live=motionGate?motionGate.update(next,{connected:!disconnected&&!streamDisconnected&&!motionNeedsBaseline}):!!previous&&!disconnected&&!motionNeedsBaseline&&Date.now()-lastReceivedAt<5000&&document.visibilityState!=='hidden';
+ motionNeedsBaseline=false;
+ lastLiveState=live;
  state=next;lastReceivedAt=Date.now();disconnected=false;RoomHost.update(next,receive);
+ if(previous?.canvasEpoch!==next.canvasEpoch)drawFeedback('');
+ resultsView?.update(next);updateConnection();
  clockOffset=Date.now()-next.serverNow;
  $('#roomTag').textContent='房間 '+code;$('#invite').hidden=false;
  $('#roundTag').textContent=next.phase==='waiting'?'朋友到齊就開畫':'第 '+next.round+' / '+next.roundLimit+' 輪';
  $('#phaseTag').textContent={waiting:'等待玩家',choosing:'畫者選題',drawing:'畫圖與猜題',reveal:'答案揭曉',finished:'本局結束'}[next.phase];
  $('#count').textContent=next.players.length+' / 8';
- GameShell.stableMarkup($('#players'),next.players.map(playerRow).join(''));
+ updatePresence();
  const key=JSON.stringify([next.canvasEpoch,next.phase,next.round,next.options,next.host,next.phase==='waiting'?null:next.players.map(player=>player.id),next.candidates,next.question,next.guessedIds.includes(next.me),next.result,next.winner]);
  const changed=key!==signature;
- if(changed){signature=key;render(live);if(live)animatePhase(oldPhase,next.phase);}
- else updateFeed(live);
+ const freshPhase=motionGate?motionGate.take('phase:'+next.canvasEpoch+':'+next.phase,live):live;
+ if(changed){signature=key;render(live);if(freshPhase)animatePhase(oldPhase,next.phase);}
+ else{updateFeed(live);updateStagePreview();}
  if(next.phase==='waiting'){
   if(!changed&&previous?.players.length!==next.players.length){GameShell.stableMarkup($('#drawActions'),waitingActions(next));decorateActions();}
   const waitingPlayers=$('#waitingPlayers');if(waitingPlayers)GameShell.stableMarkup(waitingPlayers,next.players.map(waitingPlayerRow).join(''));
@@ -182,11 +233,12 @@ function receive(next){
  connectEvents();tick();
 }
 function tick(){
- const label=$('#timer');if(!state?.deadline){label.textContent='–';label.classList.remove('urgent');lastTimerSeconds=null;return;}
+ const label=$('#timer');if(!state?.deadline){label.textContent='–';$('#drawWaitingTime').textContent='';label.classList.remove('urgent');lastTimerSeconds=null;return;}
  const seconds=Math.max(0,Math.ceil((state.deadline-(Date.now()-clockOffset))/1000));
  label.textContent=seconds+' 秒';label.classList.toggle('urgent',state.phase==='drawing'&&seconds<=10);
+ $('#drawWaitingTime').textContent=['drawing','choosing'].includes(state.phase)?'剩 '+seconds+' 秒':'';
  if(state.phase==='drawing'&&lastTimerRound===state.round&&lastTimerSeconds>10&&seconds<=10&&motionAllowed()&&document.visibilityState!=='hidden'){
-  $('.canvas-frame').animate([{borderColor:'#a6b8a5'},{borderColor:'#b34b50'},{borderColor:'#a6b8a5'}],{duration:530,easing:'ease-out'});
+  if(!motionGate||motionGate.take('timeout:'+state.canvasEpoch,lastLiveState))animate($('.canvas-frame'),[{borderColor:'#a6b8a5'},{borderColor:'#b34b50'},{borderColor:'#a6b8a5'}],{duration:530,easing:'ease-out'});
  }
  lastTimerRound=state.round;lastTimerSeconds=seconds;
 }
@@ -227,8 +279,8 @@ function syncCanvas(){
   const requestedRound=state?.round,requestedEpoch=state?.canvasEpoch;
   try{
    const snapshot=await api('draw/canvas');if(!sameCanvas(snapshot)||requestedEpoch!==state?.canvasEpoch||requestedRound!==state?.round)return;
-   applyCanvasSnapshot(snapshot);
-  }catch(error){if(requestedEpoch===state?.canvasEpoch)$('#connection').textContent='畫布同步中：'+error.message;}
+   applyCanvasSnapshot(snapshot);canvasConnectionError='';updateConnection();
+  }catch(error){if(requestedEpoch===state?.canvasEpoch){canvasConnectionError='畫布正在重新同步：'+error.message;updateConnection();}}
   finally{syncPromise=null;if(state&&(requestedRound!==state.round||requestedEpoch!==state.canvasEpoch))syncCanvas();}
  })();
  return syncPromise;
@@ -292,26 +344,31 @@ function connectEvents(){
  stream=new EventSource('/api/draw/events?code='+encodeURIComponent(code));
  stream.addEventListener('stroke',event=>{try{receiveCanvasStroke(JSON.parse(event.data));}catch{syncCanvas();}});
  stream.addEventListener('reset',event=>{try{const data=JSON.parse(event.data);if(data.version>canvasVersion)applyCanvasSnapshot(data,true);}catch{syncCanvas();}});
- stream.addEventListener('ready',event=>{try{const data=JSON.parse(event.data);if(sameCanvas(data)&&data.version!==canvasVersion)syncCanvas();}catch{syncCanvas();}});
+ stream.addEventListener('ready',event=>{streamDisconnected=false;updateConnection();try{const data=JSON.parse(event.data);if(sameCanvas(data)&&data.version!==canvasVersion)syncCanvas();}catch{syncCanvas();}});
+ stream.addEventListener('error',()=>{streamDisconnected=true;motionNeedsBaseline=true;updateConnection();});
 }
 function drawFeedback(message,kind='info',settings=false){const node=$(settings?'#roomSettingsFeedback':'#drawStatus')||$('#drawStatus');node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});}
 let pendingDrawButton=null;
 function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
-async function action(name,data={}){if(busy)return false;busy=true;drawBusy(true);drawFeedback('正在送出…');try{receive(await api('action',{action:name,...data}));$('#connection').textContent='';drawFeedback(name==='guess'?'猜測已送出。':'操作已完成。','success');return true;}catch(error){drawFeedback(error.message,'error');toast(error.message);return false;}finally{busy=false;drawBusy(false);}}
-async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));$('#connection').textContent='';drawFeedback(settings?'房間設定已儲存。':'操作已完成。','success',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
+async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch;busy=true;drawBusy(true);drawFeedback('正在送出…');try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback(name==='guess'?'猜測已送出。':'操作已完成。','success');return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error');toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
+async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));updateConnection();drawFeedback(settings?'房間設定已儲存。':'操作已完成。','success',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
-async function saveArtwork(){
- if(busy)return;busy=true;drawBusy(true);drawFeedback('正在儲存畫作…');
- const requestedRound=state?.round,requestedEpoch=state?.canvasEpoch;
- try{
-  await syncCanvas();await waitForCanvasRender();
-  if(state?.round!==requestedRound||state?.canvasEpoch!==requestedEpoch)throw Error('畫布已換到下一輪或新對局，請在目前畫作重新儲存。');
-  const base64=canvas.toDataURL('image/png').split(',')[1],name='你畫我猜：'+(state.result?.answer||state.question?.title||'我的畫');
-  const response=await fetch('/api/artworks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,base64,mime:'image/png'})});
-  const result=await response.json();if(!response.ok)throw Error(result.error||'儲存失敗');
-  toast('已存入我的繪畫圖庫');
-  drawFeedback('已加入素材庫。','success');
- }catch(error){drawFeedback(error.message,'error');toast(error.message);}finally{busy=false;drawBusy(false);}
+async function saveArtwork(resultId=state?.result?.resultId){
+ if(!resultId||!resultsView){drawFeedback('這輪尚未公開畫作；請從最近畫作選擇已揭曉的一輪。','error');return null;}
+ const snapshot=await resultsView.open(resultId,document.activeElement||$('#reviewResults'));
+ if(!snapshot)return null;
+ return resultsView.save(resultId);
+}
+async function voteForResult(resultId){
+ if(!resultsView||!resultId)return null;
+ const room=state?.code,info=resultsView.store.voteView(resultId).summary;
+ const response=await resultsView.vote(resultId);
+ if(!info||state?.code!==room||resultsView.store.view().room!==room||(state.phase==='reveal'&&state.result?.resultId===resultId))return response;
+ const result=resultsView.store.voteView(resultId),prefix='第 '+info.round+' 輪：';
+ if(result.vote?.banned)toast(prefix+'此題已移除題庫。');
+ else if(result.vote?.voted)toast(prefix+'已記錄禁題投票，可從「最近畫作」查看。');
+ else if(result.error)toast(prefix+'投票未完成，請從「最近畫作」重試。');
+ return response;
 }
 function stageClick(event){
  const button=event.target.closest('button');if(!button||button.disabled)return;
@@ -320,7 +377,7 @@ function stageClick(event){
  switch(button.dataset.do){
   case 'start':return roomAction('start');case 'next':return action('next');
    case 'settings':try{return roomAction('settings',{seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()});}catch(error){drawFeedback(error.message,'error',true);toast(error.message);return;}
-  case 'save':return saveArtwork();case 'invite':return invite();
+  case 'save':return saveArtwork(button.dataset.resultId);case 'ban':return voteForResult(button.dataset.resultId);case 'invite':return invite();
  }
 }
 $('#stage').addEventListener('click',stageClick);
@@ -328,7 +385,7 @@ $('#drawActions').addEventListener('click',stageClick);
 $('#canvasStage').addEventListener('click',stageClick);
 $('#stage').addEventListener('submit',async event=>{
  if(event.target.id!=='enterForm')return;event.preventDefault();if(busy)return;busy=true;
-  try{const result=await api(code?'join':'create',{type:'draw',code,...(!code?{topics:readTopics()}:{})});if(result.type!=='draw')throw Error('這是其他遊戲房間');save(result);receive(await api('state'));$('#connection').textContent='';}
+  try{const result=await api(code?'join':'create',{type:'draw',code,...(!code?{topics:readTopics()}:{})});if(result.type!=='draw')throw Error('這是其他遊戲房間');save(result);receive(await api('state'));updateConnection();}
  catch(error){toast(error.message);}finally{busy=false;}
 });
 $('#guessForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('#guessInput'),answer=input.value.trim();if(!answer)return;const accepted=await action('guess',{answer});if(accepted&&input.value.trim()===answer)input.value='';input.focus();});
@@ -427,8 +484,10 @@ canvas.addEventListener('keydown',event=>{
  if(moves[event.key]){event.preventDefault();cursor=[Math.max(0,Math.min(511,cursor[0]+moves[event.key][0])),Math.max(0,Math.min(255,cursor[1]+moves[event.key][1]))];toast('畫布位置 '+(cursor[0]+1)+'，'+(cursor[1]+1)+'；按空白鍵落筆');}
  if(event.key===' '){event.preventDefault();queueStroke([cursor],StrokeCanvas.strokeId(),tool==='fill'?'fill':'brush');}
 });
-async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));$('#connection').textContent='';}catch(error){disconnected=true;$('#connection').textContent='連線暫停，正在重試：'+error.message;}finally{polling=false;}}
+async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));updateConnection();}catch(error){disconnected=true;updateConnection();}finally{polling=false;}}
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||location.origin).catch(()=>{});
 entry();if(session)poll();else if(code)RoomReconnect.restore(code,'draw','#connection').then(restored=>{if(restored){save(restored);poll();}});
 setInterval(poll,1000);setInterval(tick,250);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
+window.addEventListener('pagehide',event=>{stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(!event.persisted)motionGate?.dispose();});
+window.addEventListener('pageshow',event=>{if(event.persisted){motionNeedsBaseline=true;if(state){resultsView?.update(state);updateStagePreview();}poll();}});
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});

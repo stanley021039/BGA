@@ -13,12 +13,12 @@ function presenter(options={}){
  const panel=elements.get('raceEventPopup');Object.assign(panel,{style:{},closest:()=>stage});
  Object.defineProperties(panel,{offsetWidth:{get:()=>Math.min(290,parseFloat(panel.style.maxWidth)||290)},offsetHeight:{get:()=>Math.min(180,parseFloat(panel.style.maxHeight)||180)}});
  let hidden=false,nextTimer=0;
- const timers=new Map(),document={getElementById:id=>elements.get(id),querySelectorAll:()=>[car],querySelector:()=>car,addEventListener(type,fn){listeners.set('document:'+type,fn);},get hidden(){return hidden;}};
+ const timers=new Map(),delays=new Map(),document={getElementById:id=>elements.get(id),querySelectorAll:()=>[car],querySelector:()=>car,addEventListener(type,fn){listeners.set('document:'+type,fn);},get hidden(){return hidden;}};
  const window={...options.viewport,addEventListener(type,fn){listeners.set('window:'+type,fn);}};
- const context={window,document,setTimeout(fn){const id=++nextTimer;timers.set(id,fn);return id;},clearTimeout(id){timers.delete(id);}};
+ const context={window,document,setTimeout(fn,delay){const id=++nextTimer;timers.set(id,fn);delays.set(id,delay);return id;},clearTimeout(id){timers.delete(id);}};
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','public/shared/race-event-cues.js'),'utf8'),context);
- const cues=window.RaceEventCues.mount({allowsMotion:()=>true});
- return {cues,elements,listeners,timers,stageBounds,carBounds,window,setHidden(value){hidden=value;}};
+ const cues=window.RaceEventCues.mount({allowsMotion:()=>options.motion!==false});
+ return {cues,elements,listeners,timers,delays,stageBounds,carBounds,window,setHidden(value){hidden=value;}};
 }
 
 test('race event card prefers a collision and treats event text as text',()=>{
@@ -66,4 +66,11 @@ test('race event card uses nearby space above a car when the full card fits',()=
  const ui=presenter({viewport:{innerWidth:1000,innerHeight:600},car:{top:350}}),panel=ui.elements.get('raceEventPopup');
  ui.cues.show([{id:1,kind:'damage',car:'car-1',text:'受損'}]);
  assert.equal(parseFloat(panel.style.top)+ui.stageBounds.top+panel.offsetHeight,342);
+});
+
+test('reduced motion preserves event text for the full reading period',()=>{
+ const ui=presenter({motion:false}),panel=ui.elements.get('raceEventPopup');
+ ui.cues.show([{id:1,kind:'hazard',hazard:'glass',text:'踩中玻璃：檢定輪胎受損。'}]);
+ assert.equal(panel.hidden,false);assert.equal(ui.elements.get('raceEventDetail').textContent,'踩中玻璃：檢定輪胎受損。');assert.equal([...ui.delays.values()].at(-1),3200);
+ [...ui.timers.values()][0]();assert.equal(panel.hidden,true);
 });

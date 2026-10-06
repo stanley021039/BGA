@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const {createApp}=require('../src/app');
-const {openDatabase}=require('../src/db/index');
+const {openDatabase,SCHEMA_VERSION}=require('../src/db/index');
 const {createAuth}=require('../src/auth/index');
 
 test('friends can choose shared characters, while private art and editing stay with the author',async()=>{
@@ -59,7 +59,7 @@ test('friends can choose shared characters, while private art and editing stay w
   app=createApp(config);
   await app.listen();
   const persisted=openDatabase(config.dbFile);
-  assert.equal(persisted.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(persisted.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(persisted.prepare('SELECT shared FROM player_characters WHERE id=?').get(uuid).shared,0);
   persisted.close();
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}

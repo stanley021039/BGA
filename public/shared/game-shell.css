@@ -12,6 +12,9 @@
 .game-barrage-layer{position:absolute;inset:0;z-index:25;overflow:hidden;pointer-events:none}
 .game-barrage{position:absolute;left:100%;display:block;width:max-content;max-width:min(72%,580px);padding:9px 15px;border:1px solid #ebc78b;border-radius:24px;background:#15251de8;color:#fff8e8;box-shadow:0 6px 22px #0006;font:700 15px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif;overflow-wrap:anywhere;animation:game-barrage-travel 8s linear forwards}
 .game-barrage strong{margin-right:3px;color:#f4c785}
+.game-barrage.game-barrage-static{left:12px;animation:none;transform:none}
+.race-event-popup[data-motion=false],.race-event-popup[data-motion=false] .race-event-scene,.race-event-popup[data-motion=false] .race-event-scene *,.race-car-moving[data-motion=false],.race-car-impact[data-motion=false]{animation:none!important;transition:none!important}
+.motion-reduced .newly-revealed,.motion-reduced .race-event-popup,.motion-reduced .race-event-scene,.motion-reduced .race-event-scene *,.motion-reduced .race-car-moving,.motion-reduced .race-car-impact,.motion-reduced .race-vehicle-shot-hit{animation:none!important;transition:none!important}
 @keyframes game-barrage-travel{from{transform:translateX(0)}to{transform:translateX(var(--barrage-travel))}}
 @media(max-width:900px){.has-game-shell{padding-right:0;padding-bottom:76px}.shared-game-ui{top:auto;left:8px;right:8px;bottom:8px;width:auto;height:72px;overflow:hidden;display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px}.shared-game-ui.expanded{height:min(70vh,560px);display:flex}.shared-game-ui:not(.integrated):not(.expanded)>:not(.shared-head):not(.shared-turn){display:none}.shared-game-ui .shared-turn{font-size:12px;padding:7px}.shared-game-ui .shared-head{border:0;padding:4px;font-size:9px}.shared-head>span{display:none}.shared-head button{display:inline;padding:4px 8px;border:1px solid #f4bb7e;border-radius:6px;background:#4f3d2c;font-weight:700}.shared-expressions{max-height:145px}}
 

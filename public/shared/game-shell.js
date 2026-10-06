@@ -70,7 +70,18 @@
  document.addEventListener('click',event=>{if(!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();if(expressionMenu.open&&!expressionMenu.contains(event.target))expressionMenu.open=false;});
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}else if(expressionMenu.open){expressionMenu.open=false;expressionSummary.focus();event.preventDefault();}});
  fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiPicker.append(button);}}).catch(error=>{emojiPicker.textContent=error.message;});
- let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false,barrageRoom='',seenBarrages=new Set(),nextLane=0;
+ let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false;
+ const barrages=MotionPolicy.createBarrageController((item,lane,{moving,finish})=>{
+  const bubble=element('div','game-barrage','');bubble.style.top=`${12+lane*18}%`;
+  bubble.append(element('strong','',item.name+'：'));
+  if(item.kind==='emoji'){bubble.classList.add('game-emoji-barrage');bubble.append(element('span','game-emoji-glyph',item.emoji));}
+  else bubble.append(document.createTextNode(item.message));
+  if(!moving)bubble.classList.add('game-barrage-static');
+  barrageLayer.append(bubble);
+  if(moving)bubble.style.setProperty('--barrage-travel',`-${barrageLayer.clientWidth+bubble.offsetWidth+24}px`);
+  bubble.addEventListener('animationend',finish,{once:true});return ()=>bubble.remove();
+ });
+ window.addEventListener('pagehide',event=>event.persisted?barrages.disconnect():barrages.dispose());
  function turnOf(s){
   if(['waiting','finished','showdown'].includes(s.phase))return s.phase==='waiting'?'等待房主開始':s.phase==='finished'?'本局結束':'本手結算中';
   if(s.type==='gift'){
@@ -122,23 +133,8 @@
    }
    }
   }
-  showBarrages(s,now);
+  barrages.update(s);
   if(!loaded&&!loading&&Date.now()>=nextLoad)loadExpressions();
- }
- function showBarrages(s,now){
-  if(barrageRoom!==s.code){barrageRoom=s.code;seenBarrages.clear();barrageLayer.replaceChildren();}
-  for(const item of s.barrages||[]){
-   if(seenBarrages.has(item.id)||now-item.at>=8000)continue;
-   seenBarrages.add(item.id);
-   const bubble=element('div','game-barrage','');bubble.style.top=`${12+(nextLane++%4)*18}%`;
-   bubble.append(element('strong','',item.name+'：'));
-   if(item.kind==='emoji'){bubble.classList.add('game-emoji-barrage');bubble.append(element('span','game-emoji-glyph',item.emoji));}
-   else bubble.append(document.createTextNode(item.message));
-   barrageLayer.append(bubble);
-   bubble.style.setProperty('--barrage-travel',`-${barrageLayer.clientWidth+bubble.offsetWidth+24}px`);
-   bubble.addEventListener('animationend',()=>bubble.remove(),{once:true});
-  }
-  if(seenBarrages.size>200)seenBarrages=new Set([...seenBarrages].slice(-100));
  }
  async function loadExpressions(){
   if(loading)return;
@@ -213,5 +209,5 @@
   historyNotice.hidden=!message;
   if(window.GameUI)window.GameUI.setStatus(historyNotice,message,{kind:'error'});else if(historyNotice.textContent!==message)historyNotice.textContent=message;
  }
- window.GameShell={update(s){window.TableMusic?.update(s);return update(s);},stableMarkup,playerRow,settingsActions,showHistoryWarning};
+ window.GameShell={update(s){window.TableMusic?.update(s);return update(s);},disconnected:()=>barrages.disconnect(),stableMarkup,playerRow,settingsActions,showHistoryWarning};
 })();

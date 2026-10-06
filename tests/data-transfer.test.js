@@ -9,7 +9,9 @@ const { DatabaseSync } = require('node:sqlite');
 const { run, snapshot, canonical, safeError } = require('../src/data/transfer');
 const { validateData } = require('../src/data/validation');
 const { acquireDataLocks } = require('../src/data/locks');
-const { openDatabase } = require('../src/db');
+const { openDatabase, SCHEMA_VERSION } = require('../src/db');
+const { DrawWordStore } = require('../src/games/draw-guess-store');
+const { WORDS } = require('../src/games/draw-guess-words');
 const { createAuth } = require('../src/auth');
 const { createApp } = require('../src/app');
 const { settings } = require('../src/config');
@@ -65,7 +67,7 @@ async function fixture(t, { playing = false, minimal = false } = {}) {
 async function legacyFixture(t, version) {
   const f = await fixture(t, { minimal: true }), db = new DatabaseSync(f.source.dbFile);
   try {
-    db.exec('DROP TABLE music_tracks; DROP TABLE draw_words; DROP TABLE user_artworks');
+    db.exec('DROP TABLE draw_word_exclusions; DROP TABLE music_tracks; DROP TABLE draw_words; DROP TABLE user_artworks');
     if (version < 7) db.exec('DROP INDEX player_characters_shared; ALTER TABLE player_characters DROP COLUMN shared');
     if (version < 6) db.exec('DROP TABLE user_achievements');
     if (version < 5) db.exec('DROP TABLE community_gifts');
@@ -239,7 +241,7 @@ test('newer schemas, missing FK owners, broken profile references and invalid en
   const f=await fixture(t), db=new DatabaseSync(f.source.dbFile);
   try{db.exec('PRAGMA user_version=999');}finally{db.close();}
   await assert.rejects(run(f.exportRequest),errorCode('UNSUPPORTED_SCHEMA'));
-  const fix=new DatabaseSync(f.source.dbFile); try{fix.exec('PRAGMA user_version=12; PRAGMA foreign_keys=OFF');fix.prepare('UPDATE user_artworks SET owner_id=? WHERE id=?').run(crypto.randomUUID(),f.artworkId);}finally{fix.close();}
+  const fix=new DatabaseSync(f.source.dbFile); try{fix.exec('PRAGMA user_version='+SCHEMA_VERSION+'; PRAGMA foreign_keys=OFF');fix.prepare('UPDATE user_artworks SET owner_id=? WHERE id=?').run(crypto.randomUUID(),f.artworkId);}finally{fix.close();}
   await assert.rejects(run(f.exportRequest),errorCode('FOREIGN_KEY_FAILED'));
   const fix2=new DatabaseSync(f.source.dbFile); try{fix2.prepare('UPDATE user_artworks SET owner_id=? WHERE id=?').run(f.member.id,f.artworkId);fix2.prepare('DELETE FROM character_images WHERE character_id=?').run(f.characterId);}finally{fix2.close();}
   await assert.rejects(run(f.exportRequest),errorCode('BROKEN_REFERENCE'));
@@ -257,10 +259,62 @@ test('unfinished matches require explicit acknowledgement and restore appends an
   assert.equal(JSON.parse(fs.readFileSync(path.join(f.source.historyDir,f.historyId+'.meta.json'))).status,'playing');
 });
 
+test('full backup preserves builtin and custom word bans with their majority audit after restore', async t => {
+  const f=await fixture(t,{minimal:true}),db=openDatabase(f.source.dbFile);
+  let custom,expected;
+  try {
+    const store=new DrawWordStore(db),author=db.prepare('SELECT * FROM users WHERE id=?').get(f.member.id);
+    custom=store.add(author,{title:'不再抽到的測試題',aliases:[],difficulty:'easy',topic:'misc'});
+    for(const word of [WORDS[0],custom]){
+      const electorate=Array.from({length:4},()=>crypto.randomUUID());
+      store.ban(word,{roomCode:'ABC123',resultId:crypto.randomUUID(),gameRunId:crypto.randomUUID(),electorate,votes:electorate.slice(0,3),required:3});
+    }
+    expected=db.prepare('SELECT * FROM draw_word_exclusions ORDER BY title_key').all();
+    assert.equal(expected.length,2);
+  } finally {db.close();}
+  const exported=await run(f.exportRequest);assert.equal(exported.summary.database.tableCounts.draw_word_exclusions,2);
+  const verified=await run({action:'verify',bundleDir:f.bundleDir,keyFile:f.keyFile});assert.equal(verified.summary.database.tableCounts.draw_word_exclusions,2);
+  const restored=await run({...restoreRequest(f),apply:true}),target=settings(restored.config),check=openDatabase(target.dbFile);
+  try {
+    assert.deepEqual(check.prepare('SELECT * FROM draw_word_exclusions ORDER BY title_key').all(),expected);
+    const store=new DrawWordStore(check);
+    assert.equal(store.builtin().some(word=>word.id===WORDS[0].id),false);
+    assert.equal(store.list().some(word=>word.id===custom.id),false);
+    assert.ok(check.prepare('SELECT id FROM draw_words WHERE id=?').get(custom.id));
+    assert.throws(()=>store.add(check.prepare('SELECT * FROM users WHERE id=?').get(f.member.id),{title:custom.title,aliases:[],difficulty:'easy',topic:'misc'}),{code:'DRAW_WORD_BANNED'});
+  } finally {check.close();}
+  const app=createApp({...target,port:0,host:'127.0.0.1',githubClient:{configured:false}});
+  try {
+    const {port}=await app.listen(),base='http://127.0.0.1:'+port;
+    const login=await fetch(base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'transfer_member',password})});
+    assert.equal(login.status,200);const cookie=login.headers.get('set-cookie').split(';')[0];
+    const response=await fetch(base+'/api/draw/words',{headers:{Cookie:cookie}});assert.equal(response.status,200);
+    const words=await response.json();assert.equal(words.builtin.some(word=>word.id===WORDS[0].id),false);assert.equal(words.custom.some(word=>word.id===custom.id),false);
+  } finally {await app.close();}
+  const original=new DatabaseSync(f.source.dbFile,{readOnly:true});
+  try {assert.deepEqual(original.prepare('SELECT * FROM draw_word_exclusions ORDER BY title_key').all(),expected);} finally {original.close();}
+});
+
+test('schema 12 backup gains an empty ban ledger only in its restored copy', async t => {
+  const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
+  try {db.exec('DROP TABLE draw_word_exclusions; PRAGMA user_version=12');} finally {db.close();}
+  const before=validateData(f.source).summary.database;assert.equal(before.schemaVersion,12);assert.equal(before.tableCounts.draw_word_exclusions,undefined);
+  await run(f.exportRequest);const restored=await run({...restoreRequest(f),apply:true});
+  assert.equal(restored.restoredSummary.database.schemaVersion,SCHEMA_VERSION);assert.equal(restored.restoredSummary.database.tableCounts.draw_word_exclusions,0);
+  assert.equal(restored.restoredSummary.database.accountsSha256,before.accountsSha256);
+  assert.deepEqual(validateData(f.source).summary.database,before);
+});
+
+test('schema 13 source missing the ban ledger is rejected before export', async t => {
+  const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
+  try {db.exec('DROP TABLE draw_word_exclusions');} finally {db.close();}
+  await assert.rejects(run(f.exportRequest),errorCode('INVALID_DATABASE'));
+});
+
 test('old supported schema migrates only the restored copy and preserves account hashes', async t => {
   const f=await fixture(t,{minimal:true}), db=new DatabaseSync(f.source.dbFile);
-  try{db.exec('DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
-  await run(f.exportRequest); const result=await run({...restoreRequest(f),apply:true});assert.equal(result.restoredSummary.database.schemaVersion,12);
+  try{db.exec('DROP TABLE draw_word_exclusions; DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
+  await run(f.exportRequest); const result=await run({...restoreRequest(f),apply:true});assert.equal(result.restoredSummary.database.schemaVersion,SCHEMA_VERSION);
   const old=new DatabaseSync(f.source.dbFile,{readOnly:true});try{assert.equal(old.prepare('PRAGMA user_version').get().user_version,10);assert.equal(old.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name='music_tracks'").get().n,0);}finally{old.close();}
 });
 
@@ -270,7 +324,7 @@ for (const version of [1,3,5,7]) test(`schema ${version} backup restores through
   const dry = await run(restoreRequest(f));
   assert.equal(dry.dryRun,true); assert.equal(fs.existsSync(f.destinationDir),false);
   const restored = await run({...restoreRequest(f),apply:true}), after = restored.restoredSummary.database;
-  assert.equal(after.schemaVersion,12); assert.equal(after.accountsSha256,initial.accountsSha256);
+  assert.equal(after.schemaVersion,SCHEMA_VERSION); assert.equal(after.accountsSha256,initial.accountsSha256);
   for (const [table,digest] of Object.entries(initial.blobDigests)) assert.equal(after.blobDigests[table],digest);
   for (const [table,introduced] of Object.entries({character_images:3,community_gifts:5,user_artworks:8})) {
     if (version < introduced) assert.equal(after.tableCounts[table],0);
