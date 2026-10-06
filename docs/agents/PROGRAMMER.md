@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-07候選v1.5.7：姓名用GameUI.playerName單文字／escaped原生title，超出實際slot才transform；自己／AI後綴在外。RO＋MO單rAF讀寫、同值不寫，hover／focus暫停，MotionPolicy／reduce／hidden停止，移除及BFCache清理。GameShell四款／通用角色及雷霆車隊重用；畫猜名單／排名卡用格線等尺寸，保留全部玩家及分數、56×64結算頭像。12元件＋整合回歸，Windows883及五款背景UI通過，詳細契約、尺寸及正式狀態見 [姓名驗收](../DRAW-PLAYER-NAME-PROGRESS.md)。
+
 2026-10-07已正式v1.5.6／`5941c03`：Windows／Linux各867、公開3席多尺寸／26資源通過。設計師指出不可fit縮到0px的風險由guard修正，125%自然流及恢復已驗；大字／手機不承諾單屏，完整名單／排名不能裁掉。下一段候選描述仍有效，完成證據與限制見 [正式驗收](../DRAW-VIEWPORT-FIT-PROGRESS.md)。
 
 2026-10-07畫猜候選v1.5.6：shell flex及layout剩餘列共同管理高度，玩家/main同列stretch，chat伸展、feed局部scroll、輸入最後。Canvas只改CSS width，backing512×256不改，倒數共用width；ResizeObserver量實際overhead／tools、合併rAF、相同值不寫style，不追加poll。≥1200／680正常字級採fit，手機／大字自然流；工具／聊天室最低高度或240×120canvas放不下就退出fit，budget仍用viewport＋main文件座標避免震盪；125%字級已驗。8席短屏保留完整名單/排名並局部scroll。設計師獨立review及驗收見 [進度](../DRAW-VIEWPORT-FIT-PROGRESS.md)。

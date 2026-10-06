@@ -22,3 +22,16 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 .ui-timebar::-moz-progress-bar{background:var(--ui-timebar-color,#d77918);border-radius:999px}
 .ui-timebar.urgent{--ui-timebar-color:#ba3e38;border-color:#993e36}
 .ui-timebar[hidden]{display:none!important}
+/* A name occupies one line; optional player suffixes stay outside the moving text. */
+.room-player-info .room-player-name{display:flex;align-items:center;gap:4px;min-width:0}
+.room-player-name>.ui-player-name{flex:1;min-width:0}
+.room-player-info .room-player-self{flex:none;white-space:nowrap;margin:0;padding:0}
+.ui-player-name{display:block;min-width:0;max-width:100%;margin:0;padding:0;overflow:hidden;white-space:nowrap;font:inherit;letter-spacing:inherit;text-indent:0}
+.ui-player-name-text{display:block;width:max-content;max-width:none;margin:0;padding:0;white-space:nowrap;font:inherit;letter-spacing:inherit;text-indent:0;transform:none}
+.ui-player-name[hidden],.ui-player-name-text[hidden]{display:none!important}
+.ui-player-name:focus-visible{outline:2px solid var(--ui-focus,#f0c784);outline-offset:2px}
+.ui-player-name[data-name-overflow=true][data-name-motion=on]>.ui-player-name-text{animation:ui-player-name-scroll var(--ui-player-name-duration,5s) linear infinite alternate}
+.ui-player-name[data-name-overflow=true][data-name-motion=on]:is(:hover,:focus-within)>.ui-player-name-text{animation-play-state:paused}
+@keyframes ui-player-name-scroll{0%,15%{transform:translateX(0)}85%,100%{transform:translateX(var(--ui-player-name-shift,0px))}}
+.motion-reduced .ui-player-name[data-name-overflow=true][data-name-motion=on]>.ui-player-name-text{animation:none;transform:none}
+@media(prefers-reduced-motion:reduce){.ui-player-name[data-name-overflow=true][data-name-motion=on]>.ui-player-name-text{animation:none;transform:none}}

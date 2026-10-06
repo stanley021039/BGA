@@ -58,7 +58,7 @@ body[data-game-kind="draw"] .draw-layout>.stage-head{grid-column:1/-1;grid-row:1
 body[data-game-kind="draw"] .draw-layout>main{grid-column:2;grid-row:2;display:grid;gap:16px;min-width:0}
 body[data-game-kind="draw"] .draw-layout>.draw-roster{grid-column:1;grid-row:2;display:grid;gap:12px;align-content:start;min-width:0;padding:12px;border:1px solid var(--line);border-radius:16px;background:#fffdf8;max-height:calc(100dvh - 180px);overflow:auto;overscroll-behavior:contain}
 body[data-game-kind="draw"] .draw-roster h2{margin:0;font-size:var(--ui-text-body,1rem);line-height:1.5}
-body[data-game-kind="draw"] .draw-roster #players{display:grid;grid-template-columns:1fr;gap:8px}
+body[data-game-kind="draw"] .draw-roster #players{display:grid;grid-template-columns:1fr;grid-auto-rows:1fr;gap:8px}
 body[data-game-kind="draw"] .draw-roster .room-player{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;min-width:0;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fffdf9}
 body[data-game-kind="draw"] .draw-roster .room-player-avatar{grid-column:1;grid-row:1/3;width:44px;height:56px;min-width:44px}
 body[data-game-kind="draw"] .draw-roster .room-player-info{grid-column:2;grid-row:1}
@@ -102,13 +102,18 @@ body[data-game-kind="draw"] .waiting-steps span{font-size:var(--ui-text-small,.8
 body[data-game-kind="draw"] .stage-finished{grid-template-columns:minmax(180px,.65fr) minmax(0,1.35fr);align-items:start}
 body[data-game-kind="draw"] .finished-heading{grid-column:1/-1}
 body[data-game-kind="draw"] .finished-heading h1{margin:8px 0}
-body[data-game-kind="draw"] .stage-podium{display:grid;gap:16px;min-width:0}
-body[data-game-kind="draw"] .stage-podium .stage-winners{margin:0}
-body[data-game-kind="draw"] .stage-podium .stage-winner{grid-template-columns:36px minmax(0,1fr);justify-items:start;align-items:center;flex:1 1 114px;min-width:0;gap:2px 8px;padding:8px}
-body[data-game-kind="draw"] .stage-podium .stage-winner .stage-avatar{grid-column:1;grid-row:1/3;width:36px;height:44px}
-body[data-game-kind="draw"] .stage-podium .stage-winner b{grid-column:2;grid-row:1;font-size:var(--ui-text-small,.875rem);overflow-wrap:anywhere}
-body[data-game-kind="draw"] .stage-podium .stage-winner strong{grid-column:2;grid-row:2;font-size:var(--ui-text-body,1rem)}
-body[data-game-kind="draw"] .stage-podium .stage-winner>span:last-child{display:none}
+body[data-game-kind="draw"] .stage-podium{display:grid;grid-column:1/-1;gap:16px;min-width:0}
+body[data-game-kind="draw"] .stage-player-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:12px;margin:0;padding:0;list-style:none}
+body[data-game-kind="draw"] .stage-podium .stage-player-card{position:relative;display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;align-content:start;gap:8px;min-width:0;min-height:0;margin:0;padding:12px;border:2px solid var(--line);border-radius:12px;background:#fffdf8;text-align:center}
+body[data-game-kind="draw"] .stage-podium .stage-player-card.stage-winner{border-color:#d3b36f;background:#fff9e9}
+body[data-game-kind="draw"] .stage-player-card .stage-avatar{width:56px;height:64px}
+body[data-game-kind="draw"] .stage-player-card b{display:block;width:100%;min-width:0;font-size:var(--ui-text-body,1rem);white-space:nowrap}
+body[data-game-kind="draw"] .stage-player-card .ui-player-name-text{margin-inline:auto}
+body[data-game-kind="draw"] .stage-player-card strong{font-size:var(--ui-text-section,1.25rem);white-space:nowrap;color:#735022}
+body[data-game-kind="draw"] .stage-card-rank{position:absolute;top:8px;left:8px;font-size:var(--ui-text-small,.875rem);color:var(--muted)}
+body[data-game-kind="draw"] .stage-card-win{position:absolute;top:8px;right:8px;font-size:20px;line-height:1.25;color:#956225}
+body[data-game-kind="draw"] .stage-podium .stage-player-card>.stage-card-win{display:grid;place-items:center}
+body[data-game-kind="draw"] .stage-podium+.finished-art{grid-column:1/-1;width:min(100%,512px)}
 body[data-game-kind="draw"] .stage-ranking{max-height:none;padding:0}
 body[data-game-kind="draw"] .stage-tie-summary{margin:0;padding:10px 12px;border:1px solid #d3b36f;border-radius:10px;background:#fff9e9;font-weight:700;color:#735022}
 body[data-game-kind="draw"] .stage-ranking .stage-ranking-winner{background:#fff7df}
@@ -142,6 +147,7 @@ body[data-game-kind="draw"]:not([data-draw-phase]) .draw-layout>aside{display:no
  body[data-game-kind="draw"] .board-head{flex-wrap:wrap;gap:8px}
  body[data-game-kind="draw"] .board-head>.board-heading{flex-basis:100%}
  body[data-game-kind="draw"] .stage-finished,body[data-game-kind="draw"] .stage-reveal{grid-template-columns:1fr}
+ body[data-game-kind="draw"] .stage-player-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
  body[data-game-kind="draw"] .stage-winners{flex-wrap:nowrap;overflow:auto}
 }
 @media(max-width:600px){
@@ -167,6 +173,7 @@ body[data-game-kind="draw"].ui-large-text .draw-layout>.draw-roster{grid-column:
 body[data-game-kind="draw"].ui-large-text .draw-roster #players{grid-template-columns:repeat(2,minmax(0,1fr))}
 body[data-game-kind="draw"].ui-large-text .draw-layout>main{grid-column:1;grid-row:3}
 body[data-game-kind="draw"].ui-large-text .draw-layout>.room-sidebar{grid-column:1;grid-row:4}
+body[data-game-kind="draw"].ui-large-text .stage-player-cards{grid-template-columns:minmax(0,1fr)}
 
 /* The roster and chat end on the same remaining viewport row. Small screens reflow. */
 @media(min-width:1200px) and (min-height:680px){

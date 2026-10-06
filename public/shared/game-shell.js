@@ -128,7 +128,8 @@
    for(const player of visible){
     const row=element('div','shared-player','');row.classList.toggle('active',player.id===current);
     if(player.avatar){const img=document.createElement('img');img.src=player.avatar;img.alt='';row.append(img);}
-    row.append(element('span','shared-player-name',player.name+(player.id===s.me?' · 你':'')));
+    const name=element('span','shared-player-name','');name.innerHTML=window.GameUI?.playerName?.(player.name)||escape(player.name);
+    if(player.id===s.me)name.append(element('span','shared-player-self',' · 你'));row.append(name);
     const expression=recent.get(player.id);
     if(expression){const badge=element('span','shared-emote-label',expression.label||expression.expression);badge.title=`${player.name} 使用了「${badge.textContent}」`;row.append(badge);}
     if(player.id===current)row.append(element('b','','◀ 操作中'));
@@ -198,7 +199,8 @@
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function playerRow(player,{me,status='',metrics=[{value:player.score??player.stack??0,label:'分數'}]}={}){
   const avatar=player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
-  return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b>'+escape(player.name)+(player.id===me?' · 你':'')+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
+  const name=typeof window!=='undefined'&&window.GameUI?.playerName?window.GameUI.playerName(player.name):'<span class="ui-player-name" title="'+escape(player.name)+'">'+escape(player.name)+'</span>';
+  return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+(player.id===me?'<span class="room-player-self"> · 你</span>':'')+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
  }
  let historyNotice;
  function showHistoryWarning(warning){

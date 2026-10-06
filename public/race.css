@@ -182,3 +182,6 @@ body[data-game-kind="race"].ui-large-text .race-roster{grid-column:1;grid-row:au
 .race-route-dot{fill:#15251b;stroke:#fff0a3;stroke-width:2}
 .race-route-number{fill:#fff7ce;text-anchor:middle;font:700 13px "Segoe UI",sans-serif}
 .race-route-hint{font-size:var(--ui-text-small,.875rem);line-height:1.5;min-height:3em}
+.crew-identity .crew-name{display:flex;align-items:center;gap:4px;min-width:0}
+.crew-name>.ui-player-name{flex:1;min-width:0}
+.crew-name>.crew-name-suffix{flex:none;white-space:nowrap}

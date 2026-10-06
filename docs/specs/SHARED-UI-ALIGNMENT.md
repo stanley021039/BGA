@@ -1,5 +1,7 @@
 # 共用圖示、佔位符與徽章對齊
 
+2026-10-07姓名契約候選v1.5.7：GameUI.playerName為共用單行槽，長名只按overflow差距移動，短名靜止、title顯示完整名稱，suffix固定在外；卡片尺寸由各頁格線管理，不能把姓名length當width。動態遵守共用policy，重要狀態／分數不隱藏。components_design與主agent的實作分工、Chrome與回歸證據見 [姓名驗收](../DRAW-PLAYER-NAME-PROGRESS.md)。
+
 2026-10-07画猜剩高版面候選v1.5.6：重要名單與chat共用高度owner，外框及訊息區伸展，畫布保留比例。不能以overflow:hidden假裝單屏；小視窗／大字自然流，過量名單／排名局部scroll保留完整資訊。只讀設計討論及實測表見 [高度驗收](../DRAW-VIEWPORT-FIT-PROGRESS.md)，正式狀態以末節為準。
 
 查核日期：2026-10-07。角色：程式設計師，與主 agent 討論設計取捨。

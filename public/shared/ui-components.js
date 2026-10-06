@@ -27,6 +27,7 @@
  const pending=new WeakMap(),dialogs=new WeakMap();let dialogNumber=0;
  function icon(name){const path=paths[name];return path?'<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+path+'</svg>':'';}
  function symbol(name){const image=icon(name);return image?'<span class="ui-symbol" aria-hidden="true">'+image+'</span>':'';}
+ function playerName(name){const text=String(name??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));return '<span class="ui-player-name" title="'+text+'"><span class="ui-player-name-text">'+text+'</span></span>';}
  function decorateButton(button,name,{iconOnly=false,label}={}){
   if(!button||!paths[name])return button;
   const text=label??button.getAttribute('aria-label')??button.textContent.trim();
@@ -63,7 +64,52 @@
   }
   dialogs.get(dialog).trigger=trigger;if(!dialog.open)dialog.showModal();
  }
- window.GameUI={icon,symbol,decorateButton,setBusy,setStatus,openDialog,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
+ window.GameUI={icon,symbol,playerName,decorateButton,setBusy,setStatus,openDialog,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
+ /* One text node per name. Observers only measure names affected by DOM or size changes. */
+ function observePlayerNames(){
+  const records=new Map(),owners=new WeakMap(),dirty=new Set(),media=window.matchMedia?.('(prefers-reduced-motion: reduce)');let frame=null,disposed=false,unsubscribe=null;
+  const resized=typeof ResizeObserver==='function'?new ResizeObserver(entries=>{for(const entry of entries){const slot=owners.get(entry.target);if(slot)queue(slot);}}):null;
+  const setAttribute=(node,key,value)=>{if(node.getAttribute(key)!==value)node.setAttribute(key,value);};
+  const allowed=()=>!document.hidden&&!media?.matches&&!document.documentElement?.classList.contains('motion-reduced')&&(window.MotionPolicy?.allowsMotion?.()??true);
+  function setMotion(slot,moving){setAttribute(slot,'data-name-motion',moving?'on':'off');}
+  function pause(){for(const slot of records.keys())setMotion(slot,false);}
+  function all(){for(const slot of records.keys())queue(slot);}
+  function bindPolicy(){if(!unsubscribe&&window.MotionPolicy?.subscribe)unsubscribe=window.MotionPolicy.subscribe(prefs=>{if(document.hidden||prefs.enabled===false||prefs.reduced)pause();else all();});}
+  function queue(slot){if(disposed)return;dirty.add(slot);if(frame===null&&!document.hidden)frame=window.requestAnimationFrame(flush);}
+  function forget(slot){const record=records.get(slot);if(!record)return;resized?.unobserve(slot);resized?.unobserve(record.text);records.delete(slot);dirty.delete(slot);setMotion(slot,false);}
+  function add(slot){
+   const text=slot.querySelector('.ui-player-name-text');if(!text)return;
+   const previous=records.get(slot);if(previous?.text===text){queue(slot);return;}const tabindex=previous?previous.tabindex:slot.getAttribute('tabindex');if(previous)forget(slot);
+   records.set(slot,{text,tabindex});owners.set(slot,slot);owners.set(text,slot);resized?.observe(slot);resized?.observe(text);queue(slot);
+  }
+  function collect(node){if(node?.matches?.('.ui-player-name'))add(node);for(const slot of node?.querySelectorAll?.('.ui-player-name')||[])add(slot);}
+  function containing(node){return (node?.nodeType===3?node.parentElement:node)?.closest?.('.ui-player-name');}
+  function flush(){
+   frame=null;if(disposed)return;bindPolicy();const slots=[...dirty];dirty.clear();
+   // Finish all layout reads before changing attributes or animation variables.
+   const measured=slots.map(slot=>{const record=records.get(slot);if(!record||!slot.isConnected)return{slot,removed:true};const visible=slot.getClientRects().length&&record.text.getClientRects().length&&slot.clientWidth>0&&getComputedStyle(slot).visibility!=='hidden';return{slot,record,name:record.text.textContent||'',distance:visible?Math.max(0,record.text.scrollWidth-slot.clientWidth):0};});
+   const moving=allowed();for(const item of measured){
+    if(item.removed){forget(item.slot);continue;}const{slot,record,name,distance}=item,overflow=distance>1;
+    setAttribute(slot,'title',name);setAttribute(slot,'data-name-overflow',overflow?'true':'false');setMotion(slot,overflow&&moving);
+    if(overflow){setAttribute(slot,'tabindex','0');for(const[key,value]of [['--ui-player-name-shift',-Math.ceil(distance)+'px'],['--ui-player-name-duration',Math.max(4,Math.min(14,distance/24+3)).toFixed(2)+'s']])if(slot.style.getPropertyValue(key)!==value)slot.style.setProperty(key,value);}
+    else{if(record.tabindex===null){if(slot.hasAttribute('tabindex'))slot.removeAttribute('tabindex');}else setAttribute(slot,'tabindex',record.tabindex);for(const key of ['--ui-player-name-shift','--ui-player-name-duration'])if(slot.style.getPropertyValue(key))slot.style.removeProperty(key);}
+   }
+  }
+  const mutated=typeof MutationObserver==='function'?new MutationObserver(changes=>{
+   for(const change of changes){
+    if(change.type==='childList'){for(const node of change.addedNodes)collect(node);for(const slot of [...records.keys()])if(!slot.isConnected)forget(slot);const slot=containing(change.target);if(slot)add(slot);}
+    else if(change.type==='characterData'){const slot=containing(change.target);if(slot)add(slot);}
+    else{const slot=containing(change.target);if(slot)add(slot);collect(change.target);}
+   }
+  }):null;
+  mutated?.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style','hidden']});collect(document.body);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){pause();if(frame!==null){window.cancelAnimationFrame(frame);frame=null;}}else all();});
+  media?.addEventListener?.('change',()=>{if(media.matches)pause();else all();});window.addEventListener('resize',all);
+  document.fonts?.addEventListener?.('loadingdone',all);document.fonts?.ready?.then?.(all,()=>{});
+  window.addEventListener('pagehide',event=>{pause();if(frame!==null){window.cancelAnimationFrame(frame);frame=null;}if(!event.persisted){disposed=true;resized?.disconnect();mutated?.disconnect();unsubscribe?.();dirty.clear();records.clear();}});
+  window.addEventListener('pageshow',event=>{if(event.persisted)all();});
+ }
+ if(document.body)observePlayerNames();else document.addEventListener('DOMContentLoaded',observePlayerNames,{once:true});
  /* A healthy connection is background information; failures still need a visible notice. */
  for(const connection of document.querySelectorAll('#connection,#network')){const indicator=connection.closest('.connection')||connection;const syncConnection=()=>{const text=connection.textContent.trim();indicator.hidden=!text||/^(?:●\s*)?已連線(?:[。.]|\s*·.*)?$/.test(text);};syncConnection();if(typeof MutationObserver==='function')new MutationObserver(syncConnection).observe(connection,{childList:true,subtree:true,characterData:true});}
  /* Root text enlargement needs reflow even when the viewport has not changed. */

@@ -70,6 +70,9 @@ body.game-room .room-sidebar #players{display:grid;grid-template-columns:1fr;gap
 .room-player-avatar img{width:100%;height:100%;object-fit:contain}.room-avatar-fallback{font-size:18px;color:#294e43;font-weight:700}
 .room-player-info{flex:1;min-width:0}.room-player-info b{display:block;overflow-wrap:anywhere;font-size:14px;font-weight:700}.room-player-info small{display:block;font-size:12px;line-height:1.5;color:var(--room-muted);margin-top:3px}
 .room-player-metrics{display:flex;gap:12px;flex:none;align-items:center}.room-player-metrics strong{font:700 22px/1.2 "Segoe UI","Microsoft JhengHei",sans-serif;color:var(--room-accent)}
+.shared-player .shared-player-name{display:flex;align-items:center;gap:4px;min-width:0}
+.shared-player-name>.ui-player-name{flex:1;min-width:0}
+.shared-player .shared-player-self{flex:none;white-space:nowrap;margin:0;padding:0}
 body.game-room .shared-game-ui.integrated:not(.race-ui){margin:18px 0 0;padding:0;border:0;gap:12px;color:var(--room-text);font:14px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}
 body.game-room .shared-game-ui.integrated h2{margin:0;font-size:12px;line-height:1.5;font-weight:700;letter-spacing:0;color:var(--room-muted)}
 body.game-room .shared-game-ui .shared-turn{padding:12px;min-height:44px;display:grid;place-items:center;font-size:14px;line-height:1.5;font-weight:600;border-radius:10px;border:1px solid var(--room-border);background:var(--room-status);color:var(--room-status-text);box-shadow:none}
