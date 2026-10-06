@@ -7,7 +7,7 @@
     "bitsPerSample": 16
   },
   "generator": "scripts/build-game-sounds.cjs",
-  "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+  "generatorSha256": "ffcf2f832b740025b62838010875ad0b69a12a84502b51690dd530e7035b275b",
   "generatorHashNormalization": "UTF-8 LF",
   "checkedAt": "2026-10-06",
   "auditionReviewed": false,
@@ -124,7 +124,7 @@
       "source": {
         "type": "original-synthesis",
         "generator": "scripts/build-game-sounds.cjs",
-        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorSha256": "ffcf2f832b740025b62838010875ad0b69a12a84502b51690dd530e7035b275b",
         "generatorHashNormalization": "UTF-8 LF",
         "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
         "seed": 3519946790,
@@ -164,7 +164,7 @@
       "source": {
         "type": "original-synthesis",
         "generator": "scripts/build-game-sounds.cjs",
-        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorSha256": "ffcf2f832b740025b62838010875ad0b69a12a84502b51690dd530e7035b275b",
         "generatorHashNormalization": "UTF-8 LF",
         "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
         "seed": 1359421478,
@@ -204,7 +204,7 @@
       "source": {
         "type": "original-synthesis",
         "generator": "scripts/build-game-sounds.cjs",
-        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorSha256": "ffcf2f832b740025b62838010875ad0b69a12a84502b51690dd530e7035b275b",
         "generatorHashNormalization": "UTF-8 LF",
         "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
         "seed": 1369448486,
@@ -244,7 +244,7 @@
       "source": {
         "type": "original-synthesis",
         "generator": "scripts/build-game-sounds.cjs",
-        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorSha256": "ffcf2f832b740025b62838010875ad0b69a12a84502b51690dd530e7035b275b",
         "generatorHashNormalization": "UTF-8 LF",
         "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
         "seed": 2708480038,
@@ -284,7 +284,7 @@
       "source": {
         "type": "original-synthesis",
         "generator": "scripts/build-game-sounds.cjs",
-        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorSha256": "ffcf2f832b740025b62838010875ad0b69a12a84502b51690dd530e7035b275b",
         "generatorHashNormalization": "UTF-8 LF",
         "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
         "seed": 1545412646,

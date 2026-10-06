@@ -249,7 +249,11 @@ const args = process.argv.slice(2);
 if (args.some(argument => argument !== '--check')) throw Error('Usage: node scripts/build-game-sounds.cjs [--check]');
 if (args.includes('--check')) {
   for (const [file, bytes] of artifacts) {
-    if (!fs.existsSync(path.join(output, file)) || !fs.readFileSync(path.join(output, file)).equals(bytes)) throw Error('Generated asset differs: ' + file);
+    const present = fs.existsSync(path.join(output, file)) ? fs.readFileSync(path.join(output, file)) : null;
+    const matches = present && (file === 'manifest.json'
+      ? present.toString('utf8').replace(/\r\n/g, '\n') === bytes.toString('utf8').replace(/\r\n/g, '\n')
+      : present.equals(bytes));
+    if (!matches) throw Error('Generated asset differs: ' + file);
   }
   console.log('Verified seven deterministic game cues and manifest; no audio playback.');
 } else {
