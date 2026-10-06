@@ -1,5 +1,7 @@
 # 房間 YouTube 共看播放器規格
 
+2026-10-06 PR #36 修正契約：開啟視窗的 marker GET 失敗，由既有遊戲 update 觸發同 instance／revision 的最多三次嘗試，失敗後用單調時間限制至少 1 秒／4 秒間隔；不新增網路 timer，成功穩態零額外 GET。明確重開／join／rejoin 可重置額度，清理及換房隔離晚回覆，飛行中仍追最新 pending marker。操作 UUID 優先 `randomUUID`，HTTP 缺少該方法時以 `getRandomValues` 建 UUID v4，缺安全亂數時可控提示，uncertain retry 保留同 body／ID。實際測試範圍見 [最新修正證據](../YOUTUBE-WATCH-PROGRESS.md#2026-10-06pr-36-審查修正本地驗證)。
+
 2026-10-05 U32 後續 `400cb6d`：「在這裡開始播放」只顯示給房主；使用 isHost，不以影片控制者 canControl 判斷。觀看者若遇自動播放阻擋，提示使用 YouTube 原生播放按鈕。實際雙帳號及本次測試範圍見 [實作進度](../YOUTUBE-WATCH-PROGRESS.md)。
 
 2026-10-05 U29 實作修訂：使用者要求最低伺服器負擔、個人可關閉，先不要 PR。新版本沿用遊戲既有 state 的小型 revision 標記，開啟觀看者遇變動才取快照；只有明確控制操作發 POST，本機計算進度。這取代下文獨立 SSE、fallback polling、觀看 presence/report 及周期網路校時提案。其餘控制權、個人加入、官方 IFrame 與可及性原則延用，實際完成狀態以 [實作進度](../YOUTUBE-WATCH-PROGRESS.md) 為準；以下保留研究基線供對照。

@@ -1,5 +1,11 @@
 # 程式架構 agent 記憶
 
+## 2026-10-06：PR #36 共看失聯與 HTTP 安全亂數
+
+`table-watch.js` 的 failed marker 不能記成永遠已取得。新契約以同 instance／revision 的首取加兩次 update-driven retry，失敗後 1 秒／4 秒門檻、無新增網路 timer；成功同 marker 不發 GET。4xx（408／429 除外）立即停自動重試，明確 open／join／rejoin 可再啟動。cleanup 清預算與 pending，舊 task 的失敗／finally 不能消耗新 task 額度；飛行中接到較新 marker 必須合併追最新。無 watch marker 的首次開窗 GET 失敗也需由既有遊戲 update 恢復。
+
+UUID 優先原生 `crypto.randomUUID`，HTTP 非 loopback 缺少時使用 `getRandomValues` 的 UUID v4 fallback；不降級到 `Math.random`。安全亂數不存在或拋錯需在 async command 內可控回報，不能在 try 外失敗。uncertain retry 先比對同操作／instance 並復用舊 body，不先產生新 UUID；HTTP 拒絕後才建立新操作 ID。Windows 真模組 VM **90/90** 通過；本次 Linux／真瀏覽器／發布由父任務另驗，細節見 [共看進度](../YOUTUBE-WATCH-PROGRESS.md#2026-10-06pr-36-審查修正本地驗證)。
+
 ## 最新：YouTube 共看（2026-10-05）
 
 U32 後續 `400cb6d`：使用者要求非房主隱藏「在這裡開始播放」。初始 hidden、render 依 snapshot.isHost 決定，handler 也核對身分；不能用 canControl 代替房主判斷。自動播放阻擋／對齊提示按角色提供可見入口。Windows 前端52項及原 Chrome 兩帳號可見性／實播驗收通過；本增量沒有重跑Linux／全套，未push／PR／部署。
