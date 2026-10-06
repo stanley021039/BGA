@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-07正式v1.7.0／`82149a4`：TableWatch右下把手及keyboard縮放，size key獨立、舊position key格式保留；viewport暫時clamp不寫偏好，reset移除size。尺寸計算量測header／status／footer／首local button，加210pxplayer餘量；header flex basis160允許工具換行，watch-narrow依窗寬850切換。RO觀察chrome／player、經rAF合併，close釋放capture及frame；CSS高度上限與JS都扣16px。正常resize不重建iframe或呼叫player／watchAPI，權限不變。Windows／Linux各914；公开2會員實播及320／200%／雙欄通過，詳 [尺寸验收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。驗identity以保留Runtime物件與當前iframe嚴格相等，重取DOM frontend ID可能變，不能據此推斷churn。下方v1.6.0為歷史。
+
 2026-10-07正式v1.6.0／`74372ed`：歌庫本來全會員共用，本輪將room-music的select開放同房有效座位；其他transport仍host，auth／leave／kick／rate60／SSE沿用。TableMusic picker所有人可選、guest開始以select當前track重播；每次open明確GET歌庫、request sequence＋roomEpoch擋晚回覆，沒有新增歌庫poll。Windows／Linux各896、Chrome會員上傳→另非房主選播／個人mute／同曲重播、公開兩會員Audio readyState4且時間前進已驗。schema15／8帳戶保留，詳細範圍與來源見 [共用歌曲驗收](../MUSIC-SHARING-PROGRESS.md)。下方v1.5.8及舊僅房主選曲描述為歷史，YouTube控權不隨本次開放。
 
 2026-10-07正式v1.5.8／`470ab26`：角色主圖及固定／自訂表情提高4MiB；保留共用MAX_BYTES=1MiB，imageOf／imageForRequest可信options只由三個角色呼叫端傳4MiB，不能從payload取限制。app只有三圖片POST路由的JSON cap提高至5,600,600；collection.readImage預設1，角色分支傳4。其他圖片、legacy頭像、音效、ACL與count不變。Windows／Linux各889、隔離Chrome三表單及正式4MiB三路由／+1不覆蓋、12MiB角色组加密備份還原已驗；schema15／8帳戶保留，詳細邊界及未驗範圍見 [圖片上限驗收](../CHARACTER-IMAGE-SIZE-PROGRESS.md)。下方v1.5.7為歷史。

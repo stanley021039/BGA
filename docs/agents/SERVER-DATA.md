@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-07最新正式v1.7.0／`82149a4`／PID85927：僅影片個人視窗尺寸及共用icon／測試，watch協議與schema15／21表保持。Windows／Linux各914、0房間切換，fresh backup副本21schema／rows／BLOB及8帳戶全欄位相同；公開2會員實播縮放零watch請求、3席revision1仍paused。own席位離房／3session登出，tab／proxy／presence停止，rooms0；20非session表所有rows／BLOB與備份相同、21schema保持，sessions149→152為QA登入／登出。env／原資料路徑／service／tunnel正常，integrity ok／FK0，外站資料代未啟用。下一次重新盤點，不能沿用83301／v1.6.0guard；非原子冷備份及來源見 [尺寸發布](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。
+
 2026-10-07最新正式v1.6.0／`74372ed`／PID83301：共用歌曲選曲權限及UI，schema15／21表不變；兩平台各896，0房間切換、新鮮備份副本21schema／rows／BLOB一致，8帳戶全欄位保留。公開真上傳及非房主選播／兩Audio已驗，own歌曲／席位清理、3session登出／proxy／presence／tab停止、rooms0。最後20非session表所有rows／BLOB與備份相同，21schema保持；session146→149正常QA登入／登出，env／原資料路徑／service／tunnel正常、integrity ok／FK0。備份非原子冷快照，外站資料代未啟用；下一次重新盤點，不沿用下方80949／v1.5.8guard。詳 [歌曲發布](../MUSIC-SHARING-PROGRESS.md)。
 
 2026-10-07最新正式v1.5.8／`470ab26`／PID80949：角色及表情上限4MiB，source／schema15不需migration。新鮮備份副本21表schema／rows／BLOB相同，0房間切換，8帳戶全欄位保留／integrity ok／FK0；Windows／Linux各889及正式真Chrome4MiB／三route bytes已驗。清理own測試角色後20非session表所有rows／BLOB與備份相同、21schema不變；session因一次QA登入／登出145→146，已登出。proxy／tab／viewport清理、rooms0；env／資料路徑／service／tunnel正常，外站資料代未啟用。下一次重新盤點，不用下方78591／1.5.7guard。備份非原子冷快照及詳細來源見 [最新圖片上限發布](../CHARACTER-IMAGE-SIZE-PROGRESS.md)。

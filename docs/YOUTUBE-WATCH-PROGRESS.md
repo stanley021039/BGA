@@ -1,5 +1,7 @@
 # YouTube 共看實作進度
 
+2026-10-07最新正式 **v1.7.0**／`82149a4`：影片窗右下角可縮放、鍵盤微調及恢復大小，個人尺寸記憶；依實際字級／chrome保護210px播放器，正常resize不重建iframe或增加watch請求。Windows／Linux各914，公開兩會員實播／320px／200%及雙欄通過；8帳戶／schema15保留，PID85927正常，測試清理後rooms0。完整證據、發布包及限制見 [尺寸驗收](YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。下方v1.4.0及更早發布狀態為歷史。
+
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](PARTY-PR-INTEGRATION-PROGRESS.md)。
