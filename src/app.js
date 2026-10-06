@@ -20,7 +20,7 @@ const {BoardStore}=require('./community/board');
 const {createGitHubClient}=require('./integrations/github/client');
 const {SubmissionService}=require('./integrations/github/submissions');
 const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,characterFor,galleryFor,selectedImage}=require('./profiles/appearance');
-const {createCharacter,setExpression,addExpression,setSharing,removeCharacter}=require('./profiles/uploads');
+const {createCharacter,setExpression,addExpression,setSharing,removeCharacter,MAX_CHARACTER_IMAGE_BODY_BYTES}=require('./profiles/uploads');
 const {setExpressionSound,removeExpressionSound}=require('./profiles/sounds');
 const {USER_IMAGE_PATH,USER_SOUND_PATH,createCharacterMediaAccess}=require('./profiles/media');
 const {ArtworkStore}=require('./artworks/store');
@@ -120,7 +120,15 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   let title;try{title=decodeURIComponent(req.headers['x-music-title']||'');}catch{throw new HttpError(400,'INVALID_TITLE','曲名不正確');}
   return res.end(JSON.stringify(musicStore.add(user,{title,duration:Number(req.headers['x-music-duration'])},Buffer.concat(chunks))));
  }
- let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
+ let data={};if(req.method==='POST'){
+  if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');
+  if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');
+  const characterImageUpload=url.pathname==='/api/profile/characters'||/^\/api\/profile\/characters\/[a-f0-9-]{36}\/(?:expressions|emotes)$/.test(url.pathname);
+  const limit=characterImageUpload?MAX_CHARACTER_IMAGE_BODY_BYTES:(url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192);
+  const chunks=[];let bytes=0;
+  for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}
+  data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');
+ }
  const send=x=>res.end(JSON.stringify(x));
  if(url.pathname==='/api/auth/login'&&req.method==='POST'){limitAuth(req);return send(await auth.login(data,res));}
  if(url.pathname==='/api/auth/register'&&req.method==='POST'){limitAuth(req);return send(await auth.register(data,res));}

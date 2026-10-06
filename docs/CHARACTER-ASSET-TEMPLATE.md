@@ -30,7 +30,7 @@
 
 初始 10 位角色取材自 Kenney 的 [Toon Characters](https://kenney.nl/assets/toon-characters) 與 [Platformer Characters](https://kenney.nl/assets/platformer-characters)；兩個下載包的 `License.txt` 都標示 CC0。專案將原始姿勢圖片對齊為 **256 × 256 透明 PNG**，並把兩張歡呼姿勢組成循環 GIF。前六位有六種表情，後四位有平常、開心、難過、生氣四種。生成腳本是 `scripts/build-character-assets.py`，需自行下載並解壓官方素材包才能重建；網站執行不依賴該腳本。素材保留不同藝術風格，不強制使用單一身形。
 
-主角色與自訂表情圖片都接受 **PNG、GIF、WebP**；靜態圖片和動畫都可使用。圖片都透過 `<img>` 顯示，不執行使用者程式碼。上傳單張限制 1 MB，不限制像素寬高；伺服器檢查檔案標頭、有效的正整數尺寸與宣稱的 MIME，不接受 SVG、HTML 或外部網址。
+主角色與自訂／既有固定表情圖片都接受 **PNG、GIF、WebP**；靜態圖片和動畫都可使用。圖片都透過 `<img>` 顯示，不執行使用者程式碼。v1.5.8 將角色圖片的單張上限提高至 **4 MB（4,194,304 bytes）**，不限制像素寬高；角色頁及收藏庫的角色上傳入口使用同一上限。伺服器檢查 canonical base64、解碼後 bytes、檔案標頭、有效正整數尺寸與宣稱 MIME，不接受 SVG、HTML 或外部網址。三個角色圖片 POST 路由為 base64 加 JSON metadata 預留 5,600,600 bytes；分享、刪除及音效路由不擴大上限。獨立頭像／繪畫圖庫、禮物圖片及舊版 community 頭像維持 1 MB，10 個角色及每角色 6 個自訂表情的數量上限不變。schema 不變，備份／還原保留完整角色 BLOB。發布與邊界驗證見 [角色圖片上限進度](CHARACTER-IMAGE-SIZE-PROGRESS.md)。
 
 玩家可建立最多 10 個自己的角色。角色頁上傳介面分成 A「主角色」與 B「新增表情」：先上傳主圖片並選擇自己的角色，再輸入 1–20 字的表情名稱與 PNG、GIF 或 WebP 圖片。相同角色不能新增同名表情；新增後在角色選單與遊戲表情按鈕顯示其名稱。圖片也可從本人帳號圖庫選用，無須重複上傳。
 

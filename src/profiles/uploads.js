@@ -4,12 +4,17 @@ const {expressionLabels}=require('./appearance');
 const {defaults}=require('./appearance');
 
 const MAX_BYTES=1024*1024;
+const MAX_CHARACTER_IMAGE_BYTES=4*1024*1024;
+const MAX_CHARACTER_IMAGE_BODY_BYTES=4*Math.ceil(MAX_CHARACTER_IMAGE_BYTES/3)+8192;
 const MAX_CUSTOM_EXPRESSIONS=6;
 function invalid(message='圖片格式不正確'){throw new HttpError(400,'INVALID_CHARACTER_IMAGE',message);}
-function imageOf(data){
- if(typeof data.base64!=='string'||data.base64.length>Math.ceil(MAX_BYTES*4/3)+16||!/^[A-Za-z0-9+/]+={0,2}$/.test(data.base64))invalid();
+function imageOf(data,{maxBytes=MAX_BYTES}={}){
+ const sizeMessage=`圖片不得超過 ${maxBytes/(1024*1024)} MB`;
+ if(typeof data.base64!=='string')invalid();
+ if(data.base64.length>4*Math.ceil(maxBytes/3))invalid(sizeMessage);
+ if(!/^[A-Za-z0-9+/]+={0,2}$/.test(data.base64))invalid();
  const bytes=Buffer.from(data.base64,'base64');
- if(!bytes.length||bytes.length>MAX_BYTES||bytes.toString('base64')!==data.base64)invalid('圖片不得超過 1 MB');
+ if(!bytes.length||bytes.length>maxBytes||bytes.toString('base64')!==data.base64)invalid(sizeMessage);
  let mime,width,height;
  if(bytes.length>=24&&bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))&&bytes.toString('ascii',12,16)==='IHDR'){
   mime='image/png';width=bytes.readUInt32BE(16);height=bytes.readUInt32BE(20);
@@ -30,19 +35,19 @@ function imageOf(data){
  if(data.mime&&data.mime!==mime)invalid('圖片類型與檔案內容不符');
  return {bytes,mime,width,height};
 }
-function imageForRequest(db,ownerId,data){
+function imageForRequest(db,ownerId,data,options){
  if(data?.artworkId!==undefined){
   if(typeof data.artworkId!=='string'||!/^([a-f0-9-]{36})$/.test(data.artworkId)||data.base64!==undefined)throw new HttpError(400,'INVALID_ARTWORK','作品選擇不正確');
   const artwork=db.prepare('SELECT mime,bytes FROM user_artworks WHERE id=? AND owner_id=?').get(data.artworkId,ownerId);
   if(!artwork)throw new HttpError(404,'ARTWORK_NOT_FOUND','找不到你的作品');
   return artwork;
  }
- return imageOf(data);
+ return imageOf(data,options);
 }
 function expressionOf(value){if(!Object.hasOwn(expressionLabels,value))throw new HttpError(400,'INVALID_EXPRESSION','不支援的表情');return value;}
 function nameOf(value){const name=String(value||'').trim();if(!name||[...name].length>32||/[\u0000-\u001f\u007f]/.test(name))throw new HttpError(400,'INVALID_CHARACTER_NAME','角色名稱需為 1–32 字，且不能換行');return name;}
 function createCharacter(db,ownerId,data){
- const name=nameOf(data.name),image=imageForRequest(db,ownerId,data),id=randomUUID(),now=new Date().toISOString();
+ const name=nameOf(data.name),image=imageForRequest(db,ownerId,data,{maxBytes:MAX_CHARACTER_IMAGE_BYTES}),id=randomUUID(),now=new Date().toISOString();
  const count=db.prepare('SELECT COUNT(*) AS count FROM player_characters WHERE owner_id=?').get(ownerId).count;
  if(count>=10)throw new HttpError(400,'CHARACTER_LIMIT','每個帳號最多上傳 10 個角色');
  db.exec('BEGIN IMMEDIATE');
@@ -54,7 +59,7 @@ function createCharacter(db,ownerId,data){
  return {id:'user:'+id,name};
 }
 function setExpression(db,ownerId,id,data){
- const expression=expressionOf(data.expression),image=imageForRequest(db,ownerId,data),uuid=id.replace(/^user:/,'');
+ const expression=expressionOf(data.expression),image=imageForRequest(db,ownerId,data,{maxBytes:MAX_CHARACTER_IMAGE_BYTES}),uuid=id.replace(/^user:/,'');
  const owned=db.prepare('SELECT id FROM player_characters WHERE id=? AND owner_id=?').get(uuid,ownerId);
  if(!owned)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到你的角色');
  db.prepare('INSERT INTO character_images(character_id,expression,mime,bytes) VALUES(?,?,?,?) ON CONFLICT(character_id,expression) DO UPDATE SET mime=excluded.mime,bytes=excluded.bytes').run(uuid,expression,image.mime,image.bytes);
@@ -63,7 +68,7 @@ function setExpression(db,ownerId,id,data){
 function addExpression(db,ownerId,id,data){
  const name=typeof data.name==='string'?data.name.trim():'';
  if(!name||[...name].length>20||/[\u0000-\u001f\u007f]/.test(name))throw new HttpError(400,'INVALID_EXPRESSION_NAME','表情名稱需為 1–20 字');
- const image=imageForRequest(db,ownerId,data);
+ const image=imageForRequest(db,ownerId,data,{maxBytes:MAX_CHARACTER_IMAGE_BYTES});
  const uuid=id.replace(/^user:/,'');
  db.exec('BEGIN IMMEDIATE');
  try{
@@ -102,4 +107,4 @@ function removeCharacter(db,ownerId,id){
  if(!result.changes)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到你的角色');
  return {ok:true};
 }
-module.exports={MAX_BYTES,imageOf,imageForRequest,createCharacter,setExpression,addExpression,setSharing,removeCharacter};
+module.exports={MAX_BYTES,MAX_CHARACTER_IMAGE_BYTES,MAX_CHARACTER_IMAGE_BODY_BYTES,imageOf,imageForRequest,createCharacter,setExpression,addExpression,setSharing,removeCharacter};
