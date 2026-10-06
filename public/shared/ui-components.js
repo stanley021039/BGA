@@ -22,6 +22,8 @@
   users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5"/>',
   chevron:'<path d="m6 9 6 6 6-6"/>',
   undo:'<path d="M3 4v6h6M3 10a8 8 0 0 1 16 4v5"/>',
+  resize:'<path d="M8 20H4v-4M4 20l7-7M16 4h4v4M20 4l-7 7"/>',
+  expand:'<path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/>',
   refresh:'<path d="M20 7v5h-5M4 17v-5h5M20 12a8 8 0 0 0-14-5M4 12a8 8 0 0 0 14 5"/>'
  };
  const pending=new WeakMap(),dialogs=new WeakMap();let dialogNumber=0;
