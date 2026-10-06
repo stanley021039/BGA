@@ -1,10 +1,14 @@
 # YouTube 共看實作進度
 
-2026-10-06發布候選 **v1.1.4**：將PR #36相容修正`d4020ef`只取runtime與三份回歸／helper檔整合至現有遊戲分支，不用PR的1.0.0歷史整包覆蓋目前版。PR來源Windows／Linux各552/552；正式候選Windows **663/663**，Linux與正式切換待補。新增38項，前端90/90、共看／音訊focused123/123。PR #34另補Windows／Linux442/442及背景Chrome四席四輪、跨輪／完局回看與收藏、3/4禁題；#34在驗收期間由另一端合併main，沒有由本任務合併。
+2026-10-06正式 **v1.1.4**：將PR #36相容修正`d4020ef`只取runtime與三份回歸／helper檔整合至現有遊戲分支，不用PR的1.0.0歷史整包覆蓋目前版。PR來源Windows／Linux各552/552；正式整合Windows／Linux各 **663/663**，失敗／取消／跳過0。新增38項，前端90/90、共看／音訊focused123/123。PR #34另補Windows／Linux442/442及背景Chrome四席四輪、跨輪／完局回看與收藏、3/4禁題；#34在驗收期間由另一端合併main，沒有由本任務合併。#36已非force推送至`5f2dd93`、base改main、Ready且無合併衝突，未由本任務合併。
 
 背景Chrome在隔離非loopback `http://192.168.232.1:3203`、正常1794×1010，用合成帳戶實際送出影片與全桌播放。CDP只讀驗`isSecureContext=false`、`randomUUID`未提供、`getRandomValues`可用；提案與播放POST200。加入YouTube後原生播放器實際播放，同帳戶另一端API暫停及停止，各預置單次GET503；同revision下一次GET200恢復，暫停時原生播放器paused，停止後本機iframe移除。沒有手動重開／返回進度或新revision；永久失敗／上限、關窗／晚回應等另由真模組VM測。受控故障只在私有QA server request wrapper，不改產品source或正式站。私有畫面`work/pr36-http-pause-recovered.jpg`、`pr36-http-stop-recovered.jpg`及去敏CDP紀錄`pr36-pause-retry-network.json`、`pr36-stop-retry-network.json`。這是同帳戶另端API＋一席UI，不宣稱兩台真人設備／弱網／GPU測試。
 
-## 2026-10-06：PR #36 審查修正（本地驗證）
+正式發布證據：受測提交`93ba3501aaca22768c8605609637fbdf0df2d557`、不可覆寫的本地annotated tag `v1.1.4`；後續純驗收文件不移動tag，發布分支及tag未push。發布包SHA-256 `aaa165bf4c58b7bad80af2d5bb05dcc0949b9a8071b46fad1b81b64d9e77d968`，未含本機私人偏好或QA資料。Linux約116秒，完整log`work/pr36-production-linux.log`，Windows`work/pr36-production-windows.log`。schema13隔離副本15表逐列一致、完整性ok、外鍵0、啟動成功；線上SQLite與持久檔案另備份`shared/backups/pre-party-93ba350-20261006T022835Z`（UTC），不宣稱同一原子時間點。
+
+切換前房間0；正式current `releases/93ba350`，PID42200→48811，service／tunnel active。7帳戶全欄位保留、schema13、既有session有效；公開版本1.1.4且no-store、race HTML及8份JS／CSS（包含table-watch）與受測碼一致，背景Chrome設定實際顯示「版本 v1.1.4」。正式未新建遊戲房間，HTTP失聯錄影／驗收屬本機隔離案例，不冒稱正式實玩；兩個QA服務已正常停止。截圖`work/pr36-production-version.jpg`，去敏公開驗證`work/version-production-verification.json`。
+
+## 2026-10-06：PR #36 審查修正（回歸階段紀錄）
 
 在隔離 checkout 整合最新 `feat/draw-review-motion`／main 後修正 [兩項 P2](https://github.com/stanley021039/BGA/pull/36#issuecomment-6007722283)。下列是本次修正的證據，不取代後文原實播紀錄，也不代表已推送或部署。
 

@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-06最新正式 **v1.1.4**：PR #36共看失聯重試及HTTP安全UUID修正已整合，Windows／Linux各663/663、HTTP真Chrome實播及pause／stop各503後同revision恢復通過。受測93ba350／本地v1.1.4 tag，正式current releases/93ba350、schema13／7帳戶完整保留、公開版本與資源已驗。#34雙平台442與Chrome四輪回看收藏禁題補齊，另一端已合併；#36來源552雙平台、原PR已更新5f2dd93／main／Ready、無衝突，未合併。以下較早部署及待驗文字屬歷史，以 [最新發布](../RELEASE-PROGRESS.md)與 [共看實證](../YOUTUBE-WATCH-PROGRESS.md)為準。
+
 2026-10-06版本管理：新功能必須打版。先讀 [打版規範](../RELEASE-POLICY.md)及 [最新驗收](../RELEASE-PROGRESS.md)，判斷候選／正式狀態；不要沿用package曾長期固定1.0.0的做法。
 
 本批最新遊戲程式來源 **4bab53a**，Windows／Linux整合各 **543/543** 通過。2026-10-06正式站已切換發布版 **8fcda4d**：schema13、完整性ok、7帳戶全欄位保留，公開15份資源及既有session驗證通過。新功能未push／未新PR；以下較早「未部署」為歷史狀態，最新範圍與限制以 [整合進度末節](../PARTY-UPGRADE-PROGRESS.md#正式部署驗證2026-10-06)為準。
