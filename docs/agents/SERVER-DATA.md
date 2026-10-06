@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-06最新正式v1.3.0（遊戲事件音效）：受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。schema14不變、integrity ok、外鍵錯誤0，原7帳戶全欄位保留；預演副本16張既有表逐列一致。匿名no-store版號、既有session、7份HTML、24份資源（含7WAV的精確bytes及MIME）一致，背景Chrome設定顯示「版本 v1.3.0」。沒有schema或資料格式變動、sound BLOB仍隨完整bundle保存。備份`shared/backups/pre-party-4732450-20261006T043416Z`（UTC），SQLite與檔案另備；未搬入其他站。素材重建及Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。詳 [聲音發布證據](../GAME-SOUNDS-PROGRESS.md)，下方v1.2.0為schema14導入歷史。
+
 ## 最新正式：schema 14 表情音效與移轉（2026-10-06）
 
 v1.2.0 在 `src/db/index.js` 新增 `character_sounds(character_id,expression,mime,bytes,duration_ms)`，複合主鍵及外鍵綁 `character_images(character_id,expression)`，刪除表情連帶移除音效。資料留在 SQLite BLOB，不新增磁碟媒體路徑；`src/profiles/sounds.js` 的 `inspectExpressionSound` 只接受標準 44-byte 頭、24000Hz／mono／PCM16 WAV，實 sample 數正且最多 240000，bytes 最多 480044，duration_ms 為 `ceil(samples/24)` 且最多 10000。

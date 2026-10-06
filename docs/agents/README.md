@@ -1,6 +1,8 @@
 # Agent 長期記憶索引
 
-2026-10-06新增「音效師」：角色方法與限制見 [SOUND-DESIGNER](SOUND-DESIGNER.md)，不同素材網站的具體授權見 [素材來源](../research/SOUND-ASSET-SOURCES.md)，五款遊戲的既有音效、候選位置、優先序、事件時序及實際討論見 [音效計畫](../specs/GAME-SOUND-PLAN.md)。這批是研究與規格，沒有加入新音效或修改正式站；較下方 v1.2.0 表情音效仍是目前程式基線。
+2026-10-06正式 **v1.3.0**：畫猜本人猜中／畫者輪次及雷霆骰聲／shot／slam／nitro／skid已接共用事件音效。Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。schema14不變、integrity ok、外鍵錯誤0，原7帳戶全欄位保留；預演副本16張既有表逐列一致。匿名no-store版號、既有session、7份HTML、24份資源（含7WAV的精確bytes及MIME）一致，背景Chrome設定顯示「版本 v1.3.0」。7短音（2Kenney CC0改作＋5固定seed原創）、兩個新聲音模組、遊戲2／總4段上限及1秒載入timeout已驗；Chromeplaying／清理／靜音及所有限制見 [音效實證](../GAME-SOUNDS-PROGRESS.md)。第二批遊戲候選仍為規格，沒有真人聽感／喇叭測試；無新PR／push，純驗收文件不移動tag。
+
+2026-10-06新增「音效師」：角色方法與限制見 [SOUND-DESIGNER](SOUND-DESIGNER.md)，不同素材網站的具體授權見 [素材來源](../research/SOUND-ASSET-SOURCES.md)，五款遊戲的既有音效、候選位置、優先序、事件時序及實際討論見 [音效計畫](../specs/GAME-SOUND-PLAN.md)。這筆是研究階段紀錄；第一批後續正式實作見上方v1.3.0，第二批候選仍未做。
 
 2026-10-06最新正式 **v1.2.0**：角色自訂表情可加入最多10秒音效，作者上傳／試聽／移除，五款遊戲與大廳沿用共用效果音開關／音量。Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。背景Chrome邊界、轉檔、停止、一次載入及靜音均驗。受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。schema1–13副本升級與完整音效備份還原已驗；無新PR／push，纯驗收文件不移動tag。詳細契約、備份、證據與測試範圍見 [角色表情音效](../CHARACTER-ASSET-TEMPLATE.md)，較早部署狀態保留為歷史。
 

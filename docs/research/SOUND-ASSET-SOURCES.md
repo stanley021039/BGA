@@ -53,7 +53,7 @@ CC0的可改作／再散布範圍與其他權利例外由 [Creative Commons官�
 
 所有成品都是**24000Hz、mono、PCM16 WAV**；先處理DC，再做5ms淡入／24ms淡出及適度峰值縮放，首末sample為0。七檔總長2.8秒、總計**134,708 bytes**。兩個Kenney PCM母檔及包內 [LICENSE](../../public/assets/game-sounds/sources/KENNEY-INTERFACE-LICENSE.txt)保留在sources，讓生成器不依賴重新下載或特定OGG解碼器；這兩個母檔由python-soundfile 0.14.0／libsndfile 1.2.2解碼，hash列在manifest。原創五檔以xorshift32、正弦振盪器與包絡生成，**不標成Kenney或CC0**；manifest標`Project-original`，隨專案分發，沒有取用第三方錄音。
 
-[manifest.json](../../public/assets/game-sounds/manifest.json)逐檔保存durationMs、bytes、SHA-256、作者、來源、授權、改作、峰值／RMS及生成器hash。含七檔、兩個母檔、license與manifest的asset資料夾目前共**201,280 bytes**。生成器 [build-game-sounds.cjs](../../scripts/build-game-sounds.cjs)只用Node內建模組，不播放音訊；`node scripts/build-game-sounds.cjs`重建，`node scripts/build-game-sounds.cjs --check`比較七檔及manifest並只讀驗證。WAV hash按原始bytes計算；生成器與license文字hash先正規化成UTF-8 LF，避免Windows／Linux換行差異改變manifest。
+[manifest.json](../../public/assets/game-sounds/manifest.json)逐檔保存durationMs、bytes、SHA-256、作者、來源、授權、改作、峰值／RMS及生成器hash。含七檔、兩個母檔、license與manifest的asset資料夾目前共**201,253 bytes**。生成器 [build-game-sounds.cjs](../../scripts/build-game-sounds.cjs)只用Node內建模組，不播放音訊；`node scripts/build-game-sounds.cjs`重建，`node scripts/build-game-sounds.cjs --check`比較七檔及manifest並只讀驗證。WAV hash按原始bytes計算；生成器與license文字hash先正規化成UTF-8 LF，避免Windows／Linux換行差異改變manifest。
 
 已做的內容檢查：重新生成後`--check`通過；另用Python `wave`獨立解析七檔header／sample數、核hash及峰值。實際峰值0.19998169–0.23999023（約−14至−12.4dBFS），RMS 0.01894238–0.07486735，clipped sample為0。已查看波形包絡：骰子為八段分離脈衝，shot／slam有短衰減，nitro／skid為一次隆起；頭尾歸零。這些是檔案及波形證據，**不是耳機／喇叭聽感驗收**；未播放聲音，不宣稱音色、辨識度或主觀響度合適。
 
