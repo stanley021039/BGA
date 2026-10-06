@@ -105,3 +105,4 @@ HTTP 連線位址由主機自動偵測，或在 `.env` 設定 `PUBLIC_URL`。各
 可將 `.env.example` 複製為 `.env`，設定 `PORT`、`HOST`、`PUBLIC_URL`、`HISTORY_DIR`、`COMMUNITY_DIR`、`DB_FILE` 與 `GITHUB_TOKEN`。`.env` 及資料目錄不納入 Git；系統環境變數優先於 `.env`。未設定 `PUBLIC_URL` 時自動偵測 VPN 位址，邀請按鈕使用偵測結果。Windows 防火牆工具同樣自動偵測網卡位址，不需將私人 IP 寫進程式。
 
 `PUBLIC_URL` 僅設定邀請連結來源，不會自行啟用 HTTPS。更改 `.env` 後重啟服務才會生效；重啟會清空記憶體中的房間，已保存的歷史、留言與題庫會保留。
+醜學
