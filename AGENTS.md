@@ -24,6 +24,7 @@
 
 - 玩家／遊玩評估：`docs/agents/PLAYER.md`
 - 動畫／美術／設計：`docs/agents/ANIMATION.md`、`docs/agents/ART.md`、`docs/agents/DESIGNER.md`
+- 音效／聲音素材：`docs/agents/SOUND-DESIGNER.md`；盤點與實作方向：`docs/specs/GAME-SOUND-PLAN.md`
 - 程式／伺服器資料：`docs/agents/PROGRAMMER.md`、`docs/agents/SERVER-DATA.md`
 - 共用使用者偏好與決策：`docs/agents/MEMORY-LEDGER.md`
 - 記憶更新與跨角色討論方法：`docs/agents/MEMORY-PROTOCOL.md`
