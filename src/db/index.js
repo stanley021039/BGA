@@ -1,7 +1,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
-const SCHEMA_VERSION=13;
+const SCHEMA_VERSION=14;
 
 function openDatabase(file){
  fs.mkdirSync(path.dirname(file),{recursive:true});
@@ -150,6 +150,24 @@ function openDatabase(file){
      CHECK(json_array_length(votes_json)>=required AND json_array_length(votes_json)<=json_array_length(electorate_json))
     );
     PRAGMA user_version=13;
+    COMMIT;
+   `);
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<14){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    CREATE TABLE IF NOT EXISTS character_sounds(
+     character_id TEXT NOT NULL,
+     expression TEXT NOT NULL,
+     mime TEXT NOT NULL CHECK(mime='audio/wav'),
+     bytes BLOB NOT NULL,
+     duration_ms INTEGER NOT NULL CHECK(typeof(duration_ms)='integer' AND duration_ms BETWEEN 1 AND 10000),
+     PRIMARY KEY(character_id,expression),
+     FOREIGN KEY(character_id,expression) REFERENCES character_images(character_id,expression) ON DELETE CASCADE
+    );
+    PRAGMA user_version=14;
     COMMIT;
    `);
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}

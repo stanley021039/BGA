@@ -1,5 +1,23 @@
 # 圖片角色與表情素材規格
 
+## 2026-10-06：表情音效實作契約（v1.2.0候選）
+
+本次按角色的自訂表情實作；作者可為已存在且非neutral的自有角色表情設定、試聽或移除一段音效。分享角色時同一音效供選用者發送；所有五款遊戲與好友大廳沿用表情事件送出，不新增聲音輪詢。個人開關及音量使用現有AudioSettings.effects；emoji彈幕原本功能不變。目前Windows與背景Chrome已驗，Linux及正式切換待補。
+
+| 項目 | 契約 |
+| --- | --- |
+| 匯入及格式 | 瀏覽器decode可支援的音檔（MP3/WAV/OGG/M4A等，依瀏覽器），原始檔最多10MiB；拒絕超過10秒，不自動截短。轉為24000Hz、mono、PCM16標準44-byte WAV頭，最大480044 bytes。server以RIFF/fmt/data及真sample數再次驗10秒，忽略客戶端宣稱長度。 |
+| 持久化 | schema14的character_sounds，以(character_id,expression)為主鍵及character_images複合FK，刪除角色／表情連帶清音效；存mime、bytes、duration_ms，不新增磁碟媒體路徑。圖片替換保留該表情既有音效。 |
+| 作者API | POST /api/profile/characters/<uuid>/expressions/<expression>/sound，JSON {base64}（canonical WAV）；POST同路徑/remove，JSON {}。只作者可寫，neutral或不存在表情拒絕；remove可重送。 |
+| 列表／事件 | character.sounds[expression]={url,durationMs}，沒有bytes/base64。selectedImage回傳可選sound；room expression及lobby emote帶sound={url:帶v內容hash的資源URL,durationMs}，沒設定則不帶。 |
+| 資源與權限 | /assets/characters/sounds/<uuid>/<expression>?v=<hash>；登入、作者／分享，或同房／有效大廳範圍实际收到的表情音效才可讀。grant綁原bytes及觀看範圍，最多表情at+10秒+2秒寬限；fetch不加入／延長presence，改音效後舊URL不能讀新bytes。 |
+| 播放 | 共用ExpressionSounds只播新事件一次；首次載入、重連、隱藏及離房不補播。尊重effects開關／音量，最多4個效果重疊，最長10秒停止並清理；mute／visibility停止，失敗不影響表情圖片。作者按試聽是明確手勢，使用共用音效音量。 |
+| 移轉 | schema14必須含sound表，備份還原保存bytes／長度及FK；v1–13只在目標副本新增空sound表，來源／既有帳戶與BLOB不變。新schema不能直接交舊程式啟動。 |
+
+整合候選驗收：Windows Node24.14.0完整 **727/727**，失敗／取消／跳過0，約24秒，證據`work/expression-sound-windows-tests.log`。新增64項包含strict WAV及owner／ACL、4項HTTP、客端編碼／播放／profile、原聲音控制與v1–13移轉增量。客户端音效最多4段、10秒載入timeout與實際開播後最多10秒deadline分開，避免慢載入吃掉短音效；mute／hidden／reset後的晚play promise不重新開timer。試聽停止會更新文字。獨立複查以真profile VM重現「A保存延後→切B上傳轉換→A晚回覆」導致B按鈕鎖住，已讓保存回覆綁selection generation，B仍上傳一次並恢復操作。
+
+背景Chrome在隔離localhost3210、正常1794×1010、三個合成帳戶：一席UI真正選檔，48000Hz的11秒WAV被拒、10秒WAV轉成24000Hz後保存；試聽GET200 audio/wav、移除後metadata消失，再上傳1秒音效並確認「試聽已停止」。一席收聽UI配合另一帳戶API發送，撲克房與好友大廳各只載入一次帶hash音效URL，靜音時音效GET0；其他遊戲由共用GameShell與各頁載入／回歸驗證，未宣稱五款都重新完整實玩。沒有新console error。首次／背景／重連／去重／四段上限由真模組VM另驗，沒有聲稱實際揚聲器或GPU／弱網測試。私有圖`work/expression-sound-profile-final.jpg`，去敏network證據`work/expression-sound-{preview,room,lobby,muted}-network.json`；QA已正常停止。這次真瀏覽器匯入只測WAV，MP3／OGG／M4A接受度依瀏覽器decoder，不以副檔名保證。Linux與正式站結果待補。
+
 ## 目前實作
 
 角色外觀 JSON 為 `{ "version": 5, "characterId": "builtin:traveler", "expression": "neutral" }`。角色是一組完整圖片，不再拼接衣服、褲子或共用身形。內建角色仍使用 `neutral`（平常）、`happy`（開心）、`sad`（難過）、`surprised`（驚訝）、`thinking`（思考）、`angry`（生氣）六個固定代碼。玩家上傳角色以 `neutral` 作為主角色圖片，另可新增最多六個自訂名稱的圖片表情，表情 ID 為 `emote-<UUID>`；表情名稱與 ID 分開保存。既有固定表情上傳會保留並可顯示。介面只列出實際有圖片的表情。遊戲座位的角色圖由 `/characters/<會員 ID>` 提供，會顯示該會員目前保存的角色與表情。

@@ -6,6 +6,8 @@ const { DatabaseSync } = require('node:sqlite');
 const { SCHEMA_VERSION } = require('../db');
 const { validateQuestion } = require('../community/store');
 const { audioType, MAX_BYTES } = require('../music/store');
+const { inspectExpressionSound } = require('../profiles/sounds');
+const { expressionLabels } = require('../profiles/appearance');
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -60,7 +62,7 @@ function validateDatabase(file) {
     if (db.prepare('PRAGMA foreign_key_check').all().length) fail('FOREIGN_KEY_FAILED', 'SQLite contains broken foreign keys');
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r => r.name);
     if (!tables.includes('users')) fail('INVALID_DATABASE', 'Account table is missing');
-    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 13: ['draw_word_exclusions'] };
+    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 13: ['draw_word_exclusions'], 14: ['character_sounds'] };
     for (const [version, names] of Object.entries(required)) if (schemaVersion >= Number(version) && names.some(n => !tables.includes(n))) fail('INVALID_DATABASE', 'Database schema is missing a required table');
     const accountsDigest = crypto.createHash('sha256');
     for (const user of db.prepare('SELECT * FROM users ORDER BY id').iterate()) {
@@ -81,6 +83,24 @@ function validateDatabase(file) {
         for (const c of blobs) digest.update(JSON.stringify([c.name, row[c.name] === null ? null : sha(row[c.name])]) + '\n');
       }
       blobDigests[table] = digest.digest('hex');
+    }
+    if (tables.includes('character_sounds')) {
+      if (schemaVersion < 14 && tableCounts.character_sounds !== 0) fail('INVALID_DATABASE', 'An older schema cannot contain expression sounds');
+      const columns = db.prepare('PRAGMA table_info(character_sounds)').all();
+      const types = { character_id: 'TEXT', expression: 'TEXT', mime: 'TEXT', bytes: 'BLOB', duration_ms: 'INTEGER' };
+      const keys = columns.filter(c => c.pk).sort((a, b) => a.pk - b.pk).map(c => c.name);
+      const foreignKeys = db.prepare('PRAGMA foreign_key_list(character_sounds)').all().sort((a, b) => a.seq - b.seq);
+      if (Object.entries(types).some(([name, type]) => !columns.some(c => c.name === name && c.type.toUpperCase() === type && c.notnull)) ||
+          keys.join(',') !== 'character_id,expression' || foreignKeys.length !== 2 || foreignKeys[0].id !== foreignKeys[1].id ||
+          foreignKeys.some((fk, index) => fk.seq !== index || fk.table !== 'character_images' || fk.from !== keys[index] || fk.to !== keys[index] || fk.on_delete !== 'CASCADE')) fail('INVALID_DATABASE', 'Expression sound schema does not bind the exact character image');
+      for (const row of db.prepare('SELECT character_id,expression,mime,bytes,duration_ms FROM character_sounds').iterate()) {
+        const expression = row.expression;
+        if (!uuid.test(row.character_id) || typeof expression !== 'string' || expression === 'neutral' ||
+            !(Object.hasOwn(expressionLabels, expression) || (expression.startsWith('emote-') && uuid.test(expression.slice(6)))) ||
+            !db.prepare('SELECT 1 FROM character_images WHERE character_id=? AND expression=?').get(row.character_id, expression)) fail('BROKEN_REFERENCE', 'An expression sound references an invalid or missing character expression');
+        let sound; try { sound = inspectExpressionSound(row.bytes); } catch { fail('VALIDATION_FAILED', 'Expression sound bytes are not a canonical WAV of at most ten seconds'); }
+        if (row.mime !== sound.mime || !Number.isInteger(row.duration_ms) || row.duration_ms !== sound.durationMs) fail('VALIDATION_FAILED', 'Expression sound metadata differs from its WAV samples');
+      }
     }
     // These JSON references are not represented by SQLite foreign keys.
     const exists = (table, id) => tables.includes(table) && db.prepare(`SELECT 1 FROM ${quote(table)} WHERE id=?`).get(id);

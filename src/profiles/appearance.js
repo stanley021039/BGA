@@ -56,12 +56,13 @@ function characterFor(db,userId,id){
  if(!/^user:[a-f0-9-]{36}$/.test(id||''))return null;
  const row=db.prepare('SELECT player_characters.id,player_characters.name,player_characters.owner_id,player_characters.shared,users.display_name FROM player_characters JOIN users ON users.id=player_characters.owner_id WHERE player_characters.id=? AND users.disabled=0 AND (player_characters.owner_id=? OR player_characters.shared=1)').get(id.slice(5),userId);
  if(!row)return null;
- const expressions={},labels={};
+ const expressions={},labels={},sounds={};
  for(const {expression,label} of db.prepare('SELECT expression,label FROM character_images WHERE character_id=?').all(row.id)){
   expressions[expression]=`/assets/characters/user/${row.id}/${expression}`;
   labels[expression]=label||expressionLabels[expression];
  }
- return {id,name:row.name,expressions,labels,source:row.owner_id===userId?'我的作品':`由 ${row.display_name} 分享`,owned:row.owner_id===userId,shared:!!row.shared,appearance:{version:5,characterId:id,expression:'neutral'}};
+ for(const {expression,duration_ms} of db.prepare('SELECT expression,duration_ms FROM character_sounds WHERE character_id=?').all(row.id))sounds[expression]={url:`/assets/characters/sounds/${row.id}/${expression}`,durationMs:duration_ms};
+ return {id,name:row.name,expressions,labels,sounds,source:row.owner_id===userId?'我的作品':`由 ${row.display_name} 分享`,owned:row.owner_id===userId,shared:!!row.shared,appearance:{version:5,characterId:id,expression:'neutral'}};
 }
 function galleryFor(db,userId){
  const own=db.prepare('SELECT id FROM player_characters WHERE owner_id=? ORDER BY created_at DESC').all(userId);
@@ -72,6 +73,6 @@ function selectedImage(db,userId,input){
  const appearance=validateAppearance(input),character=characterFor(db,userId,appearance.characterId);
  if(!character)invalid();
  const expression=character.expressions[appearance.expression]?appearance.expression:'neutral';
- return {appearance:{...appearance,expression},url:character.expressions[expression],label:character.labels[expression]};
+ return {appearance:{...appearance,expression},url:character.expressions[expression],label:character.labels[expression],...(character.sounds?.[expression]?{sound:character.sounds[expression]}:{})};
 }
 module.exports={expressionLabels,builtinCharacters,defaults,normalizeAppearance,validateAppearance,characterFor,galleryFor,selectedImage};

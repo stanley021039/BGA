@@ -119,12 +119,12 @@ test('store rejects non-majority, duplicate, foreign, oversized and malformed au
  assert.equal(countRows(f.db),0);f.store.ban(word,valid);assert.equal(countRows(f.db),1);
 });
 
-test('schema 12 migrates without altering users or words, and schema 13 reopening is idempotent',t=>{
+test('schema 12 migrates without altering users or words, and reopening the current schema is idempotent',t=>{
  const root=tempRoot(t),file=path.join(root,'app.sqlite');t.after(()=>removeRoot(root));let db=openDatabase(file);
  db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)').run('retained-user','retained','保留玩家','exact-hash','member','2026-10-05T00:00:00.000Z');
  new DrawWordStore(db).add({id:'retained-user',display_name:'保留玩家'},{title:'保留題目',aliases:['原別名'],difficulty:'easy'});
  const beforeUsers=db.prepare('SELECT * FROM users').all(),beforeWords=db.prepare('SELECT * FROM draw_words').all();
- db.exec('DROP TABLE draw_word_exclusions; PRAGMA user_version=12');db.close();db=openDatabase(file);
+ db.exec('DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');db.close();db=openDatabase(file);
  try{
   assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);assert.equal(countRows(db),0);
   assert.deepEqual(db.prepare('SELECT * FROM users').all(),beforeUsers);assert.deepEqual(db.prepare('SELECT * FROM draw_words').all(),beforeWords);

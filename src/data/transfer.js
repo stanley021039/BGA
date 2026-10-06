@@ -237,8 +237,8 @@ function restorePolicy(stage, validated) {
   return { revoked, heldSubmissions, interruptedMatches: validated.playing.length };
 }
 function binaryAssetsPreserved(before, after) {
-  // Migrations 3, 5 and 8 introduce empty BLOB tables; existing assets must remain exact.
-  const introduced = { character_images: 3, community_gifts: 5, user_artworks: 8 }, emptyDigest = sha('');
+  // Migrations 3, 5, 8 and 14 introduce empty BLOB tables; existing assets must remain exact.
+  const introduced = { character_images: 3, community_gifts: 5, user_artworks: 8, character_sounds: 14 }, emptyDigest = sha('');
   for (const [table, digest] of Object.entries(before.blobDigests)) {
     if (after.blobDigests[table] !== digest) return false;
   }

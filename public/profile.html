@@ -18,6 +18,12 @@
      <div class="preset-section"><h3>我的作品</h3><div id="my-characters" class="preset-gallery"></div><p id="my-empty" class="gallery-empty">還沒有作品。可以上傳圖片，或使用下方繪圖工具。</p></div>
      <div class="preset-section"><h3>好友分享</h3><div id="shared-characters" class="preset-gallery"></div><p id="shared-empty" class="gallery-empty">目前沒有好友分享的角色。</p></div>
      <div class="preset-section"><h3>表情</h3><div id="expressions" class="expression-gallery"></div></div>
+     <section id="expression-sound" class="expression-sound" aria-labelledby="expression-sound-heading" hidden>
+      <h3 id="expression-sound-heading">表情音效</h3><p id="expression-sound-description"></p>
+      <div class="expression-sound-actions"><span id="expression-sound-duration"></span><button id="preview-expression-sound" class="page-button secondary-button" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7Z"/></svg>試聽音效</button><button id="remove-expression-sound" class="page-button secondary-button" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg>移除音效</button></div>
+      <form id="upload-expression-sound" class="expression-sound-upload" hidden><label>選擇音檔<input id="expression-sound-file" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.webm,.opus"></label><button id="save-expression-sound" class="page-button" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5M4 16v4h16v-4"/></svg>上傳音效</button><p>最多 10 秒、10 MB；超過 10 秒請先縮短。可用格式依瀏覽器支援。</p></form>
+      <p id="expression-sound-status" class="upload-status" role="status" aria-live="polite"></p>
+     </section>
      <div id="sharing-controls" class="sharing-controls" hidden><span id="sharing-description"></span><button id="toggle-sharing" type="button" class="page-button secondary-button"></button></div>
      <div class="editor-actions"><button id="save" class="page-button" type="button">保存角色 <span>↗</span></button><p id="message" class="form-message" role="status" aria-live="polite"></p></div>
      <a id="open-studio" class="page-button studio-link" href="/studio">開啟我的繪畫圖庫 ↗</a>
@@ -29,6 +35,6 @@
    </div>
   </main>
  </div>
- <script src="/shared/motion-policy.js"></script><script src="/shared/audio-settings.js"></script><script src="/shared/popovers.js"></script><script src="/profile.js"></script>
+ <script src="/shared/motion-policy.js"></script><script src="/shared/audio-settings.js"></script><script src="/shared/expression-sounds.js"></script><script src="/shared/popovers.js"></script><script src="/profile.js"></script>
 <script src="/shared/site-header.js"></script></body>
 </html>

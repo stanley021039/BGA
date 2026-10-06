@@ -1,6 +1,7 @@
 const $=selector=>document.querySelector(selector);
 let appearance,characters=[],labels={},artworks=[],chosenCharacterArtwork=null,chosenExpressionArtwork=null;
 const uploads=new Map();
+let galleryRequest=0,soundSelection='',soundGeneration=0,selectionGeneration=0,soundPending=false,soundFile=null,soundPreview=null,soundPreviewRequest=0;
 async function json(url,options){const response=await fetch(url,options),value=await response.json();if(!response.ok)throw Error(value.error);return value;}
 function status(form,message){form.querySelector('.upload-status').textContent=message;}
 function clearArtworkFor(inputId){if(inputId==='#character-file')chosenCharacterArtwork=null;else chosenExpressionArtwork=null;renderArtworkPickers();}
@@ -50,6 +51,20 @@ function render(){
  $('#toggle-sharing').textContent=character.shared?'停止分享':'分享給會員';
  $('#upload-expression').hidden=!character.owned;
  $('#emote-target').textContent=character.owned?`正在為「${character.name}」新增表情（最多 6 個）。`:'先從「我的作品」選擇自己的角色。';
+ renderSound(character);
+}
+function soundKey(){const character=selected();return character?`${character.id}:${appearance.expression}`:'';}
+function soundStatus(message){$('#expression-sound-status').textContent=message;}
+function renderSound(character){
+ const target=soundKey();if(target!==soundSelection){soundSelection=target;soundGeneration++;selectionGeneration++;soundPending=false;soundFile=null;$('#expression-sound-file').value='';soundStatus('');window.AudioSettings?.stopEffect(soundPreview);soundPreview=null;}
+ const expression=appearance.expression,sound=character.sounds?.[expression],editable=!!character.owned&&character.id.startsWith('user:')&&expression!=='neutral'&&!!character.expressions[expression];
+ $('#expression-sound').hidden=expression==='neutral'||(!editable&&!sound);
+ $('#expression-sound-description').textContent=editable?`「${expressionLabel(character,expression)}」送出時可播放一段音效。音效會隨分享角色一起供好友使用。`:`「${expressionLabel(character,expression)}」的音效由角色作者設定。`;
+ $('#expression-sound-duration').textContent=sound?`已設定 ${(sound.durationMs/1000).toFixed(2).replace(/0$/,'')} 秒音效`:'尚未設定音效';
+ $('#preview-expression-sound').hidden=!sound;$('#preview-expression-sound').disabled=soundPending;
+ $('#remove-expression-sound').hidden=!editable||!sound;$('#remove-expression-sound').disabled=soundPending;
+ $('#upload-expression-sound').hidden=!editable;$('#save-expression-sound').disabled=soundPending;$('#expression-sound-file').disabled=soundPending;
+ $('#upload-expression-sound').setAttribute('aria-busy',String(soundPending));
 }
 function renderArtworkPickers(){
  for(const [mode,target] of [['character','#character-artworks'],['expression','#expression-artworks']]){
@@ -69,7 +84,7 @@ function renderArtworkPickers(){
   }
  }
 }
-async function refreshGallery(){const options=await json('/api/profile/options');characters=options.characters;render();}
+async function refreshGallery(){const request=++galleryRequest,options=await json('/api/profile/options');if(request!==galleryRequest)return;characters=options.characters;render();}
 async function imagePayload(file,form){
  if(!file||file.size>1024*1024)throw Error('請選擇不超過 1 MB 的圖片');
  if(file.type&&!['image/png','image/gif','image/webp'].includes(file.type))throw Error('僅接受 PNG、GIF 或 WebP 圖片');
@@ -88,7 +103,13 @@ async function init(){
  if(art){chosenCharacterArtwork=art.id;chosenExpressionArtwork=art.id;$('.artist-templates').open=true;$('#message').textContent=`已選擇圖庫作品「${art.name}」。可建立主角色，或選擇自己的角色新增表情。`;}
  render();renderArtworkPickers();
 }
-$('#save').onclick=async()=>{const button=$('#save');button.disabled=true;try{const result=await json('/api/profile/appearance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(appearance)});appearance=result.appearance;$('#message').textContent='角色已保存，遊戲座位會更新。';}catch(error){$('#message').textContent=error.message;}finally{button.disabled=false;}};
+$('#save').onclick=async()=>{
+ const button=$('#save'),target=soundKey(),generation=selectionGeneration,savedAppearance={...appearance};button.disabled=true;
+ try{const result=await json('/api/profile/appearance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(savedAppearance)});
+  if(generation===selectionGeneration&&target===soundKey()){appearance=result.appearance;render();$('#message').textContent='角色已保存，遊戲座位會更新。';}
+  else $('#message').textContent='角色已保存，已保留目前的選擇。';
+ }catch(error){$('#message').textContent=error.message;}finally{button.disabled=false;}
+};
 $('#toggle-sharing').onclick=async()=>{const character=selected(),button=$('#toggle-sharing');if(!character.owned)return;button.disabled=true;try{await json(`/api/profile/characters/${character.id.slice(5)}/sharing`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({shared:!character.shared})});await refreshGallery();$('#message').textContent=character.shared?'已停止分享；選用這位角色的好友會恢復預設角色。':'已分享到好友圖庫。';}catch(error){$('#message').textContent=error.message;}finally{button.disabled=false;}};
 bindUpload('#create-character','#character-file');
 bindUpload('#upload-expression','#expression-file');
@@ -106,4 +127,37 @@ $('#upload-expression').onsubmit=async event=>{event.preventDefault();const form
  appearance.expression=result.expression;await refreshGallery();
  form.reset();uploads.delete('#expression-file');chosenExpressionArtwork=null;renderArtworkPickers();status(form,'表情圖片已新增');$('#message').textContent='表情已新增到角色。若要將它設為預設外觀，再按「保存角色」。';render();
  }catch(error){status(form,error.message);}finally{button.disabled=false;}};
+$('#expression-sound-file').addEventListener('change',()=>{soundFile=$('#expression-sound-file').files[0]||null;soundStatus(soundFile?`已選取：${soundFile.name}`:'尚未選取音檔');});
+$('#upload-expression-sound').onsubmit=async event=>{
+ event.preventDefault();const character=selected(),expression=appearance.expression,target=soundKey();
+ if(soundPending||!character?.owned||!character.id.startsWith('user:')||expression==='neutral'||!character.expressions[expression])return;
+ const file=soundFile||$('#expression-sound-file').files[0],generation=++soundGeneration,current=()=>generation===soundGeneration&&target===soundKey();
+ soundPending=true;renderSound(character);soundStatus('正在讀取及轉換音檔…');
+ try{
+  const encoded=await window.ExpressionSounds.encodeFile(file);if(!current())return;
+  soundStatus('正在上傳音效…');
+  await json(`/api/profile/characters/${character.id.slice(5)}/expressions/${expression}/sound`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({base64:encoded.base64})});
+  await refreshGallery();if(!current())return;
+  soundFile=null;$('#expression-sound-file').value='';soundStatus('表情音效已保存。');
+ }catch(error){if(current())soundStatus(error.message||'音效無法保存，請重試');}
+ finally{if(current()){soundPending=false;renderSound(selected());}}
+};
+$('#remove-expression-sound').onclick=async()=>{
+ const character=selected(),expression=appearance.expression,target=soundKey();if(soundPending||!character?.owned||expression==='neutral'||!character.sounds?.[expression])return;
+ const generation=++soundGeneration,current=()=>generation===soundGeneration&&target===soundKey();soundPending=true;window.AudioSettings?.stopEffect(soundPreview);soundPreview=null;renderSound(character);soundStatus('正在移除音效…');
+ try{await json(`/api/profile/characters/${character.id.slice(5)}/expressions/${expression}/sound/remove`,{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});await refreshGallery();if(current())soundStatus('表情音效已移除。');}
+ catch(error){if(current())soundStatus(error.message||'音效無法移除，請重試');}
+ finally{if(current()){soundPending=false;renderSound(selected());}}
+};
+$('#preview-expression-sound').onclick=()=>{
+ const sound=selected()?.sounds?.[appearance.expression];if(soundPending||!sound)return;
+ const generation=soundGeneration,target=soundKey(),request=++soundPreviewRequest,current=()=>generation===soundGeneration&&target===soundKey()&&request===soundPreviewRequest;
+ window.AudioSettings?.stopEffect(soundPreview);
+ window.AudioSettings?.set('effects',{enabled:true},{gesture:true});
+ let failed=false;soundStatus('正在試聽音效。');
+ soundPreview=window.AudioSettings?.playExpression(sound,{onStop:clip=>{if(current()&&clip===soundPreview){soundPreview=null;soundStatus('試聽已停止。');}},onError:()=>{if(current()){failed=true;soundStatus('瀏覽器無法播放這段音效，請重試或重新上傳。');}}});
+ if(!soundPreview&&!failed)soundStatus('請在右上角設定調高音效音量，再試聽。');
+};
+document.addEventListener('visibilitychange',()=>{if(document.hidden){window.AudioSettings?.stopEffect(soundPreview);soundPreview=null;}});
+window.addEventListener('pagehide',()=>{soundGeneration++;soundPending=false;window.AudioSettings?.stopEffect(soundPreview);soundPreview=null;if(appearance)renderSound(selected());});
 init().catch(error=>$('#message').textContent=error.message);

@@ -1,5 +1,13 @@
 # Server／資料 agent 記憶
 
+## 候選：schema 14 表情音效與移轉（2026-10-06）
+
+開發候選在 `src/db/index.js` 新增 `character_sounds(character_id,expression,mime,bytes,duration_ms)`，複合主鍵及外鍵綁 `character_images(character_id,expression)`，刪除表情連帶移除音效。資料留在 SQLite BLOB，不新增磁碟媒體路徑；`src/profiles/sounds.js` 的 `inspectExpressionSound` 只接受標準 44-byte 頭、24000Hz／mono／PCM16 WAV，實 sample 數正且最多 240000，bytes 最多 480044，duration_ms 為 `ceil(samples/24)` 且最多 10000。
+
+`src/data/validation.js` 要求 schema 14 含音效表，檢查複合 PK／FK、非 neutral 的既有表情及 canonical bytes／MIME／duration 一致；inspect、export、verify、restore 共用檢查。v1–13 的非空音效表拒絕，不能用旧 schema 標籤绕過驗證。`src/data/transfer.js` 的既有 BLOB 保全規則新增 migration 14：只允許目標副本多出空音效表，來源、users 全欄位、既有 BLOB digest 不變；bundle 格式不變，schema 14 不能直接交給舊 schema 13 程式啟動。
+
+回歸來源為 `tests/data-transfer.test.js`：原 bytes／長度、原密碼登入及選用角色，schema 1–13 完整還原、空新表 digest、非空 migration 注入，以及重簽加密包中的壞音效／長度／MIME／引用／缺 FK 拒絕。`tests/draw-word-ban.test.js` 的 v12 fixture 先移除候選音效表，再降版，仍保留 v13 缺禁題表拒絕的獨立移轉測試。Windows Node 24.14.0 執行 `node --test tests/data-transfer.test.js tests/draw-word-ban.test.js` 共 63/63 通過；Linux、全套、真 Chrome 及正式部署尚待主 agent 統整，本段不替代下方正式 schema 13 狀態。
+
 ## 正式版本核對（2026-10-06）
 
 正式 `current` 為 `releases/8fcda4d`，本批Windows／Linux完整各543/543。部署前SQLite線上一致性備份及持久檔案另存，副本預演schema12→13後14張既有表全部一致；正式切換後schema13、完整性ok、外鍵錯誤0、7帳戶全欄位保留。既有公開session可用，網站與Tunnel active。部署加入共看及派對擴充，不是其他站資料匯入；共看仍在記憶體，沒有新增影音轉送或同步計時器。來源、備份及限制見 [本批部署驗證](../PARTY-UPGRADE-PROGRESS.md#正式部署驗證2026-10-06)。舊正式版15af1dd僅支援schema12，不能在v13資料上直接切回啟動。下列較早「未部署」為歷史狀態。
