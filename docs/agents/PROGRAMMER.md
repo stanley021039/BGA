@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-07 PR43／v1.4.1：路線每個轉移考慮J跳台的前驅，已知側向進入risk1000且提示淘汰，起跑direction1／未知內容不變；真飛躍峽谷競爭路徑與引擎結果回歸補齊。音效事件age採snapshot.serverNow，所有room withSocial及lobby回應供時鐘，game-shell與lobby.js轉交；本機elapsed判重連，legacy有界fallback、baseline／hidden／mute／ID去重／播放限制不變。受測2b5f982／本地v1.4.1，Windows／Linux各808、路線61／聲音API75通過。正式後續版面仍沿最新分支，PR範圍不擴張。詳 [修正證據](../PR43-STANLEY-REVIEW-FIXES.md)。
+
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。

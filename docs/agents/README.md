@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07 PR43審查候選v1.4.1／`2b5f982`：Stanley兩項P2已重現並修正；跳台按實際前一格方向避开致命路線，表情聲音依serverNow判年齡，五遊戲與大廳傳遞同一server時鐘。本地Windows／Linux完整各808項、聚焦路線61／聲音API75通過；原PR範圍保持，正式目前v1.5.1的後續版面另行整合。詳 [本輪修正](../PR43-STANLEY-REVIEW-FIXES.md)。下段790項是舊版驗收。
+
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。
