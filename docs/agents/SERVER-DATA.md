@@ -90,3 +90,11 @@ Windows／Linux 各259項通過（移轉16＋UI HTTP4）；完整 HTTP workflow 
 新增 `ui-uploads.js`：token／Origin／Host 後逐檔串流，manifest 先傳且只允許其 payload 白名單、精確 bytes；10 GiB／20,000 payload／5 MiB manifest／四批次上限。API 與 transfer 共用 busy，finish 呼叫真正 verify；已驗證 entry 封存。GET state 回安全摘要讓刷新恢复／清理，不回傳 key bytes。正常關閉等待工作完成再清理 owned temp；強殺不保證清理，也不自動刪其他程序的暫存。永久 key／backup／destination 禁止落入受管暫存根目錄。
 
 審查以 A→B 同 key 換包重現 path 指紋不足；restore 新增可選 `expectedBundleId`，完整驗包後、policy／publish 前比較，不符 `BUNDLE_CHANGED`。UI 自動從 verify 帶到 dryrun 與 apply；AI 也應帶入。CLI 未帶此欄位保留舊契約，不能宣稱所有 CLI 操作都要求先預演。合成資料與背景 Chrome 證據、完整最新測試總數见 [進度末節](../SERVER-DATA-TRANSFER-PROGRESS.md#管理者匯入流程與背景-chrome-驗收)。
+
+## 2026-10-06：schema 13 股市冥燈（本機）
+
+基底 main b843a3f 的隔離本地分支新增 market_rounds／votes／settlements／ledger／requests 五張非BLOB表，已有日期／唯一帳號票／結果版本／反向撤銷／冪等收據。上限13取代先前最新上限12，歷史記錄保持其當時版本。完整加密包保存五表；validation新增逐版計分與撤銷一致性。合成12版升級不改帳號hash／UUID／role，13版 export／verify／預演／restore 保留全部市場紀錄且撤銷sessions、原密碼可登入；損壞計分拒絕。Windows Node26.2.0 完整387/387與背景Chrome已驗，詳 [本機說明](../MARKET-JINX.md)。舊12程式不可開13資料，未提供降版；將來回退需舊程式及升級前完整備份一併恢復。本次未讀寫既有專案或正式備份資料，未部署或正式升級。
+
+同日 PR #38 審查修正：時鐘回退可讓投票 updated_at 早於 created_at，合法API寫入後反而無法完整備份，已以注入時間與真實 export 重現。更新票改取 now／原created_at／原updated_at最大值；不改以鎖後實際時間裁決截止的政策、不放寬語意驗證。回歸先前時間+2秒再回退至建立時間−1秒，票可修改、完整export／verify通過，精確截止仍拒絕。市場17／Windows完整391項通過，取代上段387的最新數字；沒有修改OS時鐘或正式備份，詳 [逐項證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)。
+
+同日與main `1447430` 必要整合：當前schema14取代最新13上限；完整legacy13禁題版與市場版均能冷export／verify／預演／restore，來源不變、目標升14、兩方已有行／帳號原值保留、sessions撤銷。14缺表、13部分市場布局／兩方皆缺及13壞積分拒絕；14混合備份保存禁題稽核與更正ledger。市場21／移轉26、Windows完整463/463通過；#34相關自動回歸保留，資料鎖／transfer核心與main相同。詳 [整合證據](../MARKET-JINX-MAIN-INTEGRATION.md)。未提供降版，未操作正式資料或備份。
