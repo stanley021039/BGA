@@ -1,6 +1,8 @@
 # Agent 長期記憶索引
 
-2026-10-06最新正式 **v1.1.4**：PR #36共看失聯重試及HTTP安全UUID修正已整合，Windows／Linux各663/663、HTTP真Chrome實播及pause／stop各503後同revision恢復通過。受測93ba350／本地v1.1.4 tag，正式current releases/93ba350、schema13／7帳戶完整保留、公開版本與資源已驗。#34雙平台442與Chrome四輪回看收藏禁題補齊，另一端已合併；#36來源552雙平台、原PR已更新5f2dd93／main／Ready、無衝突，未合併。以下較早部署及待驗文字屬歷史，以 [最新發布](../RELEASE-PROGRESS.md)與 [共看實證](../YOUTUBE-WATCH-PROGRESS.md)為準。
+2026-10-06最新正式 **v1.2.0**：角色自訂表情可加入最多10秒音效，作者上傳／試聽／移除，五款遊戲與大廳沿用共用效果音開關／音量。Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。背景Chrome邊界、轉檔、停止、一次載入及靜音均驗。受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。schema1–13副本升級與完整音效備份還原已驗；無新PR／push，纯驗收文件不移動tag。詳細契約、備份、證據與測試範圍見 [角色表情音效](../CHARACTER-ASSET-TEMPLATE.md)，較早部署狀態保留為歷史。
+
+2026-10-06先前正式 **v1.1.4**：PR #36共看失聯重試及HTTP安全UUID修正已整合，Windows／Linux各663/663、HTTP真Chrome實播及pause／stop各503後同revision恢復通過。受測93ba350／本地v1.1.4 tag，正式current releases/93ba350、schema13／7帳戶完整保留、公開版本與資源已驗。#34雙平台442與Chrome四輪回看收藏禁題補齊，另一端已合併；#36來源552雙平台、原PR已更新5f2dd93／main／Ready、無衝突，未合併。以下較早部署及待驗文字屬歷史，以 [最新發布](../RELEASE-PROGRESS.md)與 [共看實證](../YOUTUBE-WATCH-PROGRESS.md)為準。
 
 2026-10-06版本管理：新功能必須打版。先讀 [打版規範](../RELEASE-POLICY.md)及 [最新驗收](../RELEASE-PROGRESS.md)，判斷候選／正式狀態；不要沿用package曾長期固定1.0.0的做法。
 

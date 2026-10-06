@@ -1,6 +1,6 @@
 # 版本管理實作與驗收
 
-2026-10-06候選 **v1.2.0**：角色表情可上傳、試聽及移除最多10秒音效，五款遊戲與大廳共用效果音設定。schema14新增SQLite sound BLOB，完整移轉及v1–13副本升級已加驗；Windows727/727，背景Chrome11秒拒／10秒轉檔保存／試聽停止／房間與大廳一次載入／靜音零音效GET通過。Linux與正式切換待補。詳 [音效契約與驗收](CHARACTER-ASSET-TEMPLATE.md)。
+2026-10-06正式 **v1.2.0**：角色表情可上傳、試聽及移除最多10秒音效，五款遊戲與大廳共用效果音設定。schema14新增SQLite sound BLOB，完整移轉及v1–13副本升級已驗。Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。背景Chrome11秒拒／10秒轉檔保存／試聽停止／房間與大廳一次載入／靜音零音效GET通過。受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。無新PR／push；後續純驗收文件不移動tag。詳 [音效契約與驗收](CHARACTER-ASSET-TEMPLATE.md)。
 
 2026-10-06正式 **v1.1.4**：共看GET短暫失聯由既有遊戲state有界重試、HTTP區網用安全亂數UUIDfallback，以及合併marker已追上時不多抓一次。PR #36來源`d4020ef`Windows／Linux各552項；正式整合各663項與真HTTP背景Chrome播放／503恢復通過。受測`93ba3501aaca22768c8605609637fbdf0df2d557`及本地annotated `v1.1.4`，current releases/93ba350；零房間切換、7帳戶全欄位保留、schema13、15表副本一致，公開版本／8資源／Chrome設定通過。原PR #36非force更新並Ready，正式分支與tag未push；純驗收文件不移動tag。詳 [共看驗收與備份](YOUTUBE-WATCH-PROGRESS.md)。
 

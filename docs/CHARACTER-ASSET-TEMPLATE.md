@@ -1,8 +1,10 @@
 # 圖片角色與表情素材規格
 
-## 2026-10-06：表情音效實作契約（v1.2.0候選）
+## 2026-10-06：表情音效實作契約（v1.2.0正式）
 
-本次按角色的自訂表情實作；作者可為已存在且非neutral的自有角色表情設定、試聽或移除一段音效。分享角色時同一音效供選用者發送；所有五款遊戲與好友大廳沿用表情事件送出，不新增聲音輪詢。個人開關及音量使用現有AudioSettings.effects；emoji彈幕原本功能不變。目前Windows與背景Chrome已驗，Linux及正式切換待補。
+本次按角色的自訂表情實作；作者可為已存在且非neutral的自有角色表情設定、試聽或移除一段音效。分享角色時同一音效供選用者發送；所有五款遊戲與好友大廳沿用表情事件送出，不新增聲音輪詢。個人開關及音量使用現有AudioSettings.effects；emoji彈幕原本功能不變。Windows、Linux、背景Chrome及正式切換已完成驗收，詳下方證據。
+
+操作：開啟「我的角色」，選擇自己上傳的角色及一個已有圖片的表情，在「表情音效」上傳音檔；可用試聽及移除按鈕管理。平常表情不設定音效。收聽者在右上角設定開啟「遊戲音效」，用同一個音量滑桿調整；發送表情時一起播放，超過10秒的檔案會拒絕上傳。
 
 | 項目 | 契約 |
 | --- | --- |
@@ -14,9 +16,13 @@
 | 播放 | 共用ExpressionSounds只播新事件一次；首次載入、重連、隱藏及離房不補播。尊重effects開關／音量，最多4個效果重疊，最長10秒停止並清理；mute／visibility停止，失敗不影響表情圖片。作者按試聽是明確手勢，使用共用音效音量。 |
 | 移轉 | schema14必須含sound表，備份還原保存bytes／長度及FK；v1–13只在目標副本新增空sound表，來源／既有帳戶與BLOB不變。新schema不能直接交舊程式啟動。 |
 
-整合候選驗收：Windows Node24.14.0完整 **727/727**，失敗／取消／跳過0，約24秒，證據`work/expression-sound-windows-tests.log`。新增64項包含strict WAV及owner／ACL、4項HTTP、客端編碼／播放／profile、原聲音控制與v1–13移轉增量。客户端音效最多4段、10秒載入timeout與實際開播後最多10秒deadline分開，避免慢載入吃掉短音效；mute／hidden／reset後的晚play promise不重新開timer。試聽停止會更新文字。獨立複查以真profile VM重現「A保存延後→切B上傳轉換→A晚回覆」導致B按鈕鎖住，已讓保存回覆綁selection generation，B仍上傳一次並恢復操作。
+整合驗收：Windows Node24.14.0完整 **727/727**，失敗／取消／跳過0，約24秒，證據`work/expression-sound-windows-tests.log`。新增64項包含strict WAV及owner／ACL、4項HTTP、客端編碼／播放／profile、原聲音控制與v1–13移轉增量。客户端音效最多4段、10秒載入timeout與實際開播後最多10秒deadline分開，避免慢載入吃掉短音效；mute／hidden／reset後的晚play promise不重新開timer。試聽停止會更新文字。獨立複查以真profile VM重現「A保存延後→切B上傳轉換→A晚回覆」導致B按鈕鎖住，已讓保存回覆綁selection generation，B仍上傳一次並恢復操作。
 
-背景Chrome在隔離localhost3210、正常1794×1010、三個合成帳戶：一席UI真正選檔，48000Hz的11秒WAV被拒、10秒WAV轉成24000Hz後保存；試聽GET200 audio/wav、移除後metadata消失，再上傳1秒音效並確認「試聽已停止」。一席收聽UI配合另一帳戶API發送，撲克房與好友大廳各只載入一次帶hash音效URL，靜音時音效GET0；其他遊戲由共用GameShell與各頁載入／回歸驗證，未宣稱五款都重新完整實玩。沒有新console error。首次／背景／重連／去重／四段上限由真模組VM另驗，沒有聲稱實際揚聲器或GPU／弱網測試。私有圖`work/expression-sound-profile-final.jpg`，去敏network證據`work/expression-sound-{preview,room,lobby,muted}-network.json`；QA已正常停止。這次真瀏覽器匯入只測WAV，MP3／OGG／M4A接受度依瀏覽器decoder，不以副檔名保證。Linux與正式站結果待補。
+背景Chrome在隔離localhost3210、正常1794×1010、三個合成帳戶：一席UI真正選檔，48000Hz的11秒WAV被拒、10秒WAV轉成24000Hz後保存；試聽GET200 audio/wav、移除後metadata消失，再上傳1秒音效並確認「試聽已停止」。一席收聽UI配合另一帳戶API發送，撲克房與好友大廳各只載入一次帶hash音效URL，靜音時音效GET0；其他遊戲由共用GameShell與各頁載入／回歸驗證，未宣稱五款都重新完整實玩。沒有新console error。首次／背景／重連／去重／四段上限由真模組VM另驗，沒有聲稱實際揚聲器或GPU／弱網測試。私有圖`work/expression-sound-profile-final.jpg`，去敏network證據`work/expression-sound-{preview,room,lobby,muted}-network.json`；QA已正常停止。這次真瀏覽器匯入只測WAV，MP3／OGG／M4A接受度依瀏覽器decoder，不以副檔名保證。Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。私有全套證據為 `work/expression-sound-{windows,linux}-tests.log`。
+
+正式發布：受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。公開比對證據 `work/version-production-verification.json`，設定截圖 `work/expression-sound-production-version.jpg`。正式站只作既有session／版本／資源及資料完整性驗收，音效上傳及多人事件測試使用上述隔離fixture。
+
+發布包 SHA-256 `09eb447659e3fe2c5336ed5d2b2623c950059c2de4c2b59981319cc442cf6364`；切換前備份 `/home/ccc/apps/afterhours/shared/backups/pre-party-9b1fdd4-20261006T034156Z`（UTC）。SQLite線上備份與持久檔案另存，不宣稱同一原子時間點；備份來源schema13、正式啟動升schema14，回退不能直接用舊程式開schema14。無新PR／push；本段為純驗收文件，不移動v1.2.0 tag。
 
 ## 目前實作
 

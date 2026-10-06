@@ -9,7 +9,7 @@
 | 帳戶 | 完整保留 `users`，包括 UUID、登入名稱、顯示名稱、原密碼 hash、管理者／會員權限、停用狀態、appearance 與建立時間；玩家用**原帳號及原密碼**重新登入。 |
 | 登入／邀請／重設連結 | 備份包含來源資料；只在還原副本刪除 sessions、invites、password_resets。舊 cookie、邀請與重設連結不能在新環境沿用。 |
 | 角色、表情、作品、禮物 | SQLite BLOB、所有權、分享欄位及 profile 引用原樣保存；還原前驗證外鍵、引用與 BLOB digest。 |
-| 角色表情音效（schema 14 候選） | `character_sounds` 的 WAV bytes、MIME、毫秒長度及角色／表情複合外鍵原樣保存。驗證非 neutral 的既有表情、24000Hz／mono／PCM16 標準 WAV，以及 sample 數推算的長度；上限 10 秒、480044 bytes。音效存於 SQLite BLOB，沒有新增外部音檔目錄。 |
+| 角色表情音效（schema 14） | `character_sounds` 的 WAV bytes、MIME、毫秒長度及角色／表情複合外鍵原樣保存。驗證非 neutral 的既有表情、24000Hz／mono／PCM16 標準 WAV，以及 sample 數推算的長度；上限 10 秒、480044 bytes。音效存於 SQLite BLOB，沒有新增外部音檔目錄。 |
 | 題庫、留言、成就 | 保存 SQLite 資料、共編 `community.json`，包含 schema 13 已通過的畫猜禁題及投票稽核；舊 JSON 留言及回覆在還原副本依現有 BoardStore 規則匯入。未過半的房間記憶體投票不搬移，未新增勝場統計。 |
 | 音樂 | SQLite metadata 與外部原始音檔一起保存；驗證 metadata、大小、音訊格式。符合檔名規則的孤立音檔也保留並報告數量。 |
 | 歷史 | 保存 session／match JSONL、meta、引擎原碼及 hash；嚴格拒絕缺檔、截斷、未配對操作或 hash 不符。 |
@@ -20,7 +20,7 @@
 
 2026-10-05 後續程式 `2cf8a44` 支援 schema 13 禁題表；schema 12 備份還原時只升級目標副本，新增空禁題表，來源不變。已通過的禁題會在還原後繼續從題庫與抽題排除，詳 [相容性驗收](DRAW-WORD-BAN-PROGRESS.md)。
 
-2026-10-06 開發候選支援 schema 14 表情音效，bundle 格式仍為 `afterhours-encrypted-data-v1`。schema 14 缺少 `character_sounds` 拒絕；schema 1–13 只在還原副本新增空音效表，不改來源、帳戶或既有素材。舊 schema 若提前含有非空音效表也拒絕，不能藉 migration 相容規則帶入未驗證的新資料。inspect／export／verify／restore 都會檢查實際 WAV bytes 與 MIME／duration_ms 是否一致；新 schema 不能直接交給只支援 schema 13 的舊程式啟動。此段為候選資料契約，正式部署狀態由本批驗收更新。
+2026-10-06 正式 v1.2.0 支援 schema 14 表情音效，bundle 格式仍為 `afterhours-encrypted-data-v1`。schema 14 缺少 `character_sounds` 拒絕；schema 1–13 只在還原副本新增空音效表，不改來源、帳戶或既有素材。舊 schema 若提前含有非空音效表也拒絕，不能藉 migration 相容規則帶入未驗證的新資料。inspect／export／verify／restore 都會檢查實際 WAV bytes 與 MIME／duration_ms 是否一致；新 schema 不能直接交給只支援 schema 13 的舊程式啟動。Windows／Linux完整各727項、schema1–13副本升級與音效完整還原已驗；正式站已升schema14，本站原7帳戶完整保留。發布與備份證據見 [音效驗收](CHARACTER-ASSET-TEMPLATE.md)，此次更新不是其他站資料匯入。
 
 ## 執行介面
 
@@ -199,4 +199,4 @@ EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核�
 
 新 writer 尚未接受任何寫入時，可停新服務並切回相容的舊 code＋舊資料代；若已接受新登入或其他寫入，先冷備份新代再做受控前向修復，直接回舊 snapshot 會丟新資料。GitHub 外部操作不能由本地 DB rollback 撤銷。
 
-第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。本批 schema 14 為開發候選，支援的舊 schema 只升級還原副本；schema 1–13 有相容性回歸。帳戶及來源既有 BLOB digest 必須相同，只允許 migration 3／5／8／14 明確新增的空 BLOB 表，非空新表或未知新表仍拒絕。
+第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。本批 schema 14 已隨 v1.2.0 發布，支援的舊 schema 只升級還原副本；schema 1–13 有相容性回歸。帳戶及來源既有 BLOB digest 必須相同，只允許 migration 3／5／8／14 明確新增的空 BLOB 表，非空新表或未知新表仍拒絕。
