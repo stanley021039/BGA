@@ -1,6 +1,6 @@
 # 完整伺服器資料移轉與備份還原
 
-2026-10-06 本輪整合狀態：依使用者要求將全部已完成改動一起送 PR，正在接入 origin/main `689318f`，候選將整合為 v1.4.0；PR 尚未建立，本輪完整驗收尚未完成。正式仍 v1.3.0，v1.3.1／v1.3.2 送禮排版候選未部署，既有 tag 不改。以下較早版本、分支、PR 狀態與測試數字保留為歷史；市場 schema 14 與音效 schema 14 的布局不同，本輪候選契約統一至 schema 15，實作與驗證進行中，不能沿用任一方舊驗收當作整合結果。
+2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](PARTY-PR-INTEGRATION-PROGRESS.md)。
 
@@ -8,7 +8,7 @@
 
 ## 本輪候選：統一 schema 15
 
-以下為本輪已決定的相容契約；程式與回歸驗收仍在整合，完成證據見 [整批進度](PARTY-PR-INTEGRATION-PROGRESS.md)。市場版與音效版曾各自使用 schema 14，不能只憑版本號認定相容。schema 15 必須同時有 `draw_word_exclusions`、`character_sounds` 與完整市場五表（`market_rounds`、`market_votes`、`market_settlements`、`market_ledger`、`market_requests`）。
+以下相容契約已通過本輪完整Windows／Linux各790項及DB／移轉聚焦81項回歸，證據見 [整批進度](PARTY-PR-INTEGRATION-PROGRESS.md)。市場版與音效版曾各自使用 schema 14，不能只憑版本號認定相容。schema 15 必須同時有 `draw_word_exclusions`、`character_sounds` 與完整市場五表（`market_rounds`、`market_votes`、`market_settlements`、`market_ledger`、`market_requests`）。
 
 | 來源布局 | 候選完整備份／還原契約 |
 | --- | --- |

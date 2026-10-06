@@ -1,5 +1,7 @@
 # 版本管理實作與驗收
 
+2026-10-06候選 **v1.4.0**／[PR #43](https://github.com/stanley021039/BGA/pull/43)：全部已完成派對功能與最新main整合，schema15統一兩種舊14布局。受測程式及本地tag `bdd77d1`；Windows／Linux各790/790，既有帳戶／音效／市場資料保留。後續只有README及验收文件，既有版本tag不動；正式仍v1.3.0，較早排版候選未單獨切換。詳 [整批驗收與送審狀態](PARTY-PR-INTEGRATION-PROGRESS.md)。
+
 2026-10-06候選 **v1.3.2**：送禮主區由固定560px上限改為按實際導覽／玩家列高度分配視窗空間，包含前一筆16px間距。Chrome高視窗／720p／八席等待及選禮／手機通過，Windows／Linux各761/761，備份及16表副本預演通過；受測來源／本地tag `df7846d`。v1.3.1未單獨部署，tag保持不動；正式仍為v1.3.0，等待更新時機。詳 [高度驗收及發布狀態](GIFT-VIEWPORT-HEIGHT-PROGRESS.md)。
 
 2026-10-06正式 **v1.3.0**：畫猜本人猜中／畫者輪次及雷霆骰聲／shot／slam／nitro／skid已接共用事件音效。Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。schema14不變、integrity ok、外鍵錯誤0，原7帳戶全欄位保留；預演副本16張既有表逐列一致。匿名no-store版號、既有session、7份HTML、24份資源（含7WAV的精確bytes及MIME）一致，背景Chrome設定顯示「版本 v1.3.0」。7短音（2Kenney CC0改作＋5固定seed原創）、兩個新聲音模組、遊戲2／總4段上限及1秒載入timeout已驗；Chromeplaying／清理／靜音及所有限制見 [音效實證](GAME-SOUNDS-PROGRESS.md)。第二批遊戲候選仍為規格，沒有真人聽感／喇叭測試；無新PR／push，純驗收文件不移動tag。
