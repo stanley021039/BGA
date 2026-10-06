@@ -161,7 +161,12 @@ body.ui-large-text .choice-grid { max-height:none; overflow:visible }
 body.ui-large-text .gift-task-progress>div { grid-template-columns:minmax(0,1fr) minmax(220px,320px) }
 @media(max-width:800px) { body.ui-large-text .gift-task-progress>div { grid-template-columns:1fr } }
 @media(min-width:1001px) and (min-height:680px) {
- .gift-layout main { max-height:clamp(300px,calc(100dvh - 420px),560px); overflow:auto; scrollbar-gutter:stable }
+ /* Reserve the actual header and roster sizes; let the task use the remaining viewport. */
+ body:not(.ui-large-text) .gift-shell { display:flex; flex-direction:column; height:100dvh }
+ body:not(.ui-large-text) .gift-shell>:not(.gift-layout) { flex:none }
+ body:not(.ui-large-text) .gift-layout { flex:1 1 0; min-height:0; grid-template-rows:minmax(auto,1fr) auto }
+ body:not(.ui-large-text) #gameSidebar { min-height:min-content }
+ body:not(.ui-large-text) .gift-layout main { align-self:stretch; max-height:none; overflow:auto; scrollbar-gutter:stable }
  .choice-summaries { position:sticky; top:0; z-index:1; background:var(--paper) }
 }
 @media(max-width:1000px) {
