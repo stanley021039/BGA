@@ -5,7 +5,7 @@ const source=fs.readFileSync(require.resolve('../public/race.js'),'utf8'),diceSo
 // Real presentation functions and both real controllers; these DOM stand-ins
 // test sequencing and permissions, not browser geometry or rendering speed.
 function harness({lesson=false,enabled=true,reduced=false,muted=false}={}){
- let clock=10000,timerId=0,generation=0,scope,svg=null,cueVisible=false;const timers=new Map(),microtasks=[],animations=[],network=[],effects=[],effectRecords=[],cues=[],cueRecords=[],sounds=[],soundRecords=[],spotlights=[],order=[],scrolls=[],nodes=new Map(),layers=new Map(),subscriptions=new Set(),documentListeners=new Map(),windowListeners=new Map();let achievementChecks=0,lessonRenders=0,lessonMotions=0;
+ let clock=10000,timerId=0,generation=0,scope,svg=null,cueVisible=false;const timers=new Map(),microtasks=[],animations=[],network=[],effects=[],effectRecords=[],cues=[],cueRecords=[],sounds=[],soundRecords=[],spotlights=[],order=[],scrolls=[],hostUpdates=[],nodes=new Map(),layers=new Map(),subscriptions=new Set(),documentListeners=new Map(),windowListeners=new Map();let achievementChecks=0,lessonRenders=0,lessonMotions=0;
  class Element{
   constructor(tag='div'){this.tagName=tag.toUpperCase();this.children=[];this.dataset={};this.attrs={};this.listeners=new Map();this.hidden=false;this.disabled=false;this.open=false;this.isConnected=false;this.textContent='';this.className='';this.style={setProperty(name,value){this[name]=value;}};this.classList={contains:()=>false};}
   append(...items){for(const item of items){item.parentElement=this;item.isConnected=this.isConnected;this.children.push(item);}}
@@ -38,7 +38,7 @@ function harness({lesson=false,enabled=true,reduced=false,muted=false}={}){
  if(lesson)window.RaceLesson={onRender(){lessonRenders++;},onMotion(){lessonMotions++;}};
  let initialized=false;scope={window,document,MotionPolicy:policy,Date:{now:()=>clock},setTimeout,clearTimeout,queueMicrotask:callback=>microtasks.push(callback),state:null,busy:false,polling:false,disconnected:false,lastVersion:-1,onlineSignature:'',session:{code:'AAAAAA'},selectedCar:null,selectedDie:null,command:'',commandDie:null,repairCar:null,$:node,esc:String,RacePaths,sizes:['輕型','中型','重型'],directions:['前左','前方','前右','後左','後方','後右'],knownAchievements:null,
   motionGate:{update(s,{connected=true}={}){const live=initialized&&connected&&!document.hidden;initialized=true;return live;}},
-  RoomHost:{update(){},kicked(){}},RoomApi:{async request(route,data){network.push({route,data});return scope.request?await scope.request(route,data):scope.response||scope.state;}},GameShell:{stableMarkup(element,markup){element.innerHTML=markup;},update(){}},
+  RoomHost:{update(snapshot,callback){hostUpdates.push({snapshot,callback});},kicked(){}},RoomApi:{async request(route,data){network.push({route,data});return scope.request?await scope.request(route,data):scope.response||scope.state;}},GameShell:{stableMarkup(element,markup){element.innerHTML=markup;},update(){}},
   immersion:{allowsMotion:policy.allowsMotion,prepareFocus(){},startFocus(items){spotlights.push(items);},stopFocus(){},playSound(kind){sounds.push(kind);}},eventCues:{hide(){cueVisible=false;order.push('cue:hide');},show(events,cars,options){if(events.length)cueVisible=true;cues.push(Array.from(events,event=>event.id));cueRecords.push({events:Array.from(events),cars,options,at:clock});order.push('cue:'+events.map(event=>event.id).join(','));}},vehicleEffects:{reset(){},show(events){effects.push(Array.from(events,event=>event.id));effectRecords.push({events:Array.from(events),at:clock});}},checkRaceAchievements(){achievementChecks++;}};
  vm.createContext(scope);vm.runInContext(soundSource,scope);vm.runInContext(raceSoundSource,scope);scope.raceSounds=window.RaceGameSounds.create();vm.runInContext(diceSource,scope);scope.dice=Array.from({length:6},(_,i)=>window.RaceDiceDialog.faceMarkup(i+1));scope.diceDialog=window.RaceDiceDialog.mount({onRolling:cycle=>scope.raceSounds.rolling(cycle),onAction:(action,data)=>scope.run('action',{action,...data})});
  scope.raceMovement=RaceMovement.mount({document,policy,now:()=>clock,setTimeout,clearTimeout,onCue:cue=>scope.showRaceCheckpoint(cue),onMove:group=>scope.showRaceMotion(group),onSettled:result=>microtasks.push(()=>scope.finishRacePresentation(result))});
@@ -49,7 +49,7 @@ function harness({lesson=false,enabled=true,reduced=false,muted=false}={}){
  const flush=()=>{while(microtasks.length)microtasks.shift()();},advance=ms=>{const end=clock+ms;for(;;){const next=[...timers].filter(([,timer])=>timer.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];if(!next)break;clock=next[1].at;timers.delete(next[0]);next[1].callback();flush();}clock=end;flush();};
  const cell=(x,y)=>({generation,dataset:{x:String(x),y:String(y)},closest:selector=>selector==='[data-x]'?cell(x,y):null});
  const target=(dataset,id)=>({dataset,id,value:'nitro',disabled:false,closest:()=>target(dataset,id)});
- return {scope,document,dialog,find,button,node,animations,network,effects,effectRecords,cues,cueRecords,sounds,soundRecords,spotlights,order,layers,scrolls,cell,target,flush,advance,settle(){const animation=animations.at(-1);advance(Math.max(0,animation.options.duration-animation.currentTime-(clock-animation.createdAt)));animation.finish();flush();},dispatch(type,target){for(const callback of documentListeners.get(type)||[])callback({target});},hide(value){document.hidden=value;for(const callback of documentListeners.get('visibilitychange')||[])callback();},leave(){for(const callback of windowListeners.get('pagehide')||[])callback();},setEnabled(value){enabled=value;for(const callback of subscriptions)callback();},setMuted(value){muted=value;},get time(){return clock;},get cueVisible(){return cueVisible;},get achievementChecks(){return achievementChecks;},get lessonRenders(){return lessonRenders;},get lessonMotions(){return lessonMotions;}};
+ return {scope,document,dialog,find,button,node,animations,network,effects,effectRecords,cues,cueRecords,sounds,soundRecords,spotlights,order,layers,scrolls,hostUpdates,cell,target,flush,advance,settle(){const animation=animations.at(-1);advance(Math.max(0,animation.options.duration-animation.currentTime-(clock-animation.createdAt)));animation.finish();flush();},dispatch(type,target){for(const callback of documentListeners.get(type)||[])callback({target});},hide(value){document.hidden=value;for(const callback of documentListeners.get('visibilitychange')||[])callback();},leave(){for(const callback of windowListeners.get('pagehide')||[])callback();},setEnabled(value){enabled=value;for(const callback of subscriptions)callback();},setMuted(value){muted=value;},get time(){return clock;},get trackGeneration(){return generation;},get cueVisible(){return cueVisible;},get achievementChecks(){return achievementChecks;},get lessonRenders(){return lessonRenders;},get lessonMotions(){return lessonMotions;}};
 }
 function state(version=1,extra={}){
  const players=[{id:'P',name:'甲車隊',color:'#ca9563',dice:[1,2,3,4].map(value=>({value,used:false})),commandUsed:false,online:true,chopper:null},{id:'Q',name:'乙車隊',color:'#63a184',dice:[],commandUsed:false,online:true,chopper:null}];
@@ -57,6 +57,52 @@ function state(version=1,extra={}){
 }
 const movement={id:1,kind:'move',moves:[{car:'A',from:{x:2,y:1},to:{x:2,y:2}}]},collision=(id='CHECK',extra={})=>({id,kind:'collision',status:'awaiting',owner:'P',title:'碰撞判定',condition:'受推車與推進方向',participants:[{id:'P',name:'甲車隊'},{id:'Q',name:'乙車隊'}],dice:[{label:'受推車',faces:['進入車','原位車']},{label:'方向',faces:[1,2,3,4,5,6]}],...extra});
 const moved=(base,extra={})=>({...base,version:base.version+1,cars:base.cars.map(car=>car.id==='A'?{...car,y:2}:car),motions:[movement],...extra});
+
+const customGif='/assets/characters/user/12345678-1234-4234-8234-123456789abc/emote-22345678-1234-4234-8234-123456789abc?v='+ 'a'.repeat(64);
+const neutralPlayers=players=>players.map(player=>({...player,avatar:'/characters/'+player.id}));
+const expressionSnapshot=(base,serverNow,playerId='P')=>({...base,serverNow,players:base.players.map(player=>player.id===playerId?{...player,avatar:customGif}:player),expressions:[{id:'EXPRESSION',kind:'expression',playerId,expression:'emote-custom',label:'flip',image:customGif,at:serverNow}]});
+
+test('same-version custom GIF expressions update both viewers immediately and restore neutral after five seconds without repainting the track',async t=>{
+ for(const me of ['P','Q'])await t.test(me,()=>{
+  const h=harness(),initial=state(1,{me,serverNow:h.time});initial.players=neutralPlayers(initial.players);h.scope.receive(initial);
+  const generation=h.trackGeneration,animations=h.animations.length,sounds=h.sounds.length;
+  assert.match(h.node('#crews').innerHTML,/src="\/characters\/P"/);
+  assert.equal(h.hostUpdates.at(-1).callback,h.scope.receive,'social ACKs register the lightweight receiver');
+  const expression=expressionSnapshot(initial,h.time+1);h.scope.receive(expression);
+  assert.equal(h.scope.state.players.find(player=>player.id==='P').avatar,customGif);assert.ok(h.node('#crews').innerHTML.includes('src="'+customGif+'"'));
+  assert.equal(h.trackGeneration,generation);assert.equal(h.animations.length,animations);assert.equal(h.sounds.length,sounds);
+  h.advance(5000);h.scope.response={...initial,serverNow:h.time,expressions:[]};
+  return h.scope.refresh().then(()=>{
+   assert.equal(h.scope.state.version,initial.version);assert.equal(h.scope.state.players.find(player=>player.id==='P').avatar,'/characters/P');
+   assert.match(h.node('#crews').innerHTML,/src="\/characters\/P"/);assert.ok(!h.node('#crews').innerHTML.includes(customGif));
+   assert.equal(h.trackGeneration,generation);assert.equal(h.animations.length,animations);assert.equal(h.network.length,1);assert.equal(h.network[0].route,'state');
+  });
+ });
+});
+
+test('same-version expression ACKs preserve an active movement and its pending collision dialog',()=>{
+ const h=harness(),initial=state(1,{serverNow:h.time});initial.players=neutralPlayers(initial.players);h.scope.receive(initial);
+ const after=moved(initial,{serverNow:h.time+1,diceCheck:collision(),legalMoves:[],events:[{id:1,kind:'slam',afterMotion:1,car:'A',other:'B',x:2,y:2}]});h.scope.receive(after);h.advance(80);
+ const generation=h.trackGeneration,animation=h.animations.at(-1),count=h.animations.length,effects=h.effects.length,cues=h.cues.length;
+ assert.equal(h.scope.raceMovement.locked(),true);assert.equal(h.dialog.open,false);
+ h.scope.receive(expressionSnapshot(after,h.time,'Q'));
+ assert.ok(h.node('#crews').innerHTML.includes(customGif));assert.equal(h.scope.raceMovement.locked(),true);assert.equal(h.dialog.open,false);
+ assert.equal(h.trackGeneration,generation);assert.equal(h.animations.at(-1),animation);assert.equal(animation.cancelled,undefined);assert.equal(h.animations.length,count);
+ assert.equal(h.effects.length,effects);assert.equal(h.cues.length,cues);assert.equal(h.network.length,0);
+ h.settle();assert.equal(h.scope.raceMovement.locked(),false);assert.equal(h.dialog.open,true);assert.equal(h.dialog.dataset.stage,'awaiting');assert.equal(h.dialog.modalShows,1);
+ assert.ok(h.node('#crews').innerHTML.includes(customGif));assert.equal(h.network.length,0);
+});
+
+test('same-version avatar changes neither reopen nor restart the ongoing dice rolling cycle',()=>{
+ const h=harness(),initial=state(1,{serverNow:h.time});initial.players=neutralPlayers(initial.players);h.scope.receive(initial);
+ const rolling={...initial,version:2,serverNow:h.time,diceCheck:collision('ROLLING',{status:'rolling',startedAt:h.time,readyAt:h.time+1000,serverNow:h.time})};h.scope.receive(rolling);
+ const generation=h.trackGeneration,shows=h.dialog.modalShows,animations=h.animations.length;assert.equal(h.dialog.dataset.stage,'rolling');
+ h.advance(400);h.scope.receive(expressionSnapshot(rolling,h.time));
+ assert.equal(h.dialog.open,true);assert.equal(h.dialog.dataset.stage,'rolling');assert.equal(h.dialog.modalShows,shows);assert.equal(h.trackGeneration,generation);assert.equal(h.animations.length,animations);
+ const result={...h.scope.state,version:3,serverNow:h.time,diceCheck:{...rolling.diceCheck,status:'result',serverNow:h.time,result:{faces:['原位車',2],text:'原來的擲骰完成'}}};h.scope.receive(result);
+ h.advance(599);assert.equal(h.dialog.dataset.stage,'rolling');h.advance(1);assert.equal(h.dialog.dataset.stage,'result');assert.equal(h.find('race-dice-result').textContent,'原來的擲骰完成');
+ assert.equal(h.dialog.modalShows,shows);assert.equal(h.network.length,0);
+});
 
 test('collision approach remains visible on the map and a real dice modal opens only after the real movement controller settles',()=>{
  const h=harness(),base=state();h.scope.render(base);const after=moved(base,{diceCheck:collision(),legalMoves:[],events:[{id:1,kind:'slam',afterMotion:1,car:'A',other:'B',x:2,y:2}]});h.scope.render(after);

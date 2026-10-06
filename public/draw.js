@@ -249,7 +249,7 @@ function playDrawSounds(previous,next,live){
 function receive(next){
  if(!next||next.type!=='draw')throw Error('這不是你畫我猜房間');
  const previous=state,oldRound=state?.round,oldPhase=state?.phase;
- if(previous&&next.version<previous.version)return;
+ if(previous&&(next.version<previous.version||RoomHost.isStaleSnapshot?.(next,previous)))return;
  const soundLive=gameSounds?.update(next,{connected:!disconnected&&!streamDisconnected&&!motionNeedsBaseline})||false;
  const live=motionGate?motionGate.update(next,{connected:!disconnected&&!streamDisconnected&&!motionNeedsBaseline}):!!previous&&!disconnected&&!motionNeedsBaseline&&Date.now()-lastReceivedAt<5000&&document.visibilityState!=='hidden';
  motionNeedsBaseline=false;

@@ -194,6 +194,7 @@ function frontendHarness(f,{nested=false}={}){
  scope.raceSounds={update:()=>({live:false,epoch:0,events:[],motions:[]}),events(){},motion(){},motions(){}};
  // Exercise the real render frame and board rebuild, with isolated shell/audio
  // dependencies; these VM nodes do not claim browser layout measurements.
+ vm.runInContext(source.slice(source.indexOf('function renderCrews(s)'),source.indexOf('async function refresh()')),scope);
  vm.runInContext(source.slice(source.indexOf('function render(s)'),source.indexOf('function commandAccepts(')),scope);
  return Object.assign(scope,{hint,calls,layers,listeners,cell,svg,world,mapCar});
 }

@@ -162,7 +162,7 @@
  async function send(payload,confirmation,trigger){
   if(!state||sending)return false;
   sending=true;feedback('傳送中…');const buttons=[...panel.querySelectorAll('button'),...expressions.querySelectorAll('button')],disabled=buttons.map(button=>button.disabled);for(const button of buttons)button.disabled=true;q('#shared-barrage').setAttribute('aria-busy','true');if(window.GameUI)window.GameUI.setBusy(trigger,true);else if(trigger){trigger.setAttribute('aria-busy','true');trigger.classList.add('is-pending');}
-  try{const response=await fetch('/api/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code,...payload})});const result=await response.json();if(!response.ok)throw Error(result.error||'傳送失敗');update(result);feedback(confirmation,'success');return true;}
+  try{const response=await fetch('/api/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code,...payload})});const result=await response.json();if(!response.ok)throw Error(result.error||'傳送失敗');if(window.RoomHost?.acceptSnapshot)window.RoomHost.acceptSnapshot(result);else update(result);feedback(confirmation,'success');return true;}
   catch(error){feedback(error.message,'error');return false;}
   finally{sending=false;if(window.GameUI)window.GameUI.setBusy(trigger,false);else if(trigger){trigger.removeAttribute('aria-busy');trigger.classList.remove('is-pending');}buttons.forEach((button,index)=>button.disabled=disabled[index]);q('#shared-barrage').removeAttribute('aria-busy');}
  }
