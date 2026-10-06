@@ -1,3 +1,4 @@
+const {SCHEMA_VERSION}=require("../src/db");
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -59,7 +60,7 @@ test('friends can choose shared characters, while private art and editing stay w
   app=createApp(config);
   await app.listen();
   const persisted=openDatabase(config.dbFile);
-  assert.equal(persisted.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(persisted.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(persisted.prepare('SELECT shared FROM player_characters WHERE id=?').get(uuid).shared,0);
   persisted.close();
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}

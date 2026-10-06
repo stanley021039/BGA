@@ -1,0 +1,59 @@
+(()=>{'use strict';
+ const $=s=>document.querySelector(s),R=window.MarketRules,escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const format=value=>new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value));
+ const signed=n=>n>0?'+'+n:String(n),name=(id,r)=>id==='tie'?'和局':r.options.find(o=>o.id===id)?.name||'—';
+ // getRandomValues also works on BGA's HTTP LAN origin; randomUUID needs HTTPS.
+ const requestId=()=>[...crypto.getRandomValues(new Uint8Array(16))].map(n=>n.toString(16).padStart(2,'0')).join('');
+ let state=null,draft=null,busy=false,uncertain=false,serverAnchor=0,localAnchor=0,preview=null,loadSequence=0,votingClosed=true;
+ const now=()=>serverAnchor+performance.now()-localAnchor;
+ const round=()=>state?.rounds.find(r=>r.id===$('#roundSelect').value);
+ function message(s,error=false){$('#message').textContent=s;$('#message').classList.toggle('error',error);}
+ async function api(path,data){const res=await fetch(path,{credentials:'same-origin',cache:'no-store',...(data?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})});let value;try{value=await res.json();}catch{throw Error('伺服器回應無法辨識，請更新確認狀態');}if(!res.ok){if(res.status===401)location.href='/login?next=/market';const error=Error(value.error||'操作失敗');error.code=value.code;throw error;}return value;}
+ function selectDraft(){const r=round();draft=r?{roundId:r.id,optionId:r.vote?.optionId||null,expectedRevision:r.vote?.revision||0}:null;}
+ async function load(quiet=false){const sequence=++loadSequence,value=await api(state?.me.role==='admin'?'/api/admin/market':'/api/market');if(sequence!==loadSequence)return;
+  if(value.me.role==='admin'&&!('voteCount' in (value.rounds[0]||{}))&&!state){const admin=await api('/api/admin/market');if(sequence!==loadSequence)return;state=admin;}else state=value;
+  serverAnchor=Date.parse(state.serverNow);localAnchor=performance.now();const previous=$('#roundSelect').value;
+  $('#roundSelect').innerHTML=state.rounds.slice().reverse().map(r=>'<option value="'+escape(r.id)+'">'+escape(r.targetDate)+' · '+({open:'可預測',closed:'待結算',settled:'已結算'}[r.phase])+'</option>').join('');
+  const preferred=state.rounds.slice().reverse().find(r=>r.phase==='open')||state.rounds[0];$('#roundSelect').value=state.rounds.some(r=>r.id===previous)?previous:preferred?.id||'';
+  if(!draft||draft.roundId!==$('#roundSelect').value)selectDraft();
+  $('#score').textContent=signed(state.stats.score);$('#hits').textContent=state.stats.hits;$('#played').textContent=state.stats.played;
+  $('[data-view=admin]').hidden=state.me.role!=='admin';renderVote();renderRecords();renderAdmin();setView();uncertain=false;
+  if(!quiet)message(state.rounds.length?'選一個區間，截止前可修改。':'目前尚未建立交易日，請等待管理員更新。');
+ }
+ function renderVote(){const focused=document.activeElement?.name==='optionId'?document.activeElement.value:null,r=round(),rules=r?.rules||state?.rules||R.CONFIG,labels=R.labels(rules),closed=!r||!!r.result||now()>=Date.parse(r.cutoffAt);votingClosed=closed;
+  $('#options').innerHTML=rules.options.map((o,i)=>'<label class="choice '+(draft?.optionId===o.id?'selected ':'')+(closed?'closed':'')+'"><input type="radio" name="optionId" value="'+escape(o.id)+'" '+(draft?.optionId===o.id?'checked ':'')+(closed||busy||uncertain?'disabled':'')+' aria-label="'+escape(o.name+' '+labels[i])+'"><div class="choice-heading"><strong>'+escape(o.name)+'</strong><span>'+escape(labels[i])+'</span></div><div class="placeholder" style="background:'+escape(o.color)+'" aria-label="圖片佔位">圖片待提供</div></label>').join('');
+  if(focused){const input=[...$('#options').querySelectorAll('input')].find(x=>x.value===focused);if(input&&!input.disabled)input.focus({preventScroll:true});}
+  $('#scoreRules').innerHTML='猜中 '+signed(rules.hit)+' · 猜錯 '+signed(rules.miss)+'<br>剛好 0% 為和局，皆不計分';
+  $('#expectation').textContent='等機率隨機選六項時，非和局的期望積分為 (1/6 × '+rules.hit+') + (5/6 × '+rules.miss+') = '+((rules.hit+5*rules.miss)/6)+'。這不代表各區間真實發生機率相同，也不代表每個區間的真實期望值為 0。剛好 0% 的和局積分為 0。';
+  $('#phase').textContent=!r?'等待開放':r.result?'已結算':closed?'已截止 · 等待結算':'預測開放中';$('#cutoff').textContent=r?'截止 '+format(r.cutoffAt)+'（台北）':'由管理員手動建立交易日';
+  const voteText=r?.vote?'已提交：'+name(r.vote.optionId,rules)+' · '+format(r.vote.updatedAt):'尚未投票';
+  $('#voteStatus').textContent=!r?'尚未建立交易日。':r.result?'收盤 '+signed(r.result.returnPct)+'% · '+name(r.result.bucket,rules)+' · '+(r.vote?'本日 '+signed(r.result.points)+' 分':'未投票，不計分'):closed?voteText+'。投票已截止。':voteText+'。截止前可修改。';
+  $('#saveVote').textContent=r?.vote?'儲存修改 ↗':'送出預測 ↗';$('#saveVote').disabled=busy||uncertain||closed||!draft?.optionId||draft.optionId===r?.vote?.optionId;
+  $('#roundSelect').disabled=busy||uncertain||!state?.rounds.length;
+ }
+ function renderRecords(){const rows=state.rounds;$('#history').innerHTML=rows.length?rows.map(r=>'<article class="record"><div><strong>'+escape(r.targetDate)+'</strong><small>'+escape(r.result?'已結算 · 第 '+r.result.revision+' 版':r.phase==='open'?'投票中':'等待結算')+'</small></div><p>我的預測：'+escape(r.vote?name(r.vote.optionId,r.rules):'未投票')+'</p><p>'+escape(r.result?'收盤 '+signed(r.result.returnPct)+'% · '+name(r.result.bucket,r.rules):'收盤結果待更新')+'</p><div class="result-points">'+(r.result?(r.vote?signed(r.result.points):'0')+'<small>積分</small>':'—')+'</div></article>').join(''):'<p class="helper">有交易日後，預測與結果會出現在這裡。</p>';
+  $('#ledger').innerHTML=state.ledger.length?state.ledger.map(l=>'<div class="ledger-row"><span>'+signed(l.points)+' 分</span><strong>'+escape(l.targetDate)+'</strong> · 第 '+l.revision+' 版 · '+(l.kind==='reversal'?'撤銷第 '+l.reverses_revision+' 版':'結算')+'<br>'+escape(format(l.at))+' · '+escape(l.reason||'首次結算')+'</div>').join(''):'<p class="helper">尚無積分異動。</p>';
+ }
+ function renderAdmin(){if(state.me.role!=='admin')return;const old=$('#adminRound').value;$('#adminRound').innerHTML=state.rounds.map(r=>'<option value="'+escape(r.id)+'">'+escape(r.targetDate)+' · '+(r.result?'已結算／可更正':'待結算')+'</option>').join('');if(state.rounds.some(r=>r.id===old))$('#adminRound').value=old;$('#settlementAudit').innerHTML=state.rounds.flatMap(r=>(r.settlementHistory||[]).map(s=>'<div class="ledger-row"><strong>'+escape(r.targetDate)+'</strong> · 第 '+s.revision+' 版 · '+signed(s.returnPct)+'%<br>'+escape(format(s.at))+' · '+escape(s.administrator)+' · '+escape(s.reason||'首次結算')+'</div>')).join('')||'<p class="helper">尚無結算紀錄。</p>';updateAdmin();}
+ function updateAdmin(){const r=state?.rounds.find(r=>r.id===$('#adminRound').value);$('#settleStatus').textContent=!r?'先建立交易日。':(r.result?'目前收盤 '+signed(r.result.returnPct)+'% · 第 '+r.result.revision+' 版。更正必填原因。':'參與 '+r.voteCount+' 人。')+' 可結算時間：'+format(r.settlementAfter)+'（台北）';$('#previewButton').disabled=busy||uncertain||!r||now()<Date.parse(r.settlementAfter);}
+ function setView(){let view=location.hash.slice(1);if(!['daily','records','admin'].includes(view)||view==='admin'&&state?.me.role!=='admin')view='daily';for(const section of ['daily','records','admin'])$('#'+section).hidden=view!==section;$('#adminAudit').hidden=view!=='admin'||state?.me.role!=='admin';for(const button of document.querySelectorAll('[data-view]'))button.setAttribute('aria-selected',String(button.dataset.view===view));}
+ function setBusy(value){busy=value;for(const element of document.querySelectorAll('#createForm input,#createForm button,#settleForm input,#settleForm select,#settleForm button,#confirmSettlement,#cancelConfirm'))element.disabled=value||uncertain;renderVote();updateAdmin();}
+ async function mutate(path,payload,success){setBusy(true);try{await api(path,{...payload,requestId:requestId()});await load(true);selectDraft();renderVote();message(success);}
+  catch(error){message(error.message,true);try{await load(true);}catch{uncertain=true;message('操作結果未確認。請按「更新」取得伺服器狀態後再操作。',true);}}
+  finally{setBusy(false);}}
+ // Mutation responses are never used as account or score authority; refresh from the server.
+ $('#options').onchange=event=>{if(event.target.name==='optionId'&&draft){draft.optionId=event.target.value;renderVote();}};
+ $('#roundSelect').onchange=()=>{selectDraft();renderVote();};
+ $('#voteForm').onsubmit=event=>{event.preventDefault();if(!busy&&!$('#saveVote').disabled)mutate('/api/market/vote',{...draft},'預測已儲存。');};
+ $('#refresh').onclick=async()=>{if(busy)return;try{await load();selectDraft();setBusy(false);}catch(error){message(error.message,true);}};
+ for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>{location.hash=button.dataset.view;setView();};window.addEventListener('hashchange',setView);
+ $('#createForm').elements.targetDate.onchange=event=>{try{$('#createDeadline').textContent='截止 '+format(R.cutoffFor(event.target.value))+'（台北）。';}catch{$('#createDeadline').textContent='請選擇有效日期。';}};
+ $('#createForm').onsubmit=event=>{event.preventDefault();if(busy||uncertain)return;const form=event.target;mutate('/api/admin/market/rounds',{targetDate:form.elements.targetDate.value,confirmed:form.elements.confirmed.checked},'交易日已建立。');};
+ $('#adminRound').onchange=()=>{$('#settleForm').elements.returnPct.value='';$('#settleForm').elements.reason.value='';updateAdmin();};
+ $('#settleForm').onsubmit=async event=>{event.preventDefault();if(busy||$('#previewButton').disabled)return;const form=event.target,r=state.rounds.find(r=>r.id===$('#adminRound').value),payload={roundId:r.id,expectedRevision:r.result?.revision||0,returnPct:form.elements.returnPct.value,reason:form.elements.reason.value};setBusy(true);try{const result=await api('/api/admin/market/preview',payload);preview={...payload,returnPct:result.returnPct};$('#previewContent').innerHTML='<p>目標交易日：<strong>'+escape(result.targetDate)+'</strong></p><p class="big-result">'+signed(result.returnPct)+'%</p><p>'+escape(name(result.bucket,r.rules))+' · '+result.voteCount+' 人投票</p><p>猜中 '+result.counts.hit+' 人 · 猜錯 '+result.counts.miss+' 人 · 和局 '+result.counts.tie+' 人</p>'+(payload.expectedRevision?'<p><strong>更正會先撤銷第 '+payload.expectedRevision+' 版積分，再以新結果重新計分。</strong></p><p>原因：'+escape(payload.reason)+'</p>':'<p>確認後將保存結果並結算所有已提交的預測。</p>')+'<p>我的本日積分：'+signed(result.ownPrevious)+' → '+signed(result.ownNext)+'；累積將為 '+signed(result.ownScoreAfter)+' 分。</p>';$('#confirmError').textContent='';$('#confirmDialog').showModal();}catch(error){message(error.message,true);}finally{setBusy(false);}};
+ $('#cancelConfirm').onclick=()=>{preview=null;$('#confirmDialog').close();};$('#confirmDialog').addEventListener('cancel',event=>{if(busy)event.preventDefault();else preview=null;});
+ $('#confirmSettlement').onclick=async()=>{if(!preview||busy)return;const payload=preview;preview=null;$('#confirmDialog').close();await mutate('/api/admin/market/settle',{...payload,confirmed:true},'結算已完成，積分與異動紀錄已更新。');};
+ setInterval(()=>{if(!state)return;$('#clock').textContent=format(now());const r=round(),closed=!r||!!r.result||now()>=Date.parse(r.cutoffAt);if(closed!==votingClosed)renderVote();updateAdmin();},1000);
+ setInterval(()=>{if(!busy&&!uncertain&&document.visibilityState==='visible')load(true).catch(()=>message('更新暫時失敗，請確認連線並按「更新」。',true));},15000);
+ load().catch(error=>{uncertain=true;message(error.message,true);});
+})();

@@ -9,7 +9,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { run, snapshot, canonical, safeError } = require('../src/data/transfer');
 const { validateData } = require('../src/data/validation');
 const { acquireDataLocks } = require('../src/data/locks');
-const { openDatabase } = require('../src/db');
+const { openDatabase, SCHEMA_VERSION } = require('../src/db');
 const { createAuth } = require('../src/auth');
 const { createApp } = require('../src/app');
 const { settings } = require('../src/config');
@@ -65,7 +65,7 @@ async function fixture(t, { playing = false, minimal = false } = {}) {
 async function legacyFixture(t, version) {
   const f = await fixture(t, { minimal: true }), db = new DatabaseSync(f.source.dbFile);
   try {
-    db.exec('DROP TABLE music_tracks; DROP TABLE draw_words; DROP TABLE user_artworks');
+    db.exec('DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE music_tracks; DROP TABLE draw_words; DROP TABLE user_artworks');
     if (version < 7) db.exec('DROP INDEX player_characters_shared; ALTER TABLE player_characters DROP COLUMN shared');
     if (version < 6) db.exec('DROP TABLE user_achievements');
     if (version < 5) db.exec('DROP TABLE community_gifts');
@@ -259,8 +259,8 @@ test('unfinished matches require explicit acknowledgement and restore appends an
 
 test('old supported schema migrates only the restored copy and preserves account hashes', async t => {
   const f=await fixture(t,{minimal:true}), db=new DatabaseSync(f.source.dbFile);
-  try{db.exec('DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
-  await run(f.exportRequest); const result=await run({...restoreRequest(f),apply:true});assert.equal(result.restoredSummary.database.schemaVersion,12);
+  try{db.exec('DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
+  await run(f.exportRequest); const result=await run({...restoreRequest(f),apply:true});assert.equal(result.restoredSummary.database.schemaVersion,SCHEMA_VERSION);
   const old=new DatabaseSync(f.source.dbFile,{readOnly:true});try{assert.equal(old.prepare('PRAGMA user_version').get().user_version,10);assert.equal(old.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name='music_tracks'").get().n,0);}finally{old.close();}
 });
 
@@ -270,7 +270,7 @@ for (const version of [1,3,5,7]) test(`schema ${version} backup restores through
   const dry = await run(restoreRequest(f));
   assert.equal(dry.dryRun,true); assert.equal(fs.existsSync(f.destinationDir),false);
   const restored = await run({...restoreRequest(f),apply:true}), after = restored.restoredSummary.database;
-  assert.equal(after.schemaVersion,12); assert.equal(after.accountsSha256,initial.accountsSha256);
+  assert.equal(after.schemaVersion,SCHEMA_VERSION); assert.equal(after.accountsSha256,initial.accountsSha256);
   for (const [table,digest] of Object.entries(initial.blobDigests)) assert.equal(after.blobDigests[table],digest);
   for (const [table,introduced] of Object.entries({character_images:3,community_gifts:5,user_artworks:8})) {
     if (version < introduced) assert.equal(after.tableCounts[table],0);

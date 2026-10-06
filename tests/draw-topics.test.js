@@ -1,3 +1,4 @@
+const {SCHEMA_VERSION}=require("../src/db");
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
@@ -33,12 +34,12 @@ test('SQLite v9 custom words migrate to misc without losing their difficulty or 
    PRAGMA user_version=9;
   `);
   db.close();db=openDatabase(file);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   const stored=new DrawWordStore(db).list()[0];
   assert.equal(stored.topic,'misc');assert.equal(stored.topicLabel,'綜合');
   assert.equal(stored.category,'一般');assert.deepEqual(stored.aliases,['別名']);
   db.exec('PRAGMA user_version=9');db.close();db=openDatabase(file);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(db.prepare('PRAGMA table_info(draw_words)').all().filter(column=>column.name==='topic').length,1);
  }finally{db?.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
@@ -48,7 +49,7 @@ test('new custom words save a topic and reject unrecognized topic IDs',()=>{
  let db;
  try{
   db=openDatabase(file);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   db.prepare("INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)")
    .run('u1','draw-friend','朋友','unused','member','2026-01-01T00:00:00.000Z');
   const store=new DrawWordStore(db),user={id:'u1',display_name:'朋友'};

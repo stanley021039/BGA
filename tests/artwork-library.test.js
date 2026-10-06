@@ -1,3 +1,4 @@
+const {SCHEMA_VERSION}=require("../src/db");
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -44,7 +45,7 @@ test('private account artwork can be copied into a character, expression, and gi
   assert.ok(options.characters.find(item=>item.id===character.body.id).expressions[emote.body.expression]);
   await app.close();app=createApp(config);await app.listen();
   const saved=openDatabase(config.dbFile);
-  assert.equal(saved.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(saved.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(saved.prepare('SELECT COUNT(*) AS n FROM user_artworks').get().n,0);
   saved.close();
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}

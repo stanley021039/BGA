@@ -99,3 +99,7 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 同日追蹤回覆修正 `e60f853`／本地整合 `7c25c7b`：round 會在新對局重回 1，不能單獨作為畫布／配額 identity。server 每新畫布生成 canvasEpoch，POST 必填且在去重／配額修改前驗證；state／snapshot／ACK／SSE 同帶 epoch。client 換 epoch 清零 quota、draft、renderer、sendQueue，所有等待後的發送／套用／儲存重新驗 epoch；command finally 另以操作 token 隔離。clear／undo 不換 epoch、不退額度。舊 client 須重新整理，新舊 server/client 不可混用。Windows PR286／本地整合330項、背景實際新局填色與舊請求拒絕已驗；各平台最終結果見 [PR 修正證據](../PR30-RESOURCE-LIMITS.md#追蹤回覆新對局第-1-輪的配額隔離)，不可沿用舊279／323當最新數量。
 
 2026-10-05、2618c4b 管理UI：`src/data/ui.js` 是獨立localhost HTTP wrapper，static UI 位於tools/data-transfer-ui/，不加入遊戲路由；`tools/server-data-ui.cjs`／npm data:transfer:ui為入口。驗Host/Origin/隨機token、64KiB JSON、source/target停寫ack，互斥工作与記憶體lastResponse。只回傳run/safeError去敏結果，不能寫rawSQLite錯誤／key bytes／users到UI。前端原生required、textContent更新、預演預設、改路徑取消確認，刷新GET state不重送POST。HTTP4項與全套259項在Windows/Linux通過；主agent原Chrome背景完整合成表單流程／reload通過。收合版31c91dd以details隱藏JSON，保留config/nextSteps DOM常駐，統計三欄及140px nowrap標籤；詳進度，無正式資料與服務變更。
+
+## 2026-10-06：股市冥燈本機整合
+
+隔離 main b843a3f，本地 feature/market-jinx-local：/market 沿用既有 session canonical UUID，管理權限重查DB，不採用原型 localStorage。src/market/store.js 以 BEGIN IMMEDIATE、requestId及 expectedRevision 實作日期／投票／結算，取得寫入鎖後采樣截止時間。更正先撤銷舊 award 再保存新 award，失敗原子回復；public/market-rules.js 共用規則，日期保存快照。當前 schema上限13，取代上方12的最新架構描述。Windows Node26.2.0 完整387項、13項市場回歸及背景 Chrome 1280×720／390／320 流程通過；未測Linux／Safari／公開負載。以Draft送審，未合併或部署，證據與接手見 [本機說明](../MARKET-JINX.md)。

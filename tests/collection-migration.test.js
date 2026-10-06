@@ -1,3 +1,4 @@
+const {SCHEMA_VERSION}=require("../src/db");
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
@@ -15,7 +16,7 @@ for(const source of ['music-v11','collection-v12'])test(`integration upgrades ${
    db.prepare('INSERT INTO music_tracks(id,owner_id,title,duration,size,mime,ext,created_at) VALUES(?,?,?,?,?,?,?,?)').run('song','owner','Song',60,100,'audio/mpeg','mp3',new Date().toISOString());
   }else db.exec('DROP TABLE music_tracks');
   db.close();db=openDatabase(file);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version,12);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(db.prepare('SELECT name FROM user_artworks WHERE id=?').get('art').name,'Artwork');
   assert.equal(db.prepare('SELECT shared FROM user_artworks WHERE id=?').get('art').shared,source==='music-v11'?0:1);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM music_tracks').get().count,source==='music-v11'?1:0);
