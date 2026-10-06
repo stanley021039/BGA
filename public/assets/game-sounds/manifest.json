@@ -1,0 +1,310 @@
+{
+  "version": 1,
+  "format": {
+    "codec": "PCM",
+    "sampleRate": 24000,
+    "channels": 1,
+    "bitsPerSample": 16
+  },
+  "generator": "scripts/build-game-sounds.cjs",
+  "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+  "generatorHashNormalization": "UTF-8 LF",
+  "checkedAt": "2026-10-06",
+  "auditionReviewed": false,
+  "cues": {
+    "turn": {
+      "file": "turn.wav",
+      "durationMs": 320,
+      "bytes": 15404,
+      "sha256": "9345e6997dfde082c3e1ca3540f41396148786fd3e03b7812a887e1925611943",
+      "waveform": {
+        "peak": 0.23999023,
+        "rms": 0.04762672,
+        "mean": -0.0000538,
+        "maximumStep": 0.14578247,
+        "firstSample": 0,
+        "lastSample": 0,
+        "clippedSamples": 0
+      },
+      "author": "Kenney",
+      "source": {
+        "type": "licensed-asset",
+        "url": "https://kenney.nl/assets/interface-sounds",
+        "package": "Interface Sounds 1.0",
+        "archiveUrl": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+        "archiveSha256": "f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232",
+        "originalFile": "Audio/confirmation_003.ogg",
+        "originalSha256": "3091bf0be0497f825769ee0733ca7bdc3bcd59bd6c6e8f2ba8f93d580ff38022",
+        "decodedFile": "sources/kenney-confirmation_003.wav",
+        "decodedSha256": "60903f8e64428b742ffba12df9142ae3d391a4b428aa4deefd7fa15db013c3f8",
+        "decodedBy": "python-soundfile 0.14.0 / libsndfile 1.2.2, PCM16",
+        "checkedAt": "2026-10-06"
+      },
+      "license": {
+        "id": "CC0-1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "file": "sources/KENNEY-INTERFACE-LICENSE.txt",
+        "textSha256": "c5d1272b879c20a410a863d9d207c9ac22e4e43e6aa9b836b823c6f6295dfb38",
+        "hashNormalization": "UTF-8 LF",
+        "attributionRequired": false,
+        "redistributionAllowed": true
+      },
+      "changes": [
+        "Trim 322.018ms source to 320ms",
+        "63-tap Hamming-windowed sinc 8kHz low-pass before resampling",
+        "Linear interpolation from 44100Hz to 24000Hz",
+        "Remove DC offset",
+        "5ms linear fade-in and 24ms linear fade-out",
+        "Conservative peak scaling",
+        "Mono PCM16 WAV at 24000Hz"
+      ]
+    },
+    "correct": {
+      "file": "correct.wav",
+      "durationMs": 220,
+      "bytes": 10604,
+      "sha256": "c2d43b8c4c42e8a13986a3febffb3ec018bf107f17f4381551290b9e1dc96e78",
+      "waveform": {
+        "peak": 0.23999023,
+        "rms": 0.07486735,
+        "mean": -0.00034759,
+        "maximumStep": 0.03216553,
+        "firstSample": 0,
+        "lastSample": 0,
+        "clippedSamples": 0
+      },
+      "author": "Kenney",
+      "source": {
+        "type": "licensed-asset",
+        "url": "https://kenney.nl/assets/interface-sounds",
+        "package": "Interface Sounds 1.0",
+        "archiveUrl": "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip",
+        "archiveSha256": "f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232",
+        "originalFile": "Audio/confirmation_001.ogg",
+        "originalSha256": "063564703b6094d70718a3e787a55cc9141611e4ecd6b6637f8828f79b4a8c3a",
+        "decodedFile": "sources/kenney-confirmation_001.wav",
+        "decodedSha256": "40fedc78efd80dceb2e747bb3f98bf881e271844b914e382b349f93d89d9d067",
+        "decodedBy": "python-soundfile 0.14.0 / libsndfile 1.2.2, PCM16",
+        "checkedAt": "2026-10-06"
+      },
+      "license": {
+        "id": "CC0-1.0",
+        "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "file": "sources/KENNEY-INTERFACE-LICENSE.txt",
+        "textSha256": "c5d1272b879c20a410a863d9d207c9ac22e4e43e6aa9b836b823c6f6295dfb38",
+        "hashNormalization": "UTF-8 LF",
+        "attributionRequired": false,
+        "redistributionAllowed": true
+      },
+      "changes": [
+        "63-tap Hamming-windowed sinc 8kHz low-pass before resampling",
+        "Fit entire 289.841ms source into 220ms by interpolation (faster playback and higher pitch)",
+        "Convert 44100Hz to 24000Hz",
+        "Remove DC offset",
+        "5ms linear fade-in and 24ms linear fade-out",
+        "Conservative peak scaling",
+        "Mono PCM16 WAV at 24000Hz"
+      ]
+    },
+    "dice-roll": {
+      "file": "dice-roll.wav",
+      "durationMs": 650,
+      "bytes": 31244,
+      "sha256": "f224a3a4ae9e5c6dc7572276f60f7bf96909e88c0b2a22295e3a99dec41b343e",
+      "waveform": {
+        "peak": 0.19998169,
+        "rms": 0.01894238,
+        "mean": -0.00000248,
+        "maximumStep": 0.08099365,
+        "firstSample": 0,
+        "lastSample": 0,
+        "clippedSamples": 0
+      },
+      "author": "BGA project contributors",
+      "source": {
+        "type": "original-synthesis",
+        "generator": "scripts/build-game-sounds.cjs",
+        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorHashNormalization": "UTF-8 LF",
+        "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
+        "seed": 3519946790,
+        "synthesis": "Eight soft rattles with progressively wider spacing; invariant across dice results",
+        "createdAt": "2026-10-06"
+      },
+      "license": {
+        "id": "Project-original",
+        "url": null,
+        "attributionRequired": false,
+        "redistributionAllowed": true,
+        "note": "Original synthesized project assets, distributed with the project. No third-party samples; not attributed to Kenney and not declared CC0."
+      },
+      "changes": [
+        "Original synthesis; no external recording or sample",
+        "Remove DC offset",
+        "5ms linear fade-in and 24ms linear fade-out",
+        "Conservative peak scaling",
+        "Mono PCM16 WAV at 24000Hz"
+      ]
+    },
+    "shot": {
+      "file": "shot.wav",
+      "durationMs": 280,
+      "bytes": 13484,
+      "sha256": "3fedb0c764d12989ec52e75f5a29c4241b45ecf7b334cd9e054779d6cbc62aff",
+      "waveform": {
+        "peak": 0.23999023,
+        "rms": 0.04834451,
+        "mean": 0.00004367,
+        "maximumStep": 0.08294678,
+        "firstSample": 0,
+        "lastSample": 0,
+        "clippedSamples": 0
+      },
+      "author": "BGA project contributors",
+      "source": {
+        "type": "original-synthesis",
+        "generator": "scripts/build-game-sounds.cjs",
+        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorHashNormalization": "UTF-8 LF",
+        "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
+        "seed": 1359421478,
+        "synthesis": "Short filtered air impulse and descending sine; no real firearm sample",
+        "createdAt": "2026-10-06"
+      },
+      "license": {
+        "id": "Project-original",
+        "url": null,
+        "attributionRequired": false,
+        "redistributionAllowed": true,
+        "note": "Original synthesized project assets, distributed with the project. No third-party samples; not attributed to Kenney and not declared CC0."
+      },
+      "changes": [
+        "Original synthesis; no external recording or sample",
+        "Remove DC offset",
+        "5ms linear fade-in and 24ms linear fade-out",
+        "Conservative peak scaling",
+        "Mono PCM16 WAV at 24000Hz"
+      ]
+    },
+    "slam": {
+      "file": "slam.wav",
+      "durationMs": 350,
+      "bytes": 16844,
+      "sha256": "ce48c9b97373451f75d086c761ae76461291395b92ddb919bc9b5e52bcadba37",
+      "waveform": {
+        "peak": 0.22998047,
+        "rms": 0.04153147,
+        "mean": -0.00108454,
+        "maximumStep": 0.02453613,
+        "firstSample": 0,
+        "lastSample": 0,
+        "clippedSamples": 0
+      },
+      "author": "BGA project contributors",
+      "source": {
+        "type": "original-synthesis",
+        "generator": "scripts/build-game-sounds.cjs",
+        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorHashNormalization": "UTF-8 LF",
+        "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
+        "seed": 1369448486,
+        "synthesis": "Damped low impact with a small metallic overtone",
+        "createdAt": "2026-10-06"
+      },
+      "license": {
+        "id": "Project-original",
+        "url": null,
+        "attributionRequired": false,
+        "redistributionAllowed": true,
+        "note": "Original synthesized project assets, distributed with the project. No third-party samples; not attributed to Kenney and not declared CC0."
+      },
+      "changes": [
+        "Original synthesis; no external recording or sample",
+        "Remove DC offset",
+        "5ms linear fade-in and 24ms linear fade-out",
+        "Conservative peak scaling",
+        "Mono PCM16 WAV at 24000Hz"
+      ]
+    },
+    "nitro": {
+      "file": "nitro.wav",
+      "durationMs": 500,
+      "bytes": 24044,
+      "sha256": "9db9d9af402b616feeefc336821cd2f2bb831e5fd8a995072665fcd422f41b06",
+      "waveform": {
+        "peak": 0.2199707,
+        "rms": 0.0435672,
+        "mean": -5.7e-7,
+        "maximumStep": 0.05770874,
+        "firstSample": 0,
+        "lastSample": 0,
+        "clippedSamples": 0
+      },
+      "author": "BGA project contributors",
+      "source": {
+        "type": "original-synthesis",
+        "generator": "scripts/build-game-sounds.cjs",
+        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorHashNormalization": "UTF-8 LF",
+        "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
+        "seed": 2708480038,
+        "synthesis": "Filtered noise swell and rising engine-like tones; one shot, no loop",
+        "createdAt": "2026-10-06"
+      },
+      "license": {
+        "id": "Project-original",
+        "url": null,
+        "attributionRequired": false,
+        "redistributionAllowed": true,
+        "note": "Original synthesized project assets, distributed with the project. No third-party samples; not attributed to Kenney and not declared CC0."
+      },
+      "changes": [
+        "Original synthesis; no external recording or sample",
+        "Remove DC offset",
+        "5ms linear fade-in and 24ms linear fade-out",
+        "Conservative peak scaling",
+        "Mono PCM16 WAV at 24000Hz"
+      ]
+    },
+    "skid": {
+      "file": "skid.wav",
+      "durationMs": 480,
+      "bytes": 23084,
+      "sha256": "4a5d7febb17dc5e419f969d0ce1f17c089def67ffb25fb95598a1d4a710a279b",
+      "waveform": {
+        "peak": 0.2199707,
+        "rms": 0.05106144,
+        "mean": 9.2e-7,
+        "maximumStep": 0.15856934,
+        "firstSample": 0,
+        "lastSample": 0,
+        "clippedSamples": 0
+      },
+      "author": "BGA project contributors",
+      "source": {
+        "type": "original-synthesis",
+        "generator": "scripts/build-game-sounds.cjs",
+        "generatorSha256": "f1f3cf039b00f8513d026c77ceabeb6b703859a4e8557c6ffba3f058a105cb19",
+        "generatorHashNormalization": "UTF-8 LF",
+        "algorithm": "xorshift32 seeded noise plus sine oscillators and envelopes",
+        "seed": 1545412646,
+        "synthesis": "Band-limited friction noise and a descending mid-frequency sine; no tire recording",
+        "createdAt": "2026-10-06"
+      },
+      "license": {
+        "id": "Project-original",
+        "url": null,
+        "attributionRequired": false,
+        "redistributionAllowed": true,
+        "note": "Original synthesized project assets, distributed with the project. No third-party samples; not attributed to Kenney and not declared CC0."
+      },
+      "changes": [
+        "Original synthesis; no external recording or sample",
+        "Remove DC offset",
+        "5ms linear fade-in and 24ms linear fade-out",
+        "Conservative peak scaling",
+        "Mono PCM16 WAV at 24000Hz"
+      ]
+    }
+  }
+}

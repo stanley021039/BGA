@@ -1,5 +1,7 @@
 # 音效師角色記憶
 
+2026-10-06實作追加：v1.3.0第一批已接畫猜本人猜中／輪次及雷霆骰聲／公開動作，共用遊戲2段／所有4段cap、250ms低優先間隔、1秒新cue載入timeout；首載／hidden／重連不補播。音效師產生7個短WAV（2Kenney CC0改作＋5固定seed原創），首尾fade及格式／hash／波形已查，真人聽感待評估。Windows759/759，Chrome及Linux／正式狀態見 [最新實作進度](../GAME-SOUNDS-PROGRESS.md)，逐檔 [採用紀錄](../research/SOUND-ASSET-SOURCES.md)。以下研究階段的「未整合／子上限未實作」被這筆取代，其他分類音量／保留聲道仍未做。
+
 更新：2026-10-06。本輪為音效研究與設計提案；未下載、試聽、採購或整合新素材，未改程式。先讀 [記憶索引](README.md)、[共用決策](MEMORY-LEDGER.md)、[記憶協議](MEMORY-PROTOCOL.md)，再讀 [遊戲音效計畫](../specs/GAME-SOUND-PLAN.md)與 [素材來源研究](../research/SOUND-ASSET-SOURCES.md)。角色是可續讀的責任，不綁定目前 agent thread。
 
 ## 長期責任與設計理念

@@ -34,3 +34,27 @@ CC0的可改作／再散布範圍與其他權利例外由 [Creative Commons官�
 本輪已讀上述官方頁；沒有取得zip內容、驗hash、查全部檔案或測實際下載流程，因此不宣稱各候選已可整合。網站條款與檔案授權會變動，採用時重新確認並保存那次證據；特別是Sonniss新EULA版本與ZapSplat會員條件不可沿用舊文章。
 
 音效師下一輪負責少量短音選樣與逐檔manifest，程式方負責 [GAME-SOUND-PLAN](../specs/GAME-SOUND-PLAN.md)事件／排程，玩家方負責實際可辨識與噪音評估。這輪僅與主agent討論首批順序及密度，尚無玩家方聽感確認。
+
+## 2026-10-06後續：首批素材採用與檔案驗證
+
+使用者後續授權開始實作與驗證。**本節取代前文研究階段的「未下載／未選定素材」狀態**；上述7來源的比較保留為研究歷史。這次只採用Kenney的兩個確認聲及五個專案原創合成聲，沒有採用其他來源、付費或自動播放。
+
+重新查 [Kenney Interface Sounds官方包](https://kenney.nl/assets/interface-sounds)與 [官方授權說明](https://kenney.nl/support)，並實際取得官方頁連出的`kenney_interface-sounds.zip`。下載包內`License.txt`標示Interface Sounds 1.0、Kenney、CC0；原包SHA-256為`f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232`。原包與解壓副本只在Git忽略的work，沒有放整包進發布資產。
+
+| Cue／成品 | 採用範圍與改作 | 長度／WAV bytes |
+| --- | --- | --- |
+| [turn.wav](../../public/assets/game-sounds/turn.wav) | Kenney `Audio/confirmation_003.ogg`（原322.018ms）；裁成320ms、8kHz低通後轉24kHz。 | 320ms／15,404 |
+| [correct.wav](../../public/assets/game-sounds/correct.wav) | Kenney `Audio/confirmation_001.ogg`（原289.841ms）；完整聲音以插值加速至220ms，音高也提高，並做低通／取樣率轉換。 | 220ms／10,604 |
+| [dice-roll.wav](../../public/assets/game-sounds/dice-roll.wav) | **原創**：八次逐漸拉開間隔的輕碰撞／雜訊，seed `0xD1CE2026`，不按骰面改聲。 | 650ms／31,244 |
+| [shot.wav](../../public/assets/game-sounds/shot.wav) | **原創**：短濾波氣流與下降音高，seed `0x51072026`，沒有真槍錄音。 | 280ms／13,484 |
+| [slam.wav](../../public/assets/game-sounds/slam.wav) | **原創**：低頻衝擊、短金屬泛音及雜訊，seed `0x51A02026`。 | 350ms／16,844 |
+| [nitro.wav](../../public/assets/game-sounds/nitro.wav) | **原創**：濾波雜訊隆起與上升引擎式音高，seed `0xA1702026`；單段、無loop。 | 500ms／24,044 |
+| [skid.wav](../../public/assets/game-sounds/skid.wav) | **原創**：摩擦雜訊與下降中頻音高，seed `0x5C1D2026`；沒有輪胎錄音。 | 480ms／23,084 |
+
+所有成品都是**24000Hz、mono、PCM16 WAV**；先處理DC，再做5ms淡入／24ms淡出及適度峰值縮放，首末sample為0。七檔總長2.8秒、總計**134,708 bytes**。兩個Kenney PCM母檔及包內 [LICENSE](../../public/assets/game-sounds/sources/KENNEY-INTERFACE-LICENSE.txt)保留在sources，讓生成器不依賴重新下載或特定OGG解碼器；這兩個母檔由python-soundfile 0.14.0／libsndfile 1.2.2解碼，hash列在manifest。原創五檔以xorshift32、正弦振盪器與包絡生成，**不標成Kenney或CC0**；manifest標`Project-original`，隨專案分發，沒有取用第三方錄音。
+
+[manifest.json](../../public/assets/game-sounds/manifest.json)逐檔保存durationMs、bytes、SHA-256、作者、來源、授權、改作、峰值／RMS及生成器hash。含七檔、兩個母檔、license與manifest的asset資料夾目前共**201,280 bytes**。生成器 [build-game-sounds.cjs](../../scripts/build-game-sounds.cjs)只用Node內建模組，不播放音訊；`node scripts/build-game-sounds.cjs`重建，`node scripts/build-game-sounds.cjs --check`比較七檔及manifest並只讀驗證。WAV hash按原始bytes計算；生成器與license文字hash先正規化成UTF-8 LF，避免Windows／Linux換行差異改變manifest。
+
+已做的內容檢查：重新生成後`--check`通過；另用Python `wave`獨立解析七檔header／sample數、核hash及峰值。實際峰值0.19998169–0.23999023（約−14至−12.4dBFS），RMS 0.01894238–0.07486735，clipped sample為0。已查看波形包絡：骰子為八段分離脈衝，shot／slam有短衰減，nitro／skid為一次隆起；頭尾歸零。這些是檔案及波形證據，**不是耳機／喇叭聽感驗收**；未播放聲音，不宣稱音色、辨識度或主觀響度合適。
+
+後續由程式方接入共用播放入口及事件時序；音效師／玩家依當次授權安排聽感與多人密度驗收。若真人試聽需調音色／音量，修改生成器再重建與更新hash，不手改WAV而失去可重建性。本節不代表已部署或完整遊戲驗收完成。

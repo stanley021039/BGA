@@ -1,11 +1,11 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const RacePaths=require('../public/shared/race-paths'),RaceMovement=require('../public/shared/race-movement');
-const source=fs.readFileSync(require.resolve('../public/race.js'),'utf8'),diceSource=fs.readFileSync(require.resolve('../public/shared/race-dice-dialog.js'),'utf8');
+const source=fs.readFileSync(require.resolve('../public/race.js'),'utf8'),diceSource=fs.readFileSync(require.resolve('../public/shared/race-dice-dialog.js'),'utf8'),soundSource=fs.readFileSync(require.resolve('../public/shared/game-sounds.js'),'utf8'),raceSoundSource=fs.readFileSync(require.resolve('../public/shared/race-game-sounds.js'),'utf8');
 
 // Real presentation functions and both real controllers; these DOM stand-ins
 // test sequencing and permissions, not browser geometry or rendering speed.
-function harness({lesson=false}={}){
- let clock=10000,timerId=0,generation=0,scope,svg=null,cueVisible=false;const timers=new Map(),microtasks=[],animations=[],network=[],effects=[],effectRecords=[],cues=[],cueRecords=[],sounds=[],spotlights=[],order=[],scrolls=[],nodes=new Map(),layers=new Map(),subscriptions=new Set(),documentListeners=new Map();let achievementChecks=0,lessonRenders=0,lessonMotions=0;
+function harness({lesson=false,enabled=true,reduced=false,muted=false}={}){
+ let clock=10000,timerId=0,generation=0,scope,svg=null,cueVisible=false;const timers=new Map(),microtasks=[],animations=[],network=[],effects=[],effectRecords=[],cues=[],cueRecords=[],sounds=[],soundRecords=[],spotlights=[],order=[],scrolls=[],nodes=new Map(),layers=new Map(),subscriptions=new Set(),documentListeners=new Map(),windowListeners=new Map();let achievementChecks=0,lessonRenders=0,lessonMotions=0;
  class Element{
   constructor(tag='div'){this.tagName=tag.toUpperCase();this.children=[];this.dataset={};this.attrs={};this.listeners=new Map();this.hidden=false;this.disabled=false;this.open=false;this.isConnected=false;this.textContent='';this.className='';this.style={setProperty(name,value){this[name]=value;}};this.classList={contains:()=>false};}
   append(...items){for(const item of items){item.parentElement=this;item.isConnected=this.isConnected;this.children.push(item);}}
@@ -33,22 +33,23 @@ function harness({lesson=false}={}){
   svg={querySelectorAll:selector=>selector==='.map-car'?cars:selector==='.map-chopper'?air:[],querySelector:selector=>selector==='.race-world'?{type:'world',id:'road'}:null,insertBefore(layer){layers.set(layer.id,layer);}};
  }});
  const setTimeout=(callback,delay)=>{const id=++timerId;timers.set(id,{callback,at:clock+delay});return id;},clearTimeout=id=>timers.delete(id);
- const policy={get:()=>({enabled:true}),allowsMotion:()=>!document.hidden,subscribe(callback){subscriptions.add(callback);callback();return()=>subscriptions.delete(callback);},animate(element,frames,options){if(!element||document.hidden)return null;const animation={element,frames,options,createdAt:clock,currentTime:0,cancel(){this.cancelled=true;},finish(){this.onfinish?.();}};animations.push(animation);order.push('motion:'+element.id);return animation;}};
- const window={document,MotionPolicy:policy,matchMedia:()=>({matches:false}),setTimeout,clearTimeout,GameUI:{setStatus(){},setBusy(){}}};
+ const policy={get:()=>({enabled}),allowsMotion:()=>enabled&&!reduced&&!document.hidden,subscribe(callback){subscriptions.add(callback);callback();return()=>subscriptions.delete(callback);},animate(element,frames,options){if(!element||!policy.allowsMotion())return null;const animation={element,frames,options,createdAt:clock,currentTime:0,cancel(){this.cancelled=true;},finish(){this.onfinish?.();}};animations.push(animation);order.push('motion:'+element.id);return animation;}};
+ const window={document,MotionPolicy:policy,matchMedia:()=>({matches:reduced}),setTimeout,clearTimeout,GameUI:{setStatus(){},setBusy(){}},addEventListener(type,callback){const list=windowListeners.get(type)||[];list.push(callback);windowListeners.set(type,list);},removeEventListener(type,callback){windowListeners.set(type,(windowListeners.get(type)||[]).filter(fn=>fn!==callback));},AudioSettings:{playEffect(cue,options){if(muted)return;const clip={cue,options};sounds.push(cue);soundRecords.push({cue,at:clock,dialogOpen:all().some(element=>element.tagName==='DIALOG'&&element.open)});order.push('sound:'+cue);return clip;},stopEffect(clip){clip.options?.onStop?.(clip);}}};
  if(lesson)window.RaceLesson={onRender(){lessonRenders++;},onMotion(){lessonMotions++;}};
  let initialized=false;scope={window,document,MotionPolicy:policy,Date:{now:()=>clock},setTimeout,clearTimeout,queueMicrotask:callback=>microtasks.push(callback),state:null,busy:false,polling:false,disconnected:false,lastVersion:-1,onlineSignature:'',session:{code:'AAAAAA'},selectedCar:null,selectedDie:null,command:'',commandDie:null,repairCar:null,$:node,esc:String,RacePaths,sizes:['輕型','中型','重型'],directions:['前左','前方','前右','後左','後方','後右'],knownAchievements:null,
   motionGate:{update(s,{connected=true}={}){const live=initialized&&connected&&!document.hidden;initialized=true;return live;}},
   RoomHost:{update(){},kicked(){}},RoomApi:{async request(route,data){network.push({route,data});return scope.request?await scope.request(route,data):scope.response||scope.state;}},GameShell:{stableMarkup(element,markup){element.innerHTML=markup;},update(){}},
   immersion:{allowsMotion:policy.allowsMotion,prepareFocus(){},startFocus(items){spotlights.push(items);},stopFocus(){},playSound(kind){sounds.push(kind);}},eventCues:{hide(){cueVisible=false;order.push('cue:hide');},show(events,cars,options){if(events.length)cueVisible=true;cues.push(Array.from(events,event=>event.id));cueRecords.push({events:Array.from(events),cars,options,at:clock});order.push('cue:'+events.map(event=>event.id).join(','));}},vehicleEffects:{reset(){},show(events){effects.push(Array.from(events,event=>event.id));effectRecords.push({events:Array.from(events),at:clock});}},checkRaceAchievements(){achievementChecks++;}};
- vm.createContext(scope);vm.runInContext(diceSource,scope);scope.dice=Array.from({length:6},(_,i)=>window.RaceDiceDialog.faceMarkup(i+1));scope.diceDialog=window.RaceDiceDialog.mount({onAction:(action,data)=>scope.run('action',{action,...data})});
+ vm.createContext(scope);vm.runInContext(soundSource,scope);vm.runInContext(raceSoundSource,scope);scope.raceSounds=window.RaceGameSounds.create();vm.runInContext(diceSource,scope);scope.dice=Array.from({length:6},(_,i)=>window.RaceDiceDialog.faceMarkup(i+1));scope.diceDialog=window.RaceDiceDialog.mount({onRolling:cycle=>scope.raceSounds.rolling(cycle),onAction:(action,data)=>scope.run('action',{action,...data})});
  scope.raceMovement=RaceMovement.mount({document,policy,now:()=>clock,setTimeout,clearTimeout,onCue:cue=>scope.showRaceCheckpoint(cue),onMove:group=>scope.showRaceMotion(group),onSettled:result=>microtasks.push(()=>scope.finishRacePresentation(result))});
  vm.runInContext(source.slice(source.indexOf('let movementRoutes='),source.indexOf('const requestedRoom=')),scope);
  vm.runInContext(source.slice(source.indexOf('function toast(t)'),source.indexOf("$('#track').onclick=boardClick;")),scope);
+ vm.runInContext(source.slice(source.indexOf('MotionPolicy.subscribe(()=>{if(!MotionPolicy.allowsMotion())stopPathMotion();});'),source.indexOf("$('#track').onkeydown")),scope);
  const dialog=all().find(element=>element.tagName==='DIALOG'),find=className=>all(dialog).find(element=>element.className.split(/\s+/).includes(className)),button=action=>all(dialog).find(element=>element.dataset.diceAction===action);
  const flush=()=>{while(microtasks.length)microtasks.shift()();},advance=ms=>{const end=clock+ms;for(;;){const next=[...timers].filter(([,timer])=>timer.at<=end).sort((a,b)=>a[1].at-b[1].at)[0];if(!next)break;clock=next[1].at;timers.delete(next[0]);next[1].callback();flush();}clock=end;flush();};
  const cell=(x,y)=>({generation,dataset:{x:String(x),y:String(y)},closest:selector=>selector==='[data-x]'?cell(x,y):null});
  const target=(dataset,id)=>({dataset,id,value:'nitro',disabled:false,closest:()=>target(dataset,id)});
- return {scope,document,dialog,find,button,node,animations,network,effects,effectRecords,cues,cueRecords,sounds,spotlights,order,layers,scrolls,cell,target,flush,advance,settle(){const animation=animations.at(-1);advance(Math.max(0,animation.options.duration-animation.currentTime-(clock-animation.createdAt)));animation.finish();flush();},dispatch(type,target){for(const callback of documentListeners.get(type)||[])callback({target});},get time(){return clock;},get cueVisible(){return cueVisible;},get achievementChecks(){return achievementChecks;},get lessonRenders(){return lessonRenders;},get lessonMotions(){return lessonMotions;}};
+ return {scope,document,dialog,find,button,node,animations,network,effects,effectRecords,cues,cueRecords,sounds,soundRecords,spotlights,order,layers,scrolls,cell,target,flush,advance,settle(){const animation=animations.at(-1);advance(Math.max(0,animation.options.duration-animation.currentTime-(clock-animation.createdAt)));animation.finish();flush();},dispatch(type,target){for(const callback of documentListeners.get(type)||[])callback({target});},hide(value){document.hidden=value;for(const callback of documentListeners.get('visibilitychange')||[])callback();},leave(){for(const callback of windowListeners.get('pagehide')||[])callback();},setEnabled(value){enabled=value;for(const callback of subscriptions)callback();},setMuted(value){muted=value;},get time(){return clock;},get cueVisible(){return cueVisible;},get achievementChecks(){return achievementChecks;},get lessonRenders(){return lessonRenders;},get lessonMotions(){return lessonMotions;}};
 }
 function state(version=1,extra={}){
  const players=[{id:'P',name:'甲車隊',color:'#ca9563',dice:[1,2,3,4].map(value=>({value,used:false})),commandUsed:false,online:true,chopper:null},{id:'Q',name:'乙車隊',color:'#63a184',dice:[],commandUsed:false,online:true,chopper:null}];
@@ -137,9 +138,80 @@ test('real oil roll and accepted forced landing process the next jump check befo
 
 test('shot and damage are presented before a skid effect, whose motion callback waits until its checkpoint completes',()=>{
  const h=harness(),base=state();h.scope.render(base);const events=[{id:1,kind:'shot',afterMotion:0,target:'B',source:'A',hit:true},{id:2,kind:'damage',afterMotion:0,car:'B',damage:'skid1'}],after={...base,version:2,cars:base.cars.map(car=>car.id==='B'?{...car,y:5}:car),motions:[{id:1,kind:'skid',moves:[{car:'B',from:{x:2,y:4},to:{x:2,y:5}}]}],events};
- h.scope.render(after);assert.deepEqual(h.cues.at(-1),[1,2]);assert.equal(h.cueVisible,true,'a checkpoint at time zero must remain visible after render');assert.equal(h.scope.raceMovement.locked(),true);assert.equal(h.effectRecords.flatMap(record=>record.events).some(event=>event.kind==='motion'),false);
+ h.scope.render(after);assert.deepEqual(h.cues.at(-1),[1,2]);assert.equal(h.cueVisible,true,'a checkpoint at time zero must remain visible after render');assert.equal(h.scope.raceMovement.locked(),true);assert.equal(h.effectRecords.flatMap(record=>record.events).some(event=>event.kind==='motion'),false);assert.deepEqual(h.sounds,['shot']);
  h.advance(RaceMovement.EVENT_MS-1);assert.equal(h.effectRecords.flatMap(record=>record.events).some(event=>event.kind==='motion'),false);h.advance(1);
- const motion=h.effectRecords.flatMap(record=>record.events.map(event=>({event,at:record.at}))).find(record=>record.event.kind==='motion');assert.ok(motion);assert.equal(motion.event.motion,'skid');assert.equal(motion.event.car,'B');assert.equal(motion.at,10000+RaceMovement.EVENT_MS);h.settle();assert.equal(h.scope.raceMovement.locked(),false);assert.equal(h.cues.filter(ids=>ids.length).length,1);
+ const motion=h.effectRecords.flatMap(record=>record.events.map(event=>({event,at:record.at}))).find(record=>record.event.kind==='motion');assert.ok(motion);assert.equal(motion.event.motion,'skid');assert.equal(motion.event.car,'B');assert.equal(motion.at,10000+RaceMovement.EVENT_MS);assert.deepEqual(h.sounds,['shot','skid']);assert.equal(h.soundRecords.at(-1).at,motion.at);h.settle();assert.equal(h.scope.raceMovement.locked(),false);assert.equal(h.cues.filter(ids=>ids.length).length,1);assert.deepEqual(h.sounds,['shot','skid'],'settlement must not add the old reveal or replay either action');
+});
+
+test('slam sound waits for contact and deferred dice sound waits for its visible dialog, then each has one owner',()=>{
+ const h=harness(),base=state();h.scope.render(base);const after=moved(base,{diceCheck:collision('CONTACT',{status:'result',startedAt:1000,readyAt:2000,serverNow:3000,result:{faces:['原位車',3],text:'公開結果'}}),events:[{id:1,kind:'slam',afterMotion:1,car:'A',other:'B'}]});h.scope.render(after);
+ assert.deepEqual(h.sounds,[]);h.advance(RaceMovement.STEP_MS-1);assert.deepEqual(h.sounds,[]);h.advance(1);assert.deepEqual(h.sounds,['slam']);assert.equal(h.soundRecords[0].at,10000+RaceMovement.STEP_MS);assert.equal(h.dialog.open,false);
+ h.settle();assert.equal(h.dialog.dataset.stage,'rolling');assert.deepEqual(h.sounds,['slam','dice-roll']);assert.equal(h.soundRecords[1].dialogOpen,true);
+ h.scope.render({...after,players:after.players.map(player=>({...player,online:false}))});h.advance(1000);assert.equal(h.dialog.dataset.stage,'result');assert.equal(h.find('race-dice-result').textContent,'公開結果');h.scope.render(after);assert.deepEqual(h.sounds,['slam','dice-roll']);
+});
+
+test('rolling and reroll sound use one result-independent cue per server cycle, never a tick or ACK confirmation',async()=>{
+ for(const faces of [['命中秘密',1],['未命中秘密',6]]){
+  const h=harness(),awaiting=state(1,{diceCheck:collision()});h.scope.render(awaiting);
+  const rolling={...awaiting,version:2,diceCheck:collision('CHECK',{status:'rolling',startedAt:1000,readyAt:2000,serverNow:1000})};h.scope.response=rolling;assert.equal(await h.scope.run('action',{action:'rollDice',check:'CHECK'}),true);
+  assert.deepEqual(h.sounds,['dice-roll']);assert.equal(h.soundRecords[0].dialogOpen,true);
+  const result={...rolling,version:3,diceCheck:{...rolling.diceCheck,status:'result',rerollAllowed:true,result:{faces,text:'完整結果'},serverNow:2000}};h.scope.render(result);h.advance(999);assert.equal(h.find('race-dice-result').textContent,'');assert.deepEqual(h.sounds,['dice-roll']);h.advance(1);assert.equal(h.dialog.dataset.stage,'result');
+  const reroll={...result,version:4,diceCheck:{...result.diceCheck,status:'rolling',startedAt:5000,readyAt:6000,serverNow:5000,result:null}};h.scope.response=reroll;await h.scope.run('action',{action:'rerollDice',check:'CHECK'});h.scope.render(reroll);h.advance(1000);assert.deepEqual(h.sounds,['dice-roll','dice-roll']);
+ }
+});
+
+test('nitro uses the confirmed command event once and ordinary motion remains silent',async()=>{
+ const h=harness(),base=state();h.scope.render(base);const after=moved(base,{events:[{id:1,kind:'command',command:'nitro',car:'A',afterMotion:0}]});h.scope.response=after;
+ await h.scope.run('action',{action:'begin',car:'A',command:'nitro'});assert.deepEqual(h.sounds,['nitro']);assert.equal(h.scope.raceMovement.locked(),true);h.scope.render({...after,players:after.players.map(player=>({...player,online:false}))});h.settle();assert.deepEqual(h.sounds,['nitro']);
+ const plain={...after,version:3,cars:after.cars.map(car=>car.id==='A'?{...car,y:3}:car),motions:[movement,{id:2,kind:'move',moves:[{car:'A',from:{x:2,y:2},to:{x:2,y:3}}]}]};h.scope.render(plain);h.settle();assert.deepEqual(h.sounds,['nitro']);
+});
+
+test('continuous confirmed sliding groups share one short sound, even when presence rebuilds the moving map',()=>{
+ const h=harness(),base=state();h.scope.render(base);const first={id:1,kind:'skid',moves:[{car:'A',from:{x:2,y:1},to:{x:2,y:2}}]},second={id:2,kind:'skid',moves:[{car:'A',from:{x:2,y:2},to:{x:2,y:3}}]},after={...base,version:2,motions:[first,second],cars:base.cars.map(car=>car.id==='A'?{...car,y:3}:car)};
+ h.scope.render(after);assert.deepEqual(h.sounds,['skid']);h.advance(100);h.scope.render({...after,players:after.players.map(player=>({...player,online:false}))});h.settle();assert.deepEqual(h.sounds,['skid']);
+});
+
+test('a garage nitro command waits for the first confirmed entry and never replays its sound on later steps',async()=>{
+ for(const enabled of [true,false]){
+  const h=harness({enabled}),base=state(1,{cars:state().cars.map(car=>car.id==='A'?{...car,x:null,y:-1}:car)});h.scope.render(base);const command={...base,version:2,events:[{id:1,kind:'command',command:'nitro',car:'A',x:null,y:-1,afterMotion:0}]};h.scope.response=command;await h.scope.run('action',{action:'begin',command:'nitro'});assert.deepEqual(h.sounds,[]);
+  const entry={id:1,kind:'move',moves:[{car:'A',from:{x:null,y:-1},to:{x:2,y:0}}]},entered={...command,version:3,cars:base.cars.map(car=>car.id==='A'?{...car,x:2,y:0}:car),motions:[entry]};h.scope.render(entered);assert.deepEqual(h.sounds,['nitro']);if(enabled)h.settle();
+  const next={...entered,version:4,cars:entered.cars.map(car=>car.id==='A'?{...car,y:1}:car),motions:[entry,{id:2,kind:'move',moves:[{car:'A',from:{x:2,y:0},to:{x:2,y:1}}]}]};h.scope.render(next);if(enabled)h.settle();assert.deepEqual(h.sounds,['nitro']);
+ }
+});
+
+test('disabled and reduced motion keep one nitro, actual oil displacement and rolling cue without cosmetic animation',()=>{
+ for(const options of [{enabled:false},{reduced:true}]){
+  const h=harness(options),base=state();h.scope.render(base);const nitro={...base,version:2,events:[{id:1,kind:'command',command:'nitro',car:'A',afterMotion:0}]};h.scope.render(nitro);assert.deepEqual(h.sounds,['nitro']);assert.equal(h.scope.raceMovement.locked(),false);
+  h.advance(300);const oil={...nitro,version:3,cars:base.cars.map(car=>car.id==='A'?{...car,y:2}:car),motions:[{id:1,kind:'oil',moves:movement.moves}]};h.scope.render(oil);assert.deepEqual(h.sounds,['nitro','skid']);assert.equal(h.animations.length,0);
+  const rolling={...oil,version:4,diceCheck:collision('NO-MOTION',{status:'rolling',startedAt:1000,readyAt:2000,serverNow:1000})};h.scope.render(rolling);h.scope.render(rolling);assert.deepEqual(h.sounds,['nitro','skid','dice-roll']);assert.equal(h.dialog.dataset.motion,'false');h.advance(1000);assert.deepEqual(h.sounds,['nitro','skid','dice-roll']);
+ }
+});
+
+test('an oil hazard and stationary skid journal do not invent a sliding sound',()=>{
+ const h=harness({enabled:false}),base=state();h.scope.render(base);h.scope.render({...base,version:2,events:[{id:1,kind:'hazard',hazard:'oil',car:'A',afterMotion:0}],motions:[{id:1,kind:'skid',moves:[{car:'A',from:{x:2,y:1},to:{x:2,y:1}}]}]});assert.deepEqual(h.sounds,['reveal']);
+});
+
+test('muted sound attempts consume event and dice cycles, so enabling audio cannot replay their presence redraws',()=>{
+ const h=harness({muted:true,enabled:false}),base=state();h.scope.render(base);const after={...base,version:2,events:[{id:1,kind:'command',command:'nitro',car:'A',afterMotion:0}],diceCheck:collision('MUTED',{status:'rolling',startedAt:1000,readyAt:2000,serverNow:1000})};h.scope.render(after);assert.deepEqual(h.sounds,[]);
+ h.setMuted(false);h.scope.render({...after,players:after.players.map(player=>({...player,online:false}))});h.advance(1000);assert.deepEqual(h.sounds,[]);h.scope.render({...after,version:3,diceCheck:collision('NEW',{status:'rolling',startedAt:3000,readyAt:4000,serverNow:3000})});assert.deepEqual(h.sounds,['dice-roll']);
+});
+
+test('hydration, a data gap, hidden recovery and reconnect discard earlier game cues and dice without catch-up',()=>{
+ const h=harness({enabled:false}),rolling=collision('OLD',{status:'rolling',startedAt:1000,readyAt:2000,serverNow:1000}),base=state(1,{events:[{id:1,kind:'shot',afterMotion:0}],diceCheck:rolling});h.scope.render(base);assert.deepEqual(h.sounds,[]);h.advance(1000);h.scope.render(base);assert.deepEqual(h.sounds,[]);
+ h.advance(5001);const gap={...base,version:2,events:[...base.events,{id:2,kind:'slam',afterMotion:0}],diceCheck:{...rolling,id:'GAP',startedAt:7000}};h.scope.render(gap);assert.deepEqual(h.sounds,[]);
+ h.hide(true);const hidden={...gap,version:3,events:[...gap.events,{id:3,kind:'command',command:'nitro',car:'A',afterMotion:0}],diceCheck:{...rolling,id:'HIDDEN',startedAt:8000}};h.scope.render(hidden);h.hide(false);h.scope.render(hidden);h.advance(1000);assert.deepEqual(h.sounds,[]);
+ h.scope.disconnected=true;const reconnect={...hidden,version:4,events:[...hidden.events,{id:4,kind:'shot',afterMotion:0}],diceCheck:{...rolling,id:'RECONNECTED',startedAt:9000}};h.scope.render(reconnect);h.scope.disconnected=false;h.scope.render(reconnect);assert.deepEqual(h.sounds,[]);
+ h.scope.render({...reconnect,version:5,events:[...reconnect.events,{id:5,kind:'shot',afterMotion:0}],diceCheck:null});assert.deepEqual(h.sounds,['shot']);
+});
+
+test('turning motion off midway neither duplicates an already presented shot nor plays a queued future skid',()=>{
+ const h=harness(),base=state();h.scope.render(base);const events=[{id:1,kind:'shot',afterMotion:0,target:'B',source:'A',hit:true},{id:2,kind:'damage',afterMotion:0,car:'B',damage:'skid'}],after={...base,version:2,cars:base.cars.map(car=>car.id==='B'?{...car,y:5}:car),motions:[{id:1,kind:'skid',moves:[{car:'B',from:{x:2,y:4},to:{x:2,y:5}}]}],events};h.scope.render(after);assert.deepEqual(h.sounds,['shot']);h.advance(100);h.setEnabled(false);h.flush();h.scope.render(after);h.advance(2000);assert.deepEqual(h.sounds,['shot']);assert.equal(h.scope.raceMovement.locked(),false);
+});
+
+test('a failed refresh and leave cancel queued sound presentation; stale callbacks cannot replay after reconnect',async()=>{
+ const h=harness(),base=state();h.scope.render(base);const event={id:1,kind:'slam',afterMotion:1,car:'A',other:'B'},after=moved(base,{events:[event],diceCheck:collision('DEFERRED',{status:'result',startedAt:1000,result:{faces:['原位車',3],text:'同步'}})});h.scope.render(after);assert.deepEqual(h.sounds,[]);
+ h.scope.request=async()=>{throw Error('connection lost');};await h.scope.refresh();h.advance(2000);assert.deepEqual(h.sounds,[]);assert.equal(h.dialog.open,false);h.scope.request=async()=>after;await h.scope.refresh();h.scope.showRaceCheckpoint({events:[event],duration:0});h.flush();assert.deepEqual(h.sounds,[]);
+ h.leave();assert.equal(h.dialog.open,false);h.scope.render({...after,version:3,diceCheck:collision('AFTER-LEAVE',{status:'rolling',startedAt:5000,readyAt:6000,serverNow:5000})});assert.deepEqual(h.sounds,[]);
 });
 
 test('the visible event skip callback resumes the remaining path and never bypasses the next move animation',()=>{

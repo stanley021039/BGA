@@ -21,7 +21,7 @@
   return '<svg class="race-die-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="3" y="3" width="58" height="58" rx="10" fill="#fffaf0" stroke="#273c31" stroke-width="2"/>'+pipPositions[value-1].map(([x,y])=>'<circle cx="'+x+'" cy="'+y+'" r="5" fill="#172b21"/>').join('')+'</svg>';
  }
  let sequence=0;
- function mount({onAction}={}){
+ function mount({onAction,onRolling}={}){
   const document=root.document;if(!document)throw Error('RaceDiceDialog needs a document');
   if(!document.getElementById('race-dice-dialog-style')){const style=document.createElement('style');style.id='race-dice-dialog-style';style.textContent=STYLE;document.head.append(style);}
   function node(tag,className,parent,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=String(text);parent?.append(el);return el;}
@@ -85,19 +85,21 @@
    lastStage=currentStage;if(cycle?.observed&&now()<displayDeadline)timer=root.setTimeout(render,Math.max(1,displayDeadline-now()));
   }
   function open(){if(!dialog.open){dialog.showModal();title.focus({preventScroll:true});}}
-  function show(nextState,{live=true,deferred=false}={}){
+  function show(nextState,{live=true,deferred=false,soundLive=live,soundEpoch}={}){
    if(destroyed)return;const next=nextState?.diceCheck;if(next?.id==null||!['awaiting','rolling','result'].includes(next.status)){reset();return;}
    const different=next.id!==checkId;state=nextState;check=next;
    if(different){clearTimers();checkId=next.id;cycle=null;pending=null;layoutKey='';lastStage='';displayDeadline=0;error.textContent='';if(!dialog.open)returnFocus=document.activeElement;}
    else if(pending&&pending.key!==fingerprint(next)){pending=null;error.textContent='';}
-   const key=cycleKey(next);if(next.status==='rolling'&&cycle?.key!==key){clearTimers();cycle={key,observed:true,seenAt:now(),animate:live&&!document.hidden};displayDeadline=Math.max(serverDeadline(next),cycle.seenAt+1000);lastStage='';pending=null;error.textContent='';}
+   const key=cycleKey(next);if(next.status==='rolling'&&cycle?.key!==key){clearTimers();cycle={key,observed:true,seenAt:now(),animate:live&&!document.hidden,soundLive,soundEpoch};displayDeadline=Math.max(serverDeadline(next),cycle.seenAt+1000);lastStage='';pending=null;error.textContent='';}
    // Movement may keep the map visible until a check has already resolved on
    // the server. Show one local cosmetic cycle when it is first presented;
    // later presence polls keep its deadline and never initiate another roll.
-   else if(different&&next.status==='result'&&deferred&&live&&!document.hidden){cycle={key,observed:true,deferred:true,seenAt:now(),animate:!reduced()};displayDeadline=cycle.seenAt+1000;}
+   else if(different&&next.status==='result'&&deferred&&live&&!document.hidden){cycle={key,observed:true,deferred:true,seenAt:now(),animate:!reduced(),soundLive,soundEpoch};displayDeadline=cycle.seenAt+1000;}
    else if(cycle?.observed&&!cycle.deferred&&cycle.key===key&&Number.isFinite(next.serverNow)&&Number.isFinite(next.readyAt))displayDeadline=Math.max(cycle.seenAt+1000,serverDeadline(next));
    const nextLayout=JSON.stringify([(next.participants||[]).map(participantKey),(next.dice||[]).map(d=>[d.participant,d.label])]);if(layoutKey!==nextLayout){layoutKey=nextLayout;buildBoard();}
    render();open();
+   // Report only after the dialog is visible; cosmetic ticks and redraws never replay sound.
+   if(stage()==='rolling'&&!cycle.soundNotified){cycle.soundNotified=true;onRolling?.({checkId:check.id,cycleKey:cycle.key,live:cycle.soundLive,epoch:cycle.soundEpoch});}
   }
   async function act(action){
    if(!check||destroyed||pending||!isOwner()||typeof onAction!=='function')return;
