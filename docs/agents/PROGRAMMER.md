@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-07正式v1.5.1／`d4e3b4a`：畫猜phase row跨欄、左側常駐玩家、中央畫布＋直列聊天室（input最後）、右側共用操作。工具160px軌與畫布上緣對齊；timer沿用server deadline／clockOffset，以15s選題、options.seconds作畫、8s揭曉計算進度，不因presence poll重置，字型沿用UI＋tabular digits。猜對僅卡片高亮／勾號與chat非答案訊息，右側只保留重要例外。結算按內容高度且顯示最後一幅畫，preview job綁resultId及實際canvas node避免舊回覆畫到新場景。Windows／Linux各845、Chrome不同角色及手機／八席通過；正式schema15、8帳戶保留，無外站匯入／新PR／push。證據及限制見 [完整進度](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)，下列正式1.3敘述為歷史。
+
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。

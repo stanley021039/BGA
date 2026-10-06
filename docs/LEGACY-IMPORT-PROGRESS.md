@@ -1,5 +1,7 @@
 # 舊版原始資料匯入相容性
 
+2026-10-07現況更新：畫猜排版與聊天室修正已隨v1.5.1／`d4e3b4a`上線，現站為schema15／8帳戶；這次只升級現有資料，没有啟用外站資料代。原來源3帳戶與49logs的匯入預演、ZIP／金鑰與shadow目錄仍保留，取代或合併仍待選擇。後續匯入先重查正式code／PID／設定與帳戶；不要使用下方歷史v1.3.0／7帳戶盤點當成當前現況，亦不要為匯入把已修正版面倒退到v1.5.0。最新正式證據見 [畫猜修正](DRAW-DESKTOP-LAYOUT-PROGRESS.md)。
+
 2026-10-06，候選v1.5.0，受測程式及本地annotated tag固定於 `723fbe4eebb4cacf9170d8e2706fdc258a7e4fcf`。本地分支 `fix/legacy-community-import`，未push／PR，不改已發PR #43的受測程式／tag。匯入工具新增嚴格舊版community頭像與GitHub對應檔保存，並可明確保留啟動時已有的session logs；詳細契約見 [操作指南](SERVER-DATA-TRANSFER.md)。
 
 來源原始ZIP唯讀安全檢查：81 entries、77個持久檔及80行checksum一致；schema12、14表、integrity ok／FK0，3帳戶、1作品、2音樂、5留言板issue，49歷史logs／16對局meta（11完成、5中斷，無playing）。33個無meta session首列均符合保留判準，最大95bytes；5 PNG及GitHub對應附件完整。來源只宣稱複製期間排除寫入，沒有独立驗證其自動重啟設定；校驗與引用一致不等於整體原子快照證明。

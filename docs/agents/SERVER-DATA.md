@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-07最新正式v1.5.1／`d4e3b4a`／PID62990：原shhuang.cc資料升schema15，切換前0房間，service／tunnel正常。以最新8帳戶備份預演，16個舊表schema／rows／BLOB完全保留，只新增5個空市場表；正式8帳戶全欄位（含近期重設雜湊）一致、integrity ok／FK0。現站原資料路徑及.env不變，外站shadow仍未啟用，原ZIP／移轉key及副本保留。外站來源3帳戶要取代／合併現在8帳戶仍待使用者決定；後續不得沿用舊4732450／schema14／7帳戶guard，須重新盤點並使用最新UI程式避免倒退。備份不是跨檔原子冷快照；完整記錄見 [畫猜发布](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)，下方1.5.0shadow及1.3.0正式為歷史。
+
 2026-10-06：依使用者明確要求，已重設正式站既有管理者密碼。先建立線上一致性 SQLite 備份，再使用既有密碼重設流程；公開站登入、管理者權限及驗證 session 登出通過，原有 10 筆登入狀態已撤銷，其餘 6 個帳戶全欄位不變。未重啟服務、未切換程式或外部匯入資料。帳密不放在此文件；若後續選擇來源整份取代，帳戶密碼仍以來源資料為準，不能沿用這次現站重設結果。
 
 2026-10-06最新v1.5.0本地候選／`723fbe4`：legacy附件typed allowlist與HISTORY_PRESERVE_IMPORTED_SESSIONS旗標，完整兩平台834項、實際來源本機／server shadow 49logs／3帳戶／1作品／2音樂／5PNG及backfill保全通過。來源ZIP不執行程式，WAL讀入consistent SQLite snapshot；來源跨檔原子性只有來源宣稱，沒有自動重啟獨立證據。正式未改，待使用者決定來源3帳戶是否整份取代現站7帳戶，尚未做切換完整冷備份。下列舊schema14／候選驗收為歷史，以 [最新進度](../LEGACY-IMPORT-PROGRESS.md)為準。
