@@ -21,6 +21,7 @@ const { HistoryStore } = require('../src/history/store');
 const { Room } = require('../src/games/poker');
 const { SubmissionService } = require('../src/integrations/github/submissions');
 const { BoardStore } = require('../src/community/board');
+const { MarketStore, validateMarketDatabase } = require('../src/market/store');
 
 const password = 'synthetic-test-password';
 const mp3 = Buffer.concat([Buffer.from([255,251,144,100]), Buffer.alloc(830)]);
@@ -34,6 +35,16 @@ function expressionWav(samples = 25) {
   return bytes;
 }
 const wav = expressionWav();
+const marketTables = ['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
+const dropMarket = 'DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds;';
+function seedMarket(db,f) {
+  let now=Date.parse('2027-01-04T12:00:00Z');
+  const store=new MarketStore(db,()=>now),admin=db.prepare('SELECT * FROM users WHERE id=?').get(f.adminId);
+  const id=store.create(admin,{requestId:crypto.randomUUID(),targetDate:'2027-01-06',confirmed:true}).roundId;
+  store.vote(f.member,{requestId:crypto.randomUUID(),roundId:id,optionId:'rally',expectedRevision:0});
+  now=Date.parse('2027-01-06T05:30:00Z');
+  for (const [expectedRevision,returnPct] of [[0,2],[1,-2]]) store.settle(admin,{requestId:crypto.randomUUID(),roundId:id,returnPct,expectedRevision,reason:expectedRevision?'移轉前更正':'',confirmed:true});
+}
 async function fixture(t, { playing = false, minimal = false, sounds = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'afterhours-data-test-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5 }));
@@ -80,7 +91,7 @@ async function fixture(t, { playing = false, minimal = false, sounds = false } =
 async function legacyFixture(t, version) {
   const f = await fixture(t, { minimal: true }), db = new DatabaseSync(f.source.dbFile);
   try {
-    db.exec('DROP TABLE character_sounds');
+    db.exec('DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds');
     if (version < 13) db.exec('DROP TABLE draw_word_exclusions');
     if (version < 11) db.exec('DROP TABLE music_tracks');
     if (version < 9) db.exec('DROP TABLE draw_words');
@@ -339,7 +350,7 @@ test('full backup preserves builtin and custom word bans with their majority aud
 
 test('schema 12 backup gains an empty ban ledger only in its restored copy', async t => {
   const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
-  try {db.exec('DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');} finally {db.close();}
+  try {db.exec('DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');} finally {db.close();}
   const before=validateData(f.source).summary.database;assert.equal(before.schemaVersion,12);assert.equal(before.tableCounts.draw_word_exclusions,undefined);
   await run(f.exportRequest);const restored=await run({...restoreRequest(f),apply:true});
   assert.equal(restored.restoredSummary.database.schemaVersion,SCHEMA_VERSION);assert.equal(restored.restoredSummary.database.tableCounts.draw_word_exclusions,0);
@@ -347,17 +358,98 @@ test('schema 12 backup gains an empty ban ledger only in its restored copy', asy
   assert.deepEqual(validateData(f.source).summary.database,before);
 });
 
-test('schema 13 source missing the ban ledger is rejected before export', async t => {
+test('schema 14 source missing the ban ledger is rejected before export', async t => {
   const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
-  try {db.exec('DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=13');} finally {db.close();}
+  try {db.exec('DROP TABLE draw_word_exclusions; PRAGMA user_version=14');} finally {db.close();}
   await assert.rejects(run(f.exportRequest),errorCode('INVALID_DATABASE'));
 });
 
-test('schema 14 requires its expression sound table even when it contains no sounds', async t => {
+test('schema 15 requires its expression sound table even when it contains no sounds', async t => {
   const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
   try {db.exec('DROP TABLE character_sounds');} finally {db.close();}
   await assert.rejects(run(f.exportRequest),errorCode('INVALID_DATABASE'));
   assert.equal(fs.existsSync(f.bundleDir),false);
+});
+
+for (const layout of ['sounds-and-ban','market-and-ban','sounds-market-and-ban']) test(`legacy schema 14 ${layout} validates, upgrades and cold-restores all existing data to schema 15`, async t => {
+  const hasSounds=layout!=='market-and-ban',hasMarket=layout!=='sounds-and-ban';
+  const f=await fixture(t,{sounds:hasSounds}),db=new DatabaseSync(f.source.dbFile);
+  let rows;
+  try {
+    new DrawWordStore(db).ban(WORDS[0],{roomCode:'ABC123',resultId:crypto.randomUUID(),gameRunId:crypto.randomUUID(),electorate:[f.adminId,f.member.id],votes:[f.adminId,f.member.id],required:2});
+    if (hasMarket) seedMarket(db,f); else db.exec(dropMarket);
+    if (!hasSounds) db.exec('DROP TABLE character_sounds');
+    db.exec('PRAGMA user_version=14');
+    const existing=['users','draw_word_exclusions',...(hasSounds?['character_sounds']:[]),...(hasMarket?marketTables:[])];
+    rows=Object.fromEntries(existing.map(table=>[table,db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
+  } finally {db.close();}
+  const before=validateData(f.source).summary.database;
+  assert.equal(before.schemaVersion,14);
+  await run(f.exportRequest);await run({action:'verify',bundleDir:f.bundleDir,keyFile:f.keyFile});
+  const dry=await run(restoreRequest(f));assert.equal(dry.dryRun,true);assert.equal(fs.existsSync(f.destinationDir),false);
+  assert.equal(dry.restoredSummary.database.schemaVersion,15);
+  const restored=await run({...restoreRequest(f),apply:true});
+  assert.deepEqual(validateData(f.source).summary.database,before,'cold restore leaves every source digest and table count unchanged');
+  const check=database=>{
+    assert.equal(database.prepare('PRAGMA user_version').get().user_version,15);
+    for (const [table,expected] of Object.entries(rows)) assert.deepEqual(database.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all(),expected);
+    for (const table of ['character_sounds',...marketTables]) assert.ok(database.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(table));
+    if (!hasSounds) assert.equal(database.prepare('SELECT COUNT(*) n FROM character_sounds').get().n,0);
+    if (!hasMarket) for (const table of marketTables) assert.equal(database.prepare(`SELECT COUNT(*) n FROM ${table}`).get().n,0);
+    assert.equal(new DrawWordStore(database).isExcluded(WORDS[0]),true);
+    assert.equal(validateMarketDatabase(database),true);
+    assert.equal(new MarketStore(database).stats(f.member.id).score,hasMarket?-1:0);
+    assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(),[]);
+  };
+  const target=openDatabase(restored.config.DB_FILE);
+  try {
+    check(target);
+    for (const table of ['sessions','invites','password_resets']) assert.equal(target.prepare(`SELECT COUNT(*) n FROM ${table}`).get().n,0);
+    const user=await createAuth(target).login({username:'transfer_member',password},{setHeader(){}});
+    assert.equal(user.id,f.member.id);
+  } finally {target.close();}
+  for (const digest of Object.keys(before.blobDigests)) assert.equal(restored.restoredSummary.database.blobDigests[digest],before.blobDigests[digest]);
+  const upgraded=openDatabase(f.source.dbFile);try {check(upgraded);} finally {upgraded.close();}
+  const restarted=openDatabase(f.source.dbFile);try {check(restarted);} finally {restarted.close();}
+});
+
+test('schema 14 market restoration rejects populated contents in the newly introduced sound table', async t => {
+  const f=await fixture(t,{sounds:true}),db=new DatabaseSync(f.source.dbFile);
+  try {db.exec('DROP TABLE character_sounds; PRAGMA user_version=14');} finally {db.close();}
+  const before=validateData(f.source).summary.database;await run(f.exportRequest);
+  const exec=DatabaseSync.prototype.exec;let injected=false;
+  DatabaseSync.prototype.exec=function(sql) {
+    const result=exec.call(this,sql);
+    if (sql==='PRAGMA wal_checkpoint(TRUNCATE)') {
+      this.prepare('INSERT INTO character_sounds(character_id,expression,mime,bytes,duration_ms) VALUES(?,?,?,?,?)').run(f.characterId,f.soundExpression,'audio/wav',wav,2);
+      injected=true;
+    }
+    return result;
+  };
+  try {await assert.rejects(run({...restoreRequest(f),apply:true}),errorCode('VALIDATION_FAILED'));}
+  finally {DatabaseSync.prototype.exec=exec;}
+  assert.equal(injected,true);assert.equal(fs.existsSync(f.destinationDir),false);assert.deepEqual(validateData(f.source).summary.database,before);
+});
+
+test('legacy schema 14 rejects every partial market layout, missing feature families and malformed empty tables before migration', async t => {
+  const malformed=[
+    ...[...marketTables].map(table=>({name:'missing '+table,mutate(db){db.exec('DROP TABLE '+table);}})),
+    {name:'no feature family',mutate(db){db.exec(dropMarket+'DROP TABLE character_sounds;');}},
+    {name:'missing ban ledger',mutate(db){db.exec('DROP TABLE draw_word_exclusions;');}},
+    {name:'sound FK missing',mutate(db){db.exec('DROP TABLE character_sounds; CREATE TABLE character_sounds(character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL CHECK(mime=\'audio/wav\'),bytes BLOB NOT NULL,duration_ms INTEGER NOT NULL CHECK(typeof(duration_ms)=\'integer\' AND duration_ms BETWEEN 1 AND 10000),PRIMARY KEY(character_id,expression))');}},
+    {name:'market request FK missing',mutate(db){db.exec('DROP TABLE market_requests; CREATE TABLE market_requests(user_id TEXT NOT NULL,request_id TEXT NOT NULL,operation TEXT NOT NULL,fingerprint TEXT NOT NULL,response_json TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(user_id,request_id))');}},
+    {name:'market ledger checks missing',mutate(db){const sql=db.prepare("SELECT sql FROM sqlite_master WHERE name='market_ledger'").get().sql;db.exec('DROP TABLE market_ledger;'+sql.replace("CHECK(kind IN ('award','reversal'))",''));}},
+    {name:'market target uniqueness missing',mutate(db){const sql=db.prepare("SELECT sql FROM sqlite_master WHERE name='market_rounds'").get().sql;db.exec('DROP TABLE market_rounds;'+sql.replace('target_date TEXT NOT NULL UNIQUE','target_date TEXT NOT NULL'));}},
+  ];
+  for (const invalid of malformed) {
+    const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
+    try {invalid.mutate(db);db.exec('PRAGMA user_version=14');} finally {db.close();}
+    const before=fs.readFileSync(f.source.dbFile);
+    await assert.rejects(run(f.exportRequest),errorCode('INVALID_DATABASE'),invalid.name);
+    assert.equal(fs.existsSync(f.bundleDir),false);
+    assert.throws(()=>openDatabase(f.source.dbFile),/Incomplete|Invalid/,invalid.name);
+    assert.deepEqual(fs.readFileSync(f.source.dbFile),before,invalid.name+' must not advance schema or repair a malformed table');
+  }
 });
 
 test('the exact ten-second canonical expression sound round-trips without changing its bytes or duration', async t => {
@@ -381,7 +473,7 @@ const invalidSounds = [
   {name:'neutral expression audio',code:'BROKEN_REFERENCE',mutate(db) {db.exec("UPDATE character_sounds SET expression='neutral'");}},
   {name:'missing composite expression reference',code:'FOREIGN_KEY_FAILED',mutate(db) {db.exec('PRAGMA foreign_keys=OFF');db.prepare('UPDATE character_sounds SET expression=?').run('emote-'+crypto.randomUUID());}},
   {name:'a forged table without the composite image FK',code:'INVALID_DATABASE',mutate(db) {db.exec('CREATE TABLE forged_sounds(character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,duration_ms INTEGER NOT NULL,PRIMARY KEY(character_id,expression)); INSERT INTO forged_sounds SELECT * FROM character_sounds; DROP TABLE character_sounds; ALTER TABLE forged_sounds RENAME TO character_sounds');}},
-  {name:'MIME inconsistent with canonical audio',code:'VALIDATION_FAILED',mutate(db) {db.exec("CREATE TABLE forged_sounds(character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,duration_ms INTEGER NOT NULL,PRIMARY KEY(character_id,expression),FOREIGN KEY(character_id,expression) REFERENCES character_images(character_id,expression) ON DELETE CASCADE); INSERT INTO forged_sounds SELECT * FROM character_sounds; DROP TABLE character_sounds; ALTER TABLE forged_sounds RENAME TO character_sounds; UPDATE character_sounds SET mime='audio/mpeg'");}},
+  {name:'forged constraints allowing a MIME inconsistent with canonical audio',code:'INVALID_DATABASE',mutate(db) {db.exec("CREATE TABLE forged_sounds(character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL,bytes BLOB NOT NULL,duration_ms INTEGER NOT NULL,PRIMARY KEY(character_id,expression),FOREIGN KEY(character_id,expression) REFERENCES character_images(character_id,expression) ON DELETE CASCADE); INSERT INTO forged_sounds SELECT * FROM character_sounds; DROP TABLE character_sounds; ALTER TABLE forged_sounds RENAME TO character_sounds; UPDATE character_sounds SET mime='audio/mpeg'");}},
 ];
 for (const invalid of invalidSounds) test(`inspect, export, verify and restore reject expression sounds with ${invalid.name}`, async t => {
   const f=await fixture(t,{sounds:true});await run(f.exportRequest);
@@ -406,7 +498,7 @@ test('schema 13 cannot smuggle a populated sound table through migration compati
 
 test('old supported schema migrates only the restored copy and preserves account hashes', async t => {
   const f=await fixture(t,{minimal:true}), db=new DatabaseSync(f.source.dbFile);
-  try{db.exec('DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
+  try{db.exec('DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
   await run(f.exportRequest); const result=await run({...restoreRequest(f),apply:true});assert.equal(result.restoredSummary.database.schemaVersion,SCHEMA_VERSION);
   const old=new DatabaseSync(f.source.dbFile,{readOnly:true});try{assert.equal(old.prepare('PRAGMA user_version').get().user_version,10);assert.equal(old.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name='music_tracks'").get().n,0);}finally{old.close();}
 });
@@ -419,7 +511,7 @@ for (const version of Array.from({length:13},(_,index)=>index+1)) test(`schema $
   const restored = await run({...restoreRequest(f),apply:true}), after = restored.restoredSummary.database;
   assert.equal(after.schemaVersion,SCHEMA_VERSION); assert.equal(after.accountsSha256,initial.accountsSha256);
   for (const [table,digest] of Object.entries(initial.blobDigests)) assert.equal(after.blobDigests[table],digest);
-  for (const [table,introduced] of Object.entries({character_images:3,community_gifts:5,user_artworks:8,character_sounds:14})) {
+  for (const [table,introduced] of Object.entries({character_images:3,community_gifts:5,user_artworks:8,character_sounds:15})) {
     if (version < introduced) {
       assert.equal(initial.blobDigests[table],undefined); assert.equal(after.tableCounts[table],0);
       assert.equal(after.blobDigests[table],crypto.createHash('sha256').update('').digest('hex'));

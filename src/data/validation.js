@@ -3,7 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { StringDecoder } = require('node:string_decoder');
 const { DatabaseSync } = require('node:sqlite');
-const { SCHEMA_VERSION } = require('../db');
+const { SCHEMA_VERSION, validateFeatureSchema } = require('../db');
 const { validateQuestion } = require('../community/store');
 const { audioType, MAX_BYTES } = require('../music/store');
 const { inspectExpressionSound } = require('../profiles/sounds');
@@ -62,8 +62,17 @@ function validateDatabase(file) {
     if (db.prepare('PRAGMA foreign_key_check').all().length) fail('FOREIGN_KEY_FAILED', 'SQLite contains broken foreign keys');
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r => r.name);
     if (!tables.includes('users')) fail('INVALID_DATABASE', 'Account table is missing');
-    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 13: ['draw_word_exclusions'], 14: ['character_sounds'] };
+    const marketTables = ['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
+    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 15: ['draw_word_exclusions','character_sounds',...marketTables] };
     for (const [version, names] of Object.entries(required)) if (schemaVersion >= Number(version) && names.some(n => !tables.includes(n))) fail('INVALID_DATABASE', 'Database schema is missing a required table');
+    // Both historical schema-13 layouts and schema-14 layouts are identified by
+    // complete feature shapes. Partial or forged tables cannot be repaired away.
+    try { validateFeatureSchema(db,schemaVersion); } catch { fail('INVALID_DATABASE', 'Database feature schema is incomplete or invalid'); }
+    if (schemaVersion >= 13) {
+      const present = marketTables.filter(name => tables.includes(name)).length;
+      if (present && present !== marketTables.length || schemaVersion === 13 && !tables.includes('draw_word_exclusions') && present !== marketTables.length) fail('INVALID_DATABASE', 'Database schema is missing a required table');
+      if (present) { try { require('../market/store').validateMarketDatabase(db); } catch { fail('INVALID_DATABASE', 'Market score history is invalid'); } }
+    }
     const accountsDigest = crypto.createHash('sha256');
     for (const user of db.prepare('SELECT * FROM users ORDER BY id').iterate()) {
       if (!uuid.test(user.id) || !['member','admin'].includes(user.role) || ![0,1].includes(user.disabled) || !/^scrypt:[0-9a-f]{32}:[0-9a-f]{128}$/.test(user.password_hash)) fail('INVALID_ACCOUNTS', 'Account identity, permissions or credential format is invalid');

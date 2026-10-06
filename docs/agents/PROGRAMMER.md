@@ -1,5 +1,9 @@
 # 程式架構 agent 記憶
 
+2026-10-06 本輪整合狀態：依使用者要求將全部已完成改動一起送 PR，正在接入 origin/main `689318f`，候選將整合為 v1.4.0；PR 尚未建立，本輪完整驗收尚未完成。正式仍 v1.3.0，v1.3.1／v1.3.2 送禮排版候選未部署，既有 tag 不改。以下較早版本、分支、PR 狀態與測試數字保留為歷史；市場 schema 14 與音效 schema 14 的布局不同，本輪候選契約統一至 schema 15，實作與驗證進行中，不能沿用任一方舊驗收當作整合結果。
+
+本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。
+
 2026-10-06正式 **v1.3.0**：畫猜本人猜中／畫者輪次及雷霆骰聲／shot／slam／nitro／skid已接共用事件音效。Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。schema14不變、integrity ok、外鍵錯誤0，原7帳戶全欄位保留；預演副本16張既有表逐列一致。匿名no-store版號、既有session、7份HTML、24份資源（含7WAV的精確bytes及MIME）一致，背景Chrome設定顯示「版本 v1.3.0」。7短音（2Kenney CC0改作＋5固定seed原創）、兩個新聲音模組、遊戲2／總4段上限及1秒載入timeout已驗；Chromeplaying／清理／靜音及所有限制見 [音效實證](../GAME-SOUNDS-PROGRESS.md)。第二批遊戲候選仍為規格，沒有真人聽感／喇叭測試；無新PR／push，純驗收文件不移動tag。
 
 2026-10-06正式 v1.2.0：角色既有非neutral自訂表情可POST canonical base64音效／remove，作者控制；browser用OfflineAudioContext decode並轉24kmonoPCM16WAV，server按真sample數驗≤240000／480044bytes，不信duration宣稱。schema14 FK保存；gallery.sound只有url/duration，發送時綁bytes hash與actualaudience grants。共用ExpressionSounds新事件一次、baseline／hidden／reconnect不補播，AudioSettings effects統一音量／mute／4段cap，load10s與play≤10s分開deadline，lateplay不再啟timer。profile save晚回覆需綁selection generation，不能覆寫新角色並鎖住soundPending。Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。ChromeWAV11秒拒／10秒保存及1秒trialstop，房／大廳一次GET、mute0。受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。詳 [音效契約與實證](../CHARACTER-ASSET-TEMPLATE.md)。
@@ -24,6 +28,14 @@
 
 內建draw1000／meme100（50模板、50原創情境），原120ID不重排；gift350，成人50另組、includeAdult預設false且同步過濾投稿，原300ID不改。以上無新schema；框收藏方案將需要成熟PNG解碼器、schema／受眾／移轉驗證，尚未實作。來源、Chrome觀察及最新整合測試见 [本批進度](../PARTY-UPGRADE-PROGRESS.md)。U29共看已依新授權發PR#36；本批六項仍本地未PR／部署。
 
+2026-10-06 PR #36 合併準備：整合最新 main `9dd6282`（含 #38），靜態資源衝突保留 YouTube 與 market 路由及 market 登入返回路徑；記憶保留雙方決策，重複編號以 U29-market 區分。Windows Node 26.2.0 完整 573/573 通過，失敗／取消／跳過 0。本輪未重跑 Linux 或瀏覽器；使用者已明確授權推送與合併 main，未部署。
+
+## 2026-10-06：PR #36 共看失聯與 HTTP 安全亂數
+
+`table-watch.js` 的 failed marker 不能記成永遠已取得。新契約以同 instance／revision 的首取加兩次 update-driven retry，失敗後 1 秒／4 秒門檻、無新增網路 timer；成功同 marker 不發 GET。4xx（408／429 除外）立即停自動重試，明確 open／join／rejoin 可再啟動。cleanup 清預算與 pending，舊 task 的失敗／finally 不能消耗新 task 額度；飛行中接到較新 marker 必須合併追最新。無 watch marker 的首次開窗 GET 失敗也需由既有遊戲 update 恢復。
+
+UUID 優先原生 `crypto.randomUUID`，HTTP 非 loopback 缺少時使用 `getRandomValues` 的 UUID v4 fallback；不降級到 `Math.random`。安全亂數不存在或拋錯需在 async command 內可控回報，不能在 try 外失敗。uncertain retry 先比對同操作／instance 並復用舊 body，不先產生新 UUID；HTTP 拒絕後才建立新操作 ID。Windows 真模組 VM **90/90** 通過；本次 Linux／真瀏覽器／發布由父任務另驗，細節見 [共看進度](../YOUTUBE-WATCH-PROGRESS.md#2026-10-06pr-36-審查修正回歸階段紀錄)。
+
 ## 最新：YouTube 共看（2026-10-05）
 
 U32 後續 `400cb6d`：使用者要求非房主隱藏「在這裡開始播放」。初始 hidden、render 依 snapshot.isHost 決定，handler 也核對身分；不能用 canControl 代替房主判斷。自動播放阻擋／對齊提示按角色提供可見入口。Windows 前端52項及原 Chrome 兩帳號可見性／實播驗收通過；本增量沒有重跑Linux／全套，未push／PR／部署。
@@ -34,6 +46,20 @@ TableMusic與TableWatch同媒體入口，加入影片只在本機suspend音樂�
 
 使用者因暫留720p模擬看到頁面只在左上；已逐tab清除metrics並驗normal viewport。官方browser viewport capability reset只還原當次目標，不可假設所有owned tabs都還原；每一尺寸測完即reset並DOM查核。測試截圖只證明當次尺寸，不能把fake DOM rect當實際CSS證據。
 
+## 2026-10-06：PR #34 最新提交雙平台複驗
+
+固定來源 `3dde6a4` 包含 main `b843a3f`；Windows Node 24.14.0 與隔離 Linux Node 22.22.1 完整各 **442/442** 通過，失敗／取消／跳過皆 0。鎖程式、移轉及 11 項鎖回歸與 main 完全一致，對 main 的 77 個變更檔未帶入 PR #36 或後續六項功能。Linux 僅展開乾淨 archive 執行測試，未操作正式資料、服務或 current；package 仍為本 PR 的 1.0.0，不能混稱另一開發分支已部署的 v1.1.3。父任務背景Chrome一席UI配合四合成帳戶API已走完四輪，跨輪及完局回看第一輪、收藏及3/4禁題均通過；沒有宣稱多人真機／弱網或GPU驗收。證據與來源 SHA 見 [整合驗證](../PR34-MAIN-INTEGRATION.md#2026-10-06最新整合提交複驗)。本段取代下方「本次無 Linux 證據」的現況，沒有核准／合併／部署。
+
+## 2026-10-06：PR #34 整合 main
+
+原 head `585eb63` 接上 main `b843a3f`，保留 #31 鎖修正、新版 AGENTS 及 #34 回看／收藏／禁題／動效。程式檔無文字衝突，本轮未修改功能邏輯；三份角色記憶檔首保留兩方新增內容。Windows Node 26.2.0 完整 **442/442** 與隔離 HTTP 四輪流程通過，前端測試是 VM harness；本次無真正 browser／Linux 證據。版本、驗收腳本時序限制及複審入口見 [整合驗證](../PR34-MAIN-INTEGRATION.md)，PR 維持 Draft，未核准／合併／部署。
+
+## 2026-10-05：PR #31 鎖競態修正
+
+`0682e43`：`src/data/locks.js` 的資料／發布／legacy PID 鎖只以 `wx` 取得，既有檔一律 `DATA_IN_USE`，不讀 PID 或刪舊鎖。`HistoryStore` 共用 legacy 取得函式；release 冪等，舊實例重複 close 不會刪掉同程序後來取得的鎖。讀取比對後 unlink 不能安全回收另一程序的 stale lock，不能以多一次比對或同步函式當跨程序修復。
+
+`tests/data-locks.test.js`／`helpers/data-lock-worker.cjs` 用兩個 OS 程序在舊 unlink 前加屏障，重現共用 DB、其他目錄不同時仍雙重取得鎖；發布／legacy／HistoryStore 也重現。修後11項回歸及 Windows 完整374項通過。新版 writer 不可與仍自動回收 stale lock 的舊 writer 混跑；人工清理只在全部 writer 停止後進行，詳 [證據及限制](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。本次沒有 Linux、真實資料夾 chooser 或整合後多人實玩證據。
+
 ## 2cf8a44：畫猜過半禁題
 
 2026-10-05 U28 已實作。`publicResults` entry 的 mutable ballot 與 immutable snapshot 分開；揭曉時固定 active 席位，含畫者及暫時離線者。`POST /api/draw/result/ban` 依 resultId 投一票，state 另帶 resultVotes；跨輪八份快照仍可補投，未公開／淘汰／晚加入／踢出不可投。最後一票先 DB transaction 成功才接受；503 可重試，不先發成功事件。
@@ -41,12 +67,6 @@ TableMusic與TableWatch同媒體入口，加入影片只在本機suspend音樂�
 DrawWordStore 以題目 ID 或 normalized title 排除，內建列表、共編列表、後續候選與舊候選選取都要套用，空池安全結束。跨房禁題不一定增加本房 version，前端不可只依版本或快照 ID cache；同版本已知 banned 不因舊 poll 倒退。前端 pending、generation、跨輪 ACK 及獨立收藏狀態已測。
 
 揭曉與結束側欄要讓工具列參與自然高度，不能溢出覆蓋玩家卡；新增投票只改 reveal 排版，原猜題作畫 canvas 規則保留。Windows／Linux 各431項及 Chrome 背景驗收見 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)，未部署；schema 13 及移轉規則與 SERVER-DATA 同步。
-
-## 2026-10-05：PR #31 鎖競態修正
-
-`0682e43`：`src/data/locks.js` 的資料／發布／legacy PID 鎖只以 `wx` 取得，既有檔一律 `DATA_IN_USE`，不讀 PID 或刪舊鎖。`HistoryStore` 共用 legacy 取得函式；release 冪等，舊實例重複 close 不會刪掉同程序後來取得的鎖。讀取比對後 unlink 不能安全回收另一程序的 stale lock，不能以多一次比對或同步函式當跨程序修復。
-
-`tests/data-locks.test.js`／`helpers/data-lock-worker.cjs` 用兩個 OS 程序在舊 unlink 前加屏障，重現共用 DB、其他目錄不同時仍雙重取得鎖；發布／legacy／HistoryStore 也重現。修後11項回歸及 Windows 完整374項通過。新版 writer 不可與仍自動回收 stale lock 的舊 writer 混跑；人工清理只在全部 writer 停止後進行，詳 [證據及限制](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。本次沒有 Linux、真實資料夾 chooser 或整合後多人實玩證據。
 
 更新：2026-10-05；角色文件是可更新的專案知識，不授權對正式服務操作。
 
@@ -60,12 +80,12 @@ DrawWordStore 以題目 ID 或 normalized title 排除，內建列表、共編�
 
 此角色負責API/state、server權威／身份／同步、功能模組邊界、資料與效果的時序、可測性。先讀root AGENTS與角色索引，再按任務讀檔；與玩家agent確認遊戲規則／判定，與美術agent協商資訊階層和原創圖示，與server/data agent確認持久化及切換。
 
-最近規格：[YouTube共看](../specs/SHARED-YOUTUBE-PLAYER.md)、[多環境資料](../specs/MULTI-ENV-DATA-MIGRATION.md)、[成就與戰績](../specs/ACHIEVEMENTS-AND-RECORDS.md)。YouTube／成就仍為提案；多環境資料的完整備份還原子集已本地實作，未上線或執行正式資料切換，見 [工具](../SERVER-DATA-TRANSFER.md)。
+最近規格：[YouTube共看](../specs/SHARED-YOUTUBE-PLAYER.md)、[多環境資料](../specs/MULTI-ENV-DATA-MIGRATION.md)、[成就與戰績](../specs/ACHIEVEMENTS-AND-RECORDS.md)。YouTube共看已實作且隨前輪發布；成就擴充仍為提案。多環境資料的完整備份還原子集已實作，尚未把其他站資料切入本站，見 [工具](../SERVER-DATA-TRANSFER.md)。本輪schema15相容合併正在驗證。
 
 ## 已確認架構
 
 - `src/app.js`建立rooms、seats與music/social maps。users UUID、room seat UUID、6位room code是三種身份；永久結果用match UUID／result unit，不能從名字回推canonical user。
-- `src/db/index.js`Node DatabaseSync、WAL、同步BEGIN IMMEDIATE migration／transaction，schema上限13。async repository升級要重設transaction契約。
+- `src/db/index.js`Node DatabaseSync、WAL、同步BEGIN IMMEDIATE migration／transaction，本輪候選schema上限15，正式v1.3.0仍為音效版14；相容布局見SERVER-DATA檔首與移轉指南。async repository升級要重設transaction契約。
 - 遊戲state由server裁決；client report是非權威。重送API靠requestId／revision／epoch與永久結果ledger，不只client busy或WeakSet。
 - `src/history/store.js`記before/trace/after與enginehash、rng；進行中archive拒讀。不要把秘密歷史預設公開，新增state transition納入transact。
 - 成就以玩家spec的server證據判定，不從UI文字／瞬時events判定：poker每個sidepot需winnerIds/refund/tie；race維修僅己方。骰運候選採本人4顆原始移動骰全1的accepted round metric，加上有效manual turn與正常完賽；相同結果重擲候選已否決，不能誘導為成就額外重擲。首次權威finalize凍結winner/participants，rules_completed與timeout等quality_flags分離。
@@ -147,3 +167,11 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 同日追蹤回覆修正 `e60f853`／本地整合 `7c25c7b`：round 會在新對局重回 1，不能單獨作為畫布／配額 identity。server 每新畫布生成 canvasEpoch，POST 必填且在去重／配額修改前驗證；state／snapshot／ACK／SSE 同帶 epoch。client 換 epoch 清零 quota、draft、renderer、sendQueue，所有等待後的發送／套用／儲存重新驗 epoch；command finally 另以操作 token 隔離。clear／undo 不換 epoch、不退額度。舊 client 須重新整理，新舊 server/client 不可混用。Windows PR286／本地整合330項、背景實際新局填色與舊請求拒絕已驗；各平台最終結果見 [PR 修正證據](../PR30-RESOURCE-LIMITS.md#追蹤回覆新對局第-1-輪的配額隔離)，不可沿用舊279／323當最新數量。
 
 2026-10-05、2618c4b 管理UI：`src/data/ui.js` 是獨立localhost HTTP wrapper，static UI 位於tools/data-transfer-ui/，不加入遊戲路由；`tools/server-data-ui.cjs`／npm data:transfer:ui為入口。驗Host/Origin/隨機token、64KiB JSON、source/target停寫ack，互斥工作与記憶體lastResponse。只回傳run/safeError去敏結果，不能寫rawSQLite錯誤／key bytes／users到UI。前端原生required、textContent更新、預演預設、改路徑取消確認，刷新GET state不重送POST。HTTP4項與全套259項在Windows/Linux通過；主agent原Chrome背景完整合成表單流程／reload通過。收合版31c91dd以details隱藏JSON，保留config/nextSteps DOM常駐，統計三欄及140px nowrap標籤；詳進度，無正式資料與服務變更。
+
+## 2026-10-06：股市冥燈本機整合
+
+隔離 main b843a3f，本地 feature/market-jinx-local：/market 沿用既有 session canonical UUID，管理權限重查DB，不採用原型 localStorage。src/market/store.js 以 BEGIN IMMEDIATE、requestId及 expectedRevision 實作日期／投票／結算，取得寫入鎖後采樣截止時間。更正先撤銷舊 award 再保存新 award，失敗原子回復；public/market-rules.js 共用規則，日期保存快照。當前 schema上限13，取代上方12的最新架構描述。Windows Node26.2.0 完整387項、13項市場回歸及背景 Chrome 1280×720／390／320 流程通過；未測Linux／Safari／公開負載。以Draft送審，未合併或部署，證據與接手見 [本機說明](../MARKET-JINX.md)。
+
+同日 PR #38 審查修正：STALE_VOTE 讀新票後須更新待提交草稿 expectedRevision、保留選擇，並要求玩家明確重試。loadSequence 只隔離 GET 套用，不能代替整個操作生命週期的 busy；手動更新先鎖定直到 finally，避免舊清理解鎖新寫入。四項回歸執行實際 market.js＋SQLite store，原程式3失敗／1保護項通過；修後市場17、完整391項通過。Chrome held-fetch 驗真實控件鎖定／0寫入／焦點恢復及三寬度導覽。本筆391取代上段387作最新測試數，詳 [修正證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)。
+
+同日最新main `1447430` 已包含 #34，#38必要整合改為schema14，原禁題版／市場版13各保留已有資料並補另一方空表。保留main引擎、draw store／前端、MotionPolicy、資料鎖及AGENTS，入口／static路由合併雙方變更。六份測試自動合併的SCHEMA_VERSION重複匯入已消除。市場21／Windows全套463及整合版Chrome完整市場流程、held-fetch與三寬度導覽通過；取代391與最新schema13描述，詳 [相容整合](../MARKET-JINX-MAIN-INTEGRATION.md)，#38仍Draft、未合併部署。

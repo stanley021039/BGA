@@ -103,14 +103,14 @@ test('image replacement retains its sound; owner removal is idempotent; expressi
  assert.equal(db.prepare('SELECT count(*) AS n FROM character_sounds').get().n,0);
 });
 
-test('schema fourteen constrains stored MIME, duration, uniqueness and expression foreign keys',t=>{
+test('current schema constrains stored MIME, duration, uniqueness and expression foreign keys',t=>{
  const db=setup(t),insert=db.prepare('INSERT INTO character_sounds(character_id,expression,mime,bytes,duration_ms) VALUES(?,?,?,?,?)');
  for(const duration of [0,10001,1.5])assert.throws(()=>insert.run(character,'happy','audio/wav',wav(),duration),/CHECK constraint failed/);
  assert.throws(()=>insert.run(character,'happy','audio/mpeg',wav(),1),/CHECK constraint failed/);
  assert.throws(()=>insert.run(character,'sad','audio/wav',wav(),1),/FOREIGN KEY constraint failed/);
  insert.run(character,'happy','audio/wav',wav(),1);
  assert.throws(()=>insert.run(character,'happy','audio/wav',wav(),1),/UNIQUE constraint failed/);
- assert.equal(db.prepare('PRAGMA user_version').get().user_version,14);
+ assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
 });
 
 test('schema thirteen upgrades once without altering accounts or existing character images',()=>{
@@ -123,7 +123,7 @@ test('schema thirteen upgrades once without altering accounts or existing charac
   db.prepare("INSERT INTO character_images(character_id,expression,mime,bytes,label) VALUES(?,'happy','image/png',?,'Original label')").run(character,png);
   const account=db.prepare('SELECT * FROM users').get(),image=db.prepare('SELECT * FROM character_images').get();
   db.exec('DROP TABLE character_sounds; PRAGMA user_version=13');db.close();db=openDatabase(file);
-  assert.equal(SCHEMA_VERSION,14);assert.equal(db.prepare('PRAGMA user_version').get().user_version,14);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(db.prepare('SELECT count(*) AS n FROM character_sounds').get().n,0);
   assert.deepEqual(db.prepare('SELECT * FROM users').get(),account);assert.deepEqual(db.prepare('SELECT * FROM character_images').get(),image);
   setExpressionSound(db,owner,character,'happy',upload(wav(25)));db.close();db=openDatabase(file);

@@ -1,5 +1,9 @@
 # YouTube 共看實作進度
 
+2026-10-06 本輪整合狀態：依使用者要求將全部已完成改動一起送 PR，正在接入 origin/main `689318f`，候選將整合為 v1.4.0；PR 尚未建立，本輪完整驗收尚未完成。正式仍 v1.3.0，v1.3.1／v1.3.2 送禮排版候選未部署，既有 tag 不改。以下較早版本、分支、PR 狀態與測試數字保留為歷史；市場 schema 14 與音效 schema 14 的布局不同，本輪候選契約統一至 schema 15，實作與驗證進行中，不能沿用任一方舊驗收當作整合結果。
+
+本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](PARTY-PR-INTEGRATION-PROGRESS.md)。
+
 2026-10-06正式 **v1.1.4**：將PR #36相容修正`d4020ef`只取runtime與三份回歸／helper檔整合至現有遊戲分支，不用PR的1.0.0歷史整包覆蓋目前版。PR來源Windows／Linux各552/552；正式整合Windows／Linux各 **663/663**，失敗／取消／跳過0。新增38項，前端90/90、共看／音訊focused123/123。PR #34另補Windows／Linux442/442及背景Chrome四席四輪、跨輪／完局回看與收藏、3/4禁題；#34在驗收期間由另一端合併main，沒有由本任務合併。#36已非force推送至`5f2dd93`、base改main、Ready且無合併衝突，未由本任務合併。
 
 背景Chrome在隔離非loopback `http://192.168.232.1:3203`、正常1794×1010，用合成帳戶實際送出影片與全桌播放。CDP只讀驗`isSecureContext=false`、`randomUUID`未提供、`getRandomValues`可用；提案與播放POST200。加入YouTube後原生播放器實際播放，同帳戶另一端API暫停及停止，各預置單次GET503；同revision下一次GET200恢復，暫停時原生播放器paused，停止後本機iframe移除。沒有手動重開／返回進度或新revision；永久失敗／上限、關窗／晚回應等另由真模組VM測。受控故障只在私有QA server request wrapper，不改產品source或正式站。私有畫面`work/pr36-http-pause-recovered.jpg`、`pr36-http-stop-recovered.jpg`及去敏CDP紀錄`pr36-pause-retry-network.json`、`pr36-stop-retry-network.json`。這是同帳戶另端API＋一席UI，不宣稱兩台真人設備／弱網／GPU測試。
@@ -24,6 +28,10 @@ Windows Node 24.14.0：`node --test tests/table-watch*.test.js` **90/90 通過**
 
 
 2026-10-05 使用者U33已要求發PR：[PR #36](https://github.com/stanley021039/BGA/pull/36)，head `2eeb398`、base `feat/draw-review-motion`（接續待合#34）。本次送審前Windows focused81項及背景Chrome兩帳號驗收；未合併／部署。下文「未PR」是早期U29實作階段紀錄；新六項需求另在本地 `feat/party-content-and-race-paths`，不包含在#36，見 [進度](PARTY-UPGRADE-PROGRESS.md)。
+
+整合驗收補充（2026-10-06）：修正程式`d4020ef00e4054263d1329d3e030f7053d784959`包含main `1447430`（#34在驗收期間由另一端合併）；Windows Node24.14.0／隔離Linux Node22.22.1完整各 **552/552**，失敗／取消／跳過0，Linux約112秒。archive SHA-256 `4d9369fd86bd588929c529cd338de39a85b0ba34b2510b669faddf7fb94f244d`，只在專用source目錄測試，不帶.env/work/私人資料、不碰正式服務與DB。後續帶入#34 `cc771b8`僅驗收文件；文件首段衝突保留watch修正與main鎖／draw驗收，runtime/tests沒有改變。獨立複查另抓到response已超過pending marker仍多GET，先重現3GET再修至2GET，已含於d4020ef及新增第38項回歸。
+
+原Chrome背景、正常1794×1010、隔離非loopbackHTTP：只讀CDP驗secure=false、randomUUID未提供、getRandomValues可用，實際影片提案／播放POST200，加入影片後原生YouTube播放。由同帳戶另端API發暫停與停止，各預置下一GET503；同revision下一GET200後原生播放器paused／iframe移除，不須手動重開或新revision。被動CDP後續穩態watch事件0、無truncated或剩餘page；受控失敗只在私有server request wrapper，不改產品碼。未以一席UI＋另端API宣稱兩名真人設備或GPU/弱網驗收。證據在ignored `work/pr36-full-{windows,linux}.log`；Chrome圖及去敏網路證據在主QA的`work/pr36-http-*-recovered.jpg`、`pr36-*-retry-network.json`。正式部署使用另一本地整合分支，不將本PR的歷史1.0.0整包覆蓋現有站點；部署結果獨立記錄。
 
 日期：2026-10-05。使用者 U29 要求開始實作，以最低伺服器負擔優先，其他玩家能自行關閉影片，先不要 PR。後續 U30 要求整合音樂入口、每個 client 自行調位置，直接拖曳頂端工具列，移除移動按鈕。基線 `585eb63`，已驗收本地程式 `631eabf`，分支 `feat/youtube-watch`。未推送、未建立或更新 PR、未部署；測試使用隔離資料與原 Chrome 背景。
 
@@ -78,3 +86,8 @@ Windows Node 24.14.0：`node --test tests/table-watch*.test.js` **90/90 通過**
 低負擔優先會沿用遊戲既有state通知延遲；廣告、網速、浏览器自動播放政策及個人原生控制可造成進度差，按「返回全桌進度」重新對齊。未驗真實大量房間、所有影片／直播／受限內容、所有瀏覽器或文字放大200%；不承諾逐幀同步，也不新增永久播放清單、聊天訊息內嵌、投票換片或自動下一片。既有音樂SSE及fallback維持原行為，本批沒有把音樂同步改成新的影片協議。
 
 外部文件與開源做法另見 [研究記錄](research/YOUTUBE-WATCH-IMPLEMENTATION-REFERENCES.md)。
+
+
+## 2026-10-06 最新 main 合併驗證
+
+2026-10-06 PR #36 合併準備：整合最新 main `9dd6282`（含 #38），靜態資源衝突保留 YouTube 與 market 路由及 market 登入返回路徑；記憶保留雙方決策，重複編號以 U29-market 區分。Windows Node 26.2.0 完整 573/573 通過，失敗／取消／跳過 0。本輪未重跑 Linux 或瀏覽器；使用者已明確授權推送與合併 main，未部署。

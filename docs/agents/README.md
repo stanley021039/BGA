@@ -1,12 +1,16 @@
 # Agent 長期記憶索引
 
+2026-10-06 本輪整合狀態：依使用者要求將全部已完成改動一起送 PR，正在接入 origin/main `689318f`，候選將整合為 v1.4.0；PR 尚未建立，本輪完整驗收尚未完成。正式仍 v1.3.0，v1.3.1／v1.3.2 送禮排版候選未部署，既有 tag 不改。以下較早版本、分支、PR 狀態與測試數字保留為歷史；市場 schema 14 與音效 schema 14 的布局不同，本輪候選契約統一至 schema 15，實作與驗證進行中，不能沿用任一方舊驗收當作整合結果。
+
+本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。
+
 2026-10-06候選 **v1.3.2**：送禮主區改依實際剩餘視窗高度伸展，包含v1.3.1的16px間距；Chrome高視窗／720p／八席等待及選禮／手機通過，Windows／Linux各761項，備份及16表副本預演通過，受測來源／本地tag `df7846d`。正式仍v1.3.0；v1.3.1未單獨部署，tag保持不動。以 [高度驗收及發布狀態](../GIFT-VIEWPORT-HEIGHT-PROGRESS.md)為準。
 
 2026-10-06正式 **v1.3.0**：畫猜本人猜中／畫者輪次及雷霆骰聲／shot／slam／nitro／skid已接共用事件音效。Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。schema14不變、integrity ok、外鍵錯誤0，原7帳戶全欄位保留；預演副本16張既有表逐列一致。匿名no-store版號、既有session、7份HTML、24份資源（含7WAV的精確bytes及MIME）一致，背景Chrome設定顯示「版本 v1.3.0」。7短音（2Kenney CC0改作＋5固定seed原創）、兩個新聲音模組、遊戲2／總4段上限及1秒載入timeout已驗；Chromeplaying／清理／靜音及所有限制見 [音效實證](../GAME-SOUNDS-PROGRESS.md)。第二批遊戲候選仍為規格，沒有真人聽感／喇叭測試；無新PR／push，純驗收文件不移動tag。
 
 2026-10-06新增「音效師」：角色方法與限制見 [SOUND-DESIGNER](SOUND-DESIGNER.md)，不同素材網站的具體授權見 [素材來源](../research/SOUND-ASSET-SOURCES.md)，五款遊戲的既有音效、候選位置、優先序、事件時序及實際討論見 [音效計畫](../specs/GAME-SOUND-PLAN.md)。這筆是研究階段紀錄；第一批後續正式實作見上方v1.3.0，第二批候選仍未做。
 
-2026-10-06最新正式 **v1.2.0**：角色自訂表情可加入最多10秒音效，作者上傳／試聽／移除，五款遊戲與大廳沿用共用效果音開關／音量。Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。背景Chrome邊界、轉檔、停止、一次載入及靜音均驗。受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。schema1–13副本升級與完整音效備份還原已驗；無新PR／push，纯驗收文件不移動tag。詳細契約、備份、證據與測試範圍見 [角色表情音效](../CHARACTER-ASSET-TEMPLATE.md)，較早部署狀態保留為歷史。
+2026-10-06先前正式 **v1.2.0**：角色自訂表情可加入最多10秒音效，作者上傳／試聽／移除，五款遊戲與大廳沿用共用效果音開關／音量。Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。背景Chrome邊界、轉檔、停止、一次載入及靜音均驗。受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。schema1–13副本升級與完整音效備份還原已驗；無新PR／push，纯驗收文件不移動tag。詳細契約、備份、證據與測試範圍見 [角色表情音效](../CHARACTER-ASSET-TEMPLATE.md)，較早部署狀態保留為歷史。
 
 2026-10-06先前正式 **v1.1.4**：PR #36共看失聯重試及HTTP安全UUID修正已整合，Windows／Linux各663/663、HTTP真Chrome實播及pause／stop各503後同revision恢復通過。受測93ba350／本地v1.1.4 tag，正式current releases/93ba350、schema13／7帳戶完整保留、公開版本與資源已驗。#34雙平台442與Chrome四輪回看收藏禁題補齊，另一端已合併；#36來源552雙平台、原PR已更新5f2dd93／main／Ready、無衝突，未合併。以下較早部署及待驗文字屬歷史，以 [最新發布](../RELEASE-PROGRESS.md)與 [共看實證](../YOUTUBE-WATCH-PROGRESS.md)為準。
 
@@ -16,11 +20,19 @@
 
 2026-10-05 U33 最新：YouTube已發 [PR #36](https://github.com/stanley021039/BGA/pull/36)（head2eeb398，接續#34，未部署），取代下段「未PR」。另六項需求在本地 `feat/party-content-and-race-paths`，前五項程式／背景Chrome已驗；彈幕框僅規格評估。接手先讀 [整合進度](../PARTY-UPGRADE-PROGRESS.md)、[改名](../PLAYER-RENAME-PROGRESS.md)、[內容及來源](../PARTY-CONTENT-PROGRESS.md)、[多格路線](../RACE-MULTI-MOVE-PROGRESS.md)和 [框規格](../specs/CUSTOM-BARRAGE-FRAMES.md)，以整合文件最後測試／commit狀態為準。這六項未push／PR／部署，正常Chrome viewport未覆寫；帳密仍只在核准私有交接。
 
+2026-10-06 PR #36 合併準備：整合最新 main `9dd6282`（含 #38），靜態資源衝突保留 YouTube 與 market 路由及 market 登入返回路徑；記憶保留雙方決策，重複編號以 U29-market 區分。Windows Node 26.2.0 完整 573/573 通過，失敗／取消／跳過 0。本輪未重跑 Linux 或瀏覽器；使用者已明確授權推送與合併 main，未部署。
+
+2026-10-06 PR #36 修正程式d4020ef已接main1447430：Windows／Linux各552/552，前端90、focused123；非loopbackHTTP真Chrome提案／播放及暫停／停止各一次503後同revision200恢復，穩態零watch事件。PR #34完整雙平台442與四輪UI／回看收藏禁題已驗，#34在驗收期間由另一端合併；cc771b8驗收文件一併帶入此分支。主agent尚未合併本PR，正式分支發布獨立記錄。詳 [共看審查驗收](../YOUTUBE-WATCH-PROGRESS.md)。
+
 最新本地增量：`400cb6d`、U32「在這裡開始播放」只給房主顯示，Windows前端52項及兩個背景Chrome帳號驗收通過。原 `631eabf`、U29／U30的YouTube共看及共用媒體浮窗基線曾通過Windows／Linux各503項；本增量未重跑兩平台全套，未push／PR／部署。接手先讀 [共看進度與操作](../YOUTUBE-WATCH-PROGRESS.md)，再读PROGRAMMER／SERVER-DATA／PLAYER；舊共看spec的SSE、輪詢及固定modal方案被取代。測試viewport已逐tab還原，後续尺寸測完立即reset，不留左上角模擬區。隔離預覽／合成帳密／cookie只在ignored work私人交接，不能沿用房號當正式站資料。
 
-2026-10-05 最新追加 U28：程式 **2cf8a44** 已加入畫猜揭曉後的禁止題目投票。揭曉固定選民、嚴格過半、最近八輪補投，通過後內建／共編題目全站持久停用；schema 13 與完整備份還原相容。Windows／Linux 各 **431/431**、原 Chrome 背景按鈕及版面驗收通過，接續 PR #34，未部署。詳細規則、限制與證據見 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)。這是以下 U26／U27 的後續版本。
+2026-10-06 PR #34 最新整合提交 `3dde6a4` 已由隔離 checkout 複驗：包含 main `b843a3f`，Windows Node 24.14.0／Linux Node 22.22.1 完整各 **442/442**，失敗／取消／跳過 0；main 鎖程式與 11 項回歸完整保留，未帶入 PR #36 或後續六項功能。Linux 為乾淨 archive 的獨立測試副本，未操作正式服務或 DB。父任務背景Chrome一席UI配合合成API走完四輪，跨輪／完局回看、收藏及3/4禁題通過；真人多設備、手機與弱網／GPU仍未重驗。詳 [最新複驗](../PR34-MAIN-INTEGRATION.md#2026-10-06最新整合提交複驗)。此筆取代下一段「沒有 Linux」的缺口，未核准／合併／部署。
+
+2026-10-06 PR #34 已在隔離 clone 整合 main `b843a3f`，保留新版 AGENTS、#31 殘留鎖修正及 #34 全功能；三份角色記憶新增段落衝突保留雙方。Windows Node 26.2.0 完整 **442/442** 與合成 HTTP 四輪／禁題／收藏權限通過；本次沒有 Linux 或真正瀏覽器 UI 證據。Draft／main base，待父任務獨立複審，未核准／合併／部署。詳 [整合驗證](../PR34-MAIN-INTEGRATION.md)。此筆取代以下兩批分開的測試數字作為本輪整合證據。
 
 2026-10-05 PR #31 鎖修正：程式 `0682e43` 停止自動回收殘留資料／發布／歷史鎖，HistoryStore 共用排他鎖且關閉冪等。受控雙程序已在舊程式重現兩者同時取得鎖；Windows Node 24.14.0 完整 **374/374** 通過（新增11項），本次未重跑 Linux。人工清理與半份還原處理見 [操作指南](../SERVER-DATA-TRANSFER.md#殘留鎖的人工檢查)，證據與剩餘驗收見 [PR #31 修正進度](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。此筆更新鎖行為及本次測試數字，不代表正式服務已更新。
+
+2026-10-05 最新追加 U28：程式 **2cf8a44** 已加入畫猜揭曉後的禁止題目投票。揭曉固定選民、嚴格過半、最近八輪補投，通過後內建／共編題目全站持久停用；schema 13 與完整備份還原相容。Windows／Linux 各 **431/431**、原 Chrome 背景按鈕及版面驗收通過，接續 PR #34，未部署。詳細規則、限制與證據見 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)。這是以下 U26／U27 的後續版本。
 
 更新：2026-10-05。這些檔案是後續 session 可讀取、校正與延續的專案記憶；不是模型權重訓練，也不會讓未讀文件的 agent 自動知道內容。專案根 `AGENTS.md` 指引下一個工作回合載入索引及相關角色。
 
@@ -57,3 +69,9 @@
 最新程式 `e60f853`／本地整合 `7c25c7b` 另修新局 round 1 沿用舊配額：每輪畫布有獨立 canvasEpoch，隔離所有延遲操作／回覆。PR Windows／Linux各286項、本地整合Windows330項及背景重開／填色驗收通過；PR #30已推至 `7f44f20`，未部署。詳 [PR 修正文件](../PR30-RESOURCE-LIMITS.md)。本次沒有重跑本地整合Linux330項。
 
 同日送審前最終程式 `6e655de`：已接上 PR #30，新增舊 schema BLOB 表相容修正與回歸，完整整合 **Windows／Linux 各335/335 通過**，取代先前整合版本測試數字。PR #30 四項回覆另經獨立 agent 複查及65項回歸確認。已發出非 draft [PR #31](https://github.com/stanley021039/BGA/pull/31)，base 為 #30 的 `feature/game-stage-local`；先合 #30，再調整 #31 base 至 main。詳 [移轉進度末節](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)，未部署或搬移正式資料。
+
+2026-10-06 股市冥燈：隔離 main b843a3f 的本機整合加入 /market、既有帳號／管理者權限與 SQLite schema 13；Windows Node 26.2.0 完整387/387及背景 Chrome桌機／手機流程通過。以Draft送審，未合併、部署或變更正式資料，詳 [本機接手](../MARKET-JINX.md)。本筆取代程式與資料記憶中的最新 schema 上限12；歷史驗收數字保留原版本含義。
+
+2026-10-06 PR #38 審查後：確認並修正投票 409 草稿版本未同步、手動更新與提交交錯、時鐘回退造成投票時間戳倒置。新增4項回歸，Windows完整391/391取代上筆387作為本分支最新數字；背景Chrome再驗更新鎖／焦點、1280／390／320導覽。詳 [逐項證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)，仍保持Draft、未合併或部署。
+
+同日 #38 整合已包含 #34 的 main `1447430`：兩種舊schema13升級為共同schema14，保留禁題／回看／動效及市場功能，沒有改AGENTS或覆蓋角色記憶。Windows完整463/463、市場21／移轉26與整合版背景Chrome全流程通過，取代上笔391與schema13的最新分支狀態。詳 [整合接手](../MARKET-JINX-MAIN-INTEGRATION.md)。#38仍Draft、未合併或部署，Linux／Safari／#34完整canvas實玩未重驗。
