@@ -32,7 +32,9 @@ class MarketStore{
   const old=this.db.prepare('SELECT * FROM market_votes WHERE round_id=? AND user_id=?').get(round.id,user.id);
   if((old?.revision||0)!==data.expectedRevision)fail(409,'STALE_VOTE','投票已在另一個頁面更新，請重新整理');
   if(old?.option_id===data.optionId)return {ok:true,revision:old.revision,unchanged:true};
-  const at=new Date(now).toISOString(),revision=(old?.revision||0)+1;
+  // Wall-clock rollback must not invert vote history or invalidate a backup.
+  // The deadline above still uses the freshly sampled wall clock.
+  const at=new Date(old?Math.max(now,Date.parse(old.created_at),Date.parse(old.updated_at)):now).toISOString(),revision=(old?.revision||0)+1;
   this.db.prepare('INSERT INTO market_votes VALUES(?,?,?,?,?,?) ON CONFLICT(round_id,user_id) DO UPDATE SET option_id=excluded.option_id,revision=excluded.revision,updated_at=excluded.updated_at').run(round.id,user.id,data.optionId,revision,old?.created_at||at,at);return {ok:true,revision};
  });}
  settlementInput(input){return {requestId:input.requestId,roundId:input.roundId,returnPct:input.returnPct,reason:typeof input.reason==='string'?input.reason.trim():'',expectedRevision:this.revision(input.expectedRevision),confirmed:input.confirmed===true};}
