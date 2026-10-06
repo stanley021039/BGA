@@ -1,5 +1,7 @@
 # 共用偏好與已知決策
 
+2026-10-07 U37-drawing-smoothness：使用者要求研究Gartic作畫傳送順暢原因，可實際遊玩與查GitHub。已完成官方單席Masterpiece封包、本站v1.7.1隔離雙席、真程式計數及四種開源來源研究，提出有界時間flush／未送點合併／frame合併／活動層等規格；不是Gartic內部演算法或使用者硬體診斷。實測／缺漏／未解像素差異見 [研究](../research/GARTIC-BGA-DRAWING-COMPARISON.md)，[spec](../specs/DRAWING-SMOOTHNESS.md)仍提案，沒有產品修改、PR或部署，正式保持v1.7.1。
+
 2026-10-07 U36-expression-switch：使用者回報上傳faker後遊戲角色表情無法切換。原圖片有效；已重現雷霆same-version只改hidden共享角色列。v1.7.1／`3d82e3f`將ACK交回game callback、same-version只更新crew／state，並以共用RoomHost freshness拒舊poll覆蓋；表情仍5秒，不修改預設外觀或分享設定。原GIF隔離雙席／正式五款雙席及Windows／Linux各940通過。未收到原遊戲／房號，不宣稱觀看過原玩家操作；完整證據及界線見 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。
 
 2026-10-07 U35-watch-resize：使用者要求YouTube播放窗可調整大小，避免200×200限制。已在v1.7.0／`82149a4`提供右下拖曳、方向鍵／Shift及Home恢復，尺寸只記個人localStorage；保護實際player210px高、字級變動重新量測，正常resize不換iframe、不增watch請求或更改其他人。公開兩會員實播／320px／200%字級／雙欄及Windows／Linux各914通過，完整證據與未驗範圍見 [尺寸驗收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。這筆不改原生YouTube控件、房主本機播放按鈕或既有全桌控制者權限。
