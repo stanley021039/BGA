@@ -30,17 +30,22 @@
     const terrainCost=k==='M'?2:1,cost=current.cost+Math.min(terrainCost,points-current.cost);
     if(cost>points)continue;
     const hidden=!!cell?.hazard&&!cell.hazard.face,blocked=occupied.has(id),heli=helicopters.has(id);
+    // Jump ramps only accept straight forward entry. Evaluate the actual
+    // predecessor for every candidate; diagonal and straight routes to the
+    // same target otherwise tie. Staging entries use direction 1 in the engine.
+    const fatalRamp=k==='J'&&current.x!==null&&(current.x!==x||current.y!==y-1);
     const effect=cell?.hazard?.face&&!['road','mud'].includes(cell.hazard.kind);
     const terminal=boundary||blocked||['X','G','V','J'].includes(k)||effect;
     const warnings=[...current.warnings];
     if(hidden&&!warnings.includes('未知危險'))warnings.push('未知危險');
     if(blocked)warnings.push('進入車輛格，依碰撞／甩尾規則結算');
     if(heli)warnings.push('停在直升機下方會淘汰');
-    if(k==='X')warnings.push('岩壁／陷阱會淘汰');
+    if(fatalRamp)warnings.push('從跳台側面或前方進入會淘汰');
+    else if(k==='X')warnings.push('岩壁／陷阱會淘汰');
     else if(['G','V','J'].includes(k)||effect)warnings.push('地形效果會中斷路線');
     else if(k==='F')warnings.push('火焰會使車輛著火');
     if(boundary)warnings.push(s.finishAt!==null?'抵達終點':'新路段將重新選路');
-    const risk=current.risk+(k==='X'?1000:blocked?120:heli?100:terminal&&!boundary?60:hidden?25:k==='F'?12:k==='M'?4:k==='O'?1:0);
+    const risk=current.risk+(k==='X'||fatalRamp?1000:blocked?120:heli?100:terminal&&!boundary?60:hidden?25:k==='F'?12:k==='M'?4:k==='O'?1:0);
     const route={x,y,cost,risk,path:[...current.path,{x,y}],warnings};
     if(!best.has(id)||rank(route,best.get(id))<0)best.set(id,route);
     const stateKey=id+':'+cost;

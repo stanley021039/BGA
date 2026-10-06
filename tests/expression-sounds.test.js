@@ -2,8 +2,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=file=>fs.readFileSync(path.join(__dirname,'../public/shared',file),'utf8');
 const uuid='12345678-1234-4234-8234-123456789abc',url=`/assets/characters/sounds/${uuid}/happy?v=${'a'.repeat(64)}`;
-function fixture({blocked=false,deferredPlay=false}={}){
- let now=100000,nextTimer=0;const timers=new Map(),clips=[],listeners=new Map(),storage=new Map();
+function fixture({blocked=false,deferredPlay=false,clockSkew=0}={}){
+ let now=100000+clockSkew,nextTimer=0;const timers=new Map(),clips=[],listeners=new Map(),storage=new Map();
  const target=name=>({addEventListener(type,fn){const key=name+type;if(!listeners.has(key))listeners.set(key,new Set());listeners.get(key).add(fn);},removeEventListener(type,fn){listeners.get(name+type)?.delete(fn);}});
  const document={...target('document:'),hidden:false},window=target('window:');
  class Audio{constructor(src){this.src=src;this.originalSrc=src;this.paused=true;this.volume=1;this.currentTime=0;this.plays=0;this.loads=0;clips.push(this);}play(){this.plays++;if(blocked)return Promise.reject(Error('blocked'));if(deferredPlay)return new Promise(resolve=>{this.resolvePlay=()=>{this.paused=false;resolve();};});this.paused=false;this.onplaying?.();return Promise.resolve();}pause(){this.paused=true;}removeAttribute(key){delete this[key];}load(){this.loads++;}}
@@ -11,8 +11,42 @@ function fixture({blocked=false,deferredPlay=false}={}){
  vm.runInNewContext(source('audio-settings.js'),context);vm.runInNewContext(source('expression-sounds.js'),context);
  const fire=(key,event={})=>{for(const fn of [...(listeners.get(key)||[])])fn(event);};
  const event=(id,at=now)=>({id,at,sound:{url,durationMs:1000}});
- return {window,document,clips,timers,listeners,event,fire,audio:window.AudioSettings,controller:window.ExpressionSounds.create(),update(controller,events,contextId='draw:ABC123:me'){controller.update({contextId,events});},tick(ms){now+=ms;for(const [id,timer] of [...timers])if(timer.at<=now&&timers.delete(id))timer.fn();},hide(value){document.hidden=value;fire('document:visibilitychange');}};
+ return {window,document,clips,timers,listeners,event,fire,audio:window.AudioSettings,controller:window.ExpressionSounds.create(),update(controller,events,contextId='draw:ABC123:me',serverNow){controller.update({contextId,events,serverNow});},tick(ms){now+=ms;for(const [id,timer] of [...timers])if(timer.at<=now&&timers.delete(id))timer.fn();},hide(value){document.hidden=value;fire('document:visibilitychange');}};
 }
+for(const skew of [-60000,-6000,-2000,2000,6000,60000])test(`server-clock event freshness plays once with client clock bias ${skew}ms`,()=>{
+ const f=fixture({clockSkew:skew}),c=f.controller;f.audio.set('effects',{enabled:true});
+ f.update(c,[f.event('baseline',100000)],undefined,100000);assert.equal(f.clips.length,0);
+ f.tick(10);const fresh=f.event('fresh',100005);f.update(c,[fresh],undefined,100010);
+ assert.equal(f.clips.length,1,'a fresh server event plays after baseline on either side of the server clock');
+ f.update(c,[fresh,fresh],undefined,100010);assert.equal(f.clips.length,1,'clock correction does not bypass event deduplication');
+});
+for(const [skew,kind,at] of [[-6000,'stale',94000],[6000,'future',106000]])test(`server-clock rejects a ${kind} event even when it matches the client clock`,()=>{
+ const f=fixture({clockSkew:skew}),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);
+ f.update(c,[f.event(kind,at)],undefined,100000);assert.equal(f.clips.length,0);
+ f.update(c,[f.event(kind,100000)],undefined,100000);assert.equal(f.clips.length,0,'rejected event IDs remain consumed when later metadata would look fresh');
+});
+test('missing or invalid server timestamps retain bounded local-clock compatibility without accepting future events',()=>{
+ for(const serverNow of [undefined,null,NaN,Infinity,-Infinity,'100000',{}]){
+  const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,serverNow);
+  f.update(c,[f.event('fresh'),f.event('future',101001),f.event('expired',94999)],undefined,serverNow);
+  assert.equal(f.clips.length,1);f.update(c,[f.event('future'),f.event('expired')],undefined,100000);assert.equal(f.clips.length,1);
+ }
+});
+test('server-time freshness does not allow caught-up sounds after a locally observed polling gap',()=>{
+ const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);
+ f.tick(5001);f.update(c,[f.event('catch-up',105001)],undefined,105001);assert.equal(f.clips.length,0);
+ f.tick(10);f.update(c,[f.event('new',105011)],undefined,105011);assert.equal(f.clips.length,1);
+});
+test('an authoritative clock does not bypass mute, hidden, reconnect baseline or per-event consumption on skewed clients',()=>{
+ for(const skew of [-2000,6000]){
+  const f=fixture({clockSkew:skew}),c=f.controller,update=events=>f.update(c,events,undefined,100000);
+  update([]);update([f.event('muted',100000)]);f.audio.set('effects',{enabled:true});update([f.event('muted',100000)]);assert.equal(f.clips.length,0);
+  update([f.event('live',100000)]);assert.equal(f.clips.length,1);
+  f.hide(true);update([f.event('hidden',100000)]);assert.equal(f.clips.length,1);assert.equal(f.clips[0].paused,true);
+  f.hide(false);update([f.event('return-baseline',100000)]);assert.equal(f.clips.length,1);update([f.event('return-baseline',100000),f.event('fresh',100000)]);assert.equal(f.clips.length,2);
+  c.reset();update([f.event('reconnect',100000)]);assert.equal(f.clips.length,2);update([f.event('reconnect',100000),f.event('after-reconnect',100000)]);assert.equal(f.clips.length,3);
+ }
+});
 test('first snapshot, same-version presence updates and duplicate social sources play each new event once',()=>{
  const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});
  f.update(c,[f.event('old')]);assert.equal(f.clips.length,0);

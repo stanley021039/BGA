@@ -27,17 +27,20 @@
   function stop(){for(const clip of clips)window.AudioSettings?.stopEffect(clip);clips.clear();}
   function reset(){stop();seen.clear();context=null;baseline=true;lastUpdate=null;}
   function remember(id){seen.add(id);while(seen.size>256)seen.delete(seen.values().next().value);}
-  function update({contextId,events=[]}={}){
+  function update({contextId,events=[],serverNow}={}){
    if(disposed)return;
    const now=Date.now();if(typeof contextId!=='string'||!contextId){reset();return;}
    if(context!==contextId){reset();context=contextId;}
    const suppress=baseline||document.hidden||lastUpdate===null||now-lastUpdate>5000;
    if(suppress)stop();baseline=document.hidden;lastUpdate=now;
+   // Event timestamps belong to the server; polling gaps belong to this client.
+   // Legacy snapshots without a usable clock retain the bounded local-age check.
+   const eventNow=Number.isFinite(serverNow)?serverNow:now;
    const current=Array.isArray(events)?events:[];
    for(const event of current.slice(-256)){
     if(!event||!['string','number'].includes(typeof event.id)||String(event.id).length>200||!Number.isFinite(event.at))continue;
     const id=String(event.id);if(seen.has(id))continue;remember(id);
-    if(suppress||now-event.at>5000||event.at>now+1000)continue;
+    if(suppress||eventNow-event.at>5000||event.at>eventNow+1000)continue;
     const clip=window.AudioSettings?.playExpression(event.sound,{onStop:ended=>clips.delete(ended)});if(clip)clips.add(clip);
    }
   }

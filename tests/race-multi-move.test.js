@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const {ThunderRoom}=require('../src/games/thunder'),RacePaths=require('../public/shared/race-paths');
+const {ThunderRoom,MAPS,DEVIL_MAPS}=require('../src/games/thunder'),RacePaths=require('../public/shared/race-paths');
 const {settleDice,revealDice}=require('./helpers/race-dice');
 function fixture({points=5,x=2,y=1,terrain='O'}={}){
  let seed=913;const rng=n=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed%n;};
@@ -11,6 +11,63 @@ function fixture({points=5,x=2,y=1,terrain='O'}={}){
  const route=(target)=>RacePaths.routes(r.view(p.id)).get(RacePaths.key(target.x,target.y));
  return {r,p,q,car,move,route};
 }
+
+function canyonFixture(){
+ const f=fixture({points:2,x:1,y:8});
+ f.r.tiles=f.r.tiles.filter(tile=>tile.start!==8);
+ f.r.addTile({map:MAPS.length+DEVIL_MAPS.findIndex(map=>map.name==='試作・飛躍峽谷'),side:1},8);
+ f.r.tiles.sort((a,b)=>a.start-b.start);
+ assert.equal(f.r.tiles[1].name,'試作・飛躍峽谷');
+ assert.equal(f.r.terrain(1,9).kind,'R');assert.equal(f.r.terrain(2,9).kind,'R');assert.equal(f.r.terrain(2,10).kind,'J');
+ return f;
+}
+
+test('actual canyon ramp chooses the straight-entry route over the equally short fatal side entry',()=>{
+ const f=canyonFixture(),target={x:2,y:10},route=f.route(target);
+ assert.deepEqual(route.path,[{x:2,y:9},target]);
+ assert.equal(route.cost,2);assert.equal(route.warnings.some(warning=>warning.includes('淘汰')),false);
+ f.move(target);
+ assert.equal(f.car.dead,false);assert.equal(f.r.diceCheck.kind,'jump');assert.equal(f.r.diceCheck.status,'awaiting');
+ assert.deepEqual(f.r.events.at(-1).steps,route.path);
+ const side=canyonFixture();side.r.act(side.p.id,'move',{x:1,y:9});side.r.act(side.p.id,'move',target);
+ assert.equal(side.car.dead,true);assert.equal(side.r.diceCheck,null);
+ assert.ok(side.r.events.some(event=>event.kind==='eliminated'&&event.text.includes('從跳台側面或前方進入')),'the original engine direction rule remains authoritative');
+});
+
+test('fatal ramp side entry stays selectable with an explicit elimination warning when the straight approach is blocked',()=>{
+ const f=canyonFixture(),other=f.r.cars.find(car=>car.owner===f.q.id);Object.assign(other,{x:2,y:9});
+ const target={x:2,y:10},route=f.route(target);
+ assert.deepEqual(route.path,[{x:1,y:9},target]);assert.ok(route.risk>=1000);
+ assert.ok(route.warnings.some(warning=>warning.includes('跳台')&&warning.includes('淘汰')));
+ f.move(target);assert.equal(f.car.dead,true);assert.equal(f.r.diceCheck,null);
+});
+
+test('revealed ramp hazards keep their direction rule even after another car has already jumped from the ramp',()=>{
+ const f=canyonFixture(),target={x:2,y:10},cell=f.r.terrain(target.x,target.y);
+ cell.kind='R';cell.hazard={kind:'ramp',face:true};
+ assert.deepEqual(f.route(target).path,[{x:2,y:9},target]);
+ f.r.rng=()=>0;f.move(target);assert.equal(f.r.diceCheck.kind,'jump');settleDice(f.r);
+ assert.equal(cell.hazard.kind,'ramp');assert.equal(cell.hazard.face,true,'ramps persist after use under the engine rules');
+ const p=f.r.players[f.r.turn],next=f.r.available(p)[0];Object.assign(next,{x:1,y:8});p.dice[0]={value:2,used:false};
+ f.r.act(p.id,'begin',{car:next.id,die:0});
+ const route=RacePaths.routes(f.r.view(p.id)).get(RacePaths.key(target.x,target.y));
+ assert.deepEqual(route.path,[{x:2,y:9},target]);
+ f.r.act(p.id,'movePath',{version:f.r.version,car:next.id,...target});
+ assert.equal(next.dead,false);assert.equal(f.r.diceCheck.kind,'jump');
+});
+
+test('unrevealed ramp contents do not reveal directional danger or change the selected route',()=>{
+ const f=canyonFixture(),cell=f.r.terrain(2,10);cell.kind='R';cell.hazard={kind:'ramp',face:false};
+ const ramp=f.route({x:2,y:10});cell.hazard.kind='road';const road=f.route({x:2,y:10});
+ assert.deepEqual(ramp,road);assert.ok(ramp.warnings.includes('未知危險'));
+ assert.equal(ramp.warnings.some(warning=>warning.includes('跳台')),false);
+});
+
+test('staging into a ramp uses the engine straight-entry direction instead of being marked as fatal',()=>{
+ const f=fixture({x:null,y:-1,points:2});f.r.terrain(2,0).kind='J';
+ const route=f.route({x:2,y:0});assert.equal(route.warnings.some(warning=>warning.includes('淘汰')),false);
+ f.move({x:2,y:0});assert.equal(f.car.dead,false);assert.equal(f.r.diceCheck.kind,'jump');
+});
 
 test('multi-cell movement charges each step and reaches the target without using extra dice or ending the turn early',()=>{
  const f=fixture(),target={x:2,y:4},route=f.route(target);assert.equal(route.path.length,3);assert.equal(route.cost,3);
