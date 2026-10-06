@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07最新正式 **v1.5.2**／`7939090`：PR43 Stanley 兩項 P2（跳台方向風險／表情音效時鐘）已修正，原 PR 已更新且 Ready、未合併。原 PR v1.4.1 雙平台各808；保留畫猜版面及附件相容性的正式 v1.5.2 雙平台各863。零房間切換，schema15／21表及8帳戶全欄位保留、PID66841／service／tunnel正常，公開7份資源及五款遊戲／大廳 serverNow通過。外站資料未啟用；下方 v1.5.1 為歷史。詳細證據見 [審查修正與正式同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，tag固定受測程式、後續文件不移動tag。
+
 2026-10-07最新正式 **v1.5.1**／`d4e3b4a`：畫猜左側玩家、框線及畫具對齊、底部直列聊天室與最後輸入框、倒數進度及緊湊結算已上線；Windows／Linux完整各845項，背景Chrome多角色／八席／手機及正式3席驗收通過。正式schema15、8帳戶全欄位保留，切換前0房間，PID62990／service／tunnel正常；外站資料仍未匯入，取代／合併範圍仍待選擇。完整證據見 [畫猜最新進度](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)。下方v1.5.0候選／v1.4.0整合／v1.3.0正式為歷史；來源ZIP、金鑰與shadow資料代保留但未啟用。PR43沒有加入本輪，無新PR／push，受測tag不隨文件提交移動。
 
 2026-10-06最新本地候選v1.5.0／`723fbe4`：舊版community PNG／GitHub對應檔完整移轉與可選保留匯入session logs，Windows／Linux各834項通過；實際來源在兩端shadow資料代first boot後49logs與全部檔／帳戶／BLOB核對一致。正式仍v1.3.0；來源3帳戶與現站7帳戶有同名異UUID，等待取代／合併選擇，未切正式或push新分支，PR43保持原範圍。詳 [最新相容性與匯入狀態](../LEGACY-IMPORT-PROGRESS.md)。

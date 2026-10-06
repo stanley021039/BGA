@@ -1,5 +1,7 @@
 # 舊版原始資料匯入相容性
 
+2026-10-07最新正式為v1.5.2／`7939090`／PID66841，PR43兩項審查修正已同步，原schema15／8帳戶保留，沒有啟用外站匯入。以下v1.5.1及更早盤點為歷史；後續遷移须重新盤點。來源ZIP、shadow與待選取代／合併範圍不變，證據見 [最新正式同步](PR43-PRODUCTION-FIX-PROGRESS.md)。
+
 2026-10-07現況更新：畫猜排版與聊天室修正已隨v1.5.1／`d4e3b4a`上線，現站為schema15／8帳戶；這次只升級現有資料，没有啟用外站資料代。原來源3帳戶與49logs的匯入預演、ZIP／金鑰與shadow目錄仍保留，取代或合併仍待選擇。後續匯入先重查正式code／PID／設定與帳戶；不要使用下方歷史v1.3.0／7帳戶盤點當成當前現況，亦不要為匯入把已修正版面倒退到v1.5.0。最新正式證據見 [畫猜修正](DRAW-DESKTOP-LAYOUT-PROGRESS.md)。
 
 2026-10-06，候選v1.5.0，受測程式及本地annotated tag固定於 `723fbe4eebb4cacf9170d8e2706fdc258a7e4fcf`。本地分支 `fix/legacy-community-import`，未push／PR，不改已發PR #43的受測程式／tag。匯入工具新增嚴格舊版community頭像與GitHub對應檔保存，並可明確保留啟動時已有的session logs；詳細契約見 [操作指南](SERVER-DATA-TRANSFER.md)。
