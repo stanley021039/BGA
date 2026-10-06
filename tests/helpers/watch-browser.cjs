@@ -1,7 +1,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
-const {randomUUID}=require('node:crypto');
+const {randomUUID,webcrypto}=require('node:crypto');
 const script=fs.readFileSync(path.join(__dirname,'../../public/shared/table-watch.js'),'utf8');
 
 function deferred(){let resolve,reject;const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});return {promise,resolve,reject};}
@@ -10,7 +10,7 @@ const json=(body,{ok=true,status=200}={})=>({ok,status,json:async()=>structuredC
 
 // Exercise the real browser module without loading YouTube or using a browser service.
 // The DOM supports the actual controls, events, dialog lifecycle and iframe ownership.
-function watchHarness({youtube=true,fetchHandler,savedPosition,storageFailure=false}={}){
+function watchHarness({youtube=true,fetchHandler,savedPosition,storageFailure=false,crypto:randomSource={randomUUID,getRandomValues:bytes=>webcrypto.getRandomValues(bytes)}}={}){
  const ids=new Map(),timers=new Map(),network=[],players=[],thirdParty=[],observers=[],storage=new Map();
  if(savedPosition!==undefined)storage.set('bga.watch.window.v1',savedPosition);
  const music={suspended:0,released:0,active:0,collapsed:0},audio={subscriptions:0,unsubscriptions:0,active:0,changes:[]};
@@ -69,7 +69,7 @@ function watchHarness({youtube=true,fetchHandler,savedPosition,storageFailure=fa
  class Observer{constructor(callback){this.callback=callback;this.disconnected=false;observers.push(this);}observe(target){this.target=target;}disconnect(){this.disconnected=true;}emit(records){this.callback(records);}}
  const schedule=(callback,delay,repeat)=>{const id=nextTimer++;timers.set(id,{callback,due:now+delay,repeat});return id;};
  const fetch=async(route,options={})=>{const request={route,options,body:options.body?JSON.parse(options.body):null};network.push(request);return fetchHandler?fetchHandler(request):json(watchSnapshot());};
- context=vm.createContext({window,document,localStorage:{getItem(key){if(storageFailure)throw Error('Storage unavailable');return storage.get(key)??null;},setItem(key,value){if(storageFailure)throw Error('Storage unavailable');storage.set(key,String(value));},removeItem:key=>storage.delete(key)},location:{origin:'http://localhost:3000'},performance:{now:()=>now},crypto:{randomUUID},AbortController,fetch,IntersectionObserver:Observer,ResizeObserver:Observer,MutationObserver:Observer,setTimeout:(callback,delay)=>schedule(callback,delay,0),clearTimeout:id=>timers.delete(id),setInterval:(callback,delay)=>schedule(callback,delay,delay),clearInterval:id=>timers.delete(id)});
+ context=vm.createContext({window,document,localStorage:{getItem(key){if(storageFailure)throw Error('Storage unavailable');return storage.get(key)??null;},setItem(key,value){if(storageFailure)throw Error('Storage unavailable');storage.set(key,String(value));},removeItem:key=>storage.delete(key)},location:{origin:'http://localhost:3000'},performance:{now:()=>now},crypto:randomSource,AbortController,fetch,IntersectionObserver:Observer,ResizeObserver:Observer,MutationObserver:Observer,setTimeout:(callback,delay)=>schedule(callback,delay,0),clearTimeout:id=>timers.delete(id),setInterval:(callback,delay)=>schedule(callback,delay,delay),clearInterval:id=>timers.delete(id)});
  vm.runInContext(script,context,{filename:'public/shared/table-watch.js'});
  const node=id=>{const result=ids.get(id.replace(/^#/,''));if(!result)throw Error('Unknown control '+id);return result;};
  async function advance(ms){const end=now+ms;for(;;){const pending=[...timers].filter(([,task])=>task.due<=end).sort((a,b)=>a[1].due-b[1].due)[0];if(!pending)break;const [id,task]=pending;now=task.due;if(task.repeat)task.due+=task.repeat;else timers.delete(id);task.callback();await flush();}now=end;await flush();}
