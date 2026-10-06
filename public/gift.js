@@ -11,9 +11,10 @@ const customPercentSelect=value=>customPercentOptions.map(([number,label])=>`<op
 let code=(location.pathname.match(/\/gift\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
 let session=null,state=null,busy=false,polling=false,disconnected=false,signature='',inviteBase=location.origin;
 let draftGifts={},draftLikes=[],activeGiftRecipient=null,activeResultRecipient=null,activeChoicePanel="give";
-let focusTimer=null,motionEnabled=true,knownAchievements=null;
+let focusTimer=null,knownAchievements=null,stageAnimations=[];
+const motionGate=MotionPolicy.createGate();
 try{session=JSON.parse(localStorage.getItem(code?'ah-gift:'+code:'ah-gift')||'null');if(session&&!code)code=session.code;}catch{}
-try{motionEnabled=localStorage.getItem('ah-gift-motion')!=='off';}catch{}
+
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
 async function api(route,data){
@@ -120,8 +121,8 @@ async function checkNewAchievement(){
   knownAchievements=unlocked;
  }catch{}
 }
-function allowsMotion(){return motionEnabled&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;}
-function updateMotionButton(){const button=$('#motionToggle');button.textContent=allowsMotion()?'關閉演出':motionEnabled?'系統已減少動態':'開啟演出';button.setAttribute('aria-pressed',String(allowsMotion()));document.body.classList.toggle('gift-motion-off',!allowsMotion());}
+function allowsMotion(){return MotionPolicy.allowsMotion();}
+function updateMotionButton(){const button=$('#motionToggle');if(button)button.hidden=true;document.body.classList.toggle('gift-motion-off',!allowsMotion());}
 function playSound(kind){window.AudioSettings.playEffect(kind);}
 function stopSound(){window.AudioSettings.stopEffects();}
 function stopFocus(){clearTimeout(focusTimer);focusTimer=null;const panel=$('#giftSpotlight'),hadFocus=panel?.contains(document.activeElement);if(panel)panel.hidden=true;panel?.closest('.gift-story')?.classList.remove('is-playing');if(hadFocus)$('#stage [data-do="replay-focus"]')?.focus();}
@@ -148,7 +149,11 @@ function entry(){
 }
 function receive(next){
  if(!next||next.type!=='gift')throw Error('這不是送禮達人房間');
- const shouldFocus=state?.phase==='delivering'&&['reveal','finished'].includes(next.phase)&&next.result?.round===next.round&&state.round===next.round&&!disconnected&&!document.hidden;
+ if(state&&next.version<state.version)return false;
+ const previous=state,live=motionGate.update(next,{connected:!disconnected});
+ const newDelivery=next.phase==='delivering'&&(previous?.phase!=='delivering'||previous.round!==next.round||previous.delivery?.recipientId!==next.delivery.recipientId);
+ const arrival=newDelivery&&motionGate.take('delivery:'+next.version+':'+next.delivery.recipientId,live);
+ const shouldFocus=previous?.phase==='delivering'&&['reveal','finished'].includes(next.phase)&&next.result?.round===next.round&&previous.round===next.round&&motionGate.take('score:'+next.version,live);
  if(state?.round!==next.round){draftGifts={};draftLikes=[];activeGiftRecipient=null;activeResultRecipient=null;}
  state=next;document.body.dataset.giftPhase=next.phase;document.body.classList.toggle('gift-many-players',next.players.length>4);RoomHost.update(next,receive);
  $('#roomTag').textContent='房間 '+code;$('#invite').hidden=false;
@@ -158,12 +163,12 @@ function receive(next){
  $('#steps').querySelectorAll('span').forEach((element,index)=>element.classList.toggle('active',next.phase==='choosing'?index<2:index===({delivering:2,reveal:2,finished:2}[next.phase]??0)));
  GameShell.stableMarkup($('#players'),next.players.map(playerRow).join(''));
  const nextSignature=JSON.stringify([next.phase,next.round,next.target,next.customPercent,next.gifts,next.players.map(item=>item.id),next.ownAssignments,next.ownRanking,next.delivery,next.result,next.winner]);
- if(nextSignature!==signature){signature=nextSignature;render();if(shouldFocus){celebrateVictory();playSound('reveal');checkNewAchievement();}}
- progress();
+ if(nextSignature!==signature){signature=nextSignature;render({arrival,score:shouldFocus});if(shouldFocus){celebrateVictory();playSound('reveal');checkNewAchievement();}}
+ progress();return live;
 }
-function render(){
+function render({arrival=false,score=false}={}){
  const s=state;let html='';
- stopFocus();
+ for(const animation of stageAnimations)animation.cancel();stageAnimations=[];stopFocus();
  if(s.phase==='waiting'){
   html=`<div class="card hero"><div class="hero-mark">🎁</div><span class="eyebrow">MAKE A WISH</span><h1>禮物擺好，<br>朋友來了就開桌。</h1><p class="sub">3–8 人一起玩。每輪可以自由安排先送禮或先標喜好，大家兩項都完成後一起揭曉。</p><div class="banner">房間代碼 <b>${esc(s.code)}</b>　<button class="quiet" data-do="invite">複製邀請連結 ↗</button></div>${s.host?`<section class="room-settings-panel" aria-label="房間設定"><h2>房間設定</h2><div class="room-settings"><div><label for="target">兩條分數的目標（8–30）</label><input id="target" type="number" min="8" max="30" value="${s.target}"></div><div><label for="customPercent">玩家投稿禮物比例</label><select id="customPercent">${customPercentSelect(s.customPercent)}</select></div></div><details class="setting-details"><summary>投稿比例說明</summary><p class="small">比例依每輪禮物數取近似值；投稿不足或尚未輪到重複抽取時，會用內建禮物補足。選 0% 則只抽內建。</p></details>${GameShell.settingsActions()}</section>`:`<p>等房主開始，先看看這桌的禮物吧。投稿禮物設定：${customPercentLabel(s.customPercent)}。</p>`}</div>`;
  }else if(s.phase==='choosing'){
@@ -182,6 +187,8 @@ function render(){
   html=`<div class="card result-heading"><div><span class="eyebrow">${finished?'THE GIFTED':'ROUND COMPLETE'}</span><h1>${finished?(hasWinner?'今晚的送禮達人':'本局結束'):'大家都收到禮物了！'}</h1>${finished?`<p class="winner-names">${s.winner?.ids?.map(id=>esc(player(id)?.name||'玩家')).join('、')||esc(s.winner?.reason||'')}</p>`:''}</div>${s.host?(finished?'':''):(finished?'':'<p>等房主開始下一輪。</p>')}</div>${resultPanel(s)}`;
  }
  $('#stage').innerHTML=html;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');bindGamePopovers($('#stage'));$('#stage').classList.toggle('many-gifts',s.gifts.length>6);renderAction();showChoicePanel(activeChoicePanel);syncChoices();progress();
+ if(arrival)for(const card of document.querySelectorAll('.delivery-gift')){const animation=MotionPolicy.animate(card,[{transform:'translateY(-24px) scale(.97)',opacity:.25},{transform:'translateY(0) scale(1)',opacity:1}],{duration:700,easing:'ease-out'});if(animation)stageAnimations.push(animation);}
+ if(score){const animation=MotionPolicy.animate($('.result-totals'),[{transform:'translateY(8px)',opacity:.6},{transform:'translateY(0)',opacity:1}],{duration:240,easing:'ease-out'});if(animation)stageAnimations.push(animation);}
 }
 
 document.addEventListener('click',event=>{
@@ -215,12 +222,12 @@ $('#stage').addEventListener('submit',async event=>{
   try{const result=await api(code?'join':'create',{type:'gift',code});if(result.type!=='gift')throw Error('這是其他遊戲房間，請從大廳加入');save(result);receive(await api('state'));$('#connection').textContent='';}catch(error){toast(error.message);}finally{busy=false;syncActionBusy();}
  }
 });
-async function action(name,data={}){if(busy)return;busy=true;actionFeedback('送出中…');syncActionBusy();try{const result=await api('action',{action:name,...data});receive(result);if(['give','wish'].includes(name)&&!['reveal','finished'].includes(result.phase))playSound('confirm');actionFeedback(name==='give'?'送禮已鎖定 ✓':name==='wish'?'心願已鎖定 ✓':name==='accept'?'已確認收禮':'已完成','success');$('#connection').textContent='';}catch(error){actionFeedback(error.message,'error');}finally{busy=false;syncActionBusy();syncChoices();}}
+async function action(name,data={}){if(busy)return;busy=true;actionFeedback('送出中…');syncActionBusy();try{const result=await api('action',{action:name,...data});const live=receive(result);if(live&&['give','wish'].includes(name)&&!['reveal','finished'].includes(result.phase))playSound('confirm');actionFeedback(name==='give'?'送禮已鎖定 ✓':name==='wish'?'心願已鎖定 ✓':name==='accept'?'已確認收禮':'已完成','success');if(live)MotionPolicy.confirm($('#gameActionFeedback'));$('#connection').textContent='';}catch(error){actionFeedback(error.message,'error');}finally{busy=false;syncActionBusy();syncChoices();}}
 async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;actionFeedback('送出中…','info',settings);syncActionBusy();try{receive(await api(route,data));actionFeedback(settings?'房間設定已儲存。':'已完成','success',settings);}catch(error){actionFeedback(error.message,'error',settings);}finally{busy=false;syncActionBusy();syncChoices();if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/gift/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製給朋友',url);}}
 window.GameUI?.decorateButton($('#closeHelp'),'close',{iconOnly:true,label:'關閉遊戲規則'});
 $('#invite').onclick=invite;$('#help').onclick=()=>window.GameUI?GameUI.openDialog($('#rules'),$('#help')):$('#rules').showModal();$('#closeHelp').onclick=()=>$('#rules').close();
-$('#motionToggle').onclick=()=>{motionEnabled=!motionEnabled;try{localStorage.setItem('ah-gift-motion',motionEnabled?'on':'off');}catch{}updateMotionButton();if(!allowsMotion())stopFocus();if(state?.result)render();};
+MotionPolicy.subscribe(()=>{updateMotionButton();if(!allowsMotion()){stopFocus();$('#giftVictory')?.classList.remove('celebrate');}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopFocus();stopSound();}});
 async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));$('#connection').textContent='';if(disconnected){toast('已重新連線，恢復原座位');disconnected=false;}}catch(error){disconnected=true;$('#connection').textContent='連線暫停：'+error.message+'。正在重試…';}finally{polling=false;}}
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||info.addresses.find(address=>address.includes('://26.'))||location.origin).catch(()=>{});

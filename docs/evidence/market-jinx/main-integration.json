@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-06",
+  "main": "144743065d78944a8eca947fb71ba23e002f62a5",
+  "reviewFixCommit": "ff3b7ad",
+  "schemaVersion": 14,
+  "legacy13": {
+    "mainBanOnly": { "inPlaceUpgrade": true, "exportVerifyDryRunRestore": true, "sourceUnchangedAfterRestore": true, "existingDataAndAccountsPreserved": true, "marketTablesCreatedEmpty": true },
+    "marketOnly": { "inPlaceUpgrade": true, "exportVerifyDryRunRestore": true, "sourceUnchangedAfterRestore": true, "existingDataAndAccountsPreserved": true, "banTableCreatedEmpty": true },
+    "incompleteLayoutsRejected": true,
+    "corruptMarketScoringRejected": true,
+    "schema14RequiresBothFeatures": true,
+    "mixed14BackupPreservesBanAndCorrectedMarketHistory": true
+  },
+  "preservedMainFiles": ["AGENTS.md", "src/data/locks.js", "src/history/store.js", "src/data/transfer.js", "src/games/draw-guess.js", "src/games/draw-guess-store.js", "public/draw.js", "public/shared/motion-policy.js"],
+  "tests": {
+    "platform": "Windows",
+    "node": "26.2.0",
+    "market": { "pass": 21, "fail": 0 },
+    "marketAndTransfer": { "pass": 47, "fail": 0 },
+    "full": { "pass": 463, "fail": 0, "skipped": 0, "cancelled": 0 },
+    "finalRecordedListeners": 62,
+    "finalFetchForbiddenPorts": [],
+    "earlierMergeFailure": { "tests": 449, "fail": 6, "reason": "duplicate SCHEMA_VERSION imports introduced by automatic merge; fixed" },
+    "earlierPortFailure": { "tests": 463, "fail": 4, "reason": "Fetch bad port", "recordedForbiddenPorts": [6665, 6666, 6667, 6668], "systemPortRangeOrAllocatorChanged": false }
+  },
+  "browser": {
+    "kind": "installed headless Chrome; fresh temporary profiles; localhost synthetic accounts",
+    "completeMarketFlowReplayedAfterMainIntegration": true,
+    "flows": ["login and empty state", "manual date creation", "vote and modification", "reload persistence", "exact cutoff", "preview and settlement", "correction reversals", "own ledger and admin audit", "member permissions", "lobby and return navigation", "held fetch operation lock and zero overlapping writes", "option focus restoration", "randomUUID unavailable"],
+    "widths": [1280, 390, 320],
+    "horizontalOverflow": false,
+    "equalSizePlaceholders": true,
+    "desktopVoteButtonBottom": 699.671875,
+    "desktopViewportHeight": 720,
+    "javascriptExceptions": 0
+  },
+  "limitations": ["No Linux or Safari run", "No public load or real market data", "PR34 full canvas pixel and multi-device play not repeated", "Local tests do not imply remote CI or deployment"]
+}

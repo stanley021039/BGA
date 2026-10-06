@@ -1,5 +1,7 @@
 # Agent 強化：研究成果、進度與後續實作
 
+**接續進度（2026-10-05）**：第1步 PL-01／PL-02 與第4步共用動效政策、小批送禮／收藏動效已由 **93d7a84** 完成；新增使用者 U27 已猜中卡勾選高亮。Windows／Linux各402項＋背景Chrome驗收，見 [完整紀錄](../DRAW-REVIEW-MOTION-PROGRESS.md)。第6步完整備份／還原及管理者UI已在 [PR #31](https://github.com/stanley021039/BGA/pull/31)，見 [移轉文件](../SERVER-DATA-TRANSFER.md)。這些取代下方研究批次的未實作狀態。第2／3步 persistent勝場與趣味成就、第5步YouTube、第7步真人桌校正仍待執行；不是正式資料已搬移或程式已部署。
+
 更新：2026-10-05。工作分支 `research/agent-memory-and-next-stage`，程式基線為 PR #30 的 `0aa6c75`；本輪未修改正式遊戲、未部署、未再發 MR。先前介面與雷霆改版的 MR：[PR #30](https://github.com/stanley021039/BGA/pull/30)。本頁整合本輪研究、實玩與孤立原型，不把提案寫成現有功能。
 
 ## 成果與狀態

@@ -1,4 +1,3 @@
-const {SCHEMA_VERSION}=require("../src/db");
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -6,7 +5,7 @@ const os=require('node:os');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
 const {createApp}=require('../src/app');
-const {openDatabase}=require('../src/db/index');
+const {openDatabase,SCHEMA_VERSION}=require('../src/db/index');
 const {createAuth}=require('../src/auth/index');
 
 test('v3 character images migrate without losing existing expression bytes',()=>{

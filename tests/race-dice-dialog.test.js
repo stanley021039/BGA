@@ -10,7 +10,7 @@ test('shared dice artwork has exactly one to six separated pips and rejects inva
  }
  for(const value of [0,7,1.5,'1',null])assert.equal(window.RaceDiceDialog.faceMarkup(value),'');
 });
-function harness({reduced=false,time=10000,onAction=()=>{}}={}){
+function harness({reduced=false,time=10000,onAction=()=>{},enabled=true}={}){
  let clock=time,nextTimer=0;const timers=new Map();let document;
  class Element{
   constructor(tag){this.tagName=tag.toUpperCase();this.children=[];this.parentElement=null;this.attrs={};this.dataset={};this.style={setProperty(name,value){this[name]=value;}};this.listeners=new Map();this.hidden=false;this.disabled=false;this.open=false;this.textContent='';this.className='';this.isConnected=false;}
@@ -29,14 +29,14 @@ function harness({reduced=false,time=10000,onAction=()=>{}}={}){
  const all=(element=body)=>[element,...element.children.flatMap(child=>all(child))];
  document={head,body,activeElement:null,createElement:tag=>new Element(tag),getElementById:id=>[...all(head),...all(body)].find(el=>el.id===id)||null};
  const trigger=document.createElement('button');body.append(trigger);trigger.focus();
- const window={document,matchMedia:()=>({matches:reduced}),setTimeout(callback,ms){const id=++nextTimer;timers.set(id,{callback,at:clock+ms});return id;},clearTimeout:id=>timers.delete(id)};
+ const prefs=new Set(),window={MotionPolicy:{get:()=>({enabled}),allowsMotion:()=>enabled&&!reduced,subscribe(fn){prefs.add(fn);fn();return()=>prefs.delete(fn);}},document,matchMedia:()=>({matches:reduced}),setTimeout(callback,ms){const id=++nextTimer;timers.set(id,{callback,at:clock+ms});return id;},clearTimeout:id=>timers.delete(id)};
  vm.runInNewContext(source,{window,Date:{now:()=>clock}});
  const api=window.RaceDiceDialog.mount({onAction}),dialog=all().find(el=>el.tagName==='DIALOG');
  const find=className=>all(dialog).find(el=>el.className.split(/\s+/).includes(className));
  const button=action=>all(dialog).find(el=>el.dataset.diceAction===action);
  const text=(el=dialog)=>String(el.textContent||'')+el.children.map(child=>text(child)).join(' ');
  function advance(ms){const end=clock+ms;for(;;){const entries=[...timers].filter(([,timer])=>timer.at<=end).sort((a,b)=>a[1].at-b[1].at||a[0]-b[0]);if(!entries.length)break;const [id,timer]=entries[0];clock=timer.at;timers.delete(id);timer.callback();}clock=end;}
- return{api,dialog,document,trigger,timers,all,find,button,text,advance,get now(){return clock;}};
+ return{api,dialog,document,trigger,timers,all,find,button,text,advance,prefs,setEnabled(value){enabled=value;for(const fn of prefs)fn();},get now(){return clock;}};
 }
 function check(overrides={}){
  return{id:'C1',kind:'collision',title:'碰撞判定',condition:'依受推車與推進方向兩顆骰子結算。',owner:'A',status:'awaiting',participants:[{id:'A',name:'甲車隊',color:'#d0855a',car:{size:0},label:'進入車'},{id:'B',name:'乙車隊',color:'#63a184',car:{size:2},label:'原位車'}],dice:[{label:'受推車',faces:['進入車','原位車']},{label:'推進方向',faces:[1,2,3,4,5,6]}],...overrides};
@@ -91,6 +91,13 @@ test('reduced motion keeps faces unknown and observes the same masking delay',()
  const h=harness({reduced:true}),rolling=check({status:'rolling',startedAt:1000,readyAt:2000,serverNow:1700});h.api.show(state(rolling));
  for(const face of h.all().filter(el=>el.className==='race-dice-face'))assert.equal(face.textContent,'?');assert.equal(h.timers.size,1);
  h.api.show(state(check({...rolling,status:'result',serverNow:2000,result:{faces:['原位車',5],text:'FINAL_RESULT'}})));h.advance(999);assert.doesNotMatch(h.text(),/FINAL_RESULT/);h.advance(1);assert.equal(h.dialog.dataset.stage,'result');assert.match(h.text(),/FINAL_RESULT/);
+});
+
+test('rolling hydration remains static on later polls, and shared disable cancels cosmetics without revealing early results',()=>{
+ const rolling=check({status:'rolling',startedAt:1000,readyAt:2000,serverNow:1000}),result=check({...rolling,status:'result',serverNow:2000,result:{faces:['原位車',5],text:'FINAL_RESULT'}});
+ const hydrated=harness();hydrated.api.show(state(rolling),{live:false});assert.equal(hydrated.dialog.dataset.motion,'false');assert.equal(hydrated.timers.size,1);hydrated.api.show(state(rolling),{live:true});assert.equal(hydrated.dialog.dataset.motion,'false');
+ const h=harness();h.api.show(state(rolling));assert.equal(h.dialog.dataset.motion,'true');assert.equal(h.timers.size,2);h.advance(200);h.setEnabled(false);assert.equal(h.dialog.dataset.motion,'false');assert.equal(h.timers.size,1);h.api.show(state(result));assert.doesNotMatch(h.text(),/FINAL_RESULT/);
+ h.setEnabled(true);assert.equal(h.dialog.dataset.motion,'false');h.advance(799);assert.doesNotMatch(h.text(),/FINAL_RESULT/);h.advance(1);assert.match(h.text(),/FINAL_RESULT/);h.api.destroy();assert.equal(h.prefs.size,0);
 });
 
 test('four crews retain all sixteen dice, plus a separate shared road die and full result text',()=>{

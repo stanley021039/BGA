@@ -60,9 +60,16 @@ function validateDatabase(file) {
     if (db.prepare('PRAGMA foreign_key_check').all().length) fail('FOREIGN_KEY_FAILED', 'SQLite contains broken foreign keys');
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r => r.name);
     if (!tables.includes('users')) fail('INVALID_DATABASE', 'Account table is missing');
-    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 13: ['market_rounds','market_votes','market_settlements','market_ledger','market_requests'] };
+    const marketTables = ['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
+    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 14: ['draw_word_exclusions',...marketTables] };
     for (const [version, names] of Object.entries(required)) if (schemaVersion >= Number(version) && names.some(n => !tables.includes(n))) fail('INVALID_DATABASE', 'Database schema is missing a required table');
-    if (schemaVersion >= 13) { try { require('../market/store').validateMarketDatabase(db); } catch { fail('INVALID_DATABASE', 'Market score history is invalid'); } }
+    // Two pre-integration releases used version 13. Accept complete legacy
+    // layouts for cold backup/restore; version 14 requires both features.
+    if (schemaVersion >= 13) {
+      const present = marketTables.filter(name => tables.includes(name)).length;
+      if (present && present !== marketTables.length || schemaVersion === 13 && !tables.includes('draw_word_exclusions') && present !== marketTables.length) fail('INVALID_DATABASE', 'Database schema is missing a required table');
+      if (present) { try { require('../market/store').validateMarketDatabase(db); } catch { fail('INVALID_DATABASE', 'Market score history is invalid'); } }
+    }
     const accountsDigest = crypto.createHash('sha256');
     for (const user of db.prepare('SELECT * FROM users ORDER BY id').iterate()) {
       if (!uuid.test(user.id) || !['member','admin'].includes(user.role) || ![0,1].includes(user.disabled) || !/^scrypt:[0-9a-f]{32}:[0-9a-f]{128}$/.test(user.password_hash)) fail('INVALID_ACCOUNTS', 'Account identity, permissions or credential format is invalid');

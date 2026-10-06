@@ -1,7 +1,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
-const SCHEMA_VERSION=13;
+const SCHEMA_VERSION=14;
 
 function openDatabase(file){
  fs.mkdirSync(path.dirname(file),{recursive:true});
@@ -9,6 +9,10 @@ function openDatabase(file){
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
  if(version>SCHEMA_VERSION){db.close();throw Error(`Unsupported database version ${version}`);}
+ if(version===13){
+  const hasBan=!!db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='draw_word_exclusions'").get(),marketCount=db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE type='table' AND name IN ('market_rounds','market_votes','market_settlements','market_ledger','market_requests')").get().n;
+  if(marketCount>0&&marketCount<5||!hasBan&&marketCount!==5){db.close();throw Error('Incomplete legacy schema 13');}
+ }
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -132,7 +136,30 @@ function openDatabase(file){
   db.exec('BEGIN IMMEDIATE');
   try{if(!db.prepare('PRAGMA table_info(user_artworks)').all().some(column=>column.name==='shared'))db.exec('ALTER TABLE user_artworks ADD COLUMN shared INTEGER NOT NULL DEFAULT 0 CHECK(shared IN (0,1))');db.exec('PRAGMA user_version=12; COMMIT');}catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
- if(version<13){
+ // PR #38's earlier schema 13 had market tables but no ban ledger.
+ if(version<13||version===13&&!db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='draw_word_exclusions'").get()){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(`
+    CREATE TABLE IF NOT EXISTS draw_word_exclusions(
+     title_key TEXT PRIMARY KEY CHECK(length(title_key) BETWEEN 1 AND 512),
+     word_id TEXT NOT NULL UNIQUE CHECK(length(word_id) BETWEEN 1 AND 64),
+     title TEXT NOT NULL CHECK(length(title) BETWEEN 1 AND 24),
+     room_code TEXT NOT NULL CHECK(length(room_code)=6),
+     result_id TEXT NOT NULL UNIQUE CHECK(length(result_id)=36),
+     game_run_id TEXT NOT NULL CHECK(length(game_run_id)=36),
+     electorate_json TEXT NOT NULL CHECK(length(electorate_json)<=400 AND json_valid(electorate_json) AND json_type(electorate_json)='array' AND json_array_length(electorate_json) BETWEEN 1 AND 8),
+     votes_json TEXT NOT NULL CHECK(length(votes_json)<=400 AND json_valid(votes_json) AND json_type(votes_json)='array' AND json_array_length(votes_json) BETWEEN 1 AND 8),
+     required INTEGER NOT NULL CHECK(required=CAST(json_array_length(electorate_json)/2 AS INTEGER)+1),
+     created_at TEXT NOT NULL,
+     CHECK(json_array_length(votes_json)>=required AND json_array_length(votes_json)<=json_array_length(electorate_json))
+    );
+    PRAGMA user_version=13;
+    COMMIT;
+   `);
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<14){
   db.exec('BEGIN IMMEDIATE');
   try{db.exec(`
    CREATE TABLE IF NOT EXISTS market_rounds(id TEXT PRIMARY KEY,target_date TEXT NOT NULL UNIQUE,cutoff_at TEXT NOT NULL,settlement_after TEXT NOT NULL,rules_json TEXT NOT NULL,created_by TEXT NOT NULL REFERENCES users(id),created_at TEXT NOT NULL,result_revision INTEGER NOT NULL DEFAULT 0 CHECK(result_revision>=0),return_pct REAL,result_bucket TEXT);
@@ -141,7 +168,7 @@ function openDatabase(file){
    CREATE TABLE IF NOT EXISTS market_ledger(id TEXT PRIMARY KEY,round_id TEXT NOT NULL,user_id TEXT NOT NULL REFERENCES users(id),revision INTEGER NOT NULL,kind TEXT NOT NULL CHECK(kind IN ('award','reversal')),points INTEGER NOT NULL,return_pct REAL NOT NULL,bucket TEXT NOT NULL,vote_option TEXT NOT NULL,outcome TEXT NOT NULL CHECK(outcome IN ('hit','miss','tie')),reverses_revision INTEGER,FOREIGN KEY(round_id,revision) REFERENCES market_settlements(round_id,revision),UNIQUE(round_id,user_id,revision,kind),CHECK((kind='award' AND reverses_revision IS NULL) OR (kind='reversal' AND reverses_revision=revision-1)));
    CREATE INDEX IF NOT EXISTS market_ledger_user ON market_ledger(user_id);
    CREATE TABLE IF NOT EXISTS market_requests(user_id TEXT NOT NULL REFERENCES users(id),request_id TEXT NOT NULL,operation TEXT NOT NULL,fingerprint TEXT NOT NULL,response_json TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(user_id,request_id));
-   PRAGMA user_version=13; COMMIT;
+   PRAGMA user_version=14; COMMIT;
   `);}catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
  return db;

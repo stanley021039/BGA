@@ -8,6 +8,7 @@
   book:'<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Z M12 5v15"/>',
   save:'<path d="M5 3h12l4 4v14H3V3h2Z M7 3v6h10V3M7 21v-8h10v8"/>',
   check:'<path d="m5 12 4 4L19 6"/>',
+  ban:'<circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/>',
   lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
   next:'<path d="M4 12h16m-6-6 6 6-6 6"/>',
   replay:'<path d="M3 4v6h6M3 10a9 9 0 1 1 1 8"/>',

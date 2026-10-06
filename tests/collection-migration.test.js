@@ -1,8 +1,7 @@
-const {SCHEMA_VERSION}=require("../src/db");
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {openDatabase}=require('../src/db');
+const {openDatabase,SCHEMA_VERSION}=require('../src/db');
 
 for(const source of ['music-v11','collection-v12'])test(`integration upgrades ${source} without losing member collections`,()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-collection-migration-'));

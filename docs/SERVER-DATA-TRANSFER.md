@@ -9,13 +9,17 @@
 | 帳戶 | 完整保留 `users`，包括 UUID、登入名稱、顯示名稱、原密碼 hash、管理者／會員權限、停用狀態、appearance 與建立時間；玩家用**原帳號及原密碼**重新登入。 |
 | 登入／邀請／重設連結 | 備份包含來源資料；只在還原副本刪除 sessions、invites、password_resets。舊 cookie、邀請與重設連結不能在新環境沿用。 |
 | 角色、表情、作品、禮物 | SQLite BLOB、所有權、分享欄位及 profile 引用原樣保存；還原前驗證外鍵、引用與 BLOB digest。 |
-| 題庫、留言、成就 | 保存 SQLite 資料、共編 `community.json`；舊 JSON 留言及回覆在還原副本依現有 BoardStore 規則匯入。未新增勝場統計。 |
+| 題庫、留言、成就 | 保存 SQLite 資料、共編 `community.json`，包含 schema 13 已通過的畫猜禁題及投票稽核；舊 JSON 留言及回覆在還原副本依現有 BoardStore 規則匯入。未過半的房間記憶體投票不搬移，未新增勝場統計。 |
 | 音樂 | SQLite metadata 與外部原始音檔一起保存；驗證 metadata、大小、音訊格式。符合檔名規則的孤立音檔也保留並報告數量。 |
 | 歷史 | 保存 session／match JSONL、meta、引擎原碼及 hash；嚴格拒絕缺檔、截斷、未配對操作或 hash 不符。 |
 | 外部投稿 | 保留 payload、remote identity 及完成狀態；pending／sending 改為 needs_review，需管理者查核 GitHub 後決定重試。 |
 | 來源身份 | `source.envId` 與永久 `dataInstanceId` 放入 manifest。首次 export 在 DB 旁建立 `.<DB檔名>.data-instance.json`，後續沿用。 |
 
 `.env`、GitHub／Tunnel token、SSH key、部署程式與當前記憶體房間不放進包。內建 `public/assets` 跟程式部署，bundle 記錄其 fingerprint 並在還原前比對；不會自動下載或切換程式。帳戶 hash、素材及完整歷史仍是敏感資料，`accountCredentialsIncluded` 明確為 true；這不是匿名化開發副本。
+
+2026-10-05 後續程式 `2cf8a44` 支援 schema 13 禁題表；schema 12 備份還原時只升級目標副本，新增空禁題表，來源不變。已通過的禁題會在還原後繼續從題庫與抽題排除，詳 [相容性驗收](DRAW-WORD-BAN-PROGRESS.md)。
+
+2026-10-06 PR #38 整合後目前支援至 schema 14，同時保留禁題表與市場五表。兩種先前 schema 13（main 禁題版、PR #38 市場版）只有完整表布局可備份，還原副本升至 14、來源維持原樣；已有禁題稽核、投票、積分及收據保留。14 缺任一方表、13 部分市場表或損壞市場歷史拒絕，詳 [整合相容性](MARKET-JINX-MAIN-INTEGRATION.md)。這是本地驗收，PR #38 尚未合併或部署。
 
 ## 執行介面
 
@@ -194,4 +198,4 @@ EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核�
 
 新 writer 尚未接受任何寫入時，可停新服務並切回相容的舊 code＋舊資料代；若已接受新登入或其他寫入，先冷備份新代再做受控前向修復，直接回舊 snapshot 會丟新資料。GitHub 外部操作不能由本地 DB rollback 撤銷。
 
-第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。schema 目前仍 v12。支援的舊 schema 只升級還原副本；schema 1／3／5／7／10 已有回歸。帳戶及來源既有 BLOB digest 必須相同，只允許 migration 3／5／8 明確新增的空 BLOB 表，非空新表或未知新表仍拒絕。
+第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。目前本分支 schema v14。支援的舊 schema 只升級還原副本；schema 1／3／5／7／10／12／兩種13已有回歸。帳戶及來源既有 BLOB digest 必須相同，只允許 migration 3／5／8 明確新增的空 BLOB 表，非空新表或未知新表仍拒絕。

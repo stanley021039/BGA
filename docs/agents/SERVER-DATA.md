@@ -1,10 +1,20 @@
 # Server／資料 agent 記憶
 
+## 2026-10-06：schema 13 與拒絕殘留鎖整合
+
+PR #34 接上 main `b843a3f`，schema 13 禁題資料與 #31 拒絕殘留鎖／HistoryStore 冪等 close 同時保留；鎖程式與 main 完全一致。Windows Node 26.2.0 完整 **442/442** 包含完整還原、v12 副本升級／v13 缺表拒絕及 11 項鎖回歸。本次沒有 Linux、正式資料或真正 browser 驗收，詳 [整合驗證](../PR34-MAIN-INTEGRATION.md)；早期 v12 敘述為歷史基線，現 PR schema 為 13。維持 Draft，待獨立複審。
+
 ## 2026-10-05：殘留鎖政策更新
 
 PR #31 修正 `0682e43` 取代先前自動回收 dead-PID 鎖的行為。server／admin／transfer／HistoryStore 拒絕任何既有資料或 legacy 鎖；publication 同樣不回收。正常 owner 釋放冪等，仍保留 legacy 純 PID 格式供舊程式辨識，但不能同時運行仍自動回收鎖的舊 writer。
 
 異常終止後先停所有 writer 及自動重啟，再核對實際 DB／history／community／music 鎖與內容，保存證據後人工處理；不能只憑 PID 已結束刪檔。發布鎖與 restore marker 可能代表半份還原，保留現場並另選新目錄重試，不能當一般資料鎖刪掉後啟動。操作流程見 [人工檢查](../SERVER-DATA-TRANSFER.md#殘留鎖的人工檢查)。Windows Node24.14.0 完整374/374與11項鎖回歸通過，本次未重跑Linux，未操作正式資料；詳 [進度](../SERVER-DATA-TRANSFER-PROGRESS.md#pr-31殘留鎖競態修正)。
+
+## 2026-10-05 追加：schema 13 禁題資料
+
+程式 `2cf8a44` 新增 `draw_word_exclusions`，保存內建／共編題目 ID、正規化題名、首次通過的房間／result／gameRun、至多八名選民與票者、過半門檻及時間；不存帳密或畫布。移轉驗證的 schema 必備表同步至 v13。完整備份還原原樣保存已通過禁題，v12 來源只在還原副本建立空 ledger；來源不變，v13 缺表拒絕。
+
+未過半 ballot 與最近八輪結果只存在 room 記憶體，不屬於資料包。Windows／Linux 各431項，其中移轉26項及3項新禁題相容性回歸通過，詳 [禁題進度](../DRAW-WORD-BAN-PROGRESS.md)。尚未操作正式資料，沒有解除禁題 UI；不要把 soft exclusion 說成已刪除歷史作品。
 
 更新：2026-10-05。主規格：[多環境資料移轉](../specs/MULTI-ENV-DATA-MIGRATION.md)。第一版工具已完成實作與隔離驗收，操作入口：[完整備份還原](../SERVER-DATA-TRANSFER.md)，最新送審與證據：[驗收進度](../SERVER-DATA-TRANSFER-PROGRESS.md#送審前最終複查)。未備份、切換或遷移正式資料。
 
@@ -16,7 +26,7 @@ PR #31 修正 `0682e43` 取代先前自動回收 dead-PID 鎖的行為。server�
 
 | 項目 | 現況 |
 | --- | --- |
-| DB | `src/db/index.js` v12、Node sqlite DatabaseSync、WAL、foreign_keys/busy_timeout、BEGIN IMMEDIATE |
+| DB | `src/db/index.js` v13、Node sqlite DatabaseSync、WAL、foreign_keys/busy_timeout、BEGIN IMMEDIATE |
 | users/media | 帳號、角色表情／gift／artwork bytes在DB BLOB；users.appearance有JSON引用 |
 | music | metadata在music_tracks，實音檔在`MUSIC_DIR || dirname(DB_FILE)/music`；settings 已映射 MUSIC_DIR |
 | community | `COMMUNITY_DIR/community.json`存majority題庫與舊issue；BoardStore啟動legacy import |
@@ -80,3 +90,5 @@ Windows／Linux 各259項通過（移轉16＋UI HTTP4）；完整 HTTP workflow 
 基底 main b843a3f 的隔離本地分支新增 market_rounds／votes／settlements／ledger／requests 五張非BLOB表，已有日期／唯一帳號票／結果版本／反向撤銷／冪等收據。上限13取代先前最新上限12，歷史記錄保持其當時版本。完整加密包保存五表；validation新增逐版計分與撤銷一致性。合成12版升級不改帳號hash／UUID／role，13版 export／verify／預演／restore 保留全部市場紀錄且撤銷sessions、原密碼可登入；損壞計分拒絕。Windows Node26.2.0 完整387/387與背景Chrome已驗，詳 [本機說明](../MARKET-JINX.md)。舊12程式不可開13資料，未提供降版；將來回退需舊程式及升級前完整備份一併恢復。本次未讀寫既有專案或正式備份資料，未部署或正式升級。
 
 同日 PR #38 審查修正：時鐘回退可讓投票 updated_at 早於 created_at，合法API寫入後反而無法完整備份，已以注入時間與真實 export 重現。更新票改取 now／原created_at／原updated_at最大值；不改以鎖後實際時間裁決截止的政策、不放寬語意驗證。回歸先前時間+2秒再回退至建立時間−1秒，票可修改、完整export／verify通過，精確截止仍拒絕。市場17／Windows完整391項通過，取代上段387的最新數字；沒有修改OS時鐘或正式備份，詳 [逐項證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)。
+
+同日與main `1447430` 必要整合：當前schema14取代最新13上限；完整legacy13禁題版與市場版均能冷export／verify／預演／restore，來源不變、目標升14、兩方已有行／帳號原值保留、sessions撤銷。14缺表、13部分市場布局／兩方皆缺及13壞積分拒絕；14混合備份保存禁題稽核與更正ledger。市場21／移轉26、Windows完整463/463通過；#34相關自動回歸保留，資料鎖／transfer核心與main相同。詳 [整合證據](../MARKET-JINX-MAIN-INTEGRATION.md)。未提供降版，未操作正式資料或備份。

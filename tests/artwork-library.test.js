@@ -1,11 +1,10 @@
-const {SCHEMA_VERSION}=require("../src/db");
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const {createApp}=require('../src/app');
-const {openDatabase}=require('../src/db/index');
+const {openDatabase,SCHEMA_VERSION}=require('../src/db/index');
 const {createAuth}=require('../src/auth/index');
 
 test('private account artwork can be copied into a character, expression, and gift',async()=>{

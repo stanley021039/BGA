@@ -1,6 +1,6 @@
 # 股市冥燈：本機整合與接手
 
-2026-10-06，本地分支 `feature/market-jinx-local`，基底 main `b843a3f59c9ac520818e4d9c55f09cb51d421c29`。這是獨立 checkout 的已驗證實作，以 Draft 送審；未合併、部署或操作正式資料。
+2026-10-06，本地分支 `feature/market-jinx-local`，原基底 main `b843a3f59c9ac520818e4d9c55f09cb51d421c29`，後續整合已包含 PR #34 的 main `144743065d78944a8eca947fb71ba23e002f62a5`。這是獨立 checkout 的已驗證實作，以 Draft 送審；未合併 PR #38、部署或操作正式資料。
 
 ## 玩家與管理者流程
 
@@ -37,15 +37,17 @@
 
 ## Schema 與完整備份
 
-schema 12 → 13 新增五張表：`market_rounds`、`market_votes`、`market_settlements`、`market_ledger`、`market_requests`，無新 BLOB 或外部檔案。帳號、密碼雜湊、UUID、權限保持原值。舊 schema 1／3／5／7／10／11／12 的相關回歸均通過。
+目前 schema **14** 新增五張市場表：`market_rounds`、`market_votes`、`market_settlements`、`market_ledger`、`market_requests`，保留 main schema 13 的 `draw_word_exclusions`。先前 PR #38 單獨使用的市場版 13 也可升級至 14，補上空禁題表；main 禁題版 13 補上空市場表。帳號、密碼雜湊、UUID、權限與已有功能資料保持原值，無新 BLOB 或外部檔案。舊 schema 1／3／5／7／10／11／12 的相關回歸保留。
 
-現有完整加密備份包含全部表。備份驗證新增市場歷史語意檢查：日期與規則、投票截止、連續結果版本、命中計分、每次更正的撤銷及目前結果一致性。13 版匯出／verify／預演／還原已在合成資料驗證投票、收據、更正 ledger 與原密碼登入，還原仍撤銷 sessions。使用者既有備份 UI 不在這次操作範圍。
+現有完整加密備份包含全部表。備份驗證新增市場歷史語意檢查：日期與規則、投票截止、連續結果版本、命中計分、每次更正的撤銷及目前結果一致性。完整的禁題版／市場版 13 均可冷備份及還原；缺表、部分市場表或損壞積分拒絕。14 版必須同時具備兩方所有表。合成資料驗證匯出／verify／預演／還原保留投票、收據、更正 ledger、禁題稽核與原密碼登入，還原仍撤銷 sessions；來源不升級，只有還原副本升級。使用者既有備份 UI 不在這次操作範圍。
 
-schema 13 資料不能交給只支援 12 的舊程式。未提供降版 migration；如將來需回退，須一起恢復升級前的完整備份及舊程式，不能只換程式讀新版 DB。本次沒有執行正式升級或資料切換。
+schema 14 資料不能交給只支援 13 或 12 的舊程式；兩種 13 的舊程式也不能互換資料。未提供降版 migration；如將來需回退，須一起恢復升級前的完整備份及舊程式，不能只換程式讀新版 DB。本次沒有執行正式升級或資料切換。
 
 ## 驗證與限制
 
 Windows Node 26.2.0：PR #38 審查修正後完整 `npm test` **391/391**；其中 [市場回歸](../tests/market.test.js) 17 項，涵蓋區間邊界／0／非數值、權限與偽造身份、截止、重送／版本、HTTP 並行、不同 SQLite 連線競爭、排隊跨截止、更正回復、重啟持久化、完整備份及損壞 ledger 拒絕，另含前端衝突恢復、更新互斥／斷線恢復及時鐘回退備份。
+
+以上 391／17 是整合 PR #34 前的審查修正結果。最新 main／schema 14 的完整測試、兩種舊版相容性與再次 Chrome 流程見 [main 整合验收](MARKET-JINX-MAIN-INTEGRATION.md)。
 
 獨立背景 Chrome、全新 temporary profile、本機合成帳號實際驗收：登入返回、空狀態、建立、投票／修改／重載、截止、預覽／結算／更正、本人異動及管理歷史、首頁入口、一般會員權限。1280×720 的投票按鈕底部 y699.7（含本機驗收橫幅），390×844 及 320×740 沒有水平溢出；卡片寬度浮點誤差 <0.1 CSS px，高度一致。JavaScript exception 0。[UI 與導覽驗收資料](evidence/market-jinx/ui-checks.json) 保存量測與操作結果；完整測試輸出與畫面另隨本地交付保留。瀏覽器 profile、測試 DB、備份金鑰及本機預覽帳密不加入 Git。
 

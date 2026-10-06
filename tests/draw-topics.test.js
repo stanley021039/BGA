@@ -1,11 +1,10 @@
-const {SCHEMA_VERSION}=require("../src/db");
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
 const {WORDS,TOPICS,topicLabels}=require('../src/games/draw-guess-words');
 const {DrawWordStore,validateWord}=require('../src/games/draw-guess-store');
-const {openDatabase}=require('../src/db/index');
+const {openDatabase,SCHEMA_VERSION}=require('../src/db/index');
 
 test('all 120 drawing words have one recognized thematic category independent of difficulty',()=>{
  assert.equal(WORDS.length,120);
