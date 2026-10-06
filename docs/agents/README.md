@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07最新正式 **v1.5.6**／`5941c03`：畫猜玩家／聊天室共用剩高、底邊對齊，桌機單屏、input最後；canvas512×256及比例保留、倒數同寬，8席重要資訊保留並必要局部scroll，125%不足空間自然流／加高恢復fit已驗。Windows／Linux各867，公開26資源／3席720p／1440／1920通過；8帳戶／schema15保留，PID76509／service／tunnel正常，測試席位及proxy清理後0房間。詳細來源／備份／邊界見 [高度驗收](../DRAW-VIEWPORT-FIT-PROGRESS.md)。下方v1.5.5及更早為歷史，外站資料仍未啟用，本輪沒有新PR／push。
+
 2026-10-07最新正式 **v1.5.5**／`18d21ae`：畫猜倒數文字32px／軌道14px較亮橙色，與畫布同寬；畫者工具仍對齊畫布，作畫題材／難度／字數行移除。手機及320px／200%文字通過；原生progress停用width transition後，正式截圖像素68.9573%與native值68.9625%相符。Windows／Linux各864、正式26資源及3席通過，8帳戶／schema15保留、PID73168／service／tunnel正常；測試席位／session與preview已清理。詳細證據與v1.5.4歷史見 [倒數進度](../DRAW-TIMER-VISIBILITY-PROGRESS.md)。下方v1.5.3及更早為歷史，外站資料仍未啟用、沒有新PR／push。
 
 2026-10-07最新正式 **v1.5.3**／`0609c01`：全站20HTML載入共享primitives／GameUI；題卡背面unknown、settings close與D徽章修正，history header span auto-margin污染也已隔離。20入口背景Chrome、桌機／390手機／200%文字與hidden／pending已驗，Windows／Linux各863；正式3席題卡與25份資源通過，8帳戶及schema15保留、PID68975／service／tunnel正常，測試房間已離开及session登出。與程式設計師的實際討論、逐頁表及長期契約見 [規格](../specs/SHARED-UI-ALIGNMENT.md)，部署證據／未驗界線見 [進度](../SHARED-UI-ALIGNMENT-PROGRESS.md)。下方v1.5.2為歷史；原PR43保持Ready未合併，沒有新PR或UI push，外站資料仍未啟用。
