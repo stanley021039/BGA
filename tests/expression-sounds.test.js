@@ -2,17 +2,69 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=file=>fs.readFileSync(path.join(__dirname,'../public/shared',file),'utf8');
 const uuid='12345678-1234-4234-8234-123456789abc',url=`/assets/characters/sounds/${uuid}/happy?v=${'a'.repeat(64)}`;
-function fixture({blocked=false,deferredPlay=false,clockSkew=0}={}){
- let now=100000+clockSkew,nextTimer=0;const timers=new Map(),clips=[],listeners=new Map(),storage=new Map();
+function fixture({blocked=false,deferredPlay=false,clockSkew=0,monotonicClock=true}={}){
+ let now=100000+clockSkew,elapsed=0,nextTimer=0;const timers=new Map(),clips=[],listeners=new Map(),storage=new Map();
  const target=name=>({addEventListener(type,fn){const key=name+type;if(!listeners.has(key))listeners.set(key,new Set());listeners.get(key).add(fn);},removeEventListener(type,fn){listeners.get(name+type)?.delete(fn);}});
- const document={...target('document:'),hidden:false},window=target('window:');
+ const document={...target('document:'),hidden:false},window={...target('window:'),...(monotonicClock?{performance:{now:()=>elapsed}}:{})};
  class Audio{constructor(src){this.src=src;this.originalSrc=src;this.paused=true;this.volume=1;this.currentTime=0;this.plays=0;this.loads=0;clips.push(this);}play(){this.plays++;if(blocked)return Promise.reject(Error('blocked'));if(deferredPlay)return new Promise(resolve=>{this.resolvePlay=()=>{this.paused=false;resolve();};});this.paused=false;this.onplaying?.();return Promise.resolve();}pause(){this.paused=true;}removeAttribute(key){delete this[key];}load(){this.loads++;}}
- const context={window,document,Audio,URL,location:{origin:'https://example.test'},localStorage:{getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)},Date:{now:()=>now},setTimeout(fn,ms){const id=++nextTimer;timers.set(id,{fn,at:now+ms});return id;},clearTimeout:id=>timers.delete(id)};
+ const context={window,document,Audio,URL,location:{origin:'https://example.test'},localStorage:{getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)},Date:{now:()=>now},setTimeout(fn,ms){const id=++nextTimer;timers.set(id,{fn,at:elapsed+ms});return id;},clearTimeout:id=>timers.delete(id)};
  vm.runInNewContext(source('audio-settings.js'),context);vm.runInNewContext(source('expression-sounds.js'),context);
  const fire=(key,event={})=>{for(const fn of [...(listeners.get(key)||[])])fn(event);};
  const event=(id,at=now)=>({id,at,sound:{url,durationMs:1000}});
- return {window,document,clips,timers,listeners,event,fire,audio:window.AudioSettings,controller:window.ExpressionSounds.create(),update(controller,events,contextId='draw:ABC123:me',serverNow){controller.update({contextId,events,serverNow});},tick(ms){now+=ms;for(const [id,timer] of [...timers])if(timer.at<=now&&timers.delete(id))timer.fn();},hide(value){document.hidden=value;fire('document:visibilitychange');}};
+ return {window,document,clips,timers,listeners,event,fire,audio:window.AudioSettings,controller:window.ExpressionSounds.create(),update(controller,events,contextId='draw:ABC123:me',serverNow){controller.update({contextId,events,serverNow});},tick(ms){now+=ms;elapsed+=ms;for(const [id,timer] of [...timers])if(timer.at<=elapsed&&timers.delete(id))timer.fn();},jumpWall(ms){now+=ms;},hide(value){document.hidden=value;fire('document:visibilitychange');}};
 }
+test('newer social ACK at six seconds prevents a delayed t0 snapshot from replaying its seven-second-old sound',()=>{
+ const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);
+ for(const serverNow of [102000,104000,106000]){f.tick(2000);f.update(c,[],undefined,serverNow);}
+ f.tick(1000);const old=f.event('delayed-t0',100000);f.update(c,[old],undefined,100000);assert.equal(f.clips.length,0,'out-of-order serverNow must not move event age backwards');
+ f.update(c,[{...old,at:107000},f.event('fresh',107000)],undefined,107000);assert.equal(f.clips.length,1,'the rejected ID stays consumed while a truly new event still plays');
+});
+test('older and equal server timestamps do not reset elapsed aging at the five-second freshness boundary',()=>{
+ for(const snapshotTime of [102000,106000]){
+  const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);
+  for(const serverNow of [102000,104000,106000]){f.tick(2000);f.update(c,[],undefined,serverNow);}
+  f.tick(1001);f.update(c,[f.event('aged-after-ACK',101000)],undefined,snapshotTime);assert.equal(f.clips.length,0,'a frozen Math.max(serverNow) would incorrectly accept the event at age5000');
+ }
+ const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);
+ for(let step=1;step<=6;step++){f.tick(1000);f.update(c,[],undefined,100000);}
+ f.update(c,[f.event('same-clock-stale',100000)],undefined,100000);assert.equal(f.clips.length,0,'equal snapshots cannot continually refresh the anchor receipt time');
+});
+test('performance elapsed time keeps fresh playback and expiry stable through positive and negative wall-clock jumps',()=>{
+ const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);
+ f.tick(1000);f.jumpWall(-60000);f.update(c,[f.event('fresh-after-backward-clock',101000)],undefined,101000);assert.equal(f.clips.length,1);
+ f.tick(1000);f.jumpWall(120000);f.update(c,[f.event('fresh-after-forward-clock',102000)],undefined,102000);assert.equal(f.clips.length,2,'a wall-clock jump is not a polling gap');
+ for(const serverNow of [104000,106000]){f.tick(2000);f.update(c,[],undefined,serverNow);}
+ f.tick(1000);f.jumpWall(-120000);f.update(c,[f.event('stale-after-clock-jumps',100000)],undefined,100000);assert.equal(f.clips.length,2);
+});
+test('missing serverNow after an authoritative anchor continues server-time aging instead of returning to skewed wall time',()=>{
+ for(const clockSkew of [-60000,60000]){
+  const f=fixture({clockSkew}),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);f.tick(1000);
+  f.update(c,[f.event('fresh-with-missing-clock',101000)]);assert.equal(f.clips.length,1);
+  for(let step=2;step<=6;step++){f.tick(1000);f.update(c,[]);}
+  f.update(c,[f.event('old-with-missing-clock',100000)],undefined,null);assert.equal(f.clips.length,1);
+ }
+});
+test('estimated server freshness accepts exactly five seconds and rejects the next millisecond',()=>{
+ const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);f.tick(5000);
+ f.update(c,[f.event('age-five-seconds',100000)],undefined,100000);assert.equal(f.clips.length,1);f.tick(1);
+ f.update(c,[f.event('age-five-seconds-plus-one',100000)],undefined,100000);assert.equal(f.clips.length,1);
+});
+test('hidden, pagehide, reset and context changes establish silent baselines without poisoning later server anchors',()=>{
+ for(const leave of [f=>{f.hide(true);f.hide(false);},f=>f.fire('window:pagehide',{persisted:true}),f=>f.controller.reset()]){
+  const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);f.tick(1000);f.update(c,[f.event('before',101000)],undefined,101000);leave(f);assert.equal(f.clips[0].paused,true);
+  f.tick(1000);f.update(c,[f.event('baseline',102000)],undefined,102000);assert.equal(f.clips.length,1);f.tick(10);f.update(c,[f.event('fresh-return',102010)],undefined,102010);assert.equal(f.clips.length,2);
+ }
+ const f=fixture(),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);f.tick(10);c.reset();
+ f.update(c,[f.event('reset-baseline',1000)],undefined,1000);f.tick(10);f.update(c,[f.event('fresh-reset',1010)],undefined,1010);assert.equal(f.clips.length,1);
+ f.update(c,[f.event('context-baseline',500)],'lobby:new-user',500);f.tick(10);f.update(c,[f.event('fresh-context',510)],'lobby:new-user',510);assert.equal(f.clips.length,2);
+});
+test('environments without performance retain local fallback and elapsed server-clock expiry under stable wall clocks',()=>{
+ const legacy=fixture({monotonicClock:false}),c=legacy.controller;legacy.audio.set('effects',{enabled:true});legacy.update(c,[]);legacy.tick(10);legacy.update(c,[legacy.event('fresh-legacy')]);assert.equal(legacy.clips.length,1);
+ for(const clockSkew of [-60000,60000]){
+  const f=fixture({monotonicClock:false,clockSkew}),c=f.controller;f.audio.set('effects',{enabled:true});f.update(c,[],undefined,100000);f.tick(1000);f.update(c,[f.event('fresh',101000)],undefined,101000);assert.equal(f.clips.length,1);
+  for(const serverNow of [103000,105000]){f.tick(2000);f.update(c,[],undefined,serverNow);}f.tick(1001);f.update(c,[f.event('old',100000)],undefined,100000);assert.equal(f.clips.length,1);
+ }
+});
 for(const skew of [-60000,-6000,-2000,2000,6000,60000])test(`server-clock event freshness plays once with client clock bias ${skew}ms`,()=>{
  const f=fixture({clockSkew:skew}),c=f.controller;f.audio.set('effects',{enabled:true});
  f.update(c,[f.event('baseline',100000)],undefined,100000);assert.equal(f.clips.length,0);

@@ -23,19 +23,30 @@
   return {base64:btoa(binary),durationMs:Math.ceil(decoded.length/sampleRate*1000)};
  }
  function create(){
-  const seen=new Set(),clips=new Set();let context=null,baseline=true,lastUpdate=null,disposed=false;
+  const seen=new Set(),clips=new Set();let context=null,baseline=true,lastUpdate=null,disposed=false,serverAnchor=null,serverAnchorAt=null,lastClock=null,elapsed=0;
+  function localTime(){
+   const sample=typeof window.performance?.now==='function'?window.performance.now():Date.now();
+   if(lastClock!==null)elapsed+=Math.max(0,sample-lastClock);lastClock=sample;return elapsed;
+  }
+  function eventTime(serverNow,localNow,wallNow){
+   const projected=serverAnchor===null?null:serverAnchor+Math.max(0,localNow-serverAnchorAt);
+   // A newer snapshot may advance the clock, but an old/equal receipt cannot
+   // restart its elapsed age or replace it with a skewed client wall clock.
+   if(Number.isFinite(serverNow)&&(projected===null||serverNow>projected)){serverAnchor=serverNow;serverAnchorAt=localNow;}
+   return serverAnchor===null?wallNow:serverAnchor+Math.max(0,localNow-serverAnchorAt);
+  }
   function stop(){for(const clip of clips)window.AudioSettings?.stopEffect(clip);clips.clear();}
-  function reset(){stop();seen.clear();context=null;baseline=true;lastUpdate=null;}
+  function reset(){stop();seen.clear();context=null;baseline=true;lastUpdate=null;serverAnchor=null;serverAnchorAt=null;}
   function remember(id){seen.add(id);while(seen.size>256)seen.delete(seen.values().next().value);}
   function update({contextId,events=[],serverNow}={}){
    if(disposed)return;
-   const now=Date.now();if(typeof contextId!=='string'||!contextId){reset();return;}
+   const wallNow=Date.now(),now=localTime();if(typeof contextId!=='string'||!contextId){reset();return;}
    if(context!==contextId){reset();context=contextId;}
    const suppress=baseline||document.hidden||lastUpdate===null||now-lastUpdate>5000;
    if(suppress)stop();baseline=document.hidden;lastUpdate=now;
-   // Event timestamps belong to the server; polling gaps belong to this client.
-   // Legacy snapshots without a usable clock retain the bounded local-age check.
-   const eventNow=Number.isFinite(serverNow)?serverNow:now;
+   // Server event age and polling gaps both advance with local monotonic elapsed
+   // time. Only contexts that have never received a server clock use wall time.
+   const eventNow=eventTime(serverNow,now,wallNow);
    const current=Array.isArray(events)?events:[];
    for(const event of current.slice(-256)){
     if(!event||!['string','number'].includes(typeof event.id)||String(event.id).length>200||!Number.isFinite(event.at))continue;
