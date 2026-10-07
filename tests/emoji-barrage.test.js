@@ -4,6 +4,8 @@ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {createApp}=require('../src/app');
 const {openDatabase}=require('../src/db');
 const {createAuth}=require('../src/auth');
+const vm=require('node:vm');
+const {mediaHarness,json}=require('./helpers/media-browser.cjs');
 
 test('all five games broadcast emoji without changing character expressions or avatars',async()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-emoji-'));
@@ -30,4 +32,19 @@ test('all five games broadcast emoji without changing character expressions or a
    assert.equal((await post('social',friend,{code,kind:'emoji',emoji:'😂'})).status,429);
   }
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}
+});
+
+test('character expression cards preserve their images and send action with image-only accessible shared hints',async()=>{
+ const label='很長的角色表情名稱 <img onerror="bad">',f=mediaHarness({fetchHandler:request=>{
+  if(request.route==='/api/social/options')return json({emojis:['🎉']});
+  if(request.route==='/api/auth/me')return json({appearance:{characterId:'user:owned'}});
+  if(request.route==='/api/profile/options')return json({defaults:{characterId:'user:owned'},characters:[{id:'user:owned',labels:{happy:label},expressions:{happy:'/happy.gif'}}],expressionLabels:{}});
+  return json({type:'majority',code:'ABC123',version:2,me:'host',phase:'waiting',players:[{id:'host',name:'朋友'}],social:[],expressions:[]});
+ }});
+ const layout=f.document.createElement('div');layout.className='play-layout';const arena=f.document.createElement('main'),aside=f.document.createElement('aside'),actions=f.document.createElement('section');actions.setAttribute('data-game-action-slot','');aside.append(actions);layout.append(arena,aside);f.document.body.append(layout);
+ f.window.TableMedia={mount(){},update(){},stop(){},disconnected(){}};f.context.MotionPolicy=f.window.MotionPolicy={createBarrageController:()=>({update(){},disconnect(){},dispose(){}})};f.window.UIPopover={bind:()=>({sync(){}}),bindDetails(){},bindOverlay(){}};f.window.GameUI.setBusy=()=>{};
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/shared/game-shell.js'),'utf8'),f.context);await f.flush();f.window.GameShell.update({type:'majority',code:'ABC123',version:1,me:'host',phase:'waiting',players:[{id:'host',name:'朋友'}],social:[],expressions:[]});await f.flush();
+ const card=f.node('shared-expressions').children[0];assert.deepEqual(card.children.map(node=>node.tagName),['IMG']);assert.equal(card.querySelector('img').src,'/happy.gif');assert.equal(card.textContent,'');assert.equal(card.hasAttribute('data-ui-hint'),true);assert.equal(card.classList.contains('ui-icon-button'),false);assert.equal(card.getAttribute('aria-label'),'送出「'+label+'」表情');assert.equal(card.title,'送出「'+label+'」');
+ f.node('shared-emote-toggle').click();await card.click();await f.flush();assert.deepEqual(f.network.find(request=>request.body?.kind==='expression').body,{code:'ABC123',kind:'expression',expression:'happy'});assert.equal(f.node('shared-emoji-picker').hidden,true);
+ const css=fs.readFileSync(path.join(__dirname,'../public/shared/ui-foundation.css'),'utf8');assert.match(css,/shared-emoji-picker \.shared-expressions button\{[^}]*width:var\(--ui-expression-card-size\)[^}]*height:var\(--ui-expression-card-size\)/);assert.match(css,/shared-emoji-picker \.shared-expressions img\{[^}]*height:100%/);
 });

@@ -1,5 +1,7 @@
 # 共用偏好與已知決策
 
+2026-10-07 U42-playback-expression-ui：全桌與本機播放需用不同圖意；桌機控制列同一行，窄版允許換行且保持操作尺寸。角色表情卡只放圖片，名稱用共用hover/focus提示與中文aria；選單內部scroll不重定位，不透過暫時放寬高度量測而破壞scrollTop。見 [實作進度](../MEDIA-EMOJI-POLISH-PROGRESS.md)。
+
 2026-10-07 U41-media-icon-window-ui：使用者指定操作按鈕盡量只用圖示，hover顯示功能；共享GameUI圖示與提示，保留中文可讀名稱、keyboard／touch操作，不隱藏label、正文與重要玩家資訊。媒體名稱單行省略、hover才跑馬；視窗從邊緣縮放，清單左把手排序、右側移除。追加點播與清單獨立寬視窗、單行小間隔；播放器下方只留清單入口，音樂下拉第一項文字「上傳歌曲」。最新實作與發行證據以 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)為準，不把中間候選當正式或宣稱全站button已搬完。
 
 2026-10-07 U40-drawing-smoothness-implementation：第一批P0時間flush／有界未送buffer／rAF與coalesced、有限local-draft P1 **完成並正式v1.8.1**。source 6707a9edf07839c3307dd230ff6eeca5fa92bf62，Windows／Linux各1076，UTC03:30:44.024Z零房間guard發布。P1只有有限明確local draft且未fill才layer，完成／viewer同surfaceclassic、fill sticky至reset、單組15checkpoints＋1base≤8MiB；不變更API／codec／PR30額度。P2並行排序／P3抽稀未做，immutable ID-body／epoch／command／filled／保存契約維持。

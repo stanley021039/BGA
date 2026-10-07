@@ -1,5 +1,7 @@
 # 設計師角色記憶
 
+2026-10-07補充：語意不同的播放操作使用三角／裝置圖示區分，桌機同列按鈕以輕分隔分組；角色表情圖卡保持方形，省掉可見名稱並用共用提示。美化研究優先收斂字级／keylines／表面層次，詳 [研究評估](../research/UI-POLISH-DES13-ASSESSMENT.md)。
+
 2026-10-07媒體設計準則：操作盡量只用圖示與hover／focus提示，共用GameUI registry；中文可讀名稱與keyboard／touch操作保留，重要資訊不能因減字隱藏。清單與點播放獨立較寬視窗，媒體entry單行、小gap、左把手／右移除；主播放器保留影片空間，從邊緣縮放。音樂下拉第一個文字選項「上傳歌曲」屬導航，不能作為歌曲送出。長名稱只在hover跑馬，減少動態或背景時靜止；字體放大時用共用控制尺寸token避免遮擋。見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)，全站圖示化按後續功能逐步套用。
 
 2026-10-07：單一內容群組的置中要同時定義 items 與 content 分佈；畫猜未公開題卡的 `place-items:center` 仍承接正面 `align-content:space-between`，不能用逐glyph像素偏移修正。與程式方討論後採全頁共用 primitives、独立symbol槽及不帶help圓圈的未知問號SVG；正面題卡、禮物圖文卡與其他多區內容保留原布局。小D徽章不等於44px按鈕，文字／圖示槽也不替換人物表情或emoji內容。

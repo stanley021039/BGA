@@ -65,7 +65,7 @@
  function closeEmoji(restoreFocus=false){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');if(restoreFocus)emoteButton.focus();}
  const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',onClose:()=>closeEmoji()});
  emoteButton.onclick=()=>{if(!emojiPicker.hidden){closeEmoji();return;}emojiPicker.hidden=false;emoteButton.setAttribute('aria-expanded','true');emojiPopover?.sync();emojiPicker.querySelector('button:not(:disabled)')?.focus();};
- document.addEventListener('click',event=>{if(!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();});
+ document.addEventListener('click',event=>{if(!emojiPopover&&!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();});
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}});
  fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiChoices.append(button);}}).catch(error=>{emojiChoices.textContent=error.message;});
  let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false;
@@ -148,8 +148,8 @@
    const holder=q('#shared-expressions');holder.replaceChildren();
    for(const [key,url] of Object.entries(character.expressions)){
     const label=character.labels?.[key]||options.expressionLabels[key]||key;
-    const button=document.createElement('button');button.type='button';button.title=`送出「${label}」`;button.setAttribute('aria-label',`送出「${label}」表情`);
-    const img=document.createElement('img');img.src=url;img.alt='';button.append(img,element('span','',label));
+    const button=document.createElement('button');button.type='button';button.title=`送出「${label}」`;button.setAttribute('aria-label',`送出「${label}」表情`);button.setAttribute('data-ui-hint','');
+    const img=document.createElement('img');img.src=url;img.alt='';button.append(img);
     button.onclick=async()=>{if(await send({kind:'expression',expression:key},`已送出「${label}」表情`,button))closeEmoji(true);};holder.append(button);
    }
    loaded=true;if(!sending)feedback('');

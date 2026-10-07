@@ -114,4 +114,6 @@ body.game-room .room-sidebar #hostControls{margin:0 0 16px}
 
 .room-leave{box-sizing:border-box;display:inline-flex;align-items:center;height:36px;padding:6px 12px;border:1px solid #64765a;border-radius:9px;background:#19251e;color:#eee9d8;text-decoration:none;font:12px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}.room-leave[hidden]{display:none}
 .room-history-warning{padding:10px 14px;margin:10px 0;border:1px solid #bb7046;border-radius:8px;background:#fff0dc;color:#713c24;font:14px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}.room-history-warning[hidden]{display:none}
-body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions button{height:90px;min-height:44px;padding:6px;gap:4px;font-size:14px}body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions span{font-size:14px;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions{--ui-expression-card-size:max(64px,var(--ui-control-height,44px));grid-template-columns:repeat(auto-fill,var(--ui-expression-card-size));justify-content:start}
+body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions button{display:grid;place-items:center;width:var(--ui-expression-card-size);height:var(--ui-expression-card-size);min-height:44px;padding:4px;gap:0}
+body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions img{width:100%;height:100%;min-width:0;min-height:0;object-fit:contain;pointer-events:none}

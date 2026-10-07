@@ -1,6 +1,6 @@
 # 媒體圖示與視窗 UI 進度
 
-日期：2026-10-07。8項UI實作完成，候選patch v1.8.2發行前。最新Windows完整1101/1101（37693.3375ms）、reviewer八檔123/123（2498.5595ms）、frontend focused58/58通過，fail/cancel/skip/todo均0；背景Chrome新雙視窗、单行4px間隔、Audio開關不中斷、upload導航guard、影片擴展与sameiframe已驗。最新Linux／tag／正式切換待驗，正式仍v1.8.1。中間b420134未tag或部署，其1095項雙平台結果只作歷史記錄，不作本次最新驗收。
+日期：2026-10-07。正式v1.8.2已完成：受測來源與不可覆寫本地tag為49d0702fbaf0a8d2aefb18ea98c9237f1c6baa7b；Windows／Linux各1101/1101（37693.3375ms／189712.940156ms），零fail/cancel/skip/todo。2026-10-07T04:50:10Z零房間切換，PID110715→116191，current releases/49d0702，service／tunnel active。發布包SHA-256 340360940a95ac856771e26941d6bb4cc1339bb8429765d31a20b3791a15eb5b。備份與副本預演保留schema15與21表；8帳戶全欄位、20非session表既有rows/BLOB一致，integrity ok／FK0。公開版號、5份HTML與4份shared資源精確內容、MIME、no-store及三個自有member的room ACL通過，自己的驗收房刪除、session登出，session165→169。備份 pre-media-icon-window-fixes-49d0702-20261007T044854Z-2c42ba3d-b0fd-4521-b270-1f7ea050e8fd 是online SQLite備份＋分開檔案封存，非原子冷備份。最新追加修正候選v1.8.3另見 [控制與表情進度](MEDIA-EMOJI-POLISH-PROGRESS.md)。
 
 ## 八項需求對照
 

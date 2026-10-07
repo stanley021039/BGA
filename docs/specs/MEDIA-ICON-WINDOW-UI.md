@@ -1,6 +1,6 @@
 # 媒體圖示、視窗與待播清單 UI 規格
 
-日期：2026-10-07。8項UI實作完成，候選patch v1.8.2發行前。最新Windows完整1101/1101（37693.3375ms）、reviewer八檔123/123（2498.5595ms）、frontend focused58/58通過，fail/cancel/skip/todo均0；背景Chrome新雙視窗、单行4px間隔、Audio開關不中斷、upload導航guard、影片擴展与sameiframe已驗。最新Linux／tag／正式切換待驗，正式仍v1.8.1。中間b420134未tag或部署，其1095項雙平台結果只作歷史記錄，不作本次最新驗收。
+日期：2026-10-07。八項需求已於正式v1.8.2發布，受測來源／tag49d0702；雙平台1101/1101與資料保存等證據見 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。後續播放辨識、同列控制及表情修正為獨立v1.8.3候選，不改v1.8.2 tag。
 
 ## 永久設計準則
 

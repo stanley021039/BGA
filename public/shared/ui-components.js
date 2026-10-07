@@ -15,6 +15,7 @@
   sound:'<path d="M4 9h4l5-4v14l-5-4H4Z M17 8a6 6 0 0 1 0 8M20 5a10 10 0 0 1 0 14"/>',
   muted:'<path d="M4 9h4l5-4v14l-5-4H4Z M17 9l5 6M22 9l-5 6"/>',
   play:'<path d="m8 5 11 7-11 7Z"/>',
+  playLocal:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="m9 6 6 4-6 4Z M12 17v4M8 21h8"/>',
   video:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 6 4-6 4Z"/>',
   pause:'<path d="M8 5v14M16 5v14"/>',
   help:'<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 4M12 17h.01"/>',
@@ -112,8 +113,8 @@
    hintObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','open','aria-label']});
   }
  }
- document.addEventListener('pointerover',event=>{const control=event.target?.closest?.('.ui-icon-button');if(control)showControlHint(control);});
- document.addEventListener('focusin',event=>{const control=event.target?.closest?.('.ui-icon-button');if(control)showControlHint(control);});
+ document.addEventListener('pointerover',event=>{const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(control)showControlHint(control);});
+ document.addEventListener('focusin',event=>{const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(control)showControlHint(control);});
  document.addEventListener('pointerout',event=>{if(!hintOwner||hintOwner.contains(event.relatedTarget)||controlHint?.contains(event.relatedTarget))return;if((hintOwner.contains(event.target)||controlHint?.contains(event.target))&&!hintOwner.contains(document.activeElement))hideControlHint();});
  document.addEventListener('focusout',event=>{if(hintOwner?.contains(event.target)&&!hintOwner.matches(':hover'))hideControlHint();});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&hintOwner)hideControlHint();});

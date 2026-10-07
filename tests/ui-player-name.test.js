@@ -18,7 +18,7 @@ function harness({reduced=false,enabled=true}={}){
   append(...children){for(const child of children){child.parentElement=this;this.children.push(child);}mutations.push({type:'childList',target:this,addedNodes:children,removedNodes:[]});}
   replaceChildren(...children){for(const child of this.children)child.parentElement=null;this.children=[];this.append(...children);}
   contains(node){return node===this||this.children.some(child=>child.contains(node));}
-  matches(selector){return ['.ui-player-name','.ui-player-name-text','.ui-icon-button'].includes(selector)?this.classList.contains(selector.slice(1)):false;}
+  matches(selector){return selector.split(',').some(part=>{part=part.trim();return part==='[data-ui-hint]'?this.hasAttribute('data-ui-hint'):['.ui-player-name','.ui-player-name-text','.ui-icon-button'].includes(part)&&this.classList.contains(part.slice(1));});}
   closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null;}
   querySelectorAll(selector){return this.children.flatMap(child=>[...(child.matches(selector)?[child]:[]),...child.querySelectorAll(selector)]);}
   querySelector(selector){return this.querySelectorAll(selector)[0]||null;}
@@ -135,4 +135,10 @@ test('icon hints stay reachable when moving into the hint and release on pointer
 test('unsupported top-layer hints keep the native title and accessible label without a visible fallback overlay',()=>{
  const h=harness(),button=new h.Element('button');h.body.append(button);h.window.GameUI.decorateButton(button,'play',{iconOnly:true,label:'全桌播放'});button.setAttribute('title',button.title);h.Element.prototype.showPopover=undefined;h.document.dispatch('focusin',{target:button});
  assert.equal(button.getAttribute('title'),'全桌播放');assert.equal(button.getAttribute('aria-label'),'全桌播放');assert.equal(button.getAttribute('aria-describedby'),null);const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.notEqual(hint.hidden,false);
+});
+
+test('image-only expression cards share hover and focus hints without icon-button geometry or replacing the image',()=>{
+ const h=harness(),card=new h.Element('button'),image=new h.Element('img');card.setAttribute('data-ui-hint','');card.setAttribute('aria-label','送出「開心」表情');card.setAttribute('title','送出「開心」表情');card.append(image);h.body.append(card);
+ h.document.dispatch('pointerover',{target:image});const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.equal(hint.textContent,'送出「開心」表情');assert.equal(hint.popoverOpen,true);assert.equal(card.classList.contains('ui-icon-button'),false);assert.equal(card.children[0],image);
+ h.document.dispatch('keydown',{key:'Escape'});assert.equal(hint.hidden,true);assert.equal(card.getAttribute('title'),'送出「開心」表情');h.document.dispatch('focusin',{target:card});assert.equal(hint.popoverOpen,true);assert.equal(card.children[0],image);card.remove();h.deliver();assert.equal(hint.hidden,true);
 });
