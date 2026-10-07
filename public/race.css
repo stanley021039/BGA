@@ -177,3 +177,8 @@ body[data-game-kind="race"].ui-large-text .race-roster{grid-column:1;grid-row:au
 .die-button .race-die-icon{display:block;width:32px;height:32px;flex:none}
 @media(min-width:1440px){.race-roster .crew-pill{grid-template-columns:72px minmax(0,1fr)}.race-roster .crew-avatar{width:72px;height:90px}}
 @media(min-width:1001px) and (min-height:720px){body[data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .board-scroll svg{max-height:calc(100dvh - 572px)}}
+.hex.legal.multi-legal{stroke:#bdebc6;stroke-width:2.5;stroke-dasharray:5 3}
+.race-route-line{fill:none;stroke:#fff0a3;stroke-width:3;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 1px 2px #000)}
+.race-route-dot{fill:#15251b;stroke:#fff0a3;stroke-width:2}
+.race-route-number{fill:#fff7ce;text-anchor:middle;font:700 13px "Segoe UI",sans-serif}
+.race-route-hint{font-size:var(--ui-text-small,.875rem);line-height:1.5;min-height:3em}

@@ -1,12 +1,42 @@
 # 程式架構 agent 記憶
 
+2026-10-07 PR43／v1.4.1：路線每個轉移考慮J跳台的前驅，已知側向進入risk1000且提示淘汰，起跑direction1／未知內容不變；真飛躍峽谷競爭路徑與引擎結果回歸補齊。音效事件age採snapshot.serverNow，所有room withSocial及lobby回應供時鐘，game-shell與lobby.js轉交；本機elapsed判重連，legacy有界fallback、baseline／hidden／mute／ID去重／播放限制不變。受測2b5f982／本地v1.4.1，Windows／Linux各808、路線61／聲音API75通過。正式後續版面仍沿最新分支，PR範圍不擴張。詳 [修正證據](../PR43-STANLEY-REVIEW-FIXES.md)。
+
+2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
+
+本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。
+
+2026-10-06正式 **v1.3.0**：畫猜本人猜中／畫者輪次及雷霆骰聲／shot／slam／nitro／skid已接共用事件音效。Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。schema14不變、integrity ok、外鍵錯誤0，原7帳戶全欄位保留；預演副本16張既有表逐列一致。匿名no-store版號、既有session、7份HTML、24份資源（含7WAV的精確bytes及MIME）一致，背景Chrome設定顯示「版本 v1.3.0」。7短音（2Kenney CC0改作＋5固定seed原創）、兩個新聲音模組、遊戲2／總4段上限及1秒載入timeout已驗；Chromeplaying／清理／靜音及所有限制見 [音效實證](../GAME-SOUNDS-PROGRESS.md)。第二批遊戲候選仍為規格，沒有真人聽感／喇叭測試；無新PR／push，純驗收文件不移動tag。
+
+2026-10-06正式 v1.2.0：角色既有非neutral自訂表情可POST canonical base64音效／remove，作者控制；browser用OfflineAudioContext decode並轉24kmonoPCM16WAV，server按真sample數驗≤240000／480044bytes，不信duration宣稱。schema14 FK保存；gallery.sound只有url/duration，發送時綁bytes hash與actualaudience grants。共用ExpressionSounds新事件一次、baseline／hidden／reconnect不補播，AudioSettings effects統一音量／mute／4段cap，load10s與play≤10s分開deadline，lateplay不再啟timer。profile save晚回覆需綁selection generation，不能覆寫新角色並鎖住soundPending。Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。ChromeWAV11秒拒／10秒保存及1秒trialstop，房／大廳一次GET、mute0。受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。詳 [音效契約與實證](../CHARACTER-ASSET-TEMPLATE.md)。
+
+2026-10-06正式 v1.1.4：PR #36 `d4020ef`修GET失敗同marker永久失同步及HTTP缺randomUUID。每instance/revision最多3次，1s／4s門檻只由既有update觸發；其他4xx終止、初始無marker亦可恢復，snapshot追上目前marker不再取舊pending。force手勢可重啟budget，close/generation隔離舊回覆；成功穩態零新增watch GET。UUID用原生或getRandomValues v4，缺安全源可控提示，uncertainretry復用原body/ID。新增38回歸，PR來源雙平台552、正式整合雙平台663；Chrome非loopback HTTP真實缺randomUUID仍POST200，加入實播後暫停／停止各503→200同revision恢復。正式受測93ba350／本地v1.1.4 tag，零房間切換；current releases/93ba350，7帳戶／schema13／公開版本與8資源已驗。#34本次雙平台442及Chrome四輪回看收藏禁題均驗，另一端已merge main1447430。本段不授權或宣稱本任務合併。詳 [共看進度](../YOUTUBE-WATCH-PROGRESS.md)。
+
+2026-10-06正式 v1.1.3：Thunder `event()`最後寫入`afterMotion`，extra不可覆寫；car／target捕捉當下公開x／y，顯式x／y保留。公開events由12增至64筆，玻璃在下一forced move前記checkpoint；嵌入教學引擎同步。前端一般checkpoint1600ms／道路3200ms，同checkpoint批次文字、位移FX由`onMove`觸發；presence不隱藏／不延長事件，event-onlyhold及skip只控制事件停留，不跳位移／dice。完成後才開下一步，鎖動作但poll／roster／chat繼續；hidden／reduced／停用／重連不補播。引擎逐格drain及原地形／碰撞優先順序不改，dice／pending丟棄舊route，accept後需重選。事件payload增加，但不新增HTTP、伺服器timer或DB；客戶端排程只延遲呈現。Windows／Linux各625/625；背景Chrome火焰、玻璃→地雷→打滑及油漬→跳台已驗。正式受測22a9d6f／本地v1.1.3 tag，current releases/22a9d6f，schema13／15表副本／7帳戶完整保留，公開版本與7資源一致。詳 [進度](../RACE-MULTI-MOVE-PROGRESS.md)。
+
+2026-10-06 v1.1.2正式，已更新shhuang.cc：ThunderRoom公開motions journal為`[{id,kind,moves:[{car或player,from,to}]}]`，64groups／128transfers完整group淘汰，serial跨start單調；view深拷貝，只含公開身份與座標，不加HTTP、伺服器timer、log或額外version增量。moveEffect統一記錄玻璃／油漬／slam／jump／blast／skid／dazed等實際段落，出界／終點earlyreturn前記attempt；quake一次同group並排除preplaced重記，airplace記入口或真舊點。race.html教學引擎已同步。前端每格240ms依序、quake並行、jump／blast弧線、dead ghost／終點landing／chopper及480ms road pan；等待位移再開dice／controls／winner／教學，鎖動作但不阻斷poll／roster／chat。hidden／reduced／停用／重連跳過舊journal；不能因dead或attempt末點不同於權威car座標丟棄確認位移。取代v1.1.1的末點推算及不鎖操作限制。Windows／Linux591/591通過，11項真引擎回歸及控制器／render順序／延後骰子回歸已驗；主agent背景Chrome確認碰撞／推移／玻璃／六車地震出界／道路換片／終點；跳躍、拋飛、直升機仍以回歸驗證。正式API／資源／設定與7帳戶已核對。詳 [最新正式進度](../RACE-MULTI-MOVE-PROGRESS.md)。
+
+2026-10-06 v1.1.1修正雷霆逐格動畫：共用race-movement控制器只演確認步驟、每格240ms，保留elapsed跨SVG重建，排接連續指令。新靜態檔必須同時接race.html及app白名單；快照深複製cars，避免教學引擎原物件變更令差異判斷失效。6項控制器回歸、Windows／Linux各554項及背景Chrome證據見 [移動進度](../RACE-MULTI-MOVE-PROGRESS.md)。程式2eb4104／本地annotated v1.1.1已更新shhuang.cc，正式API／資源／設定及7帳戶核對完成，無新PR／push。v1.1.0 tag不移動，後續純驗收文件不改tag。
+
+## 版號規則（2026-10-06）
+
+新功能必須升minor、相容修正升patch、不相容契約升major，純文件不升。唯一来源package.version；匿名/api/version僅回版號且no-store。共用設定首次開啟讀取，成功後同頁不再請求；沒有新poll。`release:bump`同步package／lock／CHANGELOG，`release:check --base <正式版ref> --type minor`阻止忘記打版或幅度不足；npm test自動基本check。工具不自動commit／tag／push／部署，正式tag不可覆寫；本批候選1.1.0與最新驗收見 [版本進度](../RELEASE-PROGRESS.md)，規範見 [打版規範](../RELEASE-POLICY.md)。下列較早部署狀態依最新驗收文件為準。
+
+## U33：改名、擴題與路徑（2026-10-05）
+
+`POST /api/profile/name`只改持久display_name，同步現有五款座位及大廳；username／UUID／session／歷史結果保留。使用Unicode code point驗1–16字，create／join不可再次UTF-16截斷合法emoji；header／大廳回焦點讀最新本人，序號隔離晚回覆，不加帳戶timer。共看只刷新既有revision，不改時間錨點／控權。
+
+`public/shared/race-paths.js`讓Node及瀏覽器只用masked地形共同規劃；遠目標只送car/version/x/y，server重算逐步drain，任何揭露／dice／位置意外／道路切換就丟掉後續，不能acceptDice後自動續跑。原move逐格照常。限制16點／3000狀態；hover不送請求；靜態route白名單及教學引擎副本一致性要保留。
+
+內建draw1000／meme100（50模板、50原創情境），原120ID不重排；gift350，成人50另組、includeAdult預設false且同步過濾投稿，原300ID不改。以上無新schema；框收藏方案將需要成熟PNG解碼器、schema／受眾／移轉驗證，尚未實作。來源、Chrome觀察及最新整合測試见 [本批進度](../PARTY-UPGRADE-PROGRESS.md)。U29共看已依新授權發PR#36；本批六項仍本地未PR／部署。
+
 2026-10-06 PR #36 合併準備：整合最新 main `9dd6282`（含 #38），靜態資源衝突保留 YouTube 與 market 路由及 market 登入返回路徑；記憶保留雙方決策，重複編號以 U29-market 區分。Windows Node 26.2.0 完整 573/573 通過，失敗／取消／跳過 0。本輪未重跑 Linux 或瀏覽器；使用者已明確授權推送與合併 main，未部署。
 
 ## 2026-10-06：PR #36 共看失聯與 HTTP 安全亂數
 
 `table-watch.js` 的 failed marker 不能記成永遠已取得。新契約以同 instance／revision 的首取加兩次 update-driven retry，失敗後 1 秒／4 秒門檻、無新增網路 timer；成功同 marker 不發 GET。4xx（408／429 除外）立即停自動重試，明確 open／join／rejoin 可再啟動。cleanup 清預算與 pending，舊 task 的失敗／finally 不能消耗新 task 額度；飛行中接到較新 marker 必須合併追最新。無 watch marker 的首次開窗 GET 失敗也需由既有遊戲 update 恢復。
 
-UUID 優先原生 `crypto.randomUUID`，HTTP 非 loopback 缺少時使用 `getRandomValues` 的 UUID v4 fallback；不降級到 `Math.random`。安全亂數不存在或拋錯需在 async command 內可控回報，不能在 try 外失敗。uncertain retry 先比對同操作／instance 並復用舊 body，不先產生新 UUID；HTTP 拒絕後才建立新操作 ID。Windows 真模組 VM **90/90** 通過；本次 Linux／真瀏覽器／發布由父任務另驗，細節見 [共看進度](../YOUTUBE-WATCH-PROGRESS.md#2026-10-06pr-36-審查修正本地驗證)。
+UUID 優先原生 `crypto.randomUUID`，HTTP 非 loopback 缺少時使用 `getRandomValues` 的 UUID v4 fallback；不降級到 `Math.random`。安全亂數不存在或拋錯需在 async command 內可控回報，不能在 try 外失敗。uncertain retry 先比對同操作／instance 並復用舊 body，不先產生新 UUID；HTTP 拒絕後才建立新操作 ID。Windows 真模組 VM **90/90** 通過；本次 Linux／真瀏覽器／發布由父任務另驗，細節見 [共看進度](../YOUTUBE-WATCH-PROGRESS.md#2026-10-06pr-36-審查修正回歸階段紀錄)。
 
 ## 最新：YouTube 共看（2026-10-05）
 
@@ -52,12 +82,12 @@ DrawWordStore 以題目 ID 或 normalized title 排除，內建列表、共編�
 
 此角色負責API/state、server權威／身份／同步、功能模組邊界、資料與效果的時序、可測性。先讀root AGENTS與角色索引，再按任務讀檔；與玩家agent確認遊戲規則／判定，與美術agent協商資訊階層和原創圖示，與server/data agent確認持久化及切換。
 
-最近規格：[YouTube共看](../specs/SHARED-YOUTUBE-PLAYER.md)、[多環境資料](../specs/MULTI-ENV-DATA-MIGRATION.md)、[成就與戰績](../specs/ACHIEVEMENTS-AND-RECORDS.md)。YouTube／成就仍為提案；多環境資料的完整備份還原子集已本地實作，未上線或執行正式資料切換，見 [工具](../SERVER-DATA-TRANSFER.md)。
+最近規格：[YouTube共看](../specs/SHARED-YOUTUBE-PLAYER.md)、[多環境資料](../specs/MULTI-ENV-DATA-MIGRATION.md)、[成就與戰績](../specs/ACHIEVEMENTS-AND-RECORDS.md)。YouTube共看已實作且隨前輪發布；成就擴充仍為提案。多環境資料的完整備份還原子集已實作，尚未把其他站資料切入本站，見 [工具](../SERVER-DATA-TRANSFER.md)。本輪schema15相容合併正在驗證。
 
 ## 已確認架構
 
 - `src/app.js`建立rooms、seats與music/social maps。users UUID、room seat UUID、6位room code是三種身份；永久結果用match UUID／result unit，不能從名字回推canonical user。
-- `src/db/index.js`Node DatabaseSync、WAL、同步BEGIN IMMEDIATE migration／transaction，schema上限13。async repository升級要重設transaction契約。
+- `src/db/index.js`Node DatabaseSync、WAL、同步BEGIN IMMEDIATE migration／transaction，本輪候選schema上限15，正式v1.3.0仍為音效版14；相容布局見SERVER-DATA檔首與移轉指南。async repository升級要重設transaction契約。
 - 遊戲state由server裁決；client report是非權威。重送API靠requestId／revision／epoch與永久結果ledger，不只client busy或WeakSet。
 - `src/history/store.js`記before/trace/after與enginehash、rng；進行中archive拒讀。不要把秘密歷史預設公開，新增state transition納入transact。
 - 成就以玩家spec的server證據判定，不從UI文字／瞬時events判定：poker每個sidepot需winnerIds/refund/tie；race維修僅己方。骰運候選採本人4顆原始移動骰全1的accepted round metric，加上有效manual turn與正常完賽；相同結果重擲候選已否決，不能誘導為成就額外重擲。首次權威finalize凍結winner/participants，rules_completed與timeout等quality_flags分離。

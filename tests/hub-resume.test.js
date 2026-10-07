@@ -5,7 +5,7 @@ async function harness(rooms,failed=false){
  const element=id=>{if(!nodes.has(id))nodes.set(id,node());return nodes.get(id);};
  let current=rooms,fail=failed;
  const location={origin:'http://localhost',search:'',href:'http://localhost/'};
- const context=vm.createContext({document:{querySelector:element,querySelectorAll:()=>[],createElement:node,visibilityState:'visible'},localStorage:{getItem:key=>store.get(key)||null,setItem:(key,value)=>store.set(key,value),removeItem:key=>store.delete(key)},location,URLSearchParams,setInterval(){},setTimeout(){},navigator:{},fetch:async route=>({ok:route!=='/api/rooms'||!fail,json:async()=>route==='/api/rooms'?{rooms:current}:route==='/api/auth/me'?{displayName:'tester'}:{addresses:[]}})});
+ const context=vm.createContext({window:{addEventListener(){}},document:{querySelector:element,querySelectorAll:()=>[],createElement:node,visibilityState:'visible',addEventListener(){}},localStorage:{getItem:key=>store.get(key)||null,setItem:(key,value)=>store.set(key,value),removeItem:key=>store.delete(key)},location,URLSearchParams,setInterval(){},setTimeout(){},navigator:{},fetch:async route=>({ok:route!=='/api/rooms'||!fail,json:async()=>route==='/api/rooms'?{rooms:current}:route==='/api/auth/me'?{displayName:'tester'}:{addresses:[]}})});
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/hub.js'),'utf8'),context);
  await new Promise(resolve=>setImmediate(resolve));
  return {store,element,context,location,setRooms(value){current=value;},setFailed(value){fail=value;}};

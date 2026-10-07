@@ -5,11 +5,13 @@
  const marker=document.querySelector('#lobbyDestination'),toggle=document.querySelector('#lobbyEmoteToggle');
  const menu=document.querySelector('#lobbyEmoteMenu'),choices=document.querySelector('#lobbyEmoteChoices');
  const visitors=new Map();
+ const expressionSounds=window.ExpressionSounds?.create();
  let inFlight=false,ready=false,queuedTarget=null,destination=null,emotesLoaded=false,positionReset=true;
  function closeMenu(){menu.hidden=true;toggle.setAttribute('aria-expanded','false');}
  window.UIPopover?.bind(toggle,menu,{align:'end',onClose:closeMenu});
  function render(data){
   if(!data||!Array.isArray(data.visitors))throw Error('大廳資料格式不正確');
+  expressionSounds?.update({contextId:typeof data.selfId==='string'?`lobby:${data.selfId}`:'',serverNow:data.serverNow,events:data.visitors.filter(visitor=>visitor.emote).map(visitor=>({id:visitor.emote.id||`${visitor.id}:${visitor.emote.at}`,at:visitor.emote.at,sound:visitor.emote.sound}))});
   const resetPositions=positionReset;positionReset=false;
   const active=new Set();
   for(const visitor of data.visitors){
@@ -68,7 +70,7 @@
    const response=await fetch(target?'/api/lobby/move':'/api/lobby',target?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(target)}:{});
    if(!response.ok)throw Error(response.status===401?'登入已失效，請重新登入':'大廳暫時無法連線');
    render(await response.json());
-  }catch(error){status.textContent=error.message;ready=false;}
+  }catch(error){status.textContent=error.message;ready=false;expressionSounds?.reset();}
   finally{inFlight=false;if(queuedTarget){const next=queuedTarget;queuedTarget=null;sync(next);}}
  }
  async function loadEmotes(){
@@ -94,7 +96,7 @@
    const response=await fetch('/api/lobby/emote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expression})});
    const data=await response.json();if(!response.ok)throw Error(data.error||'無法使用表情');
    render(data);closeMenu();
-  }catch(error){status.textContent=error.message;}
+  }catch(error){status.textContent=error.message;expressionSounds?.reset();}
  }
  stage.addEventListener('click',event=>{
   if(!ready)return;
@@ -109,6 +111,7 @@
  });
  document.addEventListener('click',event=>{if(!event.target.closest('.lobby-emote-wrap'))closeMenu();});
  document.addEventListener('keydown',event=>{if(event.key==='Escape')closeMenu();});
- document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){positionReset=true;sync();}else closeMenu();});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){positionReset=true;sync();}else{closeMenu();expressionSounds?.reset();}});
+ window.addEventListener('pagehide',event=>{if(event.persisted)expressionSounds?.reset();else expressionSounds?.destroy();});
  sync();setInterval(()=>sync(),500);
 })();

@@ -21,7 +21,8 @@ const {createGitHubClient}=require('./integrations/github/client');
 const {SubmissionService}=require('./integrations/github/submissions');
 const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,characterFor,galleryFor,selectedImage}=require('./profiles/appearance');
 const {createCharacter,setExpression,addExpression,setSharing,removeCharacter}=require('./profiles/uploads');
-const {USER_IMAGE_PATH,createCharacterMediaAccess}=require('./profiles/media');
+const {setExpressionSound,removeExpressionSound}=require('./profiles/sounds');
+const {USER_IMAGE_PATH,USER_SOUND_PATH,createCharacterMediaAccess}=require('./profiles/media');
 const {ArtworkStore}=require('./artworks/store');
 const {MusicStore,MAX_BYTES}=require('./music/store');
 const {RoomMusic}=require('./music/room');
@@ -29,6 +30,7 @@ const {RoomWatchRegistry}=require('./watch/room');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
 const {ROOM_EMOJIS}=require('./social/emojis');
 const {acquireDataLocks}=require('./data/locks');
+const {version:applicationVersion}=require('../package.json');
 function createApp(config){
  const lock=acquireDataLocks(config);
  try{return initializeApp(config,lock);}catch(error){lock.release();throw error;}
@@ -53,9 +55,9 @@ function initializeApp(config,dataLock){
   for(const event of expressions)recent.set(event.playerId,event.image);
   const accounts=new Map([...(seats.get(room.code)||[])].map(([userId,playerId])=>[playerId,userId]));
   const viewerId=accounts.get(view.me);
-  if(viewerId)characterMedia.rememberExpressions(viewerId,'room:'+room.code,expressions.map(event=>({userId:accounts.get(event.playerId),image:event.image,until:event.at+5000})));
+  if(viewerId)characterMedia.rememberExpressions(viewerId,'room:'+room.code,expressions.map(event=>({userId:accounts.get(event.playerId),image:event.image,at:event.at,until:event.at+5000,sound:event.sound,soundUntil:event.at+10000})));
   const watch=reconcileWatch(room);
-  return {...view,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages,watch:watch?watch.summary(watchContext(room)):null};
+  return {...view,serverNow:now,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages,watch:watch?watch.summary(watchContext(room)):null};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir,config.historyLimits);
@@ -68,13 +70,13 @@ function initializeApp(config,dataLock){
    const members=new Map([...(seats.get(code)||[])].filter(([userId,playerId])=>!kickedUsers.get(code)?.has(userId)&&room.players.some(player=>player.id===playerId&&!player.kicked&&!player.bot)));
    if(!members.has(viewerId))continue;
    const accounts=new Map([...members].map(([userId,playerId])=>[playerId,userId]));
-   audiences.push({id:'room:'+code,userIds:new Set(members.keys()),expressions:(expressionEvents.get(code)||[]).map(event=>({userId:accounts.get(event.playerId),image:event.image,until:event.at+5000}))});
+   audiences.push({id:'room:'+code,userIds:new Set(members.keys()),expressions:(expressionEvents.get(code)||[]).map(event=>({userId:accounts.get(event.playerId),image:event.image,at:event.at,until:event.at+5000,sound:event.sound,soundUntil:event.at+10000}))});
   }
   const lobbyAudience=lobby.mediaAudience(viewerId);
   if(lobbyAudience)audiences.push(lobbyAudience);
   return audiences;
  });
- const withLobbyMedia=(user,view)=>{characterMedia.rememberExpressions(user.id,'lobby',view.visitors.filter(visitor=>visitor.emote).map(visitor=>({userId:visitor.id,...visitor.emote})));return view;};
+ const withLobbyMedia=(user,view)=>{const serverNow=Date.now();characterMedia.rememberExpressions(user.id,'lobby',view.visitors.filter(visitor=>visitor.emote).map(visitor=>({userId:visitor.id,...visitor.emote})));return {...view,serverNow};};
  const communityRate=new Map(),accountRate=new Map(),authRate=new Map();
  const trustCloudflare=config.host==='127.0.0.1'&&config.publicUrl?.startsWith('https://');
  const clientKey=req=>clientAddress(req,trustCloudflare);
@@ -106,6 +108,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   res.setHeader('Content-Security-Policy',"frame-ancestors 'self'; base-uri 'none'; object-src 'none'");
  }
  if(url.pathname==='/robots.txt'&&req.method==='GET'){res.setHeader('Content-Type','text/plain; charset=utf-8');return res.end(robots);}
+ if(url.pathname==='/api/version'&&req.method==='GET'){res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');return res.end(JSON.stringify({version:applicationVersion}));}
  if(url.pathname.startsWith('/api/')){
  res.setHeader('Content-Type','application/json; charset=utf-8');
  if(url.pathname==='/api/music/upload'&&req.method==='POST'){
@@ -125,6 +128,21 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/auth/logout'&&req.method==='POST'){auth.logout(req,res);return send({ok:true});}
  const user=auth.requireUser(req);
  if(url.pathname==='/api/auth/me'&&req.method==='GET'){const me=auth.publicUser(user);if(me.appearance)me.appearance=normalizeAppearance(me.appearance);return send(me);}
+ if(url.pathname==='/api/profile/name'&&req.method==='POST'){
+  limitAccount(user);const me=auth.rename(user,data);
+  // Names are presentation data. Keep seat IDs and recorded/revealed snapshots
+  // intact; changing a name must not execute or replay any game action.
+  lobby.rename(user.id,me.displayName);
+  for(const room of rooms.values()){
+   const playerId=seats.get(room.code)?.get(user.id),player=room.players.find(p=>p.id===playerId&&!p.kicked);
+   if(player&&player.name!==me.displayName){
+    player.name=me.displayName;if(Number.isSafeInteger(room.version))room.version++;room.updated=Date.now();
+    const watch=watchRooms.get(room);if(watch)watch.revision++;
+   }
+  }
+  if(me.appearance)me.appearance=normalizeAppearance(me.appearance);
+  return send(me);
+ }
  if(url.pathname==='/api/market'&&req.method==='GET')return send(marketStore.view(user));
  if(url.pathname==='/api/market/vote'&&req.method==='POST'){limitRate(accountRate,'market:'+user.id,60);return send(marketStore.vote(user,data));}
  if(['/api/market','/api/market/vote'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
@@ -132,12 +150,13 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/lobby/move'&&req.method==='POST')return send(withLobbyMedia(user,lobby.move(user,data)));
  if(url.pathname==='/api/lobby/emotes'&&req.method==='GET'){
   const character=lobbyCharacter(user);
-  return send({emotes:Object.entries(character.expressions).filter(([key])=>key!=='neutral').map(([expression,image])=>({expression,image,label:character.labels[expression]||expressionLabels[expression]||expression}))});
+  return send({emotes:Object.entries(character.expressions).filter(([key])=>key!=='neutral').map(([expression,image])=>({expression,image,label:character.labels[expression]||expressionLabels[expression]||expression,...(character.sounds?.[expression]?{sound:character.sounds[expression]}:{})}))});
  }
  if(url.pathname==='/api/lobby/emote'&&req.method==='POST'){
   const character=lobbyCharacter(user),expression=data.expression;
   if(typeof expression!=='string'||expression==='neutral'||!Object.hasOwn(character.expressions,expression))throw new HttpError(400,'INVALID_EXPRESSION','這個角色沒有該表情');
-  return send(withLobbyMedia(user,lobby.emote(user,{image:characterMedia.broadcastImage(character.expressions[expression]),label:character.labels[expression]||expressionLabels[expression]||expression})));
+  const sound=character.sounds?.[expression];
+  return send(withLobbyMedia(user,lobby.emote(user,{image:characterMedia.broadcastImage(character.expressions[expression]),label:character.labels[expression]||expressionLabels[expression]||expression,...(sound?{sound:{...sound,url:characterMedia.broadcastSound(sound.url)}}:{})})));
  }
  if(url.pathname==='/api/music'&&req.method==='GET')return send({tracks:musicStore.list(),me:user.id,admin:user.role==='admin'});
  const musicDelete=url.pathname.match(/^\/api\/music\/([a-f0-9-]{36})\/delete$/);
@@ -173,6 +192,12 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(customExpressionUpload&&req.method==='POST'){limitAccount(user);return send(addExpression(db,user.id,customExpressionUpload[1],data));}
  const expressionUpload=url.pathname.match(/^\/api\/profile\/characters\/([a-f0-9-]{36})\/expressions$/);
  if(expressionUpload&&req.method==='POST'){limitAccount(user);return send(setExpression(db,user.id,expressionUpload[1],data));}
+ const expressionSound=url.pathname.match(/^\/api\/profile\/characters\/([a-f0-9-]{36})\/expressions\/(happy|sad|surprised|thinking|angry|emote-[a-f0-9-]{36})\/sound(\/remove)?$/);
+ if(expressionSound&&req.method==='POST'){
+  limitAccount(user);
+  if(expressionSound[3])return send(removeExpressionSound(db,user.id,expressionSound[1],expressionSound[2]));
+  return send({sound:setExpressionSound(db,user.id,expressionSound[1],expressionSound[2],data)});
+ }
  if(url.pathname==='/api/profile/appearance'&&req.method==='POST'){
   const {appearance}=selectedImage(db,user.id,data);
   db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify(preserveAvatar(db,user.id,appearance)),user.id);
@@ -227,7 +252,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    Object.defineProperty(room,'wordBanWriter',{value:(word,audit)=>drawWordStore.ban(word,audit)});
   }
   history.attach(room);
-  let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>room.add(user.display_name));}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
+  let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>{const player=room.add(user.display_name);player.name=user.display_name;return player;});}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
  if(!['/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
@@ -242,7 +267,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   limitRate(roomRate,'join:'+user.id,30);limitRate(roomRate,'join-ip:'+clientKey(req),120);
   if((kickedUsers.get(room.code)?.size||0)>=256)throw new HttpError(429,'ROOM_RECORD_LIMIT','這間房的離席紀錄已達上限，請建立新房間');
   const departed=departedSeats.get(room.code);if(departed)for(const [account,id]of departed)if(!room.players.some(p=>p.id===id))departed.delete(account);
-  const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>rejoinPlayer(room,departed?.get(user.id),user.display_name)||room.add(user.display_name));
+  const p=history.transact(room,{action:'join',source:'player',name:user.display_name},()=>{const player=rejoinPlayer(room,departed?.get(user.id),user.display_name)||room.add(user.display_name);player.name=user.display_name;return player;});
   departed?.delete(user.id);p.avatar=`/characters/${user.id}`;seats.get(room.code).set(user.id,p.id);return send({code:room.code,type:room.type||'poker'});
  }
  const p=resumeSeat(room,user);
@@ -349,7 +374,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    const saved=user.appearance?JSON.parse(user.appearance):defaults;
    const selected=selectedImage(db,user.id,{...normalizeAppearance(saved),expression:data.expression});
    if(selected.appearance.expression!==data.expression)throw new HttpError(400,'INVALID_EXPRESSION','這個角色沒有此表情');
-   event={id:randomBytes(8).toString('hex'),kind:'expression',playerId:p.id,name:user.display_name,expression:data.expression,label:selected.label,image:characterMedia.broadcastImage(selected.url),at:now};
+   event={id:randomBytes(8).toString('hex'),kind:'expression',playerId:p.id,name:user.display_name,expression:data.expression,label:selected.label,image:characterMedia.broadcastImage(selected.url),at:now,...(selected.sound?{sound:{...selected.sound,url:characterMedia.broadcastSound(selected.sound.url)}}:{})};
   }else throw new HttpError(400,'INVALID_SOCIAL_KIND','不支援的互動');
   socialRate.set(rateKey,now);
   const events=data.kind==='message'?socialEvents:data.kind==='expression'?expressionEvents:barrageEvents;
@@ -380,11 +405,12 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  const sharedGift=url.pathname.match(/^\/assets\/gifts\/shared\/([a-f0-9-]{36})$/);
  if(sharedGift){auth.requireUser(req);const image=giftStore.image(sharedGift[1]);if(!image?.bytes)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到禮物圖片');res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(image.bytes);}
  if(GIFTS.some(gift=>gift.image===url.pathname)){auth.requireUser(req);res.setHeader('Content-Type','image/png');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(__dirname,'..','public',url.pathname)));}
+ if(USER_SOUND_PATH.test(url.pathname)){const viewer=auth.requireUser(req),row=characterMedia.sound(viewer.id,url.href);if(!row)throw new HttpError(404,'SOUND_NOT_FOUND','找不到表情音效');res.setHeader('Content-Type',row.mime);res.setHeader('Content-Length',row.bytes.length);res.setHeader('Content-Security-Policy',"default-src 'none'");if(req.method==='HEAD')return res.end();return res.end(row.bytes);}
  const media=url.pathname.match(USER_IMAGE_PATH);
  if(media){const viewer=auth.requireUser(req),row=characterMedia.image(viewer.id,url.href);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',row.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(row.bytes);}
  if(url.pathname.startsWith('/assets/characters/')){auth.requireUser(req);const asset=builtinCharacters.flatMap(character=>Object.values(character.expressions)).find(value=>value===url.pathname);if(!asset)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',asset.endsWith('.gif')?'image/gif':'image/png');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(__dirname,'..','public',asset)));}
  const characterId=url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];if(characterId){const viewer=auth.requireUser(req),selected=characterMedia.avatar(characterId);if(!selected)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到角色外觀');let bytes,mime;if(USER_IMAGE_PATH.test(selected.url)){const row=characterMedia.image(viewer.id,selected.url);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');bytes=row.bytes;mime=row.mime;}else{bytes=fs.readFileSync(path.join(__dirname,'..','public',selected.url));mime=selected.url.endsWith('.gif')?'image/gif':'image/png';}res.setHeader('Content-Type',mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(bytes);}
- const files={'/shared/table-watch.js':'shared/table-watch.js','/shared/table-watch.css':'shared/table-watch.css','/shared/draw-results.js':'shared/draw-results.js','/shared/motion-policy.js':'shared/motion-policy.js','/market':'market.html','/market.js':'market.js','/market.css':'market.css','/market-rules.js':'market-rules.js','/shared/audio-settings.js':'shared/audio-settings.js','/shared/popovers.js':'shared/popovers.js','/shared/ui-foundation.css':'shared/ui-foundation.css','/shared/ui-components.js':'shared/ui-components.js','/collection':'collection.html','/collection.js':'collection.js','/collection.css':'collection.css','/settings':'settings.html','/settings.js':'settings.js','/settings.css':'settings.css','/shared/site-header.js':'shared/site-header.js','/shared/site-header.css':'shared/site-header.css','/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/race-vehicle-effects.js':'shared/race-vehicle-effects.js','/shared/race-dice-dialog.js':'shared/race-dice-dialog.js','/shared/race-terrain-help.js':'shared/race-terrain-help.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath||file==='market.html'?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
+ const files={'/market':'market.html','/market.js':'market.js','/market.css':'market.css','/market-rules.js':'market-rules.js','/shared/race-movement.js':'shared/race-movement.js','/shared/race-paths.js':'shared/race-paths.js','/shared/table-watch.js':'shared/table-watch.js','/shared/table-watch.css':'shared/table-watch.css','/shared/draw-results.js':'shared/draw-results.js','/shared/motion-policy.js':'shared/motion-policy.js','/shared/audio-settings.js':'shared/audio-settings.js','/shared/expression-sounds.js':'shared/expression-sounds.js','/shared/game-sounds.js':'shared/game-sounds.js','/shared/race-game-sounds.js':'shared/race-game-sounds.js','/assets/game-sounds/turn.wav':'assets/game-sounds/turn.wav','/assets/game-sounds/correct.wav':'assets/game-sounds/correct.wav','/assets/game-sounds/dice-roll.wav':'assets/game-sounds/dice-roll.wav','/assets/game-sounds/shot.wav':'assets/game-sounds/shot.wav','/assets/game-sounds/slam.wav':'assets/game-sounds/slam.wav','/assets/game-sounds/nitro.wav':'assets/game-sounds/nitro.wav','/assets/game-sounds/skid.wav':'assets/game-sounds/skid.wav','/shared/popovers.js':'shared/popovers.js','/shared/ui-foundation.css':'shared/ui-foundation.css','/shared/ui-components.js':'shared/ui-components.js','/collection':'collection.html','/collection.js':'collection.js','/collection.css':'collection.css','/settings':'settings.html','/settings.js':'settings.js','/settings.css':'settings.css','/shared/site-header.js':'shared/site-header.js','/shared/site-header.css':'shared/site-header.css','/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/race-vehicle-effects.js':'shared/race-vehicle-effects.js','/shared/race-dice-dialog.js':'shared/race-dice-dialog.js','/shared/race-terrain-help.js':'shared/race-terrain-help.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath||file==='market.html'?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);

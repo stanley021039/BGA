@@ -11,10 +11,17 @@
   MotionPolicy.subscribe(prefs=>{settings.querySelector('#site-motion-enabled').checked=prefs.enabled;settings.querySelector('#site-barrages-enabled').checked=prefs.barrages;settings.querySelector('#site-motion-status').textContent=prefs.reduced?'系統已減少動態；結果保留，彈幕改為靜態。':'關閉動畫仍保留結果；彈幕可另外隱藏。';});
   settings.querySelector('#site-motion-enabled').onchange=event=>MotionPolicy.set({enabled:event.target.checked});settings.querySelector('#site-barrages-enabled').onchange=event=>MotionPolicy.set({barrages:event.target.checked});
  }
+ const versionInfo=document.createElement('p');versionInfo.id='site-version';versionInfo.className='site-version';versionInfo.textContent='版本資訊';settings.append(versionInfo);
+ let versionLoaded=false,versionLoading=false;
+ async function loadVersion(){
+  if(versionLoaded||versionLoading)return;versionLoading=true;versionInfo.textContent='版本載入中…';
+  try{const response=await fetch('/api/version',{cache:'no-store'});if(!response.ok)throw Error('version unavailable');const data=await response.json();if(typeof data.version!=='string'||data.version.length>30||!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(data.version))throw Error('invalid version');versionInfo.textContent='版本 v'+data.version;versionLoaded=true;}
+  catch{versionInfo.textContent='版本暫時無法取得';}finally{versionLoading=false;}
+ }
  account.insertBefore(settingsButton,button);account.append(settings);
  function closeSettings(focus=false){settings.hidden=true;settingsButton.setAttribute('aria-expanded','false');if(focus)settingsButton.focus();}
  const audioPopover=window.UIPopover?.bind(settingsButton,settings,{align:'end',width:320,onClose:()=>closeSettings()});
- settingsButton.onclick=()=>{const open=settings.hidden;close();closeSettings();if(open){settings.hidden=false;settingsButton.setAttribute('aria-expanded','true');audioPopover?.sync();settings.querySelector('input').focus();}};
+ settingsButton.onclick=()=>{const open=settings.hidden;close();closeSettings();if(open){settings.hidden=false;settingsButton.setAttribute('aria-expanded','true');audioPopover?.sync();settings.querySelector('input').focus();loadVersion();}};
  settings.querySelector('#site-settings-close').onclick=()=>closeSettings(true);
  settings.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeSettings(true);}});
  window.AudioSettings.subscribe(prefs=>{for(const kind of ['music','effects']){settings.querySelector('#site-'+kind+'-enabled').checked=prefs[kind].enabled;settings.querySelector('#site-'+kind+'-volume').value=Math.round(prefs[kind].volume*100);settings.querySelector('#site-'+kind+'-value').textContent=Math.round(prefs[kind].volume*100)+'%';}settings.querySelector('#site-effects-preview').disabled=!prefs.effects.enabled||!prefs.effects.volume;});
@@ -28,8 +35,18 @@
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(header.contains(document.activeElement)||!menu.hidden)){const target=document.activeElement.closest('details')?.querySelector(':scope > summary')||button;close();target.focus();}});
  header.addEventListener('focusout',e=>{if(e.relatedTarget&&!header.contains(e.relatedTarget)){close();closeSettings();}});
  function refreshAvatar(){header.querySelector('#site-avatar').src='/api/profile/avatar?v='+Date.now();}
- window.addEventListener('profile-updated',refreshAvatar);
- fetch('/api/auth/me').then(async r=>{if(!r.ok)return;const me=await r.json();button.title=me.username;button.setAttribute('aria-label',me.username+' 的帳號選單');header.querySelector('#site-account-id').textContent=me.username;if(me.role==='admin'){const link=document.createElement('a');link.id='site-admin';link.href='/admin';link.textContent='管理';menu.insertBefore(link,header.querySelector('#site-logout'));}account.hidden=false;header.querySelector('.site-links').hidden=false;refreshAvatar();}).catch(()=>{});
+ let identityRequest=0;
+ async function refreshIdentity(){
+  const request=++identityRequest;
+  try{const response=await fetch('/api/auth/me');if(!response.ok)return;const me=await response.json();if(request!==identityRequest)return;
+   button.title=me.displayName+'（'+me.username+'）';button.setAttribute('aria-label',me.displayName+' 的帳號選單');header.querySelector('#site-account-id').textContent=me.displayName;
+   const profileLink=menu.querySelector('a[href="/settings"]');if(profileLink)profileLink.textContent='帳號與形象設定';
+   if(me.role==='admin'&&!header.querySelector('#site-admin')){const link=document.createElement('a');link.id='site-admin';link.href='/admin';link.textContent='管理';menu.insertBefore(link,header.querySelector('#site-logout'));}
+   account.hidden=false;header.querySelector('.site-links').hidden=false;refreshAvatar();
+  }catch{}
+ }
+ window.addEventListener('profile-updated',refreshIdentity);window.addEventListener('focus',refreshIdentity);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshIdentity();});refreshIdentity();
  header.querySelector('#site-logout').onclick=async()=>{
   const logout=header.querySelector('#site-logout');logout.disabled=true;
   try{const r=await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!r.ok)throw Error('登出失敗，請再試一次');try{for(const key of Object.keys(localStorage))if(/^ah-(session|thunder|majority|gift|draw)(:|$)/.test(key))localStorage.removeItem(key);}catch{}location.href='/login';}

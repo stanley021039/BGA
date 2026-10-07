@@ -1,6 +1,28 @@
 # Server／資料 agent 記憶
 
-## 最新：共看暫存資料（2026-10-05）
+2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
+
+本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。
+
+## 本輪候選資料契約：schema 15
+
+統一禁題、角色音效與市場五表；legacy 13 接受完整禁題／完整市場或兩者兼具，音效表若提前存在只能是有效空表。legacy 14 須有禁題，並有有效音效表或完整市場至少一方；保留已有資料、在還原副本補缺少的另一方空表並升 15。schema 15 任一必備表缺少、任意版本部分市場表、畸形表結構或壞音效／市場歷史均拒絕，空表也要驗欄位／PK／FK／unique。來源不動、users 全欄位及已有 BLOB digest 不變；市場版 14 可只新增空 `character_sounds`，音效版 14 的既有 bytes 不可放寬。契約與布局表見 [移轉指南](../SERVER-DATA-TRANSFER.md#本輪候選統一-schema-15)。本輪實作／回歸驗收尚在進行，不能使用以下先前 727／761／463 項當作整合驗收。
+
+2026-10-06最新正式v1.3.0（遊戲事件音效）：受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。schema14不變、integrity ok、外鍵錯誤0，原7帳戶全欄位保留；預演副本16張既有表逐列一致。匿名no-store版號、既有session、7份HTML、24份資源（含7WAV的精確bytes及MIME）一致，背景Chrome設定顯示「版本 v1.3.0」。沒有schema或資料格式變動、sound BLOB仍隨完整bundle保存。備份`shared/backups/pre-party-4732450-20261006T043416Z`（UTC），SQLite與檔案另備；未搬入其他站。素材重建及Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。詳 [聲音發布證據](../GAME-SOUNDS-PROGRESS.md)，下方v1.2.0為schema14導入歷史。
+
+## 正式導入歷史：schema 14 表情音效與移轉（2026-10-06）
+
+v1.2.0 在 `src/db/index.js` 新增 `character_sounds(character_id,expression,mime,bytes,duration_ms)`，複合主鍵及外鍵綁 `character_images(character_id,expression)`，刪除表情連帶移除音效。資料留在 SQLite BLOB，不新增磁碟媒體路徑；`src/profiles/sounds.js` 的 `inspectExpressionSound` 只接受標準 44-byte 頭、24000Hz／mono／PCM16 WAV，實 sample 數正且最多 240000，bytes 最多 480044，duration_ms 為 `ceil(samples/24)` 且最多 10000。
+
+`src/data/validation.js` 要求 schema 14 含音效表，檢查複合 PK／FK、非 neutral 的既有表情及 canonical bytes／MIME／duration 一致；inspect、export、verify、restore 共用檢查。v1–13 的非空音效表拒絕，不能用旧 schema 標籤绕過驗證。`src/data/transfer.js` 的既有 BLOB 保全規則新增 migration 14：只允許目標副本多出空音效表，來源、users 全欄位、既有 BLOB digest 不變；bundle 格式不變，schema 14 不能直接交給舊 schema 13 程式啟動。
+
+回歸來源為 `tests/data-transfer.test.js`：原 bytes／長度、原密碼登入及選用角色，schema 1–13 完整還原、空新表 digest、非空 migration 注入，以及重簽加密包中的壞音效／長度／MIME／引用／缺 FK 拒絕。`tests/draw-word-ban.test.js` 的 v12 fixture 先移除音效表，再降版，仍保留 v13 缺禁題表拒絕的獨立移轉測試。Windows Node 24.14.0 執行 `node --test tests/data-transfer.test.js tests/draw-word-ban.test.js` 共 63/63 通過；Windows Node24.14.0 **727/727**（24185ms）、Linux Node22.22.1 **727/727**（125824ms），失敗／取消／跳過均0。隔離背景Chrome已驗10秒邊界、轉檔、試聽停止、房間與大廳一次載入及靜音。受測程式 `9b1fdd4148ea9e1ceec5215f8ca112ffd99cd893` 與本地 annotated tag `v1.2.0`；正式 current `releases/9b1fdd4`，零房間切換，PID 48811→50471，service／tunnel active。正式 schema14、integrity ok、外鍵錯誤0，原7帳戶全欄位完整保留；預演時15張既有表逐列一致，只新增空 `character_sounds` 第16表。匿名 no-store 版本API、既有session、7份HTML及14份資源比對通過，背景Chrome設定顯示「版本 v1.2.0」。切換前備份 `shared/backups/pre-party-9b1fdd4-20261006T034156Z`（UTC）；SQLite與檔案另備，不宣稱原子。正式只升本站資料，沒有匯入其他站或合併兩站。以下schema13正式紀錄為歷史，最新證據見 [音效契約](../CHARACTER-ASSET-TEMPLATE.md)。
+
+## 先前正式版本核對（2026-10-06）
+
+正式 `current` 為 `releases/8fcda4d`，本批Windows／Linux完整各543/543。部署前SQLite線上一致性備份及持久檔案另存，副本預演schema12→13後14張既有表全部一致；正式切換後schema13、完整性ok、外鍵錯誤0、7帳戶全欄位保留。既有公開session可用，網站與Tunnel active。部署加入共看及派對擴充，不是其他站資料匯入；共看仍在記憶體，沒有新增影音轉送或同步計時器。來源、備份及限制見 [本批部署驗證](../PARTY-UPGRADE-PROGRESS.md#正式部署驗證2026-10-06)。舊正式版15af1dd僅支援schema12，不能在v13資料上直接切回啟動。下列較早「未部署」為歷史狀態。
+
+## 歷史：共看暫存資料（2026-10-05）
 
 `631eabf`在本地提供YouTube共看，沒有DB schema／備份範圍變動。registry綁實際room物件與UUID，不因六碼重用繼承影片；最後真人離房及app.close清空。提案8／每人2、request ledger128及10分鐘TTL有界，帳戶限流、seat／控權／版本驗證沿用同源API。server只解析YouTube白名單URL取ID，不出站取metadata／影片、不加SSE／timer／心跳，也不記觀看log。
 
@@ -32,8 +54,8 @@ PR #31 修正 `0682e43` 取代先前自動回收 dead-PID 鎖的行為。server�
 
 | 項目 | 現況 |
 | --- | --- |
-| DB | `src/db/index.js` v13、Node sqlite DatabaseSync、WAL、foreign_keys/busy_timeout、BEGIN IMMEDIATE |
-| users/media | 帳號、角色表情／gift／artwork bytes在DB BLOB；users.appearance有JSON引用 |
+| DB | `src/db/index.js` v14、Node sqlite DatabaseSync、WAL、foreign_keys/busy_timeout、BEGIN IMMEDIATE |
+| users/media | 帳號、角色表情圖片／音效／gift／artwork bytes在DB BLOB；users.appearance有JSON引用 |
 | music | metadata在music_tracks，實音檔在`MUSIC_DIR || dirname(DB_FILE)/music`；settings 已映射 MUSIC_DIR |
 | community | `COMMUNITY_DIR/community.json`存majority題庫與舊issue；BoardStore啟動legacy import |
 | history | `HISTORY_DIR`每session/match JSONL＋meta＋enginehash；`.lock`是當地PID，不隨restore複製 |

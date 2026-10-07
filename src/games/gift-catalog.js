@@ -1,5 +1,7 @@
 // Original gift prompts for Afterhours. No commercial card art or card text is used.
 const additions=require('./gift-additions');
+const adultPrompts=require('./gift-adult');
+const ADULT_CATEGORY='成人派對';
 const categories={
   日常:['一年份早餐券','會自動摺衣服的衣櫃','一整天不用排隊的通行證','手沖咖啡入門組','窗邊的迷你香草園','每週送達的神祕甜點','能找到遺失物的鑰匙圈','一張不限次數的電影票','自動保持溫度的馬克杯','整套舒服的居家服','替你整理桌面的機器人','雨天專用的暖心便當','永遠不會打結的耳機','每月一本驚喜新書','一晚深度睡眠體驗','一箱各地特色零食'],
   體驗:['在天文台過一夜','自己設計一款香水','搭熱氣球看日出','跟甜點師學做蛋糕','在海邊住一週','一對一舞蹈課','在無人島野餐','親手製作玻璃杯','乘小船探索祕密海灣','學會一首完整的鋼琴曲','在森林裡拍一套寫真','搭火車環島一週','在屋頂辦露天電影夜','體驗一天動物保育員','跟朋友包下一間桌遊店','親自為家人做一桌料理'],
@@ -29,6 +31,6 @@ const GIFTS=Object.entries(categories).flatMap(([category,titles],group)=>{
    ?`/assets/gifts/kenney/genericItem_color_${String(number).padStart(3,'0')}.png`
    :notoImage(symbol)};
  });
-});
+}).concat(adultPrompts.map(([symbol,title],index)=>({id:`adult-${String(index+1).padStart(2,'0')}`,category:ADULT_CATEGORY,title,image:notoImage(symbol)})));
 
-module.exports={GIFTS,CATEGORIES:Object.keys(categories)};
+module.exports={GIFTS,CATEGORIES:[...Object.keys(categories),ADULT_CATEGORY],ADULT_CATEGORY};

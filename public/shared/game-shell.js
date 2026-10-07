@@ -82,7 +82,8 @@
   if(moving)bubble.style.setProperty('--barrage-travel',`-${barrageLayer.clientWidth+bubble.offsetWidth+24}px`);
   bubble.addEventListener('animationend',finish,{once:true});return ()=>bubble.remove();
  });
- window.addEventListener('pagehide',event=>event.persisted?barrages.disconnect():barrages.dispose());
+ const expressionSounds=window.ExpressionSounds?.create();
+ window.addEventListener('pagehide',event=>{if(event.persisted){barrages.disconnect();expressionSounds?.reset();}else{barrages.dispose();expressionSounds?.destroy();}});
  function turnOf(s){
   if(['waiting','finished','showdown'].includes(s.phase))return s.phase==='waiting'?'等待房主開始':s.phase==='finished'?'本局結束':'本手結算中';
   if(s.type==='gift'){
@@ -115,6 +116,7 @@
   const current=s.type==='majority'||s.type==='draw'?s.presenterId:s.type==='thunder'?s.actor:s.type==='gift'?null:s.players[s.turn]?.id;
   const turn=q('#shared-turn'),turnText=turnOf(s);if(turn.textContent!==turnText)turn.textContent=turnText;turn.classList.toggle('mine',turnText.includes('輪到你'));
   const social=s.social||[],recent=new Map(),now=Date.now();
+  expressionSounds?.update({contextId:`${s.type}:${s.code}:${s.me}`,serverNow:s.serverNow,events:[...(s.expressions||[]),...social.filter(item=>item.kind==='expression')]});
   for(const item of [...(s.expressions||[]),...social.filter(item=>item.kind==='expression')])if(now-item.at<5000)recent.set(item.playerId,item);
   const visible=s.players.filter(player=>!player.kicked);
   const playersKey=JSON.stringify(visible.map(player=>[player.id,player.name,player.avatar,player.stack,player.online,player.folded,player.action,player.id===current,player.id===s.me,recent.get(player.id)?.id]));
@@ -210,5 +212,5 @@
   historyNotice.hidden=!message;
   if(window.GameUI)window.GameUI.setStatus(historyNotice,message,{kind:'error'});else if(historyNotice.textContent!==message)historyNotice.textContent=message;
  }
- window.GameShell={update(s){window.TableMusic?.update(s);window.TableWatch?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();window.TableWatch?.disconnected();},stableMarkup,playerRow,settingsActions,showHistoryWarning};
+ window.GameShell={update(s){window.TableMusic?.update(s);window.TableWatch?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableWatch?.disconnected();},stop:()=>{barrages.disconnect();expressionSounds?.reset();},stableMarkup,playerRow,settingsActions,showHistoryWarning};
 })();

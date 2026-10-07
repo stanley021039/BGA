@@ -1,6 +1,27 @@
 # 完整伺服器資料移轉與備份還原
 
+2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
+
+本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](PARTY-PR-INTEGRATION-PROGRESS.md)。
+
 狀態：2026-10-05，第一版已完成實作及隔離驗收；程式 `47d79c7` 新增管理者選檔上傳、三步匯入流程、刷新恢復與備份 ID 比對。可使用 JSON CLI 或表單，產生加密備份並還原到**全新資料目錄**，包含帳戶與原密碼。實際正式資料、服務切換及部署尚未執行。最新完整測試、背景 Chrome 操作範圍與選檔工具限制見 [驗收進度](SERVER-DATA-TRANSFER-PROGRESS.md#管理者匯入流程與背景-chrome-驗收)，架構邊界見 [原規格](specs/MULTI-ENV-DATA-MIGRATION.md)。
+
+## 本輪候選：統一 schema 15
+
+以下相容契約已通過本輪完整Windows／Linux各790項及DB／移轉聚焦81項回歸，證據見 [整批進度](PARTY-PR-INTEGRATION-PROGRESS.md)。市場版與音效版曾各自使用 schema 14，不能只憑版本號認定相容。schema 15 必須同時有 `draw_word_exclusions`、`character_sounds` 與完整市場五表（`market_rounds`、`market_votes`、`market_settlements`、`market_ledger`、`market_requests`）。
+
+| 來源布局 | 候選完整備份／還原契約 |
+| --- | --- |
+| schema 13：完整禁題表，或完整市場五表，或兩者兼具 | 保存已有資料；還原副本補齊缺少的禁題、音效或市場空表並升 15。若來源已有音效表，必須是結構正確的空表；非空音效拒絕，避免用舊版標籤繞過驗證。 |
+| schema 14：禁題＋完整音效表，市場五表全無 | 保存原音效 bytes／MIME／長度、帳戶與禁題；只在還原副本新增空市場五表並升 15。 |
+| schema 14：禁題＋完整市場五表，音效表不存在 | 保存已有票、逐版結算、積分、更正／撤銷 ledger、冪等收據、帳戶與禁題；只在還原副本新增空音效表並升 15。 |
+| schema 14／15：禁題、音效及完整市場五表兼具 | 已有資料逐行保留；14 還原副本升 15，15 保持 15。 |
+| schema 14 缺禁題，或音效／完整市場兩方皆缺；schema 15 缺任何必備表 | 拒絕，不能把任意缺表當作合法舊布局默默修補。 |
+| 任意版本只含部分市場表，或音效／市場表結構畸形 | 拒絕；空表也必須驗欄位、PK、FK 與 unique，不以沒有資料略過結構檢查。 |
+
+inspect／export／verify／restore 沿用同一來源驗證：音效仍逐筆檢查 canonical WAV、真 sample 數、MIME 與毫秒長度（最多 10 秒）；市場仍驗逐版得分與更正／撤銷一致性。升級只操作還原副本，來源不變；既有帳戶全欄位與每張已有 BLOB 表的 digest 必須相同。只有明確 migration 缺少的空 BLOB 表可新增，其中市場版 schema 14 來源缺音效表時允許在目標新增空 `character_sounds`；此例外不允許修改音效版 schema 14 已有音效 bytes，亦不允許注入非空新表。
+
+加密 bundle 格式仍為 `afterhours-encrypted-data-v1`，沒有把記憶體房間、共看進度或兩站合併加入移轉範圍。schema 15 不能交給只支援 schema 14 的舊程式直接啟動；回退仍須相容舊程式與升級前完整資料一起恢復。
 
 ## 保留的資料
 
@@ -9,7 +30,9 @@
 | 帳戶 | 完整保留 `users`，包括 UUID、登入名稱、顯示名稱、原密碼 hash、管理者／會員權限、停用狀態、appearance 與建立時間；玩家用**原帳號及原密碼**重新登入。 |
 | 登入／邀請／重設連結 | 備份包含來源資料；只在還原副本刪除 sessions、invites、password_resets。舊 cookie、邀請與重設連結不能在新環境沿用。 |
 | 角色、表情、作品、禮物 | SQLite BLOB、所有權、分享欄位及 profile 引用原樣保存；還原前驗證外鍵、引用與 BLOB digest。 |
+| 角色表情音效（音效版 schema 14／統一 schema 15） | `character_sounds` 的 WAV bytes、MIME、毫秒長度及角色／表情複合外鍵原樣保存。驗證非 neutral 的既有表情、24000Hz／mono／PCM16 標準 WAV，以及 sample 數推算的長度；上限 10 秒、480044 bytes。音效存於 SQLite BLOB，沒有新增外部音檔目錄。 |
 | 題庫、留言、成就 | 保存 SQLite 資料、共編 `community.json`，包含 schema 13 已通過的畫猜禁題及投票稽核；舊 JSON 留言及回覆在還原副本依現有 BoardStore 規則匯入。未過半的房間記憶體投票不搬移，未新增勝場統計。 |
+| 股市冥燈（市場五表） | 日期規則快照、唯一帳號投票、逐版結算、得分／撤銷 ledger 與冪等收據原樣保存；完整驗證市場歷史。新契約相容布局及本輪未驗限制見上方 schema 15 段落。 |
 | 音樂 | SQLite metadata 與外部原始音檔一起保存；驗證 metadata、大小、音訊格式。符合檔名規則的孤立音檔也保留並報告數量。 |
 | 歷史 | 保存 session／match JSONL、meta、引擎原碼及 hash；嚴格拒絕缺檔、截斷、未配對操作或 hash 不符。 |
 | 外部投稿 | 保留 payload、remote identity 及完成狀態；pending／sending 改為 needs_review，需管理者查核 GitHub 後決定重試。 |
@@ -19,7 +42,11 @@
 
 2026-10-05 後續程式 `2cf8a44` 支援 schema 13 禁題表；schema 12 備份還原時只升級目標副本，新增空禁題表，來源不變。已通過的禁題會在還原後繼續從題庫與抽題排除，詳 [相容性驗收](DRAW-WORD-BAN-PROGRESS.md)。
 
-2026-10-06 PR #38 整合後目前支援至 schema 14，同時保留禁題表與市場五表。兩種先前 schema 13（main 禁題版、PR #38 市場版）只有完整表布局可備份，還原副本升至 14、來源維持原樣；已有禁題稽核、投票、積分及收據保留。14 缺任一方表、13 部分市場表或損壞市場歷史拒絕，詳 [整合相容性](MARKET-JINX-MAIN-INTEGRATION.md)。這是本地驗收，PR #38 尚未合併或部署。
+以下兩段是先前分支的已驗歷史；本輪整合契約另見文件首段，不能只依 schema 數字判定布局相同。
+
+2026-10-06 音效分支正式 v1.2.0 支援 schema 14 表情音效，bundle 格式仍為 `afterhours-encrypted-data-v1`。schema 14 缺少 `character_sounds` 拒絕；schema 1–13 只在還原副本新增空音效表，不改來源、帳戶或既有素材。舊 schema 若提前含有非空音效表也拒絕，不能藉 migration 相容規則帶入未驗證的新資料。inspect／export／verify／restore 都會檢查實際 WAV bytes 與 MIME／duration_ms 是否一致；新 schema 不能直接交給只支援 schema 13 的舊程式啟動。Windows／Linux完整各727項、schema1–13副本升級與音效完整還原已驗；正式站已升schema14，本站原7帳戶完整保留。發布與備份證據見 [音效驗收](CHARACTER-ASSET-TEMPLATE.md)，此次更新不是其他站資料匯入。
+
+2026-10-06 PR #38 當時整合至 schema 14，同時保留禁題表與市場五表。兩種先前 schema 13（main 禁題版、PR #38 市場版）只有完整表布局可備份，還原副本升至 14、來源維持原樣；已有禁題稽核、投票、積分及收據保留。14 缺任一方表、13 部分市場表或損壞市場歷史拒絕，詳 [整合相容性](MARKET-JINX-MAIN-INTEGRATION.md)。這是 PR #38 當時的本地驗收；合併與部署狀態依本輪文件首段及實際 Git 為準。
 
 ## 執行介面
 
@@ -189,7 +216,7 @@ EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核�
 | BUNDLE_CHANGED | 同一路徑的備份身分與驗證／預演時不同；重新核對來源、驗包與預演，不要移除 ID 比對繼續套用。 |
 | AUTHENTICATION_FAILED／CORRUPT_BUNDLE | 查 key 與傳輸是否完整；不啟用不完整資料。 |
 | UNSUPPORTED_SCHEMA／UNSUPPORTED_BUNDLE／ASSET_VERSION_MISMATCH | 使用相容程式及素材。較新 schema 在任何 migration 前拒絕；舊 schema 只遷移副本。 |
-| FOREIGN_KEY_FAILED／BROKEN_REFERENCE／INVALID_HISTORY／MISSING_MUSIC | 修復或重新取得完整冷備份，不能忽略錯誤強制匯入。 |
+| FOREIGN_KEY_FAILED／BROKEN_REFERENCE／VALIDATION_FAILED／INVALID_HISTORY／MISSING_MUSIC | 修復或重新取得完整冷備份，不能忽略錯誤強制匯入；包含表情音效引用、WAV 格式或長度與 metadata 不一致。 |
 | UNFINISHED_MATCHES | 完成對局，或明確接受還原時中斷的政策。 |
 | INSUFFICIENT_SPACE／ENOSPC | 釋放／更換 staging 磁碟空間，使用新 destination 重試。 |
 | PARTIAL_RESTORE／RESTORE_IN_PROGRESS | 新資料代禁止啟動；继续使用舊資料代，調查失敗並另選全新目錄重試。 |
@@ -198,4 +225,4 @@ EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核�
 
 新 writer 尚未接受任何寫入時，可停新服務並切回相容的舊 code＋舊資料代；若已接受新登入或其他寫入，先冷備份新代再做受控前向修復，直接回舊 snapshot 會丟新資料。GitHub 外部操作不能由本地 DB rollback 撤銷。
 
-第一版未實作真實正式切換、雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention。目前本分支 schema v14。支援的舊 schema 只升級還原副本；schema 1／3／5／7／10／12／兩種13已有回歸。帳戶及來源既有 BLOB digest 必須相同，只允許 migration 3／5／8 明確新增的空 BLOB 表，非空新表或未知新表仍拒絕。
+第一版未實作雙端 merge、PostgreSQL、匿名化正式資料副本、房間續局、跨主機 lock 或自動 retention，尚未將其他站資料切入本站。支援的舊 schema 只升級還原副本，來源不變。帳戶及來源既有 BLOB digest 必須相同；新 BLOB 表只能由明確 migration 建立且保持為空，非空新表或未知新表仍拒絕。先前音效分支 schema 1–13 與市場分支 schema 1／3／5／7／10／12／兩種 13 的驗收各保留於上方歷史，不能代替本輪整合相容性測試。

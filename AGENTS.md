@@ -9,7 +9,13 @@
 5. 未經明確授權，不合併、不部署、不操作正式資料；不提交密鑰
 6. Reviewer 與貢獻者如有疑問、建議或不同意見，應在該 PR 下留言、逐項回覆並溝通，讓討論與決策可追溯
 
+## 版號與打版
+
+有新功能必須升版並更新 `CHANGELOG.md`；相容新功能升 minor、相容修正升 patch、不相容變更升 major。同一批發行依最高影響升一次；純文件不升版。遵循 [打版規範](docs/RELEASE-POLICY.md)，使用 `npm run release:bump` 與 `npm run release:check`。完成測試後才在乾淨程式提交上建立不可覆寫的 `vX.Y.Z` tag；打版不代替 PR、合併或部署授權。
+
 ## 角色知識與研究
+
+開始工作時，如有 `.local/USER-PREFERENCES.md`，先讀取本機偏好。此檔僅限本機使用，不納入 Git、發布包或上傳；公開文件不得抄錄其內容。
 
 角色知識與研究成果保存在本地 `docs/agents/`。
 開始相關工作時先讀 [記憶索引](docs/agents/README.md)，再讀被分派的角色檔及該工作對應的 spec。
@@ -18,6 +24,7 @@
 
 - 玩家／遊玩評估：`docs/agents/PLAYER.md`
 - 動畫／美術／設計：`docs/agents/ANIMATION.md`、`docs/agents/ART.md`、`docs/agents/DESIGNER.md`
+- 音效／聲音素材：`docs/agents/SOUND-DESIGNER.md`；盤點與實作方向：`docs/specs/GAME-SOUND-PLAN.md`
 - 程式／伺服器資料：`docs/agents/PROGRAMMER.md`、`docs/agents/SERVER-DATA.md`
 - 共用使用者偏好與決策：`docs/agents/MEMORY-LEDGER.md`
 - 記憶更新與跨角色討論方法：`docs/agents/MEMORY-PROTOCOL.md`

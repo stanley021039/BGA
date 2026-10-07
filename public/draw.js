@@ -1,7 +1,7 @@
 'use strict';
 const $=selector=>document.querySelector(selector);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transport','交通工具'],['objects','生活物品'],['people','人物職業'],['nature','自然奇幻'],['places','場所娛樂'],['activities','運動音樂'],['custom','自定義']];
+const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transport','交通工具'],['objects','生活物品'],['people','人物職業'],['nature','自然奇幻'],['places','場所娛樂'],['activities','運動音樂'],['meme','迷因 Meme'],['custom','自定義']];
 let code=(location.pathname.match(/\/draw\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
 let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,clockOffset=0,inviteBase=location.origin;
 let filled=false,tool='brush',active=null,pending=[],lastSentAt=0,lastFillSentAt=0,sendQueue=Promise.resolve(),canvasCommandBusy=false,canvasCommandEpoch=0,cursor=[256,128];
@@ -9,6 +9,7 @@ const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
 const canvasRenderer=StrokeCanvas.createRenderer(canvas);
 const motionGate=window.MotionPolicy?.createGate();
+const gameSounds=window.GameSounds?.create();
 const resultsView=window.DrawResults?.mount({trigger:$('#reviewResults'),dialog:$('#drawResults'),validateCanvas:validCanvasSnapshot,onState:receive,onVoteChange:updateStageVote,onUnauthorized:()=>location.replace('/login?next='+encodeURIComponent('/draw/'+code))});
 let stageResultPreview=null,streamDisconnected=false,canvasConnectionError='',lastLiveState=false,motionNeedsBaseline=false;
 let canvasRenderPromise=Promise.resolve(false),canvasRenderEpoch=0,canvasRecovering=false,canvasRenderError=null;
@@ -21,7 +22,7 @@ let canvasTotals={points:0,fills:0};
 try{session=JSON.parse(localStorage.getItem(code?'ah-draw:'+code:'ah-draw')||'null');if(session&&!code)code=session.code;}catch{}
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4000);}
-async function api(route,data){return RoomApi.request(route,data,{code,room:'draw',session,onKicked:()=>{RoomHost.kicked(session);session=null;stream?.close();resultsView?.reset();}});}
+async function api(route,data){return RoomApi.request(route,data,{code,room:'draw',session,onKicked:()=>{RoomHost.kicked(session);session=null;stream?.close();resultsView?.reset();gameSounds?.reset();}});}
 function save(result){session=result;code=result.code;localStorage.setItem('ah-draw',JSON.stringify(result));localStorage.setItem('ah-draw:'+code,JSON.stringify(result));history.replaceState(null,'','/draw/'+code);}
 function nameOf(id){return state?.players.find(player=>player.id===id)?.name||'朋友';}
 function playerStatus(player,s=state){
@@ -201,10 +202,21 @@ function showCorrectFeedback(previous,next,live){
   setTimeout(()=>{badge.remove();row.classList.remove('just-correct');},1700);
  }
 }
+function playDrawSounds(previous,next,live){
+ if(!gameSounds||typeof next.canvasEpoch!=='string'||!next.canvasEpoch)return;
+ const epoch=gameSounds.epoch(),me=next.players.find(player=>player.id===next.me),active=!!me&&!me.kicked&&!me.waitingForNextRound;
+ if(next.phase==='choosing'&&next.presenterId===next.me)gameSounds.play('turn',`draw:turn:${next.canvasEpoch}:${next.me}`,{live:live&&active&&!!previous&&previous.canvasEpoch!==next.canvasEpoch,epoch});
+ const ownCorrect=(next.guesses||[]).find(guess=>guess.correct&&guess.id===next.me);
+ if(!ownCorrect)return;
+ const oldCorrect=new Set((previous?.guesses||[]).filter(guess=>guess.correct).map(guess=>guess.id)),age=next.serverNow-ownCorrect.at;
+ const fresh=active&&previous?.canvasEpoch===next.canvasEpoch&&previous?.phase==='drawing'&&['drawing','reveal'].includes(next.phase)&&!oldCorrect.has(next.me)&&!previous.guessedIds?.includes(next.me)&&next.participantIds?.includes(next.me)&&next.guessedIds?.includes(next.me)&&Number.isFinite(next.serverNow)&&Number.isFinite(ownCorrect.at)&&age>=0&&age<=5000;
+ gameSounds.play('correct',`draw:correct:${next.canvasEpoch}:${next.me}`,{live:live&&fresh,epoch});
+}
 function receive(next){
  if(!next||next.type!=='draw')throw Error('這不是你畫我猜房間');
  const previous=state,oldRound=state?.round,oldPhase=state?.phase;
  if(previous&&next.version<previous.version)return;
+ const soundLive=gameSounds?.update(next,{connected:!disconnected&&!streamDisconnected&&!motionNeedsBaseline})||false;
  const live=motionGate?motionGate.update(next,{connected:!disconnected&&!streamDisconnected&&!motionNeedsBaseline}):!!previous&&!disconnected&&!motionNeedsBaseline&&Date.now()-lastReceivedAt<5000&&document.visibilityState!=='hidden';
  motionNeedsBaseline=false;
  lastLiveState=live;
@@ -228,6 +240,7 @@ function receive(next){
   const waitingCount=$('#waitingCount');if(waitingCount)waitingCount.textContent=next.players.length+' / 8 位';
  }
  showCorrectFeedback(previous,next,live);
+ playDrawSounds(previous,next,soundLive);
  if(oldRound!==next.round||previous?.canvasEpoch!==next.canvasEpoch){strokes=[];localStrokes.clear();active=null;pending=[];sendQueue=Promise.resolve();lastSentAt=0;lastFillSentAt=0;canvasCommandEpoch++;canvasCommandBusy=false;canvasQuota={usedFills:0,usedBatches:0,usedPoints:0};canvasTotals={points:0,fills:0};canvasRound=next.round;canvasVersion=-1;canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;canvasRenderError=null;updateCanvasBusy();updateFillAvailability();updateStagePreview();}
  if(next.strokeVersion>canvasVersion||canvasRound!==next.round)syncCanvas();
  connectEvents();tick();
@@ -345,7 +358,7 @@ function connectEvents(){
  stream.addEventListener('stroke',event=>{try{receiveCanvasStroke(JSON.parse(event.data));}catch{syncCanvas();}});
  stream.addEventListener('reset',event=>{try{const data=JSON.parse(event.data);if(data.version>canvasVersion)applyCanvasSnapshot(data,true);}catch{syncCanvas();}});
  stream.addEventListener('ready',event=>{streamDisconnected=false;updateConnection();try{const data=JSON.parse(event.data);if(sameCanvas(data)&&data.version!==canvasVersion)syncCanvas();}catch{syncCanvas();}});
- stream.addEventListener('error',()=>{streamDisconnected=true;motionNeedsBaseline=true;updateConnection();});
+ stream.addEventListener('error',()=>{streamDisconnected=true;motionNeedsBaseline=true;gameSounds?.disconnect();updateConnection();});
 }
 function drawFeedback(message,kind='info',settings=false){const node=$(settings?'#roomSettingsFeedback':'#drawStatus')||$('#drawStatus');node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});}
 let pendingDrawButton=null;
@@ -484,10 +497,10 @@ canvas.addEventListener('keydown',event=>{
  if(moves[event.key]){event.preventDefault();cursor=[Math.max(0,Math.min(511,cursor[0]+moves[event.key][0])),Math.max(0,Math.min(255,cursor[1]+moves[event.key][1]))];toast('畫布位置 '+(cursor[0]+1)+'，'+(cursor[1]+1)+'；按空白鍵落筆');}
  if(event.key===' '){event.preventDefault();queueStroke([cursor],StrokeCanvas.strokeId(),tool==='fill'?'fill':'brush');}
 });
-async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));updateConnection();}catch(error){disconnected=true;updateConnection();}finally{polling=false;}}
+async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));updateConnection();}catch(error){disconnected=true;gameSounds?.disconnect();updateConnection();}finally{polling=false;}}
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||location.origin).catch(()=>{});
 entry();if(session)poll();else if(code)RoomReconnect.restore(code,'draw','#connection').then(restored=>{if(restored){save(restored);poll();}});
 setInterval(poll,1000);setInterval(tick,250);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
-window.addEventListener('pagehide',event=>{stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(!event.persisted)motionGate?.dispose();});
+window.addEventListener('pagehide',event=>{stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
 window.addEventListener('pageshow',event=>{if(event.persisted){motionNeedsBaseline=true;if(state){resultsView?.update(state);updateStagePreview();}poll();}});
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});

@@ -1,6 +1,18 @@
 # YouTube 共看實作進度
 
-## 2026-10-06：PR #36 審查修正（本地驗證）
+2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
+
+本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](PARTY-PR-INTEGRATION-PROGRESS.md)。
+
+2026-10-06正式 **v1.1.4**：將PR #36相容修正`d4020ef`只取runtime與三份回歸／helper檔整合至現有遊戲分支，不用PR的1.0.0歷史整包覆蓋目前版。PR來源Windows／Linux各552/552；正式整合Windows／Linux各 **663/663**，失敗／取消／跳過0。新增38項，前端90/90、共看／音訊focused123/123。PR #34另補Windows／Linux442/442及背景Chrome四席四輪、跨輪／完局回看與收藏、3/4禁題；#34在驗收期間由另一端合併main，沒有由本任務合併。#36已非force推送至`5f2dd93`、base改main、Ready且無合併衝突，未由本任務合併。
+
+背景Chrome在隔離非loopback `http://192.168.232.1:3203`、正常1794×1010，用合成帳戶實際送出影片與全桌播放。CDP只讀驗`isSecureContext=false`、`randomUUID`未提供、`getRandomValues`可用；提案與播放POST200。加入YouTube後原生播放器實際播放，同帳戶另一端API暫停及停止，各預置單次GET503；同revision下一次GET200恢復，暫停時原生播放器paused，停止後本機iframe移除。沒有手動重開／返回進度或新revision；永久失敗／上限、關窗／晚回應等另由真模組VM測。受控故障只在私有QA server request wrapper，不改產品source或正式站。私有畫面`work/pr36-http-pause-recovered.jpg`、`pr36-http-stop-recovered.jpg`及去敏CDP紀錄`pr36-pause-retry-network.json`、`pr36-stop-retry-network.json`。這是同帳戶另端API＋一席UI，不宣稱兩台真人設備／弱網／GPU測試。
+
+正式發布證據：受測提交`93ba3501aaca22768c8605609637fbdf0df2d557`、不可覆寫的本地annotated tag `v1.1.4`；後續純驗收文件不移動tag，發布分支及tag未push。發布包SHA-256 `aaa165bf4c58b7bad80af2d5bb05dcc0949b9a8071b46fad1b81b64d9e77d968`，未含本機私人偏好或QA資料。Linux約116秒，完整log`work/pr36-production-linux.log`，Windows`work/pr36-production-windows.log`。schema13隔離副本15表逐列一致、完整性ok、外鍵0、啟動成功；線上SQLite與持久檔案另備份`shared/backups/pre-party-93ba350-20261006T022835Z`（UTC），不宣稱同一原子時間點。
+
+切換前房間0；正式current `releases/93ba350`，PID42200→48811，service／tunnel active。7帳戶全欄位保留、schema13、既有session有效；公開版本1.1.4且no-store、race HTML及8份JS／CSS（包含table-watch）與受測碼一致，背景Chrome設定實際顯示「版本 v1.1.4」。正式未新建遊戲房間，HTTP失聯錄影／驗收屬本機隔離案例，不冒稱正式實玩；兩個QA服務已正常停止。截圖`work/pr36-production-version.jpg`，去敏公開驗證`work/version-production-verification.json`。
+
+## 2026-10-06：PR #36 審查修正（回歸階段紀錄）
 
 在隔離 checkout 整合最新 `feat/draw-review-motion`／main 後修正 [兩項 P2](https://github.com/stanley021039/BGA/pull/36#issuecomment-6007722283)。下列是本次修正的證據，不取代後文原實播紀錄，也不代表已推送或部署。
 
@@ -12,6 +24,10 @@
 | 不確定網路結果的安全重送 | 同一明確操作復用原命令及 UUID，重試不要求再產生安全亂數；不同操作或收到 HTTP 拒絕後的新操作建立新 UUID。維持原 server 去重及 revision／epoch 驗證。 |
 
 Windows Node 24.14.0：`node --test tests/table-watch*.test.js` **90/90 通過**（原 52 項，加 38 項回歸，包含子測試）；併同 `room-watch`、`audio-settings`、`music` 的 focused **123/123 通過**。測試執行真正 `table-watch.js` 模組，以 VM DOM／fake monotonic clock／deferred GET 驗證遠端 pause／stop 失聯恢復、重試上限與門檻、初次無 marker、latest pending、換房／關窗／舊回覆、原生與 fallback UUID、缺安全亂數及相同操作重送。這一筆未宣稱本次 Linux、真正 Chrome 或正式站驗收；完整整合驗證由父任務另記。
+
+
+
+2026-10-05 使用者U33已要求發PR：[PR #36](https://github.com/stanley021039/BGA/pull/36)，head `2eeb398`、base `feat/draw-review-motion`（接續待合#34）。本次送審前Windows focused81項及背景Chrome兩帳號驗收；未合併／部署。下文「未PR」是早期U29實作階段紀錄；新六項需求另在本地 `feat/party-content-and-race-paths`，不包含在#36，見 [進度](PARTY-UPGRADE-PROGRESS.md)。
 
 整合驗收補充（2026-10-06）：修正程式`d4020ef00e4054263d1329d3e030f7053d784959`包含main `1447430`（#34在驗收期間由另一端合併）；Windows Node24.14.0／隔離Linux Node22.22.1完整各 **552/552**，失敗／取消／跳過0，Linux約112秒。archive SHA-256 `4d9369fd86bd588929c529cd338de39a85b0ba34b2510b669faddf7fb94f244d`，只在專用source目錄測試，不帶.env/work/私人資料、不碰正式服務與DB。後續帶入#34 `cc771b8`僅驗收文件；文件首段衝突保留watch修正與main鎖／draw驗收，runtime/tests沒有改變。獨立複查另抓到response已超過pending marker仍多GET，先重現3GET再修至2GET，已含於d4020ef及新增第38項回歸。
 

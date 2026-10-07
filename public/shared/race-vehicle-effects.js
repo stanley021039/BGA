@@ -3,11 +3,11 @@
  const NS='http://www.w3.org/2000/svg';
  const position=(cell,min)=>cell&&Number.isInteger(cell.x)&&Number.isInteger(cell.y)?{x:48+(cell.y-min)*44+(cell.x%2)*22,y:81+cell.x*44}:null;
  const commandNames={nitro:'氮氣加速',drift:'甩尾',repair:'維修',airstrike:'空襲'};
+ const motionNames={oil:'油漬滑移',skid:'失控打滑',glass:'玻璃滑移',slam:'碰撞推移',jump:'跳躍',blast:'爆炸拋飛',quake:'地震推移',dazed:'失控移動'};
  function describe(event){
   if(event.kind==='command'&&commandNames[event.command])return{type:event.command==='nitro'?'nitro':'command',car:event.command==='repair'&&event.target?event.target:event.car,name:commandNames[event.command],duration:event.command==='nitro'?Infinity:1600};
   if(event.kind==='assign')return{type:'assign',car:event.car,name:event.coast?'滑行':'前進',duration:1000};
-  if(event.kind==='hazard'&&event.hazard==='oil')return{type:'skid',car:event.car,name:'油漬打滑',duration:1100};
-  if(event.kind==='damage'&&event.damage==='skid')return{type:'skid',car:event.car,name:'失控打滑',duration:1100};
+  if(event.kind==='motion'&&motionNames[event.motion]){const skid=event.motion==='oil'||event.motion==='skid';return{type:skid?'skid':'command',car:event.car,name:motionNames[event.motion],duration:skid?1100:1600};}
   if(event.kind==='shot')return{type:'shot',car:event.source,name:event.air?'空襲射擊':'射擊',duration:1200};
   return null;
  }

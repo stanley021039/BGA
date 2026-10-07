@@ -10,10 +10,11 @@ const {createAuth}=require('../src/auth/index');
 const {createApp}=require('../src/app');
 
 test('120 original words have unique ids and three difficulties',()=>{
- assert.equal(WORDS.length,120);
- assert.equal(new Set(WORDS.map(word=>word.id)).size,120);
- assert.equal(new Set(WORDS.map(word=>word.title)).size,120);
- assert.deepEqual(Object.groupBy(WORDS,word=>word.difficulty).easy.length,40);
+ const original=WORDS.filter(word=>/^builtin-(easy|medium|hard)-\d+$/.test(word.id));
+ assert.equal(original.length,120);
+ assert.equal(new Set(original.map(word=>word.id)).size,120);
+ assert.equal(new Set(original.map(word=>word.title)).size,120);
+ assert.deepEqual(Object.groupBy(original,word=>word.difficulty).easy.length,40);
 });
 
 test('drawing game keeps the answer private, validates strokes, scores aliases, and rotates',()=>{
@@ -84,7 +85,7 @@ test('host category limits all three drawing candidates and rejects unknown cate
 });
 
 test('multiple built-in categories draw only their union, without custom or unselected topics',()=>{
- const room=new DrawGuessRoom('MULTI1','多類別',()=>0),host=room.add('甲');
+ let draw=0;const room=new DrawGuessRoom('MULTI1','多類別',max=>draw++%2?max-1:0),host=room.add('甲');
  for(let i=1;i<8;i++)room.add('朋友'+i);
  room.wordProvider=()=>[{id:'custom-other',title:'自訂動物',topic:'animals',custom:true}];
  room.configure(host.id,{seconds:90,topics:['food','transport']});
@@ -150,9 +151,11 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
   async function post(route,headers,data){const response=await fetch(base+'/api/'+route,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify(data)});return {status:response.status,body:await response.json()};}
   assert.equal((await post('create',host,{type:'draw',topic:'wrong'})).status,400);
   for(const topics of [[],['wrong'],['food','food'],'food'])assert.equal((await post('create',host,{type:'draw',topics})).status,400);
-  const multi=await post('create',host,{type:'draw',topics:['transport','food','custom']});assert.equal(multi.status,200);
+  const bank=await (await fetch(base+'/api/draw/words',{headers:host})).json();assert.equal(bank.builtin.length,1000);assert.ok(bank.topics.some(topic=>topic.id==='meme'));
+  const meme=await post('draw/words',host,{title:'HTTP原創梗圖測試',aliases:[],difficulty:'hard',topic:'meme'});assert.equal(meme.status,200);assert.equal(meme.body.topicLabel,'迷因 Meme');
+  const multi=await post('create',host,{type:'draw',topics:['transport','food','custom','meme']});assert.equal(multi.status,200);
   const multiState=await (await fetch(base+'/api/state?code='+multi.body.code,{headers:host})).json();
-  assert.deepEqual(multiState.options.topics,['food','transport','custom']);
+  assert.deepEqual(multiState.options.topics,['food','transport','meme','custom']);
   assert.equal((await post('settings',host,{code:multi.body.code,seconds:90,topics:[]})).status,400);
   const unchanged=await (await fetch(base+'/api/state?code='+multi.body.code,{headers:host})).json();assert.deepEqual(unchanged.options.topics,multiState.options.topics);
   assert.equal((await post('leave',host,{code:multi.body.code})).status,200);

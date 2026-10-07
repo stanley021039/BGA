@@ -75,6 +75,45 @@ test('first snapshot containing only a result reveals directly without replay; n
  h.button('rerollDice').fire('click');assert.equal(calls[0][0],'rerollDice');assert.equal(calls[0][1].check,'C1');
 });
 
+test('a first live result deferred by map movement gets one cosmetic second without reading or acting on the confirmed result early',()=>{
+ const calls=[],h=harness({onAction:(action,data)=>calls.push([action,data])});let faceReads=0,textReads=0;
+ const confirmed={get faces(){faceReads++;return ['DEFERRED_CONFIRMED_FACE',999];},get text(){textReads++;return 'DEFERRED_CONFIRMED_TEXT';}};
+ const result=check({status:'result',startedAt:1000,readyAt:2000,serverNow:3000,rerollAllowed:true,result:confirmed});
+ h.api.show(state(result),{live:true,deferred:true});assert.equal(h.dialog.dataset.stage,'rolling');assert.equal(h.dialog.dataset.motion,'true');assert.equal(h.dialog.open,true);
+ for(const action of ['rollDice','acceptDice','rerollDice']){assert.equal(h.button(action).hidden,true);assert.equal(h.button(action).disabled,true);h.button(action).fire('click');}
+ assert.equal(calls.length,0);assert.equal(faceReads,0);assert.equal(textReads,0);assert.doesNotMatch(h.text(),/DEFERRED_CONFIRMED|999/);
+ h.advance(999);h.button('acceptDice').fire('click');h.button('rerollDice').fire('click');assert.equal(calls.length,0);assert.equal(faceReads,0);assert.equal(textReads,0);assert.equal(h.dialog.dataset.stage,'rolling');
+ h.advance(1);assert.equal(h.dialog.dataset.stage,'result');assert.match(h.text(),/DEFERRED_CONFIRMED_FACE.*999.*DEFERRED_CONFIRMED_TEXT/s);assert.equal(h.button('acceptDice').disabled,false);assert.equal(h.button('rerollDice').disabled,false);assert.equal(calls.length,0);
+ h.button('acceptDice').fire('click');assert.equal(calls.length,1);assert.equal(calls[0][0],'acceptDice');assert.equal(calls[0][1].check,'C1');
+});
+
+test('presence redraws of a deferred result keep the first local reveal deadline and never replay a revealed check',()=>{
+ const h=harness(),result=check({status:'result',startedAt:1000,readyAt:2000,serverNow:3000,result:{faces:['原位車',3],text:'DEFERRED_RESULT'}});
+ h.api.show(state(result),{deferred:true});const action=h.button('acceptDice'),title=h.find('race-dice-header').children[0];title.focus();
+ h.advance(700);h.api.show(state({...result,participants:result.participants.map(p=>({...p,name:p.name+'改名'})),serverNow:1800}),{deferred:true});
+ assert.equal(h.dialog.dataset.stage,'rolling');assert.doesNotMatch(h.text(),/DEFERRED_RESULT/);assert.match(h.text(),/甲車隊改名/);assert.equal(h.button('acceptDice'),action);assert.equal(h.document.activeElement,title);assert.equal(h.dialog.modalShows,1);
+ h.advance(299);assert.equal(h.dialog.dataset.stage,'rolling');h.advance(1);assert.equal(h.dialog.dataset.stage,'result');assert.match(h.text(),/DEFERRED_RESULT/);assert.equal(h.timers.size,0);
+ action.focus();h.advance(200);h.api.show(state({...result,serverNow:3200}),{deferred:true});assert.equal(h.dialog.dataset.stage,'result');assert.equal(h.document.activeElement,action);assert.equal(h.timers.size,0);assert.equal(h.dialog.modalShows,1);
+});
+
+test('non-live or hidden deferred result snapshots reveal directly and cannot start a later catch-up roll',()=>{
+ const result=check({status:'result',startedAt:1000,readyAt:2000,serverNow:3000,result:{faces:['原位車',4],text:'BASELINE_RESULT'}});
+ for(const hidden of [false,true]){
+  const h=harness();h.document.hidden=hidden;h.api.show(state(result),{live:hidden,deferred:true});assert.equal(h.dialog.dataset.stage,'result');assert.match(h.text(),/BASELINE_RESULT/);assert.equal(h.timers.size,0);
+  h.document.hidden=false;h.api.show(state(result),{live:true,deferred:true});assert.equal(h.dialog.dataset.stage,'result');assert.equal(h.timers.size,0);assert.equal(h.dialog.modalShows,1);
+ }
+});
+
+test('a deferred result respects reduced or disabled motion while retaining its one-second result barrier',()=>{
+ const result=check({status:'result',startedAt:1000,readyAt:2000,serverNow:3000,result:{faces:['原位車',5],text:'STATIC_DEFERRED_RESULT'}});
+ for(const options of [{reduced:true},{enabled:false}]){
+  const h=harness(options);h.api.show(state(result),{deferred:true});assert.equal(h.dialog.dataset.stage,'rolling');assert.equal(h.dialog.dataset.motion,'false');assert.equal(h.timers.size,1);
+  for(const face of h.all().filter(el=>el.className==='race-dice-face'))assert.equal(face.textContent,'?');
+  h.advance(200);h.setEnabled(true);assert.equal(h.dialog.dataset.motion,'false');assert.equal(h.timers.size,1);
+  h.advance(799);assert.doesNotMatch(h.text(),/STATIC_DEFERRED_RESULT/);assert.equal(h.button('acceptDice').disabled,true);h.advance(1);assert.match(h.text(),/STATIC_DEFERRED_RESULT/);assert.equal(h.button('acceptDice').disabled,false);
+ }
+});
+
 test('reroll gets a fresh cycle and cannot reuse or show the preceding result',()=>{
  const h=harness(),first=check({status:'result',startedAt:1000,readyAt:2000,result:{faces:['原位車',6],text:'FIRST_RESULT'}});h.api.show(state(first));
  const rolling=check({status:'rolling',startedAt:5000,readyAt:6000,serverNow:5900});h.api.show(state(rolling));assert.equal(h.dialog.dataset.stage,'rolling');assert.doesNotMatch(h.text(),/FIRST_RESULT/);

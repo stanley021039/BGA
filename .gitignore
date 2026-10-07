@@ -4,6 +4,7 @@
 # Local tools, exports and reference-only materials
 /work/
 /reference-assets/
+/.local/
 node_modules/
 .env
 .env.*

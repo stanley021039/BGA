@@ -1,5 +1,13 @@
 # 動畫角色記憶
 
+2026-10-06正式 v1.1.3：雷霆公開事件以`afterMotion`定位於已確認位移之後，最多64筆；一般checkpoint停留1600ms、道路3200ms，同checkpoint批次保留全部連鎖文字。位移FX只在`onMove`開始該段時觸發，presence重繪不隱藏事件、不重播或延長停留。event-only亦可hold；略過／Escape只縮短事件停留，不跳移動或dice。全部位移／事件結束才呈現下一步，鎖遊戲動作但poll／roster／chat不中斷；hidden／reduced／停用／重連不補播。dice／pending後舊route仍丟棄，需重新選路。既有回覆payload增加，沒有新HTTP、伺服器timer或DB。Windows／Linux各625/625；背景Chrome火焰、玻璃→地雷→打滑及油漬→跳台順序已驗。正式受測22a9d6f／本地v1.1.3 tag，current releases/22a9d6f；版本／資源／帳戶驗收通過。配置時長不是FPS證據。詳 [進度及證據](../RACE-MULTI-MOVE-PROGRESS.md)。
+
+2026-10-06 v1.1.2正式，已更新shhuang.cc：雷霆改以公開motions還原所有確認位移，普通／多格／玻璃／油漬／推撞／打滑／暈頭轉向按group順序每格240ms，地震同group車輛並行；跳台／爆炸弧線、淘汰motion ghost、終點視覺落點及直升機部署，車輛抵達後道路平移480ms。移動完成才呈現dice／下一步controls／winner／教學；依使用者指示等待期間鎖遊戲動作，輪詢、名單與聊天繼續更新。hidden／reduced／停用／重連直接同步，不補播。取代v1.1.1及更早「不鎖操作、淘汰不回放、強制位移僅末點」的限制；伺服器規則照常結算。Windows／Linux591/591及引擎／控制器回歸已通過，主agent背景Chrome確認碰撞／推移／玻璃／六車地震出界／道路換片／終點；跳躍、拋飛、直升機仍以回歸驗證。正式API／資源／設定與7帳戶已核對。配置秒數與截圖不是FPS證據，詳 [最新正式進度及證據](../RACE-MULTI-MOVE-PROGRESS.md)。
+
+2026-10-06逐格滑動修正v1.1.1：雷霆movePath每格240ms，移除900ms總長上限；SVG presence重繪恢復elapsed、連續指令接續既有路線，起跑滑入／實際中斷點有回歸。背景／停用／減動不補播，不增加逐格網路或用動畫推進規則。Windows／Linux各554項及背景Chrome八格截圖／改名重繪／一次POST證據見 [移動進度](../RACE-MULTI-MOVE-PROGRESS.md)；不是FPS量測。已更新shhuang.cc並驗版號／資源／帳戶；動畫GIF來自隔離本機實玩。此項取代下方舊多格動畫實作說明。
+
+2026-10-05 U33 實作補充：大廳首次auth成功後對可見標題／大廳／遊戲插圖播放420ms、最多165ms錯開的opacity／translateY入場；無遮罩、不等動畫解鎖。沿用MotionPolicy，背景或減動／停用跳過，一頁一次、回焦／輪詢不補播。Chrome重新整理實際讀到Y9.47→2.03px及opacity0.7347→0.9430；停用後8次皆none／1，再還原偏好未補播。這是DOM樣式觀察，不是GPU/FPS證據。雷霆多格動畫只演server實際走過的步驟、不推進規則；框圖建議靜態九宮格沿用原彈幕移動、僅評估。狀態见 [整合進度](../PARTY-UPGRADE-PROGRESS.md)，未PR／部署。
+
 更新：2026-10-05。角色由 `typography_design` 承擔；這是可續讀的專案記憶，不是正式功能或對下一輪的新增授權。先讀 [共用偏好](MEMORY-LEDGER.md)、[記憶協議](MEMORY-PROTOCOL.md)及當前 [動效／素材方案](../specs/ANIMATION-ASSET-PLAN.md)。
 
 ## 已驗證與來源
@@ -18,7 +26,7 @@
 
 ## 方法與設計推論
 
-先問效果要解釋哪個已確認事件、對象在哪裡、文字結果如何留存，再選素材。按下只表現 pending；成功、得分、命中由 server 確認後顯示。`animationend`、音檔播放完成或圖片載入不能決定規則，也不能使主按鈕等待。
+先問效果要解釋哪個已確認事件、對象在哪裡、文字結果如何留存，再選素材。按下只表現 pending；成功、得分、命中由 server 確認後顯示。`animationend`、音檔播放完成或圖片載入不能決定伺服器規則。雷霆依2026-10-06使用者要求，已確認的位移先呈現完再開下一步，等待期間暫鎖本機遊戲操作；保留輪詢、玩家資訊與聊天更新，取消／減動時直接同步並解除等待。
 
 每項列出 trigger/eventId、duration、target、static fallback、遮擋範圍、failure/reconnect、hidden/reduced-motion、cleanup。初次 hydration／重連只恢復最新狀態；重播必須本機手動，不推進房间。取消 Web Animations 時處理 `finished` 的 AbortError；避免用極短 duration 讓必要文字瞬間消失。
 

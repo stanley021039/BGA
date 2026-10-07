@@ -1,4 +1,11 @@
 let selected='thunder',busy=false;const $=s=>document.querySelector(s);const titles={thunder:'末路狂飆',poker:'德州撲克',majority:'同頻俱樂部',gift:'送禮達人',draw:'你畫我猜'};
+let lobbyEntrancePlayed=false,lobbyIdentityRequest=0;
+function animateLobbyEntrance(){
+ if(lobbyEntrancePlayed)return;lobbyEntrancePlayed=true;
+ if(!window.MotionPolicy?.allowsMotion())return;
+ const nodes=[...document.querySelectorAll('.library-heading,.lobby-section,.game-tile .tile-image')].filter(node=>{const box=node.getBoundingClientRect();return box.bottom>0&&box.top<innerHeight;});
+ nodes.forEach((node,index)=>window.MotionPolicy.animate(node,[{opacity:.72,transform:'translateY(10px)'},{opacity:1,transform:'translateY(0)'}],{duration:420,delay:Math.min(index*55,165),easing:'cubic-bezier(.22,.7,.25,1)'}));
+}
 function toast(t){$('#toast').textContent=t;$('#toast').style.display='block';setTimeout(()=>$('#toast').style.display='none',4000);}
 document.querySelectorAll('[data-game]').forEach(b=>b.onclick=()=>{selected=b.dataset.game;const guide=$('#gameGuide');if(guide){guide.href=selected==='majority'?'/majority?learn=1':selected==='thunder'?'/race?learn=1':selected==='gift'?'/gift?learn=1':selected==='draw'?'/draw?learn=1':'/rules?game=poker';guide.textContent=selected==='majority'?'同頻俱樂部玩法 ↗':selected==='thunder'?'雷霆之路教學 ↗':selected==='gift'?'送禮達人玩法 ↗':selected==='draw'?'你畫我猜玩法 ↗':'德州撲克說明 ↗';}document.querySelectorAll('[data-game]').forEach(x=>{x.classList.toggle('selected',x===b);x.setAttribute('aria-pressed',String(x===b));x.querySelector('.select-label').textContent=x===b?'已選擇 ✓':'選擇遊戲 ↗';});$('#create').textContent=`建立${titles[selected]}房間 ↗`;$('#roomName').placeholder=selected==='majority'?'今晚跟誰同頻？':selected==='thunder'?'末路狂飆好友局':selected==='gift'?'送禮達人好友局':selected==='draw'?'你畫我猜好友局':'深夜好友局';});
 async function enter(join,requestedCode){if(busy)return;const name=$('#name').value.trim();const code=(requestedCode||$('#code').value.trim()).toUpperCase();if(join&&!/^[A-F0-9]{6}$/.test(code))return toast('請輸入正確的 6 碼房間代碼');busy=true;$('#create').disabled=$('#join').disabled=true;document.querySelectorAll('.room-action').forEach(button=>button.disabled=true);try{const res=await fetch('/api/'+(join?'join':'create'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,code,type:selected,roomName:$('#roomName').value.trim()})});const s=await res.json();if(!res.ok)throw Error(s.error);localStorage.setItem(s.type==='majority'?'ah-majority':s.type==='thunder'?'ah-thunder':s.type==='gift'?'ah-gift':s.type==='draw'?'ah-draw':'ah-session',JSON.stringify(s));localStorage.setItem((s.type==='majority'?'ah-majority:':s.type==='thunder'?'ah-thunder:':s.type==='gift'?'ah-gift:':s.type==='draw'?'ah-draw:':'ah-session:')+s.code,JSON.stringify(s));localStorage.setItem('ah-name',name);location.href=(s.type==='majority'?'/majority/':s.type==='thunder'?'/race/':s.type==='gift'?'/gift/':s.type==='draw'?'/draw/':'/poker/')+s.code;}catch(e){toast(e.message);busy=false;$('#create').disabled=$('#join').disabled=false;loadRooms();}}
@@ -35,7 +42,14 @@ if(new URLSearchParams(location.search).get('game')==='gift')document.querySelec
 
 
 
-fetch('/api/auth/me').then(r=>{if(!r.ok)throw Error('需要登入');return r.json();}).then(me=>{const name=$('#name');name.value=me.displayName;name.readOnly=true;}).catch(()=>location.href='/login');
+async function refreshLobbyIdentity(){
+ const request=++lobbyIdentityRequest;
+ try{const response=await fetch('/api/auth/me',{cache:'no-store'});if(request!==lobbyIdentityRequest)return;if(response.status===401){location.href='/login';return;}if(!response.ok)return;const me=await response.json();if(request!==lobbyIdentityRequest)return;const name=$('#name');name.value=me.displayName;name.readOnly=true;try{localStorage.setItem('ah-name',me.displayName);}catch{}animateLobbyEntrance();}catch{}
+}
+window.addEventListener('profile-updated',refreshLobbyIdentity);
+window.addEventListener('focus',refreshLobbyIdentity);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshLobbyIdentity();});
+refreshLobbyIdentity();
 
 function roomElement(room){
  const card=document.createElement('article');card.className='room-card';

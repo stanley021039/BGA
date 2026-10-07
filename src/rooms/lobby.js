@@ -1,4 +1,5 @@
 const {HttpError}=require('../http/errors');
+const {randomBytes}=require('node:crypto');
 
 const MIN_X=15,MAX_X=85,MIN_Y=32,MAX_Y=92;
 const PRESENCE_MS=15000,EMOTE_MS=5000,MAX_VISITORS=80;
@@ -55,7 +56,7 @@ function createLobby(now=()=>Date.now()){
   const visitor=enter(user),time=now();
   if(visitor.lastEmoteAt!==undefined&&time-visitor.lastEmoteAt<1200)throw new HttpError(429,'EMOTE_RATE_LIMIT','表情太快了，請稍後再試');
   visitor.lastEmoteAt=time;
-  visitor.emote={image:selected.image,label:selected.label,at:time,until:time+EMOTE_MS};
+  visitor.emote={id:randomBytes(8).toString('hex'),image:selected.image,label:selected.label,at:time,until:time+EMOTE_MS,...(selected.sound?{sound:selected.sound,soundUntil:time+10000}:{})};
   return view(user);
  }
  function mediaAudience(viewerId){
@@ -63,7 +64,8 @@ function createLobby(now=()=>Date.now()){
   if(!present.some(visitor=>visitor.id===viewerId))return null;
   return {id:'lobby',userIds:new Set(present.map(visitor=>visitor.id)),expressions:present.filter(visitor=>visitor.emote&&visitor.emote.until>time).map(visitor=>({userId:visitor.id,...visitor.emote}))};
  }
- return {view,move,emote,mediaAudience};
+ function rename(userId,name){const visitor=visitors.get(userId);if(visitor)visitor.name=name;}
+ return {view,move,emote,mediaAudience,rename};
 }
 
 module.exports={createLobby};

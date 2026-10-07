@@ -1,7 +1,55 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
-const SCHEMA_VERSION=14;
+const SCHEMA_VERSION=15;
+const MARKET_TABLES=['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
+const SOUND_SQL=`CREATE TABLE IF NOT EXISTS character_sounds(
+ character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL CHECK(mime='audio/wav'),bytes BLOB NOT NULL,
+ duration_ms INTEGER NOT NULL CHECK(typeof(duration_ms)='integer' AND duration_ms BETWEEN 1 AND 10000),
+ PRIMARY KEY(character_id,expression),
+ FOREIGN KEY(character_id,expression) REFERENCES character_images(character_id,expression) ON DELETE CASCADE
+)`;
+const MARKET_SQL=[
+ `CREATE TABLE IF NOT EXISTS market_rounds(id TEXT PRIMARY KEY,target_date TEXT NOT NULL UNIQUE,cutoff_at TEXT NOT NULL,settlement_after TEXT NOT NULL,rules_json TEXT NOT NULL,created_by TEXT NOT NULL REFERENCES users(id),created_at TEXT NOT NULL,result_revision INTEGER NOT NULL DEFAULT 0 CHECK(result_revision>=0),return_pct REAL,result_bucket TEXT)`,
+ `CREATE TABLE IF NOT EXISTS market_votes(round_id TEXT NOT NULL REFERENCES market_rounds(id),user_id TEXT NOT NULL REFERENCES users(id),option_id TEXT NOT NULL,revision INTEGER NOT NULL CHECK(revision>0),created_at TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(round_id,user_id))`,
+ `CREATE TABLE IF NOT EXISTS market_settlements(round_id TEXT NOT NULL REFERENCES market_rounds(id),revision INTEGER NOT NULL CHECK(revision>0),return_pct REAL NOT NULL,bucket TEXT NOT NULL,reason TEXT NOT NULL,created_by TEXT NOT NULL REFERENCES users(id),created_at TEXT NOT NULL,PRIMARY KEY(round_id,revision))`,
+ `CREATE TABLE IF NOT EXISTS market_ledger(id TEXT PRIMARY KEY,round_id TEXT NOT NULL,user_id TEXT NOT NULL REFERENCES users(id),revision INTEGER NOT NULL,kind TEXT NOT NULL CHECK(kind IN ('award','reversal')),points INTEGER NOT NULL,return_pct REAL NOT NULL,bucket TEXT NOT NULL,vote_option TEXT NOT NULL,outcome TEXT NOT NULL CHECK(outcome IN ('hit','miss','tie')),reverses_revision INTEGER,FOREIGN KEY(round_id,revision) REFERENCES market_settlements(round_id,revision),UNIQUE(round_id,user_id,revision,kind),CHECK((kind='award' AND reverses_revision IS NULL) OR (kind='reversal' AND reverses_revision=revision-1)))`,
+ `CREATE TABLE IF NOT EXISTS market_requests(user_id TEXT NOT NULL REFERENCES users(id),request_id TEXT NOT NULL,operation TEXT NOT NULL,fingerprint TEXT NOT NULL,response_json TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(user_id,request_id))`,
+];
+// Inspect actual columns and constraints, including empty tables. IF NOT EXISTS
+// must never turn a malformed table into an apparently supported migration.
+function tableShape(db,name){
+ const q=value=>'"'+value.replaceAll('"','""')+'"';
+ const columns=db.prepare(`PRAGMA table_info(${q(name)})`).all().map(({name,type,notnull,dflt_value,pk})=>({name,type:type.toUpperCase(),notnull,dflt_value,pk}));
+ const groups=new Map();
+ for(const fk of db.prepare(`PRAGMA foreign_key_list(${q(name)})`).all()){
+  if(!groups.has(fk.id))groups.set(fk.id,[]);
+  groups.get(fk.id).push(fk);
+ }
+ const foreignKeys=[...groups.values()].map(rows=>rows.sort((a,b)=>a.seq-b.seq).map(({seq,table,from,to,on_update,on_delete,match})=>({seq,table,from,to,on_update,on_delete,match}))).map(JSON.stringify).sort();
+ const uniqueKeys=db.prepare(`PRAGMA index_list(${q(name)})`).all().filter(index=>index.unique).map(index=>({partial:index.partial,columns:db.prepare(`PRAGMA index_info(${q(index.name)})`).all().map(column=>column.name)})).map(JSON.stringify).sort();
+ return JSON.stringify({columns,foreignKeys,uniqueKeys});
+}
+function validateFeatureSchema(db,version){
+ const tables=new Set(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(row=>row.name));
+ const hasBan=tables.has('draw_word_exclusions'),hasSound=tables.has('character_sounds'),marketCount=MARKET_TABLES.filter(name=>tables.has(name)).length;
+ if(marketCount>0&&marketCount<MARKET_TABLES.length||version===13&&!hasBan&&marketCount!==MARKET_TABLES.length)
+  throw Error(`Incomplete legacy schema ${version}`);
+ if(version===14&&(!hasBan||!hasSound&&marketCount!==MARKET_TABLES.length)||version>=15&&(!hasBan||!hasSound||marketCount!==MARKET_TABLES.length))
+  throw Error(`Incomplete database schema ${version}`);
+ if(!hasSound&&!marketCount)return;
+ const reference=new DatabaseSync(':memory:');
+ try{
+  reference.exec(SOUND_SQL+';'+MARKET_SQL.join(';'));
+  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[])]){
+   if(tableShape(db,name)!==tableShape(reference,name))throw Error(`Invalid ${name} schema`);
+   const sql=db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?").get(name).sql.toLowerCase().replace(/\s+/g,'');
+   const checks={character_sounds:["check(mime='audio/wav')","check(typeof(duration_ms)='integer'andduration_msbetween1and10000)"],market_rounds:['check(result_revision>=0)'],market_votes:['check(revision>0)'],market_settlements:['check(revision>0)'],market_ledger:["check(kindin('award','reversal'))","check(outcomein('hit','miss','tie'))","check((kind='award'andreverses_revisionisnull)or(kind='reversal'andreverses_revision=revision-1))"]};
+   if((checks[name]||[]).some(check=>!sql.includes(check)))throw Error(`Invalid ${name} constraints`);
+  }
+  if(version<14&&hasSound&&db.prepare('SELECT COUNT(*) n FROM character_sounds').get().n)throw Error('An older schema cannot contain expression sounds');
+ }finally{reference.close();}
+}
 
 function openDatabase(file){
  fs.mkdirSync(path.dirname(file),{recursive:true});
@@ -9,10 +57,7 @@ function openDatabase(file){
  db.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000');
  const version=db.prepare('PRAGMA user_version').get().user_version;
  if(version>SCHEMA_VERSION){db.close();throw Error(`Unsupported database version ${version}`);}
- if(version===13){
-  const hasBan=!!db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='draw_word_exclusions'").get(),marketCount=db.prepare("SELECT COUNT(*) n FROM sqlite_master WHERE type='table' AND name IN ('market_rounds','market_votes','market_settlements','market_ledger','market_requests')").get().n;
-  if(marketCount>0&&marketCount<5||!hasBan&&marketCount!==5){db.close();throw Error('Incomplete legacy schema 13');}
- }
+ try{validateFeatureSchema(db,version);}catch(error){db.close();throw error;}
  if(version<1){
   db.exec('BEGIN IMMEDIATE');
   try{
@@ -159,17 +204,13 @@ function openDatabase(file){
    `);
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
- if(version<14){
+ if(version<15){
   db.exec('BEGIN IMMEDIATE');
-  try{db.exec(`
-   CREATE TABLE IF NOT EXISTS market_rounds(id TEXT PRIMARY KEY,target_date TEXT NOT NULL UNIQUE,cutoff_at TEXT NOT NULL,settlement_after TEXT NOT NULL,rules_json TEXT NOT NULL,created_by TEXT NOT NULL REFERENCES users(id),created_at TEXT NOT NULL,result_revision INTEGER NOT NULL DEFAULT 0 CHECK(result_revision>=0),return_pct REAL,result_bucket TEXT);
-   CREATE TABLE IF NOT EXISTS market_votes(round_id TEXT NOT NULL REFERENCES market_rounds(id),user_id TEXT NOT NULL REFERENCES users(id),option_id TEXT NOT NULL,revision INTEGER NOT NULL CHECK(revision>0),created_at TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(round_id,user_id));
-   CREATE TABLE IF NOT EXISTS market_settlements(round_id TEXT NOT NULL REFERENCES market_rounds(id),revision INTEGER NOT NULL CHECK(revision>0),return_pct REAL NOT NULL,bucket TEXT NOT NULL,reason TEXT NOT NULL,created_by TEXT NOT NULL REFERENCES users(id),created_at TEXT NOT NULL,PRIMARY KEY(round_id,revision));
-   CREATE TABLE IF NOT EXISTS market_ledger(id TEXT PRIMARY KEY,round_id TEXT NOT NULL,user_id TEXT NOT NULL REFERENCES users(id),revision INTEGER NOT NULL,kind TEXT NOT NULL CHECK(kind IN ('award','reversal')),points INTEGER NOT NULL,return_pct REAL NOT NULL,bucket TEXT NOT NULL,vote_option TEXT NOT NULL,outcome TEXT NOT NULL CHECK(outcome IN ('hit','miss','tie')),reverses_revision INTEGER,FOREIGN KEY(round_id,revision) REFERENCES market_settlements(round_id,revision),UNIQUE(round_id,user_id,revision,kind),CHECK((kind='award' AND reverses_revision IS NULL) OR (kind='reversal' AND reverses_revision=revision-1)));
-   CREATE INDEX IF NOT EXISTS market_ledger_user ON market_ledger(user_id);
-   CREATE TABLE IF NOT EXISTS market_requests(user_id TEXT NOT NULL REFERENCES users(id),request_id TEXT NOT NULL,operation TEXT NOT NULL,fingerprint TEXT NOT NULL,response_json TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(user_id,request_id));
-   PRAGMA user_version=14; COMMIT;
-  `);}catch(error){db.exec('ROLLBACK');db.close();throw error;}
+  try{
+   // Schema 14 was independently used by sound+ban and market+ban releases.
+   // Only the complete, checked legacy layouts may acquire the other feature.
+   db.exec(SOUND_SQL+';'+MARKET_SQL.join(';')+'; CREATE INDEX IF NOT EXISTS market_ledger_user ON market_ledger(user_id); PRAGMA user_version=15; COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
  return db;
 }
@@ -180,4 +221,4 @@ function transaction(db,run){
  catch(error){db.exec('ROLLBACK');throw error;}
 }
 
-module.exports={openDatabase,transaction,SCHEMA_VERSION};
+module.exports={openDatabase,transaction,SCHEMA_VERSION,MARKET_TABLES,validateFeatureSchema};
