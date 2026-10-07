@@ -151,7 +151,6 @@ function render(live=false){
  }else if(s.phase==='drawing'){
   const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me);
    if(!eligible&&!artist)actions='<p>下一輪起可以猜題。</p>';
-   else if(artist)actions='<p>輪到你畫圖，朋友正在猜題。</p>';
   }else if(s.phase==='choosing'){
    actions=`<p>${s.presenterId===s.me?'在舞台選一題開始作畫。':'等待 '+esc(nameOf(s.presenterId))+' 選題。'}</p>`;
  }else if(s.phase==='reveal'){
@@ -434,8 +433,8 @@ function drawFeedback(message,kind='info',settings=false,guess=false){
 }
 let pendingDrawButton=null;
 function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));$('#drawGuessPanel').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
-async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch,guess=name==='guess';busy=true;drawBusy(true);drawFeedback('正在送出…','info',false,guess);try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback(guess?'猜測已送出。':'操作已完成。','success',false,guess);return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error',false,guess);toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
-async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));updateConnection();drawFeedback(settings?'房間設定已儲存。':'操作已完成。','success',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
+async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch,guess=name==='guess';busy=true;drawBusy(true);drawFeedback('正在送出…','info',false,guess);try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback('','info',false,guess);return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error',false,guess);toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
+async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));updateConnection();drawFeedback(settings?'房間設定已儲存。':'',settings?'success':'info',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
 async function saveArtwork(resultId=state?.result?.resultId){
  if(!resultId||!resultsView){drawFeedback('這輪尚未公開畫作；請從最近畫作選擇已揭曉的一輪。','error');return null;}
