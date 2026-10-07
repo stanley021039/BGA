@@ -28,6 +28,7 @@
  const uploadOption='__upload_music__';
  q('#mediaTrack').replaceChildren(new Option('上傳歌曲',uploadOption),new Option('選擇歌曲',''));q('#mediaTrack').value='';q('#mediaPermission').classList.add('ui-sr-only');
  const positionKey='bga.media.window.v1',sizeKey='bga.media.size.v1',consents=new Map(),automaticSeen=new Set(),automaticPending=[],requests=new Set(),retiredPlayers=new WeakSet();
+ const audioTransitions=new WeakMap();let audioPreviewGesture=null;
  for(const [key,valid,apply] of [[positionKey,value=>Number.isFinite(value?.left)&&Number.isFinite(value?.top),value=>positionPreference=value],[sizeKey,value=>Number.isFinite(value?.width)&&Number.isFinite(value?.height),value=>sizePreference=value]])try{const value=JSON.parse(localStorage.getItem(key));if(valid(value))apply(value);}catch{}
  const status=(message,playback=false)=>{for(const node of playback?[q('#mediaPlaybackStatus')]:[q('#mediaStatus'),q('#mediaPlaylistStatus')]){if(window.GameUI)window.GameUI.setStatus(node,message);else node.textContent=message;}queueLayout();};
  const markerKey=value=>value?`${value.roomInstanceId}:${value.revision}`:'unmarked';
@@ -40,7 +41,7 @@
  function position(){if(!snapshot?.current)return 0;const playback=snapshot.playback;const value=playback.anchorPositionSec+(playback.state==='playing'?Math.max(0,serverAt+clock()-observedAt-playback.anchorServerMs)/1000:0);return Math.max(0,Math.min(duration()||maxPosition,value));}
  function signature(){return snapshot?JSON.stringify([currentKey(),snapshot.playback.state,snapshot.playback.anchorPositionSec,snapshot.playback.anchorServerMs]):null;}
  function validPlayer(token,key){return token===playerEpoch&&key===currentKey()&&!!room&&!document.hidden;}
- function stopAudio(){const old=audio;audio=null;interruptedAudio=null;if(!old)return;old.onloadedmetadata=null;old.onended=null;old.onerror=null;old.onplaying=null;old._mediaUnbind?.();try{old.pause();old.removeAttribute('src');old.load();}catch{}q('#mediaMusicNative').replaceChildren();}
+ function stopAudio(){const old=audio;audio=null;interruptedAudio=null;if(!old)return;old.onloadedmetadata=null;old.onended=null;old.onerror=null;old.onplaying=null;old._mediaUnbind?.();try{pauseAudio(old);old.removeAttribute('src');old.load();}catch{}q('#mediaMusicNative').replaceChildren();}
  function retirePlayer(old){if(!old||retiredPlayers.has(old))return;retiredPlayers.add(old);try{old.pauseVideo();old.destroy();}catch{}}
  function destroyVideo(){ready=false;nativeVideo=false;intersection?.disconnect();intersection=null;const old=player;player=null;retirePlayer(old);q('#mediaPlayer').replaceChildren();}
  function stopPlayers(){cancelPositionRead();playerEpoch++;appliedPlayback=null;mountingVideo=null;videoFallback=false;stopAudio();destroyVideo();apiCancel?.();}
@@ -54,21 +55,46 @@
  function observeFrame(iframe,token,key){intersection?.disconnect();if(typeof IntersectionObserver==='function'){intersection=new IntersectionObserver(entries=>{if(validPlayer(token,key)&&activeVideo()&&entries.some(entry=>entry.intersectionRatio<=.5))exitVideo('影片已離開可見範圍，需要時再加入觀看。');},{threshold:[.5]});intersection.observe(iframe);}}
  function exitVideo(message='自己的影片已關閉，其他人繼續觀看。'){videoWanted=false;playerEpoch++;appliedPlayback=null;destroyVideo();apiCancel?.();render();if(message)status(message,true);}
  function settings(value=window.AudioSettings?.get?.()){if(!value)return;const music=value.music;q('#mediaVolume').value=Math.round(music.volume*100);const label=music.enabled?'關閉媒體聲音':'開啟媒體聲音';if(q('#mediaSound').getAttribute('aria-label')!==label)iconButton(q('#mediaSound'),music.enabled?'sound':'muted',label);q('#mediaSound').setAttribute('aria-pressed',String(music.enabled));if(audio){audio.volume=music.volume;audio.muted=!music.enabled;}if(player&&ready)try{player.setVolume(music.volume*100);music.enabled?player.unMute():player.mute();}catch{}}
+ function expectAudioTransition(clip,type){
+  const record=audioTransitions.get(clip);if(!record)return;record.expected.push(type);
+  if(record.expected.length>64){record.expected.shift();record.skipped=Math.min(65536,record.skipped+1);record.intent++;record.nativePaused=null;if(interruptedAudio?.clip===clip)interruptedAudio=null;}
+ }
+ function pauseAudio(clip){const paused=clip.paused;clip.pause();if(!paused&&clip.paused)expectAudioTransition(clip,'pause');}
+ function playAudio(clip){const paused=clip.paused,record=audioTransitions.get(clip);if(record)record.nativePaused=false;const result=clip.play();if(paused&&!clip.paused)expectAudioTransition(clip,'play');return result;}
+ function bindAudioIntent(clip){
+  const record={expected:[],skipped:0,intent:0,nativePaused:false,owned:new WeakSet(),disposed:false},listeners=[],previewListeners=new Map();audioTransitions.set(clip,record);
+  const listen=(type,callback,capture=false)=>{clip.addEventListener(type,callback,capture);listeners.push(()=>clip.removeEventListener(type,callback,capture));};
+  const invalidate=()=>{if(record.disposed||clip!==audio)return;record.intent++;record.nativePaused=null;if(interruptedAudio?.clip===clip)interruptedAudio=null;};
+  const transition=event=>{
+   if(record.disposed||clip!==audio)return;
+   if(record.skipped){record.skipped--;record.owned.add(event);return;}
+   if(record.expected[0]===event.type){record.expected.shift();record.owned.add(event);return;}
+   invalidate();record.nativePaused=event.type==='pause';
+  };
+  // Browser media events are queued after the state transition. Register before bindPreview.
+  listen('play',transition);listen('pause',transition);listen('pointerdown',invalidate,true);listen('keydown',invalidate,true);
+  const preview={get volume(){return clip.volume;},set volume(value){clip.volume=value;},get muted(){return clip.muted;},set muted(value){clip.muted=value;},
+   addEventListener(type,callback){const wrapped=event=>{if(record.disposed||type==='play'&&(record.owned.has(event)||clip.paused))return;const previous=audioPreviewGesture;audioPreviewGesture=clip;try{callback.call(clip,event);}finally{audioPreviewGesture=previous;}};previewListeners.set(callback,{type,wrapped});clip.addEventListener(type,wrapped);},
+   removeEventListener(type,callback){const registered=previewListeners.get(callback);if(registered){clip.removeEventListener(registered.type,registered.wrapped);previewListeners.delete(callback);}}
+  };
+  const unbind=window.AudioSettings?.bindPreview?.(preview);
+  return ()=>{record.disposed=true;unbind?.();for(const remove of listeners)remove();for(const{type,wrapped}of previewListeners.values())clip.removeEventListener(type,wrapped);previewListeners.clear();record.expected.length=0;audioTransitions.delete(clip);};
+ }
  function alignAudio(force=false){
-  const clip=audio,key=currentKey(),token=playerEpoch;if(!clip||snapshot?.current?.type!=='music')return;const desired=position();if(clip.readyState>=1&&(force||Math.abs(clip.currentTime-desired)>1.25))try{clip.currentTime=desired;}catch{}
+  const clip=audio,key=currentKey(),token=playerEpoch,record=audioTransitions.get(clip),intent=record?.intent;if(!clip||snapshot?.current?.type!=='music')return;const desired=position();if(clip.readyState>=1&&(force||Math.abs(clip.currentTime-desired)>1.25))try{clip.currentTime=desired;}catch{}
   const preferences=window.AudioSettings?.get?.().music;
-  if(snapshot.playback.state!=='playing'||!preferences?.enabled||!unlocked||document.hidden){clip.pause();return;}
+  if(snapshot.playback.state!=='playing'||!preferences?.enabled||!unlocked||document.hidden){pauseAudio(clip);return;}
   if(!clip.paused||clip._mediaPlayPending)return;clip._mediaPlayPending=true;
-  try{Promise.resolve(clip.play()).then(()=>{if(!validPlayer(token,key)||clip!==audio||snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled)clip.pause();else status('',true);},()=>{if(validPlayer(token,key)&&clip===audio)status('瀏覽器尚未允許音樂播放，請按「在自己的裝置播放」或原生播放按鈕。',true);}).finally(()=>{clip._mediaPlayPending=false;});}catch{clip._mediaPlayPending=false;status('請按原生音樂播放器的播放按鈕重試。',true);}
+  try{Promise.resolve(playAudio(clip)).then(()=>{if(!validPlayer(token,key)||clip!==audio||snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled||record?.intent!==intent&&record?.nativePaused===true)pauseAudio(clip);else status('',true);},()=>{if(validPlayer(token,key)&&clip===audio)status('瀏覽器尚未允許音樂播放，請按「在自己的裝置播放」或原生播放按鈕。',true);}).finally(()=>{clip._mediaPlayPending=false;});}catch{clip._mediaPlayPending=false;status('請按原生音樂播放器的播放按鈕重試。',true);}
  }
  // Undo only our visibility pause; a newer room marker must first get its existing snapshot reply.
  function resumeInterruptedAudio(){
   const interrupted=interruptedAudio;if(!interrupted||document.hidden)return;
-  if(interrupted.clip!==audio||!validPlayer(interrupted.token,interrupted.key)){interruptedAudio=null;return;}
+  if(interrupted.clip!==audio||!validPlayer(interrupted.token,interrupted.key)||interrupted.intent!==audioTransitions.get(audio)?.intent){interruptedAudio=null;return;}
   if(markerKey(snapshot)!==markerKey(marker))return;
   interruptedAudio=null;alignAudio();
  }
- function mountAudio(){stopPlayers();if(snapshot?.current?.type!=='music')return;const key=currentKey(),token=playerEpoch,clip=new Audio();audio=clip;clip.controls=true;clip.preload='metadata';clip.setAttribute('aria-label','本機歌曲播放器');clip.src='/assets/music/'+encodeURIComponent(snapshot.current.trackId);q('#mediaMusicNative').append(clip);settings();clip._mediaUnbind=window.AudioSettings?.bindPreview?.(clip);clip.onloadedmetadata=()=>{if(validPlayer(token,key)&&clip===audio){alignAudio(true);updatePublishControl();}};clip.onended=()=>{if(validPlayer(token,key)&&clip===audio)report('ended',{itemId:snapshot.current.id});};clip.onerror=()=>{if(validPlayer(token,key)&&clip===audio)status('這首歌曲暫時無法播放，可用原生播放器重試或請管理者切下一筆。',true);};clip.load();alignAudio(true);}
+ function mountAudio(){stopPlayers();if(snapshot?.current?.type!=='music')return;const key=currentKey(),token=playerEpoch,clip=new Audio();audio=clip;clip.controls=true;clip.preload='metadata';clip.setAttribute('aria-label','本機歌曲播放器');clip.src='/assets/music/'+encodeURIComponent(snapshot.current.trackId);q('#mediaMusicNative').append(clip);settings();clip._mediaUnbind=bindAudioIntent(clip);clip.onloadedmetadata=()=>{if(validPlayer(token,key)&&clip===audio){alignAudio(true);updatePublishControl();}};clip.onended=()=>{if(validPlayer(token,key)&&clip===audio)report('ended',{itemId:snapshot.current.id});};clip.onerror=()=>{if(validPlayer(token,key)&&clip===audio)status('這首歌曲暫時無法播放，可用原生播放器重試或請管理者切下一筆。',true);};clip.load();alignAudio(true);}
  function youtubeApi(){
   if(window.YT?.Player)return Promise.resolve(window.YT);if(apiPromise)return apiPromise;
   apiPromise=new Promise((resolve,reject)=>{const previous=window.onYouTubeIframeAPIReady;let complete=false;const finish=()=>{if(apiTimer!==null)clearTimeout(apiTimer);apiTimer=null;apiCancel=null;if(window.onYouTubeIframeAPIReady===done)window.onYouTubeIframeAPIReady=previous;};const fail=()=>{if(complete)return;complete=true;finish();apiScript?.remove();apiScript=null;apiPromise=null;reject(Error('YouTube播放器未能載入，請使用原生播放器或重試。'));};const done=()=>{if(complete)return;if(!window.YT?.Player){fail();return;}complete=true;finish();try{previous?.();}catch{}resolve(window.YT);};apiCancel=fail;window.onYouTubeIframeAPIReady=done;apiScript=document.createElement('script');apiScript.src='https://www.youtube.com/iframe_api';apiScript.referrerPolicy='strict-origin-when-cross-origin';apiScript.onerror=fail;apiTimer=setTimeout(fail,20000);document.head.append(apiScript);});return apiPromise;
@@ -260,8 +286,8 @@
  q('#mediaPublishPosition').onclick=publishPosition;
  function selectUpload(){if(q('#mediaTrack').value!==uploadOption)return false;q('#mediaTrack').value='';window.open('/collection?section=music','_blank','noopener');return true;}
  q('#mediaTrack').onchange=selectUpload;q('#mediaMusicForm').onsubmit=async event=>{event.preventDefault();if(selectUpload())return;const trackId=q('#mediaTrack').value;if(trackId)await command('enqueue',{type:'music',trackId});};q('#mediaVideoForm').onsubmit=async event=>{event.preventDefault();const url=q('#mediaUrl').value.trim();if(url&&await command('enqueue',{type:'video',url}))q('#mediaUrl').value='';};q('#mediaLibraryRefresh').onclick=library;
- window.AudioSettings?.subscribe?.((value,{gesture=false}={})=>{settings(value);if(gesture)unlocked=true;alignAudio();});
- window.addEventListener('resize',queueLayout);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelWindowInteractions();cancelPlaylistDrag();if(audio){if(!audio.paused||audio._mediaPlayPending)interruptedAudio={clip:audio,key:currentKey(),token:playerEpoch};audio.pause();}if(snapshot?.current?.type==='video')exitVideo('');}else{resumeInterruptedAudio();maybeConsent();if(dialog.open||playlist.open)queueLayout();}});window.addEventListener('pagehide',stop);
+ window.AudioSettings?.subscribe?.((value,{gesture=false}={})=>{settings(value);if(gesture)unlocked=true;if(audio&&audioPreviewGesture===audio){if(document.hidden||snapshot?.playback.state!=='playing'||!value.music.enabled)pauseAudio(audio);return;}alignAudio();});
+ window.addEventListener('resize',queueLayout);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelWindowInteractions();cancelPlaylistDrag();if(audio){const record=audioTransitions.get(audio);if(!audio.paused||audio._mediaPlayPending&&record?.nativePaused!==true)interruptedAudio={clip:audio,key:currentKey(),token:playerEpoch,intent:record?.intent};pauseAudio(audio);}if(snapshot?.current?.type==='video')exitVideo('');}else{resumeInterruptedAudio();maybeConsent();if(dialog.open||playlist.open)queueLayout();}});window.addEventListener('pagehide',stop);
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog:modal'))return;if(playlist.open&&(playlist.contains(document.activeElement)||focusedWindow==='playlist')){event.preventDefault();closePlaylist();}else if(dialog.open){event.preventDefault();close();opener.focus();}});
  if(typeof ResizeObserver==='function'){layoutObserver=new ResizeObserver(queueLayout);for(const selector of ['#mediaWindowBar','#mediaStatus','#mediaCurrentInfo','#mediaTimeline','#mediaControlRow','#mediaPlaybackStatus'])layoutObserver.observe(q(selector));}
  if(typeof MutationObserver==='function')new MutationObserver(records=>{if(dialog.open&&records.some(record=>record.target!==dialog&&record.target!==playlist&&record.target!==consent&&record.target.tagName==='DIALOG'&&record.target.open))close();maybeConsent();}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
