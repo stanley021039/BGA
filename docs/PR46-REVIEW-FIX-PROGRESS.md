@@ -1,5 +1,50 @@
 # PR46 審查修正與正式同步
 
+## 2026-10-07：第三項 P2 驗收完成／正式v1.11.1
+
+使用者要求先處理PR再繼續其他UI。本段針對 [Stanley的新回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6035554999)，起始head `ed0071d`；修正已固定PR候選 **v1.9.2**／`cf64bfc4a4f86877c50f024b56706efdd5898e80`，Windows／Linux完整及最後原生controls通過。保留已發布UI／WebGL的正式 **v1.11.1**／`df983da7714efcf9382d6953746b828e026c76a0`已發布，本地tag固定df983da，沒有未發布patterns。本段取代舊待驗來源與中間數字，下方1,263／1,284與前次Audio trace仍是歷史。
+
+本文件更新時PR本地兩筆程式commit已完成，**尚未push，遠端仍ed0071／Draft**；最後文件提交、推送／Ready／再次請審查狀態由root完成後補，不預填已重新送審。未合併PR46，未推送正式整合分支。
+
+| 新問題 | 必須保持的行為 | 目前狀態／待驗 |
+| --- | --- | --- |
+| hidden→show等待fresh marker期間，延遲queue-only GET晚於原生Play→Pause，舊visibility中斷記錄誤自動play並覆蓋較新Pause | 原生Play後再Pause撤銷舊resume資格；同clip／key／epoch與fresh marker不能代替本機意圖。晚GET可以更新清單，不能蓋較新Pause。 | 已修並有先失敗回歸，最終cf64bfc的fresh真UA controls驗paused true／同Audio／requests8→8；不再只沿用初版9→9。 |
+| pending播放被hidden中斷 | pending play在visibility自動pause後的Abort／resolve／finally不得遺失仍合資格的中斷resume；保留native pause／mute／retire與noLoop保護。 | 15新case含7項pending Abort／resolve／mute／native／retire／noLoop；actual AudioSettings的media85＋settings19 focused共104。 |
+| 權威播放／最低流量 | manualpause／settingsdisabled／browserreject／sharedpaused／videoexit與staleclip／promise保持，不加poll／seek。 | 最終原生意圖requests8→8；受控pending retry也無新增media request。修前4→4／初版9→9／正常恢復與mute10→10是分開案例，不是完整流量benchmark。 |
+
+| 固定來源 | Windows最終 | Linux |
+| --- | --- | --- |
+| PR v1.9.2／cf64bfc | **1,278／1,278**，**59,104.0983ms** | Node22.22.1 **1,278／1,278**，**228,063.200118ms**。 |
+| 正式v1.11.1／df983da | **1,299／1,299**，**58,586.974ms** | Node22.22.1 **1,299／1,299**，**227,952.418304ms**。 |
+
+兩平台各來源fail／cancel／skip／todo均0，沒有網卡preload，input／tar固定來源與SHA一致；focused不加到完整總數。1,271／1,292及早期pending版本、較早36項等中間數字由最終來源取代。正式source archive SHA-256：`7d2dac00d60a78fabb0e887eb3784bc1556573bfa70484734634e8e88ee46d01`。
+
+| 原生情境 | 真實觀察 | 尚未驗或限制 |
+| --- | --- | --- |
+| 原審查head修前 | 原生UA controls Play→Pause＋delay GET，最後同Audio數1卻paused false、可見／dialog開啟，requests4→4。 | 是真controls重現，不拿第一輪renderer錯誤array樣本或前次Audio resume當此次證據。 |
+| 最終source原生controls | cf64bfc：FocusEmulation真hidden／visible、hold queue GET；實際UA controls Play→Pause後late GET仍paused true／sameAudio1，nativeVisible／dialogOpen true、play／pause事件全trusted，requests8→8。 | `work/pr46-intent-native-final.json`。是最終source的freshcase；初版9→9與正常／mute10→10保留為另外樣本，不冒稱所有分支皆真實切頁。 |
+| HAVE_NOTHING原生promise | 真HTMLAudio held bytes、readyState0；實際native.pause造成trusted pause與真AbortError。中間pending版plays1／paused true／pending false、誤blocked提示；cf64bfc Abort後只重試自己的plays2／paused false／pending true／status空、同clip、無新增media request。 | visibility用受控document.hidden getter／events（已刪除），不是physical native切頁；release bytes後second promise resolved但自然結束切video，不能稱sameClip持續播放。精確METADATA1與notify-playing取出正常resolve、mute／native／retire分支由media85／focused104的VM驗。 |
+
+這些是無聲MP3／controlled native promise與controls證據，不是端到端metadata1、實體切頁／喇叭或全部弱網情境。
+
+本次canvasrenderer未修改；clear／undo surfaceRevision及先前12個原生組合屬已獨立複查的既有scope，不宣稱已重跑本次所有畫猜流程。前兩P2與main衝突已獨立複查通過；第三項source、雙平台與fresh原生證據已完成，PR推送／再次送審尚待root收尾。
+
+### 正式v1.11.1發布與資料保全
+
+2026-10-07T11:22:46.109Z零房間guard後已切至 **v1.11.1**，PID141961，本地／公開版本一致，服務與tunnel active。線上SQLite備份＋另時點files不是atomic cold snapshot；schema16→16副本migration與隔離boot均保22表allrows／BLOB、8帳戶allfields、env與資料路徑。
+
+| 正式驗收 | 結果 |
+| --- | --- |
+| 發行pin | df983da／本地v1.11.1 tag與受測input／tar一致，保留既有UI／WebGL，無pending patterns。 |
+| 公開媒體 | 23資源exact frozen；3自有會員promote／demote／seek／skip ACL通過，市場mine200／admin403。 |
+| 公開畫猜 | 22資源exact frozen；SSE points／times、dedupe／quota、undo／clear額度不退與nonartist拒絕通過。 |
+| 最後資料 | schema16／22表，**21個non-session表**allrows／BLOB未變、8帳戶全fields保留，integrity ok／FK0；sessions201→208為guard1＋smoke6，已登出。 |
+| 正式QA收尾 | 兩自有房已刪、session登出，QA history保留，profiles／artwork未寫；本機native fixture／override最後清理由root完成後核對，不預填已清。 |
+
+未發布patterns v1.12.0仍暫停。純文件不移動程式tag、不推正式分支，不含私人偏好、帳密、房號、私有backup路徑或rawHAR。下方v1.11.0是前次歷史，不是目前正式狀態。
+
+以下為前次修正與正式發布紀錄。
+
 2026-10-07：[PR #46](https://github.com/stanley021039/BGA/pull/46) 的 Stanley 兩項 P2 已修正，已在 PR 分支整合 main `72ed917`、推送受測程式 `3b9363e2c0e7b815f77643b7a7137320de70e881`（候選v1.9.1），[逐項回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6034927131) 後標 Ready 並再次請 Stanley 審查，**未合併 PR46**。原審查：[問題留言](https://github.com/stanley021039/BGA/pull/46#issuecomment-6033480529)。
 
 正式同步保留此前已發布的UI／WebGL，使用另一分支 **v1.11.0**／`67e49a164ac5fcb4c3b3cce0fe2b8d899c860e62`；本地 annotated tag `v1.11.0` 固定該程式。PR來源與正式整合來源分開驗，不把UI／WebGL塞回PR46，也不因後續文件提交移動tag。

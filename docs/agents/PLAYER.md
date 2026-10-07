@@ -1,5 +1,7 @@
 # 玩家 agent 長期記憶
 
+2026-10-07 PR46第三P2已驗：真UA controls Play→Pause後，latequeue GET仍同Audio／paused true、requests8→8；visibility自動resume不能蓋較新Pause或個人靜音。pending heldbytes原生AbortError可只retry自己的中斷，但HAVE_NOTHING0／受控visibility不是端到端METADATA1或實體切頁；release後自然end換影片，不說同clip持續。正式1.11.1已發布，PR1.9.2仍待push／再送審，完整scope與dual-source測試見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。不宣稱所有硬體／喇叭／FPS，patterns暫停。
+
 ## 2026-10-07：正式v1.9.0驗收規則
 
 使用者要求每輪結束都檢查：本人持筆／up／ACK不閃、其他人按真點時間逐步看到、揭曉完整圖／換畫者新epoch不殘留舊尾或草稿，queue／frame／timer清理。合法clear／新輪空圖與非預期白底分開；短trace、終點像素一致不等所有輪或另一台電腦改善，不寫60fps。倒數須連續下降而秒數仍按server deadline。三項重複成功文字已移除，但畫者身份、猜測聊天室／得分、設定／錯誤／重連仍可讀。見 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)。

@@ -1,5 +1,7 @@
 # 媒體圖示與視窗 UI 進度
 
+2026-10-07第三P2已驗並正式 **v1.11.1／df983da**：PR候選1.9.2／cf64bfc雙平台各1,278，保UI／WebGL正式來源雙平台各1,299。最終真UA controls Play→Pause後late GET仍paused／同Audio、requests8→8；HAVE_NOTHING真AbortError的controlled promise與VM精確METADATA1／resolve分開，不稱sameClip release後持續播放或實體切頁／喇叭。正式23media／22draw資源、ACL／SSE／21non-session表與8帳戶核對完成，詳 [最新證據](PR46-REVIEW-FIX-PROGRESS.md)。本文件時PR修正仍待push／Ready／再請審查，patterns暫停未發布；下方VHP為歷史。
+
 ## 最新 V／H／P：正式v1.9.0
 
 2026-10-07 UTC07:13:55.380已發布，整批Windows／Linux各1144通過；受測source、測試時間、正式備份／資料與畫猜證據統一見 [本輪發布進度](DRAW-TIMED-PLAYBACK-PROGRESS.md)。規範見 [最新spec](specs/MEDIA-ICON-WINDOW-UI.md)。本站外開YouTube入口／共用seek已移除，clock保留；一般席可點播但無publish，全桌由host／manager按「同步我的播放進度」明確更新。
