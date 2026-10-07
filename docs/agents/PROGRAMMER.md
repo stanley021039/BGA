@@ -1,21 +1,20 @@
 # 程式架構 agent 記憶
 
-## 2026-10-07：作畫順暢度P0／P1（候選1.8.1，實作中）
+## 2026-10-07：作畫順暢度第一批（正式v1.8.1，有限P1）
 
+正式v1.8.1／6707a9edf07839c3307dd230ff6eeca5fa92bf62已於UTC03:30:44.024Z零房間guard部署，PID107492→110715、service／tunnel active。Windows1076／1076／37689.229ms，Linux Node22.22.1 1076／1076／189955.125522ms，各fail/cancel/skip/todo0；本地受測tag固定，沒有新PR／push、PR43未改。schema15／21schemas／20non-session rows+BLOB與8帳戶全fields保留、integrity ok／FK0；sessions161→165為已登出的QA登入，不說sessions不變。SQLite線上備份與另時點files/env archive不是atomic cold snapshot。公開版號與5資源精確內容/no-store已驗，沒有逐項驗5資源MIME；正式3會員HTTP/SSE duplicate／nonartist400／undo-clear quota不退已驗。Chrome正式僅背景home版號；local像素／輸入證據另列，own房／auth／tabs／preview／control已清理，不改前景或偏好。
 
-最新縮限source Windows完整1076／1076、37689.229ms、0fail/cancel/skip。native19場景18對fresh strict RGBA0，fill-dependent362 RGB／max13／alpha0／exactmask0且新wrapper與legacy SHA同，整體strict flag仍false；captured dense3現0。最新實際1000 synthetic-move／948有效點／16chunks963含anchors，兩席同JSON但artistfresh0／viewerclassic67 RGB／max54，viewer baseCopies0／mutable0；跨paintclassic timeout20ms兩組已重現old/new0差、rAF兩組未完成，不能歸因layer或硬體，不能寫雙席pixels全同。Linux／發布尚待，正式readonly仍v1.8.0／5687561。
+P0從v1.8.0／5687561基線導入140ms first-new-point timer、40點／up提前flush；115ms开送下限、fill500ms、單in-flight，prepare才UUID／deep-freeze≤64點，同epoch／round／strokeId／tool／style／filled相鄰未送才merge。queued entries≤1000／points≤30000，metrics pendingPoints／bytes只算未送，inFlightPoints另列／oldestAge從最老job入列。stroke與snapshot GET各10秒；snapshot job identity／epoch／round取消防舊finally清新GET，AbortError不全站disconnect。暫時DRAW_RATE_LIMIT／500／網路等最多3attempt同ID/body，永久WORK_LIMIT明確取消未送＋sync；quota只首attempt拒新批，已接受但lostACK且SSE先耗quota的同ID重試仍可去重。
 
-最新classic跨paint控制已在同一16chunks／948有效點／963含anchor點重現：每chunk隔timeout20ms，warmup0／1兩組原classic與opt-in Infinity均對fresh差67 RGB／max54／alpha0／exactmask0，old/new直接diff0、SHA相同。此固定capture證實原classic也有該差，不外推全部case、不推定硬體／GPU／CPU。兩組rAF控制2秒未advance，沒有完成驗證，整體control flags仍false，不能把它們列pass；Chrome未被提至前景。
+server rolling1000ms最多10批、1000accepted batchIds／30000accepted points／48fill與fill2/s不變，anchor計points，undo／clear不退lifetime quota。batchId只ID去重，已送body不能改；SSE先於HTTP，两次序／gap snapshot保持。command active筆先請完成，之後drain→權威sync→undo/clear→renderer idle；busy期間不新input，epoch清timer／request／舊draft。既有command POST與state poll未新增10秒deadline，不能泛稱所有網路有deadline。
 
-以正式v1.8.0／5687561為基線；不改stroke API／wire／DB／作品codec／canvasEpoch。P0 owner選140ms first-new-point timer、40點或up提前flush，115ms開送下限、fill500ms、單in-flight；prepare才UUID／deep-freeze≤64點，同stroke／epoch／round／tool／style／filled相鄰未送才merge。queued entries≤1000／points≤30000、pending metrics與shared drain Promise；timeout10秒、暫時rate-limit／500／網路等最多3attempt同ID-body，永久WORK_LIMIT明確提示、清未送並sync。這是待驗實作契約，不是成功數據。
+P1仅有限mutableFrom < strokes.length的明確local draft且本epoch未遇fill使用opaque base＋mutable suffix；無draft／Infinity／全部ACK／viewer用visible同surface原classic。mode切換取消舊layer job、清base checkpoints並完整合作式canonical replay；任何history／draft fill令classic sticky直到reset，不保留server末筆brush永久mutable與promotion。每mode單組15checkpoints＋1base、512×256≤8MiB，不能保留雙cache。白色source-over erase、fill容差24／filled／0.5位置／圓cap-joint及render／cancel／whenIdle／reset不變；活動完整path仍重畫，未消除全部O(N²)。up收實際尾點、cancel／lostcapture只finish已有樣本，非空coalesced與parent擇一；rAF只preview，可靠sender／恢復／save不依賴rAF。
 
-server rolling1000ms最多10批、1000accepted batchId／30000accepted points／48fill及fill2/s不變；anchors也計points，undo／clear不退lifetime quota。batchId僅ID去重，client不能改已送body或timeout後另ID重畫。SSE早於HTTP，可先SSE後ACK；draft遮同ID已接受chunks直到finished/pending0/ACK版已見後settle。command先drain／sync再undo／clear，renderer idle／epoch保存障壁不能因rAF或coalescing削弱。
+P0已驗native25／3點持筆viewer先見更新；25點up後兩席25chunks／49含anchors／ink1603與fresh0差。trusted down/up＋1000 synthetic moves單task只1preview／999lineTo，400ms延期16requests／1015點／max64；工具約1秒／move及背景970ms排程不作FPS。
 
-P1已因native差異縮限：僅有限`mutableFrom < strokes.length`的明確local draft且本epoch未遇fill才用opaque base＋mutable suffix；沒有draft／Infinity／全部ACK與viewer走visible同surface原classic，切換取消舊layer job、清base checkpoints並完整合作式canonical replay。任意history／draft fill令classic sticky直到reset；不再把server最後brush永久mutable，移除promotion。每mode單组15checkpoints＋1base、總16surface與512×256≤8MiB，mode切換不可留雙cache。白色erase、原fill容差24／filled／0.5位置／圓cap/join、render／cancel／whenIdle／reset保持；活動完整path仍重畫，不宣稱消除所有O(N²)。coalesced選非空list而非另畫parent，up收末點、cancel只收尾；hidden rAF不得阻sender／command／save。
+native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha0／exactmask0，新wrapper與legacy SHA同而整體strict flag仍false。captured dense3場景均fresh0。實際1000 synthetic-move／948有效點／16chunks963含anchors兩席同JSON，但artistfresh0／viewerclassic67 RGB／max54、viewer baseCopies0／mutable0；同capture timeout20ms／warmup0及1的原classic與opt-in Infinity同樣67／max54、old/new直接diff0／SHA相同。此證據只限受測trace，不歸因layer／硬體／GPU／CPU，不寫19native全部fresh strict或所有雙席pixels相同；兩組rAF控制2秒未advance而未完成，不能列pass。工具慢線／背景970ms不作人體FPS。
 
-這次native原layer對fill底圖白erase差1,073 RGB／max90／mask133，dense captured static／progressive／settle差45／209／45 RGB／max54而mask均0；same-surface classic全0。frequent context診斷雖15pass，但11case canonical SHA改變，不能為過關改全站hint、不以AA tolerance或mask吻合接受、不推定CPU／GPU根因。最新保守source的19場景及Windows已做（結果見本節補充），classic控制差／Linux與發布待驗；舊raster56／前端150與prefallbackWindows1068不是最新P1通過。
-
-root已凍結v1.8.0作native25點baseline：持筆0POST、25applications／24restores／viewer0，up後1POST／25點／469 JSON bytes，收尾同epoch非空圖ink1549與兩席canonical／pixels hash相同。新版P0同slowtool25點持筆viewer24chunks／version25；up後sameepoch兩席25chunks／49含anchor點／ink1603，JSON／pixels同且fresh canonical0diff。另1000 synthetic-move單task、trusted down/up時preview只1次／999lineTo、400ms延期16requests／1015點／max64；背景970ms等待不是FPS。sender已freeze，最終renderer要同canonical嚴格比較native完整replay。實作攻防、官方來源、Chrome矩陣與未驗狀態見 [進度](../DRAWING-SMOOTHNESS-PROGRESS.md)和 [spec](../specs/DRAWING-SMOOTHNESS.md)，P2並行排序／P3抽稀仍後續提案。
+原layer在fill底圖白erase及dense已確認圖有差才縮限；first-context frequent診斷雖15pass卻改11case canonical SHA，不能為過關切換全站hint或放寬AA。P2新排序／並行POST與P3抽稀／新codec仍未做。來源、備份、精確scope、未驗rAF／原生取消／真收藏或其他硬體與後續提案见 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)與 [spec](../specs/DRAWING-SMOOTHNESS.md)。下方v1.8.0與更早紀錄為歷史，後續文件提交不移動受測tag；原HAR／cookies／帳密與.local偏好不提交。
 
 ## 2026-10-07：共用媒體與房間角色（正式 v1.8.0）
 

@@ -1,17 +1,16 @@
 # 玩家 agent 長期記憶
 
-## 2026-10-07：作畫改善的玩家判定（P0／P1實作中）
+## 2026-10-07：作畫改善第一批（正式v1.8.1，有限P1）
 
+正式v1.8.1／6707a9edf07839c3307dd230ff6eeca5fa92bf62已於UTC03:30:44.024Z零房間guard部署，PID107492→110715、service／tunnel active。Windows1076／1076／37689.229ms，Linux Node22.22.1 1076／1076／189955.125522ms，各fail/cancel/skip/todo0；本地受測tag固定，沒有新PR／push、PR43未改。schema15／21schemas／20non-session rows+BLOB與8帳戶全fields保留、integrity ok／FK0；sessions161→165為已登出的QA登入，不說sessions不變。SQLite線上備份與另時點files/env archive不是atomic cold snapshot。公開版號與5資源精確內容/no-store已驗，沒有逐項驗5資源MIME；正式3會員HTTP/SSE duplicate／nonartist400／undo-clear quota不退已驗。Chrome正式僅背景home版號；local像素／輸入證據另列，own房／auth／tabs／preview／control已清理，不改前景或偏好。
 
-最新縮限source Windows完整1076／1076、37689.229ms、0fail/cancel/skip。native19場景18對fresh strict RGBA0，fill-dependent362 RGB／max13／alpha0／exactmask0且新wrapper與legacy SHA同，整體strict flag仍false；captured dense3現0。最新實際1000 synthetic-move／948有效點／16chunks963含anchors，兩席同JSON但artistfresh0／viewerclassic67 RGB／max54，viewer baseCopies0／mutable0；跨paintclassic timeout20ms兩組已重現old/new0差、rAF兩組未完成，不能歸因layer或硬體，不能寫雙席pixels全同。Linux／發布尚待，正式readonly仍v1.8.0／5687561。
+驗收分開看本人跟手、持筆時他人何時看到、慢網pending是否有界、放開／undo／clear／收藏是否保留原意。P0少量點也定時排送，pointerup尾點與cancel已有內容安全收尾；本機未確認draft才layer，完成／viewer同surface classic、任意fill後保守classic至reset。API／作品codec／PR30點數及fill額度不变，不用任意並行POST或抽稀換速度；P2／P3未做。
 
-最新classic跨paint控制已在同一16chunks／948有效點／963含anchor點重現：每chunk隔timeout20ms，warmup0／1兩組原classic與opt-in Infinity均對fresh差67 RGB／max54／alpha0／exactmask0，old/new直接diff0、SHA相同。此固定capture證實原classic也有該差，不外推全部case、不推定硬體／GPU／CPU。兩組rAF控制2秒未advance，沒有完成驗證，整體control flags仍false，不能把它們列pass；Chrome未被提至前景。
+同native25點慢trace原v1.8.0持筆viewer0，新版未up已24chunks，3點持筆也先见2chunks；25點up後兩席25chunks／49含anchor／ink1603／fresh0diff。1000 synthetic moves單task僅一次preview和16批／1015含anchor點，另一clean case去重948點／963含anchor；兩case不能混算。背景等待970ms、工具約1秒／move都不是人體FPS或使用者另一台裝置延遲。
 
-第一批候選1.8.1要分開驗「本人筆是否跟手」、「別人持筆期間何時看到」、「慢網pending是否有界」、「放開／undo／clear／收藏是否保留最後畫作」。P0用140ms timeflush／單in-flight／rAF；P1因native像素差縮限為本機未確認draft才layer，完成／觀看者回同surfaceclassic，任意fill後保守classic直到reset。不以放寬點數／batch／fill額度、任意並行POST或抽稀換流暢感。少量點持筆必須在未放開時送出，pointerup末點與cancel既有內容要安全收尾；畫者／觀看者／回看／收藏與studio保留canonical語意。
+native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha0／exactmask0，新wrapper與legacy SHA同而整體strict flag仍false。captured dense3場景均fresh0。實際1000 synthetic-move／948有效點／16chunks963含anchors兩席同JSON，但artistfresh0／viewerclassic67 RGB／max54、viewer baseCopies0／mutable0；同capture timeout20ms／warmup0及1的原classic與opt-in Infinity同樣67／max54、old/new直接diff0／SHA相同。此證據只限受測trace，不歸因layer／硬體／GPU／CPU，不寫19native全部fresh strict或所有雙席pixels相同；兩組rAF控制2秒未advance而未完成，不能列pass。工具慢線／背景970ms不作人體FPS。
 
-root在原v1.8.0同Chrome兩席已驗native25點慢線，持筆0POST／viewer空白，up後一筆25點且同epoch非空畫布兩席JSON／pixel吻合。新版同trace在未放開時viewer已見24chunks，3點持筆也見2chunks；up後兩席25chunks／49含anchor點／ink1603及fresh replay0diff。1000 synthetic moves單task只排一次preview和16批／1015含anchor點，背景等待970ms及工具約1秒／move都不是人體採樣率或FPS。
-
-後續dense canonical與fill／白erase發現原layer RGB差，不因mask相同就當完成；診斷改context hint也會改canonical pixels，不能偷換基準。P1已縮限為上述保守路徑，最新19場景／真雙席dense／Windows結果見本節補充，classic控制差／Linux與發布待驗。同trace不同切批可不同AA，但相同canonical完整replay必須零差，不能以空圖／換輪判同。沒有使用者另一台電腦資料就不歸咎硬體；真假coalesced／人工延遲／背景節流與實體多設備分開寫。以 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)為準，目前正式仍v1.8.0。
+完成指的是已驗的有限P0／P1及正式發布，不代表所有classic像素差已消除、所有遊戲FPS提升或所有硬體相同；不得因一台隔離電腦資料判定使用者電腦故障。Chrome公開版號畫面不等於正式多人原生作畫；本次正式未寫真收藏／studioPNG，OS原生cancel未實際觸發。來源、備份、精確scope、未驗rAF／原生取消／真收藏或其他硬體與後續提案见 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)與 [spec](../specs/DRAWING-SMOOTHNESS.md)。下方v1.8.0與更早紀錄為歷史，後續文件提交不移動受測tag；原HAR／cookies／帳密與.local偏好不提交。
 
 ## 2026-10-07：統一媒體的玩家驗收規則（正式 v1.8.0）
 
