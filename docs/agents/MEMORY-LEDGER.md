@@ -1,5 +1,11 @@
 # 共用偏好與已知決策
 
+2026-10-07最新patterns候選1.12：Windows完整1,386／47,918.5986ms與新UI65、獨立canvas165／media118通過，分組不加總。fresh真earned tracker／終了和shader probe分開，舊原生矩陣保留scope；Linux／固定source／tag／部署待root，正式仍1.11.1（只讀9帳戶／市場圖片13須保留）。PR46最新f36b679 Ready未合併，本批無新PR。完整結果／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，不預填已發布。
+
+2026-10-07 UI-components-patterns：使用者要求五庫評估的適合方向都嘗試實作；新批以原生widgets／notifications／短成就粒子接真頁面，不安裝React／OGL或複製來源碼，重要資訊保持。首批scope與API／hidden保正文而取消動畫、newearned不加poll、PR46獨立見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。目前正式基線1.11.1，本批待測／待交付，未更新為已發布。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
 2026-10-07 PR46-review／正式v1.11.0：Stanley兩P2修正clear／undo未present surface與切回頁音樂，只復原visibility自動pause而不覆蓋manual／設定意圖；合main市場圖片與schema16，正式整合保留既有UI／WebGL。PR46候選1.9.1已推／逐項回覆／Ready／再請Stanley審查，未合併；正式source另固定tag、雙平台各1,284。native12Canvas2D與Audio有限scope、角色caps／備份還原、8users／既有表資料與sessions變動見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。此筆更新目前v1.11／schema16，下方v1.10與schema15為歷史；不把全套tests當全玩法／喇叭／FPS通過。
 
 2026-10-07 UI-polish-WebGL：使用者在PR46後要求按既有研究美化並試WebGL，後續允許更好新效果取代舊效果。正式v1.10.0已採共用surface／邊界／選取／數字與雷霆有界原生粒子；實際畫出kind才遮同類舊裝飾，idle／loss／reduce即復原，標字與玩法互動保留。重要玩家／車隊／骰子／角色不可為減字收合；未安裝Threads研究庫、不宣稱GPU加速。雙平台各1,165及正式資料證據見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。此筆取代歷史WebGL「未實作」現況，PR46不變。

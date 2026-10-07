@@ -1,5 +1,11 @@
 # 動畫角色記憶
 
+2026-10-07最新patterns候選1.12：Windows完整1,386／47,918.5986ms與新UI65、獨立canvas165／media118通過，分組不加總。fresh真earned tracker／終了和shader probe分開，舊原生矩陣保留scope；Linux／固定source／tag／部署待root，正式仍1.11.1（只讀9帳戶／市場圖片13須保留）。PR46最新f36b679 Ready未合併，本批無新PR。完整結果／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，不預填已發布。
+
+2026-10-07元件回饋新批實作中：卡片／通知僅短回饋，新earned通知旁才用已有原創GameFxLayer短粒子；不加長背景、常駐ticker或逐frame API。只有server既有新earned差集才慶祝，initialbaseline／舊結果不播；hidden保通知可讀正文、取消入場／粒子並不補motion，reduce保靜態語意。真GPU／idle／畫猜途中回歸待驗，見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式基線1.11.1，未發布新批或宣稱FPS收益。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
 ## 2026-10-07：正式v1.11.0可見提交與音樂恢復
 
 畫猜不只比version／終點圖：staging因clear／undo已寫，最新job完成要把未present surface提交；途中維持舊完整畫面，舊job不能蓋新圖，no-op不copy。本次native12 clear／undo×3路徑×2排程RGBA等fresh；第二輪held30樣本whiteAfterInk0、viewer7partial，第一輪錯誤array取樣已排除。背景Audio只resume此次visibility自動pause的同clip，手動暫停／關聲音／拒播／共享暫停／退出影片不可被蓋掉；無聲MP3／FocusEmulation不是喇叭或物理切頁。既有WebGL／checkpoint保持，source／限制見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)；下方v1.10與v1.9版本為歷史。

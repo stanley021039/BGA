@@ -6,7 +6,7 @@ const immersion=GameImmersion.mount('poker',{focusDuration:1350}),motionGate=Mot
 $('.table-wrap').append($('#pokerSpotlight'));
 MotionPolicy.subscribe(()=>{if(!MotionPolicy.allowsMotion())for(const card of document.querySelectorAll('#board .newly-revealed'))card.classList.remove('newly-revealed');});
 const phases={waiting:'等待朋友入座',preflop:'PREFLOP / 翻牌前',flop:'FLOP / 翻牌',turn:'TURN / 轉牌',river:'RIVER / 河牌',showdown:'本局結束'};
-function toast(t){$('#toast').textContent=t;$('#toast').style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('#toast').style.display='none',3500);}
+function toast(t){if(window.GameUI?.notify)return window.GameUI.notify(t,{durationMs:3500});$('#toast').textContent=t;$('#toast').style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('#toast').style.display='none',3500);}
 async function api(route,data){return RoomApi.request(route,data,{code:session?.code,room:'poker',session,onKicked:()=>{RoomHost.kicked(session);session=null;}});}
 function card(c){if(c===undefined)return '<div class="card empty"></div>';if(c===null)return '<div class="card back">♠</div>';const suit=['♠','♥','♣','♦'][Math.floor(c/13)],rank=['2','3','4','5','6','7','8','9','10','J','Q','K','A'][c%13];return `<div class="card ${['♥','♦'].includes(suit)?'red':''}">${rank}<small>${suit}</small></div>`;}
 function animateChipTransfers(previous,next,ordered){
@@ -50,5 +50,9 @@ if(session&&location.pathname==='/poker')window.history?.replaceState(null,'','/
 
 fetch('/api/auth/me').then(r=>r.json()).then(me=>{$('#nickname').value=me.displayName;$('#nickname').readOnly=true;}).catch(()=>{});
 
-async function checkPokerAchievements(){try{const response=await fetch('/api/achievements');if(!response.ok)return;const data=await response.json(),unlocked=new Set(data.achievements.filter(item=>item.unlockedAt).map(item=>item.id));if(knownAchievements){const names=[['poker-first-hand','第一手牌'],['all-first-table','第一桌']].filter(([id])=>!knownAchievements.has(id)&&unlocked.has(id)).map(([,name])=>name);if(names.length){const notice=$('#pokerAchievementNotice');notice.textContent='解鎖成就：'+names.join('、')+'。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}}knownAchievements=unlocked;}catch{}}
+async function checkPokerAchievements(){
+ const announce=earned=>{const names=earned.map(item=>String(item.title||item.id));if(!names.length)return;const notice=$('#pokerAchievementNotice');if(notice){notice.textContent='解鎖成就：'+names.join('、')+'。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}for(const item of earned)window.GameUI?.notify?.('解鎖成就：'+String(item.title||item.id),{kind:'achievement',key:'achievement:'+item.id,href:'/achievements',label:'查看收藏冊',durationMs:7000,celebrate:true});};
+ if(window.GameUI?.createAchievementTracker){checkPokerAchievements.tracker||=window.GameUI.createAchievementTracker({onEarned:announce});return checkPokerAchievements.tracker.check();}
+ try{const response=await fetch('/api/achievements');if(!response.ok)return;const data=await response.json();if(!Array.isArray(data.achievements))return;const items=[...new Map(data.achievements.filter(item=>item?.unlockedAt&&typeof item.id==='string').map(item=>[item.id,item])).values()];announce(knownAchievements?items.filter(item=>!knownAchievements.has(item.id)):[]);knownAchievements=new Set([...(knownAchievements||[]),...items.map(item=>item.id)]);}catch{}
+}
 checkPokerAchievements();

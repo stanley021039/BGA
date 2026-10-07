@@ -1,0 +1,15 @@
+.ui-notification-stack{position:fixed;inset-inline-end:max(12px,env(safe-area-inset-right));inset-block-end:max(12px,env(safe-area-inset-bottom));z-index:1800;display:grid;gap:8px;width:min(390px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;padding:4px;box-sizing:border-box;pointer-events:none}
+.ui-notification{position:relative;isolation:isolate;display:grid;grid-template-columns:24px minmax(0,1fr) var(--ui-control-height,44px);align-items:start;gap:10px;padding:12px;border:1px solid var(--ui-control-border,#74806e);border-inline-start:3px solid var(--ui-accent,#654575);border-radius:var(--ui-radius-card,12px);background:var(--ui-surface-floating,#fffefa);color:var(--ui-text,#263b36);box-shadow:var(--ui-shadow-floating,0 8px 24px #263b3620);font:inherit;pointer-events:auto;box-sizing:border-box}
+.ui-notification-icon,.ui-notification-content,.ui-notification-close{position:relative;z-index:1}
+.ui-notification-icon{display:grid;place-items:center;min-height:var(--ui-control-height,44px);color:var(--ui-accent,#654575)}
+.ui-notification-icon .ui-symbol{width:24px;height:24px}
+.ui-notification-content{min-width:0;align-self:center}
+.ui-notification-message{margin:0;color:inherit;font-size:var(--ui-text-body,1rem);line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap}
+.ui-notification-link{display:inline-block;margin-block-start:4px;color:inherit;font-size:var(--ui-text-small,.875rem);text-underline-offset:3px}
+.ui-notification-close{align-self:start;margin:0;padding:0;border:1px solid var(--ui-control-border,#74806e);border-radius:var(--ui-radius-control,8px);background:var(--ui-surface-panel,#fffdf8);color:inherit;min-width:var(--ui-control-height,44px);min-height:var(--ui-control-height,44px)}
+.ui-notification-close:focus-visible,.ui-notification-link:focus-visible{outline:2px solid var(--ui-focus,#654575);outline-offset:3px}
+.ui-notification[data-kind=error]{border-inline-start-color:var(--ui-error,#a23526)}
+.ui-notification[data-kind=success]{border-inline-start-color:var(--ui-success,#356127)}
+.ui-notification[data-kind=achievement]{border-inline-start-width:4px}
+.ui-notification[hidden],.ui-notification-stack[hidden]{display:none!important}
+@media(max-width:440px){.ui-notification-stack{inset-inline:8px;width:calc(100vw - 16px);inset-block-end:max(8px,env(safe-area-inset-bottom))}.ui-notification{gap:8px;padding:10px}}

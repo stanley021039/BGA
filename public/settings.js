@@ -1,5 +1,7 @@
 (()=>{
  const q=s=>document.querySelector(s);let appearance,avatar,characters=[],artworks=[],busy=false,nameBusy=false;
+ for(const selector of ['#nickname-form','#settings-form'])window.GameUI?.bindForm?.(q(selector));
+ for(const selector of ['#nickname-save','#settings-save'])window.GameUI?.decorateButton?.(q(selector),'save',{iconOnly:true});
  async function request(url,data){const r=await fetch(url,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),d=await r.json();if(!r.ok)throw Error(d.error);return d;}
  function avatarKey(value){return value.kind==='artwork'?'artwork:'+value.artworkId:value.characterId+'|'+value.expression;}
  function avatarChoices(){const items=characters.flatMap(c=>Object.entries(c.expressions).map(([expression,url])=>({key:c.id+'|'+expression,value:{kind:'character',characterId:c.id,expression},url,label:c.name+' · '+(c.labels[expression]||expression)})));return [...items,...artworks.map(a=>({key:'artwork:'+a.id,value:{kind:'artwork',artworkId:a.id},url:a.url,label:(a.owned?'收藏 · ':a.author+' 分享 · ')+a.name}))];}
@@ -8,7 +10,7 @@
  function setBusy(value){busy=value;for(const el of q('#settings-form').querySelectorAll('button,input,select'))el.disabled=value;}
  function setNameBusy(value){nameBusy=value;for(const el of q('#nickname-form').querySelectorAll('button,input'))el.disabled=value;}
  q('#nickname-form').onsubmit=async event=>{
-  event.preventDefault();if(nameBusy)return;
+  event.preventDefault();if(nameBusy||window.GameUI?.validateForm&&!window.GameUI.validateForm(q('#nickname-form')))return;
   const name=q('#nickname').value.trim();
   if(!name||[...name].length>16||/[\u0000-\u001f\u007f]/.test(name)){q('#nickname-message').textContent='暱稱需為 1–16 字，且不能換行';q('#nickname').focus();return;}
   setNameBusy(true);q('#nickname-message').textContent='正在儲存暱稱…';

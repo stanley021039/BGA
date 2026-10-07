@@ -503,7 +503,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  const musicAsset=url.pathname.match(/^\/assets\/music\/([a-f0-9-]{36})$/);
- if(url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'||url.pathname==='/shared/game-fx-layer.js'||url.pathname==='/shared/game-fx-layer.css'){
+ if(url.pathname==='/shared/ui-widgets.js'||url.pathname==='/shared/ui-widgets.css'||url.pathname==='/shared/ui-notifications.js'||url.pathname==='/shared/ui-notifications.css'||url.pathname==='/shared/ui-celebrations.js'||url.pathname==='/shared/ui-celebrations.css'||url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'||url.pathname==='/shared/game-fx-layer.js'||url.pathname==='/shared/game-fx-layer.css'){
   const file=url.pathname.slice(1);res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript; charset=utf-8');return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  if(musicAsset){auth.requireUser(req);if(!['GET','HEAD'].includes(req.method))throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');return musicStore.stream(req,res,musicAsset[1]);}

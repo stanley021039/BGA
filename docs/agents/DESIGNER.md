@@ -1,5 +1,13 @@
 # 設計師角色記憶
 
+2026-10-07最新patterns候選1.12：Windows完整1,386／47,918.5986ms與新UI65、獨立canvas165／media118通過，分組不加總。fresh真earned tracker／終了和shader probe分開，舊原生矩陣保留scope；Linux／固定source／tag／部署待root，正式仍1.11.1（只讀9帳戶／市場圖片13須保留）。PR46最新f36b679 Ready未合併，本批無新PR。完整結果／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，不預填已發布。
+
+2026-10-07 patterns有限畫面：收藏／市場manual Arrow只移焦，Enter／Space才換內容；review卡selected邊界／shadow保持同120px高，收藏1280／390／1600與member市場1280／390無橫溢、44px控制。controlled glyph double只是字型模擬，不稱真200% zoom／全站認證；兩dialog Escape返焦已驗，Tab採樣未證fulltrap。真earned持久inline與短粒子不互相替代，source／native限制集中 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式仍1.11.1，本批1.12未發布。
+
+2026-10-07五庫模式實作中：以收藏／市場manual tabs、group／card／form／dialog、五款有限toast与四款既有new earned、通知旁短粒子作真落點。tab focus≠activation、group≠tabs；保重要玩家／車／骰／角色與inline，hover不蓋selected，通知hidden保可讀正文而取消動態。原生元件契約／pending證據見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，目前正式基線1.11.1，本批未發布；不套React外觀即宣稱整套可達性。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
 2026-10-07正式 **v1.10.0**：六份CSS共用背景／panel／floating、8／12／16radius、必要邊界／選取與lining／tabular數字，保留grid／padding／重要字級／操作尺寸與玩家／車隊／骰子／角色。換surface須配caller foreground，hover不可蓋selected；裝飾border不能當唯一必要線索。四遊戲桌機／390／200%與媒體sameiframe有有限證據，synthetic gift dark不是產品theme，不宣稱全部phase／全站對比。新粒子實際畫出才替換同類舊裝飾，fallback／文字保留。見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)；[Threads五庫](../research/THREADS-UI-COMPONENTS-ASSESSMENT.md)只是模式參考未安裝；下方v1.9.0與美化候選保留為歷史。
 
 2026-10-07正式v1.9.0媒體補充：影片主區使用可用高度，底列桌機compact而手機／coarse保操作尺寸，toolbar保持；本機原生控制與「同步我的播放進度」分清，只有有權席位可發布全桌。移除本站外開入口／共用seek不等移除YouTube原生branding、letterbox或所有控制；重要狀態與clock保持可見。最新規範／scope見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。

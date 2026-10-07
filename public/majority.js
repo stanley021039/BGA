@@ -9,7 +9,7 @@ let focusTimer=null,gatherAnimations=[],knownAchievements=null,achievementNotice
 const motionGate=MotionPolicy.createGate();
 
 try{session=JSON.parse(localStorage.getItem(code?'ah-majority:'+code:'ah-majority')||'null');if(session&&!code)code=session.code;}catch{}
-function toast(t){$('#toast').textContent=t;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
+function toast(t){if(window.GameUI?.notify)return window.GameUI.notify(t,{durationMs:4500});$('#toast').textContent=t;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
 async function api(route,data){return RoomApi.request(route,data,{code,room:'majority',session,onKicked:()=>{RoomHost.kicked(session);session=null;}});}
 function save(s){session=s;code=s.code;localStorage.setItem('ah-majority',JSON.stringify(s));localStorage.setItem('ah-majority:'+code,JSON.stringify(s));history.replaceState(null,'','/majority/'+code);}
 async function action(name,data={}){if(busy)return;busy=true;actionFeedback('送出中…');syncActionBusy();try{const result=await api('action',{action:name,...data});const live=receive(result);if(live&&name==='answer'&&['answering','review'].includes(result.phase))playSound('confirm');actionFeedback({answer:'答案已鎖定 ✓',withdraw:'已收回答案',merge:'答案組已合併',resetGroups:'已還原分組',score:'已計分'}[name]||'已完成','success');if(live)MotionPolicy.confirm($('#gameActionFeedback'));$('#connection').textContent='';}catch(e){actionFeedback(e.message,'error');}finally{busy=false;syncActionBusy();syncAnswerChoices();syncMerge();}}
@@ -108,10 +108,14 @@ function startFocus(){
  };show();
 }
 async function checkNewAchievement(){
- try{const response=await fetch('/api/achievements');if(!response.ok)return;const data=await response.json(),unlocked=new Set(data.achievements.filter(item=>item.unlockedAt).map(item=>item.id));
-  const names=knownAchievements?[['majority-first-vote','第一次舉牌'],['all-first-table','第一桌']].filter(([id])=>!knownAchievements.has(id)&&unlocked.has(id)).map(([,name])=>name):[];
+ const announce=earned=>{const names=earned.map(item=>String(item.title||item.id));
   if(names.length){achievementNoticeRound=state?.round;achievementNoticeNames=names.join('、');const notice=$('#majorityAchievementNotice');if(notice){notice.textContent='解鎖成就：'+achievementNoticeNames+'。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}}
-  knownAchievements=unlocked;
+  for(const item of earned)window.GameUI?.notify?.('解鎖成就：'+String(item.title||item.id),{kind:'achievement',key:'achievement:'+item.id,href:'/achievements',label:'查看收藏冊',durationMs:7000,celebrate:true});
+ };
+ if(window.GameUI?.createAchievementTracker){checkNewAchievement.tracker||=window.GameUI.createAchievementTracker({onEarned:announce});return checkNewAchievement.tracker.check();}
+ try{const response=await fetch('/api/achievements');if(!response.ok)return;const data=await response.json();if(!Array.isArray(data.achievements))return;
+  const items=[...new Map(data.achievements.filter(item=>item?.unlockedAt&&typeof item.id==='string').map(item=>[item.id,item])).values()];announce(knownAchievements?items.filter(item=>!knownAchievements.has(item.id)):[]);
+  knownAchievements=new Set([...(knownAchievements||[]),...items.map(item=>item.id)]);
  }catch{}
 }
 function restoreAchievementNotice(){if(achievementNoticeRound!==state?.round)return;const notice=$('#majorityAchievementNotice');if(!notice)return;notice.textContent='解鎖成就：'+achievementNoticeNames+'。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}

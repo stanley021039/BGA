@@ -1,5 +1,13 @@
 # 程式架構 agent 記憶
 
+2026-10-07最新patterns候選1.12：Windows完整1,386／47,918.5986ms與新UI65、獨立canvas165／media118通過，分組不加總。fresh真earned tracker／終了和shader probe分開，舊原生矩陣保留scope；Linux／固定source／tag／部署待root，正式仍1.11.1（只讀9帳戶／市場圖片13須保留）。PR46最新f36b679 Ready未合併，本批無新PR。完整結果／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，不預填已發布。
+
+2026-10-07 patterns有限原生新知：shared invalid批次先標所有無效欄位，再以單microtask聚焦第一個；focus:false／reset／destroy須取消晚排程，修valid title只清自己的aria描述。manual tabs focus與commit保持分離，rapid Arrow位置立即更新與baseline／earned錯序由中央契約處理，不各caller加poll。widgets focused72和真鍵盤／Escape有限證據見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，新排序修正／全套／公開1.12仍待驗，不稱本批已完成發布。
+
+2026-10-07原生元件新批實作中：widgets只管tabs focus／panel關聯、field feedback與native dialog，不接管submit／API權限／page state；collection原confirm保留，market busy／批次不改。notifications有限queue／seen、GameUI.notify與四款既有server earned差集，不加poll，draw僅toast。hidden保可讀內容並暫停expiry，入口／celebrate取消且不補播；pagehide清理。契約與本批待驗source見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式基線1.11.1，未以舊1,284項推定新批通過。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
 ## 2026-10-07：正式v1.11.0／PR46回歸契約
 
 renderer用`surfaceRevision`／`presentedSurfaceRevision`追staging實寫與可見提交：clear／undo尚未present即使沒有新stroke也須copy，latestjob／generation仍防舊圖覆蓋，settled no-op不copy。音樂`interruptedAudio`只復原此次hidden自動pause的同clip／key／epoch，等fresh marker；manualpause／設定停用／browserreject／sharedpaused／videoexit維持，staleclip不復活、不加poll／seek。main衝突保MarketImageStore／schema16／gallery、pngjs7／sharp0.35.5、market3MiB／approve128KiB、char4MiB與preserveImportedSessions。PR雙平台1,263、正式保UI／WebGL整合雙平台1,284；native12真Canvas2D與Audiovisibility範圍見 [證據](../PR46-REVIEW-FIX-PROGRESS.md)。此筆更新當前schema16，下面schema15與候選狀態為歷史，不能混算source／測試數。

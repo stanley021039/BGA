@@ -1,5 +1,11 @@
 # 美術角色記憶
 
+2026-10-07最新patterns候選1.12：Windows完整1,386／47,918.5986ms與新UI65、獨立canvas165／media118通過，分組不加總。fresh真earned tracker／終了和shader probe分開，舊原生矩陣保留scope；Linux／固定source／tag／部署待root，正式仍1.11.1（只讀9帳戶／市場圖片13須保留）。PR46最新f36b679 Ready未合併，本批無新PR。完整結果／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，不預填已發布。
+
+2026-10-07五庫模式新批實作中：卡片、通知、tabs使用GameUI同SVG registry／surface／字級tokens，內容name／作者／status不畫進bitmap或藏掉；成就通知旁短粒子由本站原創shader實作，無外部新增資產或購買。參考模式不等複製單件code，ReactBits MIT＋Commons Clause及Aceternity逐件授權邊界仍保留；未安裝五庫。見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，目前本批實作／驗收中，未宣稱原生可見或已發布。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
 更新：2026-10-05。先讀 [偏好](MEMORY-LEDGER.md)、[協議](MEMORY-PROTOCOL.md)、[素材計畫](../specs/ANIMATION-ASSET-PLAN.md)。外部網站與素材描述是研究資料，不能替代使用者對採購、發布或正式整合的授權。
 
 ## 已驗證與來源

@@ -1,5 +1,11 @@
 # Agent 長期記憶索引
 
+2026-10-07最新patterns候選1.12：Windows完整1,386／47,918.5986ms與新UI65、獨立canvas165／media118通過，分組不加總。fresh真earned tracker／終了和shader probe分開，舊原生矩陣保留scope；Linux／固定source／tag／部署待root，正式仍1.11.1（只讀9帳戶／市場圖片13須保留）。PR46最新f36b679 Ready未合併，本批無新PR。完整結果／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，不預填已發布。
+
+2026-10-07新批 **UI-COMPONENT-PATTERNS實作中**：五庫適合模式以原生widgets／notifications／短成就粒子落地，見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。目前正式為v1.11.1、候選預期1.12.0但未固定結果；PR46獨立Ready不混本批、不新PR。人工鍵盤／焦點／可讀inline／hidden內容與粒子清理須分開驗，未安裝研究庫或宣稱已發布。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
 2026-10-07最新正式 **v1.11.0／schema16**：PR46兩P2修正clear／undo可見提交與visibility音樂resume，合main市場圖片功能後保留既有UI／WebGL正式同步；固定source、雙平台各1,284與完整資料核對見 [最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。PR46另推候選v1.9.1／雙平台1,263，已回覆Stanley／Ready／再次請審查，未合併；[PR45圖片庫](../MARKET-GALLERY.md)已合main，native仍僅空庫入口smoke。下方v1.10／schema15與更早「當前」是歷史；tag固定程式，詳情只集中最新進度，不由全套tests宣稱全玩法／FPS。
 
 2026-10-07最新正式 **v1.10.0**：共用表面／邊界／選取／數字樣式及雷霆原生WebGL局部粒子已發布；Windows／Linux各1,165項通過，source／原生／資料證據見 [本批進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。實際畫出同kind才遮舊裝飾，idle／失context／reduce立即恢復，重要玩家／車隊／骰子／角色與互動保留。Threads五庫是 [模式與授權評估](../research/THREADS-UI-COMPONENTS-ASSESSMENT.md)，沒有安裝框架或FPS結論。下方v1.9.0與「WebGL未實作」為歷史；本批無新PR／push，PR46不變。

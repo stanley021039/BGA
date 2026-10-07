@@ -1,5 +1,13 @@
 # 玩家 agent 長期記憶
 
+2026-10-07最新patterns候選1.12：Windows完整1,386／47,918.5986ms與新UI65、獨立canvas165／media118通過，分組不加總。fresh真earned tracker／終了和shader probe分開，舊原生矩陣保留scope；Linux／固定source／tag／部署待root，正式仍1.11.1（只讀9帳戶／市場圖片13須保留）。PR46最新f36b679 Ready未合併，本批無新PR。完整結果／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，不預填已發布。
+
+2026-10-07 patterns部分實玩：own雙人撲克正常fold真的解鎖第一手牌／第一桌，持久inline仍讀得到，通知旁GL有像素且最終notify／queue／timer／celebration0。收藏／市場Arrow不發request或換panel直到Enter／Space；invalid首name與Escape返焦已驗。Audio Play尚ready0、離tab後pause不算完整解碼／可聽；glyph倍增不算browser200%，Tab到body／chrome邊界不算fulltrap。有限證據與新Arrow／成就排序修正待驗見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，patterns1.12尚未全套／發布。
+
+2026-10-07五庫模式新批驗收方向：manual tabs箭頭只focus、Enter／Space才選，表單有可定位inline錯誤，dialog可取消／返焦且busy不失守；通知不遮或取代重要玩家／車／骰／聊天室。hidden保通知正文但取消粒子，不因初次載入或舊badge慶祝。收藏／市場、五遊戲與原畫猜防閃皆需真keyboard／小屏／200%回歸，見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)；本批實作中，不能把前次1.11.1證據當新批通過。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
 ## 2026-10-07：正式v1.11.0驗收
 
 PR46清除／撤銷途中要看舊完整圖、提交後新圖與舊job不覆蓋；12真Canvas2D組合已驗，第二輪6move／30artist樣本白afterink0、viewer7partial，第一輪錯誤取樣排除。切回背景音樂只恢復此次hidden自動pause，玩家手動pause／關音樂不能被恢復蓋過；真Audio同節點恢復／零新增room-media request已驗，但無聲檔／FocusEmulation不是喇叭或實體切頁。市場每日／圖片投稿／審核空庫入口已smoke，未真上傳→審核完整native流程。有限scope與正式雙平台1,284見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)；下方版本保留歷史，不宣稱全玩法或FPS。

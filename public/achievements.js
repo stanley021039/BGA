@@ -3,6 +3,8 @@ const list=document.querySelector('#achievementList');
 fetch('/api/achievements').then(async response=>{
  const data=await response.json();
  if(!response.ok)throw Error(data.error||'無法載入成就');
+ const summary=document.querySelector('#achievementSummary');
+ if(summary)summary.textContent='已收藏 '+data.achievements.filter(item=>item.unlockedAt).length+' / '+data.achievements.length+' 枚';
  list.replaceChildren();
  for(const achievement of data.achievements){
   const card=document.createElement('article');card.className='achievement-card';card.classList.toggle('unlocked',!!achievement.unlockedAt);
