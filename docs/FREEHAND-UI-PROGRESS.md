@@ -1,6 +1,6 @@
 # Freehand UI 進度
 
-2026-10-07，候選v1.14.1／尚未固定source。基線正式v1.14.0／b4ebb15。研究／實作進行中，未以作者作品或前版測試宣稱本批完成。
+2026-10-07，最終候選v1.14.2／尚未固定source。基線正式v1.14.0／b4ebb15。v1.14.1固定tag為歷史未部署候選，下方該版中間結果保留，最新補正見末段；不移動tag，未以作者作品或前版測試宣稱完成發布。
 
 root背景Chrome實際讀Streamline Freehand family／Duotone Free，頁明列1000、24px／CCBY4；看Awwwards Gionatan Nese '26與作者真網站（白底、中央散列小作品卡、兩側題字／大量留白）。作者例僅借圖文對比，不採大留白／無限滚动／作品資產進多人操作界面。Pinterest web403，Chrome可讀搜尋則依實際後續記錄，不混同web工具或agent觀察。
 
@@ -17,3 +17,9 @@ root背景Chrome：1280×900三欄、1024×768兩欄、390×844單欄；六張�
 四款三席等待房1280×900與390×844均載入32px badge／24px SVG、無橫向溢出，玩家／車隊文字仍可見；1280三個player卡及race四slot（3車隊＋等待slot）保留，gift/majority/draw/race roster底部分別883/737/505/680，沒有重新隱藏重要內容。gift起初locator被影片詢問modal擋住，是未完成樣本，dismiss後再驗；非UI遮蓋bug。work/freehand-room-native.json與freehand-room-mobile-native.json、四款截圖為私有證據。此scope為waiting／標題插圖，不宣稱全玩法或重新驗完整畫布流程。
 
 初次畫猜卡選取經DOM snapshot顯示aria-pressed與建立你畫我猜按鈕一致；最後一筆剛click即讀的早期樣本仍thunder，未把它當完成，正式驗收會再等可見狀態確認。鉛筆比三圓color-palette更容易辨認，最終已改home/draw badge為edit-pencil。截圖work/freehand-home-cards.png、freehand-mobile-settings.png；圖片不等使用者滿意、真200%／讀屏／FPS結論。研究／preview own tabs已關閉、device/media overrides清除、isolated app/proxies停止。
+
+## 跨平台封存修正
+
+v1.14.1／482a1df的Linux完整1415項中1414通過、1失敗（212017.197949ms）：edit-pencil实际4443bytes，manifest4437；不是可忽略的UI樣本。root核原工作檔與Git blob均4437／SHA一致，但Windows core.autocrlf影響git archive匯出為CRLF（多6行尾bytes）。該tag保留未部署，Linux失敗不記pass。
+
+最終候選1.14.2加.gitattributes限制兩個curated SVG目錄text eol=lf，發布封存另以core.autocrlf=false生成canonical archive；來源與原始SHA保持。真controlled checkout-index在core.autocrlf=true／core.eol=crlf下匯出12SVG，與原工作bytes完全相同、LF-only；不是整份Windows fresh clone驗收。Windows Node24.14.0最終npm test 1415/1415、38102.9192ms、fail/cancel/skip/todo各0。Linux最終source待重驗，不能沿用1.14.1的失敗suite。

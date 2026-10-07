@@ -1,6 +1,6 @@
 # Freehand 圖示與紙卡介面
 
-日期2026-10-07；基線正式v1.14.0，本批候選v1.14.1（相容介面美化），尚未固定受測source／發布結果。研究來源見 [資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。此表為實作與驗收契約，待驗項不視為完成。
+日期2026-10-07；基線正式v1.14.0，最終候選v1.14.2（相容介面美化與素材行尾修正），尚未固定受測source／發布結果。v1.14.1未部署候選的Linux行尾失敗與修正見進度。研究來源見 [資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。此表為實作與驗收契約，待驗項不視為完成。
 
 | 分類 | 頁面／遊戲 | 修改與實作 | 保留與驗收 |
 | --- | --- | --- | --- |
