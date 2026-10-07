@@ -4,7 +4,7 @@ function harness({reduced=false,enabled=true}={}){
  const frames=new Map(),observers=[],resizers=[],mutations=[];let nextFrame=0,document;
  function events(target){const listeners=new Map();return Object.assign(target,{addEventListener(type,fn){const entries=listeners.get(type)||new Set();entries.add(fn);listeners.set(type,entries);},dispatch(type,event={}){for(const fn of [...listeners.get(type)||[]])fn(event);}});}
  class Element{
-  constructor(tag='span'){this.nodeType=1;this.tagName=tag.toUpperCase();this.children=[];this.parentElement=null;this.attributes=new Map();this._text='';this.width=100;this.textWidth=100;this.reads=0;
+  constructor(tag='span'){this.nodeType=1;this.tagName=tag.toUpperCase();this.children=[];this.parentElement=null;this.attributes=new Map();this.dataset={};this._text='';this.width=100;this.textWidth=100;this.reads=0;this.rect={left:520,top:360,width:100,height:40,right:620,bottom:400};
    this.style={values:new Map(),getPropertyValue:key=>this.style.values.get(key)||'',setProperty:(key,value)=>{this.style.values.set(key,value);mutations.push({type:'attributes',target:this,attributeName:'style'});},removeProperty:key=>{this.style.values.delete(key);mutations.push({type:'attributes',target:this,attributeName:'style'});}};
    this.classList={contains:name=>this.classes().has(name),add:(...names)=>{const classes=this.classes();for(const name of names)classes.add(name);this.className=[...classes].join(' ');},toggle:(name,force)=>{const classes=this.classes(),has=classes.has(name),on=force??!has;if(on===has)return on;on?classes.add(name):classes.delete(name);this.className=[...classes].join(' ');return on;}};
   }
@@ -16,16 +16,19 @@ function harness({reduced=false,enabled=true}={}){
   get hidden(){return this.hasAttribute('hidden');}set hidden(value){value?this.setAttribute('hidden',''):this.removeAttribute('hidden');}
   setAttribute(key,value){this.attributes.set(key,String(value));mutations.push({type:'attributes',target:this,attributeName:key});}getAttribute(key){return this.attributes.get(key)??null;}hasAttribute(key){return this.attributes.has(key);}removeAttribute(key){if(this.attributes.delete(key))mutations.push({type:'attributes',target:this,attributeName:key});}
   append(...children){for(const child of children){child.parentElement=this;this.children.push(child);}mutations.push({type:'childList',target:this,addedNodes:children,removedNodes:[]});}
+  replaceChildren(...children){for(const child of this.children)child.parentElement=null;this.children=[];this.append(...children);}
   contains(node){return node===this||this.children.some(child=>child.contains(node));}
-  matches(selector){return selector==='.ui-player-name'?this.classList.contains('ui-player-name'):selector==='.ui-player-name-text'?this.classList.contains('ui-player-name-text'):false;}
+  matches(selector){return ['.ui-player-name','.ui-player-name-text','.ui-icon-button'].includes(selector)?this.classList.contains(selector.slice(1)):false;}
   closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null;}
   querySelectorAll(selector){return this.children.flatMap(child=>[...(child.matches(selector)?[child]:[]),...child.querySelectorAll(selector)]);}
   querySelector(selector){return this.querySelectorAll(selector)[0]||null;}
   getClientRects(){for(let node=this;node;node=node.parentElement)if(node.hidden)return[];return this.isConnected?[{width:this.width}]:[];}
+  getBoundingClientRect(){return this.rect;}
+  showPopover(){this.popoverOpen=true;}hidePopover(){this.popoverOpen=false;}
   remove(){const parent=this.parentElement;if(!parent)return;parent.children=parent.children.filter(child=>child!==this);this.parentElement=null;mutations.push({type:'childList',target:parent,addedNodes:[],removedNodes:[this]});}
  }
  const root=new Element('html'),body=new Element('body');document=events({body,documentElement:root,hidden:false,querySelectorAll:selector=>body.querySelectorAll(selector),createElement:tag=>new Element(tag)});body.parentElement=root;root.children.push(body);
- const media=events({matches:reduced}),window=events({document,matchMedia:()=>media,requestAnimationFrame(fn){const id=++nextFrame;frames.set(id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id)}),storage=new Map();
+ const media=events({matches:reduced}),window=events({document,innerWidth:640,innerHeight:480,matchMedia:()=>media,requestAnimationFrame(fn){const id=++nextFrame;frames.set(id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id)}),storage=new Map();
  class MutationObserver{constructor(callback){this.callback=callback;this.targets=[];observers.push(this);}observe(target,options){this.targets.push({target,options});}disconnect(){this.targets=[];}}
  class ResizeObserver{constructor(callback){this.callback=callback;this.targets=new Set();resizers.push(this);}observe(target){this.targets.add(target);}unobserve(target){this.targets.delete(target);}disconnect(){this.targets.clear();}}
  const context=vm.createContext({window,document,MutationObserver,ResizeObserver,localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},getComputedStyle:node=>({fontSize:'16px',visibility:node.style.getPropertyValue('visibility')||'visible'})});
@@ -102,4 +105,34 @@ test('name styles isolate margins, preserve hidden state and pause on hover/focu
  assert.match(names,/\.room-player-info \.room-player-name\{display:flex/);assert.match(names,/\.room-player-info \.room-player-self\{flex:none;white-space:nowrap;margin:0;padding:0/);
  assert.match(names,/\.ui-player-name\{[^}]*margin:0;padding:0[^}]*white-space:nowrap/);assert.match(names,/\.ui-player-name\[hidden\],\.ui-player-name-text\[hidden\]\{display:none!important/);
  assert.match(names,/:is\(:hover,:focus-within\)[^{]*\{animation-play-state:paused/);assert.match(names,/prefers-reduced-motion:reduce/);assert.doesNotMatch(names,/will-change/);
+});
+
+test('overflowText preserves escaped one-line content and opts into intent-only motion without changing playerName',()=>{
+ const h=harness(),value='影片 <img onerror="bad"> & 很長的標題',html=h.window.GameUI.overflowText(value,{hoverOnly:true});
+ assert.match(html,/class="ui-player-name ui-overflow-text" data-name-activation="hover"/);assert.match(html,/title="影片 &lt;img/);assert.doesNotMatch(html,/<img|onerror="bad"/);assert.equal((html.match(/class="ui-player-name-text"/g)||[]).length,1);
+ assert.doesNotMatch(h.window.GameUI.playerName(value),/ui-overflow-text|data-name-activation/);
+ const long=h.name(value,{width:100,textWidth:300});long.slot.classList.add('ui-overflow-text');long.slot.setAttribute('data-name-activation','hover');h.flush();
+ assert.equal(long.slot.getAttribute('data-name-overflow'),'true');assert.equal(long.slot.getAttribute('tabindex'),'0');assert.equal(long.slot.style.getPropertyValue('--ui-player-name-shift'),'-200px');
+ h.reduce(true);assert.equal(long.slot.getAttribute('data-name-motion'),'off');h.reduce(false);h.flush();h.hide(true);assert.equal(long.slot.getAttribute('data-name-motion'),'off');
+ const css=fs.readFileSync(path.join(__dirname,'../public/shared/ui-primitives.css'),'utf8');assert.match(css,/\.ui-overflow-text>\.ui-player-name-text\{width:auto;overflow:hidden;text-overflow:ellipsis/);assert.match(css,/data-name-activation=hover[^\n]*\{animation:none;transform:none/);assert.match(css,/data-name-activation=hover[^\n]*:is\(:hover,:focus-within\)[^\n]*animation-play-state:running/);
+});
+
+test('icon hints reuse one top-layer node, clamp near the viewport edge and restore titles/descriptions on Escape',()=>{
+ const h=harness(),button=new h.Element('button');h.body.append(button);button.setAttribute('aria-describedby','caller-help');h.window.GameUI.decorateButton(button,'remove',{iconOnly:true,label:'移除這筆媒體'});
+ assert.equal(button.title,'移除這筆媒體');assert.equal(button.getAttribute('aria-label'),'移除這筆媒體');assert.equal(button.classList.contains('ui-icon-button'),true);button.setAttribute('title',button.title);
+ h.document.activeElement=button;h.document.dispatch('focusin',{target:button});const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.ok(hint.popoverOpen);assert.equal(hint.textContent,'移除這筆媒體');assert.equal(button.getAttribute('title'),'');assert.equal(button.getAttribute('aria-describedby'),'caller-help ui-control-hint');
+ assert.ok(parseFloat(hint.style.getPropertyValue('left'))+hint.rect.width<=632);assert.equal(hint.style.getPropertyValue('top'),'408px');
+ let prevented=false;h.document.dispatch('keydown',{key:'Escape',preventDefault(){prevented=true;}});assert.equal(prevented,false,'hint cleanup must preserve the owning dialog Escape behavior');assert.equal(hint.hidden,true);assert.equal(hint.popoverOpen,false);assert.equal(button.getAttribute('title'),'移除這筆媒體');assert.equal(button.getAttribute('aria-describedby'),'caller-help');
+ h.document.dispatch('pointerover',{target:button});assert.equal(h.body.children.filter(node=>node.classList.contains('ui-control-tooltip')).length,1);button.remove();h.deliver();assert.equal(hint.hidden,true);
+});
+
+test('icon hints stay reachable when moving into the hint and release on pointer-down, hidden or pagehide',()=>{
+ const h=harness(),button=new h.Element('button');h.body.append(button);h.window.GameUI.decorateButton(button,'add',{iconOnly:true,label:'加入播放清單'});button.setAttribute('title',button.title);h.document.dispatch('pointerover',{target:button});const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));
+ h.document.dispatch('pointerout',{target:button,relatedTarget:hint});assert.equal(hint.hidden,false);h.document.dispatch('pointerout',{target:hint,relatedTarget:h.body});assert.equal(hint.hidden,true);
+ h.document.dispatch('focusin',{target:button});h.hide(true);assert.equal(hint.hidden,true);h.hide(false);h.document.dispatch('focusin',{target:button});h.document.dispatch('pointerdown',{target:button});assert.equal(hint.hidden,true);h.document.dispatch('focusin',{target:button});h.window.dispatch('pagehide',{persisted:true});assert.equal(hint.hidden,true);
+});
+
+test('unsupported top-layer hints keep the native title and accessible label without a visible fallback overlay',()=>{
+ const h=harness(),button=new h.Element('button');h.body.append(button);h.window.GameUI.decorateButton(button,'play',{iconOnly:true,label:'全桌播放'});button.setAttribute('title',button.title);h.Element.prototype.showPopover=undefined;h.document.dispatch('focusin',{target:button});
+ assert.equal(button.getAttribute('title'),'全桌播放');assert.equal(button.getAttribute('aria-label'),'全桌播放');assert.equal(button.getAttribute('aria-describedby'),null);const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.notEqual(hint.hidden,false);
 });

@@ -1,5 +1,7 @@
 # 設計師角色記憶
 
+2026-10-07媒體六項實作完成／發行前：操作盡量icon-only＋hover說明是使用者直接永久準則；共用registry／overflow文字與提示，可讀名稱／keyboard／touch保留，label／正文／重要玩家資訊不能隱藏。queue只有左handle拖／Arrow、右remove、無上下button，8方向hitarea不遮player，只有overflow:hover跑馬、reduce／hidden停。source完成／發行前候選patch1.8.2：Windows1094／1094（37903.6806ms）、reviewer八檔focused116／116（2361.1404ms），各fail/cancel/skip/todo0。Chrome八向mouse／對邊固定、mouse／Arrow／emulatedTouch handle排序實際ACK，member點播但無全桌/remove；hover transform-237.878px且row69.5px不變，390rawCDP與210floor／sameiframe／POST4→4、rootfont200%樣本已驗。本站custom controls中文aria/icon-only；原生Audio／YT維持，本輪YTplaying未驗，不宣稱五頁UI全部native或全站button搬完。own兩tab／字體／viewport／fixture已清理；Linux／tag／部署待root、正式仍v1.8.1。 見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
+
 2026-10-07：單一內容群組的置中要同時定義 items 與 content 分佈；畫猜未公開題卡的 `place-items:center` 仍承接正面 `align-content:space-between`，不能用逐glyph像素偏移修正。與程式方討論後採全頁共用 primitives、独立symbol槽及不帶help圓圈的未知問號SVG；正面題卡、禮物圖文卡與其他多區內容保留原布局。小D徽章不等於44px按鈕，文字／圖示槽也不替換人物表情或emoji內容。
 
 本輪唯讀盘點20HTML／23CSS／46JS及實際提案、質疑、收斂見 [共用對齊規格](../specs/SHARED-UI-ALIGNMENT.md)。送禮fallback沒有同類space-between衝突，但布局utility必須維持明確hidden；基礎元件的幾何槽與字形ink／素材透明邊界分開驗。此筆是已採用契約與source盤點，程式及背景畫面驗收由主agent記錄；不宣稱本輪已上線，studio小尺寸控制與跨平台字型仍待驗。

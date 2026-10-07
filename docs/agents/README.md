@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07媒體六項source完成／發行前：source完成／發行前候選patch1.8.2：Windows1094／1094（37903.6806ms）、reviewer八檔focused116／116（2361.1404ms），各fail/cancel/skip/todo0。Chrome八向mouse／對邊固定、mouse／Arrow／emulatedTouch handle排序實際ACK，member點播但無全桌/remove；hover transform-237.878px且row69.5px不變，390rawCDP與210floor／sameiframe／POST4→4、rootfont200%樣本已驗。本站custom controls中文aria/icon-only；原生Audio／YT維持，本輪YTplaying未驗，不宣稱五頁UI全部native或全站button搬完。own兩tab／字體／viewport／fixture已清理；Linux／tag／部署待root、正式仍v1.8.1。 永久icon-only＋hover／可讀focus-touch準則已寫AGENTS／MEMORY／DESIGNER，重要內容不隱藏；接手讀 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)，不引用.local偏好，後續正式證據再更新。
+
 2026-10-07 [WebGL導入評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)：已按v1.8.1程式與官方資料盤點；建議雷霆特效局部原型，大廳先比較transform，畫猜renderer與傳送瓶頸分開。這是研究提案，未安裝或實作WebGL、未跑效能原型，不改正式v1.8.1；接手先讀該文件及PROGRAMMER／ANIMATION最新記錄。
 
 2026-10-07畫猜順暢度第一批 **P0／有限local-draft P1完成並正式v1.8.1**：140ms時間flush、有界單in-flight sender與rAF／coalesced；P1只有限明確local draft走opaque layer，settled／viewer原同surfaceclassic，任意fill sticky classic至reset，單組15checkpoints＋1base≤8MiB。P2並行POST／P3抽稀未做，API／codec／PR30額度不变。

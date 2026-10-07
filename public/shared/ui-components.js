@@ -24,12 +24,23 @@
   undo:'<path d="M3 4v6h6M3 10a8 8 0 0 1 16 4v5"/>',
   resize:'<path d="M8 20H4v-4M4 20l7-7M16 4h4v4M20 4l-7 7"/>',
   expand:'<path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/>',
-  refresh:'<path d="M20 7v5h-5M4 17v-5h5M20 12a8 8 0 0 0-14-5M4 12a8 8 0 0 0 14 5"/>'
+  refresh:'<path d="M20 7v5h-5M4 17v-5h5M20 12a8 8 0 0 0-14-5M4 12a8 8 0 0 0 14 5"/>',
+  stop:'<rect x="5" y="5" width="14" height="14" rx="1"/>',
+  add:'<path d="M12 4v16M4 12h16"/>',
+  remove:'<path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/>',
+  dragHandle:'<circle cx="8" cy="5" r="1"/><circle cx="16" cy="5" r="1"/><circle cx="8" cy="12" r="1"/><circle cx="16" cy="12" r="1"/><circle cx="8" cy="19" r="1"/><circle cx="16" cy="19" r="1"/>',
+  external:'<path d="M14 3h7v7M21 3l-10 10M10 5H4v15h15v-6"/>',
+  upload:'<path d="M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"/>'
  };
+ paths.volumeOn=paths.sound;paths.volumeOff=paths.muted;paths.sync=paths.refresh;
  const pending=new WeakMap(),dialogs=new WeakMap();let dialogNumber=0;
  function icon(name){const path=paths[name];return path?'<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+path+'</svg>':'';}
  function symbol(name){const image=icon(name);return image?'<span class="ui-symbol" aria-hidden="true">'+image+'</span>':'';}
  function playerName(name){const text=String(name??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));return '<span class="ui-player-name" title="'+text+'"><span class="ui-player-name-text">'+text+'</span></span>';}
+ function overflowText(value,{hoverOnly=true}={}){
+  const html=playerName(value);
+  return html.replace('class="ui-player-name"','class="ui-player-name ui-overflow-text"'+(hoverOnly?' data-name-activation="hover"':''));
+ }
  function decorateButton(button,name,{iconOnly=false,label}={}){
   if(!button||!paths[name])return button;
   const text=label??button.getAttribute('aria-label')??button.textContent.trim();
@@ -66,7 +77,46 @@
   }
   dialogs.get(dialog).trigger=trigger;if(!dialog.open)dialog.showModal();
  }
- window.GameUI={icon,symbol,playerName,decorateButton,setBusy,setStatus,openDialog,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
+ window.GameUI={icon,symbol,playerName,overflowText,decorateButton,setBusy,setStatus,openDialog,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
+ /* One hover/focus hint in the top layer, independent of clipped game panels. */
+ let controlHint=null,hintOwner=null,hintObserver=null;
+ function hideControlHint(){
+  hintObserver?.disconnect();
+  if(hintOwner){
+   if(hintOwner.getAttribute('title')==='')hintOwner.setAttribute('title',hintOwner.getAttribute('aria-label')||'');
+   const other=(hintOwner.getAttribute('aria-describedby')||'').split(/\s+/).filter(id=>id&&id!=='ui-control-hint');
+   if(other.length)hintOwner.setAttribute('aria-describedby',other.join(' '));else hintOwner.removeAttribute('aria-describedby');
+  }
+  hintOwner=null;
+  if(controlHint){try{controlHint.hidePopover?.();}catch{}controlHint.hidden=true;}
+ }
+ function showControlHint(control){
+  if(!control?.isConnected||document.hidden||!control.getBoundingClientRect||!control.getClientRects().length)return;
+  const text=control.getAttribute('aria-label')||control.getAttribute('title');if(!text)return;
+  if(hintOwner===control)return;
+  hideControlHint();
+  if(!controlHint){controlHint=document.createElement('div');controlHint.id='ui-control-hint';controlHint.className='ui-control-tooltip';controlHint.hidden=true;controlHint.setAttribute('role','tooltip');controlHint.setAttribute('popover','manual');document.body.append(controlHint);}
+  // Keep native title as the fallback when top-layer popovers are unavailable.
+  if(typeof controlHint.showPopover!=='function')return;
+  controlHint.textContent=text;controlHint.hidden=false;
+  try{controlHint.showPopover();}catch{controlHint.hidden=true;return;}
+  hintOwner=control;control.setAttribute('title','');
+  const descriptions=(control.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean);if(!descriptions.includes('ui-control-hint'))descriptions.push('ui-control-hint');control.setAttribute('aria-describedby',descriptions.join(' '));
+  const anchor=control.getBoundingClientRect(),bounds=controlHint.getBoundingClientRect(),width=window.innerWidth||document.documentElement.clientWidth,height=window.innerHeight||document.documentElement.clientHeight;
+  const left=Math.max(8,Math.min(width-bounds.width-8,anchor.left+(anchor.width-bounds.width)/2)),below=anchor.bottom+8,top=below+bounds.height<=height-8?below:Math.max(8,anchor.top-bounds.height-8);
+  controlHint.style.setProperty('left',left+'px');controlHint.style.setProperty('top',top+'px');
+  if(typeof MutationObserver==='function'){
+   if(!hintObserver)hintObserver=new MutationObserver(()=>{if(hintOwner&&(!hintOwner.isConnected||!hintOwner.getClientRects().length))hideControlHint();else if(hintOwner){const value=hintOwner.getAttribute('aria-label')||'';if(controlHint.textContent!==value)controlHint.textContent=value;}});
+   hintObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','open','aria-label']});
+  }
+ }
+ document.addEventListener('pointerover',event=>{const control=event.target?.closest?.('.ui-icon-button');if(control)showControlHint(control);});
+ document.addEventListener('focusin',event=>{const control=event.target?.closest?.('.ui-icon-button');if(control)showControlHint(control);});
+ document.addEventListener('pointerout',event=>{if(!hintOwner||hintOwner.contains(event.relatedTarget)||controlHint?.contains(event.relatedTarget))return;if((hintOwner.contains(event.target)||controlHint?.contains(event.target))&&!hintOwner.contains(document.activeElement))hideControlHint();});
+ document.addEventListener('focusout',event=>{if(hintOwner?.contains(event.target)&&!hintOwner.matches(':hover'))hideControlHint();});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&hintOwner)hideControlHint();});
+ document.addEventListener('pointerdown',hideControlHint,true);document.addEventListener('scroll',hideControlHint,true);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)hideControlHint();});window.addEventListener('resize',hideControlHint);window.addEventListener('pagehide',hideControlHint);
  /* One text node per name. Observers only measure names affected by DOM or size changes. */
  function observePlayerNames(){
   const records=new Map(),owners=new WeakMap(),dirty=new Set(),media=window.matchMedia?.('(prefers-reduced-motion: reduce)');let frame=null,disposed=false,unsubscribe=null;

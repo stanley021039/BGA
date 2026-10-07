@@ -35,3 +35,11 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 @keyframes ui-player-name-scroll{0%,15%{transform:translateX(0)}85%,100%{transform:translateX(var(--ui-player-name-shift,0px))}}
 .motion-reduced .ui-player-name[data-name-overflow=true][data-name-motion=on]>.ui-player-name-text{animation:none;transform:none}
 @media(prefers-reduced-motion:reduce){.ui-player-name[data-name-overflow=true][data-name-motion=on]>.ui-player-name-text{animation:none;transform:none}}
+/* Content labels rest as one-line ellipses; unlike player names, they move only on intent. */
+.ui-overflow-text>.ui-player-name-text{width:auto;overflow:hidden;text-overflow:ellipsis}
+.ui-overflow-text[data-name-activation=hover][data-name-overflow=true][data-name-motion=on]>.ui-player-name-text{animation:none;transform:none}
+.ui-overflow-text[data-name-activation=hover][data-name-overflow=true][data-name-motion=on]:is(:hover,:focus-within)>.ui-player-name-text{width:max-content;overflow:visible;text-overflow:clip;animation:ui-player-name-scroll var(--ui-player-name-duration,5s) linear infinite alternate;animation-play-state:running}
+.motion-reduced .ui-overflow-text[data-name-activation=hover][data-name-overflow=true][data-name-motion=on]:is(:hover,:focus-within)>.ui-player-name-text{animation:none;transform:none;width:auto;overflow:hidden;text-overflow:ellipsis}
+@media(prefers-reduced-motion:reduce){.ui-overflow-text[data-name-activation=hover][data-name-overflow=true][data-name-motion=on]:is(:hover,:focus-within)>.ui-player-name-text{animation:none;transform:none;width:auto;overflow:hidden;text-overflow:ellipsis}}
+.ui-control-tooltip{position:fixed;inset:auto;margin:0;box-sizing:border-box;max-width:min(360px,calc(100vw - 16px));padding:7px 11px;border:1px solid var(--ui-border,#87958a);border-radius:8px;background:var(--ui-text,#263b36);color:var(--ui-surface,#fffdf8);box-shadow:0 4px 14px #0003;font:500 .875rem/1.45 var(--ui-font-family,"Segoe UI","Microsoft JhengHei",sans-serif);overflow-wrap:anywhere;pointer-events:auto;z-index:1000}
+.ui-control-tooltip[hidden]{display:none!important}
