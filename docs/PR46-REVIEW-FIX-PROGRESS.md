@@ -1,5 +1,9 @@
 # PR46 審查修正與正式同步
 
+2026-10-07最新正式同步：**shhuang.cc v1.12.0／83ffcab**已發布，保留PR46合併後相同三份media程式／測試並加入本批原生UI；雙平台1,386、公開與資料核對完成，見 [UI實績](UI-COMPONENT-PATTERNS-PROGRESS.md)。PR46程式／tag1.9.3仍固定a2、雙平台1,300，外部merge1ea916a／headf36b679保持，沒有root merge操作、沒有新UI PR或推merged分支。下方formal1.11.1／Ready為歷史；closed PR body已同步正式1.12實績、[follow-up6039588219](https://github.com/stanley021039/BGA/pull/46#issuecomment-6039588219)已發，state仍closed／merged true。
+
+2026-10-07最新GitHub狀態：**PR46已closed／merged**，merged_at `2026-10-07T13:44:38Z`，merge `1ea916ad651c4b8cad0babfdceed154348a20156`、head f36b679。這是外部已合併，root沒有merge操作；fetch後核對三份media程式／測試與a2c5589及patterns固定83ffcab一致，不需runtime變更。下方Ready／尚未合併是歷史；PR1.9.3雙平台1,300與UI1.12雙平台1,386分開，本批新UI不屬PR46。正式部署以 [patterns進度](UI-COMPONENT-PATTERNS-PROGRESS.md)最新實績為準，不推已merged PR分支。
+
 ## 2026-10-07：新事件排序驗收與重新送審完成
 
 [Stanley新回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6037336371)對bb7b3d提出media state／event排序風險。候選 **v1.9.3**／固定程式 `a2c5589232ed2d4d595a5ac33fbaef572a04fd4f`已完成雙平台各1,300、focused126／獨立複查與fresh真原型API的Pause／最後Play／正常visibility三情境；release／merge-tree／diff checks通過。未加patterns或改renderer。PR已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併。本地tag v1.9.3固定a2c5589，後續純文檔提交不移動tag；正式仍v1.11.1，patterns未發布也不加入本PR。中間回覆只保留歷史。

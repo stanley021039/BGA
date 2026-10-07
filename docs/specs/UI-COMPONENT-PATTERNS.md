@@ -1,22 +1,22 @@
 # 五庫模式的原生元件實作
 
-2026-10-07最新狀態：patterns候選1.12 Windows完整1,386與fresh有限native已驗；Linux／固定commit／tag／正式待root，不預填發布。正式仍1.11.1，最新只讀9帳戶／13市場圖片須全保，不沿用舊8帳戶pin。PR46 a2c5589／1.9.3雙平台1,300、最新head f36b679 Ready仍未合併，本批不混入PR。實際scope以 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)為準。
+2026-10-07最新狀態：**正式v1.12.0已發布**，固定83ffcab／annotated tag、Windows／Linux各1,386與有限native／公開／資料驗收完成，9帳戶／13市場圖片保留。PR46外部合併，其1.9.3雙平台1,300與本批UI分開，沒有新UI PR；source／備份／scope與未驗限制以 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)為準，下方提案階段不是當前發布狀態。
 
-2026-10-07，狀態：**恢復實作／驗收中**。使用者要求把 [Threads五庫研究](../research/THREADS-UI-COMPONENTS-ASSESSMENT.md) 的適合方向嘗試實作；本批在 `feat/ui-polish-webgl` 以正式v1.11.1作驗收基線，預期候選v1.12.0，實際source與結果依 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。PR46第三P2已完成推送、Ready與重新請審查，見 [PR證據](../PR46-REVIEW-FIX-PROGRESS.md)；本批不加入PR46，也未建立新PR。
+初始規劃：使用者要求把 [Threads五庫研究](../research/THREADS-UI-COMPONENTS-ASSESSMENT.md) 的適合方向實作，本批在 `feat/ui-polish-webgl` 以v1.11.1為基線，現已正式v1.12.0。詳細結果依 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，PR歷史見 [PR證據](../PR46-REVIEW-FIX-PROGRESS.md)；本批不加入PR46，也未建立新PR。
 
 五庫提供設計模式與互動參考，本站以原生DOM／CSS、GameUI與已有GameFxLayer原創實作，不安裝React／Next.js／Tailwind／OGL，也不複製元件／shader或受限授權code。來源與授權詳研究；採用模式不代表取得各庫整套可達性或效能。
 
 ## 五庫分類與真實落點
 
-表中區分已完成source／focused、有限native與待整合驗收；局部通過不代表全套或正式發布。
+表中區分source／focused、有限native與正式整合實績；局部證據不外推成所有玩法／裝置認證。
 
 | 研究庫／分類 | 本站落點 | 共用契約與首批方式 | 狀態／驗收 |
 | --- | --- | --- | --- |
-| Magic UI／有限通知列表 | 五款遊戲toast、四款既有earned checks | `ui-notifications.js/css`：共享圖示／正文／dismiss，finite visible／queue／seen；中央tracker按request baseline／差集，8jobs／10s timeout。 | source已實作、focused83／有限真earned已有證據；全套／完整矩陣待驗，重要inline保持，不加poll。 |
-| Aceternity UI／tabs與卡片選取 | 收藏3tabs／query／popstate／使用中card，市場4tabs／hash／admin限制與審核選卡 | `ui-widgets.js/css`：manual tab／panel、選取表面與named group，rapid Arrow同步位置；收藏離music pause、profile讀一次無poll。 | source已實作、focused72／有限keyboard／卡片通過；最終整合待驗，不加Hero／3D傾斜。 |
+| Magic UI／有限通知列表 | 五款遊戲toast、四款既有earned checks | `ui-notifications.js/css`：共享圖示／正文／dismiss，finite visible／queue／seen；中央tracker按request baseline／差集，8jobs／10s timeout。 | 已正式1.12、focused83／有限真earned／雙平台完整已有證據；完整玩法矩陣不宣稱全驗，重要inline保持，不加poll。 |
+| Aceternity UI／tabs與卡片選取 | 收藏3tabs／query／popstate／使用中card，市場4tabs／hash／admin限制與審核選卡 | `ui-widgets.js/css`：manual tab／panel、選取表面與named group，rapid Arrow同步位置；收藏離music pause、profile讀一次無poll。 | 已正式1.12、focused72／有限keyboard／卡片與公開runtime函式通過，不加Hero／3D傾斜。 |
 | shadcn/ui／按鈕群組與dialog結構 | 收藏卡片動作、市場篩選／兩個既有確認dialog | GameUI命名group與圖示，market dialog共用focus／busy，收藏window.confirm保留。 | source已實作、有限Escape／返焦通過；不聲稱完整trap，原批次／確認意圖維持。 |
 | React Aria／鍵盤、焦點、表單錯誤 | 收藏／市場manualtabs、各4forms／市場2dialogs | roving focus／panel關聯，shared invalid batch單microtask首錯欄，保其他describedby、reset／destroy取消。 | source／focused與有限native已驗；不是套用React程式碼／讀屏認證，200% glyph simulation不當真zoom。 |
-| React Bits／短粒子概念 | 原雷霆特效＋真正新earned通知旁慶祝 | `ui-celebrations.js/css`＋原創GameFxLayer，24sparks、960ms／1100ms清理、active≤3／seen256，不畫語意或加OGL。 | source與有限真GL像素／idle已驗；新earned由tracker決定，不補播舊badge，最終全套／矩陣待root。 |
+| React Bits／短粒子概念 | 原雷霆特效＋真正新earned通知旁慶祝 | `ui-celebrations.js/css`＋原創GameFxLayer，24sparks、960ms／1100ms清理、active≤3／seen256，不畫語意或加OGL。 | 已正式1.12／雙平台；有限GL shader probe與server-earned tracker證據分開，新earned由tracker決定，不補播舊badge，完整矩陣／FPS不宣稱。 |
 
 ## 共用元件邊界
 
@@ -53,13 +53,13 @@ P0：同資料桌機1280×720／寬高桌機、390×844、200%文字；長名稱
 
 正式狀態只在受測source與版本固定、備份／schema副本預演、即時房間guard、公開asset／API／資料保全與測試收尾後記錄；本規格不寫私有偏好、帳密、房號或rawHAR。其他硬體／讀屏／所有phase／自然多輪與前景FPS未實測者明列限制。
 
-## 分工與暫定狀態
+## 分工與交付狀態
 
-目前API契約（有focused與有限native，整批source仍待固定）：`mountTabs(tablist,{initial,activation:'manual',onChange,selector})`回傳select／refresh／value／destroy；`bindForm(form)`回傳validate／clear／destroy，invalid／input／change／reset監聽不接管submit，invalid batch一microtask首invalid focus，validate focus:false／reset／destroy取消排程；`bindDialog(dialog,{label,onRequestClose,canClose})`回傳update／open(trigger)／close／destroy，WeakMap重用，bind不自行open以免共用hook遞迴，不更換非modal mode。`GameUI.notify(text,{kind,key,href,label,durationMs,celebrate})`回傳element／dismiss或null；append後才optional celebrate(node,{id})，dismiss／hidden／reduce執行取消。四款既有成就檢查（撲克／送禮／同頻／雷霆）使用server完整id／title差集，畫猜只接toast。
+目前API契約（固定83ffcab，focused／有限native與正式整合scope見進度）：`mountTabs(tablist,{initial,activation:'manual',onChange,selector})`回傳select／refresh／value／destroy；`bindForm(form)`回傳validate／clear／destroy，invalid／input／change／reset監聽不接管submit，invalid batch一microtask首invalid focus，validate focus:false／reset／destroy取消排程；`bindDialog(dialog,{label,onRequestClose,canClose})`回傳update／open(trigger)／close／destroy，WeakMap重用，bind不自行open以免共用hook遞迴，不更換非modal mode。`GameUI.notify(text,{kind,key,href,label,durationMs,celebrate})`回傳element／dismiss或null；append後才optional celebrate(node,{id})，dismiss／hidden／reduce執行取消。四款既有成就檢查（撲克／送禮／同頻／雷霆）使用server完整id／title差集，畫猜只接toast。
 
 | Owner | 檔案／責任 | 狀態 |
 | --- | --- | --- |
-| widgets agent | `ui-widgets.js/css`、收藏庫／市場原生tab／group／field／dialog／card | source／rapid Arrow更新完成，focused72／72與有限native；最終整合待root。 |
-| notifications agent | `ui-notifications.js/css`、五款toast與既有new earned差集 | source／中央tracker完成，focused83／83；整合／追加native待root，不加poll。 |
-| 主agent | `ui-celebrations.js/css`、通知與GameFxLayer接點、routes、整合／版本／原生QA／交付 | 實作／驗收中；不混入PR46。 |
-| docs agent | 本spec／進度／角色記憶與研究status連結 | 規格完成，實績待主agent提供；不從舊v1.11結果推定本批通過。 |
+| widgets agent | `ui-widgets.js/css`、收藏庫／市場原生tab／group／field／dialog／card | source／focused72／有限native與整合已完成，scope見進度。 |
+| notifications agent | `ui-notifications.js/css`、五款toast與既有new earned差集 | source／focused83／tracker與整合完成，不加poll。 |
+| 主agent | `ui-celebrations.js/css`、GameFxLayer接點、routes、整合／版本／QA／交付 | 固定source／tag、雙平台1,386、正式公開／資料／QA收尾完成，無新UI PR。 |
+| docs agent | 本spec／進度／角色記憶與研究status連結 | 已按實際source／finite scope更新，不從舊PR或庫demo推定全站／FPS。 |

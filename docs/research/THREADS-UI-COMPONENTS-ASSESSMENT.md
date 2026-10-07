@@ -1,10 +1,14 @@
 # Threads 推薦元件庫與本站美化評估
 
-2026-10-07最新候選狀態：五庫模式的本站原創元件已通過Windows完整1,386與fresh有限native，實際tracker earned／developer shader probe證據分開；Linux／固定source／tag／正式發布仍待root，不能把研究庫或所有玩法寫成已移植／已驗。正式仍1.11.1，詳 [實績進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)；下方focused／候選階段保留歷史。
+2026-10-07最新成果：本站原創原生元件模式已正式v1.12.0／83ffcab，雙平台1,386與有限native／38media＋37draw公開資源／權限／9帳戶／13圖片資料保全完成，見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。仍未安裝／複製五庫，不把研究或局部驗收當全讀屏／200%zoom／FPS證明；下方候選與pending段為歷史。
 
-2026-10-07最新實作mapping：PR46新排序修正已重新送審，patterns1.12恢復main本地整合。五庫適合模式均有原生source落點：widgets72／notifications83 focused、tabs／group／form／dialog／card、中央earned tracker與短粒子；不等於庫程式碼移植或全套／已發布。實際caps／scope／追加native／交付見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式仍1.11.1，原授權比較與歷史狀態保留。
+2026-10-07歷史候選：本站原生模式source／tag1.12固定83ffcab，Windows／Linux完整各1,386與有限native已驗；部署／公開／資料保全仍待root，不是已採用五庫程式碼或已正式發布。PR46已外部合併，其1,300項媒體scope不含本批UI；詳 [實績](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／pending狀態保留歷史。
 
-2026-10-07後續狀態：使用者要求適合方向嘗試實作，[原生元件spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)涵蓋manual tabs、group／card、form／dialog、有限通知與短成就粒子。PR46優先修正／重新送審已完成，patterns以正式1.11.1為基線恢復實作／驗收，候選1.12.0未驗／未發布。下方「短通知仍候選」是初次研究時狀態，實績以新進度為準；未安裝五庫或複製元件／shader，原授權邊界保持。
+2026-10-07歷史候選狀態：五庫模式的本站原創元件已通過Windows完整1,386與fresh有限native，實際tracker earned／developer shader probe證據分開；Linux／固定source／tag／正式發布仍待root，不能把研究庫或所有玩法寫成已移植／已驗。正式仍1.11.1，詳 [實績進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)；下方focused／候選階段保留歷史。
+
+2026-10-07歷史實作mapping：PR46新排序修正已重新送審，patterns1.12恢復main本地整合。五庫適合模式均有原生source落點：widgets72／notifications83 focused、tabs／group／form／dialog／card、中央earned tracker與短粒子；不等於庫程式碼移植或全套／已發布。實際caps／scope／追加native／交付見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式仍1.11.1，原授權比較與歷史狀態保留。
+
+2026-10-07初始規劃：使用者要求適合方向嘗試實作，[原生元件spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)涵蓋manual tabs、group／card、form／dialog、有限通知與短成就粒子。PR46優先修正／重新送審已完成，patterns以正式1.11.1為基線恢復實作／驗收，候選1.12.0未驗／未發布。下方「短通知仍候選」是初次研究時狀態，實績以新進度為準；未安裝五庫或複製元件／shader，原授權邊界保持。
 
 查核日期：2026-10-07。結論：可以參考這五個庫的元件結構、選取回饋與短動效，但本站先以既有 GameUI、原生 DOM/CSS 和局部 WebGL 落地，不為美化搬入整套 React／Next.js。最適合的三個模式是**清楚的操作分組與選取、可達的 dialog／tooltip、有限時的事件回饋**。
 

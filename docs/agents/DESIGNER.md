@@ -1,6 +1,6 @@
 # 設計師角色記憶
 
-2026-10-07最新patterns候選1.12：Windows完整1,386／47,918.5986ms與新UI65、獨立canvas165／media118通過，分組不加總。fresh真earned tracker／終了和shader probe分開，舊原生矩陣保留scope；Linux／固定source／tag／部署待root，正式仍1.11.1（只讀9帳戶／市場圖片13須保留）。PR46最新f36b679 Ready未合併，本批無新PR。完整結果／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，不預填已發布。
+2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
 
 2026-10-07 patterns有限畫面：收藏／市場manual Arrow只移焦，Enter／Space才換內容；review卡selected邊界／shadow保持同120px高，收藏1280／390／1600與member市場1280／390無橫溢、44px控制。controlled glyph double只是字型模擬，不稱真200% zoom／全站認證；兩dialog Escape返焦已驗，Tab採樣未證fulltrap。真earned持久inline與短粒子不互相替代，source／native限制集中 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式仍1.11.1，本批1.12未發布。
 
