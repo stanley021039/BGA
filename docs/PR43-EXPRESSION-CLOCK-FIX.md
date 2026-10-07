@@ -1,5 +1,7 @@
 # PR43 亂序回覆與表情音效時間修正
 
+2026-10-07 狀態更新：PR43 已合併至 main。以下為修正與送審時的歷史紀錄；最新畫猜與媒體功能已發布 v1.9.0，見 [本輪驗收](DRAW-TIMED-PLAYBACK-PROGRESS.md)。
+
 日期：2026-10-07。對應 [Stanley 的新 P2](https://github.com/stanley021039/BGA/pull/43#issuecomment-6028638470)；原 PR 保持 [#43](https://github.com/stanley021039/BGA/pull/43)。先前跳台方向／固定客戶端時鐘偏差兩項已由 reviewer 複查確認；本次處理較新 social ACK 先到、舊 state 後到造成的時間倒退。
 
 ## 問題與修正

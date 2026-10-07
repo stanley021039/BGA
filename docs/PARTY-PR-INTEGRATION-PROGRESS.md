@@ -1,5 +1,7 @@
 # 派對功能整批 PR 整合
 
+2026-10-07最新PR43候選 **v1.4.2**／`ca931b7`：新亂序音效P2已修，Windows／Linux各815；後續文件不移動受測tag。正式另為 **v1.7.2**／`6fcd55c`、各947，保留後續功能及8帳戶／schema15。完整證據見 [最新修正](PR43-EXPRESSION-CLOCK-FIX.md)。下方v1.4.0／v1.4.1保留為历史，原PR未合併。
+
 2026-10-06，使用者確認將全部已完成且尚未發 PR 的本地改動一起提交。[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，候選 **v1.4.0**。受測程式及本地annotated tag固定於 `bdd77d146ef8f207c8d94c06390aefd2a857d986`；已整合main `689318f` 的YouTube PR #36及交易市場 PR #38，並同步最新main `b744464` 的README更新。後續只有README／驗收文件，執行程式與受測提交一致；沒有移動既有tag，沒有推送版本tag。送審狀態以PR頁為準，這不是正式部署紀錄。
 
 ## 本批內容
