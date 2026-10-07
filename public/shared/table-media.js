@@ -23,7 +23,7 @@
  const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
  function overflowText(node,text){const value=String(text??'');if(node.dataset.mediaText===value)return;node.dataset.mediaText=value;node.textContent=value;node.innerHTML=window.GameUI?.overflowText?.(value,{hoverOnly:true})||'<span class="table-media-ellipsis" title="'+escape(value)+'">'+escape(value)+'</span>';}
  let room=null,marker=null,snapshot=null,generation=0,sequence=0,acceptedSequence=0,fetching=null,lastRequestedKey=null,pendingFetch=false,snapshotGeneration=0,snapshotRetry=null,submitting=false,retryOperation=null,librarySequence=0,permissionShape=null,permissionOverride=null;
- let serverAt=0,observedAt=0,playerEpoch=0,audio=null,player=null,ready=false,nativeVideo=false,videoFallback=false,mountingVideo=null,videoWanted=false,consentKey=null,pendingConsent=false,promptKey=null,unlocked=false,appliedPlayback=null,interval=null,positionRead=null,apiPromise=null,apiScript=null,apiTimer=null,apiCancel=null;
+ let serverAt=0,observedAt=0,playerEpoch=0,audio=null,interruptedAudio=null,player=null,ready=false,nativeVideo=false,videoFallback=false,mountingVideo=null,videoWanted=false,consentKey=null,pendingConsent=false,promptKey=null,unlocked=false,appliedPlayback=null,interval=null,positionRead=null,apiPromise=null,apiScript=null,apiTimer=null,apiCancel=null;
  let positionPreference=null,sizePreference=null,windowPosition=null,windowSize=null,drag=null,sizeDrag=null,queueDrag=null,queuePointer=null,playlistDrag=null,playlistPosition=null,focusedWindow='player',layoutFrame=null,layoutObserver=null,intersection=null;
  const uploadOption='__upload_music__';
  q('#mediaTrack').replaceChildren(new Option('上傳歌曲',uploadOption),new Option('選擇歌曲',''));q('#mediaTrack').value='';q('#mediaPermission').classList.add('ui-sr-only');
@@ -40,7 +40,7 @@
  function position(){if(!snapshot?.current)return 0;const playback=snapshot.playback;const value=playback.anchorPositionSec+(playback.state==='playing'?Math.max(0,serverAt+clock()-observedAt-playback.anchorServerMs)/1000:0);return Math.max(0,Math.min(duration()||maxPosition,value));}
  function signature(){return snapshot?JSON.stringify([currentKey(),snapshot.playback.state,snapshot.playback.anchorPositionSec,snapshot.playback.anchorServerMs]):null;}
  function validPlayer(token,key){return token===playerEpoch&&key===currentKey()&&!!room&&!document.hidden;}
- function stopAudio(){const old=audio;audio=null;if(!old)return;old.onloadedmetadata=null;old.onended=null;old.onerror=null;old.onplaying=null;old._mediaUnbind?.();try{old.pause();old.removeAttribute('src');old.load();}catch{}q('#mediaMusicNative').replaceChildren();}
+ function stopAudio(){const old=audio;audio=null;interruptedAudio=null;if(!old)return;old.onloadedmetadata=null;old.onended=null;old.onerror=null;old.onplaying=null;old._mediaUnbind?.();try{old.pause();old.removeAttribute('src');old.load();}catch{}q('#mediaMusicNative').replaceChildren();}
  function retirePlayer(old){if(!old||retiredPlayers.has(old))return;retiredPlayers.add(old);try{old.pauseVideo();old.destroy();}catch{}}
  function destroyVideo(){ready=false;nativeVideo=false;intersection?.disconnect();intersection=null;const old=player;player=null;retirePlayer(old);q('#mediaPlayer').replaceChildren();}
  function stopPlayers(){cancelPositionRead();playerEpoch++;appliedPlayback=null;mountingVideo=null;videoFallback=false;stopAudio();destroyVideo();apiCancel?.();}
@@ -60,6 +60,13 @@
   if(snapshot.playback.state!=='playing'||!preferences?.enabled||!unlocked||document.hidden){clip.pause();return;}
   if(!clip.paused||clip._mediaPlayPending)return;clip._mediaPlayPending=true;
   try{Promise.resolve(clip.play()).then(()=>{if(!validPlayer(token,key)||clip!==audio||snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled)clip.pause();else status('',true);},()=>{if(validPlayer(token,key)&&clip===audio)status('瀏覽器尚未允許音樂播放，請按「在自己的裝置播放」或原生播放按鈕。',true);}).finally(()=>{clip._mediaPlayPending=false;});}catch{clip._mediaPlayPending=false;status('請按原生音樂播放器的播放按鈕重試。',true);}
+ }
+ // Undo only our visibility pause; a newer room marker must first get its existing snapshot reply.
+ function resumeInterruptedAudio(){
+  const interrupted=interruptedAudio;if(!interrupted||document.hidden)return;
+  if(interrupted.clip!==audio||!validPlayer(interrupted.token,interrupted.key)){interruptedAudio=null;return;}
+  if(markerKey(snapshot)!==markerKey(marker))return;
+  interruptedAudio=null;alignAudio();
  }
  function mountAudio(){stopPlayers();if(snapshot?.current?.type!=='music')return;const key=currentKey(),token=playerEpoch,clip=new Audio();audio=clip;clip.controls=true;clip.preload='metadata';clip.setAttribute('aria-label','本機歌曲播放器');clip.src='/assets/music/'+encodeURIComponent(snapshot.current.trackId);q('#mediaMusicNative').append(clip);settings();clip._mediaUnbind=window.AudioSettings?.bindPreview?.(clip);clip.onloadedmetadata=()=>{if(validPlayer(token,key)&&clip===audio){alignAudio(true);updatePublishControl();}};clip.onended=()=>{if(validPlayer(token,key)&&clip===audio)report('ended',{itemId:snapshot.current.id});};clip.onerror=()=>{if(validPlayer(token,key)&&clip===audio)status('這首歌曲暫時無法播放，可用原生播放器重試或請管理者切下一筆。',true);};clip.load();alignAudio(true);}
  function youtubeApi(){
@@ -96,7 +103,7 @@
   marker={roomInstanceId:next.roomInstanceId,revision:next.revision,hasCurrent:!!next.current};consentKey=`${next.roomInstanceId}:${room.me}`;
   if(!consents.has(consentKey))pendingConsent=true;else if(oldConsentKey!==consentKey)videoWanted=consents.get(consentKey)===true;
   if(oldKey!==currentKey()){stopPlayers();automaticPending.length=0;if(next.current?.type==='video'&&videoWanted&&consents.get(consentKey)===true)openWindow();}
-  render();if(oldKey!==currentKey()||oldSignature!==signature())applyPlayback(true);maybeConsent();return true;
+  render();if(oldKey!==currentKey()||oldSignature!==signature())applyPlayback(true);resumeInterruptedAudio();maybeConsent();return true;
  }
  async function requestSnapshot({force=false}={}){
   if(!room)return false;const requested=markerKey(marker);if(fetching){if(force)pendingFetch=true;return fetching.promise;}if(!force&&lastRequestedKey===requested&&snapshot&&markerKey(snapshot)===requested)return false;
@@ -254,7 +261,7 @@
  function selectUpload(){if(q('#mediaTrack').value!==uploadOption)return false;q('#mediaTrack').value='';window.open('/collection?section=music','_blank','noopener');return true;}
  q('#mediaTrack').onchange=selectUpload;q('#mediaMusicForm').onsubmit=async event=>{event.preventDefault();if(selectUpload())return;const trackId=q('#mediaTrack').value;if(trackId)await command('enqueue',{type:'music',trackId});};q('#mediaVideoForm').onsubmit=async event=>{event.preventDefault();const url=q('#mediaUrl').value.trim();if(url&&await command('enqueue',{type:'video',url}))q('#mediaUrl').value='';};q('#mediaLibraryRefresh').onclick=library;
  window.AudioSettings?.subscribe?.((value,{gesture=false}={})=>{settings(value);if(gesture)unlocked=true;alignAudio();});
- window.addEventListener('resize',queueLayout);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelWindowInteractions();cancelPlaylistDrag();if(audio)audio.pause();if(snapshot?.current?.type==='video')exitVideo('');}else{maybeConsent();if(dialog.open||playlist.open)queueLayout();}});window.addEventListener('pagehide',stop);
+ window.addEventListener('resize',queueLayout);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelWindowInteractions();cancelPlaylistDrag();if(audio){if(!audio.paused||audio._mediaPlayPending)interruptedAudio={clip:audio,key:currentKey(),token:playerEpoch};audio.pause();}if(snapshot?.current?.type==='video')exitVideo('');}else{resumeInterruptedAudio();maybeConsent();if(dialog.open||playlist.open)queueLayout();}});window.addEventListener('pagehide',stop);
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog:modal'))return;if(playlist.open&&(playlist.contains(document.activeElement)||focusedWindow==='playlist')){event.preventDefault();closePlaylist();}else if(dialog.open){event.preventDefault();close();opener.focus();}});
  if(typeof ResizeObserver==='function'){layoutObserver=new ResizeObserver(queueLayout);for(const selector of ['#mediaWindowBar','#mediaStatus','#mediaCurrentInfo','#mediaTimeline','#mediaControlRow','#mediaPlaybackStatus'])layoutObserver.observe(q(selector));}
  if(typeof MutationObserver==='function')new MutationObserver(records=>{if(dialog.open&&records.some(record=>record.target!==dialog&&record.target!==playlist&&record.target!==consent&&record.target.tagName==='DIALOG'&&record.target.open))close();maybeConsent();}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
