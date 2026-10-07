@@ -1,70 +1,45 @@
 # 畫猜防閃爍、逐點播放與平滑倒數進度
 
-日期：2026-10-07。本輪依使用者回報「畫者畫布閃爍」及新要求「接收端按真正點時間逐步呈現，可有少量延遲」，並追加「時間條平滑下降」，正在實作／待整體驗收；尚無本輪正式發布證據。候選版號已定minor v1.9.0；source／最終完整1132／Linux及部署仍待root，不能沿用v1.8.1的1076或舊native結果。本輪規範見 [作畫spec最新段落](specs/DRAWING-SMOOTHNESS.md)，先前結果仍在 [順暢度歷史進度](DRAWING-SMOOTHNESS-PROGRESS.md)。
+日期：2026-10-07。本輪已完成並發布 **v1.9.0**；本頁取代先前本輪「候選／待完整測試／待部署」段落。受測程式與不可覆寫的本地 tag `v1.9.0` 指向 `bfacd7ba0eae94e359489b4a33539fed5a381ef5`。沒有新增 PR 或 push；後續文件提交不移動 tag。
 
-## 已確認原因與修正方向
+本輪同時完成安靜的成功回饋及媒體視窗／手動同步需求。規範見 [作畫順暢度](specs/DRAWING-SMOOTHNESS.md)、[媒體視窗](specs/MEDIA-ICON-WINDOW-UI.md)；更早發布的畫猜改善保留在 [歷史進度](DRAWING-SMOOTHNESS-PROGRESS.md)。
 
-root與renderer owner已確認一條可重現閃白路徑：visible被clear或copyBase後，還沒把完整suffix／canonical畫完就yield；ACK讓local mutable切回classic時，重建也可能先把visible清白。owner固定64筆brush history＋1活動tail的案例，原visible ink853，ACK轉Infinity後、尚未yield就變ink0。這是已確認程式／控制案例，不把所有裝置的閃爍都歸因同一原因，更不歸咎使用者電腦。
+## 實作與證據
 
-修正採画猜opt-in `atomicPresentation:true`：長駐opaque staging保留caller原creation options（含省略的contextAttributes），以canonical renderer完成完整job，再一次copy呈現到visible；合作式yield期間visible維持上一份完整畫作，不能先清／copy一半。取消／舊epoch／reset只允許目前job commit，持續新revision不能造成長筆永久不更新。其他default renderer不因這個選項改畫法。
-
-## 規範與待驗收表
-
-| 項目 | 已定契約 | 狀態／證據界線 |
+| 項目 | 實作方式 | 已驗證結果與界線 |
 | --- | --- | --- |
-| A1 原子呈現 | staging內合作式重建，完整job且identity／epoch有效才整幅commit；ACK／draft settle／classic切換不暴露白底或部分舊圖。 | 已實作候選；owner最終41／41及4 controlled native已驗，實際持筆／整體／部署待root。 |
-| A2 cache與取消 | staging／opaque base／checkpoints合計512×256≤8MiB；default16预算為14 checkpoints＋base＋stage，maxCheckpoints2可0checkpoint。whenIdle涵蓋完整呈現，取消不得晚commit。 | cache／visible回歸已含owner scope；跨epoch／long-held starvation與native待root。 |
-| T1 捕捉真時間 | brush／erase可選`pointTimes`，前端以同stroke相對時間生成，coalesced／up與相鄰整數去重同步保留點／時間，carry anchor沿原相對時間。 | 前端／root實作中；不用網路收包時間假造每點等間隔，參數與真native待驗。 |
-| T2 server資料 | optional僅brush／erase；與points同長，每項safe integer ms 0..120000，chunk內非遞減，可相等。null／empty／sparse、shape／fill帶times拒絕。 | backend新7項、合計30／30通過並freeze；非總體時序／native結果。 |
-| T3 continuity界線 | server不增加跨chunk timing ledger、不強制首項0或anchor時值；同stroke基準／anchor continuity由前端生成與receiver有界排程維持，不直接相減不同client的performance.now原點。 | 新stroke buffer60ms、同stroke連chunk保相對差值；gap cap300ms／單batch展開cap700ms／總lead900ms，極端backlog canonical；待真雙席／jitter。 |
-| T4 viewer live呈現 | spectator即時SSE brush／erase才按pointTimes以client rAF逐點呈現；canonical接受／version立即更新。artist看本機preview，ACK不重播。 | root實作候選／真CDP觀察25partial frames；buffer60/gap300/batch700/lead900與極端canonical有界，不保完整停頓錄影、低延遲或60fps。 |
-| T5 baseline障壁 | snapshot／首次載入／reconnect／gap、reveal／undo／clear／fill及非brush操作立即回完整canonical baseline，取消尚未播完的尾巴。 | 待跨輪／fill依賴／undo與晚callback驗收；基線不能排舊動畫。 |
-| T6 wire與保存 | 用原draw/stroke批次與SSE，不增加server timer、逐frame／逐點broadcast。immutable batchId/body包含times；ACK/SSE/live及公開result snapshot保留timing，永久收藏仍PNG、DB/schema不變。 | backend clone／payload驗證已scoped通過；保存／PNG與原額度完整回歸待root。 |
-| C 平滑倒數 | 共用CountdownBar用WAAPI linear scaleX連續下降，native progress／秒數保server deadline；不每frame JS／新增poll，epoch／phase／newdeadline重設，hidden/pagehide cancel、show-BFCache baseline。 | 原生animationseek已觀察linear單調，背景自然動畫曾約1.5s drift；新增currentTime vs wall drift≥100ms才補serverdeadline／1test，最新1132及native待root。 |
-| R 每輪後檢查 | 每輪reveal、換下一畫者與新canvasEpoch後都檢查有無閃白／殘影／舊尾巴／草稿／rAF/timer殘留，不能只首輪或最後終點。 | 使用者長期要求已記；本輪實際round矩陣／證據待填。 |
+| A 原子呈現 | 畫猜 opt-in `atomicPresentation:true`；合作式重建在長駐 opaque staging 完成後，identity／generation 有效才整幅複製至 visible。yield 期間保留上一份完整畫作，artist ACK 不先清空 visible。 | renderer focused 41/41；四個 Chrome 控制案例與 legacy／fresh 嚴格 RGBA 差皆 0。兩個 fill 案例有 3／4 次 yield，途中 visible 未改；兩個 dense 案例同步完成，沒有中途採樣。 |
+| A cache／context | 512×256 的 staging、opaque base 及 checkpoints 合計不超過 8MiB。保留 caller 原始 context creation options，不能把省略的 `willReadFrequently` 轉成明示 false。 | cache、取消、whenIdle 及原子呈現回歸通過。context 改正前有 native AA 差，改正後四例皆 0；不推斷使用者其他電腦的 GPU／CPU 原因。 |
+| T 點時間 | brush／erase 可選 `pointTimes`，與 points 等長、safe integer 0..120000ms、chunk 內非遞減。捕捉 coalesced／pointerup 時間，carry anchor 保留原相對時間；immutable retries 不修改 batch body。 | backend focused 30/30（含新 7 項）；非法 timing 不改版本或額度，points／times 分別 clone。公開 ACK、SSE、snapshot 保留 `[0,40,130]`。 |
+| T 接收端回放 | canonical acceptance／version 立即更新；viewer live brush／erase 用單一 rAF 逐点呈現，artist 不回放自己的 ACK。新筆 buffer 60ms、gap 上限 300ms、batch 展開上限 700ms、總 lead 上限 900ms；過度積壓回 canonical。 | 背景 Chrome trace：viewer 62 個採樣 frame 中 25 個 partial frame，最終 queue 排空；證明該 trace 逐步呈現，不等於自然 60fps或完整停頓錄影。 |
+| T 基線／保存 | snapshot、reconnect、gap、reveal、undo、clear、fill、shape 等立即回完整 canonical 並取消舊尾巴。原 draw/stroke／SSE 與 quota 沿用，不加伺服器逐點或逐 frame timer。 | 自動回歸與公開 duplicate／nonartist／undo／clear 驗證通過。永久收藏仍 PNG，DB schema 未變；不宣稱本輪另做過真 UI 收藏。 |
+| C 平滑倒數 | 共用 CountdownBar 用 WAAPI linear scaleX；native progress／秒數以 server deadline 為準。epoch／phase／新 deadline 重設，hidden／pagehide 取消，恢復時重建 baseline；currentTime 與 wall elapsed 漂移達 100ms 才補正。 | 三項專用回歸通過；控制 Animation.currentTime 在 0／8／16／32／64／120／200ms 間，scale 約 .643658→.641992 連續單調，之後還原。沒有新增逐 frame JS 或網路輪詢。 |
+| Q 安靜回饋 | 移除 artist「輪到你畫圖」及成功「操作已完成」「猜測已送出」提示；錯誤、重新連線、儲存設定回饋仍保留。 | 真 Chrome 開始／選題／猜錯後，artist actions 與 guess status 為空；輸入清空，猜測留在聊天室。 |
+| V 影片高度 | 沒有個人尺寸偏好時，active video 視窗使用 viewport 高度扣 16px；量測實際 chrome／間隔，player flex 填滿主區。既存個人尺寸仍尊重；music／empty／個人退出回原預設。 | Chrome 1794×1053：原視窗900×620／iframe870×321.203125，修後900×1037／iframe約870×757–762。640×1200 窄窗無水平溢出；390×260 的不足空間護欄保留。YouTube 自身長寬比留白與原生品牌連結不屬本站移除範圍。 |
+| V 縮放／按鈕 | 修正 keyboard resize 把 DOMRect spread 丟失非 enumerable 欄位，改為明確讀取 left／top／width／height。桌機影片下方按鈕36px；coarse／mobile 保留44px。本站「在YouTube開啟」出口刪除。 | getter DOMRect 回歸先失敗後通過；八個 keyboard 邊緣實際縮放且保持同 iframe。原生 mouse 跨 iframe trace 不完整，不列成功拖曳證據。 |
+| P 手動同步 | 全桌 seek slider 改為「同步我的播放進度」icon；controller 先調自己的原生 YouTube／Audio，只有按此鈕才讀 currentTime 並送既有 seek。普通席隱藏；未 ready／無 API fallback 禁用並說明。 | 真 YouTube API controlled seek47.25：shared仍0.001 paused／seek POST0；實際按鈕後雙席47.25／POST1。真 Audio controlled seek31.5：shared仍0.001 paused／revision18／累計POST1；按鈕後雙席31.5／revision19／POST2，兩席readyState4，member鈕隱藏。不是 mouse slider drag 驗收。 |
 
-timing驗證在既有duplicate ID check之後、rate／quota／version mutation之前，duplicate只ID去重的原語意不變。points與times分別clone；錯誤不能消耗畫作額度或偷偷提高30,000點上限。這是展現節奏metadata，不可信作score、deadline、畫者權限或伺服器時間。
+root 確認的閃白路徑是 visible clear／copyBase 後完整 suffix 尚未完成就 yield，以及 mutable→canonical ACK 重建先清空。五個真正 yield 的回歸修前 1 pass／4 fail；修後完成。原生持筆 trace 的 artist 56 個採樣 frame、26 次 ink 增長、whiteAfterInk 0；26 batches／51 個含 anchors 點。另一有效六次移動 trace 的兩席最終 PNG SHA 相同、版本 8、七批十三點皆有 timing，renderer／queue 排空。這些是有限的背景工具輸入與控制案例，不是所有輪、所有裝置或使用者另一台電腦的保證。
 
-## 真Chrome與回歸矩陣（待root證據）
+## 完整測試、發布與資料保存
 
-| 場景 | 必記證據 | 狀態 |
-| --- | --- | --- |
-| artist多筆／ACK mode切換 | 固定非空history／tail，每次yield前後可見畫布只能是完整前圖或完整新圖；ACK前後無非預期ink0，up末點不漏。 | 待native／自動回歸scope核對 |
-| 合作式cold replay／fill | 最多48fill及多brush、取消／reset／新job；合法clear可白，其他控制案例不能因render中途露白。cache≤8MiB／whenIdle與PNG完成。 | 待完整／native |
-| 長持筆／高頻revision | held持續增加資料仍能有界更新visible，不因每幀取消staging而餓死；send與preview各自有界。 | 待native starvation |
-| 雙席真點時間 | 同epoch不同間隔trace＋跨64點批，viewer逐步frame／時間間隔與最後完整points；artist不重播ACK。 | 待native，合成与真人工具輸入分列 |
-| 20／200／400ms／jitter／lostACK | 點時間與receipt等待分開；重試ID/body/times不變、SSE與ACK兩次序、無額外frame網路、queue／delay有界。 | 待scoped／native |
-| legacy／非法timing | 無pointTimes相容即時；null／sparse／負值／非整數／>120000／錯長／逆序／fill-shape拒且version／quota不變。 | backend30／30回報已通過；整合待root |
-| 基線操作打斷回放 | reconnect／snapshot／gap／undo／clear／fill／line／shape／reveal立即完整canonical；舊frame不能重畫已刪筆。 | 待回歸／native |
-| C 倒數連續呈現 | 固定server deadline量中間transform／剩餘比例与秒數；同deadline不重啟，epoch／phase／新deadline重設、hidden/pagehide取消、BFCache/serverbaseline及fallback，不新增frame timer/poll。 | 待root unit／native |
-| 每輪reveal→下一輪 | 每輪保存round／epoch／version、非空圖／公開result、草稿與playback queue／rAF/timer清理；新輪合法空圖與閃爍分開。 | 待多輪實測 |
-| hidden／減動／離席 | 畫作完整可見，不因停装飾動畫而不畫；hidden往返／leave清callback。減動fallback與追趕策略按最终source記錄。 | 待策略／回歸／native |
-
-5項真正yield visible regression修前1pass／4fail，第一候選四renderer檔40／40；creation intent修正後最終41／41，是特定source scope；backend30／30也是其範圍。已有下段單輪原生trace、Animation seek與1131前版Windows結果，最終stalled correction source1132／Linux／tag／正式仍待，不预填完成。舊classic/native AA差仍按原控制條件比較，不以mask相同或換context hint隱藏新增差異。
-
-## renderer原生控制案例與creation options
-
-第一atomic候選native在filled-erase差3515 RGB／max92、filled-long-history差24260／max93，dense／ACK0，不能以scoped40通過掩蓋。owner發現staging用getContextAttributes報告defaults重建，將省略willReadFrequently變成明示false；修正只傳caller原options.contextAttributes。固定Chromium source的kUndefined分支含readback後DisableAcceleration條件，支持省略／false語意差的機制線索，不證明当前Chrome唯一CPU/GPU因果。[固定Chromium source](https://chromium.googlesource.com/chromium/src/+/fe487bfab3b23b7a107987b0a2f7b65222ae7ae0/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc)。
-
-最終ignored work/draw-timed-atomic-native-final.json的dense-static／filled-erase／filled-long-history／dense-ACK-settlement四例，與legacy及fresh均RGBA0／max0；allLegacyExact／allHeld／allBounded true、cache≤8MiB。兩fill例3／4次yield觀察皆changedWhilePending0，dense兩例觀察0（同步完成），不能說四例都有中途frame採樣。這是controlled native renderer，不替代真持筆、receiver時序或每輪；180calls工具trace timeout且accepted0不作成功證據，root另驗有效短持筆。
-
-CountdownBar用Element.animate建立Animation並由caller取消／重設，合成路徑与平滑度待native。[MDN animate](https://developer.mozilla.org/en-US/docs/Web/API/Element/animate)。
-
-## 新增真輸入／倒數與Windows證據（最終1132／Linux／部署待）
-
-候選minor v1.9.0。root背景Chrome真CDP25move heldstroke：artist56採樣frames／26次ink增長、whiteAfterInk0；26batches、51含anchors點。viewer62frames，其中25partial frames的fullpoints與shown不同、drain empty，確認該trace有逐步呈現，不是整筆瞬間一次顯示。去敏ignored work/draw-timed-native-artist.json／viewer.json。這是一個工具原生事件trace／背景engine節流，不是60fps、人體採樣率、所有輪或使用者另一台電腦改善證據。
-
-倒數ignored work/draw-timed-countdown-native.json：在native progress固定0.608575時，對Animation.currentTime手動seek elapsed0／8／16／32／64／120／200ms，scale約0.621396→0.619730單調／linear，之後seek還原。這證明該控制動畫在秒數／原生value兩次更新間可連續變化，不是自然60fps或動畫與每次progress取樣毫秒完全一致。原始背景自然動畫另觀察約1.5秒drift，root新增currentTime相對wall elapsed漂移達100ms才補serverdeadline，保留原生權威value／文字，不增加逐frame JS或額外poll；新增1test，最終source1132／原生校正尚待。
-
-第一次Windows1131總1129pass／2fail是既有fixture把functional #timerFill算入decorative動畫；明確排除它後第二次1131／1131、37700.4126ms，fail/cancel/skip/todo0。root新增stalled correction1test後最新1132正在重跑；這兩次舊source數字不替代最新全套／Linux。沒有本輪tag／部署完成證據。
-
-## 交付狀態
-
-| 項目 | 結果 |
+| 驗收 | 結果 |
 | --- | --- |
-| source／focused | renderer41／backend30及controlled native4已驗；root新增timing5、CountdownBar原2與stalled校正1回歸，最終整合待1132。 |
-| Windows／Linux完整 | Win第一次1131是1129pass／2fixture fail，functional timer列入decorative animation count；fixture排除#timerFill後1131／1131、37700.4126ms、0fail/cancel/skip/todo。其後新增漂移校正1test，最終1132／Linux待驗，不把1131當最終source。 |
-| 真Chrome／每輪檢查 | controlled renderer4及單輪真CDP25move／timer animationseek已驗（scope如下）；每輪完整matrix／最終stalled校正native與清理仍待root，不宣稱60fps或別台PC改善。 |
-| 版號／tag／正式／資料／清理 | 候選minor1.9.0；最終1132／Linux／source-tag／正式資料與清理待root，新功能尚未宣稱正式發布。 |
+| Windows 全套 | Node24.14.0，1144/1144，37744.583ms。 |
+| Linux 全套 | Node22.22.1，1144/1144，198338.756991ms。 |
+| 結果完整性 | 兩平台 fail／cancel／skip／todo 皆 0。中間1131／1132／1134來源已被本頁最終1144取代。 |
+| 版號 | minor1.9.0；release check 對 v1.8.3／minor 通過；發布包 SHA-256 `c65e033f50c3045208507dfd81bf067ada9b4f456a110a77dc1008d7a13f6106`。 |
+| 備份／预演 | online SQLite backup＋另時點的 files／env archive，不是 atomic cold snapshot。副本 schema15／21表、8帳戶全欄位保留，隔離候選外部副作用關閉。 |
+| 啟用 | 使用者明確選擇現在重啟，接受等待房間失效；UTC07:13:48 fresh inventory 後切換，啟用健康確認時間 UTC07:13:55.380Z，正式 v1.9.0，PID119055→128765，service／tunnel active。 |
+| 公開畫猜 | UTC07:14:07.091Z，11資源精確 source／no-store，3個自有 member；timing ACK／SSE／snapshot、duplicate 額度、nonartist拒絕、undo／clear lifetime quota通過。單trace ACK29ms／SSE觀察29ms，不能作一般延遲或FPS排名。 |
+| 公開媒體 | UTC07:15:00.076Z，13資源精確source／MIME／no-store；三自有 member點播、普通席 transport403、room manager seek／skip、降權即時、site role不變。 |
+| 正式資料 | schema15，21表schemas、20個非session表既有rows／BLOB及8帳戶全欄位相同；integrity ok、FK0。有效data／env路徑不變、import generation未啟用。session173→184包含本輪已登出QA登入，不能寫全DB逐列不變。 |
+| 清理 | 自有正式驗收房已離席刪除、sessions登出；兩個local media Chrome分頁關閉、viewport override還原、隔離preview／proxy／SSE／presence正常停止。未將瀏覽器提到前景。 |
 
-只記本輪使用者直接要求與已確認契約；私人偏好、帳密、房號、raw HAR不提交。歷史「無PR」是當次事實，不能抄成新一輪永續偏好或發布授權。
+去敏診斷檔與截圖保存在本機 ignored `work/`，包括 `draw-timed-atomic-native-final.json`、`draw-timed-native-artist.json`、`draw-timed-countdown-native-final.json`、`draw-timed-live-pixel-proof.json`、`draw-timed-quiet-native.json`、`media-manual-music-verification.json`。截圖 `draw-timed-quiet-proof.png` 與 `media-manual-sync-final-proof.png` 已人工檢視；private credentials、cookie、原始 HAR 與本機偏好不進 Git 或發布包。
+
+## 長期檢查與尚未實測範圍
+
+每次改畫猜 input／transport／renderer，每輪都檢查持筆、ACK settle、reveal→新畫者／canvasEpoch 是否閃白、殘影或丟草稿；並檢查 viewer逐點時序、baseline操作取消、倒數及隊列清理。規則已寫入 [AGENTS](../AGENTS.md) 及角色記憶，不能只靠最終圖片相同宣稱途中順暢。
+
+本輪沒有完整多輪真人 native矩陣、不同硬體、真弱網／封包遺失、自然60fps量測、原生 mouse timeline拖曳或喇叭聽感驗收。既有自動測試與上述有限trace不能替代這些；後續依問題補針對性驗證。播放器時間讀取保留2秒deadline、generation／playerEpoch／currentKey／revision／playback signature／provider／ACL／關窗取消與晚回覆防護，不能為了少量延遲而放寬權限或主動逐秒同步。

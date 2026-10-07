@@ -1,5 +1,7 @@
 # 設計師角色記憶
 
+2026-10-07正式v1.9.0媒體補充：影片主區使用可用高度，底列桌機compact而手機／coarse保操作尺寸，toolbar保持；本機原生控制與「同步我的播放進度」分清，只有有權席位可發布全桌。移除本站外開入口／共用seek不等移除YouTube原生branding、letterbox或所有控制；重要狀態與clock保持可見。最新規範／scope見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
+
 2026-10-07補充：語意不同的播放操作使用三角／裝置圖示區分，桌機同列按鈕以輕分隔分組；角色表情圖卡保持方形，省掉可見名稱並用共用提示。美化研究優先收斂字级／keylines／表面層次，詳 [研究評估](../research/UI-POLISH-DES13-ASSESSMENT.md)。
 
 2026-10-07媒體設計準則：操作盡量只用圖示與hover／focus提示，共用GameUI registry；中文可讀名稱與keyboard／touch操作保留，重要資訊不能因減字隱藏。清單與點播放獨立較寬視窗，媒體entry單行、小gap、左把手／右移除；主播放器保留影片空間，從邊緣縮放。音樂下拉第一個文字選項「上傳歌曲」屬導航，不能作為歌曲送出。長名稱只在hover跑馬，減少動態或背景時靜止；字體放大時用共用控制尺寸token避免遮擋。見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)，全站圖示化按後續功能逐步套用。

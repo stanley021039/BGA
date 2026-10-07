@@ -1,10 +1,8 @@
 # 共用偏好與已知決策
 
-2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+2026-10-07 U44-media-height-native-publish：使用者直接要求影片填滿主區與可用高度、移除本站外開影片提示／共用seek；保留clock及canControl-only「同步我的播放進度」。原生slider／本機video或audio時間先只改自己，按publish才一次seek全桌，ticks不讀時間或seek；一般席可點播，無全桌發布權。影片底列桌機compact、手機／coarse保操作大小，toolbar不縮。YouTube原生branding／letterbox保留，縮放只自己；原生DOMRect取四欄位而不spread。正式v1.9.0實作與有限native證據見 [媒體spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
 
-2026-10-07同輪追加平滑時間條（待驗）：共用CountdownBar用WAAPI linear scaleX，native progress／秒數保server deadline，不每frame JS／新增poll。hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設；動畫不推進規則，也不能因停動效讓倒數不可讀。viewer新strokebuffer60ms、gap300／batch700／總lead900ms，極端backlog canonical，長停頓可壓縮不是完整錄影。C／timing仍待整體/native；renderer保留caller原creation options後最終41scoped与4 controlled nativeRGBA0只其scope（兩dense無yield觀察）。
-
-2026-10-07 U43-draw-atomic-timed-playback：使用者直接回報畫者畫布閃，要求每輪之後檢查、接收端依真pointTimes逐點顯示，可少量有界延遲。root已確認clear/copyBase後yield與ACK mutable→classic露白；候選opaque staging完成才present、brush/erase可選safeint0..120000／same-length／chunk非遞減、viewer live rAF，不播artist ACK。baseline snapshot/reconnect/reveal/undo/clear/fill立即canonical，cache含stage≤8MiB、不加server timer或逐frame broadcast、不改權限／額度／score／DB。每輪after-check完整圖、無舊尾／草稿／frame/timer，長期回歸必保。實作／待整體驗證，backend30／renderer41与controllednative4不等每輪／正式，见 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)；舊發布／無PR歷史不被當成新偏好，本機私有偏好不提交。
+2026-10-07 U43-draw-atomic-timed-playback：使用者回報畫者閃白，要求每輪之後檢查、接收端按真點時間逐步出現且允許少量延遲，時間條平滑下降；追加移除「輪到你畫圖」「操作已完成」「猜測已送出」。正式v1.9.0採opaque staging完整才present、brush／erase optional pointTimes與有界viewer回放，artist不重播ACK；baseline操作取消尾巴，cache含stage≤8MiB、無server逐frametimer，不改權限／PR30額度／score／DB。CountdownBar保server deadline；必要錯誤／設定／重連與玩家資訊不隱藏。每輪持筆／ACK／揭曉／換畫者必查中途白底與終點完整、舊尾／草稿／frame／timer清理；單trace不代表所有裝置／自然多輪或60fps。最新證據只集中於 [進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)，不抄本機私有偏好或把歷史PR事實當永久偏好。
 
 2026-10-07 U42-playback-expression-ui：全桌與本機播放需用不同圖意；桌機控制列同一行，窄版允許換行且保持操作尺寸。角色表情卡只放圖片，名稱用共用hover/focus提示與中文aria；選單內部scroll不重定位，不透過暫時放寬高度量測而破壞scrollTop。見 [實作進度](../MEDIA-EMOJI-POLISH-PROGRESS.md)。
 

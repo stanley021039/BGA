@@ -1,23 +1,21 @@
 # 畫猜作畫與同步順暢度改善規格
 
-## 最新：防閃爍與真點時間回放（2026-10-07，實作／待驗證）
+## 最新：防閃爍、真點時間回放、平滑倒數與安靜回饋（正式v1.9.0）
 
-候選minor v1.9.0，整合後最終1132／Linux／tag／正式仍待。使用者新要求：修画者畫布閃爍、接收端依真正點時間逐步出現且可有少量延遲；**每輪结束後都檢查**，不能只首輪或整場最後。root已確認visible clear／copyBase後yield及ACK local mutable→classic切換可暴露白底。新修正／timing均以 [本輪進度與矩陣](../DRAW-TIMED-PLAYBACK-PROGRESS.md)為準，尚未有本輪正式證據；下方v1.8.1／1076與native結果全部保留為第一批歷史，不當成本輪完成。
+2026-10-07：本輪已實作、雙平台完整回歸通過並於UTC07:13:55.380發布為正式v1.9.0。使用者要求修畫者閃爍、接收端按真點時間逐步呈現、時間條平滑下降，以及每輪之後檢查；另移除三項重複成功文字。最新source／測試／原生及正式資料證據集中於 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)。下方v1.8.1結果保留為歷史，不與本輪混算。
 
-| 類別 | 本輪規範 | 狀態 |
+| 類別 | 完成契約與長期回歸 | 驗收界線 |
 | --- | --- | --- |
-| atomicPresentation | live畫猜opt-in opaque staging，保留caller原creation options／canonical畫法完成整個job再一次copy到visible；所有yield在staging，保留上一份完整圖，ACK／draft settle／mode切換不先清visible。latest job／epoch才commit，whenIdle含present，長持筆不被連續取消餓死。 | 已實作候選／scoped回歸，native／整合待驗 |
-| cache | staging／base／checkpoint總cache512×256≤8MiB；default16為14checkpoint＋base＋stage，maxcp2可0checkpoint，default renderer不變。 | owner最終41／41scope、renderer native4 strict0；真持筆／時序／多輪待驗 |
-| pointTimes | optional僅brush／erase，與points同長的safe integer ms0..120000，chunk內非遞減／可相等；null／empty／sparse、shape／fill带times拒。server在duplicate後、rate/quota/version前驗；不新建跨chunkledger，不強制首0或anchor，continuity由前端生成／receiver維持。 | backend新7／合計30通過，整合待驗 |
-| sender／wire | 同stroke相對採樣時間，coalesced／up／去重同步保留，anchor carry沿原時間；prepare後ID/body／times不變。仍單in-flight／原額度與原stroke批／SSE，無server timer／frame或逐點broadcast。 | 時間生成／整體待驗 |
-| spectator live | 即時stroke才以client rAF按真點間隔呈現，新stroke buffer60ms、gap cap300／batch展開cap700／總lead900ms，同stroke連chunk保差值、極端backlog canonical；version／canonical接受不延後。artist本機preview不等待、不重播ACK。 | 真CDP單輪viewer62frames中25partial／drain empty已見；追趕/跨輪與最終source整體待验，不宣稱60fps。 |
-| canonical障壁 | snapshot／首次載入／reconnect／gap、reveal／undo／clear／fill／非brush即時完整baseline，取消舊回放；公開result與收藏PNG不存部分畫作，timing不改score／deadline／DBschema。 | 回歸與native待驗 |
-| C 平滑倒數 | 共用CountdownBar用WAAPI linear scaleX，native progress／秒數仍server deadline，不每frame JS／新增polltimer；hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設，不用動畫推進規則。 | 原生Animation seek linear已驗，背景约1.5s drift新增≥100ms時校正serverdeadline／1test；最終1132與native校正待root。 |
-| 長期每輪回歸 | 每輪after-check畫者／接收／reveal／下一畫者：round／epoch／version、畫布完整、合法新輪空圖、無舊尾／草稿／frame／timer；native途中frame與終點canonical分開驗。 | 永久要求已記，本輪多輪結果待root |
+| A 原子呈現 | 已確認visible clear／copyBase後yield及ACK mutable→classic切換可暴露白底。畫猜opt-in atomicPresentation:true，以opaque staging完成canonical job再整幅copy；yield保留上一份完整畫作，latest job／epoch才commit，whenIdle含present，取消／reset不能晚畫。保留caller原creation options，包括省略contextAttributes。 | controlled native四例與legacy／fresh strict RGBA0；真正持筆trace無非預期白底。控制案例與逐輪回歸分開，不推論所有硬體。 |
+| A cache | staging／base／checkpoints合計512×256≤8MiB；default16為14 checkpoints＋base＋stage，maxCheckpoints2可0 checkpoint。default renderer不改。 | cache與取消已回歸，不以換context hint或放寬AA掩蓋差異。 |
+| T timing資料 | optional pointTimes僅brush／erase；同points長度、safe integer ms0..120000、chunk內非遞減且可相等。null／empty／sparse及shape／fill帶times拒。duplicate後、rate／quota／version前驗；不增加跨chunk ledger，不強制首0或anchor值。前端維持同stroke相對時間、去重與carry anchor，immutable ID/body包含times。 | ACK／SSE／live及公開result snapshot保留timing；points／times分別clone。原duplicate ID語意、PR30額度、權限、score及DB/schema不改。 |
+| T viewer呈現 | 只live brush／erase按pointTimes以client rAF呈現；新stroke buffer60ms、gap cap300ms、單batch展開cap700ms、總lead900ms，跨chunk保相對差值，極端backlog回canonical。canonical接受／version立即；artist本機preview不等網路、不重播ACK。 | 原生trace確有partial frames；cap允許追趕與壓縮長停頓，不承諾完整錄影、60fps或固定端到端延遲。仍原POST／SSE批次，無server逐frame／逐點timer或broadcast。 |
+| T baseline | snapshot／首次載入／reconnect／gap、reveal／undo／clear／fill／非brush立即完整canonical並取消舊尾巴；公開結果／收藏PNG不保存部分回放。 | 取消／epoch／基線自動回歸與正式API已驗；每輪仍須檢查，不以終點相同代替中途不閃。 |
+| C 平滑倒數 | CountdownBar用WAAPI linear scaleX；native progress／秒數仍server deadline，不逐frame JS／新增poll。hidden／pagehide cancel，show／BFCache baseline，epoch／phase／newdeadline重設。既有更新中比currentTime與wall elapsed，drift達100ms才校正server deadline。 | 原生Animation seek單調linear且恢復；校正回歸已驗。背景自然節流不保證每刻誤差≤100ms，不用動畫推進遊戲規則。 |
+| Q 安靜回饋 | 移除「輪到你畫圖」「操作已完成」「猜測已送出」。画者身份留玩家卡、成功猜測留聊天室／既有結果；generic成功status清空。設定已儲存、錯誤與重連提示保留。 | 背景Chrome真start／choose／wrong guess已驗，兩項quiet回歸保必要提示。 |
+| R 每輪檢查 | 每輪持筆／up／ACK、reveal／下一畫者／新canvasEpoch，都查完整圖、合法空圖、無非預期白底／殘影／舊尾／草稿，queue／rAF／timer清理。 | 中途frame與終點canonical分別留證。單輪trace不代表自然多輪、所有裝置或人類FPS已驗。 |
 
-renderer第一次native填色／erase巨大差经保留caller creation intent修正；最終4 controlled native對legacy/fresh嚴格RGBA0，不代表全部實際持筆／時間／輪次已驗。不得把省略contextAttributes改成getContextAttributes回報defaults，必保caller原選項。pointTimes cap是少延遲追趕，不保任意長停頓原樣；legacy無times live仍即時。詳本輪進度。
-
-本輪新增真CDP25move：artist56frames／26ink growth／whiteAfterInk0、26batches51anchorspoints，viewer62frames／25partial／drain empty；只是單trace，不代替每輪。CountdownBar animationseek已linear單調，背景自然drift約1.5s後新增100ms門檻校正／1test。Windows1131第二次全pass只是校正前source，最新1132／Linux／部署待root；完整證據见本輪進度。
+舊P2並行POST／P3抽稀未實作；本輪不藉放寬畫作額度、並行亂序或改canonical點換效果。原classic跨paint控制的既有AA差與未完成rAF控制保留在歷史段；不歸因使用者硬體。
 
 ## 第一批v1.8.1歷史規格與發布
 

@@ -1,8 +1,10 @@
 # 畫猜作畫與同步順暢度進度
 
-2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+## 最新正式v1.9.0（2026-10-07）
 
-2026-10-07最新一輪：畫者閃爍／viewer真點時間回放正在實作與待驗證，source／完整測試／native／正式狀態另見 [本輪進度](DRAW-TIMED-PLAYBACK-PROGRESS.md)。已確認visible clear或copyBase後yield、ACK mutable→classic可露白；候選opaque staging原子present、optional brush／erase pointTimes及viewer live rAF，不改server規則／額度／SSE批次，不逐frame broadcast。snapshot／reconnect／reveal／undo／fill等立即canonical，artist不重播ACK，cache含stage≤8MiB；每輪结束必檢查無閃／殘影／舊frame／草稿。新stroke60ms／gap300／batch700／lead900、極端backlog baseline，追加CountdownBar WAAPI linear scaleX／serverdeadline与cancel-reset待驗；renderer41scoped／4 controlled nativestrict0、backend30不是full／真持筆／多輪或部署，下方v1.8.1／1076與native結果是歷史，完整保留。
+防閃爍原子呈現、brush／erase真點時間與viewer有界回放、平滑倒數、三項安靜成功回饋已完成並於UTC07:13:55.380正式發布；Windows／Linux完整各1144通過。最新受測source、native中途frame／終點像素、正式ACK-SSE與資料保存統一見 [本輪進度](DRAW-TIMED-PLAYBACK-PROGRESS.md)及 [最新規格](specs/DRAWING-SMOOTHNESS.md)，不在角色記憶重複原始數據。
+
+每輪reveal與換畫者仍是長期回歸要求；受測短trace不代表所有輪次、60fps或另一台PC改善。下方第一批v1.8.1歷史完整保留，包含既有classic AA差與未完成rAF控制；P2並行POST／P3抽稀未做。
 
 ## 下方為第一批v1.8.1歷史結果
 

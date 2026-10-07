@@ -1,6 +1,20 @@
 # 媒體圖示、視窗與待播清單 UI 規格
 
-日期：2026-10-07。八項需求已於正式v1.8.2發布，受測來源／tag49d0702；雙平台1101/1101與資料保存等證據見 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。後續播放辨識、同列控制及表情修正為獨立v1.8.3候選，不改v1.8.2 tag。
+## 最新 V／H／P：正式v1.9.0（2026-10-07）
+
+本輪已實作、完整回歸及限定原生驗收通過，UTC07:13:55.380正式更新。共享媒體仍是一房一條時間軸；一般席可點播，host／manager控制全桌，個人縮放／原生播放不替別人更改進度。最新數據與限制見 [媒體進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)，整批source／測試／正式資料見 [本輪發布進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)。下方M1–M8保留為v1.8.2歷史。
+
+| 類別 | 完成規範 | 驗收與限制 |
+| --- | --- | --- |
+| V 影片高度／控制 | active video預設使用viewport減16px的可用高度，主區flex填滿剩餘空間，不限360px；8向縮放與個人幾何保留。桌機影片底列36px／圖示20px，手機或coarse pointer為44px，toolbar不縮。 | 真YouTube playing、窄高與極矮viewport已觀察；極矮時只退出自己的iframe，控制可捲動，不停止全桌。8向keyboard resize保same iframe；本轮mouse只有down，不當完成拖拉。 |
+| V 原生幾何 | DOMRect明確取left／top／width／height，不能spread省略prototype getters。尺寸調整只本機、同iframe、不發media seek。 | fail-before／pass-after回歸及真keyboard邊角完成；客席大小不跟房主變。 |
+| H 外開入口 | 移除本站mediaYouTubeLink與錯誤中的外開句。 | YouTube原生branding link與letterbox保留；不宣稱移除原生所有連結、拉伸裁切影片或全站控件已改完。 |
+| P 明確發布進度 | 移除本站mediaSeek，保留clock。canControl-only「同步我的播放進度」按一次才讀video API或audio.currentTime，再一次seek全桌；原生slider先只影響自己，一般席隱藏publish。ticks不讀原生時間、不seek。 | video與music API設定本機時間後，真button click各只送一次seek並雙席同步。這是受控API定位，不宣稱真mouse slider拖拉。 |
+| P 取消／ACL | 保留same timeline、2秒read timeout、stale job／ACL／close-hidden與fallback guard，不讓晚callback發布舊媒體。 | 完整回歸、三會員正式manager／member／demotion／siteRole檢查通過；不放寬server權限。 |
+
+## M1–M8：v1.8.2歷史規格與驗收
+
+日期：2026-10-07。八項需求已於正式v1.8.2發布，受測來源／tag49d0702；雙平台1101/1101與資料保存等證據見 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。後續播放辨識、同列控制及表情修正另見v1.8.3進度；不改v1.8.2 tag。
 
 ## 永久設計準則
 
@@ -53,8 +67,8 @@
 | 長名／motion | 短／長／惡意字串、hover前後、focus／touch、reduce／hidden／close；一行ellipsis、全文可達且不反覆量測。 | hover transform-237.878／row69.5不变／離開靜止已驗；reduce／hidden回歸已驗 |
 | viewport／共用邊界 | 1280×720、390px、200%文字與五款共用入口；不重疊／水平溢出／遮住控制，不宣稱全站按鈕已改完。 | 390rawCDP与rootfont200%樣本已驗；fixture5rooms不等5頁native，全站buttons未全搬 |
 
-本批source、Windows與Chrome已按下列scope完成，Linux／tag／正式仍待；source／focused／雙平台、原生／合成Chrome、正式與清理證據只按實際結果更新 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)；未觀察仍未驗，不copy本機偏好、帳密或原HAR。
+本歷史批次已發布為v1.8.2；source／focused／雙平台、原生／合成Chrome、正式與清理證據只按實際結果更新 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)；未觀察仍未驗，不copy本機偏好、帳密或原HAR。
 
-## 追加布局驗收（待驗）
+## M7／M8歷史驗收要求（已完成，數據見進度）
 
-M7須驗獨立較寬非modal dialog、单行entry／較小gap、player唯一清單icon、影片完整主區与去360px cap、8向resize／sameiframe／無新增mediaPOST、兩窗關閉／復焦／390與200%文字。M8須驗無獨立上傳icon/link、首個文字option精確「上傳歌曲」、導航既有上傳頁、sentinel零enqueue與真曲目仍正常。前述M1–M6在新布局重驗；中間Chrome幾何／hover與Windows1095不是最新source通過。
+M7驗收包含獨立較寬非modal dialog、单行entry／較小gap、player唯一清單icon、影片完整主區与去360px cap、8向resize／sameiframe／無新增mediaPOST、兩窗關閉／復焦／390與200%文字。M8驗收包含無獨立上傳icon/link、首個文字option精確「上傳歌曲」、導航既有上傳頁、sentinel零enqueue與真曲目仍正常。前述M1–M6在新布局重驗；中間Chrome幾何／hover與Windows1095不是最新source通過。

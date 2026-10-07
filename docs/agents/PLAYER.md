@@ -1,14 +1,10 @@
 # 玩家 agent 長期記憶
 
-2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+## 2026-10-07：正式v1.9.0驗收規則
 
-2026-10-07同輪追加平滑時間條（待驗）：共用CountdownBar用WAAPI linear scaleX，native progress／秒數保server deadline，不每frame JS／新增poll。hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設；動畫不推進規則，也不能因停動效讓倒數不可讀。viewer新strokebuffer60ms、gap300／batch700／總lead900ms，極端backlog canonical，長停頓可壓縮不是完整錄影。C／timing仍待整體/native；renderer保留caller原creation options後最終41scoped与4 controlled nativeRGBA0只其scope（兩dense無yield觀察）。
+使用者要求每輪結束都檢查：本人持筆／up／ACK不閃、其他人按真點時間逐步看到、揭曉完整圖／換畫者新epoch不殘留舊尾或草稿，queue／frame／timer清理。合法clear／新輪空圖與非預期白底分開；短trace、終點像素一致不等所有輪或另一台電腦改善，不寫60fps。倒數須連續下降而秒數仍按server deadline。三項重複成功文字已移除，但畫者身份、猜測聊天室／得分、設定／錯誤／重連仍可讀。見 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)。
 
-## 2026-10-07：每輪防閃／接收逐點回放（實作候選，待驗證）
-
-使用者回報畫者畫布閃，要求每輪之後都檢查；viewer按真正pointTimes逐步出現，可有少量有界延遲，artist保持本機跟手且不重播ACK。root已確認一條visible clear/copyBase後yield、ACK mutable→classic露白路徑，candidate完整opaque staging才呈現；不能歸咎另一台電腦或用整場最後圖相同當每frame不閃。
-
-玩家驗收逐輪看持筆／up／ACK、reveal完整圖／下一畫者新epoch、snapshot/reconnect/undo/fill打斷播放，確認無閃白／殘影／舊尾、末點完整及queue/frame/timer清理。合法clear／新輪空圖与非預期露白分開；viewer timing只是呈現，不改server規則，不等到下輪還在播上輪。資料30／renderer41及4controllednative不等實際多輪或正式結果；新矩陣见 [進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)，下方v1.8.1保留為歷史。
+媒體本機原生控制先只改自己，host／manager再按「同步我的播放進度」才同步全桌；一般席可點播但看不到publish，也不能全桌控制。影片預設占可用高度、縮放只自己；原生YouTube branding與letterbox仍可見。媒體驗收與限制見 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
 
 ## 2026-10-07：作畫改善第一批（正式v1.8.1，有限P1）
 

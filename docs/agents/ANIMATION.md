@@ -1,10 +1,10 @@
 # 動畫角色記憶
 
-2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+## 2026-10-07：正式v1.9.0呈現規則
 
-2026-10-07同輪追加平滑時間條（待驗）：共用CountdownBar用WAAPI linear scaleX，native progress／秒數保server deadline，不每frame JS／新增poll。hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設；動畫不推進規則，也不能因停動效讓倒數不可讀。viewer新strokebuffer60ms、gap300／batch700／總lead900ms，極端backlog canonical，長停頓可壓縮不是完整錄影。C／timing仍待整體/native；renderer保留caller原creation options後最終41scoped与4 controlled nativeRGBA0只其scope（兩dense無yield觀察）。
+畫猜viewer可有少量有界延遲按真pointTimes逐步呈現，canonical與artist不延後、artist不重播ACK。snapshot／reconnect／gap／reveal／undo／clear／fill切回完整baseline，取消舊尾巴；原子staging整幅完成才呈現，yield保留上一份完整圖，cache含stage≤8MiB。每輪都查持筆／ACK／換畫者的白底／殘影與queue／rAF／timer，合法clear和新輪空圖分開判斷。
 
-2026-10-07畫猜逐點呈現（實作候選／待驗）：使用者允许接收端少量延遲，以真採樣時間重現brush／erase，取代下方舊「畫布同步不能加等待」在viewer呈現的適用範圍；server接受／score／deadline、artist跟手仍不延後。root確認clear／copyBase後yield與ACK mutable→classic露白，candidate opaque staging完整job才present；renderer cache含stage≤8MiB。viewer live client rAF播放optional pointTimes，不能用收包時間造等間隔，無逐frame網路／server timer；snapshot／reconnect／reveal／undo／fill與非brush立即canonical，不重播artist ACK。hidden／減動與追趕策略按最终source核定，畫作不可因關装飾動畫而消失。**每輪结束／下一畫者必查**中途frame無閃、舊尾清理、終點canonical與queue/rAF/timer為空；配置時長不是FPS，fake canvas／最後同pixels不證每frame不閃。renderer41／backend30与4controllednative僅各scope，完整／實際多輪／正式待root，見 [進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)。
+CountdownBar以WAAPI linear scaleX呈現server deadline，hidden／pagehide取消、show／BFCache及epoch／phase重設，既有更新中校正wall drift；不用裝飾動畫推進遊戲規則，也不新增逐frame JS或server broadcast。中途可見frame、Animation控制採样與最終canonical分開驗，不把背景工具trace寫成60fps。契約及證據集中於 [spec](../specs/DRAWING-SMOOTHNESS.md)／[本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)。
 
 2026-10-07 WebGL評估（未實作）：雷霆煙霧／火花／碎片是第一個局部原型候選，效益可能在提高特效密度而非目前少量SVG必然掉幀。共用特效層沿用已確認eventId、逐格／checkpoint時序與MotionPolicy，名單／骰子／操作／說明保留DOM；送禮彩帶等後續重用，普通卡片transform不先搬進canvas。需限制粒子／貼圖、空閒停ticker、hidden／減動與context loss退回；沒有新的FPS實證或已部署功能。與程式角色的取捨及官方來源見 [WebGL導入評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)。
 
