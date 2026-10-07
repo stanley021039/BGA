@@ -1,5 +1,7 @@
 # 共用偏好與已知決策
 
+2026-10-07 PR46-review／正式v1.11.0：Stanley兩P2修正clear／undo未present surface與切回頁音樂，只復原visibility自動pause而不覆蓋manual／設定意圖；合main市場圖片與schema16，正式整合保留既有UI／WebGL。PR46候選1.9.1已推／逐項回覆／Ready／再請Stanley審查，未合併；正式source另固定tag、雙平台各1,284。native12Canvas2D與Audio有限scope、角色caps／備份還原、8users／既有表資料與sessions變動見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。此筆更新目前v1.11／schema16，下方v1.10與schema15為歷史；不把全套tests當全玩法／喇叭／FPS通過。
+
 2026-10-07 UI-polish-WebGL：使用者在PR46後要求按既有研究美化並試WebGL，後續允許更好新效果取代舊效果。正式v1.10.0已採共用surface／邊界／選取／數字與雷霆有界原生粒子；實際畫出kind才遮同類舊裝飾，idle／loss／reduce即復原，標字與玩法互動保留。重要玩家／車隊／骰子／角色不可為減字收合；未安裝Threads研究庫、不宣稱GPU加速。雙平台各1,165及正式資料證據見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。此筆取代歷史WebGL「未實作」現況，PR46不變。
 
 2026-10-07 U44-media-height-native-publish：使用者直接要求影片填滿主區與可用高度、移除本站外開影片提示／共用seek；保留clock及canControl-only「同步我的播放進度」。原生slider／本機video或audio時間先只改自己，按publish才一次seek全桌，ticks不讀時間或seek；一般席可點播，無全桌發布權。影片底列桌機compact、手機／coarse保操作大小，toolbar不縮。YouTube原生branding／letterbox保留，縮放只自己；原生DOMRect取四欄位而不spread。正式v1.9.0實作與有限native證據見 [媒體spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。

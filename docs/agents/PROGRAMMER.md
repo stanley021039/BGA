@@ -1,5 +1,9 @@
 # 程式架構 agent 記憶
 
+## 2026-10-07：正式v1.11.0／PR46回歸契約
+
+renderer用`surfaceRevision`／`presentedSurfaceRevision`追staging實寫與可見提交：clear／undo尚未present即使沒有新stroke也須copy，latestjob／generation仍防舊圖覆蓋，settled no-op不copy。音樂`interruptedAudio`只復原此次hidden自動pause的同clip／key／epoch，等fresh marker；manualpause／設定停用／browserreject／sharedpaused／videoexit維持，staleclip不復活、不加poll／seek。main衝突保MarketImageStore／schema16／gallery、pngjs7／sharp0.35.5、market3MiB／approve128KiB、char4MiB與preserveImportedSessions。PR雙平台1,263、正式保UI／WebGL整合雙平台1,284；native12真Canvas2D與Audiovisibility範圍見 [證據](../PR46-REVIEW-FIX-PROGRESS.md)。此筆更新當前schema16，下面schema15與候選狀態為歷史，不能混算source／測試數。
+
 ## 2026-10-07：正式v1.10.0局部WebGL
 
 `GameFxLayer`用原生WebGL1、lazy、有界buffer／particles／contexts，idle無rAF；只接公開event／live gate與視覺車位anchor，不改checkpoint、server／DB或畫猜renderer。`onActivity`等成功非零draw才發布kind，僅用`visibility:hidden`遮同類SVG裝飾（opacity會被舊keyframes覆蓋），標字／bullet／trail／spin保留，empty／loss／reduce／clear復原。restore不補播；最終loss probe與較早restore cycle分開，不能拼同次完成。雙平台各1,165、限額／source／native／資料與限制見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。此筆取代下方「WebGL未實作」現況，舊研究保留。

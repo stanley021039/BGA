@@ -1,5 +1,9 @@
 # 玩家 agent 長期記憶
 
+## 2026-10-07：正式v1.11.0驗收
+
+PR46清除／撤銷途中要看舊完整圖、提交後新圖與舊job不覆蓋；12真Canvas2D組合已驗，第二輪6move／30artist樣本白afterink0、viewer7partial，第一輪錯誤取樣排除。切回背景音樂只恢復此次hidden自動pause，玩家手動pause／關音樂不能被恢復蓋過；真Audio同節點恢復／零新增room-media request已驗，但無聲檔／FocusEmulation不是喇叭或實體切頁。市場每日／圖片投稿／審核空庫入口已smoke，未真上傳→審核完整native流程。有限scope與正式雙平台1,284見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)；下方版本保留歷史，不宣稱全玩法或FPS。
+
 ## 2026-10-07：正式v1.10.0美化驗收
 
 美化先保玩家／角色／猜中／車隊／骰子／合法格，不收合到管理；看選取、長名／浮窗／小屏可達，不只看顏色。本輪畫猜23持筆樣本白afterink0、viewer7次partial／13timed points；晚一筆同SHA是下輪白baseline，不能當有墨終點一致。雷霆真draw／idle／loss有有限證據，兩anchor位置不證明全程FPS；實際新效果畫出才遮同類裝飾，不遮標字或操作。四遊戲尺寸矩陣／720補驗及限制見 [本批進度](../UI-POLISH-WEBGL-PROGRESS.md)，全部phase／多輪／其他硬體與前景性能未驗。下方v1.9.0持筆／ACK／換輪的持續檢查規則保持。

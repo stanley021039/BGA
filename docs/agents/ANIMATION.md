@@ -1,5 +1,9 @@
 # 動畫角色記憶
 
+## 2026-10-07：正式v1.11.0可見提交與音樂恢復
+
+畫猜不只比version／終點圖：staging因clear／undo已寫，最新job完成要把未present surface提交；途中維持舊完整畫面，舊job不能蓋新圖，no-op不copy。本次native12 clear／undo×3路徑×2排程RGBA等fresh；第二輪held30樣本whiteAfterInk0、viewer7partial，第一輪錯誤array取樣已排除。背景Audio只resume此次visibility自動pause的同clip，手動暫停／關聲音／拒播／共享暫停／退出影片不可被蓋掉；無聲MP3／FocusEmulation不是喇叭或物理切頁。既有WebGL／checkpoint保持，source／限制見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)；下方v1.10與v1.9版本為歷史。
+
 ## 2026-10-07：正式v1.10.0車旁粒子
 
 雷霆nitro／smoke／sparks接公開eventId／visual anchor，單次有界、idle停frame，不靠特效結束推進逐格／事件規則。使用者允許更好的新效果取代舊效果；實際畫出kind才遮同類SVG裝飾，標字／bullet／trail／spin保留，空幀／hidden／reduce／loss即復原且不補播。用visibility避免舊keyframes蓋opacity；最終nitro替換8採樣、idle／loss已驗，restore是另一早期cycle。背景採樣不是前景FPS或性能優勢，自然smoke／sparks與完整碰撞trace列後續。見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)，此筆更新下方WebGL「未實作」現況，歷史保留。
