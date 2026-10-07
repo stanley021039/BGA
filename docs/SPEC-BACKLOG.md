@@ -4,7 +4,7 @@
 範圍：[ANIMATION-ASSET-PLAN](specs/ANIMATION-ASSET-PLAN.md)、[ACHIEVEMENTS-AND-RECORDS](specs/ACHIEVEMENTS-AND-RECORDS.md)、[AGENT-UPGRADE-ROADMAP](specs/AGENT-UPGRADE-ROADMAP.md)，另列主agent考慮的[CUSTOM-BARRAGE-FRAMES](specs/CUSTOM-BARRAGE-FRAMES.md) Stage A依賴。
 本文件只做source／最新進度對照，未開browser、跑測試、改runtime／版本或部署。下列QA限制沿用實際證據，不由歷史suite數量推定全部通過。
 
-主agent後續更新：B01 Stage A已實作為候選v1.15.0，Windows1,432與有限背景三席／五入口／桌機手機通過，固定source／Linux／正式結果以 [內建彈幕框進度](BARRAGE-FRAMES-PROGRESS.md) 最新節為準；下面「基線缺口」保留盤點歷史，B09上傳／收藏仍未實作。
+主agent最終更新：B01 Stage A已發布正式v1.15.0／f4cbdfa，Windows與Linux各1,432、有限背景三席／五入口／桌機手機及公開25資源通過，固定source／完整正式與QA限制以 [內建彈幕框進度](BARRAGE-FRAMES-PROGRESS.md) 最新節為準；下面「基線缺口」保留盤點歷史，B09上傳／收藏仍未實作。
 
 ## 已實作：不再當作缺功能排程
 
@@ -19,13 +19,13 @@
 | roadmap6：backup／dry-run／restore CLI與管理UI | src/data/transfer.js、src/data/validation.js、src/data/ui.js、tools/server-data-ui.cjs與transfer tests。 | [移轉進度](SERVER-DATA-TRANSFER-PROGRESS.md)與後續發布保留功能；「尚未做CLI」已過時。外站取代／合併、正式多主DB是另外需求，不能把未切外站資料寫成CLI未完成。 |
 | 成就頁只寫送禮、未動態列metadata | public/achievements.html:12通用收藏文案；achievements.js:3–17按API列名稱／description／解鎖日期；store.js:27–29回傳defs。 | 基礎不一致已修。新metadata的rule_version／condition_key／icon_key／visibility／status與按遊戲分類尚未齊全，列下面小批後續。 |
 
-## 真缺功能：可拆批次及前置條件
+## 實作狀態與仍缺功能：可拆批次及前置條件
 
 P1表示建議下一輪規劃；排序仍待使用者優先選擇，不能把所有歷史候選一次開工。主agent目前傾向B01，其他支線不用等B01的DB。
 
 | ID／優先 | 可獨立交付範圍 | 現在缺口／source證據 | 依賴與完成條件 |
 | --- | --- | --- | --- |
-| B01／P1候選先做 | 客製彈幕框 **Stage A**：預設＋三種本站內建框、選框／個人顯示、長文與軌道尺寸 | CUSTOM-BARRAGE-FRAMES:68–72；基線game-shell.js只建DOM bubble，motion-policy只有既有四lane／開關；没有選框、frame id／內建frame樣式契約。 | 無新DB或上傳；保原8秒／減動／離房、不改角色表情；大框按實際高度避疊，改框不跳動已建立訊息。與achievement ledger無依賴。 |
+| B01／已完成 | 客製彈幕框 **Stage A**：預設＋三種本站內建框、選框／個人顯示、長文與軌道尺寸 | CUSTOM-BARRAGE-FRAMES:68–72；歷史盤點基線game-shell.js只建DOM bubble，motion-policy只有既有四lane／開關；当時没有選框、frame id／內建frame樣式契約；現v1.15.0已交付，詳最新進度。 | 已完成，無新DB或上傳；保原8秒／減動／離房、不改角色表情；大框按實際高度避疊，改框不跳動已建立訊息。與achievement ledger無依賴。 |
 | B02／P1小批 | 成就metadata／收藏冊分類補齊 | store.js:3–18只有五個基本defs；前端全部同✦，缺完整新欄位與分類／可選展示。 | 可先為既有五枚補metadata與遊戲分類，不改已授ID／日期、不假註冊未做predicate的新徽章；不需要完整win ledger。 |
 | B03／P1基礎 | 權威unit／match事件、凍結帳號參與映射、持久processed／result ledger | store.js:23 WeakSet僅runtime；src/app.js:45 seats為RAM；history/store.js:108 metadata玩家只名字；db/index.js:155只有user_achievements，無game_results／match_participants／processed_results／processed_unit_events／achievement_progress。draw雖已有UUID結果，不能推廣為五款持久ledger已完成。 | 先設normal／abandoned／interrupted＋quality flags、canonical user/seat、unit與match分離；SQLite transaction／outbox或reconciliation、schema／export/restore回歸。不能按暱稱補舊史、用room.version作跨環境事件ID。 |
 | B04／P1 | 畫猜入門 draw-first-round＋all-first-table | AchievementStore沒有awardDraw；src/app.js:111–116只gift/majority/poker/thunder；defs無draw。 | 最小依賴是可靠正常round事件、曾被server接受的stroke/guess與凍結帳號參與snapshot、持久一次授予。不能只看仍在場玩家／最終畫布是否空白；clear/undo後合法參與仍有證據，中斷artist單位不發。按原spec由B03權威unit支線支援，不需等全五款wins UI完成。 |
@@ -51,6 +51,6 @@ B03是最重的一條基礎支線，可先做unit identity／account mapping，�
 
 ## 建議下一批範圍
 
-若沒有新的優先指示：先B01（獨立、可見、無schema），同時以B03作資料方案／正常unit契約；B02可另小批，B04→B05／B06等unit支線完成後逐款做。B07可獨立補metadata，B08永續戰績再接結果ledger。
-本次僅保存盤點；未把舊「未部署」或本批尚未驗的研究寫成新的bug，也沒有啟動上述功能實作。
+B01已完成。接續可先B02既有成就metadata小批，同時以B03作資料方案／正常unit契約；B04→B05／B06等unit支線完成後逐款做。B07可獨立補metadata，B08永續戰績再接結果ledger。
+初始agent盤點為唯讀；主agent後續已完成B01，最新進度見上方。其餘沒有啟動實作；不把舊「未部署」或未驗研究寫成新的bug。
 

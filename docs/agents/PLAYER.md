@@ -1,5 +1,9 @@
 # 玩家 agent 長期記憶
 
+2026-10-08最新正式 **v1.15.0／f4cbdfa**：彈幕框Stage A發布，雙平台完整各1,432、公開25資源與五款三席frame/avatars通過。PNG上傳收藏／成就與勝場ledger仍缺；完整source/首輪Linux暫存I/O失敗與重跑/備份/native scope/9帳戶及21non-session表保留/own cleanup見 [最終進度](../BARRAGE-FRAMES-PROGRESS.md)與 [backlog](../SPEC-BACKLOG.md)。下方候選及1.14.2是歷史；tag固定受測程式，沒有新PR/push，不把有限取樣當全phase/讀屏/200%/FPS。
+
+2026-10-08彈幕框候選 **v1.15.0／f4cbdfa**：三席真送長/短text各款、接收關框仍保文字；五款等待畫面重要玩家区和44px圖示入口保留。16字名/40字/4則是隔離壓力fixture，不能說是四真人桌實玩。畫猜持筆18次sample墨跡累增、ACK與viewer1517、自然換輪reset0，僅此軌跡不推定每影格/全phase/全硬體。完整證據与StageB上傳收藏／成就ledger缺口見 [進度](../BARRAGE-FRAMES-PROGRESS.md)／[backlog](../SPEC-BACKLOG.md)。
+
 2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
 
 2026-10-07 patterns部分實玩：own雙人撲克正常fold真的解鎖第一手牌／第一桌，持久inline仍讀得到，通知旁GL有像素且最終notify／queue／timer／celebration0。收藏／市場Arrow不發request或換panel直到Enter／Space；invalid首name與Escape返焦已驗。Audio Play尚ready0、離tab後pause不算完整解碼／可聽；glyph倍增不算browser200%，Tab到body／chrome邊界不算fulltrap。有限證據與新Arrow／成就排序修正待驗見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，patterns1.12尚未全套／發布。

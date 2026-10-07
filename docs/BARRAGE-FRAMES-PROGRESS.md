@@ -1,5 +1,7 @@
 # 內建彈幕框 Stage A 進度
 
+最新正式：**v1.15.0／f4cbdfa**，2026-10-08已完成發布與有限公開驗收。下方候選／待驗為歷史，最後一節取代發布狀態；Stage B/C仍未完成。
+
 2026-10-08（Asia/Taipei）。依 [CUSTOM-BARRAGE-FRAMES](specs/CUSTOM-BARRAGE-FRAMES.md) Stage A 實作；基線 v1.14.2／8ae5c4f，候選 **v1.15.0**。本段為發布前紀錄，正式結果另補。
 
 | 範圍 | 完成内容 | 驗收／邊界 |
@@ -22,3 +24,17 @@
 Windows Node24.14.0完整 **1,432／1,432，37,815.3583ms**，fail／cancel／skip／todo均0；release:check相對v1.14.2 minor通過。Linux／固定source與正式發布仍待下節實證。
 
 隔離原生壓力fixture（不冒稱server接納的訊息）：16字名字＋40 Unicode字（含🎉）五則輸入，只建四則；四款均74px，top12／94／176／258，無文字溢出。OS減動模擬四則均static／animation none；viewport變更並觀察layout後舊氣泡0。真正背景draw三席第1輪持筆18次移動：墨跡樣本0→529→1037→1523，ACK後1517、觀看者1517；本輪自然結束進第2輪重設0，角色換畫者、倒數可見。只限取樣軌跡，不推定所有途中影格無閃白、全多輪／FPS或別台硬體。renderer／codec／傳輸本批未修改。
+
+Linux首次同source測試1,431／1,432、220,394.573269ms：既有market-images quota fixture第195行寫65×4MiB SQLite時disk I/O error。當時/tmp為1.7GiB tmpfs、已用1.1GiB／剩572MiB；正式data filesystem另有163GiB。失敗原log另存保留，同f4cbdfa／canonical archive改用私人root-filesystem TMPDIR重跑完整套件，不降低測試、不修改產品或覆寫tag；重跑結果待補。這是環境限制的推測，未以首次failure單獨斷言因果。
+
+## 最終發布與清理
+
+- 受測固定source／本地immutable tag v1.15.0：`f4cbdfae4ad6f6c60f78311d38aff79b8c3b54dc`；canonical archive SHA256 `c56e6581ab1b079e08b848d83056185a27236b9b849dbd98f8e9dfaf50019677`。排除work／.local／私有env；後續純驗收文件不移動tag。
+- Windows Node24.14.0 **1,432／1,432／37,815.3583ms**；同source Linux Node22.22.1完整root-filesystem TMPDIR重跑 **1,432／1,432／256,432.664183ms**，各fail/cancel/skip/todo0。首輪disk I/O failure完整保留；同測試後通過支持暫存環境因素，但未量測瞬間/tmp占用，不宣稱已證實唯一原因。
+- 正式UTC **2026-10-07T16:48:40.676Z** fresh zero-room guard=0後切換；current `releases/f4cbdfa`，PID160751→166218，afterhours／tunnel active，正式API／原生設定版本v1.15.0。
+- 備份 `/home/ccc/apps/afterhours/shared/backups/pre-barrage-frames-f4cbdfa-20261007T164817Z-164e3be8-3986-4a8e-8de8-b951b1f3c4fe`；SQLite在線備份、另時點files/env archive，**不是atomic cold snapshot**。隔離啟動與22既有表保留預演通過；未啟用外站資料代。
+- 公開HTTPS：19會員可讀HTML＋6shared資源，共 **25份exact bytes／MIME／no-store**；管理頁因正常member403未列公開HTML，20入口載入契約另有source回歸。五款各3既有測試會員、每房三種框server確認、avatars保留；不是五款完整遊玩／全phase。
+- 正式background Chrome使用受限私有auth proxy，內容／API來自shhuang.cc而非fixture；原生三席畫猜picker640×335、四choice、pixel真傳送形成live bubble。共用設定顯示v1.15.0及個人框開關；390×844 settings在x8/y110、320×726，底836、無横向overflow。截图在私有work，本批沒有全讀屏／200%zoom／跨設備／FPS結論。
+- own五房state均404後三帳戶logout＋auth/me401；zero-room guard登入也已logout。正式schema16／22schemas，**21非session表rows及BLOB、9帳戶全部欄位、13市場圖片**與新鮮備份相同，integrity ok／FK0；sessions **238→242**為這4次驗證登入，不能說sessions不變。臨時prefs／viewport／own Chrome tabs／兩proxy均清理；隔離preview stdin未保持，驗證PID與command後僅停止該owned process，ports3500–3503已無listener。
+
+本批無新PR／push。接續缺功能以 [SPEC-BACKLOG](SPEC-BACKLOG.md)為準：B01完成；B02成就metadata、B03正常unit／match帳號ledger、B04–B08徽章及永久戰績、B09框上傳收藏仍未做，不能把歷史動畫／共看／backup的pending重新當缺功能。
