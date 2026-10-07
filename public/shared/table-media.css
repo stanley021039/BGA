@@ -16,3 +16,15 @@ body[data-game-kind] .table-media-window[open]{display:flex;flex-direction:colum
 .table-media-playlist .table-media-queue>.table-media-queue-item{margin:0}
 @media(max-width:620px){.table-media-add{grid-template-columns:minmax(0,1fr)}.table-media-item-info{grid-template-columns:minmax(0,1fr) minmax(0,.55fr)}.table-media-window .table-media-header{padding:8px 10px}.table-media-window .table-media-body{padding:10px;gap:12px}.table-media-window .table-media-form-row{flex-wrap:wrap}.table-media-window .table-media-form-row select,.table-media-window .table-media-form-row input{flex-basis:100%}}
 @media(min-width:621px) and (pointer:fine){.table-media-window.media-video-active #mediaControlRow{--media-control-size:calc(var(--ui-control-height,44px) * .81818);--media-icon-size:calc(var(--ui-control-height,44px) * .45455)}.table-media-window.media-video-active #mediaControlRow .ui-icon-button{width:var(--media-control-size);height:var(--media-control-size);min-width:var(--media-control-size);min-height:var(--media-control-size);padding:6px}.table-media-window.media-video-active #mediaControlRow .ui-icon{width:var(--media-icon-size);height:var(--media-icon-size)}}
+
+/* Floating media uses the same surface hierarchy without changing its saved size. */
+body[data-game-kind] .table-media-window{background:var(--ui-surface-floating);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-floating)}
+body[data-game-kind] .table-media-window:focus-within{border-color:var(--ui-focus)}
+body[data-game-kind] .table-media-header{background:var(--ui-surface-title)}
+body[data-game-kind] .table-media-header h2{font-size:var(--ui-text-section);font-weight:600}
+body[data-game-kind] .table-media-window :is(button,select,input:not([type=range])){border-color:var(--ui-control-border);border-radius:var(--ui-radius-control);background:var(--ui-surface-panel);color:var(--ui-text)}
+body[data-game-kind] .table-media-window button:not(:disabled):hover{background:var(--ui-selected-soft)}
+body[data-game-kind] .table-media-queue-item{background:var(--ui-surface-panel);border-radius:var(--ui-radius-card)}
+body[data-game-kind] .table-media-queue-item.media-drop-target{background:var(--ui-selected-soft)}
+body[data-game-kind] .table-media-timeline{font-variant-numeric:lining-nums tabular-nums}
+body[data-game-kind] .table-media-consent{background:var(--ui-surface-floating);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-floating)}

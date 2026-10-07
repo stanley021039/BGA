@@ -1,0 +1,6 @@
+/* Decorative GPU particles never intercept road, car or tooltip interaction. */
+.race-stage>canvas.game-fx-layer{z-index:2;pointer-events:none;border:0;border-radius:0;margin:0;contain:strict}
+/* Replace the matching decoration only while real WebGL particles are visible. */
+#track svg[data-particle-kinds~="nitro"] .race-vehicle-exhaust,
+#track svg[data-particle-kinds~="smoke"] .race-vehicle-skid-marks,
+#track svg[data-particle-kinds~="sparks"] .race-vehicle-shot-hit{visibility:hidden}
