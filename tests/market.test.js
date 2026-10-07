@@ -4,7 +4,7 @@ const {createApp}=require('../src/app'),{settings}=require('../src/config'),{run
 const {Worker}=require('node:worker_threads');
 const {DatabaseSync}=require('node:sqlite'),{DrawWordStore}=require('../src/games/draw-guess-store'),{WORDS}=require('../src/games/draw-guess-words');
 const {createClient,waitFor,deferred,makeTransport}=require('./helpers/market-client.cjs'),clientSource=fs.readFileSync(path.join(__dirname,'../public/market.js'),'utf8');
-const start=Date.parse('2027-01-04T12:00:00Z'),target='2027-01-06',cutoff=Date.parse('2027-01-05T13:00:00Z'),after=Date.parse('2027-01-06T05:30:00Z');
+const start=Date.parse('2027-01-04T12:00:00Z'),target='2027-01-06',cutoff=Date.parse('2027-01-05T16:00:00Z'),after=Date.parse('2027-01-06T05:30:00Z');
 const req=()=>randomUUID(),code=c=>e=>e.code===c,password='test-'+randomUUID();
 async function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-market-')),file=path.join(root,'source','app.sqlite');let time=start;const db=openDatabase(file),auth=createAuth(db),id=await auth.bootstrap('market_admin',password),admin=db.prepare('SELECT * FROM users WHERE id=?').get(id),response={setHeader(){}};
  const members=[];for(let i=0;i<2;i++)members.push(await auth.register({username:'market_member_'+i,displayName:'測試玩家 '+i,password,confirmPassword:password,invite:auth.createInvite(admin).code},response));
@@ -19,7 +19,7 @@ test('six ranges cover all exact boundaries, adjacent values and zero; uniform-c
  for(const [n,b] of [[-100,'crash'],[-5,'crash'],[-4.999999,'fall'],[-2,'fall'],[-1.999999,'dip'],[-.000001,'dip'],[0,'tie'],[-0,'tie'],[.000001,'rise'],[1.999999,'rise'],[2,'rally'],[4.999999,'rally'],[5,'surge'],[100,'surge']])assert.equal(R.classify(n),b,String(n));
  for(const value of ['', ' ', 'abc', '2%', '0x10', true, null, [],{}, NaN, Infinity, -101,101])assert.throws(()=>R.parseReturn(value));
  for(const o of R.CONFIG.options)assert.equal(R.CONFIG.options.reduce((sum,v)=>sum+R.points(v.id,o.id),0),0);
- assert.ok(R.CONFIG.options.every(o=>R.points(o.id,'tie')===0));assert.equal(R.cutoffFor(target),'2027-01-05T13:00:00.000Z');assert.equal(R.settlementFor(target),'2027-01-06T05:30:00.000Z');
+ assert.ok(R.CONFIG.options.every(o=>R.points(o.id,'tie')===0));assert.equal(R.cutoffFor(target),'2027-01-05T16:00:00.000Z');assert.equal(R.settlementFor(target),'2027-01-06T05:30:00.000Z');
  for(const date of ['2027-02-29','2026-99-99','2027-1-6','1999-01-01','2200-01-01',''])assert.equal(R.validDate(date),false);assert.equal(R.validDate('2028-02-29'),true);
 });
 test('creation is explicit, unique and admin-only; snapshots ignore client rules and client identities',async t=>{const f=await fixture(t);assert.throws(()=>f.store.create({...f.members[0],role:'admin'},{requestId:req(),targetDate:target,confirmed:true}),code('ADMIN_REQUIRED'));assert.throws(()=>f.store.create(f.admin,{requestId:req(),targetDate:target}),code('CONFIRM_REQUIRED'));
@@ -96,3 +96,14 @@ test('queued vote samples server time after lock acquisition and rejects a cross
  }finally{if(f.db.isTransaction)f.db.exec('ROLLBACK');await worker.terminate();}
 });
 test('failed correction restores the previous scores and complete audit without partial reversal',async t=>{const f=await fixture(t),id=create(f);vote(f,f.members[0],id,'rally');f.setTime(after);settle(f,id,2);const before=f.store.view(f.members[0]);f.db.exec("CREATE TRIGGER correction_failure BEFORE INSERT ON market_ledger WHEN NEW.revision=2 AND NEW.kind='award' BEGIN SELECT RAISE(ABORT,'correction failed'); END");assert.throws(()=>settle(f,id,-2,1,'更正'));assert.deepEqual(f.store.view(f.members[0]).stats,before.stats);assert.equal(f.store.view(f.members[0]).rounds[0].result.revision,1);assert.equal(f.db.prepare('SELECT COUNT(*) n FROM market_ledger').get().n,1);assert.equal(validateMarketDatabase(f.db),true);});
+
+test('23:59 whole minute is open until Taipei target midnight while old v1 snapshots remain immutable',async t=>{const f=await fixture(t),id=create(f),u=f.members[0];
+ f.setTime(Date.parse('2027-01-05T15:59:00.000Z'));assert.equal(vote(f,u,id,'dip').revision,1);
+ f.setTime(Date.parse('2027-01-05T15:59:59.999Z'));assert.equal(vote(f,u,id,'rally',1).revision,2);
+ f.setTime(Date.parse('2027-01-05T16:00:00.000Z'));assert.throws(()=>vote(f,u,id,'surge',2),code('VOTING_CLOSED'));
+ const legacy={...R.snapshot(),version:1,cutoffTime:'21:00'};delete legacy.cutoffExclusive;assert.equal(R.validate(legacy),legacy);assert.equal(R.cutoffFor(target,legacy),'2027-01-05T13:00:00.000Z');
+ f.db.prepare('UPDATE market_rounds SET rules_json=?,cutoff_at=? WHERE id=?').run(JSON.stringify(legacy),R.cutoffFor(target,legacy),id);f.db.prepare('DELETE FROM market_votes WHERE round_id=?').run(id);
+ const before=f.db.prepare('SELECT * FROM market_rounds WHERE id=?').get(id);f.setTime(Date.parse('2027-01-05T12:59:59.999Z'));vote(f,u,id,'rise');f.setTime(Date.parse('2027-01-05T13:00:00Z'));assert.throws(()=>vote(f,u,id,'rally',1),code('VOTING_CLOSED'));
+ assert.deepEqual(f.db.prepare('SELECT * FROM market_rounds WHERE id=?').get(id),before);assert.equal(validateMarketDatabase(f.db),true);
+ const invalid={...R.snapshot(),cutoffExclusive:'previous-minute'};assert.throws(()=>R.validate(invalid));
+});

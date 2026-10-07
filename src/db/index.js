@@ -1,8 +1,26 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
-const SCHEMA_VERSION=15;
+const SCHEMA_VERSION=16;
 const MARKET_TABLES=['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
+const MARKET_IMAGE_SQL=`CREATE TABLE IF NOT EXISTS market_images(
+ id TEXT PRIMARY KEY,
+ author_id TEXT NOT NULL REFERENCES users(id),
+ author_name TEXT NOT NULL,
+ mime TEXT NOT NULL CHECK(mime='image/png'),
+ bytes BLOB NOT NULL CHECK(typeof(bytes)='blob' AND length(bytes) BETWEEN 1 AND 4194304),
+ width INTEGER NOT NULL CHECK(typeof(width)='integer' AND width BETWEEN 1 AND 4096),
+ height INTEGER NOT NULL CHECK(typeof(height)='integer' AND height BETWEEN 1 AND 4096),
+ buckets_json TEXT NOT NULL CHECK(length(buckets_json)<=256 AND json_valid(buckets_json) AND json_type(buckets_json)='array' AND json_array_length(buckets_json) BETWEEN 1 AND 6),
+ weekdays_json TEXT NOT NULL CHECK(length(weekdays_json)<=64 AND json_valid(weekdays_json) AND json_type(weekdays_json)='array' AND json_array_length(weekdays_json) BETWEEN 1 AND 7),
+ version INTEGER NOT NULL CHECK(typeof(version)='integer' AND version IN (1,2)),
+ status TEXT NOT NULL CHECK(status IN ('pending','approved')),
+ created_at TEXT NOT NULL,
+ approved_by TEXT REFERENCES users(id),
+ approved_at TEXT,
+ CHECK(width*height<=8000000),
+ CHECK((status='pending' AND version=1 AND approved_by IS NULL AND approved_at IS NULL) OR (status='approved' AND version=2 AND approved_by IS NOT NULL AND approved_at IS NOT NULL))
+)`;
 const SOUND_SQL=`CREATE TABLE IF NOT EXISTS character_sounds(
  character_id TEXT NOT NULL,expression TEXT NOT NULL,mime TEXT NOT NULL CHECK(mime='audio/wav'),bytes BLOB NOT NULL,
  duration_ms INTEGER NOT NULL CHECK(typeof(duration_ms)='integer' AND duration_ms BETWEEN 1 AND 10000),
@@ -32,22 +50,31 @@ function tableShape(db,name){
 }
 function validateFeatureSchema(db,version){
  const tables=new Set(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(row=>row.name));
- const hasBan=tables.has('draw_word_exclusions'),hasSound=tables.has('character_sounds'),marketCount=MARKET_TABLES.filter(name=>tables.has(name)).length;
+ const hasBan=tables.has('draw_word_exclusions'),hasSound=tables.has('character_sounds'),hasImages=tables.has('market_images'),marketCount=MARKET_TABLES.filter(name=>tables.has(name)).length;
  if(marketCount>0&&marketCount<MARKET_TABLES.length||version===13&&!hasBan&&marketCount!==MARKET_TABLES.length)
   throw Error(`Incomplete legacy schema ${version}`);
  if(version===14&&(!hasBan||!hasSound&&marketCount!==MARKET_TABLES.length)||version>=15&&(!hasBan||!hasSound||marketCount!==MARKET_TABLES.length))
   throw Error(`Incomplete database schema ${version}`);
- if(!hasSound&&!marketCount)return;
+ if(version>=16&&!hasImages)throw Error(`Incomplete database schema ${version}`);
+ if(!hasSound&&!marketCount&&!hasImages)return;
  const reference=new DatabaseSync(':memory:');
  try{
-  reference.exec(SOUND_SQL+';'+MARKET_SQL.join(';'));
-  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[])]){
+  reference.exec(SOUND_SQL+';'+MARKET_SQL.join(';')+';'+MARKET_IMAGE_SQL);
+  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[]),...(hasImages?['market_images']:[])]){
    if(tableShape(db,name)!==tableShape(reference,name))throw Error(`Invalid ${name} schema`);
    const sql=db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?").get(name).sql.toLowerCase().replace(/\s+/g,'');
    const checks={character_sounds:["check(mime='audio/wav')","check(typeof(duration_ms)='integer'andduration_msbetween1and10000)"],market_rounds:['check(result_revision>=0)'],market_votes:['check(revision>0)'],market_settlements:['check(revision>0)'],market_ledger:["check(kindin('award','reversal'))","check(outcomein('hit','miss','tie'))","check((kind='award'andreverses_revisionisnull)or(kind='reversal'andreverses_revision=revision-1))"]};
    if((checks[name]||[]).some(check=>!sql.includes(check)))throw Error(`Invalid ${name} constraints`);
+   if(name==='market_images'){
+    // A substring check permits weakened CHECK expressions (for example OR 1).
+    // Compare the complete definition, preserving string literals, even empty.
+    const normalize=value=>value.split(/('(?:''|[^'])*')/).map((part,index)=>index%2?part:part.toLowerCase().replace(/\s+/g,'')).join('');
+    const definition=database=>database.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='market_images'").get().sql;
+    if(normalize(definition(db))!==normalize(definition(reference)))throw Error('Invalid market_images constraints');
+   }
   }
   if(version<14&&hasSound&&db.prepare('SELECT COUNT(*) n FROM character_sounds').get().n)throw Error('An older schema cannot contain expression sounds');
+  if(version<16&&hasImages&&db.prepare('SELECT COUNT(*) n FROM market_images').get().n)throw Error('An older schema cannot contain market images');
  }finally{reference.close();}
 }
 
@@ -212,6 +239,12 @@ function openDatabase(file){
    db.exec(SOUND_SQL+';'+MARKET_SQL.join(';')+'; CREATE INDEX IF NOT EXISTS market_ledger_user ON market_ledger(user_id); PRAGMA user_version=15; COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
+ if(version<16){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+   db.exec(MARKET_IMAGE_SQL+'; CREATE INDEX IF NOT EXISTS market_images_owner ON market_images(author_id,created_at); CREATE INDEX IF NOT EXISTS market_images_status ON market_images(status,created_at); PRAGMA user_version=16; COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
  return db;
 }
 
@@ -221,4 +254,4 @@ function transaction(db,run){
  catch(error){db.exec('ROLLBACK');throw error;}
 }
 
-module.exports={openDatabase,transaction,SCHEMA_VERSION,MARKET_TABLES,validateFeatureSchema};
+module.exports={openDatabase,transaction,SCHEMA_VERSION,MARKET_TABLES,MARKET_IMAGE_SQL,validateFeatureSchema};

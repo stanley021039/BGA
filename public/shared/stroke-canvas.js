@@ -101,9 +101,9 @@ window.StrokeCanvas=(()=>{
   const context=canvas.getContext('2d',options.contextAttributes);
   const retainedCheckpoints=maxCheckpoints-(options.reserveCanvasCheckpoint?1:0)-(options.reservePresentationCheckpoint?1:0);
   const yieldMain=options.yieldToMain||yieldToMain,now=()=>globalThis.performance?.now?.()??Date.now();
-  let keys=[],costs=[0],checkpoints=[],revision=0,epoch=0,pendingRender=null;
+  let keys=[],costs=[0],checkpoints=[],revision=0,surfaceRevision=0,epoch=0,pendingRender=null;
   const stats={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,checkpointBytes:0,yields:0,cancelledRenders:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
-  function clear(){context.clearRect(0,0,canvas.width,canvas.height);context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);}
+  function clear(){context.clearRect(0,0,canvas.width,canvas.height);context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);surfaceRevision++;}
   function remember(index,pinned){
    if(!index||checkpoints.some(point=>point.index===index))return;
    const point={index,cost:costs[index],image:null};checkpoints.push(point);
@@ -143,7 +143,7 @@ window.StrokeCanvas=(()=>{
    const {common,from,base}=job;
    if(common<keys.length){
     checkpoints=checkpoints.filter(point=>point.index<=common);
-    if(base)context.putImageData(base.image,0,0);else clear();
+    if(base){context.putImageData(base.image,0,0);surfaceRevision++;}else clear();
     stats.restores++;
    }
    costs=costs.slice(0,from+1);keys=job.nextKeys.slice(0,from);
@@ -153,7 +153,7 @@ window.StrokeCanvas=(()=>{
   }
   function paint(job,index){
     if(index===job.mutableFrom)remember(index,job.mutableFrom);
-    const stroke=job.strokes[index],filledPixels=drawStroke(context,stroke)||0;
+    const stroke=job.strokes[index],filledPixels=drawStroke(context,stroke)||0;surfaceRevision++;
     stats.strokeApplications++;
     if(stroke.tool==='fill'){stats.fillApplications++;stats.filledPixels+=filledPixels;}
     costs.push(costs[index]+(stroke.tool==='fill'?32:1));
@@ -199,7 +199,7 @@ window.StrokeCanvas=(()=>{
    return promise?promise.then(whenIdle):Promise.resolve();
    }
   function reset(){cancelPending();epoch++;keys=[];costs=[0];checkpoints=[];stats.checkpointBytes=0;clear();revision++;}
-  function metrics(){return {...stats,revision,checkpoints:checkpoints.length,strokes:keys.length,rendering:!!pendingRender,targetStrokes:pendingRender?.plan.strokes.length??keys.length};}
+  function metrics(){return {...stats,revision,surfaceRevision,checkpoints:checkpoints.length,strokes:keys.length,rendering:!!pendingRender,targetStrokes:pendingRender?.plan.strokes.length??keys.length};}
   clear();
   return {render,renderCooperatively,whenIdle,reset,metrics};
  }
@@ -215,20 +215,23 @@ window.StrokeCanvas=(()=>{
   const attributes=options.contextAttributes;
   staging.getContext('2d',attributes);
   const worker=createRenderer(staging,{...options,atomicPresentation:false,reservePresentationCheckpoint:true,contextAttributes:attributes});
-  let generation=0,pending=null,presentationCopies=0;
-  function present(){context.save();context.setTransform?.(1,0,0,1,0,0);context.globalAlpha=1;context.globalCompositeOperation='copy';context.drawImage(staging,0,0);context.restore();presentationCopies++;}
-  function render(strokes,settings){const changed=worker.render(strokes,settings);generation++;pending=null;if(changed)present();return changed;}
+  let generation=0,pending=null,presentationCopies=0,presentedSurfaceRevision=-1;
+  function present(){context.save();context.setTransform?.(1,0,0,1,0,0);context.globalAlpha=1;context.globalCompositeOperation='copy';context.drawImage(staging,0,0);context.restore();presentedSurfaceRevision=worker.metrics().surfaceRevision;presentationCopies++;}
+  // A cancelled replay can leave staging at the new target without completing
+  // a worker revision. Track pixel writes separately from the last visible copy.
+  function presentIfNeeded(){if(worker.metrics().surfaceRevision===presentedSurfaceRevision)return false;present();return true;}
+  function render(strokes,settings){worker.render(strokes,settings);generation++;pending=null;return presentIfNeeded();}
   function renderCooperatively(strokes,settings){
    const result=worker.renderCooperatively(strokes,settings);
-   if(!result||typeof result.then!=='function'){generation++;pending=null;if(result)present();return result;}
+   if(!result||typeof result.then!=='function'){generation++;pending=null;return presentIfNeeded();}
    if(pending?.source===result)return pending.promise;
    const job={source:result,generation:++generation,promise:null};pending=job;
-   job.promise=result.then(changed=>{if(pending!==job||job.generation!==generation)return false;if(changed)present();return changed;}).finally(()=>{if(pending===job)pending=null;});
+   job.promise=result.then(()=>{if(pending!==job||job.generation!==generation)return false;return presentIfNeeded();}).finally(()=>{if(pending===job)pending=null;});
    return job.promise;
   }
   function whenIdle(){const promise=pending?.promise;return promise?promise.then(whenIdle):worker.whenIdle().then(()=>pending?whenIdle():undefined);}
   function reset(){worker.reset();generation++;pending=null;present();}
-  function metrics(){const current=worker.metrics(),presentationBytes=staging.width*staging.height*4;return {...current,atomicPresentation:true,presentationBytes,presentationCopies,cachedBytes:(current.cachedBytes??current.checkpointBytes)+presentationBytes,rendering:!!pending||current.rendering};}
+  function metrics(){const current=worker.metrics(),presentationBytes=staging.width*staging.height*4;return {...current,atomicPresentation:true,presentationBytes,presentationCopies,presentedSurfaceRevision,cachedBytes:(current.cachedBytes??current.checkpointBytes)+presentationBytes,rendering:!!pending||current.rendering};}
   present();return {render,renderCooperatively,whenIdle,reset,metrics};
  }
  function createMutableRenderer(canvas,options){
@@ -241,8 +244,8 @@ window.StrokeCanvas=(()=>{
   // original total cache budget. Both contexts use the same creation hints.
   const prefix=createRenderer(base,{...options,separateMutable:false,reserveCanvasCheckpoint:true,contextAttributes:context.getContextAttributes?.()});
   const yieldMain=options.yieldToMain||yieldToMain,now=()=>globalThis.performance?.now?.()??Date.now();
-  let keys=[],split=0,prefixRevision=-1,revision=0,epoch=0,pending=null,fallback=null,fillSensitive=false;
-  const fallbackPast={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,yields:0,cancelledRenders:0,revision:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
+  let keys=[],split=0,prefixRevision=-1,revision=0,surfaceRevision=0,epoch=0,pending=null,fallback=null,fillSensitive=false;
+  const fallbackPast={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,yields:0,cancelledRenders:0,revision:0,surfaceRevision:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
   const stats={mutableStrokeApplications:0,mutableFillApplications:0,mutableFilledPixels:0,baseCopies:0,mutableRebuilds:0,mutableLineTo:0,modeSwitches:0,yields:0,cancelledRenders:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
   function plan(strokes,settings={}){
    if(!Array.isArray(strokes)||strokes.length>(options.maxStrokes??1016))throw Error('Canvas stroke limit exceeded');
@@ -283,10 +286,10 @@ window.StrokeCanvas=(()=>{
   function cancel(){if(pending){pending.cancelled=true;pending.plan.strokes=null;pending.plan.nextKeys=null;pending=null;stats.cancelledRenders++;}}
   function copyBase(job){
    context.save();context.setTransform?.(1,0,0,1,0,0);context.globalAlpha=1;context.globalCompositeOperation='copy';context.drawImage(base,0,0);context.restore();
-   stats.baseCopies++;stats.mutableRebuilds++;keys=job.nextKeys.slice(0,job.split);split=job.split;prefixRevision=prefix.metrics().revision;
+   surfaceRevision++;stats.baseCopies++;stats.mutableRebuilds++;keys=job.nextKeys.slice(0,job.split);split=job.split;prefixRevision=prefix.metrics().revision;
   }
   function paint(job,index){
-   const stroke=job.strokes[index],filled=drawStroke(context,stroke)||0;stats.mutableStrokeApplications++;
+   const stroke=job.strokes[index],filled=drawStroke(context,stroke)||0;surfaceRevision++;stats.mutableStrokeApplications++;
    if(stroke.tool==='fill'){stats.mutableFillApplications++;stats.mutableFilledPixels+=filled;}
    if(['brush','erase','line'].includes(stroke.tool))stats.mutableLineTo+=Math.max(1,stroke.points.length-1);
    keys.push(job.nextKeys[index]);
@@ -332,13 +335,13 @@ window.StrokeCanvas=(()=>{
   }
   function reset(){
    cancel();epoch++;discardFallback();fillSensitive=false;
-   prefix.reset();keys=[];split=0;prefixRevision=-1;context.clearRect(0,0,canvas.width,canvas.height);context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);revision++;
+   prefix.reset();keys=[];split=0;prefixRevision=-1;context.clearRect(0,0,canvas.width,canvas.height);context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);surfaceRevision++;revision++;
   }
   function metrics(){
    const baseStats=prefix.metrics(),single=fallback?.metrics(),layerBytes=canvas.width*canvas.height*4,history={};
    for(const key of Object.keys(fallbackPast))history[key]=key.startsWith('max')?Math.max(fallbackPast[key],single?.[key]||0):fallbackPast[key]+(single?.[key]||0);
    const checkpointBytes=baseStats.checkpointBytes+(single?.checkpointBytes||0);
-   return {...baseStats,...stats,revision:revision+history.revision,strokeApplications:baseStats.strokeApplications+stats.mutableStrokeApplications+history.strokeApplications,fillApplications:baseStats.fillApplications+stats.mutableFillApplications+history.fillApplications,filledPixels:baseStats.filledPixels+stats.mutableFilledPixels+history.filledPixels,
+   return {...baseStats,...stats,revision:revision+history.revision,surfaceRevision:surfaceRevision+history.surfaceRevision,strokeApplications:baseStats.strokeApplications+stats.mutableStrokeApplications+history.strokeApplications,fillApplications:baseStats.fillApplications+stats.mutableFillApplications+history.fillApplications,filledPixels:baseStats.filledPixels+stats.mutableFilledPixels+history.filledPixels,
     prefixStrokeApplications:baseStats.strokeApplications,prefixFillApplications:baseStats.fillApplications,fallbackStrokeApplications:history.strokeApplications,fallbackFillApplications:history.fillApplications,layerBytes,checkpointBytes,cachedBytes:checkpointBytes+layerBytes,checkpoints:baseStats.checkpoints+(single?.checkpoints||0),
     restores:baseStats.restores+history.restores,yields:baseStats.yields+stats.yields+history.yields,cancelledRenders:stats.cancelledRenders+history.cancelledRenders,prefixCancelledRenders:baseStats.cancelledRenders,maxBatchStrokes:Math.max(baseStats.maxBatchStrokes,stats.maxBatchStrokes,history.maxBatchStrokes),maxBatchFills:Math.max(baseStats.maxBatchFills,stats.maxBatchFills,history.maxBatchFills),maxBatchMs:Math.max(baseStats.maxBatchMs,stats.maxBatchMs,history.maxBatchMs),
     strokes:single?.strokes??keys.length,mutableFrom:split,rendering:!!pending||baseStats.rendering||!!single?.rendering,targetStrokes:single?.targetStrokes??pending?.plan.strokes?.length??keys.length,separateMutable:true,fallback:fillSensitive,mode:fallback?(fillSensitive?'canonical-fill':'canonical'):'layered'};

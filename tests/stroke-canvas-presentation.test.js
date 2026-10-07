@@ -43,3 +43,43 @@ test('atomic staging preserves omitted context creation hints instead of turning
   const window={};vm.runInNewContext(source,{window,Date,setTimeout});const canvas=rasterCanvas(64,32),creation=[];canvas.getContext('2d').getContextAttributes=()=>({alpha:true,willReadFrequently:false});window.StrokeCanvas.createRenderer(canvas,{atomicPresentation:true,separateMutable:true,contextAttributes:requested,createCanvas:(width,height)=>{const layer=rasterCanvas(width,height),get=layer.getContext;layer.getContext=(type,attributes)=>{creation.push(attributes);return get(type);};return layer;}});assert.equal(creation[0],requested);
  }
 });
+
+test('clear at the first recovery yield presents white even when staging already equals the empty target',async()=>{
+ for(const mode of ['classic','canonical','layered'])for(const method of ['render','renderCooperatively']){
+  const f=fixture({separateMutable:mode!=='classic'}),settings=mode==='layered'?{mutableFrom:0}:{},old=[brush(100,[[4,4],[50,25]],9,'#cc0033')],next=Array.from({length:64},(_,i)=>brush(i+1));
+  f.renderer.render(old,settings);const visible=f.canvas.pixels(),copies=f.renderer.metrics().presentationCopies,recovery=f.renderer.renderCooperatively(next,settings),waiting=f.renderer.whenIdle();
+  assert.equal(typeof recovery.then,'function');assert.deepEqual(f.canvas.pixels(),visible,'the pending replacement must not expose staging white');assert.ok(f.schedule.length);
+  const cleared=f.renderer[method]([],settings);await f.schedule.drain();
+  assert.equal(await recovery,false);await waiting;await f.renderer.whenIdle();
+  assert.equal(Buffer.compare(Buffer.from(f.canvas.pixels()),Buffer.from(canonical(f,[]))),0,`${mode}/${method}: clear must commit the already-empty staging surface`);
+  assert.equal(await cleared,true,'a newly committed visible frame counts as a changed atomic render');assert.equal(f.renderer.metrics().presentationCopies,copies+1);assert.equal(f.renderer.metrics().rendering,false);
+ }
+});
+
+test('undo to the painted staging prefix commits that canonical prefix after cancelling a longer recovery',async()=>{
+ for(const mode of ['classic','canonical','layered'])for(const method of ['render','renderCooperatively']){
+  const f=fixture({separateMutable:mode!=='classic'}),settings=mode==='layered'?{mutableFrom:0}:{},old=[brush(100,[[4,4],[50,25]],9,'#cc0033')],next=Array.from({length:64},(_,i)=>brush(i+1));
+  f.renderer.render(old,settings);const visible=f.canvas.pixels(),copies=f.renderer.metrics().presentationCopies,recovery=f.renderer.renderCooperatively(next,settings),waiting=f.renderer.whenIdle();
+  await f.schedule.step();const count=f.renderer.metrics().strokes;assert.ok(count>0&&count<next.length);assert.deepEqual(f.canvas.pixels(),visible,'one completed offscreen batch must retain the previous visible frame');
+  const prefix=next.slice(0,count),undone=f.renderer[method](prefix,settings);await f.schedule.drain();
+  assert.equal(await recovery,false);await waiting;await f.renderer.whenIdle();
+  assert.equal(Buffer.compare(Buffer.from(f.canvas.pixels()),Buffer.from(canonical(f,prefix))),0,`${mode}/${method}: undo must commit the painted prefix rather than leaving the prior scene`);
+  assert.equal(await undone,true);assert.equal(f.renderer.metrics().presentationCopies,copies+1);assert.equal(f.renderer.metrics().strokes,prefix.length);assert.equal(f.renderer.metrics().rendering,false);
+ }
+});
+
+test('cancelling an unpainted append to the already-visible prefix remains a true no-op',async()=>{
+ for(const separateMutable of [false,true])for(const method of ['render','renderCooperatively']){
+  const f=fixture({separateMutable}),old=[brush(1),brush(2)],next=[...old,...Array.from({length:64},(_,i)=>brush(i+3))];f.renderer.render(old);
+  const visible=f.canvas.pixels(),before=f.renderer.metrics(),job=f.renderer.renderCooperatively(next),cancelled=f.renderer[method](old);await f.schedule.drain();
+  assert.equal(await cancelled,false);assert.equal(await job,false);await f.renderer.whenIdle();assert.deepEqual(f.canvas.pixels(),visible);assert.equal(f.renderer.metrics().presentationCopies,before.presentationCopies);assert.equal(f.renderer.metrics().strokeApplications,before.strokeApplications);
+ }
+});
+
+test('settled identical atomic targets do no stroke work or presentation copies in every drawing mode',()=>{
+ for(const mode of ['classic','canonical','layered']){
+  const f=fixture({separateMutable:mode!=='classic'}),settings=mode==='layered'?{mutableFrom:0}:{},strokes=[brush(1),brush(2)];f.renderer.render(strokes,settings);const before=f.renderer.metrics(),visible=f.canvas.pixels();
+  for(let i=0;i<100;i++){assert.equal(f.renderer.render(strokes,settings),false);assert.equal(f.renderer.renderCooperatively(strokes,settings),false);}
+  assert.deepEqual(f.canvas.pixels(),visible);assert.equal(f.renderer.metrics().presentationCopies,before.presentationCopies);assert.equal(f.renderer.metrics().strokeApplications,before.strokeApplications);
+ }
+});
