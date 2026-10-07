@@ -10,8 +10,8 @@ test('shared dice artwork has exactly one to six separated pips and rejects inva
  }
  for(const value of [0,7,1.5,'1',null])assert.equal(window.RaceDiceDialog.faceMarkup(value),'');
 });
-function harness({reduced=false,time=10000,onAction=()=>{},enabled=true}={}){
- let clock=time,nextTimer=0;const timers=new Map();let document;
+function harness({reduced=false,time=10000,onAction=()=>{},onRolling,enabled=true,webgl=false}={}){
+ let clock=time,nextTimer=0;const timers=new Map(),documentListeners=new Map();let document;
  class Element{
   constructor(tag){this.tagName=tag.toUpperCase();this.children=[];this.parentElement=null;this.attrs={};this.dataset={};this.style={setProperty(name,value){this[name]=value;}};this.listeners=new Map();this.hidden=false;this.disabled=false;this.open=false;this.textContent='';this.className='';this.isConnected=false;}
   append(...items){for(const item of items){item.parentElement=this;item.isConnected=this.isConnected;this.children.push(item);}}
@@ -27,16 +27,18 @@ function harness({reduced=false,time=10000,onAction=()=>{},enabled=true}={}){
  }
  const head=new Element('head'),body=new Element('body');head.isConnected=body.isConnected=true;
  const all=(element=body)=>[element,...element.children.flatMap(child=>all(child))];
- document={head,body,activeElement:null,createElement:tag=>new Element(tag),getElementById:id=>[...all(head),...all(body)].find(el=>el.id===id)||null};
+ document={head,body,hidden:false,activeElement:null,createElement:tag=>new Element(tag),getElementById:id=>[...all(head),...all(body)].find(el=>el.id===id)||null,addEventListener(type,fn){const listeners=documentListeners.get(type)||[];listeners.push(fn);documentListeners.set(type,listeners);},removeEventListener(type,fn){documentListeners.set(type,(documentListeners.get(type)||[]).filter(listener=>listener!==fn));}};
  const trigger=document.createElement('button');body.append(trigger);trigger.focus();
  const prefs=new Set(),window={MotionPolicy:{get:()=>({enabled}),allowsMotion:()=>enabled&&!reduced,subscribe(fn){prefs.add(fn);fn();return()=>prefs.delete(fn);}},document,matchMedia:()=>({matches:reduced}),setTimeout(callback,ms){const id=++nextTimer;timers.set(id,{callback,at:clock+ms});return id;},clearTimeout:id=>timers.delete(id)};
+ const fx={calls:[],clears:0,destroys:0,active:false};let activity;
+ if(webgl)window.RaceDiceWebGL={create(host,options){fx.host=host;fx.policy=options.policy;activity=options.onActivity;return {show(value){fx.calls.push({...value,wasOpen:host.parentElement.open});},clear(){fx.clears++;fx.active=false;activity({active:false});},destroy(){fx.destroys++;fx.active=false;activity({active:false});},getState(){return {active:fx.active,available:true};}};}};
  vm.runInNewContext(source,{window,Date:{now:()=>clock}});
- const api=window.RaceDiceDialog.mount({onAction}),dialog=all().find(el=>el.tagName==='DIALOG');
+ const api=window.RaceDiceDialog.mount({onAction,onRolling}),dialog=all().find(el=>el.tagName==='DIALOG');
  const find=className=>all(dialog).find(el=>el.className.split(/\s+/).includes(className));
  const button=action=>all(dialog).find(el=>el.dataset.diceAction===action);
  const text=(el=dialog)=>String(el.textContent||'')+el.children.map(child=>text(child)).join(' ');
  function advance(ms){const end=clock+ms;for(;;){const entries=[...timers].filter(([,timer])=>timer.at<=end).sort((a,b)=>a[1].at-b[1].at||a[0]-b[0]);if(!entries.length)break;const [id,timer]=entries[0];clock=timer.at;timers.delete(id);timer.callback();}clock=end;}
- return{api,dialog,document,trigger,timers,all,find,button,text,advance,prefs,setEnabled(value){enabled=value;for(const fn of prefs)fn();},get now(){return clock;}};
+ return{api,dialog,document,trigger,timers,all,find,button,text,advance,prefs,fx,window,setFxActive(active,anchors){fx.active=active;activity?.({active,anchors});},setHidden(value){document.hidden=value;for(const fn of documentListeners.get('visibilitychange')||[])fn();},setEnabled(value){enabled=value;for(const fn of prefs)fn();},get now(){return clock;}};
 }
 function check(overrides={}){
  return{id:'C1',kind:'collision',title:'碰撞判定',condition:'依受推車與推進方向兩顆骰子結算。',owner:'A',status:'awaiting',participants:[{id:'A',name:'甲車隊',color:'#d0855a',car:{size:0},label:'進入車'},{id:'B',name:'乙車隊',color:'#63a184',car:{size:2},label:'原位車'}],dice:[{label:'受推車',faces:['進入車','原位車']},{label:'推進方向',faces:[1,2,3,4,5,6]}],...overrides};
@@ -174,4 +176,46 @@ test('same-team collision retains two named vehicle cards and never displays pri
 test('reset and destroy cancel animation timers and ignore late updates',()=>{
  const h=harness(),rolling=check({status:'rolling',startedAt:1000,readyAt:2000,serverNow:1000});h.api.show(state(rolling));assert.ok(h.timers.size>0);h.api.reset();assert.equal(h.timers.size,0);assert.equal(h.dialog.open,false);h.advance(2000);assert.equal(h.dialog.open,false);
  h.api.show(state(rolling));h.api.destroy();assert.equal(h.dialog.isConnected,false);assert.equal(h.timers.size,0);h.api.show(state(check()));assert.equal(h.dialog.open,false);assert.equal(h.document.body.children.length,1);
+});
+
+test('WebGL is measured only after opening and receives cosmetic faces until the full result barrier expires',()=>{
+ const rolls=[],h=harness({webgl:true,onRolling:value=>rolls.push(value)}),rolling=check({status:'rolling',startedAt:1000,readyAt:2000,serverNow:1900});let reads=0;
+ const result=check({...rolling,status:'result',serverNow:2000,result:{get faces(){reads++;return ['原位車',4];},text:'公開結果'}});
+ h.api.show(state(rolling));assert.equal(h.fx.calls.length,1);assert.equal(h.fx.calls[0].wasOpen,true);assert.equal(h.fx.policy,h.window.MotionPolicy);assert.equal(h.fx.calls[0].stage,'rolling');assert.equal(h.fx.calls[0].elapsedMs,0);assert.equal(h.fx.calls[0].durationMs,1000);
+ for(const die of h.fx.calls[0].dice){assert.equal(Object.hasOwn(die,'value'),false);assert.equal(die.anchor.className,'race-dice-face');}
+ assert.deepEqual(Array.from(h.fx.calls[0].dice[0].faces),rolling.dice[0].faces);const key=h.fx.calls[0].key;
+ h.advance(650);h.api.show(state(result));assert.equal(reads,0);assert.equal(h.fx.calls.at(-1).key,key);assert.equal(h.fx.calls.at(-1).elapsedMs,650);assert.equal(h.fx.calls.at(-1).stage,'rolling');assert.equal(rolls.length,1);
+ h.advance(349);assert.equal(reads,0);h.advance(1);const shown=h.fx.calls.at(-1);assert.equal(shown.stage,'result');assert.equal(shown.key,key);assert.deepEqual(Array.from(shown.dice,die=>die.value),['原位車',4]);assert.match(h.text(),/公開結果/);assert.equal(rolls.length,1);
+});
+
+test('only actual WebGL draw coverage hides face artwork while preserving result labels and immediately restoring fallback',()=>{
+ const h=harness({webgl:true}),c=check({status:'result',result:{faces:['原位車',4],text:'原位車向前推移。'}});h.api.show(state(c));const faces=h.all().filter(el=>el.className==='race-dice-face');
+ assert.equal(faces[0].dataset.diceFx,'false');h.setFxActive(true,[faces[1]]);assert.equal(faces[0].dataset.diceFx,'false');assert.equal(faces[1].dataset.diceFx,'true');assert.equal(h.dialog.dataset.diceFxActive,'true');assert.equal(h.api.getFxState().active,true);
+ assert.match(faces[1].parentElement.getAttribute('aria-label'),/4 點/);assert.match(h.text(),/原位車向前推移/);assert.equal(h.button('acceptDice').disabled,false);
+ const style=h.document.head.children[0].textContent;assert.match(style,/\.race-dice-face\[data-dice-fx=true\][^}]*visibility:hidden[^}]*animation:none[^}]*transform:none/);assert.match(style,/\.race-dice-body\{[^}]*position:relative/);assert.match(style,/\.race-dice-tile\{[^}]*position:relative/);
+ h.setFxActive(false);assert.equal(faces[1].dataset.diceFx,'false');assert.equal(h.dialog.dataset.diceFxActive,'false');assert.equal(h.button('acceptDice').disabled,false);
+});
+
+test('WebGL cancellation, layout replacement and destruction cannot revive old covered dice',()=>{
+ const h=harness({webgl:true}),rolling=check({status:'rolling',startedAt:1000,readyAt:2000,serverNow:1000});h.api.show(state(rolling));const oldFaces=h.fx.calls.at(-1).dice.map(die=>die.anchor);h.setFxActive(true,oldFaces);const cleared=h.fx.clears;
+ h.api.show(state(check({...rolling,dice:[{label:'新的方向骰',faces:['前左','前方','前右']}]})));assert.ok(h.fx.clears>cleared);assert.ok(h.fx.calls.at(-1).dice.every(die=>!oldFaces.includes(die.anchor)));assert.ok(oldFaces.every(face=>face.dataset.diceFx==='false'));
+ const latest=h.fx.calls.at(-1).dice.map(die=>die.anchor);h.setFxActive(true,latest);h.setHidden(true);assert.ok(latest.every(face=>face.dataset.diceFx==='false'));const shows=h.fx.calls.length;h.setHidden(false);h.api.show(state(rolling));assert.equal(h.fx.calls.length,shows,'visible polling must not replay a cycle cancelled by hiding');
+ h.api.reset();assert.equal(h.dialog.open,false);assert.equal(h.timers.size,0);h.api.destroy();assert.equal(h.fx.destroys,1);h.setFxActive(true,latest);h.advance(5000);assert.equal(h.dialog.dataset.diceFxActive,'false');assert.equal(h.fx.calls.length,shows);assert.equal(h.prefs.size,0);
+});
+
+test('round and nonstandard dice retain every anchor, repeated face and authoritative value',()=>{
+ const h=harness({webgl:true}),participants=Array.from({length:4},(_,i)=>({id:'P'+i,name:'車隊 '+i})),dice=participants.flatMap(p=>Array.from({length:4},(_,i)=>({participant:p.id,label:'骰子 '+(i+1),faces:[1,2,3,4,5,6]}))).concat({label:'公路加速骰',faces:[1,1,1,2,2,3]}),values=dice.map((_,i)=>i%6+1);
+ h.api.show(state(check({kind:'round',participants,dice,status:'result',result:{faces:values,text:'第 1 輪'}})));assert.equal(h.fx.calls.at(-1).dice.length,17);assert.deepEqual(Array.from(h.fx.calls.at(-1).dice.at(-1).faces),[1,1,1,2,2,3]);assert.deepEqual(Array.from(h.fx.calls.at(-1).dice,die=>die.value),values);
+ const shot=['SM','M','L','L','L','SML'];h.api.show(state(check({id:'S1',kind:'shot',participants:[],dice:[{label:'射擊骰',faces:shot}],status:'result',result:{faces:['SML'],text:'依車型判定命中'}})));assert.deepEqual(Array.from(h.fx.calls.at(-1).dice[0].faces),shot);assert.equal(h.fx.calls.at(-1).dice[0].value,'SML');assert.match(h.fx.calls.at(-1).dice[0].anchor.parentElement.getAttribute('aria-label'),/射擊骰，SML/);
+});
+
+test('missing WebGL, reduced motion and non-live hydration retain the original static masking and owner controls',()=>{
+ const fallback=harness();fallback.api.show(state(check({status:'result',result:{faces:['原位車',2],text:'SVG 回退'}})));assert.equal(fallback.api.getFxState(),null);assert.equal(fallback.button('acceptDice').disabled,false);assert.match(fallback.text(),/SVG 回退/);
+ for(const options of [{reduced:true},{enabled:false},{live:false}]){const h=harness({...options,webgl:true}),rolling=check({status:'rolling',startedAt:1000,readyAt:2000,serverNow:1000});h.api.show(state(rolling),{live:options.live!==false});assert.equal(h.fx.calls.length,0);h.api.show(state(check({...rolling,status:'result',serverNow:2000,result:{faces:['原位車',5],text:'靜態結果'}})),{live:true});h.advance(999);assert.doesNotMatch(h.text(),/靜態結果/);h.advance(1);assert.match(h.text(),/靜態結果/);assert.equal(h.fx.calls.length,0);assert.equal(h.button('acceptDice').disabled,false);}
+});
+
+test('the optional dice renderer has one exact public asset route and loads before the dialog controller',async()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../public/race.html'),'utf8'),script='/shared/race-dice-webgl.js';assert.equal(html.split('src="'+script+'"').length-1,1);assert.ok(html.indexOf('src="/shared/game-fx-layer.js"')<html.indexOf('src="'+script+'"'));assert.ok(html.indexOf('src="'+script+'"')<html.indexOf('src="/shared/race-dice-dialog.js"'));assert.ok(html.indexOf('src="/shared/race-dice-dialog.js"')<html.indexOf('src="/race.js"'));
+ const os=require('node:os'),{createApp}=require('../src/app'),directory=fs.mkdtempSync(path.join(os.tmpdir(),'bga-dice-webgl-route-')),app=createApp({port:0,host:'127.0.0.1',dbFile:path.join(directory,'app.sqlite'),historyDir:path.join(directory,'history'),communityDir:path.join(directory,'community'),musicDir:path.join(directory,'music'),externalSideEffectsEnabled:false});
+ try{const {port}=await app.listen(),base='http://127.0.0.1:'+port,response=await fetch(base+script);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/^text\/javascript/);assert.equal(response.headers.get('cache-control'),'no-store');assert.equal(await response.text(),fs.readFileSync(path.join(__dirname,'../public/shared/race-dice-webgl.js'),'utf8'));assert.equal((await fetch(base+script+'-extra')).status,404);}finally{await app.close();fs.rmSync(directory,{recursive:true,force:true});}
 });

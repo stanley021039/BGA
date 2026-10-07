@@ -4,14 +4,15 @@
  .race-dice-dialog{box-sizing:border-box;width:min(60rem,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:0;border:1px solid #9e8759;border-radius:16px;background:#17231a;color:#ece3ce;font-family:var(--ui-font-family,system-ui,sans-serif);font-size:1rem;line-height:1.5;overflow:auto;box-shadow:0 24px 80px #0008}
  .race-dice-dialog[open]{display:flex;flex-direction:column}.race-dice-dialog::backdrop{background:#07110bcc;backdrop-filter:blur(3px)}
  .race-dice-dialog *{box-sizing:border-box}.race-dice-header,.race-dice-footer{flex:none;padding:16px 24px;background:#17231a}.race-dice-header{border-bottom:1px solid #667252}.race-dice-header h2{margin:0;font-size:1.25rem;line-height:1.4;color:#ffda98}.race-dice-condition{margin:8px 0 0;font-size:1rem;white-space:pre-wrap;overflow-wrap:anywhere}
- .race-dice-body{flex:1 1 auto;min-height:0;padding:16px 24px;overflow:auto;overscroll-behavior:contain}.race-dice-participants{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.race-dice-participant,.race-dice-general{min-width:0;padding:12px;border:1px solid #677259;border-radius:10px;background:#233020}.race-dice-participant{border-top:4px solid var(--race-dice-color,#bda16a)}.race-dice-participant h3,.race-dice-general h3{margin:0;font-size:1rem;font-weight:700;overflow-wrap:anywhere}.race-dice-participant-label{margin:4px 0 8px;font-size:1rem;overflow-wrap:anywhere}.race-dice-participant-label:empty{display:none}
- .race-dice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.race-dice-general{margin-top:16px}.race-dice-general .race-dice-grid{grid-template-columns:repeat(auto-fit,minmax(min(9rem,100%),1fr))}.race-dice-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:88px;margin:0;padding:8px;border:1px solid #75805c;border-radius:8px;background:#35432f;color:#f3ead2;text-align:center}.race-dice-face{display:grid;place-items:center;min-width:56px;min-height:56px;max-width:100%;font-size:2rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere}.race-dice-face .race-die-icon{display:block;width:56px;height:56px}.race-dice-face[data-symbol=true]{padding:8px;border:2px solid #273c31;border-radius:10px;background:#fffaf0;color:#172b21;font-size:1rem}.race-dice-caption{font-size:1rem;line-height:1.4;overflow-wrap:anywhere}.race-dice-value-label{font-size:1rem;line-height:1.3}
+ .race-dice-body{position:relative;flex:1 1 auto;min-height:0;padding:16px 24px;overflow:auto;overscroll-behavior:contain}.race-dice-participants{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.race-dice-participant,.race-dice-general{min-width:0;padding:12px;border:1px solid #677259;border-radius:10px;background:#233020}.race-dice-participant{border-top:4px solid var(--race-dice-color,#bda16a)}.race-dice-participant h3,.race-dice-general h3{margin:0;font-size:1rem;font-weight:700;overflow-wrap:anywhere}.race-dice-participant-label{margin:4px 0 8px;font-size:1rem;overflow-wrap:anywhere}.race-dice-participant-label:empty{display:none}
+ .race-dice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.race-dice-general{margin-top:16px}.race-dice-general .race-dice-grid{grid-template-columns:repeat(auto-fit,minmax(min(9rem,100%),1fr))}.race-dice-tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;min-height:88px;margin:0;padding:8px;border:1px solid #75805c;border-radius:8px;background:#35432f;color:#f3ead2;text-align:center}.race-dice-face{display:grid;place-items:center;min-width:56px;min-height:56px;max-width:100%;font-size:2rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere}.race-dice-face .race-die-icon{display:block;width:56px;height:56px}.race-dice-face[data-symbol=true]{padding:8px;border:2px solid #273c31;border-radius:10px;background:#fffaf0;color:#172b21;font-size:1rem}.race-dice-caption{font-size:1rem;line-height:1.4;overflow-wrap:anywhere}.race-dice-value-label{font-size:1rem;line-height:1.3}
  .race-dice-dialog[data-stage=rolling] .race-dice-face{animation:race-dice-tumble var(--race-dice-duration,1000ms) ease-out both;animation-delay:var(--race-dice-delay,0ms)}.race-dice-result{margin:16px 0 0;font-size:1rem;white-space:pre-wrap;overflow-wrap:anywhere}.race-dice-result:empty{display:none}.race-dice-footer{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border-top:1px solid #667252}.race-dice-status{flex:1 1 14rem;margin:0;font-size:1rem}.race-dice-actions{display:flex;flex-wrap:wrap;gap:8px}.race-dice-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 16px;border:1px solid #b29c65;border-radius:8px;background:#ffda98;color:#17231a;font:inherit;cursor:pointer}.race-dice-action[data-dice-action=rerollDice]{background:#293725;color:#ece3ce}.race-dice-action:disabled{cursor:default;opacity:.65}.race-dice-action:focus-visible,.race-dice-dialog h2:focus-visible{outline:3px solid #f4bf58;outline-offset:3px}.race-dice-action svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.race-dice-action [aria-hidden=true]{display:inline-flex}.race-dice-error{flex-basis:100%;min-height:1.5em;margin:0;font-size:1rem;color:#ffd0be}.race-dice-actions [hidden]{display:none}
  .race-dice-dialog[data-kind=round] .race-dice-value-label{display:none}.race-dice-dialog[data-kind=round] .race-dice-general{display:flex;align-items:center;flex-wrap:wrap;gap:16px;margin-top:12px;padding:8px 12px}.race-dice-dialog[data-kind=round] .race-dice-general .race-dice-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:0}.race-dice-dialog[data-kind=round] .race-dice-general .race-dice-tile{min-width:56px;min-height:56px;padding:8px}.race-dice-dialog[data-kind=round] .race-dice-general .race-dice-face{min-height:32px}.race-dice-dialog[data-kind=round] .race-dice-general .race-dice-caption,.race-dice-dialog[data-kind=round] .race-dice-error:empty{display:none}
  .race-dice-dialog:not([data-kind=round]){width:min(44rem,calc(100vw - 32px))}.race-dice-participants[data-count="1"]{grid-template-columns:1fr}.race-dice-participants[data-count="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}.race-dice-dialog[data-stage=result] .race-dice-face[data-symbol=true]+.race-dice-value-label{display:none}
  @keyframes race-dice-tumble{0%{transform:rotate(-18deg) translateY(-3px)}20%{transform:rotate(20deg) translateY(2px)}40%{transform:rotate(-14deg) translateY(-2px)}65%{transform:rotate(10deg)}85%{transform:rotate(-5deg)}100%{transform:none}}
  @media(max-width:800px){.race-dice-participants{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:480px){.race-dice-dialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:10px}.race-dice-header,.race-dice-footer,.race-dice-body{padding:12px 16px}.race-dice-participants{grid-template-columns:1fr;gap:12px}.race-dice-actions{width:100%}.race-dice-action{flex:1 1 auto}}
  .motion-reduced .race-dice-dialog[data-stage=rolling] .race-dice-face,.race-dice-dialog[data-motion=false] .race-dice-face{animation:none}
+ .race-dice-face[data-dice-fx=true]{visibility:hidden;animation:none!important;transform:none!important}
  @media(prefers-reduced-motion:reduce){.race-dice-dialog[data-stage=rolling] .race-dice-face{animation:none}.race-dice-dialog::backdrop{backdrop-filter:none}}
  `;
  // Fixed geometry keeps the face and pips legible regardless of the installed font.
@@ -29,9 +30,26 @@
   title.id='race-dice-title-'+number;title.tabIndex=-1;condition.id='race-dice-condition-'+number;dialog.setAttribute('aria-labelledby',title.id);dialog.setAttribute('aria-describedby',condition.id);dialog.setAttribute('aria-modal','true');status.setAttribute('role','status');status.setAttribute('aria-live','polite');status.setAttribute('aria-atomic','true');error.setAttribute('role','alert');
   const icons={rollDice:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/>',rerollDice:'<path d="M3 4v6h6M3 10a9 9 0 1 1 1 8"/>',acceptDice:'<path d="m5 12 4 4L19 6"/>'};
   const buttons={};for(const [action,label]of [['rollDice','擲骰'],['rerollDice','重擲兩顆'],['acceptDice','確認，繼續']]){const button=node('button','race-dice-action',actions);button.type='button';button.dataset.diceAction=action;const icon=node('span','',button);icon.setAttribute('aria-hidden','true');icon.innerHTML='<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">'+icons[action]+'</svg>';node('span','',button,label);button.addEventListener('click',()=>act(action));buttons[action]=button;}
-  let state=null,check=null,checkId=null,cycle=null,pending=null,requestNumber=0,destroyed=false,returnFocus=null,timer=null,animationTimer=null,tiles=[],cards=new Map(),layoutKey='',lastStage='',displayDeadline=0;
+  let state=null,check=null,checkId=null,cycle=null,pending=null,requestNumber=0,destroyed=false,returnFocus=null,timer=null,animationTimer=null,tiles=[],cards=new Map(),layoutKey='',lastStage='',displayDeadline=0,fx=null,fxFailed=false;
   const now=()=>Date.now(),reduced=()=>!!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches||root.MotionPolicy?.get().enabled===false||!!document.hidden||cycle?.animate===false;
   function write(el,text){const value=String(text??'');if(el.textContent!==value)el.textContent=value;}
+  function fxActivity({active=false,anchors}={}){
+   const eligible=active&&!destroyed&&dialog.open&&check&&!reduced()&&['rolling','result'].includes(stage()),covered=Array.isArray(anchors)?new Set(anchors):null;let visible=false;
+   for(const tile of tiles){const replacing=!!eligible&&(!covered||covered.has(tile.face));tile.face.dataset.diceFx=String(replacing);visible=visible||replacing;}dialog.dataset.diceFxActive=String(visible);
+  }
+  function clearFx(){try{fx?.clear();}catch{}fxActivity();}
+  function renderFx(currentStage=stage()){
+   if(!dialog.open)return;
+   if(reduced()||!['rolling','result'].includes(currentStage)){clearFx();return;}
+   try{
+    if(!fx&&!fxFailed)fx=root.RaceDiceWebGL?.create(body,{policy:root.MotionPolicy,onActivity:fxActivity})||null;
+    if(!fx)return;
+    const dice=tiles.map((tile,index)=>{const die={anchor:tile.face,faces:Array.isArray(check.dice[index].faces)?check.dice[index].faces.slice():[]};if(currentStage==='result')die.value=check.result.faces[index];return die;});
+    // Geometry is valid only in the open modal. A server result is never
+    // included while the local masking barrier still presents a rolling stage.
+    fx.show({key:cycleKey(check),stage:currentStage,dice,elapsedMs:cycle?.observed?Math.max(0,now()-cycle.seenAt):0,durationMs:cycle?.observed?Math.max(1000,displayDeadline-cycle.seenAt):1000});
+   }catch{try{fx?.destroy();}catch{}fx=null;fxFailed=true;fxActivity();}
+  }
   function clearTimers(){root.clearTimeout(timer);root.clearTimeout(animationTimer);timer=null;animationTimer=null;}
   function ownerName(){return check?.participants?.find(p=>p.id===check.owner)?.name||state?.players?.find(p=>p.id===check.owner)?.name||'負責玩家';}
   function isOwner(){return check?.owner!=null&&state?.me===check.owner;}
@@ -44,9 +62,10 @@
    for(const participant of check.participants||[]){const card=cards.get(participantKey(participant));if(!card)continue;card.name.textContent=participant.name||'車隊';card.label.textContent=[participant.label,carLabel(participant.car)].filter((label,index,all)=>label&&all.indexOf(label)===index).join(' · ');const color=/^#[\da-f]{3,8}$/i.test(participant.color||'')?participant.color:'#bda16a';card.el.style.setProperty('--race-dice-color',color);}
   }
   function buildBoard(){
+   clearFx();
    participants.replaceChildren();participants.dataset.count=String((check.participants||[]).length);generalDice.replaceChildren();cards=new Map();tiles=[];
    for(const participant of check.participants||[]){const el=node('section','race-dice-participant',participants),name=node('h3','',el),label=node('p','race-dice-participant-label',el),grid=node('div','race-dice-grid',el);cards.set(participantKey(participant),{el,name,label,grid});}
-   for(const [index,die]of (check.dice||[]).entries()){const parent=cards.get(die.participant)?.grid||generalDice,el=node('figure','race-dice-tile',parent),face=node('span','race-dice-face',el),valueLabel=node('span','race-dice-value-label',el),label=node('figcaption','race-dice-caption',el);face.setAttribute('aria-hidden','true');valueLabel.setAttribute('aria-hidden','true');label.textContent=die.label||'骰子 '+(index+1);tiles.push({el,face,valueLabel,label});}
+   for(const [index,die]of (check.dice||[]).entries()){const parent=cards.get(die.participant)?.grid||generalDice,el=node('figure','race-dice-tile',parent),face=node('span','race-dice-face',el),valueLabel=node('span','race-dice-value-label',el),label=node('figcaption','race-dice-caption',el);face.setAttribute('aria-hidden','true');face.dataset.diceFx='false';valueLabel.setAttribute('aria-hidden','true');label.textContent=die.label||'骰子 '+(index+1);tiles.push({el,face,valueLabel,label});}
    for(const card of cards.values())card.grid.hidden=!card.grid.children.length;
    participants.hidden=!cards.size;general.hidden=!generalDice.children.length;generalTitle.textContent=check.kind==='round'?'共同公路骰':'本次判定骰';updateParticipants();
   }
@@ -82,9 +101,9 @@
    else message=owned?'確認結果後繼續遊戲。':'等待 '+ownerName()+' 確認結果。';
    write(status,message);
    if(Object.values(buttons).includes(document.activeElement)&&document.activeElement.hidden)title.focus({preventScroll:true});
-   lastStage=currentStage;if(cycle?.observed&&now()<displayDeadline)timer=root.setTimeout(render,Math.max(1,displayDeadline-now()));
+   lastStage=currentStage;if(cycle?.observed&&now()<displayDeadline)timer=root.setTimeout(render,Math.max(1,displayDeadline-now()));renderFx(currentStage);
   }
-  function open(){if(!dialog.open){dialog.showModal();title.focus({preventScroll:true});}}
+  function open(){if(!dialog.open){dialog.showModal();title.focus({preventScroll:true});renderFx();}}
   function show(nextState,{live=true,deferred=false,soundLive=live,soundEpoch}={}){
    if(destroyed)return;const next=nextState?.diceCheck;if(next?.id==null||!['awaiting','rolling','result'].includes(next.status)){reset();return;}
    const different=next.id!==checkId;state=nextState;check=next;
@@ -108,12 +127,12 @@
    try{await onAction(action,{check:id});}
    catch(failure){if(!destroyed&&pending?.request===request&&check?.id===id&&fingerprint(check)===key){pending=null;error.textContent=failure?.message||'操作未完成，請再試一次。';render();}}
   }
-  function reset(){clearTimers();state=null;check=null;checkId=null;cycle=null;pending=null;layoutKey='';lastStage='';displayDeadline=0;error.textContent='';result.textContent='';if(dialog.open)dialog.close();if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});returnFocus=null;}
-  function destroy(){if(destroyed)return;reset();destroyed=true;unsubscribe?.();document.removeEventListener?.('visibilitychange',visibility);dialog.remove();}
+  function reset(){clearTimers();clearFx();state=null;check=null;checkId=null;cycle=null;pending=null;layoutKey='';lastStage='';displayDeadline=0;error.textContent='';result.textContent='';if(dialog.open)dialog.close();if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});returnFocus=null;}
+  function destroy(){if(destroyed)return;reset();destroyed=true;try{fx?.destroy();}catch{}fx=null;unsubscribe?.();document.removeEventListener?.('visibilitychange',visibility);dialog.remove();}
   dialog.addEventListener('cancel',event=>event.preventDefault());dialog.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();}});dialog.addEventListener('close',()=>{if(check&&!destroyed)open();});
   const preference=()=>{if(check){if(cycle&&(document.hidden||!root.MotionPolicy?.allowsMotion()))cycle.animate=false;root.clearTimeout(animationTimer);animationTimer=null;render();}},visibility=()=>{if(document.hidden)preference();};
   const unsubscribe=root.MotionPolicy?.subscribe(preference);document.addEventListener?.('visibilitychange',visibility);
-  return{show,reset,destroy};
+  return{show,reset,destroy,getFxState:()=>fx?.getState?.()||null};
  }
  root.RaceDiceDialog={mount,faceMarkup};
 })(typeof window==='object'?window:globalThis);

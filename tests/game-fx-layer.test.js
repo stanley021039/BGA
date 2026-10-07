@@ -20,6 +20,12 @@ function fixture({unavailable=false,linkFailure=false,onActivity=null}={}){
  return {layer,root,host,doc,gl,frames,calls,notices,activities,subscriptions,listeners,mediaListeners,rootListeners,observers,canvas:host.children[0],tick(ms=16){time+=ms;const entries=[...frames];frames.clear();for(const [,fn]of entries)fn(time);},enable(value){enabled=value;for(const fn of subscriptions)fn();},reduce(value){reduced=value;dispatch(mediaListeners,'change');},hide(value){doc.hidden=value;dispatch(listeners,'visibilitychange');},event(type,event){dispatch(host.children[0]?.listeners||new Map(),type,event);},pagehide(){dispatch(rootListeners,'pagehide');},setBox(w,h){host.getBoundingClientRect=()=>({width:w,height:h});}};
 }
 const anchor={x:300,y:180};
+test('dice and particle renderers reserve the same two context slots',()=>{
+ const f=fixture(),budget=f.root.GameFxLayer,dice=f.doc.createElement('canvas'),other=f.doc.createElement('canvas');
+ assert.equal(budget.acquireContext(null),false);assert.equal(budget.acquireContext(dice),true);assert.equal(budget.acquireContext(dice),true);
+ assert.equal(f.layer.play('one','nitro',anchor),true);assert.equal(budget.acquireContext(other),false);
+ budget.releaseContext(dice);assert.equal(budget.acquireContext(other),true);budget.releaseContext(other);budget.releaseContext(other);f.layer.destroy();
+});
 test('lazy one-host ownership preserves overlay semantics and allocates only on confirmed play',()=>{
  const f=fixture();assert.equal(f.calls.some(c=>c.name==='getContext'),false);assert.equal(f.frames.size,0);assert.equal(f.canvas.style.pointerEvents,'none');assert.equal(f.canvas.attrs['aria-hidden'],'true');assert.equal(f.host.children.length,1);assert.equal(f.root.GameFxLayer.create(f.host),f.layer);
  assert.equal(f.layer.play('confirmed:1','sparks',anchor),true);assert.equal(f.layer.getState().renderer,'webgl');assert.equal(f.calls.filter(c=>c.name==='getContext').length,1);assert.equal(f.frames.size,1);f.layer.destroy();

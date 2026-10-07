@@ -2,6 +2,9 @@
 ((root)=>{
  'use strict';
  const owners=new WeakMap(),contexts=new Set(),MAX_CONTEXTS=2,STRIDE=7;
+ // All optional renderers share this page budget, including the dice dialog.
+ function acquireContext(canvas){if(!canvas||typeof canvas.getContext!=='function')return false;if(contexts.has(canvas))return true;if(contexts.size>=MAX_CONTEXTS)return false;contexts.add(canvas);return true;}
+ function releaseContext(canvas){contexts.delete(canvas);}
  const kinds=new Set(['nitro','smoke','sparks']);
  const vertex=`attribute vec4 a_particle; attribute vec3 a_color;
  uniform vec2 u_view; uniform float u_scale; uniform float u_pointMax;
@@ -60,12 +63,11 @@
   function initialize(){
    if(destroyed||lost||failed)return false;
    if(available)return true;
-   if(!contexts.has(canvas)&&contexts.size>=MAX_CONTEXTS){notify(false,'context-budget');return false;}
+   if(!acquireContext(canvas)){notify(false,'context-budget');return false;}
    const shaders=[];
    try{
     gl=canvas.getContext('webgl',{alpha:true,premultipliedAlpha:true,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false,powerPreference:'low-power'});
     if(!gl){fail('webgl-unavailable');return false;}
-    contexts.add(canvas);
     program=gl.createProgram();if(!program)throw Error('program');
     for(const [type,source] of [[gl.VERTEX_SHADER,vertex],[gl.FRAGMENT_SHADER,fragment]]){
      const shader=gl.createShader(type);if(!shader)throw Error('shader');shaders.push(shader);gl.shaderSource(shader,source);gl.compileShader(shader);gl.attachShader(program,shader);
@@ -130,7 +132,7 @@
    if(destroyed)return;destroyed=true;clear();unsubscribe?.();observer?.disconnect();
    doc.removeEventListener('visibilitychange',cancelIfBlocked);root.removeEventListener?.('pagehide',clear);
    media?.removeEventListener?.('change',cancelIfBlocked);canvas.removeEventListener('webglcontextlost',onLost);canvas.removeEventListener('webglcontextrestored',onRestored);
-   release();try{gl?.getExtension('WEBGL_lose_context')?.loseContext();}catch{}contexts.delete(canvas);owners.delete(target);if(!isCanvas)canvas.remove();gl=null;notify(false,'destroyed');
+   release();try{gl?.getExtension('WEBGL_lose_context')?.loseContext();}catch{}releaseContext(canvas);owners.delete(target);if(!isCanvas)canvas.remove();gl=null;notify(false,'destroyed');
   }
   const api={play,resize,clear,destroy,getState:()=>({available,reason,context:gl&&!lost?'webgl':null,renderer:available?'webgl':null,effects:effects.length,particles:renderedParticles,activeKinds:[...activeKinds],queuedParticles:effects.reduce((sum,effect)=>sum+effect.particles.length,0),seen:seen.size,frameScheduled:frame!==null,width:canvas.width,height:canvas.height,dpr:scale,drawCalls,destroyed})};
   owners.set(target,api);canvas.addEventListener('webglcontextlost',onLost);canvas.addEventListener('webglcontextrestored',onRestored);
@@ -140,5 +142,5 @@
   resize();return api;
  }
  function inert(reason){return {play:()=>false,resize:()=>false,clear(){},destroy(){},getState:()=>({available:false,reason,context:null,effects:0,particles:0,activeKinds:[],frameScheduled:false,destroyed:true})};}
- const api={create};if(typeof module==='object'&&module.exports)module.exports=api;else root.GameFxLayer=api;
+ const api={create,acquireContext,releaseContext};if(typeof module==='object'&&module.exports)module.exports=api;else root.GameFxLayer=api;
 })(typeof window==='object'?window:globalThis);
