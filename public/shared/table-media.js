@@ -85,13 +85,20 @@
   const preferences=window.AudioSettings?.get?.().music;
   if(snapshot.playback.state!=='playing'||!preferences?.enabled||!unlocked||document.hidden){pauseAudio(clip);return;}
   if(!clip.paused||clip._mediaPlayPending)return;clip._mediaPlayPending=true;
-  try{Promise.resolve(playAudio(clip)).then(()=>{if(!validPlayer(token,key)||clip!==audio||snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled||record?.intent!==intent&&record?.nativePaused===true)pauseAudio(clip);else status('',true);},()=>{if(validPlayer(token,key)&&clip===audio)status('瀏覽器尚未允許音樂播放，請按「在自己的裝置播放」或原生播放按鈕。',true);}).finally(()=>{clip._mediaPlayPending=false;});}catch{clip._mediaPlayPending=false;status('請按原生音樂播放器的播放按鈕重試。',true);}
+  try{Promise.resolve(playAudio(clip)).then(()=>{if(!validPlayer(token,key)||clip!==audio||snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled||record?.intent!==intent&&record?.nativePaused===true)pauseAudio(clip);else status('',true);},error=>{
+   if(error?.name==='AbortError')return;
+   const interrupted=interruptedAudio;if(interrupted?.clip===clip&&interrupted.key===key&&interrupted.token===token&&interrupted.intent===intent)interruptedAudio=null;
+   if(validPlayer(token,key)&&clip===audio)status('瀏覽器尚未允許音樂播放，請按「在自己的裝置播放」或原生播放按鈕。',true);
+  }).finally(()=>{clip._mediaPlayPending=false;if(clip===audio&&token===playerEpoch&&key===currentKey())resumeInterruptedAudio();});}catch{clip._mediaPlayPending=false;status('請按原生音樂播放器的播放按鈕重試。',true);}
  }
  // Undo only our visibility pause; a newer room marker must first get its existing snapshot reply.
  function resumeInterruptedAudio(){
   const interrupted=interruptedAudio;if(!interrupted||document.hidden)return;
   if(interrupted.clip!==audio||!validPlayer(interrupted.token,interrupted.key)||interrupted.intent!==audioTransitions.get(audio)?.intent){interruptedAudio=null;return;}
   if(markerKey(snapshot)!==markerKey(marker))return;
+  if(snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled||!unlocked){interruptedAudio=null;return;}
+  // pause's queued task may still be rejecting the old play promise when visibility returns.
+  if(audio._mediaPlayPending)return;
   interruptedAudio=null;alignAudio();
  }
  function mountAudio(){stopPlayers();if(snapshot?.current?.type!=='music')return;const key=currentKey(),token=playerEpoch,clip=new Audio();audio=clip;clip.controls=true;clip.preload='metadata';clip.setAttribute('aria-label','本機歌曲播放器');clip.src='/assets/music/'+encodeURIComponent(snapshot.current.trackId);q('#mediaMusicNative').append(clip);settings();clip._mediaUnbind=bindAudioIntent(clip);clip.onloadedmetadata=()=>{if(validPlayer(token,key)&&clip===audio){alignAudio(true);updatePublishControl();}};clip.onended=()=>{if(validPlayer(token,key)&&clip===audio)report('ended',{itemId:snapshot.current.id});};clip.onerror=()=>{if(validPlayer(token,key)&&clip===audio)status('這首歌曲暫時無法播放，可用原生播放器重試或請管理者切下一筆。',true);};clip.load();alignAudio(true);}
