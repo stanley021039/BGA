@@ -264,4 +264,3 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 同日 PR #38 審查修正：STALE_VOTE 讀新票後須更新待提交草稿 expectedRevision、保留選擇，並要求玩家明確重試。loadSequence 只隔離 GET 套用，不能代替整個操作生命週期的 busy；手動更新先鎖定直到 finally，避免舊清理解鎖新寫入。四項回歸執行實際 market.js＋SQLite store，原程式3失敗／1保護項通過；修後市場17、完整391項通過。Chrome held-fetch 驗真實控件鎖定／0寫入／焦點恢復及三寬度導覽。本筆391取代上段387作最新測試數，詳 [修正證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)。
 
 同日最新main `1447430` 已包含 #34，#38必要整合改為schema14，原禁題版／市場版13各保留已有資料並補另一方空表。保留main引擎、draw store／前端、MotionPolicy、資料鎖及AGENTS，入口／static路由合併雙方變更。六份測試自動合併的SCHEMA_VERSION重複匯入已消除。市場21／Windows全套463及整合版Chrome完整市場流程、held-fetch與三寬度導覽通過；取代391與最新schema13描述，詳 [相容整合](../MARKET-JINX-MAIN-INTEGRATION.md)，#38仍Draft、未合併部署。
-

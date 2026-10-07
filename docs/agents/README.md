@@ -132,4 +132,3 @@ native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha
 2026-10-06 PR #38 審查後：確認並修正投票 409 草稿版本未同步、手動更新與提交交錯、時鐘回退造成投票時間戳倒置。新增4項回歸，Windows完整391/391取代上筆387作為本分支最新數字；背景Chrome再驗更新鎖／焦點、1280／390／320導覽。詳 [逐項證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)，仍保持Draft、未合併或部署。
 
 同日 #38 整合已包含 #34 的 main `1447430`：兩種舊schema13升級為共同schema14，保留禁題／回看／動效及市場功能，沒有改AGENTS或覆蓋角色記憶。Windows完整463/463、市場21／移轉26與整合版背景Chrome全流程通過，取代上笔391與schema13的最新分支狀態。詳 [整合接手](../MARKET-JINX-MAIN-INTEGRATION.md)。#38仍Draft、未合併或部署，Linux／Safari／#34完整canvas實玩未重驗。
-

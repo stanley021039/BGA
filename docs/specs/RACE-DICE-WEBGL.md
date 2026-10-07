@@ -145,5 +145,3 @@ destroy删除program/buffer/texture且歸還lease；不可殘留close後frame或
 
 
 最後實作：rolling 每姿態依八頂點投影限制在骰面內並保留1px，避免遮住caption；result維持原尺寸。context clear／awaiting／loss隱藏canvas，不讓舊尺寸造成窄dialog捲軸。原生及兩平台／發布狀態只以進度文件為準。
-
-
