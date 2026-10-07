@@ -1,6 +1,6 @@
 # 玩家 agent 長期記憶
 
-2026-10-07 PR46第三P2已驗：真UA controls Play→Pause後，latequeue GET仍同Audio／paused true、requests8→8；visibility自動resume不能蓋較新Pause或個人靜音。pending heldbytes原生AbortError可只retry自己的中斷，但HAVE_NOTHING0／受控visibility不是端到端METADATA1或實體切頁；release後自然end換影片，不說同clip持續。正式1.11.1已發布，PR1.9.2仍待push／再送審，完整scope與dual-source測試見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。不宣稱所有硬體／喇叭／FPS，patterns暫停。
+2026-10-07 PR46第三P2已驗：真UA controls Play→Pause後，latequeue GET仍同Audio／paused true、requests8→8；visibility自動resume不能蓋較新Pause或個人靜音。pending heldbytes原生AbortError可只retry自己的中斷，但HAVE_NOTHING0／受控visibility不是端到端METADATA1或實體切頁；release後自然end換影片，不說同clip持續。正式1.11.1已發布，PR1.9.2已推送、標 Ready 並再次請 Stanley 審查，未合併，完整scope與dual-source測試見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。不宣稱所有硬體／喇叭／FPS，patterns暫停。
 
 ## 2026-10-07：正式v1.9.0驗收規則
 

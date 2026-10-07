@@ -1,6 +1,6 @@
 # 媒體圖示與視窗 UI 進度
 
-2026-10-07第三P2已驗並正式 **v1.11.1／df983da**：PR候選1.9.2／cf64bfc雙平台各1,278，保UI／WebGL正式來源雙平台各1,299。最終真UA controls Play→Pause後late GET仍paused／同Audio、requests8→8；HAVE_NOTHING真AbortError的controlled promise與VM精確METADATA1／resolve分開，不稱sameClip release後持續播放或實體切頁／喇叭。正式23media／22draw資源、ACL／SSE／21non-session表與8帳戶核對完成，詳 [最新證據](PR46-REVIEW-FIX-PROGRESS.md)。本文件時PR修正仍待push／Ready／再請審查，patterns暫停未發布；下方VHP為歷史。
+2026-10-07第三P2已驗並正式 **v1.11.1／df983da**：PR候選1.9.2／cf64bfc雙平台各1,278，保UI／WebGL正式來源雙平台各1,299。最終真UA controls Play→Pause後late GET仍paused／同Audio、requests8→8；HAVE_NOTHING真AbortError的controlled promise與VM精確METADATA1／resolve分開，不稱sameClip release後持續播放或實體切頁／喇叭。正式23media／22draw資源、ACL／SSE／21non-session表與8帳戶核對完成，詳 [最新證據](PR46-REVIEW-FIX-PROGRESS.md)。PR修正已推送、標 Ready 並再次請 Stanley 審查，未合併，patterns暫停未發布；下方VHP為歷史。
 
 ## 最新 V／H／P：正式v1.9.0
 

@@ -1,6 +1,6 @@
 # 共用偏好與已知決策
 
-2026-10-07 PR46第三P2／正式1.11.1：使用者指定先修PR再繼續UI，patterns工作暫停未發布；修正較新native Pause被晚queue GET／舊visibility resume覆蓋及pending中斷settlement，保manual／mute意圖且不加poll／seek。cf64bfc PR1.9.2雙平台1,278與df983da正式1.11.1雙平台1,299、真controls與受控promise／資料核對見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。正式保UI／WebGL，PR尚待推送／Ready／再次請審查，未合併；研究／舊版證據保留歷史，不當所有玩法／物理切頁已驗。
+2026-10-07 PR46第三P2／正式1.11.1：使用者指定先修PR再繼續UI，patterns工作暫停未發布；修正較新native Pause被晚queue GET／舊visibility resume覆蓋及pending中斷settlement，保manual／mute意圖且不加poll／seek。cf64bfc PR1.9.2雙平台1,278與df983da正式1.11.1雙平台1,299、真controls與受控promise／資料核對見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。正式保UI／WebGL，PR已推送、標 Ready 並再次請 Stanley 審查，未合併；研究／舊版證據保留歷史，不當所有玩法／物理切頁已驗。
 
 2026-10-07 U44-media-height-native-publish：使用者直接要求影片填滿主區與可用高度、移除本站外開影片提示／共用seek；保留clock及canControl-only「同步我的播放進度」。原生slider／本機video或audio時間先只改自己，按publish才一次seek全桌，ticks不讀時間或seek；一般席可點播，無全桌發布權。影片底列桌機compact、手機／coarse保操作大小，toolbar不縮。YouTube原生branding／letterbox保留，縮放只自己；原生DOMRect取四欄位而不spread。正式v1.9.0實作與有限native證據見 [媒體spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
 

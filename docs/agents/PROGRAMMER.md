@@ -1,6 +1,6 @@
 # 程式架構 agent 記憶
 
-2026-10-07 PR46第三P2：visibility resume須同clip／epoch／fresh marker且無較新本機意圖；native Play→Pause撤銷舊中斷資格，晚queue GET不重播。pending play因visibility自動pause的Abort／resolve／finally仍可只恢復自己的中斷，native pause／mute／retire／noLoop保持，不加poll／seek。PRcf64bfc／1.9.2雙平台1,278，正式保UI／WebGLdf983da／1.11.1雙平台1,299；本文件時PR待push／Ready。fresh真UA controls與controlledHAVE_NOTHING、VM METADATA1和證據限制見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)，不能拿中間trace代替最終scope；canvas本次未改，patterns暫停。
+2026-10-07 PR46第三P2：visibility resume須同clip／epoch／fresh marker且無較新本機意圖；native Play→Pause撤銷舊中斷資格，晚queue GET不重播。pending play因visibility自動pause的Abort／resolve／finally仍可只恢復自己的中斷，native pause／mute／retire／noLoop保持，不加poll／seek。PRcf64bfc／1.9.2雙平台1,278，正式保UI／WebGLdf983da／1.11.1雙平台1,299；PR已推送、標 Ready 並再次請 Stanley 審查，未合併。fresh真UA controls與controlledHAVE_NOTHING、VM METADATA1和證據限制見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)，不能拿中間trace代替最終scope；canvas本次未改，patterns暫停。
 
 ## 2026-10-07：正式v1.9.0長期契約
 

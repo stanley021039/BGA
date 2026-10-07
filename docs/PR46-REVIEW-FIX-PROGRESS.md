@@ -4,7 +4,7 @@
 
 使用者要求先處理PR再繼續其他UI。本段針對 [Stanley的新回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6035554999)，起始head `ed0071d`；修正已固定PR候選 **v1.9.2**／`cf64bfc4a4f86877c50f024b56706efdd5898e80`，Windows／Linux完整及最後原生controls通過。保留已發布UI／WebGL的正式 **v1.11.1**／`df983da7714efcf9382d6953746b828e026c76a0`已發布，本地tag固定df983da，沒有未發布patterns。本段取代舊待驗來源與中間數字，下方1,263／1,284與前次Audio trace仍是歷史。
 
-本文件更新時PR本地兩筆程式commit已完成，**尚未push，遠端仍ed0071／Draft**；最後文件提交、推送／Ready／再次請審查狀態由root完成後補，不預填已重新送審。未合併PR46，未推送正式整合分支。
+兩筆程式修正與驗收文件已推送 PR46，最終受測程式仍為 cf64bfc；已更新 PR 描述、[逐項回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6037042380)、標 Ready 並再次請 Stanley 審查。GitHub 已確認 mergeable=true、draft=false；未合併 PR46，未推送正式整合分支。後續純文件提交不改受測程式。
 
 | 新問題 | 必須保持的行為 | 目前狀態／待驗 |
 | --- | --- | --- |
@@ -27,7 +27,7 @@
 
 這些是無聲MP3／controlled native promise與controls證據，不是端到端metadata1、實體切頁／喇叭或全部弱網情境。
 
-本次canvasrenderer未修改；clear／undo surfaceRevision及先前12個原生組合屬已獨立複查的既有scope，不宣稱已重跑本次所有畫猜流程。前兩P2與main衝突已獨立複查通過；第三項source、雙平台與fresh原生證據已完成，PR推送／再次送審尚待root收尾。
+本次canvasrenderer未修改；clear／undo surfaceRevision及先前12個原生組合屬已獨立複查的既有scope，不宣稱已重跑本次所有畫猜流程。前兩P2與main衝突已獨立複查通過；第三項 source、雙平台與 fresh 原生證據已完成，修正已推送並再次送審，等待 reviewer 複查。
 
 ### 正式v1.11.1發布與資料保全
 
@@ -39,7 +39,7 @@
 | 公開媒體 | 23資源exact frozen；3自有會員promote／demote／seek／skip ACL通過，市場mine200／admin403。 |
 | 公開畫猜 | 22資源exact frozen；SSE points／times、dedupe／quota、undo／clear額度不退與nonartist拒絕通過。 |
 | 最後資料 | schema16／22表，**21個non-session表**allrows／BLOB未變、8帳戶全fields保留，integrity ok／FK0；sessions201→208為guard1＋smoke6，已登出。 |
-| 正式QA收尾 | 兩自有房已刪、session登出，QA history保留，profiles／artwork未寫；本機native fixture／override最後清理由root完成後核對，不預填已清。 |
+| 正式QA收尾 | 兩自有房已刪、session登出，QA history保留，profiles／artwork未寫；本機 native fixture 已正常停止，owned tabs 已關閉，FocusEmulation／viewport／受控 hidden getter 已清除，3480–3493 無測試 listener。 |
 
 未發布patterns v1.12.0仍暫停。純文件不移動程式tag、不推正式分支，不含私人偏好、帳密、房號、私有backup路徑或rawHAR。下方v1.11.0是前次歷史，不是目前正式狀態。
 
