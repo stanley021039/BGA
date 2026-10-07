@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07正式 **v1.7.2**／`6fcd55c`：PR43新P2舊state晚於新social ACK補播過期音效已修正，server anchor按performance經過時間前進，old/equal/missing不重設age，gap亦用mono。原PR v1.4.2／`ca931b7`雙平台各815、正式雙平台各947，Chrome隔離真單調clock過期0／fresh1（播放替身）；正式schema15／8帳戶與21schema保留、20非session表rows／BLOB一致、PID103459／service／tunnel正常、rooms0。證據及legacy限制見 [亂序修正](../PR43-EXPRESSION-CLOCK-FIX.md)；下方v1.7.1為歷史，作畫效能改善仍只研究／spec，外站資料代未啟用。
+
 2026-10-07畫猜順暢度研究完成：Chrome官方Gartic單席Masterpiece與隔離本站雙席對照，25點持筆本站0POST／觀看者空白，放開才送；Gartic24則放開前＋1則放開後小向量更新，含累積前綴。真renderer操作計數顯示活動長筆O(N²)，人工400ms回覆延遲8短筆queue3,314ms。研究與 [改善spec](../specs/DRAWING-SMOOTHNESS.md)已保存，完整條件／HAR缺漏／未解像素差異見 [實測對照](../research/GARTIC-BGA-DRAWING-COMPARISON.md)；沒有FPS排名或使用者另一台電腦結論。產品未改、仍v1.7.1；分頁與隔離server已清理，沒有新PR／部署。
 
 2026-10-07最新正式 **v1.7.1**／`3d82e3f`：修角色表情ACK只改隱藏列、雷霆同version漏crew及舊poll蓋新表情；RoomHost共用snapshot freshness與callback，雷霆same-version只改crew／state不重畫track。原faker GIF副本重現並驗雙席／還原，正式五款雙席用既有測試角色通過，兩平台各940。原faker／8帳戶／schema15保留、20非session表所有rows／BLOB相同、PID88602／service／tunnel正常，own五桌／session／proxy／tab清理後rooms0。來源與限制見 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)；下方v1.7.0及更早為歷史，沒有新PR或push，外站資料代未啟用。

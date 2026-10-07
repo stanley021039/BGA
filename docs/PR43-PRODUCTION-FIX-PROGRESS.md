@@ -1,5 +1,7 @@
 # PR #43 審查修正與正式版同步
 
+2026-10-07新增P2「舊state晚於新ACK補播過期表情聲音」已修正：原PR v1.4.2／`ca931b7`兩平台各815，正式v1.7.2／`6fcd55c`兩平台各947、真Chrome單調clock0過期／1新播放替身通過。server anchor＋本機經過時間不被old/equal/missing回覆重設。正式PID103459、8帳戶／schema15／21表保留，20非session表rows／BLOB與新鮮備份一致、rooms0。詳細證據／legacy界線見 [最新亂序修正](PR43-EXPRESSION-CLOCK-FIX.md)。下方v1.4.1／v1.5.2是先前兩項P2的歷史，不代表最新版本。
+
 更新日期：2026-10-07。原 PR：[PR #43](https://github.com/stanley021039/BGA/pull/43)；審查來源：[Stanley 的兩項 P2](https://github.com/stanley021039/BGA/pull/43#issuecomment-6020232536)。
 
 | 項目 | 修正與證據 | 狀態 |
