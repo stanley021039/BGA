@@ -12,6 +12,7 @@
   settings.querySelector('#site-motion-enabled').onchange=event=>MotionPolicy.set({enabled:event.target.checked});settings.querySelector('#site-barrages-enabled').onchange=event=>MotionPolicy.set({barrages:event.target.checked});
  }
  const versionInfo=document.createElement('p');versionInfo.id='site-version';versionInfo.className='site-version';versionInfo.textContent='版本資訊';settings.append(versionInfo);
+ if(document.body.dataset.uiStyle==='freehand'||document.querySelector('.game-art-badge')){const credits=document.createElement('a');credits.href='/credits';credits.className='site-asset-credit';credits.textContent='素材來源與授權';settings.append(credits);}
  let versionLoaded=false,versionLoading=false;
  async function loadVersion(){
   if(versionLoaded||versionLoading)return;versionLoading=true;versionInfo.textContent='版本載入中…';
