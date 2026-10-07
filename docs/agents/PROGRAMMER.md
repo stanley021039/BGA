@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+正式 shhuang.cc 已以私有 server token 啟用既有本站→stanley021039/BGA Issue／comment／admin status 同步。程式仍v1.12.0／83ffcab，沒有runtime修改或新PR；設定前outbox空、zero-room guard後重載。Issue48正式新增、同UUID重送不重複、前端reply與adminclose均同步，ordinary status403，3筆done無待處理；沒有GitHub→本站同步或legacy backfill。憑證不得放前端／Git／logs；維護與精確scope見 [同步紀錄](../GITHUB-BOARD-SYNC.md)。
+
 2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
 
 2026-10-07 patterns有限原生新知：shared invalid批次先標所有無效欄位，再以單microtask聚焦第一個；focus:false／reset／destroy須取消晚排程，修valid title只清自己的aria描述。manual tabs focus與commit保持分離，rapid Arrow位置立即更新與baseline／earned錯序由中央契約處理，不各caller加poll。widgets focused72和真鍵盤／Escape有限證據見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，新排序修正／全套／公開1.12仍待驗，不稱本批已完成發布。

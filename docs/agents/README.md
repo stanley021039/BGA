@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+正式討論區→GitHub同步已啟用，設定與驗收見 [GitHub同步紀錄](../GITHUB-BOARD-SYNC.md)。新增／回覆／管理員關閉已驗，Issue48保留closed；無反向同步或舊留言補送。程式仍v1.12.0，僅私有設定／服務重載，不混同程式發行；帳戶與其他資料保持，敏感憑證不進角色文件。
+
 2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
 
 2026-10-07新批 **UI-COMPONENT-PATTERNS實作中**：五庫適合模式以原生widgets／notifications／短成就粒子落地，見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。目前正式為v1.11.1、候選預期1.12.0但未固定結果；PR46獨立Ready不混本批、不新PR。人工鍵盤／焦點／可讀inline／hidden內容與粒子清理須分開驗，未安裝研究庫或宣稱已發布。
