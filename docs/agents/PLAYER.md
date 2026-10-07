@@ -1,5 +1,41 @@
 # 玩家 agent 長期記憶
 
+2026-10-07最新a2c5589原型API：fresh最後Pause守住、最後Play保time37，正常hide／show同Audio恢復；proxy總media4／5各不變（GET3／4與POST1各不變），兩平台1,300與focused126／peer通過，own QA已清。沒有pointer／key或實體喇叭，fresh約3.6ms transient不稱零瞬間，舊~1ms是另case。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併、正式1.11.1不變／patterns另於main整合未發布，scope見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。
+
+2026-10-07 PR46第三P2已驗：真UA controls Play→Pause後，latequeue GET仍同Audio／paused true、requests8→8；visibility自動resume不能蓋較新Pause或個人靜音。pending heldbytes原生AbortError可只retry自己的中斷，但HAVE_NOTHING0／受控visibility不是端到端METADATA1或實體切頁；release後自然end換影片，不說同clip持續。正式1.11.1已發布，PR1.9.2已推送、標 Ready 並再次請 Stanley 審查，未合併，完整scope與dual-source測試見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。不宣稱所有硬體／喇叭／FPS，patterns暫停。
+
+## 2026-10-07：正式v1.9.0驗收規則
+
+使用者要求每輪結束都檢查：本人持筆／up／ACK不閃、其他人按真點時間逐步看到、揭曉完整圖／換畫者新epoch不殘留舊尾或草稿，queue／frame／timer清理。合法clear／新輪空圖與非預期白底分開；短trace、終點像素一致不等所有輪或另一台電腦改善，不寫60fps。倒數須連續下降而秒數仍按server deadline。三項重複成功文字已移除，但畫者身份、猜測聊天室／得分、設定／錯誤／重連仍可讀。見 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)。
+
+媒體本機原生控制先只改自己，host／manager再按「同步我的播放進度」才同步全桌；一般席可點播但看不到publish，也不能全桌控制。影片預設占可用高度、縮放只自己；原生YouTube branding與letterbox仍可見。媒體驗收與限制見 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
+
+## 2026-10-07：作畫改善第一批（正式v1.8.1，有限P1）
+
+正式v1.8.1／6707a9edf07839c3307dd230ff6eeca5fa92bf62已於UTC03:30:44.024Z零房間guard部署，PID107492→110715、service／tunnel active。Windows1076／1076／37689.229ms，Linux Node22.22.1 1076／1076／189955.125522ms，各fail/cancel/skip/todo0；本地受測tag固定，沒有新PR／push、PR43未改。schema15／21schemas／20non-session rows+BLOB與8帳戶全fields保留、integrity ok／FK0；sessions161→165為已登出的QA登入，不說sessions不變。SQLite線上備份與另時點files/env archive不是atomic cold snapshot。公開版號與5資源精確內容/no-store已驗，沒有逐項驗5資源MIME；正式3會員HTTP/SSE duplicate／nonartist400／undo-clear quota不退已驗。Chrome正式僅背景home版號；local像素／輸入證據另列，own房／auth／tabs／preview／control已清理，不改前景或偏好。
+
+驗收分開看本人跟手、持筆時他人何時看到、慢網pending是否有界、放開／undo／clear／收藏是否保留原意。P0少量點也定時排送，pointerup尾點與cancel已有內容安全收尾；本機未確認draft才layer，完成／viewer同surface classic、任意fill後保守classic至reset。API／作品codec／PR30點數及fill額度不变，不用任意並行POST或抽稀換速度；P2／P3未做。
+
+同native25點慢trace原v1.8.0持筆viewer0，新版未up已24chunks，3點持筆也先见2chunks；25點up後兩席25chunks／49含anchor／ink1603／fresh0diff。1000 synthetic moves單task僅一次preview和16批／1015含anchor點，另一clean case去重948點／963含anchor；兩case不能混算。背景等待970ms、工具約1秒／move都不是人體FPS或使用者另一台裝置延遲。
+
+native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha0／exactmask0，新wrapper與legacy SHA同而整體strict flag仍false。captured dense3場景均fresh0。實際1000 synthetic-move／948有效點／16chunks963含anchors兩席同JSON，但artistfresh0／viewerclassic67 RGB／max54、viewer baseCopies0／mutable0；同capture timeout20ms／warmup0及1的原classic與opt-in Infinity同樣67／max54、old/new直接diff0／SHA相同。此證據只限受測trace，不歸因layer／硬體／GPU／CPU，不寫19native全部fresh strict或所有雙席pixels相同；兩組rAF控制2秒未advance而未完成，不能列pass。工具慢線／背景970ms不作人體FPS。
+
+完成指的是已驗的有限P0／P1及正式發布，不代表所有classic像素差已消除、所有遊戲FPS提升或所有硬體相同；不得因一台隔離電腦資料判定使用者電腦故障。Chrome公開版號畫面不等於正式多人原生作畫；本次正式未寫真收藏／studioPNG，OS原生cancel未實際觸發。來源、備份、精確scope、未驗rAF／原生取消／真收藏或其他硬體與後續提案见 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)與 [spec](../specs/DRAWING-SMOOTHNESS.md)。下方v1.8.0與更早紀錄為歷史，後續文件提交不移動受測tag；原HAR／cookies／帳密與.local偏好不提交。
+
+## 2026-10-07：統一媒體的玩家驗收規則（正式 v1.8.0）
+
+媒體視窗應一次可看目前項目、共享進度、待播名稱／類型／點播人及點播入口；影片和音樂只一個current，不能還有另一個player在背景唱。房主／管理者可控制、排序或切下一筆，一般人可點播但不能借原生ended／舊select重播去切全桌；重要玩家與遊戲資訊保持可見，角色分級在管理顯示，不以網站admin名稱混淆。
+
+影片接受與拒絕是這個room instance／seat的個人選擇。拒絕不載Google播放器；接受仍可能被瀏覽器policy或影片禁止嵌入阻擋，要能用本機／原生控制恢復。關自己的影片不停止別人，也不能因全桌先停止再換片而擅自重新打開。個人音量、位置與尺寸不改全桌；拖曳途中別人加歌時要提示重拖，不能靜默替玩家接受新排序。清單鍵盤移動完成應回焦原項目，管理modal有角色文字及可讀升降／踢人按鈕，管理工具不作高亮主操作。
+
+本批以隔離host／manager／member三席Chrome實際驗音樂雙席、YouTube原生時間前進、音樂→影片→音樂互斥、拒絕後加入、關自己的影片、drag及keyboard排序與角色升／撤；五款有同一媒體及emoji入口。最後source390×844自然直列gap12、無水平溢出，1280×720 window900×620在viewport內。Windows／Linux各1034，台北10:24:21正式v1.8.0／5687561公開API權限及資料保存通過；公開三會員API不等於公開真人三席影音實播。
+
+實播歌曲為合成靜音MP3，一次兩client進度相近不能承諾持續逐幀同步；沒有真人樂趣評分、實體多設備／弱網／喇叭聽感、真Google autoplay拒絕或oEmbed成功，本批200%字級與極長名稱亦未真驗。fixture反覆導航見draw重連提示，轉接舊SSE未取消可能影響，不據此判定正式遊戲故障。自己的preview／三tab已停，viewport已還原；完整證據、來源與玩家邊界見 [進度](../UNIFIED-ROOM-MEDIA-PROGRESS.md)。
+
+2026-10-07畫畫順暢度實玩研究：Chrome官方Gartic單席Masterpiece已持筆送更新，本站v1.7.1隔離雙席25點持筆觀看者仍空白、放開後收到；這是觀看者等待的重現，不能當本人掉幀或真人樂趣評分。評估作畫時分開「筆是否跟手」、「別人多久看到」、「放開／復原是否等待」、「弱網／換輪後畫作是否一致」。研究未取得使用者另一台裝置、Gartic多人觀看延遲或公平FPS。真條件與未解像素差異見 [對照](../research/GARTIC-BGA-DRAWING-COMPARISON.md)；[改善spec](../specs/DRAWING-SMOOTHNESS.md)仍提案，產品保持v1.7.1。
+
+2026-10-07畫猜正式v1.5.1：玩家角色、分數及猜中／離線狀態常駐左側，不能為插圖或簡化操作藏進管理。猜題紀錄在畫布下方逐行「名字：內容」，輸入框在最下方；猜對提示不公開答案，右侧不再重複摘要。常駐的玩法說明移除，規則從遊戲說明讀取；結算以排名與最後畫作利用空間。實測桌機8席／3席、畫者及猜題者、320／390手機與猜對／錯猜；1920×1080八席結算無頁面捲動，小高度名單仍可自身捲動。Windows／Linux各845及公開3席驗收完成；所有背景分頁與尺寸覆寫已清理。詳 [進度與實證](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)。
+
 ## U33：操作與內容擴充（2026-10-05）
 
 背景Chrome兩帳號／三合成席位已驗：設定改暱稱後另一玩家名單同步；meme-only保存及三張題卡；成人開關由房主控制、guest可看摘要。題庫1000中有100meme，50為本站原創情境，不能聲稱都是既有爆紅梗；不同朋友群熟悉度仍待真人校準，可沿用禁題投票。成人50採曖昧惡搞／約會／夜生活，預設不混入。

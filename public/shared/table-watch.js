@@ -7,36 +7,61 @@
  opener.setAttribute('aria-haspopup','dialog');opener.setAttribute('aria-controls','tableWatch');
  window.GameUI?.decorateButton(opener,'video',{label:'YouTube 共看'});
  const dialog=document.createElement('dialog');dialog.id='tableWatch';dialog.className='ui-dialog table-watch-dialog';dialog.setAttribute('aria-labelledby','watchTitle');
- dialog.innerHTML=`<header id="watchWindowBar" class="table-watch-header" role="toolbar" aria-label="影片視窗工具列" aria-describedby="watchMoveHint" tabindex="0"><div><h2 id="watchTitle">YouTube 共看</h2><p id="watchController">尚未選片</p></div><div class="table-watch-window-tools"><button id="watchResetPosition" type="button">重設影片位置</button><button id="watchControlsToggle" type="button" aria-expanded="false" aria-controls="watchRoomControls">顯示全桌播放與選片</button><button id="watchClose" type="button">關閉自己的影片</button></div><span id="watchMoveHint" class="ui-sr-only">拖曳頂端工具列移動，方向鍵微調，Home 重設；位置只影響自己。</span></header>
+ dialog.innerHTML=`<header id="watchWindowBar" class="table-watch-header" role="toolbar" aria-label="影片視窗工具列" aria-describedby="watchMoveHint" tabindex="0"><div><h2 id="watchTitle">YouTube 共看</h2><p id="watchController">尚未選片</p></div><div class="table-watch-window-tools"><button id="watchResetPosition" type="button">重設影片位置</button><button id="watchResetSize" type="button">恢復預設影片大小</button><button id="watchControlsToggle" type="button" aria-expanded="false" aria-controls="watchRoomControls">顯示全桌播放與選片</button><button id="watchClose" type="button">關閉自己的影片</button></div><span id="watchMoveHint" class="ui-sr-only">拖曳頂端工具列移動，方向鍵微調，Home 重設；位置只影響自己。</span></header>
  <p id="watchStatus" class="ui-status" role="status" aria-live="polite"></p>
- <div class="table-watch-body"><div class="table-watch-view">
+ <div id="watchBody" class="table-watch-body"><div class="table-watch-view">
  <section class="table-watch-screen" aria-label="本機 YouTube 播放器"><div id="watchConsent"><strong id="watchVideoLabel">這一桌還沒選影片</strong><p>自行加入才會連線到 YouTube。關閉只影響自己，其他人繼續觀看。</p><button id="watchJoin" type="button">加入觀看</button><p class="table-watch-privacy"><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google 隱私權政策 ↗</a></p></div><div id="watchPlayer" hidden></div></section>
  <div id="watchLocal" class="table-watch-local" hidden><button id="watchRejoin" type="button">返回全桌進度</button><button id="watchLocalPlay" type="button" hidden>在這裡開始播放</button><button id="watchExit" type="button">關閉自己的影片</button><p>影片內的播放、暫停與拖曳只影響自己。</p><div class="table-watch-volume"><button id="watchSound" type="button" aria-pressed="false">開啟影片聲音</button><label for="watchVolume">音量</label><input id="watchVolume" type="range" min="0" max="100" step="1" value="30"><span id="watchVolumeValue">30%</span></div></div>
  </div><div id="watchRoomControls" class="table-watch-controls"><section id="watchTransport" class="table-watch-transport" aria-label="全桌播放控制" hidden><div class="table-watch-control-heading"><strong>全桌進度</strong><output id="watchClock">0:00</output></div><div class="table-watch-buttons"><button id="watchPlay" type="button">全桌播放</button><button id="watchPause" type="button">全桌暫停</button><button id="watchReplay" type="button">從頭共看</button><button id="watchStop" type="button">停止共看</button></div><form id="watchSeekForm" class="table-watch-seek"><label for="watchSeek">跳至秒數</label><input id="watchSeek" type="number" min="0" max="86400" step="1" value="0" inputmode="numeric" required><button id="watchSeekSubmit" type="submit">全桌跳轉</button></form><p id="watchPermission"></p><button id="watchTakeover" type="button" hidden>房主接管控制</button></section>
  <form id="watchPropose" class="table-watch-propose"><label for="watchUrl">提議 YouTube 影片</label><div><input id="watchUrl" type="url" inputmode="url" maxlength="2048" placeholder="貼上 YouTube 網址" autocomplete="off" required><button id="watchProposeSubmit" type="submit">送出影片</button></div><p>第一部直接選用；之後由控制者或房主選用。選用後由提案者控制。</p></form>
  <section id="watchProposalsSection" hidden><h3>朋友提議的影片</h3><ul id="watchProposals"></ul></section>
- </div></div>`;
+ </div></div><footer id="watchResizeBar" class="table-watch-resize-bar"><output id="watchSizeLabel" aria-label="影片尺寸"></output><button id="watchResize" type="button" aria-describedby="watchResizeHint" title="拖曳調整大小，方向鍵微調，Home 恢復預設">調整影片視窗大小</button><span id="watchResizeHint" class="ui-sr-only">拖曳右下角調整大小；方向鍵微調，Shift 加大步幅，Home 恢復預設。只影響你的視窗。</span></footer>`;
  document.body.append(dialog);
  const q=selector=>dialog.querySelector(selector),status=message=>window.GameUI?.setStatus(q('#watchStatus'),message)||(!window.GameUI&&(q('#watchStatus').textContent=message));
  for(const [id,icon,label] of [['#watchClose','close','關閉自己的影片'],['#watchPlay','play','全桌播放'],['#watchPause','pause','全桌暫停'],['#watchReplay','replay','從頭共看'],['#watchStop','ban','停止共看'],['#watchRejoin','refresh','返回全桌進度'],['#watchExit','close','關閉自己的影片']])window.GameUI?.decorateButton(q(id),icon,{iconOnly:id==='#watchClose',label});
- for(const [id,icon,label] of [['#watchResetPosition','refresh','重設影片位置'],['#watchControlsToggle','settings','顯示全桌播放與選片']])window.GameUI?.decorateButton(q(id),icon,{iconOnly:true,label});
+ for(const [id,icon,label] of [['#watchResetPosition','refresh','重設影片位置'],['#watchResetSize','expand','恢復預設影片大小'],['#watchResize','resize','調整影片視窗大小'],['#watchControlsToggle','settings','顯示全桌播放與選片']])window.GameUI?.decorateButton(q(id),icon,{iconOnly:true,label});
  let room=null,snapshot=null,generation=0,viewGeneration=0,playerGeneration=0,requestSequence=0,acceptedSequence=0;
  let marker=null,pendingMarker=null,snapshotRetry=null,fetching=null,submitting=false,pendingRetry=null,interval=null,apiPromise=null,apiScript=null,apiTimer=null,apiCancel=null;
  let joined=false,player=null,ready=false,playerVideo=null,unlisten=null,releaseMusic=null,intersection=null,resize=null,observedAt=0,serverAt=0,appliedPlayback=null,localEnded=false;
  const requests=new Set();
- const positionKey='bga.watch.window.v1';let windowPosition=null,preferredPosition=null,drag=null,controlsOpen=false;
+ const positionKey='bga.watch.window.v1',sizeKey='bga.watch.size.v1',minPlayerSize=210;let windowPosition=null,preferredPosition=null,preferredSize=null,windowSize=null,drag=null,sizeDrag=null,layoutFrame=null,controlsOpen=false;
  try{const saved=JSON.parse(localStorage.getItem(positionKey));if(saved&&Number.isFinite(saved.left)&&Number.isFinite(saved.top))preferredPosition={left:saved.left,top:saved.top};}catch{}
- function placeWindow(next=preferredPosition){if(!dialog.open)return;const box=dialog.getBoundingClientRect(),width=window.innerWidth,height=window.innerHeight;const maxLeft=Math.max(8,width-box.width-8),maxTop=Math.max(8,height-box.height-8);windowPosition={left:Math.max(8,Math.min(maxLeft,next?.left??maxLeft)),top:Math.max(8,Math.min(maxTop,next?.top??maxTop))};dialog.style.left=windowPosition.left+'px';dialog.style.top=windowPosition.top+'px';}
+ try{const saved=JSON.parse(localStorage.getItem(sizeKey));if(saved&&Number.isFinite(saved.width)&&Number.isFinite(saved.height))preferredSize={width:saved.width,height:saved.height};}catch{}
+ function pixels(node,name,fallback=0){let value;try{value=parseFloat(window.getComputedStyle?.(node)?.[name]);}catch{}return Number.isFinite(value)?value:fallback;}
+ function measuredHeight(node,fallback){return typeof window.getComputedStyle==='function'&&!node.hidden?node.getBoundingClientRect().height:fallback;}
+ function writeStyle(name,value){if(dialog.style.getPropertyValue(name)!==String(value))dialog.style.setProperty(name,String(value));}
+ function fitWindowSize(){
+  dialog.classList.toggle('watch-sized',!!preferredSize);
+  if(!preferredSize){dialog.style.removeProperty('width');dialog.style.removeProperty('height');dialog.style.removeProperty('--watch-local-limit');dialog.style.removeProperty('--watch-controls-limit');windowSize=null;dialog.classList.toggle('watch-narrow',dialog.getBoundingClientRect().width<850);dialog.classList.toggle('watch-too-small',false);return;}
+  const width=Math.max(0,Math.min(Math.max(280,preferredSize.width),window.innerWidth-16));writeStyle('width',width+'px');
+  const narrow=width<850,compact=joined&&!controlsOpen;dialog.classList.toggle('watch-narrow',narrow);
+  const body=q('#watchBody'),chrome=measuredHeight(q('#watchWindowBar'),72)+measuredHeight(q('#watchStatus'),q('#watchStatus').textContent?24:0)+measuredHeight(q('#watchResizeBar'),44)+pixels(body,'paddingTop',10)+pixels(body,'paddingBottom',10)+pixels(dialog,'borderTopWidth',1)+pixels(dialog,'borderBottomWidth',1);
+  const localMinimum=joined?Math.max(44,measuredHeight(q('#watchRejoin'),44)):0,local=joined?localMinimum+12:0,controls=narrow&&!compact?64+20:0,minimum=chrome+minPlayerSize+local+controls,maxHeight=Math.max(0,window.innerHeight-16),height=Math.min(maxHeight,Math.max(minimum,preferredSize.height));
+  writeStyle('height',height+'px');windowSize={width,height};
+  const available=Math.max(0,height-chrome),controlsLimit=narrow&&!compact?Math.min(180,Math.max(0,available-minPlayerSize-local-20)):0;
+  writeStyle('--watch-controls-limit',controlsLimit+'px');writeStyle('--watch-local-limit',Math.min(Math.max(160,localMinimum),Math.max(localMinimum,available-minPlayerSize-controlsLimit-(narrow&&!compact?20:0)-12))+'px');
+  dialog.classList.toggle('watch-too-small',width<240||available<minPlayerSize+local);
+ }
+ function placeWindow(next=preferredPosition){if(!dialog.open)return;fitWindowSize();const box=dialog.getBoundingClientRect(),width=window.innerWidth,height=window.innerHeight;const maxLeft=Math.max(8,width-box.width-8),maxTop=Math.max(8,height-box.height-8);windowPosition={left:Math.max(8,Math.min(maxLeft,next?.left??maxLeft)),top:Math.max(8,Math.min(maxTop,next?.top??maxTop))};dialog.style.left=windowPosition.left+'px';dialog.style.top=windowPosition.top+'px';const area=joined?q('#watchPlayer').getBoundingClientRect():box;q('#watchSizeLabel').textContent=(joined?'影片 ':'視窗 ')+Math.floor(area.width)+' × '+Math.floor(area.height);}
+ function queueLayout(){if(!dialog.open||layoutFrame!==null)return;const run=()=>{layoutFrame=null;if(!dialog.open)return;placeWindow();if(joined&&ready&&!isVisibleEnough())exitLocal('播放器空間不足，請放大影片視窗或瀏覽器後再加入觀看。');};if(typeof window.requestAnimationFrame==='function')layoutFrame=window.requestAnimationFrame(run);else run();}
  function saveWindow(){preferredPosition={...windowPosition};try{localStorage.setItem(positionKey,JSON.stringify(preferredPosition));}catch{}}
  function resetWindow(){windowPosition=null;preferredPosition=null;placeWindow();saveWindow();}
  const windowBar=q('#watchWindowBar');
  function isWindowControl(target){for(let node=target;node&&node!==windowBar;node=node.parentElement||node.parentNode)if(['BUTTON','A','INPUT','SELECT','TEXTAREA'].includes(node.tagName))return true;return false;}
- windowBar.onpointerdown=event=>{if(event.button!==0||isWindowControl(event.target))return;event.preventDefault();placeWindow();drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:windowPosition.left,top:windowPosition.top};windowBar.setPointerCapture?.(event.pointerId);};
+ windowBar.onpointerdown=event=>{if(!dialog.open||sizeDrag||event.button!==0||isWindowControl(event.target))return;event.preventDefault();placeWindow();drag={id:event.pointerId,x:event.clientX,y:event.clientY,left:windowPosition.left,top:windowPosition.top};windowBar.setPointerCapture?.(event.pointerId);};
  windowBar.onpointermove=event=>{if(!drag||event.pointerId!==drag.id)return;placeWindow({left:drag.left+event.clientX-drag.x,top:drag.top+event.clientY-drag.y});};
  function finishDrag(event){if(!drag||event.pointerId!==drag.id)return;windowBar.releasePointerCapture?.(drag.id);drag=null;saveWindow();}
  windowBar.onpointerup=finishDrag;windowBar.onpointercancel=finishDrag;
  windowBar.onkeydown=event=>{if(isWindowControl(event.target))return;const direction={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(event.key==='Home'){event.preventDefault();resetWindow();return;}if(!direction)return;event.preventDefault();placeWindow();const step=event.shiftKey?50:20;placeWindow({left:windowPosition.left+direction[0]*step,top:windowPosition.top+direction[1]*step});saveWindow();};
- q('#watchResetPosition').onclick=resetWindow;q('#watchControlsToggle').onclick=()=>{controlsOpen=!controlsOpen;render();};window.addEventListener('resize',()=>placeWindow());
+ const resizeHandle=q('#watchResize');
+ function saveSize(){if(!windowSize)return;preferredSize={...windowSize};try{localStorage.setItem(sizeKey,JSON.stringify(preferredSize));}catch{}}
+ function resetSize(){preferredSize=null;windowSize=null;try{localStorage.removeItem(sizeKey);}catch{}placeWindow();queueLayout();}
+ resizeHandle.onpointerdown=event=>{if(!dialog.open||drag||sizeDrag||event.button!==0)return;event.preventDefault();const box=dialog.getBoundingClientRect();sizeDrag={id:event.pointerId,x:event.clientX,y:event.clientY,width:box.width,height:box.height};resizeHandle.setPointerCapture?.(event.pointerId);dialog.classList.toggle('watch-resizing',true);};
+ resizeHandle.onpointermove=event=>{if(!sizeDrag||event.pointerId!==sizeDrag.id)return;preferredSize={width:sizeDrag.width+event.clientX-sizeDrag.x,height:sizeDrag.height+event.clientY-sizeDrag.y};placeWindow();queueLayout();};
+ function finishResize(event){if(!sizeDrag||event.pointerId!==sizeDrag.id)return;resizeHandle.releasePointerCapture?.(sizeDrag.id);sizeDrag=null;dialog.classList.toggle('watch-resizing',false);saveSize();}
+ resizeHandle.onpointerup=finishResize;resizeHandle.onpointercancel=finishResize;
+ resizeHandle.onkeydown=event=>{if(!dialog.open)return;const direction={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(event.key==='Home'){event.preventDefault();resetSize();return;}if(!direction)return;event.preventDefault();const box=dialog.getBoundingClientRect(),step=event.shiftKey?50:20;preferredSize={width:box.width+direction[0]*step,height:box.height+direction[1]*step};placeWindow();saveSize();queueLayout();};
+ q('#watchResetPosition').onclick=resetWindow;q('#watchResetSize').onclick=resetSize;q('#watchControlsToggle').onclick=()=>{controlsOpen=!controlsOpen;render();};window.addEventListener('resize',()=>{placeWindow();queueLayout();});
  function format(seconds){const n=Math.floor(Math.max(0,Number(seconds)||0));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');}
  function position(){if(!snapshot)return 0;const p=snapshot.playback;return Math.max(0,Math.min(maxPosition,p.anchorPositionSec+(p.state==='playing'?Math.max(0,serverAt+clock()-observedAt-p.anchorServerMs)/1000:0)));}
  function signature(s){return s?JSON.stringify([s.roomInstanceId,s.watchSessionId,s.video?.id,s.playback.state,s.playback.anchorPositionSec,s.playback.anchorServerMs]):null;}
@@ -52,7 +77,7 @@
  function render(){
   label();if(!dialog.open)return;
   const video=!!snapshot?.video,can=!!snapshot?.canControl,host=!!snapshot?.isHost;
-  const compact=joined&&!controlsOpen;dialog.classList.toggle('watch-compact',compact);q('#watchRoomControls').hidden=compact;q('#watchControlsToggle').disabled=!joined;q('#watchControlsToggle').setAttribute('aria-expanded',String(!compact));q('#watchControlsToggle').setAttribute('aria-label',compact?'顯示全桌播放與選片':'收合全桌播放與選片');q('#watchControlsToggle').title=compact?'顯示全桌播放與選片':'收合全桌播放與選片';
+  const compact=joined&&!controlsOpen;dialog.classList.toggle('watch-compact',compact);dialog.classList.toggle('watch-joined',joined);q('#watchRoomControls').hidden=compact;q('#watchControlsToggle').disabled=!joined;q('#watchControlsToggle').setAttribute('aria-expanded',String(!compact));q('#watchControlsToggle').setAttribute('aria-label',compact?'顯示全桌播放與選片':'收合全桌播放與選片');q('#watchControlsToggle').title=compact?'顯示全桌播放與選片':'收合全桌播放與選片';
   q('#watchController').textContent=video?'控制者：'+(snapshot.controllerName||'等待房主'):'尚未選片';
   q('#watchVideoLabel').textContent=video?'已選影片 · '+snapshot.video.id:'這一桌還沒選影片';
   q('#watchJoin').disabled=!video||!!fetching||submitting;q('#watchJoin').textContent=video?'加入觀看':'先提議影片';
@@ -87,7 +112,7 @@
   unlisten?.();unlisten=null;releaseMusic?.();releaseMusic=null;
  }
  function exitLocal(message='自己的影片已關閉，其他人繼續觀看。'){joined=false;destroyPlayer();apiCancel?.();render();if(dialog.open&&message)status(message);}
- function isVisibleEnough(){const box=q('#watchPlayer').getBoundingClientRect();return box.width>=200&&box.height>=200&&Math.max(0,Math.min(box.bottom,window.innerHeight)-Math.max(box.top,0))>=box.height/2;}
+ function isVisibleEnough(){const box=q('#watchPlayer').getBoundingClientRect();return !dialog.classList.contains('watch-too-small')&&box.width>=200&&box.height>=200&&Math.max(0,Math.min(box.bottom,window.innerHeight)-Math.max(box.top,0))>=box.height/2;}
  function applyPlayback(force=false){
   if(!joined||!ready||!player||!snapshot?.video||document.hidden)return;const key=signature(snapshot);if(!force&&appliedPlayback===key)return;appliedPlayback=key;localEnded=false;
   if(!isVisibleEnough()){exitLocal('播放器目前不可完整觀看；捲回播放器後再按加入觀看。');return;}
@@ -104,7 +129,7 @@
    const valid=()=>token===playerGeneration&&view===viewGeneration&&joined&&dialog.open&&!document.hidden;
    player=new yt.Player(iframe,{events:{onReady:()=>{if(!valid())return;ready=true;volume();applyPlayback(true);},onStateChange:event=>{if(!valid())return;if(event.data===0){localEnded=true;status('此端已播放完畢，可等控制者換片，或自行返回全桌進度。');}else if(event.data===3)status('此端正在緩衝；不會改變其他人的播放。');else if(event.data===1)status('自己的影片正在播放；影片內的操作只影響自己。');else if(event.data===2)status('自己的影片已暫停；可返回全桌進度。');},onAutoplayBlocked:()=>{if(valid())status('瀏覽器需要你允許播放，'+localPlayPrompt());},onError:event=>{if(!valid())return;const messages={2:'這部影片的網址或識別碼無效。',5:'此瀏覽器無法播放這部影片。',100:'這部影片不存在、已移除或設為私人。',101:'這部影片不允許嵌入觀看。',150:'這部影片不允許嵌入觀看。',153:'YouTube 未能確認網站來源，請重新整理後重試。'};status((messages[event.data]||'這部影片目前無法嵌入播放。')+' 可改選其他影片；其他人的播放不受影響。');}}});
    if(typeof IntersectionObserver==='function'){intersection=new IntersectionObserver(entries=>{if(valid()&&entries.some(entry=>entry.intersectionRatio<.5))exitLocal('影片已離開可見範圍；需要時再加入觀看。');},{threshold:[.5]});intersection.observe(iframe);}
-   if(typeof ResizeObserver==='function'){resize=new ResizeObserver(()=>{if(valid()&&!isVisibleEnough())exitLocal('播放器空間不足；放大視窗後再加入觀看。');});resize.observe(q('#watchPlayer'));}
+   if(typeof ResizeObserver==='function'){resize=new ResizeObserver(()=>{if(valid())queueLayout();});for(const id of ['#watchWindowBar','#watchStatus','#watchResizeBar','#watchRejoin','#watchPlayer'])resize.observe(q(id));}
   }catch(error){if(token===playerGeneration&&view===viewGeneration&&dialog.open){exitLocal('');status(error.message);}}
  }
  function receive(next,{sent,sequence,roomGeneration,view}={}){
@@ -167,7 +192,7 @@
   }finally{requests.delete(controller);if(tag.roomGeneration===generation&&tag.view===viewGeneration){submitting=false;render();}}
  }
  async function open(){if(!room||window.RaceLesson||dialog.open)return;window.TableMusic?.collapseLocal?.();const view=++viewGeneration;snapshot=null;acceptedSequence=0;pendingRetry=null;snapshotRetry=null;controlsOpen=false;status('載入這一桌的共看狀態…');dialog.show();if(interval===null)interval=setInterval(()=>{if(dialog.open&&snapshot)q('#watchClock').textContent=format(position())+' · '+(snapshot.playback.state==='playing'?'播放中':'已暫停');},1000);volume();render();await requestSnapshot();if(dialog.open&&view===viewGeneration)q('#watchClose').focus();}
- function cleanup(){viewGeneration++;joined=false;if(drag){windowBar.releasePointerCapture?.(drag.id);drag=null;}destroyPlayer();for(const controller of requests)controller.abort();requests.clear();fetching=null;pendingMarker=null;snapshotRetry=null;submitting=false;pendingRetry=null;if(interval!==null)clearInterval(interval);interval=null;apiCancel?.();render();}
+ function cleanup(){viewGeneration++;joined=false;if(drag){windowBar.releasePointerCapture?.(drag.id);drag=null;}if(sizeDrag){resizeHandle.releasePointerCapture?.(sizeDrag.id);sizeDrag=null;dialog.classList.toggle('watch-resizing',false);}if(layoutFrame!==null){window.cancelAnimationFrame?.(layoutFrame);layoutFrame=null;}destroyPlayer();for(const controller of requests)controller.abort();requests.clear();fetching=null;pendingMarker=null;snapshotRetry=null;submitting=false;pendingRetry=null;if(interval!==null)clearInterval(interval);interval=null;apiCancel?.();render();}
  function close(){cleanup();if(dialog.open){dialog.close();document.getElementById('music-expand')?.focus();}}
  opener.onclick=open;q('#watchClose').onclick=close;dialog.addEventListener('close',cleanup);dialog.addEventListener('cancel',()=>{joined=false;destroyPlayer();});
  q('#watchJoin').onclick=async()=>{if(!snapshot?.video)return;const view=viewGeneration;if(!await requestSnapshot({force:true})||view!==viewGeneration||!dialog.open||!snapshot?.video)return;joined=true;render();mountPlayer();};

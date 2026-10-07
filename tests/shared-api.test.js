@@ -27,6 +27,20 @@ test('shared room API preserves room codes, login return paths, and kicked handl
  reply={ok:false,status:403,body:{code:'KICKED',error:'已被移出房間'}};
  await assert.rejects(context.window.RoomApi.request('state',undefined,options),/已被移出房間/);
  assert.equal(kicked,1);
+ reply={ok:false,status:429,body:{code:'DRAW_RATE_LIMIT',error:'稍後再試'}};
+ await assert.rejects(context.window.RoomApi.request('draw/stroke',{points:[[1,1]]},options),error=>error.message==='稍後再試'&&error.status===429&&error.code==='DRAW_RATE_LIMIT');
+});
+
+test('optional room API cancellation reaches fetch and avoids disconnecting for a stale-context abort',async()=>{
+ const controller=new AbortController();let seenSignal,disconnects=0;
+ const aborted=Object.assign(new Error('stale context'),{name:'AbortError'});
+ const context={window:{GameShell:{disconnected:()=>disconnects++}},location:{},fetch:async(_url,options)=>{seenSignal=options.signal;throw aborted;}};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'..','public','shared','api.js'),'utf8'),context);
+ await assert.rejects(context.window.RoomApi.request('draw/stroke',{}, {code:'ABC123',room:'draw',signal:controller.signal}),error=>error===aborted);
+ assert.equal(seenSignal,controller.signal);assert.equal(disconnects,0);
+ context.fetch=async()=>{throw Object.assign(new Error('timeout'),{name:'TimeoutError'});};
+ await assert.rejects(context.window.RoomApi.request('draw/stroke',{}, {code:'ABC123',room:'draw',signal:controller.signal}),/timeout/);
+ assert.equal(disconnects,1);
 });
 
 test('history warnings survive unchanged state polls and clear after recovery, without canvas acknowledgments clearing them',async()=>{

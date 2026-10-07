@@ -86,7 +86,7 @@ function renderArtworkPickers(){
 }
 async function refreshGallery(){const request=++galleryRequest,options=await json('/api/profile/options');if(request!==galleryRequest)return;characters=options.characters;render();}
 async function imagePayload(file,form){
- if(!file||file.size>1024*1024)throw Error('請選擇不超過 1 MB 的圖片');
+ if(!file||file.size>4*1024*1024)throw Error('請選擇不超過 4 MB 的圖片');
  if(file.type&&!['image/png','image/gif','image/webp'].includes(file.type))throw Error('僅接受 PNG、GIF 或 WebP 圖片');
  status(form,'正在讀取圖片…');
  const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('讀取圖片失敗'));reader.readAsDataURL(file);});

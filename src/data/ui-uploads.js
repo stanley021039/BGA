@@ -3,7 +3,7 @@ const path = require('node:path');
 const os = require('node:os');
 const crypto = require('node:crypto');
 const { FORMAT } = require('./transfer');
-const { noLinks, uuid } = require('./validation');
+const { noLinks, uuid, validBundleLogical } = require('./validation');
 
 const defaults = Object.freeze({ maxBytes: 10 * 1024 ** 3, maxFiles: 20000, maxManifestBytes: 5 * 1024 ** 2, maxUploads: 4 });
 function uploadError(code, message) { const error = Error(message); error.uiCode = code; return error; }
@@ -36,8 +36,8 @@ function createUploadStore(options = {}) {
     if (manifest.files.length > limits.maxFiles) throw uploadError('UPLOAD_LIMIT', 'The backup contains too many payload files');
     const payloads = new Map(), logicals = new Set(); let bytes = 0;
     for (const entry of manifest.files) {
-      const logical = entry?.logical, validLogical = logical === 'db/afterhours.sqlite' || logical === 'community/community.json' || /^music\/[0-9a-f-]{36}\.(mp3|ogg|m4a)$/i.test(logical) || /^history\/[0-9a-f-]{36}\.(jsonl|meta\.json)$/i.test(logical);
-      if (!validLogical || typeof entry?.payload !== 'string' || !/^payload\/[0-9]{6}\.bin$/.test(entry.payload) || payloads.has(entry.payload) || logicals.has(logical.toLowerCase())) throw uploadError('INVALID_UPLOAD', 'The manifest contains invalid or duplicate file paths');
+      const logical = entry?.logical;
+      if (!validBundleLogical(logical) || typeof entry?.payload !== 'string' || !/^payload\/[0-9]{6}\.bin$/.test(entry.payload) || payloads.has(entry.payload) || logicals.has(logical.toLowerCase())) throw uploadError('INVALID_UPLOAD', 'The manifest contains invalid or duplicate file paths');
       if (!Number.isSafeInteger(entry.bytes) || entry.bytes < 0 || entry.bytes > limits.maxBytes - bytes) throw uploadError('UPLOAD_LIMIT', 'The backup exceeds the upload byte limit');
       bytes += entry.bytes; payloads.set(entry.payload, entry.bytes); logicals.add(logical.toLowerCase());
     }

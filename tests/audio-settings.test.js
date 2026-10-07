@@ -2,18 +2,70 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const source=file=>fs.readFileSync(path.join(__dirname,'../public/shared',file),'utf8');
-function harness(saved={},blocked=false,storageBlocked=false){
+function harness(saved={},blocked=false,storageBlocked=false,musicNetwork={}){
  const storage=new Map(Object.entries(saved)),listeners=new Map(),clips=[],nodes=new Map(),requests=[];
- const node=id=>{if(!nodes.has(id))nodes.set(id,{hidden:false,value:'',dataset:{},textContent:'',innerHTML:'',attributes:{},classList:{toggle(){}},querySelector:node,append(){},replaceChildren(){},setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];}});return nodes.get(id);};
+ const node=id=>{if(!nodes.has(id))nodes.set(id,{hidden:false,value:'',children:[],dataset:{},textContent:'',innerHTML:'',attributes:{},classList:{toggle(){}},querySelector:node,append(...children){this.children.push(...children);},replaceChildren(...children){this.children=children;},setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];}});return nodes.get(id);};
  const document={hidden:false,createElement:()=>node('panel'),body:{append(){}},querySelector:()=>null,addEventListener(type,fn){const key='document:'+type;listeners.set(key,[...(listeners.get(key)||[]),fn]);}};
  const window={addEventListener(type,fn){listeners.set('window:'+type,[...(listeners.get('window:'+type)||[]),fn]);}};
  class Audio {constructor(src){this.src=src;this.volume=1;this.paused=true;this.currentTime=0;this.readyState=1;this.plays=0;this.pauses=0;clips.push(this);}play(){this.plays++;if(blocked)return Promise.reject(Error('autoplay'));this.paused=false;return Promise.resolve();}pause(){this.pauses++;this.paused=true;}load(){}removeAttribute(key){delete this[key];}}
  const timers=new Map();let timerId=0;
- const context={window,document,Audio,localStorage:{getItem(k){if(storageBlocked)throw Error('storage blocked');return storage.get(k)??null;},setItem(k,v){if(storageBlocked)throw Error('storage blocked');storage.set(k,String(v));}},Date,setTimeout(fn){const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),setInterval(){},MutationObserver:class{observe(){}},Option:class{},fetch:async url=>{requests.push(url);return {ok:true,json:async()=>url.includes('room-music')?{version:1,serverNow:Date.now(),playing:true,position:0,loop:false,track:{id:'sample',title:'測試',duration:60}}:{tracks:[]}};}};
+ const context={window,document,Audio,localStorage:{getItem(k){if(storageBlocked)throw Error('storage blocked');return storage.get(k)??null;},setItem(k,v){if(storageBlocked)throw Error('storage blocked');storage.set(k,String(v));}},Date,setTimeout(fn){const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),setInterval(){},MutationObserver:class{observe(){}},Option:class{constructor(text,value){this.text=text;this.value=value;}},fetch:async(url,options={})=>{requests.push(url);if(musicNetwork.fetch)return musicNetwork.fetch(url,options);return {ok:true,json:async()=>url.includes('room-music')?{version:1,serverNow:Date.now(),playing:true,position:0,loop:false,track:{id:'sample',title:'測試',duration:60}}:{tracks:[]}};}};
  vm.runInNewContext(source('audio-settings.js'),context);
- return {api:window.AudioSettings,storage,clips,nodes,requests,document,window,loadMusic(){vm.runInNewContext(source('table-music.js'),context);window.TableMusic.update({code:'ABC123',host:false});},fire(key,event={}){for(const fn of listeners.get(key)||[])fn(event);}};
+ return {api:window.AudioSettings,storage,clips,nodes,requests,document,window,loadMusic(room={code:'ABC123',host:false}){vm.runInNewContext(source('table-music.js'),context);window.TableMusic.update(room);},fire(key,event={}){for(const fn of listeners.get(key)||[])fn(event);}};
 }
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
+const musicSnapshot=(trackId='sample',version=1)=>({version,serverNow:Date.now(),playing:true,position:0,loop:false,mode:'none',track:{id:trackId,title:'朋友上傳的歌',duration:60}});
+const musicReply=value=>({ok:true,json:async()=>value});
+
+test('non-host room members can choose shared music once and keep other table transport restricted',async()=>{
+ const commands=[];let resolveSelection;
+ const ui=harness({},false,false,{fetch:async(url,options)=>{
+  if(url==='/api/music')return musicReply({tracks:[{id:'friend-song',title:'朋友上傳的歌',author:'好友'}]});
+  if(options.method==='POST'){commands.push(JSON.parse(options.body));return new Promise(resolve=>{resolveSelection=resolve;});}
+  return musicReply(musicSnapshot());
+ }});ui.loadMusic();await tick();const picker=ui.nodes.get('#music-track');
+ assert.equal(picker.disabled,false);assert.match(picker.title,/全桌/);assert.ok(picker.children.some(option=>option.value==='friend-song'));
+ for(const id of ['#music-global','#music-previous','#music-next','#music-stop','#music-mode','#music-seek'])assert.equal(ui.nodes.get(id).disabled,true,id);
+ picker.value='friend-song';picker.onchange();await tick();assert.equal(picker.disabled,true);picker.onchange();await tick();
+ assert.deepEqual(commands,[{code:'ABC123',action:'select',trackId:'friend-song'}]);
+ resolveSelection(musicReply(musicSnapshot('friend-song',2)));await tick();assert.equal(picker.disabled,false);assert.equal(picker.value,'friend-song');assert.equal(ui.clips[0].src,'/assets/music/friend-song');assert.equal(ui.clips[0].paused,false);
+ ui.api.set('music',{enabled:false});assert.equal(ui.clips[0].paused,true);assert.equal(commands.length,1);assert.equal(ui.nodes.get('#music-global').attributes['aria-label'],'暫停');
+ ui.window.TableMusic.stop();picker.value='friend-song';picker.onchange();await tick();assert.equal(commands.length,1);
+});
+
+test('non-host transport handlers cannot send commands; room host can retain playback controls',async()=>{
+ const commands=[],ui=harness({},false,false,{fetch:async(url,options)=>{
+  if(url==='/api/music')return musicReply({tracks:[]});if(options.method==='POST')commands.push(JSON.parse(options.body));return musicReply(musicSnapshot('sample',2));
+ }});ui.loadMusic();await tick();
+ for(const id of ['#music-global','#music-previous','#music-next','#music-stop','#music-mode'])ui.nodes.get(id).onclick();
+ ui.nodes.get('#music-seek').value='10';ui.nodes.get('#music-seek').onchange();await tick();assert.equal(commands.length,0);
+ ui.window.TableMusic.update({code:'ABC123',host:true});assert.equal(ui.nodes.get('#music-global').disabled,false);ui.nodes.get('#music-global').onclick();await tick();assert.deepEqual(commands,[{code:'ABC123',action:'pause'}]);
+});
+
+test('non-host members can start a previously selected paused song through the authorized select action',async()=>{
+ const commands=[],ui=harness({},false,false,{fetch:async(url,options)=>{
+  if(url==='/api/music')return musicReply({tracks:[{id:'sample',title:'同一首歌',author:'好友'}]});
+  if(options.method==='POST'){commands.push(JSON.parse(options.body));return musicReply(musicSnapshot('sample',2));}
+  return musicReply({...musicSnapshot(),playing:false});
+ }});ui.loadMusic();await tick();const start=ui.nodes.get('#music-global');assert.equal(start.disabled,false);assert.equal(start.attributes['aria-label'],'開始');
+ start.onclick();await tick();assert.deepEqual(commands,[{code:'ABC123',action:'select',trackId:'sample'}]);assert.equal(ui.clips[0].paused,false);assert.equal(start.disabled,true);assert.equal(start.attributes['aria-label'],'暫停');
+});
+
+test('each explicit media-panel opening refreshes the shared library without a ten-second stale window',async()=>{
+ let reads=0;const ui=harness({},false,false,{fetch:async(url)=>url==='/api/music'?musicReply({tracks:[{id:'song-'+(++reads),title:'剛上傳',author:'好友'}]}):musicReply(musicSnapshot())});ui.loadMusic();await tick();
+ ui.nodes.get('#music-details').hidden=true;const expand=ui.nodes.get('#music-expand'),picker=ui.nodes.get('#music-track');assert.equal(reads,1);
+ expand.onclick();await tick();assert.equal(reads,2);assert.ok(picker.children.some(option=>option.value==='song-2'));
+ expand.onclick();await tick();assert.equal(reads,2);expand.onclick();await tick();assert.equal(reads,3);assert.ok(picker.children.some(option=>option.value==='song-3'));
+});
+
+test('a late shared-library response cannot overwrite a newer opening or repopulate a departed room',async()=>{
+ const pending=[],ui=harness({},false,false,{fetch:async(url)=>url==='/api/music'?new Promise(resolve=>pending.push(resolve)):musicReply(musicSnapshot())});ui.loadMusic();await tick();
+ ui.nodes.get('#music-details').hidden=true;ui.nodes.get('#music-expand').onclick();await tick();assert.equal(pending.length,2);
+ pending[1](musicReply({tracks:[{id:'new-upload',title:'最新',author:'好友'}]}));await tick();pending[0](musicReply({tracks:[{id:'old-list',title:'舊清單',author:'好友'}]}));await tick();
+ const picker=ui.nodes.get('#music-track');assert.deepEqual(picker.children.map(option=>option.value),['','new-upload']);
+ ui.nodes.get('#music-expand').onclick();ui.nodes.get('#music-expand').onclick();await tick();ui.window.TableMusic.stop();pending[2](musicReply({tracks:[{id:'departed',title:'晚回覆',author:'好友'}]}));await tick();assert.deepEqual(picker.children.map(option=>option.value),['','new-upload']);
+});
+
 test('preferences keep independent music/effect levels across navigation; one migration for old levels',()=>{
  const first=harness({'ah-music-listen':'on','ah-music-volume':'0.61','ah-gift-volume':'0.42'});
  assert.equal(first.api.get().music.enabled,true);assert.equal(first.api.get().music.volume,.61);assert.equal(first.api.get().effects.volume,.42);

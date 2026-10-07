@@ -6,3 +6,16 @@ body[data-game-kind] :is(#hostPlayers,#kickWarning) button,body[data-game-kind] 
 body[data-game-kind] #kickError{min-height:1.5em;color:#a23526;font-size:var(--ui-text-small)}
 body[data-game-kind] .host-dialog-actions{gap:12px;margin-top:24px}
 .host-cancel{position:sticky;top:0;z-index:1;background:#fffdf8}
+/* Utilities share one neutral surface; management is not a primary action. */
+.host-manage,.room-action-dock :is(.host-manage,.room-leave){background:var(--ui-surface,#19251e);color:var(--ui-text,#eee9d8);border-color:var(--ui-border,#64765a);box-shadow:none}
+.host-player{gap:12px;flex-wrap:wrap}
+.host-player-info{display:flex;flex:1 1 140px;min-width:0;flex-direction:column;gap:4px}
+.host-player-name{font-weight:600}
+.host-player-role{font-size:var(--ui-text-small,.875rem);color:#58685f}
+.host-player-actions{display:flex;flex:0 1 auto;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+#hostPlayers .host-player-actions button{min-height:44px;padding:8px 12px}
+#hostPlayers button:disabled{opacity:.5;cursor:wait}
+#hostError,#kickError{min-height:1.5em;margin:12px 0 0;overflow-wrap:anywhere;color:#58685f;font-size:var(--ui-text-small,.875rem)}
+:is(#hostError,#kickError)[data-kind=error]{color:#a23526}
+:is(#hostError,#kickError)[data-kind=success]{color:#356127}
+@media(max-width:480px){.host-player-actions{flex-basis:100%;justify-content:flex-start}}

@@ -1,0 +1,371 @@
+/* One room timeline; consent, volume, window geometry and native controls stay local. */
+(()=>{
+ 'use strict';
+ const maxPosition=14400,clock=()=>typeof globalThis.performance?.now==='function'?globalThis.performance.now():Date.now();
+ const opener=document.createElement('button');opener.id='tableMediaOpen';opener.type='button';opener.className='table-media-open';opener.hidden=true;opener.textContent='媒體';opener.setAttribute('aria-haspopup','dialog');opener.setAttribute('aria-controls','tableMedia');window.GameUI?.decorateButton(opener,'video',{label:'媒體'});
+ const dialog=document.createElement('dialog');dialog.id='tableMedia';dialog.className='ui-dialog table-media-window';dialog.setAttribute('aria-labelledby','mediaTitle');
+ dialog.innerHTML=`<header id="mediaWindowBar" class="table-media-header" role="toolbar" aria-label="媒體視窗工具列" tabindex="0" aria-describedby="mediaMoveHint"><h2 id="mediaTitle">本桌媒體</h2><div class="table-media-window-tools"><button id="mediaResetPosition" type="button">重設位置</button><button id="mediaResetSize" type="button">恢復大小</button><button id="mediaClose" type="button">關閉自己的視窗</button></div><span id="mediaMoveHint" class="ui-sr-only">拖曳頂端移動，方向鍵微調，Home重設；只影響自己。</span></header>
+ <p id="mediaStatus" class="ui-status table-media-status" role="status" aria-live="polite"></p><div id="mediaBody" class="table-media-body"><section id="mediaPrimary" class="table-media-primary" aria-label="目前播放"><div id="mediaCurrentInfo"><h3 id="mediaCurrentTitle">尚未播放</h3><p id="mediaCurrentMeta"></p></div><div id="mediaScreen" class="table-media-screen"><div id="mediaVideoConsent"><p>影片只在你接受後載入；關閉自己的影片不會停止全桌。</p><button id="mediaVideoJoin" type="button">接受並觀看影片</button></div><div id="mediaPlayer" hidden></div><div id="mediaMusicNative" hidden></div><p id="mediaEmpty">從音樂庫或YouTube網址加入清單。</p></div>
+ <div id="mediaTimeline" class="table-media-timeline"><span>全桌播放進度 <output id="mediaClock">0:00 / 0:00</output></span></div><div id="mediaTransport" class="table-media-controls"><button id="mediaPlay" type="button">全桌播放</button><button id="mediaPause" type="button">全桌暫停</button><button id="mediaSkip" type="button">切下一筆</button><button id="mediaStop" type="button">停止全桌</button><button id="mediaPublishPosition" type="button" aria-describedby="mediaPublishHint">同步我的播放進度</button><span id="mediaPublishHint" class="ui-sr-only">先調整自己的原生播放進度，再按此按鈕同步全桌。</span></div>
+ <p id="mediaPlaybackStatus" class="ui-status" role="status" aria-live="polite"></p><div id="mediaLocalControls" class="table-media-local"><button id="mediaResume" type="button">在自己的裝置播放</button><button id="mediaAlign" type="button">返回全桌進度</button><button id="mediaVideoExit" type="button">關閉自己的影片</button><button id="mediaNativeVideo" type="button" hidden>使用原生影片播放器</button><button id="mediaSound" type="button">開啟媒體聲音</button><label for="mediaVolume">個人音量 <input id="mediaVolume" type="range" min="0" max="100" value="30"></label></div></section>
+ <section id="mediaLibraryQueue" class="table-media-library-queue" aria-label="點播與待播清單"><div class="table-media-add"><form id="mediaMusicForm"><label for="mediaTrack">共用音樂庫</label><div class="table-media-form-row"><select id="mediaTrack"><option value="">選擇歌曲</option></select><button id="mediaMusicAdd" type="submit">加入清單</button><button id="mediaLibraryRefresh" type="button">更新歌庫</button></div></form><form id="mediaVideoForm"><label for="mediaUrl">YouTube網址</label><div class="table-media-form-row"><input id="mediaUrl" type="url" placeholder="貼上YouTube網址" required><button id="mediaVideoAdd" type="submit">加入清單</button></div></form></div><h3>待播清單</h3><p id="mediaPermission"></p><span id="mediaQueueHint" class="ui-sr-only">從左側把手拖曳排序；也可聚焦把手後按上下鍵移動。</span><ol id="mediaQueue" class="table-media-queue" aria-label="待播清單"></ol><p id="mediaQueueEmpty">清單目前是空的。</p></section></div>
+ <span id="mediaSizeLabel" class="ui-sr-only"></span><span id="mediaResizeHint" class="ui-sr-only">拖曳視窗邊緣或角落縮放；聚焦邊緣後用方向鍵調整，Shift加大步幅，Home恢復預設。影片至少保留210像素空間。</span>`;
+ const playlist=document.createElement('dialog');playlist.id='tableMediaPlaylist';playlist.className='ui-dialog table-media-window table-media-playlist';playlist.setAttribute('aria-labelledby','mediaPlaylistTitle');playlist.innerHTML='<header id="mediaPlaylistBar" class="table-media-header" role="toolbar" aria-label="點播清單視窗工具列" tabindex="0" aria-describedby="mediaPlaylistMoveHint"><h2 id="mediaPlaylistTitle">點播與清單</h2><button id="mediaPlaylistClose" type="button">關閉點播清單</button><span id="mediaPlaylistMoveHint" class="ui-sr-only">拖曳頂端移動；方向鍵微調，Home重設位置。</span></header><p id="mediaPlaylistStatus" class="ui-status table-media-status" role="status" aria-live="polite"></p><div id="mediaPlaylistBody" class="table-media-playlist-body"></div>';
+ playlist.querySelector('#mediaPlaylistBody').append(dialog.querySelector('#mediaLibraryQueue'));
+ const playlistEntry=document.createElement('div');playlistEntry.id='mediaPlaylistEntry';playlistEntry.className='table-media-playlist-entry';playlistEntry.innerHTML='<button id="mediaPlaylistOpen" type="button" aria-haspopup="dialog" aria-controls="tableMediaPlaylist" aria-expanded="false">點播與清單</button>';dialog.querySelector('#mediaPrimary').append(playlistEntry);
+ const controlRow=document.createElement('div');controlRow.id='mediaControlRow';controlRow.className='table-media-control-row';controlRow.setAttribute('role','group');controlRow.setAttribute('aria-label','媒體播放操作');const transport=dialog.querySelector('#mediaTransport'),localControls=dialog.querySelector('#mediaLocalControls');transport.before(controlRow);for(const [node,label] of [[transport,'全桌播放控制'],[localControls,'自己的裝置播放控制']]){node.setAttribute('role','group');node.setAttribute('aria-label',label);}controlRow.append(transport,localControls,playlistEntry);
+ const consent=document.createElement('dialog');consent.id='tableMediaConsent';consent.className='ui-dialog table-media-consent';consent.setAttribute('aria-labelledby','mediaConsentTitle');consent.innerHTML='<h2 id="mediaConsentTitle">接受這一桌的影片嗎？</h2><p>接受後，這一桌點播的YouTube影片會在你的媒體視窗顯示。瀏覽器仍可能需要你按播放器才能開始播放。</p><p>選擇暫不觀看就不載入Google播放器；之後可從「媒體」重新接受。</p><div><button id="mediaConsentAccept" type="button">接受影片</button><button id="mediaConsentDecline" type="button">暫不觀看</button></div><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google隱私權政策 ↗</a>';
+ document.body.append(dialog,playlist,consent);const q=selector=>dialog.querySelector(selector)||playlist.querySelector(selector),cq=selector=>consent.querySelector(selector);
+ function iconButton(node,icon,label){if(!node)return;node.setAttribute('aria-label',label);node.title=label;window.GameUI?.decorateButton(node,icon,{label,iconOnly:true});}
+ for(const [selector,icon,label] of [['#mediaClose','close','關閉自己的媒體視窗'],['#mediaResetPosition','undo','重設媒體位置'],['#mediaResetSize','expand','恢復預設媒體大小'],['#mediaPlay','play','全桌播放'],['#mediaPause','pause','全桌暫停'],['#mediaSkip','next','切下一筆'],['#mediaStop','stop','停止全桌'],['#mediaPublishPosition','send','同步我的播放進度'],['#mediaLibraryRefresh','refresh','更新音樂庫'],['#mediaMusicAdd','add','加入歌曲'],['#mediaVideoAdd','add','加入影片'],['#mediaResume','playLocal','在自己的裝置播放'],['#mediaAlign','sync','返回全桌進度'],['#mediaVideoExit','close','關閉自己的影片'],['#mediaVideoJoin','video','接受並觀看影片'],['#mediaNativeVideo','video','使用原生影片播放器']])iconButton(q(selector),icon,label);
+ iconButton(q('#mediaPlaylistOpen'),'queue','點播與清單');iconButton(q('#mediaPlaylistClose'),'close','關閉點播清單');
+ const resizeEdges=[['n','上邊'],['s','下邊'],['w','左邊'],['e','右邊'],['nw','左上角'],['ne','右上角'],['sw','左下角'],['se','右下角']].map(([edge,label])=>{const node=document.createElement('div');node.className='table-media-resize-edge media-resize-'+edge;node.dataset.edge=edge;node.tabIndex=0;node.setAttribute('role','separator');node.setAttribute('aria-label','調整媒體視窗'+label);node.setAttribute('aria-describedby','mediaResizeHint mediaSizeLabel');if(edge.length===1)node.setAttribute('aria-orientation',['n','s'].includes(edge)?'horizontal':'vertical');node.title='拖曳'+label+'縮放媒體視窗';dialog.append(node);return node;});
+ const escape=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+ function overflowText(node,text){const value=String(text??'');if(node.dataset.mediaText===value)return;node.dataset.mediaText=value;node.textContent=value;node.innerHTML=window.GameUI?.overflowText?.(value,{hoverOnly:true})||'<span class="table-media-ellipsis" title="'+escape(value)+'">'+escape(value)+'</span>';}
+ let room=null,marker=null,snapshot=null,generation=0,sequence=0,acceptedSequence=0,fetching=null,lastRequestedKey=null,pendingFetch=false,snapshotGeneration=0,snapshotRetry=null,submitting=false,retryOperation=null,librarySequence=0,permissionShape=null,permissionOverride=null;
+ let serverAt=0,observedAt=0,playerEpoch=0,audio=null,interruptedAudio=null,player=null,ready=false,nativeVideo=false,videoFallback=false,mountingVideo=null,videoWanted=false,consentKey=null,pendingConsent=false,promptKey=null,unlocked=false,appliedPlayback=null,interval=null,positionRead=null,apiPromise=null,apiScript=null,apiTimer=null,apiCancel=null;
+ let positionPreference=null,sizePreference=null,windowPosition=null,windowSize=null,drag=null,sizeDrag=null,queueDrag=null,queuePointer=null,playlistDrag=null,playlistPosition=null,focusedWindow='player',layoutFrame=null,layoutObserver=null,intersection=null;
+ const uploadOption='__upload_music__';
+ q('#mediaTrack').replaceChildren(new Option('上傳歌曲',uploadOption),new Option('選擇歌曲',''));q('#mediaTrack').value='';q('#mediaPermission').classList.add('ui-sr-only');
+ const positionKey='bga.media.window.v1',sizeKey='bga.media.size.v1',consents=new Map(),automaticSeen=new Set(),automaticPending=[],requests=new Set(),retiredPlayers=new WeakSet();
+ const audioTransitions=new WeakMap();let audioPreviewGesture=null;
+ for(const [key,valid,apply] of [[positionKey,value=>Number.isFinite(value?.left)&&Number.isFinite(value?.top),value=>positionPreference=value],[sizeKey,value=>Number.isFinite(value?.width)&&Number.isFinite(value?.height),value=>sizePreference=value]])try{const value=JSON.parse(localStorage.getItem(key));if(valid(value))apply(value);}catch{}
+ const status=(message,playback=false)=>{for(const node of playback?[q('#mediaPlaybackStatus')]:[q('#mediaStatus'),q('#mediaPlaylistStatus')]){if(window.GameUI)window.GameUI.setStatus(node,message);else node.textContent=message;}queueLayout();};
+ const markerKey=value=>value?`${value.roomInstanceId}:${value.revision}`:'unmarked';
+ const controls=()=>permissionOverride===null?!!snapshot?.canControl:permissionOverride;
+ const managesQueue=()=>permissionOverride===null?!!snapshot?.canManageQueue:permissionOverride;
+ const currentKey=()=>snapshot?.current?`${snapshot.roomInstanceId}:${snapshot.playbackSessionId}:${snapshot.current.id}`:null;
+ function requestId(){const random=globalThis.crypto;if(typeof random?.randomUUID==='function')return random.randomUUID();if(typeof random?.getRandomValues!=='function')throw Error('此瀏覽器無法安全建立操作識別碼，請改用支援安全亂數的瀏覽器。');const bytes=random.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;const hex=Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');return [hex.slice(0,8),hex.slice(8,12),hex.slice(12,16),hex.slice(16,20),hex.slice(20)].join('-');}
+ function format(value){const n=Math.floor(Math.max(0,Number(value)||0));return Math.floor(n/60)+':'+String(n%60).padStart(2,'0');}
+ function duration(){return Number.isFinite(snapshot?.current?.durationSec)?snapshot.current.durationSec:0;}
+ function position(){if(!snapshot?.current)return 0;const playback=snapshot.playback;const value=playback.anchorPositionSec+(playback.state==='playing'?Math.max(0,serverAt+clock()-observedAt-playback.anchorServerMs)/1000:0);return Math.max(0,Math.min(duration()||maxPosition,value));}
+ function signature(){return snapshot?JSON.stringify([currentKey(),snapshot.playback.state,snapshot.playback.anchorPositionSec,snapshot.playback.anchorServerMs]):null;}
+ function validPlayer(token,key){return token===playerEpoch&&key===currentKey()&&!!room&&!document.hidden;}
+ function stopAudio(){const old=audio;audio=null;interruptedAudio=null;if(!old)return;old.onloadedmetadata=null;old.onended=null;old.onerror=null;old.onplaying=null;old._mediaUnbind?.();try{pauseAudio(old);old.removeAttribute('src');old.load();}catch{}q('#mediaMusicNative').replaceChildren();}
+ function retirePlayer(old){if(!old||retiredPlayers.has(old))return;retiredPlayers.add(old);try{old.pauseVideo();old.destroy();}catch{}}
+ function destroyVideo(){ready=false;nativeVideo=false;intersection?.disconnect();intersection=null;const old=player;player=null;retirePlayer(old);q('#mediaPlayer').replaceChildren();}
+ function stopPlayers(){cancelPositionRead();playerEpoch++;appliedPlayback=null;mountingVideo=null;videoFallback=false;stopAudio();destroyVideo();apiCancel?.();}
+ function activeVideo(){return !!snapshot?.current&&snapshot.current.type==='video'&&videoWanted&&consents.get(consentKey)===true&&dialog.open&&!document.hidden;}
+ function isVisibleEnough(){
+  const node=q('#mediaPlayer'),box=node.getBoundingClientRect();if(dialog.classList.contains('media-too-small')||box.width<200||box.height<200||coveredVideo())return false;
+  let left=Math.max(0,box.left),right=Math.min(window.innerWidth,box.right),top=Math.max(0,box.top),bottom=Math.min(window.innerHeight,box.bottom);
+  for(let parent=node.parentElement;parent;parent=parent.parentElement){let style;try{style=window.getComputedStyle?.(parent);}catch{}const rect=parent.getBoundingClientRect?.();if(!rect)continue;if(/auto|scroll|hidden|clip/.test(style?.overflowX||style?.overflow||'')){left=Math.max(left,rect.left);right=Math.min(right,rect.right);}if(/auto|scroll|hidden|clip/.test(style?.overflowY||style?.overflow||'')){top=Math.max(top,rect.top);bottom=Math.min(bottom,rect.bottom);}}
+  return Math.max(0,right-left)*Math.max(0,bottom-top)>box.width*box.height*.5;
+ }
+ function observeFrame(iframe,token,key){intersection?.disconnect();if(typeof IntersectionObserver==='function'){intersection=new IntersectionObserver(entries=>{if(validPlayer(token,key)&&activeVideo()&&entries.some(entry=>entry.intersectionRatio<=.5))exitVideo('影片已離開可見範圍，需要時再加入觀看。');},{threshold:[.5]});intersection.observe(iframe);}}
+ function exitVideo(message='自己的影片已關閉，其他人繼續觀看。'){videoWanted=false;playerEpoch++;appliedPlayback=null;destroyVideo();apiCancel?.();render();if(message)status(message,true);}
+ function settings(value=window.AudioSettings?.get?.()){if(!value)return;const music=value.music;q('#mediaVolume').value=Math.round(music.volume*100);const label=music.enabled?'關閉媒體聲音':'開啟媒體聲音';if(q('#mediaSound').getAttribute('aria-label')!==label)iconButton(q('#mediaSound'),music.enabled?'sound':'muted',label);q('#mediaSound').setAttribute('aria-pressed',String(music.enabled));if(audio){audio.volume=music.volume;audio.muted=!music.enabled;}if(player&&ready)try{player.setVolume(music.volume*100);music.enabled?player.unMute():player.mute();}catch{}}
+ function expectAudioTransition(clip,type,front=false){
+  const record=audioTransitions.get(clip);if(!record)return;front?record.expected.unshift(type):record.expected.push(type);
+  if(record.expected.length>64){record.expected.shift();record.skipped=Math.min(65536,record.skipped+1);record.intent++;record.nativePaused=null;if(interruptedAudio?.clip===clip)interruptedAudio=null;}
+ }
+ function invokeAudio(clip,type){const record=audioTransitions.get(clip);if(record)record.issuing++;try{return clip[type]();}finally{if(record)record.issuing--;}}
+ function pauseAudio(clip,proof){const paused=clip.paused;invokeAudio(clip,'pause');if(!paused&&clip.paused){if(proof)proof.issued=true;else expectAudioTransition(clip,'pause');}}
+ function playAudio(clip,proof){const paused=clip.paused,record=audioTransitions.get(clip);if(record)record.nativePaused=false;const result=invokeAudio(clip,'play');if(paused&&!clip.paused){if(proof)proof.issued=true;else expectAudioTransition(clip,'play');}return result;}
+ function cancelAudioProof(record){if(record?.proof){record.proof.cancelled=true;record.proof.flow.closed=true;}}
+ function failAudioProof(clip,record){cancelAudioProof(record);record.intent++;record.nativePaused=true;if(interruptedAudio?.clip===clip)interruptedAudio=null;pauseAudio(clip);status('這裡保持暫停，請用原生播放按鈕繼續。',true);}
+ function createAudioProof(clip,record,kind,flow,purpose){
+  const previous=record.proof;
+  if(previous?.predecessors.size>=7){failAudioProof(clip,record);return null;}
+  const events=previous?previous.events.splice(0):[],excluded=previous?previous.excluded:new Set(),predecessors=previous?previous.predecessors:new Set();
+  if(previous){cancelAudioProof(record);previous.excluded=new Set();previous.predecessors=new Set();predecessors.add(previous);}
+  const proof={kind,intent:record.intent,events,excluded,predecessors,issued:false,cancelled:false,overflow:false,flow,purpose};record.proof=proof;return proof;
+ }
+ function finishAudioProof(clip,record,proof,error){
+  if(!proof)return false;
+  if(record?.proof!==proof){
+   const current=record?.proof;
+   if(!record?.disposed&&clip===audio&&current?.predecessors.has(proof)){
+    if(proof.issued&&proof.kind==='pause'&&!error)expectAudioTransition(clip,'pause',true);
+    else if(proof.issued&&(proof.kind==='play'||error?.name==='AbortError')){const owned=current.events.findLast(event=>event.type===(proof.kind==='pause'?'pause':'play')&&!current.excluded.has(event));if(owned)current.excluded.add(owned);}
+    current.predecessors.delete(proof);
+   }
+   proof.events.length=0;proof.excluded.clear();proof.predecessors.clear();return false;
+  }
+  record.proof=null;
+  const pause=proof.kind==='pause',abort=error?.name==='AbortError';
+  const owned=proof.issued&&(!pause||abort)?proof.events.findLastIndex(event=>event.type===(pause?'pause':'play')):-1;
+  // A successful play promise settles in notify-playing; AbortError settles in
+  // the later pause task. Both fence the preceding events of this same element.
+  // An already-playing play() checkpoints the media queue before our subsequent
+  // pause task. At low readyState its AbortError instead checkpoints that task.
+  if(pause&&proof.issued&&!error&&!record.disposed&&clip===audio)expectAudioTransition(clip,'pause',true);
+  const classified=!record.disposed&&clip===audio&&!proof.overflow&&record.intent===proof.intent&&(!pause||!error||abort);
+  if(classified){
+   for(let index=0;index<proof.events.length;index++)if(index!==owned&&!proof.excluded.has(proof.events[index])){const event=proof.events[index];proof.nativeObserved=true;proof.nativePlay=event.type==='play'?event:null;record.intent++;record.nativePaused=event.type==='pause';}
+  }
+  proof.classified=classified;proof.events.length=0;proof.excluded.clear();proof.predecessors.clear();return classified&&!proof.cancelled&&!proof.flow.closed;
+ }
+ function correctAudioPause(clip,record,token,key,flow,purpose='correction'){
+  if(clip.ended===true){if(purpose==='visibility'&&interruptedAudio?.clip===clip)interruptedAudio=null;pauseAudio(clip);return;}
+  if(flow.closed||flow.corrections>=8){flow.closed=true;failAudioProof(clip,record);return;}
+  if(purpose==='correction')flow.corrections++;const proof=createAudioProof(clip,record,'pause',flow,purpose);if(!proof)return;
+  const finish=error=>{
+   const valid=finishAudioProof(clip,record,proof,error);
+   if(purpose==='visibility'){
+    if(valid&&proof.nativePlay){record.confirmedPlay=proof.nativePlay;try{record.previewPlay?.(proof.nativePlay);}finally{record.confirmedPlay=null;}}
+    const interrupted=interruptedAudio;
+    if(proof.classified&&interrupted?.clip===clip&&interrupted.key===key&&interrupted.token===token&&interrupted.intent===proof.intent){if(proof.nativeObserved&&record.nativePaused===true)interruptedAudio=null;else interrupted.intent=record.intent;}
+    resumeInterruptedAudio();return;
+   }
+   if(valid&&validPlayer(token,key)&&clip===audio&&clip.paused&&record.nativePaused===false&&snapshot?.playback.state==='playing'&&window.AudioSettings?.get?.().music.enabled&&unlocked){interruptedAudio={clip,key,token,intent:record.intent,flow,keepPosition:true};resumeInterruptedAudio();}
+  };
+  try{const checkpoint=invokeAudio(clip,'play');pauseAudio(clip,proof);Promise.resolve(checkpoint).then(()=>finish(),finish);}catch(error){pauseAudio(clip);finish(error);}
+ }
+ function bindAudioIntent(clip){
+  const record={expected:[],skipped:0,intent:0,nativePaused:false,owned:new WeakSet(),disposed:false,issuing:0,proof:null},listeners=[],previewListeners=new Map(),methods=[];audioTransitions.set(clip,record);
+  const listen=(type,callback,capture=false)=>{clip.addEventListener(type,callback,capture);listeners.push(()=>clip.removeEventListener(type,callback,capture));};
+  const invalidate=()=>{if(record.disposed||clip!==audio)return;record.intent++;record.nativePaused=null;cancelAudioProof(record);if(interruptedAudio?.clip===clip)interruptedAudio=null;};
+  // External JS controls can express a newer choice before their media events.
+  // UA controls still use the queued-event proof below; these wrappers do not
+  // substitute for input capture or assume that native UI calls JS methods.
+  for(const type of ['play','pause']){
+   const original=clip[type],descriptor=Object.getOwnPropertyDescriptor(clip,type);
+   const wrapped=function(...args){const external=this===clip&&!record.disposed&&!record.issuing;if(external){invalidate();record.nativePaused=type==='pause';}return original.apply(this,args);};
+   try{Object.defineProperty(clip,type,{configurable:true,writable:true,value:wrapped});methods.push(()=>{if(clip[type]===wrapped){if(descriptor)Object.defineProperty(clip,type,descriptor);else delete clip[type];}});}catch{}
+  }
+  const transition=event=>{
+   if(record.disposed||clip!==audio)return;
+   if(record.skipped){record.skipped--;record.owned.add(event);return;}
+   if(record.expected[0]===event.type){record.expected.shift();record.owned.add(event);return;}
+   if(record.proof){
+    const proof=record.proof;record.owned.add(event);
+    if(proof.events.length<64)proof.events.push(event);else if(!proof.overflow){proof.overflow=true;failAudioProof(clip,record);}
+    return;
+   }
+   invalidate();record.nativePaused=event.type==='pause';
+  };
+  // Browser media events are queued after the state transition. Register before bindPreview.
+  listen('play',transition);listen('pause',transition);listen('pointerdown',invalidate,true);listen('keydown',invalidate,true);
+  const preview={get volume(){return clip.volume;},set volume(value){clip.volume=value;},get muted(){return clip.muted;},set muted(value){clip.muted=value;},
+   addEventListener(type,callback){const wrapped=event=>{if(record.disposed||type==='play'&&record.confirmedPlay!==event&&(record.owned.has(event)||clip.paused))return;const previous=audioPreviewGesture;audioPreviewGesture=clip;try{callback.call(clip,event);}finally{audioPreviewGesture=previous;}};if(type==='play')record.previewPlay=wrapped;previewListeners.set(callback,{type,wrapped});clip.addEventListener(type,wrapped);},
+   removeEventListener(type,callback){const registered=previewListeners.get(callback);if(registered){clip.removeEventListener(registered.type,registered.wrapped);previewListeners.delete(callback);}}
+  };
+  const unbind=window.AudioSettings?.bindPreview?.(preview);
+  return ()=>{record.disposed=true;record.previewPlay=null;record.confirmedPlay=null;if(record.proof){cancelAudioProof(record);record.proof.events.length=0;record.proof.excluded.clear();record.proof.predecessors.clear();record.proof=null;}unbind?.();for(const remove of listeners)remove();for(const restore of methods)restore();for(const{type,wrapped}of previewListeners.values())clip.removeEventListener(type,wrapped);previewListeners.clear();record.expected.length=0;audioTransitions.delete(clip);};
+ }
+ function alignAudio(force=false,interrupted=null,keepPosition=false){
+  const clip=audio,key=currentKey(),token=playerEpoch,record=audioTransitions.get(clip),intent=record?.intent;if(!clip||snapshot?.current?.type!=='music')return;const desired=position();if(!keepPosition&&clip.readyState>=1&&(force||Math.abs(clip.currentTime-desired)>1.25))try{clip.currentTime=desired;}catch{}
+  const preferences=window.AudioSettings?.get?.().music;
+  if(snapshot.playback.state!=='playing'||!preferences?.enabled||!unlocked||document.hidden){pauseAudio(clip);return;}
+  if(!clip.paused||clip._mediaPlayPending)return;
+  const flow=interrupted?.flow||{corrections:0,closed:false},needsProof=record&&(interrupted||record.proof),proof=needsProof?createAudioProof(clip,record,'play',flow):null;if(needsProof&&!proof)return;clip._mediaPlayPending=true;
+  try{Promise.resolve(playAudio(clip,proof)).then(()=>{const reconciled=finishAudioProof(clip,record,proof);if(!validPlayer(token,key)||clip!==audio||snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled)pauseAudio(clip);else if(record?.intent!==intent&&record?.nativePaused===true){if(reconciled&&!clip.paused)correctAudioPause(clip,record,token,key,flow);else pauseAudio(clip);}else status('',true);},error=>{
+   finishAudioProof(clip,record,proof,error);
+   if(error?.name==='AbortError')return;
+   const interrupted=interruptedAudio;if(interrupted?.clip===clip&&interrupted.key===key&&interrupted.token===token&&interrupted.intent===intent)interruptedAudio=null;
+   if(validPlayer(token,key)&&clip===audio)status('瀏覽器尚未允許音樂播放，請按「在自己的裝置播放」或原生播放按鈕。',true);
+  }).finally(()=>{clip._mediaPlayPending=false;if(clip===audio&&token===playerEpoch&&key===currentKey())resumeInterruptedAudio();});}catch{finishAudioProof(clip,record,proof);clip._mediaPlayPending=false;status('請按原生音樂播放器的播放按鈕重試。',true);}
+ }
+ // Undo only our visibility pause; a newer room marker must first get its existing snapshot reply.
+ function resumeInterruptedAudio(){
+  const interrupted=interruptedAudio;if(!interrupted||document.hidden)return;
+  if(interrupted.clip!==audio||!validPlayer(interrupted.token,interrupted.key)||interrupted.intent!==audioTransitions.get(audio)?.intent){interruptedAudio=null;return;}
+  if(markerKey(snapshot)!==markerKey(marker))return;
+  if(audioTransitions.get(audio)?.proof?.kind==='pause')return;
+  if(snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled||!unlocked){interruptedAudio=null;return;}
+  // A native Play has already superseded our pause; retain its local position.
+  if(!audio.paused){interruptedAudio=null;return;}
+  // pause's queued task may still be rejecting the old play promise when visibility returns.
+  if(audio._mediaPlayPending)return;
+  interruptedAudio=null;alignAudio(false,interrupted,!!interrupted.keepPosition);
+ }
+ function mountAudio(){stopPlayers();if(snapshot?.current?.type!=='music')return;const key=currentKey(),token=playerEpoch,clip=new Audio();audio=clip;clip.controls=true;clip.preload='metadata';clip.setAttribute('aria-label','本機歌曲播放器');clip.src='/assets/music/'+encodeURIComponent(snapshot.current.trackId);q('#mediaMusicNative').append(clip);settings();clip._mediaUnbind=bindAudioIntent(clip);clip.onloadedmetadata=()=>{if(validPlayer(token,key)&&clip===audio){alignAudio(true);updatePublishControl();}};clip.onended=()=>{if(validPlayer(token,key)&&clip===audio)report('ended',{itemId:snapshot.current.id});};clip.onerror=()=>{if(validPlayer(token,key)&&clip===audio)status('這首歌曲暫時無法播放，可用原生播放器重試或請管理者切下一筆。',true);};clip.load();alignAudio(true);}
+ function youtubeApi(){
+  if(window.YT?.Player)return Promise.resolve(window.YT);if(apiPromise)return apiPromise;
+  apiPromise=new Promise((resolve,reject)=>{const previous=window.onYouTubeIframeAPIReady;let complete=false;const finish=()=>{if(apiTimer!==null)clearTimeout(apiTimer);apiTimer=null;apiCancel=null;if(window.onYouTubeIframeAPIReady===done)window.onYouTubeIframeAPIReady=previous;};const fail=()=>{if(complete)return;complete=true;finish();apiScript?.remove();apiScript=null;apiPromise=null;reject(Error('YouTube播放器未能載入，請使用原生播放器或重試。'));};const done=()=>{if(complete)return;if(!window.YT?.Player){fail();return;}complete=true;finish();try{previous?.();}catch{}resolve(window.YT);};apiCancel=fail;window.onYouTubeIframeAPIReady=done;apiScript=document.createElement('script');apiScript.src='https://www.youtube.com/iframe_api';apiScript.referrerPolicy='strict-origin-when-cross-origin';apiScript.onerror=fail;apiTimer=setTimeout(fail,20000);document.head.append(apiScript);});return apiPromise;
+ }
+ function videoFrame(videoId,api=true){const iframe=document.createElement('iframe');iframe.title='本桌YouTube影片';iframe.setAttribute('referrerpolicy','strict-origin-when-cross-origin');iframe.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');iframe.setAttribute('allowfullscreen','');iframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(videoId)+'?controls=1&playsinline=1'+(api?'&enablejsapi=1&origin='+encodeURIComponent(location.origin):'');return iframe;}
+ function applyVideo(force=false){
+  if(!activeVideo()||!ready||!player||nativeVideo)return;const key=signature();if(!force&&appliedPlayback===key)return;if(!isVisibleEnough()){exitVideo('播放器空間不足，請放大視窗後重新加入。');return;}appliedPlayback=key;
+  try{if(snapshot.playback.state==='paused'){player.cueVideoById({videoId:snapshot.current.videoId,startSeconds:position()});player.pauseVideo();}else{player.seekTo(position(),true);player.playVideo();}}catch{status('影片尚未準備好，請按「返回全桌進度」或原生播放按鈕。',true);}
+ }
+ async function mountVideo(){
+  stopPlayers();if(!activeVideo())return;const token=playerEpoch,key=currentKey(),videoId=snapshot.current.videoId;mountingVideo=token;status('載入自己的YouTube播放器…',true);render();
+  try{const yt=await youtubeApi();if(!validPlayer(token,key)||!activeVideo())return;if(!isVisibleEnough()){exitVideo('影片至少需要200×200可見空間，請放大視窗後重新加入。');return;}
+   const iframe=videoFrame(videoId);q('#mediaPlayer').replaceChildren(iframe);const valid=()=>validPlayer(token,key)&&activeVideo();let instance;
+   const stale=target=>{if(valid())return false;retirePlayer(target);return true;};
+   instance=new yt.Player(iframe,{events:{onReady:event=>{if(stale(event?.target||instance))return;ready=true;settings();applyVideo(true);updatePublishControl();const length=Number(instance.getDuration?.());if(Number.isFinite(length)&&length>0&&length<=maxPosition&&!duration())report('duration',{itemId:snapshot.current.id,durationSec:length});},onStateChange:event=>{if(stale(event.target||instance))return;if(event.data===0){status('這裡已播放完畢，等待下一筆。',true);report('ended',{itemId:snapshot.current.id});}else if(event.data===3)status('這裡正在緩衝，其他人的播放不受影響。',true);else if(event.data===1){status('',true);const length=Number(instance.getDuration?.());if(Number.isFinite(length)&&length>0&&length<=maxPosition&&!duration())report('duration',{itemId:snapshot.current.id,durationSec:length});}},onAutoplayBlocked:event=>{if(!stale(event?.target||instance))status('瀏覽器需要你允許播放，請按「在自己的裝置播放」或YouTube原生播放按鈕。',true);},onError:event=>{if(stale(event.target||instance))return;const errors={2:'影片識別碼無效。',5:'此瀏覽器無法播放這部影片。',100:'影片不存在、已移除或是私人影片。',101:'影片不允許嵌入觀看。',150:'影片不允許嵌入觀看。',153:'YouTube未能確認網站來源。'};status((errors[event.data]||'影片目前無法嵌入播放。')+' 可用原生播放器重試，或關閉自己的影片。',true);videoFallback=true;q('#mediaNativeVideo').hidden=false;}}});
+   if(!valid()){stale(instance);return;}player=instance;
+   observeFrame(iframe,token,key);
+  }catch(error){if(validPlayer(token,key)&&activeVideo()){status(error.message,true);videoFallback=true;q('#mediaNativeVideo').hidden=false;}}finally{if(mountingVideo===token)mountingVideo=null;}
+ }
+ function applyPlayback(force=false){if(!snapshot?.current){stopPlayers();render();return;}if(snapshot.current.type==='music'){if(!audio)mountAudio();else{if(force||appliedPlayback!==signature()){appliedPlayback=signature();alignAudio(true);}}}else if(activeVideo()){if(!player&&!nativeVideo&&mountingVideo!==playerEpoch)mountVideo();else applyVideo(force);}}
+ function openWindow(){if(!dialog.open)dialog.show();opener.setAttribute('aria-expanded','true');if(interval===null)interval=setInterval(updateTimeline,500);render();layout();queueLayout();}
+ function cancelSnapshot(){snapshotGeneration++;fetching?.controller.abort();fetching=null;pendingFetch=false;snapshotRetry=null;lastRequestedKey=null;}
+ function cancelWindowInteractions(){cancelPositionRead();cancelQueuePointer();queueDrag=null;const moving=drag;drag=null;if(moving)releaseCapture(q('#mediaWindowBar'),moving.id);const resizing=sizeDrag;sizeDrag=null;if(resizing){sizePreference=resizing.preference;releaseCapture(resizing.node,resizing.id);}dialog.classList.remove('media-resizing');}
+ function close(){cancelSnapshot();closePlaylist(false);cancelWindowInteractions();if(snapshot?.current?.type==='video')exitVideo('');if(interval!==null)clearInterval(interval);interval=null;if(dialog.open)dialog.close();if(layoutFrame!==null){window.cancelAnimationFrame?.(layoutFrame);layoutFrame=null;}opener.setAttribute('aria-expanded','false');}
+ function chooseVideo(accept){if(promptKey&&promptKey!==consentKey)return;consents.set(consentKey,accept);while(consents.size>64)consents.delete(consents.keys().next().value);pendingConsent=false;promptKey=null;videoWanted=accept;if(consent.open)consent.close();if(accept){unlocked=true;if(snapshot?.current?.type==='video'){openWindow();mountVideo();}}else exitVideo('');render();}
+ function maybeConsent(){if(!pendingConsent||!room||!consentKey||document.hidden||consent.open||document.querySelector('dialog:modal'))return;promptKey=consentKey;consent.showModal();}
+ function receive(next,tag){
+  if(tag.generation!==generation||tag.snapshotGeneration!==undefined&&tag.snapshotGeneration!==snapshotGeneration||!room||!next||next.schemaVersion!==1||!Number.isInteger(next.revision))return false;
+  if(next.myPlayerId!==room.me||marker&&(next.roomInstanceId!==marker.roomInstanceId||next.revision<marker.revision))return false;
+  if(snapshot&&next.roomInstanceId===snapshot.roomInstanceId&&(next.revision<snapshot.revision||next.revision===snapshot.revision&&tag.sequence<acceptedSequence))return false;
+  const oldKey=currentKey(),oldSignature=signature(),oldConsentKey=consentKey;snapshot=next;permissionOverride=null;acceptedSequence=tag.sequence;observedAt=clock();serverAt=next.serverNowMs+Math.max(0,observedAt-tag.sent)/2;
+  marker={roomInstanceId:next.roomInstanceId,revision:next.revision,hasCurrent:!!next.current};consentKey=`${next.roomInstanceId}:${room.me}`;
+  if(!consents.has(consentKey))pendingConsent=true;else if(oldConsentKey!==consentKey)videoWanted=consents.get(consentKey)===true;
+  if(oldKey!==currentKey()){stopPlayers();automaticPending.length=0;if(next.current?.type==='video'&&videoWanted&&consents.get(consentKey)===true)openWindow();}
+  render();if(oldKey!==currentKey()||oldSignature!==signature())applyPlayback(true);resumeInterruptedAudio();maybeConsent();return true;
+ }
+ async function requestSnapshot({force=false}={}){
+  if(!room)return false;const requested=markerKey(marker);if(fetching){if(force)pendingFetch=true;return fetching.promise;}if(!force&&lastRequestedKey===requested&&snapshot&&markerKey(snapshot)===requested)return false;
+  if(!force&&snapshotRetry?.key===requested&&(snapshotRetry.permanent||snapshotRetry.attempts>=3||clock()<snapshotRetry.notBefore))return false;
+  if(force||snapshotRetry?.key!==requested)snapshotRetry={key:requested,attempts:0,notBefore:0,permanent:false};const retry=snapshotRetry;retry.attempts++;
+  const controller=new AbortController(),tag={generation,snapshotGeneration,sequence:++sequence,sent:clock()},job={key:requested,tag,controller};let httpStatus=null;requests.add(controller);fetching=job;
+  job.promise=(async()=>{try{const response=await fetch('/api/room-media?code='+encodeURIComponent(room.code),{signal:controller.signal});httpStatus=response.status;const next=await response.json();if(tag.generation!==generation||tag.snapshotGeneration!==snapshotGeneration)return false;if(!response.ok)throw Error(next.error||'媒體暫時無法連線，重新開啟可重試。');
+    if(receive(next,tag)){lastRequestedKey=markerKey(snapshot);if(snapshotRetry===retry)snapshotRetry=null;return true;}if(snapshot&&markerKey(snapshot)===markerKey(marker))return false;throw Error('媒體回覆尚未追上目前版本，正在等待重新同步。');
+   }catch(error){if(tag.generation===generation&&tag.snapshotGeneration===snapshotGeneration&&error.name!=='AbortError'&&!(snapshot&&tag.sequence<acceptedSequence&&markerKey(snapshot)===markerKey(marker))){retry.permanent=httpStatus>=400&&httpStatus<500&&![408,429].includes(httpStatus);retry.notBefore=clock()+([1000,4000][retry.attempts-1]||0);status(error.message);}return false;}
+   finally{requests.delete(controller);if(fetching===job){fetching=null;const forced=pendingFetch,newMarker=markerKey(marker)!==job.key&&(!snapshot||markerKey(marker)!==markerKey(snapshot));pendingFetch=false;if((forced||newMarker)&&tag.generation===generation&&tag.snapshotGeneration===snapshotGeneration)requestSnapshot({force:forced});}}})();return job.promise;
+ }
+ async function library(){if(!room)return;const token=generation,request=++librarySequence;try{const response=await fetch('/api/music'),data=await response.json();if(token!==generation||request!==librarySequence)return;if(!response.ok)throw Error(data.error||'音樂庫暫時無法載入');const chosen=q('#mediaTrack').value;q('#mediaTrack').replaceChildren(new Option('上傳歌曲',uploadOption),new Option('選擇歌曲',''));for(const track of data.tracks||[])q('#mediaTrack').append(new Option(track.title+' · '+track.author,track.id));q('#mediaTrack').value=chosen!==uploadOption&&[...q('#mediaTrack').children].some(option=>option.value===chosen)?chosen:'';}catch(error){if(token===generation&&request===librarySequence)status(error.message);}}
+ async function command(action,extra={},automatic=false){
+  if(!room||!snapshot||submitting||action!=='enqueue'&&!controls())return false;const tag={generation,sequence:++sequence,sent:clock()},shape=JSON.stringify([action,extra,snapshot.roomInstanceId,snapshot.playbackSessionId,snapshot.revision]);let body;
+  try{body=retryOperation?.shape===shape?retryOperation.body:{code:room.code,requestId:requestId(),roomInstanceId:snapshot.roomInstanceId,playbackSessionId:snapshot.playbackSessionId,expectedRevision:snapshot.revision,action,...extra};}catch(error){status(error.message);return false;}
+  submitting=true;render();const controller=new AbortController();requests.add(controller);
+  try{const response=await fetch('/api/room-media',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:controller.signal}),next=await response.json();if(tag.generation!==generation)return false;
+   retryOperation=null;if(!response.ok){if(next.state)receive(next.state,tag);status(response.status===409?'清單或播放狀態已更新，請確認後重新操作。':next.error||'操作未成功，請重試。');return false;}
+   receive(next,tag);if(!automatic)status(action==='enqueue'?'已加入待播清單。':'全桌媒體已更新。');return true;
+  }catch(error){if(tag.generation===generation&&error.name!=='AbortError'){if(!automatic)retryOperation={shape,body};status('未收到操作結果；再按同一操作可安全重試，或重新開啟媒體查看最新狀態。');}return false;}
+  finally{requests.delete(controller);if(tag.generation===generation){submitting=false;render();flushAutomatic();}}
+ }
+ function automaticKey(action){return `${currentKey()}:${snapshot?.revision}:${action}`;}
+ function rememberAutomatic(key){automaticSeen.add(key);while(automaticSeen.size>256)automaticSeen.delete(automaticSeen.values().next().value);}
+ function atSharedEnd(){const length=duration();return snapshot?.playback.state==='playing'&&length>0&&position()>=Math.max(0,length-2);}
+ function report(action,extra){if(!controls()||!snapshot?.current||action==='ended'&&!atSharedEnd())return;const key=automaticKey(action);if(automaticSeen.has(key))return;rememberAutomatic(key);const tag={generation,key:currentKey(),playback:signature()};if(submitting){automaticPending.push({action,extra,tag});while(automaticPending.length>8)automaticPending.shift();}else command(action,extra,true);}
+ function flushAutomatic(){if(submitting)return;while(automaticPending.length){const item=automaticPending.shift();if(item.tag.generation!==generation||item.tag.key!==currentKey()||!controls()||item.action==='duration'&&duration()||item.action==='ended'&&(item.tag.playback!==signature()||!atSharedEnd()))continue;rememberAutomatic(automaticKey(item.action));command(item.action,item.extra,true);break;}}
+ function reorder(orderIds){if(!managesQueue())return;return command('reorder',{orderIds});}
+ function moveItem(id,direction,restoreFocus=false){if(!managesQueue()||submitting)return;const order=snapshot.queue.map(item=>item.id),index=order.indexOf(id),target=index+direction,token=generation;if(index<0||target<0||target>=order.length)return;[order[index],order[target]]=[order[target],order[index]];return Promise.resolve(reorder(order)).then(result=>{if(restoreFocus&&token===generation&&playlist.open&&managesQueue())[...q('#mediaQueue').children].find(row=>row.dataset.itemId===id)?.querySelector('.table-media-drag-handle')?.focus();return result;});}
+ function dragIntent(itemId){return {generation,itemId,roomInstanceId:snapshot.roomInstanceId,session:snapshot.playbackSessionId,revision:snapshot.revision,orderIds:snapshot.queue.map(entry=>entry.id)};}
+ function validDrag(intent){return !!intent&&playlist.open&&managesQueue()&&!submitting&&intent.generation===generation&&intent.roomInstanceId===snapshot?.roomInstanceId&&intent.session===snapshot?.playbackSessionId&&intent.revision===snapshot?.revision&&JSON.stringify(intent.orderIds)===JSON.stringify(snapshot.queue.map(entry=>entry.id));}
+ function dropItem(intent,targetId){
+  if(!validDrag(intent)){status('清單已更新，請確認後重新拖曳。');return;}
+  const order=[...intent.orderIds],from=order.indexOf(intent.itemId),target=order.indexOf(targetId);if(from<0||target<0||from===target)return;order.splice(from,1);order.splice(target,0,intent.itemId);return reorder(order);
+ }
+ function releaseCapture(node,id){try{if(node.hasPointerCapture?.(id)!==false)node.releasePointerCapture?.(id);}catch{}}
+ function cancelQueuePointer(){const pointer=queuePointer;queuePointer=null;if(pointer){releaseCapture(pointer.node,pointer.id);pointer.node.classList.remove('is-dragging');}for(const row of q('#mediaQueue').children)row.classList.remove('media-drop-target');}
+ function pointerTarget(event){const row=document.elementFromPoint?.(event.clientX,event.clientY)?.closest('.table-media-queue-item');return row?.parentNode===q('#mediaQueue')?row:null;}
+ function moveQueuePointer(event){
+  const pointer=queuePointer;if(!pointer||pointer.id!==event.pointerId)return;
+  if(!validDrag(pointer.intent)){cancelQueuePointer();queueDrag=null;status('清單已更新，請確認後重新拖曳。');return;}
+  if(Math.hypot(event.clientX-pointer.x,event.clientY-pointer.y)<6&&!pointer.moved)return;pointer.moved=true;
+  const scroller=q('#mediaPlaylistBody'),box=scroller.getBoundingClientRect();if(event.clientY<box.top+40)scroller.scrollTop-=24;else if(event.clientY>box.bottom-40)scroller.scrollTop+=24;
+  const target=pointerTarget(event);if(target)pointer.targetId=target.dataset.itemId;
+  for(const row of q('#mediaQueue').children)row.classList.toggle('media-drop-target',row===target&&row.dataset.itemId!==pointer.intent.itemId);
+ }
+ function endQueuePointer(event,cancel=false){const pointer=queuePointer;if(!pointer||pointer.id!==event.pointerId)return;const intent=pointer.intent,target=pointerTarget(event)?.dataset.itemId,moved=pointer.moved;cancelQueuePointer();queueDrag=null;if(!cancel&&moved&&target)return dropItem(intent,target);}
+ function queueList(){
+  const list=q('#mediaQueue'),key=JSON.stringify([snapshot?.queue,managesQueue(),submitting]);if(list.dataset.content===key)return;
+  if(queuePointer&&!validDrag(queuePointer.intent)){cancelQueuePointer();queueDrag=null;status('清單已更新，請確認後重新拖曳。');}list.dataset.content=key;list.replaceChildren();
+  for(const [index,item] of (snapshot?.queue||[]).entries()){
+   const row=document.createElement('li');row.dataset.itemId=item.id;row.className='table-media-queue-item';row.draggable=false;row.setAttribute('aria-label',`${index+1}. ${item.title}，${item.type==='video'?'影片':'歌曲'}，${item.requestedByName}點播`);
+   const handle=document.createElement('button');handle.type='button';handle.className='table-media-drag-handle';handle.disabled=!managesQueue()||submitting;handle.draggable=!handle.disabled;handle.setAttribute('aria-describedby','mediaQueueHint');iconButton(handle,'dragHandle','排序「'+item.title+'」；拖曳或用上下鍵');row.append(handle);
+   const name=document.createElement('strong');overflowText(name,item.title);const meta=document.createElement('span');meta.className='table-media-requester';const type=document.createElement('span');type.className='table-media-item-type';type.title=item.type==='video'?'影片':'歌曲';type.setAttribute('role','img');type.setAttribute('aria-label',type.title);type.innerHTML=window.GameUI?.symbol?.(item.type==='video'?'video':'music')||escape(type.title);const requester=document.createElement('span');overflowText(requester,item.requestedByName);meta.append(type,requester);const info=document.createElement('div');info.className='table-media-item-info';info.append(name,meta);row.append(info);
+   if(managesQueue()){const remove=document.createElement('button');remove.type='button';remove.className='table-media-remove';iconButton(remove,'remove','移除「'+item.title+'」');remove.disabled=submitting;remove.onclick=()=>command('remove',{itemId:item.id});row.append(remove);}
+   handle.onkeydown=event=>{if(event.target!==handle||!['ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();moveItem(item.id,event.key==='ArrowUp'?-1:1,true);};
+   handle.onpointerdown=event=>{if(!playlist.open||!managesQueue()||submitting||queuePointer||drag||sizeDrag||playlistDrag||event.isPrimary===false||event.button!==0)return;event.preventDefault();handle.focus();queueDrag=dragIntent(item.id);queuePointer={intent:queueDrag,id:event.pointerId,node:handle,x:event.clientX,y:event.clientY,targetId:item.id,moved:false};handle.classList.add('is-dragging');handle.setPointerCapture?.(event.pointerId);};handle.onpointermove=moveQueuePointer;handle.onpointerup=endQueuePointer;handle.onpointercancel=event=>endQueuePointer(event,true);handle.onlostpointercapture=event=>endQueuePointer(event,true);
+   let ownDrag=null;handle.ondragstart=event=>{if(!managesQueue()||submitting){event.preventDefault();return;}cancelQueuePointer();ownDrag=queueDrag=dragIntent(item.id);event.dataTransfer.setData('text/plain',item.id);event.dataTransfer.effectAllowed='move';handle.classList.add('is-dragging');};handle.ondragend=()=>{handle.classList.remove('is-dragging');if(queueDrag===ownDrag)queueDrag=null;};row.ondragover=event=>{if(managesQueue()&&!submitting&&queueDrag){event.preventDefault();event.dataTransfer.dropEffect='move';}};
+   row.ondrop=event=>{if(!managesQueue()||submitting)return;event.preventDefault();const intent=queueDrag;queueDrag=null;if(!intent||event.dataTransfer.getData('text/plain')!==intent.itemId)return;dropItem(intent,item.id);
+   };list.append(row);
+  }
+ }
+ function cancelPositionRead(){const job=positionRead;positionRead=null;if(job){clearTimeout(job.timer);job.cancel?.();}}
+ function validPositionRead(job){return job===positionRead&&job.generation===generation&&validPlayer(job.epoch,job.key)&&dialog.open&&controls()&&!submitting&&job.revision===snapshot?.revision&&job.playback===signature()&&job.provider===(snapshot?.current?.type==='music'?audio:player)&&(snapshot?.current?.type==='music'?audio?.readyState>=1:ready&&!nativeVideo&&activeVideo());}
+ function publishReason(){
+  if(!snapshot?.current)return '目前沒有可同步的媒體。';if(submitting||positionRead)return '正在處理媒體操作，請稍候。';
+  if(snapshot.current.type==='music')return audio&&audio.readyState>=1?'':'歌曲尚未準備好，暫時無法同步進度。';
+  if(nativeVideo)return '原生影片播放器無法讀取播放進度，暫時無法同步全桌。';return activeVideo()&&ready&&typeof player?.getCurrentTime==='function'?'':'影片尚未準備好，暫時無法同步進度。';
+ }
+ function updatePublishControl(){if(positionRead&&!validPositionRead(positionRead))cancelPositionRead();const button=q('#mediaPublishPosition'),reason=publishReason();button.hidden=!controls();button.disabled=!controls()||!!reason;q('#mediaPublishHint').textContent=reason||'先調整自己的原生播放進度，再按此按鈕同步全桌。';}
+ async function publishPosition(){
+  if(!dialog.open||document.hidden||!controls()||publishReason())return false;const job={generation,epoch:playerEpoch,key:currentKey(),revision:snapshot.revision,playback:signature(),provider:snapshot.current.type==='music'?audio:player,timer:null};positionRead=job;updatePublishControl();
+  try{const value=await new Promise((resolve,reject)=>{job.cancel=()=>resolve(undefined);job.timer=setTimeout(()=>{job.timedOut=true;resolve(undefined);},2000);try{Promise.resolve(snapshot.current.type==='music'?job.provider.currentTime:job.provider.getCurrentTime()).then(resolve,reject);}catch(error){reject(error);}});if(!validPositionRead(job))return false;
+   if(job.timedOut){status('未能讀取播放器進度，請重試。',true);return false;}if(typeof value!=='number'||!Number.isFinite(value)||value<0||value>maxPosition||duration()&&value>duration()){status('播放器尚未提供有效播放進度，請稍後重試。',true);return false;}
+   clearTimeout(job.timer);positionRead=null;return await command('seek',{positionSec:value});
+  }catch{if(validPositionRead(job))status('未能讀取播放器進度，請重試。',true);return false;}finally{clearTimeout(job.timer);if(positionRead===job){positionRead=null;updatePublishControl();}}
+ }
+ function updateTimeline(){if(snapshot){const length=duration(),now=position();q('#mediaClock').textContent=format(now)+' / '+(length?format(length):'時長待確認');}updatePublishControl();}
+ function render(){
+  opener.hidden=!room;const item=snapshot?.current,video=item?.type==='video',music=item?.type==='music',can=controls();opener.title=item?'媒體 · '+item.title:'媒體';dialog.classList.toggle('media-video-active',activeVideo());
+  overflowText(q('#mediaCurrentTitle'),item?.title||'尚未播放');overflowText(q('#mediaCurrentMeta'),item?(video?'YouTube影片':'歌曲')+' · '+item.requestedByName+' 點播':'');
+  q('#mediaEmpty').hidden=!!item;q('#mediaVideoConsent').hidden=!video||activeVideo();q('#mediaPlayer').hidden=!activeVideo();q('#mediaMusicNative').hidden=!music;q('#mediaVideoExit').hidden=!video||!activeVideo();q('#mediaVideoJoin').disabled=!video||submitting;const joinLabel=consents.get(consentKey)?'重新加入觀看':'接受並觀看影片';if(q('#mediaVideoJoin').getAttribute('aria-label')!==joinLabel)iconButton(q('#mediaVideoJoin'),'video',joinLabel);q('#mediaNativeVideo').hidden=!video||!activeVideo()||!videoFallback||nativeVideo;
+  for(const id of ['#mediaPlay','#mediaPause','#mediaSkip','#mediaStop'])q(id).disabled=!snapshot||!can||submitting||!item&&(!['#mediaPlay','#mediaSkip'].includes(id)||!snapshot?.queue?.length);q('#mediaPlay').disabled||=snapshot?.playback.state==='playing'&&!!item;q('#mediaPause').disabled||=snapshot?.playback.state!=='playing';
+  for(const id of ['#mediaMusicAdd','#mediaVideoAdd'])q(id).disabled=!snapshot||submitting;q('#mediaTrack').disabled=!room||submitting;q('#mediaUrl').disabled=submitting;
+  q('#mediaResume').disabled=!item||video&&!activeVideo();q('#mediaAlign').disabled=!item||video&&!activeVideo();q('#mediaPermission').textContent=managesQueue()?'你可以拖曳清單、用上下鍵排序，並控制全桌播放。':'所有人都可點播；全桌播放與排序由房主或管理者操作。';q('#mediaQueueEmpty').hidden=!!snapshot?.queue?.length;queueList();updateTimeline();settings();queueLayout();
+ }
+ function pixels(node,name,fallback=0){let value;try{value=parseFloat(window.getComputedStyle?.(node)?.[name]);}catch{}return Number.isFinite(value)?value:fallback;}
+ function displayed(node){if(node.hidden||node.id==='mediaPlaybackStatus'&&!node.textContent)return false;try{return window.getComputedStyle?.(node)?.display!=='none';}catch{return true;}}
+ function measured(node,fallback){return !displayed(node)?0:typeof window.getComputedStyle==='function'?node.getBoundingClientRect().height:fallback;}
+ function layout(next=(drag||sizeDrag)?windowPosition:positionPreference){
+  if(!dialog.open)return;const width=Math.min(Math.max(280,sizePreference?.width||900),Math.max(0,window.innerWidth-16)),narrow=width<760;dialog.style.width=width+'px';dialog.classList.toggle('media-narrow',narrow);
+  const chrome=measured(q('#mediaWindowBar'),72)+measured(q('#mediaStatus'),q('#mediaStatus').textContent?24:0)+pixels(q('#mediaBody'),'paddingTop',12)+pixels(q('#mediaBody'),'paddingBottom',12)+2;
+  const sections=[['#mediaCurrentInfo',66],['#mediaTimeline',24],['#mediaControlRow',92],['#mediaPlaybackStatus',44]].map(([selector,fallback])=>[q(selector),fallback]).filter(([node])=>displayed(node));
+  const primary=sections.reduce((height,[node,fallback])=>height+measured(node,fallback),0)+pixels(q('#mediaPrimary'),'rowGap',8)*sections.length;
+  const currentInfo=measured(q('#mediaCurrentInfo'),66),availableHeight=Math.max(0,window.innerHeight-16),min=chrome+primary+210,defaultHeight=activeVideo()?availableHeight:620,height=Math.min(availableHeight,Math.max(min,sizePreference?.height||defaultHeight));dialog.style.height=height+'px';windowSize={width,height};dialog.style.setProperty('--media-player-height',Math.max(210,height-chrome-primary)+'px');dialog.classList.toggle('media-too-small',width<240||height-chrome-currentInfo<210);
+  const box=dialog.getBoundingClientRect(),maxLeft=Math.max(8,window.innerWidth-box.width-8),maxTop=Math.max(8,window.innerHeight-box.height-8);windowPosition={left:Math.max(8,Math.min(maxLeft,next?.left??maxLeft)),top:Math.max(8,Math.min(maxTop,next?.top??maxTop))};dialog.style.left=windowPosition.left+'px';dialog.style.top=windowPosition.top+'px';const sizeLabel=Math.floor(box.width)+' × '+Math.floor(box.height);q('#mediaSizeLabel').textContent=sizeLabel;for(const edge of resizeEdges)edge.setAttribute('aria-valuetext',sizeLabel);
+ }
+ function queueLayout(){if(!dialog.open&&!playlist.open||layoutFrame!==null)return;const run=()=>{layoutFrame=null;if(dialog.open)layout();if(playlist.open)layoutPlaylist();if(activeVideo()&&(player||nativeVideo)&&!isVisibleEnough())exitVideo('影片空間不足，請放大視窗後重新加入。');};if(typeof window.requestAnimationFrame==='function')layoutFrame=window.requestAnimationFrame(run);else run();}
+ function coveredVideo(){if(!playlist.open||!activeVideo())return false;const a=playlist.getBoundingClientRect(),b=q('#mediaPlayer').getBoundingClientRect();return Math.min(a.right,b.right)>Math.max(a.left,b.left)&&Math.min(a.bottom,b.bottom)>Math.max(a.top,b.top);}
+ function protectPlaylistVideo(){if(coveredVideo())exitVideo('清單暫時遮住自己的影片；關閉清單後可按影片圖示重新加入觀看。');}
+ function layoutPlaylist(next=playlistPosition){
+  if(!playlist.open)return;const width=Math.min(840,Math.max(0,window.innerWidth-16)),roomHeight=Math.max(0,window.innerHeight-16);playlist.style.width=width+'px';playlist.style.height='auto';const chrome=measured(q('#mediaPlaylistBar'),72)+measured(q('#mediaPlaylistStatus'),q('#mediaPlaylistStatus').textContent?24:0)+2,content=q('#mediaPlaylistBody').scrollHeight||220+(snapshot?.queue?.length||0)*58;let height=Math.min(560,roomHeight,chrome+content),left=8,top=8;
+  if(next){left=next.left;top=next.top;}else if(dialog.open){const main=dialog.getBoundingClientRect();top=main.top;if(main.left>=width+16)left=main.left-width-8;else if(main.right+width+16<=window.innerWidth)left=main.right+8;else if(activeVideo()){const video=q('#mediaPlayer').getBoundingClientRect(),above=video.top-16,below=window.innerHeight-video.bottom-16;if(Math.max(above,below)>=160){height=Math.min(height,Math.max(above,below));top=above>=below?8:video.bottom+8;}}}
+  playlist.style.width=width+'px';playlist.style.height=height+'px';playlist.style.left=Math.max(8,Math.min(Math.max(8,window.innerWidth-width-8),left))+'px';playlist.style.top=Math.max(8,Math.min(Math.max(8,window.innerHeight-height-8),top))+'px';protectPlaylistVideo();
+ }
+ function cancelPlaylistDrag(){const moving=playlistDrag;playlistDrag=null;if(moving)releaseCapture(q('#mediaPlaylistBar'),moving.id);}
+ function closePlaylist(restoreFocus=true){cancelQueuePointer();queueDrag=null;cancelPlaylistDrag();if(playlist.open)playlist.close();q('#mediaPlaylistOpen').setAttribute('aria-expanded','false');if(restoreFocus&&dialog.open)q('#mediaPlaylistOpen').focus();focusedWindow='player';}
+ function openPlaylist(){if(!room)return;focusedWindow='playlist';if(!playlist.open)playlist.show();q('#mediaPlaylistOpen').setAttribute('aria-expanded','true');layoutPlaylist();q('#mediaPlaylistClose').focus();library();}
+ function persistPosition(){positionPreference={...windowPosition};try{localStorage.setItem(positionKey,JSON.stringify(positionPreference));}catch{}}
+ function persistSize(){sizePreference={...windowSize};try{localStorage.setItem(sizeKey,JSON.stringify(sizePreference));}catch{}}
+ function resetPosition(){positionPreference=null;try{localStorage.removeItem(positionKey);}catch{}layout();}
+ function resetSize(){sizePreference=null;try{localStorage.removeItem(sizeKey);}catch{}layout();}
+ const bar=q('#mediaWindowBar');
+ function isControl(target){for(let node=target;node&&node!==bar;node=node.parentElement||node.parentNode)if(['BUTTON','A','INPUT','SELECT','TEXTAREA'].includes(node.tagName))return true;return false;}
+ bar.onpointerdown=event=>{if(!dialog.open||drag||sizeDrag||queuePointer||playlistDrag||event.isPrimary===false||event.button!==0||isControl(event.target))return;event.preventDefault();layout();drag={id:event.pointerId,x:event.clientX,y:event.clientY,...windowPosition};bar.setPointerCapture?.(event.pointerId);};bar.onpointermove=event=>{if(drag&&event.pointerId===drag.id)layout({left:drag.left+event.clientX-drag.x,top:drag.top+event.clientY-drag.y});};
+ function endDrag(event,cancel=false){const moving=drag;if(!moving||event.pointerId!==moving.id)return;drag=null;releaseCapture(bar,moving.id);if(cancel)layout({left:moving.left,top:moving.top});else persistPosition();}bar.onpointerup=endDrag;bar.onpointercancel=event=>endDrag(event,true);bar.onlostpointercapture=event=>endDrag(event,true);
+ bar.onkeydown=event=>{if(isControl(event.target))return;const move={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(event.key==='Home'){event.preventDefault();resetPosition();return;}if(!move)return;event.preventDefault();layout();const step=event.shiftKey?50:20;layout({left:windowPosition.left+move[0]*step,top:windowPosition.top+move[1]*step});persistPosition();};
+ function resizeWindow(pointer,dx,dy){
+  const edge=pointer.edge,maxWidth=edge.includes('w')?pointer.left+pointer.width-8:window.innerWidth-pointer.left-8,maxHeight=edge.includes('n')?pointer.top+pointer.height-8:window.innerHeight-pointer.top-8;
+  sizePreference={width:Math.min(maxWidth,pointer.width+(edge.includes('e')?dx:edge.includes('w')?-dx:0)),height:Math.min(maxHeight,pointer.height+(edge.includes('s')?dy:edge.includes('n')?-dy:0))};layout({left:pointer.left,top:pointer.top});
+  layout({left:edge.includes('w')?pointer.left+pointer.width-windowSize.width:pointer.left,top:edge.includes('n')?pointer.top+pointer.height-windowSize.height:pointer.top});
+ }
+ function endResize(event,cancel=false){const pointer=sizeDrag;if(!pointer||event.pointerId!==pointer.id)return;sizeDrag=null;releaseCapture(pointer.node,pointer.id);dialog.classList.remove('media-resizing');if(cancel){sizePreference=pointer.preference;layout({left:pointer.left,top:pointer.top});}else{persistSize();persistPosition();}}
+ for(const handle of resizeEdges){
+  handle.onpointerdown=event=>{if(!dialog.open||drag||sizeDrag||queuePointer||playlistDrag||event.isPrimary===false||event.button!==0)return;event.preventDefault();layout();const box=dialog.getBoundingClientRect();sizeDrag={id:event.pointerId,node:handle,edge:handle.dataset.edge,x:event.clientX,y:event.clientY,left:box.left,top:box.top,width:box.width,height:box.height,preference:sizePreference?{...sizePreference}:null};handle.setPointerCapture?.(event.pointerId);dialog.classList.add('media-resizing');};
+  handle.onpointermove=event=>{if(sizeDrag&&event.pointerId===sizeDrag.id)resizeWindow(sizeDrag,event.clientX-sizeDrag.x,event.clientY-sizeDrag.y);};handle.onpointerup=endResize;handle.onpointercancel=event=>endResize(event,true);handle.onlostpointercapture=event=>endResize(event,true);
+  handle.onkeydown=event=>{if(!dialog.open)return;const move={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(event.key==='Home'){event.preventDefault();resetSize();return;}const edge=handle.dataset.edge;if(!move||edge.length===1&&(move[0]&&!/[ew]/.test(edge)||move[1]&&!/[ns]/.test(edge)))return;event.preventDefault();const box=dialog.getBoundingClientRect(),step=event.shiftKey?50:20;resizeWindow({left:box.left,top:box.top,width:box.width,height:box.height,edge},move[0]*step,move[1]*step);persistSize();persistPosition();};
+ }q('#mediaResetPosition').onclick=resetPosition;q('#mediaResetSize').onclick=resetSize;
+ const playlistBar=q('#mediaPlaylistBar');
+ playlistBar.onpointerdown=event=>{if(!playlist.open||playlistDrag||drag||sizeDrag||queuePointer||event.isPrimary===false||event.button!==0||event.target?.closest('button,a,input,select'))return;event.preventDefault();playlistBar.focus();layoutPlaylist();const box=playlist.getBoundingClientRect();playlistDrag={id:event.pointerId,x:event.clientX,y:event.clientY,left:box.left,top:box.top};playlistBar.setPointerCapture?.(event.pointerId);};
+ playlistBar.onpointermove=event=>{if(playlistDrag&&event.pointerId===playlistDrag.id)layoutPlaylist({left:playlistDrag.left+event.clientX-playlistDrag.x,top:playlistDrag.top+event.clientY-playlistDrag.y});};
+ function endPlaylistDrag(event,cancel=false){const moving=playlistDrag;if(!moving||event.pointerId!==moving.id)return;playlistDrag=null;releaseCapture(playlistBar,moving.id);if(cancel)layoutPlaylist({left:moving.left,top:moving.top});else{const box=playlist.getBoundingClientRect();playlistPosition={left:box.left,top:box.top};}}
+ playlistBar.onpointerup=endPlaylistDrag;playlistBar.onpointercancel=event=>endPlaylistDrag(event,true);playlistBar.onlostpointercapture=event=>endPlaylistDrag(event,true);
+ playlistBar.onkeydown=event=>{if(!playlist.open||event.target?.closest('button,a,input,select'))return;const delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(event.key==='Home'){event.preventDefault();playlistPosition=null;layoutPlaylist();return;}if(!delta)return;event.preventDefault();const box=playlist.getBoundingClientRect(),step=event.shiftKey?50:20;layoutPlaylist({left:box.left+delta[0]*step,top:box.top+delta[1]*step});const next=playlist.getBoundingClientRect();playlistPosition={left:next.left,top:next.top};};
+ for(const [node,name] of [[dialog,'player'],[playlist,'playlist']]){node.addEventListener('focusin',()=>focusedWindow=name);node.addEventListener('pointerdown',()=>focusedWindow=name);}
+ async function open(){if(!room||window.RaceLesson)return;unlocked=true;openWindow();await Promise.all([requestSnapshot({force:true}),library()]);if(dialog.open){applyPlayback(true);q('#mediaClose').focus();}}
+ function clearContext(){generation++;librarySequence++;for(const controller of requests)controller.abort();requests.clear();submitting=false;retryOperation=null;automaticSeen.clear();automaticPending.length=0;pendingConsent=false;promptKey=null;consentKey=null;videoWanted=false;permissionShape=null;permissionOverride=null;if(consent.open)consent.close();close();playlistPosition=null;stopPlayers();snapshot=null;marker=null;acceptedSequence=0;status('');status('',true);}
+ function update(next){
+  if(window.RaceLesson||!next?.code){stop();return;}const incoming=next.media||null,changed=room?.code!==next.code||room?.me!==next.me||incoming&&marker&&incoming.roomInstanceId!==marker.roomInstanceId;
+  if(changed){clearContext();room=next;marker=incoming;opener.hidden=false;requestSnapshot();}
+  else{room=next;if(incoming&&(!marker||incoming.revision>=marker.revision))marker=incoming;if(!snapshot||markerKey(marker)!==markerKey(snapshot))requestSnapshot();}
+  const incomingPermissions=next.permissions?JSON.stringify([next.permissions.role,!!next.permissions.canManageMedia]):null;if(incomingPermissions!==permissionShape){permissionShape=incomingPermissions;permissionOverride=next.permissions?!!next.permissions.canManageMedia:null;}
+  render();maybeConsent();
+ }
+ function stop(){clearContext();room=null;opener.hidden=true;}
+ function disconnected(){stopPlayers();close();snapshot=null;render();}
+ opener.onclick=open;q('#mediaClose').onclick=()=>{close();opener.focus();};dialog.addEventListener('close',()=>{cancelSnapshot();closePlaylist(false);cancelWindowInteractions();if(interval!==null)clearInterval(interval);interval=null;if(snapshot?.current?.type==='video')exitVideo('');opener.setAttribute('aria-expanded','false');});q('#mediaPlaylistOpen').onclick=openPlaylist;q('#mediaPlaylistClose').onclick=()=>closePlaylist();playlist.addEventListener('close',()=>{cancelQueuePointer();queueDrag=null;cancelPlaylistDrag();q('#mediaPlaylistOpen').setAttribute('aria-expanded','false');});
+ cq('#mediaConsentAccept').onclick=()=>chooseVideo(true);cq('#mediaConsentDecline').onclick=()=>chooseVideo(false);consent.addEventListener('cancel',event=>{event.preventDefault();chooseVideo(false);});
+ q('#mediaVideoJoin').onclick=()=>{if(!snapshot?.current||snapshot.current.type!=='video')return;chooseVideo(true);};q('#mediaVideoExit').onclick=()=>exitVideo();
+ q('#mediaResume').onclick=()=>{unlocked=true;window.AudioSettings?.set('music',{enabled:true},{gesture:true});if(audio)alignAudio(false);if(activeVideo()&&player&&ready)try{player.playVideo();}catch{status('請直接按YouTube播放器的播放按鈕。',true);}};q('#mediaAlign').onclick=()=>{unlocked=true;applyPlayback(true);};
+ q('#mediaNativeVideo').onclick=()=>{if(!activeVideo()||!isVisibleEnough())return;playerEpoch++;destroyVideo();apiCancel?.();nativeVideo=true;const iframe=videoFrame(snapshot.current.videoId,false);q('#mediaPlayer').replaceChildren(iframe);observeFrame(iframe,playerEpoch,currentKey());status('使用原生播放器；播放、暫停和進度只影響自己。',true);render();};
+ q('#mediaSound').onclick=()=>{const music=window.AudioSettings?.get?.().music;if(music)window.AudioSettings.set('music',{enabled:!music.enabled},{gesture:true});};q('#mediaVolume').oninput=()=>window.AudioSettings?.set('music',{volume:Number(q('#mediaVolume').value)/100},{gesture:true});
+ for(const [selector,action] of [['#mediaPlay','play'],['#mediaPause','pause'],['#mediaSkip','skip'],['#mediaStop','stop']])q(selector).onclick=()=>command(action);
+ q('#mediaPublishPosition').onclick=publishPosition;
+ function selectUpload(){if(q('#mediaTrack').value!==uploadOption)return false;q('#mediaTrack').value='';window.open('/collection?section=music','_blank','noopener');return true;}
+ q('#mediaTrack').onchange=selectUpload;q('#mediaMusicForm').onsubmit=async event=>{event.preventDefault();if(selectUpload())return;const trackId=q('#mediaTrack').value;if(trackId)await command('enqueue',{type:'music',trackId});};q('#mediaVideoForm').onsubmit=async event=>{event.preventDefault();const url=q('#mediaUrl').value.trim();if(url&&await command('enqueue',{type:'video',url}))q('#mediaUrl').value='';};q('#mediaLibraryRefresh').onclick=library;
+ window.AudioSettings?.subscribe?.((value,{gesture=false}={})=>{settings(value);if(audio&&!value.music.enabled)cancelAudioProof(audioTransitions.get(audio));if(gesture)unlocked=true;if(audio&&audioPreviewGesture===audio){if(document.hidden||snapshot?.playback.state!=='playing'||!value.music.enabled)pauseAudio(audio);return;}alignAudio();});
+ window.addEventListener('resize',queueLayout);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelWindowInteractions();cancelPlaylistDrag();if(audio){const record=audioTransitions.get(audio);if(!audio.paused||audio._mediaPlayPending&&record?.nativePaused!==true&&!record?.proof?.cancelled)interruptedAudio={clip:audio,key:currentKey(),token:playerEpoch,intent:record?.intent};cancelAudioProof(record);if(!audio.paused&&record)correctAudioPause(audio,record,playerEpoch,currentKey(),{corrections:0,closed:false},'visibility');else pauseAudio(audio);}if(snapshot?.current?.type==='video')exitVideo('');}else{resumeInterruptedAudio();maybeConsent();if(dialog.open||playlist.open)queueLayout();}});window.addEventListener('pagehide',stop);
+ document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog:modal'))return;if(playlist.open&&(playlist.contains(document.activeElement)||focusedWindow==='playlist')){event.preventDefault();closePlaylist();}else if(dialog.open){event.preventDefault();close();opener.focus();}});
+ if(typeof ResizeObserver==='function'){layoutObserver=new ResizeObserver(queueLayout);for(const selector of ['#mediaWindowBar','#mediaStatus','#mediaCurrentInfo','#mediaTimeline','#mediaControlRow','#mediaPlaybackStatus'])layoutObserver.observe(q(selector));}
+ if(typeof MutationObserver==='function')new MutationObserver(records=>{if(dialog.open&&records.some(record=>record.target!==dialog&&record.target!==playlist&&record.target!==consent&&record.target.tagName==='DIALOG'&&record.target.open))close();maybeConsent();}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
+ window.TableMedia={mount(target){target.append(opener);},update,stop,disconnected,open,closeForDialog(other){if(other!==dialog&&other!==playlist&&other!==consent)close();}};
+})();

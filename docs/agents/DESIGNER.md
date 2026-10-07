@@ -1,5 +1,17 @@
 # 設計師角色記憶
 
+2026-10-07正式v1.9.0媒體補充：影片主區使用可用高度，底列桌機compact而手機／coarse保操作尺寸，toolbar保持；本機原生控制與「同步我的播放進度」分清，只有有權席位可發布全桌。移除本站外開入口／共用seek不等移除YouTube原生branding、letterbox或所有控制；重要狀態與clock保持可見。最新規範／scope見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
+
+2026-10-07補充：語意不同的播放操作使用三角／裝置圖示區分，桌機同列按鈕以輕分隔分組；角色表情圖卡保持方形，省掉可見名稱並用共用提示。美化研究優先收斂字级／keylines／表面層次，詳 [研究評估](../research/UI-POLISH-DES13-ASSESSMENT.md)。
+
+2026-10-07媒體設計準則：操作盡量只用圖示與hover／focus提示，共用GameUI registry；中文可讀名稱與keyboard／touch操作保留，重要資訊不能因減字隱藏。清單與點播放獨立較寬視窗，媒體entry單行、小gap、左把手／右移除；主播放器保留影片空間，從邊緣縮放。音樂下拉第一個文字選項「上傳歌曲」屬導航，不能作為歌曲送出。長名稱只在hover跑馬，減少動態或背景時靜止；字體放大時用共用控制尺寸token避免遮擋。見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)，全站圖示化按後續功能逐步套用。
+
+2026-10-07：單一內容群組的置中要同時定義 items 與 content 分佈；畫猜未公開題卡的 `place-items:center` 仍承接正面 `align-content:space-between`，不能用逐glyph像素偏移修正。與程式方討論後採全頁共用 primitives、独立symbol槽及不帶help圓圈的未知問號SVG；正面題卡、禮物圖文卡與其他多區內容保留原布局。小D徽章不等於44px按鈕，文字／圖示槽也不替換人物表情或emoji內容。
+
+本輪唯讀盘點20HTML／23CSS／46JS及實際提案、質疑、收斂見 [共用對齊規格](../specs/SHARED-UI-ALIGNMENT.md)。送禮fallback沒有同類space-between衝突，但布局utility必須維持明確hidden；基礎元件的幾何槽與字形ink／素材透明邊界分開驗。此筆是已採用契約與source盤點，程式及背景畫面驗收由主agent記錄；不宣稱本輪已上線，studio小尺寸控制與跨平台字型仍待驗。
+
+同日後續：主agent背景Chrome發現history全域 `header span{margin-left:auto}` 直接污染設定close的symbol；18px是computed margin，圖示中心因此右偏9px。symbol／button-icon／button-label採 `margin:0;padding:0` 中性預設，间距交給parent gap與控制padding，不能全局清掉所有span或內容布局。重載後全20入口close中心0，題卡正常桌機／390手機中心0，D仍21×21且Range偏差(0,-0.5px)，200%文字close88×88中心與四個象限內部採樣命中；完整來源及範圍見同一規格。這是入口與特定元件驗證，不是全玩法／壞圖／所有emoji驗收；/rules實際導向/race教學，字體及viewport已還原，未在此宣稱正式部署。
+
 2026-10-06：可捲動工作區不應使用固定560px上限或估算扣420px，否則高視窗仍出現捲軸。送禮桌機改為flex扣實際導覽列、grid保留實際玩家列，再分配剩餘高度；窄高差異測試須檢查操作區不與玩家列重疊。高視窗、八席與手機證據見 [高度驗收](../GIFT-VIEWPORT-HEIGHT-PROGRESS.md)。
 
 2026-10-06：重要操作區與輸入框需要最小間距，不可只依靠 flex 的 `margin-top:auto`；視窗較矮時剩餘空間會變成0。送禮側欄已用共用16px spacing token補操作區後的 margin，並在矮桌機、一般桌機及手機量測，見 [實際驗收](../GIFT-WAITING-SPACING-PROGRESS.md)。

@@ -1,5 +1,7 @@
 # 音效師角色記憶
 
+2026-10-07正式v1.5.2：表情音效的新鮮度改比較serverNow與event.at；連線間隔維持本機時間。五款遊戲及大廳都傳遞serverNow，±2／6／60秒仍播新事件且去重，過期／未來音、hidden／mute／reconnect仍抑制。本次無新素材或音量規則，沒有真人喇叭聽感證據。原PR43 v1.4.1双平台各808，正式整合版各863、公開clock及前端資源通過；詳 [審查修正](../PR43-PRODUCTION-FIX-PROGRESS.md)。
+
 2026-10-06正式實作追加：v1.3.0第一批已接畫猜本人猜中／輪次及雷霆骰聲／公開動作，共用遊戲2段／所有4段cap、250ms低優先間隔、1秒新cue載入timeout；首載／hidden／重連不補播。音效師產生7個短WAV（2Kenney CC0改作＋5固定seed原創），首尾fade及格式／hash／波形已查，真人聽感待評估。Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。Chrome實際playing與靜音零載入通過；受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。結果見 [最新實作進度](../GAME-SOUNDS-PROGRESS.md)，逐檔 [採用紀錄](../research/SOUND-ASSET-SOURCES.md)。以下研究階段的「未整合／子上限未實作」被這筆取代，其他分類音量／保留聲道仍未做。
 
 更新：2026-10-06。本輪為音效研究與設計提案；未下載、試聽、採購或整合新素材，未改程式。先讀 [記憶索引](README.md)、[共用決策](MEMORY-LEDGER.md)、[記憶協議](MEMORY-PROTOCOL.md)，再讀 [遊戲音效計畫](../specs/GAME-SOUND-PLAN.md)與 [素材來源研究](../research/SOUND-ASSET-SOURCES.md)。角色是可續讀的責任，不綁定目前 agent thread。

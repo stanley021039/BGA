@@ -8,8 +8,14 @@ const { validateQuestion } = require('../community/store');
 const { audioType, MAX_BYTES } = require('../music/store');
 const { inspectExpressionSound } = require('../profiles/sounds');
 const { expressionLabels } = require('../profiles/appearance');
+const { imageOf, MAX_BYTES: MAX_IMAGE_BYTES } = require('../profiles/uploads');
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function validBundleLogical(logical) {
+  if (typeof logical !== 'string') return false;
+  const avatar = logical.startsWith('community/avatars/') && logical.endsWith('.png') && uuid.test(logical.slice('community/avatars/'.length, -4));
+  return logical === 'db/afterhours.sqlite' || /^music\/[0-9a-f-]{36}\.(mp3|ogg|m4a)$/i.test(logical) || logical === 'community/community.json' || logical === 'community/github-backfill.json' || avatar || /^history\/[0-9a-f-]{36}\.(jsonl|meta\.json)$/i.test(logical);
+}
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 function fail(code, message) { const error = Error(message); error.code = code; throw error; }
 function absolute(value, label) {
@@ -146,6 +152,63 @@ function listFlat(dir, allowed, ignored = []) {
   }
   return names.filter(n => !ignored.includes(n));
 }
+function record(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
+function exactKeys(value, keys) { return record(value) && Object.keys(value).sort().join('|') === [...keys].sort().join('|'); }
+function timestamp(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value; }
+function communityFiles(dir) {
+  noLinks(dir);
+  if (!fs.statSync(dir).isDirectory()) fail('INVALID_DATA', 'Data path must be a directory');
+  const names = fs.readdirSync(dir).sort();
+  for (const name of names) {
+    const file = path.join(dir, name); noLinks(file);
+    if (name === 'avatars') {
+      if (!fs.lstatSync(file).isDirectory()) fail('UNSAFE_PATH', 'Legacy avatar data must be a regular directory');
+    } else {
+      if (!fs.lstatSync(file).isFile()) fail('UNSAFE_PATH', 'Unexpected directory or special file in community data');
+      if (!['community.json', 'github-backfill.json', '.afterhours-data-lock'].includes(name)) fail('UNEXPECTED_FILE', 'Unexpected community file; inspect it before transfer');
+    }
+  }
+  return names.filter(name => name !== '.afterhours-data-lock');
+}
+function legacyCommunity(dir, names, data, files) {
+  const avatars = data && Object.hasOwn(data, 'avatars') ? data.avatars : [];
+  if (!Array.isArray(avatars) || avatars.length > 5000) fail('INVALID_COMMUNITY', 'Legacy avatar metadata is invalid');
+  const avatarNames = names.includes('avatars') ? listFlat(path.join(dir, 'avatars'), name => name.endsWith('.png') && uuid.test(name.slice(0, -4))) : [];
+  const expected = new Set(), ids = new Set();
+  for (const avatar of avatars) {
+    if (!exactKeys(avatar, ['id', 'name', 'url', 'at']) || !uuid.test(avatar.id) || ids.has(avatar.id.toLowerCase()) || typeof avatar.name !== 'string' || !avatar.name.trim() || avatar.name.length > 256 || !timestamp(avatar.at)) fail('INVALID_COMMUNITY', 'Legacy avatar metadata is invalid');
+    const name = avatar.id + '.png', file = path.join(dir, 'avatars', name);
+    if (avatar.url !== '/uploads/avatars/' + name) fail('BROKEN_REFERENCE', 'A legacy avatar references an unexpected image path');
+    ids.add(avatar.id.toLowerCase()); expected.add(name);
+    if (!avatarNames.includes(name)) fail('BROKEN_REFERENCE', 'A legacy avatar image is missing');
+    const size = fs.statSync(file).size;
+    if (size < 33 || size > MAX_IMAGE_BYTES) fail('INVALID_COMMUNITY', 'A legacy avatar image is empty or oversized');
+    const bytes = fs.readFileSync(file);
+    // Use the same image signature parser as uploads, with this legacy format
+    // narrowed to PNG and a complete IHDR. Never decode or execute image data.
+    let image; try { image = imageOf({ base64: bytes.toString('base64'), mime: 'image/png' }); } catch { fail('INVALID_COMMUNITY', 'A legacy avatar image has an invalid PNG signature'); }
+    if (image.mime !== 'image/png' || bytes.readUInt32BE(8) !== 13) fail('INVALID_COMMUNITY', 'A legacy avatar image has an invalid PNG header');
+    files.push({ logical: 'community/avatars/' + name, source: file });
+  }
+  if (avatarNames.some(name => !expected.has(name))) fail('UNEXPECTED_FILE', 'Legacy avatar directory contains an unlisted image');
+  let backfillEntries = 0;
+  if (names.includes('github-backfill.json')) {
+    const file = path.join(dir, 'github-backfill.json'), backfill = readJson(file, 5 * 1024 * 1024);
+    if (!record(backfill) || Object.keys(backfill).length > 1000) fail('INVALID_COMMUNITY', 'Legacy GitHub backfill data is invalid');
+    const issues = new Set((data?.issues || []).map(issue => issue.id)), numbers = new Set();
+    for (const [id, entry] of Object.entries(backfill)) {
+      if (!uuid.test(id) || !issues.has(id)) fail('BROKEN_REFERENCE', 'Legacy GitHub backfill references a missing issue');
+      // Only the observed legacy receipt contract is accepted. Unknown comment
+      // receipt shapes need explicit support; they are never silently discarded.
+      if (!exactKeys(entry, ['number', 'url', 'comments', 'syncedAt']) || !Number.isSafeInteger(entry.number) || entry.number < 1 || numbers.has(entry.number) || entry.url !== `https://github.com/stanley021039/BGA/issues/${entry.number}` || !record(entry.comments) || Object.keys(entry.comments).length || !timestamp(entry.syncedAt)) fail('INVALID_COMMUNITY', 'Legacy GitHub backfill receipt is invalid or unsupported');
+      numbers.add(entry.number); backfillEntries++;
+    }
+    files.push({ logical: 'community/github-backfill.json', source: file });
+  }
+  // Omit the extension for old bundles without extra files, retaining their
+  // authenticated summary shape exactly. Both extra formats remain raw bytes.
+  return avatars.length || names.includes('github-backfill.json') ? { avatarFiles: avatars.length, githubBackfillEntries: backfillEntries } : undefined;
+}
 function validateData(p, { acknowledgeInterruptedMatches = false } = {}) {
   const database = validateDatabase(p.dbFile), files = [{ logical: 'db/afterhours.sqlite', source: p.dbFile }];
   const musicNames = listFlat(p.musicDir, n => /^[0-9a-f-]{36}\.(mp3|ogg|m4a)$/i.test(n), ['.afterhours-data-lock']);
@@ -159,10 +222,10 @@ function validateData(p, { acknowledgeInterruptedMatches = false } = {}) {
   }
   // Orphans are preserved rather than silently discarding previously uploaded bytes.
   for (const name of musicNames) files.push({ logical: 'music/' + name, source: path.join(p.musicDir, name) });
-  const communityNames = listFlat(p.communityDir, n => n === 'community.json', ['.afterhours-data-lock']);
-  let questionCount = 0;
-  if (communityNames.length) {
-    const file = path.join(p.communityDir, 'community.json'), data = readJson(file);
+  const communityNames = communityFiles(p.communityDir);
+  let questionCount = 0, communityData;
+  if (communityNames.includes('community.json')) {
+    const file = path.join(p.communityDir, 'community.json'), data = communityData = readJson(file);
     if (!Array.isArray(data.issues) || !Array.isArray(data.questions)) fail('INVALID_COMMUNITY', 'Community collections are invalid');
     const ids = new Set();
     for (const issue of data.issues) {
@@ -173,6 +236,8 @@ function validateData(p, { acknowledgeInterruptedMatches = false } = {}) {
     for (const q of data.questions) { try { validateQuestion(q); } catch { fail('INVALID_COMMUNITY', 'A community question is invalid'); } }
     questionCount = data.questions.length; files.push({ logical: 'community/community.json', source: file });
   }
+  if (!communityData && communityNames.length) fail('BROKEN_REFERENCE', 'Legacy community files require community.json metadata');
+  const legacy = legacyCommunity(p.communityDir, communityNames, communityData, files);
   const historyNames = listFlat(p.historyDir, n => /^[0-9a-f-]{36}\.(jsonl|meta\.json)$/i.test(n), ['.lock', '.afterhours-data-lock']);
   const metas = new Map(), logs = new Set(), playing = [], interruptedStates = new Map();
   for (const name of historyNames.filter(n => n.endsWith('.meta.json'))) {
@@ -209,6 +274,7 @@ function validateData(p, { acknowledgeInterruptedMatches = false } = {}) {
   const summary = { database: { schemaVersion: database.schemaVersion, sqliteVersion: database.sqliteVersion, tableCounts: database.tableCounts, blobDigests: database.blobDigests, accountsSha256: database.accountsSha256, ...(database.marketImagesSha256 === undefined ? {} : { marketImagesSha256: database.marketImagesSha256 }) },
     musicFiles: musicNames.length, orphanMusicFiles: musicNames.filter(n => !expectedMusic.has(n)).length, communityQuestions: questionCount,
     historyLogs: logs.size, historyMatches: metas.size, unfinishedMatches: playing.length };
+  if (legacy) summary.legacyCommunity = legacy;
   return { files, summary, metas, interruptedStates, playing };
 }
-module.exports = { fail, uuid, sha, absolute, noLinks, readJson, validateDatabase, validateData };
+module.exports = { fail, uuid, sha, absolute, noLinks, readJson, validateDatabase, validateData, validBundleLogical };

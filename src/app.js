@@ -1,5 +1,5 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
-const {randomBytes}=require('node:crypto');
+const {randomBytes,randomUUID}=require('node:crypto');
 const {Room}=require('./games/poker'),{ThunderRoom}=require('./games/thunder'),{MajorityRoom}=require('./games/majority'),{GiftRoom}=require('./games/gift');
 const {GiftStore}=require('./games/gift-store'),{GIFTS,CATEGORIES}=require('./games/gift-catalog');
 const {DrawGuessRoom,validTopic,validTopics,DRAW_CATEGORIES}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{TOPICS}=require('./games/draw-guess-words');
@@ -21,13 +21,16 @@ const {BoardStore}=require('./community/board');
 const {createGitHubClient}=require('./integrations/github/client');
 const {SubmissionService}=require('./integrations/github/submissions');
 const {expressionLabels,builtinCharacters,defaults,normalizeAppearance,characterFor,galleryFor,selectedImage}=require('./profiles/appearance');
-const {createCharacter,setExpression,addExpression,setSharing,removeCharacter}=require('./profiles/uploads');
+const {createCharacter,setExpression,addExpression,setSharing,removeCharacter,MAX_CHARACTER_IMAGE_BODY_BYTES}=require('./profiles/uploads');
 const {setExpressionSound,removeExpressionSound}=require('./profiles/sounds');
 const {USER_IMAGE_PATH,USER_SOUND_PATH,createCharacterMediaAccess}=require('./profiles/media');
 const {ArtworkStore}=require('./artworks/store');
 const {MusicStore,MAX_BYTES}=require('./music/store');
 const {RoomMusic}=require('./music/room');
 const {RoomWatchRegistry}=require('./watch/room');
+const {RoomMediaRegistry,fallbackTitle}=require('./media/room');
+const {createYoutubeTitleResolver}=require('./media/youtube-title');
+const {roomRole,canKick,setRoomRole,pruneRoomRoles,permissionsView}=require('./rooms/permissions');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
 const {ROOM_EMOJIS}=require('./social/emojis');
 const {acquireDataLocks}=require('./data/locks');
@@ -41,15 +44,34 @@ function initializeApp(config,dataLock){
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
  const musicRooms=new Map(),musicStreams=new Map();
  const watchRooms=new RoomWatchRegistry();
+ const mediaRooms=new RoomMediaRegistry();
+ const youtubeTitles=config.youtubeTitleResolver||createYoutubeTitleResolver({enabled:config.externalSideEffectsEnabled!==false,fetcher:config.youtubeMetadataFetch||fetch});
  const watchContext=room=>{
   const activeSeats=new Set(seats.get(room.code)?.values()||[]);
   return {hostId:room.host,members:room.players.filter(player=>activeSeats.has(player.id)&&!player.bot&&!player.kicked).map(player=>({id:player.id,name:player.name,lastSeen:player.lastSeen}))};
  };
  const reconcileWatch=room=>{const watch=watchRooms.get(room);if(watch)watch.reconcile(watchContext(room));return watch;};
  const roomMusic=room=>{if(!musicRooms.has(room.code))musicRooms.set(room.code,new RoomMusic(Date.now,musicStore));return musicRooms.get(room.code);};
- const publishMusic=code=>{const state=musicRooms.get(code)?.snapshot();for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
+ const activeRoomIds=room=>new Set([...(seats.get(room.code)||[])].filter(([account,id])=>db.prepare('SELECT 1 FROM users WHERE id=? AND disabled=0').get(account)&&room.players.some(player=>player.id===id&&!player.bot&&!player.kicked)).map(([,id])=>id));
+ const mediaContext=room=>{const activeIds=activeRoomIds(room);pruneRoomRoles(room,activeIds);return {hostId:room.host,managerIds:room.managerIds,members:room.players.filter(player=>activeIds.has(player.id)).map(player=>({id:player.id,name:player.name}))};};
+ const clearLegacyWatch=room=>{const watch=watchRooms.get(room);if(!watch?.video&&!watch?.proposals.length)return;watch.video=null;watch.controllerId=null;watch.selectedById=null;watch.proposals=[];watch.watchSessionId=randomUUID();watch.controllerEpoch++;watch.revision++;watch.playback={state:'paused',anchorPositionSec:0,anchorServerMs:Date.now(),rate:1};};
+ const musicProjection=room=>{const media=mediaRooms.get(room);if(!media?.managed)return roomMusic(room).snapshot();return {track:media.current?.type==='music'?{id:media.current.trackId,title:media.current.title,duration:media.current.durationSec}:null,playing:media.current?.type==='music'&&media.playback.state==='playing',position:media.current?.type==='music'?media.position():0,loop:false,mode:'none',version:media.revision,serverNow:Date.now(),managedBy:'room-media'};};
+ const watchProjection=(room,playerId)=>{const media=mediaRooms.get(room),context=mediaContext(room);return {schemaVersion:1,roomInstanceId:media.roomInstanceId,watchSessionId:media.playbackSessionId,revision:media.revision,controllerEpoch:media.revision,controllerId:room.host,controllerName:context.members.find(member=>member.id===room.host)?.name||null,selectedById:media.current?.requestedById||null,video:media.current?.type==='video'?{provider:'youtube',id:media.current.videoId,title:media.current.title}:null,playback:media.current?.type==='video'?{...media.playback}:{state:'paused',anchorPositionSec:0,anchorServerMs:Date.now(),rate:1},serverNowMs:Date.now(),proposals:[],canControl:false,isHost:room.host===playerId,managedBy:'room-media'};};
+ const activateMedia=room=>{
+  const media=mediaRooms.get(room,{create:true});if(media.managed)return media;
+  const context=mediaContext(room),watch=reconcileWatch(room),music=musicRooms.get(room.code)?.snapshot();
+  const requester=watch?.video?watch.selectedById:musicRooms.get(room.code)?.selectedById;
+  const member=context.members.find(item=>item.id===requester)||context.members.find(item=>item.id===room.host)||context.members[0];
+  if(watch?.video)media.adopt({type:'video',videoId:watch.video.id},{state:watch.playback.state,position:watch.position()},member);
+  else if(music?.track)media.adopt({type:'music',trackId:music.track.id},{state:music.playing?'playing':'paused',position:music.position},member);
+  else media.adopt(null,null,member);
+  for(const proposal of watch?.proposals||[]){const author=context.members.find(item=>item.id===proposal.proposerId);if(author)media.queue.push(media.makeItem({type:'video',videoId:proposal.videoId},author));}
+  clearLegacyWatch(room);if(musicRooms.get(room.code)?.track)roomMusic(room).act('stop',{},musicStore);
+  media.reconcile(context);publishMusic(room.code);return media;
+ };
+ const publishMusic=code=>{const room=rooms.get(code),state=room?musicProjection(room):null;for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
  const lobby=createLobby();
- const cleanupRoom=code=>{seats.delete(code);departedSeats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);watchRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);};
+ const cleanupRoom=code=>{seats.delete(code);departedSeats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);watchRooms.delete(code);mediaRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);};
  const expireRooms=()=>expireEmptyRooms({rooms,history,onDelete:cleanupRoom});
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
@@ -58,13 +80,15 @@ function initializeApp(config,dataLock){
   const viewerId=accounts.get(view.me);
   if(viewerId)characterMedia.rememberExpressions(viewerId,'room:'+room.code,expressions.map(event=>({userId:accounts.get(event.playerId),image:event.image,at:event.at,until:event.at+5000,sound:event.sound,soundUntil:event.at+10000})));
   const watch=reconcileWatch(room);
-  return {...view,serverNow:now,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),players:view.players.map(player=>recent.has(player.id)?{...player,avatar:recent.get(player.id)}:player),social,expressions,barrages,watch:watch?watch.summary(watchContext(room)):null};
+  const media=mediaRooms.get(room,{create:true});media.reconcile(mediaContext(room));
+  return {...view,serverNow:now,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),permissions:permissionsView(room,view.me),players:view.players.map(player=>({...player,roomRole:roomRole(room,player.id),...(recent.has(player.id)?{avatar:recent.get(player.id)}:{})})),social,expressions,barrages,media:media.marker(),watch:media.managed?{roomInstanceId:media.roomInstanceId,revision:media.revision,hasVideo:media.current?.type==='video',controllerId:room.host}:watch?watch.summary(watchContext(room)):null};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
- const history=new HistoryStore(config.historyDir,config.historyLimits);
+ const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});
  let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore,marketStore,marketImageStore;
  try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);marketImageStore=new MarketImageStore(db,config.marketClock||Date.now,{limits:config.marketImageLimits});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
  catch(error){history.close();db?.close();throw error;}
+ mediaRooms.store=musicStore;
  const characterMedia=createCharacterMediaAccess(db,viewerId=>{
   const audiences=[];
   for(const [code,room] of rooms){
@@ -133,7 +157,15 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   let title;try{title=decodeURIComponent(req.headers['x-music-title']||'');}catch{throw new HttpError(400,'INVALID_TITLE','曲名不正確');}
   return res.end(JSON.stringify(musicStore.add(user,{title,duration:Number(req.headers['x-music-duration'])},Buffer.concat(chunks))));
  }
- let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/market/images'?3*1024*1024:url.pathname==='/api/admin/market/images/approve'?128*1024:url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
+ let data={};if(req.method==='POST'){
+  if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');
+  if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');
+  const characterImageUpload=url.pathname==='/api/profile/characters'||/^\/api\/profile\/characters\/[a-f0-9-]{36}\/(?:expressions|emotes)$/.test(url.pathname);
+  const limit=url.pathname==='/api/market/images'?3*1024*1024:url.pathname==='/api/admin/market/images/approve'?128*1024:characterImageUpload?MAX_CHARACTER_IMAGE_BODY_BYTES:(url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192);
+  const chunks=[];let bytes=0;
+  for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}
+  data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');
+ }
  const send=x=>res.end(JSON.stringify(x));
  if(url.pathname==='/api/auth/login'&&req.method==='POST'){limitAuth(req);return send(await auth.login(data,res));}
  if(url.pathname==='/api/auth/register'&&req.method==='POST'){limitAuth(req);return send(await auth.register(data,res));}
@@ -184,7 +216,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  }
  if(url.pathname==='/api/music'&&req.method==='GET')return send({tracks:musicStore.list(),me:user.id,admin:user.role==='admin'});
  const musicDelete=url.pathname.match(/^\/api\/music\/([a-f0-9-]{36})\/delete$/);
- if(musicDelete&&req.method==='POST'){limitAccount(user);const result=musicStore.remove(user,musicDelete[1]);for(const [code,state]of musicRooms)if(state.track?.id===musicDelete[1]){state.act('stop',{},musicStore);publishMusic(code);}return send(result);}
+ if(musicDelete&&req.method==='POST'){limitAccount(user);const result=musicStore.remove(user,musicDelete[1]);for(const [code,state]of musicRooms)if(state.track?.id===musicDelete[1]){state.act('stop',{},musicStore);publishMusic(code);}for(const [code,{media}]of mediaRooms.rooms){media.removeTrack(musicDelete[1]);publishMusic(code);}return send(result);}
  if(url.pathname==='/api/collection/avatars'&&req.method==='GET')return send({artworks:artworkStore.visible(user.id)});
  const avatarSharing=url.pathname.match(/^\/api\/artworks\/([a-f0-9-]{36})\/sharing$/);
  if(avatarSharing&&req.method==='POST'){limitAccount(user);return send(artworkStore.share(user.id,avatarSharing[1],data.shared));}
@@ -289,7 +321,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>{const player=room.add(user.display_name);player.name=user.display_name;return player;});}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
- if(!['/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
+ if(!['/api/room-media','/api/room-role','/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  expireRooms();
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
@@ -318,6 +350,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   }
   seats.get(room.code)?.delete(user.id);
   reconcileWatch(room);
+  pruneRoomRoles(room,activeRoomIds(room));mediaRooms.get(room)?.reconcile(mediaContext(room));
   if(room.players.some(q=>q.id===p.id&&q.kicked)){
    if(!departedSeats.has(room.code))departedSeats.set(room.code,new Map());
    const departed=departedSeats.get(room.code);for(const [account,id]of departed)if(!room.players.some(q=>q.id===id))departed.delete(account);
@@ -329,26 +362,63 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(result.deleted){historyPersisted=endRoomHistory(history,room,'最後一位玩家已離開房間')&&historyPersisted;rooms.delete(room.code);cleanupRoom(room.code);}
   return send({code:room.code,left:true,deleted:result.deleted,...(!historyPersisted?{historyPersisted:false,historyWarning:historyWarning||{code:'HISTORY_WRITE_FAILED',message:'已離開房間，但對局記錄未完整保存'}}:{})});
  }
+ if(url.pathname==='/api/room-media'){
+  if(req.method!=='GET'&&req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
+  const media=activateMedia(room);let context=mediaContext(room);media.reconcile(context);
+  if(req.method==='GET'){limitRate(roomRate,'media-read:'+user.id,120);return send(media.snapshot(p.id,context));}
+  limitRate(roomRate,'media-command:'+user.id,60);
+  try{
+   const prepared=media.prepare(p.id,data,context);let title;
+   if(!prepared.duplicate&&prepared.effective.action==='enqueue'&&prepared.effective.type==='video'&&!prepared.effective.title){
+    try{title=await youtubeTitles.resolve(prepared.effective.videoId);}catch{title=fallbackTitle(prepared.effective.videoId);}
+    auth.requireUser(req);
+    if(rooms.get(room.code)!==room)throw new HttpError(404,'ROOM_NOT_FOUND','這間房已結束');
+    if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被踢出房間');
+    if(seats.get(room.code)?.get(user.id)!==p.id||!room.players.some(player=>player.id===p.id&&!player.bot&&!player.kicked))throw new HttpError(403,'NOT_SEATED','尚未加入此房間');
+    context=mediaContext(room);
+   }
+   const result=media.act(p.id,data,context,{title});publishMusic(room.code);return send(result);
+  }catch(error){if(error.mediaState){res.statusCode=error.status;return send({code:error.code,error:error.message,state:error.mediaState});}throw error;}
+ }
+ if(url.pathname==='/api/room-role'){
+  if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
+  limitRate(roomRate,'role-command:'+user.id,30);
+  history.transact(room,{action:'room-role',source:'player',actor:p.id,input:{playerId:data.playerId,role:data.role}},()=>{
+   setRoomRole(room,p.id,data.playerId,data.role,activeRoomIds(room));
+   if(Number.isFinite(room.version))room.version++;if(Number.isFinite(room.updated))room.updated=Date.now();
+  });
+  return send(withSocial(room,room.view(p.id)));
+ }
+ if(['/api/room-watch','/api/room-music'].includes(url.pathname)&&req.method==='POST'&&mediaRooms.get(room)?.managed){
+  const media=mediaRooms.get(room);media.reconcile(mediaContext(room));res.statusCode=409;
+  return send({code:'MEDIA_API_REQUIRED',error:'這間房已改用共用媒體清單，請重新開啟媒體視窗',state:media.snapshot(p.id,mediaContext(room))});
+ }
  if(url.pathname==='/api/room-watch'){
   if(req.method!=='GET'&&req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
+  if(mediaRooms.get(room)?.managed){const media=mediaRooms.get(room);media.reconcile(mediaContext(room));return send(watchProjection(room,p.id));}
   const watch=watchRooms.get(room,{create:true}),context=watchContext(room);
   watch.reconcile(context);
-  if(req.method==='GET'){limitRate(roomRate,'watch-read:'+user.id,120);return send(watch.snapshot(p.id,context));}
+  const controls=permissionsView(room,p.id).canManageMedia;
+  if(req.method==='GET'){limitRate(roomRate,'watch-read:'+user.id,120);const snapshot=watch.snapshot(p.id,context);return send({...snapshot,canControl:controls&&snapshot.canControl});}
   limitRate(roomRate,'watch-command:'+user.id,60);
-  try{return send(watch.act(p.id,data,context));}
+  if(!controls&&data.action!=='propose')throw new HttpError(403,'MEDIA_MANAGER_ONLY','只有房主或房間管理者可以控制媒體');
+  if(!controls&&data.action==='propose'&&!watch.video&&musicRooms.get(room.code)?.track)throw new HttpError(409,'LEGACY_MEDIA_BUSY','已有播放項目，請重新開啟媒體視窗，使用共用清單點播');
+  try{const result=watch.act(p.id,data,context);if(result.video&&musicRooms.get(room.code)?.track){roomMusic(room).act('stop',{},musicStore);publishMusic(room.code);}return send({...result,canControl:controls&&result.canControl});}
   catch(error){if(error.watchState){res.statusCode=error.status;return send({code:error.code,error:error.message,state:error.watchState});}throw error;}
  }
  if(url.pathname==='/api/room-music'){
-  if(req.method==='GET')return send(roomMusic(room).snapshot());
+  if(req.method==='GET'){mediaRooms.get(room)?.reconcile(mediaContext(room));return send(musicProjection(room));}
   if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
-  if(p.id!==room.host)throw new HttpError(403,'HOST_ONLY','只有房主可以控制全桌音樂');
-  limitRate(socialRate,'music:'+user.id,60);const result=roomMusic(room).act(data.action,data,musicStore);publishMusic(room.code);return send(result);
+  const controls=permissionsView(room,p.id).canManageMedia;
+  if(data.action!=='select'&&!controls)throw new HttpError(403,'HOST_ONLY','只有房主或房間管理者可以控制全桌音樂');
+  if(data.action==='select'&&!controls&&(musicRooms.get(room.code)?.track||watchRooms.get(room)?.video))throw new HttpError(409,'LEGACY_MEDIA_BUSY','已有播放項目，請重新開啟媒體視窗，使用共用清單點播');
+  limitRate(socialRate,'music:'+user.id,60);const state=roomMusic(room),result=state.act(data.action,data,musicStore);if(['select','previous','next'].includes(data.action))state.selectedById=p.id;if(result.track)clearLegacyWatch(room);publishMusic(room.code);return send(result);
  }
  if(url.pathname==='/api/room-music/events'&&req.method==='GET'){
   const subscribers=musicStreams.get(room.code)||new Set();if(subscribers.size>=32||[...subscribers].filter(e=>e.userId===user.id).length>=3)throw new HttpError(429,'STREAM_LIMIT','音樂連線太多，請關閉舊分頁');
   const entry={res,userId:user.id};subscribers.add(entry);musicStreams.set(room.code,subscribers);
   res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('Cache-Control','no-cache, no-transform');res.setHeader('X-Accel-Buffering','no');res.flushHeaders();
-  const sendState=()=>{if(!auth.sessionFrom(req)||kickedUsers.get(room.code)?.has(user.id))return res.end();res.write('event: music\ndata: '+JSON.stringify(roomMusic(room).snapshot())+'\n\n');};sendState();
+  const sendState=()=>{if(!auth.sessionFrom(req)||kickedUsers.get(room.code)?.has(user.id)||seats.get(room.code)?.get(user.id)!==p.id)return res.end();res.write('event: music\ndata: '+JSON.stringify(musicProjection(room))+'\n\n');};sendState();
   const timer=setInterval(sendState,10000);timer.unref();req.on('close',()=>{clearInterval(timer);subscribers.delete(entry);if(!subscribers.size)musicStreams.delete(room.code);});return;
  }
  if(url.pathname.startsWith('/api/draw/')){
@@ -419,7 +489,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  limitRate(roomRate,'mutation:'+user.id,120);
  history.transact(room,{action:url.pathname.slice(5),source:'player',actor:p.id,input:data},()=>{
  if(url.pathname==='/api/action'){if(room.type==='thunder'||!room.type)room.humanAct(p.id,data.action,room.type==='thunder'?data:data.amount);else room.act(p.id,data.action,data);}
- else if(url.pathname==='/api/kick'){if(data.confirmed!==true)throw new HttpError(400,'CONFIRM_REQUIRED','請先確認踢出玩家');const target=room.players.find(q=>q.id===data.playerId);if(!target)throw new HttpError(404,'PLAYER_NOT_FOUND','找不到玩家');room.kick(p.id,target.id);const account=[...seats.get(room.code)].find(([,id])=>id===target.id)?.[0];if(account){seats.get(room.code).delete(account);if(!kickedUsers.has(room.code))kickedUsers.set(room.code,new Set());kickedUsers.get(room.code).add(account);for(const entry of drawStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();for(const entry of musicStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();}}
+ else if(url.pathname==='/api/kick'){if(data.confirmed!==true)throw new HttpError(400,'CONFIRM_REQUIRED','請先確認踢出玩家');const target=room.players.find(q=>q.id===data.playerId);if(!target)throw new HttpError(404,'PLAYER_NOT_FOUND','找不到玩家');if(!canKick(room,p.id,target.id))throw new HttpError(403,'ROOM_KICK_FORBIDDEN','只有房主或有權限的房間管理者可以踢出這位玩家');room.kick(room.host,target.id);const account=[...seats.get(room.code)].find(([,id])=>id===target.id)?.[0];if(account){seats.get(room.code).delete(account);if(!kickedUsers.has(room.code))kickedUsers.set(room.code,new Set());kickedUsers.get(room.code).add(account);for(const entry of drawStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();for(const entry of musicStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();}pruneRoomRoles(room,activeRoomIds(room));mediaRooms.get(room)?.reconcile(mediaContext(room));}
  else if(url.pathname==='/api/settings'){if(!['thunder','majority','gift','draw'].includes(room.type))throw Error('此遊戲沒有此設定');room.configure(p.id,data);}
  else if(url.pathname==='/api/start'){if(room.host!==p.id)throw Error('只有房主可以發牌');room.start();}
  else if(url.pathname==='/api/bot'){if(room.host!==p.id)throw Error('只有房主可以加入電腦');room.add(['River','Clover','Atlas','Nova','Juno'][room.players.filter(p=>p.bot).length%5],true);}
@@ -433,6 +503,9 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  const musicAsset=url.pathname.match(/^\/assets\/music\/([a-f0-9-]{36})$/);
+ if(url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'){
+  const file=url.pathname.slice(1);res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript; charset=utf-8');return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
+ }
  if(musicAsset){auth.requireUser(req);if(!['GET','HEAD'].includes(req.method))throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');return musicStore.stream(req,res,musicAsset[1]);}
  const artworkAsset=url.pathname.match(/^\/assets\/artworks\/([a-f0-9-]{36})$/);
  if(artworkAsset){const viewer=auth.requireUser(req),image=artworkStore.image(viewer.id,artworkAsset[1]);if(!image)throw new HttpError(404,'ARTWORK_NOT_FOUND','找不到你的作品');res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(image.bytes);}
@@ -444,7 +517,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(media){const viewer=auth.requireUser(req),row=characterMedia.image(viewer.id,url.href);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',row.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(row.bytes);}
  if(url.pathname.startsWith('/assets/characters/')){auth.requireUser(req);const asset=builtinCharacters.flatMap(character=>Object.values(character.expressions)).find(value=>value===url.pathname);if(!asset)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',asset.endsWith('.gif')?'image/gif':'image/png');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(__dirname,'..','public',asset)));}
  const characterId=url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];if(characterId){const viewer=auth.requireUser(req),selected=characterMedia.avatar(characterId);if(!selected)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到角色外觀');let bytes,mime;if(USER_IMAGE_PATH.test(selected.url)){const row=characterMedia.image(viewer.id,selected.url);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');bytes=row.bytes;mime=row.mime;}else{bytes=fs.readFileSync(path.join(__dirname,'..','public',selected.url));mime=selected.url.endsWith('.gif')?'image/gif':'image/png';}res.setHeader('Content-Type',mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(bytes);}
- const files={'/market':'market.html','/market.js':'market.js','/market.css':'market.css','/market-rules.js':'market-rules.js','/shared/race-movement.js':'shared/race-movement.js','/shared/race-paths.js':'shared/race-paths.js','/shared/table-watch.js':'shared/table-watch.js','/shared/table-watch.css':'shared/table-watch.css','/shared/draw-results.js':'shared/draw-results.js','/shared/motion-policy.js':'shared/motion-policy.js','/shared/audio-settings.js':'shared/audio-settings.js','/shared/expression-sounds.js':'shared/expression-sounds.js','/shared/game-sounds.js':'shared/game-sounds.js','/shared/race-game-sounds.js':'shared/race-game-sounds.js','/assets/game-sounds/turn.wav':'assets/game-sounds/turn.wav','/assets/game-sounds/correct.wav':'assets/game-sounds/correct.wav','/assets/game-sounds/dice-roll.wav':'assets/game-sounds/dice-roll.wav','/assets/game-sounds/shot.wav':'assets/game-sounds/shot.wav','/assets/game-sounds/slam.wav':'assets/game-sounds/slam.wav','/assets/game-sounds/nitro.wav':'assets/game-sounds/nitro.wav','/assets/game-sounds/skid.wav':'assets/game-sounds/skid.wav','/shared/popovers.js':'shared/popovers.js','/shared/ui-foundation.css':'shared/ui-foundation.css','/shared/ui-components.js':'shared/ui-components.js','/collection':'collection.html','/collection.js':'collection.js','/collection.css':'collection.css','/settings':'settings.html','/settings.js':'settings.js','/settings.css':'settings.css','/shared/site-header.js':'shared/site-header.js','/shared/site-header.css':'shared/site-header.css','/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/race-vehicle-effects.js':'shared/race-vehicle-effects.js','/shared/race-dice-dialog.js':'shared/race-dice-dialog.js','/shared/race-terrain-help.js':'shared/race-terrain-help.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath||file==='market.html'?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
+ const files={'/market':'market.html','/market.js':'market.js','/market.css':'market.css','/market-rules.js':'market-rules.js','/shared/race-movement.js':'shared/race-movement.js','/shared/race-paths.js':'shared/race-paths.js','/shared/table-watch.js':'shared/table-watch.js','/shared/table-watch.css':'shared/table-watch.css','/shared/draw-results.js':'shared/draw-results.js','/shared/motion-policy.js':'shared/motion-policy.js','/shared/audio-settings.js':'shared/audio-settings.js','/shared/expression-sounds.js':'shared/expression-sounds.js','/shared/game-sounds.js':'shared/game-sounds.js','/shared/race-game-sounds.js':'shared/race-game-sounds.js','/assets/game-sounds/turn.wav':'assets/game-sounds/turn.wav','/assets/game-sounds/correct.wav':'assets/game-sounds/correct.wav','/assets/game-sounds/dice-roll.wav':'assets/game-sounds/dice-roll.wav','/assets/game-sounds/shot.wav':'assets/game-sounds/shot.wav','/assets/game-sounds/slam.wav':'assets/game-sounds/slam.wav','/assets/game-sounds/nitro.wav':'assets/game-sounds/nitro.wav','/assets/game-sounds/skid.wav':'assets/game-sounds/skid.wav','/shared/popovers.js':'shared/popovers.js','/shared/ui-foundation.css':'shared/ui-foundation.css','/shared/ui-primitives.css':'shared/ui-primitives.css','/shared/ui-components.js':'shared/ui-components.js','/collection':'collection.html','/collection.js':'collection.js','/collection.css':'collection.css','/settings':'settings.html','/settings.js':'settings.js','/settings.css':'settings.css','/shared/site-header.js':'shared/site-header.js','/shared/site-header.css':'shared/site-header.css','/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/race-vehicle-effects.js':'shared/race-vehicle-effects.js','/shared/race-dice-dialog.js':'shared/race-dice-dialog.js','/shared/race-terrain-help.js':'shared/race-terrain-help.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath||file==='market.html'?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);
@@ -465,6 +538,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   closed=true;
   stopScheduler?.();
   watchRooms.clear();
+  mediaRooms.clear();youtubeTitles.clear?.();
   for(const entries of musicStreams.values())for(const entry of entries)entry.res.end();
   for(const entries of drawStreams.values())for(const entry of entries)entry.res.end();
   if(server.listening)await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));

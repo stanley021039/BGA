@@ -1,5 +1,7 @@
 # Gartic Phone 網路錄製與 BGA 對照
 
+2026-10-07新增對照：最新产品基線v1.7.1／`3d82e3f`，Chrome官方Masterpiece持筆24則＋放開後1則累積向量更新，本站隔離雙席25點持筆0POST、放開才送，另量人工回覆延遲佇列。完整新樣本／HAR缺漏／像素待查見 [最新順暢度研究](GARTIC-BGA-DRAWING-COMPARISON.md)，改善提案見 [spec](../specs/DRAWING-SMOOTHNESS.md)。下方2026-10-05是不同基線／條件的歷史，不能當作目前效能或正式站部署證據；本輪未改產品。
+
 查核日期：2026-10-05。角色：主 agent 實玩與核對、玩家研究 agent 匯出與分析。已透過官方 CDP 在隱藏的內建瀏覽器實玩單席 Masterpiece（傑作），取得 WebSocket 訊息並離線匯出 HAR。本文件區分實際觀察、官方方法及未測項目。
 
 | 記錄欄位 | 現況 |

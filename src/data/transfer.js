@@ -9,7 +9,7 @@ const { execFileSync } = require('node:child_process');
 const { openDatabase, SCHEMA_VERSION } = require('../db');
 const { BoardStore } = require('../community/board');
 const { dataPaths, acquireDataLocks, acquireLegacyHistoryLock, acquirePublishLock } = require('./locks');
-const { fail, uuid, sha, absolute, noLinks, readJson, validateData } = require('./validation');
+const { fail, uuid, sha, absolute, noLinks, readJson, validateData, validBundleLogical } = require('./validation');
 
 const repo = path.resolve(__dirname, '../..');
 const FORMAT = 'afterhours-encrypted-data-v1';
@@ -140,8 +140,7 @@ function authenticate(request) {
   if (!Array.isArray(manifest.files) || !manifest.files.length || manifest.files.length > MAX_FILES || manifest.code?.maximumSchema > SCHEMA_VERSION) fail('UNSUPPORTED_BUNDLE', 'Bundle contents or schema are not supported');
   const logicals = new Set(), payloads = new Set(); let bytes = 0;
   for (const entry of manifest.files) {
-    const validLogical = entry.logical === 'db/afterhours.sqlite' || /^music\/[0-9a-f-]{36}\.(mp3|ogg|m4a)$/i.test(entry.logical) || entry.logical === 'community/community.json' || /^history\/[0-9a-f-]{36}\.(jsonl|meta\.json)$/i.test(entry.logical);
-    if (!validLogical || !/^payload\/[0-9]{6}\.bin$/.test(entry.payload) || logicals.has(entry.logical.toLowerCase()) || payloads.has(entry.payload)) fail('UNSAFE_PATH', 'Invalid or duplicate bundle path');
+    if (!validBundleLogical(entry.logical) || !/^payload\/[0-9]{6}\.bin$/.test(entry.payload) || logicals.has(entry.logical.toLowerCase()) || payloads.has(entry.payload)) fail('UNSAFE_PATH', 'Invalid or duplicate bundle path');
     if (!Number.isSafeInteger(entry.bytes) || entry.bytes < 0 || !/^[0-9a-f]{64}$/.test(entry.sha256) || !/^[0-9a-f]{64}$/.test(entry.cipherSha256) || !/^[0-9a-f]{24}$/.test(entry.iv) || !/^[0-9a-f]{32}$/.test(entry.tag)) fail('CORRUPT_BUNDLE', 'Invalid payload descriptor');
     logicals.add(entry.logical.toLowerCase()); payloads.add(entry.payload); bytes += entry.bytes;
     noLinks(path.join(bundle, entry.payload));
@@ -160,7 +159,13 @@ async function unpack(request, parent) {
   space(parent, auth.manifest.totalBytes * 2);
   const stage = temp(parent); initialize(stage);
   try {
-    for (const entry of auth.manifest.files) await decrypt(entry, auth.bundle, path.join(stage, ...entry.logical.split('/')), auth.keys, auth.manifest.bundleId);
+    // This is the sole new nested data directory. Authenticated paths have
+    // already passed the typed allowlist; no archive-selected mkdir is used.
+    if (auth.manifest.files.some(entry => entry.logical.startsWith('community/avatars/'))) fs.mkdirSync(path.join(stage, 'community', 'avatars'), { mode: 0o700 });
+    for (const entry of auth.manifest.files) {
+      const output = path.join(stage, ...entry.logical.split('/')); noLinks(output);
+      await decrypt(entry, auth.bundle, output, auth.keys, auth.manifest.bundleId);
+    }
     const validated = validateData(generationPaths(stage), { acknowledgeInterruptedMatches: true });
     const portableSummary = s => ({ ...s, database: { ...s.database, sqliteVersion: undefined } });
     if (canonical(portableSummary(validated.summary)) !== canonical(portableSummary(auth.manifest.summary))) fail('VALIDATION_FAILED', 'Restored inventory differs from authenticated manifest');

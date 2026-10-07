@@ -1,6 +1,46 @@
 # Agent 長期記憶索引
 
-2026-10-07 PR43審查候選v1.4.1／`2b5f982`：Stanley兩項P2已重現並修正；跳台按實際前一格方向避开致命路線，表情聲音依serverNow判年齡，五遊戲與大廳傳遞同一server時鐘。本地Windows／Linux完整各808項、聚焦路線61／聲音API75通過；原PR範圍保持，正式目前v1.5.1的後續版面另行整合。詳 [本輪修正](../PR43-STANLEY-REVIEW-FIXES.md)。下段790項是舊版驗收。
+2026-10-07最新正式v1.9.0：畫猜防閃、真點時間viewer回放、平滑倒數與安靜成功回饋，以及媒體高度／原生本機時間明確發布已完成。接手先讀 [畫猜最新進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)及 [媒體最新進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)／[spec](../specs/MEDIA-ICON-WINDOW-UI.md)。PROGRAMMER／ANIMATION／PLAYER保存每輪中途與終點分開驗、callback取消及個人／全桌權限規則；完整source、測試與原生數據集中於進度，下方旧版本是歷史。正式成功不表示所有硬體、自然多輪、實體手機／讀屏或60fps已驗。
+
+2026-10-07媒體圖示與視窗：永久操作圖示＋hover／focus提示準則已寫AGENTS、MEMORY與DESIGNER；重要內容保持可見。點播與單行清單獨立寬視窗，播放器入口、邊緣縮放及「上傳歌曲」首選項見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)。最新測試與版本只以 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)為準，不沿用中間候選或宣稱全站按鈕已改完。
+
+2026-10-07 [WebGL導入評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)：已按v1.8.1程式與官方資料盤點；建議雷霆特效局部原型，大廳先比較transform，畫猜renderer與傳送瓶頸分開。這是研究提案，未安裝或實作WebGL、未跑效能原型，不改正式v1.8.1；接手先讀該文件及PROGRAMMER／ANIMATION最新記錄。
+
+2026-10-07畫猜順暢度第一批 **P0／有限local-draft P1完成並正式v1.8.1**：140ms時間flush、有界單in-flight sender與rAF／coalesced；P1只有限明確local draft走opaque layer，settled／viewer原同surfaceclassic，任意fill sticky classic至reset，單組15checkpoints＋1base≤8MiB。P2並行POST／P3抽稀未做，API／codec／PR30額度不变。
+
+正式v1.8.1／6707a9edf07839c3307dd230ff6eeca5fa92bf62已於UTC03:30:44.024Z零房間guard部署，PID107492→110715、service／tunnel active。Windows1076／1076／37689.229ms，Linux Node22.22.1 1076／1076／189955.125522ms，各fail/cancel/skip/todo0；本地受測tag固定，沒有新PR／push、PR43未改。schema15／21schemas／20non-session rows+BLOB與8帳戶全fields保留、integrity ok／FK0；sessions161→165為已登出的QA登入，不說sessions不變。SQLite線上備份與另時點files/env archive不是atomic cold snapshot。公開版號與5資源精確內容/no-store已驗，沒有逐項驗5資源MIME；正式3會員HTTP/SSE duplicate／nonartist400／undo-clear quota不退已驗。Chrome正式僅背景home版號；local像素／輸入證據另列，own房／auth／tabs／preview／control已清理，不改前景或偏好。
+
+native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha0／exactmask0，新wrapper與legacy SHA同而整體strict flag仍false。captured dense3場景均fresh0。實際1000 synthetic-move／948有效點／16chunks963含anchors兩席同JSON，但artistfresh0／viewerclassic67 RGB／max54、viewer baseCopies0／mutable0；同capture timeout20ms／warmup0及1的原classic與opt-in Infinity同樣67／max54、old/new直接diff0／SHA相同。此證據只限受測trace，不歸因layer／硬體／GPU／CPU，不寫19native全部fresh strict或所有雙席pixels相同；兩組rAF控制2秒未advance而未完成，不能列pass。工具慢線／背景970ms不作人體FPS。
+
+來源、備份、精確scope、未驗rAF／原生取消／真收藏或其他硬體與後續提案见 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)與 [spec](../specs/DRAWING-SMOOTHNESS.md)。下方v1.8.0與更早紀錄為歷史，後續文件提交不移動受測tag；原HAR／cookies／帳密與.local偏好不提交。
+
+2026-10-07正式 **v1.8.0**／`5687561`：五款單一current／混合queue／timeline、一般席點播、host／manager共享控制及角色、個人影片接受／退出、同emoji與角色入口已發布。Windows Node24.14.0／Linux Node22.22.1完整各1034，隔離背景Chrome三席真Audio／YouTube、排序／角色與最後390px／1280×720通過；台北10:24:21（UTC02:24:21）公开版號no-store／6資源與三自有會員API驗收完成。正式PID107492／services active；schema15、21schema、20非session rows／BLOB與8帳戶全欄位保留，sessions157→161是已登出的QA登入，不能宣稱sessions未變。own房間／session／preview／分頁已清理，等待房QA歷史保留；原PR43未改，無新PR／push，tag固定受測程式。接手讀 [九項證據及限制](../UNIFIED-ROOM-MEDIA-PROGRESS.md)及 [共用契約](../specs/UNIFIED-ROOM-MEDIA.md)。queue與manager只屬room instance；200%文字、真Google拒播／oEmbed、多設備／弱網／喇叭未驗，fixture導航的draw重連提示不作正式SSE診斷。下方v1.7.2為歷史基線。
+
+2026-10-07正式 **v1.7.2**／`6fcd55c`：PR43新P2舊state晚於新social ACK補播過期音效已修正，server anchor按performance經過時間前進，old/equal/missing不重設age，gap亦用mono。原PR v1.4.2／`ca931b7`雙平台各815、正式雙平台各947，Chrome隔離真單調clock過期0／fresh1（播放替身）；正式schema15／8帳戶與21schema保留、20非session表rows／BLOB一致、PID103459／service／tunnel正常、rooms0。證據及legacy限制見 [亂序修正](../PR43-EXPRESSION-CLOCK-FIX.md)；下方v1.7.1為歷史，作畫效能改善仍只研究／spec，外站資料代未啟用。
+
+2026-10-07畫猜順暢度研究完成：Chrome官方Gartic單席Masterpiece與隔離本站雙席對照，25點持筆本站0POST／觀看者空白，放開才送；Gartic24則放開前＋1則放開後小向量更新，含累積前綴。真renderer操作計數顯示活動長筆O(N²)，人工400ms回覆延遲8短筆queue3,314ms。研究與 [改善spec](../specs/DRAWING-SMOOTHNESS.md)已保存，完整條件／HAR缺漏／未解像素差異見 [實測對照](../research/GARTIC-BGA-DRAWING-COMPARISON.md)；沒有FPS排名或使用者另一台電腦結論。產品未改、仍v1.7.1；分頁與隔離server已清理，沒有新PR／部署。
+
+2026-10-07最新正式 **v1.7.1**／`3d82e3f`：修角色表情ACK只改隱藏列、雷霆同version漏crew及舊poll蓋新表情；RoomHost共用snapshot freshness與callback，雷霆same-version只改crew／state不重畫track。原faker GIF副本重現並驗雙席／還原，正式五款雙席用既有測試角色通過，兩平台各940。原faker／8帳戶／schema15保留、20非session表所有rows／BLOB相同、PID88602／service／tunnel正常，own五桌／session／proxy／tab清理後rooms0。來源與限制見 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)；下方v1.7.0及更早為歷史，沒有新PR或push，外站資料代未啟用。
+
+2026-10-07最新正式 **v1.7.0**／`82149a4`：YouTube影片窗可拖曳縮放、鍵盤微調、恢復大小及個人尺寸記憶，依實際字級／chrome保護210px播放器；正常resize零watch流量且保持iframe。Windows／Linux各914、公開兩會員實播／窄屏／200%文字及雙欄通過；8帳戶／schema15保留，20非session表所有rows／BLOB相同，PID85927／service／tunnel正常。own席位／session／proxy／tab及臨時設定清理，rooms0。完整證據及邊界見 [影片尺寸验收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)；下方v1.6.0及更早為歷史，外站資料代未啟用，沒有新PR或push。
+
+2026-10-07最新正式 **v1.6.0**／`74372ed`：上傳歌曲供登入會員共用，同房玩家皆可選曲，guest開始以select重播同曲；每次展開取新歌庫，個人收聽／音量及YouTube規則保留。Windows／Linux各896、背景Chrome跨會員真上傳／非房主選播／兩位實際Audio通過。schema15／8帳戶全欄位保留、20非session表所有rows／BLOB與新鮮備份相同，PID83301／service／tunnel正常；own曲目／房間／session／proxy／tab清理後rooms0。詳細來源及未驗範圍見 [最新歌曲驗收](../MUSIC-SHARING-PROGRESS.md)。下方v1.5.8及更早為歷史，沒有新PR／push，外站資料代未啟用。
+
+2026-10-07最新正式 **v1.5.8**／`470ab26`：角色主圖、固定及自訂表情每張4MiB，角色頁／收藏庫同步；其他圖片仍1MiB，三route JSON cap5,600,600、schema15不變。Windows／Linux各889、背景Chrome三表單及公開4MiB真上傳／三route／+1拒且原圖保留、加密備份還原已驗。own測試角色／session／tab／proxy已清理，0房間；8帳戶全欄位及20非session表所有rows／BLOB與備份一致，PID80949／service／tunnel正常。詳 [最新圖片上限驗收](../CHARACTER-IMAGE-SIZE-PROGRESS.md)；下方v1.5.7及更早為歷史，沒有新PR／push，外站資料代未啟用。
+
+2026-10-07最新正式 **v1.5.7**／`4c5b5e7`：畫猜名單／結算卡等尺寸，所有玩家以同一排名卡格線呈現；GameUI.playerName單文字／完整title／只超寬才跑馬燈，suffix固定在外，五款重用，hover／focus暫停及MotionPolicy／reduce／hidden停動。八席桌機／手機／200%已驗，Windows／Linux各883；正式30資源／3席尺寸、長名實際位移及hover通過。測試暱稱還原、own席位及proxy清理後0房間；8帳戶全欄位／schema15保留，PID78591／service／tunnel正常。詳細來源／備份／限制見 [姓名驗收](../DRAW-PLAYER-NAME-PROGRESS.md)。下方v1.5.6及更早為歷史，外站資料未啟用，本輪沒有新PR／push。
+
+2026-10-07最新正式 **v1.5.6**／`5941c03`：畫猜玩家／聊天室共用剩高、底邊對齊，桌機單屏、input最後；canvas512×256及比例保留、倒數同寬，8席重要資訊保留並必要局部scroll，125%不足空間自然流／加高恢復fit已驗。Windows／Linux各867，公開26資源／3席720p／1440／1920通過；8帳戶／schema15保留，PID76509／service／tunnel正常，測試席位及proxy清理後0房間。詳細來源／備份／邊界見 [高度驗收](../DRAW-VIEWPORT-FIT-PROGRESS.md)。下方v1.5.5及更早為歷史，外站資料仍未啟用，本輪沒有新PR／push。
+
+2026-10-07最新正式 **v1.5.5**／`18d21ae`：畫猜倒數文字32px／軌道14px較亮橙色，與畫布同寬；畫者工具仍對齊畫布，作畫題材／難度／字數行移除。手機及320px／200%文字通過；原生progress停用width transition後，正式截圖像素68.9573%與native值68.9625%相符。Windows／Linux各864、正式26資源及3席通過，8帳戶／schema15保留、PID73168／service／tunnel正常；測試席位／session與preview已清理。詳細證據與v1.5.4歷史見 [倒數進度](../DRAW-TIMER-VISIBILITY-PROGRESS.md)。下方v1.5.3及更早為歷史，外站資料仍未啟用、沒有新PR／push。
+
+2026-10-07最新正式 **v1.5.3**／`0609c01`：全站20HTML載入共享primitives／GameUI；題卡背面unknown、settings close與D徽章修正，history header span auto-margin污染也已隔離。20入口背景Chrome、桌機／390手機／200%文字與hidden／pending已驗，Windows／Linux各863；正式3席題卡與25份資源通過，8帳戶及schema15保留、PID68975／service／tunnel正常，測試房間已離开及session登出。與程式設計師的實際討論、逐頁表及長期契約見 [規格](../specs/SHARED-UI-ALIGNMENT.md)，部署證據／未驗界線見 [進度](../SHARED-UI-ALIGNMENT-PROGRESS.md)。下方v1.5.2為歷史；原PR43保持Ready未合併，沒有新PR或UI push，外站資料仍未啟用。
+
+2026-10-07最新正式 **v1.5.2**／`7939090`：PR43 Stanley 兩項 P2（跳台方向風險／表情音效時鐘）已修正，原 PR 已更新且 Ready、未合併。原 PR v1.4.1 雙平台各808；保留畫猜版面及附件相容性的正式 v1.5.2 雙平台各863。零房間切換，schema15／21表及8帳戶全欄位保留、PID66841／service／tunnel正常，公開7份資源及五款遊戲／大廳 serverNow通過。外站資料未啟用；下方 v1.5.1 為歷史。詳細證據見 [審查修正與正式同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，tag固定受測程式、後續文件不移動tag。
+
+2026-10-07最新正式 **v1.5.1**／`d4e3b4a`：畫猜左側玩家、框線及畫具對齊、底部直列聊天室與最後輸入框、倒數進度及緊湊結算已上線；Windows／Linux完整各845項，背景Chrome多角色／八席／手機及正式3席驗收通過。正式schema15、8帳戶全欄位保留，切換前0房間，PID62990／service／tunnel正常；外站資料仍未匯入，取代／合併範圍仍待選擇。完整證據見 [畫猜最新進度](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)。下方v1.5.0候選／v1.4.0整合／v1.3.0正式為歷史；來源ZIP、金鑰與shadow資料代保留但未啟用。PR43沒有加入本輪，無新PR／push，受測tag不隨文件提交移動。
+
+2026-10-06最新本地候選v1.5.0／`723fbe4`：舊版community PNG／GitHub對應檔完整移轉與可選保留匯入session logs，Windows／Linux各834項通過；實際來源在兩端shadow資料代first boot後49logs與全部檔／帳戶／BLOB核對一致。正式仍v1.3.0；來源3帳戶與現站7帳戶有同名異UUID，等待取代／合併選擇，未切正式或push新分支，PR43保持原範圍。詳 [最新相容性與匯入狀態](../LEGACY-IMPORT-PROGRESS.md)。
 
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 

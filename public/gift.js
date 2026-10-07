@@ -149,7 +149,7 @@ function entry(){
 }
 function receive(next){
  if(!next||next.type!=='gift')throw Error('這不是送禮達人房間');
- if(state&&next.version<state.version)return false;
+ if(state&&(next.version<state.version||RoomHost.isStaleSnapshot?.(next,state)))return false;
  const previous=state,live=motionGate.update(next,{connected:!disconnected});
  const newDelivery=next.phase==='delivering'&&(previous?.phase!=='delivering'||previous.round!==next.round||previous.delivery?.recipientId!==next.delivery.recipientId);
  const arrival=newDelivery&&motionGate.take('delivery:'+next.version+':'+next.delivery.recipientId,live);

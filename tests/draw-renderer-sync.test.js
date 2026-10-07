@@ -11,7 +11,7 @@ async function setup(t,me='artist'){
 }
 async function beginFill(ui,color='#ff0000'){
  ui.element('#color').value=color;run(ui,'tool="fill";lastSentAt=0;lastFillSentAt=0');
- ui.listeners.get('#drawCanvas:pointerdown')({button:0,pointerId:1,point:[0,0],preventDefault(){}});await pause();
+ ui.listeners.get('#drawCanvas:pointerdown')({button:0,pointerId:1,point:[0,0],preventDefault(){}});ui.paintFrame();await pause();
  return ui.strokeRequests.at(-1);
 }
 function accepted(request,version=1,quota={usedFills:1,usedBatches:1,usedPoints:1}){

@@ -3,11 +3,56 @@ const $=selector=>document.querySelector(selector);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transport','交通工具'],['objects','生活物品'],['people','人物職業'],['nature','自然奇幻'],['places','場所娛樂'],['activities','運動音樂'],['meme','迷因 Meme'],['custom','自定義']];
 let code=(location.pathname.match(/\/draw\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
-let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,clockOffset=0,inviteBase=location.origin;
-let filled=false,tool='brush',active=null,pending=[],lastSentAt=0,lastFillSentAt=0,sendQueue=Promise.resolve(),canvasCommandBusy=false,canvasCommandEpoch=0,cursor=[256,128];
+let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,canvasSyncJob=null,clockOffset=0,inviteBase=location.origin;
+let filled=false,tool='brush',active=null,pending=[],lastSentAt=-Infinity,lastFillSentAt=-Infinity,sendQueue=Promise.resolve(),canvasCommandBusy=false,canvasCommandEpoch=0,cursor=[256,128];
+let strokeFlushTimer=null,previewFrame=null,pendingTimes=[];
+const drawNow=()=>typeof performance==='object'&&typeof performance.now==='function'?performance.now():Date.now();
 const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
-const canvasRenderer=StrokeCanvas.createRenderer(canvas);
+const canvasRenderer=StrokeCanvas.createRenderer(canvas,{separateMutable:true,atomicPresentation:true});
+const drawingPlayback=window.DrawPlayback.create({now:drawNow,onFrame:()=>redrawCanvas()});
+const countdownBar=window.CountdownBar.create($('#timerFill'),{reducedMotion:()=>window.matchMedia('(prefers-reduced-motion:reduce)').matches});
+const drawingTransport=window.DrawTransport.create({
+ send:(data,options,attempt)=>{if(attempt===1&&(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+data.points.length>30000||data.tool==='fill'&&canvasQuota.usedFills>=48))throw Error('本輪筆畫額度已用完，請等待下一輪。');return api('draw/stroke',data,options);},createId:()=>StrokeCanvas.strokeId(),now:drawNow,
+ pacing:()=>({lastStart:lastSentAt,lastFill:lastFillSentAt}),
+ isCurrent:(data,draft)=>sameCanvas(data)&&localStrokes.get(data.strokeId)===draft,
+ onPending:(draft,change)=>draft.pendingBatches+=change,
+ onStart:(data,clock)=>{lastSentAt=clock;if(data.tool==='fill')lastFillSentAt=clock;},
+ onAccepted:(result,_data,draft)=>{if(!sameCanvas(result))throw Error('畫布已更新，請重新同步後作畫');updateCanvasQuota(result);draft.ackVersion=Math.max(draft.ackVersion,result.version);if(draft.ackVersion>(draft.resetVersion||0))draft.hiddenByReset=false;if(result.stroke)receiveCanvasStroke(result);if(result.version>canvasVersion)return syncCanvas();},
+ onDiscard:(draft,reason)=>{if(reason==='error')draft.failed=true;},
+ onError:(error,draft)=>{draft.failed=true;cancelStrokeInput(true);drawFeedback(error.message+'；尚未同步的筆畫已取消，正在回復已確認畫布。','error');toast(error.message);syncCanvas();},
+ onSettled:()=>settleLocalStrokes()
+});
+// Measure the remaining grid row instead of subtracting a fixed header height.
+function fitDrawingWidth({width,height,overhead,chatHeight,gap,toolHeight=0}){
+ const available=height-overhead-chatHeight-gap;
+ if(available<toolHeight||available<120||width<240)return null;
+ return Math.min(width,2*available);
+}
+let drawingFitFrame=null;
+function fitDrawingViewport(){
+ drawingFitFrame=null;
+ const board=$('#boardSection'),main=board.parentElement,frame=board.querySelector('.canvas-frame');
+ if(!frame||!window.matchMedia('(min-width:1200px) and (min-height:680px)').matches||document.body.classList.contains('ui-large-text')||!board.classList.contains('is-drawing')){board.style.removeProperty('--draw-canvas-width');if(document.body.classList.contains('draw-viewport-overflow'))document.body.classList.remove('draw-viewport-overflow');return;}
+ const css=getComputedStyle(board),mainCss=getComputedStyle(main),chatCss=getComputedStyle($('#drawGuessPanel'));
+ const number=value=>parseFloat(value)||0,tools=$('#tools'),toolHeight=tools.hidden?0:tools.getBoundingClientRect().height;
+ const overhead=board.getBoundingClientRect().height-Math.max(frame.getBoundingClientRect().height,toolHeight);
+ const width=main.clientWidth-number(css.paddingLeft)-number(css.paddingRight)-number(css.borderLeftWidth)-number(css.borderRightWidth)-(tools.hidden?0:tools.getBoundingClientRect().width+number(css.columnGap));
+ // This budget stays stable even when an oversized board returns to natural flow.
+ const height=window.innerHeight-(main.getBoundingClientRect().top+window.scrollY)-number(getComputedStyle($('.draw-shell')).paddingBottom);
+ const gap=number(mainCss.rowGap),chatHeight=Math.max(number(chatCss.minHeight),Math.min(260,height*.25,height-overhead-gap-toolHeight));
+ const fitted=fitDrawingWidth({width,height,overhead,chatHeight,gap,toolHeight});
+ document.body.classList.toggle('draw-viewport-overflow',fitted===null);
+ if(fitted===null){board.style.removeProperty('--draw-canvas-width');return;}
+ const value=Math.floor(fitted)+'px';if(board.style.getPropertyValue('--draw-canvas-width')!==value)board.style.setProperty('--draw-canvas-width',value);
+}
+function scheduleDrawingFit(){if(drawingFitFrame===null)drawingFitFrame=requestAnimationFrame(fitDrawingViewport);}
+if(typeof ResizeObserver==='function'){
+ const observer=new ResizeObserver(scheduleDrawingFit);
+ for(const node of [$('.draw-shell'),$('.draw-layout'),$('#boardSection').parentElement,$('.board-head'),$('#drawCountdown'),$('#tools'),$('#drawGuessPanel')])observer.observe(node);
+ window.addEventListener('resize',scheduleDrawingFit);
+ new MutationObserver(scheduleDrawingFit).observe(document.body,{attributes:true,attributeFilter:['class']});
+}
 const motionGate=window.MotionPolicy?.createGate();
 const gameSounds=window.GameSounds?.create();
 const resultsView=window.DrawResults?.mount({trigger:$('#reviewResults'),dialog:$('#drawResults'),validateCanvas:validCanvasSnapshot,onState:receive,onVoteChange:updateStageVote,onUnauthorized:()=>location.replace('/login?next='+encodeURIComponent('/draw/'+code))});
@@ -22,12 +67,13 @@ let canvasTotals={points:0,fills:0};
 try{session=JSON.parse(localStorage.getItem(code?'ah-draw:'+code:'ah-draw')||'null');if(session&&!code)code=session.code;}catch{}
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4000);}
-async function api(route,data){return RoomApi.request(route,data,{code,room:'draw',session,onKicked:()=>{RoomHost.kicked(session);session=null;stream?.close();resultsView?.reset();gameSounds?.reset();}});}
+async function api(route,data,options={}){return RoomApi.request(route,data,{code,room:'draw',session,...options,onKicked:()=>{cancelDrawingWork();RoomHost.kicked(session);session=null;stream?.close();resultsView?.reset();gameSounds?.reset();}});}
 function save(result){session=result;code=result.code;localStorage.setItem('ah-draw',JSON.stringify(result));localStorage.setItem('ah-draw:'+code,JSON.stringify(result));history.replaceState(null,'','/draw/'+code);}
 function nameOf(id){return state?.players.find(player=>player.id===id)?.name||'朋友';}
 function playerStatus(player,s=state){
  const didNotPlay=['reveal','finished'].includes(s.phase)&&player.id!==s.presenterId&&!s.participantIds?.includes(player.id);
  let role=didNotPlay?'本輪未參與':player.waitingForNextRound?'下輪加入':player.id===s.presenterId?(s.phase==='choosing'?'選題中':s.phase==='drawing'?'畫圖中':'本輪畫者'):s.guessedIds?.includes(player.id)?'已猜中':s.phase==='waiting'?'已入座':'尚未猜中';
+ if(s.phase==='waiting'&&player.id===s.hostId)role='房主 · '+role;
  if(player.id===s.me&&(disconnected||streamDisconnected))role+=' · 正在重連';else if(player.online===false)role+=' · 暫時離線';
  return role;
 }
@@ -39,22 +85,19 @@ function playerRow(player){
 }
 function waitingSummary(s=state){
  if(!s)return {title:'',detail:''};
- const artist=s.players.find(player=>player.id===s.presenterId),participants=s.participantIds||[],correct=participants.filter(id=>s.guessedIds?.includes(id)),remaining=participants.filter(id=>!correct.includes(id)).map(id=>s.players.find(player=>player.id===id)).filter(Boolean);
- if(s.phase==='choosing')return {title:'等待畫者選題',detail:(artist?.name||'畫者')+(artist?.online===false?' · 暫時離線':' 正在選題')};
- if(s.phase==='drawing')return {title:'已猜中 '+correct.length+' / '+participants.length,detail:remaining.length?'還在猜：'+remaining.map(player=>player.name+(player.online===false?'（離線）':'')).join('、'):'全部猜中，等待揭曉。'};
- return {title:'本輪已猜中 '+correct.length+' / '+participants.length,detail:'已公開的答案與畫作，可從「最近畫作」回看。'};
+ const artist=s.players.find(player=>player.id===s.presenterId);
+ if(['choosing','drawing'].includes(s.phase)&&artist?.online===false)return {title:'畫者暫時離線',detail:artist.name+' 正在重新連線；倒數仍照常進行。'};
+ return {title:'',detail:''};
 }
 function updatePresence(){
  if(!state)return;
  GameShell.stableMarkup($('#players'),state.players.map(playerRow).join(''));
- if(state.phase==='waiting'&&$('#waitingPlayers'))GameShell.stableMarkup($('#waitingPlayers'),state.players.map(waitingPlayerRow).join(''));
- const waiting=waitingSummary();$('#drawWaiting').hidden=state.phase==='waiting';$('#drawWaitingTitle').textContent=waiting.title;$('#drawWaitingNames').textContent=waiting.detail;
+ const waiting=waitingSummary();$('#drawWaiting').hidden=!waiting.title;$('#drawWaitingTitle').textContent=waiting.title;$('#drawWaitingNames').textContent=waiting.detail;
 }
 function updateConnection(){
  const message=disconnected?'你的連線暫停，正在重新連線；目前顯示最後同步的狀態。':streamDisconnected?'畫布連線正在重連，仍可猜題與查看玩家。':canvasConnectionError;
  $('#connection').textContent=message;updatePresence();
 }
-function waitingPlayerRow(player){return GameShell.playerRow(player,{me:state.me,status:[player.id===state.hostId?'房主':null,playerStatus(player)].filter(Boolean).join(' · '),metrics:[]});}
 function options(group,choices,current,inputName){return `<fieldset><legend>${group}</legend><div class="option-row">${choices.map(([value,label])=>`<label><input type="radio" name="${inputName}" value="${value}" ${String(current??'')===value?'checked':''}><span>${label}</span></label>`).join('')}</div></fieldset>`;}
 function selectedTopics(settings={}){
  if(Array.isArray(settings.topics))return settings.topics;
@@ -85,15 +128,18 @@ function updateStageVote(){
 }
 function stageScene(s){
  const artist=s.players.find(player=>player.id===s.presenterId);
- if(s.phase==='waiting')return `<section class="stage-scene stage-waiting" aria-label="房間內的玩家"><div class="waiting-head"><h1>這桌的朋友</h1><span id="waitingCount">${s.players.length} / 8 位</span></div><div id="waitingPlayers" class="waiting-players">${s.players.map(waitingPlayerRow).join('')}</div></section>`;
+ if(s.phase==='waiting')return `<section class="stage-scene stage-waiting" aria-label="開畫準備"><div class="waiting-head"><h1>準備開畫</h1><span id="waitingCount">${s.players.length} / 8 位入座</span></div></section>`;
  if(s.phase==='choosing'){
   const mine=s.presenterId===s.me;
-  return `<div class="stage-scene stage-choosing"><div class="stage-lead">${stageAvatar(artist)}<span>${esc(artist?.name||'畫者')} 的回合</span></div><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} / ${s.roundLimit}</span><h1>${mine?'選一張題卡，準備開畫':'畫者正在挑題'}</h1><p>${mine?'只有你看得到題目，選好就能立即畫。':'題目選好後，畫作會出現在同一塊畫布。'}</p><div class="stage-picks">${mine?s.candidates.map(word=>`<button type="button" class="stage-pick" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong><span>畫這題 ↗</span></button>`).join(''):'<span class="stage-pick-back">?</span><span class="stage-pick-back">?</span><span class="stage-pick-back">?</span>'}</div></div></div>`;
+  const hiddenCard=`<span class="stage-pick-back ui-center-content" role="img" aria-label="未公開的題目">${window.GameUI?.symbol?.('unknown')||'<span class="ui-symbol" aria-hidden="true">?</span>'}</span>`;
+  return `<div class="stage-scene stage-choosing"><div class="stage-lead">${stageAvatar(artist)}<span>${esc(artist?.name||'畫者')} 的回合</span></div><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} / ${s.roundLimit}</span><h1>${mine?'選一張題卡，準備開畫':'畫者正在挑題'}</h1><p>${mine?'只有你看得到題目，選好就能立即畫。':'題目選好後，畫作會出現在同一塊畫布。'}</p><div class="stage-picks">${mine?s.candidates.map(word=>`<button type="button" class="stage-pick" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong><span>畫這題 ↗</span></button>`).join(''):hiddenCard.repeat(3)}</div></div></div>`;
  }
  if(s.phase==='reveal')return `<div class="stage-scene stage-reveal"><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} · 答案揭曉</span><h1 class="stage-answer">${esc(s.result?.answer||'這輪沒有選定題目')}</h1><p class="stage-reason">${esc(s.result?.reason||'')}</p><div class="stage-stat"><b>${s.result?.guessedIds?.length||0}</b> 位朋友猜中 <span>· 畫者每猜中一人 +15 分</span></div>${stageVotePanel(s)}</div><div class="stage-art"><canvas id="stagePreview" width="512" height="256" role="img" aria-label="本輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取本輪畫作…</small></div></div>`;
  const rankings=[...s.players].sort((a,b)=>b.score-a.score);
  const winners=s.winner?.ids||[];
- return `<div class="stage-scene stage-finished"><div class="stage-copy"><span class="stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p><div class="stage-winners">${rankings.filter(player=>winners.includes(player.id)).map(player=>`<div class="stage-winner">${stageAvatar(player)}<b>${esc(player.name)}</b><strong>${player.score} 分</strong><span aria-hidden="true">✦</span></div>`).join('')}</div></div><ol class="stage-ranking">${rankings.map((player,index)=>`<li><span>${index+1}. ${esc(player.name)}</span><b>${player.score} 分</b></li>`).join('')}</ol></div>`;
+ const playerName=name=>window.GameUI?.playerName?.(name)||`<span class="ui-player-name" title="${esc(name)}">${esc(name)}</span>`;
+ const podium=`<ol class="stage-player-cards">${rankings.map((player,index)=>`<li class="stage-player-card${winners.includes(player.id)?' stage-winner':''}"><span class="stage-card-rank" aria-label="排名 ${index+1}">${index+1}</span>${stageAvatar(player)}<b>${playerName(player.name)}</b><strong>${player.score} 分</strong>${winners.includes(player.id)?'<span class="stage-card-win ui-symbol" role="img" aria-label="本局獲勝" title="本局獲勝">✦</span>':''}</li>`).join('')}</ol>`;
+ return `<div class="stage-scene stage-finished"><div class="stage-copy finished-heading"><span class="stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p></div><section class="stage-podium" aria-label="本局排名">${podium}</section>${s.result?.resultId?`<section class="stage-art finished-art" aria-label="最後一輪畫作"><h2>最後一幅畫${s.result.answer?' · '+esc(s.result.answer):''}</h2><canvas id="stagePreview" width="512" height="256" role="img" aria-label="最後一輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取畫作…</small></section>`:''}</div>`;
 }
 function render(live=false){
  const s=state,settingsOpen=$('#stage .stage-controls')?.open,voteFocus=document.activeElement?.id==='stageBan'?document.activeElement.dataset.resultId:null;let html='',actions='';
@@ -103,10 +149,8 @@ function render(live=false){
   html=s.host?`<details class="card stage-controls room-settings-panel"><summary>房間設定</summary><div class="room-settings-body" role="group" aria-label="房間設定欄位"><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}</div>${GameShell.settingsActions()}</div></details>`:'';
   actions=waitingActions(s);
  }else if(s.phase==='drawing'){
-  const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me),guessed=s.guessedIds.includes(s.me);
+  const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me);
    if(!eligible&&!artist)actions='<p>下一輪起可以猜題。</p>';
-   else if(guessed)actions='<p>你已猜中！等待本輪揭曉。</p>';
-   else if(artist)actions='<p>輪到你畫圖，朋友正在猜題。</p>';
   }else if(s.phase==='choosing'){
    actions=`<p>${s.presenterId===s.me?'在舞台選一題開始作畫。':'等待 '+esc(nameOf(s.presenterId))+' 選題。'}</p>`;
  }else if(s.phase==='reveal'){
@@ -122,19 +166,23 @@ function render(live=false){
  const sceneKey=s.canvasEpoch+':'+s.phase;if($('#canvasStage').dataset.sceneKey!==sceneKey){$('#canvasStage').scrollTop=0;$('#canvasStage').scrollLeft=0;$('#canvasStage').dataset.sceneKey=sceneKey;}
  $('#canvasStage').hidden=s.phase==='drawing';
  $('#boardSection').hidden=false;$('#boardSection').classList.toggle('is-drawing',s.phase==='drawing');
- $('.draw-roster').hidden=s.phase==='waiting';
+ $('.draw-roster').hidden=false;
  canvas.tabIndex=s.phase==='drawing'&&s.presenterId===s.me?0:-1;
  canvas.setAttribute('aria-hidden',s.phase==='drawing'?'false':'true');
  $('#tools').hidden=!(s.phase==='drawing'&&s.presenterId===s.me);
  $('#guessChat').hidden=!['drawing','reveal','finished'].includes(s.phase);
+ $('#drawGuessPanel').hidden=$('#guessChat').hidden;
  $('#guessForm').hidden=!(s.phase==='drawing'&&s.participantIds.includes(s.me)&&!s.guessedIds.includes(s.me));
  $('#boardTitle').textContent=s.phase==='drawing'?(s.presenterId===s.me?s.question?.title||'本輪畫布':'猜猜畫者畫什麼？'):{waiting:'今晚的畫猜桌',choosing:'第 '+s.round+' 輪，'+nameOf(s.presenterId)+' 選題',reveal:'本輪答案與畫作',finished:'本局成績'}[s.phase];
- $('#boardHint').textContent=s.phase==='drawing'&&s.hint?'題材：'+s.hint.topicLabel+' · '+s.hint.category+' · '+s.hint.length+' 字':s.phase==='drawing'?'跟著畫布一起猜':s.phase==='reveal'?'答案與畫作已揭曉':s.phase==='waiting'?'題目類別：'+topicChoices.filter(([value])=>selectedTopics(s.options).includes(value)).map(([,label])=>label).join('、'):'';
- $('#timer').hidden=!s.deadline;
+ $('#boardHint').textContent=s.phase==='reveal'?'答案與畫作已揭曉':s.phase==='waiting'?'題目類別：'+topicChoices.filter(([value])=>selectedTopics(s.options).includes(value)).map(([,label])=>label).join('、'):'';
+ $('#boardHint').hidden=!$('#boardHint').textContent;
+ $('#drawCountdown').hidden=!Number.isFinite(s.deadline)||!['choosing','drawing','reveal'].includes(s.phase);
+ $('#timerCaption').textContent={choosing:'選題剩餘',drawing:'作畫剩餘',reveal:'下一輪'}[s.phase]||'';
  updateStagePreview();
  updateStageVote();
  if(voteFocus&&voteFocus===s.result?.resultId){const button=$('#stageBan');(button?.disabled?$('#stageBanStatus'):button)?.focus({preventScroll:true});}
  updateFeed(live);
+ if(typeof ResizeObserver==='function')scheduleDrawingFit();
 }
 function updateFeed(live=false){
  if(!state)return;
@@ -157,7 +205,7 @@ function updateFeed(live=false){
   for(let index=feedEntries.length;index<guesses.length;index++){
    const item=guesses[index],line=document.createElement('p');
    line.className=item.correct?'correct':'wrong';
-   line.textContent=item.correct?`${item.name} 猜對了！ +${item.points} 分`:`${item.name}：${item.answer}`;
+   line.textContent=item.correct?`${item.name}：猜對了答案！ +${item.points} 分`:`${item.name}：${item.answer}`;
    feed.append(line);
    const fresh=motionGate?motionGate.take('feed:'+state.canvasEpoch+':'+JSON.stringify(item),live):live;
    if(fresh&&hadState&&index===guesses.length-1)animate(line,[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});
@@ -169,7 +217,7 @@ function updateFeed(live=false){
 function motionAllowed(){return window.MotionPolicy?window.MotionPolicy.allowsMotion():!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;}
 function animate(node,keyframes,options){if(window.MotionPolicy)return window.MotionPolicy.animate(node,keyframes,options);if(motionAllowed())return node?.animate?.(keyframes,options);return null;}
 function updateStagePreview(){
- const id=state?.phase==='reveal'?state.result?.resultId:null,preview=id?$('#stagePreview'):null;
+ const id=['reveal','finished'].includes(state?.phase)?state.result?.resultId:null,preview=id?$('#stagePreview'):null;
  if(!id||!preview?.getContext||!resultsView){stageResultPreview?.renderer.reset();stageResultPreview=null;return;}
  if(stageResultPreview?.id===id&&stageResultPreview.node===preview)return;
  stageResultPreview?.renderer.reset();
@@ -215,7 +263,7 @@ function playDrawSounds(previous,next,live){
 function receive(next){
  if(!next||next.type!=='draw')throw Error('這不是你畫我猜房間');
  const previous=state,oldRound=state?.round,oldPhase=state?.phase;
- if(previous&&next.version<previous.version)return;
+ if(previous&&(next.version<previous.version||RoomHost.isStaleSnapshot?.(next,previous)))return;
  const soundLive=gameSounds?.update(next,{connected:!disconnected&&!streamDisconnected&&!motionNeedsBaseline})||false;
  const live=motionGate?motionGate.update(next,{connected:!disconnected&&!streamDisconnected&&!motionNeedsBaseline}):!!previous&&!disconnected&&!motionNeedsBaseline&&Date.now()-lastReceivedAt<5000&&document.visibilityState!=='hidden';
  motionNeedsBaseline=false;
@@ -236,35 +284,44 @@ function receive(next){
  else{updateFeed(live);updateStagePreview();}
  if(next.phase==='waiting'){
   if(!changed&&previous?.players.length!==next.players.length){GameShell.stableMarkup($('#drawActions'),waitingActions(next));decorateActions();}
-  const waitingPlayers=$('#waitingPlayers');if(waitingPlayers)GameShell.stableMarkup(waitingPlayers,next.players.map(waitingPlayerRow).join(''));
-  const waitingCount=$('#waitingCount');if(waitingCount)waitingCount.textContent=next.players.length+' / 8 位';
+  const waitingCount=$('#waitingCount');if(waitingCount)waitingCount.textContent=next.players.length+' / 8 位入座';
  }
  showCorrectFeedback(previous,next,live);
  playDrawSounds(previous,next,soundLive);
- if(oldRound!==next.round||previous?.canvasEpoch!==next.canvasEpoch){strokes=[];localStrokes.clear();active=null;pending=[];sendQueue=Promise.resolve();lastSentAt=0;lastFillSentAt=0;canvasCommandEpoch++;canvasCommandBusy=false;canvasQuota={usedFills:0,usedBatches:0,usedPoints:0};canvasTotals={points:0,fills:0};canvasRound=next.round;canvasVersion=-1;canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;canvasRenderError=null;updateCanvasBusy();updateFillAvailability();updateStagePreview();}
+ if(oldRound!==next.round||previous?.canvasEpoch!==next.canvasEpoch){cancelDrawingWork();strokes=[];localStrokes.clear();sendQueue=Promise.resolve();lastSentAt=-Infinity;lastFillSentAt=-Infinity;canvasCommandEpoch++;canvasCommandBusy=false;canvasQuota={usedFills:0,usedBatches:0,usedPoints:0};canvasTotals={points:0,fills:0};canvasRound=next.round;canvasVersion=-1;canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;canvasRenderError=null;updateCanvasBusy();updateFillAvailability();updateStagePreview();}
+ else if(oldPhase==='drawing'&&next.phase!=='drawing'){cancelDrawingWork({cancelSync:false});localStrokes.clear();sendQueue=Promise.resolve();redrawCanvas();}
  if(next.strokeVersion>canvasVersion||canvasRound!==next.round)syncCanvas();
  connectEvents();tick();
 }
 function tick(){
- const label=$('#timer');if(!state?.deadline){label.textContent='–';$('#drawWaitingTime').textContent='';label.classList.remove('urgent');lastTimerSeconds=null;return;}
- const seconds=Math.max(0,Math.ceil((state.deadline-(Date.now()-clockOffset))/1000));
- label.textContent=seconds+' 秒';label.classList.toggle('urgent',state.phase==='drawing'&&seconds<=10);
- $('#drawWaitingTime').textContent=['drawing','choosing'].includes(state.phase)?'剩 '+seconds+' 秒':'';
+ const label=$('#timer'),progress=$('#timerProgress'),countdown=$('#drawCountdown');
+ const timed=state&&['choosing','drawing','reveal'].includes(state.phase)&&Number.isFinite(state.deadline);
+ countdown.hidden=!timed;
+ if(!timed){countdownBar.reset();label.textContent='–';progress.value=1;progress.classList.remove('urgent');progress.removeAttribute?.('aria-valuetext');$('#drawWaitingTime').textContent='';label.classList.remove('urgent');lastTimerSeconds=null;return;}
+ const remaining=Math.max(0,state.deadline-(Date.now()-clockOffset)),seconds=Math.ceil(remaining/1000);
+ const configured=Number(state.options?.seconds),duration=state.phase==='choosing'?15000:state.phase==='reveal'?8000:(Number.isFinite(configured)&&configured>0?configured:90)*1000;
+ const text=seconds+' 秒';if(label.textContent!==text)label.textContent=text;
+ const urgent=state.phase==='drawing'&&seconds<=10;
+ label.classList.toggle('urgent',urgent);progress.classList.toggle('urgent',urgent);
+ $('#timerTrack').classList.toggle('urgent',urgent);
+ progress.value=Math.min(1,remaining/duration);progress.setAttribute('aria-valuetext','剩餘 '+seconds+' 秒');
+ countdownBar.sync({key:state.canvasEpoch+':'+state.phase,deadline:state.deadline,duration,offset:clockOffset,visible:!document.hidden});
  if(state.phase==='drawing'&&lastTimerRound===state.round&&lastTimerSeconds>10&&seconds<=10&&motionAllowed()&&document.visibilityState!=='hidden'){
   if(!motionGate||motionGate.take('timeout:'+state.canvasEpoch,lastLiveState))animate($('.canvas-frame'),[{borderColor:'#a6b8a5'},{borderColor:'#b34b50'},{borderColor:'#a6b8a5'}],{duration:530,easing:'ease-out'});
  }
  lastTimerRound=state.round;lastTimerSeconds=seconds;
 }
 function redrawCanvas(){
+ cancelPreviewFrame();
  const visible=[],keys=[],placed=new Set();let mutableFrom=Infinity;
- const key=stroke=>['fill','rect','ellipse','line'].includes(stroke.tool)?JSON.stringify([stroke.strokeId,stroke.tool,stroke.color,stroke.size,!!stroke.filled,stroke.points]):'server:'+stroke.version+':'+stroke.strokeId;
+ const key=stroke=>['fill','rect','ellipse','line'].includes(stroke.tool)?JSON.stringify([stroke.strokeId,stroke.tool,stroke.color,stroke.size,!!stroke.filled,stroke.points]):'server:'+stroke.version+':'+stroke.strokeId+':'+(stroke.playbackCount??'complete');
  function placeDraft(draft){
   if(placed.has(draft.strokeId))return;placed.add(draft.strokeId);
   if(draft.hiddenByReset)return;
   mutableFrom=Math.min(mutableFrom,visible.length);visible.push(draft);
   keys.push(['fill','rect','ellipse','line'].includes(draft.tool)?key(draft):'local:'+draft.strokeId+':'+draft.revision);
  }
- for(const stroke of strokes){const draft=localStrokes.get(stroke.strokeId);if(draft)placeDraft(draft);else{visible.push(stroke);keys.push(key(stroke));}}
+ for(const stroke of strokes){const draft=localStrokes.get(stroke.strokeId);if(draft)placeDraft(draft);else{const presented=drawingPlayback.view(stroke);if(presented){visible.push(presented);keys.push(key(presented));}}}
  for(const draft of localStrokes.values())placeDraft(draft);
  const token=++canvasRenderEpoch;let result;
  try{result=(canvasRenderer.renderCooperatively||canvasRenderer.render)(visible,{keys,mutableFrom});}
@@ -288,16 +345,21 @@ function settleLocalStrokes(){
 function syncCanvas(){
  if(!session)return Promise.resolve();
  if(syncPromise)return syncPromise;
- syncPromise=(async()=>{
-  const requestedRound=state?.round,requestedEpoch=state?.canvasEpoch;
+ const job={round:state?.round,epoch:state?.canvasEpoch,controller:new AbortController(),timer:null,promise:null};canvasSyncJob=job;
+ const current=()=>canvasSyncJob===job&&job.epoch===state?.canvasEpoch&&job.round===state?.round;
+ job.promise=(async()=>{
+  const aborted=new Promise((_,reject)=>job.controller.signal.addEventListener('abort',()=>reject(job.controller.signal.reason),{once:true}));
+  job.timer=setTimeout(()=>job.controller.abort(new DOMException('畫布同步逾時','TimeoutError')),10000);
   try{
-   const snapshot=await api('draw/canvas');if(!sameCanvas(snapshot)||requestedEpoch!==state?.canvasEpoch||requestedRound!==state?.round)return;
+   const snapshot=await Promise.race([api('draw/canvas',undefined,{signal:job.controller.signal}),aborted]);if(!current()||!sameCanvas(snapshot))return;
    applyCanvasSnapshot(snapshot);canvasConnectionError='';updateConnection();
-  }catch(error){if(requestedEpoch===state?.canvasEpoch){canvasConnectionError='畫布正在重新同步：'+error.message;updateConnection();}}
-  finally{syncPromise=null;if(state&&(requestedRound!==state.round||requestedEpoch!==state.canvasEpoch))syncCanvas();}
+  }catch(error){if(current()&&error.name!=='AbortError'){canvasConnectionError='畫布正在重新同步：'+error.message;updateConnection();}}
+  finally{clearTimeout(job.timer);job.timer=null;if(canvasSyncJob===job){canvasSyncJob=null;syncPromise=null;}}
  })();
+ syncPromise=job.promise;
  return syncPromise;
 }
+function cancelCanvasSync(){const job=canvasSyncJob;if(!job)return;canvasSyncJob=null;syncPromise=null;clearTimeout(job.timer);job.timer=null;job.controller.abort();}
 function validCanvasSnapshot(snapshot){
  if(!Number.isSafeInteger(snapshot?.round)||!Number.isSafeInteger(snapshot.version)||snapshot.version<0||!Array.isArray(snapshot.strokes)||snapshot.strokes.length>1000)return false;
  let points=0,fills=0,previous=0;
@@ -310,6 +372,7 @@ function validCanvasSnapshot(snapshot){
 function validCanvasStroke(stroke,previous,version){
  if(!Number.isSafeInteger(stroke?.version)||stroke.version<=previous||stroke.version>version||typeof stroke.strokeId!=='string'||!/^[a-f0-9-]{8,36}$/i.test(stroke.strokeId)||!['brush','erase','line','rect','ellipse','fill'].includes(stroke.tool)||!/^#[a-f0-9]{6}$/i.test(stroke.color)||!Number.isInteger(stroke.size)||stroke.size<1||stroke.size>40||!Array.isArray(stroke.points)||stroke.points.length<1||stroke.points.length>64)return false;
  if(stroke.points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255))return false;
+ if(stroke.pointTimes!==undefined&&(!['brush','erase'].includes(stroke.tool)||!Array.isArray(stroke.pointTimes)||stroke.pointTimes.length!==stroke.points.length||stroke.pointTimes.some((time,index)=>!Number.isSafeInteger(time)||time<0||time>120000||index>0&&time<stroke.pointTimes[index-1])))return false;
  return !(stroke.tool==='fill'?stroke.points.length!==1:!['brush','erase'].includes(stroke.tool)&&stroke.points.length!==2);
 }
 function updateFillAvailability(){
@@ -329,10 +392,11 @@ function updateCanvasQuota(snapshot){
 function applyCanvasSnapshot(snapshot,reset=false){
  if(!sameCanvas(snapshot)||snapshot.version<canvasVersion)return false;
  if(!validCanvasSnapshot(snapshot))throw Error('畫布資料超過同步上限');
- strokes=snapshot.strokes;canvasVersion=snapshot.version;canvasRound=snapshot.round;
+ drawingPlayback.reset();strokes=snapshot.strokes;canvasVersion=snapshot.version;canvasRound=snapshot.round;
  canvasTotals={points:strokes.reduce((sum,stroke)=>sum+stroke.points.length,0),fills:strokes.filter(stroke=>stroke.tool==='fill').length};
  updateCanvasQuota(snapshot);
  if(reset){
+  cancelStrokeInput();drawingTransport.cancel({retainInFlight:true});sendQueue=drawingTransport.whenIdle();
   for(const [id,draft] of localStrokes){
    if(draft.pendingBatches>0){draft.finished=true;draft.resetVersion=Math.max(draft.resetVersion||0,snapshot.version);draft.hiddenByReset=!strokes.some(stroke=>stroke.strokeId===id);}
    else localStrokes.delete(id);
@@ -350,6 +414,8 @@ function receiveCanvasStroke(data){
  // Existing entries were validated when accepted; an event validates only its new batch.
  strokes.push(data.stroke);canvasVersion=data.version;canvasTotals.points+=data.stroke.points.length;if(data.stroke.tool==='fill')canvasTotals.fills++;
  updateCanvasQuota(data);
+ if(state.phase==='drawing'&&state.me!==state.presenterId&&!document.hidden&&data.stroke.pointTimes)drawingPlayback.add(data.stroke);
+ else drawingPlayback.finish({notify:false});
  settleLocalStrokes();redrawCanvas();
 }
 function connectEvents(){
@@ -360,11 +426,15 @@ function connectEvents(){
  stream.addEventListener('ready',event=>{streamDisconnected=false;updateConnection();try{const data=JSON.parse(event.data);if(sameCanvas(data)&&data.version!==canvasVersion)syncCanvas();}catch{syncCanvas();}});
  stream.addEventListener('error',()=>{streamDisconnected=true;motionNeedsBaseline=true;gameSounds?.disconnect();updateConnection();});
 }
-function drawFeedback(message,kind='info',settings=false){const node=$(settings?'#roomSettingsFeedback':'#drawStatus')||$('#drawStatus');node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});}
+function drawFeedback(message,kind='info',settings=false,guess=false){
+ const node=$(settings?'#roomSettingsFeedback':guess?'#drawGuessStatus':'#drawStatus')||$('#drawStatus');
+ node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});
+ if(!message&&!settings){const other=$(guess?'#drawStatus':'#drawGuessStatus');other.textContent='';other.dataset.kind='info';window.GameUI?.setStatus(other,'',{kind:'info'});}
+}
 let pendingDrawButton=null;
-function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
-async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch;busy=true;drawBusy(true);drawFeedback('正在送出…');try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback(name==='guess'?'猜測已送出。':'操作已完成。','success');return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error');toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
-async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));updateConnection();drawFeedback(settings?'房間設定已儲存。':'操作已完成。','success',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
+function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));$('#drawGuessPanel').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
+async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch,guess=name==='guess';busy=true;drawBusy(true);drawFeedback('正在送出…','info',false,guess);try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback('','info',false,guess);return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error',false,guess);toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
+async function roomAction(route,data={}){if(busy)return;const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));updateConnection();drawFeedback(settings?'房間設定已儲存。':'',settings?'success':'info',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
 async function saveArtwork(resultId=state?.result?.resultId){
  if(!resultId||!resultsView){drawFeedback('這輪尚未公開畫作；請從最近畫作選擇已揭曉的一輪。','error');return null;}
@@ -431,28 +501,25 @@ async function command(name){
 }
 $('#undo').onclick=()=>command('undo');$('#clear').onclick=()=>{if(confirm('清空這輪畫布？'))command('clear');};
 function canDraw(){return !canvasCommandBusy&&!canvasRecovering&&!canvasRenderError&&state?.phase==='drawing'&&state.presenterId===state.me;}
-function queueStroke(points,strokeId,mode=tool){
- if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+points.length>30000){const draft=localStrokes.get(strokeId);if(draft)draft.failed=true;drawFeedback('本輪筆畫額度已用完，請等待下一輪。','error');return sendQueue;}
- if(mode==='fill'&&canvasQuota.usedFills>=48){drawFeedback('本輪填色額度已用完，可用畫筆或形狀繼續。','error');return sendQueue;}
+function rejectPendingDrawing(message){
+ for(const draft of localStrokes.values()){draft.failed=true;draft.finished=true;}
+ cancelStrokeInput(true);drawingTransport.cancel({retainInFlight:true});sendQueue=drawingTransport.whenIdle();
+ drawFeedback(message+'；尚未同步的筆畫已取消，正在回復已確認畫布。','error');syncCanvas();settleLocalStrokes();
+ return sendQueue;
+}
+function queueStroke(points,strokeId,mode=tool,pointTimes){
+ if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+points.length>30000)return rejectPendingDrawing('本輪筆畫額度已用完，請等待下一輪。');
+ if(mode==='fill'&&canvasQuota.usedFills>=48)return rejectPendingDrawing('本輪填色額度已用完，可用畫筆或形狀繼續。');
  if(mode==='fill'&&[...localStrokes.values()].some(draft=>draft.tool==='fill'&&!draft.failed)){drawFeedback('填色正在同步，請稍候再填下一區。');return sendQueue;}
  let draft=localStrokes.get(strokeId);
  if(!draft){
   if(!localCanvasCapacity(points.length)){drawFeedback('畫布同步中的筆畫已達上限，請稍候。','error');return sendQueue;}
   draft={strokeId,tool:mode,color:$('#color').value,size:Number($('#size').value),filled,points:[...points],revision:1,finished:true,pendingBatches:0,ackVersion:0,failed:false};
-  localStrokes.set(strokeId,draft);redrawCanvas();
+  localStrokes.set(strokeId,draft);scheduleCanvasPreview();
  }
- draft.pendingBatches++;
- const data={canvasEpoch:state.canvasEpoch,round:state.round,batchId:StrokeCanvas.strokeId(),strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points};
- const current=()=>sameCanvas(data)&&localStrokes.get(strokeId)===draft;
- sendQueue=sendQueue.then(async()=>{
-  if(!current())return;
-  const delay=Math.max(0,115-(Date.now()-lastSentAt),mode==='fill'?500-(Date.now()-lastFillSentAt):0);if(delay)await new Promise(resolve=>setTimeout(resolve,delay));if(!current())return;lastSentAt=Date.now();if(mode==='fill')lastFillSentAt=lastSentAt;
-  try{
-   const result=await api('draw/stroke',data);
-   if(current()&&sameCanvas(result)){updateCanvasQuota(result);draft.ackVersion=Math.max(draft.ackVersion,result.version);if(draft.ackVersion>(draft.resetVersion||0))draft.hiddenByReset=false;if(result.stroke)receiveCanvasStroke(result);if(result.version>canvasVersion)syncCanvas();}
-  }catch(error){if(current()){draft.failed=true;drawFeedback(error.message,'error');toast(error.message);syncCanvas();}}
-  finally{if(current()){draft.pendingBatches--;settleLocalStrokes();}}
- }).catch(error=>{if(current())toast(error.message);});
+ const data={canvasEpoch:state.canvasEpoch,round:state.round,strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points,...(pointTimes?{pointTimes}:{} )};
+ try{drawingTransport.enqueue(data,draft);}catch(error){rejectPendingDrawing(error.message);toast(error.message);}
+ sendQueue=drawingTransport.whenIdle();
  return sendQueue;
 }
 function localCanvasCapacity(extraPoints=0){
@@ -463,35 +530,66 @@ function localCanvasCapacity(extraPoints=0){
 }
 function flush(final=false){
  if(!active||!['brush','erase'].includes(active.tool))return;
+ clearStrokeFlush();
   if(pending.length>1||!active.sent){
-   const points=[...pending];if(points.length){queueStroke(points,active.strokeId,active.tool);active.sent=true;pending=final?[]:[points.at(-1)];}
+   const points=[...pending],times=[...pendingTimes],draft=active;if(points.length){queueStroke(points,draft.strokeId,draft.tool,times);if(active!==draft)return;draft.sent=true;pending=final?[]:[points.at(-1)];pendingTimes=final?[]:[times.at(-1)];}
   }
- if(final)pending=[];
+ if(final){pending=[];pendingTimes=[];}
+}
+function clearStrokeFlush(){if(strokeFlushTimer!==null)clearTimeout(strokeFlushTimer);strokeFlushTimer=null;}
+function scheduleStrokeFlush(){
+ if(strokeFlushTimer!==null||!active||!['brush','erase'].includes(active.tool))return;
+ const draft=active,epoch=state.canvasEpoch;
+ strokeFlushTimer=setTimeout(()=>{strokeFlushTimer=null;if(active===draft&&state?.canvasEpoch===epoch)flush();},140);
+}
+function cancelPreviewFrame(){if(previewFrame!==null)cancelAnimationFrame(previewFrame);previewFrame=null;}
+function scheduleCanvasPreview(){
+ if(previewFrame!==null)return;
+ const epoch=state?.canvasEpoch;
+ previewFrame=requestAnimationFrame(()=>{previewFrame=null;if(state?.canvasEpoch===epoch)redrawCanvas();});
+}
+function cancelStrokeInput(failed=false){clearStrokeFlush();cancelPreviewFrame();if(active){active.finished=true;if(failed)active.failed=true;}active=null;pending=[];pendingTimes=[];}
+function cancelDrawingWork({cancelSync=true}={}){cancelStrokeInput();drawingPlayback.reset();drawingTransport.cancel();if(cancelSync)cancelCanvasSync();if(drawingFitFrame!==null)cancelAnimationFrame(drawingFitFrame);drawingFitFrame=null;}
+function pointerSamples(event){
+ let samples;if(event.type==='pointermove')try{samples=event.getCoalescedEvents?.();}catch{}
+ samples=(samples?.length?[...samples]:[event]).filter(sample=>sample.pointerId===event.pointerId);
+ const rect=canvas.getBoundingClientRect();
+ return samples.map(sample=>({point:[Math.max(0,Math.min(511,Math.floor((sample.clientX-rect.left)*512/rect.width))),Math.max(0,Math.min(255,Math.floor((sample.clientY-rect.top)*256/rect.height)))],stamp:Number.isFinite(sample.timeStamp)&&sample.timeStamp>=0?sample.timeStamp:null})).filter(sample=>sample.point.every(Number.isFinite));
+}
+function collectPointer(event){
+ if(!active||canvasCommandBusy||event.pointerId!==active.pointerId)return false;
+ const brush=['brush','erase'].includes(active.tool);let changed=false;
+ for(const sample of pointerSamples(event)){
+  const point=sample.point,time=Math.min(120000,Math.max(active.pointTimes.at(-1),Math.round(sample.stamp!==null&&active.startStamp!==null?sample.stamp-active.startStamp:drawNow()-active.startNow)));
+  const last=active.points.at(-1);if(point[0]===last[0]&&point[1]===last[1])continue;
+  if(active.points.length>=30000||!localCanvasCapacity(1)){drawFeedback('這一筆已達畫布上限，請放開後再操作。','error');break;}
+  if(brush){active.points.push(point);active.pointTimes.push(time);pending.push(point);pendingTimes.push(time);}else{active.points=[active.points[0],point];pending=[active.points[0],point];}
+  active.revision++;cursor=point;changed=true;
+ }
+ if(changed&&brush){if(pending.length>=40)flush();else scheduleStrokeFlush();}
+ return changed;
 }
 canvas.addEventListener('pointerdown',event=>{
  if(!canDraw()||active||event.button!==0)return;event.preventDefault();canvas.setPointerCapture(event.pointerId);
  if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints>=30000||!localCanvasCapacity(1)){drawFeedback('本輪筆畫額度已用完或仍在同步，請稍候。','error');return;}
- const point=StrokeCanvas.pointFrom(event,canvas,512,256);cursor=point;
+ const sample=pointerSamples(event).at(-1);if(!sample)return;const point=sample.point;cursor=point;
  if(tool==='fill'){queueStroke([point],StrokeCanvas.strokeId(),'fill');return;}
- active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],revision:1,sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
- localStrokes.set(active.strokeId,active);pending=[point];redrawCanvas();
+ active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],pointTimes:[0],startStamp:sample.stamp,startNow:drawNow(),revision:1,sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
+ localStrokes.set(active.strokeId,active);pending=[point];pendingTimes=[0];scheduleStrokeFlush();scheduleCanvasPreview();
 });
 canvas.addEventListener('pointermove',event=>{
- if(!active||event.pointerId!==active.pointerId)return;const point=StrokeCanvas.pointFrom(event,canvas,512,256),last=active.points.at(-1);
- if(point[0]===last[0]&&point[1]===last[1])return;
- if(active.points.length>=30000||!localCanvasCapacity(1)){drawFeedback('這一筆已達畫布上限，請放開後再操作。','error');return;}
- if(['brush','erase'].includes(active.tool))active.points.push(point);else active.points=[active.points[0],point];
- active.revision++;if(['brush','erase'].includes(active.tool))pending.push(point);else pending=[active.points[0],point];cursor=point;
- if(['brush','erase'].includes(active.tool)&&pending.length>=40)flush();
- redrawCanvas();
+ if(collectPointer(event))scheduleCanvasPreview();
 });
 function finishPointer(event){
  if(!active||event.pointerId!==active.pointerId)return;event.preventDefault();
+ if(event.type==='pointerup')collectPointer(event);clearStrokeFlush();cancelPreviewFrame();
  if(['brush','erase'].includes(active.tool))flush(true);
  else queueStroke([active.points[0],active.points.at(-1)],active.strokeId,active.tool);
+ if(!active)return;
  active.finished=true;active=null;settleLocalStrokes();redrawCanvas();
 }
 canvas.addEventListener('pointerup',finishPointer);canvas.addEventListener('pointercancel',finishPointer);
+canvas.addEventListener('lostpointercapture',finishPointer);
 canvas.addEventListener('keydown',event=>{
  if(!canDraw())return;const moves={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
  if(moves[event.key]){event.preventDefault();cursor=[Math.max(0,Math.min(511,cursor[0]+moves[event.key][0])),Math.max(0,Math.min(255,cursor[1]+moves[event.key][1]))];toast('畫布位置 '+(cursor[0]+1)+'，'+(cursor[1]+1)+'；按空白鍵落筆');}
@@ -501,6 +599,7 @@ async function poll(){if(!session||busy||polling)return;polling=true;try{receive
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||location.origin).catch(()=>{});
 entry();if(session)poll();else if(code)RoomReconnect.restore(code,'draw','#connection').then(restored=>{if(restored){save(restored);poll();}});
 setInterval(poll,1000);setInterval(tick,250);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
-window.addEventListener('pagehide',event=>{stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
-window.addEventListener('pageshow',event=>{if(event.persisted){motionNeedsBaseline=true;if(state){resultsView?.update(state);updateStagePreview();}poll();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(active)finishPointer({pointerId:active.pointerId,preventDefault(){}});cancelPreviewFrame();drawingPlayback.finish();countdownBar.reset();}else tick();});
+window.addEventListener('pagehide',event=>{countdownBar.reset();cancelDrawingWork();localStrokes.clear();canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
+window.addEventListener('pageshow',event=>{if(event.persisted){motionNeedsBaseline=true;if(state){resultsView?.update(state);redrawCanvas();syncCanvas();updateStagePreview();}poll();}});
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});

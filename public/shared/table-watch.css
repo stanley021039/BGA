@@ -56,3 +56,29 @@ body[data-game-kind] #watchProposals li button{flex:none}
 body[data-game-kind].ui-large-text .table-watch-dialog{font-size:1rem}
 body[data-game-kind].ui-large-text .table-watch-dialog :is(button,input,label){font-size:1rem}
 body[data-game-kind].ui-large-text .table-watch-body p,body[data-game-kind].ui-large-text .table-watch-header p{font-size:.875rem}
+
+/* Resizing changes local geometry, never the iframe or shared playback. */
+body[data-game-kind] .table-watch-header{flex-wrap:wrap}
+body[data-game-kind] .table-watch-header>div:first-child{min-width:0;flex:1 1 160px}
+body[data-game-kind] .table-watch-header h2{overflow-wrap:anywhere}
+body[data-game-kind] #watchController{overflow-wrap:anywhere}
+body[data-game-kind] .table-watch-screen{flex:none;min-height:210px}
+body[data-game-kind] #watchPlayer{height:auto;min-height:210px;aspect-ratio:16/9}
+body[data-game-kind] #watchPlayer iframe{min-height:210px}
+body[data-game-kind] .table-watch-resize-bar{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex:none;min-height:44px;padding:0 8px;background:inherit;border:0}
+body[data-game-kind] #watchResize{width:44px;height:44px;min-width:44px;padding:8px;touch-action:none;cursor:nwse-resize}
+body[data-game-kind] #watchResize:focus-visible{outline-offset:-3px}
+body[data-game-kind] .watch-resizing iframe{pointer-events:none}
+body[data-game-kind] .watch-narrow .table-watch-body{display:flex;flex-direction:column;gap:12px}
+body[data-game-kind] .watch-narrow .table-watch-controls{min-width:0;min-height:0;border-top:1px solid #82958c66;padding-top:12px}
+body[data-game-kind] .watch-sized .table-watch-body{flex:1;min-height:0;overflow:auto;grid-template-columns:minmax(210px,1.7fr) minmax(260px,1fr)}
+body[data-game-kind] .table-watch-dialog.watch-sized{max-height:calc(100dvh - 16px)}
+body[data-game-kind] .watch-sized .table-watch-view{flex:1;min-height:210px;overflow:hidden}
+body[data-game-kind] .watch-sized .table-watch-screen{flex:1;min-height:210px;overflow:hidden}
+body[data-game-kind] .watch-sized #watchPlayer{height:100%;aspect-ratio:auto}
+body[data-game-kind] .watch-sized .table-watch-local{flex:none;max-height:var(--watch-local-limit,160px);overflow:auto;overscroll-behavior:contain}
+body[data-game-kind] .watch-sized.watch-narrow .table-watch-controls{flex:none;max-height:var(--watch-controls-limit,180px);overflow:auto;overscroll-behavior:contain}
+body[data-game-kind] .watch-sized.watch-compact .table-watch-view{flex:1}
+body[data-game-kind] .table-watch-dialog :is(#watchSizeLabel){font-size:14px;font-variant-numeric:tabular-nums}
+body[data-game-kind] #watchSizeLabel{margin-right:auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body[data-game-kind].ui-large-text #watchSizeLabel{font-size:.875rem}

@@ -8,7 +8,7 @@ const quota=(usedFills=0,usedBatches=0,usedPoints=0)=>({usedFills,usedBatches,us
 const snapshot=(epoch,version=0,strokes=[],used=quota())=>({canvasEpoch:epoch,round:1,version,strokes,quota:used});
 function result(request,version=1,used=quota(1,1,1)){return {canvasEpoch:request.data.canvasEpoch,round:request.data.round,version,stroke:{...request.data,version},quota:used};}
 async function setup(t){const ui=browserHarness({realRenderer:true,events:true});ui.receive(drawingState('artist'));await pause();t.after(()=>clearTimeout(run(ui,'toast.timer')));return ui;}
-async function fill(ui,color='#00ff00'){ui.element('#color').value=color;run(ui,'tool="fill";lastSentAt=0;lastFillSentAt=0');ui.listeners.get('#drawCanvas:pointerdown')({button:0,pointerId:1,point:[0,0],preventDefault(){}});await pause();return ui.strokeRequests.at(-1);}
+async function fill(ui,color='#00ff00'){ui.element('#color').value=color;run(ui,'tool="fill";lastSentAt=0;lastFillSentAt=0');ui.listeners.get('#drawCanvas:pointerdown')({button:0,pointerId:1,point:[0,0],preventDefault(){}});ui.paintFrame();await pause();return ui.strokeRequests.at(-1);}
 async function restart(ui){const next=drawingState('artist');next.version=3;next.canvasEpoch=NEXT_EPOCH;ui.setSnapshot(snapshot(NEXT_EPOCH));ui.receive(next);await pause();return next;}
 
 test('exhausted canvas quotas reset after leave/rejoin and restarting round one, while stale POSTs fail before deduplication or mutation',async t=>{
@@ -63,7 +63,7 @@ test('a delayed old command response and finally cannot reset the new image or u
 });
 
 test('a stroke delayed by the local pacing timer is discarded when its epoch changes before POST',async t=>{
- const ui=await setup(t);run(ui,'lastSentAt=Date.now();queueStroke([[20,20]],StrokeCanvas.strokeId(),"brush")');const old=run(ui,'sendQueue');await pause();assert.equal(ui.strokeRequests.length,0);await restart(ui);await old;assert.equal(ui.strokeRequests.length,0);
+ const ui=await setup(t);run(ui,'lastSentAt=drawNow();queueStroke([[20,20]],StrokeCanvas.strokeId(),"brush")');const old=run(ui,'sendQueue');await pause();assert.equal(ui.strokeRequests.length,0);await restart(ui);await old;assert.equal(ui.strokeRequests.length,0);
  const fresh=await fill(ui);assert.ok(fresh);fresh.resolve(result(fresh));await run(ui,'sendQueue');assert.equal(ui.strokeRequests.length,1);assert.equal(run(ui,'canvasQuota.usedBatches'),1);
 });
 

@@ -1,5 +1,29 @@
 # Server／資料 agent 記憶
 
+2026-10-07最新正式v1.7.1／`3d82e3f`／PID88602：角色表情前端共用回覆與亂序修正，schema15／21表不變；兩平台各940、0房間切換，fresh backup副本21schema／rows／BLOB及8帳戶全欄位保留。正式五game双席使用own既有角色測臨時表情，不寫profile／原faker；own五桌離房、3session登出、代理／presence／tab清理後rooms0。21schema及20非session表所有rows／BLOB與備份相同，sessions152→155為QA登入／登出，env／原資料路徑／service／tunnel正常、integrity ok／FK0。原faker GIF副本僅隔離診斷；外站資料代未啟用，下一次重新盤點，不沿用85927／1.7.0guard。非原子冷備份與來源見 [表情發布](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。
+
+2026-10-07最新正式v1.7.0／`82149a4`／PID85927：僅影片個人視窗尺寸及共用icon／測試，watch協議與schema15／21表保持。Windows／Linux各914、0房間切換，fresh backup副本21schema／rows／BLOB及8帳戶全欄位相同；公開2會員實播縮放零watch請求、3席revision1仍paused。own席位離房／3session登出，tab／proxy／presence停止，rooms0；20非session表所有rows／BLOB與備份相同、21schema保持，sessions149→152為QA登入／登出。env／原資料路徑／service／tunnel正常，integrity ok／FK0，外站資料代未啟用。下一次重新盤點，不能沿用83301／v1.6.0guard；非原子冷備份及來源見 [尺寸發布](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。
+
+2026-10-07最新正式v1.6.0／`74372ed`／PID83301：共用歌曲選曲權限及UI，schema15／21表不變；兩平台各896，0房間切換、新鮮備份副本21schema／rows／BLOB一致，8帳戶全欄位保留。公開真上傳及非房主選播／兩Audio已驗，own歌曲／席位清理、3session登出／proxy／presence／tab停止、rooms0。最後20非session表所有rows／BLOB與備份相同，21schema保持；session146→149正常QA登入／登出，env／原資料路徑／service／tunnel正常、integrity ok／FK0。備份非原子冷快照，外站資料代未啟用；下一次重新盤點，不沿用下方80949／v1.5.8guard。詳 [歌曲發布](../MUSIC-SHARING-PROGRESS.md)。
+
+2026-10-07最新正式v1.5.8／`470ab26`／PID80949：角色及表情上限4MiB，source／schema15不需migration。新鮮備份副本21表schema／rows／BLOB相同，0房間切換，8帳戶全欄位保留／integrity ok／FK0；Windows／Linux各889及正式真Chrome4MiB／三route bytes已驗。清理own測試角色後20非session表所有rows／BLOB與備份相同、21schema不變；session因一次QA登入／登出145→146，已登出。proxy／tab／viewport清理、rooms0；env／資料路徑／service／tunnel正常，外站資料代未啟用。下一次重新盤點，不用下方78591／1.5.7guard。備份非原子冷快照及詳細來源見 [最新圖片上限發布](../CHARACTER-IMAGE-SIZE-PROGRESS.md)。
+
+2026-10-07最新正式v1.5.7／`4c5b5e7`／PID78591：前端姓名／卡片修正，schema15／21表、8帳戶全欄位、env及原路徑保留，integrity ok／FK0。新鮮備份副本21表schema／rows／BLOB一致，0房間切換；公開30資源／3席後原暱稱核對恢復、own席位離房／session登出／proxy停止，房間0。最後全users rows仍與備份完全相同。備份不是原子冷快照，外站資料代未啟用；下一次重新盤點，勿用下方76509／1.5.6guard。詳 [最新姓名發布](../DRAW-PLAYER-NAME-PROGRESS.md)。
+
+2026-10-07最新正式v1.5.6／`5941c03`／PID76509：畫猜高度修正，schema15／21表、8帳戶全欄位、env及原資料路徑保留，integrity ok／FK0。新鮮備份副本啟動前後21表schema／rows／BLOB一致、0房間切換；公開26資源／3席驗收後own席位離房／session登出／proxy停止，房間0。SQLite與持久檔另備非原子冷快照，外站資料代未啟用。後續重新盤點，不沿用下方73168／1.5.5guard。詳 [發布證據](../DRAW-VIEWPORT-FIT-PROGRESS.md)。
+
+2026-10-07最新正式v1.5.5／`18d21ae`／PID73168：倒數UI及原生軌道繪製修正，schema15／21表不變，8帳戶全欄位／.env／原資料路徑保留，integrity ok／FK0、service／tunnel正常。新鮮備份副本21表schema／rows／BLOB一致，0房間切換；正式3席／26資源與進度像素比例已驗，測試席位離開及session登出後0房間，沒有啟用外站資料。SQLite與持久檔另備而非原子冷快照；新發布／匯入須重新盤點，不沿用下方舊PID／版本guard。詳 [最新倒數發布](../DRAW-TIMER-VISIBILITY-PROGRESS.md)。
+
+2026-10-07最新正式v1.5.3／`0609c01`／PID68975：只同步共用UI對齊；schema15／21表，8帳戶全欄位、.env／原路徑保留，integrity ok／FK0，service／tunnel正常。副本啟動前後21表schema／rows／BLOB一致，0房間切換，公開25資源及正式3席題卡確認；測試席位離开及session登出後0房間。備份不是跨檔原子冷快照，外站資料代未啟用。不要沿用下方7939090／PID66841盤點作下一次發布或匯入guard；詳 [最新同步](../SHARED-UI-ALIGNMENT-PROGRESS.md)。
+
+2026-10-07最新正式v1.5.2／`7939090`／PID66841：只同步PR43跳台與音效時鐘修正，schema15不變。新鮮8帳戶備份及隔離啟動前後21表schema／rows／BLOB一致；零房間切換後8帳戶全欄位與備份相同、integrity ok／FK0，.env／原資料路徑不變，service／tunnel正常。SQLite一致性備份與持久檔另備並非原子冷快照；原PR43 Ready未合併，受測本地tag固定7939090，双平台各863及公開API／資源已驗。外站shadow仍未啟用；後續匯入必須重新盤點，不沿用歷史PID／版本／帳戶數。證據見 [正式同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，下方v1.5.1為歷史。
+
+2026-10-07最新正式v1.5.1／`d4e3b4a`／PID62990：原shhuang.cc資料升schema15，切換前0房間，service／tunnel正常。以最新8帳戶備份預演，16個舊表schema／rows／BLOB完全保留，只新增5個空市場表；正式8帳戶全欄位（含近期重設雜湊）一致、integrity ok／FK0。現站原資料路徑及.env不變，外站shadow仍未啟用，原ZIP／移轉key及副本保留。外站來源3帳戶要取代／合併現在8帳戶仍待使用者決定；後續不得沿用舊4732450／schema14／7帳戶guard，須重新盤點並使用最新UI程式避免倒退。備份不是跨檔原子冷快照；完整記錄見 [畫猜发布](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)，下方1.5.0shadow及1.3.0正式為歷史。
+
+2026-10-06：依使用者明確要求，已重設正式站既有管理者密碼。先建立線上一致性 SQLite 備份，再使用既有密碼重設流程；公開站登入、管理者權限及驗證 session 登出通過，原有 10 筆登入狀態已撤銷，其餘 6 個帳戶全欄位不變。未重啟服務、未切換程式或外部匯入資料。帳密不放在此文件；若後續選擇來源整份取代，帳戶密碼仍以來源資料為準，不能沿用這次現站重設結果。
+
+2026-10-06最新v1.5.0本地候選／`723fbe4`：legacy附件typed allowlist與HISTORY_PRESERVE_IMPORTED_SESSIONS旗標，完整兩平台834項、實際來源本機／server shadow 49logs／3帳戶／1作品／2音樂／5PNG及backfill保全通過。來源ZIP不執行程式，WAL讀入consistent SQLite snapshot；來源跨檔原子性只有來源宣稱，沒有自動重啟獨立證據。正式未改，待使用者決定來源3帳戶是否整份取代現站7帳戶，尚未做切換完整冷備份。下列舊schema14／候選驗收為歷史，以 [最新進度](../LEGACY-IMPORT-PROGRESS.md)為準。
+
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。

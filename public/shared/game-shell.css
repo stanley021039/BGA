@@ -70,6 +70,14 @@ body.game-room .room-sidebar #players{display:grid;grid-template-columns:1fr;gap
 .room-player-avatar img{width:100%;height:100%;object-fit:contain}.room-avatar-fallback{font-size:18px;color:#294e43;font-weight:700}
 .room-player-info{flex:1;min-width:0}.room-player-info b{display:block;overflow-wrap:anywhere;font-size:14px;font-weight:700}.room-player-info small{display:block;font-size:12px;line-height:1.5;color:var(--room-muted);margin-top:3px}
 .room-player-metrics{display:flex;gap:12px;flex:none;align-items:center}.room-player-metrics strong{font:700 22px/1.2 "Segoe UI","Microsoft JhengHei",sans-serif;color:var(--room-accent)}
+.shared-player .shared-player-name{display:flex;align-items:center;gap:4px;min-width:0}
+.shared-player-name>.ui-player-name{flex:1;min-width:0}
+.shared-player .shared-player-self{flex:none;white-space:nowrap;margin:0;padding:0}
+.room-media-slot{display:flex;min-width:0;flex:1}.room-media-slot .table-media-open{width:100%;min-height:44px}
+body.game-room .shared-emoji-picker{display:block;box-sizing:border-box;width:340px;max-width:calc(100vw - 24px);max-height:min(70vh,500px);overflow:auto;padding:12px;background:var(--ui-surface,#fff9ed);color:var(--ui-text,#263b36);border-color:var(--ui-border,#959c8b)}
+body.game-room .shared-emoji-picker h3{margin:0 0 8px;font-size:14px;line-height:1.5;font-weight:600;letter-spacing:0;color:inherit}body.game-room .shared-emoji-picker hr{margin:14px 0;border:0;border-top:1px solid var(--ui-border,#ccd5c7)}
+body.game-room .shared-emoji-picker .shared-emoji-choices{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}body.game-room .shared-emoji-picker .shared-emoji-choices button{height:44px;min-height:44px;min-width:0;width:100%;font-size:26px;padding:4px}
+body.game-room .shared-emoji-picker .shared-expressions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-height:0;max-height:none;overflow:visible}body.game-room .shared-emoji-picker .shared-expressions button{height:82px;min-height:44px;padding:6px;gap:4px;min-width:0}body.game-room .shared-emoji-picker .shared-expressions img{height:44px;object-fit:contain}body.game-room .shared-emoji-picker .shared-expressions span{font-size:13px;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
 body.game-room .shared-game-ui.integrated:not(.race-ui){margin:18px 0 0;padding:0;border:0;gap:12px;color:var(--room-text);font:14px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}
 body.game-room .shared-game-ui.integrated h2{margin:0;font-size:12px;line-height:1.5;font-weight:700;letter-spacing:0;color:var(--room-muted)}
 body.game-room .shared-game-ui .shared-turn{padding:12px;min-height:44px;display:grid;place-items:center;font-size:14px;line-height:1.5;font-weight:600;border-radius:10px;border:1px solid var(--room-border);background:var(--room-status);color:var(--room-status-text);box-shadow:none}
@@ -106,3 +114,6 @@ body.game-room .room-sidebar #hostControls{margin:0 0 16px}
 
 .room-leave{box-sizing:border-box;display:inline-flex;align-items:center;height:36px;padding:6px 12px;border:1px solid #64765a;border-radius:9px;background:#19251e;color:#eee9d8;text-decoration:none;font:12px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}.room-leave[hidden]{display:none}
 .room-history-warning{padding:10px 14px;margin:10px 0;border:1px solid #bb7046;border-radius:8px;background:#fff0dc;color:#713c24;font:14px/1.5 "Segoe UI","Microsoft JhengHei",sans-serif}.room-history-warning[hidden]{display:none}
+body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions{--ui-expression-card-size:max(64px,var(--ui-control-height,44px));grid-template-columns:repeat(auto-fill,var(--ui-expression-card-size));justify-content:start}
+body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions button{display:grid;place-items:center;width:var(--ui-expression-card-size);height:var(--ui-expression-card-size);min-height:44px;padding:4px;gap:0}
+body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions img{width:100%;height:100%;min-width:0;min-height:0;object-fit:contain;pointer-events:none}

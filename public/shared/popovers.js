@@ -11,7 +11,9 @@
  }
  if(typeof module==='object'&&module.exports)module.exports={placement};
  if(!root.document)return;
- const bindings=new WeakMap(),active=new Set(),all=new Set();
+ const bindings=new WeakMap(),active=new Set(),all=new Set(),pointerStarts=new WeakMap();
+ const containsTarget=(panel,target)=>target===panel||!!target?.nodeType&&panel.contains(target);
+ function setStyles(style,values){for(const [key,value] of Object.entries(values))if(style[key]!==value)style[key]=value;}
  function bind(trigger,panel,options={}){
   if(!trigger||!panel)return null;if(bindings.has(panel))return bindings.get(panel);
   const original=panel.getAttribute('style'),originalPopover=panel.getAttribute('popover');
@@ -19,6 +21,7 @@
   const isOpen=options.isOpen||(()=>!panel.hidden);
   const inline=()=>options.inlineBelow&&innerWidth<=options.inlineBelow;
   function reset(){
+   if(frame){cancelAnimationFrame(frame);frame=0;}pointerStarts.delete(api);
    if(typeof panel.hidePopover==='function'&&panel.matches(':popover-open'))panel.hidePopover();
    if(originalPopover===null)panel.removeAttribute('popover');else panel.setAttribute('popover',originalPopover);
    if(original===null)panel.removeAttribute('style');else panel.setAttribute('style',original);
@@ -31,12 +34,13 @@
    const anchor=trigger.getBoundingClientRect();
    if(!trigger.isConnected||!panel.isConnected||!anchor.width||!anchor.height||anchor.bottom<viewport.top||anchor.top>viewport.top+viewport.height||anchor.right<viewport.left||anchor.left>viewport.left+viewport.width){close();return;}
    const style=panel.style;
-   style.position='fixed';style.margin='0';style.inset='auto';style.transform='none';style.boxSizing='border-box';style.minWidth='0';style.minHeight='0';style.zIndex='1000';style.overflow='auto';
-   style.maxWidth=Math.max(0,viewport.width-16)+'px';style.maxHeight=Math.max(0,viewport.height-16)+'px';
-   if(options.width)style.width=(options.width==='trigger'?anchor.width:options.width)+'px';
+   setStyles(style,{position:'fixed',margin:'0',inset:'auto',transform:'none',boxSizing:'border-box',minWidth:'0',minHeight:'0',zIndex:'1000',overflow:'auto',maxWidth:Math.max(0,viewport.width-16)+'px'});
+   if(options.width)setStyles(style,{width:(options.width==='trigger'?anchor.width:options.width)+'px'});
+   // Read scrollHeight under the existing constraint. Temporarily expanding
+   // maxHeight can clamp scrollTop while a user is dragging the scrollbar.
    const size=panel.getBoundingClientRect(),naturalHeight=Math.max(size.height,Math.min(panel.scrollHeight+size.height-panel.clientHeight,viewport.height-16));
    const result=placement(anchor,{width:size.width,height:naturalHeight},viewport,options);
-   style.left=result.left+'px';style.top=result.top+'px';style.maxHeight=result.maxHeight+'px';
+   setStyles(style,{left:result.left+'px',top:result.top+'px',maxHeight:result.maxHeight+'px'});
    panel.dataset.popoverSide=result.side;
   }
   function schedule(){if(opened&&!frame)frame=requestAnimationFrame(position);}
@@ -81,13 +85,15 @@
   const schedule=()=>{if(opened&&!frame)frame=requestAnimationFrame(position);};
   new MutationObserver(sync).observe(panel,{attributes:true,attributeFilter:['hidden']});
   if(typeof ResizeObserver==='function'){const observer=new ResizeObserver(schedule);observer.observe(panel);observer.observe(container);}
-  root.addEventListener('resize',schedule);root.addEventListener('scroll',schedule,true);root.visualViewport?.addEventListener('resize',schedule);root.visualViewport?.addEventListener('scroll',schedule);
+  root.addEventListener('resize',schedule);root.addEventListener('scroll',event=>{if(!containsTarget(panel,event.target))schedule();},true);root.visualViewport?.addEventListener('resize',schedule);root.visualViewport?.addEventListener('scroll',schedule);
   sync();return {sync,position:schedule};
  }
  root.UIPopover={bind,bindDetails,bindOverlay,placement};
- document.addEventListener('click',event=>{for(const api of [...active])if(!api.panel.contains(event.target)&&!api.trigger.contains(event.target))api.close();});
+ document.addEventListener('pointerdown',event=>{for(const api of active)pointerStarts.set(api,{id:event.pointerId,inside:containsTarget(api.panel,event.target)||containsTarget(api.trigger,event.target)});},true);
+ document.addEventListener('pointercancel',event=>{for(const api of active)if(pointerStarts.get(api)?.id===event.pointerId)pointerStarts.delete(api);},true);
+ document.addEventListener('click',event=>{for(const api of [...active]){const started=pointerStarts.get(api);pointerStarts.delete(api);if(!containsTarget(api.panel,event.target)&&!containsTarget(api.trigger,event.target)&&!(started?.inside&&event.detail!==0))api.close();}});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!document.querySelector('dialog[open]'))for(const api of [...active]){event.preventDefault();api.close(true);}});
- const reposition=()=>{for(const api of active)api.position();},resize=()=>{for(const api of all)api.sync();};
+ const reposition=event=>{for(const api of active)if(!containsTarget(api.panel,event?.target))api.position();},resize=()=>{for(const api of all)api.sync();};
  root.addEventListener('resize',resize);root.addEventListener('scroll',reposition,true);
  root.visualViewport?.addEventListener('resize',resize);root.visualViewport?.addEventListener('scroll',reposition);
  // Game renderers replace action panels. Release old bindings rather than retaining their DOM.

@@ -22,6 +22,7 @@ const { Room } = require('../src/games/poker');
 const { SubmissionService } = require('../src/integrations/github/submissions');
 const { BoardStore } = require('../src/community/board');
 const { MarketStore, validateMarketDatabase } = require('../src/market/store');
+const { characterImagePng } = require('./helpers/character-image-fixture.cjs');
 
 const password = 'synthetic-test-password';
 const mp3 = Buffer.concat([Buffer.from([255,251,144,100]), Buffer.alloc(830)]);
@@ -46,8 +47,8 @@ function seedMarket(db,f) {
   for (const [expectedRevision,returnPct] of [[0,2],[1,-2]]) store.settle(admin,{requestId:crypto.randomUUID(),roundId:id,returnPct,expectedRevision,reason:expectedRevision?'移轉前更正':'',confirmed:true});
 }
 async function fixture(t, { playing = false, minimal = false, sounds = false } = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'afterhours-data-test-'));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 5 }));
+  const parent = fs.realpathSync(os.tmpdir()), root = fs.mkdtempSync(path.join(parent, 'afterhours-data-test-'));
+  t.after(() => { const absolute = fs.realpathSync(root); assert.equal(absolute,path.resolve(root)); assert.equal(path.dirname(absolute),parent); assert.ok(path.basename(absolute).startsWith('afterhours-data-test-')); fs.rmSync(absolute, { recursive: true, force: true, maxRetries: 5 }); });
   const old = path.join(root, 'old'), source = { envId: 'test', dbFile: path.join(old,'app.sqlite'), historyDir: path.join(old,'history'), communityDir: path.join(old,'community'), musicDir: path.join(old,'music') };
   for (const dir of [source.historyDir, source.communityDir, source.musicDir]) fs.mkdirSync(dir, { recursive: true });
   const db = openDatabase(source.dbFile), auth = createAuth(db), adminId = await auth.bootstrap('transfer_admin', password), admin = db.prepare('SELECT * FROM users').get();
@@ -145,6 +146,29 @@ function editBundleDatabase(f, change) {
     m.totalBytes = m.files.reduce((total,item) => total+item.bytes,0);
   });
 }
+
+test('4MiB character and expression images survive encrypted export and restore with identical bytes and digests', async t => {
+  const f = await fixture(t,{minimal:true}), db = openDatabase(f.source.dbFile), characterId = crypto.randomUUID(), customExpression = 'emote-'+crypto.randomUUID();
+  const images = [['neutral',characterImagePng(4*1024*1024,{paddingByte:0xb1})],['happy',characterImagePng(4*1024*1024,{paddingByte:0xb2})],[customExpression,characterImagePng(4*1024*1024,{paddingByte:0xb3})]];
+  try {
+    db.prepare('INSERT INTO player_characters(id,owner_id,name,created_at,shared) VALUES(?,?,?,?,0)').run(characterId,f.member.id,'四MiB備份角色',new Date().toISOString());
+    for(const [expression,bytes]of images)db.prepare('INSERT INTO character_images(character_id,expression,mime,bytes,label) VALUES(?,?,?,?,?)').run(characterId,expression,'image/png',bytes,expression===customExpression?'額外表情':null);
+    db.prepare('UPDATE users SET appearance=? WHERE id=?').run(JSON.stringify({version:5,characterId:'user:'+characterId,expression:customExpression,avatar:{kind:'character',characterId:'user:'+characterId,expression:'neutral'}}),f.member.id);
+  } finally { db.close(); }
+  const before = validateData(f.source).summary, exported = await run(f.exportRequest);
+  assert.equal(exported.summary.database.tableCounts.character_images,3);assert.equal(exported.summary.database.blobDigests.character_images,before.database.blobDigests.character_images);
+  const verified = await run({action:'verify',bundleDir:f.bundleDir,keyFile:f.keyFile});assert.equal(verified.summary.database.blobDigests.character_images,before.database.blobDigests.character_images);
+  const restored = await run({...restoreRequest(f),expectedBundleId:exported.bundleId,apply:true});
+  assert.equal(restored.restoredSummary.database.blobDigests.character_images,before.database.blobDigests.character_images);assert.equal(restored.restoredSummary.database.accountsSha256,before.database.accountsSha256);
+  const target = new DatabaseSync(settings(restored.config).dbFile,{readOnly:true});
+  try {
+    const rows = target.prepare('SELECT expression,mime,bytes FROM character_images WHERE character_id=?').all(characterId);assert.equal(rows.length,3);
+    for(const [expression,bytes]of images){const row=rows.find(row=>row.expression===expression);assert.equal(row.mime,'image/png');assert.equal(row.bytes.length,4*1024*1024);assert.deepEqual(Buffer.from(row.bytes),bytes);assert.equal(crypto.createHash('sha256').update(row.bytes).digest('hex'),crypto.createHash('sha256').update(bytes).digest('hex'));}
+    assert.deepEqual(target.prepare('SELECT * FROM users ORDER BY id').all(),beforeUsers(f.source.dbFile));
+  } finally { target.close(); }
+});
+
+function beforeUsers(file){const db=new DatabaseSync(file,{readOnly:true});try{return db.prepare('SELECT * FROM users ORDER BY id').all();}finally{db.close();}}
 
 test('encrypted full backup preserves accounts and assets; dry-run and real restore revoke tokens, hold outbox and remain bootable', async t => {
   const f = await fixture(t,{sounds:true}), initial = validateData(f.source).summary;

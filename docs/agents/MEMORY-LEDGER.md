@@ -1,5 +1,35 @@
 # 共用偏好與已知決策
 
+2026-10-07 PR46新排序候選1.9.3／a2c5589雙平台1,300、126focused／peer與fresh原型Pause／最後Play／normal已驗，proxy總media4／5各不變（GET3／4、POST1各不變）、QA已清；約3.6ms transient／非physicalinput限制保持。先修PR優先序不變；已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併，正式1.11.1未改、patterns未發布、不加入PR46，scope見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)，不寫硬體UA或零瞬間。
+
+2026-10-07 PR46第三P2／正式1.11.1：使用者指定先修PR再繼續UI，patterns工作暫停未發布；修正較新native Pause被晚queue GET／舊visibility resume覆蓋及pending中斷settlement，保manual／mute意圖且不加poll／seek。cf64bfc PR1.9.2雙平台1,278與df983da正式1.11.1雙平台1,299、真controls與受控promise／資料核對見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。正式保UI／WebGL，PR已推送、標 Ready 並再次請 Stanley 審查，未合併；研究／舊版證據保留歷史，不當所有玩法／物理切頁已驗。
+
+2026-10-07 U44-media-height-native-publish：使用者直接要求影片填滿主區與可用高度、移除本站外開影片提示／共用seek；保留clock及canControl-only「同步我的播放進度」。原生slider／本機video或audio時間先只改自己，按publish才一次seek全桌，ticks不讀時間或seek；一般席可點播，無全桌發布權。影片底列桌機compact、手機／coarse保操作大小，toolbar不縮。YouTube原生branding／letterbox保留，縮放只自己；原生DOMRect取四欄位而不spread。正式v1.9.0實作與有限native證據見 [媒體spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
+
+2026-10-07 U43-draw-atomic-timed-playback：使用者回報畫者閃白，要求每輪之後檢查、接收端按真點時間逐步出現且允許少量延遲，時間條平滑下降；追加移除「輪到你畫圖」「操作已完成」「猜測已送出」。正式v1.9.0採opaque staging完整才present、brush／erase optional pointTimes與有界viewer回放，artist不重播ACK；baseline操作取消尾巴，cache含stage≤8MiB、無server逐frametimer，不改權限／PR30額度／score／DB。CountdownBar保server deadline；必要錯誤／設定／重連與玩家資訊不隱藏。每輪持筆／ACK／揭曉／換畫者必查中途白底與終點完整、舊尾／草稿／frame／timer清理；單trace不代表所有裝置／自然多輪或60fps。最新證據只集中於 [進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)，不抄本機私有偏好或把歷史PR事實當永久偏好。
+
+2026-10-07 U42-playback-expression-ui：全桌與本機播放需用不同圖意；桌機控制列同一行，窄版允許換行且保持操作尺寸。角色表情卡只放圖片，名稱用共用hover/focus提示與中文aria；選單內部scroll不重定位，不透過暫時放寬高度量測而破壞scrollTop。見 [實作進度](../MEDIA-EMOJI-POLISH-PROGRESS.md)。
+
+2026-10-07 U41-media-icon-window-ui：使用者指定操作按鈕盡量只用圖示，hover顯示功能；共享GameUI圖示與提示，保留中文可讀名稱、keyboard／touch操作，不隱藏label、正文與重要玩家資訊。媒體名稱單行省略、hover才跑馬；視窗從邊緣縮放，清單左把手排序、右側移除。追加點播與清單獨立寬視窗、單行小間隔；播放器下方只留清單入口，音樂下拉第一項文字「上傳歌曲」。最新實作與發行證據以 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)為準，不把中間候選當正式或宣稱全站button已搬完。
+
+2026-10-07 U40-drawing-smoothness-implementation：第一批P0時間flush／有界未送buffer／rAF與coalesced、有限local-draft P1 **完成並正式v1.8.1**。source 6707a9edf07839c3307dd230ff6eeca5fa92bf62，Windows／Linux各1076，UTC03:30:44.024Z零房間guard發布。P1只有有限明確local draft且未fill才layer，完成／viewer同surfaceclassic、fill sticky至reset、單組15checkpoints＋1base≤8MiB；不變更API／codec／PR30額度。P2並行排序／P3抽稀未做，immutable ID-body／epoch／command／filled／保存契約維持。
+
+正式v1.8.1／6707a9edf07839c3307dd230ff6eeca5fa92bf62已於UTC03:30:44.024Z零房間guard部署，PID107492→110715、service／tunnel active。Windows1076／1076／37689.229ms，Linux Node22.22.1 1076／1076／189955.125522ms，各fail/cancel/skip/todo0；本地受測tag固定，沒有新PR／push、PR43未改。schema15／21schemas／20non-session rows+BLOB與8帳戶全fields保留、integrity ok／FK0；sessions161→165為已登出的QA登入，不說sessions不變。SQLite線上備份與另時點files/env archive不是atomic cold snapshot。公開版號與5資源精確內容/no-store已驗，沒有逐項驗5資源MIME；正式3會員HTTP/SSE duplicate／nonartist400／undo-clear quota不退已驗。Chrome正式僅背景home版號；local像素／輸入證據另列，own房／auth／tabs／preview／control已清理，不改前景或偏好。
+
+native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha0／exactmask0，新wrapper與legacy SHA同而整體strict flag仍false。captured dense3場景均fresh0。實際1000 synthetic-move／948有效點／16chunks963含anchors兩席同JSON，但artistfresh0／viewerclassic67 RGB／max54、viewer baseCopies0／mutable0；同capture timeout20ms／warmup0及1的原classic與opt-in Infinity同樣67／max54、old/new直接diff0／SHA相同。此證據只限受測trace，不歸因layer／硬體／GPU／CPU，不寫19native全部fresh strict或所有雙席pixels相同；兩組rAF控制2秒未advance而未完成，不能列pass。工具慢線／背景970ms不作人體FPS。
+
+來源、備份、精確scope、未驗rAF／原生取消／真收藏或其他硬體與後續提案见 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)與 [spec](../specs/DRAWING-SMOOTHNESS.md)。下方v1.8.0與更早紀錄為歷史，後續文件提交不移動受測tag；原HAR／cookies／帳密與.local偏好不提交。
+
+2026-10-07 U39-unified-room-media：本批九項需求為音樂／影片單一current、混合播放清單列點播人及名稱、拖曳與鍵盤排序、一次展開完整媒體窗與音樂進度、每房個人影片接受／拒絕、host／manager切下一筆、host／manager／member房間角色、管理按鈕同工具配色，以及emoji與角色表情同一入口。一般席可點播，host／manager控全桌；房間manager不是網站admin，離席／踢出撤銷，短暫同seat重連保留。個人關閉／音量／位置／尺寸不更改全桌，autoplay被擋須提供個人恢復而非聲稱永久解鎖。正式v1.8.0／5687561已於台北10:24:21發布，完整Windows／Linux各1034、隔離三席真Chrome與公開API／6資源／資料驗收通過；schema15及8帳戶保留，sessions正常QA新增且已登出。沒有新PR或push，不更改PR43，本地tag固定受測程式；本批scope／200%文字、真Google拒播／oEmbed、多設備／弱網／喇叭及fixture draw重連提示限制見 [九項進度](../UNIFIED-ROOM-MEDIA-PROGRESS.md)及 [spec](../specs/UNIFIED-ROOM-MEDIA.md)。此批以host／manager權限取代U29原提案者控權的適用範圍；舊API只有相容投影，不能以它繞過新queue／transport ACL。沒有將角色寫到帳戶權限或新增DB schema。
+
+2026-10-07 U38-pr43-clock：使用者要求處理PR新回覆。對應Stanley的舊快照補播過期音效P2，維持原PR43，修共用server anchor＋mono elapsed，保留原功能與資料。原PR v1.4.2雙平台815、正式v1.7.2雙平台947及隔離Chrome替身通過，公開資源／帳戶／資料驗收見 [證據](../PR43-EXPRESSION-CLOCK-FIX.md)。未合併，作畫順暢度研究仍未實作；legacy／喇叭／弱網未驗界線不可省略。
+
+2026-10-07 U37-drawing-smoothness：使用者要求研究Gartic作畫傳送順暢原因，可實際遊玩與查GitHub。已完成官方單席Masterpiece封包、本站v1.7.1隔離雙席、真程式計數及四種開源來源研究，提出有界時間flush／未送點合併／frame合併／活動層等規格；不是Gartic內部演算法或使用者硬體診斷。實測／缺漏／未解像素差異見 [研究](../research/GARTIC-BGA-DRAWING-COMPARISON.md)，[spec](../specs/DRAWING-SMOOTHNESS.md)仍提案，沒有產品修改、PR或部署，正式保持v1.7.1。
+
+2026-10-07 U36-expression-switch：使用者回報上傳faker後遊戲角色表情無法切換。原圖片有效；已重現雷霆same-version只改hidden共享角色列。v1.7.1／`3d82e3f`將ACK交回game callback、same-version只更新crew／state，並以共用RoomHost freshness拒舊poll覆蓋；表情仍5秒，不修改預設外觀或分享設定。原GIF隔離雙席／正式五款雙席及Windows／Linux各940通過。未收到原遊戲／房號，不宣稱觀看過原玩家操作；完整證據及界線見 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。
+
+2026-10-07 U35-watch-resize：使用者要求YouTube播放窗可調整大小，避免200×200限制。已在v1.7.0／`82149a4`提供右下拖曳、方向鍵／Shift及Home恢復，尺寸只記個人localStorage；保護實際player210px高、字級變動重新量測，正常resize不換iframe、不增watch請求或更改其他人。公開兩會員實播／320px／200%字級／雙欄及Windows／Linux各914通過，完整證據與未驗範圍見 [尺寸驗收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。這筆不改原生YouTube控件、房主本機播放按鈕或既有全桌控制者權限。
+
 2026-10-06 最新整合：候選 **v1.4.0**、[PR #43](https://github.com/stanley021039/BGA/pull/43) 已建立，受測程式及本地tag為 `bdd77d146ef8f207c8d94c06390aefd2a857d986`。Windows／Linux完整各 **790/790**、schema15兩種舊14布局及完整移轉回歸通過；既有帳戶／音效／市場資料保留。已接main `b744464`，後續只含README／驗收文件，執行程式未變。正式仍v1.3.0，排版及整合候選尚未切換；先前PR及測試數字保留為歷史，送審狀態以PR頁及下方最新整批進度為準。
 
 本輪 source、schema 相容性、測試及送審狀態見 [整批 PR 進度](../PARTY-PR-INTEGRATION-PROGRESS.md)。
@@ -22,7 +52,7 @@
 | U12 | 本批完成後發MR，再試玩畫猜。 | PR #30已建立且未合併；後續研究另在本地分支，不能混稱既有MR的新實作。 |
 | U13 | agents 研究玩家評論、動效與素材、共享YouTube、趣味成就／勝利紀錄及多環境DB轉移，保存在本地docs長期延續。 | 本輪產角色記憶、實玩評估、spec及孤立原型；後续實作需遵守文件狀態與使用者最新範圍。 |
 | U14 | 畫猜開房的共編題庫要跟旁邊文字對齊；類別可多選，自定義也是一類；等待畫面的主要區域改放已入座的人。 | 開房／房間設定共用checkbox；自定義是獨立來源，不能偷偷抽未勾的內建類別。完整名單及角色優先於大幅插圖，入座更新不清掉設定草稿。 |
-| U15 | 音效控制全遊戲共用，放右上角設定圖案；背景音樂與音效音量各自可調。 | 使用共用AudioSettings，保留跨遊戲偏好；房主桌上選曲／播放控制與個人收聽分開。驗收見 [共用聲音進度](../SHARED-AUDIO-PROGRESS.md)。 |
+| U15 | 音效控制全遊戲共用，放右上角設定圖案；背景音樂與音效音量各自可調。 | 使用共用AudioSettings，保留跨遊戲偏好及個人收聽。2026-10-07最新歌曲要求已取代原僅房主選曲：正式v1.6.0同房玩家皆可選他人上傳歌曲及重播，其他transport及YouTube控權保留。兩平台896與公開兩會員實播驗收見 [共用歌曲進度](../MUSIC-SHARING-PROGRESS.md)；先前音量基線見 [共用聲音進度](../SHARED-AUDIO-PROGRESS.md)。 |
 | U16 | 文字彈幕要飄過畫面，不能原地淡出；房間設定與儲存房間設定放在一起。 | 共用彈幕右向左移動；畫猜／送禮／同頻的欄位、儲存與結果提示同區。畫猜設定浮層保持名單常駐與視窗邊界。實作來源15af1dd，驗收見 [本批進度](../BARRAGE-ROOM-SETTINGS-PROGRESS.md)。 |
 | U17 | Server 資料轉移做成 AI 可操作程式；第一版選「完整移轉／備份還原」，帳戶資料也必須搬。 | 全量帳戶 UUID／原密碼 hash／role／disabled／appearance 保存，target 只撤銷 session／邀請／reset。程式c831e87 已在 Windows／Linux 隔離驗收，未實際遷移正式資料；[操作文件](../SERVER-DATA-TRANSFER.md)、[證據](../SERVER-DATA-TRANSFER-PROGRESS.md)。merge／Postgres 不在第一版。 |
 | U18 | 移轉方法必須放獨立doc，可以的話提供管理員方便操作的UI。 | docs/SERVER-DATA-TRANSFER.md 是獨立指南；2618c4b 提供localhost表單、JSON預覽及預設dryrun，結果收合／對齊至31c91dd。需自行停writer、不得將管理埠公開；Windows/Linux259項及原Chrome背景完整合成表單流程通過。 |
