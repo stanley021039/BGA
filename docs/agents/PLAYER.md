@@ -1,5 +1,9 @@
 # 玩家 agent 長期記憶
 
+## 2026-10-07：正式v1.10.0美化驗收
+
+美化先保玩家／角色／猜中／車隊／骰子／合法格，不收合到管理；看選取、長名／浮窗／小屏可達，不只看顏色。本輪畫猜23持筆樣本白afterink0、viewer7次partial／13timed points；晚一筆同SHA是下輪白baseline，不能當有墨終點一致。雷霆真draw／idle／loss有有限證據，兩anchor位置不證明全程FPS；實際新效果畫出才遮同類裝飾，不遮標字或操作。四遊戲尺寸矩陣／720補驗及限制見 [本批進度](../UI-POLISH-WEBGL-PROGRESS.md)，全部phase／多輪／其他硬體與前景性能未驗。下方v1.9.0持筆／ACK／換輪的持續檢查規則保持。
+
 ## 2026-10-07：正式v1.9.0驗收規則
 
 使用者要求每輪結束都檢查：本人持筆／up／ACK不閃、其他人按真點時間逐步看到、揭曉完整圖／換畫者新epoch不殘留舊尾或草稿，queue／frame／timer清理。合法clear／新輪空圖與非預期白底分開；短trace、終點像素一致不等所有輪或另一台電腦改善，不寫60fps。倒數須連續下降而秒數仍按server deadline。三項重複成功文字已移除，但畫者身份、猜測聊天室／得分、設定／錯誤／重連仍可讀。見 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)。

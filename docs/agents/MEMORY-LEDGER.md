@@ -1,5 +1,7 @@
 # 共用偏好與已知決策
 
+2026-10-07 UI-polish-WebGL：使用者在PR46後要求按既有研究美化並試WebGL，後續允許更好新效果取代舊效果。正式v1.10.0已採共用surface／邊界／選取／數字與雷霆有界原生粒子；實際畫出kind才遮同類舊裝飾，idle／loss／reduce即復原，標字與玩法互動保留。重要玩家／車隊／骰子／角色不可為減字收合；未安裝Threads研究庫、不宣稱GPU加速。雙平台各1,165及正式資料證據見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。此筆取代歷史WebGL「未實作」現況，PR46不變。
+
 2026-10-07 U44-media-height-native-publish：使用者直接要求影片填滿主區與可用高度、移除本站外開影片提示／共用seek；保留clock及canControl-only「同步我的播放進度」。原生slider／本機video或audio時間先只改自己，按publish才一次seek全桌，ticks不讀時間或seek；一般席可點播，無全桌發布權。影片底列桌機compact、手機／coarse保操作大小，toolbar不縮。YouTube原生branding／letterbox保留，縮放只自己；原生DOMRect取四欄位而不spread。正式v1.9.0實作與有限native證據見 [媒體spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
 
 2026-10-07 U43-draw-atomic-timed-playback：使用者回報畫者閃白，要求每輪之後檢查、接收端按真點時間逐步出現且允許少量延遲，時間條平滑下降；追加移除「輪到你畫圖」「操作已完成」「猜測已送出」。正式v1.9.0採opaque staging完整才present、brush／erase optional pointTimes與有界viewer回放，artist不重播ACK；baseline操作取消尾巴，cache含stage≤8MiB、無server逐frametimer，不改權限／PR30額度／score／DB。CountdownBar保server deadline；必要錯誤／設定／重連與玩家資訊不隱藏。每輪持筆／ACK／揭曉／換畫者必查中途白底與終點完整、舊尾／草稿／frame／timer清理；單trace不代表所有裝置／自然多輪或60fps。最新證據只集中於 [進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)，不抄本機私有偏好或把歷史PR事實當永久偏好。

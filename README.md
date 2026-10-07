@@ -2,6 +2,8 @@
 
 架構決策、實作紀錄與尚待部署驗證的項目請見 [架構改善與功能實作計畫](ARCHITECTURE-PLAN.md)。
 
+介面美化與雷霆車旁 WebGL 第一批已發布為 v1.10.0：共用表面、浮窗與選取樣式，保留玩家資訊、畫布與原有操作。詳 [實作與驗收](docs/UI-POLISH-WEBGL-PROGRESS.md)、[設計規格](docs/specs/UI-POLISH-WEBGL.md) 及 [Threads 五套元件庫評估](docs/research/THREADS-UI-COMPONENTS-ASSESSMENT.md)。
+
 雷霆之路多格移動、所有位移及途中事件的呈現順序，最新驗收見 [移動進度](docs/RACE-MULTI-MOVE-PROGRESS.md)；版本與部署狀態见 [打版進度](docs/RELEASE-PROGRESS.md)。
 
 動畫、音效、UI/UX、玩家互動與美術風格的研究提案及原始來源見[遊戲互動與沉浸感設計研究](docs/IMMERSIVE-EXPERIENCE-RESEARCH.md)；送禮達人已開始實作的項目、素材授權查核與暫緩項目見[送禮達人素材與實作進度](docs/GIFT-IMMERSION-PROGRESS.md)。

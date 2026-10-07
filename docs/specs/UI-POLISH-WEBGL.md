@@ -1,6 +1,6 @@
 # 介面美化與 WebGL 第一批規格
 
-日期：2026-10-07。階段：實作與驗收中。起始分支 `feat/ui-polish-webgl`、基線 `38c1497`；本批獨立於已送審的 PR #46。完成、測試與發布狀態只以 [進度文件](../UI-POLISH-WEBGL-PROGRESS.md) 的實際證據為準。
+日期：2026-10-07。第一批已實作並發布 v1.10.0，實際驗收範圍與後續項目見 [進度文件](../UI-POLISH-WEBGL-PROGRESS.md)。起始分支 `feat/ui-polish-webgl`、基線 `38c1497`；本批獨立於已送審的 PR #46，沒有新 PR 或 push。下列完整矩陣是持續驗收契約，不表示所有情境均已實測。
 
 依據 [介面美化研究](../research/UI-POLISH-DES13-ASSESSMENT.md)、[WebGL 評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)、[共用對齊](SHARED-UI-ALIGNMENT.md) 與 [作畫順暢度](DRAWING-SMOOTHNESS.md)。保留暖白／森林綠與各遊戲配色，以共用表面、邊界、浮窗層次和選取回饋建立一致性。桌機優先，手機與放大文字仍須可用；本批不搬移主要區塊、不新增大型插圖或收合重要資訊。
 
@@ -44,7 +44,7 @@
 | 適量動效與技術邊界 | 整體遊戲 | 只新增有用途的單次裝飾，遵循 MotionPolicy；禁止裝飾常駐 ticker。 | hidden／減少動態／停用／離頁取消，不補播舊粒子；不增加每幀 API 封包。 |
 | 適量動效與技術邊界 | 你畫我猜 | 不導入 WebGL renderer；保留 Canvas 2D、atomic presentation、點時間回放與平滑倒數。 | 每輪驗畫者持筆／up／ACK／換輪途中不閃白，觀看者逐點、揭曉完整；不能只比較終點 PNG。 |
 | 適量動效與技術邊界 | 送禮達人 | 既有送禮入場與收禮者確認時序保持；首批不加粒子層。 | 全員一起送給目前收禮者，確認才前進；全員收完才顯示完整結果。 |
-| 適量動效與技術邊界 | 雷霆之路 | 氮氣、煙霧、火花用透明原生 WebGL1 point shader 局部特效層。 | 原 SVG／CSS 與事件文字永遠保留；逐格／碰撞／連鎖事件時序不改，失敗安全回退。 |
+| 適量動效與技術邊界 | 雷霆之路 | 氮氣、煙霧、火花用透明原生 WebGL1 point shader 局部特效層。 | 只在對應粒子已繪出時隱藏舊裝飾，保留原 SVG 節點、車身／子彈／事件文字；空閒或失效立即恢復，逐格／碰撞／連鎖事件時序不改。 |
 | 適量動效與技術邊界 | 同頻俱樂部 | 既有公開答案聚合動作保持；首批不把 chip 或文字搬進 canvas。 | 結果先由 DOM 正確公開，動效不承擔結果裁決。 |
 
 ### 共用視覺實作契約
@@ -59,10 +59,11 @@
 
 | 契約 | 第一批設計 |
 | --- | --- |
-| 建立 | `GameFxLayer.create(hostOrCanvas, { policy, onAvailability, maxParticles:192, maxEffects:6, maxDpr:1.5, maxPixels:1500000 })`；透明 canvas，`pointer-events:none`、`aria-hidden`，不成為 Tab stop。同 host 重用，全頁至多2個 context，第一個有效 play 才初始化。 |
+| 建立 | `GameFxLayer.create(hostOrCanvas, { policy, onAvailability, onActivity, maxParticles:192, maxEffects:6, maxDpr:1.5, maxPixels:1500000 })`；透明 canvas，`pointer-events:none`、`aria-hidden`，不成為 Tab stop。同 host 重用，全頁至多2個 context，第一個有效 play 才初始化。 |
 | 播放 | `play(id, kind, anchor, options)`；kind 為 nitro／smoke／sparks，anchor 是局部 CSS 座標或回傳當前位置的函式；每次最多48粒子、120–1800ms，可接受已過時間與方向。 |
 | 限額 | 預設192粒子／6效果／DPR1.5／150萬pixels；可設定值仍有256粒子／8效果／DPR2／200萬pixels硬上限。seen最多256；不得無界排隊。 |
 | 更新／清理 | `resize()`、`clear({resetSeen})`、`destroy()`、`getState()`；resize 不重播，clear 取消 active frame，destroy 釋放 buffers／shader／program／canvas／監聽器。 |
+| 裝飾替換 | `onActivity({active,kinds})` 只在非零粒子實際 draw 且 kinds 改變時回報；queued／available 不等於顯示。已繪出的 nitro／smoke／sparks 分別暫時隱藏舊尾焰／滑痕／命中裝飾；空閒、resize、hidden、reduce、失敗、context loss、destroy 即清除標記並恢復。使用 `visibility:hidden`，避免舊 keyframes 的 opacity 覆蓋遮罩。 |
 | 事件來源 | 只消費已接受的公開 race eventId 和既有 live gate；重送／舊 snapshot／重連不重播。車旁位置跟隨當前視覺移動，不能從 server 最終位置直接跳躍。 |
 | 時序 | 不等待 WebGL 結束才進行規則；原 RaceMovement／checkpoint 繼續負責逐格移動與事件先處理。射擊與碰撞特效不改車輛 transform。 |
 | 生命週期 | 空閒不排 rAF；hidden／reduce／MotionPolicy 停用即清理舊特效，恢復時不補播；首次初始化／shader 失敗或 context lost 停用裝飾，SVG／CSS／標字與所有遊戲操作繼續。 |

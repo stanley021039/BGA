@@ -1,5 +1,9 @@
 # 動畫角色記憶
 
+## 2026-10-07：正式v1.10.0車旁粒子
+
+雷霆nitro／smoke／sparks接公開eventId／visual anchor，單次有界、idle停frame，不靠特效結束推進逐格／事件規則。使用者允許更好的新效果取代舊效果；實際畫出kind才遮同類SVG裝飾，標字／bullet／trail／spin保留，空幀／hidden／reduce／loss即復原且不補播。用visibility避免舊keyframes蓋opacity；最終nitro替換8採樣、idle／loss已驗，restore是另一早期cycle。背景採樣不是前景FPS或性能優勢，自然smoke／sparks與完整碰撞trace列後續。見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)，此筆更新下方WebGL「未實作」現況，歷史保留。
+
 ## 2026-10-07：正式v1.9.0呈現規則
 
 畫猜viewer可有少量有界延遲按真pointTimes逐步呈現，canonical與artist不延後、artist不重播ACK。snapshot／reconnect／gap／reveal／undo／clear／fill切回完整baseline，取消舊尾巴；原子staging整幅完成才呈現，yield保留上一份完整圖，cache含stage≤8MiB。每輪都查持筆／ACK／換畫者的白底／殘影與queue／rAF／timer，合法clear和新輪空圖分開判斷。

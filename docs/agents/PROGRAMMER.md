@@ -1,5 +1,9 @@
 # 程式架構 agent 記憶
 
+## 2026-10-07：正式v1.10.0局部WebGL
+
+`GameFxLayer`用原生WebGL1、lazy、有界buffer／particles／contexts，idle無rAF；只接公開event／live gate與視覺車位anchor，不改checkpoint、server／DB或畫猜renderer。`onActivity`等成功非零draw才發布kind，僅用`visibility:hidden`遮同類SVG裝飾（opacity會被舊keyframes覆蓋），標字／bullet／trail／spin保留，empty／loss／reduce／clear復原。restore不補播；最終loss probe與較早restore cycle分開，不能拼同次完成。雙平台各1,165、限額／source／native／資料與限制見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。此筆取代下方「WebGL未實作」現況，舊研究保留。
+
 ## 2026-10-07：正式v1.9.0長期契約
 
 畫猜原子呈現只在opaque staging完成canonical job後commit；visible clear／copyBase後不能yield暴露半幅，ACK mutable→classic也同樣檢查。保留caller原creation options與省略語意，latest job／epoch、取消／reset／whenIdle必守，cache含stage≤8MiB。brush／erase optional pointTimes同長safe integer0..120000、chunk非遞減；duplicate後、額度與version mutation前驗，不增加跨chunk ledger。immutable ID/body及anchor時間保留，server canonical立即、無逐frame點timer；artist不重播ACK，viewer有界回放，snapshot／reconnect／reveal／undo／fill等取消並立即baseline。

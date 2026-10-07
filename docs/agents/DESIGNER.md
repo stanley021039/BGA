@@ -1,5 +1,7 @@
 # 設計師角色記憶
 
+2026-10-07正式 **v1.10.0**：六份CSS共用背景／panel／floating、8／12／16radius、必要邊界／選取與lining／tabular數字，保留grid／padding／重要字級／操作尺寸與玩家／車隊／骰子／角色。換surface須配caller foreground，hover不可蓋selected；裝飾border不能當唯一必要線索。四遊戲桌機／390／200%與媒體sameiframe有有限證據，synthetic gift dark不是產品theme，不宣稱全部phase／全站對比。新粒子實際畫出才替換同類舊裝飾，fallback／文字保留。見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)；[Threads五庫](../research/THREADS-UI-COMPONENTS-ASSESSMENT.md)只是模式參考未安裝；下方v1.9.0與美化候選保留為歷史。
+
 2026-10-07正式v1.9.0媒體補充：影片主區使用可用高度，底列桌機compact而手機／coarse保操作尺寸，toolbar保持；本機原生控制與「同步我的播放進度」分清，只有有權席位可發布全桌。移除本站外開入口／共用seek不等移除YouTube原生branding、letterbox或所有控制；重要狀態與clock保持可見。最新規範／scope見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
 
 2026-10-07補充：語意不同的播放操作使用三角／裝置圖示區分，桌機同列按鈕以輕分隔分組；角色表情圖卡保持方形，省掉可見名稱並用共用提示。美化研究優先收斂字级／keylines／表面層次，詳 [研究評估](../research/UI-POLISH-DES13-ASSESSMENT.md)。

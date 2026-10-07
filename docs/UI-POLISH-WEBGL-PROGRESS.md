@@ -1,48 +1,69 @@
 # 介面美化與 WebGL 進度
 
-日期：2026-10-07。狀態：**實作與驗收中，尚未確認本批正式發布**。規格：[UI-POLISH-WEBGL](specs/UI-POLISH-WEBGL.md)。本批使用 `feat/ui-polish-webgl`，起始 `38c1497`，獨立於已發 PR #46 的前一批；不把前一批 v1.9.0／1,144 項通過當成本批結果。
+2026-10-07：第一批已完成並發布至 **shhuang.cc v1.10.0**。受測程式 `52e96b762a10c257e7b3b625a207b44b76cc8b9a`，本地 annotated tag `v1.10.0` 固定該程式；後續文件提交不移動 tag。本批使用 `feat/ui-polish-webgl`，沒有新 push／PR，既有 PR #46 不改。
 
-## 計畫與目前證據
+規格見 [UI-POLISH-WEBGL](specs/UI-POLISH-WEBGL.md)，依據 [美化研究](research/UI-POLISH-DES13-ASSESSMENT.md)、[WebGL 評估](research/WEBGL-ADOPTION-ASSESSMENT.md) 與 [Threads 元件評估](research/THREADS-UI-COMPONENTS-ASSESSMENT.md)。採既有共用 CSS 和原創 WebGL shader，沒有安裝或複製研究框架／元件庫；沒有量測 WebGL 加速或前景 FPS。
 
-| 工作 | 目前狀態 | 已確認來源／下一步 |
+## 完成範圍與實際討論
+
+| 工作／問題 | 採用與實作 | 邊界 |
 | --- | --- | --- |
-| 研究收斂 | 已讀既有研究與角色規範 | 依 [美化評估](research/UI-POLISH-DES13-ASSESSMENT.md) 與 [WebGL 評估](research/WEBGL-ADOPTION-ASSESSMENT.md) 收斂共用表面與雷霆局部特效。此前研究沒有 WebGL 原型或加速量測。 |
-| 現有程式盤點 | 有限 source 盤點 | `ui-foundation.css` 已有字級／間距與 light／dark tokens，遊戲 caller 邊界／陰影仍各自指定；`race-vehicle-effects.js` 已有 SVG／CSS、eventId 去重與減動態。這不是五款完整 native UI 稽核。 |
-| 共用視覺 | 已實作，部分 native 通過 | 六份 CSS 共用表面／radius8／12／16／選取邊界／數字形式，保留布局、padding、重要字級與控制尺寸；後續補正 light／dark foreground、選禮accent及hover不蓋selected。畫猜寬高桌機八席幾何已比較；其他遊戲／390／200%仍待驗。 |
-| WebGL 模組 | 已實作，契約與有限 native 通過 | `public/shared/game-fx-layer.js` 與 `tests/game-fx-layer.test.js`；renderer13項是fake GPU契約，已納入下方最終Windows全套；另有真Chrome nitro像素／idle／context loss與restore證據。未量測FPS或性能收益。 |
-| 雷霆整合 | 已實作，部分 native 通過 | 公開 event 與 live gate 接入；原SVG／CSS與文字保留。真鍵盤movePath三步後到達server目標，兩次anchor跟視覺車位；道路連鎖／碰撞完整trace仍待驗。 |
-| 回歸與原生驗收 | Windows全套通過，背景Chrome持續驗收 | Source／自動測試、有限真Chrome與正式站分開記錄。Linux／其他UI矩陣／正式待驗。 |
-| 升版／交付 | 待主 agent 證據 | 本文件不建立tag、不操作服務、不代替發布與資料檢查。 |
+| 共用視覺 | 六份 CSS 統一背景／卡片／浮窗、8／12／16px radius、邊界／陰影、選取與 lining／tabular 數字。 | 保留 grid／padding／重要字級與操作尺寸，不用大插圖或收合取代玩家／車隊／骰子／角色。 |
+| caller foreground／hover | review 後補 media／drawtools／racecar／qcard foreground、選禮 accent soft／badge；hover 不蓋 selected。 | 靜態 sRGB 與原生畫面分開驗，不當全站對比認證。 |
+| 雷霆 WebGL | 原生 WebGL1 point shader，nitro／smoke／sparks；lazy、有界、同 host 重用、idle 無 rAF。 | SVG 賽道與文字／車／骰、鍵盤／hover保留；不改畫猜 renderer、規則、DB或每幀封包。 |
+| 同類裝飾替換 | 使用者允許更好新效果取代舊效果；`onActivity({active,kinds})` 只在成功畫出非零粒子後發布kind，僅遮同類舊SVG裝飾。 | queue／ready／空幀保留舊效果；idle／loss／reduce／clear即恢復，label／bullet／trail／車身spin保持。 |
+| 替換修正 | 原opacity被舊keyframes覆蓋，在真Chrome重現後改`visibility:hidden`。 | 最終active hidden／idle visible通過；原opacity候選不算通過。 |
+| 位移與回退 | 公開eventId／live gate與視覺車位anchor，clear／hidden／reduce／destroy取消舊事件。 | 不靠粒子結束推進checkpoint，不從server終點直接跳位置，不補播舊事件。 |
+| Threads五庫 | 核對官方元件／依賴／授權，借鑑分組選取、dialog／tooltip、短通知和局部粒子模式。 | 只作模式參考，沒有安裝五庫、複製素材或測它們的FPS。 |
 
-## 實際討論與修訂
+預設192粒子／6效果／DPR1.5／150萬pixels；硬上限256／8／2／200萬pixels，單事件最多48粒子、120–1800ms，seen256，全頁至多2 contexts。固定Float32 particle buffer，不新增atlas／貼圖或逐幀請求。
 
-| 提案／問題 | 回應與收斂 | 狀態 |
+## 最終自動測試
+
+| 環境／範圍 | 結果 | 說明 |
 | --- | --- | --- |
-| 規格方：共用CSS cascade 可能破壞 hidden／selected／大字與既有compact控制；不能只按原始 token 判可讀性。 | 主 agent 限首批為表面／radius／elevation／選取／數字，主要 grid／padding／控制尺寸／重要字級保留，不強行全站換字體。 | 已收斂實作邊界；native 回歸待驗。 |
-| 規格方：特效 canvas 不可攔 hover／鍵盤，動畫結束不能推進移動；不得承諾 GPU 自動加速。 | 主 agent 指定 pointer-events:none、原 SVG／CSS 始終保持、live gate 消費公開事件、跟隨視覺車位且不影響checkpoint。 | 契約已實作，有限原生loss／restore通過；完整回退矩陣仍待驗。 |
-| 主 agent CSS review：新表面與原caller foreground可能錯配，選禮hover亦可能覆蓋selected。 | 視覺方補accent soft、選禮文字／badge與media／drawtools／racecar／qcard foreground，hover不覆蓋selected；原字級與幾何保持。 | Source已補正，靜態sRGB比值與native畫面分開驗。 |
-| 既有研究：可先考慮 PixiJS 粒子原型。 | 本批主 agent 選原生 WebGL1 三類 point particles、無新依賴／貼圖；先驗功能／邊界，不將選型當作效能勝出。 | 有界首批工程選擇，未量測效能比較。 |
+| Windows全套 | **1,165／1,165**，**38,014.8579ms** | fail／cancel／skip／todo均0，`work/ui-polish-webgl-windows-final-tests.log`。 |
+| Linux Node22.22.1全套 | **1,165／1,165**，**199,059.14362ms** | fail／cancel／skip／todo均0，來源與最終tag一致。 |
+| 新增契約 | renderer17＋vehicle integration4，共21項 | 已含完整總數；fake GPU契約不等原生呈現。 |
+| 最後focused | **32／32** | 不加到完整總數。 |
 
-## 驗收紀錄
+先前1,160／1,164，以及visibility修正前1,165／38,020.4268ms皆為中間候選，上表取代它們。
 
-| 分類 | 方法／範圍 | 結果 |
+## 背景 Chrome 驗收
+
+| 類別 | 實際結果 | 限制與證據 |
 | --- | --- | --- |
-| Source／自動測試 | Windows完整回歸，含renderer13項與root新增integration3項；fx＋presentation focused | 主 agent回報完整 **1,160／1,160**、**37,979.0566ms**，fail／cancel／skip／todo均0；focused **56／56**。Linux與最終source／版本記錄待主agent補齊，不把focused再加進總數。 |
-| 五款桌機資訊 | 畫猜八席，1794×1109同資料的新舊幾何比較 | 主區兩版均1194×921於(260,176)，名單兩版均220×921於(24,176)，8席可見且無水平溢出。其他遊戲／phase／720p仍待驗；首次landing／consent stale截圖排除，未作通過證據。 |
-| 小螢幕／放大 | 390／320px、200%文字、自然流／局部scroll尾端 | 待驗：不能因縮字、裁切或收合重要資訊通過。 |
-| 字體／對比／表面 | 視覺方以CSS原始sRGB作靜態計算；computed/native仍待驗 | control／panel light4.0862、dark4.7622；light title3.5195；三種light answer底色必要邊界最低3.0633；selected實底文字light9.1200／dark9.0198。這些是指定token配對，不是全站對比認證或截圖像素。 |
-| 圖示／浮窗／媒體 | hover／focus／Esc／返焦／hidden／pending、表情到尾、設定、影片／清單resize | 待驗：層級／尺寸／sameiframe／零幾何POST。 |
-| 畫猜途中防閃 | artist held／up／ACK／換輪，viewer逐點／結果、倒數 | 待驗：終點圖片不能代替途中觀察。 |
-| 原生 GL／車位 | 真Chrome nitro、shader／particles像素、移動anchor與idle | GL linked／ready、error0，首次readPixels有124個非透明像素，buffer1166×535；結束後particles0／frameScheduled false。證據 `work/ui-polish-webgl-native-nitro-final.json`，早期小尺寸候選排除。movePath anchor兩次採樣x213→343，SVG尾焰仍1。背景節流採樣，不代表連續前景FPS或視覺密度；其他自然煙霧／火花及resize待驗。 |
-| 回退／減動／生命週期 | 真 `WEBGL_lose_context` lost／restored；OS reduce media override | before／lost／restored均seen6／drawCalls6，無補播；lost available false／idle0／原SVG尾焰1／合法格3仍在，restore available true。證據 `work/ui-polish-webgl-context-cycle.json`。reduce下play false已觀察，manifest保存待完成；noGL／shader失敗由fakeGPU契約覆蓋，native disable／hidden／離頁完整矩陣待驗。 |
-| 逐格與事件規則 | 鍵盤觸發原movePath三步 | 到達car.y4，seen1→4，anchor跟隨視覺位置；不能由兩次位置採樣推定全程平滑。道路事件先處理／碰撞／封包count全trace仍待驗。 |
-| 共用範圍 smoke | 撲克與非遊戲入口 | 待驗：不宣稱完整玩法。 |
-| 正式交付 | 受測來源／tag、備份／即時房間檢查／資料保全、公開版本與資源 | 待主 agent 提供正式證據後填寫。 |
+| 真WebGL像素 | 最終nitro linked／ready、error0，readPixels124非透明像素，buffer1166×535；idle particles0／frame false。 | `work/ui-polish-webgl-native-nitro-final.json`；早期346px候選排除。背景採樣不代表前景FPS或密度。 |
+| 替換舊裝飾 | 最終8次active採樣mode nitro、舊尾焰visibility hidden；idle mode空、舊尾焰visible／frame false。 | `work/ui-polish-webgl-replacement-visible-native.json`；drawCalls18／seen4是該段計數，非FPS。 |
+| 最終loss probe | 原生失context後activeKinds空、舊尾焰visible、frame false。 | `work/ui-polish-webgl-final-loss.json`；同次restore因過早要求而逾時，已reload清理，不能列該次完整restore通過。 |
+| 獨立restore cycle | 更早真lose／restore：before／lost／restored seen6／drawCalls6相同；lost available false／idle0，SVG尾焰1／合法格3仍在；restore available true。 | `work/ui-polish-webgl-context-cycle.json`；不與上列拼成同次完全通過。新activity替換失效復原另由最終probe與契約驗。 |
+| 視覺移動 | 真鍵盤原movePath三步後car.y4、seen1→4；兩anchor採樣x213→343跟視覺車位。 | 兩位置不證明全程FPS；完整道路連鎖與碰撞trace列後續。 |
+| 畫猜途中 | 第二輪真持筆6move：artist23樣本ink37→2126／whiteAfterInk0；viewer23樣本含7 partial，最後pending0／scheduled false；雙席version9／13points全timed、backing512×256。 | `work/ui-polish-draw-held-artist.json`／`ui-polish-draw-held-viewer.json`；途中與終點分開，不只比PNG。 |
+| 畫猜畫面／換輪 | 已檢視active截圖有線、4秒時間條、8玩家與下方chat對齊；晚一筆同SHA是下輪choosing白baseline。 | `work/ui-polish-draw-active-proof.png`／`ui-polish-draw-pixels.json`；不稱有墨終點SHA一致。 |
+| 新舊幾何 | 畫猜1794×1109主區兩版1194×921於(260,176)，roster220×921於(24,176)，8席可見、無橫溢。 | 排除首次landing／consent stale截圖，不由等待畫面代表全部phase。 |
+| 四遊戲矩陣 | 畫猜8席、送禮3人、同頻3人、雷霆3佔席＋1空槽；桌機／390×844／200%採樣無橫溢。giftselected紫底#f0e8f5、綠正文／紫inset可辨。 | `work/ui-polish-ui-matrix.json`14筆含重複／恢復採樣；synthetic gift dark不是產品theme。finished隱藏`#drawCanvas`幾何不當作畫比例失敗。 |
+| 720p／浮窗 | race主區下緣718、4槽／majority3人、均無橫溢；drawemoji(887.78,379)至(1243,712)、scroll447／client331，settings在screen內。 | `work/ui-polish-webgl-extra-ui.json`；只記實際情境，不宣稱所有按鈕／phase。 |
+| 媒體幾何 | video870×440→resize850×440同iframe；清單840×242；本輪proxy `/api/room-media` POST0。 | 同一extra-ui／local log；清單遮影片會本地退出，關閉後可重新加入，屬原可見政策。零媒體POST不是完整新舊traffic benchmark。 |
+| 靜態對比 | control／panel light4.0862／dark4.7622，light title3.5195，light answer邊界最低3.0633，selected文字light9.1200／dark9.0198。 | CSS原始sRGB配對計算，非螢幕像素或全站對比認證。 |
+| reduce／收尾 | media reduce override下play false；四own背景tab已清FocusEmulation／viewport／mediaoverride並關閉，最後TTYpreview正常stop／exit0、測試ports無listen。 | 首次nonTTYpreview是確認ownPID後停止，非正常stop。沒有提高Chrome視窗；FocusEmulation促paint不等前景幀率。 |
 
-## 限制與後續
+## 正式發布與資料保存
 
-本批不改畫猜 Canvas 2D、server同步、PNG或規則；不遷移整個賽道／文字／其他遊戲到GPU。192粒子是首批產品上限契約；已有有限真nitro／movePath／context回退，未量測壓力負載或性能收益。其他硬體、前景呈現FPS、實體手機／讀屏、全部phase與自然多輪須按實際驗收範圍列出，不能由context成功或全套單元測試推定。
+2026-10-07T08:35:32Z即時房間0的guard後，由v1.9.0切至v1.10.0，服務／tunnel active。SQLite線上備份、另時點檔案archive與隔離login／schema預演完成；不是atomic cold snapshot。
 
-原生驗收使用背景Chrome與FocusEmulation促進native paint，沒有將瀏覽器視窗帶到前景；這不等於真前景幀率測量。測試preview仍在進行，尚不能記為已清理；override／own tabs／preview的最終清理待主agent回報。
+| 檢查 | 結果 |
+| --- | --- |
+| 受測發布包 | SHA-256 `34efada9a3f246ba9c15916261483691cd7a9aa0a93d203ae70706d13ec26bf4`；來源固定 `52e96b7`，備份 receipt 與隔離副本啟動／登入均通過。 |
+| 服務與路徑 | 版本／source一致，schema15／21表，integrity ok／FK0；8users全fields、data paths／env保持，import generation未啟用。 |
+| 公開畫猜 | 18assets no-store且精確等於受測來源；3own會員驗SSE點時間、ACK／snapshot、dedupe、quota、undo／clear額度不退、nonartist拒絕。 |
+| 公開媒體 | 19assets精確來源；一般席enqueue／全桌控制拒絕，manager promote／seek／skip／demote即時ACL，site roles不變。HTTP不當原生Audio／YouTube實播。 |
+| own QA | 兩房已刪、sessions登出，profiles／artwork未寫，QA history保留。 |
+| 最後資料 | 20 non-session tables allrows／BLOB未變，8users全fields保持；sessions184→191為驗證登入／登出成長，不說session表不變。 |
 
-公開文件不收錄本機偏好、帳密、房碼、cookie、原 HAR 或正式環境私有設定。原始QA資料留核准位置；本文件只保存可複核的來源、範圍和摘要。
+證據：`work/ui-polish-webgl-postcheck-result.json`、`ui-polish-webgl-public-smoke.json`、`ui-polish-webgl-public-media-smoke.json`、`ui-polish-webgl-final-data-check-result.json`。公開文件不收錄私有主機路徑、房號、帳密、cookie、本機偏好或原HAR。
+
+## 後續與限制
+
+本批已交付共用表面與雷霆局部WebGL；下一批再比較自然smoke／sparks、完整道路事件／碰撞trace、同trace前景效能。沒有全部buttons／phase、全部硬體、實體手機／讀屏、自然多輪或GPU加速結論。整張賽道／角色、畫猜renderer、文字／emoji與其他遊戲仍用原技術；WebGL成功不證明傳輸或DB成本下降。
+
+未涵蓋矩陣是後續驗收方法，不把擴展研究當成本批尚未交付，也不把全部玩法寫成已測。舊v1.9.0與「WebGL未實作」保留為歷史，本文件取代其目前版本／實作狀態。
