@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-07 Issue47股市自動化候選v1.10.0／schema17：官方收盤交叉核對、自動原子結算、下一交易日、近一日曆月歷史、暱稱排行榜與休市override，尚未部署。先讀 [市場自動化](../MARKET-AUTOMATION.md)；PROGRAMMER與SERVER-DATA保存來源、單寫者、遷移與限制。
+
 2026-10-07最新正式v1.9.0：畫猜防閃、真點時間viewer回放、平滑倒數與安靜成功回饋，以及媒體高度／原生本機時間明確發布已完成。接手先讀 [畫猜最新進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)及 [媒體最新進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)／[spec](../specs/MEDIA-ICON-WINDOW-UI.md)。PROGRAMMER／ANIMATION／PLAYER保存每輪中途與終點分開驗、callback取消及個人／全桌權限規則；完整source、測試與原生數據集中於進度，下方旧版本是歷史。正式成功不表示所有硬體、自然多輪、實體手機／讀屏或60fps已驗。
 
 2026-10-07媒體圖示與視窗：永久操作圖示＋hover／focus提示準則已寫AGENTS、MEMORY與DESIGNER；重要內容保持可見。點播與單行清單獨立寬視窗，播放器入口、邊緣縮放及「上傳歌曲」首選項見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)。最新測試與版本只以 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)為準，不沿用中間候選或宣稱全站按鈕已改完。
