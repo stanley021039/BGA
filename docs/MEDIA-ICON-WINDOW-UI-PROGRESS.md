@@ -1,27 +1,29 @@
 # 媒體圖示與視窗 UI 進度
 
-日期：2026-10-07。六項source已完成並凍結，候選patchv1.8.2發行前；Windows完整1095／1095、37920.2003ms，reviewer八檔focused116／116、2361.1404ms，各fail/cancel/skip/todo0。Linux／受測commit-tag／正式部署待root，正式仍v1.8.1；不沿用舊1076當新结果。 六項與永久設計準則見 [spec](specs/MEDIA-ICON-WINDOW-UI.md)。本輪僅媒體／必要共享元件，沒有將全站操作button全搬完，未引用本機偏好。
+日期：2026-10-07。8項UI實作完成，候選patch v1.8.2發行前。最新Windows完整1101/1101（37693.3375ms）、reviewer八檔123/123（2498.5595ms）、frontend focused58/58通過，fail/cancel/skip/todo均0；背景Chrome新雙視窗、单行4px間隔、Audio開關不中斷、upload導航guard、影片擴展与sameiframe已驗。最新Linux／tag／正式切換待驗，正式仍v1.8.1。中間b420134未tag或部署，其1095項雙平台結果只作歷史記錄，不作本次最新驗收。
 
-## 六項需求對照
+## 八項需求對照
 
 | 項目 | 實作與已驗界線 | 狀態 |
 | --- | --- | --- |
-| M1 icon-only／說明 | 共用registry、中文aria／title、本站custom controls圖示化；label／重要內容可見，rootfont200%按鈕88×88／icon48×48在內。 | source完成／發行前；實體touch說明與讀屏未真驗 |
-| M2 本站播放器圖示 | 本站共享／個人控制icon-only；原生Audio／YouTube controls與consent／恢復出口保留。 | source完成；本輪YT真正playing未驗，幾何／縮圖不能替代 |
-| M3 移除影片名稱 | 無mediaVideoName input，URL點播不送可編輯title；既有metadata／fallback名稱保留。 | DOM／payload回歸與Chrome無input已驗 |
-| M4 8方向resize | 四邊四角hit areas與cursor、pointer capture、Tab／Arrow／Shift／Home，210pxplayer／clamp沿用。 | Chrome八方向mouse對邊固定、最小iframe及local-only已驗；keyboard／cancel回歸已驗 |
-| M5 左handle右remove | row不draggable／無上下button，handle-only mouse／touch與Arrow復焦，完整revision意圖及降權取消。 | mouse／Arrow／emulatedTouch實際ACK確認，stale／cancel／lost／close回歸已驗 |
-| M6 單行ellipsis／hover跑馬 | GameUI.overflowText(text,{hoverOnly:true})與escaped fallback；只有overflow:hover跑馬，reduce／hidden不動。 | Chrome transform -237.878px／row69.5px不變／離開靜止，motion回歸已驗 |
+| M1 icon-only／說明 | 共用registry、中文aria／title、本站custom controls圖示化；label／重要內容可見，rootfont200%按鈕88×88／icon48×48在內。 | 完成；最新完整回歸通過，native scope見進度 |
+| M2 本站播放器圖示 | 本站共享／個人控制icon-only；原生Audio／YouTube controls與consent／恢復出口保留。 | 完成；最新完整回歸通過，native scope見進度 |
+| M3 移除影片名稱 | 無mediaVideoName input，URL點播不送可編輯title；既有metadata／fallback名稱保留。 | 完成；最新完整回歸通過，native scope見進度 |
+| M4 8方向resize | 四邊四角hit areas與cursor、pointer capture、Tab／Arrow／Shift／Home，210pxplayer／clamp沿用。 | 完成；最新完整回歸通過，native scope見進度 |
+| M5 左handle右remove | row不draggable／無上下button，handle-only mouse／touch與Arrow復焦，完整revision意圖及降權取消。 | 完成；最新完整回歸通過，native scope見進度 |
+| M6 單行ellipsis／hover跑馬 | GameUI.overflowText(text,{hoverOnly:true})與escaped fallback；只有overflow:hover跑馬，reduce／hidden不動。 | 完成；最新完整回歸通過，native scope見進度 |
+| M7 寬點播／清單dialog | 音樂／影片entry与queue移至獨立較寬非modal窗，entry單行小gap；player下方唯一icon開清單，影片占主區、去360px高度cap、8向resize維持。 | 完成；非modal／mouse與Arrow／close復焦、row54px與gap4px／影片1377×575已驗 |
+| M8 上傳作首個option | 音樂下拉第一項文字「上傳歌曲」，導航既有共用上傳頁，不留獨立上傳icon/link，不enqueue sentinel。 | 完成；首文字option／安全導航參數／reset，POST1→1；沒有實際上傳檔案 |
 
 永久準則來自本輪直接使用者指令：操作盡量icon-only＋hover說明，也要可讀名稱及keyboard／touch理解，不能仅title。正文／label／結果及重要玩家資訊不隱藏；AGENTS／MEMORY／DESIGNER／README已保存。
 
-## 實作攻防與可靠性
+## 中間實作攻防與可靠性
 
 frontend做TableMedia／測試，root做共享GameUI registry／overflowText、整合與驗收，文件owner只六docs。排序handle凍結generation／instance／session／revision／完整IDs，queue／權限／close更新取消舊intent；row文字選取／remove不啟動drag。8個resize edges8px／corners20px透明hot area不覆播放器內區，沒有可見footer resize按鈕，keyboard替代保留。
 
-實際回歸曾重現並修header多指／已有drag重入、close不release與同步lostcapture重入；cancel／lost回原位置不persist，正常release只save一次。再修背景dialog新開首rAF延後导致越viewport：render後同步layout一次。resize／queue非primary pointer不可開始。這些修正各有fail-before／pass-after的focused回歸；owner最後51項為其source scope，最終reviewer／完整數字另列，不沿用前期46／49／50冒充最終。
+實際回歸曾重現並修header多指／已有drag重入、close不release與同步lostcapture重入；cancel／lost回原位置不persist，正常release只save一次。再修背景dialog新開首rAF延後导致越viewport：render後同步layout一次。resize／queue非primary pointer不可開始。這些修正各有fail-before／pass-after的focused回歸；中間owner最後52項（含控制token取代固定44px回歸）為其source scope，最終reviewer／完整數字另列，不沿用前期46／49／50冒充最終。
 
-## 背景Chrome證據與限制
+## 中間b420134 Chrome證據與限制（不代表最新布局）
 
 背景Chrome已驗八向mouse resize對邊固定、mouse／Arrow及emulatedTouch handle排序均實際ACK、一般member點播而無全桌／remove權。本站custom controls均icon-only及中文aria，影片名稱input已移除；原生Audio／YouTube controls保留，本輪沒有真YouTube playing證據（只幾何／縮圖）。實際長名hover transform -237.878px、row69.5px不變，離開靜止；390×844 raw CDP dialog374×620、bounds8..382、iframe337×220.2，最小縮放iframe235×210且same iframe、room-media POST4→4；root font200%樣本button88×88／icon48×48在內。這是模擬touch／viewport与文字放大，非實體手機／真人assistive technology或全站全UI驗收；fixture建5rooms不等5頁native遍測。
 
@@ -31,16 +33,28 @@ frontend做TableMedia／測試，root做共享GameUI registry／overflowText、�
 
 200%文字最後補驗：舊queue首欄44px與88px把手重疊34px；已改共用控制尺寸token，新增CSS契約回歸。Chrome修後三列均為88px／155.188px／88px，把手與標題間距10px。這筆CSS後完整Windows為1095；reviewer116是CSS前結果，frontend最後focused52/52。第二個隔離fixture也正常stop，自己的補驗tab關閉、文字大小还原。
 
-## 驗收記錄
+## 最新追加與驗收記錄
 
 | 驗收 | 結果／scope |
 | --- | --- |
-| source／focused | source frozen；reviewer八檔116／116、2361.1404ms，各fail/cancel/skip/todo0；具體gesture/layout/motion/ACL回歸如上。 |
-| Windows／Linux | Windows最終1095／1095、37920.2003ms，各fail/cancel/skip/todo0；Linux待root，不由Windows推論通過。 |
+| source／focused | b420134為已commit的中間候選，未tag；最新M7/M8 source／focused待freeze與重驗，不沿用舊116或52。 |
+| Windows／Linux | 中間b420134 Windows1095／1095、37920.2003ms、全部0；中間同份Linux1095／1095、189665.89494ms亦過，均不替代最新source測試。最新完整數字待root。 |
 | Chrome icon／name／queue | 本站controls icon-only／中文aria、hover跑馬／等高／離開靜止、mouse／Arrow／emulatedTouch handle均實際ACK。 |
 | Chrome resize／viewport | 八向mouse對邊固定；390 rawCDP374×620界8..382、iframe337×220.2；min235×210 sameiframe／POST4→4，rootfont200%88pxbutton／48pxicon。 |
 | 播放／ACL | 一般member可點播、無全桌／remove；Audio／YT native控件保留。YTplaying／真oEmbed／實體手機／讀屏未提供本批真驗證據。 |
-| source／tag／正式／資料 | 發行前：正式仍v1.8.1，候選1.8.2；commit／tag／Linux／部署／備份資料待root後續證據，不預填。 |
+| source／tag／正式／資料 | 最新M7/M8候選仍實作中；b420134只是中間commit，未tag／部署，正式仍v1.8.1。最新Linux／tag／正式證據待root。 |
 | own清理 | 自己兩tabclose、rootfont／raw viewport還原、隔離fixture正常stop；最後截圖scope如上。 |
 
 官方查核仍適用：title的keyboard／touch限制見 [MDN](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/title)；tooltip hover／focus／Escape設計參考見 [W3C APG（pattern仍work in progress）](https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/)。YouTube controls參數見 [官方文件](https://developers.google.com/youtube/player_parameters#controls)，本輪維持原生controls，不能把本站圖示化推論為YouTube播放成功。
+
+M7/M8最新source、完整Windows／Linux與native驗收待root提供。這次只更新spec／進度兩文件，角色記憶及AGENTS保持前輪版本，待最終交付再對齊；不把中間commit／已通過的舊Linux當新版完成。
+
+## 最新雙視窗驗收
+
+- 獨立非modal清單最大寬840px、內容自然高度，兩筆時840×327；歌曲row54px、文字22.5px單行、margin0，row gap4px。已清除舊dialog li的12px上下margin，避免實際gap變28px。兩點播form在清單內，桌機並排；player只有一個圖示清單入口。
+- 新清單mouse拖C到首筆及ArrowDown回第二筆，等待HTTP ACK後順序與焦點確認；member可加入音樂/影片、把手disabled、remove不存在，看到同一清單。reviewer另外重現capture後close／demotion／stale再late up，全為capture=false與POST0。
+- 真實silent MP3 Audio readyState4、paused=false，開關清單同一audio且time29.77→49.32秒，focus回清單入口。本機測試聲音已還原；此實播發生於新DOM實作中，其後只補rowmargin／autoheight及回歸。
+- 上傳首option文字與sentinel確認；用短暫window.open recorder選取後記到 /collection?section=music、_blank、noopener，選项reset為空，media POST1→1。Recorder已還原；本批沒有實際上傳歌曲或開外部上傳tab。
+- 最新native NW擴窗至1407×1021.8、iframe1377×575；SE調整後iframe1317×525，同一iframe且media POST5→5。開清單放影片下方，仍同一iframe；影片縮圖已載入，但本批不宣稱YouTube SDK ready／影片正在播放。
+- 200%文字：row98px、控制88px、title仍22.5px單行，左右各6px gap；390×844重排後player374×828 at8,8，playlist374×301 at8,535，iframe352×360.2、documentWidth375無水平溢出。背景resize經rAF重排後才記bounds，不把第一瞬間舊定位當通過。字體与raw viewport皆已還原。
+- 最新Windows1101/1101与reviewer123/123結果在本段頂部；Linux/正式資料另待發布證據。截圖與去敏證據在ignored work，不提交原cookie／HAR。

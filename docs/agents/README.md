@@ -1,6 +1,6 @@
 # Agent 長期記憶索引
 
-2026-10-07媒體六項source完成／發行前：source完成／發行前候選patch1.8.2：Windows1094／1094（37903.6806ms）、reviewer八檔focused116／116（2361.1404ms），各fail/cancel/skip/todo0。Chrome八向mouse／對邊固定、mouse／Arrow／emulatedTouch handle排序實際ACK，member點播但無全桌/remove；hover transform-237.878px且row69.5px不變，390rawCDP與210floor／sameiframe／POST4→4、rootfont200%樣本已驗。本站custom controls中文aria/icon-only；原生Audio／YT維持，本輪YTplaying未驗，不宣稱五頁UI全部native或全站button搬完。own兩tab／字體／viewport／fixture已清理；Linux／tag／部署待root、正式仍v1.8.1。 永久icon-only＋hover／可讀focus-touch準則已寫AGENTS／MEMORY／DESIGNER，重要內容不隱藏；接手讀 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)，不引用.local偏好，後續正式證據再更新。
+2026-10-07媒體圖示與視窗：永久操作圖示＋hover／focus提示準則已寫AGENTS、MEMORY與DESIGNER；重要內容保持可見。點播與單行清單獨立寬視窗，播放器入口、邊緣縮放及「上傳歌曲」首選項見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)。最新測試與版本只以 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)為準，不沿用中間候選或宣稱全站按鈕已改完。
 
 2026-10-07 [WebGL導入評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)：已按v1.8.1程式與官方資料盤點；建議雷霆特效局部原型，大廳先比較transform，畫猜renderer與傳送瓶頸分開。這是研究提案，未安裝或實作WebGL、未跑效能原型，不改正式v1.8.1；接手先讀該文件及PROGRAMMER／ANIMATION最新記錄。
 

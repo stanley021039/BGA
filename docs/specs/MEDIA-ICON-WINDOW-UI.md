@@ -1,6 +1,6 @@
 # 媒體圖示、視窗與待播清單 UI 規格
 
-日期：2026-10-07。六項source已完成並凍結，候選patchv1.8.2發行前；Windows完整1094／1094、37903.6806ms，reviewer八檔focused116／116、2361.1404ms，各fail/cancel/skip/todo0。Linux／受測commit-tag／正式部署待root，正式仍v1.8.1；不沿用舊1076當新结果。 本輪只改共用媒體與必要shared元件，不宣稱全站button已icon-only；既有 [統一媒體](UNIFIED-ROOM-MEDIA.md)及 [共用元件](SHARED-UI-ALIGNMENT.md)保留。實證／scope見 [本批進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
+日期：2026-10-07。8項UI實作完成，候選patch v1.8.2發行前。最新Windows完整1101/1101（37693.3375ms）、reviewer八檔123/123（2498.5595ms）、frontend focused58/58通過，fail/cancel/skip/todo均0；背景Chrome新雙視窗、单行4px間隔、Audio開關不中斷、upload導航guard、影片擴展与sameiframe已驗。最新Linux／tag／正式切換待驗，正式仍v1.8.1。中間b420134未tag或部署，其1095項雙平台結果只作歷史記錄，不作本次最新驗收。
 
 ## 永久設計準則
 
@@ -8,16 +8,18 @@
 
 同功能同圖示、同說明，重用GameUI registry／decorateButton／共享提示及中性幾何槽；保留disabled／pending／hidden、事件及控制token尺寸。桌機優先，手機與放大文字仍能使用。本站播放器自製控制列icon化；原生Audio／YouTube controls與consent／恢復出口保留，本站自製操作列圖示化的scope依實際source及驗收記錄，不能宣稱重畫所有YouTube原生UI。
 
-## 六項規格
+## 八項規格
 
 | 項目 | 原狀／調整 | 實作界線與驗收 | 狀態 |
 | --- | --- | --- | --- |
-| M1 操作圖示／說明 | 多項媒體操作仍可見文字；本站共享及個人操作、加入／更新／移除與視窗工具用共享registry icon-only。 | hover說明與`aria-label`同中文語意，focus／touch有可取得名稱與提示。全桌與個人操作不能混淆；保留submit／listener、44px控制token、disabled／pending及可見label／內容。 | source完成；中文aria/icon-only与Chrome尺寸樣本已驗，physical touch/讀屏未驗 |
-| M2 本站播放器控制 | 共享播放／暫停／下一筆／停止與個人播放／對齊／聲音／退出採自製icon控制；不能另留第二套本站文字操作列。 | 保留host／manager ACL、一般席點播與個人音量／退出。YouTube native／fallback、consent及autoplay恢復策略保持；本站控制圖示完成与真播放證據分列，本輪真YTplaying未驗。 | 本站icon controls完成；Audio/YT原生controls保留，真YTplaying未驗 |
-| M3 移除影片名稱input | 刪`mediaVideoName`及前端title讀值／清空流程，只填YouTube網址，沿用metadata／固定fallback名稱。 | URL label與錯誤提示保留；current／queue仍顯示名稱。server optional title相容處理不必因UI移除改wire／DB。 | source完成；no input與payload回歸已驗，不冒稱真oEmbed成功 |
-| M4 四邊四角resize | 原右下按鈕改8個edge／corner hit area，hover方向cursor、Pointer capture拖拉；不做8個常駐文字按鈕。 | N/S ns-resize、E/W ew-resize、NE/SW nesw-resize、NW/SE nwse-resize。N/W改top／left並保留對側，viewport clamp與210px播放器空間沿用。separators可Tab／Arrow／Home、名稱與尺寸可讀，不覆播放器內區／工具。 | 完成；Chrome八向mouse、390／最小iframe／零新增mediaPOST已驗 |
-| M5 queue左handle／右remove | 最左drag handle、最右remove icon，取消上移／下移button。只有handle Pointer capture／touch能排序，row不draggable，文字選取／remove不誤觸drag。 | Arrow keyboard reorder與復焦原handle保留。意圖凍結generation／instance／session／revision／完整IDs；更新／降權／close取消或要求重拖，零舊排序POST。一般席不能排序／移除；名稱／點播人可見。 | 完成；mouse／Arrow／emulatedTouch已ACK，降權／取消／stale回歸已驗 |
-| M6 單行名稱／hover跑馬 | current／queue名稱及點播人單行ellipsis；只有overflow且hover才跑馬，短名靜止。用`GameUI.overflowText(text,{hoverOnly:true})`，缺helper時escaped單行fallback。 | DOM／可讀名稱保留全文，focus／touch可取得完整內容，hover結束靜態ellipsis。MotionPolicy／OS reduce／document.hidden禁止跑馬；重用量測／清理、不加每frame輪詢，不修改全站重要玩家資訊可見性。 | 完成；Chrome hover移動與離開靜止、row等高已驗，reduce／hidden回歸已驗 |
+| M1 操作圖示／說明 | 多項媒體操作仍可見文字；本站共享及個人操作、加入／更新／移除與視窗工具用共享registry icon-only。 | hover說明與`aria-label`同中文語意，focus／touch有可取得名稱與提示。全桌與個人操作不能混淆；保留submit／listener、44px控制token、disabled／pending及可見label／內容。 | 完成；最新完整回歸通過，native scope見進度 |
+| M2 本站播放器控制 | 共享播放／暫停／下一筆／停止與個人播放／對齊／聲音／退出採自製icon控制；不能另留第二套本站文字操作列。 | 保留host／manager ACL、一般席點播與個人音量／退出。YouTube native／fallback、consent及autoplay恢復策略保持；本站控制圖示完成与真播放證據分列，本輪真YTplaying未驗。 | 完成；最新完整回歸通過，native scope見進度 |
+| M3 移除影片名稱input | 刪`mediaVideoName`及前端title讀值／清空流程，只填YouTube網址，沿用metadata／固定fallback名稱。 | URL label與錯誤提示保留；current／queue仍顯示名稱。server optional title相容處理不必因UI移除改wire／DB。 | 完成；最新完整回歸通過，native scope見進度 |
+| M4 四邊四角resize | 原右下按鈕改8個edge／corner hit area，hover方向cursor、Pointer capture拖拉；不做8個常駐文字按鈕。 | N/S ns-resize、E/W ew-resize、NE/SW nesw-resize、NW/SE nwse-resize。N/W改top／left並保留對側，viewport clamp與210px播放器空間沿用。separators可Tab／Arrow／Home、名稱與尺寸可讀，不覆播放器內區／工具。 | 完成；最新完整回歸通過，native scope見進度 |
+| M5 queue左handle／右remove | 最左drag handle、最右remove icon，取消上移／下移button。只有handle Pointer capture／touch能排序，row不draggable，文字選取／remove不誤觸drag。 | Arrow keyboard reorder與復焦原handle保留。意圖凍結generation／instance／session／revision／完整IDs；更新／降權／close取消或要求重拖，零舊排序POST。一般席不能排序／移除；名稱／點播人可見。 | 完成；最新完整回歸通過，native scope見進度 |
+| M6 單行名稱／hover跑馬 | current／queue名稱及點播人單行ellipsis；只有overflow且hover才跑馬，短名靜止。用`GameUI.overflowText(text,{hoverOnly:true})`，缺helper時escaped單行fallback。 | DOM／可讀名稱保留全文，focus／touch可取得完整內容，hover結束靜態ellipsis。MotionPolicy／OS reduce／document.hidden禁止跑馬；重用量測／清理、不加每frame輪詢，不修改全站重要玩家資訊可見性。 | 完成；最新完整回歸通過，native scope見進度 |
+| M7 獨立較寬點播／清單窗 | 清單、音樂與影片點播欄位移至獨立較寬的非modal dialog；entry單行、gap較小。播放器下方只留一個icon按鈕開啟點播／清單窗，影片占完整主區，移除360px高度cap。 | player四邊四角resize保留；移動／縮放／有足夠空間時開關清單不重mount播放器，不更改全桌或清空表單；清單遮住影片時只退出本機觀看，關清單不自動重載。較寬清單窗仍clamp viewport、保留label／keyboard／關閉復焦；queue權限及凍結意圖不變。 | 完成；新雙窗／fullwidth-height／sameiframe與零幾何POST已驗 |
+| M8 下拉第一項上傳歌曲 | 移除獨立上傳icon／link，音樂下拉第一個文字option為「上傳歌曲」；選取時導航既有共用音樂上傳頁。 | option是導航sentinel，不是曲目：不得enqueue、不得送空／假trackId；真曲目選取與加入保持。文字option例外保留清楚用途，返回／重新開窗與reset selection待驗。 | 完成；首option、安全導航／reset、submit guard與refresh回歸通過 |
 
 ## 共用元件與補驗
 
@@ -52,3 +54,7 @@
 | viewport／共用邊界 | 1280×720、390px、200%文字與五款共用入口；不重疊／水平溢出／遮住控制，不宣稱全站按鈕已改完。 | 390rawCDP与rootfont200%樣本已驗；fixture5rooms不等5頁native，全站buttons未全搬 |
 
 本批source、Windows與Chrome已按下列scope完成，Linux／tag／正式仍待；source／focused／雙平台、原生／合成Chrome、正式與清理證據只按實際結果更新 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)；未觀察仍未驗，不copy本機偏好、帳密或原HAR。
+
+## 追加布局驗收（待驗）
+
+M7須驗獨立較寬非modal dialog、单行entry／較小gap、player唯一清單icon、影片完整主區与去360px cap、8向resize／sameiframe／無新增mediaPOST、兩窗關閉／復焦／390與200%文字。M8須驗無獨立上傳icon/link、首個文字option精確「上傳歌曲」、導航既有上傳頁、sentinel零enqueue與真曲目仍正常。前述M1–M6在新布局重驗；中間Chrome幾何／hover與Windows1095不是最新source通過。

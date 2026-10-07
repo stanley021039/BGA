@@ -30,7 +30,9 @@
   remove:'<path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/>',
   dragHandle:'<circle cx="8" cy="5" r="1"/><circle cx="16" cy="5" r="1"/><circle cx="8" cy="12" r="1"/><circle cx="16" cy="12" r="1"/><circle cx="8" cy="19" r="1"/><circle cx="16" cy="19" r="1"/>',
   external:'<path d="M14 3h7v7M21 3l-10 10M10 5H4v15h15v-6"/>',
-  upload:'<path d="M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"/>'
+  upload:'<path d="M12 16V3m-5 5 5-5 5 5M4 15v6h16v-6"/>',
+  queue:'<path d="M8 5h13M8 12h13M8 19h13"/><circle cx="3" cy="5" r=".8"/><circle cx="3" cy="12" r=".8"/><circle cx="3" cy="19" r=".8"/>',
+  music:'<path d="M9 18V5l12-2v13M9 9l12-2"/><ellipse cx="6" cy="18" rx="3" ry="2"/><ellipse cx="18" cy="16" rx="3" ry="2"/>'
  };
  paths.volumeOn=paths.sound;paths.volumeOff=paths.muted;paths.sync=paths.refresh;
  const pending=new WeakMap(),dialogs=new WeakMap();let dialogNumber=0;
