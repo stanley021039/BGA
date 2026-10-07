@@ -3,11 +3,24 @@ const $=selector=>document.querySelector(selector);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transport','交通工具'],['objects','生活物品'],['people','人物職業'],['nature','自然奇幻'],['places','場所娛樂'],['activities','運動音樂'],['meme','迷因 Meme'],['custom','自定義']];
 let code=(location.pathname.match(/\/draw\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
-let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,clockOffset=0,inviteBase=location.origin;
-let filled=false,tool='brush',active=null,pending=[],lastSentAt=0,lastFillSentAt=0,sendQueue=Promise.resolve(),canvasCommandBusy=false,canvasCommandEpoch=0,cursor=[256,128];
+let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,canvasSyncJob=null,clockOffset=0,inviteBase=location.origin;
+let filled=false,tool='brush',active=null,pending=[],lastSentAt=-Infinity,lastFillSentAt=-Infinity,sendQueue=Promise.resolve(),canvasCommandBusy=false,canvasCommandEpoch=0,cursor=[256,128];
+let strokeFlushTimer=null,previewFrame=null;
+const drawNow=()=>typeof performance==='object'&&typeof performance.now==='function'?performance.now():Date.now();
 const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
-const canvasRenderer=StrokeCanvas.createRenderer(canvas);
+const canvasRenderer=StrokeCanvas.createRenderer(canvas,{separateMutable:true});
+const drawingTransport=window.DrawTransport.create({
+ send:(data,options,attempt)=>{if(attempt===1&&(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+data.points.length>30000||data.tool==='fill'&&canvasQuota.usedFills>=48))throw Error('本輪筆畫額度已用完，請等待下一輪。');return api('draw/stroke',data,options);},createId:()=>StrokeCanvas.strokeId(),now:drawNow,
+ pacing:()=>({lastStart:lastSentAt,lastFill:lastFillSentAt}),
+ isCurrent:(data,draft)=>sameCanvas(data)&&localStrokes.get(data.strokeId)===draft,
+ onPending:(draft,change)=>draft.pendingBatches+=change,
+ onStart:(data,clock)=>{lastSentAt=clock;if(data.tool==='fill')lastFillSentAt=clock;},
+ onAccepted:(result,_data,draft)=>{if(!sameCanvas(result))throw Error('畫布已更新，請重新同步後作畫');updateCanvasQuota(result);draft.ackVersion=Math.max(draft.ackVersion,result.version);if(draft.ackVersion>(draft.resetVersion||0))draft.hiddenByReset=false;if(result.stroke)receiveCanvasStroke(result);if(result.version>canvasVersion)return syncCanvas();},
+ onDiscard:(draft,reason)=>{if(reason==='error')draft.failed=true;},
+ onError:(error,draft)=>{draft.failed=true;cancelStrokeInput(true);drawFeedback(error.message+'；尚未同步的筆畫已取消，正在回復已確認畫布。','error');toast(error.message);syncCanvas();},
+ onSettled:()=>settleLocalStrokes()
+});
 // Measure the remaining grid row instead of subtracting a fixed header height.
 function fitDrawingWidth({width,height,overhead,chatHeight,gap,toolHeight=0}){
  const available=height-overhead-chatHeight-gap;
@@ -52,7 +65,7 @@ let canvasTotals={points:0,fills:0};
 try{session=JSON.parse(localStorage.getItem(code?'ah-draw:'+code:'ah-draw')||'null');if(session&&!code)code=session.code;}catch{}
 
 function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4000);}
-async function api(route,data){return RoomApi.request(route,data,{code,room:'draw',session,onKicked:()=>{RoomHost.kicked(session);session=null;stream?.close();resultsView?.reset();gameSounds?.reset();}});}
+async function api(route,data,options={}){return RoomApi.request(route,data,{code,room:'draw',session,...options,onKicked:()=>{cancelDrawingWork();RoomHost.kicked(session);session=null;stream?.close();resultsView?.reset();gameSounds?.reset();}});}
 function save(result){session=result;code=result.code;localStorage.setItem('ah-draw',JSON.stringify(result));localStorage.setItem('ah-draw:'+code,JSON.stringify(result));history.replaceState(null,'','/draw/'+code);}
 function nameOf(id){return state?.players.find(player=>player.id===id)?.name||'朋友';}
 function playerStatus(player,s=state){
@@ -274,7 +287,8 @@ function receive(next){
  }
  showCorrectFeedback(previous,next,live);
  playDrawSounds(previous,next,soundLive);
- if(oldRound!==next.round||previous?.canvasEpoch!==next.canvasEpoch){strokes=[];localStrokes.clear();active=null;pending=[];sendQueue=Promise.resolve();lastSentAt=0;lastFillSentAt=0;canvasCommandEpoch++;canvasCommandBusy=false;canvasQuota={usedFills:0,usedBatches:0,usedPoints:0};canvasTotals={points:0,fills:0};canvasRound=next.round;canvasVersion=-1;canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;canvasRenderError=null;updateCanvasBusy();updateFillAvailability();updateStagePreview();}
+ if(oldRound!==next.round||previous?.canvasEpoch!==next.canvasEpoch){cancelDrawingWork();strokes=[];localStrokes.clear();sendQueue=Promise.resolve();lastSentAt=-Infinity;lastFillSentAt=-Infinity;canvasCommandEpoch++;canvasCommandBusy=false;canvasQuota={usedFills:0,usedBatches:0,usedPoints:0};canvasTotals={points:0,fills:0};canvasRound=next.round;canvasVersion=-1;canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;canvasRenderError=null;updateCanvasBusy();updateFillAvailability();updateStagePreview();}
+ else if(oldPhase==='drawing'&&next.phase!=='drawing'){cancelDrawingWork({cancelSync:false});localStrokes.clear();sendQueue=Promise.resolve();redrawCanvas();}
  if(next.strokeVersion>canvasVersion||canvasRound!==next.round)syncCanvas();
  connectEvents();tick();
 }
@@ -295,6 +309,7 @@ function tick(){
  lastTimerRound=state.round;lastTimerSeconds=seconds;
 }
 function redrawCanvas(){
+ cancelPreviewFrame();
  const visible=[],keys=[],placed=new Set();let mutableFrom=Infinity;
  const key=stroke=>['fill','rect','ellipse','line'].includes(stroke.tool)?JSON.stringify([stroke.strokeId,stroke.tool,stroke.color,stroke.size,!!stroke.filled,stroke.points]):'server:'+stroke.version+':'+stroke.strokeId;
  function placeDraft(draft){
@@ -327,16 +342,21 @@ function settleLocalStrokes(){
 function syncCanvas(){
  if(!session)return Promise.resolve();
  if(syncPromise)return syncPromise;
- syncPromise=(async()=>{
-  const requestedRound=state?.round,requestedEpoch=state?.canvasEpoch;
+ const job={round:state?.round,epoch:state?.canvasEpoch,controller:new AbortController(),timer:null,promise:null};canvasSyncJob=job;
+ const current=()=>canvasSyncJob===job&&job.epoch===state?.canvasEpoch&&job.round===state?.round;
+ job.promise=(async()=>{
+  const aborted=new Promise((_,reject)=>job.controller.signal.addEventListener('abort',()=>reject(job.controller.signal.reason),{once:true}));
+  job.timer=setTimeout(()=>job.controller.abort(new DOMException('畫布同步逾時','TimeoutError')),10000);
   try{
-   const snapshot=await api('draw/canvas');if(!sameCanvas(snapshot)||requestedEpoch!==state?.canvasEpoch||requestedRound!==state?.round)return;
+   const snapshot=await Promise.race([api('draw/canvas',undefined,{signal:job.controller.signal}),aborted]);if(!current()||!sameCanvas(snapshot))return;
    applyCanvasSnapshot(snapshot);canvasConnectionError='';updateConnection();
-  }catch(error){if(requestedEpoch===state?.canvasEpoch){canvasConnectionError='畫布正在重新同步：'+error.message;updateConnection();}}
-  finally{syncPromise=null;if(state&&(requestedRound!==state.round||requestedEpoch!==state.canvasEpoch))syncCanvas();}
+  }catch(error){if(current()&&error.name!=='AbortError'){canvasConnectionError='畫布正在重新同步：'+error.message;updateConnection();}}
+  finally{clearTimeout(job.timer);job.timer=null;if(canvasSyncJob===job){canvasSyncJob=null;syncPromise=null;}}
  })();
+ syncPromise=job.promise;
  return syncPromise;
 }
+function cancelCanvasSync(){const job=canvasSyncJob;if(!job)return;canvasSyncJob=null;syncPromise=null;clearTimeout(job.timer);job.timer=null;job.controller.abort();}
 function validCanvasSnapshot(snapshot){
  if(!Number.isSafeInteger(snapshot?.round)||!Number.isSafeInteger(snapshot.version)||snapshot.version<0||!Array.isArray(snapshot.strokes)||snapshot.strokes.length>1000)return false;
  let points=0,fills=0,previous=0;
@@ -372,6 +392,7 @@ function applyCanvasSnapshot(snapshot,reset=false){
  canvasTotals={points:strokes.reduce((sum,stroke)=>sum+stroke.points.length,0),fills:strokes.filter(stroke=>stroke.tool==='fill').length};
  updateCanvasQuota(snapshot);
  if(reset){
+  cancelStrokeInput();drawingTransport.cancel({retainInFlight:true});sendQueue=drawingTransport.whenIdle();
   for(const [id,draft] of localStrokes){
    if(draft.pendingBatches>0){draft.finished=true;draft.resetVersion=Math.max(draft.resetVersion||0,snapshot.version);draft.hiddenByReset=!strokes.some(stroke=>stroke.strokeId===id);}
    else localStrokes.delete(id);
@@ -474,28 +495,25 @@ async function command(name){
 }
 $('#undo').onclick=()=>command('undo');$('#clear').onclick=()=>{if(confirm('清空這輪畫布？'))command('clear');};
 function canDraw(){return !canvasCommandBusy&&!canvasRecovering&&!canvasRenderError&&state?.phase==='drawing'&&state.presenterId===state.me;}
+function rejectPendingDrawing(message){
+ for(const draft of localStrokes.values()){draft.failed=true;draft.finished=true;}
+ cancelStrokeInput(true);drawingTransport.cancel({retainInFlight:true});sendQueue=drawingTransport.whenIdle();
+ drawFeedback(message+'；尚未同步的筆畫已取消，正在回復已確認畫布。','error');syncCanvas();settleLocalStrokes();
+ return sendQueue;
+}
 function queueStroke(points,strokeId,mode=tool){
- if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+points.length>30000){const draft=localStrokes.get(strokeId);if(draft)draft.failed=true;drawFeedback('本輪筆畫額度已用完，請等待下一輪。','error');return sendQueue;}
- if(mode==='fill'&&canvasQuota.usedFills>=48){drawFeedback('本輪填色額度已用完，可用畫筆或形狀繼續。','error');return sendQueue;}
+ if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+points.length>30000)return rejectPendingDrawing('本輪筆畫額度已用完，請等待下一輪。');
+ if(mode==='fill'&&canvasQuota.usedFills>=48)return rejectPendingDrawing('本輪填色額度已用完，可用畫筆或形狀繼續。');
  if(mode==='fill'&&[...localStrokes.values()].some(draft=>draft.tool==='fill'&&!draft.failed)){drawFeedback('填色正在同步，請稍候再填下一區。');return sendQueue;}
  let draft=localStrokes.get(strokeId);
  if(!draft){
   if(!localCanvasCapacity(points.length)){drawFeedback('畫布同步中的筆畫已達上限，請稍候。','error');return sendQueue;}
   draft={strokeId,tool:mode,color:$('#color').value,size:Number($('#size').value),filled,points:[...points],revision:1,finished:true,pendingBatches:0,ackVersion:0,failed:false};
-  localStrokes.set(strokeId,draft);redrawCanvas();
+  localStrokes.set(strokeId,draft);scheduleCanvasPreview();
  }
- draft.pendingBatches++;
- const data={canvasEpoch:state.canvasEpoch,round:state.round,batchId:StrokeCanvas.strokeId(),strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points};
- const current=()=>sameCanvas(data)&&localStrokes.get(strokeId)===draft;
- sendQueue=sendQueue.then(async()=>{
-  if(!current())return;
-  const delay=Math.max(0,115-(Date.now()-lastSentAt),mode==='fill'?500-(Date.now()-lastFillSentAt):0);if(delay)await new Promise(resolve=>setTimeout(resolve,delay));if(!current())return;lastSentAt=Date.now();if(mode==='fill')lastFillSentAt=lastSentAt;
-  try{
-   const result=await api('draw/stroke',data);
-   if(current()&&sameCanvas(result)){updateCanvasQuota(result);draft.ackVersion=Math.max(draft.ackVersion,result.version);if(draft.ackVersion>(draft.resetVersion||0))draft.hiddenByReset=false;if(result.stroke)receiveCanvasStroke(result);if(result.version>canvasVersion)syncCanvas();}
-  }catch(error){if(current()){draft.failed=true;drawFeedback(error.message,'error');toast(error.message);syncCanvas();}}
-  finally{if(current()){draft.pendingBatches--;settleLocalStrokes();}}
- }).catch(error=>{if(current())toast(error.message);});
+ const data={canvasEpoch:state.canvasEpoch,round:state.round,strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points};
+ try{drawingTransport.enqueue(data,draft);}catch(error){rejectPendingDrawing(error.message);toast(error.message);}
+ sendQueue=drawingTransport.whenIdle();
  return sendQueue;
 }
 function localCanvasCapacity(extraPoints=0){
@@ -506,35 +524,65 @@ function localCanvasCapacity(extraPoints=0){
 }
 function flush(final=false){
  if(!active||!['brush','erase'].includes(active.tool))return;
+ clearStrokeFlush();
   if(pending.length>1||!active.sent){
-   const points=[...pending];if(points.length){queueStroke(points,active.strokeId,active.tool);active.sent=true;pending=final?[]:[points.at(-1)];}
+   const points=[...pending],draft=active;if(points.length){queueStroke(points,draft.strokeId,draft.tool);if(active!==draft)return;draft.sent=true;pending=final?[]:[points.at(-1)];}
   }
  if(final)pending=[];
+}
+function clearStrokeFlush(){if(strokeFlushTimer!==null)clearTimeout(strokeFlushTimer);strokeFlushTimer=null;}
+function scheduleStrokeFlush(){
+ if(strokeFlushTimer!==null||!active||!['brush','erase'].includes(active.tool))return;
+ const draft=active,epoch=state.canvasEpoch;
+ strokeFlushTimer=setTimeout(()=>{strokeFlushTimer=null;if(active===draft&&state?.canvasEpoch===epoch)flush();},140);
+}
+function cancelPreviewFrame(){if(previewFrame!==null)cancelAnimationFrame(previewFrame);previewFrame=null;}
+function scheduleCanvasPreview(){
+ if(previewFrame!==null)return;
+ const epoch=state?.canvasEpoch;
+ previewFrame=requestAnimationFrame(()=>{previewFrame=null;if(state?.canvasEpoch===epoch)redrawCanvas();});
+}
+function cancelStrokeInput(failed=false){clearStrokeFlush();cancelPreviewFrame();if(active){active.finished=true;if(failed)active.failed=true;}active=null;pending=[];}
+function cancelDrawingWork({cancelSync=true}={}){cancelStrokeInput();drawingTransport.cancel();if(cancelSync)cancelCanvasSync();if(drawingFitFrame!==null)cancelAnimationFrame(drawingFitFrame);drawingFitFrame=null;}
+function pointerPoints(event){
+ let samples;if(event.type==='pointermove')try{samples=event.getCoalescedEvents?.();}catch{}
+ samples=(samples?.length?[...samples]:[event]).filter(sample=>sample.pointerId===event.pointerId);
+ const rect=canvas.getBoundingClientRect();
+ return samples.map(sample=>[Math.max(0,Math.min(511,Math.floor((sample.clientX-rect.left)*512/rect.width))),Math.max(0,Math.min(255,Math.floor((sample.clientY-rect.top)*256/rect.height)))]).filter(point=>point.every(Number.isFinite));
+}
+function collectPointer(event){
+ if(!active||canvasCommandBusy||event.pointerId!==active.pointerId)return false;
+ const brush=['brush','erase'].includes(active.tool);let changed=false;
+ for(const point of pointerPoints(event)){
+  const last=active.points.at(-1);if(point[0]===last[0]&&point[1]===last[1])continue;
+  if(active.points.length>=30000||!localCanvasCapacity(1)){drawFeedback('這一筆已達畫布上限，請放開後再操作。','error');break;}
+  if(brush){active.points.push(point);pending.push(point);}else{active.points=[active.points[0],point];pending=[active.points[0],point];}
+  active.revision++;cursor=point;changed=true;
+ }
+ if(changed&&brush){if(pending.length>=40)flush();else scheduleStrokeFlush();}
+ return changed;
 }
 canvas.addEventListener('pointerdown',event=>{
  if(!canDraw()||active||event.button!==0)return;event.preventDefault();canvas.setPointerCapture(event.pointerId);
  if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints>=30000||!localCanvasCapacity(1)){drawFeedback('本輪筆畫額度已用完或仍在同步，請稍候。','error');return;}
- const point=StrokeCanvas.pointFrom(event,canvas,512,256);cursor=point;
+ const point=pointerPoints(event).at(-1);if(!point)return;cursor=point;
  if(tool==='fill'){queueStroke([point],StrokeCanvas.strokeId(),'fill');return;}
  active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],revision:1,sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
- localStrokes.set(active.strokeId,active);pending=[point];redrawCanvas();
+ localStrokes.set(active.strokeId,active);pending=[point];scheduleStrokeFlush();scheduleCanvasPreview();
 });
 canvas.addEventListener('pointermove',event=>{
- if(!active||event.pointerId!==active.pointerId)return;const point=StrokeCanvas.pointFrom(event,canvas,512,256),last=active.points.at(-1);
- if(point[0]===last[0]&&point[1]===last[1])return;
- if(active.points.length>=30000||!localCanvasCapacity(1)){drawFeedback('這一筆已達畫布上限，請放開後再操作。','error');return;}
- if(['brush','erase'].includes(active.tool))active.points.push(point);else active.points=[active.points[0],point];
- active.revision++;if(['brush','erase'].includes(active.tool))pending.push(point);else pending=[active.points[0],point];cursor=point;
- if(['brush','erase'].includes(active.tool)&&pending.length>=40)flush();
- redrawCanvas();
+ if(collectPointer(event))scheduleCanvasPreview();
 });
 function finishPointer(event){
  if(!active||event.pointerId!==active.pointerId)return;event.preventDefault();
+ if(event.type==='pointerup')collectPointer(event);clearStrokeFlush();cancelPreviewFrame();
  if(['brush','erase'].includes(active.tool))flush(true);
  else queueStroke([active.points[0],active.points.at(-1)],active.strokeId,active.tool);
+ if(!active)return;
  active.finished=true;active=null;settleLocalStrokes();redrawCanvas();
 }
 canvas.addEventListener('pointerup',finishPointer);canvas.addEventListener('pointercancel',finishPointer);
+canvas.addEventListener('lostpointercapture',finishPointer);
 canvas.addEventListener('keydown',event=>{
  if(!canDraw())return;const moves={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
  if(moves[event.key]){event.preventDefault();cursor=[Math.max(0,Math.min(511,cursor[0]+moves[event.key][0])),Math.max(0,Math.min(255,cursor[1]+moves[event.key][1]))];toast('畫布位置 '+(cursor[0]+1)+'，'+(cursor[1]+1)+'；按空白鍵落筆');}
@@ -544,6 +592,7 @@ async function poll(){if(!session||busy||polling)return;polling=true;try{receive
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||location.origin).catch(()=>{});
 entry();if(session)poll();else if(code)RoomReconnect.restore(code,'draw','#connection').then(restored=>{if(restored){save(restored);poll();}});
 setInterval(poll,1000);setInterval(tick,250);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
-window.addEventListener('pagehide',event=>{stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
-window.addEventListener('pageshow',event=>{if(event.persisted){motionNeedsBaseline=true;if(state){resultsView?.update(state);updateStagePreview();}poll();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(active)finishPointer({pointerId:active.pointerId,preventDefault(){}});cancelPreviewFrame();}});
+window.addEventListener('pagehide',event=>{cancelDrawingWork();localStrokes.clear();canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
+window.addEventListener('pageshow',event=>{if(event.persisted){motionNeedsBaseline=true;if(state){resultsView?.update(state);redrawCanvas();syncCanvas();updateStagePreview();}poll();}});
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});

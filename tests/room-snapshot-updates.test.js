@@ -48,7 +48,7 @@ function harness(type='poker'){
   immersion:{allowsMotion:()=>false,prepareFocus:noOp,startFocus:noOp,stopFocus:noOp,playSound:noOp},phases:{waiting:'等待'},card:()=>'',animateChipTransfers:noOp,updateTimer:noOp,checkPokerAchievements:noOp,
   render:noOp,progress:noOp,stopGather:noOp,stopFocus:noOp,restoreAchievementNotice:noOp,gatherPlayers:noOp,startFocus:noOp,playSound:noOp,checkNewAchievement:noOp,
   celebrateVictory:noOp,drawFeedback:noOp,updateConnection:noOp,animatePhase:noOp,updateFeed:noOp,updateStagePreview:noOp,decorateActions:noOp,
-  showCorrectFeedback:noOp,playDrawSounds:noOp,connectEvents:noOp,tick:noOp,
+  showCorrectFeedback:noOp,playDrawSounds:noOp,connectEvents:noOp,tick:noOp,cancelDrawingWork:noOp,
  };
  vm.createContext(scope);
  vm.runInContext(source('shared/room-host.js'),scope,{filename:'public/shared/room-host.js'});scope.RoomHost=window.RoomHost;

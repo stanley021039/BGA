@@ -1,5 +1,18 @@
 # 玩家 agent 長期記憶
 
+## 2026-10-07：作畫改善的玩家判定（P0／P1實作中）
+
+
+最新縮限source Windows完整1076／1076、37689.229ms、0fail/cancel/skip。native19場景18對fresh strict RGBA0，fill-dependent362 RGB／max13／alpha0／exactmask0且新wrapper與legacy SHA同，整體strict flag仍false；captured dense3現0。最新實際1000 synthetic-move／948有效點／16chunks963含anchors，兩席同JSON但artistfresh0／viewerclassic67 RGB／max54，viewer baseCopies0／mutable0；跨paintclassic timeout20ms兩組已重現old/new0差、rAF兩組未完成，不能歸因layer或硬體，不能寫雙席pixels全同。Linux／發布尚待，正式readonly仍v1.8.0／5687561。
+
+最新classic跨paint控制已在同一16chunks／948有效點／963含anchor點重現：每chunk隔timeout20ms，warmup0／1兩組原classic與opt-in Infinity均對fresh差67 RGB／max54／alpha0／exactmask0，old/new直接diff0、SHA相同。此固定capture證實原classic也有該差，不外推全部case、不推定硬體／GPU／CPU。兩組rAF控制2秒未advance，沒有完成驗證，整體control flags仍false，不能把它們列pass；Chrome未被提至前景。
+
+第一批候選1.8.1要分開驗「本人筆是否跟手」、「別人持筆期間何時看到」、「慢網pending是否有界」、「放開／undo／clear／收藏是否保留最後畫作」。P0用140ms timeflush／單in-flight／rAF；P1因native像素差縮限為本機未確認draft才layer，完成／觀看者回同surfaceclassic，任意fill後保守classic直到reset。不以放寬點數／batch／fill額度、任意並行POST或抽稀換流暢感。少量點持筆必須在未放開時送出，pointerup末點與cancel既有內容要安全收尾；畫者／觀看者／回看／收藏與studio保留canonical語意。
+
+root在原v1.8.0同Chrome兩席已驗native25點慢線，持筆0POST／viewer空白，up後一筆25點且同epoch非空畫布兩席JSON／pixel吻合。新版同trace在未放開時viewer已見24chunks，3點持筆也見2chunks；up後兩席25chunks／49含anchor點／ink1603及fresh replay0diff。1000 synthetic moves單task只排一次preview和16批／1015含anchor點，背景等待970ms及工具約1秒／move都不是人體採樣率或FPS。
+
+後續dense canonical與fill／白erase發現原layer RGB差，不因mask相同就當完成；診斷改context hint也會改canonical pixels，不能偷換基準。P1已縮限為上述保守路徑，最新19場景／真雙席dense／Windows結果見本節補充，classic控制差／Linux與發布待驗。同trace不同切批可不同AA，但相同canonical完整replay必須零差，不能以空圖／換輪判同。沒有使用者另一台電腦資料就不歸咎硬體；真假coalesced／人工延遲／背景節流與實體多設備分開寫。以 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)為準，目前正式仍v1.8.0。
+
 ## 2026-10-07：統一媒體的玩家驗收規則（正式 v1.8.0）
 
 媒體視窗應一次可看目前項目、共享進度、待播名稱／類型／點播人及點播入口；影片和音樂只一個current，不能還有另一個player在背景唱。房主／管理者可控制、排序或切下一筆，一般人可點播但不能借原生ended／舊select重播去切全桌；重要玩家與遊戲資訊保持可見，角色分級在管理顯示，不以網站admin名稱混淆。

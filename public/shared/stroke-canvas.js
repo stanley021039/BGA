@@ -96,7 +96,9 @@ window.StrokeCanvas=(()=>{
   const maxCheckpoints=options.maxCheckpoints??16,checkpointEvery=options.checkpointEvery??32;
   const maxStrokes=options.maxStrokes??1016,maxPoints=options.maxPoints??31024,maxFills=options.maxFills??49;
   if(!Number.isInteger(maxCheckpoints)||maxCheckpoints<2||maxCheckpoints>32||!Number.isInteger(checkpointEvery)||checkpointEvery<1)throw Error('Invalid canvas checkpoint limits');
-  const context=canvas.getContext('2d');
+  if(options.separateMutable)return createMutableRenderer(canvas,options);
+  const context=canvas.getContext('2d',options.contextAttributes);
+  const retainedCheckpoints=maxCheckpoints-(options.reserveCanvasCheckpoint?1:0);
   const yieldMain=options.yieldToMain||yieldToMain,now=()=>globalThis.performance?.now?.()??Date.now();
   let keys=[],costs=[0],checkpoints=[],revision=0,epoch=0,pendingRender=null;
   const stats={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,checkpointBytes:0,yields:0,cancelledRenders:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
@@ -105,7 +107,7 @@ window.StrokeCanvas=(()=>{
    if(!index||checkpoints.some(point=>point.index===index))return;
    const point={index,cost:costs[index],image:null};checkpoints.push(point);
    checkpoints.sort((a,b)=>a.index-b.index);
-   while(checkpoints.length>maxCheckpoints){
+   while(checkpoints.length>retainedCheckpoints){
     let remove=-1,smallest=Infinity;
     for(let i=0;i<checkpoints.length-1;i++){
      if(checkpoints[i].index===pinned)continue;
@@ -199,6 +201,120 @@ window.StrokeCanvas=(()=>{
   function metrics(){return {...stats,revision,checkpoints:checkpoints.length,strokes:keys.length,rendering:!!pendingRender,targetStrokes:pendingRender?.plan.strokes.length??keys.length};}
   clear();
   return {render,renderCooperatively,whenIdle,reset,metrics};
+ }
+ function createMutableRenderer(canvas,options){
+  const context=canvas.getContext('2d');
+  const factory=options.createCanvas||((width,height)=>{const node=(canvas.ownerDocument||globalThis.document)?.createElement('canvas');if(!node)throw Error('A mutable canvas factory is required');node.width=width;node.height=height;return node;});
+  const base=factory(canvas.width,canvas.height);
+  if(!base||base===canvas||typeof context.drawImage!=='function')throw Error('Independent mutable canvas support is required');
+  base.width=canvas.width;base.height=canvas.height;
+  // Reserve one checkpoint-sized surface for this opaque base, preserving the
+  // original total cache budget. Both contexts use the same creation hints.
+  const prefix=createRenderer(base,{...options,separateMutable:false,reserveCanvasCheckpoint:true,contextAttributes:context.getContextAttributes?.()});
+  const yieldMain=options.yieldToMain||yieldToMain,now=()=>globalThis.performance?.now?.()??Date.now();
+  let keys=[],split=0,prefixRevision=-1,revision=0,epoch=0,pending=null,fallback=null,fillSensitive=false;
+  const fallbackPast={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,yields:0,cancelledRenders:0,revision:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
+  const stats={mutableStrokeApplications:0,mutableFillApplications:0,mutableFilledPixels:0,baseCopies:0,mutableRebuilds:0,mutableLineTo:0,modeSwitches:0,yields:0,cancelledRenders:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
+  function plan(strokes,settings={}){
+   if(!Array.isArray(strokes)||strokes.length>(options.maxStrokes??1016))throw Error('Canvas stroke limit exceeded');
+   let points=0,fills=0;
+   for(const stroke of strokes){if(!Array.isArray(stroke.points)||!stroke.points.length)throw Error('Invalid canvas stroke');points+=stroke.points.length;if(stroke.tool==='fill')fills++;}
+   if(points>(options.maxPoints??31024)||fills>(options.maxFills??49))throw Error('Canvas work limit exceeded');
+   const nextKeys=settings.keys||strokes.map(stroke=>JSON.stringify(stroke));if(nextKeys.length!==strokes.length)throw Error('Invalid canvas keys');
+   const requested=Number.isInteger(settings.mutableFrom)?Math.max(0,Math.min(strokes.length,settings.mutableFrom)):strokes.length;
+   // Only explicit local drafts need an isolated prefix. Accepted chunks and
+   // completed scenes stay on the original visible drawing surface.
+   return {strokes,nextKeys:nextKeys.slice(),split:requested};
+  }
+  function equal(job,otherKeys,otherSplit){return job.split===otherSplit&&job.nextKeys.length===otherKeys.length&&job.nextKeys.every((key,index)=>key===otherKeys[index]);}
+  function discardFallback(){
+   if(!fallback)return;
+   fallback.reset();const previous=fallback.metrics();
+   for(const key of Object.keys(fallbackPast))fallbackPast[key]=key.startsWith('max')?Math.max(fallbackPast[key],previous[key]):fallbackPast[key]+previous[key];
+   fallback=null;
+  }
+  function useFallback(job){
+   fillSensitive||=job.strokes.some(stroke=>stroke.tool==='fill');
+   if(fillSensitive||job.split===job.strokes.length){
+    if(!fallback){
+     // Copying layered pixels into a settled scene can retain different native
+     // antialiasing. Clear them and replay canonical strokes on this surface.
+     cancel();epoch++;prefix.reset();keys=[];split=job.split;prefixRevision=-1;stats.modeSwitches++;
+     fallback=createRenderer(canvas,{...options,separateMutable:false,reserveCanvasCheckpoint:true,contextAttributes:context.getContextAttributes?.()});
+    }
+    split=job.split;return fallback;
+   }
+   if(fallback){
+    // Keep only one checkpoint cache. A fill-bearing epoch cannot return here
+    // until reset, because fill necessarily reads the visible canvas pixels.
+    cancel();epoch++;discardFallback();prefix.reset();keys=[];split=0;prefixRevision=-1;stats.modeSwitches++;
+   }
+   return null;
+  }
+  function cancel(){if(pending){pending.cancelled=true;pending.plan.strokes=null;pending.plan.nextKeys=null;pending=null;stats.cancelledRenders++;}}
+  function copyBase(job){
+   context.save();context.setTransform?.(1,0,0,1,0,0);context.globalAlpha=1;context.globalCompositeOperation='copy';context.drawImage(base,0,0);context.restore();
+   stats.baseCopies++;stats.mutableRebuilds++;keys=job.nextKeys.slice(0,job.split);split=job.split;prefixRevision=prefix.metrics().revision;
+  }
+  function paint(job,index){
+   const stroke=job.strokes[index],filled=drawStroke(context,stroke)||0;stats.mutableStrokeApplications++;
+   if(stroke.tool==='fill'){stats.mutableFillApplications++;stats.mutableFilledPixels+=filled;}
+   if(['brush','erase','line'].includes(stroke.tool))stats.mutableLineTo+=Math.max(1,stroke.points.length-1);
+   keys.push(job.nextKeys[index]);
+  }
+  function render(strokes,settings){
+   const job=plan(strokes,settings),single=useFallback(job);if(single)return single.render(strokes,settings);
+   cancel();epoch++;
+   const changed=prefix.render(strokes.slice(0,job.split),{keys:job.nextKeys.slice(0,job.split)});
+   if(!changed&&equal(job,keys,split)&&prefixRevision===prefix.metrics().revision)return false;
+   copyBase(job);for(let index=job.split;index<strokes.length;index++)paint(job,index);revision++;return true;
+  }
+  function renderCooperatively(strokes,settings){
+   const job=plan(strokes,settings),single=useFallback(job);if(single)return single.renderCooperatively(strokes,settings);
+   if(pending&&equal(job,pending.plan.nextKeys,pending.plan.split))return pending.promise;
+   const prefixResult=prefix.renderCooperatively(strokes.slice(0,job.split),{keys:job.nextKeys.slice(0,job.split)});
+   let work=0;for(let index=job.split;index<strokes.length;index++)work+=strokes[index].tool==='fill'?32:1;
+   const asynchronous=prefixResult&&typeof prefixResult.then==='function'||work>32||strokes.length-job.split>16;
+   cancel();const token=++epoch;
+   if(!asynchronous){
+    if(!prefixResult&&equal(job,keys,split)&&prefixRevision===prefix.metrics().revision)return false;
+    copyBase(job);for(let index=job.split;index<strokes.length;index++)paint(job,index);revision++;return true;
+   }
+   job.strokes=strokes.map(stroke=>({...stroke,points:stroke.points.map(point=>point.slice())}));
+   const current={plan:job,cancelled:false,promise:null};pending=current;
+   current.promise=(async()=>{
+    try{
+     if(prefixResult&&typeof prefixResult.then==='function')await prefixResult;
+     if(current.cancelled||token!==epoch)return false;
+     copyBase(job);let index=job.split;
+     while(index<job.strokes.length){
+      stats.yields++;await yieldMain();if(current.cancelled||token!==epoch)return false;
+      const started=now();let cost=0,count=0,fills=0;
+      while(index<job.strokes.length){const next=job.strokes[index].tool==='fill'?32:1;if(count&&(cost+next>32||count>=16||now()-started>=8))break;paint(job,index++);cost+=next;count++;if(next===32)fills++;}
+      stats.maxBatchStrokes=Math.max(stats.maxBatchStrokes,count);stats.maxBatchFills=Math.max(stats.maxBatchFills,fills);stats.maxBatchMs=Math.max(stats.maxBatchMs,now()-started);
+     }
+     revision++;return true;
+    }finally{if(pending===current)pending=null;}
+   })();return current.promise;
+  }
+  function whenIdle(){
+   const active=fallback,promise=active?active.whenIdle():pending?.promise;
+   return promise?promise.then(()=>active!==fallback||pending?whenIdle():prefix.whenIdle()):prefix.whenIdle();
+  }
+  function reset(){
+   cancel();epoch++;discardFallback();fillSensitive=false;
+   prefix.reset();keys=[];split=0;prefixRevision=-1;context.clearRect(0,0,canvas.width,canvas.height);context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);revision++;
+  }
+  function metrics(){
+   const baseStats=prefix.metrics(),single=fallback?.metrics(),layerBytes=canvas.width*canvas.height*4,history={};
+   for(const key of Object.keys(fallbackPast))history[key]=key.startsWith('max')?Math.max(fallbackPast[key],single?.[key]||0):fallbackPast[key]+(single?.[key]||0);
+   const checkpointBytes=baseStats.checkpointBytes+(single?.checkpointBytes||0);
+   return {...baseStats,...stats,revision:revision+history.revision,strokeApplications:baseStats.strokeApplications+stats.mutableStrokeApplications+history.strokeApplications,fillApplications:baseStats.fillApplications+stats.mutableFillApplications+history.fillApplications,filledPixels:baseStats.filledPixels+stats.mutableFilledPixels+history.filledPixels,
+    prefixStrokeApplications:baseStats.strokeApplications,prefixFillApplications:baseStats.fillApplications,fallbackStrokeApplications:history.strokeApplications,fallbackFillApplications:history.fillApplications,layerBytes,checkpointBytes,cachedBytes:checkpointBytes+layerBytes,checkpoints:baseStats.checkpoints+(single?.checkpoints||0),
+    restores:baseStats.restores+history.restores,yields:baseStats.yields+stats.yields+history.yields,cancelledRenders:stats.cancelledRenders+history.cancelledRenders,prefixCancelledRenders:baseStats.cancelledRenders,maxBatchStrokes:Math.max(baseStats.maxBatchStrokes,stats.maxBatchStrokes,history.maxBatchStrokes),maxBatchFills:Math.max(baseStats.maxBatchFills,stats.maxBatchFills,history.maxBatchFills),maxBatchMs:Math.max(baseStats.maxBatchMs,stats.maxBatchMs,history.maxBatchMs),
+    strokes:single?.strokes??keys.length,mutableFrom:split,rendering:!!pending||baseStats.rendering||!!single?.rendering,targetStrokes:single?.targetStrokes??pending?.plan.strokes?.length??keys.length,separateMutable:true,fallback:fillSensitive,mode:fallback?(fillSensitive?'canonical-fill':'canonical'):'layered'};
+  }
+  reset();return {render,renderCooperatively,whenIdle,reset,metrics};
  }
  function strokeId(){
   if(typeof globalThis.crypto?.randomUUID==='function')return globalThis.crypto.randomUUID();

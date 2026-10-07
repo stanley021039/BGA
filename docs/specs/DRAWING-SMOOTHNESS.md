@@ -1,6 +1,6 @@
 # 畫猜作畫與同步順暢度改善規格
 
-日期：2026-10-07。狀態：**研究後提案，未實作／未部署**。基線 v1.7.1／`3d82e3f`。證據見 [Gartic 與本站實測](../research/GARTIC-BGA-DRAWING-COMPARISON.md)、[真程式稽核](../research/BGA-DRAWING-CODE-AUDIT.md)、[固定版本開源來源](../research/DRAWING-SMOOTHNESS-SOURCES.md)。本規格不把研究等同上線。
+日期：2026-10-07。第一批 **P0／P1已實作，驗收未全部完成／未部署**；当前正式基線v1.8.0，文件HEAD`d3202b2`，候選為相容效能修正v1.8.1。原研究基線v1.7.1／`3d82e3f`及數字保留為歷史，不當成本批改善結果。實作、雙平台與真正Chrome結果另記 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)，最新Windows完整1076／1076通過；native19場景18個對fresh strict RGBA零差，1個fill-dependent與原classic同SHA但對fresh仍差362／max13。最新實際dense雙席同JSON，viewer classic對fresh仍67 RGB／max54，不能宣稱全部像素相同；Linux／發布待做。研究證據見 [Gartic 與本站實測](../research/GARTIC-BGA-DRAWING-COMPARISON.md)、[真程式稽核](../research/BGA-DRAWING-CODE-AUDIT.md)、[固定版本開源來源](../research/DRAWING-SMOOTHNESS-SOURCES.md)；不重錄Gartic HAR。
 
 ## 目標與契約
 
@@ -12,16 +12,39 @@ brush／erase 輸入即使持筆未滿40點，也可有界送出；同一frame�
 
 | 階段／owner | 調整位置與做法 | 主要驗收 | 狀態 |
 | --- | --- | --- | --- |
-| P0a 程式：時間flush＋有界未送點 | `draw.js` 將活動待送與immutable in-flight batch分開。第一個新點啟動時間flush，候選125–150ms經量測選定；40點與pointerup仍可提早要求flush。維持115ms開送下限，空批或只有重複anchor不送。只合併同epoch／round／strokeId／工具／樣式的相鄰**尚未送出**點。 | fake clock：3／25點持筆不需放開即排入batch；計時不依賴move。最終端點、64點切批與跨批anchor連接完整；不超10/s。 | 未做 |
-| P0a 程式：批次固定與慢網背壓 | 準備送出時固定內容並生成batchId；已in-flight或需同ID重試的批次不能改寫。保留單一in-flight；未送點只做有界合併、不無限產生Promise／字串。pending points／bytes／oldest age可量測，容量按既有每輪額度推導，超限沿用明確錯誤與權威恢復，不靜默丟畫。 | 20／200／400ms回覆及jitter、429／500／失聯。同一長筆等待時能合併，不同筆及fill不能越界。重送同ID同內容，ACK／SSE先後都只接受一次。timer頻率與短筆收尾合計不得繞過1,000批額度。 | 未做 |
-| P0b 程式：一幀一次preview | pointer handler只收點／更新資料，維持一個待執行rAF，frame中畫最新活動狀態；正常資料可選`getCoalescedEvents()`，空／未支援以原事件fallback。一次讀rect批次轉換，去相鄰重複整數點；只收相同pointerId。 | 同frame多次move只有一次preview paint，所有合法點／轉角／末點仍保留。pointerup／cancel立即收尾與flush，取消／處理frame不丟最後一點。畫布內容不隨裝飾動畫開關停用。 | 未做 |
-| P0b 程式：背景與非即時回復 | 保留MessageChannel合作式snapshot／填色回復、取消token、epoch驗證與whenIdle。rAF只用即時preview；送出、ACK、gap恢復與deadline不依賴背景rAF。 | hidden／visible往返、換輪與舊callback、新局仍第1輪、clear及儲存等待不套舊圖；已排frame與timer在leave釋放。 | 未做 |
-| P1 程式／美術：活動層 | 已確認底圖與活動筆畫分成canvas／暫存層，先每frame只重畫活動層；ACK轉為權威、undo／clear／fill／錯誤／epoch換輪時重建。日後再採append尾段或dirty rect，不能假設短線段疊畫等於完整path。 | 對同canonical資料驗粗筆、單點、圓端／圓接、尖角、自交、橡皮擦、填色、各形狀及畫者／觀看者／回看／收藏／studio。canonical完成時位置與色彩一致，預覽不可越畫越深。 | 未做 |
-| P1 測試：重播與像素差異 | 固定同epoch，保存兩席完整strokes JSON、backing尺寸、context attributes、digest與ink mask。使用真renderer新canvas完整replay、checkpoint／draft ACK replay對照。可額外比較first getContext採同一willReadFrequently模式，不從hint推斷實際GPU。 | 排除換輪空畫布的偽吻合；判定差是AA邊緣還是位置／填色語意。若容許AA tolerance，先寫門檻與理由，不能因hash不等就任意放寬。 | 未做；研究8點差異待查 |
+| P0a 程式：時間flush＋有界未送點 | `draw.js` 將活動待送與immutable in-flight batch分開。第一個新點啟動140ms時間flush，40點與pointerup仍可提早要求flush。維持115ms開送下限，空批或只有重複anchor不送。只合併同epoch／round／strokeId／工具／顏色／粗細／filled的相鄰**尚未送出**點。 | fake clock：3／25點持筆不需放開即排入batch；計時不依賴move。最終端點、64點切批與跨批anchor連接完整；不超10/s（rolling1000ms）。 | 已實作；clock／native持筆及Windows已驗，Linux待做 |
+| P0a 程式：批次固定與慢網背壓 | 準備送出時固定內容並生成batchId；已in-flight或需同ID重試的批次不能改寫。保留單一in-flight；未送點只做有界合併、不無限產生Promise／字串。pending points／bytes／oldest age可量測，容量按既有每輪額度推導，超限沿用明確錯誤與權威恢復，不靜默丟畫。 | 20／200／400ms回覆及jitter、429／500／失聯。同一長筆等待時能合併，不同筆及fill不能越界。重送同ID同內容，ACK／SSE先後都只接受一次。timer頻率與短筆收尾合計不得繞過1,000批額度。 | 已實作；失敗／容量回歸與Windows已驗，Linux待做 |
+| P0b 程式：一幀一次preview | pointer handler只收點／更新資料，維持一個待執行rAF，frame中畫最新活動狀態；非空`getCoalescedEvents()`與parent擇一，空／未支援／throw以parent fallback。一次讀rect批次轉換，去相鄰重複整數點；只收同pointerId。pointerup收實際尾點，cancel只收尾、不製造新尾點。 | 同frame多次move只有一次preview paint，所有合法點／轉角／末點仍保留。pointerup／cancel立即final flush，不等背景rAF；lost capture不重複收尾。畫布內容不隨裝飾動畫開關停用。 | 已實作；VM與Chrome synthetic burst已驗，原生／合成範圍分列 |
+| P0b 程式：背景與非即時回復 | 保留MessageChannel合作式snapshot／填色回復、取消token、epoch驗證與whenIdle。rAF只用即時preview；送出、ACK、gap恢復與deadline不依賴背景rAF。 | hidden／visible往返、換輪與舊callback、新局仍第1輪、clear及儲存等待不套舊圖；已排frame與timer在leave釋放。 | 實作中；hidden不承諾150ms timer準時 |
+| P1 程式：有限本機draft層＋權威同surface重播 | 只在明確有限`mutableFrom < strokes.length`的本機未確認draft、且本epoch未遇fill時，複製opaque base後重畫mutable suffix。沒有draft／Infinity／全部ACK後改回visible同surface原classic renderer，取消舊layer job、清base checkpoints並完整canonical合作式重播。任意history／draft fill一出現就sticky classic直到reset；不再把server最後brush永遠當mutable，不保留promotion捷徑。每mode只一組最多15 ImageData checkpoints＋1base，總16surface／512×256≤8MiB。白色erase與原fill容差24／filled畫法保持。 | 固定canonical資料驗local draft及settlement、粗筆／dense chunks／尖角／erase／fill／filled／undo／clear／epoch；mode切換取消、whenIdle及cache不疊加。活動完整path仍重畫，不宣稱完全消除O(N²)；含fill不承諾新layer效益。 | 已縮限實作；Windows1076已驗，native classic跨paint fresh差已由timeout20ms兩組old/new0差重現，rAF未完成 |
+| P1 測試：重播與像素差異 | 固定同epoch，保存兩席完整strokes JSON、backing尺寸、context attributes、digest與ink mask。使用真renderer新canvas完整replay、checkpoint／draft ACK replay對照，新增captured dense static／progressive／draft-settle。first getContext維持原hint，不能以全站`willReadFrequently:true`換一套canonical pixels。 | 排除換輪空圖。以strict RGBA零差判定fresh，另列與原classic同SHA的相容比較；不能將mask相同、小量差或legacy相同寫成fresh strict通過，不推定GPU／CPU根因。 | 19場景18 fresh strict；1 classic同SHA但fresh362差，真viewer67差已在原classic控制重現；rAF未完成 |
 | P2 程式／伺服器：實際傳送與pipeline評估 | 先量現有POST overhead、正式SSE到達及snapshot頻度。如仍受ACK限制，另設有client sequence／server排序／ACK offset的pipeline；命令與畫作可靠交付，游標可另作可捨預覽。 | 亂序到達、重送、重連缺版、fill與closed outline、undo／clear barrier都保持意圖順序。未定排序前不可直接並行POST。是否WebSocket由實測決定。 | 未做 |
 | P3 程式／玩家：點抽稀／畫質 | 先驗相同整數點去重，再比較保端點／轉角的距離抽稀；壓感／曲線codec另开相容規格。參考Fabric、perfect-freehand但不直接套新畫法。 | 同trace比較幾何誤差、細字／轉角辨識與重播；只減點數不算成功。授權及舊收藏畫法相容需核對。 | 未做 |
 
-125–150ms是第一批候選送出週期，不是已量得最佳值；實際開送還受in-flight、限流與server接受影響，不能承諾所有網路下150ms內觀看者可見。發送錯誤回復可沿用既有政策，重試／容量的最終實作需明確寫出，不任意創建無限重試。
+125–150ms原為研究候選範圍，本批owner選140ms，尚未由真Chrome量得最佳值；實際開送還受in-flight、限流與server接受影響，不承諾140ms內觀看者可見。sender entry最多1000、尚未送點最多30000，兩者是記憶體界線，與server lifetime quota分開；metrics的pendingPoints／pendingBytes只計未送queue，inFlightPoints另列，oldestAge自最老job入列計算。stroke request與權威snapshot GET各有10秒timeout；snapshot依job身份／round／epoch判斷，取消後舊finally不能清理新GET。暫時DRAW_RATE_LIMIT／500／網路／解析／timeout最多3attempt同ID同body；永久WORK_LIMIT清未送資料、明確提示並權威sync。已知quota只在首attempt拒新批，已接受但ACK失聯的同ID重試仍可去重，不能因SSE先用完quota就阻擋它。聚焦失敗回歸已驗，完整與native結果仍見本批進度。
+
+## 官方輸入語意補驗與相容界線
+
+本節於2026-10-07查核官方文件。coalesced只用同一批的非空列表，parent是摘要，不再重畫兩組；list為時間順序。`pointerup`不是move，收它的實際末座標；`pointercancel`沿最後已dispatch座標且列表為空，只結束現有筆畫。這些是輸入收尾規則，不把predicted events加入canonical點。[W3C Pointer Events §10.1](https://www.w3.org/TR/pointerevents3/#coalesced-events)、[pointerup](https://www.w3.org/TR/pointerevents3/#the-pointerup-event)、[pointercancel](https://www.w3.org/TR/pointerevents3/#the-pointercancel-event)。
+
+coalesced在部分瀏覽器及安全context才提供，必須feature detect與空／throw fallback；真實支援分別由native輸入與明示的合成fixture驗。rAF在隱藏頁常暫停，且一次請求只執行一次，不能作為sender、command barrier或可靠儲存完成的唯一排程；frame ID用null作空值，leave／epoch清理。[MDN coalesced](https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/getCoalescedEvents)、[MDN rAF](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame)。
+
+| 必保契約 | 本批調整的可接受界線 |
+| --- | --- |
+| quota／去重 | 每批1–64點；rolling1000ms最多10批；每輪1000個accepted batchId／30000 accepted points／48fill，fill每秒2次，command每秒2次。carry anchor也計accepted points；undo／clear不退lifetime quota。timeflush可增加batch成本，要記錄而不是提高上限。 |
+| immutable request | server按batchId去重，不驗同ID重送body fingerprint；client送出後的ID／內容必須保持固定。不能把慢網已送點改寫成新大批，或在timeout後以新ID重送已接受的同批。 |
+| canonical strokes | brush／erase跨批保留anchor與樣式，line／rect／ellipse仍2點，fill1點；server `filled===true`語意、0.5座標偏移、圓cap/join與白色erase保留。render資源優化不改向量codec。 |
+| SSE／HTTP次序 | publish仍在server接受後、HTTP send前；SSE先到或ACK先到都只套一次。缺version才snapshot，quota採權威上限累積，不能用draft移除或reset回應退回額度。 |
+| command barrier | active筆尚未完成時不undo／clear；完成後等待sender所有既定點／in-flight／排程，然後同步、command及最新renderer idle。undo刪同strokeId的最後所有chunks，clear保留epoch／quota。 |
+| 收藏／storage | public result固定快照／resultId權限不變，收藏仍獨立encoder renderCooperatively完才PNG，失敗／舊epoch禁止部分圖。studio／回看default renderer與原填色語意保留；metadata／DB／媒體格式無變更。 |
+
+在上述API、wire／作品語意及可靠性全部相容時，P0／P1可按patch v1.8.1交付。若native pixels顯示填色位置、圖形或已完成作品語意改變，要先解差或另立相容規格，不將畫法改動包裝成單純效能修正。
+
+本批native實測因此收斂P1：原分層方案在白色erase覆已fill底圖時有1,073個RGB差像素、最大channel差90及133個ink-mask差；改first context hint雖診斷15場景全pass，卻使11場景的canonical SHA改變，不能當相容修復。1000-move／400ms延HTTP trace的16chunks／1015含anchor點，captured dense static／progressive／draft-settle原layer分別差45／209／45 RGB像素、max54，exact ink-mask均0，而同surface classic均0差。mask相同不足以接受；最終source必須重驗上述限定layer與canonical settlement方案，詳細證據與未驗狀態見 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)。
+
+縮限source的最新19場景已重驗：captured dense static／progressive／draft-settle均對fresh RGBA零差；總計18／19 fresh strict，fill-dependent-on-mutable-divider與legacy同SHA、同樣對fresh差362 RGB／max13／alpha0／exact mask0，整體strict flag仍false。另乾淨room的1000 synthetic-move事件轉換去重後948點、16chunks／963含anchor點，兩席canonical JSON相同；artist對fresh0差，viewer67 RGB／max54，而且viewer baseCopies0／mutable applications0，全程classic。classic跨paint timeout20ms／warmup0及1兩組已重現old/new0差（rAF兩組未完成），不能宣稱雙席pixels全相同或沒有證據歸因玩家硬體。最新Windows1076／1076通過，Linux／source發布仍待做。
+
+最新classic跨paint控制已在同一16chunks／948有效點／963含anchor點重現：每chunk隔timeout20ms，warmup0／1兩組原classic與opt-in Infinity均對fresh差67 RGB／max54／alpha0／exactmask0，old/new直接diff0、SHA相同。此固定capture證實原classic也有該差，不外推全部case、不推定硬體／GPU／CPU。兩組rAF控制2秒未advance，沒有完成驗證，整體control flags仍false，不能把它們列pass；Chrome未被提至前景。
 
 ## 量測與驗收矩陣
 
@@ -41,4 +64,4 @@ brush／erase 輸入即使持筆未滿40點，也可有界送出；同一frame�
 
 來源授權與擇用：Fabric／Excalidraw為MIT，重用仍保留所需notice；WBO為AGPL，先獨立實作設計，不默認可直接搬原碼。研究資料不是Gartic的內部規格。
 
-純研究不升版；實際修正完成後依 [版號規範](../RELEASE-POLICY.md)判定patch／feature影響、更新CHANGELOG、測試與記錄實際程式來源。實作、發布、PR各自依當次授權；本文件不宣告任何階段已完成。
+純研究不升版；本批P0／P1正在按相容效能patch v1.8.1實作，root負責CHANGELOG／全套及真正Chrome／打版與發布記錄，結果以 [本批進度](../DRAWING-SMOOTHNESS-PROGRESS.md)為準。P2並行POST／新排序協議與P3抽稀／新畫法仍是條件式後續提案，這批不做。本文件不以待驗規格宣告完成或部署，PR另依當次指示。

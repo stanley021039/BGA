@@ -1,5 +1,12 @@
 # Agent 長期記憶索引
 
+2026-10-07畫猜順暢度第一批實作中：正式基線v1.8.0／5687561，候選相容patchv1.8.1；P0的140ms時間flush、有界單in-flight sender及rAF／coalesced已凍結，native25／3點持筆會先送給viewer，另trusted down/up＋1000 synthetic moves同task只排1次preview，400ms人工背壓16批／1015含anchor點。P1 native原layer在fill／erase及dense已確認圖有RGB差，因此縮限為有限local draft才layer、settled／viewer原同surfaceclassic、任意fill sticky classic至reset、單組15checkpoints＋1base≤8MiB；最終source的19場景及Windows已做（結果分列下段），classic控制差／Linux與發布待驗，不接受mask相同或換context hint當像素通過。P2並行POST與P3抽稀仍未做。先讀 [本批進度與Chrome矩陣](../DRAWING-SMOOTHNESS-PROGRESS.md)及 [規格](../specs/DRAWING-SMOOTHNESS.md)，不要把舊56／150或prefallback1068自動回歸當最新renderer驗收。發布由root後續填寫，下方v1.8.0仍目前正式。
+
+最新縮限source Windows完整1076／1076、37689.229ms、0fail/cancel/skip。native19場景18對fresh strict RGBA0，fill-dependent362 RGB／max13／alpha0／exactmask0且新wrapper與legacy SHA同，整體strict flag仍false；captured dense3現0。最新實際1000 synthetic-move／948有效點／16chunks963含anchors，兩席同JSON但artistfresh0／viewerclassic67 RGB／max54，viewer baseCopies0／mutable0；跨paintclassic timeout20ms兩組已重現old/new0差、rAF兩組未完成，不能歸因layer或硬體，不能寫雙席pixels全同。Linux／發布尚待，正式readonly仍v1.8.0／5687561。
+
+最新classic跨paint控制已在同一16chunks／948有效點／963含anchor點重現：每chunk隔timeout20ms，warmup0／1兩組原classic與opt-in Infinity均對fresh差67 RGB／max54／alpha0／exactmask0，old/new直接diff0、SHA相同。此固定capture證實原classic也有該差，不外推全部case、不推定硬體／GPU／CPU。兩組rAF控制2秒未advance，沒有完成驗證，整體control flags仍false，不能把它們列pass；Chrome未被提至前景。
+
+
 2026-10-07正式 **v1.8.0**／`5687561`：五款單一current／混合queue／timeline、一般席點播、host／manager共享控制及角色、個人影片接受／退出、同emoji與角色入口已發布。Windows Node24.14.0／Linux Node22.22.1完整各1034，隔離背景Chrome三席真Audio／YouTube、排序／角色與最後390px／1280×720通過；台北10:24:21（UTC02:24:21）公开版號no-store／6資源與三自有會員API驗收完成。正式PID107492／services active；schema15、21schema、20非session rows／BLOB與8帳戶全欄位保留，sessions157→161是已登出的QA登入，不能宣稱sessions未變。own房間／session／preview／分頁已清理，等待房QA歷史保留；原PR43未改，無新PR／push，tag固定受測程式。接手讀 [九項證據及限制](../UNIFIED-ROOM-MEDIA-PROGRESS.md)及 [共用契約](../specs/UNIFIED-ROOM-MEDIA.md)。queue與manager只屬room instance；200%文字、真Google拒播／oEmbed、多設備／弱網／喇叭未驗，fixture導航的draw重連提示不作正式SSE診斷。下方v1.7.2為歷史基線。
 
 2026-10-07正式 **v1.7.2**／`6fcd55c`：PR43新P2舊state晚於新social ACK補播過期音效已修正，server anchor按performance經過時間前進，old/equal/missing不重設age，gap亦用mono。原PR v1.4.2／`ca931b7`雙平台各815、正式雙平台各947，Chrome隔離真單調clock過期0／fresh1（播放替身）；正式schema15／8帳戶與21schema保留、20非session表rows／BLOB一致、PID103459／service／tunnel正常、rooms0。證據及legacy限制見 [亂序修正](../PR43-EXPRESSION-CLOCK-FIX.md)；下方v1.7.1為歷史，作畫效能改善仍只研究／spec，外站資料代未啟用。

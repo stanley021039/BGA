@@ -94,6 +94,7 @@ test('artist stroke remains visible while the server accepts a delayed write', a
  const up = ui.listeners.get('#drawCanvas:pointerup');
  down({button: 0, pointerId: 1, point: [20, 20], preventDefault() {}});
  move({pointerId: 1, point: [25, 25], preventDefault() {}});
+ ui.paintFrame();
  assert.ok(frameContainsStroke(ui.frames.at(-1)), 'the live preview shows the stroke');
  const beforeFinish = ui.frames.length;
  up({pointerId: 1, point: [25, 25], preventDefault() {}});
@@ -141,6 +142,7 @@ test('a second touch cannot steal or leave behind the first pointer stroke', asy
  down({button:0,pointerId:2,point:[50,50],preventDefault(){}});
  move({pointerId:2,point:[55,55],preventDefault(){}});
  up({pointerId:2,point:[55,55],preventDefault(){}});
+ ui.paintFrame();
  assert.equal(vm.runInContext('active.pointerId',ui.context),1);
  assert.equal(vm.runInContext('localStrokes.size',ui.context),1);
  assert.ok(!ui.frames.at(-1).strokes[0].points.some(point=>point[0]===55));

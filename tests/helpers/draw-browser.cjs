@@ -5,9 +5,12 @@ const script=fs.readFileSync(path.join(__dirname,'../../public/draw.js'),'utf8')
 const sharedScript=fs.readFileSync(path.join(__dirname,'../../public/shared/stroke-canvas.js'),'utf8');
 const resultsScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-results.js'),'utf8');
 const motionScript=fs.readFileSync(path.join(__dirname,'../../public/shared/motion-policy.js'),'utf8');
+const transportScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-transport.js'),'utf8');
 const CANVAS_EPOCH='00000000-0000-4000-8000-000000000001';
-function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
+function browserHarness({realRenderer=false,events=false,rendererOptions,clock}={}) {
  const sources=[],elements = new Map(), listeners = new Map(), frames = [], animations = [], strokeRequests = [], commandRequests = [];
+ const animationFrames=new Map();let frameId=0,rectReads=0;
+ function pointerEvent(event,type){const converted={...event,type};if(event.point){converted.clientX=event.point[0];converted.clientY=event.point[1];}if(event.getCoalescedEvents)converted.getCoalescedEvents=()=>event.getCoalescedEvents().map(sample=>pointerEvent(sample,type));return converted;}
  let snapshot = {canvasEpoch:CANVAS_EPOCH,round: 1, version: 0, strokes: []};
  function element(selector) {
   if (!elements.has(selector)) {
@@ -17,7 +20,8 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
     hidden: false, open:false, value: selector === '#color' ? '#273942' : selector === '#size' ? '5' : '', checked: false,
     innerHTML: '', textContent: '', dataset: {}, style: {}, children: [], scrollHeight: 0, scrollTop: 0, clientHeight: 0,
     classList: {toggle() {}, add() {}, remove() {}},
-    addEventListener(type, fn) { handlers.set(type, fn); listeners.set(selector + ':' + type, fn); },
+    addEventListener(type, fn) { const handler=type.startsWith('pointer')?event=>fn(pointerEvent(event,type)):fn;handlers.set(type, handler);listeners.set(selector + ':' + type, handler); },
+    getBoundingClientRect(){rectReads++;return {left:0,top:0,width:512,height:256,right:512,bottom:256};},
     setPointerCapture() {}, setAttribute() {},
     append(...children) { for (const child of children) { child.parent = this; this.children.push(child); } },
     replaceChildren(...children) { this.children = []; this.append(...children); },
@@ -32,12 +36,13 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
  }
  const context = vm.createContext({
   window: {matchMedia: () => ({matches: false}),addEventListener(type,fn){const key='window:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});}},
-  document: {body: element('body'),documentElement:element('html'),hidden:false,visibilityState:'visible',querySelector: element,getElementById:id=>element('#'+id),addEventListener(type,fn){listeners.set('document:'+type,fn);},createElement: tag => {const node=element('created:'+randomUUID());if(tag==='canvas'){Object.assign(node,rasterCanvas(512,256));node.toDataURL=()=> 'data:image/png;base64,c3ludGhldGlj';}return node;}},
+  document: {body: element('body'),documentElement:element('html'),hidden:false,visibilityState:'visible',querySelector: element,getElementById:id=>element('#'+id),addEventListener(type,fn){const key='document:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});},createElement: tag => {const node=element('created:'+randomUUID());if(tag==='canvas'){Object.assign(node,rasterCanvas(512,256));node.toDataURL=()=> 'data:image/png;base64,c3ludGhldGlj';}return node;}},
   location: {pathname: '/draw/ABC123', origin: 'http://localhost:3000', search: ''},
   localStorage: {getItem: () => null, setItem() {}},
   history: {replaceState() {}}, navigator: {clipboard: {writeText: async () => {}}},
-  URLSearchParams, setTimeout, clearTimeout, setInterval: () => 0, clearInterval: () => {},
-  Date, crypto: {getRandomValues: bytes=>randomFillSync(bytes)}, confirm: () => true,
+  URLSearchParams, setTimeout:clock?.setTimeout||setTimeout, clearTimeout:clock?.clearTimeout||clearTimeout, setInterval: () => 0, clearInterval: () => {},
+  requestAnimationFrame:fn=>{const id=++frameId;animationFrames.set(id,fn);return id;},cancelAnimationFrame:id=>animationFrames.delete(id),
+  Date:clock?.Date||Date,...(clock?{performance:{now:clock.now}}:{}),AbortController,DOMException,crypto: {getRandomValues: bytes=>randomFillSync(bytes)}, confirm: () => true,
   fetch: async route => ({json: async () => route === '/api/info' ? {preferred: null} : {}}),
   RoomHost: {update() {}, kicked() {}}, RoomReconnect: {restore: async () => null},
   GameShell: {settingsActions:()=>'<button class="room-settings-save" data-do="settings">儲存房間設定</button>',playerRow:(p,{status=''})=>`<div class="room-player player" data-player-id="${p.id}"><div class="room-player-avatar"></div><small>${status}</small></div>`,stableMarkup(node, html) {
@@ -66,9 +71,9 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
    },
   },
   RoomApi: {
-   async request(route, data) {
+   async request(route, data, options) {
     if (route === 'draw/canvas') return JSON.parse(JSON.stringify(snapshot));
-    if (route === 'draw/stroke') return new Promise((resolve,reject) => strokeRequests.push({data, resolve,reject}));
+    if (route === 'draw/stroke') return new Promise((resolve,reject) => {strokeRequests.push({data, resolve,reject,signal:options?.signal,startedAt:clock?.now()??Date.now()});options?.signal?.addEventListener('abort',()=>reject(options.signal.reason),{once:true});});
     if (route === 'draw/command') {
      commandRequests.push(data);
      return {canvasEpoch:snapshot.canvasEpoch,round: snapshot.round, version: snapshot.version + 1, strokes: []};
@@ -85,12 +90,13 @@ function browserHarness({realRenderer=false,events=false,rendererOptions}={}) {
  context.StrokeCanvas.strokeId=context.window.StrokeCanvas.strokeId;
  vm.runInContext(motionScript,context,{filename:'public/shared/motion-policy.js'});
  vm.runInContext(resultsScript,context,{filename:'public/shared/draw-results.js'});
+ vm.runInContext(transportScript,context,{filename:'public/shared/draw-transport.js'});
  vm.runInContext(script, context, {filename: 'public/draw.js'});
  function receive(state) {
   context.injectedState = state;
   vm.runInContext('session={code:"ABC123"};receive(injectedState)', context);
  }
- return {context, element, listeners, sources,frames, animations, strokeRequests, commandRequests, receive, setSnapshot(value) { snapshot = value; }};
+ return {context, element, listeners, sources,frames, animations, strokeRequests, commandRequests, receive, setSnapshot(value) { snapshot = value; },paintFrame(){const jobs=[...animationFrames.values()];animationFrames.clear();for(const job of jobs)job(clock?.now()??Date.now());},pendingFrames:()=>animationFrames.size,rectReads:()=>rectReads};
 }
 
 function drawingState(me, guesses = []) {
