@@ -237,10 +237,10 @@ function restorePolicy(stage, validated) {
   return { revoked, heldSubmissions, interruptedMatches: validated.playing.length };
 }
 function binaryAssetsPreserved(before, after) {
-  // Schema 15 unifies the two historical schema-14 layouts: the market release
-  // has no sound table. Existing sounds remain exact; only a missing, empty
-  // migration table may be introduced on the restored copy.
-  const introduced = { character_images: 3, community_gifts: 5, user_artworks: 8, character_sounds: 15 }, emptyDigest = sha('');
+  // Only a missing, empty, explicitly known migration table may be introduced
+  // on the restored copy. Existing bytes and frozen image metadata remain exact.
+  const introduced = { character_images: 3, community_gifts: 5, user_artworks: 8, character_sounds: 15, market_images: 16 }, emptyDigest = sha('');
+  if (before.marketImagesSha256 !== undefined && after.marketImagesSha256 !== before.marketImagesSha256) return false;
   for (const [table, digest] of Object.entries(before.blobDigests)) {
     if (after.blobDigests[table] !== digest) return false;
   }

@@ -5,6 +5,7 @@ const {GiftStore}=require('./games/gift-store'),{GIFTS,CATEGORIES}=require('./ga
 const {DrawGuessRoom,validTopic,validTopics,DRAW_CATEGORIES}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{TOPICS}=require('./games/draw-guess-words');
 const {AchievementStore}=require('./achievements/store');
 const {MarketStore}=require('./market/store');
+const {MarketImageStore}=require('./market/images');
 const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
 const {startRoomScheduler}=require('./rooms/scheduler');
 const {reconnectPlayer}=require('./rooms/reconnect');
@@ -61,8 +62,8 @@ function initializeApp(config,dataLock){
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir,config.historyLimits);
- let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore,marketStore;
- try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
+ let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore,marketStore,marketImageStore;
+ try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);marketImageStore=new MarketImageStore(db,config.marketClock||Date.now,{limits:config.marketImageLimits});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
  catch(error){history.close();db?.close();throw error;}
  const characterMedia=createCharacterMediaAccess(db,viewerId=>{
   const audiences=[];
@@ -111,6 +112,18 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/version'&&req.method==='GET'){res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');return res.end(JSON.stringify({version:applicationVersion}));}
  if(url.pathname.startsWith('/api/')){
  res.setHeader('Content-Type','application/json; charset=utf-8');
+ // Gallery requests require same-origin access, including read-only media. Check
+ // authentication before accepting a potentially large upload body.
+ const imageApi=url.pathname.startsWith('/api/market/images')||url.pathname.startsWith('/api/admin/market/images');
+ if(imageApi){
+  const expected=config.publicUrl||'http://'+req.headers.host;
+  let origin;try{origin=req.headers.origin?new URL(req.headers.origin).origin:null;}catch{throw new HttpError(403,'CROSS_ORIGIN','不允許跨站請求');}
+  if(origin&&origin!==expected||req.headers['sec-fetch-site']&&!['same-origin','none'].includes(req.headers['sec-fetch-site']))throw new HttpError(403,'CROSS_ORIGIN','不允許跨站請求');
+  const actor=auth.requireUser(req);
+  if(url.pathname.startsWith('/api/admin/')&&actor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');
+  if(url.pathname==='/api/market/images'&&req.method==='POST'){limitRate(accountRate,'market-upload:'+actor.id,6);limitRate(accountRate,'market-upload-ip:'+clientKey(req),20);}
+ }
+
  if(url.pathname==='/api/music/upload'&&req.method==='POST'){
   if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw new HttpError(403,'CROSS_ORIGIN','不允許跨站請求');
   const user=auth.requireUser(req);limitAccount(user);
@@ -120,7 +133,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   let title;try{title=decodeURIComponent(req.headers['x-music-title']||'');}catch{throw new HttpError(400,'INVALID_TITLE','曲名不正確');}
   return res.end(JSON.stringify(musicStore.add(user,{title,duration:Number(req.headers['x-music-duration'])},Buffer.concat(chunks))));
  }
- let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
+ let data={};if(req.method==='POST'){if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');const limit=url.pathname==='/api/market/images'?3*1024*1024:url.pathname==='/api/admin/market/images/approve'?128*1024:url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname==='/api/profile/characters'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192;const chunks=[];let bytes=0;for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
  const send=x=>res.end(JSON.stringify(x));
  if(url.pathname==='/api/auth/login'&&req.method==='POST'){limitAuth(req);return send(await auth.login(data,res));}
  if(url.pathname==='/api/auth/register'&&req.method==='POST'){limitAuth(req);return send(await auth.register(data,res));}
@@ -143,6 +156,17 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(me.appearance)me.appearance=normalizeAppearance(me.appearance);
   return send(me);
  }
+
+ if(url.pathname==='/api/market/images'&&req.method==='POST')return send(await marketImageStore.upload(user,data));
+ if(url.pathname==='/api/market/images/mine'&&req.method==='GET'){limitRate(accountRate,'market-images-mine:'+user.id,60);return send(marketImageStore.listMine(user));}
+ if(url.pathname==='/api/market/images/draw'&&req.method==='POST'){limitRate(accountRate,'market-draw:'+user.id,60);return send(marketImageStore.draw(user,{targetDate:data.targetDate}));}
+ const marketImageMedia=url.pathname.match(/^\/api\/market\/images\/([a-f0-9-]{36})\/media$/i);
+ if(marketImageMedia&&req.method==='GET'){
+  limitRate(accountRate,'market-media:'+user.id,360);const image=marketImageStore.media(user,marketImageMedia[1]);
+  res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");res.setHeader('Cross-Origin-Resource-Policy','same-origin');return res.end(image.bytes);
+ }
+ if(url.pathname==='/api/market/images'||url.pathname==='/api/market/images/mine'||url.pathname==='/api/market/images/draw'||marketImageMedia)throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
+ if(url.pathname.startsWith('/api/market/images/'))throw new HttpError(404,'IMAGE_NOT_FOUND','找不到圖片');
  if(url.pathname==='/api/market'&&req.method==='GET')return send(marketStore.view(user));
  if(url.pathname==='/api/market/vote'&&req.method==='POST'){limitRate(accountRate,'market:'+user.id,60);return send(marketStore.vote(user,data));}
  if(['/api/market','/api/market/vote'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
@@ -207,6 +231,16 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname.startsWith('/api/submissions/')&&req.method==='GET')return send(submissions.visible(url.pathname.split('/')[3],user));
  if(url.pathname.startsWith('/api/admin/')){
   if(user.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');
+
+  if(url.pathname==='/api/admin/market/images'&&req.method==='GET'){
+   limitRate(accountRate,'market-pending:'+user.id,60);
+   if(['buckets','weekdays'].some(key=>url.searchParams.getAll(key).length>1))throw new HttpError(400,'INVALID_FILTER','篩選格式不正確');
+   const buckets=url.searchParams.has('buckets')?url.searchParams.get('buckets').split(','):[],weekdays=url.searchParams.has('weekdays')?url.searchParams.get('weekdays').split(',').map(value=>/^\d$/.test(value)?Number(value):NaN):[];
+   return send(marketImageStore.pending(user,{buckets,weekdays}));
+  }
+  if(url.pathname==='/api/admin/market/images/approve'&&req.method==='POST'){limitRate(accountRate,'market-approve:'+user.id,30);return send(marketImageStore.approve(user,data));}
+  if(['/api/admin/market/images','/api/admin/market/images/approve'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
+  if(url.pathname.startsWith('/api/admin/market/images/'))throw new HttpError(404,'IMAGE_NOT_FOUND','找不到圖片');
   if(url.pathname==='/api/admin/market'&&req.method==='GET')return send(marketStore.view(user,true));
   if(url.pathname.startsWith('/api/admin/market')&&req.method==='POST'){
    limitRate(accountRate,'market-admin:'+user.id,60);
