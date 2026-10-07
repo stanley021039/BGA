@@ -160,6 +160,7 @@ function render(live=false){
  }
  $('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&s.phase==='waiting'&&s.host)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
  if(s.phase==='waiting'&&s.host){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
+  actions+=GameShell.botButton?.(s)||'';
   GameShell.stableMarkup($('#drawActions'),actions);
  decorateActions();
  $('#canvasStage').innerHTML=s.phase==='drawing'?'':stageScene(s);
@@ -277,7 +278,7 @@ function receive(next){
  $('#phaseTag').textContent={waiting:'等待玩家',choosing:'畫者選題',drawing:'畫圖與猜題',reveal:'答案揭曉',finished:'本局結束'}[next.phase];
  $('#count').textContent=next.players.length+' / 8';
  updatePresence();
- const key=JSON.stringify([next.canvasEpoch,next.phase,next.round,next.options,next.host,next.phase==='waiting'?null:next.players.map(player=>player.id),next.candidates,next.question,next.guessedIds.includes(next.me),next.result,next.winner]);
+ const key=JSON.stringify([next.canvasEpoch,next.phase,next.botSupport,next.round,next.options,next.host,next.phase==='waiting'?null:next.players.map(player=>player.id),next.candidates,next.question,next.guessedIds.includes(next.me),next.result,next.winner]);
  const changed=key!==signature;
  const freshPhase=motionGate?motionGate.take('phase:'+next.canvasEpoch+':'+next.phase,live):live;
  if(changed){signature=key;render(live);if(freshPhase)animatePhase(oldPhase,next.phase);}
@@ -458,7 +459,7 @@ function stageClick(event){
  if(button.dataset.selectTopics){for(const input of button.closest('fieldset').querySelectorAll('input[name="topics"]'))input.checked=button.dataset.selectTopics==='all';return;}
  if(button.dataset.word)return action('choose',{questionId:button.dataset.word});
  switch(button.dataset.do){
-  case 'start':return roomAction('start');case 'next':return action('next');
+  case 'bot':return roomAction('bot');case 'start':return roomAction('start');case 'next':return action('next');
    case 'settings':try{return roomAction('settings',{seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()});}catch(error){drawFeedback(error.message,'error',true);toast(error.message);return;}
   case 'save':return saveArtwork(button.dataset.resultId);case 'ban':return voteForResult(button.dataset.resultId);case 'invite':return invite();
  }

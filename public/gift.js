@@ -74,6 +74,7 @@ function renderAction(){
  else if(s.phase==='choosing')html='<h2>第 '+s.round+' 輪 · 目標 '+s.target+' 分</h2><div class="gift-task-progress"><div><span>送禮 <b id="giveTaskProgress"></b></span><button id="giveSubmit" class="button" type="submit" form="giveForm" '+(s.ownAssignments?'disabled':'')+'>'+(s.ownAssignments?'已鎖定 ✓':'鎖定送禮')+'</button></div><div><span>心願 <b id="wishTaskProgress"></b></span><button id="wishSubmit" class="button" type="submit" form="wishForm" '+(s.ownRanking?'disabled':'')+'>'+(s.ownRanking?'已鎖定 ✓':'鎖定心願')+'</button></div></div><p id="progress" class="small"></p>';
  else if(s.phase==='delivering'){const recipient=player(s.delivery.recipientId);html='<h2>收禮 '+(s.delivery.index+1)+' / '+s.delivery.total+'</h2>'+(s.me===s.delivery.recipientId?'<button class="button" data-do="accept">確認收禮</button>':'<p>等待 '+esc(recipient?.name||'朋友')+' 確認收禮</p>')+'<p class="small">所有人收完才公布分數</p>';}
  else html='<h2>'+(s.phase==='finished'?'本局完成':'本輪完成')+'</h2>'+(s.host?'<button class="button" data-do="'+(s.phase==='finished'?'start':'next')+'">'+(s.phase==='finished'?'再玩一局':'開始下一輪')+'</button>':'<p>等待房主'+(s.phase==='finished'?'開新局':'開始下一輪')+'</p>');
+ html+=GameShell.botButton?.(s)||'';
  GameShell.stableMarkup($('#gameActions'),html);syncActionBusy();
  for(const button of $('#gameActions').querySelectorAll('button')){const key=button.dataset.do==='settings'?'settings':button.dataset.do==='next'?'next':button.matches('#giveSubmit,#wishSubmit')?'lock':'check';window.GameUI?.decorateButton(button,key);}
 }
@@ -210,7 +211,7 @@ document.addEventListener('click',event=>{
   else return toast('已選四件；先點一件已選禮物取消，再挑新的。');
   syncChoices();return;
  }
- switch(button.dataset.do){case'invite':invite();break;case'settings':roomAction('settings',{target:Number($('#target').value),customPercent:$('#customPercent').value===''?null:Number($('#customPercent').value),includeAdult:$('#includeAdult').checked});break;case'start':roomAction('start');break;case'next':action('next');break;case'accept':action('accept',{recipientId:state.delivery.recipientId});break;case'replay-focus':startFocus();break;case'skip-focus':stopFocus();break;}
+ switch(button.dataset.do){case'bot':roomAction('bot');break;case'invite':invite();break;case'settings':roomAction('settings',{target:Number($('#target').value),customPercent:$('#customPercent').value===''?null:Number($('#customPercent').value),includeAdult:$('#includeAdult').checked});break;case'start':roomAction('start');break;case'next':action('next');break;case'accept':action('accept',{recipientId:state.delivery.recipientId});break;case'replay-focus':startFocus();break;case'skip-focus':stopFocus();break;}
 });
 $('#stage').addEventListener('error',event=>{if(event.target.matches('.choice-art img,.story-gift-card img,.story-person img,.gift-victory-player img')){event.target.hidden=true;event.target.nextElementSibling.hidden=false;}},true);
 $('#stage').addEventListener('submit',async event=>{

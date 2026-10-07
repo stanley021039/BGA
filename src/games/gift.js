@@ -19,11 +19,10 @@ class GiftRoom{
  event(kind,text){this.events.push({id:++this.version,kind,text});this.events=this.events.slice(-16);this.updated=Date.now();}
  add(name,bot=false){
   assertRecordCapacity(this);
-  if(bot)throw Error('送禮達人只接受真人玩家');
   if(!['waiting','finished'].includes(this.phase))throw Error('本局已開始，請等待下一局');
   if(this.activePlayers().length>=8)throw Error('最多 8 位玩家');
   if(typeof name!=='string'||!name.trim())throw Error('請輸入名字');
-  const player={id:randomUUID(),secret:randomUUID(),name:name.trim().slice(0,16),bot:false,kicked:false,giveScore:0,getScore:0,lastSeen:Date.now()};
+  const player={id:randomUUID(),secret:randomUUID(),name:name.trim().slice(0,16),bot,kicked:false,giveScore:0,getScore:0,lastSeen:Date.now()};
   this.players.push(player);if(!this.host)this.host=player.id;
   this.event('join',`${player.name} 加入房間`);return player;
  }
@@ -155,7 +154,7 @@ class GiftRoom{
    type:this.type,code:this.code,name:this.name,phase:this.phase,version:this.version,
    host:id===this.host,hostId:this.host,me:id,round:this.round,target:this.target,customPercent:this.customPercent,includeAdult:!!this.includeAdult,
    dealerId:this.dealerId,gifts:this.gifts,
-   players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,bot:false,giveScore:player.giveScore,getScore:player.getScore,online:Date.now()-player.lastSeen<15000})),
+   players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,bot:!!player.bot,giveScore:player.giveScore,getScore:player.getScore,online:!!player.bot||Date.now()-player.lastSeen<15000})),
    submittedIds:this.phase==='choosing'?this.activePlayers().filter(player=>Object.hasOwn(this.assignments,player.id)&&Object.hasOwn(this.rankings,player.id)).map(player=>player.id):[],
    gaveIds:this.phase==='choosing'?Object.keys(this.assignments):[],wishedIds:this.phase==='choosing'?Object.keys(this.rankings):[],
    ownAssignments:this.assignments[id]||null,ownRanking:this.rankings[id]||null,

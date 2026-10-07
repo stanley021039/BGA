@@ -117,3 +117,4 @@ body.game-room .room-sidebar #hostControls{margin:0 0 16px}
 body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions{--ui-expression-card-size:max(64px,var(--ui-control-height,44px));grid-template-columns:repeat(auto-fill,var(--ui-expression-card-size));justify-content:start}
 body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions button{display:grid;place-items:center;width:var(--ui-expression-card-size);height:var(--ui-expression-card-size);min-height:44px;padding:4px;gap:0}
 body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions img{width:100%;height:100%;min-width:0;min-height:0;object-fit:contain;pointer-events:none}
+body[data-game-kind] .room-test-ai.ui-icon-button{width:var(--ui-control-height,2.75rem);min-width:var(--ui-control-height,2.75rem);max-width:var(--ui-control-height,2.75rem);padding:var(--ui-space-2,.5rem);justify-self:start}

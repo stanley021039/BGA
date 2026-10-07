@@ -32,10 +32,9 @@ class DrawGuessRoom{
  event(kind,text){this.events.push({id:++this.version,kind,text});this.events=this.events.slice(-16);this.updated=this.now();}
  add(name,bot=false){
   assertRecordCapacity(this);
-  if(bot)throw Error('你畫我猜只接受真人玩家');
   if(this.activePlayers().length>=8)throw Error('最多 8 位玩家');
   if(typeof name!=='string'||!name.trim())throw Error('請輸入名字');
-  const player={id:randomUUID(),secret:randomUUID(),name:name.trim().slice(0,16),bot:false,kicked:false,score:0,waitingForNextRound:this.phase!=='waiting',lastSeen:this.now()};
+  const player={id:randomUUID(),secret:randomUUID(),name:name.trim().slice(0,16),bot,kicked:false,score:0,waitingForNextRound:this.phase!=='waiting',lastSeen:this.now()};
   this.players.push(player);if(!this.host)this.host=player.id;
   this.event('join',player.name+' 加入房間'+(player.waitingForNextRound?'，下一輪開始猜題':''));
   return player;
@@ -150,7 +149,7 @@ class DrawGuessRoom{
   this.result=freeze(clone({resultId:randomUUID(),gameRunId:this.gameRunId,canvasEpoch:this.canvas.epoch,revealedAt:this.now(),round:this.round,presenterId:this.presenterId,artist:{id:this.presenterId,name:artist?.name||'畫者',avatar:artist?.avatar||null},answer:this.question?.title||null,aliases:this.question?.aliases||[],reason,guessedIds:[...this.guessedIds],guesses:this.guesses,scores:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,roundPoints:player.score-(this.roundStartScores.get(player.id)||0)}))}));
   this.results.push(this.result);
   const {guesses,...metadata}=this.result;
-  const electorate=freeze(this.activePlayers().map(player=>player.id));
+  const electorate=freeze(this.activePlayers().filter(player=>!player.bot).map(player=>player.id));
   this.publicResults.set(this.result.resultId,{snapshot:freeze({result:metadata,canvas:this.canvasSnapshot()}),artworks:new Map(),ballot:{electorate,required:Math.floor(electorate.length/2)+1,votes:new Set(),word:this.question?freeze({id:this.question.id,title:this.question.title}):null,banned:false}});
   while(this.publicResults.size>MAX_PUBLIC_RESULTS)this.publicResults.delete(this.publicResults.keys().next().value);
   this.phase='reveal';this.deadline=this.now()+8000;this.event('reveal',reason+'，本輪揭曉');
@@ -208,8 +207,8 @@ class DrawGuessRoom{
  }
  auto(){
   const now=this.now(),artist=this.player(this.presenterId);
-  if(this.phase==='choosing'&&(now>=this.deadline||now-artist?.lastSeen>15000)){this.choose(this.presenterId,undefined,true);return true;}
-  if(this.phase==='drawing'&&(now>=this.deadline||artist?.kicked||now-artist?.lastSeen>15000)){this.reveal(now>=this.deadline?'時間到':'畫者斷線');return true;}
+  if(this.phase==='choosing'&&(now>=this.deadline||(!artist?.bot&&now-artist?.lastSeen>15000))){this.choose(this.presenterId,undefined,true);return true;}
+  if(this.phase==='drawing'&&(now>=this.deadline||artist?.kicked||(!artist?.bot&&now-artist?.lastSeen>15000))){this.reveal(now>=this.deadline?'時間到':'畫者斷線');return true;}
   if(this.phase==='reveal'&&now>=this.deadline){this.newRound();return true;}
   return false;
  }
@@ -275,7 +274,7 @@ class DrawGuessRoom{
    candidates:this.phase==='choosing'&&id===this.presenterId?this.candidates.filter(word=>!this.wordExclusionProvider?.(word)):[],
    question:this.question&&(id===this.presenterId||revealed)?{title:this.question.title,aliases:this.question.aliases,category:this.question.category,difficulty:this.question.difficulty,topic:this.question.topic,topicLabel:this.question.topicLabel}:null,
    hint:this.question?{category:this.question.category,topicLabel:this.question.topicLabel||topicLabels[this.question.topic]||topicLabels.misc,length:[...this.question.title].length}:null,
-   players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,online:this.now()-player.lastSeen<15000,waitingForNextRound:player.waitingForNextRound})),
+   players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,bot:!!player.bot,score:player.score,online:!!player.bot||this.now()-player.lastSeen<15000,waitingForNextRound:player.waitingForNextRound})),
    participantIds:this.participantIds,guessedIds:this.guessedIds,guesses:this.guesses.map(item=>item.correct?{id:item.id,name:item.name,correct:true,points:item.points,at:item.at}:item),
    result:revealed?this.result:null,recentResults:[...this.publicResults.values()].reverse().map(entry=>entry.snapshot.result),resultVotes:[...this.publicResults.keys()].reverse().map(resultId=>this.resultVote(resultId,id)),winner:this.winner,canvasEpoch:this.canvas.epoch,strokeVersion:this.canvas.version,events:this.events
   });
