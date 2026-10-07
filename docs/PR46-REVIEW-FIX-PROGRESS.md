@@ -1,5 +1,44 @@
 # PR46 審查修正與正式同步
 
+## 2026-10-07：新事件排序驗收完成，推送／送審待收尾
+
+[Stanley新回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6037336371)對bb7b3d提出media state／event排序風險。候選 **v1.9.3**／固定程式 `a2c5589232ed2d4d595a5ac33fbaef572a04fd4f`已完成雙平台各1,300、focused126／獨立複查與fresh真原型API的Pause／最後Play／正常visibility三情境；release／merge-tree／diff checks通過。未加patterns或改renderer。**PR仍Draft、本地尚未push／再請審查，正式仍v1.11.1**；[中間回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038085022)不是最終重新送審，root將作最後文件提交與推送。
+
+| 本次範圍 | 已知與待驗 |
+| --- | --- |
+| 舊三項P2與main | 已有固定source、雙平台和native證據；前次actual AudioSettings focused104與main整合保持。下面結果不是本次新風險的反證或fresh驗收。 |
+| 新mediastate／event order | 原生play／pause狀態先改、事件另排media task；HTTP body JSON Promise可在事件前恢復舊播放。不能只看當下paused／timestamp或假設加capture即安全。用本機play／pause Promise建立同Audio事件fence，區分owned與較新意圖。 |
+| 有界與意圖 | 每fence事件buffer≤64、current＋最多7個predecessor共8、每flow corrections≤8；超限failclosed並保可讀重試。external API／pointer／keyboard取消舊proof，最後bare Play可forward並保本機位置；queue-only GET不seek。 |
+| 回退／cleanup | genuine opt-in照原權限forward；mute／sharedpause／retire／過期clip不能復活。清監聽器、proof事件／predecessor、preview callbacks與method wrapper；不加poll／seek／media請求。 |
+| 收尾 | Windows／Linux frozen全套、126focused／獨立複查、fresh原型Pause／最後Play／normal與proxy流量已驗；ownfixture／tabs／overrides已清理。PR推送／Ready／再次審查仍待root操作，未發布新正式patch。 |
+| 正式與UI | 正式仍已驗v1.11.1／df983da；未因新回覆變更服務或資料。未發布patterns候選1.12工作暫停，不加入PR46。 |
+
+| 新固定來源驗收 | 結果／範圍 |
+| --- | --- |
+| Windows Node24.14.0 | **1,300／1,300**，**60,842.6149ms**，fail／cancel／skip／todo均0。 |
+| Focused／獨立peer | media107＋actual AudioSettings19＝**126**；獨立126＋10probes通過，不加進完整總數。 |
+| Linux Node22.22.1 | **1,300／1,300**，**219,640.107979ms**，fail／cancel／skip／todo均0；frozen archive SHA-256 `f0fec37eac453173a031fd0b3b3d9c9bafa3539f9a87f63620ad68de17a9e555`。 |
+| 原生修前 | bb7b3d真Audio原型Play／Pause繞過instance wrapper、Ready4、Input0；釋放持有的真HTTP JSON body Promise在media events前完成，最後sameAudio1／paused false。`work/pr46-ordering-native-before.json`。 |
+| 最終source原生 | Debugger載入JS SHA `b27d3b7b8deed09b2176a8c041d0efa8bf07dab5a1e72fc5b46f1772c659f14f`；同原型／body Promise條件，最後paused true／sameAudio1／dialog visible，GET4→4。`work/pr46-ordering-native-final.json`，早期draft4624／2d1結果排除作final。 |
+
+較早原型case仍觀察到own resume短暫約1ms後被正確Pause；fresh最終case約3.6ms，見下表，**不能寫零瞬間播放／零 transient**。Input0的實際原型API不是physical UA controls／硬體按鍵，也不能由trusted media event推成人手點擊；沒有喇叭、前景FPS或所有裝置結論。
+
+### 測試gate更正與fresh控制驗收
+
+先前normal marker9／snapshot7、gatePending1是QA gate仍持有JSON；client `gateEnabled=false`不會release已held body。已drain、restore fetch後另以freshfixture驗證，這個舊診斷不算產品故障／正式blocker。晚期Performance Resource Timing buffer已滿，舊performance計數不當HTTP證據；下表使用 **proxy `/__qa/log`**，不外推舊case4→4。
+
+fresh三case皆Debugger驗載入SHA `b27d3b7b8deed09b2176a8c041d0efa8bf07dab5a1e72fc5b46f1772c659f14f`、truncated false；原型API繞instance wrapper、無pointer／key，readyState4，持有真HTTP JSON Promise在same developer task釋放。
+
+| Fresh case | 最終狀態／proxy流量 | 證據與限制 |
+| --- | --- | --- |
+| Play→Pause→late GET | paused true／sameAudio／audioCount1／dialog open；總media請求4→4，GET3→3／POST1→1。 | `work/pr46-ordering-native-fresh-pause.json`。有trusted media events，own resume約3.6ms後correct pause；不稱zero transient或physical UA控制。 |
+| Play→Pause→seek37→最後Play→late GET | paused false／time37.155091／ready4／同Audio；總media請求5→5，GET4→4／POST1→1。 | `work/pr46-ordering-native-fresh-play.json`。最後Play及本機進度保留，proxy證明本次無新增GET／POST，不當全流量benchmark。 |
+| 正常hide→show | hidden paused true／ready4→visible paused false／ready4，同Audio、pending0；總media請求5→5，GET4→4／POST1→1。 | `work/pr46-ordering-native-fresh-normal.json`。是受控visibility／原生Audio狀態，不是喇叭／實體切頁／所有裝置。 |
+
+原 `pr46-ordering-native-final.json`的約1ms transient仍是較早case，不把它與fresh約3.6ms拼成同一次測量；fresh是本次最終控制驗收。已restore fetch、drain held JSON、Debugger.disable、clearFocus／metrics、關兩ownChrome tabs、停止fixture；沒有正式或其他使用者資料操作。
+
+本段不推翻下面第三P2／正式1.11.1歷史；新問題已有受控native重現，但未把它寫成正式站自然故障。公開文檔不存原帳密、房號、私有prefs或HAR，未執行新部署；patterns仍暫停未發布。
+
 ## 2026-10-07：第三項 P2 驗收完成／正式v1.11.1
 
 使用者要求先處理PR再繼續其他UI。本段針對 [Stanley的新回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6035554999)，起始head `ed0071d`；修正已固定PR候選 **v1.9.2**／`cf64bfc4a4f86877c50f024b56706efdd5898e80`，Windows／Linux完整及最後原生controls通過。保留已發布UI／WebGL的正式 **v1.11.1**／`df983da7714efcf9382d6953746b828e026c76a0`已發布，本地tag固定df983da，沒有未發布patterns。本段取代舊待驗來源與中間數字，下方1,263／1,284與前次Audio trace仍是歷史。
