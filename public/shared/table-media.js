@@ -55,51 +55,120 @@
  function observeFrame(iframe,token,key){intersection?.disconnect();if(typeof IntersectionObserver==='function'){intersection=new IntersectionObserver(entries=>{if(validPlayer(token,key)&&activeVideo()&&entries.some(entry=>entry.intersectionRatio<=.5))exitVideo('影片已離開可見範圍，需要時再加入觀看。');},{threshold:[.5]});intersection.observe(iframe);}}
  function exitVideo(message='自己的影片已關閉，其他人繼續觀看。'){videoWanted=false;playerEpoch++;appliedPlayback=null;destroyVideo();apiCancel?.();render();if(message)status(message,true);}
  function settings(value=window.AudioSettings?.get?.()){if(!value)return;const music=value.music;q('#mediaVolume').value=Math.round(music.volume*100);const label=music.enabled?'關閉媒體聲音':'開啟媒體聲音';if(q('#mediaSound').getAttribute('aria-label')!==label)iconButton(q('#mediaSound'),music.enabled?'sound':'muted',label);q('#mediaSound').setAttribute('aria-pressed',String(music.enabled));if(audio){audio.volume=music.volume;audio.muted=!music.enabled;}if(player&&ready)try{player.setVolume(music.volume*100);music.enabled?player.unMute():player.mute();}catch{}}
- function expectAudioTransition(clip,type){
-  const record=audioTransitions.get(clip);if(!record)return;record.expected.push(type);
+ function expectAudioTransition(clip,type,front=false){
+  const record=audioTransitions.get(clip);if(!record)return;front?record.expected.unshift(type):record.expected.push(type);
   if(record.expected.length>64){record.expected.shift();record.skipped=Math.min(65536,record.skipped+1);record.intent++;record.nativePaused=null;if(interruptedAudio?.clip===clip)interruptedAudio=null;}
  }
- function pauseAudio(clip){const paused=clip.paused;clip.pause();if(!paused&&clip.paused)expectAudioTransition(clip,'pause');}
- function playAudio(clip){const paused=clip.paused,record=audioTransitions.get(clip);if(record)record.nativePaused=false;const result=clip.play();if(paused&&!clip.paused)expectAudioTransition(clip,'play');return result;}
+ function invokeAudio(clip,type){const record=audioTransitions.get(clip);if(record)record.issuing++;try{return clip[type]();}finally{if(record)record.issuing--;}}
+ function pauseAudio(clip,proof){const paused=clip.paused;invokeAudio(clip,'pause');if(!paused&&clip.paused){if(proof)proof.issued=true;else expectAudioTransition(clip,'pause');}}
+ function playAudio(clip,proof){const paused=clip.paused,record=audioTransitions.get(clip);if(record)record.nativePaused=false;const result=invokeAudio(clip,'play');if(paused&&!clip.paused){if(proof)proof.issued=true;else expectAudioTransition(clip,'play');}return result;}
+ function cancelAudioProof(record){if(record?.proof){record.proof.cancelled=true;record.proof.flow.closed=true;}}
+ function failAudioProof(clip,record){cancelAudioProof(record);record.intent++;record.nativePaused=true;if(interruptedAudio?.clip===clip)interruptedAudio=null;pauseAudio(clip);status('這裡保持暫停，請用原生播放按鈕繼續。',true);}
+ function createAudioProof(clip,record,kind,flow,purpose){
+  const previous=record.proof;
+  if(previous?.predecessors.size>=7){failAudioProof(clip,record);return null;}
+  const events=previous?previous.events.splice(0):[],excluded=previous?previous.excluded:new Set(),predecessors=previous?previous.predecessors:new Set();
+  if(previous){cancelAudioProof(record);previous.excluded=new Set();previous.predecessors=new Set();predecessors.add(previous);}
+  const proof={kind,intent:record.intent,events,excluded,predecessors,issued:false,cancelled:false,overflow:false,flow,purpose};record.proof=proof;return proof;
+ }
+ function finishAudioProof(clip,record,proof,error){
+  if(!proof)return false;
+  if(record?.proof!==proof){
+   const current=record?.proof;
+   if(!record?.disposed&&clip===audio&&current?.predecessors.has(proof)){
+    if(proof.issued&&proof.kind==='pause'&&!error)expectAudioTransition(clip,'pause',true);
+    else if(proof.issued&&(proof.kind==='play'||error?.name==='AbortError')){const owned=current.events.findLast(event=>event.type===(proof.kind==='pause'?'pause':'play')&&!current.excluded.has(event));if(owned)current.excluded.add(owned);}
+    current.predecessors.delete(proof);
+   }
+   proof.events.length=0;proof.excluded.clear();proof.predecessors.clear();return false;
+  }
+  record.proof=null;
+  const pause=proof.kind==='pause',abort=error?.name==='AbortError';
+  const owned=proof.issued&&(!pause||abort)?proof.events.findLastIndex(event=>event.type===(pause?'pause':'play')):-1;
+  // A successful play promise settles in notify-playing; AbortError settles in
+  // the later pause task. Both fence the preceding events of this same element.
+  // An already-playing play() checkpoints the media queue before our subsequent
+  // pause task. At low readyState its AbortError instead checkpoints that task.
+  if(pause&&proof.issued&&!error&&!record.disposed&&clip===audio)expectAudioTransition(clip,'pause',true);
+  const classified=!record.disposed&&clip===audio&&!proof.overflow&&record.intent===proof.intent&&(!pause||!error||abort);
+  if(classified){
+   for(let index=0;index<proof.events.length;index++)if(index!==owned&&!proof.excluded.has(proof.events[index])){const event=proof.events[index];proof.nativeObserved=true;proof.nativePlay=event.type==='play'?event:null;record.intent++;record.nativePaused=event.type==='pause';}
+  }
+  proof.classified=classified;proof.events.length=0;proof.excluded.clear();proof.predecessors.clear();return classified&&!proof.cancelled&&!proof.flow.closed;
+ }
+ function correctAudioPause(clip,record,token,key,flow,purpose='correction'){
+  if(clip.ended===true){if(purpose==='visibility'&&interruptedAudio?.clip===clip)interruptedAudio=null;pauseAudio(clip);return;}
+  if(flow.closed||flow.corrections>=8){flow.closed=true;failAudioProof(clip,record);return;}
+  if(purpose==='correction')flow.corrections++;const proof=createAudioProof(clip,record,'pause',flow,purpose);if(!proof)return;
+  const finish=error=>{
+   const valid=finishAudioProof(clip,record,proof,error);
+   if(purpose==='visibility'){
+    if(valid&&proof.nativePlay){record.confirmedPlay=proof.nativePlay;try{record.previewPlay?.(proof.nativePlay);}finally{record.confirmedPlay=null;}}
+    const interrupted=interruptedAudio;
+    if(proof.classified&&interrupted?.clip===clip&&interrupted.key===key&&interrupted.token===token&&interrupted.intent===proof.intent){if(proof.nativeObserved&&record.nativePaused===true)interruptedAudio=null;else interrupted.intent=record.intent;}
+    resumeInterruptedAudio();return;
+   }
+   if(valid&&validPlayer(token,key)&&clip===audio&&clip.paused&&record.nativePaused===false&&snapshot?.playback.state==='playing'&&window.AudioSettings?.get?.().music.enabled&&unlocked){interruptedAudio={clip,key,token,intent:record.intent,flow,keepPosition:true};resumeInterruptedAudio();}
+  };
+  try{const checkpoint=invokeAudio(clip,'play');pauseAudio(clip,proof);Promise.resolve(checkpoint).then(()=>finish(),finish);}catch(error){pauseAudio(clip);finish(error);}
+ }
  function bindAudioIntent(clip){
-  const record={expected:[],skipped:0,intent:0,nativePaused:false,owned:new WeakSet(),disposed:false},listeners=[],previewListeners=new Map();audioTransitions.set(clip,record);
+  const record={expected:[],skipped:0,intent:0,nativePaused:false,owned:new WeakSet(),disposed:false,issuing:0,proof:null},listeners=[],previewListeners=new Map(),methods=[];audioTransitions.set(clip,record);
   const listen=(type,callback,capture=false)=>{clip.addEventListener(type,callback,capture);listeners.push(()=>clip.removeEventListener(type,callback,capture));};
-  const invalidate=()=>{if(record.disposed||clip!==audio)return;record.intent++;record.nativePaused=null;if(interruptedAudio?.clip===clip)interruptedAudio=null;};
+  const invalidate=()=>{if(record.disposed||clip!==audio)return;record.intent++;record.nativePaused=null;cancelAudioProof(record);if(interruptedAudio?.clip===clip)interruptedAudio=null;};
+  // External JS controls can express a newer choice before their media events.
+  // UA controls still use the queued-event proof below; these wrappers do not
+  // substitute for input capture or assume that native UI calls JS methods.
+  for(const type of ['play','pause']){
+   const original=clip[type],descriptor=Object.getOwnPropertyDescriptor(clip,type);
+   const wrapped=function(...args){const external=this===clip&&!record.disposed&&!record.issuing;if(external){invalidate();record.nativePaused=type==='pause';}return original.apply(this,args);};
+   try{Object.defineProperty(clip,type,{configurable:true,writable:true,value:wrapped});methods.push(()=>{if(clip[type]===wrapped){if(descriptor)Object.defineProperty(clip,type,descriptor);else delete clip[type];}});}catch{}
+  }
   const transition=event=>{
    if(record.disposed||clip!==audio)return;
    if(record.skipped){record.skipped--;record.owned.add(event);return;}
    if(record.expected[0]===event.type){record.expected.shift();record.owned.add(event);return;}
+   if(record.proof){
+    const proof=record.proof;record.owned.add(event);
+    if(proof.events.length<64)proof.events.push(event);else if(!proof.overflow){proof.overflow=true;failAudioProof(clip,record);}
+    return;
+   }
    invalidate();record.nativePaused=event.type==='pause';
   };
   // Browser media events are queued after the state transition. Register before bindPreview.
   listen('play',transition);listen('pause',transition);listen('pointerdown',invalidate,true);listen('keydown',invalidate,true);
   const preview={get volume(){return clip.volume;},set volume(value){clip.volume=value;},get muted(){return clip.muted;},set muted(value){clip.muted=value;},
-   addEventListener(type,callback){const wrapped=event=>{if(record.disposed||type==='play'&&(record.owned.has(event)||clip.paused))return;const previous=audioPreviewGesture;audioPreviewGesture=clip;try{callback.call(clip,event);}finally{audioPreviewGesture=previous;}};previewListeners.set(callback,{type,wrapped});clip.addEventListener(type,wrapped);},
+   addEventListener(type,callback){const wrapped=event=>{if(record.disposed||type==='play'&&record.confirmedPlay!==event&&(record.owned.has(event)||clip.paused))return;const previous=audioPreviewGesture;audioPreviewGesture=clip;try{callback.call(clip,event);}finally{audioPreviewGesture=previous;}};if(type==='play')record.previewPlay=wrapped;previewListeners.set(callback,{type,wrapped});clip.addEventListener(type,wrapped);},
    removeEventListener(type,callback){const registered=previewListeners.get(callback);if(registered){clip.removeEventListener(registered.type,registered.wrapped);previewListeners.delete(callback);}}
   };
   const unbind=window.AudioSettings?.bindPreview?.(preview);
-  return ()=>{record.disposed=true;unbind?.();for(const remove of listeners)remove();for(const{type,wrapped}of previewListeners.values())clip.removeEventListener(type,wrapped);previewListeners.clear();record.expected.length=0;audioTransitions.delete(clip);};
+  return ()=>{record.disposed=true;record.previewPlay=null;record.confirmedPlay=null;if(record.proof){cancelAudioProof(record);record.proof.events.length=0;record.proof.excluded.clear();record.proof.predecessors.clear();record.proof=null;}unbind?.();for(const remove of listeners)remove();for(const restore of methods)restore();for(const{type,wrapped}of previewListeners.values())clip.removeEventListener(type,wrapped);previewListeners.clear();record.expected.length=0;audioTransitions.delete(clip);};
  }
- function alignAudio(force=false){
-  const clip=audio,key=currentKey(),token=playerEpoch,record=audioTransitions.get(clip),intent=record?.intent;if(!clip||snapshot?.current?.type!=='music')return;const desired=position();if(clip.readyState>=1&&(force||Math.abs(clip.currentTime-desired)>1.25))try{clip.currentTime=desired;}catch{}
+ function alignAudio(force=false,interrupted=null,keepPosition=false){
+  const clip=audio,key=currentKey(),token=playerEpoch,record=audioTransitions.get(clip),intent=record?.intent;if(!clip||snapshot?.current?.type!=='music')return;const desired=position();if(!keepPosition&&clip.readyState>=1&&(force||Math.abs(clip.currentTime-desired)>1.25))try{clip.currentTime=desired;}catch{}
   const preferences=window.AudioSettings?.get?.().music;
   if(snapshot.playback.state!=='playing'||!preferences?.enabled||!unlocked||document.hidden){pauseAudio(clip);return;}
-  if(!clip.paused||clip._mediaPlayPending)return;clip._mediaPlayPending=true;
-  try{Promise.resolve(playAudio(clip)).then(()=>{if(!validPlayer(token,key)||clip!==audio||snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled||record?.intent!==intent&&record?.nativePaused===true)pauseAudio(clip);else status('',true);},error=>{
+  if(!clip.paused||clip._mediaPlayPending)return;
+  const flow=interrupted?.flow||{corrections:0,closed:false},needsProof=record&&(interrupted||record.proof),proof=needsProof?createAudioProof(clip,record,'play',flow):null;if(needsProof&&!proof)return;clip._mediaPlayPending=true;
+  try{Promise.resolve(playAudio(clip,proof)).then(()=>{const reconciled=finishAudioProof(clip,record,proof);if(!validPlayer(token,key)||clip!==audio||snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled)pauseAudio(clip);else if(record?.intent!==intent&&record?.nativePaused===true){if(reconciled&&!clip.paused)correctAudioPause(clip,record,token,key,flow);else pauseAudio(clip);}else status('',true);},error=>{
+   finishAudioProof(clip,record,proof,error);
    if(error?.name==='AbortError')return;
    const interrupted=interruptedAudio;if(interrupted?.clip===clip&&interrupted.key===key&&interrupted.token===token&&interrupted.intent===intent)interruptedAudio=null;
    if(validPlayer(token,key)&&clip===audio)status('瀏覽器尚未允許音樂播放，請按「在自己的裝置播放」或原生播放按鈕。',true);
-  }).finally(()=>{clip._mediaPlayPending=false;if(clip===audio&&token===playerEpoch&&key===currentKey())resumeInterruptedAudio();});}catch{clip._mediaPlayPending=false;status('請按原生音樂播放器的播放按鈕重試。',true);}
+  }).finally(()=>{clip._mediaPlayPending=false;if(clip===audio&&token===playerEpoch&&key===currentKey())resumeInterruptedAudio();});}catch{finishAudioProof(clip,record,proof);clip._mediaPlayPending=false;status('請按原生音樂播放器的播放按鈕重試。',true);}
  }
  // Undo only our visibility pause; a newer room marker must first get its existing snapshot reply.
  function resumeInterruptedAudio(){
   const interrupted=interruptedAudio;if(!interrupted||document.hidden)return;
   if(interrupted.clip!==audio||!validPlayer(interrupted.token,interrupted.key)||interrupted.intent!==audioTransitions.get(audio)?.intent){interruptedAudio=null;return;}
   if(markerKey(snapshot)!==markerKey(marker))return;
+  if(audioTransitions.get(audio)?.proof?.kind==='pause')return;
   if(snapshot?.playback.state!=='playing'||!window.AudioSettings?.get?.().music.enabled||!unlocked){interruptedAudio=null;return;}
+  // A native Play has already superseded our pause; retain its local position.
+  if(!audio.paused){interruptedAudio=null;return;}
   // pause's queued task may still be rejecting the old play promise when visibility returns.
   if(audio._mediaPlayPending)return;
-  interruptedAudio=null;alignAudio();
+  interruptedAudio=null;alignAudio(false,interrupted,!!interrupted.keepPosition);
  }
  function mountAudio(){stopPlayers();if(snapshot?.current?.type!=='music')return;const key=currentKey(),token=playerEpoch,clip=new Audio();audio=clip;clip.controls=true;clip.preload='metadata';clip.setAttribute('aria-label','本機歌曲播放器');clip.src='/assets/music/'+encodeURIComponent(snapshot.current.trackId);q('#mediaMusicNative').append(clip);settings();clip._mediaUnbind=bindAudioIntent(clip);clip.onloadedmetadata=()=>{if(validPlayer(token,key)&&clip===audio){alignAudio(true);updatePublishControl();}};clip.onended=()=>{if(validPlayer(token,key)&&clip===audio)report('ended',{itemId:snapshot.current.id});};clip.onerror=()=>{if(validPlayer(token,key)&&clip===audio)status('這首歌曲暫時無法播放，可用原生播放器重試或請管理者切下一筆。',true);};clip.load();alignAudio(true);}
  function youtubeApi(){
@@ -293,8 +362,8 @@
  q('#mediaPublishPosition').onclick=publishPosition;
  function selectUpload(){if(q('#mediaTrack').value!==uploadOption)return false;q('#mediaTrack').value='';window.open('/collection?section=music','_blank','noopener');return true;}
  q('#mediaTrack').onchange=selectUpload;q('#mediaMusicForm').onsubmit=async event=>{event.preventDefault();if(selectUpload())return;const trackId=q('#mediaTrack').value;if(trackId)await command('enqueue',{type:'music',trackId});};q('#mediaVideoForm').onsubmit=async event=>{event.preventDefault();const url=q('#mediaUrl').value.trim();if(url&&await command('enqueue',{type:'video',url}))q('#mediaUrl').value='';};q('#mediaLibraryRefresh').onclick=library;
- window.AudioSettings?.subscribe?.((value,{gesture=false}={})=>{settings(value);if(gesture)unlocked=true;if(audio&&audioPreviewGesture===audio){if(document.hidden||snapshot?.playback.state!=='playing'||!value.music.enabled)pauseAudio(audio);return;}alignAudio();});
- window.addEventListener('resize',queueLayout);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelWindowInteractions();cancelPlaylistDrag();if(audio){const record=audioTransitions.get(audio);if(!audio.paused||audio._mediaPlayPending&&record?.nativePaused!==true)interruptedAudio={clip:audio,key:currentKey(),token:playerEpoch,intent:record?.intent};pauseAudio(audio);}if(snapshot?.current?.type==='video')exitVideo('');}else{resumeInterruptedAudio();maybeConsent();if(dialog.open||playlist.open)queueLayout();}});window.addEventListener('pagehide',stop);
+ window.AudioSettings?.subscribe?.((value,{gesture=false}={})=>{settings(value);if(audio&&!value.music.enabled)cancelAudioProof(audioTransitions.get(audio));if(gesture)unlocked=true;if(audio&&audioPreviewGesture===audio){if(document.hidden||snapshot?.playback.state!=='playing'||!value.music.enabled)pauseAudio(audio);return;}alignAudio();});
+ window.addEventListener('resize',queueLayout);document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelWindowInteractions();cancelPlaylistDrag();if(audio){const record=audioTransitions.get(audio);if(!audio.paused||audio._mediaPlayPending&&record?.nativePaused!==true&&!record?.proof?.cancelled)interruptedAudio={clip:audio,key:currentKey(),token:playerEpoch,intent:record?.intent};cancelAudioProof(record);if(!audio.paused&&record)correctAudioPause(audio,record,playerEpoch,currentKey(),{corrections:0,closed:false},'visibility');else pauseAudio(audio);}if(snapshot?.current?.type==='video')exitVideo('');}else{resumeInterruptedAudio();maybeConsent();if(dialog.open||playlist.open)queueLayout();}});window.addEventListener('pagehide',stop);
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog:modal'))return;if(playlist.open&&(playlist.contains(document.activeElement)||focusedWindow==='playlist')){event.preventDefault();closePlaylist();}else if(dialog.open){event.preventDefault();close();opener.focus();}});
  if(typeof ResizeObserver==='function'){layoutObserver=new ResizeObserver(queueLayout);for(const selector of ['#mediaWindowBar','#mediaStatus','#mediaCurrentInfo','#mediaTimeline','#mediaControlRow','#mediaPlaybackStatus'])layoutObserver.observe(q(selector));}
  if(typeof MutationObserver==='function')new MutationObserver(records=>{if(dialog.open&&records.some(record=>record.target!==dialog&&record.target!==playlist&&record.target!==consent&&record.target.tagName==='DIALOG'&&record.target.open))close();maybeConsent();}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
