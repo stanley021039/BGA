@@ -4,8 +4,8 @@ function fixture({unavailable=false,linkFailure=false,onActivity=null}={}){
  let time=0,enabled=true,reduced=false,nextFrame=1,nextObject=1;const frames=new Map(),notices=[],activities=[],calls=[],listeners=new Map(),subscriptions=new Set(),observers=[];
  const listen=(map,type,fn)=>{if(!map.has(type))map.set(type,new Set());map.get(type).add(fn);};
  const remove=(map,type,fn)=>map.get(type)?.delete(fn);
- const gl={VERTEX_SHADER:1,FRAGMENT_SHADER:2,LINK_STATUS:3,ARRAY_BUFFER:4,DYNAMIC_DRAW:5,FLOAT:6,ALIASED_POINT_SIZE_RANGE:7,DEPTH_TEST:8,BLEND:9,ONE:10,ONE_MINUS_SRC_ALPHA:11,COLOR_BUFFER_BIT:12,POINTS:13};
- for(const name of ['createProgram','createShader','createBuffer'])gl[name]=()=>({id:nextObject++});
+ const gl={VERTEX_SHADER:1,FRAGMENT_SHADER:2,LINK_STATUS:3,ARRAY_BUFFER:4,DYNAMIC_DRAW:5,FLOAT:6,ALIASED_POINT_SIZE_RANGE:7,DEPTH_TEST:8,BLEND:9,ONE:10,ONE_MINUS_SRC_ALPHA:11,COLOR_BUFFER_BIT:12,POINTS:13,TRIANGLES:14};
+ for(const name of ['createProgram','createShader','createBuffer'])gl[name]=(...args)=>{calls.push({name,args});return {id:nextObject++};};
  for(const name of ['shaderSource','compileShader','attachShader','bindAttribLocation','linkProgram','deleteShader','deleteProgram','deleteBuffer','useProgram','bindBuffer','bufferData','enableVertexAttribArray','vertexAttribPointer','disable','enable','blendFunc','viewport','clearColor','clear','bufferSubData','uniform2f','uniform1f','drawArrays'])gl[name]=(...args)=>{calls.push({name,args});};
  gl.getProgramParameter=()=>!linkFailure;gl.getAttribLocation=()=>1;gl.getUniformLocation=(p,name)=>name;gl.getParameter=()=>[1,64];gl.getExtension=()=>({loseContext(){calls.push({name:'loseContext',args:[]});}});
  const host={isConnected:true,children:[],appendChild(node){this.children.push(node);node.parentNode=this;},getBoundingClientRect:()=>({left:10,top:20,width:820,height:398})};
@@ -78,9 +78,9 @@ test('hidden hydration does not allocate a context and dedupe storage cannot gro
  const f=fixture();f.hide(true);for(let id=0;id<1000;id++)f.layer.play(id,'nitro',anchor);assert.equal(f.layer.getState().seen,256);assert.equal(f.frames.size,0);assert.equal(f.calls.some(c=>c.name==='getContext'),false);f.hide(false);assert.equal(f.layer.play(999,'nitro',anchor),false);assert.equal(f.layer.play(1000,'nitro',anchor),true);f.layer.destroy();
 });
 test('activity describes successful particle draws, never readiness, queues or the empty first frame',()=>{
- const f=fixture();f.layer.play('pending','nitro',anchor);assert.equal(f.layer.getState().available,true);assert.equal(f.activities.length,0);f.tick(0);assert.equal(f.layer.getState().particles,0);assert.equal(f.activities.length,0);
- f.tick(200);assert.deepEqual(f.activities.map(value=>({active:value.active,kinds:value.kinds})),[{active:true,kinds:['nitro']}]);assert.equal(f.activities[0].drawCalls,1,'activity follows the successful draw');f.tick(10);assert.equal(f.activities.length,1,'same visible kind does not notify per frame');
- f.layer.play('smoke','smoke',anchor);f.tick(200);assert.deepEqual(f.activities.at(-1).kinds,['nitro','smoke']);assert.deepEqual([...f.layer.getState().activeKinds],['nitro','smoke']);f.tick(2000);assert.deepEqual(f.activities.at(-1).kinds,[]);assert.equal(f.activities.at(-1).active,false);assert.equal(f.frames.size,0);f.layer.destroy();
+ const f=fixture();f.layer.play('pending','smoke',anchor);assert.equal(f.layer.getState().available,true);assert.equal(f.activities.length,0);f.tick(0);assert.equal(f.layer.getState().particles,0);assert.equal(f.activities.length,0);
+ f.tick(200);assert.deepEqual(f.activities.map(value=>({active:value.active,kinds:value.kinds})),[{active:true,kinds:['smoke']}]);assert.equal(f.activities[0].drawCalls,1,'activity follows the successful draw');f.tick(10);assert.equal(f.activities.length,1,'same visible kind does not notify per frame');
+ f.layer.play('nitro','nitro',anchor);f.tick(200);assert.deepEqual(f.activities.at(-1).kinds,['nitro','smoke']);assert.deepEqual([...f.layer.getState().activeKinds],['nitro','smoke']);f.tick(2000);assert.deepEqual(f.activities.at(-1).kinds,[]);assert.equal(f.activities.at(-1).active,false);assert.equal(f.frames.size,0);f.layer.destroy();
 });
 test('activity resets immediately for lifecycle cancellation, context loss, resize and a failed draw',()=>{
  for(const cancel of [f=>f.layer.clear(),f=>f.hide(true),f=>f.enable(false),f=>f.reduce(true),f=>f.pagehide(),f=>f.event('webglcontextlost',{preventDefault(){}}),f=>f.layer.destroy(),f=>{f.setBox(600,400);f.layer.resize();},f=>{f.gl.drawArrays=()=>{throw Error('lost device');};f.tick(10);}]){
@@ -92,4 +92,26 @@ test('activity observers cannot corrupt the active kinds, crash the game or add 
 });
 test('an observer that queues an effect cannot create a second frame or revive a destroyed layer',()=>{
  let f;f=fixture({onActivity(value){f.layer.play(value.active?'observer-play':'observer-empty','nitro',anchor);}});f.layer.play('source','sparks',anchor);f.tick(200);assert.equal(f.frames.size,1,'observer and renderer share the one pending frame');f.layer.destroy();assert.equal(f.frames.size,0);assert.equal(f.layer.getState().effects,0);assert.equal(f.layer.getState().destroyed,true);
+});
+
+test('nitro is one anchored continuous flame mesh with a warm core, never drifting point particles',()=>{
+ const f=fixture();let valid=true;const at=()=>valid?{x:200,y:180,direction:Math.PI,scale:1}:null;
+ f.layer.play('thrust','nitro',at,{continuous:true,count:48});assert.equal(f.activities.length,0);f.tick(0);
+ const draw=f.calls.filter(c=>c.name==='drawArrays').at(-1);assert.deepEqual(draw.args,[f.gl.TRIANGLES,0,6]);assert.equal(f.layer.getState().flames,1);assert.equal(f.layer.getState().queuedParticles,6);assert.deepEqual(f.activities.at(-1).kinds,['nitro']);
+ const first=Array.from(f.calls.filter(c=>c.name==='bufferSubData').at(-1).args[2]);assert.equal(first.length,66);assert.ok(Math.abs(first[0]-200)<.001);assert.ok(Math.abs(first[22]-152)<.001);
+ f.tick(8000);const later=Array.from(f.calls.filter(c=>c.name==='bufferSubData').at(-1).args[2]);for(const offset of [0,1,11,12,22,23])assert.equal(later[offset],first[offset],'plume geometry stays attached instead of drifting with age');assert.notEqual(later[10],first[10],'only the bounded phase changes the flame silhouette');assert.equal(f.layer.getState().flames,1);assert.equal(f.frames.size,1);
+ const shader=f.calls.filter(c=>c.name==='shaderSource').map(c=>c.args[1]).join(' ');assert.match(shader,/a_flame/);assert.match(shader,/vec3\(1\.0,0\.90,0\.52\)/);assert.match(shader,/color\*alpha/);
+ valid=false;f.tick();assert.equal(f.layer.getState().effects,0);assert.equal(f.frames.size,0);assert.deepEqual(f.activities.at(-1).kinds,[]);f.layer.destroy();
+});
+
+test('flame orientation and scale follow the dynamic tail anchor, and targeted stop preserves other effects',()=>{
+ const f=fixture();let x=100;f.layer.play('flame','nitro',()=>({x,y:120,direction:Math.PI/2,scale:.5}),{continuous:true});f.tick(0);
+ const points=()=>Array.from(f.calls.filter(c=>c.name==='bufferSubData').at(-1).args[2]),first=points();assert.ok(Math.abs(first[0]-107)<.001);assert.ok(Math.abs(first[23]-144)<.001);
+ x+=80;f.tick(16);assert.ok(Math.abs(points()[0]-first[0]-80)<.001);assert.equal(f.layer.play('flame','nitro',anchor),false);
+ f.layer.play('smoke','smoke',anchor);f.tick(200);assert.equal(f.layer.stop('flame'),true);assert.equal(f.layer.getState().flames,0);assert.equal(f.layer.getState().effects,1);assert.equal(f.frames.size,1);f.tick(2000);assert.equal(f.frames.size,0);assert.equal(f.layer.stop('missing'),false);f.layer.destroy();
+});
+
+test('flame batches keep the same context, vertex cap and cancellation contracts as short particles',()=>{
+ const f=fixture();for(let i=0;i<100;i++)f.layer.play('flame'+i,'nitro',()=>anchor,{continuous:true,count:1000});assert.ok(f.layer.getState().effects<=6);assert.ok(f.layer.getState().queuedParticles<=192);f.tick(10);assert.equal(f.calls.filter(c=>c.name==='getContext').length,1);assert.equal(f.calls.filter(c=>c.name==='createProgram').length,1);assert.equal(f.calls.filter(c=>c.name==='createBuffer').length,1);assert.equal(f.layer.getState().particles,36);f.hide(true);assert.equal(f.frames.size,0);assert.equal(f.layer.getState().flames,0);f.hide(false);assert.equal(f.layer.play('flame99','nitro',()=>anchor,{continuous:true}),false);
+ for(const cancel of [g=>g.enable(false),g=>g.reduce(true),g=>g.event('webglcontextlost',{preventDefault(){}}),g=>g.pagehide()]){const g=fixture();g.layer.play('one','nitro',()=>anchor,{continuous:true});g.tick(20);cancel(g);assert.equal(g.frames.size,0);assert.equal(g.layer.getState().flames,0);assert.deepEqual(g.activities.at(-1).kinds,[]);g.layer.destroy();}f.layer.destroy();
 });

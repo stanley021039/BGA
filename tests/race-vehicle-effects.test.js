@@ -16,10 +16,10 @@ function fixture({reduced=false,garage=false,enabled=true,webgl=false,glFail=fal
  const state={code:'ROOM',round:2,phase:'move',tiles:[{start:8}],active:{car:'source'},cars:[{id:'source',x:garage?null:3,y:10},{id:'target',x:2,y:11}]};
  function replace(){svg=new Node('svg');svg.setAttribute('viewBox','0 0 1180 398');for(const car of state.cars){if(car.x===null||car.dead)continue;const outer=new Node('g'),moving=new Node('g'),graphics=new Node('g');outer.setAttribute('data-car',car.id);outer.setAttribute('transform',`translate(${48+(car.y-8)*44+(car.x%2)*22},${81+car.x*44})`);moving.setAttribute('class','race-car-moving');moving.style.setProperty('--race-dx','-44px');moving.style.setProperty('--race-dy','0px');graphics.setAttribute('class','race-car-impact');graphics.append(new Node('rect'));moving.append(new Node('circle'),graphics,new Node('text'));outer.append(new Node('title'),moving);svg.append(outer);}return svg;}
  replace();
- const host={getBoundingClientRect:()=>({left:10,top:20,right:830,bottom:420,width:820,height:400}),querySelector:()=>({style:{}})},board={getBoundingClientRect:()=>({left:10,top:30,right:830,bottom:350})},gpu={created:0,plays:[],clears:[],destroyed:0};
+ const host={getBoundingClientRect:()=>({left:10,top:20,right:830,bottom:420,width:820,height:400}),querySelector:()=>({style:{}})},board={getBoundingClientRect:()=>({left:10,top:30,right:830,bottom:350})},gpu={created:0,plays:[],clears:[],stops:[],destroyed:0};
  const doc={createElementNS:(ns,name)=>new Node(name),querySelector:selector=>selector==='.race-stage'?host:selector==='#boardScroll'?board:svg,querySelectorAll:()=>walk(svg).filter(node=>node.dataset.car),addEventListener(type,fn){listeners.set(type,fn);},removeEventListener(type){listeners.delete(type);},get hidden(){return hidden;}},media={matches:reduced,addEventListener(type,fn){mediaListeners.set(type,fn);},removeEventListener(type){mediaListeners.delete(type);}};
  const matrix={a:1,b:0,c:0,d:1,e:200,f:180};for(const node of walk(svg).filter(n=>n.dataset.car)){node.children.find(n=>n.tagName==='g').getScreenCTM=()=>matrix;}
- const prefs=new Set(),window={document:doc,matchMedia:()=>media,MotionPolicy:{get:()=>({enabled}),allowsMotion:()=>enabled&&!media.matches&&!hidden,subscribe(fn){prefs.add(fn);fn();return()=>prefs.delete(fn);}}};if(webgl)window.GameFxLayer={create(host,{onActivity}={}){gpu.created++;if(glFail)throw Error('Driver unavailable');gpu.kinds=[];gpu.activity=value=>{gpu.kinds=value.kinds;onActivity?.(value);};return{play(...args){gpu.plays.push(args);return true;},clear(options){gpu.clears.push(options);gpu.activity({active:false,kinds:[]});},destroy(){gpu.destroyed++;},getState:()=>({available:true,activeKinds:gpu.kinds})};}};vm.runInNewContext(script,{window,Date:{now:()=>now},setTimeout(fn,delay){const id=++sequence;timers.set(id,{fn,at:now+delay});return id;},clearTimeout:id=>timers.delete(id)});
+ const prefs=new Set(),window={document:doc,matchMedia:()=>media,MotionPolicy:{get:()=>({enabled}),allowsMotion:()=>enabled&&!media.matches&&!hidden,subscribe(fn){prefs.add(fn);fn();return()=>prefs.delete(fn);}}};if(webgl)window.GameFxLayer={create(host,{onActivity}={}){gpu.created++;if(glFail)throw Error('Driver unavailable');gpu.kinds=[];gpu.activity=value=>{gpu.kinds=value.kinds;onActivity?.(value);};return{play(...args){gpu.plays.push(args);return true;},stop(id){gpu.stops.push(id);return true;},clear(options){gpu.clears.push(options);gpu.activity({active:false,kinds:[]});},destroy(){gpu.destroyed++;},getState:()=>({available:true,activeKinds:gpu.kinds})};}};vm.runInNewContext(script,{window,Date:{now:()=>now},setTimeout(fn,delay){const id=++sequence;timers.set(id,{fn,at:now+delay});return id;},clearTimeout:id=>timers.delete(id)});
  const effects=window.RaceVehicleEffects.mount();
  function tick(ms){const end=now+ms;for(;;){const next=[...timers].sort((a,b)=>a[1].at-b[1].at)[0];if(!next||next[1].at>end)break;now=next[1].at;timers.delete(next[0]);next[1].fn();}now=end;}
  const nodes=name=>walk(svg).filter(node=>node.classList.contains(name)),car=id=>walk(svg).find(node=>node.dataset.car===id),body=id=>car(id).children.find(node=>node.tagName==='g');
@@ -116,8 +116,8 @@ test('tutorial reset, round rollback and room changes allow new events without r
 test('optional particles use one confirmed event and follow the visible car without replacing SVG labels',()=>{
  const ui=fixture({webgl:true}),event={id:1,kind:'command',command:'nitro',car:'source'};
  assert.equal(ui.gpu.created,0);ui.effects.show([event],ui.state);assert.equal(ui.gpu.created,1);assert.equal(ui.gpu.plays.length,1);assert.equal(ui.nodes('race-vehicle-exhaust').length,1);assert.equal(ui.nodes('race-vehicle-label').length,1);
- const [id,kind,anchor,settings]=ui.gpu.plays[0];assert.equal(id,'vehicle:1');assert.equal(kind,'nitro');assert.deepEqual({...anchor()},{x:174,y:160});assert.equal(settings.durationMs,1400);
- ui.matrix.e+=44;assert.equal(anchor().x,218,'the anchor follows the presented transform');ui.effects.show([event],ui.state);assert.equal(ui.gpu.plays.length,1,'polling cannot replay the particle event');
+ const [id,kind,anchor,settings]=ui.gpu.plays[0];assert.equal(id,'vehicle:1');assert.equal(kind,'nitro');assert.deepEqual({...anchor()},{x:170,y:160,direction:-Math.PI,scale:1});assert.equal(settings.continuous,true);
+ ui.matrix.e+=44;assert.equal(anchor().x,214,'the anchor follows the presented transform');ui.effects.show([event],ui.state);assert.equal(ui.gpu.plays.length,1,'polling cannot replay the particle event');
  ui.hide(true);assert.equal(anchor(),null);assert.equal(ui.nodes('race-vehicle-effect').length,0);ui.hide(false);ui.effects.show([event],ui.state);assert.equal(ui.gpu.plays.length,1);
  ui.effects.reset();ui.effects.show([event],ui.state);assert.equal(ui.gpu.plays.length,2,'only a new room/lesson baseline resets event identity');ui.effects.destroy();assert.equal(ui.gpu.destroyed,1);
 });
@@ -128,11 +128,15 @@ test('GPU failure and reduced motion preserve canonical SVG effects and do not r
  const reduced=fixture({webgl:true,reduced:true});reduced.effects.show([event],reduced.state);assert.equal(reduced.gpu.created,0);assert.equal(reduced.nodes('race-vehicle-exhaust').length,0);assert.equal(reduced.nodes('race-vehicle-label').length,1);
 });
 
-test('nitro particles start again only for a confirmed moving step after the initial burst expires',()=>{
+test('nitro keeps one continuous emitter across confirmed steps and stops exactly when its phase ends',()=>{
  const ui=fixture({webgl:true}),command={id:1,kind:'command',command:'nitro',car:'source'},move={id:'motion:9:source',kind:'motion',motion:'move',car:'source'};
  ui.effects.show([command],ui.state);ui.tick(3000);ui.effects.show([],ui.state);assert.equal(ui.gpu.plays.length,1);
- ui.effects.show([move],ui.state);assert.equal(ui.gpu.plays.length,2);assert.equal(ui.gpu.plays[1][0],'vehicle:motion:9:source');assert.equal(ui.gpu.plays[1][3].elapsedMs,0);assert.equal(ui.nodes('race-vehicle-exhaust').length,1);
- ui.effects.show([move],ui.state);assert.equal(ui.gpu.plays.length,2);ui.state.phase='shoot';ui.effects.show([{...move,id:'motion:10:source'}],ui.state);assert.equal(ui.gpu.plays.length,2);
+ ui.effects.show([move],ui.state);assert.equal(ui.gpu.plays.length,1);assert.equal(ui.nodes('race-vehicle-exhaust').length,1);
+ ui.effects.show([move],ui.state);assert.equal(ui.gpu.plays.length,1);const anchor=ui.gpu.plays[0][2];ui.state.phase='shoot';ui.effects.show([{...move,id:'motion:10:source'}],ui.state);assert.equal(ui.gpu.plays.length,1);assert.deepEqual(ui.gpu.stops,['vehicle:1']);assert.equal(anchor(),null);
+});
+
+test('continuous flame attaches to the transformed tail and follows rotation and scale rather than a fixed screen offset',()=>{
+ const ui=fixture({webgl:true});ui.effects.show([{id:1,kind:'command',command:'nitro',car:'source'}],ui.state);const anchor=ui.gpu.plays[0][2];Object.assign(ui.matrix,{a:0,b:2,c:-2,d:0});assert.deepEqual({...anchor()},{x:190,y:120,direction:-Math.PI/2,scale:2});assert.equal(ui.nodes('race-vehicle-exhaust').length,1);assert.equal(ui.gpu.plays.length,1);
 });
 
 test('only actually drawn particle kinds replace decoration, survive SVG redraw and restore the fallback immediately',()=>{

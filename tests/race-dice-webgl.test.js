@@ -3,9 +3,9 @@ const source=fs.readFileSync(path.join(__dirname,'../public/shared/race-dice-web
 function fixture({budget=true,unavailable=false,compile=true,link=true,drawError=false,callback}={}){
  let time=0,next=1,enabled=true,reduced=false,reserved=0;const calls=[],frames=new Map(),activities=[],subscriptions=new Set(),observers=[],maps=[];
  const target=extra=>{const listeners=new Map();maps.push(listeners);return {...extra,listeners,addEventListener(type,fn){if(!listeners.has(type))listeners.set(type,new Set());listeners.get(type).add(fn);},removeEventListener(type,fn){listeners.get(type)?.delete(fn);},dispatch(type,event={}){for(const fn of listeners.get(type)||[])fn(event);}};};
- const gl={};['VERTEX_SHADER','FRAGMENT_SHADER','COMPILE_STATUS','LINK_STATUS','ARRAY_BUFFER','ELEMENT_ARRAY_BUFFER','DYNAMIC_DRAW','STATIC_DRAW','FLOAT','TEXTURE0','TEXTURE_2D','TEXTURE_WRAP_S','TEXTURE_WRAP_T','CLAMP_TO_EDGE','TEXTURE_MIN_FILTER','TEXTURE_MAG_FILTER','LINEAR','DEPTH_TEST','LEQUAL','CULL_FACE','BLEND','UNPACK_FLIP_Y_WEBGL','RGBA','UNSIGNED_BYTE','COLOR_BUFFER_BIT','DEPTH_BUFFER_BIT','TRIANGLES','UNSIGNED_SHORT'].forEach((n,i)=>gl[n]=i+1);gl.NO_ERROR=0;
+ const gl={};['VERTEX_SHADER','FRAGMENT_SHADER','COMPILE_STATUS','LINK_STATUS','ARRAY_BUFFER','ELEMENT_ARRAY_BUFFER','DYNAMIC_DRAW','STATIC_DRAW','FLOAT','TEXTURE0','TEXTURE_2D','TEXTURE_WRAP_S','TEXTURE_WRAP_T','CLAMP_TO_EDGE','TEXTURE_MIN_FILTER','TEXTURE_MAG_FILTER','LINEAR','DEPTH_TEST','LEQUAL','CULL_FACE','BLEND','UNPACK_FLIP_Y_WEBGL','RGBA','UNSIGNED_BYTE','COLOR_BUFFER_BIT','DEPTH_BUFFER_BIT','TRIANGLES','UNSIGNED_SHORT','ONE','ONE_MINUS_SRC_ALPHA'].forEach((n,i)=>gl[n]=i+1);gl.NO_ERROR=0;
  for(const n of ['createProgram','createShader','createBuffer','createTexture'])gl[n]=()=>({id:next++});
- for(const n of ['shaderSource','compileShader','attachShader','bindAttribLocation','linkProgram','deleteShader','deleteProgram','deleteBuffer','deleteTexture','useProgram','bindBuffer','bufferData','enableVertexAttribArray','vertexAttribPointer','activeTexture','bindTexture','texParameteri','enable','depthFunc','disable','viewport','clearColor','clear','pixelStorei','texImage2D','bufferSubData','uniform2f','uniform1f','uniform1i','drawElements'])gl[n]=(...args)=>calls.push({name:n,args:n==='bufferSubData'?[args[0],args[1],Array.from(args[2])]:args});
+ for(const n of ['shaderSource','compileShader','attachShader','bindAttribLocation','linkProgram','deleteShader','deleteProgram','deleteBuffer','deleteTexture','useProgram','bindBuffer','bufferData','enableVertexAttribArray','vertexAttribPointer','activeTexture','bindTexture','texParameteri','enable','depthFunc','depthMask','blendFunc','disable','viewport','clearColor','clear','pixelStorei','texImage2D','bufferSubData','uniform2f','uniform1f','uniform1i','drawElements'])gl[n]=(...args)=>calls.push({name:n,args:n==='bufferSubData'?[args[0],args[1],Array.from(args[2])]:args});
  gl.getShaderParameter=()=>compile;gl.getProgramParameter=()=>link;gl.getUniformLocation=(_,n)=>n;gl.getError=()=>drawError?1:0;gl.getExtension=()=>({loseContext(){calls.push({name:'loseContext'});}});
  const ctx={};for(const n of ['save','translate','fillRect','strokeRect','beginPath','arc','fill','rotate','moveTo','lineTo','stroke','bezierCurveTo','fillText','restore','clearRect'])ctx[n]=(...args)=>calls.push({name:'2d.'+n,args});
  const host=target({isConnected:true,clientWidth:800,clientHeight:300,clientLeft:0,clientTop:0,scrollLeft:0,scrollTop:0,children:[],appendChild(node){this.children.push(node);node.parentNode=this;},getBoundingClientRect:()=>({left:10,top:20,width:800,height:300})});
@@ -22,7 +22,7 @@ test('one lazy context covers the batch with actual textured 3D indexed cubes',(
  const f=fixture();assert.equal(f.calls.length,0);assert.equal(f.root.RaceDiceWebGL.create(f.host),f.layer);assert.equal(f.canvas.style.pointerEvents,'none');assert.equal(f.canvas.style.display,'none');assert.equal(f.canvas.attrs['aria-hidden'],'true');
  const dice=Array.from({length:17},(_,i)=>f.die(i%6+1,undefined,20+(i%10)*70,20+Math.floor(i/10)*110));assert.equal(rolling(f,'round',dice),true);
  assert.equal(f.calls.filter(c=>c.name==='acquire').length,1);assert.equal(f.calls.filter(c=>c.name==='getContext'&&c.args[0]==='webgl').length,1);
- assert.equal(f.calls.filter(c=>c.name==='drawElements').length,17);assert.equal(f.canvas.style.display,'block');assert.equal(f.activities.at(-1).anchors.length,17);assert.equal(f.activities.at(-1).drawCalls,17);assert.equal(f.frames.size,1);
+ assert.equal(f.calls.filter(c=>c.name==='drawElements'&&c.args[1]>6).length,17);assert.equal(f.canvas.style.display,'block');assert.equal(f.activities.at(-1).anchors.length,17);assert.equal(f.activities.at(-1).drawCalls,34);assert.equal(f.frames.size,1);
  assert.ok(f.layer.getState().pixels<=750000);assert.ok(f.layer.getState().dpr<=1.5);f.layer.destroy();
 });
 test('rolling does not inspect authoritative result values, even via getters',()=>{
@@ -37,7 +37,7 @@ test('result maps the supplied face to the front and is rendered once without RA
 });
 test('duplicate faces retain six UV slots and shot/fire/direction atlases are original',()=>{
  const f=fixture();rolling(f,'commands',[f.die(1,[1,1,1,2,2,3]),f.die('out',[1,1,2,2,'out','eliminate'],200),f.die('前左',['前左','前右','後左','後右','左','右'],300)]);
- const data=f.calls.filter(c=>c.name==='bufferSubData')[0].args[2];assert.equal(data.length,192);assert.deepEqual(data.slice(6,8),data.slice(38,40));assert.deepEqual(data.slice(6,8),data.slice(70,72));assert.notDeepEqual(data.slice(6,8),data.slice(102,104));
+ const data=f.calls.filter(c=>c.name==='bufferSubData')[0].args[2];assert.equal(data.length,490*8);assert.deepEqual(data.slice(6,8),data.slice(81*8+6,81*8+8));assert.deepEqual(data.slice(6,8),data.slice(162*8+6,162*8+8));assert.notDeepEqual(data.slice(6,8),data.slice(243*8+6,243*8+8));
  assert.ok(f.calls.some(c=>c.name==='2d.bezierCurveTo'));assert.ok(f.calls.some(c=>c.name==='2d.rotate'));assert.equal(f.calls.filter(c=>c.name==='texImage2D').length,1);f.tick();assert.equal(f.calls.filter(c=>c.name==='texImage2D').length,1);f.layer.destroy();
 });
 test('same rolling key never rewinds and clear/hidden/reduce do not replay a consumed stage',()=>{
@@ -93,7 +93,7 @@ test('cleared wide overlay cannot create scrollbars in the next smaller awaiting
 });
 test('every rolling pose fits its face box with one pixel margin while the one-second clock stays unchanged',()=>{
  const f=fixture();rolling(f,'fit');for(let i=0;i<20;i++)f.tick(50);assert.equal(f.frames.size,0);
- const angles=f.calls.filter(c=>c.name==='uniform2f'&&c.args[0]==='u_angle'),sizes=f.calls.filter(c=>c.name==='uniform1f'&&c.args[0]==='u_size');
+ const angles=f.calls.filter(c=>c.name==='uniform2f'&&c.args[0]==='u_angle'),sizes=f.calls.filter(c=>c.name==='uniform1f'&&c.args[0]==='u_size').filter((_,i)=>i%2===1);
  assert.equal(angles.length,21);assert.equal(sizes.length,21);
  for(let i=0;i<angles.length;i++){
   const [,ax,ay]=angles[i].args,size=sizes[i].args[1],sx=Math.sin(ax),cx=Math.cos(ax),sy=Math.sin(ay),cy=Math.cos(ay);
@@ -105,4 +105,12 @@ test('every rolling pose fits its face box with one pixel margin while the one-s
  }
  assert.ok(sizes.some(c=>c.args[1]<24));assert.ok(Math.max(...sizes.map(c=>c.args[1]))-Math.min(...sizes.map(c=>c.args[1]))>1,'scale follows each silhouette instead of a fixed shrink factor');
  f.layer.show({key:'fit',stage:'result',dice:[f.die()]});assert.equal(f.calls.filter(c=>c.name==='uniform1f'&&c.args[0]==='u_size').at(-1).args[1],56*.46);assert.equal(f.frames.size,0);f.layer.destroy();
+});
+test('rounded ivory dice have curved corner normals and opaque faces over a bounded translucent shadow',()=>{
+ const f=fixture();f.layer.show({key:'rounded',stage:'result',dice:[f.die()]});
+ const data=f.calls.find(c=>c.name==='bufferSubData').args[2],corner=data.slice(0,3),normal=data.slice(3,6);
+ assert.ok(corner.every(p=>Math.abs(p)<1),'rounded corner is inset from the old sharp cube');assert.ok(Math.abs(Math.hypot(...normal)-1)<.00001);assert.ok(normal.every(p=>Math.abs(p)>.5),'corner has a smooth diagonal normal');
+ assert.ok(data.slice(40*8,40*8+3).some(p=>Math.abs(p)===1),'face center keeps full-size geometry');
+ const draws=f.calls.filter(c=>c.name==='drawElements');assert.equal(draws.length,2);assert.equal(draws[0].args[1],6);assert.equal(draws[1].args[1],2304);assert.ok(draws[0].args[3]>0);assert.equal(draws[1].args[3],0);
+ assert.deepEqual(f.calls.filter(c=>c.name==='depthMask').map(c=>c.args[0]),[false,true]);assert.equal(f.frames.size,0);assert.equal(f.calls.some(c=>c.name==='2d.strokeRect'),false,'physical bevel replaces the painted square border');f.layer.destroy();
 });

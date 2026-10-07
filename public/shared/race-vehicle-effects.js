@@ -21,6 +21,7 @@
    for(const wrapper of record.wrappers||[]){const parent=wrapper.parentNode;if(parent){while(wrapper.firstChild)parent.insertBefore(wrapper.firstChild,wrapper);wrapper.remove();}}
    record.art=[];record.wrappers=[];record.labels=[];record.svg=null;
   }
+  function discard(key,record){if(record.type==='nitro')particleLayer?.stop?.('vehicle:'+record.event.id);clean(record);records.delete(key);}
   function clear(){clearTimeout(timer);timer=null;for(const record of records.values())clean(record);records.clear();particleLayer?.clear();}
   function reset(){clear();seen.clear();room=null;round=0;particleLayer?.clear({resetSeen:true});}
   function remember(event){if(event.id===undefined||event.id===null)return false;const id=String(event.id);if(seen.has(id))return false;seen.add(id);while(seen.size>256)seen.delete(seen.values().next().value);return true;}
@@ -39,19 +40,19 @@
    const anchor=()=>{
     if(destroyed||!records.has(String(record.event.id)))return null;
     const bounds=host.getBoundingClientRect(),clip=board.getBoundingClientRect(),svg=doc.querySelector('#track svg');if(!svg||!bounds.width||!bounds.height)return null;
-    const id=record.type==='shot'?record.event.target:record.car,node=carrier(carNode(id));let point;
-    if(node?.getScreenCTM){const m=node.getScreenCTM();if(m)point={x:m.e,y:m.f};}
+    const id=record.type==='shot'?record.event.target:record.car,node=carrier(carNode(id));let point,thrust;
+    if(node?.getScreenCTM){const m=node.getScreenCTM();if(m){point={x:m.e,y:m.f};if(kind==='nitro'&&Number.isFinite(m.a)&&Number.isFinite(m.b)){point={x:m.e-20*m.a,y:m.f-20*m.b};thrust={direction:Math.atan2(-m.b,-m.a),scale:Math.hypot(m.a,m.b)};}}}
     if(!point&&record.type==='shot'){
      const at=position(record.event.to,record.viewMin),m=svg.getScreenCTM?.();if(at&&m)point={x:m.a*at.x+m.c*at.y+m.e,y:m.b*at.x+m.d*at.y+m.f};
     }
     if(!point||point.x<clip.left||point.x>clip.right||point.y<clip.top||point.y>clip.bottom)return null;
     const canvas=host.querySelector('canvas.game-fx-layer');if(canvas)canvas.style.clipPath=`inset(${Math.max(0,clip.top-bounds.top)}px ${Math.max(0,bounds.right-clip.right)}px ${Math.max(0,bounds.bottom-clip.bottom)}px ${Math.max(0,clip.left-bounds.left)}px)`;
-    return{x:point.x-bounds.left-(kind==='nitro'?16:0),y:point.y-bounds.top};
+    return{x:point.x-bounds.left,y:point.y-bounds.top,...thrust};
    };
    if(!anchor())return;
    if(first)record.particlesAttempted=true;
    // The canonical SVG labels, projectile and movement always remain intact.
-   try{particleLayer??=root.GameFxLayer.create(host,{onActivity:updateParticleKinds});particleLayer.play('vehicle:'+eventId,kind,anchor,{durationMs:kind==='nitro'?1400:900,count:kind==='nitro'?30:24,elapsedMs:first?Date.now()-record.start:0});}catch{}
+   try{particleLayer??=root.GameFxLayer.create(host,{onActivity:updateParticleKinds});particleLayer.play('vehicle:'+eventId,kind,anchor,{durationMs:kind==='nitro'?1400:900,count:kind==='nitro'?6:24,continuous:kind==='nitro',elapsedMs:first?Date.now()-record.start:0});}catch{}
   }
   function expireLabel(record){for(const node of record.labels||[])node.remove();record.labels=[];record.labelExpired=true;}
   function label(record,parent,at,location,reduced,svg){
@@ -94,15 +95,15 @@
   function show(events=[],state,{min=state?.tiles?.[0]?.start||0}={}){
    if(destroyed||!state)return;
    if(room!==state.code||state.round<round){reset();room=state.code;}round=state.round||0;
-   for(const event of events)if(remember(event)){const effect=describe(event);if(!effect){if(event.kind==='motion'&&event.motion==='move'&&state.phase==='move'){const nitro=[...records.values()].find(record=>record.type==='nitro'&&record.car===event.car&&state.active?.car===event.car);if(nitro)enhance(nitro,!!media?.matches,event.id);}continue;}for(const [key,old]of records)if(old.car===effect.car){if(old.type===effect.type||old.type==='assign'){clean(old);records.delete(key);}else expireLabel(old);}records.set(String(event.id),{...effect,event,start:null,art:[],wrappers:[],labels:[],labelExpired:false,svg:null,round});}
+   for(const event of events)if(remember(event)){const effect=describe(event);if(!effect)continue;for(const [key,old]of records)if(old.car===effect.car){if(old.type===effect.type||old.type==='assign')discard(key,old);else expireLabel(old);}records.set(String(event.id),{...effect,event,start:null,art:[],wrappers:[],labels:[],labelExpired:false,svg:null,round});}
    if(doc.hidden){clear();return;}
    const svg=doc.querySelector('#track svg');if(!svg)return;
    const now=Date.now();
    for(const [key,record]of records){
     const car=state.cars?.find(car=>car.id===record.car),garage=car?.x===null&&['nitro','command','assign'].includes(record.type);
-    if(record.type==='nitro'&&(state.active?.car!==record.car||state.phase!=='move')){clean(record);records.delete(key);continue;}
-    if(garage&&(record.round!==round||state.active?.car!==record.event.car)){clean(record);records.delete(key);continue;}
-    if(!render(record,state,svg,min,now)&&!garage){clean(record);records.delete(key);}
+    if(record.type==='nitro'&&(state.active?.car!==record.car||state.phase!=='move')){discard(key,record);continue;}
+    if(garage&&(record.round!==round||state.active?.car!==record.event.car)){discard(key,record);continue;}
+    if(!render(record,state,svg,min,now)&&!garage)discard(key,record);
    }
    updateParticleKinds();schedule();
   }
