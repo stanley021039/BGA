@@ -1,6 +1,8 @@
 # 畫猜防閃爍、逐點播放與平滑倒數進度
 
-日期：2026-10-07。本輪已完成並發布 **v1.9.0**；本頁取代先前本輪「候選／待完整測試／待部署」段落。受測程式與不可覆寫的本地 tag `v1.9.0` 指向 `bfacd7ba0eae94e359489b4a33539fed5a381ef5`。沒有新增 PR 或 push；後續文件提交不移動 tag。
+日期：2026-10-07。本輪已完成並發布 **v1.9.0**；本頁取代先前本輪「候選／待完整測試／待部署」段落。受測程式與不可覆寫的本地 tag `v1.9.0` 指向 `bfacd7ba0eae94e359489b4a33539fed5a381ef5`。發布時尚未新增 PR；後續文件提交不移動 tag。
+
+送審更新：使用者於完成後明確要求發 PR，已建立 [PR46](https://github.com/stanley021039/BGA/pull/46)，標 Ready 並請 Stanley 審查。分支 `feat/draw-media-v1-9` 已整合包含 PR43 的最新 main；衝突解決後，程式、測試與其他非 Markdown 檔逐檔仍和受測 v1.9.0 相同，只補文件與合併紀錄。PR 包含 v1.5.0–v1.9.0 尚未送審的已完成功能，未合併 PR46。
 
 本輪同時完成安靜的成功回饋及媒體視窗／手動同步需求。規範見 [作畫順暢度](specs/DRAWING-SMOOTHNESS.md)、[媒體視窗](specs/MEDIA-ICON-WINDOW-UI.md)；更早發布的畫猜改善保留在 [歷史進度](DRAWING-SMOOTHNESS-PROGRESS.md)。
 
