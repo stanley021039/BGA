@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-08最新正式 **v1.14.2／8ae5c4f**：Freehand官方SVG／紙卡大廳發布，最終Windows/Linux各1,415通過；v1.14.1 archive行尾失敗留歷史未部署，tag不移。Windows core.autocrlf會影響git archive輸出；SVG provenance需要.gitattributes text eol=lf與canonical export，originalSHA和modifiedSHA分開。固定路由／SVG CSP，不能開任意SVG或user upload執行；公開測試清理須容許房間已404，且try/finally保own logout。 正式22資源exactbytes/no-store/MIME、21non-session表rows+BLOB/9帳戶allfields保留；sessions232→238為6次測試登入，都已revoked，own4房/代理/tabs已清理。精確source/備份/例外與限制見 [本批進度](../FREEHAND-UI-PROGRESS.md)、[spec](../specs/FREEHAND-UI.md)、[資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。下方1.14.0/候選狀態為歷史，沒有新PR/push；不宣稱全playing/200%/讀屏/FPS完成。
+
 2026-10-07最新正式 **v1.14.0／b4ebb15**：圓角骰子與連續暖色WebGL氮氣已發布，雙平台各1,413通過；正式三席13骰／9資源與真nitro移動、21non-session表rows+BLOB／9帳戶allfields保留。sessions225→232是驗證登入變化，own房／登入／代理／tabs已清理。骰子geometry按job cache，shadow與cube各一draw（state.drawCalls只計cube）；氮氣沿同context／program／buffer以6vertices持續畫，只有live callback可continuous，discard stop(eventId)，車尾取carrier CTM(-20,0)。 完整source／備份／原生範圍見 [本批進度](../RACE-FX-VISUAL-REFINEMENT-PROGRESS.md)／[spec](../specs/RACE-FX-VISUAL-REFINEMENT.md)。下方1.13與pending均為歷史，此筆取代其現況；沒有新PR／push。native hidden／200%／讀屏／玻璃跳台道路pan及FPS未驗，不以完整suite推定。
 
 2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。

@@ -26,6 +26,8 @@ Pinterest的web403不代表Chrome不可讀。root在背景Chrome搜尋hand drawn
 
 ## 已找到但不納入已觀察畫面的作品
 
+2026-10-08 root補原生觀察：[Ray Auguste的Game UI Paper Style](https://dribbble.com/shots/23710834-Game-UI-Paper-Style)在背景Chrome成功顯示作者圖，為深棕背景、米色紙張面板、破角輪廓、方形物件槽與深淺選取；私有完整頁圖freehand-reference-dribbble.png。這取代下方「root尚未取得像素」待驗狀態，下方是研究角色初期web提取的限制。作者作品沒有確認可重用授權，未下載原圖或搬用paper texture，僅補視覺比較。
+
 [Ray Auguste — Game UI Paper Style](https://dribbble.com/shots/23710834-Game-UI-Paper-Style) 是直接相關的具體作者 shot。標題與作者已讀到，但本次 web 提取的 image link 指向 Dribbble 廣告，未取得實際作品像素，因此沒有替它編造配色、資訊布局或按鈕行為。後續可由主 agent 在背景瀏覽器觀看原頁再補比較；作品圖只供參考，不下載當本站資產。
 
 ## Freehand 的使用邊界

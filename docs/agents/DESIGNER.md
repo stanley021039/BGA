@@ -1,5 +1,7 @@
 # 設計師角色記憶
 
+2026-10-08最新正式 **v1.14.2／8ae5c4f**：Freehand官方SVG／紙卡大廳發布，最終Windows/Linux各1,415通過；v1.14.1 archive行尾失敗留歷史未部署，tag不移。紙白home/低飽和面/薄邊影/手繪圖槽與固定grid分離；1280三欄、1024兩欄、390單欄，正文16/次14、controls≥44。遊戲只32badge/24圖，不重排玩家/車隊/骰/畫布/倒數/聊天室；小操作registry保原辨識，不為手繪大圖藏重要資訊。 正式22資源exactbytes/no-store/MIME、21non-session表rows+BLOB/9帳戶allfields保留；sessions232→238為6次測試登入，都已revoked，own4房/代理/tabs已清理。精確source/備份/例外與限制見 [本批進度](../FREEHAND-UI-PROGRESS.md)、[spec](../specs/FREEHAND-UI.md)、[資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。下方1.14.0/候選狀態為歷史，沒有新PR/push；不宣稱全playing/200%/讀屏/FPS完成。
+
 2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
 
 2026-10-07 patterns有限畫面：收藏／市場manual Arrow只移焦，Enter／Space才換內容；review卡selected邊界／shadow保持同120px高，收藏1280／390／1600與member市場1280／390無橫溢、44px控制。controlled glyph double只是字型模擬，不稱真200% zoom／全站認證；兩dialog Escape返焦已驗，Tab採樣未證fulltrap。真earned持久inline與短粒子不互相替代，source／native限制集中 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式仍1.11.1，本批1.12未發布。
