@@ -1,8 +1,8 @@
 # PR46 審查修正與正式同步
 
-## 2026-10-07：新事件排序驗收完成，推送／送審待收尾
+## 2026-10-07：新事件排序驗收與重新送審完成
 
-[Stanley新回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6037336371)對bb7b3d提出media state／event排序風險。候選 **v1.9.3**／固定程式 `a2c5589232ed2d4d595a5ac33fbaef572a04fd4f`已完成雙平台各1,300、focused126／獨立複查與fresh真原型API的Pause／最後Play／正常visibility三情境；release／merge-tree／diff checks通過。未加patterns或改renderer。**PR仍Draft、本地尚未push／再請審查，正式仍v1.11.1**；[中間回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038085022)不是最終重新送審，root將作最後文件提交與推送。
+[Stanley新回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6037336371)對bb7b3d提出media state／event排序風險。候選 **v1.9.3**／固定程式 `a2c5589232ed2d4d595a5ac33fbaef572a04fd4f`已完成雙平台各1,300、focused126／獨立複查與fresh真原型API的Pause／最後Play／正常visibility三情境；release／merge-tree／diff checks通過。未加patterns或改renderer。PR已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併。本地tag v1.9.3固定a2c5589，後續純文檔提交不移動tag；正式仍v1.11.1，patterns未發布也不加入本PR。中間回覆只保留歷史。
 
 | 本次範圍 | 已知與待驗 |
 | --- | --- |
@@ -10,8 +10,8 @@
 | 新mediastate／event order | 原生play／pause狀態先改、事件另排media task；HTTP body JSON Promise可在事件前恢復舊播放。不能只看當下paused／timestamp或假設加capture即安全。用本機play／pause Promise建立同Audio事件fence，區分owned與較新意圖。 |
 | 有界與意圖 | 每fence事件buffer≤64、current＋最多7個predecessor共8、每flow corrections≤8；超限failclosed並保可讀重試。external API／pointer／keyboard取消舊proof，最後bare Play可forward並保本機位置；queue-only GET不seek。 |
 | 回退／cleanup | genuine opt-in照原權限forward；mute／sharedpause／retire／過期clip不能復活。清監聽器、proof事件／predecessor、preview callbacks與method wrapper；不加poll／seek／media請求。 |
-| 收尾 | Windows／Linux frozen全套、126focused／獨立複查、fresh原型Pause／最後Play／normal與proxy流量已驗；ownfixture／tabs／overrides已清理。PR推送／Ready／再次審查仍待root操作，未發布新正式patch。 |
-| 正式與UI | 正式仍已驗v1.11.1／df983da；未因新回覆變更服務或資料。未發布patterns候選1.12工作暫停，不加入PR46。 |
+| 收尾 | Windows／Linux frozen全套、126focused／獨立複查、fresh原型Pause／最後Play／normal與proxy流量已驗；ownfixture／tabs／overrides已清理。PR已推送／Ready／再次請Stanley審查，未合併；未發布新正式patch。 |
+| 正式與UI | 正式仍已驗v1.11.1／df983da；未因新回覆變更服務或資料。未發布patterns候選1.12不加入PR46，另於main恢復整合。 |
 
 | 新固定來源驗收 | 結果／範圍 |
 | --- | --- |

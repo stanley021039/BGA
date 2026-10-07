@@ -1,6 +1,6 @@
 # 玩家 agent 長期記憶
 
-2026-10-07最新a2c5589原型API：fresh最後Pause守住、最後Play保time37，正常hide／show同Audio恢復；proxy總media4／5各不變（GET3／4與POST1各不變），兩平台1,300與focused126／peer通過，own QA已清。沒有pointer／key或實體喇叭，fresh約3.6ms transient不稱零瞬間，舊~1ms是另case。PR待push／Ready、正式1.11.1不變／patterns暫停，scope見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。
+2026-10-07最新a2c5589原型API：fresh最後Pause守住、最後Play保time37，正常hide／show同Audio恢復；proxy總media4／5各不變（GET3／4與POST1各不變），兩平台1,300與focused126／peer通過，own QA已清。沒有pointer／key或實體喇叭，fresh約3.6ms transient不稱零瞬間，舊~1ms是另case。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併、正式1.11.1不變／patterns另於main整合未發布，scope見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。
 
 2026-10-07 PR46第三P2已驗：真UA controls Play→Pause後，latequeue GET仍同Audio／paused true、requests8→8；visibility自動resume不能蓋較新Pause或個人靜音。pending heldbytes原生AbortError可只retry自己的中斷，但HAVE_NOTHING0／受控visibility不是端到端METADATA1或實體切頁；release後自然end換影片，不說同clip持續。正式1.11.1已發布，PR1.9.2已推送、標 Ready 並再次請 Stanley 審查，未合併，完整scope與dual-source測試見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。不宣稱所有硬體／喇叭／FPS，patterns暫停。
 

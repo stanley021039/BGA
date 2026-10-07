@@ -1,6 +1,6 @@
 # 程式架構 agent 記憶
 
-2026-10-07最新PR1.9.3／a2c5589：play／pause Promise fence與64events／8proofs／8corrections保意圖／failclosed，不加poll／seek。雙平台1,300／focused126／peer與fresh原型Pause／最後Play／normal已驗，proxy總media4／5各不變（分解GET3／4各不變、POST1不變），QA已清。原型API無input、fresh約3.6ms transient非零瞬間／physical UA；gate與resourcebuffer教訓見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。PR尚待push／Ready，正式1.11.1不變，patterns暫停。
+2026-10-07最新PR1.9.3／a2c5589：play／pause Promise fence與64events／8proofs／8corrections保意圖／failclosed，不加poll／seek。雙平台1,300／focused126／peer與fresh原型Pause／最後Play／normal已驗，proxy總media4／5各不變（分解GET3／4各不變、POST1不變），QA已清。原型API無input、fresh約3.6ms transient非零瞬間／physical UA；gate與resourcebuffer教訓見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併，正式1.11.1不變，patterns另於main整合未發布。
 
 2026-10-07 PR46第三P2：visibility resume須同clip／epoch／fresh marker且無較新本機意圖；native Play→Pause撤銷舊中斷資格，晚queue GET不重播。pending play因visibility自動pause的Abort／resolve／finally仍可只恢復自己的中斷，native pause／mute／retire／noLoop保持，不加poll／seek。PRcf64bfc／1.9.2雙平台1,278，正式保UI／WebGLdf983da／1.11.1雙平台1,299；PR已推送、標 Ready 並再次請 Stanley 審查，未合併。fresh真UA controls與controlledHAVE_NOTHING、VM METADATA1和證據限制見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)，不能拿中間trace代替最終scope；canvas本次未改，patterns暫停。
 

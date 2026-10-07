@@ -1,6 +1,6 @@
 # 共用偏好與已知決策
 
-2026-10-07 PR46新排序候選1.9.3／a2c5589雙平台1,300、126focused／peer與fresh原型Pause／最後Play／normal已驗，proxy總media4／5各不變（GET3／4、POST1各不變）、QA已清；約3.6ms transient／非physicalinput限制保持。先修PR優先序不變；本地待push／Ready，正式1.11.1未改、patterns暫停未發布，scope見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)，不寫硬體UA或零瞬間。
+2026-10-07 PR46新排序候選1.9.3／a2c5589雙平台1,300、126focused／peer與fresh原型Pause／最後Play／normal已驗，proxy總media4／5各不變（GET3／4、POST1各不變）、QA已清；約3.6ms transient／非physicalinput限制保持。先修PR優先序不變；已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併，正式1.11.1未改、patterns未發布、不加入PR46，scope見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)，不寫硬體UA或零瞬間。
 
 2026-10-07 PR46第三P2／正式1.11.1：使用者指定先修PR再繼續UI，patterns工作暫停未發布；修正較新native Pause被晚queue GET／舊visibility resume覆蓋及pending中斷settlement，保manual／mute意圖且不加poll／seek。cf64bfc PR1.9.2雙平台1,278與df983da正式1.11.1雙平台1,299、真controls與受控promise／資料核對見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。正式保UI／WebGL，PR已推送、標 Ready 並再次請 Stanley 審查，未合併；研究／舊版證據保留歷史，不當所有玩法／物理切頁已驗。
 

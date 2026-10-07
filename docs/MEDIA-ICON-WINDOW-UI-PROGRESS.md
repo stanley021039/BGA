@@ -1,6 +1,6 @@
 # 媒體圖示與視窗 UI 進度
 
-2026-10-07最新排序修正驗收完成：PR候選1.9.3／a2c5589雙平台各1,300、focused126／獨立複查與fresh原型Pause／最後Play／normal通過。proxy log的Pause總media4→4（GET3→3／POST1→1），最後Play／normal總media5→5（GET4→4／POST1→1），最後Pause保持、最後Play保time37、本機normal resume；fresh約3.6ms own transient不能稱零瞬間／physical UA。QA gate／resource buffer誤診已分清，fixture／tabs／overrides已清。PR仍Draft／本地待push／Ready，正式1.11.1未變，詳 [最終scope](PR46-REVIEW-FIX-PROGRESS.md)。patterns暫停未發布。
+2026-10-07最新排序修正驗收完成：PR候選1.9.3／a2c5589雙平台各1,300、focused126／獨立複查與fresh原型Pause／最後Play／normal通過。proxy log的Pause總media4→4（GET3→3／POST1→1），最後Play／normal總media5→5（GET4→4／POST1→1），最後Pause保持、最後Play保time37、本機normal resume；fresh約3.6ms own transient不能稱零瞬間／physical UA。QA gate／resource buffer誤診已分清，fixture／tabs／overrides已清。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併，正式1.11.1未變，詳 [最終scope](PR46-REVIEW-FIX-PROGRESS.md)。patterns未發布、不加入PR46。
 
 2026-10-07第三P2已驗並正式 **v1.11.1／df983da**：PR候選1.9.2／cf64bfc雙平台各1,278，保UI／WebGL正式來源雙平台各1,299。最終真UA controls Play→Pause後late GET仍paused／同Audio、requests8→8；HAVE_NOTHING真AbortError的controlled promise與VM精確METADATA1／resolve分開，不稱sameClip release後持續播放或實體切頁／喇叭。正式23media／22draw資源、ACL／SSE／21non-session表與8帳戶核對完成，詳 [最新證據](PR46-REVIEW-FIX-PROGRESS.md)。PR修正已推送、標 Ready 並再次請 Stanley 審查，未合併，patterns暫停未發布；下方VHP為歷史。
 
