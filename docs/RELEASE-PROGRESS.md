@@ -1,5 +1,9 @@
 # 版本管理實作與驗收
 
+2026-10-07正式 **v1.8.0**：五款遊戲統一音樂／影片待播清單、共享播放錨點、拖曳排序、房間管理者及表情入口。固定來源／本地 annotated tag `56875616c9367a25dd369c175c2b949f7861de9c`；封包 SHA-256 `71dd5440d37e1aa616a4664dcdd51ffa5f6b7fb5fbac46d632872ad27fb27a79`。Windows Node24.14.0 **1034/1034**（32080.9156ms）、Linux Node22.22.1 **1034/1034**（155673.254745ms），失敗／取消／跳過均0。背景 Chrome 三席實測音樂→真正YouTube→音樂、普通房員點播、管理者升降／控制、原生拖曳與鍵盤排序、個人關閉／縮放、五款共用入口；桌機1280×720與手機390×844通過受影響版面檢查。不是多設備弱網、200%文字或喇叭聽感驗證。
+
+正式 current `releases/5687561`，2026-10-07T02:24Z 切換前30秒內確認零房間，PID103459→107492，service／tunnel active。SQLite線上備份及另時點的持久檔案／環境檔備份後，隔離副本預演21張表與全部帳戶欄位一致；不宣稱原子冷備份。公開no-store版本與6份受影響資源精確內容／MIME通過。正式三個既有自有測試member帳號驗點播、transport 403、promote／pause／seek／skip／demote；只建立待機測試房並正常離房刪除，QA sessions已登出，待機驗收歷史保留。schema15、21張表schema、20張非session表的既有rows／BLOB及8帳戶全欄位保持一致，integrity ok／FK0；session157→161是登入驗收變動，不宣稱session逐列不變。首兩次prepare的回傳欄位缺SHA／tests，驗證拒絕且未切換；補齊私有helper欄位後重新預演通過，先前備份保留。詳細需求與限制見 [統一媒體驗收](UNIFIED-ROOM-MEDIA-PROGRESS.md)。本批未發新PR／push，PR43未改；後續純文件提交不移動v1.8.0 tag。
+
 2026-10-06候選 **v1.4.0**／[PR #43](https://github.com/stanley021039/BGA/pull/43)：全部已完成派對功能與最新main整合，schema15統一兩種舊14布局。受測程式及本地tag `bdd77d1`；Windows／Linux各790/790，既有帳戶／音效／市場資料保留。後續只有README及验收文件，既有版本tag不動；正式仍v1.3.0，較早排版候選未單獨切換。詳 [整批驗收與送審狀態](PARTY-PR-INTEGRATION-PROGRESS.md)。
 
 2026-10-06候選 **v1.3.2**：送禮主區由固定560px上限改為按實際導覽／玩家列高度分配視窗空間，包含前一筆16px間距。Chrome高視窗／720p／八席等待及選禮／手機通過，Windows／Linux各761/761，備份及16表副本預演通過；受測來源／本地tag `df7846d`。v1.3.1未單獨部署，tag保持不動；正式仍為v1.3.0，等待更新時機。詳 [高度驗收及發布狀態](GIFT-VIEWPORT-HEIGHT-PROGRESS.md)。

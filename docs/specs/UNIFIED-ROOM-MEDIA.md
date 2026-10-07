@@ -1,6 +1,6 @@
 # 共用房間媒體、播放清單與權限
 
-2026-10-07，基線為正式 v1.7.2，整合候選為 v1.8.0。九項功能程式已完成，本輪完整 Windows／Linux、真正 Chrome 與正式發布驗收由主任務執行，尚待結果；不能把 scoped 回歸當成全部已驗。需求、程式位置與逐項結果見 [統一媒體進度](../UNIFIED-ROOM-MEDIA-PROGRESS.md)。第6點已確認為切歌／跳過；房主與房間管理者可控制播放，一般房員可點播。房間管理者不同於網站管理員，不提升帳戶或網站權限。
+2026-10-07，正式 **v1.8.0**／`5687561`已實作及發布，取代v1.7.2；台北10:24:21（UTC02:24:21）完成公開API／資源／資料保存驗收。Windows／Linux完整各1034項、隔離背景Chrome三席實際播放及桌機／390px手機已驗；公開API三席與Chrome實播分開記錄，未宣稱全部裝置／影片情境。需求、受測tag與逐項證據及限制見 [統一媒體進度](../UNIFIED-ROOM-MEDIA-PROGRESS.md)。第6點已確認為切歌／跳過；房主與房間管理者可控制播放，一般房員可點播。房間管理者不同於網站管理員，不提升帳戶或網站權限。
 
 | 使用者需求 | 共用實作與驗收契約 |
 | --- | --- |
@@ -56,4 +56,4 @@ permissions共用模組 `src/rooms/permissions.js` 提供 `roomRole(room,id)`、
 
 驗收至少含雙／三席、跨五款房間、同時音樂→影片→音樂、guest點播、host提升manager／降級、越權API、拖曳與鍵盤／stale reorder、skip／ended去重、metadata失敗fallback、autoplay被擋、首次拒絕再接受、晚加入對齊進度、seek與paused、window位置／大小互不影響，以及old-room回覆不能污染新room。單一全桌current不保證每台影音零毫秒同時開始，錨點同步不新增頻繁上報。
 
-開發保留舊API相容需明列行為；既有frontend modules不應在新五款頁面同時mount／發SSE。新版候選依release規範升minor，完成測試與實際Chrome證據後才標完成；PR依當次指示，不把新功能混入PR43。
+本批已依release規範發布minor v1.8.0，受測tag固定`56875616c9367a25dd369c175c2b949f7861de9c`，後續文件提交不移動tag；没有新PR或push，不把此批混入PR43。200%文字、多實體設備、弱網／喇叭、Google真autoplay拒絕及真正oEmbed成功尚未驗；fixture反覆導航曾見draw重連提示，未診斷為正式站SSE問題。後續保留舊API相容仍需明列行為，新五款不並行mount舊frontend media模組／SSE。

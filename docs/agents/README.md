@@ -1,6 +1,6 @@
 # Agent 長期記憶索引
 
-2026-10-07統一房間媒體與角色候選 **v1.8.0**：五款共用單一current／混合queue／timeline、一般席點播、host／manager共享控制及角色管理、個人影片接受／退出、同一emoji與角色表情入口。程式已實作，helper／管理focused88及最後TableMedia／GameShell獨立VM34通過；完整Windows／Linux、真正Chrome與正式發布由主任務填寫，尚未以本段宣稱已部署。接手先讀 [進度與九項需求](../UNIFIED-ROOM-MEDIA-PROGRESS.md)及 [共用契約](../specs/UNIFIED-ROOM-MEDIA.md)。schema15不變，queue與manager只屬目前room instance；下方正式v1.7.2為本批基線，舊媒體API／提案者控權描述依新契約區分適用範圍。
+2026-10-07正式 **v1.8.0**／`5687561`：五款單一current／混合queue／timeline、一般席點播、host／manager共享控制及角色、個人影片接受／退出、同emoji與角色入口已發布。Windows Node24.14.0／Linux Node22.22.1完整各1034，隔離背景Chrome三席真Audio／YouTube、排序／角色與最後390px／1280×720通過；台北10:24:21（UTC02:24:21）公开版號no-store／6資源與三自有會員API驗收完成。正式PID107492／services active；schema15、21schema、20非session rows／BLOB與8帳戶全欄位保留，sessions157→161是已登出的QA登入，不能宣稱sessions未變。own房間／session／preview／分頁已清理，等待房QA歷史保留；原PR43未改，無新PR／push，tag固定受測程式。接手讀 [九項證據及限制](../UNIFIED-ROOM-MEDIA-PROGRESS.md)及 [共用契約](../specs/UNIFIED-ROOM-MEDIA.md)。queue與manager只屬room instance；200%文字、真Google拒播／oEmbed、多設備／弱網／喇叭未驗，fixture導航的draw重連提示不作正式SSE診斷。下方v1.7.2為歷史基線。
 
 2026-10-07正式 **v1.7.2**／`6fcd55c`：PR43新P2舊state晚於新social ACK補播過期音效已修正，server anchor按performance經過時間前進，old/equal/missing不重設age，gap亦用mono。原PR v1.4.2／`ca931b7`雙平台各815、正式雙平台各947，Chrome隔離真單調clock過期0／fresh1（播放替身）；正式schema15／8帳戶與21schema保留、20非session表rows／BLOB一致、PID103459／service／tunnel正常、rooms0。證據及legacy限制見 [亂序修正](../PR43-EXPRESSION-CLOCK-FIX.md)；下方v1.7.1為歷史，作畫效能改善仍只研究／spec，外站資料代未啟用。
 

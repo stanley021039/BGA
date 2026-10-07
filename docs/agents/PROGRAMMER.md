@@ -1,6 +1,6 @@
 # 程式架構 agent 記憶
 
-## 2026-10-07：共用媒體與房間角色（候選 v1.8.0）
+## 2026-10-07：共用媒體與房間角色（正式 v1.8.0）
 
 `RoomMediaRegistry`綁room物件，不只六碼；每房一個current、混合queue、播放anchor、UUID instance／session及revision。所有有效座位可enqueue，其他transport／queue／duration／ended只host／manager。`src/rooms/permissions.js`的non-enumerable `room.managerIds` Set只存目前room管理seat；host由room.host即時判斷、role不是siteadmin。leave／kick後prune，短暫重連active seat保留、離房重入不繼承；manager不能升人或踢host／同級／自己／bot，host原有bot管理保留。app先canKick，再以真room.host呼叫原engine，不偽造或交換host。
 
@@ -8,7 +8,9 @@ metadata只對解析過的videoId查固定oEmbed，拒redirect、有界timeout�
 
 GET只有成功才標marker已取；首取＋2次、1秒／4秒門檻由既有game update驅動，不加網路timer。永久4xx停止（408／429除外）；明確重開／新marker重置，關窗取消該GET，room／seat／instance切換清generation。old GET失敗不能改較新ACK／預算。playerEpoch＋currentKey隔離舊Audio.play／YouTube回覆，個人關閉不能因idle→下一片重新開窗；拖曳凍結revision／完整集合，drop失配要求重拖。paused／本機提早seek到終點／未知或超限影片時長不得送共享ended，必須仍有權且playing、有效時長及共享anchor接近結束。
 
-helper／管理及既有遊戲focused88、最後TableMedia／GameShell真模組VM34已驗；這不是實際Google、CSS、完整Windows／Linux或正式站證據。本批逐項進度與待驗邊界見 [統一媒體進度](../UNIFIED-ROOM-MEDIA-PROGRESS.md)，完整API見 [spec](../specs/UNIFIED-ROOM-MEDIA.md)。下方舊媒體控制者、song select重播及正式v1.7.2描述保留為各時點歷史。
+最後CSS驗收修正range的UA margin／box-sizing造成2px外寬，primary clientWidth／scrollWidth451一致；narrow body改自然block與單一scroll，primary／library min-height:auto及12px間隔，避免固定grid列縮小後內容重疊。最後source已重驗390×844無水平溢出、1280×720 window900×620在viewport内；本批200%文字未真正測，不可只由最小player契約推論通過。
+
+正式tag／來源`56875616c9367a25dd369c175c2b949f7861de9c`：Windows／Linux完整各1034、隔離三席Chrome真Audio／YouTube、排序／個人選擇／角色及五款入口通過；原focused88與VM34維持各自scope。台北10:24:21公開6資源／API三會員與資料保存通過，PID107492／services active。schema15／21schemas／20非session rows＋BLOB／8帳戶全欄位相同；sessions157→161已登出，不宣稱session逐列相同。no新PR／push、PR43不混入，後續文件不改tag。真正Google拒播／oEmbed成功、多設備／弱網／喇叭及200%文字未驗；fixture repeated navigation的draw重連提示可能受proxy未取消舊upstream SSE影響，不作正式bug診斷。完整source／備份／scope見 [進度](../UNIFIED-ROOM-MEDIA-PROGRESS.md)與 [spec](../specs/UNIFIED-ROOM-MEDIA.md)，下方v1.7.2與舊控制者／select重播描述為歷史。
 
 2026-10-07 PR43新P2已修／正式v1.7.2：ExpressionSounds controller持有serverAnchor／serverAnchorAt，本機performance非負elapsed推進eventNow；incoming只超前projected才改anchor，old/equal/missing不重設receipt年齡。poll gap用同elapsed；reset/context清serveranchor，hidden/pagehide/gap保留silent baseline与seen。原PR v1.4.2兩平台815、正式兩平台947，t6ACK→t7舊t0播放0／fresh1 Chrome替身通過；21schema／20非sessionrows／BLOB及8帳戶保留。fallback仅稳定wall兼容，未有serveranchor或无performance时不宣称walljump免疫。詳 [修正／證據／限制](../PR43-EXPRESSION-CLOCK-FIX.md)。不用只Math.max固定timestamp而不算elapsed，也不要把clock修正当成已实现作画优化。
 
