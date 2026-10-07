@@ -1,6 +1,6 @@
 # 播放控制與表情選單修正
 
-2026-10-07。正式基線v1.8.2／49d0702，候選相容修正v1.8.3。原八項媒體需求已發布，見 [前批進度](MEDIA-ICON-WINDOW-UI-PROGRESS.md)。本批source完成，Windows 1111/1111（37936.8023ms），fail/cancel/skip/todo均0；Linux、tag與正式切換待驗。
+2026-10-07。正式v1.8.3已發布。受測程式與不可覆寫本地tag ff1d00b6539aedbfa3833b60639cdaffed1d4acf；Windows／Linux各1111/1111（37936.8023ms／192716.305548ms），fail/cancel/skip/todo均0。發布包SHA-256 1c7aa0a739ebfdbff02174b52edefd690b3a38df7eab23d0d6f6b5fa4394f4b7。零房間切換，PID116191→119055，current releases/ff1d00b，service／tunnel active。schema15與21表schema保持，20非session表既有rows/BLOB與8帳戶全欄位一致，integrity ok／FK0；session169→173為驗收登入，不宣稱逐列不變。公開5份HTML＋8份shared資源精確內容、MIME、no-store、版號及三個自有member的room ACL通過，驗收房刪除、自己的sessions登出。背景Chrome既有ccc登入的設定顯示版本v1.8.3，只讀設定，沒有改身份、登出或調偏好。備份 pre-media-emoji-polish-fixes-ff1d00b-20261007T052008Z-13647c70-8cf5-4d7e-891c-a52cd1a05580，online SQLite備份＋分開檔案封存，非原子冷備份；副本啟動與資料保存已驗。
 
 | 使用者需求 | 實作／驗證 | 狀態 |
 | --- | --- | --- |
@@ -16,7 +16,7 @@
 - 1280×720 popup 355.2×383，clientHeight381、scrollHeight447。wheel後scrollTop66保留；實際拖scrollbar向上為0、向下為66且選單仍開著，後續hover也保持66。以更新後狀態記結果，沒有把wheel立即返回的第一讀值当最終結果。
 - hover顯示「送出『開心』表情」的共用top-layer提示；選取後實際收到「已送出『開心』表情」，picker隱藏、focus回emoji入口。圖片與既有角色資產未更動。
 - Native尺寸、ARIA與卡片已觀察；沒有真人讀屏或實體手機測試。捲动與role卡優先在畫猜入口驗，其他遊戲共用相同source；不宣稱五款所有phase均實玩。
-- 字體与raw viewport已還原，自己的Chrome tab已關、隔離fixture正常stop。截圖在ignored work/media-emoji-polish-controls.png（需最終可見畫面確認）與work/media-emoji-polish-expressions.png，不提交帳密或原封包。
+- 字體与raw viewport已還原，自己的Chrome tab已關、隔離fixture正常stop。截圖在ignored work/media-emoji-polish-controls.png（已重擷取確認可見）與work/media-emoji-polish-expressions.png，不提交帳密或原封包。
 - 導覽期間捕捉到兩筆async message-channel error，沒有stack可歸因；本輪操作通過，未冒稱console全部無錯。
 
 ## 美化研究
@@ -25,4 +25,6 @@
 
 ## 發行
 
-候選v1.8.3；不移動已發v1.8.2 tag，未發新PR／push。完成同一固定source的Linux測試、資料備份／副本預演、零房間切換與公開驗證後再更新本段。
+正式v1.8.3；不移動已發v1.8.2 tag，本批沒有新PR／push，後續純文件不移動既有tag。
+
+最後module截圖 work/media-emoji-polish-player-detail.png 已實際開啟圖片確認，完整single-row控制與playLocal圖意可見。背景tab、font／viewport與隔離fixture全部已清理；正式讀設定後再比資料，8帳戶與20非session表仍一致。
