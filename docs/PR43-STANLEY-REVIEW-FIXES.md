@@ -1,5 +1,7 @@
 # PR43 Stanley 審查修正
 
+2026-10-07新P2「舊state晚於新social ACK」已另修：server anchor按本機單調elapsed推進，old/equal/missing不可重設age。原PR候選v1.4.2／`ca931b7`Windows／Linux各815；正式另同步v1.7.2／`6fcd55c`各947、8帳戶／schema15保留。完整新證據及legacy界線見 [亂序時鐘修正](PR43-EXPRESSION-CLOCK-FIX.md)。下方v1.4.1與先前兩項P2為歷史，不是目前候選版本；送審以PR頁為準。
+
 2026-10-07，對應 [Stanley 在固定head488adba的審查](https://github.com/stanley021039/BGA/pull/43#issuecomment-6020232536)。維持原PR範圍，候選升為v1.4.1；後續已發布的畫猜版面及舊附件匯入相容性另有分支與記錄。
 
 | 問題 | 修正與保留規則 | 回歸證據 |
