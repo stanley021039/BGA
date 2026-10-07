@@ -1,9 +1,31 @@
 # 雷霆骰子與尾焰外觀精修：進度
 
-日期：2026-10-07。正式基線v1.13.0／353d8b6；本批候選v1.14.0，尚未固定發行source／發布结果。下方研究角色的初始待驗欄是歷史；主agent逐項補本批實測，不由前版結果推定。
+日期：2026-10-07。正式已發布 **v1.14.0／b4ebb15243c607055e7425f35974f171f35c3365**，不可覆寫tag固定受測程式。此筆取代原候選待驗狀態；v1.13.0／353d8b6是比較基線。下方研究角色與主agent的初始待驗／中間回報是歷史，最新結果集中於下面「最終發布與驗收」。沒有新PR、push或合併。
 規格與primary來源比較見 [RACE-FX-VISUAL-REFINEMENT](specs/RACE-FX-VISUAL-REFINEMENT.md)。
 
-## 本角色已完成的研究
+## 最終發布與驗收
+
+| scope | 本批最終結果與限制 |
+| --- | --- |
+| source／範圍 | b4ebb15243c607055e7425f35974f171f35c3365／v1.14.0。race-dice-webgl.js及test、game-fx-layer.js／race-vehicle-effects.js及tests；原生圓角骰子與連續暖色火焰，自製geometry／shader，不裝外部physics／Three／Babylon或採第三方assets。 |
+| 完整Windows | Node24.14.0，npm test **1413/1413**／37952.7495ms，fail/cancel/skip/todo各0；work/fx-refine-windows-full.log。 |
+| 完整Linux | Node22.22.1，同immutable source，npm test **1413/1413**／212407.209842ms，fail/cancel/skip/todo各0；work/fx-refine-linux-run.log。owner focused141／37exclusive等不加到full總數；release:check minor、syntax與git diff --check通過。 |
+| V01／V02骰子 | 下方17骰／普通與特殊面／390窄屏／真三席13骰證據成立。17是module fixture，非四席完整遊戲。shadow與cube各一draw，getFxState.drawCalls只計cube，17cube等34實際GPU draw。 |
+| V03氮氣 | 私有道路／位置fixture後真UI begin／move；772非透明像素全部warm(R>B)、GLerror0；真3步／23個GPUsamples最大CTM尾部誤差0.000006086187476960302px、1emitter／6vertices／seen1。沒有正式狀態注入；未做native玻璃／jump／oil-skid／road-pan。 |
+| V04停止 | 真UI再走2格至y6、phase bonus；effects／flames／renderedFlames／queued／particles0、SVGflames0、零RAF。未逐一人工觸發所有clear／换車／失anchor組合。 |
+| V05生命周期 | 真reduced事件完成後骰子DOM回退／零RAF，尾焰reduce=true/effects0/flameNodes0/零RAF；真WEBGL_lose_context兩者回退／零RAF，尾焰原SVG visible。lost lease持有時第二context可用、第三context-budget拒絕。media event前stale樣本排除；native hidden／pagehide未觸發，以回歸測試為準。 |
+| V06／V07清理與網路 | GPU prototype探針還原、臨時layers／hosts destroy、media／viewport overrides清除、預覽程序停止。原生idle已驗零RAF；新shader無逐frame API，server／分布／owner／聲音規則未改。不推論網路性能或全遊戲實玩。 |
+| V08外觀 | 保留v1.13正式圖、Codrops作者參考、本批骰子／flame真截圖。before/after不是嚴格同viewport比較；圖片不表示使用者已滿意、所有硬體或FPS提升。 |
+
+source archive SHA256：66d5e516238ddf6c4a7088a851ad7c23477ec706a1721c25baaafae760185516。正式release /home/ccc/apps/afterhours/releases/b4ebb15；UTC2026-10-07T15:29:41.496Z零房間guard後啟用，PID151238→154553，afterhours／tunnel active，local login/version通過。備份：/home/ccc/apps/afterhours/shared/backups/pre-fx-refine-b4ebb15-20261007T152900Z-e8e9b5a1-f855-4c13-94fb-db5039f41558。SQLite線上備份與另時點files archive不是atomic cold snapshot；schema預演16→16，私有env、active data paths保留，import generation inactive。既有GitHub討論同步設定未改，本批無Issue／comment寫入。
+
+正式三會員只用自然骰子及合法begin／move操作，沒有注入正式位置。9份資源逐byte對immutable source、no-store與MIME通過；13骰rolling遮罩、三席同result、非owner roll／confirm400、確認後12player dice通過。原生Chrome結果13anchors、958×443／424394pixels、零RAF、GLerror0，DOM對上server [3,6,2,5,2,3,2,2,6,4,6,6,1]。正式玩家2真骰值[2,3,2,2]啟用nitro／停車場入場，再由Chrome真UI移到道路格；觀察者仍1flame／6vertices／seen1，car moveSeq3／x1,y1／remaining2、GLerror0。使用本機私有authenticated preview代理連正式API，並非本機fixture，不把代理URL當公開站網址。
+
+UTC2026-10-07T15:35:00.225Z smoke結束，own房最後成員離開後404、三個own sessions登出／auth me401；代理與own Chrome tabs關閉，不影響使用者前景。最終資料核對：schema16、22table schemas、**21non-session表rows及BLOB一致**、9帳戶allfields與13market images保留、integrity ok／FK0；sessions225→232為本批驗證登入變化（含已清理的前次代理路徑錯誤重試），不宣稱sessions不變。
+
+私有正式證據：work/fx-refine-production-dice.png、fx-refine-production-flame.png、fx-refine-public-dice-native.json、fx-refine-public-flame-native.json、fx-refine-public-smoke.json、fx-refine-final-data-check-result.json。隔離生命周期receipt：fx-refine-flame-lifecycle.json。帳密／cookies不進公開文件或Git。後續native缺口：200%／讀屏、hidden／pagehide、玻璃／jump／oil-skid／road-pan、同尺寸before/after與FPS／跨硬體；完整tests不表示這些全已完成。
+
+## 本角色已完成的研究（初始回報歷史）
 
 - 讀AGENTS與ART／ANIMATION／DESIGNER、目前骰子與FX source；查Codrops/uuuulala、dice-box、dice-box-threejs、官方theme／method／license與fire/particle作品。
 - 查看主 agent保存的Codrops真demo截图，只記圆角／凹點／局部投影外觀；不是本站candidate截图或動畫／性能驗收。
