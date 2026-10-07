@@ -40,3 +40,5 @@
 有serverAnchor後，即使單次回應缺serverNow仍沿推算時間；从未收到有效serverNow才採旧wall-age fallback。沒有performance的舊環境用Date差值fallback。這兩條legacy路徑僅承諾穩定wall clock相容：沒有server anchor的wall後退仍可造成舊事件誤判；沒有performance的wall前跳可能過度老化。這些是既有legacy限制，本次沒有宣稱全部環境wall-jump免疫。現行五款遊戲與大廳API都提供serverNow，現行Chrome提供performance。
 
 沒有真人弱網、喇叭聽感、所有遊戲phase或GitHub CI實證；初始server時鐘尚無錨點時不能由serverNow單獨推算傳輸延遲。原 PR 更新／重新審查狀態以GitHub頁為準；本輪未合併。畫猜順暢度仍是獨立研究／spec，沒有在本修正實作。
+
+送審紀錄：原PR已推送至文件head `608c20e9bd06c41151ca6ad2e87b30805d29b363`（程式仍ca931b7），新P2已 [逐項回覆](https://github.com/stanley021039/BGA/pull/43#issuecomment-6028888262)，PR轉Ready並向Stanley請求重新審查；GitHub工具返回draft=false、正確head及requested reviewer。沒有建立新PR或合併原PR，tag保持固定受測來源。
