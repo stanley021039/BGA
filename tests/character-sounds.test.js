@@ -1,3 +1,4 @@
+const {legacyMarketSchema}=require('./helpers/market-legacy-schema.cjs');
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -122,7 +123,7 @@ test('schema thirteen upgrades once without altering accounts or existing charac
   db.prepare("INSERT INTO player_characters(id,owner_id,name,created_at,shared) VALUES(?,?,'original-character','original-time',1)").run(character,owner);
   db.prepare("INSERT INTO character_images(character_id,expression,mime,bytes,label) VALUES(?,'happy','image/png',?,'Original label')").run(character,png);
   const account=db.prepare('SELECT * FROM users').get(),image=db.prepare('SELECT * FROM character_images').get();
-  db.exec('DROP TABLE character_sounds; PRAGMA user_version=13');db.close();db=openDatabase(file);
+  legacyMarketSchema(db);db.exec('DROP TABLE character_sounds; PRAGMA user_version=13');db.close();db=openDatabase(file);
   assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(db.prepare('SELECT count(*) AS n FROM character_sounds').get().n,0);
   assert.deepEqual(db.prepare('SELECT * FROM users').get(),account);assert.deepEqual(db.prepare('SELECT * FROM character_images').get(),image);

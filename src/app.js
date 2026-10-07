@@ -5,6 +5,9 @@ const {GiftStore}=require('./games/gift-store'),{GIFTS,CATEGORIES}=require('./ga
 const {DrawGuessRoom,validTopic,validTopics,DRAW_CATEGORIES}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{TOPICS}=require('./games/draw-guess-words');
 const {AchievementStore}=require('./achievements/store');
 const {MarketStore}=require('./market/store');
+const {MarketAutomationStore}=require('./market/automation-store');
+const {MarketAutomation}=require('./market/automation');
+const {createOfficialProvider}=require('./market/official-provider');
 const {MarketImageStore}=require('./market/images');
 const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
 const {startRoomScheduler}=require('./rooms/scheduler');
@@ -85,8 +88,8 @@ function initializeApp(config,dataLock){
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});
- let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore,marketStore,marketImageStore;
- try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);marketImageStore=new MarketImageStore(db,config.marketClock||Date.now,{limits:config.marketImageLimits});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
+ let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore,marketStore,marketImageStore,marketAutomationStore,marketAutomation;
+ try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);marketAutomationStore=new MarketAutomationStore(db,marketStore,{clock:config.marketClock||Date.now,enabled:config.externalSideEffectsEnabled===true&&config.marketAutomationEnabled!==false});marketAutomation=new MarketAutomation(marketAutomationStore,{clock:config.marketClock||Date.now,provider:config.marketProvider||createOfficialProvider({clock:config.marketClock||Date.now})});marketImageStore=new MarketImageStore(db,config.marketClock||Date.now,{limits:config.marketImageLimits});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
  catch(error){history.close();db?.close();throw error;}
  mediaRooms.store=musicStore;
  const characterMedia=createCharacterMediaAccess(db,viewerId=>{
@@ -199,7 +202,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  }
  if(url.pathname==='/api/market/images'||url.pathname==='/api/market/images/mine'||url.pathname==='/api/market/images/draw'||marketImageMedia)throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
  if(url.pathname.startsWith('/api/market/images/'))throw new HttpError(404,'IMAGE_NOT_FOUND','找不到圖片');
- if(url.pathname==='/api/market'&&req.method==='GET')return send(marketStore.view(user));
+ if(url.pathname==='/api/market'&&req.method==='GET')return send({...marketStore.view(user),...marketAutomationStore.view()});
  if(url.pathname==='/api/market/vote'&&req.method==='POST'){limitRate(accountRate,'market:'+user.id,60);return send(marketStore.vote(user,data));}
  if(['/api/market','/api/market/vote'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
  if(url.pathname==='/api/lobby'&&req.method==='GET')return send(withLobbyMedia(user,lobby.view(user)));
@@ -273,14 +276,15 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(url.pathname==='/api/admin/market/images/approve'&&req.method==='POST'){limitRate(accountRate,'market-approve:'+user.id,30);return send(marketImageStore.approve(user,data));}
   if(['/api/admin/market/images','/api/admin/market/images/approve'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
   if(url.pathname.startsWith('/api/admin/market/images/'))throw new HttpError(404,'IMAGE_NOT_FOUND','找不到圖片');
-  if(url.pathname==='/api/admin/market'&&req.method==='GET')return send(marketStore.view(user,true));
+  if(url.pathname==='/api/admin/market'&&req.method==='GET')return send({...marketStore.view(user,true),...marketAutomationStore.view(true)});
+  if(url.pathname==='/api/admin/market/calendar-override'&&req.method==='POST'){limitRate(accountRate,'market-admin:'+user.id,60);return send(marketAutomationStore.override(user,data));}
   if(url.pathname.startsWith('/api/admin/market')&&req.method==='POST'){
    limitRate(accountRate,'market-admin:'+user.id,60);
    if(url.pathname==='/api/admin/market/rounds')return send(marketStore.create(user,data));
    if(url.pathname==='/api/admin/market/preview')return send(marketStore.preview(user,data));
    if(url.pathname==='/api/admin/market/settle')return send(marketStore.settle(user,data));
   }
-  if(['/api/admin/market','/api/admin/market/rounds','/api/admin/market/preview','/api/admin/market/settle'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
+  if(['/api/admin/market','/api/admin/market/rounds','/api/admin/market/preview','/api/admin/market/settle','/api/admin/market/calendar-override'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
   if(url.pathname==='/api/admin/submissions'&&req.method==='GET')return send(submissions.pending());
   if(url.pathname==='/api/admin/submissions/retry'&&req.method==='POST')return send(await submissions.retry(data.id,user));
   if(url.pathname==='/api/admin/invites'&&req.method==='POST')return send(auth.createInvite(user,data));
@@ -531,12 +535,14 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
   stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom});
   submissions.recover();
+  marketAutomation.start();
   return server.address();
  }
  async function close(){
   if(closed)return;
   closed=true;
   stopScheduler?.();
+  await marketAutomation.stop();
   watchRooms.clear();
   mediaRooms.clear();youtubeTitles.clear?.();
   for(const entries of musicStreams.values())for(const entry of entries)entry.res.end();

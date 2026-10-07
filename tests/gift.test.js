@@ -1,3 +1,4 @@
+const {legacyMarketSchema}=require('./helpers/market-legacy-schema.cjs');
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -129,7 +130,7 @@ test('existing v5 data survives the achievement migration',()=>{
  try{
   let db=openDatabase(file);
   db.prepare("INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)").run('existing-user','existing','原有會員','unused','member',new Date().toISOString());
-  db.exec('DROP TABLE user_achievements; DROP TABLE user_artworks; DROP INDEX player_characters_shared; ALTER TABLE player_characters DROP COLUMN shared; PRAGMA user_version=5;');db.close();
+  legacyMarketSchema(db);db.exec('DROP TABLE user_achievements; DROP TABLE user_artworks; DROP INDEX player_characters_shared; ALTER TABLE player_characters DROP COLUMN shared; PRAGMA user_version=5;');db.close();
   db=openDatabase(file);
   assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(db.prepare('SELECT display_name FROM users WHERE id=?').get('existing-user').display_name,'原有會員');
