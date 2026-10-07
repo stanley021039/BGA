@@ -1,5 +1,15 @@
 # 程式架構 agent 記憶
 
+## 2026-10-07：共用媒體與房間角色（候選 v1.8.0）
+
+`RoomMediaRegistry`綁room物件，不只六碼；每房一個current、混合queue、播放anchor、UUID instance／session及revision。所有有效座位可enqueue，其他transport／queue／duration／ended只host／manager。`src/rooms/permissions.js`的non-enumerable `room.managerIds` Set只存目前room管理seat；host由room.host即時判斷、role不是siteadmin。leave／kick後prune，短暫重連active seat保留、離房重入不繼承；manager不能升人或踢host／同級／自己／bot，host原有bot管理保留。app先canKick，再以真room.host呼叫原engine，不偽造或交換host。
+
+metadata只對解析過的videoId查固定oEmbed，拒redirect、有界timeout／bytes／cache／pending；await後重查session／disabled、原room物件與canonical seat／kicked，再由media.act再次驗revision／session／ACL。requestId對有效payload fingerprint去重，不修改已送body；不把自報title當可信歌曲名稱。接管後舊music／watch POST均409 MEDIA_API_REQUIRED，GET投影同一current；新版GameShell只mount TableMedia，不並行舊player或SSE。schema15及既有音樂格式保留，queue／角色不是冷移轉或房間續局資料。
+
+GET只有成功才標marker已取；首取＋2次、1秒／4秒門檻由既有game update驅動，不加網路timer。永久4xx停止（408／429除外）；明確重開／新marker重置，關窗取消該GET，room／seat／instance切換清generation。old GET失敗不能改較新ACK／預算。playerEpoch＋currentKey隔離舊Audio.play／YouTube回覆，個人關閉不能因idle→下一片重新開窗；拖曳凍結revision／完整集合，drop失配要求重拖。paused／本機提早seek到終點／未知或超限影片時長不得送共享ended，必須仍有權且playing、有效時長及共享anchor接近結束。
+
+helper／管理及既有遊戲focused88、最後TableMedia／GameShell真模組VM34已驗；這不是實際Google、CSS、完整Windows／Linux或正式站證據。本批逐項進度與待驗邊界見 [統一媒體進度](../UNIFIED-ROOM-MEDIA-PROGRESS.md)，完整API見 [spec](../specs/UNIFIED-ROOM-MEDIA.md)。下方舊媒體控制者、song select重播及正式v1.7.2描述保留為各時點歷史。
+
 2026-10-07 PR43新P2已修／正式v1.7.2：ExpressionSounds controller持有serverAnchor／serverAnchorAt，本機performance非負elapsed推進eventNow；incoming只超前projected才改anchor，old/equal/missing不重設receipt年齡。poll gap用同elapsed；reset/context清serveranchor，hidden/pagehide/gap保留silent baseline与seen。原PR v1.4.2兩平台815、正式兩平台947，t6ACK→t7舊t0播放0／fresh1 Chrome替身通過；21schema／20非sessionrows／BLOB及8帳戶保留。fallback仅稳定wall兼容，未有serveranchor或无performance时不宣称walljump免疫。詳 [修正／證據／限制](../PR43-EXPRESSION-CLOCK-FIX.md)。不用只Math.max固定timestamp而不算elapsed，也不要把clock修正当成已实现作画优化。
 
 2026-10-07繪圖研究（基線v1.7.1／3d82e3f，未改產品）：區分本機input→paint、湊批／queue、SSE→viewer paint。40點才flush或pointerup，25點持筆真雙席0POST；活動長筆真renderer計數1000點499,501 lineTo，不等於CPU毫秒；單in-flight POST被ACK卡住，人工回覆多延400ms／8點queue3,314ms。先有界時間flush＋同stroke未送點合併，再一幀一次preview與活動層；不可任意並行POST、修改已送batchId內容、削去epoch／quota／fill／snapshot防護。8點兩席digest差仍未解，後續空mask跨換輪不能證明吻合。已與研究agent核對方法／限制，來源與具體驗收見 [對照](../research/GARTIC-BGA-DRAWING-COMPARISON.md)、[規格](../specs/DRAWING-SMOOTHNESS.md)。Fabric可借活動層，WBO採獨立實作，採用前重查授權；不是Gartic內部原碼。

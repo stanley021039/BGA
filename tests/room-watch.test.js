@@ -166,7 +166,8 @@ async function httpFixture(t){
  const game=(code,who='host')=>request('state?code='+code,who),watch=(code,who='host')=>request('room-watch?code='+code,who);
  const create=async(type='draw')=>{const response=await post('create','host',{type});assert.equal(response.status,200);const code=response.body.code;for(const who of ['guest','third'])assert.equal((await post('join',who,{code})).status,200);return code;};
  const command=(code,state,action,extra={})=>({code,roomInstanceId:state.roomInstanceId,watchSessionId:state.watchSessionId,expectedRevision:state.revision,controllerEpoch:state.controllerEpoch,requestId:randomUUID(),action,...extra});
- return {config,post,request,create,game,watch,command,restart:async()=>{await app.close();app=createApp(config);await listen();}};
+ const promote=async(code,who)=>{const playerId=(await game(code,who)).body.me;assert.equal((await post('room-role','host',{code,playerId,role:'manager'})).status,200);};
+ return {config,post,request,create,game,watch,command,promote,restart:async()=>{await app.close();app=createApp(config);await listen();}};
 }
 
 test('HTTP authenticates valid seats, rejects spoofed authority and stale tuples, and piggybacks only a revision marker',async t=>{
@@ -186,13 +187,13 @@ test('HTTP authenticates valid seats, rejects spoofed authority and stale tuples
  assert.equal((await f.post('room-watch','guest',{...body,extra:'x'.repeat(9000)})).status,413);
 });
 
-test('HTTP leaves and kicks immediately pause and revoke controllers; last-player deletion and restart discard watch state',async t=>{
- const f=await httpFixture(t),code=await f.create();const initial=(await f.watch(code,'guest')).body;
+test('HTTP leaves and kicks immediately pause and revoke authorized manager controllers; last-player deletion and restart discard watch state',async t=>{
+ const f=await httpFixture(t),code=await f.create();await f.promote(code,'guest');const initial=(await f.watch(code,'guest')).body;
  const proposed=(await f.post('room-watch','guest',f.command(code,initial,'propose',{url:`https://youtu.be/${VIDEO}`}))).body;
  const playing=(await f.post('room-watch','guest',f.command(code,proposed,'play'))).body;assert.equal(playing.playback.state,'playing');
  assert.equal((await f.post('leave','guest',{code})).status,200);assert.equal((await f.watch(code,'guest')).body.code,'NOT_SEATED');
  const host=(await f.watch(code)).body;assert.equal(host.controllerId,(await f.game(code)).body.me);assert.equal(host.playback.state,'paused');assert.equal(host.controllerEpoch,playing.controllerEpoch+1);
- assert.equal((await f.post('join','guest',{code})).status,200);assert.equal((await f.post('room-watch','guest',f.command(code,host,'play'))).body.code,'WATCH_CONTROLLER_ONLY');
+ assert.equal((await f.post('join','guest',{code})).status,200);assert.equal((await f.post('room-watch','guest',f.command(code,host,'play'))).body.code,'MEDIA_MANAGER_ONLY');
  const third=(await f.game(code,'third')).body.me,transferred=(await f.post('room-watch','host',f.command(code,host,'transfer',{playerId:third}))).body;
  assert.equal(transferred.controllerId,third);assert.equal((await f.post('kick','host',{code,playerId:third,confirmed:true})).status,200);
  assert.equal((await f.watch(code,'third')).body.code,'KICKED');assert.equal((await f.watch(code)).body.controllerEpoch,transferred.controllerEpoch+1);
@@ -203,11 +204,12 @@ test('HTTP leaves and kicks immediately pause and revoke controllers; last-playe
  const db=openDatabase(f.config.dbFile);try{assert.equal(db.prepare("SELECT count(*) AS n FROM sqlite_master WHERE name LIKE '%watch%'").get().n,0);}finally{db.close();}
 });
 
-test('HTTP watch GET reconciles refreshed presence so the first returning nonhost can recover an ownerless video',async t=>{
+test('HTTP watch GET reconciles refreshed presence so a returning manager can recover an ownerless video',async t=>{
  const realNow=Date.now;
  let now=realNow();Date.now=()=>now;
  try{
   const f=await httpFixture(t),code=await f.create();
+  await f.promote(code,'guest');await f.promote(code,'third');
   const initial=(await f.watch(code,'guest')).body;
   const proposed=await f.post('room-watch','guest',f.command(code,initial,'propose',{url:`https://youtu.be/${VIDEO}`}));assert.equal(proposed.status,200);
   const playing=await f.post('room-watch','guest',f.command(code,proposed.body,'play'));assert.equal(playing.status,200);
@@ -226,6 +228,7 @@ test('HTTP watch GET reconciles refreshed presence so the first returning nonhos
 
 test('HTTP host departure changes the watch marker even when the online controller stays the same',async t=>{
  const f=await httpFixture(t),code=await f.create(),initial=(await f.watch(code,'guest')).body;
+ await f.promote(code,'guest');
  const proposed=await f.post('room-watch','guest',f.command(code,initial,'propose',{url:`https://youtu.be/${VIDEO}`}));assert.equal(proposed.status,200);
  const playing=await f.post('room-watch','guest',f.command(code,proposed.body,'play'));assert.equal(playing.status,200);assert.equal(playing.body.isHost,false);
  const before=(await f.game(code,'guest')).body;

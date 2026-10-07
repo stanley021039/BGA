@@ -19,9 +19,13 @@ await api('join',{code:kickRoom.code,name:'Victim'},{cookie:otherCookie});
 await api('join',{code:kickRoom.code,name:'Peer'},{cookie:thirdCookie});
 const kickState=await api('state?code='+kickRoom.code),victimId=kickState.players[1].id;
 const kickRequest=(actor,body)=>fetch(base+'/api/kick',{method:'POST',headers:{'Content-Type':'application/json',Cookie:actor},body:JSON.stringify({code:kickRoom.code,playerId:victimId,...body})});
-assert.equal((await kickRequest(thirdCookie,{confirmed:true})).status,400);
+const deniedKick=await kickRequest(thirdCookie,{confirmed:true});
+assert.equal(deniedKick.status,403);
+assert.equal((await deniedKick.json()).code,'ROOM_KICK_FORBIDDEN');
 assert.equal((await kickRequest(cookie,{})).status,400);
-assert.equal((await kickRequest(cookie,{confirmed:true,playerId:kickState.me})).status,400);
+const selfKick=await kickRequest(cookie,{confirmed:true,playerId:kickState.me});
+assert.equal(selfKick.status,403);
+assert.equal((await selfKick.json()).code,'ROOM_KICK_FORBIDDEN');
 assert.equal((await kickRequest(cookie,{confirmed:true})).status,200);
 for(const route of ['state?code='+kickRoom.code,'join']){const response=await fetch(base+'/api/'+route,{method:route==='join'?'POST':'GET',headers:{'Content-Type':'application/json',Cookie:otherCookie},body:route==='join'?JSON.stringify({code:kickRoom.code}):undefined});assert.equal(response.status,403);assert.equal((await response.json()).code,'KICKED');}
 for(const type of ['poker','thunder']){const p=await api('create',{type,name:'Avatar'});assert.match((await api('state?code='+p.code,undefined,p)).players[0].avatar,/^\/characters\/[a-f0-9-]+$/);}

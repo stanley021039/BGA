@@ -1,5 +1,7 @@
 # 共用偏好與已知決策
 
+2026-10-07 U39-unified-room-media：本批九項需求為音樂／影片單一current、混合播放清單列點播人及名稱、拖曳與鍵盤排序、一次展開完整媒體窗與音樂進度、每房個人影片接受／拒絕、host／manager切下一筆、host／manager／member房間角色、管理按鈕同工具配色，以及emoji與角色表情同一入口。一般席可點播，host／manager控全桌；房間manager不是網站admin，離席／踢出撤銷，短暫同seat重連保留。個人關閉／音量／位置／尺寸不更改全桌，autoplay被擋須提供個人恢復而非聲稱永久解鎖。程式候選v1.8.0，完整Windows／Linux、真正Chrome及發布待主任務記錄；詳 [九項進度](../UNIFIED-ROOM-MEDIA-PROGRESS.md)及 [spec](../specs/UNIFIED-ROOM-MEDIA.md)。此批以host／manager權限取代U29原提案者控權的適用範圍；舊API只有相容投影，不能以它繞過新queue／transport ACL。沒有將角色寫到帳戶權限或新增DB schema，也不把scope回歸當作本批已上線。
+
 2026-10-07 U38-pr43-clock：使用者要求處理PR新回覆。對應Stanley的舊快照補播過期音效P2，維持原PR43，修共用server anchor＋mono elapsed，保留原功能與資料。原PR v1.4.2双平台815、正式v1.7.2双平台947及隔離Chrome替身通過，公開資源／帳戶／資料驗收見 [證據](../PR43-EXPRESSION-CLOCK-FIX.md)。未合併，作畫順暢度研究仍未實作；legacy／喇叭／弱網未驗界線不可省略。
 
 2026-10-07 U37-drawing-smoothness：使用者要求研究Gartic作畫傳送順暢原因，可實際遊玩與查GitHub。已完成官方單席Masterpiece封包、本站v1.7.1隔離雙席、真程式計數及四種開源來源研究，提出有界時間flush／未送點合併／frame合併／活動層等規格；不是Gartic內部演算法或使用者硬體診斷。實測／缺漏／未解像素差異見 [研究](../research/GARTIC-BGA-DRAWING-COMPARISON.md)，[spec](../specs/DRAWING-SMOOTHNESS.md)仍提案，沒有產品修改、PR或部署，正式保持v1.7.1。

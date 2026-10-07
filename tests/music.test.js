@@ -88,7 +88,8 @@ test('authenticated streaming ranges, shared library, host controls, isolation, 
   for(const action of ['pause','play','stop','seek','previous','next','mode','loop'])assert.equal((await post('room-music',friend,{code:a,action,mode:'shuffle',loop:true,position:1})).status,403);
   const stream=await fetch(base+'/api/room-music/events?code='+a,{headers:{Cookie:friend}});reader=stream.body.getReader();
   assert.match(new TextDecoder().decode((await reader.read()).value),/event: music/);
-  const selected=await post('room-music',friend,{code:a,action:'select',trackId:owned.id});assert.equal(selected.status,200);assert.equal(selected.body.playing,true);
+  const forbiddenReplay=await post('room-music',friend,{code:a,action:'select',trackId:owned.id});assert.equal(forbiddenReplay.status,409);assert.equal(forbiddenReplay.body.code,'LEGACY_MEDIA_BUSY');
+  const selected=await post('room-music',host,{code:a,action:'select',trackId:owned.id});assert.equal(selected.status,200);assert.equal(selected.body.playing,true);
   assert.match(new TextDecoder().decode((await reader.read()).value),new RegExp(owned.id));
   const state=await (await fetch(base+'/api/room-music?code='+a,{headers:{Cookie:friend}})).json();assert.equal(state.track.id,owned.id);
   assert.equal((await (await fetch(base+'/api/room-music?code='+b,{headers:{Cookie:friend}})).json()).track,null);
@@ -97,7 +98,7 @@ test('authenticated streaming ranges, shared library, host controls, isolation, 
   const view=await (await fetch(base+'/api/state?code='+a,{headers:{Cookie:friend}})).json();
   assert.equal((await post('kick',host,{code:a,playerId:view.me,confirmed:true})).status,200);
   assert.equal((await fetch(base+'/api/room-music?code='+a,{headers:{Cookie:friend}})).status,403);
-  for(const game of ['poker','race','majority','gift','draw']){const html=await (await fetch(base+'/'+game,{headers:{Cookie:host}})).text();assert.match(html,/shared\/table-music.js/);}
+  for(const game of ['poker','race','majority','gift','draw']){const html=await (await fetch(base+'/'+game,{headers:{Cookie:host}})).text();assert.match(html,/shared\/table-media.js/);assert.match(html,/shared\/table-media.css/);assert.doesNotMatch(html,/shared\/table-(?:music|watch)\.js/);}
  }finally{await reader?.cancel();await app.close();removeMusicTemp(root,'bga-music-http-');}
 });
 
@@ -124,6 +125,7 @@ test('members select another account’s uploaded song in all five games with sh
   for(const user of [f.host,f.uploader,f.selector]){const state=await f.get('room-music?code='+code,user);assert.equal(state.status,200);assert.deepEqual(state.body.track,selected.body.track);assert.equal(state.body.playing,true);assert.equal(state.body.version,selected.body.version);}
   for(const other of rooms.slice(index+1))assert.equal((await f.get('room-music?code='+other,f.host)).body.track,null);
   for(const action of ['pause','play','stop','seek','previous','next','mode','loop']){const denied=await f.post('room-music',f.selector,{code,action,position:1,mode:'shuffle',loop:true});assert.equal(denied.status,403);assert.equal(denied.body.code,'HOST_ONLY');}
+  const replay=await f.post('room-music',f.selector,{code,action:'select',trackId:f.track.id});assert.equal(replay.status,409);assert.equal(replay.body.code,'LEGACY_MEDIA_BUSY');
   const unchanged=(await f.get('room-music?code='+code,f.host)).body;assert.equal(unchanged.version,selected.body.version);assert.equal(unchanged.playing,true);assert.equal(unchanged.mode,'none');assert.equal(unchanged.loop,false);
  }
  const denied=await f.post('music/'+f.track.id+'/delete',f.selector,{});assert.equal(denied.status,403);assert.equal(denied.body.code,'FORBIDDEN');assert.ok((await f.get('music',f.selector)).body.tracks.some(track=>track.id===f.track.id));
