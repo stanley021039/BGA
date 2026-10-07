@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-07 WebGL導入評估（研究，未實作）：優先局部雷霆粒子特效，保留SVG互動與GameUI；現四條transform彈幕及少量卡片不值得先全面換renderer，大廳left/top可先比較transform。畫猜WebGL只能處理本機繪製候選，不解140ms／單in-flight／HTTP-SSE等待；fill readback、白erase／AA／canonical PNG需另驗，Worker也是候選。PixiJS v8查核當日沒有可承諾的自動Canvas fallback，要自行保留原SVG／CSS。未跑WebGL原型／FPS，不外推加速比例，細節與官方來源見 [導入評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)。
+
 ## 2026-10-07：作畫順暢度第一批（正式v1.8.1，有限P1）
 
 正式v1.8.1／6707a9edf07839c3307dd230ff6eeca5fa92bf62已於UTC03:30:44.024Z零房間guard部署，PID107492→110715、service／tunnel active。Windows1076／1076／37689.229ms，Linux Node22.22.1 1076／1076／189955.125522ms，各fail/cancel/skip/todo0；本地受測tag固定，沒有新PR／push、PR43未改。schema15／21schemas／20non-session rows+BLOB與8帳戶全fields保留、integrity ok／FK0；sessions161→165為已登出的QA登入，不說sessions不變。SQLite線上備份與另時點files/env archive不是atomic cold snapshot。公開版號與5資源精確內容/no-store已驗，沒有逐項驗5資源MIME；正式3會員HTTP/SSE duplicate／nonartist400／undo-clear quota不退已驗。Chrome正式僅背景home版號；local像素／輸入證據另列，own房／auth／tabs／preview／control已清理，不改前景或偏好。
