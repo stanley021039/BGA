@@ -1,5 +1,11 @@
 # Agent 長期記憶索引
 
+2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+
+2026-10-07同輪追加平滑時間條（待驗）：共用CountdownBar用WAAPI linear scaleX，native progress／秒數保server deadline，不每frame JS／新增poll。hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設；動畫不推進規則，也不能因停動效讓倒數不可讀。viewer新strokebuffer60ms、gap300／batch700／總lead900ms，極端backlog canonical，長停頓可壓縮不是完整錄影。C／timing仍待整體/native；renderer保留caller原creation options後最終41scoped与4 controlled nativeRGBA0只其scope（兩dense無yield觀察）。
+
+2026-10-07畫猜防閃與真點時間回放實作／待驗：root確認visible clear/copyBase後yield及ACK mutable→classic可露白；採opaque staging原子present、optional brush/erase pointTimes0..120000與viewer live rAF，artist不重播ACK；snapshot/reconnect/reveal/undo/fill立即canonical，stage/cache≤8MiB，無server逐frame點timer。每輪结束與換画者都要回歸，不能只首輪／終點；backend30／renderer41与native4只是controlledscope，不宣稱每輪／正式完成。接手先讀 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)及 [作畫spec最新段](../specs/DRAWING-SMOOTHNESS.md)、PROGRAMMER／ANIMATION／PLAYER；下方既有版本與結果保留歷史。
+
 2026-10-07媒體圖示與視窗：永久操作圖示＋hover／focus提示準則已寫AGENTS、MEMORY與DESIGNER；重要內容保持可見。點播與單行清單獨立寬視窗，播放器入口、邊緣縮放及「上傳歌曲」首選項見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)。最新測試與版本只以 [進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)為準，不沿用中間候選或宣稱全站按鈕已改完。
 
 2026-10-07 [WebGL導入評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)：已按v1.8.1程式與官方資料盤點；建議雷霆特效局部原型，大廳先比較transform，畫猜renderer與傳送瓶頸分開。這是研究提案，未安裝或實作WebGL、未跑效能原型，不改正式v1.8.1；接手先讀該文件及PROGRAMMER／ANIMATION最新記錄。

@@ -1,5 +1,11 @@
 # 動畫角色記憶
 
+2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+
+2026-10-07同輪追加平滑時間條（待驗）：共用CountdownBar用WAAPI linear scaleX，native progress／秒數保server deadline，不每frame JS／新增poll。hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設；動畫不推進規則，也不能因停動效讓倒數不可讀。viewer新strokebuffer60ms、gap300／batch700／總lead900ms，極端backlog canonical，長停頓可壓縮不是完整錄影。C／timing仍待整體/native；renderer保留caller原creation options後最終41scoped与4 controlled nativeRGBA0只其scope（兩dense無yield觀察）。
+
+2026-10-07畫猜逐點呈現（實作候選／待驗）：使用者允许接收端少量延遲，以真採樣時間重現brush／erase，取代下方舊「畫布同步不能加等待」在viewer呈現的適用範圍；server接受／score／deadline、artist跟手仍不延後。root確認clear／copyBase後yield與ACK mutable→classic露白，candidate opaque staging完整job才present；renderer cache含stage≤8MiB。viewer live client rAF播放optional pointTimes，不能用收包時間造等間隔，無逐frame網路／server timer；snapshot／reconnect／reveal／undo／fill與非brush立即canonical，不重播artist ACK。hidden／減動與追趕策略按最终source核定，畫作不可因關装飾動畫而消失。**每輪结束／下一畫者必查**中途frame無閃、舊尾清理、終點canonical與queue/rAF/timer為空；配置時長不是FPS，fake canvas／最後同pixels不證每frame不閃。renderer41／backend30与4controllednative僅各scope，完整／實際多輪／正式待root，見 [進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)。
+
 2026-10-07 WebGL評估（未實作）：雷霆煙霧／火花／碎片是第一個局部原型候選，效益可能在提高特效密度而非目前少量SVG必然掉幀。共用特效層沿用已確認eventId、逐格／checkpoint時序與MotionPolicy，名單／骰子／操作／說明保留DOM；送禮彩帶等後續重用，普通卡片transform不先搬進canvas。需限制粒子／貼圖、空閒停ticker、hidden／減動與context loss退回；沒有新的FPS實證或已部署功能。與程式角色的取捨及官方來源見 [WebGL導入評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)。
 
 2026-10-06正式 v1.1.3：雷霆公開事件以`afterMotion`定位於已確認位移之後，最多64筆；一般checkpoint停留1600ms、道路3200ms，同checkpoint批次保留全部連鎖文字。位移FX只在`onMove`開始該段時觸發，presence重繪不隱藏事件、不重播或延長停留。event-only亦可hold；略過／Escape只縮短事件停留，不跳移動或dice。全部位移／事件結束才呈現下一步，鎖遊戲動作但poll／roster／chat不中斷；hidden／reduced／停用／重連不補播。dice／pending後舊route仍丟棄，需重新選路。既有回覆payload增加，沒有新HTTP、伺服器timer或DB。Windows／Linux各625/625；背景Chrome火焰、玻璃→地雷→打滑及油漬→跳台順序已驗。正式受測22a9d6f／本地v1.1.3 tag，current releases/22a9d6f；版本／資源／帳戶驗收通過。配置時長不是FPS證據。詳 [進度及證據](../RACE-MULTI-MOVE-PROGRESS.md)。

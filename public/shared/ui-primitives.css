@@ -22,6 +22,8 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 .ui-timebar::-moz-progress-bar{background:var(--ui-timebar-color,#d77918);border-radius:999px}
 .ui-timebar.urgent{--ui-timebar-color:#ba3e38;border-color:#993e36}
 .ui-timebar[hidden]{display:none!important}
+.ui-timebar-smooth{position:relative}
+.ui-timebar-smooth>.ui-timebar-fill{position:absolute;inset:1px;display:block;border-radius:inherit;background:var(--ui-timebar-color,#d77918);transform-origin:left center;pointer-events:none}
 /* A name occupies one line; optional player suffixes stay outside the moving text. */
 .room-player-info .room-player-name{display:flex;align-items:center;gap:4px;min-width:0}
 .room-player-name>.ui-player-name{flex:1;min-width:0}

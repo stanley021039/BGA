@@ -1,5 +1,11 @@
 # 畫猜作畫與同步順暢度進度
 
+2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+
+2026-10-07最新一輪：畫者閃爍／viewer真點時間回放正在實作與待驗證，source／完整測試／native／正式狀態另見 [本輪進度](DRAW-TIMED-PLAYBACK-PROGRESS.md)。已確認visible clear或copyBase後yield、ACK mutable→classic可露白；候選opaque staging原子present、optional brush／erase pointTimes及viewer live rAF，不改server規則／額度／SSE批次，不逐frame broadcast。snapshot／reconnect／reveal／undo／fill等立即canonical，artist不重播ACK，cache含stage≤8MiB；每輪结束必檢查無閃／殘影／舊frame／草稿。新stroke60ms／gap300／batch700／lead900、極端backlog baseline，追加CountdownBar WAAPI linear scaleX／serverdeadline与cancel-reset待驗；renderer41scoped／4 controlled nativestrict0、backend30不是full／真持筆／多輪或部署，下方v1.8.1／1076與native結果是歷史，完整保留。
+
+## 下方為第一批v1.8.1歷史結果
+
 日期：2026-10-07。第一批 **P0及有限local-draft P1完成並部署為正式v1.8.1**；source／immutable tag 6707a9edf07839c3307dd230ff6eeca5fa92bf62，archive SHA-256 8d0073c4326d2d160fbe33417409134ba1522899dea071180fbbb2404fd9a825。基線v1.8.0／5687561、原研究v1.7.1及前期測試保留為歷史。Windows／Linux完整各1076、UTC03:30:44.024Z零房間切換及正式資料／HTTP-SSE／版號驗收完成；P2／P3未做。native只有18／19對fresh strict0，一項與legacy相容及classic跨paint差皆另列，rAF控制未完成，不能泛稱所有native全pass。研究／規格見 [spec](specs/DRAWING-SMOOTHNESS.md)、[實測](research/GARTIC-BGA-DRAWING-COMPARISON.md)、[稽核](research/BGA-DRAWING-CODE-AUDIT.md)及 [PR30契約](PR30-RESOURCE-LIMITS.md)。
 
 ## 第一批實作表

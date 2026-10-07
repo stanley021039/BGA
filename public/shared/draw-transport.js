@@ -4,7 +4,7 @@
  function create({send,createId,isCurrent,onPending=()=>{},onAccepted=()=>{},onError=()=>{},onSettled=()=>{},onDiscard=()=>{},onStart=()=>{},now=()=>performance.now(),pacing=()=>({lastStart:-Infinity,lastFill:-Infinity}),maxPoints=30000,maxEntries=1000}){
   let queue=[],inFlight=null,timer=null,requestTimer=null,generation=0,drain=null,resolveDrain=null;
   const pointBytes=point=>JSON.stringify(point).length+1;
-  const key=data=>JSON.stringify([data.canvasEpoch,data.round,data.strokeId,data.tool,data.color,data.size,!!data.filled]);
+  const key=data=>JSON.stringify([data.canvasEpoch,data.round,data.strokeId,data.tool,data.color,data.size,!!data.filled,!!data.pointTimes]);
   function pending(){return queue.reduce((total,job)=>total+job.points.length,0);}
   function idle(){if(!queue.length&&!inFlight&&resolveDrain){resolveDrain();resolveDrain=null;drain=null;}}
   function whenIdle(){if(!queue.length&&!inFlight)return Promise.resolve();if(!drain)drain=new Promise(resolve=>resolveDrain=resolve);return drain;}
@@ -18,13 +18,13 @@
   }
   function schedule(delay=0){if(inFlight||timer!==null||!queue.length)return;timer=setTimeout(()=>{timer=null;pump();},delay);}
   function enqueue(data,token){
-   const points=data.points.map(point=>[...point]),signature=key(data),tail=queue.at(-1);
-   if(tail?.key===signature&&tail.token===token&&['brush','erase'].includes(data.tool)&&points.length&&tail.points.length){const last=tail.points.at(-1);if(last[0]===points[0][0]&&last[1]===points[0][1])points.shift();}
+   const points=data.points.map(point=>[...point]),pointTimes=data.pointTimes?[...data.pointTimes]:null,signature=key(data),tail=queue.at(-1);
+   if(tail?.key===signature&&tail.token===token&&['brush','erase'].includes(data.tool)&&points.length&&tail.points.length){const last=tail.points.at(-1);if(last[0]===points[0][0]&&last[1]===points[0][1]){points.shift();pointTimes?.shift();}}
    if(!points.length)return true;
    const merge=tail?.key===signature&&tail.token===token&&['brush','erase'].includes(data.tool);
    if(pending()+points.length>maxPoints||(!merge&&queue.length>=maxEntries))throw Error('畫布同步中的資料已達上限；尚未同步的筆畫已取消，正在回復已確認畫布。');
-   if(merge)tail.points.push(...points);
-   else{queue.push({data:{...data,points:undefined},points,key:signature,token,queuedAt:now()});onPending(token,1);}
+   if(merge){tail.points.push(...points);if(pointTimes)tail.pointTimes.push(...pointTimes);}
+   else{queue.push({data:{...data,points:undefined,pointTimes:undefined},points,pointTimes,key:signature,token,queuedAt:now()});onPending(token,1);}
    schedule();return true;
   }
   function transient(error){return error?.code==='DRAW_RATE_LIMIT'&&error.status===429||error?.status>=500||['TypeError','SyntaxError','TimeoutError'].includes(error?.name);}
@@ -35,9 +35,9 @@
    if(inFlight||!queue.length){idle();return;}
    const head=queue[0],clock=now(),pace=pacing(),delay=Math.max(0,115-(clock-pace.lastStart),head.data.tool==='fill'?500-(clock-pace.lastFill):0);
    if(delay){schedule(delay);return;}
-   const points=head.points.splice(0,64);
-   if(head.points.length){head.points.unshift([...points.at(-1)]);onPending(head.token,1);}else queue.shift();
-   const data=Object.freeze({...head.data,batchId:createId(),points:Object.freeze(points.map(point=>Object.freeze(point)))});
+   const points=head.points.splice(0,64),pointTimes=head.pointTimes?.splice(0,64);
+   if(head.points.length){head.points.unshift([...points.at(-1)]);if(pointTimes)head.pointTimes.unshift(pointTimes.at(-1));onPending(head.token,1);}else queue.shift();
+   const data=Object.freeze({...head.data,batchId:createId(),points:Object.freeze(points.map(point=>Object.freeze(point))),...(pointTimes?{pointTimes:Object.freeze(pointTimes)}:{})});
    inFlight={data,token:head.token,generation,attempts:0,queuedAt:head.queuedAt,controller:null};attempt(inFlight);
   }
   function attempt(job){
@@ -60,7 +60,7 @@
   }
   function metrics(){
    const oldest=inFlight?inFlight.queuedAt:queue[0]?.queuedAt;
-   return {pendingPoints:pending(),pendingBytes:queue.reduce((total,job)=>total+JSON.stringify(job.data).length+job.points.reduce((n,point)=>n+pointBytes(point),0),0),pendingEntries:queue.length,inFlightPoints:inFlight?.data.points.length||0,inFlightAttempts:inFlight?.attempts||0,oldestAgeMs:oldest===undefined?0:Math.max(0,now()-oldest)};
+   return {pendingPoints:pending(),pendingBytes:queue.reduce((total,job)=>total+JSON.stringify(job.data).length+job.points.reduce((n,point)=>n+pointBytes(point),0)+(job.pointTimes?JSON.stringify(job.pointTimes).length:0),0),pendingEntries:queue.length,inFlightPoints:inFlight?.data.points.length||0,inFlightAttempts:inFlight?.attempts||0,oldestAgeMs:oldest===undefined?0:Math.max(0,now()-oldest)};
   }
   return {enqueue,whenIdle,cancel,metrics};
  }

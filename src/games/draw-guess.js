@@ -9,6 +9,7 @@ const freeze=value=>{if(value&&typeof value==='object'&&!Object.isFrozen(value))
 const normalize=value=>value.normalize('NFKC').toLocaleLowerCase('zh-Hant').trim().replace(/\s+/gu,' ');
 const CONTROLS=new Set(['brush','erase','line','rect','ellipse','fill']);
 const MAX_BATCHES=1000,MAX_POINTS=30000,MAX_FILLS=48;
+const MAX_POINT_TIME_MS=120000;
 const MAX_PUBLIC_RESULTS=8,MAX_RESULT_SAVES=256;
 const validTopic=topic=>topic==='all'||TOPICS.some(item=>item.id===topic);
 const DRAW_CATEGORIES=[...TOPICS.map(item=>item.id),'custom'];
@@ -230,6 +231,11 @@ class DrawGuessRoom{
   if(!CONTROLS.has(data.tool)||!/^#[0-9a-f]{6}$/i.test(data.color)||!Number.isInteger(data.size)||data.size<1||data.size>40||
     !Array.isArray(points)||points.length<1||points.length>64||points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255)||
     (data.tool==='fill'?points.length!==1:data.tool!=='brush'&&data.tool!=='erase'&&points.length!==2))throw Error('筆畫格式不正確');
+  const pointTimes=data.pointTimes;
+  if(pointTimes!==undefined){
+   if(!['brush','erase'].includes(data.tool)||!Array.isArray(pointTimes)||pointTimes.length!==points.length)throw Error('筆畫時間格式不正確');
+   for(let index=0;index<pointTimes.length;index++)if(!Number.isSafeInteger(pointTimes[index])||pointTimes[index]<0||pointTimes[index]>MAX_POINT_TIME_MS||index&&pointTimes[index]<pointTimes[index-1])throw Error('筆畫時間格式不正確');
+  }
   const now=this.now();this.canvas.recent=this.canvas.recent.filter(time=>now-time<1000);
   if(this.canvas.recent.length>=10)throw new HttpError(429,'DRAW_RATE_LIMIT','畫得太快，請稍後再試');
   // Accepted batch IDs survive undo/clear; otherwise these operations could
@@ -242,7 +248,7 @@ class DrawGuessRoom{
    this.canvas.fillRecent.push(now);this.canvas.fills++;
   }
   this.canvas.recent.push(now);this.canvas.points+=points.length;this.canvas.acceptedPoints+=points.length;
-  const stroke={version:++this.canvas.version,strokeId:data.strokeId,tool:data.tool,color:data.color.toLowerCase(),size:data.size,filled:data.filled===true,points:clone(points)};
+  const stroke={version:++this.canvas.version,strokeId:data.strokeId,tool:data.tool,color:data.color.toLowerCase(),size:data.size,filled:data.filled===true,points:clone(points),...(pointTimes!==undefined?{pointTimes:clone(pointTimes)}:{})};
   this.canvas.strokes.push(stroke);this.canvas.batchIds.add(data.batchId);
   return {canvasEpoch:this.canvas.epoch,round:this.round,version:this.canvas.version,stroke,quota:this.canvasQuota()};
  }
@@ -275,4 +281,4 @@ class DrawGuessRoom{
   });
  }
 }
-module.exports={DrawGuessRoom,normalize,validTopic,validTopics,DRAW_CATEGORIES,MAX_PUBLIC_RESULTS,MAX_RESULT_SAVES};
+module.exports={DrawGuessRoom,normalize,validTopic,validTopics,DRAW_CATEGORIES,MAX_PUBLIC_RESULTS,MAX_RESULT_SAVES,MAX_POINT_TIME_MS};

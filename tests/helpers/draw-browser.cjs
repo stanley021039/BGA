@@ -6,6 +6,8 @@ const sharedScript=fs.readFileSync(path.join(__dirname,'../../public/shared/stro
 const resultsScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-results.js'),'utf8');
 const motionScript=fs.readFileSync(path.join(__dirname,'../../public/shared/motion-policy.js'),'utf8');
 const transportScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-transport.js'),'utf8');
+const playbackScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-playback.js'),'utf8');
+const countdownScript=fs.readFileSync(path.join(__dirname,'../../public/shared/countdown-bar.js'),'utf8');
 const CANVAS_EPOCH='00000000-0000-4000-8000-000000000001';
 function browserHarness({realRenderer=false,events=false,rendererOptions,clock}={}) {
  const sources=[],elements = new Map(), listeners = new Map(), frames = [], animations = [], strokeRequests = [], commandRequests = [];
@@ -28,7 +30,8 @@ function browserHarness({realRenderer=false,events=false,rendererOptions,clock}=
     remove() { if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this); },
     querySelector(selector) { return selector === '.feed-empty' ? this.children.find(child => child.className === 'feed-empty') || null : null; },
     querySelectorAll() { return []; },
-    animate() { animations.push(selector); return {cancel() {}}; }, showModal() {this.open=true;}, close() {this.open=false;handlers.get('close')?.();}, focus() {context.document.activeElement=this;},
+    // This fixture's animations list tracks decorative game feedback, not the functional clock.
+    animate() { if(selector!=='#timerFill')animations.push(selector); return {cancel() {}}; }, showModal() {this.open=true;}, close() {this.open=false;handlers.get('close')?.();}, focus() {context.document.activeElement=this;},
    };
    elements.set(selector, node);
   }
@@ -91,6 +94,8 @@ function browserHarness({realRenderer=false,events=false,rendererOptions,clock}=
  vm.runInContext(motionScript,context,{filename:'public/shared/motion-policy.js'});
  vm.runInContext(resultsScript,context,{filename:'public/shared/draw-results.js'});
  vm.runInContext(transportScript,context,{filename:'public/shared/draw-transport.js'});
+ vm.runInContext(playbackScript,context,{filename:'public/shared/draw-playback.js'});
+ vm.runInContext(countdownScript,context,{filename:'public/shared/countdown-bar.js'});
  vm.runInContext(script, context, {filename: 'public/draw.js'});
  function receive(state) {
   context.injectedState = state;

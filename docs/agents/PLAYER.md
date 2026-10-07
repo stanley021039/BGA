@@ -1,5 +1,15 @@
 # 玩家 agent 長期記憶
 
+2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+
+2026-10-07同輪追加平滑時間條（待驗）：共用CountdownBar用WAAPI linear scaleX，native progress／秒數保server deadline，不每frame JS／新增poll。hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設；動畫不推進規則，也不能因停動效讓倒數不可讀。viewer新strokebuffer60ms、gap300／batch700／總lead900ms，極端backlog canonical，長停頓可壓縮不是完整錄影。C／timing仍待整體/native；renderer保留caller原creation options後最終41scoped与4 controlled nativeRGBA0只其scope（兩dense無yield觀察）。
+
+## 2026-10-07：每輪防閃／接收逐點回放（實作候選，待驗證）
+
+使用者回報畫者畫布閃，要求每輪之後都檢查；viewer按真正pointTimes逐步出現，可有少量有界延遲，artist保持本機跟手且不重播ACK。root已確認一條visible clear/copyBase後yield、ACK mutable→classic露白路徑，candidate完整opaque staging才呈現；不能歸咎另一台電腦或用整場最後圖相同當每frame不閃。
+
+玩家驗收逐輪看持筆／up／ACK、reveal完整圖／下一畫者新epoch、snapshot/reconnect/undo/fill打斷播放，確認無閃白／殘影／舊尾、末點完整及queue/frame/timer清理。合法clear／新輪空圖与非預期露白分開；viewer timing只是呈現，不改server規則，不等到下輪還在播上輪。資料30／renderer41及4controllednative不等實際多輪或正式結果；新矩陣见 [進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)，下方v1.8.1保留為歷史。
+
 ## 2026-10-07：作畫改善第一批（正式v1.8.1，有限P1）
 
 正式v1.8.1／6707a9edf07839c3307dd230ff6eeca5fa92bf62已於UTC03:30:44.024Z零房間guard部署，PID107492→110715、service／tunnel active。Windows1076／1076／37689.229ms，Linux Node22.22.1 1076／1076／189955.125522ms，各fail/cancel/skip/todo0；本地受測tag固定，沒有新PR／push、PR43未改。schema15／21schemas／20non-session rows+BLOB與8帳戶全fields保留、integrity ok／FK0；sessions161→165為已登出的QA登入，不說sessions不變。SQLite線上備份與另時點files/env archive不是atomic cold snapshot。公開版號與5資源精確內容/no-store已驗，沒有逐項驗5資源MIME；正式3會員HTTP/SSE duplicate／nonartist400／undo-clear quota不退已驗。Chrome正式僅背景home版號；local像素／輸入證據另列，own房／auth／tabs／preview／control已清理，不改前景或偏好。

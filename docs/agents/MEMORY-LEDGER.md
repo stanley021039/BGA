@@ -1,5 +1,11 @@
 # 共用偏好與已知決策
 
+2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+
+2026-10-07同輪追加平滑時間條（待驗）：共用CountdownBar用WAAPI linear scaleX，native progress／秒數保server deadline，不每frame JS／新增poll。hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設；動畫不推進規則，也不能因停動效讓倒數不可讀。viewer新strokebuffer60ms、gap300／batch700／總lead900ms，極端backlog canonical，長停頓可壓縮不是完整錄影。C／timing仍待整體/native；renderer保留caller原creation options後最終41scoped与4 controlled nativeRGBA0只其scope（兩dense無yield觀察）。
+
+2026-10-07 U43-draw-atomic-timed-playback：使用者直接回報畫者畫布閃，要求每輪之後檢查、接收端依真pointTimes逐點顯示，可少量有界延遲。root已確認clear/copyBase後yield與ACK mutable→classic露白；候選opaque staging完成才present、brush/erase可選safeint0..120000／same-length／chunk非遞減、viewer live rAF，不播artist ACK。baseline snapshot/reconnect/reveal/undo/clear/fill立即canonical，cache含stage≤8MiB、不加server timer或逐frame broadcast、不改權限／額度／score／DB。每輪after-check完整圖、無舊尾／草稿／frame/timer，長期回歸必保。實作／待整體驗證，backend30／renderer41与controllednative4不等每輪／正式，见 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)；舊發布／無PR歷史不被當成新偏好，本機私有偏好不提交。
+
 2026-10-07 U42-playback-expression-ui：全桌與本機播放需用不同圖意；桌機控制列同一行，窄版允許換行且保持操作尺寸。角色表情卡只放圖片，名稱用共用hover/focus提示與中文aria；選單內部scroll不重定位，不透過暫時放寬高度量測而破壞scrollTop。見 [實作進度](../MEDIA-EMOJI-POLISH-PROGRESS.md)。
 
 2026-10-07 U41-media-icon-window-ui：使用者指定操作按鈕盡量只用圖示，hover顯示功能；共享GameUI圖示與提示，保留中文可讀名稱、keyboard／touch操作，不隱藏label、正文與重要玩家資訊。媒體名稱單行省略、hover才跑馬；視窗從邊緣縮放，清單左把手排序、右側移除。追加點播與清單獨立寬視窗、單行小間隔；播放器下方只留清單入口，音樂下拉第一項文字「上傳歌曲」。最新實作與發行證據以 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)為準，不把中間候選當正式或宣稱全站button已搬完。

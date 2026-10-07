@@ -96,9 +96,10 @@ window.StrokeCanvas=(()=>{
   const maxCheckpoints=options.maxCheckpoints??16,checkpointEvery=options.checkpointEvery??32;
   const maxStrokes=options.maxStrokes??1016,maxPoints=options.maxPoints??31024,maxFills=options.maxFills??49;
   if(!Number.isInteger(maxCheckpoints)||maxCheckpoints<2||maxCheckpoints>32||!Number.isInteger(checkpointEvery)||checkpointEvery<1)throw Error('Invalid canvas checkpoint limits');
+  if(options.atomicPresentation)return createAtomicRenderer(canvas,options);
   if(options.separateMutable)return createMutableRenderer(canvas,options);
   const context=canvas.getContext('2d',options.contextAttributes);
-  const retainedCheckpoints=maxCheckpoints-(options.reserveCanvasCheckpoint?1:0);
+  const retainedCheckpoints=maxCheckpoints-(options.reserveCanvasCheckpoint?1:0)-(options.reservePresentationCheckpoint?1:0);
   const yieldMain=options.yieldToMain||yieldToMain,now=()=>globalThis.performance?.now?.()??Date.now();
   let keys=[],costs=[0],checkpoints=[],revision=0,epoch=0,pendingRender=null;
   const stats={strokeApplications:0,fillApplications:0,filledPixels:0,restores:0,checkpointBytes:0,yields:0,cancelledRenders:0,maxBatchStrokes:0,maxBatchFills:0,maxBatchMs:0};
@@ -201,6 +202,34 @@ window.StrokeCanvas=(()=>{
   function metrics(){return {...stats,revision,checkpoints:checkpoints.length,strokes:keys.length,rendering:!!pendingRender,targetStrokes:pendingRender?.plan.strokes.length??keys.length};}
   clear();
   return {render,renderCooperatively,whenIdle,reset,metrics};
+ }
+ function createAtomicRenderer(canvas,options){
+  const context=canvas.getContext('2d',options.contextAttributes),factory=options.createCanvas||((width,height)=>{const node=(canvas.ownerDocument||globalThis.document)?.createElement('canvas');if(!node)throw Error('An atomic canvas factory is required');node.width=width;node.height=height;return node;});
+  const staging=factory(canvas.width,canvas.height);
+  if(!staging||staging===canvas||typeof context.drawImage!=='function')throw Error('Independent atomic canvas support is required');
+  staging.width=canvas.width;staging.height=canvas.height;
+  // The complete canonical operation sequence stays on one persistent surface.
+  // Visible pixels are copied only when that sequence finishes, never between yields.
+  // Preserve the caller's creation intent. Reported default false is not the
+  // same readback heuristic as omitting willReadFrequently in Chromium.
+  const attributes=options.contextAttributes;
+  staging.getContext('2d',attributes);
+  const worker=createRenderer(staging,{...options,atomicPresentation:false,reservePresentationCheckpoint:true,contextAttributes:attributes});
+  let generation=0,pending=null,presentationCopies=0;
+  function present(){context.save();context.setTransform?.(1,0,0,1,0,0);context.globalAlpha=1;context.globalCompositeOperation='copy';context.drawImage(staging,0,0);context.restore();presentationCopies++;}
+  function render(strokes,settings){const changed=worker.render(strokes,settings);generation++;pending=null;if(changed)present();return changed;}
+  function renderCooperatively(strokes,settings){
+   const result=worker.renderCooperatively(strokes,settings);
+   if(!result||typeof result.then!=='function'){generation++;pending=null;if(result)present();return result;}
+   if(pending?.source===result)return pending.promise;
+   const job={source:result,generation:++generation,promise:null};pending=job;
+   job.promise=result.then(changed=>{if(pending!==job||job.generation!==generation)return false;if(changed)present();return changed;}).finally(()=>{if(pending===job)pending=null;});
+   return job.promise;
+  }
+  function whenIdle(){const promise=pending?.promise;return promise?promise.then(whenIdle):worker.whenIdle().then(()=>pending?whenIdle():undefined);}
+  function reset(){worker.reset();generation++;pending=null;present();}
+  function metrics(){const current=worker.metrics(),presentationBytes=staging.width*staging.height*4;return {...current,atomicPresentation:true,presentationBytes,presentationCopies,cachedBytes:(current.cachedBytes??current.checkpointBytes)+presentationBytes,rendering:!!pending||current.rendering};}
+  present();return {render,renderCooperatively,whenIdle,reset,metrics};
  }
  function createMutableRenderer(canvas,options){
   const context=canvas.getContext('2d');

@@ -1,5 +1,15 @@
 # 程式架構 agent 記憶
 
+2026-10-07本輪最新候選minor1.9.0：真背景CDP25move artist56frames／26ink增長／whiteAfterInk0、26batches51anchors點；viewer62frames中25partial／drainempty，單trace不代表每輪或60fps。timer手動animationseek linear且已還原，但背景自然曾1.5s drift，新增Animation.currentTime vs wall漂移≥100ms才校serverdeadline／1test。Windows1131第二次全pass37700.4126ms只是此校正前source，最新1132／Linux／tag／正式待root。controlled renderer4 strict0與41／backend30各scope保留；不外推別台PC、不寫新功能已正式。
+
+2026-10-07同輪追加平滑時間條（待驗）：共用CountdownBar用WAAPI linear scaleX，native progress／秒數保server deadline，不每frame JS／新增poll。hidden/pagehide取消、show/BFCache baseline、epoch／phase／newdeadline重設；動畫不推進規則，也不能因停動效讓倒數不可讀。viewer新strokebuffer60ms、gap300／batch700／總lead900ms，極端backlog canonical，長停頓可壓縮不是完整錄影。C／timing仍待整體/native；renderer保留caller原creation options後最終41scoped与4 controlled nativeRGBA0只其scope（兩dense無yield觀察）。
+
+## 2026-10-07：防閃爍／pointTimes（實作候選、待整體驗證）
+
+root／renderer owner確認visible clear或copyBase後yield、ACK local mutable→classic重建可露白；固定64brush history＋tail ink853在ACK尚未yield即ink0。畫猜opt-in atomicPresentation以長駐opaque staging完整重建再copy，latest job／epoch才commit；yield不暴露部分畫布，whenIdle含present且長持筆不可starve。default16 cache為14checkpoint＋base＋stage、512×256≤8MiB，default renderer不改；初候選owner40／40，其後41／41与controllednative4，非所有實際持筆／正式。
+
+optional pointTimes只brush／erase，same-length safe integer0..120000、chunk內非遞減可相等，null／empty／sparse／shape/fill拒；在duplicate後、rate／quota／version前驗，無跨chunkledger或首0／anchor強制。前端同stroke相對採樣與carryanchor／immutable body，receiver有界live排程；canonical version立即、artist不重播ACK，snapshot/reconnect/gap/reveal/undo/clear/fill/非brush即時baseline取消尾巴。仍原SSE批、無server timer／逐frame點，live/public snapshot帶metadata而永久收藏PNG、DB不變；backend30／30scoped，整合待root。每輪reveal及換epoch都驗無閃／殘影／晚commit／草稿／queue與rAF殘留，不能只看最後PNG。見 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)，舊v1.8.1結果不被覆蓋、不當本輪通過。
+
 2026-10-07 WebGL導入評估（研究，未實作）：優先局部雷霆粒子特效，保留SVG互動與GameUI；現四條transform彈幕及少量卡片不值得先全面換renderer，大廳left/top可先比較transform。畫猜WebGL只能處理本機繪製候選，不解140ms／單in-flight／HTTP-SSE等待；fill readback、白erase／AA／canonical PNG需另驗，Worker也是候選。PixiJS v8查核當日沒有可承諾的自動Canvas fallback，要自行保留原SVG／CSS。未跑WebGL原型／FPS，不外推加速比例，細節與官方來源見 [導入評估](../research/WEBGL-ADOPTION-ASSESSMENT.md)。
 
 ## 2026-10-07：作畫順暢度第一批（正式v1.8.1，有限P1）

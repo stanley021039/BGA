@@ -5,11 +5,13 @@ const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transpo
 let code=(location.pathname.match(/\/draw\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
 let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,canvasSyncJob=null,clockOffset=0,inviteBase=location.origin;
 let filled=false,tool='brush',active=null,pending=[],lastSentAt=-Infinity,lastFillSentAt=-Infinity,sendQueue=Promise.resolve(),canvasCommandBusy=false,canvasCommandEpoch=0,cursor=[256,128];
-let strokeFlushTimer=null,previewFrame=null;
+let strokeFlushTimer=null,previewFrame=null,pendingTimes=[];
 const drawNow=()=>typeof performance==='object'&&typeof performance.now==='function'?performance.now():Date.now();
 const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
-const canvasRenderer=StrokeCanvas.createRenderer(canvas,{separateMutable:true});
+const canvasRenderer=StrokeCanvas.createRenderer(canvas,{separateMutable:true,atomicPresentation:true});
+const drawingPlayback=window.DrawPlayback.create({now:drawNow,onFrame:()=>redrawCanvas()});
+const countdownBar=window.CountdownBar.create($('#timerFill'),{reducedMotion:()=>window.matchMedia('(prefers-reduced-motion:reduce)').matches});
 const drawingTransport=window.DrawTransport.create({
  send:(data,options,attempt)=>{if(attempt===1&&(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+data.points.length>30000||data.tool==='fill'&&canvasQuota.usedFills>=48))throw Error('本輪筆畫額度已用完，請等待下一輪。');return api('draw/stroke',data,options);},createId:()=>StrokeCanvas.strokeId(),now:drawNow,
  pacing:()=>({lastStart:lastSentAt,lastFill:lastFillSentAt}),
@@ -296,13 +298,15 @@ function tick(){
  const label=$('#timer'),progress=$('#timerProgress'),countdown=$('#drawCountdown');
  const timed=state&&['choosing','drawing','reveal'].includes(state.phase)&&Number.isFinite(state.deadline);
  countdown.hidden=!timed;
- if(!timed){label.textContent='–';progress.value=1;progress.classList.remove('urgent');progress.removeAttribute?.('aria-valuetext');$('#drawWaitingTime').textContent='';label.classList.remove('urgent');lastTimerSeconds=null;return;}
+ if(!timed){countdownBar.reset();label.textContent='–';progress.value=1;progress.classList.remove('urgent');progress.removeAttribute?.('aria-valuetext');$('#drawWaitingTime').textContent='';label.classList.remove('urgent');lastTimerSeconds=null;return;}
  const remaining=Math.max(0,state.deadline-(Date.now()-clockOffset)),seconds=Math.ceil(remaining/1000);
  const configured=Number(state.options?.seconds),duration=state.phase==='choosing'?15000:state.phase==='reveal'?8000:(Number.isFinite(configured)&&configured>0?configured:90)*1000;
  const text=seconds+' 秒';if(label.textContent!==text)label.textContent=text;
  const urgent=state.phase==='drawing'&&seconds<=10;
  label.classList.toggle('urgent',urgent);progress.classList.toggle('urgent',urgent);
+ $('#timerTrack').classList.toggle('urgent',urgent);
  progress.value=Math.min(1,remaining/duration);progress.setAttribute('aria-valuetext','剩餘 '+seconds+' 秒');
+ countdownBar.sync({key:state.canvasEpoch+':'+state.phase,deadline:state.deadline,duration,offset:clockOffset,visible:!document.hidden});
  if(state.phase==='drawing'&&lastTimerRound===state.round&&lastTimerSeconds>10&&seconds<=10&&motionAllowed()&&document.visibilityState!=='hidden'){
   if(!motionGate||motionGate.take('timeout:'+state.canvasEpoch,lastLiveState))animate($('.canvas-frame'),[{borderColor:'#a6b8a5'},{borderColor:'#b34b50'},{borderColor:'#a6b8a5'}],{duration:530,easing:'ease-out'});
  }
@@ -311,14 +315,14 @@ function tick(){
 function redrawCanvas(){
  cancelPreviewFrame();
  const visible=[],keys=[],placed=new Set();let mutableFrom=Infinity;
- const key=stroke=>['fill','rect','ellipse','line'].includes(stroke.tool)?JSON.stringify([stroke.strokeId,stroke.tool,stroke.color,stroke.size,!!stroke.filled,stroke.points]):'server:'+stroke.version+':'+stroke.strokeId;
+ const key=stroke=>['fill','rect','ellipse','line'].includes(stroke.tool)?JSON.stringify([stroke.strokeId,stroke.tool,stroke.color,stroke.size,!!stroke.filled,stroke.points]):'server:'+stroke.version+':'+stroke.strokeId+':'+(stroke.playbackCount??'complete');
  function placeDraft(draft){
   if(placed.has(draft.strokeId))return;placed.add(draft.strokeId);
   if(draft.hiddenByReset)return;
   mutableFrom=Math.min(mutableFrom,visible.length);visible.push(draft);
   keys.push(['fill','rect','ellipse','line'].includes(draft.tool)?key(draft):'local:'+draft.strokeId+':'+draft.revision);
  }
- for(const stroke of strokes){const draft=localStrokes.get(stroke.strokeId);if(draft)placeDraft(draft);else{visible.push(stroke);keys.push(key(stroke));}}
+ for(const stroke of strokes){const draft=localStrokes.get(stroke.strokeId);if(draft)placeDraft(draft);else{const presented=drawingPlayback.view(stroke);if(presented){visible.push(presented);keys.push(key(presented));}}}
  for(const draft of localStrokes.values())placeDraft(draft);
  const token=++canvasRenderEpoch;let result;
  try{result=(canvasRenderer.renderCooperatively||canvasRenderer.render)(visible,{keys,mutableFrom});}
@@ -369,6 +373,7 @@ function validCanvasSnapshot(snapshot){
 function validCanvasStroke(stroke,previous,version){
  if(!Number.isSafeInteger(stroke?.version)||stroke.version<=previous||stroke.version>version||typeof stroke.strokeId!=='string'||!/^[a-f0-9-]{8,36}$/i.test(stroke.strokeId)||!['brush','erase','line','rect','ellipse','fill'].includes(stroke.tool)||!/^#[a-f0-9]{6}$/i.test(stroke.color)||!Number.isInteger(stroke.size)||stroke.size<1||stroke.size>40||!Array.isArray(stroke.points)||stroke.points.length<1||stroke.points.length>64)return false;
  if(stroke.points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255))return false;
+ if(stroke.pointTimes!==undefined&&(!['brush','erase'].includes(stroke.tool)||!Array.isArray(stroke.pointTimes)||stroke.pointTimes.length!==stroke.points.length||stroke.pointTimes.some((time,index)=>!Number.isSafeInteger(time)||time<0||time>120000||index>0&&time<stroke.pointTimes[index-1])))return false;
  return !(stroke.tool==='fill'?stroke.points.length!==1:!['brush','erase'].includes(stroke.tool)&&stroke.points.length!==2);
 }
 function updateFillAvailability(){
@@ -388,7 +393,7 @@ function updateCanvasQuota(snapshot){
 function applyCanvasSnapshot(snapshot,reset=false){
  if(!sameCanvas(snapshot)||snapshot.version<canvasVersion)return false;
  if(!validCanvasSnapshot(snapshot))throw Error('畫布資料超過同步上限');
- strokes=snapshot.strokes;canvasVersion=snapshot.version;canvasRound=snapshot.round;
+ drawingPlayback.reset();strokes=snapshot.strokes;canvasVersion=snapshot.version;canvasRound=snapshot.round;
  canvasTotals={points:strokes.reduce((sum,stroke)=>sum+stroke.points.length,0),fills:strokes.filter(stroke=>stroke.tool==='fill').length};
  updateCanvasQuota(snapshot);
  if(reset){
@@ -410,6 +415,8 @@ function receiveCanvasStroke(data){
  // Existing entries were validated when accepted; an event validates only its new batch.
  strokes.push(data.stroke);canvasVersion=data.version;canvasTotals.points+=data.stroke.points.length;if(data.stroke.tool==='fill')canvasTotals.fills++;
  updateCanvasQuota(data);
+ if(state.phase==='drawing'&&state.me!==state.presenterId&&!document.hidden&&data.stroke.pointTimes)drawingPlayback.add(data.stroke);
+ else drawingPlayback.finish({notify:false});
  settleLocalStrokes();redrawCanvas();
 }
 function connectEvents(){
@@ -501,7 +508,7 @@ function rejectPendingDrawing(message){
  drawFeedback(message+'；尚未同步的筆畫已取消，正在回復已確認畫布。','error');syncCanvas();settleLocalStrokes();
  return sendQueue;
 }
-function queueStroke(points,strokeId,mode=tool){
+function queueStroke(points,strokeId,mode=tool,pointTimes){
  if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints+points.length>30000)return rejectPendingDrawing('本輪筆畫額度已用完，請等待下一輪。');
  if(mode==='fill'&&canvasQuota.usedFills>=48)return rejectPendingDrawing('本輪填色額度已用完，可用畫筆或形狀繼續。');
  if(mode==='fill'&&[...localStrokes.values()].some(draft=>draft.tool==='fill'&&!draft.failed)){drawFeedback('填色正在同步，請稍候再填下一區。');return sendQueue;}
@@ -511,7 +518,7 @@ function queueStroke(points,strokeId,mode=tool){
   draft={strokeId,tool:mode,color:$('#color').value,size:Number($('#size').value),filled,points:[...points],revision:1,finished:true,pendingBatches:0,ackVersion:0,failed:false};
   localStrokes.set(strokeId,draft);scheduleCanvasPreview();
  }
- const data={canvasEpoch:state.canvasEpoch,round:state.round,strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points};
+ const data={canvasEpoch:state.canvasEpoch,round:state.round,strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points,...(pointTimes?{pointTimes}:{} )};
  try{drawingTransport.enqueue(data,draft);}catch(error){rejectPendingDrawing(error.message);toast(error.message);}
  sendQueue=drawingTransport.whenIdle();
  return sendQueue;
@@ -526,9 +533,9 @@ function flush(final=false){
  if(!active||!['brush','erase'].includes(active.tool))return;
  clearStrokeFlush();
   if(pending.length>1||!active.sent){
-   const points=[...pending],draft=active;if(points.length){queueStroke(points,draft.strokeId,draft.tool);if(active!==draft)return;draft.sent=true;pending=final?[]:[points.at(-1)];}
+   const points=[...pending],times=[...pendingTimes],draft=active;if(points.length){queueStroke(points,draft.strokeId,draft.tool,times);if(active!==draft)return;draft.sent=true;pending=final?[]:[points.at(-1)];pendingTimes=final?[]:[times.at(-1)];}
   }
- if(final)pending=[];
+ if(final){pending=[];pendingTimes=[];}
 }
 function clearStrokeFlush(){if(strokeFlushTimer!==null)clearTimeout(strokeFlushTimer);strokeFlushTimer=null;}
 function scheduleStrokeFlush(){
@@ -542,21 +549,22 @@ function scheduleCanvasPreview(){
  const epoch=state?.canvasEpoch;
  previewFrame=requestAnimationFrame(()=>{previewFrame=null;if(state?.canvasEpoch===epoch)redrawCanvas();});
 }
-function cancelStrokeInput(failed=false){clearStrokeFlush();cancelPreviewFrame();if(active){active.finished=true;if(failed)active.failed=true;}active=null;pending=[];}
-function cancelDrawingWork({cancelSync=true}={}){cancelStrokeInput();drawingTransport.cancel();if(cancelSync)cancelCanvasSync();if(drawingFitFrame!==null)cancelAnimationFrame(drawingFitFrame);drawingFitFrame=null;}
-function pointerPoints(event){
+function cancelStrokeInput(failed=false){clearStrokeFlush();cancelPreviewFrame();if(active){active.finished=true;if(failed)active.failed=true;}active=null;pending=[];pendingTimes=[];}
+function cancelDrawingWork({cancelSync=true}={}){cancelStrokeInput();drawingPlayback.reset();drawingTransport.cancel();if(cancelSync)cancelCanvasSync();if(drawingFitFrame!==null)cancelAnimationFrame(drawingFitFrame);drawingFitFrame=null;}
+function pointerSamples(event){
  let samples;if(event.type==='pointermove')try{samples=event.getCoalescedEvents?.();}catch{}
  samples=(samples?.length?[...samples]:[event]).filter(sample=>sample.pointerId===event.pointerId);
  const rect=canvas.getBoundingClientRect();
- return samples.map(sample=>[Math.max(0,Math.min(511,Math.floor((sample.clientX-rect.left)*512/rect.width))),Math.max(0,Math.min(255,Math.floor((sample.clientY-rect.top)*256/rect.height)))]).filter(point=>point.every(Number.isFinite));
+ return samples.map(sample=>({point:[Math.max(0,Math.min(511,Math.floor((sample.clientX-rect.left)*512/rect.width))),Math.max(0,Math.min(255,Math.floor((sample.clientY-rect.top)*256/rect.height)))],stamp:Number.isFinite(sample.timeStamp)&&sample.timeStamp>=0?sample.timeStamp:null})).filter(sample=>sample.point.every(Number.isFinite));
 }
 function collectPointer(event){
  if(!active||canvasCommandBusy||event.pointerId!==active.pointerId)return false;
  const brush=['brush','erase'].includes(active.tool);let changed=false;
- for(const point of pointerPoints(event)){
+ for(const sample of pointerSamples(event)){
+  const point=sample.point,time=Math.min(120000,Math.max(active.pointTimes.at(-1),Math.round(sample.stamp!==null&&active.startStamp!==null?sample.stamp-active.startStamp:drawNow()-active.startNow)));
   const last=active.points.at(-1);if(point[0]===last[0]&&point[1]===last[1])continue;
   if(active.points.length>=30000||!localCanvasCapacity(1)){drawFeedback('這一筆已達畫布上限，請放開後再操作。','error');break;}
-  if(brush){active.points.push(point);pending.push(point);}else{active.points=[active.points[0],point];pending=[active.points[0],point];}
+  if(brush){active.points.push(point);active.pointTimes.push(time);pending.push(point);pendingTimes.push(time);}else{active.points=[active.points[0],point];pending=[active.points[0],point];}
   active.revision++;cursor=point;changed=true;
  }
  if(changed&&brush){if(pending.length>=40)flush();else scheduleStrokeFlush();}
@@ -565,10 +573,10 @@ function collectPointer(event){
 canvas.addEventListener('pointerdown',event=>{
  if(!canDraw()||active||event.button!==0)return;event.preventDefault();canvas.setPointerCapture(event.pointerId);
  if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints>=30000||!localCanvasCapacity(1)){drawFeedback('本輪筆畫額度已用完或仍在同步，請稍候。','error');return;}
- const point=pointerPoints(event).at(-1);if(!point)return;cursor=point;
+ const sample=pointerSamples(event).at(-1);if(!sample)return;const point=sample.point;cursor=point;
  if(tool==='fill'){queueStroke([point],StrokeCanvas.strokeId(),'fill');return;}
- active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],revision:1,sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
- localStrokes.set(active.strokeId,active);pending=[point];scheduleStrokeFlush();scheduleCanvasPreview();
+ active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],pointTimes:[0],startStamp:sample.stamp,startNow:drawNow(),revision:1,sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
+ localStrokes.set(active.strokeId,active);pending=[point];pendingTimes=[0];scheduleStrokeFlush();scheduleCanvasPreview();
 });
 canvas.addEventListener('pointermove',event=>{
  if(collectPointer(event))scheduleCanvasPreview();
@@ -592,7 +600,7 @@ async function poll(){if(!session||busy||polling)return;polling=true;try{receive
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||location.origin).catch(()=>{});
 entry();if(session)poll();else if(code)RoomReconnect.restore(code,'draw','#connection').then(restored=>{if(restored){save(restored);poll();}});
 setInterval(poll,1000);setInterval(tick,250);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
-document.addEventListener('visibilitychange',()=>{if(document.hidden){if(active)finishPointer({pointerId:active.pointerId,preventDefault(){}});cancelPreviewFrame();}});
-window.addEventListener('pagehide',event=>{cancelDrawingWork();localStrokes.clear();canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(active)finishPointer({pointerId:active.pointerId,preventDefault(){}});cancelPreviewFrame();drawingPlayback.finish();countdownBar.reset();}else tick();});
+window.addEventListener('pagehide',event=>{countdownBar.reset();cancelDrawingWork();localStrokes.clear();canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
 window.addEventListener('pageshow',event=>{if(event.persisted){motionNeedsBaseline=true;if(state){resultsView?.update(state);redrawCanvas();syncCanvas();updateStagePreview();}poll();}});
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});
