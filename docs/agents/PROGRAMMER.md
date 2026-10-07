@@ -1,5 +1,8 @@
 # 程式架構 agent 記憶
 
+2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。
+
+
 正式 shhuang.cc 已以私有 server token 啟用既有本站→stanley021039/BGA Issue／comment／admin status 同步。程式仍v1.12.0／83ffcab，沒有runtime修改或新PR；設定前outbox空、zero-room guard後重載。Issue48正式新增、同UUID重送不重複、前端reply與adminclose均同步，ordinary status403，3筆done無待處理；沒有GitHub→本站同步或legacy backfill。憑證不得放前端／Git／logs；維護與精確scope見 [同步紀錄](../GITHUB-BOARD-SYNC.md)。
 
 2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
@@ -261,3 +264,4 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 同日 PR #38 審查修正：STALE_VOTE 讀新票後須更新待提交草稿 expectedRevision、保留選擇，並要求玩家明確重試。loadSequence 只隔離 GET 套用，不能代替整個操作生命週期的 busy；手動更新先鎖定直到 finally，避免舊清理解鎖新寫入。四項回歸執行實際 market.js＋SQLite store，原程式3失敗／1保護項通過；修後市場17、完整391項通過。Chrome held-fetch 驗真實控件鎖定／0寫入／焦點恢復及三寬度導覽。本筆391取代上段387作最新測試數，詳 [修正證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)。
 
 同日最新main `1447430` 已包含 #34，#38必要整合改為schema14，原禁題版／市場版13各保留已有資料並補另一方空表。保留main引擎、draw store／前端、MotionPolicy、資料鎖及AGENTS，入口／static路由合併雙方變更。六份測試自動合併的SCHEMA_VERSION重複匯入已消除。市場21／Windows全套463及整合版Chrome完整市場流程、held-fetch與三寬度導覽通過；取代391與最新schema13描述，詳 [相容整合](../MARKET-JINX-MAIN-INTEGRATION.md)，#38仍Draft、未合併部署。
+

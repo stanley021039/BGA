@@ -1,5 +1,8 @@
 # 動畫角色記憶
 
+2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。
+
+
 2026-10-07雷霆立體骰子新批（研究／實作中、尚未native驗收）：WebGL只承擔約一秒cube翻滾及權威結果面，沿用id＋startedAt cycle、server結果mask／owner確認；同cycle不重播，動畫完成不送accept。17骰共用一個canvas，與GameFxLayer共享全頁optional兩context預算；真draw才遮原骰面，hidden／reduce／loss／失敗立即fallback、idle停frame。特殊faces保留六面重複配比，文字／條件／可讀結果仍DOM。來源、renderer/dialog協商、CSS tumble與body scroll風險及待驗矩陣見 [新規格](../specs/RACE-DICE-WEBGL.md)／[本次進度](../RACE-DICE-WEBGL-PROGRESS.md)；沒有新FPS或發布證據，不用舊車旁粒子測試代替骰子驗收。
 
 2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
@@ -72,3 +75,4 @@ P0由程式／玩家方先定義畫猜公開回合快照、答案／畫作／收
 2026-10-05彈幕修正已實作及部署（`15af1dd`、U16）：使用者明確要求文字飄過，共用文字／emoji沿舞台右向左8秒線性移動，opacity維持1；移除原有reduced-motion原地淡出替代，其他效果的設定處理未改。公開站連續20畫面X座標837.08→722.21，本地亦確認移動；角色表情未變。詳見 [驗收進度](../BARRAGE-ROOM-SETTINGS-PROGRESS.md)。停止／隱藏控制仍是前述待研究事項，不能把本次移動修正宣稱為全站無障礙完成。
 
 同日後續使用者回報另一台卡頓。控制端Chrome八人畫猜1／8則及作畫同步量測沒有持續停頓；rAF中位7.7ms，作畫最長31ms，無>50ms長任務／長動畫幀，未改動畫。此結果不是GPU畫面幀率，也不代表已排除其他電腦的問題；不可直接用transform、will-change字樣宣稱已硬體加速或流暢。取樣與限制見 [效能檢查](../BARRAGE-PERFORMANCE-CHECK.md)。
+

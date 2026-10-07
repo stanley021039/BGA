@@ -1,6 +1,6 @@
 # 雷霆之路：WebGL 立體骰子規格
 
-日期：2026-10-07。狀態：研究與實作契約，原生畫面／完整測試／正式站驗收待補。
+日期：2026-10-07。狀態：已實作並正式v1.13.0；逐scope驗收及限制見 [進度](../RACE-DICE-WEBGL-PROGRESS.md)，不把全部矩陣視為所有原生場景都通過。
 研究時讀到 package v1.12.0、HEAD 552b41c；這是讀取時點，不能當成新功能受測或發布版本。
 本文件由設計／程式研究角色撰寫；實際完成項目及限制以 [進度](../RACE-DICE-WEBGL-PROGRESS.md) 為準。
 
@@ -145,4 +145,5 @@ destroy删除program/buffer/texture且歸還lease；不可殘留close後frame或
 
 
 最後實作：rolling 每姿態依八頂點投影限制在骰面內並保留1px，避免遮住caption；result維持原尺寸。context clear／awaiting／loss隱藏canvas，不讓舊尺寸造成窄dialog捲軸。原生及兩平台／發布狀態只以進度文件為準。
+
 

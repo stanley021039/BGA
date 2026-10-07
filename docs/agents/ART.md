@@ -1,5 +1,8 @@
 # 美術角色記憶
 
+2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。
+
+
 2026-10-07雷霆立體骰子新批（規格／研究、產品待驗）：一般骰用高對比pips，特殊方向／受推車／射擊車型／火焰用短圖案加DOM中文；主結果面可讀，側面只補立體線索，不缩長詞塞滿貼圖或鏡像方向。普通d6不畫互斥commandmapping，以免誤導nitro／drift重疊條件；射擊SML也命中，陷阱同面意義不同，不能泛用成功綠。自製有界atlas、保留原六面重複配比，沒有下載新圖／字型或採購素材。MDN／Khronos來源、兩owner討論與手機／大字／loss待驗見 [規格](../specs/RACE-DICE-WEBGL.md)／[進度](../RACE-DICE-WEBGL-PROGRESS.md)；尚未宣稱縮小辨識、真GPU／性能或正式發布完成。
 
 2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
@@ -38,3 +41,4 @@
 2026-10-05／93d7a84：本批畫猜猜中標記重用共用24 viewBox check SVG，頭像角落20px章＋靜態淺綠邊框，不修改角色圖片或表情。送禮沿用已有圖像，以原創 transform/opacity 動作表達到達；沒有採購／下載新素材，也未把研究的成就／共看原型宣稱已整合。Chrome已看勾章、14px狀態與offline並列；詳 [驗收](../DRAW-REVIEW-MOTION-PROGRESS.md)。
 
 程式方 owner `tools/prototypes/generate-motion-art.cjs` 及 `docs/prototypes/motion-art.html`；美術方唯讀對照原型語意與單次/reduced static。若後续採用新包，先保存實際license與asset manifest，再整合；此研究沒有採購／部署。角色記憶保留方法和取捨，詳細候選及license evidence留spec，避免無限抄滿來源首頁。
+
