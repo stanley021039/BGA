@@ -46,6 +46,8 @@
  const defaultLimits={maxUploadBytes:2097152,maxImageBytes:4194304,maxDimension:4096,maxPixels:8000000,maxPerUser:100,maxImages:1000,maxStorageBytes:268435456,maxApprovalBatch:1000};
  const gallery={view:null,limits:{...defaultLimits},mine:null,mineBusy:false,mineSequence:0,review:null,reviewBusy:false,reviewSequence:0,selected:new Set(),upload:null,uploadSequence:0,uploadReading:false,uploadBusy:false,uploadAttempt:null,approval:null,approvalBusy:false,approvalSequence:0};
  const drawState={targetDate:null,images:{},sequence:0,requested:false,busy:false,error:''};
+ // A timed-out or rate-limited retry may never reach an earlier committed receipt.
+ const unresolvedGalleryError=error=>!error.status||error.status>=500||error.status===408||error.status===429;
  const checkedValues=selector=>[...$(selector).querySelectorAll('input:checked')].map(input=>input.value);
  const imageUrl=image=>'/api/market/images/'+encodeURIComponent(image.id)+'/media';
  const imageRules=image=>(image.buckets||[]).map(id=>name(id,R.CONFIG)).join('、')+' · '+((image.weekdays||[]).length===7?'不限星期':(image.weekdays||[]).map(day=>weekdays[day]).join('、'));
@@ -105,7 +107,7 @@
   if(!gallery.uploadAttempt){const buckets=checkedValues('#uploadBuckets'),weekdays=checkedValues('#uploadWeekdays').map(Number);if(!gallery.upload||!buckets.length||!weekdays.length){galleryMessage('#uploadStatus','請選擇有效圖片、至少一個區間及一天星期。',true);return;}if((gallery.mine?.images.length||0)>=gallery.limits.maxPerUser){galleryMessage('#uploadStatus','已達每人投稿數量上限。',true);return;}gallery.uploadAttempt={payload:{requestId:requestId(),mime:gallery.upload.mime,base64:gallery.upload.base64,buckets,weekdays},acknowledged:false};}
   const attempt=gallery.uploadAttempt;gallery.uploadBusy=true;updateUploadControls();galleryMessage('#uploadStatus','正在送出投稿…');
   try{if(!attempt.acknowledged){await api('/api/market/images',attempt.payload);attempt.acknowledged=true;}await loadMine();if(gallery.uploadAttempt!==attempt)return;gallery.uploadAttempt=null;gallery.upload=null;$('#uploadFile').value='';$('#uploadPreview').innerHTML='<span>選擇檔案後顯示預覽</span>';galleryMessage('#uploadStatus','投稿已送出，等待管理員核准。');}
-  catch(error){if(gallery.uploadAttempt!==attempt)return;if(error.status&&error.status<500&&!attempt.acknowledged){gallery.uploadAttempt=null;galleryMessage('#uploadStatus',error.message,true);}else galleryMessage('#uploadStatus',(attempt.acknowledged?'投稿已保存，但清單更新失敗。':'投稿結果尚未確認。')+' 請按「重試確認同一筆投稿」，不會新增重複投稿。',true);}
+  catch(error){if(gallery.uploadAttempt!==attempt)return;if(!unresolvedGalleryError(error)&&!attempt.acknowledged){gallery.uploadAttempt=null;galleryMessage('#uploadStatus',error.message,true);}else galleryMessage('#uploadStatus',(attempt.acknowledged?'投稿已保存，但清單更新失敗。':'投稿結果尚未確認。')+' 請按「重試確認同一筆投稿」，不會新增重複投稿。',true);}
   finally{if(gallery.uploadAttempt===attempt||!gallery.uploadAttempt){gallery.uploadBusy=false;updateUploadControls();}}
  }
  function reviewFilters(){return {buckets:checkedValues('#reviewBuckets'),weekdays:checkedValues('#reviewWeekdays').map(Number)};}
@@ -131,7 +133,7 @@
   const attempt=gallery.approval;if(!attempt||gallery.approvalBusy||attempt.invalid||!$('#approvalDialog').open)return;
   gallery.approvalBusy=true;$('#confirmApproval').disabled=true;$('#cancelApproval').disabled=true;$('#approvalError').textContent='';updateReviewControls();
   try{if(!attempt.acknowledged){await api('/api/admin/market/images/approve',{requestId:attempt.requestId,confirmed:true,images:attempt.images});attempt.acknowledged=true;}await loadReview();if(gallery.approval!==attempt)return;gallery.approval=null;gallery.selected.clear();$('#approvalDialog').close();galleryMessage('#reviewStatus','已核准本次確認的 '+attempt.images.length+' 張圖片。');}
-  catch(error){if(gallery.approval!==attempt)return;attempt.uncertain=!error.status||error.status>=500||attempt.acknowledged;attempt.invalid=!attempt.uncertain;attempt.error=attempt.uncertain?(attempt.acknowledged?'圖片已核准，但清單更新失敗。':'核准結果尚未確認。')+' 重試只確認同一批圖片與版本。':error.message+' 請返回清單更新後重新確認。';$('#approvalError').textContent=attempt.error;$('#confirmApproval').textContent=attempt.uncertain?'重試確認同一批':'請重新確認清單';$('#confirmApproval').disabled=attempt.invalid;}
+  catch(error){if(gallery.approval!==attempt)return;attempt.uncertain=unresolvedGalleryError(error)||attempt.acknowledged;attempt.invalid=!attempt.uncertain;attempt.error=attempt.uncertain?(attempt.acknowledged?'圖片已核准，但清單更新失敗。':'核准結果尚未確認。')+' 重試只確認同一批圖片與版本。':error.message+' 請返回清單更新後重新確認。';$('#approvalError').textContent=attempt.error;$('#confirmApproval').textContent=attempt.uncertain?'重試確認同一批':'請重新確認清單';$('#confirmApproval').disabled=attempt.invalid;}
   finally{gallery.approvalBusy=false;$('#cancelApproval').disabled=false;if(gallery.approval===attempt)$('#confirmApproval').disabled=!!attempt.invalid;updateReviewControls();}
  }
  function galleryView(view){

@@ -8,11 +8,13 @@ const source=fs.readFileSync(path.join(__dirname,'../public/market.js'),'utf8');
 const limits={maxUploadBytes:2097152,maxImageBytes:4194304,maxDimension:4096,maxPixels:8000000,maxPerUser:100,maxImages:1000,maxStorageBytes:268435456,maxApprovalBatch:1000};
 const image=(id,extra={})=>({id,version:1,authorName:'上傳者 '+id,buckets:['crash','fall'],weekdays:[1,2,3,4,5],width:32,height:32,status:'pending',createdAt:'2027-01-01T08:00:00Z',url:'/api/market/images/'+id+'/media',...extra});
 const response=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json'}});
-async function fixture({role='member',rounds=true,pending=[image('a'),image('b')],mine=[],hash='',hook}={}){
+async function fixture({role='member',rounds=true,pending=[image('a'),image('b')],mine=[],hash='',hook,beforeHook}={}){
  const events=[];let current={me:{id:'member',username:'server_user',displayName:'伺服器作者',role},serverNow:'2027-01-04T08:00:00Z',rules:R.snapshot(),stats:{score:24,hits:8,played:12},ledger:[],rounds:rounds?['2027-01-06','2027-01-07'].map((targetDate,index)=>({id:'round'+index,targetDate,cutoffAt:R.cutoffFor(targetDate),settlementAfter:R.settlementFor(targetDate),rules:R.snapshot(),phase:'open',result:null,vote:{optionId:'dip',revision:4,updatedAt:'2027-01-04T07:00:00Z'},...(role==='admin'?{voteCount:2,settlementHistory:[]}: {})})):[]};
- let drawNumber=0,approvedRequests=new Map();
+ let drawNumber=0,approvedRequests=new Map(),uploadedRequests=new Map();
  const fetch=async(url,options={})=>{
   const input=options.body?JSON.parse(options.body):null,event={url,method:options.method||'GET',input};events.push(event);
+  // Model HTTP failures that occur before a durable idempotency receipt is read.
+  if(beforeHook){const result=await beforeHook({event,events});if(result instanceof Response)return result;}
   let body;
   if(url==='/api/market'||url==='/api/admin/market')body=structuredClone(current);
   else if(url==='/api/market/images/draw'){const metadata=image('draw'+(++drawNumber),{status:'approved',authorName:'伺服器抽圖作者'});body={targetDate:input.targetDate,images:{crash:metadata,fall:null,dip:null,rise:null,rally:null,surge:null}};}
@@ -22,7 +24,7 @@ async function fixture({role='member',rounds=true,pending=[image('a'),image('b')
    const filtered=pending.filter(item=>item.status==='pending'&&(!buckets.length||item.buckets.some(bucket=>buckets.includes(bucket)))&&(!days.length||item.weekdays.some(day=>days.includes(day))));body={images:structuredClone(filtered),total:filtered.length,limits};
   }
   else if(url==='/api/market/vote'){const round=current.rounds.find(round=>round.id===input.roundId);round.vote={optionId:input.optionId,revision:input.expectedRevision+1,updatedAt:current.serverNow};body={ok:true,revision:round.vote.revision};}
-  else if(url==='/api/market/images'){mine.push(image('uploaded',{authorName:current.me.displayName,buckets:input.buckets,weekdays:input.weekdays}));body={ok:true};}
+  else if(url==='/api/market/images'){if(uploadedRequests.has(input.requestId))body={ok:true,replayed:true};else{mine.push(image('uploaded',{authorName:current.me.displayName,buckets:input.buckets,weekdays:input.weekdays}));uploadedRequests.set(input.requestId,true);body={ok:true};}}
   else if(url==='/api/admin/market/images/approve'){
    if(approvedRequests.has(input.requestId))body={ok:true,replayed:true};
    else{for(const ref of input.images){const item=pending.find(item=>item.id===ref.id);if(!item||item.status!=='pending'||item.version!==ref.version)return response({code:'STALE_IMAGE_BATCH',error:'批次已變更'},409);}for(const ref of input.images)pending.find(item=>item.id===ref.id).status='approved';approvedRequests.set(input.requestId,true);body={ok:true};}
@@ -140,8 +142,7 @@ test('duplicate upload submission and navigation keep gallery busy separate from
 
 test('lost upload response freezes payload and retries the same request ID; acknowledged uploads only refresh',async()=>{
  let lost=false;const f=await fixture({hook:({event})=>{if(event.url==='/api/market/images'&&!lost){lost=true;throw Error('lost');}}});await uploads(f);await f.client.file(file());f.client.check('#uploadBuckets',['crash']);f.client.check('#uploadWeekdays',[1]);await f.client.upload();const initial=f.uploads()[0].input;assert.equal(f.client.inspect().gallery.uploadBusy,false);assert.ok(f.client.inspect().gallery.uploadAttempt);await f.client.file(file({name:'replacement.png',bytes:'different'}));assert.deepEqual(f.client.inspect().gallery.uploadAttempt.payload,initial);await f.client.upload();assert.deepEqual(f.uploads()[1].input,initial);
- // The synthetic transport does not implement server idempotency here; the
- // request identity equality above verifies the shipped client replay contract.
+ assert.equal(f.mine.length,1,'same-ID upload replay must leave one stored image');
  let failedRead=false;const acknowledged=await fixture({hook:({event,events})=>{if(event.url==='/api/market/images/mine'&&events.some(item=>item.url==='/api/market/images')&&!failedRead){failedRead=true;throw Error('read failed');}}});await uploads(acknowledged);await acknowledged.client.file(file());acknowledged.client.check('#uploadBuckets',['crash']);acknowledged.client.check('#uploadWeekdays',[1]);await acknowledged.client.upload();assert.equal(acknowledged.client.inspect().gallery.uploadAttempt.acknowledged,true);await acknowledged.client.upload();assert.equal(acknowledged.uploads().length,1);assert.equal(acknowledged.client.inspect().gallery.uploadAttempt,null);
 });
 
@@ -161,4 +162,37 @@ test('per-member upload quota and the approval batch bound block client writes w
 
 test('gallery output escapes server names and never loads metadata-provided third-party image URLs',async()=>{
  const hostile=image('a',{authorName:'<script>alert(1)</script>',url:'https://untrusted.example/image.png'});const f=await fixture({role:'admin',pending:[hostile],mine:[hostile]});await uploads(f);assert.match(f.client.node('#myImages').innerHTML,/&lt;script&gt;/);assert.doesNotMatch(f.client.node('#myImages').innerHTML,/<script>|https:\/\//);await review(f);f.client.node('#approveFiltered').onclick();assert.match(f.client.node('#approvalItems').innerHTML,/&lt;script&gt;/);assert.doesNotMatch(f.client.node('#pendingImages').innerHTML,/<script>|https:\/\//);
+});
+
+for(const status of [408,429]){
+ test(`upload preserves an unresolved request through HTTP ${status} and later replays without duplication`,async()=>{
+  let writes=0;
+  const f=await fixture({beforeHook:({event})=>{if(event.url==='/api/market/images'&&++writes===2)return response({code:'TRANSIENT_HTTP',error:'temporarily unavailable'},status);},hook:({event})=>{if(event.url==='/api/market/images'&&writes===1)throw Error('successful response lost');}});
+  await uploads(f);await f.client.file(file());f.client.check('#uploadBuckets',['crash','fall']);f.client.check('#uploadWeekdays',[0,2]);
+  await f.client.upload();const frozen=f.client.inspect().gallery.uploadAttempt.payload;assert.equal(f.mine.length,1);assert.equal(f.client.inspect().gallery.uploadAttempt.acknowledged,false);
+  await f.client.upload();assert.deepEqual(f.client.inspect().gallery.uploadAttempt?.payload,frozen);assert.equal(f.client.inspect().gallery.uploadAttempt.acknowledged,false);assert.equal(f.client.inspect().gallery.uploadBusy,false);assert.equal(f.client.node('#submitUpload').disabled,false);assert.match(f.client.node('#submitUpload').textContent,/重試確認同一筆/);
+  f.client.view('records');await f.client.file(file({name:'new.png',bytes:'new'}));await uploads(f);assert.deepEqual(f.client.inspect().gallery.uploadAttempt.payload,frozen);assert.equal(f.client.inspect().gallery.upload.filename,'測試.png');
+  await f.client.upload();assert.equal(f.client.inspect().gallery.uploadAttempt,null);assert.equal(f.mine.length,1);assert.equal(f.uploads().length,3);for(const event of f.uploads())assert.deepEqual(event.input,frozen);assert.equal(f.client.inspect().busy,false);
+ });
+
+ test(`approval preserves frozen IDs, versions and count through HTTP ${status}, cancellation and resume`,async()=>{
+  let writes=0;
+  const f=await fixture({role:'admin',pending:[image('a',{version:3}),image('b',{version:7})],beforeHook:({event})=>{if(event.url==='/api/admin/market/images/approve'&&++writes===2)return response({code:'TRANSIENT_HTTP',error:'temporarily unavailable'},status);},hook:({event})=>{if(event.url==='/api/admin/market/images/approve'&&writes===1)throw Error('successful response lost');}});
+  await review(f);f.client.node('#approveFiltered').onclick();await f.client.node('#confirmApproval').onclick();const original=f.approvals()[0].input,frozen=f.client.inspect().gallery.approval;
+  assert.deepEqual(original.images,[{id:'a',version:3},{id:'b',version:7}]);f.client.node('#cancelApproval').onclick();f.pending.push(image('later'));await f.client.node('#refreshReview').onclick();assert.equal(f.client.inspect().gallery.review.images.length,1);
+  f.client.node('#resumeApproval').onclick();assert.match(f.client.node('#approvalSummary').textContent,/2 張/);await f.client.node('#confirmApproval').onclick();const after=f.client.inspect().gallery.approval;assert.equal(after.uncertain,true);assert.equal(after.invalid,false);assert.equal(after.requestId,frozen.requestId);assert.deepEqual(after.images,frozen.images);assert.deepEqual(after.details,frozen.details);assert.equal(f.client.node('#confirmApproval').disabled,false);
+  f.client.cancelApproval();f.client.view('records');await review(f);f.client.node('#resumeApproval').onclick();assert.match(f.client.node('#approvalSummary').textContent,/2 張/);await f.client.node('#confirmApproval').onclick();assert.equal(f.client.inspect().gallery.approval,null);assert.equal(f.approvals().length,3);for(const event of f.approvals())assert.deepEqual(event.input,original);assert.equal(f.pending.find(item=>item.id==='later').status,'pending');assert.equal(f.client.inspect().busy,false);
+ });
+}
+
+test('six lost successful upload responses followed by pre-receipt rate limiting retain one upload identity',async()=>{
+ let writes=0;
+ const f=await fixture({beforeHook:({event})=>{if(event.url==='/api/market/images'&&++writes===7)return response({code:'RATE_LIMITED',error:'too many requests'},429);},hook:({event})=>{if(event.url==='/api/market/images'&&writes<=6)throw Error('successful response lost');}});
+ await uploads(f);await f.client.file(file());f.client.check('#uploadBuckets',['crash']);f.client.check('#uploadWeekdays',[1]);
+ for(let index=0;index<7;index++)await f.client.upload();const original=f.uploads()[0].input;assert.deepEqual(f.client.inspect().gallery.uploadAttempt?.payload,original);assert.equal(f.mine.length,1);await f.client.upload();assert.equal(f.mine.length,1);assert.equal(f.client.inspect().gallery.uploadAttempt,null);assert.equal(f.uploads().length,8);for(const event of f.uploads())assert.deepEqual(event.input,original);
+});
+
+test('genuine definite upload and approval 4xx errors still release or invalidate their attempts',async()=>{
+ const f=await fixture({beforeHook:({event})=>event.url==='/api/market/images'?response({code:'INVALID_MARKET_IMAGE',error:'invalid image'},400):undefined});await uploads(f);await f.client.file(file());f.client.check('#uploadBuckets',['crash']);f.client.check('#uploadWeekdays',[1]);await f.client.upload();assert.equal(f.client.inspect().gallery.uploadAttempt,null);assert.equal(f.client.node('#uploadFile').disabled,false);assert.match(f.client.node('#uploadStatus').textContent,/invalid image/);assert.equal(f.mine.length,0);
+ const admin=await fixture({role:'admin',beforeHook:({event})=>event.url==='/api/admin/market/images/approve'?response({code:'STALE_IMAGE_BATCH',error:'stale batch'},409):undefined});await review(admin);admin.client.node('#approveFiltered').onclick();await admin.client.node('#confirmApproval').onclick();assert.equal(admin.client.inspect().gallery.approval.uncertain,false);assert.equal(admin.client.inspect().gallery.approval.invalid,true);assert.equal(admin.client.node('#confirmApproval').disabled,true);admin.client.node('#cancelApproval').onclick();assert.equal(admin.client.inspect().gallery.approval,null);
 });

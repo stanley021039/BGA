@@ -49,11 +49,12 @@ schema 16 精確檢查表的欄位／型別／PK／FK／unique／完整 CHECK �
 
 ## 驗證與限制（2026-10-07）
 
-- 最終市場／圖片庫／HTTP／移轉／前端 VM 聚焦回歸 123/123 通過，失敗／跳過／取消 0
-- Linux Node 24.19.0 原始 `npm test`：915/916，失敗 1、跳過／取消 0；唯一失敗仍是下述既有 OS 網卡列舉限制
-- 顯式測試 fixture 僅在該 OS 呼叫回 errno 1 時供應空網卡清單，未修改生產程式；補充全套 916/916，失敗／跳過／取消 0。原始與補充結果不能混稱無條件全套通過
+- 最終市場／圖片庫／HTTP／移轉／前端 VM 聚焦回歸 131/131 通過，失敗／跳過／取消 0
+- Linux Node 24.19.0 原始 `npm test`：923/924，失敗 1、跳過／取消 0；唯一失敗仍是下述既有 OS 網卡列舉限制
+- 顯式測試 fixture 僅在該 OS 呼叫回 errno 1 時供應空網卡清單，未修改生產程式；補充全套 924/924，失敗／跳過／取消 0。原始與補充結果不能混稱無條件全套通過
 - `npm run release:check -- --base 9c2bceafb73d8f2af18dc149743a32db55f3fccc --type minor`、JavaScript 語法及 `git diff --check` 通過；依賴 audit 0 vulnerabilities
-- 獨立審查尚待完成，PR 保持 Draft
+- 獨立審查確認一筆重送 P2：網路回應不明後重試遇到 408／429，先前客戶端可能丟棄固定 requestId／核准批次。已修正為保留同筆／同批並加入 6 項 VM 及 2 項真實 HTTP＋出貨客戶端回歸：六次上傳成功回應丟失後第七次 429，恢復後仍只有一張圖片；三十次核准回應丟失後 429／取消／恢復，仍不加入新投稿
+- 修正的獨立複驗待完成，PR 保持 Draft
 - 這台雲端環境的 OS 網卡列舉回 `uv_interface_addresses` errno 1，未修改 main 的基線全套因此為 814/815；唯一失敗是既有 `web-features` 的 `/api/info` 呼叫。原始全套及顯式空網卡測試 fixture 的補充結果分開報告
 - 真實桌機／手機視覺驗收尚未完成：支援的雲端 Chrome 阻擋 localhost preview（`net::ERR_BLOCKED_BY_CLIENT`）；直接 headless Chromium 啟動亦受 OS socket 限制。不能以 VM／HTTP 測試冒稱真人瀏覽器或手機已驗
 - 沒有本次 Windows／Safari／真人多裝置驗收，沒有操作正式帳號、服務或資料

@@ -61,3 +61,32 @@ test('large frozen HTTP approval batches fit the bounded envelope and exclude ne
  const pending=await (await f.fetcher('/api/admin/market/images',{cookie:f.cookies[0]})).json();assert.equal(pending.total,1);assert.equal(pending.images[0].id,newer.id);
  const replay=await f.fetcher('/api/admin/market/images/approve',{cookie:f.cookies[0],body:batch});assert.equal(replay.status,200);assert.equal((await replay.json()).replayed,true);
 });
+
+const {createClient}=require('./helpers/market-client.cjs'),R=require('../public/market-rules');
+const clientSource=()=>fs.readFileSync(path.join(__dirname,'../public/market.js'),'utf8');
+async function eventually(predicate){const until=performance.now()+5000;while(!predicate()){if(performance.now()>until)throw Error('HTTP-backed client did not settle');await new Promise(resolve=>setTimeout(resolve,2));}}
+test('real HTTP rate-limited upload retries preserve one frozen request and never duplicate a committed image',async t=>{const f=await fixture(t),events=[],realNow=Date.now;let offset=0,dropReplies=true;Date.now=()=>realNow()+offset;
+ try{
+  const transport=async(url,options={})=>{const r=await fetch(f.base+url,{...options,headers:{...options.headers,Cookie:f.cookies[1]}});if(url==='/api/market/images'&&options.method==='POST'){events.push({id:JSON.parse(options.body).requestId,status:r.status});if(r.ok&&dropReplies){await r.text();throw Error('synthetic committed upload response lost');}}return r;};
+  const client=await createClient({source:clientSource(),rules:R,fetch:transport,hash:'#uploads'});await eventually(()=>!client.inspect().gallery.mineBusy);
+  const bytes=png();await client.file({name:'same.png',type:'image/png',size:bytes.length,bytes,width:2,height:2});client.check('#uploadBuckets',['crash']);client.check('#uploadWeekdays',[1]);
+  for(let i=0;i<7;i++)await client.upload();assert.deepEqual(events.map(event=>event.status),[200,200,200,200,200,200,429]);
+  const frozen=client.inspect().gallery.uploadAttempt;assert.ok(frozen,'429 must not discard an already-ambiguous upload');assert.equal(frozen.payload.requestId,events[0].id);
+  let mine=await (await f.fetcher('/api/market/images/mine',{cookie:f.cookies[1]})).json();assert.equal(mine.images.length,1);
+  offset=61000;dropReplies=false;await client.upload();assert.equal(events.at(-1).status,200);assert.equal(new Set(events.map(event=>event.id)).size,1);assert.equal(client.inspect().gallery.uploadAttempt,null);
+  mine=await (await f.fetcher('/api/market/images/mine',{cookie:f.cookies[1]})).json();assert.equal(mine.images.length,1);assert.match(client.node('#uploadStatus').textContent,/投稿已送出/);
+ }finally{Date.now=realNow;}
+});
+test('real HTTP rate-limited approval retries preserve the original frozen batch and leave new uploads pending',async t=>{const f=await fixture(t),first=(await (await f.upload(f.cookies[1])).json()).image,events=[],realNow=Date.now;let offset=0,dropReplies=true;Date.now=()=>realNow()+offset;
+ try{
+  const transport=async(url,options={})=>{const r=await fetch(f.base+url,{...options,headers:{...options.headers,Cookie:f.cookies[0]}});if(url==='/api/admin/market/images/approve'&&options.method==='POST'){events.push({input:JSON.parse(options.body),status:r.status});if(r.ok&&dropReplies){await r.text();throw Error('synthetic committed approval response lost');}}return r;};
+  const client=await createClient({source:clientSource(),rules:R,fetch:transport,hash:'#admin'});await eventually(()=>!client.inspect().gallery.reviewBusy&&client.inspect().gallery.review);
+  client.node('#approveFiltered').onclick();const frozen=client.inspect().gallery.approval;assert.deepEqual(frozen.images,[{id:first.id,version:1}]);
+  for(let i=0;i<31;i++)await client.node('#confirmApproval').onclick();assert.equal(events.length,31);assert.equal(events.at(-1).status,429);
+  const retry=client.inspect().gallery.approval;assert.equal(retry.uncertain,true);assert.equal(retry.invalid,false);assert.deepEqual(retry.images,frozen.images);assert.equal(retry.requestId,frozen.requestId);
+  client.node('#cancelApproval').onclick();assert.equal(client.node('#resumeApproval').hidden,false);
+  const newer=(await (await f.upload(f.cookies[1])).json()).image;offset=61000;dropReplies=false;await client.node('#refreshReview').onclick();client.node('#resumeApproval').onclick();await client.node('#confirmApproval').onclick();
+  assert.equal(events.at(-1).status,200);assert.equal(new Set(events.map(event=>event.input.requestId)).size,1);for(const event of events)assert.deepEqual(event.input.images,frozen.images);
+  const pending=await (await f.fetcher('/api/admin/market/images',{cookie:f.cookies[0]})).json();assert.equal(pending.total,1);assert.equal(pending.images[0].id,newer.id);assert.equal(client.inspect().gallery.approval,null);
+ }finally{Date.now=realNow;}
+});
