@@ -59,6 +59,7 @@
  const feedback=(message,kind='info')=>{const node=q('#shared-error');node.classList.toggle('ok',kind==='success');if(window.GameUI)window.GameUI.setStatus(node,message,{kind});else{node.dataset.kind=kind;node.setAttribute('aria-live','polite');if(node.textContent!==message)node.textContent=message;}};
  feedback('');
  window.GameUI?.decorateButton(q('#shared-barrage button[type=submit]'),'send',{iconOnly:true,label:'發送文字彈幕'});
+ if(window.BarrageFrames){const button=document.createElement('button');button.type='button';button.id='shared-frame-toggle';button.setAttribute('aria-haspopup','dialog');button.setAttribute('aria-controls','barrage-frame-picker');window.GameUI?.decorateButton(button,'frame',{iconOnly:true,label:'選擇彈幕框'});q('#shared-barrage input').after(button);button.onclick=()=>window.BarrageFrames.openPicker(button);}
  const emojiPicker=document.createElement('div');emojiPicker.id='shared-emoji-picker';emojiPicker.className='shared-emoji-picker';emojiPicker.hidden=true;emojiPicker.setAttribute('role','group');emojiPicker.setAttribute('aria-label','emoji彈幕與角色表情');q('#shared-barrage').after(emojiPicker);
  const emojiHeading=document.createElement('h3');emojiHeading.textContent='一般emoji彈幕';const emojiChoices=document.createElement('div');emojiChoices.className='shared-emoji-choices';const separator=document.createElement('hr');separator.setAttribute('role','separator');const expressionHeading=document.createElement('h3');expressionHeading.textContent='角色表情';emojiPicker.append(emojiHeading,emojiChoices,separator,expressionHeading,expressions);
  const emoteButton=document.createElement('button');emoteButton.type='button';emoteButton.id='shared-emote-toggle';emoteButton.textContent='☺';emoteButton.setAttribute('aria-label','選擇emoji或角色表情');emoteButton.setAttribute('aria-expanded','false');emoteButton.setAttribute('aria-controls','shared-emoji-picker');window.GameUI?.decorateButton(emoteButton,'emoji',{iconOnly:true,label:'選擇emoji或角色表情'});q('#shared-barrage').append(emoteButton);
@@ -70,17 +71,19 @@
  fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiChoices.append(button);}}).catch(error=>{emojiChoices.textContent=error.message;});
  let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false;
  const barrages=MotionPolicy.createBarrageController((item,lane,{moving,finish})=>{
-  const bubble=element('div','game-barrage','');bubble.style.top=`${12+lane*18}%`;
-  bubble.append(element('strong','',item.name+'：'));
-  if(item.kind==='emoji'){bubble.classList.add('game-emoji-barrage');bubble.append(element('span','game-emoji-glyph',item.emoji));}
-  else bubble.append(document.createTextNode(item.message));
+  const bubble=element('div','game-barrage','');
+  if(item.kind==='emoji'){bubble.append(element('strong','',item.name+'：'));bubble.classList.add('game-emoji-barrage');bubble.append(element('span','game-emoji-glyph',item.emoji));}
+  else if(window.BarrageFrames){bubble.classList.add('game-barrage-framed');window.BarrageFrames.decorate(bubble,item.frame,item.name,item.message);}
+  else bubble.append(element('strong','',item.name+'：'),document.createTextNode(item.message));
   if(!moving)bubble.classList.add('game-barrage-static');
-  barrageLayer.append(bubble);
+  if(window.BarrageFrames){if(!window.BarrageFrames.place(barrageLayer,bubble))return false;}
+  else{bubble.style.top=`${12+lane*18}%`;barrageLayer.append(bubble);}
   if(moving)bubble.style.setProperty('--barrage-travel',`-${barrageLayer.clientWidth+bubble.offsetWidth+24}px`);
   bubble.addEventListener('animationend',finish,{once:true});return ()=>bubble.remove();
  });
+ let layerSize=null;const barrageResize=window.BarrageFrames&&typeof ResizeObserver==='function'?new ResizeObserver(()=>{const next=[barrageLayer.clientWidth,barrageLayer.clientHeight].join(':');if(layerSize!==null&&layerSize!==next)barrages.clear();layerSize=next;}):null;barrageResize?.observe(barrageLayer);
  const expressionSounds=window.ExpressionSounds?.create();
- window.addEventListener('pagehide',event=>{if(event.persisted){barrages.disconnect();expressionSounds?.reset();}else{barrages.dispose();expressionSounds?.destroy();}});
+ window.addEventListener('pagehide',event=>{if(event.persisted){barrages.disconnect();expressionSounds?.reset();}else{barrageResize?.disconnect();barrages.dispose();expressionSounds?.destroy();}});
  function turnOf(s){
   if(['waiting','finished','showdown'].includes(s.phase))return s.phase==='waiting'?'等待房主開始':s.phase==='finished'?'本局結束':'本手結算中';
   if(s.type==='gift'){
@@ -163,7 +166,7 @@
   catch(error){feedback(error.message,'error');return false;}
   finally{sending=false;if(window.GameUI)window.GameUI.setBusy(trigger,false);else if(trigger){trigger.removeAttribute('aria-busy');trigger.classList.remove('is-pending');}buttons.forEach((button,index)=>button.disabled=disabled[index]);q('#shared-barrage').removeAttribute('aria-busy');}
  }
- q('#shared-barrage').onsubmit=async event=>{event.preventDefault();const input=q('#shared-barrage input'),message=input.value.trim();if(!message)return;if([...message].length>40){feedback('文字彈幕最多 40 字','error');return;}if(await send({kind:'barrage',message},'文字彈幕已送出',q('#shared-barrage button[type=submit]'))&&input.value.trim()===message)input.value='';};
+ q('#shared-barrage').onsubmit=async event=>{event.preventDefault();const input=q('#shared-barrage input'),message=input.value.trim();if(!message)return;if([...message].length>40){feedback('文字彈幕最多 40 字','error');return;}const builtinFrameId=window.BarrageFrames?.get().selected;if(await send({kind:'barrage',message,...(builtinFrameId?{builtinFrameId}:{})},'文字彈幕已送出',q('#shared-barrage button[type=submit]'))&&input.value.trim()===message)input.value='';};
  q('#shared-toggle').onclick=()=>{const expanded=panel.classList.toggle('expanded');q('#shared-toggle').setAttribute('aria-expanded',String(expanded));q('#shared-toggle').textContent=expanded?'收合互動':'表情／彈幕';};
  window.addEventListener('focus',()=>{if(state){nextLoad=0;loadExpressions();}});
  let leaving=false;

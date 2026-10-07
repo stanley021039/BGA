@@ -1,6 +1,7 @@
 (()=>{
  const paths={
   emoji:'<circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0M8.5 8.5h.01M15.5 8.5h.01"/>',
+  frame:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M17 15h.01"/>',
   close:'<path d="m6 6 12 12M18 6 6 18"/>',
   send:'<path d="m3 3 18 9-18 9 4-9-4-9Z M7 12h14"/>',
   leave:'<path d="M9 5H4v14h5M9 12h12m-4-4 4 4-4 4"/>',

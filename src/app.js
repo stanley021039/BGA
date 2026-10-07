@@ -35,6 +35,7 @@ const {createYoutubeTitleResolver}=require('./media/youtube-title');
 const {roomRole,canKick,setRoomRole,pruneRoomRoles,permissionsView}=require('./rooms/permissions');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
 const {ROOM_EMOJIS}=require('./social/emojis');
+const {BUILTIN_FRAME_OPTIONS,builtinFrameDescriptor}=require('./barrage/builtins');
 const {acquireDataLocks}=require('./data/locks');
 const {version:applicationVersion}=require('../package.json');
 function createApp(config){
@@ -240,7 +241,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/profile/options'&&req.method==='GET'){
   return send({defaults,expressionLabels,characters:galleryFor(db,user.id)});
  }
- if(url.pathname==='/api/social/options'&&req.method==='GET')return send({emojis:ROOM_EMOJIS});
+ if(url.pathname==='/api/social/options'&&req.method==='GET')return send({emojis:ROOM_EMOJIS,barrageFrames:BUILTIN_FRAME_OPTIONS});
  if(url.pathname==='/api/profile/characters'&&req.method==='POST'){limitAccount(user);return send(createCharacter(db,user.id,data));}
  const characterDelete=url.pathname.match(/^\/api\/profile\/characters\/([a-f0-9-]{36})\/delete$/);
  if(characterDelete&&req.method==='POST'){limitAccount(user);return send(removeCharacter(db,user.id,characterDelete[1]));}
@@ -472,7 +473,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   }else if(data.kind==='barrage'){
    const message=typeof data.message==='string'?data.message.trim():'';
    if(!message||[...message].length>40||/[\u0000-\u001f\u007f]/.test(message))throw new HttpError(400,'INVALID_BARRAGE','文字彈幕需為 1–40 字，且不能換行');
-   event={id:randomBytes(8).toString('hex'),kind:'barrage',playerId:p.id,name:user.display_name,message,at:now};
+   event={id:randomBytes(8).toString('hex'),kind:'barrage',playerId:p.id,name:user.display_name,message,frame:builtinFrameDescriptor(data.builtinFrameId),at:now};
   }else if(data.kind==='emoji'){
    if(typeof data.emoji!=='string'||!ROOM_EMOJIS.includes(data.emoji))throw new HttpError(400,'INVALID_EMOJI','請選擇選單中的 emoji');
    event={id:randomBytes(8).toString('hex'),kind:'emoji',playerId:p.id,name:user.display_name,emoji:data.emoji,at:now};
@@ -506,7 +507,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  }
  const musicAsset=url.pathname.match(/^\/assets\/music\/([a-f0-9-]{36})$/);
  if(Object.hasOwn(FREEHAND_ASSETS,url.pathname)){res.setHeader('Content-Type','image/svg+xml');res.setHeader('Content-Security-Policy',"default-src 'none'; sandbox");return res.end(fs.readFileSync(path.join(__dirname,'..','public',FREEHAND_ASSETS[url.pathname])));}
- if(url.pathname==='/shared/freehand-ui.css'||url.pathname==='/shared/ui-widgets.js'||url.pathname==='/shared/ui-widgets.css'||url.pathname==='/shared/ui-notifications.js'||url.pathname==='/shared/ui-notifications.css'||url.pathname==='/shared/ui-celebrations.js'||url.pathname==='/shared/ui-celebrations.css'||url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'||url.pathname==='/shared/game-fx-layer.js'||url.pathname==='/shared/game-fx-layer.css'||url.pathname==='/shared/race-dice-webgl.js'){
+ if(url.pathname==='/shared/barrage-frames.js'||url.pathname==='/shared/barrage-frames.css'||url.pathname==='/shared/freehand-ui.css'||url.pathname==='/shared/ui-widgets.js'||url.pathname==='/shared/ui-widgets.css'||url.pathname==='/shared/ui-notifications.js'||url.pathname==='/shared/ui-notifications.css'||url.pathname==='/shared/ui-celebrations.js'||url.pathname==='/shared/ui-celebrations.css'||url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'||url.pathname==='/shared/game-fx-layer.js'||url.pathname==='/shared/game-fx-layer.css'||url.pathname==='/shared/race-dice-webgl.js'){
   const file=url.pathname.slice(1);res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript; charset=utf-8');return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  if(musicAsset){auth.requireUser(req);if(!['GET','HEAD'].includes(req.method))throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');return musicStore.stream(req,res,musicAsset[1]);}
