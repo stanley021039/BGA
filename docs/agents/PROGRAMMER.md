@@ -9,13 +9,13 @@
 
 本批已實作 source 與 focused 測試，正式版本、完整 suite、原生瀏覽器與部署結果由主流程更新 [成就單位進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)，不能從本節推定已發布。對應 [成就與戰績 spec](../specs/ACHIEVEMENTS-AND-RECORDS.md) 的第一批 round 成就；下方「成就／ledger 仍缺」須拆成已完成的單位 receipt／探索進度與仍未完成的永久勝場／durable outbox。
 
-`src/games/draw-guess.js`、`gift.js`、`majority.js` 每整局產生 `match_id` UUID（draw 沿用 `gameRunId`），每輪另產生 `unit_event_id` UUID。可選、非列舉的 `achievementUnitStart` 同步返回 canonical 座位／帳號映射，開始時複製並凍結；不能在結束時從名字或現在名單補身分。帳號 UUID 正規化為小寫並拒絕同帳號／同座位重複；缺失、throw、partial 或無效映射使該成就單位降為 `interrupted`，原遊戲仍照原規則結算。`participantCount` 只計凍結映射覆蓋的官方有效真人，不大於映射人數；不足映射的同頻趣味 predicates 為 false。最小 facts 僅含身分、UUID、round、品質狀態、ISO 完成時間、參與 booleans 與必要 metrics，不含題目、猜測內容、喜好、禮物 ID、畫布或手牌。
+`src/games/draw-guess.js`、`gift.js`、`majority.js` 每整局產生 `match_id` UUID（draw 沿用 `gameRunId`），每輪另產生 `unit_event_id` UUID。可選、非列舉的 `achievementUnitStart` 同步返回 canonical 座位／帳號映射，開始時複製並凍結；不能在結束時從名字或現在名單補身分。帳號 UUID 保留資料庫原始大小寫，去重時辨識大小寫變體並拒絕同帳號／同座位重複；缺失、throw、partial 或無效映射使該成就單位降為 `interrupted`，原遊戲仍照原規則結算。`participantCount` 只計凍結映射覆蓋的官方有效真人，不大於映射人數；不足映射的同頻趣味 predicates 為 false。最小 facts 僅含身分、UUID、round、品質狀態、ISO 完成時間、參與 booleans 與必要 metrics，不含題目、猜測內容、喜好、禮物 ID、畫布或手牌。
 
 完成事件由權威操作建立，不用 `phase==='reveal'` 推測。draw 的 server 接受 stroke／guess 才留證據，clear／undo 不退款或刪資格，duplicate／拒絕操作不增加證據；artist 離房／offline auto reveal 為 `interrupted`，正規 timeout／all-guessed 為 `rules_completed`，玩家不足提前結束為 `abandoned`。正常輪保留此前已離席者的合法證據，重新入席等待下輪不加入這輪 current count。gift 僅在最後收禮確認後的正式 `finishDelivery` 建立 facts，同一收禮者的正式 entries 按 exact gift ID 判 twins，`great/good/ok` 判正向心願；delivering 移除玩家為 interrupted，少於三人為 abandoned。majority 只採正式 score 的 groups，填空合併預覽不發事件；withdraw／kick／missing 答案無資格，全有效同組需至少三人，並列最大需至少兩組且每組 count 至少二。
 
 引擎先 latch 深凍 snapshot，再呼叫 `achievementUnitCompleted` 通知；同步 throw／Promise rejection 不回滾已接受玩法。`pendingAchievementUnits()`／`drainAchievementUnits()` 皆非破壞性讀取，成功持久化後才 `acknowledgeAchievementUnit(id)`。每房私有 pending 上限 256；滿額時下一輪／新局在 mutation 前拒絕，不淘汰未儲存事件，整局最後正常結束仍可完成。無 hooks 的既有 fixture 玩法不累積 pending，也不受此上限阻擋。
 
-Store 的 `processed_unit_events` 按 UUID、單位唯一關係與 facts 指紋去重；相同 UUID 不同內容是衝突，不覆寫。只有 `game_server`／`production`／`rules_completed` 的有效參與者授予徽章與 `achievement_progress`；兩種不同遊戲的有效單位可授 `all-two-tables`，不靠登入、點擊或勝場。五枚舊徽章 ID 與取得日期保留。已驗 engine 新 31、store 新 16、既有三引擎 32，共 focused **83/83**；engine 的三遊戲 × 五類 mapping 故障真實寫入 in-memory SQLite receipt、duplicate 與 ack，均 0 award／0 progress。語法及 owned diff 檢查通過；這不是完整 suite、真人試玩或正式資料驗收。
+Store 的 `processed_unit_events` 按 UUID、單位唯一關係與 facts 指紋去重；相同 UUID 不同內容是衝突，不覆寫。只有 `game_server`／`production`／`rules_completed` 的有效參與者授予徽章與 `achievement_progress`；兩種不同遊戲的有效單位可授 `all-two-tables`，不靠登入、點擊或勝場。五枚舊徽章 ID 與取得日期保留。已驗 engine 新 34、store 新 17、既有三引擎 32，共 focused **83/83**；engine 的三遊戲 × 五類 mapping 故障真實寫入 in-memory SQLite receipt、duplicate 與 ack，均 0 award／0 progress。語法及 owned diff 檢查通過；這不是完整 suite、真人試玩或正式資料驗收。
 
 **B03 永久獲勝 ledger 與 durable outbox 尚未完成。** 已提交的單位 receipt／進度能跨 store 重開去重，但引擎／app 待處理清單仍在 RAM，程序崩潰前尚未落庫的事件會丟失，不能宣稱 crash-safe／exactly-once 全流程。後續須補持久 outbox 與 history／SQLite reconciliation；不能從暱稱、外站或不可驗身份的 archive 補授獎、補勝場。來源與限制保留在本批進度，避免把既有角色文件的歷史版本當當前完成狀態。
 
