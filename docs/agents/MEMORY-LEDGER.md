@@ -1,5 +1,9 @@
 # 共用偏好與已知決策
 
+2026-10-08最新正式 **v1.15.1／c1e59d4**：使用者要求先撤回不一致的局部手繪風格，已恢復原大廳及四房標題外觀；保留v1.15彈幕框與既有功能，SVG/credits僅歷史留存。双平台各1,432、公開27資源、原生首頁／四房waiting通過，9帳戶allfields及21non-session表/BLOB保留；詳細source/部署SIGTERM逾時與proxy drain/不可覆寫receipt修正/備份/有限native/own cleanup見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下面手繪與候選狀態屬歷史；後續局部美化须驗整體一致性，不由素材研究直接推定成熟全站方案。沒有新PR/push。
+
+2026-10-08使用者回饋：局部手繪畫風造成網站整体不一致，先撤回手繪主題。候選 **v1.15.1／c1e59d4**恢復大廳及四房導入前的外觀，v1.15彈幕框及既有WebGL/共看/排版功能保留；素材與授權只作歷史留存。後續變更須以大廳、房間、設定、其他頁面的整體一致性評估，不把素材研究或局部preview當成全站成熟方案。Windows1,432／有限native與正式結果以 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)最新節為準；下面v1.14.2的「正在使用手繪」是歷史。
+
 2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
 
 2026-10-07 UI-components-patterns：使用者要求五庫評估的適合方向都嘗試實作；新批以原生widgets／notifications／短成就粒子接真頁面，不安裝React／OGL或複製來源碼，重要資訊保持。首批scope與API／hidden保正文而取消動畫、newearned不加poll、PR46獨立見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。目前正式基線1.11.1，本批待測／待交付，未更新為已發布。

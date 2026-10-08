@@ -1,5 +1,7 @@
 # Freehand 圖示與紙卡介面
 
+2026-10-08最新決策：使用者要求先撤回手繪外觀，正式v1.15.1／c1e59d4已恢復導入前大廳與四房標題；不回退功能。狀態與證據見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下方為歷史已發布方案，不再當作目前應套用的風格規則；素材來源／授權仍保留。
+
 研究日期2026-10-07；2026-10-08（Asia/Taipei）正式已發布 **v1.14.2／8ae5c4f9bd2a9cf62156bb3b80eb49c5a473a4b9**。基線v1.14.0；v1.14.1未部署候選的Linux行尾失敗與修正見進度，tag均不移動。研究來源見 [資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。下表是契約，實際通過／未驗scope以進度為準，不視為全原生矩陣完成。
 
 | 分類 | 頁面／遊戲 | 修改與實作 | 保留與驗收 |
