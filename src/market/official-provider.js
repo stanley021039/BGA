@@ -218,8 +218,10 @@ function createOfficialProvider({fetchImpl=globalThis.fetch,clock=Date.now,signa
    if(!known.size)throw firstError||new OfficialDataError('UNKNOWN_CALENDAR_YEAR');
    return [...known.values()].sort((a,b)=>a.year-b.year);
   },
-  async fetchCloses({from,to,signal}={}){
-   const targets=dateRange(from,to),closes=[],failures=[];let index,history,market,sources;const monthly=new Map(),monthErrors=new Map();
+  async fetchCloses({from,to,dates,signal}={}){
+   const range=dateRange(from,to);
+   requireValue(dates===undefined||Array.isArray(dates)&&dates.length<=366&&new Set(dates).size===dates.length&&dates.every(date=>range.includes(date)),'INVALID_TARGET_DATES');
+   const targets=dates===undefined?range:[...dates].sort(),closes=[],failures=[];if(!targets.length)return {closes,failures};let index,history,market,sources;const monthly=new Map(),monthErrors=new Map();
    try{
     sources=await Promise.all(['index','history','market'].map(key=>read(key,signal)));
     index=parseIndex(sources[0].json);history=parseHistory(sources[1].json);market=parseMarket(sources[2].json);

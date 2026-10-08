@@ -1,5 +1,7 @@
 # 股市官方收盤自動化與排行榜
 
+2026-10-08 排程政策更新：每日 14:00–16:00 有界重試、成功停止、歷史僅缺漏及管理員手動核對，詳 [每日抓取規格](specs/MARKET-DAILY-FETCH.md)。以下舊版測試／候選版本屬當時紀錄。
+
 2026-10-07，Issue [#47](https://github.com/stanley021039/BGA/issues/47)，候選 v1.10.0、schema 17。基於合併 PR #46 後的 main `1ea916ad651c4b8cad0babfdceed154348a20156`。本功能尚未部署；不表示正式環境已啟用排程。
 
 ## 玩家流程
@@ -48,9 +50,9 @@ HTTP 契約限制：不接受轉址、登入頁或其他網域；10 秒 timeout�
 `src/market/automation.js` 在既有 app 與資料目錄單寫者鎖內啟停；沒有第二個服務或第二個正式 SQLite writer。網路等待不持有 DB transaction，單次 job 不重疊，停止會 abort 並等待 job 收尾後才關 DB。
 
 - 啟動查核年度快照與未完成日期，持久化下次嘗試時間；同一輪所有來源記錄、結果與分數在一個 SQLite transaction 內提交
-- 官方資料延遲／錯誤五分鐘後重試；通常每小時重新查核成功日資料以發現修正，日曆六小時更新一次、失败五分鐘重試
+- 官方資料延遲／錯誤依每日有界時點重試；成功日期停止自動重抓，改由管理員手動核對修正。日曆仍六小時更新一次、失敗五分鐘重試
 - 14:00 前可回補過去日期，但當日資料不能結算；14:00 到達後依來源實際內容驗證
-- 每次補可見的一個日曆月，並輪流補一個更早未結算月份；持久化 cursor 防止一筆永遠缺資料的舊日阻擋其他日期
+- 首次初始化最近一個日曆月，以後只選缺漏；輪流處理一個更早未結算月份，有限次數後交管理員，避免無界重試
 - 重啟或重送不重複加扣分；既有 `result_revision`、結果唯一鍵、ledger 唯一鍵及 `BEGIN IMMEDIATE` 序列化人工作業與自動結算
 - `EXTERNAL_SIDE_EFFECTS_ENABLED=false` 關閉全部自動 fetch、開場、結算及自動 audit 寫入。新增 `MARKET_AUTOMATION_ENABLED=false` 可單獨關閉市場自動化。這些是配置說明，本 PR 沒有修改部署設定
 - 直接嵌入 `createApp` 且未明確給 `externalSideEffectsEnabled:true` 時，市場排程預設不啟動。一般 server 的 `settings()` 仍依既有環境設定提供明確值

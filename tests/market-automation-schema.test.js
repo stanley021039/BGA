@@ -137,6 +137,7 @@ function seedAutomation(f){
  assert.equal(automation.plan(),'2027-01-05');const round=f.db.prepare('SELECT * FROM market_rounds').get();
  useLegacyRoundSnapshot(f.db,round.id);market.vote(f.admin,{requestId:crypto.randomUUID(),roundId:round.id,optionId:'rally',expectedRevision:0});now=Date.parse('2027-01-05T06:05:00.000Z');
  const fetchedAt=new Date(now).toISOString(),close={targetDate:'2027-01-05',closeCents:1020000,changeCents:20000,returnPct:'2.00',sourceUrl,evidence:[{url:sourceUrl,sha256:'b'.repeat(64),fetchedAt},{url:'https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK',sha256:'c'.repeat(64),fetchedAt}],fetchedAt};
+ assert.equal(automation.recordFetchAttempt('2027-01-05',{kind:'scheduled',slot:fetchedAt,at:fetchedAt}),true);
  assert.equal(automation.recordClose(close).settled,true);assert.equal(automation.recordClose({...close,closeCents:1030000,changeCents:30000,returnPct:'3.00'}).review,true);
  assert.equal(automation.plan(),'2027-01-06');automation.override(f.admin,{requestId:crypto.randomUUID(),targetDate:'2027-01-06',isOpen:false,reason:'官方臨時休市覆核',sourceUrl:'https://www.twse.com.tw/',confirmed:true});
  automation.updateState({status:'ok',lastAttemptAt:fetchedAt,lastSuccessAt:fetchedAt});return automation;
@@ -168,7 +169,7 @@ for(const [label,mutate] of [
  ['calendar year mismatch',db=>db.exec("UPDATE market_calendar_years SET calendar_json=json_set(calendar_json,'$.year',2028)")],
  ['invalid calendar override URL',db=>db.exec("UPDATE market_calendar_overrides SET source_url='https://example.com/fake'")],
  ['invalid audit timestamp',db=>db.exec("UPDATE market_fetch_audit SET at='yesterday'")],
- ['invalid state key',db=>db.exec("UPDATE market_automation_state SET key='unknown'")],
+ ['invalid state key',db=>db.exec("UPDATE market_automation_state SET key='unknown' WHERE key='status'")],
 ])test(`current schema backup validation rejects semantically ${label} despite valid SQLite shape`,t=>{
  const f=fixture(t);seedAutomation(f);mutate(f.db);assert.deepEqual(f.db.prepare('PRAGMA foreign_key_check').all(),[]);assert.equal(f.db.prepare('PRAGMA integrity_check').get().integrity_check,'ok');f.db.close();
  assert.throws(()=>validateDatabase(f.file),error=>error.code==='INVALID_DATABASE');

@@ -16,21 +16,23 @@
  const lastPredictionDate=r=>new Date(Date.parse(r.targetDate+'T00:00:00Z')-1).toISOString().slice(0,10);
  const cutoffLabel=r=>r.rules.version>=2?'可預測至 '+lastPredictionDate(r)+' 23:59:59.999（23:59 整分鐘）；'+r.targetDate+' 00:00 起截止（台北）':'沿用舊規則：前一晚 '+r.rules.cutoffTime+' 截止（台北）';
  const displayTime=value=>value&&Number.isFinite(Date.parse(value))?format(value):'—';
+ const displayObservation=value=>value&&Number.isFinite(Date.parse(value))?formatSnapshot(value):'—';
  const numeric=(value,{plus=false}={})=>Number.isFinite(value)?(plus&&value>0?'+':'')+new Intl.NumberFormat('zh-TW',{minimumFractionDigits:2,maximumFractionDigits:4}).format(value):'—';
  function actionButton(selector,icon,label){const button=$(selector);if(window.GameUI?.decorateButton)window.GameUI.decorateButton(button,icon,{iconOnly:true,label});else button.textContent=label;}
  function officialUrl(value){try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&['twse.com.tw','www.twse.com.tw','openapi.twse.com.tw'].includes(url.hostname)?url.href:null;}catch{return null;}}
  function renderPrediction(){const r=currentRound();$('#currentPredictionDate').textContent=r?dateLabel(r.targetDate):'等待下一個交易日開放';$('#currentPredictionCutoff').textContent=r?cutoffLabel(r):'依官方交易日曆確認，暫無可提交的預測；已截止輪次仍會繼續查核收盤結果。';$('#goCurrentRound').hidden=!r||r.id===round()?.id;$('#goCurrentRound').disabled=busy||uncertain;}
  function renderAutomation(){
   const a=state.automation,status=a?.status||'unavailable';
-  const labels={ok:'自動結算正常',waiting:'等待官方同日收盤資料','calendar-unavailable':'官方交易日曆尚未確認',disabled:'自動結算已停用',error:'自動查核暫時失敗',unavailable:'自動結算狀態尚未提供'};
+  const labels={ok:'自動結算正常',waiting:'等待官方同日收盤資料','calendar-unavailable':'官方交易日曆尚未確認',disabled:'自動結算已停用',error:'自動查核暫時失敗','manual-required':'自動查核已停止，等待管理員重查',unavailable:'自動結算狀態尚未提供'};
   $('#automationStatus').textContent=labels[status]||'自動查核狀態待確認';
-  $('#automationPanel').classList.toggle('attention',['error','calendar-unavailable','disabled'].includes(status)||!!a?.reviewDates?.length);
-  const details=['交易日 14:00（台北）起查核，只採同日正式收盤報表'];
+  $('#automationPanel').classList.toggle('attention',['error','calendar-unavailable','disabled','manual-required'].includes(status)||!!a?.reviewDates?.length||!!a?.manualRequiredDates?.length);
+  const details=['交易日 14:00（台北）起每 5 分鐘查核，只採同日正式收盤報表；成功即停止當日自動抓取，16:00 最後一次仍未成功則待人工處理'];
+  const daily=a?.dailyFetch;if(daily){if(daily.targetDate)details.push('本日查核 '+dateLabel(daily.targetDate));if(Number.isSafeInteger(daily.automaticAttempts))details.push('自動 '+daily.automaticAttempts+' 次');if(Number.isSafeInteger(daily.manualAttempts))details.push('人工 '+daily.manualAttempts+' 次');if(daily.firstValidObservedAt)details.push('首次觀測到有效資料 '+displayObservation(daily.firstValidObservedAt)+'（本站觀測時間，非官方發布時間）');}
   if(a?.lastAttemptAt)details.push('最近查核 '+displayTime(a.lastAttemptAt));if(a?.lastSuccessAt)details.push('最近成功 '+displayTime(a.lastSuccessAt));if(a?.nextAttemptAt)details.push('下次查核 '+displayTime(a.nextAttemptAt));
   if(a?.nextTradingDate)details.push('下一交易日 '+dateLabel(a.nextTradingDate));
   $('#automationDetails').textContent=details.join(' · ');
-  const notes=[];if(a?.waitingDates?.length)notes.push('等待資料：'+a.waitingDates.map(dateLabel).join('、'));if(a?.reviewDates?.length)notes.push('需管理員複核：'+a.reviewDates.map(dateLabel).join('、'));
-  if(status==='calendar-unavailable')notes.push('官方行事曆年份覆蓋未確認；已取得年份：'+(a?.calendarYears?.length?a.calendarYears.join('、'):'尚無')+'。不推測休市日或開放未知日期。');if(status==='error')notes.push('保留目前結果與積分，等待下次重試。');if(status==='disabled')notes.push('目前不會自動抓取或結算，請洽管理員。');
+  const notes=[];if(a?.manualRequiredDates?.length)notes.push('已停止自動重試，待管理員指定日期重查：'+a.manualRequiredDates.map(dateLabel).join('、')+'。');if(a?.waitingDates?.length)notes.push('等待資料：'+a.waitingDates.map(dateLabel).join('、'));if(a?.reviewDates?.length)notes.push('需管理員複核：'+a.reviewDates.map(dateLabel).join('、'));
+  if(status==='calendar-unavailable')notes.push('官方行事曆年份覆蓋未確認；已取得年份：'+(a?.calendarYears?.length?a.calendarYears.join('、'):'尚無')+'。不推測休市日或開放未知日期。');if(status==='error')notes.push('保留目前結果與積分，僅在排程允許時重試。');if(status==='manual-required')notes.push('已用完自動查核時段或重試次數，保留待結算；未取得有效資料的日期不會自動補跑。');if(status==='disabled')notes.push('目前不會自動抓取或結算，請洽管理員。');
   if(a?.waitingDates?.length)notes.push('缺少資料不等於休市；下一輪依已確認日曆獨立開放。');$('#automationDates').textContent=notes.join(' ');
  }
  function renderMarketHistory(){
@@ -40,7 +42,7 @@
   if(waiting.length)messages.push('等待資料：'+waiting.map(dateLabel).join('、')+'。缺少資料不等於休市。');if(rows.some(row=>row.reviewRequired))messages.push('標示「待複核」的日期需管理員確認。');
   if(rows.some(row=>row.returnPctSource==='computed-from-official-close-change'))messages.push('「計算值」依同一交易日的官方收盤指數與漲跌點數計算：漲跌點數 ÷（收盤指數 − 漲跌點數）× 100，四捨五入至小數點後 2 位；不是交易所直接發布的百分比。');
   $('#marketHistoryStatus').textContent=messages.join(' ');
-  $('#marketHistoryRows').innerHTML=rows.length?rows.map(row=>{const url=officialUrl(row.sourceUrl),changeClass=row.change>0?'market-up':row.change<0?'market-down':'',source=url?'<a href="'+escape(url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+escape('查看 '+row.targetDate+' 證交所官方資料（另開視窗）')+'">證交所官方資料 ↗</a>':'官方來源連結待確認';return '<tr><th scope="row">'+escape(dateLabel(row.targetDate))+'</th><td class="number">'+numeric(row.close)+'</td><td class="number '+changeClass+'">'+numeric(row.change,{plus:true})+'</td><td class="number '+changeClass+'">'+numeric(row.returnPct,{plus:true})+'%'+(row.returnPctSource==='computed-from-official-close-change'?'<small class="computed-return">計算值</small>':'')+'</td><td>'+source+'<small>取得於 '+escape(displayTime(row.fetchedAt))+'</small>'+(row.reviewRequired?'<strong class="review-badge">待複核</strong>':'')+'</td></tr>';}).join(''):'<tr><td colspan="5" class="empty-cell">官方資料確認後會顯示於此</td></tr>';
+  $('#marketHistoryRows').innerHTML=rows.length?rows.map(row=>{const url=officialUrl(row.sourceUrl),changeClass=row.change>0?'market-up':row.change<0?'market-down':'',source=url?'<a href="'+escape(url)+'" target="_blank" rel="noopener noreferrer" aria-label="'+escape('查看 '+row.targetDate+' 證交所官方資料（另開視窗）')+'">證交所官方資料 ↗</a>':'官方來源連結待確認';return '<tr><th scope="row">'+escape(dateLabel(row.targetDate))+'</th><td class="number">'+numeric(row.close)+'</td><td class="number '+changeClass+'">'+numeric(row.change,{plus:true})+'</td><td class="number '+changeClass+'">'+numeric(row.returnPct,{plus:true})+'%'+(row.returnPctSource==='computed-from-official-close-change'?'<small class="computed-return">計算值</small>':'')+'</td><td>'+source+'<small>取得於 '+escape(displayTime(row.fetchedAt))+'</small>'+(row.firstValidObservedAt?'<small>首次觀測到有效資料 '+escape(displayObservation(row.firstValidObservedAt))+'（非官方發布時間）</small>':'')+(row.reviewRequired?'<strong class="review-badge">待複核</strong>':'')+'</td></tr>';}).join(''):'<tr><td colspan="5" class="empty-cell">官方資料確認後會顯示於此</td></tr>';
  }
  function renderLeaderboard(){
   const board=state.leaderboard,rows=(board?.rows||[]).slice(0,100),own=board?.ownRank;
@@ -120,7 +122,33 @@
   $('#ledger').innerHTML=state.ledger.length?state.ledger.map(l=>'<div class="ledger-row"><span>'+pointsLabel(l.points)+' 分</span><strong>'+escape(l.targetDate)+'</strong> · 第 '+l.revision+' 版 · '+(l.kind==='reversal'?'撤銷第 '+l.reverses_revision+' 版':'結算')+'<br>'+escape(format(l.at))+' · '+escape(l.reason||'首次結算')+'</div>').join(''):'<p class="helper">尚無積分異動。</p>';
  }
  function renderAdmin(){if(state.me.role!=='admin')return;const old=$('#adminRound').value;$('#adminRound').innerHTML=state.rounds.map(r=>'<option value="'+escape(r.id)+'">'+escape(r.targetDate)+' · '+(r.phase==='void'?'休市／已取消':r.result?'已結算／可更正':'待結算')+'</option>').join('');if(state.rounds.some(r=>r.id===old))$('#adminRound').value=old;$('#settlementAudit').innerHTML=state.rounds.flatMap(r=>(r.settlementHistory||[]).map(s=>'<div class="ledger-row"><strong>'+escape(r.targetDate)+'</strong> · 第 '+s.revision+' 版 · '+signed(s.returnPct)+'%<br>'+escape(format(s.at))+' · '+escape(s.actorSource==='system'?'系統':s.administrator)+' · '+escape(s.reason||'首次結算')+'</div>')).join('')||'<p class="helper">尚無結算紀錄。</p>';updateAdmin();}
- function updateAdmin(){const r=state?.rounds.find(r=>r.id===$('#adminRound').value);$('#settleStatus').textContent=!r?'先建立交易日。':r.phase==='void'?'本輪已取消，不能結算。'+(r.voidReason||''):(r.result?'目前收盤 '+signed(r.result.returnPct)+'% · 第 '+r.result.revision+' 版。更正必填原因。':'參與 '+r.voteCount+' 人。')+' 可結算時間：'+format(r.settlementAfter)+'（台北）';$('#previewButton').disabled=busy||uncertain||!r||r.phase==='void'||now()<Date.parse(r.settlementAfter);}
+ function updateAdmin(){updateRecheckControls();const r=state?.rounds.find(r=>r.id===$('#adminRound').value);$('#settleStatus').textContent=!r?'先建立交易日。':r.phase==='void'?'本輪已取消，不能結算。'+(r.voidReason||''):(r.result?'目前收盤 '+signed(r.result.returnPct)+'% · 第 '+r.result.revision+' 版。更正必填原因。':'參與 '+r.voteCount+' 人。')+' 可結算時間：'+format(r.settlementAfter)+'（台北）';$('#previewButton').disabled=busy||uncertain||!r||r.phase==='void'||now()<Date.parse(r.settlementAfter);}
+ function recheckMessage(text,error=false){$('#officialRecheckStatus').textContent=text;$('#officialRecheckStatus').classList.toggle('error',error);}
+ function updateRecheckControls(){
+  const form=$('#officialRecheckForm');if(!form)return;
+  const disabled=busy||uncertain||state?.me.role!=='admin'||state?.automation?.enabled!==true;
+  form.elements.targetDate.disabled=form.elements.confirmed.disabled=$('#submitOfficialRecheck').disabled=disabled;
+  if(state)form.elements.targetDate.max=new Date(now()+8*3600000).toISOString().slice(0,10);
+  if(state?.me.role==='admin'&&state?.automation?.enabled!==true)recheckMessage('官方資料查核已停用，不能發出重查。請先確認伺服器設定。',true);
+ }
+ async function recheckOfficial(event){
+  event.preventDefault();if(busy||uncertain||state?.me.role!=='admin'||state?.automation?.enabled!==true)return;
+  const form=event.target,targetDate=form.elements.targetDate.value,today=new Date(now()+8*3600000).toISOString().slice(0,10);
+  if(!R.validDate(targetDate)||targetDate>today||now()<Date.parse(targetDate+'T14:00:00+08:00')){recheckMessage('請選擇已過台北時間 14:00 的有效交易日期。',true);return;}
+  if(!form.elements.confirmed.checked){recheckMessage('請勾選確認，重查你指定的 '+targetDate+'。',true);return;}
+  if(!validForm(form))return;
+  setBusy(true);recheckMessage('正在重新查核 '+targetDate+'；若自動查核正在進行，會等待其完成…');
+  let acknowledged=false;
+  try{
+   const result=await api('/api/admin/market/recheck',{targetDate,confirmed:true});acknowledged=true;await load(true);
+   recheckMessage(targetDate+'：'+(result.review?'官方資料需人工複核；原積分保持不變。':result.received?'已取得並交叉核對官方資料，結果與紀錄已更新。':result.status==='success'?'本次未取得可採用的新資料；保留先前已核對結果與積分。':'尚未取得可採用的官方資料，保留待處理狀態。'));
+  }catch(error){
+   // A lost response can follow a completed fetch/settlement. Only GET is retried;
+   // another official recheck always requires a fresh, explicit confirmation.
+   let refreshed=false;try{await load(true);refreshed=true;}catch{uncertain=true;}
+   recheckMessage(acknowledged?(refreshed?'重查已完成，已重新讀取目前紀錄；請核對查核狀態。':'重查已完成，但畫面更新失敗。請按「更新」確認狀態。'):(!error.status||error.status>=500)?'重查結果尚未確認。'+(refreshed?'已重新讀取目前紀錄；請核對後再決定是否重新重查。':'請按「更新」確認狀態。'):error.message,true);
+  }finally{form.elements.confirmed.checked=false;setBusy(false);}
+ }
  function setView(){let view=location.hash.slice(1);if(!['daily','uploads','records','marketHistory','leaderboard','admin'].includes(view)||view==='admin'&&state?.me.role!=='admin')view='daily';if(sharedTabs){sharedTabs.refresh({notify:false});sharedTabs.select(view,{notify:false});}else{for(const section of ['daily','uploads','records','marketHistory','leaderboard','admin'])$('#'+section).hidden=view!==section;}$('#adminAudit').hidden=view!=='admin'||state?.me.role!=='admin';for(const button of document.querySelectorAll('[data-view]')){button.setAttribute('aria-pressed',String(button.dataset.view===view));}galleryView(view);}
  function setBusy(value){busy=value;$('#refresh').disabled=value;for(const element of document.querySelectorAll('#createForm input,#createForm button,#settleForm input,#settleForm select,#settleForm button,#confirmSettlement,#cancelConfirm,#calendarOverrideForm input,#calendarOverrideForm select,#calendarOverrideForm button'))element.disabled=value||uncertain;renderVote();updateAdmin();}
  async function mutate(path,payload,success){setBusy(true);try{await api(path,{...payload,requestId:requestId()});await load(true);selectDraft();renderVote();message(success);}
@@ -318,6 +346,8 @@
  if(!sharedTabs)for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>{location.hash=button.dataset.view;setView();};window.addEventListener('hashchange',setView);
  $('#createForm').elements.targetDate.onchange=event=>{try{$('#createDeadline').textContent=cutoffLabel({targetDate:event.target.value,cutoffAt:R.cutoffFor(event.target.value),rules:R.CONFIG});}catch{$('#createDeadline').textContent='請選擇有效日期。';}};
  $('#createForm').onsubmit=event=>{event.preventDefault();if(busy||uncertain||!validForm(event.target))return;const form=event.target;mutate('/api/admin/market/rounds',{targetDate:form.elements.targetDate.value,confirmed:form.elements.confirmed.checked},'交易日已建立。');};
+ $('#officialRecheckForm').onsubmit=recheckOfficial;
+ $('#officialRecheckForm').elements.targetDate.onchange=()=>{$('#officialRecheckForm').elements.confirmed.checked=false;recheckMessage('');};
  $('#calendarOverrideForm').onsubmit=event=>{event.preventDefault();if(busy||uncertain||state?.me.role!=='admin')return;const form=event.target,date=form.elements.targetDate.value,open=form.elements.isOpen.value,reason=form.elements.reason.value.trim(),sourceUrl=officialUrl(form.elements.sourceUrl.value);if(!R.validDate(date)||!['true','false'].includes(open)||!reason||!sourceUrl||!form.elements.confirmed.checked){message('請填寫有效日期、開休市狀態、修正原因及證交所官方網址，並勾選確認。',true);return;}mutate('/api/admin/market/calendar-override',{targetDate:date,isOpen:open==='true',reason,sourceUrl,confirmed:true},'官方交易日曆修正已保存。');};
  $('#adminRound').onchange=()=>{$('#settleForm').elements.returnPct.value='';$('#settleForm').elements.reason.value='';updateAdmin();};
  $('#settleForm').onsubmit=async event=>{event.preventDefault();if(busy||$('#previewButton').disabled||!validForm(event.target))return;const form=event.target,r=state.rounds.find(r=>r.id===$('#adminRound').value),payload={roundId:r.id,expectedRevision:r.result?.revision||0,returnPct:form.elements.returnPct.value,reason:form.elements.reason.value};setBusy(true);try{const result=await api('/api/admin/market/preview',payload);preview={...payload,returnPct:result.returnPct};$('#previewContent').innerHTML='<p>目標交易日：<strong>'+escape(result.targetDate)+'</strong></p><p class="big-result">'+signed(result.returnPct)+'%</p><p>'+escape(name(result.bucket,r.rules))+' · '+result.voteCount+' 人投票</p>'+(isCurve(r)?'<p>正分 '+result.counts.positive+' 人 · 負分 '+result.counts.negative+' 人 · 零分 '+result.counts.zero+' 人</p>':'<p>猜中 '+result.counts.hit+' 人 · 猜錯 '+result.counts.miss+' 人 · 和局 '+result.counts.tie+' 人</p>')+(payload.expectedRevision?'<p><strong>更正會先撤銷第 '+payload.expectedRevision+' 版積分，再以新結果重新計分。</strong></p><p>原因：'+escape(payload.reason)+'</p>':'<p>確認後將保存結果並結算所有已提交的預測。</p>')+'<p>我的本日積分：'+pointsLabel(result.ownPrevious)+' → '+pointsLabel(result.ownNext)+'；累積將為 '+pointsLabel(result.ownScoreAfter)+' 分。</p>';$('#confirmError').textContent='';if(confirmDialogBinding)confirmDialogBinding.open($('#previewButton'));else $('#confirmDialog').showModal();}catch(error){message(error.message,true);}finally{setBusy(false);}};
@@ -326,11 +356,11 @@
  else{confirmDialogBinding=window.GameUI.bindDialog($('#confirmDialog'),{canClose:()=>!busy,onRequestClose:cancelSettlement});approvalDialogBinding=window.GameUI.bindDialog($('#approvalDialog'),{canClose:()=>!gallery.approvalBusy,onRequestClose:closeApproval});}
 
  $('#confirmSettlement').onclick=async()=>{if(!preview||busy)return;const payload=preview;preview=null;$('#confirmDialog').close();await mutate('/api/admin/market/settle',{...payload,confirmed:true},'結算已完成，積分與異動紀錄已更新。');};
- for(const selector of ['#voteForm','#uploadForm','#createForm','#settleForm']){const binding=window.GameUI?.bindForm?.($(selector));if(binding)formBindings.push(binding);}
+ for(const selector of ['#voteForm','#uploadForm','#createForm','#settleForm','#officialRecheckForm']){const binding=window.GameUI?.bindForm?.($(selector));if(binding)formBindings.push(binding);}
  for(const [selector,icon]of [['#refresh','refresh'],['#rerollImages','refresh'],['#refreshMine','refresh'],['#refreshReview','refresh'],['#allUploadWeekdays','check'],['#clearUploadWeekdays','undo'],['#previewButton','expand'],['#cancelConfirm','undo'],['#confirmSettlement','check'],['#cancelApproval','undo'],['#resumeApproval','refresh']])window.GameUI?.decorateButton?.($(selector),icon,{iconOnly:true});
  window.addEventListener('pagehide',event=>{if(!event.persisted){sharedTabs?.destroy();for(const binding of formBindings)binding.destroy();confirmDialogBinding?.destroy();approvalDialogBinding?.destroy();}});
  setInterval(()=>{if(!state)return;$('#clock').textContent=format(now());const r=round(),closed=!r||r.phase==='void'||!!r.result||now()>=Date.parse(r.cutoffAt);if(closed!==votingClosed)renderVote();else renderPrediction();updateAdmin();},1000);
  setInterval(()=>{if(!busy&&!uncertain&&document.visibilityState==='visible')load(true).catch(()=>message('更新暫時失敗，請確認連線並按「更新」。',true));},15000);
- actionButton('#refresh','refresh','更新行情與預測');actionButton('#goCurrentRound','next','返回目前預測');actionButton('#saveCalendarOverride','check','套用交易日曆修正');
+ actionButton('#refresh','refresh','更新行情與預測');actionButton('#goCurrentRound','next','返回目前預測');actionButton('#saveCalendarOverride','check','套用交易日曆修正');actionButton('#submitOfficialRecheck','refresh','重查指定日期官方資料');
  load().catch(error=>{uncertain=true;message(error.message,true);});
 })();

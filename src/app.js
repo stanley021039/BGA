@@ -7,7 +7,8 @@ const {GiftStore}=require('./games/gift-store'),{GIFTS,CATEGORIES}=require('./ga
 const {DrawGuessRoom,validTopic,validTopics,DRAW_CATEGORIES}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{TOPICS}=require('./games/draw-guess-words');
 const {AchievementStore}=require('./achievements/store');
 const {MarketStore}=require('./market/store');
-const {MarketAutomationStore}=require('./market/automation-store');
+const {MarketAutomationStore,dateAt,closeAfter}=require('./market/automation-store');
+const {validDate:validMarketDate}=require('../public/market-rules');
 const {MarketAutomation}=require('./market/automation');
 const {createOfficialProvider}=require('./market/official-provider');
 const {MarketImageStore}=require('./market/images');
@@ -188,15 +189,17 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/version'&&req.method==='GET'){res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');return res.end(JSON.stringify({version:applicationVersion}));}
  if(url.pathname.startsWith('/api/')){
  res.setHeader('Content-Type','application/json; charset=utf-8');
- // Gallery requests require same-origin access, including read-only media. Check
- // authentication before accepting a potentially large upload body.
+ // Gallery requests and explicit official rechecks require same-origin access.
+ // Authenticate before accepting their request bodies or initiating network work.
  const imageApi=url.pathname.startsWith('/api/market/images')||url.pathname.startsWith('/api/admin/market/images');
- if(imageApi){
+ const marketRecheckApi=url.pathname==='/api/admin/market/recheck';
+ if(imageApi||marketRecheckApi){
   const expected=config.publicUrl||'http://'+req.headers.host;
   let origin;try{origin=req.headers.origin?new URL(req.headers.origin).origin:null;}catch{throw new HttpError(403,'CROSS_ORIGIN','不允許跨站請求');}
   if(origin&&origin!==expected||req.headers['sec-fetch-site']&&!['same-origin','none'].includes(req.headers['sec-fetch-site']))throw new HttpError(403,'CROSS_ORIGIN','不允許跨站請求');
   const actor=auth.requireUser(req);
   if(url.pathname.startsWith('/api/admin/')&&actor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');
+  if(marketRecheckApi&&req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
   if(url.pathname==='/api/market/images'&&req.method==='POST'){limitRate(accountRate,'market-upload:'+actor.id,6);limitRate(accountRate,'market-upload-ip:'+clientKey(req),20);}
  }
 
@@ -347,6 +350,14 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(['/api/admin/market/images','/api/admin/market/images/approve'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
   if(url.pathname.startsWith('/api/admin/market/images/'))throw new HttpError(404,'IMAGE_NOT_FOUND','找不到圖片');
   if(url.pathname==='/api/admin/market'&&req.method==='GET')return send({...marketStore.view(user,true),...marketAutomationStore.view(true)});
+  if(url.pathname==='/api/admin/market/recheck'&&req.method==='POST'){
+   if(data?.confirmed!==true)throw new HttpError(400,'MARKET_RECHECK_CONFIRMATION_REQUIRED','請明確確認要重新查核的交易日');
+   const targetDate=data.targetDate,now=(config.marketClock||Date.now)();
+   if(!validMarketDate(targetDate)||targetDate>dateAt(now)||now<closeAfter(targetDate))throw new HttpError(400,'INVALID_MARKET_RECHECK_DATE','請選擇已過台北時間 14:00 的有效交易日期');
+   if(!marketAutomation.enabled)throw new HttpError(503,'AUTOMATION_DISABLED','官方資料查核已停用，請先確認伺服器設定');
+   limitRate(accountRate,'market-recheck:'+user.id,6);limitRate(accountRate,'market-recheck-ip:'+clientKey(req),12);
+   return send(await marketAutomation.manualRecheck(targetDate));
+  }
   if(url.pathname==='/api/admin/market/calendar-override'&&req.method==='POST'){limitRate(accountRate,'market-admin:'+user.id,60);return send(marketAutomationStore.override(user,data));}
   if(url.pathname.startsWith('/api/admin/market')&&req.method==='POST'){
    limitRate(accountRate,'market-admin:'+user.id,60);
