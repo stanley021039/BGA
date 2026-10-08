@@ -350,3 +350,8 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 
 
 2026-10-08 PR57評論修正：滑動防護只豁免controller同步選中的卡片，避免鍵盤／前後切換與create type不同步；承接PR53 bf545ae混合真人AI成就。69項與原生Chromium滑鼠／瀏覽器鍵盤事件／真create通過；固定head與兩回合審查見 [證據](../playful-ui/PR57-COMMENT-FIXES.md)。未部署／未合併main，舊收據不修補。
+
+
+## 2026-10-08：每日官方收盤抓取候選（Issue66，未部署）
+
+每日台北 14:00–16:00 有界時點，成功日持久停止；歷史只補缺漏，有限重試後由管理員處理。firstValidObservedAt 是本系統首次驗證觀察，非官方發布時間。既有 key/value 表新增逐日期 metadata，沒有 table/schema 變更；舊版 validator 不認得新 keys，回退須注意。來源與帳務交易、日曆未知／衝突、前端15秒內部讀取保持。規格、測試及手動修正邊界見 [每日抓取](../specs/MARKET-DAILY-FETCH.md)；最終證據以 PR 為準，不沿用其他版本測試數。

@@ -264,3 +264,12 @@ test('known calendar disagreement stays fenced when one source disappears and on
  phase=1;time+=RETRY_MS;await runner.tick();assert.deepEqual(store.state().calendarBlockedYears,[2026]);assert.equal(store.state().calendarFailed,true);assert.equal(store.isTradingDay('2026-10-09'),null);assert.equal(db.prepare('SELECT COUNT(*) n FROM market_rounds').get().n,0);assert.equal(db.prepare('SELECT COUNT(*) n FROM market_calendar_years').get().n,0);
  phase=2;time+=RETRY_MS;await runner.tick();assert.deepEqual(store.state().calendarBlockedYears,[]);assert.equal(store.isTradingDay('2026-10-09'),false);assert.equal(store.view().automation.nextTradingDate,'2026-10-12');assert.equal(JSON.parse(db.prepare('SELECT calendar_json FROM market_calendar_years WHERE year=2026').get().calendar_json).evidence.length,2);
 });
+
+test('gap-only dates share report downloads, omit already stored rows and reject invalid targets before I/O',async()=>{
+ const mock=mockFetch(),provider=createOfficialProvider({...mock,clock:()=>now});
+ const result=await provider.fetchCloses({from:'2026-10-01',to:'2026-10-07',dates:['2026-10-02','2026-10-06']});
+ assert.deepEqual(result.closes.map(row=>row.targetDate),['2026-10-02','2026-10-06']);assert.equal(mock.calls.length,3);
+ const count=mock.calls.length;assert.deepEqual(await provider.fetchCloses({from:'2026-10-01',to:'2026-10-07',dates:[]}),{closes:[],failures:[]});assert.equal(mock.calls.length,count);
+ for(const dates of [['2026-09-30'],['2026-10-02','2026-10-02'],'2026-10-02'])await assert.rejects(provider.fetchCloses({from:'2026-10-01',to:'2026-10-07',dates}),errorCode('INVALID_TARGET_DATES'));
+ assert.equal(mock.calls.length,count);
+});
