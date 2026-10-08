@@ -102,3 +102,23 @@ test('HTTP three humans and one AI normally complete majority and award each hum
  }
  assert.equal(f.read(db=>db.prepare('SELECT COUNT(*) n FROM achievement_progress').get().n),3);
 });
+
+
+test('HTTP mixed human/AI blank answers officially merged into one group award all-same only to humans',async t=>{
+ const f=await fixture(t),{code}=await f.api(0,'create',{type:'majority'});
+ for(let seat=1;seat<3;seat++)await f.api(seat,'join',{code});
+ await f.api(0,'bot',{code});await f.api(0,'start',{code});
+ await f.api(0,'action',{code,action:'ask',type:'blank',prompt:'全員同組的測試'});
+ for(let seat=0;seat<3;seat++)await f.api(seat,'action',{code,action:'answer',answer:'合成答案'+seat});
+ let state;for(let i=0;i<50;i++){
+  state=await f.api(0,'state?code='+code);if(state.phase==='review')break;
+  await new Promise(resolve=>setTimeout(resolve,200));
+ }
+ assert.equal(state.phase,'review');const target=state.groups[0].id;
+ for(const group of state.groups.slice(1))state=await f.api(0,'action',{code,action:'merge',from:group.id,to:target});
+ assert.equal(state.groups.length,1);assert.equal(state.groups[0].count,4);
+ state=await f.api(0,'action',{code,action:'score'});assert.equal(state.phase,'reveal');
+ for(let seat=0;seat<3;seat++)assert.ok(unlocked(await f.api(seat,'achievements')).includes('majority-one-channel'));
+ const facts=f.read(db=>JSON.parse(db.prepare('SELECT facts_json FROM processed_unit_events ORDER BY completed_at DESC LIMIT 1').get().facts_json));
+ assert.equal(facts.status,'rules_completed');assert.equal(facts.metrics.participantCount,3);assert.equal(facts.metrics.allSame,true);assert.equal(facts.participants.length,3);
+});

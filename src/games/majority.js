@@ -39,7 +39,9 @@ class MajorityRoom{
   const active=new Set(this.activePlayers().filter(player=>mappedSeats.has(player.id)&&this.participantIds.includes(player.id)).map(player=>player.id));
   const participants=unit.participants.map(participant=>({...participant,eligible:active.has(participant.seat_id)&&Object.hasOwn(this.answers,participant.seat_id),answerAccepted:active.has(participant.seat_id)&&Object.hasOwn(this.answers,participant.seat_id)}));
   const max=Math.max(0,...this.groups.map(group=>group.count)),leaders=this.groups.filter(group=>group.count===max);
-  const allSame=unit.mappingComplete&&active.size>=3&&this.groups.length===1&&this.groups[0].count===active.size&&[...active].every(id=>Object.hasOwn(this.answers,id));
+  const answeringSeats=new Set(this.activePlayers().filter(player=>this.participantIds.includes(player.id)).map(player=>player.id));
+  const group=this.groups.length===1?this.groups[0]:null;
+  const allSame=unit.mappingComplete&&active.size>=3&&!!group&&group.count===answeringSeats.size&&group.playerIds.length===answeringSeats.size&&new Set(group.playerIds).size===answeringSeats.size&&group.playerIds.every(id=>answeringSeats.has(id))&&[...answeringSeats].every(id=>Object.hasOwn(this.answers,id));
   const snapshot=freeze({unit_event_id:unit.context.unit_event_id,match_id:unit.context.match_id,game_type:this.type,unit:'round',round:unit.context.round,status,completed_at:new Date().toISOString(),participants,metrics:{participantCount:active.size,allSame,tiedLargest:unit.mappingComplete&&max>=2&&leaders.length>=2}});
   unit.completed=true;state.pending.set(snapshot.unit_event_id,snapshot);
   try{const notified=this.achievementUnitCompleted?.(snapshot);if(notified&&typeof notified.then==='function')Promise.resolve(notified).catch(()=>{});}catch{/* The latched snapshot remains pending for reconciliation. */}
