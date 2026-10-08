@@ -40,7 +40,7 @@ class DrawGuessRoom{
  beginAchievementUnit(participantSeatIds){
   if(typeof this.achievementUnitStart!=='function'&&typeof this.achievementUnitCompleted!=='function'){this.achievementUnits.current=null;return;}
   const context=freeze({match_id:this.achievementUnits.matchId,unit_event_id:randomUUID(),game_type:this.type,unit:'round',round:this.round,participantSeatIds:[...participantSeatIds]});
-  const participants=[],seats=new Set(participantSeatIds),users=new Set(),usedSeats=new Set();
+  const participants=[],seats=new Set(participantSeatIds.filter(id=>this.players.some(player=>player.id===id&&!player.bot))),users=new Set(),usedSeats=new Set();
   try{
    const supplied=this.achievementUnitStart?.(context);
    if(supplied&&typeof supplied.then==='function')Promise.resolve(supplied).catch(()=>{});
@@ -49,7 +49,7 @@ class DrawGuessRoom{
     participants.push({user_id:item.user_id,seat_id:item.seat_id});users.add(item.user_id.toLowerCase());usedSeats.add(item.seat_id);
    }
   }catch{/* Optional persistence hooks cannot roll back accepted gameplay. */}
-  this.achievementUnits.current={context,participants:freeze(participants),mappingComplete:participants.length===participantSeatIds.length,artistId:this.presenterId,strokeAccepted:new Set(),guessAccepted:new Set(),correctGuess:new Set(),completed:false};
+  this.achievementUnits.current={context,participants:freeze(participants),mappingComplete:participantSeatIds.every(id=>{const player=this.players.find(item=>item.id===id);return !!player&&(!!player.bot||usedSeats.has(id));}),artistId:this.presenterId,strokeAccepted:new Set(),guessAccepted:new Set(),correctGuess:new Set(),completed:false};
  }
  completeAchievementUnit(status){
   const state=this.achievementUnits,unit=state.current;

@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-08 PR53評論修正：同頻／送禮／畫猜混合真人AI成就映射以真人席位為準，缺真人映射仍拒絕。相关67項通過，包含真HTTP同頻3真人＋1AI；舊收據不改寫，未部署。完整證據與兩回合審查見 [本輪紀錄](../PR53-MIXED-AI-REVIEW.md)。
+
 正式仍v1.12.0／83ffcab／schema16，新增私有GitHub token並重載服務，當次PID147993。設定前備份私有env與線上SQLite；freshrooms0，沒有清房或DB restore。9帳戶全欄位、其他18表內容與22schema保持，只有session及測試board_issue／comment／submission按功能新增；3筆done無待處理。GitHub token只存正式私有env，不複製到sanitized開發資料或記憶文件。下一次重新盤點PID／env，舊1.12部署env摘要不能當新設定的pin；詳 [同步紀錄](../GITHUB-BOARD-SYNC.md)。
 
 2026-10-07最新正式 **v1.11.0／schema16／22表**：固定source／tag `67e49a164ac5fcb4c3b3cce0fe2b8d899c860e62`。線上SQLite備份＋另時點files不是atomic cold；隔離schema15→16只加空market_images，migration／boot兩次21舊表allrows／BLOB、8users全fields保持。09:15:24.105Z rooms0 guard後服務／tunnel健康；最終20舊non-session表資料、8users保持，FK0／integrity ok、新圖片0；sessions191→201是失敗QA3＋guard1＋smoke6，不說session未變。cold15升16與full16帶PNG審核資料還原已有focused證據，角色4MiB／preserveImportedSessions兼容保留。正式來源保UI／WebGL，與PR46候選source分開；[最新證據](../PR46-REVIEW-FIX-PROGRESS.md)取代下方schema15／早期部署現況，下次仍重新盤點。

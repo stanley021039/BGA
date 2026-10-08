@@ -82,3 +82,23 @@ test('HTTP imported uppercase account UUIDs retain their exact database identity
  assert.deepEqual(facts.participants.map(p=>p.user_id).sort(),users);
  assert.equal(f.read(db=>require('../src/achievements/store').validateAchievementUnitsDatabase(db)),true);
 });
+
+
+test('HTTP three humans and one AI normally complete majority and award each human',async t=>{
+ const f=await fixture(t),{code}=await f.api(0,'create',{type:'majority'});
+ for(let seat=1;seat<3;seat++)await f.api(seat,'join',{code});
+ await f.api(0,'bot',{code});await f.api(0,'start',{code});
+ await f.api(0,'action',{code,action:'ask',type:'two',prompt:'混合真人與AI',options:['一起','另一種']});
+ for(let seat=0;seat<3;seat++)await f.api(seat,'action',{code,action:'answer',answer:0});
+ let state;for(let i=0;i<50;i++){
+  state=await f.api(0,'state?code='+code);if(['review','reveal','finished'].includes(state.phase))break;
+  await new Promise(resolve=>setTimeout(resolve,200));
+ }
+ assert.ok(['review','reveal','finished'].includes(state.phase),'AI must submit its actual answer');
+ if(state.phase==='review')state=await f.api(0,'action',{code,action:'score'});
+ assert.ok(['reveal','finished'].includes(state.phase));
+ for(let seat=0;seat<3;seat++){
+  const badges=unlocked(await f.api(seat,'achievements'));assert.ok(badges.includes('majority-first-vote'));assert.ok(badges.includes('all-first-table'));
+ }
+ assert.equal(f.read(db=>db.prepare('SELECT COUNT(*) n FROM achievement_progress').get().n),3);
+});
