@@ -11,6 +11,7 @@
   check:'<path d="m5 12 4 4L19 6"/>',
   ban:'<circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/>',
   lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>',
+  previous:'<path d="M20 12H4m6-6-6 6 6 6"/>',
   next:'<path d="M4 12h16m-6-6 6 6-6 6"/>',
   replay:'<path d="M3 4v6h6M3 10a9 9 0 1 1 1 8"/>',
   sound:'<path d="M4 9h4l5-4v14l-5-4H4Z M17 8a6 6 0 0 1 0 8M20 5a10 10 0 0 1 0 14"/>',

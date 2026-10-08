@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "Chromium touch swipe selects majority",
+    "Two independent accounts see existing lobby movement",
+    "Expression request and visible speech synchronize to second account"
+  ],
+  "scope": "Synthetic accounts and isolated temporary database only"
+}

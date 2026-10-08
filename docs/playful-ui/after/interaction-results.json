@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "Keyboard finite boundaries and market navigation without room creation",
+    "Mouse drag selects the correct existing room game",
+    "Dialog Escape restores trigger focus",
+    "Original lobby click movement API and expression menu",
+    "poker original create endpoint, session and waiting route",
+    "thunder original create endpoint, session and waiting route",
+    "majority original create endpoint, session and waiting route",
+    "gift original create endpoint, session and waiting route",
+    "draw original create endpoint, session and waiting route",
+    "Real room list contains five created rooms",
+    "Reduced motion removes carousel transition",
+    "Mobile dialog has no document horizontal overflow"
+  ],
+  "errors": [],
+  "scope": "Temporary Linux worktree server only; no production state accessed"
+}
