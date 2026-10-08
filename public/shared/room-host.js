@@ -139,6 +139,7 @@
    render(snapshot);return true;
   },
   kicked(session){
+   window.SharedChat?.clearRoom();
    cancelPending();current=null;render=null;
    for(const key of ['ah-majority','ah-thunder','ah-gift','ah-draw','ah-session']){localStorage.removeItem(key+':'+session.code);try{if(JSON.parse(localStorage.getItem(key)||'null')?.code===session.code)localStorage.removeItem(key);}catch{}}
    for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
