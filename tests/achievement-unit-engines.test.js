@@ -332,3 +332,23 @@ for(const game of ['draw','gift','majority'])for(const missingHuman of [false,tr
   }finally{db.close();}
  });
 }
+
+
+for(const {name,count,botIndex,values,expected}of [
+ {name:'all humans together',count:3,values:[0,0,0],expected:true},
+ {name:'three humans plus AI together',count:4,botIndex:3,values:[0,0,0,0],expected:true},
+ {name:'AI answer differs',count:4,botIndex:3,values:[0,0,0,1],expected:false},
+ {name:'human answer differs',count:4,botIndex:3,values:[0,1,0,0],expected:false},
+ {name:'only two humans plus AI together',count:3,botIndex:2,values:[0,0,0],expected:false},
+])test('majority all-same: '+name,()=>{
+ const f=fixture('majority',count,null,{botIndex});ask(f);answer(f,values);
+ const event=f.events[0];assert.equal(event.status,'rules_completed');assert.equal(event.metrics.allSame,expected);
+ assert.equal(event.metrics.participantCount,count-(botIndex===undefined?0:1));
+ const db=openDatabase(':memory:');try{
+  for(const id of f.mapping.values())db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)').run(id,id,'會員','unused','member',new Date().toISOString());
+  new AchievementStore(db).recordUnit({...event,purpose:'production'});
+  const awarded=db.prepare("SELECT user_id FROM user_achievements WHERE achievement_id='majority-one-channel'").all().map(p=>p.user_id);
+  assert.equal(awarded.length,expected?event.participants.length:0);
+  if(botIndex!==undefined)assert.ok(!awarded.includes(f.mapping.get(f.players[botIndex].id)));
+ }finally{db.close();}
+});
