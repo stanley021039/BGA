@@ -1,0 +1,98 @@
+[
+  {
+    "name": "settings",
+    "failures": []
+  },
+  {
+    "name": "profile",
+    "failures": []
+  },
+  {
+    "name": "studio",
+    "failures": []
+  },
+  {
+    "name": "collection",
+    "failures": []
+  },
+  {
+    "name": "achievements",
+    "failures": []
+  },
+  {
+    "name": "history",
+    "failures": []
+  },
+  {
+    "name": "community",
+    "failures": []
+  },
+  {
+    "name": "music",
+    "failures": []
+  },
+  {
+    "name": "gifts",
+    "failures": []
+  },
+  {
+    "name": "draw-words",
+    "failures": []
+  },
+  {
+    "name": "credits",
+    "failures": []
+  },
+  {
+    "name": "rules",
+    "failures": []
+  },
+  {
+    "name": "admin",
+    "failures": []
+  },
+  {
+    "name": "market",
+    "failures": []
+  },
+  {
+    "name": "poker-waiting",
+    "failures": []
+  },
+  {
+    "name": "poker-playing",
+    "failures": []
+  },
+  {
+    "name": "thunder-waiting",
+    "failures": []
+  },
+  {
+    "name": "thunder-playing",
+    "failures": []
+  },
+  {
+    "name": "majority-waiting",
+    "failures": []
+  },
+  {
+    "name": "majority-playing",
+    "failures": []
+  },
+  {
+    "name": "gift-waiting",
+    "failures": []
+  },
+  {
+    "name": "gift-playing",
+    "failures": []
+  },
+  {
+    "name": "draw-waiting",
+    "failures": []
+  },
+  {
+    "name": "draw-playing",
+    "failures": []
+  }
+]

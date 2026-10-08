@@ -304,3 +304,8 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 ### 2026-10-08 授權部署更新
 
 使用者明確要求更新 shhuang.cc 測試，1.17.0／6be11b4／v1.17.0 已部署。原先 SQLite I/O 測試失敗因 /tmp 空間不足，改用磁碟 TMPDIR 後 1,519/1,519 全部通過；未改測試或 storage。正式瀏覽器驗證登入保留、輪播／建立 dialog／六張插畫與設定版號，origin八資源驗證、DB完整性/schema/四資料表指紋保留通過。此筆取代前一筆未部署／原版測試仍失敗狀態；其餘頁面尚未改造。證據 docs/playful-ui/deployment.md。
+
+
+## 2026-10-08 全站紙卡延伸，候選1.17.1
+
+使用者要求登入、等待房及遊戲頁也要改，並明確說各遊戲可保留不同布局，只要區塊對齊；開房不得要求暱稱，改用帳號設定的displayName。21HTML共享主題，四款等待内容／操作top差0、gap16px，75最新viewport无水平溢出/pageerror。原布局與core/API/DB/畫猜renderer未改；撲克漏type直接開桌已測舊版失敗並修正，五款權威名稱回歸與三入口實際settings→create通過。完整Linux1,526/1,526，focused13；實際限定遊戲操作與五款200%/reduce通過，非全規則／真手機／全讀屏／FPS。完整檔案與證據 docs/playful-ui/full-site/README.md；部署完成另記該目錄deployment.md，不把候選自稱上線。

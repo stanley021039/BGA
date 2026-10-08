@@ -1,0 +1,8 @@
+{
+  "checks": [
+    "/ creates thunder without visible nickname input, using saved display name",
+    "/poker creates poker without visible nickname input, using saved display name",
+    "/majority creates majority without visible nickname input, using saved display name"
+  ],
+  "scope": "Synthetic account, real settings form and original room endpoints; isolated server only"
+}

@@ -28,7 +28,7 @@
  else if(drawAside){if(drawAside.querySelector('[data-game-action-slot]'))drawAside.append(panel);else{drawAside.querySelector('#players').after(panel);const guesses=document.querySelector('#guessChat');if(guesses)drawAside.append(guesses);}panel.classList.add('integrated','draw-ui');}
  else if(pokerAside){
   const controls=pokerAside.querySelector('#hostControls');controls.after(panel);panel.classList.add('integrated','poker-ui');
-  const info=document.createElement('section');info.className='room-game-info';info.setAttribute('aria-label','牌桌資訊');const summary=document.createElement('h2');summary.textContent='牌桌資訊';info.append(summary);
+  const playful=document.body.dataset.visualTheme==='playful';const info=document.createElement(playful?'details':'section');info.className='room-game-info';info.setAttribute('aria-label','牌桌資訊');const summary=document.createElement(playful?'summary':'h2');summary.textContent='牌桌資訊';info.append(summary);
   for(const item of [...pokerAside.children]){if(item===controls)break;info.append(item);}
   panel.after(info);panel.querySelector('.shared-players-heading').textContent='這桌的朋友';
   panel.querySelector('#shared-turn').before(panel.querySelector('.shared-players-heading'),panel.querySelector('#shared-players'));
@@ -49,6 +49,11 @@
  }
  const toolsHost=sidebar||document.querySelector('.race-controls');if(toolsHost){dock.classList.add('in-sidebar');toolsHost.append(dock);}
  const mediaSlot=document.createElement('div');mediaSlot.className='room-media-slot';dock.append(mediaSlot);window.TableMedia?.mount(mediaSlot);
+ if(document.body.dataset.visualTheme==='playful'){
+  window.GameUI?.decorateButton(leaveLink,'leave',{iconOnly:true,label:'離開房間'});
+  if(manage)window.GameUI?.decorateButton(manage,'users',{iconOnly:true,label:'管理玩家'});
+  const mediaButton=mediaSlot.querySelector('#tableMediaOpen');if(mediaButton)window.GameUI?.decorateButton(mediaButton,'video',{iconOnly:true,label:'媒體'});
+ }
  const arena=majorityAside?.previousElementSibling||giftAside?.previousElementSibling||drawAside?.previousElementSibling||document.querySelector('#game .play-area')||document.querySelector('.race-main')||document.body;
  const barrageLayer=document.createElement('div');barrageLayer.className='game-barrage-layer';barrageLayer.setAttribute('aria-hidden','true');
  arena.classList.add('game-barrage-host');arena.append(barrageLayer);

@@ -21,10 +21,17 @@ body[data-visual-theme="playful"][data-game-kind] {
   --play-shadow: 0 7px 0 #29263920;
   --play-control-shadow: 0 3px 0 #29263924;
   --play-ease: cubic-bezier(.22,1,.36,1);
+  --play-font: "Segoe UI", "Microsoft JhengHei", sans-serif;
+  --play-space-1: .25rem; --play-space-2: .5rem; --play-space-3: .75rem;
+  --play-space-4: 1rem; --play-space-5: 1.5rem; --play-space-6: 2rem;
+  --play-text-small: .875rem; --play-text-body: 1rem; --play-text-title: 1.75rem;
+  --play-duration-fast: 140ms; --play-duration-card: 420ms;
+  --play-game-color: var(--play-lavender);
   --bg: var(--play-paper); --panel: var(--play-surface);
   --cream: var(--play-ink); --ink: var(--play-ink); --paper: var(--play-paper);
   --muted: var(--play-muted); --line: #29263935; --green: var(--play-ink);
   --lime: var(--play-mint); --lav: var(--play-lavender); --pink: var(--play-pink); --orange: var(--play-yellow);
+  --mint: var(--play-mint); --plum: var(--play-ink); --gold: #886120;
   --page-line: #29263935; --page-panel: var(--play-surface);
   --page-cream: var(--play-ink); --page-orange: var(--play-yellow);
   --ui-text: var(--play-ink); --ui-muted: var(--play-muted); --ui-border: var(--play-ink);
@@ -42,6 +49,8 @@ body[data-visual-theme="playful"][data-game-kind] {
   --room-surface: var(--play-surface); --room-border: var(--play-ink);
   --room-text: var(--play-ink); --room-muted: var(--play-muted);
   --room-accent: var(--play-yellow);
+  --room-status: var(--play-lavender); --room-status-text: var(--play-ink);
+  --room-active: var(--play-yellow); --room-active-text: var(--play-ink);
   background: var(--play-paper); color: var(--play-ink);
   font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
   line-height: 1.6; color-scheme: light;
@@ -95,7 +104,7 @@ body[data-visual-theme="playful"] .site-header :is(.site-account-id,.site-versio
 body[data-visual-theme="playful"] .site-header .site-account-id { background: var(--play-surface); border: 1px solid var(--play-ink); }
 body[data-visual-theme="playful"] .site-settings :is(button,.site-audio-group,.site-version) { border-color: #29263935; }
 /* Card-based pages share surfaces rather than each reimplementing a new theme. */
-body[data-visual-theme="playful"] :is(.page-panel,.auth-card,.profile-card,.studio-panel,.issue-item,.library-item,.market-shell .panel,.collection-panel,.collection-card,.achievement-card,.achievement-group,.credits-card,.gallery-card) {
+body[data-visual-theme="playful"] :is(.page-panel,.auth-card,.profile-card,.studio-panel,.issue-item,.library-item,.panel,.collection-panel,.collection-card,.achievement-card,.achievement-group,.credits-card,.gallery-card) {
   background: var(--play-surface); color: var(--play-ink);
   border: var(--play-border); border-radius: var(--play-radius); box-shadow: var(--play-shadow);
 }
@@ -116,7 +125,7 @@ body[data-visual-theme="playful"] :is(.rooms-message,.collection-empty,.empty-st
 body[data-visual-theme="playful"] :is(.admin-layout,.admin-wrap) :is(table,pre) { color: var(--play-ink); }
 body[data-visual-theme="playful"] :is(.admin-layout,.admin-wrap) :is(th,td,section) { border-color: #29263935; }
 /* Every game keeps its board and dock positions. Only the shared UI surfaces change. */
-body[data-visual-theme="playful"][data-game-kind] :is(.hero,.card,.room-sidebar,.shared-game-ui,.dashboard,.table-sidebar,.game-roster,.draw-roster,.race-feed,.game-action-slot>.ui-panel) {
+body[data-visual-theme="playful"][data-game-kind] :is(.hero,.card,.room-sidebar,.shared-game-ui,.dashboard,.table-sidebar,.game-roster,.draw-roster,.race-feed,.ui-panel) {
   background: var(--play-surface); color: var(--play-ink); border-color: var(--play-ink); border-radius: var(--play-radius);
 }
 body[data-visual-theme="playful"][data-game-kind] :is(.room-sidebar,.dashboard,.table-sidebar,.race-feed) { border-width: 2px; box-shadow: var(--play-shadow); }
@@ -126,8 +135,8 @@ body[data-visual-theme="playful"][data-game-kind] :is(.room-player-avatar,.avata
 body[data-visual-theme="playful"][data-game-kind] :is(.room-player-info small,.crew-detail,.detail-row,.sidebar-note,.step-controls p,.car-card small,.garage-info p,.spectate,.rookie-help p,#feed>div) { color: var(--play-muted); }
 body[data-visual-theme="playful"][data-game-kind] :is(.game-title h2,.race-heading h1,.room-game-info h2,.aside-head h2,.stage-head,.race-wordmark,.race-stats b,#codeLabel,#roomCode,#timer,.section-label,.seat-stack,.score) { color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] :is(.garage,.locked,.winner-card) { background: var(--play-peach); border-color: var(--play-ink); }
-body[data-visual-theme="playful"][data-game-kind="thunder"] .garage-art img { content: url('/assets/playful/game-thunder.svg'); object-fit: contain; width: 100%; height: 100%; left: 0; top: 0; filter: none; }
-body[data-visual-theme="playful"][data-game-kind="thunder"] .garage-art>span { display: none; }
+body[data-visual-theme="playful"][data-game-kind="race"] .garage-art img { object-fit: contain; width: 100%; height: 100%; left: 0; top: 0; filter: none; }
+body[data-visual-theme="playful"][data-game-kind="race"] .garage-art>span { display: none; }
 body[data-visual-theme="playful"][data-game-kind] :is(.mode-picker select,.car-card,.rookie-help,.lesson-nav .button,#lessonCoach,.lesson-feedback,.lesson-jump select) { background: var(--play-paper); color: var(--play-ink); border-color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] :is(.car-card.selected,.answer.chosen) { background: var(--play-yellow); border-color: var(--play-ink); box-shadow: inset 0 0 0 1px var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] :is(.die-button,.mini-die) { color: var(--play-ink); background-color: var(--play-surface); border-color: var(--play-ink); }
@@ -264,3 +273,248 @@ body[data-visual-theme="playful"] .playful-skip:focus { top: 10px; }
   body[data-visual-theme="playful"] .game-library[data-card-carousel] .game-tile { transition: none; --rotation: 0deg !important; --lift: 0px !important; }
 }
 body[data-visual-theme="playful"] .game-library.carousel-reduced .game-tile { transition: none; --rotation: 0deg !important; --lift: 0px !important; }
+
+/* Full-site continuation: the existing page/state renderers still own geometry
+   and interactions. Use the same paper, illustrated assets and GameUI controls. */
+body[data-visual-theme="playful"][data-game-kind="poker"] { --play-game-color: var(--play-blue); }
+body[data-visual-theme="playful"][data-game-kind="race"] { --play-game-color: var(--play-peach); }
+body[data-visual-theme="playful"][data-game-kind="majority"] { --play-game-color: var(--play-pink); }
+body[data-visual-theme="playful"][data-game-kind="gift"] { --play-game-color: var(--play-pink); }
+body[data-visual-theme="playful"][data-game-kind="draw"] { --play-game-color: var(--play-blue); }
+body[data-visual-theme="playful"] .auth-layout { gap: clamp(30px,5vw,90px); }
+body[data-visual-theme="playful"] .auth-story h1 { line-height: 1.28; letter-spacing: -2px; font-weight: 900; }
+body[data-visual-theme="playful"] .auth-story h1 em { padding: 0 7px; border-radius: 10px; }
+body[data-visual-theme="playful"] .auth-deck { position: relative; height: 285px; margin: 24px 0 18px; isolation: isolate; }
+body[data-visual-theme="playful"] .auth-deck-card { position: absolute; left: 50%; top: 24px; width: 205px; height: 205px; object-fit: cover; border: var(--play-card-border); border-radius: 18px; box-shadow: var(--play-shadow); }
+body[data-visual-theme="playful"] .auth-deck-left { transform: translateX(-120%) rotate(-14deg); z-index: 1; }
+body[data-visual-theme="playful"] .auth-deck-middle { transform: translateX(-50%) rotate(2deg); z-index: 3; }
+body[data-visual-theme="playful"] .auth-deck-right { transform: translateX(22%) rotate(14deg); z-index: 2; }
+body[data-visual-theme="playful"] .auth-deck-label { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%) rotate(-2deg); padding: 5px 14px; white-space: nowrap; background: var(--play-mint); border: var(--play-border); border-radius: 8px; font-size: 13px; font-weight: 750; z-index: 4; }
+body[data-visual-theme="playful"] .auth-card { border: var(--play-card-border); padding: 34px; box-shadow: 7px 8px 0 var(--play-blue); }
+body[data-visual-theme="playful"] .auth-points span { color: var(--play-ink); border: 1.5px solid var(--play-ink); background: var(--play-surface); font-size: 12px; }
+body[data-visual-theme="playful"] .auth-points span:nth-child(2n) { background: var(--play-yellow); }
+body[data-visual-theme="playful"] :is(.card-footer,.form-note,.card-intro,.form-message) { color: var(--play-muted); border-color: #29263935; }
+body[data-visual-theme="playful"] .form-message.error { color: var(--play-error); }
+body[data-visual-theme="playful"] .form-message.success { color: var(--play-success); }
+body[data-visual-theme="playful"] .auth-tabs button { min-height: 44px; font-size: 14px; }
+/* Keep the full site header compact over a live board. */
+body[data-visual-theme="playful"][data-game-kind] [data-site-header].site-header { min-height: 72px; padding-block: 12px; gap: 16px; }
+body[data-visual-theme="playful"][data-game-kind] .site-header .site-title { font-size: 28px; }
+body[data-visual-theme="playful"][data-game-kind] .game-toolbar { background: transparent; }
+body[data-visual-theme="playful"][data-game-kind] :is(.game-title,.stage-head,.race-heading) h1 { font-size: clamp(23px,2.2vw,32px); font-weight: 900; }
+body[data-visual-theme="playful"][data-game-kind] :is(.pill,.phase-pill,.phase-badge,.stage-ribbon,.round-pill) { color: var(--play-ink); background: var(--play-game-color); border: 1.5px solid var(--play-ink); border-radius: 999px; }
+body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout,.draw-layout) .card { border: var(--play-border); }
+body[data-visual-theme="playful"][data-game-kind] :is(.hero,.garage) { border: var(--play-card-border); background: var(--play-game-color); }
+body[data-visual-theme="playful"][data-game-kind] .hero h1 { font-size: clamp(26px,3vw,40px); line-height: 1.4; }
+body[data-visual-theme="playful"][data-game-kind="majority"] .hero-mark { background-image: url('/assets/playful/game-majority.svg'); }
+body[data-visual-theme="playful"][data-game-kind="gift"] .hero-mark { background-image: url('/assets/playful/game-gift.svg'); }
+body[data-visual-theme="playful"][data-game-kind="draw"] .hero-mark { background-image: url('/assets/playful/game-draw.svg'); }
+body[data-visual-theme="playful"][data-game-kind] .hero-mark { width: 126px; height: 90px; margin-bottom: 12px; border: var(--play-border); border-radius: 14px; background-size: cover; background-position: center; font-size: 0; }
+body[data-visual-theme="playful"][data-game-kind] :is(.room-settings-panel,.room-settings-body,.banner,.draw-waiting,.answer-stage,.stage-stat,.waiting-steps li,.assignment-row,.locked) { background: var(--play-paper); border-color: var(--play-ink); color: var(--play-ink); border-radius: 12px; }
+body[data-visual-theme="playful"][data-game-kind] :is(.room-settings-panel h2,.room-game-info h2,.shared-turn,.room-player-info b,.player-scores,.player-status,.entry-identity,.standing,.tags span,.intro-options span,.sub,.game-feedback,.mode-summary,.phase-note,.small) { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] :is(.room-player,.seat-info) { border: var(--play-border); box-shadow: var(--play-control-shadow); }
+body[data-visual-theme="playful"][data-game-kind] .room-player { padding: 10px; margin-block: 7px; }
+body[data-visual-theme="playful"][data-game-kind] .room-player:has(.room-player-self) { background: var(--play-game-color); }
+body[data-visual-theme="playful"][data-game-kind] .steps span { color: var(--play-muted); }
+body[data-visual-theme="playful"][data-game-kind] .steps span.active { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] .shared-turn { background: var(--play-lavender); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="draw"] .stage-reason { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] .room-player :is(.room-player-avatar,.shared-player-avatar) { border: 1.5px solid var(--play-ink); border-radius: 10px; background: var(--play-game-color); }
+body[data-visual-theme="playful"][data-game-kind] .room-player-metrics strong { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] :is(.game-roster,.draw-roster,.table-sidebar,.dashboard,.race-feed,.draw-guess-panel,.board-section) { border: var(--play-border); box-shadow: var(--play-shadow); }
+body[data-visual-theme="playful"][data-game-kind] :is(.aside-head,.dashboard-head,.board-head,.guess-chat-head) { border-color: #29263935; }
+body[data-visual-theme="playful"][data-game-kind] :is(.game-roster .aside-head h2,.draw-roster .aside-head h2,.guess-chat-head strong) { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] :is(.room-settings-entry,.shared-expression-menu summary,.shared-barrage-form button,.shared-barrage-form input,.room-host-buttons button,.room-host-trigger,.shared-game-ui button,.game-action-slot button:not(.gift-choice),.tools .tool-row button,.color-menu summary) { border-color: var(--play-ink); border-radius: var(--ui-radius-control); }
+body[data-visual-theme="playful"][data-game-kind] :is(.shared-barrage-form button,.room-host-buttons button,.shared-game-ui button,.game-action-slot button:not(.selected):not(.gift-choice),.room-settings-entry,.room-host-trigger) { background: var(--play-surface); color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] :is(.game-action-slot #start,.game-action-slot [data-do=start],.game-action-slot [data-do=answer],.game-action-slot [data-do=score]) { background: var(--play-yellow); }
+body[data-visual-theme="playful"][data-game-kind] :is(.room-host-menu,.room-settings-popover,.game-popover-panel,.shared-emoji-picker,.shared-expression-menu .shared-expressions,.rookie-help-content,.race-command-options>.command-wrap) { background: var(--play-surface); color: var(--play-ink); border: var(--play-border); box-shadow: var(--ui-shadow-floating); border-radius: 14px; }
+body[data-visual-theme="playful"][data-game-kind] :is(.game-popover-panel,.room-host-menu,.shared-expression-menu,.shared-emoji-picker,.rookie-help-content) :is(button,summary,small,p,a) { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] .shared-game-ui.integrated { background: transparent; border-radius: 0; }
+/* Poker stays a readable card table: red suits and hidden backs remain distinct. */
+body[data-visual-theme="playful"][data-game-kind="poker"] .rail { background: var(--play-blue); border-color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="poker"] :is(.rail-icon,.mark,.rail-bottom) { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="poker"] .rail-icon.active { background: var(--play-yellow); color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="poker"] :is(.lobby-bottom,.hero-art) { background: var(--play-blue); border-color: var(--play-ink); border-radius: 18px; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .poker-table { border-color: var(--play-ink); background: #d5e8d2; box-shadow: 0 0 0 3px var(--play-surface),0 0 0 5px var(--play-ink),0 12px 0 #29263918,inset 0 0 0 2px #29263935; color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="poker"] .poker-table :is(#pot,#pot b,#phase,.table-brand) { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="poker"] .card { border: 1.5px solid var(--play-ink); border-radius: 8px; background: var(--play-surface); color: var(--play-ink); box-shadow: 0 3px 0 #29263925; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .card.red { color: #a33845; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .card.back { color: var(--play-ink); border: 2px solid var(--play-ink); background: repeating-linear-gradient(45deg,var(--play-blue),var(--play-blue) 5px,#d9eff8 5px,#d9eff8 10px); }
+body[data-visual-theme="playful"][data-game-kind="poker"] .card.empty { color: transparent; background: transparent; border: 1.5px dashed #29263970; box-shadow: none; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .seat.turn .seat-info { background: var(--play-yellow); border-color: var(--play-ink); box-shadow: 0 0 0 3px var(--play-blue); }
+body[data-visual-theme="playful"][data-game-kind="poker"] :is(.seat-action,.seat-stack,.detail-row b,#turnInfo,#result,.activity-title,.activity-title span,#activity div,.invite-note p,.or) { color: var(--play-ink); }
+/* Crew colors, legal-cell SVGs, movement and dice canvases remain renderer-owned. */
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.race-stage,.terrain-legend) { border-color: var(--play-ink); background: var(--play-peach); }
+body[data-visual-theme="playful"][data-game-kind="race"] .crew-pill { border-color: var(--play-ink); border-top-color: var(--crew); border-width: 2px; border-top-width: 5px; box-shadow: var(--play-control-shadow); }
+body[data-visual-theme="playful"][data-game-kind="race"] .crew-pill.current { background: var(--play-yellow); border-color: var(--play-ink); border-top-color: var(--crew); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.race-stats small,.crew-dice-wait,.empty-crew,.command-used-note,.command-spent,.damage-pips,.crew-car.is-damaged,.crew-car.is-out,.game-feedback,.garage-info a,.build-note a) { color: var(--play-muted); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.die-button.reserved,.die-button.reserved small) { background: var(--play-blue); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.mini-die.used,.mini-die.used i) { background: var(--play-paper); color: var(--play-muted); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.terrain-help-button,.terrain-legend .legal-key) { background: var(--play-paper); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="race"] .terrain-legend .legal-key-icon { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(#trackTooltip,#raceTerrainLegendTooltip,.lesson-inline-note) { background: var(--play-surface); color: var(--play-ink); border: var(--play-border); box-shadow: var(--ui-shadow-floating); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(#trackTooltip,#raceTerrainLegendTooltip) :is(small,strong,.terrain-warning) { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.slam-choice,.shot-target) { background: var(--play-pink); border-color: var(--play-ink) !important; color: var(--play-ink) !important; }
+body[data-visual-theme="playful"][data-game-kind="race"] .slam-choice :is(h3,p) { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] :is(#pokerSpotlight,#raceSpotlight,.race-event-popup) { background: var(--play-surface); color: var(--play-ink); border: var(--play-card-border); box-shadow: var(--ui-shadow-floating); }
+body[data-visual-theme="playful"][data-game-kind] :is(#pokerSpotlight,#raceSpotlight,.race-event-popup) :is(strong,p,button,.race-event-top) { color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind] :is(#pokerSpotlight,#raceSpotlight)::before { color: var(--play-muted); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-event-top { background: var(--play-peach); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.race-dice-header,.race-dice-footer) { background: var(--play-peach); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.race-dice-participant,.race-dice-general) { background: var(--play-surface); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-dice-participant { border-top-color: var(--race-dice-color); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-dice-tile { background: var(--play-blue); color: var(--play-ink); border: var(--play-border); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-dice-action { background: var(--play-yellow); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-dice-action[data-dice-action=rerollDice] { background: var(--play-surface); color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-dice-error { color: var(--play-error); }
+body[data-visual-theme="playful"][data-game-kind] #shared-barrage button { background: var(--play-yellow); color: var(--play-ink); border: var(--play-border); }
+body[data-visual-theme="playful"] :is(.avatar-stage,.studio-panel,.result-box,.submission-list p,.artwork-card,.history-card) { border: var(--play-border); background: var(--play-surface); color: var(--play-ink); box-shadow: var(--play-shadow); border-radius: 18px; }
+body[data-visual-theme="playful"] .avatar-stage { background: var(--play-blue); }
+body[data-visual-theme="playful"] :is(.stage-caption,.stage-caption span,.stage-caption strong,.panel-heading p,.panel-number,.members-panel td,.submission-list button,.members-panel td button) { color: var(--play-ink); }
+body[data-visual-theme="playful"] :is(.submission-list button,.members-panel td button) { border-color: var(--play-ink); background: var(--play-paper); }
+body[data-visual-theme="playful"] .stage-glow { background: radial-gradient(circle,var(--play-yellow),transparent 65%); }
+body[data-visual-theme="playful"] .stage-orbit { border-color: #29263940; }
+/* Selected cards use outline as well as color; question/options keep readable data. */
+body[data-visual-theme="playful"][data-game-kind="majority"] .qcard { border: var(--play-border); box-shadow: var(--play-control-shadow); }
+body[data-visual-theme="playful"][data-game-kind="majority"] .answer { background: var(--play-lavender); color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="majority"] .answer:nth-child(2) { background: var(--play-mint); }
+body[data-visual-theme="playful"][data-game-kind="majority"] .answer:nth-child(3) { background: var(--play-pink); }
+body[data-visual-theme="playful"][data-game-kind="majority"] .answer.chosen { border-color: var(--play-ink); box-shadow: inset 0 0 0 2px var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="gift"] .gift-choice { border: var(--play-border); box-shadow: var(--play-control-shadow); }
+body[data-visual-theme="playful"][data-game-kind="gift"] .gift-choice.selected { border-color: var(--play-ink); background: var(--play-lavender); box-shadow: inset 0 0 0 2px var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="gift"] :is(.choice-badge,.gift-number,.delivery-count,.result-score strong,.recipient-name,.reveal-group h2) { color: var(--play-ink); }
+/* Canvas stays pure white, including optimistic drawing and playback layers. */
+body[data-visual-theme="playful"][data-game-kind="draw"] :is(.canvas-frame,.stage-art,.draw-result-art) { border: var(--play-border); background: #fff; }
+body[data-visual-theme="playful"][data-game-kind="draw"] :is(.canvas-stage,.tools) { background: var(--play-blue); }
+body[data-visual-theme="playful"][data-game-kind="draw"] :is(.stage-pick,.stage-pick-back,.stage-player-card,.draw-result-choice,.draw-ban-panel) { border: var(--play-border); background: var(--play-surface); color: var(--play-ink); box-shadow: var(--play-control-shadow); }
+body[data-visual-theme="playful"][data-game-kind="draw"] :is(.stage-pick-back,.stage-ribbon) { background: var(--play-lavender); }
+body[data-visual-theme="playful"][data-game-kind="draw"] .stage-pick:hover { background: var(--play-yellow); }
+body[data-visual-theme="playful"][data-game-kind="draw"] :is(.stage-answer,.stage-winner strong,.stage-ranking b,.stage-card-win,#timerCaption) { color: var(--play-ink) !important; }
+body[data-visual-theme="playful"][data-game-kind="draw"] #timer { background: var(--play-yellow); border-color: var(--play-ink); color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="draw"] #timer.urgent { background: #ffe1dd; color: #8e2e2a; border-color: #8e2e2a; }
+body[data-visual-theme="playful"][data-game-kind="draw"] .draw-player-correct { background: var(--play-mint); border-color: var(--play-success); }
+/* Account/content pages use the same surfaces, without animating content. */
+body[data-visual-theme="playful"] :is(.page-panel,.profile-card,.achievement-card,.collection-card,.market-shell .panel) { border: var(--play-border); }
+body[data-visual-theme="playful"] :is(.page-heading,.profile-heading,.market-heading) p { color: var(--play-muted); }
+body[data-visual-theme="playful"] .market-navigation .market-tabs { background: var(--play-surface); border: var(--play-border); border-radius: 12px; }
+body[data-visual-theme="playful"] .market-tabs [aria-selected=true] { background: var(--play-yellow); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"] :is(.score-strip,.record,.choice,.history-summary,.collection-tabs,.nickname-panel) { border: var(--play-border); border-radius: 14px; background: var(--play-surface); color: var(--play-ink); }
+body[data-visual-theme="playful"] .score-strip { background: var(--play-blue); }
+body[data-visual-theme="playful"] .choice.selected { border-color: var(--play-ink); box-shadow: inset 0 0 0 2px var(--play-ink); background: var(--play-yellow); }
+body[data-visual-theme="playful"] :is(.upload-preview,.rule-picks,.image-status,.rule-callout) { border-color: var(--play-ink); background: var(--play-paper); }
+body[data-visual-theme="playful"] :is(.message,.deadline strong,.card-footer,.small,.settings-note,.admin-note,.helper) { color: var(--play-muted); }
+body[data-visual-theme="playful"] .message.error { color: var(--play-error); }
+body[data-visual-theme="playful"] input[type=file] { width: 100%; min-height: 44px; border: var(--play-border); border-radius: 10px; padding: 8px; background: var(--play-paper); color: var(--play-ink); }
+body[data-visual-theme="playful"] input[type=file]::file-selector-button { min-height: 32px; margin-right: 8px; padding: 5px 12px; border: 1.5px solid var(--play-ink); border-radius: 7px; background: var(--play-yellow); color: var(--play-ink); font: inherit; }
+body[data-visual-theme="playful"] :is(.character-upload,.upload-drop,.collection-upload,.studio-controls,.studio-drawing,.studio-spectrum,.studio-swatches,.studio-advanced,.studio-layer-panel,.paint-hex-row,.studio-sliders) { background: var(--play-paper); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"].profile-page :is(.gallery-empty,.artist-templates,.artist-templates summary,.artist-templates p,.upload-group p,.sharing-controls,.expression-sound,.expression-sound span,.preset-gallery button) { color: var(--play-ink); }
+body[data-visual-theme="playful"] .preset-gallery button { border: var(--play-border); background: var(--play-surface); color: var(--play-ink); }
+body[data-visual-theme="playful"] .preset-gallery button[aria-pressed=true] { background: var(--play-yellow); }
+body[data-visual-theme="playful"].studio-page :is(p,strong,summary,output,label,.studio-size-note,.studio-color-slider,.studio-current-row) { color: var(--play-ink); }
+body[data-visual-theme="playful"].studio-page .studio-tools button { border-color: var(--play-ink); color: var(--play-ink); background: var(--play-surface); }
+body[data-visual-theme="playful"].studio-page .studio-tools button.active { background: var(--play-yellow); border-color: var(--play-ink); }
+body[data-visual-theme="playful"] .collection-page :is(summary,.collection-current,.collection-count,.collection-section-heading small) { color: var(--play-ink); }
+body[data-visual-theme="playful"] .collection-editor { background: var(--play-paper); border-color: var(--play-ink); }
+body[data-visual-theme="playful"] .upload-group { background: var(--play-paper); border-color: var(--play-ink); }
+body[data-visual-theme="playful"] .upload-group h3 { color: var(--play-ink); }
+body[data-visual-theme="playful"].profile-page .artwork-picker strong { color: var(--play-ink); }
+body[data-visual-theme="playful"].achievements-page :is(.achievement-private-note,.achievement-filter-summary,.achievement-group-heading,.achievement-group-count,.achievement-metadata,.achievement-date,.achievement-paused,.achievement-filters label) { color: var(--play-muted); }
+body[data-visual-theme="playful"] .achievement-mark { color: var(--play-ink); background: var(--play-lavender); border-color: var(--play-ink); }
+body[data-visual-theme="playful"] .achievement-card.unlocked { background: var(--play-surface); border-color: var(--play-ink); color: var(--play-ink); }
+body[data-visual-theme="playful"] .achievement-card.unlocked .achievement-mark { background: var(--play-yellow); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"].history-page :is(button,#board,.player) { border: var(--play-border); background: var(--play-surface); color: var(--play-ink); border-radius: 12px; }
+body[data-visual-theme="playful"].history-page :is(#list small,#info,.player p,.community h3,summary,#empty,#empty p) { color: var(--play-muted); }
+body[data-visual-theme="playful"] .music-library #music-upload { background: var(--play-blue); border: var(--play-border); border-radius: 16px; }
+body[data-visual-theme="playful"] .music-library #music-upload p { color: var(--play-ink); }
+body[data-visual-theme="playful"] .asset-credits a { color: var(--play-ink); }
+body[data-visual-theme="playful"] .asset-credits .credit-card { border: var(--play-border); border-radius: 16px; background: var(--play-surface); }
+body[data-visual-theme="playful"].rules-page :is(.race-command-options summary,.lesson-points,.lesson-mode .lesson-points) { color: var(--play-ink); }
+body[data-visual-theme="playful"].admin-page :is(#output,#submissions,.members-panel th) { color: var(--play-ink); }
+body[data-visual-theme="playful"] .community-main :is(#pageIntro,.browse>p,.fields small) { color: var(--play-muted); }
+body[data-visual-theme="playful"] .community-main #list>p { color: var(--play-muted); }
+body[data-visual-theme="playful"] .community-main p { color: var(--play-muted); }
+body[data-visual-theme="playful"] .community-main .error { color: var(--play-error); }
+body[data-visual-theme="playful"] :is(.ui-status,.game-feedback,.form-message,.gallery-status,.draw-ban-status)[data-kind=error] { color: var(--play-error); }
+body[data-visual-theme="playful"] :is(.ui-status,.game-feedback,.form-message,.gallery-status,.draw-ban-status)[data-kind=success] { color: var(--play-success); }
+body[data-visual-theme="playful"].studio-page :is(.paint-recent-empty,#photo-layer-count,#artwork-count) { color: var(--play-muted); }
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.race-command-options summary,.lesson-points,.lesson-mode .lesson-points) { color: var(--play-ink); }
+body[data-visual-theme="playful"] .score-strip span { color: var(--play-ink); }
+body[data-visual-theme="playful"] .card-footer span:first-child { color: var(--play-muted); }
+body[data-visual-theme="playful"] :is(.ui-control-tooltip,#ui-control-hint) { background: var(--play-ink); color: var(--play-paper); }
+@media(max-width:1000px) {
+ body[data-visual-theme="playful"] .auth-deck-card { width: 160px; height: 175px; }
+ body[data-visual-theme="playful"] .auth-deck { height: 250px; }
+}
+@media(max-width:760px) {
+ body[data-visual-theme="playful"] .auth-deck-card { width: 135px; height: 142px; top: 20px; }
+ body[data-visual-theme="playful"] .auth-deck { height: 208px; margin: 10px 0 16px; }
+ body[data-visual-theme="playful"] .auth-card { padding: 26px 22px; box-shadow: 4px 5px 0 var(--play-blue); }
+ body[data-visual-theme="playful"] .auth-story h1 { font-size: clamp(36px,9vw,54px); }
+ body[data-visual-theme="playful"][data-game-kind] [data-site-header].site-header { min-height: 0; }
+ body[data-visual-theme="playful"][data-game-kind] .site-header .site-title { font-size: 26px; }
+}
+@media(max-width:420px) {
+ body[data-visual-theme="playful"] .auth-deck-card { width: 120px; height: 142px; }
+ body[data-visual-theme="playful"][data-game-kind] .hero-mark { width: 104px; height: 78px; }
+}
+
+/* Align the game-specific layouts: shared gaps and frame insets, with each
+   game's original player/board arrangement and board coordinates preserved. */
+body[data-visual-theme="playful"][data-game-kind] {
+ --play-layout-gap: 16px; --play-tools-width: 300px;
+ --room-gap: var(--play-layout-gap); --room-sidebar-width: var(--play-tools-width);
+}
+body[data-visual-theme="playful"] .room-identity-note { margin: 0; color: var(--play-muted); font-size: 14px; }
+body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout).room-layout:has(#gameSidebar) {
+ grid-template-columns: minmax(0,1fr) var(--play-tools-width);
+ grid-template-areas: "phase phase" "steps steps" "stage tools" "players players";
+ grid-template-rows: auto auto minmax(0,1fr) auto; gap: var(--play-layout-gap);
+ align-items: start; margin-top: 8px;
+}
+body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout)>.stage-head { grid-area: phase; min-width: 0; margin: 0; flex-wrap: wrap; }
+body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout)>.steps { grid-area: steps; margin: 0; }
+body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout)>main { grid-area: stage; min-width: 0; margin: 0; padding: 16px; border: var(--play-border); border-radius: 18px; background: var(--play-surface); box-shadow: var(--play-shadow); }
+body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout) #stage>.card { border: 0; box-shadow: none; padding: 8px; }
+body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout) #gameSidebar { grid-area: tools; align-self: start; height: auto; max-height: none; margin: 0; padding: 16px; }
+body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout)>.game-roster { grid-area: players; min-width: 0; margin: 0; padding: 16px; }
+body[data-visual-theme="playful"][data-game-kind] .game-action-slot { gap: 12px; }
+body[data-visual-theme="playful"][data-game-kind] .game-action-slot h2 { margin: 0 0 12px; }
+body[data-visual-theme="playful"][data-game-kind] #shared-barrage { flex-wrap: wrap; }
+body[data-visual-theme="playful"][data-game-kind] #gameSidebar .shared-game-ui.integrated { margin-top: 16px; }
+/* Poker keeps players and utilities in its existing side column. */
+body[data-visual-theme="playful"][data-game-kind="poker"] .game-layout.room-layout { grid-template-columns: minmax(0,1fr) var(--play-tools-width); gap: var(--play-layout-gap); align-items: start; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .play-area { border: var(--play-border); border-radius: 18px; margin: 0; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .table-sidebar { min-height: 0; padding: 16px; margin: 0; }
+body[data-visual-theme="playful"][data-game-kind="poker"] #hostControls { display: grid; gap: 8px; margin-bottom: 0; }
+body[data-visual-theme="playful"][data-game-kind="poker"] #hostControls button { min-height: 44px; padding: 8px 12px; margin: 0; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .shared-game-ui.integrated { flex: none; margin-block: 12px; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .poker-ui .shared-players { min-height: 0; max-height: min(40dvh,400px); overflow: auto; }
+body[data-visual-theme="playful"][data-game-kind="poker"] :is(.room-game-info,.poker-log) { margin: 8px 0; padding: 12px; border: 1px solid var(--play-ink); border-radius: 12px; }
+body[data-visual-theme="playful"][data-game-kind="poker"] :is(.room-game-info,.poker-log)>summary { min-height: 24px; color: var(--play-ink); cursor: pointer; font-size: 16px; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .room-game-info .detail-row { margin: 6px 0; }
+body[data-visual-theme="playful"][data-game-kind="poker"] #activity { height: auto; max-height: 144px; overflow: auto; margin-top: 8px; }
+/* Race keeps a wide track with its fleet below and controls on the right. */
+body[data-visual-theme="playful"][data-game-kind="race"] :is(.race-roster,.race-controls) { padding: 16px; margin: 0; border: var(--play-border); border-radius: 18px; background: var(--play-surface); box-shadow: var(--play-shadow); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-layout { display: block; }
+body[data-visual-theme="playful"][data-game-kind="race"] #racePlay { min-width: 0; border: var(--play-border); border-radius: 18px; background: var(--play-surface); box-shadow: var(--play-shadow); }
+body[data-visual-theme="playful"][data-game-kind="race"] #racePlay .race-stage { border: 0; border-radius: 16px; }
+@media(min-width:1001px) {
+ body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .race-main { grid-template-columns: minmax(0,1fr) var(--play-tools-width); gap: var(--play-layout-gap); align-items: start; }
+ body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) :is(#racePlay,#waiting) { grid-column: 1; grid-row: 1; }
+ body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .race-controls { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
+ body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .race-roster { grid-column: 1; grid-row: 2; }
+ body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .build-note { grid-column: 1 / -1; }
+}
+@media(max-width:1000px) {
+ body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout).room-layout:has(#gameSidebar) { grid-template-columns: 1fr; grid-template-areas: "phase" "steps" "stage" "tools" "players"; grid-template-rows: auto; }
+ body[data-visual-theme="playful"][data-game-kind="poker"] .game-layout.room-layout { grid-template-columns: 1fr; }
+ body[data-visual-theme="playful"][data-game-kind="race"] .race-main { display: flex; flex-direction: column; gap: 16px; }
+}
+@media(max-width:600px) {
+ body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout)>main { padding: 12px; }
+}
+body[data-visual-theme="playful"][data-game-kind].ui-large-text :is(.play-layout,.gift-layout).room-layout:has(#gameSidebar) { grid-template-columns: 1fr; grid-template-areas: "phase" "steps" "stage" "tools" "players"; grid-template-rows: auto; }
+body[data-visual-theme="playful"][data-game-kind].ui-large-text :is(.play-layout,.gift-layout)>main { max-height: none; overflow: visible; }
+body[data-visual-theme="playful"][data-game-kind="poker"].ui-large-text .game-layout.room-layout { grid-template-columns: 1fr; }
+body[data-visual-theme="playful"][data-game-kind="poker"].ui-large-text .poker-ui .shared-players { max-height: none; }
+body[data-visual-theme="playful"][data-game-kind="race"].ui-large-text .race-main { display: flex; flex-direction: column; gap: 16px; }
