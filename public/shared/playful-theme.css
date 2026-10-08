@@ -332,6 +332,8 @@ body[data-visual-theme="playful"][data-game-kind] :is(.game-action-slot #start,.
 body[data-visual-theme="playful"][data-game-kind] :is(.room-host-menu,.room-settings-popover,.game-popover-panel,.shared-emoji-picker,.shared-expression-menu .shared-expressions,.rookie-help-content,.race-command-options>.command-wrap) { background: var(--play-surface); color: var(--play-ink); border: var(--play-border); box-shadow: var(--ui-shadow-floating); border-radius: 14px; }
 body[data-visual-theme="playful"][data-game-kind] :is(.game-popover-panel,.room-host-menu,.shared-expression-menu,.shared-emoji-picker,.rookie-help-content) :is(button,summary,small,p,a) { color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] .shared-game-ui.integrated { background: transparent; border-radius: 0; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .race-feed { padding: 16px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .race-feed h2 { margin-bottom: 8px; }
 /* Poker stays a readable card table: red suits and hidden backs remain distinct. */
 body[data-visual-theme="playful"][data-game-kind="poker"] .rail { background: var(--play-blue); border-color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind="poker"] :is(.rail-icon,.mark,.rail-bottom) { color: var(--play-ink); }

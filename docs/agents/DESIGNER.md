@@ -102,3 +102,6 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 2026-10-08 深色變體正式v1.18.0已部署；設定旁亮暗控制、鮮明操作色與auto/light/dark已公開驗證。完整矩陣及有限玩法／對比範圍见 [發布證據](../playful-ui/full-site/dark/deployment.md)。不代表未來多風格選單已完成。
 
 2026-10-08 PR57複查：保留不同遊戲布局與全站紙卡語言，main新增的市場曲線／行情／排行也共用tokens；1726全通過、深色矩陣與light/dark數值預測通過。見 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)。本輪候選非新的正式發布。
+
+
+2026-10-08 PR57 追加：雷霆賽道紀錄 16px 內距／標題 8px 間距，撲克未入座使用 hidden 槽位保留 nth-child，雷霆不產生空車隊。離線／出局實際玩家保留，API／同步未改。Linux 41 項、release check、36 組亮暗／三尺寸／2、3、滿席與兩人 playing 通過；前後截圖、範圍及兩回合審查見 [本輪證據](../playful-ui/seat-spacing/README.md)。候選 v1.19.0 未合併／未部署，正式仍 v1.18.0；既有 archive 與 tag 不動。

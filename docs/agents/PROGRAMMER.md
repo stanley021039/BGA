@@ -338,3 +338,6 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 2026-10-08 PR53修正：bb3ce44整合main7149cea；schema19相容兩線17與main18，市場新功能／AI／原成就保留。Linux1712全通過、9新分支migration與隔離三席流程通過，兩輪複查及邊界詳 [PR53整合](../PR53-MAIN-INTEGRATION.md)。候選1.19未部署；正式仍1.18，不移tag、不動正式data。
 
 2026-10-08 PR57：7d20d1b已整合PR53/main，候選1.19/schema19，Linux1726全通過；78矩陣、manual toggle/320px、五款三席/200%與main數值市場ACK通過。雙回合詳 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)。尚未合併或部署，正式仍1.18，archive ba0811b不移動。
+
+
+2026-10-08 PR57 追加：雷霆賽道紀錄 16px 內距／標題 8px 間距，撲克未入座使用 hidden 槽位保留 nth-child，雷霆不產生空車隊。離線／出局實際玩家保留，API／同步未改。Linux 41 項、release check、36 組亮暗／三尺寸／2、3、滿席與兩人 playing 通過；前後截圖、範圍及兩回合審查見 [本輪證據](../playful-ui/seat-spacing/README.md)。候選 v1.19.0 未合併／未部署，正式仍 v1.18.0；既有 archive 與 tag 不動。

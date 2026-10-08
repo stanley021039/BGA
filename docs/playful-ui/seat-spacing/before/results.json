@@ -1,0 +1,640 @@
+{
+  "stage": "before",
+  "report": [
+    {
+      "game": "poker",
+      "count": 2,
+      "scheme": "light",
+      "size": "desktop",
+      "occupied": 2,
+      "slots": [
+        0,
+        3
+      ],
+      "emptyVisible": 4,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 2,
+      "scheme": "light",
+      "size": "tablet",
+      "occupied": 2,
+      "slots": [
+        0,
+        3
+      ],
+      "emptyVisible": 4,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 2,
+      "scheme": "light",
+      "size": "mobile",
+      "occupied": 2,
+      "slots": [
+        0,
+        3
+      ],
+      "emptyVisible": 4,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 2,
+      "scheme": "dark",
+      "size": "desktop",
+      "occupied": 2,
+      "slots": [
+        0,
+        3
+      ],
+      "emptyVisible": 4,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 2,
+      "scheme": "dark",
+      "size": "tablet",
+      "occupied": 2,
+      "slots": [
+        0,
+        3
+      ],
+      "emptyVisible": 4,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 2,
+      "scheme": "dark",
+      "size": "mobile",
+      "occupied": 2,
+      "slots": [
+        0,
+        3
+      ],
+      "emptyVisible": 4,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 3,
+      "scheme": "light",
+      "size": "desktop",
+      "occupied": 3,
+      "slots": [
+        0,
+        2,
+        4
+      ],
+      "emptyVisible": 3,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 3,
+      "scheme": "light",
+      "size": "tablet",
+      "occupied": 3,
+      "slots": [
+        0,
+        2,
+        4
+      ],
+      "emptyVisible": 3,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 3,
+      "scheme": "light",
+      "size": "mobile",
+      "occupied": 3,
+      "slots": [
+        0,
+        2,
+        4
+      ],
+      "emptyVisible": 3,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 3,
+      "scheme": "dark",
+      "size": "desktop",
+      "occupied": 3,
+      "slots": [
+        0,
+        2,
+        4
+      ],
+      "emptyVisible": 3,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 3,
+      "scheme": "dark",
+      "size": "tablet",
+      "occupied": 3,
+      "slots": [
+        0,
+        2,
+        4
+      ],
+      "emptyVisible": 3,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 3,
+      "scheme": "dark",
+      "size": "mobile",
+      "occupied": 3,
+      "slots": [
+        0,
+        2,
+        4
+      ],
+      "emptyVisible": 3,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 6,
+      "scheme": "light",
+      "size": "desktop",
+      "occupied": 6,
+      "slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 6,
+      "scheme": "light",
+      "size": "tablet",
+      "occupied": 6,
+      "slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 6,
+      "scheme": "light",
+      "size": "mobile",
+      "occupied": 6,
+      "slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 6,
+      "scheme": "dark",
+      "size": "desktop",
+      "occupied": 6,
+      "slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 6,
+      "scheme": "dark",
+      "size": "tablet",
+      "occupied": 6,
+      "slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "count": 6,
+      "scheme": "dark",
+      "size": "mobile",
+      "occupied": 6,
+      "slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": null,
+      "textGap": null,
+      "overflow": false
+    },
+    {
+      "game": "poker",
+      "started": true,
+      "players": 6
+    },
+    {
+      "game": "thunder",
+      "count": 2,
+      "scheme": "light",
+      "size": "desktop",
+      "occupied": 2,
+      "slots": [
+        0,
+        1
+      ],
+      "emptyVisible": 2,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 2,
+      "scheme": "light",
+      "size": "tablet",
+      "occupied": 2,
+      "slots": [
+        0,
+        1
+      ],
+      "emptyVisible": 2,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 2,
+      "scheme": "light",
+      "size": "mobile",
+      "occupied": 2,
+      "slots": [
+        0,
+        1
+      ],
+      "emptyVisible": 2,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 2,
+      "scheme": "dark",
+      "size": "desktop",
+      "occupied": 2,
+      "slots": [
+        0,
+        1
+      ],
+      "emptyVisible": 2,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 2,
+      "scheme": "dark",
+      "size": "tablet",
+      "occupied": 2,
+      "slots": [
+        0,
+        1
+      ],
+      "emptyVisible": 2,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 2,
+      "scheme": "dark",
+      "size": "mobile",
+      "occupied": 2,
+      "slots": [
+        0,
+        1
+      ],
+      "emptyVisible": 2,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 3,
+      "scheme": "light",
+      "size": "desktop",
+      "occupied": 3,
+      "slots": [
+        0,
+        1,
+        2
+      ],
+      "emptyVisible": 1,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 3,
+      "scheme": "light",
+      "size": "tablet",
+      "occupied": 3,
+      "slots": [
+        0,
+        1,
+        2
+      ],
+      "emptyVisible": 1,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 3,
+      "scheme": "light",
+      "size": "mobile",
+      "occupied": 3,
+      "slots": [
+        0,
+        1,
+        2
+      ],
+      "emptyVisible": 1,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 3,
+      "scheme": "dark",
+      "size": "desktop",
+      "occupied": 3,
+      "slots": [
+        0,
+        1,
+        2
+      ],
+      "emptyVisible": 1,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 3,
+      "scheme": "dark",
+      "size": "tablet",
+      "occupied": 3,
+      "slots": [
+        0,
+        1,
+        2
+      ],
+      "emptyVisible": 1,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 3,
+      "scheme": "dark",
+      "size": "mobile",
+      "occupied": 3,
+      "slots": [
+        0,
+        1,
+        2
+      ],
+      "emptyVisible": 1,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 4,
+      "scheme": "light",
+      "size": "desktop",
+      "occupied": 4,
+      "slots": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 4,
+      "scheme": "light",
+      "size": "tablet",
+      "occupied": 4,
+      "slots": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 4,
+      "scheme": "light",
+      "size": "mobile",
+      "occupied": 4,
+      "slots": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 4,
+      "scheme": "dark",
+      "size": "desktop",
+      "occupied": 4,
+      "slots": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 4,
+      "scheme": "dark",
+      "size": "tablet",
+      "occupied": 4,
+      "slots": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "count": 4,
+      "scheme": "dark",
+      "size": "mobile",
+      "occupied": 4,
+      "slots": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "emptyVisible": 0,
+      "hiddenVisible": 0,
+      "padding": 0,
+      "textGap": 2,
+      "overflow": false
+    },
+    {
+      "game": "thunder",
+      "started": true,
+      "players": 4
+    }
+  ],
+  "scope": "Isolated temporary database; actual create/add-bot/start handlers; waiting-state 2/3/full roster matrix"
+}
