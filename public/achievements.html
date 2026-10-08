@@ -10,7 +10,16 @@
   <header class="site-header" data-site-header aria-label="網站導覽"><nav class="site-links" aria-label="主要導覽" hidden><a href="/community?tab=issues">留言板</a><details><summary>遊戲題庫</summary><div class="site-submenu"><a href="/community?tab=questions">同頻俱樂部</a><a href="/gifts">送禮達人</a></div></details><a href="/history">對局歷史</a></nav><a class="site-title" href="/">302捉猶團</a><div class="site-account" hidden><button id="site-account-button" class="site-avatar-button" type="button" aria-label="帳號選單" aria-expanded="false" aria-controls="site-account-menu"><img id="site-avatar" alt="我的頭像"></button><span id="site-account-id" class="site-account-id" aria-hidden="true"></span><div id="site-account-menu" class="site-account-menu" hidden><a href="/settings">形象設定</a><a href="/collection">收藏庫</a><a href="/achievements">成就收藏冊</a><button id="site-logout" type="button">登出</button></div></div><p id="site-header-error" role="status"></p></header>
   <main class="inner-page">
    <div class="page-heading"><div class="kicker">YOUR TABLE MOMENTS</div><h1>成就收藏冊<span>✦</span></h1><p>記下玩過的桌遊時刻。徽章只供自己收藏，不影響分數與遊戲能力。</p></div>
-   <section class="page-panel achievements-panel" aria-labelledby="achievementHeading"><div class="panel-heading"><span class="panel-number">YOUR COLLECTION / 01</span><h2 id="achievementHeading">成就徽章</h2><p id="achievementSummary">正在讀取收藏…</p></div><div id="achievementList" class="achievement-list" aria-live="polite"><p>正在載入成就…</p></div></section>
+   <section class="page-panel achievements-panel" aria-labelledby="achievementHeading">
+    <div class="panel-heading"><span class="panel-number">YOUR COLLECTION / 01</span><h2 id="achievementHeading">成就徽章</h2><p id="achievementSummary" role="status" aria-live="polite" aria-atomic="true">正在讀取收藏…</p><p class="achievement-private-note">此收藏僅自己可見。</p></div>
+    <div class="achievement-filters" aria-label="成就篩選">
+     <label for="achievementGameFilter">遊戲分類<select id="achievementGameFilter" aria-controls="achievementList" disabled><option value="*">全部遊戲與探索</option></select></label>
+     <label for="achievementStatusFilter">解鎖狀態<select id="achievementStatusFilter" aria-controls="achievementList" disabled><option value="*">全部狀態</option><option value="unlocked">已解鎖</option><option value="locked">未解鎖</option></select></label>
+    </div>
+    <p id="achievementFilterSummary" class="achievement-filter-summary" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div id="achievementList" class="achievement-groups" aria-busy="true"><p>正在載入成就…</p></div>
+    <button id="achievementRetry" class="page-button page-button-outline" type="button" hidden>重新載入成就</button>
+   </section>
   </main>
  </div>
  <script src="/shared/ui-components.js"></script><script src="/shared/barrage-frames.js"></script><script src="/shared/motion-policy.js"></script><script src="/shared/ui-widgets.js"></script><script src="/shared/audio-settings.js"></script><script src="/shared/popovers.js"></script><script src="/achievements.js"></script>

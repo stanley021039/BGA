@@ -84,7 +84,7 @@ function seedScoring(db, f) {
 test('schema16 creates the exact BLOB shape, explicit versions and owner/status indexes', t => {
   const f = fixture(t), db = openDatabase(f.source.dbFile);
   try {
-    assert.equal(SCHEMA_VERSION, 16);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
     const columns = db.prepare('PRAGMA table_info(market_images)').all();
     assert.deepEqual(columns.map(c => [c.name,c.type,c.notnull,c.pk]), [
       ['id','TEXT',0,1],['author_id','TEXT',1,0],['author_name','TEXT',1,0],['mime','TEXT',1,0],['bytes','BLOB',1,0],['width','INTEGER',1,0],['height','INTEGER',1,0],['buckets_json','TEXT',1,0],['weekdays_json','TEXT',1,0],['version','INTEGER',1,0],['status','TEXT',1,0],['created_at','TEXT',1,0],['approved_by','TEXT',0,0],['approved_at','TEXT',0,0]
@@ -115,10 +115,10 @@ test('schema16 enforces dimensions, pixels, BLOB bounds, JSON arrays and review/
   } finally { db.close(); }
 });
 
-test('genuine cold15 bundle upgrades only its copy to empty16 and preserves accounts, assets and score history', async t => {
+test('genuine cold15 bundle upgrades only its copy to the current schema and preserves accounts, assets and score history', async t => {
   const f = fixture(t), db = openDatabase(f.source.dbFile), preserved = ['users','user_artworks',...MARKET_TABLES];
   let expected;
-  try { seedScoring(db,f); db.exec('DROP TABLE market_images; PRAGMA user_version=15'); expected = rows(db,preserved); } finally { db.close(); }
+  try { seedScoring(db,f); db.exec('DROP TABLE achievement_progress; DROP TABLE processed_unit_events; DROP TABLE market_images; PRAGMA user_version=15'); expected = rows(db,preserved); } finally { db.close(); }
   const before = validateData(f.source).summary.database, sourceBytes = fs.readFileSync(f.source.dbFile);
   assert.equal(before.schemaVersion,15); assert.equal(before.tableCounts.market_images,undefined); assert.equal(before.marketImagesSha256,undefined);
   await run(f.exportRequest);
@@ -126,7 +126,7 @@ test('genuine cold15 bundle upgrades only its copy to empty16 and preserves acco
   editManifest(f, m => {m.code.maximumSchema=15;});
   const verified = await run({action:'verify',bundleDir:f.bundleDir,keyFile:f.keyFile}); assert.equal(verified.code.maximumSchema,15);
   const dry = await run(restoreRequest(f)); assert.equal(dry.dryRun,true); assert.equal(fs.existsSync(f.destinationDir),false);
-  assert.equal(dry.restoredSummary.database.schemaVersion,16); assert.equal(dry.restoredSummary.database.tableCounts.market_images,0);
+  assert.equal(dry.restoredSummary.database.schemaVersion,SCHEMA_VERSION); assert.equal(dry.restoredSummary.database.tableCounts.market_images,0);
   const restored = await run({...restoreRequest(f),apply:true}), copy = openDatabase(restored.config.DB_FILE);
   try {
     assert.deepEqual(rows(copy,preserved),expected);
@@ -166,7 +166,7 @@ test('schema16 missing image table is rejected by validation and boot without re
   const f=fixture(t), db=new DatabaseSync(f.source.dbFile); try {db.exec('DROP TABLE market_images');} finally {db.close();}
   const before=fs.readFileSync(f.source.dbFile);
   assert.throws(()=>validateDatabase(f.source.dbFile),rejected); await assert.rejects(run(f.exportRequest),rejected);
-  assert.throws(()=>openDatabase(f.source.dbFile),/Incomplete database schema 16/);
+  assert.throws(()=>openDatabase(f.source.dbFile),new RegExp('Incomplete database schema '+SCHEMA_VERSION));
   assert.deepEqual(fs.readFileSync(f.source.dbFile),before); assert.equal(fs.existsSync(f.bundleDir),false);
 });
 

@@ -1,12 +1,26 @@
 # 趣味成就與獲勝紀錄 spec
 
-日期：2026-10-05。狀態：**研究／設計 spec，尚未實作**。由玩家角色與設計／美術角色實際兩輪攻防後整理；多環境資料命名與程式／伺服器角色對齊。這不是把所有候選一次加入遊戲的指令。先修 [本輪玩家試玩](../research/PLAYER-PLAYTEST-ASSESSMENT.md)的 P0 畫猜結果回看，再補持久資料與小批成就。
+更新：2026-10-08。**v1.16.0 候選已實作單位成就，正式部署／最終整合驗收待主 agent**；正式基線 v1.15.1。B02 成就目錄／分類、B04 畫猜入門、B05 六枚趣味與 B06 跨遊戲探索已有程式；B03 僅完成下述 unit 支線，永久勝場、完整 match ledger 與持久 outbox 尚未實作。發行 source、最終測試與正式狀態集中於 [本批進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)。下方 2026-10-05 的未實作盤點保留為歷史，不能當成當前功能缺口。
+
+## 2026-10-08：本批有限實作
+
+目錄有 **13 枚**：保留原 5 枚 ID／名稱及既有取得日期／來源，加入本文件列出的 8 個新 ID。`src/achievements/catalog.js` 提供完整 metadata；API 保留 `id`／`unlockedAt` 相容欄位，收藏冊依 draw／gift／majority／poker／thunder／all 分類。新定義為 `rule_version=1`、`visibility=private`、`status=enabled`；不提供公開展示設定、永久勝場或排行榜。
+
+draw／gift／majority 引擎在開輪凍結 canonical 帳號／座位映射，正常結算只發最小參與旗標與 metrics，不傳原答案、畫布或喜好內容。`processUnit` 同一 SQLite transaction 寫入 `processed_unit_events`、`achievement_progress` 與 `user_achievements`。同 UUID 異內容、同 match／game／unit／number 換 UUID 皆硬衝突；已提交同內容重播及重新開啟 store 為 no-op。畫猜合法 stroke／guess 證據不因 clear／undo 消失，具體授予仍依下方條件。
+
+`rules_completed`、`production`、`game_server` 且有效參與才授獎。`interrupted`／`abandoned`、test／tutorial 只留 receipt，不授舊／新徽章或探索進度；身份映射缺失／不完整的單位保守降為 interrupted、只計可驗身份，不晚補或按名字推斷。poker／thunder 保留原合法人為操作條件，由開局凍結身份的新單位累積探索；不從既有徽章或歷史回填玩過哪些遊戲。
+
+RAM pending 保留未提交的 immutable 單位，處理失敗不 ack；同一存活程序即使刪房仍由全域 queue 重試。**未提交資料在程序崩潰後仍不能恢復**，也没有把 history JSONL 與 SQLite 做成原子交易；B03 持久 outbox／跨程序 reconciliation 留後續。已提交 receipt 的重啟去重與這個未提交限制分開描述。
+
+schema **17** 新增兩張表；舊 schema 16 遷移只加空表，不改舊徽章／帳戶，不 backfill。完整移轉驗 canonical facts／指紋、引用及全列成就 digest，schema 17 匯出還原保留 receipt／progress／舊日期；舊 bundle 可合法升級。原永久 `game_results`／`match_participants`／`processed_results`／勝場 UI 仍未完成，不以這兩張表替代。
+
+已執行的有限回歸來源：`tests/achievement-units.test.js`、`tests/immersion-achievements.test.js`、`tests/achievement-pending-retry.test.js`、`tests/achievement-migration.test.js`。涵蓋原條件／舊紀錄、六枚趣味 predicates、探索、重播／硬衝突、整筆回滾、真 HTTP 折牌後 DB 失敗／刪房／存活程序補寫，以及新舊 bundle；引擎身份失敗與資格見 `tests/achievement-unit-engines.test.js`，API／呈現另見 `tests/achievement-http.test.js`、`tests/achievements-ui.test.js`。這些 focused 證據不是完整發行測試或正式部署證明，亦不是真人誘因／多設備／讀屏驗收。
 
 ## 目的與既有基線
 
 讓玩家記得玩過、學過、自然發生過什麼，留下按原遊戲規則認定的獲勝記錄；名稱可以無厘頭，條件不鼓勵傷害同桌體驗。私人永久徽章與勝利帳本分開，不發 XP、能力、每日任務、連續登入壓力或勝率排行榜。公開展示由本人自選。
 
-2026-10-05 程式查核：
+2026-10-05 歷史程式查核（unit／目錄缺口已由上方候選更新；永久 wins 缺口仍有效）：
 
 | 位置 | 已有功能 | 缺口 |
 | --- | --- | --- |
@@ -19,6 +33,8 @@
 原五枚已取得者保留 ID 與取得日期，不撤銷、不重新刷一遍。五枚條件沒有因本文件而更改。既有資料與新ledger的遷移見 [多環境資料 spec](MULTI-ENV-DATA-MIGRATION.md)。
 
 ## 先處理的玩家缺口
+
+下表保留原驗收要求；P0 回看已有既有實作，入門／metadata／安全趣味及探索已有本批候選程式。永久 result ledger 與 P2 仍待，逐項現況見 [backlog](../SPEC-BACKLOG.md)，不重排已做功能為缺口。
 
 | 優先 | 工作 | 可驗收條件 |
 | --- | --- | --- |
@@ -33,11 +49,11 @@
 
 ## 候選攻防與採否
 
-採用候選表示**同意進入實作 backlog**，不代表已解鎖或已部署。首批能包含不同遊戲，但不為每款湊相同枚數降低條件品質。精確門檻屬spec，趣味偶發徽章可在收藏冊不提前展示桌上進度；入門與獲勝規則透明。
+下方 8 個 ID 已進 v1.16.0 候選實作，授予與正式狀態依上方範圍及最新進度；其餘 P2 研究／暫緩／否決項不因本批而啟用。首批能包含不同遊戲，但不為每款湊相同枚數降低條件品質。精確門檻屬 spec，趣味偶發徽章不提前展示桌上目標進度；入門規則透明。
 
 新增 metadata 契約：`achievement_id`永久穩定、`game`用engine type（race為thunder）、`title`、`description`、`rule_version`、`condition_key`、`icon_key`、`visibility`、`status`。文案或圖示修改不換ID；條件重定義提升rule_version且有既得權策略，不能悄悄重算舊日期。`status=proposed|enabled|paused`不與個人locked/unlocked混用。
 
-| proposed ID | 顯示名稱／對應條件 |
+| 本批新 ID（候選已實作） | 顯示名稱／對應條件 |
 | --- | --- |
 | draw-first-round | 畫猜初登場／P1中性入門 |
 | draw-soul-artist | 靈魂畫手，有人懂／合法作畫且有人猜中 |
@@ -75,7 +91,7 @@
 
 成就可以容易，不靠勝率也合理；不能為證明「難」就要求反常或連續失敗。每個名稱／圖示需避免人格或友情評價。美術使用同一筆畫與留白的原創圖示；候選可用畫筆＋燈泡、對話框＋勾、雙禮盒、清單＋禮盒、波紋、雙訊號、兩桌與碗。是否從素材庫取得、以Node產SVG或模型做圖依動畫／美術spec另行決定，這份文件沒有已產圖的宣稱。
 
-## 勝利與戰績的規則
+## 永久勝利與戰績的規則（後續，尚未實作）
 
 保存 server **第一次權威結算的不可變結果**，不從當下名單／房間最高分推測。房間完成後有人離開、改名、換角色或刪房，都不修改已結算winner。舊history沒有可靠account映射的標 `unverifiable`，不按暱稱回填勝利；五枚舊成就保留已授事實。
 
@@ -104,15 +120,15 @@
 
 | 資料 | 必需內容／唯一約束 |
 | --- | --- |
-| `game_results` | `match_id` UUID主鍵、`result_event_id` UUID唯一、env_id、game_type、rules_version、result_unit、status、quality_flags、finished_at、source_sha256、match_format。room code只作人可讀索引 |
-| `match_participants` | 主鍵 `(match_id,user_id)`；outcome、score_breakdown、tie_rank、participation_evidence。帳號UUID來自認證／server seat mapping，不能由name推測 |
-| `seat_user_mapping` | match／unit開始與必要join時保存 canonical user ID與seat ID；finalize凍結實際參與快照。中途離房不抹掉已完成單位 |
-| `processed_results` | result_event_id主鍵，match_id唯一；rule_version、processed_at；在權威整局finalize transaction去重 |
-| `processed_unit_events` | unit_event_id主鍵；round／hand單位授予與metrics处理，**不能第一題就把整場match設成已finalize** |
-| `user_achievements` | 保留目前主鍵 `(user_id,achievement_id)`，舊字段不消失；新增判定版本／來源event映射，授予仍只一次。metadata rule version與徽章ID分開 |
-| 新 `achievement_progress` | 主鍵 `(user_id,achievement_id,rule_version)`，只存必要匿名counts／game set；不存秘密答案／他人喜好內容。由同一權威事件累積，匯入archive不累積 |
+| `game_results`（後續） | `match_id` UUID主鍵、`result_event_id` UUID唯一、env_id、game_type、rules_version、result_unit、status、quality_flags、finished_at、source_sha256、match_format。room code只作人可讀索引 |
+| `match_participants`（後續） | 主鍵 `(match_id,user_id)`；outcome、score_breakdown、tie_rank、participation_evidence。帳號UUID來自認證／server seat mapping，不能由name推測 |
+| `seat_user_mapping`（尚無獨立表） | 本批在 unit 開始凍結映射、receipt 保存 minimal user／seat 事實；完整 match／join 映射與獨立表仍屬後續。中途離房不抹掉已完成單位 |
+| `processed_results`（後續） | result_event_id主鍵，match_id唯一；rule_version、processed_at；在權威整局finalize transaction去重 |
+| `processed_unit_events` | **schema17 unit 支線已實作**：unit_event_id 主鍵、match／game／unit／unit_number 唯一、status／purpose／source、完成時間、規則版本、canonical minimal facts 與指紋。round／hand／race 的參與成就紀錄，**不能第一題就把整場 match 設成已 finalize** |
+| `user_achievements` | 原主鍵／四欄位保留；本批新授予 source_key 用 unit:UUID 引用 receipt，規則版本在 catalog／receipt，不宣稱此表新增 version 欄位。舊來源／日期不改，授予只一次 |
+| `achievement_progress` | **schema17 探索支線已實作**：主鍵 `(user_id,achievement_id,rule_version,game_type)`，achievement_id 固定 all-two-tables／version1，只存首次有效單位引用與時間。不同遊戲一列，沒有勝場或秘密內容；同 transaction 累積，archive 不補算 |
 
-game event需有 `event_id`、match_id、unit_event_id（如適用）、game_type、rules_version、server時戳、outcome、eligible participant snapshot與足夠metrics。現有room.version只在記憶體局部有意義，不能當跨环境全域event ID。手牌／輪次若屬parent match，另存parent_match_id＋unit_index唯一關系，不混用room session識別。
+完整 match／wins 的後續 game event 需有 `event_id`、match_id、unit_event_id（如適用）、game_type、rules_version、server時戳、outcome、eligible participant snapshot與足夠metrics；這不代表本批已寫全部欄位。現有room.version只在記憶體局部有意義，不能當跨环境全域event ID。手牌／輪次若屬parent match，另存parent_match_id＋unit_index唯一關系，不混用room session識別。
 
 處理順序：server確認玩法結果 → 建立／讀取權威immutable結果 → 同一SQLite transaction寫result／participants／processed記錄、成就INSERT OR IGNORE與必要進度 → commit → 客戶端收到既定結果及本人成就提示。history JSONL與SQLite無法一筆atomic commit；採server持久outbox／可重入reconciliation，見DB spec；不能在JSONL失敗時先無條件展示勝利計數成功。
 
@@ -120,7 +136,7 @@ game event需有 `event_id`、match_id、unit_event_id（如適用）、game_typ
 
 ## UI、隱私與提示
 
-收藏冊按遊戲／探索分類，列名稱、短條件、取得日期與「未解鎖／已解鎖」文字，不只換色。主要文字16px、輔助14px；44px操作入口，沿用現有foundation與統一icons。成就頁可按需詳細，不占遊戲核心玩家／骰子位置。
+收藏冊按遊戲／探索分類，列名稱、短條件、取得日期。2026-10-08 使用者最新指示取代卡片可見解鎖文字：改以高亮區分，移除重複的已／未解鎖字樣與狀態圖示；讀屏保留隱藏狀態文字，篩選選項仍能按取得狀態選擇。主要文字16px、輔助14px；44px操作入口，沿用現有foundation與統一icons。成就頁可按需詳細，不占遊戲核心玩家／骰子位置。
 
 先顯示比分／winner與公開結果，再顯示本人一則合併提示「解鎖N枚」，不挡主操作、不移焦點、不在遊玩中反覆提示「差一步」。短動效、音效各可關，減動／靜音仍能讀結果。重連可看到未讀標記，不補播過去聲光。新入門與勝利透明；隐藏偶發趣味精確門槛不等於隐藏重要玩法資訊。
 
@@ -143,7 +159,7 @@ game event需有 `event_id`、match_id、unit_event_id（如適用）、game_typ
 | 成就誘因真人測 | 至少不同技能小桌／大桌各一場，問是否為了拿徽章亂猜／亂撞／送討厭禮物／要求朋友配合；有可重現行為則改條件或停發候選 |
 | 減動、靜音、鍵盤與720p | 結果可讀，提示不搶焦點、不遮關鍵狀態；不讓未解鎖者失去正常遊戲入口 |
 
-rollout依序：P0結果快照 → server身份／事件與ledger → draw中性入門＋修正metadata → 首批7枚候選逐個發放驗證 → P2自然偶發。發布前先以真實結束事件作dry-run，比對預期而不寫正式成就；小批feature flag啟用、可停新授予而不撤銷合法舊徽章。此spec沒有自動部署或創建MR授權。
+2026-10-08 rollout 現況：P0 結果快照已有既有實作；本批採最小 server 身份／unit 交易，補畫猜入門、metadata、六枚趣味及探索，正式驗收仍依最新進度。永久 match／wins／持久 outbox 與 P2 自然偶發另批，不為了完成 backlog 自動啟用。新狀態／條件改版仍需既得權策略；此 spec 不代替部署或 PR 授權。
 
 ## 實際攻防記錄
 

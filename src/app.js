@@ -43,6 +43,8 @@ function createApp(config){
  try{return initializeApp(config,lock);}catch(error){lock.release();throw error;}
 }
 function initializeApp(config,dataLock){
+ const achievementPurpose=config.achievementPurpose===undefined?'production':config.achievementPurpose;
+ if(!['production','test','tutorial'].includes(achievementPurpose))throw Error('Invalid achievement purpose');
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map(),departedSeats=new Map(),roomRate=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
  const musicRooms=new Map(),musicStreams=new Map();
@@ -108,13 +110,54 @@ function initializeApp(config,dataLock){
  const communityRate=new Map(),accountRate=new Map(),authRate=new Map();
  const trustCloudflare=config.host==='127.0.0.1'&&config.publicUrl?.startsWith('https://');
  const clientKey=req=>clientAddress(req,trustCloudflare);
- const achievementWarnings=new WeakSet();
+ const achievementWarnings=new WeakSet(),legacyAchievementResults=new WeakSet(),pendingAchievementUnits=new Map();
+ const retryAchievementUnits=()=>{
+  for(const [id,entry] of pendingAchievementUnits){
+   try{
+    if(entry.legacyResult){achievementStore.recordUnit(entry.facts);legacyAchievementResults.add(entry.legacyResult);}
+    else{achievementStore.processUnit(entry.facts);entry.room.acknowledgeAchievementUnit(id);}
+    pendingAchievementUnits.delete(id);
+   }
+   catch(error){if(!achievementWarnings.has(entry.room)){achievementWarnings.add(entry.room);console.error('Achievement update failed:',error);}}
+  }
+ };
+ const collectAchievementUnits=room=>{
+  for(const facts of room.pendingAchievementUnits?.()||[]){
+   if(!pendingAchievementUnits.has(facts.unit_event_id))pendingAchievementUnits.set(facts.unit_event_id,{room,facts:{...facts,purpose:achievementPurpose}});
+  }
+  retryAchievementUnits();
+ };
+ const freezeAchievementParticipants=(room,seatIds)=>{
+  const accounts=new Map([...(seats.get(room.code)||[])].map(([userId,seatId])=>[seatId,userId]));
+  return Object.freeze(seatIds.flatMap(seatId=>{
+   const userId=accounts.get(seatId),player=room.players.find(item=>item.id===seatId);
+   return userId&&player&&!player.bot&&!player.kicked&&db.prepare('SELECT 1 FROM users WHERE id=? AND disabled=0').get(userId)?[Object.freeze({user_id:userId,seat_id:seatId})]:[];
+  }));
+ };
+ const attachAchievementHooks=room=>{
+  Object.defineProperties(room,{
+   achievementUnitStart:{value:descriptor=>freezeAchievementParticipants(room,descriptor.participantSeatIds)},
+   achievementUnitCompleted:{value:()=>collectAchievementUnits(room)},
+  });
+  if(!room.type||room.type==='thunder'){
+   Object.defineProperties(room,{achievementMatchId:{value:null,writable:true},achievementParticipants:{value:Object.freeze([]),writable:true}});
+   const start=room.start;
+   Object.defineProperty(room,'start',{configurable:true,value:function(...args){
+    const previous={id:this.achievementMatchId,participants:this.achievementParticipants,phase:this.phase};
+    this.achievementMatchId=randomUUID();this.achievementParticipants=freezeAchievementParticipants(this,this.players.map(player=>player.id));
+    try{return start.apply(this,args);}catch(error){if(this.phase===previous.phase){this.achievementMatchId=previous.id;this.achievementParticipants=previous.participants;}throw error;}
+   }});
+  }
+ };
  const awardRoomAchievements=room=>{
   try{
-   if(room.type==='gift')achievementStore.awardGiftRound(room,seats.get(room.code));
-   if(room.type==='majority')achievementStore.awardMajorityRound(room,seats.get(room.code));
-   if(!room.type)achievementStore.awardPokerHand(room,seats.get(room.code));
-   if(room.type==='thunder')achievementStore.awardRaceFinish(room,seats.get(room.code));
+   collectAchievementUnits(room);
+   const frozenSeats=room.achievementParticipants?new Map(room.achievementParticipants.map(item=>[item.user_id,item.seat_id])):seats.get(room.code);
+   const legacyResult=!room.type&&room.phase==='showdown'&&room.hand&&room.results?.length?room.results:room.type==='thunder'&&room.phase==='finished'?room.winner:null;
+   if(legacyResult&&!legacyAchievementResults.has(legacyResult)){
+    const facts=achievementStore.legacyUnit(room,frozenSeats,room.type||'poker',legacyResult,{purpose:achievementPurpose});
+    pendingAchievementUnits.set(facts.unit_event_id,{room,facts,legacyResult});retryAchievementUnits();
+   }
   }
   catch(error){if(!achievementWarnings.has(room)){achievementWarnings.add(room);console.error('Achievement update failed:',error);}}
  };
@@ -302,6 +345,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/info'){const addresses=Object.values(os.networkInterfaces()).flat().filter(x=>x.family==='IPv4'&&!x.internal).map(x=>`${protocol}://${x.address}:${port}`);const preferred=config.publicUrl||addresses.find(a=>a.includes('://26.'))||null;return send({preferred,addresses:config.publicUrl?[config.publicUrl,...addresses.filter(a=>a!==config.publicUrl)]:addresses});}
  if(url.pathname==='/api/rooms'&&req.method==='GET'){expireRooms();return send({rooms:listRooms(rooms,seats,kickedUsers,user.id)});}
  if(url.pathname==='/api/create'&&req.method==='POST'){
+  if(pendingAchievementUnits.size>=4096)throw new HttpError(503,'ACHIEVEMENT_STORAGE_UNAVAILABLE','回合紀錄暫時無法儲存，請稍後再建立房間');
   limitRate(roomRate,'create:'+user.id,20);limitRate(roomRate,'create-ip:'+clientKey(req),60);
   if(rooms.size>=100)throw Error('房間數已達上限');
   if(!['poker','thunder','majority','gift','draw'].includes(data.type))throw new HttpError(400,'INVALID_GAME','不支援的遊戲');
@@ -321,6 +365,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    Object.defineProperty(room,'wordBanWriter',{value:(word,audit)=>drawWordStore.ban(word,audit)});
   }
   history.attach(room);
+  attachAchievementHooks(room);
   let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>{const player=room.add(user.display_name);player.name=user.display_name;return player;});}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
@@ -351,6 +396,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    // as safely persisted. Remaining players can exit this paused room too.
    historyPersisted=false;history.markUnrecorded(room);if(!applied)result=leavePlayer(room,p.id);
   }
+  awardRoomAchievements(room);
   seats.get(room.code)?.delete(user.id);
   reconcileWatch(room);
   pruneRoomRoles(room,activeRoomIds(room));mediaRooms.get(room)?.reconcile(mediaContext(room));
@@ -489,6 +535,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   return send(withSocial(room,room.view(p.id)));
  }
  if(url.pathname==='/api/start'&&room.host!==p.id)throw new HttpError(403,'HOST_ONLY','只有房主可以開始');
+ if(url.pathname==='/api/start'&&pendingAchievementUnits.size>=4096)throw new HttpError(503,'ACHIEVEMENT_STORAGE_UNAVAILABLE','回合紀錄暫時無法儲存，請稍後再開始');
  limitRate(roomRate,'mutation:'+user.id,120);
  history.transact(room,{action:url.pathname.slice(5),source:'player',actor:p.id,input:data},()=>{
  if(url.pathname==='/api/action'){if(room.type==='thunder'||!room.type)room.humanAct(p.id,data.action,room.type==='thunder'?data:data.amount);else room.act(p.id,data.action,data);}
@@ -533,7 +580,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(closed)throw Error('Application has been closed');
   if(server.listening)return server.address();
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
-  stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom});
+  stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom,onTransition:awardRoomAchievements,onSweep:retryAchievementUnits});
   submissions.recover();
   return server.address();
  }
@@ -541,6 +588,8 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(closed)return;
   closed=true;
   stopScheduler?.();
+  for(const room of rooms.values())awardRoomAchievements(room);
+  retryAchievementUnits();
   watchRooms.clear();
   mediaRooms.clear();youtubeTitles.clear?.();
   for(const entries of musicStreams.values())for(const entry of entries)entry.res.end();

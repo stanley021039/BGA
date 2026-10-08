@@ -1,7 +1,8 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
-const SCHEMA_VERSION=16;
+const {ACHIEVEMENT_TABLES,ACHIEVEMENT_SQL}=require('../achievements/schema');
+const SCHEMA_VERSION=17;
 const MARKET_TABLES=['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
 const MARKET_IMAGE_SQL=`CREATE TABLE IF NOT EXISTS market_images(
  id TEXT PRIMARY KEY,
@@ -50,31 +51,33 @@ function tableShape(db,name){
 }
 function validateFeatureSchema(db,version){
  const tables=new Set(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(row=>row.name));
- const hasBan=tables.has('draw_word_exclusions'),hasSound=tables.has('character_sounds'),hasImages=tables.has('market_images'),marketCount=MARKET_TABLES.filter(name=>tables.has(name)).length;
+ const hasBan=tables.has('draw_word_exclusions'),hasSound=tables.has('character_sounds'),hasImages=tables.has('market_images'),marketCount=MARKET_TABLES.filter(name=>tables.has(name)).length,achievementCount=ACHIEVEMENT_TABLES.filter(name=>tables.has(name)).length;
  if(marketCount>0&&marketCount<MARKET_TABLES.length||version===13&&!hasBan&&marketCount!==MARKET_TABLES.length)
   throw Error(`Incomplete legacy schema ${version}`);
  if(version===14&&(!hasBan||!hasSound&&marketCount!==MARKET_TABLES.length)||version>=15&&(!hasBan||!hasSound||marketCount!==MARKET_TABLES.length))
   throw Error(`Incomplete database schema ${version}`);
  if(version>=16&&!hasImages)throw Error(`Incomplete database schema ${version}`);
- if(!hasSound&&!marketCount&&!hasImages)return;
+ if(achievementCount>0&&achievementCount<ACHIEVEMENT_TABLES.length||version>=17&&achievementCount!==ACHIEVEMENT_TABLES.length)throw Error(`Incomplete achievement schema ${version}`);
+ if(!hasSound&&!marketCount&&!hasImages&&!achievementCount)return;
  const reference=new DatabaseSync(':memory:');
  try{
-  reference.exec(SOUND_SQL+';'+MARKET_SQL.join(';')+';'+MARKET_IMAGE_SQL);
-  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[]),...(hasImages?['market_images']:[])]){
+  reference.exec(SOUND_SQL+';'+MARKET_SQL.join(';')+';'+MARKET_IMAGE_SQL+';'+ACHIEVEMENT_SQL.join(';'));
+  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[]),...(hasImages?['market_images']:[]),...(achievementCount?ACHIEVEMENT_TABLES:[])]){
    if(tableShape(db,name)!==tableShape(reference,name))throw Error(`Invalid ${name} schema`);
    const sql=db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?").get(name).sql.toLowerCase().replace(/\s+/g,'');
    const checks={character_sounds:["check(mime='audio/wav')","check(typeof(duration_ms)='integer'andduration_msbetween1and10000)"],market_rounds:['check(result_revision>=0)'],market_votes:['check(revision>0)'],market_settlements:['check(revision>0)'],market_ledger:["check(kindin('award','reversal'))","check(outcomein('hit','miss','tie'))","check((kind='award'andreverses_revisionisnull)or(kind='reversal'andreverses_revision=revision-1))"]};
    if((checks[name]||[]).some(check=>!sql.includes(check)))throw Error(`Invalid ${name} constraints`);
-   if(name==='market_images'){
+   if(name==='market_images'||ACHIEVEMENT_TABLES.includes(name)){
     // A substring check permits weakened CHECK expressions (for example OR 1).
     // Compare the complete definition, preserving string literals, even empty.
     const normalize=value=>value.split(/('(?:''|[^'])*')/).map((part,index)=>index%2?part:part.toLowerCase().replace(/\s+/g,'')).join('');
-    const definition=database=>database.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='market_images'").get().sql;
-    if(normalize(definition(db))!==normalize(definition(reference)))throw Error('Invalid market_images constraints');
+    const definition=database=>database.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name=?").get(name).sql;
+    if(normalize(definition(db))!==normalize(definition(reference)))throw Error(`Invalid ${name} constraints`);
    }
   }
   if(version<14&&hasSound&&db.prepare('SELECT COUNT(*) n FROM character_sounds').get().n)throw Error('An older schema cannot contain expression sounds');
   if(version<16&&hasImages&&db.prepare('SELECT COUNT(*) n FROM market_images').get().n)throw Error('An older schema cannot contain market images');
+  if(version<17&&achievementCount&&ACHIEVEMENT_TABLES.some(name=>db.prepare(`SELECT COUNT(*) n FROM ${name}`).get().n))throw Error('An older schema cannot contain achievement unit records');
  }finally{reference.close();}
 }
 
@@ -244,6 +247,11 @@ function openDatabase(file){
   try{
    db.exec(MARKET_IMAGE_SQL+'; CREATE INDEX IF NOT EXISTS market_images_owner ON market_images(author_id,created_at); CREATE INDEX IF NOT EXISTS market_images_status ON market_images(status,created_at); PRAGMA user_version=16; COMMIT');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}
+ }
+ if(version<17){
+  db.exec('BEGIN IMMEDIATE');
+  try{db.exec(ACHIEVEMENT_SQL.join(';')+'; PRAGMA user_version=17; COMMIT');}
+  catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
  return db;
 }

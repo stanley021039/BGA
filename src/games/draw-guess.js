@@ -11,6 +11,8 @@ const CONTROLS=new Set(['brush','erase','line','rect','ellipse','fill']);
 const MAX_BATCHES=1000,MAX_POINTS=30000,MAX_FILLS=48;
 const MAX_POINT_TIME_MS=120000;
 const MAX_PUBLIC_RESULTS=8,MAX_RESULT_SAVES=256;
+const MAX_PENDING_ACHIEVEMENT_UNITS=256;
+const CANONICAL_USER_ID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const validTopic=topic=>topic==='all'||TOPICS.some(item=>item.id===topic);
 const DRAW_CATEGORIES=[...TOPICS.map(item=>item.id),'custom'];
 const validTopics=topics=>Array.isArray(topics)&&topics.length>0&&topics.length<=DRAW_CATEGORIES.length&&new Set(topics).size===topics.length&&topics.every(topic=>DRAW_CATEGORIES.includes(topic));
@@ -26,6 +28,39 @@ class DrawGuessRoom{
   // These bounded, in-memory snapshots must not enter every history row or poll.
   Object.defineProperty(this,'publicResults',{value:new Map(),enumerable:false});
   Object.defineProperty(this,'roundStartScores',{value:new Map(),enumerable:false});
+  Object.defineProperty(this,'achievementUnits',{value:{matchId:null,current:null,pending:new Map()},enumerable:false});
+ }
+ pendingAchievementUnits(){return [...this.achievementUnits.pending.values()];}
+ // Reading pending facts never acknowledges a failed persistence attempt.
+ drainAchievementUnits(){return this.pendingAchievementUnits();}
+ acknowledgeAchievementUnit(unitEventId){return this.achievementUnits.pending.delete(unitEventId);}
+ achievementCapacity(){
+  if((typeof this.achievementUnitStart==='function'||typeof this.achievementUnitCompleted==='function')&&this.achievementUnits.pending.size>=MAX_PENDING_ACHIEVEMENT_UNITS)throw Error('回合紀錄等待儲存，請稍後再開始下一輪');
+ }
+ beginAchievementUnit(participantSeatIds){
+  if(typeof this.achievementUnitStart!=='function'&&typeof this.achievementUnitCompleted!=='function'){this.achievementUnits.current=null;return;}
+  const context=freeze({match_id:this.achievementUnits.matchId,unit_event_id:randomUUID(),game_type:this.type,unit:'round',round:this.round,participantSeatIds:[...participantSeatIds]});
+  const participants=[],seats=new Set(participantSeatIds),users=new Set(),usedSeats=new Set();
+  try{
+   const supplied=this.achievementUnitStart?.(context);
+   if(supplied&&typeof supplied.then==='function')Promise.resolve(supplied).catch(()=>{});
+   if(Array.isArray(supplied))for(const item of supplied){
+    if(!item||typeof item.user_id!=='string'||!CANONICAL_USER_ID.test(item.user_id)||!seats.has(item.seat_id)||users.has(item.user_id.toLowerCase())||usedSeats.has(item.seat_id))continue;
+    participants.push({user_id:item.user_id,seat_id:item.seat_id});users.add(item.user_id.toLowerCase());usedSeats.add(item.seat_id);
+   }
+  }catch{/* Optional persistence hooks cannot roll back accepted gameplay. */}
+  this.achievementUnits.current={context,participants:freeze(participants),mappingComplete:participants.length===participantSeatIds.length,artistId:this.presenterId,strokeAccepted:new Set(),guessAccepted:new Set(),correctGuess:new Set(),completed:false};
+ }
+ completeAchievementUnit(status){
+  const state=this.achievementUnits,unit=state.current;
+  if(!unit||unit.completed)return;
+  if(status==='rules_completed'&&!unit.mappingComplete)status='interrupted';
+  const participants=unit.participants.map(participant=>({...participant,eligible:unit.strokeAccepted.has(participant.seat_id)||unit.guessAccepted.has(participant.seat_id),strokeAccepted:unit.strokeAccepted.has(participant.seat_id),guessAccepted:unit.guessAccepted.has(participant.seat_id),correctGuess:unit.correctGuess.has(participant.seat_id),artist:participant.seat_id===unit.artistId}));
+  const officialSeats=new Set([this.presenterId,...this.participantIds]);
+  const mappedSeats=new Set(unit.participants.map(participant=>participant.seat_id));
+  const snapshot=freeze({unit_event_id:unit.context.unit_event_id,match_id:unit.context.match_id,game_type:this.type,unit:'round',round:unit.context.round,status,completed_at:new Date(this.now()).toISOString(),participants,metrics:{participantCount:this.activePlayers().filter(player=>officialSeats.has(player.id)&&mappedSeats.has(player.id)).length}});
+  unit.completed=true;state.pending.set(snapshot.unit_event_id,snapshot);
+  try{const notified=this.achievementUnitCompleted?.(snapshot);if(notified&&typeof notified.then==='function')Promise.resolve(notified).catch(()=>{});}catch{/* The latched snapshot remains pending for reconciliation. */}
  }
  player(id){return this.players.find(player=>player.id===id);}
  activePlayers(){return this.players.filter(player=>!player.kicked);}
@@ -48,8 +83,9 @@ class DrawGuessRoom{
   this.participantIds=this.participantIds.filter(item=>item!==target);
   this.event(leaving?'leave':'kick',player.name+(leaving?' 已離開房間':' 已被房主踢出'));
   if(this.phase==='waiting'||this.phase==='finished')return;
+  if(this.presenterId===target)this.completeAchievementUnit('interrupted');
   if(this.activePlayers().length<2){this.finish('玩家不足，本局提前結束');return;}
-  if(this.presenterId===target){this.reveal('畫者已離開');return;}
+  if(this.presenterId===target){this.reveal('畫者已離開','interrupted');return;}
   if(this.phase==='drawing'&&this.allGuessed())this.reveal('所有猜題者已完成');
  }
  configure(id,data={}){
@@ -74,16 +110,18 @@ class DrawGuessRoom{
  }
  start(){
   if(!['waiting','finished'].includes(this.phase))throw Error('本局已開始');
+  this.achievementCapacity();
   this.players=this.activePlayers();
   if(this.players.length<2||this.players.length>8)throw Error('需要 2 至 8 位玩家');
   const pools=this.wordPools();
   if(!pools.builtin.length&&(!pools.custom.length||this.options.customPercent===0))throw Error('所選類別還沒有題目，請到共編題庫新增自定義題目，或勾選其他類別');
   for(const player of this.players){player.score=0;player.waitingForNextRound=false;}
-  this.gameRunId=randomUUID();this.round=0;this.roundLimit=this.players.length;this.pendingArtists=this.players.map(player=>player.id);
+  this.gameRunId=randomUUID();this.achievementUnits.matchId=this.gameRunId;this.round=0;this.roundLimit=this.players.length;this.pendingArtists=this.players.map(player=>player.id);
   this.results=[];this.winner=null;this.usedWordIds=[];
   this.newRound();
  }
  newRound(){
+  if(this.pendingArtists.length)this.achievementCapacity();
   for(const player of this.activePlayers())player.waitingForNextRound=false;
   while(this.pendingArtists.length&&!this.activePlayers().some(player=>player.id===this.pendingArtists[0]))this.pendingArtists.shift();
   if(!this.pendingArtists.length){this.finish();return;}
@@ -96,6 +134,7 @@ class DrawGuessRoom{
   this.phase='choosing';this.question=null;this.guessedIds=[];this.guesses=[];this.result=null;
   this.deadline=this.now()+15000;
   this.canvas.epoch=randomUUID();this.canvas.strokes=[];this.canvas.batchIds.clear();this.canvas.points=0;this.canvas.acceptedPoints=0;this.canvas.recent=[];this.canvas.fills=0;this.canvas.fillRecent=[];this.canvas.commandRecent=[];this.canvas.version++;
+  this.beginAchievementUnit(this.activePlayers().map(player=>player.id));
   this.event('round','第 '+this.round+' 輪，由 '+this.player(this.presenterId).name+' 選題');
  }
  refreshCandidates(){
@@ -131,10 +170,12 @@ class DrawGuessRoom{
   if(player.lastGuessAt&&now-player.lastGuessAt<700)throw Error('猜得太快，請稍後再試');
   player.lastGuessAt=now;
   const key=normalize(answer),correct=[this.question.title,...this.question.aliases].some(text=>normalize(text)===key);
+  this.achievementUnits.current?.guessAccepted.add(id);
   if(correct){
    const remaining=Math.max(0,this.deadline-now),points=30+Math.floor(70*remaining/(this.options.seconds*1000));
    player.score+=points;this.player(this.presenterId).score+=15;
    this.guessedIds.push(id);this.guesses.push({id,name:player.name,correct:true,points,at:now});
+   this.achievementUnits.current?.correctGuess.add(id);
    this.guesses=this.guesses.slice(-50);
    this.event('correct',player.name+' 猜對了');
    if(this.allGuessed())this.reveal('所有猜題者已完成');
@@ -144,7 +185,7 @@ class DrawGuessRoom{
   this.guesses=this.guesses.slice(-50);this.event('guess',player.name+' 提出猜測');
   return {correct:false};
  }
- reveal(reason='時間到'){
+ reveal(reason='時間到',status='rules_completed'){
   if(!['drawing','choosing'].includes(this.phase))return;
   const artist=this.player(this.presenterId);
   this.result=freeze(clone({resultId:randomUUID(),gameRunId:this.gameRunId,canvasEpoch:this.canvas.epoch,revealedAt:this.now(),round:this.round,presenterId:this.presenterId,artist:{id:this.presenterId,name:artist?.name||'畫者',avatar:artist?.avatar||null},answer:this.question?.title||null,aliases:this.question?.aliases||[],reason,guessedIds:[...this.guessedIds],guesses:this.guesses,scores:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,roundPoints:player.score-(this.roundStartScores.get(player.id)||0)}))}));
@@ -154,6 +195,7 @@ class DrawGuessRoom{
   this.publicResults.set(this.result.resultId,{snapshot:freeze({result:metadata,canvas:this.canvasSnapshot()}),artworks:new Map(),ballot:{electorate,required:Math.floor(electorate.length/2)+1,votes:new Set(),word:this.question?freeze({id:this.question.id,title:this.question.title}):null,banned:false}});
   while(this.publicResults.size>MAX_PUBLIC_RESULTS)this.publicResults.delete(this.publicResults.keys().next().value);
   this.phase='reveal';this.deadline=this.now()+8000;this.event('reveal',reason+'，本輪揭曉');
+  this.completeAchievementUnit(status);
  }
  resultSnapshot(resultId){
   const entry=this.publicResults.get(resultId);
@@ -201,6 +243,7 @@ class DrawGuessRoom{
   const players=this.activePlayers(),high=Math.max(0,...players.map(player=>player.score));
   this.winner={ids:players.filter(player=>player.score===high).map(player=>player.id),score:high,...(reason?{reason}:{})};
   this.event('finish',reason||'每位畫者都已完成，本局結束');
+  this.completeAchievementUnit('abandoned');
  }
  next(id){
   if(this.phase!=='reveal'||id!==this.host)throw Error('只有房主可以繼續');
@@ -209,7 +252,7 @@ class DrawGuessRoom{
  auto(){
   const now=this.now(),artist=this.player(this.presenterId);
   if(this.phase==='choosing'&&(now>=this.deadline||now-artist?.lastSeen>15000)){this.choose(this.presenterId,undefined,true);return true;}
-  if(this.phase==='drawing'&&(now>=this.deadline||artist?.kicked||now-artist?.lastSeen>15000)){this.reveal(now>=this.deadline?'時間到':'畫者斷線');return true;}
+  if(this.phase==='drawing'&&(now>=this.deadline||artist?.kicked||now-artist?.lastSeen>15000)){this.reveal(now>=this.deadline?'時間到':'畫者斷線',!artist||artist.kicked||now-artist.lastSeen>15000?'interrupted':'rules_completed');return true;}
   if(this.phase==='reveal'&&now>=this.deadline){this.newRound();return true;}
   return false;
  }
@@ -250,6 +293,7 @@ class DrawGuessRoom{
   this.canvas.recent.push(now);this.canvas.points+=points.length;this.canvas.acceptedPoints+=points.length;
   const stroke={version:++this.canvas.version,strokeId:data.strokeId,tool:data.tool,color:data.color.toLowerCase(),size:data.size,filled:data.filled===true,points:clone(points),...(pointTimes!==undefined?{pointTimes:clone(pointTimes)}:{})};
   this.canvas.strokes.push(stroke);this.canvas.batchIds.add(data.batchId);
+  this.achievementUnits.current?.strokeAccepted.add(id);
   return {canvasEpoch:this.canvas.epoch,round:this.round,version:this.canvas.version,stroke,quota:this.canvasQuota()};
  }
  canvasCommand(id,data){

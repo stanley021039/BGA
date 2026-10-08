@@ -92,7 +92,7 @@ async function fixture(t, { playing = false, minimal = false, sounds = false } =
 async function legacyFixture(t, version) {
   const f = await fixture(t, { minimal: true }), db = new DatabaseSync(f.source.dbFile);
   try {
-    db.exec('DROP TABLE market_images; DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds');
+    db.exec('DROP TABLE achievement_progress; DROP TABLE processed_unit_events; DROP TABLE market_images; DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds');
     if (version < 13) db.exec('DROP TABLE draw_word_exclusions');
     if (version < 11) db.exec('DROP TABLE music_tracks');
     if (version < 9) db.exec('DROP TABLE draw_words');
