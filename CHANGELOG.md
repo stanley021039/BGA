@@ -2,6 +2,10 @@
 
 版本管理從既有 `1.0.0` 基線開始；更早的功能與部署紀錄見 `docs/`，不追補未曾實際標記的發行版。
 
+## [1.21.2] - 2026-10-08
+
+- 股市圖片改用真正縮圖、私有重驗證快取與背景轉換，保留五張預載及原圖預覽
+
 ## [1.21.1] - 2026-10-08
 
 - Select market before entering and open lobby emotes from your character

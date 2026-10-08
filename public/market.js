@@ -71,7 +71,9 @@
  }
  function renderVote(){const focused=document.activeElement?.name==='optionId'?document.activeElement.value:null,focusedPreview=document.activeElement?.dataset?.previewOption,r=round(),rules=r?.rules||state?.rules||R.CONFIG,labels=isCurve(r)?[]:R.labels(rules),closed=!r||r.phase==='void'||!!r.result||now()>=Date.parse(r.cutoffAt);votingClosed=closed;
   $('#options').hidden=isCurve(r);$('#curvePanel').hidden=!isCurve(r);
+  cancelThumbnailRetries('#options');
   if(isCurve(r)){$('#options').innerHTML='';renderCurve(r,closed);}else $('#options').innerHTML=rules.options.map((o,i)=>'<article class="choice ui-interactive-card '+(draft?.optionId===o.id?'selected ':'')+(closed?'closed':'')+'"><label class="choice-select"><input type="radio" name="optionId" value="'+escape(o.id)+'" '+(draft?.optionId===o.id?'checked ':'')+(closed||busy||uncertain?'disabled':'')+' aria-label="'+escape(o.name+' '+labels[i])+'"><div class="choice-heading"><strong>'+escape(o.name)+'</strong><span>'+escape(labels[i])+'</span></div></label>'+drawMarkup(o)+'</article>').join('');
+  if(!isCurve(r))bindThumbnails('#options','daily');
   if(focused){const input=[...$('#options').querySelectorAll('input')].find(x=>x.value===focused);if(input&&!input.disabled)input.focus({preventScroll:true});}
   if(focusedPreview)previewTrigger(focusedPreview)?.focus({preventScroll:true});
   if(!isCurve(r)){$('#scoreRules').innerHTML='猜中 '+signed(rules.hit)+' · 猜錯 '+signed(rules.miss)+'<br>剛好 0% 為和局，皆不計分';
@@ -108,10 +110,11 @@
  }
  function renderCurveImages(){
   const key=drawState.targetDate+':'+drawState.sequence+':'+Object.values(drawState.images).map(image=>image?.id||'').join('|');if(curveImageKey===key)return;curveImageKey=key;
+  cancelThumbnailRetries('#curveImages');
   $('#curveImages').innerHTML=curveSlots.map(slot=>{
    const image=drawState.images[slot.id],option={id:slot.id,name:signed(slot.anchor)+'% 區段',color:'#e7eadf'};
    return '<span class="curve-image-anchor" data-slot="'+slot.id+'" style="left:'+((slot.anchor+10)*5)+'%" aria-hidden="true">'+escape(signed(slot.anchor)+'%')+'</span><article class="curve-image-slot" data-slot="'+slot.id+'" style="--anchor:'+((slot.anchor+10)*5)+'%"><p class="curve-slot-label">'+escape(slot.label)+'</p>'+drawMarkup(option)+(image?'<p class="curve-image-eligibility">此圖原適用：'+escape(imageRules(image))+'</p>':'')+'</article>';
-  }).join('');
+  }).join('');bindThumbnails('#curveImages','daily');
  }
  function renderRecords(){const rows=state.rounds;$('#history').innerHTML=rows.length?rows.map(r=>'<article class="record"><div><strong>'+escape(r.targetDate)+'</strong><small>'+escape(r.phase==='void'?'休市／本輪已取消':r.result?'已結算 · 第 '+r.result.revision+' 版':r.phase==='open'?'投票中':'等待結算')+'</small></div><p>我的預測：'+escape(voteLabel(r))+'</p><p>'+escape(r.phase==='void'?'不計分 · '+(r.voidReason||'官方休市公告'):r.result?'收盤 '+signed(r.result.returnPct)+'% · '+name(r.result.bucket,r.rules):'等待官方收盤結果')+'</p><div class="result-points">'+(r.result?(r.vote?pointsLabel(r.result.points):'0')+'<small>積分</small>':'—')+'</div></article>').join(''):'<p class="helper">有交易日後，預測與結果會出現在這裡。</p>';
   $('#ledger').innerHTML=state.ledger.length?state.ledger.map(l=>'<div class="ledger-row"><span>'+pointsLabel(l.points)+' 分</span><strong>'+escape(l.targetDate)+'</strong> · 第 '+l.revision+' 版 · '+(l.kind==='reversal'?'撤銷第 '+l.reverses_revision+' 版':'結算')+'<br>'+escape(format(l.at))+' · '+escape(l.reason||'首次結算')+'</div>').join(''):'<p class="helper">尚無積分異動。</p>';
@@ -128,12 +131,38 @@
  const defaultLimits={maxUploadBytes:2097152,maxImageBytes:4194304,maxDimension:4096,maxPixels:8000000,maxPerUser:100,maxImages:1000,maxStorageBytes:268435456,maxApprovalBatch:1000};
  const gallery={view:null,limits:{...defaultLimits},mine:null,mineBusy:false,mineSequence:0,review:null,reviewBusy:false,reviewSequence:0,selected:new Set(),upload:null,uploadSequence:0,uploadReading:false,uploadBusy:false,uploadAttempt:null,approval:null,approvalBusy:false,approvalSequence:0};
  const curveSlots=[{id:'crash',anchor:-8,label:'-10% ～ -6%',rank:4},{id:'fall',anchor:-4,label:'-6% ～ -2%',rank:2},{id:'center',anchor:0,label:'-2% ～ +2%',rank:1},{id:'rally',anchor:4,label:'+2% ～ +6%',rank:3},{id:'surge',anchor:8,label:'+6% ～ +10%',rank:5}];
- let curveImageKey=null,preloadedImages=[],curveReady=false,curveExampleRound=null,curveExampleActual=0;
+ let curveImageKey=null,curveReady=false,curveExampleRound=null,curveExampleActual=0;
  const drawState={targetDate:null,layout:null,images:{},sequence:0,requested:false,busy:false,error:''};
  // A timed-out or rate-limited retry may never reach an earlier committed receipt.
  const unresolvedGalleryError=error=>!error.status||error.status>=500||error.status===408||error.status===429;
  const checkedValues=selector=>[...$(selector).querySelectorAll('input:checked')].map(input=>input.value);
  const imageUrl=image=>'/api/market/images/'+encodeURIComponent(image.id)+'/media';
+ const thumbnailUrl=image=>imageUrl(image)+'/thumbnail';
+ // Each mounted slot has its own bounded retry budget, even for repeated image IDs.
+ const thumbnailRetryDelays=[1000,3000,10000,30000],thumbnailGroups=new Map();
+ let thumbnailPageActive=true;
+ const thumbnailStatus='<span class="helper" data-thumbnail-status role="status" hidden></span>';
+ function cancelThumbnailRetries(selector,reset=false){
+  for(const [key,group]of thumbnailGroups){if(selector&&key!==selector)continue;for(const record of group.nodes){record.active=false;clearTimeout(record.timer);record.image.onerror=record.image.onload=null;}group.nodes=[];if(reset)group.states.clear();}
+ }
+ function bindThumbnails(selector,view){
+  cancelThumbnailRetries(selector);
+  const group=thumbnailGroups.get(selector)||{nodes:[],states:new Map()},keys=new Set();let index=0;thumbnailGroups.set(selector,group);
+  for(const image of $(selector).querySelectorAll('img[data-thumbnail]')){
+   const src=image.getAttribute('src'),key=(index++)+':'+src,status=image.nextElementSibling,state=group.states.get(key)||{attempt:0,failed:false};keys.add(key);group.states.set(key,state);
+   const record={image,active:true,timer:null};group.nodes.push(record);
+   const active=()=>record.active&&image.isConnected&&thumbnailPageActive&&gallery.view===view;
+   image.onload=()=>{if(!record.active)return;clearTimeout(record.timer);record.timer=null;state.failed=false;image.hidden=false;status.hidden=true;status.textContent='';};
+   image.onerror=()=>{
+    if(!active())return;state.failed=true;image.hidden=true;status.hidden=false;if(record.timer!==null)return;
+    if(state.attempt>=thumbnailRetryDelays.length){status.textContent=view==='daily'?'縮圖暫時無法載入，仍可點擊放大原圖；或按更新重試。':'縮圖暫時無法載入，請更新圖片清單重試。';return;}
+    status.textContent='縮圖載入失敗，稍後自動重試…';
+    record.timer=setTimeout(()=>{record.timer=null;if(!active())return;if(image.complete&&image.naturalWidth){image.onload();return;}image.loading='eager';image.src=src;},thumbnailRetryDelays[state.attempt++]);
+   };
+   if(image.complete){if(image.naturalWidth)image.onload();else image.onerror();}else if(state.failed)image.onerror();
+  }
+  for(const key of group.states.keys())if(!keys.has(key))group.states.delete(key);
+ }
  const imageRules=image=>(image.buckets||[]).map(id=>name(id,R.CONFIG)).join('、')+' · '+((image.weekdays||[]).length===7?'不限星期':(image.weekdays||[]).map(day=>weekdays[day]).join('、'));
  function galleryMessage(selector,text,error=false){$(selector).textContent=text;$(selector).classList.toggle('error',error);}
  function rememberLimits(value){if(value?.limits)gallery.limits={...defaultLimits,...value.limits};}
@@ -145,16 +174,18 @@
   $('#reviewBuckets').innerHTML=pickMarkup(R.CONFIG.options,'篩選適用區間');
   $('#reviewWeekdays').innerHTML=pickMarkup(days,'篩選適用星期');
  }
- function syncDrawTarget(){const targetDate=round()?.targetDate||null,layout=isCurve(round())?'curve-five':null;if(drawState.targetDate!==targetDate||drawState.layout!==layout){closeImagePreview(false);drawState.sequence++;drawState.targetDate=targetDate;drawState.layout=layout;curveImageKey=null;preloadedImages=[];drawState.images={};drawState.requested=false;drawState.busy=false;drawState.error='';}renderDrawStatus();}
+ function syncDrawTarget(){const targetDate=round()?.targetDate||null,layout=isCurve(round())?'curve-five':null;if(drawState.targetDate!==targetDate||drawState.layout!==layout){closeImagePreview(false);cancelThumbnailRetries('#options',true);cancelThumbnailRetries('#curveImages',true);drawState.sequence++;drawState.targetDate=targetDate;drawState.layout=layout;curveImageKey=null;drawState.images={};drawState.requested=false;drawState.busy=false;drawState.error='';}renderDrawStatus();}
  function renderDrawStatus(){
   $('#rerollImages').disabled=!drawState.targetDate||drawState.busy;
   $('#drawStatus').textContent=!drawState.targetDate?'建立交易日後才會抽選圖片。':drawState.busy?'正在抽選 '+drawState.targetDate+' 的圖片…':drawState.error||'圖片依 '+drawState.targetDate+'（'+weekdays[new Date(drawState.targetDate+'T00:00:00Z').getUTCDay()]+'）與各區間抽選；換圖不影響投票。';
   $('#drawStatus').classList.toggle('error',!!drawState.error);
  }
+ // Eager DOM images preload every curve slot, even when CSS hides it. Do not also
+ // create detached Image preloads for the same thumbnails.
  // The preview button is a sibling of the voting label, never an interactive child of it.
  function drawMarkup(option){
   const image=drawState.targetDate===round()?.targetDate?drawState.images[option.id]:null;
-  return image?'<div class="choice-media" style="background:'+escape(option.color)+'"><button type="button" class="choice-image-preview" data-preview-option="'+escape(option.id)+'" aria-label="'+escape('放大'+option.name+'圖片')+'" aria-haspopup="dialog" aria-controls="imagePreviewDialog"><img loading="eager" src="'+escape(imageUrl(image))+'" alt="'+escape(option.name+'圖片')+'"><span class="image-preview-hint">'+(window.GameUI?.symbol('expand')||'')+'<span>點擊放大</span></span></button><span class="image-credit">上傳者：'+escape(image.authorName)+'</span></div>':'<div class="placeholder" style="background:'+escape(option.color)+'" aria-label="'+escape(option.name+'：無符合的已核准圖片')+'">尚無符合圖片</div>';
+  return image?'<div class="choice-media" style="background:'+escape(option.color)+'"><button type="button" class="choice-image-preview" data-preview-option="'+escape(option.id)+'" aria-label="'+escape('放大'+option.name+'圖片')+'" aria-haspopup="dialog" aria-controls="imagePreviewDialog"><img loading="eager" data-thumbnail src="'+escape(thumbnailUrl(image))+'" alt="'+escape(option.name+'圖片')+'">'+thumbnailStatus+'<span class="image-preview-hint">'+(window.GameUI?.symbol('expand')||'')+'<span>點擊放大</span></span></button><span class="image-credit">上傳者：'+escape(image.authorName)+'</span></div>':'<div class="placeholder" style="background:'+escape(option.color)+'" aria-label="'+escape(option.name+'：無符合的已核准圖片')+'">尚無符合圖片</div>';
  }
  let imagePreviewOption=null;
  function previewTrigger(optionId){return [...$(isCurve(round())?'#curveImages':'#options').querySelectorAll('[data-preview-option]')].find(button=>button.dataset.previewOption===optionId&&(!button.getClientRects||button.getClientRects().length));}
@@ -174,14 +205,14 @@
  }
  async function drawImages(){
   const targetDate=drawState.targetDate;if(!targetDate)return;
-  closeImagePreview(false);
+  closeImagePreview(false);cancelThumbnailRetries('#options',true);cancelThumbnailRetries('#curveImages',true);
   const sequence=++drawState.sequence;drawState.requested=true;drawState.busy=true;drawState.error='';renderDrawStatus();
-  try{const value=await api('/api/market/images/draw',{targetDate,...(drawState.layout?{layout:drawState.layout}:{})});if(sequence!==drawState.sequence||targetDate!==drawState.targetDate)return;if(value.targetDate!==targetDate)throw Error('圖片交易日不符，請重新換圖。');drawState.images=value.images||{};if(drawState.layout==='curve-five'){preloadedImages=curveSlots.map(slot=>{const image=drawState.images[slot.id];if(!image)return null;const preload=new Image();preload.src=imageUrl(image);return preload;});}renderVote();}
+  try{const value=await api('/api/market/images/draw',{targetDate,...(drawState.layout?{layout:drawState.layout}:{})});if(sequence!==drawState.sequence||targetDate!==drawState.targetDate)return;if(value.targetDate!==targetDate)throw Error('圖片交易日不符，請重新換圖。');drawState.images=value.images||{};renderVote();}
   catch(error){if(sequence!==drawState.sequence||targetDate!==drawState.targetDate)return;drawState.error='圖片載入失敗：'+error.message+' 請按「換一組圖片」重試。';}
   finally{if(sequence===drawState.sequence&&targetDate===drawState.targetDate){drawState.busy=false;renderDrawStatus();}}
  }
- function renderMine(){const images=gallery.mine?.images||[];$('#myImages').innerHTML=images.length?images.map(image=>'<article class="gallery-card ui-interactive-card"><img src="'+escape(imageUrl(image))+'" alt="我的投稿預覽" loading="lazy"><div><strong>'+escape(image.authorName)+'</strong><span class="image-status">'+(image.status==='approved'?'已核准':'待核准')+'</span><p>'+escape(imageRules(image))+'</p><small>'+escape(image.width+' × '+image.height)+' · '+escape(format(image.createdAt))+'</small></div></article>').join(''):'<p class="helper">尚無投稿。選擇圖片及適用規則後送出，等待管理員核准。</p>';updateUploadControls();}
- async function loadMine(){const sequence=++gallery.mineSequence;gallery.mineBusy=true;$('#refreshMine').disabled=true;galleryMessage('#mineStatus','正在載入我的投稿…');try{const value=await api('/api/market/images/mine');if(sequence!==gallery.mineSequence)return;gallery.mine=value;rememberLimits(value);renderMine();galleryMessage('#mineStatus','共 '+value.images.length+' / '+gallery.limits.maxPerUser+' 張投稿');}catch(error){if(sequence===gallery.mineSequence)galleryMessage('#mineStatus',error.message,true);throw error;}finally{if(sequence===gallery.mineSequence){gallery.mineBusy=false;$('#refreshMine').disabled=false;}}}
+ function renderMine(){cancelThumbnailRetries('#myImages');const images=gallery.mine?.images||[];$('#myImages').innerHTML=images.length?images.map(image=>'<article class="gallery-card ui-interactive-card"><img data-thumbnail src="'+escape(thumbnailUrl(image))+'" alt="我的投稿預覽" loading="lazy">'+thumbnailStatus+'<div><strong>'+escape(image.authorName)+'</strong><span class="image-status">'+(image.status==='approved'?'已核准':'待核准')+'</span><p>'+escape(imageRules(image))+'</p><small>'+escape(image.width+' × '+image.height)+' · '+escape(format(image.createdAt))+'</small></div></article>').join(''):'<p class="helper">尚無投稿。選擇圖片及適用規則後送出，等待管理員核准。</p>';bindThumbnails('#myImages','uploads');updateUploadControls();}
+ async function loadMine(){cancelThumbnailRetries('#myImages',true);const sequence=++gallery.mineSequence;gallery.mineBusy=true;$('#refreshMine').disabled=true;galleryMessage('#mineStatus','正在載入我的投稿…');try{const value=await api('/api/market/images/mine');if(sequence!==gallery.mineSequence)return;gallery.mine=value;rememberLimits(value);renderMine();galleryMessage('#mineStatus','共 '+value.images.length+' / '+gallery.limits.maxPerUser+' 張投稿');}catch(error){if(sequence===gallery.mineSequence)galleryMessage('#mineStatus',error.message,true);throw error;}finally{if(sequence===gallery.mineSequence){gallery.mineBusy=false;$('#refreshMine').disabled=false;}}}
  function updateUploadControls(){
   const frozen=!!gallery.uploadAttempt,busy=gallery.uploadBusy||gallery.uploadReading;
   for(const input of document.querySelectorAll('#uploadForm input,#uploadForm .weekday-actions button'))input.disabled=frozen||busy;
@@ -217,9 +248,9 @@
  }
  function reviewFilters(){return {buckets:checkedValues('#reviewBuckets'),weekdays:checkedValues('#reviewWeekdays').map(Number)};}
  function updateReviewControls(){const images=gallery.review?.images||[],blocked=gallery.reviewBusy||gallery.approvalBusy||!!gallery.approval;labelButton('#approveSelected','核准已勾選（'+gallery.selected.size+'）','check');$('#reviewSelectionCount').textContent='已勾選 '+gallery.selected.size+' / '+images.length+' 張';$('#approveSelected').disabled=blocked||!gallery.selected.size;labelButton('#approveFiltered','核准全部篩選結果（'+images.length+'）','users');$('#approveFiltered').disabled=blocked||!images.length;$('#refreshReview').disabled=gallery.reviewBusy;$('#resumeApproval').hidden=!gallery.approval||$('#approvalDialog').open||gallery.approvalBusy;for(const input of $('#pendingImages').querySelectorAll('input'))input.disabled=gallery.approvalBusy;}
- function renderReview(){const images=gallery.review?.images||[];gallery.selected=new Set([...gallery.selected].filter(id=>images.some(image=>image.id===id)));$('#pendingImages').innerHTML=images.length?images.map(image=>'<label class="gallery-card review-card ui-interactive-card"><input type="checkbox" value="'+escape(image.id)+'" '+(gallery.selected.has(image.id)?'checked ':'')+' aria-label="'+escape('選擇 '+image.authorName+' 的投稿')+'"><img src="'+escape(imageUrl(image))+'" alt="待核准投稿預覽" loading="lazy"><div><strong>'+escape(image.authorName)+'</strong><p>'+escape(imageRules(image))+'</p><small>'+escape(image.width+' × '+image.height)+' · '+escape(format(image.createdAt))+' · 版本 '+escape(image.version)+'</small></div></label>').join(''):'<p class="helper">沒有符合篩選的待核准圖片。</p>';updateReviewControls();}
+ function renderReview(){cancelThumbnailRetries('#pendingImages');const images=gallery.review?.images||[];gallery.selected=new Set([...gallery.selected].filter(id=>images.some(image=>image.id===id)));$('#pendingImages').innerHTML=images.length?images.map(image=>'<label class="gallery-card review-card ui-interactive-card"><input type="checkbox" value="'+escape(image.id)+'" '+(gallery.selected.has(image.id)?'checked ':'')+' aria-label="'+escape('選擇 '+image.authorName+' 的投稿')+'"><img data-thumbnail src="'+escape(thumbnailUrl(image))+'" alt="待核准投稿預覽" loading="lazy">'+thumbnailStatus+'<div><strong>'+escape(image.authorName)+'</strong><p>'+escape(imageRules(image))+'</p><small>'+escape(image.width+' × '+image.height)+' · '+escape(format(image.createdAt))+' · 版本 '+escape(image.version)+'</small></div></label>').join(''):'<p class="helper">沒有符合篩選的待核准圖片。</p>';bindThumbnails('#pendingImages','admin');updateReviewControls();}
  async function loadReview(){
-  if(state?.me.role!=='admin')return;const sequence=++gallery.reviewSequence,filters=reviewFilters(),query=[filters.buckets.length?'buckets='+encodeURIComponent(filters.buckets.join(',')):'',filters.weekdays.length?'weekdays='+encodeURIComponent(filters.weekdays.join(',')):''].filter(Boolean).join('&');
+  if(state?.me.role!=='admin')return;cancelThumbnailRetries('#pendingImages',true);const sequence=++gallery.reviewSequence,filters=reviewFilters(),query=[filters.buckets.length?'buckets='+encodeURIComponent(filters.buckets.join(',')):'',filters.weekdays.length?'weekdays='+encodeURIComponent(filters.weekdays.join(',')):''].filter(Boolean).join('&');
   gallery.reviewBusy=true;updateReviewControls();galleryMessage('#reviewStatus','正在載入待核准圖片…');
   try{const value=await api('/api/admin/market/images'+(query?'?'+query:''));if(sequence!==gallery.reviewSequence)return;gallery.review=value;rememberLimits(value);renderReview();galleryMessage('#reviewStatus','符合篩選：'+value.images.length+' 張待核准圖片');}
   catch(error){if(sequence===gallery.reviewSequence)galleryMessage('#reviewStatus',error.message,true);throw error;}
@@ -243,6 +274,7 @@
  }
  function galleryView(view){
   const previous=gallery.view;gallery.view=view;
+  if(previous!==view){cancelThumbnailRetries();if(view==='daily')bindThumbnails(isCurve(round())?'#curveImages':'#options','daily');}
   if(view!=='daily')closeImagePreview(false);
   if(view!=='admin'&&$('#approvalDialog').open){$('#approvalDialog').close();if(!gallery.approvalBusy&&!gallery.approval?.uncertain)gallery.approval=null;updateReviewControls();}
   if(view==='daily'&&drawState.targetDate&&!drawState.requested)drawImages();
@@ -255,7 +287,8 @@
  $('#closeImagePreview').onclick=()=>closeImagePreview();
  $('#imagePreviewDialog').addEventListener('cancel',event=>{event.preventDefault();closeImagePreview();});
  $('#imagePreviewDialog').addEventListener('click',event=>{if(event.target!==$('#imagePreviewDialog'))return;const box=event.target.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)closeImagePreview();});
- window.addEventListener('pagehide',()=>closeImagePreview(false));
+ window.addEventListener('pagehide',()=>{thumbnailPageActive=false;cancelThumbnailRetries();closeImagePreview(false);});
+ window.addEventListener('pageshow',()=>{thumbnailPageActive=true;if(gallery.view==='daily')bindThumbnails(isCurve(round())?'#curveImages':'#options','daily');else if(gallery.view==='uploads')bindThumbnails('#myImages','uploads');else if(gallery.view==='admin')bindThumbnails('#pendingImages','admin');});
  $('#rerollImages').onclick=()=>{if(!drawState.busy)drawImages();};
  $('#uploadFile').onchange=chooseUpload;
  $('#uploadBuckets').onchange=$('#uploadWeekdays').onchange=updateUploadControls;
@@ -280,7 +313,7 @@
  $('#roundSelect').onchange=()=>{followCurrentRound=false;selectDraft();syncDrawTarget();renderVote();if(drawState.targetDate)drawImages();};
  $('#goCurrentRound').onclick=()=>{if(busy||uncertain)return;const r=currentRound();if(!r)return;followCurrentRound=true;$('#roundSelect').value=r.id;selectDraft();syncDrawTarget();renderVote();if(drawState.targetDate&&!drawState.requested)drawImages();};
  $('#voteForm').onsubmit=event=>{event.preventDefault();if(!busy&&!$('#saveVote').disabled)mutate('/api/market/vote',{...draft},'預測已儲存。');};
- $('#refresh').onclick=async()=>{if(busy)return;const focused=document.activeElement?.name==='optionId'?document.activeElement.value:null;setBusy(true);try{await load();selectDraft();}catch(error){message(error.message,true);}finally{setBusy(false);if(focused){const input=[...$('#options').querySelectorAll('input')].find(x=>x.value===focused);if(input&&!input.disabled)input.focus({preventScroll:true});}}};
+ $('#refresh').onclick=async()=>{if(busy)return;cancelThumbnailRetries('#options',true);cancelThumbnailRetries('#curveImages',true);const focused=document.activeElement?.name==='optionId'?document.activeElement.value:null;setBusy(true);try{await load();selectDraft();}catch(error){message(error.message,true);}finally{setBusy(false);if(gallery.view==='daily')bindThumbnails(isCurve(round())?'#curveImages':'#options','daily');if(focused){const input=[...$('#options').querySelectorAll('input')].find(x=>x.value===focused);if(input&&!input.disabled)input.focus({preventScroll:true});}}};
  sharedTabs=window.GameUI?.mountTabs?.($('#market-tabs'),{activation:'manual',onChange:view=>{if(location.hash.slice(1)!==view)location.hash=view;else setView();}});
  if(!sharedTabs)for(const button of document.querySelectorAll('[data-view]'))button.onclick=()=>{location.hash=button.dataset.view;setView();};window.addEventListener('hashchange',setView);
  $('#createForm').elements.targetDate.onchange=event=>{try{$('#createDeadline').textContent=cutoffLabel({targetDate:event.target.value,cutoffAt:R.cutoffFor(event.target.value),rules:R.CONFIG});}catch{$('#createDeadline').textContent='請選擇有效日期。';}};

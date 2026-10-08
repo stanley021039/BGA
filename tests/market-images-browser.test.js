@@ -160,8 +160,21 @@ test('per-member upload quota and the approval batch bound block client writes w
  const large=await fixture({role:'admin',pending:Array.from({length:1001},(_,index)=>image('batch'+index))});await review(large);large.client.node('#approveFiltered').onclick();assert.equal(large.client.node('#approvalDialog').open,false);assert.match(large.client.node('#reviewStatus').textContent,/最多核准 1000/);assert.equal(large.approvals().length,0);
 });
 
+test('legacy draw, member gallery and admin review cards select thumbnails, with full PNG deferred to preview',async()=>{
+ const f=await fixture({role:'admin',mine:[image('mine')],pending:[image('review')]});
+ assert.deepEqual(f.client.imageLoads,['/api/market/images/draw1/media/thumbnail']);
+ await uploads(f);assert.match(f.client.node('#myImages').innerHTML,/src="\/api\/market\/images\/mine\/media\/thumbnail"/);
+ await review(f);assert.match(f.client.node('#pendingImages').innerHTML,/src="\/api\/market\/images\/review\/media\/thumbnail"/);
+ assert.ok(f.client.imageLoads.every(url=>url.endsWith('/media/thumbnail')),'no full PNG before a preview click');
+ assert.equal(f.client.node('#imagePreviewImage').src,undefined);
+ f.client.view('daily');const before=f.client.imageLoads.length;openPreview(f.client);
+ assert.equal(f.client.imageLoads.length,before+1);assert.equal(f.client.imageLoads.at(-1),'/api/market/images/draw1/media');
+ f.client.node('#closeImagePreview').onclick();assert.equal(f.client.imageLoads.length,before+1);
+ assert.equal(f.draws().length,1);
+});
+
 test('gallery output escapes server names and never loads metadata-provided third-party image URLs',async()=>{
- const hostile=image('a',{authorName:'<script>alert(1)</script>',url:'https://untrusted.example/image.png'});const f=await fixture({role:'admin',pending:[hostile],mine:[hostile]});await uploads(f);assert.match(f.client.node('#myImages').innerHTML,/&lt;script&gt;/);assert.doesNotMatch(f.client.node('#myImages').innerHTML,/<script>|https:\/\//);await review(f);f.client.node('#approveFiltered').onclick();assert.match(f.client.node('#approvalItems').innerHTML,/&lt;script&gt;/);assert.doesNotMatch(f.client.node('#pendingImages').innerHTML,/<script>|https:\/\//);
+ const hostile=image('a',{authorName:'<script>alert(1)</script>',url:'https://untrusted.example/image.png'});const f=await fixture({role:'admin',pending:[hostile],mine:[hostile]});await uploads(f);assert.match(f.client.node('#myImages').innerHTML,/&lt;script&gt;/);assert.doesNotMatch(f.client.node('#myImages').innerHTML,/<script>|https:\/\//);await review(f);f.client.node('#approveFiltered').onclick();assert.match(f.client.node('#approvalItems').innerHTML,/&lt;script&gt;/);assert.doesNotMatch(f.client.node('#pendingImages').innerHTML,/<script>|https:\/\//);assert.ok(f.client.imageLoads.every(url=>/^\/api\/market\/images\/[^/]+\/media\/thumbnail$/.test(url)));
 });
 
 for(const status of [408,429]){
@@ -246,4 +259,16 @@ test('prediction layout and dialog retain responsive contain sizing and accessib
  assert.ok([...css.matchAll(/\.placeholder\{height:([^;}]+)/g)].every(match=>match[1]==='200px'),'all placeholder height declarations retain the image-area height');
  assert.match(css,/\.choice-image-preview\{[^}]*height:200px/);assert.match(css,/\.choice-image-preview img\{[^}]*object-fit:contain/);assert.match(css,/\.image-preview-dialog>img\{[^}]*object-fit:contain/);
  assert.match(html,/<dialog id="imagePreviewDialog"[^>]*aria-labelledby="imagePreviewTitle"[^>]*aria-describedby="imagePreviewCredit"/);assert.match(html,/<button id="closeImagePreview" type="button" autofocus>/);assert.match(source,/aria-haspopup="dialog" aria-controls="imagePreviewDialog"/);
+});
+
+
+for(const view of ['uploads','admin'])test(view+' thumbnails have bounded retries, readable exhaustion and cancel replacement callbacks',async()=>{
+ const f=await fixture({role:'admin',mine:[image('mine')],pending:[image('review')]}),selector=view==='uploads'?'#myImages':'#pendingImages',refresh=view==='uploads'?'#refreshMine':'#refreshReview';
+ if(view==='uploads')await uploads(f);else await review(f);
+ const img=f.client.node(selector).images[0],status=img.nextElementSibling,requests=f.events.length;
+ for(const delay of [1000,3000,10000,30000]){f.client.imageError(img);assert.equal(f.client.pendingTimers()[0].delay,delay);f.client.advanceTimers(delay);}
+ f.client.imageError(img);assert.equal(f.client.pendingTimers().length,0);assert.equal(status.hidden,false);assert.match(status.textContent,/請更新圖片清單重試/);assert.equal(f.events.length,requests);assert.ok(f.client.imageLoads.every(url=>url.endsWith('/thumbnail')));
+ await f.client.node(refresh).onclick();const replacement=f.client.node(selector).images[0];f.client.imageError(replacement);const stale=f.client.pendingTimers()[0].callback;
+ await f.client.node(refresh).onclick();const loads=f.client.imageLoads.length;stale();f.client.advanceTimers(60000);assert.equal(f.client.imageLoads.length,loads);assert.equal(f.client.pendingTimers().length,0);
+ const current=f.client.node(selector).images[0];f.client.imageError(current);const afterNavigation=f.client.pendingTimers()[0].callback;f.client.view('records');const before=f.client.imageLoads.length;afterNavigation();f.client.advanceTimers(60000);assert.equal(f.client.imageLoads.length,before);assert.equal(f.client.pendingTimers().length,0);
 });

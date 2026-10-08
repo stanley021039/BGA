@@ -29,8 +29,9 @@ test('v3 defaults to a valid zero forecast and submits numeric ticks without leg
  f.choose(-37);assert.equal(f.client.node('#forecastValue').textContent,'-3.7%');assert.equal(f.votes().length,0);f.client.submit();await waitFor(()=>!f.client.inspect().busy);
  assert.equal(f.votes().length,1);assert.equal(f.votes()[0].body.forecastTick,-37);assert.equal('optionId' in f.votes()[0].body,false);assert.match(f.client.node('#voteStatus').textContent,/-3.7%/);assert.equal(f.client.node('#saveVote').disabled,true);
 });
-test('all five stable slots preload eagerly; range changes, repeated resizing and refresh never draw again',async()=>{
- const f=await fixture();assert.deepEqual(f.draws()[0].body,{targetDate:'2027-01-07',layout:'curve-five'});assert.equal(f.client.imageLoads.length,5);
+test('all five slots preload only thumbnails once; range changes, resizing and refresh never reload them',async()=>{
+ const f=await fixture();assert.deepEqual(f.draws()[0].body,{targetDate:'2027-01-07',layout:'curve-five'});assert.deepEqual(f.client.imageLoads,slots.map(slot=>'/api/market/images/'+slot+'-1/media/thumbnail'));
+ assert.equal((f.client.node('#curveImages').innerHTML.match(/<img loading="eager"/g)||[]).length,5,'CSS-hidden slots must load before becoming visible');
  assert.equal((f.client.node('#curveImages').innerHTML.match(/class="curve-image-slot"/g)||[]).length,5);assert.match(f.client.node('#curveImages').innerHTML,/此圖原適用：小跌怡情/);
  const markup=f.client.node('#curveImages').innerHTML,buttons=f.client.node('#curveImages').buttons,requests=f.events.length;
  for(const tick of [-100,-60,-20,0,20,60,100]){f.choose(tick);f.client.resize();}
@@ -46,6 +47,18 @@ test('curve preview never changes the forecast, preserves attribution and return
  for(let i=0;i<3;i++){preview(f.client);assert.equal(f.client.node('#imagePreviewDialog').open,true);assert.match(f.client.node('#imagePreviewCredit').textContent,/作者 center/);f.client.node('#closeImagePreview').onclick();assert.equal(f.client.active().dataset.previewOption,'center');}
  assert.deepEqual(f.client.inspect().draft,before);assert.equal(f.events.length,requests);preview(f.client);await f.client.refresh();f.client.node('#closeImagePreview').onclick();assert.equal(f.client.active().dataset.previewOption,'center');
  preview(f.client);f.client.view('records');assert.equal(f.client.node('#imagePreviewDialog').open,false);f.client.view('daily');assert.equal(f.client.node('#imagePreviewDialog').open,false);
+});
+test('each full-size curve image is selected only by its preview click, with no thumbnail reload',async()=>{
+ const f=await fixture(),markup=f.client.node('#curveImages').innerHTML;
+ assert.ok(f.client.imageLoads.every(url=>url.endsWith('/media/thumbnail')));
+ for(const slot of slots){
+  const before=f.client.imageLoads.length;preview(f.client,slot);
+  assert.equal(f.client.node('#imagePreviewImage').src,'/api/market/images/'+slot+'-1/media');
+  assert.equal(f.client.imageLoads.length,before+1);assert.equal(f.client.imageLoads.at(-1),f.client.node('#imagePreviewImage').src);
+  f.client.node('#closeImagePreview').onclick();assert.equal(f.client.imageLoads.length,before+1);
+ }
+ assert.equal(f.client.node('#curveImages').innerHTML,markup);assert.equal(f.draws().length,1);
+ assert.equal(f.client.imageLoads.filter(url=>url.endsWith('/thumbnail')).length,5);
 });
 test('numeric and legacy navigation preserve each scoring contract and draw layout',async()=>{
  const f=await fixture();f.client.round('old');await waitFor(()=>!f.client.inspect().draw.busy);assert.equal(f.client.node('#curvePanel').hidden,true);assert.equal(f.client.node('#options').hidden,false);assert.equal(f.draws().at(-1).body.layout,undefined);assert.equal(f.client.inspect().draft.optionId,'dip');assert.equal(f.client.inspect().draft.forecastTick,undefined);assert.match(f.client.node('#scoreRules').innerHTML,/猜中/);assert.match(f.client.node('#history').innerHTML,/小跌怡情/);
@@ -106,4 +119,48 @@ test('Enter in the scenario-only number input cannot implicitly submit a forecas
  f.client.node('#curveScenarioForm').onsubmit({preventDefault(){prevented++;}});
  await new Promise(resolve=>setTimeout(resolve,0));assert.equal(prevented,2);assert.equal(f.votes().length,0);assert.equal(f.events.length,requests);assert.deepEqual(f.client.inspect().draft,draft);
  f.choose(40);f.client.submit();await waitFor(()=>!f.client.inspect().busy);assert.equal(f.votes().length,1);assert.equal(f.votes()[0].body.forecastTick,40);
+});
+
+
+test('cold thumbnails retry only their source, recover in place and never refetch the draw or successful images',async()=>{
+ const f=await fixture(),image=f.client.node('#curveImages').images[2],status=image.nextElementSibling,requests=f.events.length,markup=f.client.node('#curveImages').innerHTML;
+ f.client.imageError(image);f.client.imageError(image);assert.equal(f.client.pendingTimers().length,1);assert.equal(f.client.pendingTimers()[0].delay,1000);
+ assert.equal(image.hidden,true);assert.equal(status.hidden,false);assert.equal(status.getAttribute('role'),'status');assert.match(status.textContent,/自動重試/);
+ f.client.advanceTimers(999);assert.equal(f.client.imageLoads.length,5);f.client.advanceTimers(1);assert.equal(f.client.imageLoads.length,6);assert.equal(f.client.imageLoads.at(-1),'/api/market/images/center-1/media/thumbnail');
+ f.client.imageLoaded(image);assert.equal(image.hidden,false);assert.equal(status.hidden,true);assert.equal(f.client.pendingTimers().length,0);
+ f.choose(42);f.client.resize();f.client.advanceTimers(60000);assert.equal(f.client.imageLoads.length,6);assert.equal(f.events.length,requests);assert.equal(f.draws().length,1);assert.equal(f.client.node('#curveImages').innerHTML,markup);
+});
+
+test('four failed thumbnail retries stop with readable recovery guidance; preview and explicit refresh still work',async()=>{
+ const f=await fixture(),image=f.client.node('#curveImages').images[2],status=image.nextElementSibling;
+ for(const delay of [1000,3000,10000,30000]){f.client.imageError(image);assert.equal(f.client.pendingTimers().length,1);assert.equal(f.client.pendingTimers()[0].delay,delay);f.client.advanceTimers(delay);}
+ f.client.imageError(image);assert.equal(f.client.imageLoads.length,9);assert.equal(f.client.pendingTimers().length,0);assert.equal(status.hidden,false);assert.match(status.textContent,/仍可點擊放大原圖.*更新重試/);assert.equal(image.hidden,true);
+ f.client.advanceTimers(120000);f.client.imageError(image);assert.equal(f.client.pendingTimers().length,0);assert.equal(f.client.imageLoads.length,9);
+ preview(f.client);assert.equal(f.client.imageLoads.at(-1),'/api/market/images/center-1/media');f.client.node('#closeImagePreview').onclick();
+ await f.client.refresh();assert.equal(f.draws().length,1);assert.equal(f.client.pendingTimers().length,1);assert.equal(f.client.pendingTimers()[0].delay,1000);
+ f.client.advanceTimers(1000);f.client.imageLoaded(image);assert.equal(image.hidden,false);assert.equal(status.hidden,true);
+ const loaded=f.client.imageLoads.length;await f.client.refresh();f.client.advanceTimers(60000);assert.equal(f.client.imageLoads.length,loaded,'refresh must not reload a successful stable thumbnail');
+});
+
+for(const action of ['navigation','reroll','round','pagehide','detached'])test('thumbnail retries ignore stale callbacks after '+action,async()=>{
+ const f=await fixture(),image=f.client.node('#curveImages').images[2];f.client.imageError(image);const stale=f.client.pendingTimers()[0].callback;
+ if(action==='navigation')f.client.view('records');else if(action==='reroll'){f.client.node('#rerollImages').onclick();await waitFor(()=>!f.client.inspect().draw.busy);}else if(action==='round'){f.client.round('old');await waitFor(()=>!f.client.inspect().draw.busy);}else if(action==='pagehide')f.client.pagehide();else image.isConnected=false;
+ const loads=f.client.imageLoads.length;stale();f.client.advanceTimers(60000);assert.equal(f.client.imageLoads.length,loads);assert.equal(f.client.pendingTimers().length,0);
+});
+
+
+test('a repeated image in all five slots retains independent retry budgets and recovers every card',async()=>{
+ const f=await fixture({hook:({url,body})=>url==='/api/market/images/draw'?Response.json({targetDate:body.targetDate,images:Object.fromEntries(slots.map(slot=>[slot,{id:'shared',authorName:'作者',buckets:['crash','fall','dip','rally','surge'],weekdays:[4]}]))}):undefined});
+ const images=f.client.node('#curveImages').images;
+ for(const delay of [1000,3000,10000,30000]){
+  for(const image of images)f.client.imageError(image);
+  assert.equal(f.client.pendingTimers().length,5);assert.ok(f.client.pendingTimers().every(timer=>timer.delay===delay));f.client.advanceTimers(delay);
+ }
+ for(const image of images){f.client.imageLoaded(image);assert.equal(image.hidden,false);assert.equal(image.nextElementSibling.hidden,true);}
+ assert.equal(f.client.pendingTimers().length,0);assert.equal(f.client.imageLoads.length,25);assert.ok(f.client.imageLoads.every(url=>url==='/api/market/images/shared/media/thumbnail'));assert.equal(f.draws().length,1);
+});
+
+test('thumbnail success cancels an already scheduled retry without an extra source assignment',async()=>{
+ const f=await fixture(),image=f.client.node('#curveImages').images[2];f.client.imageError(image);const queued=f.client.pendingTimers()[0].callback;
+ f.client.imageLoaded(image);const count=f.client.imageLoads.length;queued();f.client.advanceTimers(60000);assert.equal(f.client.imageLoads.length,count);assert.equal(f.client.pendingTimers().length,0);assert.equal(image.hidden,false);
 });
