@@ -27,7 +27,7 @@ test('merged app serves every HTML script and stylesheet, market entry and game 
    const url=match[1]||match[2];if(url.startsWith('/')&&/\.(?:js|css)(?:\?|$)/.test(url))resources.add(url);
   }
   if(file==='index.html'){
-   assert.match(html,/<a class="game-tile market-tile" href="\/market">/);
+   assert.match(html,/<button type="button" class="game-tile market-tile" data-market aria-pressed="false">/);
    assert.match(html,/<div class="library-count"><strong>06<\/strong>/);
    assert.match(html,/<script src="\/shared\/expression-sounds\.js"><\/script>/);
   }
