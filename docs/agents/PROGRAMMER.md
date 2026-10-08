@@ -343,3 +343,6 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 
 
 2026-10-08 PR57 追加：雷霆賽道紀錄 16px 內距／標題 8px 間距，撲克未入座使用 hidden 槽位保留 nth-child，雷霆不產生空車隊。離線／出局實際玩家保留，API／同步未改。Linux 41 項、release check、36 組亮暗／三尺寸／2、3、滿席與兩人 playing 通過；前後截圖、範圍及兩回合審查見 [本輪證據](../playful-ui/seat-spacing/README.md)。候選 v1.19.0 未合併／未部署，正式仍 v1.18.0；既有 archive 與 tag 不動。
+
+
+2026-10-08 PR57評論修正：滑動防護只豁免controller同步選中的卡片，避免鍵盤／前後切換與create type不同步；承接PR53 bf545ae混合真人AI成就。69項與原生Chromium滑鼠／瀏覽器鍵盤事件／真create通過；固定head與兩回合審查見 [證據](../playful-ui/PR57-COMMENT-FIXES.md)。未部署／未合併main，舊收據不修補。

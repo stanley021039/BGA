@@ -1,0 +1,42 @@
+{
+  "results": [
+    {
+      "action": "ArrowRight",
+      "from": "majority",
+      "guarded": "majority",
+      "game": "gift",
+      "heading": "開一桌送禮達人",
+      "elapsed": 2.200000047683716,
+      "createdType": "gift"
+    },
+    {
+      "action": "ArrowLeft",
+      "from": "majority",
+      "guarded": "majority",
+      "game": "thunder",
+      "heading": "開一桌雷霆之路",
+      "elapsed": 1,
+      "createdType": "thunder"
+    },
+    {
+      "action": "next",
+      "from": "majority",
+      "guarded": "majority",
+      "game": "gift",
+      "heading": "開一桌送禮達人",
+      "elapsed": 0.2999999523162842,
+      "createdType": "gift"
+    },
+    {
+      "action": "previous",
+      "from": "majority",
+      "guarded": "majority",
+      "game": "thunder",
+      "heading": "開一桌雷霆之路",
+      "elapsed": 1.0999999046325684,
+      "createdType": "thunder"
+    }
+  ],
+  "errors": [],
+  "scope": "Actual Chromium mouse swipe, then browser keyboard event/navigation during suppression, native create button and real HTTP ACK; isolated temporary DB"
+}
