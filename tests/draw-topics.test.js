@@ -1,3 +1,4 @@
+const {legacyMarketSchema}=require('./helpers/market-legacy-schema.cjs');
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
@@ -61,7 +62,7 @@ test('SQLite v9 custom words migrate to misc without losing their difficulty or 
   const stored=new DrawWordStore(db).list()[0];
   assert.equal(stored.topic,'misc');assert.equal(stored.topicLabel,'綜合');
   assert.equal(stored.category,'一般');assert.deepEqual(stored.aliases,['別名']);
-  db.exec('PRAGMA user_version=9');db.close();db=openDatabase(file);
+  legacyMarketSchema(db);db.exec('PRAGMA user_version=9');db.close();db=openDatabase(file);
   assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.equal(db.prepare('PRAGMA table_info(draw_words)').all().filter(column=>column.name==='topic').length,1);
  }finally{db?.close();fs.rmSync(dir,{recursive:true,force:true});}

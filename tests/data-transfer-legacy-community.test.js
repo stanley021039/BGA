@@ -1,3 +1,4 @@
+const {legacyMarketSchema}=require('./helpers/market-legacy-schema.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -24,7 +25,7 @@ async function fixture(t, extras = true) {
     db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,disabled,created_at) VALUES(?,?,?,?,?,?,?)').run(userId, 'legacy_account', '舊站玩家', 'scrypt:' + 'a'.repeat(32) + ':' + 'b'.repeat(128), 'admin', 0, at);
     db.prepare('INSERT INTO user_artworks(id,owner_id,name,mime,bytes,created_at,shared) VALUES(?,?,?,?,?,?,?)').run(artworkId, userId, '原始 BLOB', 'image/png', png, at, 0);
     db.prepare('INSERT INTO board_issues(id,title,body,name,game,status,at) VALUES(?,?,?,?,?,?,?)').run(issueId, '舊留言', '完整保留', '舊站玩家', 'general', 'open', at);
-    db.exec('DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');
+    legacyMarketSchema(db);db.exec('DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');
   } finally { db.close(); }
   const communityFile = path.join(source.communityDir, 'community.json');
   const community = { issues: [{ id: issueId, title: '舊留言', body: '完整保留', name: '舊站玩家', game: 'general', status: 'open', at, comments: [] }], questions: [] };

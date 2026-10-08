@@ -27,9 +27,9 @@ AI 不投禁止題目的票，也不計入該投票門檻，不會接手房主�
 
 目前回歸與 HTTP／SSE 測試在 `tests/local-ai.test.js` 和 `tests/local-ai-http.test.js`。
 
-## 本機驗證（2026-10-07）
+## 本機驗證（2026-10-08）
 
-候選版 1.10.0，尚未發 PR 或部署。Windows Node 24.19.0 完整測試 1,309 項通過，release check 相對 main 確認為 minor 升版。
+候選版 1.11.0，已整合 main 的市場自動化 v1.10.0（`4d7c40d`），尚未部署。Windows Node 24.19.0 完整測試 1,422 項通過，release check 相對 main 確認為 minor 升版。AI 功能未另行修改 DB schema。
 
 瀏覽器以隔離測試資料驗證四款遊戲可加入 AI 並解鎖開局；同頻 AI 自動交卷且計分，送禮 AI 自動鎖定禮物與心願，畫猜 AI 依公開題庫猜題、輪到畫者時完成合法圖形，完整兩輪結束。桌機與 390px 撲克介面確認共用 AI 圖示及中文名稱；手機按鈕約 44×44px。
 

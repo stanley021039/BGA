@@ -1,3 +1,4 @@
+const {legacyMarketSchema}=require('./helpers/market-legacy-schema.cjs');
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
@@ -124,7 +125,7 @@ test('schema 12 migrates without altering users or words, and reopening the curr
  db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)').run('retained-user','retained','保留玩家','exact-hash','member','2026-10-05T00:00:00.000Z');
  new DrawWordStore(db).add({id:'retained-user',display_name:'保留玩家'},{title:'保留題目',aliases:['原別名'],difficulty:'easy'});
  const beforeUsers=db.prepare('SELECT * FROM users').all(),beforeWords=db.prepare('SELECT * FROM draw_words').all();
- db.exec('DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');db.close();db=openDatabase(file);
+ legacyMarketSchema(db);db.exec('DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');db.close();db=openDatabase(file);
  try{
   assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);assert.equal(countRows(db),0);
   assert.deepEqual(db.prepare('SELECT * FROM users').all(),beforeUsers);assert.deepEqual(db.prepare('SELECT * FROM draw_words').all(),beforeWords);

@@ -1,3 +1,4 @@
+const {legacyMarketSchema}=require('./helpers/market-legacy-schema.cjs');
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
@@ -11,7 +12,7 @@ for(const source of ['music-v11','collection-v12'])test(`integration upgrades ${
   db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)').run('owner','owner','Owner','fixture','member',new Date().toISOString());
   db.prepare('INSERT INTO user_artworks(id,owner_id,name,mime,bytes,created_at,shared) VALUES(?,?,?,?,?,?,?)').run('art','owner','Artwork','image/png',Buffer.from([1,2,3]),new Date().toISOString(),1);
   if(source==='music-v11'){
-   db.exec('ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=11');
+   legacyMarketSchema(db);db.exec('ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=11');
    db.prepare('INSERT INTO music_tracks(id,owner_id,title,duration,size,mime,ext,created_at) VALUES(?,?,?,?,?,?,?,?)').run('song','owner','Song',60,100,'audio/mpeg','mp3',new Date().toISOString());
   }else db.exec('DROP TABLE music_tracks');
   db.close();db=openDatabase(file);
