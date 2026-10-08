@@ -31,6 +31,7 @@ const sketches={
  鑰匙:()=>[ellipse([135,75],[235,175]),line([235,125],[365,125]),line([325,125],[325,160]),line([355,125],[355,160])]
 };
 const fallback={food:'蛋糕',animals:'魚',transport:'汽車',nature:'彩虹',places:'房子',activities:'帳篷',people:'雪人',objects:'手機'};
-function sketchFor(word){return (sketches[word.title]||sketches[fallback[word.topic]]||sketches.手機)();}
-const hasSketch=word=>Object.hasOwn(sketches,word.title);
+const ownSketch=title=>Object.hasOwn(sketches,title)&&typeof sketches[title]==='function'?sketches[title]:null;
+function sketchFor(word){const topicTitle=Object.hasOwn(fallback,word.topic)?fallback[word.topic]:null;return (ownSketch(word.title)||ownSketch(topicTitle)||sketches.手機)();}
+const hasSketch=word=>!!ownSketch(word.title);
 module.exports={sketchFor,hasSketch};
