@@ -19,7 +19,7 @@ test('swipe guard blocks trailing card clicks but keyboard and navigation still 
   now=100;cards[1].click();assert.equal(vm.runInContext('selected',scope),'majority');
   if(action==='next'||action==='previous')get(action==='next'?'#carouselNext':'#carouselPrevious').click();else root.fire('keydown',{key:action});
   const expected={ArrowRight:'gift',ArrowLeft:'thunder',Home:'poker',End:'majority',next:'gift',previous:'thunder'}[action];
-  assert.equal(vm.runInContext('selected',scope),expected);const visible=cards.find(c=>c.tabIndex===0);if(action!=='End'){assert.equal(visible.dataset.game,expected);assert.equal(get('#createRoomDialog').querySelector('h2').textContent,'開一桌'+visible.title);await vm.runInContext('enter(false)',scope);assert.equal(request.type,expected);}else assert.equal(get('#openCreateRoom').hidden,true);
+  assert.equal(vm.runInContext('selected',scope),expected);const visible=cards.find(c=>c.tabIndex===0);assert.equal(visible.attrs['aria-pressed'],'true');assert.equal(visible.classList.contains('selected'),true);assert.equal(cards.filter(card=>card.classList.contains('selected')).length,1);if(action!=='End'){assert.equal(visible.dataset.game,expected);assert.equal(get('#createRoomDialog').querySelector('h2').textContent,'開一桌'+visible.title);await vm.runInContext('enter(false)',scope);assert.equal(request.type,expected);}else assert.equal(get('#openCreateRoom').hidden,true);
   now=500;cards[4].click();assert.equal(vm.runInContext('selected',scope),'draw');
  }
 });
