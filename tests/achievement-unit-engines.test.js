@@ -9,14 +9,15 @@ const {openDatabase}=require('../src/db');
 const {AchievementStore}=require('../src/achievements/store');
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-function fixture(game,count=3,capture=null){
+function fixture(game,count=3,capture=null,{botIndex}={}){
  const clock={time:1_000_000};
  const room=game==='draw'?new DrawGuessRoom('UNIT01','單位事件',()=>0,()=>clock.time):game==='gift'?new GiftRoom('UNIT01','單位事件',()=>0):new MajorityRoom('UNIT01','單位事件',()=>0);
  const players=Array.from({length:count},(_,i)=>room.add('玩家'+i));
+ if(botIndex!==undefined)players[botIndex].bot=true;
  const mapping=new Map(players.map(player=>[player.id,randomUUID()]));
  const starts=[],events=[];
  Object.defineProperty(room,'achievementUnitStart',{configurable:true,value:context=>{
-  starts.push(context);return capture?capture(context,mapping):context.participantSeatIds.map(seat_id=>({seat_id,user_id:mapping.get(seat_id)}));
+  starts.push(context);return capture?capture(context,mapping):context.participantSeatIds.filter(id=>!room.players.find(p=>p.id===id)?.bot).map(seat_id=>({seat_id,user_id:mapping.get(seat_id)}));
  }});
  Object.defineProperty(room,'achievementUnitCompleted',{configurable:true,value:event=>events.push(event)});
  room.start();
@@ -316,3 +317,18 @@ test('unhooked fixture play remains normal beyond the optional event retention c
  for(let i=0;i<260;i++){room.ask({type:'two',prompt:'普通題',options:['甲','乙']});for(const player of room.players)room.act(player.id,'answer',{answer:0});room.act(room.host,'next');if(room.phase==='finished')room.start();}
  assert.equal(room.phase,'choosing');assert.equal(room.round,3);assert.deepEqual(room.pendingAchievementUnits(),[]);
 });
+
+for(const game of ['draw','gift','majority'])for(const missingHuman of [false,true]){
+ test(game+' mixed human/AI completion '+(missingHuman?'still fails closed for a missing human account':'grants eligible humans without mapping AI'),()=>{
+  const f=fixture(game,4,missingHuman?(context,mapping)=>context.participantSeatIds.slice(1,3).map(seat_id=>({seat_id,user_id:mapping.get(seat_id)})):null,{botIndex:3});
+  if(game==='draw'){draw(f);stroke(f);finishDraw(f);}else if(game==='gift'){chooseGifts(f);acceptGifts(f);}else{ask(f);answer(f,[0,0,0,0]);}
+  assert.equal(f.events.length,1);const event=f.events[0];assert.equal(event.status,missingHuman?'interrupted':'rules_completed');
+  assert.equal(event.participants.length,missingHuman?2:3);assert.ok(!event.participants.some(p=>p.seat_id===f.players[3].id));assertPrivate(event);
+  const db=openDatabase(':memory:');try{
+   for(const id of f.mapping.values())db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)').run(id,id,'會員','unused','member',new Date().toISOString());
+   const store=new AchievementStore(db);store.recordUnit({...event,purpose:'production'});
+   const granted=db.prepare('SELECT COUNT(*) AS n FROM user_achievements').get().n;
+   assert.equal(granted>0,!missingHuman);assert.equal(db.prepare('SELECT COUNT(*) AS n FROM user_achievements WHERE user_id=?').get(f.mapping.get(f.players[3].id)).n,0);
+  }finally{db.close();}
+ });
+}
