@@ -13,7 +13,6 @@
  }
  if(window.BarrageFrames){const group=document.createElement('div');group.className='site-audio-group';group.innerHTML='<label class="site-audio-switch"><span>顯示彈幕框</span><input id="site-barrage-frames-enabled" type="checkbox" role="switch" aria-label="顯示彈幕框"></label>';settings.append(group);window.BarrageFrames.subscribe(prefs=>{group.querySelector('input').checked=prefs.enabled;});group.querySelector('input').onchange=event=>window.BarrageFrames.set({enabled:event.target.checked});}
  const versionInfo=document.createElement('p');versionInfo.id='site-version';versionInfo.className='site-version';versionInfo.textContent='版本資訊';settings.append(versionInfo);
- if(document.body.dataset.uiStyle==='freehand'||document.querySelector('.game-art-badge')){const credits=document.createElement('a');credits.href='/credits';credits.className='site-asset-credit';credits.textContent='素材來源與授權';settings.append(credits);}
  let versionLoaded=false,versionLoading=false;
  async function loadVersion(){
   if(versionLoaded||versionLoading)return;versionLoading=true;versionInfo.textContent='版本載入中…';
