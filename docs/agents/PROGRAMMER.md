@@ -309,3 +309,5 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 ## 2026-10-08 全站紙卡延伸，候選1.17.1
 
 使用者要求登入、等待房及遊戲頁也要改，並明確說各遊戲可保留不同布局，只要區塊對齊；開房不得要求暱稱，改用帳號設定的displayName。21HTML共享主題，四款等待内容／操作top差0、gap16px，75最新viewport无水平溢出/pageerror。原布局與core/API/DB/畫猜renderer未改；撲克漏type直接開桌已測舊版失敗並修正，五款權威名稱回歸與三入口實際settings→create通過。完整Linux1,526/1,526，focused13；實際限定遊戲操作與五款200%/reduce通過，非全規則／真手機／全讀屏／FPS。完整檔案與證據 docs/playful-ui/full-site/README.md；部署完成另記該目錄deployment.md，不把候選自稱上線。
+
+Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e51. 1526 tests passed; origin and database preservation verified. Deployment evidence: docs/playful-ui/full-site/deployment.md.
