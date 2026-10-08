@@ -51,8 +51,9 @@ test('merged app serves every HTML script and stylesheet, market entry and game 
 test('nickname and market APIs coexist without changing the canonical account or vote',async t=>{
  const f=await fixture(t),created=await f.post('/api/admin/market/rounds',{requestId:randomUUID(),targetDate:'2027-01-06',confirmed:true});
  assert.equal(created.status,200);const roundId=created.body.roundId;
- const vote=await f.post('/api/market/vote',{requestId:randomUUID(),roundId,optionId:'rally',expectedRevision:0});assert.equal(vote.status,200);
+ const vote=await f.post('/api/market/vote',{requestId:randomUUID(),roundId,forecastTick:20,expectedRevision:0});assert.equal(vote.status,200);
  const before=await (await f.get('/api/market')).json(),renamed=await f.post('/api/profile/name',{displayName:'新的冥燈'});
+ assert.equal(before.rounds[0].rules.version,3);assert.equal(before.rounds[0].vote.forecastTick,20);assert.equal(before.rounds[0].vote.revision,1);
  assert.equal(renamed.status,200);assert.equal(renamed.body.id,before.me.id);assert.equal(renamed.body.username,before.me.username);
  const after=await (await f.get('/api/market')).json();assert.equal(after.me.id,before.me.id);assert.equal(after.me.displayName,'新的冥燈');
  assert.deepEqual(after.rounds,before.rounds);assert.deepEqual(after.stats,before.stats);assert.deepEqual(after.ledger,before.ledger);

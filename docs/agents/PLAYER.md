@@ -42,6 +42,10 @@ PR46清除／撤銷途中要看舊完整圖、提交後新圖與舊job不覆蓋�
 
 美化先保玩家／角色／猜中／車隊／骰子／合法格，不收合到管理；看選取、長名／浮窗／小屏可達，不只看顏色。本輪畫猜23持筆樣本白afterink0、viewer7次partial／13timed points；晚一筆同SHA是下輪白baseline，不能當有墨終點一致。雷霆真draw／idle／loss有有限證據，兩anchor位置不證明全程FPS；實際新效果畫出才遮同類裝飾，不遮標字或操作。四遊戲尺寸矩陣／720補驗及限制見 [本批進度](../UI-POLISH-WEBGL-PROGRESS.md)，全部phase／多輪／其他硬體與前景性能未驗。下方v1.9.0持筆／ACK／換輪的持續檢查規則保持。
 
+2026-10-07最新a2c5589原型API：fresh最後Pause守住、最後Play保time37，正常hide／show同Audio恢復；proxy總media4／5各不變（GET3／4與POST1各不變），兩平台1,300與focused126／peer通過，own QA已清。沒有pointer／key或實體喇叭，fresh約3.6ms transient不稱零瞬間，舊~1ms是另case。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併、正式1.11.1不變／patterns另於main整合未發布，scope見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。
+
+2026-10-07 PR46第三P2已驗：真UA controls Play→Pause後，latequeue GET仍同Audio／paused true、requests8→8；visibility自動resume不能蓋較新Pause或個人靜音。pending heldbytes原生AbortError可只retry自己的中斷，但HAVE_NOTHING0／受控visibility不是端到端METADATA1或實體切頁；release後自然end換影片，不說同clip持續。正式1.11.1已發布，PR1.9.2已推送、標 Ready 並再次請 Stanley 審查，未合併，完整scope與dual-source測試見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。不宣稱所有硬體／喇叭／FPS，patterns暫停。
+
 ## 2026-10-07：正式v1.9.0驗收規則
 
 使用者要求每輪結束都檢查：本人持筆／up／ACK不閃、其他人按真點時間逐步看到、揭曉完整圖／換畫者新epoch不殘留舊尾或草稿，queue／frame／timer清理。合法clear／新輪空圖與非預期白底分開；短trace、終點像素一致不等所有輪或另一台電腦改善，不寫60fps。倒數須連續下降而秒數仍按server deadline。三項重複成功文字已移除，但畫者身份、猜測聊天室／得分、設定／錯誤／重連仍可讀。見 [本輪進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)。

@@ -4,6 +4,8 @@
 
 2026-10-07最新正式 **v1.11.0／schema16／22表**：固定source／tag `67e49a164ac5fcb4c3b3cce0fe2b8d899c860e62`。線上SQLite備份＋另時點files不是atomic cold；隔離schema15→16只加空market_images，migration／boot兩次21舊表allrows／BLOB、8users全fields保持。09:15:24.105Z rooms0 guard後服務／tunnel健康；最終20舊non-session表資料、8users保持，FK0／integrity ok、新圖片0；sessions191→201是失敗QA3＋guard1＋smoke6，不說session未變。cold15升16與full16帶PNG審核資料還原已有focused證據，角色4MiB／preserveImportedSessions兼容保留。正式來源保UI／WebGL，與PR46候選source分開；[最新證據](../PR46-REVIEW-FIX-PROGRESS.md)取代下方schema15／早期部署現況，下次仍重新盤點。
 
+2026-10-07 Issue47候選schema17：市場父表增加user/system actor，系統created_by為NULL而非假admin；增加五張行情／日曆／稽核表。schema1–16至17以外層transaction＋savepoint原子遷移，保留舊欄位／rowid／帳戶與BLOB；FK與官方證據／積分語意均驗。完整加密備份還原已以合成資料驗證，EXTERNAL_SIDE_EFFECTS_ENABLED=false阻止自動fetch／開場／結算；沒有操作正式資料。細節見 [市場自動化](../MARKET-AUTOMATION.md)。
+
 2026-10-07最新正式v1.7.1／`3d82e3f`／PID88602：角色表情前端共用回覆與亂序修正，schema15／21表不變；兩平台各940、0房間切換，fresh backup副本21schema／rows／BLOB及8帳戶全欄位保留。正式五game双席使用own既有角色測臨時表情，不寫profile／原faker；own五桌離房、3session登出、代理／presence／tab清理後rooms0。21schema及20非session表所有rows／BLOB與備份相同，sessions152→155為QA登入／登出，env／原資料路徑／service／tunnel正常、integrity ok／FK0。原faker GIF副本僅隔離診斷；外站資料代未啟用，下一次重新盤點，不沿用85927／1.7.0guard。非原子冷備份與來源見 [表情發布](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。
 
 2026-10-07最新正式v1.7.0／`82149a4`／PID85927：僅影片個人視窗尺寸及共用icon／測試，watch協議與schema15／21表保持。Windows／Linux各914、0房間切換，fresh backup副本21schema／rows／BLOB及8帳戶全欄位相同；公開2會員實播縮放零watch請求、3席revision1仍paused。own席位離房／3session登出，tab／proxy／presence停止，rooms0；20非session表所有rows／BLOB與備份相同、21schema保持，sessions149→152為QA登入／登出。env／原資料路徑／service／tunnel正常，integrity ok／FK0，外站資料代未啟用。下一次重新盤點，不能沿用83301／v1.6.0guard；非原子冷備份及來源見 [尺寸發布](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。
@@ -148,3 +150,8 @@ Windows／Linux 各259項通過（移轉16＋UI HTTP4）；完整 HTTP workflow 
 同日 PR #38 審查修正：時鐘回退可讓投票 updated_at 早於 created_at，合法API寫入後反而無法完整備份，已以注入時間與真實 export 重現。更新票改取 now／原created_at／原updated_at最大值；不改以鎖後實際時間裁決截止的政策、不放寬語意驗證。回歸先前時間+2秒再回退至建立時間−1秒，票可修改、完整export／verify通過，精確截止仍拒絕。市場17／Windows完整391項通過，取代上段387的最新數字；沒有修改OS時鐘或正式備份，詳 [逐項證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)。
 
 同日與main `1447430` 必要整合：當前schema14取代最新13上限；完整legacy13禁題版與市場版均能冷export／verify／預演／restore，來源不變、目標升14、兩方已有行／帳號原值保留、sessions撤銷。14缺表、13部分市場布局／兩方皆缺及13壞積分拒絕；14混合備份保存禁題稽核與更正ledger。市場21／移轉26、Windows完整463/463通過；#34相關自動回歸保留，資料鎖／transfer核心與main相同。詳 [整合證據](../MARKET-JINX-MAIN-INTEGRATION.md)。未提供降版，未操作正式資料或備份。
+
+
+## 2026-10-08：數值預測候選（未部署）
+
+Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger；舊場次、票與原積分不轉換。開場前凍結官方可用歷史與參考機率，零實際照曲線、更正精確反向分錄。完整契約、備份與未驗界線見 [計分曲線](../MARKET-PREDICTION-CURVE.md)。最終測試以固定提交為準，沒有正式資料操作。

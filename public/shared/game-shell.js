@@ -7,6 +7,7 @@
  const giftAside=document.querySelector('.gift-layout > aside');
  const drawAside=document.querySelector('.draw-layout > aside');
  const pokerAside=document.querySelector('#game .table-sidebar');
+ if(pokerAside){const bot=document.querySelector('#bot');bot?.classList.add('room-test-ai');window.GameUI?.decorateButton(bot,'users',{iconOnly:true,label:'加入測試 AI'});}
  const staticRaceControls=document.querySelector('.race-controls');
  const raceCrews=document.querySelector('.race-main #crews')||staticRaceControls?.querySelector('#crews');
  const sidebar=majorityAside||giftAside||drawAside||pokerAside;
@@ -195,12 +196,17 @@
  library.querySelector('iframe').onload=()=>{const doc=library.querySelector('iframe').contentDocument;if(!doc)return;const status=library.querySelector('#game-library-status');if(window.GameUI)window.GameUI.setStatus(status,'');else status.textContent='';const style=doc.createElement('style');style.textContent='header{display:none!important}body{padding:0!important}main{margin-top:12px!important}.gift-shell,.draw-shell,.shell{padding:0 16px!important}';doc.head.append(style);doc.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(link&&new URL(link.href).pathname==='/'){event.preventDefault();library.close();}});};
  if(majorityAside){const link=document.createElement('a');link.href='/community?tab=questions';link.className='quiet';link.textContent='新增題庫素材';document.querySelector('.shell header nav')?.append(link);}
  function stableMarkup(target,markup){if(target._gameMarkup!==markup){target.innerHTML=markup;target._gameMarkup=markup;}}
+ function botButton(s){
+  if(!s.host||!s.botSupport?.supported)return '';
+  const icon=window.GameUI?.icon('users');
+  return '<button type="button" class="button room-test-ai'+(icon?' ui-button ui-icon-button':'')+'" data-do="bot" aria-label="加入測試 AI" title="加入測試 AI" '+(s.botSupport.canAdd?'':'disabled')+'>'+(icon?'<span class="ui-button-icon" aria-hidden="true">'+icon+'</span><span class="ui-sr-only">加入測試 AI</span>':'加入測試 AI')+'</button>';
+ }
  function settingsActions(){return '<div class="room-settings-actions"><button type="button" class="button room-settings-save" data-do="settings">儲存房間設定</button><p id="roomSettingsFeedback" class="ui-status" role="status" aria-live="polite"></p></div>';}
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function playerRow(player,{me,status='',metrics=[{value:player.score??player.stack??0,label:'分數'}]}={}){
   const avatar=player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
   const name=typeof window!=='undefined'&&window.GameUI?.playerName?window.GameUI.playerName(player.name):'<span class="ui-player-name" title="'+escape(player.name)+'">'+escape(player.name)+'</span>';
-  return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+(player.id===me?'<span class="room-player-self"> · 你</span>':'')+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
+  return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+(player.id===me?'<span class="room-player-self"> · 你</span>':player.bot?'<span class="room-player-self"> · 測試 AI</span>':'')+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
  }
  let historyNotice;
  function showHistoryWarning(warning){
@@ -214,5 +220,5 @@
   historyNotice.hidden=!message;
   if(window.GameUI)window.GameUI.setStatus(historyNotice,message,{kind:'error'});else if(historyNotice.textContent!==message)historyNotice.textContent=message;
  }
- window.GameShell={update(s){window.TableMedia?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,showHistoryWarning};
+ window.GameShell={update(s){window.TableMedia?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,showHistoryWarning};
 })();

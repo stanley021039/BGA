@@ -1,3 +1,4 @@
+const {legacyMarketSchema,upgradedMarketRows,useLegacyRoundSnapshot}=require('./helpers/market-legacy-schema.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -38,10 +39,11 @@ function expressionWav(samples = 25) {
 const wav = expressionWav();
 const marketTables = ['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
 const dropMarket = 'DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds;';
-function seedMarket(db,f) {
+function seedLegacyMarket(db,f) {
   let now=Date.parse('2027-01-04T12:00:00Z');
   const store=new MarketStore(db,()=>now),admin=db.prepare('SELECT * FROM users WHERE id=?').get(f.adminId);
   const id=store.create(admin,{requestId:crypto.randomUUID(),targetDate:'2027-01-06',confirmed:true}).roundId;
+  useLegacyRoundSnapshot(db,id);
   store.vote(f.member,{requestId:crypto.randomUUID(),roundId:id,optionId:'rally',expectedRevision:0});
   now=Date.parse('2027-01-06T05:30:00Z');
   for (const [expectedRevision,returnPct] of [[0,2],[1,-2]]) store.settle(admin,{requestId:crypto.randomUUID(),roundId:id,returnPct,expectedRevision,reason:expectedRevision?'移轉前更正':'',confirmed:true});
@@ -92,7 +94,7 @@ async function fixture(t, { playing = false, minimal = false, sounds = false } =
 async function legacyFixture(t, version) {
   const f = await fixture(t, { minimal: true }), db = new DatabaseSync(f.source.dbFile);
   try {
-    db.exec('DROP TABLE achievement_progress; DROP TABLE processed_unit_events; DROP TABLE market_images; DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds');
+    legacyMarketSchema(db);db.exec('DROP TABLE IF EXISTS achievement_progress; DROP TABLE IF EXISTS processed_unit_events');db.exec('DROP TABLE market_images; DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds');
     if (version < 13) db.exec('DROP TABLE draw_word_exclusions');
     if (version < 11) db.exec('DROP TABLE music_tracks');
     if (version < 9) db.exec('DROP TABLE draw_words');
@@ -374,7 +376,7 @@ test('full backup preserves builtin and custom word bans with their majority aud
 
 test('schema 12 backup gains an empty ban ledger only in its restored copy', async t => {
   const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
-  try {db.exec('DROP TABLE market_images; DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');} finally {db.close();}
+  try {legacyMarketSchema(db);db.exec('DROP TABLE market_images; DROP TABLE character_sounds; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE draw_word_exclusions; PRAGMA user_version=12');} finally {db.close();}
   const before=validateData(f.source).summary.database;assert.equal(before.schemaVersion,12);assert.equal(before.tableCounts.draw_word_exclusions,undefined);
   await run(f.exportRequest);const restored=await run({...restoreRequest(f),apply:true});
   assert.equal(restored.restoredSummary.database.schemaVersion,SCHEMA_VERSION);assert.equal(restored.restoredSummary.database.tableCounts.draw_word_exclusions,0);
@@ -384,13 +386,13 @@ test('schema 12 backup gains an empty ban ledger only in its restored copy', asy
 
 test('schema 14 source missing the ban ledger is rejected before export', async t => {
   const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
-  try {db.exec('DROP TABLE draw_word_exclusions; PRAGMA user_version=14');} finally {db.close();}
+  try {legacyMarketSchema(db);db.exec('DROP TABLE draw_word_exclusions; PRAGMA user_version=14');} finally {db.close();}
   await assert.rejects(run(f.exportRequest),errorCode('INVALID_DATABASE'));
 });
 
 test('schema 15 requires its expression sound table even when it contains no sounds', async t => {
   const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
-  try {db.exec('DROP TABLE market_images; DROP TABLE character_sounds; PRAGMA user_version=15');} finally {db.close();}
+  try {legacyMarketSchema(db);db.exec('DROP TABLE market_images; DROP TABLE character_sounds; PRAGMA user_version=15');} finally {db.close();}
   await assert.rejects(run(f.exportRequest),errorCode('INVALID_DATABASE'));
   assert.equal(fs.existsSync(f.bundleDir),false);
 });
@@ -401,9 +403,9 @@ for (const layout of ['sounds-and-ban','market-and-ban','sounds-market-and-ban']
   let rows;
   try {
     new DrawWordStore(db).ban(WORDS[0],{roomCode:'ABC123',resultId:crypto.randomUUID(),gameRunId:crypto.randomUUID(),electorate:[f.adminId,f.member.id],votes:[f.adminId,f.member.id],required:2});
-    if (hasMarket) seedMarket(db,f); else db.exec(dropMarket);
+    if (hasMarket) seedLegacyMarket(db,f); else db.exec(dropMarket);
     if (!hasSounds) db.exec('DROP TABLE character_sounds');
-    db.exec('DROP TABLE market_images; PRAGMA user_version=14');
+    legacyMarketSchema(db);db.exec('DROP TABLE market_images; PRAGMA user_version=14');
     const existing=['users','draw_word_exclusions',...(hasSounds?['character_sounds']:[]),...(hasMarket?marketTables:[])];
     rows=Object.fromEntries(existing.map(table=>[table,db.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
   } finally {db.close();}
@@ -416,7 +418,7 @@ for (const layout of ['sounds-and-ban','market-and-ban','sounds-market-and-ban']
   assert.deepEqual(validateData(f.source).summary.database,before,'cold restore leaves every source digest and table count unchanged');
   const check=database=>{
     assert.equal(database.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
-    for (const [table,expected] of Object.entries(rows)) assert.deepEqual(database.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all(),expected);
+    for (const [table,expected] of Object.entries(rows)) assert.deepEqual(database.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all(),upgradedMarketRows(table,expected));
     for (const table of ['character_sounds',...marketTables]) assert.ok(database.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(table));
     if (!hasSounds) assert.equal(database.prepare('SELECT COUNT(*) n FROM character_sounds').get().n,0);
     if (!hasMarket) for (const table of marketTables) assert.equal(database.prepare(`SELECT COUNT(*) n FROM ${table}`).get().n,0);
@@ -439,7 +441,7 @@ for (const layout of ['sounds-and-ban','market-and-ban','sounds-market-and-ban']
 
 test('schema 14 market restoration rejects populated contents in the newly introduced sound table', async t => {
   const f=await fixture(t,{sounds:true}),db=new DatabaseSync(f.source.dbFile);
-  try {db.exec('DROP TABLE character_sounds; PRAGMA user_version=14');} finally {db.close();}
+  try {legacyMarketSchema(db);db.exec('DROP TABLE character_sounds; PRAGMA user_version=14');} finally {db.close();}
   const before=validateData(f.source).summary.database;await run(f.exportRequest);
   const exec=DatabaseSync.prototype.exec;let injected=false;
   DatabaseSync.prototype.exec=function(sql) {
@@ -467,7 +469,7 @@ test('legacy schema 14 rejects every partial market layout, missing feature fami
   ];
   for (const invalid of malformed) {
     const f=await fixture(t,{minimal:true}),db=new DatabaseSync(f.source.dbFile);
-    try {invalid.mutate(db);db.exec('PRAGMA user_version=14');} finally {db.close();}
+    try {legacyMarketSchema(db);invalid.mutate(db);db.exec('PRAGMA user_version=14');} finally {db.close();}
     const before=fs.readFileSync(f.source.dbFile);
     await assert.rejects(run(f.exportRequest),errorCode('INVALID_DATABASE'),invalid.name);
     assert.equal(fs.existsSync(f.bundleDir),false);
@@ -513,16 +515,16 @@ for (const invalid of invalidSounds) test(`inspect, export, verify and restore r
 
 test('schema 13 cannot smuggle a populated sound table through migration compatibility', async t => {
   const f=await fixture(t,{sounds:true});await run(f.exportRequest);
-  const db=new DatabaseSync(f.source.dbFile);try {db.exec('PRAGMA user_version=13');} finally {db.close();}
+  const db=new DatabaseSync(f.source.dbFile);try {legacyMarketSchema(db);db.exec('PRAGMA user_version=13');} finally {db.close();}
   await assert.rejects(run({...f.exportRequest,outputDir:path.join(f.root,'rejected-bundle')}),errorCode('INVALID_DATABASE'));
-  editBundleDatabase(f,db=>db.exec('PRAGMA user_version=13'));
+  editBundleDatabase(f,db=>{legacyMarketSchema(db);db.exec('PRAGMA user_version=13');});
   await assert.rejects(run({action:'verify',bundleDir:f.bundleDir,keyFile:f.keyFile}),errorCode('INVALID_DATABASE'));
   await assert.rejects(run({...restoreRequest(f),apply:true}),errorCode('INVALID_DATABASE'));assert.equal(fs.existsSync(f.destinationDir),false);
 });
 
 test('old supported schema migrates only the restored copy and preserves account hashes', async t => {
   const f=await fixture(t,{minimal:true}), db=new DatabaseSync(f.source.dbFile);
-  try{db.exec('DROP TABLE market_images; DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
+  try{legacyMarketSchema(db);db.exec('DROP TABLE market_images; DROP TABLE character_sounds; DROP TABLE draw_word_exclusions; DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds; DROP TABLE music_tracks; ALTER TABLE user_artworks DROP COLUMN shared; PRAGMA user_version=10');}finally{db.close();}
   await run(f.exportRequest); const result=await run({...restoreRequest(f),apply:true});assert.equal(result.restoredSummary.database.schemaVersion,SCHEMA_VERSION);
   const old=new DatabaseSync(f.source.dbFile,{readOnly:true});try{assert.equal(old.prepare('PRAGMA user_version').get().user_version,10);assert.equal(old.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name='music_tracks'").get().n,0);}finally{old.close();}
 });
@@ -592,7 +594,7 @@ test('migration allowances still reject changed accounts, changed existing BLOBs
 
 test('schema 13 restoration rejects injected contents in the newly introduced sound table', async t => {
   const f=await fixture(t,{sounds:true}),db=new DatabaseSync(f.source.dbFile);
-  try {db.exec('DROP TABLE character_sounds; PRAGMA user_version=13');} finally {db.close();}
+  try {legacyMarketSchema(db);db.exec('DROP TABLE character_sounds; PRAGMA user_version=13');} finally {db.close();}
   const before=validateData(f.source).summary.database;await run(f.exportRequest);
   const exec=DatabaseSync.prototype.exec;let injected=false;
   DatabaseSync.prototype.exec=function(sql) {

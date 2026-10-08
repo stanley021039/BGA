@@ -52,6 +52,12 @@ renderer用`surfaceRevision`／`presentedSurfaceRevision`追staging實寫與可�
 
 `GameFxLayer`用原生WebGL1、lazy、有界buffer／particles／contexts，idle無rAF；只接公開event／live gate與視覺車位anchor，不改checkpoint、server／DB或畫猜renderer。`onActivity`等成功非零draw才發布kind，僅用`visibility:hidden`遮同類SVG裝飾（opacity會被舊keyframes覆蓋），標字／bullet／trail／spin保留，empty／loss／reduce／clear復原。restore不補播；最終loss probe與較早restore cycle分開，不能拼同次完成。雙平台各1,165、限額／source／native／資料與限制見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。此筆取代下方「WebGL未實作」現況，舊研究保留。
 
+2026-10-07 Issue47候選v1.10.0：市場官方日收盤採精確日期與兩份官方日報核對；14:00只是查詢门檻。日曆開場與延遲結算解耦；單writer job、abort/join、restartcatchup及SQLite原子授分。排行榜只市場ledger、暱稱與競賽同分；新UI與舊票／圖片庫回歸均測。原生Chromiumsocket限制未驗，未部署；最新scope和來源見 [市場自動化](../MARKET-AUTOMATION.md)。
+
+2026-10-07最新PR1.9.3／a2c5589：play／pause Promise fence與64events／8proofs／8corrections保意圖／failclosed，不加poll／seek。雙平台1,300／focused126／peer與fresh原型Pause／最後Play／normal已驗，proxy總media4／5各不變（分解GET3／4各不變、POST1不變），QA已清。原型API無input、fresh約3.6ms transient非零瞬間／physical UA；gate與resourcebuffer教訓見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併，正式1.11.1不變，patterns另於main整合未發布。
+
+2026-10-07 PR46第三P2：visibility resume須同clip／epoch／fresh marker且無較新本機意圖；native Play→Pause撤銷舊中斷資格，晚queue GET不重播。pending play因visibility自動pause的Abort／resolve／finally仍可只恢復自己的中斷，native pause／mute／retire／noLoop保持，不加poll／seek。PRcf64bfc／1.9.2雙平台1,278，正式保UI／WebGLdf983da／1.11.1雙平台1,299；PR已推送、標 Ready 並再次請 Stanley 審查，未合併。fresh真UA controls與controlledHAVE_NOTHING、VM METADATA1和證據限制見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)，不能拿中間trace代替最終scope；canvas本次未改，patterns暫停。
+
 ## 2026-10-07：正式v1.9.0長期契約
 
 畫猜原子呈現只在opaque staging完成canonical job後commit；visible clear／copyBase後不能yield暴露半幅，ACK mutable→classic也同樣檢查。保留caller原creation options與省略語意，latest job／epoch、取消／reset／whenIdle必守，cache含stage≤8MiB。brush／erase optional pointTimes同長safe integer0..120000、chunk非遞減；duplicate後、額度與version mutation前驗，不增加跨chunk ledger。immutable ID/body及anchor時間保留，server canonical立即、無逐frame點timer；artist不重播ACK，viewer有界回放，snapshot／reconnect／reveal／undo／fill等取消並立即baseline。
@@ -94,7 +100,7 @@ GET只有成功才標marker已取；首取＋2次、1秒／4秒門檻由既有ga
 
 2026-10-07繪圖研究（基線v1.7.1／3d82e3f，未改產品）：區分本機input→paint、湊批／queue、SSE→viewer paint。40點才flush或pointerup，25點持筆真雙席0POST；活動長筆真renderer計數1000點499,501 lineTo，不等於CPU毫秒；單in-flight POST被ACK卡住，人工回覆多延400ms／8點queue3,314ms。先有界時間flush＋同stroke未送點合併，再一幀一次preview與活動層；不可任意並行POST、修改已送batchId內容、削去epoch／quota／fill／snapshot防護。8點兩席digest差仍未解，後續空mask跨換輪不能證明吻合。已與研究agent核對方法／限制，來源與具體驗收見 [對照](../research/GARTIC-BGA-DRAWING-COMPARISON.md)、[規格](../specs/DRAWING-SMOOTHNESS.md)。Fabric可借活動層，WBO採獨立實作，採用前重查授權；不是Gartic內部原碼。
 
-2026-10-07正式v1.7.1／`3d82e3f`：social ACK走RoomHost.acceptSnapshot→目前game callback，不能只更新被隱藏的GameShell角色列；race receive same-version更新snapshot／renderCrews，保留track、movement及dice。RoomHost.isStaleSnapshot共用較低version／same-context-version較舊finite serverNow判斷，五game入口重用，避免舊GET在ACK後把圖蓋回；higher version優先，沒有加網路traffic。原faker GIF隔離真UI、正式五款雙席及两平台各940已驗，详 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。角色表情仍5秒臨時，重送同GIF動畫起點沒有改；全部phase或真人弱網未實玩。下方v1.7.0為歷史。
+2026-10-07正式v1.7.1／`3d82e3f`：social ACK走RoomHost.acceptSnapshot→目前game callback，不能只更新被隱藏的GameShell角色列；race receive same-version更新snapshot／renderCrews，保留track、movement及dice。RoomHost.isStaleSnapshot共用較低version／same-context-version較舊finite serverNow判斷，五game入口重用，避免舊GET在ACK後把圖蓋回；higher version優先，沒有加網路traffic。原faker GIF隔離真UI、正式五款雙席及两平台各940已驗，詳 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。角色表情仍5秒臨時，重送同GIF動畫起點沒有改；全部phase或真人弱網未實玩。下方v1.7.0為歷史。
 
 2026-10-07正式v1.7.0／`82149a4`：TableWatch右下把手及keyboard縮放，size key獨立、舊position key格式保留；viewport暫時clamp不寫偏好，reset移除size。尺寸計算量測header／status／footer／首local button，加210pxplayer餘量；header flex basis160允許工具換行，watch-narrow依窗寬850切換。RO觀察chrome／player、經rAF合併，close釋放capture及frame；CSS高度上限與JS都扣16px。正常resize不重建iframe或呼叫player／watchAPI，權限不變。Windows／Linux各914；公开2會員實播及320／200%／雙欄通過，詳 [尺寸验收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。驗identity以保留Runtime物件與當前iframe嚴格相等，重取DOM frontend ID可能變，不能據此推斷churn。下方v1.6.0為歷史。
 
@@ -116,7 +122,7 @@ GET只有成功才標marker已取；首取＋2次、1秒／4秒門檻由既有ga
 
 2026-10-07共用UI契約：全站primitives與GameUI registry／symbol／decorateButton是圖示、單字元及操作槽的共同來源，20HTML共用載入，foundation只保留遊戲tokens及布局。Grid的place-items只處理格內，整組置中还需place-content；正面多區資訊卡保留space-between。wrapper内部margin／padding重設防歷史header span等泛用選擇器污染，外部間距交parent gap；資訊D保留21px、互動按鈕44px，hidden與pending可測。與程式角色的實際攻防、逐頁盤點及未驗邊界見 [規格](../specs/SHARED-UI-ALIGNMENT.md)，程式／背景Chrome／發布事實見 [進度](../SHARED-UI-ALIGNMENT-PROGRESS.md)，未全面玩法／跨平台字形不宣稱驗畢。
 
-2026-10-07正式v1.5.2／`7939090`：race-paths依每步前一格判定跳台進入方向，側面／前方風險1000、提示會淘汰；實際飛躍峽谷同長安全分支驗證存活，已揭露陷阱與起跑規則保留、未揭露內容不洩漏。expression-sounds用回應serverNow判事件新鮮度，本機時間只判連線間隔，game-shell及lobby兩處傳入；五款房間及大廳回應同步補clock。±2／6／60秒、legacy、去重／mute／hidden／reconnect有回歸，沒有新增輪詢。原PR43修正双平台808並Ready；最新正式分支雙平台863、公開資源與serverNow已驗，保留後續畫猜及移轉相容性、8帳戶，未合併原PR。證據見 [修正與同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，下方v1.5.1為版面導入歷史。
+2026-10-07正式v1.5.2／`7939090`：race-paths依每步前一格判定跳台進入方向，側面／前方風險1000、提示會淘汰；實際飛躍峽谷同長安全分支驗證存活，已揭露陷阱與起跑規則保留、未揭露內容不洩漏。expression-sounds用回應serverNow判事件新鮮度，本機時間只判連線間隔，game-shell及lobby兩處傳入；五款房間及大廳回應同步補clock。±2／6／60秒、legacy、去重／mute／hidden／reconnect有回歸，沒有新增輪詢。原PR43修正雙平台808並Ready；最新正式分支雙平台863、公開資源與serverNow已驗，保留後續畫猜及移轉相容性、8帳戶，未合併原PR。證據見 [修正與同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，下方v1.5.1為版面導入歷史。
 
 2026-10-07正式v1.5.1／`d4e3b4a`：畫猜phase row跨欄、左側常駐玩家、中央畫布＋直列聊天室（input最後）、右側共用操作。工具160px軌與畫布上緣對齊；timer沿用server deadline／clockOffset，以15s選題、options.seconds作畫、8s揭曉計算進度，不因presence poll重置，字型沿用UI＋tabular digits。猜對僅卡片高亮／勾號與chat非答案訊息，右側只保留重要例外。結算按內容高度且顯示最後一幅畫，preview job綁resultId及實際canvas node避免舊回覆畫到新場景。Windows／Linux各845、Chrome不同角色及手機／八席通過；正式schema15、8帳戶保留，無外站匯入／新PR／push。證據及限制見 [完整進度](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)，下列正式1.3敘述為歷史。
 
@@ -297,3 +303,8 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 同日最新main `1447430` 已包含 #34，#38必要整合改為schema14，原禁題版／市場版13各保留已有資料並補另一方空表。保留main引擎、draw store／前端、MotionPolicy、資料鎖及AGENTS，入口／static路由合併雙方變更。六份測試自動合併的SCHEMA_VERSION重複匯入已消除。市場21／Windows全套463及整合版Chrome完整市場流程、held-fetch與三寬度導覽通過；取代391與最新schema13描述，詳 [相容整合](../MARKET-JINX-MAIN-INTEGRATION.md)，#38仍Draft、未合併部署。
 
 2026-10-08部署教訓：SIGTERM健康逾時不可按原pin盲重啟或刪活data locks；先分current pointer與實際PID cwd/port，保持9帳戶/21表/env核對。已授權zero-room更新可重連已驗UID/command/Restart=always的既有代理協助HTTP drain，保server自然close。writePrivate wx是不可覆寫的證據契約；失敗receipt另存，confirmed另建並以受驗內容原子換入，不可在catch迴圈重複對同名wx寫入或拿verification failure當runtime failure。不要早於activation完成跑dependent公開smoke；本批舊版讀取失敗发生於0登入/0房。詳完整還原進度，不宣稱一般情況都需restart proxy。
+
+
+## 2026-10-08：數值預測候選（未部署）
+
+Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger；舊場次、票與原積分不轉換。開場前凍結官方可用歷史與參考機率，零實際照曲線、更正精確反向分錄。完整契約、備份與未驗界線見 [計分曲線](../MARKET-PREDICTION-CURVE.md)。最終測試以固定提交為準，沒有正式資料操作。

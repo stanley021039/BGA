@@ -3,7 +3,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { StringDecoder } = require('node:string_decoder');
 const { DatabaseSync } = require('node:sqlite');
-const { SCHEMA_VERSION, validateFeatureSchema } = require('../db');
+const { SCHEMA_VERSION, MARKET_CURVE_TABLES, MARKET_AUTOMATION_TABLES, validateFeatureSchema } = require('../db');
 const { validateQuestion } = require('../community/store');
 const { audioType, MAX_BYTES } = require('../music/store');
 const { inspectExpressionSound } = require('../profiles/sounds');
@@ -70,7 +70,7 @@ function validateDatabase(file) {
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r => r.name);
     if (!tables.includes('users')) fail('INVALID_DATABASE', 'Account table is missing');
     const marketTables = ['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
-    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 15: ['draw_word_exclusions','character_sounds',...marketTables], 16: ['market_images'], 17: ACHIEVEMENT_TABLES };
+    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 15: ['draw_word_exclusions','character_sounds',...marketTables], 16: ['market_images'], 18: [...MARKET_AUTOMATION_TABLES,...MARKET_CURVE_TABLES], 19: ACHIEVEMENT_TABLES };
     for (const [version, names] of Object.entries(required)) if (schemaVersion >= Number(version) && names.some(n => !tables.includes(n))) fail('INVALID_DATABASE', 'Database schema is missing a required table');
     // Both historical schema-13 layouts and schema-14 layouts are identified by
     // complete feature shapes. Partial or forged tables cannot be repaired away.
@@ -82,6 +82,9 @@ function validateDatabase(file) {
       const present = marketTables.filter(name => tables.includes(name)).length;
       if (present && present !== marketTables.length || schemaVersion === 13 && !tables.includes('draw_word_exclusions') && present !== marketTables.length) fail('INVALID_DATABASE', 'Database schema is missing a required table');
       if (present) { try { require('../market/store').validateMarketDatabase(db); } catch { fail('INVALID_DATABASE', 'Market score history is invalid'); } }
+    }
+    if (MARKET_AUTOMATION_TABLES.some(name => tables.includes(name))) {
+      try { require('../market/automation-store').validateMarketAutomationDatabase(db); } catch { fail('INVALID_DATABASE', 'Market automation history is invalid'); }
     }
     let marketImagesSha256;
     if (tables.includes('market_images')) {

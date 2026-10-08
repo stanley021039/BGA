@@ -1,3 +1,4 @@
+const {legacyMarketSchema,upgradedMarketRows,useLegacyRoundSnapshot}=require('./helpers/market-legacy-schema.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -75,16 +76,17 @@ function editBundleDatabase(f, change) {
 function seedScoring(db, f) {
   let now = Date.parse('2027-01-04T12:00:00Z'); const market = new MarketStore(db, () => now);
   const roundId = market.create(f.admin, { requestId: crypto.randomUUID(), targetDate: '2027-01-06', confirmed: true }).roundId;
+  useLegacyRoundSnapshot(db,roundId);
   market.vote(f.owner, { requestId: crypto.randomUUID(), roundId, optionId: 'rally', expectedRevision: 0 });
   now = Date.parse('2027-01-06T05:30:00Z');
   market.settle(f.admin, { requestId: crypto.randomUUID(), roundId, returnPct: 2, expectedRevision: 0, confirmed: true });
   market.settle(f.admin, { requestId: crypto.randomUUID(), roundId, returnPct: -2, expectedRevision: 1, reason: '更正歷史', confirmed: true });
 }
 
-test('schema16 creates the exact BLOB shape, explicit versions and owner/status indexes', t => {
+test('current schema preserves the schema16 BLOB shape, explicit versions and owner/status indexes', t => {
   const f = fixture(t), db = openDatabase(f.source.dbFile);
   try {
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
     const columns = db.prepare('PRAGMA table_info(market_images)').all();
     assert.deepEqual(columns.map(c => [c.name,c.type,c.notnull,c.pk]), [
       ['id','TEXT',0,1],['author_id','TEXT',1,0],['author_name','TEXT',1,0],['mime','TEXT',1,0],['bytes','BLOB',1,0],['width','INTEGER',1,0],['height','INTEGER',1,0],['buckets_json','TEXT',1,0],['weekdays_json','TEXT',1,0],['version','INTEGER',1,0],['status','TEXT',1,0],['created_at','TEXT',1,0],['approved_by','TEXT',0,0],['approved_at','TEXT',0,0]
@@ -115,10 +117,10 @@ test('schema16 enforces dimensions, pixels, BLOB bounds, JSON arrays and review/
   } finally { db.close(); }
 });
 
-test('genuine cold15 bundle upgrades only its copy to the current schema and preserves accounts, assets and score history', async t => {
+test('genuine cold15 bundle upgrades only its copy to an empty gallery and preserves accounts, assets and score history', async t => {
   const f = fixture(t), db = openDatabase(f.source.dbFile), preserved = ['users','user_artworks',...MARKET_TABLES];
   let expected;
-  try { seedScoring(db,f); db.exec('DROP TABLE achievement_progress; DROP TABLE processed_unit_events; DROP TABLE market_images; PRAGMA user_version=15'); expected = rows(db,preserved); } finally { db.close(); }
+  try { seedScoring(db,f); legacyMarketSchema(db);db.exec('DROP TABLE IF EXISTS achievement_progress; DROP TABLE IF EXISTS processed_unit_events'); db.exec('DROP TABLE market_images; PRAGMA user_version=15'); expected = Object.fromEntries(Object.entries(rows(db,preserved)).map(([table,items])=>[table,upgradedMarketRows(table,items)])); } finally { db.close(); }
   const before = validateData(f.source).summary.database, sourceBytes = fs.readFileSync(f.source.dbFile);
   assert.equal(before.schemaVersion,15); assert.equal(before.tableCounts.market_images,undefined); assert.equal(before.marketImagesSha256,undefined);
   await run(f.exportRequest);
@@ -138,7 +140,7 @@ test('genuine cold15 bundle upgrades only its copy to the current schema and pre
   assert.deepEqual(validateData(f.source).summary.database,before); assert.deepEqual(fs.readFileSync(f.source.dbFile),sourceBytes);
 });
 
-test('full16 export verify preview and restore preserve pending/approved PNGs, nickname snapshots, rules, review and receipts', async t => {
+test('current schema export verify preview and restore preserve pending/approved PNGs, nickname snapshots, rules, review and receipts', async t => {
   const f = fixture(t), db = openDatabase(f.source.dbFile); let expected;
   try {
     seedScoring(db,f); const images = new MarketImageStore(db,()=>Date.parse(created));
@@ -162,7 +164,7 @@ test('full16 export verify preview and restore preserve pending/approved PNGs, n
   assert.deepEqual(validateData(f.source).summary.database,before); assert.deepEqual(fs.readFileSync(f.source.dbFile),sourceBytes);
 });
 
-test('schema16 missing image table is rejected by validation and boot without repair', async t => {
+test('current schema missing image table is rejected by validation and boot without repair', async t => {
   const f=fixture(t), db=new DatabaseSync(f.source.dbFile); try {db.exec('DROP TABLE market_images');} finally {db.close();}
   const before=fs.readFileSync(f.source.dbFile);
   assert.throws(()=>validateDatabase(f.source.dbFile),rejected); await assert.rejects(run(f.exportRequest),rejected);
@@ -188,10 +190,10 @@ const malformed = [
   ['review check weakened',sql=>sql.replace("status='approved' AND version=2 AND approved_by IS NOT NULL AND approved_at IS NOT NULL)","status='approved' AND version=2 AND approved_by IS NOT NULL AND approved_at IS NOT NULL) OR 1")],
   ['literal containing a space',sql=>sql.replace("mime='image/png'","mime='image/ png'")],
 ];
-for (const [label, change] of malformed) test(`malformed empty image schema rejects ${label} before16 migration and current16 boot`, async t => {
-  const f=fixture(t), altered=change(MARKET_IMAGE_SQL); assert.notEqual(altered,MARKET_IMAGE_SQL);
-  for (const version of [15,16]) {
-    const db=new DatabaseSync(f.source.dbFile); try {db.exec('DROP TABLE market_images;'+altered+`; PRAGMA user_version=${version}`);} finally {db.close();}
+for (const [label, change] of malformed) test(`malformed empty image schema rejects ${label} before16 migration and schema16/current boot`, async t => {
+  const altered=change(MARKET_IMAGE_SQL); assert.notEqual(altered,MARKET_IMAGE_SQL);
+  for (const version of [15,16,SCHEMA_VERSION]) {
+    const f=fixture(t),db=new DatabaseSync(f.source.dbFile); try {if(version<17)legacyMarketSchema(db);db.exec('DROP TABLE market_images;'+altered+`; PRAGMA user_version=${version}`);} finally {db.close();}
     const before=fs.readFileSync(f.source.dbFile);
     assert.throws(()=>validateDatabase(f.source.dbFile),rejected); await assert.rejects(run(f.exportRequest),rejected);
     assert.throws(()=>openDatabase(f.source.dbFile),/Invalid market_images/); assert.deepEqual(fs.readFileSync(f.source.dbFile),before);
@@ -201,7 +203,7 @@ for (const [label, change] of malformed) test(`malformed empty image schema reje
 test('every historical version1..15 rejects a populated future image table without migration', t => {
   const f=fixture(t), seed=new DatabaseSync(f.source.dbFile); try {insertImage(seed,f);} finally {seed.close();}
   for (let version=1;version<=15;version++) {
-    const db=new DatabaseSync(f.source.dbFile); try {db.exec(`PRAGMA user_version=${version}`);} finally {db.close();}
+    const db=new DatabaseSync(f.source.dbFile); try {legacyMarketSchema(db);db.exec(`PRAGMA user_version=${version}`);} finally {db.close();}
     const before=fs.readFileSync(f.source.dbFile); assert.throws(()=>validateDatabase(f.source.dbFile),rejected);
     assert.throws(()=>openDatabase(f.source.dbFile),/older schema cannot contain market images/); assert.deepEqual(fs.readFileSync(f.source.dbFile),before);
   }
@@ -248,7 +250,7 @@ test('verify and apply reject authenticated bundles containing bad image data or
 test('restore rejects introduced image contents and changes to frozen metadata even when PNG bytes remain exact', async t => {
   for (const legacy of [true,false]) {
     const f=fixture(t),db=new DatabaseSync(f.source.dbFile);
-    try {if(legacy)db.exec('DROP TABLE market_images; PRAGMA user_version=15');else insertImage(db,f);}finally{db.close();}
+    try {if(legacy){legacyMarketSchema(db);db.exec('DROP TABLE market_images; PRAGMA user_version=15');}else insertImage(db,f);}finally{db.close();}
     const before=validateData(f.source).summary.database;await run(f.exportRequest);
     const exec=DatabaseSync.prototype.exec;let injected=false;
     DatabaseSync.prototype.exec=function(sql){const result=exec.call(this,sql);if(sql==='PRAGMA wal_checkpoint(TRUNCATE)'){
