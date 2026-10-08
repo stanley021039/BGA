@@ -1,0 +1,45 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "report": [
+    {
+      "game": "poker",
+      "mainTop": 231.59375,
+      "asideTop": 231.59375,
+      "topDifference": 0,
+      "columnGap": 16,
+      "scroll": 1440,
+      "width": 1440
+    },
+    {
+      "game": "thunder",
+      "mainTop": 136,
+      "asideTop": 136,
+      "topDifference": 0,
+      "columnGap": 16,
+      "scroll": 1440,
+      "width": 1440
+    },
+    {
+      "game": "majority",
+      "mainTop": 222,
+      "asideTop": 222,
+      "topDifference": 0,
+      "columnGap": 16,
+      "scroll": 1440,
+      "width": 1440
+    },
+    {
+      "game": "gift",
+      "mainTop": 230,
+      "asideTop": 230,
+      "topDifference": 0,
+      "columnGap": 16,
+      "scroll": 1440,
+      "width": 1440
+    }
+  ],
+  "scope": "Actual DOM waiting-room frame measurements; distinct original game layouts retained"
+}

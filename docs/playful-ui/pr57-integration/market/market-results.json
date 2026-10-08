@@ -1,0 +1,7 @@
+{
+  "checks": [
+    "Numeric forecast slider, local live curve and real saved vote keep main contract",
+    "Six shared manual tabs preserve history, leaderboard and administrator views; no document overflow"
+  ],
+  "errors": []
+}

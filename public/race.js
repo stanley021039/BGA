@@ -54,7 +54,7 @@ const sizes=['輕型','中型','重型'],dice=Array.from({length:6},(_,index)=>R
 function toast(t){if(window.GameUI?.notify)return window.GameUI.notify(t,{durationMs:4200});$('#toast').textContent=t;$('#toast').style.display='block';clearTimeout(window.tt);window.tt=setTimeout(()=>$('#toast').style.display='none',4200);}
 function vehicle(size,color,disabled=false){const w=[30,36,42][size],h=[16,20,25][size];return `<g ${disabled?'transform="rotate(180)"':''}><rect x="${-w/2+2}" y="${-h/2-4}" width="9" height="6" rx="2" fill="#111711"/><rect x="${w/2-11}" y="${-h/2-4}" width="9" height="6" rx="2" fill="#111711"/><rect x="${-w/2+2}" y="${h/2-2}" width="9" height="6" rx="2" fill="#111711"/><rect x="${w/2-11}" y="${h/2-2}" width="9" height="6" rx="2" fill="#111711"/><path d="M${-w/2},${-h/2+3} L${w/2-5},${-h/2} L${w/2},${-h/2+5} V${h/2-5} L${w/2-5},${h/2} L${-w/2},${h/2-3}Z" fill="${color}" stroke="#eff2d880" stroke-width="1"/><rect x="-4" y="${-h/2+3}" width="9" height="${h-6}" rx="2" fill="#17251f"/><path d="M9,-2H${w/2+4}M9,2H${w/2+4}" stroke="#262d24" stroke-width="2"/><path d="M${-w/2+3},0H-7" stroke="#f9eac6" stroke-width="2"/></g>`;}
 function crewCard(s,p){
- if(!p)return '<div class="crew-pill empty-crew">等待車隊入座</div>';
+ if(!p)return '';
  const name=window.GameUI?.playerName?.(p.name)||`<span class="ui-player-name" title="${esc(p.name)}">${esc(p.name)}</span>`;
  const cars=s.cars.filter(c=>c.owner===p.id),alive=cars.filter(c=>!c.dead&&c.damage.length<2).length;
  const status=p.out?'已出局':s.phase==='waiting'?'準備出發':`${alive} 輛可用${p.id===s.actor?' · 行動中':''}`;

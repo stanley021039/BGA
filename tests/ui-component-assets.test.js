@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {createApp}=require('../src/app');
-const assets=['ui-widgets.js','ui-widgets.css','ui-notifications.js','ui-notifications.css','ui-celebrations.js','ui-celebrations.css'];
+const assets=['color-scheme.js','ui-widgets.js','ui-widgets.css','ui-notifications.js','ui-notifications.css','ui-celebrations.js','ui-celebrations.css'];
 test('new shared component assets are fixed routes with correct content types and immutable source bytes',async()=>{
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'bga-ui-pattern-assets-'));
  const app=createApp({port:0,host:'127.0.0.1',dbFile:path.join(directory,'app.sqlite'),historyDir:path.join(directory,'history'),communityDir:path.join(directory,'community'),musicDir:path.join(directory,'music'),externalSideEffectsEnabled:false});

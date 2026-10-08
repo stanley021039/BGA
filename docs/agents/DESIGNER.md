@@ -73,3 +73,38 @@
 2026-10-05共用聲音已實作（`2e8dc4d`）：右上角44px齒輪放個人背景音樂／遊戲音效開關及音量，各遊戲入口一致；它適合設定選單，玩家／車隊／骰子仍需常駐。聲音設定正文16、次要14、百分比tabular、滑桿操作44，使用共用popover保持可見；手機導覽需換列容納齒輪。桌上房主播放控制保留，不能混成全桌靜音。驗收見 [共用聲音進度](../SHARED-AUDIO-PROGRESS.md)。
 
 2026-10-05房間設定整合已實作（`15af1dd`、U16）：畫猜／送禮／同頻的欄位、儲存與結果提示放同區，避免跨舞台與側欄尋找按鈕。畫猜八人桌展開表單會推長頁面，改用入口旁且限制視窗的設定浮層；玩家名單仍常駐，關閉／Escape返焦。送禮／同頻保持同容器的設定區與44px儲存按鈕，1280×720整頁不捲、舞台局部捲動。重要玩家資訊不能套用這種低頻設定的收合方式；位置、尺寸及公開站驗收見 [本批進度](../BARRAGE-ROOM-SETTINGS-PROGRESS.md)。
+
+
+## 2026-10-08 紙卡大廳 Draft
+
+已確認 shhuang.cc 是 Linux 部署 8a9cbfd 的六款遊戲專案；Windows BGA-main 舊版不是改動目標。獨立分支 codex/playful-board-game-ui，使用者接受紙卡範本並要求原角色移動功能保持原樣。這輪僅大廳啟用 tokens／六卡輪播／建立房間 dialog，hub.js、lobby.js、遊戲／房間／帳號／資料庫模組未改。五款房間遊戲實際 UI 建立與等待頁、market直接導航、兩帳號移動／表情同步及Chromium觸控驗證通過。完整測試1,519項、1,518通過、原版同項SQLite I/O失敗。其他頁面仍待視覺確認；未部署、未完成全站實玩驗收、未打發行tag。证据見 docs/playful-ui/README.md 與 test-results.md。此紀錄取代本輪將 Windows 舊三款遊戲來源視為正式專案的假設，不代表撤銷既有其他功能契約。
+
+
+### 2026-10-08 授權部署更新
+
+使用者明確要求更新 shhuang.cc 測試，1.17.0／6be11b4／v1.17.0 已部署。原先 SQLite I/O 測試失敗因 /tmp 空間不足，改用磁碟 TMPDIR 後 1,519/1,519 全部通過；未改測試或 storage。正式瀏覽器驗證登入保留、輪播／建立 dialog／六張插畫與設定版號，origin八資源驗證、DB完整性/schema/四資料表指紋保留通過。此筆取代前一筆未部署／原版測試仍失敗狀態；其餘頁面尚未改造。證據 docs/playful-ui/deployment.md。
+
+
+## 2026-10-08 全站紙卡延伸，候選1.17.1
+
+使用者要求登入、等待房及遊戲頁也要改，並明確說各遊戲可保留不同布局，只要區塊對齊；開房不得要求暱稱，改用帳號設定的displayName。21HTML共享主題，四款等待内容／操作top差0、gap16px，75最新viewport无水平溢出/pageerror。原布局與core/API/DB/畫猜renderer未改；撲克漏type直接開桌已測舊版失敗並修正，五款權威名稱回歸與三入口實際settings→create通過。完整Linux1,526/1,526，focused13；實際限定遊戲操作與五款200%/reduce通過，非全規則／真手機／全讀屏／FPS。完整檔案與證據 docs/playful-ui/full-site/README.md；部署完成另記該目錄deployment.md，不把候選自稱上線。
+
+Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e51. Distinct game layouts retained with aligned panels. Deployment evidence: docs/playful-ui/full-site/deployment.md.
+
+## 2026-10-08 風格命名及保存
+
+完成風格命名 Playful Paper／繽紛紙卡，分支 style/playful-paper，複製保存 archive/playful-paper-v1.17.1。使用者希望未來提供多種風格供玩家挑選；已記錄全站主題、一致元件與各遊戲不同布局的方向，選單尚未實作。見 [風格分支策略](../playful-ui/STYLE-BRANCHES.md)。
+
+## 2026-10-08 深色亮色對比方向
+
+繽紛紙卡深色變體使用近黑背景與鮮綠主要操作、粉紅／橘黃／藍紫選取強調；亮色填滿區用深色文字。保留插畫、撲克牌紅黑花色與白色作畫畫布。各遊戲不同布局及對齊維持；設定旁太陽／月亮按鈕及三模式select，非多風格選單。驗收詳 [深色模式](../playful-ui/DARK-MODE.md)，正式狀態以發布證據為準。
+
+2026-10-08 深色變體正式v1.18.0已部署；設定旁亮暗控制、鮮明操作色與auto/light/dark已公開驗證。完整矩陣及有限玩法／對比範圍见 [發布證據](../playful-ui/full-site/dark/deployment.md)。不代表未來多風格選單已完成。
+
+2026-10-08 PR57複查：保留不同遊戲布局與全站紙卡語言，main新增的市場曲線／行情／排行也共用tokens；1726全通過、深色矩陣與light/dark數值預測通過。見 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)。本輪候選非新的正式發布。
+
+
+2026-10-08 PR57 追加：雷霆賽道紀錄 16px 內距／標題 8px 間距，撲克未入座使用 hidden 槽位保留 nth-child，雷霆不產生空車隊。離線／出局實際玩家保留，API／同步未改。Linux 41 項、release check、36 組亮暗／三尺寸／2、3、滿席與兩人 playing 通過；前後截圖、範圍及兩回合審查見 [本輪證據](../playful-ui/seat-spacing/README.md)。候選 v1.19.0 未合併／未部署，正式仍 v1.18.0；既有 archive 與 tag 不動。
+
+
+2026-10-08 PR57評論修正：滑動防護只豁免controller同步選中的卡片，避免鍵盤／前後切換與create type不同步；承接PR53 bf545ae混合真人AI成就。69項與原生Chromium滑鼠／瀏覽器鍵盤事件／真create通過；固定head與兩回合審查見 [證據](../playful-ui/PR57-COMMENT-FIXES.md)。未部署／未合併main，舊收據不修補。

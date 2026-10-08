@@ -1,0 +1,16 @@
+{
+  "checks": [
+    "Poker current actor can call/check through original handler and receives ACK",
+    "poker 200% root text has no document horizontal overflow",
+    "Original race round dice dialog appears with readable themed header and crew colors",
+    "thunder 200% root text has no document horizontal overflow",
+    "Majority original draw/question/three player answer/score flow reaches reveal",
+    "majority 200% root text has no document horizontal overflow",
+    "Gift three players choose distinct gifts and four wishes; actual accept/score reveal succeeds",
+    "gift 200% root text has no document horizontal overflow",
+    "Draw native topic selection, mouse stroke, real transport ACK, other viewer pixels and undo command succeed",
+    "draw 200% root text has no document horizontal overflow"
+  ],
+  "errors": [],
+  "scope": "Synthetic temp accounts and isolated Linux server; finite actual game actions, not exhaustive all rules/state testing"
+}

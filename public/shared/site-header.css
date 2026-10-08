@@ -27,3 +27,6 @@ body>[data-site-header].site-header{width:calc(100% - 8vw);margin-inline:4vw}bod
 .site-settings :is(button,input):focus-visible{outline:2px solid #efb760;outline-offset:3px}
 .site-settings #site-audio-status{font-size:14px;margin:12px 0 0;color:#edba77}.site-settings #site-audio-status:empty{display:none}
 @media(max-width:430px){.site-header .site-account{gap:6px}.site-header .site-settings{padding:16px}.site-header .site-links{flex-wrap:wrap;gap:0 8px}}
+.site-header .site-theme-guest{grid-column:3;grid-row:1;justify-self:end}
+.site-settings .site-appearance-label{display:block;margin:0 0 8px;color:inherit;font:inherit}
+.site-settings #site-color-scheme{width:100%;min-height:44px;font:inherit}
