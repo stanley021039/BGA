@@ -14,6 +14,17 @@ test('GameShell mounts and updates only unified media; disconnect and stop forwa
  const f=await fixture(),state=f.state();f.window.GameShell.update(state);await f.flush();assert.equal(f.calls.mount,1);assert.equal(f.calls.updates.length,1);assert.equal(f.calls.updates[0],state);assert.equal(f.document.querySelectorAll('.shared-expression-menu').length,0);
  f.window.GameShell.disconnected();f.window.GameShell.stop();assert.equal(f.calls.disconnect,1);assert.equal(f.calls.stop,1);
 });
+
+test('test AI controls are host-only, respect capacity, and retain a Chinese accessible name',async()=>{
+ const f=await fixture(),shell=f.window.GameShell;
+ f.window.GameUI.icon=()=>'<svg aria-hidden="true"></svg>';
+ assert.equal(shell.botButton({host:false,botSupport:{supported:true,canAdd:true}}),'');
+ assert.equal(shell.botButton({host:true,botSupport:{supported:false,canAdd:false}}),'');
+ const target=f.document.createElement('div');
+ target.innerHTML=shell.botButton({host:true,botSupport:{supported:true,canAdd:true}});
+ const enabled=target.querySelector('button');assert.equal(enabled.disabled,false);assert.equal(enabled.getAttribute('aria-label'),'加入測試 AI');assert.equal(enabled.getAttribute('data-do'),'bot');assert.ok(enabled.classList.contains('ui-icon-button'));
+ target.innerHTML=shell.botButton({host:true,botSupport:{supported:true,canAdd:false}});assert.equal(target.querySelector('button').disabled,true);
+});
 test('one emoji button opens general emojis then a separator and named character expressions',async()=>{
  const f=await fixture();f.window.GameShell.update(f.state());await f.flush();const picker=f.node('shared-emoji-picker'),toggle=f.node('shared-emote-toggle');assert.equal(picker.hidden,true);toggle.click();assert.equal(picker.hidden,false);assert.match(toggle.getAttribute('aria-label'),/角色表情/);
  assert.deepEqual(picker.children.map(node=>node.tagName),['H3','DIV','HR','H3','DIV']);assert.equal(picker.children[2].getAttribute('role'),'separator');assert.equal(picker.querySelectorAll('.shared-emoji-choices button').length,2);assert.equal(picker.querySelectorAll('#shared-expressions button').length,2);const expression=picker.querySelectorAll('#shared-expressions button')[1];assert.equal(expression.title,'送出「開心大笑」');assert.equal(expression.getAttribute('aria-label'),'送出「開心大笑」表情');assert.equal(expression.querySelector('img').src,'/happy.gif');

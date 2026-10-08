@@ -11,6 +11,7 @@ const {createOfficialProvider}=require('./market/official-provider');
 const {MarketImageStore}=require('./market/images');
 const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
 const {startRoomScheduler}=require('./rooms/scheduler');
+const {botSupport,addTestBot}=require('./ai');
 const {reconnectPlayer}=require('./rooms/reconnect');
 const {leavePlayer,expireEmptyRooms,endRoomHistory}=require('./rooms/lifecycle');
 const {listRooms}=require('./rooms/listing');
@@ -84,7 +85,7 @@ function initializeApp(config,dataLock){
   if(viewerId)characterMedia.rememberExpressions(viewerId,'room:'+room.code,expressions.map(event=>({userId:accounts.get(event.playerId),image:event.image,at:event.at,until:event.at+5000,sound:event.sound,soundUntil:event.at+10000})));
   const watch=reconcileWatch(room);
   const media=mediaRooms.get(room,{create:true});media.reconcile(mediaContext(room));
-  return {...view,serverNow:now,...(history.warning(room)?{historyWarning:history.warning(room)}:{}),permissions:permissionsView(room,view.me),players:view.players.map(player=>({...player,roomRole:roomRole(room,player.id),...(recent.has(player.id)?{avatar:recent.get(player.id)}:{})})),social,expressions,barrages,media:media.marker(),watch:media.managed?{roomInstanceId:media.roomInstanceId,revision:media.revision,hasVideo:media.current?.type==='video',controllerId:room.host}:watch?watch.summary(watchContext(room)):null};
+  return {...view,serverNow:now,botSupport:botSupport(room),...(history.warning(room)?{historyWarning:history.warning(room)}:{}),permissions:permissionsView(room,view.me),players:view.players.map(player=>({...player,roomRole:roomRole(room,player.id),...(recent.has(player.id)?{avatar:recent.get(player.id)}:{})})),social,expressions,barrages,media:media.marker(),watch:media.managed?{roomInstanceId:media.roomInstanceId,revision:media.revision,hasVideo:media.current?.type==='video',controllerId:room.host}:watch?watch.summary(watchContext(room)):null};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});
@@ -321,6 +322,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    Object.defineProperty(room,'wordExclusionProvider',{value:word=>drawWordStore.isExcluded(word)});
    Object.defineProperty(room,'wordBanWriter',{value:(word,audit)=>drawWordStore.ban(word,audit)});
   }
+  if(!thunder&&!botSupport(room).supported)throw new HttpError(400,'TEST_AI_REQUIRED','新遊戲必須先提供測試 AI');
   history.attach(room);
   let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>{const player=room.add(user.display_name);player.name=user.display_name;return player;});}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
@@ -496,7 +498,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  else if(url.pathname==='/api/kick'){if(data.confirmed!==true)throw new HttpError(400,'CONFIRM_REQUIRED','請先確認踢出玩家');const target=room.players.find(q=>q.id===data.playerId);if(!target)throw new HttpError(404,'PLAYER_NOT_FOUND','找不到玩家');if(!canKick(room,p.id,target.id))throw new HttpError(403,'ROOM_KICK_FORBIDDEN','只有房主或有權限的房間管理者可以踢出這位玩家');room.kick(room.host,target.id);const account=[...seats.get(room.code)].find(([,id])=>id===target.id)?.[0];if(account){seats.get(room.code).delete(account);if(!kickedUsers.has(room.code))kickedUsers.set(room.code,new Set());kickedUsers.get(room.code).add(account);for(const entry of drawStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();for(const entry of musicStreams.get(room.code)||[])if(entry.userId===account)entry.res.end();}pruneRoomRoles(room,activeRoomIds(room));mediaRooms.get(room)?.reconcile(mediaContext(room));}
  else if(url.pathname==='/api/settings'){if(!['thunder','majority','gift','draw'].includes(room.type))throw Error('此遊戲沒有此設定');room.configure(p.id,data);}
  else if(url.pathname==='/api/start'){if(room.host!==p.id)throw Error('只有房主可以發牌');room.start();}
- else if(url.pathname==='/api/bot'){if(room.host!==p.id)throw Error('只有房主可以加入電腦');room.add(['River','Clover','Atlas','Nova','Juno'][room.players.filter(p=>p.bot).length%5],true);}
+ else if(url.pathname==='/api/bot'){if(room.host!==p.id)throw Error('只有房主可以加入電腦');if(room.type==='thunder')room.add(['River','Clover','Atlas','Nova','Juno'][room.players.filter(p=>p.bot).length%5],true);else addTestBot(room);}
  else if(url.pathname==='/api/rebuy'){if(['thunder','majority','gift','draw'].includes(room.type)||!['waiting','showdown'].includes(room.phase)||p.stack>0)throw Error('籌碼用完且本局結束後才能補充');p.stack=2000;}
  else throw Error('未知請求');
  });awardRoomAchievements(room);return send(withSocial(room,room.view(p.id)));
@@ -533,7 +535,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(closed)throw Error('Application has been closed');
   if(server.listening)return server.address();
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
-  stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom});
+  stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom,onDrawStroke:publishDraw});
   submissions.recover();
   marketAutomation.start();
   return server.address();
