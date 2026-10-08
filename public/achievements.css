@@ -1,1 +1,32 @@
-.achievements-panel{max-width:850px}.achievement-list{display:grid;gap:14px}.achievement-card{display:flex;gap:18px;align-items:center;border:1px solid #4b594a;border-radius:13px;padding:22px;background:#17221b;color:#b8c4b3}.achievement-card.unlocked{border-color:#c99d62;background:linear-gradient(120deg,#2e3221,#1c2b22);color:#f3eee0}.achievement-mark{display:grid;place-items:center;width:72px;height:72px;flex:none;clip-path:polygon(50% 0,87% 13%,100% 50%,87% 87%,50% 100%,13% 87%,0 50%,13% 13%);background:#485148;color:#b5c2b2;font:42px Georgia}.achievement-card.unlocked .achievement-mark{background:#d9ac70;color:#2b281c}.achievement-card h3{margin:0 0 5px;font-size:21px}.achievement-card p{margin:0 0 8px;font-size:14px;line-height:1.5}.achievement-status{font-size:12px;color:#a8b6a3}.achievement-card.unlocked .achievement-status{color:#e8c79b}@media(max-width:520px){.achievement-card{align-items:flex-start;padding:16px;gap:12px}.achievement-mark{width:51px;height:51px;font-size:31px}.achievement-card h3{font-size:18px}}
+.achievements-page{--ui-text-body:1rem;--ui-text-small:.875rem;--ui-control-height:2.75rem;--ui-space-2:.5rem;--ui-focus:var(--page-orange,#f6a54b)}
+.achievements-page .achievements-panel{max-width:1100px}
+.achievements-page .page-heading p,.achievements-page .panel-heading p{font-size:var(--ui-text-body);line-height:1.6}
+.achievements-page .panel-number,.achievements-page .page-heading .kicker{font-size:var(--ui-text-small)}
+.achievements-page .panel-heading h2{font-size:1.25rem}
+.achievements-page .panel-heading .achievement-private-note{margin-top:.5rem;font-size:var(--ui-text-small);color:#b5c3b2}
+.achievement-filters{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem}
+.achievements-page .achievement-filters label{flex:1 1 240px;min-width:0;font-size:var(--ui-text-body);gap:.5rem;color:#d5dfcc}
+.achievements-page .achievement-filters select{min-height:var(--ui-control-height);height:auto;font-size:var(--ui-text-body);line-height:1.5;padding:.5rem .75rem}
+.achievement-filter-summary{min-height:1.5em;margin:0 0 1.5rem;color:#b5c3b2;font-size:var(--ui-text-small)}
+.achievement-groups{display:grid;gap:2rem}
+.achievement-group{min-width:0}
+.achievement-group-heading{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;margin:0 0 1rem;color:#eeeade;font-size:1.25rem;line-height:1.5}
+.achievement-group-icon{display:inline-flex;align-items:center;flex:none}
+.achievement-group-count{margin-left:auto;color:#b5c3b2;font-size:var(--ui-text-small);font-weight:400}
+.achievement-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.achievement-card{display:flex;align-items:flex-start;gap:1rem;min-width:0;padding:1.25rem;border:1px solid #52634f;border-radius:12px;background:var(--panel,#1a221c);color:#d2dcc9}
+.achievement-card.unlocked{border-color:#c99d62;background:#253027;color:#f3eee0}
+.achievement-mark{display:grid;place-content:center;place-items:center;width:3.5rem;height:3.5rem;flex:none;border:1px solid #63735c;border-radius:12px;background:#344434;color:#c4d2b7}
+.achievement-mark .ui-icon{width:2rem;height:2rem}
+.achievement-card.unlocked .achievement-mark{border-color:#c99d62;background:#51432b;color:#f1cc91}
+.achievement-body{min-width:0;flex:1}
+.achievement-card h4{margin:0 0 .5rem;font-size:var(--ui-text-body);line-height:1.5;overflow-wrap:anywhere}
+.achievement-card p{margin:0 0 .75rem;font-size:var(--ui-text-body);line-height:1.6;overflow-wrap:anywhere}
+.achievement-date{display:block;margin:0 0 .75rem;font-size:var(--ui-text-small);line-height:1.5;color:#edcea2}
+.achievement-metadata{display:flex;flex-wrap:wrap;gap:.25rem .75rem;color:#b5c3b2;font-size:var(--ui-text-small);line-height:1.5;overflow-wrap:anywhere}
+.achievement-card .achievement-paused{margin:.75rem 0 0;color:#edcea2;font-size:var(--ui-text-small)}
+.achievement-empty{margin:0;padding:1rem;border:1px solid #52634f;border-radius:8px;color:#c3cdbb;font-size:var(--ui-text-body);line-height:1.6;overflow-wrap:anywhere}
+.achievement-error{color:#ffc2b0;border-color:#bc7567}
+.achievements-page #achievementRetry{margin-top:1rem;min-height:var(--ui-control-height);font-size:var(--ui-text-body)}
+@media(max-width:900px){.achievement-list{grid-template-columns:1fr}}
+@media(max-width:520px){.achievements-page .achievements-panel{padding:1rem}.achievement-card{padding:1rem;gap:.75rem}.achievement-mark{width:2.75rem;height:2.75rem}.achievement-mark .ui-icon{width:1.5rem;height:1.5rem}.achievement-group-count{flex-basis:100%;margin-left:0}}

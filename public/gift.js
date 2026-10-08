@@ -16,7 +16,7 @@ const motionGate=MotionPolicy.createGate();
 try{session=JSON.parse(localStorage.getItem(code?'ah-gift:'+code:'ah-gift')||'null');if(session&&!code)code=session.code;}catch{}
 
 
-function toast(message){$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
+function toast(message){if(window.GameUI?.notify)return window.GameUI.notify(message,{durationMs:4500});$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4500);}
 async function api(route,data){
  return RoomApi.request(route,data,{code,room:'gift',session,onKicked:()=>{RoomHost.kicked(session);session=null;}});
 }
@@ -111,15 +111,17 @@ function resultPanel(s){
  return `<section class="card result-card" aria-label="第 ${s.result.round} 輪完整結果"><h2>送禮與收禮總分</h2><div class="result-totals" aria-label="送禮與收禮總分">${scores}</div><p id="giftAchievementNotice" class="achievement-notice" role="status" hidden></p><section class="result-details" aria-label="收到的完整禮物"><h3>收到的禮物</h3><div class="recipient-tabs result-tabs" role="group" aria-label="查看朋友收到的禮物">${s.players.map(item=>`<button type="button" data-result-tab="${esc(item.id)}" aria-pressed="${item.id===activeResultRecipient}">${esc(item.name)}</button>`).join('')}</div><div class="reveal-groups">${groups}</div></section></section>`;
 }
 async function checkNewAchievement(){
- try{
-  const response=await fetch('/api/achievements');if(!response.ok)return;
-  const data=await response.json(),unlocked=new Set(data.achievements.filter(item=>item.unlockedAt).map(item=>item.id));
-  const names=knownAchievements?[['gift-first-gift','第一份心意'],['all-first-table','第一桌']].filter(([id])=>!knownAchievements.has(id)&&unlocked.has(id)).map(([,name])=>name):[];
-  if(names.length){
+ const announce=earned=>{const names=earned.map(item=>String(item.title||item.id));if(names.length){
    const notice=$('#giftAchievementNotice');
    if(notice){notice.textContent='解鎖成就：'+names.join('、')+'。';const link=document.createElement('a');link.href='/achievements';link.textContent='查看收藏冊 ↗';notice.append(link);notice.hidden=false;}
-  }
-  knownAchievements=unlocked;
+   for(const item of earned)window.GameUI?.notify?.('解鎖成就：'+String(item.title||item.id),{kind:'achievement',key:'achievement:'+item.id,href:'/achievements',label:'查看收藏冊',durationMs:7000,celebrate:true});
+  }};
+ if(window.GameUI?.createAchievementTracker){checkNewAchievement.tracker||=window.GameUI.createAchievementTracker({onEarned:announce});return checkNewAchievement.tracker.check();}
+ try{
+  const response=await fetch('/api/achievements');if(!response.ok)return;
+  const data=await response.json();if(!Array.isArray(data.achievements))return;
+  const items=[...new Map(data.achievements.filter(item=>item?.unlockedAt&&typeof item.id==='string').map(item=>[item.id,item])).values()];announce(knownAchievements?items.filter(item=>!knownAchievements.has(item.id)):[]);
+  knownAchievements=new Set([...(knownAchievements||[]),...items.map(item=>item.id)]);
  }catch{}
 }
 function allowsMotion(){return MotionPolicy.allowsMotion();}

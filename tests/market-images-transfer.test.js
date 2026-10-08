@@ -120,7 +120,7 @@ test('schema16 enforces dimensions, pixels, BLOB bounds, JSON arrays and review/
 test('genuine cold15 bundle upgrades only its copy to an empty gallery and preserves accounts, assets and score history', async t => {
   const f = fixture(t), db = openDatabase(f.source.dbFile), preserved = ['users','user_artworks',...MARKET_TABLES];
   let expected;
-  try { seedScoring(db,f); legacyMarketSchema(db); db.exec('DROP TABLE market_images; PRAGMA user_version=15'); expected = Object.fromEntries(Object.entries(rows(db,preserved)).map(([table,items])=>[table,upgradedMarketRows(table,items)])); } finally { db.close(); }
+  try { seedScoring(db,f); legacyMarketSchema(db);db.exec('DROP TABLE IF EXISTS achievement_progress; DROP TABLE IF EXISTS processed_unit_events'); db.exec('DROP TABLE market_images; PRAGMA user_version=15'); expected = Object.fromEntries(Object.entries(rows(db,preserved)).map(([table,items])=>[table,upgradedMarketRows(table,items)])); } finally { db.close(); }
   const before = validateData(f.source).summary.database, sourceBytes = fs.readFileSync(f.source.dbFile);
   assert.equal(before.schemaVersion,15); assert.equal(before.tableCounts.market_images,undefined); assert.equal(before.marketImagesSha256,undefined);
   await run(f.exportRequest);

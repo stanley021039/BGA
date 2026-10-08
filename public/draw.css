@@ -209,3 +209,15 @@ body[data-game-kind="draw"].ui-large-text .stage-player-cards{grid-template-colu
  body[data-game-kind="draw"]:not(.ui-large-text) .board-section.is-drawing:has(.tools:not([hidden])){grid-template-columns:252px minmax(0,1fr)}
  body[data-game-kind="draw"]:not(.ui-large-text) .tool-row{grid-template-columns:repeat(5,minmax(44px,1fr))}
 }
+
+/* Keep the drawing white; the surrounding surfaces carry the room's visual hierarchy. */
+body[data-game-kind="draw"] :is(.card,.board-section,.draw-guess-panel){background:var(--ui-surface-panel);border-color:var(--ui-border);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-panel)}
+body[data-game-kind="draw"] .canvas-frame{border-color:var(--ui-control-border);border-radius:var(--ui-radius-card);box-shadow:none}
+body[data-game-kind="draw"] .canvas-stage{background:var(--ui-surface-inset)}
+body[data-game-kind="draw"] .tools{background:var(--ui-surface-inset);border-radius:var(--ui-radius-card)}
+body[data-game-kind="draw"] .tool-row button{background:var(--ui-surface-panel);color:var(--ui-text);border-color:var(--ui-control-border);border-radius:var(--ui-radius-control)}
+body[data-game-kind="draw"] .tool-row button.selected{background:var(--ui-selected);color:var(--ui-selected-text);border-color:var(--ui-selected);box-shadow:inset 0 0 0 1px currentColor}
+body[data-game-kind="draw"] .tool-row button:not(:disabled):not(.selected):hover{background:var(--ui-selected-soft)}
+body[data-game-kind="draw"] .color-menu summary{background:var(--ui-surface-panel);border-color:var(--ui-control-border);border-radius:var(--ui-radius-control)}
+body[data-game-kind="draw"] .swatches{background:var(--ui-surface-floating);box-shadow:var(--ui-shadow-floating)}
+body[data-game-kind="draw"] .draw-roster .room-player:not(.draw-player-correct){background:var(--ui-surface-panel);border-color:var(--ui-border)}

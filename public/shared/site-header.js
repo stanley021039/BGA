@@ -11,6 +11,7 @@
   MotionPolicy.subscribe(prefs=>{settings.querySelector('#site-motion-enabled').checked=prefs.enabled;settings.querySelector('#site-barrages-enabled').checked=prefs.barrages;settings.querySelector('#site-motion-status').textContent=prefs.reduced?'系統已減少動態；結果保留，彈幕改為靜態。':'關閉動畫仍保留結果；彈幕可另外隱藏。';});
   settings.querySelector('#site-motion-enabled').onchange=event=>MotionPolicy.set({enabled:event.target.checked});settings.querySelector('#site-barrages-enabled').onchange=event=>MotionPolicy.set({barrages:event.target.checked});
  }
+ if(window.BarrageFrames){const group=document.createElement('div');group.className='site-audio-group';group.innerHTML='<label class="site-audio-switch"><span>顯示彈幕框</span><input id="site-barrage-frames-enabled" type="checkbox" role="switch" aria-label="顯示彈幕框"></label>';settings.append(group);window.BarrageFrames.subscribe(prefs=>{group.querySelector('input').checked=prefs.enabled;});group.querySelector('input').onchange=event=>window.BarrageFrames.set({enabled:event.target.checked});}
  const versionInfo=document.createElement('p');versionInfo.id='site-version';versionInfo.className='site-version';versionInfo.textContent='版本資訊';settings.append(versionInfo);
  let versionLoaded=false,versionLoading=false;
  async function loadVersion(){

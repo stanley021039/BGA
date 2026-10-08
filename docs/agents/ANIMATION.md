@@ -1,5 +1,30 @@
 # 動畫角色記憶
 
+2026-10-08最新正式 **v1.15.0／f4cbdfa**：彈幕框Stage A發布，雙平台完整各1,432、公開25資源與五款三席frame/avatars通過。PNG上傳收藏／成就與勝場ledger仍缺；完整source/首輪Linux暫存I/O失敗與重跑/備份/native scope/9帳戶及21non-session表保留/own cleanup見 [最終進度](../BARRAGE-FRAMES-PROGRESS.md)與 [backlog](../SPEC-BACKLOG.md)。下方候選及1.14.2是歷史；tag固定受測程式，沒有新PR/push，不把有限取樣當全phase/讀屏/200%/FPS。
+
+2026-10-08內建彈幕框候選 **v1.15.0／f4cbdfa**：靜態框飾只由外bubble既有8秒translate帶動；以实际測得height預留8px gap、最多4則不補播。個人收框偏好不接MotionPolicy.clear，文字／emoji開關才決定是否收彈幕；OSreduce仍5秒靜態。背景sample初300ms未advance而1秒probe有位移，不拿此說GPU/FPS或診斷使用者別台PC。素材為本站CSS原創；StageB PNG/授權/版本grant尚未做。精確scope/測試/發布見 [進度](../BARRAGE-FRAMES-PROGRESS.md)。
+
+2026-10-07最新正式 **v1.14.0／b4ebb15**：圓角骰子與連續暖色WebGL氮氣已發布，雙平台各1,413通過；正式三席13骰／9資源與真nitro移動、21non-session表rows+BLOB／9帳戶allfields保留。sessions225→232是驗證登入變化，own房／登入／代理／tabs已清理。氮氣改為連續尖尾橙紅外焰／暖黃芯／小halo，跟逐格移動wrapper的CTM車尾；同command只1emitter，phase離開即停止，reduce／loss清理且回退、不補舊動畫。 完整source／備份／原生範圍見 [本批進度](../RACE-FX-VISUAL-REFINEMENT-PROGRESS.md)／[spec](../specs/RACE-FX-VISUAL-REFINEMENT.md)。下方1.13與pending均為歷史，此筆取代其現況；沒有新PR／push。native hidden／200%／讀屏／玻璃跳台道路pan及FPS未驗，不以完整suite推定。
+
+2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。
+
+
+2026-10-07雷霆立體骰子新批（研究／實作中、尚未native驗收）：WebGL只承擔約一秒cube翻滾及權威結果面，沿用id＋startedAt cycle、server結果mask／owner確認；同cycle不重播，動畫完成不送accept。17骰共用一個canvas，與GameFxLayer共享全頁optional兩context預算；真draw才遮原骰面，hidden／reduce／loss／失敗立即fallback、idle停frame。特殊faces保留六面重複配比，文字／條件／可讀結果仍DOM。來源、renderer/dialog協商、CSS tumble與body scroll風險及待驗矩陣見 [新規格](../specs/RACE-DICE-WEBGL.md)／[本次進度](../RACE-DICE-WEBGL-PROGRESS.md)；沒有新FPS或發布證據，不用舊車旁粒子測試代替骰子驗收。
+
+2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
+
+2026-10-07元件回饋新批實作中：卡片／通知僅短回饋，新earned通知旁才用已有原創GameFxLayer短粒子；不加長背景、常駐ticker或逐frame API。只有server既有新earned差集才慶祝，initialbaseline／舊結果不播；hidden保通知可讀正文、取消入場／粒子並不補motion，reduce保靜態語意。真GPU／idle／畫猜途中回歸待驗，見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式基線1.11.1，未發布新批或宣稱FPS收益。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
+## 2026-10-07：正式v1.11.0可見提交與音樂恢復
+
+畫猜不只比version／終點圖：staging因clear／undo已寫，最新job完成要把未present surface提交；途中維持舊完整畫面，舊job不能蓋新圖，no-op不copy。本次native12 clear／undo×3路徑×2排程RGBA等fresh；第二輪held30樣本whiteAfterInk0、viewer7partial，第一輪錯誤array取樣已排除。背景Audio只resume此次visibility自動pause的同clip，手動暫停／關聲音／拒播／共享暫停／退出影片不可被蓋掉；無聲MP3／FocusEmulation不是喇叭或物理切頁。既有WebGL／checkpoint保持，source／限制見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)；下方v1.10與v1.9版本為歷史。
+
+## 2026-10-07：正式v1.10.0車旁粒子
+
+雷霆nitro／smoke／sparks接公開eventId／visual anchor，單次有界、idle停frame，不靠特效結束推進逐格／事件規則。使用者允許更好的新效果取代舊效果；實際畫出kind才遮同類SVG裝飾，標字／bullet／trail／spin保留，空幀／hidden／reduce／loss即復原且不補播。用visibility避免舊keyframes蓋opacity；最終nitro替換8採樣、idle／loss已驗，restore是另一早期cycle。背景採樣不是前景FPS或性能優勢，自然smoke／sparks與完整碰撞trace列後續。見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)，此筆更新下方WebGL「未實作」現況，歷史保留。
+
 ## 2026-10-07：正式v1.9.0呈現規則
 
 畫猜viewer可有少量有界延遲按真pointTimes逐步呈現，canonical與artist不延後、artist不重播ACK。snapshot／reconnect／gap／reveal／undo／clear／fill切回完整baseline，取消舊尾巴；原子staging整幅完成才呈現，yield保留上一份完整圖，cache含stage≤8MiB。每輪都查持筆／ACK／換畫者的白底／殘影與queue／rAF／timer，合法clear和新輪空圖分開判斷。

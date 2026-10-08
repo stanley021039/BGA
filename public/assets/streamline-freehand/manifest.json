@@ -1,0 +1,344 @@
+{
+  "schemaVersion": 1,
+  "publisher": "Streamline",
+  "repository": "https://github.com/webalys-hq/streamline-vectors",
+  "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+  "set": "Freehand Duotone",
+  "upstreamGrantUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/README.md",
+  "license": "CC-BY-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attributionUrl": "https://streamlinehq.com",
+  "retrievedAtUtc": "2026-10-07T15:43:28.6201380+00:00",
+  "assetCount": 11,
+  "assets": [
+    {
+      "file": "edit-pencil.svg",
+      "sourcePath": "freehand/duotone/interface-essential/edit-pencil.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/interface-essential/edit-pencil.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "b6626ee9d367bc1982ec109b460ce0d481066b01fcd83166b220961099637cbd",
+      "sha256": "aa547368bb73a3e410386c060a232fd4b6adc8dff2d91518189bde7703664dc8",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 4437,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Edit Pencil Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "drawing-tool",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "color-palette.svg",
+      "sourcePath": "freehand/duotone/design/color-palette.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/design/color-palette.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "39b165d7096f986c58172043d261baf021eaae25ef8eb7305917b11ba7190729",
+      "sha256": "56e96f5322dc4560e927e23a3274be7e0b6212ff7a4b43fd90d2d9f3601ca062",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 5784,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Color Palette Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "draw-game-category",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "conversation-chat.svg",
+      "sourcePath": "freehand/duotone/email-messages/conversation-chat.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/email-messages/conversation-chat.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "8461bed649573b8699170d6628099d96f7bf7c4003c0d6d753d48864c7484d2e",
+      "sha256": "796c8da7a7e550566c65e95800890702589711384fd144318caea525b3919979",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 4317,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Conversation Chat Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "majority-game-category",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "business-management-team-up.svg",
+      "sourcePath": "freehand/duotone/work-office-companies/business-management-team-up.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/work-office-companies/business-management-team-up.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "5ed74ce6e6c0d8fa2b621e80505d021294b56aa58be01380f923fc6289ab4ee8",
+      "sha256": "da92e4d312e9508b582ba895f10d768c65e82ec959ff0779b2d865a6818960cf",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 11541,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Business Management Team Up Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "lobby-social",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "board-game-dice-pawn.svg",
+      "sourcePath": "freehand/duotone/music-video-entertainment/board-game-dice-pawn.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/music-video-entertainment/board-game-dice-pawn.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "487203673856042d9dad21db50e88af7f9fd5210c71ae049b8b3de6a20077937",
+      "sha256": "3ea1f651944473c8fc7dda48e38d72e178f3d5793299fc95f1ea294cc90ff29b",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 9074,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Board Game Dice Pawn Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "board-games",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "card-game-card-spade.svg",
+      "sourcePath": "freehand/duotone/music-video-entertainment/card-game-card-spade.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/music-video-entertainment/card-game-card-spade.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "07a1f4a3aa3916c82d276983164e6885587a1b5b5f527e07435606eaa5d68ece",
+      "sha256": "8260f92528e97fe3639546fa3ee2d6013f5f2c54f42b53de21e8af814b02786b",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 6218,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Card Game Card Spade Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "poker-game-category",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "music-note-1.svg",
+      "sourcePath": "freehand/duotone/music-video-entertainment/music-note-1.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/music-video-entertainment/music-note-1.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "7a350d772f2d8ae902ceec0d1315ded487de72142d2a5aee68b23c8386074c75",
+      "sha256": "7133f248e7c3a8229b2b5c8339a9b7e3cd64361fba1734e6c21f270802d476bd",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 7744,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Music Note 1 Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "music-category",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "analytics-graph-stock.svg",
+      "sourcePath": "freehand/duotone/business/analytics-graph-stock.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/business/analytics-graph-stock.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "ee85d94e17ed9b973855926e9591f9d7912f3a227691019ecd924c49d12b48c1",
+      "sha256": "bcd0b4e42c952a1ef0dfa148d419e1234a1f1a58a1f77d0827af6b4bf01a42ce",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 11520,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Analytics Graph Stock Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "market-game-category",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "home.svg",
+      "sourcePath": "freehand/duotone/interface-essential/home.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/interface-essential/home.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "0233c80b9c6759cbfbddfc0acab9f96aa61417a6e49eb93c7c3e987460abea26",
+      "sha256": "ba7872b54ed236039bf7389367aed0307887dc0bc6f357d7fd7f025a55664bb2",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 3567,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Home Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "lobby-category",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "time-clock-circle.svg",
+      "sourcePath": "freehand/duotone/interface-essential/time-clock-circle.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/interface-essential/time-clock-circle.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "1e92a79bce15d0b263221a65732bd95e726b34b690b942235e7548a1741a0688",
+      "sha256": "1177c79ce4bfbedc8e8e6951ff7efe59d831521eb2b1a2f327f0050dc57910c0",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 12890,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202",
+        "#0c6fff"
+      ],
+      "description": "Time Clock Circle Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "time-category",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    },
+    {
+      "file": "connect-flash.svg",
+      "sourcePath": "freehand/duotone/interface-essential/connect-flash.svg",
+      "sourceUrl": "https://raw.githubusercontent.com/webalys-hq/streamline-vectors/52d750c9ce051e51cb181b7a78932120c48541d0/freehand/duotone/interface-essential/connect-flash.svg",
+      "publisher": "Streamline",
+      "set": "Freehand Duotone",
+      "commit": "52d750c9ce051e51cb181b7a78932120c48541d0",
+      "license": "CC-BY-4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "originalSha256": "64afc76e6b3cc2c56c3daaf3ae2af39eff158d9b3d4aa8f4eea7710080b6352d",
+      "sha256": "1e1f102d1984a90cd539bd8cf773bf1a4c2a0dbbb558fb3925e09b7cc8de1df8",
+      "modified": true,
+      "modifications": [
+        "Recolored original #020202 to #29362f and #0c6fff to #b68345; geometry and source attribution unchanged."
+      ],
+      "bytes": 2991,
+      "viewBox": "0 0 24 24",
+      "originalColors": [
+        "#020202"
+      ],
+      "description": "Connect Flash Streamline Icon: https://streamlinehq.com",
+      "recommendedUse": "race-speed-category",
+      "validation": {
+        "wellFormedSvg": true,
+        "scripts": false,
+        "eventHandlers": false,
+        "externalResources": false
+      }
+    }
+  ]
+}

@@ -191,3 +191,13 @@ body.ui-large-text .gift-task-progress>div { grid-template-columns:minmax(0,1fr)
  body.ui-large-text .game-roster #players { grid-template-columns:1fr }
  .game-roster .aside-head { flex-wrap:wrap }
 }
+
+/* Gift selection shares the room surfaces; recipient and selected gift remain the focus. */
+body[data-game-kind="gift"] .gift-layout :is(.card,.assignment-row,.choice-summaries,.reveal-group,.result-score){background:var(--ui-surface-panel);border-color:var(--ui-border);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-panel)}
+body[data-game-kind="gift"] .gift-choice{background:var(--ui-surface-panel);color:var(--ui-text);border-color:var(--ui-control-border);border-radius:var(--ui-radius-card)}
+body[data-game-kind="gift"] .gift-choice:not(:disabled):not(.selected):hover{background:var(--ui-selected-soft);transform:none}
+body[data-game-kind="gift"] .gift-choice.selected{background:var(--ui-accent-soft);color:var(--ui-text);border-color:var(--ui-accent);box-shadow:inset 0 0 0 1px var(--ui-accent)}
+body[data-game-kind="gift"] .gift-choice .choice-badge{color:var(--ui-accent)}
+body[data-game-kind="gift"] .game-roster .room-player{background:var(--ui-surface-panel)}
+body[data-game-kind="gift"] .game-popover-panel{background:var(--ui-surface-floating);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-floating)}
+body[data-game-kind="gift"] :is(.gift-number,.player-scores,.winner-names,.result-score strong){font-family:var(--ui-font-family);font-variant-numeric:lining-nums tabular-nums;letter-spacing:normal}

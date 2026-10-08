@@ -59,3 +59,40 @@ test('barrage room changes clear old nodes, and expired history is not displayed
  const f=barrageFixture(),{controller:c,message:m,h}=f;c.update(snapshot(1));c.update(snapshot(2,[m(1)]));assert.equal(c.size(),1);c.update(snapshot(1,[m(2)],'OTHER'));assert.equal(c.size(),0);assert.equal(f.removed.length,1);
  c.update(snapshot(2,[{...m(3),at:h.now-8000}], 'OTHER'));assert.equal(f.shown.length,1);c.dispose();
 });
+
+test('barrage placement rejection releases its lane without a timer or later replay',()=>{
+ const h=fixture(),shown=[],removed=[];
+ const c=h.policy.createBarrageController((item,lane)=>{shown.push({id:item.id,lane});return item.id<=5?false:()=>removed.push(item.id);});
+ const m=id=>({id,at:h.now,message:'message '+id});
+ c.update(snapshot(1));c.update(snapshot(2,[m(1),m(2),m(3),m(4),m(5)]));
+ assert.equal(c.size(),0);assert.equal(h.timers.size,0);assert.deepEqual(shown.map(row=>row.lane),[0,0,0,0,0]);
+ c.update(snapshot(3,[m(1),m(2),m(3),m(4),m(5),m(6)]));
+ assert.deepEqual(shown.map(row=>row.id),[1,2,3,4,5,6]);assert.equal(shown[5].lane,0);assert.equal(c.size(),1);assert.equal(h.timers.size,1);
+ c.dispose();assert.deepEqual(removed,[6]);assert.equal(h.timers.size,0);
+});
+
+test('a barrage show callback returning undefined keeps its lane for the normal duration',()=>{
+ const h=fixture(),shown=[];
+ const c=h.policy.createBarrageController((item,lane)=>{shown.push({id:item.id,lane});});
+ c.update(snapshot(1));c.update(snapshot(2,[{id:'legacy',at:h.now}]));
+ assert.equal(shown.length,1);assert.equal(c.size(),1);assert.equal(h.timers.size,1);
+ h.tick(7999);assert.equal(c.size(),1);h.tick(1);assert.equal(c.size(),0);assert.equal(h.timers.size,0);c.dispose();
+});
+
+test('synchronous barrage finish cleans the returned node once and never schedules a timer',()=>{
+ const h=fixture(),shown=[],removed=[];
+ const c=h.policy.createBarrageController((item,lane,{finish})=>{shown.push({id:item.id,lane,finish});finish();return()=>{removed.push(item.id);finish();};});
+ c.update(snapshot(1));c.update(snapshot(2,[{id:'first',at:h.now},{id:'second',at:h.now}]));
+ assert.deepEqual(shown.map(row=>row.lane),[0,0]);assert.deepEqual(removed,['first','second']);assert.equal(c.size(),0);assert.equal(h.timers.size,0);
+ shown[0].finish();shown[1].finish();h.tick(8000);c.dispose();assert.deepEqual(removed,['first','second']);assert.equal(h.timers.size,0);
+});
+
+test('throwing barrage renderers release their lane and do not block later messages',()=>{
+ const h=fixture(),shown=[],removed=[];
+ const c=h.policy.createBarrageController((item,lane,{finish})=>{shown.push({id:item.id,lane,finish});if(item.id==='broken')throw new Error('placement failed');return()=>removed.push(item.id);});
+ c.update(snapshot(1));assert.doesNotThrow(()=>c.update(snapshot(2,[{id:'broken',at:h.now},{id:'valid',at:h.now}])));
+ assert.deepEqual(shown.map(row=>row.lane),[0,0]);assert.equal(c.size(),1);assert.equal(h.timers.size,1);
+ shown[0].finish();assert.equal(c.size(),1);assert.equal(h.timers.size,1);
+ c.update(snapshot(3,[{id:'broken',at:h.now},{id:'valid',at:h.now}]));assert.equal(shown.length,2);
+ h.tick(8000);assert.deepEqual(removed,['valid']);assert.equal(c.size(),0);assert.equal(h.timers.size,0);c.dispose();
+});

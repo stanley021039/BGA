@@ -1,5 +1,25 @@
 # 設計師角色記憶
 
+2026-10-08最新正式 **v1.15.1／c1e59d4**：使用者要求先撤回不一致的局部手繪風格，已恢復原大廳及四房標題外觀；保留v1.15彈幕框與既有功能，SVG/credits僅歷史留存。双平台各1,432、公開27資源、原生首頁／四房waiting通過，9帳戶allfields及21non-session表/BLOB保留；詳細source/部署SIGTERM逾時與proxy drain/不可覆寫receipt修正/備份/有限native/own cleanup見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下面手繪與候選狀態屬歷史；後續局部美化须驗整體一致性，不由素材研究直接推定成熟全站方案。沒有新PR/push。
+
+2026-10-08使用者回饋：局部手繪畫風造成網站整体不一致，先撤回手繪主題。候選 **v1.15.1／c1e59d4**恢復大廳及四房導入前的外觀，v1.15彈幕框及既有WebGL/共看/排版功能保留；素材與授權只作歷史留存。後續變更須以大廳、房間、設定、其他頁面的整體一致性評估，不把素材研究或局部preview當成全站成熟方案。Windows1,432／有限native與正式結果以 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)最新節為準；下面v1.14.2的「正在使用手繪」是歷史。
+
+2026-10-08最新正式 **v1.15.0／f4cbdfa**：彈幕框Stage A發布，雙平台完整各1,432、公開25資源與五款三席frame/avatars通過。PNG上傳收藏／成就與勝場ledger仍缺；完整source/首輪Linux暫存I/O失敗與重跑/備份/native scope/9帳戶及21non-session表保留/own cleanup見 [最終進度](../BARRAGE-FRAMES-PROGRESS.md)與 [backlog](../SPEC-BACKLOG.md)。下方候選及1.14.2是歷史；tag固定受測程式，沒有新PR/push，不把有限取樣當全phase/讀屏/200%/FPS。
+
+2026-10-08內建彈幕框候選 **v1.15.0／f4cbdfa**：paper／comic／pixel與default同12/16padding、1px outer預留和16px字級，decor必須inset，不用外伸尾巴／陰影造成碰撞漏算。關框只清框飾且改回default palette，picker仍能比較款式。原生group四choice以aria-pressed表達選中，不為外觀假tabs；Escape返回44px圖示trigger。五waiting入口＋1280/390與40字/16字名字fixture有限驗收，未認證全phase/讀屏/200%/FPS。發布證據與未做上傳收藏見 [進度](../BARRAGE-FRAMES-PROGRESS.md)，下方歷史以最新發布節取代。
+
+2026-10-08最新正式 **v1.14.2／8ae5c4f**：Freehand官方SVG／紙卡大廳發布，最終Windows/Linux各1,415通過；v1.14.1 archive行尾失敗留歷史未部署，tag不移。紙白home/低飽和面/薄邊影/手繪圖槽與固定grid分離；1280三欄、1024兩欄、390單欄，正文16/次14、controls≥44。遊戲只32badge/24圖，不重排玩家/車隊/骰/畫布/倒數/聊天室；小操作registry保原辨識，不為手繪大圖藏重要資訊。 正式22資源exactbytes/no-store/MIME、21non-session表rows+BLOB/9帳戶allfields保留；sessions232→238為6次測試登入，都已revoked，own4房/代理/tabs已清理。精確source/備份/例外與限制見 [本批進度](../FREEHAND-UI-PROGRESS.md)、[spec](../specs/FREEHAND-UI.md)、[資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。下方1.14.0/候選狀態為歷史，沒有新PR/push；不宣稱全playing/200%/讀屏/FPS完成。
+
+2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
+
+2026-10-07 patterns有限畫面：收藏／市場manual Arrow只移焦，Enter／Space才換內容；review卡selected邊界／shadow保持同120px高，收藏1280／390／1600與member市場1280／390無橫溢、44px控制。controlled glyph double只是字型模擬，不稱真200% zoom／全站認證；兩dialog Escape返焦已驗，Tab採樣未證fulltrap。真earned持久inline與短粒子不互相替代，source／native限制集中 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式仍1.11.1，本批1.12未發布。
+
+2026-10-07五庫模式實作中：以收藏／市場manual tabs、group／card／form／dialog、五款有限toast与四款既有new earned、通知旁短粒子作真落點。tab focus≠activation、group≠tabs；保重要玩家／車／骰／角色與inline，hover不蓋selected，通知hidden保可讀正文而取消動態。原生元件契約／pending證據見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，目前正式基線1.11.1，本批未發布；不套React外觀即宣稱整套可達性。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
+2026-10-07正式 **v1.10.0**：六份CSS共用背景／panel／floating、8／12／16radius、必要邊界／選取與lining／tabular數字，保留grid／padding／重要字級／操作尺寸與玩家／車隊／骰子／角色。換surface須配caller foreground，hover不可蓋selected；裝飾border不能當唯一必要線索。四遊戲桌機／390／200%與媒體sameiframe有有限證據，synthetic gift dark不是產品theme，不宣稱全部phase／全站對比。新粒子實際畫出才替換同類舊裝飾，fallback／文字保留。見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)；[Threads五庫](../research/THREADS-UI-COMPONENTS-ASSESSMENT.md)只是模式參考未安裝；下方v1.9.0與美化候選保留為歷史。
+
 2026-10-07正式v1.9.0媒體補充：影片主區使用可用高度，底列桌機compact而手機／coarse保操作尺寸，toolbar保持；本機原生控制與「同步我的播放進度」分清，只有有權席位可發布全桌。移除本站外開入口／共用seek不等移除YouTube原生branding、letterbox或所有控制；重要狀態與clock保持可見。最新規範／scope見 [spec](../specs/MEDIA-ICON-WINDOW-UI.md)／[進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)。
 
 2026-10-07補充：語意不同的播放操作使用三角／裝置圖示區分，桌機同列按鈕以輕分隔分組；角色表情圖卡保持方形，省掉可見名稱並用共用提示。美化研究優先收斂字级／keylines／表面層次，詳 [研究評估](../research/UI-POLISH-DES13-ASSESSMENT.md)。

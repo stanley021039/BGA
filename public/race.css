@@ -185,3 +185,12 @@ body[data-game-kind="race"].ui-large-text .race-roster{grid-column:1;grid-row:au
 .crew-identity .crew-name{display:flex;align-items:center;gap:4px;min-width:0}
 .crew-name>.ui-player-name{flex:1;min-width:0}
 .crew-name>.crew-name-suffix{flex:none;white-space:nowrap}
+
+/* The dark racetrack shares the same panel and control hierarchy as the light games. */
+body[data-game-kind="race"] :is(.dashboard,.crew-pill,.race-stage){background:var(--ui-surface-panel);border-radius:var(--ui-radius-card);box-shadow:var(--ui-shadow-panel)}
+body[data-game-kind="race"] .crew-pill.current{background:var(--ui-selected-soft);border-color:var(--crew);box-shadow:inset 0 0 0 1px var(--crew)}
+body[data-game-kind="race"] .car-card{background:var(--ui-surface-inset);color:var(--ui-text);border-color:var(--ui-control-border);border-radius:var(--ui-radius-control)}
+body[data-game-kind="race"] .car-card.selected{background:var(--ui-selected-soft);border-color:var(--ui-selected);box-shadow:inset 0 0 0 1px var(--ui-selected)}
+body[data-game-kind="race"] :is(.terrain-help-button,.terrain-legend .legal-key){background:var(--ui-surface-inset);border-color:var(--ui-control-border);border-radius:var(--ui-radius-control)}
+body[data-game-kind="race"] :is(.rookie-help-content,.race-command-options>.command-wrap,#raceTerrainLegendTooltip){background:var(--ui-surface-floating);border-radius:var(--ui-radius-card);box-shadow:var(--ui-shadow-floating)}
+body[data-game-kind="race"] :is(.crew-dice,.damage-pips,.mini-die){font-variant-numeric:lining-nums tabular-nums}

@@ -1,7 +1,8 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
-const SCHEMA_VERSION=18;
+const {ACHIEVEMENT_TABLES,ACHIEVEMENT_SQL}=require('../achievements/schema');
+const SCHEMA_VERSION=19;
 const MARKET_CURVE_TABLES=['market_forecasts','market_curve_ledger'];
 const MARKET_CURVE_SQL=[
  `CREATE TABLE IF NOT EXISTS market_forecasts(round_id TEXT NOT NULL REFERENCES market_rounds(id),user_id TEXT NOT NULL REFERENCES users(id),forecast_tick INTEGER NOT NULL CHECK(typeof(forecast_tick)='integer' AND forecast_tick BETWEEN -100 AND 100),revision INTEGER NOT NULL CHECK(revision>0),created_at TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(round_id,user_id))`,
@@ -79,24 +80,28 @@ function tableShape(db,name){
 function validateFeatureSchema(db,version){
  const tables=new Set(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(row=>row.name));
  const hasBan=tables.has('draw_word_exclusions'),hasSound=tables.has('character_sounds'),hasImages=tables.has('market_images'),marketCount=MARKET_TABLES.filter(name=>tables.has(name)).length;
+ const achievementCount=ACHIEVEMENT_TABLES.filter(name=>tables.has(name)).length;
  const automationCount=MARKET_AUTOMATION_TABLES.filter(name=>tables.has(name)).length,curveCount=MARKET_CURVE_TABLES.filter(name=>tables.has(name)).length;
  if(version>=18&&curveCount!==MARKET_CURVE_TABLES.length||version<18&&curveCount)throw Error(`Invalid curve schema ${version}`);
  if(marketCount>0&&marketCount<MARKET_TABLES.length||version===13&&!hasBan&&marketCount!==MARKET_TABLES.length)
   throw Error(`Incomplete legacy schema ${version}`);
  if(version===14&&(!hasBan||!hasSound&&marketCount!==MARKET_TABLES.length)||version>=15&&(!hasBan||!hasSound||marketCount!==MARKET_TABLES.length))
   throw Error(`Incomplete database schema ${version}`);
- if(version>=16&&!hasImages||version>=17&&automationCount!==MARKET_AUTOMATION_TABLES.length)throw Error(`Incomplete database schema ${version}`);
+ if(version>=16&&!hasImages||version>=18&&automationCount!==MARKET_AUTOMATION_TABLES.length)throw Error(`Incomplete database schema ${version}`);
  if(version<17&&automationCount)throw Error('An older schema cannot contain market automation tables');
+ if(achievementCount&&achievementCount!==ACHIEVEMENT_TABLES.length||version>=19&&achievementCount!==ACHIEVEMENT_TABLES.length)throw Error('Incomplete achievement schema');
+ if(version===17&&!automationCount&&!achievementCount)throw Error('Incomplete historical schema 17');
  if(!hasSound&&!marketCount&&!hasImages&&!automationCount)return;
  const reference=new DatabaseSync(':memory:');
  try{
-  reference.exec(SOUND_SQL+';'+(version>=17?MARKET_SQL:LEGACY_MARKET_SQL).join(';')+';'+MARKET_IMAGE_SQL+';'+MARKET_AUTOMATION_SQL.join(';')+';'+MARKET_CURVE_SQL.join(';'));
-  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[]),...(hasImages?['market_images']:[]),...(automationCount?MARKET_AUTOMATION_TABLES:[]),...(curveCount?MARKET_CURVE_TABLES:[])]){
+  reference.exec(SOUND_SQL+';'+(automationCount?MARKET_SQL:LEGACY_MARKET_SQL).join(';')+';'+MARKET_IMAGE_SQL+';'+MARKET_AUTOMATION_SQL.join(';')+';'+MARKET_CURVE_SQL.join(';')+';'+ACHIEVEMENT_SQL.join(';'));
+  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[]),...(hasImages?['market_images']:[]),...(automationCount?MARKET_AUTOMATION_TABLES:[]),...(curveCount?MARKET_CURVE_TABLES:[]),...(achievementCount?ACHIEVEMENT_TABLES:[])]){
    if(tableShape(db,name)!==tableShape(reference,name))throw Error(`Invalid ${name} schema`);
    if(schemaDefinition(db,name)!==schemaDefinition(reference,name))throw Error(`Invalid ${name} constraints`);
   }
   if(version<14&&hasSound&&db.prepare('SELECT COUNT(*) n FROM character_sounds').get().n)throw Error('An older schema cannot contain expression sounds');
   if(version<16&&hasImages&&db.prepare('SELECT COUNT(*) n FROM market_images').get().n)throw Error('An older schema cannot contain market images');
+  if(version<17&&achievementCount&&ACHIEVEMENT_TABLES.some(name=>db.prepare('SELECT COUNT(*) n FROM '+name).get().n))throw Error('An older schema cannot contain achievement unit records');
  }finally{reference.close();}
 }
 
@@ -271,7 +276,7 @@ function openDatabase(file){
    db.exec(MARKET_IMAGE_SQL+'; CREATE INDEX IF NOT EXISTS market_images_owner ON market_images(author_id,created_at); CREATE INDEX IF NOT EXISTS market_images_status ON market_images(status,created_at); PRAGMA user_version=16; RELEASE schema_step');
   }catch(error){db.exec('ROLLBACK');db.close();throw error;}
  }
- if(version<17){
+ if(version<17||version===17&&!db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='market_automation_state'").get()){
   // Do not rename the old parent tables: SQLite would rewrite references in
   // votes and the immutable ledger. Rebuild both in one transaction with FK
   // enforcement temporarily disabled, then check every reference before commit.
@@ -293,8 +298,12 @@ function openDatabase(file){
   try{db.exec(MARKET_CURVE_SQL.join(';')+'; CREATE INDEX IF NOT EXISTS market_curve_ledger_user ON market_curve_ledger(user_id); PRAGMA user_version=18');validateFeatureSchema(db,18);}
   catch(error){db.exec('ROLLBACK; PRAGMA foreign_keys=ON');db.close();throw error;}
  }
+ if(version<19){
+  try{db.exec(ACHIEVEMENT_SQL.join(';')+'; PRAGMA user_version=19');validateFeatureSchema(db,19);}
+  catch(error){db.exec('ROLLBACK; PRAGMA foreign_keys=ON');db.close();throw error;}
+ }
  if(migrating){
-  try{db.exec('COMMIT; PRAGMA foreign_keys=ON');}
+  try{if(db.prepare('PRAGMA foreign_key_check').all().length)throw Error('Database migration contains broken foreign keys');db.exec('COMMIT; PRAGMA foreign_keys=ON');}
   catch(error){try{db.exec('ROLLBACK; PRAGMA foreign_keys=ON');}finally{db.close();}throw error;}
  }
  return db;

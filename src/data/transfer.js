@@ -167,7 +167,12 @@ async function unpack(request, parent) {
       await decrypt(entry, auth.bundle, output, auth.keys, auth.manifest.bundleId);
     }
     const validated = validateData(generationPaths(stage), { acknowledgeInterruptedMatches: true });
-    const portableSummary = s => ({ ...s, database: { ...s.database, sqliteVersion: undefined } });
+    // Only an authenticated pre-v17 descriptor can omit the newly introduced
+    // achievement digest. Current bundles must include it, even for an old DB.
+    const historicalMarketProducer = auth.manifest.summary.database.schemaVersion>=17 && auth.manifest.summary.database.schemaVersion<=18 && Object.hasOwn(validated.summary.database.tableCounts,'market_automation_state');
+    const noUnitTables = !Object.hasOwn(validated.summary.database.tableCounts,'processed_unit_events') && !Object.hasOwn(validated.summary.database.tableCounts,'achievement_progress');
+    const legacyAchievementDigest = !Object.hasOwn(auth.manifest.summary.database,'achievementsSha256') && (auth.manifest.code.maximumSchema<17 && auth.manifest.summary.database.schemaVersion<17 || historicalMarketProducer && auth.manifest.code.maximumSchema<=18 && auth.manifest.summary.database.schemaVersion<=18 && noUnitTables);
+    const portableSummary = s => ({ ...s, database: { ...s.database, sqliteVersion: undefined, ...(legacyAchievementDigest ? { achievementsSha256: undefined } : {}) } });
     if (canonical(portableSummary(validated.summary)) !== canonical(portableSummary(auth.manifest.summary))) fail('VALIDATION_FAILED', 'Restored inventory differs from authenticated manifest');
     return { ...auth, stage, validated };
   } catch (error) { cleanup(stage); throw error; }
@@ -268,7 +273,7 @@ async function restore(request) {
     const changes = restorePolicy(checked.stage, checked.validated), after = validateData(generationPaths(checked.stage));
     // Account UUIDs and credential hashes must survive the migration and restore policy exactly.
     const beforeDatabase = checked.manifest.summary.database, afterDatabase = after.summary.database;
-    if (afterDatabase.tableCounts.users !== beforeDatabase.tableCounts.users || afterDatabase.accountsSha256 !== beforeDatabase.accountsSha256 || !binaryAssetsPreserved(beforeDatabase, afterDatabase)) fail('VALIDATION_FAILED', 'Accounts or binary assets changed unexpectedly');
+    if (afterDatabase.tableCounts.users !== beforeDatabase.tableCounts.users || afterDatabase.accountsSha256 !== beforeDatabase.accountsSha256 || beforeDatabase.achievementsSha256 !== undefined && afterDatabase.achievementsSha256 !== beforeDatabase.achievementsSha256 || !binaryAssetsPreserved(beforeDatabase, afterDatabase)) fail('VALIDATION_FAILED', 'Accounts, achievements or binary assets changed unexpectedly');
     const result = { action: 'restore', dryRun: request.apply !== true, destinationDir: destination, ...publicManifest(checked.manifest), changes, restoredSummary: after.summary, config: bootConfig(destination),
       nextSteps: ['Start this generation on an isolated port with the returned configuration', 'Verify login, permissions, music, history and assets', 'Stop the old writer before switching traffic; retain the old code and data for rollback', 'Reconcile held remote submissions before explicitly enabling external side effects'] };
     if (request.apply !== true) return result;

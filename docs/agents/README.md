@@ -1,5 +1,34 @@
 # Agent 長期記憶索引
 
+2026-10-08最新正式 **v1.16.0／8a9cbfd**：成就收藏分組、13枚徽章與正常回合單位持久化已發布，卡片以高亮區分取得狀態。Windows／Linux各1,518項通過，背景Chrome與三款正式回合驗證、資料保留及限制見 [成就單位進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)。永久勝場、跨程序outbox與畫猜局內合併提示仍待；下方版本摘要屬歷史。
+
+2026-10-08最新正式 **v1.15.1／c1e59d4**：使用者要求先撤回不一致的局部手繪風格，已恢復原大廳及四房標題外觀；保留v1.15彈幕框與既有功能，SVG/credits僅歷史留存。双平台各1,432、公開27資源、原生首頁／四房waiting通過，9帳戶allfields及21non-session表/BLOB保留；詳細source/部署SIGTERM逾時與proxy drain/不可覆寫receipt修正/備份/有限native/own cleanup見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下面手繪與候選狀態屬歷史；後續局部美化须驗整體一致性，不由素材研究直接推定成熟全站方案。沒有新PR/push。
+
+2026-10-08使用者回饋：局部手繪畫風造成網站整体不一致，先撤回手繪主題。候選 **v1.15.1／c1e59d4**恢復大廳及四房導入前的外觀，v1.15彈幕框及既有WebGL/共看/排版功能保留；素材與授權只作歷史留存。後續變更須以大廳、房間、設定、其他頁面的整體一致性評估，不把素材研究或局部preview當成全站成熟方案。Windows1,432／有限native與正式結果以 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)最新節為準；下面v1.14.2的「正在使用手繪」是歷史。
+
+2026-10-08最新正式 **v1.15.0／f4cbdfa**：彈幕框Stage A發布，雙平台完整各1,432、公開25資源與五款三席frame/avatars通過。PNG上傳收藏／成就與勝場ledger仍缺；完整source/首輪Linux暫存I/O失敗與重跑/備份/native scope/9帳戶及21non-session表保留/own cleanup見 [最終進度](../BARRAGE-FRAMES-PROGRESS.md)與 [backlog](../SPEC-BACKLOG.md)。下方候選及1.14.2是歷史；tag固定受測程式，沒有新PR/push，不把有限取樣當全phase/讀屏/200%/FPS。
+
+2026-10-08延續未完成spec：內建彈幕框 Stage A候選 **v1.15.0／f4cbdfa**，Windows1,432及有限背景三席／五入口通過；Linux／正式結果以 [本批進度](../BARRAGE-FRAMES-PROGRESS.md)最新節為準，正式基線仍v1.14.2。[backlog](../SPEC-BACKLOG.md)已按現在code區分缺功能與QA，不重新做已完成跨輪回看／共看／backup。StageB框上傳收藏與永續成就／勝場ledger仍缺；下方舊pending不直接當新任務。
+
+2026-10-08最新正式 **v1.14.2／8ae5c4f**：Freehand官方SVG／紙卡大廳發布，最終Windows/Linux各1,415通過；v1.14.1 archive行尾失敗留歷史未部署，tag不移。本批只美化home與四房標題marker，四房原生waiting完整證據為隔離server，正式native只home，別將join landing或未完成矩陣算pass。 正式22資源exactbytes/no-store/MIME、21non-session表rows+BLOB/9帳戶allfields保留；sessions232→238為6次測試登入，都已revoked，own4房/代理/tabs已清理。精確source/備份/例外與限制見 [本批進度](../FREEHAND-UI-PROGRESS.md)、[spec](../specs/FREEHAND-UI.md)、[資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。下方1.14.0/候選狀態為歷史，沒有新PR/push；不宣稱全playing/200%/讀屏/FPS完成。
+
+2026-10-07最新正式 **v1.14.0／b4ebb15**：圓角骰子與連續暖色WebGL氮氣已發布，雙平台各1,413通過；正式三席13骰／9資源與真nitro移動、21non-session表rows+BLOB／9帳戶allfields保留。sessions225→232是驗證登入變化，own房／登入／代理／tabs已清理。Codrops外觀概念由原生renderer落地，未引入完整物理骰盘庫；美術授權與性能結論按實證記錄。 完整source／備份／原生範圍見 [本批進度](../RACE-FX-VISUAL-REFINEMENT-PROGRESS.md)／[spec](../specs/RACE-FX-VISUAL-REFINEMENT.md)。下方1.13與pending均為歷史，此筆取代其現況；沒有新PR／push。native hidden／200%／讀屏／玻璃跳台道路pan及FPS未驗，不以完整suite推定。
+
+2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。
+
+
+正式討論區→GitHub同步已啟用，設定與驗收見 [GitHub同步紀錄](../GITHUB-BOARD-SYNC.md)。新增／回覆／管理員關閉已驗，Issue48保留closed；無反向同步或舊留言補送。程式仍v1.12.0，僅私有設定／服務重載，不混同程式發行；帳戶與其他資料保持，敏感憑證不進角色文件。
+
+2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
+
+2026-10-07新批 **UI-COMPONENT-PATTERNS實作中**：五庫適合模式以原生widgets／notifications／短成就粒子落地，見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。目前正式為v1.11.1、候選預期1.12.0但未固定結果；PR46獨立Ready不混本批、不新PR。人工鍵盤／焦點／可讀inline／hidden內容與粒子清理須分開驗，未安裝研究庫或宣稱已發布。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
+2026-10-07最新正式 **v1.11.0／schema16**：PR46兩P2修正clear／undo可見提交與visibility音樂resume，合main市場圖片功能後保留既有UI／WebGL正式同步；固定source、雙平台各1,284與完整資料核對見 [最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。PR46另推候選v1.9.1／雙平台1,263，已回覆Stanley／Ready／再次請審查，未合併；[PR45圖片庫](../MARKET-GALLERY.md)已合main，native仍僅空庫入口smoke。下方v1.10／schema15與更早「當前」是歷史；tag固定程式，詳情只集中最新進度，不由全套tests宣稱全玩法／FPS。
+
+2026-10-07最新正式 **v1.10.0**：共用表面／邊界／選取／數字樣式及雷霆原生WebGL局部粒子已發布；Windows／Linux各1,165項通過，source／原生／資料證據見 [本批進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。實際畫出同kind才遮舊裝飾，idle／失context／reduce立即恢復，重要玩家／車隊／骰子／角色與互動保留。Threads五庫是 [模式與授權評估](../research/THREADS-UI-COMPONENTS-ASSESSMENT.md)，沒有安裝框架或FPS結論。下方v1.9.0與「WebGL未實作」為歷史；本批無新PR／push，PR46不變。
+
 2026-10-08 候選 v1.12.0／schema18：股市數值預測與每日凍結曲線、五等分圖片，尚未合併／部署。舊場次與帳本保持原規則；詳 [曲線契約與相容性](../MARKET-PREDICTION-CURVE.md)。
 
 2026-10-07 Issue47股市自動化候選v1.10.0／schema17：官方收盤交叉核對、自動原子結算、下一交易日、近一日曆月歷史、暱稱排行榜與休市override，尚未部署。先讀 [市場自動化](../MARKET-AUTOMATION.md)；PROGRAMMER與SERVER-DATA保存來源、單寫者、遷移與限制。
@@ -121,3 +150,5 @@ native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha
 2026-10-06 PR #38 審查後：確認並修正投票 409 草稿版本未同步、手動更新與提交交錯、時鐘回退造成投票時間戳倒置。新增4項回歸，Windows完整391/391取代上筆387作為本分支最新數字；背景Chrome再驗更新鎖／焦點、1280／390／320導覽。詳 [逐項證據](../MARKET-JINX.md#2026-10-06pr-38-獨立審查修正)，仍保持Draft、未合併或部署。
 
 同日 #38 整合已包含 #34 的 main `1447430`：兩種舊schema13升級為共同schema14，保留禁題／回看／動效及市場功能，沒有改AGENTS或覆蓋角色記憶。Windows完整463/463、市場21／移轉26與整合版背景Chrome全流程通過，取代上笔391與schema13的最新分支狀態。詳 [整合接手](../MARKET-JINX-MAIN-INTEGRATION.md)。#38仍Draft、未合併或部署，Linux／Safari／#34完整canvas實玩未重驗。
+
+2026-10-08 候選PR53已解決main衝突，1712全通過，詳 [PR53整合](../PR53-MAIN-INTEGRATION.md)。schema19非正式現況；正式1.18/schema17仍不變，#57接續全站紙卡。

@@ -11,9 +11,9 @@ function advanceTimedPhase(room,history){
  try{history.transact(room,{action:'auto',source:'timeout'},()=>room.auto());}catch(e){console.error(e);}
  return true;
 }
-function startRoomScheduler({rooms,history,onDelete=()=>{},onDrawStroke=()=>{}}){
+function startRoomScheduler({rooms,history,onDelete=()=>{},onDrawStroke=()=>{},onTransition=()=>{},onSweep=()=>{}}){
  const emptyTimer=setInterval(()=>expireEmptyRooms({rooms,history,onDelete}),400);emptyTimer.unref();
- const timer=setInterval(()=>{for(const [code,r]of rooms){
+ const timer=setInterval(()=>{for(const [code,r]of rooms){try{
   if(Date.now()-Math.max(...r.players.map(p=>p.lastSeen))>86400000){endRoomHistory(history,r,'房間閒置逾 24 小時');rooms.delete(code);onDelete(code);continue;}
   if(history.isPaused?.(r))continue;
   // Expired phases must advance before an AI attempts a now-illegal action.
@@ -31,7 +31,7 @@ function startRoomScheduler({rooms,history,onDelete=()=>{},onDrawStroke=()=>{}})
    if(!p.bot)action=due===0?'check':'fold';else if(due>150&&Math.random()<.4)action='fold';
    history.transact(r,{action,source:p.bot?'bot':'timeout',actor:p.id},()=>r.act(p.id,action));
   }catch(e){console.error(e);}}
- }},400);
+ }finally{try{onTransition(r);}catch(error){console.error(error);}}}try{onSweep();}catch(error){console.error(error);}},400);
  timer.unref();
  return ()=>{clearInterval(timer);clearInterval(emptyTimer);};
 }

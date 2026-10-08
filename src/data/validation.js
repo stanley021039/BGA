@@ -9,6 +9,7 @@ const { audioType, MAX_BYTES } = require('../music/store');
 const { inspectExpressionSound } = require('../profiles/sounds');
 const { expressionLabels } = require('../profiles/appearance');
 const { imageOf, MAX_BYTES: MAX_IMAGE_BYTES } = require('../profiles/uploads');
+const { ACHIEVEMENT_TABLES } = require('../achievements/schema');
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function validBundleLogical(logical) {
@@ -69,11 +70,14 @@ function validateDatabase(file) {
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r => r.name);
     if (!tables.includes('users')) fail('INVALID_DATABASE', 'Account table is missing');
     const marketTables = ['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
-    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 15: ['draw_word_exclusions','character_sounds',...marketTables], 16: ['market_images'], 17: MARKET_AUTOMATION_TABLES, 18: MARKET_CURVE_TABLES };
+    const required = { 1: ['users','sessions','invites','password_resets'], 2: ['board_issues','board_comments','submissions'], 3: ['player_characters','character_images'], 5: ['community_gifts'], 6: ['user_achievements'], 8: ['user_artworks'], 9: ['draw_words'], 11: ['music_tracks'], 15: ['draw_word_exclusions','character_sounds',...marketTables], 16: ['market_images'], 18: [...MARKET_AUTOMATION_TABLES,...MARKET_CURVE_TABLES], 19: ACHIEVEMENT_TABLES };
     for (const [version, names] of Object.entries(required)) if (schemaVersion >= Number(version) && names.some(n => !tables.includes(n))) fail('INVALID_DATABASE', 'Database schema is missing a required table');
     // Both historical schema-13 layouts and schema-14 layouts are identified by
     // complete feature shapes. Partial or forged tables cannot be repaired away.
     try { validateFeatureSchema(db,schemaVersion); } catch { fail('INVALID_DATABASE', 'Database feature schema is incomplete or invalid'); }
+    if (tables.includes('processed_unit_events')) {
+      try { require('../achievements/store').validateAchievementUnitsDatabase(db); } catch { fail('INVALID_DATABASE', 'Achievement unit records or progress are invalid'); }
+    }
     if (schemaVersion >= 13) {
       const present = marketTables.filter(name => tables.includes(name)).length;
       if (present && present !== marketTables.length || schemaVersion === 13 && !tables.includes('draw_word_exclusions') && present !== marketTables.length) fail('INVALID_DATABASE', 'Database schema is missing a required table');
@@ -90,6 +94,12 @@ function validateDatabase(file) {
       for (const row of db.prepare('SELECT * FROM market_images ORDER BY id').iterate()) imagesDigest.update(JSON.stringify({ ...row, bytes: sha(row.bytes) }) + '\n');
       marketImagesSha256 = imagesDigest.digest('hex');
     }
+    const achievementsDigest = crypto.createHash('sha256');
+    for (const table of ['user_achievements',...ACHIEVEMENT_TABLES].filter(name => tables.includes(name))) {
+      const order = table === 'processed_unit_events' ? 'unit_event_id' : table === 'achievement_progress' ? 'user_id,achievement_id,rule_version,game_type' : 'user_id,achievement_id';
+      for (const row of db.prepare(`SELECT * FROM ${table} ORDER BY ${order}`).iterate()) achievementsDigest.update(JSON.stringify([table,row]) + '\n');
+    }
+    const achievementsSha256 = achievementsDigest.digest('hex');
     const accountsDigest = crypto.createHash('sha256');
     for (const user of db.prepare('SELECT * FROM users ORDER BY id').iterate()) {
       if (!uuid.test(user.id) || !['member','admin'].includes(user.role) || ![0,1].includes(user.disabled) || !/^scrypt:[0-9a-f]{32}:[0-9a-f]{128}$/.test(user.password_hash)) fail('INVALID_ACCOUNTS', 'Account identity, permissions or credential format is invalid');
@@ -140,7 +150,7 @@ function validateDatabase(file) {
       character(profile); if (profile?.avatar?.kind === 'character') character(profile.avatar);
       if (profile?.avatar?.kind === 'artwork' && !exists('user_artworks', profile.avatar.artworkId)) fail('BROKEN_REFERENCE', 'A profile references missing artwork');
     }
-    return { schemaVersion, sqliteVersion: db.prepare('SELECT sqlite_version() AS version').get().version, tableCounts, blobDigests, accountsSha256: accountsDigest.digest('hex'), ...(marketImagesSha256 === undefined ? {} : { marketImagesSha256 }),
+    return { schemaVersion, sqliteVersion: db.prepare('SELECT sqlite_version() AS version').get().version, tableCounts, blobDigests, accountsSha256: accountsDigest.digest('hex'), achievementsSha256, ...(marketImagesSha256 === undefined ? {} : { marketImagesSha256 }),
       music: tables.includes('music_tracks') ? db.prepare('SELECT id,size,mime,ext FROM music_tracks ORDER BY id').all() : [] };
   } finally { db.close(); }
 }
@@ -274,7 +284,7 @@ function validateData(p, { acknowledgeInterruptedMatches = false } = {}) {
   for (const id of metas.keys()) if (!logs.has(id)) fail('INVALID_HISTORY', 'History log is missing');
   if (playing.length && !acknowledgeInterruptedMatches) fail('UNFINISHED_MATCHES', 'Finish matches first or acknowledge that restore will mark them interrupted');
   for (const name of historyNames) files.push({ logical: 'history/' + name, source: path.join(p.historyDir, name) });
-  const summary = { database: { schemaVersion: database.schemaVersion, sqliteVersion: database.sqliteVersion, tableCounts: database.tableCounts, blobDigests: database.blobDigests, accountsSha256: database.accountsSha256, ...(database.marketImagesSha256 === undefined ? {} : { marketImagesSha256: database.marketImagesSha256 }) },
+  const summary = { database: { schemaVersion: database.schemaVersion, sqliteVersion: database.sqliteVersion, tableCounts: database.tableCounts, blobDigests: database.blobDigests, accountsSha256: database.accountsSha256, achievementsSha256: database.achievementsSha256, ...(database.marketImagesSha256 === undefined ? {} : { marketImagesSha256: database.marketImagesSha256 }) },
     musicFiles: musicNames.length, orphanMusicFiles: musicNames.filter(n => !expectedMusic.has(n)).length, communityQuestions: questionCount,
     historyLogs: logs.size, historyMatches: metas.size, unfinishedMatches: playing.length };
   if (legacy) summary.legacyCommunity = legacy;

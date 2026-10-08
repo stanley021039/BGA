@@ -1,6 +1,8 @@
 # 股市冥燈：截止及審核制圖片庫
 
-Issue [#44](https://github.com/stanley021039/BGA/issues/44)／Draft PR [#45](https://github.com/stanley021039/BGA/pull/45)，候選 v1.5.0、SQLite schema 16。本文件描述本 PR 的實作與隔離驗證，不代表已合併、部署或更新正式資料。
+2026-10-07最新：Issue [#44](https://github.com/stanley021039/BGA/issues/44)／[PR #45](https://github.com/stanley021039/BGA/pull/45)已合併到main，並隨正式 **v1.11.0**／schema16發布；固定source `67e49a164ac5fcb4c3b3cce0fe2b8d899c860e62`、雙平台各1,284項通過。main整合保留MarketImageStore、3MiB投稿／128KiB核准body cap、pngjs7／sharp0.35.5、common GameUI／gallery與角色4MiB。cold15→16及full16帶PNG審核還原通過，正式只新增空market_images，既有rows／BLOB與8帳戶保留；native僅每日／投稿／審核空庫入口smoke，沒有真圖片上傳→審核完整native流程。詳 [本批整合與正式證據](PR46-REVIEW-FIX-PROGRESS.md)。
+
+下方原候選v1.5.0與隔離驗證保留為歷史實作說明，舊「Draft／未合併／未部署」現況由上段取代；原遊戲規則與測試描述不因新版本重寫。
 
 ## 截止及既有紀錄
 

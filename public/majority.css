@@ -186,3 +186,14 @@ body.ui-large-text .answer-stage-groups { max-height:none; overflow:visible }
  body.ui-large-text .game-roster #players { grid-template-columns:1fr }
  .game-roster .aside-head { flex-wrap:wrap }
 }
+
+/* Options keep their distinct colors; their shared frame carries selection and focus. */
+body[data-game-kind="majority"] .play-layout .card{background:var(--ui-surface-panel);border-color:var(--ui-border);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-panel)}
+body[data-game-kind="majority"] .qcard{background:var(--ui-surface-title);color:var(--ui-text);border-color:var(--ui-control-border);border-radius:var(--ui-radius-card);box-shadow:var(--ui-shadow-panel)}
+body[data-game-kind="majority"] .qcard :is(small,.qopts){color:var(--ui-muted)}
+body[data-game-kind="majority"] .qcard:hover{transform:none}
+body[data-game-kind="majority"] .answer{border-color:var(--ui-control-border);border-radius:var(--ui-radius-card)}
+body[data-game-kind="majority"] .answer.chosen{border-color:var(--ui-selected);box-shadow:inset 0 0 0 2px var(--ui-selected)}
+body[data-game-kind="majority"] .answer-stage{background:var(--ui-surface-inset);border-radius:var(--ui-radius-panel);box-shadow:none}
+body[data-game-kind="majority"] .answer-stage::before{display:none}
+body[data-game-kind="majority"] :is(.result-count,.score,.round-score b){font-family:var(--ui-font-family);font-variant-numeric:lining-nums tabular-nums}

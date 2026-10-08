@@ -4,9 +4,14 @@ body[data-game-kind]{
  --ui-space-1:.25rem;--ui-space-2:.5rem;--ui-space-3:.75rem;--ui-space-4:1rem;--ui-space-5:1.5rem;--ui-space-6:2rem;--ui-space-7:3rem;
  --ui-control-height:2.75rem;--ui-icon-size:1.5rem;--ui-font-family:system-ui,"Noto Sans TC","Microsoft JhengHei",sans-serif;
  --ui-text:#eee9d8;--ui-muted:#bdc8bd;--ui-surface:#19251e;--ui-border:#52634f;--ui-accent:#f0c784;--ui-focus:#f0c784;--ui-error:#ffc2b0;--ui-success:#c5dfa1;
+ --ui-surface-base:#141c17;--ui-surface-panel:#1d2a22;--ui-surface-inset:#17221b;--ui-surface-floating:#24342a;--ui-surface-title:#2a3b30;--ui-control-border:#83977f;
+ --ui-selected:#f0c784;--ui-selected-text:#352813;--ui-selected-soft:#3b3827;--ui-accent-soft:#393044;
+ --ui-radius-control:8px;--ui-radius-card:12px;--ui-radius-panel:16px;
+ --ui-shadow-panel:0 1px 3px #0002;--ui-shadow-floating:0 16px 40px #0005,0 3px 10px #0003;
  font-family:var(--ui-font-family);font-size:var(--ui-text-body);line-height:1.5;
 }
 body[data-game-kind].room-light{--ui-text:#263b36;--ui-muted:#58685f;--ui-surface:#f9f8f2;--ui-border:#b4bfaf;--ui-accent:#654575;--ui-focus:#654575;--ui-error:#a23526;--ui-success:#356127}
+body[data-game-kind].room-light{--ui-surface-base:#f3f1eb;--ui-surface-panel:#fffdf8;--ui-surface-inset:#eef0e8;--ui-surface-floating:#fffefa;--ui-surface-title:#f0eaf5;--ui-control-border:#74806e;--ui-selected:#294e43;--ui-selected-text:#fffdf8;--ui-selected-soft:#e8efe2;--ui-accent-soft:#f0e8f5;--ui-shadow-panel:0 1px 3px #263b3610;--ui-shadow-floating:0 16px 40px #263b3626,0 3px 10px #263b3614}
 body[data-game-kind] :is(button,input,select,textarea){font-family:inherit;font-size:var(--ui-text-body);line-height:1.5}
 body[data-game-kind] :is(button,input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]),select){min-height:var(--ui-control-height);box-sizing:border-box}
 body[data-game-kind] :is(button,a,input,select,textarea,summary):focus-visible{outline:2px solid var(--ui-focus);outline-offset:3px}
@@ -136,3 +141,16 @@ body[data-game-kind] .room-music-slot .table-music.collapsed header{height:var(-
 body[data-game-kind] .room-music-slot .table-music.collapsed #music-expand{width:100%;height:var(--ui-control-height);min-height:var(--ui-control-height)}
 body[data-game-kind] .immersion-spotlight strong{min-height:0;flex:1 1 auto;overflow:auto;overflow-wrap:anywhere}
 body[data-game-kind] .immersion-spotlight button{flex:none;min-height:var(--ui-control-height);position:sticky;bottom:0;z-index:1}
+
+/* Three visual layers, shared by every game; geometry remains owned by each layout. */
+body[data-game-kind]{background:var(--ui-surface-base);color:var(--ui-text)}
+body[data-game-kind].game-room{--room-surface:var(--ui-surface-panel);--room-border:var(--ui-border)}
+body[data-game-kind] :is(.room-sidebar,.game-roster,.draw-roster){background:var(--ui-surface-panel);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-panel)}
+body[data-game-kind] :is(.room-settings-panel,.game-action-slot .ui-panel){background:var(--ui-surface-inset);border-radius:var(--ui-radius-card)}
+body[data-game-kind] :is(.room-settings-body,.shared-emoji-picker,.shared-expression-menu .shared-expressions,.game-library-dialog){background:var(--ui-surface-floating);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-floating)}
+body[data-game-kind] :is(.room-leave,.host-manage,.shared-expression-menu summary){background:var(--ui-surface-panel);color:var(--ui-text);border-color:var(--ui-control-border);border-radius:var(--ui-radius-control)}
+body[data-game-kind] #shared-barrage input{background:var(--ui-surface-panel);border-color:var(--ui-control-border)}
+body[data-game-kind] :is(.game-toolbar,.stage-head,.room-player-metrics,#roomTag,#codeLabel,#roomCode,#timer){font-variant-numeric:lining-nums tabular-nums}
+body[data-game-kind] .site-header{border-bottom-color:var(--ui-border)}
+body[data-game-kind] .shared-emoji-picker button{border-color:var(--ui-control-border);border-radius:var(--ui-radius-control)}
+body[data-game-kind] .shared-emoji-picker button:is(:hover,:focus-visible){background:var(--ui-selected-soft);outline-color:var(--ui-focus)}

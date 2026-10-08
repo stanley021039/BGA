@@ -24,12 +24,13 @@ function useLegacyRoundSnapshot(db,roundId,rules=require('../../public/market-ru
  return roundId;
 }
 const AUTOMATION_TABLES=['market_daily_closes','market_calendar_years','market_calendar_overrides','market_fetch_audit','market_automation_state'];
-function legacyMarketSchema(db){
+function legacyMarketSchema(db,{preserveAchievements=false}={}){
  const tables=new Set(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(row=>row.name));
  const foreignKeys=db.prepare('PRAGMA foreign_keys').get().foreign_keys;
  db.exec('PRAGMA foreign_keys=OFF; BEGIN IMMEDIATE');
  try{
   dropEmptyCurveTables(db);
+  if(!preserveAchievements)for(const table of ['achievement_progress','processed_unit_events'])if(tables.has(table)){if(db.prepare('SELECT COUNT(*) n FROM '+table).get().n)throw Error('Legacy fixture must not discard achievement records');db.exec('DROP TABLE '+table);}
   for(const table of AUTOMATION_TABLES)if(tables.has(table)){
    if(db.prepare(`SELECT COUNT(*) n FROM ${table}`).get().n)throw Error('Legacy fixture must not discard automation records');
    db.exec(`DROP TABLE ${table}`);

@@ -1,5 +1,61 @@
 # 程式架構 agent 記憶
 
+2026-10-08 再次檢查PR53／57：修正混合AI全員同組的majority-one-channel，授獎至少3真人且AI不授。完整Linux53 1725／57 1742通過，固定source、修改前2失敗→修正後通過與兩回合審查見 [本輪](../PR-RECHECK-ALL-SAME.md)。未部署，舊收據不回写。
+
+2026-10-08 PR53評論修正：同頻／送禮／畫猜混合真人AI成就映射以真人席位為準，缺真人映射仍拒絕。相关67項通過，包含真HTTP同頻3真人＋1AI；舊收據不改寫，未部署。完整證據與兩回合審查見 [本輪紀錄](../PR53-MIXED-AI-REVIEW.md)。
+
+## 2026-10-08：成就單位事件的來源與持久邊界
+
+2026-10-08 正式驗收：v1.16.0／固定 source 8a9cbfd，Windows 與 Linux 各1,518項通過；三款正式正常回合解鎖、18筆 own 新徽章／3 receipt／9探索 rows，以及背景 Chrome 高亮／日期／桌機手機／鍵盤通過。9帳號全欄位、13市場圖片與舊16徽章保留，own房與登入／分頁／代理已清理。卡片可見解鎖字樣已移除，读屏狀態保留；畫猜局內合併提示、永久勝場及跨程序outbox尚待。此筆取代本批候選待驗狀態，不宣稱真人訪談、完整讀屏或全瀏覽器；詳細範圍見成就單位進度。
+
+
+本次相容修正：保留資料庫帳號 ID 原始大小寫，包含合法大寫 UUID 的匯入帳號；去重仍辨識大小寫變體。卡片依最新使用者指示改為高亮區分取得狀態，可見解鎖文字移除，讀屏狀態與日期保留。
+
+本批已實作 source 與 focused 測試，正式版本、完整 suite、原生瀏覽器與部署結果由主流程更新 [成就單位進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)，不能從本節推定已發布。對應 [成就與戰績 spec](../specs/ACHIEVEMENTS-AND-RECORDS.md) 的第一批 round 成就；下方「成就／ledger 仍缺」須拆成已完成的單位 receipt／探索進度與仍未完成的永久勝場／durable outbox。
+
+`src/games/draw-guess.js`、`gift.js`、`majority.js` 每整局產生 `match_id` UUID（draw 沿用 `gameRunId`），每輪另產生 `unit_event_id` UUID。可選、非列舉的 `achievementUnitStart` 同步返回 canonical 座位／帳號映射，開始時複製並凍結；不能在結束時從名字或現在名單補身分。帳號 UUID 保留資料庫原始大小寫，去重時辨識大小寫變體並拒絕同帳號／同座位重複；缺失、throw、partial 或無效映射使該成就單位降為 `interrupted`，原遊戲仍照原規則結算。`participantCount` 只計凍結映射覆蓋的官方有效真人，不大於映射人數；不足映射的同頻趣味 predicates 為 false。最小 facts 僅含身分、UUID、round、品質狀態、ISO 完成時間、參與 booleans 與必要 metrics，不含題目、猜測內容、喜好、禮物 ID、畫布或手牌。
+
+完成事件由權威操作建立，不用 `phase==='reveal'` 推測。draw 的 server 接受 stroke／guess 才留證據，clear／undo 不退款或刪資格，duplicate／拒絕操作不增加證據；artist 離房／offline auto reveal 為 `interrupted`，正規 timeout／all-guessed 為 `rules_completed`，玩家不足提前結束為 `abandoned`。正常輪保留此前已離席者的合法證據，重新入席等待下輪不加入這輪 current count。gift 僅在最後收禮確認後的正式 `finishDelivery` 建立 facts，同一收禮者的正式 entries 按 exact gift ID 判 twins，`great/good/ok` 判正向心願；delivering 移除玩家為 interrupted，少於三人為 abandoned。majority 只採正式 score 的 groups，填空合併預覽不發事件；withdraw／kick／missing 答案無資格，全有效同組需至少三人，並列最大需至少兩組且每組 count 至少二。
+
+引擎先 latch 深凍 snapshot，再呼叫 `achievementUnitCompleted` 通知；同步 throw／Promise rejection 不回滾已接受玩法。`pendingAchievementUnits()`／`drainAchievementUnits()` 皆非破壞性讀取，成功持久化後才 `acknowledgeAchievementUnit(id)`。每房私有 pending 上限 256；滿額時下一輪／新局在 mutation 前拒絕，不淘汰未儲存事件，整局最後正常結束仍可完成。無 hooks 的既有 fixture 玩法不累積 pending，也不受此上限阻擋。
+
+Store 的 `processed_unit_events` 按 UUID、單位唯一關係與 facts 指紋去重；相同 UUID 不同內容是衝突，不覆寫。只有 `game_server`／`production`／`rules_completed` 的有效參與者授予徽章與 `achievement_progress`；兩種不同遊戲的有效單位可授 `all-two-tables`，不靠登入、點擊或勝場。五枚舊徽章 ID 與取得日期保留。已驗 engine 新 34、store 新 17、既有三引擎 32，共 focused **83/83**；engine 的三遊戲 × 五類 mapping 故障真實寫入 in-memory SQLite receipt、duplicate 與 ack，均 0 award／0 progress。語法及 owned diff 檢查通過；這不是完整 suite、真人試玩或正式資料驗收。
+
+**B03 永久獲勝 ledger 與 durable outbox 尚未完成。** 已提交的單位 receipt／進度能跨 store 重開去重，但引擎／app 待處理清單仍在 RAM，程序崩潰前尚未落庫的事件會丟失，不能宣稱 crash-safe／exactly-once 全流程。後續須補持久 outbox 與 history／SQLite reconciliation；不能從暱稱、外站或不可驗身份的 archive 補授獎、補勝場。來源與限制保留在本批進度，避免把既有角色文件的歷史版本當當前完成狀態。
+
+2026-10-08最新正式 **v1.15.1／c1e59d4**：使用者要求先撤回不一致的局部手繪風格，已恢復原大廳及四房標題外觀；保留v1.15彈幕框與既有功能，SVG/credits僅歷史留存。双平台各1,432、公開27資源、原生首頁／四房waiting通過，9帳戶allfields及21non-session表/BLOB保留；詳細source/部署SIGTERM逾時與proxy drain/不可覆寫receipt修正/備份/有限native/own cleanup見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下面手繪與候選狀態屬歷史；後續局部美化须驗整體一致性，不由素材研究直接推定成熟全站方案。沒有新PR/push。
+
+2026-10-08使用者回饋：局部手繪畫風造成網站整体不一致，先撤回手繪主題。候選 **v1.15.1／c1e59d4**恢復大廳及四房導入前的外觀，v1.15彈幕框及既有WebGL/共看/排版功能保留；素材與授權只作歷史留存。後續變更須以大廳、房間、設定、其他頁面的整體一致性評估，不把素材研究或局部preview當成全站成熟方案。Windows1,432／有限native與正式結果以 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)最新節為準；下面v1.14.2的「正在使用手繪」是歷史。
+
+2026-10-08最新正式 **v1.15.0／f4cbdfa**：彈幕框Stage A發布，雙平台完整各1,432、公開25資源與五款三席frame/avatars通過。PNG上傳收藏／成就與勝場ledger仍缺；完整source/首輪Linux暫存I/O失敗與重跑/備份/native scope/9帳戶及21non-session表保留/own cleanup見 [最終進度](../BARRAGE-FRAMES-PROGRESS.md)與 [backlog](../SPEC-BACKLOG.md)。下方候選及1.14.2是歷史；tag固定受測程式，沒有新PR/push，不把有限取樣當全phase/讀屏/200%/FPS。
+
+2026-10-08彈幕框 Stage A已實作候選 **v1.15.0／f4cbdfa**：server exact builtin ID→frozen {kind,id,version}，只text事件；local frame prefs獨立於MotionPolicy，關框不可clear文字。首建按真height做interval placement／gap8，不足直接false不排queue；show false／同步finish／throw釋放lane和timer，過期finish不得刪新借用者。resize只在尺寸變時清理，不做每frame layout；新增PNG upload仍StageB，不能把現catalog說成schema/ACL完成。Windows1,432與有限native證據見 [彈幕框進度](../BARRAGE-FRAMES-PROGRESS.md)；Linux/正式結果以最新節為準，基線正式仍v1.14.2。本輪不改drawing renderer/codec/transport，持筆樣本與最終一致需分開記錄。
+
+2026-10-08最新正式 **v1.14.2／8ae5c4f**：Freehand官方SVG／紙卡大廳發布，最終Windows/Linux各1,415通過；v1.14.1 archive行尾失敗留歷史未部署，tag不移。Windows core.autocrlf會影響git archive輸出；SVG provenance需要.gitattributes text eol=lf與canonical export，originalSHA和modifiedSHA分開。固定路由／SVG CSP，不能開任意SVG或user upload執行；公開測試清理須容許房間已404，且try/finally保own logout。 正式22資源exactbytes/no-store/MIME、21non-session表rows+BLOB/9帳戶allfields保留；sessions232→238為6次測試登入，都已revoked，own4房/代理/tabs已清理。精確source/備份/例外與限制見 [本批進度](../FREEHAND-UI-PROGRESS.md)、[spec](../specs/FREEHAND-UI.md)、[資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。下方1.14.0/候選狀態為歷史，沒有新PR/push；不宣稱全playing/200%/讀屏/FPS完成。
+
+2026-10-07最新正式 **v1.14.0／b4ebb15**：圓角骰子與連續暖色WebGL氮氣已發布，雙平台各1,413通過；正式三席13骰／9資源與真nitro移動、21non-session表rows+BLOB／9帳戶allfields保留。sessions225→232是驗證登入變化，own房／登入／代理／tabs已清理。骰子geometry按job cache，shadow與cube各一draw（state.drawCalls只計cube）；氮氣沿同context／program／buffer以6vertices持續畫，只有live callback可continuous，discard stop(eventId)，車尾取carrier CTM(-20,0)。 完整source／備份／原生範圍見 [本批進度](../RACE-FX-VISUAL-REFINEMENT-PROGRESS.md)／[spec](../specs/RACE-FX-VISUAL-REFINEMENT.md)。下方1.13與pending均為歷史，此筆取代其現況；沒有新PR／push。native hidden／200%／讀屏／玻璃跳台道路pan及FPS未驗，不以完整suite推定。
+
+2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。
+
+
+正式 shhuang.cc 已以私有 server token 啟用既有本站→stanley021039/BGA Issue／comment／admin status 同步。程式仍v1.12.0／83ffcab，沒有runtime修改或新PR；設定前outbox空、zero-room guard後重載。Issue48正式新增、同UUID重送不重複、前端reply與adminclose均同步，ordinary status403，3筆done無待處理；沒有GitHub→本站同步或legacy backfill。憑證不得放前端／Git／logs；維護與精確scope見 [同步紀錄](../GITHUB-BOARD-SYNC.md)。
+
+2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
+
+2026-10-07 patterns有限原生新知：shared invalid批次先標所有無效欄位，再以單microtask聚焦第一個；focus:false／reset／destroy須取消晚排程，修valid title只清自己的aria描述。manual tabs focus與commit保持分離，rapid Arrow位置立即更新與baseline／earned錯序由中央契約處理，不各caller加poll。widgets focused72和真鍵盤／Escape有限證據見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，新排序修正／全套／公開1.12仍待驗，不稱本批已完成發布。
+
+2026-10-07原生元件新批實作中：widgets只管tabs focus／panel關聯、field feedback與native dialog，不接管submit／API權限／page state；collection原confirm保留，market busy／批次不改。notifications有限queue／seen、GameUI.notify與四款既有server earned差集，不加poll，draw僅toast。hidden保可讀內容並暫停expiry，入口／celebrate取消且不補播；pagehide清理。契約與本批待驗source見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，正式基線1.11.1，未以舊1,284項推定新批通過。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
+## 2026-10-07：正式v1.11.0／PR46回歸契約
+
+renderer用`surfaceRevision`／`presentedSurfaceRevision`追staging實寫與可見提交：clear／undo尚未present即使沒有新stroke也須copy，latestjob／generation仍防舊圖覆蓋，settled no-op不copy。音樂`interruptedAudio`只復原此次hidden自動pause的同clip／key／epoch，等fresh marker；manualpause／設定停用／browserreject／sharedpaused／videoexit維持，staleclip不復活、不加poll／seek。main衝突保MarketImageStore／schema16／gallery、pngjs7／sharp0.35.5、market3MiB／approve128KiB、char4MiB與preserveImportedSessions。PR雙平台1,263、正式保UI／WebGL整合雙平台1,284；native12真Canvas2D與Audiovisibility範圍見 [證據](../PR46-REVIEW-FIX-PROGRESS.md)。此筆更新當前schema16，下面schema15與候選狀態為歷史，不能混算source／測試數。
+
+## 2026-10-07：正式v1.10.0局部WebGL
+
+`GameFxLayer`用原生WebGL1、lazy、有界buffer／particles／contexts，idle無rAF；只接公開event／live gate與視覺車位anchor，不改checkpoint、server／DB或畫猜renderer。`onActivity`等成功非零draw才發布kind，僅用`visibility:hidden`遮同類SVG裝飾（opacity會被舊keyframes覆蓋），標字／bullet／trail／spin保留，empty／loss／reduce／clear復原。restore不補播；最終loss probe與較早restore cycle分開，不能拼同次完成。雙平台各1,165、限額／source／native／資料與限制見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。此筆取代下方「WebGL未實作」現況，舊研究保留。
+
 2026-10-07 Issue47候選v1.10.0：市場官方日收盤採精確日期與兩份官方日報核對；14:00只是查詢门檻。日曆開場與延遲結算解耦；單writer job、abort/join、restartcatchup及SQLite原子授分。排行榜只市場ledger、暱稱與競賽同分；新UI與舊票／圖片庫回歸均測。原生Chromiumsocket限制未驗，未部署；最新scope和來源見 [市場自動化](../MARKET-AUTOMATION.md)。
 
 2026-10-07最新PR1.9.3／a2c5589：play／pause Promise fence與64events／8proofs／8corrections保意圖／failclosed，不加poll／seek。雙平台1,300／focused126／peer與fresh原型Pause／最後Play／normal已驗，proxy總media4／5各不變（分解GET3／4各不變、POST1不變），QA已清。原型API無input、fresh約3.6ms transient非零瞬間／physical UA；gate與resourcebuffer教訓見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併，正式1.11.1不變，patterns另於main整合未發布。
@@ -250,7 +306,11 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 
 同日最新main `1447430` 已包含 #34，#38必要整合改為schema14，原禁題版／市場版13各保留已有資料並補另一方空表。保留main引擎、draw store／前端、MotionPolicy、資料鎖及AGENTS，入口／static路由合併雙方變更。六份測試自動合併的SCHEMA_VERSION重複匯入已消除。市場21／Windows全套463及整合版Chrome完整市場流程、held-fetch與三寬度導覽通過；取代391與最新schema13描述，詳 [相容整合](../MARKET-JINX-MAIN-INTEGRATION.md)，#38仍Draft、未合併部署。
 
+2026-10-08部署教訓：SIGTERM健康逾時不可按原pin盲重啟或刪活data locks；先分current pointer與實際PID cwd/port，保持9帳戶/21表/env核對。已授權zero-room更新可重連已驗UID/command/Restart=always的既有代理協助HTTP drain，保server自然close。writePrivate wx是不可覆寫的證據契約；失敗receipt另存，confirmed另建並以受驗內容原子換入，不可在catch迴圈重複對同名wx寫入或拿verification failure當runtime failure。不要早於activation完成跑dependent公開smoke；本批舊版讀取失敗发生於0登入/0房。詳完整還原進度，不宣稱一般情況都需restart proxy。
+
 
 ## 2026-10-08：數值預測候選（未部署）
 
 Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger；舊場次、票與原積分不轉換。開場前凍結官方可用歷史與參考機率，零實際照曲線、更正精確反向分錄。完整契約、備份與未驗界線見 [計分曲線](../MARKET-PREDICTION-CURVE.md)。最終測試以固定提交為準，沒有正式資料操作。
+
+2026-10-08 PR53修正：bb3ce44整合main7149cea；schema19相容兩線17與main18，市場新功能／AI／原成就保留。Linux1712全通過、9新分支migration與隔離三席流程通過，兩輪複查及邊界詳 [PR53整合](../PR53-MAIN-INTEGRATION.md)。候選1.19未部署；正式仍1.18，不移tag、不動正式data。

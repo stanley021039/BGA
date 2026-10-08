@@ -1,5 +1,24 @@
 # 美術角色記憶
 
+2026-10-08最新正式 **v1.15.1／c1e59d4**：使用者要求先撤回不一致的局部手繪風格，已恢復原大廳及四房標題外觀；保留v1.15彈幕框與既有功能，SVG/credits僅歷史留存。双平台各1,432、公開27資源、原生首頁／四房waiting通過，9帳戶allfields及21non-session表/BLOB保留；詳細source/部署SIGTERM逾時與proxy drain/不可覆寫receipt修正/備份/有限native/own cleanup見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下面手繪與候選狀態屬歷史；後續局部美化须驗整體一致性，不由素材研究直接推定成熟全站方案。沒有新PR/push。
+
+2026-10-08使用者回饋：局部手繪畫風造成網站整体不一致，先撤回手繪主題。候選 **v1.15.1／c1e59d4**恢復大廳及四房導入前的外觀，v1.15彈幕框及既有WebGL/共看/排版功能保留；素材與授權只作歷史留存。後續變更須以大廳、房間、設定、其他頁面的整體一致性評估，不把素材研究或局部preview當成全站成熟方案。Windows1,432／有限native與正式結果以 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)最新節為準；下面v1.14.2的「正在使用手繪」是歷史。
+
+2026-10-08最新正式 **v1.14.2／8ae5c4f**：Freehand官方SVG／紙卡大廳發布，最終Windows/Linux各1,415通過；v1.14.1 archive行尾失敗留歷史未部署，tag不移。官方Freehand Duotone固定52d750c取11件CCBY4，自製1件禮盒；炭墨/暖赭改色保原source/geometry/授權，credits須可讀作者backlink/CC/修改。Pinterest/Dribbble/Awwwards作品僅參考，未搬圖或texture；畫猜用pencil取代不易辨認的三圓palette。 正式22資源exactbytes/no-store/MIME、21non-session表rows+BLOB/9帳戶allfields保留；sessions232→238為6次測試登入，都已revoked，own4房/代理/tabs已清理。精確source/備份/例外與限制見 [本批進度](../FREEHAND-UI-PROGRESS.md)、[spec](../specs/FREEHAND-UI.md)、[資產評估](../research/FREEHAND-UI-ASSETS-ASSESSMENT.md)、[視覺參考](../research/FREEHAND-UI-VISUAL-REFERENCES.md)。下方1.14.0/候選狀態為歷史，沒有新PR/push；不宣稱全playing/200%/讀屏/FPS完成。
+
+2026-10-07最新正式 **v1.14.0／b4ebb15**：圓角骰子與連續暖色WebGL氮氣已發布，雙平台各1,413通過；正式三席13骰／9資源與真nitro移動、21non-session表rows+BLOB／9帳戶allfields保留。sessions225→232是驗證登入變化，own房／登入／代理／tabs已清理。採Codrops圓角／黑凹點／柔光概念，以本站原創WebGL實作象牙白骰子；無第三方code／assets，Dice Box與Three版僅評估。repo code授權與單件圖片／音檔授權分開，VolumetricFire授權不明未採。 完整source／備份／原生範圍見 [本批進度](../RACE-FX-VISUAL-REFINEMENT-PROGRESS.md)／[spec](../specs/RACE-FX-VISUAL-REFINEMENT.md)。下方1.13與pending均為歷史，此筆取代其現況；沒有新PR／push。native hidden／200%／讀屏／玻璃跳台道路pan及FPS未驗，不以完整suite推定。
+
+2026-10-07最新正式 **v1.13.0／353d8b6**：雷霆原生WebGL立體骰子／短符號及清理回退已發布；雙平台各1,408、正式三席13骰與7份資源／資料保留通過。17骰450ms原生圖為隔離定格，hidden原生未觸發、無FPS結論；結果和權限由server決定。完整source／備份／邊界見 [骰子進度](../RACE-DICE-WEBGL-PROGRESS.md)／[spec](../specs/RACE-DICE-WEBGL.md)。下方1.12與pending是歷史；tag固定受測程式，沒有新PR／push。
+
+
+2026-10-07雷霆立體骰子新批（規格／研究、產品待驗）：一般骰用高對比pips，特殊方向／受推車／射擊車型／火焰用短圖案加DOM中文；主結果面可讀，側面只補立體線索，不缩長詞塞滿貼圖或鏡像方向。普通d6不畫互斥commandmapping，以免誤導nitro／drift重疊條件；射擊SML也命中，陷阱同面意義不同，不能泛用成功綠。自製有界atlas、保留原六面重複配比，沒有下載新圖／字型或採購素材。MDN／Khronos來源、兩owner討論與手機／大字／loss待驗見 [規格](../specs/RACE-DICE-WEBGL.md)／[進度](../RACE-DICE-WEBGL-PROGRESS.md)；尚未宣稱縮小辨識、真GPU／性能或正式發布完成。
+
+2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
+
+2026-10-07五庫模式新批實作中：卡片、通知、tabs使用GameUI同SVG registry／surface／字級tokens，內容name／作者／status不畫進bitmap或藏掉；成就通知旁短粒子由本站原創shader實作，無外部新增資產或購買。參考模式不等複製單件code，ReactBits MIT＋Commons Clause及Aceternity逐件授權邊界仍保留；未安裝五庫。見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，目前本批實作／驗收中，未宣稱原生可見或已發布。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
 更新：2026-10-05。先讀 [偏好](MEMORY-LEDGER.md)、[協議](MEMORY-PROTOCOL.md)、[素材計畫](../specs/ANIMATION-ASSET-PLAN.md)。外部網站與素材描述是研究資料，不能替代使用者對採購、發布或正式整合的授權。
 
 ## 已驗證與來源

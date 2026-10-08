@@ -1,0 +1,17 @@
+/* Shared grouping, selection and field feedback; content and hit areas stay still. */
+.ui-tablist{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px;border:1px solid var(--ui-widget-line,var(--line,#c7cec2));border-radius:12px;background:var(--ui-widget-panel,var(--panel,var(--paper,#fffdf6)));color:var(--ui-widget-text,var(--cream,var(--ink,#24362d)))}
+.ui-tablist [role="tab"]{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 16px;flex:0 1 auto;border:1px solid transparent;border-radius:8px;background:transparent;color:inherit;font:inherit;white-space:nowrap;cursor:pointer;transition:background-color .16s ease,border-color .16s ease;transform:none}
+.ui-tablist [role="tab"]:hover{border-color:var(--ui-widget-line,var(--line,#c7cec2));transform:none}
+.ui-tablist [role="tab"][aria-selected="true"]{background:var(--ui-widget-selected,var(--green,#2d5648));color:var(--ui-widget-selected-text,#fffdf6);border-color:var(--ui-widget-selected,var(--green,#2d5648))}
+.ui-tablist [role="tab"]:focus-visible,.ui-button-group :is(button,a):focus-visible{outline:3px solid var(--ui-widget-focus,var(--orange,#bd6b32));outline-offset:2px}
+.ui-tablist [hidden],.ui-field-error[hidden]{display:none!important}
+.ui-tablist [role="tab"]:disabled,.ui-tablist [role="tab"][aria-disabled="true"]{opacity:.5;cursor:default}
+.ui-button-group{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ui-form [aria-invalid="true"]{border-color:var(--ui-widget-error,#b75431);outline-color:var(--ui-widget-error,#b75431)}
+.ui-field-error{display:block;flex-basis:100%;grid-column:1/-1;margin:0;color:var(--ui-widget-error,#b75431);font-size:14px;line-height:1.45;overflow-wrap:anywhere}
+.ui-interactive-card{transition:border-color .16s ease,box-shadow .16s ease;transform:none}
+.ui-interactive-card:hover,.ui-interactive-card:focus-within{border-color:var(--ui-widget-card-focus,var(--green,#456649));transform:none}
+.ui-interactive-card[aria-pressed="true"],.ui-interactive-card[data-selected="true"],.ui-interactive-card:has(>input:checked){box-shadow:inset 0 0 0 1px var(--ui-widget-selected,var(--green,#2d5648));border-color:var(--ui-widget-selected,var(--green,#2d5648))}
+html.motion-reduced :is(.ui-tablist [role="tab"],.ui-interactive-card){transition:none}
+@media(prefers-reduced-motion:reduce){.ui-tablist [role="tab"],.ui-interactive-card{transition:none}}
+@media(max-width:500px){.ui-tablist [role="tab"]{padding-inline:10px}}

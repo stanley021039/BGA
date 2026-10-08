@@ -52,8 +52,13 @@
      // Do not queue overflow: older messages should not cover a later decision.
      let lane=0;while(lanes.has(lane)&&lane<4)lane++;if(lane===4)continue;
      const moving=allowsMotion(),entry={remove:null,timer:null};lanes.set(lane,entry);
-     const finish=()=>{if(lanes.get(lane)!==entry)return;clearTimeout(entry.timer);entry.remove?.();lanes.delete(lane);};
-     entry.remove=show(item,lane,{moving,finish});entry.timer=setTimeout(finish,moving?8000:5000);
+     const finish=()=>{if(lanes.get(lane)!==entry)return;lanes.delete(lane);clearTimeout(entry.timer);const remove=entry.remove;entry.remove=null;remove?.();};
+     let remove;try{remove=show(item,lane,{moving,finish});}catch{finish();continue;}
+     // A renderer can reject placement, or finish synchronously before it
+     // returns its remover. Neither case should occupy a lane or leave a timer.
+     if(remove===false){finish();continue;}
+     if(lanes.get(lane)!==entry){if(typeof remove==='function')remove();continue;}
+     entry.remove=typeof remove==='function'?remove:null;entry.timer=setTimeout(finish,moving?8000:5000);
     }
    },
    disconnect(){disconnected=true;clear();},

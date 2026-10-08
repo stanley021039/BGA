@@ -1,5 +1,13 @@
 # Server／資料 agent 記憶
 
+2026-10-08 再次檢查PR53／57：修正混合AI全員同組的majority-one-channel，授獎至少3真人且AI不授。完整Linux53 1725／57 1742通過，固定source、修改前2失敗→修正後通過與兩回合審查見 [本輪](../PR-RECHECK-ALL-SAME.md)。未部署，舊收據不回写。
+
+2026-10-08 PR53評論修正：同頻／送禮／畫猜混合真人AI成就映射以真人席位為準，缺真人映射仍拒絕。相关67項通過，包含真HTTP同頻3真人＋1AI；舊收據不改寫，未部署。完整證據與兩回合審查見 [本輪紀錄](../PR53-MIXED-AI-REVIEW.md)。
+
+正式仍v1.12.0／83ffcab／schema16，新增私有GitHub token並重載服務，當次PID147993。設定前備份私有env與線上SQLite；freshrooms0，沒有清房或DB restore。9帳戶全欄位、其他18表內容與22schema保持，只有session及測試board_issue／comment／submission按功能新增；3筆done無待處理。GitHub token只存正式私有env，不複製到sanitized開發資料或記憶文件。下一次重新盤點PID／env，舊1.12部署env摘要不能當新設定的pin；詳 [同步紀錄](../GITHUB-BOARD-SYNC.md)。
+
+2026-10-07最新正式 **v1.11.0／schema16／22表**：固定source／tag `67e49a164ac5fcb4c3b3cce0fe2b8d899c860e62`。線上SQLite備份＋另時點files不是atomic cold；隔離schema15→16只加空market_images，migration／boot兩次21舊表allrows／BLOB、8users全fields保持。09:15:24.105Z rooms0 guard後服務／tunnel健康；最終20舊non-session表資料、8users保持，FK0／integrity ok、新圖片0；sessions191→201是失敗QA3＋guard1＋smoke6，不說session未變。cold15升16與full16帶PNG審核資料還原已有focused證據，角色4MiB／preserveImportedSessions兼容保留。正式來源保UI／WebGL，與PR46候選source分開；[最新證據](../PR46-REVIEW-FIX-PROGRESS.md)取代下方schema15／早期部署現況，下次仍重新盤點。
+
 2026-10-07 Issue47候選schema17：市場父表增加user/system actor，系統created_by為NULL而非假admin；增加五張行情／日曆／稽核表。schema1–16至17以外層transaction＋savepoint原子遷移，保留舊欄位／rowid／帳戶與BLOB；FK與官方證據／積分語意均驗。完整加密備份還原已以合成資料驗證，EXTERNAL_SIDE_EFFECTS_ENABLED=false阻止自動fetch／開場／結算；沒有操作正式資料。細節見 [市場自動化](../MARKET-AUTOMATION.md)。
 
 2026-10-07最新正式v1.7.1／`3d82e3f`／PID88602：角色表情前端共用回覆與亂序修正，schema15／21表不變；兩平台各940、0房間切換，fresh backup副本21schema／rows／BLOB及8帳戶全欄位保留。正式五game双席使用own既有角色測臨時表情，不寫profile／原faker；own五桌離房、3session登出、代理／presence／tab清理後rooms0。21schema及20非session表所有rows／BLOB與備份相同，sessions152→155為QA登入／登出，env／原資料路徑／service／tunnel正常、integrity ok／FK0。原faker GIF副本僅隔離診斷；外站資料代未啟用，下一次重新盤點，不沿用85927／1.7.0guard。非原子冷備份與來源見 [表情發布](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。

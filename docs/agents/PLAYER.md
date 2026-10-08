@@ -1,5 +1,47 @@
 # 玩家 agent 長期記憶
 
+## 2026-10-08：首批 round 成就的公平性與驗證範圍
+
+2026-10-08 正式驗收：v1.16.0／固定 source 8a9cbfd，Windows 與 Linux 各1,518項通過；三款正式正常回合解鎖、18筆 own 新徽章／3 receipt／9探索 rows，以及背景 Chrome 高亮／日期／桌機手機／鍵盤通過。9帳號全欄位、13市場圖片與舊16徽章保留，own房與登入／分頁／代理已清理。卡片可見解鎖字樣已移除，读屏狀態保留；畫猜局內合併提示、永久勝場及跨程序outbox尚待。此筆取代本批候選待驗狀態，不宣稱真人訪談、完整讀屏或全瀏覽器；詳細範圍見成就單位進度。
+
+
+本次相容修正：保留資料庫帳號 ID 原始大小寫，包含合法大寫 UUID 的匯入帳號；去重仍辨識大小寫變體。卡片依最新使用者指示改為高亮區分取得狀態，可見解鎖文字移除，讀屏狀態與日期保留。
+
+本批已完成三引擎與 store source／fixture 驗證，正式版本、完整測試、背景原生試玩與部署由主流程記在 [成就單位進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)；本節不宣稱已上線或真人評測完成。沿用 [成就與戰績 spec](../specs/ACHIEVEMENTS-AND-RECORDS.md) 的中性門檻：記住有效參與與自然巧合，不設 XP、每日重置、連勝任務或要求朋友配合。既有五枚徽章及取得日期保留，單輪徽章與永久獲勝紀錄是不同工作。
+
+| 遊戲／候選 | 已實作的判定與反誘因界線 |
+| --- | --- |
+| 畫猜初登場／靈魂畫手，有人懂／字幕組準時上班 | 入門需至少一次 server 接受的 stroke 或 guess 且該輪正常揭曉；錯猜也能有效參與。畫手需本人合法作畫且至少另一帳號合法猜中，猜中徽章不額外要求速度／全桌答對。clear／undo 不抹掉已接受證據，但點工具、觀看或保活不算操作。 |
+| 心意撞車、願望清單有回音 | 只授收禮者：正式收禮的同 gift ID 至少兩份，或有 great／good／ok 正向心願；同名不同 ID 不算 twins，noWay／unranked 不算心願。等全部收禮確認後正式結算，不從動畫授獎，也不新增「請大家送同款」桌上目標或低分羞辱徽章。 |
+| 同頻不用 Wi-Fi、訊號撞成平手 | 至少三名官方有效參與者全作答且同一正式組；或至少兩個並列最大組、每組至少兩人，授有效作答者。填空 review／合併預覽不提前授，withdraw／kick／missing 答案不算；保留原本平手不得分規則，不標示「就差誰」或鼓勵故意離群。 |
+| 第一桌、跨桌搬零食 | 有本人核心操作的正常有效單位才能累積；`all-two-tables` 需兩種不同遊戲，不要求贏、不按天重置，不用單純登入／點圖示累積。舊第一桌門檻與取得日期保留，不另發相同條件的第二枚。 |
+
+本批以整局 `match_id` 和每輪 `unit_event_id` UUID 綁定不可變帳號映射，完成時只保留必要事實，不把題目、猜測、喜好或手牌寫入成就記錄。離房不能用現在名單抹掉此前合法完成的 draw 證據；artist 離房／斷線造成的中斷輪不授，但此前正常輪仍保留。送禮 delivering 中移除玩家為 interrupted，玩家不足為 abandoned。開始的身分映射不足也使該成就單位中斷，遊戲仍照原規則結算；不能以同名、晚加入的帳號或外站 history 補資格。
+
+已驗 engine 新 **34**、store 新 **17**，連同既有三引擎 **32** 共 focused **83/83**。含合法／拒絕操作、重送、跨 clear／undo、離席與等待下輪、全部收禮確認、同名不同禮物、負向／未排名心願、正式合併與平手、跨局 UUID 與待儲存上限；三遊戲的 mapping 故障以 in-memory SQLite 驗證可持久確認且 0 award／0 progress。這是程式與 fixture 證據，不能當成人工真人桌／讀屏／弱網／全 phase 的完成驗收。
+
+**B03 永久勝場、完整對局結果 ledger 與 durable outbox 仍未完成**，不能把 `all-two-tables` 進度說成勝利／勝率統計。已寫入 receipt 的重送可去重，但未落庫事件仍在 RAM，崩潰會失去待重試資料；需後續持久 outbox 與權威結果 reconciliation。既有或外站 archive 僅作唯讀參考，不憑暱稱重建徽章／獲勝事實。後續玩家驗收先看公平資格、原規則與隱私，再看提示是否干擾桌上操作，完整證據集中於本批進度。
+
+2026-10-08最新正式 **v1.15.0／f4cbdfa**：彈幕框Stage A發布，雙平台完整各1,432、公開25資源與五款三席frame/avatars通過。PNG上傳收藏／成就與勝場ledger仍缺；完整source/首輪Linux暫存I/O失敗與重跑/備份/native scope/9帳戶及21non-session表保留/own cleanup見 [最終進度](../BARRAGE-FRAMES-PROGRESS.md)與 [backlog](../SPEC-BACKLOG.md)。下方候選及1.14.2是歷史；tag固定受測程式，沒有新PR/push，不把有限取樣當全phase/讀屏/200%/FPS。
+
+2026-10-08彈幕框候選 **v1.15.0／f4cbdfa**：三席真送長/短text各款、接收關框仍保文字；五款等待畫面重要玩家区和44px圖示入口保留。16字名/40字/4則是隔離壓力fixture，不能說是四真人桌實玩。畫猜持筆18次sample墨跡累增、ACK與viewer1517、自然換輪reset0，僅此軌跡不推定每影格/全phase/全硬體。完整證據与StageB上傳收藏／成就ledger缺口見 [進度](../BARRAGE-FRAMES-PROGRESS.md)／[backlog](../SPEC-BACKLOG.md)。
+
+2026-10-07最新正式 **v1.12.0／83ffcab**：雙平台各1,386、有限native／公開38media＋37draw資源／ACL／資料驗收完成；schema16／22表、9帳戶allfields／13市場圖片／21non-session rows與BLOB保留，sessions210→217為驗證登入變動。code／tag固定、own QA清理完成，沒有新UI PR。PR46外部已合併，其1,300項與本批分開；完整source／備份／限制見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)。下方候選／待驗為歷史，不宣稱全讀屏／200%zoom／FPS／真YT公開實播。
+
+2026-10-07 patterns部分實玩：own雙人撲克正常fold真的解鎖第一手牌／第一桌，持久inline仍讀得到，通知旁GL有像素且最終notify／queue／timer／celebration0。收藏／市場Arrow不發request或換panel直到Enter／Space；invalid首name與Escape返焦已驗。Audio Play尚ready0、離tab後pause不算完整解碼／可聽；glyph倍增不算browser200%，Tab到body／chrome邊界不算fulltrap。有限證據與新Arrow／成就排序修正待驗見 [進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)，patterns1.12尚未全套／發布。
+
+2026-10-07五庫模式新批驗收方向：manual tabs箭頭只focus、Enter／Space才選，表單有可定位inline錯誤，dialog可取消／返焦且busy不失守；通知不遮或取代重要玩家／車／骰／聊天室。hidden保通知正文但取消粒子，不因初次載入或舊badge慶祝。收藏／市場、五遊戲與原畫猜防閃皆需真keyboard／小屏／200%回歸，見 [spec](../specs/UI-COMPONENT-PATTERNS.md)／[進度](../UI-COMPONENT-PATTERNS-PROGRESS.md)；本批實作中，不能把前次1.11.1證據當新批通過。
+
+2026-10-07恢復基線：PR46第三P2已推送、Ready並再次請Stanley審查；正式v1.11.1的source／測試／清理見 [PR最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。patterns候選1.12.0恢復實作但未驗／未發布，前批結果不替代本批。
+
+## 2026-10-07：正式v1.11.0驗收
+
+PR46清除／撤銷途中要看舊完整圖、提交後新圖與舊job不覆蓋；12真Canvas2D組合已驗，第二輪6move／30artist樣本白afterink0、viewer7partial，第一輪錯誤取樣排除。切回背景音樂只恢復此次hidden自動pause，玩家手動pause／關音樂不能被恢復蓋過；真Audio同節點恢復／零新增room-media request已驗，但無聲檔／FocusEmulation不是喇叭或實體切頁。市場每日／圖片投稿／審核空庫入口已smoke，未真上傳→審核完整native流程。有限scope與正式雙平台1,284見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)；下方版本保留歷史，不宣稱全玩法或FPS。
+
+## 2026-10-07：正式v1.10.0美化驗收
+
+美化先保玩家／角色／猜中／車隊／骰子／合法格，不收合到管理；看選取、長名／浮窗／小屏可達，不只看顏色。本輪畫猜23持筆樣本白afterink0、viewer7次partial／13timed points；晚一筆同SHA是下輪白baseline，不能當有墨終點一致。雷霆真draw／idle／loss有有限證據，兩anchor位置不證明全程FPS；實際新效果畫出才遮同類裝飾，不遮標字或操作。四遊戲尺寸矩陣／720補驗及限制見 [本批進度](../UI-POLISH-WEBGL-PROGRESS.md)，全部phase／多輪／其他硬體與前景性能未驗。下方v1.9.0持筆／ACK／換輪的持續檢查規則保持。
+
 2026-10-07最新a2c5589原型API：fresh最後Pause守住、最後Play保time37，正常hide／show同Audio恢復；proxy總media4／5各不變（GET3／4與POST1各不變），兩平台1,300與focused126／peer通過，own QA已清。沒有pointer／key或實體喇叭，fresh約3.6ms transient不稱零瞬間，舊~1ms是另case。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併、正式1.11.1不變／patterns另於main整合未發布，scope見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。
 
 2026-10-07 PR46第三P2已驗：真UA controls Play→Pause後，latequeue GET仍同Audio／paused true、requests8→8；visibility自動resume不能蓋較新Pause或個人靜音。pending heldbytes原生AbortError可只retry自己的中斷，但HAVE_NOTHING0／受控visibility不是端到端METADATA1或實體切頁；release後自然end換影片，不說同clip持續。正式1.11.1已發布，PR1.9.2已推送、標 Ready 並再次請 Stanley 審查，未合併，完整scope與dual-source測試見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)。不宣稱所有硬體／喇叭／FPS，patterns暫停。

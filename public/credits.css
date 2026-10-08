@@ -1,0 +1,7 @@
+.asset-credits{max-width:960px;margin-inline:auto;padding-block:24px;display:grid;gap:20px;font-size:16px;line-height:1.6}
+.asset-credits h1{margin:0;font-size:28px;line-height:1.35}
+.credit-card{padding:24px;border:1px solid var(--page-line);border-radius:14px;background:var(--page-panel);overflow-wrap:anywhere}
+.credit-card h2{margin:0 0 12px;font-size:22px;line-height:1.35}
+.credit-card p{margin:12px 0;font-size:16px;color:var(--page-cream)}
+.asset-credits a{color:var(--page-orange);text-underline-offset:3px}
+.asset-credits>a{justify-self:start;min-height:44px}

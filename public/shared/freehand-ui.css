@@ -1,0 +1,102 @@
+/* Explicit artwork slots; decoration never defines a control's hit area. */
+.ui-artwork{display:block;flex:none;width:var(--ui-artwork-size,72px);height:var(--ui-artwork-size,72px);max-width:100%;object-fit:contain;margin:0;padding:0;vertical-align:middle}
+.ui-artwork[data-artwork-size="24"]{--ui-artwork-size:24px}
+.ui-artwork[data-artwork-size="48"]{--ui-artwork-size:48px}
+.ui-artwork[data-artwork-size="72"]{--ui-artwork-size:72px}
+.ui-artwork[hidden]{display:none!important}
+:is(body[data-ui-style="freehand"],body[data-game-kind]) .game-art-title{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;vertical-align:middle}
+:is(body[data-ui-style="freehand"],body[data-game-kind]) .game-art-title>:not(.game-art-badge){min-width:0}
+:is(body[data-ui-style="freehand"],body[data-game-kind]) .game-art-badge{display:inline-flex;align-items:center;justify-content:center;flex:none;box-sizing:border-box;width:32px;height:32px;padding:3px;background:#fffdf7;border:1px solid #b8b09f;border-radius:7px 9px 6px 8px;line-height:1;vertical-align:middle}
+:is(body[data-ui-style="freehand"],body[data-game-kind]) .game-art-badge>.ui-artwork{width:24px;height:24px}
+:is(body[data-ui-style="freehand"],body[data-game-kind]) :is(.game-art-title,.game-art-badge)[hidden]{display:none!important}
+.ui-asset-credit{font-size:14px;line-height:1.5;color:var(--ui-muted,var(--muted,#5e685f))}
+:is(.ui-asset-credit a,a.ui-asset-credit){color:inherit;text-decoration:underline;text-underline-offset:3px}
+:is(.ui-asset-credit a,a.ui-asset-credit):focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.site-asset-credit{display:block;box-sizing:border-box;min-height:44px;margin-top:12px;padding-block:10px;font-size:14px;line-height:1.5;text-decoration:underline;text-underline-offset:3px}
+
+/* The paper treatment belongs to the opted-in home, not every game surface. */
+body[data-ui-style="freehand"]{--bg:#f6f2e9;--panel:#fffdf7;--cream:#29362f;--muted:#5e685f;--line:#c8c0b0;--lime:#2d5144;--orange:#e8bd66;--fh-ink:#29362f;--fh-paper:#fffdf7;--fh-forest:#2d5144;--fh-mustard:#e8bd66;--fh-lilac:#e7dfea;--fh-border:#b8b09f;--fh-control:#7a8579;background:var(--bg);color:var(--fh-ink);font-size:16px;line-height:1.55}
+body[data-ui-style="freehand"] :is(button,input,select,textarea){font:inherit}
+body[data-ui-style="freehand"] :is(button,.button,input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),select){min-height:44px}
+body[data-ui-style="freehand"] :is(button,a,input,select,textarea,summary):focus-visible{outline:3px solid var(--fh-forest);outline-offset:3px}
+body[data-ui-style="freehand"] :is(button,.button,.ui-artwork,.game-art-badge)[hidden]{display:none!important}
+body[data-ui-style="freehand"] :is(label,.kicker,.quiet,.version-note,.club-footer){font-size:14px}
+body[data-ui-style="freehand"] .kicker{color:var(--muted);letter-spacing:.04em}
+body[data-ui-style="freehand"] .library-heading h1{position:relative;display:inline-block;font-size:clamp(28px,3vw,36px);letter-spacing:normal}
+body[data-ui-style="freehand"] .library-heading h1::after{content:"";position:absolute;left:0;bottom:-3px;width:64px;border-bottom:2px solid var(--fh-mustard);transform:rotate(-1deg);pointer-events:none}
+body[data-ui-style="freehand"] .library-heading p{font-size:16px;color:var(--muted)}
+body[data-ui-style="freehand"] .library-count strong{font-family:inherit;font-size:32px;line-height:1.1;color:var(--fh-forest);font-variant-numeric:tabular-nums}
+body[data-ui-style="freehand"] .library-count span{font-size:14px;color:var(--muted)}
+
+body[data-ui-style="freehand"] .game-library{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+body[data-ui-style="freehand"] .game-tile{display:flex;flex-direction:column;min-width:0;border:2px solid var(--fh-border);border-radius:12px 10px 14px 9px;background:var(--fh-paper);color:var(--fh-ink);box-shadow:2px 3px 0 #29362f14;transform:none;transition:border-color .16s ease,box-shadow .16s ease}
+body[data-ui-style="freehand"] .game-tile:hover{border-color:var(--fh-forest);box-shadow:3px 4px 0 #29362f1f;transform:none}
+body[data-ui-style="freehand"] .game-tile:is(.selected,[aria-pressed="true"]){border-color:var(--fh-forest);box-shadow:4px 4px 0 var(--fh-mustard)}
+body[data-ui-style="freehand"] .game-tile .tile-image{height:96px;min-height:96px;flex:none;display:flex;align-items:center;justify-content:center;background:#efe8da;border-bottom:1px solid #d8d0c0;overflow:hidden}
+body[data-ui-style="freehand"] .majority-tile .tile-image,body[data-ui-style="freehand"] .draw-tile .tile-image{background:var(--fh-lilac)}
+body[data-ui-style="freehand"] .gift-tile .tile-image{background:#f1e4dd}
+body[data-ui-style="freehand"] .market-tile .tile-image{background:#e7eadc}
+body[data-ui-style="freehand"] .game-tile .tile-image>img.ui-artwork{position:static;inset:auto;width:72px;height:72px;transform:none;filter:none;object-fit:contain;z-index:1}
+body[data-ui-style="freehand"] .tile-badge{left:14px;top:12px;max-width:calc(50% - 58px);padding:0;border:0;border-radius:0;font-size:14px;line-height:1.25;letter-spacing:.01em;color:#5d655c;white-space:normal;overflow-wrap:anywhere}
+body[data-ui-style="freehand"] .art-number{right:14px;bottom:10px;font-family:inherit;font-size:28px;line-height:1;font-weight:600;color:#777263;font-variant-numeric:tabular-nums}
+body[data-ui-style="freehand"] .tile-body{display:flex;flex-direction:column;flex:1;min-width:0;padding:18px 20px 20px}
+body[data-ui-style="freehand"] .tile-body h2{font-size:22px;line-height:1.35;margin:8px 0 10px;letter-spacing:normal}
+body[data-ui-style="freehand"] .tile-body h2 span{font-size:14px;line-height:1.5;color:var(--muted)}
+body[data-ui-style="freehand"] .tile-body p{font-size:16px;line-height:1.6;color:#4f5c52;margin:0 0 18px}
+body[data-ui-style="freehand"] .tile-bottom{gap:10px;margin-top:auto;padding-top:14px;font-size:14px;line-height:1.5;color:var(--muted);flex-wrap:wrap}
+body[data-ui-style="freehand"] .select-label{color:var(--fh-forest);font-weight:650}
+
+body[data-ui-style="freehand"] :is(.launch-bar,.rooms-section,.lobby-section){background:var(--fh-paper);border:1px solid var(--fh-border);border-radius:13px 10px 12px 15px;box-shadow:2px 3px 0 #29362f14}
+body[data-ui-style="freehand"] .launch-bar{gap:16px}
+body[data-ui-style="freehand"] :is(.launch-input label,.join-input label){font-size:14px;color:var(--muted)}
+body[data-ui-style="freehand"] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),body[data-ui-style="freehand"] select,body[data-ui-style="freehand"] textarea{box-sizing:border-box;background:#fffefa;color:var(--fh-ink);border:1px solid var(--fh-control);border-radius:8px;padding:10px 12px;font-size:16px}
+body[data-ui-style="freehand"] .button{font-size:16px;line-height:1.5}
+body[data-ui-style="freehand"] .button.orange{background:var(--fh-mustard);color:#302c22;border:1px solid #b58e45}
+body[data-ui-style="freehand"] .button.outline{background:var(--fh-forest);border:1px solid var(--fh-forest);color:var(--fh-paper)}
+body[data-ui-style="freehand"] button:disabled{cursor:default;opacity:.55}
+body[data-ui-style="freehand"] .rooms-heading h2{font-size:22px;line-height:1.35}
+body[data-ui-style="freehand"] :is(.rooms-heading p,.rooms-count,.room-status,.room-details p,.room-game,.room-side .button,.rooms-message){font-size:14px}
+body[data-ui-style="freehand"] .room-card{border-color:var(--fh-border);border-radius:10px 12px 9px 11px;background:#faf7ef;box-shadow:none}
+body[data-ui-style="freehand"] .room-game{color:#685076;letter-spacing:.03em}
+body[data-ui-style="freehand"] .room-status.is-open{color:var(--fh-forest)}
+body[data-ui-style="freehand"] .rooms-message{border-color:var(--fh-border);color:var(--muted)}
+body[data-ui-style="freehand"] :is(.club-footer,.version-note){color:var(--muted)}
+
+/* Keep the grass stage, character art and names intact within the paper frame. */
+body[data-ui-style="freehand"] .lobby-section{position:relative}
+body[data-ui-style="freehand"] .lobby-section::after{content:"";position:absolute;right:14px;top:8px;width:36px;height:5px;border-top:1px solid #aa9b7c;border-bottom:1px solid #aa9b7c;transform:rotate(2deg);pointer-events:none}
+body[data-ui-style="freehand"] .lobby-top h2{font-size:22px;line-height:1.35;color:var(--fh-ink);letter-spacing:normal}
+body[data-ui-style="freehand"] :is(.lobby-top p,.lobby-bottom){font-size:14px;color:#4f5c52}
+body[data-ui-style="freehand"] .lobby-count{font-size:14px;background:#edf0df;color:var(--fh-forest);border-color:#7a8579}
+body[data-ui-style="freehand"] .lobby-emote-toggle{min-width:44px;min-height:44px;background:var(--fh-mustard);color:#302c22;border-color:#b58e45;font-size:16px}
+body[data-ui-style="freehand"] .lobby-emote-toggle:is(:hover,[aria-expanded="true"]){background:#f0cc83}
+body[data-ui-style="freehand"] .lobby-emote-menu{background:var(--fh-paper);color:var(--fh-ink);border-color:var(--fh-control);box-shadow:3px 4px 0 #29362f22}
+body[data-ui-style="freehand"] .lobby-emote-menu>strong{color:var(--fh-ink);font-size:16px}
+body[data-ui-style="freehand"] .lobby-emote-choices p{color:var(--muted);font-size:14px}
+body[data-ui-style="freehand"] .lobby-emote-choice{min-height:44px;border-color:var(--fh-border);background:#f1eddf;color:var(--fh-ink)}
+body[data-ui-style="freehand"] .lobby-emote-choice:hover{border-color:var(--fh-forest);background:#e7ecd9}
+body[data-ui-style="freehand"] .lobby-emote-choice span{font-size:14px}
+
+/* Color the existing header layers without changing their toolbar geometry. */
+body[data-ui-style="freehand"] [data-site-header].site-header{border-bottom-color:var(--fh-border);color:var(--fh-ink)}
+body[data-ui-style="freehand"] .site-header :is(.site-submenu,.site-account-menu,.site-settings,.site-account-id){background:var(--fh-paper);color:var(--fh-ink);border-color:var(--fh-control);box-shadow:3px 4px 0 #29362f22}
+body[data-ui-style="freehand"] .site-header :is(.site-submenu a,.site-account-menu a,.site-account-menu button):hover{background:#edf0e3}
+body[data-ui-style="freehand"] .site-header .site-settings-button{background:var(--fh-forest);color:var(--fh-paper);border-color:var(--fh-forest)}
+body[data-ui-style="freehand"] .site-header .site-avatar-button{min-width:44px;min-height:44px;border-color:var(--fh-control)}
+body[data-ui-style="freehand"] .site-settings button{background:#edf0e3;border-color:var(--fh-control);color:var(--fh-ink)}
+body[data-ui-style="freehand"] .site-settings :is(.site-settings-note,.site-version){color:var(--muted)}
+body[data-ui-style="freehand"] .site-settings :is(.site-version,.site-audio-group){border-color:var(--fh-border)}
+body[data-ui-style="freehand"] .site-settings :is(input[type="checkbox"],input[type="range"]){accent-color:var(--fh-forest)}
+body[data-ui-style="freehand"] .site-settings #site-audio-status,body[data-ui-style="freehand"] #site-header-error{color:#8a492e}
+body[data-ui-style="freehand"] .asset-credits{max-width:960px;margin-inline:auto;padding-block:24px;display:grid;gap:16px;font-size:16px}
+body[data-ui-style="freehand"] .asset-credits h1{margin:0;font-size:28px;line-height:1.35;letter-spacing:normal}
+body[data-ui-style="freehand"] .asset-credits>p{margin:0;font-size:16px;color:var(--muted)}
+body[data-ui-style="freehand"] .credit-card{padding:24px;border:1px solid var(--fh-border);border-radius:12px 10px 14px 9px;background:var(--fh-paper);box-shadow:2px 3px 0 #29362f14;overflow-wrap:anywhere}
+body[data-ui-style="freehand"] .credit-card h2{margin:0 0 12px;font-size:22px;line-height:1.35}
+body[data-ui-style="freehand"] .credit-card :is(p,li){font-size:16px;line-height:1.6;color:var(--fh-ink)}
+body[data-ui-style="freehand"] .asset-credits a{color:var(--fh-forest);text-decoration:underline;text-underline-offset:3px}
+
+@media(min-width:1200px){body[data-ui-style="freehand"] .game-library{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){body[data-ui-style="freehand"] .game-library{grid-template-columns:1fr;gap:16px}body[data-ui-style="freehand"] .tile-body{padding:16px 18px 18px}body[data-ui-style="freehand"] .launch-bar{gap:14px}body[data-ui-style="freehand"] .lobby-section::after{display:none}}
+@media(prefers-reduced-motion:reduce){body[data-ui-style="freehand"] .game-tile{transition:none}}
+html.motion-reduced body[data-ui-style="freehand"] .game-tile{transition:none}

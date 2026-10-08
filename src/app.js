@@ -1,5 +1,7 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {randomBytes,randomUUID}=require('node:crypto');
+// Reviewed local vectors only; never resolve arbitrary SVG paths or uploaded SVGs.
+const FREEHAND_ASSETS=Object.freeze({"/assets/streamline-freehand/edit-pencil.svg":"assets/streamline-freehand/edit-pencil.svg","/assets/streamline-freehand/color-palette.svg":"assets/streamline-freehand/color-palette.svg","/assets/streamline-freehand/conversation-chat.svg":"assets/streamline-freehand/conversation-chat.svg","/assets/streamline-freehand/business-management-team-up.svg":"assets/streamline-freehand/business-management-team-up.svg","/assets/streamline-freehand/board-game-dice-pawn.svg":"assets/streamline-freehand/board-game-dice-pawn.svg","/assets/streamline-freehand/card-game-card-spade.svg":"assets/streamline-freehand/card-game-card-spade.svg","/assets/streamline-freehand/music-note-1.svg":"assets/streamline-freehand/music-note-1.svg","/assets/streamline-freehand/analytics-graph-stock.svg":"assets/streamline-freehand/analytics-graph-stock.svg","/assets/streamline-freehand/home.svg":"assets/streamline-freehand/home.svg","/assets/streamline-freehand/time-clock-circle.svg":"assets/streamline-freehand/time-clock-circle.svg","/assets/streamline-freehand/connect-flash.svg":"assets/streamline-freehand/connect-flash.svg","/assets/ui/gift.svg":"assets/ui/gift.svg"});
 const {Room}=require('./games/poker'),{ThunderRoom}=require('./games/thunder'),{MajorityRoom}=require('./games/majority'),{GiftRoom}=require('./games/gift');
 const {GiftStore}=require('./games/gift-store'),{GIFTS,CATEGORIES}=require('./games/gift-catalog');
 const {DrawGuessRoom,validTopic,validTopics,DRAW_CATEGORIES}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{TOPICS}=require('./games/draw-guess-words');
@@ -37,6 +39,7 @@ const {createYoutubeTitleResolver}=require('./media/youtube-title');
 const {roomRole,canKick,setRoomRole,pruneRoomRoles,permissionsView}=require('./rooms/permissions');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
 const {ROOM_EMOJIS}=require('./social/emojis');
+const {BUILTIN_FRAME_OPTIONS,builtinFrameDescriptor}=require('./barrage/builtins');
 const {acquireDataLocks}=require('./data/locks');
 const {version:applicationVersion}=require('../package.json');
 function createApp(config){
@@ -44,6 +47,8 @@ function createApp(config){
  try{return initializeApp(config,lock);}catch(error){lock.release();throw error;}
 }
 function initializeApp(config,dataLock){
+ const achievementPurpose=config.achievementPurpose===undefined?'production':config.achievementPurpose;
+ if(!['production','test','tutorial'].includes(achievementPurpose))throw Error('Invalid achievement purpose');
  const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map(),departedSeats=new Map(),roomRate=new Map();
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
  const musicRooms=new Map(),musicStreams=new Map();
@@ -109,13 +114,54 @@ function initializeApp(config,dataLock){
  const communityRate=new Map(),accountRate=new Map(),authRate=new Map();
  const trustCloudflare=config.host==='127.0.0.1'&&config.publicUrl?.startsWith('https://');
  const clientKey=req=>clientAddress(req,trustCloudflare);
- const achievementWarnings=new WeakSet();
+ const achievementWarnings=new WeakSet(),legacyAchievementResults=new WeakSet(),pendingAchievementUnits=new Map();
+ const retryAchievementUnits=()=>{
+  for(const [id,entry] of pendingAchievementUnits){
+   try{
+    if(entry.legacyResult){achievementStore.recordUnit(entry.facts);legacyAchievementResults.add(entry.legacyResult);}
+    else{achievementStore.processUnit(entry.facts);entry.room.acknowledgeAchievementUnit(id);}
+    pendingAchievementUnits.delete(id);
+   }
+   catch(error){if(!achievementWarnings.has(entry.room)){achievementWarnings.add(entry.room);console.error('Achievement update failed:',error);}}
+  }
+ };
+ const collectAchievementUnits=room=>{
+  for(const facts of room.pendingAchievementUnits?.()||[]){
+   if(!pendingAchievementUnits.has(facts.unit_event_id))pendingAchievementUnits.set(facts.unit_event_id,{room,facts:{...facts,purpose:achievementPurpose}});
+  }
+  retryAchievementUnits();
+ };
+ const freezeAchievementParticipants=(room,seatIds)=>{
+  const accounts=new Map([...(seats.get(room.code)||[])].map(([userId,seatId])=>[seatId,userId]));
+  return Object.freeze(seatIds.flatMap(seatId=>{
+   const userId=accounts.get(seatId),player=room.players.find(item=>item.id===seatId);
+   return userId&&player&&!player.bot&&!player.kicked&&db.prepare('SELECT 1 FROM users WHERE id=? AND disabled=0').get(userId)?[Object.freeze({user_id:userId,seat_id:seatId})]:[];
+  }));
+ };
+ const attachAchievementHooks=room=>{
+  Object.defineProperties(room,{
+   achievementUnitStart:{value:descriptor=>freezeAchievementParticipants(room,descriptor.participantSeatIds)},
+   achievementUnitCompleted:{value:()=>collectAchievementUnits(room)},
+  });
+  if(!room.type||room.type==='thunder'){
+   Object.defineProperties(room,{achievementMatchId:{value:null,writable:true},achievementParticipants:{value:Object.freeze([]),writable:true}});
+   const start=room.start;
+   Object.defineProperty(room,'start',{configurable:true,value:function(...args){
+    const previous={id:this.achievementMatchId,participants:this.achievementParticipants,phase:this.phase};
+    this.achievementMatchId=randomUUID();this.achievementParticipants=freezeAchievementParticipants(this,this.players.map(player=>player.id));
+    try{return start.apply(this,args);}catch(error){if(this.phase===previous.phase){this.achievementMatchId=previous.id;this.achievementParticipants=previous.participants;}throw error;}
+   }});
+  }
+ };
  const awardRoomAchievements=room=>{
   try{
-   if(room.type==='gift')achievementStore.awardGiftRound(room,seats.get(room.code));
-   if(room.type==='majority')achievementStore.awardMajorityRound(room,seats.get(room.code));
-   if(!room.type)achievementStore.awardPokerHand(room,seats.get(room.code));
-   if(room.type==='thunder')achievementStore.awardRaceFinish(room,seats.get(room.code));
+   collectAchievementUnits(room);
+   const frozenSeats=room.achievementParticipants?new Map(room.achievementParticipants.map(item=>[item.user_id,item.seat_id])):seats.get(room.code);
+   const legacyResult=!room.type&&room.phase==='showdown'&&room.hand&&room.results?.length?room.results:room.type==='thunder'&&room.phase==='finished'?room.winner:null;
+   if(legacyResult&&!legacyAchievementResults.has(legacyResult)){
+    const facts=achievementStore.legacyUnit(room,frozenSeats,room.type||'poker',legacyResult,{purpose:achievementPurpose});
+    pendingAchievementUnits.set(facts.unit_event_id,{room,facts,legacyResult});retryAchievementUnits();
+   }
   }
   catch(error){if(!achievementWarnings.has(room)){achievementWarnings.add(room);console.error('Achievement update failed:',error);}}
  };
@@ -242,7 +288,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/profile/options'&&req.method==='GET'){
   return send({defaults,expressionLabels,characters:galleryFor(db,user.id)});
  }
- if(url.pathname==='/api/social/options'&&req.method==='GET')return send({emojis:ROOM_EMOJIS});
+ if(url.pathname==='/api/social/options'&&req.method==='GET')return send({emojis:ROOM_EMOJIS,barrageFrames:BUILTIN_FRAME_OPTIONS});
  if(url.pathname==='/api/profile/characters'&&req.method==='POST'){limitAccount(user);return send(createCharacter(db,user.id,data));}
  const characterDelete=url.pathname.match(/^\/api\/profile\/characters\/([a-f0-9-]{36})\/delete$/);
  if(characterDelete&&req.method==='POST'){limitAccount(user);return send(removeCharacter(db,user.id,characterDelete[1]));}
@@ -304,6 +350,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/info'){const addresses=Object.values(os.networkInterfaces()).flat().filter(x=>x.family==='IPv4'&&!x.internal).map(x=>`${protocol}://${x.address}:${port}`);const preferred=config.publicUrl||addresses.find(a=>a.includes('://26.'))||null;return send({preferred,addresses:config.publicUrl?[config.publicUrl,...addresses.filter(a=>a!==config.publicUrl)]:addresses});}
  if(url.pathname==='/api/rooms'&&req.method==='GET'){expireRooms();return send({rooms:listRooms(rooms,seats,kickedUsers,user.id)});}
  if(url.pathname==='/api/create'&&req.method==='POST'){
+  if(pendingAchievementUnits.size>=4096)throw new HttpError(503,'ACHIEVEMENT_STORAGE_UNAVAILABLE','回合紀錄暫時無法儲存，請稍後再建立房間');
   limitRate(roomRate,'create:'+user.id,20);limitRate(roomRate,'create-ip:'+clientKey(req),60);
   if(rooms.size>=100)throw Error('房間數已達上限');
   if(!['poker','thunder','majority','gift','draw'].includes(data.type))throw new HttpError(400,'INVALID_GAME','不支援的遊戲');
@@ -324,6 +371,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   }
   if(!thunder&&!botSupport(room).supported)throw new HttpError(400,'TEST_AI_REQUIRED','新遊戲必須先提供測試 AI');
   history.attach(room);
+  attachAchievementHooks(room);
   let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>{const player=room.add(user.display_name);player.name=user.display_name;return player;});}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
@@ -354,6 +402,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    // as safely persisted. Remaining players can exit this paused room too.
    historyPersisted=false;history.markUnrecorded(room);if(!applied)result=leavePlayer(room,p.id);
   }
+  awardRoomAchievements(room);
   seats.get(room.code)?.delete(user.id);
   reconcileWatch(room);
   pruneRoomRoles(room,activeRoomIds(room));mediaRooms.get(room)?.reconcile(mediaContext(room));
@@ -476,7 +525,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   }else if(data.kind==='barrage'){
    const message=typeof data.message==='string'?data.message.trim():'';
    if(!message||[...message].length>40||/[\u0000-\u001f\u007f]/.test(message))throw new HttpError(400,'INVALID_BARRAGE','文字彈幕需為 1–40 字，且不能換行');
-   event={id:randomBytes(8).toString('hex'),kind:'barrage',playerId:p.id,name:user.display_name,message,at:now};
+   event={id:randomBytes(8).toString('hex'),kind:'barrage',playerId:p.id,name:user.display_name,message,frame:builtinFrameDescriptor(data.builtinFrameId),at:now};
   }else if(data.kind==='emoji'){
    if(typeof data.emoji!=='string'||!ROOM_EMOJIS.includes(data.emoji))throw new HttpError(400,'INVALID_EMOJI','請選擇選單中的 emoji');
    event={id:randomBytes(8).toString('hex'),kind:'emoji',playerId:p.id,name:user.display_name,emoji:data.emoji,at:now};
@@ -492,6 +541,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   return send(withSocial(room,room.view(p.id)));
  }
  if(url.pathname==='/api/start'&&room.host!==p.id)throw new HttpError(403,'HOST_ONLY','只有房主可以開始');
+ if(url.pathname==='/api/start'&&pendingAchievementUnits.size>=4096)throw new HttpError(503,'ACHIEVEMENT_STORAGE_UNAVAILABLE','回合紀錄暫時無法儲存，請稍後再開始');
  limitRate(roomRate,'mutation:'+user.id,120);
  history.transact(room,{action:url.pathname.slice(5),source:'player',actor:p.id,input:data},()=>{
  if(url.pathname==='/api/action'){if(room.type==='thunder'||!room.type)room.humanAct(p.id,data.action,room.type==='thunder'?data:data.amount);else room.act(p.id,data.action,data);}
@@ -509,7 +559,8 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  const musicAsset=url.pathname.match(/^\/assets\/music\/([a-f0-9-]{36})$/);
- if(url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'){
+ if(Object.hasOwn(FREEHAND_ASSETS,url.pathname)){res.setHeader('Content-Type','image/svg+xml');res.setHeader('Content-Security-Policy',"default-src 'none'; sandbox");return res.end(fs.readFileSync(path.join(__dirname,'..','public',FREEHAND_ASSETS[url.pathname])));}
+ if(url.pathname==='/shared/barrage-frames.js'||url.pathname==='/shared/barrage-frames.css'||url.pathname==='/shared/freehand-ui.css'||url.pathname==='/shared/ui-widgets.js'||url.pathname==='/shared/ui-widgets.css'||url.pathname==='/shared/ui-notifications.js'||url.pathname==='/shared/ui-notifications.css'||url.pathname==='/shared/ui-celebrations.js'||url.pathname==='/shared/ui-celebrations.css'||url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'||url.pathname==='/shared/game-fx-layer.js'||url.pathname==='/shared/game-fx-layer.css'||url.pathname==='/shared/race-dice-webgl.js'){
   const file=url.pathname.slice(1);res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript; charset=utf-8');return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  if(musicAsset){auth.requireUser(req);if(!['GET','HEAD'].includes(req.method))throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');return musicStore.stream(req,res,musicAsset[1]);}
@@ -523,7 +574,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(media){const viewer=auth.requireUser(req),row=characterMedia.image(viewer.id,url.href);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',row.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(row.bytes);}
  if(url.pathname.startsWith('/assets/characters/')){auth.requireUser(req);const asset=builtinCharacters.flatMap(character=>Object.values(character.expressions)).find(value=>value===url.pathname);if(!asset)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');res.setHeader('Content-Type',asset.endsWith('.gif')?'image/gif':'image/png');res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(fs.readFileSync(path.join(__dirname,'..','public',asset)));}
  const characterId=url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];if(characterId){const viewer=auth.requireUser(req),selected=characterMedia.avatar(characterId);if(!selected)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到角色外觀');let bytes,mime;if(USER_IMAGE_PATH.test(selected.url)){const row=characterMedia.image(viewer.id,selected.url);if(!row)throw new HttpError(404,'IMAGE_NOT_FOUND','找不到角色圖片');bytes=row.bytes;mime=row.mime;}else{bytes=fs.readFileSync(path.join(__dirname,'..','public',selected.url));mime=selected.url.endsWith('.gif')?'image/gif':'image/png';}res.setHeader('Content-Type',mime);res.setHeader('Content-Security-Policy',"default-src 'none'");return res.end(bytes);}
- const files={'/market':'market.html','/market.js':'market.js','/market.css':'market.css','/market-rules.js':'market-rules.js','/market-curve.js':'market-curve.js','/shared/race-movement.js':'shared/race-movement.js','/shared/race-paths.js':'shared/race-paths.js','/shared/table-watch.js':'shared/table-watch.js','/shared/table-watch.css':'shared/table-watch.css','/shared/draw-results.js':'shared/draw-results.js','/shared/motion-policy.js':'shared/motion-policy.js','/shared/audio-settings.js':'shared/audio-settings.js','/shared/expression-sounds.js':'shared/expression-sounds.js','/shared/game-sounds.js':'shared/game-sounds.js','/shared/race-game-sounds.js':'shared/race-game-sounds.js','/assets/game-sounds/turn.wav':'assets/game-sounds/turn.wav','/assets/game-sounds/correct.wav':'assets/game-sounds/correct.wav','/assets/game-sounds/dice-roll.wav':'assets/game-sounds/dice-roll.wav','/assets/game-sounds/shot.wav':'assets/game-sounds/shot.wav','/assets/game-sounds/slam.wav':'assets/game-sounds/slam.wav','/assets/game-sounds/nitro.wav':'assets/game-sounds/nitro.wav','/assets/game-sounds/skid.wav':'assets/game-sounds/skid.wav','/shared/popovers.js':'shared/popovers.js','/shared/ui-foundation.css':'shared/ui-foundation.css','/shared/ui-primitives.css':'shared/ui-primitives.css','/shared/ui-components.js':'shared/ui-components.js','/collection':'collection.html','/collection.js':'collection.js','/collection.css':'collection.css','/settings':'settings.html','/settings.js':'settings.js','/settings.css':'settings.css','/shared/site-header.js':'shared/site-header.js','/shared/site-header.css':'shared/site-header.css','/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/race-vehicle-effects.js':'shared/race-vehicle-effects.js','/shared/race-dice-dialog.js':'shared/race-dice-dialog.js','/shared/race-terrain-help.js':'shared/race-terrain-help.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath||file==='market.html'?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
+ const files={'/market-curve.js':'market-curve.js','/credits':'credits.html','/credits.css':'credits.css','/market':'market.html','/market.js':'market.js','/market.css':'market.css','/market-rules.js':'market-rules.js','/shared/race-movement.js':'shared/race-movement.js','/shared/race-paths.js':'shared/race-paths.js','/shared/table-watch.js':'shared/table-watch.js','/shared/table-watch.css':'shared/table-watch.css','/shared/draw-results.js':'shared/draw-results.js','/shared/motion-policy.js':'shared/motion-policy.js','/shared/audio-settings.js':'shared/audio-settings.js','/shared/expression-sounds.js':'shared/expression-sounds.js','/shared/game-sounds.js':'shared/game-sounds.js','/shared/race-game-sounds.js':'shared/race-game-sounds.js','/assets/game-sounds/turn.wav':'assets/game-sounds/turn.wav','/assets/game-sounds/correct.wav':'assets/game-sounds/correct.wav','/assets/game-sounds/dice-roll.wav':'assets/game-sounds/dice-roll.wav','/assets/game-sounds/shot.wav':'assets/game-sounds/shot.wav','/assets/game-sounds/slam.wav':'assets/game-sounds/slam.wav','/assets/game-sounds/nitro.wav':'assets/game-sounds/nitro.wav','/assets/game-sounds/skid.wav':'assets/game-sounds/skid.wav','/shared/popovers.js':'shared/popovers.js','/shared/ui-foundation.css':'shared/ui-foundation.css','/shared/ui-primitives.css':'shared/ui-primitives.css','/shared/ui-components.js':'shared/ui-components.js','/collection':'collection.html','/collection.js':'collection.js','/collection.css':'collection.css','/settings':'settings.html','/settings.js':'settings.js','/settings.css':'settings.css','/shared/site-header.js':'shared/site-header.js','/shared/site-header.css':'shared/site-header.css','/music':'music.html','/music.js':'music.js','/shared/table-music.js':'shared/table-music.js','/shared/table-music.css':'shared/table-music.css','/profile':'profile.html','/profile.js':'profile.js','/studio':'studio.html','/studio.js':'studio.js','/studio-editor.js':'studio-editor.js','/admin':'admin.html','/admin.js':'admin.js','/login':'login.html','/login.js':'login.js','/majority-social.js':'majority-social.js','/community':'community.html','/community.js':'community.js','/community.css':'community.css','/majority':'majority.html','/majority.js':'majority.js','/majority.css':'majority.css','/gift':'gift.html','/gift.js':'gift.js','/gift.css':'gift.css','/draw':'draw.html','/draw.js':'draw.js','/draw.css':'draw.css','/draw-words':'draw-words.html','/draw-words.js':'draw-words.js','/shared/stroke-canvas.js':'shared/stroke-canvas.js','/gifts':'gifts.html','/gifts.js':'gifts.js','/gifts.css':'gifts.css','/':'index.html','/poker':'poker.html','/race':'race.html','/rules':'rules.html','/history':'history.html','/history.js':'history.js','/history.css':'history.css','/achievements':'achievements.html','/achievements.js':'achievements.js','/achievements.css':'achievements.css','/app.js':'app.js','/style.css':'style.css','/hub.js':'hub.js','/club.css':'club.css','/rooms.css':'rooms.css','/club-pages.css':'club-pages.css','/race.js':'race.js','/race.css':'race.css','/assets/thunder-components.png':'assets/thunder-components.png','/assets/thunder-box.png':'assets/thunder-box.png','/assets/gift-sounds/open_001.wav':'assets/gift-sounds/open_001.wav','/assets/gift-sounds/confirmation_001.wav':'assets/gift-sounds/confirmation_001.wav','/room-reconnect.js':'shared/room-reconnect.js','/shared/room-reconnect.js':'shared/room-reconnect.js','/room-host.js':'shared/room-host.js','/shared/room-host.js':'shared/room-host.js','/room-host.css':'shared/room-host.css','/shared/room-host.css':'shared/room-host.css','/game-shell.js':'shared/game-shell.js','/shared/game-shell.js':'shared/game-shell.js','/game-shell.css':'shared/game-shell.css','/shared/game-shell.css':'shared/game-shell.css','/shared/immersion.js':'shared/immersion.js','/shared/race-event-cues.js':'shared/race-event-cues.js','/shared/race-vehicle-effects.js':'shared/race-vehicle-effects.js','/shared/race-dice-dialog.js':'shared/race-dice-dialog.js','/shared/race-terrain-help.js':'shared/race-terrain-help.js','/shared/api.js':'shared/api.js'};const roomPath=url.pathname.match(/^\/(race|poker|majority|gift|draw)\/[A-Fa-f0-9]{6}\/?$/);const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath||file==='market.html'?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.png')?'image/png':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);
@@ -535,7 +586,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(closed)throw Error('Application has been closed');
   if(server.listening)return server.address();
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
-  stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom,onDrawStroke:publishDraw});
+  stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom,onTransition:awardRoomAchievements,onSweep:retryAchievementUnits,onDrawStroke:publishDraw});
   submissions.recover();
   marketAutomation.start();
   return server.address();
@@ -545,6 +596,8 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   closed=true;
   stopScheduler?.();
   await marketAutomation.stop();
+  for(const room of rooms.values())awardRoomAchievements(room);
+  retryAchievementUnits();
   watchRooms.clear();
   mediaRooms.clear();youtubeTitles.clear?.();
   for(const entries of musicStreams.values())for(const entry of entries)entry.res.end();
