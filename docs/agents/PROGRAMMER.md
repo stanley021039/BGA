@@ -299,3 +299,8 @@ Gartic HAR 尚未取得；[官方錄製方法](../research/GARTIC-NETWORK-REFERE
 ## 2026-10-08 紙卡大廳 Draft
 
 已確認 shhuang.cc 是 Linux 部署 8a9cbfd 的六款遊戲專案；Windows BGA-main 舊版不是改動目標。獨立分支 codex/playful-board-game-ui，使用者接受紙卡範本並要求原角色移動功能保持原樣。這輪僅大廳啟用 tokens／六卡輪播／建立房間 dialog，hub.js、lobby.js、遊戲／房間／帳號／資料庫模組未改。五款房間遊戲實際 UI 建立與等待頁、market直接導航、兩帳號移動／表情同步及Chromium觸控驗證通過。完整測試1,519項、1,518通過、原版同項SQLite I/O失敗。其他頁面仍待視覺確認；未部署、未完成全站實玩驗收、未打發行tag。证据見 docs/playful-ui/README.md 與 test-results.md。此紀錄取代本輪將 Windows 舊三款遊戲來源視為正式專案的假設，不代表撤銷既有其他功能契約。
+
+
+### 2026-10-08 授權部署更新
+
+使用者明確要求更新 shhuang.cc 測試，1.17.0／6be11b4／v1.17.0 已部署。原先 SQLite I/O 測試失敗因 /tmp 空間不足，改用磁碟 TMPDIR 後 1,519/1,519 全部通過；未改測試或 storage。正式瀏覽器驗證登入保留、輪播／建立 dialog／六張插畫與設定版號，origin八資源驗證、DB完整性/schema/四資料表指紋保留通過。此筆取代前一筆未部署／原版測試仍失敗狀態；其餘頁面尚未改造。證據 docs/playful-ui/deployment.md。
