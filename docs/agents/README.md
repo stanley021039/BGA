@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-08 候選 v1.12.0／schema18：股市數值預測與每日凍結曲線、五等分圖片，尚未合併／部署。舊場次與帳本保持原規則；詳 [曲線契約與相容性](../MARKET-PREDICTION-CURVE.md)。
+
 2026-10-07 Issue47股市自動化候選v1.10.0／schema17：官方收盤交叉核對、自動原子結算、下一交易日、近一日曆月歷史、暱稱排行榜與休市override，尚未部署。先讀 [市場自動化](../MARKET-AUTOMATION.md)；PROGRAMMER與SERVER-DATA保存來源、單寫者、遷移與限制。
 
 2026-10-07最新正式v1.9.0：畫猜防閃、真點時間viewer回放、平滑倒數與安靜成功回饋，以及媒體高度／原生本機時間明確發布已完成。接手先讀 [畫猜最新進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)及 [媒體最新進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)／[spec](../specs/MEDIA-ICON-WINDOW-UI.md)。PROGRAMMER／ANIMATION／PLAYER保存每輪中途與終點分開驗、callback取消及個人／全桌權限規則；完整source、測試與原生數據集中於進度，下方旧版本是歷史。正式成功不表示所有硬體、自然多輪、實體手機／讀屏或60fps已驗。

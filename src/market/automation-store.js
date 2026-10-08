@@ -74,7 +74,7 @@ class MarketAutomationStore{
   for(const round of this.db.prepare('SELECT * FROM market_rounds WHERE result_revision=0 AND void_at IS NULL').all())if(this.isTradingDay(round.target_date)===false)this.db.prepare('UPDATE market_rounds SET void_reason=?,void_at=? WHERE id=? AND result_revision=0').run('官方行事曆或管理員覆核為休市，不計分',new Date(now).toISOString(),round.id);
   if(!target)return null;
   const existing=this.db.prepare('SELECT * FROM market_rounds WHERE target_date=?').get(target);if(existing)return existing.void_at?null:target;
-  const rules=R.snapshot(),cutoff=R.cutoffFor(target,rules);if(now>=Date.parse(cutoff))return null;
+  const rules=require('./curve-store').freezeRules(this.db,target,now),cutoff=R.cutoffFor(target,rules);if(now>=Date.parse(cutoff))return null;
   this.db.prepare("INSERT INTO market_rounds(id,target_date,cutoff_at,settlement_after,rules_json,created_by,created_at,actor_source) VALUES(?,?,?,?,?,NULL,?,'system')").run(randomUUID(),target,cutoff,R.settlementFor(target,rules),JSON.stringify(rules),new Date(now).toISOString());
   this.audit({targetDate:target,kind:'round',status:'created',detail:'official-calendar'});return target;
  });}
