@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-08 再次檢查PR53／57：修正混合AI全員同組的majority-one-channel，授獎至少3真人且AI不授。完整Linux53 1725／57 1742通過，固定source、修改前2失敗→修正後通過與兩回合審查見 [本輪](../PR-RECHECK-ALL-SAME.md)。未部署，舊收據不回写。
+
 2026-10-08 PR53評論修正：同頻／送禮／畫猜混合真人AI成就映射以真人席位為準，缺真人映射仍拒絕。相关67項通過，包含真HTTP同頻3真人＋1AI；舊收據不改寫，未部署。完整證據與兩回合審查見 [本輪紀錄](../PR53-MIXED-AI-REVIEW.md)。
 
 正式仍v1.12.0／83ffcab／schema16，新增私有GitHub token並重載服務，當次PID147993。設定前備份私有env與線上SQLite；freshrooms0，沒有清房或DB restore。9帳戶全欄位、其他18表內容與22schema保持，只有session及測試board_issue／comment／submission按功能新增；3筆done無待處理。GitHub token只存正式私有env，不複製到sanitized開發資料或記憶文件。下一次重新盤點PID／env，舊1.12部署env摘要不能當新設定的pin；詳 [同步紀錄](../GITHUB-BOARD-SYNC.md)。
