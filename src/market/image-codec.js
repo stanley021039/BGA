@@ -4,6 +4,7 @@ const {inflateSync}=require('node:zlib');
 const {HttpError}=require('../http/errors');
 
 const DEFAULT_IMAGE_LIMITS=Object.freeze({maxUploadBytes:2*1024*1024,maxImageBytes:4*1024*1024,maxDimension:4096,maxPixels:8000000,maxPerUser:100,maxImages:1000,maxStorageBytes:256*1024*1024,maxApprovalBatch:1000});
+const THUMBNAIL_MAX_BYTES=512*1024;
 const MIME_FORMAT=Object.freeze({'image/png':'png','image/jpeg':'jpeg','image/webp':'webp'});
 const SIGNATURE=Buffer.from([137,80,78,71,13,10,26,10]);
 let activeDecodes=0;
@@ -107,4 +108,20 @@ async function canonicalImage(input,limits=DEFAULT_IMAGE_LIMITS){
  }catch(error){if(error instanceof HttpError)throw error;invalid();}
  finally{activeDecodes--;}
 }
-module.exports={DEFAULT_IMAGE_LIMITS,imageLimits,imageInput,canonicalImage,inspectCanonicalImage};
+async function thumbnailImage(bytes){
+ if(activeDecodes>=2)throw new HttpError(429,'IMAGE_BUSY','圖片處理中，請稍後再試');
+ activeDecodes++;
+ try{
+  const encode=(size,quality)=>sharp(bytes,{failOn:'warning',limitInputPixels:DEFAULT_IMAGE_LIMITS.maxPixels,limitInputChannels:4})
+   .resize({width:size,height:size,fit:'inside',withoutEnlargement:true}).webp({quality,effort:4})
+   .timeout({seconds:10}).toBuffer({resolveWithObject:true});
+  let result=await encode(512,78);
+  // Random alpha needs lossless alpha storage even when RGB is lossy. Keep
+  // transparency intact and bound a single fallback rather than rejecting
+  // otherwise valid canonical uploads at the common 256 KiB threshold.
+  if(result.data.length>THUMBNAIL_MAX_BYTES)result=await encode(400,60);
+  if(result.data.length>THUMBNAIL_MAX_BYTES)tooLarge();
+  return {mime:'image/webp',bytes:result.data,width:result.info.width,height:result.info.height};
+ }finally{activeDecodes--;}
+}
+module.exports={THUMBNAIL_MAX_BYTES,thumbnailImage,DEFAULT_IMAGE_LIMITS,imageLimits,imageInput,canonicalImage,inspectCanonicalImage};

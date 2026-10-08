@@ -21,7 +21,7 @@ test('gallery endpoints require a session before reading large uploads and rejec
 });
 test('HTTP pending media is owner/admin-only; approval makes canonical PNG available to logged-in players',async t=>{const f=await fixture(t),r=await f.upload(f.cookies[1],{authorId:f.users[2].id,authorName:'forged',status:'approved',approvedBy:f.users[0].id});assert.equal(r.status,200);const image=(await r.json()).image;assert.equal(image.status,'pending');assert.equal(image.authorName,'圖片作者 0');assert.equal(image.version,1);
  const own=await (await f.fetcher('/api/market/images/mine',{cookie:f.cookies[1]})).json();assert.equal(own.images.length,1);assert.equal((await f.fetcher(image.url,{cookie:f.cookies[2]})).status,404);
- for(const cookie of [f.cookies[0],f.cookies[1]]){const media=await f.fetcher(image.url,{cookie});assert.equal(media.status,200);assert.equal(media.headers.get('content-type'),'image/png');assert.equal(media.headers.get('x-content-type-options'),'nosniff');assert.equal(media.headers.get('cache-control'),'no-store');assert.equal(media.headers.get('cross-origin-resource-policy'),'same-origin');const bytes=Buffer.from(await media.arrayBuffer());assert.equal(PNG.sync.read(bytes).width,2);}
+ for(const cookie of [f.cookies[0],f.cookies[1]]){const media=await f.fetcher(image.url,{cookie});assert.equal(media.status,200);assert.equal(media.headers.get('content-type'),'image/png');assert.equal(media.headers.get('x-content-type-options'),'nosniff');assert.equal(media.headers.get('cache-control'),'private, no-cache, must-revalidate');assert.equal(media.headers.get('cross-origin-resource-policy'),'same-origin');const bytes=Buffer.from(await media.arrayBuffer());assert.equal(PNG.sync.read(bytes).width,2);}
  const draw=await (await f.fetcher('/api/market/images/draw',{cookie:f.cookies[2],body:{targetDate:'2027-01-04'}})).json();assert.ok(Object.values(draw.images).every(x=>x===null));
  assert.equal((await f.fetcher('/api/admin/market/images/approve',{cookie:f.cookies[2],body:{requestId:request(),confirmed:true,images:[{id:image.id,version:image.version}]}})).status,403);
  const approval=await f.fetcher('/api/admin/market/images/approve',{cookie:f.cookies[0],body:{requestId:request(),confirmed:true,images:[{id:image.id,version:image.version}]}});assert.equal(approval.status,200);
@@ -89,4 +89,46 @@ test('real HTTP rate-limited approval retries preserve the original frozen batch
   assert.equal(events.at(-1).status,200);assert.equal(new Set(events.map(event=>event.input.requestId)).size,1);for(const event of events)assert.deepEqual(event.input.images,frozen.images);
   const pending=await (await f.fetcher('/api/admin/market/images',{cookie:f.cookies[0]})).json();assert.equal(pending.total,1);assert.equal(pending.images[0].id,newer.id);assert.equal(client.inspect().gallery.approval,null);
  }finally{Date.now=realNow;}
+});
+
+test('both image variants revalidate privately after authorization, including cached withdrawn and deleted images',async t=>{
+ const f=await fixture(t),image=(await (await f.upload(f.cookies[1])).json()).image;
+ const variants=[image.url,image.url+'/thumbnail'],tags=[];
+ for(const route of variants){
+  const own=await f.fetcher(route,{cookie:f.cookies[1]});assert.equal(own.status,200);tags.push(own.headers.get('etag'));
+  assert.match(tags.at(-1),/^"[a-f0-9]{64}"$/);assert.equal(own.headers.get('vary'),'Cookie');
+  assert.equal(own.headers.get('cache-control'),'private, no-cache, must-revalidate');
+  if(route.endsWith('/thumbnail')){assert.equal(own.headers.get('content-type'),'image/webp');const meta=await require('sharp')(Buffer.from(await own.arrayBuffer())).metadata();assert.equal(meta.width,2);}
+  for(const cookie of [undefined,f.cookies[2]])assert.equal((await f.fetcher(route,{cookie,headers:{'If-None-Match':tags.at(-1)}})).status,cookie?404:401);
+  const cached=await f.fetcher(route,{cookie:f.cookies[1],headers:{'If-None-Match':'"different", W/'+tags.at(-1)}});assert.equal(cached.status,304);assert.equal(cached.headers.get('content-type'),own.headers.get('content-type'));assert.equal(cached.headers.get('content-security-policy'),own.headers.get('content-security-policy'));assert.equal(cached.headers.get('cross-origin-resource-policy'),'same-origin');assert.equal((await cached.arrayBuffer()).byteLength,0);
+ }
+ assert.notEqual(tags[0],tags[1]);
+ await f.fetcher('/api/admin/market/images/approve',{cookie:f.cookies[0],body:{requestId:request(),confirmed:true,images:[{id:image.id,version:1}]}});
+ for(let i=0;i<variants.length;i++)assert.equal((await f.fetcher(variants[i],{cookie:f.cookies[2],headers:{'If-None-Match':tags[i]}})).status,304);
+ const db=openDatabase(f.file);
+ try{
+  db.prepare("UPDATE market_images SET status='pending',version=1,approved_by=NULL,approved_at=NULL WHERE id=?").run(image.id);
+  for(let i=0;i<variants.length;i++)assert.equal((await f.fetcher(variants[i],{cookie:f.cookies[2],headers:{'If-None-Match':tags[i]}})).status,404);
+  db.prepare('UPDATE users SET disabled=1 WHERE id=?').run(f.users[1].id);
+  for(let i=0;i<variants.length;i++)assert.equal((await f.fetcher(variants[i],{cookie:f.cookies[1],headers:{'If-None-Match':tags[i]}})).status,401);
+  db.prepare('DELETE FROM market_images WHERE id=?').run(image.id);
+  for(let i=0;i<variants.length;i++)assert.equal((await f.fetcher(variants[i],{cookie:f.cookies[0],headers:{'If-None-Match':tags[i]}})).status,404);
+ }finally{db.close();}
+});
+
+test('thumbnail async reads cannot serve a 304 or body after session logout or expiry',async t=>{
+ const {MarketThumbnails}=require('../src/market/thumbnails');
+ for(const mode of ['logout','expiry']){
+  const f=await fixture(t),image=(await (await f.upload(f.cookies[1])).json()).image,route=image.url+'/thumbnail';
+  const warm=await f.fetcher(route,{cookie:f.cookies[1]}),etag=warm.headers.get('etag');assert.equal(warm.status,200);await warm.arrayBuffer();
+  const read=MarketThumbnails.prototype.read;let entered,release;
+  const waiting=new Promise(resolve=>entered=resolve),gate=new Promise(resolve=>release=resolve);
+  MarketThumbnails.prototype.read=async function(key){const bytes=await read.call(this,key);entered();await gate;return bytes;};
+  try{
+   const pending=f.fetcher(route,{cookie:f.cookies[1],headers:mode==='logout'?{'If-None-Match':etag}:{}});await waiting;
+   if(mode==='logout')assert.equal((await f.fetcher('/api/auth/logout',{cookie:f.cookies[1],body:{}})).status,200);
+   else{const db=openDatabase(f.file);try{db.prepare("UPDATE sessions SET expires_at='2000-01-01T00:00:00.000Z' WHERE user_id=?").run(f.users[1].id);}finally{db.close();}}
+   release();assert.equal((await pending).status,401);assert.equal((await f.fetcher(route,{cookie:f.cookies[1],headers:{'If-None-Match':etag}})).status,401);
+  }finally{release();MarketThumbnails.prototype.read=read;}
+ }
 });

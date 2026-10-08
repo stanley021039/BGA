@@ -2,7 +2,8 @@ const {randomUUID,randomInt,createHash}=require('node:crypto');
 const {transaction}=require('../db');
 const {HttpError}=require('../http/errors');
 const R=require('../../public/market-rules');
-const {DEFAULT_IMAGE_LIMITS,imageLimits,imageInput,canonicalImage,inspectCanonicalImage}=require('./image-codec');
+const {DEFAULT_IMAGE_LIMITS,imageLimits,imageInput,canonicalImage,inspectCanonicalImage,thumbnailImage}=require('./image-codec');
+const {MarketThumbnails,keyFor,digest}=require('./thumbnails');
 const BUCKETS=Object.freeze(R.CONFIG.options.map(option=>option.id));
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const REQUEST_ID=/^[A-Za-z0-9_-]{8,80}$/;
@@ -18,7 +19,7 @@ function rulesOf(input,optional=false){
 }
 function metadata(row){return {id:row.id,version:row.version,authorName:row.author_name,buckets:JSON.parse(row.buckets_json),weekdays:JSON.parse(row.weekdays_json),width:row.width,height:row.height,status:row.status,createdAt:row.created_at,url:`/api/market/images/${row.id}/media`};}
 class MarketImageStore{
- constructor(db,clock=Date.now,options={}){this.db=db;this.clock=clock;this.limits=imageLimits(options.limits);}
+ constructor(db,clock=Date.now,options={}){this.db=db;this.clock=clock;this.limits=imageLimits(options.limits);this.thumbnails=new MarketThumbnails({directory:options.thumbnailDirectory,maxImages:this.limits.maxImages});this.thumbnailStopped=true;this.thumbnailWork=null;this.thumbnailTimer=null;this.thumbnailError=null;}
  user(actor,admin=false){
   const user=this.db.prepare('SELECT id,display_name,role,disabled FROM users WHERE id=?').get(actor?.id||'');
   if(!user||user.disabled)fail(401,'UNAUTHORIZED','請重新登入');
@@ -51,13 +52,16 @@ class MarketImageStore{
   // A retry already committed is cheap and does not consume a decoder slot.
   const replay=transaction(this.db,()=>this.receipt(this.user(actor),data,fingerprint));if(replay)return replay;
   const image=await canonicalImage(source,this.limits);
-  return this.write(actor,'image-upload',data,fingerprint,(user,now)=>{
+  const thumbnail=await thumbnailImage(image.bytes);
+  const result=this.write(actor,'image-upload',data,fingerprint,(user,now)=>{
    const counts=this.counts(),owned=this.db.prepare('SELECT COUNT(*) n FROM market_images WHERE author_id=?').get(user.id).n;
    if(owned>=this.limits.maxPerUser||counts.count>=this.limits.maxImages||counts.bytes+image.bytes.length>this.limits.maxStorageBytes)fail(409,'IMAGE_QUOTA_EXCEEDED','圖片庫容量已滿，請聯絡管理者');
    const id=randomUUID(),at=new Date(now).toISOString();
    this.db.prepare("INSERT INTO market_images(id,author_id,author_name,mime,bytes,width,height,buckets_json,weekdays_json,version,status,created_at,approved_by,approved_at) VALUES(?,?,?,?,?,?,?,?,?,1,'pending',?,NULL,NULL)").run(id,user.id,user.display_name,image.mime,image.bytes,image.width,image.height,JSON.stringify(data.buckets),JSON.stringify(data.weekdays),at);
    return {result:{ok:true,image:metadata(this.db.prepare(`SELECT ${COLUMNS} FROM market_images WHERE id=?`).get(id))},at};
   });
+  try{await this.thumbnails.write(keyFor(result.image.id,image.bytes),thumbnail.bytes);}catch(error){this.thumbnailError=error.code||'THUMBNAIL_CACHE_WRITE';}
+  return result;
  }
  listMine(actor){return transaction(this.db,()=>{const user=this.user(actor);return {images:this.boundedRows('WHERE author_id=?',[user.id]).map(metadata),limits:this.limits};});}
  pending(actor,filters={}){const rules=rulesOf(filters,true);return transaction(this.db,()=>{
@@ -90,8 +94,47 @@ class MarketImageStore{
  media(actor,id){return transaction(this.db,()=>{
   const user=this.user(actor),row=this.db.prepare('SELECT author_id,status,mime,bytes FROM market_images WHERE id=?').get(typeof id==='string'?id:'');
   if(!row||row.status!=='approved'&&row.author_id!==user.id&&user.role!=='admin')fail(404,'IMAGE_NOT_FOUND','找不到圖片');
-  return {mime:row.mime,bytes:row.bytes};
+  return {mime:row.mime,bytes:row.bytes,etag:'\"'+digest(row.bytes)+'\"'};
  });}
+ async thumbnail(actor,id){
+  // Never decode on GET. A cold/missing derivative is retried after the worker
+  // has generated it; it must not silently transfer the full original.
+  const original=this.media(actor,id),key=keyFor(id,original.bytes);
+  const bytes=await this.thumbnails.read(key);
+  // Async file reads cannot carry an old authorization decision across a
+  // withdrawal, deletion, disabled account or role change.
+  const current=this.media(actor,id);
+  if(!bytes||current.etag!==original.etag)fail(503,'THUMBNAIL_PENDING','縮圖準備中，請稍後重新整理');
+  return {mime:'image/webp',bytes,etag:'"'+digest(bytes)+'"'};
+ }
+ async buildThumbnails(){
+  // One source at a time, with bounded traversal and a yield between images.
+  // Successful files survive restart. Failures are retried on the next sweep.
+  const isLive=key=>{const row=this.db.prepare('SELECT id,bytes FROM market_images WHERE id=?').get(key.slice(0,36));return !!row&&keyFor(row.id,row.bytes)===key;};
+  await this.thumbnails.prune(isLive);
+  let cursor='',count=0;
+  while(!this.thumbnailStopped&&count<this.limits.maxImages){
+   const row=this.db.prepare('SELECT id,bytes FROM market_images WHERE id>? ORDER BY id LIMIT 1').get(cursor);
+   if(!row)break;cursor=row.id;count++;
+   try{await this.thumbnails.ensure(row.id,row.bytes);}catch(error){this.thumbnailError=error.code||'THUMBNAIL_CONVERSION';}
+   await new Promise(resolve=>setImmediate(resolve));
+  }
+  if(!this.thumbnailStopped)await this.thumbnails.prune(isLive);
+ }
+ startThumbnails(){
+  if(!this.thumbnailStopped)return;
+  this.thumbnailStopped=false;
+  const run=()=>{
+   if(this.thumbnailStopped)return;
+   this.thumbnailWork=this.buildThumbnails().catch(error=>{this.thumbnailError=error.code||'THUMBNAIL_CACHE';}).finally(()=>{
+    this.thumbnailWork=null;
+    if(!this.thumbnailStopped){this.thumbnailTimer=setTimeout(run,60000);this.thumbnailTimer.unref?.();}
+   });
+  };
+  // No startup await and no decoding before the server begins listening.
+  this.thumbnailTimer=setTimeout(run,0);this.thumbnailTimer.unref?.();
+ }
+ async stopThumbnails(){this.thumbnailStopped=true;clearTimeout(this.thumbnailTimer);await this.thumbnailWork;}
 }
 function validateMarketImagesDatabase(db){
  const check=value=>{if(!value)throw Error('Invalid market images');};

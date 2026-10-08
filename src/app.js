@@ -97,7 +97,7 @@ function initializeApp(config,dataLock){
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});
  let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore,marketStore,marketImageStore,marketAutomationStore,marketAutomation;
- try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);marketAutomationStore=new MarketAutomationStore(db,marketStore,{clock:config.marketClock||Date.now,enabled:config.externalSideEffectsEnabled===true&&config.marketAutomationEnabled!==false});marketAutomation=new MarketAutomation(marketAutomationStore,{clock:config.marketClock||Date.now,provider:config.marketProvider||createOfficialProvider({clock:config.marketClock||Date.now})});marketImageStore=new MarketImageStore(db,config.marketClock||Date.now,{limits:config.marketImageLimits});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
+ try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);marketAutomationStore=new MarketAutomationStore(db,marketStore,{clock:config.marketClock||Date.now,enabled:config.externalSideEffectsEnabled===true&&config.marketAutomationEnabled!==false});marketAutomation=new MarketAutomation(marketAutomationStore,{clock:config.marketClock||Date.now,provider:config.marketProvider||createOfficialProvider({clock:config.marketClock||Date.now})});marketImageStore=new MarketImageStore(db,config.marketClock||Date.now,{limits:config.marketImageLimits,thumbnailDirectory:config.dbFile+'.market-thumbnails'});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
  catch(error){history.close();db?.close();throw error;}
  mediaRooms.store=musicStore;
  const characterMedia=createCharacterMediaAccess(db,viewerId=>{
@@ -260,10 +260,15 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/market/images'&&req.method==='POST')return send(await marketImageStore.upload(user,data));
  if(url.pathname==='/api/market/images/mine'&&req.method==='GET'){limitRate(accountRate,'market-images-mine:'+user.id,60);return send(marketImageStore.listMine(user));}
  if(url.pathname==='/api/market/images/draw'&&req.method==='POST'){limitRate(accountRate,'market-draw:'+user.id,60);return send(marketImageStore.draw(user,{targetDate:data.targetDate,layout:data.layout}));}
- const marketImageMedia=url.pathname.match(/^\/api\/market\/images\/([a-f0-9-]{36})\/media$/i);
+ const marketImageMedia=url.pathname.match(/^\/api\/market\/images\/([a-f0-9-]{36})\/media(\/thumbnail)?$/i);
  if(marketImageMedia&&req.method==='GET'){
-  limitRate(accountRate,'market-media:'+user.id,360);const image=marketImageStore.media(user,marketImageMedia[1]);
-  res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");res.setHeader('Cross-Origin-Resource-Policy','same-origin');return res.end(image.bytes);
+  limitRate(accountRate,'market-media:'+user.id,360);const image=marketImageMedia[2]?await marketImageStore.thumbnail(user,marketImageMedia[1]):marketImageStore.media(user,marketImageMedia[1]);
+  // File I/O must not carry a revoked or expired session into a 304/body.
+  auth.requireUser(req);
+  res.setHeader('Cache-Control','private, no-cache, must-revalidate');res.setHeader('Vary','Cookie');res.setHeader('ETag',image.etag);
+  res.setHeader('Content-Type',image.mime);res.setHeader('Content-Security-Policy',"default-src 'none'");res.setHeader('Cross-Origin-Resource-Policy','same-origin');
+  if(typeof req.headers['if-none-match']==='string'&&req.headers['if-none-match'].split(',').some(tag=>tag.trim()==='*'||tag.trim().replace(/^W\//,'')===image.etag)){res.writeHead(304);return res.end();}
+  return res.end(image.bytes);
  }
  if(url.pathname==='/api/market/images'||url.pathname==='/api/market/images/mine'||url.pathname==='/api/market/images/draw'||marketImageMedia)throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
  if(url.pathname.startsWith('/api/market/images/'))throw new HttpError(404,'IMAGE_NOT_FOUND','找不到圖片');
@@ -608,6 +613,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom,onTransition:awardRoomAchievements,onSweep:retryAchievementUnits,onDrawStroke:publishDraw});
   submissions.recover();
   marketAutomation.start();
+  marketImageStore.startThumbnails();
   return server.address();
  }
  async function close(){
@@ -615,6 +621,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   closed=true;
   stopScheduler?.();
   await marketAutomation.stop();
+  await marketImageStore.stopThumbnails();
   for(const room of rooms.values())awardRoomAchievements(room);
   retryAchievementUnits();
   watchRooms.clear();

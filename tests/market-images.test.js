@@ -194,3 +194,75 @@ test('backup validator rejects per-author/gallery/storage quotas before decoding
  f.db.exec('DELETE FROM market_requests; DELETE FROM market_images; PRAGMA ignore_check_constraints=ON');
  const large=Buffer.alloc(4*1024*1024);for(let i=0;i<65;i++)insert.run(request(),row.author_id,row.author_name,row.mime,large,row.width,row.height,row.buckets_json,row.weekdays_json,row.version,row.status,row.created_at,row.approved_by,row.approved_at);assert.throws(()=>validateMarketImagesDatabase(f.db));
 });
+
+test('new uploads generate bounded 512px proportional WebP thumbnails and measure fixture bytes',async t=>{
+ const f=fixture(t),width=1280,height=720,data=Buffer.alloc(width*height*3);
+ let seed=42;for(let i=0;i<data.length;i++){seed=(seed*1664525+1013904223)>>>0;data[i]=seed>>>24;}
+ const jpeg=await sharp(data,{raw:{width,height,channels:3}}).jpeg({quality:65}).toBuffer();
+ const image=(await upload(f,f.owner,{mime:'image/jpeg',base64:jpeg.toString('base64')})).image;
+ const original=f.store.media(f.owner,image.id),thumb=await f.store.thumbnail(f.owner,image.id),meta=await sharp(thumb.bytes).metadata();
+ assert.equal(meta.width,512);assert.equal(meta.height,288);assert.equal(meta.format,'webp');assert.ok(thumb.bytes.length<original.bytes.length/10);assert.ok(thumb.bytes.length<=256*1024);
+ t.diagnostic(`Synthetic 1280x720 noise fixture: original PNG ${original.bytes.length} bytes; 512x288 WebP ${thumb.bytes.length} bytes. No production latency inference.`);
+ assert.equal(f.db.prepare('PRAGMA user_version').get().user_version,19);
+});
+test('cold thumbnails never decode on GET; bounded background cache resumes without re-encoding and removes stale derivatives',async t=>{
+ const f=fixture(t),image=(await upload(f)).image,{MarketThumbnails,keyFor}=require('../src/market/thumbnails');
+ f.store.thumbnails=new MarketThumbnails({directory:path.join(f.root,'thumbs'),maxImages:1});
+ await assert.rejects(f.store.thumbnail(f.owner,image.id),code('THUMBNAIL_PENDING'));
+ const before=Buffer.from(f.db.prepare('SELECT bytes FROM market_images WHERE id=?').get(image.id).bytes),key=keyFor(image.id,before);
+ const build=async()=>{f.store.thumbnailStopped=false;try{await f.store.buildThumbnails();}finally{f.store.thumbnailStopped=true;}};
+ await build();const file=path.join(f.root,'thumbs',key),first=fs.statSync(file).mtimeMs;
+ assert.equal((await f.store.thumbnail(f.owner,image.id)).mime,'image/webp');
+ f.store.thumbnails=new MarketThumbnails({directory:path.join(f.root,'thumbs'),maxImages:1});await build();assert.equal(fs.statSync(file).mtimeMs,first,'valid persisted derivative must survive restart unchanged');
+ assert.deepEqual(Buffer.from(f.db.prepare('SELECT bytes FROM market_images WHERE id=?').get(image.id).bytes),before);assert.equal(validateMarketImagesDatabase(f.db),true);
+ fs.writeFileSync(file,'broken');await assert.rejects(f.store.thumbnail(f.owner,image.id),code('THUMBNAIL_PENDING'));await build();assert.equal((await f.store.thumbnail(f.owner,image.id)).mime,'image/webp');
+ f.db.prepare('DELETE FROM market_requests').run();f.db.prepare('DELETE FROM market_images').run();await build();assert.equal(fs.existsSync(file),false);
+});
+test('thumbnail read rechecks withdrawal, deletion and identity after asynchronous cache read',async t=>{
+ for(const mutation of ['withdraw','delete','disable','role']){
+  const f=fixture(t),image=(await upload(f)).image;approve(f,[image]);
+  const actor=mutation==='role'?f.admin:f.other;
+  const read=f.store.thumbnails.read.bind(f.store.thumbnails);
+  f.store.thumbnails.read=async key=>{const bytes=await read(key);
+   if(mutation==='delete')f.db.prepare('DELETE FROM market_images WHERE id=?').run(image.id);
+   else if(mutation==='disable')f.db.prepare('UPDATE users SET disabled=1 WHERE id=?').run(actor.id);
+   else{f.db.prepare("UPDATE market_images SET status='pending',version=1,approved_by=NULL,approved_at=NULL WHERE id=?").run(image.id);if(mutation==='role')f.db.prepare("UPDATE users SET role='member' WHERE id=?").run(actor.id);}
+   return bytes;
+  };
+  await assert.rejects(f.store.thumbnail(actor,image.id),code(mutation==='disable'?'UNAUTHORIZED':'IMAGE_NOT_FOUND'));
+ }
+});
+test('background thumbnail failures recover next sweep and stopped workers do not touch a closed database',async t=>{
+ const f=fixture(t),image=(await upload(f)).image;f.store.thumbnails.memory.clear();
+ const ensure=f.store.thumbnails.ensure.bind(f.store.thumbnails);let calls=0;
+ f.store.thumbnails.ensure=async(...args)=>{calls++;if(calls===1)throw Error('temporary failure');return ensure(...args);};
+ f.store.thumbnailStopped=false;await f.store.buildThumbnails();assert.equal(f.store.thumbnailError,'THUMBNAIL_CONVERSION');
+ await assert.rejects(f.store.thumbnail(f.owner,image.id),code('THUMBNAIL_PENDING'));await f.store.buildThumbnails();assert.equal((await f.store.thumbnail(f.owner,image.id)).mime,'image/webp');
+ await f.store.stopThumbnails();f.store.startThumbnails();await f.store.stopThumbnails();f.db.close();await new Promise(resolve=>setTimeout(resolve,5));
+});
+
+test('high-entropy alpha valid uploads and legacy backfill preserve transparency within the thumbnail cap',async t=>{
+ const f=fixture(t),width=512,height=512,data=Buffer.alloc(width*height*4);let seed=812;
+ for(let i=0;i<data.length;i++){seed=(seed*1664525+1013904223)>>>0;data[i]=seed>>>24;}
+ const png=await sharp(data,{raw:{width,height,channels:4}}).png().toBuffer(),image=(await upload(f,f.owner,{base64:png.toString('base64')})).image;
+ const check=async()=>{const thumbnail=await f.store.thumbnail(f.owner,image.id),meta=await sharp(thumbnail.bytes).metadata();assert.equal(meta.hasAlpha,true);assert.equal(meta.width,512);assert.equal(meta.height,512);assert.ok(thumbnail.bytes.length<=512*1024);assert.ok(thumbnail.bytes.length>256*1024);};
+ await check();f.store.thumbnails.memory.clear();f.store.thumbnailStopped=false;
+ try{await f.store.buildThumbnails();await check();}finally{await f.store.stopThumbnails();}
+ assert.equal(validateMarketImagesDatabase(f.db),true);
+});
+
+test('disk derivative writes serialize capacity, replace source versions and bound payloads',async t=>{
+ const f=fixture(t),{MarketThumbnails,keyFor,MAX_BYTES}=require('../src/market/thumbnails'),directory=path.join(f.root,'bounded-thumbs'),cache=new MarketThumbnails({directory,maxImages:1});
+ const image=(await upload(f)).image,bytes=(await f.store.thumbnail(f.owner,image.id)).bytes,first=keyFor(image.id,Buffer.from('first')),second=keyFor(request(),Buffer.from('second'));
+ const results=await Promise.allSettled([cache.write(first,bytes),cache.write(second,bytes)]);assert.equal(results.filter(result=>result.status==='fulfilled').length,1);assert.equal(fs.readdirSync(directory).length,1);
+ const updated=keyFor(image.id,Buffer.from('updated'));await cache.write(updated,bytes);assert.equal(await cache.read(first),null);assert.deepEqual(await cache.read(updated),bytes);assert.deepEqual(fs.readdirSync(directory),[updated]);
+ await assert.rejects(cache.write(updated,Buffer.alloc(MAX_BYTES+1)),/cache limit/);assert.deepEqual(await cache.read(updated),bytes);
+ const orphan=path.join(directory,updated+'.'+request()+'.tmp');fs.writeFileSync(orphan,'interrupted');fs.utimesSync(orphan,new Date(0),new Date(0));await cache.prune(key=>key===updated);assert.deepEqual(fs.readdirSync(directory),[updated]);
+});
+
+test('valid imported case-distinct image IDs retain separate derivative cache entries',async t=>{
+ const f=fixture(t),image=(await upload(f)).image,upper=image.id.toUpperCase();assert.notEqual(upper,image.id);const {keyFor}=require('../src/market/thumbnails');assert.notEqual(keyFor(image.id,Buffer.from('same')).toLowerCase(),keyFor(upper,Buffer.from('same')).toLowerCase());
+ f.db.prepare(`INSERT INTO market_images SELECT ?,author_id,author_name,mime,bytes,width,height,buckets_json,weekdays_json,version,status,created_at,approved_by,approved_at FROM market_images WHERE id=?`).run(upper,image.id);
+ f.store.thumbnailStopped=false;try{await f.store.buildThumbnails();}finally{await f.store.stopThumbnails();}
+ assert.equal(f.store.thumbnails.memory.size,2);assert.equal((await f.store.thumbnail(f.owner,image.id)).mime,'image/webp');assert.equal((await f.store.thumbnail(f.owner,upper)).mime,'image/webp');assert.equal(validateMarketImagesDatabase(f.db),true);
+});
