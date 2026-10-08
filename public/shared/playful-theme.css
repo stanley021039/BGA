@@ -167,8 +167,28 @@ body[data-visual-theme="playful"] :is(.ui-error,.error,#error,#message[data-kind
 /* Existing lobby movement and expression transitions are deliberately untouched. */
 body[data-visual-theme="playful"] .lobby-section { background: var(--play-mint); border: var(--play-card-border); border-radius: 20px; box-shadow: var(--play-shadow); }
 body[data-visual-theme="playful"] .lobby-top :is(h2,p,.kicker) { color: var(--play-ink); }
-body[data-visual-theme="playful"] .lobby-stage { background: var(--play-stage); border-color: var(--play-ink); }
-body[data-visual-theme="playful"] .lobby-rug { background: var(--play-rug); border-color: var(--play-line); }
+/* Flat paper-board surfaces share the site palette in light and dark mode. */
+body[data-visual-theme="playful"] .lobby-stage {
+  background-color: var(--play-paper);
+  background-image: linear-gradient(var(--play-line) 1px,transparent 1px),linear-gradient(90deg,var(--play-line) 1px,transparent 1px);
+  background-size: 40px 40px;
+  border: var(--play-border); border-radius: var(--play-radius);
+  box-shadow: var(--play-control-shadow);
+}
+body[data-visual-theme="playful"] .lobby-stage::before,
+body[data-visual-theme="playful"] .lobby-stage::after { content: none; }
+body[data-visual-theme="playful"] .lobby-rug {
+  background: var(--play-lavender); border: 2px dashed var(--play-ink);
+  border-radius: 24px; transform: rotate(-2deg); box-shadow: var(--play-control-shadow);
+}
+body[data-visual-theme="playful"] .lobby-lamp { color: var(--play-pink); text-shadow: none; -webkit-text-stroke: 1px var(--play-ink); }
+body[data-visual-theme="playful"] .lobby-avatar { filter: drop-shadow(0 3px 0 var(--play-line)); }
+body[data-visual-theme="playful"] .lobby-avatar img { filter: none; }
+body[data-visual-theme="playful"] .lobby-avatar span,
+body[data-visual-theme="playful"] .lobby-speech { background: var(--play-surface); color: var(--play-ink); border: var(--play-border); box-shadow: var(--play-control-shadow); }
+body[data-visual-theme="playful"] .lobby-avatar.is-self span { background: var(--play-yellow); color: var(--play-ink); border-color: var(--play-ink); }
+body[data-visual-theme="playful"] .lobby-destination { border-color: var(--play-ink); background: var(--play-yellow); box-shadow: 0 0 0 4px var(--play-line); }
+body[data-visual-theme="playful"] .lobby-stage:focus-visible { outline: 3px solid var(--play-ink); outline-offset: 4px; }
 body[data-visual-theme="playful"] :is(.lobby-bottom,.lobby-count,.lobby-visitor-name,.lobby-visitor-label) { color: var(--play-ink); }
 body[data-visual-theme="playful"] :is(.lobby-emote-toggle,.lobby-emote-menu) { color: var(--play-ink); background: var(--play-paper); border-color: var(--play-ink); }
 body[data-visual-theme="playful"] .rooms-section { background: var(--play-surface); border: var(--play-border); border-radius: 20px; padding: 25px; }
@@ -229,7 +249,9 @@ body[data-visual-theme="playful"] .resume a { min-height: 44px; display: inline-
 body[data-visual-theme="playful"] .hub-quick-join .join-input { padding: 0; border: 0; }
 body[data-visual-theme="playful"] .hub-quick-join { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; padding: 19px 24px; border: var(--play-border); border-radius: 15px; background: var(--play-blue); margin: 0 0 28px; }
 body[data-visual-theme="playful"] .hub-quick-join label { font-size: 14px; margin: 0; }
-body[data-visual-theme="playful"] .hub-quick-join input { display: block; width: 190px; margin-top: 6px; text-transform: uppercase; }
+body[data-visual-theme="playful"] .hub-quick-join .join-input>div { align-items: center; margin-top: 6px; }
+body[data-visual-theme="playful"] .hub-quick-join .join-input :is(input,.button) { box-sizing: border-box; height: 54px; margin-top: 0; }
+body[data-visual-theme="playful"] .hub-quick-join input { display: block; width: 190px; text-transform: uppercase; }
 body[data-visual-theme="playful"] .hub-quick-join .join-note { margin: 0 auto 8px 0; font-size: 13px; color: var(--play-ink); }
 body[data-visual-theme="playful"] .playful-skip { position: fixed; top: -100px; left: 18px; z-index: 1500; padding: 10px 16px; background: var(--play-yellow); border: var(--play-border); border-radius: 10px; }
 body[data-visual-theme="playful"] .playful-skip:focus { top: 10px; }
@@ -332,8 +354,8 @@ body[data-visual-theme="playful"][data-game-kind] :is(.game-action-slot #start,.
 body[data-visual-theme="playful"][data-game-kind] :is(.room-host-menu,.room-settings-popover,.game-popover-panel,.shared-emoji-picker,.shared-expression-menu .shared-expressions,.rookie-help-content,.race-command-options>.command-wrap) { background: var(--play-surface); color: var(--play-ink); border: var(--play-border); box-shadow: var(--ui-shadow-floating); border-radius: 14px; }
 body[data-visual-theme="playful"][data-game-kind] :is(.game-popover-panel,.room-host-menu,.shared-expression-menu,.shared-emoji-picker,.rookie-help-content) :is(button,summary,small,p,a) { color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] .shared-game-ui.integrated { background: transparent; border-radius: 0; }
-body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .race-feed { padding: 16px; }
-body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .race-feed h2 { margin-bottom: 8px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-feed { padding: 16px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-feed h2 { margin: 0 0 8px; }
 /* Poker stays a readable card table: red suits and hidden backs remain distinct. */
 body[data-visual-theme="playful"][data-game-kind="poker"] .rail { background: var(--play-blue); border-color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind="poker"] :is(.rail-icon,.mark,.rail-bottom) { color: var(--play-ink); }
@@ -682,3 +704,155 @@ html[data-color-scheme="dark"] body[data-visual-theme="playful"] .curve-panel in
   html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="gift"] .gift-choice.selected :is(.choice-title,.choice-badge,.choice-placeholder) { color: var(--play-on-accent); }
   html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] :is(.color-menu summary,.swatches) { background: var(--play-surface); color: var(--play-ink); border-color: var(--play-ink); }
   html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] .tools .tool-row button.selected { background: var(--play-bright-blue); color: var(--play-on-accent); }
+
+/* Compact crew status and matching interaction-row spacing. */
+body[data-visual-theme="playful"][data-game-kind="race"] .crew-cars { gap: 8px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .crew-car {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border: var(--play-border); border-radius: 9px;
+  background: var(--play-surface); color: var(--play-muted); text-decoration: none;
+}
+body[data-visual-theme="playful"][data-game-kind="race"] .crew-car.is-available { background: var(--play-mint); color: var(--play-ink); box-shadow: var(--play-control-shadow); }
+body[data-visual-theme="playful"][data-game-kind="race"] .crew-car.is-unavailable { border-color: var(--play-line-strong); }
+body[data-visual-theme="playful"][data-game-kind="race"] .crew-car.is-out { opacity: .45; }
+body[data-visual-theme="playful"][data-game-kind="race"] .crew-car-fire { position: absolute; right: -4px; top: -7px; font-size: 12px; }
+body[data-visual-theme="playful"][data-game-kind] .shared-game-ui.integrated,
+body[data-visual-theme="playful"][data-game-kind] #gameSidebar .shared-game-ui.integrated { padding-block: 8px; margin-block: 8px; gap: 8px; }
+body[data-visual-theme="playful"][data-game-kind] #shared-barrage { gap: 8px; margin: 0; }
+body[data-visual-theme="playful"][data-game-kind] #shared-barrage :is(input,button) { box-sizing: border-box; height: 44px; min-height: 44px; margin-block: 0; }
+body[data-visual-theme="playful"][data-game-kind] #shared-error:empty { display: none; }
+
+html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="race"] .crew-car.is-available { background: var(--play-bright-green); color: #121212; }
+
+/* The utility card stays at the foot of a fixed-height side column.
+   Expanding instructions and logs scroll inside the separate game card. */
+body[data-visual-theme="playful"][data-game-kind="race"] .race-side-column {
+  display: flex; flex-direction: column; gap: 12px; min-width: 0;
+  height: clamp(320px,calc(100dvh - 140px),900px);
+}
+body[data-visual-theme="playful"][data-game-kind="race"] .race-side-column>.race-controls {
+  flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable;
+  padding: 16px; border: var(--play-border); border-radius: 18px;
+  background: var(--play-surface); box-shadow: var(--play-shadow);
+}
+body[data-visual-theme="playful"][data-game-kind="race"] .race-utility-panel {
+  flex: none; min-width: 0; padding: 8px 16px; border: var(--play-border);
+  border-radius: 18px; background: var(--play-surface); box-shadow: var(--play-shadow);
+}
+body[data-visual-theme="playful"][data-game-kind="race"] .race-utility-panel .shared-game-ui.integrated { border-top: 0; padding-block: 0; margin-block: 0 8px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-utility-panel .room-action-dock { margin-top: 0; }
+@media(min-width:1001px) {
+  body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .race-side-column { grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 16px; align-self: start; }
+}
+
+/* Use the global spacing contract for room interaction controls. */
+body[data-visual-theme="playful"][data-game-kind] #shared-barrage,
+body[data-visual-theme="playful"][data-game-kind] .room-action-dock.in-sidebar { gap: var(--ui-control-gap); }
+body[data-visual-theme="playful"][data-game-kind="race"] { --play-tools-width: 360px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-utility-panel { padding: var(--ui-panel-inset); gap: var(--ui-row-gap); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-utility-panel :is(.shared-game-ui.integrated,.room-action-dock.in-sidebar) { margin: 0; padding: 0; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .dashboard-head { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--ui-control-gap); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls #timer { width: auto; min-width: 44px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .car-dash { gap: var(--ui-control-gap); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .car-card { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 8px 4px; min-height: 104px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .car-card>div { display: flex; flex-direction: column; gap: 4px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .car-card :is(b,small) { white-space: nowrap; padding: 0; margin: 0; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .car-card svg { width: 36px; height: 28px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .damage-pips { position: static; white-space: nowrap; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .assign-controls { gap: var(--ui-row-gap); }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .race-command-options,
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .assign-controls:has(.race-command-options)>.button { grid-column: 1 / -1; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-command-options>summary { white-space: nowrap; }
+
+/* Reduce the former 24px game-page gutter to one third. */
+body[data-visual-theme="playful"][data-game-kind] :is(.race-main,.play-layout,.gift-layout,.draw-layout,.game-layout) { padding-inline: var(--ui-page-gutter); max-width: none; }
+body[data-visual-theme="playful"] .club { max-width: none; padding-inline: 1.6667%; }
+
+body[data-visual-theme="playful"][data-game-kind="race"] #raceActionStatus:empty { display: none; }
+
+/* Header and content share the same page edges. */
+body[data-visual-theme="playful"] .club { padding-inline: var(--ui-page-gutter); }
+body[data-visual-theme="playful"]>[data-site-header].site-header,
+body[data-visual-theme="playful"]>.game-toolbar { width: calc(100% - 2 * var(--ui-page-gutter)); max-width: none; margin-inline: var(--ui-page-gutter); }
+body[data-visual-theme="playful"][data-game-kind="race"] .garage-art { background: var(--play-peach); }
+body[data-visual-theme="playful"][data-game-kind="race"] .garage-art img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+@media(min-width:1001px) {
+  body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .race-main { grid-template-rows: minmax(0,1fr) auto auto; }
+  body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) #waiting { height: 100%; min-height: 440px; align-self: stretch; }
+  body[data-visual-theme="playful"][data-game-kind="race"] .garage-info { align-self: center; }
+}
+
+/* Dynamic race content must not determine its outer column width. */
+body[data-visual-theme="playful"][data-game-kind="race"] .race-side-column { width: 100%; min-width: 0; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-side-column>.race-controls { width: 100%; box-sizing: border-box; align-self: stretch; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls .dashboard { width: 100%; box-sizing: border-box; height: 480px; min-height: 480px; flex: none; overflow: auto; scrollbar-gutter: stable; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls #controlPanel { min-height: 224px; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls #timer { width: 64px; min-width: 64px; font-variant-numeric: tabular-nums; }
+body[data-visual-theme="playful"][data-game-kind="race"] .race-controls #feed { height: 144px; max-height: 144px; }
+
+/* Both columns terminate at the same shared grid row line. */
+@media(min-width:1001px) {
+ body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.ui-large-text) .race-side-column {
+  height: auto; min-height: clamp(320px,calc(100dvh - 140px),900px);
+  align-self: stretch; position: static;
+ }
+}
+
+/* Original paper-cut clubhouse artwork; visitors remain a separate live layer. */
+body[data-visual-theme="playful"] .lobby-stage { height: clamp(300px,24vw,420px); background: var(--play-paper) url('/assets/playful/lobby-room-light.svg') center / cover no-repeat; }
+html[data-color-scheme="dark"] body[data-visual-theme="playful"] .lobby-stage { background-image: url('/assets/playful/lobby-room-dark.svg'); }
+body[data-visual-theme="playful"] :is(.lobby-rug,.lobby-lamp) { display: none; }
+
+/* Compact selection reveals the clubhouse sooner; room entry stays with rooms. */
+body[data-visual-theme="playful"] .library-heading { margin: 18px 0 12px; }
+body[data-visual-theme="playful"] .library-heading h1 { font-size: clamp(28px,3.2vw,42px); margin: 6px 0; }
+body[data-visual-theme="playful"] .game-library[data-card-carousel] { height: 365px; --card-step: 296px; }
+body[data-visual-theme="playful"] .game-library[data-card-carousel] .game-tile { width: 280px; top: 49%; }
+body[data-visual-theme="playful"] .game-library[data-card-carousel] .tile-image { height: 160px; }
+body[data-visual-theme="playful"] .game-library[data-card-carousel] .tile-body { padding: 12px 16px; }
+body[data-visual-theme="playful"] .game-library[data-card-carousel] .tile-body h2 { font-size: 24px; margin: 5px 0 6px; }
+body[data-visual-theme="playful"] .game-library[data-card-carousel] .tile-body p { font-size: 12px; line-height: 1.5; margin: 6px 0 8px; }
+body[data-visual-theme="playful"] .game-library[data-card-carousel] .tile-bottom { padding-top: 8px; }
+body[data-visual-theme="playful"] .carousel-footer { margin-bottom: 16px; gap: 12px; }
+body[data-visual-theme="playful"] .rooms-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ui-row-gap); }
+body[data-visual-theme="playful"] .rooms-tools .hub-quick-join { margin: 0; padding: 8px 12px; }
+body[data-visual-theme="playful"] .rooms-tools .join-input { width: auto; min-width: 0; }
+body[data-visual-theme="playful"] .rooms-tools .hub-quick-join input { width: 160px; }
+body[data-visual-theme="playful"] .rooms-tools .join-note { display: none; }
+@media(max-width:650px) {
+ body[data-visual-theme="playful"] .game-library[data-card-carousel] { --card-step: 256px; }
+ body[data-visual-theme="playful"] .game-library[data-card-carousel] .game-tile { width: 244px; }
+ body[data-visual-theme="playful"] .game-library[data-card-carousel] .tile-image { height: 150px; }
+ body[data-visual-theme="playful"] .rooms-tools { width: 100%; }
+ body[data-visual-theme="playful"] .rooms-tools .hub-quick-join { width: 100%; }
+ body[data-visual-theme="playful"] .rooms-tools .join-input { width: 100%; }
+ body[data-visual-theme="playful"] .rooms-tools .hub-quick-join input { flex: 1; width: 0; }
+}
+
+/* Room browsing and code entry are two regions within one shared outer card. */
+body[data-visual-theme="playful"] .rooms-section { display: grid; grid-template-columns: minmax(0,4fr) minmax(240px,1fr); padding: 0; overflow: hidden; }
+body[data-visual-theme="playful"] .rooms-browse { min-width: 0; padding: 24px; }
+body[data-visual-theme="playful"] .room-code-panel { min-width: 0; padding: 24px; border-left: var(--play-border); background: var(--play-blue); }
+body[data-visual-theme="playful"] .room-code-panel .hub-quick-join { display: block; padding: 0; margin: 0; background: none; border: 0; border-radius: 0; }
+body[data-visual-theme="playful"] .room-code-panel .join-input { width: 100%; min-width: 0; padding: 0; border: 0; }
+body[data-visual-theme="playful"] .room-code-panel .join-input label { font-size: 18px; font-weight: 750; margin-bottom: 12px; }
+body[data-visual-theme="playful"] .room-code-panel .join-input>div { gap: var(--ui-control-gap); }
+body[data-visual-theme="playful"] .room-code-panel .hub-quick-join input { flex: 1; width: 0; min-width: 0; }
+body[data-visual-theme="playful"] .room-code-panel .join-note { display: block; margin: 12px 0 0; font-size: 13px; line-height: 1.6; }
+@media(max-width:900px) {
+ body[data-visual-theme="playful"] .rooms-section { grid-template-columns: 1fr; }
+ body[data-visual-theme="playful"] .room-code-panel { border-left: 0; border-top: var(--play-border); }
+ body[data-visual-theme="playful"] :is(.rooms-browse,.room-code-panel) { padding: 16px; }
+}
+
+body[data-visual-theme="playful"] .profile-leave-dialog { max-width: min(520px,calc(100vw - 32px)); }
+body[data-visual-theme="playful"] .profile-leave-dialog .ui-control-row { flex-wrap: wrap; gap: var(--ui-control-gap); }
+.profile-leave-dialog #profile-leave-status { min-height: 24px; }
+
+body[data-visual-theme="playful"] .room-leave-dialog { width: min(480px,calc(100vw - 32px)); }
+body[data-visual-theme="playful"] .room-leave-dialog .ui-control-row { flex-wrap: wrap; gap: var(--ui-control-gap); }
+
+body[data-visual-theme="playful"] #issueStatusFilters { flex-wrap: wrap; gap: var(--ui-control-gap); margin-bottom: var(--ui-row-gap); }
+body[data-visual-theme="playful"] #issueStatusFilters button[aria-pressed="true"] { background: var(--play-yellow); color: var(--play-ink); }
+body[data-visual-theme="playful"] .tag.processing { background: var(--play-lavender); color: var(--play-ink); }
+body[data-visual-theme="playful"] .issue-status-actions { flex-wrap: wrap; gap: var(--ui-control-gap); }

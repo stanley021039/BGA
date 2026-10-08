@@ -2,6 +2,10 @@
 
 版本管理從既有 `1.0.0` 基線開始；更早的功能與部署紀錄見 `docs/`，不追補未曾實際標記的發行版。
 
+## [1.20.0] - 2026-10-08
+
+- Integrate lobby layout, room interactions and community workflow improvements
+
 ## [1.19.0] - 2026-10-08
 
 - 修正大廳滑動後立即以鍵盤／前後按鈕切換時，顯示卡片與開房遊戲類型不同步

@@ -12,7 +12,7 @@ async function fixture({encode=async()=>({base64:'canonical-wav',durationMs:1000
  const nodes=new Map(),requests=[],plays=[],previewClips=[],settings=[],stops=[],eventListeners=new Map();let saved=false;
  const node=selector=>{if(!nodes.has(selector))nodes.set(selector,new Node());return nodes.get(selector);};
  const characters=()=>[{id:'builtin:traveler',name:'內建',source:'內建',expressions:{neutral:'/default.png',happy:'/happy.png'}},{id:first,name:'第一位',source:'我的作品',owned:true,shared:true,expressions:{neutral:'/first.png',happy:'/first-happy.png'},sounds:saved?{happy:{url:`/assets/characters/sounds/${first.slice(5)}/happy`,durationMs:1200}}:{}},{id:second,name:'第二位',source:'我的作品',owned:true,expressions:{neutral:'/second.png',happy:'/second-happy.png'},sounds:{}},{id:'user:32345678-1234-4234-8234-123456789abc',name:'好友',source:'好友分享',owned:false,expressions:{neutral:'/friend.png',happy:'/friend-happy.png'},sounds:{happy:{url:'/assets/characters/sounds/32345678-1234-4234-8234-123456789abc/happy',durationMs:1200}}}];
- const document={querySelector:node,createElement:tag=>new Node(tag),addEventListener(type,fn){eventListeners.set(type,fn);},hidden:false};
+ const document={body:new Node("body"),querySelector:node,createElement:tag=>new Node(tag),addEventListener(type,fn){eventListeners.set(type,fn);},hidden:false};
  const window={ExpressionSounds:{encodeFile:encode},AudioSettings:{set(...args){settings.push(args);},playExpression(...args){plays.push(args);const clip={clip:plays.length};previewClips.push(clip);return clip;},stopEffect(clip){stops.push(clip);const index=previewClips.indexOf(clip);if(index>=0)plays[index][1].onStop?.(clip);}},addEventListener(type,fn){eventListeners.set('window:'+type,fn);}};
  const context=vm.createContext({document,window,location:{search:''},URLSearchParams,FileReader:class{},fetch:async(url,options={})=>{
   requests.push({url,options});let data;
@@ -83,4 +83,16 @@ test('appearance save preserves newer character and expression choices while ord
  saved.resolve({ok:true,json:async()=>({appearance:{version:5,characterId:first,expression:'happy'}})});await saving;
  assert.equal(vm.runInContext('appearance.characterId',f.context),second);assert.equal(vm.runInContext('appearance.expression',f.context),'neutral');assert.equal(f.node('#preview').src,'/second.png');assert.equal(f.node('#save').disabled,false);assert.match(f.node('#message').textContent,/保留目前/);
  const ordinary=await fixture();await ordinary.node('#save').onclick();assert.equal(vm.runInContext('appearance.characterId',ordinary.context),first);assert.equal(ordinary.node('#preview').src,'/first-happy.png');assert.match(ordinary.node('#message').textContent,/遊戲座位會更新/);assert.equal(ordinary.node('#save').disabled,false);
+});
+
+test('unsaved character selections warn on unload, then successful saves clear the warning',async()=>{
+ const f=await fixture();assert.equal(vm.runInContext('profileHasUnsavedChanges()',f.context),false);
+ f.chooseCharacter('第二位');assert.equal(vm.runInContext('profileHasUnsavedChanges()',f.context),true);
+ let blocked=false;const event={preventDefault(){blocked=true;}};f.eventListeners.get('window:beforeunload')(event);assert.equal(blocked,true);assert.equal(event.returnValue,'');
+ assert.equal(await vm.runInContext('saveProfileBeforeLeaving()',f.context),true);assert.equal(vm.runInContext('profileHasUnsavedChanges()',f.context),false);
+});
+test('failed appearance saves retain unsaved state and selected image uploads also count as drafts',async()=>{
+ const f=await fixture({appearancePost:async()=>({ok:false,json:async()=>({error:'保存失敗'})})});f.chooseCharacter('第二位');
+ assert.equal(await vm.runInContext('saveProfileBeforeLeaving()',f.context),false);assert.equal(vm.runInContext('profileHasUnsavedChanges()',f.context),true);
+ const fresh=await fixture();vm.runInContext("uploads.set('#character-file',{name:'draft.png'})",fresh.context);assert.equal(vm.runInContext('profileHasUnsavedChanges()',fresh.context),true);
 });

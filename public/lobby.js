@@ -59,7 +59,7 @@
   }
   for(const [id,node] of visitors)if(!active.has(id)){node.remove();visitors.delete(id);}
   count.textContent=`${active.size} 位在大廳`;
-  status.textContent='點擊場地，讓角色走到指定位置';
+  status.textContent='';
   ready=true;
  }
  async function sync(target){

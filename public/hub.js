@@ -32,7 +32,6 @@ function renderResume(rooms){
  $('#resume').replaceChildren(...links);
 }
 
-let invite=location.origin;fetch('/api/info').then(r=>r.json()).then(d=>invite=d.preferred||d.addresses.find(a=>a.includes('://26.'))||location.origin).catch(()=>{});$('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(invite);toast('已複製好友連線網址');}catch{window.prompt('複製好友連線網址',invite);}};
 if(new URLSearchParams(location.search).get('game')==='draw')document.querySelector('[data-game="draw"]').click();
 if(new URLSearchParams(location.search).get('game')==='poker')document.querySelector('[data-game="poker"]').click();
 

@@ -1,4 +1,4 @@
-// Original, non-graphic adult party / date-night prompts. Opt-in per room.
+// Original, non-graphic adult party / date-night prompts. Included in the regular gift pool.
 // Use bundled Noto artwork; IDs are independent of the four existing categories.
 module.exports=[
  ['🌙','一晚不用回工作訊息的微醺假期'],['💃','雙人夜店舞步速成課'],['🪩','和朋友包場的復古迪斯可夜'],['🎤','一間可以唱到天亮的私人包廂'],['🎭','神祕面具約會派對入場券'],

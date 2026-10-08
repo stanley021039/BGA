@@ -1,6 +1,8 @@
 const $=selector=>document.querySelector(selector);
 let appearance,characters=[],labels={},artworks=[],chosenCharacterArtwork=null,chosenExpressionArtwork=null;
 const uploads=new Map();
+const profileAppearanceKey=value=>JSON.stringify([value?.characterId,value?.expression]);
+let savedProfileAppearance=null,allowProfileLeave=false;
 let galleryRequest=0,soundSelection='',soundGeneration=0,selectionGeneration=0,soundPending=false,soundFile=null,soundPreview=null,soundPreviewRequest=0;
 async function json(url,options){const response=await fetch(url,options),value=await response.json();if(!response.ok)throw Error(value.error);return value;}
 function status(form,message){form.querySelector('.upload-status').textContent=message;}
@@ -97,6 +99,7 @@ async function init(){
  const [me,options,library]=await Promise.all([json('/api/auth/me'),json('/api/profile/options'),json('/api/artworks')]);
  appearance=me.appearance||options.defaults;characters=options.characters;labels=options.expressionLabels;artworks=library.artworks;
  if(!characters.some(item=>item.id===appearance.characterId))appearance=options.defaults;
+ savedProfileAppearance=profileAppearanceKey(appearance);
  const query=new URLSearchParams(location.search),requested=characters.find(item=>item.id===query.get('character'));
  if(requested)appearance={version:5,characterId:requested.id,expression:requested.expressions[query.get('expression')]?query.get('expression'):'neutral'};
  const art=artworks.find(item=>item.id===query.get('artwork'));
@@ -106,6 +109,7 @@ async function init(){
 $('#save').onclick=async()=>{
  const button=$('#save'),target=soundKey(),generation=selectionGeneration,savedAppearance={...appearance};button.disabled=true;
  try{const result=await json('/api/profile/appearance',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(savedAppearance)});
+  savedProfileAppearance=profileAppearanceKey(result.appearance);
   if(generation===selectionGeneration&&target===soundKey()){appearance=result.appearance;render();$('#message').textContent='角色已保存，遊戲座位會更新。';}
   else $('#message').textContent='角色已保存，已保留目前的選擇。';
  }catch(error){$('#message').textContent=error.message;}finally{button.disabled=false;}
@@ -161,3 +165,44 @@ $('#preview-expression-sound').onclick=()=>{
 document.addEventListener('visibilitychange',()=>{if(document.hidden){window.AudioSettings?.stopEffect(soundPreview);soundPreview=null;}});
 window.addEventListener('pagehide',()=>{soundGeneration++;soundPending=false;window.AudioSettings?.stopEffect(soundPreview);soundPreview=null;if(appearance)renderSound(selected());});
 init().catch(error=>$('#message').textContent=error.message);
+
+function profilePendingDrafts(){return {
+ character:!!(uploads.get('#character-file')||chosenCharacterArtwork||$('#character-name').value.trim()),
+ expression:!!(uploads.get('#expression-file')||chosenExpressionArtwork||$('#expression-name').value.trim()),
+ sound:!!(soundFile||$('#expression-sound-file').files[0])
+};}
+function profileHasUnsavedChanges(){return savedProfileAppearance!==null&&(profileAppearanceKey(appearance)!==savedProfileAppearance||Object.values(profilePendingDrafts()).some(Boolean)||soundPending);}
+async function saveProfileBeforeLeaving(){
+ const forms=[['character','#create-character'],['expression','#upload-expression'],['sound','#upload-expression-sound']];
+ for(const [key,id] of forms){
+  if(!profilePendingDrafts()[key])continue;
+  const form=$(id);
+  if(form.querySelector('button').disabled||soundPending)return false;
+  if(!form.reportValidity())return false;
+  await form.onsubmit({preventDefault(){},currentTarget:form});
+  if(profilePendingDrafts()[key])return false;
+ }
+ if(profileAppearanceKey(appearance)!==savedProfileAppearance){if($('#save').disabled)return false;await $('#save').onclick();}
+ return !profileHasUnsavedChanges();
+}
+const profileLeaveDialog=document.createElement('dialog');profileLeaveDialog.className='ui-dialog profile-leave-dialog';profileLeaveDialog.setAttribute('aria-labelledby','profile-leave-title');
+profileLeaveDialog.innerHTML='<h2 id="profile-leave-title">角色檔案尚未儲存</h2><p>要先儲存變更再離開嗎？</p><p id="profile-leave-status" role="status" aria-live="polite"></p><div class="ui-control-row"><button type="button" data-leave="save">儲存後離開</button><button type="button" data-leave="discard">不儲存離開</button><button type="button" data-leave="cancel">繼續編輯</button></div>';
+document.body.append(profileLeaveDialog);let profileNextUrl=null;
+function leaveProfile(){const url=profileNextUrl;profileNextUrl=null;allowProfileLeave=true;profileLeaveDialog.close();location.assign(url);}
+profileLeaveDialog.querySelector('[data-leave="cancel"]').onclick=()=>{profileNextUrl=null;profileLeaveDialog.close();};
+profileLeaveDialog.addEventListener('cancel',()=>{profileNextUrl=null;});
+profileLeaveDialog.querySelector('[data-leave="discard"]').onclick=leaveProfile;
+profileLeaveDialog.querySelector('[data-leave="save"]').onclick=async()=>{
+ const buttons=[...profileLeaveDialog.querySelectorAll('button')],message=profileLeaveDialog.querySelector('#profile-leave-status');buttons.forEach(button=>button.disabled=true);message.textContent='正在儲存…';
+ try{if(await saveProfileBeforeLeaving())leaveProfile();else message.textContent='尚未儲存完成。請完成必填欄位，或回到頁面查看錯誤後重試。';}
+ catch(error){message.textContent=error.message||'儲存失敗，已保留目前頁面。';}
+ finally{buttons.forEach(button=>button.disabled=false);}
+};
+document.addEventListener('click',event=>{
+ const link=event.target.closest?.('a[href]');if(!link||event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey||link.hasAttribute('download')||link.target&&link.target!=='_self'||!profileHasUnsavedChanges())return;
+ const url=new URL(link.href,location.href);if(!['http:','https:'].includes(url.protocol)||url.origin===location.origin&&url.pathname===location.pathname&&url.search===location.search)return;
+ event.preventDefault();profileNextUrl=url.href;profileLeaveDialog.querySelector('#profile-leave-status').textContent='';
+ if(!profileLeaveDialog.open){if(window.GameUI?.openDialog)window.GameUI.openDialog(profileLeaveDialog,link);else profileLeaveDialog.showModal();}
+});
+window.addEventListener('beforeunload',event=>{if(!allowProfileLeave&&profileHasUnsavedChanges()){event.preventDefault();event.returnValue='';}});
+window.addEventListener('pageshow',()=>{allowProfileLeave=false;profileNextUrl=null;});
