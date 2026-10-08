@@ -146,3 +146,5 @@ native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha
 同日 #38 整合已包含 #34 的 main `1447430`：兩種舊schema13升級為共同schema14，保留禁題／回看／動效及市場功能，沒有改AGENTS或覆蓋角色記憶。Windows完整463/463、市場21／移轉26與整合版背景Chrome全流程通過，取代上笔391與schema13的最新分支狀態。詳 [整合接手](../MARKET-JINX-MAIN-INTEGRATION.md)。#38仍Draft、未合併或部署，Linux／Safari／#34完整canvas實玩未重驗。
 
 2026-10-08 最新：繽紛紙卡全站 v1.17.1 已部署；完成風格維護分支改名 style/playful-paper，保存分支 archive/playful-paper-v1.17.1。未來多風格供玩家選擇已記為提案，尚未實作主題切換。詳 [風格分支策略](../playful-ui/STYLE-BRANCHES.md) 與 [部署證據](../playful-ui/full-site/deployment.md)。取代舊紙卡分支名稱與早期未部署狀態。
+
+2026-10-08 最新正式v1.18.0／8a1d0e1：繽紛紙卡亮暗模式與設定旁切換已上線，auto/light/dark只記錄本機外觀偏好。1532／38項及公開檢查通過，詳 [深色發布證據](../playful-ui/full-site/dark/deployment.md)。style/playful-paper持續維護；archive/playful-paper-v1.17.1保存ba0811b不移動。多風格選單仍為未完成提案，取代舊最新版本現況。
