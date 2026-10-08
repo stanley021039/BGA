@@ -100,3 +100,5 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 繽紛紙卡深色變體使用近黑背景與鮮綠主要操作、粉紅／橘黃／藍紫選取強調；亮色填滿區用深色文字。保留插畫、撲克牌紅黑花色與白色作畫畫布。各遊戲不同布局及對齊維持；設定旁太陽／月亮按鈕及三模式select，非多風格選單。驗收詳 [深色模式](../playful-ui/DARK-MODE.md)，正式狀態以發布證據為準。
 
 2026-10-08 深色變體正式v1.18.0已部署；設定旁亮暗控制、鮮明操作色與auto/light/dark已公開驗證。完整矩陣及有限玩法／對比範圍见 [發布證據](../playful-ui/full-site/dark/deployment.md)。不代表未來多風格選單已完成。
+
+2026-10-08 PR57複查：保留不同遊戲布局與全站紙卡語言，main新增的市場曲線／行情／排行也共用tokens；1726全通過、深色矩陣與light/dark數值預測通過。見 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)。本輪候選非新的正式發布。

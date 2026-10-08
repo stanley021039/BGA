@@ -156,3 +156,5 @@ native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha
 2026-10-08 最新正式v1.18.0／8a1d0e1：繽紛紙卡亮暗模式與設定旁切換已上線，auto/light/dark只記錄本機外觀偏好。1532／38項及公開檢查通過，詳 [深色發布證據](../playful-ui/full-site/dark/deployment.md)。style/playful-paper持續維護；archive/playful-paper-v1.17.1保存ba0811b不移動。多風格選單仍為未完成提案，取代舊最新版本現況。
 
 2026-10-08 候選PR53已解決main衝突，1712全通過，詳 [PR53整合](../PR53-MAIN-INTEGRATION.md)。schema19非正式現況；正式1.18/schema17仍不變，#57接續全站紙卡。
+
+2026-10-08 PR送審：53 main衝突已修正、1712通過；57接續所有紙卡與亮暗改動、1726通過。候選1.19/schema19尚未合併／部署，正式仍1.18/schema17。先53再57，詳 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)，保存分支ba0811b不移動。

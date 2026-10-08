@@ -336,3 +336,5 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger；舊場次、票與原積分不轉換。開場前凍結官方可用歷史與參考機率，零實際照曲線、更正精確反向分錄。完整契約、備份與未驗界線見 [計分曲線](../MARKET-PREDICTION-CURVE.md)。最終測試以固定提交為準，沒有正式資料操作。
 
 2026-10-08 PR53修正：bb3ce44整合main7149cea；schema19相容兩線17與main18，市場新功能／AI／原成就保留。Linux1712全通過、9新分支migration與隔離三席流程通過，兩輪複查及邊界詳 [PR53整合](../PR53-MAIN-INTEGRATION.md)。候選1.19未部署；正式仍1.18，不移tag、不動正式data。
+
+2026-10-08 PR57：7d20d1b已整合PR53/main，候選1.19/schema19，Linux1726全通過；78矩陣、manual toggle/320px、五款三席/200%與main數值市場ACK通過。雙回合詳 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)。尚未合併或部署，正式仍1.18，archive ba0811b不移動。
