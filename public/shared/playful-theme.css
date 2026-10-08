@@ -13,6 +13,8 @@ body[data-visual-theme="playful"][data-game-kind] {
   --play-mint: #c9eabf;
   --play-yellow: #ffe783;
   --play-lavender: #dcd1f1;
+  --play-line: #29263935; --play-line-strong: #29263970;
+  --play-stage: #d6e9d9; --play-rug: #e9dfa9; --play-felt: #d5e8d2;
   --play-error: #a23b31;
   --play-success: #28613b;
   --play-border: 2px solid var(--play-ink);
@@ -29,10 +31,10 @@ body[data-visual-theme="playful"][data-game-kind] {
   --play-game-color: var(--play-lavender);
   --bg: var(--play-paper); --panel: var(--play-surface);
   --cream: var(--play-ink); --ink: var(--play-ink); --paper: var(--play-paper);
-  --muted: var(--play-muted); --line: #29263935; --green: var(--play-ink);
+  --muted: var(--play-muted); --line: var(--play-line); --green: var(--play-ink);
   --lime: var(--play-mint); --lav: var(--play-lavender); --pink: var(--play-pink); --orange: var(--play-yellow);
   --mint: var(--play-mint); --plum: var(--play-ink); --gold: #886120;
-  --page-line: #29263935; --page-panel: var(--play-surface);
+  --page-line: var(--play-line); --page-panel: var(--play-surface);
   --page-cream: var(--play-ink); --page-orange: var(--play-yellow);
   --ui-text: var(--play-ink); --ui-muted: var(--play-muted); --ui-border: var(--play-ink);
   --ui-accent: var(--play-ink); --ui-focus: var(--play-ink);
@@ -102,7 +104,7 @@ body[data-visual-theme="playful"] .site-header :is(.site-submenu a,.site-account
 body[data-visual-theme="playful"] .site-header :is(.site-submenu a,.site-account-menu a,.site-account-menu button):hover { background: var(--play-yellow); }
 body[data-visual-theme="playful"] .site-header :is(.site-account-id,.site-version,.site-settings-note,#site-audio-status) { color: var(--play-muted); }
 body[data-visual-theme="playful"] .site-header .site-account-id { background: var(--play-surface); border: 1px solid var(--play-ink); }
-body[data-visual-theme="playful"] .site-settings :is(button,.site-audio-group,.site-version) { border-color: #29263935; }
+body[data-visual-theme="playful"] .site-settings :is(button,.site-audio-group,.site-version) { border-color: var(--play-line); }
 /* Card-based pages share surfaces rather than each reimplementing a new theme. */
 body[data-visual-theme="playful"] :is(.page-panel,.auth-card,.profile-card,.studio-panel,.issue-item,.library-item,.panel,.collection-panel,.collection-card,.achievement-card,.achievement-group,.credits-card,.gallery-card) {
   background: var(--play-surface); color: var(--play-ink);
@@ -123,13 +125,13 @@ body[data-visual-theme="playful"] :is(.tag,.pill,.room-status,.achievement-tag,.
 body[data-visual-theme="playful"] :is(.tag.closed,.room-status.is-open,.achievement-tag.unlocked) { background: var(--play-mint); }
 body[data-visual-theme="playful"] :is(.rooms-message,.collection-empty,.empty-state,.market-empty) { color: var(--play-muted); background: var(--play-paper); border-color: var(--play-ink); border-radius: 15px; }
 body[data-visual-theme="playful"] :is(.admin-layout,.admin-wrap) :is(table,pre) { color: var(--play-ink); }
-body[data-visual-theme="playful"] :is(.admin-layout,.admin-wrap) :is(th,td,section) { border-color: #29263935; }
+body[data-visual-theme="playful"] :is(.admin-layout,.admin-wrap) :is(th,td,section) { border-color: var(--play-line); }
 /* Every game keeps its board and dock positions. Only the shared UI surfaces change. */
 body[data-visual-theme="playful"][data-game-kind] :is(.hero,.card,.room-sidebar,.shared-game-ui,.dashboard,.table-sidebar,.game-roster,.draw-roster,.race-feed,.ui-panel) {
   background: var(--play-surface); color: var(--play-ink); border-color: var(--play-ink); border-radius: var(--play-radius);
 }
 body[data-visual-theme="playful"][data-game-kind] :is(.room-sidebar,.dashboard,.table-sidebar,.race-feed) { border-width: 2px; box-shadow: var(--play-shadow); }
-body[data-visual-theme="playful"][data-game-kind] :is(.room-game-info,.room-settings-panel,.shared-turn,.locked,.banner,.result-group,.delivery-gift,.game-toolbar) { color: var(--play-ink); border-color: #29263935; }
+body[data-visual-theme="playful"][data-game-kind] :is(.room-game-info,.room-settings-panel,.shared-turn,.locked,.banner,.result-group,.delivery-gift,.game-toolbar) { color: var(--play-ink); border-color: var(--play-line); }
 body[data-visual-theme="playful"][data-game-kind] :is(.room-player,.crew-pill,.seat-info,.player) { background: var(--play-paper); color: var(--play-ink); border-color: var(--play-ink); border-radius: 12px; }
 body[data-visual-theme="playful"][data-game-kind] :is(.room-player-avatar,.avatar,.shared-player-avatar,.crew-avatar,.seat-avatar) { background-color: var(--play-blue); border-color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] :is(.room-player-info small,.crew-detail,.detail-row,.sidebar-note,.step-controls p,.car-card small,.garage-info p,.spectate,.rookie-help p,#feed>div) { color: var(--play-muted); }
@@ -147,7 +149,7 @@ body[data-visual-theme="playful"][data-game-kind] :is(.room-settings-body,.share
 body[data-visual-theme="playful"][data-game-kind] .poker-table { color: #fff9ef; }
 body[data-visual-theme="playful"][data-game-kind] .poker-table :is(#pot,#pot b,#phase,.table-brand) { color: #fff9ef; }
 body[data-visual-theme="playful"][data-game-kind] .play-area { border-color: var(--play-ink); background: var(--play-surface); }
-body[data-visual-theme="playful"][data-game-kind] :is(.table-topline,.action-panel) { background: var(--play-paper); color: var(--play-ink); border-color: #29263935; }
+body[data-visual-theme="playful"][data-game-kind] :is(.table-topline,.action-panel) { background: var(--play-paper); color: var(--play-ink); border-color: var(--play-line); }
 body[data-visual-theme="playful"][data-game-kind] .empty-seat { background: var(--play-paper); color: var(--play-muted); border-color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] :is(.road-toolbar,.legend,#lastEvent) { background: var(--play-paper); color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] :is(.road-toolbar>span:last-child,.legal-key,.feed-title span,#feed>div:first-child,.game-log) { color: var(--play-ink); }
@@ -165,8 +167,8 @@ body[data-visual-theme="playful"] :is(.ui-error,.error,#error,#message[data-kind
 /* Existing lobby movement and expression transitions are deliberately untouched. */
 body[data-visual-theme="playful"] .lobby-section { background: var(--play-mint); border: var(--play-card-border); border-radius: 20px; box-shadow: var(--play-shadow); }
 body[data-visual-theme="playful"] .lobby-top :is(h2,p,.kicker) { color: var(--play-ink); }
-body[data-visual-theme="playful"] .lobby-stage { background: #d6e9d9; border-color: var(--play-ink); }
-body[data-visual-theme="playful"] .lobby-rug { background: #e9dfa9; border-color: #29263935; }
+body[data-visual-theme="playful"] .lobby-stage { background: var(--play-stage); border-color: var(--play-ink); }
+body[data-visual-theme="playful"] .lobby-rug { background: var(--play-rug); border-color: var(--play-line); }
 body[data-visual-theme="playful"] :is(.lobby-bottom,.lobby-count,.lobby-visitor-name,.lobby-visitor-label) { color: var(--play-ink); }
 body[data-visual-theme="playful"] :is(.lobby-emote-toggle,.lobby-emote-menu) { color: var(--play-ink); background: var(--play-paper); border-color: var(--play-ink); }
 body[data-visual-theme="playful"] .rooms-section { background: var(--play-surface); border: var(--play-border); border-radius: 20px; padding: 25px; }
@@ -293,7 +295,7 @@ body[data-visual-theme="playful"] .auth-deck-label { position: absolute; bottom:
 body[data-visual-theme="playful"] .auth-card { border: var(--play-card-border); padding: 34px; box-shadow: 7px 8px 0 var(--play-blue); }
 body[data-visual-theme="playful"] .auth-points span { color: var(--play-ink); border: 1.5px solid var(--play-ink); background: var(--play-surface); font-size: 12px; }
 body[data-visual-theme="playful"] .auth-points span:nth-child(2n) { background: var(--play-yellow); }
-body[data-visual-theme="playful"] :is(.card-footer,.form-note,.card-intro,.form-message) { color: var(--play-muted); border-color: #29263935; }
+body[data-visual-theme="playful"] :is(.card-footer,.form-note,.card-intro,.form-message) { color: var(--play-muted); border-color: var(--play-line); }
 body[data-visual-theme="playful"] .form-message.error { color: var(--play-error); }
 body[data-visual-theme="playful"] .form-message.success { color: var(--play-success); }
 body[data-visual-theme="playful"] .auth-tabs button { min-height: 44px; font-size: 14px; }
@@ -322,7 +324,7 @@ body[data-visual-theme="playful"][data-game-kind="draw"] .stage-reason { color: 
 body[data-visual-theme="playful"][data-game-kind] .room-player :is(.room-player-avatar,.shared-player-avatar) { border: 1.5px solid var(--play-ink); border-radius: 10px; background: var(--play-game-color); }
 body[data-visual-theme="playful"][data-game-kind] .room-player-metrics strong { color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] :is(.game-roster,.draw-roster,.table-sidebar,.dashboard,.race-feed,.draw-guess-panel,.board-section) { border: var(--play-border); box-shadow: var(--play-shadow); }
-body[data-visual-theme="playful"][data-game-kind] :is(.aside-head,.dashboard-head,.board-head,.guess-chat-head) { border-color: #29263935; }
+body[data-visual-theme="playful"][data-game-kind] :is(.aside-head,.dashboard-head,.board-head,.guess-chat-head) { border-color: var(--play-line); }
 body[data-visual-theme="playful"][data-game-kind] :is(.game-roster .aside-head h2,.draw-roster .aside-head h2,.guess-chat-head strong) { color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind] :is(.room-settings-entry,.shared-expression-menu summary,.shared-barrage-form button,.shared-barrage-form input,.room-host-buttons button,.room-host-trigger,.shared-game-ui button,.game-action-slot button:not(.gift-choice),.tools .tool-row button,.color-menu summary) { border-color: var(--play-ink); border-radius: var(--ui-radius-control); }
 body[data-visual-theme="playful"][data-game-kind] :is(.shared-barrage-form button,.room-host-buttons button,.shared-game-ui button,.game-action-slot button:not(.selected):not(.gift-choice),.room-settings-entry,.room-host-trigger) { background: var(--play-surface); color: var(--play-ink); }
@@ -335,12 +337,12 @@ body[data-visual-theme="playful"][data-game-kind="poker"] .rail { background: va
 body[data-visual-theme="playful"][data-game-kind="poker"] :is(.rail-icon,.mark,.rail-bottom) { color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind="poker"] .rail-icon.active { background: var(--play-yellow); color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind="poker"] :is(.lobby-bottom,.hero-art) { background: var(--play-blue); border-color: var(--play-ink); border-radius: 18px; }
-body[data-visual-theme="playful"][data-game-kind="poker"] .poker-table { border-color: var(--play-ink); background: #d5e8d2; box-shadow: 0 0 0 3px var(--play-surface),0 0 0 5px var(--play-ink),0 12px 0 #29263918,inset 0 0 0 2px #29263935; color: var(--play-ink); }
+body[data-visual-theme="playful"][data-game-kind="poker"] .poker-table { border-color: var(--play-ink); background: var(--play-felt); box-shadow: 0 0 0 3px var(--play-surface),0 0 0 5px var(--play-ink),0 12px 0 #29263918,inset 0 0 0 2px var(--play-line); color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind="poker"] .poker-table :is(#pot,#pot b,#phase,.table-brand) { color: var(--play-ink); }
 body[data-visual-theme="playful"][data-game-kind="poker"] .card { border: 1.5px solid var(--play-ink); border-radius: 8px; background: var(--play-surface); color: var(--play-ink); box-shadow: 0 3px 0 #29263925; }
 body[data-visual-theme="playful"][data-game-kind="poker"] .card.red { color: #a33845; }
 body[data-visual-theme="playful"][data-game-kind="poker"] .card.back { color: var(--play-ink); border: 2px solid var(--play-ink); background: repeating-linear-gradient(45deg,var(--play-blue),var(--play-blue) 5px,#d9eff8 5px,#d9eff8 10px); }
-body[data-visual-theme="playful"][data-game-kind="poker"] .card.empty { color: transparent; background: transparent; border: 1.5px dashed #29263970; box-shadow: none; }
+body[data-visual-theme="playful"][data-game-kind="poker"] .card.empty { color: transparent; background: transparent; border: 1.5px dashed var(--play-line-strong); box-shadow: none; }
 body[data-visual-theme="playful"][data-game-kind="poker"] .seat.turn .seat-info { background: var(--play-yellow); border-color: var(--play-ink); box-shadow: 0 0 0 3px var(--play-blue); }
 body[data-visual-theme="playful"][data-game-kind="poker"] :is(.seat-action,.seat-stack,.detail-row b,#turnInfo,#result,.activity-title,.activity-title span,#activity div,.invite-note p,.or) { color: var(--play-ink); }
 /* Crew colors, legal-cell SVGs, movement and dice canvases remain renderer-owned. */
@@ -373,7 +375,7 @@ body[data-visual-theme="playful"] .avatar-stage { background: var(--play-blue); 
 body[data-visual-theme="playful"] :is(.stage-caption,.stage-caption span,.stage-caption strong,.panel-heading p,.panel-number,.members-panel td,.submission-list button,.members-panel td button) { color: var(--play-ink); }
 body[data-visual-theme="playful"] :is(.submission-list button,.members-panel td button) { border-color: var(--play-ink); background: var(--play-paper); }
 body[data-visual-theme="playful"] .stage-glow { background: radial-gradient(circle,var(--play-yellow),transparent 65%); }
-body[data-visual-theme="playful"] .stage-orbit { border-color: #29263940; }
+body[data-visual-theme="playful"] .stage-orbit { border-color: var(--play-line); }
 /* Selected cards use outline as well as color; question/options keep readable data. */
 body[data-visual-theme="playful"][data-game-kind="majority"] .qcard { border: var(--play-border); box-shadow: var(--play-control-shadow); }
 body[data-visual-theme="playful"][data-game-kind="majority"] .answer { background: var(--play-lavender); color: var(--play-ink); }
@@ -518,3 +520,145 @@ body[data-visual-theme="playful"][data-game-kind].ui-large-text :is(.play-layout
 body[data-visual-theme="playful"][data-game-kind="poker"].ui-large-text .game-layout.room-layout { grid-template-columns: 1fr; }
 body[data-visual-theme="playful"][data-game-kind="poker"].ui-large-text .poker-ui .shared-players { max-height: none; }
 body[data-visual-theme="playful"][data-game-kind="race"].ui-large-text .race-main { display: flex; flex-direction: column; gap: 16px; }
+@media(max-width:420px) {
+  body[data-visual-theme="playful"] .site-header .site-title { font-size: 20px; letter-spacing: 0; }
+  body[data-visual-theme="playful"] .site-header .site-title::after { margin-left: 6px; font-size: 12px; }
+  body[data-visual-theme="playful"] [data-site-header].site-header { column-gap: 8px; }
+}
+
+/* Browser/system preference is live CSS: switching appearance never reloads a
+   room or touches its state. Art, suit colors and the white drawing canvas keep
+   their original meaning; interface surfaces get a coordinated night palette. */
+
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"],
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind] {
+    color-scheme: dark;
+    --play-paper: #121212;
+    --play-surface: #202024;
+    --play-ink: #f7f1e7;
+    --play-muted: #d4cddd;
+    --play-peach: #553c35;
+    --play-blue: #294653;
+    --play-pink: #503647;
+    --play-mint: #2c493b;
+    --play-yellow: #554820;
+    --play-lavender: #42395e;
+    --play-error: #ffb4ac;
+    --play-success: #a9e5b9;
+    --play-line: #f7f1e750;
+    --play-line-strong: #f7f1e790;
+    --play-stage: #233e32;
+    --play-rug: #51472d;
+    --play-felt: #244537;
+    --play-bright-green: #35e47a;
+    --play-bright-blue: #65bcff;
+    --play-bright-pink: #ff79bd;
+    --play-bright-peach: #ffa45f;
+    --play-bright-yellow: #ffdb55;
+    --play-bright-lavender: #c5a1ff;
+    --play-on-accent: #121212;
+    --play-shadow: 0 7px 0 #00000055;
+    --play-control-shadow: 0 3px 0 #00000066;
+    --ui-shadow-floating: 0 9px 0 #00000055, 0 16px 35px #00000066;
+    --gold: #edc77b;
+    --ui-focus: var(--play-bright-green);
+  }
+  /* Keep physical playing cards white, with distinct black/red suits. */
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="poker"] .card:not(.back):not(.empty) {
+    background: #fffdf8; color: #292639; border-color: #292639;
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="poker"] .card.red:not(.back):not(.empty) { color: #a33845; }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="poker"] .card.back {
+    background: repeating-linear-gradient(45deg,#294653,#294653 5px,#385b6a 5px,#385b6a 10px);
+  }
+  /* Numbers over the unchanged light illustrations need their own ink. */
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .game-library[data-card-carousel] .tile-badge { color: #292639; }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] :is(.community-main,.words-layout) .card {
+    background: var(--play-surface); color: var(--play-ink); border-color: var(--play-ink);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] :is(.words-layout .option-row span,.word-item,.gift-artwork-choice,.image-preview) {
+    background: var(--play-paper); color: var(--play-ink); border-color: var(--play-line);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] :is(.word-item strong,.gift-artwork-heading a,.collection-tools a) { color: var(--play-ink); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .words-layout .option-row input:checked+span {
+    background: var(--play-yellow); color: var(--play-ink); border-color: var(--play-ink);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .collection-tabs [role=tab] {
+    background: var(--play-paper); color: var(--play-ink); border-color: var(--play-ink);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .collection-tabs [role=tab][aria-selected=true] {
+    background: var(--play-mint); color: var(--play-ink);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind] :is(.choice-panel-tabs button,.recipient-tabs button,button.ui-button) {
+    background: var(--play-surface); color: var(--play-ink); border-color: var(--play-ink);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind] :is(.choice-panel-tabs,.recipient-tabs) [aria-pressed=true] {
+    background: var(--play-yellow); color: var(--play-ink);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] .stage-stat b { color: var(--play-ink); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] .stage-player-card.stage-winner {
+    background: var(--play-yellow); color: var(--play-ink); border-color: var(--play-ink);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] #stagePreviewStatus { color: #686576; }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] .stage-art.finished-art {
+    background: var(--play-surface);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] .finished-art #stagePreviewStatus { color: var(--play-muted); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] #drawActions button {
+    background: var(--play-surface); color: var(--play-ink); border: var(--play-border);
+  }
+  /* Vivid accents on near-black surfaces, with dark ink on bright fills. */
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] :is(.button:not(.outline):not(.light):not(.secondary),.primary,.page-button:not(.page-button-outline)) {
+    background: var(--play-bright-green); color: var(--play-on-accent);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] :is(.button:not(.outline):not(.light):not(.secondary),.primary,.page-button:not(.page-button-outline)):hover:not(:disabled) {
+    background: #62ef96; color: var(--play-on-accent);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .auth-story h1 em {
+    color: var(--play-on-accent); background: var(--play-bright-green);
+    box-shadow: 5px 0 var(--play-bright-green),-5px 0 var(--play-bright-green);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .auth-card::before { background: var(--play-bright-green); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] :is(button,a,input,select,textarea,summary):focus-visible { outline-color: var(--play-bright-green); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] :is(.auth-tabs button[aria-selected=true],.market-tabs [aria-selected=true],.collection-tabs [role=tab][aria-selected=true],.tabs .on,.settings-characters button[aria-pressed=true],.character-choice.selected) {
+    background: var(--play-bright-green); color: var(--play-on-accent);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind] :is(.game-action-slot #start,.game-action-slot [data-do=start],.game-action-slot [data-do=answer],.game-action-slot [data-do=score],.race-dice-action,.die-button.selected) {
+    background: var(--play-bright-green); color: var(--play-on-accent);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind] :is(.choice-panel-tabs,.recipient-tabs) [aria-pressed=true] {
+    background: var(--play-bright-pink); color: var(--play-on-accent);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="poker"] .seat.turn .seat-info,
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="race"] .crew-pill.current,
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="majority"] .answer.chosen,
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="gift"] .gift-choice.selected,
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] :is(.stage-pick:hover,.stage-player-card.stage-winner) {
+    --play-ink: var(--play-on-accent); --play-muted: #292639;
+    background: var(--play-bright-yellow); color: var(--play-on-accent); border-color: var(--play-bright-yellow);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="majority"] .answer.chosen:nth-child(1) { background: var(--play-bright-lavender); border-color: var(--play-bright-lavender); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="majority"] .answer.chosen:nth-child(2) { background: var(--play-bright-green); border-color: var(--play-bright-green); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="majority"] .answer.chosen:nth-child(3) { background: var(--play-bright-pink); border-color: var(--play-bright-pink); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="gift"] .gift-choice.selected { background: var(--play-bright-pink); border-color: var(--play-bright-pink); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="race"] .crew-pill.current { background: var(--play-bright-peach); border-top-color: var(--crew); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="race"] .crew-pill.current :is(.mini-die,.mini-die i) { color: #f7f1e7; }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .collection-tabs [aria-selected=true] .collection-count { color: var(--play-on-accent); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .site-header .site-title::after { color: var(--play-bright-green); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .site-header .site-avatar-button { background: var(--play-bright-blue); color: var(--play-on-accent); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"] .auth-deck-label { background: var(--play-bright-pink); color: var(--play-on-accent); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="poker"] .rail-icon.active { background: var(--play-bright-green); color: var(--play-on-accent); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] #timer { background: var(--play-bright-yellow); color: var(--play-on-accent); border-color: var(--play-bright-yellow); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] #timer.urgent { background: #ffb4ac; color: #471b17; border-color: #ffb4ac; }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] .stage-player-card.stage-winner .stage-card-rank { color: var(--play-on-accent); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="majority"] .answer-stage-heading span { color: var(--play-muted); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="majority"] :is(.result-group,.answer-stage .result-group,.group-player.chip) {
+    background: var(--play-surface); color: var(--play-ink); border-color: var(--play-line);
+  }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="majority"] .answer-stage .result-group.win { background: var(--play-mint); border-color: var(--play-bright-green); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="gift"] .delivery-gift { background: var(--play-pink); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="gift"] .positive { color: var(--play-bright-green); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="gift"] .negative { color: var(--play-error); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="gift"] .gift-choice.selected :is(.choice-title,.choice-badge,.choice-placeholder) { color: var(--play-on-accent); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] :is(.color-menu summary,.swatches) { background: var(--play-surface); color: var(--play-ink); border-color: var(--play-ink); }
+  html[data-color-scheme="dark"] body[data-visual-theme="playful"][data-game-kind="draw"] .tools .tool-row button.selected { background: var(--play-bright-blue); color: var(--play-on-accent); }

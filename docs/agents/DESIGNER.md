@@ -94,3 +94,7 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 ## 2026-10-08 風格命名及保存
 
 完成風格命名 Playful Paper／繽紛紙卡，分支 style/playful-paper，複製保存 archive/playful-paper-v1.17.1。使用者希望未來提供多種風格供玩家挑選；已記錄全站主題、一致元件與各遊戲不同布局的方向，選單尚未實作。見 [風格分支策略](../playful-ui/STYLE-BRANCHES.md)。
+
+## 2026-10-08 深色亮色對比方向
+
+繽紛紙卡深色變體使用近黑背景與鮮綠主要操作、粉紅／橘黃／藍紫選取強調；亮色填滿區用深色文字。保留插畫、撲克牌紅黑花色與白色作畫畫布。各遊戲不同布局及對齊維持；設定旁太陽／月亮按鈕及三模式select，非多風格選單。驗收詳 [深色模式](../playful-ui/DARK-MODE.md)，正式狀態以發布證據為準。

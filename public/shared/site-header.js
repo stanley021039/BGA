@@ -20,6 +20,18 @@
   catch{versionInfo.textContent='版本暫時無法取得';}finally{versionLoading=false;}
  }
  account.insertBefore(settingsButton,button);account.append(settings);
+ if(window.ColorScheme){
+  const themeButton=document.createElement('button'),themeStatus=document.createElement('span'),group=document.createElement('div');
+  themeButton.id='site-theme-button';themeButton.type='button';themeButton.className='site-settings-button site-theme-button site-theme-guest';themeButton.setAttribute('aria-describedby','site-theme-status');
+  themeStatus.id='site-theme-status';themeStatus.className='ui-sr-only';themeStatus.setAttribute('role','status');header.append(themeButton,themeStatus);
+  group.className='site-audio-group';group.innerHTML='<label class="site-appearance-label" for="site-color-scheme">外觀模式</label><select id="site-color-scheme"><option value="auto">跟隨系統</option><option value="light">亮色模式</option><option value="dark">深色模式</option></select>';settings.insertBefore(group,settings.querySelector('.site-audio-group'));
+  const select=group.querySelector('select');
+  window.ColorScheme.subscribe(state=>{
+   const dark=state.scheme==='dark';window.GameUI?.decorateButton(themeButton,dark?'sun':'moon',{iconOnly:true,label:'深色模式'});themeButton.setAttribute('aria-pressed',String(dark));
+   themeButton.title=dark?'切換為亮色模式':'切換為深色模式';themeStatus.textContent=(state.preference==='auto'?'跟隨系統 · ':'')+(dark?'目前為深色模式':'目前為亮色模式');select.value=state.preference;
+  });
+  themeButton.onclick=()=>window.ColorScheme.toggle();select.onchange=event=>window.ColorScheme.set(event.target.value);
+ }
  function closeSettings(focus=false){settings.hidden=true;settingsButton.setAttribute('aria-expanded','false');if(focus)settingsButton.focus();}
  const audioPopover=window.UIPopover?.bind(settingsButton,settings,{align:'end',width:320,onClose:()=>closeSettings()});
  settingsButton.onclick=()=>{const open=settings.hidden;close();closeSettings();if(open){settings.hidden=false;settingsButton.setAttribute('aria-expanded','true');audioPopover?.sync();settings.querySelector('input').focus();loadVersion();}};
@@ -43,6 +55,7 @@
    button.title=me.displayName+'（'+me.username+'）';button.setAttribute('aria-label',me.displayName+' 的帳號選單');header.querySelector('#site-account-id').textContent=me.displayName;
    const profileLink=menu.querySelector('a[href="/settings"]');if(profileLink)profileLink.textContent='帳號與形象設定';
    if(me.role==='admin'&&!header.querySelector('#site-admin')){const link=document.createElement('a');link.id='site-admin';link.href='/admin';link.textContent='管理';menu.insertBefore(link,header.querySelector('#site-logout'));}
+   const themeButton=header.querySelector('#site-theme-button');if(themeButton){themeButton.classList.remove('site-theme-guest');account.insertBefore(themeButton,button);}
    account.hidden=false;header.querySelector('.site-links').hidden=false;refreshAvatar();
   }catch{}
  }

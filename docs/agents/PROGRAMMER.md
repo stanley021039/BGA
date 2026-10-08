@@ -315,3 +315,7 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 ## 2026-10-08 風格分支與未來多主題方向
 
 使用者要求替完成風格命名並複製分支。Playful Paper／繽紛紙卡：維護分支 style/playful-paper（原 codex/playful-board-game-ui），本批文件提交後複製 archive/playful-paper-v1.17.1。未來玩家可選不同風格是使用者產品方向，尚未實作切換或偏好儲存；分支保存不等於 runtime 選單。證據及規劃見 [風格分支策略](../playful-ui/STYLE-BRANCHES.md)。本批只有文件與 Git 引用，未改程式、部署或資料；未推送 GitHub。
+
+## 2026-10-08 繽紛紙卡深色模式與右上角控制
+
+使用者要求系統深色偏好、Spotify式深底與鮮明重點色，及設定旁切換按鈕。候選1.18.0在style/playful-paper；保存archive/playful-paper-v1.17.1仍不移動。head載入color-scheme.js，auto/light/dark使用本機ah-color-scheme並同步分頁；登入頁亦可切換。只新增固定靜態路徑，不改game API/schema/sync/renderer。完整1532及最終focused38通過；78矩陣、三席原生流程、200%、對比抽樣与320px/keyboard/reload/storage/form草稿通過。詳細檔案、限制與證據 [深色模式](../playful-ui/DARK-MODE.md)，發布結果另記dark/deployment.md。

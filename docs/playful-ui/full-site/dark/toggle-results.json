@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Anonymous login exposes keyboard toggle and retains manual preference after reload",
+    "Toggle is beside settings and updates another same-origin tab",
+    "Settings restores system mode; live system change preserves an open room-form draft",
+    "Header fits 320/390/768/1440 widths and has keyboard focus"
+  ],
+  "errors": []
+}

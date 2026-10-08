@@ -6,6 +6,8 @@
   send:'<path d="m3 3 18 9-18 9 4-9-4-9Z M7 12h14"/>',
   leave:'<path d="M9 5H4v14h5M9 12h12m-4-4 4 4-4 4"/>',
   settings:'<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="8" cy="18" r="2"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
+  moon:'<path d="M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14Z"/>',
   book:'<path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Z M12 5v15"/>',
   save:'<path d="M5 3h12l4 4v14H3V3h2Z M7 3v6h10V3M7 21v-8h10v8"/>',
   check:'<path d="m5 12 4 4L19 6"/>',

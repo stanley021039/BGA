@@ -1,0 +1,57 @@
+[
+  {
+    "name": "poker-action",
+    "url": "/poker/8898E1",
+    "failures": []
+  },
+  {
+    "name": "poker-large-text",
+    "url": "/poker/8898E1",
+    "failures": []
+  },
+  {
+    "name": "race-dice-dialog",
+    "url": "/race/06B052",
+    "failures": []
+  },
+  {
+    "name": "thunder-large-text",
+    "url": "/race/06B052",
+    "failures": []
+  },
+  {
+    "name": "majority-reveal",
+    "url": "/majority/AEC653",
+    "failures": []
+  },
+  {
+    "name": "majority-large-text",
+    "url": "/majority/AEC653",
+    "failures": []
+  },
+  {
+    "name": "gift-delivering",
+    "url": "/gift/3ACBD8",
+    "failures": []
+  },
+  {
+    "name": "gift-reveal",
+    "url": "/gift/3ACBD8",
+    "failures": []
+  },
+  {
+    "name": "gift-large-text",
+    "url": "/gift/3ACBD8",
+    "failures": []
+  },
+  {
+    "name": "draw-observer-stroke",
+    "url": "/draw/12AC71",
+    "failures": []
+  },
+  {
+    "name": "draw-large-text",
+    "url": "/draw/12AC71",
+    "failures": []
+  }
+]
