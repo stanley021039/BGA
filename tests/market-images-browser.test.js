@@ -196,3 +196,54 @@ test('genuine definite upload and approval 4xx errors still release or invalidat
  const f=await fixture({beforeHook:({event})=>event.url==='/api/market/images'?response({code:'INVALID_MARKET_IMAGE',error:'invalid image'},400):undefined});await uploads(f);await f.client.file(file());f.client.check('#uploadBuckets',['crash']);f.client.check('#uploadWeekdays',[1]);await f.client.upload();assert.equal(f.client.inspect().gallery.uploadAttempt,null);assert.equal(f.client.node('#uploadFile').disabled,false);assert.match(f.client.node('#uploadStatus').textContent,/invalid image/);assert.equal(f.mine.length,0);
  const admin=await fixture({role:'admin',beforeHook:({event})=>event.url==='/api/admin/market/images/approve'?response({code:'STALE_IMAGE_BATCH',error:'stale batch'},409):undefined});await review(admin);admin.client.node('#approveFiltered').onclick();await admin.client.node('#confirmApproval').onclick();assert.equal(admin.client.inspect().gallery.approval.uncertain,false);assert.equal(admin.client.inspect().gallery.approval.invalid,true);assert.equal(admin.client.node('#confirmApproval').disabled,true);admin.client.node('#cancelApproval').onclick();assert.equal(admin.client.inspect().gallery.approval,null);
 });
+
+// VM coverage exercises the shipped event handlers; native dialog focus trapping,
+// keyboard activation and actual layout still require a browser smoke test.
+function openPreview(client,optionId='crash'){
+ const button=client.node('#options').querySelectorAll('[data-preview-option]').find(item=>item.dataset.previewOption===optionId);
+ assert.ok(button);button.focus();const event={target:button,prevented:false,stopped:false,preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};
+ client.node('#options').onclick(event);return event;
+}
+test('preview is separate from voting, preserves draft and attribution, and repeatedly returns focus',async()=>{
+ const f=await fixture();f.client.choose('rally');const before=f.client.inspect(),events=f.events.length;
+ assert.match(f.client.node('#options').innerHTML,/<\/label><div class="choice-media"/);
+ assert.doesNotMatch(f.client.node('#options').innerHTML,/<label[^>]*>(?:(?!<\/label>)[\s\S])*<button/);
+ for(let i=0;i<3;i++){
+  const event=openPreview(f.client);assert.ok(event.prevented&&event.stopped);assert.equal(f.client.node('#imagePreviewDialog').open,true);
+  assert.equal(f.client.active(),f.client.node('#closeImagePreview'));assert.match(f.client.node('#imagePreviewImage').src,/^\/api\/market\/images\/draw1\/media$/);
+  assert.match(f.client.node('#imagePreviewCredit').textContent,/伺服器抽圖作者/);
+  f.client.node('#closeImagePreview').onclick();assert.equal(f.client.node('#imagePreviewDialog').open,false);assert.equal(f.client.active().dataset.previewOption,'crash');assert.equal(f.client.node('#imagePreviewImage').src,undefined);
+ }
+ assert.deepEqual(f.client.inspect().draft,before.draft);assert.deepEqual(f.client.inspect().state,before.state);assert.equal(f.events.length,events);
+});
+test('preview Escape and genuine backdrop close, dialog surface clicks do not',async()=>{
+ const f=await fixture(),dialog=f.client.node('#imagePreviewDialog');openPreview(f.client);
+ dialog.dispatch('click',{target:dialog,clientX:30,clientY:30});assert.equal(dialog.open,true);
+ dialog.dispatch('click',{target:f.client.node('#imagePreviewImage'),clientX:0,clientY:0});assert.equal(dialog.open,true);
+ dialog.dispatch('click',{target:dialog,clientX:0,clientY:0});assert.equal(dialog.open,false);assert.equal(f.client.active().dataset.previewOption,'crash');
+ openPreview(f.client);let prevented=false;dialog.dispatch('cancel',{preventDefault(){prevented=true;}});assert.ok(prevented);assert.equal(dialog.open,false);assert.equal(f.client.active().dataset.previewOption,'crash');
+});
+test('refresh replaces trigger nodes but preview remains stable and restores the current trigger',async()=>{
+ const f=await fixture();openPreview(f.client);const image=f.client.node('#imagePreviewImage').src;
+ await f.client.refresh();assert.equal(f.client.node('#imagePreviewDialog').open,true);assert.equal(f.client.node('#imagePreviewImage').src,image);
+ f.client.node('#closeImagePreview').onclick();assert.equal(f.client.active(),f.client.node('#options').querySelectorAll('[data-preview-option]')[0]);
+ f.client.active().focus();await f.client.refresh();assert.equal(f.client.active(),f.client.node('#options').querySelectorAll('[data-preview-option]')[0]);
+});
+test('reroll, round navigation, Back/Forward views and page exit clear the preview without reopening it',async()=>{
+ const f=await fixture(),dialog=f.client.node('#imagePreviewDialog');openPreview(f.client);
+ await f.client.node('#rerollImages').onclick();await waitFor(()=>!f.client.inspect().draw.busy);assert.equal(dialog.open,false);assert.equal(f.client.node('#imagePreviewImage').src,undefined);
+ openPreview(f.client);assert.match(f.client.node('#imagePreviewImage').src,/draw2/);f.client.round('round0');assert.equal(dialog.open,false);await waitFor(()=>!f.client.inspect().draw.busy);
+ openPreview(f.client);f.client.view('records');assert.equal(dialog.open,false);f.client.view('daily');assert.equal(dialog.open,false);
+ openPreview(f.client);f.client.pagehide();assert.equal(dialog.open,false);assert.equal(f.events.filter(event=>event.url==='/api/market/vote').length,0);
+});
+test('preview uses local media URLs and text-only attribution even with hostile metadata',async()=>{
+ const f=await fixture({hook:({event,body})=>{if(event.url==='/api/market/images/draw'){body.images.crash.authorName='<img src=x onerror=alert(1)>';body.images.crash.url='https://untrusted.example/image.png';}}});
+ openPreview(f.client);assert.equal(f.client.node('#imagePreviewCredit').textContent,'上傳者：<img src=x onerror=alert(1)>');assert.match(f.client.node('#imagePreviewImage').src,/^\/api\/market\/images\//);assert.doesNotMatch(f.client.node('#options').innerHTML,/https:\/\/untrusted|<img src=x/);
+});
+test('prediction layout and dialog retain responsive contain sizing and accessible controls',()=>{
+ const css=fs.readFileSync(path.join(__dirname,'../public/market.css'),'utf8'),html=fs.readFileSync(path.join(__dirname,'../public/market.html'),'utf8');
+ assert.match(css,/#options\{display:grid;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);assert.match(css,/@media\(max-width:900px\)\{#options\{grid-template-columns:repeat\(2/);assert.match(css,/@media\(max-width:440px\)\{#options\{grid-template-columns:minmax\(0,1fr\)/);
+ assert.ok([...css.matchAll(/\.placeholder\{height:([^;}]+)/g)].every(match=>match[1]==='200px'),'all placeholder height declarations retain the image-area height');
+ assert.match(css,/\.choice-image-preview\{[^}]*height:200px/);assert.match(css,/\.choice-image-preview img\{[^}]*object-fit:contain/);assert.match(css,/\.image-preview-dialog>img\{[^}]*object-fit:contain/);
+ assert.match(html,/<dialog id="imagePreviewDialog"[^>]*aria-labelledby="imagePreviewTitle"[^>]*aria-describedby="imagePreviewCredit"/);assert.match(html,/<button id="closeImagePreview" type="button" autofocus>/);assert.match(source,/aria-haspopup="dialog" aria-controls="imagePreviewDialog"/);
+});

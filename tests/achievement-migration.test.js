@@ -1,3 +1,4 @@
+const {legacyMarketSchema}=require('./helpers/market-legacy-schema.cjs');
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
@@ -30,7 +31,7 @@ function fixture(t){
 function withDatabase(file,callback,{readOnly=false}={}){const db=new DatabaseSync(file,{readOnly});try{return callback(db);}finally{db.close();}}
 function tableRows(db,tables){return Object.fromEntries(tables.map(name=>[name,db.prepare('SELECT * FROM "'+name+'" ORDER BY rowid').all()]));}
 function tableNames(db){return db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(row=>row.name);}
-function downgrade16(file){return withDatabase(file,db=>{db.exec('DROP TABLE achievement_progress; DROP TABLE processed_unit_events; PRAGMA user_version=16');return tableRows(db,tableNames(db));});}
+function downgrade16(file){return withDatabase(file,db=>{legacyMarketSchema(db);db.exec('PRAGMA user_version=16');return tableRows(db,tableNames(db));});}
 function unit(f,game,{round=1,at='2026-10-08T03:00:00.000Z'}={}){
  const participants=f.users.map((user_id,index)=>({user_id,seat_id:'seat-'+index,eligible:game==='gift'||index<2,...(game==='draw'?(index===0?{artist:true,strokeAccepted:true}:{guessAccepted:index===1,correctGuess:index===1}):{receivedTwinGifts:index===0,positiveWish:index===0})}));
  return {unit_event_id:randomUUID(),match_id:randomUUID(),game_type:game,unit:'round',round,status:'rules_completed',completed_at:at,participants,metrics:{participantCount:3},purpose:'production',source:'game_server',rule_version:1};
@@ -46,7 +47,7 @@ test('schema 16 migration adds empty achievement tables and keeps all prior rows
  assert.equal(beforeSummary.schemaVersion,16);assert.equal(Object.hasOwn(before,'processed_unit_events'),false);
  const db=openDatabase(f.source.dbFile);
  try{
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version,17);assert.equal(SCHEMA_VERSION,17);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version,SCHEMA_VERSION);
   assert.deepEqual(tableRows(db,Object.keys(before)),before);
   for(const table of ACHIEVEMENT_TABLES)assert.equal(db.prepare('SELECT COUNT(*) n FROM '+table).get().n,0);
   assert.equal(db.prepare('PRAGMA foreign_key_check').all().length,0);
@@ -59,9 +60,9 @@ for(const version of [16,17])for(const missing of ['achievement_progress','proce
  if(version===16&&missing==='both')continue; // Covered by the genuine schema-16 migration test.
  test('schema '+version+' refuses '+missing+' missing from a declared or partial achievement schema without repairing it',t=>{
   const f=fixture(t);
-  withDatabase(f.source.dbFile,db=>{if(missing==='both')db.exec('DROP TABLE achievement_progress; DROP TABLE processed_unit_events');else db.exec('DROP TABLE '+missing);db.exec('PRAGMA user_version='+version);});
+  withDatabase(f.source.dbFile,db=>{legacyMarketSchema(db,{preserveAchievements:true});if(missing==='both')db.exec('DROP TABLE achievement_progress; DROP TABLE processed_unit_events');else db.exec('DROP TABLE '+missing);db.exec('PRAGMA user_version='+version);});
   const before=withDatabase(f.source.dbFile,db=>({version:db.prepare('PRAGMA user_version').get().user_version,tables:tableNames(db),awards:tableRows(db,['user_achievements'])}));
-  assert.throws(()=>openDatabase(f.source.dbFile),/Incomplete achievement schema/);assert.throws(()=>validateData(f.source),invalidDatabase);
+  assert.throws(()=>openDatabase(f.source.dbFile),/Incomplete (achievement|historical) schema/);assert.throws(()=>validateData(f.source),invalidDatabase);
   assert.deepEqual(withDatabase(f.source.dbFile,db=>({version:db.prepare('PRAGMA user_version').get().user_version,tables:tableNames(db),awards:tableRows(db,['user_achievements'])})),before);
  });
 }
@@ -139,7 +140,7 @@ test('encrypted schema 17 export and restore preserve the entire achievements di
 test('encrypted schema 16 restore introduces only empty unit/progress tables and preserves the preexisting achievement digest',async t=>{
  const f=fixture(t),oldRows=downgrade16(f.source.dbFile),before=validateData(f.source).summary.database,keyFile=path.join(f.root,'private','backup.key'),bundleDir=path.join(f.root,'bundle'),destinationDir=path.join(f.root,'restored');
  await run({action:'keygen',keyFile});const exported=await run({action:'export',sourceStopped:true,source:f.source,keyFile,outputDir:bundleDir});assert.equal(exported.summary.database.schemaVersion,16);
- const restored=await run({action:'restore',bundleDir,keyFile,destinationDir,apply:true,expectedBundleId:exported.bundleId});assert.equal(restored.restoredSummary.database.schemaVersion,17);assert.equal(restored.restoredSummary.database.achievementsSha256,before.achievementsSha256);
+ const restored=await run({action:'restore',bundleDir,keyFile,destinationDir,apply:true,expectedBundleId:exported.bundleId});assert.equal(restored.restoredSummary.database.schemaVersion,SCHEMA_VERSION);assert.equal(restored.restoredSummary.database.achievementsSha256,before.achievementsSha256);
  withDatabase(settings(restored.config).dbFile,db=>{assert.deepEqual(tableRows(db,['users','user_achievements']),{users:oldRows.users,user_achievements:oldRows.user_achievements});for(const table of ACHIEVEMENT_TABLES)assert.equal(db.prepare('SELECT COUNT(*) n FROM '+table).get().n,0);},{readOnly:true});
 });
 
@@ -157,6 +158,6 @@ for(const [version,maximum]of [[16,16],[16,17],[17,17]]){
   if(maximum>=17){await assert.rejects(run({action:'verify',bundleDir,keyFile}),error=>error.code==='VALIDATION_FAILED');assert.equal(fs.existsSync(destinationDir),false);return;}
   const verified=await run({action:'verify',bundleDir,keyFile});assert.equal(verified.summary.database.schemaVersion,16);
   const restored=await run({action:'restore',bundleDir,keyFile,destinationDir,apply:true,expectedBundleId:manifest.bundleId});
-  assert.equal(restored.restoredSummary.database.schemaVersion,17);assert.equal(restored.restoredSummary.database.achievementsSha256,before.achievementsSha256);assert.equal(restored.restoredSummary.database.accountsSha256,before.accountsSha256);
+  assert.equal(restored.restoredSummary.database.schemaVersion,SCHEMA_VERSION);assert.equal(restored.restoredSummary.database.achievementsSha256,before.achievementsSha256);assert.equal(restored.restoredSummary.database.accountsSha256,before.accountsSha256);
  });
 }

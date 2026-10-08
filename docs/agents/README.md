@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-08最新正式 **v1.16.0／8a9cbfd**：成就收藏分組、13枚徽章與正常回合單位持久化已發布，卡片以高亮區分取得狀態。Windows／Linux各1,518項通過，背景Chrome與三款正式回合驗證、資料保留及限制見 [成就單位進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)。永久勝場、跨程序outbox與畫猜局內合併提示仍待；下方版本摘要屬歷史。
+
 2026-10-08最新正式 **v1.15.1／c1e59d4**：使用者要求先撤回不一致的局部手繪風格，已恢復原大廳及四房標題外觀；保留v1.15彈幕框與既有功能，SVG/credits僅歷史留存。双平台各1,432、公開27資源、原生首頁／四房waiting通過，9帳戶allfields及21non-session表/BLOB保留；詳細source/部署SIGTERM逾時與proxy drain/不可覆寫receipt修正/備份/有限native/own cleanup見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下面手繪與候選狀態屬歷史；後續局部美化须驗整體一致性，不由素材研究直接推定成熟全站方案。沒有新PR/push。
 
 2026-10-08使用者回饋：局部手繪畫風造成網站整体不一致，先撤回手繪主題。候選 **v1.15.1／c1e59d4**恢復大廳及四房導入前的外觀，v1.15彈幕框及既有WebGL/共看/排版功能保留；素材與授權只作歷史留存。後續變更須以大廳、房間、設定、其他頁面的整體一致性評估，不把素材研究或局部preview當成全站成熟方案。Windows1,432／有限native與正式結果以 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)最新節為準；下面v1.14.2的「正在使用手繪」是歷史。
@@ -26,6 +28,10 @@
 2026-10-07最新正式 **v1.11.0／schema16**：PR46兩P2修正clear／undo可見提交與visibility音樂resume，合main市場圖片功能後保留既有UI／WebGL正式同步；固定source、雙平台各1,284與完整資料核對見 [最新證據](../PR46-REVIEW-FIX-PROGRESS.md)。PR46另推候選v1.9.1／雙平台1,263，已回覆Stanley／Ready／再次請審查，未合併；[PR45圖片庫](../MARKET-GALLERY.md)已合main，native仍僅空庫入口smoke。下方v1.10／schema15與更早「當前」是歷史；tag固定程式，詳情只集中最新進度，不由全套tests宣稱全玩法／FPS。
 
 2026-10-07最新正式 **v1.10.0**：共用表面／邊界／選取／數字樣式及雷霆原生WebGL局部粒子已發布；Windows／Linux各1,165項通過，source／原生／資料證據見 [本批進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。實際畫出同kind才遮舊裝飾，idle／失context／reduce立即恢復，重要玩家／車隊／骰子／角色與互動保留。Threads五庫是 [模式與授權評估](../research/THREADS-UI-COMPONENTS-ASSESSMENT.md)，沒有安裝框架或FPS結論。下方v1.9.0與「WebGL未實作」為歷史；本批無新PR／push，PR46不變。
+
+2026-10-08 候選 v1.12.0／schema18：股市數值預測與每日凍結曲線、五等分圖片，尚未合併／部署。舊場次與帳本保持原規則；詳 [曲線契約與相容性](../MARKET-PREDICTION-CURVE.md)。
+
+2026-10-07 Issue47股市自動化候選v1.10.0／schema17：官方收盤交叉核對、自動原子結算、下一交易日、近一日曆月歷史、暱稱排行榜與休市override，尚未部署。先讀 [市場自動化](../MARKET-AUTOMATION.md)；PROGRAMMER與SERVER-DATA保存來源、單寫者、遷移與限制。
 
 2026-10-07最新正式v1.9.0：畫猜防閃、真點時間viewer回放、平滑倒數與安靜成功回饋，以及媒體高度／原生本機時間明確發布已完成。接手先讀 [畫猜最新進度](../DRAW-TIMED-PLAYBACK-PROGRESS.md)／[spec](../specs/DRAWING-SMOOTHNESS.md)及 [媒體最新進度](../MEDIA-ICON-WINDOW-UI-PROGRESS.md)／[spec](../specs/MEDIA-ICON-WINDOW-UI.md)。PROGRAMMER／ANIMATION／PLAYER保存每輪中途與終點分開驗、callback取消及個人／全桌權限規則；完整source、測試與原生數據集中於進度，下方旧版本是歷史。正式成功不表示所有硬體、自然多輪、實體手機／讀屏或60fps已驗。
 

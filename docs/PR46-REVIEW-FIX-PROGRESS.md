@@ -6,6 +6,9 @@
 
 ## 2026-10-07：新事件排序驗收與重新送審完成
 
+
+## 2026-10-07：新事件排序驗收與重新送審完成
+
 [Stanley新回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6037336371)對bb7b3d提出media state／event排序風險。候選 **v1.9.3**／固定程式 `a2c5589232ed2d4d595a5ac33fbaef572a04fd4f`已完成雙平台各1,300、focused126／獨立複查與fresh真原型API的Pause／最後Play／正常visibility三情境；release／merge-tree／diff checks通過。未加patterns或改renderer。PR已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併。本地tag v1.9.3固定a2c5589，後續純文檔提交不移動tag；正式仍v1.11.1，patterns未發布也不加入本PR。中間回覆只保留歷史。
 
 | 本次範圍 | 已知與待驗 |

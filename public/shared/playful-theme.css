@@ -520,6 +520,24 @@ body[data-visual-theme="playful"][data-game-kind].ui-large-text :is(.play-layout
 body[data-visual-theme="playful"][data-game-kind="poker"].ui-large-text .game-layout.room-layout { grid-template-columns: 1fr; }
 body[data-visual-theme="playful"][data-game-kind="poker"].ui-large-text .poker-ui .shared-players { max-height: none; }
 body[data-visual-theme="playful"][data-game-kind="race"].ui-large-text .race-main { display: flex; flex-direction: column; gap: 16px; }
+/* New main-market views use the same theme without altering the forecast
+   slider, frozen math, responsive media nodes or the inner table scroll. */
+body[data-visual-theme="playful"] .market-shell :is(.prediction-summary,.automation-panel,.curve-panel,.table-scroll,.own-rank,.curve-image-slot) {
+  background: var(--play-surface); color: var(--play-ink); border-color: var(--play-line);
+}
+body[data-visual-theme="playful"] .market-shell :is(.automation-dates,.data-status,.curve-image-eligibility,.image-credit) { color: var(--play-muted); }
+body[data-visual-theme="playful"] .market-shell :is(.market-table thead th,.market-table .is-me,.curve-slot-label,.review-badge) { background: var(--play-lavender); color: var(--play-ink); }
+body[data-visual-theme="playful"] .market-shell :is(.market-table a,.curve-heading output,.forecast-ticks) { color: var(--play-ink); }
+body[data-visual-theme="playful"] .market-shell .self-tag { background: var(--play-yellow); color: var(--play-ink); }
+body[data-visual-theme="playful"] .market-shell .market-up { color: var(--play-error); }
+body[data-visual-theme="playful"] .market-shell .market-down { color: var(--play-success); }
+body[data-visual-theme="playful"] .market-shell .placeholder { color: #292639; }
+body[data-visual-theme="playful"] .market-shell .image-credit { background: var(--play-paper); }
+body[data-visual-theme="playful"] .curve-grid { stroke: var(--play-line); }
+body[data-visual-theme="playful"] .curve-axis { stroke: var(--play-ink); }
+body[data-visual-theme="playful"] .score-curve { stroke: var(--play-error); }
+body[data-visual-theme="playful"] .forecast-marker { stroke: var(--play-success); }
+html[data-color-scheme="dark"] body[data-visual-theme="playful"] .curve-panel input[type=range] { accent-color: var(--play-bright-green); }
 @media(max-width:420px) {
   body[data-visual-theme="playful"] .site-header .site-title { font-size: 20px; letter-spacing: 0; }
   body[data-visual-theme="playful"] .site-header .site-title::after { margin-left: 6px; font-size: 12px; }

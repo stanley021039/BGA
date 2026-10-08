@@ -82,7 +82,9 @@ class MarketImageStore{
  draw(actor,input){
   const targetDate=input?.targetDate;if(!R.validDate(targetDate))fail(400,'INVALID_DATE','交易日期格式不正確');
   return transaction(this.db,()=>{this.user(actor);const weekday=new Date(targetDate+'T00:00:00Z').getUTCDay(),pool=this.boundedRows("WHERE status='approved'").map(metadata).filter(image=>image.weekdays.includes(weekday));
-   const images={};for(const bucket of BUCKETS){const eligible=pool.filter(image=>image.buckets.includes(bucket));images[bucket]=eligible.length?eligible[randomInt(eligible.length)]:null;}return {targetDate,images};
+   if(input.layout!==undefined&&input.layout!=='curve-five')fail(400,'INVALID_IMAGE_LAYOUT','圖片排列不正確');
+   const slots=input.layout==='curve-five'?{crash:['crash'],fall:['fall'],center:['dip','rise'],rally:['rally'],surge:['surge']}:Object.fromEntries(BUCKETS.map(bucket=>[bucket,[bucket]]));
+   const images={};for(const [slot,buckets] of Object.entries(slots)){const eligible=pool.filter(image=>buckets.some(bucket=>image.buckets.includes(bucket)));images[slot]=eligible.length?eligible[randomInt(eligible.length)]:null;}return {targetDate,images,...(input.layout?{layout:input.layout}:{})};
   });
  }
  media(actor,id){return transaction(this.db,()=>{

@@ -1,5 +1,9 @@
 # 統一房間媒體與房間角色進度
 
+2026-10-07最新PR1.9.3／a2c5589：有界play／pause Promise fence等契約雙平台各1,300／126focused／peer與freshPause／最後Play／normal已驗。Debugger載SHA／無input原型API是受控測試；proxy Pause總media4→4（GET3→3／POST1→1），最後Play／normal總media5→5（GET4→4／POST1→1），fresh ownresume约3.6ms後correctPause，非零transient／physical UA。heldgate／full ResourceTiming buffer已更正、own QA已清，詳 [最新scope](PR46-REVIEW-FIX-PROGRESS.md)。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併，正式1.11.1不變，patterns另於main整合未發布。
+
+2026-10-07 PR46第三P2已驗／正式 **v1.11.1**：晚queue-only GET不覆蓋較新native Pause，pending visibility播放只恢復自己的合法中斷，manual／mute／sharedpaused／videoexit保持、不加poll／seek。PR1.9.2／cf64bfc雙平台各1,278，正式df983da雙平台各1,299，actual AudioSettings focused104；最終真controls requests8→8與HAVE_NOTHING受控promise／VM METADATA1範圍分開，見 [最新進度](PR46-REVIEW-FIX-PROGRESS.md)。PR已推送、標 Ready 並再次請 Stanley 審查，未合併，patterns仍暫停未發布；下方九項與1,034等數字為歷史。
+
 日期：2026-10-07。本批正式 **v1.8.0**，受測來源／不可覆寫本地 tag 為 `56875616c9367a25dd369c175c2b949f7861de9c`，取代 v1.7.2；台北時間 **10:24:21**（`2026-10-07T02:24:21Z`）已完成正式發布與公開 API 驗收。Windows／Linux完整各1034項通過；真正背景Chrome三席的播放及UI證據來自隔離fixture，公開站另外驗權限／資源／資料保存，兩者分開記錄。沒有新PR或push，不修改原PR43；後續文件提交不移動受測tag。規格見 [共用媒體契約](specs/UNIFIED-ROOM-MEDIA.md)，外部播放政策的研究與未驗範圍見 [政策查核](research/ROOM-MEDIA-AUTOPLAY-POLICY.md)。
 
 ## 九項需求對照

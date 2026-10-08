@@ -2,17 +2,20 @@
 
 ## 2026-10-08：成就單位事件的來源與持久邊界
 
+2026-10-08 正式驗收：v1.16.0／固定 source 8a9cbfd，Windows 與 Linux 各1,518項通過；三款正式正常回合解鎖、18筆 own 新徽章／3 receipt／9探索 rows，以及背景 Chrome 高亮／日期／桌機手機／鍵盤通過。9帳號全欄位、13市場圖片與舊16徽章保留，own房與登入／分頁／代理已清理。卡片可見解鎖字樣已移除，读屏狀態保留；畫猜局內合併提示、永久勝場及跨程序outbox尚待。此筆取代本批候選待驗狀態，不宣稱真人訪談、完整讀屏或全瀏覽器；詳細範圍見成就單位進度。
+
+
 本次相容修正：保留資料庫帳號 ID 原始大小寫，包含合法大寫 UUID 的匯入帳號；去重仍辨識大小寫變體。卡片依最新使用者指示改為高亮區分取得狀態，可見解鎖文字移除，讀屏狀態與日期保留。
 
 本批已實作 source 與 focused 測試，正式版本、完整 suite、原生瀏覽器與部署結果由主流程更新 [成就單位進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)，不能從本節推定已發布。對應 [成就與戰績 spec](../specs/ACHIEVEMENTS-AND-RECORDS.md) 的第一批 round 成就；下方「成就／ledger 仍缺」須拆成已完成的單位 receipt／探索進度與仍未完成的永久勝場／durable outbox。
 
-`src/games/draw-guess.js`、`gift.js`、`majority.js` 每整局產生 `match_id` UUID（draw 沿用 `gameRunId`），每輪另產生 `unit_event_id` UUID。可選、非列舉的 `achievementUnitStart` 同步返回 canonical 座位／帳號映射，開始時複製並凍結；不能在結束時從名字或現在名單補身分。帳號 UUID 正規化為小寫並拒絕同帳號／同座位重複；缺失、throw、partial 或無效映射使該成就單位降為 `interrupted`，原遊戲仍照原規則結算。`participantCount` 只計凍結映射覆蓋的官方有效真人，不大於映射人數；不足映射的同頻趣味 predicates 為 false。最小 facts 僅含身分、UUID、round、品質狀態、ISO 完成時間、參與 booleans 與必要 metrics，不含題目、猜測內容、喜好、禮物 ID、畫布或手牌。
+`src/games/draw-guess.js`、`gift.js`、`majority.js` 每整局產生 `match_id` UUID（draw 沿用 `gameRunId`），每輪另產生 `unit_event_id` UUID。可選、非列舉的 `achievementUnitStart` 同步返回 canonical 座位／帳號映射，開始時複製並凍結；不能在結束時從名字或現在名單補身分。帳號 UUID 保留資料庫原始大小寫，去重時辨識大小寫變體並拒絕同帳號／同座位重複；缺失、throw、partial 或無效映射使該成就單位降為 `interrupted`，原遊戲仍照原規則結算。`participantCount` 只計凍結映射覆蓋的官方有效真人，不大於映射人數；不足映射的同頻趣味 predicates 為 false。最小 facts 僅含身分、UUID、round、品質狀態、ISO 完成時間、參與 booleans 與必要 metrics，不含題目、猜測內容、喜好、禮物 ID、畫布或手牌。
 
 完成事件由權威操作建立，不用 `phase==='reveal'` 推測。draw 的 server 接受 stroke／guess 才留證據，clear／undo 不退款或刪資格，duplicate／拒絕操作不增加證據；artist 離房／offline auto reveal 為 `interrupted`，正規 timeout／all-guessed 為 `rules_completed`，玩家不足提前結束為 `abandoned`。正常輪保留此前已離席者的合法證據，重新入席等待下輪不加入這輪 current count。gift 僅在最後收禮確認後的正式 `finishDelivery` 建立 facts，同一收禮者的正式 entries 按 exact gift ID 判 twins，`great/good/ok` 判正向心願；delivering 移除玩家為 interrupted，少於三人為 abandoned。majority 只採正式 score 的 groups，填空合併預覽不發事件；withdraw／kick／missing 答案無資格，全有效同組需至少三人，並列最大需至少兩組且每組 count 至少二。
 
 引擎先 latch 深凍 snapshot，再呼叫 `achievementUnitCompleted` 通知；同步 throw／Promise rejection 不回滾已接受玩法。`pendingAchievementUnits()`／`drainAchievementUnits()` 皆非破壞性讀取，成功持久化後才 `acknowledgeAchievementUnit(id)`。每房私有 pending 上限 256；滿額時下一輪／新局在 mutation 前拒絕，不淘汰未儲存事件，整局最後正常結束仍可完成。無 hooks 的既有 fixture 玩法不累積 pending，也不受此上限阻擋。
 
-Store 的 `processed_unit_events` 按 UUID、單位唯一關係與 facts 指紋去重；相同 UUID 不同內容是衝突，不覆寫。只有 `game_server`／`production`／`rules_completed` 的有效參與者授予徽章與 `achievement_progress`；兩種不同遊戲的有效單位可授 `all-two-tables`，不靠登入、點擊或勝場。五枚舊徽章 ID 與取得日期保留。已驗 engine 新 31、store 新 16、既有三引擎 32，共 focused **83/83**；engine 的三遊戲 × 五類 mapping 故障真實寫入 in-memory SQLite receipt、duplicate 與 ack，均 0 award／0 progress。語法及 owned diff 檢查通過；這不是完整 suite、真人試玩或正式資料驗收。
+Store 的 `processed_unit_events` 按 UUID、單位唯一關係與 facts 指紋去重；相同 UUID 不同內容是衝突，不覆寫。只有 `game_server`／`production`／`rules_completed` 的有效參與者授予徽章與 `achievement_progress`；兩種不同遊戲的有效單位可授 `all-two-tables`，不靠登入、點擊或勝場。五枚舊徽章 ID 與取得日期保留。已驗 engine 新 34、store 新 17、既有三引擎 32，共 focused **83/83**；engine 的三遊戲 × 五類 mapping 故障真實寫入 in-memory SQLite receipt、duplicate 與 ack，均 0 award／0 progress。語法及 owned diff 檢查通過；這不是完整 suite、真人試玩或正式資料驗收。
 
 **B03 永久獲勝 ledger 與 durable outbox 尚未完成。** 已提交的單位 receipt／進度能跨 store 重開去重，但引擎／app 待處理清單仍在 RAM，程序崩潰前尚未落庫的事件會丟失，不能宣稱 crash-safe／exactly-once 全流程。後續須補持久 outbox 與 history／SQLite reconciliation；不能從暱稱、外站或不可驗身份的 archive 補授獎、補勝場。來源與限制保留在本批進度，避免把既有角色文件的歷史版本當當前完成狀態。
 
@@ -48,6 +51,12 @@ renderer用`surfaceRevision`／`presentedSurfaceRevision`追staging實寫與可�
 ## 2026-10-07：正式v1.10.0局部WebGL
 
 `GameFxLayer`用原生WebGL1、lazy、有界buffer／particles／contexts，idle無rAF；只接公開event／live gate與視覺車位anchor，不改checkpoint、server／DB或畫猜renderer。`onActivity`等成功非零draw才發布kind，僅用`visibility:hidden`遮同類SVG裝飾（opacity會被舊keyframes覆蓋），標字／bullet／trail／spin保留，empty／loss／reduce／clear復原。restore不補播；最終loss probe與較早restore cycle分開，不能拼同次完成。雙平台各1,165、限額／source／native／資料與限制見 [進度](../UI-POLISH-WEBGL-PROGRESS.md)／[spec](../specs/UI-POLISH-WEBGL.md)。此筆取代下方「WebGL未實作」現況，舊研究保留。
+
+2026-10-07 Issue47候選v1.10.0：市場官方日收盤採精確日期與兩份官方日報核對；14:00只是查詢门檻。日曆開場與延遲結算解耦；單writer job、abort/join、restartcatchup及SQLite原子授分。排行榜只市場ledger、暱稱與競賽同分；新UI與舊票／圖片庫回歸均測。原生Chromiumsocket限制未驗，未部署；最新scope和來源見 [市場自動化](../MARKET-AUTOMATION.md)。
+
+2026-10-07最新PR1.9.3／a2c5589：play／pause Promise fence與64events／8proofs／8corrections保意圖／failclosed，不加poll／seek。雙平台1,300／focused126／peer與fresh原型Pause／最後Play／normal已驗，proxy總media4／5各不變（分解GET3／4各不變、POST1不變），QA已清。原型API無input、fresh約3.6ms transient非零瞬間／physical UA；gate與resourcebuffer教訓見 [進度](../PR46-REVIEW-FIX-PROGRESS.md)。已推送4604dce、更新描述與 [最終回覆](https://github.com/stanley021039/BGA/pull/46#issuecomment-6038913529)、Ready（draft=false）並再次請Stanley審查，未合併，正式1.11.1不變，patterns另於main整合未發布。
+
+2026-10-07 PR46第三P2：visibility resume須同clip／epoch／fresh marker且無較新本機意圖；native Play→Pause撤銷舊中斷資格，晚queue GET不重播。pending play因visibility自動pause的Abort／resolve／finally仍可只恢復自己的中斷，native pause／mute／retire／noLoop保持，不加poll／seek。PRcf64bfc／1.9.2雙平台1,278，正式保UI／WebGLdf983da／1.11.1雙平台1,299；PR已推送、標 Ready 並再次請 Stanley 審查，未合併。fresh真UA controls與controlledHAVE_NOTHING、VM METADATA1和證據限制見 [最新進度](../PR46-REVIEW-FIX-PROGRESS.md)，不能拿中間trace代替最終scope；canvas本次未改，patterns暫停。
 
 ## 2026-10-07：正式v1.9.0長期契約
 
@@ -91,7 +100,7 @@ GET只有成功才標marker已取；首取＋2次、1秒／4秒門檻由既有ga
 
 2026-10-07繪圖研究（基線v1.7.1／3d82e3f，未改產品）：區分本機input→paint、湊批／queue、SSE→viewer paint。40點才flush或pointerup，25點持筆真雙席0POST；活動長筆真renderer計數1000點499,501 lineTo，不等於CPU毫秒；單in-flight POST被ACK卡住，人工回覆多延400ms／8點queue3,314ms。先有界時間flush＋同stroke未送點合併，再一幀一次preview與活動層；不可任意並行POST、修改已送batchId內容、削去epoch／quota／fill／snapshot防護。8點兩席digest差仍未解，後續空mask跨換輪不能證明吻合。已與研究agent核對方法／限制，來源與具體驗收見 [對照](../research/GARTIC-BGA-DRAWING-COMPARISON.md)、[規格](../specs/DRAWING-SMOOTHNESS.md)。Fabric可借活動層，WBO採獨立實作，採用前重查授權；不是Gartic內部原碼。
 
-2026-10-07正式v1.7.1／`3d82e3f`：social ACK走RoomHost.acceptSnapshot→目前game callback，不能只更新被隱藏的GameShell角色列；race receive same-version更新snapshot／renderCrews，保留track、movement及dice。RoomHost.isStaleSnapshot共用較低version／same-context-version較舊finite serverNow判斷，五game入口重用，避免舊GET在ACK後把圖蓋回；higher version優先，沒有加網路traffic。原faker GIF隔離真UI、正式五款雙席及两平台各940已驗，详 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。角色表情仍5秒臨時，重送同GIF動畫起點沒有改；全部phase或真人弱網未實玩。下方v1.7.0為歷史。
+2026-10-07正式v1.7.1／`3d82e3f`：social ACK走RoomHost.acceptSnapshot→目前game callback，不能只更新被隱藏的GameShell角色列；race receive same-version更新snapshot／renderCrews，保留track、movement及dice。RoomHost.isStaleSnapshot共用較低version／same-context-version較舊finite serverNow判斷，五game入口重用，避免舊GET在ACK後把圖蓋回；higher version優先，沒有加網路traffic。原faker GIF隔離真UI、正式五款雙席及两平台各940已驗，詳 [表情驗收](../CHARACTER-EXPRESSION-SWITCH-PROGRESS.md)。角色表情仍5秒臨時，重送同GIF動畫起點沒有改；全部phase或真人弱網未實玩。下方v1.7.0為歷史。
 
 2026-10-07正式v1.7.0／`82149a4`：TableWatch右下把手及keyboard縮放，size key獨立、舊position key格式保留；viewport暫時clamp不寫偏好，reset移除size。尺寸計算量測header／status／footer／首local button，加210pxplayer餘量；header flex basis160允許工具換行，watch-narrow依窗寬850切換。RO觀察chrome／player、經rAF合併，close釋放capture及frame；CSS高度上限與JS都扣16px。正常resize不重建iframe或呼叫player／watchAPI，權限不變。Windows／Linux各914；公开2會員實播及320／200%／雙欄通過，詳 [尺寸验收](../YOUTUBE-WINDOW-RESIZE-PROGRESS.md)。驗identity以保留Runtime物件與當前iframe嚴格相等，重取DOM frontend ID可能變，不能據此推斷churn。下方v1.6.0為歷史。
 
@@ -113,7 +122,7 @@ GET只有成功才標marker已取；首取＋2次、1秒／4秒門檻由既有ga
 
 2026-10-07共用UI契約：全站primitives與GameUI registry／symbol／decorateButton是圖示、單字元及操作槽的共同來源，20HTML共用載入，foundation只保留遊戲tokens及布局。Grid的place-items只處理格內，整組置中还需place-content；正面多區資訊卡保留space-between。wrapper内部margin／padding重設防歷史header span等泛用選擇器污染，外部間距交parent gap；資訊D保留21px、互動按鈕44px，hidden與pending可測。與程式角色的實際攻防、逐頁盤點及未驗邊界見 [規格](../specs/SHARED-UI-ALIGNMENT.md)，程式／背景Chrome／發布事實見 [進度](../SHARED-UI-ALIGNMENT-PROGRESS.md)，未全面玩法／跨平台字形不宣稱驗畢。
 
-2026-10-07正式v1.5.2／`7939090`：race-paths依每步前一格判定跳台進入方向，側面／前方風險1000、提示會淘汰；實際飛躍峽谷同長安全分支驗證存活，已揭露陷阱與起跑規則保留、未揭露內容不洩漏。expression-sounds用回應serverNow判事件新鮮度，本機時間只判連線間隔，game-shell及lobby兩處傳入；五款房間及大廳回應同步補clock。±2／6／60秒、legacy、去重／mute／hidden／reconnect有回歸，沒有新增輪詢。原PR43修正双平台808並Ready；最新正式分支雙平台863、公開資源與serverNow已驗，保留後續畫猜及移轉相容性、8帳戶，未合併原PR。證據見 [修正與同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，下方v1.5.1為版面導入歷史。
+2026-10-07正式v1.5.2／`7939090`：race-paths依每步前一格判定跳台進入方向，側面／前方風險1000、提示會淘汰；實際飛躍峽谷同長安全分支驗證存活，已揭露陷阱與起跑規則保留、未揭露內容不洩漏。expression-sounds用回應serverNow判事件新鮮度，本機時間只判連線間隔，game-shell及lobby兩處傳入；五款房間及大廳回應同步補clock。±2／6／60秒、legacy、去重／mute／hidden／reconnect有回歸，沒有新增輪詢。原PR43修正雙平台808並Ready；最新正式分支雙平台863、公開資源與serverNow已驗，保留後續畫猜及移轉相容性、8帳戶，未合併原PR。證據見 [修正與同步](../PR43-PRODUCTION-FIX-PROGRESS.md)，下方v1.5.1為版面導入歷史。
 
 2026-10-07正式v1.5.1／`d4e3b4a`：畫猜phase row跨欄、左側常駐玩家、中央畫布＋直列聊天室（input最後）、右側共用操作。工具160px軌與畫布上緣對齊；timer沿用server deadline／clockOffset，以15s選題、options.seconds作畫、8s揭曉計算進度，不因presence poll重置，字型沿用UI＋tabular digits。猜對僅卡片高亮／勾號與chat非答案訊息，右側只保留重要例外。結算按內容高度且顯示最後一幅畫，preview job綁resultId及實際canvas node避免舊回覆畫到新場景。Windows／Linux各845、Chrome不同角色及手機／八席通過；正式schema15、8帳戶保留，無外站匯入／新PR／push。證據及限制見 [完整進度](../DRAW-DESKTOP-LAYOUT-PROGRESS.md)，下列正式1.3敘述為歷史。
 
@@ -321,3 +330,7 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 使用者要求系統深色偏好、Spotify式深底與鮮明重點色，及設定旁切換按鈕。候選1.18.0在style/playful-paper；保存archive/playful-paper-v1.17.1仍不移動。head載入color-scheme.js，auto/light/dark使用本機ah-color-scheme並同步分頁；登入頁亦可切換。只新增固定靜態路徑，不改game API/schema/sync/renderer。完整1532及最終focused38通過；78矩陣、三席原生流程、200%、對比抽樣与320px/keyboard/reload/storage/form草稿通過。詳細檔案、限制與證據 [深色模式](../playful-ui/DARK-MODE.md)，發布結果另記dark/deployment.md。
 
 2026-10-08 正式發布：v1.18.0／8a1d0e1已部署shhuang.cc。1532完整與38最終相關測試通過；15來源資產、23 non-session表、schema與integrity保留。公開瀏覽器真亮暗切換／三模式／版本與匿名login持久性通過；測試房均隔離DB。保存分支ba0811b與v1.17.1 tag未移動，無push。詳 [深色發布證據](../playful-ui/full-site/dark/deployment.md)，取代上方候選狀態。
+
+## 2026-10-08：數值預測候選（未部署）
+
+Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger；舊場次、票與原積分不轉換。開場前凍結官方可用歷史與參考機率，零實際照曲線、更正精確反向分錄。完整契約、備份與未驗界線見 [計分曲線](../MARKET-PREDICTION-CURVE.md)。最終測試以固定提交為準，沒有正式資料操作。

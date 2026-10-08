@@ -169,7 +169,9 @@ async function unpack(request, parent) {
     const validated = validateData(generationPaths(stage), { acknowledgeInterruptedMatches: true });
     // Only an authenticated pre-v17 descriptor can omit the newly introduced
     // achievement digest. Current bundles must include it, even for an old DB.
-    const legacyAchievementDigest = auth.manifest.code.maximumSchema < 17 && auth.manifest.summary.database.schemaVersion < 17 && !Object.hasOwn(auth.manifest.summary.database, 'achievementsSha256');
+    const historicalMarketProducer = auth.manifest.summary.database.schemaVersion>=17 && auth.manifest.summary.database.schemaVersion<=18 && Object.hasOwn(validated.summary.database.tableCounts,'market_automation_state');
+    const noUnitTables = !Object.hasOwn(validated.summary.database.tableCounts,'processed_unit_events') && !Object.hasOwn(validated.summary.database.tableCounts,'achievement_progress');
+    const legacyAchievementDigest = !Object.hasOwn(auth.manifest.summary.database,'achievementsSha256') && (auth.manifest.code.maximumSchema<17 && auth.manifest.summary.database.schemaVersion<17 || historicalMarketProducer && auth.manifest.code.maximumSchema<=18 && auth.manifest.summary.database.schemaVersion<=18 && noUnitTables);
     const portableSummary = s => ({ ...s, database: { ...s.database, sqliteVersion: undefined, ...(legacyAchievementDigest ? { achievementsSha256: undefined } : {}) } });
     if (canonical(portableSummary(validated.summary)) !== canonical(portableSummary(auth.manifest.summary))) fail('VALIDATION_FAILED', 'Restored inventory differs from authenticated manifest');
     return { ...auth, stage, validated };
