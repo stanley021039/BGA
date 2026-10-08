@@ -1,4 +1,4 @@
-const {legacyMarketSchema,upgradedMarketRows}=require('./helpers/market-legacy-schema.cjs');
+const {legacyMarketSchema,upgradedMarketRows,useLegacyRoundSnapshot}=require('./helpers/market-legacy-schema.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -39,10 +39,11 @@ function expressionWav(samples = 25) {
 const wav = expressionWav();
 const marketTables = ['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
 const dropMarket = 'DROP TABLE market_requests; DROP TABLE market_ledger; DROP TABLE market_settlements; DROP TABLE market_votes; DROP TABLE market_rounds;';
-function seedMarket(db,f) {
+function seedLegacyMarket(db,f) {
   let now=Date.parse('2027-01-04T12:00:00Z');
   const store=new MarketStore(db,()=>now),admin=db.prepare('SELECT * FROM users WHERE id=?').get(f.adminId);
   const id=store.create(admin,{requestId:crypto.randomUUID(),targetDate:'2027-01-06',confirmed:true}).roundId;
+  useLegacyRoundSnapshot(db,id);
   store.vote(f.member,{requestId:crypto.randomUUID(),roundId:id,optionId:'rally',expectedRevision:0});
   now=Date.parse('2027-01-06T05:30:00Z');
   for (const [expectedRevision,returnPct] of [[0,2],[1,-2]]) store.settle(admin,{requestId:crypto.randomUUID(),roundId:id,returnPct,expectedRevision,reason:expectedRevision?'移轉前更正':'',confirmed:true});
@@ -402,7 +403,7 @@ for (const layout of ['sounds-and-ban','market-and-ban','sounds-market-and-ban']
   let rows;
   try {
     new DrawWordStore(db).ban(WORDS[0],{roomCode:'ABC123',resultId:crypto.randomUUID(),gameRunId:crypto.randomUUID(),electorate:[f.adminId,f.member.id],votes:[f.adminId,f.member.id],required:2});
-    if (hasMarket) seedMarket(db,f); else db.exec(dropMarket);
+    if (hasMarket) seedLegacyMarket(db,f); else db.exec(dropMarket);
     if (!hasSounds) db.exec('DROP TABLE character_sounds');
     legacyMarketSchema(db);db.exec('DROP TABLE market_images; PRAGMA user_version=14');
     const existing=['users','draw_word_exclusions',...(hasSounds?['character_sounds']:[]),...(hasMarket?marketTables:[])];

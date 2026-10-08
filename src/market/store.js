@@ -2,6 +2,8 @@ const {randomUUID,createHash}=require('node:crypto');
 const {transaction}=require('../db');
 const {HttpError}=require('../http/errors');
 const R=require('../../public/market-rules');
+const C=require('../../public/market-curve');
+const Curve=require('./curve-store');
 const fail=(status,code,message)=>{throw new HttpError(status,code,message);};
 
 class MarketStore{
@@ -22,11 +24,11 @@ class MarketStore{
  }
  create(actor,input){const data={requestId:input.requestId,targetDate:input.targetDate,confirmed:input.confirmed===true};return this.write(actor,'create',data,(user,now)=>{
   if(!data.confirmed)fail(400,'CONFIRM_REQUIRED','請確認這是下一個交易日');if(!R.validDate(data.targetDate))fail(400,'INVALID_DATE','交易日期格式不正確');
-  const rules=R.snapshot(),cutoff=R.cutoffFor(data.targetDate,rules),after=R.settlementFor(data.targetDate,rules);
+  const rules=Curve.freezeRules(this.db,data.targetDate,now),cutoff=R.cutoffFor(data.targetDate,rules),after=R.settlementFor(data.targetDate,rules);
   if(now>=Date.parse(cutoff))fail(409,'CUTOFF_PASSED','此交易日的投票截止時間已過');if(this.db.prepare('SELECT 1 FROM market_rounds WHERE target_date=?').get(data.targetDate))fail(409,'ROUND_EXISTS','此交易日已建立');
   const id=randomUUID();this.db.prepare('INSERT INTO market_rounds(id,target_date,cutoff_at,settlement_after,rules_json,created_by,created_at) VALUES(?,?,?,?,?,?,?)').run(id,data.targetDate,cutoff,after,JSON.stringify(rules),user.id,new Date(now).toISOString());return {ok:true,roundId:id};
  },true);}
- vote(actor,input){const data={requestId:input.requestId,roundId:input.roundId,optionId:input.optionId,expectedRevision:this.revision(input.expectedRevision)};return this.write(actor,'vote',data,(user,now)=>{
+ vote(actor,input){this.user(actor);if(JSON.parse(this.round(input.roundId).rules_json).version===3)return Curve.vote(this,actor,input);const data={requestId:input.requestId,roundId:input.roundId,optionId:input.optionId,expectedRevision:this.revision(input.expectedRevision)};return this.write(actor,'vote',data,(user,now)=>{
   const round=this.round(data.roundId),rules=R.validate(JSON.parse(round.rules_json));if(!rules.options.some(o=>o.id===data.optionId))fail(400,'INVALID_OPTION','請選擇一個預測區間');
   if(round.void_at||round.result_revision||now>=Date.parse(round.cutoff_at))fail(409,'VOTING_CLOSED','投票已截止');
   const old=this.db.prepare('SELECT * FROM market_votes WHERE round_id=? AND user_id=?').get(round.id,user.id);
@@ -43,7 +45,7 @@ class MarketStore{
   if(round.result_revision&&value===round.return_pct)fail(409,'RESULT_UNCHANGED','此結果已結算，無須重複操作');if(data.reason.length>240||round.result_revision&&!data.reason)fail(400,'CORRECTION_REASON','更正結果須填寫原因（最多 240 字）');
   return {round,rules,value,bucket};
  }
- preview(actor,input){const data=this.settlementInput(input);return transaction(this.db,()=>{const user=this.user(actor,true),now=this.clock(),{round,rules,value,bucket}=this.checkSettlement(data,now),votes=this.db.prepare('SELECT * FROM market_votes WHERE round_id=?').all(round.id),counts={hit:0,miss:0,tie:0};for(const vote of votes)counts[R.outcome(vote.option_id,bucket)]++;
+ preview(actor,input){const data=this.settlementInput(input);return transaction(this.db,()=>{const user=this.user(actor,true),now=this.clock(),{round,rules,value,bucket}=this.checkSettlement(data,now);if(rules.version===3){const votes=this.db.prepare('SELECT * FROM market_forecasts WHERE round_id=?').all(round.id),own=votes.find(v=>v.user_id===user.id),old=this.db.prepare("SELECT points_units FROM market_curve_ledger WHERE round_id=? AND user_id=? AND revision=? AND kind='award'").get(round.id,user.id,round.result_revision)?.points_units||0,next=own?C.scorePredictionUnits(own.forecast_tick,value,rules):0;return {roundId:round.id,targetDate:round.target_date,returnPct:value,bucket,counts:{positive:votes.filter(v=>C.scorePredictionUnits(v.forecast_tick,value,rules)>0).length,negative:votes.filter(v=>C.scorePredictionUnits(v.forecast_tick,value,rules)<0).length,zero:votes.filter(v=>C.scorePredictionUnits(v.forecast_tick,value,rules)===0).length},voteCount:votes.length,expectedRevision:round.result_revision,ownPrevious:old/1e6,ownNext:next/1e6,ownScoreAfter:this.stats(user.id).score+(next-old)/1e6,serverNow:new Date(now).toISOString()};}const votes=this.db.prepare('SELECT * FROM market_votes WHERE round_id=?').all(round.id),counts={hit:0,miss:0,tie:0};for(const vote of votes)counts[R.outcome(vote.option_id,bucket)]++;
   const own=votes.find(v=>v.user_id===user.id),old=this.db.prepare("SELECT points FROM market_ledger WHERE round_id=? AND user_id=? AND revision=? AND kind='award'").get(round.id,user.id,round.result_revision)?.points||0,next=own?R.points(own.option_id,bucket,rules):0;
   return {roundId:round.id,targetDate:round.target_date,returnPct:value,bucket,counts,voteCount:votes.length,expectedRevision:round.result_revision,ownPrevious:old,ownNext:next,ownScoreAfter:this.stats(user.id).score-old+next,serverNow:new Date(now).toISOString()};
  });}
@@ -54,6 +56,7 @@ class MarketStore{
  // Internal primitive: callers own the SQLite transaction and authorization.
  // The system path never manufactures an account or borrows an administrator.
  applySettlement({round,rules,value,bucket,reason,actorId=null,actorSource='system',now}){
+  if(rules.version===3)return Curve.applySettlement(this.db,{round,rules,value,reason,actorId,actorSource,now});
   const revision=round.result_revision+1;
   this.db.prepare('INSERT INTO market_settlements(round_id,revision,return_pct,bucket,reason,created_by,created_at,actor_source) VALUES(?,?,?,?,?,?,?,?)').run(round.id,revision,value,bucket,reason,actorId,new Date(now).toISOString(),actorSource);
   const add=this.db.prepare('INSERT INTO market_ledger VALUES(?,?,?,?,?,?,?,?,?,?,?)');
@@ -62,23 +65,24 @@ class MarketStore{
   if(this.db.prepare('UPDATE market_rounds SET result_revision=?,return_pct=?,result_bucket=? WHERE id=? AND result_revision=? AND void_at IS NULL').run(revision,value,bucket,round.id,round.result_revision).changes!==1)fail(409,'STALE_RESULT','結算版本已更新');
   return {ok:true,revision};
  }
+ ledgerSource(){return `(SELECT id,round_id,user_id,revision,kind,points*1000000 AS points_units,return_pct,bucket,vote_option,outcome,reverses_revision,NULL AS forecast_tick FROM market_ledger UNION ALL SELECT id,round_id,user_id,revision,kind,points_units,return_pct,'curve' AS bucket,NULL AS vote_option,CASE WHEN forecast_tick/10.0=return_pct THEN 'hit' ELSE 'miss' END AS outcome,reverses_revision,forecast_tick FROM market_curve_ledger)`;}
  leaderboard(id){
   const query=`WITH totals AS (
-   SELECT u.id,u.display_name,u.created_at,SUM(l.points) score,
+   SELECT u.id,u.display_name,u.created_at,SUM(l.points_units) score_units,
     SUM(CASE WHEN l.kind='award' AND l.revision=r.result_revision THEN 1 ELSE 0 END) played
-   FROM users u JOIN market_ledger l ON l.user_id=u.id JOIN market_rounds r ON r.id=l.round_id WHERE u.disabled=0 GROUP BY u.id
-  ), ranked AS (SELECT *,RANK() OVER(ORDER BY score DESC) rank,COUNT(*) OVER() total FROM totals) SELECT * FROM ranked`;
-  const rows=this.db.prepare(query+' ORDER BY score DESC,created_at,id LIMIT 100').all(),own=this.db.prepare(query+' WHERE id=?').get(id);
-  const safe=row=>({rank:row.rank,displayName:row.display_name,score:row.score,played:row.played,isMe:row.id===id});
+   FROM users u JOIN ${this.ledgerSource()} l ON l.user_id=u.id JOIN market_rounds r ON r.id=l.round_id WHERE u.disabled=0 GROUP BY u.id
+  ), ranked AS (SELECT *,RANK() OVER(ORDER BY score_units DESC) rank,COUNT(*) OVER() total FROM totals) SELECT * FROM ranked`;
+  const rows=this.db.prepare(query+' ORDER BY score_units DESC,created_at,id LIMIT 100').all(),own=this.db.prepare(query+' WHERE id=?').get(id);
+  const safe=row=>({rank:row.rank,displayName:row.display_name,score:row.score_units/1e6,played:row.played,isMe:row.id===id});
   return {rows:rows.map(safe),totalParticipants:rows[0]?.total||0,ownRank:own?safe(own):null};
  }
- stats(id){const score=this.db.prepare('SELECT COALESCE(SUM(points),0) AS n FROM market_ledger WHERE user_id=?').get(id).n,counts=this.db.prepare("SELECT COUNT(*) AS played,SUM(CASE WHEN l.outcome='hit' THEN 1 ELSE 0 END) AS hits,SUM(CASE WHEN l.outcome='tie' THEN 1 ELSE 0 END) AS ties FROM market_ledger l JOIN market_rounds r ON r.id=l.round_id AND r.result_revision=l.revision WHERE l.user_id=? AND l.kind='award'").get(id);return {score,played:counts.played,hits:counts.hits||0,ties:counts.ties||0};}
+ stats(id){const score=this.db.prepare(`SELECT COALESCE(SUM(points_units),0) AS n FROM ${this.ledgerSource()} WHERE user_id=?`).get(id).n,counts=this.db.prepare(`SELECT COUNT(*) AS played,SUM(CASE WHEN l.outcome='hit' THEN 1 ELSE 0 END) AS hits,SUM(CASE WHEN l.outcome='tie' THEN 1 ELSE 0 END) AS ties FROM ${this.ledgerSource()} l JOIN market_rounds r ON r.id=l.round_id AND r.result_revision=l.revision WHERE l.user_id=? AND l.kind='award'`).get(id);return {score:score/1e6,played:counts.played,hits:counts.hits||0,ties:counts.ties||0};}
  view(actor,admin=false){return transaction(this.db,()=>{
   const user=this.user(actor,admin),now=this.clock(),rounds=this.db.prepare('SELECT * FROM market_rounds ORDER BY target_date DESC LIMIT 100').all().map(row=>{
-   const vote=this.db.prepare('SELECT option_id AS optionId,revision,updated_at AS updatedAt FROM market_votes WHERE round_id=? AND user_id=?').get(row.id,user.id)||null,result=row.result_revision?this.db.prepare('SELECT created_at AS settledAt,reason,actor_source AS actorSource FROM market_settlements WHERE round_id=? AND revision=?').get(row.id,row.result_revision):null;
-   return {id:row.id,targetDate:row.target_date,cutoffAt:row.cutoff_at,settlementAfter:row.settlement_after,rules:JSON.parse(row.rules_json),vote,voidReason:row.void_reason,phase:row.void_at?'void':row.result_revision?'settled':now>=Date.parse(row.cutoff_at)?'closed':'open',result:result?{...result,revision:row.result_revision,returnPct:row.return_pct,bucket:row.result_bucket,points:vote?R.points(vote.optionId,row.result_bucket,JSON.parse(row.rules_json)):null}:null,...(admin?{voteCount:this.db.prepare('SELECT COUNT(*) AS n FROM market_votes WHERE round_id=?').get(row.id).n,settlementHistory:this.db.prepare('SELECT s.revision,s.return_pct AS returnPct,s.bucket,s.reason,s.created_at AS at,s.actor_source AS actorSource,COALESCE(u.display_name,\'系統\') AS administrator FROM market_settlements s LEFT JOIN users u ON u.id=s.created_by WHERE s.round_id=? ORDER BY s.revision DESC').all(row.id)}:{})};
+   const numeric=JSON.parse(row.rules_json).version===3;const vote=numeric?Curve.forecast(this.db,row.id,user.id):this.db.prepare('SELECT option_id AS optionId,revision,updated_at AS updatedAt FROM market_votes WHERE round_id=? AND user_id=?').get(row.id,user.id)||null,result=row.result_revision?this.db.prepare('SELECT created_at AS settledAt,reason,actor_source AS actorSource FROM market_settlements WHERE round_id=? AND revision=?').get(row.id,row.result_revision):null;
+   return {id:row.id,targetDate:row.target_date,cutoffAt:row.cutoff_at,settlementAfter:row.settlement_after,rules:JSON.parse(row.rules_json),vote,voidReason:row.void_reason,phase:row.void_at?'void':row.result_revision?'settled':now>=Date.parse(row.cutoff_at)?'closed':'open',result:result?{...result,revision:row.result_revision,returnPct:row.return_pct,bucket:row.result_bucket,points:vote?(numeric?C.scorePredictionUnits(vote.forecastTick,row.return_pct,JSON.parse(row.rules_json))/1e6:R.points(vote.optionId,row.result_bucket,JSON.parse(row.rules_json))):null}:null,...(admin?{voteCount:this.db.prepare('SELECT COUNT(*) AS n FROM '+(numeric?'market_forecasts':'market_votes')+' WHERE round_id=?').get(row.id).n,settlementHistory:this.db.prepare('SELECT s.revision,s.return_pct AS returnPct,s.bucket,s.reason,s.created_at AS at,s.actor_source AS actorSource,COALESCE(u.display_name,\'系統\') AS administrator FROM market_settlements s LEFT JOIN users u ON u.id=s.created_by WHERE s.round_id=? ORDER BY s.revision DESC').all(row.id)}:{})};
   });
-  const ledger=this.db.prepare('SELECT l.*,r.target_date AS targetDate,s.created_at AS at,s.reason FROM market_ledger l JOIN market_rounds r ON r.id=l.round_id JOIN market_settlements s ON s.round_id=l.round_id AND s.revision=l.revision WHERE l.user_id=? ORDER BY s.created_at DESC,l.revision DESC,CASE WHEN l.kind=\'award\' THEN 0 ELSE 1 END LIMIT 100').all(user.id);
+  const ledger=this.db.prepare(`SELECT l.*,l.points_units/1000000.0 AS points,r.target_date AS targetDate,s.created_at AS at,s.reason FROM ${this.ledgerSource()} l JOIN market_rounds r ON r.id=l.round_id JOIN market_settlements s ON s.round_id=l.round_id AND s.revision=l.revision WHERE l.user_id=? ORDER BY s.created_at DESC,l.revision DESC,CASE WHEN l.kind='award' THEN 0 ELSE 1 END LIMIT 100`).all(user.id);
   return {me:{id:user.id,username:user.username,displayName:user.display_name,role:user.role},serverNow:new Date(now).toISOString(),rules:R.snapshot(),stats:this.stats(user.id),leaderboard:this.leaderboard(user.id),rounds,ledger};
  });}
 }
@@ -88,6 +92,8 @@ function validateMarketDatabase(db){
  const check=(ok)=>{if(!ok)throw Error('Invalid market history');};
  for(const round of db.prepare('SELECT * FROM market_rounds').iterate()){
   const rules=R.validate(JSON.parse(round.rules_json));check(R.validDate(round.target_date)&&round.cutoff_at===R.cutoffFor(round.target_date,rules)&&round.settlement_after===R.settlementFor(round.target_date,rules));
+  if(rules.version===3){Curve.validateRound(db,round,rules);continue;}
+  if(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='market_forecasts'").get())check(!db.prepare('SELECT 1 FROM market_forecasts WHERE round_id=?').get(round.id)&&!db.prepare('SELECT 1 FROM market_curve_ledger WHERE round_id=?').get(round.id));
   const votes=db.prepare('SELECT * FROM market_votes WHERE round_id=?').all(round.id),settlements=db.prepare('SELECT * FROM market_settlements WHERE round_id=? ORDER BY revision').all(round.id);
   check(settlements.length===round.result_revision);
   if(round.actor_source!==undefined)check(['user','system'].includes(round.actor_source)&&(round.actor_source==='system'?round.created_by===null:typeof round.created_by==='string')&&(!round.void_at||round.result_revision===0&&typeof round.void_reason==='string'&&round.void_reason.length>0&&Number.isFinite(Date.parse(round.void_at))));

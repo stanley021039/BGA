@@ -1,7 +1,12 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const {DatabaseSync}=require('node:sqlite');
-const SCHEMA_VERSION=17;
+const SCHEMA_VERSION=18;
+const MARKET_CURVE_TABLES=['market_forecasts','market_curve_ledger'];
+const MARKET_CURVE_SQL=[
+ `CREATE TABLE IF NOT EXISTS market_forecasts(round_id TEXT NOT NULL REFERENCES market_rounds(id),user_id TEXT NOT NULL REFERENCES users(id),forecast_tick INTEGER NOT NULL CHECK(typeof(forecast_tick)='integer' AND forecast_tick BETWEEN -100 AND 100),revision INTEGER NOT NULL CHECK(revision>0),created_at TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(round_id,user_id))`,
+ `CREATE TABLE IF NOT EXISTS market_curve_ledger(id TEXT PRIMARY KEY,round_id TEXT NOT NULL,user_id TEXT NOT NULL REFERENCES users(id),revision INTEGER NOT NULL,kind TEXT NOT NULL CHECK(kind IN ('award','reversal')),points_units INTEGER NOT NULL CHECK(typeof(points_units)='integer' AND points_units BETWEEN -100000000 AND 100000000),return_pct REAL NOT NULL,forecast_tick INTEGER NOT NULL CHECK(typeof(forecast_tick)='integer' AND forecast_tick BETWEEN -100 AND 100),reverses_revision INTEGER,FOREIGN KEY(round_id,revision) REFERENCES market_settlements(round_id,revision),UNIQUE(round_id,user_id,revision,kind),CHECK((kind='award' AND reverses_revision IS NULL) OR (kind='reversal' AND reverses_revision=revision-1)))`,
+];
 const MARKET_AUTOMATION_TABLES=['market_daily_closes','market_calendar_years','market_calendar_overrides','market_fetch_audit','market_automation_state'];
 const MARKET_TABLES=['market_rounds','market_votes','market_settlements','market_ledger','market_requests'];
 const MARKET_IMAGE_SQL=`CREATE TABLE IF NOT EXISTS market_images(
@@ -74,7 +79,8 @@ function tableShape(db,name){
 function validateFeatureSchema(db,version){
  const tables=new Set(db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(row=>row.name));
  const hasBan=tables.has('draw_word_exclusions'),hasSound=tables.has('character_sounds'),hasImages=tables.has('market_images'),marketCount=MARKET_TABLES.filter(name=>tables.has(name)).length;
- const automationCount=MARKET_AUTOMATION_TABLES.filter(name=>tables.has(name)).length;
+ const automationCount=MARKET_AUTOMATION_TABLES.filter(name=>tables.has(name)).length,curveCount=MARKET_CURVE_TABLES.filter(name=>tables.has(name)).length;
+ if(version>=18&&curveCount!==MARKET_CURVE_TABLES.length||version<18&&curveCount)throw Error(`Invalid curve schema ${version}`);
  if(marketCount>0&&marketCount<MARKET_TABLES.length||version===13&&!hasBan&&marketCount!==MARKET_TABLES.length)
   throw Error(`Incomplete legacy schema ${version}`);
  if(version===14&&(!hasBan||!hasSound&&marketCount!==MARKET_TABLES.length)||version>=15&&(!hasBan||!hasSound||marketCount!==MARKET_TABLES.length))
@@ -84,8 +90,8 @@ function validateFeatureSchema(db,version){
  if(!hasSound&&!marketCount&&!hasImages&&!automationCount)return;
  const reference=new DatabaseSync(':memory:');
  try{
-  reference.exec(SOUND_SQL+';'+(version>=17?MARKET_SQL:LEGACY_MARKET_SQL).join(';')+';'+MARKET_IMAGE_SQL+';'+MARKET_AUTOMATION_SQL.join(';'));
-  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[]),...(hasImages?['market_images']:[]),...(automationCount?MARKET_AUTOMATION_TABLES:[])]){
+  reference.exec(SOUND_SQL+';'+(version>=17?MARKET_SQL:LEGACY_MARKET_SQL).join(';')+';'+MARKET_IMAGE_SQL+';'+MARKET_AUTOMATION_SQL.join(';')+';'+MARKET_CURVE_SQL.join(';'));
+  for(const name of [...(hasSound?['character_sounds']:[]),...(marketCount?MARKET_TABLES:[]),...(hasImages?['market_images']:[]),...(automationCount?MARKET_AUTOMATION_TABLES:[]),...(curveCount?MARKET_CURVE_TABLES:[])]){
    if(tableShape(db,name)!==tableShape(reference,name))throw Error(`Invalid ${name} schema`);
    if(schemaDefinition(db,name)!==schemaDefinition(reference,name))throw Error(`Invalid ${name} constraints`);
   }
@@ -283,6 +289,10 @@ function openDatabase(file){
    db.exec('PRAGMA user_version=17; RELEASE schema_step');
   }catch(error){db.exec('ROLLBACK; PRAGMA foreign_keys=ON');db.close();throw error;}
  }
+ if(version<18){
+  try{db.exec(MARKET_CURVE_SQL.join(';')+'; CREATE INDEX IF NOT EXISTS market_curve_ledger_user ON market_curve_ledger(user_id); PRAGMA user_version=18');validateFeatureSchema(db,18);}
+  catch(error){db.exec('ROLLBACK; PRAGMA foreign_keys=ON');db.close();throw error;}
+ }
  if(migrating){
   try{db.exec('COMMIT; PRAGMA foreign_keys=ON');}
   catch(error){try{db.exec('ROLLBACK; PRAGMA foreign_keys=ON');}finally{db.close();}throw error;}
@@ -296,4 +306,4 @@ function transaction(db,run){
  catch(error){db.exec('ROLLBACK');throw error;}
 }
 
-module.exports={openDatabase,transaction,SCHEMA_VERSION,MARKET_TABLES,MARKET_IMAGE_SQL,MARKET_AUTOMATION_TABLES,MARKET_AUTOMATION_SQL,MARKET_SQL,LEGACY_MARKET_SQL,validateFeatureSchema};
+module.exports={openDatabase,transaction,SCHEMA_VERSION,MARKET_CURVE_TABLES,MARKET_CURVE_SQL,MARKET_TABLES,MARKET_IMAGE_SQL,MARKET_AUTOMATION_TABLES,MARKET_AUTOMATION_SQL,MARKET_SQL,LEGACY_MARKET_SQL,validateFeatureSchema};
