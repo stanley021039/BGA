@@ -58,19 +58,19 @@ test('350 gifts keep all legacy IDs and have bundled PNG artwork',()=>{
  }
 });
 
-test('adult builtins and submissions only draw after a host explicitly enables the category',()=>{
+test('adult builtins and submissions are included by default, including legacy false settings',()=>{
  const room=new GiftRoom('ADULT1','成人分類',n=>n-1),host=room.add('甲'),guest=room.add('乙');room.add('丙');
  room.giftProvider=()=>[{id:'shared-adult',title:'朋友的成人禮物',category:ADULT_CATEGORY},{id:'shared-safe',title:'朋友的日常禮物',category:'日常'}];
- assert.equal(room.view(guest.id).includeAdult,false);
+ assert.equal(room.view(guest.id).includeAdult,true);
  assert.throws(()=>room.configure(guest.id,{target:8,includeAdult:true}),/房主/);
  for(const includeAdult of ['true',1,null,[]])assert.throws(()=>room.configure(host.id,{target:8,includeAdult}),/成人派對/);
  assert.equal(room.target,15,'invalid option must not partially save settings');
  room.configure(host.id,{target:8,customPercent:100});room.start();
- assert.ok(room.gifts.every(gift=>gift.category!==ADULT_CATEGORY));assert.ok(room.gifts.some(gift=>gift.id==='shared-safe'));
+ assert.ok(room.gifts.some(gift=>gift.id==='shared-adult'));assert.ok(room.gifts.some(gift=>gift.id==='shared-safe'));
  assert.throws(()=>room.configure(host.id,{target:8,includeAdult:true}),/遊戲中/);
  room.phase='finished';room.configure(host.id,{target:8,includeAdult:true,customPercent:100});assert.equal(room.view(guest.id).includeAdult,true);room.start();
  assert.ok(room.gifts.some(gift=>gift.id==='shared-adult'));assert.ok(room.gifts.some(gift=>gift.id.startsWith('adult-')));
- room.phase='finished';room.configure(host.id,{target:8,includeAdult:false});room.start();assert.ok(room.gifts.every(gift=>gift.category!==ADULT_CATEGORY));
+ room.phase='finished';room.configure(host.id,{target:8,includeAdult:false});room.start();assert.equal(room.view(guest.id).includeAdult,true);assert.ok(room.gifts.some(gift=>gift.category===ADULT_CATEGORY));
 });
 
 test('custom gifts persist in SQLite and become eligible for the next draw',()=>{
@@ -303,7 +303,7 @@ test('authenticated players can create, join and reconnect to a gift room withou
   const getAchievements=async cookie=>(await (await fetch(base+'/api/achievements',{headers:{Cookie:cookie}})).json()).achievements;
   assert.equal((await getAchievements(host))[0].unlockedAt,null);
   let state=await getState();assert.equal(state.phase,'waiting');
-  assert.equal(state.includeAdult,false);
+  assert.equal(state.includeAdult,true);
   assert.deepEqual(state.players.map(player=>player.name),['giftadmin','giftfriend','giftother']);
   assert.equal((await post('settings',friend,{code,target:8})).status,400);
   assert.equal((await post('settings',friend,{code,target:8,includeAdult:true})).status,400);
@@ -311,12 +311,12 @@ test('authenticated players can create, join and reconnect to a gift room withou
   assert.equal((await post('settings',host,{code,target:8,includeAdult:true})).body.includeAdult,true);
   const configured=await post('settings',host,{code,target:8,customPercent:75,includeAdult:false});
   assert.equal(configured.status,200);
-  assert.equal(configured.body.customPercent,75);
+  assert.equal(configured.body.customPercent,75);assert.equal(configured.body.includeAdult,true);
   assert.equal((await post('start',friend,{code})).status,403);
   assert.equal((await post('start',host,{code})).status,200);
   state=await getState();assert.equal(state.gifts.length,4);
-  assert.ok(state.gifts.every(gift=>gift.category!==ADULT_CATEGORY));
-  assert.equal(state.gifts.filter(gift=>gift.shared).length,1);
+  assert.equal(state.includeAdult,true);
+  assert.equal(state.gifts.filter(gift=>gift.shared).length,2);assert.ok(state.gifts.some(gift=>gift.shared&&gift.category===ADULT_CATEGORY));
   const [a,b,c]=state.players.map(player=>player.id),[g0,g1,g2,g3]=state.gifts.map(gift=>gift.id);
   assert.equal((await post('join',outsider,{code})).status,400);
   const visible=(await (await fetch(base+'/api/rooms',{headers:{Cookie:outsider}})).json()).rooms.find(room=>room.code===code);

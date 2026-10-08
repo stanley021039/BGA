@@ -45,3 +45,18 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 @media(prefers-reduced-motion:reduce){.ui-overflow-text[data-name-activation=hover][data-name-overflow=true][data-name-motion=on]:is(:hover,:focus-within)>.ui-player-name-text{animation:none;transform:none;width:auto;overflow:hidden;text-overflow:ellipsis}}
 .ui-control-tooltip{position:fixed;inset:auto;margin:0;box-sizing:border-box;max-width:min(360px,calc(100vw - 16px));padding:7px 11px;border:1px solid var(--ui-border,#87958a);border-radius:8px;background:var(--ui-text,#263b36);color:var(--ui-surface,#fffdf8);box-shadow:0 4px 14px #0003;font:500 .875rem/1.45 var(--ui-font-family,"Segoe UI","Microsoft JhengHei",sans-serif);overflow-wrap:anywhere;pointer-events:auto;z-index:1000}
 .ui-control-tooltip[hidden]{display:none!important}
+
+/* Shared control layout contract: 8px between controls, 12px between rows,
+   and 16px from a panel edge. Themes may override the tokens. */
+:root { --ui-control-gap: 8px; --ui-row-gap: 12px; --ui-panel-inset: 16px; --ui-page-gutter: 16px; }
+.ui-control-row { display: flex; align-items: center; gap: var(--ui-control-gap); min-width: 0; }
+.ui-control-stack { display: flex; flex-direction: column; gap: var(--ui-row-gap); padding: var(--ui-panel-inset); }
+.ui-control-stack>*,.ui-control-row>* { min-width: 0; }
+.ui-control-row[hidden],.ui-control-stack[hidden] { display: none !important; }
+
+@media(min-width:1001px) { :root { --ui-page-gutter: 50px; } }
+
+/* Status captions participate in layout rather than hanging outside controls. */
+.ui-control-caption { display: block; position: static; min-height: 18px; line-height: 18px; font-size: 12px; white-space: nowrap; }
+
+.room-settings-actions .ui-status { min-height: 24px; margin: 0; }

@@ -39,7 +39,7 @@ body{background:#141714}.race-header{display:flex;gap:30px;align-items:center;pa
 .lesson-mode .lesson-copy{scrollbar-width:thin;scrollbar-color:#788668 #233026}
 
 
-.die-button.reserved{position:relative;border:2px solid #68c9ca;background:#203e3a;color:#ace9df;opacity:1;cursor:not-allowed}.die-button.reserved small{position:absolute;left:-2px;right:-2px;bottom:-20px;font-size:var(--ui-text-small,.875rem);line-height:16px;color:#ace9df;white-space:nowrap}.dice-select:has(.reserved){padding-bottom:20px}#commandDie option:disabled{color:#8b9183}
+.die-button.reserved{position:relative;border:2px solid #68c9ca;background:#203e3a;color:#ace9df;opacity:1;cursor:not-allowed}.die-button.reserved small{position:static;font-size:var(--ui-text-small,.875rem);line-height:16px;color:#ace9df;white-space:nowrap}.dice-select:has(.reserved){padding-bottom:20px}#commandDie option:disabled{color:#8b9183}
 
 /* Keep command and command die side by side, with an inactive slot when unused. */
 .assign-controls{align-items:start}
@@ -194,3 +194,8 @@ body[data-game-kind="race"] .car-card.selected{background:var(--ui-selected-soft
 body[data-game-kind="race"] :is(.terrain-help-button,.terrain-legend .legal-key){background:var(--ui-surface-inset);border-color:var(--ui-control-border);border-radius:var(--ui-radius-control)}
 body[data-game-kind="race"] :is(.rookie-help-content,.race-command-options>.command-wrap,#raceTerrainLegendTooltip){background:var(--ui-surface-floating);border-radius:var(--ui-radius-card);box-shadow:var(--ui-shadow-floating)}
 body[data-game-kind="race"] :is(.crew-dice,.damage-pips,.mini-die){font-variant-numeric:lining-nums tabular-nums}
+
+/* Every die reserves the same in-flow caption slot, even when unused. */
+.die-button,.race-controls .die-button { display: inline-flex; flex-direction: column; gap: 4px; width: 52px; height: 76px; padding: 6px; justify-content: center; }
+.die-button.reserved small { position: static; inset: auto; display: block; height: 18px; min-height: 18px; margin: 0; font-size: 12px; line-height: 18px; white-space: nowrap; flex: none; }
+.die-button:not(.reserved)::after { content: ""; display: block; height: 18px; flex: none; }

@@ -12,7 +12,7 @@ class SubmissionService{
   const issue=this.board.get(input.id);
   if(!issue.github_number)throw new HttpError(409,'ISSUE_NOT_SYNCED','這則舊留言尚未連結 GitHub Issue');
   if(kind==='comment')return {...this.board.validateComment(input),name:user.display_name,issueId:issue.id,githubNumber:issue.github_number};
-  if(kind==='status'){if(user.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以更改處理狀態');if(!['open','closed'].includes(input.status))throw new HttpError(400,'INVALID_STATUS','狀態不正確');return {issueId:issue.id,githubNumber:issue.github_number,status:input.status};}
+  if(kind==='status'){if(user.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以更改處理狀態');if(!['open','processing','closed'].includes(input.status))throw new HttpError(400,'INVALID_STATUS','狀態不正確');return {issueId:issue.id,githubNumber:issue.github_number,status:input.status};}
   throw new HttpError(400,'INVALID_SUBMISSION','不支援的操作');
  }
  async submit(kind,input,user){
@@ -49,8 +49,8 @@ class SubmissionService{
    this.setState(id,'needs_review','GitHub 結果不明，請管理者確認後再重試');return this.result(this.row(id));
   }
  }
- async sendRemote(row,payload){this.requireEnabled();if(row.kind==='issue')return this.github.createIssue(payload,row.id);if(row.kind==='comment')return this.github.createComment(payload.githubNumber,payload,row.id);return this.github.setStatus(payload.githubNumber,payload.status);}
- async findRemote(row,payload){this.requireEnabled();if(row.kind==='issue')return this.github.findIssue(row.id);if(row.kind==='comment')return this.github.findComment(payload.githubNumber,row.id);const issue=await this.github.getIssue(payload.githubNumber);return issue.state===payload.status?issue:null;}
+ async sendRemote(row,payload){this.requireEnabled();if(row.kind==='issue')return this.github.createIssue(payload,row.id);if(row.kind==='comment')return this.github.createComment(payload.githubNumber,payload,row.id);return this.github.setStatus(payload.githubNumber,payload.status==='processing'?'open':payload.status);}
+ async findRemote(row,payload){this.requireEnabled();if(row.kind==='issue')return this.github.findIssue(row.id);if(row.kind==='comment')return this.github.findComment(payload.githubNumber,row.id);const issue=await this.github.getIssue(payload.githubNumber);return issue.state===(payload.status==='processing'?'open':payload.status)?issue:null;}
  finish(row,payload,remote){return transaction(this.db,()=>{
   if(row.kind==='issue'){if(!Number.isInteger(remote.number)||!remote.html_url)throw Error('GitHub issue response missing number or URL');this.board.publishIssue(payload,{id:row.user_id,display_name:payload.name},remote);}
   else if(row.kind==='comment'){if(!Number.isInteger(remote.id))throw Error('GitHub comment response missing ID');this.board.publishComment(payload.issueId,payload,{id:row.user_id,display_name:payload.name},remote);}
