@@ -1,6 +1,6 @@
 # 規格 backlog：目前功能與未完成項
 
-更新日期：**2026-10-08（Asia/Taipei）**。本批 **v1.16.0 候選**已實作 B02／B04／B05／B06 與 B03 的 unit 支線，正式部署／最終發行驗收待主 agent；正式基線 **v1.15.1**。固定 source 與實績以 [成就單位進度](ACHIEVEMENTS-UNIT-PROGRESS.md) 最新節為準。
+更新日期：**2026-10-08（Asia/Taipei）**。本批 **v1.16.0 已正式發布**：B02／B04／B05／B06 與 B03 的 unit 支線已實作並驗收；固定 source `8a9cbfd`，Windows／Linux 各 1,518 項與三款正式解鎖、背景高亮介面通過。B03 整局結果／persistent outbox、B07／B08 仍待。固定 source、資料保留與有限 QA 以 [成就單位進度](ACHIEVEMENTS-UNIT-PROGRESS.md) 最新節為準；畫猜局內合併提示尚待接共用 tracker，不把授予完成等同提示完成。
 範圍：[ANIMATION-ASSET-PLAN](specs/ANIMATION-ASSET-PLAN.md)、[ACHIEVEMENTS-AND-RECORDS](specs/ACHIEVEMENTS-AND-RECORDS.md)、[AGENT-UPGRADE-ROADMAP](specs/AGENT-UPGRADE-ROADMAP.md)，另列主agent考慮的[CUSTOM-BARRAGE-FRAMES](specs/CUSTOM-BARRAGE-FRAMES.md) Stage A依賴。
 最初盤點為唯讀基線 2a2aec7／正式 v1.14.2，保留為歷史；本次按已實作 source 及 focused 回歸更新狀態，未由文件編輯者部署。下列 QA 限制不由歷史 suite 數量推定全部通過。
 
