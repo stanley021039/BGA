@@ -135,3 +135,7 @@ POSIX mode 0600／0700 不會替 Windows 建立 ACL；Windows 私有目錄 ACL �
 - 外部副作用仍停用直到另行確認；備份、key、receipt、舊代保留政策已決定，公開記錄只放去敏摘要
 
 未達以上證據就標待驗／受阻；不得把這份手冊、合成測試或舊部署紀錄稱為已完成正式 recovery 演練。
+
+## 9. #70–79 整合後的界線核對
+
+本批本地候選整合後，資料 CLI／verify／restore／locks／schema 與基線保持相同；不因 RoomRuntime 拆分而提供 hot backup、跨程序 pending 恢復或自動殘留鎖回收。app shutdown 現由 RoomRuntime 管理 registries／scheduler／SSE，close 的所有呼叫者等待相同清理結果；HTTP 與背景作業結束後才釋放資料鎖。操作方仍須確認所有 writer 與重啟策略確實停止，不把 API close 的改善當正式停寫證據。對照 [runtime ownership](refactors/ROOM-RUNTIME.md)、[契約矩陣](GAME-DATA-CONTRACTS.md) 與 [整合驗證](refactors/BATCH-70-79-INTEGRATION.md)。沒有執行部署、正式資料、主分支保護或權限設定操作。

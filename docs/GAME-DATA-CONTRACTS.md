@@ -6,6 +6,12 @@
 
 **決定：先保留 explicit dispatch。** 五款只共享少量方法名稱，加入時機、action 的第三參數、真人動作記帳、遮罩及結束單位都不同。建立通用 adapter 會增加新契約，沒有本票需要解決的實際呼叫端重複。#78 先補跨遊戲契約測試，不新增空 adapter 或持久化框架。#73／#74 若移動 app 接線，應在整合後重核下列 create、dispatch、identity、history 呼叫鏈，不沿用行號當完成證據。[APP] [SCHEDULER] [LIFECYCLE]
 
+## 本批整合核對（2026-10-09，本地未發布）
+
+上方固定 main SHA 的證據保留為盤點基線。#70–79 已在隔離整合分支合成；目前版本為同批 1.23.1，schema 19 不變。#73 僅移出四條 lobby handler；#74 將 registries／scheduler／stream／close ownership 移到 [RoomRuntime](../src/rooms/runtime.js)，create、action 的 explicit game dispatch、account→seat、history transaction 及 achievement hooks 仍由 [app](../src/app.js) 接線。五款 engine、DB schema、transfer FORMAT／restore 實作及 locks 與基線 byte-identical；#78 的 [HTTP／restore 契約測試](GAME-DATA-CONTRACT-TESTS.md) 在合成版本重新執行，不能沿用單票測試總數。
+
+#72 共用 transport 與 #75/#76 controllers 不改 server action 參數／view 契約。controller 資源的實際 HTTP bytes 與 page script 次序由 [整合測試](../tests/refactor-integration.test.js) 覆蓋。停止／恢復與外部副作用限制參考 [操作復原](OPERATIONS-RECOVERY.md)；本批沒有設定 main 保護、改系統權限、發布或部署。完整測試與 native browser 門檻仍受阻，詳 [整合證據](refactors/BATCH-70-79-INTEGRATION.md)。
+
 ## 遊戲能力矩陣（目前實作）
 
 每格描述 engine 與 HTTP 接線的差異。所有 create 都由 `/api/create` 明確選 class、安裝 provider、attach history／achievement hooks，再以 history transaction 加入建立者；公開 game key 為 `room.type || 'poker'`。除 thunder 外需有測試 AI capability。不可把 poker 缺 `type` 改成未知遊戲。[APP]
