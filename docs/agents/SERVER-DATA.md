@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-09 #81／#83 候選 v1.26.0、schema19：兩款新類型接既有 auth／room／history，正常與中止 status 分開，歷史封存 subclass／PartyRoom 與題源；不公開進行中歷史。MusicQuiz 三份自製六秒 PCM cache 有界，endpoint 不曝曲名檔名。只用合成 fixture，沒有正式資料／服務操作；Windows 1,967 及剩餘風險見 [驗收](../PARTY-GAMES-81-83-PROGRESS.md)。
+
 2026-10-09 #80 候選 v1.25.0：schema 19 不變；Telephone 歷史新增類型／source＋原創題庫 archive，historyState 保存 bookHeaders／pageCommits，現場完整 books 不枚舉。最大八人八頁 test 驗 64 commits／每個 result <512KiB；正常與中止不同 status，舊類型不走此 snapshot 邊界。完整測試與首輪 HTTP 失敗／重驗見 [證據](../TELEPHONE-FIRST-EDITION-PROGRESS.md)，只有合成資料，未部署／操作正式資料。
 
 2026-10-09 #59 候選 v1.24.0：新增 trpg finished 歷史判定、匯入類型白名單與引擎 source archive；schema 19／格式不變。HTTP fixture 驗完整六幕終局歷史，snapshot 沿用去 secret／lastSeen，收據為不可列舉欄位；房間仍在記憶體，重啟不保證續局。全套 Windows 1,932；[範圍證據](../TRPG-FIRST-EDITION-PROGRESS.md)。只隔離合成資料，未操作正式資料／部署。

@@ -2,6 +2,7 @@ const {expireEmptyRooms,endRoomHistory}=require('./lifecycle');
 const {runTestAIStep}=require('../ai');
 function advanceTimedPhase(room,history){
  const now=Date.now();let due=false;
+ if(room.type==='minimal')due=room.phase==='drawing'&&room.deadline!=null&&now>=room.deadline;
  if(room.type==='majority')due=room.phase==='answering'&&room.deadline!=null&&now>=room.deadline;
  if(room.type==='draw'){
   const artist=room.player(room.presenterId);
@@ -23,7 +24,7 @@ function startRoomScheduler({rooms,history,onDelete=()=>{},onDrawStroke=()=>{},o
   try{if(r.type!=='thunder'&&runTestAIStep(r,{history,onDrawStroke}))continue;}catch(e){console.error('Test AI action failed:',e);}
   // The deadline can also pass during an AI action that throws.
   if(advanceTimedPhase(r,history))continue;
-  if(['majority','draw','gift','trpg','telephone'].includes(r.type))continue;
+  if(['majority','draw','gift','trpg','telephone','musicquiz','minimal'].includes(r.type))continue;
   if(r.type==='thunder'&&r.diceCheck?.status==='rolling'){if(Date.now()>=r.diceCheck.readyAt)try{history.transact(r,{action:'revealDice',source:'timer',actor:r.actor()},()=>r.advanceDice(Date.now()));}catch(e){console.error(e);}continue;}
   const p=r.type==='thunder'?r.player(r.actor()):r.players[r.turn];
   if(!p||['waiting','finished'].includes(r.phase))continue;

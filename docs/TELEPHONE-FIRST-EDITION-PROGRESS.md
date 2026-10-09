@@ -1,5 +1,7 @@
 # #80 傳情畫意初版進度
 
+最新狀態（2026-10-09）：使用者已授權合併，PR #85 merge `0d1f16d2e97669507d7bb05bb052a713968be13b` 進 main，交付 head 9ea629e 的 CI run 37922437872 Linux／Windows Node22 均 success。本筆取代下方 Draft／未合併／CI pending 現況，歷史證據保留；真人／手機待驗不因此改 pass，未部署或打 tag。
+
 2026-10-09。base `6785f3512c0b421fb75ee23bb8138a9cff4e1309`（#84 跑團初版已按使用者授權合併）。branch `codex/issue80-telephone-v1`，候選 v1.25.0，schema 19 不變。#80 尚未合併／部署，獨立遊戲規則版號尚未實作。
 
 ## 已完成

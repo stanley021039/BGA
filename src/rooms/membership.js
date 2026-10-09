@@ -9,9 +9,9 @@ function assertRecordCapacity(room){
 function rejoinPlayer(room,playerId,name){
  const player=room.players.find(p=>p.id===playerId&&p.kicked);
  if(!player)return null;
- if(['gift','trpg','telephone'].includes(room.type)&&!['waiting','finished'].includes(room.phase))throw Error('本局已開始，請等待下一局');
+ if(['gift','trpg','telephone','musicquiz','minimal'].includes(room.type)&&!['waiting','finished'].includes(room.phase))throw Error('本局已開始，請等待下一局');
  if(room.type==='thunder'&&room.phase!=='waiting')throw Error('比賽已開始，請等下一場或建立新房間');
- const limits={draw:8,gift:8,majority:12,thunder:4,poker:6,trpg:6,telephone:8};
+ const limits={draw:8,gift:8,majority:12,thunder:4,poker:6,trpg:6,telephone:8,musicquiz:8,minimal:6};
  if(room.players.filter(p=>!p.kicked).length>=limits[room.type||'poker'])throw Error('房間已滿');
  player.kicked=false;player.bot=false;player.name=name.slice(0,16);player.lastSeen=Date.now();
  if(['draw','majority'].includes(room.type))player.waitingForNextRound=room.phase!=='waiting';

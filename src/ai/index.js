@@ -12,12 +12,12 @@ function botSupport(room){
  const type=room.type||'poker',adapter=adapters.get(type);
  if(!adapter)return {supported:false,canAdd:false};
  const count=type==='poker'?room.players.length:room.players.filter(p=>!p.kicked).length;
- return {supported:true,canAdd:count<adapter.maxPlayers&&(!['gift','trpg','telephone'].includes(type)||['waiting','finished'].includes(room.phase)),maxPlayers:adapter.maxPlayers,label:'本機測試 AI'};
+ return {supported:true,canAdd:count<adapter.maxPlayers&&(!['gift','trpg','telephone','musicquiz','minimal'].includes(type)||['waiting','finished'].includes(room.phase)),maxPlayers:adapter.maxPlayers,label:'本機測試 AI'};
 }
 function addTestBot(room){
  const support=botSupport(room);
  if(!support.supported)throw Error('此遊戲尚未提供測試 AI');
- if(!support.canAdd)throw Error(['gift','trpg','telephone'].includes(room.type)&&!['waiting','finished'].includes(room.phase)?'本局已開始，請等待下一局再加入 AI':'房間已滿');
+ if(!support.canAdd)throw Error(['gift','trpg','telephone','musicquiz','minimal'].includes(room.type)&&!['waiting','finished'].includes(room.phase)?'本局已開始，請等待下一局再加入 AI':'房間已滿');
  let number=1;while(room.players.some(p=>!p.kicked&&p.name===`測試 AI ${number}`))number++;
  return room.add(`測試 AI ${number}`,true);
 }
@@ -26,6 +26,8 @@ const blankAnswer=(prompt,rng)=>{
  const options=/吃|食|餐|料理|早餐|點心|飲料/u.test(prompt)?['珍珠奶茶','披薩','麵包','咖啡']:/動物|寵物/u.test(prompt)?['貓','狗','兔子']:/旅行|國家|城市|出遊/u.test(prompt)?['台灣','日本','台北','海邊']:/顏色/u.test(prompt)?['藍色','綠色','紅色']:['朋友','音樂','遊戲','休息'];
  return options[rng(options.length)];
 };
+registerTestAI('musicquiz',{maxPlayers:8,plan(room,p){const s=room.view(p.id);if(s.phase==='answering'&&!s.submitted)return action(p.id,'guess',{roundId:s.roundId,requestId:randomUUID(),text:'',pass:true});return null;}});
+registerTestAI('minimal',{maxPlayers:6,plan(room,p){const s=room.view(p.id),input={roundId:s.roundId,requestId:randomUUID()};if(s.phase==='drawing'&&s.guesserId!==p.id&&!s.submitted)return action(p.id,'submit',{...input,shapes:[{kind:'line',x1:140,y1:180,x2:256,y2:60},{kind:'line',x1:256,y1:60,x2:370,y2:180}]});if(s.phase==='guessing'&&s.guesserId===p.id)return action(p.id,'guess',{...input,text:'不知道'});return null;}});
 registerTestAI('telephone',{maxPlayers:8,plan(room,p){
  const s=room.view(p.id);if(s.phase!=='passing'||s.task.submitted)return null;
  return action(p.id,'submit',{stepId:s.stepId,requestId:randomUUID(),...(s.task.kind==='drawing'?{strokes:[{tool:'brush',color:'#222222',size:4,points:[[180,160],[256,70],[330,160],[180,160]]}]}:{text:'神祕小動物'})});
