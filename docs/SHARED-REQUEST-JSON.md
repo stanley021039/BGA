@@ -4,7 +4,7 @@ Issue #72; first consumer is `RoomApi.request` in `public/shared/api.js`.
 `RoomApi.requestJson(url, options)` is the transport boundary, available without
 another script or dependency. It performs exactly one fetch and one body read.
 It does not redirect, update session/UI state, create IDs, or retry any request.
-Other fetch call sites and draw/race controllers are deliberately unchanged.
+In the #72 slice, other fetch call sites and draw/race controllers are deliberately unchanged. The combined batch subsequently integrates the #75/#76 controllers; see [integration evidence](refactors/BATCH-70-79-INTEGRATION.md).
 
 ## Outcomes
 
