@@ -1,6 +1,7 @@
 # 程式架構 agent 記憶
 
 2026-10-09 測試整理候選（Issue #70／parent #56）：首批 character-sound-http、room-media-http、market-images-http 改用 [共用隔離 fixture](../../tests/helpers/README.md)，專屬資料與遊戲 assertions 保留。新 helper 在 seed／listen 前登記清理、關閉 setup DB，失敗即清理；close 拒絕時保留資料並報錯。沒有 runtime／schema／版號／CI 或 main 保護設定變更；其他 fixture、subprocess／global-env 通用管理仍未遷移。驗證與 PR 狀態以 Issue #70 連結的實際檢查為準，不代表已合併／部署。
+2026-10-09 Issue #72 本地候選：RoomApi 委派共用 requestJson，保留 HTTP status／code／details 與取消語意；只遷移此邊界、不改 draw／race controller、不增加寫入重試。契約與範圍見 [shared requestJson](../SHARED-REQUEST-JSON.md)。尚未推送、合併或部署；完整驗證仍受基線 `/api/info` 的執行環境限制，不可從 focused 通過推定可發佈。
 
 2026-10-08 Issue #63：候選 1.22.0 大廳／本桌聊天室，基於 main dae903e；記憶體 50 則、每次讀寫驗證席位、無 schema／永久保存。仍 Draft 未部署，整合與驗證限制見 [聊天室規格](../specs/LOBBY-TABLE-CHAT.md) 及 PR 證據；不取代既有正式部署紀錄。
 
