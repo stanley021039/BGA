@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-09 #80 候選：TelephoneRoom 獨立規則，step UUID／SHA256 request 指紋、最多 128 收據；view 僅上一頁，歷史 historyState 以逐頁 delta 有界保存／重建。client 私人草稿同分頁 sessionStorage、逐段 preview／canonical 收尾、poll 不重建草稿、lifetime 身分防止 BFCache 舊回覆覆蓋。最大八席八頁仍符合預設歷史限額，Windows 1,951／最新 client 4。失敗及工具限制见 [驗收](../TELEPHONE-FIRST-EDITION-PROGRESS.md)。未改舊畫猜 renderer，未部署。
+
 2026-10-09 #59 候選：獨立 TrpgRoom 及 client 接既有房間／權限／重連／history。伺服器 d6，場景 UUID、有限 requestId 收據去重，檢定前驗證；view 不外洩他人草稿／secret。client 一個可取消輪詢，寫入不自動重送，未提交修改阻止檢定。Windows Node22 1,932/1,932；工具六幕與歷史通過，其他範圍見 [驗收](../TRPG-FIRST-EDITION-PROGRESS.md)。非跨程序续局／模型主持，未部署。
 
 2026-10-09 驗收增量（base 2a5a197、受驗 head d610186）：Draft PR #82 已建立，CI run 37879539800 的 Linux／Windows Node22 jobs 均 success；本地 app/runtime/controller focused 41/41。內建瀏覽器完成有限兩席畫猜同步／倒數／返回及賽跑擲骰／三步移動鎖／返回／教學切章重試。手機 viewport 設定未生效，仍1280×720，不能算手機驗收；Chrome fallback 因工具無法可靠辨識網址而中止。使用者明確回覆沒有觸控設備，真實觸控與旋轉先記待驗，未豁免門檻。詳細矩陣見 [本地驗收](../refactors/BATCH-70-79-LOCAL-ACCEPTANCE.md)。本筆取代先前「沒有PR／CI／真瀏覽器操作」現況；完整UI矩陣與最終兩輪審查仍未完成，保持Draft／HOLD。

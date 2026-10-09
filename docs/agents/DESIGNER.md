@@ -1,5 +1,7 @@
 # 設計師角色記憶
 
+2026-10-09 #80 候選：独立生活／奇想原創情境題庫，不共用畫猜唯一答案與禁題票；同步私人畫猜、固定傳遞、完局選本回顧。三到八人短局是本站變體；離席中止明确標示，不能重排造成錯鏈。送出明確按鈕與就地提示取代每頁打斷，草稿／上一頁／已送出名單保清楚。真人樂趣及手機待驗；[設計](../specs/TELEPHONE-FIRST-EDITION.md)、[證據](../TELEPHONE-FIRST-EDITION-PROGRESS.md)。未合併／部署。
+
 2026-10-09 #59 候選：原創霧港六幕，規則主持／不耗 token。以公共難度／代價與三專長、協助／整備建立決策；領隊整備失去專長，避免免費回復支配選擇。六席六幕輪替，不設淘汰或倒數；風格沿用共用 Playful Paper。上述為設計推論，真人平衡／樂趣與手機仍待驗；[設計](../specs/TRPG-FIRST-EDITION.md)、[工具證據](../TRPG-FIRST-EDITION-PROGRESS.md)。未合併／部署。
 
 2026-10-08最新正式 **v1.15.1／c1e59d4**：使用者要求先撤回不一致的局部手繪風格，已恢復原大廳及四房標題外觀；保留v1.15彈幕框與既有功能，SVG/credits僅歷史留存。双平台各1,432、公開27資源、原生首頁／四房waiting通過，9帳戶allfields及21non-session表/BLOB保留；詳細source/部署SIGTERM逾時與proxy drain/不可覆寫receipt修正/備份/有限native/own cleanup見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下面手繪與候選狀態屬歷史；後續局部美化须驗整體一致性，不由素材研究直接推定成熟全站方案。沒有新PR/push。

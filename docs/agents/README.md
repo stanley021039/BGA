@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-09 增量：#84 跑團初版按使用者授權合 main `6785f35`，最新雙平台 CI success，未部署；取代下方 #59 未合併現況，待驗不變。#80 傳情畫意 v1.25.0 候選已實作，Windows 全套 1,951、有限四席工具傳遞／歷史驗收，保持 Draft。題庫生活／奇想各 20 原創情境，與畫猜分開；[本批證據與限制](../TELEPHONE-FIRST-EDITION-PROGRESS.md)。獨立遊戲版號仍只是本輪建議。
+
 2026-10-09 #59：使用者選擇免 token 初版；v1.24.0 候選霧港跑團已實作，Windows Node22 全套 1,932/1,932，隔離瀏覽器走完六幕與歷史。真人樂趣、手機／觸控及完整可及性待驗，未合併／部署；現況與限制見 [本批驗收](../TRPG-FIRST-EDITION-PROGRESS.md)、[設計](../specs/TRPG-FIRST-EDITION.md)。本筆僅更新 #59，不改前批發布紀錄。
 
 2026-10-09 驗收增量（base 2a5a197、受驗 head d610186）：Draft PR #82 已建立，CI run 37879539800 的 Linux／Windows Node22 jobs 均 success；本地 app/runtime/controller focused 41/41。內建瀏覽器完成有限兩席畫猜同步／倒數／返回及賽跑擲骰／三步移動鎖／返回／教學切章重試。手機 viewport 設定未生效，仍1280×720，不能算手機驗收；Chrome fallback 因工具無法可靠辨識網址而中止。使用者明確回覆沒有觸控設備，真實觸控與旋轉先記待驗，未豁免門檻。詳細矩陣見 [本地驗收](../refactors/BATCH-70-79-LOCAL-ACCEPTANCE.md)。本筆取代先前「沒有PR／CI／真瀏覽器操作」現況；完整UI矩陣與最終兩輪審查仍未完成，保持Draft／HOLD。
