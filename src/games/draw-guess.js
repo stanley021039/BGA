@@ -14,6 +14,11 @@ const MAX_PUBLIC_RESULTS=8,MAX_RESULT_SAVES=256;
 const MAX_PENDING_ACHIEVEMENT_UNITS=256;
 const CANONICAL_USER_ID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const validTopic=topic=>topic==='all'||TOPICS.some(item=>item.id===topic);
+function readEnding(value,current={mode:'rounds',value:null}){
+ if(value===undefined)return {...current};
+ if(!value||typeof value!=='object'||Array.isArray(value)||!['rounds','score'].includes(value.mode)||!Number.isInteger(value.value)||value.value<(value.mode==='rounds'?1:10)||value.value>(value.mode==='rounds'?64:1000))throw new HttpError(400,'INVALID_DRAW_ENDING','固定總題數需 1–64，目標分數需 10–1000');
+ return {mode:value.mode,value:value.value};
+}
 const DRAW_CATEGORIES=[...TOPICS.map(item=>item.id),'custom'];
 const validTopics=topics=>Array.isArray(topics)&&topics.length>0&&topics.length<=DRAW_CATEGORIES.length&&new Set(topics).size===topics.length&&topics.every(topic=>DRAW_CATEGORIES.includes(topic));
 
@@ -22,7 +27,7 @@ class DrawGuessRoom{
   this.type='draw';this.code=code;this.name=name;this.rng=rng;this.now=now;
   this.players=[];this.host=null;this.phase='waiting';this.version=0;this.updated=now();
   this.round=0;this.roundLimit=0;this.pendingArtists=[];this.presenterId=null;this.gameRunId=null;
-  this.options={seconds:90,customPercent:null,topic:'all',topics:[...DRAW_CATEGORIES]};this.candidates=[];this.question=null;
+  this.options={seconds:90,customPercent:null,topic:'all',topics:[...DRAW_CATEGORIES],ending:{mode:'rounds',value:null}};this.candidates=[];this.question=null;
   this.usedWordIds=[];this.participantIds=[];this.guessedIds=[];this.guesses=[];this.result=null;this.results=[];this.winner=null;this.deadline=null;this.events=[];
   Object.defineProperty(this,'canvas',{value:{epoch:randomUUID(),version:0,strokes:[],batchIds:new Set(),points:0,acceptedPoints:0,recent:[],fills:0,fillRecent:[],commandRecent:[]},enumerable:false});
   // These bounded, in-memory snapshots must not enter every history row or poll.
@@ -97,7 +102,7 @@ class DrawGuessRoom{
   const options={...this.options,seconds:data.seconds,customPercent:data.customPercent===undefined?this.options.customPercent:data.customPercent};
   if(data.topics!==undefined){options.topics=DRAW_CATEGORIES.filter(topic=>data.topics.includes(topic));options.topic='all';options.customPercent=null;}
   else if(data.topic!==undefined){options.topic=data.topic;delete options.topics;}
-  this.options=options;
+  options.ending=readEnding(data.ending,this.options.ending);this.options=options;
   this.event('settings','房主已更新作畫時間與題目類別');
  }
  wordPools(){
@@ -115,11 +120,13 @@ class DrawGuessRoom{
   const pools=this.wordPools();
   if(!pools.builtin.length&&(!pools.custom.length||this.options.customPercent===0))throw Error('所選類別還沒有題目，請到共編題庫新增自定義題目，或勾選其他類別');
   for(const player of this.players){player.score=0;player.waitingForNextRound=false;}
-  this.gameRunId=randomUUID();this.achievementUnits.matchId=this.gameRunId;this.round=0;this.roundLimit=this.players.length;this.pendingArtists=this.players.map(player=>player.id);
+  this.gameRunId=randomUUID();this.achievementUnits.matchId=this.gameRunId;this.round=0;const ending=this.options.ending||{mode:'rounds',value:null};this.roundLimit=ending.mode==='score'?64:ending.value||this.players.length;this.pendingArtists=this.players.map(player=>player.id);
   this.results=[];this.winner=null;this.usedWordIds=[];
   this.newRound();
  }
  newRound(){
+  if(this.options.ending?.value!=null&&this.round>=this.roundLimit){this.finish(this.options.ending?.mode==='score'?'已達 64 題上限，本局結束':'已達固定總題數，本局結束');return;}
+  if(!this.pendingArtists.length&&this.options.ending?.value!=null)this.pendingArtists=this.activePlayers().map(player=>player.id);
   if(this.pendingArtists.length)this.achievementCapacity();
   for(const player of this.activePlayers())player.waitingForNextRound=false;
   while(this.pendingArtists.length&&!this.activePlayers().some(player=>player.id===this.pendingArtists[0]))this.pendingArtists.shift();
@@ -189,12 +196,15 @@ class DrawGuessRoom{
   const artist=this.player(this.presenterId);
   this.result=freeze(clone({resultId:randomUUID(),gameRunId:this.gameRunId,canvasEpoch:this.canvas.epoch,revealedAt:this.now(),round:this.round,presenterId:this.presenterId,artist:{id:this.presenterId,name:artist?.name||'畫者',avatar:artist?.avatar||null},answer:this.question?.title||null,aliases:this.question?.aliases||[],reason,guessedIds:[...this.guessedIds],guesses:this.guesses,scores:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,roundPoints:player.score-(this.roundStartScores.get(player.id)||0)}))}));
   this.results.push(this.result);
+  this.results=this.results.slice(-MAX_PUBLIC_RESULTS);
   const {guesses,...metadata}=this.result;
   const electorate=freeze(this.activePlayers().filter(player=>!player.bot).map(player=>player.id));
   this.publicResults.set(this.result.resultId,{snapshot:freeze({result:metadata,canvas:this.canvasSnapshot()}),artworks:new Map(),ballot:{electorate,required:Math.floor(electorate.length/2)+1,votes:new Set(),word:this.question?freeze({id:this.question.id,title:this.question.title}):null,banned:false}});
   while(this.publicResults.size>MAX_PUBLIC_RESULTS)this.publicResults.delete(this.publicResults.keys().next().value);
   this.phase='reveal';this.deadline=this.now()+8000;this.event('reveal',reason+'，本輪揭曉');
   this.completeAchievementUnit(status);
+  if(status==='rules_completed'&&this.options.ending?.mode==='score'&&this.activePlayers().some(player=>player.score>=this.options.ending.value))this.finish('本題已揭曉，分數達標，本局結束');
+  else if(this.options.ending?.value!=null&&this.round>=this.roundLimit)this.finish(this.options.ending?.mode==='score'?'已達 64 題上限，本局結束':'已達固定總題數，本局結束');
  }
  resultSnapshot(resultId){
   const entry=this.publicResults.get(resultId);
@@ -324,4 +334,4 @@ class DrawGuessRoom{
   });
  }
 }
-module.exports={DrawGuessRoom,normalize,validTopic,validTopics,DRAW_CATEGORIES,MAX_PUBLIC_RESULTS,MAX_RESULT_SAVES,MAX_POINT_TIME_MS};
+module.exports={DrawGuessRoom,normalize,validTopic,validTopics,readEnding,DRAW_CATEGORIES,MAX_PUBLIC_RESULTS,MAX_RESULT_SAVES,MAX_POINT_TIME_MS};

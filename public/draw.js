@@ -172,7 +172,7 @@ function render(live=false){
  }
  $('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&s.phase==='waiting'&&s.host)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
  if(s.phase==='waiting'&&s.host){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
-  actions+=GameShell.botButton?.(s)||'';
+  actions=(s.options.ending?.value!=null?'<p class="draw-ending-summary">'+(s.options.ending.mode==='score'?'目標 '+s.options.ending.value+' 分（最多 64 題）':'固定 '+s.options.ending.value+' 題')+'</p>':'')+actions;actions+=GameShell.botButton?.(s)||'';
   GameShell.stableMarkup($('#drawActions'),actions);
  decorateActions();
  $('#canvasStage').innerHTML=s.phase==='drawing'?'':stageScene(s);
