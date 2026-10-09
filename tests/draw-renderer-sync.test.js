@@ -88,7 +88,7 @@ test('duplicate and out-of-order SSE plus a stale gap snapshot never roll the ca
  assert.equal(run(ui,'canvasVersion'),0);
  ui.sources[0].emit('stroke',event(fill(1)));ui.sources[0].emit('stroke',event(fill(2)));
  ui.sources[0].emit('stroke',event(fill(1)));ui.sources[0].emit('stroke',event(fill(2)));
- resolveSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:1,strokes:[fill(1)]});await run(ui,'syncPromise');
+ resolveSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:1,strokes:[fill(1)]});await run(ui,'drawingController.pendingSync');
  assert.equal(run(ui,'canvasVersion'),2);assert.equal(run(ui,'strokes.length'),2);
  assert.equal(run(ui,'canvasRenderer.metrics().fillApplications'),2);
  assert.deepEqual(ui.element('#drawCanvas').pixel(400,200),[0,0,255,255]);
@@ -100,7 +100,7 @@ test('a delayed snapshot from the old round is discarded and the new round is fe
  run(ui,'syncCanvas()');const next=drawingState('guest');next.round=2;next.canvasEpoch=CANVAS_EPOCH.replace(/1$/,'2');next.strokeVersion=0;ui.receive(next);
  requests[0]({canvasEpoch:CANVAS_EPOCH,round:1,version:1,strokes:[fill(1)]});await pause();
  assert.equal(requests.length,2);assert.equal(run(ui,'canvasVersion'),-1);
- requests[1]({canvasEpoch:next.canvasEpoch,round:2,version:0,strokes:[],quota:{usedFills:0,usedBatches:0,usedPoints:0}});await run(ui,'syncPromise');
+ requests[1]({canvasEpoch:next.canvasEpoch,round:2,version:0,strokes:[],quota:{usedFills:0,usedBatches:0,usedPoints:0}});await run(ui,'drawingController.pendingSync');
  assert.equal(run(ui,'canvasRound'),2);assert.equal(run(ui,'canvasVersion'),0);
  assert.equal(run(ui,'canvasRenderer.metrics().fillApplications'),0);
 });

@@ -43,3 +43,13 @@ test('long packet gaps have bounded replay latency, invalid timing resyncs, and 
  const invalid=batch(2,[[20,20],[30,30]],[50,10]);assert.equal(run(ui,'validCanvasStroke('+JSON.stringify(invalid.stroke)+',1,2)'),false);
  ui.context.snapshot={canvasEpoch:CANVAS_EPOCH,round:1,version:2,strokes:[batch(2,[[20,20],[30,30]],[0,100]).stroke]};run(ui,'applyCanvasSnapshot(snapshot)');assert.equal(ui.frames.at(-1).strokes[0].points.length,2);assert.equal(read(ui,'drawingPlayback.metrics()').scheduled,false);
 });
+
+test('pagehide cancels partial viewer playback and restore paints a fresh canonical baseline',async t=>{
+ const {ui,time}=await setup(t),timed=batch(1,[[1,1],[10,10],[20,20]],[0,100,200]);ui.sources[0].emit('stroke',timed);
+ await time.advance(60);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,1);
+ const oldSource=ui.sources[0];ui.listeners.get('window:pagehide')({persisted:true});assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,0);assert.equal(read(ui,'drawingPlayback.metrics()').scheduled,false);
+ const frames=ui.frames.length;oldSource.emit('stroke',batch(2,[[30,30],[40,40]],[0,100]));await time.advance(500);ui.paintFrame();assert.equal(ui.frames.length,frames);assert.equal(run(ui,'canvasVersion'),1);
+ ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:1,strokes:[timed.stroke]});
+ const original=ui.context.RoomApi.request;ui.context.RoomApi.request=(route,...args)=>route==='state'?Promise.resolve({...drawingState('guest'),version:3,strokeVersion:1}):original(route,...args);
+ ui.listeners.get('window:pageshow')({persisted:true});await microtasks();assert.equal(ui.frames.at(-1).strokes[0].points.length,3);assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,0);assert.equal(ui.sources.length,2);
+});

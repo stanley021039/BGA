@@ -128,9 +128,9 @@ test('snapshot timeout releases ACK drain, and superseded old finally cannot cle
  ui.context.RoomApi.request=(route,data,options)=>route==='draw/canvas'?new Promise(resolve=>requests.push({resolve,signal:options.signal})):original(route,data,options);
  pointer(ui,'pointerdown',[1,1]);pointer(ui,'pointerup',[2,2]);await clock.advance(0);ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round:1,version:1});await microtasks();assert.equal(requests.length,1);
  await clock.advance(10000);await run(ui,'sendQueue');assert.equal(requests[0].signal.reason.name,'TimeoutError');assert.match(ui.element('#connection').textContent,/同步逾時/);
- const oldSync=run(ui,'syncCanvas()');assert.equal(requests.length,2);const nextEpoch=CANVAS_EPOCH.replace(/1$/,'2');ui.receive({...drawingState('artist'),version:3,canvasEpoch:nextEpoch,serverNow:1010000});assert.equal(requests.length,3,'new epoch starts its own GET without waiting ten seconds');const latest=run(ui,'syncPromise');await oldSync;assert.equal(run(ui,'syncPromise'),latest);
- requests[1].resolve({canvasEpoch:CANVAS_EPOCH,round:1,version:5,strokes:[]});await microtasks();assert.equal(run(ui,'syncPromise'),latest);assert.equal(run(ui,'canvasVersion'),-1);
- requests[2].resolve({canvasEpoch:nextEpoch,round:1,version:0,strokes:[]});await latest;assert.equal(run(ui,'canvasVersion'),0);assert.equal(run(ui,'syncPromise'),null);assert.doesNotMatch(ui.element('#connection').textContent,/同步逾時/);
+ const oldSync=run(ui,'syncCanvas()');assert.equal(requests.length,2);const nextEpoch=CANVAS_EPOCH.replace(/1$/,'2');ui.receive({...drawingState('artist'),version:3,canvasEpoch:nextEpoch,serverNow:1010000});assert.equal(requests.length,3,'new epoch starts its own GET without waiting ten seconds');const latest=run(ui,'drawingController.pendingSync');await oldSync;assert.equal(run(ui,'drawingController.pendingSync'),latest);
+ requests[1].resolve({canvasEpoch:CANVAS_EPOCH,round:1,version:5,strokes:[]});await microtasks();assert.equal(run(ui,'drawingController.pendingSync'),latest);assert.equal(run(ui,'canvasVersion'),-1);
+ requests[2].resolve({canvasEpoch:nextEpoch,round:1,version:0,strokes:[]});await latest;assert.equal(run(ui,'canvasVersion'),0);assert.equal(run(ui,'drawingController.pendingSync'),null);assert.doesNotMatch(ui.element('#connection').textContent,/同步逾時/);
 });
 
 test('a quota-exhausting SSE before a lost ACK still permits exact-ID deduplication retry',async t=>{
