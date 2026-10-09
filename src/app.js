@@ -7,7 +7,7 @@ const {TrpgRoom}=require('./games/trpg');
 const {TelephoneRoom}=require('./games/telephone');
 const {MusicQuizRoom}=require('./games/musicquiz'),{MinimalRoom}=require('./games/minimal');
 const {GiftStore}=require('./games/gift-store'),{GIFTS,CATEGORIES}=require('./games/gift-catalog');
-const {DrawGuessRoom,validTopic,validTopics,DRAW_CATEGORIES}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{TOPICS}=require('./games/draw-guess-words');
+const {DrawGuessRoom,readEnding,validTopic,validTopics,DRAW_CATEGORIES}=require('./games/draw-guess'),{DrawWordStore}=require('./games/draw-guess-store'),{TOPICS}=require('./games/draw-guess-words');
 const {AchievementStore}=require('./achievements/store');
 const {MarketStore}=require('./market/store');
 const {MarketAutomationStore,dateAt,closeAfter}=require('./market/automation-store');
@@ -395,6 +395,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(majority)Object.defineProperty(room,'questionProvider',{value:()=>community.data.questions});
   if(gift)Object.defineProperty(room,'giftProvider',{value:()=>giftStore.list()});
   if(draw){
+   room.options.ending=readEnding(data.ending);
    if(data.topics!==undefined)room.options.topics=DRAW_CATEGORIES.filter(topic=>data.topics.includes(topic));
    else if(data.topic!==undefined){room.options.topic=data.topic;delete room.options.topics;}
    Object.defineProperty(room,'wordProvider',{value:()=>drawWordStore.list()});

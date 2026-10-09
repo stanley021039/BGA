@@ -1,5 +1,7 @@
 # #81／#83 初版驗收
 
+最新（2026-10-09）：交付head1074d27本機最終1,967／雙平台CI run37938008170均success，PR#86已按使用者授權合main，merge1fb45d51098333cd9a6961b3f7e329835380ede7。此筆取代下方未合併／最後增量尚未全套與CI待確認現況；待驗仍保留，未部署或tag。
+
 日期 2026-10-09，base `0d1f16d2e97669507d7bb05bb052a713968be13b`，branch `codex/issues81-83-party-games`，候選 v1.26.0／schema 19。尚未合併、打 tag、部署或操作正式資料。規則／題源／來源與未做內容見 [spec](specs/PARTY-GAMES-81-83.md)。
 
 ## 已完成與測試

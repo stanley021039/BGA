@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-09 #87/#88候選：Draw ending整數驗證、after-reveal達標、跨圈及64題上限，recent結果限8，legacy未帶設定維持原流程。TableMedia主X只縮小video，不改playerEpoch／videoWanted；小窗X才退出，同意／paused／視窗可見性／清理不放寬。新八regression、完整1,975；[原生scope與已知限制](../ROOM-CONTROLS-87-88-PROGRESS.md)。未改renderer／SSE，未部署；#86已合main，前述候選狀態為歷史。
+
 2026-10-09 #81／#83：新 PartyRoom 共用入座／epoch／128 指紋收據，不重構舊引擎。MusicQuiz 音訊檢查登入／席位／当前輪，無曲名 URL／未揭曉答案；Minimal 僅可信幾何座標、server deadline 与計數，沿用 StrokeCanvas 原子呈現。client scope 取消／草稿／不可變重試 payload／音訊 binding cleanup 有 fixture 驗證；Windows 1,967 與 UI 範圍見 [進度](../PARTY-GAMES-81-83-PROGRESS.md)。開始、開發途中、測試前與推送／交付前 fetch main；更新時先對差異再整合，不覆寫別人 worktree。
 
 2026-10-09 #80 候選：TelephoneRoom 獨立規則，step UUID／SHA256 request 指紋、最多 128 收據；view 僅上一頁，歷史 historyState 以逐頁 delta 有界保存／重建。client 私人草稿同分頁 sessionStorage、逐段 preview／canonical 收尾、poll 不重建草稿、lifetime 身分防止 BFCache 舊回覆覆蓋。最大八席八頁仍符合預設歷史限額，Windows 1,951／最新 client 4。失敗及工具限制见 [驗收](../TELEPHONE-FIRST-EDITION-PROGRESS.md)。未改舊畫猜 renderer，未部署。
