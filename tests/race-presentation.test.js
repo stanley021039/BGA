@@ -36,12 +36,12 @@ function harness({lesson=false,enabled=true,reduced=false,muted=false}={}){
  const policy={get:()=>({enabled}),allowsMotion:()=>enabled&&!reduced&&!document.hidden,subscribe(callback){subscriptions.add(callback);callback();return()=>subscriptions.delete(callback);},animate(element,frames,options){if(!element||!policy.allowsMotion())return null;const animation={element,frames,options,createdAt:clock,currentTime:0,cancel(){this.cancelled=true;},finish(){this.onfinish?.();}};animations.push(animation);order.push('motion:'+element.id);return animation;}};
  const window={document,MotionPolicy:policy,matchMedia:()=>({matches:reduced}),setTimeout,clearTimeout,GameUI:{setStatus(){},setBusy(){}},addEventListener(type,callback){const list=windowListeners.get(type)||[];list.push(callback);windowListeners.set(type,list);},removeEventListener(type,callback){windowListeners.set(type,(windowListeners.get(type)||[]).filter(fn=>fn!==callback));},AudioSettings:{playEffect(cue,options){if(muted)return;const clip={cue,options};sounds.push(cue);soundRecords.push({cue,at:clock,dialogOpen:all().some(element=>element.tagName==='DIALOG'&&element.open)});order.push('sound:'+cue);return clip;},stopEffect(clip){clip.options?.onStop?.(clip);}}};
  if(lesson)window.RaceLesson={onRender(){lessonRenders++;},onMotion(){lessonMotions++;}};
- let initialized=false;scope={window,document,MotionPolicy:policy,Date:{now:()=>clock},setTimeout,clearTimeout,queueMicrotask:callback=>microtasks.push(callback),state:null,busy:false,polling:false,disconnected:false,lastVersion:-1,onlineSignature:'',session:{code:'AAAAAA'},selectedCar:null,selectedDie:null,command:'',commandDie:null,repairCar:null,$:node,esc:String,RacePaths,sizes:['輕型','中型','重型'],directions:['前左','前方','前右','後左','後方','後右'],knownAchievements:null,
+ let initialized=false;scope={requestedRoom:null,RaceController:require('../public/shared/race-controller'),AbortController,setInterval:()=>0,clearInterval(){},window,document,MotionPolicy:policy,Date:{now:()=>clock},setTimeout,clearTimeout,queueMicrotask:callback=>microtasks.push(callback),state:null,busy:false,polling:false,disconnected:false,lastVersion:-1,onlineSignature:'',session:{code:'AAAAAA'},selectedCar:null,selectedDie:null,command:'',commandDie:null,repairCar:null,$:node,esc:String,RacePaths,sizes:['輕型','中型','重型'],directions:['前左','前方','前右','後左','後方','後右'],knownAchievements:null,
   motionGate:{update(s,{connected=true}={}){const live=initialized&&connected&&!document.hidden;initialized=true;return live;}},
   RoomHost:{update(snapshot,callback){hostUpdates.push({snapshot,callback});},kicked(){}},RoomApi:{async request(route,data){network.push({route,data});return scope.request?await scope.request(route,data):scope.response||scope.state;}},GameShell:{stableMarkup(element,markup){element.innerHTML=markup;},update(){}},
   immersion:{allowsMotion:policy.allowsMotion,prepareFocus(){},startFocus(items){spotlights.push(items);},stopFocus(){},playSound(kind){sounds.push(kind);}},eventCues:{hide(){cueVisible=false;order.push('cue:hide');},show(events,cars,options){if(events.length)cueVisible=true;cues.push(Array.from(events,event=>event.id));cueRecords.push({events:Array.from(events),cars,options,at:clock});order.push('cue:'+events.map(event=>event.id).join(','));}},vehicleEffects:{reset(){},show(events){effects.push(Array.from(events,event=>event.id));effectRecords.push({events:Array.from(events),at:clock});}},checkRaceAchievements(){achievementChecks++;}};
  vm.createContext(scope);vm.runInContext(soundSource,scope);vm.runInContext(raceSoundSource,scope);scope.raceSounds=window.RaceGameSounds.create();vm.runInContext(diceSource,scope);scope.dice=Array.from({length:6},(_,i)=>window.RaceDiceDialog.faceMarkup(i+1));scope.diceDialog=window.RaceDiceDialog.mount({onRolling:cycle=>scope.raceSounds.rolling(cycle),onAction:(action,data)=>scope.run('action',{action,...data})});
- scope.raceMovement=RaceMovement.mount({document,policy,now:()=>clock,setTimeout,clearTimeout,onCue:cue=>scope.showRaceCheckpoint(cue),onMove:group=>scope.showRaceMotion(group),onSettled:result=>microtasks.push(()=>scope.finishRacePresentation(result))});
+ scope.raceMovement=RaceMovement.mount({document,policy,now:()=>clock,setTimeout,clearTimeout,onCue:cue=>scope.showRaceCheckpoint(cue),onMove:group=>scope.showRaceMotion(group),onSettled:result=>scope.settleRacePresentation(result)});
  vm.runInContext(source.slice(source.indexOf('let movementRoutes='),source.indexOf('const requestedRoom=')),scope);
  vm.runInContext(source.slice(source.indexOf('function toast(t)'),source.indexOf("$('#track').onclick=boardClick;")),scope);
  vm.runInContext(source.slice(source.indexOf('MotionPolicy.subscribe(()=>{if(!MotionPolicy.allowsMotion())stopPathMotion();});'),source.indexOf("$('#track').onkeydown")),scope);
@@ -67,7 +67,7 @@ test('same-version custom GIF expressions update both viewers immediately and re
   const h=harness(),initial=state(1,{me,serverNow:h.time});initial.players=neutralPlayers(initial.players);h.scope.receive(initial);
   const generation=h.trackGeneration,animations=h.animations.length,sounds=h.sounds.length;
   assert.match(h.node('#crews').innerHTML,/src="\/characters\/P"/);
-  assert.equal(h.hostUpdates.at(-1).callback,h.scope.receive,'social ACKs register the lightweight receiver');
+  assert.equal(h.hostUpdates.at(-1).callback,vm.runInContext('raceController.receiver()',h.scope),'social ACKs register the lifetime-bound lightweight receiver');
   const expression=expressionSnapshot(initial,h.time+1);h.scope.receive(expression);
   assert.equal(h.scope.state.players.find(player=>player.id==='P').avatar,customGif);assert.ok(h.node('#crews').innerHTML.includes('src="'+customGif+'"'));
   assert.equal(h.trackGeneration,generation);assert.equal(h.animations.length,animations);assert.equal(h.sounds.length,sounds);
@@ -275,4 +275,23 @@ test('an automatic event without new motion keeps next-turn controls hidden unti
 test('skipping a standalone event immediately restores the next controls without a request or replay',()=>{
  const h=harness(),base=state(1,{phase:'assign',active:null,available:['A']});h.scope.render(base);const after={...base,version:2,events:[{id:1,kind:'damage',afterMotion:0,car:'A'}]};h.scope.render(after);h.advance(200);const cue=h.cueRecords.at(-1);h.scope.eventCues.hide();cue.options.onSkip();h.flush();
  assert.equal(h.scope.raceMovement.locked(),false);assert.equal(h.cueVisible,false);assert.match(h.node('#controlPanel').innerHTML,/data-action="begin"/);assert.equal(h.network.length,0);h.scope.render({...after,players:after.players.map(player=>({...player,online:false}))});assert.equal(h.scope.raceMovement.locked(),false);assert.equal(h.cues.filter(ids=>ids.includes(1)).length,1);
+});
+
+
+test('a cancelled request cannot replace a new lesson or clear the next action busy state',async()=>{
+ const h=harness();h.scope.render(state());let resolveOld,resolveNew;
+ h.scope.request=()=>new Promise(resolve=>{resolveOld=resolve;});
+ const old=h.scope.run('action',{action:'move',x:2,y:2});
+ vm.runInContext("raceController.cancel('reset')",h.scope);h.scope.render(state(1,{name:'new lesson'}));
+ h.scope.request=()=>new Promise(resolve=>{resolveNew=resolve;});const next=h.scope.run('action',{action:'move',x:2,y:3});
+ resolveOld(state(9,{name:'old lesson'}));assert.equal(await old,false);assert.equal(h.scope.state.name,'new lesson');assert.equal(h.scope.busy,true);assert.equal(h.node('#raceActionSlot').getAttribute('aria-busy'),'true');
+ resolveNew(state(2,{name:'new result'}));assert.equal(await next,true);assert.equal(h.scope.busy,false);assert.equal(h.scope.state.name,'new result');
+});
+
+test('an old movement settlement microtask cannot flush a newly started presentation',()=>{
+ const h=harness(),base=state();h.scope.render(base);h.scope.render(moved(base,{diceCheck:collision(),legalMoves:[]}));
+ vm.runInContext("raceController.cancel('reset');racePresentation=null;raceMovement.reset();state=null;",h.scope);
+ h.scope.motionGate.update=()=>false;h.scope.render(base);h.scope.motionGate.update=()=>true;h.scope.render(moved(base,{diceCheck:collision('NEW'),legalMoves:[]}));
+ assert.equal(h.scope.raceMovement.locked(),true);h.flush();assert.equal(h.scope.raceMovement.locked(),true);assert.equal(h.dialog.open,false);
+ h.settle();assert.equal(h.dialog.open,true);assert.equal(h.find('race-dice-header').children[0].textContent,'碰撞判定');
 });

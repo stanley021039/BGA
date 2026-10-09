@@ -189,6 +189,6 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
    assert.equal(response.status,200);assert.equal(payload.canvasEpoch,reopened.canvasEpoch);assert.equal(payload.round,1);assert.equal(payload.version,accepted.body.version);
   }finally{abort.abort();}
   assert.equal((await fetch(base+'/api/draw/canvas?code='+code)).status,401);
-  for(const asset of ['draw','draw.js','draw.css','draw-words','shared/stroke-canvas.js'])assert.equal((await fetch(base+'/'+asset,{headers:guest})).status,200,asset);
+  for(const asset of ['draw','draw.js','draw.css','draw-words','shared/stroke-canvas.js','shared/draw-controller.js'])assert.equal((await fetch(base+'/'+asset,{headers:guest})).status,200,asset);
  }finally{await app.close();try{fs.rmSync(root,{recursive:true,force:true});}catch{}}
 });

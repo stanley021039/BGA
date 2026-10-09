@@ -1,14 +1,11 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{randomUUID}=require('node:crypto');
-const {createApp}=require('../src/app'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth');
+const {randomUUID}=require('node:crypto');
+const {createAuth}=require('../src/auth'),{openDatabase}=require('../src/db');
+const {appFixture}=require('./helpers/app-fixture.cjs');
 const VIDEO='M7lc1UVf-VE',OTHER='dQw4w9WgXcQ',password='synthetic-test-password';
 function deferred(){let resolve;const promise=new Promise(ok=>{resolve=ok;});return {promise,resolve};}
 async function fixture(t,extra={}){
- const root=fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),'bga-unified-media-'));
- const config={host:'127.0.0.1',port:0,historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite'),externalSideEffectsEnabled:false,...extra};
- const setup=openDatabase(config.dbFile);await createAuth(setup).bootstrap('host',password);setup.close();
- const app=createApp(config),{port}=await app.listen(),base=`http://127.0.0.1:${port}`;
- t.after(async()=>{await app.close();const absolute=fs.realpathSync(root);assert.equal(path.dirname(absolute),fs.realpathSync(os.tmpdir()));assert.ok(path.basename(absolute).startsWith('bga-unified-media-'));fs.rmSync(absolute,{recursive:true,force:true,maxRetries:5});});
+ const {config,base}=await appFixture(t,{config:extra,seed:db=>createAuth(db).bootstrap('host',password)});
  const users={};
  async function request(route,who,options={}){const response=await fetch(base+'/api/'+route,{...options,headers:{...(users[who]?.cookie?{Cookie:users[who].cookie}:{}),...options.headers}});return {status:response.status,body:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};}
  const post=(route,who,data)=>request(route,who,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});

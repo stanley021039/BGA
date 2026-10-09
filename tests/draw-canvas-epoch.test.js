@@ -50,7 +50,7 @@ test('a new-generation ready and stroke arriving before state are recovered by t
  assert.equal(requests.length,1);assert.equal(run(ui,'canvasQuota.usedFills'),0);assert.equal(run(ui,'canvasVersion'),0);
  const next=drawingState('artist');next.version=3;next.canvasEpoch=NEXT_EPOCH;next.strokeVersion=1;ui.receive(next);
  requests[0](snapshot(CANVAS_EPOCH,1000,[],quota(48,1000,30000)));await pause();assert.equal(requests.length,2);assert.equal(run(ui,'canvasQuota.usedFills'),0);
- requests[1](snapshot(NEXT_EPOCH,1,[newStroke],quota(1,1,1)));await run(ui,'syncPromise');await run(ui,'waitForCanvasRender()');assert.equal(run(ui,'canvasVersion'),1);assert.equal(run(ui,'canDraw()'),true);assert.deepEqual(ui.element('#drawCanvas').pixel(400,200),[0,255,0,255]);
+ requests[1](snapshot(NEXT_EPOCH,1,[newStroke],quota(1,1,1)));await run(ui,'drawingController.pendingSync');await run(ui,'waitForCanvasRender()');assert.equal(run(ui,'canvasVersion'),1);assert.equal(run(ui,'canDraw()'),true);assert.deepEqual(ui.element('#drawCanvas').pixel(400,200),[0,255,0,255]);
  const fresh=await fill(ui,'#0000ff');fresh.resolve(result(fresh,2,quota(2,2,2)));await run(ui,'sendQueue');assert.equal(run(ui,'canvasQuota.usedFills'),2);assert.deepEqual(ui.element('#drawCanvas').pixel(400,200),[0,0,255,255]);
 });
 

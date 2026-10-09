@@ -7,6 +7,7 @@ const resultsScript=fs.readFileSync(path.join(__dirname,'../../public/shared/dra
 const motionScript=fs.readFileSync(path.join(__dirname,'../../public/shared/motion-policy.js'),'utf8');
 const transportScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-transport.js'),'utf8');
 const playbackScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-playback.js'),'utf8');
+const controllerScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-controller.js'),'utf8');
 const countdownScript=fs.readFileSync(path.join(__dirname,'../../public/shared/countdown-bar.js'),'utf8');
 const CANVAS_EPOCH='00000000-0000-4000-8000-000000000001';
 function browserHarness({realRenderer=false,events=false,rendererOptions,clock}={}) {
@@ -96,6 +97,7 @@ function browserHarness({realRenderer=false,events=false,rendererOptions,clock}=
  vm.runInContext(transportScript,context,{filename:'public/shared/draw-transport.js'});
  vm.runInContext(playbackScript,context,{filename:'public/shared/draw-playback.js'});
  vm.runInContext(countdownScript,context,{filename:'public/shared/countdown-bar.js'});
+ vm.runInContext(controllerScript,context,{filename:'public/shared/draw-controller.js'});
  vm.runInContext(script, context, {filename: 'public/draw.js'});
  function receive(state) {
   context.injectedState = state;

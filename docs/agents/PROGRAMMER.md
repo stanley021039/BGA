@@ -1,5 +1,12 @@
 # 程式架構 agent 記憶
 
+2026-10-09 驗收增量（base 2a5a197、受驗 head d610186）：Draft PR #82 已建立，CI run 37879539800 的 Linux／Windows Node22 jobs 均 success；本地 app/runtime/controller focused 41/41。內建瀏覽器完成有限兩席畫猜同步／倒數／返回及賽跑擲骰／三步移動鎖／返回／教學切章重試。手機 viewport 設定未生效，仍1280×720，不能算手機驗收；Chrome fallback 因工具無法可靠辨識網址而中止。使用者明確回覆沒有觸控設備，真實觸控與旋轉先記待驗，未豁免門檻。詳細矩陣見 [本地驗收](../refactors/BATCH-70-79-LOCAL-ACCEPTANCE.md)。本筆取代先前「沒有PR／CI／真瀏覽器操作」現況；完整UI矩陣與最終兩輪審查仍未完成，保持Draft／HOLD。
+
+2026-10-09 本地接手：bundle SHA256、完整歷史、HEAD f5080e4904d004affd78ac9fd5aa53c5682dae2f、tree 4742535214385d144ed680c8a28703f3875a4773 與 base 2a5a197094c254d4a16cdec682d441af31692c76 已核對。遠端 main 仍等於此 base。使用者授權匯入、設定及推送新分支 codex/refactor-70-79-20261009。Windows 隔離 Node 22.23.3／npm 10.9.9 原生 networkInterfaces 正常，npm test 1916/1916、fail/skip/cancel 0、exit 0；npm ci、patch release check、教學來源及 diff check 通過。Node 26.2.0／npm 11.13.0 診斷全套 1915/1916、exit 1，schema 3 restore 測試 HTTP fetch 遇 bad port；根因未確認，不視為通過。測試僅用合成／隔離資料。本輪未執行真瀏覽器矩陣、遠端 CI、PR、tag、main 合併或部署；HOLD 保留，Node22 通過不取代 UI 驗收。
+
+2026-10-09 測試整理候選（Issue #70／parent #56）：首批 character-sound-http、room-media-http、market-images-http 改用 [共用隔離 fixture](../../tests/helpers/README.md)，專屬資料與遊戲 assertions 保留。新 helper 在 seed／listen 前登記清理、關閉 setup DB，失敗即清理；close 拒絕時保留資料並報錯。沒有 runtime／schema／版號／CI 或 main 保護設定變更；其他 fixture、subprocess／global-env 通用管理仍未遷移。驗證與 PR 狀態以 Issue #70 連結的實際檢查為準，不代表已合併／部署。
+2026-10-09 Issue #72 本地候選：RoomApi 委派共用 requestJson，保留 HTTP status／code／details 與取消語意；只遷移此邊界、不改 draw／race controller、不增加寫入重試。契約與範圍見 [shared requestJson](../SHARED-REQUEST-JSON.md)。尚未推送、合併或部署；完整驗證仍受基線 `/api/info` 的執行環境限制，不可從 focused 通過推定可發佈。
+
 2026-10-08 Issue #63：候選 1.22.0 大廳／本桌聊天室，基於 main dae903e；記憶體 50 則、每次讀寫驗證席位、無 schema／永久保存。仍 Draft 未部署，整合與驗證限制見 [聊天室規格](../specs/LOBBY-TABLE-CHAT.md) 及 PR 證據；不取代既有正式部署紀錄。
 
 2026-10-08 再次檢查PR53／57：修正混合AI全員同組的majority-one-channel，授獎至少3真人且AI不授。完整Linux53 1725／57 1742通過，固定source、修改前2失敗→修正後通過與兩回合審查見 [本輪](../PR-RECHECK-ALL-SAME.md)。未部署，舊收據不回写。
@@ -355,3 +362,42 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 ## 2026-10-08：每日官方收盤抓取候選（Issue66，未部署）
 
 每日台北 14:00–16:00 有界時點，成功日持久停止；歷史只補缺漏，有限重試後由管理員處理。firstValidObservedAt 是本系統首次驗證觀察，非官方發布時間。既有 key/value 表新增逐日期 metadata，沒有 table/schema 變更；舊版 validator 不認得新 keys，回退須注意。來源與帳務交易、日曆未知／衝突、前端15秒內部讀取保持。規格、測試及手動修正邊界見 [每日抓取](../specs/MARKET-DAILY-FETCH.md)；最終證據以 PR 為準，不沿用其他版本測試數。
+
+## 2026-10-09：race 教學來源防線（Issue71，本地未發布）
+
+`public/race.html` 的 `TutorialEngine`／`LessonScenarios` 分別完整內嵌
+`src/games/thunder.js`／`src/games/tutorial.js`。新增 check-only 工具與 npm test 回歸，
+只允許 CRLF→LF，wrapper、exports、註解及空白仍嚴格比較；HTML 與 runtime 不改。
+後續章節／timer 教學殼仍手寫，未宣稱完整單一來源，未引入產生器。
+來源邊界與驗證方法見 [race 教學來源](../RACE-TEACHING-SOURCES.md)。
+本地驗證及發布狀態以本切片審查證據為準，不沿用既有 main CI 當新 head 通過。
+## 2026-10-09: local lobby handler extraction (#73)
+
+Four lobby handlers now have explicit app-local dependencies in `src/http/lobby-routes.js`; path/method matching, parsing, login, error serialization and media access callbacks stay in app.js. Route inventory, limits and unextracted groups: [lobby slice](../refactors/LOBBY-ROUTES.md). HTTP characterization uses #70's fixture, including simultaneous app isolation and private image/sound access. This is an unpublished local slice, not merged or deployed; full-suite `/api/info` environment failure remains a release blocker. No RoomRuntime extraction or version/schema change is included.
+
+## 2026-10-09：遊戲與資料契約盤點（#77，文件）
+
+固定程式基線 `2a5a197094c254d4a16cdec682d441af31692c76` 的 [契約矩陣](../GAME-DATA-CONTRACTS.md) 區分現有行為、已存在 coverage 與 #78 最小測試提案。保留 explicit game dispatch；schema19 的歷史 feature-shape 分支、restore 新代 fence 及同程序 achievement retry 已有實作，不代表跨程序 outbox 或記憶體房間續玩。#53 已是基線祖先，不沿用歷史 Draft 狀態。這次不改 runtime/schema/backup 格式、不升版；app 接線於 #73/#74 整合後須重新核對。操作復原程序另由 [#79](https://github.com/stanley021039/BGA/issues/79) 整理，不能把契約盤點當正式移轉驗收。
+## 2026-10-09: Room runtime local candidate (#74)
+
+Per-app room/seat/reconnect/stream registries and scheduler ownership now have a
+small `src/rooms/runtime.js` boundary. Concurrent close/startup failure cleanup
+is covered by local regression tests; this is an unpublished candidate stacked
+on #70/#73, not deployed functionality. Ownership, release order, dependencies,
+validation limits and rollback are in [Room runtime](../refactors/ROOM-RUNTIME.md)
+and its review record. Game engines, AI, lobby handlers and routes retain their
+existing responsibilities.
+
+## 2026-10-09：race controller 切片（Issue76，本地未發布）
+
+RaceController 接管 receive／polling／timer／取消與頁面生命週期，render／input／
+movement／dice／sound 模組及教學引擎保持原 ownership。RoomHost callback、晚到 API
+與 movement settlement microtask 依 epoch／presentation 隔離；教學不啟動 live poll。
+RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三參數呼叫保留。
+依賴 Issue71 來源一致防線及 Issue72 requestJson，維持未發行批次 1.23.1。
+細節、已驗與未驗範圍見 [race controller](../RACE-CONTROLLER.md)。
+原生 browser 無法連 executor loopback，全套仍受既有 api/info 環境問題限制；
+不把 focused／VM 通過視為全部驗收或准許推送，沒有部署／正式資料操作。
+## 2026-10-09 Issue 75 同步 controller（本機候選，未推送）
+
+畫猜同步/取消 ownership 已抽為 DrawController；頁面保留 canonical state、input、renderer、transport/playback 專用責任，沿用 1.23.1。85/85 focused 通過，完整 suite 及原生 acceptance 的實際狀態、固定 code SHA、兩回合審查見 [本切片證據](../DRAW-CONTROLLER-REFACTOR-PROGRESS.md)。dot cloud browser 無法連入隔離 localhost，途中 frame／desktop/mobile/touch/keyboard 不算驗收；不可用 VM raster、OS stub 或跳過失敗替代 required native／完整 suite。沒有新 PR、部署、schema 或正式資料操作。

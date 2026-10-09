@@ -1,0 +1,313 @@
+{
+  "base": "2a5a197094c254d4a16cdec682d441af31692c76",
+  "codeHead": "cfd437d0bf797b6b131ee2e53050482a43c64dfa",
+  "mergeBase": "2a5a197094c254d4a16cdec682d441af31692c76",
+  "publication": "HOLD: full suite native OS failure and required native browser verification blocked",
+  "version": "1.23.1",
+  "schema": 19,
+  "sharedDependency": {
+    "source": "89204da6ee7d366995f5da7752c7f97bb614579e",
+    "integrated": "774f00d1346077caa83b1e91cb76399e776d3c3b",
+    "deduplicatedDrawEquivalent": "ce43e9bb1c2c292d89f8bc9df1d6af60fb93f305"
+  },
+  "issues": [
+    {
+      "issue": 70,
+      "sourceBase": "2a5a197094c254d4a16cdec682d441af31692c76",
+      "sourceHead": "1a16ec6853f30696f4abe1bfec30f3baf2fa96da",
+      "sourceCommits": [
+        "1a16ec6853f30696f4abe1bfec30f3baf2fa96da"
+      ],
+      "integratedCommits": [
+        "77c490594fe63cf9c5f9d53bf615e36c6ec85af3"
+      ],
+      "files": [
+        "docs/agents/PROGRAMMER.md",
+        "tests/app-fixture.test.js",
+        "tests/character-sound-http.test.js",
+        "tests/helpers/README.md",
+        "tests/helpers/app-fixture.cjs",
+        "tests/market-images-http.test.js",
+        "tests/room-media-http.test.js"
+      ],
+      "testFiles": [
+        "tests/app-fixture.test.js",
+        "tests/character-sound-http.test.js",
+        "tests/helpers/README.md",
+        "tests/helpers/app-fixture.cjs",
+        "tests/market-images-http.test.js",
+        "tests/room-media-http.test.js"
+      ],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 71,
+      "sourceBase": "2a5a197094c254d4a16cdec682d441af31692c76",
+      "sourceHead": "9f20aa4452eae35a97681e431838d67b6f27fd89",
+      "sourceCommits": [
+        "9f20aa4452eae35a97681e431838d67b6f27fd89"
+      ],
+      "integratedCommits": [
+        "1fff426223e8f4d7324a7825be42897bfdafc464"
+      ],
+      "files": [
+        "docs/RACE-TEACHING-SOURCES.md",
+        "docs/agents/PROGRAMMER.md",
+        "tests/race-teaching-source.test.js",
+        "tools/check-race-teaching.cjs"
+      ],
+      "testFiles": [
+        "tests/race-teaching-source.test.js"
+      ],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 72,
+      "sourceBase": "2a5a197094c254d4a16cdec682d441af31692c76",
+      "sourceHead": "72981f5d2c1ceed7e8e5fd9eb3052411375dedbc",
+      "sourceCommits": [
+        "72981f5d2c1ceed7e8e5fd9eb3052411375dedbc"
+      ],
+      "integratedCommits": [
+        "3b2eddfaf52ce318473a4f06844d48e7507fd886"
+      ],
+      "files": [
+        "CHANGELOG.md",
+        "docs/SHARED-REQUEST-JSON.md",
+        "docs/agents/PROGRAMMER.md",
+        "package-lock.json",
+        "package.json",
+        "public/shared/api.js",
+        "tests/shared-api.test.js"
+      ],
+      "testFiles": [
+        "tests/shared-api.test.js"
+      ],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 73,
+      "sourceBase": "1a16ec6853f30696f4abe1bfec30f3baf2fa96da",
+      "sourceHead": "384c2e14192cfaea24d563d78a2e442d0395bca8",
+      "sourceCommits": [
+        "7a1deae8d707212a216bbf7093fc2fb8a8197267",
+        "384c2e14192cfaea24d563d78a2e442d0395bca8"
+      ],
+      "integratedCommits": [
+        "6feec6701cd65256a60101a9b466c33f53eb6049",
+        "f8cc01cf027c931b2d540c8162c7161690b20a15"
+      ],
+      "files": [
+        "docs/agents/PROGRAMMER.md",
+        "docs/refactors/LOBBY-ROUTES-REVIEW.md",
+        "docs/refactors/LOBBY-ROUTES.md",
+        "src/app.js",
+        "src/http/lobby-routes.js",
+        "tests/lobby-http.test.js",
+        "tests/lobby-routes.test.js"
+      ],
+      "testFiles": [
+        "tests/lobby-http.test.js",
+        "tests/lobby-routes.test.js"
+      ],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 74,
+      "sourceBase": "384c2e14192cfaea24d563d78a2e442d0395bca8",
+      "sourceHead": "89f8438ed5a59fd46e10381b39906087e81af37e",
+      "sourceCommits": [
+        "454f9360fa49f11511a7833cd8747b99e83b72be",
+        "e61766278299a3a82d10422cc06f7a793a3631e4",
+        "89f8438ed5a59fd46e10381b39906087e81af37e"
+      ],
+      "integratedCommits": [
+        "bf37615985775e2c9fd47766f6705a9e9cb75414",
+        "4fcfd87c09ab47dafb34674b8ff8f313978c4569",
+        "087972227c18617d2e77fe0f28d50bd7c92e41ba"
+      ],
+      "files": [
+        "CHANGELOG.md",
+        "docs/agents/PROGRAMMER.md",
+        "docs/agents/SERVER-DATA.md",
+        "docs/refactors/ROOM-RUNTIME-REVIEW.md",
+        "docs/refactors/ROOM-RUNTIME.md",
+        "package-lock.json",
+        "package.json",
+        "src/app.js",
+        "src/rooms/runtime.js",
+        "src/rooms/scheduler.js",
+        "tests/app-runtime.test.js",
+        "tests/room-runtime.test.js"
+      ],
+      "testFiles": [
+        "tests/app-runtime.test.js",
+        "tests/room-runtime.test.js"
+      ],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 75,
+      "sourceBase": "ce43e9bb1c2c292d89f8bc9df1d6af60fb93f305",
+      "sourceHead": "84b960579e3e2faec0d43330b847ee572bae29db",
+      "sourceCommits": [
+        "b4f0582fe281308773ca98fdf1a8c8aebb6c6f1b",
+        "84b960579e3e2faec0d43330b847ee572bae29db"
+      ],
+      "integratedCommits": [
+        "d9d0d903b82bf68333c696bbba9d987f48e1fe75",
+        "f5b36cfda8792cef73dd9b6acde96d2e2734e1b1"
+      ],
+      "files": [
+        "docs/DRAW-CONTROLLER-REFACTOR-PROGRESS.md",
+        "docs/agents/PROGRAMMER.md",
+        "public/draw.html",
+        "public/draw.js",
+        "public/shared/draw-controller.js",
+        "src/app.js",
+        "tests/draw-canvas-epoch.test.js",
+        "tests/draw-controller-characterization.test.js",
+        "tests/draw-controller.test.js",
+        "tests/draw-game-sounds.test.js",
+        "tests/draw-guess.test.js",
+        "tests/draw-input-transport.test.js",
+        "tests/draw-renderer-sync.test.js",
+        "tests/draw-timed-playback.test.js",
+        "tests/helpers/draw-browser.cjs"
+      ],
+      "testFiles": [
+        "tests/draw-canvas-epoch.test.js",
+        "tests/draw-controller-characterization.test.js",
+        "tests/draw-controller.test.js",
+        "tests/draw-game-sounds.test.js",
+        "tests/draw-guess.test.js",
+        "tests/draw-input-transport.test.js",
+        "tests/draw-renderer-sync.test.js",
+        "tests/draw-timed-playback.test.js",
+        "tests/helpers/draw-browser.cjs"
+      ],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 76,
+      "sourceBase": "89204da6ee7d366995f5da7752c7f97bb614579e",
+      "sourceHead": "c8327967ecc49c4817ac0c0e76d7686b2785f325",
+      "sourceCommits": [
+        "c8327967ecc49c4817ac0c0e76d7686b2785f325"
+      ],
+      "integratedCommits": [
+        "b3173cde643ee1e72af52bceade99a8ae4bb14ea"
+      ],
+      "files": [
+        "docs/RACE-CONTROLLER.md",
+        "docs/agents/PROGRAMMER.md",
+        "public/race.html",
+        "public/race.js",
+        "public/shared/race-controller.js",
+        "src/app.js",
+        "tests/helpers/notifications-game-client.cjs",
+        "tests/race-controller.test.js",
+        "tests/race-multi-move.test.js",
+        "tests/race-presentation.test.js",
+        "tests/room-snapshot-updates.test.js"
+      ],
+      "testFiles": [
+        "tests/helpers/notifications-game-client.cjs",
+        "tests/race-controller.test.js",
+        "tests/race-multi-move.test.js",
+        "tests/race-presentation.test.js",
+        "tests/room-snapshot-updates.test.js"
+      ],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 77,
+      "sourceBase": "2a5a197094c254d4a16cdec682d441af31692c76",
+      "sourceHead": "18d8ac314109f6697df45cc52f9a00c1788b439c",
+      "sourceCommits": [
+        "18d8ac314109f6697df45cc52f9a00c1788b439c"
+      ],
+      "integratedCommits": [
+        "74ccf80aec4169f2922181026c162d79a4b90550"
+      ],
+      "files": [
+        "docs/GAME-DATA-CONTRACTS.md",
+        "docs/agents/PROGRAMMER.md",
+        "docs/agents/SERVER-DATA.md"
+      ],
+      "testFiles": [],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 78,
+      "sourceBase": "374f00988098c8659da7f93ec50c0083b5b87e54",
+      "sourceHead": "a3610b883d02465f8a7a0798dff0a5eaaeabb310",
+      "sourceCommits": [
+        "a3610b883d02465f8a7a0798dff0a5eaaeabb310"
+      ],
+      "integratedCommits": [
+        "40406f6b9e439b67cd777ee25bf9bba34dd19077"
+      ],
+      "files": [
+        "docs/GAME-DATA-CONTRACT-TESTS.md",
+        "docs/GAME-DATA-CONTRACTS.md",
+        "tests/data-transfer.test.js",
+        "tests/game-boundary-contract.test.js"
+      ],
+      "testFiles": [
+        "tests/data-transfer.test.js",
+        "tests/game-boundary-contract.test.js"
+      ],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    },
+    {
+      "issue": 79,
+      "sourceBase": "2a5a197094c254d4a16cdec682d441af31692c76",
+      "sourceHead": "7d40627c9990e46f04e68a502bd54d6651153d0b",
+      "sourceCommits": [
+        "7d40627c9990e46f04e68a502bd54d6651153d0b"
+      ],
+      "integratedCommits": [
+        "604f6c2180d3bf00f38d6c9f823ad69a4c774e9d"
+      ],
+      "files": [
+        "docs/DEPLOYMENT.md",
+        "docs/OPERATIONS-RECOVERY.md"
+      ],
+      "testFiles": [],
+      "validation": "Combined final full/focused logs and review report govern; individual source reports are supporting evidence, not final-head passes"
+    }
+  ],
+  "validation": {
+    "node": "v24.19.0",
+    "npm": "11.9.0",
+    "baselineFull": {
+      "command": "npm test",
+      "tests": 1828,
+      "pass": 1827,
+      "fail": 1,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "combinedFull": {
+      "head": "cfd437d0bf797b6b131ee2e53050482a43c64dfa",
+      "command": "npm test",
+      "tests": 1916,
+      "pass": 1915,
+      "fail": 1,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    "focused": {
+      "tests": 542,
+      "pass": 542,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "command": "node --test tests/app-fixture.test.js tests/lobby-{routes,http}.test.js tests/shared-api.test.js tests/room-reconnect-cancellation.test.js tests/{app,room}-runtime.test.js tests/draw-*.test.js tests/race-*.test.js tests/game-boundary-contract.test.js tests/data-transfer.test.js tests/schema-forks.test.js tests/achievement-migration.test.js tests/history-failed-start.test.js tests/refactor-integration.test.js"
+    },
+    "knownFailure": "web-features.test.js initial /api/info 500; direct os.networkInterfaces ERR_SYSTEM_ERROR uv_interface_addresses",
+    "nativeBrowser": "blocked on source-worker cloud browser loopback access; not passed",
+    "WindowsAndCI": "not run on local head"
+  }
+}

@@ -3,7 +3,7 @@ const $=selector=>document.querySelector(selector);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const topicChoices=[['food','食物飲料'],['animals','動物生物'],['transport','交通工具'],['objects','生活物品'],['people','人物職業'],['nature','自然奇幻'],['places','場所娛樂'],['activities','運動音樂'],['meme','迷因 Meme'],['custom','自定義']];
 let code=(location.pathname.match(/\/draw\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
-let session=null,state=null,busy=false,polling=false,signature='',stream=null,canvasVersion=-1,canvasRound=-1,strokes=[],syncPromise=null,canvasSyncJob=null,clockOffset=0,inviteBase=location.origin;
+let session=null,state=null,busy=false,signature='',canvasVersion=-1,canvasRound=-1,strokes=[],clockOffset=0,inviteBase=location.origin;
 let filled=false,tool='brush',active=null,pending=[],lastSentAt=-Infinity,lastFillSentAt=-Infinity,sendQueue=Promise.resolve(),canvasCommandBusy=false,canvasCommandEpoch=0,cursor=[256,128];
 let strokeFlushTimer=null,previewFrame=null,pendingTimes=[];
 const drawNow=()=>typeof performance==='object'&&typeof performance.now==='function'?performance.now():Date.now();
@@ -64,10 +64,22 @@ function sameCanvas(data,epoch=state?.canvasEpoch,round=state?.round){return !!e
 let feedEntries=[],lastReceivedAt=0,lastTimerSeconds=null,lastTimerRound=-1,disconnected=false;
 let canvasQuota={usedFills:0,usedBatches:0,usedPoints:0};
 let canvasTotals={points:0,fills:0};
+const drawingController=window.DrawController.create({
+ context:()=>({room:code,session,busy,epoch:state?.canvasEpoch,round:state?.round,version:canvasVersion}),
+ restoreSession:(room,options)=>RoomReconnect.restore(room,'draw','#connection',options),onRestored:save,
+ request:api,receive,applySnapshot:applyCanvasSnapshot,receiveStroke:receiveCanvasStroke,tick,
+ onSyncSuccess:()=>{canvasConnectionError='';updateConnection();},
+ onSyncError:error=>{canvasConnectionError='畫布正在重新同步：'+error.message;updateConnection();},
+ onPollSuccess:updateConnection,
+ onPollError:()=>{disconnected=true;gameSounds?.disconnect();updateConnection();},
+ onStreamReady:()=>{streamDisconnected=false;updateConnection();},
+ onStreamError:()=>{streamDisconnected=true;motionNeedsBaseline=true;gameSounds?.disconnect();updateConnection();},
+ cancelWork:()=>{cancelStrokeInput();drawingPlayback.reset();drawingTransport.cancel();if(drawingFitFrame!==null)cancelAnimationFrame(drawingFitFrame);drawingFitFrame=null;}
+});
 try{session=JSON.parse(localStorage.getItem(code?'ah-draw:'+code:'ah-draw')||'null');if(session&&!code)code=session.code;}catch{}
 
 function toast(message,{immediate=false}={}){if(!immediate&&window.GameUI?.notify)return window.GameUI.notify(message,{durationMs:4000});$('#toast').textContent=message;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,4000);}
-async function api(route,data,options={}){return RoomApi.request(route,data,{code,room:'draw',session,...options,onKicked:()=>{cancelDrawingWork();RoomHost.kicked(session);session=null;stream?.close();resultsView?.reset();gameSounds?.reset();}});}
+async function api(route,data,options={}){return RoomApi.request(route,data,{code,room:'draw',session,...options,onKicked:()=>{drawingController.dispose();RoomHost.kicked(session);session=null;resultsView?.reset();gameSounds?.reset();}});}
 function save(result){session=result;code=result.code;localStorage.setItem('ah-draw',JSON.stringify(result));localStorage.setItem('ah-draw:'+code,JSON.stringify(result));history.replaceState(null,'','/draw/'+code);}
 function nameOf(id){return state?.players.find(player=>player.id===id)?.name||'朋友';}
 function playerStatus(player,s=state){
@@ -343,24 +355,8 @@ function settleLocalStrokes(){
  }
  if(changed)redrawCanvas();
 }
-function syncCanvas(){
- if(!session)return Promise.resolve();
- if(syncPromise)return syncPromise;
- const job={round:state?.round,epoch:state?.canvasEpoch,controller:new AbortController(),timer:null,promise:null};canvasSyncJob=job;
- const current=()=>canvasSyncJob===job&&job.epoch===state?.canvasEpoch&&job.round===state?.round;
- job.promise=(async()=>{
-  const aborted=new Promise((_,reject)=>job.controller.signal.addEventListener('abort',()=>reject(job.controller.signal.reason),{once:true}));
-  job.timer=setTimeout(()=>job.controller.abort(new DOMException('畫布同步逾時','TimeoutError')),10000);
-  try{
-   const snapshot=await Promise.race([api('draw/canvas',undefined,{signal:job.controller.signal}),aborted]);if(!current()||!sameCanvas(snapshot))return;
-   applyCanvasSnapshot(snapshot);canvasConnectionError='';updateConnection();
-  }catch(error){if(current()&&error.name!=='AbortError'){canvasConnectionError='畫布正在重新同步：'+error.message;updateConnection();}}
-  finally{clearTimeout(job.timer);job.timer=null;if(canvasSyncJob===job){canvasSyncJob=null;syncPromise=null;}}
- })();
- syncPromise=job.promise;
- return syncPromise;
-}
-function cancelCanvasSync(){const job=canvasSyncJob;if(!job)return;canvasSyncJob=null;syncPromise=null;clearTimeout(job.timer);job.timer=null;job.controller.abort();}
+function syncCanvas(){return drawingController.syncCanvas();}
+function cancelCanvasSync(){drawingController.cancelSync();}
 function validCanvasSnapshot(snapshot){
  if(!Number.isSafeInteger(snapshot?.round)||!Number.isSafeInteger(snapshot.version)||snapshot.version<0||!Array.isArray(snapshot.strokes)||snapshot.strokes.length>1000)return false;
  let points=0,fills=0,previous=0;
@@ -419,14 +415,7 @@ function receiveCanvasStroke(data){
  else drawingPlayback.finish({notify:false});
  settleLocalStrokes();redrawCanvas();
 }
-function connectEvents(){
- if(stream||!session||!window.EventSource)return;
- stream=new EventSource('/api/draw/events?code='+encodeURIComponent(code));
- stream.addEventListener('stroke',event=>{try{receiveCanvasStroke(JSON.parse(event.data));}catch{syncCanvas();}});
- stream.addEventListener('reset',event=>{try{const data=JSON.parse(event.data);if(data.version>canvasVersion)applyCanvasSnapshot(data,true);}catch{syncCanvas();}});
- stream.addEventListener('ready',event=>{streamDisconnected=false;updateConnection();try{const data=JSON.parse(event.data);if(sameCanvas(data)&&data.version!==canvasVersion)syncCanvas();}catch{syncCanvas();}});
- stream.addEventListener('error',()=>{streamDisconnected=true;motionNeedsBaseline=true;gameSounds?.disconnect();updateConnection();});
-}
+function connectEvents(){drawingController.connectEvents();}
 function drawFeedback(message,kind='info',settings=false,guess=false){
  const node=$(settings?'#roomSettingsFeedback':guess?'#drawGuessStatus':'#drawStatus')||$('#drawStatus');
  node.textContent=message;node.dataset.kind=kind;window.GameUI?.setStatus(node,message,{kind});
@@ -469,7 +458,7 @@ $('#drawActions').addEventListener('click',stageClick);
 $('#canvasStage').addEventListener('click',stageClick);
 $('#stage').addEventListener('submit',async event=>{
  if(event.target.id!=='enterForm')return;event.preventDefault();if(busy)return;busy=true;
-  try{const result=await api(code?'join':'create',{type:'draw',code,...(!code?{topics:readTopics()}:{})});if(result.type!=='draw')throw Error('這是其他遊戲房間');save(result);receive(await api('state'));updateConnection();}
+  try{const result=await api(code?'join':'create',{type:'draw',code,...(!code?{topics:readTopics()}:{})});if(result.type!=='draw')throw Error('這是其他遊戲房間');save(result);drawingController.start();receive(await api('state'));updateConnection();}
  catch(error){toast(error.message);}finally{busy=false;}
 });
 $('#guessForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('#guessInput'),answer=input.value.trim();if(!answer)return;const accepted=await action('guess',{answer});if(accepted&&input.value.trim()===answer)input.value='';input.focus();});
@@ -550,7 +539,7 @@ function scheduleCanvasPreview(){
  previewFrame=requestAnimationFrame(()=>{previewFrame=null;if(state?.canvasEpoch===epoch)redrawCanvas();});
 }
 function cancelStrokeInput(failed=false){clearStrokeFlush();cancelPreviewFrame();if(active){active.finished=true;if(failed)active.failed=true;}active=null;pending=[];pendingTimes=[];}
-function cancelDrawingWork({cancelSync=true}={}){cancelStrokeInput();drawingPlayback.reset();drawingTransport.cancel();if(cancelSync)cancelCanvasSync();if(drawingFitFrame!==null)cancelAnimationFrame(drawingFitFrame);drawingFitFrame=null;}
+function cancelDrawingWork(options){drawingController.cancel(options);}
 function pointerSamples(event){
  let samples;if(event.type==='pointermove')try{samples=event.getCoalescedEvents?.();}catch{}
  samples=(samples?.length?[...samples]:[event]).filter(sample=>sample.pointerId===event.pointerId);
@@ -596,13 +585,14 @@ canvas.addEventListener('keydown',event=>{
  if(moves[event.key]){event.preventDefault();cursor=[Math.max(0,Math.min(511,cursor[0]+moves[event.key][0])),Math.max(0,Math.min(255,cursor[1]+moves[event.key][1]))];toast('畫布位置 '+(cursor[0]+1)+'，'+(cursor[1]+1)+'；按空白鍵落筆',{immediate:true});}
  if(event.key===' '){event.preventDefault();queueStroke([cursor],StrokeCanvas.strokeId(),tool==='fill'?'fill':'brush');}
 });
-async function poll(){if(!session||busy||polling)return;polling=true;try{receive(await api('state'));updateConnection();}catch(error){disconnected=true;gameSounds?.disconnect();updateConnection();}finally{polling=false;}}
+function poll(){return drawingController.poll();}
 fetch('/api/info').then(response=>response.json()).then(info=>inviteBase=info.preferred||location.origin).catch(()=>{});
-entry();if(session)poll();else if(code)RoomReconnect.restore(code,'draw','#connection').then(restored=>{if(restored){save(restored);poll();}});
-setInterval(poll,1000);setInterval(tick,250);if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
+drawingController.start();
+entry();if(session)poll();else if(code)drawingController.restore();
+if(new URLSearchParams(location.search).has('learn'))$('#rules').showModal();
 document.addEventListener('visibilitychange',()=>{if(document.hidden){if(active)finishPointer({pointerId:active.pointerId,preventDefault(){}});cancelPreviewFrame();drawingPlayback.finish();countdownBar.reset();}else tick();});
-window.addEventListener('pagehide',event=>{countdownBar.reset();cancelDrawingWork();localStrokes.clear();canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
-window.addEventListener('pageshow',event=>{if(event.persisted){motionNeedsBaseline=true;if(state){resultsView?.update(state);redrawCanvas();syncCanvas();updateStagePreview();}poll();}});
+window.addEventListener('pagehide',event=>{countdownBar.reset();drawingController.dispose();localStrokes.clear();canvasRenderEpoch++;canvasRenderer.reset();canvasRenderPromise=Promise.resolve(false);canvasRecovering=false;stageResultPreview?.renderer.reset();stageResultPreview=null;lastLiveState=false;motionNeedsBaseline=true;if(event.persisted)gameSounds?.reset();else{motionGate?.dispose();gameSounds?.destroy();}});
+window.addEventListener('pageshow',event=>{if(event.persisted){drawingController.start();motionNeedsBaseline=true;if(state){resultsView?.update(state);redrawCanvas();syncCanvas();updateStagePreview();}if(session)poll();else drawingController.restore();}});
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});
 
 const roomSettingsAutoSave=window.GameShell?.autoSaveSettings?.({read:()=>({seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()}),save:data=>roomAction('settings',data),canSave:()=>!!state?.host&&state.phase==='waiting',isBusy:()=>busy});
