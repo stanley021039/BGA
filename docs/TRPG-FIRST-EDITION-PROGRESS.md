@@ -27,3 +27,15 @@ console error 0；桌機 DOM scrollWidth 1265 ≤ viewport 1280，未見横向�
 只有一篇六幕短篇，尚無自由場景、AI KP、角色戰役持久化或成就。場景 UUID／requestId 去重只在本次房間執行期；伺服器重啟會結束記憶體房間，歷史不是續局恢復。真正的多人樂趣、等待時間、角色平衡與重玩性待真人試玩；手機、觸控與完整可及性待驗。歷史的通用操作名稱仍沿用既有標籤，主要故事與公式已可回看。
 
 保留 Draft 供檢視上述驗收缺口；不能由本文件推定已上線。固定 commit 的兩回合自查與遠端 CI 結果會另附交付紀錄。
+
+## 固定差異自查（同一實作者，兩個回合）
+
+兩回合均 base／merge-base `bef199bbc7129e41fb870df0e9debd0670a899f1`、head `89ad7b961c2bd8b3e1885697852af1c742230f56`，範圍 `bef199b..89ad7b9`。直接讀新增引擎／client／測試與 app、scheduler、membership、history、hub、共用重連差異及呼叫端；不是外部 reviewer 意見。測試是上節實作階段證據，審查階段沒有宣稱重跑全套。
+
+第一回合（規格）：免 token、原創六幕、1–6 人、輪替領隊、公開代價／骰子、每人參與、失敗推進、重連與歷史，對照 spec 與新增 engine／HTTP／client 測試符合；版本／CHANGELOG minor 符合。手機／觸控、全讀屏／200%、真人桌與主觀樂趣為待驗，不能標完整 UI 驗收通過。歷史通用操作標籤與只有一篇故事是明列限制。結論：可供初版試玩／檢視，保持 Draft，未達完整驗收。
+
+第二回合（品質／風險）：檢查 `src/games/trpg.js:53` 輸入／身分／requestId、`:94` 驗證→RNG→成本順序、`:118` 離席轉移與舊場景失效、`:131` view 白名單；`src/ai/index.js:29` 腳本只用 public view；`public/trpg.js:18` busy／dirty 鎖、`:24` 草稿保留與新鮮度、`:64`–`:70` abort／pagehide／BFCache；history 轉義與去秘密及六幕有界容量。checked diff／新檔只含合成测试資料，未新增外部依賴或提交秘密。完整全套涵蓋既有 route／資源／主题回歸；沒有新 migration。結論：本次已檢查範圍未發現未解重大問題，不能保證沒有 bug；跨程序去重／續局、真人大桌、完整可及性不在已驗證範圍。
+
+實作時修正的主要反例：領隊免費整備支配選擇（放棄專長＋engine 回歸）、已準備後未送出修改仍可檢定（dirty 鎖＋client 回歸＋真瀏覽器複驗）、新增頁面／卡數與共用資源斷言不一致（保留斷言改期望數＋全套複驗）。這些已包含在固定 head，不冒稱外部審查 findings。
+
+交付：Draft PR #84，https://github.com/stanley021039/BGA/pull/84 。本節為文件增量，程式／測試與固定受測 head 相同；後續 CI 以 PR 最新 head 的 GitHub Actions 為準，未完成不算通過。隔離 server 已用 fixture dispose 關閉，loopback 5935 不再監聽，驗收分頁已關閉。沒有建立發行 tag／合併／部署，#59 保留開啟。
