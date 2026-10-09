@@ -1,15 +1,12 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const {createApp}=require('../src/app'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth');
+const fs=require('node:fs'),path=require('node:path');
+const {createAuth}=require('../src/auth');
+const {appFixture}=require('./helpers/app-fixture.cjs');
 const png=fs.readFileSync(path.join(__dirname,'../public/assets/characters/traveler-neutral.png'));
 function wave(samples=24000,value=100){const bytes=Buffer.alloc(44+samples*2);bytes.write('RIFF');bytes.writeUInt32LE(bytes.length-8,4);bytes.write('WAVEfmt ',8);bytes.writeUInt32LE(16,16);bytes.writeUInt16LE(1,20);bytes.writeUInt16LE(1,22);bytes.writeUInt32LE(24000,24);bytes.writeUInt32LE(48000,28);bytes.writeUInt16LE(2,32);bytes.writeUInt16LE(16,34);bytes.write('data',36);bytes.writeUInt32LE(samples*2,40);for(let i=44;i<bytes.length;i+=2)bytes.writeInt16LE(value,i);return bytes;}
 async function fixture(t){
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-expression-http-'));
- const config={host:'127.0.0.1',port:0,dbFile:path.join(root,'db.sqlite'),historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),musicDir:path.join(root,'music'),externalSideEffectsEnabled:false};
- const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('sound_owner','sound-password-123');db.close();
- const app=createApp(config),address=await app.listen(),base='http://127.0.0.1:'+address.port;
- t.after(async()=>{await app.close();assert.equal(path.dirname(root),path.resolve(os.tmpdir()));assert.ok(path.basename(root).startsWith('bga-expression-http-'));fs.rmSync(root,{recursive:true,force:true});});
+ const {base}=await appFixture(t,{seed:db=>createAuth(db).bootstrap('sound_owner','sound-password-123')});
  async function post(route,cookie,data={}){const response=await fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(data)});return {status:response.status,body:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};}
  const owner=(await post('auth/login',null,{username:'sound_owner',password:'sound-password-123'})).cookie;
  async function member(name){const invite=await post('admin/invites',owner);return (await post('auth/register',null,{username:name,password:'sound-password-123',confirmPassword:'sound-password-123',invite:invite.body.code})).cookie;}

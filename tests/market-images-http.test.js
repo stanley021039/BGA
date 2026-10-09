@@ -1,14 +1,17 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{randomUUID}=require('node:crypto');
-const {PNG}=require('pngjs'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth'),{createApp}=require('../src/app'),{settings}=require('../src/config');
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{randomUUID}=require('node:crypto');
+const {PNG}=require('pngjs'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth'),{settings}=require('../src/config');
+const {appFixture}=require('./helpers/app-fixture.cjs');
 const png=()=>PNG.sync.write({width:2,height:2,data:Buffer.from([255,0,0,255,0,255,0,255,0,0,255,255,255,255,0,255])}),request=()=>randomUUID();
 async function fixture(t){
- const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-image-http-')),file=path.join(root,'app.sqlite'),db=openDatabase(file),auth=createAuth(db),password='fixture-'+randomUUID(),adminId=await auth.bootstrap('image_admin',password),admin=db.prepare('SELECT * FROM users WHERE id=?').get(adminId),users=[admin];
- for(let i=0;i<2;i++)users.push(await auth.register({username:'image_member_'+i,displayName:'圖片作者 '+i,password,confirmPassword:password,invite:auth.createInvite(admin).code},{setHeader(){}}));db.close();
- const config={...settings({DB_FILE:file,HISTORY_DIR:path.join(root,'history'),COMMUNITY_DIR:path.join(root,'community'),MUSIC_DIR:path.join(root,'music'),EXTERNAL_SIDE_EFFECTS_ENABLED:'false'}),host:'127.0.0.1',port:0,githubClient:{configured:false}};
- const app=createApp(config),address=await app.listen(),base='http://127.0.0.1:'+address.port,cookies=[];
+ const password='fixture-'+randomUUID(),users=[];
+ const {root,config,app,base}=await appFixture(t,{
+  config:paths=>settings({DB_FILE:paths.dbFile,HISTORY_DIR:paths.historyDir,COMMUNITY_DIR:paths.communityDir,MUSIC_DIR:paths.musicDir,EXTERNAL_SIDE_EFFECTS_ENABLED:'false'}),
+  async seed(db){const auth=createAuth(db),adminId=await auth.bootstrap('image_admin',password),admin=db.prepare('SELECT * FROM users WHERE id=?').get(adminId);users.push(admin);
+   for(let i=0;i<2;i++)users.push(await auth.register({username:'image_member_'+i,displayName:'圖片作者 '+i,password,confirmPassword:password,invite:auth.createInvite(admin).code},{setHeader(){}}));}
+ });
+ const file=config.dbFile,cookies=[];
  const fetcher=(route,{body,headers={},cookie,method=body?'POST':'GET'}={})=>fetch(base+route,{method,headers:{...(body?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...headers},body:body?JSON.stringify(body):undefined});
  for(const user of users){const r=await fetcher('/api/auth/login',{body:{username:user.username,password}});assert.equal(r.status,200);cookies.push(r.headers.get('set-cookie').split(';')[0]);}
- t.after(async()=>{await app.close();fs.rmSync(root,{recursive:true,force:true,maxRetries:5});});
  const upload=(cookie,extra={})=>fetcher('/api/market/images',{cookie,body:{requestId:request(),mime:'image/png',base64:png().toString('base64'),buckets:['crash','rally'],weekdays:[1,3],...extra}});
  return {root,file,base,app,users,cookies,fetcher,upload};
 }
