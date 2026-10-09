@@ -383,3 +383,14 @@ on #70/#73, not deployed functionality. Ownership, release order, dependencies,
 validation limits and rollback are in [Room runtime](../refactors/ROOM-RUNTIME.md)
 and its review record. Game engines, AI, lobby handlers and routes retain their
 existing responsibilities.
+
+## 2026-10-09：race controller 切片（Issue76，本地未發布）
+
+RaceController 接管 receive／polling／timer／取消與頁面生命週期，render／input／
+movement／dice／sound 模組及教學引擎保持原 ownership。RoomHost callback、晚到 API
+與 movement settlement microtask 依 epoch／presentation 隔離；教學不啟動 live poll。
+RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三參數呼叫保留。
+依賴 Issue71 來源一致防線及 Issue72 requestJson，維持未發行批次 1.23.1。
+細節、已驗與未驗範圍見 [race controller](../RACE-CONTROLLER.md)。
+原生 browser 無法連 executor loopback，全套仍受既有 api/info 環境問題限制；
+不把 focused／VM 通過視為全部驗收或准許推送，沒有部署／正式資料操作。

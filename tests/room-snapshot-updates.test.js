@@ -67,7 +67,10 @@ function harness(type='poker'){
   // New versions enter the full board renderer. Its motion/dice integration is
   // exercised with the real renderer in race-presentation.test.js; preserve its
   // state/roster/callback contract here without inventing a fake board layout.
-  scope.render=s=>{scope.state=scope.snapshotRaceState(s);scope.onlineSignature=s.players.map(player=>player.online).join(',');scope.lastVersion=s.version;scope.renderCrews(s);scope.RoomHost.update(s,scope.receive);};
+  scope.render=s=>{scope.state=scope.snapshotRaceState(s);scope.onlineSignature=s.players.map(player=>player.online).join(',');scope.lastVersion=s.version;scope.renderCrews(s);scope.RoomHost.update(s,vm.runInContext('raceController.receiver()',scope));};
+  Object.assign(scope,{RaceController:require('../public/shared/race-controller'),session:{code:base.code},busy:false,requestedRoom:null,AbortController,setInterval:()=>0,clearInterval:noOp});
+  document.addEventListener=noOp;window.addEventListener=noOp;
+  vm.runInContext(section(text,'function createRaceController(','// The teaching engine'),scope);
  }
  callback(base);
  vm.runInContext(sendSource,scope,{filename:'public/shared/game-shell.js:send'});
