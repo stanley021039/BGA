@@ -1,5 +1,7 @@
 # 部署方式：直接連線與 Cloudflare 網域
 
+部署／資料操作前先按[最小權限與重構回退手冊](OPERATIONS-RECOVERY.md)核對授權、writer 停止、一致性備份與恢復驗收；歷史部署紀錄不代表目前設定已生效。
+
 Afterhours 需要 Node.js **22.13 或更新版**，Windows 與 Linux 使用同一份程式碼。以下兩種模式都可運作；選擇一種作為正式入口，再依作業系統設定。現行正式服務是 **Linux + Cloudflare**，實際路徑及服務名稱見 [Linux 實際部署紀錄](LINUX-DEPLOYMENT.md)。
 
 | 模式 | 網址 | `HOST` | `PUBLIC_URL` | 適用情況 |
