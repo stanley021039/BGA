@@ -3,7 +3,7 @@ const {HttpError}=require('../http/errors');
 const {acquireLegacyHistoryLock}=require('../data/locks');
 const clone=x=>JSON.parse(JSON.stringify(x,(key,value)=>['secret','lastSeen'].includes(key)||typeof value==='function'?undefined:value));
 const snapshot=room=>clone(room);
-const finished=r=>['thunder','majority','gift','draw'].includes(r.type)?r.phase==='finished':r.phase==='showdown';
+const finished=r=>['thunder','majority','gift','draw','trpg'].includes(r.type)?r.phase==='finished':r.phase==='showdown';
 const UUID=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i,MiB=1024*1024;
 const DEFAULT_LIMITS=Object.freeze({maxRowBytes:3*MiB,maxResultBytes:512*1024,maxTraceBytes:256*1024,maxSessionBytes:2*MiB,maxMatchBytes:64*MiB,maxTotalBytes:512*MiB,maxArchives:1000,maxFiles:2200,retentionDays:30});
 const MAX_IMPORTED_SESSION_HEADER_BYTES=16*1024;
@@ -28,7 +28,7 @@ function importedSessionHeader(file){
   const allowed=new Set(['kind','schema','at','type','room','continuationOf','initial']);
   return header&&typeof header==='object'&&!Array.isArray(header)&&header.kind==='session'&&header.schema===1&&
    Object.keys(header).every(key=>allowed.has(key))&&typeof header.at==='string'&&Number.isFinite(Date.parse(header.at))&&
-   ['poker','thunder','majority','gift','draw'].includes(header.type)&&typeof header.room==='string'&&/^[a-f0-9]{6}$/i.test(header.room)&&
+   ['poker','thunder','majority','gift','draw','trpg'].includes(header.type)&&typeof header.room==='string'&&/^[a-f0-9]{6}$/i.test(header.room)&&
    (header.continuationOf===undefined||UUID.test(header.continuationOf))&&
    (header.initial===undefined||(header.initial&&typeof header.initial==='object'&&!Array.isArray(header.initial)));
  }finally{fs.closeSync(fd);}
@@ -104,7 +104,7 @@ class HistoryStore{
   const seq=ctx.seq+1,before=snapshot(room),intent=this.encode({kind:'intent',seq,at:new Date().toISOString(),operation:clone(operation),before});
   const reserve=Buffer.byteLength(intent)+this.limits.maxResultBytes+16*1024;let m=ctx.current,id=m?.id||ctx.session,header=null;
   if(operation.action==='start'&&['waiting','finished','showdown'].includes(room.phase)){
-   id=crypto.randomUUID();const type=room.type||'poker',source=fs.readFileSync(path.join(__dirname,'..','games',type==='majority'?'majority.js':type==='thunder'?'thunder.js':type==='gift'?'gift.js':type==='draw'?'draw-guess.js':'poker.js'),'utf8');
+   id=crypto.randomUUID();const type=room.type||'poker',source=fs.readFileSync(path.join(__dirname,'..','games',type==='trpg'?'trpg.js':type==='majority'?'majority.js':type==='thunder'?'thunder.js':type==='gift'?'gift.js':type==='draw'?'draw-guess.js':'poker.js'),'utf8');
    m={id,type,room:room.code,name:room.name,startedAt:new Date().toISOString(),status:'playing',players:room.players.map(p=>p.name),count:0};
    header=this.encode({kind:'header',schema:1,id,session:ctx.session,meta:m,initial:before,engine:{sha256:crypto.createHash('sha256').update(source).digest('hex'),source,...(type==='majority'?{questionBank:fs.readFileSync(path.join(__dirname,'..','games','majority-questions.js'),'utf8')}:type==='gift'?{giftCatalog:fs.readFileSync(path.join(__dirname,'..','games','gift-catalog.js'),'utf8')}:{})},setup:this.readRows(ctx.session)});
   }

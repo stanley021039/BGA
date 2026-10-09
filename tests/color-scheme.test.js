@@ -11,7 +11,7 @@ function fixture({dark=false,saved,blocked=false,noMedia=false}={}){
 test('appearance follows system by default, reacts live and boots before styles on every themed page',()=>{
  const f=fixture({dark:true});assert.equal(f.document.documentElement.dataset.colorScheme,'dark');f.system(false);assert.equal(f.api.get().scheme,'light');
  const directory=path.join(__dirname,'../public'),pages=fs.readdirSync(directory).filter(name=>name.endsWith('.html')).map(name=>({name,html:fs.readFileSync(path.join(directory,name),'utf8')})).filter(page=>page.html.includes('data-visual-theme="playful"'));
- assert.equal(pages.length,21);for(const {name,html}of pages){assert.equal((html.match(/src="\/shared\/color-scheme.js"/g)||[]).length,1,name);assert.ok(html.indexOf('/shared/color-scheme.js')<html.indexOf('rel="stylesheet"'),name);}
+ assert.equal(pages.length,22);for(const {name,html}of pages){assert.equal((html.match(/src="\/shared\/color-scheme.js"/g)||[]).length,1,name);assert.ok(html.indexOf('/shared/color-scheme.js')<html.indexOf('rel="stylesheet"'),name);}
 });
 test('manual toggle overrides system, survives reload and can restore following the system',()=>{
  const f=fixture({dark:true});f.api.toggle();assert.equal(f.api.get().preference,'light');assert.equal(f.storage.get('ah-color-scheme'),'light');f.system(true);assert.equal(f.api.get().scheme,'light');
