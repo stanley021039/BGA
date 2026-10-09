@@ -1,14 +1,14 @@
 window.RoomReconnect={
  forget(code){
-  for(const key of ['ah-draw','ah-gift','ah-majority','ah-thunder','ah-session']){
+  for(const key of ['ah-trpg','ah-draw','ah-gift','ah-majority','ah-thunder','ah-session']){
    localStorage.removeItem(key+':'+code);
    try{if(JSON.parse(localStorage.getItem(key)||'null')?.code===code)localStorage.removeItem(key);}catch{localStorage.removeItem(key);}
   }
  },
  async restore(code,type,statusSelector,{signal}={}){
   const status=document.querySelector(statusSelector);
-  const key=type==='draw'?'ah-draw':type==='majority'?'ah-majority':type==='thunder'?'ah-thunder':type==='gift'?'ah-gift':'ah-session';
-  const path=type==='draw'?'/draw/':type==='majority'?'/majority/':type==='thunder'?'/race/':type==='gift'?'/gift/':'/poker/';
+  const key=type==='trpg'?'ah-trpg':type==='draw'?'ah-draw':type==='majority'?'ah-majority':type==='thunder'?'ah-thunder':type==='gift'?'ah-gift':'ah-session';
+  const path=type==='trpg'?'/trpg/':type==='draw'?'/draw/':type==='majority'?'/majority/':type==='thunder'?'/race/':type==='gift'?'/gift/':'/poker/';
   for(;;){
    try{
     signal?.throwIfAborted();
@@ -23,7 +23,7 @@ window.RoomReconnect={
      }
      throw Error(result.error||'無法重新連線');
     }
-    if(result.type!==type){location.replace((result.type==='draw'?'/draw/':result.type==='majority'?'/majority/':result.type==='thunder'?'/race/':result.type==='gift'?'/gift/':'/poker/')+code);return null;}
+    if(result.type!==type){location.replace((result.type==='trpg'?'/trpg/':result.type==='draw'?'/draw/':result.type==='majority'?'/majority/':result.type==='thunder'?'/race/':result.type==='gift'?'/gift/':'/poker/')+code);return null;}
     localStorage.setItem(key,JSON.stringify(result));
     localStorage.setItem(key+':'+code,JSON.stringify(result));
     if(status)status.textContent='已重新連線，恢復原座位';

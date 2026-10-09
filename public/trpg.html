@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+ <script src="/shared/color-scheme.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <title>霧港跑團｜Afterhours</title>
+ <link rel="stylesheet" href="/shared/ui-foundation.css"><link rel="stylesheet" href="/shared/site-header.css"><link rel="stylesheet" href="/shared/playful-theme.css"><link rel="stylesheet" href="/shared/barrage-frames.css"><link rel="stylesheet" href="/trpg.css">
+</head>
+<body data-visual-theme="playful" data-game-kind="trpg">
+ <div class="adventure-shell">
+  <header class="site-header" data-site-header aria-label="網站導覽"><nav class="site-links" aria-label="主要導覽" hidden><a href="/community?tab=issues">留言板</a><details><summary>遊戲題庫</summary><div class="site-submenu"><a href="/community?tab=questions">同頻俱樂部</a><a href="/gifts">送禮達人</a></div></details><a href="/history">對局歷史</a></nav><a class="site-title" href="/">302捉猶團</a><div class="site-account" hidden><button id="site-account-button" class="site-avatar-button" type="button" aria-label="帳號選單" aria-expanded="false" aria-controls="site-account-menu"><img id="site-avatar" alt="我的頭像"></button><span id="site-account-id" class="site-account-id" aria-hidden="true"></span><div id="site-account-menu" class="site-account-menu" hidden><a href="/settings">形象設定</a><a href="/collection">收藏庫</a><a href="/achievements">成就收藏冊</a><button id="site-logout" type="button">登出</button></div></div><p id="site-header-error" role="status"></p></header>
+  <div class="adventure-heading"><div><p class="eyebrow">合作冒險 · 1–6 人 · 六幕短篇</p><h1>霧港鐘聲</h1><p>帶著彼此的故事，在黎明前找回失落的鐘聲。</p></div><div class="room-tools"><span id="roomTag"></span><button id="copyInvite" type="button" hidden>複製邀請連結</button><button id="leave" type="button" hidden>離開房間</button></div></div>
+  <p class="mode-note">初版使用規則主持，不連接 AI、不消耗 token。行動描述供隊友閱讀，不會由模型判定。</p>
+  <p id="connection" role="status">正在載入…</p><p id="feedback" role="status"></p><button id="retry" type="button" hidden>重試剛才的操作</button>
+  <details id="guide"><summary>一分鐘學會跑團</summary><ol><li>開局前選角色。每幕換一位領隊，領隊選擇解法；其他人協助或整備，也可寫一句角色行動。</li><li>觀察花 1 補給、難度 6；交涉難度 7；冒險難度 8，成功多得 1 線索。符合角色專長 +2。</li><li>最多兩位隊友各花 1 專注提供 +1，按入座順序取前兩位；多出的協助者不扣專注。整備恢復 1 專注，上限 3；領隊若整備，本幕不使用專長加成。</li><li>骰子由伺服器擲。總值達難度為成功；差 1–2 為付出代價仍推進；更低則受挫仍推進。沒有玩家淘汰，所有結果都能回看。</li><li>六幕結束時，線索至少 5、危機不超過 7，就找回鐘聲。沒有倒數催促；離線隊友可由房主確認休息，離線領隊可移除並交棒。</li></ol><p>1 人也能試玩，可在等待房加入「測試夥伴」。這是規則腳本電腦，不是 AI KP。冒險房間在伺服器重啟後不恢復；已記錄的歷史可回看。</p><a href="/?game=trpg">回大廳開一桌 →</a></details>
+  <main id="game" hidden>
+   <section class="team-panel" aria-labelledby="teamHeading"><h2 id="teamHeading">這桌的冒險者</h2><div id="players"></div><p id="readiness"></p></section>
+   <div class="adventure-layout">
+    <section class="story-panel"><div class="story-top"><span id="sceneLabel" class="eyebrow"></span><span id="phase"></span></div><div class="route-map" aria-label="冒險路線"><span>⚓ 渡口與市場</span><i aria-hidden="true">→</i><span>⚙ 鐘匠與潮階</span><i aria-hidden="true">→</i><span>🔔 燈塔鐘室</span></div><h2 id="sceneTitle"></h2><p id="sceneText" class="story-text"></p><div id="resources" class="resources"></div><section id="latest" aria-label="本幕結果"></section></section>
+    <section class="action-panel" aria-labelledby="actionsHeading"><h2 id="actionsHeading">你的選擇</h2><p id="turnHint"></p><div id="controls"></div></section>
+   </div>
+   <section class="journal-panel"><h2>旅途手記</h2><p>已公開的結果與每位隊友的行動描述，換幕後仍保留。</p><div id="journal"></div></section>
+  </main>
+ </div>
+ <script src="/shared/ui-components.js"></script><script src="/shared/barrage-frames.js"></script><script src="/shared/audio-settings.js"></script><script src="/shared/api.js"></script><script src="/shared/room-reconnect.js"></script><script src="/trpg.js"></script><script src="/shared/site-header.js"></script>
+</body></html>

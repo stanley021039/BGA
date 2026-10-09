@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-09 #59：使用者選擇免 token 初版；v1.24.0 候選霧港跑團已實作，Windows Node22 全套 1,932/1,932，隔離瀏覽器走完六幕與歷史。真人樂趣、手機／觸控及完整可及性待驗，未合併／部署；現況與限制見 [本批驗收](../TRPG-FIRST-EDITION-PROGRESS.md)、[設計](../specs/TRPG-FIRST-EDITION.md)。本筆僅更新 #59，不改前批發布紀錄。
+
 2026-10-09 驗收增量（base 2a5a197、受驗 head d610186）：Draft PR #82 已建立，CI run 37879539800 的 Linux／Windows Node22 jobs 均 success；本地 app/runtime/controller focused 41/41。內建瀏覽器完成有限兩席畫猜同步／倒數／返回及賽跑擲骰／三步移動鎖／返回／教學切章重試。手機 viewport 設定未生效，仍1280×720，不能算手機驗收；Chrome fallback 因工具無法可靠辨識網址而中止。使用者明確回覆沒有觸控設備，真實觸控與旋轉先記待驗，未豁免門檻。詳細矩陣見 [本地驗收](../refactors/BATCH-70-79-LOCAL-ACCEPTANCE.md)。本筆取代先前「沒有PR／CI／真瀏覽器操作」現況；完整UI矩陣與最終兩輪審查仍未完成，保持Draft／HOLD。
 
 2026-10-09 本地接手：bundle SHA256、完整歷史、HEAD f5080e4904d004affd78ac9fd5aa53c5682dae2f、tree 4742535214385d144ed680c8a28703f3875a4773 與 base 2a5a197094c254d4a16cdec682d441af31692c76 已核對。遠端 main 仍等於此 base。使用者授權匯入、設定及推送新分支 codex/refactor-70-79-20261009。Windows 隔離 Node 22.23.3／npm 10.9.9 原生 networkInterfaces 正常，npm test 1916/1916、fail/skip/cancel 0、exit 0；npm ci、patch release check、教學來源及 diff check 通過。Node 26.2.0／npm 11.13.0 診斷全套 1915/1916、exit 1，schema 3 restore 測試 HTTP fetch 遇 bad port；根因未確認，不視為通過。測試僅用合成／隔離資料。本輪未執行真瀏覽器矩陣、遠端 CI、PR、tag、main 合併或部署；HOLD 保留，Node22 通過不取代 UI 驗收。

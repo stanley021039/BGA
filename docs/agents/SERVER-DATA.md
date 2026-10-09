@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-09 #59 候選 v1.24.0：新增 trpg finished 歷史判定、匯入類型白名單與引擎 source archive；schema 19／格式不變。HTTP fixture 驗完整六幕終局歷史，snapshot 沿用去 secret／lastSeen，收據為不可列舉欄位；房間仍在記憶體，重啟不保證續局。全套 Windows 1,932；[範圍證據](../TRPG-FIRST-EDITION-PROGRESS.md)。只隔離合成資料，未操作正式資料／部署。
+
 2026-10-08 Issue #63：候選 1.22.0 大廳／本桌聊天室，基於 main dae903e；記憶體 50 則、每次讀寫驗證席位、無 schema／永久保存。仍 Draft 未部署，整合與驗證限制見 [聊天室規格](../specs/LOBBY-TABLE-CHAT.md) 及 PR 證據；不取代既有正式部署紀錄。
 
 2026-10-08 再次檢查PR53／57：修正混合AI全員同組的majority-one-channel，授獎至少3真人且AI不授。完整Linux53 1725／57 1742通過，固定source、修改前2失敗→修正後通過與兩回合審查見 [本輪](../PR-RECHECK-ALL-SAME.md)。未部署，舊收據不回写。
