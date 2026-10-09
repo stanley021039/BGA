@@ -104,3 +104,19 @@ test('close waits for an in-flight request before clearing its room state and da
  });
  const result=await response;assert.equal(result.status,200);assert.match(result.body.code,/^[A-F0-9]{6}$/);await f.app.close();
 });
+test('simultaneous apps isolate rooms and sessions and closing one leaves the other usable',async t=>{
+ const {appFixture}=require('./helpers/app-fixture.cjs'),{createAuth}=require('../src/auth');
+ const apps=[];
+ for(let i=0;i<2;i++){
+  const f=await appFixture(t,{seed:db=>createAuth(db).bootstrap('isolated_owner','runtime-test-password')});
+  const login=await fetch(f.base+'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'isolated_owner',password:'runtime-test-password'})});
+  assert.equal(login.status,200);f.headers={Cookie:login.headers.get('set-cookie').split(';')[0],'Content-Type':'application/json'};
+  const response=await fetch(f.base+'/api/create',{method:'POST',headers:f.headers,body:JSON.stringify({type:'poker',name:'isolated '+i})});
+  assert.equal(response.status,200);f.code=(await response.json()).code;apps.push(f);
+ }
+ const [a,b]=apps;
+ assert.equal((await fetch(b.base+'/api/state?code='+a.code,{headers:b.headers})).status,404);
+ assert.equal((await fetch(b.base+'/api/state?code='+b.code,{headers:a.headers})).status,401);
+ await a.app.close();const state=await fetch(b.base+'/api/state?code='+b.code,{headers:b.headers});
+ assert.equal(state.status,200);assert.equal((await state.json()).code,b.code);
+});
