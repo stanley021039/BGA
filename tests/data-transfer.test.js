@@ -637,6 +637,67 @@ test('partial publication keeps a blocking marker; disk-space failure cleans sta
   assert.equal(fs.existsSync(path.join(f.root,'disk-full')),false);assert.equal(fs.readdirSync(f.root).some(n=>n.startsWith('.afterhours-transfer-')),false);
 });
 
+test('receipt write failure after all four moves preserves the failed generation fences and source', async t => {
+  const f = await fixture(t, { sounds: true });
+  await run(f.exportRequest);
+  const sourceDigests = () => {
+    const checked = validateData(f.source);
+    return checked.files.map(file => [file.logical, crypto.createHash('sha256').update(fs.readFileSync(file.source)).digest('hex')]);
+  };
+  const before = validateData(f.source).summary, beforeDigests = sourceDigests();
+  const sourceIdentityFile = path.join(path.dirname(f.source.dbFile), '.app.sqlite.data-instance.json');
+  const sourceIdentity = fs.readFileSync(sourceIdentityFile);
+  const marker = path.join(f.destinationDir, '.afterhours-restore-in-progress');
+  const fence = path.join(f.root, '.restored.afterhours-publish-lock');
+  const receipt = path.join(f.destinationDir, 'restore-receipt.json');
+  const moved = [], rename = fs.renameSync, write = fs.writeFileSync;
+  let injected = false;
+  fs.renameSync = (from, to) => {
+    const result = rename(from, to);
+    if (path.dirname(to) === f.destinationDir) moved.push(path.basename(to));
+    return result;
+  };
+  fs.writeFileSync = (file, ...args) => {
+    if (file === receipt) {
+      injected = true;
+      const error = Error('synthetic receipt disk-full failure'); error.code = 'ENOSPC'; throw error;
+    }
+    return write(file, ...args);
+  };
+  try { await assert.rejects(run({ ...restoreRequest(f), apply: true }), errorCode('PARTIAL_RESTORE')); }
+  finally { fs.renameSync = rename; fs.writeFileSync = write; }
+  assert.equal(injected, true);
+  assert.deepEqual(moved, ['db', 'history', 'community', 'music']);
+  for (const name of moved) assert.ok(fs.statSync(path.join(f.destinationDir, name)).isDirectory());
+  assert.equal(fs.existsSync(receipt), false);
+  assert.equal(fs.existsSync(marker), true); assert.equal(fs.existsSync(fence), true);
+  const markerBytes = fs.readFileSync(marker), fenceBytes = fs.readFileSync(fence);
+  const failedConfig = { ...settings({
+    DB_FILE: path.join(f.destinationDir, 'db', 'afterhours.sqlite'), HISTORY_DIR: path.join(f.destinationDir, 'history'),
+    COMMUNITY_DIR: path.join(f.destinationDir, 'community'), MUSIC_DIR: path.join(f.destinationDir, 'music'),
+    EXTERNAL_SIDE_EFFECTS_ENABLED: 'false',
+  }), host: '127.0.0.1', port: 0 };
+  assert.throws(() => createApp(failedConfig), errorCode('RESTORE_IN_PROGRESS'));
+  assert.deepEqual(validateData(f.source).summary, before);
+  assert.deepEqual(fs.readFileSync(sourceIdentityFile), sourceIdentity);
+  assert.deepEqual(sourceDigests(), beforeDigests);
+  assert.equal(fs.readdirSync(f.root).some(name => name.startsWith('.afterhours-transfer-')), false);
+
+  // A new destination can succeed, but must not clear a different generation's fences.
+  const retryDir = path.join(f.root, 'fresh-retry');
+  const restored = await run({ ...restoreRequest(f), destinationDir: retryDir, apply: true });
+  assert.equal(restored.dryRun, false);
+  assert.equal(fs.existsSync(path.join(retryDir, '.afterhours-restore-in-progress')), false);
+  assert.equal(fs.existsSync(path.join(f.root, '.fresh-retry.afterhours-publish-lock')), false);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(retryDir, 'restore-receipt.json'))).bundleId, restored.bundleId);
+  assert.deepEqual(fs.readFileSync(marker), markerBytes); assert.deepEqual(fs.readFileSync(fence), fenceBytes);
+  assert.throws(() => createApp(failedConfig), errorCode('RESTORE_IN_PROGRESS'));
+  assert.deepEqual(validateData(f.source).summary, before);
+  assert.deepEqual(fs.readFileSync(sourceIdentityFile), sourceIdentity);
+  assert.deepEqual(sourceDigests(), beforeDigests);
+  assert.equal(fs.readdirSync(f.root).some(name => name.startsWith('.afterhours-transfer-')), false);
+});
+
 test('a new server cannot start during the gap before the restore marker is installed', async t => {
   const f=await fixture(t,{minimal:true});await run(f.exportRequest);
   const mkdir=fs.mkdirSync;let blocked=false;

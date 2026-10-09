@@ -75,7 +75,9 @@ scheduler 的遊戲自動動作經 history transaction，先檢查 recorder paus
 
 尚未在這些邊界實作：跨程序 persistent achievement outbox、以 restore 復活記憶體房間、通用 game adapter；本票不把它們包裝成已完成。此處也不由 #53 推論永久勝場或其他 UI backlog 完成，更不推論目前部署狀態。[APP] [TRANSFER] [ACH-STORE]
 
-## #78 最小 test-first 切片（提案，尚未實作）
+## #78 最小 test-first 切片（原提案）
+
+2026-10-09 更新：下列窄切片已有本地測試候選；實際範圍、相依、故障注入與驗證限制見 [#78 測試證據](GAME-DATA-CONTRACT-TESTS.md)。下文保留原規劃，不代表其他候選接線或發布驗收已完成。
 
 現有測試已廣泛覆蓋各 engine view、legacy schema、future schema、FK/identity/BLOB、鎖與部分發布失敗。不要複製整套測試。選以下兩個窄缺口：
 
