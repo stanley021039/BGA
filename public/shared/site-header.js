@@ -63,7 +63,7 @@
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshIdentity();});refreshIdentity();
  header.querySelector('#site-logout').onclick=async()=>{
   const logout=header.querySelector('#site-logout');logout.disabled=true;
-  try{const r=await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!r.ok)throw Error('登出失敗，請再試一次');window.SharedChat?.logout();try{localStorage.setItem('ah-chat-logout',String(Date.now()));}catch{}try{for(const key of Object.keys(localStorage))if(/^ah-(telephone|trpg|session|thunder|majority|gift|draw)(:|$)/.test(key))localStorage.removeItem(key);}catch{}location.href='/login';}
+  try{const r=await fetch('/api/auth/logout',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!r.ok)throw Error('登出失敗，請再試一次');window.SharedChat?.logout();try{localStorage.setItem('ah-chat-logout',String(Date.now()));}catch{}try{for(const key of Object.keys(localStorage))if(/^ah-(musicquiz|minimal|telephone|trpg|session|thunder|majority|gift|draw)(:|$)/.test(key))localStorage.removeItem(key);}catch{}location.href='/login';}
   catch(error){header.querySelector('#site-header-error').textContent=error.message;logout.disabled=false;}
  };
 })();

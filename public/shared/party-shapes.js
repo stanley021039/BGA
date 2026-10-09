@@ -1,0 +1,1 @@
+window.PartyShapes={toStrokes(shapes){return (shapes||[]).map(s=>({tool:s.kind==='circle'?'ellipse':'line',color:'#222222',size:4,points:s.kind==='circle'?[[s.cx-s.r,s.cy-s.r],[s.cx+s.r,s.cy+s.r]]:[[s.x1,s.y1],[s.x2,s.y2]]}));}};
