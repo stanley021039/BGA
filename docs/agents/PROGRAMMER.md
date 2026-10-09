@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-09 本地接手：bundle SHA256、完整歷史、HEAD f5080e4904d004affd78ac9fd5aa53c5682dae2f、tree 4742535214385d144ed680c8a28703f3875a4773 與 base 2a5a197094c254d4a16cdec682d441af31692c76 已核對。遠端 main 仍等於此 base。使用者授權匯入、設定及推送新分支 codex/refactor-70-79-20261009。Windows 隔離 Node 22.23.3／npm 10.9.9 原生 networkInterfaces 正常，npm test 1916/1916、fail/skip/cancel 0、exit 0；npm ci、patch release check、教學來源及 diff check 通過。Node 26.2.0／npm 11.13.0 診斷全套 1915/1916、exit 1，schema 3 restore 測試 HTTP fetch 遇 bad port；根因未確認，不視為通過。測試僅用合成／隔離資料。本輪未執行真瀏覽器矩陣、遠端 CI、PR、tag、main 合併或部署；HOLD 保留，Node22 通過不取代 UI 驗收。
+
 2026-10-09 測試整理候選（Issue #70／parent #56）：首批 character-sound-http、room-media-http、market-images-http 改用 [共用隔離 fixture](../../tests/helpers/README.md)，專屬資料與遊戲 assertions 保留。新 helper 在 seed／listen 前登記清理、關閉 setup DB，失敗即清理；close 拒絕時保留資料並報錯。沒有 runtime／schema／版號／CI 或 main 保護設定變更；其他 fixture、subprocess／global-env 通用管理仍未遷移。驗證與 PR 狀態以 Issue #70 連結的實際檢查為準，不代表已合併／部署。
 2026-10-09 Issue #72 本地候選：RoomApi 委派共用 requestJson，保留 HTTP status／code／details 與取消語意；只遷移此邊界、不改 draw／race controller、不增加寫入重試。契約與範圍見 [shared requestJson](../SHARED-REQUEST-JSON.md)。尚未推送、合併或部署；完整驗證仍受基線 `/api/info` 的執行環境限制，不可從 focused 通過推定可發佈。
 

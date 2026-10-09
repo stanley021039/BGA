@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-09 本地接手：bundle SHA256、完整歷史、HEAD f5080e4904d004affd78ac9fd5aa53c5682dae2f、tree 4742535214385d144ed680c8a28703f3875a4773 與 base 2a5a197094c254d4a16cdec682d441af31692c76 已核對。遠端 main 仍等於此 base。使用者授權匯入、設定及推送新分支 codex/refactor-70-79-20261009。Windows 隔離 Node 22.23.3／npm 10.9.9 原生 networkInterfaces 正常，npm test 1916/1916、fail/skip/cancel 0、exit 0；npm ci、patch release check、教學來源及 diff check 通過。Node 26.2.0／npm 11.13.0 診斷全套 1915/1916、exit 1，schema 3 restore 測試 HTTP fetch 遇 bad port；根因未確認，不視為通過。測試僅用合成／隔離資料。本輪未執行真瀏覽器矩陣、遠端 CI、PR、tag、main 合併或部署；HOLD 保留，Node22 通過不取代 UI 驗收。
+
 2026-10-08最新正式 **v1.16.0／8a9cbfd**：成就收藏分組、13枚徽章與正常回合單位持久化已發布，卡片以高亮區分取得狀態。Windows／Linux各1,518項通過，背景Chrome與三款正式回合驗證、資料保留及限制見 [成就單位進度](../ACHIEVEMENTS-UNIT-PROGRESS.md)。永久勝場、跨程序outbox與畫猜局內合併提示仍待；下方版本摘要屬歷史。
 
 2026-10-08最新正式 **v1.15.1／c1e59d4**：使用者要求先撤回不一致的局部手繪風格，已恢復原大廳及四房標題外觀；保留v1.15彈幕框與既有功能，SVG/credits僅歷史留存。双平台各1,432、公開27資源、原生首頁／四房waiting通過，9帳戶allfields及21non-session表/BLOB保留；詳細source/部署SIGTERM逾時與proxy drain/不可覆寫receipt修正/備份/有限native/own cleanup見 [還原進度](../UI-STYLE-ROLLBACK-PROGRESS.md)。下面手繪與候選狀態屬歷史；後續局部美化须驗整體一致性，不由素材研究直接推定成熟全站方案。沒有新PR/push。

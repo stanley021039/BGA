@@ -67,3 +67,10 @@ Hold all publication. Run the unchanged full suite on a supported environment wi
 ## Independent combined review
 
 A separate reviewer read the official #70–79 requirements, inspected the same base/head range and independently ran 49/49 transport/controller/source/static checks plus 22/22 app/runtime/lobby checks, the strict teaching check and whitespace checks. All 71 tests passed with no skips/cancellations. It found an isolated-#72 sentence that could imply the controllers stayed unchanged in the combined batch; the evidence-only documentation update qualifies that sentence. Final independent conclusion: no confirmed new runtime regression or additional code fix requested. The scope matches local composition, while #75/#76 real-browser acceptance, native full-suite and Windows/final-head CI gates remain unpassed. No production-source edit followed the frozen code head.
+
+
+## 2026-10-09 Windows local handoff verification
+
+2026-10-09 本地接手：bundle SHA256、完整歷史、HEAD f5080e4904d004affd78ac9fd5aa53c5682dae2f、tree 4742535214385d144ed680c8a28703f3875a4773 與 base 2a5a197094c254d4a16cdec682d441af31692c76 已核對。遠端 main 仍等於此 base。使用者授權匯入、設定及推送新分支 codex/refactor-70-79-20261009。Windows 隔離 Node 22.23.3／npm 10.9.9 原生 networkInterfaces 正常，npm test 1916/1916、fail/skip/cancel 0、exit 0；npm ci、patch release check、教學來源及 diff check 通過。Node 26.2.0／npm 11.13.0 診斷全套 1915/1916、exit 1，schema 3 restore 測試 HTTP fetch 遇 bad port；根因未確認，不視為通過。測試僅用合成／隔離資料。本輪未執行真瀏覽器矩陣、遠端 CI、PR、tag、main 合併或部署；HOLD 保留，Node22 通過不取代 UI 驗收。
+
+Commands: `npm ci`; `npm run release:check -- --base 2a5a197094c254d4a16cdec682d441af31692c76 --type patch`; `node tools/check-race-teaching.cjs`; `git diff --check 2a5a197094c254d4a16cdec682d441af31692c76 HEAD`; `npm test` under each stated runtime. Node22 duration 143599 ms, Node26 duration 196983 ms. Logs retained outside the checkout; no raw private logs committed. This update changes evidence only.
