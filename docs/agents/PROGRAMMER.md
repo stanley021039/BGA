@@ -394,3 +394,6 @@ RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三�
 細節、已驗與未驗範圍見 [race controller](../RACE-CONTROLLER.md)。
 原生 browser 無法連 executor loopback，全套仍受既有 api/info 環境問題限制；
 不把 focused／VM 通過視為全部驗收或准許推送，沒有部署／正式資料操作。
+## 2026-10-09 Issue 75 同步 controller（本機候選，未推送）
+
+畫猜同步/取消 ownership 已抽為 DrawController；頁面保留 canonical state、input、renderer、transport/playback 專用責任，沿用 1.23.1。85/85 focused 通過，完整 suite 及原生 acceptance 的實際狀態、固定 code SHA、兩回合審查見 [本切片證據](../DRAW-CONTROLLER-REFACTOR-PROGRESS.md)。dot cloud browser 無法連入隔離 localhost，途中 frame／desktop/mobile/touch/keyboard 不算驗收；不可用 VM raster、OS stub 或跳過失敗替代 required native／完整 suite。沒有新 PR、部署、schema 或正式資料操作。
