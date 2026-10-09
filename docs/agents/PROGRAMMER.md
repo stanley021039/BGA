@@ -1,5 +1,9 @@
 # 程式架構 agent 記憶
 
+## 2026-10-09：#93 共用夜間對比
+
+基線 main4664916：`ui-widgets.css` 選取分頁 fallback 以 `--green` 當填色，playful dark 卻將其映射為淺 ink，文字 fallback 仍白，真 CSS fixture 為1.10:1；欄位錯誤與市場局部錯誤色在暗底也不足4.5。候選修正採成對 widget tokens，特別校正市場／素材庫局部 override，裸按鈕以零 specificity 主題 scope 補成對配色；分頁只有邊線過渡，背景／字同步切換。`ui-content-card`／紙卡 modifier 明確區別 theme surface 與固定淺紙，電話畫猜結果已採用，沒有改 renderer／SSE。21樣本日夜與390px fixture已驗，不代表全頁遊玩；他人本機 bluff 尚未在 main，仍需讀 source、採用契約並實際驗證。詳 [契約與限制](../specs/SHARED-THEME-CONTRAST.md)，尚未合併／部署。
+
 2026-10-09 #87/#88候選：Draw ending整數驗證、after-reveal達標、跨圈及64題上限，recent結果限8，legacy未帶設定維持原流程。TableMedia主X只縮小video，不改playerEpoch／videoWanted；小窗X才退出，同意／paused／視窗可見性／清理不放寬。新八regression、完整1,975；[原生scope與已知限制](../ROOM-CONTROLS-87-88-PROGRESS.md)。未改renderer／SSE，未部署；#86已合main，前述候選狀態為歷史。
 
 2026-10-09 #81／#83：新 PartyRoom 共用入座／epoch／128 指紋收據，不重構舊引擎。MusicQuiz 音訊檢查登入／席位／当前輪，無曲名 URL／未揭曉答案；Minimal 僅可信幾何座標、server deadline 与計數，沿用 StrokeCanvas 原子呈現。client scope 取消／草稿／不可變重試 payload／音訊 binding cleanup 有 fixture 驗證；Windows 1,967 與 UI 範圍見 [進度](../PARTY-GAMES-81-83-PROGRESS.md)。開始、開發途中、測試前與推送／交付前 fetch main；更新時先對差異再整合，不覆寫別人 worktree。
