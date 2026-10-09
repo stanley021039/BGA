@@ -374,3 +374,12 @@ Four lobby handlers now have explicit app-local dependencies in `src/http/lobby-
 ## 2026-10-09：遊戲與資料契約盤點（#77，文件）
 
 固定程式基線 `2a5a197094c254d4a16cdec682d441af31692c76` 的 [契約矩陣](../GAME-DATA-CONTRACTS.md) 區分現有行為、已存在 coverage 與 #78 最小測試提案。保留 explicit game dispatch；schema19 的歷史 feature-shape 分支、restore 新代 fence 及同程序 achievement retry 已有實作，不代表跨程序 outbox 或記憶體房間續玩。#53 已是基線祖先，不沿用歷史 Draft 狀態。這次不改 runtime/schema/backup 格式、不升版；app 接線於 #73/#74 整合後須重新核對。操作復原程序另由 [#79](https://github.com/stanley021039/BGA/issues/79) 整理，不能把契約盤點當正式移轉驗收。
+## 2026-10-09: Room runtime local candidate (#74)
+
+Per-app room/seat/reconnect/stream registries and scheduler ownership now have a
+small `src/rooms/runtime.js` boundary. Concurrent close/startup failure cleanup
+is covered by local regression tests; this is an unpublished candidate stacked
+on #70/#73, not deployed functionality. Ownership, release order, dependencies,
+validation limits and rollback are in [Room runtime](../refactors/ROOM-RUNTIME.md)
+and its review record. Game engines, AI, lobby handlers and routes retain their
+existing responsibilities.

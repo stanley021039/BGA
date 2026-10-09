@@ -13,10 +13,10 @@ const {MarketAutomation}=require('./market/automation');
 const {createOfficialProvider}=require('./market/official-provider');
 const {MarketImageStore}=require('./market/images');
 const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
-const {startRoomScheduler}=require('./rooms/scheduler');
+const {createRoomRuntime}=require('./rooms/runtime');
 const {botSupport,addTestBot}=require('./ai');
 const {reconnectPlayer}=require('./rooms/reconnect');
-const {leavePlayer,expireEmptyRooms,endRoomHistory}=require('./rooms/lifecycle');
+const {leavePlayer,endRoomHistory}=require('./rooms/lifecycle');
 const {listRooms}=require('./rooms/listing');
 const {rejoinPlayer}=require('./rooms/membership');
 const {createLobby}=require('./rooms/lobby');
@@ -35,8 +35,7 @@ const {USER_IMAGE_PATH,USER_SOUND_PATH,createCharacterMediaAccess}=require('./pr
 const {ArtworkStore}=require('./artworks/store');
 const {MusicStore,MAX_BYTES}=require('./music/store');
 const {RoomMusic}=require('./music/room');
-const {RoomWatchRegistry}=require('./watch/room');
-const {RoomMediaRegistry,fallbackTitle}=require('./media/room');
+const {fallbackTitle}=require('./media/room');
 const {createYoutubeTitleResolver}=require('./media/youtube-title');
 const {roomRole,canKick,setRoomRole,pruneRoomRoles,permissionsView}=require('./rooms/permissions');
 const {getProfileSettings,setProfileSettings,avatarContent,preserveAvatar}=require('./profiles/settings');
@@ -47,18 +46,22 @@ const {acquireDataLocks}=require('./data/locks');
 const {version:applicationVersion}=require('../package.json');
 function createApp(config){
  const lock=acquireDataLocks(config);
- try{return initializeApp(config,lock);}catch(error){lock.release();throw error;}
+ const acquired=[()=>lock.release()];
+ try{return initializeApp(config,lock,acquired);}catch(error){
+  const errors=[error];for(const release of acquired.reverse())try{release();}catch(cleanupError){errors.push(cleanupError);}
+  if(errors.length>1)throw new AggregateError(errors,'Application initialization failed');throw error;
+ }
 }
-function initializeApp(config,dataLock){
+function initializeApp(config,dataLock,acquired){
  const achievementPurpose=config.achievementPurpose===undefined?'production':config.achievementPurpose;
  if(!['production','test','tutorial'].includes(achievementPurpose))throw Error('Invalid achievement purpose');
- const rooms=new Map(),seats=new Map(),kickedUsers=new Map(),socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),socialRate=new Map(),reconnectGrace=new Map(),drawStreams=new Map(),departedSeats=new Map(),roomRate=new Map();
+ const runtime=createRoomRuntime();acquired.push(()=>runtime.close());
+ const {rooms,seats,kickedUsers,socialEvents,expressionEvents,barrageEvents,reconnectGrace,drawStreams,departedSeats,musicRooms,musicStreams,watchRooms,mediaRooms,cleanupRoom}=runtime;
+ const socialRate=new Map(),roomRate=new Map();
  const chat=createChat({events:socialEvents});
  const publishDraw=(code,kind,payload)=>{for(const entry of drawStreams.get(code)||[])try{entry.res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n');}catch{entry.res.end();}};
- const musicRooms=new Map(),musicStreams=new Map();
- const watchRooms=new RoomWatchRegistry();
- const mediaRooms=new RoomMediaRegistry();
  const youtubeTitles=config.youtubeTitleResolver||createYoutubeTitleResolver({enabled:config.externalSideEffectsEnabled!==false,fetcher:config.youtubeMetadataFetch||fetch});
+ acquired.push(()=>youtubeTitles.clear?.());
  const watchContext=room=>{
   const activeSeats=new Set(seats.get(room.code)?.values()||[]);
   return {hostId:room.host,members:room.players.filter(player=>activeSeats.has(player.id)&&!player.bot&&!player.kicked).map(player=>({id:player.id,name:player.name,lastSeen:player.lastSeen}))};
@@ -84,8 +87,7 @@ function initializeApp(config,dataLock){
  };
  const publishMusic=code=>{const room=rooms.get(code),state=room?musicProjection(room):null;for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
  const lobby=createLobby();
- const cleanupRoom=code=>{seats.delete(code);departedSeats.delete(code);kickedUsers.delete(code);socialEvents.delete(code);expressionEvents.delete(code);barrageEvents.delete(code);for(const entry of drawStreams.get(code)||[])entry.res.end();drawStreams.delete(code);for(const entry of musicStreams.get(code)||[])entry.res.end();musicStreams.delete(code);musicRooms.delete(code);watchRooms.delete(code);mediaRooms.delete(code);for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);};
- const expireRooms=()=>expireEmptyRooms({rooms,history,onDelete:cleanupRoom});
+ const expireRooms=()=>runtime.expireRooms(history);
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
   for(const event of expressions)recent.set(event.playerId,event.image);
@@ -97,10 +99,9 @@ function initializeApp(config,dataLock){
   return {...view,serverNow:now,botSupport:botSupport(room),...(history.warning(room)?{historyWarning:history.warning(room)}:{}),permissions:permissionsView(room,view.me),players:view.players.map(player=>({...player,roomRole:roomRole(room,player.id),...(recent.has(player.id)?{avatar:recent.get(player.id)}:{})})),social,expressions,barrages,media:media.marker(),watch:media.managed?{roomInstanceId:media.roomInstanceId,revision:media.revision,hasVideo:media.current?.type==='video',controllerId:room.host}:watch?watch.summary(watchContext(room)):null};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
- const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});
+ const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});acquired.push(()=>history.close());
  let community,db,auth,board,submissions,giftStore,drawWordStore,achievementStore,artworkStore,musicStore,marketStore,marketImageStore,marketAutomationStore,marketAutomation;
- try{community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);marketAutomationStore=new MarketAutomationStore(db,marketStore,{clock:config.marketClock||Date.now,enabled:config.externalSideEffectsEnabled===true&&config.marketAutomationEnabled!==false});marketAutomation=new MarketAutomation(marketAutomationStore,{clock:config.marketClock||Date.now,provider:config.marketProvider||createOfficialProvider({clock:config.marketClock||Date.now})});marketImageStore=new MarketImageStore(db,config.marketClock||Date.now,{limits:config.marketImageLimits,thumbnailDirectory:config.dbFile+'.market-thumbnails'});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});}
- catch(error){history.close();db?.close();throw error;}
+ community=new CommunityStore(config.communityDir);db=openDatabase(config.dbFile);acquired.push(()=>db.close());auth=createAuth(db,{secureCookies:config.publicUrl?.startsWith('https://')});marketStore=new MarketStore(db,config.marketClock||Date.now);marketAutomationStore=new MarketAutomationStore(db,marketStore,{clock:config.marketClock||Date.now,enabled:config.externalSideEffectsEnabled===true&&config.marketAutomationEnabled!==false});marketAutomation=new MarketAutomation(marketAutomationStore,{clock:config.marketClock||Date.now,provider:config.marketProvider||createOfficialProvider({clock:config.marketClock||Date.now})});marketImageStore=new MarketImageStore(db,config.marketClock||Date.now,{limits:config.marketImageLimits,thumbnailDirectory:config.dbFile+'.market-thumbnails'});board=new BoardStore(db,community.data.issues);giftStore=new GiftStore(db);drawWordStore=new DrawWordStore(db);achievementStore=new AchievementStore(db);artworkStore=new ArtworkStore(db);musicStore=new MusicStore(db,config.musicDir||path.join(path.dirname(config.dbFile),'music'));submissions=new SubmissionService(db,board,config.githubClient||createGitHubClient({token:config.githubToken??process.env.GITHUB_TOKEN,baseUrl:config.githubApiBase??process.env.GITHUB_API_BASE}),{enabled:config.externalSideEffectsEnabled!==false});
  mediaRooms.store=musicStore;
  const characterMedia=createCharacterMediaAccess(db,viewerId=>{
   const audiences=[];
@@ -502,7 +503,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   const entry={res,userId:user.id};subscribers.add(entry);musicStreams.set(room.code,subscribers);
   res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('Cache-Control','no-cache, no-transform');res.setHeader('X-Accel-Buffering','no');res.flushHeaders();
   const sendState=()=>{if(!auth.sessionFrom(req)||kickedUsers.get(room.code)?.has(user.id)||seats.get(room.code)?.get(user.id)!==p.id)return res.end();res.write('event: music\ndata: '+JSON.stringify(musicProjection(room))+'\n\n');};sendState();
-  const timer=setInterval(sendState,10000);timer.unref();req.on('close',()=>{clearInterval(timer);subscribers.delete(entry);if(!subscribers.size)musicStreams.delete(room.code);});return;
+  const timer=setInterval(sendState,10000);timer.unref();runtime.ownStream(musicStreams,room.code,entry,req,timer);return;
  }
  if(url.pathname.startsWith('/api/draw/')){
   if(room.type!=='draw')throw new HttpError(400,'WRONG_GAME','這不是你畫我猜房間');
@@ -515,7 +516,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
    subscribers.add(entry);drawStreams.set(room.code,subscribers);
    res.write('event: ready\ndata: '+JSON.stringify({canvasEpoch:room.canvas.epoch,round:room.round,version:room.canvas.version})+'\n\n');
    const keepAlive=setInterval(()=>res.write(': keepalive\n\n'),25000);keepAlive.unref();
-   req.on('close',()=>{clearInterval(keepAlive);subscribers.delete(entry);if(!subscribers.size)drawStreams.delete(room.code);});return;
+   runtime.ownStream(drawStreams,room.code,entry,req,keepAlive);return;
   }
   if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
   if(url.pathname==='/api/draw/result/ban'){
@@ -610,33 +611,49 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  server.headersTimeout=10000;
  server.requestTimeout=30000;
  server.keepAliveTimeout=5000;
- let stopScheduler,closed=false;
- async function listen(){
-  if(closed)throw Error('Application has been closed');
-  if(server.listening)return server.address();
-  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,config.host,()=>{server.off('error',reject);resolve();});});
-  stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom,onTransition:awardRoomAchievements,onSweep:retryAchievementUnits,onDrawStroke:publishDraw});
-  submissions.recover();
-  marketAutomation.start();
-  marketImageStore.startThumbnails();
-  return server.address();
+ let closed=false,starting=null,listenPromise=null,closePromise=null;
+ function listen(){
+  if(closed)return Promise.reject(Error('Application has been closed'));
+  if(listenPromise)return listenPromise;
+  starting=(async()=>{
+   await new Promise((resolve,reject)=>{server.once('error',reject);try{server.listen(port,config.host,()=>{server.off('error',reject);resolve();});}catch(error){server.off('error',reject);reject(error);}});
+   if(closed)throw Error('Application has been closed');
+   runtime.start({history,onTransition:awardRoomAchievements,onSweep:retryAchievementUnits,onDrawStroke:publishDraw});
+   submissions.recover();
+   marketAutomation.start();
+   marketImageStore.startThumbnails();
+   return server.address();
+  })();
+  // close waits for the raw startup, never for this recovery promise.
+  listenPromise=starting.catch(async error=>{try{await close();}catch(cleanupError){throw new AggregateError([error,cleanupError],'Application startup failed');}throw error;});
+  return listenPromise;
  }
- async function close(){
-  if(closed)return;
+ function close(){
+  if(closePromise)return closePromise;
   closed=true;
-  stopScheduler?.();
-  await marketAutomation.stop();
-  await marketImageStore.stopThumbnails();
-  for(const room of rooms.values())awardRoomAchievements(room);
-  retryAchievementUnits();
-  watchRooms.clear();
-  mediaRooms.clear();youtubeTitles.clear?.();
-  for(const entries of musicStreams.values())for(const entry of entries)entry.res.end();
-  for(const entries of drawStreams.values())for(const entry of entries)entry.res.end();
-  if(server.listening)await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
-  history.close();
-  await Promise.allSettled([...submissions.inFlight.values()]);
-  try{db.close();}finally{dataLock.release();}
+  closePromise=(async()=>{
+   if(starting)await starting.catch(()=>{});
+   const errors=[],attempt=async action=>{try{await action();}catch(error){errors.push(error);}};
+   await attempt(()=>runtime.stop());
+   // Stop admitting requests before draining SSE. In-flight handlers may still
+   // use room state; keep it alive until the HTTP server finishes draining.
+   const serverClosed=server.listening?new Promise(resolve=>server.close(error=>{if(error)errors.push(error);resolve();})):Promise.resolve();
+   await attempt(()=>marketAutomation.stop());
+   await attempt(()=>marketImageStore.stopThumbnails());
+   await attempt(()=>runtime.drainStreams());
+   await serverClosed;
+   for(const room of rooms.values())await attempt(()=>awardRoomAchievements(room));
+   await attempt(()=>retryAchievementUnits());
+   await attempt(()=>runtime.close());
+   await attempt(()=>youtubeTitles.clear?.());
+   await attempt(()=>history.close());
+   await attempt(()=>Promise.allSettled([...submissions.inFlight.values()]));
+   await attempt(()=>db.close());
+   await attempt(()=>dataLock.release());
+   if(errors.length===1)throw errors[0];
+   if(errors.length)throw new AggregateError(errors,'Application cleanup failed');
+  })();
+  return closePromise;
  }
  return {server,listen,close};
 }
