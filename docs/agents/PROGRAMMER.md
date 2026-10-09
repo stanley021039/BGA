@@ -357,3 +357,12 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 ## 2026-10-08：每日官方收盤抓取候選（Issue66，未部署）
 
 每日台北 14:00–16:00 有界時點，成功日持久停止；歷史只補缺漏，有限重試後由管理員處理。firstValidObservedAt 是本系統首次驗證觀察，非官方發布時間。既有 key/value 表新增逐日期 metadata，沒有 table/schema 變更；舊版 validator 不認得新 keys，回退須注意。來源與帳務交易、日曆未知／衝突、前端15秒內部讀取保持。規格、測試及手動修正邊界見 [每日抓取](../specs/MARKET-DAILY-FETCH.md)；最終證據以 PR 為準，不沿用其他版本測試數。
+
+## 2026-10-09：race 教學來源防線（Issue71，本地未發布）
+
+`public/race.html` 的 `TutorialEngine`／`LessonScenarios` 分別完整內嵌
+`src/games/thunder.js`／`src/games/tutorial.js`。新增 check-only 工具與 npm test 回歸，
+只允許 CRLF→LF，wrapper、exports、註解及空白仍嚴格比較；HTML 與 runtime 不改。
+後續章節／timer 教學殼仍手寫，未宣稱完整單一來源，未引入產生器。
+來源邊界與驗證方法見 [race 教學來源](../RACE-TEACHING-SOURCES.md)。
+本地驗證及發布狀態以本切片審查證據為準，不沿用既有 main CI 當新 head 通過。
