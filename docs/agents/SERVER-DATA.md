@@ -166,3 +166,8 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 ## 2026-10-08：每日官方收盤抓取候選（Issue66，未部署）
 
 每日台北 14:00–16:00 有界時點，成功日持久停止；歷史只補缺漏，有限重試後由管理員處理。firstValidObservedAt 是本系統首次驗證觀察，非官方發布時間。既有 key/value 表新增逐日期 metadata，沒有 table/schema 變更；舊版 validator 不認得新 keys，回退須注意。來源與帳務交易、日曆未知／衝突、前端15秒內部讀取保持。規格、測試及手動修正邊界見 [每日抓取](../specs/MARKET-DAILY-FETCH.md)；最終證據以 PR 為準，不沿用其他版本測試數。
+
+
+## 2026-10-09：遊戲與資料契約盤點（#77，文件）
+
+固定程式基線 `2a5a197094c254d4a16cdec682d441af31692c76` 的 [契約矩陣](../GAME-DATA-CONTRACTS.md) 區分現有行為、已存在 coverage 與 #78 最小測試提案。保留 explicit game dispatch；schema19 的歷史 feature-shape 分支、restore 新代 fence 及同程序 achievement retry 已有實作，不代表跨程序 outbox 或記憶體房間續玩。#53 已是基線祖先，不沿用歷史 Draft 狀態。這次不改 runtime/schema/backup 格式、不升版；app 接線於 #73/#74 整合後須重新核對。操作復原程序另由 [#79](https://github.com/stanley021039/BGA/issues/79) 整理，不能把契約盤點當正式移轉驗收。
