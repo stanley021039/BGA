@@ -20,6 +20,7 @@ const {leavePlayer,expireEmptyRooms,endRoomHistory}=require('./rooms/lifecycle')
 const {listRooms}=require('./rooms/listing');
 const {rejoinPlayer}=require('./rooms/membership');
 const {createLobby}=require('./rooms/lobby');
+const {createLobbyHandlers}=require('./http/lobby-routes');
 const {HttpError,writeError}=require('./http/errors');
 const {clientAddress,setSecurityHeaders}=require('./http/security');
 const {openDatabase}=require('./db/index');
@@ -177,6 +178,7 @@ function initializeApp(config,dataLock){
   try{appearance=normalizeAppearance(user.appearance?JSON.parse(user.appearance):defaults);}catch{appearance=defaults;}
   return characterFor(db,user.id,appearance.characterId)||characterFor(db,user.id,defaults.characterId);
  };
+ const lobbyHandlers=createLobbyHandlers({lobby,withLobbyMedia,lobbyCharacter,expressionLabels,characterMedia});
  const port=config.port,protocol='http';
  function limitAuth(req){limitRate(authRate,clientKey(req),20);}
 const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
@@ -278,18 +280,10 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/market'&&req.method==='GET')return send({...marketStore.view(user),...marketAutomationStore.view()});
  if(url.pathname==='/api/market/vote'&&req.method==='POST'){limitRate(accountRate,'market:'+user.id,60);return send(marketStore.vote(user,data));}
  if(['/api/market','/api/market/vote'].includes(url.pathname))throw new HttpError(405,'METHOD_NOT_ALLOWED','此操作不支援此方法');
- if(url.pathname==='/api/lobby'&&req.method==='GET')return send(withLobbyMedia(user,lobby.view(user)));
- if(url.pathname==='/api/lobby/move'&&req.method==='POST')return send(withLobbyMedia(user,lobby.move(user,data)));
- if(url.pathname==='/api/lobby/emotes'&&req.method==='GET'){
-  const character=lobbyCharacter(user);
-  return send({emotes:Object.entries(character.expressions).filter(([key])=>key!=='neutral').map(([expression,image])=>({expression,image,label:character.labels[expression]||expressionLabels[expression]||expression,...(character.sounds?.[expression]?{sound:character.sounds[expression]}:{})}))});
- }
- if(url.pathname==='/api/lobby/emote'&&req.method==='POST'){
-  const character=lobbyCharacter(user),expression=data.expression;
-  if(typeof expression!=='string'||expression==='neutral'||!Object.hasOwn(character.expressions,expression))throw new HttpError(400,'INVALID_EXPRESSION','這個角色沒有該表情');
-  const sound=character.sounds?.[expression];
-  return send(withLobbyMedia(user,lobby.emote(user,{image:characterMedia.broadcastImage(character.expressions[expression]),label:character.labels[expression]||expressionLabels[expression]||expression,...(sound?{sound:{...sound,url:characterMedia.broadcastSound(sound.url)}}:{})})));
- }
+ if(url.pathname==='/api/lobby'&&req.method==='GET')return send(lobbyHandlers.view(user));
+ if(url.pathname==='/api/lobby/move'&&req.method==='POST')return send(lobbyHandlers.move(user,data));
+ if(url.pathname==='/api/lobby/emotes'&&req.method==='GET')return send(lobbyHandlers.emotes(user));
+ if(url.pathname==='/api/lobby/emote'&&req.method==='POST')return send(lobbyHandlers.emote(user,data));
  if(url.pathname==='/api/music'&&req.method==='GET')return send({tracks:musicStore.list(),me:user.id,admin:user.role==='admin'});
  const musicDelete=url.pathname.match(/^\/api\/music\/([a-f0-9-]{36})\/delete$/);
  if(musicDelete&&req.method==='POST'){limitAccount(user);const result=musicStore.remove(user,musicDelete[1]);for(const [code,state]of musicRooms)if(state.track?.id===musicDelete[1]){state.act('stop',{},musicStore);publishMusic(code);}for(const [code,{media}]of mediaRooms.rooms){media.removeTrack(musicDelete[1]);publishMusic(code);}return send(result);}

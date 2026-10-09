@@ -367,3 +367,6 @@ Issue52／51整合，v1.12.0／schema18新增數值預測與整數微分ledger�
 後續章節／timer 教學殼仍手寫，未宣稱完整單一來源，未引入產生器。
 來源邊界與驗證方法見 [race 教學來源](../RACE-TEACHING-SOURCES.md)。
 本地驗證及發布狀態以本切片審查證據為準，不沿用既有 main CI 當新 head 通過。
+## 2026-10-09: local lobby handler extraction (#73)
+
+Four lobby handlers now have explicit app-local dependencies in `src/http/lobby-routes.js`; path/method matching, parsing, login, error serialization and media access callbacks stay in app.js. Route inventory, limits and unextracted groups: [lobby slice](../refactors/LOBBY-ROUTES.md). HTTP characterization uses #70's fixture, including simultaneous app isolation and private image/sound access. This is an unpublished local slice, not merged or deployed; full-suite `/api/info` environment failure remains a release blocker. No RoomRuntime extraction or version/schema change is included.
