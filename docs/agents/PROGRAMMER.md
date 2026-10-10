@@ -1,5 +1,9 @@
 # 程式架構 agent 記憶
 
+2026-10-10 音效秒數補驗：10／30／60 秒真實時間瀏覽器各取得 5→1 原生 playing，320ms、25% 音量、零錯誤／重播；隔離靜音及提前 ready 也通過。56 focused，未改 runtime／重跑全套；取代前筆『無原生 playing 證據』，喇叭主觀聽感仍未驗。詳細 [三種秒數證據](../BLUFF-KING-PROGRESS.md)，沒有 PR／部署／永久偏好更新。
+
+2026-10-10 瞎掰王候選 1.28.0：隨機首位想想、按座位輪替每人一次；最後 5→1 秒重用 320ms turn 音，roundId＋秒數去重，沿用音效偏好、首載／hidden／斷線／BFCache 不補播。50 focused、Windows 完整 2000 通過；原生計分與輪替、0 秒完成，無喇叭聽感／playing 事件結論。測試音效暫開後恢復原偏好。詳 [驗證與限制](../BLUFF-KING-PROGRESS.md)，未發布 PR／部署。
+
 2026-10-09 #87/#88候選：Draw ending整數驗證、after-reveal達標、跨圈及64題上限，recent結果限8，legacy未帶設定維持原流程。TableMedia主X只縮小video，不改playerEpoch／videoWanted；小窗X才退出，同意／paused／視窗可見性／清理不放寬。新八regression、完整1,975；[原生scope與已知限制](../ROOM-CONTROLS-87-88-PROGRESS.md)。未改renderer／SSE，未部署；#86已合main，前述候選狀態為歷史。
 
 2026-10-09 #81／#83：新 PartyRoom 共用入座／epoch／128 指紋收據，不重構舊引擎。MusicQuiz 音訊檢查登入／席位／当前輪，無曲名 URL／未揭曉答案；Minimal 僅可信幾何座標、server deadline 与計數，沿用 StrokeCanvas 原子呈現。client scope 取消／草稿／不可變重試 payload／音訊 binding cleanup 有 fixture 驗證；Windows 1,967 與 UI 範圍見 [進度](../PARTY-GAMES-81-83-PROGRESS.md)。開始、開發途中、測試前與推送／交付前 fetch main；更新時先對差異再整合，不覆寫別人 worktree。
@@ -409,3 +413,17 @@ RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三�
 ## 2026-10-09 Issue 75 同步 controller（本機候選，未推送）
 
 畫猜同步/取消 ownership 已抽為 DrawController；頁面保留 canonical state、input、renderer、transport/playback 專用責任，沿用 1.23.1。85/85 focused 通過，完整 suite 及原生 acceptance 的實際狀態、固定 code SHA、兩回合審查見 [本切片證據](../DRAW-CONTROLLER-REFACTOR-PROGRESS.md)。dot cloud browser 無法連入隔離 localhost，途中 frame／desktop/mobile/touch/keyboard 不算驗收；不可用 VM raster、OS stub 或跳過失敗替代 required native／完整 suite。沒有新 PR、部署、schema 或正式資料操作。
+
+
+2026-10-10 瞎掰王口說版：feat/bluff-king 本機候選 1.28.0，基線 main 4664916；60 題（冷知識 30、迷因 15、文學 15），開桌前可選看身分 10／30／60 秒。到期自動口說並隱去私人角色／答案，AI 只保存自己的卡片記憶。Windows 1991 全通過、Chromium 實驗 10 秒到期／重載／新輪倒數；真人語音、實體觸控、Linux 未驗，未發 PR／部署。取代上輪 1.27.0／15 題／1979 數字；接手讀 [本輪證據](../BLUFF-KING-PROGRESS.md) 與 [規格](../specs/BLUFF-KING.md)。
+
+2026-10-10 秒數可見性追加：瞎掰王大字 sticky 倒數、口說保留 0 秒；CAB7B6 原生頁面確認捲動仍可見，31 項相關測試通過。準備倒數計算沿用前輪，未操作使用者回合；詳 [本輪證據](../BLUFF-KING-PROGRESS.md)。維持未發行 1.28.0。
+
+2026-10-10 主頁圖片：五款新遊戲原創 SVG 與共用圖片卡片，現在11款全有圖；精確圖片路徑／輪播相關6項通過，桌機亮色與390px深色驗證，未發布。接手見 [主頁圖片證據](../GAME-CARD-ART-PROGRESS.md)。
+
+
+## 2026-10-10 PR 發布前最終驗證
+
+候選版 1.28.0；完整 node --test tests/*.test.js：2006/2006 通過，fail/cancel/skip 0，93923ms。這筆更新取代上一輪未重跑完整 2006 的驗證限制。另有倒數音效 focused 56/56，以及 Chromium 原生播放五項案例通過；仍未驗證喇叭／耳機主觀聽感、Safari、真人跨裝置語音與弱網。完整記錄保留於 ignored work/bluff-pr-final-tests.log；原生證據沿用 work/bluff-preview/sound-qa/results.json。
+
+目標 stanley021039/BGA，feat/bluff-king → main；本機準備提交供發布確認，尚未推送、建立 PR、合併或部署。

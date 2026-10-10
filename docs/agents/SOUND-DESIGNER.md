@@ -1,5 +1,9 @@
 # 音效師角色記憶
 
+2026-10-10 音效秒數補驗：10／30／60 秒真實時間瀏覽器各取得 5→1 原生 playing，320ms、25% 音量、零錯誤／重播；隔離靜音及提前 ready 也通過。56 focused，未改 runtime／重跑全套；取代前筆『無原生 playing 證據』，喇叭主觀聽感仍未驗。詳細 [三種秒數證據](../BLUFF-KING-PROGRESS.md)，沒有 PR／部署／永久偏好更新。
+
+2026-10-10 瞎掰王候選 1.28.0：隨機首位想想、按座位輪替每人一次；最後 5→1 秒重用 320ms turn 音，roundId＋秒數去重，沿用音效偏好、首載／hidden／斷線／BFCache 不補播。50 focused、Windows 完整 2000 通過；原生計分與輪替、0 秒完成，無喇叭聽感／playing 事件結論。測試音效暫開後恢復原偏好。詳 [驗證與限制](../BLUFF-KING-PROGRESS.md)，未發布 PR／部署。
+
 2026-10-07正式v1.5.2：表情音效的新鮮度改比較serverNow與event.at；連線間隔維持本機時間。五款遊戲及大廳都傳遞serverNow，±2／6／60秒仍播新事件且去重，過期／未來音、hidden／mute／reconnect仍抑制。本次無新素材或音量規則，沒有真人喇叭聽感證據。原PR43 v1.4.1双平台各808，正式整合版各863、公開clock及前端資源通過；詳 [審查修正](../PR43-PRODUCTION-FIX-PROGRESS.md)。
 
 2026-10-06正式實作追加：v1.3.0第一批已接畫猜本人猜中／輪次及雷霆骰聲／公開動作，共用遊戲2段／所有4段cap、250ms低優先間隔、1秒新cue載入timeout；首載／hidden／重連不補播。音效師產生7個短WAV（2Kenney CC0改作＋5固定seed原創），首尾fade及格式／hash／波形已查，真人聽感待評估。Windows Node24.14.0 **761/761**（25286ms）、Linux Node22.22.1 **761/761**（130827ms），失敗／取消／跳過均0。Chrome實際playing與靜音零載入通過；受測程式 `4732450fe44d2640ecaf961cf2d8dee9d8bd5e95` 與本地 annotated tag `v1.3.0`，正式 current `releases/4732450`；零房間切換，PID50471→52510，service／tunnel active。結果見 [最新實作進度](../GAME-SOUNDS-PROGRESS.md)，逐檔 [採用紀錄](../research/SOUND-ASSET-SOURCES.md)。以下研究階段的「未整合／子上限未實作」被這筆取代，其他分類音量／保留聲道仍未做。
@@ -61,3 +65,10 @@
 這一輪只讀規範、程式與官方網頁；未自動播放音訊，未測喇叭、耳機、弱網、跨裝置或多人聽感。上述毫秒及密度不是無障礙標準，也不代表已實作、已上線或聽起來合適。
 
 程式方先完成 [事件契約與去重規格](../specs/GAME-SOUND-PLAN.md)，再由音效師從可進repository的CC0具體包挑少量候選、逐檔重查license並建manifest。採用後做單次／重連／hidden／mute／滿額／載入失敗驗收；採用後安排人工試聽，依當次授權記錄收聽設備及音量，不把解碼成功當聽感證據。首批保持既有共用控制及秘密資訊邊界；不把角色表情音效10秒上限套成提示音目標。
+
+
+## 2026-10-10 PR 發布前最終驗證
+
+候選版 1.28.0；完整 node --test tests/*.test.js：2006/2006 通過，fail/cancel/skip 0，93923ms。這筆更新取代上一輪未重跑完整 2006 的驗證限制。另有倒數音效 focused 56/56，以及 Chromium 原生播放五項案例通過；仍未驗證喇叭／耳機主觀聽感、Safari、真人跨裝置語音與弱網。完整記錄保留於 ignored work/bluff-pr-final-tests.log；原生證據沿用 work/bluff-preview/sound-qa/results.json。
+
+目標 stanley021039/BGA，feat/bluff-king → main；本機準備提交供發布確認，尚未推送、建立 PR、合併或部署。
