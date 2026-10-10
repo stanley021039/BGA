@@ -1,5 +1,9 @@
 # Agent 長期記憶索引
 
+2026-10-10 音效秒數補驗：10／30／60 秒真實時間瀏覽器各取得 5→1 原生 playing，320ms、25% 音量、零錯誤／重播；隔離靜音及提前 ready 也通過。56 focused，未改 runtime／重跑全套；取代前筆『無原生 playing 證據』，喇叭主觀聽感仍未驗。詳細 [三種秒數證據](../BLUFF-KING-PROGRESS.md)，沒有 PR／部署／永久偏好更新。
+
+2026-10-10 瞎掰王候選 1.28.0：隨機首位想想、按座位輪替每人一次；最後 5→1 秒重用 320ms turn 音，roundId＋秒數去重，沿用音效偏好、首載／hidden／斷線／BFCache 不補播。50 focused、Windows 完整 2000 通過；原生計分與輪替、0 秒完成，無喇叭聽感／playing 事件結論。測試音效暫開後恢復原偏好。詳 [驗證與限制](../BLUFF-KING-PROGRESS.md)，未發布 PR／部署。
+
 2026-10-09 增量：#86 已按使用者授權合main 1fb45d5，雙平台CI success、未部署，取代下方#81/#83候選未合併現況，未驗不變。#87/#88候選1.27.0已做結算設定／可見小播放器續播；Windows完整1,975、focused124，有限原生一題結束與同iframe新增待播通過；[證據／限制](../ROOM-CONTROLS-87-88-PROGRESS.md)。每輪途中與推送／交付前仍需fetch main。
 
 2026-10-09 最新增量：#85 傳情畫意已按使用者授權合 main `0d1f16d`，雙平台 CI success，未部署，取代下方 #80 Draft 現況，待驗不變。#59／#80 已在 issue 留已完成／未完成摘要。#81／#83 v1.26.0 候選實作，Windows 全套 1,967；使用者選傳統／古典旋律種子題，極簡以直線／圓與伺服器計數。詳 [證據／限制](../PARTY-GAMES-81-83-PROGRESS.md)。每輪開發途中及推送／交付前必須再次 fetch main，不沿用舊遠端狀態。
@@ -170,3 +174,17 @@ native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha
 2026-10-08 候選PR53已解決main衝突，1712全通過，詳 [PR53整合](../PR53-MAIN-INTEGRATION.md)。schema19非正式現況；正式1.18/schema17仍不變，#57接續全站紙卡。
 
 2026-10-08 PR送審：53 main衝突已修正、1712通過；57接續所有紙卡與亮暗改動、1726通過。候選1.19/schema19尚未合併／部署，正式仍1.18/schema17。先53再57，詳 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)，保存分支ba0811b不移動。
+
+
+2026-10-10 瞎掰王口說版：feat/bluff-king 本機候選 1.28.0，基線 main 4664916；60 題（冷知識 30、迷因 15、文學 15），開桌前可選看身分 10／30／60 秒。到期自動口說並隱去私人角色／答案，AI 只保存自己的卡片記憶。Windows 1991 全通過、Chromium 實驗 10 秒到期／重載／新輪倒數；真人語音、實體觸控、Linux 未驗，未發 PR／部署。取代上輪 1.27.0／15 題／1979 數字；接手讀 [本輪證據](../BLUFF-KING-PROGRESS.md) 與 [規格](../specs/BLUFF-KING.md)。
+
+2026-10-10 秒數可見性追加：瞎掰王大字 sticky 倒數、口說保留 0 秒；CAB7B6 原生頁面確認捲動仍可見，31 項相關測試通過。準備倒數計算沿用前輪，未操作使用者回合；詳 [本輪證據](../BLUFF-KING-PROGRESS.md)。維持未發行 1.28.0。
+
+2026-10-10 主頁圖片：五款新遊戲原創 SVG 與共用圖片卡片，現在11款全有圖；精確圖片路徑／輪播相關6項通過，桌機亮色與390px深色驗證，未發布。接手見 [主頁圖片證據](../GAME-CARD-ART-PROGRESS.md)。
+
+
+## 2026-10-10 PR 發布前最終驗證
+
+候選版 1.28.0；完整 node --test tests/*.test.js：2006/2006 通過，fail/cancel/skip 0，93923ms。這筆更新取代上一輪未重跑完整 2006 的驗證限制。另有倒數音效 focused 56/56，以及 Chromium 原生播放五項案例通過；仍未驗證喇叭／耳機主觀聽感、Safari、真人跨裝置語音與弱網。完整記錄保留於 ignored work/bluff-pr-final-tests.log；原生證據沿用 work/bluff-preview/sound-qa/results.json。
+
+目標 stanley021039/BGA，feat/bluff-king → main；本機準備提交供發布確認，尚未推送、建立 PR、合併或部署。
