@@ -44,6 +44,13 @@ body[data-visual-theme="playful"][data-game-kind] {
   --ui-surface-floating: var(--play-surface); --ui-surface-title: var(--play-lavender);
   --ui-control-border: var(--play-ink); --ui-selected: var(--play-ink);
   --ui-selected-text: var(--play-paper); --ui-selected-soft: var(--play-yellow);
+  /* Widget fills and their ink must change together, including field errors. */
+  --ui-widget-panel: var(--ui-surface-panel); --ui-widget-text: var(--ui-text);
+  --ui-widget-line: var(--play-line); --ui-widget-selected: var(--ui-selected);
+  --ui-widget-selected-text: var(--ui-selected-text); --ui-widget-error: var(--ui-error);
+  --ui-widget-focus: var(--ui-focus); --ui-widget-card-focus: var(--ui-accent);
+  /* Physical paper stays light in both schemes; never inherit night ink on it. */
+  --ui-paper-background: #fffdf8; --ui-paper-text: #292639; --ui-paper-muted: #686576;
   --ui-accent-soft: var(--play-lavender); --ui-radius-control: 11px;
   --ui-radius-card: 16px; --ui-radius-panel: 20px;
   --ui-shadow-panel: var(--play-shadow); --ui-shadow-floating: 0 9px 0 #29263920,0 16px 35px #2926391a;
@@ -79,6 +86,17 @@ body[data-visual-theme="playful"] :is(input,select,textarea):not([type=range]):n
   border: var(--play-border); border-radius: 10px;
   background: var(--play-paper); color: var(--play-ink);
 }
+/* These older pages define widget tokens locally, so body inheritance alone
+   cannot replace their fixed light palette. Keep the override theme-scoped. */
+body[data-visual-theme="playful"] :is(.market-shell,.collection-page) {
+  --ui-widget-panel: var(--ui-surface-panel); --ui-widget-text: var(--ui-text);
+  --ui-widget-line: var(--play-line); --ui-widget-selected: var(--ui-selected);
+  --ui-widget-selected-text: var(--ui-selected-text); --ui-widget-error: var(--ui-error);
+  --ui-widget-focus: var(--ui-focus); --ui-widget-card-focus: var(--ui-accent);
+}
+/* A neutral bare button must not retain a legacy light fill with inherited
+   night ink. Zero-specificity theme scope preserves component modifiers. */
+:where(body[data-visual-theme="playful"]) button { background: var(--play-surface); color: var(--play-ink); }
 body[data-visual-theme="playful"] input::placeholder,
 body[data-visual-theme="playful"] textarea::placeholder { color: var(--play-muted); opacity: 1; }
 body[data-visual-theme="playful"] input[type=range],
