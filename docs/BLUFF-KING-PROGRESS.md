@@ -56,3 +56,10 @@ Chromium 三種時長各取得 5 次原生 playing，依序剩 5、4、3、2、1
 候選版 1.28.0；完整 node --test tests/*.test.js：2006/2006 通過，fail/cancel/skip 0，93923ms。這筆更新取代上一輪未重跑完整 2006 的驗證限制。另有倒數音效 focused 56/56，以及 Chromium 原生播放五項案例通過；仍未驗證喇叭／耳機主觀聽感、Safari、真人跨裝置語音與弱網。完整記錄保留於 ignored work/bluff-pr-final-tests.log；原生證據沿用 work/bluff-preview/sound-qa/results.json。
 
 目標 stanley021039/BGA，feat/bluff-king → main；本機準備提交供發布確認，尚未推送、建立 PR、合併或部署。
+
+
+## 2026-10-11 PR #95 與 main 衝突整合
+
+將 main b8aa891（1.27.1、PR #94 共用日夜配色）合入 feat/bluff-king，解決 CHANGELOG、兩份角色文件及 package/lock 共五項衝突。更新紀錄與角色證據保留雙方內容；候選版仍 1.28.0，lock 同步。共用配色程式原樣保留，瞎掰王原有表面／文字 token 成對宣告不變；沒有 DB schema、遊戲引擎或音效程式的新修改。
+
+Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip 0，110968ms，含新增的共用日夜配色回歸。node tools/release.cjs check --base origin/main --type minor 與 diff check 通過。ignored 證據 work/pr95-main-integration-tests.log。本輪未重跑原生瀏覽器或主觀音效驗收，先前證據維持原版本範圍。整合後沿用 PR #95 推送，不另開 PR、不合併或部署。

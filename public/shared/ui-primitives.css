@@ -1,4 +1,11 @@
 /* Shared across every page. Game themes only supply tokens and surface styles. */
+/* Opt-in content surfaces: pair foreground with background. No geometry or
+   broad descendant reset; callers still own layout and semantic status colors. */
+.ui-content-card{background:var(--ui-surface-panel,#fffdf8);color:var(--ui-text,#292639);--ui-content-muted:var(--ui-muted,#686576)}
+.ui-content-card--paper{background:var(--ui-paper-background,#fffdf8);color:var(--ui-paper-text,#292639);--ui-content-muted:var(--ui-paper-muted,#686576);color-scheme:light}
+.ui-content-card.ui-content-card--paper :is(h1,h2,h3,h4,h5,h6){color:inherit}
+.ui-content-card .ui-content-muted{color:var(--ui-content-muted)}
+.ui-content-card[hidden]{display:none!important}
 .ui-center-content{display:grid;place-content:center;place-items:center;text-align:center}
 .ui-symbol{display:inline-grid;place-content:center;place-items:center;flex:none;margin:0;padding:0;line-height:1;letter-spacing:normal;text-indent:0;text-align:center}
 .ui-symbol>.ui-icon{display:block;width:var(--ui-symbol-size,1em);height:var(--ui-symbol-size,1em)}

@@ -1,0 +1,22 @@
+<!doctype html><html lang="zh-Hant" data-color-scheme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>#93 共用配色驗證</title>
+<link rel="stylesheet" href="/shared/ui-foundation.css"><link rel="stylesheet" href="/shared/ui-primitives.css"><link rel="stylesheet" href="/shared/ui-widgets.css"><link rel="stylesheet" href="/market.css"><link rel="stylesheet" href="/collection.css"><link rel="stylesheet" href="/telephone.css"><link rel="stylesheet" href="/shared/playful-theme.css">
+<style>main{max-width:900px;margin:auto;padding:24px}article{padding:16px;margin:16px 0;border:1px solid currentColor;border-radius:12px}.ui-tablist{margin:12px 0}.market-shell{padding:0}#report{display:block;max-height:130px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}</style></head>
+<body data-visual-theme="playful"><main><h1>#93 共用配色驗證</h1><button id="toggle" data-check>切換日／夜</button>
+<div class="ui-tablist"><button role="tab" aria-selected="true" data-check>通用已選分頁</button><button role="tab" aria-selected="false" data-check>通用未選分頁</button></div>
+<p class="ui-field-error" data-check>通用欄位錯誤：請輸入合法值</p>
+<section class="market-shell"><div class="ui-tablist"><button role="tab" aria-selected="true" data-check>市場共用分頁</button><button role="tab" aria-selected="false" data-check>市場未選分頁</button></div><p class="ui-field-error" data-check>市場欄位錯誤</p></section>
+<section class="collection-page"><div class="ui-tablist"><button role="tab" aria-selected="true" data-check>素材庫共用分頁</button><button role="tab" aria-selected="false" data-check>素材庫未選分頁</button></div><p class="ui-field-error" data-check>素材庫欄位錯誤</p></section>
+<section class="market-shell market-navigation"><div class="ui-tablist market-tabs"><button role="tab" aria-selected="true" data-check>市場現有分頁選取</button><button role="tab" aria-selected="false" data-check>市場現有分頁未選</button></div></section>
+<section class="collection-page"><div class="ui-tablist collection-tabs"><button role="tab" aria-selected="true" data-check>素材庫現有分頁選取</button><button role="tab" aria-selected="false" data-check>素材庫現有分頁未選</button></div></section>
+<article class="ui-content-card"><p data-check>跟隨主題的內容卡：說詞與結果可直接閱讀。</p><p class="ui-content-muted" data-check>次要說明文字</p><a href="#report" data-check>內容連結</a></article>
+<article class="ui-content-card ui-content-card--paper"><h3 data-check>固定紙卡標題</h3><p data-check>固定淺色紙卡：保留深色文字，不繼承夜間淺色字。</p><p class="ui-content-muted" data-check>紙卡次要說明</p></article>
+<article class="page-card ui-content-card"><p data-check>電話畫猜回顧內容</p><canvas width="512" height="256" aria-label="保留白色畫布"></canvas></article>
+<article class="ui-content-card" hidden>不應顯示的卡片</article><output id="report"></output></main>
+<script>
+function report(){
+ function lum(rgb){const c=rgb.match(/[\d.]+/g).slice(0,3).map(Number).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return c[0]*.2126+c[1]*.7152+c[2]*.0722;}
+ const results=[...document.querySelectorAll('[data-check]')].map(el=>{const fg=getComputedStyle(el).color;let p=el,bg;while(p){bg=getComputedStyle(p).backgroundColor;if(bg!=='rgba(0, 0, 0, 0)')break;p=p.parentElement;}const a=lum(fg),b=lum(bg),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);return {text:el.textContent,fg,bg,ratio:Number(ratio.toFixed(2)),pass:ratio>=4.5};});
+ document.querySelector('#report').textContent=JSON.stringify({scheme:document.documentElement.dataset.colorScheme,pass:results.every(r=>r.pass),results},null,2);
+}
+document.querySelector('#toggle').onclick=()=>{document.documentElement.dataset.colorScheme=document.documentElement.dataset.colorScheme==='dark'?'light':'dark';report();};window.onload=report;
+</script></body></html>

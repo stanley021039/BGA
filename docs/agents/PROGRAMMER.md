@@ -4,6 +4,10 @@
 
 2026-10-10 瞎掰王候選 1.28.0：隨機首位想想、按座位輪替每人一次；最後 5→1 秒重用 320ms turn 音，roundId＋秒數去重，沿用音效偏好、首載／hidden／斷線／BFCache 不補播。50 focused、Windows 完整 2000 通過；原生計分與輪替、0 秒完成，無喇叭聽感／playing 事件結論。測試音效暫開後恢復原偏好。詳 [驗證與限制](../BLUFF-KING-PROGRESS.md)，未發布 PR／部署。
 
+## 2026-10-09：#93 共用夜間對比
+
+基線 main4664916：`ui-widgets.css` 選取分頁 fallback 以 `--green` 當填色，playful dark 卻將其映射為淺 ink，文字 fallback 仍白，真 CSS fixture 為1.10:1；欄位錯誤與市場局部錯誤色在暗底也不足4.5。候選修正採成對 widget tokens，特別校正市場／素材庫局部 override，裸按鈕以零 specificity 主題 scope 補成對配色；分頁只有邊線過渡，背景／字同步切換。`ui-content-card`／紙卡 modifier 明確區別 theme surface 與固定淺紙，電話畫猜結果已採用，沒有改 renderer／SSE。21樣本日夜與390px fixture已驗，不代表全頁遊玩；他人本機 bluff 尚未在 main，仍需讀 source、採用契約並實際驗證。詳 [契約與限制](../specs/SHARED-THEME-CONTRAST.md)，尚未合併／部署。
+
 2026-10-09 #87/#88候選：Draw ending整數驗證、after-reveal達標、跨圈及64題上限，recent結果限8，legacy未帶設定維持原流程。TableMedia主X只縮小video，不改playerEpoch／videoWanted；小窗X才退出，同意／paused／視窗可見性／清理不放寬。新八regression、完整1,975；[原生scope與已知限制](../ROOM-CONTROLS-87-88-PROGRESS.md)。未改renderer／SSE，未部署；#86已合main，前述候選狀態為歷史。
 
 2026-10-09 #81／#83：新 PartyRoom 共用入座／epoch／128 指紋收據，不重構舊引擎。MusicQuiz 音訊檢查登入／席位／当前輪，無曲名 URL／未揭曉答案；Minimal 僅可信幾何座標、server deadline 与計數，沿用 StrokeCanvas 原子呈現。client scope 取消／草稿／不可變重試 payload／音訊 binding cleanup 有 fixture 驗證；Windows 1,967 與 UI 範圍見 [進度](../PARTY-GAMES-81-83-PROGRESS.md)。開始、開發途中、測試前與推送／交付前 fetch main；更新時先對差異再整合，不覆寫別人 worktree。
@@ -427,3 +431,10 @@ RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三�
 候選版 1.28.0；完整 node --test tests/*.test.js：2006/2006 通過，fail/cancel/skip 0，93923ms。這筆更新取代上一輪未重跑完整 2006 的驗證限制。另有倒數音效 focused 56/56，以及 Chromium 原生播放五項案例通過；仍未驗證喇叭／耳機主觀聽感、Safari、真人跨裝置語音與弱網。完整記錄保留於 ignored work/bluff-pr-final-tests.log；原生證據沿用 work/bluff-preview/sound-qa/results.json。
 
 目標 stanley021039/BGA，feat/bluff-king → main；本機準備提交供發布確認，尚未推送、建立 PR、合併或部署。
+
+
+## 2026-10-11 PR #95 與 main 衝突整合
+
+將 main b8aa891（1.27.1、PR #94 共用日夜配色）合入 feat/bluff-king，解決 CHANGELOG、兩份角色文件及 package/lock 共五項衝突。更新紀錄與角色證據保留雙方內容；候選版仍 1.28.0，lock 同步。共用配色程式原樣保留，瞎掰王原有表面／文字 token 成對宣告不變；沒有 DB schema、遊戲引擎或音效程式的新修改。
+
+Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip 0，110968ms，含新增的共用日夜配色回歸。node tools/release.cjs check --base origin/main --type minor 與 diff check 通過。ignored 證據 work/pr95-main-integration-tests.log。本輪未重跑原生瀏覽器或主觀音效驗收，先前證據維持原版本範圍。整合後沿用 PR #95 推送，不另開 PR、不合併或部署。
