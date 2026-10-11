@@ -1,5 +1,9 @@
 # Agent 長期記憶索引
 
+2026-10-10 音效秒數補驗：10／30／60 秒真實時間瀏覽器各取得 5→1 原生 playing，320ms、25% 音量、零錯誤／重播；隔離靜音及提前 ready 也通過。56 focused，未改 runtime／重跑全套；取代前筆『無原生 playing 證據』，喇叭主觀聽感仍未驗。詳細 [三種秒數證據](../BLUFF-KING-PROGRESS.md)，沒有 PR／部署／永久偏好更新。
+
+2026-10-10 瞎掰王候選 1.28.0：隨機首位想想、按座位輪替每人一次；最後 5→1 秒重用 320ms turn 音，roundId＋秒數去重，沿用音效偏好、首載／hidden／斷線／BFCache 不補播。50 focused、Windows 完整 2000 通過；原生計分與輪替、0 秒完成，無喇叭聽感／playing 事件結論。測試音效暫開後恢復原偏好。詳 [驗證與限制](../BLUFF-KING-PROGRESS.md)，未發布 PR／部署。
+
 2026-10-09 #93 共用配色候選：通用 widget 選取分頁／欄位錯誤有已重現的夜間對比缺口，已成對映射主題 tokens，另補中性裸按鈕與 opt-in 內容／紙卡；電話畫猜回顧採用。瀏覽器真 CSS fixture 日夜21樣本至少5.57:1，390px 無溢出，未驗全站及他人本機 `/bluff`。接手讀 [配色契約](../specs/SHARED-THEME-CONTRAST.md)；PR／測試狀態以 issue #93 的最新留言為準，未合併／部署。
 
 2026-10-09 增量：#86 已按使用者授權合main 1fb45d5，雙平台CI success、未部署，取代下方#81/#83候選未合併現況，未驗不變。#87/#88候選1.27.0已做結算設定／可見小播放器續播；Windows完整1,975、focused124，有限原生一題結束與同iframe新增待播通過；[證據／限制](../ROOM-CONTROLS-87-88-PROGRESS.md)。每輪途中與推送／交付前仍需fetch main。
@@ -172,3 +176,24 @@ native19場景18個對fresh strict RGBA0；fill-dependent362 RGB／max13／alpha
 2026-10-08 候選PR53已解決main衝突，1712全通過，詳 [PR53整合](../PR53-MAIN-INTEGRATION.md)。schema19非正式現況；正式1.18/schema17仍不變，#57接續全站紙卡。
 
 2026-10-08 PR送審：53 main衝突已修正、1712通過；57接續所有紙卡與亮暗改動、1726通過。候選1.19/schema19尚未合併／部署，正式仍1.18/schema17。先53再57，詳 [PR57複查](../playful-ui/PR57-INTEGRATION-REVIEW.md)，保存分支ba0811b不移動。
+
+
+2026-10-10 瞎掰王口說版：feat/bluff-king 本機候選 1.28.0，基線 main 4664916；60 題（冷知識 30、迷因 15、文學 15），開桌前可選看身分 10／30／60 秒。到期自動口說並隱去私人角色／答案，AI 只保存自己的卡片記憶。Windows 1991 全通過、Chromium 實驗 10 秒到期／重載／新輪倒數；真人語音、實體觸控、Linux 未驗，未發 PR／部署。取代上輪 1.27.0／15 題／1979 數字；接手讀 [本輪證據](../BLUFF-KING-PROGRESS.md) 與 [規格](../specs/BLUFF-KING.md)。
+
+2026-10-10 秒數可見性追加：瞎掰王大字 sticky 倒數、口說保留 0 秒；CAB7B6 原生頁面確認捲動仍可見，31 項相關測試通過。準備倒數計算沿用前輪，未操作使用者回合；詳 [本輪證據](../BLUFF-KING-PROGRESS.md)。維持未發行 1.28.0。
+
+2026-10-10 主頁圖片：五款新遊戲原創 SVG 與共用圖片卡片，現在11款全有圖；精確圖片路徑／輪播相關6項通過，桌機亮色與390px深色驗證，未發布。接手見 [主頁圖片證據](../GAME-CARD-ART-PROGRESS.md)。
+
+
+## 2026-10-10 PR 發布前最終驗證
+
+候選版 1.28.0；完整 node --test tests/*.test.js：2006/2006 通過，fail/cancel/skip 0，93923ms。這筆更新取代上一輪未重跑完整 2006 的驗證限制。另有倒數音效 focused 56/56，以及 Chromium 原生播放五項案例通過；仍未驗證喇叭／耳機主觀聽感、Safari、真人跨裝置語音與弱網。完整記錄保留於 ignored work/bluff-pr-final-tests.log；原生證據沿用 work/bluff-preview/sound-qa/results.json。
+
+目標 stanley021039/BGA，feat/bluff-king → main；本機準備提交供發布確認，尚未推送、建立 PR、合併或部署。
+
+
+## 2026-10-11 PR #95 與 main 衝突整合
+
+將 main b8aa891（1.27.1、PR #94 共用日夜配色）合入 feat/bluff-king，解決 CHANGELOG、兩份角色文件及 package/lock 共五項衝突。更新紀錄與角色證據保留雙方內容；候選版仍 1.28.0，lock 同步。共用配色程式原樣保留，瞎掰王原有表面／文字 token 成對宣告不變；沒有 DB schema、遊戲引擎或音效程式的新修改。
+
+Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip 0，110968ms，含新增的共用日夜配色回歸。node tools/release.cjs check --base origin/main --type minor 與 diff check 通過。ignored 證據 work/pr95-main-integration-tests.log。本輪未重跑原生瀏覽器或主觀音效驗收，先前證據維持原版本範圍。整合後沿用 PR #95 推送，不另開 PR、不合併或部署。

@@ -15,3 +15,7 @@
 | [Quaternius](https://quaternius.com/) | 未來 3D 角色和動畫 | [目前授權頁](https://quaternius.com/license.html)列出 QAL、限制素材包再散布；[FAQ](https://quaternius.com/faq.html)仍寫 CC0。兩頁說法不一致，採用前須確認指定套件與下載當時附的授權文件。 |
 
 素材採用時，把來源網址、作者、下載日期、授權版本與必要署名一同放入素材清單。未來玩家作品另需取得作品使用與展示授權，不能以網站素材授權代替玩家的同意。
+
+## 2026-10-10 主頁原創遊戲插圖
+
+新增 public/assets/playful/game-bluff.svg、game-musicquiz.svg、game-minimal.svg、game-telephone.svg、game-trpg.svg，均於本專案以 SVG 幾何與路徑原創繪製，延續現有紙卡語言。未採用第三方封面、圖片、字型或下載素材；來源與驗證見 [本輪證據](GAME-CARD-ART-PROGRESS.md)。
