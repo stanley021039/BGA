@@ -76,7 +76,7 @@
  }
 
  function update(s){
-  if(window.RaceLesson)return;
+  if(window.RaceLesson)return;window.RoomControls?.update(s);
   document.body.dataset.roomPhase=s.phase;window.SharedChat?.updateRoom(s);const type=s.type||'poker';updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');arrange(type,s.phase==='waiting');return;}const game=games[type];if(!game)return;
   document.body.dataset.roomPhase=s.phase;
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');

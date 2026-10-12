@@ -1,0 +1,30 @@
+:root{--ui-room-control-gap:12px;--ui-room-setting-gap:12px}
+[data-room-native-action]{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;clip-path:inset(50%)!important;overflow:hidden!important;pointer-events:none!important}
+.ui-room-controls{display:grid;gap:var(--ui-room-control-gap);min-width:0;width:100%;margin:0 0 12px}
+.ui-room-controls[hidden],.ui-room-controls [hidden]{display:none!important}
+.ui-room-settings-card{display:grid;gap:var(--ui-room-setting-gap);min-width:0;border:1px solid var(--ui-border,#aaa);border-radius:12px;padding:16px;background:var(--ui-surface-panel,var(--play-surface,#fffdf8));color:var(--ui-text,var(--play-ink,#292639))}
+.ui-room-settings-card>h2{font-size:1rem;margin:0;min-height:24px;line-height:1.5}
+.ui-room-settings-source{margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important;min-width:0;max-width:100%;display:grid;gap:var(--ui-room-setting-gap)}
+.ui-room-settings-source>:is(h2,summary){display:none!important}
+.ui-room-settings-slot,.ui-room-setting-grid,.ui-room-settings-source :is(.settings,.fields,.room-settings,.room-settings-body){display:grid;grid-template-columns:minmax(0,1fr)!important;gap:var(--ui-room-setting-gap);min-width:0}
+.ui-room-settings-slot{max-height:220px;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain}
+.ui-room-setting-field{display:grid;gap:8px;min-width:0;margin:0;text-align:left}
+.ui-room-setting-choice{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.ui-room-setting-field>label,.ui-room-setting-field>input,.ui-room-setting-field>select{margin:0;max-width:100%;min-width:0}
+.ui-room-setting-field>:is(input,select){width:100%;min-height:44px}
+.ui-room-settings-note{font-size:.875rem;margin:0;overflow-wrap:anywhere}
+.ui-room-session-actions{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;align-items:center;gap:var(--ui-room-control-gap);min-height:44px}
+.ui-room-session-actions>.ui-room-action{margin:0!important;min-height:44px;max-width:100%}
+.ui-room-action[data-room-action=start]{grid-column:1;min-width:0;width:100%}
+.ui-room-action[data-room-action=bot]{grid-column:2}
+.ui-room-action[data-room-action=leave]{grid-column:3}
+.ui-room-control-status{margin:0;min-height:24px;font-size:.875rem;overflow-wrap:anywhere}
+.room-leave-dialog{max-width:min(440px,calc(100vw - 24px))}.room-leave-dialog .ui-control-row{flex-wrap:wrap;gap:12px}.ui-room-leave-status{min-height:24px;overflow-wrap:anywhere}
+.chat-room-tools{flex-wrap:wrap;gap:12px;min-height:44px;margin-top:12px}.chat-room-tools>.room-media-slot{flex:0 0 44px}.chat-room-tools button{margin:0!important}
+.chat-compose{gap:12px}.chat-destination{margin:8px 0 0;font-size:.8rem;min-height:20px;overflow-wrap:anywhere}
+.chat-room-tools>#shared-error{flex:1 0 100%;min-height:24px;margin:0}
+.game-barrage:not(.game-emoji-barrage),.game-barrage .barrage-frame-content{white-space:nowrap}
+.game-barrage:not(.game-emoji-barrage){max-width:none}
+.game-barrage:not(.game-emoji-barrage).game-barrage-static{max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
+.game-barrage-static .barrage-frame-content{overflow:hidden;text-overflow:ellipsis}
+@media(max-width:400px){.ui-room-settings-card{padding:12px}.ui-room-session-actions{gap:8px}}

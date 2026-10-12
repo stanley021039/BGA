@@ -4,7 +4,7 @@ const {HttpError}=require('../http/errors');
 function createChat({events=new Map(),clock=Date.now}={}){
  const rates=new Map(),metadata=new WeakMap();
  function send(channel,user,message,requestId){
-  if(typeof message!=='string'||!message.trim()||message.trim().length>160||/[\u0000-\u0008\u000b-\u001f\u007f]/.test(message))throw new HttpError(400,'INVALID_MESSAGE','留言需為 1–160 字純文字');
+  if(typeof message!=='string'||!message.trim()||[...message.trim()].length>160||/[\u0000-\u0008\u000b-\u001f\u007f]/.test(message))throw new HttpError(400,'INVALID_MESSAGE','留言需為 1–160 字純文字');
   if(requestId!==undefined&&(typeof requestId!=='string'||!/^[a-zA-Z0-9-]{8,80}$/.test(requestId)))throw new HttpError(400,'INVALID_REQUEST_ID','傳送識別碼不正確');
   const messages=events.get(channel)||[];
   const duplicate=requestId&&messages.find(event=>{const meta=metadata.get(event);return meta?.userId===user.id&&meta.requestId===requestId;});
@@ -16,6 +16,7 @@ function createChat({events=new Map(),clock=Date.now}={}){
   const event={id:randomUUID(),kind:'message',name:user.display_name,message:message.trim(),at:now};
   metadata.set(event,{userId:user.id,requestId});rates.set(user.id,now);messages.push(event);if(messages.length>50)messages.shift();events.set(channel,messages);return event;
  }
- return {send,read:channel=>(events.get(channel)||[]).slice(),delete:channel=>events.delete(channel)};
+ function record(channel,event){const messages=events.get(channel)||[];if(messages.some(item=>item.id===event.id))return;messages.push({id:event.id,kind:'message',name:event.name,message:event.kind==='emoji'?event.emoji:'使用了「'+event.label+'」表情',at:event.at});if(messages.length>50)messages.shift();events.set(channel,messages);}
+ return {send,record,read:channel=>(events.get(channel)||[]).slice(),delete:channel=>events.delete(channel)};
 }
 module.exports={createChat};

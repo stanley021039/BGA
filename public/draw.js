@@ -121,7 +121,7 @@ function topicOptions(group,current){
  return `<fieldset class="topic-options"><legend>${group}</legend><div class="topic-shortcuts"><span>可多選</span><button type="button" data-select-topics="all">全選</button><button type="button" data-select-topics="none">清除</button></div><div class="option-row">${topicChoices.map(([value,label])=>`<label><input type="checkbox" name="topics" value="${value}" ${current.includes(value)?'checked':''}><span><i aria-hidden="true">✓</i>${label}</span></label>`).join('')}</div><p class="topic-hint">自定義包含共編題庫的投稿題目；至少選擇一個類別。</p></fieldset>`;
 }
 function readTopics(){
- const topics=[...document.querySelectorAll('#stage input[name="topics"]:checked')].map(input=>input.value);
+ const topics=[...document.querySelectorAll('#stage input[name="topics"]:checked,.ui-room-settings-slot input[name="topics"]:checked')].map(input=>input.value);
  if(!topics.length)throw Error('請至少選擇一個題目類別');
  return topics;
 }
@@ -158,7 +158,7 @@ function render(live=false){
  document.body.dataset.drawPhase=s.phase;
  document.body.classList.toggle('drawing-active',s.phase==='drawing');
  if(s.phase==='waiting'){
-  html=s.host?`<details class="card stage-controls room-settings-panel"><summary>房間設定</summary><div class="room-settings-body" role="group" aria-label="房間設定欄位"><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}</div>${GameShell.settingsActions()}</div></details>`:'';
+  html=s.host?`<section class="card stage-controls room-settings-panel"><h2>房間設定</h2><div class="room-settings-body" role="group" aria-label="房間設定欄位"><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}</div>${GameShell.settingsActions()}</div></section>`:'';
   actions=waitingActions(s);
  }else if(s.phase==='drawing'){
   const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me);
@@ -170,8 +170,8 @@ function render(live=false){
   }else if(s.phase==='finished'){
    actions=`<p>本局完成。</p>${s.host?'<button data-do="start">再玩一局</button>':'<p>等待房主再開一局。</p>'}${s.result?.resultId?'<button data-do="save" data-result-id="'+esc(s.result.resultId)+'">收藏這幅畫</button>':''}`;
  }
- $('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&s.phase==='waiting'&&s.host)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
- if(s.phase==='waiting'&&s.host){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
+ $('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&s.phase==='waiting'&&s.host&&!window.RoomControls)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
+ if(s.phase==='waiting'&&s.host&&!window.RoomControls){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
   actions=(s.options.ending?.value!=null?'<p class="draw-ending-summary">'+(s.options.ending.mode==='score'?'目標 '+s.options.ending.value+' 分（最多 64 題）':'固定 '+s.options.ending.value+' 題')+'</p>':'')+actions;actions+=GameShell.botButton?.(s)||'';
   GameShell.stableMarkup($('#drawActions'),actions);
  decorateActions();
@@ -449,11 +449,12 @@ function stageClick(event){
  if(button.dataset.word)return action('choose',{questionId:button.dataset.word});
  switch(button.dataset.do){
   case 'bot':return roomAction('bot');case 'start':return roomAction('start');case 'next':return action('next');
-   case 'settings':try{return roomAction('settings',{seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()});}catch(error){drawFeedback(error.message,'error',true);toast(error.message);return;}
+   case 'settings':try{return roomAction('settings',{seconds:Number($('#stage input[name="seconds"]:checked,.ui-room-settings-slot input[name="seconds"]:checked')?.value),topics:readTopics()});}catch(error){drawFeedback(error.message,'error',true);toast(error.message);return;}
   case 'save':return saveArtwork(button.dataset.resultId);case 'ban':return voteForResult(button.dataset.resultId);case 'invite':return invite();
  }
 }
 $('#stage').addEventListener('click',stageClick);
+document.addEventListener('click',event=>{if(event.target.closest('.ui-room-settings-slot'))stageClick(event);});
 $('#drawActions').addEventListener('click',stageClick);
 $('#canvasStage').addEventListener('click',stageClick);
 $('#stage').addEventListener('submit',async event=>{
@@ -595,4 +596,4 @@ window.addEventListener('pagehide',event=>{countdownBar.reset();drawingControlle
 window.addEventListener('pageshow',event=>{if(event.persisted){drawingController.start();motionNeedsBaseline=true;if(state){resultsView?.update(state);redrawCanvas();syncCanvas();updateStagePreview();}if(session)poll();else drawingController.restore();}});
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});
 
-const roomSettingsAutoSave=window.GameShell?.autoSaveSettings?.({read:()=>({seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()}),save:data=>roomAction('settings',data),canSave:()=>!!state?.host&&state.phase==='waiting',isBusy:()=>busy});
+const roomSettingsAutoSave=window.GameShell?.autoSaveSettings?.({read:()=>({seconds:Number($('#stage input[name="seconds"]:checked,.ui-room-settings-slot input[name="seconds"]:checked')?.value),topics:readTopics()}),save:data=>roomAction('settings',data),canSave:()=>!!state?.host&&state.phase==='waiting',isBusy:()=>busy});

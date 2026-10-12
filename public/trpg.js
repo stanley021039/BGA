@@ -22,7 +22,7 @@
   return box;
  }
  function render(next){
-  if(disposed||next.type!=='trpg'||state&&next.version<state.version)return;state=next;window.RoomWaiting?.update(next);$('#connection').textContent='';$('#game').hidden=false;$('#roomTag').textContent='房號 '+code;$('#copyInvite').hidden=$('#leave').hidden=false;
+  if(disposed||next.type!=='trpg'||state&&next.version<state.version)return;state=next;if(window.GameShell)window.GameShell.update(next);else window.RoomWaiting?.update(next);$('#connection').textContent='';$('#game').hidden=false;$('#roomTag').textContent='房號 '+code;$('#copyInvite').hidden=$('#leave').hidden=false;
   $('#phase').textContent=phaseNames[state.phase];$('#sceneLabel').textContent=state.round?'第 '+state.round+'／6 幕':'準備出發';
   $('#sceneTitle').textContent=state.winner?.title||state.scene?.title||'先選角色，再邀朋友入座';$('#sceneText').textContent=state.winner?.text||state.scene?.text||'每個角色都能選擇任何解法，專長提供 +2。所有人都能協助與整備；可獨自試玩，或加入腳本測試夥伴。';
   $('#resources').replaceChildren(...['線索 '+state.clues+'／5','危機 '+state.danger+'（目標 ≤7）','補給 '+state.supplies].map(t=>node('span',t)));
