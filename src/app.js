@@ -223,7 +223,8 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(req.headers.origin&&new URL(req.headers.origin).host!==req.headers.host)throw Error('不允許跨站請求');
   if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');
   const characterImageUpload=url.pathname==='/api/profile/characters'||/^\/api\/profile\/characters\/[a-f0-9-]{36}\/(?:expressions|emotes)$/.test(url.pathname);
-  const limit=url.pathname==='/api/market/images'?3*1024*1024:url.pathname==='/api/admin/market/images/approve'?128*1024:characterImageUpload?MAX_CHARACTER_IMAGE_BODY_BYTES:(url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192);
+  // Bounded private drawing submissions can exceed the small text-action body budget.
+  const limit=url.pathname==='/api/action'?128*1024:url.pathname==='/api/market/images'?3*1024*1024:url.pathname==='/api/admin/market/images/approve'?128*1024:characterImageUpload?MAX_CHARACTER_IMAGE_BODY_BYTES:(url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192);
   const chunks=[];let bytes=0;
   for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}
   data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');
