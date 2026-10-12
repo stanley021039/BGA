@@ -438,3 +438,6 @@ RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三�
 將 main b8aa891（1.27.1、PR #94 共用日夜配色）合入 feat/bluff-king，解決 CHANGELOG、兩份角色文件及 package/lock 共五項衝突。更新紀錄與角色證據保留雙方內容；候選版仍 1.28.0，lock 同步。共用配色程式原樣保留，瞎掰王原有表面／文字 token 成對宣告不變；沒有 DB schema、遊戲引擎或音效程式的新修改。
 
 Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip 0，110968ms，含新增的共用日夜配色回歸。node tools/release.cjs check --base origin/main --type minor 與 diff check 通過。ignored 證據 work/pr95-main-integration-tests.log。本輪未重跑原生瀏覽器或主觀音效驗收，先前證據維持原版本範圍。整合後沿用 PR #95 推送，不另開 PR、不合併或部署。
+
+
+2026-10-12 組隊房間分離：十款等待畫面採雷霆之路模板，遊玩資訊等待時隱藏，瞎掰王與傳情畫意設定自動提交。40布局／十次開局及有限設定邊界已驗；完整測試、原生作畫补验、兩輪審查及部署以 [組隊房間進度](../WAITING-ROOMS-PROGRESS.md) 與 PR #96最新留言為準；未驗設備與全phase不冒稱完成。
