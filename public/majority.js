@@ -19,6 +19,7 @@ function actionFeedback(message,kind='info',settings=false){
  if(window.GameUI)GameUI.setStatus(node,message,{kind});else{node.textContent=message;node.dataset.kind=kind;}
 }
 function syncActionBusy(){
+ window.RoomWaiting?.setRosterBusy(busy);
  const slot=$('[data-game-action-slot]');if(!slot)return;slot.setAttribute('aria-busy',String(busy));
  for(const button of [...slot.querySelectorAll('button'),...document.querySelectorAll('.room-settings-save')]){
   if(busy){if(!button.hasAttribute('data-idle-disabled'))button.dataset.idleDisabled=String(button.disabled);button.disabled=true;}

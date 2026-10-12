@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),vm=requir
 const {mediaHarness}=require('./helpers/media-browser.cjs');
 const source=fs.readFileSync(path.join(__dirname,'../public/shared/room-waiting.js'),'utf8');
 function fixture(type){
- const f=mediaHarness(),game=f.document.createElement('main');game.id='game';
+ const f=mediaHarness();f.document.createComment=()=>f.document.createElement('comment');const sample=f.document.createElement('span');Object.defineProperty(Object.getPrototypeOf(sample),'childNodes',{get(){return this.children;},configurable:true});const game=f.document.createElement('main');game.id='game';
  const host=f.document.createElement('div');host.className=({poker:'game-layout',thunder:'race-main',majority:'play-layout',gift:'gift-layout',draw:'draw-layout'})[type]||'';
  game.append(host);f.document.body.append(game);vm.runInContext(source,f.context);
  return {...f,host,update:s=>f.window.RoomWaiting.update(s),roster:()=>f.document.querySelector('.ui-room-roster')};
@@ -31,4 +31,17 @@ test('roster add action remains last, keeps its native handler and is not counte
  f.update({...s,players:[...s.players,{id:'new',name:'新夥伴',bot:true}]});assert.equal(list.children.at(-1).querySelector('button'),b);
  f.window.RoomWaiting.setRosterAction(null);assert.equal(list.children.length,4);
  f.update({...s,phase:'passing'});assert.equal(f.window.RoomWaiting.setRosterAction(b),false);
+});
+
+test('moving a decorated action is idempotent, restores its home and preserves pending state',()=>{
+ const f=fixture('minimal'),s={...state,type:'minimal'};f.update(s);
+ const home=f.document.createElement('div'),button=f.document.createElement('button');button.className='button ui-button ui-icon-button';button.append(f.document.createElement('svg'));home.append(button);f.host.append(home);
+ f.window.RoomWaiting.setRosterAction(button);const card=f.roster().querySelector('.ui-room-roster-add');
+ assert.equal(button.classList.contains('ui-button'),false);assert.equal(button.classList.contains('ui-icon-button'),false);
+ f.window.RoomWaiting.setRosterAction(button);assert.equal(f.roster().querySelector('.ui-room-roster-add'),card);
+ f.window.RoomWaiting.setRosterBusy(true);assert.equal(button.disabled,true);
+ f.window.RoomWaiting.setRosterBusy(false);assert.equal(button.disabled,false);
+ button.disabled=true;f.window.RoomWaiting.setRosterBusy(true);f.window.RoomWaiting.setRosterBusy(false);assert.equal(button.disabled,true);
+ f.update({...s,phase:'finished'});assert.equal(f.roster().hidden,false);assert.equal(f.roster().querySelector('.ui-room-roster-add'),card);
+ f.update({...s,phase:'drawing'});assert.equal(f.window.RoomWaiting.setRosterAction(button),false);assert.equal(button.parentNode,home);assert.equal(button.className,'button ui-button ui-icon-button');assert.equal(button.children[0].tagName,'SVG');
 });

@@ -432,7 +432,7 @@ function drawFeedback(message,kind='info',settings=false,guess=false){
  if(!message&&!settings){const other=$(guess?'#drawStatus':'#drawGuessStatus');other.textContent='';other.dataset.kind='info';window.GameUI?.setStatus(other,'',{kind:'info'});}
 }
 let pendingDrawButton=null;
-function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));$('#drawGuessPanel').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
+function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));$('#drawGuessPanel').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton&&!pendingDrawButton.classList.contains('ui-room-roster-action-button'))window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton&&!pendingDrawButton.classList.contains('ui-room-roster-action-button'))window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}window.RoomWaiting?.setRosterBusy(value);}
 async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch,guess=name==='guess';busy=true;drawBusy(true);drawFeedback('正在送出…','info',false,guess);try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback('','info',false,guess);return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error',false,guess);toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
 async function roomAction(route,data={}){if(busy)return;if(route==='start'&&roomSettingsAutoSave){await roomSettingsAutoSave.flush();if(roomSettingsAutoSave.pending())return;}const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));updateConnection();drawFeedback(settings?'房間設定已儲存。':'',settings?'success':'info',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
@@ -469,6 +469,7 @@ $('#stage').addEventListener('change',event=>{
 });
 $('#stage').addEventListener('click',stageClick);
 $('#drawActions').addEventListener('click',stageClick);
+document.addEventListener('click',event=>{if(event.target.closest('.ui-room-roster-add button[data-do=bot]'))stageClick(event);});
 $('#canvasStage').addEventListener('click',stageClick);
 $('#stage').addEventListener('submit',async event=>{
  if(event.target.id!=='enterForm')return;event.preventDefault();if(busy)return;busy=true;

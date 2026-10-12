@@ -1,7 +1,7 @@
 (function(){
  'use strict';
  const $=s=>document.querySelector(s),code=location.pathname.match(/\/trpg\/([A-Fa-f0-9]{6})\/?$/)?.[1].toUpperCase();
- let state=null,busy=false,disposed=false,timer=null,lifetime=null,controlKey='',journalKey='',failed=null,dirty=false;
+ let state=null,busy=false,disposed=false,timer=null,lifetime=null,controlKey='',journalKey='',failed=null,dirty=false,botControl=null;
  const phaseNames={waiting:'等待開局',planning:'一起準備',reveal:'檢定揭曉',finished:'冒險結束'};
  const outcomeNames={success:'成功',partial:'付出代價仍推進',failure:'受挫仍推進'};
  function node(tag,text,className){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;}
@@ -15,7 +15,7 @@
   catch(error){if(error.name!=='AbortError'&&!disposed){say(error.message+(error.status?'':'；尚未確認是否成功，請更新狀態或重試同一操作。'));if(!error.status){failed={route,payload};$('#retry').hidden=false;}}}
   finally{busy=false;if(!disposed){lock();await refresh();}}
  }
- function lock(){for(const b of $('#controls').querySelectorAll('button,select,textarea'))b.disabled=busy;$('#leave').disabled=busy;$('#retry').disabled=busy;const resolve=$('#resolve');if(resolve)resolve.disabled=busy||dirty||!state?.canResolve;}
+ function lock(){if(botControl)botControl.disabled=busy;for(const b of $('#controls').querySelectorAll('button,select,textarea'))b.disabled=busy;$('#leave').disabled=busy;$('#retry').disabled=busy;const resolve=$('#resolve');if(resolve)resolve.disabled=busy||dirty||!state?.canResolve;}
  function resultNode(r){
   const box=node('article',undefined,'journal-entry');box.append(node('h3',r.round+'. '+r.title),node('p',r.leaderName+' · '+r.approach+' · '+outcomeNames[r.outcome]),node('p','骰 '+r.die+' + 專長 '+r.skill+' + 協助 '+r.support+' = '+r.total+'／難度 '+r.difficulty,'formula'),node('p',r.text),node('p','線索 +'+r.clues+' · 危機 +'+r.danger));
   for(const p of r.participants)box.append(node('p',p.name+'：'+(p.note||'用行動參與故事')+'（'+(p.skipped?'離線休息':p.charged?'協助，專注 −1':p.stance==='recover'?'整備，專注 +1／上限 3':'協助未扣專注')+'）','contribution'));
@@ -37,11 +37,11 @@
    }return card;
   }));
   // Keep in-progress typing/focus stable when another seat submits or a poll arrives.
-  const key=JSON.stringify([state.phase,state.sceneId,state.leaderId,state.host,me?.role,me?.focus,state.myPlan]);
-  if(key!==controlKey){controlKey=key;dirty=false;const controls=$('#controls');controls.replaceChildren();
+  const key=JSON.stringify([state.phase,state.sceneId,state.leaderId,state.host,me?.role,me?.focus,state.myPlan,state.players.length<6]);
+  if(key!==controlKey){controlKey=key;window.RoomWaiting?.setRosterAction(null);botControl=null;dirty=false;const controls=$('#controls');controls.replaceChildren();
    if(['waiting','finished'].includes(state.phase)){
     const label=node('label','你的角色');label.htmlFor='role';const roles=node('select');roles.id='role';for(const [id,r]of Object.entries(state.roles)){const o=node('option',r.name+' · '+r.description);o.value=id;roles.append(o);}roles.value=me.role;controls.append(label,roles,button('選擇角色',()=>commandRole(roles.value)));
-    if(state.host===state.me){controls.append(button(state.phase==='finished'?'再來一場':'開始冒險',()=>mutate('start',{}),true));if(state.players.length<6)controls.append(button('加入測試夥伴',()=>mutate('bot',{})));}
+    if(state.host===state.me){controls.append(button(state.phase==='finished'?'再來一場':'開始冒險',()=>mutate('start',{}),true));if(state.players.length<6){botControl=button('加入 AI 測試夥伴',()=>mutate('bot',{}));if(!window.RoomWaiting?.setRosterAction(botControl))controls.append(botControl);};}
     else controls.append(node('p','等待房主開始冒險。'));
    }else if(state.phase==='planning'){
     if(state.me===state.leaderId){
