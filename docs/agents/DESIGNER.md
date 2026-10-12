@@ -140,3 +140,6 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 2026-10-12 共用組隊人員名單1.28.5：十款waiting共用ui-room-roster固定260×112卡片／64×80角色／12gap，窄容器縮窄，112px桌機與236px手機捲動槽；真人沿用角色、AI預設機器人，姓名共用observer，hidden切回遊玩名單。十款1→滿席、40布局、十次開局及畫猜15持筆／ACK／觀看者／倒數／揭曉／換輪已驗，完整suite、PR與正式結果以 [名單契約](../specs/SHARED-WAITING-ROSTER.md) 和本批PR留言為準；未驗真觸控／全部phase，不改引擎或資料。
 
 2026-10-12 共用操作按鈕1.28.6：native action與ui-button共用999px橢圓／2px框線，晚載頁面不覆寫；icon44px圓形、內容選擇卡保持幾何。離房dialog confirm/cancel明確接GameUI中文label與primary/secondary。25頁100layout、十房40waiting／start、自動設定、五dialog20layout／取消／Escape／503留房／重試返大廳及畫猜15持筆／ACK／觀看者／倒數／揭曉／換輪已驗；完整suite與正式結果以 [按鈕契約](../specs/SHARED-BUTTON-FRAMES.md) 和本批PR留言為準，原生播放器／browser confirm不聲稱重繪。
+
+
+2026-10-12 組隊布局與聊天室1.29.0候選：十款統一上列介紹／設定、下列固定人員卡／聊天室；手機換列且內容框內捲動。五款補共用聊天依賴，單client/mountIn保留草稿與輪詢，開局恢復操作節點與原展開狀態；TRPG公開角色名出現在名單。等待特殊設定留在共用欄，賽道／手牌／畫布／播放器／身分與揭曉保留遊玩專用布局。驗收範圍、完整suite、PR與公開結果見[共用組隊與聊天契約](../specs/SHARED-WAITING-CHAT.md)與本批PR留言，不推定全phase或真人觸控。

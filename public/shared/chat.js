@@ -38,13 +38,13 @@
  }
  if(typeof module==='object'&&module.exports){module.exports={ChatClient};return;}
  let mountAttempts=0;
- let queuedRoom=null,queuedLogout=false;root.SharedChat={updateRoom:s=>{queuedRoom=s;},clearRoom:()=>{queuedRoom=null;},logout:()=>{queuedRoom=null;queuedLogout=true;}};
+ let queuedRoom=null,queuedLogout=false,queuedMount=null;root.SharedChat={mountIn:(host,options)=>{queuedMount={host,options};},updateRoom:s=>{queuedRoom=s;},clearRoom:()=>{queuedRoom=null;},logout:()=>{queuedRoom=null;queuedLogout=true;}};
  function mount(){
   const game=location.pathname!=='/';
   if(game&&new URLSearchParams(location.search).has('learn'))return;
-  const host=document.querySelector(game?'.room-sidebar,.race-utility-panel,.race-controls':'.lobby-section');if(!host){if(game&&mountAttempts++<50)setTimeout(mount,100);return;}
+  const host=queuedMount?.host||document.querySelector(game?'.room-sidebar,.race-utility-panel,.race-controls,.action-panel,#controls':'.lobby-section');if(!host){if(game&&mountAttempts++<50)setTimeout(mount,100);return;}
   const panel=document.createElement('section');panel.className='shared-chat';panel.setAttribute('aria-label','聊天室');
-  panel.innerHTML='<button type="button" class="chat-toggle" aria-expanded="false" aria-controls="chat-content">聊天室 <span class="chat-badge"></span></button><div id="chat-content" hidden><div class="chat-channels" role="group" aria-label="聊天頻道"><button type="button" data-channel="lobby">大廳 <span></span></button><button type="button" data-channel="table" hidden>本桌 <span></span></button></div><p class="chat-retention">各頻道最多保留 50 則；僅存記憶體，重啟後消失，本桌隨房間結束清除。</p><ol class="chat-messages" aria-label="聊天訊息"></ol><form autocomplete="off"><label for="chat-input"></label><div class="chat-compose"><input id="chat-input" maxlength="160" required autocomplete="off"><button type="submit" aria-label="發送聊天訊息">發送</button></div></form><p class="chat-status" role="status" aria-live="polite"></p></div>';
+  panel.innerHTML='<h2 class="chat-heading" hidden>聊天室</h2><button type="button" class="chat-toggle" aria-expanded="false" aria-controls="chat-content">聊天室 <span class="chat-badge"></span></button><div id="chat-content" hidden><div class="chat-channels" role="group" aria-label="聊天頻道"><button type="button" data-channel="lobby">大廳 <span></span></button><button type="button" data-channel="table" hidden>本桌 <span></span></button></div><p class="chat-retention">各頻道最多保留 50 則；僅存記憶體，重啟後消失，本桌隨房間結束清除。</p><ol class="chat-messages" aria-label="聊天訊息"></ol><form autocomplete="off"><label for="chat-input"></label><div class="chat-compose"><input id="chat-input" maxlength="160" required autocomplete="off"><button type="submit" aria-label="發送聊天訊息">發送</button></div></form><p class="chat-status" role="status" aria-live="polite"></p></div>';
   host.append(panel);const q=s=>panel.querySelector(s),list=q('.chat-messages'),input=q('input'),submit=q('[type=submit]');
   root.GameUI?.decorateButton(submit,'send',{iconOnly:true,label:'發送聊天訊息'});
   let rendered='',lastContext='',timer=null,backoff=3000,paused=false,pollEpoch=0;
@@ -68,8 +68,15 @@
   document.addEventListener('visibilitychange',()=>{if(document.hidden){clearTimeout(timer);client.cancel();}else tick();});
   root.addEventListener('online',tick);root.addEventListener('pagehide',()=>{paused=true;clearTimeout(timer);client.cancel();client.reset();render();});root.addEventListener('pageshow',()=>{paused=false;tick();});
   root.addEventListener('storage',event=>{if(event.key==='ah-chat-logout'){clearTimeout(timer);client.logout();}});
-  root.SharedChat={updateRoom(snapshot){client.room(snapshot);},clearRoom(){client.room(null);},logout(){clearTimeout(timer);client.logout();}};
-  if(queuedRoom)client.room(queuedRoom);if(queuedLogout)client.logout();render();tick();
+  let inline=false,previousOpen=false;
+  function mountIn(host,options={}){
+   if(!host)return;if(panel.parentElement!==host)host.append(panel);
+   const next=options.inline===true;if(next===inline)return;
+   inline=next;panel.classList.toggle('chat-inline',inline);q('.chat-heading').hidden=!inline;q('.chat-toggle').hidden=inline;
+   if(inline){previousOpen=client.open;client.show(true);}else client.show(previousOpen);
+  }
+  root.SharedChat={mountIn,updateRoom(snapshot){client.room(snapshot);},clearRoom(){client.room(null);},logout(){clearTimeout(timer);client.logout();}};
+  if(queuedRoom)client.room(queuedRoom);if(queuedMount)mountIn(queuedMount.host,queuedMount.options);if(queuedLogout)client.logout();render();tick();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })(typeof window==='object'?window:globalThis);

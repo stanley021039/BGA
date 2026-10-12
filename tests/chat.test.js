@@ -70,3 +70,39 @@ test('browser default fetch retains the window receiver',async()=>{
  const original=globalThis.fetch;globalThis.fetch=function(){assert.equal(this,globalThis);return Promise.resolve(json(snapshot('lobby')));};
  try{assert.equal(await new ChatClient().poll(),true);}finally{globalThis.fetch=original;}
 });
+
+test('all ten games share table chat membership without changing gameplay snapshots',async()=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'all-room-chat-')),config={host:'127.0.0.1',port:0,dbFile:path.join(root,'app.sqlite'),historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),externalSideEffectsEnabled:false,achievementPurpose:'test'};
+ const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('allchatadmin','test-password-123');db.close();const app=createApp(config);
+ try{
+  const {port}=await app.listen(),base=`http://127.0.0.1:${port}`;
+  const post=async(route,cookie,data)=>{const res=await fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',Cookie:cookie||''},body:JSON.stringify(data)});return {status:res.status,data:await res.json(),cookie:res.headers.get('set-cookie')?.split(';')[0]};};
+  const get=async(route,cookie)=>{const res=await fetch(base+'/api/'+route,{headers:{Cookie:cookie||''}});return {status:res.status,data:await res.json()};};
+  const host=(await post('auth/login',null,{username:'allchatadmin',password:'test-password-123'})).cookie,invite=(await post('admin/invites',host,{days:1})).data.code;
+  const guest=(await post('auth/register',null,{username:'allchatguest',password:'test-password-123',confirmPassword:'test-password-123',invite})).cookie;
+  for(const type of ['poker','thunder','majority','gift','draw','telephone','trpg','musicquiz','minimal','bluff']){
+   const created=await post('create',host,{type});assert.equal(created.status,200,type);const code=created.data.code;
+   assert.equal((await get('chat?channel=table&code='+code,guest)).status,403,type+' outsider');
+   assert.equal((await post('chat',guest,{channel:'table',code,message:'outsider'})).status,403,type+' outsider write');
+   assert.equal((await post('join',guest,{code})).status,200,type+' join');const before=(await get('state?code='+code,host)).data;
+   const sent=await post('chat',host,{channel:'table',code,message:'only '+type,requestId:'all-room-'+type});assert.equal(sent.status,200,type+' send');
+   assert.deepEqual((await get('chat?channel=table&code='+code,guest)).data.messages.map(m=>m.message),['only '+type]);
+   const after=(await get('state?code='+code,host)).data;assert.equal(after.phase,before.phase);assert.equal(after.version,before.version);
+   assert.equal((await post('leave',guest,{code})).status,200);assert.equal((await get('chat?channel=table&code='+code,guest)).status,403,type+' departed');
+   await post('leave',host,{code});await new Promise(resolve=>setTimeout(resolve,1510));
+  }
+ }finally{await app.close();fs.rmSync(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}
+});
+
+test('moving chat between waiting and play keeps one panel and restores the previous expansion state',()=>{
+ const vm=require('node:vm'),source=fs.readFileSync(path.join(__dirname,'../public/shared/chat.js'),'utf8');
+ const start=source.indexOf('  function mountIn('),end=source.indexOf('  root.SharedChat={mountIn',start),heading={hidden:true},toggle={hidden:false};let parent=null,moves=0;
+ const classes=new Set(),panel={classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name)},get parentElement(){return parent;}};
+ const host=id=>({id,append:el=>{assert.equal(el,panel);parent=hosts[id];moves++;}}),hosts={waiting:host('waiting'),play:host('play')};
+ const client=new ChatClient();client.room({code:'AAAAAA',me:'a'});client.messages.table=[event('kept')];client.retry={key:'draft',id:'same'};
+ const ctx={panel,client,q:s=>s==='.chat-heading'?heading:toggle};vm.runInNewContext('let inline=false,previousOpen=false;'+source.slice(start,end)+'globalThis.moveChat=mountIn;',ctx);
+ ctx.moveChat(hosts.waiting,{inline:true});assert.equal(client.open,true);assert.equal(heading.hidden,false);assert.equal(toggle.hidden,true);assert.ok(classes.has('chat-inline'));
+ ctx.moveChat(hosts.waiting,{inline:true});assert.equal(moves,1);assert.equal(client.messages.table[0].id,'kept');assert.equal(client.retry.id,'same');
+ ctx.moveChat(hosts.play,{inline:false});assert.equal(moves,2);assert.equal(client.open,false);assert.equal(toggle.hidden,false);assert.equal(heading.hidden,true);
+ client.show(true);ctx.moveChat(hosts.waiting,{inline:true});ctx.moveChat(hosts.play,{inline:false});assert.equal(client.open,true);assert.equal(client.messages.table[0].id,'kept');
+});

@@ -85,3 +85,34 @@ body[data-room-phase=waiting] #game>.ui-room-roster{order:2}
 body[data-room-phase=waiting] .race-main>.ui-room-roster{grid-column:1/-1;grid-row:2}
 @media(min-width:1001px){body[data-room-phase=waiting] .race-main>.race-side-column{grid-row:1!important}}
 @media(max-width:600px){:root{--ui-roster-list-height:236px}.ui-room-roster{padding:16px}.ui-room-roster-heading{flex-wrap:wrap}.ui-room-roster-count{text-align:left}}
+
+/* One shared grid; the original controls and play containers are restored at start. */
+:root{--ui-room-row-height:440px;--ui-room-gap:16px;--ui-room-tools-width:340px}
+body[data-room-phase=waiting] [data-waiting-layout-host]{display:block!important}
+body[data-room-phase=waiting] [data-waiting-layout-hidden]{display:none!important}
+.ui-room-waiting-layout{display:grid;grid-template-columns:minmax(0,1fr) var(--ui-room-tools-width);grid-template-areas:"intro controls" "roster chat";grid-template-rows:var(--ui-room-row-height) var(--ui-room-row-height);gap:var(--ui-room-gap);width:100%;min-width:0}
+.ui-room-waiting-layout[hidden]{display:none!important}
+.ui-room-waiting-layout>:is(.room-waiting-template,.garage){grid-area:intro;height:100%;min-height:0!important;max-height:none;margin:0!important}
+.ui-room-waiting-layout>.ui-room-waiting-controls{grid-area:controls!important;position:static!important;box-sizing:border-box;width:100%;height:100%!important;min-height:0!important;max-height:none!important;margin:0!important;overflow:auto;scrollbar-gutter:stable;align-self:stretch}
+.ui-room-waiting-layout>.ui-room-roster{grid-area:roster;display:flex;flex-direction:column;height:100%;min-height:0}
+.ui-room-waiting-layout .ui-room-roster-list{flex:1;min-height:0;height:auto}
+.ui-room-chat-slot{grid-area:chat;min-width:0;min-height:0;height:100%}
+body[data-room-phase=waiting] .ui-room-waiting-layout>.race-side-column{grid-column:2!important;grid-row:1!important;gap:12px}
+body[data-room-phase=waiting] .ui-room-waiting-layout>.race-side-column>.race-controls{min-height:220px;flex:1;position:static}
+.ui-room-waiting-layout .shared-chat{margin:0;padding:20px;border:var(--play-card-border,2px solid #292639);border-radius:var(--play-radius,16px);box-shadow:var(--play-shadow,3px 4px 0 #0001);background:var(--play-surface,#fffdf8);color:var(--play-ink,#292639);height:100%;display:flex;flex-direction:column;overflow:hidden;--ui-surface:var(--play-surface);--ui-border:var(--play-ink);--ui-text:var(--play-ink)}
+.chat-inline .chat-heading{margin:0 0 12px;min-height:28px;font-size:var(--ui-text-section,1.25rem);line-height:1.4}
+.chat-inline #chat-content{display:flex;flex-direction:column;min-height:0;flex:1}
+.chat-inline .chat-channels{flex:none;margin:0 0 8px;min-height:44px}
+.chat-inline .chat-retention{flex:none;margin:0 0 8px;color:var(--play-muted);font-size:12px}
+.chat-inline .chat-messages{flex:1;min-height:0;max-height:none;margin:0;scrollbar-gutter:stable;border-block:1px solid var(--play-ink)}
+.chat-inline form{flex:none;margin:0}
+.chat-inline label{min-height:2.7em;margin:8px 0;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.chat-inline .chat-status{flex:none;min-height:24px;max-height:48px;overflow:auto;margin:8px 0 0;font-size:13px;line-height:1.4}
+.ui-room-waiting-layout .chat-compose input{background:var(--play-paper);color:var(--play-ink);border:1px solid var(--play-ink);border-radius:12px;padding:8px}
+.ui-room-waiting-layout .chat-channels button{background:var(--play-paper);color:var(--play-ink)}
+.ui-room-waiting-layout .chat-channels [aria-pressed=true]{background:var(--play-blue)}
+@media(max-width:1000px){.ui-room-waiting-layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"intro" "controls" "roster" "chat";grid-template-rows:440px 440px 440px 440px}body[data-room-phase=waiting] .ui-room-waiting-layout>.race-side-column{grid-column:1!important;grid-row:2!important}}
+@media(max-width:600px){.ui-room-waiting-layout{grid-template-rows:auto 440px 360px 440px}.ui-room-waiting-layout>:is(.room-waiting-template,.garage){height:auto}.ui-room-waiting-layout .shared-chat{padding:16px}.ui-room-waiting-layout .garage-art{height:180px}.ui-room-waiting-layout .garage-art img{height:180px;object-fit:contain}.ui-room-waiting-layout .garage-art>span{display:none}}
+
+.ui-room-waiting-layout>.ui-room-waiting-controls:not(.race-side-column){padding:20px;border:var(--play-card-border,2px solid #292639);border-radius:var(--play-radius,16px);background:var(--play-surface,#fffdf8);color:var(--play-ink,#292639);box-shadow:var(--play-shadow,3px 4px 0 #0001)}
+body[data-room-phase=waiting] #turnHint{display:none}
