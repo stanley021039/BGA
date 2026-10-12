@@ -42,10 +42,10 @@ test('joining the waiting room updates the roster and start action without disca
  assert.equal(ui.element('.draw-roster').hidden,false,'the room roster remains available during setup');
 });
 
-test('meme appears beside the existing topics in both create and host settings without changing saved topic choices',()=>{
+test('creation directs topic choices to host room settings without changing saved topic choices',()=>{
  const ui=browserHarness();vm.runInContext('code="";entry()',ui.context);
- assert.match(ui.element('#stage').innerHTML,/name="topics" value="meme" checked/);
- assert.match(ui.element('#stage').innerHTML,/迷因 Meme/);
+ assert.doesNotMatch(ui.element('#stage').innerHTML,/name="topics"/);
+ assert.match(ui.element('#stage').innerHTML,/房間設定/);
  const s=drawingState('artist');s.phase='waiting';s.presenterId=null;s.options.topics=['food','meme','custom'];ui.receive(s);
  assert.match(ui.element('#stage').innerHTML,/name="topics" value="meme" checked/);
  assert.match(ui.element('#stage').innerHTML,/name="topics" value="animals" ><span>/);

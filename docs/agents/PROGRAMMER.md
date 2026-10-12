@@ -3,6 +3,7 @@
 2026-10-12：傳情畫意共用畫板候選，題目與倒數上移、移除技術限額說明、採同款工具與renderer。19 focused及8組隔離Chromium布局，未部署；到0流程待確認，詳[共用畫板](../specs/TELEPHONE-SHARED-BOARD.md)。
 
 2026-10-12：欄位＋操作排版候選修正，傳情畫意等待／再開局使用共用ui-field、ui-field-actions與ui-control-group，避免選單貼住開始按鈕。實作與範圍見[共用欄位操作](../specs/SHARED-FIELD-ACTIONS.md)；測試、PR與部署狀態以本批PR證據為準。
+2026-10-12：獨立側邊候選將建房遊戲設定移至房間設定；畫猜結算／題庫／時間與瞎掰難度／身分時間集中、非房主唯讀。保留8題與30秒預設及舊API，不改傳情畫意控制列。規格見[設定位置](../specs/GAME-SETTINGS-IN-ROOM.md)，測試與發布以本批證據為準，尚未部署。
 
 2026-10-10 音效秒數補驗：10／30／60 秒真實時間瀏覽器各取得 5→1 原生 playing，320ms、25% 音量、零錯誤／重播；隔離靜音及提前 ready 也通過。56 focused，未改 runtime／重跑全套；取代前筆『無原生 playing 證據』，喇叭主觀聽感仍未驗。詳細 [三種秒數證據](../BLUFF-KING-PROGRESS.md)，沒有 PR／部署／永久偏好更新。
 
