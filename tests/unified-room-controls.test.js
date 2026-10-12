@@ -1,8 +1,16 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const vm=require('node:vm');
 test('all ten room entry points load the common actions before their controllers',()=>{
  for(const type of ['poker','race','draw','gift','majority','telephone','trpg','musicquiz','minimal','bluff']){
   const html=fs.readFileSync(path.join(__dirname,'../public',type+'.html'),'utf8');
   for(const asset of ['room-controls.js','room-controls.css','chat.js','game-shell.js','table-media.js'])assert.equal(html.split('/shared/'+asset).length-1,1,type+' '+asset);
   assert.ok(html.indexOf('/shared/room-controls.js')<html.indexOf('/shared/game-shell.js'),type+' controls ready before shell');
  }
+});
+test('common actions honor hidden native containers and only show supported restart settings',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../public/shared/room-controls.js'),'utf8'),button=()=>{const attrs=new Map();return {hidden:false,disabled:false,parentElement:null,tabIndex:0,setAttribute:(k,v)=>attrs.set(k,v),hasAttribute:k=>attrs.has(k),getAttribute:k=>attrs.get(k)||null};},parent={hidden:true,parentElement:null},original=button(),card={hidden:false},slot={textContent:'',replaceChildren(n){this.textContent=n.textContent;}},proxies={start:button(),bot:button(),leave:button()};original.parentElement=parent;
+ const scope={state:{type:'thunder',phase:'move',host:true,me:'P',players:[{},{},{}],botSupport:{supported:false,canAdd:false}},panel:{querySelector:s=>s==='.ui-room-settings-card'?card:slot},native:{},proxies,leaving:false,settingsSource:null,scheduled:false,minimumPlayers:{thunder:2},window:{},getComputedStyle:()=>({display:'block',visibility:'visible'}),mount(){},findAction:()=>original,node:(_tag,_cls,text)=>({textContent:text}),document:{getElementById:()=>null,querySelectorAll:()=>[]}};
+ vm.createContext(scope);vm.runInContext(source.slice(source.indexOf(' function owner('),source.indexOf(' function findAction('))+source.slice(source.indexOf(' function normalize(){'),source.indexOf(' function schedule(){')),scope);
+ scope.normalize();assert.equal(proxies.bot.disabled,true,'native AI action is unavailable inside hidden waiting area');assert.equal(card.hidden,true);parent.hidden=false;scope.normalize();assert.equal(proxies.bot.disabled,false,'legacy AI remains supported while its native control is available');
+ scope.state.phase='finished';scope.normalize();assert.equal(card.hidden,true,'do not expose cached settings without a supported save flow');for(const type of ['draw','bluff','telephone']){scope.state.type=type;scope.normalize();assert.equal(card.hidden,false,type+' keeps room settings for restart');}
 });

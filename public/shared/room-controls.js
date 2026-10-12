@@ -45,13 +45,13 @@
    const source=findAction(kind);native[kind]=source;if(source&&!source.hasAttribute('data-room-native-action')){source.setAttribute('data-room-native-action',kind);source.tabIndex=-1;source.setAttribute('aria-hidden','true');}
    const legacyRace=state.type==='thunder',visible=kind==='bot'?owner()&&(legacyRace||state.botSupport?.supported!==false)&&(!!source||state.botSupport?.canAdd===false):!!source&&!hidden(source),button=proxies[kind];if(button.hidden===visible)button.hidden=!visible;
    const tooFew=kind==='start'&&(state.players||[]).filter(p=>!p.kicked).length<(minimumPlayers[state.type||'poker']||1);
-   const disabled=!visible||!source||source.disabled||button.getAttribute('aria-busy')==='true'||leaving||tooFew||kind==='bot'&&!legacyRace&&state.botSupport?.canAdd===false;if(button.disabled!==disabled)button.disabled=disabled;
+   const disabled=!visible||!source||source.disabled||hidden(source)||button.getAttribute('aria-busy')==='true'||leaving||tooFew||kind==='bot'&&!legacyRace&&state.botSupport?.canAdd===false;if(button.disabled!==disabled)button.disabled=disabled;
   }
   const ownLeave=document.getElementById('leave'),legacyLinks=document.querySelectorAll('.room-leave,#back');
   if(ownLeave&&!ownLeave.hasAttribute('data-room-native-action')){ownLeave.setAttribute('data-room-native-action','leave');ownLeave.tabIndex=-1;ownLeave.setAttribute('aria-hidden','true');}
   for(const n of legacyLinks)if(!n.hasAttribute('data-room-native-action')){n.setAttribute('data-room-native-action','leave');n.tabIndex=-1;n.setAttribute('aria-hidden','true');}
   const leaveDisabled=leaving||!!ownLeave?.disabled;if(proxies.leave.disabled!==leaveDisabled)proxies.leave.disabled=leaveDisabled;if(proxies.leave.hidden)proxies.leave.hidden=false;
-  const setup=['waiting','finished','showdown'].includes(state.phase),card=panel.querySelector('.ui-room-settings-card');if(card.hidden===setup)card.hidden=!setup;
+  const setup=state.phase==='waiting'||['draw','bluff','telephone'].includes(state.type)&&state.phase==='finished',card=panel.querySelector('.ui-room-settings-card');if(card.hidden===setup)card.hidden=!setup;
   if(setup){
    let source=[...document.querySelectorAll('.room-settings-panel')].find(n=>!n.closest('[data-room-common]'));
    if(!owner()&&!source&&!(settingsSource?.isConnected&&settingsSource.dataset.roomReadOnly==='true')){settingsSource=null;const slot=panel.querySelector('.ui-room-settings-slot');if(slot.textContent!=='由房主調整房間設定。')slot.replaceChildren(node('p','ui-room-settings-note','由房主調整房間設定。'));return;}
