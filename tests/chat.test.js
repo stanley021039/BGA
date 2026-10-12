@@ -23,18 +23,18 @@ test('changing rooms cancels stale reads and sends, with no previous room messag
  const old=deferred();let pending=false;const client=new ChatClient({fetcher:async url=>pending?old.promise:json(snapshot(url.includes('table')?'table':'lobby','AAAAAA',[event('a')]))});
  client.room({code:'AAAAAA',me:'a'});client.messages.table=[event('old')];pending=true;const poll=client.request('table');
  client.room({code:'BBBBBB',me:'b'});assert.deepEqual(client.messages.table,[]);assert.equal(client.channel,'table');old.resolve(json(snapshot('table','AAAAAA',[event('secret')])));assert.equal(await poll,false);assert.deepEqual(client.messages.table,[]);
- const send=deferred();client.fetcher=()=>send.promise;const sending=client.send('hi');client.room(null);send.resolve(json(snapshot('table','BBBBBB',[event('late')])));assert.equal(await sending,false);assert.equal(client.channel,'lobby');assert.deepEqual(client.messages.table,[]);assert.equal(client.pending,false);
+ const send=deferred();client.fetcher=()=>send.promise;const sending=client.send('hi');client.room(null);send.resolve(json(snapshot('table','BBBBBB',[event('late')])));assert.equal(await sending,false);assert.equal(client.channel,'table');assert.deepEqual(client.messages.table,[]);assert.equal(client.pending,false);
 });
 test('unread, duplicate clicks, failed-send retry, logout and permission revocation',async()=>{
- const requests=[];let result=json(snapshot('lobby',null,[event('1')]));const client=new ChatClient({fetcher:async(url,options)=>{requests.push(options);return result;}});
- await client.poll();assert.equal(client.unread.lobby,0);result=json(snapshot('lobby',null,[event('1'),event('2')]));await client.poll();assert.equal(client.unread.lobby,1);await client.poll();assert.equal(client.unread.lobby,1);client.show(true);assert.equal(client.unread.lobby,0);
+ const requests=[];let result=json(snapshot('table','AAAAAA',[event('1')]));const client=new ChatClient({fetcher:async(url,options)=>{requests.push(options);return result;}});
+ client.room({code:'AAAAAA',me:'a'});await client.poll();assert.equal(client.unread.table,0);result=json(snapshot('table','AAAAAA',[event('1'),event('2')]));await client.poll();assert.equal(client.unread.table,1);await client.poll();assert.equal(client.unread.table,1);client.show(true);assert.equal(client.unread.table,0);
  const failed=deferred();client.fetcher=async(url,options)=>{requests.push(options);return failed.promise;};const sending=client.send('hello');assert.equal(await client.send('hello'),false);failed.resolve(json({error:'offline'},503));assert.equal(await sending,false);const id=JSON.parse(requests.at(-1).body).requestId;
- client.fetcher=async(url,options)=>{assert.equal(JSON.parse(options.body).requestId,id);return json(snapshot('lobby',null,[event('3')]));};assert.equal(await client.send('hello'),true);
+ client.fetcher=async(url,options)=>{assert.equal(JSON.parse(options.body).requestId,id);return json(snapshot('table','AAAAAA',[event('3')]));};assert.equal(await client.send('hello'),true);
  client.room({code:'AAAAAA',me:'a'});client.messages.table=[event('private')];client.fetcher=async()=>json({error:'kicked'},403);await client.request('table');assert.equal(client.code,null);assert.deepEqual(client.messages.table,[]);
- client.fetcher=async()=>json({},401);await client.poll();assert.equal(client.enabled,false);assert.deepEqual(client.messages.lobby,[]);assert.equal(await client.send('x'),false);
+ client.room({code:'BBBBBB',me:'a'});client.fetcher=async()=>json({},401);await client.poll();assert.equal(client.enabled,false);assert.deepEqual(client.messages.lobby,[]);assert.equal(await client.send('x'),false);
 });
 test('identity changes clear both histories and invalidate other pending replies',async()=>{
- const client=new ChatClient({fetcher:async()=>json(snapshot('lobby',null,[event('a')],'alice'))});await client.poll();client.room({code:'AAAAAA',me:'a'});client.messages.table=[event('secret')];client.fetcher=async()=>json(snapshot('lobby',null,[event('b')],'bob'));await client.poll();assert.deepEqual(client.messages,{lobby:[],table:[]});assert.equal(client.code,null);assert.equal(client.viewer,'bob');
+ const client=new ChatClient({fetcher:async()=>json(snapshot('table','AAAAAA',[event('a')],'alice'))});client.room({code:'AAAAAA',me:'a'});await client.poll();client.messages.table=[event('secret')];client.fetcher=async()=>json(snapshot('table','AAAAAA',[event('b')],'bob'));await client.poll();assert.deepEqual(client.messages,{lobby:[],table:[]});assert.equal(client.code,null);assert.equal(client.viewer,'bob');
 });
 test('HTTP chat auth, cross-room isolation, leave/kick, compatibility and no gameplay mutation',async()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-chat-'));const config={host:'127.0.0.1',port:0,dbFile:path.join(root,'app.sqlite'),historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),externalSideEffectsEnabled:false,achievementPurpose:'test'};
@@ -51,24 +51,24 @@ test('HTTP chat auth, cross-room isolation, leave/kick, compatibility and no gam
   assert.equal((await post('chat',host,{channel:'table',code:a,message:'<script>alert(1)</script>',requestId:'request-0001'})).data.messages.length,1);
   assert.equal((await post('social',host,{code:a,kind:'message',message:'rate bypass'})).status,429);
   assert.equal((await get('chat?channel=table&code='+a,guest)).status,403);assert.equal((await post('chat',guest,{channel:'table',code:a,message:'intruder'})).status,403);
-  assert.equal((await get('chat?channel=table&code='+b,guest)).data.messages.length,0);assert.equal((await get('chat?channel=lobby',guest)).data.messages.length,0);
-  const after=(await get('state?code='+a,host)).data;assert.equal(after.version,before.version);assert.equal(after.phase,before.phase);assert.equal(after.social[0].message,'<script>alert(1)</script>');assert.deepEqual(after.barrages,before.barrages);
+  assert.equal((await get('chat?channel=table&code='+b,guest)).data.messages.length,0);assert.equal((await get('chat?channel=lobby',guest)).status,400);
+  const after=(await get('state?code='+a,host)).data;assert.equal(after.version,before.version);assert.equal(after.phase,before.phase);assert.equal(after.social[0].message,'<script>alert(1)</script>');assert.equal(after.barrages.length,1);assert.equal(after.barrages[0].message,after.social[0].message);
   await post('join',guest,{code:a});assert.equal((await get('chat?channel=table&code='+a,guest)).data.messages.length,1);
   await post('leave',guest,{code:a});assert.equal((await get('chat?channel=table&code='+a,guest)).status,403);await post('join',guest,{code:a});const state=(await get('state?code='+a,guest)).data;
   await post('kick',host,{code:a,playerId:state.me,confirmed:true});assert.equal((await get('chat?channel=table&code='+a,guest)).status,403);assert.equal((await post('chat',guest,{channel:'table',code:a,message:'kicked'})).status,403);
-  assert.equal((await post('chat',guest,{channel:'lobby',message:'still in lobby'})).status,200);assert.equal((await get('chat?channel=lobby',host)).data.messages[0].message,'still in lobby');
+  assert.equal((await post('chat',guest,{channel:'lobby',message:'still in lobby'})).status,400);assert.equal((await get('chat?channel=lobby',host)).status,400);
   assert.equal((await post('chat',host,{channel:'other',message:'bad'})).status,400);await post('auth/logout',guest,{});assert.equal((await get('chat?channel=lobby',guest)).status,401);
-  for(const asset of ['chat.js','chat.css'])assert.equal((await fetch(base+'/shared/'+asset)).status,200);
+  for(const asset of ['chat.js','chat.css','room-controls.js','room-controls.css'])assert.equal((await fetch(base+'/shared/'+asset)).status,200);
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}
 });
 
 test('a send interrupts polling without accepting a late pre-send snapshot',async()=>{
  const read=deferred(),posted=deferred();const client=new ChatClient({fetcher:async(url,options)=>options.method==='POST'?posted.promise:read.promise});
- const polling=client.poll();const sending=client.send('new message');posted.resolve(json(snapshot('lobby',null,[event('new')])));assert.equal(await sending,true);read.resolve(json(snapshot('lobby',null,[event('old')])));await polling;assert.equal(client.messages.lobby[0].id,'new');assert.equal(client.pending,false);
+ client.room({code:'AAAAAA',me:'a'});const polling=client.poll();const sending=client.send('new message');posted.resolve(json(snapshot('table','AAAAAA',[event('new')])));assert.equal(await sending,true);read.resolve(json(snapshot('table','AAAAAA',[event('old')])));await polling;assert.equal(client.messages.table[0].id,'new');assert.equal(client.pending,false);
 });
 test('browser default fetch retains the window receiver',async()=>{
- const original=globalThis.fetch;globalThis.fetch=function(){assert.equal(this,globalThis);return Promise.resolve(json(snapshot('lobby')));};
- try{assert.equal(await new ChatClient().poll(),true);}finally{globalThis.fetch=original;}
+ const original=globalThis.fetch;globalThis.fetch=function(){assert.equal(this,globalThis);return Promise.resolve(json(snapshot('table','AAAAAA')));};
+ try{const client=new ChatClient();client.room({code:'AAAAAA',me:'a'});assert.equal(await client.poll(),true);}finally{globalThis.fetch=original;}
 });
 
 test('all ten games share table chat membership without changing gameplay snapshots',async()=>{
@@ -85,9 +85,11 @@ test('all ten games share table chat membership without changing gameplay snapsh
    assert.equal((await get('chat?channel=table&code='+code,guest)).status,403,type+' outsider');
    assert.equal((await post('chat',guest,{channel:'table',code,message:'outsider'})).status,403,type+' outsider write');
    assert.equal((await post('join',guest,{code})).status,200,type+' join');const before=(await get('state?code='+code,host)).data;
-   const sent=await post('chat',host,{channel:'table',code,message:'only '+type,requestId:'all-room-'+type});assert.equal(sent.status,200,type+' send');
-   assert.deepEqual((await get('chat?channel=table&code='+code,guest)).data.messages.map(m=>m.message),['only '+type]);
-   const after=(await get('state?code='+code,host)).data;assert.equal(after.phase,before.phase);assert.equal(after.version,before.version);
+   const message='😀'.repeat(160),requestId='all-room-'+type;
+   const sent=await post('chat',host,{channel:'table',code,message,requestId});assert.equal(sent.status,200,type+' send');assert.equal(sent.data.roomState.barrages[0].message,'😀'.repeat(40)+'…');
+   assert.equal((await post('social',host,{code,kind:'barrage',message,requestId})).status,200,type+' compatible retry');
+   assert.deepEqual((await get('chat?channel=table&code='+code,guest)).data.messages.map(m=>m.message),[message]);
+   const after=(await get('state?code='+code,host)).data;assert.equal(after.phase,before.phase);assert.equal(after.version,before.version);assert.equal(after.barrages.length,1);assert.equal(after.social.length,1);
    assert.equal((await post('leave',guest,{code})).status,200);assert.equal((await get('chat?channel=table&code='+code,guest)).status,403,type+' departed');
    await post('leave',host,{code});await new Promise(resolve=>setTimeout(resolve,1510));
   }

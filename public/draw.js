@@ -121,7 +121,7 @@ function topicOptions(group,current){
  return `<fieldset class="topic-options"><legend>${group}</legend><div class="topic-shortcuts"><span>可多選</span><button type="button" data-select-topics="all">全選</button><button type="button" data-select-topics="none">清除</button></div><div class="option-row">${topicChoices.map(([value,label])=>`<label><input type="checkbox" name="topics" value="${value}" ${current.includes(value)?'checked':''}><span><i aria-hidden="true">✓</i>${label}</span></label>`).join('')}</div><p class="topic-hint">自定義包含共編題庫的投稿題目；至少選擇一個類別。</p></fieldset>`;
 }
 function readTopics(){
- const topics=[...document.querySelectorAll('#stage input[name="topics"]:checked')].map(input=>input.value);
+ const topics=[...document.querySelectorAll('#stage input[name="topics"]:checked,.ui-room-settings-slot input[name="topics"]:checked')].map(input=>input.value);
  if(!topics.length)throw Error('請至少選擇一個題目類別');
  return topics;
 }
@@ -130,11 +130,11 @@ function endingSettings(settings){
  return `<fieldset class="draw-ending-settings"><legend>結算條件</legend><label for="drawEndMode">結算方式</label><select id="drawEndMode">${legacy?'<option value="legacy" selected>每位玩家畫一次（目前設定）</option>':''}<option value="rounds" ${!legacy&&!score?'selected':''}>固定輪數（總題數）</option><option value="score" ${score?'selected':''}>分數達標</option></select><label for="drawEndValue">數值</label><input id="drawEndValue" type="number" min="${score?10:1}" max="${score?1000:64}" step="1" value="${legacy?'':ending.value}" ${legacy?'disabled':''}><p id="drawEndHint">${legacy?'依入座順序，每位玩家畫一次。':score?'10–1000 分；當題揭曉後結算，最多 64 題。':'1–64 題；畫者依入座順序輪替。'}</p></fieldset>`;
 }
 function readRoomSettings(){
- const mode=$('#drawEndMode').value,data={seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()};
+ const mode=$('#drawEndMode').value,data={seconds:Number($('#stage input[name="seconds"]:checked,.ui-room-settings-slot input[name="seconds"]:checked')?.value),topics:readTopics()};
  if(mode!=='legacy'){const value=Number($('#drawEndValue').value),min=mode==='score'?10:1,max=mode==='score'?1000:64;if(!Number.isInteger(value)||value<min||value>max)throw Error(mode==='score'?'目標分數需為10–1000的整數。':'固定總題數需為1–64的整數。');data.ending={mode,value};}
  return data;
 }
-function roomSettingsMarkup(s){return `<details class="card stage-controls room-settings-panel"><summary>房間設定</summary><div class="room-settings-body" role="group" aria-label="房間設定欄位"><p>${s.host?'修改後自動儲存，開始前請確認設定。':'只有房主能修改；以下為目前房間設定。'}</p><div class="room-settings-scroll"><fieldset class="room-settings-fields" ${s.host?'':'disabled'}><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}${endingSettings(s.options)}</div></fieldset></div>${s.host?GameShell.settingsActions():''}</div></details>`;}
+function roomSettingsMarkup(s){return `<section class="card stage-controls room-settings-panel"><h2>房間設定</h2><div class="room-settings-body" role="group" aria-label="房間設定欄位"><p>${s.host?'修改後自動儲存，開始前請確認設定。':'只有房主能修改；以下為目前房間設定。'}</p><div class="room-settings-scroll"><fieldset class="room-settings-fields" ${s.host?'':'disabled'}><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}${endingSettings(s.options)}</div></fieldset></div>${s.host?GameShell.settingsActions():''}</div></section>`;}
 function waitingActions(s){return s.host?`<p>${s.players.length<2?'等朋友入座，至少需要兩人。':'朋友已入座，可以開始。'}</p><button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲</button>`:'<p>等待房主開始遊戲。</p>';}
 function decorateActions(){for(const button of $('#drawActions').querySelectorAll('button'))window.GameUI?.decorateButton(button,({start:state.phase==='finished'?'replay':'play',next:'next',save:'save',settings:'settings'})[button.dataset.do]);}
 function entry(){
@@ -180,8 +180,8 @@ function render(live=false){
   }else if(s.phase==='finished'){
    actions=`<p>本局完成。</p>${s.host?'<button data-do="start">再玩一局</button>':'<p>等待房主再開一局。</p>'}${s.result?.resultId?'<button data-do="save" data-result-id="'+esc(s.result.resultId)+'">收藏這幅畫</button>':''}`;
  }
- if(s.phase==='finished')html=roomSettingsMarkup(s);$('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&['waiting','finished'].includes(s.phase))$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
- if(['waiting','finished'].includes(s.phase)){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
+ if(s.phase==='finished')html=roomSettingsMarkup(s);$('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&['waiting','finished'].includes(s.phase)&&!window.RoomControls)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
+ if(['waiting','finished'].includes(s.phase)&&!window.RoomControls){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
   actions=(s.options.ending?.value!=null?'<p class="draw-ending-summary">'+(s.options.ending.mode==='score'?'目標 '+s.options.ending.value+' 分（最多 64 題）':'固定 '+s.options.ending.value+' 題')+'</p>':'')+actions;actions+=GameShell.botButton?.(s)||'';
   GameShell.stableMarkup($('#drawActions'),actions);
  decorateActions();
@@ -463,11 +463,12 @@ function stageClick(event){
   case 'save':return saveArtwork(button.dataset.resultId);case 'ban':return voteForResult(button.dataset.resultId);case 'invite':return invite();
  }
 }
-$('#stage').addEventListener('change',event=>{
+document.addEventListener('change',event=>{
  if(event.target.id!=='drawEndMode'||!state?.host)return;
  const mode=event.target.value,score=mode==='score',value=$('#drawEndValue');value.disabled=mode==='legacy';value.min=score?10:1;value.max=score?1000:64;value.value=mode==='legacy'?'':score?100:8;$('#drawEndHint').textContent=mode==='legacy'?'依入座順序，每位玩家畫一次。':score?'10–1000 分；當題揭曉後結算，最多 64 題。':'1–64 題；畫者依入座順序輪替。';
 });
 $('#stage').addEventListener('click',stageClick);
+document.addEventListener('click',event=>{if(event.target.closest('.ui-room-settings-slot'))stageClick(event);});
 $('#drawActions').addEventListener('click',stageClick);
 document.addEventListener('click',event=>{if(event.target.closest('.ui-room-roster-add button[data-do=bot]'))stageClick(event);});
 $('#canvasStage').addEventListener('click',stageClick);
