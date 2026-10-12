@@ -33,7 +33,7 @@ let drawingFitFrame=null;
 function fitDrawingViewport(){
  drawingFitFrame=null;
  const board=$('#boardSection'),main=board.parentElement,frame=board.querySelector('.canvas-frame');
- if(!frame||!window.matchMedia('(min-width:1200px) and (min-height:680px)').matches||document.body.classList.contains('ui-large-text')||!board.classList.contains('is-drawing')){board.style.removeProperty('--draw-canvas-width');if(document.body.classList.contains('draw-viewport-overflow'))document.body.classList.remove('draw-viewport-overflow');return;}
+ if(document.body.classList.contains('ui-drawing-play-mode')||!frame||!window.matchMedia('(min-width:1200px) and (min-height:680px)').matches||document.body.classList.contains('ui-large-text')||!board.classList.contains('is-drawing')){board.style.removeProperty('--draw-canvas-width');if(document.body.classList.contains('draw-viewport-overflow'))document.body.classList.remove('draw-viewport-overflow');return;}
  const css=getComputedStyle(board),mainCss=getComputedStyle(main),chatCss=getComputedStyle($('#drawGuessPanel'));
  const number=value=>parseFloat(value)||0,tools=$('#tools'),toolHeight=tools.hidden?0:tools.getBoundingClientRect().height;
  const overhead=board.getBoundingClientRect().height-Math.max(frame.getBoundingClientRect().height,toolHeight);
@@ -134,8 +134,8 @@ function readRoomSettings(){
  if(mode!=='legacy'){const value=Number($('#drawEndValue').value),min=mode==='score'?10:1,max=mode==='score'?1000:64;if(!Number.isInteger(value)||value<min||value>max)throw Error(mode==='score'?'目標分數需為10–1000的整數。':'固定總題數需為1–64的整數。');data.ending={mode,value};}
  return data;
 }
-function roomSettingsMarkup(s){return `<section class="card stage-controls room-settings-panel"><h2>房間設定</h2><div class="room-settings-body" role="group" aria-label="房間設定欄位"><p>${s.host?'修改後自動儲存，開始前請確認設定。':'只有房主能修改；以下為目前房間設定。'}</p><div class="room-settings-scroll"><fieldset class="room-settings-fields" ${s.host?'':'disabled'}><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}${endingSettings(s.options)}</div></fieldset></div>${s.host?GameShell.settingsActions():''}</div></section>`;}
-function waitingActions(s){return s.host?`<p>${s.players.length<2?'等朋友入座，至少需要兩人。':'朋友已入座，可以開始。'}</p><button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲</button>`:'<p>等待房主開始遊戲。</p>';}
+function roomSettingsMarkup(s){return `<section class="card stage-controls room-settings-panel"><h2>房間設定</h2><div class="room-settings-body" role="group" aria-label="房間設定欄位">${s.host?'':'<p>只有房主能修改；以下為目前房間設定。</p>'}<div class="room-settings-scroll"><fieldset class="room-settings-fields" ${s.host?'':'disabled'}><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}${endingSettings(s.options)}</div></fieldset></div>${s.host?GameShell.settingsActions():''}</div></section>`;}
+function waitingActions(s){return s.host?`<button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲</button>`:'';}
 function decorateActions(){for(const button of $('#drawActions').querySelectorAll('button'))window.GameUI?.decorateButton(button,({start:state.phase==='finished'?'replay':'play',next:'next',save:'save',settings:'settings'})[button.dataset.do]);}
 function entry(){
  $('#stage').innerHTML=`<div class="card hero"><div class="hero-mark">✎</div><span class="eyebrow">DRAW TOGETHER</span><h1>畫一筆，<br>讓朋友猜一猜。</h1><p id="identity">將以你的角色名稱入座</p><form id="enterForm">${code?`<p>加入房間 <b>${esc(code)}</b></p><button class="button wide">加入這一桌 →</button>`:`<p>題目類別、時間與結算條件可在建房後的房間設定調整。</p><button class="button wide">開一桌你畫我猜 →</button>`}</form></div>`;
@@ -182,7 +182,7 @@ function render(live=false){
  }
  if(s.phase==='finished')html=roomSettingsMarkup(s);$('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&['waiting','finished'].includes(s.phase)&&!window.RoomControls)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
  if(['waiting','finished'].includes(s.phase)&&!window.RoomControls){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
-  actions=(s.options.ending?.value!=null?'<p class="draw-ending-summary">'+(s.options.ending.mode==='score'?'目標 '+s.options.ending.value+' 分（最多 64 題）':'固定 '+s.options.ending.value+' 題')+'</p>':'')+actions;actions+=GameShell.botButton?.(s)||'';
+  if(s.phase==='waiting')actions+=GameShell.botButton?.(s)||'';
   GameShell.stableMarkup($('#drawActions'),actions);
  decorateActions();
  $('#canvasStage').innerHTML=s.phase==='drawing'?'':stageScene(s);

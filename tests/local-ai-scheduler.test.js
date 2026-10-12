@@ -2,6 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {DrawGuessRoom}=require('../src/games/draw-guess');
 const {validateWord}=require('../src/games/draw-guess-store');
 const {MajorityRoom}=require('../src/games/majority');
+const {TelephoneRoom}=require('../src/games/telephone');
 const {addTestBot}=require('../src/ai');
 const {startRoomScheduler}=require('../src/rooms/scheduler');
 
@@ -75,3 +76,11 @@ for(const title of ['__proto__','constructor','toString','hasOwnProperty','proto
   assert.equal(h.strokes.length,3);assert.ok(h.strokes.every(([code,kind,data])=>code===r.code&&kind==='stroke'&&data.canvasEpoch===r.canvas.epoch));
  });
 }
+
+test('telephone deadline advances before bots, preserves drafts and finishes without host actions',t=>{
+ const h=schedulerHarness(t,TelephoneRoom),r=h.room;addTestBot(r);r.start();
+ const step=r.stepId;r.saveDraft(h.human.id,{stepId:step,requestId:require('node:crypto').randomUUID(),strokes:[{tool:'brush',color:'#123456',size:4,points:[[10,10],[30,30]]}]});
+ h.setNow(r.deadline-401);h.tick();assert.equal(r.round,1);h.setNow(r.deadline-400);h.tick();assert.equal(r.round,2);assert.equal(r.pageCommits.length,3);assert.equal(h.records.at(-1).source,'timeout');assert.equal(h.errors.length,0);
+ const committed=r.pageCommits.find(c=>c.page.authorId===h.human.id);assert.equal(committed.page.strokes.length,1);assert.equal(committed.page.timedOut,true);
+ h.setNow(r.deadline-400);h.tick();assert.equal(r.phase,'finished');assert.equal(r.books[0].pages.length,3);assert.equal(h.errors.length,0);
+});

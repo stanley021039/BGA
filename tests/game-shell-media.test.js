@@ -4,7 +4,7 @@ const read=file=>fs.readFileSync(path.join(__dirname,'../public/shared',file),'u
 async function fixture(){
  const responses=[],sounds=[],calls={mount:0,updates:[],stop:0,disconnect:0};let next;
  const f=mediaHarness({fetchHandler:async request=>{if(request.route==='/api/social/options')return json({emojis:['🎉','😂']});if(request.route==='/api/auth/me')return json({appearance:{characterId:'user:owned'}});if(request.route==='/api/profile/options')return json({defaults:{characterId:'user:owned'},characters:[{id:'user:owned',name:'我的角色',labels:{'emote-happy':'開心大笑'},expressions:{neutral:'/neutral.png','emote-happy':'/happy.gif'}}],expressionLabels:{neutral:'平常'}});if(request.body){responses.push(request.body);return json(next);}throw Error('unexpected '+request.route);}});
- const layout=f.document.createElement('div');layout.className='play-layout';const arena=f.document.createElement('main'),aside=f.document.createElement('aside'),actions=f.document.createElement('section');actions.setAttribute('data-game-action-slot','');aside.append(actions);layout.append(arena,aside);f.document.body.append(layout);
+ const layout=f.document.createElement('div');layout.className='play-layout';const arena=f.document.createElement('main'),aside=f.document.createElement('aside'),actions=f.document.createElement('section');actions.setAttribute('data-game-action-slot','');const history=f.document.createElement('a');history.className='history-link';history.href='/history';history.textContent='對局歷史 ↗';aside.append(actions,history);layout.append(arena,aside);f.document.body.append(layout);
  f.window.TableMedia={mount(target){calls.mount++;const button=f.document.createElement('button');button.textContent='媒體';target.append(button);},update:state=>calls.updates.push(state),stop:()=>calls.stop++,disconnected:()=>calls.disconnect++};f.window.TableMusic={update(){throw Error('legacy music mounted');},getWatchSlot(){throw Error('legacy music mounted');}};f.window.TableWatch={update(){throw Error('legacy watch mounted');},mount(){throw Error('legacy watch mounted');}};
  const motion={createBarrageController:()=>({update(){},disconnect(){},dispose(){}})};f.context.MotionPolicy=motion;f.window.MotionPolicy=motion;f.window.UIPopover={bind:()=>({sync(){}}),bindDetails(){},bindOverlay(){}};f.window.GameUI.setBusy=()=>{};f.window.AudioSettings.playExpression=sound=>{sounds.push(sound);};vm.runInContext(read('expression-sounds.js'),f.context);vm.runInContext(read('game-shell.js'),f.context);await f.flush();
  const state=(changes={})=>({type:'majority',code:'ABC123',version:1,me:'host',phase:'waiting',serverNow:100000,players:[{id:'host',name:'朋友'}],expressions:[],social:[],...changes});
@@ -52,4 +52,13 @@ test('markup action slot reuses relocated native bot on unchanged polls and clea
  f.window.GameShell.stableMarkup(target,markup);assert.equal(moves.at(-1),first);
  const full=f.window.GameShell.botButton({phase:'waiting',host:true,botSupport:{supported:true,canAdd:false}});assert.equal(full,'');
  f.window.GameShell.stableMarkup(target,full);assert.equal(moves.at(-1),null);
+});
+
+test('sidebar footer has no visual turn strip or history link but retains live turn announcements',async()=>{
+ const f=await fixture();f.window.GameShell.update(f.state());
+ const turn=f.node('shared-turn');assert.ok(turn.classList.contains('ui-sr-only'));assert.equal(turn.classList.contains('shared-turn'),false);
+ assert.equal(turn.getAttribute('role'),'status');assert.equal(turn.getAttribute('aria-live'),'polite');assert.equal(turn.textContent,'等待房主開始');
+ assert.equal(f.document.querySelectorAll('.history-link').length,0);
+ f.window.GameShell.update(f.state({phase:'answering',presenterId:'host',answeredIds:[]}));assert.equal(turn.textContent,'輪到你作答！');
+ for(const game of ['draw','gift','majority'])assert.doesNotMatch(fs.readFileSync(path.join(__dirname,'../public',game+'.html'),'utf8'),/class="history-link"/);
 });

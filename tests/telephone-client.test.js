@@ -3,10 +3,10 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const {TelephoneRoom}=require('../src/games/telephone');
 const flush=async()=>{for(let i=0;i<30;i++)await Promise.resolve();};
 function fixture({room,storage=new Map(),guess=false}={}){
- const r=room||new TelephoneRoom('ABCDEF','client',()=>0);if(!room){r.add('reader');r.add('peer');r.add('peer2');r.start();if(guess){for(const p of r.players)r.act(p.id,'skip',{stepId:r.stepId,requestId:randomUUID()});r.act(r.host,'advance',{stepId:r.stepId,requestId:randomUUID()});}}
- const p=r.players[0],ids=new Map(),events={},timers=new Set(),requests=[],navigations=[];
+ const r=room||new TelephoneRoom('ABCDEF','client',()=>0);if(!room){r.add('reader');r.add('peer');r.add('peer2');r.start();if(guess){for(const p of r.players)r.act(p.id,'skip',{stepId:r.stepId,requestId:randomUUID()});r.deadline=r.now();r.auto();}}
+ const p=r.players[0],ids=new Map(),events={},timers=new Set(),timeouts=new Set(),delays=[],requests=[],navigations=[];
  class Element{
-  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.disabled=false;this.textContent='';this.style={};}
+  constructor(tag='div'){this.tag=tag;this.children=[];this.value='';this.disabled=false;this.textContent='';this.style={};this.classList={add(){}};this.classList={add(){}};}
   set id(value){this._id=value;ids.set('#'+value,this);}get id(){return this._id;}
   append(...items){this.children.push(...items);}setAttribute(){}setPointerCapture(){}getContext(){return {};}
   replaceChildren(...items){for(const c of this.children)this.removeIds(c);this.children=items;}
@@ -15,12 +15,12 @@ function fixture({room,storage=new Map(),guess=false}={}){
  }
  for(const id of ['feedback','retry','controls','advance','leave','connection','game','roomTag','phase','players','readiness','previous','books','book','guide']){const e=new Element();e.id=id;}
  let pending=null,failAfterSubmit=false,leaveError=false;
- const context={document:{hidden:false,querySelector:s=>ids.get(s)||null,createElement:tag=>new Element(tag),addEventListener:(type,fn)=>events[type]=fn},location:{pathname:'/telephone/ABCDEF',replace:url=>navigations.push(url)},crypto:{randomUUID},AbortController,
+ const context={Date:{now:()=>r.now()},document:{hidden:false,querySelector:s=>ids.get(s)||null,createElement:tag=>new Element(tag),addEventListener:(type,fn)=>events[type]=fn},location:{pathname:'/telephone/ABCDEF',replace:url=>navigations.push(url)},crypto:{randomUUID},AbortController,
   sessionStorage:{getItem:key=>storage.get(key)||null,setItem:(key,v)=>storage.set(key,v),removeItem:key=>storage.delete(key)},confirm:()=>true,
-  RoomApi:{request:async(route,payload,options)=>{requests.push({route,payload,options});if(pending){const result=await pending;pending=null;return result;}if(route==='leave'&&leaveError){const error=Error('denied');error.status=403;throw error;}if(route==='action'){r.act(p.id,payload.action,payload);if(failAfterSubmit){failAfterSubmit=false;throw Error('lost reply');}}return r.view(p.id);}},RoomReconnect:{restore:async()=>({}),forget(){}},
-  StrokeCanvas:{pointFrom:e=>[e.clientX,e.clientY],drawStroke(){},iconMarkup:()=>'',createRenderer:()=>({render(){},reset(){}})},setInterval:fn=>{timers.add(fn);return fn;},clearInterval:fn=>timers.delete(fn)};
- context.window={addEventListener:(type,fn)=>events[type]=fn};vm.runInNewContext(fs.readFileSync(require.resolve('../public/telephone.js'),'utf8'),context);
- return {r,p,ids,storage,events,timers,requests,navigations,async poll(){for(const fn of timers)await fn();await flush();},defer:promise=>pending=promise,failAfterSubmit:()=>failAfterSubmit=true,denyLeave:()=>leaveError=true};
+  RoomApi:{request:async(route,payload,options)=>{requests.push({route,payload,options});if(pending){const result=await pending;pending=null;return result;}if(route==='leave'&&leaveError){const error=Error('denied');error.status=403;throw error;}if(route==='telephone/draft')r.saveDraft(p.id,payload);if(route==='action'){r.act(p.id,payload.action,payload);if(failAfterSubmit){failAfterSubmit=false;throw Error('lost reply');}}return r.view(p.id);}},RoomReconnect:{restore:async()=>({}),forget(){}},
+  StrokeCanvas:{pointFrom:e=>[e.clientX,e.clientY],drawStroke(){},iconMarkup:()=>'',createRenderer:()=>({render(){},reset(){}})},setInterval:fn=>{timers.add(fn);return fn;},clearInterval:fn=>timers.delete(fn),setTimeout:(fn,delay)=>{timeouts.add(fn);delays.push(delay);return fn;},clearTimeout:fn=>timeouts.delete(fn)};
+ context.window={addEventListener:(type,fn)=>events[type]=fn,GameShell:{update(){},playerRow:()=>''},GameUI:{createDrawingBoard({canvas,countdown}){const n=new Element();n.append(countdown,canvas);return n;},frameDrawingTask(){}}};vm.runInNewContext(fs.readFileSync(require.resolve('../public/telephone.js'),'utf8'),context);
+ return {r,p,ids,storage,events,timers,requests,navigations,delays,async poll(){for(const fn of [...timeouts]){timeouts.delete(fn);await fn();}await flush();for(const fn of timers)await fn();await flush();},defer:promise=>pending=promise,failAfterSubmit:()=>failAfterSubmit=true,denyLeave:()=>leaveError=true};
 }
 test('guess draft survives peer polling and reload; failed leave does not navigate',async()=>{
  const f=fixture({guess:true});await flush();const input=f.ids.get('#guess');input.value='尚未送出的猜詞';input.oninput();await f.poll();assert.equal(f.ids.get('#guess'),input);const again=fixture({room:f.r,storage:f.storage});await flush();assert.equal(again.ids.get('#guess').value,'尚未送出的猜詞');again.denyLeave();await again.ids.get('#leave').onclick();assert.equal(again.navigations.length,0);
@@ -48,4 +48,17 @@ test('host setup groups the labelled source and start action in shared layout pr
  for(const control of f.ids.get('#controls').querySelectorAll('button,input,select,textarea'))assert.equal(control.disabled,true);
  resolve(r.view(f.p.id));await request;assert.equal(f.requests.filter(x=>x.route==='start').length,1);
  for(const control of f.ids.get('#controls').querySelectorAll('button,input,select,textarea'))assert.equal(control.disabled,false);
+});
+
+test('autosave keeps held drawing and guessed text private without rebuilding controls',async()=>{
+ const f=fixture();await flush();const canvas=f.ids.get('#drawing'),event={button:0,pointerId:1,clientX:10,clientY:10,preventDefault(){}};
+ canvas.onpointerdown(event);canvas.onpointermove({...event,clientX:40});await f.poll();assert.equal(f.ids.get('#drawing'),canvas);assert.equal(f.r.drafts[f.p.id].strokes[0].points.length,2);assert.equal(f.r.submissions[f.p.id],undefined);
+ canvas.onpointermove({...event,clientX:60});canvas.onpointerup(event);await f.poll();assert.equal(f.r.drafts[f.p.id].strokes[0].points.at(-1)[0],60);
+ const g=fixture({guess:true});await flush();const input=g.ids.get('#guess');input.value='自動保留的猜詞';input.oninput();await g.poll();assert.equal(g.ids.get('#guess'),input);assert.equal(g.r.drafts[g.p.id].text,input.value);
+});
+
+test('last-moment input syncs immediately and expired controls cannot keep drawing',async()=>{
+ let now=100000;const r=new TelephoneRoom('ABCDEF','deadline',()=>0,()=>now);r.add('reader');r.add('peer');r.add('peer2');r.start();const f=fixture({room:r});await flush();
+ const canvas=f.ids.get('#drawing'),event={button:0,pointerId:1,clientX:10,clientY:10,preventDefault(){}};now=r.deadline-100;canvas.onpointerdown(event);assert.equal(f.delays.at(-1),0);await f.poll();assert.equal(r.drafts[f.p.id].strokes.length,1);
+ now=r.deadline;await f.poll();assert.equal(f.ids.get('#submit').disabled,true);assert.equal(r.round,1);r.auto();await f.poll();assert.equal(r.round,2);assert.ok(f.ids.get('#guess'));assert.equal(r.books[0].pages[1].strokes.length,1);
 });

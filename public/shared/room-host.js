@@ -39,7 +39,7 @@
   else{node.textContent=message;node.dataset.kind=kind;}
  }
  function open(dialog,trigger){if(dialog.open)return;if(window.GameUI?.openDialog)window.GameUI.openDialog(dialog,trigger);else dialog.showModal();}
- function focusManage(){if(!q('#managePlayers').hidden)q('#managePlayers').focus();}
+ function focusManage(){if(!q('#managePlayers').hidden&&!q('#managePlayers').disabled)q('#managePlayers').focus();}
  function list(){
   const focused=document.activeElement;
   const focusAction=focused?.dataset?.kick?{kind:'kick',id:focused.dataset.kick}:focused?.dataset?.rolePlayer?{kind:'rolePlayer',id:focused.dataset.rolePlayer}:null;
@@ -59,6 +59,7 @@
   }
  }
  function controls(){
+  q('#managePlayers').disabled=!canManage()||!!pending;
   q('#confirmKick').disabled=q('#cancelKick').disabled=!!pending;
   q('#hostPlayers').setAttribute('aria-busy',String(!!pending));
   list();
@@ -127,7 +128,7 @@
    const changed=current&&!sameRoom(snapshot,current);
    current=snapshot;render=callback;
    if(changed){cancelPending();status('#hostError','');status('#kickError','');q('#hostPlayers').close();q('#kickWarning').close();}
-   const allowed=canManage();q('#managePlayers').hidden=!allowed;
+   const allowed=canManage();q('#managePlayers').hidden=false;q('#managePlayers').disabled=!allowed||!!pending;
    q('#hostPlayersHelp').textContent=canPromote()?'房主可設定房間管理者，並踢出其他玩家。房間角色不影響網站帳戶權限。':'管理者可踢出一般玩家；房主與其他管理者的角色由房主設定。';
    if(!allowed){if(pending)cancelPending();q('#hostPlayers').close();q('#kickWarning').close();}
    else if(target&&!mayKick(current.players.find(player=>player.id===target.id))){target=null;q('#kickWarning').close();}

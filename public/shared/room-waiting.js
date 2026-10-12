@@ -16,6 +16,7 @@
  function move(el,host){if(!el||el.parentElement===host)return;if(!homes.has(el)){const mark=document.createComment('waiting-home');el.before(mark);homes.set(el,mark);}host.append(el);}
  function restore(el){const mark=homes.get(el);if(mark?.parentNode)mark.after(el);}
  function arrange(type,waiting){
+  const phase=document.body.dataset.roomPhase;if(waiting||phase==='finished')window.GameUI?.layoutDrawingPlay?.(type,phase);
   if(!layout){
    const host=document.querySelector(rosterHosts[type]);
    controls=document.querySelector(type==='thunder'?'.race-side-column':type==='poker'?'.table-sidebar':type==='trpg'?'.action-panel':['telephone','musicquiz','minimal','bluff'].includes(type)?'#controls':'.room-sidebar');
@@ -33,8 +34,13 @@
    if(waiting){move(hero,layout);move(controls,layout);move(roster,layout);layout.append(layout.querySelector('.ui-room-chat-slot'));}
    else{restore(hero);restore(controls);restore(roster);}
   }
-  const chatHost=waiting?layout.querySelector('.ui-room-chat-slot'):type==='thunder'?controls.querySelector('.race-utility-panel'):controls;
-  window.SharedChat?.mountIn(chatHost,{inline:waiting});
+  const guide=document.getElementById('guide'),info=hero.querySelector('.room-waiting-info');
+  if(guide&&info){if(waiting)move(guide,info);else restore(guide);}
+  const drawingChat=waiting?null:window.GameUI?.layoutDrawingPlay?.(type,phase);
+  const chatHost=drawingChat||(waiting?layout.querySelector('.ui-room-chat-slot'):type==='thunder'?controls.querySelector('.race-utility-panel'):controls);
+  window.SharedChat?.mountIn(chatHost,{inline:true});
+  const nativePeer=type==='draw'?document.querySelector('.draw-roster'):type==='thunder'?document.querySelector('.race-roster'):['majority','gift'].includes(type)?document.querySelector('.game-roster'):null;
+  window.SharedChat?.matchRosterHeight?.(waiting||phase==='finished'||drawingChat?null:nativePeer||roster);
  }
  const rosterHosts={
   poker:'#game .game-layout',thunder:'.race-main',majority:'.play-layout',gift:'.gift-layout',draw:'.draw-layout',
@@ -68,16 +74,24 @@
    const img=node('img','');img.alt='';img.src=player.avatar||(player.bot?'/assets/characters/sunny-neutral.png':'/assets/characters/traveler-neutral.png');
    img.onerror=()=>{img.hidden=true;};avatar.append(fallback,img);
    const info=node('div','ui-room-roster-info'),name=node('div','ui-room-roster-name'),label=node('b','ui-room-roster-name-text ui-player-name');label.title=player.name||'玩家';label.append(node('span','ui-player-name-text',player.name||'玩家'));
-   name.append(label);if(player.id===s.me)name.append(node('span','ui-room-roster-self','你'));
-   const status=[player.id===hostId?'房主':'',player.roleName||'',player.bot?'測試 AI':player.online===false||player.offline?'暫時離線':'已入座'].filter(Boolean).join(' · ');
+   name.append(label);
+   const status=[player.id===hostId?'房主':'',player.roleName||'',player.online===false||player.offline?'暫時離線':'已入座'].filter(Boolean).join(' · ');
    info.append(name,node('small','ui-room-roster-status',status));card.append(avatar,info);return card;
   }));
   if(rosterActionCard)rosterList.append(rosterActionCard);
   rosterList.scrollTop=scrollTop;
  }
 
+ // Teaching belongs to the waiting room and standalone introductions.
+ function updateTeaching(phase){
+  const visible=phase==='waiting';
+  for(const teaching of document.querySelectorAll('[data-room-teaching]'))teaching.hidden=!visible;
+  if(!visible)for(const dialog of document.querySelectorAll('dialog[data-room-teaching-dialog][open]'))dialog.close();
+ }
+ const roomPath=/^\/(poker|majority|gift|draw|telephone|trpg|musicquiz|minimal|bluff|race)\/[a-f0-9]{6}\/?$/i.test(location.pathname);
+ updateTeaching(roomPath&&!window.RaceLesson?'connecting':'waiting');
  function update(s){
-  if(window.RaceLesson)return;window.RoomControls?.update(s);
+  if(window.RaceLesson)return;updateTeaching(s.phase);window.RoomControls?.update(s);
   document.body.dataset.roomPhase=s.phase;window.SharedChat?.updateRoom(s);const type=s.type||'poker';document.body.dataset.roomType=type;updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');arrange(type,s.phase==='waiting');return;}const game=games[type];if(!game)return;
   document.body.dataset.roomPhase=s.phase;
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');

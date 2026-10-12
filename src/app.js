@@ -225,7 +225,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(!req.headers['content-type']?.startsWith('application/json'))throw Error('需要 JSON');
   const characterImageUpload=url.pathname==='/api/profile/characters'||/^\/api\/profile\/characters\/[a-f0-9-]{36}\/(?:expressions|emotes)$/.test(url.pathname);
   // Bounded private drawing submissions can exceed the small text-action body budget.
-  const limit=url.pathname==='/api/action'?128*1024:url.pathname==='/api/market/images'?3*1024*1024:url.pathname==='/api/admin/market/images/approve'?128*1024:characterImageUpload?MAX_CHARACTER_IMAGE_BODY_BYTES:(url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192);
+  const limit=(url.pathname==='/api/action'||url.pathname==='/api/telephone/draft')?128*1024:url.pathname==='/api/market/images'?3*1024*1024:url.pathname==='/api/admin/market/images/approve'?128*1024:characterImageUpload?MAX_CHARACTER_IMAGE_BODY_BYTES:(url.pathname==='/api/artworks'||url.pathname==='/api/draw/result/save'||url.pathname.startsWith('/api/profile/characters/')||url.pathname==='/api/community/gifts'?1400000:8192);
   const chunks=[];let bytes=0;
   for await(const chunk of req){bytes+=chunk.length;if(bytes>limit)throw new HttpError(413,'REQUEST_TOO_LARGE','請求過大');chunks.push(chunk);}
   data=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');
@@ -413,7 +413,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   let p;try{p=history.transact(room,{action:'create',source:'player',name:user.display_name},()=>{const player=room.add(user.display_name);player.name=user.display_name;return player;});}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
- if(!['/api/room-media','/api/room-role','/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/musicquiz-clip','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
+ if(!['/api/room-media','/api/room-role','/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/telephone/draft','/api/musicquiz-clip','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  expireRooms();
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
@@ -551,6 +551,11 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   if(url.pathname==='/api/draw/command'){const result=room.canvasCommand(p.id,data);publishDraw(room.code,'reset',result);return send(result);}
  }
  if(url.pathname==='/api/musicquiz-clip'){if(req.method!=='GET'||room.type!=='musicquiz')throw new HttpError(404,'NOT_FOUND','找不到音訊');const bytes=room.audio(p.id,url.searchParams.get('roundId'));res.setHeader('Content-Type','audio/wav');res.setHeader('Cache-Control','no-store');return res.end(bytes);}
+ if(url.pathname==='/api/telephone/draft'){
+  if(room.type!=='telephone')throw new HttpError(400,'WRONG_GAME','這不是傳情畫意房間');
+  if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
+  limitRate(roomRate,'telephone-draft:'+user.id,120);room.saveDraft(p.id,data);return send(withSocial(room,room.view(p.id)));
+ }
  if(url.pathname==='/api/state'){awardRoomAchievements(room);return send(withSocial(room,room.view(p.id)));}
  if(req.method!=='POST')throw Error('不支援的請求');
  if(url.pathname==='/api/social'){
