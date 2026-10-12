@@ -9,15 +9,16 @@ function drawing(input){
  if(!Array.isArray(input)||!input.length||input.length>100)fail('INVALID_DRAWING','畫作需有 1–100 筆',400);
  let points=0;
  return input.map(s=>{
-  if(!s||!['brush','erase'].includes(s.tool)||!/^#[a-f0-9]{6}$/i.test(s.color)||![2,4,8,16].includes(s.size)||!Array.isArray(s.points)||!s.points.length||s.points.length>256)fail('INVALID_DRAWING','筆畫格式不正確',400);
+  if(!s||!['brush','erase','line','rect','ellipse','fill'].includes(s.tool)||!/^#[a-f0-9]{6}$/i.test(s.color)||!Number.isInteger(s.size)||s.size<1||s.size>40||!Array.isArray(s.points)||!s.points.length||s.points.length>256)fail('INVALID_DRAWING','筆畫格式不正確',400);
   points+=s.points.length;if(points>3000)fail('DRAWING_LIMIT','每頁最多 3,000 點',400);
   const coordinates=s.points.map(p=>{if(!Array.isArray(p)||p.length!==2||!p.every(Number.isInteger)||p[0]<0||p[0]>511||p[1]<0||p[1]>255)fail('INVALID_DRAWING','畫作座標不正確',400);return p.slice();});
-  return {tool:s.tool,color:s.color,size:s.size,points:coordinates};
+  if(s.filled!==undefined&&typeof s.filled!=='boolean')fail('INVALID_DRAWING','填滿格式不正確',400);
+  return {tool:s.tool,color:s.color,size:s.size,points:coordinates,...(s.filled!==undefined?{filled:s.filled}:{})};
  });
 }
 class TelephoneRoom{
  constructor(code,name,rng=randomInt){
-  Object.assign(this,{type:'telephone',code,name,rng,players:[],host:null,phase:'waiting',version:0,updated:Date.now(),round:0,roundLimit:0,stepId:null,books:[],roster:[],submissions:{},options:{sources:['everyday','silly']},events:[],log:[],interrupted:false});
+  Object.assign(this,{type:'telephone',code,name,rng,players:[],host:null,phase:'waiting',version:0,updated:Date.now(),round:0,roundLimit:0,stepId:null,books:[],roster:[],submissions:{},options:{sources:['everyday','silly'],seconds:90},deadline:null,events:[],log:[],interrupted:false});
   Object.defineProperty(this,'receipts',{value:new Map(),enumerable:false});
   Object.defineProperty(this,'books',{value:[],writable:true,enumerable:false});
   this.runId=null;this.pageCommits=[];
@@ -42,7 +43,7 @@ class TelephoneRoom{
   const pool=PROMPTS.filter(p=>this.options.sources.includes(p.source)),books=[];
   // Allocate all prompts before mutating: bad RNG cannot partially start a match.
   for(const p of active){const index=this.rng(pool.length);if(!Number.isInteger(index)||index<0||index>=pool.length)throw Error('無效抽題結果');const prompt=pool.splice(index,1)[0];books.push({ownerId:p.id,ownerName:p.name,promptId:prompt.id,pages:[{kind:'text',authorName:'情境題庫',text:prompt.text}]});}
-  this.players=active;this.roster=active.map(p=>p.id);this.books=books;this.runId=randomUUID();this.pageCommits=[];this.round=1;this.roundLimit=active.length%2?active.length-1:active.length;this.phase='passing';this.stepId=randomUUID();this.submissions={};this.interrupted=false;this.receipts.clear();this.event('start','每人只看上一頁，畫圖與猜詞交替；最後一起揭曉。');
+  this.players=active;this.roster=active.map(p=>p.id);this.books=books;this.runId=randomUUID();this.pageCommits=[];this.round=1;this.roundLimit=active.length%2?active.length-1:active.length;this.phase='passing';this.deadline=Date.now()+this.options.seconds*1000;this.stepId=randomUUID();this.submissions={};this.interrupted=false;this.receipts.clear();this.event('start','每人只看上一頁，畫圖與猜詞交替；最後一起揭曉。');
  }
  bookFor(id){const seat=this.roster.indexOf(id);return this.books[(seat-this.round+1+this.roster.length)%this.roster.length];}
  act(id,action,data={}){
@@ -56,8 +57,8 @@ class TelephoneRoom{
    if(id!==this.host)fail('HOST_ONLY','只有房主可以傳下一頁',403);
    if(this.roster.some(seat=>!this.submissions[seat]))fail('NOT_READY','還有人未送出');
    this.commitPages();
-   if(this.round===this.roundLimit){this.phase='finished';this.event('finish','全部故事揭曉！沒有排名，一起看看故事如何變形。');}
-   else{this.round++;this.stepId=randomUUID();this.submissions={};this.event('pass','第 '+this.round+' 頁：'+(this.round%2?'畫圖':'猜詞'));}
+   if(this.round===this.roundLimit){this.phase='finished';this.deadline=null;this.event('finish','全部故事揭曉！沒有排名，一起看看故事如何變形。');}
+   else{this.round++;this.deadline=Date.now()+this.options.seconds*1000;this.stepId=randomUUID();this.submissions={};this.event('pass','第 '+this.round+' 頁：'+(this.round%2?'畫圖':'猜詞'));}
   }else if(action==='submit'||action==='skip'){
    if(this.submissions[id])fail('ALREADY_SUBMITTED','這頁已送出');
    const kind=this.round%2?'drawing':'text';let page={kind,authorName:p.name,authorId:id,skipped:action==='skip'};
@@ -72,7 +73,7 @@ class TelephoneRoom{
   if(id!==this.host&&!leaving)fail('HOST_ONLY','只有房主可以移除席位',403);
   const p=this.player(targetId);if(!p)fail('PLAYER_NOT_FOUND','找不到玩家',404);p.kicked=true;
   if(this.host===targetId)this.host=this.activePlayers()[0]?.id??null;
-  if(this.phase==='passing'){this.commitPages();this.interrupted=true;this.phase='finished';this.event('interrupted','有人離席，傳遞中止；只揭曉已送出的頁面，不冒充正常完局。');}
+  if(this.phase==='passing'){this.commitPages();this.interrupted=true;this.phase='finished';this.deadline=null;this.event('interrupted','有人離席，傳遞中止；只揭曉已送出的頁面，不冒充正常完局。');}
   this.event('leave',p.name+' 離席');
  }
  commitPages(){this.pageCommits=[];for(const seat of this.roster){const page=this.submissions[seat];if(!page)continue;const book=this.bookFor(seat);book.pages.push(page);this.pageCommits.push({bookIndex:this.books.indexOf(book),round:this.round,page});}this.submissions={};}
@@ -81,7 +82,7 @@ class TelephoneRoom{
  view(id){
   if(!this.player(id))fail('NOT_SEATED','尚未入座',403);
   const passing=this.phase==='passing',book=passing?this.bookFor(id):null;
-  return clone({type:this.type,code:this.code,name:this.name,me:id,host:this.host,version:this.version,phase:this.phase,round:this.round,roundLimit:this.roundLimit,stepId:this.stepId,interrupted:this.interrupted,options:this.options,sources:SOURCES,
+  return clone({type:this.type,code:this.code,name:this.name,me:id,host:this.host,version:this.version,phase:this.phase,round:this.round,roundLimit:this.roundLimit,stepId:this.stepId,deadline:this.deadline,serverNow:Date.now(),interrupted:this.interrupted,options:this.options,sources:SOURCES,
    players:this.activePlayers().map(p=>({id:p.id,name:p.name,bot:p.bot,avatar:p.avatar,ready:!!this.submissions[p.id],offline:!p.bot&&Date.now()-p.lastSeen>=15000})),
    task:passing?{kind:this.round%2?'drawing':'text',previous:book.pages.at(-1),submitted:!!this.submissions[id]}:null,
    canAdvance:passing&&id===this.host&&this.roster.every(seat=>this.submissions[seat]),books:this.phase==='finished'?this.books:[],events:this.events,log:this.log});

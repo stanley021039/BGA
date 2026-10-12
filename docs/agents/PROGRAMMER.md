@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-12：傳情畫意共用畫板候選，題目與倒數上移、移除技術限額說明、採同款工具與renderer。19 focused及8組隔離Chromium布局，未部署；到0流程待確認，詳[共用畫板](../specs/TELEPHONE-SHARED-BOARD.md)。
+
 2026-10-12：欄位＋操作排版候選修正，傳情畫意等待／再開局使用共用ui-field、ui-field-actions與ui-control-group，避免選單貼住開始按鈕。實作與範圍見[共用欄位操作](../specs/SHARED-FIELD-ACTIONS.md)；測試、PR與部署狀態以本批PR證據為準。
 
 2026-10-10 音效秒數補驗：10／30／60 秒真實時間瀏覽器各取得 5→1 原生 playing，320ms、25% 音量、零錯誤／重播；隔離靜音及提前 ready 也通過。56 focused，未改 runtime／重跑全套；取代前筆『無原生 playing 證據』，喇叭主觀聽感仍未驗。詳細 [三種秒數證據](../BLUFF-KING-PROGRESS.md)，沒有 PR／部署／永久偏好更新。
