@@ -93,7 +93,7 @@ body[data-room-phase=waiting] [data-waiting-layout-hidden]{display:none!importan
 .ui-room-waiting-layout{display:grid;grid-template-columns:minmax(0,1fr) var(--ui-room-tools-width);grid-template-areas:"intro controls" "roster chat";grid-template-rows:var(--ui-room-row-height) var(--ui-room-row-height);gap:var(--ui-room-gap);width:100%;min-width:0}
 .ui-room-waiting-layout[hidden]{display:none!important}
 .ui-room-waiting-layout>:is(.room-waiting-template,.garage){grid-area:intro;height:100%;min-height:0!important;max-height:none;margin:0!important}
-.ui-room-waiting-layout>.ui-room-waiting-controls{grid-area:controls!important;position:static!important;box-sizing:border-box;width:100%;height:100%!important;min-height:0!important;max-height:none!important;margin:0!important;overflow:auto;scrollbar-gutter:stable;align-self:stretch}
+.ui-room-waiting-layout>.ui-room-waiting-controls{grid-area:controls!important;position:static!important;box-sizing:border-box;width:100%;height:100%!important;min-height:0!important;max-height:none!important;margin:0!important;overflow:auto!important;scrollbar-gutter:stable;align-self:stretch}
 .ui-room-waiting-layout>.ui-room-roster{grid-area:roster;display:flex;flex-direction:column;height:100%;min-height:0}
 .ui-room-waiting-layout .ui-room-roster-list{flex:1;min-height:0;height:auto}
 .ui-room-chat-slot{grid-area:chat;min-width:0;min-height:0;height:100%}
