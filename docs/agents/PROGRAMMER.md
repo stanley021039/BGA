@@ -441,3 +441,6 @@ Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip
 
 
 2026-10-12 組隊房間分離：十款等待畫面採雷霆之路模板，遊玩資訊等待時隱藏，瞎掰王與傳情畫意設定自動提交。40布局／十次開局及有限設定邊界已驗；完整測試、原生作畫补验、兩輪審查及部署以 [組隊房間進度](../WAITING-ROOMS-PROGRESS.md) 與 PR #96最新留言為準；未驗設備與全phase不冒稱完成。
+
+
+2026-10-12 頁首深色模式修正（1.28.2候選）：使用者截圖中的直向文字來自trpg.html漏載ui-primitives.css，icon-only的ui-sr-only caption未被裁切。只補共用stylesheet引用，沒有改遊戲或頁首CSS；新增全站header資源契約回歸。headless Chrome 25頁／1440与390／日夜100組合通過，caption裁切、圖示範圍及切換前後44px按鈕尺寸已驗；非真人觸控或全phase。最終測試、審查、PR與正式部署結果以本批PR驗收留言為準。
