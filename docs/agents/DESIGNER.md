@@ -136,3 +136,5 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 2026-10-12 共用文字徽章1.28.3：ui-badge以共用tokens提供內距2px／8px、gap4px、min-height28px；實際狀態／類別／計數入口已opt-in並移除各頁重複幾何，房間操作欄保留120px。七頁28布局與有限原生畫猜已驗，完整測試／PR／公開結果以 [徽章契約](../specs/SHARED-BADGES.md) 與本批PR留言為準。玩家資訊卡、D符號與装饰籌碼不套用。
 
 2026-10-12 共用資訊與操作列1.28.4：ui-control-row 的 ui-info-actions 變體統一12px gap、可換列、44px高度與12ch房號槽；八房入口opt-in，純操作8px維持。32桌機／手機亮暗布局及畫猜15持筆採樣／ACK／觀看者／倒數／揭曉／換輪已驗；完整suite、PR與正式結果以 [共用操作列契約](../specs/SHARED-INFO-ACTIONS.md) 與本批PR留言為準，不推定全部phase／真觸控。
+
+2026-10-12 共用組隊人員名單1.28.5：十款waiting共用ui-room-roster固定260×112卡片／64×80角色／12gap，窄容器縮窄，112px桌機與236px手機捲動槽；真人沿用角色、AI預設機器人，姓名共用observer，hidden切回遊玩名單。十款1→滿席、40布局、十次開局及畫猜15持筆／ACK／觀看者／倒數／揭曉／換輪已驗，完整suite、PR與正式結果以 [名單契約](../specs/SHARED-WAITING-ROSTER.md) 和本批PR留言為準；未驗真觸控／全部phase，不改引擎或資料。

@@ -11,10 +11,49 @@
   minimal:['極簡猜圖','線條已備，等你作畫。','3–6 人一起玩。用直線與圓作畫，由少到多一起猜圖。'],
   bluff:['瞎掰王','角色已備，等你開場。','3–9 人一起玩。輪流解釋與質問，找出唯一的老實人。']
  };
- let hero,stageHome;
+ let hero,stageHome,roster,rosterList,rosterCount,lastRoster='';
+ const rosterHosts={
+  poker:'#game .game-layout',thunder:'.race-main',majority:'.play-layout',gift:'.gift-layout',draw:'.draw-layout',
+  telephone:'#game',trpg:'#game',musicquiz:'#game',minimal:'#game',bluff:'#game'
+ };
+ function node(tag,className,text){
+  const el=document.createElement(tag);el.className=className;if(text!==undefined)el.textContent=text;return el;
+ }
+ function updateRoster(s,type){
+  if(s.phase!=='waiting'){if(roster)roster.hidden=true;return;}
+  const selector=rosterHosts[type];if(!selector)return;const host=document.querySelector(selector);if(!host)return;
+  if(!roster){
+   roster=node('section','ui-room-roster');roster.setAttribute('aria-labelledby','waitingRosterTitle');
+   const heading=node('div','ui-room-roster-heading'),title=node('h2','','這桌的朋友');title.id='waitingRosterTitle';
+   rosterCount=node('span','ui-room-roster-count');heading.append(title,rosterCount);
+   rosterList=node('div','ui-room-roster-list');rosterList.setAttribute('role','list');rosterList.setAttribute('aria-label','已入座玩家，可捲動查看');rosterList.tabIndex=0;
+   roster.append(heading,rosterList);host.append(roster);
+   const originals=type==='poker'?document.querySelectorAll('.poker-ui .shared-players-heading,.poker-ui #shared-players'):
+    [type==='thunder'?document.querySelector('.race-roster'):type==='draw'?document.querySelector('.draw-roster'):['gift','majority'].includes(type)?document.querySelector('.game-roster'):document.querySelector('#players')?.closest('section')];
+   for(const original of originals)if(original)original.dataset.waitingNativeRoster='';
+  }
+  roster.hidden=false;
+  const players=(s.players||[]).filter(p=>!p.kicked),hostId=typeof s.host==='string'?s.host:s.hostId||(s.host?s.me:null);
+  rosterCount.textContent=players.length+' 位已入座 · 捲動查看';
+  const key=JSON.stringify([s.me,hostId,players.map(p=>[p.id,p.name,p.avatar,p.bot,p.online,p.offline])]);
+  if(key===lastRoster)return;lastRoster=key;
+  const scrollTop=rosterList.scrollTop;
+  rosterList.replaceChildren(...players.map(player=>{
+   const card=node('article','ui-room-roster-card');card.setAttribute('role','listitem');card.dataset.playerId=player.id;card.dataset.self=String(player.id===s.me);
+   const avatar=node('div','ui-room-roster-avatar'),fallback=node('span','ui-room-roster-fallback',String(player.name||'？').slice(0,1));fallback.setAttribute('aria-hidden','true');
+   const img=node('img','');img.alt='';img.src=player.avatar||(player.bot?'/assets/characters/sunny-neutral.png':'/assets/characters/traveler-neutral.png');
+   img.onerror=()=>{img.hidden=true;};avatar.append(fallback,img);
+   const info=node('div','ui-room-roster-info'),name=node('div','ui-room-roster-name'),label=node('b','ui-room-roster-name-text ui-player-name');label.title=player.name||'玩家';label.append(node('span','ui-player-name-text',player.name||'玩家'));
+   name.append(label);if(player.id===s.me)name.append(node('span','ui-room-roster-self','你'));
+   const status=[player.id===hostId?'房主':'',player.bot?'測試 AI':player.online===false||player.offline?'暫時離線':'已入座'].filter(Boolean).join(' · ');
+   info.append(name,node('small','ui-room-roster-status',status));card.append(avatar,info);return card;
+  }));
+  rosterList.scrollTop=scrollTop;
+ }
+
  function update(s){
   if(window.RaceLesson)return;
-  document.body.dataset.roomPhase=s.phase;if(s.type==='thunder')return;const type=s.type||'poker';const game=games[type];if(!game)return;
+  document.body.dataset.roomPhase=s.phase;const type=s.type||'poker';updateRoster(s,type);if(type==='thunder')return;const game=games[type];if(!game)return;
   document.body.dataset.roomPhase=s.phase;
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');
   if(stage&&sidebar){if(!stageHome){stageHome=document.createComment('play-stage');stage.before(stageHome);}if(s.phase==='waiting'){if(stage.parentElement!==sidebar)sidebar.prepend(stage);}else if(stage.parentElement!==stageHome.parentElement)stageHome.after(stage);}
