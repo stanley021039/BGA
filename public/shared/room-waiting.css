@@ -56,3 +56,32 @@ body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>.draw-roster
 body[data-room-phase="waiting"][data-game-kind="draw"] .draw-roster #players{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:1000px){body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout.room-layout{grid-template-columns:minmax(0,1fr)}body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>.room-sidebar{grid-column:1;grid-row:2}body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>.draw-roster{grid-row:3}body[data-room-phase="waiting"][data-game-kind="draw"] .draw-roster #players{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){body[data-room-phase="waiting"][data-game-kind="draw"] .draw-roster #players{grid-template-columns:1fr}}
+
+/* Every waiting room uses the same bounded list; play rosters retain game data. */
+:root{--ui-roster-card-width:260px;--ui-roster-card-height:112px;--ui-roster-avatar-width:64px;--ui-roster-avatar-height:80px;--ui-roster-gap:12px;--ui-roster-list-height:112px}
+.ui-room-roster{box-sizing:border-box;width:100%;min-width:0;margin:0;padding:20px;border:var(--play-card-border,2px solid #292639);border-radius:var(--play-radius,16px);background:var(--play-surface,#fffdf8);color:var(--play-ink,#292639);box-shadow:var(--play-shadow,3px 4px 0 #0001)}
+.ui-room-roster[hidden]{display:none!important}
+.ui-room-roster-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px;margin-bottom:16px}
+.ui-room-roster-heading h2{margin:0;font-size:var(--ui-text-section,1.25rem);line-height:1.4}
+.ui-room-roster-count{flex:none;width:13em;max-width:100%;min-width:0;text-align:right;font-size:var(--ui-text-small,.875rem);color:var(--play-muted,#686576)}
+.ui-room-roster-list{display:grid;grid-template-columns:repeat(auto-fill,min(100%,var(--ui-roster-card-width)));grid-auto-rows:var(--ui-roster-card-height);align-content:start;gap:var(--ui-roster-gap);height:var(--ui-roster-list-height);overflow:auto;scrollbar-gutter:stable;min-width:0}
+.ui-room-roster-list:focus-visible{outline:2px solid var(--ui-focus,#37857c);outline-offset:3px}
+.ui-room-roster-card{display:flex;box-sizing:border-box;align-items:center;gap:12px;height:var(--ui-roster-card-height);min-width:0;padding:12px;border:1px solid var(--play-ink,#292639);border-radius:12px;background:var(--play-paper,#faf6ec);color:inherit}
+.ui-room-roster-card[data-self=true]{background:var(--play-blue,#d7e9f2)}
+.ui-room-roster-avatar{display:grid;place-items:center;flex:0 0 var(--ui-roster-avatar-width);width:var(--ui-roster-avatar-width);height:var(--ui-roster-avatar-height);border-radius:8px;background:var(--play-surface,#fffdf8);overflow:hidden}
+.ui-room-roster-avatar>*{grid-area:1/1}
+.ui-room-roster-avatar img{display:block;width:100%;height:100%;object-fit:contain;position:relative;background:inherit}
+.ui-room-roster-avatar img[hidden]{display:none!important}
+.ui-room-roster-fallback{font-size:24px;font-weight:700}
+.ui-room-roster-info{flex:1;min-width:0}
+.ui-room-roster-name{display:flex;align-items:center;gap:6px;min-height:24px;min-width:0}
+.ui-room-roster-name-text{display:block;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--ui-text-body,1rem);line-height:1.5}
+.ui-room-roster-self{flex:none;font-size:var(--ui-text-small,.875rem)}
+.ui-room-roster-status{display:block;min-height:3em;margin-top:4px;font-size:var(--ui-text-small,.875rem);line-height:1.5;color:var(--play-muted,#686576);overflow-wrap:anywhere}
+body[data-room-phase=waiting] [data-waiting-native-roster]{display:none!important}
+body[data-room-phase=waiting] :is(.play-layout,.gift-layout)>.ui-room-roster{grid-area:players}
+body[data-room-phase=waiting] :is(.draw-layout,.game-layout)>.ui-room-roster{grid-column:1/-1;grid-row:2}
+body[data-room-phase=waiting] #game>.ui-room-roster{order:2}
+body[data-room-phase=waiting] .race-main>.ui-room-roster{grid-column:1/-1;grid-row:2}
+@media(min-width:1001px){body[data-room-phase=waiting] .race-main>.race-side-column{grid-row:1!important}}
+@media(max-width:600px){:root{--ui-roster-list-height:236px}.ui-room-roster{padding:16px}.ui-room-roster-heading{flex-wrap:wrap}.ui-room-roster-count{text-align:left}}
