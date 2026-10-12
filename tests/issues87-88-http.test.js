@@ -10,5 +10,5 @@ test('draw ending is validated at creation, persists in snapshots and survives o
   const {code}=await post('create',{type:'draw',ending});const response=await fetch(base+'/api/state?code='+code,{headers:{Cookie:cookie}}),state=await response.json();assert.deepEqual(state.options.ending,ending);
   const update=await post('settings',{code,seconds:60,topics:['animals']});assert.deepEqual(update.options.ending,ending);await post('bot',{code});const start=await post('start',{code});assert.equal(start.roundLimit,ending.mode==='score'?64:4);await post('settings',{code,seconds:60,ending:{mode:'rounds',value:1}},400);await post('leave',{code});
  }
- const page=await fetch(base+'/?game=draw',{headers:{Cookie:cookie}});const html=await page.text();assert.match(html,/drawEndMode/);assert.match(html,/固定輪數（總題數）/);
+ const page=await fetch(base+'/?game=draw',{headers:{Cookie:cookie}});const html=await page.text();assert.doesNotMatch(html,/drawEndMode|drawEnding|bluffCreateOptions|bluffRoleSeconds/);const drawClient=await (await fetch(base+'/draw.js')).text();assert.match(drawClient,/drawEndMode/);assert.match(drawClient,/固定輪數（總題數）/);
 });

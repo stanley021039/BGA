@@ -27,7 +27,7 @@ test('host/all-ready gates, single submission and text validation precede writes
  const version=r.version;for(const text of ['', 'x'.repeat(81),'a\nb',null])assert.throws(()=>cmd(r,p[0],'submit',{text}),e=>e.code==='INVALID_TEXT');assert.equal(r.version,version);cmd(r,p[0],'submit',{text:'<script>文字</script>'});assert.equal(r.submissions[p[0].id].text,'<script>文字</script>');
 });
 test('drawings are bounded, validated and copied; invalid coordinates/colour/tool/size rejected',()=>{
- for(const s of [{...stroke,tool:'fill'},{...stroke,color:'red'},{...stroke,size:100},{...stroke,points:[[512,0]]},{...stroke,points:[[0,-1]]},{...stroke,points:[[1.5,2]]},{...stroke,points:Array(257).fill([0,0])}])assert.throws(()=>drawing([s]),e=>e.code==='INVALID_DRAWING');
+ for(const s of [{...stroke,tool:'unknown'},{...stroke,color:'red'},{...stroke,size:100},{...stroke,points:[[512,0]]},{...stroke,points:[[0,-1]]},{...stroke,points:[[1.5,2]]},{...stroke,points:Array(257).fill([0,0])}])assert.throws(()=>drawing([s]),e=>e.code==='INVALID_DRAWING');
  assert.throws(()=>drawing([]));assert.throws(()=>drawing(Array(101).fill(stroke)));assert.throws(()=>drawing(Array(12).fill({...stroke,points:Array(256).fill([0,0])})),e=>e.code==='DRAWING_LIMIT');const s=JSON.parse(JSON.stringify(stroke)),saved=drawing([s]);s.points[0][0]=99;assert.equal(saved[0].points[0][0],10);
 });
 test('departure preserves submitted pages, marks interruption and transfers host; no new seats mid-game',()=>{
@@ -38,4 +38,18 @@ test('independent source settings, capacity and invalid RNG leave start atomic',
 });
 test('script bots only submit their public task; host still controls passing',()=>{
  const {runTestAIStep}=require('../src/ai'),r=new TelephoneRoom('ABCDEF','bots',()=>0),host=r.add('host');r.add('bot1',true);r.add('bot2',true);r.start();const history={transact:(room,op,run)=>run()};for(let i=0;i<5;i++)runTestAIStep(r,{history,now:i*1500});assert.equal(r.round,1);assert.equal(Object.keys(r.submissions).length,2);cmd(r,host,'skip');cmd(r,host,'advance');for(let i=5;i<10;i++)runTestAIStep(r,{history,now:i*1500});assert.equal(Object.keys(r.submissions).length,2);
+});
+
+test('telephone accepts shared drawing tools, filled shapes and 1–40px brushes without leaking drafts',()=>{
+ const {r,players}=fixture();const shapes=['brush','erase','line','rect','ellipse','fill'].map(tool=>({...stroke,tool,size:6,filled:tool==='rect'}));
+ const result=drawing(shapes);assert.deepEqual(result.map(s=>s.tool),shapes.map(s=>s.tool));assert.equal(result[3].filled,true);
+ for(const size of [0,41,1.5])assert.throws(()=>drawing([{...stroke,size}]),e=>e.code==='INVALID_DRAWING');
+ assert.throws(()=>drawing([{...stroke,filled:'yes'}]),e=>e.code==='INVALID_DRAWING');
+ cmd(r,players[0],'submit',{strokes:shapes});assert.equal(r.view(players[1].id).books.length,0);
+});
+test('telephone pages expose a server deadline and reset it only on advancing to a new page',()=>{
+ const {r,players}=fixture(),deadline=r.deadline;assert.equal(r.options.seconds,90);assert.ok(deadline>Date.now());
+ assert.equal(r.view(players[0].id).deadline,deadline);assert.ok(Number.isFinite(r.view(players[0].id).serverNow));
+ for(const p of players)cmd(r,p,'skip');assert.equal(r.deadline,deadline);cmd(r,players[0],'advance');assert.ok(r.deadline>=deadline);
+ r.kick(players[0].id,players[0].id,true);assert.equal(r.deadline,null);
 });

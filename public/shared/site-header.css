@@ -30,3 +30,13 @@ body>[data-site-header].site-header{width:calc(100% - 8vw);margin-inline:4vw}bod
 .site-header .site-theme-guest{grid-column:3;grid-row:1;justify-self:end}
 .site-settings .site-appearance-label{display:block;margin:0 0 8px;color:inherit;font:inherit}
 .site-settings #site-color-scheme{width:100%;min-height:44px;font:inherit}
+
+/* Framed navigation needs real row/column gaps and a full-width mobile row. */
+.site-header .site-links{gap:var(--ui-info-action-gap,12px)}
+.site-header .site-submenu{display:grid;gap:var(--ui-control-gap,8px)}
+.site-header .site-submenu .ui-navigation-button{display:flex;justify-content:flex-start;white-space:normal}
+.game-toolbar nav.ui-info-actions{gap:var(--ui-info-action-gap,12px)}
+@media(max-width:1180px){
+ .site-header .site-links{grid-column:1/-1;grid-row:2;justify-content:center;flex-wrap:wrap;gap:var(--ui-info-action-gap,12px)}
+ .site-header .site-account{grid-column:1/-1;grid-row:3;justify-self:center}
+}

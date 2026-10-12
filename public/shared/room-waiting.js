@@ -82,7 +82,7 @@
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');
   if(stage&&sidebar){if(!stageHome){stageHome=document.createComment('play-stage');stage.before(stageHome);}if(s.phase==='waiting'){if(stage.parentElement!==sidebar)sidebar.prepend(stage);}else if(stage.parentElement!==stageHome.parentElement)stageHome.after(stage);}
   if(!hero){
-   const host=document.querySelector('.play-layout>main,.gift-layout>main,.draw-layout>main,#game .play-area,#game .task-layout,#game .adventure-layout');
+   const host=document.querySelector('.play-layout>main,.gift-layout>main,.draw-layout>main,#game .play-area,#game .task-layout,#game .adventure-layout')||(type==='telephone'?document.querySelector('#game'):null);
    if(!host)return;
    hero=document.createElement('section');hero.className='room-waiting-template';hero.setAttribute('aria-label','組隊房間介紹');
    const art=document.createElement('div');art.className='room-waiting-art';const image=document.createElement('img');image.src='/assets/playful/game-'+type+'.svg';image.alt=game[0]+'遊戲插畫';art.append(image);

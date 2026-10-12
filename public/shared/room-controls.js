@@ -53,15 +53,15 @@
   const leaveDisabled=leaving||!!ownLeave?.disabled;if(proxies.leave.disabled!==leaveDisabled)proxies.leave.disabled=leaveDisabled;if(proxies.leave.hidden)proxies.leave.hidden=false;
   const setup=['waiting','finished','showdown'].includes(state.phase),card=panel.querySelector('.ui-room-settings-card');if(card.hidden===setup)card.hidden=!setup;
   if(setup){
-   if(!owner()){settingsSource=null;const slot=panel.querySelector('.ui-room-settings-slot');if(slot.textContent!=='由房主調整房間設定。')slot.replaceChildren(node('p','ui-room-settings-note','由房主調整房間設定。'));return;}
    let source=[...document.querySelectorAll('.room-settings-panel')].find(n=>!n.closest('[data-room-common]'));
+   if(!owner()&&!source&&!(settingsSource?.isConnected&&settingsSource.dataset.roomReadOnly==='true')){settingsSource=null;const slot=panel.querySelector('.ui-room-settings-slot');if(slot.textContent!=='由房主調整房間設定。')slot.replaceChildren(node('p','ui-room-settings-note','由房主調整房間設定。'));return;}
    if(!source&&owner()){
     const base=document.getElementById('controls')||document.getElementById('hostButtons');
     const fields=base?[...base.querySelectorAll('label,fieldset,.mode-note')].filter(n=>!n.closest('[data-room-common]')&&!n.closest('fieldset label')):[];
     if(fields.length){source=node('div','');source.dataset.roomSetting='';base.prepend(source);for(const n of fields)if(!fields.some(other=>other!==n&&other.contains(n))){source.append(n);if(n.tagName==='LABEL'&&n.htmlFor){const input=document.getElementById(n.htmlFor);if(input&&base.contains(input)&&!n.contains(input))source.append(input);}}}
    }
    const slot=panel.querySelector('.ui-room-settings-slot');
-   if(source&&source!==settingsSource){settingsSource=source;normalizeFields(source);slot.replaceChildren(source);}
+   if(source&&source!==settingsSource){settingsSource=source;source.dataset.roomReadOnly=String(!owner());if(!owner())for(const input of source.querySelectorAll('input,select,textarea,button'))input.disabled=true;normalizeFields(source);slot.replaceChildren(source);}
    else if(!settingsSource||!settingsSource.isConnected){settingsSource=null;const text=owner()?'本遊戲使用固定規則，無需調整。':'由房主調整房間設定。';if(slot.textContent!==text)slot.replaceChildren(node('p','ui-room-settings-note',text));}
   }
  }
