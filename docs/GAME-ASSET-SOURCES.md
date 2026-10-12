@@ -19,3 +19,6 @@
 ## 2026-10-10 主頁原創遊戲插圖
 
 新增 public/assets/playful/game-bluff.svg、game-musicquiz.svg、game-minimal.svg、game-telephone.svg、game-trpg.svg，均於本專案以 SVG 幾何與路徑原創繪製，延續現有紙卡語言。未採用第三方封面、圖片、字型或下載素材；來源與驗證見 [本輪證據](GAME-CARD-ART-PROGRESS.md)。
+
+
+瞎掰王旁觀反應音效：使用者指定 [統神之喔是喔真的假的55555](https://www.youtube.com/watch?v=pezuzuUDvyc)，2026-10-12 依明確要求轉 MP3，約 1.66 秒。非自製、未核對來源授權；只以本機 Audio 播放，不占用 YouTube 共看播放器。檔案 public/assets/game-sounds/bluff-reaction.mp3；轉檔及驗證見 docs/BLUFF-ROUND-FOCUS-PROGRESS.md。

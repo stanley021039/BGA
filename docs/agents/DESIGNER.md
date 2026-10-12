@@ -125,3 +125,17 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 2026-10-10 秒數可見性追加：瞎掰王大字 sticky 倒數、口說保留 0 秒；CAB7B6 原生頁面確認捲動仍可見，31 項相關測試通過。準備倒數計算沿用前輪，未操作使用者回合；詳 [本輪證據](../BLUFF-KING-PROGRESS.md)。維持未發行 1.28.0。
 
 2026-10-10 主頁圖片：五款新遊戲原創 SVG 與共用圖片卡片，現在11款全有圖；精確圖片路徑／輪播相關6項通過，桌機亮色與390px深色驗證，未發布。接手見 [主頁圖片證據](../GAME-CARD-ART-PROGRESS.md)。
+
+
+2026-10-12 候選 1.29.0：瞎掰王三選一、真人多數全站禁題與本機轉檔反應音效；11 款遊戲共用專注切換，新遊戲接入規則已寫 AGENTS。初次40 focused／2019完整，後續原生頁面修正與最終驗證見 [本輪證據](../BLUFF-ROUND-FOCUS-PROGRESS.md)。未發布或部署，永久記憶及轉檔工具保持 ignored。
+
+
+## 2026-10-12 最終交付驗證
+
+完整 Windows 2023/2023 通過，fail/cancel/skip 0，132730ms（work/bluff-focus-final-tests.log）；此後補跨房間禁題即時替換選項，受影響瞎掰王引擎／真 HTTP／前端反應／專注測試 33/33 通過（work/bluff-final-game-tests.log）。專注最後補 root 幾何標記與外層單欄 CSS；交付前對共用資源／圖示配色與 overlay 再驗。
+
+Chromium 隔離實際房間 BB07C0：想想三題中選海洋雪後才顯示30秒；揭曉正確計分，1位真人＋2AI投票門檻1，按禁題後顯示1/1、已全站禁用；下一輪AI想想選題，人類可按固定文字反應，專注內也可見。撲克先完成原有媒體同意（暫不觀看）後，專注進出正常；雷霆、跑團、市場及其餘房間頁都確認專注 root 可見、導覽隱藏。共用頁面不重新建遊戲 DOM；內建瀏覽器驗證的是頁內回退。
+
+已補資料標記保留旁觀反應與必要 DIALOG／tooltip；相關回歸7/7。音效本機原生playing及靜音案例通過，證據使用 screenshot bluff-reaction-audio.png；專注實際房間 screenshot bluff-focus-final.png。全部 QA 為隔離站及合成帳號，沒有操作使用者房間或正式禁題資料。所有新版首頁遊戲自動由 data-game 目錄納入接入回歸，未來新增遊戲缺共用模組／ui-primitives 將使測試失敗。
+
+候選仍1.29.0，release check以origin/main de526dc為minor通過；永久記憶更新本機且ignored。未推送、發布新PR、合併或部署。原生OS全螢幕、實機Safari、真人語音與主觀聽感仍未驗，沿用此前限制。

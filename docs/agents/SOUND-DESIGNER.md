@@ -72,3 +72,17 @@
 候選版 1.28.0；完整 node --test tests/*.test.js：2006/2006 通過，fail/cancel/skip 0，93923ms。這筆更新取代上一輪未重跑完整 2006 的驗證限制。另有倒數音效 focused 56/56，以及 Chromium 原生播放五項案例通過；仍未驗證喇叭／耳機主觀聽感、Safari、真人跨裝置語音與弱網。完整記錄保留於 ignored work/bluff-pr-final-tests.log；原生證據沿用 work/bluff-preview/sound-qa/results.json。
 
 目標 stanley021039/BGA，feat/bluff-king → main；本機準備提交供發布確認，尚未推送、建立 PR、合併或部署。
+
+
+2026-10-12 候選 1.29.0：瞎掰王三選一、真人多數全站禁題與本機轉檔反應音效；11 款遊戲共用專注切換，新遊戲接入規則已寫 AGENTS。初次40 focused／2019完整，後續原生頁面修正與最終驗證見 [本輪證據](../BLUFF-ROUND-FOCUS-PROGRESS.md)。未發布或部署，永久記憶及轉檔工具保持 ignored。
+
+
+## 2026-10-12 最終交付驗證
+
+完整 Windows 2023/2023 通過，fail/cancel/skip 0，132730ms（work/bluff-focus-final-tests.log）；此後補跨房間禁題即時替換選項，受影響瞎掰王引擎／真 HTTP／前端反應／專注測試 33/33 通過（work/bluff-final-game-tests.log）。專注最後補 root 幾何標記與外層單欄 CSS；交付前對共用資源／圖示配色與 overlay 再驗。
+
+Chromium 隔離實際房間 BB07C0：想想三題中選海洋雪後才顯示30秒；揭曉正確計分，1位真人＋2AI投票門檻1，按禁題後顯示1/1、已全站禁用；下一輪AI想想選題，人類可按固定文字反應，專注內也可見。撲克先完成原有媒體同意（暫不觀看）後，專注進出正常；雷霆、跑團、市場及其餘房間頁都確認專注 root 可見、導覽隱藏。共用頁面不重新建遊戲 DOM；內建瀏覽器驗證的是頁內回退。
+
+已補資料標記保留旁觀反應與必要 DIALOG／tooltip；相關回歸7/7。音效本機原生playing及靜音案例通過，證據使用 screenshot bluff-reaction-audio.png；專注實際房間 screenshot bluff-focus-final.png。全部 QA 為隔離站及合成帳號，沒有操作使用者房間或正式禁題資料。所有新版首頁遊戲自動由 data-game 目錄納入接入回歸，未來新增遊戲缺共用模組／ui-primitives 將使測試失敗。
+
+候選仍1.29.0，release check以origin/main de526dc為minor通過；永久記憶更新本機且ignored。未推送、發布新PR、合併或部署。原生OS全螢幕、實機Safari、真人語音與主觀聽感仍未驗，沿用此前限制。

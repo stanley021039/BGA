@@ -1,0 +1,20 @@
+
+.game-focus-toggle{position:fixed;right:1rem;bottom:1rem;z-index:2147483000;min-width:44px;min-height:44px;background:var(--ui-surface-floating,#fffdf8);color:var(--ui-text,#292639);border:2px solid var(--ui-border,#292639);border-radius:1rem}
+body.game-focus-active .game-focus-excluded{display:none!important}
+body.game-focus-active{margin:0!important;padding:0!important;min-height:100dvh}
+body.game-focus-active :is(.shell,.club,.draw-shell,.gift-shell,.telephone-shell,.adventure-shell,.market-shell){width:100%!important;max-width:none!important;margin:0!important;padding:1rem!important}
+body.game-focus-active :is(.game-layout,.play-layout,.gift-layout,.draw-layout,.race-layout,.task-layout,.adventure-layout){max-width:none;width:100%}
+body.game-focus-active :is(.table-sidebar .chat-panel,.room-social,.social-panel,#tableMediaOpen,#tableWatchOpen){display:none!important}
+body.game-focus-active [data-game-focus-root]{min-height:calc(100dvh - 2rem);padding-bottom:4rem}
+
+body.game-focus-active [data-site-header]{display:none!important}
+
+body.game-focus-active .chat-panel{display:none!important}
+
+body.game-focus-active .shared-chat{display:none!important}
+
+body.game-focus-active :is(.shared-head,.shared-expressions-heading,.shared-barrage-heading,#shared-expressions,#shared-barrage,#shared-emoji-picker,.room-game-info,.room-tools,#invite){display:none!important}
+
+body.game-focus-active :is(.room-action-dock,.race-utility-panel){display:none!important}
+
+body.game-focus-active :is(.shell,.club,.draw-shell,.gift-shell,.telephone-shell,.adventure-shell,.market-shell){display:block!important}
