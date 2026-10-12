@@ -31,3 +31,11 @@ test('bare themed buttons pair their actual background and ink in both schemes',
  const foreground=rule[1].match(/color:\s*var\((--[\w-]+)\)/)?.[1];
  for(const tokens of [light,dark])assert.ok(contrast(resolve(tokens,foreground),resolve(tokens,background))>=4.5);
 });
+
+test('chat message and destination text keep panel ink despite game-level paragraph colors',()=>{
+ const css=fs.readFileSync(path.join(__dirname,'../public/shared/chat.css'),'utf8');
+ const scoped=[...css.matchAll(/([^{}]+)\{([^{}]+)\}/g)].filter(m=>m[1].includes('.shared-chat')&&/color\s*:\s*inherit(?:;|$)/.test(m[2]));
+ for(const tag of ['p','label','time'])assert.ok(scoped.some(m=>new RegExp('(?:^|[\\s,(])'+tag+'(?:$|[\\s,)])').test(m[1])),tag+' must inherit chat panel ink');
+ assert.ok(contrast('#6e7c71',resolve(dark,'--play-surface'))<4.5,'old majority paragraph ink reproduces poor night contrast');
+ for(const tokens of [light,dark])assert.ok(contrast(resolve(tokens,'--play-ink'),resolve(tokens,'--play-surface'))>=4.5);
+});

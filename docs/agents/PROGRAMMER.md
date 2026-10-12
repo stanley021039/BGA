@@ -456,3 +456,8 @@ Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip
 
 
 2026-10-12 組隊布局與聊天室1.29.0候選：十款統一上列介紹／設定、下列固定人員卡／聊天室；手機換列且內容框內捲動。五款補共用聊天依賴，單client/mountIn保留草稿與輪詢，開局恢復操作節點與原展開狀態；TRPG公開角色名出現在名單。等待特殊設定留在共用欄，賽道／手牌／畫布／播放器／身分與揭曉保留遊玩專用布局。驗收範圍、完整suite、PR與公開結果見[共用組隊與聊天契約](../specs/SHARED-WAITING-CHAT.md)與本批PR留言，不推定全phase或真人觸控。
+
+
+2026-10-12 聊天文字配色1.29.1候選：1.29.0公開幾何／收發驗證通過後，截圖發現同頻頁全域p的#6e7c71滲入聊天室，深色訊息對比不足。chat.css讓p／label／time繼承面板配對文字，不借各遊戲舊字色；保留等待retention專用muted token。共用scope與明暗contrast回歸、十款實際等待／遊玩文字對比及最終完整suite／CI／公開結果以本批PR證據為準；不是已驗全站所有文字或所有遊戲phase。
+
+同批追加捲動驗收：ui-foundation的room-sidebar:has(action-slot)原為playing popover保留overflow:visible，搬入固定等待grid後會讓互動／離房工具溢出並覆蓋聊天室。waiting控制槽明確overflow:auto覆寫，遊玩側欄維持原規則；驗證框內捲動與工具／表情彈窗，不以框尺寸一致代表子內容沒有溢出。
