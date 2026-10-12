@@ -2,6 +2,7 @@
  const paths={
   emoji:'<circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0M8.5 8.5h.01M15.5 8.5h.01"/>',
   frame:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M17 15h.01"/>',
+  clear:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',
   close:'<path d="m6 6 12 12M18 6 6 18"/>',
   send:'<path d="m3 3 18 9-18 9 4-9-4-9Z M7 12h14"/>',
   leave:'<path d="M9 5H4v14h5M9 12h12m-4-4 4 4-4 4"/>',
@@ -75,8 +76,190 @@
   node.classList.add('ui-status');node.dataset.kind=kind;node.setAttribute('role','status');node.setAttribute('aria-live','polite');node.setAttribute('aria-atomic','true');
   if(node.textContent!==message)node.textContent=message;
  }
+ /* One frame for static and dynamically mounted native dialogs. Keep nodes and handlers. */
+ function frameDialog(dialog){
+  if(!dialog||dialog.dataset.uiDialogFrame==='true')return dialog;
+  const doc=dialog.ownerDocument||document;
+  const titleId=dialog.getAttribute('aria-labelledby')?.split(/\s+/)[0];
+  const title=(titleId&&dialog.querySelector('[id="'+titleId+'"]'))||dialog.querySelector('[data-dialog-title],h1,h2,h3,strong');
+  const titleBlock=title&&[...dialog.children].find(n=>n!==title&&n.contains(title));
+  const existingHeader=titleBlock?.matches('header,.game-dialog-header,.library-dialog-head,.image-preview-heading,.barrage-frame-header')?titleBlock:null;
+  const header=existingHeader||doc.createElement('header');
+  const footer=dialog.querySelector(':scope > footer')||doc.createElement('footer');
+  const body=dialog.querySelector(':scope > .game-dialog-body,:scope > .race-dice-body');
+  const content=body||doc.createElement('div');
+  header.classList.add('ui-dialog-header');content.classList.add('ui-dialog-content');footer.classList.add('ui-dialog-footer');
+  const windowFrame=dialog.matches('.table-media-window,.table-watch-dialog');
+  const actionRows='.ui-control-row,[data-dialog-actions],.host-dialog-actions,.dialog-actions';
+  const moveAction=node=>{const form=node.closest('form');if(form&&!node.hasAttribute('form')&&node.matches('button,input')){if(!form.id)form.id='ui-dialog-form-'+(++dialogNumber);node.setAttribute('form',form.id);}footer.append(node);};
+  for(const child of [...dialog.childNodes]){
+   if(child===header||child===footer||child===content)continue;
+   if(child===title)header.append(child);
+   else if(child.nodeType===1&&child.matches('.table-media-resize-edge'))continue;
+   else if(child.nodeType===1&&(child.matches(actionRows)||child.matches('button,.host-return')))moveAction(child);
+   else content.append(child);
+  }
+  // Header buttons are dialog actions; keep the original draggable header itself.
+  for(const button of [...header.querySelectorAll('button')])moveAction(button);
+  for(const row of [...content.querySelectorAll(actionRows)]){
+   if(row.matches('.ui-control-row')&&row.querySelector('input:not([type=submit]),select,textarea'))continue;
+   const form=row.closest('form');if(form){if(!row.matches('[data-dialog-actions],.dialog-actions'))continue;if(!form.id)form.id='ui-dialog-form-'+(++dialogNumber);for(const button of row.querySelectorAll('button,input[type=submit]'))if(!button.hasAttribute('form'))button.setAttribute('form',form.id);}
+   if((row.parentElement===content||form)&&row.querySelector('button,input[type=submit],a'))moveAction(row);
+  }
+  // Submit remains attached to its original form after moving to the footer.
+  const create=dialog.querySelector('#create');if(create&&dialog.id==='createRoomDialog')moveAction(create);
+  if(title){if(!title.id)title.id='ui-dialog-title-'+(++dialogNumber);if(!dialog.hasAttribute('aria-label')&&!dialog.hasAttribute('aria-labelledby'))dialog.setAttribute('aria-labelledby',title.id);}
+  // Closing the dialog belongs to the header; decision actions stay in the footer.
+  for(const button of [...header.querySelectorAll('button'),...footer.querySelectorAll('button')]){
+   const label=button.getAttribute('aria-label')||button.textContent.trim();
+   if(button.matches('.close,.dialog-close,.host-cancel,[data-close-create],#mediaClose,#mediaPlaylistClose,#watchClose')||/^關閉/.test(label)){
+    button.classList.add('ui-dialog-close');button.type='button';decorateButton(button,'close',{iconOnly:true,label:label==='×'?'關閉視窗':label});header.append(button);
+   }
+  }
+  header.hidden=!header.childNodes.length;footer.hidden=!footer.childNodes.length;
+  dialog.classList.add('ui-dialog','ui-dialog-layout');if(windowFrame)dialog.classList.add('ui-dialog-window');
+  dialog.dataset.uiDialogFrame='true';dialog.append(header,content,footer);return dialog;
+ }
+ function mountDialogFrames(root){
+  if(root?.nodeType!==1)return;
+  if(root.matches('dialog'))frameDialog(root);
+  for(const dialog of root.querySelectorAll('dialog'))frameDialog(dialog);
+ }
+ function observeDialogFrames(){
+  mountDialogFrames(document.body);
+  if(typeof MutationObserver==='function')new MutationObserver(records=>{for(const record of records)for(const node of record.addedNodes)mountDialogFrames(node);}).observe(document.body,{childList:true,subtree:true});
+ }
+ if(document.body)observeDialogFrames();else document.addEventListener('DOMContentLoaded',observeDialogFrames,{once:true});
+ /* A field keeps its native label, control and handlers; spacing is shared site-wide. */
+ const fieldControls='input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=button]):not([type=submit]):not([type=reset]):not([type=image]),select,textarea';
+ const inlineFields='[data-ui-field-layout="inline"],.ui-sr-only,.ui-control-row,.chat-compose,.table-media-local,.table-watch-volume,.table-watch-seek,.tool-row,.color-row,.size-pick';
+ function frameField(label,control){
+  if(!label||!control||!control.matches(fieldControls)||label.closest(inlineFields))return null;
+  let field=label.closest('.ui-field,.ui-room-setting-field');
+  if(field&&!field.contains(control))return null;
+  if(!field){
+   if(label.contains(control))field=label;
+   else if(label.parentElement===control.parentElement&&label.nextElementSibling===control){field=label.ownerDocument.createElement('div');label.before(field);field.append(label,control);}
+   else return null;
+  }
+  if(!field.classList.contains('ui-field'))field.classList.add('ui-field');
+  if(!control.classList.contains('ui-field-control'))control.classList.add('ui-field-control');
+  if(label!==field&&!label.classList.contains('ui-field-label'))label.classList.add('ui-field-label');
+  const parent=field.parentElement;
+  if(parent&&!parent.matches('label,button,.ui-field')&&!parent.closest(inlineFields)){
+   const display=getComputedStyle(parent).display;
+   if(!/flex|table|contents/.test(display)&&!parent.classList.contains('ui-field-group'))parent.classList.add('ui-field-group');
+  }
+  return field;
+ }
+ function frameFields(root){
+  if(!root?.querySelectorAll)return;
+  const labels=[...(root.matches?.('label')?[root]:[]),...root.querySelectorAll('label')];
+  for(const label of labels){const control=label.htmlFor?label.ownerDocument.getElementById(label.htmlFor):label.querySelector(fieldControls);if(control)frameField(label,control);}
+ }
+ function createField({label='',control,help=null,className=''}={}){
+  if(!control)return null;
+  const doc=control.ownerDocument,field=doc.createElement('div'),caption=doc.createElement('label');field.className='ui-field '+className;
+  if(!control.id)control.id='ui-field-control-'+(++dialogNumber);caption.htmlFor=control.id;caption.textContent=label;field.append(caption,control);
+  if(help){if(!help.id)help.id='ui-field-help-'+(++dialogNumber);help.classList.add('ui-field-help');const ids=new Set((control.getAttribute('aria-describedby')||'').split(/\s+/).filter(Boolean));ids.add(help.id);control.setAttribute('aria-describedby',[...ids].join(' '));field.append(help);}
+  frameField(caption,control);return field;
+ }
+ function observeFields(){
+  frameFields(document.body);
+  if(typeof MutationObserver==='function')new MutationObserver(records=>{
+   const roots=new Set();
+   for(const record of records){
+    if(record.target.nodeType===1&&record.target.matches('label'))roots.add(record.target);
+    for(const node of record.addedNodes)if(node.nodeType===1){
+     if(node.matches('label')||node.querySelector('label'))roots.add(node);
+     if(node.matches(fieldControls)&&node.parentElement)roots.add(node.parentElement);
+    }
+   }
+   for(const root of roots)if(root.isConnected)frameFields(root);
+  }).observe(document.body,{subtree:true,childList:true});
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observeFields,{once:true});else observeFields();
+ /* Drawing games share the telephone flow: left players, middle drawing/answer, right room chat. */
+ let drawingPlay=null,drawingFitFrame=null;
+ function scheduleDrawingBoardFit(){
+  if(drawingFitFrame!==null)return;
+  drawingFitFrame=requestAnimationFrame(()=>{
+   drawingFitFrame=null;if(!drawingPlay)return;
+   for(const board of drawingPlay.work.querySelectorAll('.ui-drawing-board')){
+    const frame=board.querySelector(':scope > .canvas-frame'),scene=frame?.querySelector('#canvasStage');
+    if(!frame||window.matchMedia('(max-width:760px)').matches||scene&&!scene.hidden){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
+    const viewport=board.closest('.ui-drawing-task-board,#source')||board,tools=board.querySelector(':scope > .tools:not([hidden])'),css=getComputedStyle(board),gap=parseFloat(css.columnGap)||0;
+    const width=board.clientWidth-(tools?tools.getBoundingClientRect().width+gap:0),offset=frame.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop,available=viewport.clientHeight-offset;
+    if(available<120){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
+    const value=Math.floor(Math.min(width,2*Math.max(0,available-2)))+'px';
+    if(board.style.getPropertyValue('--ui-drawing-canvas-width')!==value)board.style.setProperty('--ui-drawing-canvas-width',value);
+   }
+  });
+ }
+
+ function createDrawingBoard({title='',canvas,countdown=null,tools=null}={}){
+  const doc=canvas?.ownerDocument||document,area=doc.createElement('div'),head=doc.createElement('div'),heading=doc.createElement('div'),caption=doc.createElement('h3'),frame=doc.createElement('div');
+  area.className='ui-drawing-board';head.className='board-head';heading.className='board-heading';caption.textContent=title;heading.append(caption);head.append(heading);frame.className='canvas-frame';if(canvas)frame.append(canvas);area.append(head);if(countdown)area.append(countdown);area.append(frame);if(tools){tools.classList.add('tools');area.append(tools);}return area;
+ }
+ function frameDrawingTask(controls){
+  if(!controls)return;
+  let board=controls.querySelector(':scope > .ui-drawing-task-board'),answer=controls.querySelector(':scope > .ui-drawing-task-answer');
+  if(!board||!answer){
+   const children=[...controls.children];board=document.createElement('div');answer=document.createElement('div');board.className='ui-drawing-task-board';answer.className='ui-drawing-task-answer';controls.append(board,answer);
+   for(const child of children)(child.matches('.ui-drawing-board')?board:answer).append(child);
+  }
+  controls.classList.add('ui-drawing-task-controls');board.hidden=!board.childElementCount;scheduleDrawingBoardFit();
+ }
+ function layoutDrawingPlay(type,phase){
+  if(!['draw','minimal','telephone'].includes(type))return null;
+  const active=!['waiting','finished'].includes(phase);
+  if(!active){
+   if(drawingPlay){
+    const record=drawingPlay;record.fitObserver?.disconnect();for(const board of record.work.querySelectorAll('.ui-drawing-board'))board.style.removeProperty('--ui-drawing-canvas-width');record.root.classList.remove('ui-drawing-play-layout');record.roster.classList.remove('ui-drawing-play-roster');record.work.classList.remove('ui-drawing-play-work');record.chat.classList.remove('ui-drawing-play-chat');record.results?.classList.remove('ui-drawing-play-results');record.title?.classList.remove('ui-drawing-play-title');if(record.createdTitle)record.title.hidden=true;
+    for(const [node,home]of record.homes){if(home.parentNode)home.after(node);home.remove();}record.homes.clear();
+    if(record.createdWork)record.work.remove();if(record.createdChat)record.chat.remove();drawingPlay=null;
+   }
+   document.body.classList.remove('ui-drawing-play-mode');return null;
+  }
+  if(!drawingPlay){
+   const root=document.querySelector(type==='draw'?'.draw-layout':'#game');
+   const roster=type==='draw'?document.querySelector('.draw-roster'):document.querySelector('#players')?.closest('section');
+   const controls=type==='draw'?null:document.querySelector('#controls')?.closest('section');
+   if(!root||!roster||type!=='draw'&&!controls)return null;
+   const homes=new Map(),move=(node,to)=>{const home=document.createComment('drawing-play-home');node.before(home);homes.set(node,home);to.append(node);};
+   let work=type==='draw'?root.querySelector(':scope > main'):controls,createdWork=false;
+   if(type==='minimal'){const source=document.querySelector('#source');if(source.parentElement===controls.parentElement)work=source.parentElement;else{work=document.createElement('section');work.className='panel';source.before(work);move(source,work);move(controls,work);createdWork=true;}}
+   let chat=type==='draw'?root.querySelector(':scope > aside'):document.createElement('aside'),createdChat=type!=='draw';
+   if(createdChat){chat.className='panel room-sidebar';chat.setAttribute('aria-label','聊天室與房間操作');root.append(chat);}
+   const results=type==='draw'?null:document.querySelector(type==='minimal'?'#results':'#books')?.closest('section');
+   const title=type==='draw'?document.querySelector('#drawingPlayTitle'):document.querySelector('.telephone-shell > h1');let createdTitle=type==='draw',heading=title;
+   if(type==='draw'&&!heading){heading=document.createElement('h1');heading.id='drawingPlayTitle';heading.textContent='你畫我猜';const toolbar=document.querySelector('.draw-shell > .game-toolbar');(toolbar||root).before(heading);createdTitle=true;}
+   if(type==='draw'){const phaseHead=root.querySelector(':scope > .stage-head');if(phaseHead)move(phaseHead,roster);}
+   drawingPlay={root,roster,work,chat,results,title:heading,homes,createdWork,createdChat,createdTitle};
+   if(typeof ResizeObserver==='function'){drawingPlay.fitObserver=new ResizeObserver(scheduleDrawingBoardFit);drawingPlay.fitObserver.observe(work);}
+  }
+  const record=drawingPlay;document.body.classList.add('ui-drawing-play-mode');record.root.classList.add('ui-drawing-play-layout');record.roster.classList.add('ui-drawing-play-roster');record.work.classList.add('ui-drawing-play-work');record.chat.classList.add('ui-drawing-play-chat');record.results?.classList.add('ui-drawing-play-results');record.title?.classList.add('ui-drawing-play-title');if(record.createdTitle)record.title.hidden=false;scheduleDrawingBoardFit();return record.chat;
+ }
+ /* Reusable room/chat block: stable header, one scrolling content, bottom actions. */
+ function framePanel(panel,{header,content,footer,body=null}={}){
+  if(!panel||!header||!content||!footer)return panel;
+  const main=body||panel.ownerDocument.createElement('div');
+  panel.classList.add('ui-panel-frame');header.classList.add('ui-panel-header');
+  main.classList.add('ui-panel-body');content.classList.add('ui-panel-content');footer.classList.add('ui-panel-footer');
+  if(header.parentElement!==panel)panel.prepend(header);
+  if(content.parentElement!==main)main.append(content);
+  if(footer.parentElement!==main)main.append(footer);
+  if(main.parentElement!==panel)panel.append(main);
+  return panel;
+ }
+ function createDialog({title='',titleId='',className='',content=[],actions=[]}={}){
+  const dialog=document.createElement('dialog'),heading=document.createElement('h2'),row=document.createElement('div');
+  dialog.className=className;heading.textContent=title;if(titleId)heading.id=titleId;row.className='ui-control-row';
+  row.append(...actions);dialog.append(heading,...content,row);return frameDialog(dialog);
+ }
  function openDialog(dialog,trigger=document.activeElement){
   if(!dialog)return;
+  frameDialog(dialog);
   window.GameUI?.bindDialog?.(dialog,{trigger});
   window.TableWatch?.closeForDialog(dialog);
   if(!dialogs.has(dialog)){
@@ -93,7 +276,7 @@
   }
   dialogs.get(dialog).trigger=trigger;if(!dialog.open)dialog.showModal();
  }
- window.GameUI={icon,symbol,playerName,overflowText,decorateButton,setBusy,setStatus,openDialog,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
+ window.GameUI={icon,symbol,playerName,overflowText,decorateButton,setBusy,setStatus,openDialog,frameDialog,createDialog,framePanel,frameField,frameFields,createField,createDrawingBoard,frameDrawingTask,layoutDrawingPlay,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
  /* One hover/focus hint in the top layer, independent of clipped game panels. */
  let controlHint=null,hintOwner=null,hintObserver=null;
  function hideControlHint(){

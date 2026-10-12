@@ -98,7 +98,7 @@ test('all ten games share table chat membership without changing gameplay snapsh
 
 test('moving chat between waiting and play keeps one panel and restores the previous expansion state',()=>{
  const vm=require('node:vm'),source=fs.readFileSync(path.join(__dirname,'../public/shared/chat.js'),'utf8');
- const start=source.indexOf('  function mountIn('),end=source.indexOf('  root.SharedChat={mountIn',start),heading={hidden:true},toggle={hidden:false};let parent=null,moves=0;
+ const start=source.indexOf('  function mountIn('),end=source.indexOf('  function mountTools(',start),heading={hidden:true},toggle={hidden:false};let parent=null,moves=0;
  const classes=new Set(),panel={classList:{toggle:(name,on)=>on?classes.add(name):classes.delete(name)},get parentElement(){return parent;}};
  const host=id=>({id,append:el=>{assert.equal(el,panel);parent=hosts[id];moves++;}}),hosts={waiting:host('waiting'),play:host('play')};
  const client=new ChatClient();client.room({code:'AAAAAA',me:'a'});client.messages.table=[event('kept')];client.retry={key:'draft',id:'same'};

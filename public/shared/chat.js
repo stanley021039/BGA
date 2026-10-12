@@ -33,19 +33,19 @@
   }
  }
  if(typeof module==='object'&&module.exports){module.exports={ChatClient};return;}
- let mountAttempts=0,queuedRoom=null,queuedLogout=false,queuedMount=null,queuedTools=[];
- root.SharedChat={mountIn:(host,options)=>{queuedMount={host,options};},mountTools:tools=>{queuedTools=tools;},updateRoom:s=>{queuedRoom=s;},clearRoom:()=>{queuedRoom=null;},logout:()=>{queuedRoom=null;queuedLogout=true;}};
+ let mountAttempts=0,queuedRoom=null,queuedLogout=false,queuedMount=null,queuedTools=[],queuedHeightPeer=null;
+ root.SharedChat={mountIn:(host,options)=>{queuedMount={host,options};},mountTools:tools=>{queuedTools=tools;},matchRosterHeight:peer=>{queuedHeightPeer=peer;},updateRoom:s=>{queuedRoom=s;},clearRoom:()=>{queuedRoom=null;},logout:()=>{queuedRoom=null;queuedLogout=true;}};
  function mount(){
   if(location.pathname==='/'||new URLSearchParams(location.search).has('learn'))return;
   const host=queuedMount?.host||document.querySelector('.room-sidebar,.race-utility-panel,.race-controls,.action-panel,#controls');if(!host){if(mountAttempts++<50)setTimeout(mount,100);return;}
   const panel=document.createElement('section');panel.className='shared-chat';panel.setAttribute('aria-label','聊天室與房間彈幕');
-  panel.innerHTML='<h2 class="chat-heading" hidden>聊天室</h2><button type="button" class="chat-toggle" aria-expanded="false" aria-controls="chat-content">聊天室 <span class="chat-badge"></span></button><div id="chat-content" hidden><ol class="chat-messages" aria-label="聊天訊息"></ol><form autocomplete="off"><label for="chat-input">房間彈幕</label><div class="chat-compose"><input id="chat-input" maxlength="320" required autocomplete="off" aria-describedby="chat-destination"><button type="submit" aria-label="發送房間彈幕">發送</button></div></form><div class="chat-room-tools ui-control-row" aria-label="媒體與表情"></div><p id="chat-destination" class="chat-destination"></p><p class="chat-status" role="status" aria-live="polite"></p></div>';
-  host.append(panel);const q=s=>panel.querySelector(s),list=q('.chat-messages'),input=q('input'),submit=q('[type=submit]');root.GameUI?.decorateButton(submit,'send',{iconOnly:true,label:'發送房間彈幕'});
+  panel.innerHTML='<h2 class="chat-heading" hidden>聊天室</h2><button type="button" class="chat-toggle" aria-expanded="false" aria-controls="chat-content">聊天室 <span class="chat-badge"></span></button><div id="chat-content" hidden><ol class="chat-messages" aria-label="聊天訊息"></ol><form autocomplete="off"><label for="chat-input" class="ui-sr-only">房間彈幕</label><div class="chat-compose"><input id="chat-input" maxlength="320" required autocomplete="off"><button type="submit" aria-label="發送房間彈幕">發送</button></div></form><div class="chat-room-tools ui-control-row" aria-label="媒體與表情"></div><p class="chat-status" role="status" aria-live="polite"></p></div>';
+  host.append(panel);const q=s=>panel.querySelector(s),list=q('.chat-messages'),input=q('input'),submit=q('[type=submit]');const content=q('#chat-content'),footer=document.createElement('footer');footer.className='chat-room-footer';footer.append(q('.chat-status'),q('.chat-room-tools'),q('form'));root.GameUI.framePanel(panel,{header:q('.chat-heading'),body:content,content:list,footer});root.GameUI?.decorateButton(submit,'send',{iconOnly:true,label:'發送房間彈幕'});
   let rendered='',lastContext='',timer=null,backoff=3000,paused=false,pollEpoch=0;
   const client=new ChatClient({changed:render,roomChanged:s=>{if(root.RoomHost?.acceptSnapshot?.(s))return;root.GameShell?.update(s);}});
   function render(){
    const context=`${client.viewer}:${client.code}`;if(context!==lastContext){input.value='';lastContext=context;rendered=null;}
-   q('#chat-content').hidden=!client.open;q('.chat-toggle').setAttribute('aria-expanded',String(client.open));q('.chat-badge').textContent=client.unread.table?`未讀 ${client.unread.table}`:'';q('#chat-destination').textContent=client.code?'只發送至本房間 '+client.code:'請先入座';input.placeholder='輸入彈幕（最多160字）';
+   q('#chat-content').hidden=!client.open;q('.chat-toggle').setAttribute('aria-expanded',String(client.open));q('.chat-badge').textContent=client.unread.table?`未讀 ${client.unread.table}`:'';input.placeholder='輸入彈幕（最多160字）';
    input.disabled=submit.disabled=!client.enabled||!client.code||!client.viewer||client.pending;q('form').setAttribute('aria-busy',String(client.pending));q('.chat-status').textContent=client.pending?'傳送中…':client.status;
    const messages=client.messages.table,signature=messages.map(item=>item.id).join();if(signature===rendered)return;const atBottom=list.scrollHeight-list.scrollTop-list.clientHeight<40;rendered=signature;list.replaceChildren();
    for(const message of messages){const row=document.createElement('li'),name=document.createElement('b'),time=document.createElement('time'),text=document.createElement('p');name.textContent=message.name;time.textContent=new Date(message.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});text.textContent=message.message;row.append(name,time,text);list.append(row);}if(atBottom)list.scrollTop=list.scrollHeight;
@@ -61,8 +61,38 @@
    inline=next;panel.classList.toggle('chat-inline',inline);q('.chat-heading').hidden=!inline;q('.chat-toggle').hidden=inline;if(inline){previousOpen=client.open;client.show(true);}else client.show(previousOpen);
   }
   function mountTools(tools){for(const tool of tools||[])if(tool)q('.chat-room-tools').append(tool);}
-  root.SharedChat={mountIn,mountTools,updateRoom(snapshot){const old=client.roomKey;client.room(snapshot);if(old!==client.roomKey)tick();},clearRoom(){clearTimeout(timer);client.room(null);},logout(){clearTimeout(timer);client.logout();}};
-  if(queuedRoom)client.room(queuedRoom);if(queuedMount)mountIn(queuedMount.host,queuedMount.options);mountTools(queuedTools);if(queuedLogout)client.logout();render();tick();
+  let heightPeer=null,heightHost=null,heightFrame=null,heightSettleFrame=null;
+  function releaseHeight(){
+   if(heightFrame!==null)cancelAnimationFrame(heightFrame);if(heightSettleFrame!==null)cancelAnimationFrame(heightSettleFrame);heightFrame=heightSettleFrame=null;
+   heightPeer?.classList.remove('ui-chat-height-peer');heightPeer?.removeAttribute('data-chat-height-bound');heightPeer?.style.removeProperty('--ui-chat-fixed-height');heightHost?.style.removeProperty('--ui-chat-fixed-height');panel.removeAttribute('data-roster-height-bound');heightPeer=heightHost=null;
+  }
+  function measurePeerHeight(){
+   if(!heightPeer?.isConnected||!heightHost?.isConnected)return;
+   if(heightFrame!==null)cancelAnimationFrame(heightFrame);if(heightSettleFrame!==null)cancelAnimationFrame(heightSettleFrame);
+   heightFrame=requestAnimationFrame(()=>{
+    heightFrame=null;if(!heightPeer||!heightHost)return;
+    heightPeer.style.removeProperty('--ui-chat-fixed-height');heightHost.style.removeProperty('--ui-chat-fixed-height');
+    heightSettleFrame=requestAnimationFrame(()=>{
+     heightSettleFrame=null;if(!heightPeer?.isConnected||!heightHost?.isConnected||!heightPeer.getClientRects().length)return;
+     const minimum=parseFloat(getComputedStyle(panel).getPropertyValue('--ui-room-row-height'))||440;
+     const css=getComputedStyle(heightHost),gap=parseFloat(css.gap)||0;
+     const extras=[...heightHost.children].filter(n=>n!==panel&&getComputedStyle(n).position!=='absolute'&&n.getClientRects().length&&n.getBoundingClientRect().height>1);
+     const extraHeight=extras.reduce((total,n)=>{const style=getComputedStyle(n);return total+n.getBoundingClientRect().height+(parseFloat(style.marginTop)||0)+(parseFloat(style.marginBottom)||0);},0)+extras.length*gap;
+     const header=q('.chat-heading'),footer=q('.ui-panel-footer'),panelCss=getComputedStyle(panel);
+     const frameHeight=(header?.getBoundingClientRect().height||0)+(footer?.getBoundingClientRect().height||0)+2*(parseFloat(panelCss.getPropertyValue('--ui-panel-gap'))||12)+112;
+     const padding=(parseFloat(css.paddingTop)||0)+(parseFloat(css.paddingBottom)||0)+(parseFloat(css.borderTopWidth)||0)+(parseFloat(css.borderBottomWidth)||0);
+     const height=Math.ceil(Math.max(minimum,heightPeer.getBoundingClientRect().height,extraHeight+frameHeight+padding));
+     heightPeer.style.setProperty('--ui-chat-fixed-height',height+'px');heightHost.style.setProperty('--ui-chat-fixed-height',height+'px');heightPeer.dataset.chatHeightBound='true';panel.dataset.rosterHeightBound='true';
+    });
+   });
+  }
+  function matchRosterHeight(peer){
+   if(peer===heightPeer&&panel.parentElement===heightHost)return;
+   releaseHeight();if(!peer)return;heightPeer=peer;heightHost=panel.parentElement;heightPeer.classList.add('ui-chat-height-peer');measurePeerHeight();
+  }
+  root.addEventListener('resize',measurePeerHeight);root.addEventListener('pagehide',releaseHeight);
+  root.SharedChat={mountIn,mountTools,matchRosterHeight,updateRoom(snapshot){const old=client.roomKey;client.room(snapshot);if(old!==client.roomKey)tick();},clearRoom(){clearTimeout(timer);matchRosterHeight(null);client.room(null);},logout(){clearTimeout(timer);matchRosterHeight(null);client.logout();}};
+  if(queuedRoom)client.room(queuedRoom);if(queuedMount)mountIn(queuedMount.host,queuedMount.options);mountTools(queuedTools);matchRosterHeight(queuedHeightPeer);if(queuedLogout)client.logout();render();tick();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })(typeof window==='object'?window:globalThis);

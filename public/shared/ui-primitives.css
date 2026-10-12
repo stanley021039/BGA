@@ -98,3 +98,73 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 /* Navigation rows keep spacing independent from page themes. */
 .ui-navigation-row{display:flex;align-items:center;gap:var(--ui-info-action-gap,12px)!important;justify-content:flex-start!important;min-width:0}
 .ui-navigation-row[hidden]{display:none!important}
+
+/* Native dialogs use stable header / scrollable content / bottom-right actions. */
+.ui-dialog.ui-dialog-layout{padding:0!important;max-height:calc(100dvh - 24px);overflow:hidden}
+.ui-dialog-layout[open]{display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.ui-dialog-layout:not([open]){display:none}
+.ui-dialog-header{padding:20px 20px 12px;min-width:0}
+.ui-dialog-header>:is(h1,h2,h3){margin:0;overflow-wrap:anywhere}
+.ui-dialog-content{min-width:0;min-height:0;overflow:auto;padding:0 20px 20px;scrollbar-gutter:stable}
+.ui-dialog-content>p{margin:0 0 12px;overflow-wrap:anywhere}
+.ui-dialog-content>:last-child{margin-bottom:0}
+.ui-dialog-footer{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:var(--ui-info-action-gap,12px);padding:16px 20px;border-top:1px solid var(--ui-control-border,#b9b4ad);min-width:0}
+.ui-dialog-footer>.ui-control-row{justify-content:flex-end;flex-wrap:wrap;gap:var(--ui-info-action-gap,12px);max-width:100%;margin:0}
+.ui-dialog-footer :is(button,.ui-button){margin:0;flex-shrink:0;max-width:100%}
+.ui-dialog-header[hidden],.ui-dialog-footer[hidden]{display:none!important}
+.room-leave-dialog .ui-dialog-content{min-height:120px}
+.ui-dialog-content .ui-room-leave-status{min-height:24px;max-height:48px;overflow:auto}
+
+/* Complex windows retain their width and geometry; content stays inside one scrolling slot. */
+.ui-dialog.ui-dialog-layout:not(.ui-dialog-window):not(.race-dice-dialog):not(.draw-results):not(.game-library-dialog){width:min(560px,calc(100vw - 24px))}
+.ui-dialog-layout>.ui-dialog-header,.ui-dialog-layout>.ui-dialog-footer{flex:none}
+.ui-dialog-layout>.ui-dialog-content{flex:1 1 auto;min-height:0}
+.ui-dialog-layout>.ui-dialog-footer{justify-content:flex-end}
+.ui-dialog-layout>.ui-dialog-footer>:is(.host-dialog-actions,.dialog-actions,.race-dice-actions){display:flex;justify-content:flex-end;flex-wrap:wrap;gap:12px;margin:0}
+.ui-dialog-footer>:is(.close,.dialog-close,.host-cancel){position:static;inset:auto;float:none}
+.ui-dialog-window>.ui-dialog-content{padding:0;scrollbar-gutter:auto}
+.ui-dialog-layout .game-dialog-body{max-height:none}
+.game-library-dialog>.ui-dialog-content{display:flex;flex-direction:column;min-height:240px}
+.game-library-dialog>.ui-dialog-content>iframe{flex:1;min-height:240px;width:100%;border:0}
+.ui-dialog-layout .ui-dialog-header:empty{display:none}
+
+.ui-dialog-footer>[data-dialog-actions]{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:var(--ui-info-action-gap,12px);margin:0}
+
+/* Shared single-select primitive: native keyboard/menu behavior, inset chevron. */
+:root{--ui-select-arrow-gap:12px;--ui-select-arrow-size:12px;--ui-select-text-gap:12px;--ui-select-chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m2 4 4 4 4-4' fill='none' stroke='%235e586b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html[data-color-scheme=dark]{--ui-select-chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='m2 4 4 4 4-4' fill='none' stroke='%23eee9df' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+body select:not([multiple]):not([size]),body select:not([multiple])[size="1"]{appearance:none;-webkit-appearance:none;box-sizing:border-box;padding-left:var(--ui-select-arrow-gap)!important;padding-right:calc(var(--ui-select-arrow-gap) + var(--ui-select-arrow-size) + var(--ui-select-text-gap))!important;background-image:var(--ui-select-chevron)!important;background-repeat:no-repeat!important;background-position:right var(--ui-select-arrow-gap) center!important;background-size:var(--ui-select-arrow-size) var(--ui-select-arrow-size)!important}
+@media(forced-colors:active){body select:not([multiple]):not([size]),body select:not([multiple])[size="1"]{appearance:auto;-webkit-appearance:auto;background-image:none!important;padding-right:var(--ui-select-arrow-gap)!important}}
+
+/* All dialog dismiss controls share the header's upper-right corner. */
+.ui-dialog-layout>.ui-dialog-header{position:relative}
+.ui-dialog-layout>.ui-dialog-header:has(>.ui-dialog-close){padding-right:80px;min-height:76px;box-sizing:border-box}
+.ui-dialog-layout>.ui-dialog-header>.ui-dialog-close{position:absolute!important;top:16px!important;right:20px!important;bottom:auto!important;left:auto!important;float:none!important;margin:0!important;width:44px;min-width:44px;height:44px;min-height:44px;padding:0!important;display:inline-flex;align-items:center;justify-content:center;touch-action:auto;cursor:pointer}
+
+/* Scores stand apart from player names and status text in both color schemes. */
+:root{--ui-player-score-color:#9b4800}
+html[data-color-scheme=dark]{--ui-player-score-color:#ffe078}
+body[data-game-kind] .room-player-metrics strong{color:var(--ui-player-score-color)!important;font-weight:800;font-variant-numeric:tabular-nums}
+
+/* Shared panel frame uses chat's spacing for room settings and chat alike. */
+:root{--ui-panel-gap:12px;--ui-panel-heading-height:28px}
+.ui-panel-frame{display:flex;flex-direction:column;gap:var(--ui-panel-gap);min-width:0;min-height:0}
+.ui-panel-frame[hidden],.ui-panel-frame [hidden]{display:none!important}
+.ui-panel-frame>.ui-panel-header{flex:none;min-height:var(--ui-panel-heading-height);margin:0!important;font-size:var(--ui-text-section,1.25rem);line-height:1.4}
+.ui-panel-frame>.ui-panel-body{display:flex;flex-direction:column;flex:1 1 0;gap:var(--ui-panel-gap);min-width:0;min-height:0!important}
+.ui-panel-frame>.ui-panel-body>.ui-panel-content{flex:1 1 0;min-width:0;min-height:0;max-height:none!important;overflow:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable;margin:0!important;padding:0!important;border:0!important;border-block:1px solid var(--play-ink,var(--ui-border,#aaa))!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.ui-panel-frame>.ui-panel-body>.ui-panel-footer{display:flex;flex-direction:column;flex:none;gap:var(--ui-panel-gap);min-width:0;margin:0;padding:0;border:0}
+.ui-panel-footer>:is(.chat-status,.ui-room-control-status):empty{display:none}
+
+/* Single-line text and numeric inputs use the same inset as select text. */
+:root{--ui-input-text-gap:var(--ui-select-arrow-gap,12px)}
+body input:is(:not([type]),[type=text],[type=number],[type=email],[type=password],[type=tel],[type=url],[type=search],[type=date],[type=time],[type=datetime-local],[type=month],[type=week]){box-sizing:border-box;padding-inline:var(--ui-input-text-gap)!important}
+
+/* Label + select / input / adjustable control is one basic field across pages. */
+:root{--ui-field-label-gap:8px;--ui-field-gap:12px}
+body .ui-field{display:grid;gap:var(--ui-field-label-gap)!important;min-width:0;max-width:100%;margin:0!important}
+body .ui-field-group{display:grid;row-gap:var(--ui-field-gap)!important;min-width:0}
+body .ui-field>.ui-field-label{display:block;margin:0!important;min-width:0;overflow-wrap:anywhere}
+body .ui-field>.ui-field-control{margin:0!important;min-width:0;max-width:100%;box-sizing:border-box}
+body .ui-field-help{margin:0;line-height:1.5;overflow-wrap:anywhere}
+.ui-field[hidden],.ui-field-group[hidden]{display:none!important}

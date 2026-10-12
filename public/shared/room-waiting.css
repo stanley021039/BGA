@@ -125,3 +125,16 @@ body[data-room-phase=waiting] #turnHint{display:none}
 .ui-room-roster-action-button:focus-visible{outline:3px solid var(--ui-focus,#37857c);outline-offset:3px}
 .ui-room-roster-action-button:disabled{opacity:.55;cursor:wait}
 body[data-room-phase=finished][data-room-type=telephone] .telephone-shell #players{display:none}
+
+/* Keep the composer at the bottom of the waiting-room chat panel. */
+.chat-inline .chat-status{margin:0}
+.chat-inline label.ui-sr-only{min-height:0;margin:-1px}
+
+/* Short guides share the bottom of the introduction copy, across games. */
+.room-waiting-info:has(>#guide){align-self:stretch;display:flex;flex-direction:column;min-height:0;overflow:auto}
+.room-waiting-info>#guide{flex:none;margin: auto 0 0!important;width:100%;box-sizing:border-box;max-height:50%;overflow:auto;padding:12px;border-radius:12px}
+.room-waiting-info>#guide>summary{min-height:24px;cursor:pointer}
+
+
+/* Explicit teaching visibility wins over game-specific details/button display rules. */
+[data-room-teaching][hidden]{display:none!important}

@@ -5,3 +5,25 @@
 
 /* Chat paragraphs and labels inherit their panel's paired ink, not page-level text colors. */
 .shared-chat :is(p,label,time){color:inherit}
+
+/* The message viewport grows; tools and composer occupy stable bottom rows. */
+.shared-chat #chat-content{display:flex;flex-direction:column;min-height:300px;gap:12px}
+.shared-chat .chat-messages{flex:1 1 auto;min-height:120px;max-height:none;margin:0;overflow:auto;scrollbar-gutter:stable}
+.shared-chat .chat-status{flex:none;min-height:24px;max-height:48px;overflow:auto;margin:0;line-height:1.4}
+.shared-chat .chat-room-tools{display:flex;flex:none;flex-wrap:nowrap;align-items:center;gap:12px;min-height:44px;margin:0}
+.shared-chat form{flex:none;margin:0;min-width:0}
+.shared-chat .chat-compose{display:flex;flex-wrap:nowrap;align-items:center;gap:12px;min-height:44px}
+.shared-chat .chat-compose input{flex:1 1 0;min-width:0;width:0;margin:0}
+.shared-chat .chat-compose button{flex:0 0 44px;width:44px;min-width:44px;margin:0}
+.shared-chat label.ui-sr-only{min-height:0;margin:-1px}
+.chat-inline #chat-content{min-height:0;flex:1}
+.chat-inline .chat-messages{min-height:0}
+
+/* Use the waiting-room chat component during play as well. */
+.shared-chat.chat-inline{display:flex;flex-direction:column;height:var(--ui-room-row-height,440px);min-height:0;overflow:hidden;padding:20px;border:var(--play-card-border,2px solid #292639);border-radius:var(--play-radius,16px);background:var(--play-surface,var(--ui-surface,#fffdf8));color:var(--play-ink,var(--ui-text,#292639));box-shadow:var(--play-shadow,3px 4px 0 #0001)}
+.shared-chat.chat-inline #chat-content{flex:1;min-height:0}
+.shared-chat.chat-inline .chat-messages{flex:1;min-height:0;max-height:none}
+@media(max-width:600px){.shared-chat.chat-inline{padding:16px}}
+
+/* Empty delivery feedback must not add a spacer between messages and tools. */
+.shared-chat .chat-status:empty{display:none}

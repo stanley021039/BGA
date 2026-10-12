@@ -78,7 +78,7 @@ test('an empty collection has a readable state and no fabricated game sections',
 });
 
 test('achievement game icons are defined by the common 24px registry instead of page artwork',()=>{
- const source=read('shared/ui-components.js'),end=source.indexOf(' /* One hover/focus hint');const context=vm.createContext({window:{},document:{}});vm.runInContext(source.slice(0,end)+'})();',context);
+ const source=read('shared/ui-components.js'),end=source.indexOf(' /* One hover/focus hint');const context=vm.createContext({window:{},document:{readyState:'loading',addEventListener(){}}});vm.runInContext(source.slice(0,end)+'})();',context);
  for(const name of ['edit','gift','users','cards','car','table']){const svg=context.window.GameUI.icon(name);assert.match(svg,/class="ui-icon" viewBox="0 0 24 24"/);assert.match(svg,/aria-hidden="true" focusable="false"/);assert.doesNotMatch(svg,/<script|<image|https?:/);}
  const html=read('achievements.html');assert.match(html,/for="achievementGameFilter"/);assert.match(html,/for="achievementStatusFilter"/);assert.match(html,/<option value="unlocked">已解鎖<\/option>/);assert.match(html,/<option value="locked">未解鎖<\/option>/);assert.ok(html.indexOf('/shared/ui-components.js')<html.indexOf('/achievements.js'));
 });

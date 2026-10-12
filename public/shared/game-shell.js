@@ -2,7 +2,7 @@
  const panel=document.createElement('aside');
  panel.className='shared-game-ui';
  panel.hidden=true;
- panel.innerHTML='<div class="shared-head"><span>AFTERHOURS / ROOM</span><button id="shared-toggle" type="button" aria-expanded="false">表情／彈幕</button><a href="/" aria-label="返回遊戲大廳">離開房間 ↗</a></div><div id="shared-turn" class="shared-turn" role="status" aria-live="polite">等待開局</div><h2 class="shared-players-heading">這一桌的角色</h2><div id="shared-players" class="shared-players"></div><h2 class="shared-expressions-heading">使用角色表情</h2><div id="shared-expressions" class="shared-expressions" aria-label="我的角色表情"></div><h2 class="shared-barrage-heading">文字彈幕</h2><form id="shared-barrage" class="ui-control-row" autocomplete="off"><input autocomplete="off" name="message" maxlength="40" placeholder="輸入彈幕（最多 40 字）" aria-label="文字彈幕" required><button type="submit">發送</button></form><p id="shared-error" role="status"></p>';
+ panel.innerHTML='<div class="shared-head"><span>AFTERHOURS / ROOM</span><button id="shared-toggle" type="button" aria-expanded="false">表情／彈幕</button><a href="/" aria-label="返回遊戲大廳">離開房間 ↗</a></div><span id="shared-turn" class="ui-sr-only" role="status" aria-live="polite">等待開局</span><h2 class="shared-players-heading">這一桌的角色</h2><div id="shared-players" class="shared-players"></div><h2 class="shared-expressions-heading">使用角色表情</h2><div id="shared-expressions" class="shared-expressions" aria-label="我的角色表情"></div><h2 class="shared-barrage-heading">文字彈幕</h2><form id="shared-barrage" class="ui-control-row" autocomplete="off"><input autocomplete="off" name="message" maxlength="40" placeholder="輸入彈幕（最多 40 字）" aria-label="文字彈幕" required><button type="submit">發送</button></form><p id="shared-error" role="status"></p>';
  const majorityAside=document.querySelector('.play-layout > aside');
  const giftAside=document.querySelector('.gift-layout > aside');
  const drawAside=document.querySelector('.draw-layout > aside');
@@ -19,11 +19,11 @@
   sidebar.classList.add('room-sidebar');sidebar.parentElement.classList.add('room-layout');
   const heading=sidebar.querySelector('.aside-head');
   if(heading){const count=heading.querySelector('#count');heading.replaceChildren();const title=document.createElement('h2');title.textContent='這桌的朋友';heading.append(title);if(count)heading.append(count);}
-  const history=sidebar.querySelector('.history-link');if(history)history.textContent='對局歷史 ↗';
+  for(const history of sidebar.querySelectorAll('.history-link'))history.remove();
  }
  const dock=document.createElement('div');dock.className='room-action-dock ui-control-row';dock.setAttribute('aria-label','房間工具');
  const leaveLink=document.createElement('a');leaveLink.href='/';leaveLink.className='room-leave';leaveLink.textContent='離開房間';leaveLink.hidden=true;window.GameUI?.decorateButton(leaveLink,'leave',{label:'離開房間'});dock.append(leaveLink);
- const manage=document.querySelector('#managePlayers');if(manage){window.GameUI?.decorateButton(manage,'users',{label:'管理玩家'});dock.append(manage);}document.body.append(dock);
+ const manage=document.querySelector('#managePlayers');if(manage){window.GameUI?.decorateButton(manage,'users',{label:'管理玩家'});dock.prepend(manage);}document.body.append(dock);
  for(const dialog of document.querySelectorAll('#hostPlayers,#kickWarning,#kickedNotice')){const title=dialog.querySelector('h2');if(title){if(!title.id)title.id=dialog.id+'-title';dialog.setAttribute('aria-labelledby',title.id);}dialog.classList.add('ui-dialog');}
  if(majorityAside){if(majorityAside.querySelector('[data-game-action-slot]'))majorityAside.append(panel);else majorityAside.querySelector('#players').after(panel);panel.classList.add('integrated','majority-ui');}
  else if(giftAside){if(giftAside.querySelector('[data-game-action-slot]'))giftAside.append(panel);else giftAside.querySelector('#players').after(panel);panel.classList.add('integrated','gift-ui');}
@@ -50,7 +50,6 @@
  else document.body.append(panel);
  if(sidebar){
   const toggle=panel.querySelector('#shared-toggle');toggle.className='room-interaction-toggle';toggle.textContent='表情／互動';panel.querySelector('#shared-turn').after(toggle);
-  if(!sidebar.querySelector('.history-link')){const history=document.createElement('a');history.className='history-link';history.href='/history';history.textContent='對局歷史 ↗';panel.after(history);}
  }
  const toolsHost=sidebar||raceUtilities||document.querySelector('.race-controls');if(toolsHost){dock.classList.add('in-sidebar');toolsHost.append(dock);}
  const mediaSlot=document.createElement('div');mediaSlot.className='room-media-slot';dock.append(mediaSlot);window.TableMedia?.mount(mediaSlot);
@@ -142,7 +141,7 @@
     const row=element('div','shared-player','');row.classList.toggle('active',player.id===current);
     if(player.avatar){const img=document.createElement('img');img.src=player.avatar;img.alt='';row.append(img);}
     const name=element('span','shared-player-name','');name.innerHTML=window.GameUI?.playerName?.(player.name)||escape(player.name);
-    if(player.id===s.me)name.append(element('span','shared-player-self',' · 你'));row.append(name);
+    row.append(name);
     const expression=recent.get(player.id);
     if(expression){const badge=element('span','shared-emote-label',expression.label||expression.expression);badge.title=`${player.name} 使用了「${badge.textContent}」`;row.append(badge);}
     if(player.id===current)row.append(element('b','','◀ 操作中'));
@@ -187,6 +186,7 @@
  let leaving=false;
  const leaveDialog=document.createElement('dialog');leaveDialog.className='ui-dialog room-leave-dialog';leaveDialog.setAttribute('aria-labelledby','room-leave-title');
  leaveDialog.innerHTML='<h2 id="room-leave-title">確定離開這個房間？</h2><p>離開後會返回遊戲大廳。</p><div class="ui-control-row"><button type="button" class="ui-button primary" id="room-leave-confirm">確認離開</button><button type="button" class="ui-button secondary" id="room-leave-cancel">留在房間</button></div>';
+ window.GameUI?.frameDialog?.(leaveDialog);
  window.GameUI?.decorateButton(leaveDialog.querySelector('#room-leave-confirm'),'leave',{label:'確認離開'});
  window.GameUI?.decorateButton(leaveDialog.querySelector('#room-leave-cancel'),'close',{label:'留在房間'});
  document.body.append(leaveDialog);
@@ -263,7 +263,7 @@
  function playerRow(player,{me,status='',metrics=[{value:player.score??player.stack??0,label:'分數'}]}={}){
   const avatar=player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
   const name=typeof window!=='undefined'&&window.GameUI?.playerName?window.GameUI.playerName(player.name):'<span class="ui-player-name" title="'+escape(player.name)+'">'+escape(player.name)+'</span>';
-  return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+(player.id===me?'<span class="room-player-self"> · 你</span>':player.bot?'<span class="room-player-self"> · 測試 AI</span>':'')+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
+  return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
  }
  let historyNotice;
  function showHistoryWarning(warning){
