@@ -269,5 +269,10 @@
   historyNotice.hidden=!message;
   if(window.GameUI)window.GameUI.setStatus(historyNotice,message,{kind:'error'});else if(historyNotice.textContent!==message)historyNotice.textContent=message;
  }
- window.GameShell={update(s){window.RoomWaiting?.update(s);window.TableMedia?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
+ function isStaleRoomState(next){
+  if(!state||next.code!==state.code||next.me!==state.me||(next.type||'poker')!==(state.type||'poker'))return false;
+  for(const marker of [s=>s.roomInstanceId,s=>s.media?.roomInstanceId,s=>s.watch?.roomInstanceId])if(marker(next)&&marker(state)&&marker(next)!==marker(state))return false;
+  return next.version<state.version||next.version===state.version&&Number.isFinite(next.serverNow)&&Number.isFinite(state.serverNow)&&next.serverNow<state.serverNow;
+ }
+ window.GameShell={update(s){if(isStaleRoomState(s))return false;window.RoomWaiting?.update(s);window.TableMedia?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
 })();
