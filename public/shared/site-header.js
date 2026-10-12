@@ -1,5 +1,9 @@
 (()=>{
  const header=document.querySelector('[data-site-header]');if(!header)return;
+ header.querySelector('.site-links')?.classList.add('ui-navigation-row');
+ // Preserve native link/summary semantics while sharing the action-button frame.
+ for(const control of document.querySelectorAll('[data-site-header] .site-links a,[data-site-header] .site-links summary,.game-toolbar nav>a,.game-toolbar nav>button'))control.classList.add('ui-button','ui-navigation-button');
+
  const account=header.querySelector('.site-account'),button=header.querySelector('#site-account-button'),menu=header.querySelector('#site-account-menu');
  const settingsButton=document.createElement('button'),settings=document.createElement('section');
  settingsButton.id='site-settings-button';settingsButton.type='button';settingsButton.className='site-settings-button';settingsButton.title='設定';settingsButton.setAttribute('aria-label','設定');settingsButton.setAttribute('aria-expanded','false');settingsButton.setAttribute('aria-controls','site-settings');settingsButton.setAttribute('aria-haspopup','dialog');

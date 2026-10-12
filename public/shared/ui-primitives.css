@@ -19,6 +19,9 @@
 :is(button,input[type=button],input[type=submit],.ui-button,.ui-icon-button,.button,.page-button,.primary,.secondary)[hidden]{display:none!important}
 .ui-button-icon{display:inline-flex;flex:none;align-items:center;justify-content:center;margin:0;padding:0;line-height:1}
 .ui-button-label{margin:0;padding:0}
+/* Navigation actions use the same text/frame inset as buttons, not legacy quiet-link padding. */
+.ui-button.ui-navigation-button:not(.ui-icon-button){padding:var(--ui-button-padding-block) var(--ui-button-padding-inline)!important;margin:0;max-width:100%;overflow-wrap:anywhere}
+
 .ui-button{display:inline-flex;align-items:center;justify-content:center;gap:var(--ui-space-2,.5rem);position:relative;min-height:var(--ui-control-height,2.75rem);font-size:var(--ui-text-body,1rem)}
 .ui-icon-button{display:inline-flex;align-items:center;justify-content:center;flex:none;width:var(--ui-control-height,2.75rem);height:var(--ui-control-height,2.75rem);min-width:var(--ui-control-height,2.75rem);min-height:var(--ui-control-height,2.75rem);padding:var(--ui-space-2,.5rem);box-sizing:border-box}
 /* A layout class must never make an explicitly hidden control visible. */
@@ -91,3 +94,7 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 .ui-control-caption { display: block; position: static; min-height: 18px; line-height: 18px; font-size: 12px; white-space: nowrap; }
 
 .room-settings-actions .ui-status { min-height: 24px; margin: 0; }
+
+/* Navigation rows keep spacing independent from page themes. */
+.ui-navigation-row{display:flex;align-items:center;gap:var(--ui-info-action-gap,12px)!important;justify-content:flex-start!important;min-width:0}
+.ui-navigation-row[hidden]{display:none!important}
