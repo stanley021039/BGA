@@ -43,3 +43,13 @@ test('room leave confirmation and cancellation adopt the shared button primitive
  assert.equal(confirm.getAttribute('aria-label'),'確認離開');assert.equal(cancel.getAttribute('aria-label'),'留在房間');
  assert.equal(confirm.dataset.uiIcon,'leave');assert.equal(cancel.dataset.uiIcon,'close');
 });
+
+test('markup action slot reuses relocated native bot on unchanged polls and clears it at capacity',async()=>{
+ const f=await fixture(),moves=[];f.window.GameUI.icon=()=>null;f.window.RoomWaiting={setRosterAction(button){moves.push(button);if(button)button.remove();return true;}};
+ const target=f.document.createElement('div');target.id='gameActions';f.document.body.append(target);
+ const markup=f.window.GameShell.botButton({phase:'waiting',host:true,botSupport:{supported:true,canAdd:true}});
+ f.window.GameShell.stableMarkup(target,markup);const first=moves.at(-1);assert.ok(first);assert.equal(target.querySelector('button'),null);
+ f.window.GameShell.stableMarkup(target,markup);assert.equal(moves.at(-1),first);
+ const full=f.window.GameShell.botButton({phase:'waiting',host:true,botSupport:{supported:true,canAdd:false}});assert.equal(full,'');
+ f.window.GameShell.stableMarkup(target,full);assert.equal(moves.at(-1),null);
+});

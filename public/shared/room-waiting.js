@@ -11,7 +11,7 @@
   minimal:['極簡猜圖','線條已備，等你作畫。','3–6 人一起玩。用直線與圓作畫，由少到多一起猜圖。'],
   bluff:['瞎掰王','角色已備，等你開場。','3–9 人一起玩。輪流解釋與質問，找出唯一的老實人。']
  };
- let hero,stageHome,roster,rosterList,rosterCount,rosterActionCard,lastRoster='',layout,controls,layoutWaiting=false;
+ let hero,stageHome,roster,rosterList,rosterCount,rosterActionCard,actionHome,actionClasses,actionChildren,actionBusy=false,lastRoster='',layout,controls,layoutWaiting=false;
  const homes=new Map();
  function move(el,host){if(!el||el.parentElement===host)return;if(!homes.has(el)){const mark=document.createComment('waiting-home');el.before(mark);homes.set(el,mark);}host.append(el);}
  function restore(el){const mark=homes.get(el);if(mark?.parentNode)mark.after(el);}
@@ -44,7 +44,7 @@
   const el=document.createElement(tag);el.className=className;if(text!==undefined)el.textContent=text;return el;
  }
  function updateRoster(s,type){
-  if(s.phase!=='waiting'&&!(type==='telephone'&&s.phase==='finished')){if(roster)roster.hidden=true;return;}
+  if(!['waiting','finished','showdown'].includes(s.phase)){if(roster)roster.hidden=true;return;}
   const selector=rosterHosts[type];if(!selector)return;const host=document.querySelector(selector);if(!host)return;
   if(!roster){
    roster=node('section','ui-room-roster');roster.setAttribute('aria-labelledby','waitingRosterTitle');
@@ -78,7 +78,7 @@
 
  function update(s){
   if(window.RaceLesson)return;
-  document.body.dataset.roomPhase=s.phase;window.SharedChat?.updateRoom(s);const type=s.type||'poker';updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');arrange(type,s.phase==='waiting');return;}const game=games[type];if(!game)return;
+  document.body.dataset.roomPhase=s.phase;window.SharedChat?.updateRoom(s);const type=s.type||'poker';document.body.dataset.roomType=type;updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');arrange(type,s.phase==='waiting');return;}const game=games[type];if(!game)return;
   document.body.dataset.roomPhase=s.phase;
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');
   if(stage&&sidebar){if(!stageHome){stageHome=document.createComment('play-stage');stage.before(stageHome);}if(s.phase==='waiting'){if(stage.parentElement!==sidebar)sidebar.prepend(stage);}else if(stage.parentElement!==stageHome.parentElement)stageHome.after(stage);}
@@ -96,16 +96,28 @@
  }
  // Keep the original native button/handler; the roster only supplies its card layout.
  function setRosterAction(button){
-  if(rosterActionCard){rosterActionCard.remove();rosterActionCard=null;}
-  if(!button)return false;
-  if(!rosterList||roster.hidden)return false;
-  const card=node('article','ui-room-roster-card ui-room-roster-add');card.setAttribute('role','listitem');
-  button.classList.add('ui-room-roster-action-button');button.type='button';button.setAttribute('aria-label','加入 AI 測試夥伴');
+  if(button&&rosterActionCard?.querySelector('button')===button&&!roster.hidden)return true;
+  if(rosterActionCard){
+   const previous=rosterActionCard.querySelector('button');
+   if(previous){previous.className=actionClasses;previous.replaceChildren(...actionChildren);if(actionHome?.parentNode)actionHome.after(previous);}
+   actionHome?.remove();rosterActionCard.remove();rosterActionCard=null;
+  }
+  if(!button||window.RaceLesson||!rosterList||roster.hidden)return false;
+  actionHome=document.createComment('roster-action-home');button.before(actionHome);
+  actionClasses=button.className;actionChildren=[...button.childNodes];
+  for(const name of ['button','ui-button','ui-icon-button','primary','secondary','outline'])button.classList.remove(name);
+  const card=node('article','ui-room-roster-card ui-room-roster-add');card.setAttribute('role','listitem');card.dataset.gameActionSlot='';
+  button.classList.add('ui-room-roster-action-button');button.type='button';button.setAttribute('aria-label','加入 AI 測試夥伴');button.title='加入 AI 測試夥伴';
   const avatar=node('span','ui-room-roster-avatar'),icon=node('span','ui-symbol');icon.setAttribute('aria-hidden','true');
   const symbol=window.GameUI?.symbol?.('add');if(symbol)icon.innerHTML=symbol;else icon.textContent='+';
   avatar.append(icon);const info=node('span','ui-room-roster-info');
   info.append(node('b','ui-room-roster-action-label','加入 AI 測試夥伴'),node('small','ui-room-roster-status','協助測試遊戲流程'));
-  button.replaceChildren(avatar,info);card.append(button);rosterList.append(card);rosterActionCard=card;return true;
+  button.replaceChildren(avatar,info);card.append(button);rosterList.append(card);rosterActionCard=card;setRosterBusy(actionBusy);return true;
+ }
+ function setRosterBusy(value){
+  actionBusy=!!value;rosterActionCard?.setAttribute('aria-busy',String(actionBusy));const button=rosterActionCard?.querySelector('button');if(!button)return;
+  if(actionBusy){if(button.dataset.idleDisabled===undefined)button.dataset.idleDisabled=String(button.disabled);button.disabled=true;}
+  else if(button.dataset.idleDisabled!==undefined){button.disabled=button.dataset.idleDisabled==='true';delete button.dataset.idleDisabled;}
  }
  // Settings use their existing API handlers; a single change commits a valid selection.
  function bindSettings({container,read,save,canSave,isBusy,onError}){
@@ -126,5 +138,5 @@
   window.addEventListener('pagehide',()=>{clearTimeout(timer);pending=null;});
   return {flush};
  }
- window.RoomWaiting={update,bindSettings,setRosterAction};
+ window.RoomWaiting={update,bindSettings,setRosterAction,setRosterBusy};
 })();

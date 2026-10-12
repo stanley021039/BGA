@@ -213,9 +213,17 @@
  document.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(!link||event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;const url=new URL(link.href);if(url.origin!==location.origin||!['/gifts','/draw-words','/community'].includes(url.pathname))return;event.preventDefault();libraryTrigger=link;url.searchParams.set('embed','1');library.querySelector('iframe').src=url.pathname+url.search;const status=library.querySelector('#game-library-status');if(window.GameUI)window.GameUI.setStatus(status,'載入素材庫…');else status.textContent='載入素材庫…';if(window.GameUI)window.GameUI.openDialog(library,link);else library.showModal();});
  library.querySelector('iframe').onload=()=>{const doc=library.querySelector('iframe').contentDocument;if(!doc)return;const status=library.querySelector('#game-library-status');if(window.GameUI)window.GameUI.setStatus(status,'');else status.textContent='';const style=doc.createElement('style');style.textContent='header{display:none!important}body{padding:0!important}main{margin-top:12px!important}.gift-shell,.draw-shell,.shell{padding:0 16px!important}';doc.head.append(style);doc.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(link&&new URL(link.href).pathname==='/'){event.preventDefault();library.close();}});};
  if(majorityAside){const link=document.createElement('a');link.href='/community?tab=questions';link.className='quiet';link.textContent='新增題庫素材';document.querySelector('.shell header nav')?.append(link);}
- function stableMarkup(target,markup){if(target._gameMarkup!==markup){target.innerHTML=markup;target._gameMarkup=markup;}}
+ function stableMarkup(target,markup){
+  const actionSlot=['gameActions','drawActions'].includes(target.id);
+  if(target._gameMarkup!==markup){
+   if(actionSlot){window.RoomWaiting?.setRosterAction(null);target._rosterBot=null;}
+   target.innerHTML=markup;target._gameMarkup=markup;
+   if(actionSlot)target._rosterBot=target.querySelector('[data-do="bot"]');
+  }
+  if(actionSlot)window.RoomWaiting?.setRosterAction(target._rosterBot);
+ }
  function botButton(s){
-  if(!s.host||!s.botSupport?.supported)return '';
+  if(!s.host||!s.botSupport?.supported||['waiting','finished'].includes(s.phase)&&!s.botSupport.canAdd)return '';
   const icon=window.GameUI?.icon('users');
   return '<button type="button" class="button room-test-ai'+(icon?' ui-button ui-icon-button':'')+'" data-do="bot" aria-label="加入測試 AI" title="加入測試 AI" '+(s.botSupport.canAdd?'':'disabled')+'>'+(icon?'<span class="ui-button-icon" aria-hidden="true">'+icon+'</span><span class="ui-sr-only">加入測試 AI</span>':'加入測試 AI')+'</button>';
  }
