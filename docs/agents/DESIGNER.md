@@ -1,5 +1,7 @@
 # 設計師角色記憶
 
+2026-10-12：導覽／題庫連結外框候選修正，以ui-button＋ui-navigation-button共用文字留白，ui-navigation-row維持間距；獨立分支未整合。驗收與限制見[導覽操作元件](../specs/NAVIGATION-ACTION-FRAMES.md)。
+
 2026-10-12：傳情畫意共用畫板候選，題目與倒數上移、移除技術限額說明、採同款工具與renderer。19 focused及8組隔離Chromium布局，未部署；到0流程待確認，詳[共用畫板](../specs/TELEPHONE-SHARED-BOARD.md)。
 
 2026-10-12：欄位＋操作排版候選修正，傳情畫意等待／再開局使用共用ui-field、ui-field-actions與ui-control-group，避免選單貼住開始按鈕。實作與範圍見[共用欄位操作](../specs/SHARED-FIELD-ACTIONS.md)；測試、PR與部署狀態以本批PR證據為準。
