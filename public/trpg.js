@@ -37,7 +37,7 @@
    }return card;
   }));
   // Keep in-progress typing/focus stable when another seat submits or a poll arrives.
-  const key=JSON.stringify([state.phase,state.sceneId,state.leaderId,state.host,me?.role,me?.focus,state.myPlan,state.players.length<6]);
+  const key=JSON.stringify([state.phase,state.sceneId,state.leaderId,state.host,me?.role,me?.focus,state.myPlan,['waiting','finished'].includes(state.phase)?state.players.length<6:null]);
   if(key!==controlKey){controlKey=key;window.RoomWaiting?.setRosterAction(null);botControl=null;dirty=false;const controls=$('#controls');controls.replaceChildren();
    if(['waiting','finished'].includes(state.phase)){
     const label=node('label','你的角色');label.htmlFor='role';const roles=node('select');roles.id='role';for(const [id,r]of Object.entries(state.roles)){const o=node('option',r.name+' · '+r.description);o.value=id;roles.append(o);}roles.value=me.role;controls.append(label,roles,button('選擇角色',()=>commandRole(roles.value)));
