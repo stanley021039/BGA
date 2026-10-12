@@ -20,3 +20,15 @@ for(const type of ['poker','thunder','majority','gift','draw','telephone','trpg'
  f.update({...s,phase:'playing'});assert.equal(roster.hidden,true);f.update(s);assert.equal(roster.hidden,false);assert.equal(f.document.querySelectorAll('.ui-room-roster').length,1);
 });
 test('race lessons keep their own teaching roster',()=>{const f=fixture('thunder');f.window.RaceLesson={};f.update({...state,type:'thunder'});assert.equal(f.roster(),null);});
+
+test('roster add action remains last, keeps its native handler and is not counted as seated',()=>{
+ const f=fixture('telephone'),s={...state,type:'telephone'};f.update(s);
+ const b=f.document.createElement('button');let calls=0;b.onclick=()=>calls++;
+ assert.equal(f.window.RoomWaiting.setRosterAction(b),true);
+ const list=f.roster().querySelector('.ui-room-roster-list');assert.equal(list.children.length,4);
+ assert.equal(list.children[3].querySelector('button'),b);assert.equal(b.getAttribute('aria-label'),'加入 AI 測試夥伴');
+ b.onclick();assert.equal(calls,1);assert.match(f.roster().querySelector('.ui-room-roster-count').textContent,/3 位已入座/);
+ f.update({...s,players:[...s.players,{id:'new',name:'新夥伴',bot:true}]});assert.equal(list.children.at(-1).querySelector('button'),b);
+ f.window.RoomWaiting.setRosterAction(null);assert.equal(list.children.length,4);
+ f.update({...s,phase:'passing'});assert.equal(f.window.RoomWaiting.setRosterAction(b),false);
+});

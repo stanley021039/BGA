@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const {PNG}=require('pngjs'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth'),{settings}=require('../src/config');
 const {appFixture}=require('./helpers/app-fixture.cjs');
 const png=()=>PNG.sync.write({width:2,height:2,data:Buffer.from([255,0,0,255,0,255,0,255,0,0,255,255,255,255,0,255])}),request=()=>randomUUID();
-async function fixture(t){
+async function fixture(t,{freshConnections=false}={}){
  const password='fixture-'+randomUUID(),users=[];
  const {root,config,app,base}=await appFixture(t,{
   config:paths=>settings({DB_FILE:paths.dbFile,HISTORY_DIR:paths.historyDir,COMMUNITY_DIR:paths.communityDir,MUSIC_DIR:paths.musicDir,EXTERNAL_SIDE_EFFECTS_ENABLED:'false'}),
@@ -10,7 +10,7 @@ async function fixture(t){
    for(let i=0;i<2;i++)users.push(await auth.register({username:'image_member_'+i,displayName:'圖片作者 '+i,password,confirmPassword:password,invite:auth.createInvite(admin).code},{setHeader(){}}));}
  });
  const file=config.dbFile,cookies=[];
- const fetcher=(route,{body,headers={},cookie,method=body?'POST':'GET'}={})=>fetch(base+route,{method,headers:{...(body?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...headers},body:body?JSON.stringify(body):undefined});
+ const fetcher=(route,{body,headers={},cookie,method=body?'POST':'GET'}={})=>fetch(base+route,{method,headers:{...(freshConnections?{Connection:'close'}:{}),...(body?{'Content-Type':'application/json'}:{}),...(cookie?{Cookie:cookie}:{}),...headers},body:body?JSON.stringify(body):undefined});
  for(const user of users){const r=await fetcher('/api/auth/login',{body:{username:user.username,password}});assert.equal(r.status,200);cookies.push(r.headers.get('set-cookie').split(';')[0]);}
  const upload=(cookie,extra={})=>fetcher('/api/market/images',{cookie,body:{requestId:request(),mime:'image/png',base64:png().toString('base64'),buckets:['crash','rally'],weekdays:[1,3],...extra}});
  return {root,file,base,app,users,cookies,fetcher,upload};
@@ -53,7 +53,9 @@ test('disabled sessions and revoked admin role cannot preview or approve with st
  assert.equal((await f.fetcher('/api/market/images/../../app.sqlite',{cookie:f.cookies[2]})).status,404);
  assert.equal((await f.fetcher('/api/market/images/'+image.id+'/edit',{cookie:f.cookies[2],body:{base64:png().toString('base64')}})).status,404);
 });
-test('large frozen HTTP approval batches fit the bounded envelope and exclude newly uploaded images',async t=>{const f=await fixture(t),db=openDatabase(f.file),ids=[],bytes=png();
+// Synchronous bulk fixture inserts can outlast the server's keep-alive timeout
+// on Windows. This test checks the batch envelope, not idle socket reuse.
+test('large frozen HTTP approval batches fit the bounded envelope and exclude newly uploaded images',async t=>{const f=await fixture(t,{freshConnections:true}),db=openDatabase(f.file),ids=[],bytes=png();
  try{const insert=db.prepare("INSERT INTO market_images(id,author_id,author_name,mime,bytes,width,height,buckets_json,weekdays_json,version,status,created_at,approved_by,approved_at) VALUES(?,?,?,'image/png',?,2,2,'[\"crash\"]','[1]',1,'pending',?,NULL,NULL)");
   for(let i=0;i<200;i++){const user=f.users[1+Math.floor(i/100)],id=request();ids.push(id);insert.run(id,user.id,user.displayName,bytes,new Date().toISOString());}
  }finally{db.close();}

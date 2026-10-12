@@ -2,10 +2,15 @@
  'use strict';
  let state=null,panel=null,scheduled=false,leaving=false,leaveController=null,settingsSource=null;
  const native={start:null,bot:null},proxies={};
- const actions={start:{icon:'play',label:'開始遊戲'},bot:{icon:'users',label:'加入測試 AI'},leave:{icon:'leave',label:'離房'}};
+ const actions={start:{icon:'play',label:'開始遊戲'},bot:{icon:'users',label:'加入 AI 測試夥伴'},leave:{icon:'leave',label:'離房'}};
  const minimumPlayers={poker:2,thunder:2,draw:2,majority:3,gift:3,telephone:3,minimal:3,bluff:3,trpg:1,musicquiz:1};
  function node(tag,cls,text){const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;}
  function decorate(button,kind){const action=actions[kind];button.classList.add('ui-room-action');button.dataset.roomAction=kind;window.GameUI?.decorateButton(button,action.icon,{iconOnly:kind!=='start',label:action.label});if(!window.GameUI){button.textContent=action.label;button.setAttribute('aria-label',action.label);}return button;}
+ function rosterAction(button){
+  const card=node('article','ui-room-roster-card ui-room-roster-add');card.setAttribute('role','listitem');button.classList.add('ui-room-roster-action-button');button.type='button';button.dataset.roomCommonAction='bot';button.setAttribute('aria-label',actions.bot.label);
+  const avatar=node('span','ui-room-roster-avatar'),icon=node('span','ui-symbol');icon.setAttribute('aria-hidden','true');const symbol=window.GameUI?.symbol?.('add');if(symbol)icon.innerHTML=symbol;else icon.textContent='+';avatar.append(icon);
+  const info=node('span','ui-room-roster-info');info.append(node('b','ui-room-roster-action-label',actions.bot.label),node('small','ui-room-roster-status','協助測試遊戲流程'));button.replaceChildren(avatar,info);card.append(button);return card;
+ }
  function owner(){return state&&(state.host===true||state.host===state.me||state.hostId===state.me);}
  function hidden(n){for(let a=n;a;a=a.parentElement)if(a.hidden||getComputedStyle(a).display==='none'||getComputedStyle(a).visibility==='hidden')return true;return false;}
  function findAction(kind){
@@ -37,13 +42,14 @@
    const status=node('p','ui-room-control-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');panel.append(settings,row,status);host.append(panel);
   }
   if(panel.parentElement!==host)host.append(panel);
+  panel.dataset.aiPlacement=state.type==='telephone'&&window.RoomWaiting?.setRosterAction?'roster':'inline';
   if(panel.hidden)panel.hidden=false;
  }
  function normalize(){
   scheduled=false;if(!state||window.RaceLesson)return;mount();if(!panel)return;
   for(const kind of ['start','bot']){
    const source=findAction(kind);native[kind]=source;if(source&&!source.hasAttribute('data-room-native-action')){source.setAttribute('data-room-native-action',kind);source.tabIndex=-1;source.setAttribute('aria-hidden','true');}
-   const legacyRace=state.type==='thunder',visible=kind==='bot'?owner()&&(legacyRace||state.botSupport?.supported!==false)&&(!!source||state.botSupport?.canAdd===false):!!source&&!hidden(source),button=proxies[kind];if(button.hidden===visible)button.hidden=!visible;
+   const legacyRace=state.type==='thunder',rosterBot=state.type==='telephone'&&!!window.RoomWaiting?.setRosterAction,visible=kind==='bot'?!rosterBot&&owner()&&(legacyRace||state.botSupport?.supported!==false)&&(!!source||state.botSupport?.canAdd===false):!!source&&!hidden(source),button=proxies[kind];if(button.hidden===visible)button.hidden=!visible;
    const tooFew=kind==='start'&&(state.players||[]).filter(p=>!p.kicked).length<(minimumPlayers[state.type||'poker']||1);
    const disabled=!visible||!source||source.disabled||hidden(source)||button.getAttribute('aria-busy')==='true'||leaving||tooFew||kind==='bot'&&!legacyRace&&state.botSupport?.canAdd===false;if(button.disabled!==disabled)button.disabled=disabled;
   }
@@ -86,5 +92,5 @@
  },true);
  const observer=new MutationObserver(schedule);observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});
  window.addEventListener('pagehide',()=>{leaveController?.abort();observer.disconnect();});window.addEventListener('pageshow',()=>{observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});schedule();});
- window.RoomControls={update(next){if(window.RaceLesson)return;if(state&&state.code===next.code&&next.version<state.version)return;if(state&&(state.code!==next.code||state.me!==next.me)){leaveController?.abort();if(dialog.open)dialog.close();}state=next;schedule();},decorate,stop(){state=null;leaveController?.abort();if(panel)panel.hidden=true;}};
+ window.RoomControls={update(next){if(window.RaceLesson)return;if(state&&state.code===next.code&&next.version<state.version)return;if(state&&(state.code!==next.code||state.me!==next.me)){leaveController?.abort();if(dialog.open)dialog.close();}state=next;schedule();},decorate,rosterAction,stop(){state=null;leaveController?.abort();if(panel)panel.hidden=true;}};
 })();

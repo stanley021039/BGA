@@ -9,7 +9,7 @@ test('all ten room entry points load the common actions before their controllers
 });
 test('tutorial snapshots and lobby navigation do not become a live-room leave operation',()=>{
  const source=fs.readFileSync(path.join(__dirname,'../public/shared/room-controls.js'),'utf8'),original={code:'DEMO01',me:'P',version:1};let calls=0,listener;
- const scope={state:original,window:{RaceLesson:{}},leaveController:null,dialog:{open:false},panel:null,decorate(){},schedule(){calls++;},leave(){calls++;},URL,location:{origin:'http://example.test'},document:{addEventListener:(_name,fn)=>listener=fn}};
+ const scope={state:original,window:{RaceLesson:{}},leaveController:null,dialog:{open:false},panel:null,decorate(){},rosterAction(){},schedule(){calls++;},leave(){calls++;},URL,location:{origin:'http://example.test'},document:{addEventListener:(_name,fn)=>listener=fn}};
  vm.createContext(scope);vm.runInContext(source.slice(source.indexOf(' window.RoomControls='),source.lastIndexOf('})();')),scope);scope.window.RoomControls.update({code:'OTHER1',me:'P',version:2});assert.equal(scope.state,original);assert.equal(calls,0);
  vm.runInContext(source.slice(source.indexOf(" document.addEventListener('click',event=>{"),source.indexOf(' const observer=')),scope);listener({button:0,defaultPrevented:false,target:{closest:()=>({tagName:'A',href:'http://example.test/',closest:()=>null,matches:()=>false})},preventDefault(){calls++;},stopImmediatePropagation(){calls++;}});assert.equal(calls,0,'tutorial lobby link retains normal navigation');
 });

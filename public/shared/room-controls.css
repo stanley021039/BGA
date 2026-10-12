@@ -18,6 +18,8 @@
 .ui-room-action[data-room-action=start]{grid-column:1;min-width:0;width:100%}
 .ui-room-action[data-room-action=bot]{grid-column:2}
 .ui-room-action[data-room-action=leave]{grid-column:3}
+.ui-room-controls[data-ai-placement=roster] .ui-room-session-actions{grid-template-columns:minmax(0,1fr) 44px}
+.ui-room-controls[data-ai-placement=roster] [data-room-action=leave]{grid-column:2}
 .ui-room-control-status{margin:0;min-height:24px;font-size:.875rem;overflow-wrap:anywhere}
 .room-leave-dialog{max-width:min(440px,calc(100vw - 24px))}.room-leave-dialog .ui-control-row{flex-wrap:wrap;gap:12px}.ui-room-leave-status{min-height:24px;overflow-wrap:anywhere}
 .chat-room-tools{flex-wrap:wrap;gap:12px;min-height:44px;margin-top:12px}.chat-room-tools>.room-media-slot{flex:0 0 44px}.chat-room-tools button{margin:0!important}

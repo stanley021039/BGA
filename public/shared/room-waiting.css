@@ -116,3 +116,12 @@ body[data-room-phase=waiting] .ui-room-waiting-layout>.race-side-column>.race-co
 
 .ui-room-waiting-layout>.ui-room-waiting-controls:not(.race-side-column){padding:20px;border:var(--play-card-border,2px solid #292639);border-radius:var(--play-radius,16px);background:var(--play-surface,#fffdf8);color:var(--play-ink,#292639);box-shadow:var(--play-shadow,3px 4px 0 #0001)}
 body[data-room-phase=waiting] #turnHint{display:none}
+
+/* An add-player slot is a roster content card, not a framed pill action. */
+.ui-room-roster-add{padding:0}
+.ui-room-roster-add>button.ui-room-roster-action-button{display:flex;align-items:center;justify-content:flex-start;gap:12px;box-sizing:border-box;width:100%;height:100%;min-width:0;margin:0;padding:12px;border:0;border-radius:inherit;background:transparent;color:inherit;font:inherit;text-align:left;white-space:normal}
+.ui-room-roster-action-button .ui-symbol{--ui-symbol-size:32px;font-size:32px}
+.ui-room-roster-action-label{display:block;font-size:var(--ui-text-body,1rem);line-height:1.5;overflow-wrap:anywhere}
+.ui-room-roster-action-button:focus-visible{outline:3px solid var(--ui-focus,#37857c);outline-offset:3px}
+.ui-room-roster-action-button:disabled{opacity:.55;cursor:wait}
+body[data-room-phase=finished] .telephone-shell #players{display:none}

@@ -56,3 +56,10 @@ Linux Node 22.22.1 整合後 `npm test` **2057／2057 通過**，fail／cancel�
 
 
 上述操作邊界完整 Linux 套件 **2060／2060 通過**，394116ms，fail／cancel／skip 0。教學頁補驗：RoomControls 不接收教學假房間，也不攔截其返回大廳連結；相關回歸與既有 tutorial 測試 **9／9 通過**，原生教學返回成功，無需房間離席請求。最後教學條件只影響 lesson 分支；最終 CI 在 PR #109 執行全套（含新增回歸），正式交付結果以該檢查及公開驗證為準。
+
+
+## 最新 main AI 名單入口整合
+
+main 在最後 CI 期間推進至 `d52f2b02586b2f566fbd07dd1b1e4bb98e1bdcb6`。整合該提交，保留傳情畫意的原生 AI 卡片與事件，改由 RoomControls 的卡片變體建立內容；不重複顯示操作列 AI，其他九款保留操作列變體。版號仍為未發布的 1.31.0，重新對照最新 main 的 minor 基準。30 項相關測試通過，十款原生開局、AI、聊天與離房重驗；最終完整套件與 CI 結果見 PR #109。
+
+先前 Windows CI 的 market-images-http 大量審核案例在同步建立200筆 fixture 後，第一個 GET 發生 fetch failed。此資料建置可能超過原有 keep-alive 窗口；只對該測試改用關閉連線的 fixture，避免將閒置連線重用競態混入批次大小與審核隔離驗證。不改正式 HTTP timeout、不增加測試重試、不放寬審核斷言。該測試與其餘相關測試通過，Windows CI 另驗。
