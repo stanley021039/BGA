@@ -124,4 +124,4 @@ body[data-room-phase=waiting] #turnHint{display:none}
 .ui-room-roster-action-label{display:block;font-size:var(--ui-text-body,1rem);line-height:1.5;overflow-wrap:anywhere}
 .ui-room-roster-action-button:focus-visible{outline:3px solid var(--ui-focus,#37857c);outline-offset:3px}
 .ui-room-roster-action-button:disabled{opacity:.55;cursor:wait}
-body[data-room-phase=finished] .telephone-shell #players{display:none}
+body[data-room-phase=finished][data-room-type=telephone] .telephone-shell #players{display:none}

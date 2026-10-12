@@ -63,3 +63,10 @@ Linux Node 22.22.1 整合後 `npm test` **2057／2057 通過**，fail／cancel�
 main 在最後 CI 期間推進至 `d52f2b02586b2f566fbd07dd1b1e4bb98e1bdcb6`。整合該提交，保留傳情畫意的原生 AI 卡片與事件，改由 RoomControls 的卡片變體建立內容；不重複顯示操作列 AI，其他九款保留操作列變體。版號仍為未發布的 1.31.0，重新對照最新 main 的 minor 基準。30 項相關測試通過，十款原生開局、AI、聊天與離房重驗；最終完整套件與 CI 結果見 PR #109。
 
 先前 Windows CI 的 market-images-http 大量審核案例在同步建立200筆 fixture 後，第一個 GET 發生 fetch failed。此資料建置可能超過原有 keep-alive 窗口；只對該測試改用關閉連線的 fixture，避免將閒置連線重用競態混入批次大小與審核隔離驗證。不改正式 HTTP timeout、不增加測試重試、不放寬審核斷言。該測試與其餘相關測試通過，Windows CI 另驗。
+
+
+## 全遊戲 AI 名單入口主線整合
+
+main 追加至 `4c0b15a887d3a67341f9a00ae6c8cb84ff0cc0a4`（1.30.4），將所有 AI 入口移至共用名單卡片。整合並保留其原生按鈕、原位置恢復、pending 與房主移交；卡片內容仍由 RoomControls 共用工廠提供，操作列保留開始與離房且不產生第二個 AI 入口。修正穩定狀態反覆寫入 hidden／disabled 引發 observer 迴圈的問題，真實 normalize 回歸確認第二次呼叫沒有多餘屬性寫入。43 項相關回歸、最後觀察器3項及十款原生40布局／AI／開局／離房重驗通過。
+
+先前精確 head `4264a058a54c09760ae1dc86331d3d58ae9703bd` 的 Linux 與 Windows CI（run 38238620226）均成功，Linux VM 全套2062通過，證實測試 fixture 連線調整可在 Windows 完成。新主線整合後仍須核對最新 head 的完整套件與 CI，不沿用為新 head 通過。

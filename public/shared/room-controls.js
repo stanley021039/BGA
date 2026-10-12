@@ -42,12 +42,13 @@
    const status=node('p','ui-room-control-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');panel.append(settings,row,status);host.append(panel);
   }
   if(panel.parentElement!==host)host.append(panel);
-  panel.dataset.aiPlacement=state.type==='telephone'&&window.RoomWaiting?.setRosterAction?'roster':'inline';
+  panel.dataset.aiPlacement=window.RoomWaiting?.setRosterBusy||state.type==='telephone'&&window.RoomWaiting?.setRosterAction?'roster':'inline';
   if(panel.hidden)panel.hidden=false;
  }
  function normalize(){
   scheduled=false;if(!state||window.RaceLesson)return;mount();if(!panel)return;
   for(const kind of ['start','bot']){
+   if(kind==='bot'&&window.RoomWaiting?.setRosterBusy){native.bot=null;if(!proxies.bot.hidden)proxies.bot.hidden=true;if(!proxies.bot.disabled)proxies.bot.disabled=true;continue;}
    const source=findAction(kind);native[kind]=source;if(source&&!source.hasAttribute('data-room-native-action')){source.setAttribute('data-room-native-action',kind);source.tabIndex=-1;source.setAttribute('aria-hidden','true');}
    const legacyRace=state.type==='thunder',rosterBot=state.type==='telephone'&&!!window.RoomWaiting?.setRosterAction,visible=kind==='bot'?!rosterBot&&owner()&&(legacyRace||state.botSupport?.supported!==false)&&(!!source||state.botSupport?.canAdd===false):!!source&&!hidden(source),button=proxies[kind];if(button.hidden===visible)button.hidden=!visible;
    const tooFew=kind==='start'&&(state.players||[]).filter(p=>!p.kicked).length<(minimumPlayers[state.type||'poker']||1);

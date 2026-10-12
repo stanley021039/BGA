@@ -1,12 +1,12 @@
 (()=>{
 'use strict';
 const $=s=>document.querySelector(s),code=location.pathname.match(/^\/bluff\/([a-f0-9]{6})\/?$/i)?.[1]?.toUpperCase();
-let state,scope,timer,countdownTimer,receivedAt=0,busy=false,reading=false,disposed=false,key='',retry=null;
+let state,scope,timer,countdownTimer,receivedAt=0,busy=false,reading=false,disposed=false,key='',retry=null,botControl=null;
 const countdownSounds=window.GameSounds?.create();
 const roles={thinker:'想想',honest:'老實人',bluffer:'瞎掰人'};
 const el=(tag,value)=>{const n=document.createElement(tag);if(value!==undefined)n.textContent=value;return n;};
 function button(label,icon,fn){const n=el('button',label);n.type='button';n.onclick=fn;GameUI.decorateButton(n,icon);return n;}
-function controlsLock(){for(const n of $('#controls').querySelectorAll('button,input,select'))n.disabled=busy||n.dataset.blocked==='true';$('#leave').disabled=busy;$('#retry').disabled=busy;}
+function controlsLock(){if(botControl)botControl.disabled=busy;for(const n of $('#controls').querySelectorAll('button,input,select'))n.disabled=busy||n.dataset.blocked==='true';$('#leave').disabled=busy;$('#retry').disabled=busy;}
 async function api(route,payload){return RoomApi.request(route,payload,{code,room:'bluff',session:true,signal:scope.signal,onKicked:()=>{RoomReconnect.forget(code);location.replace('/?game=bluff');}});}
 async function mutate(route,payload){if(busy||disposed)return;const lifetime=scope;busy=true;retry=null;$('#retry').hidden=true;$('#feedback').textContent='';controlsLock();try{const next=await api(route,payload);if(!disposed&&scope===lifetime)render(next);}catch(e){if(!disposed&&e.name!=='AbortError'){$('#feedback').textContent=e.message;if(!e.status){retry={route,payload};$('#retry').hidden=false;}}}finally{busy=false;if(!disposed){controlsLock();refresh();}}}
 const command=(action,extra={})=>mutate('action',{action,roundId:state.roundId,requestId:crypto.randomUUID(),...extra});
@@ -17,12 +17,12 @@ function render(next){
  $('#players').replaceChildren(...state.players.map(p=>{const card=el('article');card.className='player-card';card.append(el('strong',p.name+(p.id===state.me?'（你）':'')),el('p',p.score+' 分'+(p.id===state.thinkerId?' · 想想':'')),el('p',state.challenges.includes(p.id)?'被質疑：公三小':state.spokenIds.includes(p.id)?'說明完畢':state.readyIds.includes(p.id)?'已準備':''));return card;}));
  // Rebuild only on transitions; an open private card never opens on polling.
  const settingsOpen=$('#controls .room-settings-panel')?.open;const nextKey=JSON.stringify([state.phase,state.roundId,state.host,state.myRole,state.options,state.players.length,state.readyIds.includes(state.me),state.spokenIds.includes(state.me),state.canGuess,state.challenges]);
- if(nextKey!==key){key=nextKey;$('#source').replaceChildren();$('#controls').replaceChildren();const source=$('#source'),box=$('#controls');
+ if(nextKey!==key){key=nextKey;window.RoomWaiting?.setRosterAction(null);botControl=null;$('#source').replaceChildren();$('#controls').replaceChildren();const source=$('#source'),box=$('#controls');
  if(state.prompt){source.append(el('h2',state.prompt.title),el('p','難度 '+state.prompt.level+' · '+(state.prompt.hints.length?'類別提示：'+state.prompt.hints.join('／'):'沒有類別提示')));if(state.myRole){const privateCard=el('details'),summary=el('summary','查看我的秘密角色（請勿讓他人看螢幕）');privateCard.append(summary,el('h3',roles[state.myRole]),el('p',state.secretAnswer|| (state.myRole==='thinker'?'聽完大家說法後找出老實人。':'請臨場編出可信的解釋，網站不提供正解。')));source.append(privateCard);}else source.append(el('p','看身分時間已結束，秘密卡已收起。'));}
  else source.append(el('p','3–9 人，以自己的語音或面對面聊天；每人輪流當一次想想。'));
  if(['waiting','finished'].includes(state.phase)){
  const host=state.me===state.host;
- if(host){box.append(button('開始一場','play',async()=>{await roomSettings.flush();if(!busy)await mutate('start',{});}));if(state.players.length<9)box.append(button('加入測試 AI','users',()=>mutate('bot',{})));}
+ if(host){box.append(button('開始一場','play',async()=>{await roomSettings.flush();if(!busy)await mutate('start',{});}));if(state.players.length<9){botControl=button('加入 AI 測試夥伴','add',()=>mutate('bot',{}));if(!window.RoomWaiting?.setRosterAction(botControl))box.append(botControl);};}
  else box.append(el('p','等待房主開局。'));
  const panel=el('details');panel.className='room-settings-panel';panel.open=!!settingsOpen;panel.append(el('summary','房間設定'));const body=el('div');body.className='room-settings-body';body.append(el('p',host?'修改後自動儲存。':'只有房主能修改；以下為目前房間設定。'));
  const field=el('fieldset');field.append(el('legend','題目難度（至少選一種）'));for(const level of [1,2,3]){const label=el('label'),input=el('input');input.type='checkbox';input.value=level;input.checked=state.options.levels.includes(level);input.dataset.blocked=String(!host);label.append(input,document.createTextNode(' '+level+' 級 '));field.append(label);}field.dataset.roomSetting='';
