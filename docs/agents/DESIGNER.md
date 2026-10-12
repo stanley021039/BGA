@@ -157,3 +157,6 @@ Full-site UI deployed to shhuang.cc on 2026-10-08: v1.17.1, frozen commit 35c1e5
 同批追加捲動驗收：ui-foundation的room-sidebar:has(action-slot)原為playing popover保留overflow:visible，搬入固定等待grid後會讓互動／離房工具溢出並覆蓋聊天室。waiting控制槽明確overflow:auto覆寫，遊玩側欄維持原規則；驗證框內捲動與工具／表情彈窗，不以框尺寸一致代表子內容沒有溢出。
 
 2026-10-12 共用房間操作與彈幕獨立分支：十款設定卡片與開始／AI／離房操作列共用 RoomControls，聊天室集中媒體、emoji／表情及 160 字輸入；完整紀錄與单行40字省略彈幕共用一次送出。40 等待亮暗／桌機手機布局、十款房主與一般玩家操作、16 彈幕框／動畫組合、原生畫猜持筆及離房錯誤重試已驗。Linux 2049 通過；未整合 main 或正式發布。取代此分支的舊聊天室双頻道／分離文字彈幕入口，不改其他發布紀錄。見 [規格](../specs/SHARED-ROOM-SOCIAL.md) 與 [證據](../SHARED-ROOM-SOCIAL-PROGRESS.md)。
+
+
+2026-10-12 PR #109 整合複驗：取代上一筆本分支「未整合 main」狀態，候選 1.31.0 已整合 f2689a4，保留房間內設定、傳情畫意共用畫板與導覽元件。2057 Linux 全通過、原生十款40布局、畫猜持筆／時序／倒數／換輪與傳情畫意作畫／送出／下一頁已驗；結算150分／4輪及非房主唯讀設定已驗。CI、合併與正式結果以 PR #109 及 [本輪紀錄](../SHARED-ROOM-SOCIAL-PROGRESS.md) 為準；未驗真人觸控或十款完整場次。
