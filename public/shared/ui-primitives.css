@@ -59,11 +59,17 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 
 /* Shared control layout contract: 8px between controls, 12px between rows,
    and 16px from a panel edge. Themes may override the tokens. */
-:root { --ui-control-gap: 8px; --ui-row-gap: 12px; --ui-panel-inset: 16px; --ui-page-gutter: 16px; }
+:root { --ui-info-action-gap: 12px; --ui-control-gap: 8px; --ui-row-gap: 12px; --ui-panel-inset: 16px; --ui-page-gutter: 16px; }
 .ui-control-row { display: flex; align-items: center; gap: var(--ui-control-gap); min-width: 0; }
 .ui-control-stack { display: flex; flex-direction: column; gap: var(--ui-row-gap); padding: var(--ui-panel-inset); }
 .ui-control-stack>*,.ui-control-row>* { min-width: 0; }
 .ui-control-row[hidden],.ui-control-stack[hidden] { display: none !important; }
+/* Information and actions share a wrapping row, with a stable room-code slot.
+   Keep control-only rows on their existing 8px contract. */
+.ui-control-row.ui-info-actions { flex-wrap: wrap; gap: var(--ui-info-action-gap); min-height: var(--ui-control-height,44px); }
+.ui-info-actions>button,.ui-info-actions>a { flex-shrink: 0; }
+.ui-info-actions>.ui-room-code { min-inline-size: 12ch; overflow-wrap: anywhere; }
+
 
 @media(min-width:1001px) { :root { --ui-page-gutter: 50px; } }
 
