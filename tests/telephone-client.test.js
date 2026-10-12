@@ -36,3 +36,16 @@ test('telephone history hydrates page deltas without duplicates and resets betwe
  const source=fs.readFileSync(require.resolve('../public/history.js'),'utf8'),context={};vm.runInNewContext(source.slice(source.indexOf('function hydrateTelephoneFrames'),source.indexOf('function telephone(s)')),context);
  const header={ownerName:'A',pages:[{kind:'text',text:'起始情境'}]},page={kind:'drawing',strokes:[]};const frames=[{state:{runId:'one',bookHeaders:[header],pageCommits:[{bookIndex:0,round:1,page}]}},{state:{runId:'one',bookHeaders:[header],pageCommits:[{bookIndex:0,round:1,page}]}},{state:{runId:'two',bookHeaders:[header],pageCommits:[]}}];context.hydrateTelephoneFrames(frames);assert.equal(frames[0].state.books[0].pages.length,2);assert.equal(frames[1].state.books[0].pages.length,2);assert.equal(frames[2].state.books[0].pages.length,1);
 });
+
+test('host setup groups the labelled source and start action in shared layout primitives',async()=>{
+ const r=new TelephoneRoom('ABCDEF','host',()=>0);r.add('房主');const f=fixture({room:r});await flush();
+ const group=f.ids.get('#controls').children[0],field=group.children[0],row=field.children[1];
+ assert.equal(group.className,'ui-control-group');assert.equal(field.className,'ui-field');
+ assert.equal(field.children[0].htmlFor,'sources');assert.equal(row.className,'ui-control-row ui-field-actions');
+ assert.equal(row.children[0],f.ids.get('#sources'));assert.equal(row.children[1].textContent,'開始傳遞');
+ assert.equal(group.children[1].children[0].textContent,'加入腳本測試夥伴');
+ let resolve;f.defer(new Promise(done=>resolve=done));const request=row.children[1].onclick();await flush();
+ for(const control of f.ids.get('#controls').querySelectorAll('button,input,select,textarea'))assert.equal(control.disabled,true);
+ resolve(r.view(f.p.id));await request;assert.equal(f.requests.filter(x=>x.route==='start').length,1);
+ for(const control of f.ids.get('#controls').querySelectorAll('button,input,select,textarea'))assert.equal(control.disabled,false);
+});

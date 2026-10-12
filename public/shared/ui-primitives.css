@@ -75,6 +75,14 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 .ui-control-row.ui-info-actions { flex-wrap: wrap; gap: var(--ui-info-action-gap); min-height: var(--ui-control-height,44px); }
 .ui-info-actions>button,.ui-info-actions>a { flex-shrink: 0; }
 .ui-info-actions>.ui-room-code { min-inline-size: 12ch; overflow-wrap: anywhere; }
+/* Field/action primitives own external spacing; button and icon geometry stays separate. */
+.ui-control-group { display: grid; gap: var(--ui-row-gap); min-width: 0; }
+.ui-field { display: grid; gap: var(--ui-control-gap); min-width: 0; }
+.ui-control-row.ui-field-actions { flex-wrap: wrap; gap: var(--ui-info-action-gap); min-height: var(--ui-control-height,44px); }
+.ui-control-row.ui-field-actions>button,.ui-control-row.ui-field-actions>select { margin: 0; max-width: 100%; }
+.ui-control-row.ui-field-actions>button { flex-shrink: 0; }
+.ui-control-group[hidden],.ui-field[hidden] { display: none !important; }
+
 
 
 @media(min-width:1001px) { :root { --ui-page-gutter: 50px; } }
