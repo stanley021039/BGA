@@ -11,7 +11,31 @@
   minimal:['極簡猜圖','線條已備，等你作畫。','3–6 人一起玩。用直線與圓作畫，由少到多一起猜圖。'],
   bluff:['瞎掰王','角色已備，等你開場。','3–9 人一起玩。輪流解釋與質問，找出唯一的老實人。']
  };
- let hero,stageHome,roster,rosterList,rosterCount,lastRoster='';
+ let hero,stageHome,roster,rosterList,rosterCount,lastRoster='',layout,controls,layoutWaiting=false;
+ const homes=new Map();
+ function move(el,host){if(!el||el.parentElement===host)return;if(!homes.has(el)){const mark=document.createComment('waiting-home');el.before(mark);homes.set(el,mark);}host.append(el);}
+ function restore(el){const mark=homes.get(el);if(mark?.parentNode)mark.after(el);}
+ function arrange(type,waiting){
+  if(!layout){
+   const host=document.querySelector(rosterHosts[type]);
+   controls=document.querySelector(type==='thunder'?'.race-side-column':type==='poker'?'.table-sidebar':type==='trpg'?'.action-panel':['telephone','musicquiz','minimal','bluff'].includes(type)?'#controls':'.room-sidebar');
+   if(['telephone','musicquiz','minimal','bluff'].includes(type))controls=controls?.closest('section');
+   if(!host||!controls||!hero)return;
+   layout=node('div','ui-room-waiting-layout');layout.setAttribute('aria-label','組隊房間');
+   const chatSlot=node('div','ui-room-chat-slot');layout.append(chatSlot);host.append(layout);
+   host.dataset.waitingLayoutHost='';controls.classList.add('ui-room-waiting-controls');
+   // Hide the original play containers while their controls live in the shared grid.
+   for(const child of [...host.children])if(![layout,hero,controls,roster].includes(child)&&!child.classList.contains('game-barrage-layer'))child.dataset.waitingLayoutHidden='';
+  }
+  layout.hidden=!waiting;
+  if(waiting!==layoutWaiting){
+   layoutWaiting=waiting;
+   if(waiting){move(hero,layout);move(controls,layout);move(roster,layout);layout.append(layout.querySelector('.ui-room-chat-slot'));}
+   else{restore(hero);restore(controls);restore(roster);}
+  }
+  const chatHost=waiting?layout.querySelector('.ui-room-chat-slot'):type==='thunder'?controls.querySelector('.race-utility-panel'):controls;
+  window.SharedChat?.mountIn(chatHost,{inline:waiting});
+ }
  const rosterHosts={
   poker:'#game .game-layout',thunder:'.race-main',majority:'.play-layout',gift:'.gift-layout',draw:'.draw-layout',
   telephone:'#game',trpg:'#game',musicquiz:'#game',minimal:'#game',bluff:'#game'
@@ -35,7 +59,7 @@
   roster.hidden=false;
   const players=(s.players||[]).filter(p=>!p.kicked),hostId=typeof s.host==='string'?s.host:s.hostId||(s.host?s.me:null);
   rosterCount.textContent=players.length+' 位已入座 · 捲動查看';
-  const key=JSON.stringify([s.me,hostId,players.map(p=>[p.id,p.name,p.avatar,p.bot,p.online,p.offline])]);
+  const key=JSON.stringify([s.me,hostId,players.map(p=>[p.id,p.name,p.avatar,p.bot,p.online,p.offline,p.roleName])]);
   if(key===lastRoster)return;lastRoster=key;
   const scrollTop=rosterList.scrollTop;
   rosterList.replaceChildren(...players.map(player=>{
@@ -45,7 +69,7 @@
    img.onerror=()=>{img.hidden=true;};avatar.append(fallback,img);
    const info=node('div','ui-room-roster-info'),name=node('div','ui-room-roster-name'),label=node('b','ui-room-roster-name-text ui-player-name');label.title=player.name||'玩家';label.append(node('span','ui-player-name-text',player.name||'玩家'));
    name.append(label);if(player.id===s.me)name.append(node('span','ui-room-roster-self','你'));
-   const status=[player.id===hostId?'房主':'',player.bot?'測試 AI':player.online===false||player.offline?'暫時離線':'已入座'].filter(Boolean).join(' · ');
+   const status=[player.id===hostId?'房主':'',player.roleName||'',player.bot?'測試 AI':player.online===false||player.offline?'暫時離線':'已入座'].filter(Boolean).join(' · ');
    info.append(name,node('small','ui-room-roster-status',status));card.append(avatar,info);return card;
   }));
   rosterList.scrollTop=scrollTop;
@@ -53,7 +77,7 @@
 
  function update(s){
   if(window.RaceLesson)return;
-  document.body.dataset.roomPhase=s.phase;const type=s.type||'poker';updateRoster(s,type);if(type==='thunder')return;const game=games[type];if(!game)return;
+  document.body.dataset.roomPhase=s.phase;window.SharedChat?.updateRoom(s);const type=s.type||'poker';updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');arrange(type,s.phase==='waiting');return;}const game=games[type];if(!game)return;
   document.body.dataset.roomPhase=s.phase;
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');
   if(stage&&sidebar){if(!stageHome){stageHome=document.createComment('play-stage');stage.before(stageHome);}if(s.phase==='waiting'){if(stage.parentElement!==sidebar)sidebar.prepend(stage);}else if(stage.parentElement!==stageHome.parentElement)stageHome.after(stage);}
@@ -65,6 +89,7 @@
    const info=document.createElement('div');info.className='room-waiting-info';const kicker=document.createElement('div');kicker.className='kicker';kicker.textContent='朋友集結中';const title=document.createElement('h2');title.textContent=game[1];const copy=document.createElement('p');copy.textContent=game[2];const hint=document.createElement('p');hint.className='room-waiting-hint';hint.setAttribute('role','status');info.append(kicker,title,copy,hint);hero.append(art,info);host.prepend(hero);
   }
   hero.hidden=s.phase!=='waiting';
+  arrange(type,s.phase==='waiting');
   const host=s.host===true||s.host===s.me;
   hero.querySelector('.room-waiting-hint').textContent=host?'邀請朋友入座，設定好就能開始。':'等待房主開始遊戲。';
  }
