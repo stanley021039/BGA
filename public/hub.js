@@ -61,7 +61,7 @@ function roomElement(room){
  const meta=document.createElement('p');meta.textContent=`房號 ${room.code}　·　${room.playerCount}/${room.maxPlayers} 席`;
  details.append(game,name,meta);
  const side=document.createElement('div');side.className='room-side';
- const status=document.createElement('span');status.className='room-status'+(room.joinable?' is-open':'');
+ const status=document.createElement('span');status.className='ui-badge room-status'+(room.joinable?' is-open':'');
  status.textContent=room.seated?'已入座':room.kicked?'無法加入':room.phase==='waiting'?'等待玩家':room.phase==='showdown'?'本局結束':room.phase==='finished'?'遊戲結束':'遊戲進行中';
  const button=document.createElement('button');button.type='button';button.className='button '+(room.joinable?'orange':'outline')+' room-action';
  button.textContent=room.seated?'返回房間 →':room.joinable?'加入房間 →':room.kicked?'無法加入':room.playerCount>=room.maxPlayers?'人數已滿':'已開始';

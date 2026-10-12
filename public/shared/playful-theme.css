@@ -139,7 +139,7 @@ body[data-visual-theme="playful"] .auth-story h1 em { color: var(--play-ink); ba
 body[data-visual-theme="playful"] .auth-card::before { height: 6px; background: var(--play-yellow); }
 body[data-visual-theme="playful"] :is(.auth-tabs,.auth-tabs button,.settings-characters button,.profile-choices button,.character-choice,.tabs button,.market-tabs) { border-color: var(--play-ink); background: var(--play-paper); color: var(--play-ink); }
 body[data-visual-theme="playful"] :is(.auth-tabs button[aria-selected=true],.tabs .on,.settings-characters button[aria-pressed=true],.market-tabs .active,.character-choice.selected) { background: var(--play-yellow); color: var(--play-ink); border-color: var(--play-ink); }
-body[data-visual-theme="playful"] :is(.tag,.pill,.room-status,.achievement-tag,.image-status,.collection-kind) { border: 1.5px solid var(--play-ink); color: var(--play-ink); background: var(--play-lavender); border-radius: 999px; }
+body[data-visual-theme="playful"] :is(.tag,.pill,.room-status,.achievement-tag,.image-status,.collection-kind) { border: 1.5px solid var(--play-ink); color: var(--play-ink); background: var(--play-lavender);  }
 body[data-visual-theme="playful"] :is(.tag.closed,.room-status.is-open,.achievement-tag.unlocked) { background: var(--play-mint); }
 body[data-visual-theme="playful"] :is(.rooms-message,.collection-empty,.empty-state,.market-empty) { color: var(--play-muted); background: var(--play-paper); border-color: var(--play-ink); border-radius: 15px; }
 body[data-visual-theme="playful"] :is(.admin-layout,.admin-wrap) :is(table,pre) { color: var(--play-ink); }
@@ -344,7 +344,7 @@ body[data-visual-theme="playful"][data-game-kind] [data-site-header].site-header
 body[data-visual-theme="playful"][data-game-kind] .site-header .site-title { font-size: 28px; }
 body[data-visual-theme="playful"][data-game-kind] .game-toolbar { background: transparent; }
 body[data-visual-theme="playful"][data-game-kind] :is(.game-title,.stage-head,.race-heading) h1 { font-size: clamp(23px,2.2vw,32px); font-weight: 900; }
-body[data-visual-theme="playful"][data-game-kind] :is(.pill,.phase-pill,.phase-badge,.stage-ribbon,.round-pill) { color: var(--play-ink); background: var(--play-game-color); border: 1.5px solid var(--play-ink); border-radius: 999px; }
+body[data-visual-theme="playful"][data-game-kind] :is(.pill,.phase-pill,.phase-badge,.stage-ribbon,.round-pill) { color: var(--play-ink); background: var(--play-game-color); border: 1.5px solid var(--play-ink);  }
 body[data-visual-theme="playful"][data-game-kind] :is(.play-layout,.gift-layout,.draw-layout) .card { border: var(--play-border); }
 body[data-visual-theme="playful"][data-game-kind] :is(.hero,.garage) { border: var(--play-card-border); background: var(--play-game-color); }
 body[data-visual-theme="playful"][data-game-kind] .hero h1 { font-size: clamp(26px,3vw,40px); line-height: 1.4; }
