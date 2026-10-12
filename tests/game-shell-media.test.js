@@ -34,3 +34,12 @@ test('emoji and text still send their original social kinds without changing cha
  const f=await fixture();f.window.GameShell.update(f.state());await f.flush();f.setResponse(f.state({serverNow:100010}));f.node('shared-emote-toggle').click();const emoji=f.node('shared-emoji-picker').querySelector('.shared-emoji-choices button');await emoji.click();await f.flush();assert.deepEqual(f.responses[0],{code:'ABC123',kind:'emoji',emoji:'🎉'});
  const input=f.node('shared-barrage').querySelector('input');input.value='測試彈幕';await f.node('shared-barrage').submit();await f.flush();assert.deepEqual(f.responses[1],{code:'ABC123',kind:'barrage',message:'測試彈幕'});assert.equal(input.value,'');assert.equal(f.sounds.length,0);
 });
+
+test('room leave confirmation and cancellation adopt the shared button primitive with readable labels',async()=>{
+ const f=await fixture();f.window.GameShell.update(f.state());
+ const confirm=f.node('room-leave-confirm'),cancel=f.node('room-leave-cancel');
+ for(const button of [confirm,cancel])assert.equal(button.classList.contains('ui-button'),true);
+ assert.equal(confirm.classList.contains('primary'),true);assert.equal(cancel.classList.contains('secondary'),true);
+ assert.equal(confirm.getAttribute('aria-label'),'確認離開');assert.equal(cancel.getAttribute('aria-label'),'留在房間');
+ assert.equal(confirm.dataset.uiIcon,'leave');assert.equal(cancel.dataset.uiIcon,'close');
+});
