@@ -43,7 +43,7 @@ test('host setup groups the labelled source and start action in shared layout pr
  assert.equal(group.className,'ui-control-group');assert.equal(field.className,'ui-field');
  assert.equal(field.children[0].htmlFor,'sources');assert.equal(row.className,'ui-control-row ui-field-actions');
  assert.equal(row.children[0],f.ids.get('#sources'));assert.equal(row.children[1].textContent,'開始傳遞');
- assert.equal(group.children[1].children[0].textContent,'加入腳本測試夥伴');
+ assert.equal(group.children[1].children[0].textContent,'加入 AI 測試夥伴');
  let resolve;f.defer(new Promise(done=>resolve=done));const request=row.children[1].onclick();await flush();
  for(const control of f.ids.get('#controls').querySelectorAll('button,input,select,textarea'))assert.equal(control.disabled,true);
  resolve(r.view(f.p.id));await request;assert.equal(f.requests.filter(x=>x.route==='start').length,1);

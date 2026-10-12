@@ -11,7 +11,7 @@
   minimal:['極簡猜圖','線條已備，等你作畫。','3–6 人一起玩。用直線與圓作畫，由少到多一起猜圖。'],
   bluff:['瞎掰王','角色已備，等你開場。','3–9 人一起玩。輪流解釋與質問，找出唯一的老實人。']
  };
- let hero,stageHome,roster,rosterList,rosterCount,lastRoster='',layout,controls,layoutWaiting=false;
+ let hero,stageHome,roster,rosterList,rosterCount,rosterActionCard,lastRoster='',layout,controls,layoutWaiting=false;
  const homes=new Map();
  function move(el,host){if(!el||el.parentElement===host)return;if(!homes.has(el)){const mark=document.createComment('waiting-home');el.before(mark);homes.set(el,mark);}host.append(el);}
  function restore(el){const mark=homes.get(el);if(mark?.parentNode)mark.after(el);}
@@ -44,7 +44,7 @@
   const el=document.createElement(tag);el.className=className;if(text!==undefined)el.textContent=text;return el;
  }
  function updateRoster(s,type){
-  if(s.phase!=='waiting'){if(roster)roster.hidden=true;return;}
+  if(s.phase!=='waiting'&&!(type==='telephone'&&s.phase==='finished')){if(roster)roster.hidden=true;return;}
   const selector=rosterHosts[type];if(!selector)return;const host=document.querySelector(selector);if(!host)return;
   if(!roster){
    roster=node('section','ui-room-roster');roster.setAttribute('aria-labelledby','waitingRosterTitle');
@@ -72,6 +72,7 @@
    const status=[player.id===hostId?'房主':'',player.roleName||'',player.bot?'測試 AI':player.online===false||player.offline?'暫時離線':'已入座'].filter(Boolean).join(' · ');
    info.append(name,node('small','ui-room-roster-status',status));card.append(avatar,info);return card;
   }));
+  if(rosterActionCard)rosterList.append(rosterActionCard);
   rosterList.scrollTop=scrollTop;
  }
 
@@ -93,6 +94,19 @@
   const host=s.host===true||s.host===s.me;
   hero.querySelector('.room-waiting-hint').textContent=host?'邀請朋友入座，設定好就能開始。':'等待房主開始遊戲。';
  }
+ // Keep the original native button/handler; the roster only supplies its card layout.
+ function setRosterAction(button){
+  if(rosterActionCard){rosterActionCard.remove();rosterActionCard=null;}
+  if(!button)return false;
+  if(!rosterList||roster.hidden)return false;
+  const card=node('article','ui-room-roster-card ui-room-roster-add');card.setAttribute('role','listitem');
+  button.classList.add('ui-room-roster-action-button');button.type='button';button.setAttribute('aria-label','加入 AI 測試夥伴');
+  const avatar=node('span','ui-room-roster-avatar'),icon=node('span','ui-symbol');icon.setAttribute('aria-hidden','true');
+  const symbol=window.GameUI?.symbol?.('add');if(symbol)icon.innerHTML=symbol;else icon.textContent='+';
+  avatar.append(icon);const info=node('span','ui-room-roster-info');
+  info.append(node('b','ui-room-roster-action-label','加入 AI 測試夥伴'),node('small','ui-room-roster-status','協助測試遊戲流程'));
+  button.replaceChildren(avatar,info);card.append(button);rosterList.append(card);rosterActionCard=card;return true;
+ }
  // Settings use their existing API handlers; a single change commits a valid selection.
  function bindSettings({container,read,save,canSave,isBusy,onError}){
   let pending=null,running=false,timer;
@@ -112,5 +126,5 @@
   window.addEventListener('pagehide',()=>{clearTimeout(timer);pending=null;});
   return {flush};
  }
- window.RoomWaiting={update,bindSettings};
+ window.RoomWaiting={update,bindSettings,setRosterAction};
 })();
