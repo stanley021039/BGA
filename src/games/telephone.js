@@ -16,6 +16,16 @@ function drawing(input){
   return {tool:s.tool,color:s.color,size:s.size,points:coordinates,...(s.filled!==undefined?{filled:s.filled}:{})};
  });
 }
+function guessText(input,allowEmpty=false){
+  if(typeof input!=='string'||(!allowEmpty&&![...input.trim()].length)||[...input.trim()].length>80||/[\u0000-\u001f\u007f]/.test(input))fail('INVALID_TEXT','猜詞需 1–80 字且不能換行',400);
+  return input.trim();
+}
+function makePage(player,round,data,skipped=false){
+  const kind=round%2?'drawing':'text',page={kind,authorName:player.name,authorId:player.id,skipped};
+  if(skipped)return kind==='drawing'?{...page,strokes:[]}:{...page,text:'（本頁略過）'};
+  return kind==='drawing'?{...page,strokes:drawing(data.strokes)}:{...page,text:guessText(data.text)};
+}
+
 class TelephoneRoom{
  constructor(code,name,rng=randomInt,now=Date.now){
   Object.assign(this,{type:'telephone',code,name,rng,players:[],host:null,phase:'waiting',version:0,updated:now(),round:0,roundLimit:0,stepId:null,books:[],roster:[],submissions:{},options:{sources:['everyday','silly'],seconds:90},deadline:null,events:[],log:[],interrupted:false});
@@ -60,7 +70,7 @@ class TelephoneRoom{
   if(this.now()>=this.deadline)fail('PAGE_CLOSED','本頁時間已到，正在傳下一頁');
   if(action!=='submit'&&action!=='skip')fail('INVALID_ACTION','不支援的操作',400);
   if(this.submissions[id])fail('ALREADY_SUBMITTED','這頁已送出');
-  this.submissions[id]=this.makePage(p,data,action==='skip');delete this.drafts[id];this.event('submit',p.name+' 已送出');
+  this.submissions[id]=makePage(p,this.round,data,action==='skip');delete this.drafts[id];this.event('submit',p.name+' 已送出');
   this.receipts.set(key,fingerprint);if(this.receipts.size>128)this.receipts.delete(this.receipts.keys().next().value);
  }
  // Private autosave stays bounded in memory; only committed pages enter history.
@@ -73,24 +83,15 @@ class TelephoneRoom{
   if(this.draftReceipts.has(key)){if(this.draftReceipts.get(key)!==fingerprint)fail('REQUEST_CONFLICT','操作識別碼內容不一致');return;}
   if(this.now()>=this.deadline)fail('PAGE_CLOSED','本頁時間已到，正在傳下一頁');
   if(this.submissions[id])fail('ALREADY_SUBMITTED','這頁已送出');
-  const draft=this.round%2?{strokes:Array.isArray(data.strokes)&&!data.strokes.length?[]:drawing(data.strokes)}:{text:this.guessText(data.text,true)};
+  const draft=this.round%2?{strokes:Array.isArray(data.strokes)&&!data.strokes.length?[]:drawing(data.strokes)}:{text:guessText(data.text,true)};
   this.drafts[id]=draft;this.draftReceipts.set(key,fingerprint);
   if(this.draftReceipts.size>128)this.draftReceipts.delete(this.draftReceipts.keys().next().value);
- }
- guessText(input,allowEmpty=false){
-  if(typeof input!=='string'||(!allowEmpty&&![...input.trim()].length)||[...input.trim()].length>80||/[\u0000-\u001f\u007f]/.test(input))fail('INVALID_TEXT','猜詞需 1–80 字且不能換行',400);
-  return input.trim();
- }
- makePage(player,data,skipped=false){
-  const kind=this.round%2?'drawing':'text',page={kind,authorName:player.name,authorId:player.id,skipped};
-  if(skipped)return kind==='drawing'?{...page,strokes:[]}:{...page,text:'（本頁略過）'};
-  return kind==='drawing'?{...page,strokes:drawing(data.strokes)}:{...page,text:this.guessText(data.text)};
  }
  auto(){
   const now=this.now();if(this.phase!=='passing'||!Number.isFinite(this.deadline)||now<this.deadline)return false;
   for(const seat of this.roster)if(!this.submissions[seat]){
    const draft=this.drafts[seat],empty=this.round%2?!draft?.strokes.length:!draft?.text;
-   this.submissions[seat]={...this.makePage(this.player(seat),draft||{},empty),timedOut:true};
+   this.submissions[seat]={...makePage(this.player(seat),this.round,draft||{},empty),timedOut:true};
   }
   this.commitPages();this.drafts={};this.draftReceipts.clear();
   if(this.round===this.roundLimit){this.phase='finished';this.deadline=null;this.event('finish','時間到，全部故事揭曉！沒有排名，一起看看故事如何變形。');}

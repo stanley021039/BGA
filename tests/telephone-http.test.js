@@ -45,3 +45,14 @@ test('telephone HTTP accepts a bounded private page above 8KiB while rejecting b
  await post('telephone/draft',{...body,text:'x'.repeat(128*1024)},413);
  const result=await post('action',body);assert.equal(result.task.submitted,true);assert.deepEqual(result.books,[]);
 });
+
+test('eight maximum private drafts auto-pass every page without overflowing the history result budget',async t=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{HistoryStore}=require('../src/history/store'),{TelephoneRoom}=require('../src/games/telephone');const dir=fs.mkdtempSync(path.join(os.tmpdir(),'telephone-timed-history-'));const store=new HistoryStore(dir);t.after(()=>{store.close();fs.rmSync(dir,{recursive:true,force:true});});const room=new TelephoneRoom('ABCDEF','max drafts',()=>0),players=Array.from({length:8},(_,i)=>room.add('p'+i));store.attach(room);store.transact(room,{action:'start'},()=>room.start());
+ const strokes=Array.from({length:100},()=>({tool:'brush',color:'#123456',size:4,points:Array.from({length:30},()=>[511,255])}));
+ for(let round=1;round<=8;round++){
+  for(const p of players)room.saveDraft(p.id,{stepId:room.stepId,requestId:randomUUID(),...(round%2?{strokes}:{text:'傳遞草稿'})});
+  room.deadline=room.now();store.transact(room,{action:'auto',source:'timeout'},()=>room.auto());assert.equal(room.pageCommits.length,8);
+ }
+ assert.equal(room.phase,'finished');assert.equal(store.list()[0].status,'finished');assert.ok(room.books.every(b=>b.pages.length===9));
+ const rows=store.read(store.list()[0].id),committed=new Map();for(const row of rows.filter(r=>r.kind==='result')){assert.ok(Buffer.byteLength(JSON.stringify(row))<store.limits.maxResultBytes);for(const c of row.after.pageCommits)committed.set(c.bookIndex+':'+c.round,c.page);}assert.equal(committed.size,64);assert.ok([...committed.values()].every(p=>p.timedOut));assert.equal(committed.get('0:1').strokes.length,100);
+});
