@@ -88,3 +88,7 @@ test('a request begun inside the window may finish with valid late data after00:
 test('two scheduler instances cannot claim the same night slot',async t=>{
  const f=fixture(t),a=f.makeRunner(),b=f.makeRunner();await Promise.all([a.tick(),b.tick()]);assert.equal(f.calls.length,1);assert.equal(f.store.state().nightWindow.slots.length,1);await Promise.all([a.stop(),b.stop()]);
 });
+test('midnight month rollover keeps the prior-night monthly boundary eligible in the dashboard',t=>{
+ const f=fixture(t,{now:startFor('2026-12-31')+60000});f.store.writeFetchState('2026-11-30',{status:'exhausted',scheduledSlots:[],automaticAttempts:25,manualAttempts:0});
+ const view=f.store.view().automation;assert.equal(view.dailyFetch.targetDate,'2026-12-31');assert.ok(!view.manualRequiredDates.includes('2026-11-30'));
+});
