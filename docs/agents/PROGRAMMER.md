@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-13 畫猜 2.1.0：新畫筆以可選 quadratic codec 保留跨包曲線；renderer 合併相鄰同樣式、同 ID 且 anchor 相接的 chunks，保留未標記的舊直線作品。活動排送改為 16 點／80 ms，wire 仍 64 點／115 ms／單一 in-flight；viewer 同筆 dt 不因晚到重新計時，插值只在 view，積壓超過 450 ms 壓縮未來時程至 180 ms 且不丟點。Linux 完整 2081 通過；有限原生兩席最終非空像素相同、canonical 重播 RGBA0 及受測持筆無閃白。具體證據、初次暫存 I/O 失敗與未驗範圍見 [本輪進度](../DRAW-GARTIC-DT-PROGRESS.md)。CI／公開發布以 PR 實際紀錄為準，取代舊 input／viewer 時程數字，保留可靠交付、quota、權限及舊作品相容契約。
+
 2026-10-12：共用側欄重複色塊與歷史連結移除候選；shared-turn保留僅讀屏公告，網站歷史入口保留。範圍與驗收見[共用側欄](../specs/SHARED-SIDEBAR-FOOTER-REMOVAL.md)；測試、PR與部署狀態以本批PR證據為準。
 
 2026-10-12：AI 玩家末格補齊各遊戲入口，含極簡畫家／猜歌、霧港、瞎掰、撲克、雷霆、同頻、送禮及畫猜。共用移動保留原事件、delegation、pending 與滿員／房主限制；測試與正式部署狀態見本批 PR，不沿用上一輪電話遊戲單頁證據。

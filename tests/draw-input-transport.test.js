@@ -13,10 +13,10 @@ function accepted(ui,request){const version=run(ui,'canvasVersion')+1,prior=read
 async function acknowledge(ui,request){request.resolve(accepted(ui,request));await microtasks();}
 const pointsOf=ui=>ui.strokeRequests.flatMap((request,index)=>index?request.data.points.slice(1):request.data.points).map(point=>[...point]);
 
-for(const count of [3,25])test(count+' held points flush at 140ms without another move or frame',async t=>{
+for(const count of [3,12])test(count+' held points flush at 80ms without another move or frame',async t=>{
  const {ui,clock}=await setup(t);pointer(ui,'pointerdown',[0,20]);for(let i=1;i<count;i++)pointer(ui,'pointermove',[i,20]);
- assert.equal(ui.pendingFrames(),1);await clock.advance(139);assert.equal(ui.strokeRequests.length,0);await clock.advance(1);
- assert.equal(ui.strokeRequests.length,1);assert.equal(ui.strokeRequests[0].startedAt,140);assert.equal(ui.strokeRequests[0].data.points.length,count);
+ assert.equal(ui.pendingFrames(),1);await clock.advance(79);assert.equal(ui.strokeRequests.length,0);await clock.advance(1);
+ assert.equal(ui.strokeRequests.length,1);assert.equal(ui.strokeRequests[0].startedAt,80);assert.equal(ui.strokeRequests[0].data.points.length,count);
  await acknowledge(ui,ui.strokeRequests[0]);await clock.advance(500);assert.equal(ui.strokeRequests.length,1,'anchor alone never creates a new batch');
  pointer(ui,'pointerup',[count-1,20]);assert.equal(ui.pendingFrames(),0);
 });
