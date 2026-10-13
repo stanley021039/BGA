@@ -15,17 +15,18 @@ body>[data-site-header].site-header{width:calc(100% - 8vw);margin-inline:4vw}bod
 .site-settings .site-settings-heading h2{font:700 20px/1.4 "Segoe UI","Microsoft JhengHei",sans-serif;margin:0;color:inherit;letter-spacing:normal}
 .site-settings button{font:inherit;color:inherit;cursor:pointer;min-height:44px;margin:0;border:1px solid #64765f;border-radius:8px;background:#344a3b;padding:8px 12px}
 .site-settings #site-settings-close{width:44px;flex:none;font-size:24px;padding:0;background:transparent}
-.site-settings .site-settings-note{font-size:14px;color:#c1cdbd;margin:8px 0 20px}
-.site-settings .site-audio-group{border-top:1px solid #50614e;padding:12px 0;margin:0}
-.site-settings .site-version{border-top:1px solid #50614e;padding-top:12px;margin:8px 0 0;font-size:14px;line-height:1.5;color:#c1cdbd;font-variant-numeric:tabular-nums}
+.site-settings .site-settings-note{font-size:14px;color:#c1cdbd;margin:8px 0 var(--ui-row-gap,12px)}
+.site-settings .site-audio-group{display:grid;gap:var(--ui-row-gap,12px);border-top:1px solid #50614e;padding:var(--ui-row-gap,12px) 0;margin:0}
+.site-settings .site-settings-footer{display:grid;margin:0;gap:var(--ui-row-gap,12px);border-top:1px solid var(--play-line,#50614e);padding:var(--ui-row-gap,12px) 0 0}
+.site-settings .site-version{margin:0;font-size:14px;line-height:1.5;color:#c1cdbd;font-variant-numeric:tabular-nums}
 .site-settings .site-audio-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin:0;font:inherit;color:inherit;cursor:pointer}
 .site-settings .site-audio-switch input{appearance:auto;accent-color:#f3b95f;width:22px;height:22px;margin:11px;cursor:pointer}
 .site-settings .site-audio-volume{display:grid;grid-template-columns:minmax(0,1fr) 48px;align-items:center;gap:16px;min-height:44px}
 .site-settings input[type=range]{appearance:auto;width:100%;min-width:0;height:44px;margin:0;padding:0;border:0;background:transparent;accent-color:#f3b95f;cursor:pointer}
 .site-settings output{font-size:14px;font-variant-numeric:tabular-nums;text-align:right;color:inherit}
-.site-settings .site-effects-preview{width:100%;margin-top:8px}.site-settings button:disabled{opacity:.5;cursor:default}
+.site-settings .site-effects-preview{width:100%;margin:0}.site-settings button:disabled{opacity:.5;cursor:default}
 .site-settings :is(button,input):focus-visible{outline:2px solid #efb760;outline-offset:3px}
-.site-settings #site-audio-status{font-size:14px;margin:12px 0 0;color:#edba77}.site-settings #site-audio-status:empty{display:none}
+.site-settings #site-audio-status{font-size:14px;margin:0;height:24px;min-height:24px;overflow:auto;overflow-wrap:anywhere;color:#edba77}
 @media(max-width:430px){.site-header .site-account{gap:6px}.site-header .site-settings{padding:16px}.site-header .site-links{flex-wrap:wrap;gap:0 8px}}
 .site-header .site-theme-guest{grid-column:3;grid-row:1;justify-self:end}
 .site-settings .site-appearance-label{display:block;margin:0 0 8px;color:inherit;font:inherit}
@@ -40,3 +41,6 @@ body>[data-site-header].site-header{width:calc(100% - 8vw);margin-inline:4vw}bod
  .site-header .site-links{grid-column:1/-1;grid-row:2;justify-content:center;flex-wrap:wrap;gap:var(--ui-info-action-gap,12px)}
  .site-header .site-account{grid-column:1/-1;grid-row:3;justify-self:center}
 }
+
+/* Group spacing belongs to its grid; notes do not add another margin. */
+.site-settings .site-audio-group>.site-settings-note{margin:0}
