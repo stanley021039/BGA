@@ -78,4 +78,4 @@ SVG DOM測試確認短鍋名沒有textLength、長名收縮、永久液滴2／�
 最後人偶防裁切與素材說明完成後，SVG／藥袋／動畫去重／音效相關 **24/24**，fail/cancel/skip 0，212.0001ms；node --check、minor release check及Git diff whitespace檢查通過。私人記憶／試玩helper、DB、runtime和證據路徑仍被Git忽略。
 
 ## 2026-10-13 PR準備狀態
-本批候選升為2.2.0，已整合main共用UI與畫猜最新更新；保留配書投票、共用控制與AI席位。完整2150/2150，升版11/11，最終瀏覽器／手機／喇叭待驗。詳 [固定提交與兩輪檢查](PR-QUACKS-BLUFF-2.2.0-PREPARATION.md)。尚未推送、發PR或部署。
+本批先前候選為2.2.0；PR #115 衝突修正時整合 main 3dc4a55，保留市場 2.2.0 紀錄並升至2.3.0。合併後尚未重跑測試；先前2150/2150與升版階段11/11僅適用原提交。詳 [衝突處理紀錄](PR-QUACKS-BLUFF-2.3.0-PREPARATION.md)。PR #115 維持 Draft。

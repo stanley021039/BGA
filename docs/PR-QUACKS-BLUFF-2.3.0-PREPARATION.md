@@ -1,10 +1,10 @@
-# 郎中／瞎掰王 PR 準備（2.2.0）
+# 郎中／瞎掰王 PR 準備（2.3.0）
 
-2026-10-13；本機候選，尚未推送／建立 PR／部署。目標 stanley021039/BGA，feat/bluff-round-options → main，建議先 Draft。
+2026-10-13；PR #115 Draft。目標 stanley021039/BGA，feat/bluff-round-options → main。
 
 共用審查基準：
-- Base／merge-base：a54a6b934771d492ac415dad014aa1e047e6f968（main 2.1.0）
-- 程式候選 head：58096895620f65da25ddcdd33e073334ea249087（2.2.0）
+- 初次整合 base：a54a6b934771d492ac415dad014aa1e047e6f968（main 2.1.0）；衝突修正時最新 main：3dc4a55b9ff8d21cdad22f37b3dd15fa83182de4（2.2.0）
+- 初次程式候選 head：58096895620f65da25ddcdd33e073334ea249087（當時 2.2.0）；整合 main 後升為 2.3.0
 - 完整回歸的功能程式 head：31d21324cdff96b2c3337fc948bc85b522dc9dce。其後僅改版號、公開資源快取字串與更新紀錄；受影響檢查另列，不把兩批驗證混成同一 SHA。
 - 本文件及角色紀錄是後續純文件提交；程式候選與審查結果不因文件提交改變。
 
@@ -22,10 +22,13 @@
 角色／鍋名／題目文字沿用textContent；資產採明確公開allowlist，沒有新增客戶端自報成就端點。沒有schema更改；既有備份／成就驗證回歸通过。掃描本批新增／修改文字的高信心密鑰格式没有命中；永久記憶、work／data／本機設定不在本批差異。這不是全歷史秘密稽核。
 在已檢查範圍內未發現阻擋 Draft 的程式／資料問題；未完成的真瀏覽器驗收保持待驗，不以綠燈保證沒有問題或可直接合併。
 
+## 與最新 main 的衝突處理（2026-10-13）
+PR #115 唯一文字衝突為 CHANGELOG.md：main 已以 2.2.0 記錄股市冥燈夜間查核，故保留 main 的 2.2.0 項目，將本 PR 候選升至 2.3.0，並同步更新 package.json、package-lock.json、全遊戲焦點資源快取字串及測試期望。其餘 main 變更以無衝突方式整合。這次整合尚未重跑完整測試套件；下方測試數據只代表所列出的先前提交。
+
 ## 測試與限制
 - 初次main整合完整2139/2141；兩項失敗為郎中彈幕框載入順序及首頁遊戲數量11未更新12，已修正。受影響31/31通过。
 - 首次完整整合2142/2142，94679.1852ms。
 - 再合入main最新畫猜改動後 **2150/2150**，fail/cancel/skip/todo0，135396.665ms；本機Windows Node24，指令 node --test tests/*.test.js，隔離合成資料；ignored work/pr-preparation/pr-final-tests.log。
 - 升為2.2.0後 release／focus／公共資源 **11/11**，fail/cancel/skip0，2743.1323ms；ignored work/pr-preparation/version-final-tests.log。
 - minor release check相對main2.1.0及Git差異空白檢查通过。先前SVG預覽及限定UI證據仍只適用原版本；整合後没有新增真瀏覽器／手機／喇叭聽感結論。
-- 未執行遠端CI，因本批尚未推送／發布。Draft發布仍須使用者本次明確確認；Ready、合併與部署不在本次準備動作內。
+- 未執行遠端CI，因本批尚未推送／發布。目前 PR #115 保持 Draft；本文件列出的先前測試不代表合併最新 main 後已重新驗證。

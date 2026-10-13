@@ -87,9 +87,9 @@ test('side-effect isolation disables every automatic fetch and mutation, includi
  assert.equal(f.store.view().automation.status,'disabled');assert.equal(settings({}).marketAutomationEnabled,true);assert.equal(settings({MARKET_AUTOMATION_ENABLED:'false'}).marketAutomationEnabled,false);assert.throws(()=>settings({MARKET_AUTOMATION_ENABLED:'yes'}));
 });
 test('delayed official data retries but never blocks next round; restart catches a pending award once',async t=>{
- const f=fixture(t),id=setupLegacyRound(f);vote(f,id);f.setTime(after);let ready=false,calls=0;const provider={async fetchCalendar(){return calendar();},async fetchCloses(){calls++;return ready?{closes:[close()],failures:[]}:{closes:[],failures:[{targetDate:'2026-10-07',code:'DATA_NOT_PUBLISHED'}]};}};
+ const f=fixture(t),id=setupLegacyRound(f);vote(f,id);f.setTime(after+35940000);let ready=false,calls=0;const provider={async fetchCalendar(){return calendar();},async fetchCloses(){calls++;return ready?{closes:[close()],failures:[]}:{closes:[],failures:[{targetDate:'2026-10-07',code:'DATA_NOT_PUBLISHED'}]};}};
  let runner=new MarketAutomation(f.store,{clock:f.clock,provider});await runner.tick();assert.equal(f.market.stats(f.users[0].id).score,0);assert.ok(f.db.prepare("SELECT 1 FROM market_rounds WHERE target_date='2026-10-08'").get());assert.equal(f.store.view().automation.status,'waiting');await runner.tick();assert.equal(calls,1);await runner.stop();
- ready=true;f.setTime(after+RETRY_MS);runner=new MarketAutomation(f.store,{clock:f.clock,provider});await runner.tick();assert.equal(f.market.stats(f.users[0].id).score,5);f.setTime(after+2*RETRY_MS);await runner.tick();assert.equal(f.db.prepare('SELECT COUNT(*) n FROM market_ledger').get().n,1);await runner.stop();
+ ready=true;f.setTime(after+35940000+RETRY_MS);runner=new MarketAutomation(f.store,{clock:f.clock,provider});await runner.tick();assert.equal(f.market.stats(f.users[0].id).score,5);f.setTime(after+35940000+2*RETRY_MS);await runner.tick();assert.equal(f.db.prepare('SELECT COUNT(*) n FROM market_ledger').get().n,1);await runner.stop();
 });
 test('single in-flight run and shutdown abort prevent late fetch completion from writing',async t=>{
  const f=fixture(t,{now:after});let finish,started=false;const provider={fetchCalendar({signal}){started=true;return new Promise(resolve=>{finish=()=>resolve(calendar());signal.addEventListener('abort',finish,{once:true});});},fetchCloses(){throw Error('must not run after shutdown');}};
@@ -108,7 +108,7 @@ test('separate SQLite writers serialize duplicate system settlement and competin
 });
 
 test('HTTP API publishes safe dashboard, protects overrides, and restarts with persisted automatic awards',async t=>{
- const {createApp}=require('../src/app'),{createHash}=require('node:crypto'),f=fixture(t),id=setupLegacyRound(f);vote(f,id);vote(f,id,f.users[1],'dip');f.setTime(after);
+ const {createApp}=require('../src/app'),{createHash}=require('node:crypto'),f=fixture(t),id=setupLegacyRound(f);vote(f,id);vote(f,id,f.users[1],'dip');f.setTime(after+35940000);
  const cookies=f.users.map(user=>{const raw=randomUUID();f.db.prepare('INSERT INTO sessions(token_hash,user_id,expires_at) VALUES(?,?,?)').run(createHash('sha256').update(raw).digest('hex'),user.id,'2030-01-01T00:00:00.000Z');return 'ah-session='+raw;});
  const provider={async fetchCalendar(){return calendar();},async fetchCloses(){return {closes:[close()],failures:[]};}},config={...settings({DB_FILE:f.file,HISTORY_DIR:path.join(f.root,'history'),COMMUNITY_DIR:path.join(f.root,'community'),MUSIC_DIR:path.join(f.root,'music'),EXTERNAL_SIDE_EFFECTS_ENABLED:'true'}),host:'127.0.0.1',port:0,githubClient:{configured:false},marketClock:f.clock,marketProvider:provider};
  f.db.close();let app=createApp(config),base='http://127.0.0.1:'+(await app.listen()).port;
@@ -130,10 +130,10 @@ test('closure after a manual settlement is visibly reviewable without official c
 });
 
 test('fresh conflicting calendars invalidate cached coverage until a consistent refresh',async t=>{
- const f=fixture(t),id=setupLegacyRound(f);vote(f,id);f.setTime(after);const error=Object.assign(Error('calendar disagreement'),{code:'CALENDAR_SOURCE_MISMATCH',years:[2026]});let fixed=false;
+ const f=fixture(t),id=setupLegacyRound(f);vote(f,id);f.setTime(after+35940000);const error=Object.assign(Error('calendar disagreement'),{code:'CALENDAR_SOURCE_MISMATCH',years:[2026]});let fixed=false;
  const provider={async fetchCalendar(){if(!fixed)throw error;return [agreedCalendar()];},async fetchCloses(){return {closes:[close()],failures:[]};}},runner=new MarketAutomation(f.store,{clock:f.clock,provider});
  await runner.tick();assert.equal(f.store.isTradingDay('2026-10-08'),null);assert.equal(f.store.view().automation.nextTradingDate,null);assert.equal(f.store.view().automation.status,'calendar-unavailable');assert.equal(f.market.stats(f.users[0].id).score,0);assert.equal(f.db.prepare("SELECT COUNT(*) n FROM market_calendar_years WHERE year=2026").get().n,1,'last valid snapshot remains auditable');
- fixed=true;f.setTime(after+RETRY_MS);await runner.tick();assert.equal(f.store.isTradingDay('2026-10-08'),true);assert.equal(f.market.stats(f.users[0].id).score,5);assert.deepEqual(f.store.state().calendarBlockedYears,[]);assert.equal(validateMarketAutomationDatabase(f.db),true);await runner.stop();
+ fixed=true;f.setTime(after+35940000+RETRY_MS);await runner.tick();assert.equal(f.store.isTradingDay('2026-10-08'),true);assert.equal(f.market.stats(f.users[0].id).score,5);assert.deepEqual(f.store.state().calendarBlockedYears,[]);assert.equal(validateMarketAutomationDatabase(f.db),true);await runner.stop();
 });
 
 test('primary audit hashes always belong to their recorded URL through first, repeated and review fetches',t=>{

@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-13夜間回補候選：原status KV新增有界nightWindow，最多七ISO時槽＋目標日＋最後實際開始時間；交易先領槽、再等待網路，原fetch／audit／ledger保留。validator保留舊14–16紀錄、接受新夜窗並拒偽造時槽；備份／還原應用本版，schema未升，不操作正式資料。取代未合併診斷方案，詳[夜間重試](../specs/MARKET-NIGHT-RETRY.md)。
+
 2026-10-09 #87/#88候選1.27.0/schema19：ending存options／現有歷史snapshot，建房驗證在席位與history.attach前；結果與public gallery限8，歷史仍存題目／猜中次序／分數，非長期畫作庫。Media只改自己的dialog／iframe，不改全桌protocol／權限；Window1,975及隔離實播scope見 [驗收](../ROOM-CONTROLS-87-88-PROGRESS.md)。未操作正式資料／服務或部署。
 
 2026-10-09 #81／#83 候選 v1.26.0、schema19：兩款新類型接既有 auth／room／history，正常與中止 status 分開，歷史封存 subclass／PartyRoom 與題源；不公開進行中歷史。MusicQuiz 三份自製六秒 PCM cache 有界，endpoint 不曝曲名檔名。只用合成 fixture，沒有正式資料／服務操作；Windows 1,967 及剩餘風險見 [驗收](../PARTY-GAMES-81-83-PROGRESS.md)。
@@ -196,4 +198,8 @@ unpublished, dependent on #70/#73; see [ownership and validation](../refactors/R
 取代前述整套預設和整場一次藥袋配額；每輪私有快照一次、逐色隨機票、唯一鍋色／公開鍋名、白色炸彈、召喚翻牌與公共骰動畫／結果、原創資源和爆炸WAV、回合火焰與尾巴格、永久液滴／老鼠石分離。五枚郎中徽章由固定開局帳號及合法九輪操作伺服器判定，交易回滾與刪房後同程序重試、AI/test/tutorial排除；既有schema/單位帳本不變。完整2078通过，SVG排版渲染檢視；本輪沒有新增真瀏覽器或喇叭聽感驗證。來源、範圍、跨程序及跨桌限制見 [最新郎中進度](../QUACKS-PROGRESS.md)。未發PR／部署，候選仍1.29.0。
 
 ### 2026-10-13 PR準備更新：候選2.2.0
-本批已整合main共用房間UI及最新畫猜曲線／點時間更新（base a54a6b9、main2.1.0）；取代先前本批1.29.0／2.1.0候選狀態。郎中接共用控制／等待室／聊天室／AI席位，保持配書投票可見與开局還原。最終功能程式完整2150/2150，升版／快取後11/11；最終真瀏覽器／手機／喇叭驗收待验，先準備Draft，未推送／發PR／部署。兩輪範圍、固定提交及限制見 [PR準備](../PR-QUACKS-BLUFF-2.2.0-PREPARATION.md)。
+本批已整合main共用房間UI及最新畫猜曲線／點時間更新（base a54a6b9、main2.1.0）；取代先前本批1.29.0／2.1.0候選狀態。郎中接共用控制／等待室／聊天室／AI席位，保持配書投票可見與开局還原。最終功能程式完整2150/2150，升版／快取後11/11；最終真瀏覽器／手機／喇叭驗收待验，先準備Draft，未推送／發PR／部署。兩輪範圍、固定提交及限制見 [PR準備](../PR-QUACKS-BLUFF-2.3.0-PREPARATION.md)。
+
+
+### 2026-10-13 PR #115 衝突修正
+已整合 main 3dc4a55（2.2.0）；唯一衝突是 CHANGELOG 版本項目。保留 main 的市場自動查核 2.2.0，將本批功能升至 2.3.0，並更新套件版本、焦點資源快取與回歸測試期望。完整測試尚未在新合併提交上重跑，PR 維持 Draft。
