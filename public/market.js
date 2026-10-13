@@ -26,13 +26,13 @@
   const labels={ok:'自動結算正常',waiting:'等待官方同日收盤資料','calendar-unavailable':'官方交易日曆尚未確認',disabled:'自動結算已停用',error:'自動查核暫時失敗','manual-required':'自動查核已停止，等待管理員重查',unavailable:'自動結算狀態尚未提供'};
   $('#automationStatus').textContent=labels[status]||'自動查核狀態待確認';
   $('#automationPanel').classList.toggle('attention',['error','calendar-unavailable','disabled','manual-required'].includes(status)||!!a?.reviewDates?.length||!!a?.manualRequiredDates?.length);
-  const details=['交易日 14:00（台北）起每 5 分鐘查核，只採同日正式收盤報表；成功即停止當日自動抓取，16:00 最後一次仍未成功則待人工處理'];
-  const daily=a?.dailyFetch;if(daily){if(daily.targetDate)details.push('本日查核 '+dateLabel(daily.targetDate));if(Number.isSafeInteger(daily.automaticAttempts))details.push('自動 '+daily.automaticAttempts+' 次');if(Number.isSafeInteger(daily.manualAttempts))details.push('人工 '+daily.manualAttempts+' 次');if(daily.firstValidObservedAt)details.push('首次觀測到有效資料 '+displayObservation(daily.firstValidObservedAt)+'（本站觀測時間，非官方發布時間）');}
+  const details=['每天 23:59（台北）起每 5 分鐘查核，至次日 00:29；只採對應日期正式收盤報表，成功即停止抓取，未完成日期下一晚限量回補'];
+  if(Number.isInteger(a?.nightAttempts))details.push('本夜 '+a.nightAttempts+'／最多 7 次');const daily=a?.dailyFetch;if(daily){if(daily.targetDate)details.push('本輪查核日期 '+dateLabel(daily.targetDate));if(Number.isSafeInteger(daily.automaticAttempts))details.push('自動累計 '+daily.automaticAttempts+' 次');if(Number.isSafeInteger(daily.manualAttempts))details.push('人工 '+daily.manualAttempts+' 次');if(daily.firstValidObservedAt)details.push('首次觀測到有效資料 '+displayObservation(daily.firstValidObservedAt)+'（本站觀測時間，非官方發布時間）');}
   if(a?.lastAttemptAt)details.push('最近查核 '+displayTime(a.lastAttemptAt));if(a?.lastSuccessAt)details.push('最近成功 '+displayTime(a.lastSuccessAt));if(a?.nextAttemptAt)details.push('下次查核 '+displayTime(a.nextAttemptAt));
   if(a?.nextTradingDate)details.push('下一交易日 '+dateLabel(a.nextTradingDate));
   $('#automationDetails').textContent=details.join(' · ');
   const notes=[];if(a?.manualRequiredDates?.length)notes.push('已停止自動重試，待管理員指定日期重查：'+a.manualRequiredDates.map(dateLabel).join('、')+'。');if(a?.waitingDates?.length)notes.push('等待資料：'+a.waitingDates.map(dateLabel).join('、'));if(a?.reviewDates?.length)notes.push('需管理員複核：'+a.reviewDates.map(dateLabel).join('、'));
-  if(status==='calendar-unavailable')notes.push('官方行事曆年份覆蓋未確認；已取得年份：'+(a?.calendarYears?.length?a.calendarYears.join('、'):'尚無')+'。不推測休市日或開放未知日期。');if(status==='error')notes.push('保留目前結果與積分，僅在排程允許時重試。');if(status==='manual-required')notes.push('已用完自動查核時段或重試次數，保留待結算；未取得有效資料的日期不會自動補跑。');if(status==='disabled')notes.push('目前不會自動抓取或結算，請洽管理員。');
+  if(status==='calendar-unavailable')notes.push('官方行事曆年份覆蓋未確認；已取得年份：'+(a?.calendarYears?.length?a.calendarYears.join('、'):'尚無')+'。不推測休市日或開放未知日期。');if(status==='error')notes.push('保留目前結果與積分，僅在排程允許時重試。');if(status==='manual-required')notes.push('超過自動回補範圍的日期保留待結算，可由管理員指定日期重查。');if(status==='disabled')notes.push('目前不會自動抓取或結算，請洽管理員。');
   if(a?.waitingDates?.length)notes.push('缺少資料不等於休市；下一輪依已確認日曆獨立開放。');$('#automationDates').textContent=notes.join(' ');
  }
  function renderMarketHistory(){

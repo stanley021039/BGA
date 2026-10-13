@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-13 PR113夜間策略取代未合併診斷方案：23:59–次日00:29，每五分鐘、最多七次，使用23:59的目標日／月份。global nightWindow在網路前交易領槽，晚啟動不補burst、實際五分鐘間隔、重啟／並行／時鐘回退防重；缺資料次晚限量補，成功永不自動重抓。只在夜窗啟動價格查核與自動保存證據結算，日曆／開局與人工14點後流程保留。詳[策略](../specs/MARKET-NIGHT-RETRY.md)，未部署，真實夜間時序待驗。
+
 2026-10-13 畫猜 2.1.0：新畫筆以可選 quadratic codec 保留跨包曲線；renderer 合併相鄰同樣式、同 ID 且 anchor 相接的 chunks，保留未標記的舊直線作品。活動排送改為 16 點／80 ms，wire 仍 64 點／115 ms／單一 in-flight；viewer 同筆 dt 不因晚到重新計時，插值只在 view，積壓超過 450 ms 壓縮未來時程至 180 ms 且不丟點。Linux 完整 2081 通過；有限原生兩席最終非空像素相同、canonical 重播 RGBA0 及受測持筆無閃白。具體證據、初次暫存 I/O 失敗與未驗範圍見 [本輪進度](../DRAW-GARTIC-DT-PROGRESS.md)。CI／公開發布以 PR 實際紀錄為準，取代舊 input／viewer 時程數字，保留可靠交付、quota、權限及舊作品相容契約。
 
 2026-10-12：共用側欄重複色塊與歷史連結移除候選；shared-turn保留僅讀屏公告，網站歷史入口保留。範圍與驗收見[共用側欄](../specs/SHARED-SIDEBAR-FOOTER-REMOVAL.md)；測試、PR與部署狀態以本批PR證據為準。

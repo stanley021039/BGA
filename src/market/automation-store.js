@@ -5,8 +5,7 @@ const R=require('../../public/market-rules');
 const DAY=86400000;
 const stamp=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)&&Number.isFinite(Date.parse(value))&&new Date(value).toISOString()===value;
 const hash=value=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
-const dateAt=now=>new Date(now+8*3600000).toISOString().slice(0,10);
-const addDays=(date,count)=>new Date(Date.parse(date+'T00:00:00Z')+count*DAY).toISOString().slice(0,10);
+const {dateAt,addDays,nightWindow,startFor,RETRY_MS,WINDOW_MS}=require('./night-window');
 const closeAfter=date=>Date.parse(date+'T14:00:00+08:00');
 function monthWindow(date){
  if(!R.validDate(date))throw Error('Invalid market date');
@@ -55,16 +54,26 @@ class MarketAutomationStore{
   for(let date=from;date<=to;date=addDays(date,1))if(this.isTradingDay(date)===true&&!saved.has(date))dates.push(date);
   return dates;
  }
- recordFetchAttempt(date,{slot=null,kind,at=new Date(this.clock()).toISOString()}){
+ recordNightSlot(slot){
+  if(!this.enabled)return false;
+  return transaction(this.db,()=>{
+   const now=this.clock(),w=nightWindow(now),prior=this.state().nightWindow;
+   if(!w.active||slot!==w.slot||prior&&prior.targetDate>w.targetDate)return false;
+   const same=prior?.targetDate===w.targetDate,slots=same?prior.slots:[];
+   if(slots.length>=7||slots.some(s=>s>=slot)||same&&now-Date.parse(prior.lastAttemptAt)<RETRY_MS)return false;
+   this.updateState({nightWindow:{targetDate:w.targetDate,slots:[...slots,slot],lastAttemptAt:new Date(now).toISOString()}});return true;
+  });
+ }
+ recordFetchAttempt(date,{slot=null,kind,night=false,at=new Date(this.clock()).toISOString()}){
   if(!this.enabled)return false;
   if(!R.validDate(date)||!['scheduled','history','catchup','manual'].includes(kind)||!stamp(at))throw Error('Invalid fetch attempt');
   if(kind==='scheduled'&&(!stamp(slot)||dateAt(Date.parse(slot))!==date||Date.parse(slot)<closeAfter(date)||Date.parse(slot)>closeAfter(date)+2*3600000||(Date.parse(slot)-closeAfter(date))%300000!==0))throw Error('Invalid scheduled fetch slot');
   return transaction(this.db,()=>{
    const state=this.fetchState(date),manual=kind==='manual';
-   if(!manual&&(this.hasClose(date)||['success','exhausted'].includes(state.status)))return false;
+   if(!manual&&(this.hasClose(date)||state.status==='success'||state.status==='exhausted'&&!night))return false;
    if(kind==='scheduled'&&(state.scheduledSlots.length>=25||state.scheduledSlots.some(previous=>previous>=slot)))return false;
    if(!manual&&state.lastAutomaticAttemptAt&&Date.parse(at)-Date.parse(state.lastAutomaticAttemptAt)<300000)return false;
-   if(!manual&&kind!=='scheduled'&&state.automaticAttempts>=5)return false;
+   if(!manual&&!night&&kind!=='scheduled'&&state.automaticAttempts>=5)return false;
    this.writeFetchState(date,{...state,status:state.status==='success'?'success':'waiting',scheduledSlots:kind==='scheduled'?[...state.scheduledSlots,slot]:state.scheduledSlots,automaticAttempts:state.automaticAttempts+(manual?0:1),manualAttempts:state.manualAttempts+(manual?1:0),lastAttemptAt:at,lastAttemptKind:kind,...(!manual?{lastAutomaticAttemptAt:at}:{})});
    this.audit({targetDate:date,kind:'fetch-attempt',status:'started',detail:kind+(slot?':'+slot:'')});return true;
   });
@@ -169,8 +178,8 @@ class MarketAutomationStore{
   for(let date=window.from;date<=today;date=addDays(date,1))if(this.isTradingDay(date)===true&&!verified.has(date))waitingDates.push(date);
   const reviewDates=[...new Set([...this.db.prepare('SELECT target_date FROM market_daily_closes WHERE review_required=1 ORDER BY target_date').all().map(row=>row.target_date),...this.db.prepare('SELECT target_date FROM market_rounds WHERE result_revision>0').all().map(row=>row.target_date).filter(date=>this.isTradingDay(date)===false)])].sort();
   const calendarYears=this.db.prepare('SELECT year FROM market_calendar_years ORDER BY year').all().map(row=>row.year),nextTradingDate=this.nextTradingDay(today);
-  const dailyFetch={targetDate:today,...this.fetchState(today)},manualRequiredDates=this.db.prepare("SELECT key FROM market_automation_state WHERE key LIKE 'fetch:%' AND json_extract(value_json,'$.status')='exhausted' ORDER BY key").all().map(row=>row.key.slice(6)).filter(date=>this.isTradingDay(date)!==false&&!this.hasClose(date));
-  return {automation:{dailyFetch,manualRequiredDates,enabled:this.enabled,status:this.enabled?(state.status||'waiting'):'disabled',lastAttemptAt:state.lastAttemptAt||null,lastSuccessAt:state.lastSuccessAt||null,nextAttemptAt:this.enabled?state.nextAttemptAt||null:null,nextTradingDate,calendarYears,waitingDates:[...new Set([...this.pending(),...waitingDates])].sort(),reviewDates},marketHistory:{...window,rows:rows.map(row=>{const close=storedClose(row);return {targetDate:row.target_date,firstValidObservedAt:this.fetchState(row.target_date).firstValidObservedAt||null,close:row.close_cents/100,change:row.change_cents/100,returnPct:Number(row.return_pct),sourceUrl:close.sourceUrl,fetchedAt:row.fetched_at,reviewRequired:!!row.review_required,returnPctSource:close.returnPctSource||'official-published'};}),waitingDates},...(admin?{marketFetchAudit:this.db.prepare('SELECT target_date AS targetDate,kind,status,source_url AS sourceUrl,source_hash AS sourceHash,at,detail FROM market_fetch_audit ORDER BY id DESC LIMIT 50').all()}: {})};
+  const target=nightWindow(this.clock()).targetDate,dailyFetch={targetDate:target,...this.fetchState(target)},pending=new Set(this.pending()),manualRequiredDates=this.db.prepare("SELECT key FROM market_automation_state WHERE key LIKE 'fetch:%' AND json_extract(value_json,'$.status')='exhausted' ORDER BY key").all().map(row=>row.key.slice(6)).filter(date=>date<window.from&&!pending.has(date)&&this.isTradingDay(date)!==false&&!this.hasClose(date));
+  return {automation:{nightAttempts:state.nightWindow?.targetDate===target?state.nightWindow.slots.length:0,schedule:{startLocal:"23:59",windowMinutes:30,retryMinutes:5},dailyFetch,manualRequiredDates,enabled:this.enabled,status:this.enabled?(state.status||'waiting'):'disabled',lastAttemptAt:state.lastAttemptAt||null,lastSuccessAt:state.lastSuccessAt||null,nextAttemptAt:this.enabled?state.nextAttemptAt||null:null,nextTradingDate,calendarYears,waitingDates:[...new Set([...this.pending(),...waitingDates])].sort(),reviewDates},marketHistory:{...window,rows:rows.map(row=>{const close=storedClose(row);return {targetDate:row.target_date,firstValidObservedAt:this.fetchState(row.target_date).firstValidObservedAt||null,close:row.close_cents/100,change:row.change_cents/100,returnPct:Number(row.return_pct),sourceUrl:close.sourceUrl,fetchedAt:row.fetched_at,reviewRequired:!!row.review_required,returnPctSource:close.returnPctSource||'official-published'};}),waitingDates},...(admin?{marketFetchAudit:this.db.prepare('SELECT target_date AS targetDate,kind,status,source_url AS sourceUrl,source_hash AS sourceHash,at,detail FROM market_fetch_audit ORDER BY id DESC LIMIT 50').all()}: {})};
  }
 }
 
@@ -202,7 +211,12 @@ function validateMarketAutomationDatabase(db){
    continue;
   }
   check(row.key==='status');
-  const allowed=['status','lastAttemptAt','lastSuccessAt','nextAttemptAt','calendarAttemptAt','calendarFailed','catchupMonth','calendarBlockedYears'];check(Object.keys(state).every(key=>allowed.includes(key)));
+  if(state.nightWindow!==undefined){
+   const w=state.nightWindow;check(w&&R.validDate(w.targetDate)&&Object.keys(w).every(k=>['targetDate','slots','lastAttemptAt'].includes(k))&&stamp(w.lastAttemptAt));
+   check(Array.isArray(w.slots)&&w.slots.length>=1&&w.slots.length<=7&&w.slots.every((s,i)=>stamp(s)&&Date.parse(s)>=startFor(w.targetDate)&&Date.parse(s)<=startFor(w.targetDate)+WINDOW_MS&&(Date.parse(s)-startFor(w.targetDate))%RETRY_MS===0&&(!i||s>w.slots[i-1])));
+   check(Date.parse(w.lastAttemptAt)>=Date.parse(w.slots.at(-1))&&Date.parse(w.lastAttemptAt)<=startFor(w.targetDate)+WINDOW_MS);
+  }
+  const allowed=['nightWindow','status','lastAttemptAt','lastSuccessAt','nextAttemptAt','calendarAttemptAt','calendarFailed','catchupMonth','calendarBlockedYears'];check(Object.keys(state).every(key=>allowed.includes(key)));
   if(state.status!==undefined)check(['waiting','ok','calendar-unavailable','disabled','error','manual-required'].includes(state.status));
   for(const key of ['lastAttemptAt','lastSuccessAt','nextAttemptAt','calendarAttemptAt'])if(state[key]!==undefined)check(key==='nextAttemptAt'&&state[key]===null||stamp(state[key]));
   if(state.calendarBlockedYears!==undefined)check(Array.isArray(state.calendarBlockedYears)&&state.calendarBlockedYears.length<=200&&new Set(state.calendarBlockedYears).size===state.calendarBlockedYears.length&&state.calendarBlockedYears.every(year=>Number.isInteger(year)&&year>=2000&&year<=2199));

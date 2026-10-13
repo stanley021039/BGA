@@ -1,15 +1,10 @@
-const {dateAt,monthWindow,closeAfter}=require('./automation-store');
+const {dateAt,addDays,monthWindow,closeAfter}=require('./automation-store');
 const {HttpError}=require('../http/errors');
 const R=require('../../public/market-rules');
-const RETRY_MS=5*60*1000,CALENDAR_MS=6*60*60*1000,DAILY_WINDOW_MS=2*60*60*1000,HISTORY_ATTEMPTS=5;
+const {nightWindow,startFor,RETRY_MS}=require('./night-window');
+const CALENDAR_MS=6*60*60*1000;
 const safeCode=error=>/^[A-Z][A-Z0-9_]{0,63}$/.test(error?.code||'')?error.code:'OFFICIAL_FETCH_FAILED';
-const cutoffFor=date=>closeAfter(date)+DAILY_WINDOW_MS;
 const iso=value=>new Date(value).toISOString();
-function slotAt(date,now){
- const start=closeAfter(date);
- return now<start||now>cutoffFor(date)?null:iso(start+Math.floor((now-start)/RETRY_MS)*RETRY_MS);
-}
-
 // The application's data lock still owns the only writer. Slot claims commit
 // before network I/O; a restart never replays an elapsed or already claimed slot.
 class MarketAutomation{
@@ -64,55 +59,32 @@ class MarketAutomation{
    this.store.audit({kind:'calendar',status:'waiting',detail:safeCode(error)});this.store.updateState({calendarFailed:true});
   }
  }
- exhaustDaily(date,now){
-  const state=this.store.fetchState(date);
-  if(this.store.hasClose(date)||state.status==='success'||state.status==='exhausted'||this.store.isTradingDay(date)===false)return;
-  if(now>cutoffFor(date)&&(date===dateAt(now)||state.scheduledSlots.length))this.store.finishFetch(date,{status:'exhausted',error:'DAILY_WINDOW_ENDED'});
- }
  historyDates(window){
   // Unknown calendar days are not invented. An existing pending round is an
   // explicit obligation and can still be queried unless the day is closed.
   return [...new Set([...this.store.missingDates(window),...this.store.pending().filter(date=>date>=window.from&&date<=window.to&&this.store.isTradingDay(date)!==false)])].sort();
  }
- historyCandidate(date,now,kind){
-  if(date>=dateAt(now)||this.store.hasClose(date)||this.store.isTradingDay(date)===false)return null;
-  this.exhaustDaily(date,now);const state=this.store.fetchState(date);
-  if(['success','exhausted'].includes(state.status))return null;
-  if(state.automaticAttempts>=HISTORY_ATTEMPTS){this.store.finishFetch(date,{status:'exhausted',error:'HISTORY_ATTEMPTS_EXHAUSTED'});return null;}
-  if(state.lastAutomaticAttemptAt&&now-Date.parse(state.lastAutomaticAttemptAt)<RETRY_MS)return null;
-  return {date,kind};
- }
  async run(signal){
   await this.refreshCalendar(signal);if(this.stopped)return;
-  // Planning and stored-proof settlement must not depend on the daily job's
-  // success, cutoff, backoff, or an unrelated year's calendar coverage.
-  const nextTradingDate=this.store.plan();
-  for(const date of this.store.pending())if(this.store.hasClose(date))this.store.settleStored(date);
-  let now=this.clock();const today=dateAt(now),window=monthWindow(today);
-  for(const date of this.store.fetchDates())if(date<today)this.exhaustDaily(date,now);
-  this.exhaustDaily(today,now);
-  const visible=this.historyDates(window),candidates=visible.map(date=>this.historyCandidate(date,now,'history')).filter(Boolean);
-  const slot=slotAt(today,now),state=this.store.fetchState(today);
-  const due=!state.lastAutomaticAttemptAt||now-Date.parse(state.lastAutomaticAttemptAt)>=RETRY_MS;
-  if(slot&&due&&this.store.isTradingDay(today)!==false&&!this.store.hasClose(today)&&!['success','exhausted'].includes(state.status))candidates.push({date:today,kind:'scheduled',slot});
-  let result={received:false,failed:false,review:false};
-  if(candidates.length)result=await this.fetchDates(candidates,signal);
-  if(this.stopped)return;
-  // At most one older outstanding month per run; persist rotation so one
-  // unpublished month cannot starve other outstanding settlement dates.
-  now=this.clock();const older=[...new Set(this.store.pending().filter(date=>date<window.from&&!this.store.hasClose(date)&&this.store.isTradingDay(date)!==false).map(date=>date.slice(0,7)))].sort();
-  if(older.length){
-   const cursor=this.store.state().catchupMonth||'',month=older.find(value=>value>cursor)||older[0];
-   const dates=this.store.pending().filter(date=>date.slice(0,7)===month).map(date=>this.historyCandidate(date,now,'catchup')).filter(Boolean);
-   this.store.updateState({catchupMonth:month});
-   if(dates.length){const catchup=await this.fetchDates(dates,signal);result={received:result.received||catchup.received,failed:result.failed||catchup.failed,review:result.review||catchup.review};}
+  const nextTradingDate=this.store.plan(),w=nightWindow(this.clock());
+  if(w.active){
+   for(const date of this.store.pending())if(date<=w.targetDate&&this.store.hasClose(date))this.store.settleStored(date);
+   const window=monthWindow(w.targetDate),eligible=date=>date<=w.targetDate&&!this.store.hasClose(date)&&this.store.isTradingDay(date)!==false;
+   const dates=[...new Set([...this.historyDates(window),w.targetDate])].filter(eligible).sort();
+   const older=[...new Set(this.store.pending().filter(date=>date<window.from&&eligible(date)).map(date=>date.slice(0,7)))].sort();
+   const cursor=this.store.state().catchupMonth||'',month=older.find(m=>m>cursor)||older[0];
+   const catchup=month?this.store.pending().filter(date=>date.slice(0,7)===month&&eligible(date)):[];
+   if((dates.length||catchup.length)&&this.store.recordNightSlot(w.slot)){
+    const items=list=>list.map(date=>({date,kind:'catchup',night:true}));
+    let result=dates.length?await this.fetchDates(items(dates),signal):{received:false,failed:false};
+    if(!this.stopped&&this.clock()<=w.end&&catchup.length){this.store.updateState({catchupMonth:month});const r=await this.fetchDates(items(catchup),signal);result={received:result.received||r.received,failed:result.failed||r.failed};}
+    if(!this.stopped)this.refreshStatus(nextTradingDate,this.clock(),result);return result;
+   }
   }
-  if(this.stopped)return;
-  this.refreshStatus(nextTradingDate,this.clock(),result);
-  return {nextTradingDate,waiting:this.store.view().automation.waitingDates.length>0,...result};
+  if(!this.stopped)this.refreshStatus(nextTradingDate,this.clock(),{});
  }
  async fetchDates(candidates,signal){
-  const selected=candidates.filter(item=>this.store.recordFetchAttempt(item.date,{slot:item.slot,kind:item.kind,at:iso(this.clock())}));
+  const selected=candidates.filter(item=>this.store.recordFetchAttempt(item.date,{slot:item.slot,kind:item.kind,night:item.night,at:iso(this.clock())}));
   if(!selected.length)return {received:false,failed:false,review:false};
   const dates=selected.map(item=>item.date).sort(),allowed=new Set(dates),accepted=new Set(),errors=new Map();
   let received=false,failed=false,review=false;
@@ -141,37 +113,26 @@ class MarketAutomation{
   }catch(error){if(this.stopped)return {received:false,failed:false,review:false};for(const date of dates)errors.set(date,safeCode(error));}
   if(this.stopped)return {received:false,failed:false,review:false};
   const now=this.clock();
-  for(const {date,kind} of selected){
+  for(const {date,kind,night} of selected){
    if(accepted.has(date)){this.store.finishFetch(date,{status:'success',at:iso(now)});continue;}
    failed=true;const state=this.store.fetchState(date),error=errors.get(date)||'DATA_NOT_PUBLISHED';errors.set(date,error);
-   const exhausted=state.status==='exhausted'||(state.scheduledSlots.length||date===dateAt(now))&&now>=cutoffFor(date)||kind!=='manual'&&kind!=='scheduled'&&state.automaticAttempts>=HISTORY_ATTEMPTS;
+   const exhausted=!night&&state.status==='exhausted';
    this.store.finishFetch(date,{status:exhausted?'exhausted':'waiting',at:iso(now),error});
    this.store.audit({targetDate:date,status:'waiting',detail:error});
   }
   return {received,failed,review,...(errors.size?{error:errors.values().next().value}:{})};
  }
  refreshStatus(nextTradingDate,now,{received=false,failed=false}={}){
-  const today=dateAt(now),window=monthWindow(today),dates=[...new Set([...this.historyDates(window),...this.store.pending()])];
-  for(const date of this.store.fetchDates())if(date<today)this.exhaustDaily(date,now);
-  this.exhaustDaily(today,now);
-  let next=Infinity;
-  const daily=this.store.fetchState(today);
-  if(!this.store.hasClose(today)&&!['success','exhausted'].includes(daily.status)&&this.store.isTradingDay(today)!==false){
-   const start=closeAfter(today),lastSlot=daily.scheduledSlots.at(-1);
-   // A late poll may claim a slot shortly before its next boundary. Preserve
-   // five real minutes between starts, rather than bursting at that boundary.
-   const candidate=Math.max(now,start,lastSlot?Date.parse(lastSlot)+RETRY_MS:start,daily.lastAutomaticAttemptAt?Date.parse(daily.lastAutomaticAttemptAt)+RETRY_MS:start);
-   if(candidate<=cutoffFor(today))next=candidate;
+  const w=nightWindow(now),view=this.store.view(),window=monthWindow(w.targetDate);
+  const dates=[...new Set([...this.historyDates(window),...this.store.pending(),w.targetDate])];
+  const work=dates.some(date=>date<=w.targetDate&&!this.store.hasClose(date)&&this.store.isTradingDay(date)!==false);
+  const prior=this.store.state().nightWindow;
+  let next=w.start;
+  if(w.active){
+   next=prior?.targetDate===w.targetDate?Math.max(now,Date.parse(prior.slots.at(-1))+RETRY_MS,Date.parse(prior.lastAttemptAt)+RETRY_MS):now;
+   if(!work||next>w.end)next=startFor(addDays(w.targetDate,1));
   }
-  for(const date of dates){
-   if(date>=today||this.store.hasClose(date)||this.store.isTradingDay(date)===false)continue;
-   this.exhaustDaily(date,now);const state=this.store.fetchState(date);
-   if(['success','exhausted'].includes(state.status)||state.automaticAttempts>=HISTORY_ATTEMPTS)continue;
-   next=Math.min(next,Math.max(now+this.pollMs,state.lastAutomaticAttemptAt?Date.parse(state.lastAutomaticAttemptAt)+RETRY_MS:now));
-  }
-  const view=this.store.view(),waiting=view.automation.waitingDates.some(date=>now>=closeAfter(date));
-  const manualRequired=view.automation.manualRequiredDates.length>0;
-  this.store.updateState({status:!nextTradingDate?'calendar-unavailable':manualRequired?'manual-required':failed||waiting?'waiting':'ok',...(received?{lastSuccessAt:iso(now)}:{}),nextAttemptAt:Number.isFinite(next)?iso(next):null});
+  this.store.updateState({status:!nextTradingDate?'calendar-unavailable':failed||view.automation.waitingDates.length?'waiting':'ok',...(received?{lastSuccessAt:iso(now)}:{}),nextAttemptAt:iso(next)});
  }
  async stop(){if(this.stopped)return;this.stopped=true;clearInterval(this.timer);this.timer=null;this.controller?.abort();await Promise.allSettled([this.inFlight,this.manualPending].filter(Boolean));}
 }
