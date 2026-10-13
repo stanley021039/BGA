@@ -127,3 +127,9 @@ body[data-room-phase=waiting] .ui-room-panel-host{min-height:0;min-width:0}
 .ui-chat-height-peer{min-height:var(--ui-room-row-height,440px)!important}
 .ui-chat-height-peer[data-chat-height-bound=true]{box-sizing:border-box;height:var(--ui-chat-fixed-height)!important;max-height:var(--ui-chat-fixed-height)!important;overflow:hidden!important;display:flex;flex-direction:column}
 .ui-chat-height-peer[data-chat-height-bound=true]>:is(#players,.ui-room-roster-list){flex:1 1 0;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+
+/* Reserve chat's header, message viewport and footer before shrinking game actions. */
+.ui-game-chat-host>.ui-room-panel-host{flex:0 1 auto;min-height:0!important;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.ui-game-chat-host>.shared-chat[data-game-chat=true]{min-height:244px;flex:1 0 244px}
+.shared-chat[data-game-chat=true] .chat-messages{min-height:44px}
+.shared-chat[data-game-chat=true] .chat-status,.shared-chat[data-game-chat=true] .chat-status:empty{display:block;min-height:24px;height:24px;max-height:24px;overflow:auto}
