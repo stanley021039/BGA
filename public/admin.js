@@ -1,6 +1,13 @@
 const $=selector=>document.querySelector(selector);
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const show=value=>$('#output').textContent=value;
+if(typeof window!=='undefined')window.GameUI?.decorateButton?.($('#refreshMarketDiagnostics'),'refresh',{iconOnly:true});
+$('#refreshMarketDiagnostics').onclick=async()=>{
+ const button=$('#refreshMarketDiagnostics');button.disabled=true;$('#marketDiagnosticsStatus').textContent='正在讀取診斷紀錄…';
+ try{const result=await api('market/diagnostics');$('#marketDiagnostics').textContent=JSON.stringify(result,null,2);$('#marketDiagnosticsStatus').textContent='紀錄已更新。查 lastError 與 audit 的 detail；如需協助，下載 JSON 提供診斷。';}
+ catch(error){$('#marketDiagnostics').textContent='';$('#marketDiagnosticsStatus').textContent=error.message||'診斷讀取失敗，請重試';}
+ finally{button.disabled=false;}
+};
 let currentInviteCode='';
 async function api(route,payload){const response=await fetch('/api/admin/'+route,{method:payload?'POST':'GET',headers:{'Content-Type':'application/json'},body:payload?JSON.stringify(payload):undefined});const result=await response.json();if(!response.ok)throw Error(result.error);return result;}
 async function users(){const list=await api('users');$('#users').innerHTML=list.map(user=>`<tr><td>${escapeHtml(user.username)}</td><td>${escapeHtml(user.displayName)}</td><td>${user.disabled?'已停用':'正常'}${user.role==='admin'?' · 管理者':''}</td><td><button data-reset="${user.id}">重設密碼</button>${user.role==='admin'?'':`<button data-disable="${user.id}" data-value="${user.disabled?0:1}">${user.disabled?'啟用':'停用'}</button>`}</td></tr>`).join('');}

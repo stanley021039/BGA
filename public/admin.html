@@ -20,6 +20,13 @@
     <section class="page-panel sync-panel"><div class="panel-heading"><span class="panel-number">02 / GITHUB SYNC</span><h2>待確認提交</h2><p>結果不明時，請先到 GitHub 查核；確認沒有建立後才能重試。</p></div><button id="refreshSubmissions" class="page-button page-button-outline">更新清單 ↻</button><div id="submissions" class="submission-list"></div></section>
    </div>
    <section class="page-panel members-panel"><div class="panel-heading"><span class="panel-number">03 / MEMBERS</span><h2>會員名單</h2><p>可為會員建立密碼重設連結，或停用與重新啟用帳號。</p></div><div class="table-scroll"><table><thead><tr><th>帳號</th><th>暱稱</th><th>狀態</th><th>操作</th></tr></thead><tbody id="users"></tbody></table></div></section>
+   <section class="page-panel"><div class="panel-heading"><h2>股市冥燈診斷紀錄</h2><p>查看排程開關、日期重試與最近官方來源查核。重新整理或下載不會觸發抓取、重查或結算。</p></div>
+    <div class="ui-control-group"><button id="refreshMarketDiagnostics" class="page-button page-button-outline" type="button">更新診斷紀錄</button><a class="page-button page-button-outline" href="/api/admin/market/diagnostics?download=1">下載診斷 JSON</a><a href="/market#admin">前往指定日期重查</a></div>
+    <p id="marketDiagnosticsStatus" role="status">按更新載入紀錄。</p>
+    <p>當日查核時段為台北 14:00–16:00；歷史回補最多五次。停止重試只作用於列出的日期，其他日期仍獨立排程。HTTP 200 也可能沒有同日資料或未通過跨來源核對。紀錄中的時間是伺服器觀測時間，不是官方發布時間。</p>
+    <p>常見原因：OFFICIAL_SOURCE_TIMEOUT＝官方來源逾時；OFFICIAL_HTTP_STATUS＝HTTP 狀態非 200（看 HTTP_403／HTTP_429 等）；ENOTFOUND／EAI_AGAIN＝DNS 問題；DATA_NOT_PUBLISHED＝尚無可接受的同日資料；OFFICIAL_*_MISMATCH＝來源核對不一致；DAILY_WINDOW_ENDED／HISTORY_ATTEMPTS_EXHAUSTED＝查核時段或次數已耗盡。MS_* 為該次請求耗時毫秒。</p>
+    <pre id="marketDiagnostics" style="max-height:28rem;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere" tabindex="0" aria-label="股市冥燈診斷 JSON"></pre>
+   </section>
   </main>
  </div>
  <script src="/shared/ui-components.js"></script><script src="/shared/barrage-frames.js"></script><script src="/shared/motion-policy.js"></script><script src="/shared/audio-settings.js"></script><script src="/shared/popovers.js"></script><script src="/admin.js"></script>

@@ -1,5 +1,7 @@
 # Server／資料 agent 記憶
 
+2026-10-13 市場診斷候選沿用market_fetch_audit（2000筆），來源請求只記固定官方URL、機器碼、HTTP／DNS與耗時；管理員匯出200筆audit／100日期，剔除秘密、error message、body及任意query。讀取無外部副作用／DB寫入，原schema／備份驗證保留；舊請求未存欄位不能事後補回。詳[操作](../specs/MARKET-DIAGNOSTICS.md)，未部署或操作正式資料。
+
 2026-10-09 #87/#88候選1.27.0/schema19：ending存options／現有歷史snapshot，建房驗證在席位與history.attach前；結果與public gallery限8，歷史仍存題目／猜中次序／分數，非長期畫作庫。Media只改自己的dialog／iframe，不改全桌protocol／權限；Window1,975及隔離實播scope見 [驗收](../ROOM-CONTROLS-87-88-PROGRESS.md)。未操作正式資料／服務或部署。
 
 2026-10-09 #81／#83 候選 v1.26.0、schema19：兩款新類型接既有 auth／room／history，正常與中止 status 分開，歷史封存 subclass／PartyRoom 與題源；不公開進行中歷史。MusicQuiz 三份自製六秒 PCM cache 有界，endpoint 不曝曲名檔名。只用合成 fixture，沒有正式資料／服務操作；Windows 1,967 及剩餘風險見 [驗收](../PARTY-GAMES-81-83-PROGRESS.md)。
