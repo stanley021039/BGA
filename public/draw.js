@@ -379,6 +379,7 @@ function validCanvasSnapshot(snapshot){
 function validCanvasStroke(stroke,previous,version){
  if(!Number.isSafeInteger(stroke?.version)||stroke.version<=previous||stroke.version>version||typeof stroke.strokeId!=='string'||!/^[a-f0-9-]{8,36}$/i.test(stroke.strokeId)||!['brush','erase','line','rect','ellipse','fill'].includes(stroke.tool)||!/^#[a-f0-9]{6}$/i.test(stroke.color)||!Number.isInteger(stroke.size)||stroke.size<1||stroke.size>40||!Array.isArray(stroke.points)||stroke.points.length<1||stroke.points.length>64)return false;
  if(stroke.points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255))return false;
+ if(stroke.curve!==undefined&&(stroke.tool!=='brush'||stroke.curve!=='quadratic'))return false;
  if(stroke.pointTimes!==undefined&&(!['brush','erase'].includes(stroke.tool)||!Array.isArray(stroke.pointTimes)||stroke.pointTimes.length!==stroke.points.length||stroke.pointTimes.some((time,index)=>!Number.isSafeInteger(time)||time<0||time>120000||index>0&&time<stroke.pointTimes[index-1])))return false;
  return !(stroke.tool==='fill'?stroke.points.length!==1:!['brush','erase'].includes(stroke.tool)&&stroke.points.length!==2);
 }
@@ -520,10 +521,10 @@ function queueStroke(points,strokeId,mode=tool,pointTimes){
  let draft=localStrokes.get(strokeId);
  if(!draft){
   if(!localCanvasCapacity(points.length)){drawFeedback('畫布同步中的筆畫已達上限，請稍候。','error');return sendQueue;}
-  draft={strokeId,tool:mode,color:$('#color').value,size:Number($('#size').value),filled,points:[...points],revision:1,finished:true,pendingBatches:0,ackVersion:0,failed:false};
+  draft={strokeId,tool:mode,color:$('#color').value,size:Number($('#size').value),filled,points:[...points],...(mode==='brush'?{curve:'quadratic'}:{}),revision:1,finished:true,pendingBatches:0,ackVersion:0,failed:false};
   localStrokes.set(strokeId,draft);scheduleCanvasPreview();
  }
- const data={canvasEpoch:state.canvasEpoch,round:state.round,strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points,...(pointTimes?{pointTimes}:{} )};
+ const data={canvasEpoch:state.canvasEpoch,round:state.round,strokeId,tool:mode,color:draft.color,size:draft.size,filled:draft.filled,points,...(draft.curve?{curve:draft.curve}:{}),...(pointTimes?{pointTimes}:{} )};
  try{drawingTransport.enqueue(data,draft);}catch(error){rejectPendingDrawing(error.message);toast(error.message);}
  sendQueue=drawingTransport.whenIdle();
  return sendQueue;
@@ -546,7 +547,7 @@ function clearStrokeFlush(){if(strokeFlushTimer!==null)clearTimeout(strokeFlushT
 function scheduleStrokeFlush(){
  if(strokeFlushTimer!==null||!active||!['brush','erase'].includes(active.tool))return;
  const draft=active,epoch=state.canvasEpoch;
- strokeFlushTimer=setTimeout(()=>{strokeFlushTimer=null;if(active===draft&&state?.canvasEpoch===epoch)flush();},140);
+ strokeFlushTimer=setTimeout(()=>{strokeFlushTimer=null;if(active===draft&&state?.canvasEpoch===epoch)flush();},80);
 }
 function cancelPreviewFrame(){if(previewFrame!==null)cancelAnimationFrame(previewFrame);previewFrame=null;}
 function scheduleCanvasPreview(){
@@ -572,7 +573,7 @@ function collectPointer(event){
   if(brush){active.points.push(point);active.pointTimes.push(time);pending.push(point);pendingTimes.push(time);}else{active.points=[active.points[0],point];pending=[active.points[0],point];}
   active.revision++;cursor=point;changed=true;
  }
- if(changed&&brush){if(pending.length>=40)flush();else scheduleStrokeFlush();}
+ if(changed&&brush){if(pending.length>=16)flush();else scheduleStrokeFlush();}
  return changed;
 }
 canvas.addEventListener('pointerdown',event=>{
@@ -580,7 +581,7 @@ canvas.addEventListener('pointerdown',event=>{
  if(canvasQuota.usedBatches>=1000||canvasQuota.usedPoints>=30000||!localCanvasCapacity(1)){drawFeedback('本輪筆畫額度已用完或仍在同步，請稍候。','error');return;}
  const sample=pointerSamples(event).at(-1);if(!sample)return;const point=sample.point;cursor=point;
  if(tool==='fill'){queueStroke([point],StrokeCanvas.strokeId(),'fill');return;}
- active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],pointTimes:[0],startStamp:sample.stamp,startNow:drawNow(),revision:1,sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
+ active={strokeId:StrokeCanvas.strokeId(),pointerId:event.pointerId,tool,color:$('#color').value,size:Number($('#size').value),filled,points:[point],pointTimes:[0],...(tool==='brush'?{curve:'quadratic'}:{}),startStamp:sample.stamp,startNow:drawNow(),revision:1,sent:false,finished:false,pendingBatches:0,ackVersion:0,failed:false};
  localStrokes.set(active.strokeId,active);pending=[point];pendingTimes=[0];scheduleStrokeFlush();scheduleCanvasPreview();
 });
 canvas.addEventListener('pointermove',event=>{

@@ -11,7 +11,7 @@ test('a received batch unfolds at the original sample intervals, independent of 
  const {ui,time}=await setup(t);ui.sources[0].emit('stroke',batch(1,[[1,1],[10,10],[20,20]],[0,40,130]));
  assert.equal(run(ui,'canvasVersion'),1);assert.equal(run(ui,'strokes[0].points.length'),3);assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,3);
  ui.paintFrame();assert.equal(ui.frames.at(-1).strokes.length,0);await time.advance(60);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,1);
- await time.advance(39);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,1);await time.advance(1);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,2);
+ await time.advance(39);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,2);assert.ok(ui.frames.at(-1).strokes[0].points[1][0]<10);await time.advance(1);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,2);
  await time.advance(90);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,3);assert.equal(read(ui,'drawingPlayback.metrics()').scheduled,false);
 });
 
