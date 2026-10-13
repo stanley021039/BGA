@@ -12,9 +12,9 @@ async function mutate(route,payload){if(busy||disposed)return;const lifetime=sco
 const command=(action,extra={})=>mutate('action',{action,roundId:state.roundId,requestId:crypto.randomUUID(),...extra});
 let confirmation=null,confirmDialog=null,confirmMessage=null,confirmButton=null;
 function confirmationValid(){
- const c=confirmation;if(!c||busy||disposed||!state||state.me!==c.me||state.roundId!==c.roundId||state.phase!==c.phase||state.interrupted)return false;
+ const c=confirmation;if(!c||busy||disposed||!state||state.me!==c.me||state.roundId!==c.roundId||state.phase!==c.phase)return false;
  if(c.action==='leave')return true;
- if(state.phase!=='discussion'||state.me!==state.thinkerId||!state.players.some(p=>p.id===c.targetId&&!p.kicked))return false;
+ if(state.interrupted||state.phase!=='discussion'||state.me!==state.thinkerId||!state.players.some(p=>p.id===c.targetId&&!p.kicked))return false;
  return c.action==='guess'?state.canGuess:state.challenges.length<2&&!state.challenges.includes(c.targetId);
 }
 function closeConfirmation(){confirmation=null;if(confirmDialog?.open)confirmDialog.close();}
