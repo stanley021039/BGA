@@ -252,5 +252,6 @@ test('HTTP final-write failure is retriable and successful bans disappear from t
 test('HTTP votes retain the per-account mutation rate limit, including idempotent retries',async t=>{
  const f=await httpFixture(t),code=await f.create(),{id}=await f.reveal(code);let attempts=0,response;
  do{response=await f.vote(code,id);attempts++;}while(response.status===200&&attempts<=121);
- assert.equal(response.status,429);assert.ok(attempts<=121);assert.equal((await f.state(code)).body.resultVotes[0].votes,1);
+ // Slow HTTP retries may let the scheduler advance; verify the ballot we voted on.
+ assert.equal(response.status,429);assert.ok(attempts<=121);assert.equal((await f.state(code)).body.resultVotes.find(result=>result.resultId===id)?.votes,1);
 });
