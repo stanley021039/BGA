@@ -77,6 +77,10 @@ test('an empty collection has a readable state and no fabricated game sections',
  const f=fixture();await f.reply(0,{achievements:[]});assert.equal(f.classNodes('achievement-group').length,0);assert.equal(f.nodes.get('#achievementSummary').textContent,'已收藏 0 / 0 枚');assert.match(f.nodes.get('#achievementList').textContent,/目前沒有可收集/);assert.equal(f.nodes.get('#achievementGameFilter').options.length,1);
 });
 
+test('Quacks server badges appear in their own filterable game group',async()=>{
+ const f=fixture();await f.reply(0,{achievements:[item('quacks-first-match','quacks',{title:'郎中初出江湖'}),item('gift-first-gift','gift')]});
+ f.filter('achievementGameFilter','quacks');assert.equal(f.classNodes('achievement-group')[0].dataset.game,'quacks');assert.equal(f.classNodes('achievement-card').length,1);assert.equal(f.nodes.get('#achievementGameFilter').options.some(o=>o.value==='quacks'&&o.textContent==='郎中闖江湖'),true);
+});
 test('achievement game icons are defined by the common 24px registry instead of page artwork',()=>{
  const source=read('shared/ui-components.js'),end=source.indexOf(' /* One hover/focus hint');const context=vm.createContext({window:{},document:{readyState:'loading',addEventListener(){}}});vm.runInContext(source.slice(0,end)+'})();',context);
  for(const name of ['edit','gift','users','cards','car','table']){const svg=context.window.GameUI.icon(name);assert.match(svg,/class="ui-icon" viewBox="0 0 24 24"/);assert.match(svg,/aria-hidden="true" focusable="false"/);assert.doesNotMatch(svg,/<script|<image|https?:/);}

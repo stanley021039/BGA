@@ -34,7 +34,7 @@ test('HTTP draw awards only a normally completed round and preserves its frozen 
  await f.api(artist,'draw/stroke',stroke);await f.api(artist,'draw/stroke',stroke);
  assert.deepEqual(unlocked(await f.api(artist,'achievements')),[]);
  for(let seat=0;seat<3;seat++)if(seat!==artist)await f.api(seat,'action',{code,action:'guess',answer:drawing.question.title});
- const collection=await f.api(artist,'achievements');assert.equal(collection.achievements.length,13);
+ const collection=await f.api(artist,'achievements');assert.equal(collection.achievements.length,18);
  assert.ok(unlocked(collection).includes('draw-soul-artist'));assert.ok(unlocked(collection).includes('draw-first-round'));
  assert.equal(JSON.stringify(collection).includes('user_id'),false);
  const receipt=f.read(db=>db.prepare('SELECT * FROM processed_unit_events').get());assert.equal(receipt.status,'rules_completed');assert.equal(receipt.unit_number,1);

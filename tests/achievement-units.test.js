@@ -15,8 +15,8 @@ function fixture(t,{uppercase=false}={}){
  return {users,unit,has,count,get db(){return db;},get store(){return store;},reopen(){db.close();db=openDatabase(file);store=new AchievementStore(db);}};
 }
 
-test('metadata registers exactly the five unchanged entries and eight scoped new IDs',t=>{
- const f=fixture(t),list=f.store.list(f.users[0]);assert.equal(list.achievements.length,13);assert.equal(new Set(definitions.map(d=>d.id)).size,13);
+test('metadata registers the unchanged entries, scoped unit IDs and five Quacks IDs',t=>{
+ const f=fixture(t),list=f.store.list(f.users[0]);assert.equal(list.achievements.length,18);assert.equal(new Set(definitions.map(d=>d.id)).size,18);
  assert.deepEqual(definitions.slice(0,5).map(({id,title})=>({id,title})),[{id:'gift-first-gift',title:'第一份心意'},{id:'majority-first-vote',title:'第一次舉牌'},{id:'poker-first-hand',title:'第一手牌'},{id:'thunder-first-drive',title:'公路初航'},{id:'all-first-table',title:'第一桌'}]);
  for(const d of list.achievements){assert.equal(d.achievement_id,d.id);assert.equal(d.rule_version,1);assert.equal(d.visibility,'private');assert.equal(d.status,'enabled');assert.equal(d.unlockedAt,null);assert.ok(d.condition_key&&d.description);assert.ok(['edit','check','gift','users','cards','car','table'].includes(d.icon_key));}
  assert.ok(Object.isFrozen(definitions));assert.ok(definitions.every(Object.isFrozen));

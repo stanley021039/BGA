@@ -6,9 +6,23 @@ test('settings serialize saves and cancel queued work on page exit or phase chan
 test('shared waiting assets are served through the explicit HTTP allowlist with their source and MIME',async()=>{const os=require('node:os'),{createApp}=require('../src/app'),root=fs.mkdtempSync(path.join(os.tmpdir(),'waiting-http-'));const app=createApp({port:0,host:'127.0.0.1',historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),musicDir:path.join(root,'music'),dbFile:path.join(root,'app.sqlite')});try{const {port}=await app.listen();for(const name of ['room-waiting.js','room-waiting.css']){const r=await fetch('http://127.0.0.1:'+port+'/shared/'+name);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),name.endsWith('.css')?/text\/css/:/javascript/);assert.equal(await r.text(),fs.readFileSync(path.join(__dirname,'../public/shared',name),'utf8'));}}finally{await app.close();fs.rmSync(root,{recursive:true,force:true});}});
 
 test('every room loads exactly one common chat script and stylesheet',()=>{
- for(const page of ['race','poker','majority','gift','draw','telephone','trpg','musicquiz','minimal','bluff']){
+ for(const page of ['race','poker','majority','gift','draw','telephone','trpg','musicquiz','minimal','bluff','quacks']){
   const html=fs.readFileSync(path.join(__dirname,'../public',page+'.html'),'utf8');
   assert.equal((html.match(/src="\/shared\/chat.js"/g)||[]).length,1,page+' client');
   assert.equal((html.match(/href="\/shared\/chat.css"/g)||[]).length,1,page+' styles');
  }
+});
+
+test('Quacks waiting layout preserves ingredient voting and restores brewing controls',()=>{
+ const {dom}=require('./helpers/widget-dom.cjs');
+ const f=dom('<main id="game"><section id="scoreboard"></section><section id="bookVoting" data-waiting-essential="true"><button>選第2面</button></section><div class="game-grid"><section class="cauldron-panel"></section><section class="action-panel"><div id="controls"><button>開始一場</button></div></section></div></main>');
+ f.document.createComment=()=>{const mark=f.document.createElement('comment');mark.after=el=>{const parent=mark.parentNode,next=parent.children[parent.children.indexOf(mark)+1];parent.insertBefore(el,next||null);};return mark;};
+ const window={addEventListener(){},GameUI:{layoutDrawingPlay(){}}},ctx=vm.createContext({window,document:f.document,location:{pathname:'/quacks/ABCDEF'},setTimeout,clearTimeout});
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/shared/room-waiting.js'),'utf8'),ctx);
+ const s={type:'quacks',phase:'waiting',me:'A',host:'A',players:[{id:'A',name:'甲'},{id:'B',name:'乙'}]};
+ window.RoomWaiting.update(s);
+ assert.equal(f.node('bookVoting').dataset.waitingLayoutHidden,undefined);assert.equal(f.node('bookVoting').hidden,false);
+ assert.ok(f.node('controls').closest('.ui-room-waiting-layout'));assert.equal(f.document.querySelector('.game-grid').dataset.waitingLayoutHidden,'');
+ window.RoomWaiting.update({...s,phase:'fortune'});
+ assert.ok(f.node('controls').closest('.game-grid'));assert.equal(f.document.querySelector('.ui-room-waiting-layout').hidden,true);
 });

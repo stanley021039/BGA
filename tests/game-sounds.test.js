@@ -56,3 +56,8 @@ test('cue reset/destroy stops only its clips, preserves expressions, bounds keys
 test('failed new cue playback frees both caps and reports once without unhandled rejection',async()=>{
  const f=fixture({blocked:true});f.api.set('effects',{enabled:true});let errors=0;const clip=f.api.playEffect('turn',{onError:()=>errors++});await new Promise(resolve=>setImmediate(resolve));assert.equal(clip.paused,true);assert.equal(errors,1);assert.equal(f.timers.size,0);assert.ok(f.api.playEffect('turn'));await new Promise(resolve=>setImmediate(resolve));assert.equal(f.timers.size,0);
 });
+
+test('explosion cue respects live gates, mute, duplicate keys and original fixed source',()=>{
+ const f=fixture(),c=f.controller;c.update(f.state());c.play('explosion','old');assert.equal(f.clips.length,0);c.update(f.state());c.play('explosion','muted');assert.equal(f.clips.length,0);
+ f.api.set('effects',{enabled:true});c.play('explosion','muted');assert.equal(f.clips.length,0);c.play('explosion','new');c.play('explosion','new');assert.equal(f.clips.length,1);assert.equal(f.clips[0].originalSrc,'/assets/game-sounds/quacks-explosion.wav');f.tick(900);assert.equal(f.clips[0].paused,true);
+});

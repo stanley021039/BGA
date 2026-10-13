@@ -12,6 +12,11 @@ const rows=[
  ['majority-one-channel','majority','同頻不用 Wi-Fi','至少三位有效參與者正常完成作答，且所有答案在同一組。','majority.all-same','users','fun'],
  ['majority-tied-signals','majority','訊號撞成平手','正常揭曉時至少兩組並列最多人，且每組至少兩人；本人有有效答案。','majority.tied-largest','users','fun'],
  ['all-two-tables','all','跨桌搬零食','以有效操作完成兩種不同遊戲的正式遊玩單位。','all.two-game-types','table','exploration'],
+ ["quacks-first-match","quacks","郎中初出江湖","九回合皆親自選擇抽藥或停止，並正常完成整場遊戲。","quacks.first-match","table","intro"],
+ ["quacks-winner","quacks","江湖藥王","完成有效九回合並獲勝；共同勝利也算。","quacks.winner","check","fun"],
+ ["quacks-no-explosion","quacks","穩穩煮九天","完成有效九回合，期間從未觸發爆炸；女巫救援仍算曾爆炸。","quacks.no-explosion","check","fun"],
+ ["quacks-three-witches","quacks","女巫全員出動","完成有效九回合，親自使用金、銅、銀三枚女巫幣。","quacks.three-witches","users","fun"],
+ ["quacks-fifty-points","quacks","五十分傳奇","完成有效九回合，最終得分至少 50 分。","quacks.fifty-points","table","fun"],
 ];
 const definitions=Object.freeze(rows.map(([id,game,title,description,condition_key,icon_key,category])=>Object.freeze({id,achievement_id:id,game,title,description,rule_version:1,condition_key,icon_key,visibility:'private',status:'enabled',category})));
 module.exports={definitions};

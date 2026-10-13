@@ -9,6 +9,7 @@
   trpg:['霧港跑團','冒險已備，等你出發。','1–6 人一起玩。選擇角色，與朋友一起完成六幕冒險。'],
   musicquiz:['猜歌挑戰','旋律已備，等你聽題。','1–8 人一起玩。聽六秒旋律開頭，猜歌名後一起揭曉。'],
   minimal:['極簡猜圖','線條已備，等你作畫。','3–6 人一起玩。用直線與圓作畫，由少到多一起猜圖。'],
+  quacks:['郎中闖江湖','藥袋已備，等你開釜。','2–4 人一起煮藥；草藥女巫支援 5 人，逐色投票搭配藥材書。'],
   bluff:['瞎掰王','角色已備，等你開場。','3–9 人一起玩。輪流解釋與質問，找出唯一的老實人。']
  };
  let hero,stageHome,roster,rosterList,rosterCount,rosterActionCard,actionHome,actionClasses,actionChildren,actionBusy=false,lastRoster='',layout,controls,layoutWaiting=false;
@@ -19,14 +20,14 @@
   const phase=document.body.dataset.roomPhase;if(waiting||phase==='finished')window.GameUI?.layoutDrawingPlay?.(type,phase);
   if(!layout){
    const host=document.querySelector(rosterHosts[type]);
-   controls=document.querySelector(type==='thunder'?'.race-side-column':type==='poker'?'.table-sidebar':type==='trpg'?'.action-panel':['telephone','musicquiz','minimal','bluff'].includes(type)?'#controls':'.room-sidebar');
-   if(['telephone','musicquiz','minimal','bluff'].includes(type))controls=controls?.closest('section');
+   controls=document.querySelector(type==='thunder'?'.race-side-column':type==='poker'?'.table-sidebar':type==='trpg'?'.action-panel':['telephone','musicquiz','minimal','bluff','quacks'].includes(type)?'#controls':'.room-sidebar');
+   if(['telephone','musicquiz','minimal','bluff','quacks'].includes(type))controls=controls?.closest('section');
    if(!host||!controls||!hero)return;
    layout=node('div','ui-room-waiting-layout');layout.setAttribute('aria-label','組隊房間');
    const chatSlot=node('div','ui-room-chat-slot');layout.append(chatSlot);host.append(layout);
    host.dataset.waitingLayoutHost='';controls.classList.add('ui-room-waiting-controls');
    // Hide the original play containers while their controls live in the shared grid.
-   for(const child of [...host.children])if(![layout,hero,controls,roster].includes(child)&&!child.classList.contains('game-barrage-layer'))child.dataset.waitingLayoutHidden='';
+   for(const child of [...host.children])if(![layout,hero,controls,roster].includes(child)&&!child.dataset.waitingEssential&&!child.classList.contains('game-barrage-layer'))child.dataset.waitingLayoutHidden='';
   }
   layout.hidden=!waiting;
   if(waiting!==layoutWaiting){
@@ -44,7 +45,7 @@
  }
  const rosterHosts={
   poker:'#game .game-layout',thunder:'.race-main',majority:'.play-layout',gift:'.gift-layout',draw:'.draw-layout',
-  telephone:'#game',trpg:'#game',musicquiz:'#game',minimal:'#game',bluff:'#game'
+  telephone:'#game',trpg:'#game',musicquiz:'#game',minimal:'#game',bluff:'#game',quacks:'#game'
  };
  function node(tag,className,text){
   const el=document.createElement(tag);el.className=className;if(text!==undefined)el.textContent=text;return el;
@@ -88,7 +89,7 @@
   for(const teaching of document.querySelectorAll('[data-room-teaching]'))teaching.hidden=!visible;
   if(!visible)for(const dialog of document.querySelectorAll('dialog[data-room-teaching-dialog][open]'))dialog.close();
  }
- const roomPath=/^\/(poker|majority|gift|draw|telephone|trpg|musicquiz|minimal|bluff|race)\/[a-f0-9]{6}\/?$/i.test(location.pathname);
+ const roomPath=/^\/(poker|majority|gift|draw|telephone|trpg|musicquiz|minimal|bluff|quacks|race)\/[a-f0-9]{6}\/?$/i.test(location.pathname);
  updateTeaching(roomPath&&!window.RaceLesson?'connecting':'waiting');
  function update(s){
   if(window.RaceLesson)return;updateTeaching(s.phase);window.RoomControls?.update(s);
@@ -97,7 +98,7 @@
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');
   if(stage&&sidebar){if(!stageHome){stageHome=document.createComment('play-stage');stage.before(stageHome);}if(s.phase==='waiting'){if(stage.parentElement!==sidebar)sidebar.prepend(stage);}else if(stage.parentElement!==stageHome.parentElement)stageHome.after(stage);}
   if(!hero){
-   const host=document.querySelector('.play-layout>main,.gift-layout>main,.draw-layout>main,#game .play-area,#game .task-layout,#game .adventure-layout')||(type==='telephone'?document.querySelector('#game'):null);
+   const host=document.querySelector('.play-layout>main,.gift-layout>main,.draw-layout>main,#game .play-area,#game .task-layout,#game .adventure-layout')||(['telephone','quacks'].includes(type)?document.querySelector('#game'):null);
    if(!host)return;
    hero=document.createElement('section');hero.className='room-waiting-template';hero.setAttribute('aria-label','組隊房間介紹');
    const art=document.createElement('div');art.className='room-waiting-art';const image=document.createElement('img');image.src='/assets/playful/game-'+type+'.svg';image.alt=game[0]+'遊戲插畫';art.append(image);

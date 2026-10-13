@@ -3,7 +3,7 @@
  'use strict';
  const document=root.document;let visibilityEpoch=0;
  document?.addEventListener('visibilitychange',()=>{visibilityEpoch++;});
- const known=new Set(['turn','correct','dice-roll','shot','slam','nitro','skid','confirm','reveal']);
+ const known=new Set(['turn','correct','dice-roll','shot','slam','explosion','nitro','skid','confirm','reveal']);
  const quietCues=new Set(['shot','slam','nitro','skid']);
  function create({now=()=>Date.now(),maxSeen=256,maxGapMs=5000}={}){
   maxSeen=Math.max(1,Math.min(1024,Number(maxSeen)||256));maxGapMs=Math.max(1,Math.min(5000,Number(maxGapMs)||5000));

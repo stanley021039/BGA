@@ -114,7 +114,7 @@
    const presenter=s.players.find(player=>player.id===s.presenterId);
    return s.presenterId===s.me?'輪到你出題！':`輪到 ${presenter?.name||'出題者'} 出題`;
   }
-  if(['telephone','trpg','musicquiz','minimal','bluff'].includes(s.type))return '本場遊戲進行中';
+  if(['telephone','trpg','musicquiz','minimal','bluff','quacks'].includes(s.type))return '本場遊戲進行中';
   const id=s.type==='thunder'?s.actor:s.players[s.turn]?.id;
   const actor=s.players.find(player=>player.id===id);
   return id===s.me?'輪到你操作！':`輪到 ${actor?.name||'其他玩家'} 操作`;

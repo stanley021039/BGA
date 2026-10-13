@@ -58,6 +58,22 @@ class AchievementStore{
   const unit=normalizeUnit({unit_event_id:eventIdFor(match,game,number),match_id:match,game_type:game,unit:game==='poker'?'hand':'race',round:number,status:'rules_completed',completed_at:new Date().toISOString(),purpose:context.purpose??room.achievementPurpose??'production',participants,metrics:{participantCount:participants.length}},{legacy:true});
   legacyUnits.set(result,unit);return unit;
  }
+ awardQuacksFinish(room,context={}){
+  const result=room.quacksAchievements?.completed,purpose=context.purpose??room.achievementPurpose??'production';
+  if(room.type!=='quacks'||room.phase!=='finished'||room.interrupted||!room.winner||!result||purpose!=='production'||this.processed.has(result))return [];
+  return this.recordQuacksResult(result,{purpose});
+ }
+ recordQuacksResult(result,{purpose='production'}={}){
+  if(purpose!=='production'||this.processed.has(result))return [];
+  const awards=[];transaction(this.db,()=>{
+   for(const p of result.participants){
+    if(!p.eligible||!this.db.prepare('SELECT id FROM users WHERE id=? AND disabled=0').get(p.user_id))continue;
+    const ids=['quacks-first-match','all-first-table'];
+    for(const [flag,id]of [['winner','quacks-winner'],['noExplosion','quacks-no-explosion'],['threeWitches','quacks-three-witches'],['fiftyPoints','quacks-fifty-points']])if(p[flag])ids.push(id);
+    for(const id of ids)if(this.insert.run(p.user_id,id,'quacks:'+result.id,result.completed_at).changes)awards.push({user_id:p.user_id,achievement_id:id});
+   }
+  });this.processed.add(result);return awards;
+ }
  awardGiftRound(room,seats){
   if(room.type!=='gift'||!room.result||!['reveal','finished'].includes(room.phase)||this.processed.has(room.result))return [];
   const active=new Set(room.activePlayers().map(player=>player.id));

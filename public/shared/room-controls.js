@@ -3,7 +3,7 @@
  let state=null,panel=null,scheduled=false,leaving=false,leaveController=null,settingsSource=null,readonlySource=null,readonlyKey='';
  const native={start:null,bot:null},proxies={};
  const actions={start:{icon:'play',label:'開始遊戲'},bot:{icon:'users',label:'加入 AI 測試夥伴'},manage:{icon:'settings',label:'管理玩家'},leave:{icon:'leave',label:'離房'}};
- const minimumPlayers={poker:2,thunder:2,draw:2,majority:3,gift:3,telephone:3,minimal:3,bluff:3,trpg:1,musicquiz:1};
+ const minimumPlayers={poker:2,thunder:2,draw:2,majority:3,gift:3,telephone:3,minimal:3,bluff:3,trpg:1,musicquiz:1,quacks:2};
  function node(tag,cls,text){const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;}
  function decorate(button,kind){const action=actions[kind];button.classList.add('ui-room-action');button.dataset.roomAction=kind;window.GameUI?.decorateButton(button,action.icon,{iconOnly:kind!=='start',label:action.label});if(!window.GameUI){button.textContent=action.label;button.setAttribute('aria-label',action.label);}return button;}
  function rosterAction(button){
@@ -51,7 +51,8 @@
   else if(state.type==='bluff'){
    const group=node('fieldset',''),legend=node('legend','','題目難度（至少選一種）');group.disabled=true;group.append(legend);
    for(const level of [1,2,3]){const label=node('label','ui-room-setting-choice'),input=node('input','');input.type='checkbox';input.checked=(options.levels||[]).includes(level);input.disabled=true;label.append(input,document.createTextNode(' '+level+' 級'));group.append(label);}source.append(group);field('role-seconds','看身分時間',(options.roleSeconds??30)+' 秒');
-  }else source.append(node('p','ui-room-settings-note','本遊戲使用固定規則，無需調整。'));
+  }else if(state.type==='quacks'){field('witches','草藥女巫擴充',options.witches?'加入':'不加入');field('hidden-progress','隱藏他人大釜',options.hiddenProgress?'隱藏至爆炸／結算':'公開進度');}
+  else source.append(node('p','ui-room-settings-note','本遊戲使用固定規則，無需調整。'));
   readonlySource=source;return source;
  }
  function alignNativePanel(outer){
@@ -69,7 +70,7 @@
   scan(outer);
  }
  function mount(){
-  const type=state.type||'poker',host=['telephone','musicquiz','minimal','bluff','trpg'].includes(type)?document.getElementById('controls'):document.querySelector(type==='thunder'?'.race-controls':'.room-sidebar,.table-sidebar');
+  const type=state.type||'poker',host=['telephone','musicquiz','minimal','bluff','trpg','quacks'].includes(type)?document.getElementById('controls'):document.querySelector(type==='thunder'?'.race-controls':'.room-sidebar,.table-sidebar');
   if(!host)return;
   if(!panel){panel=node('section','ui-room-controls');panel.dataset.roomCommon='';panel.setAttribute('aria-label','房間設定與操作');
    const settings=node('section','ui-room-settings-card'),heading=node('h2','ui-room-settings-heading','房間設定'),slot=node('div','ui-room-settings-slot');settings.append(slot);proxies.heading=heading;
@@ -101,7 +102,7 @@
   if(ownLeave&&!ownLeave.hasAttribute('data-room-native-action')){ownLeave.setAttribute('data-room-native-action','leave');ownLeave.tabIndex=-1;ownLeave.setAttribute('aria-hidden','true');}
   for(const n of legacyLinks)if(!n.hasAttribute('data-room-native-action')){n.setAttribute('data-room-native-action','leave');n.tabIndex=-1;n.setAttribute('aria-hidden','true');}
   const leaveDisabled=leaving||!!ownLeave?.disabled;if(proxies.leave.disabled!==leaveDisabled)proxies.leave.disabled=leaveDisabled;if(proxies.leave.hidden)proxies.leave.hidden=false;
-  const setup=state.phase==='waiting'||['draw','bluff','telephone'].includes(state.type)&&state.phase==='finished',card=panel.querySelector('.ui-room-settings-card');if(card.hidden===setup)card.hidden=!setup;const heading=proxies.heading;if(heading.hidden===setup)heading.hidden=!setup;for(const legacy of document.querySelectorAll('[data-room-settings-heading]'))if(!legacy.hidden)legacy.hidden=true;
+  const setup=state.phase==='waiting'||['draw','bluff','telephone','quacks'].includes(state.type)&&state.phase==='finished',card=panel.querySelector('.ui-room-settings-card');if(card.hidden===setup)card.hidden=!setup;const heading=proxies.heading;if(heading.hidden===setup)heading.hidden=!setup;for(const legacy of document.querySelectorAll('[data-room-settings-heading]'))if(!legacy.hidden)legacy.hidden=true;
   // Like chat, the header belongs inside the outer panel and above its content lines.
   if(heading.parentElement!==panel)panel.prepend(heading);
   const outer=panel.closest('.ui-room-waiting-controls'),frame=outer?.parentElement;
@@ -127,7 +128,7 @@
  window.GameUI?.frameDialog?.(dialog);
  document.body.append(dialog);const confirm=dialog.querySelector('[data-confirm]'),cancel=dialog.querySelector('[data-cancel]');window.GameUI?.decorateButton(confirm,'leave',{label:'確認離開'});window.GameUI?.decorateButton(cancel,'close',{label:'留在房間'});
  cancel.onclick=()=>{if(!leaving)dialog.close();};dialog.addEventListener('cancel',event=>{if(leaving)event.preventDefault();});
- function leave(trigger){if(!state||window.RaceLesson||leaving||dialog.open)return;const type=state.type||'poker';dialog.querySelector('.ui-room-leave-effect').textContent=['telephone','trpg','musicquiz','minimal','bluff'].includes(type)&&!['waiting','finished'].includes(state.phase)?'離席會中止本場遊戲，保留已完成內容。離開後返回遊戲大廳。':type==='draw'&&!['waiting','finished'].includes(state.phase)?'畫者離席會揭曉本輪；人數不足時本場結束。離開後返回遊戲大廳。':'離開後返回遊戲大廳；房主離開時依遊戲規則移交房主或結束房間。';dialog.querySelector('.ui-room-leave-status').textContent='';if(window.GameUI?.openDialog)window.GameUI.openDialog(dialog,trigger);else dialog.showModal();}
+ function leave(trigger){if(!state||window.RaceLesson||leaving||dialog.open)return;const type=state.type||'poker';dialog.querySelector('.ui-room-leave-effect').textContent=['telephone','trpg','musicquiz','minimal','bluff','quacks'].includes(type)&&!['waiting','finished'].includes(state.phase)?'離席會中止本場遊戲，保留已完成內容。離開後返回遊戲大廳。':type==='draw'&&!['waiting','finished'].includes(state.phase)?'畫者離席會揭曉本輪；人數不足時本場結束。離開後返回遊戲大廳。':'離開後返回遊戲大廳；房主離開時依遊戲規則移交房主或結束房間。';dialog.querySelector('.ui-room-leave-status').textContent='';if(window.GameUI?.openDialog)window.GameUI.openDialog(dialog,trigger);else dialog.showModal();}
  confirm.onclick=async()=>{
   if(!state||leaving)return;const captured=state,code=state.code;leaving=true;confirm.disabled=cancel.disabled=true;schedule();leaveController=new AbortController();const timer=setTimeout(()=>leaveController.abort(),10000);
   try{const r=await fetch('/api/leave',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({code}),signal:leaveController.signal});const result=await r.json();if(!r.ok&&!['ROOM_NOT_FOUND','NOT_SEATED','KICKED'].includes(result.code))throw Error(result.error||'無法離開房間');if(state?.code!==code||state?.me!==captured.me)return;window.RoomReconnect?.forget(code);window.GameShell?.stop();window.SharedChat?.clearRoom();location.replace('/?game='+(captured.type||'poker'));}

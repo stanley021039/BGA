@@ -4,6 +4,8 @@ const clean=(v,max,label)=>{if(typeof v!=='string'||!v.trim()||v.trim().length>m
 function validateQuestion(data){const type=data.type;if(!['two','three','blank'].includes(type))throw Error('題型不正確');const prompt=clean(data.prompt,160,'題目');let options=[];if(type!=='blank'){const count=type==='two'?2:3;if(!Array.isArray(data.options)||data.options.length!==count)throw Error('選項數量不正確');options=data.options.map(v=>clean(v,60,'選項'));if(new Set(options.map(v=>v.normalize('NFKC').toLowerCase())).size!==count)throw Error('選項不可重複');}return {type,prompt,options,topic:TOPICS.some(t=>t.id===data.topic)?data.topic:'daily'};}
 class CommunityStore{
  constructor(dir){this.dir=dir;this.file=path.join(dir,'community.json');fs.mkdirSync(dir,{recursive:true});this.data=fs.existsSync(this.file)?JSON.parse(fs.readFileSync(this.file,'utf8')):{issues:[],questions:[]};}
+ bluffBanned(id){return !!this.data.bluffBans?.[id];}
+ banBluff(id,audit){const {QUESTIONS}=require('../games/bluff-catalog');if(!QUESTIONS.some(q=>q.id===id))throw Error('未知瞎掰題目');if(this.bluffBanned(id))return;const previous=this.data.bluffBans;this.data.bluffBans={...previous,[id]:{at:new Date().toISOString(),...audit}};try{this.save();}catch(e){this.data.bluffBans=previous;throw e;}}
  save(){fs.writeFileSync(this.file+'.tmp',JSON.stringify(this.data));fs.renameSync(this.file+'.tmp',this.file);}
  question(data){if(this.data.questions.length>=5000)throw Error('共用題庫已達上限');const q={...validateQuestion(data),id:'shared-'+randomUUID(),pack:clean(data.pack||'朋友共編',40,'題庫名稱'),author:clean(data.name||'朋友',16,'暱稱'),shared:true,at:new Date().toISOString()};this.data.questions.push(q);this.save();return q;}
  publicIssue(i){const {owner,...out}=i;return out;}
