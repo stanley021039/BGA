@@ -4,3 +4,5 @@
 #roleCountdown{position:sticky;top:1rem;z-index:20;display:flex;align-items:center;gap:.6rem;width:max-content;max-width:100%;box-sizing:border-box;margin:1rem auto;padding:.6rem 1rem;border:2px solid var(--ui-border,#292639);border-radius:1rem;background:var(--ui-surface-floating,#fffdf8);color:var(--ui-text,#292639);box-shadow:var(--ui-shadow-panel);font-size:1rem;font-weight:700}#roleCountdownSeconds{font-size:2.5rem;line-height:1.15;font-variant-numeric:tabular-nums}#roleCountdown[data-urgent=true]{border-color:var(--ui-error,#a23b31)}#controls select{display:block;min-height:44px;max-width:100%;margin-block:.5rem}
 
 .bluff-reaction{position:fixed;left:50%;top:25%;transform:translateX(-50%);z-index:200;max-width:90vw;padding:1rem 1.5rem;border:3px solid var(--ui-border);border-radius:1rem;background:var(--ui-surface-floating);color:var(--ui-text);font-size:clamp(1.3rem,4vw,2.5rem);font-weight:800;pointer-events:none;overflow-wrap:anywhere}.bluff-reaction[hidden]{display:none}
+
+#source details p,#results article p{line-height:1.75;overflow-wrap:anywhere}#source details h4{margin-bottom:.25rem}#source details h4+p{margin-top:.25rem}

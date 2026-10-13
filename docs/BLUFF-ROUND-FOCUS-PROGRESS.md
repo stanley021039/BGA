@@ -36,3 +36,22 @@ Chromium 隔離實際房間 BB07C0：想想三題中選海洋雪後才顯示30�
 候選仍1.29.0，release check以origin/main de526dc為minor通過；永久記憶更新本機且ignored。未推送、發布新PR、合併或部署。原生OS全螢幕、實機Safari、真人語音與主觀聽感仍未驗，沿用此前限制。
 
 交付前最終影響範圍：玩法／HTTP／音效／反應／專注overlay／共用資源／日夜配色57/57通過，fail/cancel/skip0（2863ms，work/bluff-focus-delivery-tests.log）。本輪沒有將最後新增跨房間回歸冒稱包含在先前完整2023之中；以57項補驗最終修改。已保存最終專注內反應截圖，QA分頁已關閉。
+
+## 2026-10-12 題庫與專注尺寸補強（最新）
+
+本節取代此前「非想想真人才能反應」與初版 60 題的現況；不取代已記錄的早期驗證範圍。分支 feat/bluff-round-options，HEAD 7ab84dd、origin/main de526dc；本輪修改尚未提交，候選仍 1.29.0。
+
+- 四份 Quizlet 的 111 筆題名全部建立對照，88 題新增、光冠沿用 bk13、8 題待補，抽題池 148。每題補詳細解釋、口說例子、易混淆界線；source 查核日期分別保留。未確認為完整官方原版，未直接搬整份解答；[逐筆來源與待補](research/BLUFF-QUIZLET-IMPORT.md)。
+- 想想與其他真人同享口說反應權限，5 秒冷卻、收據去重與 bot 限制保留；本輪未換音檔或共用播放器。舊試玩房 90ADC5，真人為想想，成功送反應且專注內文字出現，error／warn 為空。這不是喇叭主觀聽感驗收。
+- secretExplanation 只在準備期限內給老實人，selecting／其他角色／discussion 不給；結果揭曉才公開。真 HTTP 與角色時限／未來題目私密性回歸涵蓋。86AF72 合成老實人實際開秘密卡，三段補充可見；API 確認其他兩席為 null。
+- 共用專注標記外層容器，排除原本側欄占位；根布局改成完整欄寬，必要控制留在內容下方；[hidden] 必須保持隱藏。賽道取消高度上限；畫布在 drawing 狀態保留 2:1，忽略原視窗縮窄變數，非 drawing 的題卡維持可讀高度。
+- 11 款靜態布局 fixture 在桌面與 390px 各驗專注／退出，主要內容寬度不縮小。此 fixture 使用實際 HTML／CSS，但不是各款完整玩法驗收。手機賽道保留 850px 最小寬並於容器內橫向捲動。
+- 真實 3943F7 賽道：787×148 → 1172×395 → 787×148，必要控制可見、導覽隱藏。真實 EB88C0：畫者 883.8×441.9、觀看者 1147.8×573.9，比例均 2；已傳送短筆跡及 AI 圖形切換後仍可見。390px 最終觀看畫布 317.18×158.59，比例 2，無 console error／warn。退出恢復普通布局；即時聊天／回合改變時，尺寸會依原排版重新計算。
+
+### 驗證結果與限制
+
+完整 Windows 2028/2028 通過，fail／cancel／skip 0，187909ms，命令 node --test --test-concurrency=4 tests/*.test.js，紀錄 work/bluff-refinement/full-tests-bounded.log。先前預設高並行 2026/2028，既有 local-ai-http 與 player-rename 時間相依檢查失敗；player-rename 獨立複跑通過，完整降低並行後全通過。沒有為此修改無關產品程式。
+
+完整測試後最後補畫布比例 CSS 與題庫繁體用字，再跑引擎、真 HTTP、題庫、共用專注、瞎掰與畫猜音效及視窗尺寸的 58/58（2016ms），包含最後莢狀雲補充文字，紀錄 work/bluff-refinement/delivery-tests.log。不將最後 CSS 冒稱已包含在前面的完整測試。
+
+瀏覽器為隔離 localhost、合成帳號與測試資料；沒有操作正式資料。使用內建瀏覽器驗專注布局及 VM 驗 OS Fullscreen API 回退／Esc，未完成所有平台的原生 OS 全螢幕、Safari、手機實機或每款整局遊玩。沒有推送、發布 PR、合併、部署或新增永久偏好。

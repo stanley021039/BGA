@@ -7,6 +7,7 @@
   {key:'majority',label:'同頻俱樂部',icon:'users'},
   {key:'poker',label:'德州撲克',icon:'cards'},
   {key:'thunder',label:'雷霆之路',icon:'car'},
+  {key:'quacks',label:'郎中闖江湖',icon:'table'},
   {key:'all',label:'跨桌探索',icon:'table'},
   {key:'other',label:'其他成就',icon:'book'}
  ];

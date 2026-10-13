@@ -186,3 +186,11 @@ HTTP/background work and DB cleanup have finished, including startup/stop
 failure paths. Synthetic tests reopen the same data directory afterward.
 No schema/archive/backup format change and no production data access. This is
 unpublished, dependent on #70/#73; see [ownership and validation](../refactors/ROOM-RUNTIME.md).
+
+
+## 2026-10-13 郎中闖江湖試玩版
+
+基本版＋草藥女巫已接入同步抽藥、秘密大釜、九輪結算、測試 AI、原創 SVG 卡圖與共用專注。12 位女巫／六套藥材書／24 張基本占卜卡、PDF 4 七頁中文譯本；實玩一輪及九輪自動／HTTP 證據見 [交付紀錄](../QUACKS-PROGRESS.md)，範圍見 [spec](../specs/QUACKS.md)。完整 2042 後受影響複驗另記；數位供應不限，煉金術士／擴充占卜卡／試管面仍接續，未發布或部署。
+
+### 2026-10-13 最新：郎中沉浸介面與成就
+取代前述整套預設和整場一次藥袋配額；每輪私有快照一次、逐色隨機票、唯一鍋色／公開鍋名、白色炸彈、召喚翻牌與公共骰動畫／結果、原創資源和爆炸WAV、回合火焰與尾巴格、永久液滴／老鼠石分離。五枚郎中徽章由固定開局帳號及合法九輪操作伺服器判定，交易回滾與刪房後同程序重試、AI/test/tutorial排除；既有schema/單位帳本不變。完整2078通过，SVG排版渲染檢視；本輪沒有新增真瀏覽器或喇叭聽感驗證。來源、範圍、跨程序及跨桌限制見 [最新郎中進度](../QUACKS-PROGRESS.md)。未發PR／部署，候選仍1.29.0。

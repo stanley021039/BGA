@@ -1,0 +1,722 @@
+{
+  "checkedAt": "2026-10-12",
+  "policy": "題名按使用者提供的四份 Quizlet 整理；解釋自行改寫並另查來源，未確認題目不進抽題池；保留 bk01–bk60 ID 與禁題相容。",
+  "sets": [
+    {
+      "id": "917019925",
+      "url": "https://quizlet.com/tw/917019925/",
+      "items": [
+        {
+          "title": "梧桐樹條約",
+          "status": "included",
+          "questionId": "bk61",
+          "canonicalTitle": "梧桐樹條約"
+        },
+        {
+          "title": "伊頓混亂",
+          "status": "included",
+          "questionId": "bk62",
+          "canonicalTitle": "伊頓混亂"
+        },
+        {
+          "title": "斯特魯普效應",
+          "status": "included",
+          "questionId": "bk63",
+          "canonicalTitle": "斯特魯普效應"
+        },
+        {
+          "title": "西施舌",
+          "status": "included",
+          "questionId": "bk64",
+          "canonicalTitle": "西施舌"
+        },
+        {
+          "title": "卡美洛",
+          "status": "included",
+          "questionId": "bk65",
+          "canonicalTitle": "卡美洛"
+        },
+        {
+          "title": "卡瓦帝之舞",
+          "status": "included",
+          "questionId": "bk66",
+          "canonicalTitle": "卡瓦帝之舞"
+        },
+        {
+          "title": "黑老虎",
+          "status": "included",
+          "questionId": "bk67",
+          "canonicalTitle": "黑老虎"
+        },
+        {
+          "title": "波士頓動力",
+          "status": "included",
+          "questionId": "bk68",
+          "canonicalTitle": "波士頓動力"
+        },
+        {
+          "title": "奧菲斯蛋",
+          "status": "included",
+          "questionId": "bk69",
+          "canonicalTitle": "奧菲斯蛋"
+        },
+        {
+          "title": "波士文法案",
+          "status": "included",
+          "questionId": "bk70",
+          "canonicalTitle": "波士文法案"
+        },
+        {
+          "title": "水晶之夜",
+          "status": "included",
+          "questionId": "bk71",
+          "canonicalTitle": "水晶之夜"
+        },
+        {
+          "title": "綠閃光",
+          "status": "included",
+          "questionId": "bk72",
+          "canonicalTitle": "綠閃光"
+        },
+        {
+          "title": "摩爾定律",
+          "status": "included",
+          "questionId": "bk73",
+          "canonicalTitle": "摩爾定律"
+        },
+        {
+          "title": "羽.泉",
+          "status": "included",
+          "questionId": "bk74",
+          "canonicalTitle": "羽.泉"
+        },
+        {
+          "title": "松鼠鱖魚",
+          "status": "included",
+          "questionId": "bk75",
+          "canonicalTitle": "松鼠鱖魚"
+        },
+        {
+          "title": "樓外樓",
+          "status": "included",
+          "questionId": "bk76",
+          "canonicalTitle": "樓外樓"
+        },
+        {
+          "title": "克林尼索",
+          "status": "pending",
+          "reason": "題名與貨幣／地區提示無法對應可靠來源，需原題正解。"
+        },
+        {
+          "title": "幻椅式",
+          "status": "included",
+          "questionId": "bk77",
+          "canonicalTitle": "幻椅式"
+        },
+        {
+          "title": "抽象速度",
+          "status": "included",
+          "questionId": "bk78",
+          "canonicalTitle": "抽象速度"
+        },
+        {
+          "title": "腺毛馬蘭",
+          "status": "alias",
+          "questionId": "bk79",
+          "canonicalTitle": "腺毛馬藍"
+        },
+        {
+          "title": "灰姑娘效應",
+          "status": "included",
+          "questionId": "bk80",
+          "canonicalTitle": "灰姑娘效應"
+        },
+        {
+          "title": "天邊一朵雲",
+          "status": "included",
+          "questionId": "bk81",
+          "canonicalTitle": "天邊一朵雲"
+        },
+        {
+          "title": "薪能",
+          "status": "included",
+          "questionId": "bk82",
+          "canonicalTitle": "薪能"
+        },
+        {
+          "title": "髒剋",
+          "status": "included",
+          "questionId": "bk83",
+          "canonicalTitle": "髒剋"
+        },
+        {
+          "title": "心意把",
+          "status": "included",
+          "questionId": "bk84",
+          "canonicalTitle": "心意把"
+        }
+      ]
+    },
+    {
+      "id": "1045634360",
+      "url": "https://quizlet.com/tw/1045634360/",
+      "items": [
+        {
+          "title": "天邊一朵雲",
+          "status": "included",
+          "questionId": "bk81",
+          "canonicalTitle": "天邊一朵雲"
+        },
+        {
+          "title": "安藤百福",
+          "status": "included",
+          "questionId": "bk85",
+          "canonicalTitle": "安藤百福"
+        },
+        {
+          "title": "抓大放小",
+          "status": "included",
+          "questionId": "bk86",
+          "canonicalTitle": "抓大放小"
+        },
+        {
+          "title": "油鬼仔",
+          "status": "included",
+          "questionId": "bk87",
+          "canonicalTitle": "油鬼仔"
+        },
+        {
+          "title": "鍵盤小妹",
+          "status": "included",
+          "questionId": "bk88",
+          "canonicalTitle": "鍵盤小妹"
+        },
+        {
+          "title": "普隆德拉",
+          "status": "included",
+          "questionId": "bk89",
+          "canonicalTitle": "普隆德拉"
+        },
+        {
+          "title": "毒鵝膏",
+          "status": "included",
+          "questionId": "bk90",
+          "canonicalTitle": "毒鵝膏"
+        },
+        {
+          "title": "法老之蛇",
+          "status": "included",
+          "questionId": "bk91",
+          "canonicalTitle": "法老之蛇"
+        },
+        {
+          "title": "香蕉戰爭",
+          "status": "included",
+          "questionId": "bk92",
+          "canonicalTitle": "香蕉戰爭"
+        },
+        {
+          "title": "豐乳肥臀",
+          "status": "included",
+          "questionId": "bk93",
+          "canonicalTitle": "豐乳肥臀"
+        },
+        {
+          "title": "魔鬼蛋",
+          "status": "included",
+          "questionId": "bk94",
+          "canonicalTitle": "魔鬼蛋"
+        },
+        {
+          "title": "灰姑娘效應",
+          "status": "included",
+          "questionId": "bk80",
+          "canonicalTitle": "灰姑娘效應"
+        },
+        {
+          "title": "天使抽稅",
+          "status": "included",
+          "questionId": "bk95",
+          "canonicalTitle": "天使抽稅"
+        },
+        {
+          "title": "大人買",
+          "status": "included",
+          "questionId": "bk96",
+          "canonicalTitle": "大人買"
+        },
+        {
+          "title": "收皮",
+          "status": "included",
+          "questionId": "bk97",
+          "canonicalTitle": "收皮"
+        },
+        {
+          "title": "薪能",
+          "status": "included",
+          "questionId": "bk82",
+          "canonicalTitle": "薪能"
+        },
+        {
+          "title": "拉撒路現象",
+          "status": "alias",
+          "questionId": "bk98",
+          "canonicalTitle": "拉撒路反射"
+        },
+        {
+          "title": "心意把",
+          "status": "included",
+          "questionId": "bk84",
+          "canonicalTitle": "心意把"
+        },
+        {
+          "title": "小豆洗",
+          "status": "included",
+          "questionId": "bk99",
+          "canonicalTitle": "小豆洗"
+        },
+        {
+          "title": "槲葉環",
+          "status": "included",
+          "questionId": "bk100",
+          "canonicalTitle": "槲葉環"
+        },
+        {
+          "title": "腺毛馬藍",
+          "status": "included",
+          "questionId": "bk79",
+          "canonicalTitle": "腺毛馬藍"
+        }
+      ]
+    },
+    {
+      "id": "1051712709",
+      "url": "https://quizlet.com/tw/1051712709/",
+      "items": [
+        {
+          "title": "7正負2",
+          "status": "alias",
+          "questionId": "bk101",
+          "canonicalTitle": "7±2（神奇數字七）"
+        },
+        {
+          "title": "香蕉戰爭",
+          "status": "included",
+          "questionId": "bk92",
+          "canonicalTitle": "香蕉戰爭"
+        },
+        {
+          "title": "自律期",
+          "status": "included",
+          "questionId": "bk102",
+          "canonicalTitle": "自律期"
+        },
+        {
+          "title": "黑洞餐廳",
+          "status": "included",
+          "questionId": "bk103",
+          "canonicalTitle": "黑洞餐廳"
+        },
+        {
+          "title": "泡泡聊天",
+          "status": "included",
+          "questionId": "bk104",
+          "canonicalTitle": "泡泡聊天"
+        },
+        {
+          "title": "鷹架論",
+          "status": "included",
+          "questionId": "bk105",
+          "canonicalTitle": "鷹架論"
+        },
+        {
+          "title": "利他能",
+          "status": "included",
+          "questionId": "bk106",
+          "canonicalTitle": "利他能"
+        },
+        {
+          "title": "螞蟻農夫",
+          "status": "included",
+          "questionId": "bk107",
+          "canonicalTitle": "螞蟻農夫"
+        },
+        {
+          "title": "漂鳥學校",
+          "status": "pending",
+          "reason": "原說明可能指遊牧民族的流動教育，但此專有名稱與地點尚未確認。"
+        },
+        {
+          "title": "拿了錢就跑",
+          "status": "included",
+          "questionId": "bk108",
+          "canonicalTitle": "拿了錢就跑"
+        },
+        {
+          "title": "垃圾桶決策",
+          "status": "included",
+          "questionId": "bk109",
+          "canonicalTitle": "垃圾桶決策"
+        },
+        {
+          "title": "地球三明治",
+          "status": "included",
+          "questionId": "bk110",
+          "canonicalTitle": "地球三明治"
+        },
+        {
+          "title": "紅心皇后理論",
+          "status": "included",
+          "questionId": "bk111",
+          "canonicalTitle": "紅心皇后理論"
+        },
+        {
+          "title": "灰姑娘理論",
+          "status": "alias",
+          "questionId": "bk80",
+          "canonicalTitle": "灰姑娘效應"
+        },
+        {
+          "title": "軍刀綜合症",
+          "status": "alias",
+          "questionId": "bk112",
+          "canonicalTitle": "軍刀症候群"
+        },
+        {
+          "title": "窗戶逛街",
+          "status": "included",
+          "questionId": "bk113",
+          "canonicalTitle": "窗戶逛街"
+        },
+        {
+          "title": "巴斯卡三角形",
+          "status": "included",
+          "questionId": "bk114",
+          "canonicalTitle": "巴斯卡三角形"
+        },
+        {
+          "title": "舌尖效應",
+          "status": "included",
+          "questionId": "bk115",
+          "canonicalTitle": "舌尖效應"
+        },
+        {
+          "title": "天使稅",
+          "status": "alias",
+          "questionId": "bk95",
+          "canonicalTitle": "天使抽稅"
+        },
+        {
+          "title": "一滴血原則",
+          "status": "included",
+          "questionId": "bk116",
+          "canonicalTitle": "一滴血原則"
+        },
+        {
+          "title": "炸西瓜",
+          "status": "pending",
+          "reason": "原說明似指具爆裂果實的植物，但名稱無法確認；不與油炸西瓜混用。"
+        },
+        {
+          "title": "老祖母原則",
+          "status": "included",
+          "questionId": "bk117",
+          "canonicalTitle": "老祖母原則"
+        },
+        {
+          "title": "鉤吻",
+          "status": "included",
+          "questionId": "bk118",
+          "canonicalTitle": "鉤吻"
+        },
+        {
+          "title": "光冠",
+          "status": "alias",
+          "questionId": "bk13",
+          "canonicalTitle": "華（Corona）"
+        },
+        {
+          "title": "空氣花",
+          "status": "included",
+          "questionId": "bk119",
+          "canonicalTitle": "空氣花"
+        },
+        {
+          "title": "拉薩路現象",
+          "status": "alias",
+          "questionId": "bk98",
+          "canonicalTitle": "拉撒路反射"
+        },
+        {
+          "title": "生命之星",
+          "status": "included",
+          "questionId": "bk120",
+          "canonicalTitle": "生命之星"
+        },
+        {
+          "title": "鴿子與豌豆",
+          "status": "included",
+          "questionId": "bk121",
+          "canonicalTitle": "鴿子與豌豆"
+        },
+        {
+          "title": "伐爾沙瓦動作",
+          "status": "included",
+          "questionId": "bk122",
+          "canonicalTitle": "伐爾沙瓦動作"
+        },
+        {
+          "title": "糖蜜災難",
+          "status": "included",
+          "questionId": "bk123",
+          "canonicalTitle": "糖蜜災難"
+        },
+        {
+          "title": "狐狸叫",
+          "status": "included",
+          "questionId": "bk124",
+          "canonicalTitle": "狐狸叫"
+        },
+        {
+          "title": "伊頓混亂",
+          "status": "included",
+          "questionId": "bk62",
+          "canonicalTitle": "伊頓混亂"
+        },
+        {
+          "title": "恆河猴實驗",
+          "status": "included",
+          "questionId": "bk125",
+          "canonicalTitle": "恆河猴實驗"
+        },
+        {
+          "title": "帕夫洛夫的狗",
+          "status": "included",
+          "questionId": "bk126",
+          "canonicalTitle": "帕夫洛夫的狗"
+        },
+        {
+          "title": "油鬼仔",
+          "status": "included",
+          "questionId": "bk87",
+          "canonicalTitle": "油鬼仔"
+        },
+        {
+          "title": "蝌蝌啃蠟",
+          "status": "included",
+          "questionId": "bk127",
+          "canonicalTitle": "蝌蝌啃蠟"
+        },
+        {
+          "title": "間間觀音",
+          "status": "included",
+          "questionId": "bk128",
+          "canonicalTitle": "間間觀音"
+        },
+        {
+          "title": "鴨蛋教",
+          "status": "included",
+          "questionId": "bk129",
+          "canonicalTitle": "鴨蛋教"
+        },
+        {
+          "title": "廁所女神",
+          "status": "included",
+          "questionId": "bk130",
+          "canonicalTitle": "廁所女神"
+        },
+        {
+          "title": "亞東六眼幽靈",
+          "status": "included",
+          "questionId": "bk131",
+          "canonicalTitle": "亞東六眼幽靈"
+        },
+        {
+          "title": "拉菲爾心理",
+          "status": "pending",
+          "reason": "未確認此名稱為正式心理學概念，也無可靠依據支持鼻形故事。"
+        },
+        {
+          "title": "飛特族",
+          "status": "included",
+          "questionId": "bk132",
+          "canonicalTitle": "飛特族"
+        },
+        {
+          "title": "貝佛里奇的五大巨人",
+          "status": "included",
+          "questionId": "bk133",
+          "canonicalTitle": "貝佛里奇的五大巨人"
+        },
+        {
+          "title": "老鼠樂園",
+          "status": "included",
+          "questionId": "bk134",
+          "canonicalTitle": "老鼠樂園"
+        },
+        {
+          "title": "囚牛",
+          "status": "included",
+          "questionId": "bk135",
+          "canonicalTitle": "囚牛"
+        },
+        {
+          "title": "紫婆婆",
+          "status": "pending",
+          "reason": "都市傳說版本眾多，尚未確認可靠文本與正解界線。"
+        },
+        {
+          "title": "伏尼契手稿",
+          "status": "included",
+          "questionId": "bk136",
+          "canonicalTitle": "伏尼契手稿"
+        },
+        {
+          "title": "鐵處女像",
+          "status": "alias",
+          "questionId": "bk137",
+          "canonicalTitle": "鐵處女"
+        },
+        {
+          "title": "青藍冰水",
+          "status": "included",
+          "questionId": "bk138",
+          "canonicalTitle": "青藍冰水"
+        },
+        {
+          "title": "國土鍊成陣",
+          "status": "included",
+          "questionId": "bk139",
+          "canonicalTitle": "國土鍊成陣"
+        }
+      ]
+    },
+    {
+      "id": "838697940",
+      "url": "https://quizlet.com/tw/838697940/",
+      "items": [
+        {
+          "title": "切香腸戰術",
+          "status": "included",
+          "questionId": "bk140",
+          "canonicalTitle": "切香腸戰術"
+        },
+        {
+          "title": "美女拳法",
+          "status": "included",
+          "questionId": "bk141",
+          "canonicalTitle": "美女拳法"
+        },
+        {
+          "title": "萊姆病",
+          "status": "included",
+          "questionId": "bk142",
+          "canonicalTitle": "萊姆病"
+        },
+        {
+          "title": "拿了錢就跑",
+          "status": "included",
+          "questionId": "bk108",
+          "canonicalTitle": "拿了錢就跑"
+        },
+        {
+          "title": "100-1=0",
+          "status": "pending",
+          "reason": "可能是人際或服務品質比喻，題目缺少足以限定正解的上下文。"
+        },
+        {
+          "title": "茉莉三惡魔",
+          "status": "pending",
+          "reason": "疑似網路三乳房造假事件；須可靠查核資料與名稱對應。"
+        },
+        {
+          "title": "蘑菇管理定律",
+          "status": "alias",
+          "questionId": "bk143",
+          "canonicalTitle": "蘑菇管理"
+        },
+        {
+          "title": "屁股眨眼",
+          "status": "included",
+          "questionId": "bk144",
+          "canonicalTitle": "屁股眨眼"
+        },
+        {
+          "title": "番茄大戰",
+          "status": "included",
+          "questionId": "bk145",
+          "canonicalTitle": "番茄大戰"
+        },
+        {
+          "title": "香蕉戰爭",
+          "status": "included",
+          "questionId": "bk92",
+          "canonicalTitle": "香蕉戰爭"
+        },
+        {
+          "title": "無聊小鎮",
+          "status": "included",
+          "questionId": "bk146",
+          "canonicalTitle": "無聊小鎮"
+        },
+        {
+          "title": "7+-2",
+          "status": "alias",
+          "questionId": "bk101",
+          "canonicalTitle": "7±2（神奇數字七）"
+        },
+        {
+          "title": "合太醬料",
+          "status": "pending",
+          "reason": "台大醫科錯視梗暫缺可核對原始圖或出處。"
+        },
+        {
+          "title": "床山",
+          "status": "included",
+          "questionId": "bk147",
+          "canonicalTitle": "床山"
+        },
+        {
+          "title": "聰明漢斯",
+          "status": "included",
+          "questionId": "bk148",
+          "canonicalTitle": "聰明漢斯"
+        }
+      ]
+    }
+  ],
+  "pending": [
+    {
+      "title": "克林尼索",
+      "reason": "題名與貨幣／地區提示無法對應可靠來源，需原題正解。"
+    },
+    {
+      "title": "漂鳥學校",
+      "reason": "原說明可能指遊牧民族的流動教育，但此專有名稱與地點尚未確認。"
+    },
+    {
+      "title": "炸西瓜",
+      "reason": "原說明似指具爆裂果實的植物，但名稱無法確認；不與油炸西瓜混用。"
+    },
+    {
+      "title": "拉菲爾心理",
+      "reason": "未確認此名稱為正式心理學概念，也無可靠依據支持鼻形故事。"
+    },
+    {
+      "title": "茉莉三惡魔",
+      "reason": "疑似網路三乳房造假事件；須可靠查核資料與名稱對應。"
+    },
+    {
+      "title": "紫婆婆",
+      "reason": "都市傳說版本眾多，尚未確認可靠文本與正解界線。"
+    },
+    {
+      "title": "合太醬料",
+      "reason": "台大醫科錯視梗暫缺可核對原始圖或出處。"
+    },
+    {
+      "title": "100-1=0",
+      "reason": "可能是人際或服務品質比喻，題目缺少足以限定正解的上下文。"
+    }
+  ]
+}

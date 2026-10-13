@@ -1,0 +1,69 @@
+/* Original summon and rolling-die scenes; server results remain authoritative. */
+(function(root){
+'use strict';
+const labels=['1 分','1 分','2 分','1 顆紅寶石','液滴前進 1 格','南瓜 1'];
+const node=(tag,text)=>{const el=root.document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
+function die(face,size=78){
+ const el=node('div');el.className='quacks-die';el.style.setProperty('--die-size',size+'px');el.setAttribute('role','img');el.setAttribute('aria-label',labels[face]);
+ const symbol=node('div');symbol.className='die-symbol';
+ if(face===3)symbol.append(root.QuacksArt.resource('ruby',{size:size*.62,decorative:true}));
+ else if(face===4){symbol.append(root.QuacksArt.resource('droplet',{size:size*.62,decorative:true}));}
+ else if(face===5)symbol.append(root.QuacksArt.token({color:'orange',value:1},{size:size*.65,decorative:true}));
+ else{symbol.classList.add('die-points');symbol.append(node('strong',face===2?'2':'1'),node('small','分'));}
+ el.append(symbol);return el;
+}
+function create(host){
+ let context=null,queue=[],active=null,initialized=false;const seen=new Set();
+ const allowed=()=>root.MotionPolicy?root.MotionPolicy.allowsMotion():!root.document.hidden&&!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+ function clear(){if(active)clearTimeout(active.timer);active=null;queue=[];host.replaceChildren();host.hidden=true;}
+ function next(){
+  if(active||!queue.length||!allowed())return;const event=queue.shift();if(Date.now()-event.at>5000){next();return;}
+  const scene=node('section');scene.className='quacks-fx-scene '+event.kind;scene.setAttribute('aria-label',event.kind==='card'?'占卜抽卡動畫':'獎勵骰動畫');
+  const glow=node('div');glow.className='summon-glow';scene.append(glow);
+  if(event.kind==='card'){
+   const rune=node('div','✦  ✧  ✦  ✧  ✦  ✧');rune.className='summon-rune';const gate=node('div');gate.className='summon-gate';
+   const card=node('div');card.className='summon-card';const back=node('div','✦');back.className='summon-back';const front=node('div');front.className='summon-front';front.dataset.timing=event.fortune.timing||'round';front.append(node('small',event.name+'抽出的占卜牌'),node('h3',event.fortune.name),node('p',event.fortune.text));card.append(back,front);
+   scene.append(rune,gate,card);
+  }else{
+   const cup=node('div');cup.className='dice-arena';const cube=die(event.face,110);cube.classList.add('rolling');cup.append(cube);scene.append(node('h3',event.name+'擲骰'),cup,node('strong',labels[event.face]),node('p',event.source+' · 第 '+event.round+' 回合'));
+  }
+  const skip=node('button','跳過動畫');skip.type='button';root.GameUI?.decorateButton(skip,'close');skip.className+=' fx-skip';skip.onclick=clear;scene.append(skip);
+  host.hidden=false;host.replaceChildren(scene);active={event,timer:setTimeout(()=>{active=null;host.replaceChildren();host.hidden=true;next();},event.kind==='card'?2700:1800)};
+ }
+ function update(state,live){
+  const nextContext=state.code+':'+state.roundId;
+  if(context!==nextContext){clear();seen.clear();context=nextContext;initialized=false;}
+  const events=[...(state.fortuneRevealId?[{id:state.fortuneRevealId,kind:'card',fortune:state.fortune,name:state.players.find(p=>p.id===state.roundStarterId)?.name||'起始玩家',at:state.fortuneDrawnAt||state.serverNow}]:[]),...(state.rollEvents||[]).map(e=>({...e,kind:'dice'}))];
+  if(!live||!allowed())clear();
+  for(const event of events){if(seen.has(event.id))continue;seen.add(event.id);if(initialized&&live&&allowed())queue.push(event);}
+  initialized=true;if(queue.length>20)queue=queue.slice(-20);next();
+ }
+ const unsubscribe=root.MotionPolicy?.subscribe(()=>{if(!allowed())clear();});
+ const hidden=()=>{if(root.document.hidden)clear();};root.document.addEventListener('visibilitychange',hidden);
+ return {update,clear,destroy(){clear();unsubscribe?.();root.document.removeEventListener('visibilitychange',hidden);},size:()=>seen.size};
+}
+
+function createScoreboard(host){
+ const svg=root.QuacksArt.scoreBoard(),pieces=new Map(),scores=new Map();host.replaceChildren(svg);
+ return {update(state,live){
+  const legend=root.document.querySelector('#scoreLegend'),list=[];
+  const round=Number(state.round)||0;for(const lantern of svg.querySelectorAll('[data-round]')){const current=Number(lantern.getAttribute('data-round'))===round;lantern.classList.toggle('current-round',current);lantern.setAttribute('aria-label','第 '+lantern.getAttribute('data-round')+' 回合'+(current?'，目前回合':''));if(current)lantern.setAttribute('aria-current','step');else lantern.removeAttribute('aria-current');}
+  const flame=svg.querySelector('.round-flame');flame.setAttribute('visibility',round?'visible':'hidden');if(round)flame.setAttribute('transform','translate('+(137+(round-1)*69)+' '+(110+((round-1)%2)*53)+')');
+  svg.querySelector('.score-round-label').textContent=round?'目前第 '+round+' / 9 回合':'等待開局';
+  for(let index=0;index<state.recipes.length;index++){const p=state.recipes[index],color=state.potColors?.[p.potColor]?.liquid[0]||'#aed395';let piece=pieces.get(p.id);
+   if(!piece){piece=root.QuacksArt.pawn(color);pieces.set(p.id,piece);svg.append(piece);}
+   piece.setAttribute('aria-label',p.name+' '+p.score+' 分');let caption=piece.querySelector('title');if(!caption){caption=root.document.createElementNS('http://www.w3.org/2000/svg','title');piece.append(caption);}caption.textContent=p.name+' · '+p.score+' 分';
+   for(const part of piece.querySelectorAll('path'))if(part.getAttribute('fill')&&part.getAttribute('fill')!=='none')part.setAttribute('fill',color);
+   const offset=(index-2)*5,point=n=>{const q=root.QuacksArt.scorePoint(n);return {x:q.x+offset,y:Math.max(50,q.y-index%2*6)};},target=point(p.score),previous=scores.get(p.id);
+   if(previous!==p.score){piece.getAnimations?.().forEach(a=>a.cancel());piece.style.transform='translate('+target.x+'px,'+target.y+'px)';
+    if(previous!==undefined&&live&&p.score>previous&&root.MotionPolicy?.allowsMotion()){const steps=Math.min(50,p.score-previous),frames=Array.from({length:steps+1},(_,i)=>{const q=point(i===0?previous:p.score-steps+i);return {transform:'translate('+q.x+'px,'+q.y+'px)'};});root.MotionPolicy.animate(piece,frames,{duration:Math.min(1600,250+steps*65),easing:'linear'});}
+   }scores.set(p.id,p.score);
+   const item=node('span',p.name+' · '+p.score+' 分'+(p.score>50?'（超過50分）':''));item.style.setProperty('--pawn-color',color);list.push(item);
+  }
+  for(const [id,piece]of pieces)if(!state.recipes.some(p=>p.id===id)){piece.remove();pieces.delete(id);scores.delete(id);}
+  legend.replaceChildren(...list);
+ }};
+}
+
+root.QuacksFx={create,createScoreboard,die,labels};
+})(window);
