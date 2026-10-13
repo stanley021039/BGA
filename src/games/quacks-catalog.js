@@ -7,7 +7,7 @@ blue:[[5,10,19],[5,10,19],[4,8,14],[5,10,20],[8,15,19],[5,10,18]],
 red:[[6,10,16],[4,8,14],[5,9,15],[7,11,17],[6,11,18],[7,11,17]],
 yellow:[[8,12,18],[9,13,19],[8,12,18],[8,12,18],[10,14,20],[8,12,18]],
 green:[[4,8,14],[6,11,18],[6,11,18],[4,8,14],[5,9,16],[4,8,14]],
-black:[[10],[10],[10],[10],[10],[9]],purple:[[9],[12],[10],[11],[9],[16]],locoweed:[[],[],[],[],[8],[10]]
+black:[[10],[10],[10],[10],[10],[9]],purple:[[9],[12],[10],[11],[9],[16]],locoweed:[[],[],[],[],[8],[10],[11],[16],[10],[12]]
 };
 const EFFECTS={
 orange:['按數值前進，沒有特殊效果。'],
@@ -17,7 +17,7 @@ yellow:['緊接白色炸彈，可把前一片白色炸彈放回藥袋；不倒�
 green:['結算時，最後兩片中每片綠色得 1 顆紅寶石。','結算時，最後兩片綠色按數值取得指定藥材。','白色炸彈總數值恰好 7，最後一片再前進全部綠色數值總和。','最後兩片中每片綠色可付 1 顆紅寶石，液滴前進 1 格。','最後兩片綠色可保留一片不超過其數值的藥材，下輪預先放入並執行效果。','最後兩片中每片綠色擲一次獎勵骰。'],
 black:['兩人比較片數；三人以上比較左右鄰座；取得液滴與紅寶石獎勵。','兩人比較片數；三人以上比較左右鄰座；取得液滴與紅寶石獎勵。','兩人比較片數；三人以上比較左右鄰座；取得液滴與紅寶石獎勵。','兩人比較片數；三人以上比較左右鄰座；取得液滴與紅寶石獎勵。','獲得時交給左鄰並推進自己的液滴；結算依左鄰黑色得紅寶石。','黑色最遠格位取得液滴，第二遠格位取得紅寶石；平手均得。'],
 purple:['1／2／3 片以上：1 分／1 分加紅寶石／2 分加液滴；可取較低獎勵。','永久棄掉 1–3 片，換取對應藥材與獎勵；最多選一組。','每片紫色按該格印刷金幣數值的十位數得 0–3 分。','按片數選一片升級：1→2／2→4／1→4；可選較低階。','紫色所在格的分數加總，作為獨立購物預算；最多兩片不同顏色。','每片紫色後一片的數值得等量分數，額外移動不算。'],
-locoweed:['','','','','數值為本輪老鼠石推進格數加 1，最多 4。','複製最後一片白色炸彈以外藥材的數值及效果；沒有時為數值 1、無效果。']
+locoweed:['','','','','數值為本輪老鼠石推進格數加 1，最多 4。','複製最後一片白色炸彈以外藥材的數值及效果；沒有時為數值 1、無效果。','前進1格；特效藥階段每片愚人草再提供1格，顏色本身仍計一種。','按大釜已有彩色藥材的種類前進，包含這片愚人草；忽略數值。','前進1格後可收回任一彩色藥材，其他格位不變。','按投入前的大釜白色炸彈總數值前進；沒有則前進1格。']
 };
 // Each entry represents one actual space, not its repeated printed coin number.
 const COINS=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,30,30,31,31,32,32,33,33,35];
@@ -68,5 +68,5 @@ const FORTUNES=[
 ['wise','明智選擇','選擇：液滴前進 2 格，或得一片紫色 1。']
 ].map(([id,name,text],index)=>({id,name,text,timing:index<10?'round':'immediate'}));
 function values(color,witches){return color==='orange'?(witches?[1,6]:[1]):['black','purple','locoweed'].includes(color)?[1]:[1,2,4];}
-function book(color,set,witches){const n=color==='orange'?(witches?5:1):color==='locoweed'?(set<5?5:set):set;return {color,name:NAMES[color],set:n,effect:EFFECTS[color][color==='orange'?0:n-1],offers:values(color,witches).map((value,i)=>({value,price:PRICES[color][n-1]?.[i]})).filter(o=>Number.isInteger(o.price))};}
+function book(color,set,witches){const n=color==='orange'?(witches?5:1):color==='locoweed'?(set<5?5:set):set;return {color,name:NAMES[color],set:n,faceName:color==='locoweed'&&n>=7?'煉金術士第 '+(n-6)+' 面':'第 '+n+' 面',effect:EFFECTS[color][color==='orange'?0:n-1],offers:values(color,witches).map((value,i)=>({value,price:PRICES[color][n-1]?.[i]})).filter(o=>Number.isInteger(o.price))};}
 module.exports={POT_COLORS,NAMES,PRICES,EFFECTS,BOARD,WITCHES,FORTUNES,book};

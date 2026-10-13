@@ -96,6 +96,30 @@ function scoreBoard(){
  return svg;
 }
 
-const api={ratScores,markerPositions,scoreCells,scorePoint,pawn,scoreBoard,resource,names,palette,position,canInspect,selectRecipe,lookup,info,token,glyph,cauldron};
+
+function patientPortrait(id){
+ const specs={nervous:['#b7a9d9','#e5c767'],earworm:['#84b9cb','#a47859'],carrot:['#87b082','#bd9662'],ears:['#c697a7','#c56873'],eyes:['#d6aa7d','#a96f52'],hump:['#83a995','#7a9271'],forgetful:['#a5b5ca','#d1bc85'],vampire:['#b592ba','#685879']};
+ const [bg,hair]=specs[id]||specs.nervous,svg=sv('svg',{viewBox:'0 0 120 120',class:'patient-portrait',role:'img','aria-label':'原創病患插圖'});
+ svg.append(sv('rect',{x:2,y:2,width:116,height:116,rx:24,fill:bg,stroke:'#d3b985','stroke-width':3}),sv('path',{d:'M16 117q2-32 44-30 44-2 44 30',fill:'#384b49'}),sv('ellipse',{cx:60,cy:55,rx:29,ry:36,fill:'#ead0a8'}),sv('path',{d:'M29 57Q12 10 52 13Q91-1 91 57L77 30 58 29 39 42Z',fill:hair}),sv('circle',{cx:49,cy:55,r:3,fill:'#354742'}),sv('circle',{cx:73,cy:55,r:3,fill:'#354742'}),sv('path',{d:'M50 76q11 6 22 0',fill:'none',stroke:'#935e55','stroke-width':3,'stroke-linecap':'round'}));
+ if(id==='carrot')svg.append(sv('path',{d:'m60 58 40 8-41 5Z',fill:'#e89648'}));
+ if(id==='ears')for(const x of [23,94])svg.append(sv('ellipse',{cx:x,cy:52,rx:15,ry:23,fill:'#eac0a3',stroke:'#b48274','stroke-width':2}));
+ if(id==='earworm')svg.append(sv('path',{d:'M88 53q20-18 18 7q-5 16-16 8',stroke:'#cc995f','stroke-width':6,fill:'none'}));
+ if(id==='vampire')svg.append(sv('path',{d:'m50 77 4 10 5-9m8 0 4 9 4-11',fill:'#fff9df'}));
+ if(id==='nervous')svg.append(sv('path',{d:'m43 43 12-5m10 1 13 5',stroke:'#71506a','stroke-width':3}),sv('path',{d:'M21 19 12 26l9 6M101 17l9 8-8 8',fill:'none',stroke:'#f8efd1','stroke-width':4}));
+ if(id==='eyes')svg.append(sv('ellipse',{cx:49,cy:55,rx:10,ry:12,fill:'none',stroke:'#ae7867','stroke-width':2}),sv('ellipse',{cx:73,cy:55,rx:10,ry:12,fill:'none',stroke:'#ae7867','stroke-width':2}));
+ if(id==='hump')svg.append(sv('path',{d:'M10 104Q8 66 34 87l20 19',fill:'#547b60'}));
+ if(id==='forgetful')svg.append(sv('text',{x:96,y:31,'font-size':27,fill:'#fff5d0','font-family':'serif'},'?'));
+ return svg;
+}
+function essenceFlask(value){
+ value=Math.max(0,Math.min(10,value||0));
+ const svg=sv('svg',{viewBox:'0 0 620 170',class:'essence-flask',role:'img','aria-label':'特效藥燒瓶：第'+value+'格'});
+ svg.append(sv('rect',{x:3,y:3,width:614,height:164,rx:19,fill:'#243e3a',stroke:'#c6a777','stroke-width':3}),sv('path',{d:'M31 18h50v15l-8 1v37l22 55q6 23-15 27H31q-21-4-15-27l23-55V34l-8-1Z',fill:'#b3dbd8','fill-opacity':.2,stroke:'#cee1cf','stroke-width':3}),sv('path',{d:'M23 128q15-7 28 0t35 0v12H23Z',fill:'#bd7da3'}),sv('rect',{x:44,y:142-value*9,width:26,height:value*9,rx:10,fill:'#cd97b8',opacity:.7}),sv('text',{x:56,y:144,'text-anchor':'middle','font-size':23,'font-weight':'bold',fill:'#fff8e0'},value));
+ for(let n=0;n<=10;n++){const x=126+(n%6)*85,y=n<6?47:121,g=sv('g',{'data-essence':n});
+ g.append(sv('circle',{cx:x,cy:y,r:22,fill:n===value?'#d8b675':'#365c52',stroke:n===value?'#fff1bd':'#a99370','stroke-width':n===value?4:2}),sv('text',{x,y:y+6,'text-anchor':'middle','font-size':20,fill:n===value?'#23382f':'#e6dfc2'},n));svg.append(g);}
+ return svg;
+}
+
+const api={patientPortrait,essenceFlask,ratScores,markerPositions,scoreCells,scorePoint,pawn,scoreBoard,resource,names,palette,position,canInspect,selectRecipe,lookup,info,token,glyph,cauldron};
 if(typeof module==='object'&&module.exports)module.exports=api;else root.QuacksArt=api;
 })(typeof window==='object'?window:globalThis);
