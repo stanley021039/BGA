@@ -64,7 +64,10 @@ window.StrokeCanvas=(()=>{
   if(stroke.tool==='brush'||stroke.tool==='erase'||stroke.tool==='line'){
    ctx.beginPath();ctx.moveTo(first[0]+.5,first[1]+.5);
    if(points.length===1)ctx.lineTo(first[0]+.51,first[1]+.51);
-   else for(const point of points.slice(1))ctx.lineTo(point[0]+.5,point[1]+.5);
+   else if(stroke.tool==='brush'&&stroke.curve==='quadratic'){
+    for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i];ctx.quadraticCurveTo(a[0]+.5,a[1]+.5,(a[0]+b[0])/2+.5,(a[1]+b[1])/2+.5);}
+    ctx.lineTo(last[0]+.5,last[1]+.5);
+   }else for(const point of points.slice(1))ctx.lineTo(point[0]+.5,point[1]+.5);
    ctx.stroke();
   }else if(stroke.tool==='rect'){
    const x=Math.min(first[0],last[0]),y=Math.min(first[1],last[1]),w=Math.abs(last[0]-first[0]),h=Math.abs(last[1]-first[1]);
@@ -77,7 +80,7 @@ window.StrokeCanvas=(()=>{
  }
  function redraw(canvas,strokes,preview){
   const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
-  for(const stroke of strokes)drawStroke(ctx,stroke);
+  for(const stroke of curveScene(strokes).strokes)drawStroke(ctx,stroke);
   if(preview)drawStroke(ctx,preview);
  }
  // Live drawing keeps the painted prefix instead of replaying every fill on SSE.
@@ -92,7 +95,38 @@ window.StrokeCanvas=(()=>{
   }
   return new Promise(resolve=>setTimeout(resolve,0));
  }
+ // Join only marked, adjacent chunks. Legacy geometry and intervening tools remain barriers.
+ function curveScene(strokes,settings={}){
+  if(!strokes.some(stroke=>stroke.tool==='brush'&&stroke.curve==='quadratic'))return {strokes,settings};
+  const inputKeys=settings.keys||strokes.map(stroke=>JSON.stringify(stroke));
+  if(inputKeys.length!==strokes.length)throw Error('Invalid canvas keys');
+  const requested=Number.isInteger(settings.mutableFrom)?Math.max(0,Math.min(strokes.length,settings.mutableFrom)):strokes.length;
+  const joined=[],groups=[];let mutableFrom=Infinity;
+  for(let i=0;i<strokes.length;i++){
+   const stroke=strokes[i],previous=joined.at(-1),a=previous?.points?.at(-1),b=stroke.points[0];
+   const merge=stroke.curve==='quadratic'&&stroke.tool==='brush'&&stroke.strokeId&&previous?.curve===stroke.curve&&previous.strokeId===stroke.strokeId&&previous.tool===stroke.tool&&previous.color===stroke.color&&previous.size===stroke.size&&!!previous.filled===!!stroke.filled&&a&&b&&a[0]===b[0]&&a[1]===b[1];
+   if(i>=requested)mutableFrom=Math.min(mutableFrom,merge?joined.length-1:joined.length);
+   if(merge){
+    const group=groups.at(-1),target=group.length===1?{...previous,points:previous.points.slice()}:previous;
+    for(let point=1;point<stroke.points.length;point++)target.points.push(stroke.points[point]);
+    joined[joined.length-1]=target;group.push(inputKeys[i]);
+   }
+   else{joined.push(stroke);groups.push([inputKeys[i]]);}
+  }
+  return {strokes:joined,settings:{...settings,keys:groups.map(keys=>keys.length===1?keys[0]:'curve:'+JSON.stringify(keys)),mutableFrom:Math.min(mutableFrom,joined.length)}};
+ }
  function createRenderer(canvas,options={}){
+  const renderer=createRendererInternal(canvas,options);
+  function scene(strokes,settings){
+   if(!Array.isArray(strokes)||strokes.length>(options.maxStrokes??1016))throw Error('Canvas stroke limit exceeded');
+   let points=0,fills=0;
+   for(const stroke of strokes){if(!Array.isArray(stroke.points)||!stroke.points.length)throw Error('Invalid canvas stroke');points+=stroke.points.length;if(stroke.tool==='fill')fills++;}
+   if(points>(options.maxPoints??31024)||fills>(options.maxFills??49))throw Error('Canvas work limit exceeded');
+   return curveScene(strokes,settings);
+  }
+  return {...renderer,render(strokes,settings){const prepared=scene(strokes,settings);return renderer.render(prepared.strokes,prepared.settings);},renderCooperatively(strokes,settings){const prepared=scene(strokes,settings);return renderer.renderCooperatively(prepared.strokes,prepared.settings);}};
+ }
+ function createRendererInternal(canvas,options={}){
   const maxCheckpoints=options.maxCheckpoints??16,checkpointEvery=options.checkpointEvery??32;
   const maxStrokes=options.maxStrokes??1016,maxPoints=options.maxPoints??31024,maxFills=options.maxFills??49;
   if(!Number.isInteger(maxCheckpoints)||maxCheckpoints<2||maxCheckpoints>32||!Number.isInteger(checkpointEvery)||checkpointEvery<1)throw Error('Invalid canvas checkpoint limits');

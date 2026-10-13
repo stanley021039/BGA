@@ -284,6 +284,7 @@ class DrawGuessRoom{
     !Array.isArray(points)||points.length<1||points.length>64||points.some(point=>!Array.isArray(point)||point.length!==2||!Number.isInteger(point[0])||point[0]<0||point[0]>511||!Number.isInteger(point[1])||point[1]<0||point[1]>255)||
     (data.tool==='fill'?points.length!==1:data.tool!=='brush'&&data.tool!=='erase'&&points.length!==2))throw Error('筆畫格式不正確');
   const pointTimes=data.pointTimes;
+  if(data.curve!==undefined&&(data.tool!=='brush'||data.curve!=='quadratic'))throw Error('筆畫曲線格式不正確');
   if(pointTimes!==undefined){
    if(!['brush','erase'].includes(data.tool)||!Array.isArray(pointTimes)||pointTimes.length!==points.length)throw Error('筆畫時間格式不正確');
    for(let index=0;index<pointTimes.length;index++)if(!Number.isSafeInteger(pointTimes[index])||pointTimes[index]<0||pointTimes[index]>MAX_POINT_TIME_MS||index&&pointTimes[index]<pointTimes[index-1])throw Error('筆畫時間格式不正確');
@@ -300,7 +301,7 @@ class DrawGuessRoom{
    this.canvas.fillRecent.push(now);this.canvas.fills++;
   }
   this.canvas.recent.push(now);this.canvas.points+=points.length;this.canvas.acceptedPoints+=points.length;
-  const stroke={version:++this.canvas.version,strokeId:data.strokeId,tool:data.tool,color:data.color.toLowerCase(),size:data.size,filled:data.filled===true,points:clone(points),...(pointTimes!==undefined?{pointTimes:clone(pointTimes)}:{})};
+  const stroke={version:++this.canvas.version,strokeId:data.strokeId,tool:data.tool,color:data.color.toLowerCase(),size:data.size,filled:data.filled===true,points:clone(points),...(pointTimes!==undefined?{pointTimes:clone(pointTimes)}:{}),...(data.curve?{curve:data.curve}:{})};
   this.canvas.strokes.push(stroke);this.canvas.batchIds.add(data.batchId);
   this.achievementUnits.current?.strokeAccepted.add(id);
   return {canvasEpoch:this.canvas.epoch,round:this.round,version:this.canvas.version,stroke,quota:this.canvasQuota()};
