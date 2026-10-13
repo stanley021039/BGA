@@ -1,0 +1,140 @@
+/* Waiting rooms share Thunder Road's illustration / introduction card. */
+body[data-visual-theme="playful"] .room-waiting-template{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:440px;border:var(--play-card-border,2px solid var(--play-ink));border-radius:var(--play-radius,16px);background:var(--play-peach);color:var(--play-ink);overflow:hidden;box-sizing:border-box;min-width:0;margin:0}
+.room-waiting-template[hidden]{display:none!important}
+.room-waiting-art{display:grid;place-items:center;min-width:0;background:var(--play-peach)}
+.room-waiting-art img{display:block;width:100%;height:100%;max-height:440px;object-fit:cover}
+.room-waiting-info{align-self:center;padding:32px 24px;min-width:0;overflow-wrap:anywhere}
+.room-waiting-info h2{font-size:var(--ui-text-page,1.75rem);line-height:1.35;margin:12px 0 20px}
+.room-waiting-info p{font-size:var(--ui-text-body,1rem);line-height:1.7;color:var(--play-muted);margin:16px 0}
+.room-waiting-hint{min-height:3.4em}
+body[data-room-phase="waiting"] :is(.play-layout,.gift-layout)>main{display:grid;align-content:start;gap:var(--play-layout-gap,16px);min-width:0}
+body[data-room-phase="waiting"] #stage>.hero{padding:0;background:transparent;border:0;box-shadow:none;min-height:0}
+body[data-room-phase="waiting"] #stage>.hero>:not(.room-settings-panel){display:none}
+body[data-room-phase="waiting"] #stage .room-settings-panel{margin:0;padding:20px;border:var(--play-card-border);border-radius:var(--play-radius,16px);background:var(--play-surface)}
+body[data-room-phase="waiting"][data-game-kind="draw"] #boardSection{display:none!important}
+body[data-room-phase="waiting"][data-game-kind="poker"] .table-wrap{display:none}
+body[data-room-phase="waiting"] #game :is(.task-layout,.adventure-layout){grid-template-columns:minmax(0,1fr) var(--play-tools-width,340px);gap:var(--play-layout-gap,16px);align-items:start}
+body[data-room-phase="waiting"] #game :is(.task-layout,.adventure-layout)>.room-waiting-template{grid-column:1;grid-row:1}
+body[data-room-phase="waiting"] #game :is(.task-layout,.adventure-layout)>:is(#source,.story-panel){display:none}
+body[data-room-phase="waiting"] #game :is(.task-layout,.adventure-layout)>:last-child{grid-column:2;grid-row:1;min-height:440px;margin:0;overflow:auto;scrollbar-gutter:stable}
+body[data-room-phase="waiting"] #game>.panel:has(#results),body[data-room-phase="waiting"] #game>.panel:has(#botStatements),body[data-room-phase="waiting"] .journal-panel{display:none}
+body[data-room-phase="waiting"] #game>.panel:has(#players),body[data-room-phase="waiting"] .team-panel{margin:16px 0}
+.room-settings-feedback{min-height:3em;margin:8px 0;font-size:var(--ui-text-small,.875rem);overflow-wrap:anywhere}
+@media(max-width:1000px){body[data-room-phase="waiting"] #game :is(.task-layout,.adventure-layout){grid-template-columns:minmax(0,1fr)}body[data-room-phase="waiting"] #game :is(.task-layout,.adventure-layout)>:last-child{grid-column:1;grid-row:2;min-height:0}.room-waiting-template{min-height:340px!important}.room-waiting-art img{max-height:340px}}
+@media(max-width:600px){body[data-visual-theme="playful"] .room-waiting-template{grid-template-columns:1fr;min-height:0!important}.room-waiting-art{height:180px}.room-waiting-art img{height:180px;object-fit:contain}.room-waiting-info{padding:20px}.room-waiting-info h2{font-size:var(--ui-text-section,1.25rem)}}
+
+/* The waiting screen deliberately contains no round, score or play equipment. */
+body[data-room-phase="waiting"] :is(.stage-head,#steps,.footnote,.aside-note,.score-legend,.room-player-metrics,.room-game-info,.race-feed,.build-note,.race-stats>div:not(:last-child),.crew-cars,.crew-dice,.crew-detail,.crew-dice-wait,#reviewResults,#boardHint,#turnInfo,#result,#actions,.immersion-result-tools){display:none!important}
+body[data-room-phase="waiting"] #game #players .player-card>p:first-of-type{display:none}
+body[data-room-phase="waiting"] #game:has(.task-layout),body[data-room-phase="waiting"] #game:has(.adventure-layout){display:flex;flex-direction:column;gap:16px}
+body[data-room-phase="waiting"] #game>.panel:has(#players),body[data-room-phase="waiting"] #game>.team-panel{order:2;margin:0}
+body[data-room-phase="waiting"] #game>:is(.task-layout,.adventure-layout){order:1}
+body[data-room-phase="waiting"] #game #players{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+body[data-room-phase="waiting"] #game #players .player-card{min-width:0;min-height:88px;margin:0;overflow-wrap:anywhere}
+body[data-room-phase="waiting"] :is(.play-layout,.gift-layout){grid-template-areas:"stage tools" "players players"!important;grid-template-rows:auto auto!important}
+body[data-room-phase="waiting"] .room-waiting-template~#stage:empty{display:none}
+@media(max-width:1000px){body[data-room-phase="waiting"] :is(.play-layout,.gift-layout){grid-template-areas:"stage" "tools" "players"!important}}
+
+body[data-room-phase="waiting"] :is(.play-layout,.gift-layout)>main{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+body[data-room-phase="waiting"] #gameSidebar>#stage{flex:none;max-height:340px;overflow:auto;scrollbar-gutter:stable}
+body[data-room-phase="waiting"] #gameSidebar>#stage .room-settings-panel{border:0;padding:0;background:transparent}
+body[data-room-phase="waiting"] .table-topline,body[data-room-phase="waiting"] .poker-log,body[data-room-phase="waiting"] .crew-board{display:none!important}
+body[data-room-phase="waiting"] #game :is(.task-layout,.adventure-layout){align-items:stretch}
+body[data-room-phase="waiting"] #game :is(.task-layout,.adventure-layout)>.room-waiting-template{height:100%}
+body[data-room-phase="waiting"] :is(.telephone-shell,.adventure-shell){max-width:1600px;padding-inline:var(--ui-page-gutter,24px)}
+body[data-room-phase="waiting"] .telephone-shell>h1{font-size:var(--ui-text-page,1.75rem);margin:20px 0 12px}
+body[data-room-phase="waiting"] .telephone-shell>h1+p{display:none}
+
+body[data-room-phase="waiting"] :is(.play-layout,.gift-layout)>main{align-self:stretch}
+body[data-room-phase="waiting"] :is(.play-layout,.gift-layout)>main>.room-waiting-template{height:100%}
+body[data-room-phase="waiting"] #socialBar{display:none!important}
+body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout.room-layout{grid-template-columns:minmax(0,1fr) var(--play-tools-width,340px);grid-template-rows:auto auto;align-items:stretch}
+body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>main{grid-column:1;grid-row:1;align-self:stretch}
+body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>main>.room-waiting-template{height:100%}
+body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>.room-sidebar{grid-column:2;grid-row:1;max-height:none!important}
+body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>.draw-roster{grid-column:1/-1;grid-row:2;max-height:none}
+body[data-room-phase="waiting"][data-game-kind="draw"] .draw-roster #players{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1000px){body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout.room-layout{grid-template-columns:minmax(0,1fr)}body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>.room-sidebar{grid-column:1;grid-row:2}body[data-room-phase="waiting"][data-game-kind="draw"] .draw-layout>.draw-roster{grid-row:3}body[data-room-phase="waiting"][data-game-kind="draw"] .draw-roster #players{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){body[data-room-phase="waiting"][data-game-kind="draw"] .draw-roster #players{grid-template-columns:1fr}}
+
+/* Every waiting room uses the same bounded list; play rosters retain game data. */
+:root{--ui-roster-card-width:260px;--ui-roster-card-height:112px;--ui-roster-avatar-width:64px;--ui-roster-avatar-height:80px;--ui-roster-gap:12px;--ui-roster-list-height:112px}
+.ui-room-roster{box-sizing:border-box;width:100%;min-width:0;margin:0;padding:20px;border:var(--play-card-border,2px solid #292639);border-radius:var(--play-radius,16px);background:var(--play-surface,#fffdf8);color:var(--play-ink,#292639);box-shadow:var(--play-shadow,3px 4px 0 #0001)}
+.ui-room-roster[hidden]{display:none!important}
+.ui-room-roster-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:28px;margin-bottom:16px}
+.ui-room-roster-heading h2{margin:0;font-size:var(--ui-text-section,1.25rem);line-height:1.4}
+.ui-room-roster-count{flex:none;width:13em;max-width:100%;min-width:0;text-align:right;font-size:var(--ui-text-small,.875rem);color:var(--play-muted,#686576)}
+.ui-room-roster-list{display:grid;grid-template-columns:repeat(auto-fill,min(100%,var(--ui-roster-card-width)));grid-auto-rows:var(--ui-roster-card-height);align-content:start;gap:var(--ui-roster-gap);height:var(--ui-roster-list-height);overflow:auto;scrollbar-gutter:stable;min-width:0}
+.ui-room-roster-list:focus-visible{outline:2px solid var(--ui-focus,#37857c);outline-offset:3px}
+.ui-room-roster-card{display:flex;box-sizing:border-box;align-items:center;gap:12px;height:var(--ui-roster-card-height);min-width:0;padding:12px;border:1px solid var(--play-ink,#292639);border-radius:12px;background:var(--play-paper,#faf6ec);color:inherit}
+.ui-room-roster-card[data-self=true]{background:var(--play-blue,#d7e9f2)}
+.ui-room-roster-avatar{display:grid;place-items:center;flex:0 0 var(--ui-roster-avatar-width);width:var(--ui-roster-avatar-width);height:var(--ui-roster-avatar-height);border-radius:8px;background:var(--play-surface,#fffdf8);overflow:hidden}
+.ui-room-roster-avatar>*{grid-area:1/1}
+.ui-room-roster-avatar img{display:block;width:100%;height:100%;object-fit:contain;position:relative;background:inherit}
+.ui-room-roster-avatar img[hidden]{display:none!important}
+.ui-room-roster-fallback{font-size:24px;font-weight:700}
+.ui-room-roster-info{flex:1;min-width:0}
+.ui-room-roster-name{display:flex;align-items:center;gap:6px;min-height:24px;min-width:0}
+.ui-room-roster-name-text{display:block;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--ui-text-body,1rem);line-height:1.5}
+.ui-room-roster-self{flex:none;font-size:var(--ui-text-small,.875rem)}
+.ui-room-roster-status{display:block;min-height:3em;margin-top:4px;font-size:var(--ui-text-small,.875rem);line-height:1.5;color:var(--play-muted,#686576);overflow-wrap:anywhere}
+body[data-room-phase=waiting] [data-waiting-native-roster]{display:none!important}
+body[data-room-phase=waiting] :is(.play-layout,.gift-layout)>.ui-room-roster{grid-area:players}
+body[data-room-phase=waiting] :is(.draw-layout,.game-layout)>.ui-room-roster{grid-column:1/-1;grid-row:2}
+body[data-room-phase=waiting] #game>.ui-room-roster{order:2}
+body[data-room-phase=waiting] .race-main>.ui-room-roster{grid-column:1/-1;grid-row:2}
+@media(min-width:1001px){body[data-room-phase=waiting] .race-main>.race-side-column{grid-row:1!important}}
+@media(max-width:600px){:root{--ui-roster-list-height:236px}.ui-room-roster{padding:16px}.ui-room-roster-heading{flex-wrap:wrap}.ui-room-roster-count{text-align:left}}
+
+/* One shared grid; the original controls and play containers are restored at start. */
+:root{--ui-room-row-height:440px;--ui-room-gap:16px;--ui-room-tools-width:340px}
+body[data-room-phase=waiting] [data-waiting-layout-host]{display:block!important}
+body[data-room-phase=waiting] [data-waiting-layout-hidden]{display:none!important}
+.ui-room-waiting-layout{display:grid;grid-template-columns:minmax(0,1fr) var(--ui-room-tools-width);grid-template-areas:"intro controls" "roster chat";grid-template-rows:var(--ui-room-row-height) var(--ui-room-row-height);gap:var(--ui-room-gap);width:100%;min-width:0}
+.ui-room-waiting-layout[hidden]{display:none!important}
+.ui-room-waiting-layout>:is(.room-waiting-template,.garage){grid-area:intro;height:100%;min-height:0!important;max-height:none;margin:0!important}
+.ui-room-waiting-layout>.ui-room-waiting-controls{grid-area:controls!important;position:static!important;box-sizing:border-box;width:100%;height:100%!important;min-height:0!important;max-height:none!important;margin:0!important;overflow:auto!important;scrollbar-gutter:stable;align-self:stretch}
+.ui-room-waiting-layout>.ui-room-roster{grid-area:roster;display:flex;flex-direction:column;height:100%;min-height:0}
+.ui-room-waiting-layout .ui-room-roster-list{flex:1;min-height:0;height:auto}
+.ui-room-chat-slot{grid-area:chat;min-width:0;min-height:0;height:100%}
+body[data-room-phase=waiting] .ui-room-waiting-layout>.race-side-column{grid-column:2!important;grid-row:1!important;gap:12px}
+body[data-room-phase=waiting] .ui-room-waiting-layout>.race-side-column>.race-controls{min-height:220px;flex:1;position:static}
+.ui-room-waiting-layout .shared-chat{margin:0;padding:20px;border:var(--play-card-border,2px solid #292639);border-radius:var(--play-radius,16px);box-shadow:var(--play-shadow,3px 4px 0 #0001);background:var(--play-surface,#fffdf8);color:var(--play-ink,#292639);height:100%;display:flex;flex-direction:column;overflow:hidden;--ui-surface:var(--play-surface);--ui-border:var(--play-ink);--ui-text:var(--play-ink)}
+.chat-inline .chat-heading{margin:0 0 12px;min-height:28px;font-size:var(--ui-text-section,1.25rem);line-height:1.4}
+.chat-inline #chat-content{display:flex;flex-direction:column;min-height:0;flex:1}
+.chat-inline .chat-channels{flex:none;margin:0 0 8px;min-height:44px}
+.chat-inline .chat-retention{flex:none;margin:0 0 8px;color:var(--play-muted);font-size:12px}
+.chat-inline .chat-messages{flex:1;min-height:0;max-height:none;margin:0;scrollbar-gutter:stable;border-block:1px solid var(--play-ink)}
+.chat-inline form{flex:none;margin:0}
+.chat-inline label{min-height:2.7em;margin:8px 0;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.chat-inline .chat-status{flex:none;min-height:24px;max-height:48px;overflow:auto;margin:8px 0 0;font-size:13px;line-height:1.4}
+.ui-room-waiting-layout .chat-compose input{background:var(--play-paper);color:var(--play-ink);border:1px solid var(--play-ink);border-radius:12px;padding:8px}
+.ui-room-waiting-layout .chat-channels button{background:var(--play-paper);color:var(--play-ink)}
+.ui-room-waiting-layout .chat-channels [aria-pressed=true]{background:var(--play-blue)}
+@media(max-width:1000px){.ui-room-waiting-layout{grid-template-columns:minmax(0,1fr);grid-template-areas:"intro" "controls" "roster" "chat";grid-template-rows:440px 440px 440px 440px}body[data-room-phase=waiting] .ui-room-waiting-layout>.race-side-column{grid-column:1!important;grid-row:2!important}}
+@media(max-width:600px){.ui-room-waiting-layout{grid-template-rows:auto 440px 360px 440px}.ui-room-waiting-layout>:is(.room-waiting-template,.garage){height:auto}.ui-room-waiting-layout .shared-chat{padding:16px}.ui-room-waiting-layout .garage-art{height:180px}.ui-room-waiting-layout .garage-art img{height:180px;object-fit:contain}.ui-room-waiting-layout .garage-art>span{display:none}}
+
+.ui-room-waiting-layout>.ui-room-waiting-controls:not(.race-side-column){padding:20px;border:var(--play-card-border,2px solid #292639);border-radius:var(--play-radius,16px);background:var(--play-surface,#fffdf8);color:var(--play-ink,#292639);box-shadow:var(--play-shadow,3px 4px 0 #0001)}
+body[data-room-phase=waiting] #turnHint{display:none}
+
+/* An add-player slot is a roster content card, not a framed pill action. */
+.ui-room-roster-add{padding:0}
+.ui-room-roster-add>button.ui-room-roster-action-button{display:flex;align-items:center;justify-content:flex-start;gap:12px;box-sizing:border-box;width:100%;height:100%;min-width:0;margin:0;padding:12px;border:0;border-radius:inherit;background:transparent;color:inherit;font:inherit;text-align:left;white-space:normal}
+.ui-room-roster-action-button .ui-symbol{--ui-symbol-size:32px;font-size:32px}
+.ui-room-roster-action-label{display:block;font-size:var(--ui-text-body,1rem);line-height:1.5;overflow-wrap:anywhere}
+.ui-room-roster-action-button:focus-visible{outline:3px solid var(--ui-focus,#37857c);outline-offset:3px}
+.ui-room-roster-action-button:disabled{opacity:.55;cursor:wait}
+body[data-room-phase=finished][data-room-type=telephone] .telephone-shell #players{display:none}
+
+/* Keep the composer at the bottom of the waiting-room chat panel. */
+.chat-inline .chat-status{margin:0}
+.chat-inline label.ui-sr-only{min-height:0;margin:-1px}
+
+/* Short guides share the bottom of the introduction copy, across games. */
+.room-waiting-info:has(>#guide){align-self:stretch;display:flex;flex-direction:column;min-height:0;overflow:auto}
+.room-waiting-info>#guide{flex:none;margin: auto 0 0!important;width:100%;box-sizing:border-box;max-height:50%;overflow:auto;padding:12px;border-radius:12px}
+.room-waiting-info>#guide>summary{min-height:24px;cursor:pointer}
+
+
+/* Explicit teaching visibility wins over game-specific details/button display rules. */
+[data-room-teaching][hidden]{display:none!important}

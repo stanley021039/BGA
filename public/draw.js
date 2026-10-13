@@ -33,7 +33,7 @@ let drawingFitFrame=null;
 function fitDrawingViewport(){
  drawingFitFrame=null;
  const board=$('#boardSection'),main=board.parentElement,frame=board.querySelector('.canvas-frame');
- if(!frame||!window.matchMedia('(min-width:1200px) and (min-height:680px)').matches||document.body.classList.contains('ui-large-text')||!board.classList.contains('is-drawing')){board.style.removeProperty('--draw-canvas-width');if(document.body.classList.contains('draw-viewport-overflow'))document.body.classList.remove('draw-viewport-overflow');return;}
+ if(document.body.classList.contains('ui-drawing-play-mode')||!frame||!window.matchMedia('(min-width:1200px) and (min-height:680px)').matches||document.body.classList.contains('ui-large-text')||!board.classList.contains('is-drawing')){board.style.removeProperty('--draw-canvas-width');if(document.body.classList.contains('draw-viewport-overflow'))document.body.classList.remove('draw-viewport-overflow');return;}
  const css=getComputedStyle(board),mainCss=getComputedStyle(main),chatCss=getComputedStyle($('#drawGuessPanel'));
  const number=value=>parseFloat(value)||0,tools=$('#tools'),toolHeight=tools.hidden?0:tools.getBoundingClientRect().height;
  const overhead=board.getBoundingClientRect().height-Math.max(frame.getBoundingClientRect().height,toolHeight);
@@ -121,14 +121,24 @@ function topicOptions(group,current){
  return `<fieldset class="topic-options"><legend>${group}</legend><div class="topic-shortcuts"><span>可多選</span><button type="button" data-select-topics="all">全選</button><button type="button" data-select-topics="none">清除</button></div><div class="option-row">${topicChoices.map(([value,label])=>`<label><input type="checkbox" name="topics" value="${value}" ${current.includes(value)?'checked':''}><span><i aria-hidden="true">✓</i>${label}</span></label>`).join('')}</div><p class="topic-hint">自定義包含共編題庫的投稿題目；至少選擇一個類別。</p></fieldset>`;
 }
 function readTopics(){
- const topics=[...document.querySelectorAll('#stage input[name="topics"]:checked')].map(input=>input.value);
+ const topics=[...document.querySelectorAll('#stage input[name="topics"]:checked,.ui-room-settings-slot input[name="topics"]:checked')].map(input=>input.value);
  if(!topics.length)throw Error('請至少選擇一個題目類別');
  return topics;
 }
-function waitingActions(s){return s.host?`<p>${s.players.length<2?'等朋友入座，至少需要兩人。':'朋友已入座，可以開始。'}</p><button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲</button>`:'<p>等待房主開始遊戲。</p>';}
+function endingSettings(settings){
+ const ending=settings.ending||{mode:'rounds',value:null},legacy=ending.value==null,score=ending.mode==='score';
+ return `<fieldset class="draw-ending-settings"><legend>結算條件</legend><label for="drawEndMode">結算方式</label><select id="drawEndMode">${legacy?'<option value="legacy" selected>每位玩家畫一次（目前設定）</option>':''}<option value="rounds" ${!legacy&&!score?'selected':''}>固定輪數（總題數）</option><option value="score" ${score?'selected':''}>分數達標</option></select><label for="drawEndValue">數值</label><input id="drawEndValue" type="number" min="${score?10:1}" max="${score?1000:64}" step="1" value="${legacy?'':ending.value}" ${legacy?'disabled':''}><p id="drawEndHint">${legacy?'依入座順序，每位玩家畫一次。':score?'10–1000 分；當題揭曉後結算，最多 64 題。':'1–64 題；畫者依入座順序輪替。'}</p></fieldset>`;
+}
+function readRoomSettings(){
+ const mode=$('#drawEndMode').value,data={seconds:Number($('#stage input[name="seconds"]:checked,.ui-room-settings-slot input[name="seconds"]:checked')?.value),topics:readTopics()};
+ if(mode!=='legacy'){const value=Number($('#drawEndValue').value),min=mode==='score'?10:1,max=mode==='score'?1000:64;if(!Number.isInteger(value)||value<min||value>max)throw Error(mode==='score'?'目標分數需為10–1000的整數。':'固定總題數需為1–64的整數。');data.ending={mode,value};}
+ return data;
+}
+function roomSettingsMarkup(s){return `<section class="card stage-controls room-settings-panel"><h2>房間設定</h2><div class="room-settings-body" role="group" aria-label="房間設定欄位">${s.host?'':'<p>只有房主能修改；以下為目前房間設定。</p>'}<div class="room-settings-scroll"><fieldset class="room-settings-fields" ${s.host?'':'disabled'}><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}${endingSettings(s.options)}</div></fieldset></div>${s.host?GameShell.settingsActions():''}</div></section>`;}
+function waitingActions(s){return s.host?`<button data-do="start" ${s.players.length<2?'disabled':''}>開始遊戲</button>`:'';}
 function decorateActions(){for(const button of $('#drawActions').querySelectorAll('button'))window.GameUI?.decorateButton(button,({start:state.phase==='finished'?'replay':'play',next:'next',save:'save',settings:'settings'})[button.dataset.do]);}
 function entry(){
- $('#stage').innerHTML=`<div class="card hero"><div class="hero-mark">✎</div><span class="eyebrow">DRAW TOGETHER</span><h1>畫一筆，<br>讓朋友猜一猜。</h1><p id="identity">將以你的角色名稱入座</p><form id="enterForm">${code?`<p>加入房間 <b>${esc(code)}</b></p><button class="button wide">加入這一桌 →</button>`:`<div class="entry-topic">${topicOptions('這桌畫什麼？',selectedTopics())}</div><button class="button wide">開一桌你畫我猜 →</button>`}</form></div>`;
+ $('#stage').innerHTML=`<div class="card hero"><div class="hero-mark">✎</div><span class="eyebrow">DRAW TOGETHER</span><h1>畫一筆，<br>讓朋友猜一猜。</h1><p id="identity">將以你的角色名稱入座</p><form id="enterForm">${code?`<p>加入房間 <b>${esc(code)}</b></p><button class="button wide">加入這一桌 →</button>`:`<p>題目類別、時間與結算條件可在建房後的房間設定調整。</p><button class="button wide">開一桌你畫我猜 →</button>`}</form></div>`;
 }
 function stageAvatar(player,extraClass=''){
  return player?.avatar?`<img class="stage-avatar ${extraClass}" src="${esc(player.avatar)}" alt="">`:`<span class="stage-avatar stage-avatar-fallback ${extraClass}" aria-hidden="true">✎</span>`;
@@ -144,21 +154,21 @@ function stageScene(s){
  if(s.phase==='choosing'){
   const mine=s.presenterId===s.me;
   const hiddenCard=`<span class="stage-pick-back ui-center-content" role="img" aria-label="未公開的題目">${window.GameUI?.symbol?.('unknown')||'<span class="ui-symbol" aria-hidden="true">?</span>'}</span>`;
-  return `<div class="stage-scene stage-choosing"><div class="stage-lead">${stageAvatar(artist)}<span>${esc(artist?.name||'畫者')} 的回合</span></div><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} / ${s.roundLimit}</span><h1>${mine?'選一張題卡，準備開畫':'畫者正在挑題'}</h1><p>${mine?'只有你看得到題目，選好就能立即畫。':'題目選好後，畫作會出現在同一塊畫布。'}</p><div class="stage-picks">${mine?s.candidates.map(word=>`<button type="button" class="stage-pick" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong><span>畫這題 ↗</span></button>`).join(''):hiddenCard.repeat(3)}</div></div></div>`;
+  return `<div class="stage-scene stage-choosing"><div class="stage-lead">${stageAvatar(artist)}<span>${esc(artist?.name||'畫者')} 的回合</span></div><div class="stage-copy"><span class="ui-badge stage-ribbon">ROUND ${s.round} / ${s.roundLimit}</span><h1>${mine?'選一張題卡，準備開畫':'畫者正在挑題'}</h1><p>${mine?'只有你看得到題目，選好就能立即畫。':'題目選好後，畫作會出現在同一塊畫布。'}</p><div class="stage-picks">${mine?s.candidates.map(word=>`<button type="button" class="stage-pick" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong><span>畫這題 ↗</span></button>`).join(''):hiddenCard.repeat(3)}</div></div></div>`;
  }
- if(s.phase==='reveal')return `<div class="stage-scene stage-reveal"><div class="stage-copy"><span class="stage-ribbon">ROUND ${s.round} · 答案揭曉</span><h1 class="stage-answer">${esc(s.result?.answer||'這輪沒有選定題目')}</h1><p class="stage-reason">${esc(s.result?.reason||'')}</p><div class="stage-stat"><b>${s.result?.guessedIds?.length||0}</b> 位朋友猜中 <span>· 畫者每猜中一人 +15 分</span></div>${stageVotePanel(s)}</div><div class="stage-art"><canvas id="stagePreview" width="512" height="256" role="img" aria-label="本輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取本輪畫作…</small></div></div>`;
+ if(s.phase==='reveal')return `<div class="stage-scene stage-reveal"><div class="stage-copy"><span class="ui-badge stage-ribbon">ROUND ${s.round} · 答案揭曉</span><h1 class="stage-answer">${esc(s.result?.answer||'這輪沒有選定題目')}</h1><p class="stage-reason">${esc(s.result?.reason||'')}</p><div class="stage-stat"><b>${s.result?.guessedIds?.length||0}</b> 位朋友猜中 <span>· 畫者每猜中一人 +15 分</span></div>${stageVotePanel(s)}</div><div class="stage-art"><canvas id="stagePreview" width="512" height="256" role="img" aria-label="本輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取本輪畫作…</small></div></div>`;
  const rankings=[...s.players].sort((a,b)=>b.score-a.score);
  const winners=s.winner?.ids||[];
  const playerName=name=>window.GameUI?.playerName?.(name)||`<span class="ui-player-name" title="${esc(name)}">${esc(name)}</span>`;
  const podium=`<ol class="stage-player-cards">${rankings.map((player,index)=>`<li class="stage-player-card${winners.includes(player.id)?' stage-winner':''}"><span class="stage-card-rank" aria-label="排名 ${index+1}">${index+1}</span>${stageAvatar(player)}<b>${playerName(player.name)}</b><strong>${player.score} 分</strong>${winners.includes(player.id)?'<span class="stage-card-win ui-symbol" role="img" aria-label="本局獲勝" title="本局獲勝">✦</span>':''}</li>`).join('')}</ol>`;
- return `<div class="stage-scene stage-finished"><div class="stage-copy finished-heading"><span class="stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p></div><section class="stage-podium" aria-label="本局排名">${podium}</section>${s.result?.resultId?`<section class="stage-art finished-art" aria-label="最後一輪畫作"><h2>最後一幅畫${s.result.answer?' · '+esc(s.result.answer):''}</h2><canvas id="stagePreview" width="512" height="256" role="img" aria-label="最後一輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取畫作…</small></section>`:''}</div>`;
+ return `<div class="stage-scene stage-finished"><div class="stage-copy finished-heading"><span class="ui-badge stage-ribbon">GAME OVER</span><h1>今晚的畫猜高手</h1><p>${esc(s.winner?.reason||'每位畫者都已完成。')}</p></div><section class="stage-podium" aria-label="本局排名">${podium}</section>${s.result?.resultId?`<section class="stage-art finished-art" aria-label="最後一輪畫作"><h2>最後一幅畫${s.result.answer?' · '+esc(s.result.answer):''}</h2><canvas id="stagePreview" width="512" height="256" role="img" aria-label="最後一輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取畫作…</small></section>`:''}</div>`;
 }
 function render(live=false){
  const s=state,settingsOpen=$('#stage .stage-controls')?.open,voteFocus=document.activeElement?.id==='stageBan'?document.activeElement.dataset.resultId:null;let html='',actions='';
  document.body.dataset.drawPhase=s.phase;
  document.body.classList.toggle('drawing-active',s.phase==='drawing');
  if(s.phase==='waiting'){
-  html=s.host?`<details class="card stage-controls room-settings-panel"><summary>房間設定</summary><div class="room-settings-body" role="group" aria-label="房間設定欄位"><div class="settings">${topicOptions('題目類別',selectedTopics(s.options))}${options('作畫時間',[['60','60 秒'],['90','90 秒'],['120','120 秒']],s.options.seconds,'seconds')}</div>${GameShell.settingsActions()}</div></details>`:'';
+  html=roomSettingsMarkup(s);
   actions=waitingActions(s);
  }else if(s.phase==='drawing'){
   const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me);
@@ -170,9 +180,9 @@ function render(live=false){
   }else if(s.phase==='finished'){
    actions=`<p>本局完成。</p>${s.host?'<button data-do="start">再玩一局</button>':'<p>等待房主再開一局。</p>'}${s.result?.resultId?'<button data-do="save" data-result-id="'+esc(s.result.resultId)+'">收藏這幅畫</button>':''}`;
  }
- $('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&s.phase==='waiting'&&s.host)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
- if(s.phase==='waiting'&&s.host){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
-  actions=(s.options.ending?.value!=null?'<p class="draw-ending-summary">'+(s.options.ending.mode==='score'?'目標 '+s.options.ending.value+' 分（最多 64 題）':'固定 '+s.options.ending.value+' 題')+'</p>':'')+actions;actions+=GameShell.botButton?.(s)||'';
+ if(s.phase==='finished')html=roomSettingsMarkup(s);$('#stage').innerHTML=html;$('#stage').hidden=!html;if(settingsOpen&&['waiting','finished'].includes(s.phase)&&!window.RoomControls)$('#stage .stage-controls').open=true;window.GameUI?.decorateButton($('#stage .room-settings-save'),'save');
+ if(['waiting','finished'].includes(s.phase)&&!window.RoomControls){const details=$('#stage .stage-controls');window.UIPopover?.bindDetails(details,details.querySelector('.room-settings-body'),{align:'start',width:720});}
+  if(s.phase==='waiting')actions+=GameShell.botButton?.(s)||'';
   GameShell.stableMarkup($('#drawActions'),actions);
  decorateActions();
  $('#canvasStage').innerHTML=s.phase==='drawing'?'':stageScene(s);
@@ -422,7 +432,7 @@ function drawFeedback(message,kind='info',settings=false,guess=false){
  if(!message&&!settings){const other=$(guess?'#drawStatus':'#drawGuessStatus');other.textContent='';other.dataset.kind='info';window.GameUI?.setStatus(other,'',{kind:'info'});}
 }
 let pendingDrawButton=null;
-function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));$('#drawGuessPanel').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton)window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}}
+function drawBusy(value){$('#drawActionSlot').setAttribute('aria-busy',String(value));$('#drawGuessPanel').setAttribute('aria-busy',String(value));if(value){pendingDrawButton=document.activeElement?.closest?.('button');if(pendingDrawButton&&!pendingDrawButton.classList.contains('ui-room-roster-action-button'))window.GameUI?.setBusy(pendingDrawButton,true);}else{if(pendingDrawButton&&!pendingDrawButton.classList.contains('ui-room-roster-action-button'))window.GameUI?.setBusy(pendingDrawButton,false);pendingDrawButton=null;}window.RoomWaiting?.setRosterBusy(value);}
 async function action(name,data={}){if(busy)return false;const epoch=state?.canvasEpoch,guess=name==='guess';busy=true;drawBusy(true);drawFeedback('正在送出…','info',false,guess);try{receive(await api('action',{action:name,...data}));updateConnection();if(state?.canvasEpoch!==epoch)return false;drawFeedback('','info',false,guess);return true;}catch(error){if(state?.canvasEpoch===epoch){drawFeedback(error.message,'error',false,guess);toast(error.message);}return false;}finally{busy=false;drawBusy(false);}}
 async function roomAction(route,data={}){if(busy)return;if(route==='start'&&roomSettingsAutoSave){await roomSettingsAutoSave.flush();if(roomSettingsAutoSave.pending())return;}const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;drawBusy(true);drawFeedback('正在送出…','info',settings);try{receive(await api(route,data));updateConnection();drawFeedback(settings?'房間設定已儲存。':'',settings?'success':'info',settings);}catch(error){drawFeedback(error.message,'error',settings);toast(error.message);}finally{busy=false;drawBusy(false);if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/draw/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製邀請連結',url);}}
@@ -449,16 +459,22 @@ function stageClick(event){
  if(button.dataset.word)return action('choose',{questionId:button.dataset.word});
  switch(button.dataset.do){
   case 'bot':return roomAction('bot');case 'start':return roomAction('start');case 'next':return action('next');
-   case 'settings':try{return roomAction('settings',{seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()});}catch(error){drawFeedback(error.message,'error',true);toast(error.message);return;}
+   case 'settings':try{return roomAction('settings',readRoomSettings());}catch(error){drawFeedback(error.message,'error',true);toast(error.message);return;}
   case 'save':return saveArtwork(button.dataset.resultId);case 'ban':return voteForResult(button.dataset.resultId);case 'invite':return invite();
  }
 }
+document.addEventListener('change',event=>{
+ if(event.target.id!=='drawEndMode'||!state?.host)return;
+ const mode=event.target.value,score=mode==='score',value=$('#drawEndValue');value.disabled=mode==='legacy';value.min=score?10:1;value.max=score?1000:64;value.value=mode==='legacy'?'':score?100:8;$('#drawEndHint').textContent=mode==='legacy'?'依入座順序，每位玩家畫一次。':score?'10–1000 分；當題揭曉後結算，最多 64 題。':'1–64 題；畫者依入座順序輪替。';
+});
 $('#stage').addEventListener('click',stageClick);
+document.addEventListener('click',event=>{if(event.target.closest('.ui-room-settings-slot'))stageClick(event);});
 $('#drawActions').addEventListener('click',stageClick);
+document.addEventListener('click',event=>{if(event.target.closest('.ui-room-roster-add button[data-do=bot]'))stageClick(event);});
 $('#canvasStage').addEventListener('click',stageClick);
 $('#stage').addEventListener('submit',async event=>{
  if(event.target.id!=='enterForm')return;event.preventDefault();if(busy)return;busy=true;
-  try{const result=await api(code?'join':'create',{type:'draw',code,...(!code?{topics:readTopics()}:{})});if(result.type!=='draw')throw Error('這是其他遊戲房間');save(result);drawingController.start();receive(await api('state'));updateConnection();}
+  try{const result=await api(code?'join':'create',{type:'draw',code});if(result.type!=='draw')throw Error('這是其他遊戲房間');save(result);drawingController.start();receive(await api('state'));updateConnection();}
  catch(error){toast(error.message);}finally{busy=false;}
 });
 $('#guessForm').addEventListener('submit',async event=>{event.preventDefault();const input=$('#guessInput'),answer=input.value.trim();if(!answer)return;const accepted=await action('guess',{answer});if(accepted&&input.value.trim()===answer)input.value='';input.focus();});
@@ -595,4 +611,4 @@ window.addEventListener('pagehide',event=>{countdownBar.reset();drawingControlle
 window.addEventListener('pageshow',event=>{if(event.persisted){drawingController.start();motionNeedsBaseline=true;if(state){resultsView?.update(state);redrawCanvas();syncCanvas();updateStagePreview();}if(session)poll();else drawingController.restore();}});
 fetch('/api/auth/me').then(response=>response.json()).then(me=>{const identity=$('#identity');if(identity&&me.displayName)identity.textContent='以「'+me.displayName+'」入座';}).catch(()=>{});
 
-const roomSettingsAutoSave=window.GameShell?.autoSaveSettings?.({read:()=>({seconds:Number($('#stage input[name="seconds"]:checked')?.value),topics:readTopics()}),save:data=>roomAction('settings',data),canSave:()=>!!state?.host&&state.phase==='waiting',isBusy:()=>busy});
+const roomSettingsAutoSave=window.GameShell?.autoSaveSettings?.({read:readRoomSettings,save:data=>roomAction('settings',data),canSave:()=>!!state?.host&&['waiting','finished'].includes(state.phase),isBusy:()=>busy});

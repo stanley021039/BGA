@@ -82,8 +82,8 @@ test('manager can open the same dialog and kick only ordinary humans; members an
  for(const id of ['host','peer','bot'])assert.equal(h.button('kick',id),undefined);
  const forged=new h.Node('button');forged.dataset={rolePlayer:'member',roomRole:'manager'};await h.delegate(forged);assert.equal(h.network.length,0);
  forged.dataset={kick:'peer'};await h.delegate(forged);assert.equal(h.node('kickWarning').open,false);
- h.update(snapshot({role:'member',host:true}));assert.equal(h.node('managePlayers').hidden,true);assert.equal(h.node('hostPlayers').open,false);h.open();assert.equal(h.node('hostPlayers').open,false);
- h.window.RaceLesson={};h.update(snapshot());assert.equal(h.node('managePlayers').hidden,true);h.open();assert.equal(h.node('hostPlayers').open,false);
+ h.update(snapshot({role:'member',host:true}));assert.equal(h.node('managePlayers').hidden,false);assert.equal(h.node('managePlayers').disabled,true);assert.equal(h.node('hostPlayers').open,false);h.open();assert.equal(h.node('hostPlayers').open,false);
+ h.window.RaceLesson={};h.update(snapshot());assert.equal(h.node('managePlayers').disabled,true);h.open();assert.equal(h.node('hostPlayers').open,false);
 });
 
 test('real role commands reach callbacks immediately in all five games and retain session compatibility',async t=>{
@@ -156,7 +156,7 @@ test('target promotion or actor demotion closes an obsolete kick prompt and prev
  const initial=snapshot({role:'manager'}),h=harness(initial);h.open();await h.kick('member');
  h.update({...initial,version:2,players:initial.players.map(player=>player.id==='member'?{...player,roomRole:'manager'}:player)});
  assert.equal(h.node('kickWarning').open,false);await h.node('confirmKick').click();assert.equal(h.network.length,0);
- h.update(initial);h.open();await h.kick('member');h.update(snapshot({role:'member'}));assert.equal(h.node('kickWarning').open,false);assert.equal(h.node('managePlayers').hidden,true);
+ h.update(initial);h.open();await h.kick('member');h.update(snapshot({role:'member'}));assert.equal(h.node('kickWarning').open,false);assert.equal(h.node('managePlayers').hidden,false);assert.equal(h.node('managePlayers').disabled,true);
  await h.node('confirmKick').click();assert.equal(h.network.length,0);
 });
 

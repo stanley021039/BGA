@@ -2,7 +2,11 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{randomUUID}=require('node:crypto');
 const {createApp}=require('../src/app'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth');
 
-test('HTTP nickname updates current seats in all five games while keeping results, history and watch playback stable',async()=>{
+test('HTTP nickname updates current seats in all five games while keeping results, history and watch playback stable',async t=>{
+ // This test isolates renaming from ordinary game timers. Thunder reveals its
+ // opening dice after one second and legitimately advances the deadline;
+ // slower runners must not conflate that timer with a profile/name mutation.
+ t.mock.timers.enable({apis:['Date'],now:Date.UTC(2026,9,12,8,0)});
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-player-rename-'));
  const config={port:0,host:'127.0.0.1',dbFile:path.join(root,'app.sqlite'),communityDir:path.join(root,'community'),historyDir:path.join(root,'history'),externalSideEffectsEnabled:false};
  const seed=openDatabase(config.dbFile),auth=createAuth(seed),hostId=await auth.bootstrap('rename_host','rename-password-123'),friendId=randomUUID();

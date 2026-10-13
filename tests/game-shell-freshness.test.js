@@ -1,0 +1,9 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const source=fs.readFileSync(path.join(__dirname,'../public/shared/game-shell.js'),'utf8');
+function harness(){const changes=[],scope={state:{code:'ABC123',me:'P',type:'telephone',phase:'passing',version:2,serverNow:200,media:{roomInstanceId:'instance-A'}},window:{RoomWaiting:{update:s=>changes.push('waiting:'+s.phase)},TableMedia:{update:s=>changes.push('media:'+s.phase)}},Number,stableMarkup(){},playerRow(){},settingsActions(){},botButton(){},autoSaveSettings(){},showHistoryWarning(){}};scope.update=s=>{scope.state=s;changes.push('shell:'+s.phase);};vm.createContext(scope);vm.runInContext(source.slice(source.indexOf(' function isStaleRoomState('),source.lastIndexOf('})();')),scope);return {scope,changes,send:s=>scope.window.GameShell.update({...scope.state,...s})};}
+test('a delayed waiting-room ACK cannot undo a game start in the shared presentation',()=>{
+ const h=harness();assert.equal(h.send({phase:'waiting',version:1,serverNow:100}),false);assert.deepEqual(h.changes,[]);assert.equal(h.scope.state.phase,'passing');assert.equal(h.send({phase:'waiting',serverNow:199}),false);assert.deepEqual(h.changes,[]);h.send({phase:'reveal',version:3,serverNow:150});assert.deepEqual(h.changes,['waiting:reveal','media:reveal','shell:reveal']);
+});
+test('fresh clocks and new room, seat, game or instance contexts remain accepted',()=>{
+ for(const next of [{serverNow:201},{code:'DEF456',version:0},{me:'Q',version:0},{type:'bluff',version:0},{media:{roomInstanceId:'instance-B'},version:0}]){const h=harness();h.send(next);assert.equal(h.changes.length,3,JSON.stringify(next));}
+});

@@ -82,7 +82,7 @@ test('Quacks server badges appear in their own filterable game group',async()=>{
  f.filter('achievementGameFilter','quacks');assert.equal(f.classNodes('achievement-group')[0].dataset.game,'quacks');assert.equal(f.classNodes('achievement-card').length,1);assert.equal(f.nodes.get('#achievementGameFilter').options.some(o=>o.value==='quacks'&&o.textContent==='郎中闖江湖'),true);
 });
 test('achievement game icons are defined by the common 24px registry instead of page artwork',()=>{
- const source=read('shared/ui-components.js'),end=source.indexOf(' /* One hover/focus hint');const context=vm.createContext({window:{},document:{}});vm.runInContext(source.slice(0,end)+'})();',context);
+ const source=read('shared/ui-components.js'),end=source.indexOf(' /* One hover/focus hint');const context=vm.createContext({window:{},document:{readyState:'loading',addEventListener(){}}});vm.runInContext(source.slice(0,end)+'})();',context);
  for(const name of ['edit','gift','users','cards','car','table']){const svg=context.window.GameUI.icon(name);assert.match(svg,/class="ui-icon" viewBox="0 0 24 24"/);assert.match(svg,/aria-hidden="true" focusable="false"/);assert.doesNotMatch(svg,/<script|<image|https?:/);}
  const html=read('achievements.html');assert.match(html,/for="achievementGameFilter"/);assert.match(html,/for="achievementStatusFilter"/);assert.match(html,/<option value="unlocked">已解鎖<\/option>/);assert.match(html,/<option value="locked">未解鎖<\/option>/);assert.ok(html.indexOf('/shared/ui-components.js')<html.indexOf('/achievements.js'));
 });

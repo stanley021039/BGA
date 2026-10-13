@@ -55,6 +55,7 @@ function actionFeedback(message,kind='info',settings=false){
  if(window.GameUI)GameUI.setStatus(node,message,{kind});else{node.textContent=message;node.dataset.kind=kind;}
 }
 function syncActionBusy(){
+ window.RoomWaiting?.setRosterBusy(busy);
  const slot=$('[data-game-action-slot]');if(!slot)return;slot.setAttribute('aria-busy',String(busy));
  for(const button of [...slot.querySelectorAll('button'),...document.querySelectorAll('.room-settings-save')]){
   if(busy){if(!button.hasAttribute('data-idle-disabled'))button.dataset.idleDisabled=String(button.disabled);button.disabled=true;}
@@ -140,7 +141,7 @@ function startFocus(){
  const show=()=>{
   if(step>=indexes.length){stopFocus();celebrateVictory();return;}
   const entry=entries[indexes[step]],gift=state.gifts.find(item=>item.id===entry.giftId),giver=player(entry.giverId),recipient=player(entry.recipientId);
-  content.innerHTML=`<span class="eyebrow">FOCUS ${step+1} / ${indexes.length}</span><div class="gift-story-line"><div class="story-person story-giver">${storyAvatar(giver)}<small>送禮</small><b>${esc(giver?.name||'玩家')}</b></div><div class="story-flight"><div class="story-gift-card">${gift?.image?`<img src="${esc(gift.image)}" alt=""><span class="story-gift-fallback" aria-hidden="true" hidden>✦</span>`:'<span class="story-gift-fallback" aria-hidden="true">✦</span>'}<strong>${esc(gift?.title||'禮物')}</strong></div></div><div class="story-person story-recipient">${storyAvatar(recipient)}<small>收禮</small><b>${esc(recipient?.name||'玩家')}</b></div></div><div class="story-verdict"><span>${esc(storyRankLabels[entry.rank]||'沒標記')}</span><b class="${entry.points>=0?'positive':'negative'}">本件評分 ${entry.points>0?'+':''}${entry.points}</b></div>`;
+  content.innerHTML=`<span class="eyebrow">FOCUS ${step+1} / ${indexes.length}</span><div class="gift-story-line"><div class="story-person story-giver">${storyAvatar(giver)}<small>送禮</small><b>${esc(giver?.name||'玩家')}</b></div><div class="story-flight"><div class="story-gift-card">${gift?.image?`<img src="${esc(gift.image)}" alt=""><span class="story-gift-fallback" aria-hidden="true" hidden>✦</span>`:'<span class="story-gift-fallback" aria-hidden="true">✦</span>'}<strong>${esc(gift?.title||'禮物')}</strong></div></div><div class="story-person story-recipient">${storyAvatar(recipient)}<small>收禮</small><b>${esc(recipient?.name||'玩家')}</b></div></div><div class="story-verdict"><span class="ui-badge">${esc(storyRankLabels[entry.rank]||'沒標記')}</span><b class="${entry.points>=0?'positive':'negative'}">本件評分 ${entry.points>0?'+':''}${entry.points}</b></div>`;
   content.classList.remove('focus-enter');void content.offsetWidth;content.classList.add('focus-enter');
   step++;focusTimer=setTimeout(show,1400);
  };

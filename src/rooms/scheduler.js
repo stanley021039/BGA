@@ -3,6 +3,7 @@ const {runTestAIStep}=require('../ai');
 function advanceTimedPhase(room,history){
  const now=Date.now();let due=false;
  if(room.type==='bluff')due=room.phase==='preparing'&&room.deadline!=null&&now>=room.deadline;
+ if(room.type==='telephone')due=room.phase==='passing'&&room.deadline!=null&&now>=room.deadline;
  if(room.type==='minimal')due=room.phase==='drawing'&&room.deadline!=null&&now>=room.deadline;
  if(room.type==='majority')due=room.phase==='answering'&&room.deadline!=null&&now>=room.deadline;
  if(room.type==='draw'){

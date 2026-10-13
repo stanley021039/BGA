@@ -42,7 +42,7 @@ test('history escapes date text and rejects script, nonofficial, credentials and
 
 test('leaderboard preserves competition ties and server ordering, renders only nickname/rank/score plus self',async()=>{
  const rows=[{rank:1,displayName:'甲',score:12,played:20,isMe:false,id:'private-id',username:'private-account'},{rank:1,displayName:'<img onerror=evil>',score:12,played:19,isMe:true},{rank:3,displayName:'乙',score:-1,played:7,isMe:false}];const f=await fixture({hash:'#leaderboard',state:baseState({leaderboard:{rows,totalParticipants:3,ownRank:rows[1]}})});const html=f.client.node('#leaderboardRows').innerHTML;
- assert.equal(f.client.node('#leaderboard').hidden,false);assert.match(html,/甲.*&lt;img onerror=evil&gt;.*乙/);assert.equal((html.match(/rank-number">1</g)||[]).length,2);assert.match(html,/rank-number">3</);assert.match(html,/class="self-tag">你/);assert.match(html,/>-1\.00</);assert.doesNotMatch(html,/<img |private-id|private-account|>20<|>19</);assert.equal(f.client.node('#ownRank').hidden,true);assert.equal(f.client.node('#leaderboardCount').textContent,'共 3 位玩家');
+ assert.equal(f.client.node('#leaderboard').hidden,false);assert.match(html,/甲.*&lt;img onerror=evil&gt;.*乙/);assert.equal((html.match(/rank-number">1</g)||[]).length,2);assert.match(html,/rank-number">3</);assert.match(html,/class="[^\"]*\bself-tag\b[^\"]*">你/);assert.match(html,/>-1\.00</);assert.doesNotMatch(html,/<img |private-id|private-account|>20<|>19</);assert.equal(f.client.node('#ownRank').hidden,true);assert.equal(f.client.node('#leaderboardCount').textContent,'共 3 位玩家');
 });
 
 test('leaderboard bounds visible list at 100 and keeps own rank outside list with literal text',async()=>{

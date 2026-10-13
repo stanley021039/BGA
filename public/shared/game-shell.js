@@ -2,7 +2,7 @@
  const panel=document.createElement('aside');
  panel.className='shared-game-ui';
  panel.hidden=true;
- panel.innerHTML='<div class="shared-head"><span>AFTERHOURS / ROOM</span><button id="shared-toggle" type="button" aria-expanded="false">表情／彈幕</button><a href="/" aria-label="返回遊戲大廳">離開房間 ↗</a></div><div id="shared-turn" class="shared-turn" role="status" aria-live="polite">等待開局</div><h2 class="shared-players-heading">這一桌的角色</h2><div id="shared-players" class="shared-players"></div><h2 class="shared-expressions-heading">使用角色表情</h2><div id="shared-expressions" class="shared-expressions" aria-label="我的角色表情"></div><h2 class="shared-barrage-heading">文字彈幕</h2><form id="shared-barrage" class="ui-control-row" autocomplete="off"><input autocomplete="off" name="message" maxlength="40" placeholder="輸入彈幕（最多 40 字）" aria-label="文字彈幕" required><button type="submit">發送</button></form><p id="shared-error" role="status"></p>';
+ panel.innerHTML='<div class="shared-head"><span>AFTERHOURS / ROOM</span><button id="shared-toggle" type="button" aria-expanded="false">表情／彈幕</button><a href="/" aria-label="返回遊戲大廳">離開房間 ↗</a></div><span id="shared-turn" class="ui-sr-only" role="status" aria-live="polite">等待開局</span><h2 class="shared-players-heading">這一桌的角色</h2><div id="shared-players" class="shared-players"></div><h2 class="shared-expressions-heading">使用角色表情</h2><div id="shared-expressions" class="shared-expressions" aria-label="我的角色表情"></div><h2 class="shared-barrage-heading">文字彈幕</h2><form id="shared-barrage" class="ui-control-row" autocomplete="off"><input autocomplete="off" name="message" maxlength="40" placeholder="輸入彈幕（最多 40 字）" aria-label="文字彈幕" required><button type="submit">發送</button></form><p id="shared-error" role="status"></p>';
  const majorityAside=document.querySelector('.play-layout > aside');
  const giftAside=document.querySelector('.gift-layout > aside');
  const drawAside=document.querySelector('.draw-layout > aside');
@@ -10,7 +10,8 @@
  if(pokerAside){const bot=document.querySelector('#bot');bot?.classList.add('room-test-ai');window.GameUI?.decorateButton(bot,'users',{iconOnly:true,label:'加入測試 AI'});}
  const staticRaceControls=document.querySelector('.race-controls');let raceUtilities=null;
  const raceCrews=document.querySelector('.race-main #crews')||staticRaceControls?.querySelector('#crews');
- const sidebar=majorityAside||giftAside||drawAside||pokerAside;
+ const basicAside=document.querySelector('#controls')?.closest('section');
+ const sidebar=majorityAside||giftAside||drawAside||pokerAside||basicAside;
  document.body.classList.add('game-room');
  if(!document.body.dataset.gameKind)document.body.dataset.gameKind=majorityAside?'majority':giftAside?'gift':drawAside?'draw':pokerAside?'poker':raceCrews?'race':'room';
  document.body.classList.toggle('room-light',!!(majorityAside||giftAside||drawAside));
@@ -18,11 +19,11 @@
   sidebar.classList.add('room-sidebar');sidebar.parentElement.classList.add('room-layout');
   const heading=sidebar.querySelector('.aside-head');
   if(heading){const count=heading.querySelector('#count');heading.replaceChildren();const title=document.createElement('h2');title.textContent='這桌的朋友';heading.append(title);if(count)heading.append(count);}
-  const history=sidebar.querySelector('.history-link');if(history)history.textContent='對局歷史 ↗';
+  for(const history of sidebar.querySelectorAll('.history-link'))history.remove();
  }
  const dock=document.createElement('div');dock.className='room-action-dock ui-control-row';dock.setAttribute('aria-label','房間工具');
  const leaveLink=document.createElement('a');leaveLink.href='/';leaveLink.className='room-leave';leaveLink.textContent='離開房間';leaveLink.hidden=true;window.GameUI?.decorateButton(leaveLink,'leave',{label:'離開房間'});dock.append(leaveLink);
- const manage=document.querySelector('#managePlayers');if(manage){window.GameUI?.decorateButton(manage,'users',{label:'管理玩家'});dock.append(manage);}document.body.append(dock);
+ const manage=document.querySelector('#managePlayers');if(manage){window.GameUI?.decorateButton(manage,'users',{label:'管理玩家'});dock.prepend(manage);}document.body.append(dock);
  for(const dialog of document.querySelectorAll('#hostPlayers,#kickWarning,#kickedNotice')){const title=dialog.querySelector('h2');if(title){if(!title.id)title.id=dialog.id+'-title';dialog.setAttribute('aria-labelledby',title.id);}dialog.classList.add('ui-dialog');}
  if(majorityAside){if(majorityAside.querySelector('[data-game-action-slot]'))majorityAside.append(panel);else majorityAside.querySelector('#players').after(panel);panel.classList.add('integrated','majority-ui');}
  else if(giftAside){if(giftAside.querySelector('[data-game-action-slot]'))giftAside.append(panel);else giftAside.querySelector('#players').after(panel);panel.classList.add('integrated','gift-ui');}
@@ -45,10 +46,10 @@
   panel.classList.add('integrated','race-ui');
  }
 
+ else if(basicAside){basicAside.append(panel);panel.classList.add('integrated','compact-room-ui');}
  else document.body.append(panel);
  if(sidebar){
   const toggle=panel.querySelector('#shared-toggle');toggle.className='room-interaction-toggle';toggle.textContent='表情／互動';panel.querySelector('#shared-turn').after(toggle);
-  if(!sidebar.querySelector('.history-link')){const history=document.createElement('a');history.className='history-link';history.href='/history';history.textContent='對局歷史 ↗';panel.after(history);}
  }
  const toolsHost=sidebar||raceUtilities||document.querySelector('.race-controls');if(toolsHost){dock.classList.add('in-sidebar');toolsHost.append(dock);}
  const mediaSlot=document.createElement('div');mediaSlot.className='room-media-slot';dock.append(mediaSlot);window.TableMedia?.mount(mediaSlot);
@@ -57,10 +58,10 @@
   if(manage)window.GameUI?.decorateButton(manage,'users',{iconOnly:true,label:'管理玩家'});
   const mediaButton=mediaSlot.querySelector('#tableMediaOpen');if(mediaButton)window.GameUI?.decorateButton(mediaButton,'video',{iconOnly:true,label:'媒體'});
  }
- const arena=majorityAside?.previousElementSibling||giftAside?.previousElementSibling||drawAside?.previousElementSibling||document.querySelector('#game .play-area')||document.querySelector('.race-main')||document.body;
+ const arena=majorityAside?.previousElementSibling||giftAside?.previousElementSibling||drawAside?.previousElementSibling||document.querySelector('#game .play-area')||document.querySelector('.race-main')||document.querySelector('#game')||document.body;
  const barrageLayer=document.createElement('div');barrageLayer.className='game-barrage-layer';barrageLayer.setAttribute('aria-hidden','true');
  arena.classList.add('game-barrage-host');arena.append(barrageLayer);
- const q=selector=>panel.querySelector(selector)||dock.querySelector(selector);
+ const q=selector=>panel.querySelector(selector)||dock.querySelector(selector)||document.querySelector(selector);
  for(const [selector,container] of [['#raceSpotlight','.race-stage'],['#pokerSpotlight','.table-wrap']])window.UIPopover?.bindOverlay(document.querySelector(selector),document.querySelector(container));
  const expressions=q('#shared-expressions');panel.querySelector('.shared-expressions-heading')?.remove();
  if(toolsHost){leaveLink.textContent='離房';leaveLink.setAttribute('aria-label','離房，離開房間');leaveLink.title='離開房間';window.GameUI?.decorateButton(leaveLink,'leave',{label:'離房'});if(manage){manage.textContent='管理';manage.setAttribute('aria-label','管理玩家');manage.title='管理玩家';window.GameUI?.decorateButton(manage,'settings',{label:'管理'});}}
@@ -70,6 +71,8 @@
  const emojiPicker=document.createElement('div');emojiPicker.id='shared-emoji-picker';emojiPicker.className='shared-emoji-picker';emojiPicker.hidden=true;emojiPicker.setAttribute('role','group');emojiPicker.setAttribute('aria-label','emoji彈幕與角色表情');q('#shared-barrage').after(emojiPicker);
  const emojiHeading=document.createElement('h3');emojiHeading.textContent='一般emoji彈幕';const emojiChoices=document.createElement('div');emojiChoices.className='shared-emoji-choices';const separator=document.createElement('hr');separator.setAttribute('role','separator');const expressionHeading=document.createElement('h3');expressionHeading.textContent='角色表情';emojiPicker.append(emojiHeading,emojiChoices,separator,expressionHeading,expressions);
  const emoteButton=document.createElement('button');emoteButton.type='button';emoteButton.id='shared-emote-toggle';emoteButton.textContent='☺';emoteButton.setAttribute('aria-label','選擇emoji或角色表情');emoteButton.setAttribute('aria-expanded','false');emoteButton.setAttribute('aria-controls','shared-emoji-picker');window.GameUI?.decorateButton(emoteButton,'emoji',{iconOnly:true,label:'選擇emoji或角色表情'});q('#shared-barrage').append(emoteButton);
+ q('#shared-barrage').hidden=true;if(window.SharedChat)q('#shared-toggle').hidden=true;panel.querySelector('.shared-barrage-heading')?.remove();
+ window.SharedChat?.mountTools?.([emoteButton,mediaSlot,emojiPicker,q('#shared-error')]);
  function closeEmoji(restoreFocus=false){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');if(restoreFocus)emoteButton.focus();}
  const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',onClose:()=>closeEmoji()});
  emoteButton.onclick=()=>{if(!emojiPicker.hidden){closeEmoji();return;}emojiPicker.hidden=false;emoteButton.setAttribute('aria-expanded','true');emojiPopover?.sync();emojiPicker.querySelector('button:not(:disabled)')?.focus();};
@@ -111,13 +114,14 @@
    const presenter=s.players.find(player=>player.id===s.presenterId);
    return s.presenterId===s.me?'輪到你出題！':`輪到 ${presenter?.name||'出題者'} 出題`;
   }
+  if(['telephone','trpg','musicquiz','minimal','bluff','quacks'].includes(s.type))return '本場遊戲進行中';
   const id=s.type==='thunder'?s.actor:s.players[s.turn]?.id;
   const actor=s.players.find(player=>player.id===id);
   return id===s.me?'輪到你操作！':`輪到 ${actor?.name||'其他玩家'} 操作`;
  }
  function element(tag,className,text){const node=document.createElement(tag);node.className=className;node.textContent=text;return node;}
  function update(s){
-  leaveLink.hidden=false;
+  leaveLink.hidden=false;window.RoomControls?.update(s);
   if(window.RaceLesson)return;
   window.SharedChat?.updateRoom(s);
   state=s;panel.hidden=false;if(!panel.classList.contains('integrated'))document.body.classList.add('has-game-shell');
@@ -137,7 +141,7 @@
     const row=element('div','shared-player','');row.classList.toggle('active',player.id===current);
     if(player.avatar){const img=document.createElement('img');img.src=player.avatar;img.alt='';row.append(img);}
     const name=element('span','shared-player-name','');name.innerHTML=window.GameUI?.playerName?.(player.name)||escape(player.name);
-    if(player.id===s.me)name.append(element('span','shared-player-self',' · 你'));row.append(name);
+    row.append(name);
     const expression=recent.get(player.id);
     if(expression){const badge=element('span','shared-emote-label',expression.label||expression.expression);badge.title=`${player.name} 使用了「${badge.textContent}」`;row.append(badge);}
     if(player.id===current)row.append(element('b','','◀ 操作中'));
@@ -145,6 +149,7 @@
    }
    }
   }
+  const host=s.phase==='waiting'?document.querySelector('.room-waiting-template,#waiting')||arena:arena;if(barrageLayer.parentElement!==host){host.classList.add('game-barrage-host');host.append(barrageLayer);}
   barrages.update(s);
   if(!loaded&&!loading&&Date.now()>=nextLoad)loadExpressions();
  }
@@ -169,7 +174,7 @@
  }
  async function send(payload,confirmation,trigger){
   if(!state||sending)return false;
-  sending=true;feedback('傳送中…');const buttons=[...panel.querySelectorAll('button'),...expressions.querySelectorAll('button')],disabled=buttons.map(button=>button.disabled);for(const button of buttons)button.disabled=true;q('#shared-barrage').setAttribute('aria-busy','true');if(window.GameUI)window.GameUI.setBusy(trigger,true);else if(trigger){trigger.setAttribute('aria-busy','true');trigger.classList.add('is-pending');}
+  sending=true;feedback('傳送中…');const buttons=[...panel.querySelectorAll('button'),...expressions.querySelectorAll('button'),q('#shared-emote-toggle')].filter(Boolean),disabled=buttons.map(button=>button.disabled);for(const button of buttons)button.disabled=true;q('#shared-barrage').setAttribute('aria-busy','true');if(window.GameUI)window.GameUI.setBusy(trigger,true);else if(trigger){trigger.setAttribute('aria-busy','true');trigger.classList.add('is-pending');}
   try{const response=await fetch('/api/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code,...payload})});const result=await response.json();if(!response.ok)throw Error(result.error||'傳送失敗');if(window.RoomHost?.acceptSnapshot)window.RoomHost.acceptSnapshot(result);else update(result);feedback(confirmation,'success');return true;}
   catch(error){feedback(error.message,'error');return false;}
   finally{sending=false;if(window.GameUI)window.GameUI.setBusy(trigger,false);else if(trigger){trigger.removeAttribute('aria-busy');trigger.classList.remove('is-pending');}buttons.forEach((button,index)=>button.disabled=disabled[index]);q('#shared-barrage').removeAttribute('aria-busy');}
@@ -177,9 +182,13 @@
  q('#shared-barrage').onsubmit=async event=>{event.preventDefault();const input=q('#shared-barrage input'),message=input.value.trim();if(!message)return;if([...message].length>40){feedback('文字彈幕最多 40 字','error');return;}const builtinFrameId=window.BarrageFrames?.get().selected;if(await send({kind:'barrage',message,...(builtinFrameId?{builtinFrameId}:{})},'文字彈幕已送出',q('#shared-barrage button[type=submit]'))&&input.value.trim()===message)input.value='';};
  q('#shared-toggle').onclick=()=>{const expanded=panel.classList.toggle('expanded');q('#shared-toggle').setAttribute('aria-expanded',String(expanded));q('#shared-toggle').textContent=expanded?'收合互動':'表情／彈幕';};
  window.addEventListener('focus',()=>{if(state){nextLoad=0;loadExpressions();}});
+ if(!window.RoomControls){
  let leaving=false;
  const leaveDialog=document.createElement('dialog');leaveDialog.className='ui-dialog room-leave-dialog';leaveDialog.setAttribute('aria-labelledby','room-leave-title');
- leaveDialog.innerHTML='<h2 id="room-leave-title">確定離開這個房間？</h2><p>離開後會返回遊戲大廳。</p><div class="ui-control-row"><button type="button" id="room-leave-confirm">確認離開</button><button type="button" id="room-leave-cancel">留在房間</button></div>';
+ leaveDialog.innerHTML='<h2 id="room-leave-title">確定離開這個房間？</h2><p>離開後會返回遊戲大廳。</p><div class="ui-control-row"><button type="button" class="ui-button primary" id="room-leave-confirm">確認離開</button><button type="button" class="ui-button secondary" id="room-leave-cancel">留在房間</button></div>';
+ window.GameUI?.frameDialog?.(leaveDialog);
+ window.GameUI?.decorateButton(leaveDialog.querySelector('#room-leave-confirm'),'leave',{label:'確認離開'});
+ window.GameUI?.decorateButton(leaveDialog.querySelector('#room-leave-cancel'),'close',{label:'留在房間'});
  document.body.append(leaveDialog);
  leaveDialog.querySelector('#room-leave-confirm').onclick=()=>leaveDialog.close('leave');
  leaveDialog.querySelector('#room-leave-cancel').onclick=()=>leaveDialog.close('cancel');
@@ -197,6 +206,7 @@
    window.RoomReconnect?.forget(state.code);location.href=link.href;
   }catch(error){feedback(error.message,'error');leaving=false;}
  });
+ }
  const library=document.createElement('dialog');library.className='game-library-dialog';library.setAttribute('aria-labelledby','game-library-title');library.innerHTML='<div class="library-dialog-head"><strong id="game-library-title">新增題庫素材</strong><button type="button" aria-label="關閉題庫">關閉</button></div><iframe title="新增題庫素材"></iframe><p class="ui-status" id="game-library-status" role="status"></p>';document.body.append(library);let libraryTrigger=null;
  window.GameUI?.decorateButton(library.querySelector('button'),'close',{iconOnly:true,label:'關閉題庫'});
  library.addEventListener('close',()=>{
@@ -211,9 +221,17 @@
  document.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(!link||event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;const url=new URL(link.href);if(url.origin!==location.origin||!['/gifts','/draw-words','/community'].includes(url.pathname))return;event.preventDefault();libraryTrigger=link;url.searchParams.set('embed','1');library.querySelector('iframe').src=url.pathname+url.search;const status=library.querySelector('#game-library-status');if(window.GameUI)window.GameUI.setStatus(status,'載入素材庫…');else status.textContent='載入素材庫…';if(window.GameUI)window.GameUI.openDialog(library,link);else library.showModal();});
  library.querySelector('iframe').onload=()=>{const doc=library.querySelector('iframe').contentDocument;if(!doc)return;const status=library.querySelector('#game-library-status');if(window.GameUI)window.GameUI.setStatus(status,'');else status.textContent='';const style=doc.createElement('style');style.textContent='header{display:none!important}body{padding:0!important}main{margin-top:12px!important}.gift-shell,.draw-shell,.shell{padding:0 16px!important}';doc.head.append(style);doc.addEventListener('click',event=>{const link=event.target.closest('a[href]');if(link&&new URL(link.href).pathname==='/'){event.preventDefault();library.close();}});};
  if(majorityAside){const link=document.createElement('a');link.href='/community?tab=questions';link.className='quiet';link.textContent='新增題庫素材';document.querySelector('.shell header nav')?.append(link);}
- function stableMarkup(target,markup){if(target._gameMarkup!==markup){target.innerHTML=markup;target._gameMarkup=markup;}}
+ function stableMarkup(target,markup){
+  const actionSlot=['gameActions','drawActions'].includes(target.id);
+  if(target._gameMarkup!==markup){
+   if(actionSlot){window.RoomWaiting?.setRosterAction(null);target._rosterBot=null;}
+   target.innerHTML=markup;target._gameMarkup=markup;
+   if(actionSlot)target._rosterBot=target.querySelector('[data-do="bot"]');
+  }
+  if(actionSlot)window.RoomWaiting?.setRosterAction(target._rosterBot);
+ }
  function botButton(s){
-  if(!s.host||!s.botSupport?.supported)return '';
+  if(!s.host||!s.botSupport?.supported||['waiting','finished'].includes(s.phase)&&!s.botSupport.canAdd)return '';
   const icon=window.GameUI?.icon('users');
   return '<button type="button" class="button room-test-ai'+(icon?' ui-button ui-icon-button':'')+'" data-do="bot" aria-label="加入測試 AI" title="加入測試 AI" '+(s.botSupport.canAdd?'':'disabled')+'>'+(icon?'<span class="ui-button-icon" aria-hidden="true">'+icon+'</span><span class="ui-sr-only">加入測試 AI</span>':'加入測試 AI')+'</button>';
  }
@@ -245,7 +263,7 @@
  function playerRow(player,{me,status='',metrics=[{value:player.score??player.stack??0,label:'分數'}]}={}){
   const avatar=player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
   const name=typeof window!=='undefined'&&window.GameUI?.playerName?window.GameUI.playerName(player.name):'<span class="ui-player-name" title="'+escape(player.name)+'">'+escape(player.name)+'</span>';
-  return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+(player.id===me?'<span class="room-player-self"> · 你</span>':player.bot?'<span class="room-player-self"> · 測試 AI</span>':'')+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
+  return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
  }
  let historyNotice;
  function showHistoryWarning(warning){
@@ -259,5 +277,10 @@
   historyNotice.hidden=!message;
   if(window.GameUI)window.GameUI.setStatus(historyNotice,message,{kind:'error'});else if(historyNotice.textContent!==message)historyNotice.textContent=message;
  }
- window.GameShell={update(s){window.TableMedia?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
+ function isStaleRoomState(next){
+  if(!state||next.code!==state.code||next.me!==state.me||(next.type||'poker')!==(state.type||'poker'))return false;
+  for(const marker of [s=>s.roomInstanceId,s=>s.media?.roomInstanceId,s=>s.watch?.roomInstanceId])if(marker(next)&&marker(state)&&marker(next)!==marker(state))return false;
+  return next.version<state.version||next.version===state.version&&Number.isFinite(next.serverNow)&&Number.isFinite(state.serverNow)&&next.serverNow<state.serverNow;
+ }
+ window.GameShell={update(s){if(isStaleRoomState(s))return false;window.RoomWaiting?.update(s);window.TableMedia?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
 })();

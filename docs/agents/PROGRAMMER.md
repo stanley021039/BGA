@@ -1,5 +1,16 @@
 # 程式架構 agent 記憶
 
+2026-10-12：共用側欄重複色塊與歷史連結移除候選；shared-turn保留僅讀屏公告，網站歷史入口保留。範圍與驗收見[共用側欄](../specs/SHARED-SIDEBAR-FOOTER-REMOVAL.md)；測試、PR與部署狀態以本批PR證據為準。
+
+2026-10-12：AI 玩家末格補齊各遊戲入口，含極簡畫家／猜歌、霧港、瞎掰、撲克、雷霆、同頻、送禮及畫猜。共用移動保留原事件、delegation、pending 與滿員／房主限制；測試與正式部署狀態見本批 PR，不沿用上一輪電話遊戲單頁證據。
+
+2026-10-12：AI夥伴末格整合候選，基於main f2689a4保留共用畫板與操作間距；朋友名單最後一格使用玩家卡／＋圖示、房主／滿員／pending契約。來源與驗收見[AI入口](../specs/AI-ROSTER-SLOT.md)；正式結果以本批PR為準，不將舊隔離證據當作新版通過。
+
+2026-10-12：傳情畫意共用畫板候選，題目與倒數上移、移除技術限額說明、採同款工具與renderer。19 focused及8組隔離Chromium布局，未部署；到0流程待確認，詳[共用畫板](../specs/TELEPHONE-SHARED-BOARD.md)。
+
+2026-10-12：欄位＋操作排版候選修正，傳情畫意等待／再開局使用共用ui-field、ui-field-actions與ui-control-group，避免選單貼住開始按鈕。實作與範圍見[共用欄位操作](../specs/SHARED-FIELD-ACTIONS.md)；測試、PR與部署狀態以本批PR證據為準。
+2026-10-12：獨立側邊候選將建房遊戲設定移至房間設定；畫猜結算／題庫／時間與瞎掰難度／身分時間集中、非房主唯讀。保留8題與30秒預設及舊API，不改傳情畫意控制列。規格見[設定位置](../specs/GAME-SETTINGS-IN-ROOM.md)，測試與發布以本批證據為準，尚未部署。
+
 2026-10-10 音效秒數補驗：10／30／60 秒真實時間瀏覽器各取得 5→1 原生 playing，320ms、25% 音量、零錯誤／重播；隔離靜音及提前 ready 也通過。56 focused，未改 runtime／重跑全套；取代前筆『無原生 playing 證據』，喇叭主觀聽感仍未驗。詳細 [三種秒數證據](../BLUFF-KING-PROGRESS.md)，沒有 PR／部署／永久偏好更新。
 
 2026-10-10 瞎掰王候選 1.28.0：隨機首位想想、按座位輪替每人一次；最後 5→1 秒重用 320ms turn 音，roundId＋秒數去重，沿用音效偏好、首載／hidden／斷線／BFCache 不補播。50 focused、Windows 完整 2000 通過；原生計分與輪替、0 秒完成，無喇叭聽感／playing 事件結論。測試音效暫開後恢復原偏好。詳 [驗證與限制](../BLUFF-KING-PROGRESS.md)，未發布 PR／部署。
@@ -439,6 +450,45 @@ RoomReconnect 可選 AbortSignal 支援取消原本 recovery 與等待，舊三�
 
 Windows 完整 node --test tests/*.test.js：2010/2010 通過，fail/cancel/skip 0，110968ms，含新增的共用日夜配色回歸。node tools/release.cjs check --base origin/main --type minor 與 diff check 通過。ignored 證據 work/pr95-main-integration-tests.log。本輪未重跑原生瀏覽器或主觀音效驗收，先前證據維持原版本範圍。整合後沿用 PR #95 推送，不另開 PR、不合併或部署。
 
+
+2026-10-12 組隊房間分離：十款等待畫面採雷霆之路模板，遊玩資訊等待時隱藏，瞎掰王與傳情畫意設定自動提交。40布局／十次開局及有限設定邊界已驗；完整測試、原生作畫补验、兩輪審查及部署以 [組隊房間進度](../WAITING-ROOMS-PROGRESS.md) 與 PR #96最新留言為準；未驗設備與全phase不冒稱完成。
+
+
+2026-10-12 頁首深色模式修正（1.28.2候選）：使用者截圖中的直向文字來自trpg.html漏載ui-primitives.css，icon-only的ui-sr-only caption未被裁切。只補共用stylesheet引用，沒有改遊戲或頁首CSS；新增全站header資源契約回歸。headless Chrome 25頁／1440与390／日夜100組合通過，caption裁切、圖示範圍及切換前後44px按鈕尺寸已驗；非真人觸控或全phase。最終測試、審查、PR與正式部署結果以本批PR驗收留言為準。
+
+
+2026-10-12 共用文字徽章1.28.3：ui-badge以共用tokens提供內距2px／8px、gap4px、min-height28px；實際狀態／類別／計數入口已opt-in並移除各頁重複幾何，房間操作欄保留120px。七頁28布局與有限原生畫猜已驗，完整測試／PR／公開結果以 [徽章契約](../specs/SHARED-BADGES.md) 與本批PR留言為準。玩家資訊卡、D符號與装饰籌碼不套用。
+
+2026-10-12 共用資訊與操作列1.28.4：ui-control-row 的 ui-info-actions 變體統一12px gap、可換列、44px高度與12ch房號槽；八房入口opt-in，純操作8px維持。32桌機／手機亮暗布局及畫猜15持筆採樣／ACK／觀看者／倒數／揭曉／換輪已驗；完整suite、PR與正式結果以 [共用操作列契約](../specs/SHARED-INFO-ACTIONS.md) 與本批PR留言為準，不推定全部phase／真觸控。
+
+2026-10-12 共用組隊人員名單1.28.5：十款waiting共用ui-room-roster固定260×112卡片／64×80角色／12gap，窄容器縮窄，112px桌機與236px手機捲動槽；真人沿用角色、AI預設機器人，姓名共用observer，hidden切回遊玩名單。十款1→滿席、40布局、十次開局及畫猜15持筆／ACK／觀看者／倒數／揭曉／換輪已驗，完整suite、PR與正式結果以 [名單契約](../specs/SHARED-WAITING-ROSTER.md) 和本批PR留言為準；未驗真觸控／全部phase，不改引擎或資料。
+
+2026-10-12 共用操作按鈕1.28.6：native action與ui-button共用999px橢圓／2px框線，晚載頁面不覆寫；icon44px圓形、內容選擇卡保持幾何。離房dialog confirm/cancel明確接GameUI中文label與primary/secondary。25頁100layout、十房40waiting／start、自動設定、五dialog20layout／取消／Escape／503留房／重試返大廳及畫猜15持筆／ACK／觀看者／倒數／揭曉／換輪已驗；完整suite與正式結果以 [按鈕契約](../specs/SHARED-BUTTON-FRAMES.md) 和本批PR留言為準，原生播放器／browser confirm不聲稱重繪。
+
+
+2026-10-12 組隊布局與聊天室1.29.0候選：十款統一上列介紹／設定、下列固定人員卡／聊天室；手機換列且內容框內捲動。五款補共用聊天依賴，單client/mountIn保留草稿與輪詢，開局恢復操作節點與原展開狀態；TRPG公開角色名出現在名單。等待特殊設定留在共用欄，賽道／手牌／畫布／播放器／身分與揭曉保留遊玩專用布局。驗收範圍、完整suite、PR與公開結果見[共用組隊與聊天契約](../specs/SHARED-WAITING-CHAT.md)與本批PR留言，不推定全phase或真人觸控。
+
+
+2026-10-12 聊天文字配色1.29.1候選：1.29.0公開幾何／收發驗證通過後，截圖發現同頻頁全域p的#6e7c71滲入聊天室，深色訊息對比不足。chat.css讓p／label／time繼承面板配對文字，不借各遊戲舊字色；保留等待retention專用muted token。共用scope與明暗contrast回歸、十款實際等待／遊玩文字對比及最終完整suite／CI／公開結果以本批PR證據為準；不是已驗全站所有文字或所有遊戲phase。
+
+同批追加捲動驗收：ui-foundation的room-sidebar:has(action-slot)原為playing popover保留overflow:visible，搬入固定等待grid後會讓互動／離房工具溢出並覆蓋聊天室。waiting控制槽明確overflow:auto覆寫，遊玩側欄維持原規則；驗證框內捲動與工具／表情彈窗，不以框尺寸一致代表子內容沒有溢出。
+
+2026-10-12 共用房間操作與彈幕獨立分支：chat table POST 與 social message／barrage 共用 sendRoomMessage，相同 requestId 只產生一組全文／短彈幕；160 字以 Unicode code points 驗證，emoji／expression 補聊天紀錄。RoomControls 轉接原有操作與欄位，設定搬移修正畫猜讀取／委派範圍，雷霆保留原有 AI 並轉接 restart；共用離房支援送出中、503 與重試。Linux 2049 通過，原生十款及畫猜／離房流程已驗，無 schema 或引擎規則變更；未整合 main 或發布。見 [規格](../specs/SHARED-ROOM-SOCIAL.md) 與 [證據](../SHARED-ROOM-SOCIAL-PROGRESS.md)。
+
+
+2026-10-12 PR #109 整合複驗：取代上一筆本分支「未整合 main」狀態，候選 1.31.0 已整合 f2689a4，保留房間內設定、傳情畫意共用畫板與導覽元件。2057 Linux 全通過、原生十款40布局、畫猜持筆／時序／倒數／換輪與傳情畫意作畫／送出／下一頁已驗；結算150分／4輪及非房主唯讀設定已驗。CI、合併與正式結果以 PR #109 及 [本輪紀錄](../SHARED-ROOM-SOCIAL-PROGRESS.md) 為準；未驗真人觸控或十款完整場次。
+
+2026-10-12：以共用 ui-field / ui-field-group 與 GameUI.frameField、frameFields、createField 統一標題＋控制項；label-control 8px、相鄰欄位 12px，保留原生節點與 inline 控制布局。隔離測試站的欄位量測及已驗功能／限制見 [共用表單欄位](../specs/SHARED-FORM-FIELDS.md)。
+
+2026-10-12：極簡畫家、你畫我猜與傳情畫意共用 GameUI.layoutDrawingPlay / createDrawingBoard 的直向遊玩版面，玩家／工作區／固定聊天室同寬；手機工具列移至畫布下方。三款 12 組明暗／桌機手機布局、聊天室收發及固定高度、原生作畫／送出／換輪與再開局已做針對性驗證，範圍與限制見 [共用繪畫遊玩排版](../specs/SHARED-DRAWING-PLAY-LAYOUT.md)。此三款取代先前畫猜遊玩側欄等高安排，其他遊戲配對仍保留；未合併 main 或正式發布。
+
+2026-10-12：極簡畫家回顧有回合結果才顯示，教學只在等待開局／介紹入口顯示，進行中與結算隱藏且不留空槽。桌機／手機 12 次狀態檢查與作畫／猜中／換輪已驗，結果與限制見 [共用繪畫遊玩排版](../specs/SHARED-DRAWING-PLAY-LAYOUT.md#極簡畫家輔助區塊顯示)。
+
+2026-10-12 更正繪畫排版：使用者明確要求左玩家／中上畫布／中下猜題或送出／右聊天室，取代先前同日直向排列記錄。三款共用 layoutDrawingPlay、createDrawingBoard、frameDrawingTask 與尺寸適配；桌機同列等高、手機換列，極簡教學與回顧顯示條件保留。12 組明暗布局、20 組角色／階段與斷點、作畫時序／同步／送出／換輪／再開局已驗；範圍與限制見 [最新共用繪畫排版](../specs/SHARED-DRAWING-PLAY-LAYOUT.md)。未合併 main 或正式發布。
+
+2026-10-12 共用教學顯示實作：使用者要求遊戲中不顯示「一分鐘學會」等教學；十款標記內容／入口改由 RoomWaiting 統一處理，等待與介紹保留、遊玩與結算隱藏，開局關閉已開啟的教學 dialog，独立賽車教學與退出入口保留。十款 70 次狀態／桌機手機檢查、入口與 13 資源來源核對通過；範圍及限制見 [房間教學顯示條件](../specs/SHARED-ROOM-TEACHING-VISIBILITY.md)。此筆取代極簡畫家個別教學判斷的實作記錄，回顧條件及三欄繪畫排版維持。
+
+2026-10-13 傳情畫意定時傳頁：使用者要求移除全員送出後的房主按鈕；90 秒共同 deadline 到時自動傳頁與最後揭曉，提前全員送出仍等時，已送出保留倒數。私人有界草稿先同步，逾時採已同步內容或空白略過；不把草稿頻繁存入歷史。37 項針對性測試、兩個三席真實兩頁倒數及 10 次桌機手機幾何檢查已驗；持筆／放開／同步回應無意外白屏，重新開局空白。此筆取代先前房主手動傳頁與待定截止記錄；範圍及限制見 [定時傳頁](../specs/TELEPHONE-TIMED-PASSING.md)，不推定全套／真觸控／正式發布。
 
 2026-10-12 候選 1.29.0：瞎掰王三選一、真人多數全站禁題與本機轉檔反應音效；11 款遊戲共用專注切換，新遊戲接入規則已寫 AGENTS。初次40 focused／2019完整，後續原生頁面修正與最終驗證見 [本輪證據](../BLUFF-ROUND-FOCUS-PROGRESS.md)。未發布或部署，永久記憶及轉檔工具保持 ignored。
 
