@@ -14,6 +14,7 @@ function rasterCanvas(width=32,height=16){
   clearRect(x,y,w,h){rectangle(x,y,w,h,[0,0,0,0]);},fillRect(x,y,w,h){rectangle(x,y,w,h,rgba(this.fillStyle));},
   strokeRect(x,y,w,h){const color=rgba(this.strokeStyle);line([x,y],[x+w,y],color,this.lineWidth);line([x+w,y],[x+w,y+h],color,this.lineWidth);line([x+w,y+h],[x,y+h],color,this.lineWidth);line([x,y+h],[x,y],color,this.lineWidth);},
   beginPath(){points=[];ellipse=null;},moveTo(x,y){points=[[x,y]];},lineTo(x,y){calls.lineTos++;points.push([x,y]);},
+  quadraticCurveTo(cx,cy,x,y){const a=points.at(-1);for(let i=1;i<=24;i++){const t=i/24,u=1-t;points.push([u*u*a[0]+2*u*t*cx+t*t*x,u*u*a[1]+2*u*t*cy+t*t*y]);}},
   ellipse(cx,cy,rx,ry){ellipse={cx,cy,rx,ry};},
   stroke(){calls.paths++;if(ellipse){const {cx,cy,rx,ry}=ellipse;for(let angle=0;angle<Math.PI*2;angle+=.04)pixel(cx+rx*Math.cos(angle),cy+ry*Math.sin(angle),rgba(this.strokeStyle));}else for(let i=1;i<points.length;i++)line(points[i-1],points[i],rgba(this.strokeStyle),this.lineWidth);},
   fill(){if(ellipse){const {cx,cy,rx,ry}=ellipse;for(let y=0;y<height;y++)for(let x=0;x<width;x++)if(((x-cx)/rx)**2+((y-cy)/ry)**2<=1)pixel(x,y,rgba(this.fillStyle));}},

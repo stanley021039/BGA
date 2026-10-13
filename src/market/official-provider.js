@@ -163,18 +163,16 @@ async function raceAbort(promise,signal){
  try{return await Promise.race([promise,new Promise((_,reject)=>{listener=()=>reject(signal.reason);signal.addEventListener('abort',listener,{once:true});})]);}
  finally{if(listener)signal.removeEventListener('abort',listener);}
 }
-async function readSource(url,{fetchImpl,clock,signal,format='json',onDiagnostic}){
+async function readSource(url,{fetchImpl,clock,signal,format='json'}){
  const isMonthly=Object.keys(MONTHLY_PATHS).some(kind=>{const prefix=MONTHLY_PATHS[kind]+'?date=',match=/[?]date=(\d{4})(\d{2})01&response=html$/.exec(url);return match&&url.startsWith(prefix)&&url===monthlyUrl(kind,`${match[1]}-${match[2]}`);});
  const calendarMatch=/[?]date=(\d{4})0101&response=html$/.exec(url),isCalendar=calendarMatch&&url.startsWith(CALENDAR_PATH+'?')&&url===calendarUrl(Number(calendarMatch[1]));
  requireValue(format==='json'&&Object.values(SOURCE_URLS).includes(url)||format==='html'&&(isMonthly||isCalendar),'SOURCE_NOT_ALLOWED');
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(new OfficialDataError('OFFICIAL_SOURCE_TIMEOUT')),REQUEST_TIMEOUT_MS);
  const combined=signal?AbortSignal.any([signal,controller.signal]):controller.signal;
- const started=Date.now();let httpStatus=null,outcome='ok',code='OK',networkCode=null;
  try{
   if(combined.aborted)throw combined.reason;
   return await raceAbort((async()=>{
    const response=await fetchImpl(url,{method:'GET',headers:{Accept:format==='json'?'application/json':'text/html'},redirect:'error',credentials:'omit',cache:'no-store',signal:combined});
-   httpStatus=Number.isInteger(response?.status)?response.status:null;
    requireValue(response&&response.status===200,'OFFICIAL_HTTP_STATUS');
    requireValue(!response.redirected&&(!response.url||response.url===url),'OFFICIAL_REDIRECT');
    requireValue((format==='json'?/^application\/json(?:\s*;|$)/i:/^text\/html(?:\s*;|$)/i).test(response.headers?.get('content-type')||''),'OFFICIAL_CONTENT_TYPE');
@@ -189,30 +187,20 @@ async function readSource(url,{fetchImpl,clock,signal,format='json',onDiagnostic
    try{text=new TextDecoder('utf-8',{fatal:true}).decode(bytes);if(format==='json')json=JSON.parse(text);}catch{throw new OfficialDataError(format==='json'?'OFFICIAL_INVALID_JSON':'OFFICIAL_INVALID_HTML');}
    return {json,text,evidence:{url,sha256:createHash('sha256').update(bytes).digest('hex'),fetchedAt:new Date(clock()).toISOString()}};
   })(),combined);
- }catch(error){
-  outcome='error';const cause=error?.cause?.code||error?.code;
-  if(['ENOTFOUND','EAI_AGAIN','ECONNREFUSED','ECONNRESET','ETIMEDOUT','UND_ERR_CONNECT_TIMEOUT','CERT_HAS_EXPIRED','UNABLE_TO_VERIFY_LEAF_SIGNATURE','DEPTH_ZERO_SELF_SIGNED_CERT'].includes(cause))networkCode=cause;
-  const failure=error instanceof OfficialDataError?error:combined.aborted?(combined.reason instanceof OfficialDataError?combined.reason:new OfficialDataError('OFFICIAL_REQUEST_ABORTED')):new OfficialDataError('OFFICIAL_SOURCE_UNAVAILABLE');
-  code=failure.code;throw failure;
- }
- finally{
-  clearTimeout(timeout);
-  // Only fixed official URLs and bounded machine metadata. Never response
-  // bodies, request headers, error messages, cookies or environment values.
-  try{onDiagnostic?.({sourceUrl:url,status:outcome,code,httpStatus,networkCode,elapsedMs:Math.max(0,Date.now()-started)});}catch{}
- }
+ }catch(error){if(error instanceof OfficialDataError)throw error;if(combined.aborted)throw combined.reason instanceof OfficialDataError?combined.reason:new OfficialDataError('OFFICIAL_REQUEST_ABORTED');throw new OfficialDataError('OFFICIAL_SOURCE_UNAVAILABLE');}
+ finally{clearTimeout(timeout);}
 }
-function createOfficialProvider({fetchImpl=globalThis.fetch,clock=Date.now,signal:providerSignal,onDiagnostic}={}){
+function createOfficialProvider({fetchImpl=globalThis.fetch,clock=Date.now,signal:providerSignal}={}){
  requireValue(typeof fetchImpl==='function'&&typeof clock==='function','INVALID_PROVIDER');
  const combinedSignal=signal=>providerSignal&&signal?AbortSignal.any([providerSignal,signal]):signal||providerSignal;
- const read=(key,signal)=>readSource(SOURCE_URLS[key],{fetchImpl,clock,signal:combinedSignal(signal),onDiagnostic});
+ const read=(key,signal)=>readSource(SOURCE_URLS[key],{fetchImpl,clock,signal:combinedSignal(signal)});
  return {
   async fetchCalendar({signal}={}){
    const year=Number(taipeiDate(clock()).slice(0,4)),years=[year,year+1],proof=(calendar,source)=>({...calendar,sourceUrl:source.evidence.url,sourceHash:source.evidence.sha256,fetchedAt:source.evidence.fetchedAt,evidence:[source.evidence]});
    // At most three requests. A not-yet-published next year never discards a
    // verified current year; the planner still treats missing years as unknown.
    const attempts=[(async()=>{const source=await read('calendar',signal);return proof(parseCalendar(source.json),source);})(),...years.map(async requestedYear=>{
-    const source=await readSource(calendarUrl(requestedYear),{fetchImpl,clock,signal:combinedSignal(signal),format:'html',onDiagnostic});return proof(parseCalendarHtml(source.text,{year:requestedYear}),source);
+    const source=await readSource(calendarUrl(requestedYear),{fetchImpl,clock,signal:combinedSignal(signal),format:'html'});return proof(parseCalendarHtml(source.text,{year:requestedYear}),source);
    })];
    const settled=await Promise.allSettled(attempts),known=new Map(),conflicts=new Set();let firstError;
    if(combinedSignal(signal)?.aborted)throw new OfficialDataError('OFFICIAL_REQUEST_ABORTED');
@@ -248,7 +236,7 @@ function createOfficialProvider({fetchImpl=globalThis.fetch,clock=Date.now,signa
     if(monthly.has(month)||month>index.targetDate.slice(0,7))continue;
     try{
      const reports=[];
-     for(const kind of ['history','market'])reports.push(await readSource(monthlyUrl(kind,month),{fetchImpl,clock,signal:combinedSignal(signal),format:'html',onDiagnostic}));
+     for(const kind of ['history','market'])reports.push(await readSource(monthlyUrl(kind,month),{fetchImpl,clock,signal:combinedSignal(signal),format:'html'}));
      monthly.set(month,{history:parseMonthlyHtml(reports[0].text,{kind:'history',month}),market:parseMonthlyHtml(reports[1].text,{kind:'market',month}),evidence:reports.map(report=>report.evidence)});
     }catch(error){monthErrors.set(month,error);}
    }

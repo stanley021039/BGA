@@ -163,24 +163,6 @@ class MarketAutomationStore{
   return {...result,settled:true};
  });}
  pending(){return this.db.prepare('SELECT target_date FROM market_rounds WHERE result_revision=0 AND void_at IS NULL AND target_date<=? ORDER BY target_date').all(dateAt(this.clock())).map(row=>row.target_date);}
- diagnostics(){
-  const state=this.state(),view=this.view().automation;
-  const safeCode=value=>/^[A-Z][A-Z0-9_]{0,63}$/.test(value||'')?value:null;
-  const safeDetail=value=>/^(?:[A-Z][A-Z0-9_]{0,63}(?:;[A-Z][A-Z0-9_]{0,63})*|(?:scheduled|history|catchup|manual)(?::\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)?|official-calendar)$/.test(value)?value:value===''?'':'REDACTED';
-  const source=value=>{try{const u=new URL(value);u.username='';u.password='';const date=u.searchParams.get('date'),response=u.searchParams.get('response');u.search='';if(/^\d{8}$/.test(date||''))u.searchParams.set('date',date);if(['html','json'].includes(response))u.searchParams.set('response',response);return officialUrl(u.href)?u.href:null;}catch{return null;}};
-  view.dailyFetch={...view.dailyFetch,lastError:safeCode(view.dailyFetch.lastError)};
-  for(const key of ['manualRequiredDates','waitingDates','reviewDates'])view[key]=view[key].slice(-100);
-  const dates=this.db.prepare("SELECT key FROM market_automation_state WHERE key LIKE 'fetch:%' ORDER BY key DESC LIMIT 100").all().map(row=>row.key.slice(6));
-  return {generatedAt:new Date(this.clock()).toISOString(),automation:view,calendar:{lastAttemptAt:state.calendarAttemptAt||null,failed:!!state.calendarFailed,blockedYears:state.calendarBlockedYears||[]},
-   dates:dates.map(targetDate=>{const f=this.fetchState(targetDate);return {targetDate,status:f.status,automaticAttempts:f.automaticAttempts,manualAttempts:f.manualAttempts,scheduledSlotCount:f.scheduledSlots.length,lastAttemptAt:f.lastAttemptAt||null,lastAttemptKind:f.lastAttemptKind||null,lastError:safeCode(f.lastError),hasClose:this.hasClose(targetDate)};}),
-   audit:this.db.prepare('SELECT target_date AS targetDate,kind,status,source_url AS sourceUrl,at,detail FROM market_fetch_audit ORDER BY id DESC LIMIT 200').all().map(row=>({...row,sourceUrl:source(row.sourceUrl),detail:safeDetail(row.detail)}))};
- }
- recordSourceDiagnostic({sourceUrl,status,code,httpStatus,networkCode,elapsedMs}){
-  if(!this.enabled)return;
-  const safe=value=>/^[A-Z][A-Z0-9_]{0,63}$/.test(value||'')?value:'UNKNOWN';
-  const details=[safe(code),Number.isInteger(httpStatus)&&httpStatus>=100&&httpStatus<=599?'HTTP_'+httpStatus:null,networkCode?safe(networkCode):null,Number.isFinite(elapsedMs)?'MS_'+Math.min(600000,Math.max(0,Math.round(elapsedMs))):null].filter(Boolean);
-  this.audit({kind:'source-request',status:status==='ok'?'ok':'error',sourceUrl,detail:details.join(';')});
- }
  view(admin=false){
   const today=dateAt(this.clock()),window=monthWindow(today),state=this.state(),rows=this.db.prepare('SELECT * FROM market_daily_closes WHERE target_date>=? AND target_date<=? ORDER BY target_date DESC').all(window.from,window.to);
   const verified=new Set(rows.map(row=>row.target_date)),waitingDates=[];

@@ -4,7 +4,7 @@
  function create({send,createId,isCurrent,onPending=()=>{},onAccepted=()=>{},onError=()=>{},onSettled=()=>{},onDiscard=()=>{},onStart=()=>{},now=()=>performance.now(),pacing=()=>({lastStart:-Infinity,lastFill:-Infinity}),maxPoints=30000,maxEntries=1000}){
   let queue=[],inFlight=null,timer=null,requestTimer=null,generation=0,drain=null,resolveDrain=null;
   const pointBytes=point=>JSON.stringify(point).length+1;
-  const key=data=>JSON.stringify([data.canvasEpoch,data.round,data.strokeId,data.tool,data.color,data.size,!!data.filled,!!data.pointTimes]);
+  const key=data=>JSON.stringify([data.canvasEpoch,data.round,data.strokeId,data.tool,data.color,data.size,!!data.filled,!!data.pointTimes,data.curve]);
   function pending(){return queue.reduce((total,job)=>total+job.points.length,0);}
   function idle(){if(!queue.length&&!inFlight&&resolveDrain){resolveDrain();resolveDrain=null;drain=null;}}
   function whenIdle(){if(!queue.length&&!inFlight)return Promise.resolve();if(!drain)drain=new Promise(resolve=>resolveDrain=resolve);return drain;}
