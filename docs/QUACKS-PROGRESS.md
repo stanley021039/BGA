@@ -76,3 +76,6 @@ SVG DOM測試確認短鍋名沒有textLength、長名收縮、永久液滴2／�
 獨立新版隔離試玩站3004、合成帳號與專用資料庫，不重啟使用者3002／3003遊玩站；成就只存試玩庫。使用者試玩入口採preview.localhost避免跨端口同host登入cookie互蓋。確切房號以ignored work/playtest/quacks-current-runtime.json為準。本輪仍是1.29.0同批候選，未提交／推送／發PR／合併／部署；煉金術士、擴充占卜卡、背面大釜與有限供應保持前述待做範圍。
 
 最後人偶防裁切與素材說明完成後，SVG／藥袋／動畫去重／音效相關 **24/24**，fail/cancel/skip 0，212.0001ms；node --check、minor release check及Git diff whitespace檢查通過。私人記憶／試玩helper、DB、runtime和證據路徑仍被Git忽略。
+
+## 2026-10-13 PR準備狀態
+本批候選升為2.2.0，已整合main共用UI與畫猜最新更新；保留配書投票、共用控制與AI席位。完整2150/2150，升版11/11，最終瀏覽器／手機／喇叭待驗。詳 [固定提交與兩輪檢查](PR-QUACKS-BLUFF-2.2.0-PREPARATION.md)。尚未推送、發PR或部署。
