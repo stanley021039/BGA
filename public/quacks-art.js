@@ -74,17 +74,24 @@ function resource(kind,{size=42,decorative=false}={}){
  const labels={bag:'藥袋',ruby:'紅寶石',rat:'老鼠尾巴',droplet:'液滴',gold:'金女巫幣',copper:'銅女巫幣',silver:'銀女巫幣',potion:'藥水瓶','draw-hand':'伸手抽藥材','stop-hands':'雙手食指交叉停止'},svg=sv('svg',{viewBox:'0 0 80 80',width:size,height:size,class:'quacks-resource '+kind,role:'img','aria-hidden':decorative?'true':'false','aria-label':labels[kind]||kind});
  if(kind==='bag'){svg.append(sv('path',{d:'M23 8Q40 1 58 8l-5 15Q78 40 68 66q-26 15-56 0Q1 40 28 23Z',fill:'#ac7642',stroke:'#ecd09a','stroke-width':2}),sv('path',{d:'M28 24Q5 48 23 65M53 24q20 28 3 42M34 23v39',stroke:'#80512e',fill:'none','stroke-width':4,opacity:.6}),sv('path',{d:'M23 20q16 8 33 0M25 26q16 4 31-2',stroke:'#ecbf73',fill:'none','stroke-width':4,'stroke-linecap':'round'}),sv('path',{d:'m42 24 18 10M40 25 22 37',stroke:'#ead29a','stroke-width':3,fill:'none'}),sv('ellipse',{cx:40,cy:8,rx:15,ry:4,fill:'#4e3328'}));}
 
+
 else if(kind==='draw-hand'){
- const sack=resource('bag',{decorative:true}),group=sv('g',{transform:'translate(-2 33) scale(.58)'});while(sack.firstChild)group.append(sack.firstChild);svg.append(group);
- svg.append(sv('path',{d:'M77 7 61 5 50 17 36 20q-11-6-13 0-2 5 5 7l9 1 8 8 16-7 16-7Z',fill:'#efc29b',stroke:'#916b63','stroke-width':1.8,'stroke-linejoin':'round'}));
- svg.append(sv('circle',{cx:29,cy:29,r:10,fill:'#92b476',stroke:'#f6e3b0','stroke-width':2}),sv('path',{d:'M25 27q-3-5-5-5m5 9-6 2m14-6 6-5m-6 9 6 2',stroke:'#d6e3ad','stroke-width':1.5,fill:'none'}),sv('ellipse',{cx:29,cy:30,rx:3.5,ry:5,fill:'#d2de9c'}));
- svg.append(sv('path',{d:'M57 24 40 35q-7 4-10-1-2-4 4-7l9-6M59 16l-8 6M63 21l-9 6',fill:'#efc29b',stroke:'#916b63','stroke-width':1.8,'stroke-linecap':'round','stroke-linejoin':'round'}),sv('path',{d:'M69 3 61 29 74 33 80 9Z',fill:'#7270a4',stroke:'#d3c1eb','stroke-width':2}),sv('path',{d:'m68 8-6 17',stroke:'#a7a4d4','stroke-width':2,'stroke-linecap':'round'}));
+ const sack=resource('bag',{decorative:true}),bag=sv('g',{transform:'translate(-1 25) scale(.7)'});while(sack.firstChild)bag.append(sack.firstChild);svg.append(bag);
+ const id='draw-skin-'+(++serial),defs=sv('defs'),shade=sv('linearGradient',{id,x1:'0%',y1:'0%',x2:'30%',y2:'100%'});shade.append(sv('stop',{offset:'0%','stop-color':'#f6d8b8'}),sv('stop',{offset:'100%','stop-color':'#dfab87'}));defs.append(shade);svg.append(defs);
+ // Short pinching fingers attach to a compact palm; the bag is the largest mass.
+ svg.append(sv('path',{d:'M76 9 61 8 51 16 42 17q-5 0-8 4l-4 5q-2 4 1 5t6-2l6-5 7 2-7 6q-4 3-2 6t6 0l12-9 15-3Z',fill:'url(#'+id+')',stroke:'#936d60','stroke-width':1.65,'stroke-linejoin':'round'}));
+ svg.append(sv('circle',{cx:37,cy:31,r:7,fill:'#a7bd81',stroke:'#f2dfb1','stroke-width':1.6}),sv('path',{d:'M37 27v8m-3-6 3 3 3-3',fill:'none',stroke:'#56744e','stroke-width':1.6,'stroke-linecap':'round'}));
+ svg.append(sv('path',{d:'M50 26 43 32q-4 3-2 6t6 0l8-6',fill:'url(#'+id+')',stroke:'#936d60','stroke-width':1.65,'stroke-linecap':'round','stroke-linejoin':'round'}),sv('path',{d:'M67 7 63 27 75 30 79 10Z',fill:'#7773a8',stroke:'#d7c8ea','stroke-width':1.8}),sv('path',{d:'m68 12-2 11M47 19l8-2',stroke:'#fff0d5','stroke-width':1.8,'stroke-linecap':'round',opacity:.65,fill:'none'}));
 }
 else if(kind==='stop-hands'){
- svg.append(sv('path',{d:'M6 77 10 58 19 51q5-3 9 1l9 13-7 13Z',fill:'#eebd99',stroke:'#936c65','stroke-width':1.8}),sv('path',{d:'M74 77 70 58 61 51q-5-3-9 1l-9 13 7 13Z',fill:'#f0c49f',stroke:'#936c65','stroke-width':1.8}));
- svg.append(sv('path',{d:'M24 59 58 17',stroke:'#936c65','stroke-width':13,'stroke-linecap':'round',fill:'none'}),sv('path',{d:'M24 59 58 17',stroke:'#eebd99','stroke-width':9.5,'stroke-linecap':'round',fill:'none'}));
- svg.append(sv('path',{d:'M56 59 22 17',stroke:'#936c65','stroke-width':13,'stroke-linecap':'round',fill:'none'}),sv('path',{d:'M56 59 22 17',stroke:'#f0c49f','stroke-width':9.5,'stroke-linecap':'round',fill:'none'}));
- svg.append(sv('path',{d:'M16 61q-4-8 1-9l11 1q5 0 4 5M19 68l9-2M23 73l6-2M64 61q4-8-1-9l-11 1q-5 0-4 5M61 68l-9-2M57 73l-6-2',stroke:'#936c65','stroke-width':1.6,fill:'none','stroke-linecap':'round'}),sv('path',{d:'M4 69 30 73l-1 7H3ZM76 69l-26 4 1 7h26Z',fill:'#a36786',stroke:'#e1b2cd','stroke-width':1.8}),sv('path',{d:'m26 20 8 10M55 22l-6 7',stroke:'#ffe6c8','stroke-width':2.5,'stroke-linecap':'round',fill:'none'}));
+ const defs=sv('defs'),id='cross-skin-'+(++serial),shade=sv('linearGradient',{id,x1:'0%',y1:'0%',x2:'80%',y2:'100%'});shade.append(sv('stop',{offset:'0%','stop-color':'#f6d8b8'}),sv('stop',{offset:'100%','stop-color':'#dfa584'}));defs.append(shade);svg.append(defs);
+ // Both hands use the same proportions: 30-unit index, 25-unit folded palm.
+ const hand=(mirror)=>{
+  const g=sv('g',mirror?{transform:'translate(80 0) scale(-1 1)'}:{});
+  g.append(sv('path',{d:'M16 71q-5-10-3-17q1-6 7-7l5 1 18-23q4-5 8-2t0 8L34 48q6 1 7 7l-2 10-6 7Z',fill:'url(#'+id+')',stroke:'#936d60','stroke-width':1.7,'stroke-linejoin':'round'}));
+  g.append(sv('path',{d:'M20 49q-6 3-3 8l11 4q5 1 5-3t-5-5M17 62l10 3M19 67l8 2',fill:'none',stroke:'#a77a68','stroke-width':1.45,'stroke-linecap':'round'}),sv('path',{d:'M27 47 45 26',fill:'none',stroke:'#fff0d5','stroke-width':1.8,'stroke-linecap':'round',opacity:.7}),sv('path',{d:'M13 69 34 71l-1 7-20-2Z',fill:mirror?'#97617d':'#a26c89',stroke:'#e1b2cd','stroke-width':1.6}));
+  return g;
+ };svg.append(hand(false),hand(true));
 }
  else if(kind==='potion'){svg.append(sv('path',{d:'M29 8h22v19l15 20q14 25-26 27Q0 72 14 47l15-20Z',fill:'#bdd9ef',opacity:.85,stroke:'#eaf7ff','stroke-width':2}),sv('path',{d:'M17 48q23 8 46 0l5 14q-2 10-28 10T12 62Z',fill:'#db64c7',stroke:'#f5b4ed','stroke-width':1.4}),sv('rect',{x:27,y:5,width:26,height:10,rx:3,fill:'#bc9461',stroke:'#f0d3a0','stroke-width':2}),sv('path',{d:'M22 37q-10 14-4 23M33 19v8',fill:'none',stroke:'#fff','stroke-width':4,'stroke-linecap':'round',opacity:.7}),sv('circle',{cx:45,cy:59,r:4,fill:'#f4c8ef',opacity:.8}));}
  else if(kind==='ruby')svg.append(sv('path',{d:'M19 13h42l15 23L40 73 4 36Z',fill:'#d95372',stroke:'#f6b3b0','stroke-width':2}),sv('path',{d:'m19 13 9 23H4m57-23-9 23h24M28 36l12 37 12-37Zm0 0 12-23 12 23',fill:'#f08ba0',stroke:'#932c50','stroke-width':1.6}),sv('path',{d:'m26 20 7-4-6 14-10-2Z',fill:'#fff0de',opacity:.65}));
