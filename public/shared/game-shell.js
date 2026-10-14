@@ -10,7 +10,7 @@
  if(pokerAside){const bot=document.querySelector('#bot');bot?.classList.add('room-test-ai');window.GameUI?.decorateButton(bot,'users',{iconOnly:true,label:'加入測試 AI'});}
  const staticRaceControls=document.querySelector('.race-controls');let raceUtilities=null;
  const raceCrews=document.querySelector('.race-main #crews')||staticRaceControls?.querySelector('#crews');
- const basicAside=document.querySelector('#controls')?.closest('section');
+ const basicAside=document.querySelector('[data-room-social-host]')||document.querySelector('#controls')?.closest('section');
  const sidebar=majorityAside||giftAside||drawAside||pokerAside||basicAside;
  document.body.classList.add('game-room');
  if(!document.body.dataset.gameKind)document.body.dataset.gameKind=majorityAside?'majority':giftAside?'gift':drawAside?'draw':pokerAside?'poker':raceCrews?'race':'room';
@@ -79,7 +79,7 @@
  document.addEventListener('click',event=>{if(!emojiPopover&&!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();});
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}});
  fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{
-  const stitch=document.body.dataset.uiTemplate&&document.body.dataset.gameKind==='draw';
+  const stitch=document.body.dataset.uiTemplate&&['draw','quacks'].includes(document.body.dataset.gameKind);
   if(!stitch){for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiChoices.append(button);}return;}
   const featured=[['😂','笑死'],['👏','神作'],['🔥','熱血'],['🤔','思考'],['😱','崩潰'],['👍','厲害'],['❤️','喜歡'],['🎉','恭喜'],['💩','畫啥呢'],['🤡','小丑'],['🚀','起飛'],['💡','靈光'],['🎨','畫工'],['💯','滿分'],['👻','抓到了'],['🕶️','淡定'],['👀','圍觀'],['🤯','震驚'],['🤝','同意'],['🎯','命中'],['⏳','快點'],['🤐','保密'],['🍿','爆米花'],['🏆','MVP']].filter(([value])=>emojis.includes(value));
   const tabs=element('div','st-emote-tabs'),all=element('div','st-emote-panel'),characterPanel=element('div','st-emote-panel'),phrases=element('div','st-emote-panel'),footer=element('div','st-emote-footer'),sendBubble=element('button','st-button st-primary','發送泡泡');sendBubble.type='button';window.GameUI?.decorateButton(sendBubble,'send',{label:'發送泡泡'});
@@ -91,7 +91,7 @@
    choice.onclick=()=>{selected=value;for(const node of all.querySelectorAll('[data-emoji]'))node.setAttribute('aria-pressed',String(node===choice));};
    (featured.some(([item])=>item===value)?emojiChoices:extraGrid).append(choice);
   }
-  for(const phrase of ['💬 太抽象了！','💬 肯定是那個吧？','💬 加油快畫完！']){const b=element('button','st-button',phrase);b.type='button';b.onclick=()=>{window.SharedChat?.compose(phrase);closeEmoji(true);};phrases.append(b);}
+  for(const phrase of (document.body.dataset.gameKind==='quacks'?['💬 這鍋穩啦！','💬 先停還是衝？','💬 差一顆就爆了！']:['💬 太抽象了！','💬 肯定是那個吧？','💬 加油快畫完！'])){const b=element('button','st-button',phrase);b.type='button';b.onclick=()=>{window.SharedChat?.compose(phrase);closeEmoji(true);};phrases.append(b);}
   const panels=[all,characterPanel,phrases];
   function selectTab(index){panels.forEach((p,i)=>p.hidden=i!==index);[...tabs.children].forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;});footer.hidden=index!==0;}
   ['全部表情 ('+featured.length+')','動態肢體','桌遊吐槽'].forEach((label,index)=>{const tab=element('button','',label);tab.type='button';tab.id='stEmoteTab'+index;tab.setAttribute('role','tab');panels[index].id='stEmotePanel'+index;panels[index].setAttribute('role','tabpanel');panels[index].setAttribute('aria-labelledby',tab.id);tab.setAttribute('aria-controls',panels[index].id);tab.onclick=()=>selectTab(index);tab.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?2:(index+(event.key==='ArrowRight'?1:2))%3;selectTab(next);tabs.children[next].focus();};tabs.append(tab);});selectTab(0);

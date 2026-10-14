@@ -2,6 +2,9 @@
  'use strict';
  let state=null,panel=null,scheduled=false,leaving=false,leaveController=null,settingsSource=null,readonlySource=null,readonlyKey='';
  const native={start:null,bot:null},proxies={};let playPanels=null;
+  const customHomes=new Map();
+ function rememberCustom(n){if(!n||customHomes.has(n))return;const home=document.createComment('custom-room-control-home');n.before(home);customHomes.set(n,{home,tabIndex:n.getAttribute('tabindex'),ariaHidden:n.getAttribute('aria-hidden'),native:n.getAttribute('data-room-native-action')});}
+ function restoreCustom(){for(const [n,e]of customHomes){if(e.home.parentNode)e.home.after(n);e.home.remove();for(const [attr,value]of [['tabindex',e.tabIndex],['aria-hidden',e.ariaHidden],['data-room-native-action',e.native]]){if(value===null)n.removeAttribute(attr);else n.setAttribute(attr,value);}}customHomes.clear();if(panel)panel.hidden=true;}
  const actions={start:{icon:'play',label:'開始遊戲'},bot:{icon:'bot',label:'加入 AI 測試夥伴'},invite:{icon:'invite',label:'邀請線上朋友'},manage:{icon:'settings',label:'管理玩家'},leave:{icon:'leave',label:'離房'}};
  const minimumPlayers={poker:2,thunder:2,draw:2,majority:3,gift:3,telephone:3,minimal:3,bluff:3,trpg:1,musicquiz:1,quacks:2};
  function node(tag,cls,text){const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;}
@@ -103,7 +106,7 @@
   syncPlayPanels();return host;
  }
  function mount(){
-  const type=state.type||'poker',sourceHost=['telephone','musicquiz','minimal','bluff','trpg','quacks'].includes(type)?document.getElementById('controls'):document.querySelector(type==='thunder'?'.race-controls':'.room-sidebar,.table-sidebar');
+  const type=state.type||'poker',sourceHost=type==='quacks'&&document.body.dataset.roomLayout==='custom'?document.getElementById('qWaitingControls'):['telephone','musicquiz','minimal','bluff','trpg','quacks'].includes(type)?document.getElementById('controls'):document.querySelector(type==='thunder'?'.race-controls':'.room-sidebar,.table-sidebar');
   const host=sourceHost===playPanels?.host?playPanels.content:sourceHost;
   if(!host)return;
   if(!panel){panel=node('section','ui-room-controls');panel.dataset.roomCommon='';panel.setAttribute('aria-label','房間設定與操作');
@@ -118,7 +121,7 @@
   const inPlay=!['waiting','finished'].includes(state.phase);if(panel.hidden!==inPlay)panel.hidden=inPlay;
  }
  function normalize(){
-  scheduled=false;if(!state||window.RaceLesson)return;syncPlayPanels();mount();if(!panel)return;
+  scheduled=false;if(!state||window.RaceLesson)return;const customQuacks=state.type==='quacks'&&document.body.dataset.roomLayout==='custom';if(document.body.dataset.roomLayout==='custom'&&(!customQuacks||state.phase!=='waiting')){if(customHomes.size)restoreCustom();window.RoomInvites?.updateRoom(state);return;}syncPlayPanels();mount();if(!panel)return;
   window.RoomInvites?.updateRoom(state);
   if(window.RoomInvites?.ready&&playPanels){if(!proxies.invite){proxies.invite=decorate(node('button',''),'invite');proxies.invite.onclick=()=>window.RoomInvites.open(proxies.invite);}const header=playPanels.frame.querySelector('.ui-game-operations-header');if(proxies.invite.parentElement!==header)header.append(proxies.invite);}
   const legacyInvite=document.getElementById('invite');if(legacyInvite&&legacyInvite.dataset.roomLinkLabel!=='true'){legacyInvite.dataset.roomLinkLabel='true';window.GameUI?.decorateButton(legacyInvite,'external',{label:'複製房間連結'});}
@@ -134,11 +137,11 @@
   const manage=document.getElementById('managePlayers'),row=panel.querySelector('.ui-room-session-actions');
   const inPlay=!['waiting','finished'].includes(state.phase),chat=document.querySelector('.shared-chat'),tools=chat?.querySelector('.chat-room-tools'),actionHost=inPlay&&tools?tools:row;
   if(proxies.leave.parentElement!==actionHost)actionHost.append(proxies.leave);
-  if(manage){if(manage.dataset.roomAction!=='manage')decorate(manage,'manage');if(manage.parentElement!==actionHost||manage.nextElementSibling!==proxies.leave)actionHost.insertBefore(manage,proxies.leave);}
+  if(manage){if(customQuacks)rememberCustom(manage);if(manage.dataset.roomAction!=='manage')decorate(manage,'manage');if(manage.parentElement!==actionHost||manage.nextElementSibling!==proxies.leave)actionHost.insertBefore(manage,proxies.leave);}
   if(chat){const value=String(state.phase!=='waiting');if(chat.dataset.gameChat!==value)chat.dataset.gameChat=value;chat.parentElement?.classList.remove('ui-game-chat-host');}
 
   const hasManage=String(!!manage);if(panel.dataset.hasManage!==hasManage)panel.dataset.hasManage=hasManage;
-  const ownLeave=document.getElementById('leave'),legacyLinks=document.querySelectorAll('.room-leave,#back');
+  const ownLeave=document.getElementById('leave'),legacyLinks=document.querySelectorAll('.room-leave,#back');if(customQuacks)rememberCustom(ownLeave);
   if(ownLeave&&!ownLeave.hasAttribute('data-room-native-action')){ownLeave.setAttribute('data-room-native-action','leave');ownLeave.tabIndex=-1;ownLeave.setAttribute('aria-hidden','true');}
   for(const n of legacyLinks)if(!n.hasAttribute('data-room-native-action')){n.setAttribute('data-room-native-action','leave');n.tabIndex=-1;n.setAttribute('aria-hidden','true');}
   const leaveDisabled=leaving||!!ownLeave?.disabled;if(proxies.leave.disabled!==leaveDisabled)proxies.leave.disabled=leaveDisabled;if(proxies.leave.hidden)proxies.leave.hidden=false;
@@ -160,7 +163,7 @@
    if(source){const changed=source!==settingsSource;settingsSource=source;source.dataset.roomReadOnly=String(!owner());if(!owner())for(const input of source.querySelectorAll('input,select,textarea,button'))if(!input.disabled)input.disabled=true;if(changed){normalizeFields(source);slot.replaceChildren(source);}}
    else if(!settingsSource||!settingsSource.isConnected){settingsSource=null;const text=owner()?'本遊戲使用固定規則，無需調整。':'由房主調整房間設定。';if(slot.textContent!==text)slot.replaceChildren(node('p','ui-room-settings-note',text));}
   }
-  if(state.phase==='waiting'&&outer)alignNativePanel(outer);
+  if(state.phase==='waiting'&&outer){alignNativePanel(outer);if(customQuacks)window.QuacksStitch?.waitingRoom(state);window.GameUI?.Template?.patterns.refreshWaiting?.(outer.closest('.ui-room-waiting-layout'));}
  }
  function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(normalize);}
  const dialog=node('dialog','ui-dialog room-leave-dialog');dialog.setAttribute('aria-labelledby','unified-leave-title');

@@ -241,44 +241,11 @@
   text(footer.querySelector('.st-footer-status'),$('#connection')?.textContent.trim()||'房間連線中');
  }
  function waitingUi(center){
-  if(!state||state.phase!=='waiting'||!center)return;
-  const layout=center.closest('.ui-room-waiting-layout'),hero=center.querySelector('.room-waiting-template');if(!layout||!hero)return;
-  let banner=center.querySelector('.st-waiting-banner');
-  if(!banner){banner=el('section','st-waiting-banner');banner.setAttribute('aria-label','房間準備狀態');center.prepend(banner);}
-  if(!banner.querySelector('.st-ready-copy')){const mark=el('span','st-ready-mark'),copy=el('div','st-ready-copy');mark.setAttribute('aria-hidden','true');figmaIcon(mark,'ux02-12.svg',{tone:'accent'});copy.append(el('strong'),el('small'));banner.replaceChildren(mark,copy,el('span','st-ready-badge'));}
-  const enough=state.players.length>=2;
-  text(banner.querySelector('strong'),enough?(state.host?'人數達標，房主可隨時開始':'朋友已就位，等待房主開畫'):'入座成功，等朋友一起開畫');
-  text(banner.querySelector('small'),'目前 '+state.players.length+' 人已入座'+(enough?'，畫筆與題卡已備妥':'，至少 2 人即可開始'));
-  text(banner.querySelector('.st-ready-badge'),enough?'READY':'WAITING');
-  if(!hero.querySelector('.st-showcase-body')){
-   const header=el('div','st-showcase-header');header.append(el('span','st-classic-tag','CLASSIC MODE'),el('span','st-waiting-limit','2–8 人一起畫'));hero.prepend(header);
-   const body=el('div','st-showcase-body');move(hero.querySelector('.room-waiting-art'),body);move(hero.querySelector('.room-waiting-info'),body);header.after(body);
-   const facts=el('div','st-waiting-facts');for(const [label,value]of [['每輪輪替','全員輪流畫'],['計分機制','愈快猜愈高'],['繪圖工具','12 色＋粗細']]){const fact=el('div');fact.append(el('strong','',value),el('small','',label));facts.append(fact);}hero.append(facts);
-  }
-  const artwork=hero.querySelector('.room-waiting-art img'),source=state.host?'/assets/stitch/figma/ux02-03.png':'/assets/stitch/waiting-guest.jpg';if(artwork&&artwork.getAttribute('src')!==source&&!artwork.dataset.stAssetUnavailable){artwork.onerror=()=>{artwork.dataset.stAssetUnavailable='true';artwork.src='/assets/stitch/waiting-host.jpg';};artwork.src=source;}
-  const heading=hero.querySelector('.room-waiting-info h2');if(heading&&!heading.querySelector('.st-game-english'))heading.replaceChildren(el('span','','你畫我猜'),el('small','st-game-english','Draw & Guess'));
-  text(hero.querySelector('.room-waiting-info>.kicker'),'朋友集結中，畫筆已備，等房主開畫。');
-  text(hero.querySelector('.room-waiting-info>p:not(.room-waiting-hint)'),'2–8 人一起玩。輪流挑題作畫，其他朋友一起猜出答案。邀請朋友入座，設定好就能開始。');
-  const ready=center.querySelector('.st-ready-button');if(ready&&ready.parentElement!==hero)hero.append(ready);
-  const roster=layout.querySelector('.ui-room-roster'),list=roster?.querySelector('.ui-room-roster-list');
-  if(roster&&!roster.querySelector('.st-room-share')){const share=el('div','st-room-share'),copy=el('div');copy.append(el('small','','快速邀請連結'),el('code'));share.append(copy,button('複製',null,()=>actions?.invite()));roster.append(share);}
-  const link=location.host+'/draw/'+state.code;text(roster?.querySelector('.st-room-share code'),link);if(roster?.querySelector('.st-room-share code'))roster.querySelector('.st-room-share code').title=location.origin+'/draw/'+state.code;
-  text(roster?.querySelector('.ui-room-roster-count'),state.players.length+' 位已入座 · 最多 8 人');
-  if(list){
-   for(const row of list.querySelectorAll('[data-player-id]')){const player=state.players.find(p=>p.id===row.dataset.playerId);if(!player)continue;const name=row.querySelector('.ui-room-roster-name');let badge=name?.querySelector('.st-player-badge');const label=player.id===state.hostId?'房主':player.bot?'機器人':'';if(label&&name){if(!badge){badge=el('small','st-player-badge');name.append(badge);}text(badge,label);}else badge?.remove();}
-   const bot=list.querySelector('[data-room-common-action=bot]');if(bot){figmaIcon(bot.querySelector('.ui-symbol'),'ux02-09.svg',{tone:'accent'});const label=bot.querySelector('.ui-room-roster-action-label');text(label,'＋ 加入 AI 測試夥伴');}
-   const seats=Math.min(2,8-state.players.length),key=state.players.length+':'+seats;
-   if(list.dataset.stSeats!==key||list.querySelectorAll('.st-empty-seat').length!==seats){list.dataset.stSeats=key;for(const old of list.querySelectorAll('.st-empty-seat'))old.remove();for(let i=0;i<seats;i++){const seat=el('article','st-empty-seat'),icon=el('span'),copy=el('div');seat.setAttribute('aria-label','第 '+(state.players.length+i+1)+' 號座位，等待朋友入座');figmaIcon(icon,'ux02-10.svg');copy.append(el('strong','','第 '+(state.players.length+i+1)+' 號座位'),el('p','','等待好友入座…'));seat.append(icon,copy,el('small','','空缺'));list.append(seat);}}
-  }
-  let rail=layout.querySelector('.st-waiting-status');
-  if(!rail){rail=el('section','st-waiting-status');rail.setAttribute('aria-label','房間連線與操作');const main=el('div','st-status-main'),status=el('span','st-owner-status'),code=el('span');status.append(el('span','st-connection-dot'),el('span','st-owner-copy'));code.append(el('span','','房間代號：'),el('code','st-status-code'));main.append(status,code);const actions=el('div','st-status-actions');actions.append(iconButton('房間閒聊與表情','chat',()=>center.querySelector('.tpl-waiting-footer button')?.click()),button('遊玩說明','help',()=>$('#help')?.click(),'st-waiting-help'),button('解散房間','leave',dissolve,'st-danger st-waiting-dissolve'),button('離開房間','leave',()=>$('.ui-room-session-actions>[data-room-action=leave]')?.click(),'st-waiting-leave'));rail.append(main,actions);layout.append(rail);}
-  text(rail.querySelector('.st-owner-copy'),state.host?'房主權限生效中':'等待房主開畫');text(rail.querySelector('.st-status-code'),state.code);rail.querySelector('.st-waiting-dissolve').hidden=!state.host;rail.querySelector('.st-waiting-leave').hidden=state.host;
-  figmaIcon(rail.querySelector('.st-waiting-help .ui-button-icon'),'ux02-19.svg');figmaIcon(rail.querySelector('.st-waiting-dissolve .ui-button-icon'),'ux02-20.svg',{tone:'accent'});
-  const panel=layout.querySelector('.ui-room-controls'),headingSettings=panel?.querySelector('.ui-room-settings-heading');
-  if(headingSettings&&!headingSettings.querySelector('.st-settings-badge'))headingSettings.append(el('small','st-settings-badge',state.host?'房主專用':'唯讀設定'));
-  const row=panel?.querySelector('.ui-room-session-actions');if(row&&!row.querySelector('.st-waiting-invite'))row.append(button('邀請朋友 ↗','share',event=>window.RoomInvites?.ready?window.RoomInvites.open(event.currentTarget):actions?.invite(),'st-waiting-invite'));
-  const manage=row?.querySelector('[data-room-action=manage]');if(manage&&(manage.classList.contains('ui-icon-button')||manage.getAttribute('aria-label')!=='房間管理')){ui.decorateButton(manage,'settings',{label:'房間管理',iconOnly:false});manage.setAttribute('aria-label','房間管理');manage.title='房間管理';}
-  figmaIcon(row?.querySelector('[data-room-action=start] .ui-button-icon'),'ux02-15.svg',{tone:'accent'});figmaIcon(row?.querySelector('.st-waiting-invite .ui-button-icon'),'ux02-16.svg');figmaIcon(manage?.querySelector('.ui-button-icon'),'ux02-17.svg');
+  if(!state||state.phase!=='waiting')return;
+  const scene=ui.Template.patterns.waitingScene(center,state,{owner:state.host,hostId:state.hostId,capacity:8,title:'你畫我猜',english:'Draw & Guess',limit:'2–8 人一起畫',art:state.host?'/assets/stitch/figma/ux02-03.png':'/assets/stitch/waiting-guest.jpg',fallbackArt:'/assets/stitch/waiting-host.jpg',kicker:'朋友集結中，畫筆已備，等房主開畫。',description:'2–8 人一起玩。輪流挑題作畫，其他朋友一起猜出答案。邀請朋友入座，設定好就能開始。',readyCopy:'畫筆與題卡已備妥',facts:[['每輪輪替','全員輪流畫'],['計分機制','愈快猜愈高'],['繪圖工具','12 色＋粗細']],onCopy:()=>actions?.invite(),onChat:()=>center.querySelector('.tpl-waiting-footer button')?.click(),onHelp:()=>$('#help')?.click(),onDissolve:dissolve,onLeave:()=>$('.ui-room-session-actions>[data-room-action=leave]')?.click(),onInvite:event=>window.RoomInvites?.ready?window.RoomInvites.open(event.currentTarget):actions?.invite()});
+  if(!scene)return;const {banner,list,rail,panel,row,manage}=scene;
+  figmaIcon(banner.querySelector('.st-ready-mark'),'ux02-12.svg',{tone:'accent'});for(const n of list?.querySelectorAll('.st-empty-seat>span:first-child')||[])figmaIcon(n,'ux02-10.svg');figmaIcon(list?.querySelector('[data-room-common-action=bot] .ui-symbol'),'ux02-09.svg',{tone:'accent'});
+  figmaIcon(rail.querySelector('.st-waiting-help .ui-button-icon'),'ux02-19.svg');figmaIcon(rail.querySelector('.st-waiting-dissolve .ui-button-icon'),'ux02-20.svg',{tone:'accent'});figmaIcon(row?.querySelector('[data-room-action=start] .ui-button-icon'),'ux02-15.svg',{tone:'accent'});figmaIcon(row?.querySelector('.st-waiting-invite .ui-button-icon'),'ux02-16.svg');figmaIcon(manage?.querySelector('.ui-button-icon'),'ux02-17.svg');
   const seconds=panel?.querySelector('input[name=seconds]')?.closest('fieldset');if(seconds){seconds.classList.add('st-seconds-options');for(const input of seconds.querySelectorAll('input[name=seconds]')){const label=input.nextElementSibling;if(label&&!label.querySelector('.st-duration-note'))label.append(el('small','st-duration-note',{60:'標準',90:'充裕',120:'悠閒'}[input.value]||''));}}
   const topics=panel?.querySelector('.topic-options');if(topics)topics.title=topics.querySelector('.topic-hint')?.textContent||'至少選擇一個題目類別';
  }

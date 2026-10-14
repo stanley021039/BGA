@@ -1,5 +1,7 @@
 # 動畫角色記憶
 
+2026-10-15 候選 2.7.0：郎中 Stitch 與畫猜以同一等待室／聊天室元件整合；採購以圖片、價格與勾選呈現，保留購買取消、最新原生控制器及原音檔。五席、第一輪實際買退、主鍋／放大提示、1280及390／320採購與有限畫猜開局／筆跡已觀察；未新增完整九輪、實機手機或聽感結論。詳 [本輪整合與驗收](../STITCH-QUACKS-INTEGRATION.md)。
+
 2026-10-08最新正式 **v1.15.0／f4cbdfa**：彈幕框Stage A發布，雙平台完整各1,432、公開25資源與五款三席frame/avatars通過。PNG上傳收藏／成就與勝場ledger仍缺；完整source/首輪Linux暫存I/O失敗與重跑/備份/native scope/9帳戶及21non-session表保留/own cleanup見 [最終進度](../BARRAGE-FRAMES-PROGRESS.md)與 [backlog](../SPEC-BACKLOG.md)。下方候選及1.14.2是歷史；tag固定受測程式，沒有新PR/push，不把有限取樣當全phase/讀屏/200%/FPS。
 
 2026-10-08內建彈幕框候選 **v1.15.0／f4cbdfa**：靜態框飾只由外bubble既有8秒translate帶動；以实际測得height預留8px gap、最多4則不補播。個人收框偏好不接MotionPolicy.clear，文字／emoji開關才決定是否收彈幕；OSreduce仍5秒靜態。背景sample初300ms未advance而1秒probe有位移，不拿此說GPU/FPS或診斷使用者別台PC。素材為本站CSS原創；StageB PNG/授權/版本grant尚未做。精確scope/測試/發布見 [進度](../BARRAGE-FRAMES-PROGRESS.md)。
