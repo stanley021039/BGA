@@ -62,6 +62,7 @@
    if(me.role==='admin'&&!header.querySelector('#site-admin')){const link=document.createElement('a');link.id='site-admin';link.href='/admin';link.textContent='管理';menu.insertBefore(link,header.querySelector('#site-logout'));}
    const themeButton=header.querySelector('#site-theme-button');if(themeButton){themeButton.classList.remove('site-theme-guest');account.insertBefore(themeButton,button);}
    account.hidden=false;header.querySelector('.site-links').hidden=false;refreshAvatar();
+   if(!document.querySelector('script[data-room-invitations]')){const invitations=document.createElement('script');invitations.src='/shared/room-invitations.js';invitations.dataset.roomInvitations='';document.body.append(invitations);}
   }catch{}
  }
  window.addEventListener('profile-updated',refreshIdentity);window.addEventListener('focus',refreshIdentity);

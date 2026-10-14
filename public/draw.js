@@ -104,6 +104,7 @@ function waitingSummary(s=state){
 function updatePresence(){
  if(!state)return;
  GameShell.stableMarkup($('#players'),state.players.map(playerRow).join(''));
+ window.GameUI?.Template?.patterns.updateRoster($('#players'),state);
  const waiting=waitingSummary();$('#drawWaiting').hidden=!waiting.title;$('#drawWaitingTitle').textContent=waiting.title;$('#drawWaitingNames').textContent=waiting.detail;
 }
 function updateConnection(){
@@ -154,7 +155,7 @@ function stageScene(s){
  if(s.phase==='choosing'){
   const mine=s.presenterId===s.me;
   const hiddenCard=`<span class="stage-pick-back ui-center-content" role="img" aria-label="未公開的題目">${window.GameUI?.symbol?.('unknown')||'<span class="ui-symbol" aria-hidden="true">?</span>'}</span>`;
-  return `<div class="stage-scene stage-choosing"><div class="stage-lead">${stageAvatar(artist)}<span>${esc(artist?.name||'畫者')} 的回合</span></div><div class="stage-copy"><span class="ui-badge stage-ribbon">ROUND ${s.round} / ${s.roundLimit}</span><h1>${mine?'選一張題卡，準備開畫':'畫者正在挑題'}</h1><p>${mine?'只有你看得到題目，選好就能立即畫。':'題目選好後，畫作會出現在同一塊畫布。'}</p><div class="stage-picks">${mine?s.candidates.map(word=>`<button type="button" class="stage-pick" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong><span>畫這題 ↗</span></button>`).join(''):hiddenCard.repeat(3)}</div></div></div>`;
+  return `<div class="stage-scene stage-choosing"><div class="stage-lead">${stageAvatar(artist)}<span>${esc(artist?.name||'畫者')} 的回合</span></div><div class="stage-copy"><span class="ui-badge stage-ribbon">ROUND ${s.round} / ${s.roundLimit}</span><h1>${mine?'選一張題卡，準備開畫':'畫者正在挑題'}</h1><p>${mine?'請在「遊戲操作」選一題，選好就能立即畫。':'題目選好後，畫作會出現在同一塊畫布。'}</p><div class="stage-picks">${hiddenCard.repeat(3)}</div></div></div>`;
  }
  if(s.phase==='reveal')return `<div class="stage-scene stage-reveal"><div class="stage-copy"><span class="ui-badge stage-ribbon">ROUND ${s.round} · 答案揭曉</span><h1 class="stage-answer">${esc(s.result?.answer||'這輪沒有選定題目')}</h1><p class="stage-reason">${esc(s.result?.reason||'')}</p><div class="stage-stat"><b>${s.result?.guessedIds?.length||0}</b> 位朋友猜中 <span>· 畫者每猜中一人 +15 分</span></div>${stageVotePanel(s)}</div><div class="stage-art"><canvas id="stagePreview" width="512" height="256" role="img" aria-label="本輪完成的畫作"></canvas><small id="stagePreviewStatus">正在讀取本輪畫作…</small></div></div>`;
  const rankings=[...s.players].sort((a,b)=>b.score-a.score);
@@ -172,9 +173,10 @@ function render(live=false){
   actions=waitingActions(s);
  }else if(s.phase==='drawing'){
   const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me);
+  actions=`<p>${artist?'在中央畫布作畫；倒數結束後自動揭曉。':'在中央的猜題框輸入答案；倒數結束後自動揭曉。'}</p>`;
    if(!eligible&&!artist)actions='<p>下一輪起可以猜題。</p>';
   }else if(s.phase==='choosing'){
-   actions=`<p>${s.presenterId===s.me?'在舞台選一題開始作畫。':'等待 '+esc(nameOf(s.presenterId))+' 選題。'}</p>`;
+   actions=s.presenterId===s.me?`<p>選一題開始作畫，題目只有你看得到。</p><div class="ui-game-word-choices">${s.candidates.map(word=>`<button type="button" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong></button>`).join('')}</div>`:`<p>等待 ${esc(nameOf(s.presenterId))} 選題。</p>`;
  }else if(s.phase==='reveal'){
    actions=`<p>本輪已揭曉。</p>${s.host?'<button data-do="next">下一位畫者</button>':'<p>等待房主開始下一輪。</p>'}${s.result?.resultId?'<button data-do="save" data-result-id="'+esc(s.result.resultId)+'">收藏這幅畫</button>':''}`;
   }else if(s.phase==='finished'){
@@ -306,7 +308,7 @@ function receive(next){
  if(changed){signature=key;render(live);if(freshPhase)animatePhase(oldPhase,next.phase);}
  else{updateFeed(live);updateStagePreview();}
  if(next.phase==='waiting'){
-  if(!changed&&previous?.players.length!==next.players.length){GameShell.stableMarkup($('#drawActions'),waitingActions(next));decorateActions();}
+  if(!changed&&previous?.players.length!==next.players.length){GameShell.stableMarkup($('#drawActions'),waitingActions(next)+(GameShell.botButton?.(next)||''));decorateActions();}
   const waitingCount=$('#waitingCount');if(waitingCount)waitingCount.textContent=next.players.length+' / 8 位入座';
  }
  showCorrectFeedback(previous,next,live);

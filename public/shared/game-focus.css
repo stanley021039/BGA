@@ -54,3 +54,6 @@ body.game-focus-active .draw-layout .board-section .canvas-frame{min-height:400p
 /* Drawing must retain its intrinsic 2:1 ratio while using the wider column. */
 body.game-focus-active[data-game-kind=draw] .board-section.is-drawing .canvas-frame{width:100%!important;min-height:0!important;aspect-ratio:2/1!important;align-self:start}
 body.game-focus-active[data-game-kind=draw] .board-section.is-drawing .draw-countdown{width:100%!important}
+
+/* The race utility column now contains required game operations. */
+body.game-focus-active .race-utility-panel.ui-room-play-tools{display:flex!important}

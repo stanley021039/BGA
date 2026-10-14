@@ -251,17 +251,19 @@
    finally{running=null;}
    if(queued)return flush();
   }
-  document.addEventListener('change',event=>{
-   if(!event.target.closest?.('.room-settings-panel')||!canSave()||!['INPUT','SELECT'].includes(event.target.tagName))return;
+  function settingsChanged(event){
+   if(!event.target.closest?.('.room-settings-panel,.ui-room-settings-slot')||!canSave()||!['INPUT','SELECT'].includes(event.target.tagName))return;
    if(event.target.checkValidity&&!event.target.checkValidity()){queued=null;status('請輸入範圍內的設定值。');return;}
    try{queued=read();schedule();}catch(error){queued=null;status(error.message);}
-  });
+  }
+  document.addEventListener('change',settingsChanged);
+  document.addEventListener('input',event=>{if(['number','range'].includes(event.target.type))settingsChanged(event);});
   return {flush,pending:()=>!!queued||!!running};
  }
  function settingsActions(){return '<div class="room-settings-actions"><p id="roomSettingsFeedback" class="ui-status" role="status" aria-live="polite"></p></div>';}
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function playerRow(player,{me,status='',metrics=[{value:player.score??player.stack??0,label:'分數'}]}={}){
-  const avatar=player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
+  const avatar=document.body.dataset.uiTemplate&&window.GameUI?.Template?window.GameUI.Template.objects.characterMarkup(player):player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
   const name=typeof window!=='undefined'&&window.GameUI?.playerName?window.GameUI.playerName(player.name):'<span class="ui-player-name" title="'+escape(player.name)+'">'+escape(player.name)+'</span>';
   return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
  }

@@ -13,7 +13,7 @@
   bluff:['瞎掰王','角色已備，等你開場。','3–9 人一起玩。輪流解釋與質問，找出唯一的老實人。']
  };
  let hero,stageHome,roster,rosterList,rosterCount,rosterActionCard,actionHome,actionClasses,actionChildren,actionBusy=false,lastRoster='',layout,controls,layoutWaiting=false;
- const homes=new Map();
+ const homes=new Map();let inviteCard=null,lastSnapshot=null;
  function move(el,host){if(!el||el.parentElement===host)return;if(!homes.has(el)){const mark=document.createComment('waiting-home');el.before(mark);homes.set(el,mark);}host.append(el);}
  function restore(el){const mark=homes.get(el);if(mark?.parentNode)mark.after(el);}
  function arrange(type,waiting){
@@ -39,9 +39,10 @@
   if(guide&&info){if(waiting)move(guide,info);else restore(guide);}
   const drawingChat=waiting?null:window.GameUI?.layoutDrawingPlay?.(type,phase);
   const chatHost=drawingChat||(waiting?layout.querySelector('.ui-room-chat-slot'):type==='thunder'?controls.querySelector('.race-utility-panel'):controls);
+  window.RoomControls?.mountPlayPanels?.(waiting?null:chatHost,type);
   window.SharedChat?.mountIn(chatHost,{inline:true});
-  const nativePeer=type==='draw'?document.querySelector('.draw-roster'):type==='thunder'?document.querySelector('.race-roster'):['majority','gift'].includes(type)?document.querySelector('.game-roster'):null;
-  window.SharedChat?.matchRosterHeight?.(waiting||phase==='finished'||drawingChat?null:nativePeer||roster);
+  // Chat owns its viewport; operation content never determines its height.
+  window.SharedChat?.matchRosterHeight?.(null);
  }
  const rosterHosts={
   poker:'#game .game-layout',thunder:'.race-main',majority:'.play-layout',gift:'.gift-layout',draw:'.draw-layout',
@@ -64,6 +65,7 @@
    for(const original of originals)if(original)original.dataset.waitingNativeRoster='';
   }
   roster.hidden=false;
+  if(window.RoomInvites?.ready&&!inviteCard){const button=node('button','');button.onclick=()=>window.RoomInvites.open(button);inviteCard=window.RoomControls.rosterAction(button,'invite');}
   const players=(s.players||[]).filter(p=>!p.kicked),hostId=typeof s.host==='string'?s.host:s.hostId||(s.host?s.me:null);
   rosterCount.textContent=players.length+' 位已入座 · 捲動查看';
   const key=JSON.stringify([s.me,hostId,players.map(p=>[p.id,p.name,p.avatar,p.bot,p.online,p.offline,p.roleName])]);
@@ -79,7 +81,7 @@
    const status=[player.id===hostId?'房主':'',player.roleName||'',player.online===false||player.offline?'暫時離線':'已入座'].filter(Boolean).join(' · ');
    info.append(name,node('small','ui-room-roster-status',status));card.append(avatar,info);return card;
   }));
-  if(rosterActionCard)rosterList.append(rosterActionCard);
+  if(inviteCard)rosterList.append(inviteCard);if(rosterActionCard)rosterList.append(rosterActionCard);
   rosterList.scrollTop=scrollTop;
  }
 
@@ -89,10 +91,11 @@
   for(const teaching of document.querySelectorAll('[data-room-teaching]'))teaching.hidden=!visible;
   if(!visible)for(const dialog of document.querySelectorAll('dialog[data-room-teaching-dialog][open]'))dialog.close();
  }
+ window.addEventListener('room-invitations-ready',()=>{lastRoster='';if(lastSnapshot)update(lastSnapshot);});
  const roomPath=/^\/(poker|majority|gift|draw|telephone|trpg|musicquiz|minimal|bluff|quacks|race)\/[a-f0-9]{6}\/?$/i.test(location.pathname);
  updateTeaching(roomPath&&!window.RaceLesson?'connecting':'waiting');
  function update(s){
-  if(window.RaceLesson)return;updateTeaching(s.phase);window.RoomControls?.update(s);
+  if(window.RaceLesson)return;lastSnapshot=s;updateTeaching(s.phase);window.RoomControls?.update(s);
   document.body.dataset.roomPhase=s.phase;window.SharedChat?.updateRoom(s);const type=s.type||'poker';document.body.dataset.roomType=type;updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');arrange(type,s.phase==='waiting');return;}const game=games[type];if(!game)return;
   document.body.dataset.roomPhase=s.phase;
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');
@@ -125,7 +128,7 @@
   const card=node('article','ui-room-roster-card ui-room-roster-add');card.setAttribute('role','listitem');card.dataset.gameActionSlot='';
   button.classList.add('ui-room-roster-action-button');button.type='button';button.setAttribute('aria-label','加入 AI 測試夥伴');button.title='加入 AI 測試夥伴';
   const avatar=node('span','ui-room-roster-avatar'),icon=node('span','ui-symbol');icon.setAttribute('aria-hidden','true');
-  const symbol=window.GameUI?.symbol?.('add');if(symbol)icon.innerHTML=symbol;else icon.textContent='+';
+  const symbol=window.GameUI?.symbol?.('bot');if(symbol)icon.innerHTML=symbol;else icon.textContent='+';
   avatar.append(icon);const info=node('span','ui-room-roster-info');
   info.append(node('b','ui-room-roster-action-label','加入 AI 測試夥伴'),node('small','ui-room-roster-status','協助測試遊戲流程'));
   button.replaceChildren(avatar,info);card.append(button);rosterList.append(card);rosterActionCard=card;setRosterBusy(actionBusy);return true;

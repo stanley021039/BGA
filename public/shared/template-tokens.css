@@ -1,0 +1,9 @@
+/* Semantic aliases preserve the established Playful Paper palette in both modes. */
+body[data-ui-template="tactile"] {
+ --tpl-page:var(--play-paper);--tpl-panel:var(--play-surface);--tpl-inset:var(--play-paper);
+ --tpl-text:var(--play-ink);--tpl-muted:var(--play-muted);--tpl-line:var(--play-ink);
+ --tpl-action:var(--play-bright-yellow,var(--play-yellow));--tpl-on-action:var(--play-on-accent,#292639);
+ --tpl-focus:var(--ui-focus);--tpl-shadow:var(--play-control-shadow);--tpl-gap:16px;--tpl-pad:16px;
+ --tpl-radius:var(--play-radius);--tpl-control:44px;--tpl-border:var(--play-border);
+ --tpl-roster-width:200px;--tpl-chat-width:280px;--tpl-answer-height:136px;
+}

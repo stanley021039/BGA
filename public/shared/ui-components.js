@@ -26,6 +26,8 @@
   help:'<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 4M12 17h.01"/>',
   unknown:'<path d="M8 8a4 4 0 0 1 8 0c0 3-4 3-4 6"/><circle cx="12" cy="19" r=".6"/>',
   users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5"/>',
+  invite:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M19 8v8M15 12h8"/>',
+  bot:'<path d="M12 3v3M2 12v5M22 12v5"/><rect x="5" y="6" width="14" height="15" rx="3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M9 17h6"/>',
   gift:'<rect x="3" y="7" width="18" height="4" rx="1"/><path d="M5 11v10h14V11M12 7v14M12 7C8 7 6 6 6 4a2 2 0 0 1 4-1l2 4Zm0 0c4 0 6-1 6-3a2 2 0 0 0-4-1l-2 4Z"/>',
   cards:'<rect x="7" y="3" width="13" height="18" rx="2"/><path d="M7 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3m7-13 3 4-3 4-3-4 3-4Z"/>',
   'car-light':'<path d="M7 9 9 5h6l2 4M5 16V10l2-1h10l2 1v6H5Zm2 0v3m10-3v3M8 12h1m6 0h1"/>',
@@ -189,8 +191,9 @@
     const frame=board.querySelector(':scope > .canvas-frame'),scene=frame?.querySelector('#canvasStage');
     if(!frame||window.matchMedia('(max-width:760px)').matches||scene&&!scene.hidden){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
     const viewport=board.closest('.ui-drawing-task-board,#source')||board,tools=board.querySelector(':scope > .tools:not([hidden])'),css=getComputedStyle(board),gap=parseFloat(css.columnGap)||0;
-    const width=board.clientWidth-(tools?tools.getBoundingClientRect().width+gap:0),offset=frame.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop,available=viewport.clientHeight-offset;
-    if(available<120){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
+    const measurements=window.GameUI?.Template?.patterns.measureBoard({board,frame,viewport,tools,gap});
+    const width=measurements?.width??board.clientWidth-(tools?tools.getBoundingClientRect().width+gap:0),offset=frame.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop,available=measurements?.available??viewport.clientHeight-offset;
+    if(available<(measurements?64:120)){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
     const value=Math.floor(Math.min(width,2*Math.max(0,available-2)))+'px';
     if(board.style.getPropertyValue('--ui-drawing-canvas-width')!==value)board.style.setProperty('--ui-drawing-canvas-width',value);
    }
@@ -212,7 +215,7 @@
  }
  function layoutDrawingPlay(type,phase){
   if(!['draw','minimal','telephone'].includes(type))return null;
-  const active=!['waiting','finished'].includes(phase);
+  const active=phase!=='waiting'&&(phase!=='finished'||type==='draw'&&!!document.body.dataset.uiTemplate);
   if(!active){
    if(drawingPlay){
     const record=drawingPlay;record.fitObserver?.disconnect();for(const board of record.work.querySelectorAll('.ui-drawing-board'))board.style.removeProperty('--ui-drawing-canvas-width');record.root.classList.remove('ui-drawing-play-layout');record.roster.classList.remove('ui-drawing-play-roster');record.work.classList.remove('ui-drawing-play-work');record.chat.classList.remove('ui-drawing-play-chat');record.results?.classList.remove('ui-drawing-play-results');record.title?.classList.remove('ui-drawing-play-title');if(record.createdTitle)record.title.hidden=true;

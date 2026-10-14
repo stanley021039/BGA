@@ -1,0 +1,93 @@
+/* Page templates compose native panels; carousel transforms remain unchanged. */
+body[data-ui-template][data-game-kind="draw"][data-room-phase="finished"] .draw-layout>.ui-room-roster{display:none}
+body[data-ui-template][data-game-kind="draw"][data-room-phase="finished"] .ui-game-operations .ui-room-controls{height:360px;min-height:360px;flex:none}
+body[data-ui-template][data-game-kind="draw"][data-room-phase="finished"] .ui-room-session-actions>[data-room-action="start"]{flex:0 0 44px;width:44px!important;height:44px;min-height:44px}
+body[data-ui-template][data-game-kind="draw"][data-room-phase="finished"] .ui-room-session-actions>[data-room-action="start"] .ui-button-label{display:none}
+body[data-ui-template] .tpl-page{max-width:1800px;margin:auto}
+body[data-ui-template] .tpl-game-grid{gap:var(--tpl-gap)}
+body[data-ui-template] .tpl-roster .room-player-avatar{width:72px!important;height:88px!important;min-width:72px!important;grid-row:1/3!important}
+body[data-ui-template] .tpl-roster .room-player{grid-template-columns:72px minmax(0,1fr)!important;min-height:112px!important}
+body[data-ui-template] .tpl-roster .room-player-metrics{grid-column:2!important;grid-row:2!important;align-self:end!important}
+body[data-ui-template] .tpl-roster .room-player-info{grid-column:2!important;grid-row:1!important}
+body[data-ui-template] .lobby-top>.tpl-button{flex:none;margin-left:8px}
+body[data-ui-template] .lobby-avatar img{width:64px;height:76px}
+@media(min-width:1101px) and (min-height:680px){
+ body[data-ui-template][data-game-kind="draw"]:not(.ui-large-text) .ui-room-waiting-layout{height:var(--tpl-game-height);grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:minmax(0,1.1fr) minmax(244px,1fr)}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .room-waiting-art img{max-height:100%;object-fit:contain}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .room-waiting-info{padding:16px;overflow:auto}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .room-waiting-info h2{font-size:24px;margin:8px 0}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .room-waiting-info p{margin:8px 0}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .ui-room-roster{padding:12px}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .shared-chat{padding:12px}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .ui-room-chat-slot>.shared-chat{height:100%!important;min-height:0!important;max-height:100%!important}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout>.ui-room-waiting-controls{padding:12px;overflow:hidden!important;display:flex;flex-direction:column}
+ body[data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .ui-room-controls{flex:1;min-height:0}
+ body[data-ui-template]:not(.ui-large-text) .tpl-page>[data-site-header]{padding-block:12px;min-height:68px;margin-bottom:8px}
+ body[data-ui-template]:not(.ui-large-text) .tpl-lobby-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(340px,1fr);grid-template-rows:auto minmax(300px,1fr) minmax(208px,.65fr) auto;gap:12px 16px;height:calc(100dvh - 92px);padding-bottom:12px}
+ body[data-ui-template]:not(.ui-large-text) .library-heading{grid-column:1/-1;margin:0;align-items:center}
+ body[data-ui-template]:not(.ui-large-text) .library-heading h1{font-size:28px;margin:0}
+ body[data-ui-template]:not(.ui-large-text) .library-heading .kicker{display:none}
+ body[data-ui-template]:not(.ui-large-text) .library-count strong{font-size:36px}
+ body[data-ui-template]:not(.ui-large-text) .game-carousel-section{grid-column:1/-1;display:flex;flex-direction:column;min-height:0}
+ body[data-ui-template]:not(.ui-large-text) .carousel-heading{min-height:24px;margin:0}
+ body[data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel]{height:auto;min-height:232px;flex:1}
+ body[data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .game-tile{width:248px;top:47%}
+ body[data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-image{height:112px}
+ body[data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-body{padding:8px 12px}
+ body[data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-body h2{font-size:22px;margin:4px 0}
+ body[data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-body p{font-size:13px;line-height:1.5;margin:4px 0;min-height:39px}
+ body[data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-bottom{padding-top:6px}
+ body[data-ui-template]:not(.ui-large-text) .carousel-footer{margin:0;min-height:44px}
+ body[data-ui-template]:not(.ui-large-text) .lobby-section{grid-column:1;grid-row:3;margin:0;padding:12px;display:flex;flex-direction:column;min-height:0}
+ body[data-ui-template]:not(.ui-large-text) .lobby-top h2{font-size:20px;margin:0}
+ body[data-ui-template]:not(.ui-large-text) .lobby-top :is(.kicker,p){display:none}
+ body[data-ui-template]:not(.ui-large-text) .lobby-stage{flex:1;min-height:132px;height:auto;margin-top:8px}
+ body[data-ui-template]:not(.ui-large-text) .lobby-bottom{min-height:24px}
+ body[data-ui-template]:not(.ui-large-text) .rooms-section{grid-column:2;grid-row:3;margin:0;padding:0;display:flex;flex-direction:column;min-height:0}
+ body[data-ui-template]:not(.ui-large-text) .rooms-browse{padding:12px;display:flex;flex-direction:column;min-height:0;flex:1}
+ body[data-ui-template]:not(.ui-large-text) .rooms-heading{margin:0 0 8px;gap:8px;align-items:center}
+ body[data-ui-template]:not(.ui-large-text) .rooms-heading h2{font-size:20px;margin:0}
+ body[data-ui-template]:not(.ui-large-text) .rooms-heading :is(p,.kicker){display:none}
+ body[data-ui-template]:not(.ui-large-text) .room-list{flex:1;min-height:48px;overflow:auto;grid-template-columns:1fr;align-content:start}
+ body[data-ui-template]:not(.ui-large-text) .room-card{padding:8px;gap:8px}
+ body[data-ui-template]:not(.ui-large-text) .room-code-panel{border:0;border-top:1px solid var(--tpl-line);padding:8px 12px;flex:none}
+ body[data-ui-template]:not(.ui-large-text) .room-code-panel .join-note{display:none}
+ body[data-ui-template]:not(.ui-large-text) .room-code-panel .join-input{display:flex;align-items:center;gap:12px}
+ body[data-ui-template]:not(.ui-large-text) .room-code-panel .join-input>div{flex:1;min-width:0}
+ body[data-ui-template]:not(.ui-large-text) .room-code-panel label{margin:0;white-space:nowrap}
+ body[data-ui-template]:not(.ui-large-text) :is(.resume,.version-note){grid-column:1/-1;margin:0;font-size:12px}
+ body[data-ui-template]:not(.ui-large-text) .resume:empty{display:none}
+ body[data-ui-template][data-game-kind="draw"]:not(.ui-large-text){--ui-drawing-row-height:var(--tpl-game-height,calc(100dvh - 176px));--ui-drawing-answer-height:var(--tpl-answer-height);--ui-drawing-roster-width:var(--tpl-roster-width);--ui-drawing-chat-width:var(--tpl-chat-width)}
+ body[data-ui-template]:not(.ui-large-text) .draw-shell .game-toolbar{margin-block:4px;padding-block:0;min-height:44px}
+ body[data-ui-template]:not(.ui-large-text) .draw-shell .game-toolbar{display:flex;align-items:center;gap:16px}
+ body[data-ui-template]:not(.ui-large-text) .draw-shell .game-toolbar>h1{flex:none}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-title{font-size:24px;margin-block:4px}
+ body[data-ui-template]:not(.ui-large-text) .draw-shell.tpl-page{padding-block:0!important}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout{margin-bottom:12px!important;grid-template-rows:var(--ui-drawing-row-height)!important}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout>.ui-drawing-play-chat{--ui-chat-fixed-height:var(--tpl-game-height);height:var(--tpl-game-height)!important;min-height:0!important;max-height:var(--tpl-game-height)!important}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-chat>.ui-game-operations{height:220px!important;min-height:0!important;max-height:42%;flex:0 0 220px;overflow:auto}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-chat>.shared-chat{height:auto!important;min-height:0!important;max-height:none!important;flex:1 1 0}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-chat>.ui-room-panel-host:has(#drawActions:empty){display:none}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto auto auto!important;gap:8px!important}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board>.canvas-frame{grid-column:1!important;grid-row:3!important;justify-self:center}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board>.draw-countdown{grid-column:1!important;grid-row:2!important;justify-self:center}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board>.tools{grid-column:1!important;grid-row:4!important;width:100%;padding:6px;gap:6px;display:flex;flex-wrap:wrap;background:var(--play-blue)!important}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board .tool-row{display:flex;flex-wrap:wrap;gap:4px!important}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board .tool-row button{width:44px;min-width:44px;height:44px;margin:0}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board .color-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board .size-pick{display:flex;align-items:center;gap:8px;margin:0}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board .size-pick input{width:100px}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board .board-head{min-height:24px}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-roster .stage-head{gap:4px}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .ui-drawing-board>.draw-countdown{min-height:48px}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .draw-countdown #timer{font-size:24px;padding:4px 12px}
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout .draw-countdown #timerTrack{height:8px;margin:4px 0 0}
+}
+@media(max-width:760px){
+ body[data-ui-template] .tpl-roster .room-player{grid-template-columns:56px minmax(0,1fr)!important;min-height:96px!important}
+ body[data-ui-template] .tpl-roster .room-player-avatar{width:56px!important;height:72px!important;min-width:56px!important}
+ body[data-ui-template] .tpl-roster #players{display:flex!important;flex-direction:row;overflow:auto}
+ body[data-ui-template] .tpl-roster .room-player{flex:0 0 180px}
+ body[data-ui-template] .ui-drawing-play-roster{height:284px!important}
+ body[data-ui-template] .tpl-lobby-grid .lobby-top{flex-wrap:wrap}
+}

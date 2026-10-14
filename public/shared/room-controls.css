@@ -75,8 +75,6 @@ body[data-room-phase=waiting] #drawActionSlot:has(>[data-room-native-action]),bo
 .shared-chat[data-game-chat=true] .chat-room-tools>[data-room-action=leave]:not(:has(+*)){flex:none}
 .shared-chat[data-game-chat=true] .chat-room-tools>[data-room-action=leave]:first-child{margin-left:auto!important}
 .shared-chat[data-game-chat=true] .chat-room-tools>[data-room-action]{position:static!important;inset:auto!important;transform:none!important;align-self:center;grid-column:auto!important;width:44px!important;min-width:44px;height:44px;padding:0!important;margin-top:0!important;margin-bottom:0!important}
-.ui-game-chat-host{display:flex!important;flex-direction:column;min-height:440px}
-.ui-game-chat-host>.shared-chat[data-game-chat=true]{flex:1;min-height:0;height:100%;margin:0;padding:0;border:0;box-shadow:none;border-radius:0;background:transparent}
 body:not([data-room-phase=waiting]) #drawActionSlot:has(#drawActions:empty){display:none}
 body:not([data-room-phase=waiting]) :is(#bot,[data-do=bot],[data-room-action=bot]){display:none!important}
 
@@ -120,16 +118,36 @@ body[data-room-phase=waiting] .ui-room-panel-host{min-height:0;min-width:0}
 .ui-room-settings-footer>.ui-room-session-actions>[data-room-action=start]{flex:1 1 0;min-width:0;width:auto!important;background:var(--play-bright-green,#35e47a)!important;color:var(--play-on-accent,#121212)!important}
 .ui-room-settings-footer>.ui-room-session-actions>[data-room-action]:not([data-room-action=start]){flex:0 0 44px;width:44px;min-width:44px;max-width:44px}
 
-/* A game's chat and friends reserve their full peer height before messages arrive. */
-.ui-game-chat-host{height:var(--ui-chat-fixed-height,var(--ui-room-row-height,440px))!important;min-height:var(--ui-chat-fixed-height,var(--ui-room-row-height,440px))!important;max-height:var(--ui-chat-fixed-height,var(--ui-room-row-height,440px))!important;overflow:hidden!important}
-.ui-game-chat-host>.shared-chat[data-game-chat=true]{flex:1 1 0;min-height:0;height:auto;margin:0}
-.ui-game-chat-host>.room-action-dock,.ui-game-chat-host>.shared-game-ui.draw-ui{display:none!important}
+/* Legacy roster height matching remains available for callers outside play columns. */
 .ui-chat-height-peer{min-height:var(--ui-room-row-height,440px)!important}
 .ui-chat-height-peer[data-chat-height-bound=true]{box-sizing:border-box;height:var(--ui-chat-fixed-height)!important;max-height:var(--ui-chat-fixed-height)!important;overflow:hidden!important;display:flex;flex-direction:column}
 .ui-chat-height-peer[data-chat-height-bound=true]>:is(#players,.ui-room-roster-list){flex:1 1 0;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
 
-/* Reserve chat's header, message viewport and footer before shrinking game actions. */
-.ui-game-chat-host>.ui-room-panel-host{flex:0 1 auto;min-height:0!important;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
-.ui-game-chat-host>.shared-chat[data-game-chat=true]{min-height:244px;flex:1 0 244px}
-.shared-chat[data-game-chat=true] .chat-messages{min-height:44px}
-.shared-chat[data-game-chat=true] .chat-status,.shared-chat[data-game-chat=true] .chat-status:empty{display:block;min-height:24px;height:24px;max-height:24px;overflow:auto}
+
+/* Shared, independent frames for gameplay operations and room chat. */
+:root{--ui-game-operations-height:220px;--ui-game-tools-height:calc(var(--ui-game-operations-height) + var(--ui-room-gap,16px) + var(--ui-room-row-height,440px))}
+body.game-room .ui-room-play-tools,
+body.ui-drawing-play-mode .ui-drawing-play-layout>.ui-drawing-play-chat.ui-room-play-tools{display:flex!important;flex-direction:column;gap:var(--ui-room-gap,16px)!important;width:100%!important;min-width:0;min-height:0!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;align-self:start!important}
+.ui-room-play-tools>.ui-game-operations{box-sizing:border-box;flex:none;width:100%;height:var(--ui-game-operations-height);min-height:0;padding:var(--ui-room-panel-padding,20px);border:var(--play-card-border,2px solid var(--ui-border));border-radius:var(--play-radius,16px);background:var(--play-surface,var(--ui-surface));color:var(--play-ink,var(--ui-text));box-shadow:var(--play-shadow,3px 4px 0 #0001)}
+.ui-game-operations-content>.ui-game-operation-source{height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.ui-game-operations-content>h2.ui-game-operation-source{display:none}
+.ui-game-operations-content p{overflow-wrap:anywhere}
+.ui-game-operations-content .ui-room-controls>.ui-panel-header{font-size:1rem}
+.ui-room-play-tools>:is(.shared-game-ui,.room-action-dock){display:none!important}
+.ui-operation-native-action{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;clip-path:inset(50%)!important;overflow:hidden!important;pointer-events:none!important}
+.ui-game-word-choices{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--ui-space-3,12px)}
+.ui-game-word-choices>button{display:grid;gap:4px;width:100%;min-width:0;margin:0!important;text-align:left;white-space:normal}
+.ui-game-word-choices>button>small{font-size:.75rem;line-height:1.4}
+.ui-game-word-choices>button>strong{overflow-wrap:anywhere}
+@media(min-width:1101px){body.ui-drawing-play-mode .ui-room-play-tools{--ui-game-operations-height:max(220px,calc(var(--ui-drawing-row-height) - var(--ui-room-row-height,440px) - var(--ui-room-gap,16px)))}}
+@media(max-width:1100px){.ui-drawing-play-layout:has(>.ui-room-play-tools){grid-template-rows:var(--ui-drawing-row-height) var(--ui-game-tools-height) auto!important}}
+body.game-room audio{max-width:100%}
+
+/* Compact template viewports scroll the two frames as a column, never shrink chat. */
+@media(min-width:1101px) and (min-height:680px){
+ body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout>.ui-drawing-play-chat.ui-room-play-tools{height:var(--tpl-game-height)!important;max-height:var(--tpl-game-height)!important;overflow:auto!important;scrollbar-gutter:stable}
+}
+
+.ui-game-operations-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ui-game-operations-header>h2{margin:0;font-size:inherit}
+.ui-game-operations-header>[data-room-action=invite]{flex:none;width:44px;height:44px;margin:0}
