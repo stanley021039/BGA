@@ -29,7 +29,7 @@
  function disclosure({label,icon='settings',content=[],open=false}={}){
   const root=element('details',{className:'tpl-disclosure'}),summary=element('summary'),body=element('div',{className:'tpl-disclosure__content'});
   const glyph=element('span',{className:'ui-symbol',attrs:{'aria-hidden':'true'}});glyph.innerHTML=ui.symbol(icon);summary.append(glyph,element('span',{text:label}));body.append(...content);root.append(summary,body);root.open=open;
-  ui.bindPopover?.(root);return root;
+  ui.bindPopover?.(root,body,{align:'start'});return root;
  }
  function frame(node,kind){if(node)node.classList.add('tpl-'+kind);return node;}
  const gate=window.MotionPolicy?.createGate(),events=new Map();let context='';
