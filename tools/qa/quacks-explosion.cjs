@@ -1,0 +1,45 @@
+
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
+const {openDatabase}=require('../../src/db'),{createAuth}=require('../../src/auth'),{createApp}=require('../../src/app'),{chromium}=require('playwright');
+const out=path.resolve(__dirname,'../../work/qa/quacks-explosion');fs.mkdirSync(out,{recursive:true});
+(async()=>{
+ const root=fs.mkdtempSync(path.join(out,'data-')),dbFile=path.join(root,'qa.sqlite'),db=openDatabase(dbFile);
+ try{await createAuth(db).bootstrap('explosion_qa','synthetic-browser-password');}finally{db.close();}
+ const app=createApp({host:'127.0.0.1',port:0,dbFile,historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),musicDir:path.join(root,'music'),achievementPurpose:'test',externalSideEffectsEnabled:false,marketAutomationEnabled:false,githubClient:{configured:false}});let browser;
+ try{
+  const {port}=await app.listen(),base='http://127.0.0.1:'+port;browser=await chromium.launch({headless:true,channel:'msedge'});
+  const owner=await browser.newContext({viewport:{width:1280,height:900}}),peer=await browser.newContext({viewport:{width:1280,height:900}}),contexts=[owner,peer];
+  for(const ctx of contexts)await ctx.addInitScript(()=>{
+   window.__explosionPlaying=[];const NativeAudio=window.Audio;window.Audio=function(...args){const clip=new NativeAudio(...args);clip.addEventListener('playing',()=>{if(clip.src.includes('quacks-explosion.wav'))window.__explosionPlaying.push({src:clip.src,volume:clip.volume,time:performance.now()});});return clip;};window.Audio.prototype=NativeAudio.prototype;
+  });
+  const post=async(ctx,route,data)=>{const r=await ctx.request.post(base+'/api/'+route,{data});if(!r.ok())throw Error(route+' '+await r.text());return r.json();};
+  await post(owner,'auth/login',{username:'explosion_qa',password:'synthetic-browser-password'});const invite=await post(owner,'admin/invites',{});await post(peer,'auth/register',{username:'explosion_peer',password:'synthetic-browser-password',confirmPassword:'synthetic-browser-password',invite:invite.code});
+  const room=await post(owner,'create',{type:'quacks',roomName:'全桌爆鍋驗收',witches:false,alchemists:false,hiddenProgress:true}),code=room.code;await post(peer,'join',{code});await post(owner,'start',{code});
+  const state=async ctx=>(await ctx.request.get(base+'/api/state?code='+code)).json(),action=(ctx,s,name,extra={})=>post(ctx,'action',{code,action:name,roundId:s.roundId,requestId:randomUUID(),...extra});
+  const pages=[],errors=[];for(const ctx of contexts){const p=await ctx.newPage();p.on('pageerror',e=>errors.push(e.message));await p.addLocatorHandler(p.locator('#tableMediaConsent[open]'),()=>p.locator('#mediaConsentDecline').click());await p.goto(base+'/quacks/'+code);await p.locator('#potHeading').waitFor();await p.evaluate(()=>AudioSettings.set('effects',{enabled:true,volume:.25}));await p.locator('#potHeading').click();pages.push(p);}
+  let snapshot=await state(owner),steps=0;
+  while(!snapshot.recipes.some(p=>p.explosionId)){
+   assert.ok(++steps<100,'a real room explodes');
+   for(const ctx of contexts){const s=await state(ctx),m=s.mine;if(s.recipes.some(p=>p.explosionId))break;if(m.pending){const q=m.pending,o=q.options.find(o=>!o.disabled);await action(ctx,s,'choice',{choiceId:q.id,optionId:o.id});}else if(s.phase==='fortune'&&s.me===s.roundStarterId)await action(ctx,s,'draw-fortune');else if(s.phase==='brewing'&&m.canDraw)await action(ctx,s,'draw',{step:s.step});}
+   snapshot=await state(owner);
+   if(snapshot.phase==='brewing'&&steps===2){await pages[0].locator('#controls .draw-action').waitFor();await pages[0].locator('#controls .draw-action').hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});await pages[0].keyboard.press('Escape');if(await pages[0].locator('#quacksFx .fx-skip').isVisible())await pages[0].locator('#quacksFx .fx-skip').click();await pages[0].locator('.pot-action-dock').screenshot({path:path.join(out,'portrait-actions.png')});}
+  }
+  const ids=snapshot.recipes.filter(p=>p.explosionId).map(p=>p.explosionId),names=snapshot.recipes.filter(p=>p.explosionId).map(p=>p.name);
+  await Promise.all(pages.map(p=>p.locator('#quacksExplosion .quacks-explosion-scene').waitFor({state:'visible'})));
+  await Promise.all(pages.map(p=>p.waitForFunction(n=>window.__explosionPlaying.length===n,ids.length)));
+  for(const p of pages){const copy=await p.locator('#quacksExplosion').innerText();assert.ok(names.every(name=>copy.includes(name)));assert.ok(await p.locator('.explosion-caption>h3').evaluate(el=>parseFloat(getComputedStyle(el).fontSize)>=28));assert.equal(await p.locator('#quacksExplosion img').evaluate(img=>img.complete&&img.naturalWidth>0),true);}
+  await pages[0].waitForTimeout(300);await pages[0].screenshot({path:path.join(out,'table-explosion.png')});await pages[1].screenshot({path:path.join(out,'peer-explosion.png')});
+  const audio=await Promise.all(pages.map(p=>p.evaluate(()=>window.__explosionPlaying)));assert.ok(audio.every(events=>events.length===ids.length&&events.every(e=>e.volume===.25)));
+  await pages[0].waitForTimeout(3300);for(const p of pages){assert.equal(await p.locator('#quacksExplosion').isVisible(),false);assert.equal(await p.evaluate(()=>window.__explosionPlaying.length),ids.length);}
+  // A reloaded viewer establishes a baseline and does not replay old explosions.
+  await pages[1].reload();await pages[1].locator('#potHeading').waitFor();await pages[1].waitForTimeout(1500);assert.equal(await pages[1].locator('#quacksExplosion').isVisible(),false);assert.equal(await pages[1].evaluate(()=>window.__explosionPlaying.length),0);
+  const mobile=await owner.newPage();await mobile.addLocatorHandler(mobile.locator('#tableMediaConsent[open]'),()=>mobile.locator('#mediaConsentDecline').click());mobile.on('pageerror',e=>errors.push(e.message));await mobile.setViewportSize({width:390,height:844});await mobile.emulateMedia({reducedMotion:'reduce'});await mobile.goto(base+'/quacks/'+code);await mobile.locator('#potHeading').waitFor();await mobile.locator('#gameFocusToggle').click();assert.equal(await mobile.evaluate(()=>GameFocus.isActive()),true);
+  // Controlled presentation-only snapshot verifies reduced-motion and focused overlay geometry.
+  await mobile.evaluate(s=>{window.__qaFx=QuacksFx.createExplosion(document.querySelector('#quacksExplosion'));window.__qaFx.update({...s,recipes:[]},false);window.__qaFx.update({...s,recipes:[{name:'測試爆鍋',explosionId:'synthetic-mobile'}]},true);},snapshot);
+  assert.equal(await mobile.locator('#quacksExplosion').isVisible(),true);assert.equal(await mobile.locator('#quacksExplosion .quacks-explosion-scene').getAttribute('data-motion'),'still');assert.equal(await mobile.locator('#quacksExplosion .quacks-explosion-scene').evaluate(el=>getComputedStyle(el).animationName),'none');
+  const geometry=await mobile.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));assert.ok(geometry.scroll<=geometry.width+1,JSON.stringify(geometry));await mobile.screenshot({path:path.join(out,'mobile-focus-still-explosion.png')});await mobile.evaluate(()=>window.__qaFx.destroy());
+  for(const file of ['draw-portrait-v1.png','stop-portrait-v1.png','explosion-reference-v1.png']){const response=await owner.request.get(base+'/assets/quacks/'+file);assert.equal(response.status(),200);assert.ok(response.headers()['content-type'].startsWith('image/png'));assert.deepEqual(await response.body(),fs.readFileSync(path.resolve(__dirname,'../../public/assets/quacks',file)));}
+  assert.deepEqual(errors,[]);const evidence={passed:true,explosionIds:ids,viewers:audio.map(a=>({nativePlaying:a.length,volume:a[0]?.volume})),replaySuppressed:true,geometry,focusedReducedMotion:true,pageErrors:errors};fs.writeFileSync(path.join(out,'evidence.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence));
+ }finally{await browser?.close();await app.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});

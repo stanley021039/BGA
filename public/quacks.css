@@ -139,3 +139,26 @@ body[data-quacks-skin=neon] .quacks-inspect:focus-visible{outline-color:#d4c1ff}
 body.game-room[data-game-kind=quacks] #game .pot-action-dock #controls:has(.quacks-dock-button){display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center;justify-content:flex-end}
 
 .pot-action-dock #controls .quacks-dock-button.potion-action{background:linear-gradient(155deg,#487b9c,#385976 55%,#2b3c60)!important;border-color:#a0cfe4!important}
+
+/* Portrait actions and one live table-wide cut-in per authoritative explosion. */
+.pot-action-dock #controls .quacks-dock-button.portrait-action{width:154px!important;min-width:0;flex:0 0 154px;min-height:102px;height:102px;padding:0!important;overflow:hidden;border-radius:16px!important}
+.quacks-action-portrait{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.quacks-explosion{position:fixed;inset:0;z-index:1300;display:flex;align-items:center;justify-content:center;padding:14px;pointer-events:none}
+.quacks-explosion[hidden]{display:none!important}
+.quacks-explosion-scene{position:relative;display:flex;isolation:isolate;width:min(860px,100%);height:clamp(210px,32dvh,290px);max-height:70dvh;overflow:hidden;color:#fff1fb;background:repeating-linear-gradient(174deg,#78558133 0 2px,transparent 2px 17px),linear-gradient(105deg,#1b1439,#51325c 62%,#171630);border-block:5px solid #d8baf1;box-shadow:0 16px 60px #10082188}
+.explosion-portrait{height:100%;aspect-ratio:796/988;flex-shrink:0;overflow:hidden}
+.explosion-portrait>img{display:block;width:200%;height:100%;max-width:none;object-fit:fill}
+.explosion-caption{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:12px 28px;text-align:center;flex:1}
+.explosion-caption>strong{font-size:clamp(18px,3vw,32px);overflow-wrap:anywhere}
+.explosion-caption>h3{font-size:clamp(28px,5vw,64px);font-weight:900;margin:10px 0;text-shadow:3px 3px 0 #16112b;line-height:1.15}
+.explosion-close{position:absolute;right:7px;top:7px;pointer-events:auto;background:#251c3c!important;color:#fceaff!important;border:1px solid #cfa8e5!important;min-width:36px;min-height:36px}
+.quacks-explosion-scene[data-motion=moving]{animation:quacks-cut-in 2800ms both}
+@keyframes quacks-cut-in{0%{transform:translateX(110vw)}8%,90%{transform:translateX(0)}100%{transform:translateX(-110vw)}}
+@media(max-width:760px){.explosion-caption{padding:10px}.explosion-portrait{max-width:44%}.pot-action-dock #controls .quacks-dock-button.portrait-action{width:136px!important;flex-basis:136px;height:92px;min-height:92px}}
+@media(prefers-reduced-motion:reduce){.quacks-explosion-scene{animation:none!important}}
+.motion-reduced .quacks-explosion-scene{animation:none!important}
+
+.portrait-action.draw-action::after{content:attr(data-caption);position:absolute;inset:auto 0 0;padding:3px 4px;background:#141a20ed;color:#fff;font-weight:900;font-size:18px;line-height:1.15;text-align:center;pointer-events:none;text-shadow:1px 1px 1px #000}
+
+body[data-game-kind=quacks] .quacks-explosion .explosion-caption>h3{font-size:clamp(28px,5vw,64px)!important;color:#fff1fb!important;line-height:1.15}
+body[data-quacks-skin=neon] #game>.game-heading{background:#1c2237;border-radius:16px;padding:12px;color:#edf0ff}

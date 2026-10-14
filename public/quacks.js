@@ -9,7 +9,7 @@ async function api(route,data){return RoomApi.request(route,data,{code,room:'qua
 async function mutate(route,data){if(busy||disposed)return;busy=true;retry=null;$('#retry').hidden=true;$('#feedback').textContent='';lock();try{const s=await api(route,data);if(!disposed)render(s);}catch(e){if(!disposed&&e.name!=='AbortError'){$('#feedback').textContent=e.message;if(!e.status){retry={route,data};$('#retry').hidden=false;}}}finally{busy=false;if(!disposed){lock();refresh();}}}
 const act=(action,extra={})=>mutate('action',{action,roundId:state.roundId,requestId:crypto.randomUUID(),...extra});
 
-const art=window.QuacksArt,scoreboard=window.QuacksFx.createScoreboard($('#scoreboard')),fx=window.QuacksFx.create($('#quacksFx'));const seenRolls=new Set();
+const art=window.QuacksArt,scoreboard=window.QuacksFx.createScoreboard($('#scoreboard')),fx=window.QuacksFx.create($('#quacksFx')),explosionFx=window.QuacksFx.createExplosion($('#quacksExplosion'));const seenRolls=new Set();
 
 let viewedPotId=null,potKey='',lastReveal=null,tooltipOwner=null;
 function hint(anchor,details){
@@ -185,14 +185,14 @@ function arrangePotActions(s){
 }
 function render(s){
  if(disposed||s.type!=='quacks'||state&&s.version<state.version)return;
- const live=sounds?.update(s);fx.update(s,live);for(const e of s.rollEvents||[])if(!seenRolls.has(e.id)){seenRolls.add(e.id);if(live)sounds?.play('dice-roll','quacks:'+e.id);}
+ const live=sounds?.update(s);fx.update(s,live);explosionFx.update(s,live);for(const e of s.rollEvents||[])if(!seenRolls.has(e.id)){seenRolls.add(e.id);if(live)sounds?.play('dice-roll','quacks:'+e.id);}
  state=s;if(['waiting','finished'].includes(s.phase))restorePotActions();if(window.GameShell)window.GameShell.update(s);else window.RoomWaiting?.update(s);if(s.version===lastVersion)return;lastVersion=s.version;
  $('#game').hidden=false;$('#roomTag').textContent='房號 '+code;$('#connection').textContent='';
  $('#phase').textContent='郎中闖江湖 · '+({waiting:'等待開局',patients:'選擇病患',fortune:'第 '+s.round+' 回合 · 抽占卜牌',brewing:'第 '+s.round+' 回合 · '+(s.stage==='drawing'?'第 '+s.step+' 次同步抽藥':s.stage==='reserves'?'決定暫存藥材':'效果選擇'),settlement:'第 '+s.round+' 回合 · '+({witches:'結算前女巫',essence:'特效藥階段',bonus:'獎勵骰',effects:'藥材效果選擇','effects-confirm':'確認藥材效果',rewards:'領取格位獎勵',shopping:'購物與補瓶'})[s.stage],between:'本輪結算完成',finished:s.interrupted?'有人離席，本場中止':'九回合完成'})[s.phase];
  if(s.winner)$('#phase').append(document.createTextNode(' · 獲勝：'+s.winner.names.join('、')+'（'+s.winner.score+' 分）'));
  scoreboard.update(s,live);for(const lantern of $('#scoreboard').querySelectorAll('[data-round]')){const n=Number(lantern.getAttribute('data-round')),event=art.roundMilestones[n];hint(lantern,{title:'第 '+n+' 回合'+(event?' · '+event.name:''),effect:event?.text||'依本回合占卜牌進行煮藥。',caption:n===s.round?'目前回合':'',color:event?.color||'round'});}renderAlchemy(s);renderFortune(s,live);renderBookVoting(s);renderTableDice(s);
  for(const p of s.recipes)if(p.explosionId&&!seenExplosion.has(p.explosionId)){
- seenExplosion.add(p.explosionId);if(previousState&&live){sounds?.play('explosion','quacks:'+p.explosionId);if(p.id===viewedPotId){$('#cauldron').classList.remove('burst');void $('#cauldron').offsetWidth;$('#cauldron').classList.add('burst');}}
+ seenExplosion.add(p.explosionId);if(previousState&&live){fx.clear();sounds?.play('explosion','quacks:'+p.explosionId);if(p.id===viewedPotId){$('#cauldron').classList.remove('burst');void $('#cauldron').offsetWidth;$('#cauldron').classList.add('burst');}}
  }
  window.RoomWaiting?.setRosterAction(null);botControl=null;$('#controls').replaceChildren();$('#witches').replaceChildren();const box=$('#controls'),m=s.mine,me=s.recipes.find(p=>p.id===s.me);
  if(['waiting','finished'].includes(s.phase)){
@@ -214,7 +214,7 @@ function render(s){
   else if(s.phase==='fortune')box.append(s.me===s.roundStarterId?button('抽一張占卜牌','gift',()=>act('draw-fortune')):node('p','等 '+s.players.find(p=>p.id===s.roundStarterId)?.name+' 抽占卜牌。'));
   else if(s.phase==='brewing'){
    if(s.stage==='drawing'){
-    if(m.canDraw){const draw=button('要拼！繼續抽！','draw-bag',()=>act('draw',{step:s.step})),stop=button('我不抽了QQ','close',()=>act('stop',{step:s.step}));draw.classList.add('draw-action');stop.classList.add('stop-action');for(const [b,icon,text]of [[draw,'draw-bag','要拼！繼續抽！'],[stop,'hand','我不抽了QQ']]){window.GameUI.decorateButton(b,icon,{iconOnly:true});b.classList.remove('ui-icon-button');b.classList.add('quacks-dock-button');const caption=node('span',text);caption.className='ui-sr-only';b.replaceChildren(art.resource(icon==='draw-bag'?'draw-hand':'stop-hands',{size:52,decorative:true}),caption);hint(b,{title:text,effect:'對自己的大釜作出本次選擇；全員選好後同步抽藥。',caption:'',color:icon});}box.append(draw,stop);}
+    if(m.canDraw){const draw=button('還要爽爽：繼續抽藥','draw-bag',()=>act('draw',{step:s.step})),stop=button('我不抽了QQ','close',()=>act('stop',{step:s.step}));draw.classList.add('draw-action');stop.classList.add('stop-action');for(const [b,icon,text]of [[draw,'draw-bag','還要爽爽：繼續抽藥'],[stop,'hand','我不抽了QQ']]){window.GameUI.decorateButton(b,icon,{iconOnly:true});b.classList.remove('ui-icon-button');b.classList.add('quacks-dock-button');const caption=node('span',text);caption.className='ui-sr-only';const portrait=node('img');portrait.src=icon==='draw-bag'?'/assets/quacks/draw-portrait-v1.png':'/assets/quacks/stop-portrait-v1.png';portrait.alt='';portrait.width=240;portrait.height=160;portrait.className='quacks-action-portrait';b.classList.add('portrait-action');if(icon==='draw-bag')b.dataset.caption='還要爽爽';b.replaceChildren(portrait,caption);hint(b,{title:text,effect:'對自己的大釜作出本次選擇；全員選好後同步抽藥。',caption:'',color:icon});}box.append(draw,stop);}
     else box.append(node('p',me.stopped?'你已停止；等其他人完成。':'已選擇，等所有繼續抽藥者。'));
     if(m.canDraw)for(const c of m.alchemy?.drawablePool||[])box.append(button('改放預抽 '+names[c.color]+' '+c.value,'play',()=>act('draw',{step:s.step,chipId:c.id})));
     if(m.canPotion){const potion=button('使用藥水瓶：收回最後白色炸彈','help',()=>act('potion'));potion.classList.remove('ui-icon-button');potion.classList.add('quacks-dock-button','potion-action');const label=node('span','使用藥水瓶：收回最後白色炸彈');label.className='ui-sr-only';potion.replaceChildren(art.resource('potion',{size:42,decorative:true}),label);hint(potion,{title:'使用藥水瓶',effect:'把最後一片尚未造成爆炸的白色炸彈放回自己的藥袋；藥水瓶用完會變空，購物時可用紅寶石補滿。',caption:'',color:'potion'});box.append(potion);}
@@ -260,7 +260,7 @@ function render(s){
 
  arrangePotActions(s);previousState=s;lock();
 }
-async function refresh(){if(disposed||reading)return;reading=true;try{render(await api('state'));}catch(e){if(!disposed&&e.name!=='AbortError'){sounds?.disconnect();fx.clear();$('#connection').textContent='連線中斷：'+e.message;}}finally{reading=false;}}
+async function refresh(){if(disposed||reading)return;reading=true;try{render(await api('state'));}catch(e){if(!disposed&&e.name!=='AbortError'){sounds?.disconnect();fx.clear();explosionFx.clear();$('#connection').textContent='連線中斷：'+e.message;}}finally{reading=false;}}
 async function start(){disposed=false;scope=new AbortController();try{await RoomReconnect.restore(code,'quacks','#connection',{signal:scope.signal});if(disposed)return;await refresh();timer=setInterval(()=>{if(!document.hidden)refresh();},1200);}catch(e){if(e.name!=='AbortError')$('#feedback').textContent=e.message;}}
 $('#retry').onclick=()=>retry&&mutate(retry.route,retry.data);
 $('#leave').onclick=async()=>{if(busy||!confirm('離席會中止本場，確定離開？'))return;await mutate('leave',{});if(!retry&&!$('#feedback').textContent){RoomReconnect.forget(code);location.replace('/?game=quacks');}};
@@ -275,5 +275,5 @@ $('#potNameForm').onsubmit=event=>{event.preventDefault();act('name-pot',{name:$
 
 for(const [id,icon]of [['customizePot','settings'],['savePotName','save'],['closeCustomize','close'],['closeBag','close']])window.GameUI?.decorateButton($('#'+id),icon,{iconOnly:true});
 if(!code){$('#guide').open=true;$('#connection').textContent='從大廳建立房間開始。';return;}
-window.addEventListener('pagehide',()=>{disposed=true;clearInterval(timer);scope?.abort();sounds?.reset();fx.clear();});window.addEventListener('pageshow',e=>{if(e.persisted){lastVersion=-1;start();}});start();
+window.addEventListener('pagehide',()=>{disposed=true;clearInterval(timer);scope?.abort();sounds?.reset();fx.clear();explosionFx.clear();});window.addEventListener('pageshow',e=>{if(e.persisted){lastVersion=-1;start();}});start();
 })();

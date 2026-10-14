@@ -31,3 +31,5 @@
 2026-10-14：基本版收回白色炸彈的玻璃藥水瓶是本專案原創SVG（QuacksArt.resource potion），與特效藥燒瓶不同；截圖僅原生瀏覽器QA，沒有重用第三方桌遊圖片。
 
 2026-10-14 最終手勢：QuacksArt.resource draw-hand 與 stop-hands 為原創SVG；使用者附圖僅作食指交叉姿勢參考，未匯入截圖、角色或其視覺素材。取代郎中實際停止按鈕的Lucide手掌，既有registry的Lucide授權仍保留。
+
+2026-10-14 郎中人物按鈕改使用者附件＋內建image_gen輕微Q化，字幕還要爽爽；哭哭圖原檔保留並以CSS只顯示左半。原創SVG手勢已退出這兩個操作，PNG來源／提示詞／保存路徑見[素材規格](specs/QUACKS-PORTRAIT-ASSETS.md)。不把附件人物宣稱本站原創或CC素材。

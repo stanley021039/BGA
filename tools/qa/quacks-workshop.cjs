@@ -55,7 +55,7 @@ await pages[0].setViewportSize({width:1280,height:900});
     if(m.pending){const q=m.pending,o=q.options.find(o=>!o.disabled);await action(ctx,s,'choice',{choiceId:q.id,optionId:o.id});}
     else if(s.phase==='fortune'&&s.me===s.roundStarterId)await action(ctx,s,'draw-fortune');
     else if(s.phase==='brewing'&&m.canDraw){
- if(ctx===owner){const control=pages[0].locator(m.draws?'#controls .stop-action':'#controls .draw-action');await control.waitFor();if(!m.draws){await control.hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});assert.ok((await pages[0].locator('#potTooltip').innerText()).includes('要拼'));
+ if(ctx===owner){const control=pages[0].locator(m.draws?'#controls .stop-action':'#controls .draw-action');await control.waitFor();if(!m.draws){await control.hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});assert.ok((await pages[0].locator('#potTooltip').innerText()).includes('繼續抽藥'));
  const where=await control.evaluate(el=>({parent:el.closest('.cauldron-panel')!==null,icon:el.dataset.uiIcon}));assert.deepEqual(where,{parent:true,icon:'draw-bag'});
  await pages[0].locator('#witches .witch-slot').first().hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});
  await pages[0].screenshot({path:path.join(output,'pot-circle-controls.png'),fullPage:true});

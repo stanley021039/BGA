@@ -43,6 +43,31 @@ function create(host){
  return {update,clear,destroy(){clear();unsubscribe?.();root.document.removeEventListener('visibilitychange',hidden);},size:()=>seen.size};
 }
 
+
+/* All viewers receive the same authoritative explosion IDs; current pot selection is irrelevant. */
+function createExplosion(host){
+ let context=null,initialized=false,active=[],timer=null;const seen=new Set();
+ const clear=()=>{if(timer!==null)clearTimeout(timer);timer=null;active=[];host.replaceChildren();host.hidden=true;};
+ function show(events){
+  active.push(...events);if(timer!==null)clearTimeout(timer);
+  const scene=node('section');scene.className='quacks-explosion-scene';scene.dataset.motion=root.MotionPolicy?.allowsMotion()===false?'still':'moving';scene.setAttribute('role','status');scene.setAttribute('aria-live','polite');
+  const portrait=node('div');portrait.className='explosion-portrait';const img=node('img');img.src='/assets/quacks/explosion-reference-v1.png';img.alt='爆鍋後哭哭的表情';img.width=1592;img.height=988;portrait.append(img);
+  const caption=node('div');caption.className='explosion-caption';caption.append(node('strong',active.map(e=>e.name).join('、')),node('h3','爆鍋了 QQ'));
+  const close=node('button','關閉爆鍋提示');close.type='button';root.GameUI?.decorateButton(close,'close',{iconOnly:true});close.className+=' explosion-close';close.onclick=clear;
+  scene.append(portrait,caption,close);host.replaceChildren(scene);host.hidden=false;
+  timer=setTimeout(clear,2800);
+ }
+ function update(state,live){
+  const next=state.code+':'+state.roundId;if(next!==context){clear();seen.clear();initialized=false;context=next;}
+  if(!live||root.document.hidden)clear();
+  const fresh=[];for(const p of state.recipes||[]){if(!p.explosionId||seen.has(p.explosionId))continue;seen.add(p.explosionId);if(initialized&&live&&!root.document.hidden)fresh.push({id:p.explosionId,name:p.name});}
+  initialized=true;if(fresh.length)show(fresh);
+ }
+ const hidden=()=>{if(root.document.hidden)clear();};root.document.addEventListener('visibilitychange',hidden);
+ const unsubscribe=root.MotionPolicy?.subscribe(()=>{if(root.document.hidden)clear();else if(host.children[0])host.children[0].dataset.motion=root.MotionPolicy.allowsMotion()?'moving':'still';});
+ return {update,clear,size:()=>seen.size,destroy(){clear();unsubscribe?.();root.document.removeEventListener('visibilitychange',hidden);}};
+}
+
 function createScoreboard(host){
  const svg=root.QuacksArt.scoreBoard(),pieces=new Map(),scores=new Map();host.replaceChildren(svg);
  return {update(state,live){
@@ -65,5 +90,5 @@ function createScoreboard(host){
  }};
 }
 
-root.QuacksFx={create,createScoreboard,die,labels};
+root.QuacksFx={create,createExplosion,createScoreboard,die,labels};
 })(window);
