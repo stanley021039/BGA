@@ -425,3 +425,7 @@ body[data-ui-template=tactile][data-game-kind=draw][data-visual-theme=playful][d
 body[data-ui-template=tactile][data-game-kind=draw][data-visual-theme=playful][data-draw-phase=finished] #boardSection .stage-podium .st-podium-cards .st-podium-cell>strong{color:var(--st-primary)!important}
 body[data-ui-template=tactile][data-game-kind=draw][data-visual-theme=playful] .st-podium-base .stage-card-rank{position:static!important;inset:auto!important;color:inherit!important}
 body[data-ui-template=tactile][data-game-kind=draw][data-visual-theme=playful] .stage-finished .finished-heading :is(h1,p),body[data-ui-template=tactile][data-game-kind=draw][data-visual-theme=playful] .st-finish-banner{color:var(--st-on-yellow)!important}
+/* These objects sit on inset surfaces, rather than the legacy bright accents. */
+body[data-ui-template=tactile][data-game-kind=draw][data-visual-theme=playful] #timer{color:var(--st-ink)!important}
+body[data-ui-template=tactile][data-game-kind=draw][data-visual-theme=playful] #timer.urgent{color:var(--st-error)!important}
+html[data-color-scheme=dark] body[data-ui-template=tactile][data-game-kind=draw][data-visual-theme=playful] #players .room-player[data-artist=true] .st-player-status{color:var(--st-primary)!important}
