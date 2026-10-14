@@ -51,7 +51,7 @@
   else if(state.type==='bluff'){
    const group=node('fieldset',''),legend=node('legend','','題目難度（至少選一種）');group.disabled=true;group.append(legend);
    for(const level of [1,2,3]){const label=node('label','ui-room-setting-choice'),input=node('input','');input.type='checkbox';input.checked=(options.levels||[]).includes(level);input.disabled=true;label.append(input,document.createTextNode(' '+level+' 級'));group.append(label);}source.append(group);field('role-seconds','看身分時間',(options.roleSeconds??30)+' 秒');
-  }else if(state.type==='quacks'){field('witches','草藥女巫擴充',options.witches?'加入':'不加入');field('hidden-progress','隱藏他人大釜',options.hiddenProgress?'隱藏至爆炸／結算':'公開進度');}
+  }else if(state.type==='quacks'){field('witches','草藥女巫擴充',options.witches?'加入':'不加入');field('alchemists','煉金術士擴充',options.alchemists?'加入':'不加入');field('hidden-progress','隱藏他人大釜',options.hiddenProgress?'隱藏至爆炸／結算':'公開進度');}
   else source.append(node('p','ui-room-settings-note','本遊戲使用固定規則，無需調整。'));
   readonlySource=source;return source;
  }

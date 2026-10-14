@@ -27,7 +27,7 @@
   }catch{if(clip)stopEffect(clip);onError?.();}
  }
  function playEffect(kind,options={}){
-  const cues={'bluff-reaction':['/assets/game-sounds/bluff-reaction.mp3',1700],confirm:['/assets/gift-sounds/confirmation_001.wav',10000],reveal:['/assets/gift-sounds/open_001.wav',10000],turn:['/assets/game-sounds/turn.wav',320],correct:['/assets/game-sounds/correct.wav',220],'dice-roll':['/assets/game-sounds/dice-roll.wav',650],shot:['/assets/game-sounds/shot.wav',280],slam:['/assets/game-sounds/slam.wav',350],explosion:['/assets/game-sounds/quacks-explosion.wav',900],nitro:['/assets/game-sounds/nitro.wav',500],skid:['/assets/game-sounds/skid.wav',480]};
+  const cues={settlement:['/assets/game-sounds/quacks-settlement.wav',420],'potion-drink':['/assets/game-sounds/quacks-potion.wav',600],'ingredient-draw':['/assets/game-sounds/quacks-ingredient.wav',650],'card-draw':['/assets/game-sounds/quacks-card.wav',1500],'bluff-reaction':['/assets/game-sounds/bluff-reaction.mp3',1700],confirm:['/assets/gift-sounds/confirmation_001.wav',10000],reveal:['/assets/gift-sounds/open_001.wav',10000],turn:['/assets/game-sounds/turn.wav',320],correct:['/assets/game-sounds/correct.wav',220],'dice-roll':['/assets/game-sounds/dice-roll.wav',650],shot:['/assets/game-sounds/shot.wav',280],slam:['/assets/game-sounds/slam.wav',350],explosion:['/assets/game-sounds/quacks-explosion.wav',900],nitro:['/assets/game-sounds/nitro.wav',500],skid:['/assets/game-sounds/skid.wav',480]};
   const cue=Object.hasOwn(cues,kind)?cues[kind]:null;
   if(cue)return playClip(cue[0],cue[1],{onError:options.onError,onStop:options.onStop,game:true,maxStartDelayMs:kind==='confirm'||kind==='reveal'?10000:1000});
  }
@@ -46,5 +46,5 @@
  document.addEventListener('pointerdown',unlock,{once:true});document.addEventListener('keydown',unlock,{once:true});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopEffects();});window.addEventListener('pagehide',stopEffects);
  window.addEventListener('storage',event=>{if(event.key===key||event.key===null){preferences=read();notify();}});
- persist();window.AudioSettings={get,set,subscribe,bindPreview,playEffect,playExpression,stopEffect,stopEffects};
+ persist();window.AudioSettings={canPlayGameEffect:()=>effects.size<4&&gameEffects.size<2,get,set,subscribe,bindPreview,playEffect,playExpression,stopEffect,stopEffects};
 })();

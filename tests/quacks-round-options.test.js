@@ -5,22 +5,20 @@ const act=(r,p,action,data={})=>r.act(p.id,action,{roundId:r.roundId,requestId:r
 function lobby(witches=false){const r=new QuacksRoom('ABCDEF','mix',n=>0),a=r.add('A'),b=r.add('B');r.configure(a.id,{witches,hiddenProgress:true});return {r,a,b};}
 function ready(r){for(const p of r.players)if(!p.ready)act(r,p,'settle-ready');}
 function bonuses(r){for(const p of r.players){if(p.bonusEligible&&!p.bonusRolled)act(r,p,'roll-bonus');if(!p.ready)act(r,p,'bonus-ready');}}
-test('independent color voting, host ties, bot exclusion and locked mixed books',()=>{
+test('all humans select shared color effects immediately, without votes or ties; match start freezes books',()=>{
  const {r,a,b}=lobby(true),bot=r.add('Bot',true);
- act(r,a,'book-vote',{color:'red',set:3});assert.throws(()=>r.start(),e=>e.code==='BOOK_TIE');
- assert.throws(()=>act(r,b,'book-tie',{color:'red',set:3}),e=>e.code==='HOST_ONLY');
- assert.throws(()=>act(r,a,'book-tie',{color:'red',set:6}),e=>e.code==='INVALID_TIE');
- act(r,a,'book-tie',{color:'red',set:3});
- act(r,a,'book-vote',{color:'green',set:2});act(r,b,'book-vote',{color:'green',set:2});
- assert.throws(()=>act(r,bot,'book-vote',{color:'blue',set:6}),e=>e.code==='HUMANS_ONLY');
- // A changed green ballot must not discard the already resolved red tie.
+ act(r,a,'book-select',{color:'red',set:2});assert.equal(r.view(b.id).bookSelection.find(c=>c.color==='red').selected,2);
+ act(r,b,'book-select',{color:'red',set:3});assert.equal(r.view(a.id).bookSelection.find(c=>c.color==='red').selected,3);assert.equal(r.bookSelection().find(c=>c.color==='red').chosenBy,b.id);
+ act(r,a,'book-select',{color:'green',set:2});assert.ok(r.bookSelection().every(c=>!c.tied&&c.votes.length===0));
+ assert.throws(()=>act(r,bot,'book-select',{color:'blue',set:6}),e=>e.code==='HUMANS_ONLY');
  assert.equal(r.bookSelection().find(c=>c.color==='red').selected,3);
  r.start();assert.equal(r.activeBooks.red,3);assert.equal(r.activeBooks.green,2);assert.equal(r.activeBooks.blue,1);
  assert.equal(r.bookFor('red').offers[0].price,5);assert.equal(r.bookFor('green').offers[0].price,6);
- assert.throws(()=>act(r,a,'book-vote',{color:'red',set:1}),e=>e.code==='MATCH_STARTED');
+ assert.throws(()=>act(r,a,'book-select',{color:'red',set:1}),e=>e.code==='MATCH_STARTED');
  act(r,a,'draw-fortune');a.pot=[];a.position=0;r.place(a,r.chip('white',2));r.place(a,r.chip('red',1));assert.equal(a.position,5);
 });
-test('invalid expansion faces rejected; disabling expansion coerces old ballot',()=>{
+
+test('invalid expansion faces rejected; disabling expansion coerces old selection',()=>{
  const {r,a,b}=lobby(true);act(r,a,'book-vote',{color:'blue',set:6});act(r,b,'book-vote',{color:'blue',set:6});
  r.configure(a.id,{witches:false,bookSet:1});assert.equal(r.bookSelection().find(c=>c.color==='blue').selected,1);
  assert.throws(()=>act(r,a,'book-vote',{color:'locoweed',set:5}),e=>e.code==='INVALID_BOOK');
@@ -74,4 +72,8 @@ test('pot inspection respects hidden views and uses active color effect with no-
  assert.match(art.info(s,p,BOARD[2],null).title,/空格/);assert.match(art.info(s,p,BOARD[2],{color:'locoweed',value:1,effectColor:'blue',effectValue:2}).effect,/本片模仿烏鴉頭骨：抽出/);
  const points=BOARD.slice(0,-1).map(t=>art.position(t.position));for(const p of points){assert.ok(p.x>25&&p.x<695&&p.y>25&&p.y<605);}
  const min=Math.min(...points.flatMap((a,i)=>points.slice(i+1).map(b=>Math.hypot(a.x-b.x,a.y-b.y))));assert.ok(min>36,'tokens have separately visible centers');
+});
+
+test('a retry of an earlier shared book pick cannot overwrite a newer human selection',()=>{
+ const {r,a,b}=lobby(),data={roundId:r.roundId,requestId:randomUUID(),color:'red',set:2};r.act(a.id,'book-select',data);act(r,b,'book-select',{color:'red',set:4});r.act(a.id,'book-select',data);assert.equal(r.bookSelection().find(c=>c.color==='red').selected,4);assert.equal(r.bookSelection().find(c=>c.color==='red').chosenBy,b.id);assert.throws(()=>act(r,a,'book-select',{color:'__proto__',set:1}),e=>e.code==='INVALID_BOOK');assert.throws(()=>act(r,a,'book-select',{color:'red',set:'2'}),e=>e.code==='INVALID_BOOK');
 });

@@ -118,3 +118,30 @@ body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions{--ui-exp
 body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions button{display:grid;place-items:center;width:var(--ui-expression-card-size);height:var(--ui-expression-card-size);min-height:44px;padding:4px;gap:0}
 body.game-room .shared-game-ui .shared-emoji-picker .shared-expressions img{width:100%;height:100%;min-width:0;min-height:0;object-fit:contain;pointer-events:none}
 body[data-game-kind] .room-test-ai.ui-icon-button{width:var(--ui-control-height,2.75rem);min-width:var(--ui-control-height,2.75rem);max-width:var(--ui-control-height,2.75rem);padding:var(--ui-space-2,.5rem);justify-self:start}
+
+/* Workshop and bluff rooms follow the current drawing-room geometry. */
+body.room-stage-active .quacks-shell,body.room-stage-active .telephone-shell{max-width:1900px}
+.room-stage-layout{display:grid;grid-template-columns:minmax(175px,220px) minmax(0,1fr) minmax(260px,310px);gap:18px;align-items:start}
+.room-stage-layout[hidden]{display:none}
+.room-stage-friends,.room-stage-chat{min-width:0;border:1px solid var(--ui-border);border-radius:22px;padding:16px;background:var(--ui-surface-panel);box-sizing:border-box;position:sticky;top:12px}
+.room-stage-friends h2{font-size:1.05rem;margin:0 0 16px}.room-stage-work{min-width:0}
+.room-stage-friend{display:flex;gap:9px;align-items:center;border:1px solid var(--ui-border);border-radius:14px;padding:10px;margin:9px 0}
+.room-stage-avatar{display:grid;place-items:center;width:38px;height:46px;flex:none;border-radius:10px;color:#fff;border:1px solid #c7cbb0}
+.room-stage-friend-info{min-width:0;flex:1;font-size:.84rem;overflow-wrap:anywhere}.room-stage-friend-info small{display:block;color:var(--ui-muted);margin-top:4px}.room-stage-friend>strong{color:var(--room-accent)}
+body.room-stage-active .game-grid,body.room-stage-active.game-focus-active .game-grid{grid-template-columns:minmax(0,1fr)}
+body.room-stage-active .room-stage-work .action-panel{padding:16px;border-radius:18px}
+body.room-stage-active .room-stage-chat .chat-panel{margin:0;border:0;min-width:0;max-width:none;max-height:none}
+body.room-stage-active .room-stage-chat .chat-messages{max-height:55dvh;min-height:220px}
+body.room-stage-active .task-layout{grid-template-columns:1fr}
+body.room-stage-active .room-stage-roster #players{display:flex;flex-direction:column;gap:8px}
+body.room-stage-active .room-stage-roster #players>*{min-width:0;width:100%;box-sizing:border-box}
+body.room-stage-active .room-stage-work .round-top{grid-template-columns:minmax(180px,.6fr) minmax(0,1fr)}
+body.room-stage-active .room-stage-work .panel{margin-block:10px}
+@media(max-width:1100px){.room-stage-layout{grid-template-columns:160px minmax(0,1fr) 240px;gap:10px}.room-stage-friends,.room-stage-chat{padding:10px}.room-stage-friend{padding:8px;flex-wrap:wrap}.room-stage-avatar{width:30px;height:38px}}
+@media(max-width:900px){.room-stage-layout{grid-template-columns:1fr}.room-stage-friends,.room-stage-chat{position:static}.room-stage-roster{display:flex;flex-wrap:wrap;gap:8px}.room-stage-friend{flex:1;min-width:120px;margin:0}.room-stage-friends h2{margin-bottom:10px}body.room-stage-active .room-stage-roster #players{flex-direction:row;flex-wrap:wrap}body.room-stage-active .room-stage-roster #players>*{flex:1;min-width:125px}body.room-stage-active .room-stage-work .round-top{grid-template-columns:1fr}}
+/* Round archives are removed from game surfaces; current reveals retain their actions. */
+[data-room-history]{display:none!important}
+
+body.room-stage-active .room-stage-chat .shared-chat{margin:0;border:0;max-width:none;min-width:0}
+body.room-stage-active.game-focus-active .room-stage-layout{grid-template-columns:minmax(0,1fr)}
+body.room-stage-active.game-focus-active .room-stage-friends,body.room-stage-active.game-focus-active .room-stage-chat{display:none!important}

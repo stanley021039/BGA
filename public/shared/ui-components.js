@@ -1,5 +1,29 @@
+/* Lucide hand icon, adapted as a stop gesture.
+Source: https://lucide.dev/icons/hand
+ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+*/
 (()=>{
  const paths={
+  hand:"<path d=\"M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2\" /><path d=\"M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2\" /><path d=\"M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8\" /><path d=\"M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15\" />",
+  'draw-bag':'<path d="M7 10h10l3 9a2 2 0 0 1-2 3H6a2 2 0 0 1-2-3l3-9Zm1-7h8l-2 7h-4L8 3Z M18 3v7m-3-4 3-3 3 3"/>',
+  ingredient:'<path d="M3 13h16l-2 7H5l-2-7Zm3-2 8-8 4 4-6 6M5 22h12"/>',
+  circle:'<circle cx="12" cy="12" r="8"/>',
+  star:'<path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/>',
+  coins:'<circle cx="9" cy="9" r="6"/><path d="M9 5v8m-2-6h4M15 9a6 6 0 1 1-6 6"/>',
   emoji:'<circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0M8.5 8.5h.01M15.5 8.5h.01"/>',
   frame:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M17 15h.01"/>',
   clear:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',
@@ -369,4 +393,36 @@
   syncTextScale();if(typeof MutationObserver==='function')new MutationObserver(syncTextScale).observe(document.documentElement,{attributes:true,attributeFilter:['style','class']});
   window.addEventListener('resize',syncTextScale);
  }
+})();
+
+/* Stable friends / game / chat layout; moving nodes preserves game handlers and focus root. */
+(()=>{
+ 'use strict';
+ let record=null;
+ const node=(tag,cls,text)=>{const n=document.createElement(tag);n.className=cls;if(text)n.textContent=text;return n;};
+ function move(n,target){if(!n||n.parentElement===target)return;if(!record.homes.has(n)){const mark=document.createComment('room-stage-home');n.before(mark);record.homes.set(n,mark);}target.append(n);}
+ function restore(){for(const [n,mark]of record.homes)if(mark.parentNode)mark.after(n);}
+ function update(s,waiting){
+  if(!['quacks','bluff'].includes(s.type))return null;
+  const root=document.getElementById('game');if(!root)return null;
+  if(waiting){if(record){restore();record.layout.hidden=true;document.body.classList.remove('room-stage-active');}return null;}
+  if(!record){const layout=node('div','room-stage-layout'),friends=node('aside','room-stage-friends'),work=node('div','room-stage-work'),chat=node('aside','room-stage-chat');
+   friends.setAttribute('aria-label','這桌的朋友');friends.append(node('h2','','這桌的朋友'));const list=node('div','room-stage-roster');friends.append(list);
+   chat.setAttribute('aria-label','聊天室');layout.append(friends,work,chat);root.append(layout);record={layout,friends,list,work,chat,homes:new Map(),type:s.type};
+  }
+  record.layout.hidden=false;document.body.classList.add('room-stage-active');const oldRoster=root.querySelector('.ui-room-roster');if(oldRoster)oldRoster.hidden=true;
+  if(s.type==='quacks'){
+   for(const selector of ['.game-heading','.round-top','#alchemy','#tableDice','.game-grid','#books']){const n=root.querySelector(selector);if(n)move(selector==='#books'?n.closest('details'):n,record.work);}
+   const key=JSON.stringify(s.recipes.map(p=>[p.id,p.name,p.score,p.potColor,p.exploded,p.stopped,p.chosen,p.alchemy]));
+   if(record.rosterKey!==key){record.rosterKey=key;record.list.replaceChildren(...s.recipes.map(p=>{
+    const item=node('article','room-stage-friend'),avatar=node('span','room-stage-avatar',p.name.slice(0,1)),info=node('div','room-stage-friend-info'),score=node('strong','',String(p.score));
+    avatar.style.background=s.potColors?.[p.potColor]?.liquid[1]||'#35564f';info.append(node('strong','',p.name+(p.id===s.me?'（你）':'')),node('small','',p.exploded?'爆炸':p.stopped?'已停止':p.chosen?'已選擇':'準備選擇'));score.setAttribute('aria-label',p.score+' 分');item.append(avatar,info,score);return item;
+   }));}
+  }else{
+   move(document.getElementById('players'),record.list);
+   for(const selector of ['#phase','#roleCountdown','.task-layout','#botStatements','#roundReveal']){const n=root.querySelector(selector);if(n)move(['#phase','#botStatements','#roundReveal'].includes(selector)?n.closest('section'):n,record.work);}
+  }
+  return record.chat;
+ }
+ window.RoomStage={update};
 })();

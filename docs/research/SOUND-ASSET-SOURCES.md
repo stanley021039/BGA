@@ -58,3 +58,6 @@ CC0的可改作／再散布範圍與其他權利例外由 [Creative Commons官�
 已做的內容檢查：重新生成後`--check`通過；另用Python `wave`獨立解析七檔header／sample數、核hash及峰值。實際峰值0.19998169–0.23999023（約−14至−12.4dBFS），RMS 0.01894238–0.07486735，clipped sample為0。已查看波形包絡：骰子為八段分離脈衝，shot／slam有短衰減，nitro／skid為一次隆起；頭尾歸零。這些是檔案及波形證據，**不是耳機／喇叭聽感驗收**；未播放聲音，不宣稱音色、辨識度或主觀響度合適。
 
 後續由程式方接入共用播放入口及事件時序；音效師／玩家依當次授權安排聽感與多人密度驗收。若真人試聽需調音色／音量，修改生成器再重建與更新hash，不手改WAV而失去可重建性。本節不代表已部署或完整遊戲驗收完成。
+
+
+2026-10-14 郎中原創结算提示：quacks-settlement.wav，420ms／20204bytes，三個正弦音及包絡，無第三方錄音；生成器tools/generate-quacks-sounds.cjs、hash／峰值見quacks-manifest.json。native playing與聽感限制見 [本輪驗收](../specs/QUACKS-SETTLEMENT-GLOW-LAYOUT.md)。

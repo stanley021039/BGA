@@ -22,3 +22,22 @@
 
 
 瞎掰王旁觀反應音效：使用者指定 [統神之喔是喔真的假的55555](https://www.youtube.com/watch?v=pezuzuUDvyc)，2026-10-12 依明確要求轉 MP3，約 1.66 秒。非自製、未核對來源授權；只以本機 Audio 播放，不占用 YouTube 共看播放器。檔案 public/assets/game-sounds/bluff-reaction.mp3；轉檔及驗證見 docs/BLUFF-ROUND-FOCUS-PROGRESS.md。
+
+
+## 2026-10-14 郎中暗夜霓光操作
+
+使用者選擇C方向後，霓光面板及藥袋取藥圖示由原生CSS／原創SVG實作；沒有匯入Stitch服務產出的圖。參考公開設計探索介紹：https://blog.google/innovation-and-ai/models-and-research/google-labs/stitch-ai-ui-design/ 。停止手勢取自 Lucide Hand：https://lucide.dev/icons/hand ，原始SVG SHA256 fe3771fa2f0a9a3c7736164c9a855beefacc02548084ac1d6fc8da8a8a9180b0；Copyright (c) 2026 Lucide Icons and Contributors，ISC License，完整聲明保存在 docs/licenses/LUCIDE.txt 與 public/shared/ui-components.js。只是調色／縮放圖示，沒有引入Lucide套件依賴。
+
+2026-10-14：基本版收回白色炸彈的玻璃藥水瓶是本專案原創SVG（QuacksArt.resource potion），與特效藥燒瓶不同；截圖僅原生瀏覽器QA，沒有重用第三方桌遊圖片。
+
+2026-10-14 最終手勢：QuacksArt.resource draw-hand 與 stop-hands 為原創SVG；使用者附圖僅作食指交叉姿勢參考，未匯入截圖、角色或其視覺素材。取代郎中實際停止按鈕的Lucide手掌，既有registry的Lucide授權仍保留。
+
+2026-10-14 郎中人物按鈕改使用者附件＋內建image_gen輕微Q化，字幕還要爽爽；哭哭圖原檔保留並以CSS只顯示左半。原創SVG手勢已退出這兩個操作，PNG來源／提示詞／保存路徑見[素材規格](specs/QUACKS-PORTRAIT-ASSETS.md)。不把附件人物宣稱本站原創或CC素材。
+
+2026-10-14：兩段新的抽藥／抽卡WAV由 tools/generate-quacks-sounds.cjs 原創合成，沒有第三方取樣；公開素材與種子／hash見 public/assets/game-sounds/quacks-manifest.json。既有爆炸檔位元組保持一致，人物PNG未重製。
+
+
+2026-10-14：郎中抽卡／抽藥來源改為使用者提供抽卡.mp3與抽藥.mp3，經裁切、低通與峰值限制後輸出WAV。取代上一輪「原創合成抽卡／抽藥」現況；爆炸仍原創。來源hash與參數在public/assets/game-sounds/quacks-manifest.json；不收錄原始38秒錄音、私人路徑或憑證。詳細來源／驗證／權利未核對限制見[規格](specs/QUACKS-CART-CUES-SETUP.md)。
+
+
+2026-10-14：郎中溢出盆為自製SVG；樹脂骰的金色刻字、静態纹理與亮面為CSS材質，使用者照片僅作方向參考，未复制圖片素材。喝藥水600ms音效為原創低頻液體氣泡合成，來源／checksum在quacks-manifest.json，不改使用者抽卡與抽藥錄音。詳[交付紀錄](specs/QUACKS-KETTLE-SHARED-EFFECTS.md)。
