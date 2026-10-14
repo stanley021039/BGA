@@ -43,6 +43,7 @@
   window.SharedChat?.mountIn(chatHost,{inline:true});
   // Chat owns its viewport; operation content never determines its height.
   window.SharedChat?.matchRosterHeight?.(null);
+  window.GameUI?.Template?.patterns.arrangeWaiting?.(layout,waiting);
  }
  const rosterHosts={
   poker:'#game .game-layout',thunder:'.race-main',majority:'.play-layout',gift:'.gift-layout',draw:'.draw-layout',
@@ -109,6 +110,7 @@
   }
   hero.hidden=s.phase!=='waiting';
   arrange(type,s.phase==='waiting');
+  if(s.phase==='waiting')window.GameUI?.Template?.patterns.updateRoster?.(roster,s);
   const host=s.host===true||s.host===s.me;
   hero.querySelector('.room-waiting-hint').textContent=host?'邀請朋友入座，設定好就能開始。':'等待房主開始遊戲。';
  }

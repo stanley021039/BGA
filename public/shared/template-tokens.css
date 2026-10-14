@@ -1,9 +1,27 @@
-/* Semantic aliases preserve the established Playful Paper palette in both modes. */
-body[data-ui-template="tactile"] {
- --tpl-page:var(--play-paper);--tpl-panel:var(--play-surface);--tpl-inset:var(--play-paper);
- --tpl-text:var(--play-ink);--tpl-muted:var(--play-muted);--tpl-line:var(--play-ink);
- --tpl-action:var(--play-bright-yellow,var(--play-yellow));--tpl-on-action:var(--play-on-accent,#292639);
- --tpl-focus:var(--ui-focus);--tpl-shadow:var(--play-control-shadow);--tpl-gap:16px;--tpl-pad:16px;
- --tpl-radius:var(--play-radius);--tpl-control:44px;--tpl-border:var(--play-border);
- --tpl-roster-width:200px;--tpl-chat-width:280px;--tpl-answer-height:136px;
+/* Stitch 302 paper system. Scope is opt-in so other games retain their layouts. */
+body[data-ui-template="tactile"],body[data-ui-template="tactile"][data-game-kind]{
+ --play-paper:#fcf9f8;--play-surface:#fff;--play-ink:#24201c;--play-muted:#706961;
+ --play-yellow:#f8c838;--play-bright-yellow:#f8c838;--play-line:#e4ddd5;--play-line-strong:#cfc6bc;
+ --play-border:2px solid var(--play-ink);--play-card-border:2px solid var(--play-ink);
+ --play-shadow:0 4px 0 #24201c18;--play-control-shadow:0 3px 0 #24201c18;
+ --play-duration-card:500ms;--play-layout-gap:24px;
+ --tpl-page:var(--play-paper);--tpl-panel:var(--play-surface);--tpl-inset:#f6f3f2;
+ --tpl-text:var(--play-ink);--tpl-muted:var(--play-muted);--tpl-line:var(--play-line);
+ --tpl-action:#f8c838;--tpl-on-action:#24201c;--tpl-focus:var(--ui-focus);
+ --tpl-card-blue:#c8e5f7;--tpl-card-pink:#fedbc4;
+ --tpl-shadow:var(--play-control-shadow);--tpl-gap:24px;--tpl-pad:24px;--tpl-radius:16px;
+ --tpl-control:44px;--tpl-border:2px solid var(--play-ink);
+ --tpl-roster-width:240px;--tpl-chat-width:300px;--tpl-answer-height:156px;
+ --ui-surface-inset:var(--tpl-inset);--ui-surface-panel:var(--tpl-panel);--ui-text:var(--tpl-text);
+ --ui-muted:var(--tpl-muted);--ui-border:var(--play-ink);
+ background:var(--tpl-page);color:var(--tpl-text);
 }
+html[data-color-scheme="dark"] body[data-ui-template="tactile"],html[data-color-scheme="dark"] body[data-ui-template="tactile"][data-game-kind]{
+ --play-paper:#181512;--play-surface:#24201c;--play-ink:#f5f0eb;--play-muted:#b9aea3;
+ --play-line:#4a4036;--play-line-strong:#776858;--play-shadow:0 4px 0 #0005;
+ --play-control-shadow:0 3px 0 #0005;--play-border:2px solid #4a4036;--play-card-border:2px solid #4a4036;
+ --tpl-inset:#2e2722;--tpl-border:2px solid #4a4036;
+ --ui-control-border:#776858;--ui-focus:#f8c838;--ui-selected:#f8c838;--ui-selected-text:#24201c;
+}
+@media(max-width:1200px){body[data-ui-template]{--tpl-gap:20px;--tpl-pad:20px;--tpl-roster-width:204px;--tpl-chat-width:270px}}
+@media(max-width:760px){body[data-ui-template]{--tpl-gap:16px;--tpl-pad:16px}}

@@ -1,5 +1,6 @@
 (()=>{
  const paths={
+  chat:'<path d="M4 4h16v12H9l-5 4V4Z M8 8h8M8 12h5"/>',
   emoji:'<circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0M8.5 8.5h.01M15.5 8.5h.01"/>',
   frame:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M17 15h.01"/>',
   clear:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',

@@ -110,7 +110,8 @@
    for(const kind of ['start','bot','leave']){const button=decorate(node('button',''),kind);button.type='button';button.onclick=()=>kind==='leave'?leave(button):native[kind]?.click();proxies[kind]=button;row.append(button);}
    const status=node('p','ui-room-control-status'),footer=node('footer','ui-room-settings-footer');status.setAttribute('role','status');status.setAttribute('aria-live','polite');footer.append(status,row);window.GameUI.framePanel(panel,{header:heading,content:settings,footer});host.append(panel);
   }
-  if(panel.parentElement!==host)host.append(panel);
+  const settingsHost=window.GameUI?.Template?.patterns.settingsHost?.(host,state)||host;
+  if(panel.parentElement!==settingsHost)settingsHost.append(panel);
   panel.dataset.aiPlacement=window.RoomWaiting?.setRosterBusy||state.type==='telephone'&&window.RoomWaiting?.setRosterAction?'roster':'inline';
   const inPlay=!['waiting','finished'].includes(state.phase);if(panel.hidden!==inPlay)panel.hidden=inPlay;
  }

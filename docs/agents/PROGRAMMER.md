@@ -563,3 +563,6 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 ### 2026-10-14 大廳與畫猜共用紙卡模板
 
 新增 opt-in GameUI.Template 元件階層，沿用原 carousel、角色圖、表情與 canvas controller；語意 tokens、panel header/body/footer、roster、toolbar 與頁面 adapter 分層。桌機 1280×720 實際走過等待、選題、作畫、猜題、聊天室、表情、結算、最近畫作及再開局；390px 手機與亮暗模式驗收。設定移至共用 slot 後仍能自動儲存，數值 input 有行為回歸測試。長內容採區塊內捲動，保留原資訊及控制項。元件契約見 docs/specs/SHARED-GAME-TEMPLATE.md；此筆本身不代表正式發布完成。
+
+## 2026-10-14 Stitch 共用模板
+補 dialogPanel、等待室聊天与下局設定 portal；不重建有事件的欄位或畫布。hidden／高度樣式僅於值改變時更新，避免觀察器反覆排程；畫布依實際 grid 槽量測。原生對局／收藏／重開与畫筆取樣證據見 STITCH-UI-IMPLEMENTATION.md，未更改同步引擎、資料 schema 或原站計分。
