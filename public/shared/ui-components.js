@@ -1,5 +1,7 @@
 (()=>{
  const paths={
+  star:'<path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/>',
+  coins:'<circle cx="9" cy="9" r="6"/><path d="M9 5v8m-2-6h4M15 9a6 6 0 1 1-6 6"/>',
   emoji:'<circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0M8.5 8.5h.01M15.5 8.5h.01"/>',
   frame:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M17 15h.01"/>',
   clear:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',
@@ -369,4 +371,36 @@
   syncTextScale();if(typeof MutationObserver==='function')new MutationObserver(syncTextScale).observe(document.documentElement,{attributes:true,attributeFilter:['style','class']});
   window.addEventListener('resize',syncTextScale);
  }
+})();
+
+/* Stable friends / game / chat layout; moving nodes preserves game handlers and focus root. */
+(()=>{
+ 'use strict';
+ let record=null;
+ const node=(tag,cls,text)=>{const n=document.createElement(tag);n.className=cls;if(text)n.textContent=text;return n;};
+ function move(n,target){if(!n||n.parentElement===target)return;if(!record.homes.has(n)){const mark=document.createComment('room-stage-home');n.before(mark);record.homes.set(n,mark);}target.append(n);}
+ function restore(){for(const [n,mark]of record.homes)if(mark.parentNode)mark.after(n);}
+ function update(s,waiting){
+  if(!['quacks','bluff'].includes(s.type))return null;
+  const root=document.getElementById('game');if(!root)return null;
+  if(waiting){if(record){restore();record.layout.hidden=true;document.body.classList.remove('room-stage-active');}return null;}
+  if(!record){const layout=node('div','room-stage-layout'),friends=node('aside','room-stage-friends'),work=node('div','room-stage-work'),chat=node('aside','room-stage-chat');
+   friends.setAttribute('aria-label','這桌的朋友');friends.append(node('h2','','這桌的朋友'));const list=node('div','room-stage-roster');friends.append(list);
+   chat.setAttribute('aria-label','聊天室');layout.append(friends,work,chat);root.append(layout);record={layout,friends,list,work,chat,homes:new Map(),type:s.type};
+  }
+  record.layout.hidden=false;document.body.classList.add('room-stage-active');const oldRoster=root.querySelector('.ui-room-roster');if(oldRoster)oldRoster.hidden=true;
+  if(s.type==='quacks'){
+   for(const selector of ['.game-heading','.round-top','#alchemy','#tableDice','.game-grid','#books']){const n=root.querySelector(selector);if(n)move(selector==='#books'?n.closest('details'):n,record.work);}
+   const key=JSON.stringify(s.recipes.map(p=>[p.id,p.name,p.score,p.potColor,p.exploded,p.stopped,p.chosen,p.alchemy]));
+   if(record.rosterKey!==key){record.rosterKey=key;record.list.replaceChildren(...s.recipes.map(p=>{
+    const item=node('article','room-stage-friend'),avatar=node('span','room-stage-avatar',p.name.slice(0,1)),info=node('div','room-stage-friend-info'),score=node('strong','',String(p.score));
+    avatar.style.background=s.potColors?.[p.potColor]?.liquid[1]||'#35564f';info.append(node('strong','',p.name+(p.id===s.me?'（你）':'')),node('small','',p.exploded?'爆炸':p.stopped?'已停止':p.chosen?'已選擇':'準備選擇'));score.setAttribute('aria-label',p.score+' 分');item.append(avatar,info,score);return item;
+   }));}
+  }else{
+   move(document.getElementById('players'),record.list);
+   for(const selector of ['#phase','#roleCountdown','.task-layout','#botStatements','#roundReveal']){const n=root.querySelector(selector);if(n)move(['#phase','#botStatements','#roundReveal'].includes(selector)?n.closest('section'):n,record.work);}
+  }
+  return record.chat;
+ }
+ window.RoomStage={update};
 })();

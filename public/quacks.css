@@ -67,3 +67,30 @@ html[data-color-scheme] body[data-visual-theme=playful][data-game-kind=quacks] .
 .alchemy-panel{border:1px solid #a79574;background:var(--ui-surface-panel);min-width:0}.patient-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.patient-card{padding:14px;border:1px solid var(--ui-border);border-radius:16px;background:var(--ui-surface-panel);min-width:0}.patient-portrait{width:88px;height:88px;flex:none}.alchemy-summary{display:flex;align-items:center;gap:16px}.alchemy-summary p{line-height:1.65}.essence-flask{width:100%;max-width:660px;height:auto;display:block;margin:14px auto}.essence-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}.alchemy-pool{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;background:var(--ui-surface-panel);border-radius:12px}@media(max-width:650px){.patient-grid{grid-template-columns:1fr}.alchemy-summary{align-items:flex-start}.patient-portrait{width:65px;height:65px}.essence-choices{grid-template-columns:1fr}}
 
 html[data-color-scheme] body[data-game-kind=quacks] .cauldron-panel h2{color:#f0e7ca}html[data-color-scheme] body[data-game-kind=quacks] .fortune[data-timing] h3{color:inherit}
+
+/* Compact workshop: state belongs to the selected cauldron. */
+.pot-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:10px}
+.pot-toolbar .pot-badge{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;max-width:100%;padding:10px 12px;border:1px solid #a8956666;border-radius:14px;background:#0a211baa}
+.pot-badge>strong{font-size:.95rem}.pot-badge>small{font-size:.8rem;color:#d9d5b7}.pot-badge .resource-row{gap:8px}
+.pot-score,.patient-pill{display:flex;align-items:center;gap:4px}.patient-pill .patient-portrait{width:30px;height:30px}
+.pot-toolbar h2{font-size:1rem;margin:3px 0 7px}.pot-toolbar small#potOwner{display:none}
+#customizePot{min-width:36px;min-height:36px;width:36px;height:36px;margin:0;padding:6px}
+.pot-tabs{gap:5px;margin:9px 0}.pot-tabs .ui-icon-button{flex:none;width:36px;min-width:36px;min-height:36px;height:36px;padding:6px;border-bottom:4px solid var(--pot-tab-color)}
+.pot-toolbar .bag-button{min-width:58px;max-width:64px;padding:4px;gap:0;border-radius:12px}.bag-button strong{font-size:.8rem}
+.pot-tooltip{margin:0;inset:auto;max-height:calc(100dvh - 16px);overflow:auto}
+.quacks-inspect{cursor:help}.quacks-inspect:focus-visible{outline:2px solid #e1ba74;outline-offset:3px}
+.book-face-list{display:grid;gap:6px}.book-face{display:flex;align-items:center;gap:8px;padding:6px;border:1px solid var(--ui-border);border-radius:9px;font-size:.82rem}.book-face.selected{background:var(--ui-selected-bg,#bdbd891c)}.book-face strong{margin-left:auto}.book-face .ingredient-token{flex:none}
+.book-card{padding:12px}.book-heading h3{font-size:.95rem}.book-heading .ingredient-token{width:40px;height:40px}
+.purchase-grid{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}.purchase-offer>button.ingredient-purchase{display:flex;align-items:center;justify-content:space-between;width:100%;min-width:0;gap:7px;padding:8px}
+.ingredient-purchase>.ui-icon{display:none}.purchase-price{display:flex;align-items:center;gap:3px;font-size:.9rem}.purchase-price .ui-symbol{width:18px;height:18px}
+body[data-game-kind=quacks] .ui-room-settings-slot{max-height:none;overflow:visible}
+body[data-game-kind=quacks] .quacks-settings-grid{display:grid;gap:10px;border:0;padding:0;margin:0}
+.quacks-settings-grid legend{display:none}
+body[data-game-kind=quacks] label.quacks-setting-choice{display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:6px 10px;padding:12px;margin:0;border:1px solid var(--ui-border);border-radius:14px;background:var(--ui-surface-panel)}
+.quacks-setting-choice input{grid-column:3;grid-row:1;margin:0;accent-color:#b29054;width:20px;height:20px}
+.quacks-setting-choice small{grid-column:2/-1;color:var(--ui-muted);font-size:.78rem;line-height:1.5}
+.quacks-setting-choice:has(input:checked){border-color:#a8bd85;box-shadow:inset 3px 0 #8ba36e}
+#cauldron{position:relative}.pot-help{margin:4px 0}
+@media(max-width:760px){.pot-badge .resource-pill svg{width:25px;height:25px}.pot-badge{gap:5px!important}.pot-tabs .ui-icon-button,#customizePot{width:44px;height:44px;min-height:44px}.purchase-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.pot-marker-summary{display:flex;align-items:center;gap:18px}.pot-badge .resource-pill,.pot-marker-summary .resource-pill{color:#efe6c9}
