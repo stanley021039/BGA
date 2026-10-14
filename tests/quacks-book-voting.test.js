@@ -43,7 +43,15 @@ test('every face reserves description space while only the browsed effect is exp
  test('ingredient mappings preserve actual line breaks and reserve their full height',()=>{
  const {EFFECTS}=require('../src/games/quacks-catalog');
  assert.equal(EFFECTS.blue[1],'保護接下來 1／2／4 片；期間若爆炸，仍可得分及購買，但不能擲獎勵骰。');
- assert.equal(EFFECTS.green[1],'結算時，最後兩片中的花園蜘蛛各得一片藥材：\n1 > 南瓜 1\n2 > 烏鴉頭骨 1 或毒蘑菇 1\n4 > 曼德拉草 1 或幽靈氣息 1');
+ assert.equal(EFFECTS.green[1],'結算時，最後兩片中的花園蜘蛛各得一片藥材：\n1 → 南瓜 1\n2 → 烏鴉頭骨 1 或毒蘑菇 1\n4 → 曼德拉草 1 或幽靈氣息 1');
  for(const index of [0,2,3])assert.ok(EFFECTS.purple[index].includes('\n'));
  assert.match(fs.readFileSync('public/quacks.css','utf8'),/\.book-page-effect>\.book-effect-copy\{white-space:pre-line\}/);
  });
+
+test('effect copy names zero-chip neighbors and the purple chips being discarded, with arrow mappings',()=>{
+ const {EFFECTS}=require('../src/games/quacks-catalog');
+ for(const effects of Object.values(EFFECTS))for(const text of effects)assert.equal(text.includes('>'),false);
+ for(const text of EFFECTS.black.slice(0,4))assert.match(text,/沒有非洲骷髏天蛾也算 0 片，不跳過/);
+ assert.match(EFFECTS.purple[1],/永久棄掉大釜中的 1–3 片幽靈氣息/);
+ assert.match(EFFECTS.purple[1],/棄 2 片 → 花園蜘蛛 1、烏鴉頭骨 2、3 分、水滴前進 1 格/);
+});
