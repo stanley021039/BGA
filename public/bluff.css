@@ -6,3 +6,6 @@
 .bluff-reaction{position:fixed;left:50%;top:25%;transform:translateX(-50%);z-index:200;max-width:90vw;padding:1rem 1.5rem;border:3px solid var(--ui-border);border-radius:1rem;background:var(--ui-surface-floating);color:var(--ui-text);font-size:clamp(1.3rem,4vw,2.5rem);font-weight:800;pointer-events:none;overflow-wrap:anywhere}.bluff-reaction[hidden]{display:none}
 
 #source details p,#results article p{line-height:1.75;overflow-wrap:anywhere}#source details h4{margin-bottom:.25rem}#source details h4+p{margin-top:.25rem}
+
+/* Decision dialogs use the shared frame and reserve a readable confirmation message. */
+.bluff-confirm-message{margin:0;min-height:96px;overflow-wrap:anywhere}

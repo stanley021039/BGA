@@ -10,8 +10,30 @@ function controlsLock(){if(botControl)botControl.disabled=busy;for(const n of $(
 async function api(route,payload){return RoomApi.request(route,payload,{code,room:'bluff',session:true,signal:scope.signal,onKicked:()=>{RoomReconnect.forget(code);location.replace('/?game=bluff');}});}
 async function mutate(route,payload){if(busy||disposed)return;const lifetime=scope;busy=true;retry=null;$('#retry').hidden=true;$('#feedback').textContent='';controlsLock();try{const next=await api(route,payload);if(!disposed&&scope===lifetime)render(next);}catch(e){if(!disposed&&e.name!=='AbortError'){$('#feedback').textContent=e.message;if(!e.status){retry={route,payload};$('#retry').hidden=false;}}}finally{busy=false;if(!disposed){controlsLock();refresh();}}}
 const command=(action,extra={})=>mutate('action',{action,roundId:state.roundId,requestId:crypto.randomUUID(),...extra});
+let confirmation=null,confirmDialog=null,confirmMessage=null,confirmButton=null;
+function confirmationValid(){
+ const c=confirmation;if(!c||busy||disposed||!state||state.me!==c.me||state.roundId!==c.roundId||state.phase!==c.phase)return false;
+ if(c.action==='leave')return true;
+ if(state.interrupted||state.phase!=='discussion'||state.me!==state.thinkerId||!state.players.some(p=>p.id===c.targetId&&!p.kicked))return false;
+ return c.action==='guess'?state.canGuess:state.challenges.length<2&&!state.challenges.includes(c.targetId);
+}
+function closeConfirmation(){confirmation=null;if(confirmDialog?.open)confirmDialog.close();}
+function confirmAction(action,{title,message,label,targetId,trigger,run}){
+ if(busy||disposed||!state||confirmDialog?.open)return;
+ if(!confirmDialog){
+  confirmMessage=el('p');confirmMessage.id='bluff-confirm-message';confirmMessage.className='bluff-confirm-message';
+  const cancel=button('取消','close',closeConfirmation);cancel.dataset.bluffConfirmCancel='';
+  confirmButton=button('確認','check',()=>{const c=confirmation;if(!confirmationValid()){closeConfirmation();return;}closeConfirmation();c.run();});confirmButton.dataset.bluffConfirmAccept='';
+  confirmDialog=GameUI.createDialog({titleId:'bluff-confirm-title',className:'bluff-confirm-dialog',content:[confirmMessage],actions:[cancel,confirmButton]});confirmDialog.id='bluff-confirm';confirmDialog.setAttribute('aria-describedby',confirmMessage.id);document.body.append(confirmDialog);
+  confirmDialog.addEventListener('close',()=>{if(!confirmDialog.open)confirmation=null;});
+ }
+ confirmation={action,targetId,me:state.me,roundId:state.roundId,phase:state.phase,run};if(!confirmationValid()){confirmation=null;return;}
+ confirmDialog.querySelector('#bluff-confirm-title').textContent=title;confirmMessage.textContent=message;GameUI.decorateButton(confirmButton,'check',{label});GameUI.openDialog(confirmDialog,trigger);
+ confirmDialog.querySelector('[data-bluff-confirm-cancel]').focus();
+}
+
 function render(next){
- if(disposed||next.type!=='bluff'||state&&next.version<state.version)return;state=next;if(window.GameShell)window.GameShell.update(next);else window.RoomWaiting?.update(next);receivedAt=performance.now();countdownSounds?.update(state);$('#game').hidden=false;$('#leave').hidden=false;$('#roomTag').textContent='房號 '+code;$('#connection').textContent='';
+ if(disposed||next.type!=='bluff'||state&&next.version<state.version)return;state=next;if(confirmation&&!confirmationValid())closeConfirmation();if(window.GameShell)window.GameShell.update(next);else window.RoomWaiting?.update(next);receivedAt=performance.now();countdownSounds?.update(state);$('#game').hidden=false;$('#leave').hidden=false;$('#roomTag').textContent='房號 '+code;$('#connection').textContent='';
  $('#phase').textContent=state.interrupted?'有人離席，本場中止':({selecting:'想想三選一抽題',waiting:'等待開始',preparing:'查看角色',discussion:'輪流解釋與質問',reveal:'本輪揭曉',finished:'本場結束'})[state.phase]+(state.round?' · '+state.round+'/'+state.roundLimit:'');
  if(state.winner&&!state.interrupted)$('#phase').textContent+=' · 最高分：'+state.winner.names.join('、')+'（'+state.winner.score+' 分）';
  $('#players').replaceChildren(...state.players.map(p=>{const card=el('article');card.className='player-card';card.append(el('strong',p.name+(p.id===state.me?'（你）':'')),el('p',p.score+' 分'+(p.id===state.thinkerId?' · 想想':'')),el('p',state.challenges.includes(p.id)?'被質疑：公三小':state.spokenIds.includes(p.id)?'說明完畢':state.readyIds.includes(p.id)?'已準備':''));return card;}));
@@ -32,7 +54,7 @@ function render(next){
  }
  else if(state.phase==='preparing'){if(!state.readyIds.includes(state.me))box.append(button('我已看完角色，準備好了','check',()=>command('ready')));else box.append(el('p','等待其他人準備或倒數結束。'));}
  else if(state.phase==='discussion'){box.append(button('哦是哦真的假的555555','help',()=>command('reaction')));if(state.me!==state.thinkerId){if(!state.spokenIds.includes(state.me))box.append(button('我已口頭說明完畢','check',()=>command('spoken')));else box.append(el('p','可繼續接受口頭質問，等想想作決定。'));}
- else{box.append(el('p','剩餘公三小：'+(2-state.challenges.length)+' 張；選人後立即結算。'));for(const p of state.players.filter(p=>p.id!==state.me)){const row=el('div');row.className='bluff-choice';row.append(el('strong',p.name));const challenge=button('質疑 '+p.name+'：公三小','help',()=>{if(confirm('對 '+p.name+' 打出公三小？揭曉時，瞎掰人 -1、你 +1；老實人則你 -3。'))command('challenge',{targetId:p.id});});challenge.dataset.blocked=String(state.challenges.length>=2||state.challenges.includes(p.id));const guess=button('選 '+p.name+' 為老實人','check',()=>{if(confirm('確定選 '+p.name+' 為老實人？將立即揭曉與計分。'))command('guess',{targetId:p.id,confirmed:true});});guess.dataset.blocked=String(!state.canGuess);row.append(challenge,guess);box.append(row);}if(!state.canGuess)box.append(el('p','請等每位解釋者標記說明完畢。'));}}
+ else{box.append(el('p','剩餘公三小：'+(2-state.challenges.length)+' 張；選人後立即結算。'));for(const p of state.players.filter(p=>p.id!==state.me)){const row=el('div');row.className='bluff-choice';row.append(el('strong',p.name));const challenge=button('質疑 '+p.name+'：公三小','help',event=>confirmAction('challenge',{title:'確認打出公三小',message:'對 '+p.name+' 打出公三小？揭曉時，瞎掰人 -1、你 +1；老實人則你 -3。',label:'確認質疑',targetId:p.id,trigger:event.currentTarget,run:()=>command('challenge',{targetId:p.id})}));challenge.dataset.blocked=String(state.challenges.length>=2||state.challenges.includes(p.id));const guess=button('選 '+p.name+' 為老實人','check',event=>confirmAction('guess',{title:'確認選擇老實人',message:'確定選 '+p.name+' 為老實人？將立即揭曉與計分。',label:'確認選擇',targetId:p.id,trigger:event.currentTarget,run:()=>command('guess',{targetId:p.id,confirmed:true})}));guess.dataset.blocked=String(!state.canGuess);row.append(challenge,guess);box.append(row);}if(!state.canGuess)box.append(el('p','請等每位解釋者標記說明完畢。'));}}
  else if(state.phase==='reveal'){if(state.me===state.host)box.append(button('下一輪','next',()=>command('next')));else box.append(el('p','等房主開始下一輪。'));}
  }
  $('#botStatements').replaceChildren(...Object.entries(state.botStatements).map(([id,s])=>el('p',(state.players.find(p=>p.id===id)?.name||'AI')+' 說：「'+s+'」')));
@@ -44,7 +66,7 @@ async function refresh(){if(disposed||reading)return;const lifetime=scope;readin
 async function start(){disposed=false;const lifetime=scope=new AbortController();try{await RoomReconnect.restore(code,'bluff','#connection',{signal:scope.signal});if(disposed||scope!==lifetime)return;await refresh();if(!disposed&&scope===lifetime){timer=setInterval(()=>{if(!document.hidden)refresh();},1500);countdownTimer=setInterval(updateCountdown,250);}}catch(e){$('#feedback').textContent=e.message;}}
 const roomSettings=window.RoomWaiting?.bindSettings({container:'#controls [data-room-setting]',read:()=>{const levels=[...$('#controls').querySelectorAll('fieldset input:checked')].map(n=>Number(n.value));if(!levels.length){for(const n of $('#controls').querySelectorAll('fieldset input'))n.checked=state.options.levels.includes(Number(n.value));throw Error('題目難度至少選一種。');}return {levels,roleSeconds:Number($('#roleSeconds').value)};},save:data=>mutate('settings',data),canSave:()=>!!state&&state.host===state.me&&['waiting','finished'].includes(state.phase),isBusy:()=>busy,onError:text=>{const feedback=$('#roomSettingsFeedback');if(feedback)feedback.textContent=text;}})||{flush:async()=>{}};
 $('#retry').onclick=()=>retry&&mutate(retry.route,retry.payload);
-$('#leave').onclick=async()=>{if(busy||!confirm('離席會中止本場，確定離開？'))return;await mutate('leave',{});if(!retry&&!$('#feedback').textContent){RoomReconnect.forget(code);location.replace('/?game=bluff');}};
+$('#leave').onclick=event=>confirmAction('leave',{title:'確認離席',message:'離席會中止本場，確定離開？',label:'確認離席',trigger:event.currentTarget,run:async()=>{await mutate('leave',{});if(!retry&&!$('#feedback').textContent){RoomReconnect.forget(code);location.replace('/?game=bluff');}}});
 if(!code){$('#guide').open=true;$('#connection').textContent='從大廳建立房間開始。';return;}
-window.addEventListener('pagehide',()=>{disposed=true;clearInterval(timer);clearInterval(countdownTimer);scope?.abort();$('#source').replaceChildren();key='';});window.addEventListener('pageshow',e=>{if(e.persisted){clearInterval(timer);clearInterval(countdownTimer);start();}});start();
+window.addEventListener('pagehide',()=>{disposed=true;closeConfirmation();clearInterval(timer);clearInterval(countdownTimer);scope?.abort();$('#source').replaceChildren();key='';});window.addEventListener('pageshow',e=>{if(e.persisted){clearInterval(timer);clearInterval(countdownTimer);start();}});start();
 })();
