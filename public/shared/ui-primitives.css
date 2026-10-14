@@ -113,6 +113,7 @@ button.is-pending::after{content:"";position:absolute;left:calc(50% - .5rem);top
 .ui-dialog-footer :is(button,.ui-button){margin:0;flex-shrink:0;max-width:100%}
 .ui-dialog-header[hidden],.ui-dialog-footer[hidden]{display:none!important}
 .room-leave-dialog .ui-dialog-content{min-height:120px}
+.room-leave-dialog .ui-room-leave-thumbnail{display:block;width:100%;max-width:360px;height:auto;object-fit:contain;margin:0 auto 12px;border-radius:var(--ui-radius,12px)}
 .ui-dialog-content .ui-room-leave-status{min-height:24px;max-height:48px;overflow:auto}
 
 /* Complex windows retain their width and geometry; content stays inside one scrolling slot. */

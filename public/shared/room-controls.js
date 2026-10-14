@@ -11,12 +11,14 @@
   const avatar=node('span','ui-room-roster-avatar'),icon=node('span','ui-symbol');icon.setAttribute('aria-hidden','true');const symbol=window.GameUI?.symbol?.(action.icon);if(symbol)icon.innerHTML=symbol;else icon.textContent='+';avatar.append(icon);
   const info=node('span','ui-room-roster-info');info.append(node('b','ui-room-roster-action-label',action.label),node('small','ui-room-roster-status',kind==='invite'?'選擇目前在線的玩家':'協助測試遊戲流程'));button.replaceChildren(avatar,info);card.append(button);return card;
  }
+ function primaryAction(button,{step='start'}={}){if(!button)return button;button.dataset.roomNativeAction='start';button.tabIndex=-1;button.setAttribute('aria-hidden','true');if(step==='prepare')button.dataset.roomPrimaryAction='prepare';else if(step==='start')button.dataset.do='start';return button;}
  function owner(){return state&&(state.host===true||state.host===state.me||state.hostId===state.me);}
  function hidden(n){for(let a=n;a;a=a.parentElement)if(a.hidden||getComputedStyle(a).display==='none'||getComputedStyle(a).visibility==='hidden')return true;return false;}
  function findAction(kind){
   if(kind==='start'&&state.type==='thunder'&&state.phase==='finished')return document.querySelector('#winner [data-action="restart"]');
   const selectors=kind==='start'?'#start,[data-do="start"]':'#bot,[data-do="bot"]';
   const original=n=>!n.closest('[data-room-common]')||n.dataset.roomNativeAction===kind;
+  if(kind==='start'&&state.phase==='waiting'){const staged=[...document.querySelectorAll('[data-room-primary-action]')].find(n=>original(n)&&!hidden(n));if(staged)return staged;}
   let found=[...document.querySelectorAll(selectors)].find(original);
   if(!found){const names=kind==='start'?/^(開始|再來一場|發牌)/:/^(加入腳本測試夥伴|加入測試 AI|加入測試AI|加入.*夥伴|＋.*電腦)/;
    found=[...document.querySelectorAll('#controls button,.action-panel button')].find(n=>original(n)&&names.test(n.getAttribute('aria-label')||n.textContent.trim()));}
@@ -51,7 +53,7 @@
   else if(state.type==='bluff'){
    const group=node('fieldset',''),legend=node('legend','','題目難度（至少選一種）');group.disabled=true;group.append(legend);
    for(const level of [1,2,3]){const label=node('label','ui-room-setting-choice'),input=node('input','');input.type='checkbox';input.checked=(options.levels||[]).includes(level);input.disabled=true;label.append(input,document.createTextNode(' '+level+' 級'));group.append(label);}source.append(group);field('role-seconds','看身分時間',(options.roleSeconds??30)+' 秒');
-  }else if(state.type==='quacks'){field('witches','草藥女巫擴充',options.witches?'加入':'不加入');field('hidden-progress','隱藏他人大釜',options.hiddenProgress?'隱藏至爆炸／結算':'公開進度');}
+  }else if(state.type==='quacks'){field('witches','草藥女巫擴充',options.witches?'加入':'不加入');field('alchemists','煉金術士擴充',options.alchemists?'加入':'不加入');field('hidden-progress','隱藏他人大釜',options.hiddenProgress?'隱藏至爆炸／結算':'公開進度');}
   else source.append(node('p','ui-room-settings-note','本遊戲使用固定規則，無需調整。'));
   readonlySource=source;return source;
  }
@@ -124,7 +126,9 @@
    if(kind==='bot'&&window.RoomWaiting?.setRosterBusy){native.bot=null;if(!proxies.bot.hidden)proxies.bot.hidden=true;if(!proxies.bot.disabled)proxies.bot.disabled=true;continue;}
    const source=findAction(kind);native[kind]=source;if(source&&!source.hasAttribute('data-room-native-action')){source.setAttribute('data-room-native-action',kind);source.tabIndex=-1;source.setAttribute('aria-hidden','true');}
    const legacyRace=state.type==='thunder',rosterBot=state.type==='telephone'&&!!window.RoomWaiting?.setRosterAction,visible=kind==='bot'?state.phase==='waiting'&&!rosterBot&&owner()&&(legacyRace||state.botSupport?.supported!==false)&&(!!source||state.botSupport?.canAdd===false):['waiting','finished'].includes(state.phase),button=proxies[kind];if(button.hidden===visible)button.hidden=!visible;
-   const tooFew=kind==='start'&&(state.players||[]).filter(p=>!p.kicked).length<(minimumPlayers[state.type||'poker']||1);
+   const preparing=kind==='start'&&source?.dataset.roomPrimaryAction==='prepare';
+   if(kind==='start'){const label=preparing?(source.getAttribute('aria-label')||source.textContent.trim()):actions.start.label;if(button.dataset.roomPrimaryLabel!==label){window.GameUI?.decorateButton(button,preparing?'next':actions.start.icon,{label});button.dataset.roomPrimaryLabel=label;}}
+   const tooFew=kind==='start'&&!preparing&&(state.players||[]).filter(p=>!p.kicked).length<(minimumPlayers[state.type||'poker']||1);
    const disabled=!visible||!source||source.disabled||hidden(source)||button.getAttribute('aria-busy')==='true'||leaving||tooFew||kind==='start'&&!owner()||kind==='bot'&&!legacyRace&&state.botSupport?.canAdd===false;if(button.disabled!==disabled)button.disabled=disabled;
   }
   const manage=document.getElementById('managePlayers'),row=panel.querySelector('.ui-room-session-actions');
@@ -160,7 +164,7 @@
  }
  function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(normalize);}
  const dialog=node('dialog','ui-dialog room-leave-dialog');dialog.setAttribute('aria-labelledby','unified-leave-title');
- dialog.innerHTML='<h2 id="unified-leave-title">確定離開這個房間？</h2><p class="ui-room-leave-effect"></p><div class="ui-control-row"><button type="button" class="ui-button primary" data-confirm>確認離開</button><button type="button" class="ui-button secondary" data-cancel>留在房間</button></div><p class="ui-room-leave-status" role="status" aria-live="polite"></p>';
+ dialog.innerHTML='<h2 id="unified-leave-title">確定離開這個房間？</h2><img class="ui-room-leave-thumbnail" src="/assets/room-leave-thumbnail.jpg" width="640" height="361" alt="離別場景，字幕：多麼虎頭蛇尾的結局"><p class="ui-room-leave-effect"></p><div class="ui-control-row"><button type="button" class="ui-button primary" data-confirm>確認離開</button><button type="button" class="ui-button secondary" data-cancel>留在房間</button></div><p class="ui-room-leave-status" role="status" aria-live="polite"></p>';
  window.GameUI?.frameDialog?.(dialog);
  document.body.append(dialog);const confirm=dialog.querySelector('[data-confirm]'),cancel=dialog.querySelector('[data-cancel]');window.GameUI?.decorateButton(confirm,'leave',{label:'確認離開'});window.GameUI?.decorateButton(cancel,'close',{label:'留在房間'});
  cancel.onclick=()=>{if(!leaving)dialog.close();};dialog.addEventListener('cancel',event=>{if(leaving)event.preventDefault();});
@@ -181,5 +185,5 @@
  const observer=new MutationObserver(schedule);observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});
  window.addEventListener('pagehide',()=>{leaveController?.abort();observer.disconnect();});window.addEventListener('pageshow',()=>{observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});schedule();});
  window.addEventListener('room-invitations-ready',schedule);
- window.RoomControls={update(next){if(window.RaceLesson)return;if(state&&state.code===next.code&&next.version<state.version)return;if(state&&(state.code!==next.code||state.me!==next.me)){leaveController?.abort();if(dialog.open)dialog.close();}state=next;schedule();},decorate,rosterAction,mountPlayPanels,inviteContext:()=>state?{code:state.code,type:state.type}:null,stop(){state=null;leaveController?.abort();restorePlayPanels();if(panel)panel.hidden=true;}};
+ window.RoomControls={update(next){if(window.RaceLesson)return;if(state&&state.code===next.code&&next.version<state.version)return;if(state&&(state.code!==next.code||state.me!==next.me)){leaveController?.abort();if(dialog.open)dialog.close();}state=next;schedule();},decorate,rosterAction,primaryAction,mountPlayPanels,inviteContext:()=>state?{code:state.code,type:state.type}:null,stop(){state=null;leaveController?.abort();restorePlayPanels();if(panel)panel.hidden=true;}};
 })();

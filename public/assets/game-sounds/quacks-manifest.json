@@ -1,0 +1,51 @@
+{
+  "card": {
+    "file": "quacks-card.wav",
+    "durationMs": 1500,
+    "bytes": 72044,
+    "sha256": "89e64e4126947a84da2054934fc1ff1b5b1ebe8c331884194b3bdce95d40b937",
+    "peak": 7536,
+    "source": "User-supplied 抽卡.mp3",
+    "sourceSha256": "c1d4fba4b28b9163c089493b2aeb8be29a075ceed94a0d496f720172aa0dca96",
+    "trimStartSeconds": 0.04,
+    "lowpassHz": 1800,
+    "peakTarget": 0.23,
+    "fadeInMs": 10,
+    "fadeOutMs": 60,
+    "generator": "tools/convert-quacks-sounds.cjs"
+  },
+  "ingredient": {
+    "file": "quacks-ingredient.wav",
+    "durationMs": 650,
+    "bytes": 31244,
+    "sha256": "b9991755a4f67c32aea3f295ecfd4c83005209d35a8fdf3ae69c1496324406d8",
+    "peak": 13107,
+    "source": "User-supplied 抽藥.mp3",
+    "sourceSha256": "2c49223bd48fc56e4d1145e419811ae994423ab89468cab8d0f13a211404487d",
+    "trimStartSeconds": 10.8,
+    "lowpassHz": 2800,
+    "peakTarget": 0.4,
+    "fadeInMs": 10,
+    "fadeOutMs": 60,
+    "generator": "tools/convert-quacks-sounds.cjs"
+  },
+  "potion": {
+    "file": "quacks-potion.wav",
+    "durationMs": 600,
+    "bytes": 28844,
+    "sha256": "003f247056f374c3018b0c524ff83969488f0e75f1c9be64b903e2f9efb9043b",
+    "peak": 6377,
+    "seed": 83119,
+    "source": "Project-original synthesis: low liquid bubbles and filtered noise, no third-party sample",
+    "generator": "tools/generate-quacks-sounds.cjs"
+  },
+  "settlement": {
+    "file": "quacks-settlement.wav",
+    "durationMs": 420,
+    "bytes": 20204,
+    "sha256": "45a4652a12dcfbadf8d2a9e358d726c3b0a0cb671dc9dcce52739c1a1c63e09d",
+    "peak": 10928,
+    "source": "Project-original synthesis: three warm sine tones and faded envelopes, no third-party sample",
+    "generator": "tools/generate-quacks-sounds.cjs"
+  }
+}

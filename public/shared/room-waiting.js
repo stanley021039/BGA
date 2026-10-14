@@ -9,14 +9,15 @@
   trpg:['霧港跑團','冒險已備，等你出發。','1–6 人一起玩。選擇角色，與朋友一起完成六幕冒險。'],
   musicquiz:['猜歌挑戰','旋律已備，等你聽題。','1–8 人一起玩。聽六秒旋律開頭，猜歌名後一起揭曉。'],
   minimal:['極簡猜圖','線條已備，等你作畫。','3–6 人一起玩。用直線與圓作畫，由少到多一起猜圖。'],
-  quacks:['郎中闖江湖','藥袋已備，等你開釜。','2–4 人一起煮藥；草藥女巫支援 5 人，逐色投票搭配藥材書。'],
+  quacks:['郎中闖江湖','藥袋已備，等你開釜。','2–4 人一起煮藥；可加入草藥女巫與煉金術士，真人共選藥材書。'],
   bluff:['瞎掰王','角色已備，等你開場。','3–9 人一起玩。輪流解釋與質問，找出唯一的老實人。']
  };
  let hero,stageHome,roster,rosterList,rosterCount,rosterActionCard,actionHome,actionClasses,actionChildren,actionBusy=false,lastRoster='',layout,controls,layoutWaiting=false;
  const homes=new Map();let inviteCard=null,lastSnapshot=null;
  function move(el,host){if(!el||el.parentElement===host)return;if(!homes.has(el)){const mark=document.createComment('waiting-home');el.before(mark);homes.set(el,mark);}host.append(el);}
  function restore(el){const mark=homes.get(el);if(mark?.parentNode)mark.after(el);}
- function arrange(type,waiting){
+ function arrange(type,waiting,s){
+  if(waiting)window.RoomStage?.update(s,true);
   const phase=document.body.dataset.roomPhase;if(waiting||phase==='finished')window.GameUI?.layoutDrawingPlay?.(type,phase);
   if(!layout){
    const host=document.querySelector(rosterHosts[type]);
@@ -37,7 +38,7 @@
   }
   const guide=document.getElementById('guide'),info=hero.querySelector('.room-waiting-info');
   if(guide&&info){if(waiting)move(guide,info);else restore(guide);}
-  const drawingChat=waiting?null:window.GameUI?.layoutDrawingPlay?.(type,phase);
+  const drawingChat=waiting?null:window.RoomStage?.update(s,false)||window.GameUI?.layoutDrawingPlay?.(type,phase);
   const chatHost=drawingChat||(waiting?layout.querySelector('.ui-room-chat-slot'):type==='thunder'?controls.querySelector('.race-utility-panel'):controls);
   window.RoomControls?.mountPlayPanels?.(waiting?null:chatHost,type);
   window.SharedChat?.mountIn(chatHost,{inline:true});
@@ -97,7 +98,7 @@
  updateTeaching(roomPath&&!window.RaceLesson?'connecting':'waiting');
  function update(s){
   if(window.RaceLesson)return;lastSnapshot=s;updateTeaching(s.phase);window.RoomControls?.update(s);
-  document.body.dataset.roomPhase=s.phase;window.SharedChat?.updateRoom(s);const type=s.type||'poker';document.body.dataset.roomType=type;updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');arrange(type,s.phase==='waiting');return;}const game=games[type];if(!game)return;
+  document.body.dataset.roomPhase=s.phase;window.SharedChat?.updateRoom(s);const type=s.type||'poker';document.body.dataset.roomType=type;updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');arrange(type,s.phase==='waiting',s);return;}const game=games[type];if(!game)return;
   document.body.dataset.roomPhase=s.phase;
   const stage=document.querySelector('#stage'),sidebar=document.querySelector('#gameSidebar,.draw-layout>aside');
   if(stage&&sidebar){if(!stageHome){stageHome=document.createComment('play-stage');stage.before(stageHome);}if(s.phase==='waiting'){if(stage.parentElement!==sidebar)sidebar.prepend(stage);}else if(stage.parentElement!==stageHome.parentElement)stageHome.after(stage);}
@@ -109,7 +110,7 @@
    const info=document.createElement('div');info.className='room-waiting-info';const kicker=document.createElement('div');kicker.className='kicker';kicker.textContent='朋友集結中';const title=document.createElement('h2');title.textContent=game[1];const copy=document.createElement('p');copy.textContent=game[2];const hint=document.createElement('p');hint.className='room-waiting-hint';hint.setAttribute('role','status');info.append(kicker,title,copy,hint);hero.append(art,info);host.prepend(hero);
   }
   hero.hidden=s.phase!=='waiting';
-  arrange(type,s.phase==='waiting');
+  arrange(type,s.phase==='waiting',s);
   if(s.phase==='waiting')window.GameUI?.Template?.patterns.updateRoster?.(roster,s);
   const host=s.host===true||s.host===s.me;
   hero.querySelector('.room-waiting-hint').textContent=host?'邀請朋友入座，設定好就能開始。':'等待房主開始遊戲。';

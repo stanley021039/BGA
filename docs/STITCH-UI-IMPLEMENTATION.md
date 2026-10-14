@@ -85,3 +85,11 @@
 | 手機 | 390×844 大廳、等待室與作畫無水平溢出，畫布等比，工具可達；驗證的是瀏覽器尺寸，非實體觸控裝置 |
 
 語法檢查、版本一致性及差異空白檢查另行完成。實玩範圍不等於所有裝置／弱網／所有遊戲的完整驗收；本輪沒有第三方 YouTube 實播、Safari、跨實體裝置或 60fps 結論。原同步引擎及遊戲規則未修改。
+
+## 2026-10-14 main 整合候選 2.6.0
+
+整合 Stitch 提交 3eccd1f 與 GitHub main 88823b6。main 的郎中煉金術士、共享藥材書、購物／音效／大釜與離房縮圖保留；靜態映射與 GameUI 圖示／音效 registry 合併兩側新增項目，不用單側版本覆蓋。原画猜計分、持筆同步、倒數及 Stitch 頁面 adapter 與 2.5.1 相同。
+
+隔離整合站以 Chrome 原生操作驗證：開房、AI、邀請選單、作畫、四次 stroke HTTP 200、結算 4 筆畫、回看／篩選選單、下一局設定及含 main 圖片的離房視窗。1412×1053 桌機頁高等於 viewport、深色倒數前景 rgb(245,240,228)；390×844 手機無橫向溢出，10 工具保持獨立位置。相關截圖 main-260-drawing.png、main-260-mobile.png。先前 2.5.1 的 15 秒 HTTP 提示／靜音／重載證據仍適用於未變動的畫猜觸發碼；本次不冒稱聽感、實機或全套測試。
+
+整合發現郎中的「設定完成，選藥材書」原生按鈕在設定捲動槽底部，難以操作。共用 RoomControls.primaryAction 契約讓原生 prepare／start handler 共用固定 footer，保留自動儲存及選書後才開始的限制。按鈕文字更新以 dataset 簽章避免重複 DOM mutation。隔離 Chrome 已實際進入藥材書並以原生 Enter 開局，/api/start HTTP 200、郎中第一輪占卜牌／大釜／左右朋友與聊天呈現；最後無頁面 JS error。新增 registry 保留郎中 ingredient-draw、card-draw、potion-drink、settlement 和畫猜 countdown-warning。

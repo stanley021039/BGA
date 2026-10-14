@@ -73,3 +73,7 @@
 事件由組件交回原狀態持有者，不能用匯出原型的假資料引擎取代遊戲。移動元件時保留完整 owner 宿主，不能搬走 owner 的內部 slot；原 input／canvas 不重建。畫廊空篩選清除選擇，明確點選作品可重設篩選。桌機各階段共用欄寬，捲軸占位保持穩定；手機／短視窗的場景回到文件流，必要內容不能被高度裁切。
 
 Stitch 圖片與字型只是渲染資源，來源及授權與執行邏輯分開。原 actor 圖、扇形卡牌與完整工具保留；示意規則改為實際規則。當前能力及實際觀察範圍見 [2.5.0 驗收](../STITCH-UI-IMPLEMENTATION.md)。
+
+### 原生分步開局與固定操作槽
+
+RoomControls.primaryAction(button, { step }) 登記既有原生按鈕；step='prepare' 表示前置設定／選書，step='start' 表示開始（預設），step=null 保留已完成階段的原生 handler 且不選為主要操作。固定 footer proxy 轉送 native click，prepare 保留其真實名稱並允許玩家未到齊前設定；start 仍依遊戲的人數及 disabled 條件。原生按鈕保持可程式點擊但不占可見版面，文字變動以簽章比對，不能在 MutationObserver 中重複重建相同按鈕內容。郎中兩步開局為本次已驗證接入；其他遊戲維持原 start fallback。
