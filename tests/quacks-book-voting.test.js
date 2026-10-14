@@ -12,7 +12,7 @@ function setup(){
 
 test('book selection explains numeric draws, ruby landing and pumpkin thresholds in plain Chinese',()=>{
  const f=setup();
- assert.match(f.card('blue').textContent,/抽出與這片數值（1／2／4）相同片數，最多選一片放入，其餘放回藥袋。/);
+ assert.match(f.card('blue').textContent,/抽出 1／2／4 片，最多選一片放入大釜，其餘放回藥袋。/);
  f.control('blue','next').onclick();f.control('blue','next').onclick();
  assert.equal(f.card('blue').querySelectorAll('.book-effect-copy').find(n=>n.getAttribute('aria-hidden')!=='true').textContent,'若放在紅寶石格，立即得 1 顆紅寶石。');
  assert.match(f.card('red').textContent,/若先前有 1–2 片南瓜，額外前進 1 格；3 片以上則額外前進 2 格。/);
@@ -39,3 +39,11 @@ test('every face reserves description space while only the browsed effect is exp
  function check(set){const effect=f.card('blue').querySelector('.book-page-effect'),copies=effect.querySelectorAll('.book-effect-copy');assert.equal(copies.length,row.candidates.length);const visible=copies.filter(n=>n.getAttribute('aria-hidden')!=='true');assert.equal(visible.length,1);assert.equal(visible[0].textContent,row.candidates.find(c=>c.set===set).effect);assert.equal(effect.querySelectorAll('.book-effect-measure').length,row.candidates.length-1);}
  check(1);f.control('blue','next').onclick();check(2);assert.equal(f.calls.length,0);
 });
+
+ test('ingredient mappings preserve actual line breaks and reserve their full height',()=>{
+ const {EFFECTS}=require('../src/games/quacks-catalog');
+ assert.equal(EFFECTS.blue[1],'保護接下來 1／2／4 片；期間若爆炸，仍可得分及購買，但不能擲獎勵骰。');
+ assert.equal(EFFECTS.green[1],'結算時，最後兩片中的花園蜘蛛各得一片藥材：\n1 > 南瓜 1\n2 > 烏鴉頭骨 1 或毒蘑菇 1\n4 > 曼德拉草 1 或幽靈氣息 1');
+ for(const index of [0,2,3])assert.ok(EFFECTS.purple[index].includes('\n'));
+ assert.match(fs.readFileSync('public/quacks.css','utf8'),/\.book-page-effect>\.book-effect-copy\{white-space:pre-line\}/);
+ });

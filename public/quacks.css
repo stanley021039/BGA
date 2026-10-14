@@ -259,3 +259,6 @@ body[data-game-kind=quacks] #game #alchemy .essence-flask{width:100%;max-width:4
 @media(max-width:760px){#bookVoting .book-grid{grid-template-columns:1fr}.book-vote-card{min-height:360px}.book-voting-heading h2{font-size:1.1rem}}
 .book-page-controls{gap:6px}.book-page-controls>button:nth-child(2){min-width:80px;padding-inline:8px;gap:6px}.book-page-controls .ui-button-label{white-space:nowrap}.book-vote-counts{min-height:2.8em}
 .book-page-effect{display:grid;align-content:start}.book-page-effect>.book-effect-copy{grid-area:1/1;margin:0}.book-effect-measure{visibility:hidden;pointer-events:none}
+
+/* Preserve the rule mappings in both visible and height-measuring book faces. */
+.book-page-effect>.book-effect-copy{white-space:pre-line}
