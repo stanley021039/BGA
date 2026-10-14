@@ -11,7 +11,7 @@ body[data-ui-template] .tpl-button{min-height:var(--tpl-control);border:var(--tp
 body[data-ui-template] .tpl-button--primary{background:var(--tpl-action);color:var(--tpl-on-action)}
 body[data-ui-template] .tpl-portrait{position:relative;display:grid;place-items:center;flex:none;isolation:isolate}
 body[data-ui-template] .tpl-portrait img{width:100%;height:100%;object-fit:contain}
-body[data-ui-template] .tpl-reaction{position:absolute;inset-inline:0;top:0;margin:auto;width:max-content;max-width:100%;padding:3px 8px;border:1px solid var(--tpl-line);border-radius:12px;background:var(--tpl-action);color:var(--tpl-on-action);font-size:12px;font-weight:700;overflow-wrap:anywhere;z-index:1;pointer-events:none}
+body[data-ui-template] .tpl-reaction{position:absolute;inset-inline:0;top:0;margin:auto;width:max-content;max-width:100%;padding:3px 8px;border:1px solid var(--tpl-line);border-radius:12px;background:var(--tpl-action);color:var(--tpl-on-action);font-size:var(--ui-type-p3, 14px);font-weight:700;overflow-wrap:anywhere;z-index:1;pointer-events:none}
 body[data-ui-template] .tpl-player{position:relative;border:1px solid var(--tpl-line);border-radius:12px;background:var(--tpl-inset);padding:12px;min-width:0}
 body[data-ui-template] .tpl-player[data-self="true"]{border:2px solid var(--tpl-focus)}
 body[data-ui-template] .tpl-player .room-player-info small{color:var(--tpl-muted)}
@@ -26,4 +26,4 @@ body[data-ui-template] :is(input:not([type=color]):not([type=range]):not([type=c
 body[data-ui-template] .tpl-help{max-width:32ch;font-size:.875rem;line-height:1.5}
 /* Feedback is a reserved row, never an extra item pushing room tools sideways. */
 body[data-ui-template] .chat-room-tools{display:grid;grid-template-columns:repeat(4,minmax(44px,1fr));gap:8px;align-items:center;position:relative}
-body[data-ui-template] .chat-room-tools #shared-error{grid-column:1/-1;grid-row:2;width:100%;min-width:0;height:24px;min-height:24px;max-height:24px;margin:0;font-size:12px;overflow:auto;white-space:normal;overflow-wrap:anywhere}
+body[data-ui-template] .chat-room-tools #shared-error{grid-column:1/-1;grid-row:2;width:100%;min-width:0;height:24px;min-height:24px;max-height:24px;margin:0;font-size:var(--ui-type-p3, 14px);overflow:auto;white-space:normal;overflow-wrap:anywhere}

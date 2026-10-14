@@ -12,10 +12,12 @@ body[data-ui-template="tactile"],body[data-ui-template="tactile"][data-game-kind
  --tpl-shadow:var(--play-control-shadow);--tpl-gap:24px;--tpl-pad:24px;--tpl-radius:16px;
  --tpl-control:44px;--tpl-border:2px solid var(--play-ink);
  --tpl-roster-width:240px;--tpl-chat-width:300px;--tpl-answer-height:156px;
+ --ui-type-p1:18px;--ui-type-p2:16px;--ui-type-p3:14px;
  --ui-surface-inset:var(--tpl-inset);--ui-surface-panel:var(--tpl-panel);--ui-text:var(--tpl-text);
  --ui-muted:var(--tpl-muted);--ui-border:var(--play-ink);
  background:var(--tpl-page);color:var(--tpl-text);
 }
+body[data-ui-template="tactile"] small{font-size:var(--ui-type-p3,14px)}
 html[data-color-scheme="dark"] body[data-ui-template="tactile"],html[data-color-scheme="dark"] body[data-ui-template="tactile"][data-game-kind]{
  --play-paper:#181512;--play-surface:#24201c;--play-ink:#f5f0eb;--play-muted:#b9aea3;
  --play-line:#4a4036;--play-line-strong:#776858;--play-shadow:0 4px 0 #0005;
