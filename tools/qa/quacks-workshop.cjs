@@ -34,7 +34,7 @@ const columns=await pages[0].evaluate(()=>{const f=document.querySelector('.room
 assert.ok(columns.friends<columns.work&&columns.work<columns.chat,JSON.stringify(columns));assert.ok(columns.scroll<=columns.width+1);
 assert.equal(await pages[0].locator('.player-card').count(),0);
 const badgePlace=await pages[0].evaluate(()=>{const pot=document.querySelector('#cauldron').getBoundingClientRect(),badge=document.querySelector('#potBadge').getBoundingClientRect();return {potBottom:pot.bottom,badgeTop:badge.top,potLeft:pot.left,badgeLeft:badge.left};});assert.ok(badgePlace.badgeTop>=badgePlace.potBottom);assert.ok(Math.abs(badgePlace.badgeLeft-badgePlace.potLeft)<2);assert.equal(await pages[0].locator('#potBadge').getByText('準備選擇',{exact:true}).count(),0);
-await pages[0].locator('#alchemy [data-essence="3"]').first().hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});assert.ok((await pages[0].locator('#potTooltip').innerText()).includes('第 3 格'));
+await pages[0].locator('#alchemy .essence-vessel').first().hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});assert.ok((await pages[0].locator('#potTooltip').innerText()).includes('每種彩色'));await pages[0].keyboard.press('Escape');await pages[0].locator('#alchemy [data-essence="3"]').first().hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});assert.ok((await pages[0].locator('#potTooltip').innerText()).includes('第 3 格'));
 await pages[0].keyboard.press('Escape');
 await pages[0].screenshot({path:path.join(output,'workshop-desktop.png'),fullPage:true});
 await pages[0].setViewportSize({width:1280,height:900});
@@ -69,7 +69,7 @@ await pages[0].setViewportSize({width:1280,height:900});
    }
    current=await state(owner);
   }
-  await pages[0].locator('#alchemy [data-quacks-action][data-blocked="false"]').first().waitFor();assert.equal(await pages[0].locator('#alchemy').getByText('滑過格位查看獎勵。',{exact:true}).count(),0);assert.equal(await pages[0].locator('#alchemy .alchemy-summary p').count(),0);assert.equal(await pages[0].locator('#scoreboard [data-milestone="6"] .ingredient-token').count(),0);assert.equal(await pages[0].locator('#scoreboard [data-milestone="6"]').count(),1);
+  await pages[0].locator('#alchemy [data-quacks-action][data-blocked="false"]').first().waitFor();const essenceState=await state(owner);assert.equal(essenceState.mine.alchemy.essence,essenceState.mine.alchemy.max);assert.ok((await pages[0].locator('#alchemy .essence-flask').getAttribute('aria-label')).includes('第'+essenceState.mine.alchemy.max+'格'));await pages[0].locator('#alchemy .essence-vessel').hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});assert.ok((await pages[0].locator('#potTooltip').innerText()).includes('本回合彩色'));await pages[0].keyboard.press('Escape');assert.equal(await pages[0].locator('#alchemy').getByText('滑過格位查看獎勵。',{exact:true}).count(),0);assert.equal(await pages[0].locator('#alchemy .alchemy-summary p').count(),0);assert.equal(await pages[0].locator('#scoreboard [data-milestone="6"] .ingredient-token').count(),0);assert.equal(await pages[0].locator('#scoreboard [data-milestone="6"]').count(),1);
   await pages[0].screenshot({path:path.join(output,'alchemy-essence-desktop.png'),fullPage:true});
   
 await pages[0].locator('#potTabs button').nth(1).click();assert.ok((await pages[0].locator('#potBadge').innerText()).includes('alchemy_peer'));

@@ -1,0 +1,22 @@
+{
+  "ingredient": {
+    "file": "quacks-ingredient.wav",
+    "durationMs": 210,
+    "bytes": 10124,
+    "sha256": "bbd85556cefa46b90061412b2777063ca3bd9aef248205e2116b3793a9234878",
+    "peak": 5752,
+    "seed": 13919,
+    "source": "Project-original synthesis; seeded filtered noise and sine tones, no third-party sample",
+    "generator": "tools/generate-quacks-sounds.cjs"
+  },
+  "card": {
+    "file": "quacks-card.wav",
+    "durationMs": 460,
+    "bytes": 22124,
+    "sha256": "f13ca4143d62c90ba1debe381fadf6d5ba66210a62f4c4e8aae0214d9642a7a8",
+    "peak": 5126,
+    "seed": 83551,
+    "source": "Project-original synthesis; seeded filtered noise and sine tones, no third-party sample",
+    "generator": "tools/generate-quacks-sounds.cjs"
+  }
+}

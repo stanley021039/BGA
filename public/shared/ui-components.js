@@ -20,6 +20,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  const paths={
   hand:"<path d=\"M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2\" /><path d=\"M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2\" /><path d=\"M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8\" /><path d=\"M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15\" />",
   'draw-bag':'<path d="M7 10h10l3 9a2 2 0 0 1-2 3H6a2 2 0 0 1-2-3l3-9Zm1-7h8l-2 7h-4L8 3Z M18 3v7m-3-4 3-3 3 3"/>',
+  ingredient:'<path d="M3 13h16l-2 7H5l-2-7Zm3-2 8-8 4 4-6 6M5 22h12"/>',
   circle:'<circle cx="12" cy="12" r="8"/>',
   star:'<path d="m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1Z"/>',
   coins:'<circle cx="9" cy="9" r="6"/><path d="M9 5v8m-2-6h4M15 9a6 6 0 1 1-6 6"/>',

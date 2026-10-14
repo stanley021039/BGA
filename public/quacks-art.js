@@ -146,7 +146,7 @@ function patientPortrait(id){
 function essenceFlask(value){
  value=Math.max(0,Math.min(10,value||0));
  const svg=sv('svg',{viewBox:'0 0 620 170',class:'essence-flask',role:'img','aria-label':'特效藥燒瓶：第'+value+'格'});
- svg.append(sv('rect',{x:3,y:3,width:614,height:164,rx:19,fill:'#243e3a',stroke:'#c6a777','stroke-width':3}),sv('path',{d:'M31 18h50v15l-8 1v37l22 55q6 23-15 27H31q-21-4-15-27l23-55V34l-8-1Z',fill:'#b3dbd8','fill-opacity':.2,stroke:'#cee1cf','stroke-width':3}),sv('path',{d:'M23 128q15-7 28 0t35 0v12H23Z',fill:'#bd7da3'}),sv('rect',{x:44,y:142-value*9,width:26,height:value*9,rx:10,fill:'#cd97b8',opacity:.7}),sv('text',{x:56,y:144,'text-anchor':'middle','font-size':23,'font-weight':'bold',fill:'#fff8e0'},value));
+ svg.append(sv('rect',{x:3,y:3,width:614,height:164,rx:19,fill:'#243e3a',stroke:'#c6a777','stroke-width':3}));const vessel=sv('g',{class:'essence-vessel'});vessel.append(sv('path',{d:'M31 18h50v15l-8 1v37l22 55q6 23-15 27H31q-21-4-15-27l23-55V34l-8-1Z',fill:'#b3dbd8','fill-opacity':.2,stroke:'#cee1cf','stroke-width':3}),sv('path',{d:'M23 128q15-7 28 0t35 0v12H23Z',fill:'#bd7da3'}),sv('rect',{x:44,y:142-value*9,width:26,height:value*9,rx:10,fill:'#cd97b8',opacity:.7}),sv('text',{x:56,y:144,'text-anchor':'middle','font-size':23,'font-weight':'bold',fill:'#fff8e0'},value));svg.append(vessel);
  for(let n=0;n<=10;n++){const x=126+(n%6)*85,y=n<6?47:121,g=sv('g',{'data-essence':n});
  g.append(sv('circle',{cx:x,cy:y,r:22,fill:n===value?'#d8b675':'#365c52',stroke:n===value?'#fff1bd':'#a99370','stroke-width':n===value?4:2}),sv('text',{x,y:y+6,'text-anchor':'middle','font-size':20,fill:n===value?'#23382f':'#e6dfc2'},n));svg.append(g);}
  return svg;

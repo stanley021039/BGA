@@ -27,7 +27,7 @@
   }catch{if(clip)stopEffect(clip);onError?.();}
  }
  function playEffect(kind,options={}){
-  const cues={'bluff-reaction':['/assets/game-sounds/bluff-reaction.mp3',1700],confirm:['/assets/gift-sounds/confirmation_001.wav',10000],reveal:['/assets/gift-sounds/open_001.wav',10000],turn:['/assets/game-sounds/turn.wav',320],correct:['/assets/game-sounds/correct.wav',220],'dice-roll':['/assets/game-sounds/dice-roll.wav',650],shot:['/assets/game-sounds/shot.wav',280],slam:['/assets/game-sounds/slam.wav',350],explosion:['/assets/game-sounds/quacks-explosion.wav',900],nitro:['/assets/game-sounds/nitro.wav',500],skid:['/assets/game-sounds/skid.wav',480]};
+  const cues={'ingredient-draw':['/assets/game-sounds/quacks-ingredient.wav',210],'card-draw':['/assets/game-sounds/quacks-card.wav',460],'bluff-reaction':['/assets/game-sounds/bluff-reaction.mp3',1700],confirm:['/assets/gift-sounds/confirmation_001.wav',10000],reveal:['/assets/gift-sounds/open_001.wav',10000],turn:['/assets/game-sounds/turn.wav',320],correct:['/assets/game-sounds/correct.wav',220],'dice-roll':['/assets/game-sounds/dice-roll.wav',650],shot:['/assets/game-sounds/shot.wav',280],slam:['/assets/game-sounds/slam.wav',350],explosion:['/assets/game-sounds/quacks-explosion.wav',900],nitro:['/assets/game-sounds/nitro.wav',500],skid:['/assets/game-sounds/skid.wav',480]};
   const cue=Object.hasOwn(cues,kind)?cues[kind]:null;
   if(cue)return playClip(cue[0],cue[1],{onError:options.onError,onStop:options.onStop,game:true,maxStartDelayMs:kind==='confirm'||kind==='reveal'?10000:1000});
  }

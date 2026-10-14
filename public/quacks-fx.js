@@ -45,6 +45,24 @@ function create(host){
 
 
 /* All viewers receive the same authoritative explosion IDs; current pot selection is irrelevant. */
+
+/* Private draw IDs include extra draws but never disclose another player's bag. */
+function createAudio(sounds){
+ let context=null,initialized=false,timer=null,queue=[],generation=0;const seen=new Set();
+ const clear=()=>{generation++;if(timer!==null)clearTimeout(timer);timer=null;queue=[];};
+ const next=()=>{timer=null;const prefs=root.AudioSettings?.get?.().effects;if(prefs&&(!prefs.enabled||!prefs.volume)){clear();return;}while(queue.length){const e=queue.shift();if(Date.now()-e.at>5000)continue;const token=generation;let ended=false;const done=()=>{if(ended||token!==generation)return;ended=true;if(timer!==null)clearTimeout(timer);timer=setTimeout(next,25);};const clip=sounds?.play('ingredient-draw',e.key,{live:true,epoch:e.epoch,onStop:done});if(!clip)done();else if(!ended)timer=setTimeout(done,1300);break;}};
+ function update(state,live){
+  const key=state.code+':'+state.roundId;if(key!==context){clear();seen.clear();context=key;initialized=false;}
+  if(!live||root.document.hidden)clear();
+  const card=state.fortuneRevealId;if(card&&!seen.has('card:'+card)){seen.add('card:'+card);if(initialized&&live&&!root.document.hidden)sounds?.play('card-draw','quacks:card:'+card);}
+  const events=state.mine?.drawEvents||[];
+  for(const e of events){if(seen.has(e.id))continue;seen.add(e.id);if(initialized&&live&&!root.document.hidden)queue.push({key:'quacks:draw:'+e.id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
+  while(seen.size>128)seen.delete(seen.values().next().value);queue=queue.slice(-20);initialized=true;if(queue.length&&timer===null)next();
+ }
+ const hide=()=>{if(root.document.hidden)clear();};root.document.addEventListener('visibilitychange',hide);const unsubscribe=root.AudioSettings?.subscribe?.(prefs=>{if(!prefs.effects.enabled||!prefs.effects.volume)clear();});
+ return {update,clear,destroy(){clear();seen.clear();unsubscribe?.();root.document.removeEventListener('visibilitychange',hide);}};
+}
+
 function createExplosion(host){
  let context=null,initialized=false,active=[],timer=null;const seen=new Set();
  const clear=()=>{if(timer!==null)clearTimeout(timer);timer=null;active=[];host.replaceChildren();host.hidden=true;};
@@ -90,5 +108,5 @@ function createScoreboard(host){
  }};
 }
 
-root.QuacksFx={create,createExplosion,createScoreboard,die,labels};
+root.QuacksFx={create,createAudio,createExplosion,createScoreboard,die,labels};
 })(window);

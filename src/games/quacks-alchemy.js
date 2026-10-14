@@ -41,7 +41,7 @@ const methods={
    const explosions=[...neighbors].filter(q=>q!==p&&q.exploded).length;
    const locoweed=this.setFor('locoweed')===7?p.pot.filter(c=>c.color==='locoweed').length:0;
    const fortune=(this.fortune.id==='alchemy-misfortune'&&p.exploded?2:0)+(this.fortune.id==='alchemy-last'?(p.pot.at(-1)?.value||0):0);
-   a.calculation={colors,exactSeven,explosions,locoweed,fortune};a.max=Math.min(10,colors+exactSeven+explosions+locoweed+fortune);a.essence=0;a.confirmed=false;p.ready=false;
+   a.calculation={colors,exactSeven,explosions,locoweed,fortune};a.max=Math.min(10,colors+exactSeven+explosions+locoweed+fortune);a.essence=a.max;a.confirmed=false;p.ready=false;
   }
   this.event('essence','進入特效藥階段：依大釜計算，爆炸者也參加。');
  },
