@@ -61,3 +61,8 @@ test('explosion cue respects live gates, mute, duplicate keys and original fixed
  const f=fixture(),c=f.controller;c.update(f.state());c.play('explosion','old');assert.equal(f.clips.length,0);c.update(f.state());c.play('explosion','muted');assert.equal(f.clips.length,0);
  f.api.set('effects',{enabled:true});c.play('explosion','muted');assert.equal(f.clips.length,0);c.play('explosion','new');c.play('explosion','new');assert.equal(f.clips.length,1);assert.equal(f.clips[0].originalSrc,'/assets/game-sounds/quacks-explosion.wav');f.tick(900);assert.equal(f.clips[0].paused,true);
 });
+
+test('Quacks explosion reaction is a fixed live cue with a resampled blast before fish, while other explosions retain their source',()=>{
+ const f=fixture();f.api.set('effects',{enabled:true});const c=f.controller;c.update(f.state());c.update(f.state());c.play('quacks-explosion','fish');assert.equal(f.clips.at(-1).src,'/assets/game-sounds/quacks-explosion-fish.wav');
+ const fs=require('node:fs'),crypto=require('node:crypto'),m=JSON.parse(fs.readFileSync('public/assets/game-sounds/quacks-manifest.json')).explosionReaction,b=fs.readFileSync('public/assets/game-sounds/'+m.file);assert.equal(b.readUInt32LE(24),24000);assert.equal(m.prefixMs,840);assert.equal(m.gapMs,20);assert.equal(m.durationMs,1428);assert.equal(m.sha256,crypto.createHash('sha256').update(b).digest('hex'));assert.equal(b.readInt16LE(b.length-2),0);assert.ok(b.readUInt32LE(40)/48>1427);c.destroy();
+});

@@ -47,5 +47,20 @@
     "peak": 10928,
     "source": "Project-original synthesis: three warm sine tones and faded envelopes, no third-party sample",
     "generator": "tools/generate-quacks-sounds.cjs"
+  },
+  "explosionReaction": {
+    "file": "quacks-explosion-fish.wav",
+    "durationMs": 1428,
+    "bytes": 68552,
+    "sha256": "71129dd08c6b2f6dd81f25c56a07c804399e50ad7c6a8d96af83ba41e4672ec0",
+    "source": "User-supplied fish.mp3 after project-original 840ms explosion",
+    "sourceSha256": "e31505db6d929124612ae0df972c78dc3d74c66a3f68dfb52ddc034d1b53a98b",
+    "explosionSha256": "988ce3e81ad136ab8e9dd212e22d0b29cb160b8e4aa369c7658fbad35ebc9356",
+    "prefixMs": 840,
+    "gapMs": 20,
+    "reactionFrames": 13614,
+    "peakTarget": 0.32,
+    "lowpassHz": 6500,
+    "generator": "tools/convert-quacks-explosion.cjs"
   }
 }

@@ -41,3 +41,6 @@
 
 
 2026-10-14：郎中溢出盆為自製SVG；樹脂骰的金色刻字、静態纹理與亮面為CSS材質，使用者照片僅作方向參考，未复制圖片素材。喝藥水600ms音效為原創低頻液體氣泡合成，來源／checksum在quacks-manifest.json，不改使用者抽卡與抽藥錄音。詳[交付紀錄](specs/QUACKS-KETTLE-SHARED-EFFECTS.md)。
+
+
+2026-10-14：public/assets/majority-cruel/共120張SVG為專案原創人物／情境物件插畫，由tools/generate-cruel-art.cjs及原創60題catalog生成；商業卡牌照片僅作題材／版型參考，未移植圖檔。quacks-explosion-fish.wav使用專案原創爆炸與使用者fish.mp3片段，來源hash與處理資訊見quacks-manifest.json。詳[驗收與來源](specs/MAJORITY-CRUEL-AND-QUACKS-FISH.md)。

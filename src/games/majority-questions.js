@@ -1,3 +1,4 @@
+const {CRUEL_QUESTIONS}=require('./majority-cruel-catalog');
 const TOPICS = [
   { id: 'food', label: '飲食' },
   { id: 'daily', label: '日常' },
@@ -318,4 +319,6 @@ const QUESTIONS = [
   { id: 'weather-blank-08', topic: 'weather', type: 'blank', prompt: '聽到打雷時你通常會做什麼？', options: [] },
 ];
 
+TOPICS.push({id:'cruel',label:'殘酷2選1',types:['two']});
+QUESTIONS.push(...CRUEL_QUESTIONS);
 module.exports = { TOPICS, QUESTIONS };
