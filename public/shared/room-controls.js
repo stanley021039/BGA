@@ -124,7 +124,7 @@
  }
  function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(normalize);}
  const dialog=node('dialog','ui-dialog room-leave-dialog');dialog.setAttribute('aria-labelledby','unified-leave-title');
- dialog.innerHTML='<h2 id="unified-leave-title">確定離開這個房間？</h2><p class="ui-room-leave-effect"></p><div class="ui-control-row"><button type="button" class="ui-button primary" data-confirm>確認離開</button><button type="button" class="ui-button secondary" data-cancel>留在房間</button></div><p class="ui-room-leave-status" role="status" aria-live="polite"></p>';
+ dialog.innerHTML='<h2 id="unified-leave-title">確定離開這個房間？</h2><img class="ui-room-leave-thumbnail" src="/assets/room-leave-thumbnail.jpg" width="640" height="361" alt="離別場景，字幕：多麼虎頭蛇尾的結局"><p class="ui-room-leave-effect"></p><div class="ui-control-row"><button type="button" class="ui-button primary" data-confirm>確認離開</button><button type="button" class="ui-button secondary" data-cancel>留在房間</button></div><p class="ui-room-leave-status" role="status" aria-live="polite"></p>';
  window.GameUI?.frameDialog?.(dialog);
  document.body.append(dialog);const confirm=dialog.querySelector('[data-confirm]'),cancel=dialog.querySelector('[data-cancel]');window.GameUI?.decorateButton(confirm,'leave',{label:'確認離開'});window.GameUI?.decorateButton(cancel,'close',{label:'留在房間'});
  cancel.onclick=()=>{if(!leaving)dialog.close();};dialog.addEventListener('cancel',event=>{if(leaving)event.preventDefault();});
