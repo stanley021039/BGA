@@ -9,6 +9,15 @@ function setup(){
  function render(){context.state=r.view(a.id);vm.runInContext('renderBookVoting(state)',context);}
  const card=color=>document.querySelector('[data-ingredient="'+color+'"]'),control=(color,kind)=>document.querySelector('[data-book-control="'+color+'-'+kind+'"]');render();return {document,r,a,b,calls,context,render,card,control};
 }
+
+test('book selection explains numeric draws, ruby landing and pumpkin thresholds in plain Chinese',()=>{
+ const f=setup();
+ assert.match(f.card('blue').textContent,/抽出與這片數值（1／2／4）相同片數，最多選一片放入，其餘放回藥袋。/);
+ f.control('blue','next').onclick();f.control('blue','next').onclick();
+ assert.equal(f.card('blue').querySelectorAll('.book-effect-copy').find(n=>n.getAttribute('aria-hidden')!=='true').textContent,'若放在紅寶石格，立即得 1 顆紅寶石。');
+ assert.match(f.card('red').textContent,/若先前有 1–2 片南瓜，額外前進 1 格；3 片以上則額外前進 2 格。/);
+ assert.equal(f.calls.length,0);
+});
 test('browsing changes visible face and prices without changing shared choice, explicit choice sends displayed face',()=>{
  const f=setup();assert.match(f.card('blue').textContent,/已選/);f.control('blue','next').onclick();assert.equal(f.calls.length,0);assert.match(f.card('blue').textContent,/已選第 1 面/);assert.match(f.card('blue').textContent,/第 2 面/);const expected=f.r.bookSelection().find(b=>b.color==='blue').candidates[1];assert.match(f.card('blue').textContent,new RegExp(expected.effect.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));for(const o of expected.offers)assert.match(f.card('blue').textContent,new RegExp(o.price+' 金幣'));
  f.control('blue','choose').onclick();assert.equal(JSON.stringify(f.calls),JSON.stringify([{action:'book-select',color:'blue',set:2}]));
