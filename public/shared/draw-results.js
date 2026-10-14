@@ -90,7 +90,7 @@
  }
  function mount({trigger,dialog,validateCanvas,onUnauthorized,onState,onVoteChange}={}){
   if(!trigger||!dialog)return null;
-  const $=id=>document.getElementById(id),preview=$('drawResultCanvas'),renderer=window.StrokeCanvas.createRenderer(preview,{maxCheckpoints:2});
+  const $=id=>document.getElementById(id),preview=$('drawResultCanvas'),renderer=window.StrokeCanvas.createDrawingRenderer(preview,{maxCheckpoints:2});
   let shownId=null,paintedSnapshot=null,painting=0,paintError=null,paintBusy=false,listSignature='',lastSaveStates=new Map();const encoders=new Set();
   async function request(url,body){
    const response=await fetch(url,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});
@@ -106,12 +106,12 @@
     // The encoder owns a separate canvas for this immutable result. Changing the
     // live round or browsing another result cannot alter an in-flight save.
     const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
-    const encoder=window.StrokeCanvas.createRenderer(canvas,{maxCheckpoints:2});
+    const encoder=window.StrokeCanvas.createDrawingRenderer(canvas,{maxCheckpoints:2});
     encoders.add(encoder);
     try{
      await encoder.renderCooperatively(snapshot.canvas.strokes);
      if(!isCurrent())throw Error('已離開這個房間，尚未送出收藏。');
-     const base64=canvas.toDataURL('image/png').split(',')[1];
+     const base64=window.StrokeCanvas.drawingDataURL(canvas,1024*1024).split(',')[1];
      return await request('/api/draw/result/save',{code:room,resultId:snapshot.result.resultId,base64,...(recollect?{recollect:true}:{})});
     }finally{encoders.delete(encoder);encoder.reset();canvas.width=0;canvas.height=0;}
    },

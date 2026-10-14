@@ -105,7 +105,9 @@
   function fitViewport(){
    queued=false;
    const top=root.getBoundingClientRect().top+window.scrollY;
-   const height=Math.max(440,Math.floor(window.innerHeight-top-32));
+   const footer=document.querySelector('.st-site-footer');
+   const bottom=(footer?footer.getBoundingClientRect().height:46)+(document.body.dataset.drawPhase==='waiting'?24:16);
+   const height=Math.max(440,Math.floor(window.innerHeight-top-bottom));
    if(document.body.style.getPropertyValue('--tpl-game-height')!==height+'px')document.body.style.setProperty('--tpl-game-height',height+'px');
   }
   function schedule(){if(!queued){queued=true;requestAnimationFrame(fitViewport);}}
@@ -120,7 +122,8 @@
   const css=getComputedStyle(board),paddingX=parseFloat(css.paddingLeft)+parseFloat(css.paddingRight),paddingBottom=parseFloat(css.paddingBottom);
   const row=Number(getComputedStyle(frame).gridRowStart)-1,rowHeight=css.gridTemplateRows.split(/\s+/).map(parseFloat)[row];
   const available=Number.isFinite(rowHeight)&&rowHeight>0?rowHeight:viewport.clientHeight-paddingBottom-(frame.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop)-(below?tools.getBoundingClientRect().height+gap:0);
-  return {width:board.clientWidth-paddingX-(!below&&tools?tools.getBoundingClientRect().width+gap:0),available};
+  const paperInset=document.body.dataset.drawRole==='artist'&&document.body.dataset.drawPhase==='drawing'?16:0;
+  return {width:board.clientWidth-paddingX-(!below&&tools?tools.getBoundingClientRect().width+gap:0)-paperInset,available:available-paperInset};
  }
  let waitingChat;
  let nextSettings;

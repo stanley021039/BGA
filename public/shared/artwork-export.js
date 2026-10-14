@@ -11,7 +11,7 @@
  async function png(snapshot){
   if(!snapshot?.result?.resultId||!Array.isArray(snapshot.canvas?.strokes))throw Error('這幅畫尚未公開');
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=256;
-  const renderer=window.StrokeCanvas.createRenderer(canvas,{maxCheckpoints:2});
+  const renderer=window.StrokeCanvas.createDrawingRenderer(canvas,{maxCheckpoints:2});
   try{await renderer.renderCooperatively(snapshot.canvas.strokes);return await new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(Error('畫作無法匯出')),'image/png'));}
   finally{renderer.reset();canvas.width=0;canvas.height=0;}
  }

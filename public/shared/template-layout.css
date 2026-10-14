@@ -202,6 +202,8 @@ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] 
 body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-heading h2{font-size:18px;white-space:normal;margin:0}
 body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-count{font-size:12px;white-space:normal}
 body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-card:not(.ui-room-roster-add){display:grid!important;grid-template-columns:48px minmax(0,1fr)!important;gap:12px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-card.ui-room-roster-add{grid-template-columns:minmax(0,1fr)!important;min-width:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-add>button.ui-room-roster-action-button{grid-column:1/-1!important;grid-row:1!important;width:100%!important;min-width:0!important}
 body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-action-button{display:grid!important;grid-template-columns:32px minmax(0,1fr)!important;gap:12px!important;padding:0!important;min-width:0}
 body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-card .ui-room-roster-avatar{width:48px!important;height:64px!important;min-width:48px!important}
 body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-add .ui-room-roster-avatar{width:32px!important;height:40px!important;min-width:32px!important}

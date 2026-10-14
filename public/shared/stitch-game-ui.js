@@ -50,8 +50,7 @@
  function updateBrush(){const dot=$('#stBrushPreview');if(!dot)return;const size=Math.min(28,Math.max(4,Number($('#size')?.value||6))),color=$('#color')?.value||'#1b1c1c';dot.style.setProperty('--st-brush-size',size+'px');dot.style.setProperty('--st-brush-color',color);for(const b of document.querySelectorAll('#swatches button')){const selected=b.dataset.color===color;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));}}
  function phaseControls(){
   if(!state)return;const drawing=state.phase==='drawing',mine=state.presenterId===state.me;
-  if(drawing&&!mine&&state.hint){const length=state.hint.length,mask=length>6?'● × '+length:'●'.repeat(length);text($('#boardTitle'),mask+'（'+length+' 字 · '+(state.hint.topicLabel||state.hint.category)+'）');}
-  if($('#boardTitle'))$('#boardTitle').title=$('#boardTitle').textContent;
+  wordUi();
   text($('#stPrivateLabel'),drawing?(mine?'你的專屬秘密題目':'畫者正在作畫'):{waiting:'房間等待室',choosing:'選題階段',reveal:'本輪題目揭曉',finished:'對局已結束'}[state.phase]||'你畫我猜');
   text($('#stRoundCounter'),state.round?'回合 '+String(state.round).padStart(2,'0')+' / '+String(state.roundLimit).padStart(2,'0'):'等待開桌');
   $('.st-secret-rule').hidden=!drawing||!mine;$('.st-hint-button').hidden=!drawing;$('.st-skip-button').hidden=!drawing||!mine&&!state.host;
@@ -74,14 +73,7 @@
    const node=row.querySelector('.st-player-guess');text(node,guess?'猜測：'+guess.answer:'');node.hidden=!guess||!drawing||state.guessedIds.includes(player.id);
   }
   const center=$('.tpl-waiting-center');
-  if(center&&state.phase==='waiting'){
-   const art=center.querySelector('.room-waiting-art img'),source=state.host?'/assets/stitch/waiting-host.jpg':'/assets/stitch/waiting-guest.jpg';if(art&&art.getAttribute('src')!==source)art.src=source;
-   text(center.querySelector('.room-waiting-info h2'),'你畫我猜 Draw & Guess');
-   if(!center.querySelector('.st-waiting-banner')){const banner=el('div','st-waiting-banner');center.prepend(banner);const facts=el('div','st-waiting-facts');for(const key of ['players','topics','seconds']){const card=el('div');card.dataset.fact=key;card.append(el('strong'),el('small'));facts.append(card);}center.append(facts);}
-   text(center.querySelector('.st-waiting-banner'),state.players.length>=2?'人數已足，可以準備開畫！':'入座成功，現在等朋友就位');
-   for(const [key,value,label]of [['players',state.players.length+' / 8','入座玩家'],['topics',(state.options.topics?.length||1)+' 類','多選題庫'],['seconds',state.options.seconds+' 秒','作畫時間']]){const card=center.querySelector('[data-fact='+key+']');text(card.querySelector('strong'),value);text(card.querySelector('small'),label);}
-   ui.Template.patterns.arrangeWaiting($('.ui-room-waiting-layout'),true);
-  }
+  if(center&&state.phase==='waiting')waitingUi(center);
   if(center&&!center.querySelector('.st-ready-button'))center.append(button('準備好了！點擊就緒','check',()=>actions.action('ready',{ready:!state.players.find(p=>p.id===state.me)?.ready}),'st-ready-button st-primary'));
   if(center){const ready=state.players.find(p=>p.id===state.me)?.ready===true,b=center.querySelector('.st-ready-button');b.hidden=state.host||state.phase!=='waiting';b.setAttribute('aria-pressed',String(ready));text(b.querySelector('.ui-button-label'),ready?'已就緒（點擊切換）':'準備好了！點擊就緒');}
   const result=$('.stage-reveal');if(result&&!result.querySelector('.st-art-share'))result.querySelector('.tpl-result-actions')?.prepend(button('分享畫作','share',shareArtwork,'st-art-share'));
@@ -104,9 +96,19 @@
  function guestSettings(){
   const side=$('.st-waiting-guest-aside');if(!side||side.hidden||!state||state.phase!=='waiting'||state.host)return;
   let summary=side.querySelector('.st-guest-settings-summary');
-  if(!summary){summary=el('section','st-guest-settings-summary');summary.append(el('h2','','房間設定 · 由房主設定'),el('p'),button('查看全部設定','settings',openGuestSettings));side.prepend(summary);}
-  text(summary.querySelector('p'),state.options.seconds+' 秒／題 · '+(state.options.ending?.mode==='score'?'目標 '+state.options.ending.value+' 分':(state.options.ending?.value??state.players.length)+' 題')+' · '+(state.options.topics?.length||1)+' 類題庫');
+  if(!summary){
+   summary=el('section','st-guest-settings-summary');summary.setAttribute('aria-label','目前房間規則');
+   const heading=el('div','st-guest-rules-heading');heading.append(el('h2','','本局房間規則'),el('small','st-settings-badge','房主設定'));
+   const topics=el('div','st-guest-topics');topics.append(el('small','','題目類別'),el('div','st-guest-topic-chips'));
+   const grid=el('div','st-guest-rule-metrics');for(const [key,label]of [['seconds','作畫時間'],['ending','結算條件']]){const card=el('div');card.dataset.guestRule=key;card.append(el('small','',label),el('strong'));grid.append(card);}
+   summary.append(heading,topics,grid,el('p','st-guest-rules-note','只有房主可以調整設定與開始遊戲。'),button('查看全部設定','settings',openGuestSettings));side.prepend(summary);
+  }
+  const topics=(state.options.topics||[]).map(key=>$('.ui-room-controls [value="'+key+'"]')?.closest('label')?.textContent.replace('✓','').trim()||key),key=topics.join('|'),chips=summary.querySelector('.st-guest-topic-chips');
+  if(chips.dataset.topics!==key){chips.dataset.topics=key;chips.replaceChildren(...topics.slice(0,3).map(label=>el('span','',label)));if(topics.length>3)chips.append(el('span','','＋ '+(topics.length-3)+' 類'));chips.title=topics.join('、');}
+  text(summary.querySelector('[data-guest-rule=seconds] strong'),state.options.seconds+' 秒');
+  text(summary.querySelector('[data-guest-rule=ending] strong'),state.options.ending?.mode==='score'?state.options.ending.value+' 分':(state.options.ending?.value??state.players.length)+' 題');
  }
+
  function openGuestSettings(){
   const component=ui.Template.compositions.dialogPanel({title:'目前房間設定',className:'st-guest-settings-dialog'}),topics=state.options.topics||[];
   component.body.append(el('p','','作畫時間：'+state.options.seconds+' 秒'),el('p','',state.options.ending?.mode==='score'?'分數達標：'+state.options.ending.value+' 分':'總題數：'+(state.options.ending?.value??state.players.length)+' 題'),el('p','','題目類別：'+topics.map(key=>$('.ui-room-controls [value="'+key+'"]')?.closest('label')?.textContent.replace('✓','').trim()||key).join('、')),el('small','','只有房主可修改房間設定。'));
@@ -136,7 +138,7 @@
   root.replaceChildren(grid,highlights);
   const items=[...list].sort((a,b)=>b.guessedIds.length-a.guessedIds.length||a.round-b.round).slice(0,3);
   for(const item of items){const card=button('查看第 '+item.round+' 輪畫作',null,()=>actions.results?.open(item.resultId,card),'st-highlight'),canvas=el('canvas'),copy=el('span');canvas.width=512;canvas.height=256;canvas.setAttribute('role','img');canvas.setAttribute('aria-label','第 '+item.round+' 輪畫作縮圖');copy.append(el('strong','','R'+item.round+' · '+(item.answer||'未選定題目')),el('small','',(item.artist?.name||'畫者')+' · '+item.guessedIds.length+' 人猜中'));card.replaceChildren(canvas,copy);card.title='開啟最近畫作：'+(item.answer||'第 '+item.round+' 輪');highlights.append(card);
-   actions.results?.store.load(item.resultId).then(async snapshot=>{if(finishedKey!==key||state.phase!=='finished'||!canvas.isConnected)return;const renderer=window.StrokeCanvas.createRenderer(canvas,{maxCheckpoints:2});finishRenderers.add(renderer);await renderer.renderCooperatively(snapshot.canvas.strokes);if(finishedKey!==key)renderer.reset();}).catch(()=>{canvas.setAttribute('aria-label','縮圖暫時無法載入，點擊回看畫作');});
+   actions.results?.store.load(item.resultId).then(async snapshot=>{if(finishedKey!==key||state.phase!=='finished'||!canvas.isConnected)return;const renderer=window.StrokeCanvas.createDrawingRenderer(canvas,{maxCheckpoints:2});finishRenderers.add(renderer);await renderer.renderCooperatively(snapshot.canvas.strokes);if(finishedKey!==key)renderer.reset();}).catch(()=>{canvas.setAttribute('aria-label','縮圖暫時無法載入，點擊回看畫作');});
   }
   const banner=panelBanner();if(banner)text(banner,'🏆 '+state.players.filter(player=>state.winner?.ids.includes(player.id)).map(player=>player.name).join('、')+' · 本局獲勝');
   const exportButton=$('[data-do=template-export]');if(exportButton)exportButton.title='匯出目前保留的本局最近 '+list.length+' 幅 PNG 畫作';
@@ -178,7 +180,9 @@
   text(dialog.querySelector(':scope>p'),'填好房間名稱，邀請朋友一起入座。進入房間後可再調整遊戲設定。');
   const sync=card=>{pick.value=card?.dataset.game||'draw';settings.hidden=pick.value!=='draw';};sync(document.querySelector('.game-tile.selected'));
   pick.onchange=()=>cards.find(card=>card.dataset.game===pick.value)?.click();document.querySelector('[data-card-carousel]')?.addEventListener('game-card-selected',e=>sync(e.detail.card));
-  const code=$('#code'),panel=$('.room-code-panel');if(code&&panel){code.maxLength=6;code.addEventListener('input',e=>{if(!e.isComposing)code.value=code.value.toUpperCase();});
+  const code=$('#code'),panel=$('.room-code-panel');if(code&&panel){code.maxLength=6;
+   const label=panel.querySelector('label[for="code"]');if(label){const hint=el('span','st-code-hint',code.placeholder||'6 碼代碼');hint.id='stCodeHint';hint.setAttribute('aria-hidden','true');label.append(hint);code.setAttribute('aria-describedby',((code.getAttribute('aria-describedby')||'')+' '+hint.id).trim());}code.removeAttribute('placeholder');
+   code.addEventListener('input',e=>{if(!e.isComposing)code.value=code.value.toUpperCase();});
    const entry=el('div','st-code-entry');code.before(entry);entry.append(code);const cells=[];for(let i=0;i<6;i++){const cell=el('span','st-code-slot');cell.setAttribute('aria-hidden','true');entry.append(cell);cells.push(cell);}
    function syncCode(){const value=code.value;cells.forEach((cell,i)=>{text(cell,value[i]||'');cell.dataset.active=String(document.activeElement===code&&i===Math.min(code.selectionStart??value.length,5));});}
    for(const event of ['input','focus','blur','click','keyup','select'])code.addEventListener(event,syncCode);syncCode();
@@ -188,7 +192,98 @@
  }
  function createOptions(game){if(game!=='draw')return {};const seconds=Number($('#stCreateSeconds')?.value||60),rounds=Number($('#stCreateRounds')?.value||8);if(![60,90,120].includes(seconds)||!Number.isInteger(rounds)||rounds<1||rounds>64)throw Error('總題數需為 1–64 題');return {seconds,ending:{mode:'rounds',value:rounds}};}
  function lobbyError(message){const create=$('#createRoomDialog')?.open,status=$(create?'#stCreateError':'#stJoinError');text(status,message);if(!create)$('#code')?.setAttribute('aria-invalid','true');}
- function ensure(){queued=false;if(!mounted)return;makeHeader();inlineProfile();if(document.body.dataset.gameKind==='draw'){makePhaseBar();chatControls();hostControls();move($('[data-template-next-settings]'),$('.st-site-more .site-links'));if(state){phaseControls();guestSettings();finishedControls();text($('.st-host-link'),location.origin+'/draw/'+state.code);}}else lobbyControls();}
+ /* Editable Figma exports supply visual objects; room state supplies all content. */
+ function figmaIcon(host,file,{prepend=false,tone='ink'}={}){
+  if(!host)return;
+  if(host.dataset.stAssetUnavailable===file)return;
+  if(host.querySelector('img.st-figma-icon')?.getAttribute('src')==='/assets/stitch/figma/'+file)return;
+  const original=[...host.childNodes],image=el('img','st-figma-icon');image.src='/assets/stitch/figma/'+file;image.alt='';image.setAttribute('aria-hidden','true');image.dataset.tone=tone;
+  image.onerror=()=>{host.dataset.stAssetUnavailable=file;image.remove();if(!prepend)host.replaceChildren(...original);};
+  if(prepend){host.querySelector('img.st-figma-icon')?.remove();host.prepend(image);}else host.replaceChildren(image);
+ }
+ function exportedIcons(){
+  const tag=$('#roomTag');if(tag&&!tag.closest('.st-room-code-chip')){const chip=el('div','st-room-code-chip'),copy=iconButton('複製房間代碼','save',async()=>{if(!state)return;try{await navigator.clipboard.writeText(state.code);notify('房間代碼已複製。');}catch{notify('暫時無法複製；房間代碼是 '+state.code);}});copy.classList.add('st-room-code-copy');tag.before(chip);chip.append(tag,copy);}
+  const copyCode=$('.st-room-code-copy');if(copyCode){copyCode.hidden=!state;figmaIcon(copyCode.querySelector('.ui-button-icon'),'ux02-22.svg');}
+  const invite=$('#invite');if(invite&&invite.getAttribute('aria-label')!=='邀請')ui.decorateButton(invite,'invite',{label:'邀請'});
+  if(invite&&!invite.dataset.stInvite){invite.dataset.stInvite='true';invite.onclick=()=>window.RoomInvites?.ready?window.RoomInvites.open(invite):actions?.invite();}
+  if(state){text($('#count'),state.players.length+'/8 人入座');figmaIcon($('#count'),'ux02-23.svg',{prepend:true,tone:'accent'});}
+  figmaIcon($('.st-brand-mark'),'ux02-21.svg',{tone:'accent'});
+  figmaIcon($('.site-settings-button .ui-button-icon'),'ux02-25.svg');
+  figmaIcon($('#invite .ui-button-icon'),'ux02-24.svg',{tone:'accent'});
+  figmaIcon($('.st-private-label'),'ux06-01.svg',{prepend:true,tone:'accent'});
+  figmaIcon($('.st-countdown-icon'),'ux06-03.svg',{tone:'accent'});
+  figmaIcon($('.st-hint-button .ui-button-icon'),'ux06-04.svg');
+  figmaIcon($('.st-skip-button .ui-button-icon'),'ux06-05.svg',{tone:'accent'});
+  for(const [selector,file]of [['[data-tool=brush]','ux06-14.svg'],['[data-tool=erase]','ux06-15.svg'],['[data-tool=line]','ux06-16.svg'],['[data-tool=rect]:not([data-filled])','ux06-17.svg'],['[data-tool=rect][data-filled=true]','ux06-18.svg'],['[data-tool=ellipse]:not([data-filled])','ux06-19.svg'],['[data-tool=ellipse][data-filled=true]','ux06-20.svg'],['[data-tool=fill]','ux06-21.svg'],['#undo','ux06-22.svg'],['#clear','ux06-23.svg']]){const button=$('#tools '+selector);figmaIcon(button?.querySelector('.ui-button-icon')||button,file,{tone:selector==='#clear'?'accent':'ink'});}
+  updateBrush();
+ }
+ function chatDock(){
+  const panel=$('.shared-chat');let header=panel?.querySelector('.ui-panel-header');if(!panel||!header)return;
+  // The native heading also starts as the panel header. Keep tools outside the
+  // heading's textContent so phase titles cannot remove their live handlers.
+  if(header.classList.contains('chat-heading')){const wrapper=el('div','ui-panel-header');header.before(wrapper);header.classList.remove('ui-panel-header');wrapper.append(header);header=wrapper;}
+  move(panel.querySelector('.chat-room-tools'),header);
+  const guess=$('#drawGuessPanel');if(guess){guess.setAttribute('aria-label','猜題作答專區');text(guess.querySelector('.guess-chat-head>strong'),'猜題作答專區');}
+ }
+ function wordUi(){
+  if(!state||state.phase!=='drawing')return;
+  const title=$('#boardTitle'),mine=state.presenterId===state.me,hint=state.hint;
+  if(!title)return;
+  const word=mine?(state.question?.title||'本輪畫布'):(hint?.length>6?'● × '+hint.length:'●'.repeat(hint?.length||2));
+  const meta=hint?'（'+hint.length+' 字 · '+(hint.topicLabel||hint.category)+'）':'';
+  const key=word+'|'+meta;
+  if(title.dataset.stWordKey!==key||!title.querySelector('.st-word-name')){title.dataset.stWordKey=key;title.replaceChildren(el('span','st-word-name',word),el('small','st-word-meta',meta));}
+  title.title=word+' '+meta;
+ }
+ function makeFooter(){
+  let footer=$('.st-site-footer');
+  if(!footer){footer=el('footer','st-site-footer');footer.append(el('span','','302 捉猶團 © 2025 · 歡樂休閒派對桌遊平台'));const connection=el('span','st-footer-connection');connection.append(el('span','st-connection-dot'),el('span','st-footer-status','房間連線中'));footer.append(connection);$('.draw-shell')?.append(footer);}
+  text(footer.querySelector('.st-footer-status'),$('#connection')?.textContent.trim()||'房間連線中');
+ }
+ function waitingUi(center){
+  if(!state||state.phase!=='waiting'||!center)return;
+  const layout=center.closest('.ui-room-waiting-layout'),hero=center.querySelector('.room-waiting-template');if(!layout||!hero)return;
+  let banner=center.querySelector('.st-waiting-banner');
+  if(!banner){banner=el('section','st-waiting-banner');banner.setAttribute('aria-label','房間準備狀態');center.prepend(banner);}
+  if(!banner.querySelector('.st-ready-copy')){const mark=el('span','st-ready-mark'),copy=el('div','st-ready-copy');mark.setAttribute('aria-hidden','true');figmaIcon(mark,'ux02-12.svg',{tone:'accent'});copy.append(el('strong'),el('small'));banner.replaceChildren(mark,copy,el('span','st-ready-badge'));}
+  const enough=state.players.length>=2;
+  text(banner.querySelector('strong'),enough?(state.host?'人數達標，房主可隨時開始':'朋友已就位，等待房主開畫'):'入座成功，等朋友一起開畫');
+  text(banner.querySelector('small'),'目前 '+state.players.length+' 人已入座'+(enough?'，畫筆與題卡已備妥':'，至少 2 人即可開始'));
+  text(banner.querySelector('.st-ready-badge'),enough?'READY':'WAITING');
+  if(!hero.querySelector('.st-showcase-body')){
+   const header=el('div','st-showcase-header');header.append(el('span','st-classic-tag','CLASSIC MODE'),el('span','st-waiting-limit','2–8 人一起畫'));hero.prepend(header);
+   const body=el('div','st-showcase-body');move(hero.querySelector('.room-waiting-art'),body);move(hero.querySelector('.room-waiting-info'),body);header.after(body);
+   const facts=el('div','st-waiting-facts');for(const [label,value]of [['每輪輪替','全員輪流畫'],['計分機制','愈快猜愈高'],['繪圖工具','12 色＋粗細']]){const fact=el('div');fact.append(el('strong','',value),el('small','',label));facts.append(fact);}hero.append(facts);
+  }
+  const artwork=hero.querySelector('.room-waiting-art img'),source=state.host?'/assets/stitch/figma/ux02-03.png':'/assets/stitch/waiting-guest.jpg';if(artwork&&artwork.getAttribute('src')!==source&&!artwork.dataset.stAssetUnavailable){artwork.onerror=()=>{artwork.dataset.stAssetUnavailable='true';artwork.src='/assets/stitch/waiting-host.jpg';};artwork.src=source;}
+  const heading=hero.querySelector('.room-waiting-info h2');if(heading&&!heading.querySelector('.st-game-english'))heading.replaceChildren(el('span','','你畫我猜'),el('small','st-game-english','Draw & Guess'));
+  text(hero.querySelector('.room-waiting-info>.kicker'),'朋友集結中，畫筆已備，等房主開畫。');
+  text(hero.querySelector('.room-waiting-info>p:not(.room-waiting-hint)'),'2–8 人一起玩。輪流挑題作畫，其他朋友一起猜出答案。邀請朋友入座，設定好就能開始。');
+  const ready=center.querySelector('.st-ready-button');if(ready&&ready.parentElement!==hero)hero.append(ready);
+  const roster=layout.querySelector('.ui-room-roster'),list=roster?.querySelector('.ui-room-roster-list');
+  if(roster&&!roster.querySelector('.st-room-share')){const share=el('div','st-room-share'),copy=el('div');copy.append(el('small','','快速邀請連結'),el('code'));share.append(copy,button('複製',null,()=>actions?.invite()));roster.append(share);}
+  const link=location.host+'/draw/'+state.code;text(roster?.querySelector('.st-room-share code'),link);if(roster?.querySelector('.st-room-share code'))roster.querySelector('.st-room-share code').title=location.origin+'/draw/'+state.code;
+  text(roster?.querySelector('.ui-room-roster-count'),state.players.length+' 位已入座 · 最多 8 人');
+  if(list){
+   for(const row of list.querySelectorAll('[data-player-id]')){const player=state.players.find(p=>p.id===row.dataset.playerId);if(!player)continue;const name=row.querySelector('.ui-room-roster-name');let badge=name?.querySelector('.st-player-badge');const label=player.id===state.hostId?'房主':player.bot?'機器人':'';if(label&&name){if(!badge){badge=el('small','st-player-badge');name.append(badge);}text(badge,label);}else badge?.remove();}
+   const bot=list.querySelector('[data-room-common-action=bot]');if(bot){figmaIcon(bot.querySelector('.ui-symbol'),'ux02-09.svg',{tone:'accent'});const label=bot.querySelector('.ui-room-roster-action-label');text(label,'＋ 加入 AI 測試夥伴');}
+   const seats=Math.min(2,8-state.players.length),key=state.players.length+':'+seats;
+   if(list.dataset.stSeats!==key||list.querySelectorAll('.st-empty-seat').length!==seats){list.dataset.stSeats=key;for(const old of list.querySelectorAll('.st-empty-seat'))old.remove();for(let i=0;i<seats;i++){const seat=el('article','st-empty-seat'),icon=el('span'),copy=el('div');seat.setAttribute('aria-label','第 '+(state.players.length+i+1)+' 號座位，等待朋友入座');figmaIcon(icon,'ux02-10.svg');copy.append(el('strong','','第 '+(state.players.length+i+1)+' 號座位'),el('p','','等待好友入座…'));seat.append(icon,copy,el('small','','空缺'));list.append(seat);}}
+  }
+  let rail=layout.querySelector('.st-waiting-status');
+  if(!rail){rail=el('section','st-waiting-status');rail.setAttribute('aria-label','房間連線與操作');const main=el('div','st-status-main'),status=el('span','st-owner-status'),code=el('span');status.append(el('span','st-connection-dot'),el('span','st-owner-copy'));code.append(el('span','','房間代號：'),el('code','st-status-code'));main.append(status,code);const actions=el('div','st-status-actions');actions.append(iconButton('房間閒聊與表情','chat',()=>center.querySelector('.tpl-waiting-footer button')?.click()),button('遊玩說明','help',()=>$('#help')?.click(),'st-waiting-help'),button('解散房間','leave',dissolve,'st-danger st-waiting-dissolve'),button('離開房間','leave',()=>$('.ui-room-session-actions>[data-room-action=leave]')?.click(),'st-waiting-leave'));rail.append(main,actions);layout.append(rail);}
+  text(rail.querySelector('.st-owner-copy'),state.host?'房主權限生效中':'等待房主開畫');text(rail.querySelector('.st-status-code'),state.code);rail.querySelector('.st-waiting-dissolve').hidden=!state.host;rail.querySelector('.st-waiting-leave').hidden=state.host;
+  figmaIcon(rail.querySelector('.st-waiting-help .ui-button-icon'),'ux02-19.svg');figmaIcon(rail.querySelector('.st-waiting-dissolve .ui-button-icon'),'ux02-20.svg',{tone:'accent'});
+  const panel=layout.querySelector('.ui-room-controls'),headingSettings=panel?.querySelector('.ui-room-settings-heading');
+  if(headingSettings&&!headingSettings.querySelector('.st-settings-badge'))headingSettings.append(el('small','st-settings-badge',state.host?'房主專用':'唯讀設定'));
+  const row=panel?.querySelector('.ui-room-session-actions');if(row&&!row.querySelector('.st-waiting-invite'))row.append(button('邀請朋友 ↗','share',event=>window.RoomInvites?.ready?window.RoomInvites.open(event.currentTarget):actions?.invite(),'st-waiting-invite'));
+  const manage=row?.querySelector('[data-room-action=manage]');if(manage&&(manage.classList.contains('ui-icon-button')||manage.getAttribute('aria-label')!=='房間管理')){ui.decorateButton(manage,'settings',{label:'房間管理',iconOnly:false});manage.setAttribute('aria-label','房間管理');manage.title='房間管理';}
+  figmaIcon(row?.querySelector('[data-room-action=start] .ui-button-icon'),'ux02-15.svg',{tone:'accent'});figmaIcon(row?.querySelector('.st-waiting-invite .ui-button-icon'),'ux02-16.svg');figmaIcon(manage?.querySelector('.ui-button-icon'),'ux02-17.svg');
+  const seconds=panel?.querySelector('input[name=seconds]')?.closest('fieldset');if(seconds){seconds.classList.add('st-seconds-options');for(const input of seconds.querySelectorAll('input[name=seconds]')){const label=input.nextElementSibling;if(label&&!label.querySelector('.st-duration-note'))label.append(el('small','st-duration-note',{60:'標準',90:'充裕',120:'悠閒'}[input.value]||''));}}
+  const topics=panel?.querySelector('.topic-options');if(topics)topics.title=topics.querySelector('.topic-hint')?.textContent||'至少選擇一個題目類別';
+ }
+
+ function ensure(){queued=false;if(!mounted)return;makeHeader();inlineProfile();if(document.body.dataset.gameKind==='draw'){makePhaseBar();chatControls();chatDock();hostControls();makeFooter();exportedIcons();move($('[data-template-next-settings]'),$('.st-site-more .site-links'));if(state){phaseControls();guestSettings();finishedControls();exportedIcons();text($('.st-host-link'),location.origin+'/draw/'+state.code);}}else lobbyControls();}
  function schedule(){if(!queued){queued=true;requestAnimationFrame(ensure);}}
  function mount(){mounted=true;ensure();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});window.MotionPolicy?.subscribe(prefs=>{document.body.dataset.stitchMotion=String(prefs.enabled&&!prefs.reduced);});}
  window.StitchGameUI={confirm,roomError,createOptions,lobbyError,update(next,handlers){state=next;actions=handlers;if(mounted){phaseControls();guestSettings();finishedControls();}schedule();}};

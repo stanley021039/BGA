@@ -9,7 +9,7 @@ let strokeFlushTimer=null,previewFrame=null,pendingTimes=[];
 const drawNow=()=>typeof performance==='object'&&typeof performance.now==='function'?performance.now():Date.now();
 const localStrokes=new Map();
 const canvas=$('#drawCanvas'),colors=document.body.dataset.uiTemplate?['#1b1c1c','#ffffff','#6b7280','#ba1a1a','#f97316','#f8c838','#16a34a','#0284c7','#4338ca','#7e22ce','#735947','#fedbc4']:['#273942','#ffffff','#e45757','#f3a844','#f4d264','#6bb879','#5197ca','#8058ad','#d979a7','#8b6348'];
-const canvasRenderer=StrokeCanvas.createRenderer(canvas,{separateMutable:true,atomicPresentation:true});
+const canvasRenderer=StrokeCanvas.createDrawingRenderer(canvas,{separateMutable:true,atomicPresentation:true});
 const drawingPlayback=window.DrawPlayback.create({now:drawNow,onFrame:()=>redrawCanvas()});
 const countdownBar=window.CountdownBar.create($('#timerFill'),{reducedMotion:()=>window.matchMedia('(prefers-reduced-motion:reduce)').matches});
 const drawingTransport=window.DrawTransport.create({
@@ -127,8 +127,10 @@ function readTopics(){
  return topics;
 }
 function endingSettings(settings){
- const ending=settings.ending||{mode:'rounds',value:null},legacy=ending.value==null,score=ending.mode==='score';
- return `<fieldset class="draw-ending-settings"><legend>結算條件</legend><label for="drawEndMode">結算方式</label><select id="drawEndMode">${legacy?'<option value="legacy" selected>每位玩家畫一次（目前設定）</option>':''}<option value="rounds" ${!legacy&&!score?'selected':''}>固定輪數（總題數）</option><option value="score" ${score?'selected':''}>分數達標</option></select><label for="drawEndValue">數值</label><input id="drawEndValue" type="number" min="${score?10:1}" max="${score?1000:64}" step="1" value="${legacy?'':ending.value}" ${legacy?'disabled':''}><p id="drawEndHint">${legacy?'依入座順序，每位玩家畫一次。':score?'10–1000 分；當題揭曉後結算，最多 64 題。':'1–64 題；畫者依入座順序輪替。'}</p></fieldset>`;
+ const ending=settings.ending||{mode:'rounds',value:null},legacy=ending.value==null,score=ending.mode==='score',selected=legacy?'legacy':score?'score':'rounds';
+ const value=`<input id="drawEndValue" type="number" aria-label="${score?'目標分數':'固定總題數'}" min="${score?10:1}" max="${score?1000:64}" step="1" value="${legacy?'':ending.value}" ${legacy?'disabled':''}>`;
+ const choice=(mode,label,defaultValue)=>`<label class="st-end-choice" data-ending-mode="${mode}"><input type="radio" name="endingChoice" data-ending-option="${mode}" value="${mode}" ${selected===mode?'checked':''}><span>${label}</span><span class="st-end-value-slot">${selected===mode?value+`<small>${score?'分':'題'}</small>`:`<small class="st-end-default">${defaultValue}</small>`}</span></label>`;
+ return `<fieldset class="draw-ending-settings"><legend>結算條件</legend><select id="drawEndMode" aria-hidden="true" tabindex="-1" hidden>${legacy?'<option value="legacy" selected>每位玩家畫一次（目前設定）</option>':''}<option value="rounds" ${!legacy&&!score?'selected':''}>固定輪數（總題數）</option><option value="score" ${score?'selected':''}>分數達標</option></select><div class="st-end-modes">${choice('rounds','固定題數','8 題')}${choice('score','先達分數','100 分')}${legacy?choice('legacy','每位玩家畫一次','輪流') :''}</div><p id="drawEndHint">${legacy?'依入座順序，每位玩家畫一次。':score?'10–1000 分；當題揭曉後結算，最多 64 題。':'1–64 題；畫者依入座順序輪替。'}</p></fieldset>`;
 }
 function readRoomSettings(){
  const mode=$('#drawEndMode').value,data={seconds:Number($('#stage input[name="seconds"]:checked,.ui-room-settings-slot input[name="seconds"]:checked')?.value),topics:readTopics()};
@@ -257,7 +259,7 @@ function updateStagePreview(){
  if(!id||!preview?.getContext||!resultsView){stageResultPreview?.renderer.reset();stageResultPreview=null;return;}
  if(stageResultPreview?.id===id&&stageResultPreview.node===preview)return;
  stageResultPreview?.renderer.reset();
- const job={id,node:preview,renderer:window.StrokeCanvas.createRenderer(preview,{maxCheckpoints:2})};stageResultPreview=job;
+ const job={id,node:preview,renderer:window.StrokeCanvas.createDrawingRenderer(preview,{maxCheckpoints:2})};stageResultPreview=job;
  preview.hidden=true;
  resultsView.store.load(id).then(snapshot=>{if(stageResultPreview!==job)return;return job.renderer.renderCooperatively(snapshot.canvas.strokes);}).then(()=>{if(stageResultPreview!==job)return;preview.hidden=false;$('#stagePreviewStatus').textContent='本輪畫作 · 可從最近畫作回看與收藏';}).catch(()=>{if(stageResultPreview===job)$('#stagePreviewStatus').textContent='畫作暫時無法載入，可從最近畫作重試。';});
 }
@@ -338,7 +340,7 @@ function tick(){
  if(!timed){countdownBar.reset();label.textContent='–';progress.value=1;progress.classList.remove('urgent');progress.removeAttribute?.('aria-valuetext');$('#drawWaitingTime').textContent='';label.classList.remove('urgent');lastTimerSeconds=null;return;}
  const remaining=Math.max(0,state.deadline-(Date.now()-clockOffset)),seconds=Math.ceil(remaining/1000);
  const configured=Number(state.options?.seconds),duration=state.phase==='choosing'?15000:state.phase==='reveal'?8000:(Number.isFinite(configured)&&configured>0?configured:90)*1000;
- const text=document.body.dataset.uiTemplate?String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0'):seconds+' 秒';if(label.textContent!==text)label.textContent=text;
+ const text=document.body.dataset.uiTemplate?seconds+'秒':seconds+' 秒';if(label.textContent!==text)label.textContent=text;
  const urgent=state.phase==='drawing'&&seconds<=10;
  label.classList.toggle('urgent',urgent);progress.classList.toggle('urgent',urgent);
  $('#timerTrack').classList.toggle('urgent',urgent);
@@ -486,9 +488,14 @@ function stageClick(event){
  }
 }
 document.addEventListener('change',event=>{
- if(event.target.id!=='drawEndMode'||!state?.host)return;
- const mode=event.target.value,score=mode==='score',value=$('#drawEndValue');value.disabled=mode==='legacy';value.min=score?10:1;value.max=score?1000:64;value.value=mode==='legacy'?'':score?100:8;$('#drawEndHint').textContent=mode==='legacy'?'依入座順序，每位玩家畫一次。':score?'10–1000 分；當題揭曉後結算，最多 64 題。':'1–64 題；畫者依入座順序輪替。';
-});
+ const mode=event.target.id==='drawEndMode'?event.target.value:event.target.dataset.endingOption;
+ if(!mode||!state?.host)return;
+ const select=$('#drawEndMode'),score=mode==='score',value=$('#drawEndValue');select.value=mode;value.disabled=mode==='legacy';value.min=score?10:1;value.max=score?1000:64;value.value=mode==='legacy'?'':score?100:8;value.setAttribute('aria-label',score?'目標分數':'固定總題數');
+ const group=select.closest('.draw-ending-settings');
+ for(const option of group.querySelectorAll('[data-ending-option]'))option.checked=option.dataset.endingOption===mode;
+ for(const choice of group.querySelectorAll('.st-end-choice')){const slot=choice.querySelector('.st-end-value-slot');if(choice.dataset.endingMode===mode){slot.replaceChildren(value);const unit=document.createElement('small');unit.textContent=score?'分':mode==='legacy'?'輪流':'題';slot.append(unit);}else{const label=document.createElement('small');label.className='st-end-default';label.textContent=choice.dataset.endingMode==='score'?'100 分':choice.dataset.endingMode==='rounds'?'8 題':'輪流';slot.replaceChildren(label);}}
+ $('#drawEndHint').textContent=mode==='legacy'?'依入座順序，每位玩家畫一次。':score?'10–1000 分；當題揭曉後結算，最多 64 題。':'1–64 題；畫者依入座順序輪替。';
+},true);
 $('#stage').addEventListener('click',stageClick);
 document.addEventListener('click',event=>{if(event.target.closest('.ui-room-settings-slot'))stageClick(event);});
 $('#drawActions').addEventListener('click',stageClick);
@@ -527,7 +534,12 @@ async function command(name){
  }catch(error){if(current()){drawFeedback(error.message,'error');toast(error.message);}}
  finally{if(current()){canvasCommandBusy=false;updateCanvasBusy();}}
 }
-$('#undo').onclick=()=>command('undo');$('#clear').onclick=()=>{if(confirm('清空這輪畫布？'))command('clear');};
+$('#undo').onclick=()=>command('undo');$('#clear').onclick=async()=>{
+ if(!canDraw())return;
+ const epoch=state.canvasEpoch,round=state.round;
+ const accepted=window.StitchGameUI?await window.StitchGameUI.confirm({title:'清空這輪畫布？',text:'清空目前的筆跡，所有玩家會看到空白畫布。',label:'清空畫布',danger:true,trigger:$('#clear')}):confirm('清空這輪畫布？');
+ if(accepted&&canDraw()&&state.canvasEpoch===epoch&&state.round===round)command('clear');
+};
 function canDraw(){return !canvasCommandBusy&&!canvasRecovering&&!canvasRenderError&&state?.phase==='drawing'&&state.presenterId===state.me;}
 function rejectPendingDrawing(message){
  for(const draft of localStrokes.values()){draft.failed=true;draft.finished=true;}
