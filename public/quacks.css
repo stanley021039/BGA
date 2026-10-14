@@ -184,3 +184,15 @@ body[data-game-kind=quacks] .summon-front small{font-size:14px;color:#e7d8b2}
 
 .pot-action-dock #controls button[data-ui-icon=star]{background:linear-gradient(145deg,#7b662e,#463b25)!important;color:#fff0b8!important;border-color:#d8bd7a!important}
 .pot-action-dock #controls button[data-ui-icon=ingredient]{background:linear-gradient(145deg,#3c765c,#24453f)!important;color:#dcf2cf!important;border-color:#8fc3a5!important}
+
+/* Equal-size decisions; the kettle begins at the top of its own panel. */
+body[data-game-kind=quacks] .cauldron-panel{position:relative;padding-top:8px!important}
+.pot-bag-dock{position:absolute;right:12px;top:10px;z-index:2}
+.pot-bag-dock .bag-button{min-width:58px;max-width:64px;padding:4px;gap:0;border-radius:14px}
+.pot-details .pot-toolbar{display:block}.pot-details .pot-tabs{margin:7px 0}
+.pot-action-dock #controls .quacks-dock-button:is(.portrait-action,.potion-action){width:66px!important;flex:0 0 66px;height:64px;min-height:64px;border-radius:14px!important}
+.portrait-action.draw-action::after{font-size:10px}
+body[data-quacks-skin=neon] #game .fortune[data-timing=immediate]{background:linear-gradient(145deg,#56366e,#30233f)!important;border-color:#b890dc!important;border-left-color:#c59bf1!important}
+body[data-quacks-skin=neon] #game .fortune[data-timing=round]{background:linear-gradient(145deg,#294f72,#1b3049)!important;border-color:#7faed0!important;border-left-color:#9bcced!important}
+.ingredient-purchase[data-selected=true]{outline:2px solid #bae6bb;outline-offset:-3px;background:#305647!important}
+.ingredient-purchase[data-selected=true]::after{content:'✓';color:#dcffd6;font-weight:900}

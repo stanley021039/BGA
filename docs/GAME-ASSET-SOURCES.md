@@ -35,3 +35,6 @@
 2026-10-14 郎中人物按鈕改使用者附件＋內建image_gen輕微Q化，字幕還要爽爽；哭哭圖原檔保留並以CSS只顯示左半。原創SVG手勢已退出這兩個操作，PNG來源／提示詞／保存路徑見[素材規格](specs/QUACKS-PORTRAIT-ASSETS.md)。不把附件人物宣稱本站原創或CC素材。
 
 2026-10-14：兩段新的抽藥／抽卡WAV由 tools/generate-quacks-sounds.cjs 原創合成，沒有第三方取樣；公開素材與種子／hash見 public/assets/game-sounds/quacks-manifest.json。既有爆炸檔位元組保持一致，人物PNG未重製。
+
+
+2026-10-14：郎中抽卡／抽藥來源改為使用者提供抽卡.mp3與抽藥.mp3，經裁切、低通與峰值限制後輸出WAV。取代上一輪「原創合成抽卡／抽藥」現況；爆炸仍原創。來源hash與參數在public/assets/game-sounds/quacks-manifest.json；不收錄原始38秒錄音、私人路徑或憑證。詳細來源／驗證／權利未核對限制見[規格](specs/QUACKS-CART-CUES-SETUP.md)。

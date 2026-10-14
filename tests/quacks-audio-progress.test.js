@@ -20,9 +20,9 @@ test('card and each private extra draw cue play once, in order, independently of
 test('baseline, reconnection, hidden pages and round changes consume events without old queued playback',()=>{
  const f=audioFixture(),old=f.state(f.events(2),{fortuneRevealId:'old'});f.cues.update(old,false);f.cues.update(old,true);assert.equal(f.calls.length,0);f.cues.update(f.state(f.events(5)),true);assert.equal(f.calls.length,1);f.hide();f.tick(1000);assert.equal(f.calls.length,1);f.cues.update(f.state(f.events(6)),true);f.cues.update(f.state(f.events(6),{roundId:'r2'}),false);assert.equal(f.calls.length,1);f.cues.destroy();
 });
-test('new original cue waveforms match their manifest and have finite bounded samples and faded edges',()=>{
+test('user-supplied cue waveforms match their manifest and have finite bounded samples and faded edges',()=>{
  const manifest=JSON.parse(fs.readFileSync('public/assets/game-sounds/quacks-manifest.json','utf8'));
- for(const [cue,ms]of [['ingredient',210],['card',460]]){const meta=manifest[cue],buf=fs.readFileSync('public/assets/game-sounds/'+meta.file);assert.equal(meta.durationMs,ms);assert.equal(buf.length,44+ms*48);assert.equal(buf.toString('ascii',0,4),'RIFF');assert.equal(meta.sha256,crypto.createHash('sha256').update(buf).digest('hex'));assert.equal(buf.readInt16LE(44),0);assert.equal(buf.readInt16LE(buf.length-2),0);assert.ok(meta.peak>1000&&meta.peak<15000);}
+ for(const [cue,ms]of [['ingredient',650],['card',1500]]){const meta=manifest[cue],buf=fs.readFileSync('public/assets/game-sounds/'+meta.file);assert.equal(meta.durationMs,ms);assert.equal(buf.length,44+ms*48);assert.equal(buf.toString('ascii',0,4),'RIFF');assert.equal(meta.sha256,crypto.createHash('sha256').update(buf).digest('hex'));assert.equal(buf.readInt16LE(44),0);assert.equal(buf.readInt16LE(buf.length-2),0);assert.ok(meta.peak>1000&&meta.peak<15000);}
 });
 
 
