@@ -78,7 +78,25 @@
  emoteButton.onclick=()=>{if(!emojiPicker.hidden){closeEmoji();return;}emojiPicker.hidden=false;emoteButton.setAttribute('aria-expanded','true');emojiPopover?.sync();emojiPicker.querySelector('button:not(:disabled)')?.focus();};
  document.addEventListener('click',event=>{if(!emojiPopover&&!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();});
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}});
- fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiChoices.append(button);}}).catch(error=>{emojiChoices.textContent=error.message;});
+ fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{
+  const stitch=document.body.dataset.uiTemplate&&document.body.dataset.gameKind==='draw';
+  if(!stitch){for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiChoices.append(button);}return;}
+  const featured=[['😂','笑死'],['👏','神作'],['🔥','熱血'],['🤔','思考'],['😱','崩潰'],['👍','厲害'],['❤️','喜歡'],['🎉','恭喜'],['💩','畫啥呢'],['🤡','小丑'],['🚀','起飛'],['💡','靈光'],['🎨','畫工'],['💯','滿分'],['👻','抓到了'],['🕶️','淡定'],['👀','圍觀'],['🤯','震驚'],['🤝','同意'],['🎯','命中'],['⏳','快點'],['🤐','保密'],['🍿','爆米花'],['🏆','MVP']].filter(([value])=>emojis.includes(value));
+  const tabs=element('div','st-emote-tabs'),all=element('div','st-emote-panel'),characterPanel=element('div','st-emote-panel'),phrases=element('div','st-emote-panel'),footer=element('div','st-emote-footer'),sendBubble=element('button','st-button st-primary','發送泡泡');sendBubble.type='button';window.GameUI?.decorateButton(sendBubble,'send',{label:'發送泡泡'});
+  emojiHeading.textContent='表情互動面板';emojiPicker.replaceChildren(emojiHeading,tabs,all,characterPanel,phrases,footer);all.append(emojiChoices);characterPanel.append(expressionHeading,expressions);footer.append(sendBubble);
+  tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','表情分類');let selected='🎨';
+  const extra=element('details','st-emote-more'),extraTitle=element('summary','','更多表情'),extraGrid=element('div','shared-emoji-choices');extra.append(extraTitle,extraGrid);all.append(extra);
+  for(const [value,label]of [...featured,...emojis.filter(value=>!featured.some(([item])=>item===value)).map(value=>[value,value])]){
+   const choice=element('button','st-emote-choice');choice.type='button';choice.dataset.emoji=value;choice.setAttribute('aria-label','選擇 '+value+' '+label);choice.setAttribute('aria-pressed',String(value===selected));choice.title=label;choice.append(element('span','st-emote-glyph',value),element('small','',label));
+   choice.onclick=()=>{selected=value;for(const node of all.querySelectorAll('[data-emoji]'))node.setAttribute('aria-pressed',String(node===choice));};
+   (featured.some(([item])=>item===value)?emojiChoices:extraGrid).append(choice);
+  }
+  for(const phrase of ['💬 太抽象了！','💬 肯定是那個吧？','💬 加油快畫完！']){const b=element('button','st-button',phrase);b.type='button';b.onclick=()=>{window.SharedChat?.compose(phrase);closeEmoji(true);};phrases.append(b);}
+  const panels=[all,characterPanel,phrases];
+  function selectTab(index){panels.forEach((p,i)=>p.hidden=i!==index);[...tabs.children].forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;});footer.hidden=index!==0;}
+  ['全部表情 ('+featured.length+')','動態肢體','桌遊吐槽'].forEach((label,index)=>{const tab=element('button','',label);tab.type='button';tab.id='stEmoteTab'+index;tab.setAttribute('role','tab');panels[index].id='stEmotePanel'+index;panels[index].setAttribute('role','tabpanel');panels[index].setAttribute('aria-labelledby',tab.id);tab.setAttribute('aria-controls',panels[index].id);tab.onclick=()=>selectTab(index);tab.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?2:(index+(event.key==='ArrowRight'?1:2))%3;selectTab(next);tabs.children[next].focus();};tabs.append(tab);});selectTab(0);
+  sendBubble.onclick=async()=>{if(await send({kind:'emoji',emoji:selected},`已送出 ${selected} emoji 彈幕`,sendBubble))closeEmoji(true);};
+ }).catch(error=>{emojiChoices.textContent=error.message;});
  let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false;
  const barrages=MotionPolicy.createBarrageController((item,lane,{moving,finish})=>{
   const bubble=element('div','game-barrage','');
@@ -182,6 +200,7 @@
  q('#shared-barrage').onsubmit=async event=>{event.preventDefault();const input=q('#shared-barrage input'),message=input.value.trim();if(!message)return;if([...message].length>40){feedback('文字彈幕最多 40 字','error');return;}const builtinFrameId=window.BarrageFrames?.get().selected;if(await send({kind:'barrage',message,...(builtinFrameId?{builtinFrameId}:{})},'文字彈幕已送出',q('#shared-barrage button[type=submit]'))&&input.value.trim()===message)input.value='';};
  q('#shared-toggle').onclick=()=>{const expanded=panel.classList.toggle('expanded');q('#shared-toggle').setAttribute('aria-expanded',String(expanded));q('#shared-toggle').textContent=expanded?'收合互動':'表情／彈幕';};
  window.addEventListener('focus',()=>{if(state){nextLoad=0;loadExpressions();}});
+ window.addEventListener('profile-updated',()=>{loaded=false;nextLoad=0;if(state)loadExpressions();});
  if(!window.RoomControls){
  let leaving=false;
  const leaveDialog=document.createElement('dialog');leaveDialog.className='ui-dialog room-leave-dialog';leaveDialog.setAttribute('aria-labelledby','room-leave-title');

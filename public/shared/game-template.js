@@ -131,6 +131,7 @@
    const component=dialogPanel({title:'下一局設定',titleId:'tplNextSettingsTitle',className:'tpl-settings-dialog',closeLabel:'關閉下一局設定'});
    const dialog=component.root,body=component.body;body.classList.add('tpl-settings-dialog__body');
    const trigger=button({label:'下一局設定',icon:'settings',onClick:()=>ui.openDialog(dialog,trigger)});
+   trigger.dataset.templateNextSettings='';
    document.querySelector('.game-toolbar nav')?.append(trigger);nextSettings={dialog,body,trigger};
   }
   if(nextSettings.trigger.hidden)nextSettings.trigger.hidden=false;return nextSettings.body;
@@ -139,7 +140,9 @@
  function arrangeWaiting(layout,waiting=true){
   if(!document.body.dataset.uiTemplate||document.body.dataset.gameKind!=='draw'||!layout)return;
   const chat=layout.querySelector('.ui-room-chat-slot')||waitingChat?.dialog.querySelector('.ui-room-chat-slot');
-  if(!waiting){if(waitingChat?.dialog.open)waitingChat.dialog.close();if(chat&&chat.parentElement!==layout)layout.append(chat);return;}
+  // Move the complete controller host; its internal settings slot belongs to RoomControls.
+  const settings=layout.querySelector('.ui-room-waiting-controls'),guestSide=layout.querySelector('.st-waiting-guest-aside');
+  if(!waiting){if(waitingChat?.dialog.open)waitingChat.dialog.close();if(chat&&chat.parentElement!==layout)layout.append(chat);if(settings&&settings.parentElement!==layout)layout.append(settings);if(guestSide&&!guestSide.hidden)guestSide.hidden=true;return;}
   let center=layout.querySelector('.tpl-waiting-center');
   if(!center){center=element('div',{className:'tpl-waiting-center tpl-stack'});layout.append(center);}
   const hero=layout.querySelector(':scope>.room-waiting-template');if(hero)center.append(hero);
@@ -150,9 +153,26 @@
    const footer=element('div',{className:'tpl-waiting-footer'});footer.append(trigger,element('span',{text:'房間閒聊與表情'}));center.append(footer);
    waitingChat={dialog,body:component.body,trigger};
   }
-  if(chat&&chat.parentElement!==waitingChat.body)waitingChat.body.append(chat);
+  if(document.body.dataset.drawHost==='false'){
+   const side=guestSide||element('aside',{className:'st-waiting-guest-aside'});if(!guestSide)layout.append(side);if(side.hidden)side.hidden=false;
+   if(settings&&settings.parentElement!==side)side.append(settings);if(chat&&chat.parentElement!==side)side.append(chat);
+  }else{
+   if(settings&&settings.parentElement!==layout)layout.append(settings);if(guestSide&&!guestSide.hidden)guestSide.hidden=true;
+   if(chat&&chat.parentElement!==waitingChat.body)waitingChat.body.append(chat);
+  }
  }
- ui.Template={objects:{element,button,frame,characterMarkup},compositions:{panel,disclosure,dialogPanel},patterns:{grid,updateRoster,measureBoard,arrangeWaiting,settingsHost,openSettings},pages:{mountLobby,mountDrawing}};
+ function podium({players,winners=[],correctCounts={}}){
+  const root=element('div',{className:'tpl-podium'}),top=element('ol',{className:'stage-player-cards st-podium-cards'}),rest=element('ol',{className:'st-ranking-list'});let rank=0,previous=null;
+  players.forEach((player,index)=>{if(player.score!==previous)rank=index+1;previous=player.score;
+   const card=element('li',{className:index<3?'stage-player-card st-podium-cell':'st-ranking-row'});card.dataset.rank=rank;card.dataset.podium=index+1;card.dataset.winner=String(winners.includes(player.id));
+   if(winners.includes(player.id))card.classList.add('stage-winner');
+   const image=element('img',{className:'stage-avatar',attrs:{src:player.avatar||(player.bot?'/assets/characters/sunny-neutral.png':'/assets/characters/traveler-neutral.png'),alt:''}}),name=element('b');name.innerHTML=ui.playerName(player.name);const score=element('strong',{text:player.score+' 分'});
+   card.append(image,name,score);
+   if(index<3){const base=element('div',{className:'st-podium-base'});base.append(element('span',{className:'stage-card-rank',text:rank,attrs:{'aria-label':'排名 '+rank}}),element('span',{className:'st-podium-medal',text:winners.includes(player.id)?winners.length>1?'共同優勝':'CHAMPION':index===1?'SILVER':'BRONZE'}));card.append(base);top.append(card);}
+   else{card.prepend(element('span',{text:'#'+rank}));card.append(element('small',{text:'猜中 '+(correctCounts[player.id]||0)+' 次'}));rest.append(card);}
+  });root.append(top);if(players.length>3){root.append(element('h3',{text:'完整排名席次'}),rest);}return root.outerHTML;
+ }
+ ui.Template={objects:{element,button,frame,characterMarkup},compositions:{panel,disclosure,dialogPanel,podium},patterns:{grid,updateRoster,measureBoard,arrangeWaiting,settingsHost,openSettings},pages:{mountLobby,mountDrawing}};
  if(document.body.dataset.uiTemplate){if(document.body.dataset.gameKind==='draw')mountDrawing();else mountLobby();}
  window.addEventListener('pagehide',event=>{if(!event.persisted)gate?.dispose();});
 })();

@@ -28,7 +28,7 @@
   return result;
  }
 
- async function request(route,data,{code,room,session,onKicked,signal}){
+ async function request(route,data,{code,room,session,onKicked,onClosed,signal}){
   const post=data!==undefined;
   const url='/api/'+route+(post?'':'?code='+encodeURIComponent(code||''));
   const options={
@@ -46,7 +46,7 @@
    if(error?.kind==='http'){
     if(error.status===401&&session)location.replace('/login?next='+encodeURIComponent('/'+room+'/'+code));
     if(error.code==='KICKED'&&session)onKicked?.();
-    if(['ROOM_NOT_FOUND','NOT_SEATED'].includes(error.code)&&session){window.RoomReconnect?.forget(code);location.replace('/?closedRoom='+encodeURIComponent(code)+'&game='+(room==='race'?'thunder':room));}
+    if(['ROOM_NOT_FOUND','NOT_SEATED'].includes(error.code)&&session){window.RoomReconnect?.forget(code);if(onClosed)onClosed(error);else location.replace('/?closedRoom='+encodeURIComponent(code)+'&game='+(room==='race'?'thunder':room));}
    }
    throw error;
   }

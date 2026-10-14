@@ -55,3 +55,21 @@
 - [Digital.gov reusable patterns](https://digital.gov/guides/research-collaboration/designing/reusable-patterns)：以共用模式與使用規範承接頁面。
 
 採用分層原則而非搬入外部框架，沿用本站原生 JavaScript 與共用 GameUI。
+
+
+## 2.5.0 組件細分與責任
+
+此版沿用 [Thinking in React](https://react.dev/learn/thinking-in-react) 的設計拆分方法：從畫面劃分父子組件、讓資料往下傳、把互動放在擁有狀態的控制器。本站以原生 DOM factory 與既有 controller 實作這個方法，未增加框架依賴。
+
+| 層級 | 實作 | 子物件／責任 |
+|---|---|---|
+| Tokens | template-tokens、stitch-fidelity | 配對亮暗色、字體、間距、欄寬、高度槽、動態時間 |
+| Objects | GameUI registry、Template.objects | text、icon、button、character、field、status；中文名稱及鍵盤／觸控說明 |
+| Compositions | Template.compositions | panel 的 header/body/footer；disclosure、dialogPanel；podium 的 portrait/name/score/base/medal 及完整名次 |
+| Patterns | Template.patterns | roster/stage/chat grid；角色反應；measureBoard；完整宿主 portal 及設定出口 |
+| Page adapters | Template.pages、StitchGameUI | 大廳卡牌＋入房；等待室、階段列、工具工作台、表情分頁、摘要與精彩畫作 |
+| State owners | RoomControls、RoomWaiting、DrawResults、draw controller | 原節點、原權限、公開快照、sender／ACK／播放時序與伺服器計分 |
+
+事件由組件交回原狀態持有者，不能用匯出原型的假資料引擎取代遊戲。移動元件時保留完整 owner 宿主，不能搬走 owner 的內部 slot；原 input／canvas 不重建。畫廊空篩選清除選擇，明確點選作品可重設篩選。桌機各階段共用欄寬，捲軸占位保持穩定；手機／短視窗的場景回到文件流，必要內容不能被高度裁切。
+
+Stitch 圖片與字型只是渲染資源，來源及授權與執行邏輯分開。原 actor 圖、扇形卡牌與完整工具保留；示意規則改為實際規則。當前能力及實際觀察範圍見 [2.5.0 驗收](../STITCH-UI-IMPLEMENTATION.md)。

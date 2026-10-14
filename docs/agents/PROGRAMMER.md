@@ -566,3 +566,8 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 
 ## 2026-10-14 Stitch 共用模板
 補 dialogPanel、等待室聊天与下局設定 portal；不重建有事件的欄位或畫布。hidden／高度樣式僅於值改變時更新，避免觀察器反覆排程；畫布依實際 grid 槽量測。原生對局／收藏／重開与畫筆取樣證據見 STITCH-UI-IMPLEMENTATION.md，未更改同步引擎、資料 schema 或原站計分。
+
+
+## 2026-10-14 Stitch 功能與版面 2.5.0
+
+2.5.0 使用每次已接受快照更新 Stitch adapter，避免只在大場景重建時更新就緒／狀態。等待室搬完整 controls 宿主，保留內部 settings slot；新 ready／skip／transfer-host／解散／取消個人收藏均經後端權限及必要的 epoch 檢查。公開 snapshot 維持不可變與八輪限制，原計分與 DB schema 不變；獨立 PNG／ZIP encoder 與小型 matchSummary 補齊真實功能。 詳 [本輪證據與限制](../STITCH-UI-IMPLEMENTATION.md)。

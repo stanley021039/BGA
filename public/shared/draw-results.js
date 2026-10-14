@@ -74,7 +74,7 @@
    });
    changed();return job.promise;
   }
-  return {update,select,save,vote,voteView,load,view,reset};
+  return {update,select,save,vote,voteView,load,view,reset,forgetSave(id){saves.delete(id);changed();}};
  }
  function votePresentation({summary,vote,pending,error,recent}){
   const unavailable=!summary?.answer?'這輪未選題，無法投票。':!vote?recent?'投票資訊尚未同步，請稍候。':'這輪已不在最近 8 輪，無法投票。':!vote.canVote&&!vote.voted&&!vote.banned?'你在這輪揭曉後才加入，沒有投票權。':'';
@@ -117,18 +117,61 @@
    },
    onChange:render
   });
+  const tactile=Boolean(document.body.dataset.uiTemplate);
+  let filter='all',myId=null,knownSaved=new Set(),galleryBusy=false;
+  let filters,favorite,downloadButton,exportButton,exportStatus;
+  if(tactile){
+   filters=document.createElement('nav');filters.className='st-gallery-filters';filters.setAttribute('aria-label','篩選公開畫作');
+   for(const [value,label]of [['all','最近全部'],['mine','我作畫的'],['saved','已收藏']]){
+    const button=document.createElement('button');button.type='button';button.dataset.filter=value;button.textContent=label;
+    button.onclick=()=>{filter=value;listSignature='';render(store.view());const first=filtered(store.view())[0];if(first&&!filtered(store.view()).some(item=>item.resultId===store.view().selectedId))store.select(first.resultId);};filters.append(button);
+   }
+   dialog.querySelector('.draw-results-head').after(filters);
+   const actions=$('drawResultSave').parentElement;
+   downloadButton=document.createElement('button');downloadButton.type='button';downloadButton.textContent='下載畫作 PNG';downloadButton.className='st-art-download';
+   favorite=document.createElement('button');favorite.type='button';favorite.className='st-art-favorite';
+   exportButton=document.createElement('button');exportButton.type='button';exportButton.textContent='匯出畫作集';exportButton.className='st-art-export';
+   exportStatus=document.createElement('p');exportStatus.className='st-export-status';exportStatus.setAttribute('role','status');actions.prepend(downloadButton,favorite);actions.append(exportStatus);filters.append(exportButton);
+   downloadButton.onclick=()=>withExport(async()=>{const snapshot=store.view().snapshot;if(!snapshot)throw Error('畫作仍在載入');window.ArtworkExport.download(await window.ArtworkExport.png(snapshot),window.ArtworkExport.name(snapshot));});
+   exportButton.onclick=()=>exportAll();
+   favorite.onclick=async()=>{
+    const view=store.view(),id=view.selectedId;if(!id||galleryBusy)return;
+    if(!knownSaved.has(id))return store.save();
+    if(!await window.StitchGameUI.confirm({title:'取消這幅畫的收藏？',text:'這會移除私人素材庫中的收藏；房間公開畫作與得分會保留。',label:'取消收藏',danger:true,trigger:favorite}))return;
+    galleryBusy=true;render(store.view());
+    try{const state=await request('/api/draw/result/unsave',{code:view.room,resultId:id,confirmed:true});knownSaved.delete(id);store.forgetSave(id);onState?.(state);}
+    catch(error){message(exportStatus,error.message,'error');}
+    finally{galleryBusy=false;render(store.view());}
+   };
+  }
+  function filtered(view){return view.results.filter(item=>filter==='mine'?item.artist?.id===myId:filter==='saved'?knownSaved.has(item.resultId):true);}
+  async function withExport(job){if(galleryBusy)return;galleryBusy=true;render(store.view());try{await job();message(exportStatus,'畫作已匯出。','success');}catch(error){message(exportStatus,error.message,'error');}finally{galleryBusy=false;render(store.view());}}
+  function exportAll({currentRun=false}={}){return withExport(async()=>{
+   const view=store.view(),list=currentRun?view.results.filter(item=>item.gameRunId===view.gameRunId):filtered(view),entries=[];
+   if(!list.length)throw Error('目前沒有可以匯出的公開畫作');
+   for(const item of list){const snapshot=await store.load(item.resultId);entries.push({name:window.ArtworkExport.name(snapshot),blob:await window.ArtworkExport.png(snapshot)});}
+   window.ArtworkExport.download(await window.ArtworkExport.zip(entries),'你畫我猜_畫作集.zip');
+  });}
   function message(node,text,kind='info'){if(window.GameUI)window.GameUI.setStatus(node,text,{kind});else{node.textContent=text;node.dataset.kind=kind;}}
   function renderList(view){
-   const next=JSON.stringify([view.results.map(item=>item.resultId),view.selectedId,view.gameRunId]);if(listSignature===next)return;listSignature=next;
+   const next=JSON.stringify([view.results.map(item=>item.resultId),view.selectedId,view.gameRunId,filter,[...knownSaved]]);if(listSignature===next)return;listSignature=next;
    $('drawResultList').replaceChildren();
-   for(const result of view.results){
+   for(const result of tactile?filtered(view):view.results){
     const button=document.createElement('button'),round=document.createElement('strong'),answer=document.createElement('span'),artist=document.createElement('small');
     button.type='button';button.className='draw-result-choice';button.dataset.resultId=result.resultId;button.setAttribute('aria-pressed',String(result.resultId===view.selectedId));
     round.textContent=(result.gameRunId===view.gameRunId?'本局':'先前對局')+' · 第 '+result.round+' 輪';answer.textContent=result.answer||'未選定題目';artist.textContent=result.artist?.name||'畫者';
+    if(knownSaved.has(result.resultId))artist.textContent+=' · ★ 已收藏';
     button.append(round,answer,artist);button.addEventListener('click',()=>store.select(result.resultId));$('drawResultList').append(button);
    }
+   if(tactile&&!filtered(view).length){const empty=document.createElement('p');empty.className='st-filter-empty';empty.textContent='此篩選目前沒有畫作。';$('drawResultList').append(empty);}
   }
   function render(view){
+   if(tactile&&view.save?.status==='saved')knownSaved.add(view.selectedId);
+   if(tactile&&view.selectedId&&!filtered(view).some(item=>item.resultId===view.selectedId)){store.select(filtered(view)[0]?.resultId||null);return;}
+   if(filters){for(const button of filters.querySelectorAll('[data-filter]')){const mode=button.dataset.filter,count=view.results.filter(item=>mode==='mine'?item.artist?.id===myId:mode==='saved'?knownSaved.has(item.resultId):true).length;button.setAttribute('aria-pressed',String(mode===filter));button.textContent=({all:'最近全部',mine:'我作畫的',saved:'已收藏'})[mode]+' ('+count+')';}
+    favorite.textContent=knownSaved.has(view.selectedId)?'★ 已收藏 · 取消收藏':'☆ 收藏這幅畫';favorite.setAttribute('aria-pressed',String(knownSaved.has(view.selectedId)));favorite.disabled=!view.snapshot||view.loading||Boolean(view.savingId)||galleryBusy;
+    downloadButton.disabled=!view.snapshot||view.loading||galleryBusy;exportButton.disabled=!filtered(view).length||galleryBusy;
+   }
    trigger.disabled=!view.results.length;trigger.textContent='最近畫作'+(view.results.length?' · '+view.results.length:'');
    renderList(view);
    const info=view.summary;$('drawResultEmpty').hidden=Boolean(info);$('drawResultBody').hidden=!info;
@@ -167,8 +210,9 @@
    finally{if(token===painting){paintBusy=false;renderCanvasStatus();}}
   }
   function open(id,opener=trigger){
+   if(tactile&&id&&!filtered(store.view()).some(item=>item.resultId===id)){filter='all';listSignature='';}
    if(window.GameUI?.openDialog)window.GameUI.openDialog(dialog,opener);else if(!dialog.open)dialog.showModal();
-   return store.select(id||store.view().selectedId||store.view().results[0]?.resultId);
+   return store.select(id||store.view().selectedId||(tactile?filtered(store.view()):store.view().results)[0]?.resultId||null);
   }
   trigger.addEventListener('click',()=>open());
   $('closeDrawResults').addEventListener('click',()=>dialog.close());
@@ -179,7 +223,7 @@
   dialog.addEventListener('close',()=>{painting++;paintedSnapshot=null;paintBusy=false;renderer.reset();});
   window.addEventListener('pagehide',()=>{painting++;renderer.reset();for(const encoder of encoders)encoder.reset();store.reset();});
   window.GameUI?.decorateButton($('closeDrawResults'),'close',{iconOnly:true,label:'關閉最近畫作'});
-  return {update(state){store.update(state);if(dialog.open&&!store.view().selectedId&&store.view().results.length)store.select();},open,save:store.save,vote:store.vote,votePresentation:id=>votePresentation(store.voteView(id)),reset(){painting++;renderer.reset();for(const encoder of encoders)encoder.reset();store.reset();},store};
+  return {update(state){myId=state.me;if(tactile&&Array.isArray(state.savedResultIds))knownSaved=new Set(state.savedResultIds);store.update(state);if(tactile)render(store.view());if(dialog.open&&!store.view().selectedId&&store.view().results.length)store.select();},open,exportAll,save:store.save,vote:store.vote,votePresentation:id=>votePresentation(store.voteView(id)),reset(){painting++;renderer.reset();for(const encoder of encoders)encoder.reset();knownSaved.clear();store.reset();},store};
  }
  window.DrawResults={createStore,mount,renderVote,votePresentation};
 })();

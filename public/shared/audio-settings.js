@@ -27,6 +27,8 @@
   }catch{if(clip)stopEffect(clip);onError?.();}
  }
  function playEffect(kind,options={}){
+  // Reuse the existing short double tone; warning is a distinct once-per-round cue.
+  if(kind==='countdown-warning')kind='turn';
   const cues={'bluff-reaction':['/assets/game-sounds/bluff-reaction.mp3',1700],confirm:['/assets/gift-sounds/confirmation_001.wav',10000],reveal:['/assets/gift-sounds/open_001.wav',10000],turn:['/assets/game-sounds/turn.wav',320],correct:['/assets/game-sounds/correct.wav',220],'dice-roll':['/assets/game-sounds/dice-roll.wav',650],shot:['/assets/game-sounds/shot.wav',280],slam:['/assets/game-sounds/slam.wav',350],explosion:['/assets/game-sounds/quacks-explosion.wav',900],nitro:['/assets/game-sounds/nitro.wav',500],skid:['/assets/game-sounds/skid.wav',480]};
   const cue=Object.hasOwn(cues,kind)?cues[kind]:null;
   if(cue)return playClip(cue[0],cue[1],{onError:options.onError,onStop:options.onStop,game:true,maxStartDelayMs:kind==='confirm'||kind==='reveal'?10000:1000});

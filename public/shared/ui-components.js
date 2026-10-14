@@ -1,6 +1,13 @@
 (()=>{
  const paths={
   chat:'<path d="M4 4h16v12H9l-5 4V4Z M8 8h8M8 12h5"/>',
+  flag:'<path d="M5 22V3m0 1h8l2 3h5v10h-7l-2-3H5"/>',
+  crown:'<path d="m3 6 4 5 5-8 5 8 4-5-2 14H5L3 6Z"/>',
+  more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  brush:'<path d="m14 4 6 6M8 15 19 4a2.8 2.8 0 0 1 4 4L12 19M8 15c-4-1-5 2-5 6 4 0 7-1 7-4Z"/>',
+  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m9 10 6-3M9 14l6 3"/>',
+  download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+  timer:'<circle cx="12" cy="14" r="8"/><path d="M12 6V3M9 2h6M17 6l2-2M12 10v5"/>',
   emoji:'<circle cx="12" cy="12" r="9"/><path d="M8 14a4 4 0 0 0 8 0M8.5 8.5h.01M15.5 8.5h.01"/>',
   frame:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M17 15h.01"/>',
   clear:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/>',
