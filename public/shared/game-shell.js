@@ -185,7 +185,7 @@
  if(!window.RoomControls){
  let leaving=false;
  const leaveDialog=document.createElement('dialog');leaveDialog.className='ui-dialog room-leave-dialog';leaveDialog.setAttribute('aria-labelledby','room-leave-title');
- leaveDialog.innerHTML='<h2 id="room-leave-title">確定離開這個房間？</h2><p>離開後會返回遊戲大廳。</p><div class="ui-control-row"><button type="button" class="ui-button primary" id="room-leave-confirm">確認離開</button><button type="button" class="ui-button secondary" id="room-leave-cancel">留在房間</button></div>';
+ leaveDialog.innerHTML='<h2 id="room-leave-title">確定離開這個房間？</h2><img class="ui-room-leave-thumbnail" src="/assets/room-leave-thumbnail.jpg" width="640" height="361" alt="離別場景，字幕：多麼虎頭蛇尾的結局"><p>離開後會返回遊戲大廳。</p><div class="ui-control-row"><button type="button" class="ui-button primary" id="room-leave-confirm">確認離開</button><button type="button" class="ui-button secondary" id="room-leave-cancel">留在房間</button></div>';
  window.GameUI?.frameDialog?.(leaveDialog);
  window.GameUI?.decorateButton(leaveDialog.querySelector('#room-leave-confirm'),'leave',{label:'確認離開'});
  window.GameUI?.decorateButton(leaveDialog.querySelector('#room-leave-cancel'),'close',{label:'留在房間'});
