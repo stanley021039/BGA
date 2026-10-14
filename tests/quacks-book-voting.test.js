@@ -51,7 +51,7 @@ test('every face reserves description space while only the browsed effect is exp
 test('effect copy names neighboring opponents and the purple chips being discarded, with arrow mappings',()=>{
  const {EFFECTS}=require('../src/games/quacks-catalog');
  for(const effects of Object.values(EFFECTS))for(const text of effects)assert.equal(text.includes('>'),false);
- for(const text of EFFECTS.black.slice(0,4)){assert.match(text,/與左、右相鄰的對手比較。/);assert.doesNotMatch(text,/不跳過/);}
+ for(const text of EFFECTS.black.slice(0,4)){assert.match(text,/與左、右相鄰的玩家比較。/);assert.doesNotMatch(text,/不跳過/);}
  assert.match(EFFECTS.purple[3],/南瓜、白色炸彈不能升級。/);
  assert.match(EFFECTS.purple[1],/永久棄掉大釜中的 1–3 片幽靈氣息/);
  assert.match(EFFECTS.purple[1],/棄 2 片 → 花園蜘蛛 1、烏鴉頭骨 2、3 分、水滴前進 1 格/);
