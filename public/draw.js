@@ -173,7 +173,7 @@ function render(live=false){
   actions=waitingActions(s);
  }else if(s.phase==='drawing'){
   const artist=s.presenterId===s.me,eligible=s.participantIds.includes(s.me);
-  actions=`<p>${artist?'在中央畫布作畫；倒數結束後自動揭曉。':'在中央的猜題框輸入答案；倒數結束後自動揭曉。'}</p>`;
+  actions='';
    if(!eligible&&!artist)actions='<p>下一輪起可以猜題。</p>';
   }else if(s.phase==='choosing'){
    actions=s.presenterId===s.me?`<p>選一題開始作畫，題目只有你看得到。</p><div class="ui-game-word-choices">${s.candidates.map(word=>`<button type="button" data-word="${esc(word.id)}"><small>${esc(word.topicLabel||'綜合')} · ${esc(word.category)} · ${[...word.title].length} 字</small><strong>${esc(word.title)}</strong></button>`).join('')}</div>`:`<p>等待 ${esc(nameOf(s.presenterId))} 選題。</p>`;
