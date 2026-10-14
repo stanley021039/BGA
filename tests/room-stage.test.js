@@ -23,3 +23,15 @@ test('bluff places the live reveal with its voting controls in the middle and fr
  f.update(false);assert.equal(players.parentElement.className,'room-stage-roster');assert.equal(reveal.closest('section').parentElement.className,'room-stage-work');
  f.update(true);assert.equal(players.parentElement,original);f.update(false);assert.equal(f.document.querySelector('#roundReveal'),reveal);
 });
+
+test('pot action docking never pulls saved settings out of the waiting-room grid on polling',()=>{
+ const f=fixture('quacks'),panel=f.document.querySelector('.action-panel'),waiting=f.document.createElement('div');f.root.append(waiting);
+ f.context.$=selector=>f.document.querySelector(selector);f.context.viewedPotId='a';
+ const source=fs.readFileSync('public/quacks.js','utf8');vm.runInContext(source.slice(source.indexOf("const actionPanel=$('#controls')"),source.indexOf('function render(s){')),f.context);
+ waiting.append(panel);f.context.restorePotActions();assert.equal(panel.parentElement,waiting,'initial waiting poll retains settings location');
+ const pot=f.document.createElement('section');pot.className='cauldron-panel';f.root.querySelector('.game-grid').append(pot);
+ f.context.arrangePotActions(f.s);assert.equal(panel.parentElement,pot);assert.equal(panel.hidden,false);f.context.arrangePotActions(f.s);assert.equal(panel.parentElement,pot);
+ f.context.viewedPotId='b';f.context.arrangePotActions(f.s);assert.equal(panel.hidden,true,'actions only appear on the own pot');
+ f.context.restorePotActions();assert.equal(panel.classList.contains('pot-action-dock'),false);
+ waiting.append(panel);f.context.restorePotActions();assert.equal(panel.parentElement,waiting,'saving settings after rematch cannot move the waiting controls again');
+});

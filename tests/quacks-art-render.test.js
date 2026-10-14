@@ -18,3 +18,11 @@ test('scoreboard shows 25 rat locations, one current-round marker and authoritat
  s.round=9;board.update(s,true);assert.equal(svg.querySelector('.current-round').getAttribute('data-round'),'9');assert.notEqual(svg.querySelector('.round-flame').getAttribute('transform'),first);
  s.round=0;board.update(s,false);assert.equal(svg.querySelector('.round-flame').getAttribute('visibility'),'hidden');assert.equal(svg.querySelectorAll('.current-round').length,0);
 });
+
+test('round milestone icons correspond to real ingredient unlocks and the round-six bag addition',()=>{
+ const {art}=fixture(),svg=art.scoreBoard();assert.equal(svg.querySelectorAll('.round-event').length,4);
+ const r=new QuacksRoom('ABCDEF','事件',n=>0),a=r.add('甲');r.add('乙');r.start();
+ for(const [round,color]of [[2,'yellow'],[3,'purple']]){r.round=round-1;assert.equal(r.availableBooks().some(b=>b.color===color),false);r.round=round;assert.equal(r.availableBooks().some(b=>b.color===color),true);assert.equal(art.roundMilestones[round].color,color);}
+ r.round=5;const before=a.bag.filter(c=>c.color==='white'&&c.value===1).length;r.nextRound();assert.equal(a.bag.filter(c=>c.color==='white'&&c.value===1).length,before+1);assert.equal(art.roundMilestones[6].color,'white');
+ assert.equal(svg.querySelector('.round-event').getAttribute('data-milestone'),'2');
+});

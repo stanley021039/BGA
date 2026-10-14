@@ -22,3 +22,10 @@
 
 
 瞎掰王旁觀反應音效：使用者指定 [統神之喔是喔真的假的55555](https://www.youtube.com/watch?v=pezuzuUDvyc)，2026-10-12 依明確要求轉 MP3，約 1.66 秒。非自製、未核對來源授權；只以本機 Audio 播放，不占用 YouTube 共看播放器。檔案 public/assets/game-sounds/bluff-reaction.mp3；轉檔及驗證見 docs/BLUFF-ROUND-FOCUS-PROGRESS.md。
+
+
+## 2026-10-14 郎中暗夜霓光操作
+
+使用者選擇C方向後，霓光面板及藥袋取藥圖示由原生CSS／原創SVG實作；沒有匯入Stitch服務產出的圖。參考公開設計探索介紹：https://blog.google/innovation-and-ai/models-and-research/google-labs/stitch-ai-ui-design/ 。停止手勢取自 Lucide Hand：https://lucide.dev/icons/hand ，原始SVG SHA256 fe3771fa2f0a9a3c7736164c9a855beefacc02548084ac1d6fc8da8a8a9180b0；Copyright (c) 2026 Lucide Icons and Contributors，ISC License，完整聲明保存在 docs/licenses/LUCIDE.txt 與 public/shared/ui-components.js。只是調色／縮放圖示，沒有引入Lucide套件依賴。
+
+2026-10-14：基本版收回白色炸彈的玻璃藥水瓶是本專案原創SVG（QuacksArt.resource potion），與特效藥燒瓶不同；截圖僅原生瀏覽器QA，沒有重用第三方桌遊圖片。

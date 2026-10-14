@@ -71,8 +71,9 @@ function cauldron(s,p,onInspect){
 }
 
 function resource(kind,{size=42,decorative=false}={}){
- const labels={bag:'藥袋',ruby:'紅寶石',rat:'老鼠尾巴',droplet:'液滴',gold:'金女巫幣',copper:'銅女巫幣',silver:'銀女巫幣'},svg=sv('svg',{viewBox:'0 0 80 80',width:size,height:size,class:'quacks-resource '+kind,role:'img','aria-hidden':decorative?'true':'false','aria-label':labels[kind]||kind});
+ const labels={bag:'藥袋',ruby:'紅寶石',rat:'老鼠尾巴',droplet:'液滴',gold:'金女巫幣',copper:'銅女巫幣',silver:'銀女巫幣',potion:'藥水瓶'},svg=sv('svg',{viewBox:'0 0 80 80',width:size,height:size,class:'quacks-resource '+kind,role:'img','aria-hidden':decorative?'true':'false','aria-label':labels[kind]||kind});
  if(kind==='bag'){svg.append(sv('path',{d:'M23 8Q40 1 58 8l-5 15Q78 40 68 66q-26 15-56 0Q1 40 28 23Z',fill:'#ac7642',stroke:'#ecd09a','stroke-width':2}),sv('path',{d:'M28 24Q5 48 23 65M53 24q20 28 3 42M34 23v39',stroke:'#80512e',fill:'none','stroke-width':4,opacity:.6}),sv('path',{d:'M23 20q16 8 33 0M25 26q16 4 31-2',stroke:'#ecbf73',fill:'none','stroke-width':4,'stroke-linecap':'round'}),sv('path',{d:'m42 24 18 10M40 25 22 37',stroke:'#ead29a','stroke-width':3,fill:'none'}),sv('ellipse',{cx:40,cy:8,rx:15,ry:4,fill:'#4e3328'}));}
+ else if(kind==='potion'){svg.append(sv('path',{d:'M29 8h22v19l15 20q14 25-26 27Q0 72 14 47l15-20Z',fill:'#bdd9ef',opacity:.85,stroke:'#eaf7ff','stroke-width':2}),sv('path',{d:'M17 48q23 8 46 0l5 14q-2 10-28 10T12 62Z',fill:'#db64c7',stroke:'#f5b4ed','stroke-width':1.4}),sv('rect',{x:27,y:5,width:26,height:10,rx:3,fill:'#bc9461',stroke:'#f0d3a0','stroke-width':2}),sv('path',{d:'M22 37q-10 14-4 23M33 19v8',fill:'none',stroke:'#fff','stroke-width':4,'stroke-linecap':'round',opacity:.7}),sv('circle',{cx:45,cy:59,r:4,fill:'#f4c8ef',opacity:.8}));}
  else if(kind==='ruby')svg.append(sv('path',{d:'M19 13h42l15 23L40 73 4 36Z',fill:'#d95372',stroke:'#f6b3b0','stroke-width':2}),sv('path',{d:'m19 13 9 23H4m57-23-9 23h24M28 36l12 37 12-37Zm0 0 12-23 12 23',fill:'#f08ba0',stroke:'#932c50','stroke-width':1.6}),sv('path',{d:'m26 20 7-4-6 14-10-2Z',fill:'#fff0de',opacity:.65}));
  else if(kind==='droplet')svg.append(sv('path',{d:'M40 6Q26 28 17 42c-20 38 66 39 46 0Q52 25 40 6Z',fill:'#79bad4',stroke:'#ddf1ec','stroke-width':3}),sv('path',{d:'M27 37q-15 21 5 24',stroke:'#e1f8f1','stroke-width':4,fill:'none','stroke-linecap':'round'}));
  else if(kind==='rat')svg.append(sv('path',{d:'M35 43q-21-22-30 1-10 25 19 24 44 0 46-16',stroke:'#d39fa5','stroke-width':5,fill:'none','stroke-linecap':'round'}),sv('ellipse',{cx:47,cy:40,rx:23,ry:17,fill:'#b9a895'}),sv('circle',{cx:59,cy:27,r:9,fill:'#e0b1aa',stroke:'#9c8a78','stroke-width':3}),sv('path',{d:'m64 35 14 10-13 6',fill:'#b9a895'}),sv('circle',{cx:66,cy:39,r:2.4,fill:'#252d2b'}),sv('circle',{cx:76,cy:45,r:2.5,fill:'#ebabb0'}));
@@ -86,11 +87,22 @@ const ratScores=Object.freeze(Array.from({length:25},(_,i)=>(i+1)*2));
 function markerPositions(p){return {droplet:Math.max(0,p.droplet||0),start:Math.max(0,p.startPosition??p.droplet??0)};}
 function scorePoint(score){return score<=0?{x:20,y:499}:scoreCells[(Math.floor(score)-1)%50];}
 function pawn(color){const g=sv('g',{class:'score-pawn'});g.append(sv('ellipse',{cx:0,cy:5,rx:12,ry:4,fill:'#091719',opacity:.4}),sv('path',{d:'M-10 0-5-14h10L11 0Z',fill:color,stroke:'#f8e4b4','stroke-width':1.4}),sv('circle',{cx:0,cy:-20,r:6,fill:'#eacba3'}),sv('path',{d:'M-7-22 0-37 8-22Z',fill:color,stroke:'#f3d6a2','stroke-width':1.2}),sv('path',{d:'M-5 0-8 4M5 0l8 4',stroke:'#5b432d','stroke-width':3,'stroke-linecap':'round'}));return g;}
+const roundMilestones={
+ 2:{color:'yellow',name:'黃色藥材解鎖',text:'從本回合起可購買黃色曼德拉草；不是直接放入藥袋。'},
+ 3:{color:'purple',name:'紫色藥材解鎖',text:'從本回合起可購買紫色幽靈氣息；不是直接放入藥袋。'},
+ 6:{color:'white',name:'白色炸彈＋1',text:'每人的藥袋加入一片數值1的白色炸彈。'},
+ 9:{name:'最終結算',text:'最後一回合：購物預算每5轉1分、紅寶石每2轉1分、未用女巫幣各2分；特效藥格數直接得分。'}
+};
 function scoreBoard(){
- const svg=sv('svg',{viewBox:'0 0 840 520',class:'score-track',role:'img','aria-label':'1 至 50 分環形記分板；超過 50 分繼續繞圈，總分見下方名單'});
+ const svg=sv('svg',{viewBox:'0 0 840 520',class:'score-track',role:'group','aria-label':'1 至 50 分環形記分板；超過 50 分繼續繞圈，總分見下方名單'});
  svg.append(sv('rect',{x:4,y:4,width:832,height:512,rx:26,fill:'#26392f',stroke:'#b69c70','stroke-width':5}),sv('rect',{x:65,y:69,width:710,height:374,rx:22,fill:'#152c29',stroke:'#7c8261','stroke-width':2}));
  for(let i=0;i<50;i++){const p=scoreCells[i],g=sv('g');g.append(sv('rect',{x:p.x-24,y:p.y-17,width:48,height:34,rx:5,fill:i%5===4?'#d0b477':'#d7d1b2',stroke:'#867c5d','stroke-width':1.2}),sv('text',{x:p.x,y:p.y+5,'text-anchor':'middle','font-family':'serif','font-size':19,'font-weight':i%5===4?'bold':'normal',fill:'#384636'},i+1));if(ratScores.includes(i+1)){const rat=sv('g',{class:'score-rat','aria-label':'第 '+(i+1)+' 分：老鼠尾巴','data-score':i+1,transform:'translate('+(p.x+14)+' '+(p.y-10)+')'});rat.append(sv('ellipse',{cx:0,cy:0,rx:5,ry:3,fill:'#856046'}),sv('circle',{cx:-3,cy:-3,r:2,fill:'#c3a379'}),sv('path',{d:'M4 1q8 8 11 1',fill:'none',stroke:'#856046','stroke-width':1.5}),sv('title',{},'第 '+(i+1)+' 分有一條老鼠尾巴'));g.append(rat);}svg.append(g);}
- for(let i=0;i<9;i++){const x=137+i*69,y=160+(i%2)*53;const lantern=sv('g',{'data-round':i+1,class:'round-lantern'});lantern.append(sv('path',{d:'M'+x+' 73v'+(y-90),stroke:'#a39163','stroke-width':2}),sv('ellipse',{cx:x,cy:y,rx:26,ry:32,fill:'#634e33',stroke:'#d0b378','stroke-width':2}),sv('text',{x,y:y+7,'text-anchor':'middle',fill:'#e7d49f','font-family':'serif','font-size':23},i+1));svg.append(lantern);}
+ for(let i=0;i<9;i++){const x=137+i*69,y=160+(i%2)*53;const lantern=sv('g',{'data-round':i+1,class:'round-lantern'});lantern.append(sv('path',{d:'M'+x+' 73v'+(y-90),stroke:'#a39163','stroke-width':2}),sv('ellipse',{cx:x,cy:y,rx:26,ry:32,fill:'#634e33',stroke:'#d0b378','stroke-width':2}),sv('text',{x,y:y+7,'text-anchor':'middle',fill:'#e7d49f','font-family':'serif','font-size':23},i+1));
+ const event=roundMilestones[i+1];if(event){const badge=sv('g',{class:'round-event','data-milestone':i+1,transform:'translate('+(x-14)+' '+(y+32)+')'});
+ if(event.color){const token=sv('svg',{x:0,y:0,width:28,height:28,viewBox:'0 0 64 64'});token.append(sv('circle',{cx:32,cy:32,r:30,fill:palette[event.color][0],stroke:palette[event.color][1],'stroke-width':2}),glyph(event.color,9,6,45));if(i===5)token.append(sv('text',{x:48,y:57,fill:'#fff7dc','font-size':18,'font-weight':800},'1'));badge.append(token);}
+ else badge.append(sv('path',{d:'M8 2v27M8 3h20l-5 7 5 7H8',fill:'#dfc37f',stroke:'#f3e6bb','stroke-width':2}));
+ badge.append(sv('title',{},event.name+'：'+event.text));lantern.append(badge);
+ }svg.append(lantern);}
  svg.append(sv('text',{x:420,y:321,'text-anchor':'middle','font-size':30,'font-family':'serif',fill:'#dbc595'},'郎中闖江湖'),sv('text',{x:420,y:357,'text-anchor':'middle','font-size':17,'font-family':'sans-serif',fill:'#91afa1'},'九回合，煮出你的傳奇'));svg.append(sv('text',{x:420,y:395,'text-anchor':'middle','font-size':19,'font-family':'sans-serif',fill:'#f3de9e',class:'score-round-label'},'等待開局'));
  const flame=sv('g',{class:'round-flame',role:'img','aria-label':'目前回合指示物',visibility:'hidden'});flame.append(sv('path',{d:'M0 0c-18-9-15-22-6-31c-2 13 11 11 8-28c23 23 22 51-2 59Z',fill:'#f4bc57',stroke:'#fff0b4','stroke-width':2}),sv('path',{d:'M0-4c-8-7-6-15 1-23c5 11 9 17-1 23Z',fill:'#fff0b4'}));svg.append(flame);
  return svg;
@@ -120,6 +132,6 @@ function essenceFlask(value){
  return svg;
 }
 
-const api={patientPortrait,essenceFlask,ratScores,markerPositions,scoreCells,scorePoint,pawn,scoreBoard,resource,names,palette,position,canInspect,selectRecipe,lookup,info,token,glyph,cauldron};
+const api={roundMilestones,patientPortrait,essenceFlask,ratScores,markerPositions,scoreCells,scorePoint,pawn,scoreBoard,resource,names,palette,position,canInspect,selectRecipe,lookup,info,token,glyph,cauldron};
 if(typeof module==='object'&&module.exports)module.exports=api;else root.QuacksArt=api;
 })(typeof window==='object'?window:globalThis);
