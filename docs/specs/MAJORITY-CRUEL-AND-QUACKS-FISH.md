@@ -41,3 +41,11 @@ Windows Node24完整2216/2216，fail/cancel/skip/todo0，226072ms，work/playtes
 郎中兩人自然抽藥爆鍋：每端1抽卡／6抽藥／1複合爆鍋音效native playing，音量25%，重載不補播；390px／減少動態／專注，0頁面錯誤。證據work/qa/quacks-explosion/evidence.json、work/qa/majority-cruel/evidence.json及相關截图。一次高速測試曾遇到Windows隔離歷史meta檔rename EPERM；未修改正式儲存邏輯，最終原生測試以合成操作間40ms節奏完整通過，不宣稱驗證過該系統鎖檔問題的所有情況。
 
 3010另建隔離資料試玩站，read-only VACUUM INTO複製舊3009測試SQLite快照，保留帳戶；新增兩桌等待開局。正式／外部副作用關閉，test成就。原3009及更舊牌局未重啟或重置。七個服務資源逐位元比對通過，包括成人題SVG與fish成品；房碼／程序／資料僅存ignored work/playtest/cruel-fish-runtime.json。
+
+
+## 最終 main 整合（2026-10-14）
+已整合 origin/main 931b602（PR123藥材書翻面瀏覽、選中印章與效果說明），保留對方最新UI與兩側角色紀錄；僅CHANGELOG／角色文件／package版本文字衝突，保留双方紀錄並維持候選2.6.0。主程式及UI自動合併，沒有恢復舊的藥材書畫面。
+
+整合後完整Windows Node24 **2225/2225**，fail/cancel/skip/todo0，213247ms，證據work/playtest/cruel-fish-main-integration-tests.log。真Edge新模式、真正solo、一般同頻抽雙圖分類重新全部通過，0頁面錯誤；朋友／題卡／聊天相對位置、暗色與390px專注完成。最新測試來源e1a621a整合提交；後續僅文件與測試尾空白整理，沒有功能修改。
+
+另建3011整合版隔離站，保留3010及原有牌局，兩桌等待開局；十個服務資源逐位元與整合原始碼一致，包含main新版書卡控制、原創圖片與fish音效。release check對origin/main為minor通過，永久記憶與測試資料仍ignored。未推送功能分支、發新PR、合併本次新功能或部署。
