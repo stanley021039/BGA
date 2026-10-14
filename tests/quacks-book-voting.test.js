@@ -56,3 +56,12 @@ test('effect copy names neighboring opponents and the purple chips being discard
  assert.match(EFFECTS.purple[1],/永久棄掉大釜中的 1–3 片幽靈氣息/);
  assert.match(EFFECTS.purple[1],/棄 2 片 → 花園蜘蛛 1、烏鴉頭骨 2、3 分、水滴前進 1 格/);
 });
+
+test('black fifth face explains each acquisition and both ruby rewards',()=>{
+ const {EFFECTS}=require('../src/games/quacks-catalog');
+ assert.match(EFFECTS.black[4],/每獲得 1 片，就將該片交給左鄰玩家，自己的水滴前進 1 格/);
+ assert.match(EFFECTS.black[4],/左鄰大釜每片非洲骷髏天蛾，讓你得 1 顆紅寶石/);
+ assert.match(EFFECTS.black[4],/自己最後兩片中的每片非洲骷髏天蛾，也各得 1 顆紅寶石/);
+ const f=setup();f.r.configure(f.a.id,{witches:true});f.render();f.control('black','next').onclick();
+ assert.match(f.card('black').querySelectorAll('.book-effect-copy').find(n=>n.getAttribute('aria-hidden')!=='true').textContent,/每獲得 1 片/);
+});
