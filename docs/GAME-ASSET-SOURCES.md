@@ -29,3 +29,5 @@
 使用者選擇C方向後，霓光面板及藥袋取藥圖示由原生CSS／原創SVG實作；沒有匯入Stitch服務產出的圖。參考公開設計探索介紹：https://blog.google/innovation-and-ai/models-and-research/google-labs/stitch-ai-ui-design/ 。停止手勢取自 Lucide Hand：https://lucide.dev/icons/hand ，原始SVG SHA256 fe3771fa2f0a9a3c7736164c9a855beefacc02548084ac1d6fc8da8a8a9180b0；Copyright (c) 2026 Lucide Icons and Contributors，ISC License，完整聲明保存在 docs/licenses/LUCIDE.txt 與 public/shared/ui-components.js。只是調色／縮放圖示，沒有引入Lucide套件依賴。
 
 2026-10-14：基本版收回白色炸彈的玻璃藥水瓶是本專案原創SVG（QuacksArt.resource potion），與特效藥燒瓶不同；截圖僅原生瀏覽器QA，沒有重用第三方桌遊圖片。
+
+2026-10-14 最終手勢：QuacksArt.resource draw-hand 與 stop-hands 為原創SVG；使用者附圖僅作食指交叉姿勢參考，未匯入截圖、角色或其視覺素材。取代郎中實際停止按鈕的Lucide手掌，既有registry的Lucide授權仍保留。

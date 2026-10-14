@@ -27,3 +27,6 @@
 已整合 main bd036b6（2.3.3，共用瞎掰王確認視窗），候選仍2.4.0同批；交付前再次 fetch main 未變。完整功能回歸2172/2172、fail/cancel/skip/todo0，111584.6517ms（work/playtest/quacks-icon-final-tests.log），之後外觀／藥水瓶圖示的最終受影響20/20及隔離真Edge驗收通過。瀏覽器確認抽／停、白色炸彈收回後藥袋+1與瓶子變空、特效藥格確認、獎勵骰階段、下一回合、設定保存、提示、專注退出與390px無橫向溢出、零JS錯誤。截圖與證據在 ignored work/qa/quacks-workshop，驗收工具 tools/qa/quacks-workshop.cjs。
 使用者測試站3005原程序已停止，確認所有既有測試資料鎖屬不存在的舊PID後僅清理該隔離庫殘留鎖，沿用同一SQLite重啟，沒有重設帳號、刪資料或中斷其他端口。試玩房號以 ignored runtime 為準，舊房號不再適用。
 原創CSS/SVG提供三方向比較；Stitch僅參考公開設計探索，不是透過Stitch產生素材。Hand来源／ISC授權見網站credits、docs/licenses/LUCIDE.txt與素材來源文件。未驗實機觸控／Safari／讀屏／喇叭聽感；沒有推送、建立PR或部署。
+
+### 2026-10-14 手勢更新（取代舉手停止）
+依使用者最後提供的姿勢，繼續抽改為原創「手從藥袋拈出藥材」SVG，停止改為原創雙手食指交叉成X；不是角色截圖或第三方插畫。原創藥水瓶保留。三圖示維持既有操作、滑過提示／可讀名稱與禁用。最終隔離真Edge完整本輪驗收再通過（含原生抽停與藥水瓶回袋、數字格／下一回合、專注與390px無橫溢出、零JS錯誤），截圖 work/qa/quacks-workshop/neon-potion-controls.png。共用registry仍包含已合法授權的Lucide Hand，但郎中停止按鈕已改為原創交叉食指。本輪同批2.4.0，本機修改未推送／PR／部署。
