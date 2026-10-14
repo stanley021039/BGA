@@ -12,12 +12,12 @@ const PATIENTS=[
  patient('earworm','耳蟲','本輪特效藥完成後逐片額外抽藥，執行藥材效果。保留原本爆炸狀態，這些額外藥材不會造成新爆炸。',[{},...Array.from({length:10},(_,i)=>({draw:i===9?6:Math.floor(i/2)+1,...(i%2&&i<8?{rat:1}:{})}))]),
  patient('carrot','胡蘿蔔鼻','開局多一片南瓜1。第二輪起，抽出南瓜可花2格特效藥，跳到下一個紅寶石格。',passive),
  patient('ears','招風耳','第二輪起，未造成爆炸的白色炸彈可花2格特效藥、按數值前進兩倍；或花3格直接放回袋。',actionTrack),
- patient('eyes','雞眼','特效藥完成時立即領取所選格的藥材、紅寶石、升級、補瓶、液滴或骰子獎勵。',[{},{rubies:1},{chip:{color:'orange',value:1}},{upgrade:2},{refill:true},{chip:{color:'red',value:1}},{rubies:3},{dice:2},{droplet:2},{upgrade:4},{dice:4}]),
+ patient('eyes','雞眼','特效藥完成時立即領取所選格的藥材、紅寶石、升級、補瓶、水滴或骰子獎勵。',[{},{rubies:1},{chip:{color:'orange',value:1}},{upgrade:2},{refill:true},{chip:{color:'red',value:1}},{rubies:3},{dice:2},{droplet:2},{upgrade:4},{dice:4}]),
  patient('hump','女巫駝峰','第二輪起，投入藥材落在紅寶石格可花2格特效藥：1級拿紅寶石；2級或黑色擲骰；3級或紫色拿黃色1；4級或愚人草拿3分。',passive),
  patient('forgetful','健忘症','開局多紅色1、藍色1。第二輪起，製藥時可收回任一彩色藥材（愚人草除外），花掉其實際數值的特效藥；其他藥材與進度不移動。',[{},{},{},{},{},{},{},{points:1},{points:1},{points:2},{points:2}]),
  patient('vampire','吸血鬼化','本輪特效藥完成時，用所選格的獨立預算額外買一片藥材；不占普通購物次數。',[{},{rat:1},...[2,4,6,8,10,12,14,16,18].map(buy=>({buy}))])
 ];
-function rewardText(r){const a=[];if(r.rat)a.push('下輪鼠尾巴 +'+r.rat);if(r.points)a.push(r.points+' 分');if(r.preview)a.push('下輪預抽 '+r.preview+' 片');if(r.draw)a.push('額外抽 '+r.draw+' 片');if(r.buy)a.push('獨立買一片 · '+r.buy+' 金幣');if(r.rubies)a.push(r.rubies+' 顆紅寶石');if(r.chip)a.push(NAMES[r.chip.color]+' '+r.chip.value);if(r.upgrade)a.push('1級升為'+r.upgrade+'級');if(r.refill)a.push('補滿藥水瓶');if(r.dice)a.push('擲骰 '+r.dice+' 次');if(r.droplet)a.push('液滴 +'+r.droplet);return a.join('；')||'保留特效藥，沒有額外獎勵';}
+function rewardText(r){const a=[];if(r.rat)a.push('下輪鼠尾巴 +'+r.rat);if(r.points)a.push(r.points+' 分');if(r.preview)a.push('下輪預抽 '+r.preview+' 片');if(r.draw)a.push('額外抽 '+r.draw+' 片');if(r.buy)a.push('獨立買一片 · '+r.buy+' 金幣');if(r.rubies)a.push(r.rubies+' 顆紅寶石');if(r.chip)a.push(NAMES[r.chip.color]+' '+r.chip.value);if(r.upgrade)a.push('1級升為'+r.upgrade+'級');if(r.refill)a.push('補滿藥水瓶');if(r.dice)a.push('擲骰 '+r.dice+' 次');if(r.droplet)a.push('水滴 +'+r.droplet);return a.join('；')||'保留特效藥，沒有額外獎勵';}
 const catalog=()=>PATIENTS.map(p=>({...p,track:p.track.map((r,position)=>({position,...r,text:rewardText(r)}))}));
 const methods={
  initAlchemy(){

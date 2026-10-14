@@ -25,10 +25,10 @@ test('pot colors are unique; a claimed color cannot be taken and a released one 
  assert.throws(()=>act(r,b,'color-pot',{color:a.potColor}),e=>e.code==='COLOR_TAKEN');act(r,a,'color-pot',{color:'rose'});act(r,b,'color-pot',{color:previous});r.start();assert.equal(a.potColor,'rose');
  assert.throws(()=>act(r,a,'color-pot',{color:b.potColor}),e=>e.code==='COLOR_TAKEN');assert.throws(()=>act(r,a,'color-pot',{color:'__proto__'}),e=>e.code==='INVALID_COLOR');assert.equal(r.view(b.id).recipes.find(p=>p.id===a.id).potColor,'rose');assert.equal(Object.keys(POT_COLORS).length,8);
 });
-test('random book selection changes only requesting human ballots using legal faces',()=>{
- const {r,a,b}=setup();r.configure(a.id,{witches:true});r.rng=n=>n-1;act(r,a,'book-random');for(const row of r.bookSelection()){const own=row.votes.find(v=>v.id===a.id),peer=row.votes.find(v=>v.id===b.id);assert.ok(row.candidates.some(c=>c.set===own.set));assert.equal(peer.explicit,false);}
+test('random book selection changes shared effects for all viewers using legal faces',()=>{
+ const {r,a,b}=setup();r.configure(a.id,{witches:true});r.rng=n=>n-1;act(r,a,'book-random');for(const row of r.bookSelection()){assert.equal(row.selected,row.candidates.at(-1).set);assert.equal(row.chosenBy,a.id);assert.equal(r.view(b.id).bookSelection.find(c=>c.color===row.color).selected,row.selected);assert.equal(row.votes.length,0);}
  const bot=r.add('bot',true);assert.throws(()=>act(r,bot,'book-random'),e=>e.code==='HUMANS_ONLY');assert.throws(()=>act(r,a,'book-random',{color:'no'}),e=>e.code==='INVALID_BOOK');
- for(const row of r.bookSelection())if(row.tied)act(r,a,'book-tie',{color:row.color,set:row.leaders[0]});r.start();assert.throws(()=>act(r,a,'book-random'),e=>e.code==='MATCH_STARTED');
+ r.start();assert.throws(()=>act(r,a,'book-random'),e=>e.code==='MATCH_STARTED');
 });
 test('yellow round 2, purple round 3 and exactly one white bomb value 1 in round 6',()=>{
  const {r,a}=setup();r.start();assert.equal(r.availableBooks().some(b=>b.color==='yellow'),false);assert.equal(r.availableBooks().some(b=>b.color==='purple'),false);

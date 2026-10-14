@@ -3,14 +3,14 @@ const {BOARD,WITCHES,NAMES}=require('./quacks-catalog'),{fail,clone}=require('./
 const LAST=BOARD.length-2;
 const rows=[
  ['give-get','方捨方得','棄1／2／4顆紅寶石換同數值藥材（紫色除外），或獲得2顆紅寶石。','immediate'],
- ['strong-water','強大藥水','液滴後退1／2格，換一片2／4級藥材。','immediate'],
+ ['strong-water','強大藥水','水滴後退1／2格，換一片2／4級藥材。','immediate'],
  ['precious-rats','珍愛老鼠','最多棄3顆紅寶石，每顆換本輪3條鼠尾巴。','immediate'],
  ['feed-pets','實用的餵養動物','放棄本輪2／4／6條鼠尾巴，換1／2／4級藥材（紫色除外）。','immediate'],
  ['neighbor-help','芳鄰相助','可永久移除袋中一片白色炸彈1，或取得任意一片藥材。','immediate'],
  ['twin-shopping','跳樓拍賣','本輪普通購物買足兩片時，免費多拿一片其中較便宜的藥材。','round'],
  ['give-get-again','有所方得','棄1／2／4顆紅寶石換同數值藥材（紫色除外），或獲得2顆紅寶石。','immediate'],
  ['good-neighbor','好鄰居','未爆炸時，本輪可一次把白色炸彈3加入自己的袋，其他玩家各得2顆紅寶石。','round'],
- ['generous-choice','優渥選項','選擇：本輪多8条鼠尾巴、擲4次骰、或液滴前進3格。','immediate'],
+ ['generous-choice','優渥選項','選擇：本輪多8条鼠尾巴、擲4次骰、或水滴前進3格。','immediate'],
  ['small-donation','小小捐獻','本輪開始時有至少2條鼠尾巴的玩家各擲一次骰。','immediate'],
  ['witch-visit','女巫來訪','隨機抽一位本場未選用的草藥女巫；每位玩家本輪可免費使用她一次。','immediate','witches'],
  ['witch-trade','快速成交','可棄掉自己的任一女巫幣，換任意一片藥材。','immediate','witches'],
@@ -33,11 +33,11 @@ const methods={
   for(const p of this.players){
    let options=[];
    if(f==='give-get'||f==='give-get-again')options=[this.option('獲得2顆紅寶石',[{op:'ruby',amount:2}]),...[1,2,4].filter(n=>p.rubies>=n).flatMap(n=>this.freeOffers(n,true).map(o=>this.option('付'+n+'顆紅寶石：'+NAMES[o.color]+' '+o.value,[{op:'ruby',amount:-n},{op:'grant',color:o.color,value:o.value}])) )];
-   if(f==='strong-water')options=[this.option('不交換',[]),...[1,2].filter(n=>p.droplet>=n).flatMap(n=>this.freeOffers(n*2).map(o=>this.option('液滴後退'+n+'：'+NAMES[o.color]+' '+o.value,[{op:'droplet',amount:-n},{op:'grant',color:o.color,value:o.value}])))];
+   if(f==='strong-water')options=[this.option('不交換',[]),...[1,2].filter(n=>p.droplet>=n).flatMap(n=>this.freeOffers(n*2).map(o=>this.option('水滴後退'+n+'：'+NAMES[o.color]+' '+o.value,[{op:'droplet',amount:-n},{op:'grant',color:o.color,value:o.value}])))];
    if(f==='precious-rats')options=[this.option('不交換',[]),...[1,2,3].filter(n=>p.rubies>=n).map(n=>this.option('棄'+n+'顆紅寶石，多'+n*3+'條鼠尾巴',[{op:'ruby',amount:-n},{op:'expRat',amount:n*3}]))];
    if(f==='feed-pets')options=[this.option('不交換',[]),...[[2,1],[4,2],[6,4]].filter(([n])=>p.rat>=n).flatMap(([n,v])=>this.freeOffers(v,true).map(o=>this.option('放棄'+n+'條鼠尾巴：'+NAMES[o.color]+' '+v,[{op:'expRat',amount:-n},{op:'grant',color:o.color,value:v}])))];
    if(f==='neighbor-help'){const c=p.bag.find(c=>c.color==='white'&&c.value===1);options=[...(c?[this.option('移除白色炸彈1',[{op:'discardBag',chipId:c.id}])]:[]),...this.freeOffers().map(o=>this.option(NAMES[o.color]+' '+o.value,[{op:'grant',color:o.color,value:o.value}]))];}
-   if(f==='generous-choice')options=[this.option('8條鼠尾巴',[{op:'expRat',amount:8}]),this.option('擲骰4次',[{op:'expRoll',amount:4}]),this.option('液滴前進3格',[{op:'droplet',amount:3}])];
+   if(f==='generous-choice')options=[this.option('8條鼠尾巴',[{op:'expRat',amount:8}]),this.option('擲骰4次',[{op:'expRoll',amount:4}]),this.option('水滴前進3格',[{op:'droplet',amount:3}])];
    if(f==='small-donation'&&p.rat>=2)this.roll(p,'占卜牌');
    if(f==='witch-trade')options=[this.option('保留女巫幣',[]),...Object.keys(p.coins).filter(c=>p.coins[c]).flatMap(coin=>this.freeOffers().map(o=>this.option('棄'+({gold:'金',copper:'銅',silver:'銀'})[coin]+'幣：'+NAMES[o.color]+' '+o.value,[{op:'expCoin',color:coin},{op:'grant',color:o.color,value:o.value}])))];
    if(f==='glow-stones'){const c=this.drawOne(p);if(c){p.rubies+=c.value;p.bag.push(c);}}

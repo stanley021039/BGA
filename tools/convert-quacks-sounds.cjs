@@ -3,7 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),{spawnSync}=require('node:child_process');
 const [ffmpeg,cardSource,ingredientSource]=process.argv.slice(2);
 if(!ffmpeg||!cardSource||!ingredientSource)throw Error('Usage: node tools/convert-quacks-sounds.cjs ffmpeg card.mp3 ingredient.mp3');
-const dir=path.resolve(__dirname,'../public/assets/game-sounds'),manifest={};
+const dir=path.resolve(__dirname,'../public/assets/game-sounds'),manifest=JSON.parse(fs.readFileSync(path.resolve(__dirname,'../public/assets/game-sounds/quacks-manifest.json'),'utf8'));
 for(const [kind,source,start,ms,cutoff,level]of [['card',cardSource,.04,1500,1800,.23],['ingredient',ingredientSource,10.8,650,2800,.40]]){
  const r=spawnSync(ffmpeg,['-v','error','-ss',String(start),'-i',source,'-t',String(ms/1000),'-af','highpass=f=65,lowpass=f='+cutoff,'-ac','1','-ar','24000','-f','s16le','pipe:1'],{maxBuffer:1024*1024});
  if(r.status!==0)throw Error(String(r.stderr));const pcm=r.stdout,frames=ms*24;let inputPeak=0;

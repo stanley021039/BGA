@@ -1,10 +1,10 @@
 /* Original summon and rolling-die scenes; server results remain authoritative. */
 (function(root){
 'use strict';
-const labels=['1 分','1 分','2 分','1 顆紅寶石','液滴前進 1 格','南瓜 1'];
+const labels=['1 分','1 分','2 分','1 顆紅寶石','水滴前進 1 格','南瓜 1'];
 const node=(tag,text)=>{const el=root.document.createElement(tag);if(text!==undefined)el.textContent=text;return el;};
-function die(face,size=78){
- const el=node('div');el.className='quacks-die';el.style.setProperty('--die-size',size+'px');el.setAttribute('role','img');el.setAttribute('aria-label',labels[face]);
+function die(face,size=78,tones=null){
+ const el=node('div');el.className='quacks-die';el.style.setProperty('--die-size',size+'px');el.style.setProperty('--die-glow',tones?.[0]||'#315db1');el.style.setProperty('--die-body',tones?.[1]||'#152c69');el.style.setProperty('--die-deep',tones?.[2]||'#08162f');el.setAttribute('role','img');el.setAttribute('aria-label',labels[face]);
  const symbol=node('div');symbol.className='die-symbol';
  if(face===3)symbol.append(root.QuacksArt.resource('ruby',{size:size*.62,decorative:true}));
  else if(face===4){symbol.append(root.QuacksArt.resource('droplet',{size:size*.62,decorative:true}));}
@@ -25,7 +25,7 @@ function create(host){
    const card=node('div');card.className='summon-card';const back=node('div','✦');back.className='summon-back';const front=node('div');front.className='summon-front';front.dataset.timing=event.fortune.timing||'round';front.append(node('small',event.name+'抽出的占卜牌'),node('h3',event.fortune.name),node('p',event.fortune.text));card.append(back,front);
    scene.append(rune,gate,card);
   }else{
-   const cup=node('div');cup.className='dice-arena';const cube=die(event.face,110);cube.classList.add('rolling');cup.append(cube);scene.append(node('h3',event.name+'擲骰'),cup,node('strong',labels[event.face]),node('p',event.source+' · 第 '+event.round+' 回合'));
+   const cup=node('div');cup.className='dice-arena';const cube=die(event.face,110,event.tones);cube.classList.add('rolling');cup.append(cube);scene.append(node('h3',event.name+'擲骰'),cup,node('strong',labels[event.face]),node('p',event.source+' · 第 '+event.round+' 回合'));
   }
   const skip=node('button','跳過動畫');skip.type='button';root.GameUI?.decorateButton(skip,'close');skip.className+=' fx-skip';skip.onclick=clear;scene.append(skip);
   host.hidden=false;host.replaceChildren(scene);active={event,timer:setTimeout(()=>{active=null;host.replaceChildren();host.hidden=true;next();},event.kind==='card'?2700:1800)};
@@ -33,7 +33,7 @@ function create(host){
  function update(state,live){
   const nextContext=state.code+':'+state.roundId;
   if(context!==nextContext){clear();seen.clear();context=nextContext;initialized=false;}
-  const events=[...(state.fortuneRevealId?[{id:state.fortuneRevealId,kind:'card',fortune:state.fortune,name:state.players.find(p=>p.id===state.roundStarterId)?.name||'起始玩家',at:state.fortuneDrawnAt||state.serverNow}]:[]),...(state.rollEvents||[]).map(e=>({...e,kind:'dice'}))];
+  const events=[...(state.fortuneRevealId?[{id:state.fortuneRevealId,kind:'card',fortune:state.fortune,name:state.players.find(p=>p.id===state.roundStarterId)?.name||'起始玩家',at:state.fortuneDrawnAt||state.serverNow}]:[]),...(state.rollEvents||[]).map(e=>({...e,kind:'dice',tones:state.potColors?.[e.potColor||state.recipes?.find(p=>p.id===e.playerId)?.potColor]?.liquid}))];
   if(!live||!allowed())clear();
   for(const event of events){if(seen.has(event.id))continue;seen.add(event.id);if(initialized&&live&&allowed())queue.push(event);}
   initialized=true;if(queue.length>20)queue=queue.slice(-20);next();
@@ -50,11 +50,12 @@ function create(host){
 function createAudio(sounds){
  let context=null,initialized=false,timer=null,queue=[],generation=0;const seen=new Set();
  const clear=()=>{generation++;if(timer!==null)clearTimeout(timer);timer=null;queue=[];};
- const next=()=>{timer=null;const prefs=root.AudioSettings?.get?.().effects;if(prefs&&(!prefs.enabled||!prefs.volume)){clear();return;}while(queue.length){const e=queue.shift();if(Date.now()-e.at>5000)continue;const token=generation;let ended=false;const done=()=>{if(ended||token!==generation)return;ended=true;if(timer!==null)clearTimeout(timer);timer=setTimeout(next,25);};const clip=sounds?.play('ingredient-draw',e.key,{live:true,epoch:e.epoch,onStop:done});if(!clip)done();else if(!ended)timer=setTimeout(done,1300);break;}};
+ const next=()=>{timer=null;const prefs=root.AudioSettings?.get?.().effects;if(prefs&&(!prefs.enabled||!prefs.volume)){clear();return;}while(queue.length){const e=queue.shift();if(Date.now()-e.at>5000)continue;const token=generation;let ended=false;const done=()=>{if(ended||token!==generation)return;ended=true;if(timer!==null)clearTimeout(timer);timer=setTimeout(next,25);};const clip=sounds?.play(e.cue||'ingredient-draw',e.key,{live:true,epoch:e.epoch,onStop:done});if(!clip)done();else if(!ended)timer=setTimeout(done,1300);break;}};
  function update(state,live){
   const key=state.code+':'+state.roundId;if(key!==context){clear();seen.clear();context=key;initialized=false;}
   if(!live||root.document.hidden)clear();
   const card=state.fortuneRevealId;if(card&&!seen.has('card:'+card)){seen.add('card:'+card);if(initialized&&live&&!root.document.hidden)sounds?.play('card-draw','quacks:card:'+card);}
+  for(const e of state.mine?.potionEvents||[]){const id='potion:'+e.id;if(seen.has(id))continue;seen.add(id);if(initialized&&live&&!root.document.hidden)queue.push({cue:'potion-drink',key:'quacks:'+id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
   const events=state.mine?.drawEvents||[];
   for(const e of events){if(seen.has(e.id))continue;seen.add(e.id);if(initialized&&live&&!root.document.hidden)queue.push({key:'quacks:draw:'+e.id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
   while(seen.size>128)seen.delete(seen.values().next().value);queue=queue.slice(-20);initialized=true;if(queue.length&&timer===null)next();
@@ -86,10 +87,10 @@ function createExplosion(host){
  return {update,clear,size:()=>seen.size,destroy(){clear();unsubscribe?.();root.document.removeEventListener('visibilitychange',hidden);}};
 }
 
-function createScoreboard(host){
+function createScoreboard(host,legendHost=root.document.querySelector('#scoreLegend')){
  const svg=root.QuacksArt.scoreBoard(),pieces=new Map(),scores=new Map();host.replaceChildren(svg);
  return {update(state,live){
-  const legend=root.document.querySelector('#scoreLegend'),list=[];
+  const legend=legendHost,list=[];
   const round=Number(state.round)||0;for(const lantern of svg.querySelectorAll('[data-round]')){const current=Number(lantern.getAttribute('data-round'))===round;lantern.classList.toggle('current-round',current);lantern.setAttribute('aria-label','第 '+lantern.getAttribute('data-round')+' 回合'+(current?'，目前回合':''));if(current)lantern.setAttribute('aria-current','step');else lantern.removeAttribute('aria-current');}
   const flame=svg.querySelector('.round-flame');flame.setAttribute('visibility',round?'visible':'hidden');if(round)flame.setAttribute('transform','translate('+(137+(round-1)*69)+' '+(110+((round-1)%2)*53)+')');
   svg.querySelector('.score-round-label').textContent=round?'目前第 '+round+' / 9 回合':'等待開局';

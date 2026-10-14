@@ -29,3 +29,15 @@ test('user-supplied cue waveforms match their manifest and have finite bounded s
 test('a queued ingredient waits for the previous clip cleanup and late callbacks cannot restart a cleared queue',()=>{
  const f=audioFixture({controlledClip:true});f.cues.update(f.state([]),false);f.cues.update(f.state(f.events(3)),true);assert.equal(f.calls.length,1);f.tick(240);assert.equal(f.calls.length,1);f.calls[0].options.onStop();f.tick(25);assert.equal(f.calls.length,2);f.hide();f.calls[1].options.onStop();f.tick(1500);assert.equal(f.calls.length,2);assert.equal(f.timers.size,0);f.cues.destroy();
 });
+
+test('potion returns a real chip, records a private one-shot cue, deduplicates retries and resets on new rounds',()=>{
+ const r=new QuacksRoom('ABCDEF','potion',n=>0),a=r.add('A'),b=r.add('B');r.start();r.drawFortune();r.place(a,r.drawOne(a));const bag=a.bag.length,request={roundId:r.roundId,requestId:crypto.randomUUID()};
+ r.act(a.id,'potion',request);r.act(a.id,'potion',request);assert.equal(a.bag.length,bag+1);assert.equal(r.view(a.id).mine.potionEvents.length,1);assert.equal(r.view(b.id).mine.potionEvents.length,0);assert.equal(Object.hasOwn(r.view(b.id).recipes[0],'potionEvents'),false);assert.throws(()=>r.act(a.id,'potion',{...request,requestId:crypto.randomUUID()}));assert.equal(a.potionEvents.length,1);r.nextRound();assert.equal(a.potionEvents.length,0);
+});
+test('potion sounds once after a live action, waits for draw cleanup and never replays on initial load or reconnect',()=>{
+ const f=audioFixture({controlledClip:true});const old={potionEvents:[{id:'old',at:100000}]};f.cues.update(f.state([],{mine:old}),false);f.cues.update(f.state([],{mine:old}),true);assert.equal(f.calls.length,0);
+ f.cues.update(f.state(f.events(1)),true);assert.equal(f.calls[0].cue,'ingredient-draw');const next=f.state(f.events(1));next.mine.potionEvents=[{id:'fresh',at:100000}];f.cues.update(next,true);assert.equal(f.calls.length,1);f.calls[0].options.onStop();f.tick(25);assert.equal(f.calls[1].cue,'potion-drink');f.cues.update(next,true);assert.equal(f.calls.length,2);f.cues.update(next,false);f.tick(2000);assert.equal(f.calls.length,2);f.cues.destroy();
+});
+test('potion WAV has faded bounds and recorded deterministic checksum',()=>{
+ const m=JSON.parse(fs.readFileSync('public/assets/game-sounds/quacks-manifest.json')).potion,b=fs.readFileSync('public/assets/game-sounds/'+m.file);assert.equal(m.durationMs,600);assert.equal(b.length,28844);assert.equal(m.sha256,crypto.createHash('sha256').update(b).digest('hex'));assert.equal(b.readInt16LE(44),0);assert.equal(b.readInt16LE(b.length-2),0);assert.ok(m.peak>1000&&m.peak<15000);
+});

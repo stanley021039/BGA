@@ -28,5 +28,15 @@
     "fadeInMs": 10,
     "fadeOutMs": 60,
     "generator": "tools/convert-quacks-sounds.cjs"
+  },
+  "potion": {
+    "file": "quacks-potion.wav",
+    "durationMs": 600,
+    "bytes": 28844,
+    "sha256": "003f247056f374c3018b0c524ff83969488f0e75f1c9be64b903e2f9efb9043b",
+    "peak": 6377,
+    "seed": 83119,
+    "source": "Project-original synthesis: low liquid bubbles and filtered noise, no third-party sample",
+    "generator": "tools/generate-quacks-sounds.cjs"
   }
 }

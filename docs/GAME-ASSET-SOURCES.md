@@ -38,3 +38,6 @@
 
 
 2026-10-14：郎中抽卡／抽藥來源改為使用者提供抽卡.mp3與抽藥.mp3，經裁切、低通與峰值限制後輸出WAV。取代上一輪「原創合成抽卡／抽藥」現況；爆炸仍原創。來源hash與參數在public/assets/game-sounds/quacks-manifest.json；不收錄原始38秒錄音、私人路徑或憑證。詳細來源／驗證／權利未核對限制見[規格](specs/QUACKS-CART-CUES-SETUP.md)。
+
+
+2026-10-14：郎中溢出盆為自製SVG；樹脂骰的金色刻字、静態纹理與亮面為CSS材質，使用者照片僅作方向參考，未复制圖片素材。喝藥水600ms音效為原創低頻液體氣泡合成，來源／checksum在quacks-manifest.json，不改使用者抽卡與抽藥錄音。詳[交付紀錄](specs/QUACKS-KETTLE-SHARED-EFFECTS.md)。

@@ -11,7 +11,7 @@ const act=(action,extra={})=>mutate('action',{action,roundId:state.roundId,reque
 const settingsAuto=window.GameShell.autoSaveSettings({canSave:()=>state?.me===state?.host&&['waiting','finished'].includes(state?.phase),isBusy:()=>busy,read:()=>Object.fromEntries(['witches','alchemists','hiddenProgress'].map(k=>[k,document.querySelector('[data-quacks-setting="'+k+'"]').checked])),save:async data=>{bookSetupReady=false;if(!await mutate('settings',{...data,...(!data.witches&&state.options.bookSet>4?{bookSet:1}:{})}))throw Error($('#feedback').textContent||'設定更新失敗');}});
 
 
-const art=window.QuacksArt,scoreboard=window.QuacksFx.createScoreboard($('#scoreboard')),fx=window.QuacksFx.create($('#quacksFx')),explosionFx=window.QuacksFx.createExplosion($('#quacksExplosion')),audioFx=window.QuacksFx.createAudio(sounds);const seenRolls=new Set();
+const art=window.QuacksArt,scoreboard=window.QuacksFx.createScoreboard($('#scoreboard')),zoomScoreboard=window.QuacksFx.createScoreboard($('#scoreZoomBoard'),$('#scoreZoomLegend')),fx=window.QuacksFx.create($('#quacksFx')),explosionFx=window.QuacksFx.createExplosion($('#quacksExplosion')),audioFx=window.QuacksFx.createAudio(sounds);const seenRolls=new Set();
 
 let bookSetupReady=false;
 let viewedPotId=null,potKey='',lastReveal=null,tooltipOwner=null;
@@ -58,7 +58,7 @@ function inspectPot(details,event,anchor){
  tip.style.left=left+'px';tip.style.top=top+'px';
 }
 function drawPot(s){
- const p=art.selectRecipe(s,viewedPotId);viewedPotId=p.id;$('#potHeading').textContent=p.potName||p.name+'的好運釜';const markers=art.markerPositions(p);$('#customizePot').hidden=p.id!==s.me;$('#potMarkerSummary').replaceChildren(...[['droplet',markers.droplet,'永久液滴起點'],['rat',markers.start,'本輪老鼠石起點']].map(([kind,value,label])=>{const item=node('span');item.className='resource-pill';item.append(art.resource(kind,{size:28,decorative:true}),node('strong',String(value)));hint(item,{title:label+' · 第 '+value+' 格',effect:kind==='droplet'?'永久保留的起點。':'本回合鼠尾巴加成後的起點。',caption:'金色圈表示目前進度第 '+p.position+' 格。',color:kind});return item;}));
+ const p=art.selectRecipe(s,viewedPotId);viewedPotId=p.id;$('#potHeading').textContent=p.potName||p.name+'的好運釜';const markers=art.markerPositions(p);$('#customizePot').hidden=p.id!==s.me;$('#potMarkerSummary').replaceChildren(...[['droplet',markers.droplet,'永久水滴起點'],['rat',markers.start,'本輪老鼠石起點']].map(([kind,value,label])=>{const item=node('span');item.className='resource-pill';item.append(art.resource(kind,{size:28,decorative:true}),node('strong',String(value)));hint(item,{title:label+' · 第 '+value+' 格',effect:kind==='droplet'?'永久保留的起點。':'本回合鼠尾巴加成後的起點。',caption:'金色圈表示目前進度第 '+p.position+' 格。',color:kind});return item;}));
  $('#potTabs').replaceChildren(...s.recipes.map(q=>{const b=button(q.name+(q.id===s.me?'（你）':q.hidden?' · 未公開':''),'users',()=>{viewedPotId=q.id;drawPot(state);},!art.canInspect(s,q));window.GameUI?.decorateButton(b,'users',{iconOnly:true});b.style.setProperty('--pot-tab-color',s.potColors?.[q.potColor]?.liquid[1]||'#547663');b.setAttribute('aria-pressed',q.id===p.id?'true':'false');b.classList.toggle('selected',q.id===p.id);return b;}));
  const key=JSON.stringify([p.id,p.potName,p.potColor,p.position,p.startPosition,p.droplet,p.rat,p.pot,p.exploded,p.stopped,s.books,s.options.books]);
  if(key!==potKey){potKey=key;hideTooltip();const svg=art.cauldron(s,p,inspectPot);svg.addEventListener('pointerleave',()=>{if(!svg.contains(document.activeElement))hideTooltip();});svg.addEventListener('focusout',event=>{if(!svg.contains(event.relatedTarget))hideTooltip();});$('#cauldron').replaceChildren(svg);}
@@ -86,7 +86,7 @@ function renderResources(s,p){
  const row=node('div');row.className='resource-row';
  for(const [kind,value,label]of [['bag',p.bagCount??0,'藥袋'],['ruby',p.rubies??0,'紅寶石'],['rat',p.rat??0,'老鼠尾巴']]){
   const item=node('span');item.className='resource-pill';item.append(art.resource(kind,{size:27,decorative:true}),node('strong',String(value)));
-  hint(item,{title:label+' '+value,effect:kind==='bag'?'藥袋剩餘總數；內容僅本人每回合查看一次。':kind==='rat'?'本回合老鼠尾巴加成。':'可補滿藥水瓶或推進永久液滴。',caption:'',color:kind});row.append(item);
+  hint(item,{title:label+' '+value,effect:kind==='bag'?'藥袋剩餘總數；內容僅本人每回合查看一次。':kind==='rat'?'本回合老鼠尾巴加成。':'可補滿藥水瓶或推進永久水滴。',caption:'',color:kind});row.append(item);
  }
  if(s.options.witches&&p.coins){const coins=node('div');coins.className='witch-coins';for(const color of ['gold','copper','silver']){
   const coin=node('span');coin.className='coin-status'+(p.coins[color]?'':' used');coin.append(art.resource(color,{size:27,decorative:true}));
@@ -119,7 +119,7 @@ function purchaseOffer(s,b,o,action,blocked){
 
 function renderTableDice(s){
  const box=$('#tableDice');box.hidden=!(s.rollEvents?.length);if(box.hidden)return;box.replaceChildren(node('h3','本回合擲骰結果 · 全桌公開'));const rows=node('div');rows.className='table-dice-grid';
- for(const e of s.rollEvents||[]){const item=node('article');item.append(QuacksFx.die(e.face,42),node('strong',e.name));hint(item,{title:e.name+' · '+QuacksFx.labels[e.face],effect:e.source,caption:'本輪公開擲骰結果',color:'dice'});rows.append(item);}box.append(rows);
+ for(const e of s.rollEvents||[]){const item=node('article');item.dataset.rollId=e.id;item.dataset.playerId=e.playerId;item.dataset.potColor=e.potColor||s.recipes.find(p=>p.id===e.playerId)?.potColor;item.append(QuacksFx.die(e.face,42,s.potColors?.[e.potColor||s.recipes.find(p=>p.id===e.playerId)?.potColor]?.liquid),node('strong',e.name));hint(item,{title:e.name+' · '+QuacksFx.labels[e.face],effect:e.source,caption:'本輪公開擲骰結果',color:'dice'});rows.append(item);}box.append(rows);
 }
 function renderFortune(s,live){
  const f=$('#fortune'),isDrawing=s.phase==='fortune',starter=s.players.find(p=>p.id===s.roundStarterId),key=JSON.stringify([isDrawing,s.fortune?.id,s.fortuneRevealId,s.roundStarterId]);
@@ -132,20 +132,18 @@ function renderFortune(s,live){
 }
 function renderBookVoting(s){
  const box=$('#bookVoting'),waiting=['waiting','finished'].includes(s.phase);box.hidden=!waiting||!s.bookSelection||(s.me===s.host&&!bookSetupReady);
- if(box.hidden)return;box.replaceChildren(node('h2','② 搭配本局藥材書'),node('p','逐色投票，最多票採用；平票由房主決定。滑過各面藥材查看效果。'));
+ if(box.hidden)return;box.replaceChildren(node('h2','② 搭配本局藥材書'),node('p','每顆藥材代表一種效果；大家都可點選，全桌同步採用最後一次選擇。滑過圖示查看效果。'));
+ if(s.me===s.host)box.append(button('調整房間設定','settings',()=>{bookSetupReady=false;lastVersion=-1;render(state);requestAnimationFrame(()=>document.querySelector('.ui-room-settings-card')?.scrollIntoView({block:'start',behavior:'instant'}));}));
  box.append(button('隨機挑選','refresh',()=>act('book-random')));
  const grid=node('div');grid.className='book-grid';
  for(const row of s.bookSelection){
-  const card=coloredCard(row.color,row.name),own=row.votes.find(v=>v.id===s.me),current=row.candidates.find(c=>c.set===(row.selected??own?.set??row.candidates[0].set));
+  const card=coloredCard(row.color,row.name),current=row.candidates.find(c=>c.set===row.selected),who=s.players.find(p=>p.id===row.chosenBy);
   ingredientHint(card.querySelector('.ingredient-token'),{color:row.color,value:1},current);
-  card.append(node('p',row.tied?'平票，等房主決定':'採用'+current.faceName));
-  if(row.candidates.length>1&&own){const label=node('label','你的選擇'),select=node('select');select.setAttribute('aria-label',row.name+'藥材書面');for(const c of row.candidates){const option=node('option',c.faceName);option.value=c.set;option.selected=c.set===own.set;select.append(option);}select.onchange=()=>act('book-vote',{color:row.color,set:Number(select.value)});label.append(select);card.append(label);}
+  const selected=node('p','目前採用：'+current.faceName);hint(selected,{title:row.name+' · '+current.faceName,effect:current.effect,caption:who?'由 '+who.name+' 選擇':'預設效果',color:row.color});card.append(selected);
   const faces=node('div');faces.className='book-face-list';
-  for(const c of row.candidates){const face=node('div');face.className='book-face'+(c.set===current.set?' selected':'');face.append(art.token({color:row.color,value:1},{size:30,decorative:true}),node('span',c.faceName),node('strong',String(row.counts.find(v=>v.set===c.set)?.count||0)));
-   hint(face,{title:row.name+' · '+c.faceName,effect:c.effect,caption:c.offers.map(o=>o.value+'：'+o.price+' 金幣').join(' · '),color:row.color});faces.append(face);
-  }card.append(faces);
-  if(row.tied&&s.me===s.host){const ties=node('div');ties.className='tie-controls';ties.append(node('strong','房主決定平票'));for(const set of row.leaders)ties.append(button('採用'+row.candidates.find(c=>c.set===set).faceName,'check',()=>act('book-tie',{color:row.color,set})));card.append(ties);}
-  grid.append(card);
+  for(const c of row.candidates){const face=node('button');face.type='button';face.onclick=()=>act('book-select',{color:row.color,set:c.set});face.setAttribute('aria-pressed',String(c.set===row.selected));face.dataset.bookColor=row.color;face.dataset.bookSet=String(c.set);face.className='book-face'+(c.set===row.selected?' selected':'');const illustration=art.token({color:row.color,value:1},{size:48,decorative:true,showValue:false});face.append(illustration,node('small',String(c.set)));
+   hint(face,{title:row.name+' · '+c.faceName,effect:c.effect,caption:(c.set===row.selected?'目前採用 · ':'點選採用 · ')+c.offers.map(o=>o.value+'：'+o.price+' 金幣').join(' · '),color:row.color});faces.append(face);
+  }card.append(faces);grid.append(card);
  }box.append(grid);
 }
 
@@ -169,7 +167,7 @@ function renderAlchemy(s){
 
  if(a.pool?.length){const row=node('div');row.className='alchemy-pool';row.append(node('strong','只有你看得到的預抽藥材'));for(const c of a.pool)row.append(chip(c));host.append(row);}
 }
-const diceLabels=['1 分','1 分','2 分','1 顆紅寶石','液滴前進 1 格','南瓜 1'];
+const diceLabels=['1 分','1 分','2 分','1 顆紅寶石','水滴前進 1 格','南瓜 1'];
 function bonusControls(box,s,m){
  box.append(node('h3','獎勵骰'),node('p',m.bonusEligible?'你的大釜在符合資格的玩家中進度最遠，可以擲骰。':'本輪無獎勵骰資格；進度相同的最遠玩家都能擲骰。'));
  const dice=node('div');dice.className='bonus-dice';for(const face of m.bonusDice||[]){const card=node('div');const icon=node('span');icon.innerHTML=window.GameUI.icon('dice');card.append(icon,node('strong',diceLabels[face]));dice.append(card);}box.append(dice);
@@ -177,26 +175,27 @@ function bonusControls(box,s,m){
  else box.append(button('獎勵骰完成，查看藥材結算','check',()=>act('bonus-ready')));
 }
 function effectControls(box,s,m){
- box.append(node('h3','確認藥材結算'),node('p','先處理黑色、綠色、紫色效果，再領取格位獎勵；以下已套用，不會因確認重複領取。'));
- for(const color of ['black','green','purple']){const card=coloredCard(color,names[color]);for(const entry of m.effectSummary||[])if(entry.color===color)card.append(node('p',entry.text));box.append(card);}
- for(const entry of m.effectSummary||[])if(!['black','green','purple'].includes(entry.color))box.append(node('p',entry.text));
- box.append(button('確認藥材效果','check',()=>act('confirm-effects')));
+ const row=node('div');row.className='settlement-effects';
+ for(const color of ['black','green','purple']){const icon=node('span');icon.append(art.token({color,value:1},{size:48,decorative:true}));const entries=(m.effectSummary||[]).filter(e=>e.color===color).map(e=>e.text);hint(icon,{title:names[color]+'結算效果',effect:entries.join('；')||'本回合沒有額外效果。',caption:art.lookup(s,color)?.effect||'',color});row.append(icon);}
+ const total=node('span');total.innerHTML=window.GameUI.symbol('star');hint(total,{title:'藥材結算合計',effect:(m.effectSummary||[]).filter(e=>!['black','green','purple'].includes(e.color)).map(e=>e.text).join('；')||'已套用本輪藥材效果。',caption:'確認不會重複領取。',color:'summary'});row.append(total);
+ box.append(row);const confirm=button('確認藥材效果','check',()=>act('confirm-effects'));window.GameUI.decorateButton(confirm,'check',{iconOnly:true});box.append(confirm);
 }
 const actionPanel=$('#controls').closest('.action-panel'),actionHome=document.createComment('quacks-action-home');actionPanel.before(actionHome);
 function restorePotActions(){if(!actionPanel.classList.contains('pot-action-dock'))return;if(actionHome.parentNode)actionHome.after(actionPanel);actionPanel.classList.remove('pot-action-dock');actionPanel.hidden=false;}
+function keepPotInView(){requestAnimationFrame(()=>{if(state?.phase==='brewing'&&viewedPotId===state.me){const pot=$('#cauldron'),r=pot.getBoundingClientRect();if(r.top<8||r.bottom>innerHeight-80)pot.scrollIntoView({block:'start',behavior:'instant'});}});}
 function arrangePotActions(s){
  if(['waiting','finished'].includes(s.phase))return;
- if(actionPanel.parentElement!==$('.cauldron-panel'))$('.cauldron-panel').append(actionPanel);
+ const dock=document.body.dataset.quacksStage==='drawing'?$('.pot-footer'):$('.cauldron-panel');if(actionPanel.parentElement!==dock)dock.append(actionPanel);
  actionPanel.classList.add('pot-action-dock');actionPanel.hidden=viewedPotId!==s.me;
 }
 function render(s){
  if(disposed||s.type!=='quacks'||state&&s.version<state.version)return;
  const live=sounds?.update(s);fx.update(s,live);explosionFx.update(s,live);const freshExplosions=s.recipes.filter(p=>p.explosionId&&!seenExplosion.has(p.explosionId));for(const p of freshExplosions)seenExplosion.add(p.explosionId);if(previousState&&live&&freshExplosions.length){fx.clear();sounds?.stop();sounds?.play('explosion','quacks:burst:'+freshExplosions.map(p=>p.explosionId).join(':'));}audioFx.update(s,live);for(const e of s.rollEvents||[])if(!seenRolls.has(e.id)){seenRolls.add(e.id);if(live)sounds?.play('dice-roll','quacks:'+e.id);}
- state=s;if(['waiting','finished'].includes(s.phase))restorePotActions();if(window.GameShell)window.GameShell.update(s);else window.RoomWaiting?.update(s);if(s.version===lastVersion)return;lastVersion=s.version;
+ state=s;document.body.dataset.quacksStage=s.phase==='brewing'&&s.stage==='drawing'?'drawing':s.stage||s.phase;if(['waiting','finished'].includes(s.phase))restorePotActions();if(window.GameShell)window.GameShell.update(s);else window.RoomWaiting?.update(s);if(s.version===lastVersion)return;lastVersion=s.version;
  $('#game').hidden=false;$('#roomTag').textContent='房號 '+code;$('#connection').textContent='';
  $('#phase').textContent='郎中闖江湖 · '+({waiting:'等待開局',patients:'選擇病患',fortune:'第 '+s.round+' 回合 · 抽占卜牌',brewing:'第 '+s.round+' 回合 · '+(s.stage==='drawing'?'第 '+s.step+' 次同步抽藥':s.stage==='reserves'?'決定暫存藥材':'效果選擇'),settlement:'第 '+s.round+' 回合 · '+({witches:'結算前女巫',essence:'特效藥階段',bonus:'獎勵骰',effects:'藥材效果選擇','effects-confirm':'確認藥材效果',rewards:'領取格位獎勵',shopping:'購物與補瓶'})[s.stage],between:'本輪結算完成',finished:s.interrupted?'有人離席，本場中止':'九回合完成'})[s.phase];
  if(s.winner)$('#phase').append(document.createTextNode(' · 獲勝：'+s.winner.names.join('、')+'（'+s.winner.score+' 分）'));
- scoreboard.update(s,live);for(const lantern of $('#scoreboard').querySelectorAll('[data-round]')){const n=Number(lantern.getAttribute('data-round')),event=art.roundMilestones[n];hint(lantern,{title:'第 '+n+' 回合'+(event?' · '+event.name:''),effect:event?.text||'依本回合占卜牌進行煮藥。',caption:n===s.round?'目前回合':'',color:event?.color||'round'});}renderAlchemy(s);renderFortune(s,live);renderBookVoting(s);renderTableDice(s);
+ scoreboard.update(s,live);if($('#scoreZoom').open)zoomScoreboard.update(s,false);for(const lantern of document.querySelectorAll('#scoreboard [data-round],#scoreZoomBoard [data-round]')){const n=Number(lantern.getAttribute('data-round')),event=art.roundMilestones[n];hint(lantern,{title:'第 '+n+' 回合'+(event?' · '+event.name:''),effect:event?.text||'依本回合占卜牌進行煮藥。',caption:n===s.round?'目前回合':'',color:event?.color||'round'});}renderAlchemy(s);renderFortune(s,live);renderBookVoting(s);renderTableDice(s);
  for(const p of freshExplosions)if(previousState&&live&&p.id===viewedPotId){$('#cauldron').classList.remove('burst');void $('#cauldron').offsetWidth;$('#cauldron').classList.add('burst');}
  window.RoomWaiting?.setRosterAction(null);botControl=null;$('#controls').replaceChildren();$('#witches').replaceChildren();const box=$('#controls'),m=s.mine,me=s.recipes.find(p=>p.id===s.me);
  if(['waiting','finished'].includes(s.phase)){
@@ -207,18 +206,21 @@ function render(s){
    const field=node('fieldset'),legend=node('legend','開局設定');field.append(legend);
    const witches=node('input'),alchemists=node('input'),hidden=node('input');witches.type=alchemists.type=hidden.type='checkbox';witches.dataset.quacksSetting='witches';alchemists.dataset.quacksSetting='alchemists';hidden.dataset.quacksSetting='hiddenProgress';witches.checked=s.options.witches;alchemists.checked=s.options.alchemists;hidden.checked=s.options.hiddenProgress;
    const a=node('label'),b=node('label');a.append(witches,document.createTextNode(' 加入草藥女巫擴充'));b.append(hidden,document.createTextNode(' 隱藏他人大釜進度'));const c=node('label');c.append(alchemists,document.createTextNode(' 加入煉金術士擴充'));for(const [label,kind,description]of [[a,'gold','每人三枚女巫幣，適用時可使用一次能力。'],[c,'droplet','三選一病患與特效藥燒瓶。'],[b,'bag','其他人的進度在爆炸或結算時才公開。']]){label.classList.add('quacks-setting-choice');label.prepend(art.resource(kind,{size:32,decorative:true}));label.append(node('small',description));}field.className='quacks-settings-grid';field.append(a,c,b);
-   const settings=node('details');settings.className='room-settings-panel';settings.append(node('summary','① 房間設定'),field);const feedback=node('p');feedback.id='roomSettingsFeedback';feedback.setAttribute('role','status');settings.append(feedback,button('設定完成，選藥材書','next',async()=>{await settingsAuto.flush();if($('#feedback').textContent)return;bookSetupReady=true;lastVersion=-1;render(state);}));box.append(settings);
+   const settings=node('details');settings.className='room-settings-panel';settings.append(node('summary','① 房間設定'),field);const feedback=node('p');feedback.id='roomSettingsFeedback';feedback.setAttribute('role','status');settings.append(feedback,button('設定完成，選藥材書','next',async()=>{await settingsAuto.flush();if($('#feedback').textContent)return;bookSetupReady=true;lastVersion=-1;render(state);requestAnimationFrame(()=>$('#bookVoting').scrollIntoView({block:'start',behavior:'instant'}));}));box.append(settings);
   }else box.append(node('p','等待房主開局。'));
  }else if(m){
   drawPot(s);
   if(s.interrupted)box.append(node('p','本場已中止，回大廳另開新房。'));
-  else if(m.pending){box.append(node('h3',m.pending.title));for(const o of m.pending.options)box.append(button(o.label,'check',()=>act('choice',{choiceId:m.pending.id,optionId:o.id}),o.disabled));}
+  else if(m.pending){if(s.phase==='settlement'&&s.stage==='effects'){
+ const color=['black','green','purple'].find(c=>m.pending.title.includes(names[c]))||'purple',summary=node('span');summary.append(art.token({color,value:1},{size:48,decorative:true}));hint(summary,{title:m.pending.title,effect:'選擇本輪藥材效果；滑過各選項查看內容。',caption:'',color});box.append(summary);
+ const row=node('div');row.className='effect-choices';for(const o of m.pending.options){const b=button(o.label,'check',()=>act('choice',{choiceId:m.pending.id,optionId:o.id}),o.disabled);window.GameUI.decorateButton(b,'check',{iconOnly:true});const ingredient=Object.keys(names).find(c=>o.label.includes(names[c])),kind=o.label.includes('水滴')?'droplet':o.label.includes('紅寶石')?'ruby':null;const sr=node('span',o.label);sr.className='ui-sr-only';if(ingredient){const value=Number(o.label.slice(o.label.indexOf(names[ingredient])+names[ingredient].length).match(/^\s*(\d+)/)?.[1]||1);b.replaceChildren(art.token({color:ingredient,value},{size:40,decorative:true}),sr);}else if(kind)b.replaceChildren(art.resource(kind,{size:40,decorative:true}),sr);else window.GameUI.decorateButton(b,/略過|不|放棄/.test(o.label)?'close':/分/.test(o.label)?'star':'next',{iconOnly:true});hint(b,{title:o.label,effect:m.pending.title,caption:o.disabled?'目前無法使用':'',color:ingredient||color});row.append(b);}box.append(row);
+ }else{box.append(node('h3',m.pending.title));for(const o of m.pending.options)box.append(button(o.label,'check',()=>act('choice',{choiceId:m.pending.id,optionId:o.id}),o.disabled));}}
   else if(m.waitingEffect)box.append(node('p','等待其他人完成藥材／占卜卡效果。'));
   else if(s.phase==='patients')box.append(node('p',m.alchemy?.patientId?'已選病患，等待其他人。':'在特效藥面板選一位病患，同場可以選相同病患。'));
   else if(s.phase==='fortune')box.append(s.me===s.roundStarterId?button('抽一張占卜牌','cards',()=>act('draw-fortune')):node('p','等 '+s.players.find(p=>p.id===s.roundStarterId)?.name+' 抽占卜牌。'));
   else if(s.phase==='brewing'){
    if(s.stage==='drawing'){
-    if(m.canDraw){const draw=button('還要爽爽：繼續抽藥','draw-bag',()=>act('draw',{step:s.step})),stop=button('我不抽了QQ','close',()=>act('stop',{step:s.step}));draw.classList.add('draw-action');stop.classList.add('stop-action');for(const [b,icon,text]of [[draw,'draw-bag','還要爽爽：繼續抽藥'],[stop,'hand','我不抽了QQ']]){window.GameUI.decorateButton(b,icon,{iconOnly:true});b.classList.remove('ui-icon-button');b.classList.add('quacks-dock-button');const caption=node('span',text);caption.className='ui-sr-only';const portrait=node('img');portrait.src=icon==='draw-bag'?'/assets/quacks/draw-portrait-v1.png':'/assets/quacks/stop-portrait-v1.png';portrait.alt='';portrait.width=240;portrait.height=160;portrait.className='quacks-action-portrait';b.classList.add('portrait-action');if(icon==='draw-bag')b.dataset.caption='還要爽爽';b.replaceChildren(portrait,caption);hint(b,{title:text,effect:'對自己的大釜作出本次選擇；全員選好後同步抽藥。',caption:'',color:icon});}box.append(draw,stop);}
+    if(m.canDraw){const draw=button('還要爽爽：繼續抽藥','draw-bag',async()=>{await act('draw',{step:s.step});keepPotInView();}),stop=button('我不抽了QQ','close',()=>act('stop',{step:s.step}));draw.classList.add('draw-action');stop.classList.add('stop-action');for(const [b,icon,text]of [[draw,'draw-bag','還要爽爽：繼續抽藥'],[stop,'hand','我不抽了QQ']]){window.GameUI.decorateButton(b,icon,{iconOnly:true});b.classList.remove('ui-icon-button');b.classList.add('quacks-dock-button');const caption=node('span',text);caption.className='ui-sr-only';const portrait=node('img');portrait.src=icon==='draw-bag'?'/assets/quacks/draw-portrait-v1.png':'/assets/quacks/stop-portrait-v1.png';portrait.alt='';portrait.width=240;portrait.height=160;portrait.className='quacks-action-portrait';b.classList.add('portrait-action');if(icon==='draw-bag')b.dataset.caption='還要爽爽';b.replaceChildren(portrait,caption);hint(b,{title:text,effect:'對自己的大釜作出本次選擇；全員選好後同步抽藥。',caption:'',color:icon});}box.append(draw,stop);}
     else box.append(node('p',me.stopped?'你已停止；等其他人完成。':'已選擇，等所有繼續抽藥者。'));
     if(m.canDraw)for(const c of m.alchemy?.drawablePool||[])box.append(button('改放預抽 '+names[c.color]+' '+c.value,'play',()=>act('draw',{step:s.step,chipId:c.id})));
     if(m.canPotion){const potion=button('使用藥水瓶：收回最後白色炸彈','help',()=>act('potion'));potion.classList.remove('ui-icon-button');potion.classList.add('quacks-dock-button','potion-action');const label=node('span','使用藥水瓶：收回最後白色炸彈');label.className='ui-sr-only';potion.replaceChildren(art.resource('potion',{size:42,decorative:true}),label);hint(potion,{title:'使用藥水瓶',effect:'把最後一片尚未造成爆炸的白色炸彈放回自己的藥袋；藥水瓶用完會變空，購物時可用紅寶石補滿。',caption:'',color:'potion'});box.append(potion);}
@@ -241,11 +243,11 @@ function render(s){
     box.append(node('p','購物預算 '+m.budget+' 金幣 · 本輪買入 '+m.bought.length+'／2 片'));
     if(s.round===9)box.append(node('p','第九輪不再買藥材；完成結算時，剩餘可用預算每 5 金幣轉 1 分。'));
     else{
-     const grid=node('div');grid.className='purchase-grid';
+     const grid=node('div');grid.className='purchase-grid';grid.dataset.uiLayout='ingredient-market';
      for(const b of s.books)for(const o of b.offers)grid.append(purchaseOffer(s,b,o,'buy',!m.canBuy||m.budget<o.price||m.bought.length>=2||m.bought.some(c=>c.color===b.color)));
      box.append(grid);
-     if(m.extraBudget>0||m.extraBought.length){box.append(node('h3','幽靈氣息獨立預算：'+m.extraBudget));for(const b of s.books)for(const o of b.offers)box.append(purchaseOffer(s,b,o,'extra-buy',o.price>m.extraBudget||m.extraBought.length>=2||m.extraBought.some(c=>c.color===b.color)));}
-     box.append(button('補滿藥水瓶（'+m.discount+' 顆紅寶石）','help',()=>act('ruby',{mode:'refill'}),m.potion||me.rubies<m.discount),button('液滴前進 1 格（'+m.discount+' 顆紅寶石）','next',()=>act('ruby',{mode:'droplet'}),me.rubies<m.discount));
+     if(m.extraBudget>0||m.extraBought.length){box.append(node('h3','幽靈氣息獨立預算：'+m.extraBudget));const extraGrid=node('div');extraGrid.className='purchase-grid';for(const b of s.books)for(const o of b.offers)extraGrid.append(purchaseOffer(s,b,o,'extra-buy',o.price>m.extraBudget||m.extraBought.length>=2||m.extraBought.some(c=>c.color===b.color)));box.append(extraGrid);}
+     const utilities=node('div');utilities.className='shop-utilities';for(const [mode,kind,label,blocked]of [['refill','potion','補滿藥水瓶',m.potion||me.rubies<m.discount],['droplet','droplet','水滴前進 1 格',me.rubies<m.discount]]){const b=button(label,'help',()=>act('ruby',{mode}),blocked);b.classList.add('quacks-resource-action');const sr=node('span',label);sr.className='ui-sr-only';b.replaceChildren(art.resource(kind,{size:38,decorative:true}),sr);hint(b,{title:label,effect:'支付 '+m.discount+' 顆紅寶石。',caption:kind==='potion'?'重新補滿已喝完的藥水瓶。':'永久水滴起點前進一格。',color:kind});utilities.append(b);}box.append(utilities);
     }
     box.append(button('完成本輪結算','check',()=>act('shop-ready')));
    }
@@ -262,10 +264,11 @@ function render(s){
  }
  renderBooks(s);
 
- arrangePotActions(s);previousState=s;lock();
+ arrangePotActions(s);if(s.phase==='brewing'&&s.stage==='drawing'&&(previousState?.phase!=='brewing'||previousState?.stage!=='drawing'))keepPotInView();previousState=s;lock();
 }
 async function refresh(){if(disposed||reading)return;reading=true;try{render(await api('state'));}catch(e){if(!disposed&&e.name!=='AbortError'){sounds?.disconnect();fx.clear();explosionFx.clear();audioFx.clear();$('#connection').textContent='連線中斷：'+e.message;}}finally{reading=false;}}
 async function start(){disposed=false;scope=new AbortController();try{await RoomReconnect.restore(code,'quacks','#connection',{signal:scope.signal});if(disposed)return;await refresh();timer=setInterval(()=>{if(!document.hidden)refresh();},1200);}catch(e){if(e.name!=='AbortError')$('#feedback').textContent=e.message;}}
+const scorePanel=$('.score-panel');scorePanel.tabIndex=0;scorePanel.setAttribute('role','button');scorePanel.setAttribute('aria-label','放大記分板');function openScore(){if(!state||$('#scoreZoom').open)return;hideTooltip();zoomScoreboard.update(state,false);$('#scoreZoom').showModal();}scorePanel.addEventListener('click',e=>{e.stopPropagation();openScore();},true);scorePanel.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();openScore();}});$('#closeScoreZoom').onclick=()=>$('#scoreZoom').close();$('#scoreZoom').addEventListener('close',()=>scorePanel.focus({preventScroll:true}));window.GameUI.decorateButton($('#closeScoreZoom'),'close',{iconOnly:true});
 $('#retry').onclick=()=>retry&&mutate(retry.route,retry.data);
 $('#leave').onclick=async()=>{if(busy||!confirm('離席會中止本場，確定離開？'))return;await mutate('leave',{});if(!retry&&!$('#feedback').textContent){RoomReconnect.forget(code);location.replace('/?game=quacks');}};
 document.addEventListener('keydown',event=>{if(event.key==='Escape')hideTooltip();});document.addEventListener('pointerdown',event=>{if(tooltipOwner&&!tooltipOwner.contains(event.target))hideTooltip();},true);window.addEventListener('resize',hideTooltip);document.addEventListener('visibilitychange',()=>{if(document.hidden)hideTooltip();});window.addEventListener('scroll',()=>{const anchor=tooltipOwner;hideTooltip();if(anchor)requestAnimationFrame(()=>{if((!tooltipOwner||tooltipOwner===anchor)&&anchor.isConnected&&(anchor.matches(':hover')||anchor===document.activeElement))inspectPot(anchor.quacksDisplayedInsight,null,anchor);});},true);
