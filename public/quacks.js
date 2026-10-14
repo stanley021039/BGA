@@ -91,7 +91,7 @@ function renderResources(s,p){
 function renderPotBadge(s,p){
  const badge=$('#potBadge');badge.replaceChildren(node('strong',p.name+(p.id===s.me?'（你）':'')),renderResources(s,p));
  const score=node('span');score.className='pot-score';score.innerHTML=window.GameUI.symbol('star');score.append(node('strong',String(p.score)));score.setAttribute('aria-label',p.score+' 分');score.dataset.uiHint='';badge.append(score);
- badge.append(node('small',p.exploded?'大釜爆炸':p.stopped?'已停止':p.chosen?'等待其他人':'準備選擇'));
+ const status=p.exploded?'大釜爆炸':p.stopped?'已停止':p.chosen?'等待其他人':null;if(status)badge.append(node('small',status));
  if(p.alchemy){const patient=s.patients.find(x=>x.id===p.alchemy.patientId);if(patient){const pill=node('span');pill.className='patient-pill';pill.append(art.patientPortrait(patient.id),node('strong',String(p.alchemy.essence)));hint(pill,{title:patient.name+' · 特效藥 '+p.alchemy.essence+' 格',effect:patient.text,caption:'',color:'alchemy'});badge.append(pill);}}
  if(p.hidden)badge.append(node('small','進度未公開'));
  else{const bomb=node('span');bomb.className='resource-pill';bomb.append(art.token({color:'white',value:1},{size:27,decorative:true}),node('strong',p.white+' / '+p.threshold));hint(bomb,{title:'白色炸彈 '+p.white+' / '+p.threshold,effect:'數值合計超過門檻時爆炸。',caption:'目前第 '+p.position+' 格',color:'white'});badge.append(bomb);}

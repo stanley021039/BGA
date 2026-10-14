@@ -33,13 +33,14 @@ await pages[0].setViewportSize({width:1440,height:900});
 const columns=await pages[0].evaluate(()=>{const f=document.querySelector('.room-stage-friends').getBoundingClientRect(),w=document.querySelector('.room-stage-work').getBoundingClientRect(),c=document.querySelector('.room-stage-chat').getBoundingClientRect();return {friends:f.x,work:w.x,chat:c.x,width:innerWidth,scroll:document.documentElement.scrollWidth};});
 assert.ok(columns.friends<columns.work&&columns.work<columns.chat,JSON.stringify(columns));assert.ok(columns.scroll<=columns.width+1);
 assert.equal(await pages[0].locator('.player-card').count(),0);
+const badgePlace=await pages[0].evaluate(()=>{const pot=document.querySelector('#cauldron').getBoundingClientRect(),badge=document.querySelector('#potBadge').getBoundingClientRect();return {potBottom:pot.bottom,badgeTop:badge.top,potLeft:pot.left,badgeLeft:badge.left};});assert.ok(badgePlace.badgeTop>=badgePlace.potBottom);assert.ok(Math.abs(badgePlace.badgeLeft-badgePlace.potLeft)<2);assert.equal(await pages[0].locator('#potBadge').getByText('準備選擇',{exact:true}).count(),0);
 await pages[0].locator('#alchemy [data-essence="3"]').first().hover();await pages[0].locator('#potTooltip').waitFor({state:'visible'});assert.ok((await pages[0].locator('#potTooltip').innerText()).includes('第 3 格'));
 await pages[0].keyboard.press('Escape');
 await pages[0].screenshot({path:path.join(output,'workshop-desktop.png'),fullPage:true});
 await pages[0].setViewportSize({width:1280,height:900});
 
   await pages[0].evaluate(()=>{document.documentElement.setAttribute('data-color-scheme','dark');scrollTo(0,0);});await pages[0].waitForTimeout(150);await pages[0].screenshot({path:path.join(output,'workshop-dark-desktop.png'),fullPage:true});
-  await pages[0].setViewportSize({width:1440,height:1400});await pages[0].locator('.cauldron-panel').scrollIntoViewIfNeeded();await pages[0].waitForTimeout(150);await pages[0].screenshot({path:path.join(output,'workshop-dark-pot.png')});
+  await pages[0].setViewportSize({width:1440,height:1400});await pages[0].locator('.cauldron-panel').scrollIntoViewIfNeeded();await pages[0].waitForTimeout(150);await pages[0].screenshot({path:path.join(output,'workshop-dark-pot.png')});await pages[0].locator('.pot-details').screenshot({path:path.join(output,'lower-left-resources.png')});
   await pages[0].setViewportSize({width:390,height:844});
   const mobile=await pages[0].evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,cards:document.querySelectorAll('#alchemy .patient-card').length}));
   assert.ok(mobile.scroll<=mobile.width+1,JSON.stringify(mobile));assert.equal(mobile.cards,3);
