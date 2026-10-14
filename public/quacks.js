@@ -132,7 +132,7 @@ function renderFortune(s,live){
 }
 function renderBookVoting(s){
  const box=$('#bookVoting'),waiting=['waiting','finished'].includes(s.phase);box.hidden=!waiting||!s.bookSelection||(s.me===s.host&&!bookSetupReady);
- if(box.hidden)return;box.replaceChildren(node('h2','② 搭配本局藥材書'),node('p','每顆藥材代表一種效果；大家都可點選，全桌同步採用最後一次選擇。滑過圖示查看效果。'));
+ if(box.hidden)return;box.replaceChildren(node('h2','② 搭配本局藥材書'),node('p','每顆藥材代表一種效果；大家都可點選，全桌同步採用最後一次選擇。'));
  if(s.me===s.host)box.append(button('調整房間設定','settings',()=>{bookSetupReady=false;lastVersion=-1;render(state);requestAnimationFrame(()=>document.querySelector('.ui-room-settings-card')?.scrollIntoView({block:'start',behavior:'instant'}));}));
  box.append(button('隨機挑選','refresh',()=>act('book-random')));
  const grid=node('div');grid.className='book-grid';
@@ -176,7 +176,7 @@ function bonusControls(box,s,m){
 }
 function effectControls(box,s,m){
  const row=node('div');row.className='settlement-effects';
- for(const color of ['black','green','purple']){const icon=node('span');icon.append(art.token({color,value:1},{size:48,decorative:true}));const entries=(m.effectSummary||[]).filter(e=>e.color===color).map(e=>e.text);hint(icon,{title:names[color]+'結算效果',effect:entries.join('；')||'本回合沒有額外效果。',caption:art.lookup(s,color)?.effect||'',color});row.append(icon);}
+ for(const color of ['black','green','purple']){const icon=node('span');icon.append(art.token({color,value:1},{size:48,decorative:true}));icon.dataset.effectColor=color;const records=(m.effectSummary||[]).filter(e=>e.color===color);icon.classList.toggle('effect-triggered',records.some(e=>e.triggered));const entries=records.map(e=>e.text);hint(icon,{title:names[color]+'結算效果',effect:entries.join('；')||'本回合沒有額外效果。',caption:art.lookup(s,color)?.effect||'',color});row.append(icon);}
  const total=node('span');total.innerHTML=window.GameUI.symbol('star');hint(total,{title:'藥材結算合計',effect:(m.effectSummary||[]).filter(e=>!['black','green','purple'].includes(e.color)).map(e=>e.text).join('；')||'已套用本輪藥材效果。',caption:'確認不會重複領取。',color:'summary'});row.append(total);
  box.append(row);const confirm=button('確認藥材效果','check',()=>act('confirm-effects'));window.GameUI.decorateButton(confirm,'check',{iconOnly:true});box.append(confirm);
 }
@@ -212,7 +212,7 @@ function render(s){
   drawPot(s);
   if(s.interrupted)box.append(node('p','本場已中止，回大廳另開新房。'));
   else if(m.pending){if(s.phase==='settlement'&&s.stage==='effects'){
- const color=['black','green','purple'].find(c=>m.pending.title.includes(names[c]))||'purple',summary=node('span');summary.append(art.token({color,value:1},{size:48,decorative:true}));hint(summary,{title:m.pending.title,effect:'選擇本輪藥材效果；滑過各選項查看內容。',caption:'',color});box.append(summary);
+ const color=['black','green','purple'].find(c=>m.pending.title.includes(names[c]))||'purple',summary=node('span');summary.append(art.token({color,value:1},{size:48,decorative:true}));hint(summary,{title:m.pending.title,effect:'選擇本輪藥材效果。',caption:'',color});box.append(summary);
  const row=node('div');row.className='effect-choices';for(const o of m.pending.options){const b=button(o.label,'check',()=>act('choice',{choiceId:m.pending.id,optionId:o.id}),o.disabled);window.GameUI.decorateButton(b,'check',{iconOnly:true});const ingredient=Object.keys(names).find(c=>o.label.includes(names[c])),kind=o.label.includes('水滴')?'droplet':o.label.includes('紅寶石')?'ruby':null;const sr=node('span',o.label);sr.className='ui-sr-only';if(ingredient){const value=Number(o.label.slice(o.label.indexOf(names[ingredient])+names[ingredient].length).match(/^\s*(\d+)/)?.[1]||1);b.replaceChildren(art.token({color:ingredient,value},{size:40,decorative:true}),sr);}else if(kind)b.replaceChildren(art.resource(kind,{size:40,decorative:true}),sr);else window.GameUI.decorateButton(b,/略過|不|放棄/.test(o.label)?'close':/分/.test(o.label)?'star':'next',{iconOnly:true});hint(b,{title:o.label,effect:m.pending.title,caption:o.disabled?'目前無法使用':'',color:ingredient||color});row.append(b);}box.append(row);
  }else{box.append(node('h3',m.pending.title));for(const o of m.pending.options)box.append(button(o.label,'check',()=>act('choice',{choiceId:m.pending.id,optionId:o.id}),o.disabled));}}
   else if(m.waitingEffect)box.append(node('p','等待其他人完成藥材／占卜卡效果。'));
@@ -227,7 +227,8 @@ function render(s){
    }
    for(const c of m.reserve){box.append(button('投入暫存 '+names[c.color]+' '+c.value,'play',()=>act('reserve',{chipId:c.id}),me.chosen||(s.options.books?.red??s.options.bookSet)===2&&!me.stopped));if(!c.must)box.append(button('暫存 '+names[c.color]+' '+c.value+' 放回藥袋','close',()=>act('reserve-return',{chipId:c.id}),me.chosen));}
    for(const c of m.alchemy?.pool||[])if(s.stage==='reserves'&&c.color==='red'&&(s.options.books?.red??s.options.bookSet)===2)box.append(button('投入預抽 '+names.red+' '+c.value,'play',()=>act('alchemy-pool',{chipId:c.id})));
-   for(const c of m.alchemy?.returnable||[])box.append(button('收回 '+names[c.color]+' '+c.value+'（花'+c.value+'格特效藥）','close',()=>act('alchemy-return',{chipId:c.id})));
+   if(m.alchemy?.returnable?.length){const returns=node('div');returns.className='alchemy-return-choices';for(const c of m.alchemy.returnable){const label='收回 '+names[c.color]+' '+c.value+'（花'+c.value+'格特效藥）',b=button(label,'undo',()=>act('alchemy-return',{chipId:c.id}));window.GameUI.decorateButton(b,'undo',{iconOnly:true});b.classList.add('alchemy-return');b.dataset.returnChip=c.id;const sr=node('span',label);sr.className='ui-sr-only';const cost=node('span');cost.className='essence-cost';cost.append(art.resource('essence',{size:26,decorative:true}),node('strong',String(c.value)));b.replaceChildren(art.token(c,{size:40,decorative:true}),node('span'),cost,sr);b.children[1].innerHTML=window.GameUI.symbol('undo');hint(b,{title:'收回 '+names[c.color]+' '+c.value,effect:'消耗 '+c.value+' 格特效藥，將這片藥材放回藥袋；其他藥材格位不變。',caption:'',color:c.color});b.setAttribute('aria-label',label);returns.append(b);}box.append(returns);}
+
    if(s.stage==='reserves')box.append(button('暫存決定完成，其餘保留','check',()=>act('reserve-done'),m.reserve.some(c=>c.must)));
   }else if(s.phase==='settlement'){
    if(s.stage==='essence'){if(m.alchemy?.diceRemaining)box.append(button('擲特效藥骰（剩'+m.alchemy.diceRemaining+'次）','dice',()=>act('essence-roll')));else box.append(node('p',m.alchemy?.confirmed?'特效藥已確認，等待其他人與額外效果。':'到特效藥面板確認格位，可選已達到的較低格。'));}

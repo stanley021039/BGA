@@ -231,3 +231,21 @@ body[data-game-kind=quacks][data-quacks-stage=drawing] .pot-footer .pot-badge>st
 .effect-choices{display:flex;flex-wrap:wrap;gap:8px}.effect-choices button{width:58px;height:58px;min-height:58px;padding:6px!important;display:flex;align-items:center;justify-content:center}
 
 #bookVoting .book-face-list{display:flex;flex-wrap:wrap;gap:8px}#bookVoting button.book-face{position:relative;display:grid;place-items:center;min-width:60px;width:60px;height:60px;padding:4px!important;border-radius:50%;flex:none}#bookVoting button.book-face .ingredient-token{width:48px;height:48px}#bookVoting .book-face small{position:absolute;right:-2px;bottom:-2px;display:grid;place-items:center;width:22px;height:22px;background:#2d324c;border:1px solid #cab3ed;border-radius:50%;font-size:.75rem;color:#fff}#bookVoting .book-face[aria-pressed=true]{outline:2px solid #d9b8ff;outline-offset:2px;background:#5f4880!important}#bookVoting .book-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+
+/* More kettle space, smaller name tools and a left-aligned compact essence track. */
+body[data-game-kind=quacks][data-quacks-stage=drawing] #game .cauldron{max-height:calc(100svh - 170px);min-height:300px}
+body[data-game-kind=quacks] #game .pot-footer .pot-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 28px;align-items:center;gap:6px}
+body[data-game-kind=quacks] #game .pot-footer .pot-toolbar h2{font-size:.88rem!important;line-height:1.2;margin:0}
+body[data-game-kind=quacks] #game .pot-footer #customizePot{width:28px!important;min-width:28px;min-height:28px!important;height:28px!important;padding:4px!important}
+body[data-game-kind=quacks] #game .pot-footer .pot-tabs .ui-icon-button{width:28px!important;min-width:28px;min-height:30px!important;height:30px!important;padding:3px!important}
+body[data-game-kind=quacks] #game .pot-footer .pot-tabs{margin:4px 0;gap:4px}
+#alchemy .alchemy-summary{justify-content:flex-start!important}
+body[data-game-kind=quacks] #game #alchemy .essence-flask{width:100%;max-width:400px!important;margin:6px 0!important}
+#alchemy .alchemy-summary .patient-portrait{width:40px;height:40px}
+.alchemy-return-choices{display:flex;flex-wrap:wrap;gap:8px;min-width:0;width:100%}
+.alchemy-return{display:flex!important;align-items:center;justify-content:center;gap:6px;padding:5px 8px!important;min-width:120px;min-height:52px;border-radius:14px!important}
+.alchemy-return>.ui-symbol{width:20px;height:20px}.alchemy-return .essence-cost{display:flex;align-items:center;gap:2px;color:#ebc7ff}.alchemy-return .essence-cost strong{font-size:.85rem}
+@media(max-width:560px){body[data-game-kind=quacks][data-quacks-stage=drawing] #game .cauldron{max-height:calc(100svh - 200px);min-height:230px}}
+
+.settlement-effects [data-effect-color].effect-triggered{border-color:var(--effect-glow);box-shadow:inset 0 0 14px color-mix(in srgb,var(--effect-glow) 18%,transparent),0 0 14px color-mix(in srgb,var(--effect-glow) 45%,transparent)}
+.settlement-effects [data-effect-color=black]{--effect-glow:#ebcc82}.settlement-effects [data-effect-color=green]{--effect-glow:#77e6ae}.settlement-effects [data-effect-color=purple]{--effect-glow:#ca9cf5}

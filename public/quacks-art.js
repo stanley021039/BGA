@@ -81,7 +81,7 @@ function cauldron(s,p,onInspect){
 }
 
 function resource(kind,{size=42,decorative=false}={}){
- const labels={bag:'藥袋',ruby:'紅寶石',rat:'老鼠尾巴',droplet:'水滴',gold:'金女巫幣',copper:'銅女巫幣',silver:'銀女巫幣',potion:'藥水瓶','draw-hand':'伸手抽藥材','stop-hands':'雙手食指交叉停止'},svg=sv('svg',{viewBox:'0 0 80 80',width:size,height:size,class:'quacks-resource '+kind,role:'img','aria-hidden':decorative?'true':'false','aria-label':labels[kind]||kind});
+ const labels={bag:'藥袋',ruby:'紅寶石',rat:'老鼠尾巴',droplet:'水滴',gold:'金女巫幣',copper:'銅女巫幣',silver:'銀女巫幣',potion:'藥水瓶',essence:'特效藥','draw-hand':'伸手抽藥材','stop-hands':'雙手食指交叉停止'},svg=sv('svg',{viewBox:'0 0 80 80',width:size,height:size,class:'quacks-resource '+kind,role:'img','aria-hidden':decorative?'true':'false','aria-label':labels[kind]||kind});
  if(kind==='bag'){svg.append(sv('path',{d:'M23 8Q40 1 58 8l-5 15Q78 40 68 66q-26 15-56 0Q1 40 28 23Z',fill:'#ac7642',stroke:'#ecd09a','stroke-width':2}),sv('path',{d:'M28 24Q5 48 23 65M53 24q20 28 3 42M34 23v39',stroke:'#80512e',fill:'none','stroke-width':4,opacity:.6}),sv('path',{d:'M23 20q16 8 33 0M25 26q16 4 31-2',stroke:'#ecbf73',fill:'none','stroke-width':4,'stroke-linecap':'round'}),sv('path',{d:'m42 24 18 10M40 25 22 37',stroke:'#ead29a','stroke-width':3,fill:'none'}),sv('ellipse',{cx:40,cy:8,rx:15,ry:4,fill:'#4e3328'}));}
 
 
@@ -103,6 +103,7 @@ else if(kind==='stop-hands'){
   return g;
  };svg.append(hand(false),hand(true));
 }
+ else if(kind==='essence'){svg.append(sv('path',{d:'M25 6h30v10H49v25l18 25q5 10-10 10H23Q8 76 13 66l18-25V16h-6Z',fill:'#bfdde3','fill-opacity':.25,stroke:'#d1edf1','stroke-width':3}),sv('path',{d:'M19 61q21-7 42 0l6 10H13Z',fill:'#cc83d2',stroke:'#eed1fb','stroke-width':1.5}),sv('path',{d:'M35 22v17M26 48l-6 11',stroke:'#f1fbff','stroke-width':3,'stroke-linecap':'round'}));}
  else if(kind==='potion'){svg.append(sv('path',{d:'M29 8h22v19l15 20q14 25-26 27Q0 72 14 47l15-20Z',fill:'#bdd9ef',opacity:.85,stroke:'#eaf7ff','stroke-width':2}),sv('path',{d:'M17 48q23 8 46 0l5 14q-2 10-28 10T12 62Z',fill:'#db64c7',stroke:'#f5b4ed','stroke-width':1.4}),sv('rect',{x:27,y:5,width:26,height:10,rx:3,fill:'#bc9461',stroke:'#f0d3a0','stroke-width':2}),sv('path',{d:'M22 37q-10 14-4 23M33 19v8',fill:'none',stroke:'#fff','stroke-width':4,'stroke-linecap':'round',opacity:.7}),sv('circle',{cx:45,cy:59,r:4,fill:'#f4c8ef',opacity:.8}));}
  else if(kind==='ruby')svg.append(sv('path',{d:'M19 13h42l15 23L40 73 4 36Z',fill:'#d95372',stroke:'#f6b3b0','stroke-width':2}),sv('path',{d:'m19 13 9 23H4m57-23-9 23h24M28 36l12 37 12-37Zm0 0 12-23 12 23',fill:'#f08ba0',stroke:'#932c50','stroke-width':1.6}),sv('path',{d:'m26 20 7-4-6 14-10-2Z',fill:'#fff0de',opacity:.65}));
  else if(kind==='droplet')svg.append(sv('path',{d:'M40 6Q26 28 17 42c-20 38 66 39 46 0Q52 25 40 6Z',fill:'#79bad4',stroke:'#ddf1ec','stroke-width':3}),sv('path',{d:'M27 37q-15 21 5 24',stroke:'#e1f8f1','stroke-width':4,fill:'none','stroke-linecap':'round'}));

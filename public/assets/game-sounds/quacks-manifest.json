@@ -38,5 +38,14 @@
     "seed": 83119,
     "source": "Project-original synthesis: low liquid bubbles and filtered noise, no third-party sample",
     "generator": "tools/generate-quacks-sounds.cjs"
+  },
+  "settlement": {
+    "file": "quacks-settlement.wav",
+    "durationMs": 420,
+    "bytes": 20204,
+    "sha256": "45a4652a12dcfbadf8d2a9e358d726c3b0a0cb671dc9dcce52739c1a1c63e09d",
+    "peak": 10928,
+    "source": "Project-original synthesis: three warm sine tones and faded envelopes, no third-party sample",
+    "generator": "tools/generate-quacks-sounds.cjs"
   }
 }

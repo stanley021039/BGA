@@ -3,7 +3,7 @@
  'use strict';
  const document=root.document;let visibilityEpoch=0;
  document?.addEventListener('visibilitychange',()=>{visibilityEpoch++;});
- const known=new Set(['turn','correct','dice-roll','ingredient-draw','card-draw','potion-drink','shot','slam','explosion','nitro','skid','confirm','reveal']);
+ const known=new Set(['turn','correct','dice-roll','ingredient-draw','card-draw','potion-drink','settlement','shot','slam','explosion','nitro','skid','confirm','reveal']);
  const quietCues=new Set(['shot','slam','nitro','skid']);
  function create({now=()=>Date.now(),maxSeen=256,maxGapMs=5000}={}){
   maxSeen=Math.max(1,Math.min(1024,Number(maxSeen)||256));maxGapMs=Math.max(1,Math.min(5000,Number(maxGapMs)||5000));
@@ -31,7 +31,7 @@
   }
   const hide=()=>{if(document?.hidden)invalidate();};const leave=()=>reset();
   document?.addEventListener('visibilitychange',hide);root.addEventListener?.('pagehide',leave);
-  return {update,play,epoch:()=>epoch,disconnect(){invalidate();initialized=false;},reset,stop,size:()=>seen.size,destroy(){if(destroyed)return;reset();destroyed=true;document?.removeEventListener?.('visibilitychange',hide);root.removeEventListener?.('pagehide',leave);}};
+  return {update,play,hasCapacity:()=>root.AudioSettings?.canPlayGameEffect?.()!==false,epoch:()=>epoch,disconnect(){invalidate();initialized=false;},reset,stop,size:()=>seen.size,destroy(){if(destroyed)return;reset();destroyed=true;document?.removeEventListener?.('visibilitychange',hide);root.removeEventListener?.('pagehide',leave);}};
  }
  root.GameSounds={create};
 })(typeof window==='object'?window:globalThis);
