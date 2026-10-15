@@ -45,7 +45,7 @@
  window.AudioSettings.subscribe(prefs=>{for(const kind of ['music','effects']){settings.querySelector('#site-'+kind+'-enabled').checked=prefs[kind].enabled;settings.querySelector('#site-'+kind+'-volume').value=Math.round(prefs[kind].volume*100);settings.querySelector('#site-'+kind+'-value').textContent=Math.round(prefs[kind].volume*100)+'%';}settings.querySelector('#site-effects-preview').disabled=!prefs.effects.enabled||!prefs.effects.volume;});
  for(const kind of ['music','effects']){settings.querySelector('#site-'+kind+'-enabled').onchange=event=>{window.AudioSettings.set(kind,{enabled:event.target.checked},{gesture:true});settings.querySelector('#site-audio-status').textContent='';};settings.querySelector('#site-'+kind+'-volume').oninput=event=>window.AudioSettings.set(kind,{volume:Number(event.target.value)/100},{gesture:true});}
  settings.querySelector('#site-effects-preview').onclick=()=>{settings.querySelector('#site-audio-status').textContent='';window.AudioSettings.playEffect('confirm',{onError:()=>{settings.querySelector('#site-audio-status').textContent='無法播放音效，請再試一次。';}});};
- function close(){menu.hidden=true;button.setAttribute('aria-expanded','false');for(const item of header.querySelectorAll('details'))item.open=false;}
+ function close(){menu.hidden=true;button.setAttribute('aria-expanded','false');for(const item of header.querySelectorAll('details'))if(item.id!=='qMobileMenu'||document.body.dataset.roomLayout!=='custom')item.open=false;}
  button.onclick=()=>{const open=menu.hidden;close();closeSettings();menu.hidden=!open;button.setAttribute('aria-expanded',String(open));};
  window.UIPopover?.bind(button,menu,{align:'end',onClose:close});
  for(const details of header.querySelectorAll('details'))window.UIPopover?.bindDetails(details,details.querySelector('.site-submenu'));
@@ -62,6 +62,7 @@
    if(me.role==='admin'&&!header.querySelector('#site-admin')){const link=document.createElement('a');link.id='site-admin';link.href='/admin';link.textContent='管理';menu.insertBefore(link,header.querySelector('#site-logout'));}
    const themeButton=header.querySelector('#site-theme-button');if(themeButton){themeButton.classList.remove('site-theme-guest');account.insertBefore(themeButton,button);}
    account.hidden=false;header.querySelector('.site-links').hidden=false;refreshAvatar();
+   if(!document.querySelector('script[data-room-invitations]')){const invitations=document.createElement('script');invitations.src='/shared/room-invitations.js';invitations.dataset.roomInvitations='';document.body.append(invitations);}
   }catch{}
  }
  window.addEventListener('profile-updated',refreshIdentity);window.addEventListener('focus',refreshIdentity);

@@ -5,7 +5,7 @@ const uuid='12345678-1234-4234-8234-123456789abc',url=`/assets/characters/sounds
 function fixture({blocked=false,deferredPlay=false,clockSkew=0,monotonicClock=true}={}){
  let now=100000+clockSkew,elapsed=0,nextTimer=0;const timers=new Map(),clips=[],listeners=new Map(),storage=new Map();
  const target=name=>({addEventListener(type,fn){const key=name+type;if(!listeners.has(key))listeners.set(key,new Set());listeners.get(key).add(fn);},removeEventListener(type,fn){listeners.get(name+type)?.delete(fn);}});
- const document={...target('document:'),hidden:false},window={...target('window:'),...(monotonicClock?{performance:{now:()=>elapsed}}:{})};
+ const document={...target('document:'),hidden:false,body:{dataset:{}}},window={...target('window:'),...(monotonicClock?{performance:{now:()=>elapsed}}:{})};
  class Audio{constructor(src){this.src=src;this.originalSrc=src;this.paused=true;this.volume=1;this.currentTime=0;this.plays=0;this.loads=0;clips.push(this);}play(){this.plays++;if(blocked)return Promise.reject(Error('blocked'));if(deferredPlay)return new Promise(resolve=>{this.resolvePlay=()=>{this.paused=false;resolve();};});this.paused=false;this.onplaying?.();return Promise.resolve();}pause(){this.paused=true;}removeAttribute(key){delete this[key];}load(){this.loads++;}}
  const context={window,document,Audio,URL,location:{origin:'https://example.test'},localStorage:{getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)},Date:{now:()=>now},setTimeout(fn,ms){const id=++nextTimer;timers.set(id,{fn,at:elapsed+ms});return id;},clearTimeout:id=>timers.delete(id)};
  vm.runInNewContext(source('audio-settings.js'),context);vm.runInNewContext(source('expression-sounds.js'),context);

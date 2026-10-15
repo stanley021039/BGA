@@ -5,7 +5,7 @@ const source=file=>fs.readFileSync(path.join(__dirname,'../public/shared',file),
 function harness(saved={},blocked=false,storageBlocked=false,musicNetwork={}){
  const storage=new Map(Object.entries(saved)),listeners=new Map(),clips=[],nodes=new Map(),requests=[];
  const node=id=>{if(!nodes.has(id))nodes.set(id,{hidden:false,value:'',children:[],dataset:{},textContent:'',innerHTML:'',attributes:{},classList:{toggle(){}},querySelector:node,append(...children){this.children.push(...children);},replaceChildren(...children){this.children=children;},setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];}});return nodes.get(id);};
- const document={hidden:false,createElement:()=>node('panel'),body:{append(){}},querySelector:()=>null,addEventListener(type,fn){const key='document:'+type;listeners.set(key,[...(listeners.get(key)||[]),fn]);}};
+ const document={hidden:false,createElement:()=>node('panel'),body:{dataset:{},append(){}},querySelector:()=>null,addEventListener(type,fn){const key='document:'+type;listeners.set(key,[...(listeners.get(key)||[]),fn]);}};
  const window={addEventListener(type,fn){listeners.set('window:'+type,[...(listeners.get('window:'+type)||[]),fn]);}};
  class Audio {constructor(src){this.src=src;this.volume=1;this.paused=true;this.currentTime=0;this.readyState=1;this.plays=0;this.pauses=0;clips.push(this);}play(){this.plays++;if(blocked)return Promise.reject(Error('autoplay'));this.paused=false;return Promise.resolve();}pause(){this.pauses++;this.paused=true;}load(){}removeAttribute(key){delete this[key];}}
  const timers=new Map();let timerId=0;

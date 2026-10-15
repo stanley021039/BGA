@@ -1,0 +1,368 @@
+/* Page compositions follow Stitch UX02–UX17. Native controls keep their owners. */
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-page{max-width:1680px;margin:auto;padding:0 32px 24px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .site-header{min-height:80px;margin-bottom:16px;padding-block:16px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] :is(.tpl-game-grid,.tpl-lobby-grid){gap:var(--tpl-gap)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-section{padding:var(--tpl-pad);margin:0;background:var(--tpl-panel)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-top{align-items:center;gap:16px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-top h2{font-size:18px;margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-top :is(.kicker,p){display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-avatar img{width:64px;height:76px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-stage{background:var(--tpl-inset);border:0;height:150px;min-height:150px;margin-top:12px;border-radius:12px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-bottom{min-height:24px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .library-heading{margin:0 0 16px;align-items:center}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .library-heading h1{font-size:26px;margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .library-heading :is(.kicker,p),body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .library-count{display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .carousel-heading{margin:0;min-height:28px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .carousel-heading small{display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel]{height:360px;min-height:300px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel] .game-tile{width:240px;top:48%;border:var(--tpl-border);border-radius:16px;box-shadow:0 6px 0 #24201c20}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel] .tile-image{height:148px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel] .tile-body{padding:16px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel] .tile-body h2{font-size:22px;margin:8px 0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel] .tile-body h2 span{display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel] .tile-body p{display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel] .tile-bottom{padding-top:12px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel] .tile-bottom>span:not(.select-label){display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .carousel-footer{margin:12px 0 0;padding:16px;border:var(--tpl-border);border-radius:16px;background:var(--tpl-panel);gap:16px;flex-wrap:wrap}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .rooms-section{margin:0;padding:0;display:flex;flex-direction:column;gap:var(--tpl-gap);border:0;background:none;box-shadow:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] :is(.rooms-browse,.room-code-panel){padding:var(--tpl-pad);border:var(--tpl-border);border-radius:16px;background:var(--tpl-panel);box-shadow:var(--tpl-shadow)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .rooms-browse{display:flex;flex:1;flex-direction:column;min-height:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .rooms-heading{margin:0 0 16px;align-items:center}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .rooms-heading h2{font-size:18px;margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .rooms-heading :is(.kicker,p),body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .join-note{display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-list{display:grid;grid-template-columns:1fr;gap:12px;min-height:0;overflow:auto;flex:1;align-content:start}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-card{padding:16px;border:1px solid var(--tpl-line);background:var(--tpl-inset)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .join-input{display:grid;gap:12px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-code-panel label{font-size:18px;font-weight:700;margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] :is(.resume,.version-note){font-size:var(--ui-type-p3, 14px);margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .resume a{font-size:var(--ui-type-p3,14px)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .resume:empty{display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-roster .room-player{grid-template-columns:56px minmax(0,1fr)!important;min-height:104px!important;gap:12px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-roster .room-player-avatar{width:56px!important;height:76px!important;min-width:56px!important;grid-row:1/3!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-roster .room-player-info{grid-column:2!important;grid-row:1!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-roster .room-player-metrics{grid-column:2!important;grid-row:2!important;align-self:end!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-shell .game-toolbar{display:flex;align-items:center;gap:16px;min-height:48px;margin:0 0 16px;padding:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-shell .game-toolbar h1{font-size:22px;margin:0;white-space:nowrap}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-roster .stage-head{padding:0 0 16px;gap:8px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-roster{padding:var(--tpl-pad)!important;border:var(--tpl-border)!important;background:var(--tpl-panel)!important;border-radius:16px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-work{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;gap:16px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-chat{padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;gap:16px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-chat>.shared-chat{padding:var(--tpl-pad)!important;border:var(--tpl-border)!important;background:var(--tpl-panel)!important;border-radius:16px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-chat>.ui-game-operations:has(#drawActions:empty){display:none!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-chat>.ui-room-panel-host:has(#drawActions:empty){display:none!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board{padding:var(--tpl-pad)!important;background:var(--tpl-inset)!important;border:var(--tpl-border)!important;border-radius:16px!important;gap:12px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board>.board-head{grid-column:1/-1;grid-row:1;min-height:32px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board>.draw-countdown{grid-column:1/-1;grid-row:2;min-height:52px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board>.tpl-palette{grid-column:1/-1;grid-row:3;display:flex;align-items:center;flex-wrap:wrap;gap:12px;min-height:52px;background:var(--tpl-panel);padding:8px 12px;border-radius:12px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not([data-draw-phase=drawing]) .tpl-palette,body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template][data-draw-role=guesser] .tpl-palette{display:none!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-palette .size-pick{display:flex;align-items:center;gap:8px;margin:0;font-size:var(--ui-type-p3, 14px)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-palette .size-pick input{width:100px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-palette .color-pick input{width:32px;height:32px;padding:0;border-radius:50%}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-palette .color-menu{position:relative}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board>.canvas-frame{grid-column:2;grid-row:4;align-self:center;justify-self:center;background:#fff;width:var(--ui-drawing-canvas-width,100%);max-width:100%;box-shadow:0 3px 0 #0001}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board>.tools{grid-column:1;grid-row:4;display:block;padding:6px;background:var(--tpl-panel)!important;border:1px solid var(--tpl-line);border-radius:12px;align-self:stretch}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board .tool-row{display:grid;grid-template-columns:44px;gap:4px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board .tool-row button{width:44px;height:44px;min-width:44px;margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board .tool-row button[aria-pressed=true]{background:var(--tpl-action)!important;color:var(--tpl-on-action)!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board:not(.is-drawing)>.canvas-frame,body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template][data-draw-role=guesser] .ui-drawing-board>.canvas-frame{grid-column:1/-1}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .canvas-stage{background:var(--tpl-panel)!important;color:var(--tpl-text)!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-scene{padding:var(--tpl-pad)!important;gap:24px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-choosing{display:flex!important;flex-direction:column;justify-content:center;text-align:center}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-choosing .stage-lead{display:flex;align-items:center;justify-content:center;gap:12px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-picks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:24px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:20px;min-height:168px;padding:20px 12px;border:var(--tpl-border);border-radius:16px;background:var(--play-yellow);color:var(--tpl-on-action);box-shadow:0 4px 0 #24201c20;transition:transform 140ms}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick:nth-child(2){background:var(--play-blue)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick:nth-child(3){background:var(--play-pink)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick strong{font-size:24px;overflow-wrap:anywhere}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick:hover{transform:translateY(-6px)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-reveal{grid-template-columns:1fr!important;text-align:center}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-reveal .stage-art{max-width:100%;width:100%;margin:0 auto}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-cards{grid-template-columns:repeat(3,minmax(0,1fr))!important;align-items:end;gap:16px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card{min-width:0;background:var(--tpl-inset)!important;border:1px solid var(--tpl-line)!important;padding:16px!important;border-radius:12px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card:first-child{grid-column:2;grid-row:1;min-height:220px;background:var(--play-yellow)!important;color:var(--tpl-on-action)!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card:nth-child(2){grid-column:1;grid-row:1;min-height:190px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card:nth-child(3){grid-column:3;grid-row:1;min-height:170px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card:nth-child(n+4){min-height:128px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-guess-panel{padding:16px!important;border:var(--tpl-border)!important;background:var(--tpl-panel)!important;border-radius:16px!important;gap:8px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-guess-panel .guess-chat-head{font-size:var(--ui-type-p3, 14px)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-guess-panel #guessForm label{font-size:14px;margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-guess-panel #drawGuessStatus{min-height:24px;max-height:48px;overflow:auto;margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-results{width:min(1080px,calc(100vw - 48px))!important;padding:var(--tpl-pad)!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-results-layout{grid-template-columns:200px minmax(0,1fr);gap:24px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-game-operations{padding:16px!important;border:var(--tpl-border)!important;background:var(--tpl-panel)!important;border-radius:16px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-game-operations-content>p:empty{display:none}
+@media(min-width:1101px) and (min-height:680px){
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-lobby-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;grid-template-rows:210px minmax(330px,1fr) auto;min-height:0;height:calc(100dvh - 128px)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-section{grid-column:1/-1;grid-row:1;display:flex;flex-direction:column;padding:20px 24px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-stage{flex:1;height:auto;min-height:96px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-carousel-section{grid-column:1;grid-row:2;display:flex;flex-direction:column;min-height:0}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel]{flex:1;height:auto;min-height:240px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .rooms-section{grid-column:2;grid-row:2;min-height:0}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) :is(.version-note,.resume){grid-column:1/-1;grid-row:3}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template][data-game-kind=draw]:not(.ui-large-text){--ui-drawing-row-height:var(--tpl-game-height);--ui-drawing-roster-width:var(--tpl-roster-width);--ui-drawing-chat-width:var(--tpl-chat-width);--ui-drawing-answer-height:var(--tpl-answer-height)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout{height:var(--tpl-game-height);grid-template-rows:var(--tpl-game-height)!important;grid-template-columns:var(--tpl-roster-width) minmax(0,1fr) var(--tpl-chat-width)!important;gap:var(--tpl-gap)!important;margin:0!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout>:is(.ui-drawing-play-roster,.ui-drawing-play-work,.ui-drawing-play-chat){height:var(--tpl-game-height)!important;min-height:0!important;max-height:var(--tpl-game-height)!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-play-work{display:flex!important;flex-direction:column;overflow:hidden!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-board{grid-template-columns:58px minmax(0,1fr)!important;grid-template-rows:auto auto auto minmax(0,1fr)!important;flex:1!important;min-height:0!important;overflow:auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-board:not(.is-drawing){grid-template-columns:1fr!important;grid-template-rows:auto auto minmax(0,1fr)!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-board:not(.is-drawing)>.canvas-frame{grid-row:3;width:100%;height:100%;aspect-ratio:auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-board .draw-countdown{grid-template-columns:1fr auto;gap:8px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-board .draw-countdown .draw-timer{font-size:24px;width:7ch;min-width:7ch}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-play-chat{display:flex!important;flex-direction:column;overflow:hidden!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-play-chat>.shared-chat{flex:1!important;height:auto!important;min-height:0!important;max-height:none!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-play-chat>.ui-game-operations{flex:none;max-height:220px;min-height:0;height:auto!important;overflow:auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .draw-guess-panel{flex:0 0 156px!important;height:156px!important;min-height:156px!important;max-height:156px!important;overflow:hidden;grid-template-rows:minmax(0,1fr) 24px auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .draw-guess-panel .guess-feed{max-height:none!important;min-height:0!important;flex:1;overflow:auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .draw-guess-panel .guess-chat{display:flex;flex-direction:column;min-height:0}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout{height:var(--tpl-game-height);grid-template-columns:var(--tpl-roster-width) minmax(0,1fr) var(--tpl-chat-width)!important;grid-template-areas:'roster center chat'!important;grid-template-rows:minmax(0,1fr)!important;gap:var(--tpl-gap)!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-waiting-center{grid-area:center;height:100%;min-height:0;gap:16px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-waiting-center>.room-waiting-template{display:grid;grid-template-columns:140px minmax(0,1fr);min-height:164px!important;height:164px!important;flex:0 0 164px;border:var(--tpl-border);background:var(--tpl-panel)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-art{background:var(--tpl-inset)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-art img{object-fit:contain;max-height:164px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-info{padding:20px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-info h2{font-size:22px;margin:8px 0}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-info p{font-size:14px;margin:8px 0}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-hint{min-height:24px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-waiting-center>.ui-room-waiting-controls{flex:1;min-height:0!important;height:auto!important;overflow:hidden!important;padding:var(--tpl-pad);border:var(--tpl-border);border-radius:16px;background:var(--tpl-panel)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout>.ui-room-roster{padding:var(--tpl-pad);border:var(--tpl-border);background:var(--tpl-panel)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .ui-room-roster-card{min-height:104px;grid-template-columns:56px minmax(0,1fr);padding:12px;background:var(--tpl-inset);border:1px solid var(--tpl-line)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .ui-room-roster-avatar{width:56px;height:76px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout .ui-room-chat-slot>.shared-chat{height:100%!important;min-height:0!important;max-height:100%!important;padding:var(--tpl-pad)!important;border:var(--tpl-border);background:var(--tpl-panel)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-controls .ui-room-controls{height:100%;min-height:0;flex:1}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-controls .room-settings-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-controls fieldset{grid-column:1/-1}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-controls .topic-picks{grid-template-columns:repeat(3,minmax(0,1fr))}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template][data-room-phase=finished] .draw-layout>.ui-room-roster{display:none}
+}
+@media(min-width:1101px) and (max-height:800px){
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]{--tpl-pad:16px;--tpl-gap:16px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-lobby-grid{grid-template-rows:150px minmax(300px,1fr) auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-board .tool-row{grid-template-columns:repeat(2,44px)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-drawing-board{grid-template-columns:102px minmax(0,1fr)!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-waiting-center>.room-waiting-template{height:132px!important;min-height:132px!important;flex-basis:132px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-art img{max-height:132px}
+}
+@media(max-width:1100px){
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-page{padding-inline:20px!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-lobby-grid{display:flex;flex-direction:column;gap:24px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-section{order:0}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-carousel-section{order:1}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .rooms-section{order:2}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .version-note{order:3}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-waiting-layout{display:flex;flex-direction:column;gap:20px;height:auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-waiting-center{order:0}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-waiting-layout>.ui-room-roster{order:1;height:320px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-chat-slot{order:2;height:440px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-waiting-center>.ui-room-waiting-controls{height:440px;padding:20px;border:var(--tpl-border);border-radius:16px;background:var(--tpl-panel)}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board{grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto auto!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board>.canvas-frame{grid-column:1!important;grid-row:4!important;aspect-ratio:2/1}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board>.tools{grid-column:1!important;grid-row:5!important;width:100%;overflow:auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-board .tool-row{display:flex;gap:8px!important;width:max-content}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-work{overflow:visible!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-guess-panel{min-height:180px}
+}
+@media(max-width:760px){
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-page{padding-inline:16px!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .site-header{margin-bottom:16px;min-height:68px;padding-block:12px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-drawing-play-roster{height:284px!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-roster #players{display:flex!important;flex-direction:row;overflow:auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-roster .room-player{flex:0 0 180px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-picks{gap:8px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick{min-height:132px;padding:12px 8px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick strong{font-size:20px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-scene{padding:16px!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-cards{gap:8px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card{padding:8px!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card:first-child{min-height:180px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card:nth-child(2){min-height:160px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-player-card:nth-child(3){min-height:140px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-results-layout{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick:hover{transform:none}}
+html.motion-reduced body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .stage-pick:hover{transform:none}
+/* Waiting follows exported UX02: roster / illustrated welcome / room settings. */
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-chat-dialog{width:min(520px,calc(100vw - 32px));height:min(720px,calc(100dvh - 48px));padding:24px;overflow:hidden}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-chat-dialog>.ui-room-chat-slot{height:calc(100% - 84px);min-height:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-chat-dialog .shared-chat{height:100%!important;min-height:0!important;max-height:100%!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-waiting-footer{display:flex;align-items:center;gap:12px;min-height:56px;padding:12px 20px;border-top:1px solid var(--tpl-line);flex:none}
+@media(min-width:1101px) and (min-height:680px){
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout{grid-template-areas:'roster center controls'!important;grid-template-columns:var(--tpl-roster-width) minmax(0,1fr) 360px!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-waiting-center{border:var(--tpl-border);border-radius:16px;background:var(--tpl-panel);overflow:hidden}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-waiting-center>.room-waiting-template{display:flex;flex-direction:column;justify-content:center;border:0;box-shadow:none;flex:1;height:auto!important;min-height:0!important;gap:24px;padding:32px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-art{width:100%;height:200px;min-height:0;background:none}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-art img{width:240px;max-height:200px;height:100%;border-radius:12px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-info{text-align:center;padding:0}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-waiting-info h2{font-size:28px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-layout>.ui-room-waiting-controls{grid-area:controls!important;padding:var(--tpl-pad)!important;border:var(--tpl-border)!important;background:var(--tpl-panel)!important}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-controls .room-settings-fields{grid-template-columns:1fr}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .ui-room-waiting-controls .topic-picks{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:1100px){body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-waiting-layout>.ui-room-waiting-controls{height:500px!important;order:1}body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-waiting-center{border:var(--tpl-border);border-radius:16px;background:var(--tpl-panel)}body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-waiting-center>.room-waiting-template{border:0;box-shadow:none}body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-waiting-layout>.ui-room-roster{order:2}}
+/* Native roster wrappers use the same fixed avatar and flexible text slots. */
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-heading{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;flex:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-heading h2{font-size:18px;white-space:normal;margin:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-count{font-size:var(--ui-type-p3, 14px);white-space:normal}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-card:not(.ui-room-roster-add){display:grid!important;grid-template-columns:48px minmax(0,1fr)!important;gap:12px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-card.ui-room-roster-add{grid-template-columns:minmax(0,1fr)!important;min-width:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-add>button.ui-room-roster-action-button{grid-column:1/-1!important;grid-row:1!important;width:100%!important;min-width:0!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-action-button{display:grid!important;grid-template-columns:32px minmax(0,1fr)!important;gap:12px!important;padding:0!important;min-width:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-card .ui-room-roster-avatar{width:48px!important;height:64px!important;min-width:48px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-add .ui-room-roster-avatar{width:32px!important;height:40px!important;min-width:32px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-add .ui-room-roster-status{display:none}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-info{min-width:0;flex:1}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-roster-action-label{font-size:14px;line-height:1.5}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-settings-fields .option-row{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-settings-fields .option-row span{font-size:var(--ui-type-p3, 14px);padding:6px 8px;min-height:40px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-settings-fields .option-row input:checked+span{background:var(--tpl-inset)!important;color:var(--tpl-text)!important;border-color:var(--tpl-text)}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-settings-fields .topic-hint{font-size:var(--ui-type-p3, 14px);margin:8px 0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-settings-fields fieldset{padding:12px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .room-settings-fields fieldset:not(:first-child) .option-row{grid-template-columns:repeat(3,minmax(0,1fr))}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-settings-footer>.ui-room-session-actions>[data-room-action=start]{background:var(--tpl-action)!important;color:var(--tpl-on-action)!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .draw-layout{width:100%!important;max-width:none!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-avatar{transform:translate(-50%,-50%);width:72px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-avatar img{width:54px;height:58px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-visitors{inset:36px 0 20px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .lobby-bottom{min-height:0;height:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .join-note{display:none!important}
+@media(min-width:1101px) and (min-height:680px){
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-lobby-grid{height:calc(100dvh - 144px);grid-template-rows:230px minmax(300px,1fr) auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-stage{min-height:140px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-carousel-section .carousel-footer{padding:12px;min-height:72px}
+}
+@media(min-width:1101px) and (max-height:800px){
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-lobby-grid{grid-template-rows:186px minmax(280px,1fr) auto}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-stage{min-height:100px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-image{height:112px}
+ body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .game-tile{width:220px}
+}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template][data-game-kind=draw]{font-size:16px;--ui-page-gutter:0px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-waiting-layout{padding-inline:0!important;width:100%}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-settings-slot .room-settings-fields{gap:12px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .ui-room-settings-slot .topic-options .option-row{margin-top:8px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .tpl-waiting-footer{font-size:14px}
+body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-board>.tpl-palette{grid-column:1/-1!important;grid-row:3!important;align-self:start!important;height:auto!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-board .tool-row{grid-template-columns:44px!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-board>.tools{align-self:stretch!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-board>.canvas-frame{grid-row:4!important}
+@media(min-width:1101px) and (min-height:680px){body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-board:not(.is-drawing)>.canvas-frame{grid-row:3!important}}
+@media(min-width:1101px) and (max-height:800px){body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-board .tool-row{grid-template-columns:repeat(2,44px)!important}}
+@media(max-width:1100px){body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-board>.tools{grid-row:5!important}body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-board .tool-row{display:flex!important}}
+/* Opt-in board owns its frame; the legacy #boardSection reset is bypassed here. */
+body[data-ui-template=tactile] .ui-drawing-play-work>#boardSection{padding:var(--tpl-pad)!important;border:var(--tpl-border)!important;background:var(--tpl-inset)!important;box-shadow:var(--tpl-shadow)!important;overflow:hidden!important;align-content:stretch}
+body[data-ui-template=tactile] #boardSection>.tools{grid-row:4!important}
+body[data-ui-template=tactile] #boardSection>.draw-countdown{width:100%!important;grid-column:1/-1!important}
+body[data-ui-template=tactile] #boardSection>.canvas-frame{width:var(--ui-drawing-canvas-width,100%)!important;align-self:center!important}
+body[data-ui-template=tactile] #boardSection>.tpl-palette{grid-column:1/-1!important;grid-row:3!important;width:100%;display:flex!important;flex-wrap:wrap;align-self:start}
+body[data-ui-template=tactile]:not([data-draw-phase=drawing]) #boardSection>.tpl-palette,body[data-ui-template=tactile][data-draw-role=guesser] #boardSection>.tpl-palette{display:none!important}
+body[data-ui-template=tactile] #boardSection:not(.is-drawing)>.canvas-frame{height:100%!important;aspect-ratio:auto}
+body[data-ui-template=tactile] #boardSection .draw-timer-track{width:100%}
+@media(max-width:1100px){body[data-ui-template=tactile] .ui-drawing-play-work>#boardSection{overflow:visible!important}body[data-ui-template=tactile] #boardSection>.tools{grid-row:5!important}}
+@media(min-width:1101px) and (min-height:680px){
+ body[data-ui-template=tactile] .ui-room-waiting-controls .room-settings-fields{font-size:14px}
+ body[data-ui-template=tactile] .ui-room-waiting-controls .room-settings-fields .option-row span{min-height:32px;padding:4px 6px}
+ body[data-ui-template=tactile] .ui-room-waiting-controls .room-settings-fields .option-row{gap:6px}
+ body[data-ui-template=tactile] .ui-room-waiting-controls .room-settings-fields fieldset{padding:8px;margin:0}
+ body[data-ui-template=tactile] .ui-room-waiting-controls .topic-shortcuts button{min-height:32px;padding:4px 8px}
+ body[data-ui-template=tactile] .ui-room-waiting-controls .room-settings-fields .ui-field{gap:4px}
+}
+body[data-ui-template=tactile] #boardSection .tpl-palette>.swatches{display:flex;flex-wrap:wrap;position:static;gap:4px;padding:0;border:0;background:none;flex:1;min-width:150px}
+body[data-ui-template=tactile] #boardSection .tpl-palette>.swatches button{width:24px!important;min-width:24px!important;height:24px!important;min-height:24px!important;border-radius:50%;border:1px solid var(--tpl-line);box-shadow:none;margin:0}
+body[data-ui-template=tactile] #boardSection .tpl-palette>.size-pick{flex:none}
+@media(max-width:760px){body[data-ui-template=tactile] #boardSection .tpl-palette>.swatches{flex-basis:100%}body[data-ui-template=tactile] #boardSection .tpl-palette>.swatches button{width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important}}
+body[data-ui-template=tactile] .tpl-settings-dialog{width:min(580px,calc(100vw - 32px));max-height:calc(100dvh - 48px);padding:24px}
+body[data-ui-template=tactile] .tpl-settings-dialog__body{height:min(620px,calc(100dvh - 176px));min-height:0}
+body[data-ui-template=tactile] .tpl-settings-dialog .ui-room-controls{height:100%;max-height:100%;min-height:0}
+body[data-ui-template=tactile][data-room-phase=finished] .ui-game-operations .ui-room-controls{height:auto;max-height:220px}
+body[data-ui-template=tactile] .ui-drawing-play-chat>.ui-game-operations:has(#drawActions:not(:empty)){display:flex!important}
+body[data-ui-template=tactile] .stage-card-rank{font-size:28px;color:var(--tpl-muted)}
+body[data-ui-template=tactile] .stage-player-card:first-child .stage-card-rank{color:var(--tpl-on-action)}
+body[data-ui-template=tactile] .stage-podium .stage-player-cards .stage-player-card .stage-avatar{width:72px;height:96px;object-fit:contain}
+body[data-ui-template=tactile] #boardSection:not(.is-drawing) .canvas-stage{position:absolute!important;inset:0!important;overflow:auto!important;height:100%;min-height:0}
+body[data-ui-template=tactile] .stage-finished{align-content:start;gap:24px;min-height:100%;grid-template-rows:auto auto minmax(0,1fr) auto}
+body[data-ui-template=tactile] .stage-finished .finished-art{max-height:160px;overflow:auto;width:100%}
+body[data-ui-template=tactile] .stage-finished .finished-art canvas{max-height:100px;width:auto;max-width:100%;margin:auto}
+body[data-ui-template=tactile] .tpl-result-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--tpl-line)}
+body[data-ui-template=tactile] .tpl-result-actions :is(a,button){min-height:44px;padding:10px 16px;border:var(--tpl-border);border-radius:12px;color:var(--tpl-text);background:var(--tpl-panel)}
+body[data-ui-template=tactile] .tpl-result-actions .tpl-replay{background:var(--tpl-action);color:var(--tpl-on-action);margin-left:auto}
+body[data-ui-template=tactile][data-room-phase=finished] .ui-drawing-play-chat>.ui-game-operations{display:none!important}
+body[data-ui-template=tactile][data-room-phase=finished] .tpl-settings-dialog [data-room-action=start]{display:none!important}
+/* A two-column tool rail fits all ten controls in the desktop height budget. */
+@media(min-width:1101px) and (min-height:680px){
+ body[data-ui-template=tactile] #boardSection.is-drawing:has(>.tools:not([hidden])){grid-template-columns:102px minmax(0,1fr)!important}
+ body[data-ui-template=tactile] #boardSection .tool-row{grid-template-columns:repeat(2,44px)!important;gap:4px!important}
+ body[data-ui-template=tactile] #boardSection>.tools{padding:6px!important;overflow:auto}
+ body[data-ui-template=tactile] #boardSection .board-head{min-height:28px}
+ body[data-ui-template=tactile] #boardSection .draw-countdown{min-height:40px}
+ body[data-ui-template=tactile] #boardSection .draw-timer{font-size:22px}
+ body[data-ui-template=tactile] #boardSection:not(.is-drawing){grid-template-columns:1fr!important}
+}
+body[data-ui-template=tactile][data-draw-role=guesser] #boardSection.is-drawing{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto minmax(0,1fr)!important}
+body[data-ui-template=tactile][data-draw-role=guesser] #boardSection.is-drawing>.canvas-frame{grid-column:1/-1!important;grid-row:3!important}
+body[data-ui-template=tactile][data-room-phase=finished] .ui-drawing-play-chat>.ui-game-operations:has(#drawActions){display:none!important}
+body[data-ui-template=tactile] .stage-player-card:first-child{background:var(--tpl-action)!important;color:var(--tpl-on-action)!important}
+body[data-ui-template=tactile] .stage-finished{display:flex!important;flex-direction:column;height:100%;min-height:0;gap:16px!important}
+body[data-ui-template=tactile] .stage-finished .finished-heading{flex:none;text-align:center}
+body[data-ui-template=tactile] .stage-finished .stage-podium{flex:1;min-height:0;overflow:auto;width:100%}
+body[data-ui-template=tactile] .stage-finished .tpl-result-actions{flex:none;width:100%;justify-content:center;min-height:64px}
+body[data-ui-template=tactile] .tpl-finished-art{flex:none;width:100%;font-size:14px}
+body[data-ui-template=tactile] .tpl-finished-art>summary{min-height:32px;cursor:pointer;color:var(--tpl-muted)}
+body[data-ui-template=tactile] .tpl-finished-art .finished-art{max-height:132px}
+/* Short desktops retain all controls: shared horizontal rail, compact metadata row. */
+@media(min-width:1101px) and (max-height:800px) and (min-height:680px){
+ body[data-ui-template=tactile] #boardSection.is-drawing:has(>.tools:not([hidden])){grid-template-columns:minmax(0,1fr) 140px!important;grid-template-rows:48px 52px minmax(0,1fr) 52px!important;gap:8px!important}
+ body[data-ui-template=tactile] #boardSection.is-drawing>.board-head{grid-column:1!important;grid-row:1!important}
+ body[data-ui-template=tactile] #boardSection.is-drawing>.draw-countdown{grid-column:2!important;grid-row:1!important;grid-template-columns:1fr!important;min-height:48px;gap:4px}
+ body[data-ui-template=tactile] #boardSection.is-drawing .draw-timer-caption{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ body[data-ui-template=tactile] #boardSection.is-drawing .draw-timer{width:100%;min-width:0;font-size:20px;margin:0;padding:0}
+ body[data-ui-template=tactile] #boardSection.is-drawing .draw-timer-track{height:6px;margin:0}
+ body[data-ui-template=tactile] #boardSection.is-drawing>.tpl-palette{grid-row:2!important;padding:4px 8px;min-height:44px}
+ body[data-ui-template=tactile] #boardSection.is-drawing>.canvas-frame{grid-column:1/-1!important;grid-row:3!important}
+ body[data-ui-template=tactile] #boardSection.is-drawing>.tools{grid-column:1/-1!important;grid-row:4!important;overflow:visible!important;padding:4px!important;width:100%;border:0;align-self:start!important}
+ body[data-ui-template=tactile] #boardSection .tool-row{display:flex!important;flex-wrap:nowrap;gap:4px!important;justify-content:center}
+ body[data-ui-template=tactile][data-draw-role=artist] .draw-guess-panel{flex-basis:104px!important;height:104px!important;min-height:104px!important;max-height:104px!important}
+ body[data-ui-template=tactile][data-draw-role=guesser] #boardSection.is-drawing{grid-template-columns:minmax(0,1fr) 140px!important;grid-template-rows:48px minmax(0,1fr)!important}
+ body[data-ui-template=tactile][data-draw-role=guesser] #boardSection.is-drawing>.canvas-frame{grid-row:2!important}
+}
+body[data-ui-template=tactile] .tpl-chat-dialog>.tpl-dialog-body{height:calc(100% - 84px);min-height:0}
+body[data-ui-template=tactile] .tpl-chat-dialog .ui-room-chat-slot{height:100%;min-height:0}
+body[data-ui-template=tactile][data-room-phase=reveal] .ui-drawing-play-chat>.ui-game-operations:has(#drawActions){display:none!important}
+body[data-ui-template=tactile][data-game-kind=draw].game-focus-active .draw-shell{padding:16px!important}
+body[data-ui-template=tactile][data-game-kind=draw].game-focus-active .draw-layout{padding:0!important;min-height:0!important}
+body[data-ui-template=tactile][data-game-kind=draw].game-focus-active .ui-drawing-play-chat{display:contents!important}
+body[data-ui-template=tactile][data-game-kind=draw].game-focus-active .ui-drawing-play-chat>:not(#connection):not(#drawWaiting){display:none!important}
+body[data-ui-template=tactile][data-game-kind=draw].game-focus-active :is(#connection,#drawWaiting):not([hidden]){position:absolute;bottom:68px;right:24px;z-index:5;max-width:min(400px,90vw);padding:12px;background:var(--tpl-panel);color:var(--tpl-text);border:var(--tpl-border);border-radius:12px}
+body[data-ui-template=tactile][data-game-kind=draw].game-focus-active #boardSection{min-height:0!important}
+body[data-ui-template=tactile][data-game-kind=draw].game-focus-active #boardSection>.canvas-frame{min-height:0!important;width:var(--ui-drawing-canvas-width,100%)!important}
+@media(min-width:1101px) and (min-height:680px){
+ body[data-ui-template=tactile][data-game-kind=draw].game-focus-active .draw-layout.ui-drawing-play-layout{display:grid!important;grid-template-columns:var(--tpl-roster-width) minmax(0,1fr)!important;grid-template-rows:var(--tpl-game-height)!important;gap:var(--tpl-gap)!important;position:relative}
+ body[data-ui-template=tactile][data-game-kind=draw].game-focus-active .draw-layout>.ui-drawing-play-roster{grid-column:1!important;grid-row:1!important;width:100%!important;order:0}
+ body[data-ui-template=tactile][data-game-kind=draw].game-focus-active .draw-layout>.ui-drawing-play-work{grid-column:2!important;grid-row:1!important;width:100%!important;order:0}
+}
+body[data-ui-template=tactile] .stage-pick{background:var(--tpl-action)!important;color:var(--tpl-on-action)!important}
+body[data-ui-template=tactile] .stage-pick:nth-child(2){background:var(--tpl-card-blue)!important}
+body[data-ui-template=tactile] .stage-pick:nth-child(3){background:var(--tpl-card-pink)!important}
+body[data-ui-template=tactile] .stage-pick :is(small,strong,span){color:inherit!important}
+body[data-ui-template=tactile] .tpl-focus-settings{display:none!important}
+body[data-ui-template=tactile].game-focus-active .tpl-result-actions>.tpl-focus-settings{display:grid!important;width:44px;padding:0;place-items:center}
+body[data-ui-template=tactile] .tpl-game-summary{flex:1;min-width:160px;max-width:420px;min-height:44px}
+body[data-ui-template=tactile] .tpl-game-summary strong{font-size:16px}
+body[data-ui-template=tactile] .tpl-game-summary p{margin:4px 0 0;font-size:var(--ui-type-p3, 14px);line-height:1.5;color:var(--tpl-muted)}
+body[data-ui-template=tactile] .carousel-heading{display:none}
+@media(min-width:1101px) and (max-height:800px){
+ body[data-ui-template=tactile] .game-library[data-card-carousel]{min-height:200px!important}
+ body[data-ui-template=tactile] .game-library[data-card-carousel] .tile-image{height:96px!important}
+ body[data-ui-template=tactile] .game-library[data-card-carousel] .tile-body{padding:12px!important}
+ body[data-ui-template=tactile] .game-library[data-card-carousel] .tile-body h2{font-size:20px}
+}
+@media(max-width:760px){body[data-ui-template=tactile] .tpl-game-summary{flex-basis:100%;max-width:none;order:-1}}
+body[data-ui-template=tactile] .carousel-actions :is(#openCreateRoom,#marketLaunch){background:var(--tpl-action)!important;color:var(--tpl-on-action)!important}
+@media(min-width:1101px) and (max-height:800px){
+ body[data-ui-template=tactile] .game-library[data-card-carousel]{min-height:224px!important}
+ body[data-ui-template=tactile] .game-library[data-card-carousel] .game-tile{top:50%!important}
+ body[data-ui-template=tactile] .game-library[data-card-carousel] .tile-image{height:80px!important}
+ body[data-ui-template=tactile] .game-library[data-card-carousel] .tile-body{padding:10px!important}
+ body[data-ui-template=tactile] .game-library[data-card-carousel] .tile-bottom{padding-top:8px!important}
+ body[data-ui-template=tactile] .library-heading{margin-bottom:8px}
+ body[data-ui-template=tactile] .game-carousel-section .carousel-footer{padding:8px!important;min-height:64px}
+}
+@media(min-width:1101px) and (max-height:800px) and (min-height:680px){body[data-ui-template=tactile][data-draw-role=artist] .ui-drawing-play-work>#drawGuessPanel{flex:0 0 104px!important;height:104px!important;min-height:104px!important;max-height:104px!important}}

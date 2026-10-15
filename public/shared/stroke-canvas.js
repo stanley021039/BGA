@@ -55,7 +55,13 @@ window.StrokeCanvas=(()=>{
  }
  function drawStroke(ctx,stroke){
   const points=stroke.points;if(!points?.length)return;
-  if(stroke.tool==='fill')return floodFill(ctx,points[0],stroke.color);
+  if(stroke.tool==='fill'){
+   // Pixel reads ignore the context transform; convert only the fill seed.
+   // Every drawing client uses the same raster scale, so enclosed areas agree.
+   const transform=ctx.getTransform?.(),scaled=transform&&(transform.a!==1||transform.d!==1);
+   const seed=scaled?[Math.floor((points[0][0]+.5)*transform.a+transform.e),Math.floor((points[0][1]+.5)*transform.d+transform.f)]:points[0];
+   return floodFill(ctx,seed,stroke.color);
+  }
   ctx.save();
   ctx.lineWidth=stroke.size;ctx.lineCap='round';ctx.lineJoin='round';
   ctx.strokeStyle=stroke.tool==='erase'?'#fff':stroke.color;
@@ -130,6 +136,10 @@ window.StrokeCanvas=(()=>{
   const maxCheckpoints=options.maxCheckpoints??16,checkpointEvery=options.checkpointEvery??32;
   const maxStrokes=options.maxStrokes??1016,maxPoints=options.maxPoints??31024,maxFills=options.maxFills??49;
   if(!Number.isInteger(maxCheckpoints)||maxCheckpoints<2||maxCheckpoints>32||!Number.isInteger(checkpointEvery)||checkpointEvery<1)throw Error('Invalid canvas checkpoint limits');
+  if(options.coordinateWidth||options.coordinateHeight){
+   if(!(options.coordinateWidth>0&&options.coordinateHeight>0))throw Error('Invalid canvas coordinate dimensions');
+   canvas.getContext('2d',options.contextAttributes).setTransform(canvas.width/options.coordinateWidth,0,0,canvas.height/options.coordinateHeight,0,0);
+  }
   if(options.atomicPresentation)return createAtomicRenderer(canvas,options);
   if(options.separateMutable)return createMutableRenderer(canvas,options);
   const context=canvas.getContext('2d',options.contextAttributes);
@@ -382,6 +392,32 @@ window.StrokeCanvas=(()=>{
   }
   reset();return {render,renderCooperatively,whenIdle,reset,metrics};
  }
+ // Protocol coordinates stay 512 x 256. Paint the vector geometry directly at
+ // 3x resolution instead of enlarging a low-resolution bitmap. A fixed scale
+ // also keeps pixel-based bucket fills identical across screen densities.
+ function createDrawingRenderer(canvas,options={}){
+  const coordinateWidth=512,coordinateHeight=256,scale=3;
+  canvas.width=coordinateWidth*scale;canvas.height=coordinateHeight*scale;
+  // Include the mutable base and atomic staging surface in the cache budget.
+  // Five full-size cached surfaces use under 24 MiB, rather than growing 9x.
+  const maxCheckpoints=Math.min(options.maxCheckpoints??16,5);
+  return createRenderer(canvas,{...options,maxCheckpoints,coordinateWidth,coordinateHeight});
+ }
+ function drawingDataURL(canvas,maxBytes=Infinity){
+  const fits=url=>{const data=url.slice(url.indexOf(',')+1);return data.length*3/4-(data.endsWith('==')?2:data.endsWith('=')?1:0)<=maxBytes;};
+  let image=canvas.toDataURL('image/png');if(fits(image))return image;
+  // Collections retain their existing upload limit. Downsample the finished
+  // raster only when needed; never rerun bucket fills at another resolution.
+  const smaller=canvas.ownerDocument.createElement('canvas');
+  try{
+   for(const width of [1024,512]){
+    smaller.width=width;smaller.height=width/2;
+    const context=smaller.getContext('2d');context.imageSmoothingEnabled=true;context.imageSmoothingQuality='high';context.drawImage(canvas,0,0,width,width/2);
+    image=smaller.toDataURL('image/png');if(fits(image))return image;
+   }
+   throw Error('畫作超過收藏圖片大小上限');
+  }finally{smaller.width=0;smaller.height=0;}
+ }
  function strokeId(){
   if(typeof globalThis.crypto?.randomUUID==='function')return globalThis.crypto.randomUUID();
   const bytes=new Uint8Array(16);globalThis.crypto.getRandomValues(bytes);
@@ -389,5 +425,5 @@ window.StrokeCanvas=(()=>{
   const hex=Array.from(bytes,n=>n.toString(16).padStart(2,'0')).join('');
   return hex.slice(0,8)+'-'+hex.slice(8,12)+'-'+hex.slice(12,16)+'-'+hex.slice(16,20)+'-'+hex.slice(20);
  }
- return {pointFrom,drawStroke,redraw,createRenderer,strokeId,fillRegion,floodFill,icons,iconMarkup};
+ return {pointFrom,drawStroke,redraw,createRenderer,createDrawingRenderer,drawingDataURL,strokeId,fillRegion,floodFill,icons,iconMarkup};
 })();

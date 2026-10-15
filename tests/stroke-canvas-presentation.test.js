@@ -5,6 +5,14 @@ const pause=()=>new Promise(resolve=>setImmediate(resolve));
 function gates(){const pending=[];return {yieldToMain:()=>new Promise(resolve=>pending.push(resolve)),async step(){assert.ok(pending.length);pending.shift()();await pause();},async drain(){let limit=300;while(pending.length&&limit--){pending.shift()();await pause();}assert.ok(limit>0);},get length(){return pending.length;}};}
 function fixture(options={}){const window={};vm.runInNewContext(source,{window,Date,setTimeout});const canvas=rasterCanvas(64,32),schedule=gates(),surfaces=[],renderer=window.StrokeCanvas.createRenderer(canvas,{atomicPresentation:true,createCanvas:(w,h)=>{const layer=rasterCanvas(w,h);surfaces.push(layer);return layer;},yieldToMain:schedule.yieldToMain,...options});return {api:window.StrokeCanvas,canvas,renderer,schedule,surfaces};}
 const fill=(version,color)=>({version,strokeId:'fill-'+version,tool:'fill',color,size:1,points:[[0,0]]});
+test('drawing renderer paints protocol geometry on a three-times denser surface',()=>{
+ const window={};vm.runInNewContext(source,{window,Date,setTimeout});
+ const canvas=rasterCanvas(512,256),renderer=window.StrokeCanvas.createDrawingRenderer(canvas,{createCanvas:(width,height)=>rasterCanvas(width,height)});
+ assert.equal(canvas.width,1536);assert.equal(canvas.height,768);
+ renderer.render([fill(1,'#2244ee')]);
+ assert.deepEqual(canvas.pixel(1400,700),[34,68,238,255]);
+ assert.equal(renderer.metrics().filledPixels,1536*768);
+});
 const brush=(version,points=[[2+version%50,3+version%20]],size=3,color='#2244ee')=>({version,strokeId:'brush-'+version,tool:'brush',color,size,points});
 const canonical=(f,strokes)=>{const canvas=rasterCanvas(64,32);f.api.redraw(canvas,strokes);return canvas.pixels();};
 

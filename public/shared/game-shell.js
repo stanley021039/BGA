@@ -10,7 +10,7 @@
  if(pokerAside){const bot=document.querySelector('#bot');bot?.classList.add('room-test-ai');window.GameUI?.decorateButton(bot,'users',{iconOnly:true,label:'加入測試 AI'});}
  const staticRaceControls=document.querySelector('.race-controls');let raceUtilities=null;
  const raceCrews=document.querySelector('.race-main #crews')||staticRaceControls?.querySelector('#crews');
- const basicAside=document.querySelector('#controls')?.closest('section');
+ const basicAside=document.querySelector('[data-room-social-host]')||document.querySelector('#controls')?.closest('section');
  const sidebar=majorityAside||giftAside||drawAside||pokerAside||basicAside;
  document.body.classList.add('game-room');
  if(!document.body.dataset.gameKind)document.body.dataset.gameKind=majorityAside?'majority':giftAside?'gift':drawAside?'draw':pokerAside?'poker':raceCrews?'race':'room';
@@ -74,11 +74,29 @@
  q('#shared-barrage').hidden=true;if(window.SharedChat)q('#shared-toggle').hidden=true;panel.querySelector('.shared-barrage-heading')?.remove();
  window.SharedChat?.mountTools?.([emoteButton,mediaSlot,emojiPicker,q('#shared-error')]);
  function closeEmoji(restoreFocus=false){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');if(restoreFocus)emoteButton.focus();}
- const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',onClose:()=>closeEmoji()});
+ const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',inlineBelow:document.body.dataset.gameKind==='quacks'?Number.POSITIVE_INFINITY:undefined,onClose:()=>closeEmoji()});
  emoteButton.onclick=()=>{if(!emojiPicker.hidden){closeEmoji();return;}emojiPicker.hidden=false;emoteButton.setAttribute('aria-expanded','true');emojiPopover?.sync();emojiPicker.querySelector('button:not(:disabled)')?.focus();};
  document.addEventListener('click',event=>{if(!emojiPopover&&!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();});
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}});
- fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiChoices.append(button);}}).catch(error=>{emojiChoices.textContent=error.message;});
+ fetch('/api/social/options').then(async response=>{if(!response.ok)throw Error('無法載入 emoji');return response.json();}).then(({emojis})=>{
+  const stitch=document.body.dataset.uiTemplate&&['draw','quacks'].includes(document.body.dataset.gameKind);
+  if(!stitch){for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiChoices.append(button);}return;}
+  const featured=[['😂','笑死'],['👏','神作'],['🔥','熱血'],['🤔','思考'],['😱','崩潰'],['👍','厲害'],['❤️','喜歡'],['🎉','恭喜'],['💩','畫啥呢'],['🤡','小丑'],['🚀','起飛'],['💡','靈光'],['🎨','畫工'],['💯','滿分'],['👻','抓到了'],['🕶️','淡定'],['👀','圍觀'],['🤯','震驚'],['🤝','同意'],['🎯','命中'],['⏳','快點'],['🤐','保密'],['🍿','爆米花'],['🏆','MVP']].filter(([value])=>emojis.includes(value));
+  const tabs=element('div','st-emote-tabs'),all=element('div','st-emote-panel'),characterPanel=element('div','st-emote-panel'),phrases=element('div','st-emote-panel');
+  emojiHeading.textContent='表情互動面板';emojiPicker.replaceChildren(emojiHeading,tabs,all,characterPanel,phrases);all.append(emojiChoices);characterPanel.append(expressionHeading,expressions);
+  tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','表情分類');
+  const extra=element('details','st-emote-more'),extraTitle=element('summary','','更多表情'),extraGrid=element('div','shared-emoji-choices');for(const [key,value]of Object.entries({display:'block',width:'100%',minHeight:'40px',writingMode:'horizontal-tb',whiteSpace:'nowrap'}))extraTitle.style.setProperty(key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),value,'important');extra.append(extraTitle,extraGrid);all.append(extra);
+  const emojiNames={'😀':'開心','🥰':'喜歡','😎':'帥氣','😮':'驚訝','😭':'哭哭','😡':'生氣','👎':'不行','🙌':'歡呼','🙏':'拜託','🥳':'慶祝','😴':'想睡','✨':'閃亮','💪':'加油'};
+  for(const [value,label]of [...featured,...emojis.filter(value=>!featured.some(([item])=>item===value)).map(value=>[value,emojiNames[value]||'表情互動'])]){
+   const choice=element('button','st-emote-choice');choice.type='button';choice.dataset.emoji=value;choice.setAttribute('aria-label','送出 '+label+' 表情');choice.title=label;choice.append(element('span','st-emote-glyph',value),element('small','',label));for(const [key,size]of Object.entries({width:'100%',height:'72px',minHeight:'72px',padding:'4px'}))choice.style.setProperty(key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),size,'important');
+   choice.onclick=async()=>{if(await send({kind:'emoji',emoji:value},`已送出 ${label} 表情`,choice))closeEmoji(true);};
+   (featured.some(([item])=>item===value)?emojiChoices:extraGrid).append(choice);
+  }
+  for(const phrase of (document.body.dataset.gameKind==='quacks'?['💬 這鍋穩啦！','💬 先停還是衝？','💬 差一顆就爆了！']:['💬 太抽象了！','💬 肯定是那個吧？','💬 加油快畫完！'])){const b=element('button','st-button',phrase);b.type='button';b.onclick=()=>{window.SharedChat?.compose(phrase);closeEmoji(true);};phrases.append(b);}
+  const panels=[all,characterPanel,phrases];
+  function selectTab(index){panels.forEach((p,i)=>p.hidden=i!==index);[...tabs.children].forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;});}
+  ['全部表情 ('+featured.length+')','動態肢體','桌遊吐槽'].forEach((label,index)=>{const tab=element('button','',label);tab.type='button';tab.id='stEmoteTab'+index;tab.setAttribute('role','tab');panels[index].id='stEmotePanel'+index;panels[index].setAttribute('role','tabpanel');panels[index].setAttribute('aria-labelledby',tab.id);tab.setAttribute('aria-controls',panels[index].id);tab.onclick=()=>selectTab(index);tab.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?2:(index+(event.key==='ArrowRight'?1:2))%3;selectTab(next);tabs.children[next].focus();};tabs.append(tab);});selectTab(0);
+ }).catch(error=>{emojiChoices.textContent=error.message;});
  let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false;
  const barrages=MotionPolicy.createBarrageController((item,lane,{moving,finish})=>{
   const bubble=element('div','game-barrage','');
@@ -182,6 +200,7 @@
  q('#shared-barrage').onsubmit=async event=>{event.preventDefault();const input=q('#shared-barrage input'),message=input.value.trim();if(!message)return;if([...message].length>40){feedback('文字彈幕最多 40 字','error');return;}const builtinFrameId=window.BarrageFrames?.get().selected;if(await send({kind:'barrage',message,...(builtinFrameId?{builtinFrameId}:{})},'文字彈幕已送出',q('#shared-barrage button[type=submit]'))&&input.value.trim()===message)input.value='';};
  q('#shared-toggle').onclick=()=>{const expanded=panel.classList.toggle('expanded');q('#shared-toggle').setAttribute('aria-expanded',String(expanded));q('#shared-toggle').textContent=expanded?'收合互動':'表情／彈幕';};
  window.addEventListener('focus',()=>{if(state){nextLoad=0;loadExpressions();}});
+ window.addEventListener('profile-updated',()=>{loaded=false;nextLoad=0;if(state)loadExpressions();});
  if(!window.RoomControls){
  let leaving=false;
  const leaveDialog=document.createElement('dialog');leaveDialog.className='ui-dialog room-leave-dialog';leaveDialog.setAttribute('aria-labelledby','room-leave-title');
@@ -251,17 +270,19 @@
    finally{running=null;}
    if(queued)return flush();
   }
-  document.addEventListener('change',event=>{
-   if(!event.target.closest?.('.room-settings-panel')||!canSave()||!['INPUT','SELECT'].includes(event.target.tagName))return;
+  function settingsChanged(event){
+   if(!event.target.closest?.('.room-settings-panel,.ui-room-settings-slot')||!canSave()||!['INPUT','SELECT'].includes(event.target.tagName))return;
    if(event.target.checkValidity&&!event.target.checkValidity()){queued=null;status('請輸入範圍內的設定值。');return;}
    try{queued=read();schedule();}catch(error){queued=null;status(error.message);}
-  });
+  }
+  document.addEventListener('change',settingsChanged);
+  document.addEventListener('input',event=>{if(['number','range'].includes(event.target.type))settingsChanged(event);});
   return {flush,pending:()=>!!queued||!!running};
  }
  function settingsActions(){return '<div class="room-settings-actions"><p id="roomSettingsFeedback" class="ui-status" role="status" aria-live="polite"></p></div>';}
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function playerRow(player,{me,status='',metrics=[{value:player.score??player.stack??0,label:'分數'}]}={}){
-  const avatar=player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
+  const avatar=typeof document!=='undefined'&&document.body?.dataset?.uiTemplate&&window.GameUI?.Template?window.GameUI.Template.objects.characterMarkup(player):player.avatar?'<img src="'+escape(player.avatar)+'" alt="">':'<span class="room-avatar-fallback">'+escape(String(player.name||'？').slice(0,1))+'</span>';
   const name=typeof window!=='undefined'&&window.GameUI?.playerName?window.GameUI.playerName(player.name):'<span class="ui-player-name" title="'+escape(player.name)+'">'+escape(player.name)+'</span>';
   return '<div class="room-player player" data-player-id="'+escape(player.id)+'"><div class="room-player-avatar">'+avatar+'</div><div class="room-player-info"><b class="room-player-name">'+name+'</b><small>'+escape(status)+'</small></div><div class="room-player-metrics">'+metrics.map(metric=>'<strong title="'+escape(metric.label)+'" aria-label="'+escape(metric.label)+'：'+escape(metric.value)+'">'+escape(metric.value)+'</strong>').join('')+'</div></div>';
  }
@@ -282,5 +303,5 @@
   for(const marker of [s=>s.roomInstanceId,s=>s.media?.roomInstanceId,s=>s.watch?.roomInstanceId])if(marker(next)&&marker(state)&&marker(next)!==marker(state))return false;
   return next.version<state.version||next.version===state.version&&Number.isFinite(next.serverNow)&&Number.isFinite(state.serverNow)&&next.serverNow<state.serverNow;
  }
- window.GameShell={update(s){if(isStaleRoomState(s))return false;window.RoomWaiting?.update(s);window.TableMedia?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
+ window.GameShell={update(s){if(isStaleRoomState(s))return false;window.RoomWaiting?.update(s);window.TableMedia?.update(s);return update(s);},sendEmoji:value=>send({kind:'emoji',emoji:value},'已送出表情'),disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
 })();

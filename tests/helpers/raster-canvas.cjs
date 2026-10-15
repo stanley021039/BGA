@@ -1,7 +1,12 @@
 // Deterministic pixel fixture: exercises read/paint/checkpoint behaviour without a browser.
-function rasterCanvas(width=32,height=16){
- const canvas={width,height,getBoundingClientRect:()=>({left:0,top:0,width,height})};
- const data=new Uint8ClampedArray(width*height*4),calls={reads:0,writes:0,paths:0,copies:0,lineTos:0};
+function rasterCanvas(initialWidth=32,initialHeight=16){
+ let width=initialWidth,height=initialHeight,data=new Uint8ClampedArray(width*height*4);
+ const canvas={
+  get width(){return width;},set width(value){width=value;data=new Uint8ClampedArray(width*height*4);},
+  get height(){return height;},set height(value){height=value;data=new Uint8ClampedArray(width*height*4);},
+  getBoundingClientRect:()=>({left:0,top:0,width:initialWidth,height:initialHeight}),
+ };
+ const calls={reads:0,writes:0,paths:0,copies:0,lineTos:0};
  const saved=[];
  let points=[],ellipse=null;
  function rgba(color){color=color||'#000000';if(color.length===4)color='#'+[...color.slice(1)].map(c=>c+c).join('');return [parseInt(color.slice(1,3),16),parseInt(color.slice(3,5),16),parseInt(color.slice(5,7),16),255];}

@@ -27,3 +27,8 @@
 
 /* Empty delivery feedback must not add a spacer between messages and tools. */
 .shared-chat .chat-status:empty{display:none}
+
+/* One stable chat viewport and footer, independent of game operations. */
+.shared-chat.chat-inline .chat-status,.shared-chat.chat-inline .chat-status:empty{display:block;flex:none;min-height:24px;height:24px;max-height:24px;overflow:auto}
+
+.shared-chat.chat-inline{flex:none;height:var(--ui-room-row-height,440px)!important;min-height:var(--ui-room-row-height,440px)!important;max-height:var(--ui-room-row-height,440px)!important;margin:0!important}

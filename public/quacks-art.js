@@ -32,33 +32,31 @@ function info(s,p,tile,c){
  if(c&&!c.noEffect&&c.effectColor&&c.effectColor!==c.color)effect+=' 本片模仿'+names[c.effectColor]+'：'+(lookup(s,c.effectColor)?.effect||'按效果數值前進。');
  return {title:text,color:c?.color||'empty',effect,caption:'格位 '+tile.position+' · '+tile.coins+' 金幣 · '+tile.points+' 分'+(tile.ruby?' · 紅寶石':'')+(c?.effectColor&&c.effectColor!==c.color?' · 本次模仿'+names[c.effectColor]+'（'+c.effectValue+'）':'')};
 }
-function cauldron(s,p,onInspect){
+function cauldron(s,p,onInspect,onDismiss){
  if(!canInspect(s,p)||!Array.isArray(p.pot))throw Error('大釜資料尚未公開');
  const tones=s.potColors?.[p.potColor]?.liquid||['#4f9876','#27684f','#10342d'];
  const id='quacks-art-'+(++serial),svg=sv('svg',{viewBox:s.options.witches?'0 0 720 780':'0 0 720 680',class:'cauldron',role:'group','aria-label':p.name+' 的大釜，進度 '+(p.position||0)+' 格'});
  const defs=sv('defs');
  const gradient=(name,type,attrs,stops)=>{const g=sv(type,{id:id+'-'+name,...attrs});for(const [offset,color]of stops)g.append(sv('stop',{offset,'stop-color':color}));defs.append(g);};
- gradient('copper','linearGradient',{x1:0,y1:0,x2:1,y2:1},[['0%','#f0d7a1'],['18%','#a57843'],['45%','#352f26'],['72%','#be995f'],['100%','#554332']]);
+ gradient('copper','linearGradient',{x1:0,y1:0,x2:1,y2:1},[['0%','#385a3d'],['18%','#203727'],['45%','#102217'],['72%','#516349'],['100%','#273c2a']]);
  gradient('liquid','radialGradient',{cx:'.42',cy:'.35',r:'.7'},[['0%',tones[0]],['45%',tones[1]],['100%',tones[2]]]);
  gradient('body','linearGradient',{x1:0,y1:0,x2:0,y2:1},[['0%','#594e3b'],['45%','#263630'],['100%','#111e1b']]);svg.append(defs);
  svg.append(sv('ellipse',{cx:360,cy:640,rx:255,ry:19,fill:'#000',opacity:.25}));
  for(const side of [-1,1])svg.append(sv('ellipse',{cx:360+side*316,cy:336,rx:29,ry:65,fill:'none',stroke:'#aa8a58','stroke-width':14}),sv('ellipse',{cx:360+side*316,cy:336,rx:29,ry:65,fill:'none',stroke:'#443b2b','stroke-width':5}));
- svg.append(sv('ellipse',{cx:360,cy:349,rx:315,ry:290,fill:'url(#'+id+'-body)',stroke:'#d0ae74','stroke-width':3}),sv('ellipse',{cx:360,cy:326,rx:316,ry:283,fill:'none',stroke:'url(#'+id+'-copper)','stroke-width':25}),sv('ellipse',{cx:360,cy:326,rx:297,ry:266,fill:'url(#'+id+'-liquid)',stroke:'#182f28','stroke-width':7}));
+ svg.append(sv('ellipse',{cx:360,cy:349,rx:315,ry:290,fill:'url(#'+id+'-body)',stroke:'#d0ae74','stroke-width':3}),sv('ellipse',{cx:360,cy:326,rx:316,ry:283,fill:'none',stroke:'url(#'+id+'-copper)','stroke-width':14}),sv('ellipse',{cx:360,cy:326,rx:297,ry:266,fill:'url(#'+id+'-liquid)',stroke:'#182f28','stroke-width':7}));
  // Soft still bubbles, not flashing decorative animations.
- for(const [x,y,r]of [[115,264,10],[558,178,8],[438,91,5],[254,557,6],[589,428,10],[346,175,7],[200,398,5],[493,506,4]])svg.append(sv('circle',{cx:x,cy:y,r,fill:'#9ec8a6',opacity:.18}),sv('path',{d:'M'+(x-r/2)+' '+(y-r/3)+'q'+r/3+' '+(-r/3)+' '+r/2+' 0',stroke:'#d3ead0',fill:'none',opacity:.5,'stroke-width':2}));
- const points=s.board.slice(0,-1).map((_,i)=>position(i));svg.append(sv('polyline',{points:points.map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'#d7d3a0','stroke-width':18,opacity:.06,'stroke-linejoin':'round'}),sv('polyline',{points:points.map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'#d0c78c','stroke-width':2,opacity:.32,'stroke-linejoin':'round'}));
+ for(const [x,y,r]of [[115,264,10],[558,178,8],[438,91,5],[254,557,6],[589,428,10],[346,175,7],[200,398,5],[493,506,4]])svg.append(sv('circle',{cx:x,cy:y,r,fill:'#9ec8a6',opacity:.18,class:'pot-bubble',style:'animation-delay:'+(-x/80)+'s'}),sv('path',{d:'M'+(x-r/2)+' '+(y-r/3)+'q'+r/3+' '+(-r/3)+' '+r/2+' 0',stroke:'#d3ead0',fill:'none',opacity:.5,'stroke-width':2}));
+ for(let i=0;i<3;i++)svg.append(sv('path',{d:'M'+(310+i*48)+' 86q-16-24 0-42t0-35',class:'pot-steam',style:'animation-delay:'+(-i*1.6)+'s'}));svg.append(sv('ellipse',{cx:360,cy:326,rx:295,ry:264,fill:'#efab46',opacity:0,class:'pot-liquid-warning','pointer-events':'none'}));const points=s.board.slice(0,-1).map((_,i)=>position(i));svg.append(sv('polyline',{points:points.map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'#d7d3a0','stroke-width':18,opacity:.06,'stroke-linejoin':'round'}),sv('polyline',{points:points.map(p=>p.x+','+p.y).join(' '),fill:'none',stroke:'#d0c78c','stroke-width':2,opacity:.32,'stroke-linejoin':'round'}));
  const placed=new Map(p.pot.map(c=>[c.position,c])),slots=[];let focused=Math.max(0,Math.min(52,p.position||0));
  for(const tile of s.board.slice(0,-1)){
   const i=tile.position,v=position(i),c=placed.get(i),details=info(s,p,tile,c),group=sv('g',{class:'pot-space'+(c?' occupied':'')+(i===Math.min(53,(p.position||0)+1)?' settlement-target':''),transform:'translate('+v.x+' '+v.y+')',tabindex:i===focused?0:-1,role:'button','aria-label':details.title+'，'+details.caption,'data-position':i});
   if(i===Math.min(53,(p.position||0)+1)){details.title='大釜結算位置 · '+details.title;group.setAttribute('aria-label',details.title+'，'+details.caption);group.append(sv('rect',{x:-21,y:-23,width:42,height:46,rx:8,fill:'none',stroke:'#65e8ff','stroke-width':2.5,'vector-effect':'non-scaling-stroke',class:'settlement-frame','pointer-events':'none'}));}
   group.append(sv('title',{},details.title+'。'+details.effect+' '+details.caption),sv('circle',{r:15,fill:i<=(p.position||0)?'#618861':'#24513e',stroke:'#a8bd85','stroke-width':1,opacity:.85}));
   if(c){const t=token(c,{size:42,decorative:true});t.setAttribute('x',-21);t.setAttribute('y',-23);group.append(t);}
-  else{
-   group.append(sv('text',{x:0,y:4,'text-anchor':'middle','font-family':'sans-serif','font-size':11,'font-weight':650,fill:'#e3e9c0'},tile.coins));
-   if(tile.ruby)group.append(sv('path',{d:'M9-17 14-13 12-6 7-9Z',fill:'#e092a0',stroke:'#f7ccbe','stroke-width':1}));
-  }
+  const number=sv('g',{class:'pot-cell-number','data-coins':tile.coins,'aria-hidden':'true'});number.append(sv('rect',{x:-11,y:-7,width:22,height:14,rx:5,class:'pot-coin-badge'}),sv('text',{x:0,y:3.5,'text-anchor':'middle',class:'pot-coin-value'},tile.coins));group.append(number);
+  if(tile.ruby)group.append(sv('path',{d:'M10-18 16-14 13-7 7-10Z',fill:'#e76f8f',stroke:'#f7ccbe','stroke-width':1,'pointer-events':'none'}));
   const show=event=>{for(const n of slots)n.setAttribute('tabindex',n===group?'0':'-1');focused=i;onInspect?.(details,event,group);};
-  group.addEventListener('pointerenter',show);group.addEventListener('focus',show);group.addEventListener('click',show);
+  group.addEventListener('pointerenter',show);group.addEventListener('focus',show);group.addEventListener('click',show);group.addEventListener('pointerleave',e=>{if(e.pointerType!=='touch')onDismiss?.(group,e);});group.addEventListener('focusout',e=>{if(!group.contains(e.relatedTarget))onDismiss?.(group,e);});
   slots.push(group);svg.append(group);
  }
  svg.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key))return;event.preventDefault();const delta=['ArrowLeft','ArrowUp'].includes(event.key)?-1:1;focused=event.key==='Home'?0:event.key==='End'?52:Math.max(0,Math.min(52,focused+delta));slots[focused]?.focus();});
@@ -86,7 +84,7 @@ function cauldron(s,p,onInspect){
 }
 
 function resource(kind,{size=42,decorative=false}={}){
- const labels={bag:'藥袋',ruby:'紅寶石',rat:'老鼠尾巴',droplet:'水滴',gold:'金女巫幣',copper:'銅女巫幣',silver:'銀女巫幣',potion:'藥水瓶',essence:'特效藥','draw-hand':'伸手抽藥材','stop-hands':'雙手食指交叉停止'},svg=sv('svg',{viewBox:'0 0 80 80',width:size,height:size,class:'quacks-resource '+kind,role:'img','aria-hidden':decorative?'true':'false','aria-label':labels[kind]||kind});
+ const labels={progress:'目前進度',bag:'藥袋',ruby:'紅寶石',rat:'老鼠尾巴',droplet:'水滴',gold:'金女巫幣',copper:'銅女巫幣',silver:'銀女巫幣',potion:'藥水瓶',essence:'特效藥','draw-hand':'伸手抽藥材','stop-hands':'雙手食指交叉停止'},svg=sv('svg',{viewBox:'0 0 80 80',width:size,height:size,class:'quacks-resource '+kind,role:'img','aria-hidden':decorative?'true':'false','aria-label':labels[kind]||kind});
  if(kind==='bag'){svg.append(sv('path',{d:'M23 8Q40 1 58 8l-5 15Q78 40 68 66q-26 15-56 0Q1 40 28 23Z',fill:'#ac7642',stroke:'#ecd09a','stroke-width':2}),sv('path',{d:'M28 24Q5 48 23 65M53 24q20 28 3 42M34 23v39',stroke:'#80512e',fill:'none','stroke-width':4,opacity:.6}),sv('path',{d:'M23 20q16 8 33 0M25 26q16 4 31-2',stroke:'#ecbf73',fill:'none','stroke-width':4,'stroke-linecap':'round'}),sv('path',{d:'m42 24 18 10M40 25 22 37',stroke:'#ead29a','stroke-width':3,fill:'none'}),sv('ellipse',{cx:40,cy:8,rx:15,ry:4,fill:'#4e3328'}));}
 
 
@@ -110,6 +108,7 @@ else if(kind==='stop-hands'){
 }
  else if(kind==='essence'){svg.append(sv('path',{d:'M25 6h30v10H49v25l18 25q5 10-10 10H23Q8 76 13 66l18-25V16h-6Z',fill:'#bfdde3','fill-opacity':.25,stroke:'#d1edf1','stroke-width':3}),sv('path',{d:'M19 61q21-7 42 0l6 10H13Z',fill:'#cc83d2',stroke:'#eed1fb','stroke-width':1.5}),sv('path',{d:'M35 22v17M26 48l-6 11',stroke:'#f1fbff','stroke-width':3,'stroke-linecap':'round'}));}
  else if(kind==='potion'){svg.append(sv('path',{d:'M29 8h22v19l15 20q14 25-26 27Q0 72 14 47l15-20Z',fill:'#bdd9ef',opacity:.85,stroke:'#eaf7ff','stroke-width':2}),sv('path',{d:'M17 48q23 8 46 0l5 14q-2 10-28 10T12 62Z',fill:'#db64c7',stroke:'#f5b4ed','stroke-width':1.4}),sv('rect',{x:27,y:5,width:26,height:10,rx:3,fill:'#bc9461',stroke:'#f0d3a0','stroke-width':2}),sv('path',{d:'M22 37q-10 14-4 23M33 19v8',fill:'none',stroke:'#fff','stroke-width':4,'stroke-linecap':'round',opacity:.7}),sv('circle',{cx:45,cy:59,r:4,fill:'#f4c8ef',opacity:.8}));}
+ else if(kind==='progress')svg.append(sv('circle',{cx:40,cy:40,r:27,fill:'none',stroke:'#f1d391','stroke-width':8}),sv('circle',{cx:40,cy:40,r:34,fill:'none',stroke:'#aa944e','stroke-width':2}));
  else if(kind==='ruby')svg.append(sv('path',{d:'M19 13h42l15 23L40 73 4 36Z',fill:'#d95372',stroke:'#f6b3b0','stroke-width':2}),sv('path',{d:'m19 13 9 23H4m57-23-9 23h24M28 36l12 37 12-37Zm0 0 12-23 12 23',fill:'#f08ba0',stroke:'#932c50','stroke-width':1.6}),sv('path',{d:'m26 20 7-4-6 14-10-2Z',fill:'#fff0de',opacity:.65}));
  else if(kind==='droplet')svg.append(sv('path',{d:'M40 6Q26 28 17 42c-20 38 66 39 46 0Q52 25 40 6Z',fill:'#79bad4',stroke:'#ddf1ec','stroke-width':3}),sv('path',{d:'M27 37q-15 21 5 24',stroke:'#e1f8f1','stroke-width':4,fill:'none','stroke-linecap':'round'}));
  else if(kind==='rat')svg.append(sv('path',{d:'M35 43q-21-22-30 1-10 25 19 24 44 0 46-16',stroke:'#d39fa5','stroke-width':5,fill:'none','stroke-linecap':'round'}),sv('ellipse',{cx:47,cy:40,rx:23,ry:17,fill:'#b9a895'}),sv('circle',{cx:59,cy:27,r:9,fill:'#e0b1aa',stroke:'#9c8a78','stroke-width':3}),sv('path',{d:'m64 35 14 10-13 6',fill:'#b9a895'}),sv('circle',{cx:66,cy:39,r:2.4,fill:'#252d2b'}),sv('circle',{cx:76,cy:45,r:2.5,fill:'#ebabb0'}));
