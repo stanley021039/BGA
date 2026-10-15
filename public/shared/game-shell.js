@@ -74,7 +74,7 @@
  q('#shared-barrage').hidden=true;if(window.SharedChat)q('#shared-toggle').hidden=true;panel.querySelector('.shared-barrage-heading')?.remove();
  window.SharedChat?.mountTools?.([emoteButton,mediaSlot,emojiPicker,q('#shared-error')]);
  function closeEmoji(restoreFocus=false){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');if(restoreFocus)emoteButton.focus();}
- const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',onClose:()=>closeEmoji()});
+ const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',inlineBelow:document.body.dataset.gameKind==='quacks'?Number.POSITIVE_INFINITY:undefined,onClose:()=>closeEmoji()});
  emoteButton.onclick=()=>{if(!emojiPicker.hidden){closeEmoji();return;}emojiPicker.hidden=false;emoteButton.setAttribute('aria-expanded','true');emojiPopover?.sync();emojiPicker.querySelector('button:not(:disabled)')?.focus();};
  document.addEventListener('click',event=>{if(!emojiPopover&&!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();});
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}});
@@ -82,20 +82,20 @@
   const stitch=document.body.dataset.uiTemplate&&['draw','quacks'].includes(document.body.dataset.gameKind);
   if(!stitch){for(const emoji of emojis){const button=document.createElement('button');button.type='button';button.textContent=emoji;button.setAttribute('aria-label',`送出 ${emoji} emoji 彈幕`);button.onclick=async()=>{if(await send({kind:'emoji',emoji},`已送出 ${emoji} emoji 彈幕`,button))closeEmoji(true);};emojiChoices.append(button);}return;}
   const featured=[['😂','笑死'],['👏','神作'],['🔥','熱血'],['🤔','思考'],['😱','崩潰'],['👍','厲害'],['❤️','喜歡'],['🎉','恭喜'],['💩','畫啥呢'],['🤡','小丑'],['🚀','起飛'],['💡','靈光'],['🎨','畫工'],['💯','滿分'],['👻','抓到了'],['🕶️','淡定'],['👀','圍觀'],['🤯','震驚'],['🤝','同意'],['🎯','命中'],['⏳','快點'],['🤐','保密'],['🍿','爆米花'],['🏆','MVP']].filter(([value])=>emojis.includes(value));
-  const tabs=element('div','st-emote-tabs'),all=element('div','st-emote-panel'),characterPanel=element('div','st-emote-panel'),phrases=element('div','st-emote-panel'),footer=element('div','st-emote-footer'),sendBubble=element('button','st-button st-primary','發送泡泡');sendBubble.type='button';window.GameUI?.decorateButton(sendBubble,'send',{label:'發送泡泡'});
-  emojiHeading.textContent='表情互動面板';emojiPicker.replaceChildren(emojiHeading,tabs,all,characterPanel,phrases,footer);all.append(emojiChoices);characterPanel.append(expressionHeading,expressions);footer.append(sendBubble);
-  tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','表情分類');let selected='🎨';
-  const extra=element('details','st-emote-more'),extraTitle=element('summary','','更多表情'),extraGrid=element('div','shared-emoji-choices');extra.append(extraTitle,extraGrid);all.append(extra);
-  for(const [value,label]of [...featured,...emojis.filter(value=>!featured.some(([item])=>item===value)).map(value=>[value,value])]){
-   const choice=element('button','st-emote-choice');choice.type='button';choice.dataset.emoji=value;choice.setAttribute('aria-label','選擇 '+value+' '+label);choice.setAttribute('aria-pressed',String(value===selected));choice.title=label;choice.append(element('span','st-emote-glyph',value),element('small','',label));
-   choice.onclick=()=>{selected=value;for(const node of all.querySelectorAll('[data-emoji]'))node.setAttribute('aria-pressed',String(node===choice));};
+  const tabs=element('div','st-emote-tabs'),all=element('div','st-emote-panel'),characterPanel=element('div','st-emote-panel'),phrases=element('div','st-emote-panel');
+  emojiHeading.textContent='表情互動面板';emojiPicker.replaceChildren(emojiHeading,tabs,all,characterPanel,phrases);all.append(emojiChoices);characterPanel.append(expressionHeading,expressions);
+  tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','表情分類');
+  const extra=element('details','st-emote-more'),extraTitle=element('summary','','更多表情'),extraGrid=element('div','shared-emoji-choices');for(const [key,value]of Object.entries({display:'block',width:'100%',minHeight:'40px',writingMode:'horizontal-tb',whiteSpace:'nowrap'}))extraTitle.style.setProperty(key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),value,'important');extra.append(extraTitle,extraGrid);all.append(extra);
+  const emojiNames={'😀':'開心','🥰':'喜歡','😎':'帥氣','😮':'驚訝','😭':'哭哭','😡':'生氣','👎':'不行','🙌':'歡呼','🙏':'拜託','🥳':'慶祝','😴':'想睡','✨':'閃亮','💪':'加油'};
+  for(const [value,label]of [...featured,...emojis.filter(value=>!featured.some(([item])=>item===value)).map(value=>[value,emojiNames[value]||'表情互動'])]){
+   const choice=element('button','st-emote-choice');choice.type='button';choice.dataset.emoji=value;choice.setAttribute('aria-label','送出 '+label+' 表情');choice.title=label;choice.append(element('span','st-emote-glyph',value),element('small','',label));for(const [key,size]of Object.entries({width:'100%',height:'72px',minHeight:'72px',padding:'4px'}))choice.style.setProperty(key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),size,'important');
+   choice.onclick=async()=>{if(await send({kind:'emoji',emoji:value},`已送出 ${label} 表情`,choice))closeEmoji(true);};
    (featured.some(([item])=>item===value)?emojiChoices:extraGrid).append(choice);
   }
   for(const phrase of (document.body.dataset.gameKind==='quacks'?['💬 這鍋穩啦！','💬 先停還是衝？','💬 差一顆就爆了！']:['💬 太抽象了！','💬 肯定是那個吧？','💬 加油快畫完！'])){const b=element('button','st-button',phrase);b.type='button';b.onclick=()=>{window.SharedChat?.compose(phrase);closeEmoji(true);};phrases.append(b);}
   const panels=[all,characterPanel,phrases];
-  function selectTab(index){panels.forEach((p,i)=>p.hidden=i!==index);[...tabs.children].forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;});footer.hidden=index!==0;}
+  function selectTab(index){panels.forEach((p,i)=>p.hidden=i!==index);[...tabs.children].forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;});}
   ['全部表情 ('+featured.length+')','動態肢體','桌遊吐槽'].forEach((label,index)=>{const tab=element('button','',label);tab.type='button';tab.id='stEmoteTab'+index;tab.setAttribute('role','tab');panels[index].id='stEmotePanel'+index;panels[index].setAttribute('role','tabpanel');panels[index].setAttribute('aria-labelledby',tab.id);tab.setAttribute('aria-controls',panels[index].id);tab.onclick=()=>selectTab(index);tab.onkeydown=event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const next=event.key==='Home'?0:event.key==='End'?2:(index+(event.key==='ArrowRight'?1:2))%3;selectTab(next);tabs.children[next].focus();};tabs.append(tab);});selectTab(0);
-  sendBubble.onclick=async()=>{if(await send({kind:'emoji',emoji:selected},`已送出 ${selected} emoji 彈幕`,sendBubble))closeEmoji(true);};
  }).catch(error=>{emojiChoices.textContent=error.message;});
  let state,loaded=false,loading=false,nextLoad=0,lastPlayers='',sending=false;
  const barrages=MotionPolicy.createBarrageController((item,lane,{moving,finish})=>{
@@ -303,5 +303,5 @@
   for(const marker of [s=>s.roomInstanceId,s=>s.media?.roomInstanceId,s=>s.watch?.roomInstanceId])if(marker(next)&&marker(state)&&marker(next)!==marker(state))return false;
   return next.version<state.version||next.version===state.version&&Number.isFinite(next.serverNow)&&Number.isFinite(state.serverNow)&&next.serverNow<state.serverNow;
  }
- window.GameShell={update(s){if(isStaleRoomState(s))return false;window.RoomWaiting?.update(s);window.TableMedia?.update(s);return update(s);},disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
+ window.GameShell={update(s){if(isStaleRoomState(s))return false;window.RoomWaiting?.update(s);window.TableMedia?.update(s);return update(s);},sendEmoji:value=>send({kind:'emoji',emoji:value},'已送出表情'),disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
 })();
