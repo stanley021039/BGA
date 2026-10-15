@@ -1,10 +1,10 @@
 /* Personal sound preferences shared by every game; room transport stays on the server. */
 (()=>{
  const key='ah-audio-settings',listeners=new Set(),effects=new Map(),gameEffects=new Set();
- const defaults=()=>({version:1,music:{enabled:false,volume:.3},effects:{enabled:false,volume:.25}});
+ const defaults=()=>({version:2,music:{enabled:false,volume:.3},effects:{enabled:true,volume:.25}});
  const validVolume=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1;
  function normalize(value){const result=defaults();for(const kind of ['music','effects']){if(typeof value?.[kind]?.enabled==='boolean')result[kind].enabled=value[kind].enabled;if(validVolume(value?.[kind]?.volume))result[kind].volume=value[kind].volume;}return result;}
- function read(){try{const saved=localStorage.getItem(key);if(saved!==null)return normalize(JSON.parse(saved));const result=defaults();result.music.enabled=localStorage.getItem('ah-music-listen')==='on';for(const [kind,keys] of [['music',['ah-music-volume']],['effects',['ah-gift-volume','ah-majority-volume','ah-race-volume','ah-poker-volume']]])for(const old of keys){const raw=localStorage.getItem(old);if(raw!==null&&raw.trim()!==''&&validVolume(Number(raw))){result[kind].volume=Number(raw);break;}}return result;}catch{return defaults();}}
+ function read(){try{const saved=localStorage.getItem(key);if(saved!==null){const savedValue=JSON.parse(saved),result=normalize(savedValue);if(savedValue?.version!==2)result.effects.enabled=true;return result;}const result=defaults();result.music.enabled=localStorage.getItem('ah-music-listen')==='on';for(const [kind,keys] of [['music',['ah-music-volume']],['effects',['ah-gift-volume','ah-majority-volume','ah-race-volume','ah-poker-volume']]])for(const old of keys){const raw=localStorage.getItem(old);if(raw!==null&&raw.trim()!==''&&validVolume(Number(raw))){result[kind].volume=Number(raw);break;}}return result;}catch{return defaults();}}
  let preferences=read();
  const get=()=>normalize(preferences);
  function persist(){try{localStorage.setItem(key,JSON.stringify(preferences));}catch{}}
@@ -41,7 +41,7 @@
    return playClip(url.pathname+url.search,sound.durationMs,options);
   }catch{}
  }
- // A saved opt-in still requires a fresh browser gesture after navigation.
+ // Browsers may require a fresh gesture after navigation, including default-enabled effects.
  const unlock=event=>{if(event.isTrusted)notify(true);};
  document.addEventListener('pointerdown',unlock,{once:true});document.addEventListener('keydown',unlock,{once:true});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopEffects();});window.addEventListener('pagehide',stopEffects);

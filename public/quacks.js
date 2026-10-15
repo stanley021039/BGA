@@ -59,7 +59,7 @@ function inspectPot(details,event,anchor){
  tip.style.left=left+'px';tip.style.top=top+'px';
 }
 function drawPot(s){
- const p=art.selectRecipe(s,viewedPotId);viewedPotId=p.id;$('#potHeading').textContent=p.potName||p.name+'的好運釜';const markers=art.markerPositions(p);$('#customizePot').hidden=p.id!==s.me;$('#potMarkerSummary').replaceChildren(...[['droplet',markers.droplet,'永久水滴起點'],['rat',markers.start,'本輪老鼠石起點']].map(([kind,value,label])=>{const item=node('span');item.className='resource-pill';item.append(art.resource(kind,{size:28,decorative:true}),node('strong',String(value)));hint(item,{title:label+' · 第 '+value+' 格',effect:kind==='droplet'?'永久保留的起點。':'本回合鼠尾巴加成後的起點。',caption:'金色圈表示目前進度第 '+p.position+' 格。',color:kind});return item;}));
+ const p=art.selectRecipe(s,viewedPotId);viewedPotId=p.id;$('#potHeading').textContent=p.potName||p.name+'的好運釜';const markers=art.markerPositions(p);$('#customizePot').hidden=p.id!==s.me;$('#potMarkerSummary').replaceChildren(...[['droplet',markers.droplet,'永久水滴起點']].map(([kind,value,label])=>{const item=node('span');item.className='resource-pill';item.append(art.resource(kind,{size:28,decorative:true}),node('strong',String(value)));hint(item,{title:label+' · 第 '+value+' 格',effect:kind==='droplet'?'永久保留的起點。':'本回合鼠尾巴加成後的起點。',caption:'金色圈表示目前進度第 '+p.position+' 格。',color:kind});return item;}));
  $('#potTabs').replaceChildren(...s.recipes.map(q=>{const b=button(q.name+(q.id===s.me?'（你）':q.hidden?' · 未公開':''),'users',()=>{viewedPotId=q.id;drawPot(state);},!art.canInspect(s,q));window.GameUI?.decorateButton(b,'users',{iconOnly:true});b.style.setProperty('--pot-tab-color',s.potColors?.[q.potColor]?.liquid[1]||'#547663');b.setAttribute('aria-pressed',q.id===p.id?'true':'false');b.classList.toggle('selected',q.id===p.id);return b;}));
  const key=JSON.stringify([p.id,p.potName,p.potColor,p.position,p.startPosition,p.droplet,p.rat,p.pot,p.exploded,p.stopped,s.books,s.options.books]);
  if(key!==potKey){potKey=key;hideTooltip();const svg=art.cauldron(s,p,inspectPot);svg.addEventListener('pointerleave',()=>{if(!svg.contains(document.activeElement))hideTooltip();});svg.addEventListener('focusout',event=>{if(!svg.contains(event.relatedTarget))hideTooltip();});$('#cauldron').replaceChildren(svg);}
@@ -95,13 +95,13 @@ function renderResources(s,p){
  }row.append(coins);}return row;
 }
 function renderPotBadge(s,p){
- const badge=$('#potBadge');badge.replaceChildren(node('strong',p.name+(p.id===s.me?'（你）':'')),renderResources(s,p));
+ const badge=$('#potBadge'),marker=$('#potMarkerSummary');badge.replaceChildren(node('strong',p.name+(p.id===s.me?'（你）':'')),renderResources(s,p));
  const score=node('span');score.className='pot-score';score.innerHTML=window.GameUI.symbol('star');score.append(node('strong',String(p.score)));score.setAttribute('aria-label',p.score+' 分');score.dataset.uiHint='';badge.append(score);
  const status=p.exploded?'大釜爆炸':p.stopped?'已停止':p.chosen?'等待其他人':null;if(status)badge.append(node('small',status));
  if(p.alchemy){const patient=s.patients.find(x=>x.id===p.alchemy.patientId);if(patient){const pill=node('span');pill.className='patient-pill';pill.append(art.patientPortrait(patient.id),node('strong',String(p.alchemy.essence)));hint(pill,{title:patient.name+' · 特效藥 '+p.alchemy.essence+' 格',effect:patient.text,caption:'',color:'alchemy'});badge.append(pill);}}
  if(p.hidden)badge.append(node('small','進度未公開'));
  else{const bomb=node('span');bomb.className='resource-pill';bomb.append(art.token({color:'white',value:1},{size:27,decorative:true}),node('strong',p.white+' / '+p.threshold));hint(bomb,{title:'白色炸彈 '+p.white+' / '+p.threshold,effect:'數值合計超過門檻時爆炸。',caption:'目前第 '+p.position+' 格',color:'white'});badge.append(bomb);}
- badge.classList.toggle('exploded',p.exploded);
+ badge.append(marker);badge.classList.toggle('exploded',p.exploded);
 }
 
 function renderPotCustomization(s){
@@ -123,9 +123,11 @@ function renderTableDice(s){
  for(const e of s.rollEvents||[]){const item=node('article');item.dataset.rollId=e.id;item.dataset.playerId=e.playerId;item.dataset.potColor=e.potColor||s.recipes.find(p=>p.id===e.playerId)?.potColor;item.append(QuacksFx.die(e.face,42,s.potColors?.[e.potColor||s.recipes.find(p=>p.id===e.playerId)?.potColor]?.liquid),node('strong',e.name));hint(item,{title:e.name+' · '+QuacksFx.labels[e.face],effect:e.source,caption:'本輪公開擲骰結果',color:'dice'});rows.append(item);}box.append(rows);
 }
 function renderFortune(s,live){
- const f=$('#fortune'),isDrawing=s.phase==='fortune',starter=s.players.find(p=>p.id===s.roundStarterId),key=JSON.stringify([isDrawing,s.fortune?.id,s.fortuneRevealId,s.roundStarterId]);
+ const f=$('#fortune'),isDrawing=s.phase==='fortune',starter=s.players.find(p=>p.id===s.roundStarterId),key=JSON.stringify([isDrawing,s.fortune?.id,s.fortuneRevealId,s.roundStarterId,s.me]);
  if(f.dataset.renderKey===key)return;f.dataset.renderKey=key;
- f.dataset.timing=s.fortune?.timing||'unknown';f.classList.toggle('face-down',isDrawing);f.setAttribute('aria-label',isDrawing?'尚未翻開的占卜牌':'本輪占卜牌');
+ const myTurn=isDrawing&&s.roundStarterId===s.me;f.classList.toggle('awaiting-draw',myTurn);f.tabIndex=myTurn?0:-1;f.setAttribute('role',myTurn?'button':'group');f.setAttribute('aria-label',myTurn?'抽占卜牌：輪到你':isDrawing?'尚未翻開的占卜牌':'本輪占卜牌');
+ f.onclick=()=>{if(state?.phase==='fortune'&&state.me===state.roundStarterId&&!busy)act('draw-fortune');};f.onkeydown=e=>{if(myTurn&&['Enter',' '].includes(e.key)){e.preventDefault();f.click();}};
+ f.dataset.timing=s.fortune?.timing||'unknown';f.classList.toggle('face-down',isDrawing);f.setAttribute('aria-label',myTurn?'抽占卜牌：輪到你':isDrawing?'尚未翻開的占卜牌':'本輪占卜牌');
  if(isDrawing)f.replaceChildren(node('span','✦ 占卜牌 ✦'),node('h3',starter?.name+'抽牌'),node('p','由本回合的起始玩家親自抽取一張，之後輪流。'));
  else f.replaceChildren(node('h3',s.fortune?.name||'九回合的命運，等你揭曉'),node('p',s.fortune?.text||'每輪抽一張占卜牌，所有人同步抽藥。'));
  f.classList.remove('card-reveal');

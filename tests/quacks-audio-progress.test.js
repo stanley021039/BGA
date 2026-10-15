@@ -52,7 +52,7 @@ test('settlement acknowledgements are private, bounded, retry-safe and exclude r
  for(let n=0;n<40;n++){a.ready=false;r.phase='settlement';r.stage='witches';r.act(a.id,'settle-ready',{roundId:r.roundId,requestId:crypto.randomUUID()});}
  assert.equal(a.settlementEvents.length,32);r.nextRound();assert.equal(a.settlementEvents.length,0);
 });
-test('all settlement stages and own confirmations sound once, coalescing same-snapshot transitions',()=>{
+test('only settlement stage transitions sound once, regardless of same-stage confirmations',()=>{
  const f=audioFixture();f.cues.update(f.state([],{phase:'brewing',version:1}),false);
  const stages=['witches','essence','bonus','effects','effects-confirm','rewards','shopping'];
  stages.forEach((stage,i)=>{const s=f.state([],{phase:'settlement',stage,version:i+2,mine:{settlementEvents:[{id:'ack'+i,at:100000}]}});f.cues.update(s,true);f.cues.update(s,true);f.tick(30);});
@@ -62,8 +62,8 @@ test('all settlement stages and own confirmations sound once, coalescing same-sn
 test('settlement load, reconnect and hidden transitions do not replay historical acknowledgements',()=>{
  const f=audioFixture(),s=f.state([],{phase:'settlement',stage:'shopping',version:1,mine:{settlementEvents:[{id:'old',at:100000}]}});
  f.cues.update(s,false);f.cues.update(s,true);assert.equal(f.calls.length,0);
- f.cues.update({...s,version:2,mine:{settlementEvents:[{id:'new',at:100000}]}},true);assert.equal(f.calls.length,1);
- f.hide();f.cues.update({...s,phase:'between',version:3},true);f.tick(1000);assert.equal(f.calls.length,1);f.cues.destroy();
+ f.cues.update({...s,version:2,mine:{settlementEvents:[{id:'new',at:100000}]}},true);assert.equal(f.calls.length,0);
+ f.hide();f.cues.update({...s,phase:'between',version:3},true);f.tick(1000);assert.equal(f.calls.length,0);f.cues.destroy();
 });
 test('settlement WAV has faded bounds and reproducible manifest checksum',()=>{
  const m=JSON.parse(fs.readFileSync('public/assets/game-sounds/quacks-manifest.json')).settlement,b=fs.readFileSync('public/assets/game-sounds/'+m.file);
@@ -103,4 +103,9 @@ test('only accepted voluntary stops emit a private cue; explosions and automatic
  r.act(a.id,'stop',request);r.act(a.id,'stop',request);assert.equal(r.view(a.id).mine.stopEvents.length,1);assert.equal(r.view(b.id).mine.stopEvents.length,0);assert.equal(Object.hasOwn(r.view(b.id).recipes[0],'stopEvents'),false);
  assert.throws(()=>r.act(a.id,'stop',{...request,requestId:crypto.randomUUID()}));assert.equal(a.stopEvents.length,1);
  b.pot=[r.chip('white',4),r.chip('white',4)];r.exploded(b);assert.equal(b.exploded,true);assert.equal(b.stopEvents.length,0);r.nextRound();assert.equal(a.stopEvents.length,0);
+});
+test('buy, undo, refill and pending choices do not emit settlement cues until the stage actually changes',()=>{
+ const f=audioFixture(),s={phase:'settlement',stage:'shopping',version:1,mine:{settlementEvents:[]}};f.cues.update(f.state([],s),false);
+ for(let i=2;i<7;i++){f.cues.update(f.state([],{...s,version:i,mine:{settlementEvents:[{id:'action'+i,at:100000}]}}),true);f.tick(30);}assert.equal(f.calls.length,0);
+ f.cues.update(f.state([],{...s,phase:'between',version:7}),true);assert.deepEqual(f.calls.map(c=>c.cue),['quacks-settlement']);f.cues.destroy();
 });

@@ -7,6 +7,7 @@ function fixture({pending=false,blocked=false}={}){
  class Audio{constructor(src){this.src=this.originalSrc=src;this.paused=true;this.currentTime=0;clips.push(this);}play(){if(blocked)return Promise.reject(Error('blocked'));if(pending)return new Promise(resolve=>{this.finishLoad=()=>{this.paused=false;resolve();};});this.paused=false;this.onplaying?.();return Promise.resolve();}pause(){this.paused=true;}removeAttribute(name){delete this[name];}load(){}}
  const context={window,document,Audio,URL,location:{origin:'https://example.test'},localStorage:{getItem:key=>store.get(key)??null,setItem:(key,value)=>store.set(key,value)},Date:{now:()=>time},setTimeout(fn,ms){const key=++id;timers.set(key,{fn,at:time+ms});return key;},clearTimeout:key=>timers.delete(key)};
  for(const file of ['audio-settings.js','game-sounds.js'])vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../public/shared',file),'utf8'),context);
+ window.AudioSettings.set('effects',{enabled:false}); // Controlled muted baseline; global default-on is tested separately.
  const fire=name=>{for(const fn of [...(handlers.get(name)||[])])fn();};
  const state=(code='ABC123',version=1)=>({code,version});
  return {window,document,clips,timers,handlers,state,api:window.AudioSettings,controller:window.GameSounds.create(),fire,tick(ms){time+=ms;for(const [key,timer]of [...timers])if(timer.at<=time&&timers.delete(key))timer.fn();},hide(hidden){document.hidden=hidden;fire('document:visibilitychange');}};

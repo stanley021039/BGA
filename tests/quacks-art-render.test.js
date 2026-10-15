@@ -7,7 +7,7 @@ test('SVG keeps short pot titles natural and marks actual droplet separately fro
  assert.equal(svg.querySelector('.pot-name').textContent,'黑鬼鍋');assert.equal(svg.querySelector('.pot-name').getAttribute('textLength'),null);
  assert.equal(svg.querySelector('.pot-droplet').getAttribute('data-position'),'2');assert.equal(svg.querySelector('.pot-rat-stone').getAttribute('data-position'),'7');
  assert.notEqual(svg.querySelector('.pot-droplet').querySelector('path').getAttribute('d'),svg.querySelector('.pot-rat-stone').querySelector('path').getAttribute('d'));
- p.potName='長'.repeat(24);assert.equal(art.cauldron(s,p).querySelector('.pot-name').getAttribute('textLength'),'300');
+ p.potName='長'.repeat(24);assert.equal(art.cauldron(s,p).querySelector('.pot-name').getAttribute('textLength'),'216');
  p.startPosition=2;assert.equal(art.cauldron(s,p).querySelector('.pot-rat-stone'),null);
 });
 test('scoreboard shows 25 rat locations, one current-round marker and authoritative score positions',()=>{

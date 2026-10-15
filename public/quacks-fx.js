@@ -58,9 +58,8 @@ function createAudio(sounds){
   for(const e of state.mine?.potionEvents||[]){const id='potion:'+e.id;if(seen.has(id))continue;seen.add(id);if(initialized&&live&&!root.document.hidden)queue.push({cue:'potion-drink',key:'quacks:'+id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
   for(const e of state.mine?.stopEvents||[]){const id='stop:'+e.id;if(seen.has(id))continue;seen.add(id);if(initialized&&live&&!root.document.hidden)queue.push({cue:'quacks-stop',key:'quacks:'+id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
   const stage=state.phase==='settlement'?state.stage:state.phase==='between'?'between':state.phase==='finished'&&!state.interrupted?'finished':null;
-  const fresh=[];for(const e of state.mine?.settlementEvents||[]){const id='settle:'+e.id;if(seen.has(id))continue;seen.add(id);fresh.push(e);}
   const entering=stage&&stage!==lastSettlement;lastSettlement=stage;
-  if(initialized&&live&&!root.document.hidden&&(entering||fresh.length))queue.push({cue:'quacks-settlement',key:'quacks:settle:'+key+':'+state.version+':'+(fresh.at(-1)?.id||stage),at:fresh.at(-1)?.at??Date.now(),epoch:sounds?.epoch?.()});
+  if(initialized&&live&&!root.document.hidden&&entering)queue.push({cue:'quacks-settlement',key:'quacks:settle:'+key+':'+state.version+':'+stage,at:Date.now(),epoch:sounds?.epoch?.()});
   const events=state.mine?.drawEvents||[];
   for(const e of events){if(seen.has(e.id))continue;seen.add(e.id);if(initialized&&live&&!root.document.hidden)queue.push({key:'quacks:draw:'+e.id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
   while(seen.size>128)seen.delete(seen.values().next().value);queue=queue.slice(-20);initialized=true;if(queue.length&&timer===null)next();

@@ -65,8 +65,8 @@ function cauldron(s,p,onInspect){
  const permanent=sv('g',{class:'pot-droplet','data-position':markers.droplet,'pointer-events':'none'});permanent.append(sv('title',{},'永久水滴：第 '+markers.droplet+' 格'),sv('path',{d:'M'+drop.x+' '+(drop.y-22)+'q-10-13 0-22 10 9 0 22Z',fill:'#8fcee0',stroke:'#d6f4e7','stroke-width':2}));svg.append(permanent);
  if(markers.start!==markers.droplet){const stone=sv('g',{class:'pot-rat-stone','data-position':markers.start,'pointer-events':'none'});stone.append(sv('title',{},'本輪老鼠石起點：第 '+markers.start+' 格'),sv('circle',{cx:start.x,cy:start.y-29,r:13,fill:'#ac8770',stroke:'#f2d9ae','stroke-width':2}),sv('path',{d:'M'+(start.x-6)+' '+(start.y-27)+'q-3-11 6-8q7 0 7 7q-4 7-10 3m8-1q13 10 17 0',fill:'#d7c3a0',stroke:'#563f30','stroke-width':2}));svg.append(stone);}
  svg.append(sv('circle',{cx:current.x,cy:current.y,r:25,fill:'none',stroke:p.exploded?'#ec8877':'#f1d391','stroke-width':3,'pointer-events':'none'}));
- const name=p.potName||p.name+'的好運釜',nameStyle={'font-size':15,...([...name].reduce((n,c)=>n+(/[\u0000-\u007f]/.test(c)?8:15),0)>300?{textLength:300,lengthAdjust:'spacingAndGlyphs'}:{})};
- svg.append(sv('rect',{x:180,y:615,width:360,height:37,rx:14,fill:'#1a2f28',stroke:'#b19262'}),sv('text',{x:360,y:640,'text-anchor':'middle','font-family':'sans-serif',fill:'#e9dbb8',class:'pot-name',...nameStyle},name));
+ const name=p.potName||p.name+'的好運釜',nameStyle={'font-size':26,...([...name].reduce((n,c)=>n+(/[\u0000-\u007f]/.test(c)?14:26),0)>216?{textLength:216,lengthAdjust:'spacingAndGlyphs'}:{})};
+ svg.append(sv('rect',{x:12,y:8,width:240,height:44,rx:14,fill:'#1a2f28',stroke:'#b19262'}),sv('text',{x:24,y:39,'text-anchor':'start','font-family':'sans-serif',fill:'#e9dbb8',class:'pot-name',...nameStyle},name));
 
  if(s.options.witches){
   const chips=p.overflow||[],sum=chips.reduce((n,c)=>n+(c.effectValue??c.value),0),points=Math.floor(sum/2),g=sv('g',{class:'overflow-basin',tabindex:0,role:'group','aria-label':'溢出盆，'+chips.length+' 片，'+points+' 分'});

@@ -265,3 +265,7 @@ body[data-game-kind=quacks] #game #alchemy .essence-flask{width:100%;max-width:4
 
 /* Keep inspection text inside the visual viewport, including native popovers. */
 #potTooltip{margin:0;inset:auto;right:auto;bottom:auto;transform:none;translate:none;overflow-wrap:anywhere;white-space:normal;min-width:0;max-width:calc(100vw - 16px)}
+
+/* Compact lower-left player tools; the cauldron owns its only visible title. */
+.pot-footer .pot-toolbar{display:none!important}.pot-switcher{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px}.pot-switcher .pot-tabs{display:flex;gap:5px;margin:0!important}.pot-switcher #customizePot{width:38px;height:38px;min-height:38px;min-width:38px;padding:5px}.pot-details .pot-marker-summary{display:inline-flex;align-items:center;gap:0;margin:0!important;flex:0 0 auto}.pot-details .pot-marker-summary .resource-pill{display:inline-flex}.pot-marker-summary .resource-pill svg{width:25px;height:25px}
+#fortune.awaiting-draw{cursor:pointer;border-color:#f5d37a!important;box-shadow:0 0 0 2px #f5d37a99,0 0 26px #c39bfc99,inset 0 0 20px #f7d78a33;animation:quacks-fortune-ready 2s ease-in-out infinite}#fortune.awaiting-draw:focus-visible{outline:3px solid #fff0b5;outline-offset:5px}@keyframes quacks-fortune-ready{50%{box-shadow:0 0 0 2px #f5d37acc,0 0 36px #c39bfcbb,inset 0 0 26px #f7d78a55}}@media(prefers-reduced-motion:reduce){#fortune.awaiting-draw{animation:none}}
