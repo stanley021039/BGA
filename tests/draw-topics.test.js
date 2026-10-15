@@ -39,7 +39,7 @@ test('meme is a selectable builtin category while custom submissions remain an i
  const room=new DrawGuessRoom('MEME12','迷因試玩',n=>n-1),host=room.add('甲');room.add('乙');
  room.wordProvider=()=>[{id:'shared-food',title:'自訂食物',topic:'food',custom:true},{id:'shared-meme',title:'自訂迷因',topic:'meme',custom:true}];
  room.configure(host.id,{seconds:90,topics:['meme']});room.start();assert.ok(room.candidates.every(word=>word.topic==='meme'&&!word.custom));
- room.choose(host.id,room.candidates[0].id);assert.equal(room.view(room.players[1].id).question,null);assert.equal(room.view(room.players[1].id).hint.topicLabel,'迷因 Meme');
+ room.choose(room.presenterId,room.candidates[0].id);const guesser=room.players.find(p=>p.id!==room.presenterId);assert.equal(room.view(guesser.id).question,null);assert.equal(room.view(guesser.id).hint.topicLabel,'迷因 Meme');
  const old=new DrawGuessRoom('OLD123','舊客戶端',n=>n-1),owner=old.add('甲');old.add('乙');old.wordProvider=room.wordProvider;
  old.configure(owner.id,{seconds:90,topic:'meme',customPercent:100});old.start();assert.equal(old.candidates[0].id,'shared-meme');
 });

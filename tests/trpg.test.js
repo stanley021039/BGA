@@ -6,7 +6,7 @@ const {TrpgRoom}=require('../src/games/trpg');
 const {botSupport,runTestAIStep}=require('../src/ai');
 const {listRooms}=require('../src/rooms/listing');
 const {rejoinPlayer}=require('../src/rooms/membership');
-function room(count=3,rng=()=>5){const r=new TrpgRoom('ABCDEF','測試冒險',rng);for(let i=0;i<count;i++)r.add('隊友'+i);r.start();return r;}
+function room(count=3,rng=n=>n===6?5:0){const r=new TrpgRoom('ABCDEF','測試冒險',rng);for(let i=0;i<count;i++)r.add('隊友'+i);r.start();return r;}
 function act(r,id,action,input={}){const data={sceneId:r.sceneId,requestId:randomUUID(),...input};r.act(id,action,data);return data;}
 function ready(r,approach='bold'){for(const p of r.activePlayers())act(r,p.id,'plan',{approach,stance:p.focus>0||p.id===r.leaderId?'assist':'recover',note:'準備前進'});}
 
@@ -56,6 +56,6 @@ test('capacity, listing and rejoin obey waiting/finished boundaries for TRPG',()
  const r=room(6);assert.throws(()=>r.add('late'),e=>e.code==='MATCH_STARTED');const rows=listRooms(new Map([[r.code,r]]),new Map(),new Map(),'outsider');assert.equal(rows[0].maxPlayers,6);assert.equal(rows[0].joinable,false);const id=r.players[5].id;r.kick(r.host,id);assert.throws(()=>rejoinPlayer(r,id,'late'),/下一局/);r.phase='finished';assert.ok(rejoinPlayer(r,id,'back'));assert.equal(r.activePlayers().length,6);assert.throws(()=>r.add('full'),e=>e.code==='ROOM_FULL');
 });
 test('scripted test partners use only public state and can complete solo-leader scenes',()=>{
- const r=new TrpgRoom('ABCDEF','bot',()=>5),p=r.add('script',true);r.start();assert.equal(botSupport(r).supported,true);const history={transact:(_room,_op,fn)=>fn()};
+ const r=new TrpgRoom('ABCDEF','bot',n=>n===6?5:0),p=r.add('script',true);r.start();assert.equal(botSupport(r).supported,true);const history={transact:(_room,_op,fn)=>fn()};
  for(let i=0;i<40&&r.phase!=='finished';i++)runTestAIStep(r,{history,now:Date.now()+i*2000});assert.equal(r.phase,'finished');assert.equal(r.results.length,6);assert.ok(r.results.every(result=>result.leaderName===p.name));
 });

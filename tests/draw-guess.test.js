@@ -137,7 +137,7 @@ test('custom words persist in SQLite and reject malformed aliases',()=>{
  }finally{db?.close();try{fs.rmSync(root,{recursive:true,force:true});}catch{}}
 });
 
-test('authenticated HTTP draw room hides answers and restricts the stroke channel',async()=>{
+test('authenticated HTTP draw room hides answers and restricts the stroke channel',async t=>{require('./helpers/fixed-starter.cjs')(t,DrawGuessRoom);
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-draw-http-')),config={port:0,host:'127.0.0.1',publicUrl:null,historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite')};
  const db=openDatabase(config.dbFile),auth=createAuth(db);
  await auth.bootstrap('drawadmin','test-password-88888888');

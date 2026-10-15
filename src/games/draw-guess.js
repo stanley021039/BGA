@@ -1,3 +1,4 @@
+const {starterOrder}=require('./random-starter');
 const {assertRecordCapacity}=require('../rooms/membership');
 const {randomInt,randomUUID}=require('node:crypto');
 const {WORDS,TOPICS,topicLabels}=require('./draw-guess-words');
@@ -120,13 +121,13 @@ class DrawGuessRoom{
   const pools=this.wordPools();
   if(!pools.builtin.length&&(!pools.custom.length||this.options.customPercent===0))throw Error('所選類別還沒有題目，請到共編題庫新增自定義題目，或勾選其他類別');
   for(const player of this.players){player.score=0;player.waitingForNextRound=false;}
-  this.gameRunId=randomUUID();this.achievementUnits.matchId=this.gameRunId;this.round=0;const ending=this.options.ending||{mode:'rounds',value:null};this.roundLimit=ending.mode==='score'?64:ending.value||this.players.length;this.pendingArtists=this.players.map(player=>player.id);
+  this.gameRunId=randomUUID();this.achievementUnits.matchId=this.gameRunId;this.round=0;const ending=this.options.ending||{mode:'rounds',value:null};this.roundLimit=ending.mode==='score'?64:ending.value||this.players.length;this.pendingArtists=starterOrder(this.players,this.rng).map(player=>player.id);this.firstArtistId=this.pendingArtists[0];
   this.results=[];this.winner=null;this.usedWordIds=[];
   this.newRound();
  }
  newRound(){
   if(this.options.ending?.value!=null&&this.round>=this.roundLimit){this.finish(this.options.ending?.mode==='score'?'已達 64 題上限，本局結束':'已達固定總題數，本局結束');return;}
-  if(!this.pendingArtists.length&&this.options.ending?.value!=null)this.pendingArtists=this.activePlayers().map(player=>player.id);
+  if(!this.pendingArtists.length&&this.options.ending?.value!=null){const seats=this.activePlayers(),first=Math.max(0,seats.findIndex(p=>p.id===this.firstArtistId));this.pendingArtists=seats.slice(first).concat(seats.slice(0,first)).map(p=>p.id);}
   if(this.pendingArtists.length)this.achievementCapacity();
   for(const player of this.activePlayers())player.waitingForNextRound=false;
   while(this.pendingArtists.length&&!this.activePlayers().some(player=>player.id===this.pendingArtists[0]))this.pendingArtists.shift();

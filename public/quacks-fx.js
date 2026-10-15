@@ -28,12 +28,12 @@ function create(host){
    const cup=node('div');cup.className='dice-arena';const cube=die(event.face,110,event.tones);cube.classList.add('rolling');cup.append(cube);scene.append(node('h3',event.name+'擲骰'),cup,node('strong',labels[event.face]),node('p',event.source+' · 第 '+event.round+' 回合'));
   }
   const skip=node('button','跳過動畫');skip.type='button';root.GameUI?.decorateButton(skip,'close');skip.className+=' fx-skip';skip.onclick=clear;scene.append(skip);
-  host.hidden=false;host.replaceChildren(scene);active={event,timer:setTimeout(()=>{active=null;host.replaceChildren();host.hidden=true;next();},event.kind==='card'?2700:1800)};
+  host.hidden=false;host.replaceChildren(scene);active={event,timer:setTimeout(()=>{active=null;host.replaceChildren();host.hidden=true;next();},event.kind==='card'?3600:1800)};
  }
  function update(state,live){
   const nextContext=state.code+':'+state.roundId;
   if(context!==nextContext){clear();seen.clear();context=nextContext;initialized=false;}
-  const events=[...(state.fortuneRevealId&&state.me===state.roundStarterId?[{id:state.fortuneRevealId,kind:'card',fortune:state.fortune,name:state.players.find(p=>p.id===state.roundStarterId)?.name||'起始玩家',at:state.fortuneDrawnAt||state.serverNow}]:[]),...(state.rollEvents||[]).map(e=>({...e,kind:'dice',tones:state.potColors?.[e.potColor||state.recipes?.find(p=>p.id===e.playerId)?.potColor]?.liquid}))];
+  const events=[...(state.fortuneRevealId?[{id:state.fortuneRevealId,kind:'card',fortune:state.fortune,name:state.players.find(p=>p.id===state.roundStarterId)?.name||'起始玩家',at:state.fortuneDrawnAt||state.serverNow}]:[]),...(state.rollEvents||[]).map(e=>({...e,kind:'dice',tones:state.potColors?.[e.potColor||state.recipes?.find(p=>p.id===e.playerId)?.potColor]?.liquid}))];
   if(!live||!allowed())clear();
   for(const event of events){if(seen.has(event.id))continue;seen.add(event.id);if(initialized&&live&&allowed())queue.push(event);}
   initialized=true;if(queue.length>20)queue=queue.slice(-20);next();

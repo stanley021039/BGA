@@ -128,6 +128,7 @@ const cases = [
     assert.equal(calls.at(-1).id, f.ids[actor]);
   } },
   { type: 'majority', Engine: MajorityRoom, method: 'act', async check(f, calls) {
+    while((await f.state(0)).presenterId!==f.ids[0])await f.action(0,{action:'pass'});
     await f.action(0, { action: 'draw', type: 'blank' });
     assert.ok((await f.state(0)).candidates.length > 0);
     assert.deepEqual((await f.state(1)).candidates, []);

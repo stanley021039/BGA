@@ -1,4 +1,5 @@
 'use strict';
+const {starterIndex}=require('./random-starter');
 const {randomUUID}=require('node:crypto');
 const {PartyRoom,fail,clone,text}=require('./party-base');
 const {QuacksAchievements}=require('./quacks-achievements');
@@ -38,7 +39,7 @@ class QuacksRoom extends PartyRoom {
  chip(color,value=1){return {id:randomUUID(),color,value};}
  grant(p,color,value=1){const chip=this.chip(color,value);if(color==='black'&&this.setFor('black')===5){const left=this.players[(this.players.indexOf(p)+1)%this.players.length];left.bag.push(chip);p.droplet=Math.min(LAST,p.droplet+1);}else p.bag.push(chip);}
  start(){
-  if(!this.options.witches&&this.activePlayers().length>4)fail('NEED_EXPANSION','五人局須開啟草藥女巫');const selection=this.bookSelection();this.activeBooks=Object.fromEntries(selection.map(c=>[c.color,c.selected]));this.options.books=clone(this.activeBooks);this.prepare();this.quacksAchievements.start();this.roundLimit=9;
+  if(!this.options.witches&&this.activePlayers().length>4)fail('NEED_EXPANSION','五人局須開啟草藥女巫');const selection=this.bookSelection();this.activeBooks=Object.fromEntries(selection.map(c=>[c.color,c.selected]));this.options.books=clone(this.activeBooks);this.prepare();this.firstSeatIndex=starterIndex(this.players,this.rng);this.quacksAchievements.start();this.roundLimit=9;
   this.deck=FORTUNES.concat(this.expansionFortunes()).map(x=>x.id);this.witches=this.options.witches?Object.fromEntries(Object.entries(WITCHES).map(([color,items])=>[color,items[this.index(items.length)]])):{};
   for(const p of this.players){Object.assign(p,{bag:[],pot:[],overflow:[],reserve:[],drawEvents:[],potionEvents:[],stopEvents:[],settlementEvents:[],startChips:[],bagPeekUsed:false,bagPeek:null,potName:p.potName||p.name+'的好運釜',droplet:0,rubies:1,potion:true,coins:{gold:true,copper:true,silver:true}});
    for(let i=0;i<4;i++)p.bag.push(this.chip('white',1));for(let i=0;i<2;i++)p.bag.push(this.chip('white',2));p.bag.push(this.chip('white',3),this.chip('orange',1),this.chip('green',1));
@@ -71,7 +72,7 @@ class QuacksRoom extends PartyRoom {
  roll(p,sourceOverride){const n=this.index(6);if(n<3)p.score+=n===2?2:1;else if(n===3)p.rubies++;else if(n===4)p.droplet=Math.min(LAST,p.droplet+1);else this.grant(p,'orange',1);p.dice.push(n);const source=sourceOverride||(this.stage==='bonus'?'獎勵骰':this.phase==='settlement'?'花園蜘蛛':'占卜牌');this.rollEvents.push({id:randomUUID(),playerId:p.id,name:p.name,potName:p.potName,face:n,potColor:p.potColor,source,round:this.round,at:this.now()});this.rollEvents=this.rollEvents.slice(-64);this.event('dice',p.name+' 擲出 '+['1 分','1 分','2 分','紅寶石','水滴前進','南瓜'][n]);return n;}
 
  nextRound(){
-  this.visitingWitch=null;this.rollEvents=[];this.alchemyDraws={};this.round++;this.roundId=randomUUID();this.step=1;this.phase='fortune';this.stage='draw-card';this.intents={};this.fortune=null;this.fortuneRevealId=null;this.fortuneDrawnAt=null;this.roundStarterId=this.players[(this.round-1)%this.players.length].id;this.advanceStep=false;
+  this.visitingWitch=null;this.rollEvents=[];this.alchemyDraws={};this.round++;this.roundId=randomUUID();this.step=1;this.phase='fortune';this.stage='draw-card';this.intents={};this.fortune=null;this.fortuneRevealId=null;this.fortuneDrawnAt=null;this.roundStarterId=this.players[((this.firstSeatIndex||0)+this.round-1)%this.players.length].id;this.advanceStep=false;
   for(const p of this.players){
    Object.assign(p,{goodNeighborUsed:false,visitorUsed:false,freeCheap:false,returnCoinDone:false,fortuneSettlementApplied:false,bagPeekUsed:false,bagPeek:null,pending:[],stopped:false,exploded:false,explosionId:null,draws:0,drawEvents:[],potionEvents:[],stopEvents:[],settlementEvents:[],position:p.droplet,roundStartPosition:p.droplet,rat:0,protect:0,doubleNext:false,secondUsed:false,firstWhite:false,strongDone:false,reserveDone:false,fullBenefits:false,settlementChoice:null,ready:false,budget:0,bought:[],purchaseEdits:[],purchaseBonus:null,discount:2,dice:[],bonusDice:[],bonusEligible:false,bonusRolled:false,silverRuby:false,copyUsed:false,effectSummary:[]});
    if(this.round===6)p.bag.push(this.chip('white',1));

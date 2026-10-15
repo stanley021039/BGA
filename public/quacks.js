@@ -126,10 +126,10 @@ function renderTableDice(s){
 function renderFortune(s,live){
  const f=$('#fortune'),isDrawing=s.phase==='fortune',starter=s.players.find(p=>p.id===s.roundStarterId),key=JSON.stringify([isDrawing,s.fortune?.id,s.fortuneRevealId,s.roundStarterId,s.me]);
  if(f.dataset.renderKey===key)return;f.dataset.renderKey=key;
- const myTurn=isDrawing&&s.roundStarterId===s.me;f.classList.toggle('awaiting-draw',myTurn);f.tabIndex=-1;f.setAttribute('role','group');f.setAttribute('aria-label',myTurn?'輪到你，自動抽占卜牌':isDrawing?'尚未翻開的占卜牌':'本輪占卜牌');
+ const myTurn=isDrawing&&s.roundStarterId===s.me;f.classList.toggle('awaiting-draw',myTurn);f.tabIndex=-1;f.setAttribute('role','group');f.setAttribute('aria-label',myTurn?'輪到你，點中央牌背抽占卜牌':isDrawing?'尚未翻開的占卜牌':'本輪占卜牌');
  f.onclick=null;f.onkeydown=null;
  f.dataset.timing=s.fortune?.timing||'unknown';f.classList.toggle('face-down',isDrawing);f.setAttribute('aria-label',myTurn?'輪到你，自動抽占卜牌':isDrawing?'尚未翻開的占卜牌':'本輪占卜牌');
- if(isDrawing)f.replaceChildren(node('span','✦ 占卜牌 ✦'),node('h3',starter?.name+'抽牌'),node('p','每回合由起始玩家自動抽取一張。'));
+ if(isDrawing)f.replaceChildren(node('span','✦ 占卜牌 ✦'),node('h3',starter?.name+'抽牌'),node('p','每回合由起始玩家點牌抽取一張。'));
  else f.replaceChildren(node('h3',s.fortune?.name||'九回合的命運，等你揭曉'),node('p',s.fortune?.text||'每輪抽一張占卜牌，所有人同步抽藥。'));
  f.classList.remove('card-reveal');
  lastReveal=s.fortuneRevealId;
@@ -240,7 +240,7 @@ function render(s){
  }else{box.append(node('h3',m.pending.title));for(const o of m.pending.options)box.append(button(o.label,'check',()=>act('choice',{choiceId:m.pending.id,optionId:o.id}),o.disabled));}}
   else if(m.waitingEffect)box.append(node('p','等待其他人完成藥材／占卜卡效果。'));
   else if(s.phase==='patients')box.append(node('p',m.alchemy?.patientId?'已選病患，等待其他人。':'在特效藥面板選一位病患，同場可以選相同病患。'));
-  else if(s.phase==='fortune')box.append(node('p',s.me===s.roundStarterId?'正在自動抽取占卜牌。':'等 '+s.players.find(p=>p.id===s.roundStarterId)?.name+' 抽占卜牌。'));
+  else if(s.phase==='fortune')box.append(node('p',s.me===s.roundStarterId?'點中央牌背抽取占卜牌。':'等 '+s.players.find(p=>p.id===s.roundStarterId)?.name+' 抽占卜牌。'));
   else if(s.phase==='brewing'){
    if(s.stage==='drawing'){
     if(m.canDraw){const draw=button('還要爽爽：繼續抽藥','draw-bag',async()=>{await act('draw',{step:s.step});keepPotInView();}),stop=button('我不抽了QQ','close',()=>act('stop',{step:s.step}));draw.classList.add('draw-action');stop.classList.add('stop-action');for(const [b,icon,text]of [[draw,'draw-bag','還要爽爽：繼續抽藥'],[stop,'hand','我不抽了QQ']]){window.GameUI.decorateButton(b,icon,{iconOnly:true});b.classList.remove('ui-icon-button');b.classList.add('quacks-dock-button');const caption=node('span',text);caption.className='ui-sr-only';const portrait=node('img');portrait.src=icon==='draw-bag'?'/assets/quacks/draw-portrait-v1.png':'/assets/quacks/stop-portrait-v1.png';portrait.alt='';portrait.width=240;portrait.height=160;portrait.className='quacks-action-portrait';b.classList.add('portrait-action');if(icon==='draw-bag')b.dataset.caption='還要爽爽';b.replaceChildren(portrait,caption);hint(b,{title:text,effect:'對自己的大釜作出本次選擇；全員選好後同步抽藥。',caption:'',color:icon});}box.append(draw,stop);}
