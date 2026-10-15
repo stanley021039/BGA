@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-15／2.9.0：新增 Stitch 20 款動態彈幕框與收藏庫分頁，保留原 4 款；靜態模板、框飾動畫與文字分離，沿用白名單事件及本地選框偏好。20 款隔離雙席傳送、現行整合服務代表款及聊天表單、1440／390／320px 選框與收藏庫、長文字／關閉框飾尺寸及減少動態設定已觀察。無測試套件、實體手機、全遊戲階段或 FPS 結論。詳 [設計、實作與驗收](../BARRAGE-STITCH-20.md)。
+
 2026-10-15 架構 PR 驗證（2.8.1）：取代本批候選「套件未執行」的狀態。Linux Node v22.22.1 完整 `npm test` 2229/2229 通過，無失敗、取消或略過；設定保存競態新增 6 項，共用實體操作元件驗房主／容量／階段／pending／焦點／跨房間回應。修正測試 fixture 接線及過時 DOM 斷言，保留畫布像素／中途筆跡與協定斷言；復原測試等待 renderer，不等待刻意未回覆的筆畫 HTTP。67 個變更 JS 語法、CSS ownership、11 頁載入順序、patch release check 與 staged diff check 通過。瀏覽器證據沿用同日實作驗收，沒有新增九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
 
 2026-10-15 前端 UI 階層：以畫猜／郎中為基準，RoomUI 單次分派 snapshot；RoomLayout／DrawingLayout 集中 host 位置與畫板幾何，移除 primitives→Template 反向依賴及 Stitch 全 body 版面觀察；全遊戲房間操作改明確 adapter，設定保存失敗阻止開局。CSS 分成 tokens／skin／composition 與郎中 theme／layout，122 處等值 token；72 組真 Chromium 前後比較 computedStyle 一致。測試站已驗畫猜持筆／ACK／SSE／換輪／結束再玩及設定失敗恢復、郎中一回合採購／女巫、其餘九款房主／訪客／滿員／開局防重；pageerror 皆空。套件未執行，無完整九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
@@ -633,3 +635,23 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 
 ## 2026-10-14：#119 最新 main 整合與說明高度
 取代上一筆2.3.4個人投票候選：已整合main88823b6，使用者確認全桌最後選擇；2.5.1保留煉金術士與設定先行，選藥採翻面／明確選擇／全桌印章。說明區預留每色最長面高度，非當前面不可見及aria-hidden；全套2207通過後31受影響項通過，隔離瀏覽器卡高／按鈕位置一致。最新授權建立Draft PR供換環境接續；Linux／CI／真觸控仍待驗，不合併部署。詳[最新進度](../QUACKS-BOOK-VOTING-UI-PROGRESS.md)。
+
+
+## 2026-10-15 帳號選單圖文按鈕與角色尺寸
+
+候選2.9.1：既有 GameUI.decorateButton 保留；site-header 帳號選單不再以 display:block 覆蓋 ui-button 圖文排列，暱稱儲存移除36px限寬、保留44px高度與共用setBusy。角色每列四格、64px選項／56px圖片，預留216px捲動槽與42px提示槽。盤點29個使用decorateButton的JS呼叫端，未建立重複按鈕元件。
+
+8080隔離測試站實際驗證暱稱儲存、角色切換、重載保留、1440亮色／1280深色／390與320手機選單；儲存按鈕88×44、圖文間距8px，角色圖片56px高。320頁面原有整頁橫溢出仍存在，帳號選單及本次控制均在視窗內；未擴大修改大廳布局。完成JS語法／diff／版號一致性檢查，未跑test套件；未PR、推送、main合併或正式發布。
+
+
+### 2026-10-15 彈幕外觀目前選用預覽
+設定頁新增右側固定預覽槽，直接使用 BarrageFrames.decorate 與 subscribe，同步選框與跨頁重載保存，手機700px以下上下排列。8080隔離站實際驗證預設→星際軌道即時更新、重載保存、1280亮暗與390手機版，框與裝飾位於面板內。JS語法、diff及版號一致性檢查通過；沿用同批2.9.1，未跑test套件、未PR或正式發布。
+
+
+## 2026-10-15 表情20字與15格
+候選2.10.0。表情名稱原有20字驗證保留；大廳speech取消110px單行省略，使用12em上限與完整換行，依舞台左右邊緣調整位置。選單名稱同樣換行。自訂表情上限6→15，服務端與角色管理說明同步（主圖neutral另計）。
+8080測試服務重啟載入來源；實際HTTP建立一位QA角色及15個表情，第16個回400 EXPRESSION_LIMIT，20字名稱保存及大廳選單15項通過。首次批量新增遇既有429，依60秒限制等待重試後完成，未放寬限制。桌機及390手機實際發送20中文字，scrollWidth/clientWidth及scrollHeight/clientHeight一致，完整文字無裁切；手機氣泡左右在舞台內。來源版號2.10.0，服務於升版前啟動、API版號仍2.9.1。語法／diff／版號一致性通過；未執行test套件、未PR、推送、main合併或正式發布。
+
+
+## 2026-10-15 PR127 main衝突整合
+整合main bf8eb4e至架構PR e56aac3。保留兩邊角色記錄與main 2.9.0／2.10.0變更，候選升2.10.1；stitch-fidelity維持tokens／skin／composition載入入口，帳號按鈕44px、角色56px／四欄與固定狀態槽移到composition，不恢復舊整包CSS。保留main彈幕預覽、20字換行、15表情、共用setBusy與原PR架構；此筆是衝突整合紀錄，未新增正式發布證據。

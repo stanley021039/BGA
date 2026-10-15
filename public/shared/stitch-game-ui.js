@@ -166,7 +166,7 @@
     for(const c of options.characters){const b=button(c.name,null,async()=>{if(busy)return;busy=true;try{const next={...appearance,characterId:c.id,expression:'neutral'};await request('/api/profile/appearance',next);appearance=next;preview.src=c.expressions.neutral;window.dispatchEvent(new CustomEvent('profile-updated'));text(status,'已選用 '+c.name);for(const other of grid.children)other.setAttribute('aria-pressed',String(other===b));}catch(error){text(status,error.message);}finally{busy=false;}});b.title=c.name;b.setAttribute('aria-label','選用 '+c.name);b.setAttribute('aria-pressed',String(c.id===appearance.characterId));const img=el('img');img.src=c.expressions.neutral;img.alt='';b.replaceChildren(img);grid.append(b);}
    }catch(error){loaded=false;text(status,error.message);}}
   new MutationObserver(load).observe(menu,{attributes:true,attributeFilter:['hidden']});
-  form.onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;save.disabled=true;try{const me=await request('/api/profile/name',{displayName:input.value.trim()});input.value=me.displayName;window.dispatchEvent(new CustomEvent('profile-updated'));text(status,'暱稱已儲存。');}catch(error){text(status,error.message);}finally{busy=false;save.disabled=false;}};
+  form.onsubmit=async e=>{e.preventDefault();if(busy)return;busy=true;ui.setBusy(save,true);try{const me=await request('/api/profile/name',{displayName:input.value.trim()});input.value=me.displayName;window.dispatchEvent(new CustomEvent('profile-updated'));text(status,'暱稱已儲存。');}catch(error){text(status,error.message);}finally{busy=false;ui.setBusy(save,false);}};
  }
  function lobbyControls(){
   const dialog=$('#createRoomDialog');if(!dialog||dialog.dataset.stitchCreate)return;dialog.dataset.stitchCreate='true';

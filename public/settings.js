@@ -1,6 +1,6 @@
 (()=>{
  const q=s=>document.querySelector(s);let appearance,avatar,characters=[],artworks=[],busy=false,nameBusy=false;
- if(window.BarrageFrames){const trigger=q('#settings-barrage-frame');trigger.onclick=()=>window.BarrageFrames.openPicker(trigger);window.BarrageFrames.subscribe(prefs=>{const option=window.BarrageFrames.options.find(item=>item.id===prefs.selected);q('#settings-barrage-frame-status').textContent='目前彈幕框：'+(option?.label||'預設');});}
+ if(window.BarrageFrames){const trigger=q('#settings-barrage-frame');trigger.onclick=()=>window.BarrageFrames.openPicker(trigger);window.BarrageFrames.subscribe(prefs=>{const option=window.BarrageFrames.options.find(item=>item.id===prefs.selected);q('#settings-barrage-frame-status').textContent='目前彈幕框：'+(option?.label||'預設');const preview=q('#settings-barrage-preview');preview.replaceChildren();window.BarrageFrames.decorate(preview,{kind:'builtin',id:prefs.selected,version:1},'小雨','這一桌好好玩！');});}
 
  for(const selector of ['#nickname-form','#settings-form'])window.GameUI?.bindForm?.(q(selector));
  for(const selector of ['#nickname-save','#settings-save'])window.GameUI?.decorateButton?.(q(selector),'save',{iconOnly:true});

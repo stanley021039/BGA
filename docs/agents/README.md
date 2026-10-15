@@ -1,5 +1,7 @@
 # Agent 長期記憶索引
 
+2026-10-15／2.9.0：新增 Stitch 20 款動態彈幕框與收藏庫分頁，保留原 4 款；靜態模板、框飾動畫與文字分離，沿用白名單事件及本地選框偏好。20 款隔離雙席傳送、現行整合服務代表款及聊天表單、1440／390／320px 選框與收藏庫、長文字／關閉框飾尺寸及減少動態設定已觀察。無測試套件、實體手機、全遊戲階段或 FPS 結論。詳 [設計、實作與驗收](../BARRAGE-STITCH-20.md)。
+
 2026-10-15 架構 PR 驗證（2.8.1）：取代本批候選「套件未執行」的狀態。Linux Node v22.22.1 完整 `npm test` 2229/2229 通過，無失敗、取消或略過；設定保存競態新增 6 項，共用實體操作元件驗房主／容量／階段／pending／焦點／跨房間回應。修正測試 fixture 接線及過時 DOM 斷言，保留畫布像素／中途筆跡與協定斷言；復原測試等待 renderer，不等待刻意未回覆的筆畫 HTTP。67 個變更 JS 語法、CSS ownership、11 頁載入順序、patch release check 與 staged diff check 通過。瀏覽器證據沿用同日實作驗收，沒有新增九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
 
 2026-10-15 前端 UI 階層：以畫猜／郎中為基準，RoomUI 單次分派 snapshot；RoomLayout／DrawingLayout 集中 host 位置與畫板幾何，移除 primitives→Template 反向依賴及 Stitch 全 body 版面觀察；全遊戲房間操作改明確 adapter，設定保存失敗阻止開局。CSS 分成 tokens／skin／composition 與郎中 theme／layout，122 處等值 token；72 組真 Chromium 前後比較 computedStyle 一致。測試站已驗畫猜持筆／ACK／SSE／換輪／結束再玩及設定失敗恢復、郎中一回合採購／女巫、其餘九款房主／訪客／滿員／開局防重；pageerror 皆空。套件未執行，無完整九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
