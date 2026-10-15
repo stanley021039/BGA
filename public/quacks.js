@@ -166,7 +166,7 @@ function renderBookVoting(s){
   const author=node('small',who?'由 '+who.name+' 選擇':'預設效果');author.className='book-vote-counts';
   card.append(top,effect,controls,tally,author);
   grid.append(card);
- }box.append(grid);bookVotingKey=JSON.stringify([s.phase,s.me,s.host,s.bookSelection,[...bookPages],bookHelpOpen]);lock();if(focused)box.querySelector('[data-book-control="'+focused+'"]')?.focus({preventScroll:true});
+ }box.append(grid);window.QuacksStitch?.syncBookTabs?.();bookVotingKey=JSON.stringify([s.phase,s.me,s.host,s.bookSelection,[...bookPages],bookHelpOpen]);lock();if(focused)box.querySelector('[data-book-control="'+focused+'"]')?.focus({preventScroll:true});
 }
 function renderBooks(s){
  $('#books').replaceChildren(...s.books.map(b=>{const card=coloredCard(b.color,b.faceName);ingredientHint(card.querySelector('.ingredient-token'),{color:b.color,value:1},b);const offers=node('div');offers.className='book-offers';

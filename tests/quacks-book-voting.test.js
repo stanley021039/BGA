@@ -40,6 +40,17 @@ test('every face reserves description space while only the browsed effect is exp
  check(1);f.control('blue','next').onclick();check(2);assert.equal(f.calls.length,0);
 });
 
+test('flipping or opening help keeps book cards limited to the active color tab',()=>{
+ const f=setup();
+ f.context.window.QuacksStitch={syncBookTabs:()=>{for(const card of f.document.querySelectorAll('#bookVoting .book-card'))card.hidden=card.dataset.ingredient!=='blue';}};
+ f.control('blue','next').onclick();
+ assert.equal(f.card('blue').hidden,false);
+ assert.equal(f.card('red').hidden,true);
+ f.document.querySelector('[data-book-control="help"]').onclick();
+ assert.equal(f.card('blue').hidden,false);
+ assert.equal(f.card('red').hidden,true);
+});
+
  test('ingredient mappings preserve actual line breaks and reserve their full height',()=>{
  const {EFFECTS}=require('../src/games/quacks-catalog');
  assert.equal(EFFECTS.blue[1],'保護接下來 1／2／4 片；期間若爆炸，仍可得分及購買，但不能擲獎勵骰。');

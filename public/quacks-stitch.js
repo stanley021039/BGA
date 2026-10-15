@@ -192,6 +192,6 @@
    const quick=$('.q-chat-quick'),finished=String(s.phase==='finished');if(quick&&quick.dataset.finished!==finished){quick.dataset.finished=finished;quick.replaceChildren();for(const value of s.phase==='finished'?['GG','再來一局','笑死']:['😂','🤔','👏','這鍋穩啦','先停還是衝？']){const b=el('button','',value);b.type='button';b.onclick=()=>window.SharedChat.compose(value);quick.append(b);}}
    ui.decorateButton($('#soundToggle'),window.AudioSettings.get().effects.enabled?'sound':'muted',{iconOnly:true,label:window.AudioSettings.get().effects.enabled?'關閉遊戲音效':'開啟遊戲音效'});
    liveEffects(s,live);
-  },potUpdated(s){state=s;potChrome(s);},socialUpdate,openBook,waitingRoom,inspectTooltip:inspect,dismissTooltip,
+  },potUpdated(s){state=s;potChrome(s);},socialUpdate,openBook,syncBookTabs:renderBookTabs,waitingRoom,inspectTooltip:inspect,dismissTooltip,
  };
 })();
