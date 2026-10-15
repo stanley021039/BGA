@@ -31,8 +31,8 @@ test('shared last choice updates selection and author, expansion switches discar
  f.context.state=f.r.view(f.b.id);vm.runInContext('renderBookVoting(state)',f.context);assert.equal(f.document.querySelector('[data-book-control="settings"]'),null);
  f.r.configure(f.a.id,{witches:true});f.render();for(let i=0;i<5;i++)f.control('blue','next').onclick();assert.match(f.card('blue').textContent,/第 6 面/);f.r.configure(f.a.id,{witches:false});f.render();assert.doesNotMatch(f.card('blue').textContent,/第 6 面/);
 });
-test('help is available by click, busy browsing cannot move the face',()=>{
- const f=setup();const help=f.document.querySelector('[data-book-control="help"]');help.onclick();assert.equal(f.document.querySelector('#bookVotingHelp').hidden,false);assert.equal(f.control('orange','next').disabled,true);assert.equal(f.control('blue','choose').disabled,true);f.context.busy=true;f.control('blue','next').onclick();assert.doesNotMatch(f.card('blue').textContent,/已選第 1 面/);
+test('book heading omits help and room settings, busy browsing cannot move the face',()=>{
+ const f=setup();assert.equal(f.document.querySelector('[data-book-control="help"]'),null);assert.equal(f.document.querySelector('[data-book-control="settings"]'),null);assert.equal(f.document.querySelector('#bookVotingHelp'),null);assert.equal(f.control('orange','next').disabled,true);assert.equal(f.control('blue','choose').disabled,true);f.context.busy=true;f.control('blue','next').onclick();assert.doesNotMatch(f.card('blue').textContent,/已選第 1 面/);
 });
 test('every face reserves description space while only the browsed effect is exposed',()=>{
  const f=setup(),row=f.r.bookSelection().find(b=>b.color==='blue');
@@ -40,13 +40,13 @@ test('every face reserves description space while only the browsed effect is exp
  check(1);f.control('blue','next').onclick();check(2);assert.equal(f.calls.length,0);
 });
 
-test('flipping or opening help keeps book cards limited to the active color tab',()=>{
+test('flipping and shared random selection keep book cards limited to the active color tab',()=>{
  const f=setup();
  f.context.window.QuacksStitch={syncBookTabs:()=>{for(const card of f.document.querySelectorAll('#bookVoting .book-card'))card.hidden=card.dataset.ingredient!=='blue';}};
  f.control('blue','next').onclick();
  assert.equal(f.card('blue').hidden,false);
  assert.equal(f.card('red').hidden,true);
- f.document.querySelector('[data-book-control="help"]').onclick();
+ f.r.rng=n=>n-1;f.r.act(f.b.id,'book-random',{roundId:f.r.roundId,requestId:require('crypto').randomUUID()});f.render();
  assert.equal(f.card('blue').hidden,false);
  assert.equal(f.card('red').hidden,true);
 });
@@ -76,3 +76,8 @@ test('black fifth face explains each acquisition and both ruby rewards',()=>{
  const f=setup();f.r.configure(f.a.id,{witches:true});f.render();f.control('black','next').onclick();
  assert.match(f.card('black').querySelectorAll('.book-effect-copy').find(n=>n.getAttribute('aria-hidden')!=='true').textContent,/每獲得 1 片/);
 });
+
+
+test('a fresh random choice follows the selected effect on both pages and preserves random-button focus',()=>{const f=setup();f.control('blue','face-2').onclick();const random=f.document.querySelector('[data-book-control="random"]');random.focus();random.onclick();assert.equal(f.calls.at(-1).action,'book-random');f.r.rng=n=>n-1;f.r.act(f.a.id,'book-random',{roundId:f.r.roundId,requestId:require('crypto').randomUUID()});f.render();for(const row of f.r.bookSelection()){const card=f.card(row.color);assert.equal(card.querySelector('.book-page-effect strong').textContent,'第 '+row.selected+' 面效果');assert.equal(card.querySelector('.book-selected-stamp').textContent,'已選');assert.equal(f.control(row.color,'face-'+row.selected).getAttribute('aria-pressed'),'true');assert.equal(card.querySelector('.book-page-top small').textContent,'第 '+row.selected+' 面 · 本局採用');}assert.equal(f.document.activeElement.dataset.bookControl,'random');});
+test('peer random and repeated identical random results resync browsing, regular refresh does not',()=>{const f=setup();f.r.rng=n=>n-1;const random=()=>f.r.act(f.b.id,'book-random',{roundId:f.r.roundId,requestId:require('crypto').randomUUID()});random();f.render();assert.equal(f.card('blue').querySelector('.book-page-effect strong').textContent,'第 4 面效果');f.control('blue','face-2').onclick();const card=f.card('blue');f.render();assert.equal(f.card('blue'),card);assert.equal(card.querySelector('.book-page-effect strong').textContent,'第 2 面效果');random();f.render();assert.equal(f.card('blue').querySelector('.book-page-effect strong').textContent,'第 4 面效果');assert.equal(f.card('blue').querySelector('.book-selected-stamp').textContent,'已選');});
+test('rolling old random events out of history does not snap browsing; the next random choice still syncs',()=>{const f=setup();f.r.rng=n=>n-1;f.r.act(f.b.id,'book-random',{roundId:f.r.roundId,requestId:require('crypto').randomUUID()});f.render();f.control('blue','face-2').onclick();for(let i=0;i<35;i++)f.r.event('test','unrelated');f.render();assert.equal(f.card('blue').querySelector('.book-page-effect strong').textContent,'第 2 面效果');f.r.act(f.b.id,'book-random',{roundId:f.r.roundId,requestId:require('crypto').randomUUID()});f.render();assert.equal(f.card('blue').querySelector('.book-page-effect strong').textContent,'第 4 面效果');});

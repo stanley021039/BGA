@@ -136,19 +136,17 @@ function renderFortune(s,live){
  f.classList.remove('card-reveal');
  lastReveal=s.fortuneRevealId;
 }
-const bookPages=new Map();let bookVotingKey='',bookHelpOpen=false;
+const bookPages=new Map();let bookVotingKey='',lastBookRandomId=null;
 function renderBookVoting(s){
  const box=$('#bookVoting'),waiting=['waiting','finished'].includes(s.phase);box.hidden=!waiting||!s.bookSelection||(s.me===s.host&&!bookSetupReady);
  if(box.hidden){bookVotingKey='';return;}
- const key=JSON.stringify([s.phase,s.me,s.host,s.bookSelection,[...bookPages],bookHelpOpen]);if(key===bookVotingKey)return;bookVotingKey=key;
+ const randomEvent=(s.events||[]).filter(e=>e.kind==='book-random').at(-1);
+ if(randomEvent&&randomEvent.id!==lastBookRandomId){for(const row of s.bookSelection)bookPages.set(row.color,row.selected);lastBookRandomId=randomEvent.id;}
+ const key=JSON.stringify([s.phase,s.me,s.host,s.bookSelection,[...bookPages]]);if(key===bookVotingKey)return;bookVotingKey=key;
  const focused=document.activeElement?.dataset?.bookControl;
  const heading=node('div');heading.className='book-voting-heading';
- const explanation='每種顏色選一面，全桌同步採用最後一次選擇。左右翻面只查看效果，按「選擇」才會更換本局藥材書；也可隨機搭配。';
- const help=button(explanation,'notice',()=>{bookHelpOpen=!bookHelpOpen;renderBookVoting(state);});window.GameUI?.decorateButton(help,'notice',{iconOnly:true,label:explanation});help.dataset.bookControl='help';help.setAttribute('aria-expanded',String(bookHelpOpen));help.setAttribute('aria-controls','bookVotingHelp');
- const subtitle=node('p',explanation);subtitle.id='bookVotingHelp';subtitle.className='book-voting-help';subtitle.hidden=!bookHelpOpen;
  const random=button('隨機挑選','refresh',()=>act('book-random'));window.GameUI?.decorateButton(random,'refresh',{iconOnly:true,label:'隨機挑選藥材書'});random.dataset.bookControl='random';
- heading.append(node('h2','本局藥材書選擇'),help,random);box.replaceChildren(heading,subtitle);
- if(s.me===s.host){const settings=button('調整房間設定','settings',()=>{bookSetupReady=false;lastVersion=-1;render(state);requestAnimationFrame(()=>document.querySelector('.ui-room-settings-card')?.scrollIntoView({block:'start',behavior:'instant'}));});settings.dataset.bookControl='settings';heading.insertBefore(settings,random);}
+ heading.append(node('h2','本局藥材書選擇'),random);box.replaceChildren(heading);
  const grid=node('div');grid.className='book-grid';
  for(const row of s.bookSelection){
   const current=row.candidates.find(c=>c.set===bookPages.get(row.color))||row.candidates.find(c=>c.set===row.selected)||row.candidates[0];
@@ -171,7 +169,7 @@ function renderBookVoting(s){
   const author=node('small',who?'由 '+who.name+' 選擇':'預設效果');author.className='book-vote-counts';
   const left=node('section'),right=node('section');left.className='q-book-page q-book-page-left';right.className='q-book-page q-book-page-right';left.append(node('small','本局藥材 · '+row.name),mark,top,node('p','藥材數值與購買價格依這一面顯示。'));right.append(node('small','效果翻頁 · '+row.candidates.length+' 面'),effect,controls,tally,author);card.replaceChildren(left,right);
   grid.append(card);
- }box.append(grid);window.QuacksStitch?.syncBookTabs?.();bookVotingKey=JSON.stringify([s.phase,s.me,s.host,s.bookSelection,[...bookPages],bookHelpOpen]);lock();if(focused)box.querySelector('[data-book-control="'+focused+'"]')?.focus({preventScroll:true});
+ }box.append(grid);window.QuacksStitch?.syncBookTabs?.();bookVotingKey=JSON.stringify([s.phase,s.me,s.host,s.bookSelection,[...bookPages]]);lock();if(focused)box.querySelector('[data-book-control="'+focused+'"]')?.focus({preventScroll:true});
 }
 function renderBooks(s){
  $('#books').replaceChildren(...s.books.map(b=>{const card=node('article');card.className='book-card book-vote-card q-book-readonly';card.dataset.ingredient=b.color;card.style.setProperty('--ingredient',art.palette[b.color][0]);card.setAttribute('aria-label',b.name+'藥材書');
