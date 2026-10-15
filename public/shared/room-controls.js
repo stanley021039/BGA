@@ -137,7 +137,7 @@
   const manage=document.getElementById('managePlayers'),row=panel.querySelector('.ui-room-session-actions');
   const inPlay=!['waiting','finished'].includes(state.phase),chat=document.querySelector('.shared-chat'),tools=chat?.querySelector('.chat-room-tools'),actionHost=inPlay&&tools?tools:row;
   if(proxies.leave.parentElement!==actionHost)actionHost.append(proxies.leave);
-  if(manage){if(customQuacks)rememberCustom(manage);if(manage.dataset.roomAction!=='manage')decorate(manage,'manage');if(manage.parentElement!==actionHost||manage.nextElementSibling!==proxies.leave)actionHost.insertBefore(manage,proxies.leave);}
+  if(manage){if(customQuacks)rememberCustom(manage);if(manage.dataset.roomAction!=='manage')decorate(manage,'manage');let slot=document.querySelector('[data-room-manage-slot]');const headerTools=document.querySelector('.q-header-tools')||document.querySelector('[data-site-header] .site-account');if(!slot&&headerTools){slot=node('div','room-management-slot');slot.dataset.roomManageSlot='';slot.setAttribute('role','group');slot.setAttribute('aria-label','房間管理');headerTools.prepend(slot);}const manageHost=slot||actionHost;if(manage.parentElement!==manageHost)manageHost.append(manage);}
   if(chat){const value=String(state.phase!=='waiting');if(chat.dataset.gameChat!==value)chat.dataset.gameChat=value;chat.parentElement?.classList.remove('ui-game-chat-host');}
 
   const hasManage=String(!!manage);if(panel.dataset.hasManage!==hasManage)panel.dataset.hasManage=hasManage;

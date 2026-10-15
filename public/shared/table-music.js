@@ -1,5 +1,5 @@
 (()=>{
- const panel=document.createElement('section');panel.className='table-music collapsed';panel.hidden=true;panel.setAttribute('aria-label','這桌音樂與影片');panel.innerHTML=`<header><strong id="table-media-title">本桌媒體</strong><button id="music-expand" aria-expanded="false" aria-controls="music-details" aria-label="展開音樂與影片" title="展開音樂與影片" type="button">媒體</button></header><div id="music-details" hidden>
+ const panel=document.createElement('section');panel.className='table-music collapsed';panel.hidden=true;panel.setAttribute('aria-label','這桌音樂與影片');panel.innerHTML=`<header><strong id="table-media-title" class="ui-sr-only">媒體</strong><button id="music-expand" aria-expanded="false" aria-controls="music-details" aria-label="展開音樂與影片" title="展開音樂與影片" type="button">媒體</button></header><div id="music-details" hidden>
 <section class="table-media-video" aria-labelledby="table-video-title"><h3 id="table-video-title">影片</h3><div id="table-media-watch-slot"></div></section>
 <section class="table-media-music" aria-labelledby="table-music-title"><h3 id="table-music-title">音樂</h3><p id="music-title" class="music-current">本桌音樂 - 無</p>
 <select id="music-track" aria-label="選曲"><option value="">選曲</option></select>

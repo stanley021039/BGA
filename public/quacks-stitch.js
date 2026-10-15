@@ -16,7 +16,7 @@
  for(const b of document.querySelectorAll('[data-q-close]')){ui.decorateButton(b,'close',{iconOnly:true,label:'關閉視窗'});b.onclick=()=>close(b.closest('dialog'));}
  for(const d of document.querySelectorAll('.quacks-dialog'))d.addEventListener('close',()=>{dismissTooltip();returnFocus(dialogTriggers.get(d));});
  icon('#qBook','book','藥材寶典');icon('#qRecords','queue','回合結算紀錄');icon('#qScore','crown','環形記分板');icon('#qGuide','help','玩法與版本範圍');icon('#leave','leave','離開房間');icon('#customizePot','edit','大釜命名與換色');
- icon('#managePlayers','settings','房間管理');if($('#managePlayers'))$('#qMobileMenuContent').append($('#managePlayers'));
+ icon('#managePlayers','settings','房間管理');
  $('#qBook').onclick=()=>openBook(null,$('#qBook'));$('#qRecords').onclick=()=>open($('#recordsDialog'),$('#qRecords'));$('#qScore').onclick=()=>open($('#scoreDialog'),$('#qScore'));$('#qGuide').onclick=()=>open($('#guideDialog'),$('#qGuide'));$('#qFortune').onclick=()=>open($('#fortuneDialog'),$('#qFortune'));
  const supplies=el('div','q-pot-supplies');supplies.setAttribute('aria-label','藥水瓶與藥袋');supplies.append($('#qPotionSlot'),$('#bagButton'));$('#qPotStage').append(supplies);
  const phaseSteps=['配書','占卜','抽藥','結算','購物','下回合'],phaseRail=el('nav','q-phase-rail');phaseRail.setAttribute('aria-label','本局遊戲階段');for(const label of phaseSteps){const step=el('span','q-phase-step',label);phaseRail.append(step);}$('.q-header').after(phaseRail);
@@ -25,7 +25,7 @@
  const alchemyTool=el('button','','煉金術士與特效藥');alchemyTool.type='button';ui.decorateButton(alchemyTool,'ingredient',{label:'煉金術士與特效藥'});alchemyTool.onclick=()=>open($('#alchemyDialog'),alchemyTool);$('#qMobileMenuContent').append(alchemyTool);
  $('#qBrandIcon').innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 4h10M13 4v9L6 24q-1 4 3 4h14q4 0 3-4l-7-11V4" fill="none" stroke="#765b16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20h12l3 5H7Z" fill="#765b16" opacity=".5"/><circle cx="16" cy="18" r="1.5" fill="#765b16"/></svg>';
  $('#qRecords').remove();$('#qBook').before($('#qScore'));
- const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qGuide','#soundToggle','#qMotion'],toolHomes=new Map();
+ const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qGuide','#soundToggle'],toolHomes=new Map();
  ui.decorateButton($('#qScore'),'crown',{iconOnly:true,label:'環形記分板'});
  for(const id of mobileTools){const n=$(id),mark=document.createComment('quacks-tool-home');n.before(mark);toolHomes.set(n,mark);}
  const account=$('.site-account'),accountHome=document.createComment('quacks-account-home');account.before(accountHome);toolHomes.set(account,accountHome);
@@ -125,7 +125,7 @@
    const inspectButton=el('button','q-witch-info');inspectButton.type='button';inspectButton.setAttribute('aria-label','查看'+w.name+'效果');inspectButton.onclick=()=>inspect({title:w.name,effect:w.text},row);row.append(inspectButton);
   }
   const complex=waiting||s.phase!=='brewing'||s.stage!=='drawing'||!!m?.pending||!!m?.waitingEffect||!!m?.reserve.length;
-  const overlay=$('#qStageOverlay');overlay.hidden=!complex;
+  const overlay=$('#qStageOverlay');overlay.hidden=!complex;overlay.classList.toggle('q-stage-centered',s.phase!=='finished'&&s.stage!=='shopping');
   if(!complex){const extras=[...$('#controls').children].filter(n=>n.matches('button,.alchemy-return-choices')&&!n.matches('.draw-action,.stop-action'));for(const n of extras)$('#qExtraContent').append(n);if(extraTool.hidden===!!extras.length)extraTool.hidden=!extras.length;if(extraBadge.hidden===!!extras.length)extraBadge.hidden=!extras.length;extraBadge.textContent=String(extras.length);if(extras.length)ui.decorateButton(extraTool,'ingredient',{label:'額外煮藥選擇（'+extras.length+'）'});else if($('#qExtraDialog').open)$('#qExtraDialog').close();return;}
   if(!extraTool.hidden)extraTool.hidden=true;if(!extraBadge.hidden)extraBadge.hidden=true;if($('#qExtraDialog').open)$('#qExtraDialog').close();
   const content=$('#qStageContent'),heading=$('#qStageTitle');heading.textContent=waiting?(s.phase==='finished'?'本場結果':'藥袋已備，等你開釜。'):({patients:'選擇治療病患',fortune:'本輪占卜',between:'本輪結算完成',settlement:({witches:'結算前女巫',essence:'特效藥階段',bonus:'獎勵骰',effects:'藥材效果', 'effects-confirm':'藥材結算',rewards:'領取本輪獎勵',shopping:'藥材市集'})[s.stage],brewing:m?.pending?.title||'暫存藥材'})[s.phase]||'你的操作';
@@ -177,9 +177,8 @@
   if(mediaReady)return;const tools=$('.q-chat-panel .chat-room-tools');if(!tools)return;mediaReady=true;
   const quick=el('div','q-chat-quick');quick.setAttribute('aria-label','常用句與快速表情');
   tools.prepend(quick);quickChoices(quick,state?.phase==='finished');quick.dataset.finished=String(state?.phase==='finished');
-  const off=window.MotionPolicy.subscribe(p=>{$('#qMotion').setAttribute('aria-pressed',String(p.enabled));});window.addEventListener('pagehide',off,{once:true});
  }
- icon('#qMotion','play','切換遊戲動畫');$('#qMotion').onclick=()=>window.MotionPolicy.set({enabled:!window.MotionPolicy.get().enabled});
+ $('#qMotion')?.remove();
  $('#soundToggle').onclick=()=>window.AudioSettings.set('effects',{enabled:!window.AudioSettings.get().effects.enabled},{gesture:true});
  const soundSubscription=window.AudioSettings.subscribe(prefs=>{const b=$('#soundToggle'),enabled=String(prefs.effects.enabled);if(b.dataset.effectsEnabled!==enabled){b.dataset.effectsEnabled=enabled;ui.decorateButton(b,prefs.effects.enabled?'sound':'muted',{iconOnly:true,label:prefs.effects.enabled?'關閉遊戲音效':'開啟遊戲音效'});}});window.addEventListener('pagehide',soundSubscription,{once:true});
  window.SharedChat.mountIn($('#qSocial'),{inline:true});

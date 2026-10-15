@@ -31,3 +31,6 @@ body[data-game-kind] .table-media-queue-item{background:var(--ui-surface-panel);
 body[data-game-kind] .table-media-queue-item.media-drop-target{background:var(--ui-selected-soft)}
 body[data-game-kind] .table-media-timeline{font-variant-numeric:lining-nums tabular-nums}
 body[data-game-kind] .table-media-consent{background:var(--ui-surface-floating);border-radius:var(--ui-radius-panel);box-shadow:var(--ui-shadow-floating)}
+
+.table-media-header .table-media-window-tools{margin-left:auto}
+.table-media-playlist-body{overscroll-behavior:contain;overflow-anchor:none;scrollbar-gutter:stable}
