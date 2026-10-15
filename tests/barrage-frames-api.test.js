@@ -29,7 +29,7 @@ async function fixture(t){
 
 test('all five games publish the same catalog and freeze every valid builtin frame into confirmed text events',async t=>{
  const f=await fixture(t),options=await f.request('social/options','paper');assert.equal(options.status,200);
- assert.deepEqual(options.body.barrageFrames,[{id:'default',label:'預設'},{id:'paper',label:'紙張'},{id:'comic',label:'漫畫'},{id:'pixel',label:'像素'}]);assert.ok(options.body.emojis.includes('🎉'));
+ assert.deepEqual(options.body.barrageFrames,[{"id": "default", "label": "預設"}, {"id": "paper", "label": "紙張"}, {"id": "comic", "label": "漫畫"}, {"id": "pixel", "label": "像素"}, {"id": "neon", "label": "電流霓虹"}, {"id": "orbit", "label": "星際軌道"}, {"id": "holo", "label": "全息故障"}, {"id": "arcade", "label": "街機像素"}, {"id": "mech", "label": "機械核心"}, {"id": "berry", "label": "奶油草莓"}, {"id": "cat", "label": "貓咪肉球"}, {"id": "cloud", "label": "軟糖雲朵"}, {"id": "jelly", "label": "深海水母"}, {"id": "shiba", "label": "柴犬吐司"}, {"id": "forest", "label": "森林精靈"}, {"id": "dragon", "label": "龍焰寶藏"}, {"id": "frost", "label": "冰晶王冠"}, {"id": "moon", "label": "月光魔法"}, {"id": "potion", "label": "蘑菇藥釜"}, {"id": "ink", "label": "水墨游魚"}, {"id": "sakura", "label": "御守櫻花"}, {"id": "steam", "label": "蒸汽郵件"}, {"id": "burst", "label": "漫畫爆擊"}, {"id": "royal", "label": "皇家劇院"}]);assert.ok(options.body.emojis.includes('🎉'));
  const selections=[['host','default'],['paper','paper'],['comic','comic'],['pixel','pixel']];
  for(const [index,type]of ['poker','thunder','majority','gift','draw'].entries()){
   // The social limit is per account and kind across rooms. Keep the real clock

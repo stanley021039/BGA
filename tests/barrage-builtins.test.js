@@ -21,7 +21,7 @@ test('only exact primitive builtin IDs are accepted without coercion or trimming
 });
 
 test('catalog callers cannot modify the allowlist or published labels and descriptors',()=>{
- assert.deepEqual(BUILTIN_FRAME_OPTIONS.map(option=>option.id),['default','paper','comic','pixel']);
+ assert.deepEqual(BUILTIN_FRAME_OPTIONS.map(option=>option.id),["default", "paper", "comic", "pixel", "neon", "orbit", "holo", "arcade", "mech", "berry", "cat", "cloud", "jelly", "shiba", "forest", "dragon", "frost", "moon", "potion", "ink", "sakura", "steam", "burst", "royal"]);
  assert.ok(Object.isFrozen(BUILTIN_FRAME_OPTIONS));assert.throws(()=>BUILTIN_FRAME_OPTIONS.push({id:'unsafe',label:'自訂'}),TypeError);
  const snapshots=BUILTIN_FRAME_OPTIONS.map(({id,label})=>({id,label}));
  for(const option of BUILTIN_FRAME_OPTIONS){
