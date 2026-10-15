@@ -462,3 +462,58 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-brand-copy{min-width:0!important;overflow:hidden!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-brand-copy>b{overflow:hidden!important}
 }
+
+/* Latest main presentation additions. */
+body[data-game-kind=quacks][data-ui-template=tactile] .q-pot-name{position:absolute;z-index:4;top:10px;left:50%;width:max-content;max-width:50%;padding:4px 10px;overflow:hidden}
+body[data-game-kind=quacks][data-ui-template=tactile] #cauldron :is(.pot-name,.pot-nameplate){visibility:hidden}
+@media(max-width:780px){body[data-game-kind=quacks][data-ui-template=tactile] .q-pot-name{top:42px;max-width:65%}
+}
+@layer stitch-export{body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-table{height:clamp(480px,calc(100dvh - 150px),840px)!important;min-height:480px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom].game-focus-active .q-table{height:calc(100dvh - 56px)!important;min-height:440px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-action-dock,body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom].game-focus-active .q-action-dock{height:104px!important;grid-template-rows:28px minmax(0,1fr)!important;padding:5px 7px!important;gap:4px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #controls>.portrait-action{height:100%!important;min-height:0!important;gap:8px!important;padding:4px 8px!important;flex-direction:row!important;justify-content:flex-start!important;overflow:hidden!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #controls>.portrait-action .quacks-action-portrait{width:90px!important;height:54px!important;max-width:38%!important;object-fit:cover!important;object-position:center!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-name{left:10px!important;top:48px!important;max-width:42%!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-supplies{width:76px!important;top:62px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-stage #cauldron{width:calc(100% - 96px)!important;margin-right:96px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-room-phase=waiting] [data-room-action=start]{width:100%!important;max-width:360px!important;min-height:48px!important;height:52px!important;margin-inline:auto!important;padding:10px 18px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-room-phase=waiting] [data-room-action=start] .ui-button-icon{width:22px!important;height:22px!important;flex:none!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #qScore{display:inline-flex!important;min-width:40px!important;width:40px!important;justify-content:center!important;align-items:center!important;padding:8px!important}
+@media(max-width:780px){body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-table{height:clamp(540px,calc(100dvh - 214px),760px)!important;min-height:540px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-action-dock{height:106px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-stage #cauldron{width:100%!important;margin-right:0!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-supplies{width:58px!important;top:auto!important;bottom:40px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-name{left:6px!important;top:42px!important;max-width:68%!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #controls>.portrait-action{gap:5px!important;padding:3px 5px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #controls>.portrait-action .quacks-action-portrait{width:62px!important;height:50px!important;max-width:40%!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #controls>.portrait-action .q-action-detail{display:none!important}
+}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-room-phase=waiting] #game [data-room-action=start]{height:52px!important;min-height:48px!important;padding:10px 18px!important;max-width:360px!important}
+}
+@layer stitch-export{@media(max-width:440px){body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header{gap:4px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header .site-title{max-width:104px!important;min-width:0!important;gap:4px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header .q-brand-copy small{display:none!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #roomTag{padding:3px 5px!important;min-width:0!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header-tools{gap:3px!important;min-width:0!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header-tools :is(button,summary){width:36px!important;min-width:36px!important;max-width:36px!important;height:44px!important;padding:5px!important}
+}
+}
+@layer stitch-export{body[data-game-kind=quacks] #quacksFx .summon-card{width:min(344px,84vw)!important;height:448px!important;max-height:76dvh!important}
+body[data-game-kind=quacks] #quacksFx .summon-front{overflow:hidden!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:10px!important;padding:26px 24px 20px!important}
+body[data-game-kind=quacks] #quacksFx .summon-front::before{position:absolute;inset:8px;z-index:-1}
+body[data-game-kind=quacks] #quacksFx .summon-front::after{position:absolute;inset:15px;z-index:-1}
+body[data-game-kind=quacks] #quacksFx .summon-front .fortune-edition{flex-shrink:0}
+body[data-game-kind=quacks] #quacksFx .fortune-seal{position:relative;width:64px;height:64px;flex:0 0 64px;margin:2px auto 3px}
+body[data-game-kind=quacks] #quacksFx .fortune-seal::before{position:absolute;inset:18px}
+body[data-game-kind=quacks] #quacksFx .fortune-seal::after{position:absolute;inset:25px}
+body[data-game-kind=quacks] #quacksFx .fortune-timing{padding:4px 12px;flex-shrink:0}
+body[data-game-kind=quacks] #quacksFx .summon-front h3{margin:0!important;flex-shrink:0}
+body[data-game-kind=quacks] #quacksFx .fortune-effect{position:relative;min-height:0;flex:1;width:100%;overflow:auto;display:grid;align-items:center;padding:12px 4px;box-sizing:border-box}
+body[data-game-kind=quacks] #quacksFx .summon-front .fortune-effect p{margin:0!important;overflow-wrap:anywhere}
+body[data-game-kind=quacks] #quacksFx .summon-front .fortune-byline{max-width:100%;overflow-wrap:anywhere;flex-shrink:0}
+@media(max-height:640px){body[data-game-kind=quacks] #quacksFx .fortune-seal{width:48px;height:48px;flex-basis:48px}
+body[data-game-kind=quacks] #quacksFx .fortune-seal::before{inset:13px}
+body[data-game-kind=quacks] #quacksFx .fortune-seal::after{inset:19px}
+body[data-game-kind=quacks] #quacksFx .summon-front{gap:7px!important;padding:22px 20px 16px!important}
+}
+}

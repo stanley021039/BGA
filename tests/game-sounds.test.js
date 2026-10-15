@@ -7,6 +7,7 @@ function fixture({pending=false,blocked=false}={}){
  class Audio{constructor(src){this.src=this.originalSrc=src;this.paused=true;this.currentTime=0;clips.push(this);}play(){if(blocked)return Promise.reject(Error('blocked'));if(pending)return new Promise(resolve=>{this.finishLoad=()=>{this.paused=false;resolve();};});this.paused=false;this.onplaying?.();return Promise.resolve();}pause(){this.paused=true;}removeAttribute(name){delete this[name];}load(){}}
  const context={window,document,Audio,URL,location:{origin:'https://example.test'},localStorage:{getItem:key=>store.get(key)??null,setItem:(key,value)=>store.set(key,value)},Date:{now:()=>time},setTimeout(fn,ms){const key=++id;timers.set(key,{fn,at:time+ms});return key;},clearTimeout:key=>timers.delete(key)};
  for(const file of ['audio-settings.js','game-sounds.js'])vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../public/shared',file),'utf8'),context);
+ window.AudioSettings.set('effects',{enabled:false}); // Controlled muted baseline; global default-on is tested separately.
  const fire=name=>{for(const fn of [...(handlers.get(name)||[])])fn();};
  const state=(code='ABC123',version=1)=>({code,version});
  return {window,document,clips,timers,handlers,state,api:window.AudioSettings,controller:window.GameSounds.create(),fire,tick(ms){time+=ms;for(const [key,timer]of [...timers])if(timer.at<=time&&timers.delete(key))timer.fn();},hide(hidden){document.hidden=hidden;fire('document:visibilitychange');}};
@@ -60,4 +61,9 @@ test('failed new cue playback frees both caps and reports once without unhandled
 test('explosion cue respects live gates, mute, duplicate keys and original fixed source',()=>{
  const f=fixture(),c=f.controller;c.update(f.state());c.play('explosion','old');assert.equal(f.clips.length,0);c.update(f.state());c.play('explosion','muted');assert.equal(f.clips.length,0);
  f.api.set('effects',{enabled:true});c.play('explosion','muted');assert.equal(f.clips.length,0);c.play('explosion','new');c.play('explosion','new');assert.equal(f.clips.length,1);assert.equal(f.clips[0].originalSrc,'/assets/game-sounds/quacks-explosion.wav');f.tick(900);assert.equal(f.clips[0].paused,true);
+});
+
+test('Quacks explosion reaction is a fixed live cue with a resampled blast before fish, while other explosions retain their source',()=>{
+ const f=fixture();f.api.set('effects',{enabled:true});const c=f.controller;c.update(f.state());c.update(f.state());c.play('quacks-explosion','fish');assert.equal(f.clips.at(-1).src,'/assets/game-sounds/quacks-explosion-fish.wav');
+ const fs=require('node:fs'),crypto=require('node:crypto'),m=JSON.parse(fs.readFileSync('public/assets/game-sounds/quacks-manifest.json')).explosionReaction,b=fs.readFileSync('public/assets/game-sounds/'+m.file);assert.equal(b.readUInt32LE(24),24000);assert.equal(m.prefixMs,840);assert.equal(m.gapMs,20);assert.equal(m.durationMs,1428);assert.equal(m.sha256,crypto.createHash('sha256').update(b).digest('hex'));assert.equal(b.readInt16LE(b.length-2),0);assert.ok(b.readUInt32LE(40)/48>1427);c.destroy();
 });

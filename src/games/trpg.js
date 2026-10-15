@@ -1,4 +1,5 @@
 'use strict';
+const {starterIndex}=require('./random-starter');
 const {randomInt,randomUUID}=require('node:crypto');
 const {HttpError}=require('../http/errors');
 const {assertRecordCapacity}=require('../rooms/membership');
@@ -45,11 +46,11 @@ class TrpgRoom{
  start(){
   if(!['waiting','finished'].includes(this.phase))fail('MATCH_STARTED','冒險已開始');
   if(!this.activePlayers().length)fail('NEED_PLAYERS','至少需要一位玩家',400);
-  this.players=this.activePlayers();this.players.forEach(p=>p.focus=3);
+  this.players=this.activePlayers();this.firstSeatIndex=starterIndex(this.players,this.rng);this.players.forEach(p=>p.focus=3);
   this.runId=randomUUID();this.receipts.clear();this.supplies=4;this.clues=0;this.danger=0;this.results=[];this.winner=null;this.round=0;
   this.newScene();this.event('start','霧港鐘聲：在六個場景內找回至少 5 枚線索，危機不超過 7。');
  }
- newScene(){this.round++;this.sceneId=randomUUID();this.leaderId=this.activePlayers()[(this.round-1)%this.activePlayers().length].id;this.plans={};this.phase='planning';}
+ newScene(){this.round++;this.sceneId=randomUUID();this.leaderId=this.activePlayers()[((this.firstSeatIndex||0)+this.round-1)%this.activePlayers().length].id;this.plans={};this.phase='planning';}
  act(id,action,data={}){
   const p=this.player(id);if(!p)fail('NOT_SEATED','尚未入座',403);
   if(action==='role'){

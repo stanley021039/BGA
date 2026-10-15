@@ -74,12 +74,12 @@ test('preferences keep independent music/effect levels across navigation; one mi
  next.api.get().effects.volume=1;assert.equal(next.api.get().effects.volume,.18);
 });
 test('invalid settings never create an invalid audio volume; unavailable storage still works',()=>{
- for(const raw of ['broken','{"music":{"volume":-4},"effects":{"volume":"1","enabled":"on"}}']){const ui=harness({'ah-audio-settings':raw});assert.equal(ui.api.get().music.volume,.3);assert.equal(ui.api.get().effects.volume,.25);assert.equal(ui.api.get().effects.enabled,false);}
+ for(const raw of ['broken','{"music":{"volume":-4},"effects":{"volume":"1","enabled":"on"}}']){const ui=harness({'ah-audio-settings':raw});assert.equal(ui.api.get().music.volume,.3);assert.equal(ui.api.get().effects.volume,.25);assert.equal(ui.api.get().effects.enabled,true);}
  const ui=harness();for(const volume of [NaN,Infinity,-1,2,'0.3'])ui.api.set('effects',{volume});assert.equal(ui.api.get().effects.volume,.25);
  const denied=harness({},false,true);denied.api.set('effects',{enabled:true,volume:.8});assert.equal(denied.api.playEffect('confirm').volume,.8);
 });
 test('all effect clips use the common volume, update live, and stop immediately when muted or at zero',()=>{
- const ui=harness();assert.equal(ui.api.playEffect('confirm'),undefined);ui.api.set('effects',{enabled:true,volume:.2});
+ const ui=harness();ui.api.set('effects',{enabled:false});assert.equal(ui.api.playEffect('confirm'),undefined);ui.api.set('effects',{enabled:true,volume:.2});
  const a=ui.api.playEffect('confirm'),b=ui.api.playEffect('reveal');assert.equal(a.volume,.2);assert.equal(b.volume,.2);
  ui.api.set('effects',{volume:.8});assert.equal(a.volume,.8);assert.equal(b.volume,.8);
  ui.api.set('effects',{enabled:false});assert.equal(a.paused,true);assert.equal(b.paused,true);assert.equal(a.currentTime,0);
@@ -139,3 +139,13 @@ test('the HTTP server serves the shared controller as executable JavaScript',asy
  try{const {port}=await app.listen();const response=await fetch(`http://127.0.0.1:${port}/shared/audio-settings.js`);assert.equal(response.status,200);assert.match(response.headers.get('content-type'),/javascript/);const served=await response.text();const ui=harness();vm.runInNewContext(served,{window:ui.window,document:ui.document,localStorage:{getItem:()=>null,setItem(){}},Audio:class{}});assert.equal(ui.window.AudioSettings.get().music.volume,.3);}
  finally{await app.close();fs.rmSync(dir,{recursive:true,force:true,maxRetries:5});}
 });
+
+test('effects default on, migrate legacy off once, and retain a subsequent explicit mute across navigation',()=>{
+ const first=harness();assert.equal(first.api.get().effects.enabled,true);assert.equal(first.api.get().music.enabled,false);
+ const migrated=harness({'ah-audio-settings':JSON.stringify({version:1,music:{enabled:false,volume:.61},effects:{enabled:false,volume:.18}})});assert.equal(migrated.api.get().effects.enabled,true);assert.equal(migrated.api.get().effects.volume,.18);
+ migrated.api.set('effects',{enabled:false});const next=harness(Object.fromEntries(migrated.storage));assert.equal(next.api.get().effects.enabled,false);assert.equal(next.api.get().effects.volume,.18);assert.equal(next.api.get().music.volume,.61);
+});
+
+test('majority settlement uses the uploaded settlement clip without changing generic reveal cues',()=>{const ui=harness();const clip=ui.api.playEffect('majority-settlement');assert.equal(clip.src,'/assets/game-sounds/quacks-settlement-user.wav');});
+
+test('Quacks draw and stop use the newly supplied voice clips and keep mute preferences',()=>{const ui=harness();assert.equal(ui.api.playEffect('ingredient-draw').src,'/assets/game-sounds/quacks-push-user.wav');assert.equal(ui.api.playEffect('quacks-stop').src,'/assets/game-sounds/quacks-decline-user.wav');ui.api.set('effects',{enabled:false});assert.ok(!ui.api.playEffect('ingredient-draw'));});

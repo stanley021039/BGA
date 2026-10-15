@@ -33,7 +33,7 @@ for(const purpose of ['test','production','retry'])test('quacks '+purpose+' auth
 
  const historyList=await (await fetch(base+'/api/history',{headers:{Cookie:owner}})).json(),match=historyList.find(m=>m.type==='quacks');assert.equal(match.status,'finished');
  const history=await (await fetch(base+'/api/history/'+match.id,{headers:{Cookie:owner}})).json();assert.match(history[0].engine.source,/class QuacksRoom/);assert.match(history[0].engine.catalog,/Crow|烏鴉/);assert.equal(history.filter(r=>r.kind==='result').at(-1).after.results.length,9);
- await post('reconnect',owner,{code});const rooms=await (await fetch(base+'/api/rooms',{headers:{Cookie:owner}})).json();assert.equal(rooms.rooms.find(r=>r.code===code).maxPlayers,5);
+ await post('reconnect',owner,{code});const rooms=await (await fetch(base+'/api/rooms',{headers:{Cookie:owner}})).json();assert.equal(rooms.rooms.find(r=>r.code===code).maxPlayers,8);
  for(const path of ['/quacks','/quacks/'+code]){assert.equal((await fetch(base+path,{redirect:'manual'})).status,302);const r=await fetch(base+path,{headers:{Cookie:owner}});assert.equal(r.status,200);assert.match(await r.text(),/data-game-focus/);}
  for(const path of ['/quacks.js','/quacks-art.js','/quacks-fx.js','/assets/game-sounds/quacks-explosion.wav','/quacks.css','/assets/playful/game-quacks.svg'])assert.equal((await fetch(base+path)).status,200);
  if(purpose==='retry'){

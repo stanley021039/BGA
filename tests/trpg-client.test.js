@@ -6,7 +6,7 @@ const {randomUUID}=require('node:crypto');
 const {TrpgRoom}=require('../src/games/trpg');
 const flush=async()=>{for(let i=0;i<10;i++)await Promise.resolve();};
 function fixture(){
- const ids=new Map(),events={},timers=new Set(),requests=[],r=new TrpgRoom('ABCDEF','client',()=>5),p=r.add('reader');r.start();
+ const ids=new Map(),events={},timers=new Set(),requests=[],r=new TrpgRoom('ABCDEF','client',n=>n===6?5:0),p=r.add('reader');r.start();
  class Element{
   constructor(tag='div'){this.tag=tag;this.children=[];this.handlers={};this.value='';this.disabled=false;this.hidden=false;this.textContent='';this.classList={toggle(){}};}
   set id(value){this._id=value;ids.set('#'+value,this);}get id(){return this._id;}

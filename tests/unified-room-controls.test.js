@@ -47,3 +47,14 @@ test('tutorial snapshots and lobby navigation do not become live-room leave oper
  const f=fixture();f.window.RaceLesson={};f.window.RoomControls.update({code:'OTHER1',me:'P',version:2});f.flush();assert.equal(f.window.RoomControls.inviteContext().code,'ABC123');
  const link=f.document.createElement('a');link.setAttribute('href','/');link.href='http://example.test/';f.document.body.append(link);const event=link.dispatch('click',{button:0});assert.equal(event.defaultPrevented,false);
 });
+
+test('changing a settings source preserves unrelated native actions, and one-player cruel mode can start',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../public/shared/room-controls.js'),'utf8');
+ const attrs=new Map(),original={dataset:{},hidden:false,disabled:false,parentElement:null,tabIndex:0,setAttribute:(k,v)=>attrs.set(k,v),hasAttribute:k=>attrs.has(k),getAttribute:k=>attrs.get(k)||null};
+ const b=()=>({dataset:{},hidden:false,disabled:false,parentElement:null,getAttribute:()=>null}),row={append(n){n.parentElement=this;}};
+ const controls={classList:{contains:()=>false}},previous={classList:{contains:c=>c==='ui-room-settings-source'},remove(){slot.children=slot.children.filter(n=>n!==this);}};
+ const next={dataset:{},classList:{},closest:()=>null,querySelectorAll:()=>[]},slot={children:[previous,controls],prepend(n){this.children.unshift(n);},textContent:''},card={hidden:false};
+ const scope={state:{type:'majority',phase:'waiting',host:true,me:'P',players:[{}],cruel:{rules:'individual'},botSupport:{supported:false,canAdd:false}},panel:{dataset:{},closest:()=>null,prepend(n){n.parentElement=this;},querySelector:s=>s==='.ui-room-settings-card'?card:s==='.ui-room-session-actions'?row:slot},native:{},proxies:{start:b(),bot:b(),leave:b(),heading:{hidden:false,parentElement:null}},leaving:false,settingsSource:previous,scheduled:false,minimumPlayers:{majority:3},actions:{start:{label:'開始遊戲',icon:'play'}},window:{GameUI:{decorateButton(){}},RoomWaiting:{setRosterBusy(){}}},getComputedStyle:()=>({display:'block',visibility:'visible'}),mount(){},findAction:()=>original,syncPlayPanels(){},normalizeFields(){},node:()=>({}),document:{body:{dataset:{}},getElementById:()=>null,querySelector:()=>null,querySelectorAll:s=>s==='.room-settings-panel'?[next]:[]}};
+ vm.createContext(scope);vm.runInContext(source.slice(source.indexOf(' function owner('),source.indexOf(' function findAction('))+source.slice(source.indexOf(' function normalize(){'),source.indexOf(' function schedule(){')),scope);scope.normalize();assert.ok(slot.children.includes(controls));assert.ok(slot.children.includes(next));assert.ok(!slot.children.includes(previous));assert.equal(scope.proxies.start.disabled,false);
+ scope.state.cruel.rules='teams';scope.normalize();assert.equal(scope.proxies.start.disabled,true);
+});

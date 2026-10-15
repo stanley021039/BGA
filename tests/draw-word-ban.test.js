@@ -173,7 +173,7 @@ test('history preflight blocks an unrecordable deciding vote and ballot/stroke s
  for(const forbidden of ['electorate','votes_json','ballot','publicResults','strokeSnapshot'])assert.equal(encoded.includes(forbidden),false);
 });
 
-async function httpFixture(t){
+async function httpFixture(t){require('./helpers/fixed-starter.cjs')(t,DrawGuessRoom);
  const root=tempRoot(t),config={port:0,host:'127.0.0.1',historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite'),externalSideEffectsEnabled:false};
  const db=openDatabase(config.dbFile),auth=createAuth(db),users={};
  try{

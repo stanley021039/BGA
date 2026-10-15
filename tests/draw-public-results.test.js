@@ -133,7 +133,7 @@ test('eight maximum-work drawings stay out of state and serialized history while
  choose(room);room.reveal();assert.equal(room.publicResults.size,8);assert.throws(()=>room.resultSnapshot(id),{code:'DRAW_RESULT_NOT_FOUND'});
 });
 
-async function httpGame(t){
+async function httpGame(t){require('./helpers/fixed-starter.cjs')(t,DrawGuessRoom);
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-draw-results-'));
  assert.equal(path.dirname(root),path.resolve(os.tmpdir()));
  const config={port:0,host:'127.0.0.1',historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite'),externalSideEffectsEnabled:false};

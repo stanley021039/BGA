@@ -56,6 +56,7 @@ RoomControls.bindActions({type, read, run}) 沿用郎中試點，擴展到所有
 實作階段先以 3115 測試站的真正 Chrome 操作及量測驗收；當時尚未執行套件。後續套件驗證見下節。
 
 - snapshot：6 個呈現 slots 每次各 1 次；同版本 clock 刷新、過期回應、callback 略過、stop、reload 及實際 social 回應通過。
+- 郎中一回合：實際女巫直接命令、採購／取消精確退費及返焦、1440／390／320 採購無橫溢，走至 between；無 pageerror。
 - 畫猜：房主／訪客 1440／390／320 等待室、聊天／說明／離房確認與焦點；設定 503 阻止開始且面板維持 416×758，成功重試可開局；結束頁三尺寸、下一局設定與實體再玩按鈕通過。
 - 畫猜同步回歸：雙席持筆、延遲 ACK＋SSE、reset-before-ACK 無殘影、ACK 無 SSE、undo／clear quota、重連、換輪與倒數；過程採樣與最終畫布皆檢查。桌機／390／320 無橫溢。
 - 郎中：女巫直接命令、採購／取消精確退費及焦點、一回合至 between；桌機／390／320 採購無橫溢。
@@ -81,3 +82,23 @@ RoomControls.bindActions({type, read, run}) 沿用郎中試點，擴展到所有
 - 67 個變更 JS 語法、CSS ownership、11 款入口的新資產唯一載入／順序、`release:check -- --base 05640c9 --type patch`、`git diff --cached --check` 通過。提交範圍未包含私有登入檔、QA 輸出或 node_modules。
 
 上述套件結果取代實作階段「尚未執行」的狀態。瀏覽器／桌機／手機驗收仍引用本文件上一節，沒有因套件通過而擴大實玩結論；Windows CI 以 PR 的實際 check 狀態為準。
+
+## 2026-10-15 PR #127 最新 main 整合複查（2.13.1）
+
+固定基底 main `eb648ce3a2c4b17ef8405f527ad30dd0f360745b`，原 PR head `4973219a00f6ab32b6d48f5da5dd6751ea27a46f`。main 後續新增功能造成 13 個檔案衝突，本次逐段整合至同一 PR；不恢復 selector 探測或整包 CSS。
+
+範圍審查：保留 main 的八人郎中、自動占卜、抽停圖片／語音、爆鍋時序、殘酷二選一、隨機先手與 Bluff 秘密角色簡化。共用 RoomUI／RoomLayout／操作 adapter／DrawCanvasSession 及 CSS 所有權仍保留。修正郎中 adapter 舊 4／5 人 AI 上限與同頻 adapter 固定 3 人開局門檻，避免新模式被舊接線阻擋。候選版本從已發布 2.13.0 遞增為 2.13.1。
+
+程式與回歸審查：檢查命令、保存失敗阻擋、pending、防重與跨輪、入口及靜態資產註冊；11 款入口均包含三個共用架構 module。整合驗收曾發現郎中有版本 query 的 ui-components 入口未載入布局 module，已補齊，重驗設定可點擊、面板布局與焦點。main 個人設定新增的 scrollbar-gutter 依原所有權規則移至 skin。
+
+本次隔離測試站（3132）真 Chrome 驗證：
+
+- 九款 adapter：1440／390 等待室、最低人數、UI 加 AI、開局及連點只送一次、撲克下一手；無 pageerror。
+- 同頻：單人殘酷二選一可開始作答。郎中：AI 可加至八人，滿員停用；1440／390 無頁面水平溢出。
+- 郎中：準備／藥材書及返焦、設定 503 阻擋與成功重試、延遲加 AI／開局連點只送一次、finished 重載再開局；1440／390／320 的 pending／長錯誤前後面板及操作列尺寸一致。
+- 郎中一回合：實際女巫直接命令、採購／取消精確退費及返焦、1440／390／320 採購無橫溢，走至 between；無 pageerror。
+- 畫猜：房主／訪客 1440／390／320、聊天／說明／離房返焦、設定 503 阻擋與恢復、結束及下一局設定／再玩。
+- 作畫：雙席持筆途中與延遲 ACK／SSE 無閃白；觀看端逐點呈現、最終畫布一致；undo／clear 額度、重連、reset-before-ACK 無殘影、無 SSE 的 ACK、倒數與換輪空畫布均通過。
+- 67 個差異 JS 語法、style ownership、release:check 及 diff whitespace 檢查通過。
+
+本次沒有執行測試套件。隔離資料與驗收帳號只用於測試站，未操作正式服務；未合併 main 或正式發布。未驗真實手機觸控／Safari、所有遊戲完整對局與郎中九回合。截圖及 JSON 證據保存在本機 PR127 review QA 目錄，不納入發布資產。

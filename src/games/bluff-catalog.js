@@ -1732,8 +1732,227 @@ const imported=[
     "id": "bk148"
   }
 ];
+const octoberAddition=[
+  {
+    "id": "bk149",
+    "title": "湧升流（Upwelling）",
+    "level": 1,
+    "category": "海洋",
+    "answer": "較深處的海水上升到表層的現象。",
+    "aliases": [],
+    "explanation": {
+      "detail": "較深處的海水上升到表層的現象。 當風把表層海水推開，下方較冷、富含營養鹽的水可上來補位，因此常形成生產力高的海域。",
+      "example": "像把表面那層水移走，底下的水往上補。",
+      "clarification": "不是海水被加熱煮滾。"
+    },
+    "source": {
+      "title": "NOAA：Upwelling",
+      "url": "https://oceanservice.noaa.gov/facts/upwelling.html",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk150",
+    "title": "下降流（Downwelling）",
+    "level": 2,
+    "category": "海洋",
+    "answer": "表層海水往較深處下沉的現象。",
+    "aliases": [],
+    "explanation": {
+      "detail": "表層海水往較深處下沉的現象。 例如風把表層水推向岸邊，水堆積後向下沉；方向與湧升流相反。",
+      "example": "像把水推到牆邊，上面擠不下就往下走。",
+      "clarification": "不是所有往外海流的水都叫下降流。"
+    },
+    "source": {
+      "title": "NOAA：Upwelling",
+      "url": "https://oceanservice.noaa.gov/facts/upwelling.html",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk151",
+    "title": "副振盪（Seiche）",
+    "level": 3,
+    "category": "海洋",
+    "answer": "封閉或半封閉水域中，水面來回擺動的駐波。",
+    "aliases": [],
+    "explanation": {
+      "detail": "封閉或半封閉水域中，水面來回擺動的駐波。 湖泊、海灣甚至杯中的水都能出現類似晃動；風與氣壓改變可使大型水域持續振盪。",
+      "example": "像浴缸裡的水被推到一端，又來回晃。",
+      "clarification": "不是每天固定由天體引潮力形成的潮汐。"
+    },
+    "source": {
+      "title": "NOAA：Seiche",
+      "url": "https://oceanservice.noaa.gov/facts/seiche.html",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk152",
+    "title": "大洋環流（Gyre）",
+    "level": 2,
+    "category": "海洋",
+    "answer": "由多股持續洋流構成的大尺度旋轉海流系統。",
+    "aliases": [],
+    "explanation": {
+      "detail": "由多股持續洋流構成的大尺度旋轉海流系統。 主要副熱帶環流有五個；漂浮垃圾可能在部分區域聚集，但環流本身指水流系統。",
+      "example": "像海洋裡非常寬廣的循環輸送帶。",
+      "clarification": "不是一個會把船吸下去的小漩渦。"
+    },
+    "source": {
+      "title": "NOAA：Gyre",
+      "url": "https://oceanservice.noaa.gov/facts/gyre.html",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk153",
+    "title": "氣象海嘯（Meteotsunami）",
+    "level": 3,
+    "category": "氣象",
+    "answer": "由氣壓擾動等快速天氣變化驅動、向外傳播的海嘯型波浪。",
+    "aliases": [],
+    "explanation": {
+      "detail": "由氣壓擾動等快速天氣變化驅動、向外傳播的海嘯型波浪。 它可與快速移動的風暴系統有關，接近淺水陸棚或海灣時可能放大。",
+      "example": "不是地震推水，而是移動的天氣擾動激起長波。",
+      "clarification": "與封閉水域來回擺盪的副振盪不同。"
+    },
+    "source": {
+      "title": "NOAA：Meteotsunami",
+      "url": "https://oceanservice.noaa.gov/facts/meteotsunami.html",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk154",
+    "title": "異常巨浪（Rogue wave）",
+    "level": 2,
+    "category": "海洋",
+    "answer": "相較周圍海浪特別高大且常難以預期的單次巨浪。",
+    "aliases": [],
+    "explanation": {
+      "detail": "相較周圍海浪特別高大且常難以預期的單次巨浪。 不同波浪的能量疊加或海流對波浪的集中作用，都可能促成異常大浪。",
+      "example": "周圍本來只有一般浪，突然冒出一道巨大的水牆。",
+      "clarification": "不必先有海底地震，也不等於海嘯。"
+    },
+    "source": {
+      "title": "NOAA：Rogue waves",
+      "url": "https://oceanservice.noaa.gov/facts/roguewaves.html",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk155",
+    "title": "河口灣（Estuary）",
+    "level": 1,
+    "category": "海洋",
+    "answer": "河流與海洋交會、常有淡水和海水混合的沿岸水域。",
+    "aliases": [],
+    "explanation": {
+      "detail": "河流與海洋交會、常有淡水和海水混合的沿岸水域。 適應半鹹水的生物可在此棲息；部分大型湖泊沿岸也有功能相似的淡水河口生態系。",
+      "example": "像河水與海水會合的育幼場。",
+      "clarification": "不能把所有河口灣都說成完全一樣的鹽度。"
+    },
+    "source": {
+      "title": "NOAA：Estuary",
+      "url": "https://oceanservice.noaa.gov/facts/estuary.html",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk156",
+    "title": "同步潮汐鎖定",
+    "level": 2,
+    "category": "天文",
+    "answer": "天體自轉一圈的時間與繞另一個天體公轉一圈相同的狀態。",
+    "aliases": [],
+    "explanation": {
+      "detail": "天體自轉一圈的時間與繞另一個天體公轉一圈相同的狀態。 月球因此大致以同一面朝向地球；潮汐作用造成的能量耗散可讓自轉逐步同步。",
+      "example": "像繞著舞伴轉圈，身體也轉，臉始終朝向對方。",
+      "clarification": "不是月球完全沒有自轉。"
+    },
+    "source": {
+      "title": "NASA：Tidal locking",
+      "url": "https://science.nasa.gov/moon/tidal-locking/",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk157",
+    "title": "太陽的差異自轉",
+    "level": 2,
+    "category": "天文",
+    "answer": "太陽不同緯度區域以不同速度自轉的現象。",
+    "aliases": [],
+    "explanation": {
+      "detail": "太陽不同緯度區域以不同速度自轉的現象。 太陽不是固體球殼，赤道一帶自轉比兩極快。",
+      "example": "不像硬球整顆同步轉，而是不同位置各有速度。",
+      "clarification": "不是整顆太陽突然改變公轉方向。"
+    },
+    "source": {
+      "title": "NASA：Sun facts",
+      "url": "https://science.nasa.gov/sun/facts/",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk158",
+    "title": "光球（Photosphere）",
+    "level": 1,
+    "category": "天文",
+    "answer": "太陽主要可見光從中向外發出的那一層。",
+    "aliases": [],
+    "explanation": {
+      "detail": "太陽主要可見光從中向外發出的那一層。 日常所說太陽的表面通常指光球；它屬於太陽大氣的一部分，並不是可站立的固體外殼。",
+      "example": "我們看見的亮亮圓盤，大致就是這一層。",
+      "clarification": "不是地球大氣裡反射太陽光的雲層。"
+    },
+    "source": {
+      "title": "NASA：Sun facts",
+      "url": "https://science.nasa.gov/sun/facts/",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk159",
+    "title": "日冕洞（Coronal hole）",
+    "level": 3,
+    "category": "天文",
+    "answer": "日冕中密度較低、在紫外線影像裡顯得較暗的區域。",
+    "aliases": [],
+    "explanation": {
+      "detail": "日冕中密度較低、在紫外線影像裡顯得較暗的區域。 該處的磁力線可延伸到行星際空間，讓太陽物質以高速太陽風形式向外流出。",
+      "example": "像太陽外層大氣裡比較稀薄的出口。",
+      "clarification": "不是太陽表面真的破了一個通往內部的洞。"
+    },
+    "source": {
+      "title": "NASA：Sun facts",
+      "url": "https://science.nasa.gov/sun/facts/",
+      "checkedAt": "2026-10-15"
+    }
+  },
+  {
+    "id": "bk160",
+    "title": "太陽針狀體（Spicule）",
+    "level": 3,
+    "category": "天文",
+    "answer": "太陽表面附近短暫向上噴出的細長電漿流。",
+    "aliases": [],
+    "explanation": {
+      "detail": "太陽表面附近短暫向上噴出的細長電漿流。 它們像草叢般大量出現，物質快速升起後又消退，是太陽大氣中的動態構造。",
+      "example": "像太陽邊緣不斷冒出的細細噴泉。",
+      "clarification": "不是扎在太陽上的固體針。"
+    },
+    "source": {
+      "title": "NASA：Sun facts",
+      "url": "https://science.nasa.gov/sun/facts/",
+      "checkedAt": "2026-10-15"
+    }
+  }
+];
 const QUESTIONS=Object.freeze([
  ...rows.map(([id,title,level,category,answer,key],index)=>Object.freeze({id,title,level,category,answer,aliases:Object.freeze(id==="bk13"?["光冠"]:[]),explanation:Object.freeze({detail:answer+" "+notes[index][0],example:notes[index][1],clarification:notes[index][2]}),source:Object.freeze({title:sources[key][0],url:sources[key][1],checkedAt:"2026-10-09"})})),
- ...imported.map(q=>Object.freeze({...q,aliases:Object.freeze(q.aliases),explanation:Object.freeze(q.explanation),source:Object.freeze(q.source)}))
+ ...imported.map(q=>Object.freeze({...q,aliases:Object.freeze(q.aliases),explanation:Object.freeze(q.explanation),source:Object.freeze(q.source)})),
+ ...octoberAddition.map(q=>Object.freeze({...q,aliases:Object.freeze(q.aliases),explanation:Object.freeze(q.explanation),source:Object.freeze(q.source)}))
 ]);
 module.exports={QUESTIONS};

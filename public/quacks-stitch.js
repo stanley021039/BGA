@@ -24,8 +24,9 @@
  window.addEventListener('room-invitations-ready',()=>{if(state)window.RoomInvites?.updateRoom(state);placeInviteInbox();});
  const alchemyTool=el('button','','煉金術士與特效藥');alchemyTool.type='button';ui.decorateButton(alchemyTool,'ingredient',{label:'煉金術士與特效藥'});alchemyTool.onclick=()=>open($('#alchemyDialog'),alchemyTool);$('#qMobileMenuContent').append(alchemyTool);
  $('#qBrandIcon').innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 4h10M13 4v9L6 24q-1 4 3 4h14q4 0 3-4l-7-11V4" fill="none" stroke="#765b16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20h12l3 5H7Z" fill="#765b16" opacity=".5"/><circle cx="16" cy="18" r="1.5" fill="#765b16"/></svg>';
- const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qRecords','#qGuide','#soundToggle','#qMotion'],toolHomes=new Map();
- ui.decorateButton($('#qScore'),'crown',{label:'環形記分板'});
+ $('#qRecords').remove();$('#qBook').before($('#qScore'));
+ const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qGuide','#soundToggle','#qMotion'],toolHomes=new Map();
+ ui.decorateButton($('#qScore'),'crown',{iconOnly:true,label:'環形記分板'});
  for(const id of mobileTools){const n=$(id),mark=document.createComment('quacks-tool-home');n.before(mark);toolHomes.set(n,mark);}
  const account=$('.site-account'),accountHome=document.createComment('quacks-account-home');account.before(accountHome);toolHomes.set(account,accountHome);
  function arrangeTools(){for(const [n,home]of toolHomes){if(mobile.matches)$('#qMobileMenuContent').append(n);else home.after(n);}if(!mobile.matches)$('#qMobileMenu').open=false;}
@@ -53,7 +54,7 @@
   const center=$('.tpl-waiting-center');if(!center)return;placeInviteInbox();
   $('.ui-room-roster-add:has([data-room-common-action="invite"])')?.style.setProperty('display','block','important');
   $('.ui-room-session-actions>.st-waiting-invite')?.style.setProperty('display','none','important');
-  ui.Template.patterns.waitingScene(center,s,{owner:s.me===s.host,hostId:s.host,capacity:s.options.witches?5:4,title:'郎中闖江湖',english:'Quacks',limit:'2–'+(s.options.witches?5:4)+' 人一起煮藥',art:'/assets/playful/game-quacks.svg',fallbackArt:'/assets/playful/game-quacks.svg',kicker:'朋友集結中，藥袋已備，等房主開釜。',description:'九回合同步抽藥，逐色共選本局藥材效果。可加入草藥女巫與煉金術士，煮出你的傳奇。',readyCopy:'藥袋與大釜已備妥',readiness:s.bookSelection?.some(r=>r.tied)?'藥材書仍有平票，請房主開啟寶典裁決。':null,facts:[['同步煮藥','全員一起抽'],['對局回合','9 回合累計'],['本局藥材','逐色共選效果']],onCopy:()=>navigator.clipboard.writeText(location.origin+'/quacks/'+s.code),onChat:event=>window.RoomLayout?.openChat(event.currentTarget),onHelp:event=>open($('#guideDialog'),event.currentTarget),onLeave:event=>window.RoomControls?.leave(event.currentTarget),onInvite:()=>window.RoomInvites?.open(center)});
+  ui.Template.patterns.waitingScene(center,s,{owner:s.me===s.host,hostId:s.host,capacity:s.maxPlayers||8,title:'郎中闖江湖',english:'Quacks',limit:'2–'+(s.maxPlayers||8)+' 人一起煮藥',art:'/assets/playful/game-quacks.svg',fallbackArt:'/assets/playful/game-quacks.svg',kicker:'朋友集結中，藥袋已備，等房主開釜。',description:'九回合同步抽藥，逐色共選本局藥材效果。可加入草藥女巫與煉金術士，煮出你的傳奇。',readyCopy:'藥袋與大釜已備妥',readiness:s.bookSelection?.some(r=>r.tied)?'藥材書仍有平票，請房主開啟寶典裁決。':null,facts:[['同步煮藥','全員一起抽'],['對局回合','9 回合累計'],['本局藥材','逐色共選效果']],onCopy:()=>navigator.clipboard.writeText(location.origin+'/quacks/'+s.code),onChat:event=>window.RoomLayout?.openChat(event.currentTarget),onHelp:event=>open($('#guideDialog'),event.currentTarget),onLeave:event=>window.RoomControls?.leave(event.currentTarget),onInvite:()=>window.RoomInvites?.open(center)});
   const source=$('#qWaitingControls .room-settings-panel')||$('.ui-room-settings-slot');if(source&&!source.querySelector('.q-waiting-books')){const books=el('button','q-waiting-books','搭配本局藥材書');books.type='button';ui.decorateButton(books,'book',{label:'搭配本局藥材書'});books.onclick=()=>openBook(null,books);source.append(books);}
  }
  function renderBookTabs(){
@@ -75,7 +76,7 @@
   for(const item of fresh){const card=$('#players [data-player-id="'+item.playerId+'"]');if(reactions.get(item.playerId)===item.id)continue;reactions.set(item.playerId,item.id);if(!live||!card)continue;const bubble=el('span','q-avatar-reaction',item.emoji||item.label||'表情');bubble.setAttribute('aria-label',item.name+'：'+bubble.textContent);card.querySelector('.q-avatar')?.append(bubble);window.MotionPolicy.animate(bubble,[{transform:'scale(.6) translateY(5px)',opacity:0},{transform:'scale(1.15) translateY(-4px)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:350,easing:'ease-out'});setTimeout(()=>bubble.remove(),4000);}
  }
  function paintRoster(s){
-  $('#qRosterCount').textContent=s.players.length+'/'+(s.options.witches?5:4)+' 人 · R'+(s.round||0)+'/9';
+  $('#qRosterCount').textContent=s.players.length+'/'+(s.maxPlayers||8)+' 人 · R'+(s.round||0)+'/9';
   for(const [i,card]of [...$('#players').children].entries()){
    const p=s.recipes[i],player=s.players.find(x=>x.id===p.id)||p;card.dataset.playerId=p.id;
    const strong=card.querySelector(':scope>strong'),paras=[...card.querySelectorAll(':scope>p')],resources=card.querySelector('.resource-row'),chips=card.querySelector('.chip-row');
@@ -91,9 +92,9 @@
   }
  }
  function potChrome(s){
-  const selected=[...$('#potTabs').children].find(b=>b.getAttribute('aria-pressed')==='true'),index=[...$('#potTabs').children].indexOf(selected),p=s.recipes[index]||s.recipes.find(p=>p.id===s.me);viewed=p.id;
+  const selected=[...$('#potTabs').children].find(b=>b.getAttribute('aria-pressed')==='true'),index=[...$('#potTabs').children].indexOf(selected),p=s.recipes[index]||s.recipes.find(p=>p.id===s.me);viewed=p.id;let name=$('#qPotName');if(!name){name=el('span','q-pot-name');name.id='qPotName';$('#qPotStage').append(name);}name.textContent=p.potName||p.name+'的好運釜';name.title=name.textContent;
   const markers=art.markerPositions(p),metrics=$('#qPotMetrics');metrics.replaceChildren();
-  for(const [kind,value,label]of [['droplet',markers.droplet,'液滴'],['rat',markers.start,'起點'],['progress',p.position||0,'當前']]){const span=el('span',kind==='progress'?'q-metric-progress':'');span.append(art.resource(kind,{size:14,decorative:true}),document.createTextNode(label+' '+value));metrics.append(span);}
+  for(const [kind,value,label]of [['droplet',markers.droplet,'水滴'],['rat',markers.start,'起點'],['progress',p.position||0,'當前']]){const span=el('span',kind==='progress'?'q-metric-progress':'');span.append(art.resource(kind,{size:14,decorative:true}),document.createTextNode(label+' '+value));metrics.append(span);}
   const recent=$('#qRecent');recent.replaceChildren(el('span','','本輪投入：'));
   for(const c of p.pot?.slice(-8)||[]){const b=el('button');b.type='button';b.setAttribute('aria-label',art.names[c.color]+' '+c.value+' · 查看效果');b.append(art.token(c,{size:26,decorative:true}));const tile=s.board[c.position],details=art.info(s,p,tile,c);hint(b,details);b.onclick=()=>inspect(details,b);recent.append(b);}
   if(!p.pot?.length)recent.append(el('span','q-empty','還沒投入藥材'));
@@ -147,9 +148,6 @@
    if(potVisible&&window.MotionPolicy.allowsMotion())for(const c of added.slice(-3)){const from=center($('#bagButton')),to=potPoint(c.position);if(from&&to){const a=flight(art.token(c,{size:44,decorative:true}),from,to);a?.finished.then(()=>{if(viewed===s.me)ripple(to);}).catch(()=>{});}}
   }
   if(p.white>=p.threshold-1&&old.white<p.threshold-1&&!p.exploded)sound('quacks-danger','danger:'+s.roundId+':'+p.white,live);
-  if(p.explosionId&&p.explosionId!==old.explosionId&&viewed===s.me&&window.MotionPolicy.allowsMotion()){
-   const stage=$('#qPotStage'),r=stage.getBoundingClientRect(),at=potPoint(p.position)||center(stage);for(let i=0;i<10;i++){const n=el('div','q-puff');n.style.left=at.x-r.left-27+'px';n.style.top=at.y-r.top-27+'px';stage.append(n);const angle=i*Math.PI*2/10;motion(n,[{transform:'translate(0,0) scale(.2)',opacity:.9},{transform:'translate('+Math.cos(angle)*110+'px,'+(Math.sin(angle)*85-25)+'px) scale(2.6)',opacity:0}],{duration:950,delay:i*12,easing:'ease-out'});}motion($('#cauldron'),[{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(-3px)'},{transform:'translateX(0)'}],{duration:390},false);
-  }
   const own=s.mine,prior=previous.mine;
   if(prior?.potion&&!own?.potion){if(potVisible){const removed=old.pot.find(c=>!p.pot.some(x=>x.id===c.id));if(removed){const from=potPoint(removed.position),to=center($('#qPotionSlot'));if(from&&to)flight(art.token(removed,{size:44,decorative:true}),from,to);}}}
   if(own?.bought.length>prior?.bought.length||own?.extraBought.length>prior?.extraBought.length){sound('quacks-buy','buy:'+s.roundId+':'+s.version+':'+own.bought.length+':'+own.extraBought.length,live);const bought=own.bought.at(-1)||own.extraBought.at(-1),from=center($('.q-purchased')||$('.q-budget')),to=center($('#bagButton'));if(bought&&from&&to)flight(art.token(bought,{size:44,decorative:true}),from,{x:to.x,y:$('#qPotStage').getBoundingClientRect().top+18});}
@@ -173,6 +171,10 @@
  window.MotionPolicy.subscribe(()=>{if(!window.MotionPolicy.allowsMotion())for(const n of [...flying]){n.getAnimations?.().forEach(a=>a.cancel());if(n.classList.contains('q-flight')||n.classList.contains('q-puff')||n.classList.contains('q-ripple')||n.classList.contains('q-witch-ring')||n.classList.contains('q-score-pop'))n.remove();flying.delete(n);}});
  window.addEventListener('pagehide',()=>{removeEffects();cue.reset();});
  window.QuacksStitch={
+  burst(events){const s=state,p=s?.recipes.find(p=>p.id===s.me);if(!p||viewed!==s.me||!events.some(e=>e.playerId===s.me)||!window.MotionPolicy.allowsMotion())return;
+   const stage=$('#qPotStage'),r=stage.getBoundingClientRect(),at=potPoint(p.position)||center(stage);for(let i=0;i<10;i++){const n=el('div','q-puff');n.style.left=at.x-r.left-27+'px';n.style.top=at.y-r.top-27+'px';stage.append(n);const angle=i*Math.PI*2/10;motion(n,[{transform:'translate(0,0) scale(.2)',opacity:.9},{transform:'translate('+Math.cos(angle)*110+'px,'+(Math.sin(angle)*85-25)+'px) scale(2.6)',opacity:0}],{duration:950,delay:i*12,easing:'ease-out'});}motion($('#cauldron'),[{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(-3px)'},{transform:'translateX(0)'}],{duration:390},false);
+  },
+
   baseline(s){return cue.update(s);},disconnect(){cue.disconnect();removeEffects();previous=null;},
   beforeRender(s){const next=s.roundId+':'+s.phase+':'+s.stage,active=document.activeElement;stageScroll=next===stageKey?$('#qStageContent').scrollTop:0;stageFocus=next===stageKey?(active?.closest('#qStageContent')?active.dataset.quacksActionKey||null:stageFocus):null;stageKey=next;state=s;arrangeNativeControls(s);alchemyHome.after($('#alchemy'));$('#qStageContent').replaceChildren();$('#qPotionSlot').replaceChildren();$('#qExtraContent').replaceChildren();},
   update(s,live,view){state=s;presentation=view;cue.update(s);waitingRoom(s);paintRoster(s);potChrome(s);actions(s);renderBookTabs();social();phaseRail.hidden=s.phase==='waiting';const phaseIndex=s.phase==='fortune'?1:s.phase==='brewing'?2:s.phase==='settlement'&&s.stage==='shopping'?4:s.phase==='settlement'?3:s.phase==='between'||s.phase==='finished'?5:0;for(const [index,step]of [...phaseRail.children].entries()){step.classList.toggle('active',index===phaseIndex);step.setAttribute('aria-current',index===phaseIndex?'step':'false');}$('#qStageContent').scrollTop=stageScroll;

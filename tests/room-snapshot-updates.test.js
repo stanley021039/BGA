@@ -46,7 +46,7 @@ function harness(type='poker'){
   feedback(message,kind){feedback.push({message,kind});},
   fetch:async(url,options)=>{network.push({url,options,body:JSON.parse(options.body)});return {ok:true,json:async()=>await reply};},
   immersion:{allowsMotion:()=>false,prepareFocus:noOp,startFocus:noOp,stopFocus:noOp,playSound:noOp},phases:{waiting:'等待'},card:()=>'',animateChipTransfers:noOp,updateTimer:noOp,checkPokerAchievements:noOp,
-  render:noOp,progress:noOp,stopGather:noOp,stopFocus:noOp,restoreAchievementNotice:noOp,gatherPlayers:noOp,startFocus:noOp,playSound:noOp,checkNewAchievement:noOp,
+  render:noOp,renderAction:noOp,progress:noOp,stopGather:noOp,stopFocus:noOp,restoreAchievementNotice:noOp,gatherPlayers:noOp,startFocus:noOp,playSound:noOp,checkNewAchievement:noOp,
   celebrateVictory:noOp,drawFeedback:noOp,updateConnection:noOp,animatePhase:noOp,updateFeed:noOp,updateStagePreview:noOp,decorateActions:noOp,
   showCorrectFeedback:noOp,playDrawSounds:noOp,connectEvents:noOp,tick:noOp,cancelDrawingWork:noOp,
  };

@@ -395,3 +395,5 @@ body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=dra
 }
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .ui-room-session-actions>[data-room-action=start]{background:var(--st-yellow)!important;color:var(--st-on-yellow)!important}
 }
+
+.st-profile-characters{scrollbar-gutter:stable;}
