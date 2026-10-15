@@ -5,6 +5,7 @@ const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&q
 const heart='<path d="M0 12C-42-24-49-57-23-69C-11-75-2-69 0-57C5-73 24-76 35-66C65-36 17-3 0 12Z" fill="#ed7a92"/>';
 const person=(x,y,shirt='#84b9c0',pose='normal')=>'<g transform="translate('+x+' '+y+')"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="'+shirt+'"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="'+(pose==='up'?'M-26 41L-53 12-77-36M25 41L58 18 85-22':'M-26 40L-54 77M26 40L58 77')+'" fill="none" stroke-width="13"/></g>';
 const shapes={
+chair:'<path d="M-49-61H36Q48-61 48-48V5H-49Z" fill="#a9bdb6"/><path d="M-54 10H58V31H-54Z" fill="#dec387"/><path d="M-42 31V77M45 31V77M-49-48V10" stroke-width="9"/>',
 heart:'<g transform="translate(0 10)">'+heart+'</g>',
 hearts:'<g transform="translate(-35 0) scale(.7)">'+heart+'</g><g transform="translate(30 40) scale(.75)">'+heart+'</g>',
 brokenheart:heart+'<path d="M0-59L-9-37 9-19-4 6" stroke="#fff0dd" fill="none" stroke-width="7"/>',

@@ -56,7 +56,7 @@ test('all settlement stages and own confirmations sound once, coalescing same-sn
  const f=audioFixture();f.cues.update(f.state([],{phase:'brewing',version:1}),false);
  const stages=['witches','essence','bonus','effects','effects-confirm','rewards','shopping'];
  stages.forEach((stage,i)=>{const s=f.state([],{phase:'settlement',stage,version:i+2,mine:{settlementEvents:[{id:'ack'+i,at:100000}]}});f.cues.update(s,true);f.cues.update(s,true);f.tick(30);});
- assert.equal(f.calls.length,7);assert.ok(f.calls.every(c=>c.cue==='settlement'));
+ assert.equal(f.calls.length,7);assert.ok(f.calls.every(c=>c.cue==='quacks-settlement'));
  f.cues.update(f.state([],{phase:'between',version:10}),true);assert.equal(f.calls.length,8);f.cues.destroy();
 });
 test('settlement load, reconnect and hidden transitions do not replay historical acknowledgements',()=>{
@@ -72,7 +72,7 @@ test('settlement WAV has faded bounds and reproducible manifest checksum',()=>{
 });
 test('settlement waits for an occupied game audio slot, then plays once',()=>{
  const f=audioFixture({capacity:false});f.cues.update(f.state([],{phase:'brewing'}),false);f.cues.update(f.state([],{phase:'settlement',stage:'bonus',version:2}),true);
- assert.equal(f.calls.length,0);f.tick(100);assert.equal(f.calls.length,0);f.freeCapacity();f.tick(50);assert.equal(f.calls.length,1);assert.equal(f.calls[0].cue,'settlement');f.cues.destroy();
+ assert.equal(f.calls.length,0);f.tick(100);assert.equal(f.calls.length,0);f.freeCapacity();f.tick(50);assert.equal(f.calls.length,1);assert.equal(f.calls[0].cue,'quacks-settlement');f.cues.destroy();
 });
 test('settlement glow marks actual outcomes, includes upgrade and dice results, and resets every round',()=>{
  const r=new QuacksRoom('ABCDEF','glow',n=>0),a=r.add('A'),b=r.add('B');r.start();r.phase='settlement';r.round=3;r.fortune={id:'test'};
@@ -84,4 +84,23 @@ test('settlement glow marks actual outcomes, includes upgrade and dice results, 
  const before=r.effectSnapshot(a);a.pot[0].value=2;r.effectRecord(a,'purple',before);assert.equal(a.effectSummary.at(-1).triggered,true);
  const diceBefore=r.effectSnapshot(a);a.dice.push(0);r.effectRecord(a,'green',diceBefore);assert.equal(a.effectSummary.at(-1).triggered,true);
  r.nextRound();assert.deepEqual(a.effectSummary,[]);
+});
+
+test('stop cue is private, once per confirmed transition, and never replayed on baseline or reconnect',()=>{
+ const f=audioFixture(),s=stopped=>f.state([],{mine:{stopEvents:stopped?[{id:'stop1',at:100000}]:[]},me:'a',recipes:[{id:'a',stopped},{id:'b',stopped:true}]});
+ f.cues.update(s(false),false);f.cues.update(s(false),true);assert.equal(f.calls.length,0);
+ f.cues.update(s(true),true);f.cues.update(s(true),true);assert.deepEqual(f.calls.map(c=>c.cue),['quacks-stop']);
+ f.cues.update(s(false),false);f.cues.update(s(true),false);f.cues.update(s(true),true);f.tick(3000);assert.equal(f.calls.length,1);f.cues.destroy();
+});
+test('replacement stop and settlement sources retain normalized, faded PCM with matching checksums',()=>{
+ const manifest=JSON.parse(fs.readFileSync('public/assets/game-sounds/quacks-manifest.json'));
+ for(const key of ['stopUser','settlementUser']){const m=manifest[key],b=fs.readFileSync('public/assets/game-sounds/'+m.file);
+ assert.equal(m.sha256,crypto.createHash('sha256').update(b).digest('hex'));assert.equal(b.readUInt32LE(24),24000);assert.equal(b.length,44+b.readUInt32LE(40));assert.equal(b.readInt16LE(44),0);assert.equal(b.readInt16LE(b.length-2),0);assert.ok(m.durationMs>500&&m.durationMs<2000);let peak=0;for(let i=44;i<b.length;i+=2)peak=Math.max(peak,Math.abs(b.readInt16LE(i)));assert.ok(peak<=11500&&peak>5000);}
+});
+
+test('only accepted voluntary stops emit a private cue; explosions and automatic stops stay silent',()=>{
+ const r=new QuacksRoom('ABCDEF','stop',()=>0),a=r.add('A'),b=r.add('B');r.start();r.drawFortune();const request={roundId:r.roundId,requestId:crypto.randomUUID(),step:r.step};
+ r.act(a.id,'stop',request);r.act(a.id,'stop',request);assert.equal(r.view(a.id).mine.stopEvents.length,1);assert.equal(r.view(b.id).mine.stopEvents.length,0);assert.equal(Object.hasOwn(r.view(b.id).recipes[0],'stopEvents'),false);
+ assert.throws(()=>r.act(a.id,'stop',{...request,requestId:crypto.randomUUID()}));assert.equal(a.stopEvents.length,1);
+ b.pot=[r.chip('white',4),r.chip('white',4)];r.exploded(b);assert.equal(b.exploded,true);assert.equal(b.stopEvents.length,0);r.nextRound();assert.equal(a.stopEvents.length,0);
 });

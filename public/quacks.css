@@ -262,3 +262,6 @@ body[data-game-kind=quacks] #game #alchemy .essence-flask{width:100%;max-width:4
 
 /* Preserve the rule mappings in both visible and height-measuring book faces. */
 .book-page-effect>.book-effect-copy{white-space:pre-line}
+
+/* Keep inspection text inside the visual viewport, including native popovers. */
+#potTooltip{margin:0;inset:auto;right:auto;bottom:auto;transform:none;translate:none;overflow-wrap:anywhere;white-space:normal;min-width:0;max-width:calc(100vw - 16px)}

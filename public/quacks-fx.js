@@ -50,16 +50,17 @@ function create(host){
 function createAudio(sounds){
  let context=null,initialized=false,timer=null,queue=[],generation=0,lastSettlement=null;const seen=new Set();
  const clear=()=>{generation++;if(timer!==null)clearTimeout(timer);timer=null;queue=[];};
- const next=()=>{timer=null;const prefs=root.AudioSettings?.get?.().effects;if(prefs&&(!prefs.enabled||!prefs.volume)){clear();return;}while(queue.length){const e=queue.shift();if(Date.now()-e.at>5000)continue;if(sounds?.hasCapacity?.()===false){queue.unshift(e);timer=setTimeout(next,50);return;}const token=generation;let ended=false;const done=()=>{if(ended||token!==generation)return;ended=true;if(timer!==null)clearTimeout(timer);timer=setTimeout(next,25);};const clip=sounds?.play(e.cue||'ingredient-draw',e.key,{live:true,epoch:e.epoch,onStop:done});if(!clip)done();else if(!ended)timer=setTimeout(done,1300);break;}};
+ const next=()=>{timer=null;const prefs=root.AudioSettings?.get?.().effects;if(prefs&&(!prefs.enabled||!prefs.volume)){clear();return;}while(queue.length){const e=queue.shift();if(Date.now()-e.at>5000)continue;if(sounds?.hasCapacity?.()===false){queue.unshift(e);timer=setTimeout(next,50);return;}const token=generation;let ended=false;const done=()=>{if(ended||token!==generation)return;ended=true;if(timer!==null)clearTimeout(timer);timer=setTimeout(next,25);};const clip=sounds?.play(e.cue||'ingredient-draw',e.key,{live:true,epoch:e.epoch,onStop:done});if(!clip)done();else if(!ended)timer=setTimeout(done,e.cue==='quacks-stop'?2200:1300);break;}};
  function update(state,live){
   const key=state.code+':'+state.roundId;if(key!==context){clear();seen.clear();context=key;initialized=false;lastSettlement=null;}
   if(!live||root.document.hidden)clear();
   const card=state.fortuneRevealId;if(card&&!seen.has('card:'+card)){seen.add('card:'+card);if(initialized&&live&&!root.document.hidden)sounds?.play('card-draw','quacks:card:'+card);}
   for(const e of state.mine?.potionEvents||[]){const id='potion:'+e.id;if(seen.has(id))continue;seen.add(id);if(initialized&&live&&!root.document.hidden)queue.push({cue:'potion-drink',key:'quacks:'+id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
+  for(const e of state.mine?.stopEvents||[]){const id='stop:'+e.id;if(seen.has(id))continue;seen.add(id);if(initialized&&live&&!root.document.hidden)queue.push({cue:'quacks-stop',key:'quacks:'+id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
   const stage=state.phase==='settlement'?state.stage:state.phase==='between'?'between':state.phase==='finished'&&!state.interrupted?'finished':null;
   const fresh=[];for(const e of state.mine?.settlementEvents||[]){const id='settle:'+e.id;if(seen.has(id))continue;seen.add(id);fresh.push(e);}
   const entering=stage&&stage!==lastSettlement;lastSettlement=stage;
-  if(initialized&&live&&!root.document.hidden&&(entering||fresh.length))queue.push({cue:'settlement',key:'quacks:settle:'+key+':'+state.version+':'+(fresh.at(-1)?.id||stage),at:fresh.at(-1)?.at??Date.now(),epoch:sounds?.epoch?.()});
+  if(initialized&&live&&!root.document.hidden&&(entering||fresh.length))queue.push({cue:'quacks-settlement',key:'quacks:settle:'+key+':'+state.version+':'+(fresh.at(-1)?.id||stage),at:fresh.at(-1)?.at??Date.now(),epoch:sounds?.epoch?.()});
   const events=state.mine?.drawEvents||[];
   for(const e of events){if(seen.has(e.id))continue;seen.add(e.id);if(initialized&&live&&!root.document.hidden)queue.push({key:'quacks:draw:'+e.id,at:e.at??Date.now(),epoch:sounds?.epoch?.()});}
   while(seen.size>128)seen.delete(seen.values().next().value);queue=queue.slice(-20);initialized=true;if(queue.length&&timer===null)next();

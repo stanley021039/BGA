@@ -53,8 +53,9 @@ function hideTooltip(){
 
 function inspectPot(details,event,anchor){
  anchor.quacksDisplayedInsight=details;const tip=$('#potTooltip');hideTooltip();tip.replaceChildren(node('strong',details.title),node('p',details.effect),node('small',details.caption));tip.dataset.ingredient=details.color;tip.hidden=false;tooltipOwner=anchor;anchor.setAttribute('aria-describedby','potTooltip');if(typeof tip.showPopover==='function')tip.showPopover();
- const rect=anchor.getBoundingClientRect(),width=tip.getBoundingClientRect().width,height=tip.getBoundingClientRect().height;
- const left=Math.max(8,Math.min(innerWidth-width-8,rect.left+rect.width/2-width/2)),top=Math.max(8,Math.min(innerHeight-height-8,rect.bottom+10));
+ tip.style.left='8px';tip.style.top='8px';
+ const rect=anchor.getBoundingClientRect(),{width,height}=tip.getBoundingClientRect(),view=window.visualViewport,viewLeft=view?.offsetLeft||0,viewTop=view?.offsetTop||0,viewWidth=view?.width||innerWidth,viewHeight=view?.height||innerHeight;
+ const left=Math.max(viewLeft+8,Math.min(viewLeft+viewWidth-width-8,rect.left+rect.width/2-width/2)),below=rect.bottom+10,preferred=below+height<=viewTop+viewHeight-8?below:rect.top-height-10,top=Math.max(viewTop+8,Math.min(viewTop+viewHeight-height-8,preferred));
  tip.style.left=left+'px';tip.style.top=top+'px';
 }
 function drawPot(s){
@@ -111,7 +112,7 @@ function renderPotCustomization(s){
 function purchaseOffer(s,b,o,action,blocked){
  const wrap=node('div');wrap.className='purchase-offer';
  const extra=action==='extra-buy',selected=(extra?s.mine.extraBought:s.mine.bought).find(c=>c.color===b.color&&c.value===o.value);const buy=button((selected?'取消購買 ':extra?'額外購買 ':'購買 ')+b.name+' '+o.value+'，'+o.price+' 金幣','ingredient',()=>selected?act('unbuy',{color:b.color,value:o.value,extra}):act(action,{color:b.color,value:o.value}),selected?!selected.canUndo:blocked);buy.setAttribute('aria-pressed',String(!!selected));buy.dataset.selected=String(!!selected);buy.dataset.purchaseColor=b.color;buy.dataset.purchaseValue=String(o.value);
- buy.classList.add('ingredient-purchase');buy.prepend(art.token({color:b.color,value:o.value},{size:42,decorative:true}));
+ buy.classList.add('ingredient-purchase');buy.classList.remove('ui-icon-button');buy.replaceChildren(art.token({color:b.color,value:o.value},{size:42,decorative:true}));
  const price=node('span');price.className='purchase-price';price.innerHTML=window.GameUI.symbol('coins');price.append(node('strong',String(o.price)));buy.append(price);
  hint(wrap,{title:b.name+' · '+o.value,effect:b.effect,caption:b.faceName+' · '+o.price+' 金幣'+(selected?(selected.canUndo?' · 再點一次取消，退還預算':' · 已用於後續效果，無法取消'):''),color:b.color});
  wrap.append(buy);return wrap;
@@ -195,7 +196,7 @@ function bonusControls(box,s,m){
 }
 function effectControls(box,s,m){
  const row=node('div');row.className='settlement-effects';
- for(const color of ['black','green','purple']){const icon=node('span');icon.append(art.token({color,value:1},{size:48,decorative:true}));icon.dataset.effectColor=color;const records=(m.effectSummary||[]).filter(e=>e.color===color);icon.classList.toggle('effect-triggered',records.some(e=>e.triggered));const entries=records.map(e=>e.text);hint(icon,{title:names[color]+'結算效果',effect:entries.join('；')||'本回合沒有額外效果。',caption:art.lookup(s,color)?.effect||'',color});row.append(icon);}
+ for(const color of ['black','green','purple']){const icon=node('span');icon.append(art.token({color,value:1},{size:48,decorative:true}));icon.dataset.effectColor=color;const records=(m.effectSummary||[]).filter(e=>e.color===color);icon.classList.toggle('effect-triggered',records.some(e=>e.triggered));const entries=records.map(e=>e.text);hint(icon,{title:names[color]+'結算效果',effect:entries.join('；')||'本回合沒有額外效果。',caption:'',color});row.append(icon);}
  const total=node('span');total.innerHTML=window.GameUI.symbol('star');hint(total,{title:'藥材結算合計',effect:(m.effectSummary||[]).filter(e=>!['black','green','purple'].includes(e.color)).map(e=>e.text).join('；')||'已套用本輪藥材效果。',caption:'確認不會重複領取。',color:'summary'});row.append(total);
  box.append(row);const confirm=button('確認藥材效果','check',()=>act('confirm-effects'));window.GameUI.decorateButton(confirm,'check',{iconOnly:true});box.append(confirm);
 }
