@@ -439,3 +439,100 @@ body[data-game-kind=quacks][data-ui-template=tactile] .portrait-action.draw-acti
 body[data-game-kind=quacks][data-ui-template=tactile] .q-book-dialog #bookVoting :is(small,.book-page-prices strong,.book-selected-stamp,.book-selected-label,.book-voting-help,.book-page-controls button){font-size:var(--ui-type-p3,14px)!important;line-height:1.4!important}
 /* Keep short book faces fully operable in a 720px desktop viewport. */
 @media(min-width:761px){body[data-game-kind=quacks][data-ui-template=tactile] .q-book-dialog .book-vote-card{min-height:0!important;gap:8px!important;padding:14px!important}body[data-game-kind=quacks][data-ui-template=tactile] .q-book-dialog .book-page-top{display:grid!important;grid-template-columns:64px minmax(0,1fr);grid-template-rows:auto auto;align-items:center;gap:3px 12px;padding-top:2px}body[data-game-kind=quacks][data-ui-template=tactile] .q-book-dialog .book-page-top>svg{grid-column:1;grid-row:1/3;width:64px;height:64px}body[data-game-kind=quacks][data-ui-template=tactile] .q-book-dialog .book-page-top h3{grid-column:2;grid-row:1;margin:0}body[data-game-kind=quacks][data-ui-template=tactile] .q-book-dialog .book-page-top>small{grid-column:2;grid-row:2}body[data-game-kind=quacks][data-ui-template=tactile] .q-book-dialog .book-page-prices{grid-column:1/-1;margin-top:4px}}
+
+/* Shared dimensions for the Quacks table, book pages, and dialogs. */
+body[data-game-kind=quacks][data-ui-template=tactile]{--q-control-size:44px;--q-icon-size:20px;--q-ui-gap:8px;--q-dialog-gap:16px}
+body[data-game-kind=quacks][data-ui-template=tactile] :is(.q-header,.q-panel,.quacks-dialog) .ui-icon{width:var(--q-icon-size)!important;height:var(--q-icon-size)!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-header #qInvite{display:none!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #qMobileMenuContent #qInvite{display:none!important}
+body[data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-room-phase=waiting] #game .ui-room-roster-list .ui-room-roster-add:has([data-room-common-action=invite]){display:block!important}
+body[data-game-kind=quacks][data-ui-template=tactile][data-room-phase=waiting] #game #qWaitingControls .ui-room-session-actions>.st-waiting-invite{display:none!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .ui-room-roster-heading #room-invitations-button{width:36px;min-width:36px;height:36px;min-height:36px;margin-left:auto;padding:7px}
+/* The waiting-room chat is a right-side modal drawer. FramePanel's generic
+   dialog grid has empty content/footer slots; reclaim them for the chat. */
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog.ui-dialog-layout{position:fixed!important;left:auto!important;right:16px!important;top:50%!important;transform:translateY(-50%)!important;margin:0!important;width:min(420px,calc(100vw - 32px))!important;height:min(640px,calc(100dvh - 32px))!important;max-height:calc(100dvh - 32px)!important;padding:16px!important;display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:44px 42px minmax(0,1fr)!important;gap:8px!important;overflow:hidden!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog.ui-dialog-layout>:is(.ui-dialog-content,.ui-dialog-footer){display:none!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog.ui-dialog-layout>.ui-dialog-header{grid-row:2!important;min-height:0!important;height:auto!important;margin:0!important;padding:0!important;display:flex!important;align-items:center!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog.ui-dialog-layout>.tpl-dialog-body{grid-row:3!important;height:100%!important;min-height:0!important;overflow:hidden!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog .ui-room-chat-slot{height:100%!important;min-height:0!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog .shared-chat{height:100%!important;min-height:0!important;max-height:100%!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog .shared-chat #chat-content{flex:1!important;min-height:0!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .shared-emoji-picker{position:fixed!important;left:auto!important;right:16px!important;top:auto!important;bottom:84px!important;z-index:1100!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog .chat-room-tools{position:static!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .tpl-chat-dialog #shared-emoji-picker{position:absolute!important;left:16px!important;right:16px!important;top:104px!important;bottom:84px!important;width:auto!important;max-height:none!important}
+
+/* The phase rail reserves its own row so state changes never resize the table. */
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-phase-rail{height:34px;min-height:34px;display:flex;align-items:center;justify-content:center;gap:4px;padding:3px 12px;border-bottom:1px solid var(--q-line);background:var(--q-paper);overflow-x:auto;scrollbar-width:thin}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-phase-step{display:inline-flex;align-items:center;justify-content:center;min-width:76px;max-width:140px;flex:1;white-space:nowrap;border-radius:999px;padding:3px 8px;font-size:var(--ui-type-p3,14px);line-height:22px;color:var(--q-muted);background:var(--q-inset)}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-phase-step.active{background:var(--q-yellow);color:#53420c;font-weight:800}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #game.q-layout{height:auto!important;min-height:0!important;flex:1 1 auto!important}
+
+/* Reserve room for the bottle and bag beside the fully visible cauldron. */
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-stage #cauldron{width:calc(100% - 116px)!important;flex:none!important;margin-right:116px!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-pot-supplies{position:absolute;z-index:4;top:56px;right:10px;width:96px;display:flex;flex-direction:column;align-items:stretch;gap:var(--q-ui-gap)}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-supplies .q-potion-slot{width:100%!important;min-width:0!important;justify-content:stretch!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-supplies :is(.q-potion-display,.q-potion-slot button,#bagButton){width:100%!important;min-width:0!important;max-width:none!important;min-height:72px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;padding:5px!important;border:1px solid #a8c5b7!important;border-radius:12px!important;background:#e1efdf!important;color:#193b2a!important;font-size:var(--ui-type-p3,14px)!important;text-align:center!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-supplies :is(.q-potion-display,.q-potion-slot button,#bagButton) svg{width:36px!important;height:36px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-supplies #bagButton{background:#d4e9f5!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-supplies .q-potion-slot button>.ui-icon{display:none!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-metrics{max-width:calc(100% - 126px)!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #customizePot{right:12px!important;top:10px!important;min-width:44px!important;min-height:36px!important}
+
+/* Action portraits have persistent readable captions, including stop. */
+body[data-game-kind=quacks][data-ui-template=tactile] .portrait-action.draw-action::after{content:none!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #controls>.portrait-action{min-width:0!important;display:flex!important;flex-direction:column!important;gap:1px!important;align-items:center!important;justify-content:center!important;padding:2px 6px!important;overflow:visible!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #controls>.portrait-action .quacks-action-portrait{width:64px!important;height:37px!important;object-fit:contain!important;flex:none!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-action-caption{display:block;position:static;width:100%;font-size:var(--ui-type-p3,14px);line-height:20px;font-weight:800;text-align:center;white-space:nowrap;color:inherit}
+
+/* Five-player rows grow enough for the bomb value and the status line. */
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .player-card{grid-template-rows:34px 24px minmax(30px,auto) minmax(22px,auto)!important;min-height:132px!important;height:auto!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-risk{min-height:30px!important;align-items:center!important;overflow:visible!important;line-height:20px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-risk span{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:20px!important}
+@media (min-width:781px) and (max-width:1140px){body[data-game-kind=quacks][data-ui-template=tactile] .q-player-risk{display:flex!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:0!important}body[data-game-kind=quacks][data-ui-template=tactile] .q-player-risk span{white-space:nowrap!important}}
+
+/* Emotes float over the right column; opening them cannot change column sizes. */
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-room-footer{min-height:110px!important;overflow:visible!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-room-tools{min-height:38px!important;overflow:visible!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-room-tools button{min-width:36px!important;width:36px!important;min-height:36px!important;height:36px!important;padding:6px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-room-tools .ui-icon{width:22px!important;height:22px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-quick{min-height:36px!important;overflow-x:auto!important;overflow-y:hidden!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .shared-emoji-picker{width:min(410px,calc(100vw - 24px))!important;max-height:min(570px,calc(100dvh - 24px))!important;overflow:auto!important;z-index:1000!important;overscroll-behavior:contain}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .shared-emoji-picker .st-emote-choice{min-height:72px!important;gap:3px!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .shared-emoji-picker .st-emote-glyph{font-size:28px!important;line-height:34px!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .shared-emoji-picker .st-emote-choice small{font-size:var(--ui-type-p3,14px)!important;line-height:19px!important;white-space:normal!important;text-align:center!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .shared-emoji-picker .shared-expressions button{min-height:90px!important;gap:3px!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .shared-emoji-picker .shared-expressions img{width:68px!important;height:68px!important}
+
+/* The voting face is a physical two-page spread. Dialogs share one alignment grid. */
+body[data-game-kind=quacks][data-ui-template=tactile] .quacks-dialog{--q-dialog-pad:16px}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-book-dialog{width:min(860px,calc(100vw - 24px))!important;max-height:calc(100dvh - 32px)!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-book-dialog .book-grid{display:block!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-book-dialog .book-vote-card{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:0!important;min-height:310px!important;padding:0!important;margin:0!important;border:2px solid #c7b27d!important;border-radius:9px!important;background:#f5e7c8!important;box-shadow:0 12px 22px #30250f28!important;overflow:hidden!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page{min-width:0;padding:18px;display:flex;flex-direction:column;gap:var(--q-ui-gap);background:linear-gradient(105deg,#fff9e9,#f8ebd0);color:#2c261d}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page-left{border-right:4px double #b69d68;box-shadow:inset -9px 0 14px #6d53251a}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page-right{background:linear-gradient(85deg,#f6e7c9,#fff9e9);box-shadow:inset 9px 0 14px #6d53251a}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page .book-page-effect{flex:1;min-height:85px;overflow:auto}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page .book-page-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--q-ui-gap)}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-book-faces{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-book-faces .q-book-face{min-height:36px!important;padding:4px 8px!important;background:#fffbef!important;border-color:#c3ad76!important;color:#3e321c!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-book-faces .q-book-face[aria-pressed=true]{background:#f8c838!important;font-weight:800!important}
+body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page :is(small,p,strong,h3){color:#2c261d!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #potCustomize{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--q-dialog-gap);align-content:start}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] dialog#potCustomize:not([open]),
+body[data-game-kind=quacks][data-ui-template=tactile] dialog.tpl-chat-dialog.ui-dialog-layout:not([open]){display:none!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #potCustomize :is(h2,h3,p){margin:0;line-height:1.45}
+body[data-game-kind=quacks][data-ui-template=tactile] #potNameForm{grid-template-columns:minmax(0,1fr) 112px!important;column-gap:var(--q-dialog-gap)!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #potNameForm #savePotName,
+body[data-game-kind=quacks][data-ui-template=tactile] #potCustomize #closeCustomize{width:112px!important;min-width:112px!important;height:44px!important;min-height:44px!important;justify-content:center!important;gap:8px!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #potCustomize :is(#savePotName,#closeCustomize) .ui-sr-only{position:static!important;width:auto!important;height:auto!important;clip:auto!important;clip-path:none!important;overflow:visible!important;white-space:nowrap!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #qSocial .q-chat-quick{min-width:0;height:40px!important;overflow:hidden!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #qSocial .q-chat-quick button{flex:0 0 40px!important;width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;white-space:nowrap!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #potNameForm{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--q-ui-gap);align-items:end;margin:0}
+body[data-game-kind=quacks][data-ui-template=tactile] #potNameForm label{grid-column:1/-1;width:auto;margin:0}
+body[data-game-kind=quacks][data-ui-template=tactile] #potNameForm input{width:100%;min-width:0;min-height:var(--q-control-size)}
+body[data-game-kind=quacks][data-ui-template=tactile] #potNameForm button{min-height:var(--q-control-size)!important;white-space:nowrap}
+body[data-game-kind=quacks][data-ui-template=tactile] #potColors{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--q-ui-gap);margin:0}
+body[data-game-kind=quacks][data-ui-template=tactile] #potColors .pot-swatch{min-height:var(--q-control-size)!important;display:flex;align-items:center;gap:var(--q-ui-gap);text-align:left}
+body[data-game-kind=quacks][data-ui-template=tactile] #closeCustomize{justify-self:end;min-height:var(--q-control-size)!important}
+html[data-color-scheme=dark] body[data-game-kind=quacks][data-ui-template=tactile] .q-pot-supplies :is(.q-potion-display,.q-potion-slot button,#bagButton){background:#304d43!important;color:#f4ecdb!important;border-color:#73917f!important}
+@media(max-width:780px){body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-stage #cauldron{width:100%!important;margin-right:0!important}body[data-game-kind=quacks][data-ui-template=tactile] .q-pot-supplies{top:auto;bottom:40px;right:5px;width:62px}body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-supplies :is(.q-potion-display,.q-potion-slot button,#bagButton){min-height:54px!important}body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page{padding:10px}body[data-game-kind=quacks][data-ui-template=tactile] .q-book-dialog .book-vote-card{grid-template-columns:minmax(0,1fr)!important}body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page-left{border-right:0;border-bottom:4px double #b69d68}}
