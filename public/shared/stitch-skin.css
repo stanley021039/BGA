@@ -1,8 +1,8 @@
 /* Stitch skin owns paint, typography and motion only. Geometry belongs to stitch-composition.css. Preserve stitch-export layer for compatibility. */
-@font-face{font-family:StitchJakarta;src:url('/assets/fonts/plus-jakarta-500.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
-@font-face{font-family:StitchJakarta;src:url('/assets/fonts/plus-jakarta-600.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
-@font-face{font-family:StitchJakarta;src:url('/assets/fonts/plus-jakarta-700.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
-@font-face{font-family:StitchJakarta;src:url('/assets/fonts/plus-jakarta-800.woff2') format('woff2');font-weight:800;font-style:normal;font-display:swap}
+@font-face{font-family:StitchJakarta;src:url("/assets/fonts/plus-jakarta-500.woff2") format("woff2");font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:StitchJakarta;src:url("/assets/fonts/plus-jakarta-600.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:StitchJakarta;src:url("/assets/fonts/plus-jakarta-700.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:StitchJakarta;src:url("/assets/fonts/plus-jakarta-800.woff2") format("woff2");font-weight:800;font-style:normal;font-display:swap}
 body[data-ui-template=tactile][data-visual-theme=playful]{
  background:var(--st-paper);color:var(--st-ink);font-family:var(--play-font);font-size:14px;font-weight:500;
 }
@@ -34,7 +34,7 @@ body[data-ui-template=tactile] .room-player-metrics{font-size:var(--ui-type-p3, 
 body[data-ui-template=tactile] .room-player .room-player-name{font-size:16px!important}.st-player-status{font-size:var(--ui-type-p3, 14px);font-weight:600;color:var(--st-on-blue)}.st-player-guess{font-size:var(--ui-type-p3, 14px);background:var(--st-low);border-radius:8px}
 body[data-ui-template=tactile] :is(.room-player,.ui-room-roster-card)[data-artist=true]{background:var(--st-yellow)!important;color:var(--st-on-yellow)!important;box-shadow:0 2px 0 var(--st-primary)!important}
 body[data-ui-template=tactile] :is(.room-player,.ui-room-roster-card)[data-artist=true] .st-player-status{color:var(--st-on-yellow)}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-play-chat>.shared-chat{background:var(--st-low)!important;border:0!important;border-radius:24px!important;box-shadow:none!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] #boardSection{border:0!important;border-radius:24px!important;box-shadow:none!important;background:var(--st-low)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .tpl-palette{border:0!important;border-radius:16px!important;box-shadow:none!important;background:var(--st-surface)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .tpl-palette #swatches button{border-radius:50%!important;border:1px solid #0001!important;box-shadow:none!important}
@@ -42,7 +42,7 @@ body[data-ui-template=tactile] .tpl-palette #swatches button.selected{outline:2p
 body[data-ui-template=tactile] .tpl-palette #color{border:0!important;border-radius:50%!important}
 body[data-ui-template=tactile] .tpl-palette .size-pick{white-space:nowrap;font-size:var(--ui-type-p3, 14px)!important}
 body[data-ui-template=tactile] #size{accent-color:var(--st-primary)}
-.st-brush-preview{border:12px solid var(--st-inset);border-radius:12px;background-clip:padding-box;transform:scale(.66)}.st-brush-preview::before{content:'';border-radius:50%;background:inherit}
+.st-brush-preview{border:12px solid var(--st-inset);border-radius:12px;background-clip:padding-box;transform:scale(.66)}.st-brush-preview::before{content:"";border-radius:50%;background:inherit}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] #tools{background:var(--st-surface)!important;border:0!important;border-radius:16px!important;box-shadow:none!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] #tools button{border:0!important;border-radius:10px!important;box-shadow:none!important;background:transparent!important;color:var(--st-muted)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] #tools button.selected{background:var(--st-yellow)!important;color:var(--st-on-yellow)!important;box-shadow:0 1px 2px #0001!important}body[data-ui-template=tactile] #tools #clear{color:var(--st-error)!important}
@@ -53,15 +53,15 @@ body[data-ui-template=tactile][data-draw-role=guesser] #boardSection{background:
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .draw-guess-panel{border:0!important;border-radius:16px!important;background:var(--st-low)!important;box-shadow:none!important}
 .st-artist-log{border-radius:12px;background:var(--st-inset);font-size:var(--ui-type-p3, 14px)}.st-artist-log>summary{cursor:pointer}.st-artist-log .draw-guess-panel{font-size:var(--ui-type-p3, 14px)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] #guessForm :is(input,button){font-size:var(--ui-type-p3, 14px)!important;border-radius:12px!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-heading{font-size:16px!important;border-bottom:1px solid var(--st-high)}
-.st-chat-notice{background:var(--st-blue);color:var(--st-on-blue);font-size:var(--ui-type-p3, 14px);border-radius:999px}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-messages li{background:var(--st-surface)!important;border:0!important;box-shadow:none!important;border-radius:16px!important;font-size:var(--ui-type-p3, 14px)!important;line-height:1.5}
-body[data-ui-template=tactile] .chat-messages li b{font-size:var(--ui-type-p3, 14px);color:var(--st-on-peach)}body[data-ui-template=tactile] .chat-messages li time{font-size:var(--ui-type-p3, 14px)}
-.st-chat-quick{border-radius:12px;background:var(--st-inset)}.st-chat-quick .st-button{font-size:20px;background:none;box-shadow:none}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-compose input{border:0!important;box-shadow:none!important;border-radius:14px!important;background:var(--st-surface)!important;font-size:var(--ui-type-p3, 14px)!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-compose button{background:var(--st-primary)!important;color:#fff!important;border:0!important;box-shadow:none!important;border-radius:10px!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-room-tools :is(button,summary){font-size:var(--ui-type-p3, 14px)!important;border-radius:999px!important;box-shadow:none!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-status{font-size:var(--ui-type-p3, 14px)!important}
+
+
+
+
+
+
+
+
+
 .st-choice-group{background:var(--st-inset);border-radius:12px}.st-choice-group .st-button{font-size:var(--ui-type-p3, 14px);white-space:normal;background:none}.st-choice-group [aria-pressed=true]{background:var(--st-surface);box-shadow:0 2px 0 var(--st-ink);outline:2px solid var(--st-yellow)}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-room-settings-panel{border-radius:16px!important;background:var(--st-surface)!important;box-shadow:0 3px 0 var(--st-ink)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-room-settings-panel :is(input,select){font-size:var(--ui-type-p3, 14px)!important;border-width:1px!important;border-radius:8px!important;box-shadow:none!important}.ui-room-settings-panel .draw-topic-options label{font-size:var(--ui-type-p3, 14px)!important}
@@ -94,7 +94,7 @@ body[data-ui-template=tactile] .draw-result-choice{border:0!important;border-bot
 body[data-ui-template=tactile] .draw-result-choice[aria-pressed=true]{background:var(--st-yellow)!important;box-shadow:0 3px 0 var(--st-ink)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .draw-result-art{background:var(--st-low);border-radius:16px;border:0!important}.draw-result-art canvas{background:#fff;box-shadow:0 3px 5px #0002;border-radius:12px}
 body[data-ui-template=tactile] .shared-emoji-picker{border:0!important;box-shadow:0 4px 12px #0002!important;background:var(--st-surface)!important;border-radius:16px!important}.shared-emoji-picker h3{font-size:14px!important}.shared-emoji-picker .shared-emoji-choices button{border:0!important;border-radius:12px!important;background:var(--st-low)!important;box-shadow:none!important;font-size:22px!important}
-.st-word-lock{background:#30303066;backdrop-filter:blur(3px);animation:st-lock-in 150ms ease-out;color:var(--st-ink)}.st-word-lock::before{content:'';background:var(--st-surface);border-radius:16px;box-shadow:0 8px 0 var(--st-ink)}.st-word-lock-icon{background:var(--st-yellow);color:var(--st-on-yellow);border-radius:50%}.st-word-lock strong{font-size:24px}.st-word-lock p{font-size:14px}
+.st-word-lock{background:#30303066;backdrop-filter:blur(3px);animation:st-lock-in 150ms ease-out;color:var(--st-ink)}.st-word-lock::before{content:"";background:var(--st-surface);border-radius:16px;box-shadow:0 8px 0 var(--st-ink)}.st-word-lock-icon{background:var(--st-yellow);color:var(--st-on-yellow);border-radius:50%}.st-word-lock strong{font-size:24px}.st-word-lock p{font-size:14px}
 .st-ui-status{transform:translateX(-50%);border-radius:999px;background:var(--st-ink);color:var(--st-paper);font-size:var(--ui-type-p3, 14px);pointer-events:none}
 @media(min-width:1101px) and (max-height:800px) and (min-height:680px){.st-phase-context>#boardTitle{font-size:18px}.st-phase-bar .st-button{font-size:var(--ui-type-p3, 14px)}.st-game-nav :is(a,button){font-size:var(--ui-type-p3, 14px)!important}
 }
@@ -102,7 +102,7 @@ body[data-ui-template=tactile] .shared-emoji-picker{border:0!important;box-shado
 @media(max-width:1100px){.st-phase-bar .st-button{font-size:var(--ui-type-p3, 14px)}.st-phase-context>#boardTitle{font-size:18px}.st-phase-bar #timer{font-size:20px}
 }
 @media(max-width:760px){
- body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .site-header .site-title{font-size:16px}.st-brand-mark{border-radius:10px}.st-private-label{font-size:var(--ui-type-p3, 14px)}.st-phase-context>#boardTitle{font-size:16px}.st-phase-bar .st-button{font-size:var(--ui-type-p3, 14px)}.st-round-counter{font-size:var(--ui-type-p3, 14px)}.st-chat-quick .st-button{font-size:18px}.stage-pick strong{font-size:22px!important}.stage-pick small{font-size:14px!important}.stage-pick span{font-size:14px!important}.st-gallery-filters>button{font-size:var(--ui-type-p3, 14px)}
+ body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .site-header .site-title{font-size:16px}.st-brand-mark{border-radius:10px}.st-private-label{font-size:var(--ui-type-p3, 14px)}.st-phase-context>#boardTitle{font-size:16px}.st-phase-bar .st-button{font-size:var(--ui-type-p3, 14px)}.st-round-counter{font-size:var(--ui-type-p3, 14px)}.stage-pick strong{font-size:22px!important}.stage-pick small{font-size:14px!important}.stage-pick span{font-size:14px!important}.st-gallery-filters>button{font-size:var(--ui-type-p3, 14px)}
 }
 @keyframes st-bounce{0%,100%{transform:translateY(-25%);animation-timing-function:cubic-bezier(.8,0,1,1)}50%{transform:none;animation-timing-function:cubic-bezier(0,0,.2,1)}}
 @keyframes st-lock-in{from{opacity:0}to{opacity:1}}
@@ -138,12 +138,12 @@ body[data-ui-template=tactile] .shared-emoji-choices [aria-pressed=true]{backgro
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-button.ui-button{border:0!important;border-radius:12px!important;box-shadow:none!important;background:var(--st-low)!important;color:var(--st-ink)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-button.st-primary{background:var(--st-yellow)!important;color:var(--st-on-yellow)!important;box-shadow:var(--st-hard-shadow)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-button:is(.st-danger,.st-skip-button){background:var(--st-error-surface)!important;color:var(--st-error)!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-chat-quick .st-button{border:0!important;background:transparent!important;box-shadow:none!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .site-header .site-account :is(.site-settings-button,.site-theme-button,.site-avatar-button,.room-invitations-button){border:0!important;box-shadow:none!important;border-radius:50%!important;background:transparent!important;color:var(--st-ink)!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .site-header #invite{border:0!important;box-shadow:none!important;background:var(--st-yellow)!important;color:var(--st-on-yellow)!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-room-tools :is(button,summary){border:0!important;background:var(--st-inset)!important;color:var(--st-muted)!important;box-shadow:none!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-messages{border-block:0!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-room-footer{border-top:0!important}
+
+
+
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-visual-theme=playful] #drawCountdown{border:0!important;border-radius:16px!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-visual-theme=playful] #timer{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;font-size:24px!important;line-height:24px!important;letter-spacing:0!important;text-align:left!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-visual-theme=playful] #timerCaption{line-height:18px!important;font-size:var(--ui-type-p3, 14px)!important;white-space:nowrap}
@@ -156,19 +156,19 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-visual-theme=playful] #players .st-player-guess{line-height:18px;white-space:nowrap;text-overflow:ellipsis}
 body[data-ui-template=tactile] #players .room-player-name{font-size:14px!important}
 @media(min-width:1101px){body[data-ui-template=tactile] .room-waiting-info h2{font-size:36px!important}}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-draw-phase=drawing][data-draw-role=artist] #boardSection::before{content:'';border-radius:16px;background:var(--st-high);pointer-events:none}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-visual-theme=playful][data-draw-role=guesser][data-draw-phase=drawing] :is(.draw-roster,#boardSection,#drawGuessPanel,.ui-drawing-play-chat>.shared-chat){border:2px solid var(--st-ink)!important;border-radius:16px!important;box-shadow:var(--st-hard-shadow)!important;background:var(--st-surface)!important}
+body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-draw-phase=drawing][data-draw-role=artist] #boardSection::before{content:"";border-radius:16px;background:var(--st-high);pointer-events:none}
+
 body[data-ui-template=tactile][data-draw-role=guesser][data-draw-phase=drawing] #players .room-player{border:2px solid var(--st-ink)!important;box-shadow:var(--st-hard-shadow)!important;background:var(--st-low)!important}
 body[data-ui-template=tactile][data-draw-role=guesser][data-draw-phase=drawing] #players .room-player[data-self=true]{background:var(--st-blue)!important}
 body[data-ui-template=tactile][data-draw-role=guesser][data-draw-phase=drawing] #players .room-player[data-artist=true]{background:color-mix(in srgb,var(--st-yellow) 20%,var(--st-surface))!important}
-body[data-ui-template=tactile][data-draw-role=guesser][data-draw-phase=drawing] .canvas-frame::after{content:'';pointer-events:none;background-image:linear-gradient(#e4e2e144 1px,transparent 1px),linear-gradient(90deg,#e4e2e144 1px,transparent 1px);background-size:32px 32px}
-body[data-ui-template=tactile][data-draw-role=guesser][data-draw-phase=drawing] .chat-compose button{background:var(--st-on-blue)!important}
+body[data-ui-template=tactile][data-draw-role=guesser][data-draw-phase=drawing] .canvas-frame::after{content:"";pointer-events:none;background-image:linear-gradient(#e4e2e144 1px,transparent 1px),linear-gradient(90deg,#e4e2e144 1px,transparent 1px);background-size:32px 32px}
+
 .st-summary-metric{border:2px solid var(--st-ink);border-radius:12px;background:var(--st-low)}.st-summary-metric small{font-size:var(--ui-type-p3, 14px)}.st-summary-metric strong{font-size:16px;line-height:24px;font-variant-numeric:tabular-nums;color:var(--st-primary);white-space:nowrap;text-overflow:ellipsis}.st-finished-highlights h3{font-size:16px}.st-finished-highlights>small{font-size:var(--ui-type-p3, 14px);color:var(--st-muted)}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-highlight{border:2px solid var(--st-ink)!important;background:var(--st-low)!important;color:var(--st-ink)!important;border-radius:12px!important;box-shadow:var(--st-hard-shadow)!important;text-align:left}
 .st-highlight canvas{background:#fff;border-radius:6px}.st-highlight strong{font-size:var(--ui-type-p3, 14px);white-space:nowrap;text-overflow:ellipsis}.st-highlight small{font-size:var(--ui-type-p3, 14px)}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template][data-draw-phase=finished] :is(.draw-roster,.ui-drawing-play-chat>.shared-chat){background:var(--st-surface)!important;border:2px solid var(--st-ink)!important;border-radius:16px!important;box-shadow:var(--st-hard-shadow)!important}
+
 .st-finish-banner{font-size:var(--ui-type-p3, 14px);line-height:1.5;border:1px solid var(--st-ink);background:var(--st-yellow);color:var(--st-on-yellow)}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template][data-draw-phase=finished] .st-chat-quick .st-button{font-size:var(--ui-type-p3, 14px)!important;white-space:nowrap!important;border:1px solid var(--st-ink)!important;border-radius:999px!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .stage-podium .st-podium-cards{list-style:none}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-podium-cards>.st-podium-cell{border:0!important;box-shadow:none!important;background:transparent!important;transform:none!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-podium-cards .stage-avatar{border:2px solid var(--st-ink);border-radius:16px;background:var(--st-yellow);box-shadow:var(--st-hard-shadow)}
@@ -191,7 +191,7 @@ body[data-ui-template=tactile][data-draw-phase=drawing][data-draw-role=guesser] 
 @media(min-width:1101px) and (min-height:680px) and (max-height:800px){
  body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-visual-theme=playful] #players .st-player-guess{line-height:16px}
 }
-body[data-ui-template=tactile] :is(#players,.ui-room-roster-list,.chat-messages,.st-finished-highlights,.st-ranking-list,.ui-room-settings-slot,.draw-result-list){scrollbar-gutter:stable}
+
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .stage-finished .finished-heading{text-align:center}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .stage-finished .finished-heading h1{line-height:32px!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .stage-finished .finished-heading p{line-height:20px!important;font-size:var(--ui-type-p3, 14px)!important}
@@ -242,7 +242,7 @@ body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=dra
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-info>.kicker {font-size:18px!important;line-height:26px!important;color:var(--st-primary)!important;letter-spacing:0!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-info>p:not(.room-waiting-hint) {font-size:14px!important;line-height:23px!important;color:var(--st-muted)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-hint {clip-path:inset(50%)!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-template::before,body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-template::after {content:''!important;pointer-events:none!important;border-radius:50%!important}
+body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-template::before,body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-template::after {content:""!important;pointer-events:none!important;border-radius:50%!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-template::before {background:color-mix(in srgb,var(--st-yellow) 20%,transparent)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .room-waiting-template::after {background:color-mix(in srgb,var(--st-blue) 20%,transparent)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-waiting-facts {border-top:2px solid var(--st-inset)!important}
@@ -308,26 +308,26 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] #boardSection {border-radius:16px!important;background:var(--st-low)!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .tpl-palette {border-radius:16px!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .tpl-palette #color {opacity:0!important;cursor:pointer!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette .color-pick::before {content:'顏色:'!important;color:var(--st-muted)!important;font-size:var(--ui-type-p3, 14px)!important;line-height:18px!important;white-space:nowrap!important}
+body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette .color-pick::before {content:"顏色:"!important;color:var(--st-muted)!important;font-size:var(--ui-type-p3, 14px)!important;line-height:18px!important;white-space:nowrap!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .tpl-palette #swatches button {border:0!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette #swatches button:nth-child(11) {transform:translateX(-36px)!important}body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette #swatches button:nth-child(12) {transform:translateX(-36px)!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette #swatches button[data-color='#ffffff'] {border:1px solid var(--st-high)!important}
+body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette #swatches button[data-color="#ffffff"] {border:1px solid var(--st-high)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette .size-pick {font-size:var(--ui-type-p3, 14px)!important;white-space:nowrap!important;line-height:16px!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette #size {accent-color:var(--st-primary)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette #sizeValue {font-size:var(--ui-type-p3, 14px)!important;text-align:right!important;line-height:16px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette #sizeValue::after {content:'px'!important}
+body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .tpl-palette #sizeValue::after {content:"px"!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-brush-preview {background:var(--st-inset)!important;border-radius:12px!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] #tools {border-radius:12px!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] #tools button {border-radius:8px!important}body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) #undo::before {content:''!important;background:var(--st-high)!important}
+body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] #tools button {border-radius:8px!important}body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) #undo::before {content:""!important;background:var(--st-high)!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .st-board-footer {font-size:var(--ui-type-p3, 14px)!important;line-height:16px!important;border-radius:12px!important;background:var(--st-inset)!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .ui-drawing-play-chat>.shared-chat {border-radius:16px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-heading {font-size:14px!important;line-height:18px!important;white-space:nowrap!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-chat-notice {font-size:var(--ui-type-p3, 14px)!important;line-height:14px!important;border-radius:999px!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .chat-messages li {border-radius:12px!important;font-size:14px!important;line-height:22px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-messages li b {font-size:var(--ui-type-p3, 14px)!important;line-height:14px!important;color:var(--st-muted)!important}body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-messages li time {font-size:var(--ui-type-p3, 14px)!important;line-height:14px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-chat-quick {background:var(--st-inset)!important}.st-chat-quick button {font-size:18px!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .chat-compose input {border-radius:8px!important;font-size:14px!important;line-height:20px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-compose button {border-radius:12px!important}
+
+
+
+
+
+
+
+
 
 @media(min-width:1101px) and (min-height:680px) {
  body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=artist] #boardSection::before {border-radius:12px!important}
@@ -354,13 +354,13 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
 .st-guest-topic-chips {scrollbar-width:none!important}.st-guest-topic-chips>span {font-size:var(--ui-type-p3, 14px)!important;line-height:18px!important;border-radius:8px!important;background:var(--st-low)!important}.st-guest-rule-metrics>div {border-radius:8px!important;background:var(--st-low)!important}.st-guest-rule-metrics small {font-size:var(--ui-type-p3, 14px)!important;line-height:14px!important;color:var(--st-muted)!important}.st-guest-rule-metrics strong {font-size:18px!important;line-height:24px!important;color:var(--st-primary)!important;font-variant-numeric:tabular-nums!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-guest-rules-note {font-size:var(--ui-type-p3, 14px)!important;line-height:16px!important;color:var(--st-muted)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-guest-settings-summary>.st-button {font-size:var(--ui-type-p3, 14px)!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-waiting-guest-aside .shared-chat {background:var(--st-surface)!important;border:0!important;border-radius:12px!important;box-shadow:var(--st-hard-shadow)!important}
+
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .ui-room-roster-list,body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) #players {scrollbar-gutter:auto!important;scrollbar-width:none!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] :is(.draw-roster,#boardSection,#drawGuessPanel,.ui-drawing-play-chat>.shared-chat) {border:2px solid var(--st-ink)!important;border-radius:12px!important;box-shadow:0 4px 0 var(--st-ink)!important;background:var(--st-surface)!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] #players .room-player {border:2px solid var(--st-ink)!important;box-shadow:0 2px 0 var(--st-ink)!important;background:var(--st-low)!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] #players .room-player[data-self=true] {background:var(--st-blue)!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] #players .room-player[data-artist=true] {background:color-mix(in srgb,var(--st-yellow) 16%,var(--st-surface))!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] .chat-messages li {background:var(--st-low)!important;border:1px solid var(--st-ink)!important;border-radius:8px!important;box-shadow:0 1px 0 var(--st-ink)!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] .st-phase-bar {border:2px solid var(--st-ink)!important;border-radius:12px!important;box-shadow:0 3px 0 var(--st-ink)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-draw-phase=drawing][data-draw-role=guesser] .st-round-counter {background:var(--st-blue)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-draw-phase=drawing][data-draw-role=guesser] .st-phase-context {border:2px dashed var(--st-ink)!important;border-radius:8px!important}
@@ -369,7 +369,7 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
 .st-room-code-chip {background:var(--st-low)!important;border-radius:999px!important;white-space:nowrap!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .st-room-code-chip>#roomTag {background:transparent!important;box-shadow:none!important;line-height:18px!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .st-room-code-copy {background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-room-footer>.chat-status {font-size:var(--ui-type-p3, 14px)!important;line-height:16px!important}
+
 @media(max-width:760px){
  body[data-ui-template=tactile] .stage-finished .tpl-result-actions>[data-do=template-replay]{white-space:nowrap!important}
  body[data-ui-template=tactile] .stage-finished .tpl-result-actions>:is(.tpl-return,[data-do=template-export]){white-space:nowrap!important}
@@ -380,8 +380,8 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
  body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .room-waiting-info>p:not(.room-waiting-hint) {font-size:var(--ui-type-p3, 14px)!important;line-height:20px!important}
 }
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template]:not(:is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting])) .draw-layout>.ui-drawing-play-chat {border:0!important;box-shadow:none!important;background:transparent!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template]:not(:is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting])) .ui-drawing-play-chat>.shared-chat {scrollbar-gutter:auto!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=finished] :is(.draw-roster,#boardSection,.ui-drawing-play-chat>.shared-chat) {border:2px solid var(--st-ink)!important;background:var(--st-surface)!important;border-radius:12px!important;box-shadow:0 4px 0 var(--st-ink)!important}
+
+
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .tpl-palette :is(.size-pick,#sizeValue) {color:var(--st-ink)!important}
 }
 
@@ -397,3 +397,47 @@ body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=dra
 }
 
 .st-profile-characters{scrollbar-gutter:stable;}
+/* Shared room chrome: Draw and Quacks use identical identity and chat presentation. */
+body[data-ui-template=tactile][data-visual-theme=playful] .ui-room-header{background:var(--st-surface)!important;color:var(--st-ink)!important;border:0!important;box-shadow:0 1px 8px #0000000a!important}
+body[data-ui-template=tactile][data-visual-theme=playful] .ui-room-header .site-title{font-family:var(--play-font)!important;font-size:20px!important;font-weight:700!important;letter-spacing:0!important;color:var(--st-ink)!important;text-decoration:none!important}
+body[data-ui-template=tactile] .ui-room-header .st-brand-subtitle{font-size:14px!important;line-height:1.2!important;color:var(--st-muted)!important}
+body[data-ui-template=tactile] .ui-room-header #roomTag{background:var(--st-low)!important;color:var(--st-ink)!important;border:0!important;border-radius:999px!important;font:700 14px var(--play-font)!important;white-space:nowrap!important;letter-spacing:1px!important}
+body[data-ui-template=tactile] .ui-room-header .q-mobile-tools>summary{border:0;border-radius:12px;background:var(--st-low);list-style:none;cursor:pointer;color:var(--st-ink)}
+body[data-ui-template=tactile] .ui-room-header #qMobileMenuContent{background:var(--st-surface);color:var(--st-ink);border:1px solid var(--st-high);border-radius:12px;box-shadow:var(--st-hard-shadow)}
+body[data-ui-template=tactile] .ui-room-header .q-round-pill{background:var(--st-blue);color:var(--st-on-blue);border-radius:999px;font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums}
+body[data-ui-template=tactile] .ui-room-chat{border:2px solid var(--st-ink)!important;border-radius:16px!important;box-shadow:var(--st-hard-shadow)!important;background:var(--st-surface)!important;color:var(--st-ink)!important;font:500 14px/1.5 var(--play-font)!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-heading{font:700 16px/1.35 var(--play-font)!important;color:var(--st-ink)!important;border:0!important}
+body[data-ui-template=tactile] .ui-room-chat :is(button,summary,input){font-family:var(--play-font)!important;font-size:14px!important;color:var(--st-ink)!important;box-shadow:none!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-room-tools :is(button,summary):not(#shared-emoji-picker *){background:var(--st-low)!important;border:1px solid var(--st-high)!important;border-radius:10px!important}
+body[data-ui-template=tactile] .ui-room-chat .ui-room-chat-notice{background:var(--st-low)!important;color:var(--st-muted)!important;border:0!important;border-radius:8px!important;font-size:14px!important;line-height:20px!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-messages{list-style:none!important;background:transparent!important;border:0!important;font:500 14px/1.5 var(--play-font)!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-messages li{background:var(--st-low)!important;border:0!important;border-radius:12px!important;box-shadow:none!important;font-size:14px!important;line-height:22px!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-messages :is(b,time){font-size:14px!important;line-height:20px!important;color:var(--st-muted)!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-messages p{color:var(--st-ink)!important;white-space:pre-wrap!important}
+body[data-ui-template=tactile] .ui-room-chat .ui-room-chat-quick-button{background:var(--st-low)!important;border:1px solid var(--st-high)!important;border-radius:10px!important;font-size:16px!important;white-space:nowrap!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-compose input{background:var(--st-low)!important;border:1px solid var(--st-high)!important;border-radius:10px!important;font:500 16px var(--play-font)!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-compose button{background:var(--st-yellow)!important;color:var(--st-on-yellow)!important;border:1px solid var(--st-ink)!important;border-radius:10px!important}
+body[data-ui-template=tactile] .ui-room-chat .chat-status{font-size:14px!important;line-height:24px!important;color:var(--st-error)!important}
+body[data-ui-template=tactile] .ui-room-chat :is(button,summary):hover{background:var(--st-inset)!important}
+body[data-ui-template=tactile] .ui-room-chat :is(button,summary,input):focus-visible{outline:3px solid var(--st-primary)!important;outline-offset:2px!important}
+body[data-ui-template=tactile] .ui-room-chat button:disabled{opacity:.45!important}
+
+
+body[data-ui-template=tactile] .ui-room-chat .chat-room-tools .room-leave{color:var(--st-ink)!important;background:var(--st-low)!important;border:1px solid var(--st-high)!important;border-radius:10px!important;box-shadow:none!important}
+
+/* Shared room presentation, separated from composition. */
+@layer stitch-export {
+body[data-ui-template=tactile] .ui-room-header #roomTag{text-align:center!important;}body[data-ui-template=tactile] .ui-room-header .q-round-pill{text-overflow:ellipsis;white-space:nowrap;}body[data-ui-template=tactile] .ui-room-header #qFortune{text-overflow:ellipsis;}body[data-ui-template=tactile] .ui-room-header #qMobileMenuContent :is(.ui-button-label,.ui-sr-only){clip:auto!important;clip-path:none!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools .shared-inline-error{clip-path:inset(50%);}body[data-ui-template=tactile] .ui-room-chat .chat-messages{scrollbar-gutter:stable!important;}body[data-ui-template=tactile] .ui-room-chat .ui-room-chat-quick{scrollbar-width:thin;}body[data-ui-template=tactile] :is(.room-player-name,.ui-room-roster-name){font-size:16px!important;line-height:22px!important;}@media(max-width:700px){
+body[data-ui-template=tactile] .ui-room-header .site-title{font-size:16px!important;}body[data-ui-template=tactile] .ui-room-header #roomTag{font-size:14px!important;letter-spacing:0!important;}
+}
+}@layer stitch-export {
+body[data-ui-template=tactile][data-game-kind=quacks] #qSocial{border:0!important;box-shadow:none!important;background:transparent!important;}body[data-ui-template=tactile][data-game-kind=quacks] .q-player-title{font-size:16px!important;line-height:22px!important;}
+}@layer stitch-export {
+body[data-ui-template=tactile] .ui-room-chat-announcements{clip-path:inset(50%)!important;}
+}@layer stitch-export {
+body[data-ui-template=tactile] .ui-room-play-chat-trigger .ui-sr-only{clip:auto!important;clip-path:none!important;}
+}@layer stitch-export {
+body[data-ui-template=tactile] .ui-room-chat .chat-heading{font:700 16px/24px var(--play-font)!important;white-space:nowrap!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools>:is(button,.room-media-slot,.room-action-dock){transform:none!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools #managePlayers{transform:none!important;}
+}@layer stitch-export {
+body[data-ui-template=tactile] #shared-emoji-picker>h3{font:700 18px/28px var(--play-font)!important;}body[data-ui-template=tactile] #shared-emoji-picker .st-emote-tabs button{font-size:14px!important;}body[data-ui-template=tactile] #shared-emoji-picker>.st-emote-panel{scrollbar-gutter:stable!important;}
+}

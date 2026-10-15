@@ -22,8 +22,7 @@
  }
  function makeHeader(){
   const header=$('[data-site-header]');if(!header||header.dataset.stitchMounted)return;header.dataset.stitchMounted='true';
-  const title=header.querySelector('.site-title'),identity=el('div','st-brand'),logo=el('span','st-brand-mark');logo.innerHTML=ui.symbol('brush');
-  const copy=el('div','st-brand-copy'),subtitle=el('small','st-brand-subtitle',document.body.dataset.gameKind==='draw'?'你畫我猜':'桌遊交誼廳');copy.append(title,subtitle);identity.append(logo,copy);header.prepend(identity);
+  const identity=window.RoomChrome.header({subtitle:document.body.dataset.gameKind==='draw'?'你畫我猜':'桌遊交誼廳',icon:'brush'});
   const originalLinks=header.querySelector('.site-links');
   if(document.body.dataset.gameKind==='draw'){
    const room=el('div','st-header-room');move($('#roomTag'),room);move($('#count'),room);move($('#invite'),room);identity.after(room);
@@ -114,15 +113,11 @@
   component.body.append(el('p','','作畫時間：'+state.options.seconds+' 秒'),el('p','',state.options.ending?.mode==='score'?'分數達標：'+state.options.ending.value+' 分':'總題數：'+(state.options.ending?.value??state.players.length)+' 題'),el('p','','題目類別：'+topics.map(key=>$('.ui-room-controls [value="'+key+'"]')?.closest('label')?.textContent.replace('✓','').trim()||key).join('、')),el('small','','只有房主可修改房間設定。'));
   component.root.addEventListener('close',()=>component.root.remove(),{once:true});component.open($('.st-guest-settings-summary button'));
  }
- function chatControls(){
-  const panel=$('.shared-chat');if(!panel||panel.dataset.stitchQuick)return;panel.dataset.stitchQuick='true';
-  text(panel.querySelector('.chat-heading'),'房間彈幕閒聊');const safe=el('p','st-chat-notice','✓ 閒聊與答案分流');panel.querySelector('.ui-panel-header')?.after(safe);
-  const quick=el('div','st-chat-quick');panel.querySelector('.chat-room-footer')?.prepend(quick);
- }
+ function chatControls(){chatPhase();}
  function chatPhase(){
-  const quick=$('.st-chat-quick'),panel=$('.shared-chat');if(!quick||!state)return;const finished=state.phase==='finished',mode=finished?'finished':'playing';
-  text(panel.querySelector('.chat-heading'),finished?'結算慶祝聊天室':'房間彈幕閒聊');
-  if(quick.dataset.mode!==mode){quick.dataset.mode=mode;quick.replaceChildren(...(finished?['GG! 🔥','再來一局! 🔄','笑死 🤣','畫猜高手 🎨']:['👏','🤣','🔥','🏍️','❓','💯']).map(value=>button(value,null,()=>window.SharedChat?.compose(value))));}
+  if(!state)return;
+  const finished=state.phase==='finished';
+  window.SharedChat?.setPresentation({notice:finished?'本局已結束，聊聊剛才的精彩畫作。':'閒聊與答案分流；猜題請使用作答區。',quickReplies:(finished?['GG! 🔥','再來一局! 🔄','笑死 🤣']:['👏','🤣','🔥']).map(value=>({label:value,value,kind:'text'}))});
  }
  function finishedControls(){
   const roster=$('.draw-roster');if(!state||!roster)return;

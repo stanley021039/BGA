@@ -68,7 +68,7 @@
  updateTeaching(roomPath&&!window.RaceLesson?'connecting':'waiting');
  function update(s){
   if(window.RaceLesson)return;lastSnapshot=s;updateTeaching(s.phase);
-  document.body.dataset.roomPhase=s.phase;const type=s.type||'poker';document.body.dataset.roomType=type;if(document.body.dataset.roomLayout==='custom'){if(type!=='quacks')return;if(s.phase!=='waiting'){if(layout)layoutUpdate(s);if(hero)hero.hidden=true;if(roster)roster.hidden=true;return;}}updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');layoutUpdate(s);return;}const game=games[type];if(!game)return;
+  document.body.dataset.roomPhase=s.phase;const type=s.type||'poker';document.body.dataset.roomType=type;if(document.body.dataset.roomLayout==='custom'){if(type!=='quacks')return;if(s.phase!=='waiting'){layoutUpdate(s);if(hero)hero.hidden=true;if(roster)roster.hidden=true;return;}}updateRoster(s,type);if(type==='thunder'){hero=document.querySelector('#waiting');layoutUpdate(s);return;}const game=games[type];if(!game)return;
   document.body.dataset.roomPhase=s.phase;
   if(!hero){
    const host=document.querySelector('.play-layout>main,.gift-layout>main,.draw-layout>main,#game .play-area,#game .task-layout,#game .adventure-layout')||(['telephone','quacks'].includes(type)?document.querySelector('#game'):null);

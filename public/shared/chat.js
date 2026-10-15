@@ -33,16 +33,34 @@
   }
  }
  if(typeof module==='object'&&module.exports){module.exports={ChatClient};return;}
- let mountAttempts=0,queuedRoom=null,queuedLogout=false,queuedMount=null,queuedTools=[],queuedHeightPeer=null;
- root.SharedChat={mountIn:(host,options)=>{queuedMount={host,options};},mountTools:tools=>{queuedTools=tools;},matchRosterHeight:peer=>{queuedHeightPeer=peer;},updateRoom:s=>{queuedRoom=s;},clearRoom:()=>{queuedRoom=null;},logout:()=>{queuedRoom=null;queuedLogout=true;}};
+ let mountAttempts=0,queuedRoom=null,queuedLogout=false,queuedMount=null,queuedTools=[],queuedHeightPeer=null,queuedPresentation=null;
+ root.SharedChat={setPresentation:value=>{queuedPresentation=value;},mountIn:(host,options)=>{queuedMount={host,options};},mountTools:tools=>{queuedTools=tools;},matchRosterHeight:peer=>{queuedHeightPeer=peer;},updateRoom:s=>{queuedRoom=s;},clearRoom:()=>{queuedRoom=null;},logout:()=>{queuedRoom=null;queuedLogout=true;}};
  function mount(){
   if(location.pathname==='/'||new URLSearchParams(location.search).has('learn'))return;
   const host=queuedMount?.host||document.querySelector('.room-sidebar,.race-utility-panel,.race-controls,.action-panel,#controls');if(!host){if(mountAttempts++<50)setTimeout(mount,100);return;}
   const panel=document.createElement('section');panel.className='shared-chat';panel.setAttribute('aria-label','聊天室與房間彈幕');
   panel.innerHTML='<h2 class="chat-heading" hidden>聊天室</h2><button type="button" class="chat-toggle" aria-expanded="false" aria-controls="chat-content">聊天室 <span class="chat-badge"></span></button><div id="chat-content" hidden><ol class="chat-messages" aria-label="聊天訊息"></ol><form autocomplete="off"><label for="chat-input" class="ui-sr-only">房間彈幕</label><div class="chat-compose"><input id="chat-input" maxlength="320" required autocomplete="off"><button type="submit" aria-label="發送房間彈幕">發送</button></div></form><div class="chat-room-tools ui-control-row" aria-label="媒體與表情"></div><p class="chat-status" role="status" aria-live="polite"></p></div>';
   host.append(panel);const q=s=>panel.querySelector(s),list=q('.chat-messages'),input=q('input'),submit=q('[type=submit]');const content=q('#chat-content'),footer=document.createElement('footer');footer.className='chat-room-footer';footer.append(q('.chat-status'),q('.chat-room-tools'),q('form'));root.GameUI.framePanel(panel,{header:q('.chat-heading'),body:content,content:list,footer});root.GameUI?.decorateButton(submit,'send',{iconOnly:true,label:'發送房間彈幕'});
-  if(document.body.dataset.uiTemplate&&document.body.dataset.gameKind==='draw'){
-   const heading=q('.chat-heading'),header=document.createElement('div');header.className='ui-panel-header';heading.before(header);heading.classList.remove('ui-panel-header');header.append(heading,q('.chat-room-tools'));
+  const common=!!document.body.dataset.uiTemplate&&['draw','quacks'].includes(document.body.dataset.gameKind);
+  if(common){
+   panel.classList.add('ui-room-chat');
+   const heading=q('.chat-heading'),header=document.createElement('div'),notice=document.createElement('p'),quick=document.createElement('div');
+   header.className='ui-panel-header';heading.before(header);heading.classList.remove('ui-panel-header');heading.textContent='房間彈幕閒聊';header.append(heading,q('.chat-room-tools'));
+   notice.className='ui-room-chat-notice';notice.setAttribute('aria-label','本桌遊戲提示');header.after(notice);
+   quick.className='ui-room-chat-quick';quick.setAttribute('aria-label','常用句與快速表情');footer.prepend(quick);
+  }
+  let quickSignature='';
+  function setPresentation(value={}){
+   if(!common)return;
+   const notice=q('.ui-room-chat-notice'),quick=q('.ui-room-chat-quick');
+   notice.textContent=String(value.notice||'朋友集結中，先聊聊這局的玩法。');
+   const items=(value.quickReplies||[]).slice(0,6),signature=JSON.stringify(items);
+   if(signature===quickSignature)return;quickSignature=signature;quick.replaceChildren();
+   for(const item of items){
+    const b=document.createElement('button');b.type='button';b.className='ui-room-chat-quick-button';b.textContent=item.label||item.value;
+    b.setAttribute('aria-label',(item.kind==='emoji'?'送出表情 ':'填入聊天室 ')+(item.value||item.label));
+    b.onclick=()=>item.kind==='emoji'?root.GameShell?.sendEmoji(item.value):root.SharedChat?.compose(item.value||item.label);quick.append(b);
+   }
   }
 
   let rendered='',lastContext='',timer=null,backoff=3000,paused=false,pollEpoch=0;
@@ -95,8 +113,8 @@
    releaseHeight();if(!peer)return;heightPeer=peer;heightHost=panel.parentElement;heightPeer.classList.add('ui-chat-height-peer');measurePeerHeight();
   }
   root.addEventListener('resize',measurePeerHeight);root.addEventListener('pagehide',releaseHeight);
-  root.SharedChat={compose(text){if(input.disabled)return false;input.value=[...(input.value+text)].slice(0,160).join('');input.focus();return true;},send:text=>client.send(text),mountIn,mountTools,matchRosterHeight,updateRoom(snapshot){const old=client.roomKey;client.room(snapshot);if(old!==client.roomKey)tick();},clearRoom(){clearTimeout(timer);matchRosterHeight(null);client.room(null);},logout(){clearTimeout(timer);matchRosterHeight(null);client.logout();}};
-  if(queuedRoom)client.room(queuedRoom);if(queuedMount)mountIn(queuedMount.host,queuedMount.options);mountTools(queuedTools);matchRosterHeight(queuedHeightPeer);if(queuedLogout)client.logout();render();tick();root.dispatchEvent(new CustomEvent('room-chat-ready'));
+  root.SharedChat={setPresentation,compose(text){if(input.disabled)return false;input.value=[...(input.value+text)].slice(0,160).join('');input.focus();return true;},send:text=>client.send(text),mountIn,mountTools,matchRosterHeight,updateRoom(snapshot){const old=client.roomKey;client.room(snapshot);if(old!==client.roomKey)tick();},clearRoom(){clearTimeout(timer);matchRosterHeight(null);client.room(null);},logout(){clearTimeout(timer);matchRosterHeight(null);client.logout();}};
+  if(queuedPresentation)setPresentation(queuedPresentation);if(queuedRoom)client.room(queuedRoom);if(queuedMount)mountIn(queuedMount.host,queuedMount.options);mountTools(queuedTools);matchRosterHeight(queuedHeightPeer);if(queuedLogout)client.logout();render();tick();root.dispatchEvent(new CustomEvent('room-chat-ready'));
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })(typeof window==='object'?window:globalThis);
