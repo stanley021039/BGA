@@ -20,6 +20,7 @@
   opener.hidden=isMarket;market.hidden=!isMarket;
   opener.textContent='開一桌'+title(chosen)+' ↗';
   const heading=dialog.querySelector('h2');heading.textContent='開一桌'+title(chosen);
+  root.dispatchEvent(new CustomEvent('game-card-selected',{detail:{card:chosen,index}}));
   if(activate&&chosen.dataset.game){controllerCard=chosen;try{chosen.click();}finally{controllerCard=null;}}
   if(focus)chosen.focus({preventScroll:true});
  }

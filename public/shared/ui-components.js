@@ -18,6 +18,14 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 (()=>{
  const paths={
+  chat:'<path d="M4 4h16v12H9l-5 4V4Z M8 8h8M8 12h5"/>',
+  flag:'<path d="M5 22V3m0 1h8l2 3h5v10h-7l-2-3H5"/>',
+  crown:'<path d="m3 6 4 5 5-8 5 8 4-5-2 14H5L3 6Z"/>',
+  more:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+  brush:'<path d="m14 4 6 6M8 15 19 4a2.8 2.8 0 0 1 4 4L12 19M8 15c-4-1-5 2-5 6 4 0 7-1 7-4Z"/>',
+  share:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m9 10 6-3M9 14l6 3"/>',
+  download:'<path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/>',
+  timer:'<circle cx="12" cy="14" r="8"/><path d="M12 6V3M9 2h6M17 6l2-2M12 10v5"/>',
   hand:"<path d=\"M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2\" /><path d=\"M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2\" /><path d=\"M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8\" /><path d=\"M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15\" />",
   'draw-bag':'<path d="M7 10h10l3 9a2 2 0 0 1-2 3H6a2 2 0 0 1-2-3l3-9Zm1-7h8l-2 7h-4L8 3Z M18 3v7m-3-4 3-3 3 3"/>',
   ingredient:'<path d="M3 13h16l-2 7H5l-2-7Zm3-2 8-8 4 4-6 6M5 22h12"/>',
@@ -51,6 +59,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   notice:'<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/>',
   unknown:'<path d="M8 8a4 4 0 0 1 8 0c0 3-4 3-4 6"/><circle cx="12" cy="19" r=".6"/>',
   users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5"/>',
+  invite:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M19 8v8M15 12h8"/>',
+  bot:'<path d="M12 3v3M2 12v5M22 12v5"/><rect x="5" y="6" width="14" height="15" rx="3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M9 17h6"/>',
   gift:'<rect x="3" y="7" width="18" height="4" rx="1"/><path d="M5 11v10h14V11M12 7v14M12 7C8 7 6 6 6 4a2 2 0 0 1 4-1l2 4Zm0 0c4 0 6-1 6-3a2 2 0 0 0-4-1l-2 4Z"/>',
   cards:'<rect x="7" y="3" width="13" height="18" rx="2"/><path d="M7 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3m7-13 3 4-3 4-3-4 3-4Z"/>',
   'car-light':'<path d="M7 9 9 5h6l2 4M5 16V10l2-1h10l2 1v6H5Zm2 0v3m10-3v3M8 12h1m6 0h1"/>',
@@ -214,8 +224,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     const frame=board.querySelector(':scope > .canvas-frame'),scene=frame?.querySelector('#canvasStage');
     if(!frame||window.matchMedia('(max-width:760px)').matches||scene&&!scene.hidden){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
     const viewport=board.closest('.ui-drawing-task-board,#source')||board,tools=board.querySelector(':scope > .tools:not([hidden])'),css=getComputedStyle(board),gap=parseFloat(css.columnGap)||0;
-    const width=board.clientWidth-(tools?tools.getBoundingClientRect().width+gap:0),offset=frame.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop,available=viewport.clientHeight-offset;
-    if(available<120){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
+    const measurements=window.GameUI?.Template?.patterns.measureBoard({board,frame,viewport,tools,gap});
+    const width=measurements?.width??board.clientWidth-(tools?tools.getBoundingClientRect().width+gap:0),offset=frame.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop,available=measurements?.available??viewport.clientHeight-offset;
+    if(available<(measurements?64:120)){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
     const value=Math.floor(Math.min(width,2*Math.max(0,available-2)))+'px';
     if(board.style.getPropertyValue('--ui-drawing-canvas-width')!==value)board.style.setProperty('--ui-drawing-canvas-width',value);
    }
@@ -237,7 +248,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  }
  function layoutDrawingPlay(type,phase){
   if(!['draw','minimal','telephone'].includes(type))return null;
-  const active=!['waiting','finished'].includes(phase);
+  const active=phase!=='waiting'&&(phase!=='finished'||type==='draw'&&!!document.body.dataset.uiTemplate);
   if(!active){
    if(drawingPlay){
     const record=drawingPlay;record.fitObserver?.disconnect();for(const board of record.work.querySelectorAll('.ui-drawing-board'))board.style.removeProperty('--ui-drawing-canvas-width');record.root.classList.remove('ui-drawing-play-layout');record.roster.classList.remove('ui-drawing-play-roster');record.work.classList.remove('ui-drawing-play-work');record.chat.classList.remove('ui-drawing-play-chat');record.results?.classList.remove('ui-drawing-play-results');record.title?.classList.remove('ui-drawing-play-title');if(record.createdTitle)record.title.hidden=true;

@@ -91,7 +91,7 @@
    releaseHeight();if(!peer)return;heightPeer=peer;heightHost=panel.parentElement;heightPeer.classList.add('ui-chat-height-peer');measurePeerHeight();
   }
   root.addEventListener('resize',measurePeerHeight);root.addEventListener('pagehide',releaseHeight);
-  root.SharedChat={mountIn,mountTools,matchRosterHeight,updateRoom(snapshot){const old=client.roomKey;client.room(snapshot);if(old!==client.roomKey)tick();},clearRoom(){clearTimeout(timer);matchRosterHeight(null);client.room(null);},logout(){clearTimeout(timer);matchRosterHeight(null);client.logout();}};
+  root.SharedChat={compose(text){if(input.disabled)return false;input.value=[...(input.value+text)].slice(0,160).join('');input.focus();return true;},send:text=>client.send(text),mountIn,mountTools,matchRosterHeight,updateRoom(snapshot){const old=client.roomKey;client.room(snapshot);if(old!==client.roomKey)tick();},clearRoom(){clearTimeout(timer);matchRosterHeight(null);client.room(null);},logout(){clearTimeout(timer);matchRosterHeight(null);client.logout();}};
   if(queuedRoom)client.room(queuedRoom);if(queuedMount)mountIn(queuedMount.host,queuedMount.options);mountTools(queuedTools);matchRosterHeight(queuedHeightPeer);if(queuedLogout)client.logout();render();tick();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();

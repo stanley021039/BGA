@@ -1,22 +1,27 @@
 (()=>{
  'use strict';
  let state=null,panel=null,scheduled=false,leaving=false,leaveController=null,settingsSource=null,readonlySource=null,readonlyKey='';
- const native={start:null,bot:null},proxies={};
- const actions={start:{icon:'play',label:'開始遊戲'},bot:{icon:'users',label:'加入 AI 測試夥伴'},manage:{icon:'settings',label:'管理玩家'},leave:{icon:'leave',label:'離房'}};
+ const native={start:null,bot:null},proxies={};let playPanels=null;
+  const customHomes=new Map();
+ function rememberCustom(n){if(!n||customHomes.has(n))return;const home=document.createComment('custom-room-control-home');n.before(home);customHomes.set(n,{home,tabIndex:n.getAttribute('tabindex'),ariaHidden:n.getAttribute('aria-hidden'),native:n.getAttribute('data-room-native-action')});}
+ function restoreCustom(){for(const [n,e]of customHomes){if(e.home.parentNode)e.home.after(n);e.home.remove();for(const [attr,value]of [['tabindex',e.tabIndex],['aria-hidden',e.ariaHidden],['data-room-native-action',e.native]]){if(value===null)n.removeAttribute(attr);else n.setAttribute(attr,value);}}customHomes.clear();if(panel)panel.hidden=true;}
+ const actions={start:{icon:'play',label:'開始遊戲'},bot:{icon:'bot',label:'加入 AI 測試夥伴'},invite:{icon:'invite',label:'邀請線上朋友'},manage:{icon:'settings',label:'管理玩家'},leave:{icon:'leave',label:'離房'}};
  const minimumPlayers={poker:2,thunder:2,draw:2,majority:3,gift:3,telephone:3,minimal:3,bluff:3,trpg:1,musicquiz:1,quacks:2};
  function node(tag,cls,text){const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;}
  function decorate(button,kind){const action=actions[kind];button.classList.add('ui-room-action');button.dataset.roomAction=kind;window.GameUI?.decorateButton(button,action.icon,{iconOnly:kind!=='start',label:action.label});if(!window.GameUI){button.textContent=action.label;button.setAttribute('aria-label',action.label);}return button;}
- function rosterAction(button){
-  const card=node('article','ui-room-roster-card ui-room-roster-add');card.setAttribute('role','listitem');button.classList.add('ui-room-roster-action-button');button.type='button';button.dataset.roomCommonAction='bot';button.setAttribute('aria-label',actions.bot.label);
-  const avatar=node('span','ui-room-roster-avatar'),icon=node('span','ui-symbol');icon.setAttribute('aria-hidden','true');const symbol=window.GameUI?.symbol?.('add');if(symbol)icon.innerHTML=symbol;else icon.textContent='+';avatar.append(icon);
-  const info=node('span','ui-room-roster-info');info.append(node('b','ui-room-roster-action-label',actions.bot.label),node('small','ui-room-roster-status','協助測試遊戲流程'));button.replaceChildren(avatar,info);card.append(button);return card;
+ function rosterAction(button,kind='bot'){
+  const action=actions[kind];const card=node('article','ui-room-roster-card ui-room-roster-add');card.setAttribute('role','listitem');button.classList.add('ui-room-roster-action-button');button.type='button';button.dataset.roomCommonAction=kind;button.setAttribute('aria-label',action.label);
+  const avatar=node('span','ui-room-roster-avatar'),icon=node('span','ui-symbol');icon.setAttribute('aria-hidden','true');const symbol=window.GameUI?.symbol?.(action.icon);if(symbol)icon.innerHTML=symbol;else icon.textContent='+';avatar.append(icon);
+  const info=node('span','ui-room-roster-info');info.append(node('b','ui-room-roster-action-label',action.label),node('small','ui-room-roster-status',kind==='invite'?'選擇目前在線的玩家':'協助測試遊戲流程'));button.replaceChildren(avatar,info);card.append(button);return card;
  }
+ function primaryAction(button,{step='start'}={}){if(!button)return button;button.dataset.roomNativeAction='start';button.tabIndex=-1;button.setAttribute('aria-hidden','true');if(step==='prepare')button.dataset.roomPrimaryAction='prepare';else if(step==='start')button.dataset.do='start';return button;}
  function owner(){return state&&(state.host===true||state.host===state.me||state.hostId===state.me);}
  function hidden(n){for(let a=n;a;a=a.parentElement)if(a.hidden||getComputedStyle(a).display==='none'||getComputedStyle(a).visibility==='hidden')return true;return false;}
  function findAction(kind){
   if(kind==='start'&&state.type==='thunder'&&state.phase==='finished')return document.querySelector('#winner [data-action="restart"]');
   const selectors=kind==='start'?'#start,[data-do="start"]':'#bot,[data-do="bot"]';
   const original=n=>!n.closest('[data-room-common]')||n.dataset.roomNativeAction===kind;
+  if(kind==='start'&&state.phase==='waiting'){const staged=[...document.querySelectorAll('[data-room-primary-action]')].find(n=>original(n)&&!hidden(n));if(staged)return staged;}
   let found=[...document.querySelectorAll(selectors)].find(original);
   if(!found){const names=kind==='start'?/^(開始|再來一場|發牌)/:/^(加入腳本測試夥伴|加入測試 AI|加入測試AI|加入.*夥伴|＋.*電腦)/;
    found=[...document.querySelectorAll('#controls button,.action-panel button')].find(n=>original(n)&&names.test(n.getAttribute('aria-label')||n.textContent.trim()));}
@@ -63,14 +68,46 @@
     if(child===panel)continue;
     if(child.contains(panel)){if(!child.classList.contains('ui-room-panel-host'))child.classList.add('ui-room-panel-host');scan(child);continue;}
     // Preserve personal controls (for example TRPG role choice) within content.
+    if(child.matches('.race-utility-panel'))continue;
     if(!child.hidden&&!hidden(child)&&!child.matches('.shared-game-ui,.room-action-dock')&&(child.matches(controls)||child.querySelector(controls))){slot.append(child);continue;}
     if(!child.classList.contains('ui-room-native-placeholder'))child.classList.add('ui-room-native-placeholder');
    }
   }
   scan(outer);
  }
+ function restorePlayPanels(){
+  if(!playPanels)return;
+  for(const [n,home]of playPanels.homes){n.classList.remove('ui-game-operation-source');if(home.parentNode)home.after(n);home.remove();}
+  for(const [n,entry]of playPanels.drawingActions){n.classList.remove('ui-operation-native-action');if(entry.tabIndex===null)n.removeAttribute('tabindex');else n.setAttribute('tabindex',entry.tabIndex);if(entry.ariaHidden===null)n.removeAttribute('aria-hidden');else n.setAttribute('aria-hidden',entry.ariaHidden);}
+  playPanels.host.classList.remove('ui-room-play-tools');playPanels.frame.remove();playPanels=null;
+ }
+ function syncPlayPanels(){
+  if(!playPanels)return;const r=playPanels;
+  const move=n=>{if(!n||n===r.frame||n===r.content||n.contains(r.content)||n.closest('.shared-chat')||n.matches('.shared-chat,.shared-game-ui,.room-action-dock'))return;if(!r.homes.has(n)){const home=document.createComment('game-operation-home');n.before(home);r.homes.set(n,home);}n.classList.add('ui-game-operation-source');if(n.parentElement!==r.content)r.content.append(n);};
+  for(const n of [...r.host.children])move(n);
+  if(r.type==='poker')move(document.querySelector('.play-area > .action-panel'));
+  if(r.type==='thunder')move(document.querySelector('.race-controls'));
+  if(['minimal','telephone'].includes(r.type)){
+   const answer=document.querySelector('#controls > .ui-drawing-task-answer'),buttons=[...(answer?.querySelectorAll('button')||[])].filter(n=>!n.hasAttribute('data-room-native-action'));
+   const hint=answer?.querySelector('p')?.textContent||'在中央完成作畫或填答，再送出本輪內容。';if(r.hint.textContent!==hint)r.hint.textContent=hint;
+   for(const [n,entry]of r.drawingActions)if(!buttons.includes(n)){entry.proxy.remove();r.drawingActions.delete(n);}
+   for(const n of buttons){let entry=r.drawingActions.get(n);if(!entry){const proxy=node('button','ui-game-operation-action');proxy.type='button';proxy.onclick=()=>n.click();entry={proxy,tabIndex:n.getAttribute('tabindex'),ariaHidden:n.getAttribute('aria-hidden'),label:null};r.drawingActions.set(n,entry);n.classList.add('ui-operation-native-action');n.tabIndex=-1;n.setAttribute('aria-hidden','true');r.drawingRow.append(proxy);}
+    const label=n.getAttribute('aria-label')||n.textContent.trim();if(label!==entry.label){entry.label=label;window.GameUI.decorateButton(entry.proxy,'check',{label});}if(entry.proxy.disabled!==n.disabled)entry.proxy.disabled=n.disabled;
+   }
+  }
+ }
+ function mountPlayPanels(host,type){
+  if(!host){restorePlayPanels();return null;}if(playPanels&&playPanels.host!==host)restorePlayPanels();
+  if(!playPanels){
+   const frame=node('section','ui-game-operations'),title=node('h2','','遊戲操作'),header=node('div','ui-game-operations-header'),content=node('div','ui-game-operations-content'),footer=node('div','');title.id='gameOperationsTitle';frame.setAttribute('aria-labelledby',title.id);header.append(title);content.tabIndex=0;content.setAttribute('role','region');content.setAttribute('aria-label','遊戲操作選項');footer.hidden=true;window.GameUI.framePanel(frame,{header,content,footer});host.prepend(frame);host.classList.add('ui-room-play-tools');host.classList.remove('ui-game-chat-host');
+   playPanels={host,type,frame,content,homes:new Map(),drawingActions:new Map()};
+   if(['minimal','telephone'].includes(type)){playPanels.hint=node('p','');playPanels.drawingRow=node('div','ui-control-stack');content.append(playPanels.hint,playPanels.drawingRow);}
+  }
+  syncPlayPanels();return host;
+ }
  function mount(){
-  const type=state.type||'poker',host=['telephone','musicquiz','minimal','bluff','trpg','quacks'].includes(type)?document.getElementById('controls'):document.querySelector(type==='thunder'?'.race-controls':'.room-sidebar,.table-sidebar');
+  const type=state.type||'poker',sourceHost=type==='quacks'&&document.body.dataset.roomLayout==='custom'?document.getElementById('qWaitingControls'):['telephone','musicquiz','minimal','bluff','trpg','quacks'].includes(type)?document.getElementById('controls'):document.querySelector(type==='thunder'?'.race-controls':'.room-sidebar,.table-sidebar');
+  const host=sourceHost===playPanels?.host?playPanels.content:sourceHost;
   if(!host)return;
   if(!panel){panel=node('section','ui-room-controls');panel.dataset.roomCommon='';panel.setAttribute('aria-label','房間設定與操作');
    const settings=node('section','ui-room-settings-card'),heading=node('h2','ui-room-settings-heading','房間設定'),slot=node('div','ui-room-settings-slot');settings.append(slot);proxies.heading=heading;
@@ -78,27 +115,33 @@
    for(const kind of ['start','bot','leave']){const button=decorate(node('button',''),kind);button.type='button';button.onclick=()=>kind==='leave'?leave(button):native[kind]?.click();proxies[kind]=button;row.append(button);}
    const status=node('p','ui-room-control-status'),footer=node('footer','ui-room-settings-footer');status.setAttribute('role','status');status.setAttribute('aria-live','polite');footer.append(status,row);window.GameUI.framePanel(panel,{header:heading,content:settings,footer});host.append(panel);
   }
-  if(panel.parentElement!==host)host.append(panel);
+  const settingsHost=window.GameUI?.Template?.patterns.settingsHost?.(host,state)||host;
+  if(panel.parentElement!==settingsHost)settingsHost.append(panel);
   panel.dataset.aiPlacement=window.RoomWaiting?.setRosterBusy||state.type==='telephone'&&window.RoomWaiting?.setRosterAction?'roster':'inline';
   const inPlay=!['waiting','finished'].includes(state.phase);if(panel.hidden!==inPlay)panel.hidden=inPlay;
  }
  function normalize(){
-  scheduled=false;if(!state||window.RaceLesson)return;mount();if(!panel)return;
+  scheduled=false;if(!state||window.RaceLesson)return;const customQuacks=state.type==='quacks'&&document.body.dataset.roomLayout==='custom';if(document.body.dataset.roomLayout==='custom'&&(!customQuacks||state.phase!=='waiting')){if(customHomes.size)restoreCustom();window.RoomInvites?.updateRoom(state);return;}syncPlayPanels();mount();if(!panel)return;
+  window.RoomInvites?.updateRoom(state);
+  if(window.RoomInvites?.ready&&playPanels){if(!proxies.invite){proxies.invite=decorate(node('button',''),'invite');proxies.invite.onclick=()=>window.RoomInvites.open(proxies.invite);}const header=playPanels.frame.querySelector('.ui-game-operations-header');if(proxies.invite.parentElement!==header)header.append(proxies.invite);}
+  const legacyInvite=document.getElementById('invite');if(legacyInvite&&legacyInvite.dataset.roomLinkLabel!=='true'){legacyInvite.dataset.roomLinkLabel='true';window.GameUI?.decorateButton(legacyInvite,'external',{label:'複製房間連結'});}
   for(const kind of ['start','bot']){
    if(kind==='bot'&&window.RoomWaiting?.setRosterBusy){native.bot=null;if(!proxies.bot.hidden)proxies.bot.hidden=true;if(!proxies.bot.disabled)proxies.bot.disabled=true;continue;}
    const source=findAction(kind);native[kind]=source;if(source&&!source.hasAttribute('data-room-native-action')){source.setAttribute('data-room-native-action',kind);source.tabIndex=-1;source.setAttribute('aria-hidden','true');}
    const legacyRace=state.type==='thunder',rosterBot=state.type==='telephone'&&!!window.RoomWaiting?.setRosterAction,visible=kind==='bot'?state.phase==='waiting'&&!rosterBot&&owner()&&(legacyRace||state.botSupport?.supported!==false)&&(!!source||state.botSupport?.canAdd===false):['waiting','finished'].includes(state.phase),button=proxies[kind];if(button.hidden===visible)button.hidden=!visible;
-   const tooFew=kind==='start'&&(state.players||[]).filter(p=>!p.kicked).length<(minimumPlayers[state.type||'poker']||1);
+   const preparing=kind==='start'&&source?.dataset.roomPrimaryAction==='prepare';
+   if(kind==='start'){const label=preparing?(source.getAttribute('aria-label')||source.textContent.trim()):actions.start.label;if(button.dataset.roomPrimaryLabel!==label){window.GameUI?.decorateButton(button,preparing?'next':actions.start.icon,{label});button.dataset.roomPrimaryLabel=label;}}
+   const tooFew=kind==='start'&&!preparing&&(state.players||[]).filter(p=>!p.kicked).length<(minimumPlayers[state.type||'poker']||1);
    const disabled=!visible||!source||source.disabled||hidden(source)||button.getAttribute('aria-busy')==='true'||leaving||tooFew||kind==='start'&&!owner()||kind==='bot'&&!legacyRace&&state.botSupport?.canAdd===false;if(button.disabled!==disabled)button.disabled=disabled;
   }
   const manage=document.getElementById('managePlayers'),row=panel.querySelector('.ui-room-session-actions');
   const inPlay=!['waiting','finished'].includes(state.phase),chat=document.querySelector('.shared-chat'),tools=chat?.querySelector('.chat-room-tools'),actionHost=inPlay&&tools?tools:row;
   if(proxies.leave.parentElement!==actionHost)actionHost.append(proxies.leave);
-  if(manage){if(manage.dataset.roomAction!=='manage')decorate(manage,'manage');if(manage.parentElement!==actionHost||manage.nextElementSibling!==proxies.leave)actionHost.insertBefore(manage,proxies.leave);}
-  if(chat){const value=String(inPlay);if(chat.dataset.gameChat!==value)chat.dataset.gameChat=value;const host=chat.parentElement;if(host&&!host.classList.contains('ui-room-chat-slot'))host.classList.toggle('ui-game-chat-host',inPlay);}
+  if(manage){if(customQuacks)rememberCustom(manage);if(manage.dataset.roomAction!=='manage')decorate(manage,'manage');if(manage.parentElement!==actionHost||manage.nextElementSibling!==proxies.leave)actionHost.insertBefore(manage,proxies.leave);}
+  if(chat){const value=String(state.phase!=='waiting');if(chat.dataset.gameChat!==value)chat.dataset.gameChat=value;chat.parentElement?.classList.remove('ui-game-chat-host');}
 
   const hasManage=String(!!manage);if(panel.dataset.hasManage!==hasManage)panel.dataset.hasManage=hasManage;
-  const ownLeave=document.getElementById('leave'),legacyLinks=document.querySelectorAll('.room-leave,#back');
+  const ownLeave=document.getElementById('leave'),legacyLinks=document.querySelectorAll('.room-leave,#back');if(customQuacks)rememberCustom(ownLeave);
   if(ownLeave&&!ownLeave.hasAttribute('data-room-native-action')){ownLeave.setAttribute('data-room-native-action','leave');ownLeave.tabIndex=-1;ownLeave.setAttribute('aria-hidden','true');}
   for(const n of legacyLinks)if(!n.hasAttribute('data-room-native-action')){n.setAttribute('data-room-native-action','leave');n.tabIndex=-1;n.setAttribute('aria-hidden','true');}
   const leaveDisabled=leaving||!!ownLeave?.disabled;if(proxies.leave.disabled!==leaveDisabled)proxies.leave.disabled=leaveDisabled;if(proxies.leave.hidden)proxies.leave.hidden=false;
@@ -120,7 +163,7 @@
    if(source){const changed=source!==settingsSource;settingsSource=source;source.dataset.roomReadOnly=String(!owner());if(!owner())for(const input of source.querySelectorAll('input,select,textarea,button'))if(!input.disabled)input.disabled=true;if(changed){normalizeFields(source);slot.replaceChildren(source);}}
    else if(!settingsSource||!settingsSource.isConnected){settingsSource=null;const text=owner()?'本遊戲使用固定規則，無需調整。':'由房主調整房間設定。';if(slot.textContent!==text)slot.replaceChildren(node('p','ui-room-settings-note',text));}
   }
-  if(state.phase==='waiting'&&outer)alignNativePanel(outer);
+  if(state.phase==='waiting'&&outer){alignNativePanel(outer);if(customQuacks)window.QuacksStitch?.waitingRoom(state);window.GameUI?.Template?.patterns.refreshWaiting?.(outer.closest('.ui-room-waiting-layout'));}
  }
  function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(normalize);}
  const dialog=node('dialog','ui-dialog room-leave-dialog');dialog.setAttribute('aria-labelledby','unified-leave-title');
@@ -144,5 +187,6 @@
  },true);
  const observer=new MutationObserver(schedule);observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});
  window.addEventListener('pagehide',()=>{leaveController?.abort();observer.disconnect();});window.addEventListener('pageshow',()=>{observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});schedule();});
- window.RoomControls={update(next){if(window.RaceLesson)return;if(state&&state.code===next.code&&next.version<state.version)return;if(state&&(state.code!==next.code||state.me!==next.me)){leaveController?.abort();if(dialog.open)dialog.close();}state=next;schedule();},decorate,rosterAction,stop(){state=null;leaveController?.abort();if(panel)panel.hidden=true;}};
+ window.addEventListener('room-invitations-ready',schedule);
+ window.RoomControls={update(next){if(window.RaceLesson)return;if(state&&state.code===next.code&&next.version<state.version)return;if(state&&(state.code!==next.code||state.me!==next.me)){leaveController?.abort();if(dialog.open)dialog.close();}state=next;schedule();},decorate,rosterAction,primaryAction,mountPlayPanels,inviteContext:()=>state?{code:state.code,type:state.type}:null,stop(){state=null;leaveController?.abort();restorePlayPanels();if(panel)panel.hidden=true;}};
 })();

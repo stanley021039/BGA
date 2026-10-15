@@ -138,3 +138,13 @@ body[data-room-phase=finished][data-room-type=telephone] .telephone-shell #playe
 
 /* Explicit teaching visibility wins over game-specific details/button display rules. */
 [data-room-teaching][hidden]{display:none!important}
+
+/* Room shells share Draw's outer inset and bounded content width. */
+:root{--ui-room-shell-max-width:1800px;--ui-room-shell-inset:24px}
+body[data-visual-theme="playful"][data-game-kind="draw"] .draw-shell{max-width:var(--ui-room-shell-max-width);padding-inline:var(--ui-room-shell-inset)}
+body[data-visual-theme="playful"][data-game-kind="race"]:not(.lesson-mode):not(.game-focus-active) .race-main{box-sizing:border-box;width:100%;max-width:var(--ui-room-shell-max-width);margin-inline:auto;padding-inline:calc(var(--ui-room-shell-inset) + var(--ui-page-gutter,16px))}
+@media(max-width:600px){:root{--ui-room-shell-inset:12px}}
+
+/* SharedChat now owns room tools; its empty legacy wrapper has no waiting-room frame. */
+body[data-room-phase=waiting] .ui-room-waiting-layout .race-utility-panel{display:none!important}
+body[data-room-phase=waiting] .ui-room-waiting-layout>.race-side-column{overflow:visible!important;scrollbar-gutter:auto}

@@ -52,12 +52,12 @@ test('a failed result encoder preserves the snapshot and exposes retry without u
  const {ui}=await setup(t),published=publicResult([fill(1)]);let posts=0;
  servePublic(ui,published,async body=>{posts++;return {ok:true,json:async()=>({resultId:body.resultId,canvasEpoch:CANVAS_EPOCH})};});
  reveal(ui,published);await run(ui,'resultsView.open(state.result.resultId)');
- const factory=ui.context.window.StrokeCanvas.createRenderer;
- ui.context.window.StrokeCanvas.createRenderer=(canvas,options)=>{const renderer=factory(canvas,options);renderer.renderCooperatively=()=>Promise.reject(Error('result image unavailable'));return renderer;};
+ const factory=ui.context.window.StrokeCanvas.createDrawingRenderer;
+ ui.context.window.StrokeCanvas.createDrawingRenderer=(canvas,options)=>{const renderer=factory(canvas,options);renderer.renderCooperatively=()=>Promise.reject(Error('result image unavailable'));return renderer;};
  await run(ui,'resultsView.save(state.result.resultId)');assert.equal(posts,0);
  assert.match(ui.element('#drawResultSaveStatus').textContent,/result image unavailable/);assert.equal(ui.element('#drawResultSave').disabled,false);
  assert.equal(run(ui,'resultsView.store.view().snapshot.result.answer'),'原來的答案');
- ui.context.window.StrokeCanvas.createRenderer=factory;await run(ui,'resultsView.save(state.result.resultId)');
+ ui.context.window.StrokeCanvas.createDrawingRenderer=factory;await run(ui,'resultsView.save(state.result.resultId)');
  assert.equal(posts,1);assert.match(ui.element('#drawResultSaveStatus').textContent,/已加入/);
 });
 test('a delayed result load survives a new game round one and saves only its captured public result',async t=>{

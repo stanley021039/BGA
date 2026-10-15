@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 function fixture({pending=false,blocked=false}={}){
  let time=100000,id=0;const timers=new Map(),clips=[],handlers=new Map(),store=new Map();
  const target=name=>({addEventListener(type,fn){const key=name+type;if(!handlers.has(key))handlers.set(key,new Set());handlers.get(key).add(fn);},removeEventListener(type,fn){handlers.get(name+type)?.delete(fn);}});
- const document={...target('document:'),hidden:false},window={...target('window:'),document};
+ const document={...target('document:'),hidden:false,body:{dataset:{}}},window={...target('window:'),document};
  class Audio{constructor(src){this.src=this.originalSrc=src;this.paused=true;this.currentTime=0;clips.push(this);}play(){if(blocked)return Promise.reject(Error('blocked'));if(pending)return new Promise(resolve=>{this.finishLoad=()=>{this.paused=false;resolve();};});this.paused=false;this.onplaying?.();return Promise.resolve();}pause(){this.paused=true;}removeAttribute(name){delete this[name];}load(){}}
  const context={window,document,Audio,URL,location:{origin:'https://example.test'},localStorage:{getItem:key=>store.get(key)??null,setItem:(key,value)=>store.set(key,value)},Date:{now:()=>time},setTimeout(fn,ms){const key=++id;timers.set(key,{fn,at:time+ms});return key;},clearTimeout:key=>timers.delete(key)};
  for(const file of ['audio-settings.js','game-sounds.js'])vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../public/shared',file),'utf8'),context);

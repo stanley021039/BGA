@@ -33,6 +33,8 @@ class DrawGuessRoom{
   // These bounded, in-memory snapshots must not enter every history row or poll.
   Object.defineProperty(this,'publicResults',{value:new Map(),enumerable:false});
   Object.defineProperty(this,'roundStartScores',{value:new Map(),enumerable:false});
+  Object.defineProperty(this,'roundFastest',{value:null,writable:true,enumerable:false});
+  Object.defineProperty(this,'matchSummary',{value:{startedAt:null,endedAt:null,rounds:0,eligibleGuesses:0,correctGuesses:0,strokeCount:0,fastest:null,bestArtwork:null,correctByPlayer:{}},writable:true,enumerable:false});
   Object.defineProperty(this,'achievementUnits',{value:{matchId:null,current:null,pending:new Map()},enumerable:false});
  }
  pendingAchievementUnits(){return [...this.achievementUnits.pending.values()];}
@@ -74,7 +76,7 @@ class DrawGuessRoom{
   assertRecordCapacity(this);
   if(this.activePlayers().length>=8)throw Error('最多 8 位玩家');
   if(typeof name!=='string'||!name.trim())throw Error('請輸入名字');
-  const player={id:randomUUID(),secret:randomUUID(),name:name.trim().slice(0,16),bot,kicked:false,score:0,waitingForNextRound:this.phase!=='waiting',lastSeen:this.now()};
+  const player={id:randomUUID(),secret:randomUUID(),name:name.trim().slice(0,16),bot,kicked:false,score:0,ready:bot||!this.host,waitingForNextRound:this.phase!=='waiting',lastSeen:this.now()};
   this.players.push(player);if(!this.host)this.host=player.id;
   this.event('join',player.name+' 加入房間'+(player.waitingForNextRound?'，下一輪開始猜題':''));
   return player;
@@ -122,6 +124,7 @@ class DrawGuessRoom{
   for(const player of this.players){player.score=0;player.waitingForNextRound=false;}
   this.gameRunId=randomUUID();this.achievementUnits.matchId=this.gameRunId;this.round=0;const ending=this.options.ending||{mode:'rounds',value:null};this.roundLimit=ending.mode==='score'?64:ending.value||this.players.length;this.pendingArtists=this.players.map(player=>player.id);
   this.results=[];this.winner=null;this.usedWordIds=[];
+  this.matchSummary={startedAt:this.now(),endedAt:null,rounds:0,eligibleGuesses:0,correctGuesses:0,strokeCount:0,fastest:null,bestArtwork:null,correctByPlayer:{}};
   this.newRound();
  }
  newRound(){
@@ -138,6 +141,7 @@ class DrawGuessRoom{
   this.participantIds=this.activePlayers().filter(player=>player.id!==this.presenterId).map(player=>player.id);
   this.candidates=draw.items.map(clone);this.usedWordIds=draw.usedIds;
   this.phase='choosing';this.question=null;this.guessedIds=[];this.guesses=[];this.result=null;
+  this.roundFastest=null;
   this.deadline=this.now()+15000;
   this.canvas.epoch=randomUUID();this.canvas.strokes=[];this.canvas.batchIds.clear();this.canvas.points=0;this.canvas.acceptedPoints=0;this.canvas.recent=[];this.canvas.fills=0;this.canvas.fillRecent=[];this.canvas.commandRecent=[];this.canvas.version++;
   this.beginAchievementUnit(this.activePlayers().map(player=>player.id));
@@ -181,6 +185,7 @@ class DrawGuessRoom{
    const remaining=Math.max(0,this.deadline-now),points=30+Math.floor(70*remaining/(this.options.seconds*1000));
    player.score+=points;this.player(this.presenterId).score+=15;
    this.guessedIds.push(id);this.guesses.push({id,name:player.name,correct:true,points,at:now});
+   const milliseconds=Math.max(0,now-(this.deadline-this.options.seconds*1000));if(!this.roundFastest||milliseconds<this.roundFastest.milliseconds)this.roundFastest={playerId:id,name:player.name,milliseconds,round:this.round};
    this.achievementUnits.current?.correctGuess.add(id);
    this.guesses=this.guesses.slice(-50);
    this.event('correct',player.name+' 猜對了');
@@ -194,7 +199,12 @@ class DrawGuessRoom{
  reveal(reason='時間到',status='rules_completed'){
   if(!['drawing','choosing'].includes(this.phase))return;
   const artist=this.player(this.presenterId);
-  this.result=freeze(clone({resultId:randomUUID(),gameRunId:this.gameRunId,canvasEpoch:this.canvas.epoch,revealedAt:this.now(),round:this.round,presenterId:this.presenterId,artist:{id:this.presenterId,name:artist?.name||'畫者',avatar:artist?.avatar||null},answer:this.question?.title||null,aliases:this.question?.aliases||[],reason,guessedIds:[...this.guessedIds],guesses:this.guesses,scores:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,roundPoints:player.score-(this.roundStartScores.get(player.id)||0)}))}));
+  this.result=freeze(clone({resultId:randomUUID(),gameRunId:this.gameRunId,canvasEpoch:this.canvas.epoch,revealedAt:this.now(),round:this.round,presenterId:this.presenterId,artist:{id:this.presenterId,name:artist?.name||'畫者',avatar:artist?.avatar||null},answer:this.question?.title||null,aliases:this.question?.aliases||[],reason,guessedIds:[...this.guessedIds],eligibleGuessers:this.participantIds.length,strokeCount:this.canvas.strokes.length,guesses:this.guesses,scores:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,score:player.score,roundPoints:player.score-(this.roundStartScores.get(player.id)||0)}))}));
+  const summary=this.matchSummary,correct=this.guessedIds.filter(id=>this.participantIds.includes(id));
+  summary.rounds++;summary.eligibleGuesses+=this.participantIds.length;summary.correctGuesses+=correct.length;summary.strokeCount+=this.canvas.strokes.length;
+  for(const id of correct)summary.correctByPlayer[id]=(summary.correctByPlayer[id]||0)+1;
+  if(this.roundFastest&&correct.includes(this.roundFastest.playerId)&&(!summary.fastest||this.roundFastest.milliseconds<summary.fastest.milliseconds))summary.fastest={...this.roundFastest};
+  if(this.question&&(!summary.bestArtwork||correct.length>summary.bestArtwork.guessedCount))summary.bestArtwork={resultId:this.result.resultId,answer:this.result.answer,artist:this.result.artist,round:this.round,guessedCount:correct.length};
   this.results.push(this.result);
   this.results=this.results.slice(-MAX_PUBLIC_RESULTS);
   const {guesses,...metadata}=this.result;
@@ -249,6 +259,7 @@ class DrawGuessRoom{
  }
  finish(reason=null){
   this.phase='finished';this.deadline=null;
+  if(this.matchSummary.startedAt!==null&&this.matchSummary.endedAt===null)this.matchSummary.endedAt=this.now();
   const players=this.activePlayers(),high=Math.max(0,...players.map(player=>player.score));
   this.winner={ids:players.filter(player=>player.score===high).map(player=>player.id),score:high,...(reason?{reason}:{})};
   this.event('finish',reason||'每位畫者都已完成，本局結束');
@@ -267,6 +278,21 @@ class DrawGuessRoom{
  }
  act(id,action,data={}){
   if(!this.player(id)||this.player(id).kicked)throw Error('找不到玩家');
+  if(action==='ready'){
+   if(this.phase!=='waiting'||typeof data.ready!=='boolean')throw new HttpError(400,'DRAW_READY_UNAVAILABLE','只可在等待室切換就緒');
+   const player=this.player(id);if(player.ready!==data.ready){player.ready=data.ready;this.event('ready',player.name+(data.ready?' 已就緒':' 暫未就緒'));}return;
+  }
+  if(action==='skip'){
+   if(this.phase!=='drawing'||![this.host,this.presenterId].includes(id))throw new HttpError(403,'DRAW_SKIP_FORBIDDEN','只有當輪畫者或房主可以跳過');
+   if(data.round!==this.round||data.canvasEpoch!==this.canvas.epoch)throw new HttpError(409,'DRAW_STALE_ROUND','回合已更新，請重新確認');
+   return this.reveal(id===this.presenterId?'畫者跳過此題':'房主跳過此輪','interrupted');
+  }
+  if(action==='transfer-host'){
+   if(id!==this.host)throw new HttpError(403,'DRAW_HOST_ONLY','只有房主可以移交房主');
+   const target=this.activePlayers().find(player=>player.id===data.playerId&&!player.bot&&player.id!==id);
+   if(!target)throw new HttpError(400,'DRAW_INVALID_HOST','請選擇桌內其他真人玩家');
+   this.host=target.id;this.event('host-transfer',target.name+' 成為新房主');return;
+  }
   if(action==='choose')return this.choose(id,data.questionId);
   if(action==='guess')return this.guess(id,data.answer);
   if(action==='next')return this.next(id);
@@ -329,9 +355,9 @@ class DrawGuessRoom{
    candidates:this.phase==='choosing'&&id===this.presenterId?this.candidates.filter(word=>!this.wordExclusionProvider?.(word)):[],
    question:this.question&&(id===this.presenterId||revealed)?{title:this.question.title,aliases:this.question.aliases,category:this.question.category,difficulty:this.question.difficulty,topic:this.question.topic,topicLabel:this.question.topicLabel}:null,
    hint:this.question?{category:this.question.category,topicLabel:this.question.topicLabel||topicLabels[this.question.topic]||topicLabels.misc,length:[...this.question.title].length}:null,
-   players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,bot:!!player.bot,score:player.score,online:!!player.bot||this.now()-player.lastSeen<15000,waitingForNextRound:player.waitingForNextRound})),
+   players:this.activePlayers().map(player=>({id:player.id,name:player.name,avatar:player.avatar||null,bot:!!player.bot,score:player.score,ready:player.ready===true,online:!!player.bot||this.now()-player.lastSeen<15000,waitingForNextRound:player.waitingForNextRound})),
    participantIds:this.participantIds,guessedIds:this.guessedIds,guesses:this.guesses.map(item=>item.correct?{id:item.id,name:item.name,correct:true,points:item.points,at:item.at}:item),
-   result:revealed?this.result:null,recentResults:[...this.publicResults.values()].reverse().map(entry=>entry.snapshot.result),resultVotes:[...this.publicResults.keys()].reverse().map(resultId=>this.resultVote(resultId,id)),winner:this.winner,canvasEpoch:this.canvas.epoch,strokeVersion:this.canvas.version,events:this.events
+   result:revealed?this.result:null,recentResults:[...this.publicResults.values()].reverse().map(entry=>entry.snapshot.result),resultVotes:[...this.publicResults.keys()].reverse().map(resultId=>this.resultVote(resultId,id)),winner:this.winner,...(this.phase==='finished'?{matchSummary:clone(this.matchSummary)}:{}),canvasEpoch:this.canvas.epoch,strokeVersion:this.canvas.version,events:this.events
   });
  }
 }
