@@ -147,3 +147,5 @@ test('effects default on, migrate legacy off once, and retain a subsequent expli
 });
 
 test('majority settlement uses the uploaded settlement clip without changing generic reveal cues',()=>{const ui=harness();const clip=ui.api.playEffect('majority-settlement');assert.equal(clip.src,'/assets/game-sounds/quacks-settlement-user.wav');});
+
+test('Quacks draw and stop use the newly supplied voice clips and keep mute preferences',()=>{const ui=harness();assert.equal(ui.api.playEffect('ingredient-draw').src,'/assets/game-sounds/quacks-push-user.wav');assert.equal(ui.api.playEffect('quacks-stop').src,'/assets/game-sounds/quacks-decline-user.wav');ui.api.set('effects',{enabled:false});assert.ok(!ui.api.playEffect('ingredient-draw'));});

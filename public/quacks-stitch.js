@@ -24,8 +24,9 @@
  window.addEventListener('room-invitations-ready',()=>{if(state)window.RoomInvites?.updateRoom(state);placeInviteInbox();});
  const alchemyTool=el('button','','煉金術士與特效藥');alchemyTool.type='button';ui.decorateButton(alchemyTool,'ingredient',{label:'煉金術士與特效藥'});alchemyTool.onclick=()=>open($('#alchemyDialog'),alchemyTool);$('#qMobileMenuContent').append(alchemyTool);
  $('#qBrandIcon').innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 4h10M13 4v9L6 24q-1 4 3 4h14q4 0 3-4l-7-11V4" fill="none" stroke="#765b16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20h12l3 5H7Z" fill="#765b16" opacity=".5"/><circle cx="16" cy="18" r="1.5" fill="#765b16"/></svg>';
- const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qRecords','#qGuide','#soundToggle','#qMotion'],toolHomes=new Map();
- ui.decorateButton($('#qScore'),'crown',{label:'環形記分板'});
+ $('#qRecords').remove();$('#qBook').before($('#qScore'));
+ const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qGuide','#soundToggle','#qMotion'],toolHomes=new Map();
+ ui.decorateButton($('#qScore'),'crown',{iconOnly:true,label:'環形記分板'});
  for(const id of mobileTools){const n=$(id),mark=document.createComment('quacks-tool-home');n.before(mark);toolHomes.set(n,mark);}
  const account=$('.site-account'),accountHome=document.createComment('quacks-account-home');account.before(accountHome);toolHomes.set(account,accountHome);
  function arrangeTools(){for(const [n,home]of toolHomes){if(mobile.matches)$('#qMobileMenuContent').append(n);else home.after(n);}if(!mobile.matches)$('#qMobileMenu').open=false;}
