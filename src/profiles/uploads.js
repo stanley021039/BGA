@@ -6,7 +6,7 @@ const {defaults}=require('./appearance');
 const MAX_BYTES=1024*1024;
 const MAX_CHARACTER_IMAGE_BYTES=4*1024*1024;
 const MAX_CHARACTER_IMAGE_BODY_BYTES=4*Math.ceil(MAX_CHARACTER_IMAGE_BYTES/3)+8192;
-const MAX_CUSTOM_EXPRESSIONS=6;
+const MAX_CUSTOM_EXPRESSIONS=15;
 function invalid(message='圖片格式不正確'){throw new HttpError(400,'INVALID_CHARACTER_IMAGE',message);}
 function imageOf(data,{maxBytes=MAX_BYTES}={}){
  const sizeMessage=`圖片不得超過 ${maxBytes/(1024*1024)} MB`;
@@ -75,7 +75,7 @@ function addExpression(db,ownerId,id,data){
   const owned=db.prepare('SELECT id FROM player_characters WHERE id=? AND owner_id=?').get(uuid,ownerId);
   if(!owned)throw new HttpError(404,'CHARACTER_NOT_FOUND','找不到你的角色');
   const count=db.prepare("SELECT COUNT(*) AS count FROM character_images WHERE character_id=? AND expression LIKE 'emote-%'").get(uuid).count;
-  if(count>=MAX_CUSTOM_EXPRESSIONS)throw new HttpError(400,'EXPRESSION_LIMIT','每個角色最多新增 6 個表情');
+  if(count>=MAX_CUSTOM_EXPRESSIONS)throw new HttpError(400,'EXPRESSION_LIMIT','每個角色最多新增 15 個表情');
   if(db.prepare('SELECT 1 FROM character_images WHERE character_id=? AND label=?').get(uuid,name))throw new HttpError(400,'DUPLICATE_EXPRESSION_NAME','這個表情名稱已經使用');
   const expression='emote-'+randomUUID();
   db.prepare('INSERT INTO character_images(character_id,expression,mime,bytes,label) VALUES(?,?,?,?,?)').run(uuid,expression,image.mime,image.bytes,name);

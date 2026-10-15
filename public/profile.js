@@ -52,7 +52,7 @@ function render(){
  $('#sharing-description').textContent=character.shared?'好友可在圖庫選用這位角色與表情。':'目前只有你可以選用這位角色。';
  $('#toggle-sharing').textContent=character.shared?'停止分享':'分享給會員';
  $('#upload-expression').hidden=!character.owned;
- $('#emote-target').textContent=character.owned?`正在為「${character.name}」新增表情（最多 6 個）。`:'先從「我的作品」選擇自己的角色。';
+ $('#emote-target').textContent=character.owned?`正在為「${character.name}」新增表情（最多 15 個）。`:'先從「我的作品」選擇自己的角色。';
  renderSound(character);
 }
 function soundKey(){const character=selected();return character?`${character.id}:${appearance.expression}`:'';}
