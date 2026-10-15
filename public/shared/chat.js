@@ -41,8 +41,12 @@
   const panel=document.createElement('section');panel.className='shared-chat';panel.setAttribute('aria-label','聊天室與房間彈幕');
   panel.innerHTML='<h2 class="chat-heading" hidden>聊天室</h2><button type="button" class="chat-toggle" aria-expanded="false" aria-controls="chat-content">聊天室 <span class="chat-badge"></span></button><div id="chat-content" hidden><ol class="chat-messages" aria-label="聊天訊息"></ol><form autocomplete="off"><label for="chat-input" class="ui-sr-only">房間彈幕</label><div class="chat-compose"><input id="chat-input" maxlength="320" required autocomplete="off"><button type="submit" aria-label="發送房間彈幕">發送</button></div></form><div class="chat-room-tools ui-control-row" aria-label="媒體與表情"></div><p class="chat-status" role="status" aria-live="polite"></p></div>';
   host.append(panel);const q=s=>panel.querySelector(s),list=q('.chat-messages'),input=q('input'),submit=q('[type=submit]');const content=q('#chat-content'),footer=document.createElement('footer');footer.className='chat-room-footer';footer.append(q('.chat-status'),q('.chat-room-tools'),q('form'));root.GameUI.framePanel(panel,{header:q('.chat-heading'),body:content,content:list,footer});root.GameUI?.decorateButton(submit,'send',{iconOnly:true,label:'發送房間彈幕'});
+  if(document.body.dataset.uiTemplate&&document.body.dataset.gameKind==='draw'){
+   const heading=q('.chat-heading'),header=document.createElement('div');header.className='ui-panel-header';heading.before(header);heading.classList.remove('ui-panel-header');header.append(heading,q('.chat-room-tools'));
+  }
+
   let rendered='',lastContext='',timer=null,backoff=3000,paused=false,pollEpoch=0;
-  const client=new ChatClient({changed:render,roomChanged:s=>{if(root.RoomHost?.acceptSnapshot?.(s))return;root.GameShell?.update(s);}});
+  const client=new ChatClient({changed:render,roomChanged:s=>root.RoomUI?.acceptSnapshot(s)});
   function render(){
    const context=`${client.viewer}:${client.code}`;if(context!==lastContext){input.value='';lastContext=context;rendered=null;}
    q('#chat-content').hidden=!client.open;q('.chat-toggle').setAttribute('aria-expanded',String(client.open));q('.chat-badge').textContent=client.unread.table?`未讀 ${client.unread.table}`:'';input.placeholder='輸入彈幕（最多160字）';
@@ -92,7 +96,7 @@
   }
   root.addEventListener('resize',measurePeerHeight);root.addEventListener('pagehide',releaseHeight);
   root.SharedChat={compose(text){if(input.disabled)return false;input.value=[...(input.value+text)].slice(0,160).join('');input.focus();return true;},send:text=>client.send(text),mountIn,mountTools,matchRosterHeight,updateRoom(snapshot){const old=client.roomKey;client.room(snapshot);if(old!==client.roomKey)tick();},clearRoom(){clearTimeout(timer);matchRosterHeight(null);client.room(null);},logout(){clearTimeout(timer);matchRosterHeight(null);client.logout();}};
-  if(queuedRoom)client.room(queuedRoom);if(queuedMount)mountIn(queuedMount.host,queuedMount.options);mountTools(queuedTools);matchRosterHeight(queuedHeightPeer);if(queuedLogout)client.logout();render();tick();
+  if(queuedRoom)client.room(queuedRoom);if(queuedMount)mountIn(queuedMount.host,queuedMount.options);mountTools(queuedTools);matchRosterHeight(queuedHeightPeer);if(queuedLogout)client.logout();render();tick();root.dispatchEvent(new CustomEvent('room-chat-ready'));
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();
 })(typeof window==='object'?window:globalThis);

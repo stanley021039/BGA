@@ -1,5 +1,12 @@
 # 設計師角色記憶
 
+2026-10-15 架構 PR 驗證（2.8.1）：取代本批候選「套件未執行」的狀態。Linux Node v22.22.1 完整 `npm test` 2229/2229 通過，無失敗、取消或略過；設定保存競態新增 6 項，共用實體操作元件驗房主／容量／階段／pending／焦點／跨房間回應。修正測試 fixture 接線及過時 DOM 斷言，保留畫布像素／中途筆跡與協定斷言；復原測試等待 renderer，不等待刻意未回覆的筆畫 HTTP。67 個變更 JS 語法、CSS ownership、11 頁載入順序、patch release check 與 staged diff check 通過。瀏覽器證據沿用同日實作驗收，沒有新增九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
+
+2026-10-15 前端 UI 階層：以畫猜／郎中為基準，RoomUI 單次分派 snapshot；RoomLayout／DrawingLayout 集中 host 位置與畫板幾何，移除 primitives→Template 反向依賴及 Stitch 全 body 版面觀察；全遊戲房間操作改明確 adapter，設定保存失敗阻止開局。CSS 分成 tokens／skin／composition 與郎中 theme／layout，122 處等值 token；72 組真 Chromium 前後比較 computedStyle 一致。測試站已驗畫猜持筆／ACK／SSE／換輪／結束再玩及設定失敗恢復、郎中一回合採購／女巫、其餘九款房主／訪客／滿員／開局防重；pageerror 皆空。套件未執行，無完整九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
+
+
+2026-10-15 架構 2／3／4：郎中改用具名槽位、單次採購呈現、直接女巫動作與穩定焦點 key；房間玩家／AI／timer 共用 transitions，保留歷史失敗可離席與清理；畫猜 session 集中 canonical／draft／quota／ACK／reset／renderer。測試站真 Chromium 已驗一回合郎中買退與女巫、雙席持筆／ACK／SSE／reset、undo／clear／重連／換輪／倒數、桌機與390／320；隔離 HTTP 驗 kick 確認／禁重入及歷史 quota 失敗離席。套件測試未執行，語法及 diff check 通過；無九回合／實機觸控／全遊戲結論。詳 [實作與驗收](../refactors/ARCHITECTURE-234.md)。
+
 2026-10-15 2.8.0：依郎中 Stitch 最新畫面修正藥材書、聊天、邀請、階段與大釜周圍排版，恢復「繼續拚／我不抽了 QQ」原角色梗圖操作卡。測試站 1280×720 日夜模式無額外捲動，實際抽藥及停手流程已觀察；未重跑完整自動測試。詳 [本輪整合與驗收](../STITCH-QUACKS-INTEGRATION.md)。
 
 2026-10-15 候選 2.7.0：郎中 Stitch 與畫猜以同一等待室／聊天室元件整合；採購以圖片、價格與勾選呈現，保留購買取消、最新原生控制器及原音檔。五席、第一輪實際買退、主鍋／放大提示、1280及390／320採購與有限畫猜開局／筆跡已觀察；未新增完整九輪、實機手機或聽感結論。詳 [本輪整合與驗收](../STITCH-QUACKS-INTEGRATION.md)。

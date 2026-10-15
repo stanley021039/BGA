@@ -9,10 +9,10 @@ function pointer(ui,type,point,timeStamp,coalesced){ui.listeners.get('#drawCanva
 
 test('a received batch unfolds at the original sample intervals, independent of server version acceptance',async t=>{
  const {ui,time}=await setup(t);ui.sources[0].emit('stroke',batch(1,[[1,1],[10,10],[20,20]],[0,40,130]));
- assert.equal(run(ui,'canvasVersion'),1);assert.equal(run(ui,'strokes[0].points.length'),3);assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,3);
+ assert.equal(run(ui,'canvasSession.view().version'),1);assert.equal(run(ui,'canvasSession.view().pointCount'),3);assert.equal(read(ui,'sessionPlayback.metrics()').pendingSamples,3);
  ui.paintFrame();assert.equal(ui.frames.at(-1).strokes.length,0);await time.advance(60);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,1);
  await time.advance(39);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,2);assert.ok(ui.frames.at(-1).strokes[0].points[1][0]<10);await time.advance(1);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,2);
- await time.advance(90);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,3);assert.equal(read(ui,'drawingPlayback.metrics()').scheduled,false);
+ await time.advance(90);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,3);assert.equal(read(ui,'sessionPlayback.metrics()').scheduled,false);
 });
 
 test('continuous chunks retain their common time origin and erase stays ordered after brush',async t=>{
@@ -24,32 +24,32 @@ test('continuous chunks retain their common time origin and erase stays ordered 
 
 test('fill, reset, visibility loss and published reveal finish or cancel replay without stale frames',async t=>{
  const {ui,time}=await setup(t);const timed=batch(1,[[1,1],[10,10]],[0,200]);ui.sources[0].emit('stroke',timed);
- ui.sources[0].emit('stroke',batch(2,[[0,0]],null,'12345678-1234-4123-8123-123456789abd','fill'));assert.deepEqual(ui.frames.at(-1).strokes.map(s=>s.points.length),[2,1]);assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,0);
+ ui.sources[0].emit('stroke',batch(2,[[0,0]],null,'12345678-1234-4123-8123-123456789abd','fill'));assert.deepEqual(ui.frames.at(-1).strokes.map(s=>s.points.length),[2,1]);assert.equal(read(ui,'sessionPlayback.metrics()').pendingSamples,0);
  ui.sources[0].emit('stroke',batch(3,[[30,30],[40,40]],[0,200]));ui.sources[0].emit('reset',{canvasEpoch:CANVAS_EPOCH,round:1,version:4,strokes:[]});await time.advance(500);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes.length,0);
- ui.sources[0].emit('stroke',batch(5,[[1,1],[20,20]],[0,200]));ui.context.document.hidden=true;ui.listeners.get('document:visibilitychange')();assert.equal(ui.frames.at(-1).strokes[0].points.length,2);assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,0);
- ui.context.document.hidden=false;ui.sources[0].emit('stroke',batch(6,[[30,30],[40,40]],[0,200]));ui.receive({...drawingState('guest'),phase:'reveal',strokeVersion:6});assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,0);assert.equal(ui.frames.at(-1).strokes.at(-1).points.length,2);
+ ui.sources[0].emit('stroke',batch(5,[[1,1],[20,20]],[0,200]));ui.context.document.hidden=true;ui.listeners.get('document:visibilitychange')();assert.equal(ui.frames.at(-1).strokes[0].points.length,2);assert.equal(read(ui,'sessionPlayback.metrics()').pendingSamples,0);
+ ui.context.document.hidden=false;ui.sources[0].emit('stroke',batch(6,[[30,30],[40,40]],[0,200]));ui.receive({...drawingState('guest'),phase:'reveal',strokeVersion:6});assert.equal(read(ui,'sessionPlayback.metrics()').pendingSamples,0);assert.equal(ui.frames.at(-1).strokes.at(-1).points.length,2);
 });
 
 test('coalesced sample timestamps survive deduplication, chunk anchors, merging, splitting and immutable retry',async t=>{
  const {ui,time}=await setup(t,'artist');pointer(ui,'pointerdown',[0,0],1000);pointer(ui,'pointermove',[99,99],1140,[[0,0,1010],[1,1,1020],[2,2,1100]]);pointer(ui,'pointerup',[3,3],1140);
  await time.advance(0);const first=ui.strokeRequests[0];assert.deepEqual(Array.from(first.data.pointTimes),[0,20,100,140]);first.reject(new TypeError('lost ACK'));await microtasks();await time.advance(1000);assert.equal(JSON.stringify(ui.strokeRequests[1].data),JSON.stringify(first.data));
- ui.strokeRequests[1].resolve({...batch(1,first.data.points,first.data.pointTimes,first.data.strokeId),quota:{usedPoints:4,usedBatches:1,usedFills:0}});await microtasks();assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,0,'artist ACK never triggers observer playback');
+ ui.strokeRequests[1].resolve({...batch(1,first.data.points,first.data.pointTimes,first.data.strokeId),quota:{usedPoints:4,usedBatches:1,usedFills:0}});await microtasks();assert.equal(read(ui,'sessionPlayback.metrics()').pendingSamples,0,'artist ACK never triggers observer playback');
  run(ui,'transportChecks=[];const token={};timingTransport=window.DrawTransport.create({send:async data=>{transportChecks.push(data);return{};},createId:()=>StrokeCanvas.strokeId(),isCurrent:()=>true,now:drawNow});for(let chunk=0;chunk<2;chunk++){const start=chunk*63;timingTransport.enqueue({canvasEpoch:state.canvasEpoch,round:1,strokeId:"12345678",tool:"brush",color:"#000000",size:1,points:Array.from({length:64},(_,i)=>[start+i,0]),pointTimes:Array.from({length:64},(_,i)=>(start+i)*2)},token);}');await time.advance(0);await run(ui,'timingTransport.whenIdle()');
  const chunks=read(ui,'transportChecks');assert.deepEqual(chunks.map(c=>c.points.length),[64,64]);assert.deepEqual(chunks.map(c=>c.pointTimes),[Array.from({length:64},(_,i)=>i*2),Array.from({length:64},(_,i)=>(63+i)*2)]);
 });
 
 test('long packet gaps have bounded replay latency, invalid timing resyncs, and snapshots remain immediate',async t=>{
- const {ui,time}=await setup(t);ui.sources[0].emit('stroke',batch(1,[[1,1],[5,5],[10,10]],[0,60000,120000]));assert.ok(read(ui,'drawingPlayback.metrics()').leadMs<=900);await time.advance(900);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,3);
- const invalid=batch(2,[[20,20],[30,30]],[50,10]);assert.equal(run(ui,'validCanvasStroke('+JSON.stringify(invalid.stroke)+',1,2)'),false);
- ui.context.snapshot={canvasEpoch:CANVAS_EPOCH,round:1,version:2,strokes:[batch(2,[[20,20],[30,30]],[0,100]).stroke]};run(ui,'applyCanvasSnapshot(snapshot)');assert.equal(ui.frames.at(-1).strokes[0].points.length,2);assert.equal(read(ui,'drawingPlayback.metrics()').scheduled,false);
+ const {ui,time}=await setup(t);ui.sources[0].emit('stroke',batch(1,[[1,1],[5,5],[10,10]],[0,60000,120000]));assert.ok(read(ui,'sessionPlayback.metrics()').leadMs<=900);await time.advance(900);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,3);
+ const invalid=batch(2,[[20,20],[30,30]],[50,10]);assert.equal(run(ui,'validCanvasSnapshot({round:1,version:2,strokes:['+JSON.stringify(invalid.stroke)+']})'),false);
+ ui.context.snapshot={canvasEpoch:CANVAS_EPOCH,round:1,version:2,strokes:[batch(2,[[20,20],[30,30]],[0,100]).stroke]};run(ui,'applyCanvasSnapshot(snapshot)');assert.equal(ui.frames.at(-1).strokes[0].points.length,2);assert.equal(read(ui,'sessionPlayback.metrics()').scheduled,false);
 });
 
 test('pagehide cancels partial viewer playback and restore paints a fresh canonical baseline',async t=>{
  const {ui,time}=await setup(t),timed=batch(1,[[1,1],[10,10],[20,20]],[0,100,200]);ui.sources[0].emit('stroke',timed);
  await time.advance(60);ui.paintFrame();assert.equal(ui.frames.at(-1).strokes[0].points.length,1);
- const oldSource=ui.sources[0];ui.listeners.get('window:pagehide')({persisted:true});assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,0);assert.equal(read(ui,'drawingPlayback.metrics()').scheduled,false);
- const frames=ui.frames.length;oldSource.emit('stroke',batch(2,[[30,30],[40,40]],[0,100]));await time.advance(500);ui.paintFrame();assert.equal(ui.frames.length,frames);assert.equal(run(ui,'canvasVersion'),1);
+ const oldSource=ui.sources[0];ui.listeners.get('window:pagehide')({persisted:true});assert.equal(read(ui,'sessionPlayback.metrics()').pendingSamples,0);assert.equal(read(ui,'sessionPlayback.metrics()').scheduled,false);
+ const frames=ui.frames.length;oldSource.emit('stroke',batch(2,[[30,30],[40,40]],[0,100]));await time.advance(500);ui.paintFrame();assert.equal(ui.frames.length,frames);assert.equal(run(ui,'canvasSession.view().version'),1);
  ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:1,strokes:[timed.stroke]});
  const original=ui.context.RoomApi.request;ui.context.RoomApi.request=(route,...args)=>route==='state'?Promise.resolve({...drawingState('guest'),version:3,strokeVersion:1}):original(route,...args);
- ui.listeners.get('window:pageshow')({persisted:true});await microtasks();assert.equal(ui.frames.at(-1).strokes[0].points.length,3);assert.equal(read(ui,'drawingPlayback.metrics()').pendingSamples,0);assert.equal(ui.sources.length,2);
+ ui.listeners.get('window:pageshow')({persisted:true});await microtasks();assert.equal(ui.frames.at(-1).strokes[0].points.length,3);assert.equal(read(ui,'sessionPlayback.metrics()').pendingSamples,0);assert.equal(ui.sources.length,2);
 });

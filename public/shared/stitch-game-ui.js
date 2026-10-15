@@ -218,11 +218,6 @@
   updateBrush();
  }
  function chatDock(){
-  const panel=$('.shared-chat');let header=panel?.querySelector('.ui-panel-header');if(!panel||!header)return;
-  // The native heading also starts as the panel header. Keep tools outside the
-  // heading's textContent so phase titles cannot remove their live handlers.
-  if(header.classList.contains('chat-heading')){const wrapper=el('div','ui-panel-header');header.before(wrapper);header.classList.remove('ui-panel-header');wrapper.append(header);header=wrapper;}
-  move(panel.querySelector('.chat-room-tools'),header);
   const guess=$('#drawGuessPanel');if(guess){guess.setAttribute('aria-label','猜題作答專區');text(guess.querySelector('.guess-chat-head>strong'),'猜題作答專區');}
  }
  function wordUi(){
@@ -242,7 +237,7 @@
  }
  function waitingUi(center){
   if(!state||state.phase!=='waiting')return;
-  const scene=ui.Template.patterns.waitingScene(center,state,{owner:state.host,hostId:state.hostId,capacity:8,title:'你畫我猜',english:'Draw & Guess',limit:'2–8 人一起畫',art:state.host?'/assets/stitch/figma/ux02-03.png':'/assets/stitch/waiting-guest.jpg',fallbackArt:'/assets/stitch/waiting-host.jpg',kicker:'朋友集結中，畫筆已備，等房主開畫。',description:'2–8 人一起玩。輪流挑題作畫，其他朋友一起猜出答案。邀請朋友入座，設定好就能開始。',readyCopy:'畫筆與題卡已備妥',facts:[['每輪輪替','全員輪流畫'],['計分機制','愈快猜愈高'],['繪圖工具','12 色＋粗細']],onCopy:()=>actions?.invite(),onChat:()=>center.querySelector('.tpl-waiting-footer button')?.click(),onHelp:()=>$('#help')?.click(),onDissolve:dissolve,onLeave:()=>$('.ui-room-session-actions>[data-room-action=leave]')?.click(),onInvite:event=>window.RoomInvites?.ready?window.RoomInvites.open(event.currentTarget):actions?.invite()});
+  const scene=ui.Template.patterns.waitingScene(center,state,{owner:state.host,hostId:state.hostId,capacity:8,title:'你畫我猜',english:'Draw & Guess',limit:'2–8 人一起畫',art:state.host?'/assets/stitch/figma/ux02-03.png':'/assets/stitch/waiting-guest.jpg',fallbackArt:'/assets/stitch/waiting-host.jpg',kicker:'朋友集結中，畫筆已備，等房主開畫。',description:'2–8 人一起玩。輪流挑題作畫，其他朋友一起猜出答案。邀請朋友入座，設定好就能開始。',readyCopy:'畫筆與題卡已備妥',facts:[['每輪輪替','全員輪流畫'],['計分機制','愈快猜愈高'],['繪圖工具','12 色＋粗細']],onCopy:()=>actions?.invite(),onChat:event=>window.RoomLayout?.openChat(event.currentTarget),onHelp:event=>ui.openDialog($('#rules'),event.currentTarget),onDissolve:dissolve,onLeave:event=>window.RoomControls?.leave(event.currentTarget),onInvite:event=>window.RoomInvites?.ready?window.RoomInvites.open(event.currentTarget):actions?.invite()});
   if(!scene)return;const {banner,list,rail,panel,row,manage}=scene;
   figmaIcon(banner.querySelector('.st-ready-mark'),'ux02-12.svg',{tone:'accent'});for(const n of list?.querySelectorAll('.st-empty-seat>span:first-child')||[])figmaIcon(n,'ux02-10.svg');figmaIcon(list?.querySelector('[data-room-common-action=bot] .ui-symbol'),'ux02-09.svg',{tone:'accent'});
   figmaIcon(rail.querySelector('.st-waiting-help .ui-button-icon'),'ux02-19.svg');figmaIcon(rail.querySelector('.st-waiting-dissolve .ui-button-icon'),'ux02-20.svg',{tone:'accent'});figmaIcon(row?.querySelector('[data-room-action=start] .ui-button-icon'),'ux02-15.svg',{tone:'accent'});figmaIcon(row?.querySelector('.st-waiting-invite .ui-button-icon'),'ux02-16.svg');figmaIcon(manage?.querySelector('.ui-button-icon'),'ux02-17.svg');
@@ -250,9 +245,9 @@
   const topics=panel?.querySelector('.topic-options');if(topics)topics.title=topics.querySelector('.topic-hint')?.textContent||'至少選擇一個題目類別';
  }
 
- function ensure(){queued=false;if(!mounted)return;makeHeader();inlineProfile();if(document.body.dataset.gameKind==='draw'){makePhaseBar();chatControls();chatDock();hostControls();makeFooter();exportedIcons();move($('[data-template-next-settings]'),$('.st-site-more .site-links'));if(state){phaseControls();guestSettings();finishedControls();exportedIcons();text($('.st-host-link'),location.origin+'/draw/'+state.code);}}else lobbyControls();}
+ function ensure(){queued=false;if(!mounted)return;makeHeader();inlineProfile();if(document.body.dataset.gameKind==='draw'){makePhaseBar();chatControls();chatDock();hostControls();makeFooter();exportedIcons();if(state){phaseControls();guestSettings();finishedControls();exportedIcons();text($('.st-host-link'),location.origin+'/draw/'+state.code);}}else lobbyControls();}
  function schedule(){if(!queued){queued=true;requestAnimationFrame(ensure);}}
- function mount(){mounted=true;ensure();new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});window.MotionPolicy?.subscribe(prefs=>{document.body.dataset.stitchMotion=String(prefs.enabled&&!prefs.reduced);});}
+ function mount(){mounted=true;ensure();for(const name of ['room-controls-rendered','room-chat-ready','site-header-ready','room-invitations-ready','profile-updated'])window.addEventListener(name,schedule);const lobby=$('.club');if(document.body.dataset.gameKind!=='draw'&&lobby)new MutationObserver(schedule).observe(lobby,{childList:true,subtree:true});window.MotionPolicy?.subscribe(prefs=>{document.body.dataset.stitchMotion=String(prefs.enabled&&!prefs.reduced);});}
  window.StitchGameUI={confirm,roomError,createOptions,lobbyError,update(next,handlers){state=next;actions=handlers;if(mounted){phaseControls();guestSettings();finishedControls();}schedule();}};
  window.addEventListener('pagehide',()=>{for(const renderer of finishRenderers)renderer.reset();finishRenderers.clear();});
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',mount,{once:true});else mount();

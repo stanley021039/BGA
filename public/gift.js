@@ -10,6 +10,7 @@ const customPercentLabel=value=>value===null?'依題庫比例':value+'%';
 const customPercentSelect=value=>customPercentOptions.map(([number,label])=>`<option value="${number}" ${(value===null?'':String(value))===number?'selected':''}>${label}</option>`).join('');
 let code=(location.pathname.match(/\/gift\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'';
 let session=null,state=null,busy=false,polling=false,disconnected=false,signature='',inviteBase=location.origin;
+const roomActions=window.RoomControls.bindActions({type:'gift',read:()=>({setup:['waiting','finished'].includes(state?.phase),start:{step:'start',label:state?.phase==='finished'?'再玩一局':'開始送禮',enabled:!busy&&!!state&&state.players.filter(p=>!p.kicked).length>=3},bot:{enabled:!busy&&!!state&&state.players.length<8&&state.botSupport?.canAdd!==false}}),run:action=>roomAction(action)});
 let draftGifts={},draftLikes=[],activeGiftRecipient=null,activeResultRecipient=null,activeChoicePanel="give";
 let focusTimer=null,knownAchievements=null,stageAnimations=[];
 const motionGate=MotionPolicy.createGate();
@@ -54,7 +55,7 @@ function actionFeedback(message,kind='info',settings=false){
  const node=$(settings?'#roomSettingsFeedback':'#gameActionFeedback')||$('#gameActionFeedback');if(!node)return;
  if(window.GameUI)GameUI.setStatus(node,message,{kind});else{node.textContent=message;node.dataset.kind=kind;}
 }
-function syncActionBusy(){
+function syncActionBusy(){roomActions.refresh();
  window.RoomWaiting?.setRosterBusy(busy);
  const slot=$('[data-game-action-slot]');if(!slot)return;slot.setAttribute('aria-busy',String(busy));
  for(const button of [...slot.querySelectorAll('button'),...document.querySelectorAll('.room-settings-save')]){
@@ -71,11 +72,11 @@ function bindGamePopovers(container){
 }
 function renderAction(){
  if(!state)return;const s=state;let html='';
- if(s.phase==='waiting')html='<h2>準備開桌</h2>'+(s.host?'<button class="button" data-do="start" '+(s.players.length<3?'disabled':'')+'>'+(s.players.length<3?'還差 '+(3-s.players.length)+' 位朋友':'開始送禮')+'</button>':'<p>等待房主開始</p>');
+ if(s.phase==='waiting')html='<h2>準備開桌</h2>'+(s.host?'':'<p>等待房主開始</p>');
  else if(s.phase==='choosing')html='<h2>第 '+s.round+' 輪 · 目標 '+s.target+' 分</h2><div class="gift-task-progress"><div><span>送禮 <b id="giveTaskProgress"></b></span><button id="giveSubmit" class="button" type="submit" form="giveForm" '+(s.ownAssignments?'disabled':'')+'>'+(s.ownAssignments?'已鎖定 ✓':'鎖定送禮')+'</button></div><div><span>心願 <b id="wishTaskProgress"></b></span><button id="wishSubmit" class="button" type="submit" form="wishForm" '+(s.ownRanking?'disabled':'')+'>'+(s.ownRanking?'已鎖定 ✓':'鎖定心願')+'</button></div></div><p id="progress" class="small"></p>';
  else if(s.phase==='delivering'){const recipient=player(s.delivery.recipientId);html='<h2>收禮 '+(s.delivery.index+1)+' / '+s.delivery.total+'</h2>'+(s.me===s.delivery.recipientId?'<button class="button" data-do="accept">確認收禮</button>':'<p>等待 '+esc(recipient?.name||'朋友')+' 確認收禮</p>')+'<p class="small">所有人收完才公布分數</p>';}
- else html='<h2>'+(s.phase==='finished'?'本局完成':'本輪完成')+'</h2>'+(s.host?'<button class="button" data-do="'+(s.phase==='finished'?'start':'next')+'">'+(s.phase==='finished'?'再玩一局':'開始下一輪')+'</button>':'<p>等待房主'+(s.phase==='finished'?'開新局':'開始下一輪')+'</p>');
- html+=GameShell.botButton?.(s)||'';
+ else html='<h2>'+(s.phase==='finished'?'本局完成':'本輪完成')+'</h2>'+(s.host?(s.phase==='finished'?'':'<button class="button" data-do="next">開始下一輪</button>'):'<p>等待房主'+(s.phase==='finished'?'開新局':'開始下一輪')+'</p>');
+
  GameShell.stableMarkup($('#gameActions'),html);syncActionBusy();
  for(const button of $('#gameActions').querySelectorAll('button')){const key=button.dataset.do==='settings'?'settings':button.dataset.do==='next'?'next':button.matches('#giveSubmit,#wishSubmit')?'lock':'check';window.GameUI?.decorateButton(button,key);}
 }
@@ -227,7 +228,7 @@ $('#stage').addEventListener('submit',async event=>{
  }
 });
 async function action(name,data={}){if(busy)return;busy=true;actionFeedback('送出中…');syncActionBusy();try{const result=await api('action',{action:name,...data});const live=receive(result);if(live&&['give','wish'].includes(name)&&!['reveal','finished'].includes(result.phase))playSound('confirm');actionFeedback(name==='give'?'送禮已鎖定 ✓':name==='wish'?'心願已鎖定 ✓':name==='accept'?'已確認收禮':'已完成','success');if(live)MotionPolicy.confirm($('#gameActionFeedback'));$('#connection').textContent='';}catch(error){actionFeedback(error.message,'error');}finally{busy=false;syncActionBusy();syncChoices();}}
-async function roomAction(route,data={}){if(busy)return;if(route==='start'&&roomSettingsAutoSave){await roomSettingsAutoSave.flush();if(roomSettingsAutoSave.pending())return;}const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;actionFeedback('送出中…','info',settings);syncActionBusy();try{receive(await api(route,data));actionFeedback(settings?'房間設定已儲存。':'已完成','success',settings);}catch(error){actionFeedback(error.message,'error',settings);}finally{busy=false;syncActionBusy();syncChoices();if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
+async function roomAction(route,data={}){if(busy)return;if(route==='start'&&roomSettingsAutoSave){await roomSettingsAutoSave.flush();if(roomSettingsAutoSave.pending())return;const error=roomSettingsAutoSave.error?.();if(error)throw Error(error);}const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;actionFeedback('送出中…','info',settings);syncActionBusy();try{receive(await api(route,data));actionFeedback(settings?'房間設定已儲存。':'已完成','success',settings);}catch(error){actionFeedback(error.message,'error',settings);throw error;}finally{busy=false;syncActionBusy();syncChoices();if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 async function invite(){const url=inviteBase+'/gift/'+code;try{await navigator.clipboard.writeText(url);toast('邀請連結已複製');}catch{window.prompt('複製給朋友',url);}}
 window.GameUI?.decorateButton($('#closeHelp'),'close',{iconOnly:true,label:'關閉遊戲規則'});
 $('#invite').onclick=invite;$('#help').onclick=()=>window.GameUI?GameUI.openDialog($('#rules'),$('#help')):$('#rules').showModal();$('#closeHelp').onclick=()=>$('#rules').close();

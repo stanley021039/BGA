@@ -8,6 +8,7 @@ function setup(options){
  h.document.body=node();h.document.activeElement=null;h.document.querySelector=selector=>{if(!nodes.has(selector))nodes.set(selector,node());return nodes.get(selector);};
  h.document.querySelectorAll=selector=>selector==='.delivery-gift'?Array.from({length:(h.document.querySelector('#stage').innerHTML.match(/class="delivery-gift"/g)||[]).length},node):[];
  Object.assign(h.context,{location:{pathname:'',origin:'http://localhost',search:''},history:{replaceState(){}},URLSearchParams,setInterval(){},fetch:()=>new Promise(()=>{}),RoomHost:{update:state=>barrageController.update(state)},GameShell:{stableMarkup:(el,html)=>{el.innerHTML=html;},playerRow:()=>'<div><small>在線</small></div>',settingsActions:()=>''}});
+ h.window.RoomControls=require('./helpers/room-actions.cjs')();
  h.window.AudioSettings={playEffect(){},stopEffects(){}};
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/gift.js'),'utf8'),h.context);
  return{...h,animations,nodes,barrages,receive(state){h.context.nextState=state;return vm.runInContext('receive(nextState)',h.context);},poll(state){h.context.RoomApi={request:async()=>state};return vm.runInContext("session={code:'ABCDEF'};poll()",h.context);},disconnect(){vm.runInContext('disconnected=true',h.context);},reconnect(){vm.runInContext('disconnected=false',h.context);}};

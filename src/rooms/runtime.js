@@ -45,9 +45,9 @@ function createRoomRuntime(){
   req.once('close',entry.dispose);
   if(stopped){entry.dispose();entry.res.end();}
  }
- function start({history,onTransition,onSweep,onDrawStroke}){
+ function start({history,transitions,onTransition,onSweep,onDrawStroke}){
   if(stopped)throw Error('Room runtime has been closed');
-  if(!stopScheduler)stopScheduler=startRoomScheduler({rooms,history,onDelete:cleanupRoom,onTransition,onSweep,onDrawStroke});
+  if(!stopScheduler)stopScheduler=startRoomScheduler({rooms,history,transitions,onDelete:cleanupRoom,onTransition,onSweep,onDrawStroke});
  }
  function stop(){if(stopped)return;stopped=true;stopScheduler?.();stopScheduler=null;}
  function close(){

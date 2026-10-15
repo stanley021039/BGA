@@ -2,6 +2,10 @@
 
 版本管理從既有 `1.0.0` 基線開始；更早的功能與部署紀錄見 `docs/`，不追補未曾實際標記的發行版。
 
+## [2.8.1] - 2026-10-15
+
+- Unify room UI ownership and actions; preserve drawing sessions and settings-save ordering
+
 ## [2.8.0] - 2026-10-15
 
 - 改善郎中藥材書與操作版面，恢復抽藥及停手梗圖卡
