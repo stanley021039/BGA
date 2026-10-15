@@ -6,6 +6,15 @@
 
 2026-10-15／2.9.0：新增 Stitch 20 款動態彈幕框與收藏庫分頁，保留原 4 款；靜態模板、框飾動畫與文字分離，沿用白名單事件及本地選框偏好。20 款隔離雙席傳送、現行整合服務代表款及聊天表單、1440／390／320px 選框與收藏庫、長文字／關閉框飾尺寸及減少動態設定已觀察。無測試套件、實體手機、全遊戲階段或 FPS 結論。詳 [設計、實作與驗收](../BARRAGE-STITCH-20.md)。
 
+2026-10-15 架構 PR 驗證（2.8.1）：取代本批候選「套件未執行」的狀態。Linux Node v22.22.1 完整 `npm test` 2229/2229 通過，無失敗、取消或略過；設定保存競態新增 6 項，共用實體操作元件驗房主／容量／階段／pending／焦點／跨房間回應。修正測試 fixture 接線及過時 DOM 斷言，保留畫布像素／中途筆跡與協定斷言；復原測試等待 renderer，不等待刻意未回覆的筆畫 HTTP。67 個變更 JS 語法、CSS ownership、11 頁載入順序、patch release check 與 staged diff check 通過。瀏覽器證據沿用同日實作驗收，沒有新增九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
+
+2026-10-15 前端 UI 階層：以畫猜／郎中為基準，RoomUI 單次分派 snapshot；RoomLayout／DrawingLayout 集中 host 位置與畫板幾何，移除 primitives→Template 反向依賴及 Stitch 全 body 版面觀察；全遊戲房間操作改明確 adapter，設定保存失敗阻止開局。CSS 分成 tokens／skin／composition 與郎中 theme／layout，122 處等值 token；72 組真 Chromium 前後比較 computedStyle 一致。測試站已驗畫猜持筆／ACK／SSE／換輪／結束再玩及設定失敗恢復、郎中一回合採購／女巫、其餘九款房主／訪客／滿員／開局防重；pageerror 皆空。套件未執行，無完整九回合／實機觸控結論。詳 [UI 架構與驗收](../refactors/UI-ARCHITECTURE.md)。
+
+
+2026-10-15 架構 2／3／4：郎中改用具名槽位、單次採購呈現、直接女巫動作與穩定焦點 key；房間玩家／AI／timer 共用 transitions，保留歷史失敗可離席與清理；畫猜 session 集中 canonical／draft／quota／ACK／reset／renderer。測試站真 Chromium 已驗一回合郎中買退與女巫、雙席持筆／ACK／SSE／reset、undo／clear／重連／換輪／倒數、桌機與390／320；隔離 HTTP 驗 kick 確認／禁重入及歷史 quota 失敗離席。套件測試未執行，語法及 diff check 通過；無九回合／實機觸控／全遊戲結論。詳 [實作與驗收](../refactors/ARCHITECTURE-234.md)。
+
+2026-10-15 郎中房間操作 module：基於 cf80116，新增明確 read/run seam，郎中移除隱藏開始／準備按鈕及代理 click；共用 module 管理 pending、AI 名單槽與焦點，其他遊戲保留舊接線。設定保存失敗與一般操作錯誤分開，避免後者阻塞開始。測試站 Chromium 已驗設定失敗恢復、連點防重、房主／非房主、1440／390／320尺寸穩定、結束重載再開局與撲克相容；未執行測試套件，無實機觸控／九回合／全遊戲結論。詳 [接線契約與驗收](../refactors/ROOM-ACTIONS-ADAPTER.md)。
+
 2026-10-15 整合分支測試修復：首次 Linux `npm test` 為 2091/2209、118 失敗；原因集中於測試 DOM 與畫布 fixture 未跟上 `createDrawingRenderer`、`document.body.dataset`、`CustomEvent` 及共用房間操作。修復後 Linux 完整 2210/2210，另有畫猜 185/185 與三倍像素畫布專項。只改測試與記憶文件，未改產品程式；本輪未作新增實機、PR 或正式部署驗收。詳 [程式架構記錄](PROGRAMMER.md)。
 
 2026-10-15 候選 2.7.0：郎中 Stitch 與畫猜以同一等待室／聊天室元件整合；採購以圖片、價格與勾選呈現，保留購買取消、最新原生控制器及原音檔。五席、第一輪實際買退、主鍋／放大提示、1280及390／320採購與有限畫猜開局／筆跡已觀察；未新增完整九輪、實機手機或聽感結論。詳 [本輪整合與驗收](../STITCH-QUACKS-INTEGRATION.md)。
@@ -265,3 +274,5 @@ Chromium 隔離實際房間 BB07C0：想想三題中選海洋雪後才顯示30�
 本批2.11.1最終驗證：Windows完整2263／2263，版本及diff檢查通過，本機試玩仍3018；無推送／PR／部署。
 
 2026-10-15 PR準備候選2.13.0：整合main bf8eb4e／#129最新個人設定與表情功能，保留本聊天三遊戲、八人、音效及隨機先手；完整2277、三款原生複驗與兩輪自查完成。範圍、限制與未發布狀態見[PR準備](../specs/THREE-GAME-PR-PREPARATION.md)。尚未推送／建立PR／合併／部署。
+
+2026-10-15 PR #127 再複查：整合 main eb648ce，候選 2.13.1；解 13 檔衝突並修正郎中八人 AI／同頻殘酷模式開局 adapter，保留架構拆分。隔離站九款開局、郎中保存失敗／恢復及穩定尺寸、畫猜雙席持筆／ACK／重連／換輪與桌機手機已驗；未執行套件，未合併或正式發布。詳 [本次證據](../refactors/UI-ARCHITECTURE.md#2026-10-15-pr-127-最新-main-整合複查2131)。

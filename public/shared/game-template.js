@@ -85,85 +85,6 @@
    }});emotes.dataset.templateEmotes='';top.append(emotes);
   }
  }
- function mountDrawing(){
-  const root=document.querySelector('.draw-layout');if(!root)return;
-  if(mounted.has(root))return;mounted.add(root);
-  const toolbar=document.querySelector('.draw-shell>.game-toolbar');
-  if(toolbar&&!document.getElementById('drawingPlayTitle')){
-   const title=element('h1',{text:'你畫我猜',attrs:{id:'drawingPlayTitle'}});title.hidden=true;toolbar.prepend(title);
-  }
-  frame(document.querySelector('.draw-shell'),'page');
-  grid(root,{roster:root.querySelector('.draw-roster'),stage:root.querySelector('main'),chat:root.querySelector('aside')});
-  frame(document.querySelector('#tools'),'toolbar');
-  const board=document.getElementById('boardSection'),palette=document.querySelector('#tools>.color-row');
-  if(board&&palette){
-   palette.classList.add('tpl-palette');board.append(palette);
-   const menu=palette.querySelector('#colorMenu'),swatches=menu?.querySelector('#swatches');
-   if(swatches){menu.after(swatches);menu.hidden=true;}
-  }
-  let queued=false;
-  function fitViewport(){
-   queued=false;
-   const top=root.getBoundingClientRect().top+window.scrollY;
-   const footer=document.querySelector('.st-site-footer');
-   const bottom=(footer?footer.getBoundingClientRect().height:46)+(document.body.dataset.drawPhase==='waiting'?24:16);
-   const height=Math.max(440,Math.floor(window.innerHeight-top-bottom));
-   if(document.body.style.getPropertyValue('--tpl-game-height')!==height+'px')document.body.style.setProperty('--tpl-game-height',height+'px');
-  }
-  function schedule(){if(!queued){queued=true;requestAnimationFrame(fitViewport);}}
-  window.addEventListener('resize',schedule);
-  new MutationObserver(schedule).observe(document.body,{attributes:true,attributeFilter:['class','data-room-phase']});
-  if(typeof ResizeObserver==='function')new ResizeObserver(schedule).observe(document.querySelector('.draw-shell>[data-site-header]'));
-  schedule();
- }
- function measureBoard({board,frame,viewport,tools,gap}){
-  if(!document.body.dataset.uiTemplate||document.body.classList.contains('ui-large-text')||!matchMedia('(min-width:1101px) and (min-height:680px)').matches)return null;
-  const below=tools&&matchMedia('(max-height:800px)').matches;
-  const css=getComputedStyle(board),paddingX=parseFloat(css.paddingLeft)+parseFloat(css.paddingRight),paddingBottom=parseFloat(css.paddingBottom);
-  const row=Number(getComputedStyle(frame).gridRowStart)-1,rowHeight=css.gridTemplateRows.split(/\s+/).map(parseFloat)[row];
-  const available=Number.isFinite(rowHeight)&&rowHeight>0?rowHeight:viewport.clientHeight-paddingBottom-(frame.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop)-(below?tools.getBoundingClientRect().height+gap:0);
-  const paperInset=document.body.dataset.drawRole==='artist'&&document.body.dataset.drawPhase==='drawing'?16:0;
-  return {width:board.clientWidth-paddingX-(!below&&tools?tools.getBoundingClientRect().width+gap:0)-paperInset,available:available-paperInset};
- }
- let waitingChat;
- let nextSettings;
- function settingsHost(host,state){
-  if(!document.body.dataset.uiTemplate||state?.type!=='draw')return host;
-  if(state.phase!=='finished'){if(nextSettings?.dialog.open)nextSettings.dialog.close();if(nextSettings&&!nextSettings.trigger.hidden)nextSettings.trigger.hidden=true;return host;}
-  if(!nextSettings){
-   const component=dialogPanel({title:'下一局設定',titleId:'tplNextSettingsTitle',className:'tpl-settings-dialog',closeLabel:'關閉下一局設定'});
-   const dialog=component.root,body=component.body;body.classList.add('tpl-settings-dialog__body');
-   const trigger=button({label:'下一局設定',icon:'settings',onClick:()=>ui.openDialog(dialog,trigger)});
-   trigger.dataset.templateNextSettings='';
-   document.querySelector('.game-toolbar nav')?.append(trigger);nextSettings={dialog,body,trigger};
-  }
-  if(nextSettings.trigger.hidden)nextSettings.trigger.hidden=false;return nextSettings.body;
- }
- function openSettings(trigger){if(nextSettings)ui.openDialog(nextSettings.dialog,trigger);}
- function arrangeWaiting(layout,waiting=true){
-  if(!document.body.dataset.uiTemplate||!['draw','quacks'].includes(document.body.dataset.gameKind)||!layout)return;
-  const chat=layout.querySelector('.ui-room-chat-slot')||waitingChat?.dialog.querySelector('.ui-room-chat-slot');
-  // Move the complete controller host; its internal settings slot belongs to RoomControls.
-  const settings=layout.querySelector('.ui-room-waiting-controls'),guestSide=layout.querySelector('.st-waiting-guest-aside');
-  if(!waiting){if(waitingChat?.dialog.open)waitingChat.dialog.close();if(chat&&chat.parentElement!==layout)layout.append(chat);if(settings&&settings.parentElement!==layout)layout.append(settings);if(guestSide&&!guestSide.hidden)guestSide.hidden=true;return;}
-  let center=layout.querySelector('.tpl-waiting-center');
-  if(!center){center=element('div',{className:'tpl-waiting-center tpl-stack'});layout.append(center);}
-  const hero=layout.querySelector(':scope>.room-waiting-template');if(hero)center.append(hero);
-  if(!waitingChat){
-   const component=dialogPanel({title:'房間閒聊',titleId:'tplWaitingChatTitle',className:'tpl-chat-dialog',closeLabel:'關閉房間閒聊'});
-   const dialog=component.root;
-   const trigger=button({label:'房間閒聊與表情',icon:'chat',onClick:()=>ui.openDialog(dialog,trigger)});
-   const footer=element('div',{className:'tpl-waiting-footer'});footer.append(trigger,element('span',{text:'房間閒聊與表情'}));center.append(footer);
-   waitingChat={dialog,body:component.body,trigger};
-  }
-  if(document.body.dataset.drawHost==='false'){
-   const side=guestSide||element('aside',{className:'st-waiting-guest-aside'});if(!guestSide)layout.append(side);if(side.hidden)side.hidden=false;
-   if(settings&&settings.parentElement!==side)side.append(settings);if(chat&&chat.parentElement!==side)side.append(chat);
-  }else{
-   if(settings&&settings.parentElement!==layout)layout.append(settings);if(guestSide&&!guestSide.hidden)guestSide.hidden=true;
-   if(chat&&chat.parentElement!==waitingChat.body)waitingChat.body.append(chat);
-  }
- }
  const waitingScenes=new WeakMap();
  function waitingScene(center,state,config){
   if(!center||state?.phase!=='waiting')return;
@@ -211,7 +132,7 @@
    else{card.prepend(element('span',{text:'#'+rank}));card.append(element('small',{text:'猜中 '+(correctCounts[player.id]||0)+' 次'}));rest.append(card);}
   });root.append(top);if(players.length>3){root.append(element('h3',{text:'完整排名席次'}),rest);}return root.outerHTML;
  }
- ui.Template={objects:{element,button,frame,characterMarkup},compositions:{panel,disclosure,dialogPanel,podium},patterns:{grid,updateRoster,measureBoard,arrangeWaiting,waitingScene,refreshWaiting,settingsHost,openSettings},pages:{mountLobby,mountDrawing}};
- if(document.body.dataset.uiTemplate){if(document.body.dataset.gameKind==='draw')mountDrawing();else mountLobby();}
+ ui.Template={objects:{element,button,frame,characterMarkup},compositions:{panel,disclosure,dialogPanel,podium},patterns:{grid,updateRoster,waitingScene,refreshWaiting},pages:{mountLobby}};
+ if(document.body.dataset.uiTemplate&&document.body.dataset.gameKind!=='draw')mountLobby();
  window.addEventListener('pagehide',event=>{if(!event.persisted)gate?.dispose();});
 })();

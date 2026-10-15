@@ -1,0 +1,32 @@
+/* Stitch theme adapter: palette and presentation tokens. No layout selectors. Inherits foundation and template tokens. */
+body[data-ui-template=tactile][data-visual-theme=playful]{
+ --st-paper:#fcf9f8;--st-surface:#fff;--st-low:#f6f3f2;--st-inset:#f0eded;--st-high:#e4e2e1;
+ --st-ink:#1b1c1c;--st-muted:#4e4634;--st-primary:#755b00;--st-yellow:#f8c838;--st-on-yellow:#6d5400;
+ --st-blue:#c7e4f6;--st-on-blue:#4b6675;--st-peach:#e9c7b1;--st-on-peach:#6b5240;
+ --st-error:#ba1a1a;--st-error-surface:#ffdad6;--st-success:#d6eed9;--st-soft-shadow:0 2px 2px #1b1c1c08;
+ --st-hard-shadow:0 3px 0 var(--st-ink);--st-duration:150ms;--st-gap:16px;--st-radius:16px;
+ --tpl-page:var(--st-paper);--tpl-panel:var(--st-surface);--tpl-inset:var(--st-low);--tpl-text:var(--st-ink);--tpl-muted:var(--st-muted);
+ --tpl-action:var(--st-yellow);--tpl-on-action:var(--st-on-yellow);--tpl-line:var(--st-high);--tpl-border:2px solid var(--st-ink);--tpl-shadow:var(--st-hard-shadow);--tpl-gap:16px;--tpl-pad:16px;
+ --play-ink:var(--st-ink);--play-paper:var(--st-paper);--play-surface:var(--st-surface);--play-muted:var(--st-muted);
+ --play-font:StitchJakarta,'Microsoft JhengHei','Noto Sans TC',sans-serif;
+}
+html[data-color-scheme=dark] body[data-ui-template=tactile][data-visual-theme=playful]{--st-paper:#13120f;--st-surface:#1b1a17;--st-low:#23221e;--st-inset:#2b2924;--st-high:#353229;--st-ink:#f5f0e4;--st-muted:#c5bba6;--st-primary:#e4c76e;--st-on-yellow:#302400;--st-blue:#273d49;--st-on-blue:#c7e4f6;--st-peach:#49362b;--st-on-peach:#ffdcc5;--st-error:#ffb4ab;--st-error-surface:#4a2522;--st-success:#234637;--st-soft-shadow:0 2px 2px #0004;--st-hard-shadow:0 3px 0 #050504;--tpl-page:var(--st-paper);--tpl-panel:var(--st-surface);--tpl-inset:var(--st-low);--tpl-text:var(--st-ink);--tpl-muted:var(--st-muted)}
+@layer stitch-export {
+body[data-ui-template=tactile][data-visual-theme=playful] {
+ --st-page-padding:24px!important; --st-panel-padding:16px!important; --st-panel-gap:24px!important;
+ --st-header-height:64px!important; --st-footer-height:46px!important;
+ --st-roster-width:280px!important; --st-chat-width:320px!important;
+ --st-seat-avatar:56px!important; --st-playing-avatar:44px!important;
+}
+html[data-color-scheme=dark] body[data-ui-template=tactile][data-visual-theme=playful] {
+ --st-paper:#181512!important; --st-surface:#24201c!important; --st-low:#2e2722!important;
+ --st-inset:#352e27!important; --st-high:#443a31!important; --st-ink:#f5f0eb!important; --st-muted:#c9bbae!important;
+ --st-blue:#2d404b!important; --st-on-blue:#c7e4f6!important; --st-peach:#4b362b!important;
+}
+}
+
+/* Stable room and drawing workbench slots; game adapters own density. */
+body[data-ui-template=tactile][data-visual-theme=playful]{
+ --st-room-seat-height:72px;--st-room-status-height:16px;
+ --st-board-tools-width:56px;--st-board-toolbar-height:70px;--st-board-footer-height:40px;
+}

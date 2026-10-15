@@ -1,12 +1,50 @@
 (()=>{
  'use strict';
  let state=null,panel=null,scheduled=false,leaving=false,leaveController=null,settingsSource=null,readonlySource=null,readonlyKey='';
- const native={start:null,bot:null},proxies={};let playPanels=null;
+ const proxies={};let playPanels=null;
   const customHomes=new Map();
  function rememberCustom(n){if(!n||customHomes.has(n))return;const home=document.createComment('custom-room-control-home');n.before(home);customHomes.set(n,{home,tabIndex:n.getAttribute('tabindex'),ariaHidden:n.getAttribute('aria-hidden'),native:n.getAttribute('data-room-native-action')});}
  function restoreCustom(){for(const [n,e]of customHomes){if(e.home.parentNode)e.home.after(n);e.home.remove();for(const [attr,value]of [['tabindex',e.tabIndex],['aria-hidden',e.ariaHidden],['data-room-native-action',e.native]]){if(value===null)n.removeAttribute(attr);else n.setAttribute(attr,value);}}customHomes.clear();if(panel)panel.hidden=true;}
  const actions={start:{icon:'play',label:'開始遊戲'},bot:{icon:'bot',label:'加入 AI 測試夥伴'},invite:{icon:'invite',label:'邀請線上朋友'},manage:{icon:'settings',label:'管理玩家'},leave:{icon:'leave',label:'離房'}};
- const minimumPlayers={poker:2,thunder:2,draw:2,majority:3,gift:3,telephone:3,minimal:3,bluff:3,trpg:1,musicquiz:1,quacks:2};
+ // Explicit action adapters own game decisions; this module owns the buttons,
+ // pending guard, roster placement and focus. Games declare their decisions explicitly.
+ let actionBinding=null,actionPending=null,rosterButton=null;
+ const boundActions=()=>actionBinding&&(state?.type||'poker')===actionBinding.type?actionBinding:null;
+ const setupPhase=()=>boundActions()?.read().setup??['waiting','finished'].includes(state?.phase);
+ const actionRoom=()=>state&&[state.type,state.code,state.me,state.roomInstanceId||''].join(':');
+ function actionStatus(message){const slot=panel?.querySelector('.ui-room-control-status');if(slot&&slot.textContent!==message)slot.textContent=message;}
+ async function invokeAction(kind,trigger){
+  const binding=boundActions(),model=binding?.read();
+  if(!binding||actionPending||leaving||!owner()||!setupPhase()||!model?.[kind]?.enabled)return;
+  const operation={binding,room:actionRoom(),kind},step=kind==='start'?model.start.step:kind;
+  actionPending=operation;actionStatus('');syncActions();
+  try{await binding.run(step,trigger);}
+  catch(error){if(actionPending===operation&&actionRoom()===operation.room)actionStatus(error.message||'無法完成房間操作');}
+  finally{if(actionPending===operation){actionPending=null;syncActions();const active=document.activeElement;if(actionRoom()===operation.room&&trigger?.isConnected&&!trigger.disabled&&!document.querySelector('dialog[open]')&&(active===trigger||active===document.body))trigger.focus({preventScroll:true});}}
+ }
+ function syncActions(){
+  const binding=boundActions();if(!binding||!panel)return;
+  const model=binding.read(),setup=setupPhase(),pending=!!actionPending;
+  for(const kind of ['start','bot']){
+   const button=proxies[kind],action=model[kind],visible=setup&&(kind==='start'||owner()),label=action?.label||actions[kind].label;
+   if(button.dataset.roomPrimaryLabel!==label){window.GameUI?.decorateButton(button,kind==='start'&&action?.step==='prepare'?'next':actions[kind].icon,{label,iconOnly:kind!=='start'});button.dataset.roomPrimaryLabel=label;}
+   button.hidden=!visible;button.disabled=!visible||!owner()||!action?.enabled||pending||leaving;
+   button.setAttribute('aria-busy',String(pending&&actionPending.kind===kind));
+  }
+  // The roster gets the actual owned button, never a proxy to a hidden button.
+  if(!rosterButton){rosterButton=decorate(node('button',''),'bot');rosterButton.type='button';rosterButton.onclick=()=>invokeAction('bot',rosterButton);}
+  rosterButton.disabled=!owner()||!model.bot?.enabled||pending||leaving;
+  rosterButton.setAttribute('aria-busy',String(pending&&actionPending.kind==='bot'));
+  if(state.phase==='waiting'&&owner()&&window.RoomWaiting?.setRosterAction){window.RoomWaiting.setRosterAction(rosterButton);proxies.bot.hidden=true;}
+  else if(rosterButton.closest('.ui-room-roster-add'))window.RoomWaiting?.setRosterAction(null);
+  const row=panel.querySelector('.ui-room-session-actions');
+  for(const kind of ['start','bot']){const host=model.host||row;if(proxies[kind].parentElement!==host)host.insertBefore(proxies[kind],kind==='start'?host.firstChild:null);}
+ }
+ function bindActions(binding){
+  if(actionBinding)throw Error('Room actions already bound');
+  actionBinding=binding;schedule();
+  return {refresh(){if(boundActions()){syncActions();schedule();}}};
+ }
  function node(tag,cls,text){const n=document.createElement(tag);n.className=cls;if(text!==undefined)n.textContent=text;return n;}
  function decorate(button,kind){const action=actions[kind];button.classList.add('ui-room-action');button.dataset.roomAction=kind;window.GameUI?.decorateButton(button,action.icon,{iconOnly:kind!=='start',label:action.label});if(!window.GameUI){button.textContent=action.label;button.setAttribute('aria-label',action.label);}return button;}
  function rosterAction(button,kind='bot'){
@@ -17,16 +55,6 @@
  function primaryAction(button,{step='start'}={}){if(!button)return button;button.dataset.roomNativeAction='start';button.tabIndex=-1;button.setAttribute('aria-hidden','true');if(step==='prepare')button.dataset.roomPrimaryAction='prepare';else if(step==='start')button.dataset.do='start';return button;}
  function owner(){return state&&(state.host===true||state.host===state.me||state.hostId===state.me);}
  function hidden(n){for(let a=n;a;a=a.parentElement)if(a.hidden||getComputedStyle(a).display==='none'||getComputedStyle(a).visibility==='hidden')return true;return false;}
- function findAction(kind){
-  if(kind==='start'&&state.type==='thunder'&&state.phase==='finished')return document.querySelector('#winner [data-action="restart"]');
-  const selectors=kind==='start'?'#start,[data-do="start"]':'#bot,[data-do="bot"]';
-  const original=n=>!n.closest('[data-room-common]')||n.dataset.roomNativeAction===kind;
-  if(kind==='start'&&state.phase==='waiting'){const staged=[...document.querySelectorAll('[data-room-primary-action]')].find(n=>original(n)&&!hidden(n));if(staged)return staged;}
-  let found=[...document.querySelectorAll(selectors)].find(original);
-  if(!found){const names=kind==='start'?/^(開始|再來一場|發牌)/:/^(加入腳本測試夥伴|加入測試 AI|加入測試AI|加入.*夥伴|＋.*電腦)/;
-   found=[...document.querySelectorAll('#controls button,.action-panel button')].find(n=>original(n)&&names.test(n.getAttribute('aria-label')||n.textContent.trim()));}
-  return found||null;
- }
  function normalizeFields(source){
   source.classList.add('ui-room-settings-source');if(source.tagName==='DETAILS')source.open=true;window.GameUI.frameFields(source);
   for(const grid of source.querySelectorAll('.fields,.settings,.room-settings'))grid.classList.add('ui-room-setting-grid');
@@ -112,30 +140,22 @@
   if(!panel){panel=node('section','ui-room-controls');panel.dataset.roomCommon='';panel.setAttribute('aria-label','房間設定與操作');
    const settings=node('section','ui-room-settings-card'),heading=node('h2','ui-room-settings-heading','房間設定'),slot=node('div','ui-room-settings-slot');settings.append(slot);proxies.heading=heading;
    const row=node('div','ui-room-session-actions');row.setAttribute('aria-label','房間操作');
-   for(const kind of ['start','bot','leave']){const button=decorate(node('button',''),kind);button.type='button';button.onclick=()=>kind==='leave'?leave(button):native[kind]?.click();proxies[kind]=button;row.append(button);}
+   for(const kind of ['start','bot','leave']){const button=decorate(node('button',''),kind);button.type='button';button.onclick=()=>kind==='leave'?leave(button):invokeAction(kind,button);proxies[kind]=button;row.append(button);}
    const status=node('p','ui-room-control-status'),footer=node('footer','ui-room-settings-footer');status.setAttribute('role','status');status.setAttribute('aria-live','polite');footer.append(status,row);window.GameUI.framePanel(panel,{header:heading,content:settings,footer});host.append(panel);
   }
-  const settingsHost=window.GameUI?.Template?.patterns.settingsHost?.(host,state)||host;
+  const settingsHost=window.RoomLayout?.settingsHost?.(host,state)||host;
   if(panel.parentElement!==settingsHost)settingsHost.append(panel);
   panel.dataset.aiPlacement=window.RoomWaiting?.setRosterBusy||state.type==='telephone'&&window.RoomWaiting?.setRosterAction?'roster':'inline';
-  const inPlay=!['waiting','finished'].includes(state.phase);if(panel.hidden!==inPlay)panel.hidden=inPlay;
+  const inPlay=!setupPhase();if(panel.hidden!==inPlay)panel.hidden=inPlay;
  }
  function normalize(){
-  scheduled=false;if(!state||window.RaceLesson)return;const customQuacks=state.type==='quacks'&&document.body.dataset.roomLayout==='custom';if(document.body.dataset.roomLayout==='custom'&&(!customQuacks||state.phase!=='waiting')){if(customHomes.size)restoreCustom();window.RoomInvites?.updateRoom(state);return;}syncPlayPanels();mount();if(!panel)return;
+  scheduled=false;if(!state||window.RaceLesson)return;const customQuacks=state.type==='quacks'&&document.body.dataset.roomLayout==='custom';if(document.body.dataset.roomLayout==='custom'&&(!customQuacks||state.phase!=='waiting')){if(boundActions()){mount();syncActions();}if(customHomes.size)restoreCustom();window.RoomInvites?.updateRoom(state);return;}syncPlayPanels();mount();if(!panel)return;
   window.RoomInvites?.updateRoom(state);
   if(window.RoomInvites?.ready&&playPanels){if(!proxies.invite){proxies.invite=decorate(node('button',''),'invite');proxies.invite.onclick=()=>window.RoomInvites.open(proxies.invite);}const header=playPanels.frame.querySelector('.ui-game-operations-header');if(proxies.invite.parentElement!==header)header.append(proxies.invite);}
   const legacyInvite=document.getElementById('invite');if(legacyInvite&&legacyInvite.dataset.roomLinkLabel!=='true'){legacyInvite.dataset.roomLinkLabel='true';window.GameUI?.decorateButton(legacyInvite,'external',{label:'複製房間連結'});}
-  for(const kind of ['start','bot']){
-   if(kind==='bot'&&window.RoomWaiting?.setRosterBusy){native.bot=null;if(!proxies.bot.hidden)proxies.bot.hidden=true;if(!proxies.bot.disabled)proxies.bot.disabled=true;continue;}
-   const source=findAction(kind);native[kind]=source;if(source&&!source.hasAttribute('data-room-native-action')){source.setAttribute('data-room-native-action',kind);source.tabIndex=-1;source.setAttribute('aria-hidden','true');}
-   const legacyRace=state.type==='thunder',rosterBot=state.type==='telephone'&&!!window.RoomWaiting?.setRosterAction,visible=kind==='bot'?state.phase==='waiting'&&!rosterBot&&owner()&&(legacyRace||state.botSupport?.supported!==false)&&(!!source||state.botSupport?.canAdd===false):['waiting','finished'].includes(state.phase),button=proxies[kind];if(button.hidden===visible)button.hidden=!visible;
-   const preparing=kind==='start'&&source?.dataset.roomPrimaryAction==='prepare';
-   if(kind==='start'){const label=preparing?(source.getAttribute('aria-label')||source.textContent.trim()):actions.start.label;if(button.dataset.roomPrimaryLabel!==label){window.GameUI?.decorateButton(button,preparing?'next':actions.start.icon,{label});button.dataset.roomPrimaryLabel=label;}}
-   const playerCount=(state.players||[]).filter(p=>!p.kicked).length;const tooFew=kind==='start'&&!preparing&&(state.cruel?(state.cruel.rules==='teams'?![4,6,8].includes(playerCount):playerCount<1):playerCount<(minimumPlayers[state.type||'poker']||1));
-   const disabled=!visible||!source||source.disabled||hidden(source)||button.getAttribute('aria-busy')==='true'||leaving||tooFew||kind==='start'&&!owner()||kind==='bot'&&!legacyRace&&state.botSupport?.canAdd===false;if(button.disabled!==disabled)button.disabled=disabled;
-  }
+  syncActions();
   const manage=document.getElementById('managePlayers'),row=panel.querySelector('.ui-room-session-actions');
-  const inPlay=!['waiting','finished'].includes(state.phase),chat=document.querySelector('.shared-chat'),tools=chat?.querySelector('.chat-room-tools'),actionHost=inPlay&&tools?tools:row;
+  const inPlay=!setupPhase(),chat=document.querySelector('.shared-chat'),tools=chat?.querySelector('.chat-room-tools'),actionHost=inPlay&&tools?tools:row;
   if(proxies.leave.parentElement!==actionHost)actionHost.append(proxies.leave);
   if(manage){if(customQuacks)rememberCustom(manage);if(manage.dataset.roomAction!=='manage')decorate(manage,'manage');if(manage.parentElement!==actionHost||manage.nextElementSibling!==proxies.leave)actionHost.insertBefore(manage,proxies.leave);}
   if(chat){const value=String(state.phase!=='waiting');if(chat.dataset.gameChat!==value)chat.dataset.gameChat=value;chat.parentElement?.classList.remove('ui-game-chat-host');}
@@ -144,7 +164,7 @@
   const ownLeave=document.getElementById('leave'),legacyLinks=document.querySelectorAll('.room-leave,#back');if(customQuacks)rememberCustom(ownLeave);
   if(ownLeave&&!ownLeave.hasAttribute('data-room-native-action')){ownLeave.setAttribute('data-room-native-action','leave');ownLeave.tabIndex=-1;ownLeave.setAttribute('aria-hidden','true');}
   for(const n of legacyLinks)if(!n.hasAttribute('data-room-native-action')){n.setAttribute('data-room-native-action','leave');n.tabIndex=-1;n.setAttribute('aria-hidden','true');}
-  const leaveDisabled=leaving||!!ownLeave?.disabled;if(proxies.leave.disabled!==leaveDisabled)proxies.leave.disabled=leaveDisabled;if(proxies.leave.hidden)proxies.leave.hidden=false;
+  const leaveDisabled=leaving||!!actionPending||!!ownLeave?.disabled;if(proxies.leave.disabled!==leaveDisabled)proxies.leave.disabled=leaveDisabled;if(proxies.leave.hidden)proxies.leave.hidden=false;
   const setup=state.phase==='waiting'||['draw','bluff','telephone','quacks'].includes(state.type)&&state.phase==='finished',card=panel.querySelector('.ui-room-settings-card');if(card.hidden===setup)card.hidden=!setup;const heading=proxies.heading;if(heading.hidden===setup)heading.hidden=!setup;for(const legacy of document.querySelectorAll('[data-room-settings-heading]'))if(!legacy.hidden)legacy.hidden=true;
   // Like chat, the header belongs inside the outer panel and above its content lines.
   if(heading.parentElement!==panel)panel.prepend(heading);
@@ -164,6 +184,7 @@
    else if(!settingsSource||!settingsSource.isConnected){settingsSource=null;const text=owner()?'本遊戲使用固定規則，無需調整。':'由房主調整房間設定。';if(slot.textContent!==text)slot.replaceChildren(node('p','ui-room-settings-note',text));}
   }
   if(state.phase==='waiting'&&outer){alignNativePanel(outer);if(customQuacks)window.QuacksStitch?.waitingRoom(state);window.GameUI?.Template?.patterns.refreshWaiting?.(outer.closest('.ui-room-waiting-layout'));}
+  document.dispatchEvent(new CustomEvent('room-controls-rendered'));
  }
  function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(normalize);}
  const dialog=node('dialog','ui-dialog room-leave-dialog');dialog.setAttribute('aria-labelledby','unified-leave-title');
@@ -171,7 +192,7 @@
  window.GameUI?.frameDialog?.(dialog);
  document.body.append(dialog);const confirm=dialog.querySelector('[data-confirm]'),cancel=dialog.querySelector('[data-cancel]');window.GameUI?.decorateButton(confirm,'leave',{label:'確認離開'});window.GameUI?.decorateButton(cancel,'close',{label:'留在房間'});
  cancel.onclick=()=>{if(!leaving)dialog.close();};dialog.addEventListener('cancel',event=>{if(leaving)event.preventDefault();});
- function leave(trigger){if(!state||window.RaceLesson||leaving||dialog.open)return;const type=state.type||'poker';dialog.querySelector('.ui-room-leave-effect').textContent=['telephone','trpg','musicquiz','minimal','bluff','quacks'].includes(type)&&!['waiting','finished'].includes(state.phase)?'離席會中止本場遊戲，保留已完成內容。離開後返回遊戲大廳。':type==='draw'&&!['waiting','finished'].includes(state.phase)?'畫者離席會揭曉本輪；人數不足時本場結束。離開後返回遊戲大廳。':'離開後返回遊戲大廳；房主離開時依遊戲規則移交房主或結束房間。';dialog.querySelector('.ui-room-leave-status').textContent='';if(window.GameUI?.openDialog)window.GameUI.openDialog(dialog,trigger);else dialog.showModal();}
+ function leave(trigger){if(!state||window.RaceLesson||leaving||actionPending||dialog.open)return;const type=state.type||'poker';dialog.querySelector('.ui-room-leave-effect').textContent=['telephone','trpg','musicquiz','minimal','bluff','quacks'].includes(type)&&!setupPhase()?'離席會中止本場遊戲，保留已完成內容。離開後返回遊戲大廳。':type==='draw'&&!setupPhase()?'畫者離席會揭曉本輪；人數不足時本場結束。離開後返回遊戲大廳。':'離開後返回遊戲大廳；房主離開時依遊戲規則移交房主或結束房間。';dialog.querySelector('.ui-room-leave-status').textContent='';if(window.GameUI?.openDialog)window.GameUI.openDialog(dialog,trigger);else dialog.showModal();}
  confirm.onclick=async()=>{
   if(!state||leaving)return;const captured=state,code=state.code;leaving=true;confirm.disabled=cancel.disabled=true;schedule();leaveController=new AbortController();const timer=setTimeout(()=>leaveController.abort(),10000);
   try{const r=await fetch('/api/leave',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({code}),signal:leaveController.signal});const result=await r.json();if(!r.ok&&!['ROOM_NOT_FOUND','NOT_SEATED','KICKED'].includes(result.code))throw Error(result.error||'無法離開房間');if(state?.code!==code||state?.me!==captured.me)return;window.RoomReconnect?.forget(code);window.GameShell?.stop();window.SharedChat?.clearRoom();location.replace('/?game='+(captured.type||'poker'));}
@@ -185,8 +206,7 @@
   if(!target.matches('#leave,#back,.room-leave')&&(!href||href.origin!==location.origin||href.pathname!=='/'))return;
   event.preventDefault();event.stopImmediatePropagation();leave(target);
  },true);
- const observer=new MutationObserver(schedule);observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});
- window.addEventListener('pagehide',()=>{leaveController?.abort();observer.disconnect();});window.addEventListener('pageshow',()=>{observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['disabled','hidden']});schedule();});
+ window.addEventListener('pagehide',()=>{leaveController?.abort();actionPending=null;});window.addEventListener('pageshow',schedule);
  window.addEventListener('room-invitations-ready',schedule);
- window.RoomControls={update(next){if(window.RaceLesson)return;if(state&&state.code===next.code&&next.version<state.version)return;if(state&&(state.code!==next.code||state.me!==next.me)){leaveController?.abort();if(dialog.open)dialog.close();}state=next;schedule();},decorate,rosterAction,primaryAction,mountPlayPanels,inviteContext:()=>state?{code:state.code,type:state.type}:null,stop(){state=null;leaveController?.abort();restorePlayPanels();if(panel)panel.hidden=true;}};
+ window.RoomControls={update(next){if(window.RaceLesson)return;if(state&&state.code===next.code&&next.version<state.version)return;if(state&&(state.code!==next.code||state.me!==next.me)){leaveController?.abort();actionPending=null;actionStatus('');if(dialog.open)dialog.close();}state=next;schedule();},bindActions,leave,decorate,rosterAction,primaryAction,mountPlayPanels,inviteContext:()=>state?{code:state.code,type:state.type}:null,stop(){state=null;actionPending=null;leaveController?.abort();restorePlayPanels();if(panel)panel.hidden=true;}};
 })();
