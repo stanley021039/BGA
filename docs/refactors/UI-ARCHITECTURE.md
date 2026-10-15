@@ -102,3 +102,7 @@ RoomControls.bindActions({type, read, run}) 沿用郎中試點，擴展到所有
 - 67 個差異 JS 語法、style ownership、release:check 及 diff whitespace 檢查通過。
 
 本次沒有執行測試套件。隔離資料與驗收帳號只用於測試站，未操作正式服務；未合併 main 或正式發布。未驗真實手機觸控／Safari、所有遊戲完整對局與郎中九回合。截圖及 JSON 證據保存在本機 PR127 review QA 目錄，不納入發布資產。
+
+### PR #127 CI 後續修正
+
+10237b7 的 Linux CI 失敗於 unified-room-controls 測試：舊測試仍依賴已移除的 findAction 函式邊界擷取程式碼，indexOf 回傳 -1 後造成 VM SyntaxError。改用既有完整 RoomControls DOM fixture 驗證設定來源替換仍保留其他原生操作，並獨立捕捉真實 majority command adapter，保留單人個人模式、隊伍人數、一般最低人數及 busy 限制斷言。沒有改動網站執行程式。Linux Node22 與 Windows Node22 的該檔均 8/8 通過；完整結果以修正提交的 CI 為準。
