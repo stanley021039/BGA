@@ -44,3 +44,6 @@ body>[data-site-header].site-header{width:calc(100% - 8vw);margin-inline:4vw}bod
 
 /* Group spacing belongs to its grid; notes do not add another margin. */
 .site-settings .site-audio-group>.site-settings-note{margin:0}
+
+/* Decorated menu actions retain the shared icon + caption layout. Plain menu links keep their full-row alignment. */
+.site-header .site-account-menu .ui-button{display:inline-flex;align-items:center;justify-content:center;gap:var(--ui-control-gap,8px);padding:var(--ui-button-padding-block,8px) var(--ui-button-padding-inline,16px)}

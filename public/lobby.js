@@ -62,6 +62,10 @@
    bubble.hidden=!visitor.emote;
    if(visitor.emote){
     bubble.textContent=visitor.emote.label;
+    // Keep the complete caption inside the stage, including edge seats.
+    const half=bubble.offsetWidth/2,center=layer.clientWidth*visitor.x/100;
+    const safeCenter=Math.max(half+8,Math.min(layer.clientWidth-half-8,center));
+    bubble.style.left=(node.offsetWidth/2-half+safeCenter-center)+'px';
     if(node.dataset.emoteAt!==String(visitor.emote.at)){
      node.dataset.emoteAt=String(visitor.emote.at);
      node.classList.remove('is-emoting');void node.offsetWidth;node.classList.add('is-emoting');
