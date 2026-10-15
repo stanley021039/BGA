@@ -13,6 +13,7 @@ const CANVAS_EPOCH='00000000-0000-4000-8000-000000000001';
 function browserHarness({realRenderer=false,events=false,rendererOptions,clock}={}) {
  const sources=[],elements = new Map(), listeners = new Map(), frames = [], animations = [], strokeRequests = [], commandRequests = [];
  const animationFrames=new Map();let frameId=0,rectReads=0;
+ const rasterize=(node,width,height)=>Object.defineProperties(node,Object.getOwnPropertyDescriptors(rasterCanvas(width,height)));
  function pointerEvent(event,type){const converted={...event,type};if(event.point){converted.clientX=event.point[0];converted.clientY=event.point[1];}if(event.getCoalescedEvents)converted.getCoalescedEvents=()=>event.getCoalescedEvents().map(sample=>pointerEvent(sample,type));return converted;}
  let snapshot = {canvasEpoch:CANVAS_EPOCH,round: 1, version: 0, strokes: []};
  function element(selector) {
@@ -40,7 +41,7 @@ function browserHarness({realRenderer=false,events=false,rendererOptions,clock}=
  }
  const context = vm.createContext({
   window: {matchMedia: () => ({matches: false}),addEventListener(type,fn){const key='window:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});}},
-  document: {body: element('body'),documentElement:element('html'),hidden:false,visibilityState:'visible',querySelector: element,getElementById:id=>element('#'+id),addEventListener(type,fn){const key='document:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});},createElement: tag => {const node=element('created:'+randomUUID());if(tag==='canvas'){Object.assign(node,rasterCanvas(512,256));node.toDataURL=()=> 'data:image/png;base64,c3ludGhldGlj';}return node;}},
+  document: {body: element('body'),documentElement:element('html'),hidden:false,visibilityState:'visible',querySelector: element,getElementById:id=>element('#'+id),addEventListener(type,fn){const key='document:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});},createElement: tag => {const node=element('created:'+randomUUID());if(tag==='canvas'){rasterize(node,512,256);node.toDataURL=()=> 'data:image/png;base64,c3ludGhldGlj';}return node;}},
   location: {pathname: '/draw/ABC123', origin: 'http://localhost:3000', search: ''},
   localStorage: {getItem: () => null, setItem() {}},
   history: {replaceState() {}}, navigator: {clipboard: {writeText: async () => {}}},
@@ -73,6 +74,7 @@ function browserHarness({realRenderer=false,events=false,rendererOptions,clock}=
      render(strokes,{keys}={}){const next=JSON.stringify(keys||strokes);if(next===signature)return false;signature=next;frames.push(JSON.parse(JSON.stringify({strokes,preview:null})));return true;},
     };
    },
+   createDrawingRenderer(canvas,options){return this.createRenderer(canvas,options);},
   },
   RoomApi: {
    async request(route, data, options) {
@@ -86,11 +88,17 @@ function browserHarness({realRenderer=false,events=false,rendererOptions,clock}=
    },
   },
  });
- Object.assign(element('#drawResultCanvas'),rasterCanvas(512,256));Object.assign(element('#stagePreview'),rasterCanvas(512,256));
- if(realRenderer){const raster=rasterCanvas(512,256);Object.assign(element('#drawCanvas'),raster);}
+ rasterize(element('#drawResultCanvas'),512,256);rasterize(element('#stagePreview'),512,256);
+ if(realRenderer)rasterize(element('#drawCanvas'),512,256);
  if(events){class EventSource{constructor(){this.handlers=new Map();sources.push(this);}addEventListener(type,fn){this.handlers.set(type,fn);}close(){}emit(type,data){this.handlers.get(type)?.({data:JSON.stringify(data)});}}context.EventSource=EventSource;context.window.EventSource=EventSource;}
  vm.runInContext(sharedScript,context);
- if(realRenderer){context.StrokeCanvas=context.window.StrokeCanvas;context.StrokeCanvas.pointFrom=event=>event.point;if(rendererOptions){const factory=context.StrokeCanvas.createRenderer;context.StrokeCanvas.createRenderer=(canvas,options)=>factory(canvas,{...options,...rendererOptions});}}
+ if(realRenderer){
+  context.StrokeCanvas=context.window.StrokeCanvas;context.StrokeCanvas.pointFrom=event=>event.point;
+  // Integration assertions use protocol pixels; resolution is verified by the
+  // dedicated createDrawingRenderer test instead of multiplying every fill.
+  const factory=context.StrokeCanvas.createRenderer;
+  context.StrokeCanvas.createDrawingRenderer=(canvas,options)=>factory(canvas,{...options,...rendererOptions});
+ }
  context.StrokeCanvas.strokeId=context.window.StrokeCanvas.strokeId;
  vm.runInContext(motionScript,context,{filename:'public/shared/motion-policy.js'});
  vm.runInContext(resultsScript,context,{filename:'public/shared/draw-results.js'});
