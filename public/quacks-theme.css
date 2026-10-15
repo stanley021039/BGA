@@ -1,21 +1,21 @@
 /* Quacks skin owns palette, paint, type and motion. No panel geometry; see quacks-layout.css. */
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom]{--q-column-gap:12px;--q-card-gap:8px;--q-stack-gap:7px;--q-panel-inset:8px}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-content .room-settings-panel{border:1px solid var(--q-line)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom]{--q-paper:#fcf9f8!important;--q-panel:#f6f3f2!important;--q-inset:#f0eded!important;--q-line:#eae7e7!important;--q-ink:#1b1c1c!important;--q-muted:#4e4634!important;--q-yellow:#f8c838!important;--q-gold:#755b00!important;--q-blue:#c7e4f6!important;--q-peach:#ffdcc5!important;background:var(--q-paper)!important;color:var(--q-ink)!important;font-family:"Plus Jakarta Sans","Noto Sans TC",sans-serif!important;font-size:var(--ui-type-p3, 14px)!important;line-height:1.45!important}
-html[data-color-scheme=dark] body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom]{--q-paper:#181b1a!important;--q-panel:#222624!important;--q-inset:#2e3330!important;--q-line:#3d433e!important;--q-ink:#f1e8d6!important;--q-muted:#b6b6a6!important;--q-yellow:#dfb846!important;--q-gold:#e9c85f!important;--q-blue:#304d59!important;--q-peach:#4c3a2e!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom]{--q-paper:var(--st-paper)!important;--q-panel:var(--st-surface)!important;--q-inset:var(--st-low)!important;--q-line:var(--st-high)!important;--q-ink:var(--st-ink)!important;--q-muted:var(--st-muted)!important;--q-yellow:var(--st-yellow)!important;--q-gold:var(--st-primary)!important;--q-blue:var(--st-blue)!important;--q-peach:var(--st-peach)!important;background:var(--q-paper)!important;color:var(--q-ink)!important;font-family:var(--play-font)!important;font-size:var(--ui-type-p3, 14px)!important;line-height:1.45!important}
+html[data-color-scheme=dark] body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom]{--q-paper:var(--st-paper)!important;--q-panel:var(--st-surface)!important;--q-inset:var(--st-low)!important;--q-line:var(--st-high)!important;--q-ink:var(--st-ink)!important;--q-muted:var(--st-muted)!important;--q-yellow:var(--st-yellow)!important;--q-gold:var(--st-primary)!important;--q-blue:var(--st-blue)!important;--q-peach:var(--st-peach)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .quacks-shell{color:inherit!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] :is(button,a.ui-button){font:inherit!important;color:inherit!important;cursor:pointer!important;box-shadow:0 2px 3px #42372310!important;border:1px solid var(--q-line)!important;border-radius:8px!important;background:var(--q-paper)!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] :is(button,a.ui-button):not(.ui-room-header *):not(.ui-room-chat *):not(.ui-room-waiting-layout *){font:inherit!important;color:inherit!important;cursor:pointer!important;box-shadow:0 2px 3px #42372310!important;border:1px solid var(--q-line)!important;border-radius:8px!important;background:var(--q-paper)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] button:disabled{cursor:default!important;opacity:.45!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] :is(button,a,input,select,summary,[tabindex]):focus-visible{outline:2px solid var(--q-gold)!important;outline-offset:2px!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header{border-bottom:1px solid var(--q-line)!important;background:var(--q-paper)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header .site-title{color:var(--q-ink)!important;font-size:14px!important;font-weight:700!important;white-space:nowrap!important;text-decoration:none!important;letter-spacing:-.6px!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-brand-mark{border-radius:9px!important;background:var(--q-yellow)!important;box-shadow:inset 0 1px 2px #fff8!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-brand-copy{line-height:1.05!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-brand-copy small{font-size:var(--ui-type-p3, 14px)!important;font-weight:400!important;letter-spacing:0!important;color:var(--q-muted)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #roomTag{background:var(--q-inset)!important;border-radius:5px!important;font-size:var(--ui-type-p3, 14px)!important;white-space:nowrap!important}
+
+
+
+
+
+
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-round-pill{background:var(--q-yellow)!important;color:#53420c!important;border-radius:999px!important;text-align:center!important;font-size:var(--ui-type-p3, 14px)!important;white-space:nowrap!important;text-overflow:ellipsis!important;font-variant-numeric:tabular-nums!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #qFortune{background:var(--q-peach)!important;font-size:var(--ui-type-p3, 14px)!important;border:0!important;box-shadow:none!important;white-space:nowrap!important;text-overflow:ellipsis!important;border-radius:5px!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header .site-avatar-button{border-radius:50%!important}
+
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-mobile-tools summary{font-size:20px!important;font-weight:800!important;list-style:none!important;background:var(--q-inset)!important;border-radius:7px!important;cursor:pointer!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #qMobileMenuContent{background:var(--q-panel)!important;border:1px solid var(--q-line)!important;border-radius:12px!important;box-shadow:0 8px 30px #0003!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #qMobileMenuContent :is(.ui-button-label,.ui-sr-only){clip:auto!important;clip-path:none!important;font-size:var(--ui-type-p3, 14px)!important}
@@ -29,7 +29,7 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .player-card{background:var(--q-paper)!important;border:1px solid var(--q-line)!important;border-radius:10px!important;font-size:var(--ui-type-p3, 14px)!important;box-shadow:0 2px 3px #44351b05!important;color:var(--q-ink)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .player-card.is-me{border-color:#cbbb8f!important;box-shadow:inset 0 0 0 1px #d5bd7944!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-avatar{border-radius:50%!important;background:var(--q-blue)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-title{font-size:var(--ui-type-p3, 14px)!important;font-weight:700!important;white-space:nowrap!important;text-overflow:ellipsis!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-title{font-size:16px!important;font-weight:700!important;white-space:nowrap!important;text-overflow:ellipsis!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-title small{font-size:var(--ui-type-p3, 14px)!important;color:var(--q-muted)!important;font-weight:400!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-score{font-size:var(--ui-type-p3, 14px)!important;font-weight:800!important;color:var(--q-gold)!important;font-variant-numeric:tabular-nums!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-score small{font-size:var(--ui-type-p3, 14px)!important}
@@ -96,21 +96,21 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-budget{border:1px solid var(--q-line)!important;background:var(--q-yellow)!important;border-radius:9px!important;color:#55420b!important;font-weight:700!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-purchased{background:var(--q-inset)!important;border-radius:8px!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-purchased>span{font-size:var(--ui-type-p3, 14px)!important;color:var(--q-muted)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-notice{background:var(--q-inset)!important;border-radius:5px!important;font-size:var(--ui-type-p3, 14px)!important;color:var(--q-muted)!important;text-align:center!important;white-space:nowrap!important;text-overflow:ellipsis!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel>.shared-chat{background:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel #chat-content{background:none!important;border:0!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-messages{scrollbar-gutter:stable!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-messages li{background:var(--q-paper)!important;border:1px solid var(--q-line)!important;border-radius:7px!important;font-size:var(--ui-type-p3, 14px)!important;line-height:1.5!important;color:var(--q-ink)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-messages li b{font-size:var(--ui-type-p3, 14px)!important;color:#877010!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-messages li time{color:var(--q-muted)!important;font-size:var(--ui-type-p3, 14px)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-room-footer{background:none!important;border:0!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-status{font-size:var(--ui-type-p3, 14px)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-room-tools button{box-shadow:none!important;border:0!important;background:var(--q-inset)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-compose input{background:var(--q-paper)!important;border:1px solid var(--q-line)!important;border-radius:6px!important;font-size:var(--ui-type-p3, 14px)!important;color:var(--q-ink)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel .chat-compose button{background:var(--q-yellow)!important;border-color:#e3b832!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-quick{scrollbar-width:none!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-quick button{font-size:var(--ui-type-p3, 14px)!important;white-space:nowrap!important;border-radius:999px!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-chat-panel #shared-error{font-size:var(--ui-type-p3, 14px)!important;pointer-events:none!important}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .shared-emoji-picker{background:var(--q-panel)!important;border:1px solid var(--q-line)!important;border-radius:16px!important;color:var(--q-ink)!important;box-shadow:0 12px 40px #0003!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .shared-emoji-picker h3{font-size:14px!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .st-emote-tabs{background:var(--q-inset)!important}
@@ -158,7 +158,7 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 html.motion-reduced body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] :is(.pot-steam,.pot-bubble,.pot-liquid-warning){animation:none!important}
 html.motion-reduced body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-steam{opacity:.1!important}
 @media(min-width:1600px){
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-title{font-size:var(--ui-type-p3, 14px)!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-player-title{font-size:16px!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-metrics{font-size:var(--ui-type-p3, 14px)!important}
 }
 @media(max-width:1140px) and (min-width:781px){
@@ -166,14 +166,14 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .witch-row>button:first-of-type{font-size:var(--ui-type-p3, 14px)!important}
 }
 @media(max-width:780px){
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header .site-title{font-size:var(--ui-type-p3, 14px)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-brand-copy small{font-size:var(--ui-type-p3, 14px)!important}
+
+
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-round-pill{font-size:var(--ui-type-p3, 14px)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header #qFortune{font-size:var(--ui-type-p3, 14px)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header #roomTag{font-size:var(--ui-type-p3, 14px)!important}
+
+
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-panel{border-radius:12px!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-roster-panel #players{scrollbar-gutter:auto!important;scrollbar-width:thin!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-roster-panel .q-player-title{font-size:var(--ui-type-p3, 14px)!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-roster-panel .q-player-title{font-size:16px!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-roster-panel .q-player-title small{font-size:var(--ui-type-p3, 14px)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-top #potTabs button{font-size:var(--ui-type-p3, 14px)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-top #bagButton{font-size:var(--ui-type-p3, 14px)!important}
@@ -204,7 +204,7 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 }
 @media(prefers-reduced-motion:reduce){body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-steam,body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-bubble,body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-liquid-warning{animation:none!important}
 }
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-header .site-links a{font-size:var(--ui-type-p3, 14px)!important;border:0!important;border-radius:7px!important;background:var(--q-inset)!important;box-shadow:none!important}
+
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-avatar img{border-radius:50%!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-avatar-reaction{white-space:nowrap!important;border-radius:10px!important;background:var(--q-paper)!important;border:1px solid var(--q-line)!important;font-size:18px!important;box-shadow:0 3px 12px #0002!important;color:var(--q-ink)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .quacks-fx-scene{background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;color:#f6e7bd!important}
@@ -243,7 +243,7 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .patient-card{border:1px solid var(--q-line)!important;border-radius:12px!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .essence-flask{background:#152c27!important;border-radius:12px!important}body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-room-phase=waiting] .quacks-setting-choice>.q-setting-label{writing-mode:horizontal-tb!important;line-height:20px!important}
 
-@media(max-width:780px){body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-room-phase=waiting] .q-header .site-title{font-size:14px!important}body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-room-phase=waiting] .q-header #roomTag{font-size:var(--ui-type-p3, 14px)!important}}
+@media(max-width:780px){}
 
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-extra-badge{border-radius:99px!important;font-size:var(--ui-type-p3, 14px)!important;line-height:14px!important;background:var(--q-yellow)!important;color:#53420c!important}
 body[data-game-kind=quacks][data-ui-template=tactile] .portrait-action.draw-action::after{font-size:var(--ui-type-p3,14px)!important;line-height:1.2!important}
@@ -272,7 +272,7 @@ body[data-game-kind=quacks][data-ui-template=tactile] .q-book-faces .q-book-face
 body[data-game-kind=quacks][data-ui-template=tactile] .q-book-page :is(small,p,strong,h3){color:#2c261d!important}
 body[data-game-kind=quacks][data-ui-template=tactile] #potCustomize :is(h2,h3,p){line-height:1.45}
 body[data-game-kind=quacks][data-ui-template=tactile] #potCustomize :is(#savePotName,#closeCustomize) .ui-sr-only{clip:auto!important;clip-path:none!important;white-space:nowrap!important}
-body[data-game-kind=quacks][data-ui-template=tactile] #qSocial .q-chat-quick button{white-space:nowrap!important}
+
 body[data-game-kind=quacks][data-ui-template=tactile] #potNameForm button{white-space:nowrap}
 body[data-game-kind=quacks][data-ui-template=tactile] #potColors .pot-swatch{text-align:left}
 html[data-color-scheme=dark] body[data-game-kind=quacks][data-ui-template=tactile] .q-pot-supplies :is(.q-potion-display,.q-potion-slot button,#bagButton){background:#304d43!important;color:#f4ecdb!important;border-color:#73917f!important}
@@ -311,7 +311,7 @@ html[data-color-scheme=dark] body[data-game-focus="#game"][data-game-kind=quacks
 body[data-game-kind=quacks][data-ui-template=tactile] #controls>.portrait-action .q-action-detail{font-size:var(--ui-type-p3,14px)}
 }
 @media(max-width:350px){
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-brand-copy>b{text-overflow:ellipsis!important;white-space:nowrap!important}
+
 }
 
 /* Latest main presentation additions. */
