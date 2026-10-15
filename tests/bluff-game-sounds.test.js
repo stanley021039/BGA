@@ -4,7 +4,7 @@ const flush=async()=>{for(let i=0;i<6;i++)await Promise.resolve();};
 async function fixture({enabled=true,volume=.4,blocked=false,roleSeconds=10,remaining=roleSeconds}={}){
  let now=1000000,id=0,offline=false;const nodes=new Map(),handlers=new Map(),intervals=new Map(),timeouts=new Map(),clips=[],store=new Map();
  const target=name=>({addEventListener(type,fn){const key=name+type;if(!handlers.has(key))handlers.set(key,new Set());handlers.get(key).add(fn);},removeEventListener(type,fn){handlers.get(name+type)?.delete(fn);}});
- const node=key=>{if(!nodes.has(key))nodes.set(key,{hidden:false,dataset:{},children:[],textContent:'',append(...v){this.children.push(...v);},replaceChildren(...v){this.children=v;},querySelectorAll(){return [];},remove(){this.removed=true;}});return nodes.get(key);};
+ const node=key=>{if(!nodes.has(key))nodes.set(key,{hidden:false,dataset:{},children:[],classList:{add(){}},querySelector:()=>null,textContent:'',append(...v){this.children.push(...v);},replaceChildren(...v){this.children=v;},querySelectorAll(){return [];},remove(){this.removed=true;}});return nodes.get(key);};
  const document={...target('document:'),hidden:false,querySelector:node,createElement:tag=>node('created:'+tag+':'+nodes.size),createTextNode:text=>({textContent:text})};
  const window={...target('window:'),document,MotionPolicy:{allowsMotion:()=>false}};
  class Audio{constructor(src){this.originalSrc=src;this.startedAt=now;this.remaining=Number(node('#roleCountdownSeconds').textContent);this.paused=true;clips.push(this);}play(){if(blocked)return Promise.reject(Error('blocked'));this.paused=false;this.onplaying?.();return Promise.resolve();}pause(){this.paused=true;}removeAttribute(){}load(){}}

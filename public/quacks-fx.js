@@ -22,7 +22,7 @@ function create(host){
   const glow=node('div');glow.className='summon-glow';scene.append(glow);
   if(event.kind==='card'){
    const rune=node('div','✦  ✧  ✦  ✧  ✦  ✧');rune.className='summon-rune';const gate=node('div');gate.className='summon-gate';
-   const card=node('div');card.className='summon-card';const back=node('div','✦');back.className='summon-back';const front=node('div');front.className='summon-front';front.dataset.timing=event.fortune.timing||'round';front.append(node('small',event.name+'抽出的占卜牌'),node('h3',event.fortune.name),node('p',event.fortune.text));card.append(back,front);
+   const card=node('div');card.className='summon-card';const back=node('div');back.className='summon-back';const front=node('div');front.className='summon-front';front.dataset.timing=event.fortune.timing||'round';front.append(node('small',event.name+'抽出的占卜牌'),node('h3',event.fortune.name),node('p',event.fortune.text));card.append(back,front);
    scene.append(rune,gate,card);
   }else{
    const cup=node('div');cup.className='dice-arena';const cube=die(event.face,110,event.tones);cube.classList.add('rolling');cup.append(cube);scene.append(node('h3',event.name+'擲骰'),cup,node('strong',labels[event.face]),node('p',event.source+' · 第 '+event.round+' 回合'));
@@ -33,7 +33,7 @@ function create(host){
  function update(state,live){
   const nextContext=state.code+':'+state.roundId;
   if(context!==nextContext){clear();seen.clear();context=nextContext;initialized=false;}
-  const events=[...(state.fortuneRevealId?[{id:state.fortuneRevealId,kind:'card',fortune:state.fortune,name:state.players.find(p=>p.id===state.roundStarterId)?.name||'起始玩家',at:state.fortuneDrawnAt||state.serverNow}]:[]),...(state.rollEvents||[]).map(e=>({...e,kind:'dice',tones:state.potColors?.[e.potColor||state.recipes?.find(p=>p.id===e.playerId)?.potColor]?.liquid}))];
+  const events=[...(state.fortuneRevealId&&state.me===state.roundStarterId?[{id:state.fortuneRevealId,kind:'card',fortune:state.fortune,name:state.players.find(p=>p.id===state.roundStarterId)?.name||'起始玩家',at:state.fortuneDrawnAt||state.serverNow}]:[]),...(state.rollEvents||[]).map(e=>({...e,kind:'dice',tones:state.potColors?.[e.potColor||state.recipes?.find(p=>p.id===e.playerId)?.potColor]?.liquid}))];
   if(!live||!allowed())clear();
   for(const event of events){if(seen.has(event.id))continue;seen.add(event.id);if(initialized&&live&&allowed())queue.push(event);}
   initialized=true;if(queue.length>20)queue=queue.slice(-20);next();

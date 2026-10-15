@@ -145,3 +145,5 @@ test('effects default on, migrate legacy off once, and retain a subsequent expli
  const migrated=harness({'ah-audio-settings':JSON.stringify({version:1,music:{enabled:false,volume:.61},effects:{enabled:false,volume:.18}})});assert.equal(migrated.api.get().effects.enabled,true);assert.equal(migrated.api.get().effects.volume,.18);
  migrated.api.set('effects',{enabled:false});const next=harness(Object.fromEntries(migrated.storage));assert.equal(next.api.get().effects.enabled,false);assert.equal(next.api.get().effects.volume,.18);assert.equal(next.api.get().music.volume,.61);
 });
+
+test('majority settlement uses the uploaded settlement clip without changing generic reveal cues',()=>{const ui=harness();const clip=ui.api.playEffect('majority-settlement');assert.equal(clip.src,'/assets/game-sounds/quacks-settlement-user.wav');});
