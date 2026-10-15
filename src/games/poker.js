@@ -1,3 +1,4 @@
+const {starterIndex}=require('./random-starter');
 const {randomInt,randomUUID}=require('node:crypto');
 const labels=['高牌','一對','兩對','三條','順子','同花','葫蘆','四條','同花順'];
 function rank5(cards){
@@ -26,7 +27,7 @@ class Room{
  this.deck=Array.from({length:52},(_,i)=>i);for(let i=51;i>0;i--){let j=this.rng(i+1);[this.deck[i],this.deck[j]]=[this.deck[j],this.deck[i]];}
  this.board=[];this.results=[];this.hand++;this.phase='preflop';this.currentBet=20;this.minRaise=20;
  for(const p of this.players){p.bet=0;p.total=0;p.folded=p.stack===0;p.cards=p.folded?[]:[this.deck.pop(),this.deck.pop()];p.acted=false;p.actedAt=null;p.action='';p.handDecision=false;}
- this.button=this.next(this.button,p=>!p.folded);let sb=this.players.filter(p=>!p.folded).length===2?this.button:this.next(this.button,p=>!p.folded);let bb=this.next(sb,p=>!p.folded);
+ this.button=this.players.indexOf(this.players.filter(p=>!p.folded)[starterIndex(this.players.filter(p=>!p.folded),this.rng)]);let sb=this.players.filter(p=>!p.folded).length===2?this.button:this.next(this.button,p=>!p.folded);let bb=this.next(sb,p=>!p.folded);
  this.pay(this.players[sb],10);this.pay(this.players[bb],20);this.note(`第 ${this.hand} 局 · 盲注 10 / 20`);this.setTurn(this.next(bb,p=>!p.folded&&p.stack>0));this.advance();
  }
  setTurn(i){this.turn=i;this.deadline=Date.now()+45000;this.botAt=Date.now()+1200;}

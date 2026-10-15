@@ -47,5 +47,46 @@
     "peak": 10928,
     "source": "Project-original synthesis: three warm sine tones and faded envelopes, no third-party sample",
     "generator": "tools/generate-quacks-sounds.cjs"
+  },
+  "explosionReaction": {
+    "file": "quacks-explosion-fish.wav",
+    "durationMs": 1428,
+    "bytes": 68552,
+    "sha256": "71129dd08c6b2f6dd81f25c56a07c804399e50ad7c6a8d96af83ba41e4672ec0",
+    "source": "User-supplied fish.mp3 after project-original 840ms explosion",
+    "sourceSha256": "e31505db6d929124612ae0df972c78dc3d74c66a3f68dfb52ddc034d1b53a98b",
+    "explosionSha256": "988ce3e81ad136ab8e9dd212e22d0b29cb160b8e4aa369c7658fbad35ebc9356",
+    "prefixMs": 840,
+    "gapMs": 20,
+    "reactionFrames": 13614,
+    "peakTarget": 0.32,
+    "lowpassHz": 6500,
+    "generator": "tools/convert-quacks-explosion.cjs"
+  },
+  "stopUser": {
+    "file": "quacks-stop-user.wav",
+    "durationMs": 1765,
+    "bytes": 84750,
+    "sha256": "f2d742cad441db5d5503b125d0bcb50cfc4f911ec277f46d1c19989fef3746e6",
+    "source": "User-supplied 不抽了.mp3",
+    "sourceSha256": "0f2a1af2586db9f0659993049eceb0cb5dbccef6a10c13e2b78d0b3aa1b5ab78",
+    "peakTarget": 0.35,
+    "fadeInMs": 10,
+    "fadeOutMs": 30,
+    "lowpassHz": 6500,
+    "generator": "tools/convert-quacks-stop-settlement.cjs"
+  },
+  "settlementUser": {
+    "file": "quacks-settlement-user.wav",
+    "durationMs": 660,
+    "bytes": 31708,
+    "sha256": "8fb0b5222c9ad83de8f8d75d2e31c7ab06d309ac884ec7d96e604abb03d9f42d",
+    "source": "User-supplied 結算.mp3",
+    "sourceSha256": "c35bc1633c2f339de8a53293409f3a295ae4d6533604a02dcd0e73735cd97cb8",
+    "peakTarget": 0.35,
+    "fadeInMs": 10,
+    "fadeOutMs": 30,
+    "lowpassHz": 6500,
+    "generator": "tools/convert-quacks-stop-settlement.cjs"
   }
 }

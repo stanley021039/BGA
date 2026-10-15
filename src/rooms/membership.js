@@ -11,8 +11,9 @@ function rejoinPlayer(room,playerId,name){
  if(!player)return null;
  if(['gift','trpg','telephone','musicquiz','minimal','bluff','quacks'].includes(room.type)&&!['waiting','finished'].includes(room.phase))throw Error('本局已開始，請等待下一局');
  if(room.type==='thunder'&&room.phase!=='waiting')throw Error('比賽已開始，請等下一場或建立新房間');
- const limits={draw:8,gift:8,majority:12,thunder:4,poker:6,trpg:6,telephone:8,musicquiz:8,minimal:6,bluff:9,quacks:5};
+ const limits={draw:8,gift:8,majority:12,thunder:4,poker:6,trpg:6,telephone:8,musicquiz:8,minimal:6,bluff:9,quacks:8};
  if(room.players.filter(p=>!p.kicked).length>=(room.type==='quacks'?room.max:limits[room.type||'poker']))throw Error('房間已滿');
+ if(room.type==='quacks')room.assignPotColor(player);
  player.kicked=false;player.bot=false;player.name=name.slice(0,16);player.lastSeen=Date.now();
  if(['draw','majority'].includes(room.type))player.waitingForNextRound=room.phase!=='waiting';
  if(room.event)room.event('join',player.name+' 重新加入房間');else room.note(player.name+' 重新加入牌桌');

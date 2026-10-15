@@ -1,4 +1,5 @@
 'use strict';
+const {starterIndex}=require('./random-starter');
 const {randomUUID}=require('node:crypto');
 const {PartyRoom,fail,clone,text,normalize}=require('./party-base');
 const {WORDS}=require('./draw-guess-words');
@@ -12,8 +13,8 @@ function shapes(input){
 }
 class MinimalRoom extends PartyRoom{
  constructor(code,name,rng,now){super('minimal',code,name,6,3,rng,now);this.question=null;this.guesserId=null;this.drafts={};this.ready={};this.order=[];this.shown=0;this.attempts=[];this.deadline=null;this.used=[];}
- start(){this.prepare();this.roundLimit=this.players.length<=4?this.players.length*2:this.players.length;this.used=[];this.nextRound();}
- nextRound(){const pool=BANK.filter(w=>!this.used.includes(w.id)),index=this.rng(pool.length);if(!Number.isInteger(index)||index<0||index>=pool.length)throw Error('無效抽題結果');this.question=clone(pool[index]);this.used.push(this.question.id);this.round++;this.roundId=randomUUID();this.guesserId=this.players[(this.round-1)%this.players.length].id;this.phase='drawing';this.drafts={};this.ready={};this.order=[];this.shown=0;this.attempts=[];this.deadline=null;this.event('round','第 '+this.round+' 輪，輪替猜題者；畫家只用直線與圓。');}
+ start(){this.prepare();this.firstSeatIndex=starterIndex(this.players,this.rng);this.roundLimit=this.players.length<=4?this.players.length*2:this.players.length;this.used=[];this.nextRound();}
+ nextRound(){const pool=BANK.filter(w=>!this.used.includes(w.id)),index=this.rng(pool.length);if(!Number.isInteger(index)||index<0||index>=pool.length)throw Error('無效抽題結果');this.question=clone(pool[index]);this.used.push(this.question.id);this.round++;this.roundId=randomUUID();this.guesserId=this.players[((this.firstSeatIndex||0)+this.round-1)%this.players.length].id;this.phase='drawing';this.drafts={};this.ready={};this.order=[];this.shown=0;this.attempts=[];this.deadline=null;this.event('round','第 '+this.round+' 輪，輪替猜題者；畫家只用直線與圓。');}
  artists(){return this.activePlayers().filter(p=>p.id!==this.guesserId);}
  act(id,action,data={}){return this.command(id,action,data,p=>{
   if(['draft','submit'].includes(action)){

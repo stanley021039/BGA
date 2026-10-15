@@ -48,9 +48,9 @@ registerTestAI('poker',{maxPlayers:6,plan:()=>null}); // Existing poker schedule
 registerTestAI('majority',{maxPlayers:12,plan(room,p){
  if(room.phase==='choosing'&&room.presenterId===p.id){
   if(room.candidates.length)return {actor:p.id,action:'ask',run:r=>r.act(p.id,'ask',{questionId:r.candidates[r.rng(r.candidates.length)].id})};
-  return {actor:p.id,action:'draw',run:r=>r.act(p.id,'draw',{topic:TOPICS[r.rng(TOPICS.length)].id,type:['two','three','blank'][r.round%3]})};
+  return {actor:p.id,action:'draw',run:r=>r.act(p.id,'draw',{topic:TOPICS.filter(t=>!t.types)[r.rng(TOPICS.filter(t=>!t.types).length)].id,type:['two','three','blank'][r.round%3]})};
  }
- if(room.phase==='answering'&&room.participantIds.includes(p.id)&&!Object.hasOwn(room.answers,p.id))return {actor:p.id,action:'answer',run:r=>{const q=r.view(p.id).question;r.act(p.id,'answer',{answer:q.type==='blank'?blankAnswer(q.prompt,r.rng):r.rng(q.options.length)});}};
+ if(room.phase==='answering'&&room.participantIds.includes(p.id)&&!Object.hasOwn(room.answers,p.id))return {actor:p.id,action:'answer',run:r=>{const q=r.view(p.id).question;r.act(p.id,'answer',{questionId:q.id,answer:q.type==='blank'?blankAnswer(q.prompt,r.rng):r.rng(q.options.length)});}};
  return null;
 }});
 registerTestAI('gift',{maxPlayers:8,plan(room,p){

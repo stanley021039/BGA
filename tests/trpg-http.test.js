@@ -14,8 +14,8 @@ test('TRPG authenticated create/join/action/reconnect/leave and finished history
  let s=await state(owner);const ids=[s.me,(await state(peer)).me];assert.equal(s.players.length,2);assert.equal(s.botSupport.supported,true);
  await post('start',peer,{code},403);s=(await post('start',owner,{code})).body;
  const action=async(cookie,action,data={},status=200)=>post('action',cookie,{code,action,sceneId:s.sceneId,requestId:randomUUID(),...data},status);
- await action(peer,'resolve',{},403);await action(owner,'resolve',{},409);
- const draft=await action(peer,'plan',{stance:'recover',note:'<script>alert(1)</script>'});assert.equal(draft.body.myPlan.note,'<script>alert(1)</script>');assert.ok(!JSON.stringify(await state(owner)).includes('<script>'));
+ await action(s.leaderId===ids[0]?peer:owner,'resolve',{},403);await action(s.leaderId===ids[0]?owner:peer,'resolve',{},409);
+ const draft=await action(peer,'plan',{stance:'recover',approach:'connect',note:'<script>alert(1)</script>'});assert.equal(draft.body.myPlan.note,'<script>alert(1)</script>');assert.ok(!JSON.stringify(await state(owner)).includes('<script>'));
  for(let round=1;round<=6;round++){
   s=await state(owner);const leaderCookie=s.leaderId===ids[0]?owner:peer;
   for(const cookie of [owner,peer])await action(cookie,'plan',{stance:'recover',approach:'connect',note:'一起走下去'});

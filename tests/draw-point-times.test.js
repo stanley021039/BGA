@@ -48,7 +48,7 @@ test('timed samples do not increase rate capacity or refund quotas through undo 
  room.canvasCommand(host.id,{round:room.round,canvasEpoch:room.canvas.epoch,command:'undo'});room.canvasCommand(host.id,{round:room.round,canvasEpoch:room.canvas.epoch,command:'clear'});assert.deepEqual(room.canvasQuota(),{usedFills:0,usedBatches:10,usedPoints:20});assert.equal(room.canvasSnapshot().strokes.length,0);
 });
 
-test('HTTP ACK, live SSE, snapshots and revealed results preserve timing while PNG and history formats stay unchanged',async t=>{
+test('HTTP ACK, live SSE, snapshots and revealed results preserve timing while PNG and history formats stay unchanged',async t=>{require('./helpers/fixed-starter.cjs')(t,require('../src/games/draw-guess').DrawGuessRoom);
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bga-point-times-')),config={host:'127.0.0.1',port:0,dbFile:path.join(dir,'app.sqlite'),historyDir:path.join(dir,'history'),communityDir:path.join(dir,'community'),externalSideEffectsEnabled:false};
  const db=openDatabase(config.dbFile);try{await createAuth(db).bootstrap('times_host','point-times-password-123');const hash=db.prepare("SELECT password_hash FROM users WHERE username='times_host'").get().password_hash;db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)').run(randomUUID(),'times_guest','Viewer',hash,'member',new Date().toISOString());}finally{db.close();}
  const app=createApp(config),abort=new AbortController();t.after(async()=>{abort.abort();await app.close();assert.equal(path.dirname(dir),path.resolve(os.tmpdir()));fs.rmSync(dir,{recursive:true,force:true});});

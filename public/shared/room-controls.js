@@ -65,7 +65,7 @@
   const controls='button:not([data-room-native-action]),input:not([data-room-native-action]),select:not([data-room-native-action]),textarea:not([data-room-native-action])';
   function scan(parent){
    for(const child of [...parent.children]){
-    if(child===panel)continue;
+    if(child===panel||child.id==="socialBar")continue;
     if(child.contains(panel)){if(!child.classList.contains('ui-room-panel-host'))child.classList.add('ui-room-panel-host');scan(child);continue;}
     // Preserve personal controls (for example TRPG role choice) within content.
     if(child.matches('.race-utility-panel'))continue;
@@ -131,7 +131,7 @@
    const legacyRace=state.type==='thunder',rosterBot=state.type==='telephone'&&!!window.RoomWaiting?.setRosterAction,visible=kind==='bot'?state.phase==='waiting'&&!rosterBot&&owner()&&(legacyRace||state.botSupport?.supported!==false)&&(!!source||state.botSupport?.canAdd===false):['waiting','finished'].includes(state.phase),button=proxies[kind];if(button.hidden===visible)button.hidden=!visible;
    const preparing=kind==='start'&&source?.dataset.roomPrimaryAction==='prepare';
    if(kind==='start'){const label=preparing?(source.getAttribute('aria-label')||source.textContent.trim()):actions.start.label;if(button.dataset.roomPrimaryLabel!==label){window.GameUI?.decorateButton(button,preparing?'next':actions.start.icon,{label});button.dataset.roomPrimaryLabel=label;}}
-   const tooFew=kind==='start'&&!preparing&&(state.players||[]).filter(p=>!p.kicked).length<(minimumPlayers[state.type||'poker']||1);
+   const playerCount=(state.players||[]).filter(p=>!p.kicked).length;const tooFew=kind==='start'&&!preparing&&(state.cruel?(state.cruel.rules==='teams'?![4,6,8].includes(playerCount):playerCount<1):playerCount<(minimumPlayers[state.type||'poker']||1));
    const disabled=!visible||!source||source.disabled||hidden(source)||button.getAttribute('aria-busy')==='true'||leaving||tooFew||kind==='start'&&!owner()||kind==='bot'&&!legacyRace&&state.botSupport?.canAdd===false;if(button.disabled!==disabled)button.disabled=disabled;
   }
   const manage=document.getElementById('managePlayers'),row=panel.querySelector('.ui-room-session-actions');
@@ -160,7 +160,7 @@
     if(fields.length){source=node('div','');source.dataset.roomSetting='';base.prepend(source);for(const n of fields)if(!fields.some(other=>other!==n&&other.contains(n))){source.append(n);if(n.tagName==='LABEL'&&n.htmlFor){const input=document.getElementById(n.htmlFor);if(input&&base.contains(input)&&!n.contains(input))source.append(input);}}}
    }
    const slot=panel.querySelector('.ui-room-settings-slot');
-   if(source){const changed=source!==settingsSource;settingsSource=source;source.dataset.roomReadOnly=String(!owner());if(!owner())for(const input of source.querySelectorAll('input,select,textarea,button'))if(!input.disabled)input.disabled=true;if(changed){normalizeFields(source);slot.replaceChildren(source);}}
+   if(source){const changed=source!==settingsSource;settingsSource=source;source.dataset.roomReadOnly=String(!owner());if(!owner())for(const input of source.querySelectorAll('input,select,textarea,button'))if(!input.disabled)input.disabled=true;if(changed){normalizeFields(source);for(const previous of [...slot.children])if(previous!==source&&previous.classList.contains("ui-room-settings-source"))previous.remove();slot.prepend(source);}}
    else if(!settingsSource||!settingsSource.isConnected){settingsSource=null;const text=owner()?'本遊戲使用固定規則，無需調整。':'由房主調整房間設定。';if(slot.textContent!==text)slot.replaceChildren(node('p','ui-room-settings-note',text));}
   }
   if(state.phase==='waiting'&&outer){alignNativePanel(outer);if(customQuacks)window.QuacksStitch?.waitingRoom(state);window.GameUI?.Template?.patterns.refreshWaiting?.(outer.closest('.ui-room-waiting-layout'));}

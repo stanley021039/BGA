@@ -16,7 +16,7 @@ async function fixture(t,purpose='production',{uppercaseIds=false}={}){
  t.after(async()=>{await app.close();assert.equal(path.dirname(root),path.resolve(os.tmpdir()));fs.rmSync(root,{recursive:true,force:true,maxRetries:5});});
  async function api(seat,route,data){const response=await fetch(base+'/api/'+route,{method:data===undefined?'GET':'POST',headers:{...(users[seat].cookie?{Cookie:users[seat].cookie}:{}),...(data===undefined?{}:{'Content-Type':'application/json'})},...(data===undefined?{}:{body:JSON.stringify(data)})});const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));const cookie=response.headers.get('set-cookie');if(cookie)users[seat].cookie=cookie.split(';')[0];return body;}
  for(let seat=0;seat<3;seat++)await api(seat,'auth/login',{username:users[seat].username,password});
- return {users,api,async room(type){const {code}=await api(0,'create',{type});for(let seat=1;seat<3;seat++)await api(seat,'join',{code});await api(0,'start',{code});return code;},read(run){const db=new DatabaseSync(config.dbFile,{readOnly:true});try{return run(db);}finally{db.close();}},async restart(){await app.close();app=createApp(config);base='http://127.0.0.1:'+(await app.listen()).port;}};
+ return {users,api,async ask(code,data){let views=await Promise.all(users.map((_,i)=>api(i,'state?code='+code))),seat=views.findIndex(v=>v.me===v.presenterId);for(let i=0;seat<0&&i<4;i++){await api(0,'action',{code,action:'pass'});views=await Promise.all(users.map((_,i)=>api(i,'state?code='+code)));seat=views.findIndex(v=>v.me===v.presenterId);}assert.ok(seat>=0);return api(seat,'action',{code,action:'ask',...data});},async foldHuman(code){const views=await Promise.all([0,1].map(i=>api(i,'state?code='+code)));let seat=views.findIndex(v=>v.me===v.players[v.turn].id);if(seat!==0)await api(seat,'action',{code,action:'call'});return api(0,'action',{code,action:'fold'});},async room(type){const {code}=await api(0,'create',{type});for(let seat=1;seat<3;seat++)await api(seat,'join',{code});await api(0,'start',{code});return code;},read(run){const db=new DatabaseSync(config.dbFile,{readOnly:true});try{return run(db);}finally{db.close();}},async restart(){await app.close();app=createApp(config);base='http://127.0.0.1:'+(await app.listen()).port;}};
 }
 const unlocked=body=>body.achievements.filter(item=>item.unlockedAt).map(item=>item.id);
 test('app factory rejects an explicit invalid purpose and releases its data locks',async()=>{
@@ -56,24 +56,24 @@ test('HTTP removing the artist interrupts the draw unit without phantom achievem
 
 test('HTTP official majority answers count across game types but do not infer progress from old badges',async t=>{
  const f=await fixture(t),code=await f.room('majority');
- await f.api(0,'action',{code,action:'ask',type:'two',prompt:'測試是否同頻',options:['一起','另一種']});
+ await f.ask(code,{type:'two',prompt:'測試是否同頻',options:['一起','另一種']});
  for(let seat=0;seat<3;seat++)await f.api(seat,'action',{code,action:'answer',answer:0});
  const collection=await f.api(0,'achievements');assert.ok(unlocked(collection).includes('majority-one-channel'));
  assert.equal(unlocked(collection).includes('all-two-tables'),false);
  assert.equal(f.read(db=>db.prepare('SELECT COUNT(*) n FROM achievement_progress').get().n),3);
  for(let seat=0;seat<3;seat++)await f.api(seat,'leave',{code});
- const poker=await f.api(0,'create',{type:'poker'});await f.api(0,'bot',{code:poker.code});await f.api(0,'start',{code:poker.code});await f.api(0,'action',{code:poker.code,action:'fold'});
+ const poker=await f.api(0,'create',{type:'poker'});await f.api(1,'join',{code:poker.code});await f.api(0,'start',{code:poker.code});await f.foldHuman(poker.code);
  assert.ok(unlocked(await f.api(0,'achievements')).includes('all-two-tables'));
 });
 
 for(const purpose of ['test','tutorial'])test(`HTTP ${purpose} poker units persist receipts without issuing production badges or progress`,async t=>{
- const f=await fixture(t,purpose),{code}=await f.api(0,'create',{type:'poker'});await f.api(0,'bot',{code});await f.api(0,'start',{code});await f.api(0,'action',{code,action:'fold'});
+ const f=await fixture(t,purpose),{code}=await f.api(0,'create',{type:'poker'});await f.api(1,'join',{code});await f.api(0,'start',{code});await f.foldHuman(code);
  assert.deepEqual(unlocked(await f.api(0,'achievements')),[]);assert.equal(f.read(db=>db.prepare('SELECT COUNT(*) n FROM achievement_progress').get().n),0);
  const receipt=f.read(db=>db.prepare('SELECT purpose FROM processed_unit_events').get());assert.equal(receipt.purpose,purpose);
 });
 test('HTTP imported uppercase account UUIDs retain their exact database identity when earning achievements',async t=>{
  const f=await fixture(t,'production',{uppercaseIds:true}),code=await f.room('majority');
- await f.api(0,'action',{code,action:'ask',type:'two',prompt:'舊帳號相容驗證',options:['一起','另一種']});
+ await f.ask(code,{type:'two',prompt:'舊帳號相容驗證',options:['一起','另一種']});
  for(let seat=0;seat<3;seat++)await f.api(seat,'action',{code,action:'answer',answer:0});
  for(let seat=0;seat<3;seat++)assert.ok(unlocked(await f.api(seat,'achievements')).includes('majority-one-channel'));
  const users=f.read(db=>db.prepare('SELECT DISTINCT user_id FROM achievement_progress ORDER BY user_id').all()).map(row=>row.user_id);
@@ -88,7 +88,7 @@ test('HTTP three humans and one AI normally complete majority and award each hum
  const f=await fixture(t),{code}=await f.api(0,'create',{type:'majority'});
  for(let seat=1;seat<3;seat++)await f.api(seat,'join',{code});
  await f.api(0,'bot',{code});await f.api(0,'start',{code});
- await f.api(0,'action',{code,action:'ask',type:'two',prompt:'混合真人與AI',options:['一起','另一種']});
+ await f.ask(code,{type:'two',prompt:'混合真人與AI',options:['一起','另一種']});
  for(let seat=0;seat<3;seat++)await f.api(seat,'action',{code,action:'answer',answer:0});
  let state;for(let i=0;i<50;i++){
   state=await f.api(0,'state?code='+code);if(['review','reveal','finished'].includes(state.phase))break;
@@ -108,7 +108,7 @@ test('HTTP mixed human/AI blank answers officially merged into one group award a
  const f=await fixture(t),{code}=await f.api(0,'create',{type:'majority'});
  for(let seat=1;seat<3;seat++)await f.api(seat,'join',{code});
  await f.api(0,'bot',{code});await f.api(0,'start',{code});
- await f.api(0,'action',{code,action:'ask',type:'blank',prompt:'全員同組的測試'});
+ await f.ask(code,{type:'blank',prompt:'全員同組的測試'});
  for(let seat=0;seat<3;seat++)await f.api(seat,'action',{code,action:'answer',answer:'合成答案'+seat});
  let state;for(let i=0;i<50;i++){
   state=await f.api(0,'state?code='+code);if(state.phase==='review')break;

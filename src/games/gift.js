@@ -1,3 +1,4 @@
+const {starterIndex}=require('./random-starter');
 const {assertRecordCapacity}=require('../rooms/membership');
 const {randomInt,randomUUID}=require('node:crypto');
 const {GIFTS}=require('./gift-catalog');
@@ -101,13 +102,13 @@ class GiftRoom{
   this.players=this.activePlayers();
   if(this.players.length<3||this.players.length>8)throw Error('需要 3 至 8 位玩家');
   for(const player of this.players){player.giveScore=0;player.getScore=0;}
-  this.achievementUnits.matchId=randomUUID();this.round=0;this.usedGiftIds=[];this.winner=null;this.newRound();
+  this.firstSeatIndex=starterIndex(this.players,this.rng);this.achievementUnits.matchId=randomUUID();this.round=0;this.usedGiftIds=[];this.winner=null;this.newRound();
  }
  newRound(){
   this.achievementCapacity();
   const players=this.activePlayers();
   const builtin=GIFTS,custom=this.giftProvider?.()||[];
-  this.round++;this.dealerId=players[(this.round-1)%players.length].id;
+  this.round++;this.dealerId=players[((this.firstSeatIndex||0)+this.round-1)%players.length].id;
   const draw=drawContent({builtin,custom,count:players.length+1,customPercent:this.customPercent,usedIds:this.usedGiftIds,rng:this.rng});
   this.gifts=draw.items;this.usedGiftIds=draw.usedIds;
   this.assignments={};this.rankings={};this.result=null;this.delivery=null;this.pendingResult=null;this.phase='choosing';

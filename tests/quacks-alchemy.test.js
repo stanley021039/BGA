@@ -42,8 +42,8 @@ test('three distinct public patients, own choice, duplicates allowed, start gift
  const f=fixture('forgetful');assert.equal(f.a.bag.length,11);assert.equal(f.a.bag.filter(c=>c.color==='blue').length,1);
 });
 test('standalone and combined expansions, filtered card symbols, four new weed faces and disable coercion',()=>{
- const {r,a}=fixture('carrot');assert.deepEqual(r.choiceSets('locoweed'),[7,8,9,10]);assert.equal(r.max,4);assert.equal(r.expansionFortunes().length,17);assert.equal(r.expansionFortunes().some(f=>f.requires==='witches'),false);
- const both=fixture('carrot',true);assert.deepEqual(both.r.choiceSets('locoweed'),[5,6,7,8,9,10]);assert.equal(both.r.expansionFortunes().length,20);assert.equal(both.r.max,5);
+ const {r,a}=fixture('carrot');assert.deepEqual(r.choiceSets('locoweed'),[7,8,9,10]);assert.equal(r.max,8);assert.equal(r.expansionFortunes().length,17);assert.equal(r.expansionFortunes().some(f=>f.requires==='witches'),false);
+ const both=fixture('carrot',true);assert.deepEqual(both.r.choiceSets('locoweed'),[5,6,7,8,9,10]);assert.equal(both.r.expansionFortunes().length,20);assert.equal(both.r.max,8);
  r.phase='finished';r.configure(a.id,{alchemists:false});assert.deepEqual(r.choiceSets('locoweed'),[]);r.start();assert.equal(r.phase,'fortune');assert.equal(r.patientChoices.length,0);assert.equal(a.alchemy,undefined);
  assert.throws(()=>r.configure(a.id,{alchemists:'yes'}),e=>e.code==='MATCH_STARTED');
 });

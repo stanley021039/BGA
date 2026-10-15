@@ -3,7 +3,7 @@ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {setTimeout:delay}=require('node:timers/promises');
 const {createApp}=require('../src/app'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth');
 
-test('a completed poker unit survives failed SQLite writes and room deletion, then commits exactly once during the live process sweep',async t=>{
+test('a completed poker unit survives failed SQLite writes and room deletion, then commits exactly once during the live process sweep',async t=>{require('./helpers/fixed-starter.cjs')(t,require('../src/games/poker').Room,51);
  const root=fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),'bga-achievement-pending-'));
  const config={host:'127.0.0.1',port:0,dbFile:path.join(root,'app.sqlite'),historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),externalSideEffectsEnabled:false,achievementPurpose:'production'};
  const setup=openDatabase(config.dbFile);await createAuth(setup).bootstrap('pending_host','synthetic-pending-password');setup.close();
