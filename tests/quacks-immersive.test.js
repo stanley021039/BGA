@@ -61,3 +61,7 @@ test('first load and reconnect do not replay card or dice; hidden state cancels 
 });
 
 test('all players see the centered card reveal and retain dice effects',()=>{const f=fxFixture();f.fx.update(f.state(1,{me:'B'}),false);f.fx.update(f.state(2,{me:'B',fortuneRevealId:'card1',fortune:{name:'card'},fortuneDrawnAt:100000}),true);assert.equal(f.host.hidden,false);f.fx.clear();f.fx.update(f.state(3,{me:'B',rollEvents:[{id:'dice',at:100000,face:1,name:'A'}]}),true);assert.equal(f.host.hidden,false);});
+
+test('fortune face preserves complete effect, timing and author with a decorative foil seal',()=>{
+ for(const timing of ['round','immediate']){const f=fxFixture();f.fx.update(f.state(1),false);const fortune={name:'第二機會',timing,text:'投入第五片後，可以保留或重來一次；重來將本輪藥材放回袋。'};f.fx.update(f.state(2,{fortuneRevealId:timing,fortune,fortuneDrawnAt:100000}),true);const card=f.host.children[0].children.find(n=>n.className==='summon-card'),front=card.children[1];assert.equal(front.dataset.timing,timing);assert.equal(front.children.find(n=>n.className==='fortune-seal').attrs['aria-hidden'],'true');assert.equal(front.children.find(n=>n.className==='fortune-timing').textContent,timing==='round'?'本回合生效':'立即生效');assert.equal(front.children.find(n=>n.className==='fortune-effect').children[0].textContent,fortune.text);assert.equal(front.children.at(-1).textContent,'A抽出的占卜牌');f.fx.clear();}
+});

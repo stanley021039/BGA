@@ -1,16 +1,18 @@
 {
   "draw": {
     "file": "quacks-push-user.wav",
-    "durationMs": 480,
+    "durationMs": 640,
     "source": "要拚.mp3",
     "sourceSha256": "e773e6621d2bf74245560aa95cd6378cf25c5eb1f818c2e45d1b1eec4dbd063d",
-    "sha256": "d9a9d54a669b94b09c4332f2a02c4810fdccd8f6f8934f882834aa85bc197caf",
+    "sha256": "2f22a2c7305e3b7707058a8201e7ddde8b2356c04cddc11e1905b7f379fb8b19",
     "sampleRate": 24000,
     "peakTarget": 0.45,
     "fadeInMs": 10,
     "fadeOutMs": 40,
     "highpassHz": 65,
-    "lowpassHz": 5000
+    "lowpassHz": 5000,
+    "tailStartMs": 180,
+    "tailTempo": 0.62
   },
   "stop": {
     "file": "quacks-decline-user.wav",

@@ -8,11 +8,11 @@ test('successful bag draws get private bounded audio IDs; empty draws do not, an
 test('essence advances to the computed maximum without awarding before confirmation, and a lower choice remains valid',()=>{
  const r=new QuacksRoom('ABCDEF','auto',n=>0),a=r.add('A'),b=r.add('B');r.configure(a.id,{alchemists:true});r.start();for(const p of [a,b]){p.alchemy.patientId='eyes';p.pot=[r.chip('orange'),r.chip('red')];p.ready=false;}r.phase='settlement';r.round=1;r.fortune={id:'test'};r.beginAlchemy();assert.equal(a.alchemy.essence,2);assert.equal(a.alchemy.max,2);assert.equal(a.alchemy.confirmed,false);const rubies=a.rubies,bag=a.bag.length;assert.equal(a.rubies,rubies);assert.equal(a.bag.length,bag);r.act(a.id,'essence',{position:1,roundId:r.roundId,requestId:crypto.randomUUID()});assert.equal(a.alchemy.essence,1);assert.equal(a.alchemy.confirmed,true);assert.equal(a.rubies,rubies+1);assert.equal(a.bag.length,bag);assert.equal(b.alchemy.confirmed,false);
 });
-function audioFixture({controlledClip=false,capacity=true}={}){
- let now=100000,id=0;const timers=new Map(),handlers=new Set(),calls=[];const document={hidden:false,addEventListener:(_,f)=>handlers.add(f),removeEventListener:(_,f)=>handlers.delete(f)};
- const window={document};vm.runInNewContext(fs.readFileSync('public/quacks-fx.js','utf8'),{window,Date:{now:()=>now},setTimeout(fn,ms){timers.set(++id,{fn,at:now+ms});return id;},clearTimeout:id=>timers.delete(id)});const cues=window.QuacksFx.createAudio({epoch:()=>4,hasCapacity:()=>capacity,play:(cue,key,options)=>{calls.push({cue,key,options});if(controlledClip)return {};}});
+function audioFixture({controlledClip=false,capacity=true,enabled=true}={}){
+ let now=100000,id=0;const timers=new Map(),handlers=new Set(),calls=[],bursts=[];const document={hidden:false,addEventListener:(_,f)=>handlers.add(f),removeEventListener:(_,f)=>handlers.delete(f)};
+ const window={document,AudioSettings:{get:()=>({effects:{enabled,volume:.25}})}};vm.runInNewContext(fs.readFileSync('public/quacks-fx.js','utf8'),{window,Date:{now:()=>now},setTimeout(fn,ms){timers.set(++id,{fn,at:now+ms});return id;},clearTimeout:id=>timers.delete(id)});const cues=window.QuacksFx.createAudio({epoch:()=>4,hasCapacity:()=>capacity,play:(cue,key,options)=>{calls.push({cue,key,options});if(controlledClip&&enabled)return {};}},{onExplosion:events=>bursts.push({at:now,events})});
  const state=(events,extra={})=>({code:'ABCDEF',roundId:'r1',mine:{drawEvents:events},...extra});
- return {cues,calls,state,timers,freeCapacity(){capacity=true;},events:n=>Array.from({length:n},(_,i)=>({id:'draw'+i,at:now})),tick(ms){now+=ms;for(const [id,t]of [...timers])if(t.at<=now&&timers.delete(id))t.fn();},hide(){document.hidden=true;for(const fn of handlers)fn();}};
+ return {cues,calls,bursts,state,timers,freeCapacity(){capacity=true;},events:n=>Array.from({length:n},(_,i)=>({id:'draw'+i,at:now})),tick(ms){now+=ms;for(const [id,t]of [...timers])if(t.at<=now&&timers.delete(id))t.fn();},hide(){document.hidden=true;for(const fn of handlers)fn();}};
 }
 test('card and each private extra draw cue play once, in order, independently of visual motion',()=>{
  const f=audioFixture();f.cues.update(f.state([]),false);const state=f.state(f.events(3),{fortuneRevealId:'card1'});f.cues.update(state,true);assert.deepEqual(f.calls.map(x=>x.cue),['card-draw','ingredient-draw']);f.cues.update(state,true);f.tick(240);f.tick(240);assert.equal(f.calls.filter(x=>x.cue==='ingredient-draw').length,3);assert.equal(new Set(f.calls.map(x=>x.key)).size,4);assert.equal(f.calls[1].options.epoch,4);f.cues.destroy();assert.equal(f.timers.size,0);
@@ -108,4 +108,21 @@ test('buy, undo, refill and pending choices do not emit settlement cues until th
  const f=audioFixture(),s={phase:'settlement',stage:'shopping',version:1,mine:{settlementEvents:[]}};f.cues.update(f.state([],s),false);
  for(let i=2;i<7;i++){f.cues.update(f.state([],{...s,version:i,mine:{settlementEvents:[{id:'action'+i,at:100000}]}}),true);f.tick(30);}assert.equal(f.calls.length,0);
  f.cues.update(f.state([],{...s,phase:'between',version:7}),true);assert.deepEqual(f.calls.map(c=>c.cue),['quacks-settlement']);f.cues.destroy();
+});
+
+
+test('an explosive draw finishes, pauses, then shows/sounds the burst before same-snapshot settlement',()=>{
+ const f=audioFixture({controlledClip:true});f.cues.update(f.state([],{phase:'brewing'}),false);
+ const s=f.state(f.events(1),{phase:'settlement',stage:'witches',recipes:[{id:'a',name:'甲',explosionId:'boom'}]});
+ f.cues.update(s,true);f.cues.update(s,true);assert.deepEqual(f.calls.map(x=>x.cue),['ingredient-draw']);assert.equal(f.bursts.length,0);
+ f.tick(1600);assert.equal(f.bursts.length,0,'slow loading still waits for draw cleanup');
+ f.calls[0].options.onStop();f.tick(25);f.tick(179);assert.equal(f.bursts.length,0);f.tick(1);
+ assert.deepEqual(f.calls.map(x=>x.cue),['ingredient-draw','quacks-explosion']);assert.equal(f.bursts.length,1);assert.equal(f.bursts[0].events[0].playerId,'a');
+ f.cues.update(s,true);assert.equal(f.bursts.length,1);f.calls[1].options.onStop();f.tick(25);assert.equal(f.calls[2].cue,'quacks-settlement');f.cues.destroy();
+});
+test('other viewers and muted/rejected audio still receive the delayed public explosion once',()=>{
+ for(const enabled of [true,false]){const f=audioFixture({enabled}),s=f.state([],{recipes:[{id:'b',name:'乙',explosionId:'public'}]});f.cues.update(f.state([]),false);f.cues.update(s,true);f.tick(179);assert.equal(f.bursts.length,0);f.tick(1);assert.equal(f.bursts.length,1);f.tick(25);f.cues.update(s,true);assert.equal(f.bursts.length,1);f.cues.destroy();}
+});
+test('pending explosion is cancelled on clear, disconnect, hidden or a new round and is never caught up',()=>{
+ for(const cancel of ['clear','disconnect','hide','round']){const f=audioFixture(),s=f.state([],{recipes:[{id:'a',name:'甲',explosionId:'cancel'}]});f.cues.update(f.state([]),false);f.cues.update(s,true);if(cancel==='clear')f.cues.clear();if(cancel==='disconnect')f.cues.update(s,false);if(cancel==='hide')f.hide();if(cancel==='round')f.cues.update({...s,roundId:'r2'},true);f.tick(2500);assert.equal(f.bursts.length,0,cancel);f.cues.update(s,false);f.cues.update(s,true);f.tick(2500);assert.equal(f.bursts.length,0,cancel);f.cues.destroy();}
 });

@@ -1,4 +1,4 @@
-const limits={thunder:4,poker:6,majority:12,gift:8,draw:8,trpg:6,telephone:8,musicquiz:8,minimal:6,bluff:9,quacks:5};
+const limits={thunder:4,poker:6,majority:12,gift:8,draw:8,trpg:6,telephone:8,musicquiz:8,minimal:6,bluff:9,quacks:8};
 
 function listRooms(rooms,seats,kickedUsers,userId){
  return [...rooms.values()].map(room=>{
