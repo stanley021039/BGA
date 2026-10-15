@@ -17,7 +17,7 @@ test('Quacks waiting layout preserves ingredient voting and restores brewing con
  const {dom}=require('./helpers/widget-dom.cjs');
  const f=dom('<main id="game"><section id="scoreboard"></section><section id="bookVoting" data-waiting-essential="true"><button>選第2面</button></section><div class="game-grid"><section class="cauldron-panel"></section><section class="action-panel"><div id="controls"><button>開始一場</button></div></section></div></main>');
  f.document.createComment=()=>{const mark=f.document.createElement('comment');mark.after=el=>{const parent=mark.parentNode,next=parent.children[parent.children.indexOf(mark)+1];parent.insertBefore(el,next||null);};return mark;};
- const window={addEventListener(){},GameUI:{layoutDrawingPlay(){}}},ctx=vm.createContext({window,document:f.document,location:{pathname:'/quacks/ABCDEF'},setTimeout,clearTimeout});
+ const window={addEventListener(){},GameUI:{layoutDrawingPlay(){}}},ctx=vm.createContext({window,document:f.document,matchMedia:()=>({matches:false,addEventListener(){}}),location:{pathname:'/quacks/ABCDEF'},setTimeout,clearTimeout});
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/shared/room-layout.js'),'utf8'),ctx);
  vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/shared/room-waiting.js'),'utf8'),ctx);
  const s={type:'quacks',phase:'waiting',me:'A',host:'A',players:[{id:'A',name:'甲'},{id:'B',name:'乙'}]};
