@@ -55,8 +55,8 @@ class QuacksRoom extends PartyRoom {
  reverseGrant(edit){for(const e of edit.changes){const q=this.player(e.playerId);q.bag=q.bag.filter(c=>!e.chips.includes(c.id));q.droplet-=e.droplet;}}
  lockPurchases(p){for(const e of p.purchaseEdits||[])e.locked=true;if(p.purchaseBonus)p.purchaseBonus.locked=true;}
  canUndoPurchase(p,c,extra=false){const edit=p.purchaseEdits?.find(e=>e.extra===extra&&e.color===c.color&&e.value===c.value);return this.grantPresent(edit)&&(extra||!p.purchaseBonus||this.grantPresent(p.purchaseBonus));}
- recordDraw(p){p.drawEvents??=[];p.drawEvents.push({id:randomUUID(),at:this.now()});p.drawEvents=p.drawEvents.slice(-64);}
- drawOne(p){if(!p.bag.length)return null;const c=p.bag.splice(this.index(p.bag.length),1)[0];this.recordDraw(p);return c;}
+ recordDraw(p,{decision=false}={}){p.drawEvents??=[];p.drawEvents.push({id:randomUUID(),at:this.now(),decision,...(decision?{step:this.step}:{})});p.drawEvents=p.drawEvents.slice(-64);}
+ drawOne(p,options){if(!p.bag.length)return null;const c=p.bag.splice(this.index(p.bag.length),1)[0];this.recordDraw(p,options);return c;}
  look(p,count){const out=[];while(out.length<count&&p.bag.length)out.push(this.drawOne(p));return out;}
  queue(p,title,options){if(!options.length)return;const q={id:randomUUID(),title,color:this.phase==='settlement'&&this.stage==='effects'?(title.startsWith(NAMES.green)?'green':title.startsWith(NAMES.purple)?'purple':'fortune'):null,options:options.map((o,i)=>({id:String(i),...o}))};p.pending.push(q);}
  option(label,ops){return {label,ops};}
@@ -356,7 +356,7 @@ class QuacksRoom extends PartyRoom {
    this.quacksAchievements.decision(p);this.intents[id]=action;if(action==='stop'){p.stopEvents??=[];p.stopEvents.push({id:randomUUID(),at:this.now()});p.stopEvents=p.stopEvents.slice(-16);}this.event('intent',p.name+' 已選擇');
    if(this.players.filter(q=>!q.stopped).every(q=>Object.hasOwn(this.intents,q.id))){
     const drawing=this.players.filter(q=>!q.stopped);
-    for(const q of drawing){if(this.intents[q.id]==='stop')q.stopped=true;else{const chipId=this.alchemyDraws[q.id],c=chipId?q.alchemy.pool.find(c=>c.id===chipId):this.drawOne(q);if(chipId){this.recordDraw(q);q.alchemy.pool=q.alchemy.pool.filter(x=>x.id!==chipId);delete this.alchemyDraws[q.id];}if(c){q.draws++;this.place(q,c);}else q.stopped=true;}}
+    for(const q of drawing){if(this.intents[q.id]==='stop')q.stopped=true;else{const chipId=this.alchemyDraws[q.id],c=chipId?q.alchemy.pool.find(c=>c.id===chipId):this.drawOne(q,{decision:true});if(chipId){this.recordDraw(q,{decision:true});q.alchemy.pool=q.alchemy.pool.filter(x=>x.id!==chipId);delete this.alchemyDraws[q.id];}if(c){q.draws++;this.place(q,c);}else q.stopped=true;}}
     this.advanceStep=true;this.advance();
    }return;
   }

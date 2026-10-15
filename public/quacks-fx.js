@@ -48,21 +48,22 @@ function create(host){
 
 /* Private draw IDs include extra draws but never disclose another player's bag. */
 function createAudio(sounds,{onExplosion=()=>{},onClear=()=>{}}={}){
- let context=null,initialized=false,timer=null,queue=[],generation=0,lastSettlement=null;const seen=new Set();
- const clear=()=>{generation++;if(timer!==null)clearTimeout(timer);timer=null;queue=[];onClear();};
+ let context=null,initialized=false,timer=null,queue=[],generation=0,lastSettlement=null,drawActive=false;const seen=new Set();
+ const clear=()=>{generation++;if(timer!==null)clearTimeout(timer);timer=null;queue=[];drawActive=false;onClear();};
  const muted=()=>{const p=root.AudioSettings?.get?.().effects;return p&&(!p.enabled||!p.volume);};
  const next=()=>{
   timer=null;
   while(queue.length){
    const e=queue.shift();if(Date.now()-e.at>5000||(!e.explosions&&muted()))continue;
    if(!e.explosions&&sounds?.hasCapacity?.()===false){queue.unshift(e);timer=setTimeout(next,50);return;}
-   const token=generation;let ended=false;
-   const done=()=>{if(ended||token!==generation)return;ended=true;if(timer!==null)clearTimeout(timer);timer=setTimeout(next,25);};
+   const token=generation,isDraw=!e.cue;let ended=false;
+   const done=()=>{if(ended||token!==generation)return;ended=true;if(isDraw)drawActive=false;if(timer!==null)clearTimeout(timer);timer=setTimeout(next,25);};
    const play=()=>{
     if(token!==generation||root.document.hidden)return;
     if(e.explosions)onExplosion(e.explosions);
+    if(isDraw)drawActive=true;
     const clip=sounds?.play(e.cue||'ingredient-draw',e.key,{live:true,epoch:e.epoch,onStop:done});
-    if(!clip)done();else if(!ended)timer=setTimeout(done,e.explosions?3000:e.cue==='quacks-stop'?3500:2200);
+    if(!clip)done();else if(!ended)timer=setTimeout(done,e.explosions?3000:e.cue==='quacks-stop'?3500:isDraw?3000:2200);
    };
    // Leave a short beat after the last draw finishes, even when audio is muted or refused.
    if(e.explosions)timer=setTimeout(play,180);else play();
@@ -77,7 +78,7 @@ function createAudio(sounds,{onExplosion=()=>{},onClear=()=>{}}={}){
   for(const e of state.mine?.potionEvents||[]){const id='potion:'+e.id;if(seen.has(id))continue;seen.add(id);if(eligible)queue.push({cue:'potion-drink',key:'quacks:'+id,at:e.at??Date.now(),epoch});}
   for(const e of state.mine?.stopEvents||[]){const id='stop:'+e.id;if(seen.has(id))continue;seen.add(id);if(eligible)queue.push({cue:'quacks-stop',key:'quacks:'+id,at:e.at??Date.now(),epoch});}
   // Draw -> pause -> explosion -> settlement. Same-snapshot settlement never cuts the draw short.
-  for(const e of state.mine?.drawEvents||[]){if(seen.has(e.id))continue;seen.add(e.id);if(eligible)queue.push({key:'quacks:draw:'+e.id,at:e.at??Date.now(),epoch});}
+  for(const e of state.mine?.drawEvents||[]){if(seen.has(e.id))continue;seen.add(e.id);if(eligible&&e.decision===true&&!drawActive&&!queue.some(x=>!x.cue))queue.push({key:'quacks:draw:'+e.id,at:e.at??Date.now(),epoch});}
   const explosions=[];
   for(const p of state.recipes||[]){const id='burst:'+p.explosionId;if(!p.explosionId||seen.has(id))continue;seen.add(id);if(eligible)explosions.push({id:p.explosionId,playerId:p.id,name:p.name});}
   if(explosions.length)queue.push({cue:'quacks-explosion',key:'quacks:burst:'+explosions.map(e=>e.id).join(':'),explosions,at:Date.now(),epoch});
