@@ -134,7 +134,7 @@
    const book=el('button','',s.bookSelection?.some(r=>r.tied)?'有藥材書平票 · 開啟寶典裁決':'搭配本局藥材書');book.type='button';book.onclick=()=>openBook(null,book);ui.decorateButton(book,'book');hero.append(book);content.append(hero);
   }
   if(s.phase==='patients'||s.stage==='essence')content.append($('#alchemy'));
-  const keep=/^(還要爽爽|下一回合|開始一場|加入測試 AI|抽一張占卜牌|準備結算|擲獎勵骰|獎勵骰完成|確認藥材效果|我要勝利分數|領取本輪獎勵|我要買藥材|完成本輪結算|開始下一回合|暫存決定完成|要拼|我不抽)/;
+  const keep=/^(還要爽爽|繼續拼|下一回合|開始一場|加入測試 AI|抽一張占卜牌|準備結算|擲獎勵骰|獎勵骰完成|確認藥材效果|我要勝利分數|領取本輪獎勵|我要買藥材|完成本輪結算|開始下一回合|暫存決定完成|要拼|我不抽)/;
   for(const n of [...$('#controls').children]){if(n.tagName==='BUTTON'&&keep.test(n.getAttribute('aria-label')||n.textContent))continue;content.append(n);}
   if(waiting&&!content.querySelector('.room-settings-panel')&&s.me!==s.host)content.append(el('p','',s.options.witches?'本局加入草藥女巫擴充；'+(s.options.hiddenProgress?'其他人大釜進度隱藏。':'大釜進度公開。'):'本局使用基本版；'+(s.options.hiddenProgress?'其他人大釜進度隱藏。':'大釜進度公開。')));
   if(s.stage==='shopping'){
