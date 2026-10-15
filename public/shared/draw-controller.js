@@ -1,7 +1,7 @@
 (function(){
  'use strict';
  // Owns read/stream lifetimes only. Canonical canvas, input, ACKs and rendering
- // remain with the page and their existing specialized modules.
+ // belong to DrawCanvasSession; this module does not interpret drawing state.
  function create({context,request,receive,applySnapshot,receiveStroke,onSyncError=()=>{},onSyncSuccess=()=>{},onPollError=()=>{},onPollSuccess=()=>{},onStreamReady=()=>{},onStreamError=()=>{},cancelWork=()=>{},tick=()=>{},restoreSession,onRestored=()=>{},createStream=typeof EventSource==='function'?url=>new EventSource(url):null,setTimer=setTimeout,clearTimer=clearTimeout,setRepeater=setInterval,clearRepeater=clearInterval}){
   let running=false,generation=0,syncJob=null,pollJob=null,restoreJob=null,stream=null,pollTimer=null,tickTimer=null;
   const sameRoom=captured=>{const next=context();return running&&!!next.session&&captured.room===next.room;};

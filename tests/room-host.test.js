@@ -40,9 +40,11 @@ function harness(initial=snapshot(),fetchHandler){
   click(){if(this.disabled)return false;return this.onclick?.({target:this});}
  }
  const document={body:new Node('body'),activeElement:null,createElement:tag=>new Node(tag),querySelector:selector=>ids.get(selector.slice(1)),querySelectorAll:selector=>selector==='dialog[open]'?[...ids.values()].filter(node=>node.tagName==='DIALOG'&&node.open):[]};
- const window={GameShell:{update:state=>shellUpdates.push(state)},GameUI:{openDialog(dialog,trigger){opens.push({dialog:dialog.id,trigger:trigger?.id});dialog.showModal();}}};
+ const window={GameShell:{renderSnapshot:state=>shellUpdates.push(state)},GameUI:{openDialog(dialog,trigger){opens.push({dialog:dialog.id,trigger:trigger?.id});dialog.showModal();}}};
  const fetch=async(url,options)=>{const request={url,options,body:JSON.parse(options.body)};network.push(request);return fetchHandler?fetchHandler(request):json(current);};
- vm.runInNewContext(source,{window,document,fetch,AbortController,localStorage:{getItem:key=>storage.get(key)??null,removeItem:key=>storage.delete(key)}});
+ const context=vm.createContext({window,document,fetch,AbortController,localStorage:{getItem:key=>storage.get(key)??null,removeItem:key=>storage.delete(key)}});
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'../public/shared/room-ui.js'),'utf8'),context);
+ vm.runInContext(source,context);
  function update(state){current=state;window.RoomHost.update(state,receive);}
  function receive(state){applied.push(state);update(state);}
  update(initial);
@@ -113,7 +115,7 @@ test('role submissions lock every player action and prevent duplicate commands w
 test('ordinary polls preserve management focus and legacy watch IDs are not compared with media IDs',()=>{
  const initial=snapshot(),h=harness(initial);h.open();const control=h.button('rolePlayer','member');control.focus();
  h.update({...initial,serverNow:1001});assert.equal(h.button('rolePlayer','member'),control);
- const legacy={...initial,media:undefined,watch:{roomInstanceId:'legacy-watch-instance'}};h.update(legacy);
+ const legacy={...initial,serverNow:1002,media:undefined,watch:{roomInstanceId:'legacy-watch-instance'}};h.update(legacy);
  const unified={...legacy,version:2,media:{roomInstanceId:'unified-media-instance'},watch:{roomInstanceId:'legacy-watch-instance'}};
  assert.equal(h.window.RoomHost.acceptSnapshot(unified),true);
  assert.equal(h.window.RoomHost.acceptSnapshot({...unified,watch:{roomInstanceId:'other-watch-instance'}}),false);
@@ -156,7 +158,7 @@ test('target promotion or actor demotion closes an obsolete kick prompt and prev
  const initial=snapshot({role:'manager'}),h=harness(initial);h.open();await h.kick('member');
  h.update({...initial,version:2,players:initial.players.map(player=>player.id==='member'?{...player,roomRole:'manager'}:player)});
  assert.equal(h.node('kickWarning').open,false);await h.node('confirmKick').click();assert.equal(h.network.length,0);
- h.update(initial);h.open();await h.kick('member');h.update(snapshot({role:'member'}));assert.equal(h.node('kickWarning').open,false);assert.equal(h.node('managePlayers').hidden,false);assert.equal(h.node('managePlayers').disabled,true);
+ h.update({...initial,version:3});h.open();await h.kick('member');h.update(snapshot({role:'member',version:4}));assert.equal(h.node('kickWarning').open,false);assert.equal(h.node('managePlayers').hidden,false);assert.equal(h.node('managePlayers').disabled,true);
  await h.node('confirmKick').click();assert.equal(h.network.length,0);
 });
 

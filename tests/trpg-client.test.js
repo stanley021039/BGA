@@ -6,7 +6,7 @@ const {randomUUID}=require('node:crypto');
 const {TrpgRoom}=require('../src/games/trpg');
 const flush=async()=>{for(let i=0;i<10;i++)await Promise.resolve();};
 function fixture(){
- const ids=new Map(),events={},timers=new Set(),requests=[],r=new TrpgRoom('ABCDEF','client',()=>5),p=r.add('reader');r.start();
+ const ids=new Map(),events={},timers=new Set(),requests=[],r=new TrpgRoom('ABCDEF','client',n=>n===6?5:0),p=r.add('reader');r.start();
  class Element{
   constructor(tag='div'){this.tag=tag;this.children=[];this.handlers={};this.value='';this.disabled=false;this.hidden=false;this.textContent='';this.classList={toggle(){}};}
   set id(value){this._id=value;ids.set('#'+value,this);}get id(){return this._id;}
@@ -21,7 +21,7 @@ function fixture(){
  let pending=null;
  const RoomApi={request:async(route,payload,options)=>{requests.push({route,payload,options});if(pending){const result=await pending;pending=null;return result;}if(route==='action')r.act(p.id,payload.action,payload);return r.view(p.id);}};
  const context={document,location:{pathname:'/trpg/ABCDEF',origin:'http://fixture',replace(){}},crypto:{randomUUID},AbortController,RoomApi,RoomReconnect:{restore:async()=>({}),forget(){}},navigator:{clipboard:{writeText:async()=>{}}},confirm:()=>true,setInterval:fn=>{timers.add(fn);return fn;},clearInterval:fn=>timers.delete(fn)};
- context.window={addEventListener:(type,fn)=>events[type]=fn};vm.runInNewContext(fs.readFileSync(require.resolve('../public/trpg.js'),'utf8'),context);
+ context.window={RoomControls:require('./helpers/room-actions.cjs')(),addEventListener:(type,fn)=>events[type]=fn};vm.runInNewContext(fs.readFileSync(require.resolve('../public/trpg.js'),'utf8'),context);
  return {ids,r,p,requests,events,timers,async poll(){for(const fn of timers)await fn();await flush();},defer(promise){pending=promise;}};
 }
 test('TRPG drafts survive polling; edited submitted choices cannot resolve until saved',async()=>{

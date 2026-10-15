@@ -49,7 +49,7 @@ test('race badge needs a completed human-operated turn and a finished race',()=>
  room.start();assert.equal(room.players.some(player=>player.completedHumanTurn),false);
 }));
 
-test('poker HTTP action awards badges only after the hand settles',async()=>{
+test('poker HTTP action awards badges only after the hand settles',async t=>{require('./helpers/fixed-starter.cjs')(t,require('../src/games/poker').Room,51);
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-poker-http-badge-'));
  const config={port:0,host:'127.0.0.1',historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite')};
  const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('artist','test-password-123');db.close();

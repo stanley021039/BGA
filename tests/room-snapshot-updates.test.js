@@ -36,9 +36,9 @@ function harness(type='poker'){
  const node=selector=>{if(!nodes.has(selector))nodes.set(selector,new Element());return nodes.get(selector);};
  const document={body:new Element(),activeElement:null,hidden:false,visibilityState:'visible',createElement:()=>new Element(),querySelector:node,querySelectorAll:()=>[]};
  const base=snapshot(type),trigger=node('#sendExpression');let reply=expressionState(base),scope;
- const window={GameUI:{setBusy(button,busy){button.setAttribute('aria-busy',String(busy));}},GameShell:{update(s){shellUpdates.push(s);}}};
+ const window={GameUI:{setBusy(button,busy){button.setAttribute('aria-busy',String(busy));}},GameShell:{renderSnapshot(s){shellUpdates.push(s);}}};
  const motionGate={update:()=>false,take:()=>false};
- scope={window,document,$:node,q:node,escape,esc:escape,Date,Promise,Number,Array,JSON,Map,Set,localStorage:{getItem:()=>null,removeItem:noOp},
+ scope={canvasSession:{transition(){},view:()=>({version:0,round:1})},roomActions:{refresh(){}},window,document,$:node,q:node,escape,esc:escape,Date,Promise,Number,Array,JSON,Map,Set,localStorage:{getItem:()=>null,removeItem:noOp},
   state:base,busy:false,code:base.code,signature:'',disconnected:false,streamDisconnected:false,motionNeedsBaseline:false,lastReceivedAt:0,lastLiveState:false,clockOffset:0,
   motionGate,gameSounds:null,resultsView:null,canvasRound:base.round,canvasVersion:0,choice:null,draft:'',draftGifts:{},draftLikes:[],activeGiftRecipient:null,activeResultRecipient:null,
   lastVersion:base.version,onlineSignature:base.players.map(player=>player.online).join(','),sizes:['輕型','中型','重型'],raceSounds:{update:noOp},
@@ -46,11 +46,12 @@ function harness(type='poker'){
   feedback(message,kind){feedback.push({message,kind});},
   fetch:async(url,options)=>{network.push({url,options,body:JSON.parse(options.body)});return {ok:true,json:async()=>await reply};},
   immersion:{allowsMotion:()=>false,prepareFocus:noOp,startFocus:noOp,stopFocus:noOp,playSound:noOp},phases:{waiting:'等待'},card:()=>'',animateChipTransfers:noOp,updateTimer:noOp,checkPokerAchievements:noOp,
-  render:noOp,progress:noOp,stopGather:noOp,stopFocus:noOp,restoreAchievementNotice:noOp,gatherPlayers:noOp,startFocus:noOp,playSound:noOp,checkNewAchievement:noOp,
+  render:noOp,renderAction:noOp,progress:noOp,stopGather:noOp,stopFocus:noOp,restoreAchievementNotice:noOp,gatherPlayers:noOp,startFocus:noOp,playSound:noOp,checkNewAchievement:noOp,
   celebrateVictory:noOp,drawFeedback:noOp,updateConnection:noOp,animatePhase:noOp,updateFeed:noOp,updateStagePreview:noOp,decorateActions:noOp,
   showCorrectFeedback:noOp,playDrawSounds:noOp,connectEvents:noOp,tick:noOp,cancelDrawingWork:noOp,
  };
  vm.createContext(scope);
+ vm.runInContext(source('shared/room-ui.js'),scope,{filename:'public/shared/room-ui.js'});
  vm.runInContext(source('shared/room-host.js'),scope,{filename:'public/shared/room-host.js'});scope.RoomHost=window.RoomHost;
  vm.runInContext(rowSource+'\n'+stableSource,scope);window.GameShell.playerRow=scope.playerRow;window.GameShell.stableMarkup=scope.stableMarkup;scope.GameShell=window.GameShell;
  let callback,output;

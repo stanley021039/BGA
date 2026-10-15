@@ -1,10 +1,10 @@
 /* Personal sound preferences shared by every game; room transport stays on the server. */
 (()=>{
  const key='ah-audio-settings',listeners=new Set(),effects=new Map(),gameEffects=new Set();
- const defaults=()=>({version:1,music:{enabled:false,volume:.3},effects:{enabled:false,volume:.25}});
+ const defaults=()=>({version:2,music:{enabled:false,volume:.3},effects:{enabled:true,volume:.25}});
  const validVolume=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0&&value<=1;
  function normalize(value){const result=defaults();for(const kind of ['music','effects']){if(typeof value?.[kind]?.enabled==='boolean')result[kind].enabled=value[kind].enabled;if(validVolume(value?.[kind]?.volume))result[kind].volume=value[kind].volume;}return result;}
- function read(){try{const saved=localStorage.getItem(key);if(saved!==null)return normalize(JSON.parse(saved));const result=defaults();result.music.enabled=localStorage.getItem('ah-music-listen')==='on';for(const [kind,keys] of [['music',['ah-music-volume']],['effects',['ah-gift-volume','ah-majority-volume','ah-race-volume','ah-poker-volume']]])for(const old of keys){const raw=localStorage.getItem(old);if(raw!==null&&raw.trim()!==''&&validVolume(Number(raw))){result[kind].volume=Number(raw);break;}}return result;}catch{return defaults();}}
+ function read(){try{const saved=localStorage.getItem(key);if(saved!==null){const savedValue=JSON.parse(saved),result=normalize(savedValue);if(savedValue?.version!==2)result.effects.enabled=true;return result;}const result=defaults();result.music.enabled=localStorage.getItem('ah-music-listen')==='on';for(const [kind,keys] of [['music',['ah-music-volume']],['effects',['ah-gift-volume','ah-majority-volume','ah-race-volume','ah-poker-volume']]])for(const old of keys){const raw=localStorage.getItem(old);if(raw!==null&&raw.trim()!==''&&validVolume(Number(raw))){result[kind].volume=Number(raw);break;}}return result;}catch{return defaults();}}
  let preferences=read();
  const get=()=>normalize(preferences);
  function persist(){try{localStorage.setItem(key,JSON.stringify(preferences));}catch{}}
@@ -28,9 +28,10 @@
   }catch{if(clip)stopEffect(clip);onError?.();}
  }
  function playEffect(kind,options={}){
+  // The 580ms draw recording uses onended; a 1s safety margin tolerates delayed media clocks.
   // Reuse the existing short double tone; warning is a distinct once-per-round cue.
   if(kind==='countdown-warning')kind='turn';
-  const cues={'quacks-draw':['/assets/game-sounds/quacks-draw.wav',540],'quacks-danger':['/assets/game-sounds/quacks-danger.wav',420],'quacks-potion':['/assets/game-sounds/quacks-potion-synth.wav',550],'quacks-buy':['/assets/game-sounds/quacks-buy.wav',380],'quacks-ruby':['/assets/game-sounds/quacks-ruby.wav',460],'quacks-witch':['/assets/game-sounds/quacks-witch.wav',750],settlement:['/assets/game-sounds/quacks-settlement.wav',420],'potion-drink':['/assets/game-sounds/quacks-potion.wav',600],'ingredient-draw':['/assets/game-sounds/quacks-ingredient.wav',650],'card-draw':['/assets/game-sounds/quacks-card.wav',1500],'bluff-reaction':['/assets/game-sounds/bluff-reaction.mp3',1700],confirm:['/assets/gift-sounds/confirmation_001.wav',10000],reveal:['/assets/gift-sounds/open_001.wav',10000],turn:['/assets/game-sounds/turn.wav',320],correct:['/assets/game-sounds/correct.wav',220],'dice-roll':['/assets/game-sounds/dice-roll.wav',650],shot:['/assets/game-sounds/shot.wav',280],slam:['/assets/game-sounds/slam.wav',350],explosion:['/assets/game-sounds/quacks-explosion.wav',900],nitro:['/assets/game-sounds/nitro.wav',500],skid:['/assets/game-sounds/skid.wav',480]};
+  const cues={'majority-settlement':['/assets/game-sounds/quacks-settlement-user.wav',660],'quacks-stop':['/assets/game-sounds/quacks-decline-user.wav',1811],'quacks-settlement':['/assets/game-sounds/quacks-settlement-user.wav',660],'quacks-explosion':['/assets/game-sounds/quacks-explosion-fish.wav',1428],'quacks-draw':['/assets/game-sounds/quacks-draw.wav',540],'quacks-danger':['/assets/game-sounds/quacks-danger.wav',420],'quacks-potion':['/assets/game-sounds/quacks-potion-synth.wav',550],'quacks-buy':['/assets/game-sounds/quacks-buy.wav',380],'quacks-ruby':['/assets/game-sounds/quacks-ruby.wav',460],'quacks-witch':['/assets/game-sounds/quacks-witch.wav',750],settlement:['/assets/game-sounds/quacks-settlement.wav',420],'potion-drink':['/assets/game-sounds/quacks-potion.wav',600],'ingredient-draw':['/assets/game-sounds/quacks-push-user.wav',1580],'card-draw':['/assets/game-sounds/quacks-card.wav',1500],'bluff-reaction':['/assets/game-sounds/bluff-reaction.mp3',1700],confirm:['/assets/gift-sounds/confirmation_001.wav',10000],reveal:['/assets/gift-sounds/open_001.wav',10000],turn:['/assets/game-sounds/turn.wav',320],correct:['/assets/game-sounds/correct.wav',220],'dice-roll':['/assets/game-sounds/dice-roll.wav',650],shot:['/assets/game-sounds/shot.wav',280],slam:['/assets/game-sounds/slam.wav',350],explosion:['/assets/game-sounds/quacks-explosion.wav',900],nitro:['/assets/game-sounds/nitro.wav',500],skid:['/assets/game-sounds/skid.wav',480]};
   const cue=Object.hasOwn(cues,kind)?cues[kind]:null;
   if(cue)return playClip(cue[0],cue[1],{onError:options.onError,onStop:options.onStop,game:true,maxStartDelayMs:kind==='confirm'||kind==='reveal'?10000:1000});
  }
@@ -44,7 +45,7 @@
    return playClip(url.pathname+url.search,sound.durationMs,options);
   }catch{}
  }
- // A saved opt-in still requires a fresh browser gesture after navigation.
+ // Browsers may require a fresh gesture after navigation, including default-enabled effects.
  const unlock=event=>{if(event.isTrusted)notify(true);};
  document.addEventListener('pointerdown',unlock,{once:true});document.addEventListener('keydown',unlock,{once:true});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopEffects();});window.addEventListener('pagehide',stopEffects);

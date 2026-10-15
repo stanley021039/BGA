@@ -1,14 +1,16 @@
 'use strict';
+const {starterIndex}=require('./random-starter');
 const {randomUUID}=require('node:crypto');
 const {PartyRoom,fail,clone,text}=require('./party-base');
 const {QuacksAchievements}=require('./quacks-achievements');
 const Alchemy=require('./quacks-alchemy');
 const ExpansionFortunes=require('./quacks-expansion-fortunes');
 const {POT_COLORS,NAMES,BOARD,WITCHES,FORTUNES,book}=require('./quacks-catalog');
+const MAX_PLAYERS=8;
 const LAST=BOARD.length-2, Spoon=BOARD.at(-1);
 const label=c=>NAMES[c.color]+' '+c.value;
 class QuacksRoom extends PartyRoom {
- constructor(code,name,rng,now){super('quacks',code,name,5,2,rng,now);Object.defineProperty(this,'quacksAchievements',{value:new QuacksAchievements(this),enumerable:false});this.options={witches:false,alchemists:false,hiddenProgress:false,bookSet:1};this.alchemyDraws={};this.bookChoices={};this.bookPickedBy={};this.activeBooks=null;this.rollEvents=[];this.step=0;this.intents={};this.fortune=null;this.witches={};this.stage=null;}
+ constructor(code,name,rng,now){super('quacks',code,name,MAX_PLAYERS,2,rng,now);Object.defineProperty(this,'quacksAchievements',{value:new QuacksAchievements(this),enumerable:false});this.options={witches:false,alchemists:false,hiddenProgress:false,bookSet:1};this.alchemyDraws={};this.bookChoices={};this.bookPickedBy={};this.activeBooks=null;this.rollEvents=[];this.step=0;this.intents={};this.fortune=null;this.witches={};this.stage=null;}
  command(id,action,data,run){
   return super.command(id,action,data,p=>{
    const settling=this.phase==='settlement',eligible=['settle-ready','essence','bonus-ready','confirm-effects','reward','shop-ready','choice','buy','extra-buy','unbuy','ruby','witch','free-witch','alchemy-return'].includes(action);
@@ -21,10 +23,10 @@ class QuacksRoom extends PartyRoom {
   if(!['waiting','finished'].includes(this.phase))fail('MATCH_STARTED','開始後不能改設定');
   const options={...this.options,...Object.fromEntries(['witches','alchemists','hiddenProgress','bookSet'].filter(k=>data[k]!==undefined).map(k=>[k,data[k]]))};
   if(typeof options.alchemists!=='boolean'||typeof options.witches!=='boolean'||typeof options.hiddenProgress!=='boolean'||!Number.isInteger(options.bookSet)||options.bookSet<1||options.bookSet>(options.witches?6:4))fail('INVALID_SETTINGS','請選有效的擴充、隱藏進度及藥材書',400);
-  if(!options.witches&&this.activePlayers().length>4)fail('NEED_EXPANSION','五人局須開啟草藥女巫');
-  this.options=options;this.max=options.witches?5:4;this.event('settings','更新遊戲設定');
+  this.options=options;this.max=MAX_PLAYERS;this.event('settings','更新遊戲設定');
  }
- add(name,bot=false){this.max=this.options?.witches?5:4;const p=super.add(name,bot);p.potColor=Object.keys(POT_COLORS).find(c=>!this.activePlayers().some(q=>q.id!==p.id&&q.potColor===c));p.potName=p.name+'的好運釜';return p;}
+ assignPotColor(p){const free=c=>!this.activePlayers().some(q=>q.id!==p.id&&q.potColor===c);p.potColor=Object.hasOwn(POT_COLORS,p.potColor)&&free(p.potColor)?p.potColor:Object.keys(POT_COLORS).find(free);}
+ add(name,bot=false){const p=super.add(name,bot);this.assignPotColor(p);p.potName=p.name+'的好運釜';return p;}
 
  choiceSets(color){if(color==='orange')return [this.options.witches?5:1];if(color==='black')return this.options.witches?[1,5,6]:[1];if(color==='locoweed')return [...(this.options.witches?[5,6]:[]),...(this.options.alchemists?[7,8,9,10]:[])];return this.options.witches?[1,2,3,4,5,6]:[1,2,3,4];}
  defaultBook(color){const sets=this.choiceSets(color);return sets.includes(this.options.bookSet)?this.options.bookSet:sets[0];}
@@ -38,9 +40,9 @@ class QuacksRoom extends PartyRoom {
  chip(color,value=1){return {id:randomUUID(),color,value};}
  grant(p,color,value=1){const chip=this.chip(color,value);if(color==='black'&&this.setFor('black')===5){const left=this.players[(this.players.indexOf(p)+1)%this.players.length];left.bag.push(chip);p.droplet=Math.min(LAST,p.droplet+1);}else p.bag.push(chip);}
  start(){
-  if(!this.options.witches&&this.activePlayers().length>4)fail('NEED_EXPANSION','五人局須開啟草藥女巫');const selection=this.bookSelection();this.activeBooks=Object.fromEntries(selection.map(c=>[c.color,c.selected]));this.options.books=clone(this.activeBooks);this.prepare();this.quacksAchievements.start();this.roundLimit=9;
+  const selection=this.bookSelection();this.activeBooks=Object.fromEntries(selection.map(c=>[c.color,c.selected]));this.options.books=clone(this.activeBooks);this.prepare();this.firstSeatIndex=starterIndex(this.players,this.rng);this.quacksAchievements.start();this.roundLimit=9;
   this.deck=FORTUNES.concat(this.expansionFortunes()).map(x=>x.id);this.witches=this.options.witches?Object.fromEntries(Object.entries(WITCHES).map(([color,items])=>[color,items[this.index(items.length)]])):{};
-  for(const p of this.players){Object.assign(p,{bag:[],pot:[],overflow:[],reserve:[],drawEvents:[],potionEvents:[],settlementEvents:[],startChips:[],bagPeekUsed:false,bagPeek:null,potName:p.potName||p.name+'的好運釜',droplet:0,rubies:1,potion:true,coins:{gold:true,copper:true,silver:true}});
+  for(const p of this.players){Object.assign(p,{bag:[],pot:[],overflow:[],reserve:[],drawEvents:[],potionEvents:[],stopEvents:[],settlementEvents:[],startChips:[],bagPeekUsed:false,bagPeek:null,potName:p.potName||p.name+'的好運釜',droplet:0,rubies:1,potion:true,coins:{gold:true,copper:true,silver:true}});
    for(let i=0;i<4;i++)p.bag.push(this.chip('white',1));for(let i=0;i<2;i++)p.bag.push(this.chip('white',2));p.bag.push(this.chip('white',3),this.chip('orange',1),this.chip('green',1));
   }if(this.options.alchemists)this.initAlchemy();else{this.patientChoices=[];this.players.forEach(p=>delete p.alchemy);this.nextRound();}
  }
@@ -53,8 +55,8 @@ class QuacksRoom extends PartyRoom {
  reverseGrant(edit){for(const e of edit.changes){const q=this.player(e.playerId);q.bag=q.bag.filter(c=>!e.chips.includes(c.id));q.droplet-=e.droplet;}}
  lockPurchases(p){for(const e of p.purchaseEdits||[])e.locked=true;if(p.purchaseBonus)p.purchaseBonus.locked=true;}
  canUndoPurchase(p,c,extra=false){const edit=p.purchaseEdits?.find(e=>e.extra===extra&&e.color===c.color&&e.value===c.value);return this.grantPresent(edit)&&(extra||!p.purchaseBonus||this.grantPresent(p.purchaseBonus));}
- recordDraw(p){p.drawEvents??=[];p.drawEvents.push({id:randomUUID(),at:this.now()});p.drawEvents=p.drawEvents.slice(-64);}
- drawOne(p){if(!p.bag.length)return null;const c=p.bag.splice(this.index(p.bag.length),1)[0];this.recordDraw(p);return c;}
+ recordDraw(p,{decision=false}={}){p.drawEvents??=[];p.drawEvents.push({id:randomUUID(),at:this.now(),decision,...(decision?{step:this.step}:{})});p.drawEvents=p.drawEvents.slice(-64);}
+ drawOne(p,options){if(!p.bag.length)return null;const c=p.bag.splice(this.index(p.bag.length),1)[0];this.recordDraw(p,options);return c;}
  look(p,count){const out=[];while(out.length<count&&p.bag.length)out.push(this.drawOne(p));return out;}
  queue(p,title,options){if(!options.length)return;const q={id:randomUUID(),title,color:this.phase==='settlement'&&this.stage==='effects'?(title.startsWith(NAMES.green)?'green':title.startsWith(NAMES.purple)?'purple':'fortune'):null,options:options.map((o,i)=>({id:String(i),...o}))};p.pending.push(q);}
  option(label,ops){return {label,ops};}
@@ -71,9 +73,9 @@ class QuacksRoom extends PartyRoom {
  roll(p,sourceOverride){const n=this.index(6);if(n<3)p.score+=n===2?2:1;else if(n===3)p.rubies++;else if(n===4)p.droplet=Math.min(LAST,p.droplet+1);else this.grant(p,'orange',1);p.dice.push(n);const source=sourceOverride||(this.stage==='bonus'?'獎勵骰':this.phase==='settlement'?'花園蜘蛛':'占卜牌');this.rollEvents.push({id:randomUUID(),playerId:p.id,name:p.name,potName:p.potName,face:n,potColor:p.potColor,source,round:this.round,at:this.now()});this.rollEvents=this.rollEvents.slice(-64);this.event('dice',p.name+' 擲出 '+['1 分','1 分','2 分','紅寶石','水滴前進','南瓜'][n]);return n;}
 
  nextRound(){
-  this.visitingWitch=null;this.rollEvents=[];this.alchemyDraws={};this.round++;this.roundId=randomUUID();this.step=1;this.phase='fortune';this.stage='draw-card';this.intents={};this.fortune=null;this.fortuneRevealId=null;this.fortuneDrawnAt=null;this.roundStarterId=this.players[(this.round-1)%this.players.length].id;this.advanceStep=false;
+  this.visitingWitch=null;this.rollEvents=[];this.alchemyDraws={};this.round++;this.roundId=randomUUID();this.step=1;this.phase='fortune';this.stage='draw-card';this.intents={};this.fortune=null;this.fortuneRevealId=null;this.fortuneDrawnAt=null;this.roundStarterId=this.players[((this.firstSeatIndex||0)+this.round-1)%this.players.length].id;this.advanceStep=false;
   for(const p of this.players){
-   Object.assign(p,{goodNeighborUsed:false,visitorUsed:false,freeCheap:false,returnCoinDone:false,fortuneSettlementApplied:false,bagPeekUsed:false,bagPeek:null,pending:[],stopped:false,exploded:false,explosionId:null,draws:0,drawEvents:[],potionEvents:[],settlementEvents:[],position:p.droplet,roundStartPosition:p.droplet,rat:0,protect:0,doubleNext:false,secondUsed:false,firstWhite:false,strongDone:false,reserveDone:false,fullBenefits:false,settlementChoice:null,ready:false,budget:0,bought:[],purchaseEdits:[],purchaseBonus:null,discount:2,dice:[],bonusDice:[],bonusEligible:false,bonusRolled:false,silverRuby:false,copyUsed:false,effectSummary:[]});
+   Object.assign(p,{goodNeighborUsed:false,visitorUsed:false,freeCheap:false,returnCoinDone:false,fortuneSettlementApplied:false,bagPeekUsed:false,bagPeek:null,pending:[],stopped:false,exploded:false,explosionId:null,draws:0,drawEvents:[],potionEvents:[],stopEvents:[],settlementEvents:[],position:p.droplet,roundStartPosition:p.droplet,rat:0,protect:0,doubleNext:false,secondUsed:false,firstWhite:false,strongDone:false,reserveDone:false,fullBenefits:false,settlementChoice:null,ready:false,budget:0,bought:[],purchaseEdits:[],purchaseBonus:null,discount:2,dice:[],bonusDice:[],bonusEligible:false,bonusRolled:false,silverRuby:false,copyUsed:false,effectSummary:[]});
    if(this.round===6)p.bag.push(this.chip('white',1));
   }
   this.event('round','第 '+this.round+' 回合：等 '+this.player(this.roundStarterId).name+' 抽占卜牌。');
@@ -351,10 +353,10 @@ class QuacksRoom extends PartyRoom {
    if(this.phase!=='brewing'||this.stage!=='drawing'||this.hasPending()||p.stopped)fail('INVALID_PHASE','先完成效果或等待下一次抽藥');
    if(data.step!==this.step)fail('STALE_STEP','抽藥次序已更新');if(Object.hasOwn(this.intents,id))fail('ALREADY_CHOSEN','這次已選擇');
    if(action==='draw'&&data.chipId){const c=p.alchemy?.pool.find(c=>c.id===data.chipId);if(!this.options.alchemists||!c||c.color==='red'&&this.setFor('red')===2)fail('INVALID_CHIP','此預抽藥材現在不能投入',400);this.alchemyDraws[id]=c.id;}
-   this.quacksAchievements.decision(p);this.intents[id]=action;this.event('intent',p.name+' 已選擇');
+   this.quacksAchievements.decision(p);this.intents[id]=action;if(action==='stop'){p.stopEvents??=[];p.stopEvents.push({id:randomUUID(),at:this.now()});p.stopEvents=p.stopEvents.slice(-16);}this.event('intent',p.name+' 已選擇');
    if(this.players.filter(q=>!q.stopped).every(q=>Object.hasOwn(this.intents,q.id))){
     const drawing=this.players.filter(q=>!q.stopped);
-    for(const q of drawing){if(this.intents[q.id]==='stop')q.stopped=true;else{const chipId=this.alchemyDraws[q.id],c=chipId?q.alchemy.pool.find(c=>c.id===chipId):this.drawOne(q);if(chipId){this.recordDraw(q);q.alchemy.pool=q.alchemy.pool.filter(x=>x.id!==chipId);delete this.alchemyDraws[q.id];}if(c){q.draws++;this.place(q,c);}else q.stopped=true;}}
+    for(const q of drawing){if(this.intents[q.id]==='stop')q.stopped=true;else{const chipId=this.alchemyDraws[q.id],c=chipId?q.alchemy.pool.find(c=>c.id===chipId):this.drawOne(q,{decision:true});if(chipId){this.recordDraw(q,{decision:true});q.alchemy.pool=q.alchemy.pool.filter(x=>x.id!==chipId);delete this.alchemyDraws[q.id];}if(c){q.draws++;this.place(q,c);}else q.stopped=true;}}
     this.advanceStep=true;this.advance();
    }return;
   }
@@ -412,8 +414,8 @@ class QuacksRoom extends PartyRoom {
  view(id){
   const base=this.baseView(id),p=this.player(id),revealed=['settlement','between','finished'].includes(this.phase),books=this.availableBooks();
   const recipes=this.activePlayers().map(q=>{const show=q.id===id||!this.options.hiddenProgress||q.exploded||revealed;return {id:q.id,name:q.name,alchemy:this.options.alchemists&&q.alchemy?{patientId:q.alchemy.patientId,essence:q.alchemy.essence,confirmed:q.alchemy.confirmed,calculation:revealed?q.alchemy.calculation:null}:null,potColor:q.potColor||Object.keys(POT_COLORS)[this.players.indexOf(q)],potName:q.potName||q.name+'的好運釜',bagCount:q.bag?.length??0,rat:q.rat||0,coins:q.coins||null,score:q.score,rubies:q.rubies,droplet:q.droplet,stopped:q.stopped,exploded:q.exploded,explosionId:q.explosionId,ready:q.ready,chosen:Object.hasOwn(this.intents,q.id),hidden:!show,position:show?q.position:null,startPosition:show?q.roundStartPosition:null,bonusEligible:revealed?q.bonusEligible:null,bonusDice:revealed?q.bonusDice:[],pot:show?clone(q.pot||[]):null,overflow:show?clone(q.overflow||[]):null,white:show&&q.bag?this.white(q):null,threshold:show?(q.bag?this.threshold(q):7):null,draws:show?q.draws:null};});
-  return clone({...base,serverNow:this.now(),potColors:POT_COLORS,rollEvents:this.rollEvents,options:this.options,step:this.step,stage:this.stage,fortune:this.fortune,fortuneRevealId:this.fortuneRevealId,fortuneDrawnAt:this.fortuneDrawnAt,roundStarterId:this.roundStarterId,bookSelection:this.bookSelection().map(({key,...b})=>b),visitingWitch:this.visitingWitch||null,witches:this.witches,patients:this.options.alchemists?Alchemy.catalog().filter(p=>this.patientChoices?.includes(p.id)):[],board:BOARD,books,recipes,mine:p.bag?{drawEvents:p.drawEvents||[],potionEvents:p.potionEvents||[],settlementEvents:p.settlementEvents||[],alchemy:this.alchemyView(p),canVisit:this.visitorAllowed(p),canGoodNeighbor:this.fortune?.id==='good-neighbor'&&this.phase==='brewing'&&!p.exploded&&!p.goodNeighborUsed&&!p.pending.length&&!Object.hasOwn(this.intents,id),bagCount:p.bag.length,bagPeek:p.bagPeek,peekUsed:!!p.bagPeekUsed,peekAvailable:!p.bot&&!p.bagPeekUsed&&!['waiting','patients','finished'].includes(this.phase),potion:p.potion,bonusEligible:p.bonusEligible,bonusRolled:p.bonusRolled,bonusDice:p.bonusDice,effectSummary:p.effectSummary,coins:p.coins,position:p.position,white:this.white(p),threshold:this.threshold(p),reserve:p.reserve,pending:p.pending[0]?{id:p.pending[0].id,title:p.pending[0].title,options:p.pending[0].options.map(o=>({id:o.id,label:o.label,disabled:!this.choiceValid(p,o)}))}:null,budget:p.budget,extraBudget:p.extraBudget||0,extraBought:(p.extraBought||[]).map(c=>({...c,canUndo:this.canUndoPurchase(p,c,true)})),bought:p.bought.map(c=>({...c,canUndo:this.canUndoPurchase(p,c)})),canBuy:p.canBuy,canScore:p.canScore,discount:p.discount,ready:p.ready,draws:p.draws,canDraw:this.phase==='brewing'&&this.stage==='drawing'&&!this.hasPending()&&!p.stopped&&!Object.hasOwn(this.intents,id),canPotion:this.phase==='brewing'&&this.stage==='drawing'&&!p.stopped&&!p.pending.length&&p.potion&&p.pot.at(-1)?.color==='white'&&!Object.hasOwn(this.intents,id),witchAvailable:Object.fromEntries(Object.keys(this.witches).map(c=>[c,this.witchAllowed(p,c)])),waitingEffect:this.hasPending()&&!p.pending.length}:null});
+  return clone({...base,maxPlayers:this.max,serverNow:this.now(),potColors:POT_COLORS,rollEvents:this.rollEvents,options:this.options,step:this.step,stage:this.stage,fortune:this.fortune,fortuneRevealId:this.fortuneRevealId,fortuneDrawnAt:this.fortuneDrawnAt,roundStarterId:this.roundStarterId,bookSelection:this.bookSelection().map(({key,...b})=>b),visitingWitch:this.visitingWitch||null,witches:this.witches,patients:this.options.alchemists?Alchemy.catalog().filter(p=>this.patientChoices?.includes(p.id)):[],board:BOARD,books,recipes,mine:p.bag?{drawEvents:p.drawEvents||[],potionEvents:p.potionEvents||[],stopEvents:p.stopEvents||[],settlementEvents:p.settlementEvents||[],alchemy:this.alchemyView(p),canVisit:this.visitorAllowed(p),canGoodNeighbor:this.fortune?.id==='good-neighbor'&&this.phase==='brewing'&&!p.exploded&&!p.goodNeighborUsed&&!p.pending.length&&!Object.hasOwn(this.intents,id),bagCount:p.bag.length,bagPeek:p.bagPeek,peekUsed:!!p.bagPeekUsed,peekAvailable:!p.bot&&!p.bagPeekUsed&&!['waiting','patients','finished'].includes(this.phase),potion:p.potion,bonusEligible:p.bonusEligible,bonusRolled:p.bonusRolled,bonusDice:p.bonusDice,effectSummary:p.effectSummary,coins:p.coins,position:p.position,white:this.white(p),threshold:this.threshold(p),reserve:p.reserve,pending:p.pending[0]?{id:p.pending[0].id,title:p.pending[0].title,options:p.pending[0].options.map(o=>({id:o.id,label:o.label,disabled:!this.choiceValid(p,o)}))}:null,budget:p.budget,extraBudget:p.extraBudget||0,extraBought:(p.extraBought||[]).map(c=>({...c,canUndo:this.canUndoPurchase(p,c,true)})),bought:p.bought.map(c=>({...c,canUndo:this.canUndoPurchase(p,c)})),canBuy:p.canBuy,canScore:p.canScore,discount:p.discount,ready:p.ready,draws:p.draws,canDraw:this.phase==='brewing'&&this.stage==='drawing'&&!this.hasPending()&&!p.stopped&&!Object.hasOwn(this.intents,id),canPotion:this.phase==='brewing'&&this.stage==='drawing'&&!p.stopped&&!p.pending.length&&p.potion&&p.pot.at(-1)?.color==='white'&&!Object.hasOwn(this.intents,id),witchAvailable:Object.fromEntries(Object.keys(this.witches).map(c=>[c,this.witchAllowed(p,c)])),waitingEffect:this.hasPending()&&!p.pending.length}:null});
  }
 }
 Object.assign(QuacksRoom.prototype,Alchemy.methods,ExpansionFortunes.methods);
-module.exports={QuacksRoom,LAST};
+module.exports={QuacksRoom,MAX_PLAYERS,LAST};

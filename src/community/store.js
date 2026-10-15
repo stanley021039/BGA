@@ -1,7 +1,7 @@
 const fs=require('node:fs'),path=require('node:path'),{randomUUID,timingSafeEqual}=require('node:crypto');
 const {TOPICS}=require('../games/majority-questions');
 const clean=(v,max,label)=>{if(typeof v!=='string'||!v.trim()||v.trim().length>max)throw Error(`${label}需為 1 至 ${max} 字`);return v.trim();};
-function validateQuestion(data){const type=data.type;if(!['two','three','blank'].includes(type))throw Error('題型不正確');const prompt=clean(data.prompt,160,'題目');let options=[];if(type!=='blank'){const count=type==='two'?2:3;if(!Array.isArray(data.options)||data.options.length!==count)throw Error('選項數量不正確');options=data.options.map(v=>clean(v,60,'選項'));if(new Set(options.map(v=>v.normalize('NFKC').toLowerCase())).size!==count)throw Error('選項不可重複');}return {type,prompt,options,topic:TOPICS.some(t=>t.id===data.topic)?data.topic:'daily'};}
+function validateQuestion(data){const type=data.type;if(!['two','three','blank'].includes(type))throw Error('題型不正確');const prompt=clean(data.prompt,160,'題目');let options=[];if(type!=='blank'){const count=type==='two'?2:3;if(!Array.isArray(data.options)||data.options.length!==count)throw Error('選項數量不正確');options=data.options.map(v=>clean(v,60,'選項'));if(new Set(options.map(v=>v.normalize('NFKC').toLowerCase())).size!==count)throw Error('選項不可重複');}if(data.topic==='cruel')throw Error('殘酷2選1使用內建雙圖題庫');return {type,prompt,options,topic:TOPICS.some(t=>t.id===data.topic)?data.topic:'daily'};}
 class CommunityStore{
  constructor(dir){this.dir=dir;this.file=path.join(dir,'community.json');fs.mkdirSync(dir,{recursive:true});this.data=fs.existsSync(this.file)?JSON.parse(fs.readFileSync(this.file,'utf8')):{issues:[],questions:[]};}
  bluffBanned(id){return !!this.data.bluffBans?.[id];}

@@ -7,7 +7,7 @@
  <dialog id="kickedNotice" aria-labelledby="kickedNotice-title"><h2 id="kickedNotice-title">你已被踢出房間</h2><p>原本的連線已結束。請返回大廳。</p><a class="host-return" href="/">返回大廳</a></dialog>`;
  document.body.append(box);
  const q=selector=>document.querySelector(selector);
- let current=null,render=null,target=null,pending=null,generation=0;
+ let current=null,target=null,pending=null,generation=0;
 
  function isStaleSnapshot(next,previous){
   if(!previous)return false;
@@ -80,7 +80,7 @@
    const snapshot=await response.json();
    if(pending!==operation||operation.generation!==generation||!sameRoom(operation.state,current))return false;
    if(!response.ok)throw Error(snapshot.error||'無法完成房間管理操作');
-   const accepted=window.RoomHost.acceptSnapshot(snapshot);
+   const accepted=window.RoomUI.acceptSnapshot(snapshot);
    if(pending!==operation)return accepted;
    status(errorSelector,accepted?success:'操作已送出，等待最新房間狀態。',accepted?'success':'info');
    return accepted;
@@ -124,24 +124,22 @@
  q('#kickedNotice').addEventListener('cancel',event=>event.preventDefault());
  window.RoomHost={
   isStaleSnapshot,
-  update(snapshot,callback){
+  update(snapshot,callback){return window.RoomUI.update(snapshot,callback);},
+  renderSnapshot(snapshot){
    const changed=current&&!sameRoom(snapshot,current);
-   current=snapshot;render=callback;
+   current=snapshot;
    if(changed){cancelPending();status('#hostError','');status('#kickError','');q('#hostPlayers').close();q('#kickWarning').close();}
    const allowed=canManage();q('#managePlayers').hidden=false;q('#managePlayers').disabled=!allowed||!!pending;
    q('#hostPlayersHelp').textContent=canPromote()?'房主可設定房間管理者，並踢出其他玩家。房間角色不影響網站帳戶權限。':'管理者可踢出一般玩家；房主與其他管理者的角色由房主設定。';
    if(!allowed){if(pending)cancelPending();q('#hostPlayers').close();q('#kickWarning').close();}
    else if(target&&!mayKick(current.players.find(player=>player.id===target.id))){target=null;q('#kickWarning').close();}
    if(q('#hostPlayers').open)list();
-   window.GameShell?.update(snapshot);
+
   },
-  acceptSnapshot(snapshot){
-   if(!snapshot||!current||typeof render!=='function'||!sameRoom(snapshot,current)||isStaleSnapshot(snapshot,current))return false;
-   render(snapshot);return true;
-  },
+  acceptSnapshot(snapshot){return window.RoomUI.acceptSnapshot(snapshot);},
   kicked(session){
    window.SharedChat?.clearRoom();
-   cancelPending();current=null;render=null;
+   cancelPending();current=null;window.RoomUI.stop();
    for(const key of ['ah-majority','ah-thunder','ah-gift','ah-draw','ah-session']){localStorage.removeItem(key+':'+session.code);try{if(JSON.parse(localStorage.getItem(key)||'null')?.code===session.code)localStorage.removeItem(key);}catch{}}
    for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
    q('#managePlayers').hidden=true;q('#kickedNotice').showModal();

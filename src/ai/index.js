@@ -48,9 +48,9 @@ registerTestAI('poker',{maxPlayers:6,plan:()=>null}); // Existing poker schedule
 registerTestAI('majority',{maxPlayers:12,plan(room,p){
  if(room.phase==='choosing'&&room.presenterId===p.id){
   if(room.candidates.length)return {actor:p.id,action:'ask',run:r=>r.act(p.id,'ask',{questionId:r.candidates[r.rng(r.candidates.length)].id})};
-  return {actor:p.id,action:'draw',run:r=>r.act(p.id,'draw',{topic:TOPICS[r.rng(TOPICS.length)].id,type:['two','three','blank'][r.round%3]})};
+  return {actor:p.id,action:'draw',run:r=>r.act(p.id,'draw',{topic:TOPICS.filter(t=>!t.types)[r.rng(TOPICS.filter(t=>!t.types).length)].id,type:['two','three','blank'][r.round%3]})};
  }
- if(room.phase==='answering'&&room.participantIds.includes(p.id)&&!Object.hasOwn(room.answers,p.id))return {actor:p.id,action:'answer',run:r=>{const q=r.view(p.id).question;r.act(p.id,'answer',{answer:q.type==='blank'?blankAnswer(q.prompt,r.rng):r.rng(q.options.length)});}};
+ if(room.phase==='answering'&&room.participantIds.includes(p.id)&&!Object.hasOwn(room.answers,p.id))return {actor:p.id,action:'answer',run:r=>{const q=r.view(p.id).question;r.act(p.id,'answer',{questionId:q.id,answer:q.type==='blank'?blankAnswer(q.prompt,r.rng):r.rng(q.options.length)});}};
  return null;
 }});
 registerTestAI('gift',{maxPlayers:8,plan(room,p){
@@ -82,7 +82,7 @@ registerTestAI('draw',{maxPlayers:8,plan(room,p,cache){
  if(!choices.length)return null;
  return {actor:p.id,action:'guess',delay:2400,run:r=>{const answer=choices[r.rng(choices.length)].title;r.act(p.id,'guess',{answer});cache.guessed.add(answer);}};
 }});
-function runTestAIStep(room,{history,now=Date.now(),onDrawStroke=()=>{}}){
+function runTestAIStep(room,{history,transitions=history,now=Date.now(),onDrawStroke=()=>{}}){
  const adapter=adapters.get(room.type||'poker');if(!adapter||['waiting','finished','showdown'].includes(room.phase)||history.isPaused?.(room))return false;
  let state=runtime.get(room);const key=[room.round,room.phase,room.presenterId,room.canvas?.epoch].join(':');
  if(!state||state.key!==key){state={key,players:new Map(),cursor:0};runtime.set(room,state);}
@@ -92,7 +92,7 @@ function runTestAIStep(room,{history,now=Date.now(),onDrawStroke=()=>{}}){
   if(!state.players.has(p.id))state.players.set(p.id,{at:now});const cache=state.players.get(p.id);
   if(now-cache.at<400)continue;
   const operation=adapter.plan(room,p,cache);if(!operation||now-cache.at<(operation.delay||1200))continue;
-  const result=history.transact(room,{action:operation.action,source:'bot',actor:p.id,...(operation.input?{input:operation.input}:{})},()=>operation.run(room));
+  const result=transitions.transact(room,{action:operation.action,source:'bot',actor:p.id,...(operation.input?{input:operation.input}:{})},()=>operation.run(room));
   cache.at=now;operation.after?.();state.cursor=(index+1)%bots.length;
   if(operation.stroke)onDrawStroke(room.code,'stroke',result);
   return true;

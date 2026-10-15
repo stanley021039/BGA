@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {setTimeout:delay}=require('node:timers/promises');
 const {createApp}=require('../src/app'),{openDatabase}=require('../src/db/index'),{createAuth}=require('../src/auth/index');
-test('authenticated host can add test AI to every supported room, with real scheduling and canvas SSE',async()=>{
+test('authenticated host can add test AI to every supported room, with real scheduling and canvas SSE',async t=>{for(const Engine of [require('../src/games/majority').MajorityRoom,require('../src/games/draw-guess').DrawGuessRoom])require('./helpers/fixed-starter.cjs')(t,Engine);
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'bga-test-ai-'));
  const config={port:0,host:'127.0.0.1',historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),dbFile:path.join(root,'app.sqlite'),externalSideEffectsEnabled:false};
  const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('aiadmin','test-password-123');db.close();

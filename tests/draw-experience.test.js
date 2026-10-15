@@ -26,17 +26,18 @@ test('choosing keeps selection actions separate from finished game actions',()=>
  s.phase='finished';s.winner={ids:['artist'],reason:'完成'};
  ui.receive(s);
  assert.match(ui.element('#drawActions').innerHTML,/本局完成/);
- assert.match(ui.element('#drawActions').innerHTML,/再玩一局/);
+ assert.equal(ui.context.window.RoomControls.binding.read().start.label,'再玩一局');
+ assert.equal(ui.context.window.RoomControls.binding.read().start.enabled,true);
 });
 
 test('joining the waiting room updates the roster and start action without discarding the settings draft',()=>{
  const ui=browserHarness(),s=drawingState('artist');s.phase='waiting';s.players=s.players.slice(0,1);s.presenterId=null;
  ui.receive(s);
- assert.match(ui.element('#drawActions').innerHTML,/data-do="start" disabled/);
+ assert.equal(ui.context.window.RoomControls.binding.read().start.enabled,false);
  const settings=ui.element('#stage');settings.innerHTML='UNSAVED TOPIC SELECTION';
  const joined={...s,players:[...s.players,{id:'guest',name:'朋友',online:true,score:0}]};ui.receive(joined);
  assert.equal(settings.innerHTML,'UNSAVED TOPIC SELECTION');
- assert.doesNotMatch(ui.element('#drawActions').innerHTML,/data-do="start" disabled/);
+ assert.equal(ui.context.window.RoomControls.binding.read().start.enabled,true);
  assert.equal(ui.element('#waitingCount').textContent,'2 / 8 位入座');
  assert.match(ui.element('#players').innerHTML,/data-player-id="guest"/);
  assert.equal(ui.element('.draw-roster').hidden,false,'the room roster remains available during setup');
@@ -108,7 +109,7 @@ test('artist stroke remains visible while the server accepts a delayed write', a
  await vm.runInContext('syncCanvas()', ui.context);
  assert.ok(frameContainsStroke(ui.frames.at(-1)), 'the confirmed stroke stays visible');
  assert.equal(ui.frames.at(-1).strokes.length, 1, 'the authoritative stroke does not overlap the local draft');
- assert.equal(vm.runInContext('localStrokes.size', ui.context), 0, 'the optimistic draft is removed after acknowledgement');
+ assert.equal(vm.runInContext('canvasSession.view().draftCount', ui.context), 0, 'the optimistic draft is removed after acknowledgement');
 });
 
 test('undo waits for a queued stroke before sending the canvas command', async () => {
@@ -131,7 +132,7 @@ test('undo waits for a queued stroke before sending the canvas command', async (
  await undo;
  assert.deepEqual(ui.commandRequests.map(item => item.command), ['undo']);
  assert.equal(ui.frames.at(-1).strokes.length, 0, 'the completed stroke is undone');
- assert.equal(vm.runInContext('localStrokes.size', ui.context), 0);
+ assert.equal(vm.runInContext('canvasSession.view().draftCount', ui.context), 0);
 });
 
 test('a second touch cannot steal or leave behind the first pointer stroke', async () => {
@@ -144,14 +145,14 @@ test('a second touch cannot steal or leave behind the first pointer stroke', asy
  up({pointerId:2,point:[55,55],preventDefault(){}});
  ui.paintFrame();
  assert.equal(vm.runInContext('active.pointerId',ui.context),1);
- assert.equal(vm.runInContext('localStrokes.size',ui.context),1);
+ assert.equal(vm.runInContext('canvasSession.view().draftCount',ui.context),1);
  assert.ok(!ui.frames.at(-1).strokes[0].points.some(point=>point[0]===55));
  up({pointerId:1,point:[25,25],preventDefault(){}});await pause(250);
  assert.equal(ui.strokeRequests.length,1);
  const posted=ui.strokeRequests[0].data;
  ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:1,strokes:[{version:1,strokeId:posted.strokeId,tool:posted.tool,color:posted.color,size:posted.size,points:posted.points}]});
- ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round:1,version:1});await vm.runInContext('sendQueue',ui.context);
- assert.equal(vm.runInContext('localStrokes.size',ui.context),0);
+ ui.strokeRequests[0].resolve({canvasEpoch:CANVAS_EPOCH,round:1,version:1});await vm.runInContext('canvasSession.whenIdle()',ui.context);
+ assert.equal(vm.runInContext('canvasSession.view().draftCount',ui.context),0);
 });
 
 test('older wrong guesses remain visible in the guessing feed and are escaped', () => {

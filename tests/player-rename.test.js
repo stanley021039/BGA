@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{randomUUID}=require('node:crypto');
 const {createApp}=require('../src/app'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth');
 
-test('HTTP nickname updates current seats in all five games while keeping results, history and watch playback stable',async t=>{
+test('HTTP nickname updates current seats in all five games while keeping results, history and watch playback stable',async t=>{require('./helpers/fixed-starter.cjs')(t,require('../src/games/draw-guess').DrawGuessRoom);
  // This test isolates renaming from ordinary game timers. Thunder reveals its
  // opening dice after one second and legitimately advances the deadline;
  // slower runners must not conflate that timer with a profile/name mutation.

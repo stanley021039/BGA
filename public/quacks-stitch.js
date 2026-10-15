@@ -3,14 +3,14 @@
  'use strict';
  const $=s=>document.querySelector(s),art=window.QuacksArt,ui=window.GameUI;
  const el=(t,c='',value)=>{const n=document.createElement(t);n.className=c;if(value!==undefined)n.textContent=value;return n;};
- const cue=window.GameSounds.create();let state=null,previous=null,bookColor=null,viewed=null,mediaReady=false,stageKey='',stageScroll=0,stageFocus=null;
+ const cue=window.GameSounds.create();let state=null,previous=null,bookColor=null,viewed=null,mediaReady=false,stageKey='',stageScroll=0,stageFocus=null,presentation=null;
  const flying=new Set(),reactions=new Map(),alchemyHome=document.createComment('quacks-alchemy-home');$('#alchemy').before(alchemyHome);
  function icon(id,name,label){const b=$(id);if(b)ui.decorateButton(b,name,{iconOnly:true,label});}
- const dialogTriggers=new WeakMap();
+ const dialogTriggers=new WeakMap(),witchDetailControls=new Map();
  const rosterTools=$('.q-roster-tools');$('#qMobileMenuContent').append(...rosterTools.children);rosterTools.remove();$('.quacks-achievement-link').classList.add('ui-button');
  const nativeControls=$('#controls'),controlsHome=document.createComment('quacks-controls-home');nativeControls.before(controlsHome);
  const extraTool=el('button','','額外煮藥選擇');extraTool.type='button';extraTool.hidden=true;extraTool.onclick=()=>open($('#qExtraDialog'),extraTool);$('#qMobileMenuContent').append(extraTool);const extraBadge=el('span','q-extra-badge');extraBadge.hidden=true;extraBadge.setAttribute('aria-hidden','true');$('#qMobileMenu>summary').append(extraBadge);
- function returnFocus(trigger){if(trigger?.dataset.roomNativeAction==='start')trigger=$('.ui-room-session-actions>[data-room-action=start]')||trigger;if(trigger?.closest('#qMobileMenu')&&!$('#qMobileMenu').open)trigger=$('#qMobileMenu>summary');trigger?.focus();}
+ function returnFocus(trigger){if(trigger?.closest('#qMobileMenu')&&!$('#qMobileMenu').open)trigger=$('#qMobileMenu>summary');trigger?.focus();}
  function open(dialog,trigger){if(!dialog)return;dialogTriggers.set(dialog,trigger||document.activeElement);if(!dialog.open)dialog.showModal();dialog.querySelector('[data-q-close],button,input,select')?.focus();}
  function close(dialog){dialog.close();returnFocus(dialogTriggers.get(dialog));}
  for(const b of document.querySelectorAll('[data-q-close]')){ui.decorateButton(b,'close',{iconOnly:true,label:'關閉視窗'});b.onclick=()=>close(b.closest('dialog'));}
@@ -24,8 +24,9 @@
  window.addEventListener('room-invitations-ready',()=>{if(state)window.RoomInvites?.updateRoom(state);placeInviteInbox();});
  const alchemyTool=el('button','','煉金術士與特效藥');alchemyTool.type='button';ui.decorateButton(alchemyTool,'ingredient',{label:'煉金術士與特效藥'});alchemyTool.onclick=()=>open($('#alchemyDialog'),alchemyTool);$('#qMobileMenuContent').append(alchemyTool);
  $('#qBrandIcon').innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 4h10M13 4v9L6 24q-1 4 3 4h14q4 0 3-4l-7-11V4" fill="none" stroke="#765b16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20h12l3 5H7Z" fill="#765b16" opacity=".5"/><circle cx="16" cy="18" r="1.5" fill="#765b16"/></svg>';
- const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qRecords','#qGuide','#soundToggle','#qMotion'],toolHomes=new Map();
- ui.decorateButton($('#qScore'),'crown',{label:'環形記分板'});
+ $('#qRecords').remove();$('#qBook').before($('#qScore'));
+ const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qGuide','#soundToggle','#qMotion'],toolHomes=new Map();
+ ui.decorateButton($('#qScore'),'crown',{iconOnly:true,label:'環形記分板'});
  for(const id of mobileTools){const n=$(id),mark=document.createComment('quacks-tool-home');n.before(mark);toolHomes.set(n,mark);}
  const account=$('.site-account'),accountHome=document.createComment('quacks-account-home');account.before(accountHome);toolHomes.set(account,accountHome);
  function arrangeTools(){for(const [n,home]of toolHomes){if(mobile.matches)$('#qMobileMenuContent').append(n);else home.after(n);}if(!mobile.matches)$('#qMobileMenu').open=false;}
@@ -37,7 +38,7 @@
  witchDetails.onclick=()=>{
   if(!state)return;const content=el('div'),dialog=ui.createDialog({title:'本局草藥女巫',className:'quacks-dialog',content:[content]}),done=el('button','','關閉');done.type='button';done.onclick=()=>{dialog.close();dialog.remove();};content.append(done);
   if(!Object.keys(state.witches).length)content.append(el('p','','本局使用基本版，沒有加入草藥女巫。'));
-  for(const [color,w]of Object.entries(state.witches)){const card=el('article','q-witch-detail');card.append(art.resource(color,{size:42}),el('h3','',w.name),el('p','',w.text));const native=$('#witches [data-witch-color="'+color+'"]>button'),use=el('button','','使用'+w.name);use.type='button';use.disabled=!native||native.disabled;use.onclick=()=>{dialog.close();dialog.remove();native.onclick();};ui.decorateButton(use,'check',{label:'使用'+w.name});card.append(use);content.append(card);}
+  for(const [color,w]of Object.entries(state.witches)){const card=el('article','q-witch-detail');card.append(art.resource(color,{size:42}),el('h3','',w.name),el('p','',w.text));const use=el('button','','使用'+w.name);use.type='button';use.disabled=!presentation?.canWitch(color);use.dataset.witchCommand=color;witchDetailControls.set(use,color);use.onclick=()=>{dialog.close();dialog.remove();presentation?.useWitch(color);};ui.decorateButton(use,'check',{label:'使用'+w.name});card.append(use);content.append(card);}
   document.body.append(dialog);open(dialog,witchDetails);
  };
  function dismissTooltip(anchor){if(anchor?.nodeType===1&&anchor.getAttribute('aria-describedby')!=='potTooltip')return;const tip=$('#potTooltip');if(tip.matches(':popover-open'))tip.hidePopover();tip.hidden=true;for(const n of document.querySelectorAll('[aria-describedby=potTooltip]'))n.removeAttribute('aria-describedby');}
@@ -53,7 +54,7 @@
   const center=$('.tpl-waiting-center');if(!center)return;placeInviteInbox();
   $('.ui-room-roster-add:has([data-room-common-action="invite"])')?.style.setProperty('display','block','important');
   $('.ui-room-session-actions>.st-waiting-invite')?.style.setProperty('display','none','important');
-  ui.Template.patterns.waitingScene(center,s,{owner:s.me===s.host,hostId:s.host,capacity:s.options.witches?5:4,title:'郎中闖江湖',english:'Quacks',limit:'2–'+(s.options.witches?5:4)+' 人一起煮藥',art:'/assets/playful/game-quacks.svg',fallbackArt:'/assets/playful/game-quacks.svg',kicker:'朋友集結中，藥袋已備，等房主開釜。',description:'九回合同步抽藥，逐色共選本局藥材效果。可加入草藥女巫與煉金術士，煮出你的傳奇。',readyCopy:'藥袋與大釜已備妥',readiness:s.bookSelection?.some(r=>r.tied)?'藥材書仍有平票，請房主開啟寶典裁決。':null,facts:[['同步煮藥','全員一起抽'],['對局回合','9 回合累計'],['本局藥材','逐色共選效果']],onCopy:()=>navigator.clipboard.writeText(location.origin+'/quacks/'+s.code),onChat:()=>center.querySelector('.tpl-waiting-footer button')?.click(),onHelp:()=>$('#qGuide').click(),onLeave:()=>$('.ui-room-session-actions>[data-room-action=leave]')?.click(),onInvite:()=>window.RoomInvites?.open(center)});
+  ui.Template.patterns.waitingScene(center,s,{owner:s.me===s.host,hostId:s.host,capacity:s.maxPlayers||8,title:'郎中闖江湖',english:'Quacks',limit:'2–'+(s.maxPlayers||8)+' 人一起煮藥',art:'/assets/playful/game-quacks.svg',fallbackArt:'/assets/playful/game-quacks.svg',kicker:'朋友集結中，藥袋已備，等房主開釜。',description:'九回合同步抽藥，逐色共選本局藥材效果。可加入草藥女巫與煉金術士，煮出你的傳奇。',readyCopy:'藥袋與大釜已備妥',readiness:s.bookSelection?.some(r=>r.tied)?'藥材書仍有平票，請房主開啟寶典裁決。':null,facts:[['同步煮藥','全員一起抽'],['對局回合','9 回合累計'],['本局藥材','逐色共選效果']],onCopy:()=>navigator.clipboard.writeText(location.origin+'/quacks/'+s.code),onChat:event=>window.RoomLayout?.openChat(event.currentTarget),onHelp:event=>open($('#guideDialog'),event.currentTarget),onLeave:event=>window.RoomControls?.leave(event.currentTarget),onInvite:()=>window.RoomInvites?.open(center)});
   const source=$('#qWaitingControls .room-settings-panel')||$('.ui-room-settings-slot');if(source&&!source.querySelector('.q-waiting-books')){const books=el('button','q-waiting-books','搭配本局藥材書');books.type='button';ui.decorateButton(books,'book',{label:'搭配本局藥材書'});books.onclick=()=>openBook(null,books);source.append(books);}
  }
  function renderBookTabs(){
@@ -75,7 +76,7 @@
   for(const item of fresh){const card=$('#players [data-player-id="'+item.playerId+'"]');if(reactions.get(item.playerId)===item.id)continue;reactions.set(item.playerId,item.id);if(!live||!card)continue;const bubble=el('span','q-avatar-reaction',item.emoji||item.label||'表情');bubble.setAttribute('aria-label',item.name+'：'+bubble.textContent);card.querySelector('.q-avatar')?.append(bubble);window.MotionPolicy.animate(bubble,[{transform:'scale(.6) translateY(5px)',opacity:0},{transform:'scale(1.15) translateY(-4px)',opacity:1},{transform:'scale(1)',opacity:1}],{duration:350,easing:'ease-out'});setTimeout(()=>bubble.remove(),4000);}
  }
  function paintRoster(s){
-  $('#qRosterCount').textContent=s.players.length+'/'+(s.options.witches?5:4)+' 人 · R'+(s.round||0)+'/9';
+  $('#qRosterCount').textContent=s.players.length+'/'+(s.maxPlayers||8)+' 人 · R'+(s.round||0)+'/9';
   for(const [i,card]of [...$('#players').children].entries()){
    const p=s.recipes[i],player=s.players.find(x=>x.id===p.id)||p;card.dataset.playerId=p.id;
    const strong=card.querySelector(':scope>strong'),paras=[...card.querySelectorAll(':scope>p')],resources=card.querySelector('.resource-row'),chips=card.querySelector('.chip-row');
@@ -91,41 +92,31 @@
   }
  }
  function potChrome(s){
-  const selected=[...$('#potTabs').children].find(b=>b.getAttribute('aria-pressed')==='true'),index=[...$('#potTabs').children].indexOf(selected),p=s.recipes[index]||s.recipes.find(p=>p.id===s.me);viewed=p.id;
+  const selected=[...$('#potTabs').children].find(b=>b.getAttribute('aria-pressed')==='true'),index=[...$('#potTabs').children].indexOf(selected),p=s.recipes[index]||s.recipes.find(p=>p.id===s.me);viewed=p.id;let name=$('#qPotName');if(!name){name=el('span','q-pot-name');name.id='qPotName';$('#qPotStage').append(name);}name.textContent=p.potName||p.name+'的好運釜';name.title=name.textContent;
   const markers=art.markerPositions(p),metrics=$('#qPotMetrics');metrics.replaceChildren();
-  for(const [kind,value,label]of [['droplet',markers.droplet,'液滴'],['rat',markers.start,'起點'],['progress',p.position||0,'當前']]){const span=el('span',kind==='progress'?'q-metric-progress':'');span.append(art.resource(kind,{size:14,decorative:true}),document.createTextNode(label+' '+value));metrics.append(span);}
+  for(const [kind,value,label]of [['droplet',markers.droplet,'水滴'],['rat',markers.start,'起點'],['progress',p.position||0,'當前']]){const span=el('span',kind==='progress'?'q-metric-progress':'');span.append(art.resource(kind,{size:14,decorative:true}),document.createTextNode(label+' '+value));metrics.append(span);}
   const recent=$('#qRecent');recent.replaceChildren(el('span','','本輪投入：'));
   for(const c of p.pot?.slice(-8)||[]){const b=el('button');b.type='button';b.setAttribute('aria-label',art.names[c.color]+' '+c.value+' · 查看效果');b.append(art.token(c,{size:26,decorative:true}));const tile=s.board[c.position],details=art.info(s,p,tile,c);hint(b,details);b.onclick=()=>inspect(details,b);recent.append(b);}
   if(!p.pot?.length)recent.append(el('span','q-empty','還沒投入藥材'));
   $('#potTabs').setAttribute('aria-label','切換大釜，目前查看 '+p.name);
   $('#qPotStage').classList.toggle('q-danger',!p.exploded&&p.white>=p.threshold-1);$('#qPotStage').classList.toggle('q-exploded',!!p.exploded);
  }
- function groupMarket(s){
-  for(const grid of $('#qStageContent').querySelectorAll('.purchase-grid')){
-   const offers=[...grid.children];grid.replaceChildren();
-   for(const b of s.books){const nodes=offers.filter(n=>n.querySelector('button')?.dataset.purchaseColor===b.color);if(!nodes.length)continue;
-    const card=el('section','q-market-color'),head=el('header'),info=el('button','q-market-effect');card.dataset.ingredient=b.color;card.setAttribute('aria-label',b.name+'採購');info.type='button';ui.decorateButton(info,'book',{iconOnly:true,label:'查閱'+b.name+'藥材書'});info.onclick=()=>openBook(b.color,info);head.append(art.token({color:b.color,value:1},{size:34,decorative:true}),info);hint(head,{title:b.name,effect:b.effect,caption:b.faceName||'本局採用第 '+b.set+' 面',color:b.color});const row=el('div','q-market-offers');
-    for(const n of nodes){const buy=n.querySelector('button'),value=Number(buy.dataset.purchaseValue),offer=b.offers.find(o=>o.value===value),price=el('span','q-offer-price'),status=el('span','q-purchase-state');price.innerHTML=ui.symbol('coins');price.append(el('strong','',String(offer.price)));status.setAttribute('aria-hidden','true');if(buy.dataset.selected==='true')status.innerHTML=ui.symbol('check');buy.replaceChildren(art.token({color:b.color,value},{size:52,decorative:true}),price,status);row.append(n);}
-    card.append(head,row);grid.append(card);
-   }
-  }
- }
  function actions(s){
   if(s.phase==='waiting'){$('#qStageOverlay').hidden=true;return;}
   const me=s.recipes.find(p=>p.id===s.me),m=s.mine,waiting=['waiting','finished'].includes(s.phase);
   $('#qRiskCaption').replaceChildren(document.createTextNode('白色炸彈 '),el('strong','',(me.white||0)+' / '+me.threshold),el('small','','（超過 '+me.threshold+' 爆炸）'));
-  const potion=[...$('#controls').children].find(n=>n.tagName==='BUTTON'&&(n.getAttribute('aria-label')||n.textContent).startsWith('使用藥水瓶'));
+  const potion=presentation.potion;
   if(potion){potion.setAttribute('aria-label','使用藥水瓶：收回最後白色炸彈');if(potion.querySelector('.ui-button-label'))potion.querySelector('.ui-button-label').textContent='收回白彈';$('#qPotionSlot').append(potion);}
   else{const bottle=el('div','q-potion-display');bottle.setAttribute('aria-label',m?.potion?'藥水瓶已裝滿，目前不能使用':'藥水瓶是空瓶');bottle.append(art.resource('potion',{size:42,decorative:true}),el('span','',m?.potion?'滿瓶':'空瓶'));$('#qPotionSlot').append(bottle);}
-  for(const row of [...$('#witches').children]){
-   const color=row.dataset.witchColor,w=s.witches[color],button=row.querySelector('button');if(!w||!button)continue;
+  for(const {color,row,button} of presentation.witches){
+   const w=s.witches[color];if(!w||!button)continue;
    if(!button.querySelector('.quacks-resource'))button.prepend(art.resource(color,{size:23,decorative:true}));button.querySelector('.ui-icon')?.remove();if(button.querySelector('.ui-button-label'))button.querySelector('.ui-button-label').textContent=({gold:'金',copper:'銅',silver:'銀'})[color];button.setAttribute('aria-label','使用'+w.name);button.title=w.name;button.classList.toggle('used',!m?.coins[color]);row.tabIndex=0;row.setAttribute('aria-label',w.name+'：'+w.text+(m?.coins[color]?' · 女巫幣可用':' · 已使用'));
    hint(row,{title:w.name,effect:w.text,caption:button.disabled?'目前不能使用這位女巫。':'點選女巫幣使用。',color});
    const inspectButton=el('button','q-witch-info');inspectButton.type='button';inspectButton.setAttribute('aria-label','查看'+w.name+'效果');inspectButton.onclick=()=>inspect({title:w.name,effect:w.text},row);row.append(inspectButton);
   }
   const complex=waiting||s.phase!=='brewing'||s.stage!=='drawing'||!!m?.pending||!!m?.waitingEffect||!!m?.reserve.length;
   const overlay=$('#qStageOverlay');overlay.hidden=!complex;
-  if(!complex){const extras=[...$('#controls').children].filter(n=>n.matches('button,.alchemy-return-choices')&&!n.matches('.draw-action,.stop-action'));for(const n of extras)$('#qExtraContent').append(n);if(extraTool.hidden===!!extras.length)extraTool.hidden=!extras.length;if(extraBadge.hidden===!!extras.length)extraBadge.hidden=!extras.length;extraBadge.textContent=String(extras.length);if(extras.length)ui.decorateButton(extraTool,'ingredient',{label:'額外煮藥選擇（'+extras.length+'）'});else if($('#qExtraDialog').open)$('#qExtraDialog').close();return;}
+  if(!complex){const extras=presentation.extras;for(const n of extras)$('#qExtraContent').append(n);if(extraTool.hidden===!!extras.length)extraTool.hidden=!extras.length;if(extraBadge.hidden===!!extras.length)extraBadge.hidden=!extras.length;extraBadge.textContent=String(extras.length);if(extras.length)ui.decorateButton(extraTool,'ingredient',{label:'額外煮藥選擇（'+extras.length+'）'});else if($('#qExtraDialog').open)$('#qExtraDialog').close();return;}
   if(!extraTool.hidden)extraTool.hidden=true;if(!extraBadge.hidden)extraBadge.hidden=true;if($('#qExtraDialog').open)$('#qExtraDialog').close();
   const content=$('#qStageContent'),heading=$('#qStageTitle');heading.textContent=waiting?(s.phase==='finished'?'本場結果':'藥袋已備，等你開釜。'):({patients:'選擇治療病患',fortune:'本輪占卜',between:'本輪結算完成',settlement:({witches:'結算前女巫',essence:'特效藥階段',bonus:'獎勵骰',effects:'藥材效果', 'effects-confirm':'藥材結算',rewards:'領取本輪獎勵',shopping:'藥材市集'})[s.stage],brewing:m?.pending?.title||'暫存藥材'})[s.phase]||'你的操作';
   $('#qStageStep').textContent=s.round?'第 '+s.round+' / 9 回合':(s.options.witches?'草藥女巫 · 最多 5 人':'基本版 · 最多 4 人');
@@ -134,14 +125,8 @@
    const book=el('button','',s.bookSelection?.some(r=>r.tied)?'有藥材書平票 · 開啟寶典裁決':'搭配本局藥材書');book.type='button';book.onclick=()=>openBook(null,book);ui.decorateButton(book,'book');hero.append(book);content.append(hero);
   }
   if(s.phase==='patients'||s.stage==='essence')content.append($('#alchemy'));
-  const keep=/^(還要爽爽|繼續拼|下一回合|開始一場|加入測試 AI|抽一張占卜牌|準備結算|擲獎勵骰|獎勵骰完成|確認藥材效果|我要勝利分數|領取本輪獎勵|我要買藥材|完成本輪結算|開始下一回合|暫存決定完成|要拼|我不抽)/;
-  for(const n of [...$('#controls').children]){if(n.tagName==='BUTTON'&&keep.test(n.getAttribute('aria-label')||n.textContent))continue;content.append(n);}
+  for(const n of presentation.stage)if(n!==presentation.potion&&!presentation.dock.includes(n))content.append(n);
   if(waiting&&!content.querySelector('.room-settings-panel')&&s.me!==s.host)content.append(el('p','',s.options.witches?'本局加入草藥女巫擴充；'+(s.options.hiddenProgress?'其他人大釜進度隱藏。':'大釜進度公開。'):'本局使用基本版；'+(s.options.hiddenProgress?'其他人大釜進度隱藏。':'大釜進度公開。')));
-  if(s.stage==='shopping'){
-   const budget=[...content.children].find(n=>n.tagName==='P'&&n.textContent.startsWith('購物預算'));if(budget){budget.classList.add('q-budget');const coins=el('span','q-budget-coins'),bought=el('span','q-budget-bought');coins.innerHTML=ui.symbol('coins');coins.append(el('strong','',String(m.budget)));bought.append(art.resource('bag',{size:32,decorative:true}),el('strong','',m.bought.length+' / 2'));budget.replaceChildren(coins,bought);budget.tabIndex=0;hint(budget,{title:'本輪採購預算 · '+m.budget+' 金幣',effect:'本輪已買入 '+m.bought.length+' / 2 片；最多兩種不同顏色，剩餘預算不帶到下輪。',caption:'已購藥材卡片有勾選標記，可再次點選取消與退款。',color:'budget'});}
-   const purchased=el('div','q-purchased');purchased.setAttribute('aria-label','已收入藥袋的藥材');purchased.append(art.resource('bag',{size:28,decorative:true}));for(const c of m.bought)purchased.append(art.token(c,{size:34}));budget?.after(purchased);
-   groupMarket(s);
-  }
   if(!$('#controls').children.length)$('#controls').append(el('p','',m?.ready?'你已完成，等待其他人。':s.me===s.host?'請完成中央的選擇。':'等待其他人操作。'));
  }
  function motion(n,frames,opts,remove=true){const a=window.MotionPolicy.animate(n,frames,opts);if(a){if(new URLSearchParams(location.search).has('ui-verify'))console.debug('[quacks-motion] '+n.className+' '+opts.duration+'ms');flying.add(n);a.finished.catch(()=>{}).finally(()=>{flying.delete(n);if(remove)n.remove();});}else if(remove)n.remove();return a;}
@@ -163,9 +148,6 @@
    if(potVisible&&window.MotionPolicy.allowsMotion())for(const c of added.slice(-3)){const from=center($('#bagButton')),to=potPoint(c.position);if(from&&to){const a=flight(art.token(c,{size:44,decorative:true}),from,to);a?.finished.then(()=>{if(viewed===s.me)ripple(to);}).catch(()=>{});}}
   }
   if(p.white>=p.threshold-1&&old.white<p.threshold-1&&!p.exploded)sound('quacks-danger','danger:'+s.roundId+':'+p.white,live);
-  if(p.explosionId&&p.explosionId!==old.explosionId&&viewed===s.me&&window.MotionPolicy.allowsMotion()){
-   const stage=$('#qPotStage'),r=stage.getBoundingClientRect(),at=potPoint(p.position)||center(stage);for(let i=0;i<10;i++){const n=el('div','q-puff');n.style.left=at.x-r.left-27+'px';n.style.top=at.y-r.top-27+'px';stage.append(n);const angle=i*Math.PI*2/10;motion(n,[{transform:'translate(0,0) scale(.2)',opacity:.9},{transform:'translate('+Math.cos(angle)*110+'px,'+(Math.sin(angle)*85-25)+'px) scale(2.6)',opacity:0}],{duration:950,delay:i*12,easing:'ease-out'});}motion($('#cauldron'),[{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(-3px)'},{transform:'translateX(0)'}],{duration:390},false);
-  }
   const own=s.mine,prior=previous.mine;
   if(prior?.potion&&!own?.potion){if(potVisible){const removed=old.pot.find(c=>!p.pot.some(x=>x.id===c.id));if(removed){const from=potPoint(removed.position),to=center($('#qPotionSlot'));if(from&&to)flight(art.token(removed,{size:44,decorative:true}),from,to);}}}
   if(own?.bought.length>prior?.bought.length||own?.extraBought.length>prior?.extraBought.length){sound('quacks-buy','buy:'+s.roundId+':'+s.version+':'+own.bought.length+':'+own.extraBought.length,live);const bought=own.bought.at(-1)||own.extraBought.at(-1),from=center($('.q-purchased')||$('.q-budget')),to=center($('#bagButton'));if(bought&&from&&to)flight(art.token(bought,{size:44,decorative:true}),from,{x:to.x,y:$('#qPotStage').getBoundingClientRect().top+18});}
@@ -189,15 +171,19 @@
  window.MotionPolicy.subscribe(()=>{if(!window.MotionPolicy.allowsMotion())for(const n of [...flying]){n.getAnimations?.().forEach(a=>a.cancel());if(n.classList.contains('q-flight')||n.classList.contains('q-puff')||n.classList.contains('q-ripple')||n.classList.contains('q-witch-ring')||n.classList.contains('q-score-pop'))n.remove();flying.delete(n);}});
  window.addEventListener('pagehide',()=>{removeEffects();cue.reset();});
  window.QuacksStitch={
+  burst(events){const s=state,p=s?.recipes.find(p=>p.id===s.me);if(!p||viewed!==s.me||!events.some(e=>e.playerId===s.me)||!window.MotionPolicy.allowsMotion())return;
+   const stage=$('#qPotStage'),r=stage.getBoundingClientRect(),at=potPoint(p.position)||center(stage);for(let i=0;i<10;i++){const n=el('div','q-puff');n.style.left=at.x-r.left-27+'px';n.style.top=at.y-r.top-27+'px';stage.append(n);const angle=i*Math.PI*2/10;motion(n,[{transform:'translate(0,0) scale(.2)',opacity:.9},{transform:'translate('+Math.cos(angle)*110+'px,'+(Math.sin(angle)*85-25)+'px) scale(2.6)',opacity:0}],{duration:950,delay:i*12,easing:'ease-out'});}motion($('#cauldron'),[{transform:'translateX(0)'},{transform:'translateX(-5px)'},{transform:'translateX(5px)'},{transform:'translateX(-3px)'},{transform:'translateX(0)'}],{duration:390},false);
+  },
+
   baseline(s){return cue.update(s);},disconnect(){cue.disconnect();removeEffects();previous=null;},
-  beforeRender(s){const next=s.roundId+':'+s.phase+':'+s.stage,active=document.activeElement;stageScroll=next===stageKey?$('#qStageContent').scrollTop:0;stageFocus=next===stageKey&&active?.closest('#qStageContent')?active.getAttribute('aria-label')||active.textContent:null;stageKey=next;state=s;arrangeNativeControls(s);alchemyHome.after($('#alchemy'));$('#qStageContent').replaceChildren();$('#qPotionSlot').replaceChildren();$('#qExtraContent').replaceChildren();},
-  update(s,live){state=s;cue.update(s);waitingRoom(s);paintRoster(s);potChrome(s);actions(s);renderBookTabs();social();phaseRail.hidden=s.phase==='waiting';const phaseIndex=s.phase==='fortune'?1:s.phase==='brewing'?2:s.phase==='settlement'&&s.stage==='shopping'?4:s.phase==='settlement'?3:s.phase==='between'||s.phase==='finished'?5:0;for(const [index,step]of [...phaseRail.children].entries()){step.classList.toggle('active',index===phaseIndex);step.setAttribute('aria-current',index===phaseIndex?'step':'false');}$('#qStageContent').scrollTop=stageScroll;if(stageFocus){const target=[...$('#qStageContent').querySelectorAll('button,select,input')].find(n=>(n.getAttribute('aria-label')||n.textContent)===stageFocus&&!n.disabled);(target||$('#qStageContent')).focus({preventScroll:true});stageFocus=null;}
+  beforeRender(s){const next=s.roundId+':'+s.phase+':'+s.stage,active=document.activeElement;stageScroll=next===stageKey?$('#qStageContent').scrollTop:0;stageFocus=next===stageKey?(active?.closest('#qStageContent')?active.dataset.quacksActionKey||null:stageFocus):null;stageKey=next;state=s;arrangeNativeControls(s);alchemyHome.after($('#alchemy'));$('#qStageContent').replaceChildren();$('#qPotionSlot').replaceChildren();$('#qExtraContent').replaceChildren();},
+  update(s,live,view){state=s;presentation=view;cue.update(s);waitingRoom(s);paintRoster(s);potChrome(s);actions(s);renderBookTabs();social();phaseRail.hidden=s.phase==='waiting';const phaseIndex=s.phase==='fortune'?1:s.phase==='brewing'?2:s.phase==='settlement'&&s.stage==='shopping'?4:s.phase==='settlement'?3:s.phase==='between'||s.phase==='finished'?5:0;for(const [index,step]of [...phaseRail.children].entries()){step.classList.toggle('active',index===phaseIndex);step.setAttribute('aria-current',index===phaseIndex?'step':'false');}$('#qStageContent').scrollTop=stageScroll;
    $('#qFortune').textContent=s.fortune?'占卜 · '+s.fortune.name:'占卜 · 等待揭曉';$('#qFortune').setAttribute('aria-label',s.fortune?'查看占卜牌 '+s.fortune.name:'查看占卜規則');
    $('#qChatNotice').textContent=s.phase==='waiting'?'朋友集結中，先聊聊這局的配方。':s.phase==='patients'?'先選擇本局要治療的病患。':s.phase==='finished'?'本局完成，聊聊你的神奇藥釜。':'第 '+s.round+' 回合 · '+(s.phase==='brewing'?'等待全桌同步抽藥':'依序結算本輪效果');
    $('#qChatCount').textContent=s.players.length+' 人';
    const quick=$('.q-chat-quick'),finished=String(s.phase==='finished');if(quick&&quick.dataset.finished!==finished){quick.dataset.finished=finished;quickChoices(quick,s.phase==='finished');}
    ui.decorateButton($('#soundToggle'),window.AudioSettings.get().effects.enabled?'sound':'muted',{iconOnly:true,label:window.AudioSettings.get().effects.enabled?'關閉遊戲音效':'開啟遊戲音效'});
    liveEffects(s,live);
-  },potUpdated(s){state=s;potChrome(s);},socialUpdate,openBook,syncBookTabs:renderBookTabs,waitingRoom,inspectTooltip:inspect,dismissTooltip,
+  },captureStageFocus(){const active=document.activeElement;if(active?.closest('#qStageContent')&&active.dataset.quacksActionKey)stageFocus=active.dataset.quacksActionKey;},syncWitchCommands(){for(const [button,color]of witchDetailControls){if(!button.isConnected)witchDetailControls.delete(button);else button.disabled=!presentation?.canWitch(color);}},restoreStageFocus(ready){if(!ready||!stageFocus)return;const target=[...$('#qStageContent').querySelectorAll('button,select,input')].find(n=>n.dataset.quacksActionKey===stageFocus&&!n.disabled);(target||$('#qStageContent')).focus({preventScroll:true});stageFocus=null;},potUpdated(s){state=s;potChrome(s);},socialUpdate,openBook,syncBookTabs:renderBookTabs,waitingRoom,inspectTooltip:inspect,dismissTooltip,
  };
 })();

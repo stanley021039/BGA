@@ -139,9 +139,8 @@
  }
  function element(tag,className,text){const node=document.createElement(tag);node.className=className;node.textContent=text;return node;}
  function update(s){
-  leaveLink.hidden=false;window.RoomControls?.update(s);
+  leaveLink.hidden=false;
   if(window.RaceLesson)return;
-  window.SharedChat?.updateRoom(s);
   state=s;panel.hidden=false;if(!panel.classList.contains('integrated'))document.body.classList.add('has-game-shell');
   const current=s.type==='majority'||s.type==='draw'?s.presenterId:s.type==='thunder'?s.actor:s.type==='gift'?null:s.players[s.turn]?.id;
   const turn=q('#shared-turn'),turnText=turnOf(s);if(turn.textContent!==turnText)turn.textContent=turnText;turn.classList.toggle('mine',turnText.includes('輪到你'));
@@ -193,7 +192,7 @@
  async function send(payload,confirmation,trigger){
   if(!state||sending)return false;
   sending=true;feedback('傳送中…');const buttons=[...panel.querySelectorAll('button'),...expressions.querySelectorAll('button'),q('#shared-emote-toggle')].filter(Boolean),disabled=buttons.map(button=>button.disabled);for(const button of buttons)button.disabled=true;q('#shared-barrage').setAttribute('aria-busy','true');if(window.GameUI)window.GameUI.setBusy(trigger,true);else if(trigger){trigger.setAttribute('aria-busy','true');trigger.classList.add('is-pending');}
-  try{const response=await fetch('/api/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code,...payload})});const result=await response.json();if(!response.ok)throw Error(result.error||'傳送失敗');if(window.RoomHost?.acceptSnapshot)window.RoomHost.acceptSnapshot(result);else update(result);feedback(confirmation,'success');return true;}
+  try{const response=await fetch('/api/social',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code,...payload})});const result=await response.json();if(!response.ok)throw Error(result.error||'傳送失敗');window.RoomUI.acceptSnapshot(result);feedback(confirmation,'success');return true;}
   catch(error){feedback(error.message,'error');return false;}
   finally{sending=false;if(window.GameUI)window.GameUI.setBusy(trigger,false);else if(trigger){trigger.removeAttribute('aria-busy');trigger.classList.remove('is-pending');}buttons.forEach((button,index)=>button.disabled=disabled[index]);q('#shared-barrage').removeAttribute('aria-busy');}
  }
@@ -255,29 +254,30 @@
   return '<button type="button" class="button room-test-ai'+(icon?' ui-button ui-icon-button':'')+'" data-do="bot" aria-label="加入測試 AI" title="加入測試 AI" '+(s.botSupport.canAdd?'':'disabled')+'>'+(icon?'<span class="ui-button-icon" aria-hidden="true">'+icon+'</span><span class="ui-sr-only">加入測試 AI</span>':'加入測試 AI')+'</button>';
  }
  function autoSaveSettings({read,save,canSave,isBusy,delay=200}){
-  let queued=null,running=null,timer=null;
+  let queued=null,running=null,timer=null,lastError='',revision=0;
   function status(message){const node=document.querySelector('#roomSettingsFeedback');if(node){if(window.GameUI)window.GameUI.setStatus(node,message,{kind:'error'});else node.textContent=message;}}
   function schedule(){clearTimeout(timer);timer=setTimeout(()=>{void flush();},delay);}
   async function flush(){
    clearTimeout(timer);timer=null;
-   if(running){await running;return flush();}
+   if(running){try{await running;}catch{/* The save owner records the error. */}return flush();}
    if(!canSave()){queued=null;return;}
    if(!queued)return;
    if(isBusy()){schedule();return;}
-   const data=queued;queued=null;
+   const data=queued,attempt=revision;queued=null;
    running=Promise.resolve().then(()=>save(data));
-   try{await running;}catch(error){status(error.message||'設定儲存失敗，請稍後重新更改選項。');}
+   try{await running;if(attempt===revision)lastError='';}catch(error){if(attempt===revision){lastError=error.message||'設定儲存失敗，請稍後重新更改選項。';status(lastError);}}
    finally{running=null;}
    if(queued)return flush();
   }
   function settingsChanged(event){
    if(!event.target.closest?.('.room-settings-panel,.ui-room-settings-slot')||!canSave()||!['INPUT','SELECT'].includes(event.target.tagName))return;
-   if(event.target.checkValidity&&!event.target.checkValidity()){queued=null;status('請輸入範圍內的設定值。');return;}
-   try{queued=read();schedule();}catch(error){queued=null;status(error.message);}
+   revision++;
+   if(event.target.checkValidity&&!event.target.checkValidity()){queued=null;lastError='請輸入範圍內的設定值。';status(lastError);return;}
+   try{queued=read();schedule();}catch(error){queued=null;lastError=error.message||'無法讀取設定';status(lastError);}
   }
   document.addEventListener('change',settingsChanged);
   document.addEventListener('input',event=>{if(['number','range'].includes(event.target.type))settingsChanged(event);});
-  return {flush,pending:()=>!!queued||!!running};
+  return {flush,pending:()=>!!queued||!!running,error:()=>lastError};
  }
  function settingsActions(){return '<div class="room-settings-actions"><p id="roomSettingsFeedback" class="ui-status" role="status" aria-live="polite"></p></div>';}
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -303,5 +303,5 @@
   for(const marker of [s=>s.roomInstanceId,s=>s.media?.roomInstanceId,s=>s.watch?.roomInstanceId])if(marker(next)&&marker(state)&&marker(next)!==marker(state))return false;
   return next.version<state.version||next.version===state.version&&Number.isFinite(next.serverNow)&&Number.isFinite(state.serverNow)&&next.serverNow<state.serverNow;
  }
- window.GameShell={update(s){if(isStaleRoomState(s))return false;window.RoomWaiting?.update(s);window.TableMedia?.update(s);return update(s);},sendEmoji:value=>send({kind:'emoji',emoji:value},'已送出表情'),disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
+ window.GameShell={update(s){return window.RoomUI.update(s);},renderSnapshot(s){if(isStaleRoomState(s))return false;return update(s);},sendEmoji:value=>send({kind:'emoji',emoji:value},'已送出表情'),disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomUI?.stop();window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
 })();
