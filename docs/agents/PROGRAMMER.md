@@ -617,3 +617,10 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 ## 2026-10-14 Stitch 與 main 整合 2.6.0
 
 合併 3eccd1f / 88823b6，靜態路徑、圖示、音效採聯集；郎中新引擎保持 main 原檔。補上共用 primaryAction prepare/start 契約以處理設定確認按鈕被捲動槽遮住，producer 是郎中的原生開始／選書按鈕。DOM 文字以 dataset 簽章去重，不按可能不存在的 aria-label 重建；驗證實際 Enter 開局 HTTP 200。畫猜桌機／390px、四次 stroke ACK、結算及 gallery／離房原生流程通過；細節及未驗範圍見 STITCH-UI-IMPLEMENTATION.md。
+
+## 2026-10-14：郎中選藥介面 #119 本機候選
+使用者要求先開票、本機開發並預覽、不提PR。2.3.4候選以獨立翻面／明確選擇、右上個人已選印章、價格／效果上下分區取代下拉與比較區；保留票數、平票裁決及共用UI。Windows全套2148通過，後續受影響26項複驗通過；隔離實際瀏覽器驗投票／鍵盤／日夜／390px／1440px及專注恢復。真觸控、讀屏、Linux／CI未驗；未推送、PR或部署。證據：[本輪進度](../QUACKS-BOOK-VOTING-UI-PROGRESS.md)。
+
+
+## 2026-10-14：#119 最新 main 整合與說明高度
+取代上一筆2.3.4個人投票候選：已整合main88823b6，使用者確認全桌最後選擇；2.5.1保留煉金術士與設定先行，選藥採翻面／明確選擇／全桌印章。說明區預留每色最長面高度，非當前面不可見及aria-hidden；全套2207通過後31受影響項通過，隔離瀏覽器卡高／按鈕位置一致。最新授權建立Draft PR供換環境接續；Linux／CI／真觸控仍待驗，不合併部署。詳[最新進度](../QUACKS-BOOK-VOTING-UI-PROGRESS.md)。

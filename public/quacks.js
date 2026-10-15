@@ -132,23 +132,42 @@ function renderFortune(s,live){
  f.classList.remove('card-reveal');
  lastReveal=s.fortuneRevealId;
 }
+const bookPages=new Map();let bookVotingKey='',bookHelpOpen=false;
 function renderBookVoting(s){
  const box=$('#bookVoting'),waiting=['waiting','finished'].includes(s.phase);box.hidden=!waiting||!s.bookSelection||(s.me===s.host&&!bookSetupReady);
- if(box.hidden)return;box.replaceChildren(node('h2','② 搭配本局藥材書'),node('p','每顆藥材代表一種效果；大家都可點選，全桌同步採用最後一次選擇。'));
- if(s.me===s.host)box.append(button('調整房間設定','settings',()=>{bookSetupReady=false;lastVersion=-1;render(state);requestAnimationFrame(()=>document.querySelector('.ui-room-settings-card')?.scrollIntoView({block:'start',behavior:'instant'}));}));
- box.append(button('隨機挑選','refresh',()=>act('book-random')));
+ if(box.hidden){bookVotingKey='';return;}
+ const key=JSON.stringify([s.phase,s.me,s.host,s.bookSelection,[...bookPages],bookHelpOpen]);if(key===bookVotingKey)return;bookVotingKey=key;
+ const focused=document.activeElement?.dataset?.bookControl;
+ const heading=node('div');heading.className='book-voting-heading';
+ const explanation='每種顏色選一面，全桌同步採用最後一次選擇。左右翻面只查看效果，按「選擇」才會更換本局藥材書；也可隨機搭配。';
+ const help=button(explanation,'notice',()=>{bookHelpOpen=!bookHelpOpen;renderBookVoting(state);});window.GameUI?.decorateButton(help,'notice',{iconOnly:true,label:explanation});help.dataset.bookControl='help';help.setAttribute('aria-expanded',String(bookHelpOpen));help.setAttribute('aria-controls','bookVotingHelp');
+ const subtitle=node('p',explanation);subtitle.id='bookVotingHelp';subtitle.className='book-voting-help';subtitle.hidden=!bookHelpOpen;
+ const random=button('隨機挑選','refresh',()=>act('book-random'));window.GameUI?.decorateButton(random,'refresh',{iconOnly:true,label:'隨機挑選藥材書'});random.dataset.bookControl='random';
+ heading.append(node('h2','本局藥材書選擇'),help,random);box.replaceChildren(heading,subtitle);
+ if(s.me===s.host){const settings=button('調整房間設定','settings',()=>{bookSetupReady=false;lastVersion=-1;render(state);requestAnimationFrame(()=>document.querySelector('.ui-room-settings-card')?.scrollIntoView({block:'start',behavior:'instant'}));});settings.dataset.bookControl='settings';heading.insertBefore(settings,random);}
  const grid=node('div');grid.className='book-grid';
  for(const row of s.bookSelection){
-  const card=coloredCard(row.color,row.name),current=row.candidates.find(c=>c.set===row.selected),who=s.players.find(p=>p.id===row.chosenBy);
-  ingredientHint(card.querySelector('.ingredient-token'),{color:row.color,value:1},current);
-  const selected=node('p','目前採用：'+current.faceName);hint(selected,{title:row.name+' · '+current.faceName,effect:current.effect,caption:who?'由 '+who.name+' 選擇':'預設效果',color:row.color});card.append(selected);
-  const faces=node('div');faces.className='book-face-list';
-  for(const c of row.candidates){const face=node('button');face.type='button';face.onclick=()=>act('book-select',{color:row.color,set:c.set});face.setAttribute('aria-pressed',String(c.set===row.selected));face.dataset.bookColor=row.color;face.dataset.bookSet=String(c.set);face.className='book-face'+(c.set===row.selected?' selected':'');const illustration=art.token({color:row.color,value:1},{size:48,decorative:true,showValue:false});face.append(illustration,node('small',String(c.set)));
-   hint(face,{title:row.name+' · '+c.faceName,effect:c.effect,caption:(c.set===row.selected?'目前採用 · ':'點選採用 · ')+c.offers.map(o=>o.value+'：'+o.price+' 金幣').join(' · '),color:row.color});faces.append(face);
-  }card.append(faces);grid.append(card);
- }box.append(grid);
+  const current=row.candidates.find(c=>c.set===bookPages.get(row.color))||row.candidates.find(c=>c.set===row.selected)||row.candidates[0];
+  bookPages.set(row.color,current.set);
+  const card=node('article');card.className='book-card book-vote-card';card.dataset.ingredient=row.color;card.style.setProperty('--ingredient',art.palette[row.color][0]);card.setAttribute('aria-label',row.name+'藥材書');
+  const selected=row.selected===current.set,mark=node('span',selected?'已選':'已選第 '+row.selected+' 面');mark.className=selected?'book-selected-stamp':'book-selected-label';card.append(mark);
+  const top=node('div');top.className='book-page-top';top.append(art.token({color:row.color,value:1},{size:76,decorative:true}),node('h3',row.name),node('small','第 '+current.set+' 面'));
+  const prices=node('div');prices.className='book-page-prices';prices.setAttribute('aria-label',row.name+'第 '+current.set+' 面價格');
+  for(const o of current.offers){const price=node('div');price.append(art.token({color:row.color,value:o.value},{size:48,decorative:true}),node('strong',o.price+' 金幣'));price.setAttribute('aria-label','數值 '+o.value+'，'+o.price+' 金幣');prices.append(price);}top.append(prices);
+  const effect=node('div');effect.className='book-page-effect';
+  // Overlay every face in one grid cell so the longest text reserves the height.
+  for(const candidate of row.candidates){const copy=node('p',candidate.effect);copy.className='book-effect-copy';if(candidate.set!==current.set){copy.classList.add('book-effect-measure');copy.setAttribute('aria-hidden','true');}effect.append(copy);}
+  const controls=node('div');controls.className='book-page-controls';
+  function turn(delta){if(busy)return;const index=row.candidates.findIndex(c=>c.set===current.set);bookPages.set(row.color,row.candidates[(index+delta+row.candidates.length)%row.candidates.length].set);renderBookVoting(state);lock();}
+  for(const [direction,delta]of [['previous',-1],['next',1]]){const b=button(row.name+(delta<0?'上一面':'下一面'),direction,()=>turn(delta),row.candidates.length===1);window.GameUI?.decorateButton(b,direction,{iconOnly:true});b.dataset.bookControl=row.color+'-'+direction;controls.append(b);}
+  const choose=button('選擇','check',()=>act('book-select',{color:row.color,set:current.set}),selected||row.candidates.length===1);choose.dataset.bookControl=row.color+'-choose';choose.setAttribute('aria-label','選擇'+row.name+'第 '+current.set+' 面');choose.setAttribute('aria-pressed',String(selected));controls.insertBefore(choose,controls.lastChild);
+  controls.addEventListener('keydown',event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();turn(event.key==='ArrowLeft'?-1:1);}});
+  const who=s.players.find(p=>p.id===row.chosenBy),tally=node('small',row.candidates.length===1?'固定書面':'本局採用第 '+row.selected+' 面');tally.className='book-vote-result';
+  const author=node('small',who?'由 '+who.name+' 選擇':'預設效果');author.className='book-vote-counts';
+  card.append(top,effect,controls,tally,author);
+  grid.append(card);
+ }box.append(grid);bookVotingKey=JSON.stringify([s.phase,s.me,s.host,s.bookSelection,[...bookPages],bookHelpOpen]);lock();if(focused)box.querySelector('[data-book-control="'+focused+'"]')?.focus({preventScroll:true});
 }
-
 function renderBooks(s){
  $('#books').replaceChildren(...s.books.map(b=>{const card=coloredCard(b.color,b.faceName);ingredientHint(card.querySelector('.ingredient-token'),{color:b.color,value:1},b);const offers=node('div');offers.className='book-offers';
   for(const o of b.offers){const row=node('div');row.append(art.token({color:b.color,value:o.value},{size:40,decorative:true}),node('strong',String(o.price)));ingredientHint(row,{color:b.color,value:o.value},b);offers.append(row);}card.append(offers);return card;

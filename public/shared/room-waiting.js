@@ -9,7 +9,8 @@
   trpg:['霧港跑團','冒險已備，等你出發。','1–6 人一起玩。選擇角色，與朋友一起完成六幕冒險。'],
   musicquiz:['猜歌挑戰','旋律已備，等你聽題。','1–8 人一起玩。聽六秒旋律開頭，猜歌名後一起揭曉。'],
   minimal:['極簡猜圖','線條已備，等你作畫。','3–6 人一起玩。用直線與圓作畫，由少到多一起猜圖。'],
-  quacks:['郎中闖江湖','藥袋已備，等你開釜。','2–4 人一起煮藥；可加入草藥女巫與煉金術士，真人共選藥材書。'],
+  quacks:['郎中闖江湖','藥袋已備，等你開釜。','2–4 人一起煮藥；草藥女巫支援 5 人，可加煉金術士並由真人共選藥材書。'],
+
   bluff:['瞎掰王','角色已備，等你開場。','3–9 人一起玩。輪流解釋與質問，找出唯一的老實人。']
  };
  let hero,stageHome,roster,rosterList,rosterCount,rosterActionCard,actionHome,actionClasses,actionChildren,actionBusy=false,lastRoster='',layout,controls,layoutWaiting=false;

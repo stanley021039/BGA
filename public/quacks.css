@@ -249,3 +249,16 @@ body[data-game-kind=quacks] #game #alchemy .essence-flask{width:100%;max-width:4
 
 .settlement-effects [data-effect-color].effect-triggered{border-color:var(--effect-glow);box-shadow:inset 0 0 14px color-mix(in srgb,var(--effect-glow) 18%,transparent),0 0 14px color-mix(in srgb,var(--effect-glow) 45%,transparent)}
 .settlement-effects [data-effect-color=black]{--effect-glow:#ebcc82}.settlement-effects [data-effect-color=green]{--effect-glow:#77e6ae}.settlement-effects [data-effect-color=purple]{--effect-glow:#ca9cf5}
+
+/* Book browsing and voting are separate actions; prices belong to the visible face. */
+.book-voting-heading{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.book-voting-heading h2{margin:0;font-size:1.2rem}.book-voting-heading>button:last-child{margin-left:auto}.book-voting-help{line-height:1.8;color:var(--ui-muted)}.book-voting-help[hidden]{display:none}
+#bookVoting .book-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));align-items:stretch}
+.book-vote-card{position:relative;display:flex;flex-direction:column;gap:14px;padding:20px;min-height:410px}.book-page-top{display:flex;flex-direction:column;align-items:center;padding-top:20px;gap:6px}.book-page-top h3{margin:6px 0 0;font-size:1.2rem}.book-page-top>svg{width:76px;height:76px}.book-page-prices{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:14px;width:100%}.book-page-prices>div{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:46px}.book-page-prices strong{font-size:.8rem;white-space:nowrap}
+.book-selected-stamp{position:absolute;top:12px;right:12px;display:grid;place-items:center;width:50px;height:50px;border:2px solid currentColor;outline:1px solid currentColor;outline-offset:-6px;border-radius:50%;color:var(--ui-error,var(--ui-text));font-size:.85rem;font-weight:800;transform:rotate(12deg);background:var(--ui-surface-panel);box-sizing:border-box;pointer-events:none}.book-selected-label{position:absolute;top:12px;right:12px;min-height:24px;font-size:.78rem;border:1px solid var(--ui-border);border-radius:20px;padding:3px 9px;color:var(--ui-muted)}
+.book-page-effect{border-top:1px solid var(--ui-border);padding-top:16px;margin:0;flex:1}.book-page-controls{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px}.book-page-controls>button:nth-child(2){min-width:88px}.book-vote-result{text-align:center;font-weight:700}.book-vote-counts{text-align:center;font-size:.74rem}.book-vote-card .tie-controls{display:flex;flex-wrap:wrap;gap:8px;padding-top:12px;border-top:1px solid var(--ui-border)}.book-vote-card .tie-controls strong{width:100%}
+@media(max-width:760px){#bookVoting .book-grid{grid-template-columns:1fr}.book-vote-card{min-height:360px}.book-voting-heading h2{font-size:1.1rem}}
+.book-page-controls{gap:6px}.book-page-controls>button:nth-child(2){min-width:80px;padding-inline:8px;gap:6px}.book-page-controls .ui-button-label{white-space:nowrap}.book-vote-counts{min-height:2.8em}
+.book-page-effect{display:grid;align-content:start}.book-page-effect>.book-effect-copy{grid-area:1/1;margin:0}.book-effect-measure{visibility:hidden;pointer-events:none}
+
+/* Preserve the rule mappings in both visible and height-measuring book faces. */
+.book-page-effect>.book-effect-copy{white-space:pre-line}
