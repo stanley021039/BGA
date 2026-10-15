@@ -30,3 +30,8 @@ body[data-ui-template=tactile][data-visual-theme=playful]{
  --st-room-seat-height:72px;--st-room-status-height:16px;
  --st-board-tools-width:56px;--st-board-toolbar-height:70px;--st-board-footer-height:40px;
 }
+
+/* Shared room presentation, separated from composition. */
+@layer stitch-export {
+body[data-ui-template=tactile][data-visual-theme=playful]{--st-seat-avatar:44px!important;--st-playing-avatar:44px!important;--st-header-height:64px!important;--st-chat-tool-size:44px;--st-chat-notice-height:48px;}
+}

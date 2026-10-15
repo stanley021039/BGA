@@ -4,7 +4,7 @@
  const proxies={};let playPanels=null;
   const customHomes=new Map();
  function rememberCustom(n){if(!n||customHomes.has(n))return;const home=document.createComment('custom-room-control-home');n.before(home);customHomes.set(n,{home,tabIndex:n.getAttribute('tabindex'),ariaHidden:n.getAttribute('aria-hidden'),native:n.getAttribute('data-room-native-action')});}
- function restoreCustom(){for(const [n,e]of customHomes){if(e.home.parentNode)e.home.after(n);e.home.remove();for(const [attr,value]of [['tabindex',e.tabIndex],['aria-hidden',e.ariaHidden],['data-room-native-action',e.native]]){if(value===null)n.removeAttribute(attr);else n.setAttribute(attr,value);}}customHomes.clear();if(panel)panel.hidden=true;}
+ function restoreCustom({keepChatActions=false}={}){for(const [n,e]of customHomes){if(keepChatActions&&n.id==='managePlayers'&&n.closest('.ui-room-chat'))continue;if(e.home.parentNode)e.home.after(n);e.home.remove();for(const [attr,value]of [['tabindex',e.tabIndex],['aria-hidden',e.ariaHidden],['data-room-native-action',e.native]]){if(value===null)n.removeAttribute(attr);else n.setAttribute(attr,value);}customHomes.delete(n);}if(panel)panel.hidden=true;}
  const actions={start:{icon:'play',label:'開始遊戲'},bot:{icon:'bot',label:'加入 AI 測試夥伴'},invite:{icon:'invite',label:'邀請線上朋友'},manage:{icon:'settings',label:'管理玩家'},leave:{icon:'leave',label:'離房'}};
  // Explicit action adapters own game decisions; this module owns the buttons,
  // pending guard, roster placement and focus. Games declare their decisions explicitly.
@@ -148,14 +148,22 @@
   panel.dataset.aiPlacement=window.RoomWaiting?.setRosterBusy||state.type==='telephone'&&window.RoomWaiting?.setRosterAction?'roster':'inline';
   const inPlay=!setupPhase();if(panel.hidden!==inPlay)panel.hidden=inPlay;
  }
+ function chatActions(){
+  const tools=document.querySelector('.ui-room-chat .chat-room-tools');if(!tools||!proxies.leave)return;
+  const manage=document.getElementById('managePlayers');
+  if(proxies.leave.parentElement!==tools)tools.append(proxies.leave);
+  window.GameUI.decorateButton(proxies.leave,'leave',{iconOnly:true,label:'離開房間'});
+  if(manage){if(state.type==='quacks')rememberCustom(manage);window.GameUI.decorateButton(manage,'users',{iconOnly:true,label:'房間管理'});if(manage.parentElement!==tools)tools.insertBefore(manage,proxies.leave);}
+  proxies.leave.hidden=false;proxies.leave.disabled=leaving||!!actionPending;
+ }
  function normalize(){
-  scheduled=false;if(!state||window.RaceLesson)return;const customQuacks=state.type==='quacks'&&document.body.dataset.roomLayout==='custom';if(document.body.dataset.roomLayout==='custom'&&(!customQuacks||state.phase!=='waiting')){if(boundActions()){mount();syncActions();}if(customHomes.size)restoreCustom();window.RoomInvites?.updateRoom(state);return;}syncPlayPanels();mount();if(!panel)return;
+  scheduled=false;if(!state||window.RaceLesson)return;const customQuacks=state.type==='quacks'&&document.body.dataset.roomLayout==='custom';if(document.body.dataset.roomLayout==='custom'&&(!customQuacks||state.phase!=='waiting')){if(boundActions()){mount();syncActions();}if(customHomes.size)restoreCustom({keepChatActions:customQuacks});if(customQuacks)chatActions();window.RoomInvites?.updateRoom(state);return;}syncPlayPanels();mount();if(!panel)return;
   window.RoomInvites?.updateRoom(state);
   if(window.RoomInvites?.ready&&playPanels){if(!proxies.invite){proxies.invite=decorate(node('button',''),'invite');proxies.invite.onclick=()=>window.RoomInvites.open(proxies.invite);}const header=playPanels.frame.querySelector('.ui-game-operations-header');if(proxies.invite.parentElement!==header)header.append(proxies.invite);}
   const legacyInvite=document.getElementById('invite');if(legacyInvite&&legacyInvite.dataset.roomLinkLabel!=='true'){legacyInvite.dataset.roomLinkLabel='true';window.GameUI?.decorateButton(legacyInvite,'external',{label:'複製房間連結'});}
   syncActions();
   const manage=document.getElementById('managePlayers'),row=panel.querySelector('.ui-room-session-actions');
-  const inPlay=!setupPhase(),chat=document.querySelector('.shared-chat'),tools=chat?.querySelector('.chat-room-tools'),actionHost=inPlay&&tools?tools:row;
+  const inPlay=!setupPhase(),chat=document.querySelector('.shared-chat'),tools=chat?.querySelector('.chat-room-tools'),commonChat=chat?.classList.contains('ui-room-chat'),actionHost=(inPlay||commonChat)&&tools?tools:row;
   if(proxies.leave.parentElement!==actionHost)actionHost.append(proxies.leave);
   if(manage){if(customQuacks)rememberCustom(manage);if(manage.dataset.roomAction!=='manage')decorate(manage,'manage');if(manage.parentElement!==actionHost||manage.nextElementSibling!==proxies.leave)actionHost.insertBefore(manage,proxies.leave);}
   if(chat){const value=String(state.phase!=='waiting');if(chat.dataset.gameChat!==value)chat.dataset.gameChat=value;chat.parentElement?.classList.remove('ui-game-chat-host');}
@@ -184,7 +192,7 @@
    else if(!settingsSource||!settingsSource.isConnected){settingsSource=null;const text=owner()?'本遊戲使用固定規則，無需調整。':'由房主調整房間設定。';if(slot.textContent!==text)slot.replaceChildren(node('p','ui-room-settings-note',text));}
   }
   if(state.phase==='waiting'&&outer){alignNativePanel(outer);if(customQuacks)window.QuacksStitch?.waitingRoom(state);window.GameUI?.Template?.patterns.refreshWaiting?.(outer.closest('.ui-room-waiting-layout'));}
-  document.dispatchEvent(new CustomEvent('room-controls-rendered'));
+  if(inPlay||commonChat)chatActions();document.dispatchEvent(new CustomEvent('room-controls-rendered'));
  }
  function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(normalize);}
  const dialog=node('dialog','ui-dialog room-leave-dialog');dialog.setAttribute('aria-labelledby','unified-leave-title');

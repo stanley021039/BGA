@@ -3,6 +3,7 @@
  'use strict';
  const $=s=>document.querySelector(s),art=window.QuacksArt,ui=window.GameUI;
  const el=(t,c='',value)=>{const n=document.createElement(t);n.className=c;if(value!==undefined)n.textContent=value;return n;};
+ window.RoomChrome.header({subtitle:'郎中闖江湖',icon:'ingredient'});
  const cue=window.GameSounds.create();let state=null,previous=null,bookColor=null,viewed=null,mediaReady=false,stageKey='',stageScroll=0,stageFocus=null,presentation=null;
  const flying=new Set(),reactions=new Map(),alchemyHome=document.createComment('quacks-alchemy-home');$('#alchemy').before(alchemyHome);
  function icon(id,name,label){const b=$(id);if(b)ui.decorateButton(b,name,{iconOnly:true,label});}
@@ -23,12 +24,10 @@
  function placeInviteInbox(){const badge=$('#room-invitations-button'),tools=$('#qMobileMenuContent');if(badge&&tools&&badge.parentElement!==tools){badge.setAttribute('aria-label','查看收到的房間邀請');badge.title='查看收到的房間邀請';tools.append(badge);}}
  window.addEventListener('room-invitations-ready',()=>{if(state)window.RoomInvites?.updateRoom(state);placeInviteInbox();});
  const alchemyTool=el('button','','煉金術士與特效藥');alchemyTool.type='button';ui.decorateButton(alchemyTool,'ingredient',{label:'煉金術士與特效藥'});alchemyTool.onclick=()=>open($('#alchemyDialog'),alchemyTool);$('#qMobileMenuContent').append(alchemyTool);
- $('#qBrandIcon').innerHTML='<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 4h10M13 4v9L6 24q-1 4 3 4h14q4 0 3-4l-7-11V4" fill="none" stroke="#765b16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 20h12l3 5H7Z" fill="#765b16" opacity=".5"/><circle cx="16" cy="18" r="1.5" fill="#765b16"/></svg>';
  $('#qRecords').remove();$('#qBook').before($('#qScore'));
  const mobile=matchMedia('(max-width:1140px)'),mobileTools=['#qGuide','#soundToggle','#qMotion'],toolHomes=new Map();
  ui.decorateButton($('#qScore'),'crown',{iconOnly:true,label:'環形記分板'});
  for(const id of mobileTools){const n=$(id),mark=document.createComment('quacks-tool-home');n.before(mark);toolHomes.set(n,mark);}
- const account=$('.site-account'),accountHome=document.createComment('quacks-account-home');account.before(accountHome);toolHomes.set(account,accountHome);
  function arrangeTools(){for(const [n,home]of toolHomes){if(mobile.matches)$('#qMobileMenuContent').append(n);else home.after(n);}if(!mobile.matches)$('#qMobileMenu').open=false;}
  mobile.addEventListener('change',arrangeTools);arrangeTools();
  document.addEventListener('click',event=>{if(!$('#qMobileMenu').contains(event.target))$('#qMobileMenu').open=false;});
@@ -156,11 +155,11 @@
   for(const player of s.recipes){const before=previous.recipes.find(x=>x.id===player.id);if(before&&player.score>before.score){const card=$('#players [data-player-id="'+player.id+'"]');if(card){const n=el('span','q-score-pop','+'+(player.score-before.score));card.append(n);motion(n,[{transform:'translateY(8px)',opacity:0},{transform:'translateY(-4px)',opacity:1},{transform:'translateY(-24px)',opacity:0}],{duration:950});}}}
   previous=s;
  }
- function quickChoices(quick,finished){quick.replaceChildren();for(const [label,value]of finished?[['GG','GG'],['🔁','再來一局'],['😂','😂']]:[['😂','😂'],['🤔','🤔'],['👏','👏']]){const b=el('button','',label),emoji=/^(😂|🤔|👏)$/.test(value);b.type='button';b.title=value;b.setAttribute('aria-label',(emoji?'送出 ':'填入 ')+value+(emoji?' 表情':' 到聊天室'));b.onclick=()=>emoji?window.GameShell?.sendEmoji(value):window.SharedChat?.compose(value);quick.append(b);}}
  function social(){
-  if(mediaReady)return;const tools=$('.q-chat-panel .chat-room-tools');if(!tools)return;mediaReady=true;
-  const quick=el('div','q-chat-quick');quick.setAttribute('aria-label','常用句與快速表情');
-  tools.prepend(quick);quickChoices(quick,state?.phase==='finished');quick.dataset.finished=String(state?.phase==='finished');
+  const finished=state?.phase==='finished';
+  const notice=state?.phase==='waiting'?'朋友集結中，先聊聊這局的配方。':state?.phase==='patients'?'先選擇本局要治療的病患。':finished?'本局完成，聊聊你的神奇藥釜。':'第 '+state.round+' 回合 · '+(state.phase==='brewing'?'等待全桌同步抽藥':'依序結算本輪效果');
+  window.SharedChat?.setPresentation({notice,quickReplies:(finished?[['GG','GG','text'],['🔁','再來一局','text'],['😂','😂','emoji']]:[['😂','😂','emoji'],['🤔','🤔','emoji'],['👏','👏','emoji']]).map(([label,value,kind])=>({label,value,kind}))});
+  if(mediaReady)return;mediaReady=true;
   const off=window.MotionPolicy.subscribe(p=>{$('#qMotion').setAttribute('aria-pressed',String(p.enabled));});window.addEventListener('pagehide',off,{once:true});
  }
  icon('#qMotion','play','切換遊戲動畫');$('#qMotion').onclick=()=>window.MotionPolicy.set({enabled:!window.MotionPolicy.get().enabled});
@@ -179,9 +178,6 @@
   beforeRender(s){const next=s.roundId+':'+s.phase+':'+s.stage,active=document.activeElement;stageScroll=next===stageKey?$('#qStageContent').scrollTop:0;stageFocus=next===stageKey?(active?.closest('#qStageContent')?active.dataset.quacksActionKey||null:stageFocus):null;stageKey=next;state=s;arrangeNativeControls(s);alchemyHome.after($('#alchemy'));$('#qStageContent').replaceChildren();$('#qPotionSlot').replaceChildren();$('#qExtraContent').replaceChildren();},
   update(s,live,view){state=s;presentation=view;cue.update(s);waitingRoom(s);paintRoster(s);potChrome(s);actions(s);renderBookTabs();social();phaseRail.hidden=s.phase==='waiting';const phaseIndex=s.phase==='fortune'?1:s.phase==='brewing'?2:s.phase==='settlement'&&s.stage==='shopping'?4:s.phase==='settlement'?3:s.phase==='between'||s.phase==='finished'?5:0;for(const [index,step]of [...phaseRail.children].entries()){step.classList.toggle('active',index===phaseIndex);step.setAttribute('aria-current',index===phaseIndex?'step':'false');}$('#qStageContent').scrollTop=stageScroll;
    $('#qFortune').textContent=s.fortune?'占卜 · '+s.fortune.name:'占卜 · 等待揭曉';$('#qFortune').setAttribute('aria-label',s.fortune?'查看占卜牌 '+s.fortune.name:'查看占卜規則');
-   $('#qChatNotice').textContent=s.phase==='waiting'?'朋友集結中，先聊聊這局的配方。':s.phase==='patients'?'先選擇本局要治療的病患。':s.phase==='finished'?'本局完成，聊聊你的神奇藥釜。':'第 '+s.round+' 回合 · '+(s.phase==='brewing'?'等待全桌同步抽藥':'依序結算本輪效果');
-   $('#qChatCount').textContent=s.players.length+' 人';
-   const quick=$('.q-chat-quick'),finished=String(s.phase==='finished');if(quick&&quick.dataset.finished!==finished){quick.dataset.finished=finished;quickChoices(quick,s.phase==='finished');}
    ui.decorateButton($('#soundToggle'),window.AudioSettings.get().effects.enabled?'sound':'muted',{iconOnly:true,label:window.AudioSettings.get().effects.enabled?'關閉遊戲音效':'開啟遊戲音效'});
    liveEffects(s,live);
   },captureStageFocus(){const active=document.activeElement;if(active?.closest('#qStageContent')&&active.dataset.quacksActionKey)stageFocus=active.dataset.quacksActionKey;},syncWitchCommands(){for(const [button,color]of witchDetailControls){if(!button.isConnected)witchDetailControls.delete(button);else button.disabled=!presentation?.canWitch(color);}},restoreStageFocus(ready){if(!ready||!stageFocus)return;const target=[...$('#qStageContent').querySelectorAll('button,select,input')].find(n=>n.dataset.quacksActionKey===stageFocus&&!n.disabled);(target||$('#qStageContent')).focus({preventScroll:true});stageFocus=null;},potUpdated(s){state=s;potChrome(s);},socialUpdate,openBook,syncBookTabs:renderBookTabs,waitingRoom,inspectTooltip:inspect,dismissTooltip,
