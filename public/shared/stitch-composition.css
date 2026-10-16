@@ -702,3 +702,10 @@ body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks]
 }
 
 @layer stitch-export{body[data-ui-template=tactile][data-visual-theme=playful] dialog.table-media-window.media-collapsed{padding:0!important}}
+
+@layer stitch-export{body[data-ui-template=tactile][data-visual-theme=playful] dialog.table-media-window{padding:0!important}body[data-ui-template=tactile][data-visual-theme=playful] dialog.table-media-window.media-collapsed{min-width:0!important}}
+
+/* Keep open navigation menus reachable above the floating media window. */
+@layer stitch-export {
+body [data-site-header].site-header:has(details[open],.site-settings:not([hidden]),.site-account-menu:not([hidden])){z-index:220!important}
+}

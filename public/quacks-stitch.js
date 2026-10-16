@@ -103,7 +103,7 @@
  function actions(s){
   if(s.phase==='waiting'){$('#qStageOverlay').hidden=true;return;}
   const me=s.recipes.find(p=>p.id===s.me),m=s.mine,waiting=['waiting','finished'].includes(s.phase);
-  $('#qRiskCaption').replaceChildren(document.createTextNode('白色炸彈 '),el('strong','',(me.white||0)+' / '+me.threshold),el('small','','（超過 '+me.threshold+' 爆炸）'));
+  const risk=$('#qRiskCaption'),atLimit=!me.exploded&&me.white===me.threshold;risk.classList.toggle('q-risk-at-limit',atLimit);risk.setAttribute('aria-label','白色炸彈 '+(me.white||0)+' / '+me.threshold+'，超過 '+me.threshold+' 爆炸'+(atLimit?'，已達上限':''));risk.replaceChildren(el('span','q-risk-label','白色炸彈'),el('strong','',(me.white||0)+' / '+me.threshold),el('small','','（超過 '+me.threshold+' 爆炸）'));
   const potion=presentation.potion;
   if(potion){potion.setAttribute('aria-label','使用藥水瓶：收回最後白色炸彈');if(potion.querySelector('.ui-button-label'))potion.querySelector('.ui-button-label').textContent='收回白彈';$('#qPotionSlot').append(potion);}
   else{const bottle=el('div','q-potion-display');bottle.setAttribute('aria-label',m?.potion?'藥水瓶已裝滿，目前不能使用':'藥水瓶是空瓶');bottle.append(art.resource('potion',{size:42,decorative:true}),el('span','',m?.potion?'滿瓶':'空瓶'));$('#qPotionSlot').append(bottle);}
@@ -114,7 +114,7 @@
    const inspectButton=el('button','q-witch-info');inspectButton.type='button';inspectButton.setAttribute('aria-label','查看'+w.name+'效果');inspectButton.onclick=()=>inspect({title:w.name,effect:w.text},row);row.append(inspectButton);
   }
   const complex=waiting||s.phase!=='brewing'||s.stage!=='drawing'||!!m?.pending||!!m?.waitingEffect||!!m?.reserve.length;
-  const overlay=$('#qStageOverlay');overlay.hidden=!complex;overlay.classList.toggle('q-stage-centered',s.phase!=='finished'&&s.stage!=='shopping');
+  const overlay=$('#qStageOverlay');overlay.hidden=!complex;overlay.classList.toggle('q-round-intro',s.phase==='round-intro');overlay.classList.toggle('q-stage-centered',s.phase!=='finished'&&s.stage!=='shopping');
   if(!complex){const extras=presentation.extras;for(const n of extras)$('#qExtraContent').append(n);if(extraTool.hidden===!!extras.length)extraTool.hidden=!extras.length;if(extraBadge.hidden===!!extras.length)extraBadge.hidden=!extras.length;extraBadge.textContent=String(extras.length);if(extras.length)ui.decorateButton(extraTool,'ingredient',{label:'額外煮藥選擇（'+extras.length+'）'});else if($('#qExtraDialog').open)$('#qExtraDialog').close();return;}
   if(!extraTool.hidden)extraTool.hidden=true;if(!extraBadge.hidden)extraBadge.hidden=true;if($('#qExtraDialog').open)$('#qExtraDialog').close();
   const content=$('#qStageContent'),heading=$('#qStageTitle');heading.textContent=waiting?(s.phase==='finished'?'本場結果':'藥袋已備，等你開釜。'):({patients:'選擇治療病患',fortune:'本輪占卜',between:'本輪結算完成',settlement:({witches:'結算前女巫',essence:'特效藥階段',bonus:'獎勵骰',effects:'藥材效果', 'effects-confirm':'藥材結算',rewards:'領取本輪獎勵',shopping:'藥材市集'})[s.stage],brewing:m?.pending?.title||'暫存藥材'})[s.phase]||'你的操作';
@@ -123,6 +123,7 @@
    const hero=el('div','q-waiting-hero'),img=el('img');img.src='/assets/playful/game-quacks.svg';img.alt='郎中與藥釜插畫';hero.append(img,el('h3','',s.phase==='finished'?(s.winner?'獲勝：'+s.winner.names.join('、'):'本場已結束'):'朋友集結，煮出你的傳奇。'),el('p','',s.phase==='finished'?(s.interrupted?'有人離席，本場中止；可回顧本局紀錄。':'九回合累計已完成，可以查看紀錄或開始新局。'):'九回合同步抽藥，調製你的藥袋。每種顏色由真人共選本局藥材效果，全桌同步採用。'));
    const book=el('button','',s.bookSelection?.some(r=>r.tied)?'有藥材書平票 · 開啟寶典裁決':'搭配本局藥材書');book.type='button';book.onclick=()=>openBook(null,book);ui.decorateButton(book,'book');hero.append(book);content.append(hero);
   }
+  if(s.phase==='round-intro'){const announcement=el('p','q-round-announcement','第 '+(s.round+1)+' 回合');announcement.setAttribute('role','status');announcement.setAttribute('aria-live','polite');content.append(announcement);return;}
   if(s.phase==='patients'||s.stage==='essence')content.append($('#alchemy'));
   for(const n of presentation.stage)if(n!==presentation.potion&&!presentation.dock.includes(n))content.append(n);
   if(waiting&&!content.querySelector('.room-settings-panel')&&s.me!==s.host)content.append(el('p','',s.options.witches?'本局加入草藥女巫擴充；'+(s.options.hiddenProgress?'其他人大釜進度隱藏。':'大釜進度公開。'):'本局使用基本版；'+(s.options.hiddenProgress?'其他人大釜進度隱藏。':'大釜進度公開。')));
@@ -175,7 +176,7 @@
 
   baseline(s){return cue.update(s);},disconnect(){cue.disconnect();removeEffects();previous=null;},
   beforeRender(s){const next=s.roundId+':'+s.phase+':'+s.stage,active=document.activeElement;stageScroll=next===stageKey?$('#qStageContent').scrollTop:0;stageFocus=next===stageKey?(active?.closest('#qStageContent')?active.dataset.quacksActionKey||null:stageFocus):null;stageKey=next;state=s;arrangeNativeControls(s);alchemyHome.after($('#alchemy'));$('#qStageContent').replaceChildren();$('#qPotionSlot').replaceChildren();$('#qExtraContent').replaceChildren();},
-  update(s,live,view){state=s;presentation=view;cue.update(s);waitingRoom(s);paintRoster(s);potChrome(s);actions(s);renderBookTabs();social();phaseRail.hidden=s.phase==='waiting';const phaseIndex=s.phase==='fortune'?1:s.phase==='brewing'?2:s.phase==='settlement'&&s.stage==='shopping'?4:s.phase==='settlement'?3:s.phase==='between'||s.phase==='finished'?5:0;for(const [index,step]of [...phaseRail.children].entries()){step.classList.toggle('active',index===phaseIndex);step.setAttribute('aria-current',index===phaseIndex?'step':'false');}$('#qStageContent').scrollTop=stageScroll;
+  update(s,live,view){state=s;presentation=view;cue.update(s);waitingRoom(s);paintRoster(s);potChrome(s);actions(s);renderBookTabs();social();phaseRail.hidden=s.phase==='waiting';const phaseIndex=s.phase==='fortune'?1:s.phase==='brewing'?2:s.phase==='settlement'&&s.stage==='shopping'?4:s.phase==='settlement'?3:s.phase==='round-intro'||s.phase==='between'||s.phase==='finished'?5:0;for(const [index,step]of [...phaseRail.children].entries()){step.classList.toggle('active',index===phaseIndex);step.setAttribute('aria-current',index===phaseIndex?'step':'false');}$('#qStageContent').scrollTop=stageScroll;
    $('#qFortune').textContent=s.fortune?'占卜 · '+s.fortune.name:'占卜 · 等待揭曉';$('#qFortune').setAttribute('aria-label',s.fortune?'查看占卜牌 '+s.fortune.name:'查看占卜規則');
    ui.decorateButton($('#soundToggle'),window.AudioSettings.get().effects.enabled?'sound':'muted',{iconOnly:true,label:window.AudioSettings.get().effects.enabled?'關閉遊戲音效':'開啟遊戲音效'});
    liveEffects(s,live);

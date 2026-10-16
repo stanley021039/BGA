@@ -328,3 +328,9 @@ body .game-barrage-framed .barrage-frame-content{white-space:normal;overflow:vis
 body.barrage-frames-disabled .game-barrage-framed.barrage-frame-ornate{
  --barrage-frame-text:var(--ui-text,#eee9d8);--barrage-frame-name:var(--ui-text,#eee9d8);
 }
+
+/* The same catalogue picker is available in the player, site settings and appearance page. */
+body .media-frame-picker{width:min(960px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:20px;background:var(--ui-surface-floating);color:var(--ui-text);border:1px solid var(--ui-control-border);border-radius:16px}
+body .media-frame-picker>header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+body .media-frame-picker h2{margin:0;font-size:20px}
+body .media-frame-picker .barrage-frame-choice[aria-pressed=true]{outline:3px solid var(--ui-selected);outline-offset:2px}

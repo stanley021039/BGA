@@ -35,3 +35,6 @@ body[data-ui-template=tactile][data-visual-theme=playful]{
 @layer stitch-export {
 body[data-ui-template=tactile][data-visual-theme=playful]{--st-seat-avatar:44px!important;--st-playing-avatar:44px!important;--st-header-height:64px!important;--st-chat-tool-size:44px;--st-chat-notice-height:48px;}
 }
+
+/* Personal media frames adapt the same palette across all active theme aliases. */
+body[data-game-kind] .table-media-window[data-media-frame]:not([data-media-frame=default]){--st-paper:var(--media-frame-background);--st-surface:var(--media-frame-background);--st-low:var(--media-frame-background);--st-inset:var(--media-frame-background);--st-high:var(--media-frame-line);--st-ink:var(--media-frame-text);--st-muted:var(--media-frame-text);--tpl-page:var(--media-frame-background);--tpl-panel:var(--media-frame-background);--tpl-inset:var(--media-frame-background);--tpl-text:var(--media-frame-text);--tpl-muted:var(--media-frame-text);--tpl-line:var(--media-frame-line);--play-paper:var(--media-frame-background);--play-surface:var(--media-frame-background);--play-ink:var(--media-frame-text);--play-muted:var(--media-frame-text)}

@@ -56,8 +56,8 @@ test('only settlement stage transitions sound once, regardless of same-stage con
  const f=audioFixture();f.cues.update(f.state([],{phase:'brewing',version:1}),false);
  const stages=['witches','essence','bonus','effects','effects-confirm','rewards','shopping'];
  stages.forEach((stage,i)=>{const s=f.state([],{phase:'settlement',stage,version:i+2,mine:{settlementEvents:[{id:'ack'+i,at:100000}]}});f.cues.update(s,true);f.cues.update(s,true);f.tick(30);});
- assert.equal(f.calls.length,7);assert.ok(f.calls.every(c=>c.cue==='quacks-settlement'));
- f.cues.update(f.state([],{phase:'between',version:10}),true);assert.equal(f.calls.length,8);f.cues.destroy();
+ assert.equal(f.calls.length,6);assert.ok(f.calls.every(c=>c.cue==='quacks-settlement'));
+ f.cues.update(f.state([],{phase:'between',version:10}),true);assert.equal(f.calls.length,6);f.cues.destroy();
 });
 test('settlement load, reconnect and hidden transitions do not replay historical acknowledgements',()=>{
  const f=audioFixture(),s=f.state([],{phase:'settlement',stage:'shopping',version:1,mine:{settlementEvents:[{id:'old',at:100000}]}});
@@ -107,18 +107,18 @@ test('only accepted voluntary stops emit a private cue; explosions and automatic
 test('buy, undo, refill and pending choices do not emit settlement cues until the stage actually changes',()=>{
  const f=audioFixture(),s={phase:'settlement',stage:'shopping',version:1,mine:{settlementEvents:[]}};f.cues.update(f.state([],s),false);
  for(let i=2;i<7;i++){f.cues.update(f.state([],{...s,version:i,mine:{settlementEvents:[{id:'action'+i,at:100000}]}}),true);f.tick(30);}assert.equal(f.calls.length,0);
- f.cues.update(f.state([],{...s,phase:'between',version:7}),true);assert.deepEqual(f.calls.map(c=>c.cue),['quacks-settlement']);f.cues.destroy();
+ f.cues.update(f.state([],{...s,phase:'between',version:7}),true);assert.deepEqual(f.calls.map(c=>c.cue),[]);f.cues.destroy();
 });
 
 
-test('an explosive draw finishes, pauses, then shows/sounds the burst before same-snapshot settlement',()=>{
+test('an explosive draw finishes, pauses, then shows/sounds the burst without an extra settlement cue',()=>{
  const f=audioFixture({controlledClip:true});f.cues.update(f.state([],{phase:'brewing'}),false);
  const s=f.state(f.events(1),{phase:'settlement',stage:'witches',recipes:[{id:'a',name:'甲',explosionId:'boom'}]});
  f.cues.update(s,true);f.cues.update(s,true);assert.deepEqual(f.calls.map(x=>x.cue),['ingredient-draw']);assert.equal(f.bursts.length,0);
  f.tick(1600);assert.equal(f.bursts.length,0,'slow loading still waits for draw cleanup');
  f.calls[0].options.onStop();f.tick(25);f.tick(179);assert.equal(f.bursts.length,0);f.tick(1);
  assert.deepEqual(f.calls.map(x=>x.cue),['ingredient-draw','quacks-explosion']);assert.equal(f.bursts.length,1);assert.equal(f.bursts[0].events[0].playerId,'a');
- f.cues.update(s,true);assert.equal(f.bursts.length,1);f.calls[1].options.onStop();f.tick(25);assert.equal(f.calls[2].cue,'quacks-settlement');f.cues.destroy();
+ f.cues.update(s,true);assert.equal(f.bursts.length,1);f.calls[1].options.onStop();f.tick(25);assert.equal(f.calls.length,2);f.cues.destroy();
 });
 test('other viewers and muted/rejected audio still receive the delayed public explosion once',()=>{
  for(const enabled of [true,false]){const f=audioFixture({enabled}),s=f.state([],{recipes:[{id:'b',name:'乙',explosionId:'public'}]});f.cues.update(f.state([]),false);f.cues.update(s,true);f.tick(179);assert.equal(f.bursts.length,0);f.tick(1);assert.equal(f.bursts.length,1);f.tick(25);f.cues.update(s,true);assert.equal(f.bursts.length,1);f.cues.destroy();}
@@ -131,3 +131,5 @@ test('pending explosion is cancelled on clear, disconnect, hidden or a new round
 test('crow previews and all effect draws are consumed silently across repeated snapshots and choices',()=>{const f=audioFixture({controlledClip:true});f.cues.update(f.state([]),false);const events=[{id:'root',at:100000,decision:true,step:1},...Array.from({length:4},(_,i)=>({id:'look'+i,at:100000,decision:false}))];const s=f.state(events);f.cues.update(s,true);assert.equal(f.calls.length,1);f.calls[0].options.onStop();for(let i=0;i<8;i++){f.tick(400);f.cues.update(s,true);}assert.equal(f.calls.length,1);f.cues.update(f.state([...events,{id:'choice-look',at:100000,decision:false}]),true);f.tick(1000);assert.equal(f.calls.length,1);f.cues.destroy();});
 test('crow, potion and fortune previews never produce a voluntary draw cue by themselves',()=>{const f=audioFixture();f.cues.update(f.state([]),false);f.cues.update(f.state([{id:'crow',at:100000,decision:false},{id:'legacy',at:100000}]),true);f.tick(3000);assert.equal(f.calls.length,0);f.cues.destroy();});
 test('one valid manual draw including crow previews is voiced once; retried intents and choices add no voice events',()=>{const r=new QuacksRoom('ABCDEF','crow',()=>0),a=r.add('A'),b=r.add('B');r.start();r.drawFortune();a.bag=[r.chip('blue',2),r.chip('green'),r.chip('white')];b.bag=[r.chip('orange')];const data={roundId:r.roundId,requestId:crypto.randomUUID(),step:r.step};r.act(a.id,'draw',data);r.act(a.id,'draw',data);assert.throws(()=>r.act(a.id,'draw',{...data,requestId:crypto.randomUUID()}));r.act(b.id,'draw',{...data,requestId:crypto.randomUUID()});assert.equal(a.drawEvents.length,3);assert.equal(a.drawEvents.filter(e=>e.decision).length,1);assert.equal(a.drawEvents[0].step,1);const q=r.view(a.id).mine.pending,o=q.options.find(o=>o.label==='全部放回');r.act(a.id,'choice',{roundId:r.roundId,requestId:crypto.randomUUID(),choiceId:q.id,optionId:o.id});assert.equal(a.drawEvents.filter(e=>e.decision).length,1);assert.equal(Object.hasOwn(r.view(b.id).recipes[0],'drawEvents'),false);});
+
+test('stopping at settlement entry voices the stop once without an appended settlement cue',()=>{const f=audioFixture({controlledClip:true});f.cues.update(f.state([],{phase:'brewing',stage:'drawing'}),false);const state=f.state([],{phase:'settlement',stage:'witches',mine:{stopEvents:[{id:'manual-stop',at:100000}]}});f.cues.update(state,true);assert.deepEqual(f.calls.map(c=>c.cue),['quacks-stop']);f.calls[0].options.onStop();for(let i=0;i<4;i++){f.tick(1000);f.cues.update(state,true);}assert.deepEqual(f.calls.map(c=>c.cue),['quacks-stop']);f.cues.update({...state,stage:'bonus'},true);assert.deepEqual(f.calls.map(c=>c.cue),['quacks-stop','quacks-settlement']);f.cues.destroy();});

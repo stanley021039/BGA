@@ -15,6 +15,7 @@ for(const witches of [false,true])test('alchemy '+(witches?'combined':'standalon
  let iterations=0;
  while(s.phase!=='finished'){
   assert.ok(++iterations<500,'HTTP phase progresses');
+  if(s.phase==='round-intro'){await new Promise(resolve=>setTimeout(resolve,2400));s=await state(owner);continue;}
   if(s.phase==='between'){s=await action(owner,s,'next');continue;}
   for(const cookie of cookies){
    const v=await state(cookie),m=v.mine;

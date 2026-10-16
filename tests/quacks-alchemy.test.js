@@ -12,7 +12,7 @@ function settle(r){for(const p of r.players){p.stopped=true;p.pending=[];}r.begi
 function choices(r){let n=0;while(r.hasPending()){assert.ok(++n<120,'pending effects terminate');for(const p of r.players){const q=r.view(p.id).mine.pending;if(!q)continue;const o=q.options.find(x=>!x.disabled);act(r,p,'choice',{choiceId:q.id,optionId:o.id});}}}
 function driver(r,cap=2000){
  let steps=0;while(r.phase!=='finished'){
-  assert.ok(++steps<cap,'progress '+r.round+' '+r.phase+' '+r.stage);if(r.phase==='between'){act(r,r.player(r.host),'next');continue;}
+  assert.ok(++steps<cap,'progress '+r.round+' '+r.phase+' '+r.stage);if(r.phase==='round-intro'){r.auto(r.nextRoundAt);continue;}if(r.phase==='between'){act(r,r.player(r.host),'next');continue;}
   for(const p of r.players){
    const s=r.view(p.id),m=s.mine;
    if(m.pending){const q=m.pending,o=q.options.find(o=>!o.disabled);assert.ok(o);act(r,p,'choice',{choiceId:q.id,optionId:o.id});continue;}
@@ -147,7 +147,7 @@ test('visiting witch uses no coin, does not mark paid coin achievement, and cann
 test('real AI planner picks patients and completes essence plus nine rounds without forbidden private views',()=>{
  const {runTestAIStep}=require('../src/ai');let seed=345;const r=new QuacksRoom('ABCDEF','AI',n=>{seed=(seed*1664525+1013904223)>>>0;return seed%n;});const a=r.add('BotA',true);r.add('BotB',true);r.configure(a.id,{alchemists:true,witches:true});r.start();let now=0,tries=0;
  const history={transact:(room,entry,run)=>run()};
- while(r.phase!=='finished'){assert.ok(++tries<2500,'AI progresses '+r.phase+' '+r.stage);if(r.phase==='between')act(r,r.player(r.host),'next');else runTestAIStep(r,{history,now:now+=1500});}
+ while(r.phase!=='finished'){assert.ok(++tries<2500,'AI progresses '+r.phase+' '+r.stage);if(r.phase==='round-intro')r.auto(now=Math.max(now,r.nextRoundAt));else if(r.phase==='between')act(r,r.player(r.host),'next');else runTestAIStep(r,{history,now:now+=1500});}
  assert.equal(r.results.length,9);assert.ok(r.results.every(x=>x.players.every(p=>p.alchemy)));
 });
 

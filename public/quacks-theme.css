@@ -361,3 +361,27 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #qStageContent #alchemy>button{font-size:16px!important;line-height:1.25!important}
 
 body[data-game-kind=quacks] .q-visitor-free{pointer-events:none;font-size:12px;font-weight:700;line-height:1.2;background:var(--ui-selected);color:var(--ui-selected-text);border-radius:4px}
+
+/* Unselected book faces stay readable against their paper surface in both themes. */
+@layer stitch-export {
+body[data-game-kind=quacks][data-ui-template=tactile] #bookDialog .q-book-faces button.q-book-face{background:#fffbef!important;color:#30291e!important;border-color:#ad9663!important;opacity:1!important;filter:none!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #bookDialog .q-book-faces button.q-book-face[aria-pressed=true]{background:#f3d178!important;color:#30291e!important;border-color:#866222!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #bookDialog .q-book-faces button.q-book-face :is(strong,span){color:inherit!important;opacity:1!important}
+}
+
+@layer stitch-export {
+body[data-game-kind=quacks] #qRiskCaption{font-size:16px!important;font-weight:650;color:var(--ui-text)!important;background:var(--ui-surface-panel);border:1px solid var(--ui-control-border);border-radius:10px;line-height:1.4!important;white-space:normal!important}
+body[data-game-kind=quacks] #qRiskCaption strong{font-size:22px!important;font-weight:850;line-height:1.2!important;color:#715100!important;white-space:nowrap}
+html[data-color-scheme=dark] body[data-game-kind=quacks] #qRiskCaption strong{color:#ffe079!important}
+body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit{background:#fff1be;color:#543800!important;border-color:#b37a00;box-shadow:0 0 0 2px #f6ca4388,0 0 18px #f6bd3977;animation:q-risk-limit-glow 1.6s ease-in-out infinite alternate}
+body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit strong{color:#5f3a00!important}
+html[data-color-scheme=dark] body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit{background:#3b2c12;color:#fff3bb!important;border-color:#f5cf62}
+html[data-color-scheme=dark] body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit strong{color:#ffe079!important}
+@keyframes q-risk-limit-glow{from{box-shadow:0 0 0 2px #f6ca4377,0 0 10px #f6bd3944}to{box-shadow:0 0 0 2px #f6ca43bb,0 0 22px #f6bd3999}}
+html.motion-reduced body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit{animation:none!important}
+@media(prefers-reduced-motion:reduce){body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit{animation:none!important}}
+}
+
+@layer stitch-export {
+body[data-game-kind=quacks] #qStageOverlay.q-round-intro .q-round-announcement{font-size:clamp(32px,5vw,64px)!important;font-weight:850!important;line-height:1.3!important;letter-spacing:.1em!important;color:var(--st-ink)!important;text-align:center!important}
+}

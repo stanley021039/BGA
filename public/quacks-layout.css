@@ -553,3 +553,14 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 
 body[data-game-kind=quacks] #witches .q-visitor-trigger{position:relative;min-width:44px;min-height:44px;padding:0}
 body[data-game-kind=quacks] .q-visitor-free{position:absolute;top:0;right:0;padding:1px 3px}
+
+@layer stitch-export {
+body[data-game-kind=quacks] #qRiskCaption{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;flex:1 1 auto!important;width:auto!important;min-width:0!important;padding:6px 10px;overflow:visible!important}
+}
+
+@layer stitch-export {
+body[data-game-kind=quacks] #qStageOverlay.q-round-intro>header{display:none!important}
+body[data-game-kind=quacks] #qStageOverlay.q-round-intro .q-stage-content{display:flex!important;align-items:center!important;justify-content:center!important;align-content:center!important;padding:16px!important}
+}
+
+@layer stitch-export {body[data-game-kind=quacks] #qStageOverlay.q-round-intro .q-round-announcement{margin:0!important}}

@@ -34,8 +34,9 @@ function create(host){
   const nextContext=state.code+':'+state.roundId;
   if(context!==nextContext){clear();seen.clear();context=nextContext;initialized=false;}
   const events=[...(state.fortuneRevealId?[{id:state.fortuneRevealId,kind:'card',fortune:state.fortune,name:state.players.find(p=>p.id===state.roundStarterId)?.name||'起始玩家',at:state.fortuneDrawnAt||state.serverNow}]:[]),...(state.rollEvents||[]).map(e=>({...e,kind:'dice',tones:state.potColors?.[e.potColor||state.recipes?.find(p=>p.id===e.playerId)?.potColor]?.liquid}))];
-  if(!live||!allowed())clear();
-  for(const event of events){if(seen.has(event.id))continue;seen.add(event.id);if(initialized&&live&&allowed())queue.push(event);}
+  const presenting=state.phase!=='round-intro'&&state.phase!=='finished';
+  if(!live||!allowed()||!presenting)clear();
+  for(const event of events){if(seen.has(event.id))continue;seen.add(event.id);if(initialized&&live&&allowed()&&presenting)queue.push(event);}
   initialized=true;if(queue.length>20)queue=queue.slice(-20);next();
  }
  const unsubscribe=root.MotionPolicy?.subscribe(()=>{if(!allowed())clear();});
@@ -73,18 +74,18 @@ function createAudio(sounds,{onExplosion=()=>{},onClear=()=>{}}={}){
  function update(state,live){
   const key=state.code+':'+state.roundId;if(key!==context){clear();seen.clear();context=key;initialized=false;lastSettlement=null;}
   if(!live||root.document.hidden)clear();
-  const eligible=initialized&&live&&!root.document.hidden,epoch=sounds?.epoch?.();
+  const eligible=initialized&&live&&!root.document.hidden,epoch=sounds?.epoch?.();let stoppedNow=false;
   const card=state.fortuneRevealId;if(card&&!seen.has('card:'+card)){seen.add('card:'+card);if(eligible)sounds?.play('card-draw','quacks:card:'+card);}
   for(const e of state.mine?.potionEvents||[]){const id='potion:'+e.id;if(seen.has(id))continue;seen.add(id);if(eligible)queue.push({cue:'potion-drink',key:'quacks:'+id,at:e.at??Date.now(),epoch});}
-  for(const e of state.mine?.stopEvents||[]){const id='stop:'+e.id;if(seen.has(id))continue;seen.add(id);if(eligible)queue.push({cue:'quacks-stop',key:'quacks:'+id,at:e.at??Date.now(),epoch});}
-  // Draw -> pause -> explosion -> settlement. Same-snapshot settlement never cuts the draw short.
+  for(const e of state.mine?.stopEvents||[]){const id='stop:'+e.id;if(seen.has(id))continue;seen.add(id);if(eligible){stoppedNow=true;queue.push({cue:'quacks-stop',key:'quacks:'+id,at:e.at??Date.now(),epoch});}}
+  // Draw -> pause -> explosion. No extra settlement cue after stopping or bursting. Same-snapshot settlement never cuts the draw short.
   for(const e of state.mine?.drawEvents||[]){if(seen.has(e.id))continue;seen.add(e.id);if(eligible&&e.decision===true&&!drawActive&&!queue.some(x=>!x.cue))queue.push({key:'quacks:draw:'+e.id,at:e.at??Date.now(),epoch});}
   const explosions=[];
   for(const p of state.recipes||[]){const id='burst:'+p.explosionId;if(!p.explosionId||seen.has(id))continue;seen.add(id);if(eligible)explosions.push({id:p.explosionId,playerId:p.id,name:p.name});}
   if(explosions.length)queue.push({cue:'quacks-explosion',key:'quacks:burst:'+explosions.map(e=>e.id).join(':'),explosions,at:Date.now(),epoch});
-  const stage=state.phase==='settlement'?state.stage:state.phase==='between'?'between':state.phase==='finished'&&!state.interrupted?'finished':null;
+  const stage=state.phase==='settlement'&&state.stage!=='witches'?state.stage:state.phase==='finished'&&!state.interrupted?'finished':null;
   const entering=stage&&stage!==lastSettlement;lastSettlement=stage;
-  if(eligible&&entering)queue.push({cue:'quacks-settlement',key:'quacks:settle:'+key+':'+state.version+':'+stage,at:Date.now(),epoch});
+  if(eligible&&entering&&!stoppedNow&&!explosions.length)queue.push({cue:'quacks-settlement',key:'quacks:settle:'+key+':'+state.version+':'+stage,at:Date.now(),epoch});
   while(seen.size>128)seen.delete(seen.values().next().value);queue=queue.slice(-20);initialized=true;if(queue.length&&timer===null)next();
  }
  const hide=()=>{if(root.document.hidden)clear();};root.document.addEventListener('visibilitychange',hide);

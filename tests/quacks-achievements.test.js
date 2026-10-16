@@ -15,7 +15,7 @@ function fixture(t,{bot=false,witches=false}={}){
 }
 function play(r,{witches=false,beforeLast=()=>{}}={}){
  let n=0;while(r.phase!=='finished'){
-  assert.ok(++n<1500);if(r.phase==='between'){act(r,r.player(r.host),'next');continue;}
+  assert.ok(++n<1500);if(r.phase==='round-intro'){r.auto(r.nextRoundAt);continue;}if(r.phase==='between'){act(r,r.player(r.host),'next');continue;}
   if(r.phase==='fortune'){act(r,r.player(r.roundStarterId),'draw-fortune');continue;}
   for(const p of r.players){
    const m=r.view(p.id).mine;if(m.pending){const o=m.pending.options.find(o=>!o.disabled);act(r,p,'choice',{choiceId:m.pending.id,optionId:o.id});continue;}

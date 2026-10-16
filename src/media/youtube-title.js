@@ -1,11 +1,11 @@
 const {fallbackTitle}=require('./room');
-const MAX_TITLE_CACHE=256,MAX_METADATA_BYTES=32768,TITLE_TIMEOUT_MS=2000;
-function createYoutubeTitleResolver({enabled=true,fetcher=fetch}={}){
+const MAX_TITLE_CACHE=256,MAX_METADATA_BYTES=32768,TITLE_TIMEOUT_MS=2000,FAILURE_CACHE_MS=15000;
+function createYoutubeTitleResolver({enabled=true,fetcher=fetch,now=Date.now}={}){
  const cache=new Map(),pending=new Map();let closed=false;
  async function resolve(videoId){
   const fallback=fallbackTitle(videoId);
   if(!/^[A-Za-z0-9_-]{11}$/.test(videoId)||!enabled||closed)return fallback;
-  if(cache.has(videoId))return cache.get(videoId);
+  if(cache.has(videoId)){const cached=cache.get(videoId);if(cached.expiresAt>now())return cached.title;cache.delete(videoId);}
   if(pending.has(videoId))return pending.get(videoId).promise;
   if(pending.size>=32)return fallback;
   const controller=new AbortController();
@@ -25,8 +25,8 @@ function createYoutubeTitleResolver({enabled=true,fetcher=fetch}={}){
    }catch{controller.abort();return fallback;}finally{clearTimeout(timer);}
   })();
   pending.set(videoId,{promise,controller});
-  try{const title=await promise;if(!closed){cache.set(videoId,title);while(cache.size>MAX_TITLE_CACHE)cache.delete(cache.keys().next().value);}return title;}finally{pending.delete(videoId);}
+  try{const title=await promise;if(!closed){cache.set(videoId,{title,expiresAt:title===fallback?now()+FAILURE_CACHE_MS:Infinity});while(cache.size>MAX_TITLE_CACHE)cache.delete(cache.keys().next().value);}return title;}finally{pending.delete(videoId);}
  }
  return {resolve,clear(){closed=true;for(const entry of pending.values())entry.controller.abort();pending.clear();cache.clear();}};
 }
-module.exports={createYoutubeTitleResolver,MAX_TITLE_CACHE,MAX_METADATA_BYTES,TITLE_TIMEOUT_MS};
+module.exports={createYoutubeTitleResolver,MAX_TITLE_CACHE,MAX_METADATA_BYTES,TITLE_TIMEOUT_MS,FAILURE_CACHE_MS};
