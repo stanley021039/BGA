@@ -34,3 +34,7 @@ body[data-game-kind] .table-media-consent{background:var(--ui-surface-floating);
 
 .table-media-header .table-media-window-tools{margin-left:auto}
 .table-media-playlist-body{overscroll-behavior:contain;overflow-anchor:none;scrollbar-gutter:stable}
+
+body[data-game-kind] .table-media-window.media-collapsed{min-height:0!important;padding:0!important;overflow:hidden}
+body[data-game-kind] .table-media-window.media-collapsed .table-media-body,body[data-game-kind] .table-media-window.media-collapsed #mediaSizeLabel,body[data-game-kind] .table-media-window.media-collapsed #mediaResizeHint{display:none!important}
+body[data-game-kind] .table-media-window.media-collapsed .table-media-header{box-sizing:border-box;height:54px;min-height:54px;padding:4px 8px;flex-wrap:nowrap}

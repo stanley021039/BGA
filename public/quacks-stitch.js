@@ -94,9 +94,6 @@
   const selected=[...$('#potTabs').children].find(b=>b.getAttribute('aria-pressed')==='true'),index=[...$('#potTabs').children].indexOf(selected),p=s.recipes[index]||s.recipes.find(p=>p.id===s.me);viewed=p.id;let name=$('#qPotName');if(!name){name=el('span','q-pot-name');name.id='qPotName';$('#qPotStage').append(name);}name.textContent=p.potName||p.name+'的好運釜';name.title=name.textContent;
   const markers=art.markerPositions(p),metrics=$('#qPotMetrics');metrics.replaceChildren();
   for(const [kind,value,label]of [['droplet',markers.droplet,'水滴'],['rat',markers.start,'起點'],['progress',p.position||0,'當前']]){const span=el('span',kind==='progress'?'q-metric-progress':'');span.append(art.resource(kind,{size:14,decorative:true}),document.createTextNode(label+' '+value));metrics.append(span);}
-  const recent=$('#qRecent');recent.replaceChildren(el('span','','本輪投入：'));
-  for(const c of p.pot?.slice(-8)||[]){const b=el('button');b.type='button';b.setAttribute('aria-label',art.names[c.color]+' '+c.value+' · 查看效果');b.append(art.token(c,{size:26,decorative:true}));const tile=s.board[c.position],details=art.info(s,p,tile,c);hint(b,details);b.onclick=()=>inspect(details,b);recent.append(b);}
-  if(!p.pot?.length)recent.append(el('span','q-empty','還沒投入藥材'));
   $('#potTabs').setAttribute('aria-label','切換大釜，目前查看 '+p.name);
   $('#qPotStage').classList.toggle('q-danger',!p.exploded&&p.white>=p.threshold-1);$('#qPotStage').classList.toggle('q-exploded',!!p.exploded);
  }

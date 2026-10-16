@@ -700,3 +700,5 @@ body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks]
 @layer stitch-export{
 @media(max-width:360px){body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header{height:auto!important;min-height:108px!important;flex-wrap:wrap!important;align-content:center!important;gap:4px 8px!important}body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header .q-header-tools{flex-basis:100%!important;order:3!important;justify-content:flex-end!important}body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header .site-account{margin-left:auto!important}}
 }
+
+@layer stitch-export{body[data-ui-template=tactile][data-visual-theme=playful] dialog.table-media-window.media-collapsed{padding:0!important}}

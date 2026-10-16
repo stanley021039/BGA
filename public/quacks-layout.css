@@ -527,3 +527,22 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered .q-stage-content>button{min-height:52px!important;padding:12px 20px!important}
 @media(max-width:620px){body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered>header{padding:0 0 26px!important}body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered #qStageStep{bottom:0!important}body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered .q-stage-content{padding:10px!important}}
+
+/* Current choices share the same ingredient and resource artwork as the table. */
+body[data-game-kind=quacks] .q-choice-ui{width:100%;min-width:0}
+body[data-game-kind=quacks] .q-choice-grid{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:12px}
+body[data-game-kind=quacks] .q-choice-grid button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:72px;min-height:64px;padding:8px 12px}
+body[data-game-kind=quacks] .q-choice-grid .q-choice-ingredient{flex-wrap:wrap}
+body[data-game-kind=quacks] .q-choice-selected{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px}
+body[data-game-kind=quacks] .q-choice-cost{display:inline-flex;align-items:center;gap:4px}
+body[data-game-kind=quacks]:not(.game-focus-active) #gameFocusToggle{display:none!important}
+
+/* Essence selection has one content height owner instead of nested scrolling panels. */
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #qStageContent{flex-direction:column!important;flex-wrap:nowrap!important;gap:8px!important;padding:8px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #qStageContent #alchemy{flex:0 1 auto!important;max-height:none!important;height:auto!important;overflow:visible!important;width:100%!important;margin:0!important;padding:8px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #alchemy .alchemy-summary{align-items:center!important;justify-content:center!important;margin:0!important;gap:8px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #alchemy .alchemy-summary h3{margin:0!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #alchemy .essence-flask{max-width:min(100%,620px)!important;max-height:180px!important;width:100%!important;margin:4px auto!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #alchemy>button{margin:0!important;min-height:44px!important;padding:8px 16px!important}
+
+body[data-game-kind=quacks][data-quacks-stage=essence] #qStageContent #alchemy>h2{display:none}
