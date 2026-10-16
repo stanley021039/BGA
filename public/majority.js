@@ -5,6 +5,7 @@ const customPercentOptions=[['','依題庫比例'],['0','0% · 只抽內建'],['
 const customPercentLabel=value=>value===null?'依題庫比例':value+'%';
 const customPercentSelect=value=>customPercentOptions.map(([number,label])=>`<option value="${number}" ${(value===null?'':String(value))===number?'selected':''}>${label}</option>`).join('');
 let code=(location.pathname.match(/\/majority\/([a-f0-9]{6})/i)||[])[1]?.toUpperCase()||'',session=null,state=null,busy=false,polling=false,disconnected=false,signature='',topic='food',type='two',source='bank',choice=null,draft='',custom={prompt:'',options:['','','']},inviteBase=location.origin;
+const roomActions=window.RoomControls.bindActions({type:'majority',read:()=>({setup:['waiting','finished'].includes(state?.phase),start:{step:'start',label:state?.phase==='finished'?'再玩一局':state?.cruel?'開始十題':'開始同頻',enabled:!busy&&!!state&&(state.cruel?(state.cruel.rules==='teams'?[4,6,8].includes(state.players.filter(p=>!p.kicked).length):state.players.filter(p=>!p.kicked).length>=1):state.players.filter(p=>!p.kicked).length>=3)},bot:{enabled:!busy&&!!state&&state.players.length<12&&state.botSupport?.canAdd!==false}}),run:action=>roomAction(action)});
 let focusTimer=null,gatherAnimations=[],knownAchievements=null,achievementNoticeRound=null,achievementNoticeNames='';
 const motionGate=MotionPolicy.createGate();
 const actionDock=document.querySelector(".game-action-slot"),actionsRoot=document.getElementById("gameActions"),actionFeedbackRoot=document.getElementById("gameActionFeedback");
@@ -14,12 +15,12 @@ function toast(t){if(window.GameUI?.notify)return window.GameUI.notify(t,{durati
 async function api(route,data){return RoomApi.request(route,data,{code,room:'majority',session,onKicked:()=>{RoomHost.kicked(session);session=null;}});}
 function save(s){session=s;code=s.code;localStorage.setItem('ah-majority',JSON.stringify(s));localStorage.setItem('ah-majority:'+code,JSON.stringify(s));history.replaceState(null,'','/majority/'+code);}
 async function action(name,data={}){if(busy)return;busy=true;actionFeedback('送出中…');syncActionBusy();try{const result=await api('action',{action:name,...data});const live=receive(result);if(live&&name==='answer'&&['answering','review'].includes(result.phase))playSound('confirm');actionFeedback({answer:'答案已鎖定 ✓',withdraw:'已收回答案',merge:'答案組已合併',resetGroups:'已還原分組',score:'已計分'}[name]||'已完成','success');if(live)MotionPolicy.confirm($('#gameActionFeedback'));$('#connection').textContent='';}catch(e){actionFeedback(e.message,'error');}finally{busy=false;syncActionBusy();syncAnswerChoices();syncMerge();}}
-async function roomAction(route,data={}){if(busy)return;if(route==='start'&&roomSettingsAutoSave){await roomSettingsAutoSave.flush();if(roomSettingsAutoSave.pending())return;}const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;actionFeedback('送出中…','info',settings);syncActionBusy();try{receive(await api(route,data));actionFeedback(settings?'房間設定已儲存。':'已完成','success',settings);}catch(e){actionFeedback(e.message,'error',settings);}finally{busy=false;syncActionBusy();if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
+async function roomAction(route,data={}){if(busy)return;if(route==='start'&&roomSettingsAutoSave){await roomSettingsAutoSave.flush();if(roomSettingsAutoSave.pending())return;const error=roomSettingsAutoSave.error?.();if(error)throw Error(error);}const settings=route==='settings',restoreFocus=settings&&document.activeElement?.closest?.('.room-settings-save');busy=true;actionFeedback('送出中…','info',settings);syncActionBusy();try{receive(await api(route,data));actionFeedback(settings?'房間設定已儲存。':'已完成','success',settings);}catch(e){actionFeedback(e.message,'error',settings);throw e;}finally{busy=false;syncActionBusy();if(restoreFocus)$('#stage .room-settings-save')?.focus({preventScroll:true});}}
 function actionFeedback(message,kind='info',settings=false){
  const node=$(settings?'#roomSettingsFeedback':'#gameActionFeedback')||$('#gameActionFeedback');if(!node)return;
  if(window.GameUI)GameUI.setStatus(node,message,{kind});else{node.textContent=message;node.dataset.kind=kind;}
 }
-function syncActionBusy(){
+function syncActionBusy(){roomActions.refresh();
  window.RoomWaiting?.setRosterBusy(busy);
  const slot=$('[data-game-action-slot]');if(!slot)return;slot.setAttribute('aria-busy',String(busy));
  for(const button of [...slot.querySelectorAll('button'),...document.querySelectorAll('.room-settings-save')]){
@@ -50,7 +51,7 @@ function bindGamePopovers(container){
 function renderAction(){
  if(!state)return;const s=state;const dockTarget=['waiting','finished'].includes(s.phase)?document.querySelector('[data-room-common] .ui-room-settings-footer'):document.getElementById('gameSidebar');if(dockTarget&&actionDock.parentElement!==dockTarget)dockTarget.append(actionDock);if(!actionsRoot.isConnected)actionDock.prepend(actionsRoot);if(!actionFeedbackRoot.isConnected)actionDock.append(actionFeedbackRoot);let html=['answering','review'].includes(s.phase)?'':'<h2>本輪操作</h2>';
  const button=(name,label,disabled=false)=>'<button class="button" data-do="'+name+'" '+(disabled?'disabled':'')+'>'+label+'</button>';
- if(s.cruel&&s.phase==='answering')html+=s.participantIds.includes(s.me)?(s.ownAnswer!==null?'<p>答案已鎖定 ✓</p>'+button('withdraw','收回答案'):button('answer','鎖定答案',choice===null))+button('replace',s.cruel.skipRemaining?'換一題（本局剩 1 次）':'換題已用完',!s.cruel.canReplace)+'<div class="action-progress"><span id="progress"></span><span id="timer"></span></div>':'<p>下一局可加入作答</p>';else if(s.phase==='waiting'&&s.cruel)html+=s.host?button('start','開始十題',s.cruel.rules==='teams'&&![4,6,8].includes(s.players.length)):'<p>等待房主開始</p>';else if(s.phase==='waiting')html+=s.host?button('start',s.players.length<3?'還差 '+(3-s.players.length)+' 位朋友':'開始同頻',s.players.length<3):'<p>等待房主開始</p>';
+ if(s.cruel&&s.phase==='answering')html+=s.participantIds.includes(s.me)?(s.ownAnswer!==null?'<p>答案已鎖定 ✓</p>'+button('withdraw','收回答案'):button('answer','鎖定答案',choice===null))+button('replace',s.cruel.skipRemaining?'換一題（本局剩 1 次）':'換題已用完',!s.cruel.canReplace)+'<div class="action-progress"><span id="progress"></span><span id="timer"></span></div>':'<p>下一局可加入作答</p>';else if(s.phase==='waiting')html+=s.host?'':'<p>等待房主開始</p>';
  else if(s.players.find(p=>p.id===s.me)?.waitingForNextRound&&['choosing','answering'].includes(s.phase))html+='<p>下一題會自動加入</p>';
  else if(s.phase==='choosing'){
   if(s.presenterId!==s.me)html+='<p>等待 '+esc(playerName(s.presenterId))+' 挑題</p>'+(s.host?button('pass','換下一位出題'):'');
@@ -64,10 +65,10 @@ function renderAction(){
    html+='<div class="review-actions">'+button('resetGroups','還原分組')+button('score','確認計分')+'</div>';
   }else html+='<p>等待房主確認分組</p>';
  }else if(s.phase==='reveal')html+=s.host||s.presenterId===s.me?button('next',s.round>=s.roundLimit?'查看本局結果':'開始下一題'):'<p>等待開始下一題</p>';
- else if(s.phase==='finished')html+=(s.host?button('start','再玩一局'):'')+'<a href="/history">查看對局歷史</a>';
- html+=GameShell.botButton?.(s)||'';
+ else if(s.phase==='finished')html+='<a href="/history">查看對局歷史</a>';
+
  GameShell.stableMarkup(actionsRoot,html);bindGamePopovers($('#gameActions'));syncAnswerChoices();syncMerge();syncActionBusy();
- for(const control of actionsRoot.querySelectorAll('button')){if(control.dataset.do==='start'){control.dataset.roomNativeAction='start';control.setAttribute('aria-hidden','true');control.tabIndex=-1;}window.GameUI?.decorateButton(control,['draw','replace','resetGroups'].includes(control.dataset.do)?'refresh':'check',{iconOnly:control.dataset.do==='replace'});}
+ for(const control of actionsRoot.querySelectorAll('button'))window.GameUI?.decorateButton(control,['draw','replace','resetGroups'].includes(control.dataset.do)?'refresh':'check');
 }
 
 const playerName=id=>state?.players.find(p=>p.id===id)?.name||state?.departed?.find(p=>p.id===id)?.name||'玩家';

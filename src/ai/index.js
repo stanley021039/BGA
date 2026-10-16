@@ -82,7 +82,7 @@ registerTestAI('draw',{maxPlayers:8,plan(room,p,cache){
  if(!choices.length)return null;
  return {actor:p.id,action:'guess',delay:2400,run:r=>{const answer=choices[r.rng(choices.length)].title;r.act(p.id,'guess',{answer});cache.guessed.add(answer);}};
 }});
-function runTestAIStep(room,{history,now=Date.now(),onDrawStroke=()=>{}}){
+function runTestAIStep(room,{history,transitions=history,now=Date.now(),onDrawStroke=()=>{}}){
  const adapter=adapters.get(room.type||'poker');if(!adapter||['waiting','finished','showdown'].includes(room.phase)||history.isPaused?.(room))return false;
  let state=runtime.get(room);const key=[room.round,room.phase,room.presenterId,room.canvas?.epoch].join(':');
  if(!state||state.key!==key){state={key,players:new Map(),cursor:0};runtime.set(room,state);}
@@ -92,7 +92,7 @@ function runTestAIStep(room,{history,now=Date.now(),onDrawStroke=()=>{}}){
   if(!state.players.has(p.id))state.players.set(p.id,{at:now});const cache=state.players.get(p.id);
   if(now-cache.at<400)continue;
   const operation=adapter.plan(room,p,cache);if(!operation||now-cache.at<(operation.delay||1200))continue;
-  const result=history.transact(room,{action:operation.action,source:'bot',actor:p.id,...(operation.input?{input:operation.input}:{})},()=>operation.run(room));
+  const result=transitions.transact(room,{action:operation.action,source:'bot',actor:p.id,...(operation.input?{input:operation.input}:{})},()=>operation.run(room));
   cache.at=now;operation.after?.();state.cursor=(index+1)%bots.length;
   if(operation.stroke)onDrawStroke(room.code,'stroke',result);
   return true;

@@ -19,8 +19,8 @@ function fixture({room,storage=new Map(),guess=false}={}){
   sessionStorage:{getItem:key=>storage.get(key)||null,setItem:(key,v)=>storage.set(key,v),removeItem:key=>storage.delete(key)},confirm:()=>true,
   RoomApi:{request:async(route,payload,options)=>{requests.push({route,payload,options});if(pending){const result=await pending;pending=null;return result;}if(route==='leave'&&leaveError){const error=Error('denied');error.status=403;throw error;}if(route==='telephone/draft')r.saveDraft(p.id,payload);if(route==='action'){r.act(p.id,payload.action,payload);if(failAfterSubmit){failAfterSubmit=false;throw Error('lost reply');}}return r.view(p.id);}},RoomReconnect:{restore:async()=>({}),forget(){}},
   StrokeCanvas:{pointFrom:e=>[e.clientX,e.clientY],drawStroke(){},iconMarkup:()=>'',createRenderer:()=>({render(){},reset(){}})},setInterval:fn=>{timers.add(fn);return fn;},clearInterval:fn=>timers.delete(fn),setTimeout:(fn,delay)=>{timeouts.add(fn);delays.push(delay);return fn;},clearTimeout:fn=>timeouts.delete(fn)};
- context.window={addEventListener:(type,fn)=>events[type]=fn,GameShell:{update(){},playerRow:()=>''},GameUI:{createDrawingBoard({canvas,countdown}){const n=new Element();n.append(countdown,canvas);return n;},frameDrawingTask(){}}};vm.runInNewContext(fs.readFileSync(require.resolve('../public/telephone.js'),'utf8'),context);
- return {r,p,ids,storage,events,timers,requests,navigations,delays,async poll(){for(const fn of [...timeouts]){timeouts.delete(fn);await fn();}await flush();for(const fn of timers)await fn();await flush();},defer:promise=>pending=promise,failAfterSubmit:()=>failAfterSubmit=true,denyLeave:()=>leaveError=true};
+ context.window={RoomControls:require('./helpers/room-actions.cjs')(),addEventListener:(type,fn)=>events[type]=fn,GameShell:{update(){},playerRow:()=>''},GameUI:{createDrawingBoard({canvas,countdown}){const n=new Element();n.append(countdown,canvas);return n;},frameDrawingTask(){}}};vm.runInNewContext(fs.readFileSync(require.resolve('../public/telephone.js'),'utf8'),context);
+ return {actions:context.window.RoomControls,r,p,ids,storage,events,timers,requests,navigations,delays,async poll(){for(const fn of [...timeouts]){timeouts.delete(fn);await fn();}await flush();for(const fn of timers)await fn();await flush();},defer:promise=>pending=promise,failAfterSubmit:()=>failAfterSubmit=true,denyLeave:()=>leaveError=true};
 }
 test('guess draft survives peer polling and reload; failed leave does not navigate',async()=>{
  const f=fixture({guess:true});await flush();const input=f.ids.get('#guess');input.value='尚未送出的猜詞';input.oninput();await f.poll();assert.equal(f.ids.get('#guess'),input);const again=fixture({room:f.r,storage:f.storage});await flush();assert.equal(again.ids.get('#guess').value,'尚未送出的猜詞');again.denyLeave();await again.ids.get('#leave').onclick();assert.equal(again.navigations.length,0);
@@ -38,13 +38,13 @@ test('telephone history hydrates page deltas without duplicates and resets betwe
 });
 
 test('host setup groups the labelled source and start action in shared layout primitives',async()=>{
- const r=new TelephoneRoom('ABCDEF','host',()=>0);r.add('房主');const f=fixture({room:r});await flush();
+ const r=new TelephoneRoom('ABCDEF','host',()=>0);r.add('房主');r.add('同伴');r.add('同伴二');const f=fixture({room:r});await flush();
  const group=f.ids.get('#controls').children[0],field=group.children[0],row=field.children[1];
  assert.equal(group.className,'ui-control-group');assert.equal(field.className,'ui-field');
  assert.equal(field.children[0].htmlFor,'sources');assert.equal(row.className,'ui-control-row ui-field-actions');
- assert.equal(row.children[0],f.ids.get('#sources'));assert.equal(row.children[1].textContent,'開始傳遞');
- assert.equal(group.children[1].children[0].textContent,'加入 AI 測試夥伴');
- let resolve;f.defer(new Promise(done=>resolve=done));const request=row.children[1].onclick();await flush();
+ assert.equal(row.children[0],f.ids.get('#sources'));assert.equal(row.children.length,1);
+ const binding=f.actions.binding;assert.equal(binding.read().start.label,'開始傳遞');assert.equal(binding.read().start.enabled,true);assert.equal(binding.read().bot.enabled,true);
+ let resolve;f.defer(new Promise(done=>resolve=done));const request=binding.run('start');await flush();
  for(const control of f.ids.get('#controls').querySelectorAll('button,input,select,textarea'))assert.equal(control.disabled,true);
  resolve(r.view(f.p.id));await request;assert.equal(f.requests.filter(x=>x.route==='start').length,1);
  for(const control of f.ids.get('#controls').querySelectorAll('button,input,select,textarea'))assert.equal(control.disabled,false);

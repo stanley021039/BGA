@@ -217,68 +217,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   }).observe(document.body,{subtree:true,childList:true});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',observeFields,{once:true});else observeFields();
- /* Drawing games share the telephone flow: left players, middle drawing/answer, right room chat. */
- let drawingPlay=null,drawingFitFrame=null;
- function scheduleDrawingBoardFit(){
-  if(drawingFitFrame!==null)return;
-  drawingFitFrame=requestAnimationFrame(()=>{
-   drawingFitFrame=null;if(!drawingPlay)return;
-   for(const board of drawingPlay.work.querySelectorAll('.ui-drawing-board')){
-    const frame=board.querySelector(':scope > .canvas-frame'),scene=frame?.querySelector('#canvasStage');
-    if(!frame||window.matchMedia('(max-width:760px)').matches||scene&&!scene.hidden){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
-    const viewport=board.closest('.ui-drawing-task-board,#source')||board,tools=board.querySelector(':scope > .tools:not([hidden])'),css=getComputedStyle(board),gap=parseFloat(css.columnGap)||0;
-    const measurements=window.GameUI?.Template?.patterns.measureBoard({board,frame,viewport,tools,gap});
-    const width=measurements?.width??board.clientWidth-(tools?tools.getBoundingClientRect().width+gap:0),offset=frame.getBoundingClientRect().top-viewport.getBoundingClientRect().top+viewport.scrollTop,available=measurements?.available??viewport.clientHeight-offset;
-    if(available<(measurements?64:120)){board.style.removeProperty('--ui-drawing-canvas-width');continue;}
-    const value=Math.floor(Math.min(width,2*Math.max(0,available-2)))+'px';
-    if(board.style.getPropertyValue('--ui-drawing-canvas-width')!==value)board.style.setProperty('--ui-drawing-canvas-width',value);
-   }
-  });
- }
-
- function createDrawingBoard({title='',canvas,countdown=null,tools=null}={}){
-  const doc=canvas?.ownerDocument||document,area=doc.createElement('div'),head=doc.createElement('div'),heading=doc.createElement('div'),caption=doc.createElement('h3'),frame=doc.createElement('div');
-  area.className='ui-drawing-board';head.className='board-head';heading.className='board-heading';caption.textContent=title;heading.append(caption);head.append(heading);frame.className='canvas-frame';if(canvas)frame.append(canvas);area.append(head);if(countdown)area.append(countdown);area.append(frame);if(tools){tools.classList.add('tools');area.append(tools);}return area;
- }
- function frameDrawingTask(controls){
-  if(!controls)return;
-  let board=controls.querySelector(':scope > .ui-drawing-task-board'),answer=controls.querySelector(':scope > .ui-drawing-task-answer');
-  if(!board||!answer){
-   const children=[...controls.children];board=document.createElement('div');answer=document.createElement('div');board.className='ui-drawing-task-board';answer.className='ui-drawing-task-answer';controls.append(board,answer);
-   for(const child of children)(child.matches('.ui-drawing-board')?board:answer).append(child);
-  }
-  controls.classList.add('ui-drawing-task-controls');board.hidden=!board.childElementCount;scheduleDrawingBoardFit();
- }
- function layoutDrawingPlay(type,phase){
-  if(!['draw','minimal','telephone'].includes(type))return null;
-  const active=phase!=='waiting'&&(phase!=='finished'||type==='draw'&&!!document.body.dataset.uiTemplate);
-  if(!active){
-   if(drawingPlay){
-    const record=drawingPlay;record.fitObserver?.disconnect();for(const board of record.work.querySelectorAll('.ui-drawing-board'))board.style.removeProperty('--ui-drawing-canvas-width');record.root.classList.remove('ui-drawing-play-layout');record.roster.classList.remove('ui-drawing-play-roster');record.work.classList.remove('ui-drawing-play-work');record.chat.classList.remove('ui-drawing-play-chat');record.results?.classList.remove('ui-drawing-play-results');record.title?.classList.remove('ui-drawing-play-title');if(record.createdTitle)record.title.hidden=true;
-    for(const [node,home]of record.homes){if(home.parentNode)home.after(node);home.remove();}record.homes.clear();
-    if(record.createdWork)record.work.remove();if(record.createdChat)record.chat.remove();drawingPlay=null;
-   }
-   document.body.classList.remove('ui-drawing-play-mode');return null;
-  }
-  if(!drawingPlay){
-   const root=document.querySelector(type==='draw'?'.draw-layout':'#game');
-   const roster=type==='draw'?document.querySelector('.draw-roster'):document.querySelector('#players')?.closest('section');
-   const controls=type==='draw'?null:document.querySelector('#controls')?.closest('section');
-   if(!root||!roster||type!=='draw'&&!controls)return null;
-   const homes=new Map(),move=(node,to)=>{const home=document.createComment('drawing-play-home');node.before(home);homes.set(node,home);to.append(node);};
-   let work=type==='draw'?root.querySelector(':scope > main'):controls,createdWork=false;
-   if(type==='minimal'){const source=document.querySelector('#source');if(source.parentElement===controls.parentElement)work=source.parentElement;else{work=document.createElement('section');work.className='panel';source.before(work);move(source,work);move(controls,work);createdWork=true;}}
-   let chat=type==='draw'?root.querySelector(':scope > aside'):document.createElement('aside'),createdChat=type!=='draw';
-   if(createdChat){chat.className='panel room-sidebar';chat.setAttribute('aria-label','聊天室與房間操作');root.append(chat);}
-   const results=type==='draw'?null:document.querySelector(type==='minimal'?'#results':'#books')?.closest('section');
-   const title=type==='draw'?document.querySelector('#drawingPlayTitle'):document.querySelector('.telephone-shell > h1');let createdTitle=type==='draw',heading=title;
-   if(type==='draw'&&!heading){heading=document.createElement('h1');heading.id='drawingPlayTitle';heading.textContent='你畫我猜';const toolbar=document.querySelector('.draw-shell > .game-toolbar');(toolbar||root).before(heading);createdTitle=true;}
-   if(type==='draw'){const phaseHead=root.querySelector(':scope > .stage-head');if(phaseHead)move(phaseHead,roster);}
-   drawingPlay={root,roster,work,chat,results,title:heading,homes,createdWork,createdChat,createdTitle};
-   if(typeof ResizeObserver==='function'){drawingPlay.fitObserver=new ResizeObserver(scheduleDrawingBoardFit);drawingPlay.fitObserver.observe(work);}
-  }
-  const record=drawingPlay;document.body.classList.add('ui-drawing-play-mode');record.root.classList.add('ui-drawing-play-layout');record.roster.classList.add('ui-drawing-play-roster');record.work.classList.add('ui-drawing-play-work');record.chat.classList.add('ui-drawing-play-chat');record.results?.classList.add('ui-drawing-play-results');record.title?.classList.add('ui-drawing-play-title');if(record.createdTitle)record.title.hidden=false;scheduleDrawingBoardFit();return record.chat;
- }
  /* Reusable room/chat block: stable header, one scrolling content, bottom actions. */
  function framePanel(panel,{header,content,footer,body=null}={}){
   if(!panel||!header||!content||!footer)return panel;
@@ -315,7 +253,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   }
   dialogs.get(dialog).trigger=trigger;if(!dialog.open)dialog.showModal();
  }
- window.GameUI={icon,symbol,playerName,overflowText,decorateButton,setBusy,setStatus,openDialog,frameDialog,createDialog,framePanel,frameField,frameFields,createField,createDrawingBoard,frameDrawingTask,layoutDrawingPlay,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
+ window.GameUI={icon,symbol,playerName,overflowText,decorateButton,setBusy,setStatus,openDialog,frameDialog,createDialog,framePanel,frameField,frameFields,createField,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
  /* One hover/focus hint in the top layer, independent of clipped game panels. */
  let controlHint=null,hintOwner=null,hintObserver=null;
  function hideControlHint(){
@@ -408,36 +346,4 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   syncTextScale();if(typeof MutationObserver==='function')new MutationObserver(syncTextScale).observe(document.documentElement,{attributes:true,attributeFilter:['style','class']});
   window.addEventListener('resize',syncTextScale);
  }
-})();
-
-/* Stable friends / game / chat layout; moving nodes preserves game handlers and focus root. */
-(()=>{
- 'use strict';
- let record=null;
- const node=(tag,cls,text)=>{const n=document.createElement(tag);n.className=cls;if(text)n.textContent=text;return n;};
- function move(n,target){if(!n||n.parentElement===target)return;if(!record.homes.has(n)){const mark=document.createComment('room-stage-home');n.before(mark);record.homes.set(n,mark);}target.append(n);}
- function restore(){for(const [n,mark]of record.homes)if(mark.parentNode)mark.after(n);}
- function update(s,waiting){
-  if(!['quacks','bluff'].includes(s.type))return null;
-  const root=document.getElementById('game');if(!root)return null;
-  if(waiting){if(record){restore();record.layout.hidden=true;document.body.classList.remove('room-stage-active');}return null;}
-  if(!record){const layout=node('div','room-stage-layout'),friends=node('aside','room-stage-friends'),work=node('div','room-stage-work'),chat=node('aside','room-stage-chat');
-   friends.setAttribute('aria-label','這桌的朋友');friends.append(node('h2','','這桌的朋友'));const list=node('div','room-stage-roster');friends.append(list);
-   chat.setAttribute('aria-label','聊天室');layout.append(friends,work,chat);root.append(layout);record={layout,friends,list,work,chat,homes:new Map(),type:s.type};
-  }
-  record.layout.hidden=false;document.body.classList.add('room-stage-active');const oldRoster=root.querySelector('.ui-room-roster');if(oldRoster)oldRoster.hidden=true;
-  if(s.type==='quacks'){
-   for(const selector of ['.game-heading','.round-top','#alchemy','#tableDice','.game-grid','#books']){const n=root.querySelector(selector);if(n)move(selector==='#books'?n.closest('details'):n,record.work);}
-   const key=JSON.stringify(s.recipes.map(p=>[p.id,p.name,p.score,p.potColor,p.exploded,p.stopped,p.chosen,p.alchemy]));
-   if(record.rosterKey!==key){record.rosterKey=key;record.list.replaceChildren(...s.recipes.map(p=>{
-    const item=node('article','room-stage-friend'),avatar=node('span','room-stage-avatar',p.name.slice(0,1)),info=node('div','room-stage-friend-info'),score=node('strong','',String(p.score));
-    avatar.style.background=s.potColors?.[p.potColor]?.liquid[1]||'#35564f';info.append(node('strong','',p.name+(p.id===s.me?'（你）':'')),node('small','',p.exploded?'爆炸':p.stopped?'已停止':p.chosen?'已選擇':'準備選擇'));score.setAttribute('aria-label',p.score+' 分');item.append(avatar,info,score);return item;
-   }));}
-  }else{
-   move(document.getElementById('players'),record.list);
-   for(const selector of ['#phase','#roleCountdown','.task-layout','#botStatements','#roundReveal']){const n=root.querySelector(selector);if(n)move(['#phase','#botStatements','#roundReveal'].includes(selector)?n.closest('section'):n,record.work);}
-  }
-  return record.chat;
- }
- window.RoomStage={update};
 })();

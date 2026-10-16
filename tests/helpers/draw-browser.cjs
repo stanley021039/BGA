@@ -8,6 +8,7 @@ const motionScript=fs.readFileSync(path.join(__dirname,'../../public/shared/moti
 const transportScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-transport.js'),'utf8');
 const playbackScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-playback.js'),'utf8');
 const controllerScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-controller.js'),'utf8');
+const sessionScript=fs.readFileSync(path.join(__dirname,'../../public/shared/draw-canvas-session.js'),'utf8');
 const countdownScript=fs.readFileSync(path.join(__dirname,'../../public/shared/countdown-bar.js'),'utf8');
 const CANVAS_EPOCH='00000000-0000-4000-8000-000000000001';
 function browserHarness({realRenderer=false,events=false,rendererOptions,clock}={}) {
@@ -40,7 +41,7 @@ function browserHarness({realRenderer=false,events=false,rendererOptions,clock}=
   return elements.get(selector);
  }
  const context = vm.createContext({
-  window: {matchMedia: () => ({matches: false}),addEventListener(type,fn){const key='window:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});}},
+  window: {RoomControls:require('./room-actions.cjs')(),matchMedia: () => ({matches: false}),addEventListener(type,fn){const key='window:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});}},
   document: {body: element('body'),documentElement:element('html'),hidden:false,visibilityState:'visible',querySelector: element,getElementById:id=>element('#'+id),addEventListener(type,fn){const key='document:'+type,previous=listeners.get(key);listeners.set(key,event=>{previous?.(event);fn(event);});},createElement: tag => {const node=element('created:'+randomUUID());if(tag==='canvas'){rasterize(node,512,256);node.toDataURL=()=> 'data:image/png;base64,c3ludGhldGlj';}return node;}},
   location: {pathname: '/draw/ABC123', origin: 'http://localhost:3000', search: ''},
   localStorage: {getItem: () => null, setItem() {}},
@@ -105,7 +106,15 @@ function browserHarness({realRenderer=false,events=false,rendererOptions,clock}=
  vm.runInContext(transportScript,context,{filename:'public/shared/draw-transport.js'});
  vm.runInContext(playbackScript,context,{filename:'public/shared/draw-playback.js'});
  vm.runInContext(countdownScript,context,{filename:'public/shared/countdown-bar.js'});
+ vm.runInContext(sessionScript,context,{filename:'public/shared/draw-canvas-session.js'});
  vm.runInContext(controllerScript,context,{filename:'public/shared/draw-controller.js'});
+ // Capture concrete adapters for diagnostics, without reaching into session state.
+ const rendererFactory=context.StrokeCanvas.createDrawingRenderer;
+ context.StrokeCanvas.createDrawingRenderer=(...args)=>{const renderer=rendererFactory.apply(context.StrokeCanvas,args);if(args[0]===element('#drawCanvas'))context.sessionRenderer=renderer;return renderer;};
+ const transportFactory=context.window.DrawTransport.create,playbackFactory=context.window.DrawPlayback.create;
+ context.window.DrawTransport.create=(...args)=>context.sessionTransport=transportFactory(...args);
+ context.window.DrawPlayback.create=(...args)=>context.sessionPlayback=playbackFactory(...args);
+ context.renderFrames=frames;
  vm.runInContext(script, context, {filename: 'public/draw.js'});
  function receive(state) {
   context.injectedState = state;

@@ -26,6 +26,6 @@ test('kicked owner becomes AI and can finish a waiting check',()=>{
 });
 test('server scheduler reveals human dice on time through a history transaction',()=>{
  const fs=require('node:fs'),vm=require('node:vm'),s=createScenario(3);act(s,'begin',{car:s.car.id,die:0});act(s,'move',{x:2,y:2});act(s,'shoot',{target:s.target.id});act(s,'rollDice',{check:s.r.diceCheck.id});const callbacks=[],operations=[];let now=s.r.diceCheck.readyAt-1;
- const scope={require:()=>({expireEmptyRooms(){}}),module:{exports:{}},console,Date:{now:()=>now},setInterval:fn=>{callbacks.push(fn);return {unref(){}};},clearInterval(){}};
+ const scope={require:name=>name==='./transitions'?require('../src/rooms/transitions'):{expireEmptyRooms(){}},module:{exports:{}},console,Date:{now:()=>now},setInterval:fn=>{callbacks.push(fn);return {unref(){}};},clearInterval(){}};
  vm.runInNewContext(fs.readFileSync(require.resolve('../src/rooms/scheduler'),'utf8'),scope);scope.module.exports.startRoomScheduler({rooms:new Map([['T',s.r]]),history:{transact(r,op,run){operations.push(op);return run();}}});callbacks[1]();assert.equal(s.r.diceCheck.status,'rolling');now++;callbacks[1]();assert.equal(s.r.diceCheck.status,'result');assert.equal(operations[0].action,'revealDice');assert.equal(operations[0].source,'timer');assert.equal(s.target.damage.length,0);
 });
