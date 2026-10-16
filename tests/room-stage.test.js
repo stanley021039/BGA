@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),vm=requir
 const {mediaHarness}=require('./helpers/media-browser.cjs');
 const stage=fs.readFileSync('public/shared/room-layout.js','utf8');
 function fixture(type){
- const f=mediaHarness();f.document.createComment=()=>f.document.createElement('comment');f.document.getElementById=id=>f.document.querySelector('#'+id);
+ const f=mediaHarness();f.context.matchMedia=()=>({matches:false,addEventListener(){}});f.document.createComment=()=>f.document.createElement('comment');f.document.getElementById=id=>f.document.querySelector('#'+id);
  const root=f.document.createElement('main');root.id='game';
  root.innerHTML=type==='quacks'?'<header class="game-heading"></header><div class="round-top"></div><section id="alchemy"></section><section id="tableDice"></section><div class="game-grid"><section class="action-panel"><div id="controls"></div></section></div><details><div id="books"></div></details><section class="ui-room-roster"></section>':'<section><h2 id="phase"></h2><div id="players"></div></section><div id="roleCountdown"></div><div class="task-layout"><section id="source"></section><section><div id="controls"></div></section></div><section><div id="botStatements"></div></section><section id="currentReveal"><div id="roundReveal"></div></section>';
  const hero=f.document.createElement('section'),roster=f.document.createElement('section');root.append(hero,roster);f.document.body.append(root);vm.runInContext(stage,f.context);

@@ -72,9 +72,16 @@
  const emojiHeading=document.createElement('h3');emojiHeading.textContent='一般emoji彈幕';const emojiChoices=document.createElement('div');emojiChoices.className='shared-emoji-choices';const separator=document.createElement('hr');separator.setAttribute('role','separator');const expressionHeading=document.createElement('h3');expressionHeading.textContent='角色表情';emojiPicker.append(emojiHeading,emojiChoices,separator,expressionHeading,expressions);
  const emoteButton=document.createElement('button');emoteButton.type='button';emoteButton.id='shared-emote-toggle';emoteButton.textContent='☺';emoteButton.setAttribute('aria-label','選擇emoji或角色表情');emoteButton.setAttribute('aria-expanded','false');emoteButton.setAttribute('aria-controls','shared-emoji-picker');window.GameUI?.decorateButton(emoteButton,'emoji',{iconOnly:true,label:'選擇emoji或角色表情'});q('#shared-barrage').append(emoteButton);
  q('#shared-barrage').hidden=true;if(window.SharedChat)q('#shared-toggle').hidden=true;panel.querySelector('.shared-barrage-heading')?.remove();
- window.SharedChat?.mountTools?.([emoteButton,mediaSlot,emojiPicker,q('#shared-error')]);
+ const commonRoomChrome=document.body.dataset.uiTemplate&&['draw','quacks'].includes(document.body.dataset.gameKind);
+ if(commonRoomChrome){
+  panel.classList.add('ui-room-chat-announcements');
+  leaveLink.dataset.roomNativeAction='leave';leaveLink.tabIndex=-1;leaveLink.setAttribute('aria-hidden','true');
+  window.GameUI?.decorateButton(leaveLink,'leave',{iconOnly:true,label:'離開房間'});
+  if(manage)window.GameUI?.decorateButton(manage,'users',{iconOnly:true,label:'管理玩家'});
+ }
+ window.SharedChat?.mountTools?.([emoteButton,mediaSlot,...(commonRoomChrome?[dock]:[]),emojiPicker,q('#shared-error')]);
  function closeEmoji(restoreFocus=false){emojiPicker.hidden=true;emoteButton.setAttribute('aria-expanded','false');if(restoreFocus)emoteButton.focus();}
- const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',inlineBelow:document.body.dataset.gameKind==='quacks'?Number.POSITIVE_INFINITY:undefined,onClose:()=>closeEmoji()});
+ const emojiPopover=window.UIPopover?.bind(emoteButton,emojiPicker,{align:'end',onClose:()=>closeEmoji()});
  emoteButton.onclick=()=>{if(!emojiPicker.hidden){closeEmoji();return;}emojiPicker.hidden=false;emoteButton.setAttribute('aria-expanded','true');emojiPopover?.sync();emojiPicker.querySelector('button:not(:disabled)')?.focus();};
  document.addEventListener('click',event=>{if(!emojiPopover&&!emojiPicker.hidden&&!emojiPicker.contains(event.target)&&!emoteButton.contains(event.target))closeEmoji();});
  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!emojiPicker.hidden){closeEmoji(true);event.preventDefault();}});

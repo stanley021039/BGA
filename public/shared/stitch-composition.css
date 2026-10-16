@@ -34,7 +34,7 @@ body[data-ui-template=tactile] :is(.room-player-info,.ui-room-roster-info){grid-
 body[data-ui-template=tactile] .room-player-metrics{grid-column:2!important;grid-row:2!important;min-height:20px;padding:0!important;flex-direction:row!important;justify-content:space-between}.st-player-status{grid-column:2;min-height:14px}.st-player-guess{grid-column:2;grid-row:auto;margin:0;padding:5px 8px;max-height:38px;overflow:auto}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-play-work{padding:0!important;gap:8px!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-play-chat{padding:0!important;gap:8px!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-drawing-play-chat>.shared-chat{padding:12px!important;min-height:0!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] #boardSection{padding:8px!important;gap:8px!important;min-height:0!important}
 body[data-ui-template=tactile] #boardSection>.board-head{display:none!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .tpl-palette{grid-column:1/-1!important;grid-row:1!important;display:flex!important;align-items:center!important;gap:8px!important;min-height:56px!important;max-height:none!important;padding:8px 12px!important;overflow:visible!important}
@@ -58,15 +58,15 @@ body[data-ui-template=tactile][data-draw-role=guesser] .tpl-palette{display:none
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .draw-guess-panel{padding:10px 12px!important}
 .st-artist-log{margin-top:auto;flex:none}.st-artist-log>summary{padding:10px}.st-artist-log .draw-guess-panel{height:120px!important;min-height:120px!important;max-height:120px!important;padding:6px!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] #guessForm :is(input,button){min-height:40px!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-heading{padding:4px 0 8px}
-.st-chat-notice{padding:6px 10px;margin:0;min-height:24px}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-messages{gap:8px!important;display:flex;flex-direction:column;padding:0!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-messages li{padding:10px!important}body[data-ui-template=tactile] .chat-messages li p{margin:6px 0 0}
-.st-chat-quick{display:flex;justify-content:space-between;gap:4px;overflow:auto;padding:4px;flex:none}.st-chat-quick .st-button{padding:2px 4px;min-height:30px}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-compose input{min-height:40px!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-compose button{width:36px!important;height:36px!important;min-width:36px!important;min-height:36px!important;padding:7px!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-room-tools :is(button,summary){height:28px!important;min-height:28px!important}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .chat-status{min-height:14px!important}
+
+
+
+
+
+
+
+
+
 .st-choice-group{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;min-height:52px}.st-choice-group .st-button{min-width:0;padding:8px 4px}
 body[data-ui-template=tactile] #drawSeconds[data-stitch-choice]{display:none!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .ui-room-settings-panel{padding:12px!important}
@@ -178,7 +178,7 @@ body[data-ui-template=tactile] .room-waiting-info h2{margin:0 0 8px!important}
 .st-waiting-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:none}.st-waiting-facts>div{padding:12px;display:flex;flex-direction:column;gap:4px;align-items:center}
 .st-waiting-guest-aside{grid-column:3;grid-row:1;display:flex;flex-direction:column;gap:var(--st-gap,16px);min-height:0;min-width:0}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]):is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting]) .st-waiting-guest-aside>.ui-room-chat-slot{display:flex!important;min-height:0;flex:1}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]):is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting]) .st-waiting-guest-aside .shared-chat{display:flex!important;height:100%!important;min-height:0!important;max-height:none!important}
+
 body[data-ui-template=tactile][data-draw-host=false] .tpl-waiting-footer{display:none!important}
 body[data-ui-template=tactile][data-draw-host=false] .st-waiting-facts{display:none}
 body[data-ui-template=tactile] .st-waiting-guest-aside[hidden]{display:none!important}
@@ -223,7 +223,7 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
 }
 @media(max-width:1100px){body[data-ui-template=tactile] .st-artist-log{display:block}.st-guest-settings-summary{padding:12px}.st-guest-settings-summary p{min-height:0}}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-button.ui-button{min-height:40px;padding:10px var(--st-panel-padding,16px)}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-chat-quick .st-button{min-height:30px!important;padding:2px 4px!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .site-header .site-account :is(.site-settings-button,.site-theme-button,.site-avatar-button,.room-invitations-button){min-width:36px!important;min-height:36px!important;width:36px!important;height:36px!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .site-header #invite{min-height:36px!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-visual-theme=playful] .st-phase-bar{height:64px;min-height:64px;max-height:64px}
@@ -256,8 +256,8 @@ body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-
 .st-highlight canvas{width:64px;height:32px;object-fit:contain}.st-highlight>span{display:flex;min-width:0;flex-direction:column;gap:4px}.st-highlight strong{overflow:hidden}
 .st-finish-banner{display:none;padding:8px 10px;min-height:36px;margin:0}
 body[data-ui-template=tactile][data-draw-phase=finished] .st-finish-banner{display:block}
-body[data-ui-template=tactile][data-draw-phase=finished] .st-chat-notice{display:none}
-body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template][data-draw-phase=finished] .st-chat-quick .st-button{padding:4px 6px!important}
+
+
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .stage-podium .st-podium-cards{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;align-items:end!important;gap:0!important;padding:12px 0!important;min-height:300px!important;margin:0}
 body[data-ui-template=tactile][data-visual-theme=playful][data-ui-template] .st-podium-cards>.st-podium-cell{padding:0!important;min-height:0!important;height:auto!important;gap:6px!important;display:flex!important;flex-direction:column!important;align-items:center!important;min-width:0}
 .st-podium-cell[data-podium="1"]{grid-column:2;grid-row:1}.st-podium-cell[data-podium="2"]{grid-column:1;grid-row:1}.st-podium-cell[data-podium="3"]{grid-column:3;grid-row:1}
@@ -471,17 +471,17 @@ body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=dra
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] #tools button {width:40px!important;min-width:40px!important;height:40px!important;min-height:40px!important;padding:0!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) #undo {position:relative!important;padding-top:7px!important}body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) #undo::before {position:absolute!important;top:-8px!important;left:-4px!important;right:-4px!important;height:1px!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .st-board-footer {min-height:40px!important;padding:8px!important;display:flex!important;align-items:center!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .ui-drawing-play-chat>.shared-chat {padding:8px!important;gap:8px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .shared-chat .ui-panel-header {display:flex!important;flex-direction:row!important;min-height:28px!important;height:28px!important;gap:8px!important;align-items:center!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-heading {min-height:0!important;padding:4px 8px!important;margin:0!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-room-tools {margin-left:auto!important;gap:4px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-room-tools :is(button,summary) {min-height:24px!important;width:24px!important;min-width:24px!important;height:24px!important;padding:4px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-chat-notice {padding:4px 8px!important;min-height:22px!important;height:22px!important;margin:0!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .chat-messages li {padding:8px!important;flex:none!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-messages li p {margin:6px 0 0!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-chat-quick {padding:4px!important;min-height:38px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-compose {gap:8px!important;padding:0!important;min-height:36px!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .chat-compose input {min-height:36px!important;height:36px!important;padding:8px!important}
+
+
+
+
+
+
+
+
+
+
+
 
 @media(min-width:1101px) and (min-height:680px) {
  body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template]:is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting]) .ui-room-waiting-layout {height:100%!important;display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;grid-template-rows:minmax(0,1fr) 44px!important;grid-template-areas:none!important;gap:8px var(--st-panel-gap,24px)!important;align-items:stretch!important}
@@ -548,7 +548,7 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-guest-rules-note {min-height:16px!important;margin:0!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-guest-settings-summary>.st-button {min-height:30px!important;padding:4px 8px!important;flex:none!important;align-self:flex-start!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-waiting-guest-aside>.ui-room-chat-slot {flex:1!important;min-height:0!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .st-waiting-guest-aside .shared-chat {padding:12px!important;min-height:0!important;max-height:none!important;height:100%!important}
+
 @media(min-width:1101px) and (min-height:680px){
  body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template]:not(:is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting])):not([data-draw-phase=drawing]):not(.game-focus-active) .draw-layout,
  body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser]:not(.game-focus-active) .draw-layout {grid-template-columns:repeat(12,minmax(0,1fr))!important;grid-template-rows:minmax(0,1fr)!important;gap:var(--st-gap,16px)!important}
@@ -559,9 +559,9 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
  body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]):not(:is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting])):not([data-draw-phase=drawing]):not(.game-focus-active) .draw-layout>.room-sidebar,
  body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-draw-phase=drawing][data-draw-role=guesser]:not(.game-focus-active) .draw-layout>.room-sidebar {grid-column:10/span 3!important;grid-row:1!important}
 }
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] :is(.draw-roster,#boardSection,#drawGuessPanel,.ui-drawing-play-chat>.shared-chat) {padding:12px!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] #players .room-player {height:80px!important;min-height:80px!important;grid-template-rows:24px 20px!important;padding:10px!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] .chat-messages li {padding:8px!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=drawing][data-draw-role=guesser] .st-phase-bar {margin:16px 16px 0!important;padding:8px var(--st-panel-padding,16px)!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-draw-phase=drawing][data-draw-role=guesser] .st-round-counter {order:0!important;margin-right:auto!important}
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-draw-phase=drawing][data-draw-role=guesser] .st-phase-context {order:1!important;flex:0 1 auto!important;gap:8px!important}
@@ -577,11 +577,11 @@ body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .st-room-code-chip>#roomTag {padding:0!important;min-width:0!important;min-height:18px!important;height:auto!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .st-room-code-copy {width:16px!important;min-width:16px!important;max-width:16px!important;height:18px!important;min-height:18px!important;padding:0!important;flex:none!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] .tpl-waiting-center>.room-waiting-template {overflow:clip!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-room-footer {gap:4px!important;padding:0!important;min-height:98px!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .chat-room-footer>.chat-status {height:var(--st-room-status-height,16px)!important;min-height:var(--st-room-status-height,16px)!important;margin:0!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .ui-panel-header>.chat-room-tools {display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:4px!important;height:24px!important;min-height:24px!important;width:auto!important;margin:0 0 0 auto!important;grid-template-columns:none!important;flex:none!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .ui-panel-header>.chat-room-tools :is(button,summary) {width:24px!important;min-width:24px!important;max-width:24px!important;height:24px!important;min-height:24px!important;padding:4px!important;flex:none!important}
-body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting]) .ui-panel-header>.chat-room-tools .ui-room-action .ui-button-label {display:none!important}
+
+
+
+
+
 @media(max-width:760px){
  body[data-ui-template=tactile] .stage-finished .tpl-result-actions>[data-do=template-replay]{flex:1 0 100%!important;margin-left:0!important}
  body[data-ui-template=tactile] .stage-finished .tpl-result-actions>:is(.tpl-return,[data-do=template-export]){flex:1 1 calc(50% - 6px)!important}
@@ -597,7 +597,7 @@ body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=dra
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-role=guesser] :is(.tpl-palette,.st-board-footer) {display:none!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template][data-draw-phase=finished] :is(#players,.st-artist-log) {display:none!important}
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template]:not(:is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting])) .draw-layout>.ui-drawing-play-chat {padding:0!important;min-width:0!important}
-body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template]:not(:is([data-draw-phase=waiting],[data-game-kind=quacks][data-room-phase=waiting])) .ui-drawing-play-chat>.shared-chat {width:100%!important;min-width:0!important;max-width:none!important}
+
 body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=draw],[data-game-kind=quacks][data-room-phase=waiting])[data-ui-template] [hidden][hidden] {display:none!important}
 }
 
@@ -614,6 +614,53 @@ body[data-ui-template=tactile][data-visual-theme=playful]:is([data-game-kind=dra
 }
 @media(max-width:760px){body[data-game-kind=draw][data-ui-template=tactile] .topic-options .topic-shortcuts{position:static!important;justify-content:flex-end!important;min-height:32px!important;margin:0 0 6px!important}body[data-game-kind=draw][data-ui-template=tactile] .topic-options .topic-shortcuts button{min-height:32px!important;padding:5px 8px!important}}
 @media(max-width:360px){body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=draw][data-ui-template] .site-header{height:auto!important;min-height:100px!important;flex-wrap:wrap!important;align-content:center!important;padding:8px 12px!important}body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=draw][data-ui-template] .site-header .site-account{flex:1 0 100%!important;justify-content:flex-end!important}}
+
+/* Shared slots have stable width and height, independent of game status. */
+@layer stitch-export {
+body[data-ui-template=tactile][data-visual-theme=playful] .ui-room-header{height:var(--st-header-height)!important;min-height:var(--st-header-height)!important;display:flex!important;align-items:center!important;gap:16px!important;padding:0 24px!important;flex:none!important;position:relative!important;z-index:30!important;}body[data-ui-template=tactile][data-visual-theme=playful].game-focus-active .ui-room-header.game-focus-excluded{display:none!important;}body[data-ui-template=tactile] .ui-room-header .st-brand{display:flex;align-items:center;gap:8px;flex:none;}body[data-ui-template=tactile] .ui-room-header .st-brand-mark{display:grid;width:36px;height:36px;place-items:center;flex:none;}body[data-ui-template=tactile] .ui-room-header .st-brand-copy{display:flex;flex-direction:column;gap:2px;min-width:0;}body[data-ui-template=tactile] .ui-room-header .st-brand-subtitle{margin:0;}body[data-ui-template=tactile] .ui-room-header #roomTag{padding:8px 12px!important;min-width:112px!important;flex:none!important;}body[data-ui-template=tactile] .ui-room-header :is(.site-settings-button,.site-theme-button,.site-avatar-button,.room-invitations-button){width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;padding:8px!important;}body[data-ui-template=tactile] .ui-room-header .site-avatar-button{padding:0!important;}body[data-ui-template=tactile] .ui-room-header .q-header-status{display:flex;gap:8px;align-items:center;flex:1;min-width:0;}body[data-ui-template=tactile] .ui-room-header .q-round-pill{max-width:260px;min-width:180px;padding:6px 12px;margin:0;overflow:hidden;}body[data-ui-template=tactile] .ui-room-header #qFortune{max-width:210px;min-width:0;min-height:44px;overflow:hidden;}body[data-ui-template=tactile] .ui-room-header .q-header-tools{display:flex;align-items:center;gap:6px;flex:none;}body[data-ui-template=tactile] .ui-room-header .q-header-tools>button{width:44px;min-width:44px;height:44px;padding:8px;}body[data-ui-template=tactile] .ui-room-header .q-mobile-tools{position:relative;}body[data-ui-template=tactile] .ui-room-header .q-mobile-tools>summary{display:grid;place-items:center;width:44px;height:44px;}body[data-ui-template=tactile] .ui-room-header #qMobileMenuContent{position:absolute;right:0;top:calc(100% + 8px);min-width:220px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 100px);overflow:auto;display:grid;gap:8px;padding:12px;z-index:40;}body[data-ui-template=tactile] .ui-room-header .q-mobile-tools:not([open]) #qMobileMenuContent{display:none;}body[data-ui-template=tactile] .ui-room-header #qMobileMenuContent :is(button,a){min-height:44px;display:flex;align-items:center;gap:8px;}body[data-ui-template=tactile] .ui-room-header #qMobileMenuContent :is(.ui-button-label,.ui-sr-only){position:static!important;width:auto!important;height:auto!important;margin:0!important;}body[data-ui-template=tactile] .ui-room-chat{display:flex!important;flex-direction:column!important;padding:12px!important;gap:8px!important;min-width:0!important;overflow:hidden!important;box-sizing:border-box!important;}body[data-ui-template=tactile] .ui-room-chat .ui-panel-header{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;height:52px!important;min-height:52px!important;margin:0!important;padding:0!important;flex:none!important;}body[data-ui-template=tactile] .ui-room-chat .chat-heading{margin:0!important;padding:0!important;min-width:0!important;max-height:44px!important;overflow:auto!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools{display:flex!important;flex-wrap:nowrap!important;gap:6px!important;align-items:center!important;min-height:44px!important;margin:0!important;padding:0!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools :is(button,summary):not(#shared-emoji-picker *){display:inline-flex!important;align-items:center!important;justify-content:center!important;width:var(--st-chat-tool-size)!important;height:var(--st-chat-tool-size)!important;min-width:var(--st-chat-tool-size)!important;min-height:var(--st-chat-tool-size)!important;padding:8px!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools .shared-inline-error{position:absolute;width:1px;height:1px;overflow:hidden;}body[data-ui-template=tactile] .ui-room-chat .ui-room-chat-notice{height:var(--st-chat-notice-height)!important;min-height:var(--st-chat-notice-height)!important;max-height:var(--st-chat-notice-height)!important;overflow:auto!important;padding:4px 8px!important;margin:0!important;flex:none!important;box-sizing:border-box!important;}body[data-ui-template=tactile] .ui-room-chat #chat-content{display:flex!important;flex-direction:column!important;flex:1!important;min-height:0!important;gap:8px!important;overflow:hidden!important;}body[data-ui-template=tactile] .ui-room-chat .chat-messages{display:flex!important;flex-direction:column!important;gap:8px!important;flex:1!important;min-height:0!important;max-height:none!important;overflow:auto!important;margin:0!important;padding:0!important;}body[data-ui-template=tactile] .ui-room-chat .chat-messages li{flex:none!important;padding:10px!important;overflow-wrap:anywhere!important;}body[data-ui-template=tactile] .ui-room-chat .chat-messages p{margin:4px 0 0!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-footer{display:flex!important;flex-direction:column!important;gap:8px!important;flex:none!important;min-width:0!important;padding:0!important;margin:0!important;}body[data-ui-template=tactile] .ui-room-chat .ui-room-chat-quick{display:flex!important;gap:6px!important;align-items:center!important;height:44px!important;min-height:44px!important;overflow:auto!important;flex:none!important;}body[data-ui-template=tactile] .ui-room-chat .ui-room-chat-quick-button{height:44px!important;min-height:44px!important;min-width:44px!important;padding:8px 12px!important;flex:none!important;}body[data-ui-template=tactile] .ui-room-chat .chat-status,body[data-ui-template=tactile] .ui-room-chat .chat-status:empty{display:block!important;flex:none!important;height:24px!important;min-height:24px!important;max-height:24px!important;overflow:auto!important;padding:0!important;margin:0!important;}body[data-ui-template=tactile] .ui-room-chat :is(form,.chat-compose){margin:0!important;padding:0!important;min-width:0!important;}body[data-ui-template=tactile] .ui-room-chat .chat-compose{display:flex!important;gap:8px!important;min-height:44px!important;align-items:center!important;}body[data-ui-template=tactile] .ui-room-chat .chat-compose input{height:44px!important;min-height:44px!important;padding:8px 10px!important;flex:1 1 0!important;width:0!important;min-width:0!important;margin:0!important;box-sizing:border-box!important;}body[data-ui-template=tactile] .ui-room-chat .chat-compose button{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;flex:none!important;padding:8px!important;margin:0!important;}body[data-ui-template=tactile] :is(.room-player-avatar,.ui-room-roster-avatar){width:44px!important;min-width:44px!important;height:44px!important;}@media(max-width:700px){
+body[data-ui-template=tactile][data-visual-theme=playful] .ui-room-header{height:64px!important;min-height:64px!important;gap:8px!important;padding:0 12px!important;flex-wrap:nowrap!important;}body[data-ui-template=tactile] .ui-room-header .st-brand-mark{width:32px;height:32px;}body[data-ui-template=tactile] .ui-room-header #roomTag{min-width:76px!important;padding:6px 8px!important;}body[data-ui-template=tactile] .ui-room-header .site-account{margin-left:auto!important;flex:none!important;gap:4px!important;}body[data-ui-template=tactile] .ui-room-header .q-header-status{display:none;}body[data-ui-template=tactile] .ui-room-header .q-header-tools{margin-left:auto;gap:4px;}body[data-ui-template=tactile] .ui-room-header .st-header-room{gap:6px!important;}
+}
+}
+
+@layer stitch-export {
+body[data-ui-template=tactile][data-game-kind=quacks] .ui-room-header{margin:0!important;width:100%!important;}body[data-ui-template=tactile][data-game-kind=quacks][data-room-layout=custom] #game.q-layout{grid-template-columns:var(--st-roster-width,280px) minmax(0,1fr) var(--st-chat-width,320px)!important;gap:16px!important;padding:12px!important;}body[data-ui-template=tactile][data-game-kind=quacks] #qSocial{display:flex!important;flex-direction:column!important;gap:0!important;padding:0!important;min-height:0!important;overflow:hidden!important;}body[data-ui-template=tactile][data-game-kind=quacks] #qSocial>.ui-room-chat{flex:1!important;height:100%!important;min-height:0!important;max-height:none!important;width:100%!important;margin:0!important;}body[data-ui-template=tactile][data-game-kind=quacks] #players .player-card{grid-template-columns:44px minmax(0,1fr) 40px!important;gap:8px!important;}@media(max-width:1100px){
+body[data-ui-template=tactile][data-game-kind=quacks][data-room-layout=custom] #game.q-layout{grid-template-columns:220px minmax(0,1fr) 300px!important;}
+}@media(max-width:900px){
+body[data-ui-template=tactile][data-game-kind=quacks][data-room-layout=custom] #game.q-layout{grid-template-columns:minmax(0,1fr)!important;gap:12px!important;padding:8px!important;}
+}
+}
+
+@layer stitch-export {
+body[data-ui-template=tactile] .ui-room-chat-announcements{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;margin:0!important;padding:0!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools .room-action-dock{display:contents!important;margin:0!important;padding:0!important;min-height:0!important;gap:0!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools .room-leave{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;padding:8px!important;margin:0!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools .room-leave[hidden]{display:none!important;}
+}
+
+@layer stitch-export {
+body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks]) .tpl-chat-dialog[open]{display:flex!important;flex-direction:column!important;width:min(560px,calc(100vw - 24px))!important;height:min(760px,calc(100dvh - 48px))!important;max-height:calc(100dvh - 48px)!important;gap:12px!important;padding:16px!important;box-sizing:border-box!important;}body[data-ui-template=tactile] .tpl-chat-dialog>.ui-dialog-header{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;height:52px!important;min-height:52px!important;flex:none!important;margin:0!important;padding:0!important;}body[data-ui-template=tactile] .tpl-chat-dialog>.ui-dialog-header h2{margin:0!important;}body[data-ui-template=tactile] .tpl-chat-dialog>.ui-dialog-content{display:flex!important;flex-direction:column!important;flex:1!important;min-height:0!important;overflow:hidden!important;padding:0!important;}body[data-ui-template=tactile] .tpl-chat-dialog .tpl-dialog-body{display:flex!important;flex-direction:column!important;flex:1!important;min-height:0!important;overflow:hidden!important;}body[data-ui-template=tactile] .tpl-chat-dialog .ui-room-chat-slot{display:flex!important;flex-direction:column!important;flex:1!important;min-height:0!important;}body[data-ui-template=tactile] .tpl-chat-dialog .ui-room-chat{height:100%!important;min-height:0!important;max-height:none!important;flex:1!important;width:100%!important;}
+}
+
+@layer stitch-export {
+body[data-ui-template=tactile] .ui-room-play-chat-trigger{width:100%!important;min-height:44px!important;height:44px!important;flex:none!important;margin:0!important;}body[data-ui-template=tactile] .ui-room-play-chat-trigger .ui-sr-only{position:static!important;width:auto!important;height:auto!important;margin:0!important;}@media(max-width:900px){
+body[data-ui-template=tactile] :is(.ui-drawing-play-chat,#qSocial).ui-room-chat-collapsed{height:56px!important;min-height:56px!important;max-height:56px!important;padding:4px!important;overflow:visible!important;}body[data-ui-template=tactile] .ui-room-chat-collapsed .ui-play-room-settings{display:none!important;}
+}
+}
+
+@layer stitch-export {
+body[data-ui-template=tactile] .ui-room-chat .chat-room-tools [data-room-native-action]{display:none!important;}body[data-ui-template=tactile][data-game-kind=quacks] .ui-room-header #leave{display:none!important;}
+}
+
+@layer stitch-export {
+@media(max-width:700px){
+body[data-ui-template=tactile] .ui-room-header .st-header-room{flex:0 1 auto!important;}body[data-ui-template=tactile] .ui-room-header .st-header-room :is(#count,#invite){display:none!important;}body[data-ui-template=tactile] .ui-room-header .st-site-more>summary{width:44px!important;height:44px!important;}body[data-ui-template=tactile] .ui-room-header .st-brand{gap:6px!important;}body[data-ui-template=tactile] .ui-room-header .st-site-more .site-links :is(.site-settings-button,.site-theme-button,.room-invitations-button){display:flex!important;}
+}
+}
+
+@layer stitch-export {
+body[data-ui-template=tactile] .ui-room-chat .ui-panel-header{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:24px 44px!important;gap:8px!important;height:84px!important;min-height:84px!important;}body[data-ui-template=tactile] .ui-room-chat .chat-heading{max-height:none!important;height:24px!important;overflow:visible!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools{justify-content:flex-end!important;width:100%!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools>:is(button,.room-media-slot,.room-action-dock){position:static!important;inset:auto!important;}body[data-ui-template=tactile] .ui-room-chat .chat-room-tools #managePlayers{position:static!important;inset:auto!important;margin:0!important;}
+}
+
+@layer stitch-export {
+body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks]) #shared-emoji-picker{display:flex!important;flex-direction:column!important;gap:8px!important;width:min(480px,calc(100vw - 32px))!important;height:min(560px,calc(100dvh - 64px))!important;min-height:0!important;max-height:calc(100dvh - 64px)!important;padding:16px!important;box-sizing:border-box!important;overflow:hidden!important;}body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks]) #shared-emoji-picker[hidden]{display:none!important;}body[data-ui-template=tactile] #shared-emoji-picker>h3{height:28px!important;min-height:28px!important;margin:0!important;flex:none!important;}body[data-ui-template=tactile] #shared-emoji-picker>.st-emote-tabs{height:44px!important;min-height:44px!important;max-height:44px!important;flex:none!important;padding:0!important;margin:0!important;}body[data-ui-template=tactile] #shared-emoji-picker .st-emote-tabs button{height:44px!important;min-height:44px!important;padding:4px!important;}body[data-ui-template=tactile] #shared-emoji-picker>.st-emote-panel{flex:1!important;min-height:0!important;overflow:auto!important;}body[data-ui-template=tactile] #shared-emoji-picker .st-emote-panel[hidden]{display:none!important;}body[data-ui-template=tactile] #shared-emoji-picker .st-emote-panel>button{min-height:44px!important;flex:none!important;}
+}
 
 @layer stitch-export {
 @media(min-width:960px) and (min-height:560px) and (pointer:fine){
@@ -645,4 +692,11 @@ body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks]
 body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) :is(.st-status-main,.st-status-actions){flex-wrap:nowrap!important;gap:12px!important;flex:none!important}
 body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .st-status-actions{margin-left:auto!important}
 }
+}
+
+/* Preserve the waiting layout visibility contract above active chat display rules. */
+@layer stitch-export{body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-room-layout=custom] #game>[data-waiting-layout-hidden]{display:none!important}}
+
+@layer stitch-export{
+@media(max-width:360px){body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header{height:auto!important;min-height:108px!important;flex-wrap:wrap!important;align-content:center!important;gap:4px 8px!important}body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header .q-header-tools{flex-basis:100%!important;order:3!important;justify-content:flex-end!important}body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header .site-account{margin-left:auto!important}}
 }
