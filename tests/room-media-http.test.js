@@ -1,16 +1,20 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {randomUUID}=require('node:crypto');
-const {createAuth}=require('../src/auth'),{openDatabase}=require('../src/db');
+const {createAuth}=require('../src/auth'),{openDatabase,transaction}=require('../src/db');
 const {appFixture}=require('./helpers/app-fixture.cjs');
 const VIDEO='M7lc1UVf-VE',OTHER='dQw4w9WgXcQ',password='synthetic-test-password';
 function deferred(){let resolve;const promise=new Promise(ok=>{resolve=ok;});return {promise,resolve};}
 async function fixture(t,extra={}){
- const {config,base}=await appFixture(t,{config:extra,seed:db=>createAuth(db).bootstrap('host',password)});
+ const {config,base}=await appFixture(t,{config:extra,seed:async db=>{
+  const host=await createAuth(db).bootstrap('host',password),hash=db.prepare('SELECT password_hash FROM users WHERE id=?').get(host).password_hash;
+  // This suite exercises media authority. Auth registration has its own suite;
+  // seed independent users here, but still obtain every session via real login.
+  transaction(db,()=>{const insert=db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)');for(const name of ['manager','member','other'])insert.run(randomUUID(),name,name,hash,'member',new Date().toISOString());});
+ }});
  const users={};
  async function request(route,who,options={}){const response=await fetch(base+'/api/'+route,{...options,headers:{...(users[who]?.cookie?{Cookie:users[who].cookie}:{}),...options.headers}});return {status:response.status,body:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};}
  const post=(route,who,data)=>request(route,who,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
- const login=await post('auth/login',null,{username:'host',password});users.host={cookie:login.cookie,id:login.body.id};
- for(const name of ['manager','member','other']){const invite=await post('admin/invites','host',{days:1}),registered=await post('auth/register',null,{username:name,password,confirmPassword:password,invite:invite.body.code});assert.equal(registered.status,200);users[name]={cookie:registered.cookie,id:registered.body.id};}
+ for(const name of ['host','manager','member','other']){const login=await post('auth/login',null,{username:name,password});assert.equal(login.status,200);users[name]={cookie:login.cookie,id:login.body.id};}
  const track=await request('music/upload','host',{method:'POST',headers:{'Content-Type':'audio/mpeg','x-music-title':encodeURIComponent('Shared test song'),'x-music-duration':'60'},body:Buffer.concat([Buffer.from([255,251,144,100]),Buffer.alloc(830)])});assert.equal(track.status,200);
  async function create(type='poker',members=['manager','member']){const created=await post('create','host',{type});assert.equal(created.status,200);for(const who of members)assert.equal((await post('join',who,{code:created.body.code})).status,200);return created.body.code;}
  const game=(code,who='host')=>request('state?code='+code,who);
