@@ -148,7 +148,7 @@
  function update(s){
   leaveLink.hidden=false;
   if(window.RaceLesson)return;
-  state=s;panel.hidden=false;if(!panel.classList.contains('integrated'))document.body.classList.add('has-game-shell');
+  state=s;window.RoomPings?.update(s);panel.hidden=false;if(!panel.classList.contains('integrated'))document.body.classList.add('has-game-shell');
   const current=s.type==='majority'||s.type==='draw'?s.presenterId:s.type==='thunder'?s.actor:s.type==='gift'?null:s.players[s.turn]?.id;
   const turn=q('#shared-turn'),turnText=turnOf(s);if(turn.textContent!==turnText)turn.textContent=turnText;turn.classList.toggle('mine',turnText.includes('輪到你'));
   const social=s.social||[],recent=new Map(),now=Date.now();
@@ -162,7 +162,7 @@
    if(pokerAside){players.innerHTML=visible.map(player=>playerRow(player,{me:s.me,status:player.bot?'練習電腦':s.phase==='waiting'?(player.online===false?'暫時離線':'已入座'):player.folded?'已棄牌':player.id===current?'操作中':player.online===false?'暫時離線':'已入座',metrics:[{value:Number(player.stack||0).toLocaleString('zh-TW'),label:'籌碼'}]})).join('');}
    else{
    for(const player of visible){
-    const row=element('div','shared-player','');row.classList.toggle('active',player.id===current);
+    const row=element('div','shared-player','');row.dataset.playerId=player.id;row.classList.toggle('active',player.id===current);
     if(player.avatar){const img=document.createElement('img');img.src=player.avatar;img.alt='';row.append(img);}
     const name=element('span','shared-player-name','');name.innerHTML=window.GameUI?.playerName?.(player.name)||escape(player.name);
     row.append(name);
@@ -310,5 +310,5 @@
   for(const marker of [s=>s.roomInstanceId,s=>s.media?.roomInstanceId,s=>s.watch?.roomInstanceId])if(marker(next)&&marker(state)&&marker(next)!==marker(state))return false;
   return next.version<state.version||next.version===state.version&&Number.isFinite(next.serverNow)&&Number.isFinite(state.serverNow)&&next.serverNow<state.serverNow;
  }
- window.GameShell={update(s){return window.RoomUI.update(s);},renderSnapshot(s){if(isStaleRoomState(s))return false;return update(s);},sendEmoji:value=>send({kind:'emoji',emoji:value},'已送出表情'),disconnected:()=>{barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomUI?.stop();window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
+ window.GameShell={update(s){return window.RoomUI.update(s);},renderSnapshot(s){if(isStaleRoomState(s))return false;return update(s);},sendEmoji:value=>send({kind:'emoji',emoji:value},'已送出表情'),disconnected:()=>{window.RoomPings?.disconnect();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.disconnected();},stop:()=>{window.RoomPings?.stop();window.RoomUI?.stop();window.RoomControls?.stop();window.SharedChat?.clearRoom();barrages.disconnect();expressionSounds?.reset();window.TableMedia?.stop();},stableMarkup,playerRow,settingsActions,botButton,autoSaveSettings,showHistoryWarning};
 })();

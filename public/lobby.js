@@ -23,6 +23,7 @@
  }
  function render(data){
   if(!data||!Array.isArray(data.visitors))throw Error('大廳資料格式不正確');
+  window.RoomPings?.update({code:'__LOBBY__',type:'lobby',me:data.selfId,players:data.visitors,serverNow:data.serverNow,pingContext:data.pingContext});
   expressionSounds?.update({contextId:typeof data.selfId==='string'?`lobby:${data.selfId}`:'',serverNow:data.serverNow,events:data.visitors.filter(visitor=>visitor.emote).map(visitor=>({id:visitor.emote.id||`${visitor.id}:${visitor.emote.at}`,at:visitor.emote.at,sound:visitor.emote.sound}))});
   const resetPositions=positionReset;positionReset=false;
   const active=new Set();
@@ -32,7 +33,7 @@
    let node=visitors.get(visitor.id);
    const isNew=!node;
    if(!node){
-    node=document.createElement(visitor.id===data.selfId?'button':'div');node.className='lobby-avatar';if(visitor.id===data.selfId)node.type='button';
+    node=document.createElement(visitor.id===data.selfId?'button':'div');node.className='lobby-avatar';node.dataset.playerId=visitor.id;if(visitor.id===data.selfId)node.type='button';
     const bubble=document.createElement('div');bubble.className='lobby-speech';bubble.hidden=true;
     const image=document.createElement('img');image.alt='';image.draggable=false;
     const label=document.createElement('span');node.append(bubble,image,label);layer.append(node);visitors.set(visitor.id,node);
@@ -88,7 +89,7 @@
    const response=await fetch(target?'/api/lobby/move':'/api/lobby',target?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(target)}:{});
    if(!response.ok)throw Error(response.status===401?'登入已失效，請重新登入':'大廳暫時無法連線');
    render(await response.json());
-  }catch(error){status.textContent=error.message;ready=false;expressionSounds?.reset();}
+  }catch(error){status.textContent=error.message;ready=false;expressionSounds?.reset();window.RoomPings?.disconnect();}
   finally{inFlight=false;if(queuedTarget){const next=queuedTarget;queuedTarget=null;sync(next);}}
  }
  async function loadEmotes(){
