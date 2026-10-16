@@ -106,6 +106,8 @@ test('unresolved conflicts are rejected before invoking tests',t=>{
  const f=fixture(t);f.git(['switch','-qc','other']);f.write('tests/leaf.test.js','other');f.commit();f.git(['switch','-q','main']);f.write('tests/leaf.test.js','main');f.commit();
  assert.equal(spawnSync('git',['-c','user.name=Test','-c','user.email=test@example.invalid','merge','other'],{cwd:f.root,stdio:'ignore'}).status,1);
  assert.throws(()=>createPlan(f.root),/未解合併衝突/);
+ f.git(['update-ref','-d','refs/remotes/origin/main']);
+ assert.throws(()=>createPlan(f.root),/未解合併衝突/,'missing default base must not bypass conflict rejection');
 });
 
 test('runner checks release first, uses argv without a shell and preserves failures',()=>{

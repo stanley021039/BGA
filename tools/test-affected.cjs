@@ -65,12 +65,18 @@ function packageOnlySafeChange(file,before,after){
 function createPlan(root,{base}={}){
  const allTests=inventory(root),requestedBase=base??'origin/main';
  let head,baseSha,mergeBase;
- try{head=resolveRef(root,'HEAD');baseSha=resolveRef(root,requestedBase);mergeBase=git(root,['merge-base',baseSha,head]).trim();}
+ const fallback=()=>({...planChanges(['<Git 或 origin/main 基準不可用>'],allTests),head:head??null,requestedBase,baseSha:null,mergeBase:null,dirty:null});
+ try{head=resolveRef(root,'HEAD');}
  catch(error){
   if(base!==undefined)throw Error('無法解析基準或共同祖先：'+requestedBase,{cause:error});
-  return {...planChanges(['<Git 或 origin/main 基準不可用>'],allTests),head:head??null,requestedBase,baseSha:null,mergeBase:null,dirty:null};
+  return fallback();
  }
  if(git(root,['diff','--name-only','--diff-filter=U','-z']).length)throw Error('有未解合併衝突，請先解決後再測試');
+ try{baseSha=resolveRef(root,requestedBase);mergeBase=git(root,['merge-base',baseSha,head]).trim();}
+ catch(error){
+  if(base!==undefined)throw Error('無法解析基準或共同祖先：'+requestedBase,{cause:error});
+  return fallback();
+ }
  // Union, not a net diff: staged edits can be reverted only in the working tree.
  const diffArgs=[['diff','--name-only','--no-renames','-z',mergeBase,head,'--'],['diff','--cached','--name-only','--no-renames','-z','--'],['diff','--name-only','--no-renames','-z','--'],['ls-files','--others','--exclude-standard','-z']];
  const files=diffArgs.flatMap(args=>git(root,args).split('\0')).filter(Boolean);
