@@ -13,17 +13,34 @@ test('deployment history quota overrides are opt-in positive integers',()=>{
  assert.deepEqual(settings({HISTORY_MAX_TOTAL_BYTES:'4194304',HISTORY_MAX_ARCHIVES:'2',HISTORY_RETENTION_DAYS:'90'}).historyLimits,{maxTotalBytes:4194304,maxArchives:2,retentionDays:90});
  for(const value of ['0','-1','1.2','1e6','bad','9007199254740992'])assert.throws(()=>settings({HISTORY_MAX_TOTAL_BYTES:value}),/HISTORY_MAX_TOTAL_BYTES/);
 });
-for(const Engine of [DrawGuessRoom,GiftRoom,MajorityRoom])test(Engine.name+': 1000 waiting join/leave cycles bound players, snapshots and session storage',t=>{
+for(const Engine of [DrawGuessRoom,GiftRoom,MajorityRoom])test(Engine.name+': 1000 in-memory waiting cycles bound players and snapshots and still allow start',()=>{
+ const r=new Engine('B0A123','churn'),host=r.add('host');
+ for(let i=0;i<1000;i++){
+  const p=r.add('guest');leavePlayer(r,p.id);
+  assert.equal(r.players.length,1);assert.equal(r.host,host.id);
+  assert.equal(r.players.some(player=>player.id===p.id),false);
+  assert.ok(Buffer.byteLength(JSON.stringify(r.view(host.id)))<5000);
+ }
+ for(let i=0;i<(Engine===GiftRoom||Engine===MajorityRoom?2:1);i++)r.add('ready'+i);
+ r.start();assert.notEqual(r.phase,'waiting');
+});
+for(const Engine of [DrawGuessRoom,GiftRoom,MajorityRoom])test(Engine.name+': small real session rolls over twice and preserves the start baseline',t=>{
  const {h,dir}=historyHarness(t,limits),r=new Engine('B0A123','churn');h.attach(r);
  const host=h.transact(r,{action:'create'},()=>r.add('host'));
- for(let i=0;i<1000;i++){
+ let previous=h.records.get(r).session,rollovers=0;
+ // Stop on the storage boundary, not an arbitrary long repetition count.
+ for(let i=0;rollovers<2;i++){
+  assert.ok(i<100,'small session must roll over within 100 cycles');
   const p=h.transact(r,{action:'join'},()=>r.add('guest'));
   h.transact(r,{action:'leave'},()=>leavePlayer(r,p.id));
   assert.equal(r.players.length,1);assert.equal(r.host,host.id);
-  assert.ok(Buffer.byteLength(JSON.stringify(r.view(host.id)))<5000);
+  const current=h.records.get(r).session;
+  if(current!==previous){assert.equal(fs.existsSync(path.join(dir,previous+'.jsonl')),false);rollovers++;previous=current;}
+  assert.ok(h.totalBytes<=limits.maxTotalBytes);
  }
  const files=fs.readdirSync(dir).filter(f=>f.endsWith('.jsonl'));assert.equal(files.length,1);
  const rows=h.readRows(files[0].slice(0,-6));assert.equal(rows[0].kind,'session');assert.ok(rows[0].continuationOf);assert.equal(rows[0].initial.players[0].id,host.id);
+ for(const intent of rows.filter(row=>row.kind==='intent'))assert.equal(rows.filter(row=>row.kind==='result'&&row.seq===intent.seq).length,1);
  assert.ok(fs.statSync(path.join(dir,files[0])).size<=limits.maxSessionBytes);
  assert.ok(h.totalBytes<=limits.maxTotalBytes);
  for(let i=0;i<(Engine===GiftRoom||Engine===MajorityRoom?2:1);i++)h.transact(r,{action:'join'},()=>r.add('ready'+i));

@@ -7,7 +7,7 @@ const fill=(version,color=version%2?'#ff0000':'#0000ff')=>({version,strokeId:'f0
 const event=(stroke,quota={usedFills:stroke.version,usedBatches:stroke.version,usedPoints:stroke.version})=>({canvasEpoch:CANVAS_EPOCH,round:1,version:stroke.version,stroke,quota});
 async function setup(t,me='artist'){
  const ui=browserHarness({realRenderer:true,events:true});ui.receive(drawingState(me));await pause();
- t.after(()=>clearTimeout(run(ui,'toast.timer')));return ui;
+ t.after(async()=>{run(ui,'canvasSession.dispose()');await run(ui,'canvasSession.whenIdle()');clearTimeout(run(ui,'toast.timer'));});return ui;
 }
 async function beginFill(ui,color='#ff0000'){
  ui.element('#color').value=color;run(ui,'tool="fill"');
@@ -41,21 +41,25 @@ test('HTTP acknowledgement before SSE applies the new batch once and preserves l
  assert.match(ui.element('#drawStatus').textContent,/填色額度已用完/);
 });
 
-test('48 SSE fills take linear work; undo and reconnect retain the consumed fill quota',async t=>{
+test('eight SSE fills apply once; undo and reconnect retain an exhausted lifetime quota',async t=>{
+ // Earlier undone fills still consume quota; pixel stress (48 fills) is
+ // independently covered by stroke-canvas.test.js on a small real raster.
  const ui=await setup(t,'guest'),strokes=[];
- for(let version=1;version<=48;version++){const stroke=fill(version);strokes.push(stroke);ui.sources[0].emit('stroke',event(stroke));}
- assert.equal(run(ui,'sessionRenderer.metrics().fillApplications'),48);
- assert.equal(run(ui,'sessionRenderer.metrics().filledPixels'),48*512*256);
+ ui.context.injected={canvasEpoch:CANVAS_EPOCH,round:1,version:80,strokes:[],quota:{usedFills:40,usedBatches:40,usedPoints:40}};
+ run(ui,'applyCanvasSnapshot(injected)');await run(ui,'canvasSession.whenIdle()');
+ for(let version=81;version<=88;version++){const stroke=fill(version);strokes.push(stroke);ui.sources[0].emit('stroke',event(stroke,{usedFills:version-40,usedBatches:version-40,usedPoints:version-40}));}
+ assert.equal(run(ui,'sessionRenderer.metrics().fillApplications'),8);
+ assert.equal(run(ui,'sessionRenderer.metrics().filledPixels'),8*512*256);
  assert.ok(run(ui,'sessionRenderer.metrics().checkpointBytes')<=8*1024*1024);
- ui.sources[0].emit('reset',{canvasEpoch:CANVAS_EPOCH,round:1,version:49,strokes:strokes.slice(0,47),quota:{usedFills:48,usedBatches:48,usedPoints:48}});
- const state=drawingState('artist');state.strokeVersion=49;ui.receive(state);
- ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:49,strokes:strokes.slice(0,47),quota:{usedFills:48,usedBatches:48,usedPoints:48}});
+ ui.sources[0].emit('reset',{canvasEpoch:CANVAS_EPOCH,round:1,version:89,strokes:strokes.slice(0,7),quota:{usedFills:48,usedBatches:48,usedPoints:48}});
+ const state=drawingState('artist');state.strokeVersion=89;ui.receive(state);
+ ui.setSnapshot({canvasEpoch:CANVAS_EPOCH,round:1,version:89,strokes:strokes.slice(0,7),quota:{usedFills:48,usedBatches:48,usedPoints:48}});
  await run(ui,'canvasSession.whenIdle()');
  const before=run(ui,'sessionRenderer.metrics().fillApplications');await run(ui,'syncCanvas()');
  await run(ui,'canvasSession.whenIdle()');
  assert.equal(run(ui,'sessionRenderer.metrics().fillApplications'),before,'identical reconnect does no pixel replay');
  await beginFill(ui);assert.equal(ui.strokeRequests.length,0);
- assert.equal(run(ui,'canvasSession.view().quota.usedFills'),48);assert.equal(run(ui,'canvasSession.view().strokeCount'),47);
+ assert.equal(run(ui,'canvasSession.view().quota.usedFills'),48);assert.equal(run(ui,'canvasSession.view().strokeCount'),7);
  assert.deepEqual(ui.element('#drawCanvas').pixel(400,200),[255,0,0,255]);
 });
 
@@ -106,15 +110,22 @@ test('a delayed snapshot from the old round is discarded and the new round is fe
 });
 
 test('an excessive fill snapshot or SSE batch is rejected before changing accepted history',async t=>{
- const ui=await setup(t,'guest'),strokes=Array.from({length:48},(_,index)=>fill(index+1));
- ui.context.injected={canvasEpoch:CANVAS_EPOCH,round:1,version:48,strokes,quota:{usedFills:48,usedBatches:48,usedPoints:48}};
+ const ui=await setup(t,'guest');
+ // The boundary is 48 operations regardless of filled area. A small enclosed
+ // region exercises real rasterization without repainting 48 full canvases.
+ const boundary={version:1,strokeId:'b0000000-0000-4000-8000-000000000001',tool:'rect',color:'#000000',size:1,filled:true,points:[[0,0],[3,3]]};
+ const strokes=[boundary,...Array.from({length:48},(_,index)=>fill(index+2))];
+ ui.context.injected={canvasEpoch:CANVAS_EPOCH,round:1,version:49,strokes,quota:{usedFills:48,usedBatches:49,usedPoints:50}};
  run(ui,'applyCanvasSnapshot(injected)');await run(ui,'canvasSession.whenIdle()');const before=run(ui,'sessionRenderer.metrics().fillApplications');
- ui.sources[0].emit('stroke',event(fill(49)));await pause();
- assert.equal(run(ui,'canvasSession.view().version'),48);assert.equal(run(ui,'canvasSession.view().strokeCount'),48);
+ assert.equal(before,48);assert.deepEqual(ui.element('#drawCanvas').pixel(0,0),[255,0,0,255]);
+ assert.deepEqual(ui.element('#drawCanvas').pixel(400,200),[255,255,255,255]);
+ ui.sources[0].emit('stroke',event(fill(50),{usedFills:49,usedBatches:50,usedPoints:51}));await pause();
+ assert.equal(run(ui,'canvasSession.view().version'),49);assert.equal(run(ui,'canvasSession.view().strokeCount'),49);
  assert.equal(run(ui,'sessionRenderer.metrics().fillApplications'),before);
- ui.context.injected={canvasEpoch:CANVAS_EPOCH,round:1,version:49,strokes:[...strokes,fill(49)]};
+ ui.context.injected={canvasEpoch:CANVAS_EPOCH,round:1,version:50,strokes:[...strokes,fill(50)]};
  assert.throws(()=>run(ui,'applyCanvasSnapshot(injected)'),/同步上限/);
- assert.equal(run(ui,'canvasSession.view().version'),48);
+ assert.equal(run(ui,'canvasSession.view().version'),49);
+ assert.deepEqual(ui.element('#drawCanvas').pixel(0,0),[255,0,0,255]);
 });
 
 test('undo quota blocks more fills while ordinary brush remains available',async t=>{
