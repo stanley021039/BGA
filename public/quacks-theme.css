@@ -357,3 +357,5 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered .q-stage-content>p{font-size:inherit!important;line-height:1.7!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered .q-stage-content>button{font-size:18px!important;}
 @media(max-width:620px){}
+
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #qStageContent #alchemy>button{font-size:16px!important;line-height:1.25!important}
