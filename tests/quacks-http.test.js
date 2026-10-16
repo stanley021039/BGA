@@ -2,11 +2,17 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUUID}=require('node:crypto');
 const {appFixture}=require('./helpers/app-fixture.cjs'),{createAuth}=require('../src/auth');
 for(const purpose of ['test','production','retry'])test('quacks '+purpose+' authenticated rooms, nine-round history and achievements',async t=>{
- const {base,config}=await appFixture(t,{config:{achievementPurpose:purpose==='retry'?'production':purpose,marketAutomationEnabled:false},seed:db=>createAuth(db).bootstrap('quacks_owner','synthetic-quacks-password')});
+ // Keep production on wall time; purpose/retry only virtualize Date and intervals.
+ if(purpose!=='production')t.mock.timers.enable({apis:['Date','setInterval'],now:Date.now()});
+ const {base,config}=await appFixture(t,{config:{achievementPurpose:purpose==='retry'?'production':purpose,marketAutomationEnabled:false},seed:async db=>{
+  const id=await createAuth(db).bootstrap('quacks_owner','synthetic-quacks-password');
+  const hash=db.prepare('SELECT password_hash FROM users WHERE id=?').get(id).password_hash;
+  db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)').run(randomUUID(),'quacks_peer','peer',hash,'member',new Date().toISOString());
+ }});
  const dbRun=fn=>{const db=require('../src/db').openDatabase(config.dbFile);try{return fn(db);}finally{db.close();}};
  if(purpose==='retry')dbRun(db=>db.exec("CREATE TRIGGER reject_quacks_badges BEFORE INSERT ON user_achievements BEGIN SELECT RAISE(ABORT,'synthetic badge failure'); END"));
  async function post(route,cookie,data={},status=200){const res=await fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(data)}),s=await res.json();assert.equal(res.status,status,JSON.stringify(s));return {s,cookie:res.headers.get('set-cookie')?.split(';')[0]};}
- const owner=(await post('auth/login',null,{username:'quacks_owner',password:'synthetic-quacks-password'})).cookie,invite=(await post('admin/invites',owner)).s.code,peer=(await post('auth/register',null,{username:'quacks_peer',password:'synthetic-quacks-password',confirmPassword:'synthetic-quacks-password',invite})).cookie,cookies=[owner,peer];
+ const owner=(await post('auth/login',null,{username:'quacks_owner',password:'synthetic-quacks-password'})).cookie,peer=(await post('auth/login',null,{username:'quacks_peer',password:'synthetic-quacks-password'})).cookie,cookies=[owner,peer];
  if(purpose==='production'){await post('create',null,{type:'quacks'},401);await post('create',owner,{type:'quacks',bookSet:5},400);}
  const {code}=(await post('create',owner,{type:'quacks',hiddenProgress:true})).s;
  await post('join',peer,{code});if(purpose==='production'){await post('settings',peer,{code,witches:true},403);await post('start',peer,{code},403);}
@@ -16,7 +22,7 @@ for(const purpose of ['test','production','retry'])test('quacks '+purpose+' auth
  let iterations=0,ordinary=false,s=await state(owner);
  while(s.phase!=='finished'){
   assert.ok(++iterations<300);
-  if(s.phase==='round-intro'){await new Promise(resolve=>setTimeout(resolve,2400));s=await state(owner);continue;}
+  if(s.phase==='round-intro'){if(purpose==='production')await new Promise(resolve=>setTimeout(resolve,2400));else t.mock.timers.tick(2400);s=await state(owner);continue;}
   if(s.phase==='between'){s=await action(owner,s,'next');ordinary=false;continue;}
   for(const cookie of cookies){
    const v=await state(cookie),m=v.mine;
@@ -34,6 +40,7 @@ for(const purpose of ['test','production','retry'])test('quacks '+purpose+' auth
 
  const historyList=await (await fetch(base+'/api/history',{headers:{Cookie:owner}})).json(),match=historyList.find(m=>m.type==='quacks');assert.equal(match.status,'finished');
  const history=await (await fetch(base+'/api/history/'+match.id,{headers:{Cookie:owner}})).json();assert.match(history[0].engine.source,/class QuacksRoom/);assert.match(history[0].engine.catalog,/Crow|烏鴉/);assert.equal(history.filter(r=>r.kind==='result').at(-1).after.results.length,9);
+ assert.equal(history.filter(r=>r.kind==='result'&&r.operation.source==='timeout'&&r.after.phase==='fortune').length,8,'all eight timed round transitions are persisted');
  await post('reconnect',owner,{code});const rooms=await (await fetch(base+'/api/rooms',{headers:{Cookie:owner}})).json();assert.equal(rooms.rooms.find(r=>r.code===code).maxPlayers,8);
  // Resource serving and HTTP access policy do not depend on achievement purpose.
  if(purpose==='production'){
@@ -42,6 +49,6 @@ for(const purpose of ['test','production','retry'])test('quacks '+purpose+' auth
  }
  if(purpose==='retry'){
   await post('leave',owner,{code});await post('leave',peer,{code});dbRun(db=>db.exec('DROP TRIGGER reject_quacks_badges'));
-  const until=Date.now()+4000;let earned=false;while(Date.now()<until){const collection=await (await fetch(base+'/api/achievements',{headers:{Cookie:owner}})).json();earned=!!collection.achievements.find(a=>a.id==='quacks-first-match').unlockedAt;if(earned)break;await new Promise(resolve=>setTimeout(resolve,40));}assert.equal(earned,true,'global retry survives room deletion');const before=dbRun(db=>db.prepare('SELECT * FROM user_achievements ORDER BY user_id,achievement_id').all());await new Promise(resolve=>setTimeout(resolve,850));assert.deepEqual(dbRun(db=>db.prepare('SELECT * FROM user_achievements ORDER BY user_id,achievement_id').all()),before);
+  const until=Date.now()+4000;let earned=false;while(Date.now()<until){const collection=await (await fetch(base+'/api/achievements',{headers:{Cookie:owner}})).json();earned=!!collection.achievements.find(a=>a.id==='quacks-first-match').unlockedAt;if(earned)break;t.mock.timers.tick(40);}assert.equal(earned,true,'global retry survives room deletion');const before=dbRun(db=>db.prepare('SELECT * FROM user_achievements ORDER BY user_id,achievement_id').all());t.mock.timers.tick(850);assert.deepEqual(dbRun(db=>db.prepare('SELECT * FROM user_achievements ORDER BY user_id,achievement_id').all()),before);
  }
 });

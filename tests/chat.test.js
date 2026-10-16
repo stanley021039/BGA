@@ -73,14 +73,19 @@ test('browser default fetch retains the window receiver',async()=>{
 
 test('all ten games share table chat membership without changing gameplay snapshots',async()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'all-room-chat-')),config={host:'127.0.0.1',port:0,dbFile:path.join(root,'app.sqlite'),historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),externalSideEffectsEnabled:false,achievementPurpose:'test'};
- const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('allchatadmin','test-password-123');db.close();const app=createApp(config);
+ const types=['poker','thunder','majority','gift','draw','telephone','trpg','musicquiz','minimal','bluff'];
+ const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('allchatadmin','test-password-123');
+ const hash=db.prepare("SELECT password_hash FROM users WHERE username='allchatadmin'").get().password_hash;
+ require('../src/db').transaction(db,()=>{const insert=db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)');for(const name of ['allchatguest',...types.map(type=>'chat_'+type)])insert.run(require('node:crypto').randomUUID(),name,name,hash,'member',new Date().toISOString());});db.close();const app=createApp(config);
  try{
   const {port}=await app.listen(),base=`http://127.0.0.1:${port}`;
   const post=async(route,cookie,data)=>{const res=await fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',Cookie:cookie||''},body:JSON.stringify(data)});return {status:res.status,data:await res.json(),cookie:res.headers.get('set-cookie')?.split(';')[0]};};
   const get=async(route,cookie)=>{const res=await fetch(base+'/api/'+route,{headers:{Cookie:cookie||''}});return {status:res.status,data:await res.json()};};
-  const host=(await post('auth/login',null,{username:'allchatadmin',password:'test-password-123'})).cookie,invite=(await post('admin/invites',host,{days:1})).data.code;
-  const guest=(await post('auth/register',null,{username:'allchatguest',password:'test-password-123',confirmPassword:'test-password-123',invite})).cookie;
-  for(const type of ['poker','thunder','majority','gift','draw','telephone','trpg','musicquiz','minimal','bluff']){
+  const guest=(await post('auth/login',null,{username:'allchatguest',password:'test-password-123'})).cookie;
+  // Independent senders avoid waiting on the global account rate limiter.
+  // Global cross-room throttling remains covered by the createChat unit test.
+  for(const type of types){
+   const login=await post('auth/login',null,{username:'chat_'+type,password:'test-password-123'});assert.equal(login.status,200);const host=login.cookie;
    const created=await post('create',host,{type});assert.equal(created.status,200,type);const code=created.data.code;
    assert.equal((await get('chat?channel=table&code='+code,guest)).status,403,type+' outsider');
    assert.equal((await post('chat',guest,{channel:'table',code,message:'outsider'})).status,403,type+' outsider write');
@@ -91,7 +96,7 @@ test('all ten games share table chat membership without changing gameplay snapsh
    assert.deepEqual((await get('chat?channel=table&code='+code,guest)).data.messages.map(m=>m.message),[message]);
    const after=(await get('state?code='+code,host)).data;assert.equal(after.phase,before.phase);assert.equal(after.version,before.version);assert.equal(after.barrages.length,1);assert.equal(after.social.length,1);
    assert.equal((await post('leave',guest,{code})).status,200);assert.equal((await get('chat?channel=table&code='+code,guest)).status,403,type+' departed');
-   await post('leave',host,{code});await new Promise(resolve=>setTimeout(resolve,1510));
+   await post('leave',host,{code});
   }
  }finally{await app.close();fs.rmSync(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}
 });

@@ -7,7 +7,9 @@ const password='synthetic-barrage-test-password';
 async function fixture(t){
  const root=fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()),'bga-barrage-api-'));
  const config={host:'127.0.0.1',port:0,dbFile:path.join(root,'app.sqlite'),historyDir:path.join(root,'history'),communityDir:path.join(root,'community'),externalSideEffectsEnabled:false};
- const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('frame_host',password);db.close();
+ const db=openDatabase(config.dbFile);await createAuth(db).bootstrap('frame_host',password);
+ const hash=db.prepare("SELECT password_hash FROM users WHERE username='frame_host'").get().password_hash;
+ require('../src/db').transaction(db,()=>{const insert=db.prepare('INSERT INTO users(id,username,display_name,password_hash,role,created_at) VALUES(?,?,?,?,?,?)');for(const name of ['paper','comic','pixel','outsider'])insert.run(require('node:crypto').randomUUID(),'frame_'+name,name,hash,'member',new Date().toISOString());});db.close();
  const app=createApp(config),{port}=await app.listen(),base='http://127.0.0.1:'+port,users={};
  t.after(async()=>{await app.close();const absolute=fs.realpathSync(root);assert.equal(path.dirname(absolute),fs.realpathSync(os.tmpdir()));assert.ok(path.basename(absolute).startsWith('bga-barrage-api-'));fs.rmSync(absolute,{recursive:true,force:true,maxRetries:5});});
  async function request(route,who,options={}){
@@ -17,7 +19,7 @@ async function fixture(t){
  const post=(route,who,data={})=>request(route,who,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
  const loggedIn=await post('auth/login',null,{username:'frame_host',password});assert.equal(loggedIn.status,200);users.host=loggedIn.cookie;
  for(const name of ['paper','comic','pixel','outsider']){
-  const invite=await post('admin/invites','host',{days:1}),registered=await post('auth/register',null,{username:'frame_'+name,password,confirmPassword:password,invite:invite.body.code});
+  const registered=await post('auth/login',null,{username:'frame_'+name,password});
   assert.equal(registered.status,200);users[name]=registered.cookie;
  }
  async function create(type='poker'){
@@ -27,14 +29,11 @@ async function fixture(t){
  return {base,users,request,post,create};
 }
 
-test('all five games publish the same catalog and freeze every valid builtin frame into confirmed text events',async t=>{
+for(const type of ['poker','thunder','majority','gift','draw'])test(type+': catalog and four legacy frame variants reach confirmed text events',async t=>{
  const f=await fixture(t),options=await f.request('social/options','paper');assert.equal(options.status,200);
  assert.deepEqual(options.body.barrageFrames,[{"id": "default", "label": "預設"}, {"id": "paper", "label": "紙張"}, {"id": "comic", "label": "漫畫"}, {"id": "pixel", "label": "像素"}, {"id": "neon", "label": "電流霓虹"}, {"id": "orbit", "label": "星際軌道"}, {"id": "holo", "label": "全息故障"}, {"id": "arcade", "label": "街機像素"}, {"id": "mech", "label": "機械核心"}, {"id": "berry", "label": "奶油草莓"}, {"id": "cat", "label": "貓咪肉球"}, {"id": "cloud", "label": "軟糖雲朵"}, {"id": "jelly", "label": "深海水母"}, {"id": "shiba", "label": "柴犬吐司"}, {"id": "forest", "label": "森林精靈"}, {"id": "dragon", "label": "龍焰寶藏"}, {"id": "frost", "label": "冰晶王冠"}, {"id": "moon", "label": "月光魔法"}, {"id": "potion", "label": "蘑菇藥釜"}, {"id": "ink", "label": "水墨游魚"}, {"id": "sakura", "label": "御守櫻花"}, {"id": "steam", "label": "蒸汽郵件"}, {"id": "burst", "label": "漫畫爆擊"}, {"id": "royal", "label": "皇家劇院"}]);assert.ok(options.body.emojis.includes('🎉'));
  const selections=[['host','default'],['paper','paper'],['comic','comic'],['pixel','pixel']];
- for(const [index,type]of ['poker','thunder','majority','gift','draw'].entries()){
-  // The social limit is per account and kind across rooms. Keep the real clock
-  // and wait between rounds of senders, instead of changing scheduler time.
-  if(index)await delay(1501);
+
   const code=await f.create(type);
   for(const [who,id]of selections){
    const sent=await f.post('social',who,{code,kind:'barrage',message:type+' '+id,builtinFrameId:id});assert.equal(sent.status,200,type+' '+id);
@@ -43,7 +42,6 @@ test('all five games publish the same catalog and freeze every valid builtin fra
   }
   const state=await f.request('state?code='+code,'paper');assert.equal(state.status,200);assert.deepEqual(state.body.barrages.map(event=>event.frame.id),selections.map(([,id])=>id));
   const outsider=await f.post('social','outsider',{code,kind:'barrage',message:'not a room member',builtinFrameId:'paper'});assert.equal(outsider.status,403);assert.equal(outsider.body.code,'NOT_SEATED');
- }
  assert.equal((await f.request('social/options',null)).status,401);
 });
 
