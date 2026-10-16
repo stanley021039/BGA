@@ -2,20 +2,22 @@
 (()=>{
  'use strict';
  const M=window.PingModel;if(!M)return;
- let state,context,stream,held=false,pUsed=false,gesture=null,armed=null,enabled=true,muted=false,offset=0,raf=0,suppressUntil=0,noticeTimer;
+ let state,context,stream,held=false,pUsed=false,gesture=null,armed=null,enabled=true,offset=0,raf=0,suppressUntil=0,noticeTimer,preferences=M.preferences();
  const seen=new Set(),marks=[],pointers=new Set();
  const layer=document.createElement('div');layer.className='room-ping-layer';layer.setAttribute('data-game-focus-overlay','');document.body.append(layer);
  const status=document.createElement('div');status.className='room-ping-status';status.setAttribute('role','status');status.setAttribute('aria-live','polite');layer.append(status);
  const wheel=document.createElement('div');wheel.className='room-ping-wheel';wheel.hidden=true;wheel.setAttribute('role','group');wheel.setAttribute('aria-label','快速標記：方向鍵選擇，Enter確認，Esc取消');layer.append(wheel);
  const control=(label,icon,fn)=>{const b=document.createElement('button');b.type='button';b.textContent=label;window.GameUI?.decorateButton(b,icon,{iconOnly:true,label});b.onclick=fn;return b;};
- const sound=control('標記音效：開啟','sound',()=>{muted=!muted;sound.setAttribute('aria-pressed',String(muted));window.GameUI?.decorateButton(sound,muted?'muted':'sound',{iconOnly:true,label:'標記音效：'+(muted?'關閉':'開啟')});});
  const visibility=control('接收標記：開啟','check',()=>{enabled=!enabled;visibility.setAttribute('aria-pressed',String(enabled));window.GameUI?.decorateButton(visibility,enabled?'check':'close',{iconOnly:true,label:'接收標記：'+(enabled?'開啟':'關閉')});if(!enabled)clearMarks();});
  function notify(text){status.textContent=text;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>{status.textContent='';},3500);}
  function syncLayer(){const host=[...document.querySelectorAll('dialog[open]')].at(-1)||document.body;if(layer.parentElement!==host)host.append(layer);}
  function open(x,y){syncLayer();wheel.hidden=false;wheel.style.left=Math.max(110,Math.min(innerWidth-110,x))+'px';wheel.style.top=Math.max(110,Math.min(innerHeight-110,y))+'px';highlight('ping');}
  function highlight(type){for(const b of wheel.querySelectorAll('[data-ping-type]'))b.classList.toggle('is-selected',b.dataset.pingType===type);}
  for(const [type,def]of Object.entries(M.types)){const b=control(def.label,def.icon,()=>{armed=type;wheel.hidden=true;notify('點選要標記的位置；Esc 取消');});b.dataset.pingType=type;b.classList.remove('ui-icon-button');b.removeAttribute('title');for(const [key,value]of Object.entries({background:'transparent',color:'var(--ping-color)',border:'0',borderRadius:'50%'}))b.style.setProperty(key==='borderRadius'?'border-radius':key,value,'important');const label=document.createElement('small');label.textContent=def.label;b.append(label);wheel.append(b);}
- const options=document.createElement('div');options.className='room-ping-settings';options.append(sound,visibility);wheel.append(options);
+ const options=document.createElement('div');options.className='room-ping-settings';options.append(visibility);wheel.append(options);
+ function renderIcon(node,type){node.innerHTML=window.GameUI?.icon(M.types[type].icon)||'';const url=preferences[type].imageUrl;if(!url)return;const img=document.createElement('img');img.src=url;img.alt='';img.onerror=()=>{node.innerHTML=window.GameUI?.icon(M.types[type].icon)||'';};node.replaceChildren(img);}
+ // Integration seam for #142. Absent selections always mean built-in image + silence.
+ function setPreferences(value){preferences=M.preferences(value);for(const b of wheel.querySelectorAll('[data-ping-type]')){const slot=b.querySelector('.ui-button-icon');if(slot)renderIcon(slot,b.dataset.pingType);}}
  function editing(node){return !!node?.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"],iframe');}
  function anchorEntries(){
   const pairs=[['header',document.querySelector('[data-site-header]'),'頁首'],['chat',document.querySelector('.ui-room-chat,#chat-content,.shared-chat,#shared-chat,.room-stage-chat'),'聊天室'],['players',document.querySelector('#waitingRoster,#shared-players,.room-stage-friends'),'玩家區']];
@@ -53,8 +55,8 @@
   if(!context||event.roomInstanceId!==context.roomInstanceId||seen.has(event.id))return;seen.add(event.id);while(seen.size>256)seen.delete(seen.values().next().value);
   if(!M.types[event.type]||document.hidden||!enabled||event.expiresAt<=serverNow||serverNow-event.at>5000||serverNow<event.at-1000)return;
   offset=Date.now()-serverNow;const n=document.createElement('div');n.className='room-ping-mark';n.dataset.type=event.type;
-  const icon=document.createElement('strong');icon.innerHTML=window.GameUI?.icon(M.types[event.type].icon)||'';const caption=document.createElement('span');n.append(icon,caption);layer.append(n);marks.push({node:n,caption,event});while(marks.length>8)marks.shift().node.remove();
-  notify(event.name+'：'+M.types[event.type].label);if(!muted)window.AudioSettings?.playEffect('ping-'+event.type);if(!raf)raf=requestAnimationFrame(paint);
+  const icon=document.createElement('strong');renderIcon(icon,event.type);const caption=document.createElement('span');n.append(icon,caption);layer.append(n);marks.push({node:n,caption,event});while(marks.length>8)marks.shift().node.remove();
+  notify(event.name+'：'+M.types[event.type].label);const sound=preferences[event.type].sound;if(sound?.effect)window.AudioSettings?.playEffect(sound.effect);else if(sound)window.AudioSettings?.playExpression(sound);if(!raf)raf=requestAnimationFrame(paint);
  }
  async function send(type,target){
   const current=context,code=state?.code;if(!current||!code)return;
@@ -91,5 +93,5 @@
  window.addEventListener('blur',()=>{pointers.clear();cancel();});window.addEventListener('pagehide',disconnect);
  document.addEventListener('visibilitychange',()=>{if(document.hidden){disconnect();pointers.clear();}else connect();});
  if(window.MutationObserver)new window.MutationObserver(entries=>{if(entries.some(e=>e.target.tagName==='DIALOG'))syncLayer();}).observe(document.body,{attributes:true,attributeFilter:['open'],subtree:true});
- window.RoomPings={update,disconnect,stop(){disconnect();state=null;context=null;seen.clear();}};
+ window.RoomPings={update,disconnect,setPreferences,stop(){disconnect();setPreferences();state=null;context=null;seen.clear();}};
 })();

@@ -31,3 +31,5 @@
 .room-ping-wheel>button[data-ping-type] .ui-button-icon,.room-ping-wheel>button[data-ping-type] svg{width:30px!important;height:30px!important;min-width:30px!important;color:var(--ping-color)!important}.room-ping-wheel>button[data-ping-type] small{color:#f2e6c8!important}
 .room-ping-wheel>button[data-ping-type].is-selected{background:#b79b4b35!important;box-shadow:0 0 15px #f4d27340!important}
 .room-ping-mark>strong svg{width:44px!important;height:44px!important;color:var(--ping-color)!important}
+
+.room-ping-mark>strong img{width:44px;height:44px;object-fit:contain}.room-ping-wheel .ui-button-icon img{width:30px;height:30px;object-fit:contain}

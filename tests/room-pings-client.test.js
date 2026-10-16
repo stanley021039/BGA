@@ -35,8 +35,15 @@ test('P tap opens keyboard selection without a permanent trigger; canvas targets
  const f=setup();assert.equal(f.document.querySelector('.room-ping-tools'),null);f.fire('keydown');f.fire('keyup');f.fire('keydown',{key:'ArrowDown'});f.fire('keydown',{key:'Enter'});const canvas=f.document.querySelector('#drawCanvas');canvas.getBoundingClientRect=()=>({left:100,top:100,width:400,height:400});f.fire('pointerdown',{target:canvas,clientX:200,clientY:300});await flush();assert.equal(f.requests[0].type,'help');assert.equal(f.requests[0].target.kind,'surface');assert.equal(f.requests[0].target.epoch,'scene-1');assert.equal(f.requests[0].target.x,.25);assert.equal(f.requests[0].target.y,.5);
 });
 test('live events are deduplicated; hidden, expired, other-room events do not display or sound',()=>{
- const f=setup(),source=f.sources[0],event={id:'one',roomInstanceId:'instance',scene:'scene-1',type:'question',name:'<script>bad</script>',target:{kind:'viewport',x:.5,y:.5},at:10000,expiresAt:15000};
+ const f=setup(),source=f.sources[0],event={id:'one',roomInstanceId:'instance',scene:'scene-1',type:'question',name:'<script>bad</script>',target:{kind:'viewport',x:.5,y:.5},at:10000,expiresAt:15000};f.window.RoomPings.setPreferences({question:{sound:{effect:'ping-question'}}});
  source.emit('ping',{event,serverNow:10000});source.emit('ping',{event,serverNow:10000});assert.equal(f.document.querySelectorAll('.room-ping-mark').length,1);assert.equal(f.window.played,1);f.frame();assert.match(f.document.querySelector('.room-ping-mark').textContent,/<script>bad<\/script>/);
  for(const patch of [{id:'expired',expiresAt:9999},{id:'wrong',roomInstanceId:'another'}])source.emit('ping',{event:{...event,...patch},serverNow:10000});f.document.hidden=true;source.emit('ping',{event:{...event,id:'hidden'},serverNow:10000});assert.equal(f.window.played,1);assert.equal(f.document.querySelectorAll('.room-ping-mark').length,1);
  f.window.RoomPings.stop();assert.equal(source.closed,true);assert.equal(f.document.querySelectorAll('.room-ping-mark').length,0);
+});
+test('default markers are silent; selected personal media can be cleared and failed images fall back',()=>{
+ const f=setup(),source=f.sources[0];let id=0;const receive=type=>source.emit('ping',{event:{id:'custom-'+(++id),roomInstanceId:'instance',scene:'scene-1',type,name:'A',target:{kind:'viewport',x:.5,y:.5},at:10000,expiresAt:15000},serverNow:10000});
+ for(const type of Object.keys(model.types))receive(type);assert.equal(f.window.played,undefined);assert.equal(f.document.querySelectorAll('.room-ping-mark').length,5);assert.equal(f.document.querySelectorAll('.room-ping-settings button').length,1);
+ f.window.RoomPings.setPreferences({ping:{imageUrl:'/assets/artworks/12345678-1234-1234-1234-123456789abc',sound:{effect:'ping-ping'}}});receive('ping');assert.equal(f.window.played,1);
+ const img=f.document.querySelector('.room-ping-mark img');assert.ok(img);img.onerror();assert.equal(f.document.querySelector('.room-ping-mark img'),null);
+ f.window.RoomPings.setPreferences();receive('ping');assert.equal(f.window.played,1);assert.equal(f.document.querySelector('.room-ping-mark img'),null);
 });
