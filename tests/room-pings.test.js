@@ -20,6 +20,13 @@ test('stale room/scene, unknown type and invalid request ids cannot broadcast',(
 test('an expired retry reports current server time instead of reviving an old effect',()=>{const f=setup();const first=f.hub.post(f.r,'a','a',f.input);f.advance(6000);const retry=f.hub.post(f.r,'a','a',f.input);assert.equal(retry.event.id,first.event.id);assert.ok(retry.serverNow>retry.event.expiresAt);assert.equal(retry.duplicate,true);});
 test('room budgets and receipt memory are bounded, expiry does not affect game state',()=>{const f=setup();for(let i=0;i<180;i++){f.hub.post(f.r,'a','a',{...f.input,requestId:'request-'+i});f.advance(1500);}const s=f.hub.get(f.r);assert.equal(s.receipts.size,128);assert.ok(s.events.length<=4);const g=setup();for(let i=0;i<12;i++)g.hub.post(g.r,'p'+i,'n',{...g.input,requestId:'request-'+i});assert.throws(()=>g.hub.post(g.r,'next','n',{...g.input,requestId:'request-next'}),e=>e.status===429);});
 test('stream caps, unsubscribe, room reuse and shutdown dispose old clients',()=>{const {hub,r}=setup();let closed=0;for(let i=0;i<3;i++)hub.subscribe(r,{userId:'a',send(){},close(){closed++;}});assert.throws(()=>hub.subscribe(r,{userId:'a'}),e=>e.status===429);const old=hub.context(r).roomInstanceId;const next=room();assert.notEqual(hub.context(next).roomInstanceId,old);assert.equal(closed,3);const drop=hub.subscribe(next,{userId:'b',close(){closed++;}});drop();hub.clear();assert.equal(closed,3);assert.equal(hub.rooms.size,0);});
+test('lobby supports all 80 visitors with three tabs while game rooms retain their smaller stream cap',()=>{
+ const hub=new RoomPings(),lobby={...room('__LOBBY__'),type:'lobby'};
+ for(let i=0;i<80;i++)for(let tab=0;tab<3;tab++)hub.subscribe(lobby,{userId:'user-'+i,close(){}});
+ assert.equal(hub.get(lobby).clients.size,240);assert.throws(()=>hub.subscribe(lobby,{userId:'extra'}),e=>e.status===429);
+ const table=room();for(let i=0;i<32;i++)hub.subscribe(table,{userId:'table-'+i,close(){}});
+ assert.throws(()=>hub.subscribe(table,{userId:'extra'}),e=>e.status===429);hub.clear();
+});
 
 test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly drained on shutdown',async()=>{
  const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{openDatabase}=require('../src/db'),{createAuth}=require('../src/auth'),{createApp}=require('../src/app');

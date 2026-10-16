@@ -39,7 +39,7 @@ class RoomPings{
   for(const client of [...s.clients])client.send('ping',{event,serverNow:now});
   return {event,serverNow:now,duplicate:false};
  }
- subscribe(room,client){const s=this.get(room);if(s.clients.size>=32||[...s.clients].filter(c=>c.userId===client.userId).length>=3)fail(429,'PING_STREAM_LIMIT','標記連線太多，請關閉舊分頁');s.clients.add(client);return ()=>s.clients.delete(client);}
+ subscribe(room,client){const s=this.get(room);if(s.clients.size>=(room.type==='lobby'?240:32)||[...s.clients].filter(c=>c.userId===client.userId).length>=3)fail(429,'PING_STREAM_LIMIT','標記連線太多，請關閉舊分頁');s.clients.add(client);return ()=>s.clients.delete(client);}
  delete(code){const s=this.rooms.get(code);if(s)for(const c of [...s.clients])c.close();this.rooms.delete(code);}
  clear(){for(const code of [...this.rooms.keys()])this.delete(code);}
 }
