@@ -1,4 +1,5 @@
 'use strict';
+const {RoomPings}=require('./pings');
 const {startRoomScheduler}=require('./scheduler');
 const {expireEmptyRooms}=require('./lifecycle');
 const {RoomWatchRegistry}=require('../watch/room');
@@ -7,6 +8,7 @@ const {RoomMediaRegistry}=require('../media/room');
 // One runtime per app. Membership, permissions, history and game rules remain
 // with their existing owners; callbacks are supplied only when the app starts.
 function createRoomRuntime(){
+ const pings=new RoomPings();
  const rooms=new Map(),seats=new Map(),departedSeats=new Map(),kickedUsers=new Map();
  const socialEvents=new Map(),expressionEvents=new Map(),barrageEvents=new Map(),reconnectGrace=new Map();
  const drawStreams=new Map(),musicStreams=new Map(),musicRooms=new Map();
@@ -24,12 +26,13 @@ function createRoomRuntime(){
   if(errors.length)throw new AggregateError(errors,'Room stream cleanup failed');
  }
  function cleanupRoom(code){
+  pings.delete(code);
   for(const registry of registries)registry.delete(code);
   for(const key of reconnectGrace.keys())if(key.startsWith(code+':'))reconnectGrace.delete(key);
   closeStreams(code);
  }
  function drainStreams(){
-  const errors=[];
+  pings.clear();const errors=[];
   for(const code of new Set([...drawStreams.keys(),...musicStreams.keys()]))try{closeStreams(code);}catch(error){errors.push(error);}
   if(errors.length)throw new AggregateError(errors,'Room stream drain failed');
  }
@@ -51,13 +54,13 @@ function createRoomRuntime(){
  }
  function stop(){if(stopped)return;stopped=true;stopScheduler?.();stopScheduler=null;}
  function close(){
-  stop();const errors=[];
+  stop();pings.clear();const errors=[];
   const codes=new Set([...rooms.keys(),...drawStreams.keys(),...musicStreams.keys()]);
   for(const code of codes)try{cleanupRoom(code);}catch(error){errors.push(error);}
   for(const registry of [rooms,...registries,reconnectGrace,drawStreams,musicStreams])registry.clear();
   if(errors.length)throw new AggregateError(errors,'Room runtime cleanup failed');
  }
- return {rooms,seats,departedSeats,kickedUsers,socialEvents,expressionEvents,barrageEvents,reconnectGrace,drawStreams,musicStreams,musicRooms,watchRooms,mediaRooms,
+ return {pings,rooms,seats,departedSeats,kickedUsers,socialEvents,expressionEvents,barrageEvents,reconnectGrace,drawStreams,musicStreams,musicRooms,watchRooms,mediaRooms,
   cleanupRoom,drainStreams,ownStream,start,stop,close,expireRooms:history=>expireEmptyRooms({rooms,history,onDelete:cleanupRoom})};
 }
 module.exports={createRoomRuntime};

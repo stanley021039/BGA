@@ -106,7 +106,7 @@ function initializeApp(config,dataLock,acquired){
   if(viewerId)characterMedia.rememberExpressions(viewerId,'room:'+room.code,expressions.map(event=>({userId:accounts.get(event.playerId),image:event.image,at:event.at,until:event.at+5000,sound:event.sound,soundUntil:event.at+10000})));
   const watch=reconcileWatch(room);
   const media=mediaRooms.get(room,{create:true});media.reconcile(mediaContext(room));
-  return {...view,...savedDrawResults,serverNow:now,botSupport:botSupport(room),...(history.warning(room)?{historyWarning:history.warning(room)}:{}),permissions:permissionsView(room,view.me),players:view.players.map(player=>({...player,roomRole:roomRole(room,player.id),...(recent.has(player.id)?{avatar:recent.get(player.id)}:{})})),social,expressions,barrages,media:media.marker(),watch:media.managed?{roomInstanceId:media.roomInstanceId,revision:media.revision,hasVideo:media.current?.type==='video',controllerId:room.host}:watch?watch.summary(watchContext(room)):null};
+  return {...view,...savedDrawResults,pingContext:runtime.pings.context(room),serverNow:now,botSupport:botSupport(room),...(history.warning(room)?{historyWarning:history.warning(room)}:{}),permissions:permissionsView(room,view.me),players:view.players.map(player=>({...player,roomRole:roomRole(room,player.id),...(recent.has(player.id)?{avatar:recent.get(player.id)}:{})})),social,expressions,barrages,media:media.marker(),watch:media.managed?{roomInstanceId:media.roomInstanceId,revision:media.revision,hasVideo:media.current?.type==='video',controllerId:room.host}:watch?watch.summary(watchContext(room)):null};
  };
  const resumeSeat=(room,user)=>reconnectPlayer(room,user.id,seats,reconnectGrace);
  const history=new HistoryStore(config.historyDir,config.historyLimits,{preserveImportedSessions:config.historyPreserveImportedSessions});acquired.push(()=>history.close());
@@ -443,7 +443,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
   let p;try{p=transitions.transact(room,{action:'create',source:'player',name:user.display_name},()=>{const player=room.add(user.display_name);player.name=user.display_name;return player;});}catch(error){endRoomHistory(history,room,'建立房間未完成');throw error;}
   p.avatar=`/characters/${user.id}`;rooms.set(code,room);seats.set(code,new Map([[user.id,p.id]]));return send({code,type:room.type||'poker'});
  }
- if(!['/api/room-media','/api/room-role','/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/telephone/draft','/api/musicquiz-clip','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban','/api/draw/result/unsave','/api/draw/dissolve'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
+ if(!['/api/pings','/api/pings/events','/api/room-media','/api/room-role','/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/telephone/draft','/api/musicquiz-clip','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban','/api/draw/result/unsave','/api/draw/dissolve'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  expireRooms();
  const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
@@ -452,6 +452,20 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  if(url.pathname==='/api/reconnect'&&req.method==='POST'){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker',reconnected:true});}
  if(url.pathname==='/api/join'&&req.method==='POST')return send(joinRoom(room,user,req));
  const p=resumeSeat(room,user);
+ if(url.pathname==='/api/pings'){
+  if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
+  return send(runtime.pings.post(room,p.id,user.display_name,data));
+ }
+ if(url.pathname==='/api/pings/events'&&req.method==='GET'){
+  const valid=()=>{const session=auth.sessionFrom(req);return !!session&&rooms.get(room.code)===room&&!kickedUsers.get(room.code)?.has(user.id)&&seats.get(room.code)?.get(user.id)===p.id;};
+  let timer,unsubscribe=()=>{},closed=false;
+  const close=()=>{if(closed)return;closed=true;clearInterval(timer);unsubscribe();req.off('close',close);res.end();};
+  const client={userId:user.id,close,send(kind,payload){if(!valid())return close();try{if(!res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n'))close();}catch{close();}}};
+  unsubscribe=runtime.pings.subscribe(room,client);
+  res.setHeader('Content-Type','text/event-stream; charset=utf-8');res.setHeader('Cache-Control','no-cache, no-transform');res.setHeader('X-Accel-Buffering','no');res.flushHeaders();
+  client.send('ready',runtime.pings.context(room));
+  if(!closed){timer=setInterval(()=>client.send('heartbeat',runtime.pings.context(room)),10000);timer.unref();req.once('close',close);}return;
+ }
  if(url.pathname==='/api/leave'&&req.method==='POST'){
   limitRate(roomRate,'leave:'+user.id,30);limitRate(roomRate,'leave-ip:'+clientKey(req),120);
   return send(transitions.leave(room,user.id,p.id));
@@ -616,7 +630,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  }
  const musicAsset=url.pathname.match(/^\/assets\/music\/([a-f0-9-]{36})$/);
  if(Object.hasOwn(FREEHAND_ASSETS,url.pathname)){res.setHeader('Content-Type','image/svg+xml');res.setHeader('Content-Security-Policy',"default-src 'none'; sandbox");return res.end(fs.readFileSync(path.join(__dirname,'..','public',FREEHAND_ASSETS[url.pathname])));}
- if(url.pathname==='/shared/media-appearance.js'||url.pathname==='/shared/barrage-frames.js'||url.pathname==='/shared/barrage-frames.css'||url.pathname==='/shared/freehand-ui.css'||url.pathname==='/shared/ui-widgets.js'||url.pathname==='/shared/ui-widgets.css'||url.pathname==='/shared/ui-notifications.js'||url.pathname==='/shared/ui-notifications.css'||url.pathname==='/shared/ui-celebrations.js'||url.pathname==='/shared/ui-celebrations.css'||url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-canvas-session.js'||url.pathname==='/shared/draw-controller.js'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'||url.pathname==='/shared/game-fx-layer.js'||url.pathname==='/shared/game-fx-layer.css'||url.pathname==='/shared/race-dice-webgl.js'){
+ if(url.pathname==='/shared/room-pings.js'||url.pathname==='/shared/ping-model.js'||url.pathname==='/shared/room-pings.css'||url.pathname==='/shared/media-appearance.js'||url.pathname==='/shared/barrage-frames.js'||url.pathname==='/shared/barrage-frames.css'||url.pathname==='/shared/freehand-ui.css'||url.pathname==='/shared/ui-widgets.js'||url.pathname==='/shared/ui-widgets.css'||url.pathname==='/shared/ui-notifications.js'||url.pathname==='/shared/ui-notifications.css'||url.pathname==='/shared/ui-celebrations.js'||url.pathname==='/shared/ui-celebrations.css'||url.pathname==='/shared/table-media.js'||url.pathname==='/shared/table-media.css'||url.pathname==='/shared/draw-canvas-session.js'||url.pathname==='/shared/draw-controller.js'||url.pathname==='/shared/draw-transport.js'||url.pathname==='/shared/draw-playback.js'||url.pathname==='/shared/countdown-bar.js'||url.pathname==='/shared/game-fx-layer.js'||url.pathname==='/shared/game-fx-layer.css'||url.pathname==='/shared/race-dice-webgl.js'){
   const file=url.pathname.slice(1);res.setHeader('Content-Type',file.endsWith('.css')?'text/css':'text/javascript; charset=utf-8');return res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
  }
  if(musicAsset){auth.requireUser(req);if(!['GET','HEAD'].includes(req.method))throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');return musicStore.stream(req,res,musicAsset[1]);}
