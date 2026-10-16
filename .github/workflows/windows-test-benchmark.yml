@@ -1,0 +1,30 @@
+name: Windows test benchmark (diagnostic)
+
+on:
+  push:
+    branches: [codex/windows-test-fixture-benchmark]
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '22.23.3'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Compare original and batched fixtures, sequential and parallel files
+        env:
+          BGA_BENCH_OUTPUT: ${{ runner.temp }}/bga-windows-benchmark
+        run: node tools/benchmark-windows-ci.cjs
+      - name: Verify source remained unchanged
+        if: always()
+        run: git diff --exit-code
