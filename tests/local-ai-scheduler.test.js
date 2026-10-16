@@ -84,3 +84,5 @@ test('telephone deadline advances before bots, preserves drafts and finishes wit
  const committed=r.pageCommits.find(c=>c.page.authorId===h.human.id);assert.equal(committed.page.strokes.length,1);assert.equal(committed.page.timedOut,true);
  h.setNow(r.deadline-400);h.tick();assert.equal(r.phase,'finished');assert.equal(r.books[0].pages.length,3);assert.equal(h.errors.length,0);
 });
+
+test('quacks round announcement expires without a host action and records one timed transition',t=>{const {QuacksRoom}=require('../src/games/quacks'),h=schedulerHarness(t,QuacksRoom),r=h.room;r.start();r.phase='round-intro';r.stage=null;r.nextRoundAt=102000;const id=r.roundId;h.setNow(101599);h.tick();assert.equal(r.phase,'round-intro');assert.equal(r.round,1);h.setNow(101600);h.tick();assert.equal(r.phase,'fortune');assert.equal(r.round,2);assert.notEqual(r.roundId,id);assert.equal(h.records.filter(x=>x.action==='auto').length,1);h.tick();assert.equal(r.round,2);assert.deepEqual(h.errors,[]);});

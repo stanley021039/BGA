@@ -16,6 +16,7 @@ for(const purpose of ['test','production','retry'])test('quacks '+purpose+' auth
  let iterations=0,ordinary=false,s=await state(owner);
  while(s.phase!=='finished'){
   assert.ok(++iterations<300);
+  if(s.phase==='round-intro'){await new Promise(resolve=>setTimeout(resolve,2400));s=await state(owner);continue;}
   if(s.phase==='between'){s=await action(owner,s,'next');ordinary=false;continue;}
   for(const cookie of cookies){
    const v=await state(cookie),m=v.mine;

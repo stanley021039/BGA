@@ -6,7 +6,7 @@ function room(count,options={}){const r=new QuacksRoom('ABCDEF','親友加大桌
 
 function play(r,cap=2000){
  let steps=0;while(r.phase!=='finished'){
-  assert.ok(++steps<cap,'progress '+r.round+' '+r.phase+' '+r.stage);if(r.phase==='between'){act(r,r.player(r.host),'next');continue;}
+  assert.ok(++steps<cap,'progress '+r.round+' '+r.phase+' '+r.stage);if(r.phase==='round-intro'){r.auto(r.nextRoundAt);continue;}if(r.phase==='between'){act(r,r.player(r.host),'next');continue;}
   for(const p of r.players){
    const s=r.view(p.id),m=s.mine;
    if(m.pending){const q=m.pending,o=q.options.find(o=>!o.disabled);assert.ok(o);act(r,p,'choice',{choiceId:q.id,optionId:o.id});continue;}

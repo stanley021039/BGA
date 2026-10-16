@@ -34,7 +34,7 @@ function confirmAction(action,{title,message,label,targetId,trigger,run}){
 }
 
 function render(next){
- if(disposed||next.type!=='bluff'||state&&next.version<state.version)return;state=next;if(confirmation&&!confirmationValid())closeConfirmation();if(window.GameShell)window.GameShell.update(next);else window.RoomWaiting?.update(next);receivedAt=performance.now();countdownSounds?.update(state);$('#game').hidden=false;$('#leave').hidden=false;$('#roomTag').textContent='房號 '+code;$('#connection').textContent='';
+ if(disposed||next.type!=='bluff'||state&&next.version<state.version)return;state=next;if(confirmation&&!confirmationValid())closeConfirmation();if(window.RoomHost)window.RoomHost.update(next,render);else if(window.GameShell)window.GameShell.update(next);else window.RoomWaiting?.update(next);receivedAt=performance.now();countdownSounds?.update(state);$('#game').hidden=false;$('#leave').hidden=false;$('#roomTag').textContent='房號 '+code;$('#connection').textContent='';
  $('#phase').textContent=state.interrupted?'有人離席，本場中止':({selecting:'想想三選一抽題',waiting:'等待開始',preparing:'查看角色',discussion:'輪流解釋與質問',reveal:'本輪揭曉',finished:'本場結束'})[state.phase]+(state.round?' · '+state.round+'/'+state.roundLimit:'');
  if(state.winner&&!state.interrupted)$('#phase').textContent+=' · 最高分：'+state.winner.names.join('、')+'（'+state.winner.score+' 分）';
  $('#players').replaceChildren(...state.players.map(p=>{const card=el('article');card.className='player-card';card.append(el('strong',p.name+(p.id===state.me?'（你）':'')),el('p',p.score+' 分'+(p.id===state.thinkerId?' · 想想':'')),el('p',state.challenges.includes(p.id)?'被質疑：公三小':state.spokenIds.includes(p.id)?'說明完畢':state.readyIds.includes(p.id)?'已準備':''));return card;}));

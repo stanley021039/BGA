@@ -661,3 +661,51 @@ body[data-ui-template=tactile] .ui-room-chat .ui-panel-header{grid-template-colu
 @layer stitch-export {
 body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks]) #shared-emoji-picker{display:flex!important;flex-direction:column!important;gap:8px!important;width:min(480px,calc(100vw - 32px))!important;height:min(560px,calc(100dvh - 64px))!important;min-height:0!important;max-height:calc(100dvh - 64px)!important;padding:16px!important;box-sizing:border-box!important;overflow:hidden!important;}body[data-ui-template=tactile]:is([data-game-kind=draw],[data-game-kind=quacks]) #shared-emoji-picker[hidden]{display:none!important;}body[data-ui-template=tactile] #shared-emoji-picker>h3{height:28px!important;min-height:28px!important;margin:0!important;flex:none!important;}body[data-ui-template=tactile] #shared-emoji-picker>.st-emote-tabs{height:44px!important;min-height:44px!important;max-height:44px!important;flex:none!important;padding:0!important;margin:0!important;}body[data-ui-template=tactile] #shared-emoji-picker .st-emote-tabs button{height:44px!important;min-height:44px!important;padding:4px!important;}body[data-ui-template=tactile] #shared-emoji-picker>.st-emote-panel{flex:1!important;min-height:0!important;overflow:auto!important;}body[data-ui-template=tactile] #shared-emoji-picker .st-emote-panel[hidden]{display:none!important;}body[data-ui-template=tactile] #shared-emoji-picker .st-emote-panel>button{min-height:44px!important;flex:none!important;}
 }
+
+@layer stitch-export {
+@media(min-width:960px) and (min-height:560px) and (pointer:fine){
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text){display:flex!important;flex-direction:column!important;height:100dvh!important;min-height:0!important;overflow:hidden!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .quacks-shell{display:flex!important;flex-direction:column!important;flex:1!important;min-height:0!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .q-header{flex:none!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) #game{display:flex!important;flex-direction:column!important;flex:1!important;height:auto!important;min-height:0!important;padding:12px!important;overflow:hidden!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .ui-room-waiting-layout{display:grid!important;grid-template-columns:repeat(12,minmax(0,1fr))!important;grid-template-rows:minmax(0,1fr) 40px!important;grid-template-areas:none!important;gap:8px clamp(12px,1.25vw,24px)!important;flex:1!important;height:100%!important;min-height:0!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .ui-room-waiting-layout>.ui-room-roster{grid-area:auto!important;grid-column:1/span 3!important;grid-row:1!important;height:100%!important;min-height:0!important;max-height:100%!important;order:0!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .ui-room-waiting-layout>.tpl-waiting-center{grid-area:auto!important;grid-column:4/span 5!important;grid-row:1!important;display:flex!important;flex-direction:column!important;height:100%!important;min-height:0!important;max-height:100%!important;order:0!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .ui-room-waiting-layout>.ui-room-waiting-controls{grid-area:auto!important;grid-column:9/span 4!important;grid-row:1!important;height:100%!important;min-height:0!important;max-height:100%!important;order:0!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .tpl-waiting-center>.room-waiting-template{min-height:0!important;height:auto!important;flex:1!important;padding:clamp(12px,1.25vw,24px)!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .st-waiting-banner{height:clamp(60px,10dvh,79px)!important;min-height:60px!important;padding:12px!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .room-waiting-template .room-waiting-art,body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .room-waiting-art img{width:clamp(104px,20dvh,176px)!important;height:clamp(84px,16dvh,144px)!important;min-height:0!important;max-height:144px!important;margin-bottom:12px!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .ui-room-settings-slot{min-height:0!important;overflow:auto!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .st-site-footer{grid-column:1/-1!important;grid-row:2!important;min-height:0!important;height:40px!important;padding:8px 12px!important}
+}
+@media(min-width:960px) and (min-height:560px) and (max-height:700px) and (pointer:fine){
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .quacks-setting-choice{min-height:60px!important;padding:8px!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .ui-room-settings-source .quacks-settings-grid{gap:8px!important;padding:4px 0!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .st-waiting-facts>div{min-height:42px!important;padding:6px!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .ui-room-settings-footer{padding-top:8px!important}
+}
+}
+
+@layer stitch-export{
+@media(min-width:960px) and (min-height:560px) and (pointer:fine){
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .st-waiting-status{grid-column:1/-1!important;grid-row:2!important;flex-wrap:nowrap!important;height:40px!important;min-height:40px!important;padding:0 12px!important;gap:12px!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) :is(.st-status-main,.st-status-actions){flex-wrap:nowrap!important;gap:12px!important;flex:none!important}
+body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-ui-template][data-room-layout=custom][data-game-kind=quacks]:not(.ui-large-text) .st-status-actions{margin-left:auto!important}
+}
+}
+
+/* Preserve the waiting layout visibility contract above active chat display rules. */
+@layer stitch-export{body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks][data-room-phase=waiting][data-room-layout=custom] #game>[data-waiting-layout-hidden]{display:none!important}}
+
+@layer stitch-export{
+@media(max-width:360px){body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header{height:auto!important;min-height:108px!important;flex-wrap:wrap!important;align-content:center!important;gap:4px 8px!important}body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header .q-header-tools{flex-basis:100%!important;order:3!important;justify-content:flex-end!important}body[data-ui-template=tactile][data-visual-theme=playful][data-game-kind=quacks] .ui-room-header .site-account{margin-left:auto!important}}
+}
+
+@layer stitch-export{body[data-ui-template=tactile][data-visual-theme=playful] dialog.table-media-window.media-collapsed{padding:0!important}}
+
+@layer stitch-export{body[data-ui-template=tactile][data-visual-theme=playful] dialog.table-media-window{padding:0!important}body[data-ui-template=tactile][data-visual-theme=playful] dialog.table-media-window.media-collapsed{min-width:0!important}}
+
+/* Keep open navigation menus reachable above the floating media window. */
+@layer stitch-export {
+body [data-site-header].site-header:has(details[open],.site-settings:not([hidden]),.site-account-menu:not([hidden])){z-index:220!important}
+}

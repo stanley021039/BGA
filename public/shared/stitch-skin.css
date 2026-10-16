@@ -441,3 +441,7 @@ body[data-ui-template=tactile] .ui-room-chat .chat-heading{font:700 16px/24px va
 }@layer stitch-export {
 body[data-ui-template=tactile] #shared-emoji-picker>h3{font:700 18px/28px var(--play-font)!important;}body[data-ui-template=tactile] #shared-emoji-picker .st-emote-tabs button{font-size:14px!important;}body[data-ui-template=tactile] #shared-emoji-picker>.st-emote-panel{scrollbar-gutter:stable!important;}
 }
+
+@layer stitch-export {
+body[data-ui-template=tactile][data-visual-theme=playful] #tableMedia[data-media-frame]:not([data-media-frame=default]) :is(button,select,input:not([type=range]),.table-media-queue-item){background:color-mix(in srgb,var(--media-frame-background) 96%,var(--media-frame-text))!important;color:var(--media-frame-text)!important;border-color:var(--media-frame-line)!important}
+}

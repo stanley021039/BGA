@@ -10,7 +10,7 @@ async function page(ctx,url){const p=await ctx.newPage();currentPage=p;p.on('pag
 async function action(ctx,code,name,extra={}){const s=await state(ctx,code);return post(ctx,'action',{code,action:name,roundId:s.roundId,requestId:randomUUID(),...extra});}
 async function sample(p){await p.evaluate(()=>{window.__ink={frames:[],running:true};const visible=document.querySelector('#drawCanvas'),probe=document.createElement('canvas');probe.width=128;probe.height=64;const ctx=probe.getContext('2d',{willReadFrequently:true});function frame(){if(!window.__ink.running)return;ctx.drawImage(visible,0,0,128,64);const bytes=ctx.getImageData(0,0,128,64).data;let ink=0;for(let i=0;i<bytes.length;i+=4)if(bytes[i+3]>0&&Math.min(bytes[i],bytes[i+1],bytes[i+2])<180)ink++;window.__ink.frames.push({at:performance.now(),ink});requestAnimationFrame(frame);}requestAnimationFrame(frame);});}
 async function stopSamples(p){return p.evaluate(()=>{window.__ink.running=false;return window.__ink.frames;});}
-async function stroke(p,dx=0){const r=await p.locator('#drawCanvas').boundingBox();assert.ok(r);await p.mouse.move(r.x+r.width*.15,r.y+r.height*.35);await p.mouse.down();for(let i=1;i<=38;i++){await p.mouse.move(r.x+r.width*(.15+i*.014),r.y+r.height*(.35+Math.sin(i*.25)*.12+dx));await sleep(28);}await p.mouse.up();}
+async function stroke(p,dx=0){await p.locator('#drawCanvas').click({trial:true});const r=await p.locator('#drawCanvas').boundingBox();assert.ok(r);await p.mouse.move(r.x+r.width*.15,r.y+r.height*.35);await p.mouse.down();for(let i=1;i<=38;i++){await p.mouse.move(r.x+r.width*(.15+i*.014),r.y+r.height*(.35+Math.sin(i*.25)*.12+dx));await sleep(28);}await p.mouse.up();}
 async function digest(p){return createHash('sha256').update(await p.locator('#drawCanvas').evaluate(n=>n.toDataURL())).digest('hex');}
 (async()=>{
  browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE?{executablePath:process.env.BROWSER_EXECUTABLE}:process.platform==='win32'?{channel:'chrome'}:{})});const owner=await browser.newContext({viewport:{width:1440,height:1000}}),peer=await browser.newContext({viewport:{width:1440,height:1000}});contexts.push(owner,peer);for(const c of contexts)c.setDefaultTimeout(15000);
@@ -26,7 +26,7 @@ async function digest(p){return createHash('sha256').update(await p.locator('#dr
 
    else if(m?.pending){const choice=m.pending.options.find(o=>!o.disabled);await action(owner,room.code,'choice',{choiceId:m.pending.id,optionId:choice.id});}
    else if(s.phase==='patients'&&!m.alchemy.patientId){await q.locator('.patient-card button').first().click();}
-   else if(s.phase==='fortune'&&s.roundStarterId===s.me){await q.locator('[data-quacks-action-key=draw-fortune]').click();}
+   else if(s.phase==='fortune'&&s.roundStarterId===s.me){await q.locator('#quacksAutoFortune .auto-fortune-draw').click();}
    else if(s.phase==='brewing'&&s.stage==='drawing'&&m.canDraw){if(draws++<4)await q.locator('[data-quacks-action-key=draw]').click();else await q.locator('[data-quacks-action-key=stop]').click();}
    else if(s.phase==='brewing'&&s.stage==='reserves'){const c=m.reserve.find(c=>c.must)||m.reserve[0];await action(owner,room.code,c?'reserve':'reserve-done',c?{chipId:c.id}:{});}
    else if(s.phase==='settlement'&&!m.ready){

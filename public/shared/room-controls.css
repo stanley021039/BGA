@@ -151,3 +151,15 @@ body.game-room audio{max-width:100%}
 .ui-game-operations-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ui-game-operations-header>h2{margin:0;font-size:inherit}
 .ui-game-operations-header>[data-room-action=invite]{flex:none;width:44px;height:44px;margin:0}
+
+/* One management entry in the shared upper-right header, in every phase. */
+.room-management-slot{display:flex;align-items:center;justify-content:flex-end;flex:none;gap:8px}
+.room-management-slot #managePlayers{position:static!important;inset:auto!important;transform:none!important;align-self:center;justify-self:center;z-index:auto;margin:0!important;min-width:44px;min-height:44px}
+
+/* Keep the added action from overlapping the brand on narrow shared headers. */
+@media(max-width:620px){
+body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot){grid-template-columns:minmax(0,1fr)!important;row-gap:10px!important}
+body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)>.site-title{grid-column:1!important;grid-row:1!important;justify-self:start!important}
+body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)>.site-account{grid-column:1!important;grid-row:2!important;justify-self:end!important}
+body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)>.site-links{grid-column:1!important;grid-row:3!important;justify-self:start!important}
+}

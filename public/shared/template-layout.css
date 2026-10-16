@@ -366,3 +366,55 @@ body[data-ui-template=tactile] .carousel-actions :is(#openCreateRoom,#marketLaun
  body[data-ui-template=tactile] .game-carousel-section .carousel-footer{padding:8px!important;min-height:64px}
 }
 @media(min-width:1101px) and (max-height:800px) and (min-height:680px){body[data-ui-template=tactile][data-draw-role=artist] .ui-drawing-play-work>#drawGuessPanel{flex:0 0 104px!important;height:104px!important;min-height:104px!important;max-height:104px!important}}
+
+/* Fit the desktop lobby to the available CSS viewport at the browser default zoom. */
+@media(min-width:960px) and (min-height:560px) and (pointer:fine){
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-page{padding:0 24px 8px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-lobby-grid{display:grid!important;grid-template-columns:minmax(0,1fr) clamp(280px,24vw,340px)!important;grid-template-rows:clamp(164px,26dvh,230px) minmax(0,1fr) auto!important;height:calc(100dvh - 96px)!important;min-height:0!important;gap:12px 16px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-section{grid-column:1/-1!important;grid-row:1!important;display:flex!important;flex-direction:column!important;min-height:0!important;padding:12px 20px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-stage{flex:1!important;height:auto!important;min-height:90px!important;margin:8px 0 0!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-visitors{inset:20px 0 38px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-carousel-section{grid-column:1!important;grid-row:2!important;display:flex!important;flex-direction:column!important;min-height:0!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .library-heading{flex:none;min-height:28px;margin:0 0 4px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel]{flex:1!important;height:auto!important;min-height:0!important;container-type:size}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .game-tile{width:clamp(180px,23cqw,240px)!important;top:50%!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-image{height:clamp(48px,calc(100cqh - 150px),148px)!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-body{padding:10px 14px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-body h2{font-size:20px!important;margin:6px 0!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-bottom{padding-top:8px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .carousel-footer{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;align-items:center!important;flex:none!important;gap:12px!important;margin:4px 0 0!important;padding:10px 12px!important;min-height:64px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .carousel-footer .carousel-controls{grid-column:1;gap:8px}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .carousel-footer .tpl-game-summary{grid-column:2;min-width:0}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .carousel-footer .carousel-actions{grid-column:3;gap:8px;flex-wrap:nowrap}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .rooms-section{grid-column:2!important;grid-row:2!important;min-height:0!important;gap:12px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-code-panel{flex:none;padding:14px 16px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .rooms-browse{min-height:0!important;padding:14px 16px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .version-note{grid-column:1!important;grid-row:3!important;margin:0!important;align-self:center}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .resume{grid-column:2!important;grid-row:3!important;margin:0!important;justify-self:end;align-self:center}
+}
+@media(min-width:960px) and (max-width:1300px) and (min-height:560px) and (pointer:fine){body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .carousel-footer{grid-template-columns:auto minmax(0,1fr) auto!important}body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .carousel-footer .tpl-game-summary p{display:none!important}body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .carousel-footer .carousel-actions{grid-column:3!important;justify-content:flex-end}}
+
+@media(min-width:960px) and (max-width:1300px) and (min-height:560px) and (pointer:fine){body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-body{padding:8px 10px!important}body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .game-library[data-card-carousel] .tile-body h2{font-size:18px!important;margin:4px 0!important}}
+
+@media(min-width:960px) and (max-height:650px) and (min-height:560px) and (pointer:fine){
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .tpl-lobby-grid{grid-template-rows:136px minmax(0,1fr) auto!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-stage{min-height:64px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-visitors{inset:32px 0 24px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-avatar{width:56px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .lobby-avatar img{width:32px!important;height:34px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-code-panel{padding:10px 16px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-code-panel .join-input{gap:8px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-code-panel .st-code-reset{margin-top:8px!important}
+}
+
+@media(max-width:959px){body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-carousel-section{min-width:0;max-width:100%}body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template] .game-library[data-card-carousel]{max-width:100%}}
+
+@media(min-width:960px) and (max-height:650px) and (min-height:560px) and (pointer:fine){
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-code-panel .st-lobby-error:empty{display:none!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .room-code-panel .st-code-reset{margin-top:4px!important;min-height:28px!important;height:28px!important;padding:4px 8px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .rooms-browse{padding:10px 12px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .rooms-heading{gap:6px!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .rooms-heading h2{font-size:18px!important;white-space:nowrap}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .rooms-heading .rooms-tools{gap:4px!important;flex-wrap:nowrap!important}
+body[data-ui-template="tactile"][data-visual-theme="playful"][data-ui-template]:not(.ui-large-text) .rooms-heading #refreshRooms{padding:4px 8px!important;min-height:32px!important}
+}

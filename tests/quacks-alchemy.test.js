@@ -12,7 +12,7 @@ function settle(r){for(const p of r.players){p.stopped=true;p.pending=[];}r.begi
 function choices(r){let n=0;while(r.hasPending()){assert.ok(++n<120,'pending effects terminate');for(const p of r.players){const q=r.view(p.id).mine.pending;if(!q)continue;const o=q.options.find(x=>!x.disabled);act(r,p,'choice',{choiceId:q.id,optionId:o.id});}}}
 function driver(r,cap=2000){
  let steps=0;while(r.phase!=='finished'){
-  assert.ok(++steps<cap,'progress '+r.round+' '+r.phase+' '+r.stage);if(r.phase==='between'){act(r,r.player(r.host),'next');continue;}
+  assert.ok(++steps<cap,'progress '+r.round+' '+r.phase+' '+r.stage);if(r.phase==='round-intro'){r.auto(r.nextRoundAt);continue;}if(r.phase==='between'){act(r,r.player(r.host),'next');continue;}
   for(const p of r.players){
    const s=r.view(p.id),m=s.mine;
    if(m.pending){const q=m.pending,o=q.options.find(o=>!o.disabled);assert.ok(o);act(r,p,'choice',{choiceId:q.id,optionId:o.id});continue;}
@@ -140,14 +140,14 @@ test('snow bonus and refine swap cannot repeat after a rescue revisits settlemen
 });
 test('visiting witch uses no coin, does not mark paid coin achievement, and cannot repeat',()=>{
  const {r,a,b}=fixture('carrot',true);r.fortune=EXTRA.find(f=>f.id==='witch-visit');r.applyFortune();r.visitingWitch={color:'copper',...WITCHES.copper.find(w=>w.id==='double')};const original=r.witches.copper;
- r.phase='settlement';r.stage='shopping';a.budget=9;a.canBuy=true;const before=cloneCoins(a.coins);act(r,a,'free-witch');assert.equal(a.budget,18);assert.deepEqual(a.coins,before);assert.equal(r.witches.copper,original);assert.equal(a.visitorUsed,true);assert.throws(()=>act(r,a,'free-witch'),e=>e.code==='WITCH_UNAVAILABLE');
+ r.phase='settlement';r.stage='shopping';a.budget=9;a.canBuy=true;const before=cloneCoins(a.coins);assert.equal(r.view(a.id).mine.visitorUsed,false);assert.equal(r.view(a.id).mine.canVisit,true);act(r,a,'free-witch');assert.equal(r.view(a.id).mine.visitorUsed,true);assert.equal(r.view(a.id).mine.canVisit,false);assert.equal(r.view(b.id).mine.visitorUsed,false);assert.equal(a.budget,18);assert.deepEqual(a.coins,before);assert.equal(r.witches.copper,original);assert.equal(a.visitorUsed,true);assert.throws(()=>act(r,a,'free-witch'),e=>e.code==='WITCH_UNAVAILABLE');
  r.fortune=EXTRA.find(f=>f.id==='good-neighbor');r.phase='brewing';r.stage='drawing';a.stopped=false;a.exploded=false;a.ready=false;const rubies=b.rubies,count=a.bag.length;act(r,a,'fortune-neighbor');assert.equal(b.rubies,rubies+2);assert.equal(a.bag.length,count+1);assert.throws(()=>act(r,a,'fortune-neighbor'),e=>e.code==='INVALID_PHASE');
  function cloneCoins(c){return {...c};}
 });
 test('real AI planner picks patients and completes essence plus nine rounds without forbidden private views',()=>{
  const {runTestAIStep}=require('../src/ai');let seed=345;const r=new QuacksRoom('ABCDEF','AI',n=>{seed=(seed*1664525+1013904223)>>>0;return seed%n;});const a=r.add('BotA',true);r.add('BotB',true);r.configure(a.id,{alchemists:true,witches:true});r.start();let now=0,tries=0;
  const history={transact:(room,entry,run)=>run()};
- while(r.phase!=='finished'){assert.ok(++tries<2500,'AI progresses '+r.phase+' '+r.stage);if(r.phase==='between')act(r,r.player(r.host),'next');else runTestAIStep(r,{history,now:now+=1500});}
+ while(r.phase!=='finished'){assert.ok(++tries<2500,'AI progresses '+r.phase+' '+r.stage);if(r.phase==='round-intro')r.auto(now=Math.max(now,r.nextRoundAt));else if(r.phase==='between')act(r,r.player(r.host),'next');else runTestAIStep(r,{history,now:now+=1500});}
  assert.equal(r.results.length,9);assert.ok(r.results.every(x=>x.players.every(p=>p.alchemy)));
 });
 

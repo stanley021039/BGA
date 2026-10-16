@@ -70,3 +70,12 @@ test('majority command adapter permits solo cruel play and enforces team and nor
  scope.state.cruel=null;assert.equal(enabled(),true);scope.state.players.pop();scope.state.players.pop();assert.equal(enabled(),false);
  scope.state.players.push({id:'C'});scope.busy=true;assert.equal(enabled(),false);
 });
+
+
+test('every game loads the shared kick and promote dialog before its controller',()=>{for(const [page,controller]of [['poker','app'],['race','race'],['draw','draw'],['gift','gift'],['majority','majority'],['telephone','telephone'],['trpg','trpg'],['musicquiz','party-games'],['minimal','party-games'],['bluff','bluff'],['quacks','quacks']]){const html=fs.readFileSync(path.join(__dirname,'../public',page+'.html'),'utf8');assert.equal(html.split('/shared/room-host.js').length-1,1,page);assert.ok(html.indexOf('/shared/room-host.js')<html.indexOf('src="/'+controller+'.js'),page);}for(const name of ['telephone','party-games','bluff','trpg'])assert.match(fs.readFileSync(path.join(__dirname,'../public',name+'.js'),'utf8'),/RoomHost.update\(next,render\)/);});
+
+test('common chat does not move management out of its shared header slot',()=>{
+ const f=fixture('draw'),header=f.document.createElement('header'),account=f.document.createElement('div'),manage=f.document.createElement('button'),chat=f.document.createElement('section'),tools=f.document.createElement('div');
+ header.setAttribute('data-site-header','');account.className='site-account';header.append(account);manage.id='managePlayers';f.node('controls').append(manage);chat.className='shared-chat ui-room-chat';tools.className='chat-room-tools';chat.append(tools);f.document.body.append(header,chat);
+ for(const phase of ['waiting','drawing','finished','waiting']){f.update({phase});assert.equal(manage.closest('[data-room-manage-slot]').parentElement,account);assert.equal(f.button('leave').parentElement,tools);assert.equal(f.document.querySelectorAll('#managePlayers').length,1);}
+});

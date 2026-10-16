@@ -2,6 +2,7 @@
  const q=s=>document.querySelector(s);let appearance,avatar,characters=[],artworks=[],busy=false,nameBusy=false;
  if(window.BarrageFrames){const trigger=q('#settings-barrage-frame');trigger.onclick=()=>window.BarrageFrames.openPicker(trigger);window.BarrageFrames.subscribe(prefs=>{const option=window.BarrageFrames.options.find(item=>item.id===prefs.selected);q('#settings-barrage-frame-status').textContent='目前彈幕框：'+(option?.label||'預設');const preview=q('#settings-barrage-preview');preview.replaceChildren();window.BarrageFrames.decorate(preview,{kind:'builtin',id:prefs.selected,version:1},'小雨','這一桌好好玩！');});}
 
+ if(window.MediaAppearance){const trigger=q('#settings-media-frame');trigger.onclick=()=>window.MediaAppearance.openPicker(trigger);window.MediaAppearance.subscribe(id=>{const option=window.BarrageFrames?.options.find(item=>item.id===id);q('#settings-media-frame-status').textContent='目前播放器外觀：'+(option?.label||'預設');const preview=q('#settings-media-preview');preview.replaceChildren();window.BarrageFrames?.decorate(preview,{kind:'builtin',id,version:1},'播放器','我的風格');});}
  for(const selector of ['#nickname-form','#settings-form'])window.GameUI?.bindForm?.(q(selector));
  for(const selector of ['#nickname-save','#settings-save'])window.GameUI?.decorateButton?.(q(selector),'save',{iconOnly:true});
  async function request(url,data){const r=await fetch(url,data===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),d=await r.json();if(!r.ok)throw Error(d.error);return d;}

@@ -35,3 +35,5 @@ test('the title cache evicts old entries and in-flight work has a separate fixed
  assert.match(await limited.resolve('00000000032'),/YouTube/);assert.equal(signals.length,32);limited.clear();assert.ok(signals.every(signal=>signal.aborted));
  release(new Response(JSON.stringify({title:'resolved after clear'})));await Promise.all(pending);
 });
+
+test('temporary metadata failures expire so a later enqueue can recover the real title',async()=>{let now=0,calls=0;const resolver=createYoutubeTitleResolver({now:()=>now,fetcher:async()=>{calls++;if(calls===1)throw Error('temporary');return new Response(JSON.stringify({title:'真正的影片名稱'}));}});assert.match(await resolver.resolve(VIDEO),/YouTube/);assert.match(await resolver.resolve(VIDEO),/YouTube/);assert.equal(calls,1);now+=require('../src/media/youtube-title').FAILURE_CACHE_MS+1;assert.equal(await resolver.resolve(VIDEO),'真正的影片名稱');assert.equal(calls,2);resolver.clear();});

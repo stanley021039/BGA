@@ -141,7 +141,6 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-coin-badge{fill:#091b12!important;stroke:#82934d!important;stroke-width:.7!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-coin-value{fill:#f6e38b!important;font-family:sans-serif!important;font-weight:800!important;font-size:var(--ui-type-p3, 14px)!important;pointer-events:none!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-space .pot-cell-number{pointer-events:none!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-space.occupied .pot-cell-number{transform:translate(0,14px)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-steam{fill:none!important;stroke:#c2d9b1!important;stroke-width:4!important;opacity:.18!important;pointer-events:none!important;animation:q-steam 5s ease-in-out infinite!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-bubble{animation:q-bubble 6s ease-in-out infinite!important;transform-box:fill-box!important;transform-origin:center!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-danger #cauldron{box-shadow:inset 0 0 36px #e49b4b33!important}
@@ -218,7 +217,6 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] #qZoomPot{background:#07190fcc!important;color:#e8dab7!important;border-color:#66745266!important;box-shadow:none!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-pot-zoom-canvas{background:#102e23!important;border-radius:12px!important}
 @media(max-width:780px){body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-coin-value{font-size:var(--ui-type-p3, 14px)!important}}body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-witch-detail{border:1px solid var(--q-line)!important;border-radius:12px!important}body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-witch-detail h3{font-size:15px!important}body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-witch-detail p{font-size:var(--ui-type-p3, 14px)!important}
-body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .pot-space.occupied .pot-cell-number{transform:translate(0,24px)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .shared-emoji-picker .st-emote-choice{border-radius:9px!important;background:transparent!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .shared-emoji-picker .st-emote-choice[aria-pressed=true]{background:var(--q-yellow)!important}
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .shared-emoji-picker .st-emote-choice[aria-pressed=true] small{color:#53420c!important}
@@ -348,4 +346,42 @@ body[data-game-kind=quacks] #quacksFx .summon-front h3{font-family:'Noto Serif T
 body[data-game-kind=quacks] #quacksFx .fortune-effect{border-top:1px solid #d8bb7555;border-bottom:1px solid #d8bb7555}
 body[data-game-kind=quacks] #quacksFx .summon-front .fortune-effect p{font-size:17px!important;line-height:1.85!important;letter-spacing:.035em!important;color:#faf0d8!important;text-wrap:pretty}
 body[data-game-kind=quacks] #quacksFx .summon-front .fortune-byline{color:#d2c398!important;font-size:11px!important;line-height:1.5!important}
+}
+
+/* Phase choices stay centered and readable without moving the round counter. */
+
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered #qStageTitle{text-align:center!important;font-size:clamp(20px,2.2vw,28px)!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered #qStageStep{font-size:14px!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered .q-stage-content{text-align:center!important;font-size:clamp(18px,1.6vw,22px)!important;line-height:1.7!important;}
+
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered .q-stage-content>p{font-size:inherit!important;line-height:1.7!important}
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom] .q-stage-centered .q-stage-content>button{font-size:18px!important;}
+@media(max-width:620px){}
+
+body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #qStageContent #alchemy>button{font-size:16px!important;line-height:1.25!important}
+
+body[data-game-kind=quacks] .q-visitor-free{pointer-events:none;font-size:12px;font-weight:700;line-height:1.2;background:var(--ui-selected);color:var(--ui-selected-text);border-radius:4px}
+
+/* Unselected book faces stay readable against their paper surface in both themes. */
+@layer stitch-export {
+body[data-game-kind=quacks][data-ui-template=tactile] #bookDialog .q-book-faces button.q-book-face{background:#fffbef!important;color:#30291e!important;border-color:#ad9663!important;opacity:1!important;filter:none!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #bookDialog .q-book-faces button.q-book-face[aria-pressed=true]{background:#f3d178!important;color:#30291e!important;border-color:#866222!important}
+body[data-game-kind=quacks][data-ui-template=tactile] #bookDialog .q-book-faces button.q-book-face :is(strong,span){color:inherit!important;opacity:1!important}
+}
+
+@layer stitch-export {
+body[data-game-kind=quacks] #qRiskCaption{font-size:16px!important;font-weight:650;color:var(--ui-text)!important;background:var(--ui-surface-panel);border:1px solid var(--ui-control-border);border-radius:10px;line-height:1.4!important;white-space:normal!important}
+body[data-game-kind=quacks] #qRiskCaption strong{font-size:22px!important;font-weight:850;line-height:1.2!important;color:#715100!important;white-space:nowrap}
+html[data-color-scheme=dark] body[data-game-kind=quacks] #qRiskCaption strong{color:#ffe079!important}
+body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit{background:#fff1be;color:#543800!important;border-color:#b37a00;box-shadow:0 0 0 2px #f6ca4388,0 0 18px #f6bd3977;animation:q-risk-limit-glow 1.6s ease-in-out infinite alternate}
+body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit strong{color:#5f3a00!important}
+html[data-color-scheme=dark] body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit{background:#3b2c12;color:#fff3bb!important;border-color:#f5cf62}
+html[data-color-scheme=dark] body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit strong{color:#ffe079!important}
+@keyframes q-risk-limit-glow{from{box-shadow:0 0 0 2px #f6ca4377,0 0 10px #f6bd3944}to{box-shadow:0 0 0 2px #f6ca43bb,0 0 22px #f6bd3999}}
+html.motion-reduced body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit{animation:none!important}
+@media(prefers-reduced-motion:reduce){body[data-game-kind=quacks] #qRiskCaption.q-risk-at-limit{animation:none!important}}
+}
+
+@layer stitch-export {
+body[data-game-kind=quacks] #qStageOverlay.q-round-intro .q-round-announcement{font-size:clamp(32px,5vw,64px)!important;font-weight:850!important;line-height:1.3!important;letter-spacing:.1em!important;color:var(--st-ink)!important;text-align:center!important}
 }

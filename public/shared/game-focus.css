@@ -57,3 +57,6 @@ body.game-focus-active[data-game-kind=draw] .board-section.is-drawing .draw-coun
 
 /* The race utility column now contains required game operations. */
 body.game-focus-active .race-utility-panel.ui-room-play-tools{display:flex!important}
+
+/* Floating media controls stay clickable when they share the bottom-right corner. */
+body:has(#tableMedia[open],#tableMediaPlaylist[open]) #gameFocusToggle{z-index:179}
