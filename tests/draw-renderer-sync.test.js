@@ -45,7 +45,9 @@ test('eight SSE fills apply once; undo and reconnect retain an exhausted lifetim
  // Earlier undone fills still consume quota; pixel stress (48 fills) is
  // independently covered by stroke-canvas.test.js on a small real raster.
  const ui=await setup(t,'guest'),strokes=[];
- for(let version=1;version<=8;version++){const stroke=fill(version);strokes.push(stroke);ui.sources[0].emit('stroke',event(stroke,{usedFills:40+version,usedBatches:40+version,usedPoints:40+version}));}
+ ui.context.injected={canvasEpoch:CANVAS_EPOCH,round:1,version:80,strokes:[],quota:{usedFills:40,usedBatches:40,usedPoints:40}};
+ run(ui,'applyCanvasSnapshot(injected)');await run(ui,'canvasSession.whenIdle()');
+ for(let version=81;version<=88;version++){const stroke=fill(version);strokes.push(stroke);ui.sources[0].emit('stroke',event(stroke,{usedFills:version-40,usedBatches:version-40,usedPoints:version-40}));}
  assert.equal(run(ui,'sessionRenderer.metrics().fillApplications'),8);
  assert.equal(run(ui,'sessionRenderer.metrics().filledPixels'),8*512*256);
  assert.ok(run(ui,'sessionRenderer.metrics().checkpointBytes')<=8*1024*1024);
