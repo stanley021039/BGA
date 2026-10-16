@@ -359,3 +359,5 @@ body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][d
 @media(max-width:620px){}
 
 body[data-game-focus="#game"][data-game-kind=quacks][data-ui-template=tactile][data-visual-theme=playful][data-room-layout=custom][data-quacks-stage=essence] #qStageContent #alchemy>button{font-size:16px!important;line-height:1.25!important}
+
+body[data-game-kind=quacks] .q-visitor-free{pointer-events:none;font-size:12px;font-weight:700;line-height:1.2;background:var(--ui-selected);color:var(--ui-selected-text);border-radius:4px}

@@ -140,7 +140,7 @@ test('snow bonus and refine swap cannot repeat after a rescue revisits settlemen
 });
 test('visiting witch uses no coin, does not mark paid coin achievement, and cannot repeat',()=>{
  const {r,a,b}=fixture('carrot',true);r.fortune=EXTRA.find(f=>f.id==='witch-visit');r.applyFortune();r.visitingWitch={color:'copper',...WITCHES.copper.find(w=>w.id==='double')};const original=r.witches.copper;
- r.phase='settlement';r.stage='shopping';a.budget=9;a.canBuy=true;const before=cloneCoins(a.coins);act(r,a,'free-witch');assert.equal(a.budget,18);assert.deepEqual(a.coins,before);assert.equal(r.witches.copper,original);assert.equal(a.visitorUsed,true);assert.throws(()=>act(r,a,'free-witch'),e=>e.code==='WITCH_UNAVAILABLE');
+ r.phase='settlement';r.stage='shopping';a.budget=9;a.canBuy=true;const before=cloneCoins(a.coins);assert.equal(r.view(a.id).mine.visitorUsed,false);assert.equal(r.view(a.id).mine.canVisit,true);act(r,a,'free-witch');assert.equal(r.view(a.id).mine.visitorUsed,true);assert.equal(r.view(a.id).mine.canVisit,false);assert.equal(r.view(b.id).mine.visitorUsed,false);assert.equal(a.budget,18);assert.deepEqual(a.coins,before);assert.equal(r.witches.copper,original);assert.equal(a.visitorUsed,true);assert.throws(()=>act(r,a,'free-witch'),e=>e.code==='WITCH_UNAVAILABLE');
  r.fortune=EXTRA.find(f=>f.id==='good-neighbor');r.phase='brewing';r.stage='drawing';a.stopped=false;a.exploded=false;a.ready=false;const rubies=b.rubies,count=a.bag.length;act(r,a,'fortune-neighbor');assert.equal(b.rubies,rubies+2);assert.equal(a.bag.length,count+1);assert.throws(()=>act(r,a,'fortune-neighbor'),e=>e.code==='INVALID_PHASE');
  function cloneCoins(c){return {...c};}
 });
