@@ -7,7 +7,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const { PNG } = require('pngjs');
-const { openDatabase, SCHEMA_VERSION, MARKET_TABLES, MARKET_IMAGE_SQL } = require('../src/db');
+const { openDatabase, transaction, SCHEMA_VERSION, MARKET_TABLES, MARKET_IMAGE_SQL } = require('../src/db');
 const { validateDatabase, validateData, sha } = require('../src/data/validation');
 const { run, canonical } = require('../src/data/transfer');
 const { createAuth } = require('../src/auth');
@@ -228,7 +228,7 @@ for (const [label, changes] of invalidRecords) test(`cold export rejects ${label
 });
 
 test('cold export rejects per-owner gallery quota overflow', async t => {
-  const f=fixture(t), db=new DatabaseSync(f.source.dbFile); try {for(let n=0;n<101;n++)insertImage(db,f);} finally {db.close();}
+  const f=fixture(t), db=new DatabaseSync(f.source.dbFile); try {transaction(db,()=>{for(let n=0;n<101;n++)insertImage(db,f);});} finally {db.close();}
   await assert.rejects(run(f.exportRequest),rejected); assert.equal(fs.existsSync(f.bundleDir),false);
 });
 

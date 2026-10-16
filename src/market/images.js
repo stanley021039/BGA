@@ -136,12 +136,15 @@ class MarketImageStore{
  }
  async stopThumbnails(){this.thumbnailStopped=true;clearTimeout(this.thumbnailTimer);await this.thumbnailWork;}
 }
-function validateMarketImagesDatabase(db){
+function validateMarketImagesDatabase(db,overrides=DEFAULT_IMAGE_LIMITS){
+ // Only trusted callers supply policy; never read limits from backup contents.
+ // The data-transfer entry point omits overrides and keeps the default policy.
+ const limits=imageLimits(overrides);
  const check=value=>{if(!value)throw Error('Invalid market images');};
  const stamp=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)&&Number.isFinite(Date.parse(value))&&new Date(value).toISOString()===value;
  const counts=db.prepare('SELECT COUNT(*) AS count,COALESCE(SUM(length(bytes)),0) AS bytes FROM market_images').get();
- check(counts.count<=DEFAULT_IMAGE_LIMITS.maxImages&&counts.bytes<=DEFAULT_IMAGE_LIMITS.maxStorageBytes);
- check(!db.prepare('SELECT author_id FROM market_images GROUP BY author_id HAVING COUNT(*)>? LIMIT 1').get(DEFAULT_IMAGE_LIMITS.maxPerUser));
+ check(counts.count<=limits.maxImages&&counts.bytes<=limits.maxStorageBytes);
+ check(!db.prepare('SELECT author_id FROM market_images GROUP BY author_id HAVING COUNT(*)>? LIMIT 1').get(limits.maxPerUser));
  for(const row of db.prepare('SELECT * FROM market_images').iterate()){
   check(UUID.test(row.id)&&UUID.test(row.author_id)&&db.prepare('SELECT 1 FROM users WHERE id=?').get(row.author_id)&&stamp(row.created_at));
   // Bootstrap historically used username as display_name (up to 24 chars),
@@ -150,7 +153,7 @@ function validateMarketImagesDatabase(db){
   check(typeof row.buckets_json==='string'&&row.buckets_json.length<=256&&typeof row.weekdays_json==='string'&&row.weekdays_json.length<=64);
   const rules=rulesOf({buckets:JSON.parse(row.buckets_json),weekdays:JSON.parse(row.weekdays_json)});
   check(JSON.stringify(rules.buckets)===row.buckets_json&&JSON.stringify(rules.weekdays)===row.weekdays_json);
-  const image=inspectCanonicalImage(row.bytes);
+  const image=inspectCanonicalImage(row.bytes,limits);
   check(row.mime===image.mime&&Number.isSafeInteger(row.width)&&row.width===image.width&&Number.isSafeInteger(row.height)&&row.height===image.height);
   if(row.status==='pending')check(row.version===1&&row.approved_by===null&&row.approved_at===null);
   else check(row.status==='approved'&&row.version===2&&typeof row.approved_by==='string'&&UUID.test(row.approved_by)&&db.prepare('SELECT 1 FROM users WHERE id=?').get(row.approved_by)&&stamp(row.approved_at)&&Date.parse(row.approved_at)>=Date.parse(row.created_at));
@@ -162,7 +165,7 @@ function validateMarketImagesDatabase(db){
   check(UUID.test(row.user_id)&&db.prepare('SELECT 1 FROM users WHERE id=?').get(row.user_id)&&REQUEST_ID.test(row.request_id)&&/^[0-9a-f]{64}$/.test(row.fingerprint)&&stamp(row.created_at));
   const response=JSON.parse(row.response_json);check(response?.ok===true&&!Object.hasOwn(response,'replayed'));
   const images=row.operation==='image-upload'?[response.image]:response.images;
-  check(Array.isArray(images)&&images.length>=1&&images.length<=DEFAULT_IMAGE_LIMITS.maxApprovalBatch&&new Set(images.map(image=>image?.id)).size===images.length);
+  check(Array.isArray(images)&&images.length>=1&&images.length<=limits.maxApprovalBatch&&new Set(images.map(image=>image?.id)).size===images.length);
   if(row.operation==='image-approve')check(response.approved===images.length);
   for(const image of images){
    check(image&&UUID.test(image.id));const stored=db.prepare('SELECT * FROM market_images WHERE id=?').get(image.id);check(stored);

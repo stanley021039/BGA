@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const {randomUUID,randomBytes}=require('node:crypto'),{deflateSync}=require('node:zlib'),{Worker}=require('node:worker_threads');
 const sharp=require('sharp'),{PNG}=require('pngjs'),{crc32}=require('pngjs/lib/crc');
-const {openDatabase}=require('../src/db');
+const {openDatabase,transaction}=require('../src/db');
 const {MarketImageStore,validateMarketImagesDatabase,inspectCanonicalImage,DEFAULT_IMAGE_LIMITS,BUCKETS}=require('../src/market/images');
 const {imageInput,canonicalImage}=require('../src/market/image-codec');
 const start=Date.parse('2026-10-07T05:00:00.000Z'),request=()=>randomUUID(),code=value=>error=>error.code===value;
@@ -185,14 +185,45 @@ test('backup validator rejects semantic metadata, references, canonical corrupti
  for(const [column,value] of [['fingerprint','bad'],['request_id','short'],['response_json','{"ok":true,"image":null}'],['created_at','not a date']]){f.db.prepare(`UPDATE market_requests SET ${column}=?`).run(value);assert.throws(()=>validateMarketImagesDatabase(f.db));f.db.prepare(`UPDATE market_requests SET ${column}=?`).run(receipt[column]);}
  approve(f,[image]);const approved=f.db.prepare('SELECT * FROM market_images').get();for(const [column,value] of [['approved_by',request()],['approved_at',new Date(start-1).toISOString()],['approved_at','invalid'],['version',1]]){f.db.prepare(`UPDATE market_images SET ${column}=?`).run(value);assert.throws(()=>validateMarketImagesDatabase(f.db));f.db.prepare(`UPDATE market_images SET ${column}=?`).run(approved[column]);}assert.equal(validateMarketImagesDatabase(f.db),true);
 });
-test('backup validator rejects per-author/gallery/storage quotas before decoding rows',async t=>{
- const f=fixture(t),image=(await upload(f)).image,row=f.db.prepare('SELECT * FROM market_images').get(),insert=f.db.prepare('INSERT INTO market_images VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
- for(let i=0;i<100;i++)insert.run(request(),row.author_id,row.author_name,row.mime,row.bytes,row.width,row.height,row.buckets_json,row.weekdays_json,row.version,row.status,row.created_at,row.approved_by,row.approved_at);
- assert.throws(()=>validateMarketImagesDatabase(f.db));assert.equal(f.db.prepare('SELECT COUNT(*) n FROM market_images').get().n,101);
- for(let i=0;i<900;i++)insert.run(request(),row.author_id,row.author_name,row.mime,row.bytes,row.width,row.height,row.buckets_json,row.weekdays_json,row.version,row.status,row.created_at,row.approved_by,row.approved_at);assert.equal(f.db.prepare('SELECT COUNT(*) n FROM market_images').get().n,1001);assert.throws(()=>validateMarketImagesDatabase(f.db));
- // These aggregate checks intentionally precede full decoding of any BLOB.
- f.db.exec('DELETE FROM market_requests; DELETE FROM market_images; PRAGMA ignore_check_constraints=ON');
- const large=Buffer.alloc(4*1024*1024);for(let i=0;i<65;i++)insert.run(request(),row.author_id,row.author_name,row.mime,large,row.width,row.height,row.buckets_json,row.weekdays_json,row.version,row.status,row.created_at,row.approved_by,row.approved_at);assert.throws(()=>validateMarketImagesDatabase(f.db));
+// Valid, canonical PNGs ensure removing a quota check cannot pass via a decode error.
+for(const quota of ['per-author','gallery','storage'])test('backup validator enforces '+quota+' boundaries before decoding valid rows',async t=>{
+ const f=fixture(t);await upload(f);
+ const row=f.db.prepare('SELECT * FROM market_images').get(),insert=f.db.prepare('INSERT INTO market_images VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+ const add=author=>transaction(f.db,()=>insert.run(request(),author,row.author_name,row.mime,row.bytes,row.width,row.height,row.buckets_json,row.weekdays_json,row.version,row.status,row.created_at,row.approved_by,row.approved_at));
+ const limits=quota==='per-author'?{maxPerUser:2}:quota==='gallery'?{maxImages:2}:{maxStorageBytes:2*row.bytes.length};
+ const decoder=t.mock.method(PNG.sync,'read');
+ assert.equal(validateMarketImagesDatabase(f.db,limits),true,'below limit');
+ add(quota==='gallery'?f.other.id:f.owner.id);
+ assert.equal(validateMarketImagesDatabase(f.db,limits),true,'exactly at limit');
+ assert.ok(decoder.mock.callCount()>=3,'the accepted fixtures really decode');
+ if(quota==='storage'){
+  assert.equal(validateMarketImagesDatabase(f.db,{maxStorageBytes:2*row.bytes.length+1}),true,'one byte below limit');
+  decoder.mock.resetCalls();assert.throws(()=>validateMarketImagesDatabase(f.db,{maxStorageBytes:2*row.bytes.length-1}),/Invalid market images/);
+  assert.equal(decoder.mock.callCount(),0,'one byte over limit must reject before decoding');
+ }
+ add(f.owner.id);decoder.mock.resetCalls();
+ assert.throws(()=>validateMarketImagesDatabase(f.db,limits),/Invalid market images/);
+ assert.equal(decoder.mock.callCount(),0,'over quota must reject before decoding');
+ assert.equal(f.db.prepare('SELECT COUNT(*) n FROM market_images').get().n,3);
+ assert.equal(f.db.prepare('SELECT SUM(length(bytes)) n FROM market_images').get().n,3*row.bytes.length);
+ assert.equal(validateMarketImagesDatabase(f.db),true,'only the narrowed policy rejects these valid rows');
+});
+
+test('backup validator retains the default 256 MiB policy without allocating a full gallery',async t=>{
+ const f=fixture(t);await upload(f);let reportedBytes=256*1024*1024;
+ // Inject only aggregate bytes to test the default constant; the small real-DB
+ // boundary cases above independently exercise SUM(length(bytes)) and decoding.
+ const policyView={prepare(sql){const statement=f.db.prepare(sql);return sql==='SELECT COUNT(*) AS count,COALESCE(SUM(length(bytes)),0) AS bytes FROM market_images'?{get:()=>({...statement.get(),bytes:reportedBytes})}:statement;}};
+ assert.equal(validateMarketImagesDatabase(policyView),true);
+ reportedBytes++;assert.throws(()=>validateMarketImagesDatabase(policyView),/Invalid market images/);
+ for(const overrides of [{maxStorageBytes:0},{maxStorageBytes:256*1024*1024+1},{maxImages:0},{unknownLimit:1}])assert.throws(()=>validateMarketImagesDatabase(f.db,overrides),/Invalid market image limits/);
+});
+
+test('backup validator rejects corrupt images below a small storage limit',async t=>{
+ const f=fixture(t);await upload(f);const row=f.db.prepare('SELECT * FROM market_images').get(),limits={maxStorageBytes:2*row.bytes.length};
+ assert.equal(validateMarketImagesDatabase(f.db,limits),true);
+ const corrupt=Buffer.from(row.bytes);corrupt[29]^=1;f.db.prepare('UPDATE market_images SET bytes=?').run(corrupt);
+ assert.throws(()=>validateMarketImagesDatabase(f.db,limits),code('INVALID_MARKET_IMAGE'));
 });
 
 test('new uploads generate bounded 512px proportional WebP thumbnails and measure fixture bytes',async t=>{

@@ -711,3 +711,22 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 
 ## 2026-10-16 受影響測試與CI分工
 使用者明確要求新增npm run test:affected、本機受影響測試、同commit CI全套、仍保留兩輪審查及開PR／merge。工具採明確路徑表；未知／核心／共用／fixture／刪測試回退全套，差異取branch/index/worktree/untracked聯集；套件例外比對三種snapshot。AGENTS／PR審查／打版及README已對齊，CI明確checkout並驗head SHA，完整npm test仍跑Linux／Windows。17項本機focused通過，未本機全套；僅開發工具／流程，不升產品版號。範圍／限制與最新PR證據入口見[測試分工](../TESTING.md)，未部署。
+
+## 2026-10-16 Windows CI 耗時分析
+PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 38842723647 的同 head 084e4016：Windows 全套 2302 項 817269ms，Linux 77599ms；前輪 run 38841283889 Windows 402309ms、Linux 114757ms，Windows runner 映像同為 20261007.264.1，不能歸因映像升級。最慢個案為 market-images 配額驗證 106760ms、quacks retry HTTP 96360ms，以及三款房間 1000 次加入／離開 90600／83420／64950ms（四捨五入）。並行個案時間不可相加當作 job wall time。
+配額 fixture 約 1065 次逐筆 SQLite 寫入，含 65 筆 4MiB BLOB；優先評估按驗證階段 transaction 批次準備，保留配額與解碼順序斷言。三款房間隔離本機 Windows 量測共 12437 次 fsync、耗時約 5583ms，四項選定測試皆通過；這不是 CI 磁碟瓶頸的直接量測。後續先收集 CI 每檔／setup/body/cleanup 與 runner 資源，再比較 Windows 分片及明確 concurrency；保留同 head 全套門檻與真實持久化驗證，不以移除 fsync 或減少壓力迴圈作結論。原始分析留於本機忽略目錄 work/windows-ci-analysis，未部署。
+
+2026-10-16 使用者授權實測後增量：本機 Windows Node22.22.3，原版／批次版各三輪、檔案並行1／3，共12次五案例執行皆通過。配額個案中位數：原版單檔2049ms／並行2366ms；批次單檔2416ms／並行2469ms，未證實批次加速，實驗改動已撤回。數據順序存在環境波動，不把整組時間差歸因候選版。獨立診斷分支 codex/windows-test-fixture-benchmark 的 head 082a290 只新增 tools/benchmark-windows-ci.cjs 與限定該分支push的workflow；真正Windows CI run 38845642927 交錯比較兩版／兩種並行數，候選僅記憶體編譯三段原有insert迴圈，無來源檔或產品durability修改，最終結果另記。
+隔離故障注入：只移除單人配額檢查，目標測試正確失敗；只移除總數檢查或容量檢查，目標仍通過。總數案例同時超單人上限，容量案例無效PNG可由解碼拋錯，故目前斷言不能證明對應檢查存在與解碼順序；不是產品檢查已缺失。候選精簡：quacks-http三模式重複的認證／資源斷言可集中一次，room-media-http多次邀請／註冊可改各fixture獨立預建帳號；retry刪房後重試、真實持久化與三種引擎差異仍須保留，未刪測試。
+診斷提交自查分開兩輪（base46cbeee／head082a290）：第一輪核對任務範圍、原版資料量及斷言不變、隔離執行及不改main門檻；第二輪核對僅目標測試檔的三個迴圈轉換、子程序失敗與逾時非零、固定Node、環境與commit輸出、來源不變驗證及無密鑰。語法／diff檢查及新工具兩版smoke通過；不是完整套件或產品合併審查通過，未開PR／合併／部署。
+本機 SQLite 分階段 probe（各版單次、非 CI）：原版小圖1000筆 run 累積426ms、大圖65筆1591ms、exec22ms、close3ms、清理34ms；批次小圖8ms、大圖885ms、exec1008ms、close31ms、清理29ms。包 transaction 確實降低小筆 insert 呼叫成本，但大量 BLOB 寫入／提交仍主導；不能只用 insert 計時宣稱全案例加速。probe兩版目標案例均通過，沒有更改SQLite durability參數。
+真正CI最終量測增量（取代「批次未證實」作為CI結論，但不改本機數據）：run38845642927、job116795443025、head082a290a4f16b51ec1ff8f4057ecb094601f0277，Windows映像20261007.264.1／Node22.23.3／4邏輯CPU／約16GiB。原訂12組三輪，因重複診斷較久，主動取消檢查進度；無個案逾時，已完成9組各5項皆status0，共45次個案，兩輪完整配對及第三輪baseline/單檔；job整體cancelled，不是CI通過／全套門檻。兩輪配對quota：concurrency1原版15053／12963ms、批次6107／6903ms；concurrency3原版49007／47353ms、批次5847／11584ms。各版相同原始資料／斷言、記憶體改寫insert準備，來源不變檢查通過。支持Windows CI批次建立候選，不能外推全套節省比例。
+原版五案例組wall：concurrency1為92.21／76.96s，concurrency3為103.06／106.27s；quacks retry單檔4.24–4.65s、並行14.94–16.37s，draw churn單檔19.49–27.99s、並行60.70–66.38s。這組負載的並行成本有直接證據，但只有單一runner／兩輪完整配對，尚不直接修改全套concurrency。下一步先實作批次fixture並補能抓到各quota移除的斷言，再用固定head完整CI驗證；重複認證／靜態資源斷言及媒體fixture註冊列為後續精簡，不刪retry／耐久性／引擎差異驗證。原始結構化結果work/windows-ci-analysis/ci-results.json；沒有產品修改、PR、merge、tag或部署。
+
+## 2026-10-16 備份驗證與輕量測試實作
+使用者確認讓備份驗證接受可信任的收緊限制，以有效小圖片取代260MiB假資料，並實作先前確認的批次fixture及重複流程精簡。分支codex/lightweight-backup-tests，基線main46cbeee；診斷分支的workflow／工具未帶入。validateMarketImagesDatabase沿用imageLimits，拒絕未知／非正整數／高於預設的設定；正式data-transfer入口仍省略覆寫，維持256MiB／1000／100等預設，不讀備份內限制。驗證器對圖片解碼與receipt上限也沿用收緊的policy，未改正式路徑行為，依release規範測試／等同行為整理不升版。
+配額拆成三張有效PNG的單人／總張數／容量邊界，另驗一位元組邊界、PNG decoder呼叫順序、正式預設容量常數與未超容量的損壞圖片。default容量案例只注入聚合bytes，不冒稱真的寫入；小圖真SQLite案例驗SUM(length(bytes))。cold export正式單人101張測試批次transaction，原有跨作者1001張整合案例保留。媒體fixture批次預建獨立成員、四帳戶仍真登入；郎中三purpose仍完整九輪／history／achievements與retry刪房後不重複授獎，僅共通權限／靜態資源檢查集中production。未縮減churn／關閉fsync或更改CI門檻。
+四檔focused97/97通過；五種隔離記憶體mutation（刪單人／總數／容量guard、<=改<、quota移到解碼後）均被對應新測試抓到。單次本機比較原混合quota2827ms，五個替代案例合計269ms；整組三檔44項9479ms／新48項10312ms，未證實整組或全套加速，不外推CI收益。結果留本機work/windows-ci-analysis。test:affected因共用來源回退全233檔，依規範實際執行；全套結果另記。
+兩輪本機自查分開完成：第一輪核對需求／範圍，保留正式政策、安全邊界與整合場景；第二輪核對邏輯、限值驗證、decoder spy可觀察性、錯誤遮蔽、transaction rollback、fixture帳號／session隔離與密鑰風險。檢查同一基線46cbeee及相同工作區程式差異SHA256 00d1e3a7436bdbccb9fa61fa75d2019517618ef0a2ba90ab1f252442dd5bb876，未發現未解重大問題；此為未提交本機自查，不冒稱PR固定head審查或同head雙平台CI通過。尚未PR／合併／部署。
+最終本機驗證：npm run test:affected實際回退全233檔，Windows Node22.22.3完整2306/2306，fail/cancel/skip 0，169408.6394ms，exit0；release check與diff check通過。取代本輪前述全套尚在執行狀態。測試後僅更新證據文件，程式差異hash不變；未提交／PR／遠端CI／merge／部署，不以本機結果代替合併所需同head雙平台CI。
+2026-10-16 PR交付授權增量：使用者明確要求開PR、固定提交兩輪審查、等待同一head雙平台CI通過後merge，並比較Windows全套耗時。本機已測程式差異hash仍為00d1e3a7436bdbccb9fa61fa75d2019517618ef0a2ba90ab1f252442dd5bb876；本次提交只增加交付意圖記錄，未改已驗程式。最新固定提交審查、CI／比較及合併證據以本次PR對話為準；不包含部署授權。

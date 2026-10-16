@@ -7,9 +7,9 @@ for(const purpose of ['test','production','retry'])test('quacks '+purpose+' auth
  if(purpose==='retry')dbRun(db=>db.exec("CREATE TRIGGER reject_quacks_badges BEFORE INSERT ON user_achievements BEGIN SELECT RAISE(ABORT,'synthetic badge failure'); END"));
  async function post(route,cookie,data={},status=200){const res=await fetch(base+'/api/'+route,{method:'POST',headers:{'Content-Type':'application/json',...(cookie?{Cookie:cookie}:{})},body:JSON.stringify(data)}),s=await res.json();assert.equal(res.status,status,JSON.stringify(s));return {s,cookie:res.headers.get('set-cookie')?.split(';')[0]};}
  const owner=(await post('auth/login',null,{username:'quacks_owner',password:'synthetic-quacks-password'})).cookie,invite=(await post('admin/invites',owner)).s.code,peer=(await post('auth/register',null,{username:'quacks_peer',password:'synthetic-quacks-password',confirmPassword:'synthetic-quacks-password',invite})).cookie,cookies=[owner,peer];
- await post('create',null,{type:'quacks'},401);await post('create',owner,{type:'quacks',bookSet:5},400);
+ if(purpose==='production'){await post('create',null,{type:'quacks'},401);await post('create',owner,{type:'quacks',bookSet:5},400);}
  const {code}=(await post('create',owner,{type:'quacks',hiddenProgress:true})).s;
- await post('join',peer,{code});await post('settings',peer,{code,witches:true},403);await post('start',peer,{code},403);
+ await post('join',peer,{code});if(purpose==='production'){await post('settings',peer,{code,witches:true},403);await post('start',peer,{code},403);}
  await post('settings',owner,{code,witches:true,bookSet:6,hiddenProgress:true});await post('start',owner,{code});
  const state=async cookie=>(await (await fetch(base+'/api/state?code='+code,{headers:{Cookie:cookie}})).json());
  const action=async (cookie,s,action,data={})=>(await post('action',cookie,{code,action,roundId:s.roundId,requestId:randomUUID(),...data})).s;
@@ -34,8 +34,11 @@ for(const purpose of ['test','production','retry'])test('quacks '+purpose+' auth
  const historyList=await (await fetch(base+'/api/history',{headers:{Cookie:owner}})).json(),match=historyList.find(m=>m.type==='quacks');assert.equal(match.status,'finished');
  const history=await (await fetch(base+'/api/history/'+match.id,{headers:{Cookie:owner}})).json();assert.match(history[0].engine.source,/class QuacksRoom/);assert.match(history[0].engine.catalog,/Crow|烏鴉/);assert.equal(history.filter(r=>r.kind==='result').at(-1).after.results.length,9);
  await post('reconnect',owner,{code});const rooms=await (await fetch(base+'/api/rooms',{headers:{Cookie:owner}})).json();assert.equal(rooms.rooms.find(r=>r.code===code).maxPlayers,8);
- for(const path of ['/quacks','/quacks/'+code]){assert.equal((await fetch(base+path,{redirect:'manual'})).status,302);const r=await fetch(base+path,{headers:{Cookie:owner}});assert.equal(r.status,200);assert.match(await r.text(),/data-game-focus/);}
- for(const path of ['/quacks.js','/quacks-art.js','/quacks-fx.js','/assets/game-sounds/quacks-explosion.wav','/quacks.css','/assets/playful/game-quacks.svg'])assert.equal((await fetch(base+path)).status,200);
+ // Resource serving and HTTP access policy do not depend on achievement purpose.
+ if(purpose==='production'){
+  for(const path of ['/quacks','/quacks/'+code]){assert.equal((await fetch(base+path,{redirect:'manual'})).status,302);const r=await fetch(base+path,{headers:{Cookie:owner}});assert.equal(r.status,200);assert.match(await r.text(),/data-game-focus/);}
+  for(const path of ['/quacks.js','/quacks-art.js','/quacks-fx.js','/assets/game-sounds/quacks-explosion.wav','/quacks.css','/assets/playful/game-quacks.svg'])assert.equal((await fetch(base+path)).status,200);
+ }
  if(purpose==='retry'){
   await post('leave',owner,{code});await post('leave',peer,{code});dbRun(db=>db.exec('DROP TRIGGER reject_quacks_badges'));
   const until=Date.now()+4000;let earned=false;while(Date.now()<until){const collection=await (await fetch(base+'/api/achievements',{headers:{Cookie:owner}})).json();earned=!!collection.achievements.find(a=>a.id==='quacks-first-match').unlockedAt;if(earned)break;await new Promise(resolve=>setTimeout(resolve,40));}assert.equal(earned,true,'global retry survives room deletion');const before=dbRun(db=>db.prepare('SELECT * FROM user_achievements ORDER BY user_id,achievement_id').all());await new Promise(resolve=>setTimeout(resolve,850));assert.deepEqual(dbRun(db=>db.prepare('SELECT * FROM user_achievements ORDER BY user_id,achievement_id').all()),before);
