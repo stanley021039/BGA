@@ -7,7 +7,7 @@ function harness(saved={},blocked=false,storageBlocked=false,musicNetwork={}){
  const node=id=>{if(!nodes.has(id))nodes.set(id,{hidden:false,value:'',children:[],dataset:{},textContent:'',innerHTML:'',attributes:{},classList:{toggle(){}},querySelector:node,append(...children){this.children.push(...children);},replaceChildren(...children){this.children=children;},setAttribute(k,v){this.attributes[k]=v;},getAttribute(k){return this.attributes[k];}});return nodes.get(id);};
  const document={hidden:false,createElement:()=>node('panel'),body:{dataset:{},append(){}},querySelector:()=>null,addEventListener(type,fn){const key='document:'+type;listeners.set(key,[...(listeners.get(key)||[]),fn]);}};
  const window={addEventListener(type,fn){listeners.set('window:'+type,[...(listeners.get('window:'+type)||[]),fn]);}};
- class Audio {constructor(src){this.src=src;this.volume=1;this.paused=true;this.currentTime=0;this.readyState=1;this.plays=0;this.pauses=0;clips.push(this);}play(){this.plays++;if(blocked)return Promise.reject(Error('autoplay'));this.paused=false;return Promise.resolve();}pause(){this.pauses++;this.paused=true;}load(){}removeAttribute(key){delete this[key];}}
+ class Audio {constructor(src){this.src=src;this.volume=1;this.paused=true;this.currentTime=0;this.readyState=1;this.plays=0;this.pauses=0;clips.push(this);}play(){this.plays++;if(blocked)return Promise.reject(Error('autoplay'));this.paused=false;return Promise.resolve();}pause(){this.pauses++;this.paused=true;}load(){}addEventListener(){}removeAttribute(key){delete this[key];}}
  const timers=new Map();let timerId=0;
  const context={window,document,Audio,localStorage:{getItem(k){if(storageBlocked)throw Error('storage blocked');return storage.get(k)??null;},setItem(k,v){if(storageBlocked)throw Error('storage blocked');storage.set(k,String(v));}},Date,setTimeout(fn){const id=++timerId;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),setInterval(){},MutationObserver:class{observe(){}},Option:class{constructor(text,value){this.text=text;this.value=value;}},fetch:async(url,options={})=>{requests.push(url);if(musicNetwork.fetch)return musicNetwork.fetch(url,options);return {ok:true,json:async()=>url.includes('room-music')?{version:1,serverNow:Date.now(),playing:true,position:0,loop:false,track:{id:'sample',title:'測試',duration:60}}:{tracks:[]}};}};
  vm.runInNewContext(source('audio-settings.js'),context);
@@ -149,3 +149,16 @@ test('effects default on, migrate legacy off once, and retain a subsequent expli
 test('majority settlement uses the uploaded settlement clip without changing generic reveal cues',()=>{const ui=harness();const clip=ui.api.playEffect('majority-settlement');assert.equal(clip.src,'/assets/game-sounds/quacks-settlement-user.wav');});
 
 test('Quacks draw and stop use the newly supplied voice clips and keep mute preferences',()=>{const ui=harness();assert.equal(ui.api.playEffect('ingredient-draw').src,'/assets/game-sounds/quacks-push-user.wav');assert.equal(ui.api.playEffect('quacks-stop').src,'/assets/game-sounds/quacks-decline-user.wav');ui.api.set('effects',{enabled:false});assert.ok(!ui.api.playEffect('ingredient-draw'));});
+
+
+test('all five ping cues use playable WAV paths, shared volume and mute',async()=>{
+ const ui=harness();
+ for(const type of ['ping','attention','question','help','look']){
+  const clip=ui.api.playEffect('ping-'+type);await tick();
+  assert.equal(clip.src,'/assets/game-sounds/ping-'+type+'.wav');
+  assert.equal(clip.volume,.25);assert.equal(clip.paused,false);assert.equal(clip.plays,1);
+  clip.onended();
+ }
+ assert.equal(ui.clips.length,5);ui.api.set('effects',{enabled:false});
+ assert.equal(ui.api.playEffect('ping-attention'),undefined);assert.equal(ui.clips.length,5);
+});

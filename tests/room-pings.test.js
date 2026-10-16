@@ -51,6 +51,12 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
   const after=(await get('state?code='+code,host)).data;assert.equal(after.version,before.version);assert.equal(after.phase,before.phase);
   const guestState=(await get('state?code='+code,guest)).data;await post('kick',host,{code,playerId:guestState.me,confirmed:true});assert.equal((await post('pings',guest,{...request,...guestState.pingContext,requestId:randomUUID()})).status,403);
   for(const asset of ['room-pings.js','ping-model.js','room-pings.css'])assert.equal((await fetch(base+'/shared/'+asset)).status,200);
+  for(const type of ['ping','attention','question','help','look']){
+   const asset='ping-'+type+'.wav',res=await fetch(base+'/assets/game-sounds/'+asset);
+   assert.equal(res.status,200,asset);assert.equal(res.headers.get('content-type'),'audio/wav');
+   const bytes=Buffer.from(await res.arrayBuffer());assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.equal(bytes.toString('ascii',8,12),'WAVE');
+   assert.deepEqual(bytes,fs.readFileSync(path.join(__dirname,'../public/assets/game-sounds',asset)));
+  }
   await app.close(); // Active SSE streams must not make shutdown wait forever.
   for(const reader of readers)await reader.cancel().catch(()=>{});
  }finally{for(const a of aborts)a.abort();await app.close();assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep));fs.rmSync(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}

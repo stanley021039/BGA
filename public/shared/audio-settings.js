@@ -22,6 +22,7 @@
    effects.set(clip,()=>{clearTimeout(deadline);clip.onplaying=null;clip.onended=null;clip.onerror=null;try{clip.pause();clip.currentTime=0;clip.removeAttribute('src');clip.load();}catch{}try{onStop?.(clip);}catch{}});
    if(game)gameEffects.add(clip);
    if(game&&document.body.dataset.gameKind==='quacks'&&new URLSearchParams(location.search).has('ui-verify'))clip.addEventListener('playing',()=>console.debug('[quacks-audio] playing '+new URL(clip.src,location.origin).pathname));
+   if(game&&url.startsWith('/assets/game-sounds/ping-'))clip.addEventListener('playing',()=>console.debug('[ping-audio] playing '+url));
    const started=()=>{if(!effects.has(clip)){try{clip.pause();}catch{}return;}if(playing)return;playing=true;clearTimeout(deadline);deadline=setTimeout(()=>stopEffect(clip),Math.min(10000,durationMs));};
    const failed=()=>{if(stopEffect(clip))onError?.();};clip.onplaying=started;clip.onended=()=>stopEffect(clip);clip.onerror=failed;
    Promise.resolve(clip.play()).then(started,failed);return clip;
