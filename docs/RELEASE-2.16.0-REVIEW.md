@@ -39,3 +39,17 @@ Edge原生工具room-media-pot-polish、quacks-round-risk通過：真HTTP完整�
 審查階段重驗：固定diff、26頁載入順序、metadata回應後權限及去重路徑、版本minor、樣式歸屬、diff格式與私有檔排除。沒有新增未解finding。
 
 本機預覽：[3028](http://alchemy.localhost:3028/quacks/83B358)，API2.16.0，受影響JS資源HTTP200且與本機位元相同；3027及更早測試站保留。圖片及log在ignored work/qa、work/playtest，不附DB、登入資訊或私人偏好。
+
+## 發布前整合 main 複查（候選2.16.1）
+
+本節取代上方「尚未整合#133–135」的舊base／head及候選版號描述；歷史v2.16.0標記不移動，新2.16.1尚未建立tag，須依新規範等同head雙平台CI完成。
+
+固定base／merge-base：cb890c969e2d208c3a5378c578f91bd36cd5ee28；固定head：1ab2b85bca12011bedf4596229eb4f5d124eae58。merge保留main的登入圖片、縮圖白名單、製作團隊、受影響選取、exact-head CI及輕量配額fixture；只解決版號／CHANGELOG及角色紀錄的追加衝突。程式自動合併區塊另讀，後續只追加本證據文件。
+
+第一輪（規格）：核對完整分支相對新main差異、房間管理升降／踢人、100%布局、藥材與溢出盆、免費女巫、播放器整窗／三入口／橫條、兩秒換輪及九輪最終結果；沿用未受main改動影響的既有原生證據，整合後再跑room-media-pot-polish，桌機暗色及手機亮色、320窄版、24模板與全部三入口通過。登入頁相對新main僅追加共用appearance script，新圖及credits保留。版本minor對新main通過，未發現未解重大規格問題。
+
+第二輪（風險）：重新讀合併的app資源白名單、metadata呼叫端、room-controls狀態還原與管理槽、quacks最後一輪／auto／receipt、scheduler及測試fixture；main的三種purpose仍跑九輪且舊round-intro等待保留。掃描完整PR差異常見token／私鑰樣式0項，私人work／記憶不在提交中；沒有放寬資料或管理權限，未發現未解重大問題。這是同一位實作者兩輪自查，不代表獨立人工審查。
+
+本機實際node tools/test-affected.cjs --base origin/main因共用來源回退236／236檔，Windows Node24完整2347／2347，fail／cancel／skip 0，204899.0677ms；全套後僅升2.16.1版號／lock／CHANGELOG，另node --test tests/release.test.js 5／5及minor／樣式／diff檢查通過，未重跑相同整套。原生整合工具無pageerror，影響路徑可見且同iframe未重建。
+
+目前未推送或建立PR，沒有此head的Linux／Windows CI。之後先請使用者確認建立Draft，不能將本機結果當作同head雙平台CI，亦不將舊候選標記移到新程式。沒有合併本功能分支或部署。
