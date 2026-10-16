@@ -82,7 +82,7 @@ Git 僅保存程式與執行所需資源；`data/`（玩家對局歷史）、`wo
 
 房主可使用「管理玩家」踢人，操作前會顯示確認警告，被踢者收到通知且不能以相同帳號重新加入該房間。雷霆之路棋盤上的金色虛線分隔後、中、前三段；分界會隨道路延伸而更新。
 
-`npm start` 啟動；`npm test` 執行遊戲規則、帳號、HTTP 與 GitHub 模擬 API 測試。遊戲資源全部本機提供；GitHub Issue 同步需要網際網路。
+`npm start` 啟動；本機預設 `npm run test:affected`，依 Git 差異列出原因並執行受影響測試，`-- --list` 可先看計畫。完整 `npm test`（遊戲規則、帳號、HTTP 與 GitHub 模擬 API）由目前 PR head 同一 commit 的 Linux／Windows CI 執行；兩輪審查與必要 UI 驗收仍必須完成，未知／核心變更會保守回退全套。詳 [測試分工與選取範圍](docs/TESTING.md)。遊戲資源全部本機提供；GitHub Issue 同步需要網際網路。
 
 ## 對局歷史與房間網址
 

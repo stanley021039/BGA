@@ -708,3 +708,6 @@ RoomControls.mountPlayPanels 統一建立上方「遊戲操作」框、下方 Sh
 2026-10-16 #132最新：左圖上方文案刪除，署名同左欄；桌機高度預算與長表單內捲。10組桌機scrollHeight等於viewport、原12組手機亮暗DPR、3項相關回歸與release/diff通過，未重跑全套；低於640px高允許正常捲頁。詳AUTH-ARTWORK-132.md。
 
 2026-10-16 #132 PR交付最新：使用者授權開PR及merge。最終功能樹完整2290/2290（fail/cancel/skip 0、141198ms），12組響應式＋10組桌機高度複驗、minor release／語法／diff通過；取代本批前述未重跑全套限制。兩輪固定提交審查與CI／合併結果以PR對話為準；未部署。
+
+## 2026-10-16 受影響測試與CI分工
+使用者明確要求新增npm run test:affected、本機受影響測試、同commit CI全套、仍保留兩輪審查及開PR／merge。工具採明確路徑表；未知／核心／共用／fixture／刪測試回退全套，差異取branch/index/worktree/untracked聯集；套件例外比對三種snapshot。AGENTS／PR審查／打版及README已對齊，CI明確checkout並驗head SHA，完整npm test仍跑Linux／Windows。17項本機focused通過，未本機全套；僅開發工具／流程，不升產品版號。範圍／限制與最新PR證據入口見[測試分工](../TESTING.md)，未部署。

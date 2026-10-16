@@ -34,11 +34,11 @@
    ```powershell
    npm run release:check
    npm run release:check -- --base <上一正式版tag或commit> --type minor
-   npm test
+   npm run test:affected
    ```
 
-   `check`驗證版號、日期、最新CHANGELOG摘要與排序／唯一性及lock同步；帶base才會核對升版幅度。新增功能的驗收必須指定`--type minor`，不相容則major；未升版或幅度不足回非零。`npm test`前自動執行不帶base的基本檢查，無Git目錄的發布包也可測試。
-4. 測試通過後，提交本批程式、版號及紀錄；在乾淨提交建立annotated tag：`git tag -a v1.1.0 -m "Release v1.1.0"`。tag指向受測試的程式提交；後续純驗收文件可另提交，不移動tag。工具不自動commit、tag、push、合併或部署。
+   `check`驗證版號、日期、最新CHANGELOG摘要與排序／唯一性及lock同步；帶base才會核對升版幅度。新增功能的驗收必須指定`--type minor`，不相容則major；未升版或幅度不足回非零。本機檢查選取原因，補適當回歸與必要驗收；回退全套時不得自行略過。完整 `npm test` 可由目前 head 同一個 commit 的 Linux／Windows CI 滿足，不必在本機重跑；`npm test`前仍自動執行基本版號檢查，無Git目錄的發布包也可測試。詳 [測試分工](TESTING.md)。
+4. 本機受影響測試通過後，提交本批程式、版號及紀錄並開／更新 Draft PR；完成目前 head 同一 SHA 的完整 CI、兩輪審查與必要檢查後，才在該乾淨提交建立annotated tag：`git tag -a v1.1.0 -m "Release v1.1.0"`。CI須核對真正checkout SHA及所有必要平台成功，pending／舊head不算通過；base前進須整合、複驗及重跑新head的CI。tag指向受完整測試的程式提交；後续純驗收文件可另提交，不移動tag。沒有升產品版號的文件／測試工具整理不另打產品tag。工具不自動commit、tag、push、合併或部署。
 5. 依現有授權發PR／發布；部署封存tag或其固定commit，排除本機私人文件。使用隔離候選測試、資料備份／必要的migration預演及健康檢查；有DB變更時不能只回退程式tag。
 6. 正式切換後驗`/api/version`、設定版號、受影響資源及既有帳戶，部署文件記錄版號、固定commit、測試數、備份、資料檢查與限制。未完成公開驗收只能標候選或待驗。
 
