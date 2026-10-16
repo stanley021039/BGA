@@ -14,6 +14,11 @@ function setup(){
  return {window,document,requests,sources,frames,state,fire,tick(n){time+=n;},frame(){const batch=[...frames.values()];frames.clear();for(const f of batch)f();}};
 }
 const flush=async()=>{for(let i=0;i<5;i++)await Promise.resolve();};
+test('lobby uses an isolated stream and sends to its own scope without moving an avatar',async()=>{
+ const f=setup();f.window.RoomPings.update({...f.state,code:'__LOBBY__',type:'lobby',pingContext:{roomInstanceId:'lobby-instance',scene:'lobby-scene'}});
+ assert.equal(f.sources[0].closed,true);f.fire('keydown');assert.equal(f.fire('pointerdown').stopped,true);f.fire('pointerup');await flush();
+ assert.equal(f.requests[0].code,'__LOBBY__');assert.equal(f.requests[0].roomInstanceId,'lobby-instance');assert.equal(f.fire('click').stopped,true);
+});
 test('P click and each drag send exactly one kind, at the press point, and suppress underlying input',async()=>{
  for(const [dx,dy,type]of [[0,0,'ping'],[0,-50,'attention'],[-50,0,'question'],[0,50,'help'],[50,0,'look']]){
   const f=setup();f.fire('keydown');const down=f.fire('pointerdown');assert.equal(down.stopped,true);if(dx||dy)f.fire('pointermove',{clientX:300+dx,clientY:300+dy});f.fire('pointerup',{clientX:300+dx,clientY:300+dy});await flush();assert.equal(f.requests.length,1);assert.equal(f.requests[0].type,type);assert.equal(f.requests[0].target.x,.3);assert.equal(f.requests[0].target.y,.375);assert.equal(f.fire('click').stopped,true);

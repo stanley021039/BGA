@@ -21,7 +21,8 @@
  function editing(node){return !!node?.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"],iframe');}
  function anchorEntries(){
   const pairs=[['header',document.querySelector('[data-site-header]'),'頁首'],['chat',document.querySelector('.ui-room-chat,#chat-content,.shared-chat,#shared-chat,.room-stage-chat'),'聊天室'],['players',document.querySelector('#waitingRoster,#shared-players,.room-stage-friends'),'玩家區']];
-  for(const p of state?.players||[]){const candidates=[...document.querySelectorAll('[data-player-id]')].filter(n=>n.dataset.playerId===p.id&&n.matches('.ui-room-roster-card,.q-player-card,.player,.player-card,.ui-player-row,.waiting-player,.room-player,.shared-player,.ui-player,.room-waiting-player'));const n=candidates.find(n=>n.getClientRects().length)||candidates[0];if(n)pairs.push(['player:'+p.id,n,p.name]);}
+  if(state?.type==='lobby')pairs.push(['lobby-stage',document.querySelector('#lobbyStage'),'好友大廳'],['game-list',document.querySelector('.game-carousel-section'),'遊戲選單'],['room-list',document.querySelector('#roomList'),'房間列表']);
+  for(const p of state?.players||[]){const candidates=[...document.querySelectorAll('[data-player-id]')].filter(n=>n.dataset.playerId===p.id&&n.matches('.ui-room-roster-card,.q-player-card,.player,.player-card,.ui-player-row,.waiting-player,.room-player,.shared-player,.ui-player,.room-waiting-player,.lobby-avatar'));const n=candidates.find(n=>n.getClientRects().length)||candidates[0];if(n)pairs.push(['player:'+p.id,n,p.name]);}
   return pairs.filter(([,n])=>n);
  }
  function canvas(){return state?.type==='draw'?document.querySelector('canvas#drawCanvas'):null;}

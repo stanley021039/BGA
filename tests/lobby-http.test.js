@@ -48,10 +48,12 @@ test('lobby HTTP keeps authentication, parsing, method fallthrough and exact pat
 test('lobby HTTP preserves view, move, options, expression validation and cooldown payloads',async t=>{
  const f=await fixture(t),view=await f.get('/api/lobby');
  assert.equal(view.status,200);assert.equal(view.body.selfId,f.owner.body.id);
- assert.deepEqual(Object.keys(view.body).sort(),['selfId','serverNow','visitors']);
+ assert.deepEqual(Object.keys(view.body).sort(),['pingContext','selfId','serverNow','visitors']);
+ assert.equal(typeof view.body.pingContext.roomInstanceId,'string');assert.equal(typeof view.body.pingContext.scene,'string');assert.ok(Number.isSafeInteger(view.body.pingContext.serverNow));
  assert.equal(view.body.visitors.length,1);assert.ok(Number.isSafeInteger(view.body.serverNow));
  const moved=await f.post('/api/lobby/move',{x:100,y:0});
  assert.equal(moved.status,200);assert.equal(moved.body.visitors[0].targetX,85);assert.equal(moved.body.visitors[0].targetY,32);assert.equal(moved.body.visitors[0].moveId,1);
+ assert.equal(moved.body.pingContext.roomInstanceId,view.body.pingContext.roomInstanceId);
  const invalidMove=await f.post('/api/lobby/move',{x:'30',y:50});
  assert.equal(invalidMove.status,400);assert.equal(invalidMove.body.code,'INVALID_MOVEMENT');
  const options=await f.get('/api/lobby/emotes');assert.equal(options.status,200);

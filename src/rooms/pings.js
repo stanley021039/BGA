@@ -9,7 +9,7 @@ function target(room,value){
  if(!value||!unit(value.x)||!unit(value.y))fail(400,'INVALID_PING_TARGET','標記位置不正確');
  if(value.kind==='viewport')return {kind:'viewport',x:value.x,y:value.y};
  if(value.kind==='element'){
-  const fixed=['header','chat','players'];
+  const fixed=room.type==='lobby'?['header','chat','players','lobby-stage','game-list','room-list']:['header','chat','players'];
   if(!fixed.includes(value.key)&&!room.players.some(p=>!p.kicked&&value.key==='player:'+p.id))fail(400,'INVALID_PING_TARGET','找不到公開標記目標');
   return {kind:'element',key:value.key,x:value.x,y:value.y};
  }

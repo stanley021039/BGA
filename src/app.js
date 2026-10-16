@@ -96,6 +96,7 @@ function initializeApp(config,dataLock,acquired){
  };
  const publishMusic=code=>{const room=rooms.get(code),state=room?musicProjection(room):null;for(const entry of musicStreams.get(code)||[])try{entry.res.write('event: music\ndata: '+JSON.stringify(state)+'\n\n');}catch{entry.res.end();}};
  const lobby=createLobby();
+ const lobbyPingRoom={code:'__LOBBY__',type:'lobby',phase:'lobby',players:[]};
  const expireRooms=()=>runtime.expireRooms(history);
  const withSocial=(room,view)=>{
   const social=socialEvents.get(room.code)||[],now=Date.now(),expressions=(expressionEvents.get(room.code)||[]).filter(event=>now-event.at<5000),barrages=(barrageEvents.get(room.code)||[]).filter(event=>now-event.at<8000),recent=new Map();
@@ -138,7 +139,7 @@ function initializeApp(config,dataLock,acquired){
   if(lobbyAudience)audiences.push(lobbyAudience);
   return audiences;
  });
- const withLobbyMedia=(user,view)=>{const serverNow=Date.now();characterMedia.rememberExpressions(user.id,'lobby',view.visitors.filter(visitor=>visitor.emote).map(visitor=>({userId:visitor.id,...visitor.emote})));return {...view,serverNow};};
+ const withLobbyMedia=(user,view)=>{const serverNow=Date.now();lobbyPingRoom.players=view.visitors;characterMedia.rememberExpressions(user.id,'lobby',view.visitors.filter(visitor=>visitor.emote).map(visitor=>({userId:visitor.id,...visitor.emote})));return {...view,serverNow,pingContext:runtime.pings.context(lobbyPingRoom)};};
  const communityRate=new Map(),accountRate=new Map(),authRate=new Map();
  const trustCloudflare=config.host==='127.0.0.1'&&config.publicUrl?.startsWith('https://');
  const clientKey=req=>clientAddress(req,trustCloudflare);
@@ -445,19 +446,22 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  }
  if(!['/api/pings','/api/pings/events','/api/room-media','/api/room-role','/api/room-watch','/api/room-music','/api/room-music/events','/api/leave','/api/join','/api/reconnect','/api/state','/api/telephone/draft','/api/musicquiz-clip','/api/action','/api/kick','/api/settings','/api/start','/api/bot','/api/rebuy','/api/social','/api/draw/canvas','/api/draw/events','/api/draw/stroke','/api/draw/command','/api/draw/result','/api/draw/result/save','/api/draw/result/ban','/api/draw/result/unsave','/api/draw/dissolve'].includes(url.pathname))throw new HttpError(404,'NOT_FOUND','找不到請求路徑');
  expireRooms();
- const room=rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
+ const pingLobby=['/api/pings','/api/pings/events'].includes(url.pathname)&&String(data.code||url.searchParams.get('code')||'').toUpperCase()==='__LOBBY__';
+ if(pingLobby&&!lobby.mediaAudience(user.id))throw new HttpError(403,'LOBBY_PRESENCE_REQUIRED','請先進入大廳');
+ if(pingLobby)lobbyPingRoom.players=lobby.view(user).visitors;
+ const room=pingLobby?lobbyPingRoom:rooms.get(String(data.code||url.searchParams.get('code')||'').toUpperCase());if(!room)throw new HttpError(404,'ROOM_NOT_FOUND','找不到房間，請確認房間代碼');
  if(kickedUsers.get(room.code)?.has(user.id))throw new HttpError(403,'KICKED','你已被房主踢出房間');
  // Revoke an expired controller before this request refreshes their seat lease.
  reconcileWatch(room);
  if(url.pathname==='/api/reconnect'&&req.method==='POST'){resumeSeat(room,user);return send({code:room.code,type:room.type||'poker',reconnected:true});}
  if(url.pathname==='/api/join'&&req.method==='POST')return send(joinRoom(room,user,req));
- const p=resumeSeat(room,user);
+ const p=pingLobby?{id:user.id}:resumeSeat(room,user);
  if(url.pathname==='/api/pings'){
   if(req.method!=='POST')throw new HttpError(405,'METHOD_NOT_ALLOWED','不支援的請求');
   return send(runtime.pings.post(room,p.id,user.display_name,data));
  }
  if(url.pathname==='/api/pings/events'&&req.method==='GET'){
-  const valid=()=>{const session=auth.sessionFrom(req);return !!session&&rooms.get(room.code)===room&&!kickedUsers.get(room.code)?.has(user.id)&&seats.get(room.code)?.get(user.id)===p.id;};
+  const valid=()=>{const session=auth.sessionFrom(req);return !!session&&(pingLobby?!!lobby.mediaAudience(user.id):rooms.get(room.code)===room&&!kickedUsers.get(room.code)?.has(user.id)&&seats.get(room.code)?.get(user.id)===p.id);};
   let timer,unsubscribe=()=>{},closed=false;
   const close=()=>{if(closed)return;closed=true;clearInterval(timer);unsubscribe();req.off('close',close);res.end();};
   const client={userId:user.id,close,send(kind,payload){if(!valid())return close();try{if(!res.write('event: '+kind+'\ndata: '+JSON.stringify(payload)+'\n\n'))close();}catch{close();}}};

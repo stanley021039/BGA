@@ -22,6 +22,17 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
   const get=async(route,cookie)=>{const res=await fetch(base+'/api/'+route,{headers:cookie?{cookie}:{}});return {status:res.status,data:await res.json()};};
   const host=(await post('auth/login',null,{username:'pinghost',password:'synthetic-password'})).cookie,invite=(await post('admin/invites',host,{})).data.code;
   const guest=(await post('auth/register',null,{username:'pingguest',password:'synthetic-password',confirmPassword:'synthetic-password',invite})).cookie;
+  assert.equal((await get('pings/events?code=__LOBBY__',guest)).status,403);
+  const lobbyHost=(await get('lobby',host)).data;
+  const lobbyGuest=(await get('lobby',guest)).data;
+  assert.equal(lobbyHost.pingContext.roomInstanceId,lobbyGuest.pingContext.roomInstanceId);
+  const lobbyAbort=new AbortController();aborts.push(lobbyAbort);
+  const lobbyStream=await fetch(base+'/api/pings/events?code=__LOBBY__',{headers:{cookie:guest},signal:lobbyAbort.signal}),lobbyReader=lobbyStream.body.getReader();
+  assert.match(new TextDecoder().decode((await lobbyReader.read()).value),/event: ready/);
+  const lobbyPing={code:'__LOBBY__',...lobbyHost.pingContext,type:'look',target:{kind:'element',key:'lobby-stage',x:.2,y:.4},requestId:randomUUID()};
+  const lobbySent=await post('pings',host,lobbyPing);assert.equal(lobbySent.status,200);
+  assert.ok(new TextDecoder().decode((await lobbyReader.read()).value).includes(lobbySent.data.event.id));
+  await lobbyReader.cancel();lobbyAbort.abort();
   const code=(await post('create',host,{type:'quacks'})).data.code;
   assert.equal((await get('pings/events?code='+code)).status,401);assert.equal((await get('pings/events?code='+code,guest)).status,403);
   await post('join',guest,{code});const before=(await get('state?code='+code,host)).data;
@@ -29,6 +40,9 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
   const streams=await Promise.all([host,guest].map((cookie,i)=>fetch(base+'/api/pings/events?code='+code,{headers:{cookie},signal:controllers[i].signal})));
   const readers=streams.map(r=>r.body.getReader());for(const reader of readers)assert.match(new TextDecoder().decode((await reader.read()).value),/event: ready/);
   const request={code,...before.pingContext,type:'help',target:{kind:'element',key:'player:'+before.me,x:.5,y:.5},requestId:randomUUID()};
+  assert.notEqual(before.pingContext.roomInstanceId,lobbyHost.pingContext.roomInstanceId);
+  assert.equal((await post('pings',host,{...lobbyPing,code})).status,409);
+  assert.equal((await post('pings',host,{...request,target:{kind:'element',key:'lobby-stage',x:.5,y:.5}})).status,400);
   const sent=await post('pings',host,request);assert.equal(sent.status,200);for(const reader of readers){const text=new TextDecoder().decode((await reader.read()).value);assert.match(text,/event: ping/);assert.ok(text.includes(sent.data.event.id));}
   assert.equal((await post('pings',host,request)).data.duplicate,true);
   assert.equal((await post('pings',host,{...request,requestId:randomUUID(),target:{kind:'element',key:'#hand',x:.5,y:.5}})).status,400);
