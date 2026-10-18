@@ -13,9 +13,12 @@ export function readWordLibrary(value: unknown): WordLibrary {
   const x = record(value); return { builtin: array(x.builtin).map(word), custom: array(x.custom).map(word), topics: array(x.topics).map(v => { const t = record(v); return { id: text(t.id), label: text(t.label) }; }) };
 }
 export interface Gift { id: string; title: string; category: string; image: string; author: string; shared: boolean; at: string }
-export interface Artwork { id: string; name: string; url: string; owned: boolean; author: string }
+export interface Artwork { id: string; name: string; url: string; owned: boolean; shared: boolean; author: string }
+export function readArtwork(value: unknown): Artwork {
+  const x = record(value); return { id: text(x.id), name: text(x.name), url: text(x.url), owned: x.owned === true, shared: x.shared === true, author: text(x.author) };
+}
 export function readArtworks(value: unknown): Artwork[] {
-  return array(record(value).artworks).map(v => { const x = record(v); return { id: text(x.id), name: text(x.name), url: text(x.url), owned: x.owned === true, author: text(x.author) }; });
+  return array(record(value).artworks).map(readArtwork);
 }
 export function readGiftLibrary(value: unknown) {
   const x = record(value); return {

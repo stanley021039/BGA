@@ -1,29 +1,4 @@
-@use 'sass:map';
 @use 'tokens';
-@use 'mixins';
-
-// Retain the site's existing visual CSS. New rules cover shared state contracts only.
-.frontend-status {
-  @include mixins.stable-slot(3em);
-  block-size: 3em;
-  max-block-size: 3em;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
-}
-
-.frontend-submit {
-  position: relative;
-  min-block-size: var(--ui-control-height, 2.75rem);
-
-  .frontend-submit-caption { display: inline-flex; gap: map.get(tokens.$space, 2); align-items: center; }
-  .is-pending { opacity: 0; }
-  .frontend-submit-progress {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-  }
-}
 
 .auth-card .auth-tabs {
   flex-shrink: 0;

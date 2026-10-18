@@ -1,0 +1,34 @@
+@use 'tokens';
+
+.vue-page.settings-page {
+  .nickname-panel, .settings-grid, .settings-barrage-panel { gap: tokens.space(6); }
+  .page-panel { min-inline-size: 0; padding: tokens.space(6); box-sizing: border-box; }
+  .settings-fields { border: 0; padding: 0; margin: 0; min-inline-size: 0; }
+  .settings-grid > section { display: flex; flex-direction: column; }
+  .settings-grid > section > a { margin-block-start: auto; }
+  .settings-image-slot { display: grid; align-items: center; justify-items: start; block-size: 10rem; }
+  .settings-image-slot img { margin: 0; }
+  .settings-characters { grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr)); gap: tokens.space(3); block-size: 20rem; overflow: auto; scrollbar-gutter: stable; align-content: start; }
+  .settings-characters button { min-inline-size: 0; }
+  .settings-characters span { font-size: .875rem; overflow-wrap: anywhere; }
+  .settings-grid :is(input, select), .nickname-panel input { inline-size: 100%; max-inline-size: 100%; min-inline-size: 0; }
+  .settings-actions { gap: tokens.space(4); align-items: start; }
+  .settings-actions .frontend-status { margin: 0; flex: 1; }
+  .settings-load-slot { block-size: 4rem; display: flex; flex-wrap: wrap; align-items: center; gap: tokens.space(3); overflow: auto; }
+  .settings-barrage-preview-slot { block-size: 12rem; }
+  .settings-barrage-panel + .settings-barrage-panel { margin-block-start: tokens.space(6); }
+  .settings-barrage-controls > p[role=status] { min-block-size: 3em; margin-block-end: 0; }
+}
+.vue-dialog { font-size: 1rem; line-height: 1.5; }
+@media(max-width:760px) {
+  .vue-page.settings-page {
+    .nickname-panel, .settings-grid, .settings-barrage-panel { gap: tokens.space(4); }
+    .page-panel { padding: tokens.space(4); }
+    .settings-grid { grid-template-columns: minmax(0, 1fr); }
+    .settings-barrage-panel { grid-template-columns: minmax(0, 1fr); }
+    .settings-barrage-panel + .settings-barrage-panel { margin-block-start: tokens.space(4); }
+    .settings-actions { display: flex; flex-wrap: wrap; }
+    .settings-actions .frontend-status { flex-basis: 100%; }
+    .settings-load-slot { block-size: 7rem; align-content: center; }
+  }
+}

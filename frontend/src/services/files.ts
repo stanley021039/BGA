@@ -1,5 +1,5 @@
 export async function fileBase64(file: File, maxBytes = 1024 * 1024): Promise<string> {
-  if (file.size > maxBytes) throw new Error('圖片不得超過 1 MB');
+  if (file.size > maxBytes) throw new Error(`圖片不得超過 ${maxBytes / 1024 / 1024} MB`);
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('無法讀取檔案'));

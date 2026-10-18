@@ -120,7 +120,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  }
  /* One frame for static and dynamically mounted native dialogs. Keep nodes and handlers. */
  function frameDialog(dialog){
-  if(!dialog||dialog.dataset.uiDialogFrame==='true')return dialog;
+  if(!dialog||dialog.dataset.uiDialogFrame==='true'||dialog.closest('[data-ui-owner="vue"]'))return dialog;
   // Floating media owns its drag header, resize handles and internal scroll regions.
   if(dialog.matches('.table-media-window')){dialog.classList.add('ui-dialog','ui-dialog-window');dialog.dataset.uiDialogFrame='true';return dialog;}
   const doc=dialog.ownerDocument||document;
@@ -178,7 +178,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  const fieldControls='input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=button]):not([type=submit]):not([type=reset]):not([type=image]),select,textarea';
  const inlineFields='[data-ui-field-layout="inline"],.ui-sr-only,.ui-control-row,.chat-compose,.table-media-local,.table-watch-volume,.table-watch-seek,.tool-row,.color-row,.size-pick';
  function frameField(label,control){
-  if(!label||!control||!control.matches(fieldControls)||label.closest(inlineFields))return null;
+  if(!label||!control||!control.matches(fieldControls)||label.closest(inlineFields)||label.closest('[data-ui-owner="vue"]'))return null;
   let field=label.closest('.ui-field,.ui-room-setting-field');
   if(field&&!field.contains(control))return null;
   if(!field){

@@ -38,5 +38,15 @@
     "id": "rules",
     "document": "rules.html",
     "route": "/rules"
+  },
+  {
+    "id": "settings",
+    "document": "settings.html",
+    "route": "/settings"
+  },
+  {
+    "id": "collection",
+    "document": "collection.html",
+    "route": "/collection"
   }
 ]
