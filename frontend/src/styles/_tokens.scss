@@ -1,0 +1,6 @@
+@use 'sass:map';
+$space: (1: .25rem, 2: .5rem, 3: .75rem, 4: 1rem, 6: 1.5rem);
+
+@function space($step) {
+  @return map.get($space, $step);
+}

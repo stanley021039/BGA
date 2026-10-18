@@ -20,6 +20,7 @@ const {createOfficialProvider}=require('./market/official-provider');
 const {MarketImageStore}=require('./market/images');
 const {HistoryStore}=require('./history/store'),{CommunityStore}=require('./community/store');
 const {createRoomRuntime}=require('./rooms/runtime');
+const {createFrontend}=require('./http/frontend');
 const {createRoomTransitions}=require('./rooms/transitions');
 const {botSupport,addTestBot}=require('./ai');
 const {reconnectPlayer}=require('./rooms/reconnect');
@@ -64,6 +65,7 @@ function createApp(config){
 function initializeApp(config,dataLock,acquired){
  const achievementPurpose=config.achievementPurpose===undefined?'production':config.achievementPurpose;
  if(!['production','test','tutorial'].includes(achievementPurpose))throw Error('Invalid achievement purpose');
+ const frontend=createFrontend({enabled:config.frontendEnabled===true});
  const runtime=createRoomRuntime();acquired.push(()=>runtime.close());
  const {rooms,seats,kickedUsers,socialEvents,expressionEvents,barrageEvents,reconnectGrace,drawStreams,departedSeats,musicRooms,musicStreams,watchRooms,mediaRooms,cleanupRoom}=runtime;
  const socialRate=new Map(),roomRate=new Map();
@@ -212,6 +214,7 @@ function initializeApp(config,dataLock,acquired){
  function limitAuth(req){limitRate(authRate,clientKey(req),20);}
 const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
  const url=new URL(req.url,'http://localhost');
+ if(frontend?.serveAsset(req,res,url.pathname))return;
  if(req.method==='GET'&&url.searchParams.get('embed')==='1'&&['/gifts','/draw-words','/community'].includes(url.pathname)){
   res.setHeader('X-Frame-Options','SAMEORIGIN');
   res.setHeader('Content-Security-Policy',"frame-ancestors 'self'; base-uri 'none'; object-src 'none'");
@@ -652,7 +655,7 @@ const handler=async(req,res)=>{setSecurityHeaders(res,config.publicUrl);try{
 for(const type of ['ping','attention','question','help','look'])files['/assets/game-sounds/ping-'+type+'.wav']='assets/game-sounds/ping-'+type+'.wav';
 for(const name of ['register-320.webp','register-480.webp','register-576.webp','login-320.webp','login-480.webp','login-576.webp','login-864.webp'])files['/assets/auth/'+name]='assets/auth/'+name;
 for(const name of ['stanley021039','x55662306','azrael04'])for(const width of [64,88,176])files[`/assets/auth/${name}-${width}.webp`]=`assets/auth/${name}-${width}.webp`;
-const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath||file==='market.html'||file==='trpg.html'||file==='telephone.html'||file==='musicquiz.html'||file==='minimal.html'||file==='bluff.html'||file==='quacks.html'?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.webp')?'image/webp':file.endsWith('.jpg')?'image/jpeg':file.endsWith('.woff2')?'font/woff2':file.endsWith('.txt')?'text/plain; charset=utf-8':file.endsWith('.png')?'image/png':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.mp3')?'audio/mpeg':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(fs.readFileSync(path.join(__dirname,'..','public',file)));
+const file=roomPath?roomPath[1]+'.html':files[url.pathname];if(!file){res.writeHead(404);return res.end();}if(file.endsWith('.html')&&file!=='login.html'){const visitor=auth.sessionFrom(req);if(!visitor){res.writeHead(302,{Location:roomPath||file==='market.html'||file==='trpg.html'||file==='telephone.html'||file==='musicquiz.html'||file==='minimal.html'||file==='bluff.html'||file==='quacks.html'?'/login?next='+encodeURIComponent(url.pathname):'/login'});return res.end();}if(file==='admin.html'&&visitor.role!=='admin')throw new HttpError(403,'ADMIN_REQUIRED','只有管理者可以操作');}res.setHeader('Content-Type',file.endsWith('.webp')?'image/webp':file.endsWith('.jpg')?'image/jpeg':file.endsWith('.woff2')?'font/woff2':file.endsWith('.txt')?'text/plain; charset=utf-8':file.endsWith('.png')?'image/png':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.svg')?'image/svg+xml':file.endsWith('.mp3')?'audio/mpeg':file.endsWith('.wav')?'audio/wav':file.endsWith('.css')?'text/css':file.endsWith('.js')?'text/javascript; charset=utf-8':'text/html; charset=utf-8');res.end(frontend?.readPage(file)||fs.readFileSync(path.join(__dirname,'..','public',file)));
  }catch(e){writeError(res,e);}};
 
  const server=http.createServer(handler);
