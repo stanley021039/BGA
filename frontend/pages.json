@@ -53,5 +53,10 @@
     "id": "profile",
     "document": "profile.html",
     "route": "/profile"
+  },
+  {
+    "id": "history",
+    "document": "history.html",
+    "route": "/history"
   }
 ]
