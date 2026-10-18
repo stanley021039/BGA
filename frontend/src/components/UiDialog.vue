@@ -2,7 +2,7 @@
 import { nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import UiButton from './UiButton.vue';
 defineProps<{ title: string; compact?: boolean }>();
-const emit = defineEmits<{ closed: [] }>();
+const emit = defineEmits<{ closing: []; closed: [] }>();
 const dialog = ref<HTMLDialogElement | null>(null), visible = ref(false), headingId = useId();
 let trigger: HTMLElement | null = null;
 async function open(source?: HTMLElement) {
@@ -12,13 +12,13 @@ async function open(source?: HTMLElement) {
   await nextTick();
   dialog.value?.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus();
 }
-function close() { dialog.value?.close(); }
+function close() { if (dialog.value?.open) { emit('closing'); dialog.value.close(); } }
 function closed() { if (dialog.value?.open) return; visible.value = false; if (trigger?.isConnected) trigger.focus(); emit('closed'); }
 onBeforeUnmount(close);
 defineExpose({ open, close });
 </script>
 <template>
-  <dialog ref="dialog" class="vue-dialog ui-dialog" :class="{ 'vue-dialog-compact': compact }" :aria-labelledby="headingId" @close="closed">
+  <dialog ref="dialog" class="vue-dialog ui-dialog" :class="{ 'vue-dialog-compact': compact }" :aria-labelledby="headingId" @cancel="emit('closing')" @close="closed">
     <header class="vue-dialog-header"><h2 :id="headingId">{{ title }}</h2><UiButton icon="close" icon-only caption="關閉" :label="'關閉' + title" @click="close" /></header>
     <div v-if="visible" class="vue-dialog-content"><slot /></div>
   </dialog>

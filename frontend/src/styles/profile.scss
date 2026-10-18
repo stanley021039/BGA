@@ -1,0 +1,48 @@
+@use 'tokens';
+
+.vue-page.profile-editor-page {
+  .profile-load-slot { display: flex; flex-wrap: wrap; align-items: center; gap: tokens.space(3); block-size: 4rem; overflow: auto; }
+  .profile-layout { grid-template-columns: minmax(18rem, .85fr) minmax(0, 1.15fr); gap: tokens.space(6); align-items: stretch; }
+  .avatar-stage, .editor-panel { block-size: clamp(34rem, calc(100dvh - 18rem), 60rem); min-block-size: 0; box-sizing: border-box; }
+  .avatar-stage { position: relative; top: auto; }
+  .avatar-frame { inline-size: min(70%, 16.875rem); block-size: min(70%, 24.375rem); }
+  .stage-caption { position: relative; inset: auto; inline-size: calc(100% - 3rem); margin-block-start: tokens.space(6); gap: tokens.space(2); }
+  .stage-caption span { font-size: .875rem; letter-spacing: .08em; }
+  .stage-caption strong { @include tokens.type(h2); }
+  .editor-panel { display: flex; flex-direction: column; padding: tokens.space(6); }
+  .panel-heading { flex-shrink: 0; }
+  .panel-number { font-size: .875rem; }
+  .profile-editor-content { flex: 1; min-block-size: 0; overflow: auto; scrollbar-gutter: stable; padding: tokens.space(1); }
+  .editor-actions { flex-shrink: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: tokens.space(3); margin-block-start: tokens.space(4); padding-block-start: tokens.space(4); }
+  .editor-actions .frontend-status { margin: 0; }
+  .editor-actions .studio-link { grid-column: 1/-1; margin: 0; }
+  .preset-section { padding-block-end: tokens.space(4); margin-block-end: tokens.space(4); }
+  .preset-section h3 { font-size: 1.125rem; letter-spacing: 0; }
+  .preset-gallery, .expression-gallery { grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); gap: tokens.space(2); }
+  :is(.preset-card, .expression-card) :is(span, small) { font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; }
+  .gallery-empty { font-size: .875rem; }
+  .artist-templates { font-size: 1rem; }
+  .artist-templates .artwork-picker > strong { font-size: .875rem; }
+  .artist-templates .artwork-choices { gap: tokens.space(2); }
+  .artwork-choice :is(span, small) { font-size: .875rem; }
+  .character-upload { grid-template-columns: minmax(0, 1fr); gap: tokens.space(3); }
+  .character-upload :is(label, input) { min-inline-size: 0; font-size: 1rem; }
+  .character-upload .frontend-status { grid-column: 1/-1; }
+  .sharing-controls { flex-wrap: wrap; gap: tokens.space(3); font-size: .875rem; }
+  .expression-sound { padding: tokens.space(4); }
+  .upload-group h3, .expression-sound h3 { @include tokens.type(p1); }
+  .expression-sound :is(input, label) { min-inline-size: 0; max-inline-size: 100%; }
+  .expression-sound-actions, .expression-sound-upload { gap: tokens.space(3); }
+}
+@media(max-width:760px) {
+  .vue-page.profile-editor-page {
+    .profile-load-slot { block-size: 7rem; }
+    .profile-layout { grid-template-columns: minmax(0, 1fr); gap: tokens.space(4); }
+    .avatar-stage { block-size: 24rem; }
+    .avatar-frame { inline-size: 11rem; block-size: 16rem; }
+    .stage-caption { margin-block-start: tokens.space(4); }
+    .editor-panel { block-size: 48rem; padding: tokens.space(4); }
+    .editor-actions { grid-template-columns: minmax(0, 1fr); }
+    .editor-actions .page-button { min-inline-size: 0; }
+  }
+}

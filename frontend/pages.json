@@ -48,5 +48,10 @@
     "id": "collection",
     "document": "collection.html",
     "route": "/collection"
+  },
+  {
+    "id": "profile",
+    "document": "profile.html",
+    "route": "/profile"
   }
 ]
