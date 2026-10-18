@@ -7,7 +7,10 @@ const {HttpError}=require('./errors');
 // keep their existing routing and authorization.
 function createFrontend({enabled=false,root=path.join(__dirname,'../../frontend/dist')}={}){
  if(!enabled)return null;
- const pages=new Map([['login.html','pages/login/index.html'],['achievements.html','pages/achievements/index.html']]);
+ const pages=new Map(require('../../frontend/pages.json').map(page=>{
+  if(!/^[a-z][a-z0-9-]*$/.test(page.id)||!/^[-a-z0-9]+\.html$/.test(page.document))throw Error('Invalid frontend document registry');
+  return [page.document,`pages/${page.id}/index.html`];
+ }));
  const documents=new Map();
  for(const [key,file]of pages)documents.set(key,fs.readFileSync(path.join(root,file)));
  const assetRoot=path.join(root,'frontend-assets'),assets=new Map();

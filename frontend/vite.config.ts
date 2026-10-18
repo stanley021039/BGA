@@ -2,14 +2,16 @@ import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import pages from './pages.json' with { type: 'json' };
 
 const documents: Plugin = {
   name: 'afterhours-document-routes',
   configureServer(server) {
     server.middlewares.use((request, _response, next) => {
-      for (const page of ['login', 'achievements']) {
-        if (new RegExp(`^/${page}/?(?:\\?|$)`).test(request.url || '')) {
-          request.url = request.url!.replace(new RegExp(`^/${page}/?`), `/pages/${page}/index.html`);
+      const url = new URL(request.url || '/', 'http://localhost');
+      for (const page of pages) {
+        if (url.pathname === page.route || url.pathname === page.route + '/') {
+          request.url = `/pages/${page.id}/index.html${url.search}`;
           break;
         }
       }
@@ -28,10 +30,7 @@ export default defineConfig({
     manifest: true,
     target: 'es2022',
     rolldownOptions: {
-      input: {
-        login: fileURLToPath(new URL('./pages/login/index.html', import.meta.url)),
-        achievements: fileURLToPath(new URL('./pages/achievements/index.html', import.meta.url)),
-      },
+      input: Object.fromEntries(pages.map(page => [page.id, fileURLToPath(new URL(`./pages/${page.id}/index.html`, import.meta.url))])),
     },
   },
   server: {

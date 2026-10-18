@@ -14,7 +14,7 @@ declare global {
   interface Window {
     ColorScheme?: { get(): ColorState; set(theme: Theme): ColorState; subscribe(fn: (state: ColorState) => void): () => void };
     MotionPolicy?: { get(): MotionState; subscribe(fn: (state: MotionState) => void): () => void };
-    AudioSettings?: { get(): AudioState; subscribe(fn: (state: AudioState) => void): () => void };
+    AudioSettings?: { get(): AudioState; subscribe(fn: (state: AudioState) => void): () => void; bindPreview(audio: HTMLAudioElement): () => void };
   }
 }
 

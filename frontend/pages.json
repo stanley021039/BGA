@@ -1,0 +1,42 @@
+[
+  {
+    "id": "login",
+    "document": "login.html",
+    "route": "/login"
+  },
+  {
+    "id": "achievements",
+    "document": "achievements.html",
+    "route": "/achievements"
+  },
+  {
+    "id": "draw-words",
+    "document": "draw-words.html",
+    "route": "/draw-words"
+  },
+  {
+    "id": "gifts",
+    "document": "gifts.html",
+    "route": "/gifts"
+  },
+  {
+    "id": "music",
+    "document": "music.html",
+    "route": "/music"
+  },
+  {
+    "id": "community",
+    "document": "community.html",
+    "route": "/community"
+  },
+  {
+    "id": "credits",
+    "document": "credits.html",
+    "route": "/credits"
+  },
+  {
+    "id": "rules",
+    "document": "rules.html",
+    "route": "/rules"
+  }
+]

@@ -1,0 +1,22 @@
+@use 'tokens';
+
+.vue-page.community-main {
+  #pageTitle { min-block-size: 2.6em; }
+  .community-intro { min-block-size: 4.5em; }
+  .community-compose { padding: tokens.space(6); }
+  .community-compose fieldset { border: 0; margin: 0; padding: 0; min-inline-size: 0; display: grid; gap: tokens.space(3); }
+  .community-compose :is(label, .community-options) { display: grid; gap: tokens.space(2); min-inline-size: 0; }
+  .community-compose :is(input, select, textarea) { inline-size: 100%; min-inline-size: 0; }
+  .community-options { min-block-size: 18rem; align-content: start; }
+  .issue-meta { font-size: .875rem; gap: tokens.space(2); }
+  .resource-panel-filters { display: grid; gap: tokens.space(3); }
+  .resource-panel-filters .fields { margin: 0; }
+  :is(.issue-item, .library-item) { padding: tokens.space(6); margin: 0 0 tokens.space(3); }
+  .comment-form input { min-inline-size: 0; }
+  .comment { padding-inline: tokens.space(4); }
+}
+@media(max-width:760px) {
+  .vue-page.community-main .community-compose { block-size: 42rem; }
+  .vue-page.community-main .community-compose form { overflow: auto; }
+  .vue-page.community-main .community-compose, .vue-page.community-main :is(.issue-item, .library-item) { padding: tokens.space(4); }
+}

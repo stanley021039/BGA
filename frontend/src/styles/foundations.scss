@@ -1,0 +1,28 @@
+@use 'tokens';
+
+// Scoped to migrated document roots; game boards adopt these through their own layouts.
+.vue-page {
+  --ui-text-body: 1rem;
+  --ui-text-small: .875rem;
+  --ui-control-height: 2.75rem;
+  @include tokens.type(p2);
+  min-inline-size: 0;
+}
+.vue-page h1 { @include tokens.type(h1); }
+.vue-page h2 { @include tokens.type(h2); }
+.vue-page :is(h3, h4) { @include tokens.type(p1); }
+.vue-page :is(p, label, input, select, textarea, button) { font-size: 1rem; line-height: 1.5; }
+.vue-page :is(small, .small, .eyebrow, .kicker, .music-meta) { font-size: .875rem; line-height: 1.5; }
+.vue-page :is(input, select, textarea, button) { box-sizing: border-box; }
+.vue-page:is(.resource-workspace, .words-layout), .vue-page :is(.resource-workspace, .words-layout) { gap: tokens.space(6); }
+.vue-page .resource-compose { padding: tokens.space(6); min-inline-size: 0; }
+.vue-page .resource-compose form { display: grid; gap: tokens.space(3); }
+.vue-page .resource-compose :is(label, fieldset) { min-inline-size: 0; }
+.vue-page .resource-compose label { display: grid; gap: tokens.space(2); }
+.vue-page .resource-compose .option-row label { display: flex; align-items: center; }
+.vue-page .resource-compose .option-row { gap: tokens.space(2); }
+.vue-page .gift-artwork-heading :is(strong, a), .vue-page .gift-artwork-choice span { font-size: .875rem; line-height: 1.5; }
+@media(max-width:760px) {
+  .vue-page .resource-compose { padding: tokens.space(4); }
+  .vue-page:is(.resource-workspace, .words-layout), .vue-page :is(.resource-workspace, .words-layout) { gap: tokens.space(4); }
+}

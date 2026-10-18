@@ -1,0 +1,8 @@
+@use 'tokens';
+
+.vue-page.asset-credits .credit-card { padding: tokens.space(6); margin-block: tokens.space(6); }
+.vue-page.rules > h2 { margin-block: tokens.space(6) tokens.space(3); }
+.vue-page:is(.asset-credits, .rules) { overflow-wrap: anywhere; }
+@media(max-width:760px) {
+  .vue-page.asset-credits .credit-card { padding: tokens.space(4); margin-block: tokens.space(4); }
+}
