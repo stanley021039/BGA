@@ -4,6 +4,8 @@
 
 ## [2.17.1] - 2026-10-19
 
+- 修正 YouTube 暫停回到封面、暫停中首次加入未載入畫面、換片重建兩次及 iframe 載入逾時無重試入口；實際雙帳號驗證播放、同步、定位與切片，詳見 docs/refactors/YOUTUBE-LIVE-VERIFICATION.md
+
 - 以已審核 00 共用元件校正媒體視窗，恢復清楚的播放清單／點播入口；修正自動 hover、手機等待空白、玩家欄寬、深色對比與全站表單間距，詳見 docs/refactors/STITCH-SITE-LAYOUT-AUDIT.md
 
 - 補齊另九張已審核大廳設定、彈幕／播放器外觀、形象設定、表情、邀請與繪畫圖庫畫面；共用完整縮放預覽與穩定操作槽，保留真實偏好、邀請及畫布流程，詳見 docs/refactors/STITCH-APPROVED-SUPPLEMENT.md

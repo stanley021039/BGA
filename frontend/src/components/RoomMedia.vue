@@ -54,7 +54,7 @@ function syncPlayback() {
   if (lastConsent !== consentKey.value) { lastConsent = consentKey.value; wantsVideo = consents.get(lastConsent) === true; }
   const key = mediaCurrentKey(state), changed = key !== lastItem; lastItem = key;
   player.setMarker(media.marker); player.update(state, media.marker, media.serverNow()); sharedClock.value = media.position();
-  if (changed && state.current?.type === 'video' && wantsVideo && consents.get(consentKey.value) === true) void show().then(async () => { await nextTick(); if (key === mediaCurrentKey(media.snapshot) && wantsVideo && opened.value) player?.joinVideo(); });
+  if (changed && state.current?.type === 'video' && wantsVideo && consents.get(consentKey.value) === true) void show().then(async () => { await nextTick(); if (key === mediaCurrentKey(media.snapshot) && wantsVideo && opened.value && !document.hidden && !view.value.videoWanted) player?.joinVideo(); });
   void maybeConsent();
 }
 async function maybeConsent() {
@@ -173,7 +173,7 @@ onBeforeUnmount(() => { disposed = true; mounted = false; observer?.disconnect()
                 <div class="vue-media-volume" role="group" aria-label="個人媒體音量"><UiButton stitch variant="ghost" :icon="musicEnabled ? 'sound' : 'muted'" icon-only :label="musicEnabled ? '靜音自己的媒體聲音' : '開啟自己的媒體聲音'" :aria-pressed="musicEnabled" @click="sound" /><span class="ui-sr-only">個人媒體音量</span><input aria-label="個人媒體音量" type="range" min="0" max="100" :value="volume" @input="setVolume"><output>{{ volume }}%</output></div>
               </div>
               <p :id="id + '-publish'" class="vue-media-publish-reason">{{ view.publishReason || (media.canControl ? '可將自己的原生播放進度同步至全桌。' : '全桌播放由房主或管理者控制；你仍可點播與調整個人音量。') }}</p>
-              <details class="vue-media-local-options" :open="videoActive && view.videoFallback"><summary>本機播放與疑難排解</summary><div><UiButton stitch variant="secondary" icon="play" label="在自己的裝置播放" :disabled="!item || item.type === 'video' && !videoActive" @click="player?.resume()" /><UiButton stitch v-if="videoActive" variant="secondary" icon="close" label="退出自己的影片" @click="exitVideo" /><UiButton stitch v-if="videoActive && view.videoFallback && !view.nativeVideo" variant="secondary" icon="video" label="使用原生影片播放器" @click="player?.useNativeVideo()" /><UiButton stitch variant="ghost" icon="refresh" label="恢復視窗位置與大小" @click="geometry.reset" /></div></details>
+              <details class="vue-media-local-options" :open="videoActive && view.videoFallback"><summary>本機播放與疑難排解</summary><div><UiButton stitch variant="secondary" icon="play" label="在自己的裝置播放" :disabled="!item || item.type === 'video' && !videoActive" @click="player?.resume()" /><UiButton stitch v-if="videoActive" variant="secondary" icon="close" label="退出自己的影片" @click="exitVideo" /><UiButton stitch v-if="videoActive && view.videoFallback && !view.nativeVideo" variant="secondary" icon="refresh" label="重新載入自己的 YouTube 播放器" @click="player?.joinVideo()" /><UiButton stitch v-if="videoActive && view.videoFallback && !view.nativeVideo" variant="secondary" icon="video" label="使用原生影片播放器" @click="player?.useNativeVideo()" /><UiButton stitch variant="ghost" icon="refresh" label="恢復視窗位置與大小" @click="geometry.reset" /></div></details>
               <div class="vue-media-shortcuts"><UiButton stitch variant="secondary" icon="cards" :label="'播放清單（' + (media.snapshot?.queue.length || 0) + '）'" @click="setTab('queue')" /><UiButton stitch variant="secondary" icon="add" label="曲庫／YouTube 點播" @click="setTab('request')" /></div>
             </div>
           </section>

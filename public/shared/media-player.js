@@ -5,7 +5,7 @@
  'use strict';
  function create(options){
  const {audioHost,videoHost}=options,maxPosition=14400,clock=()=>performance.now();
- const retiredPlayers=new WeakSet(),audioTransitions=new WeakMap();let audioPreviewGesture=null;
+ const retiredPlayers=new WeakSet(),audioTransitions=new WeakMap();let audioPreviewGesture=null,videoReadyJob=null,initialVideoPause=null,videoHasStarted=false;
  let snapshot=null,marker=null,room=null,serverAt=0,observedAt=0,playerEpoch=0,audio=null,interruptedAudio=null,player=null,ready=false,nativeVideo=false,videoFallback=false,mountingVideo=null,videoWanted=false,unlocked=false,appliedPlayback=null,positionRead=null,apiPromise=null,apiScript=null,apiTimer=null,apiCancel=null,intersection=null,opened=false,collapsed=false,disposed=false;
  const status=message=>{if(!disposed)options.onStatus(message);};
  const markerKey=value=>value?`${value.roomInstanceId}:${value.revision}`:'';
@@ -15,10 +15,11 @@
  function position(){if(!snapshot?.current)return 0;const playback=snapshot.playback;return Math.max(0,Math.min(duration()||maxPosition,playback.anchorPositionSec+(playback.state==='playing'?Math.max(0,serverAt+clock()-observedAt-playback.anchorServerMs)/1000:0)));}
  function signature(){return snapshot?JSON.stringify([currentKey(),snapshot.playback.state,snapshot.playback.anchorPositionSec,snapshot.playback.anchorServerMs]):null;}
  function validPlayer(token,key){return !disposed&&token===playerEpoch&&key===currentKey()&&!!room&&!document.hidden;}
- function notify(){if(!disposed)options.onChange({videoWanted,ready,nativeVideo,videoFallback,loading:mountingVideo!==null,publishReason:publishReason()});}
+ function notify(){if(!disposed)options.onChange({videoWanted,ready,nativeVideo,videoFallback,loading:mountingVideo!==null||videoReadyJob!==null,publishReason:publishReason()});}
  function stopAudio(){const old=audio;audio=null;interruptedAudio=null;if(!old)return;old.onloadedmetadata=null;old.onended=null;old.onerror=null;old.onplaying=null;old._mediaUnbind?.();try{pauseAudio(old);old.removeAttribute('src');old.load();}catch{}audioHost.replaceChildren();}
- function retirePlayer(old){if(!old||retiredPlayers.has(old))return;retiredPlayers.add(old);try{old.pauseVideo();old.destroy();}catch{}}
- function destroyVideo(){ready=false;nativeVideo=false;intersection?.disconnect();intersection=null;const old=player;player=null;retirePlayer(old);videoHost.replaceChildren();}
+ function cancelVideoReady(target){if(!videoReadyJob||target&&videoReadyJob.player!==target)return;clearTimeout(videoReadyJob.timer);videoReadyJob=null;}
+ function retirePlayer(old){if(!old||retiredPlayers.has(old))return;cancelVideoReady(old);retiredPlayers.add(old);try{old.pauseVideo();old.destroy();}catch{}}
+ function destroyVideo(){cancelVideoReady();initialVideoPause=null;videoHasStarted=false;ready=false;nativeVideo=false;intersection?.disconnect();intersection=null;const old=player;player=null;retirePlayer(old);videoHost.replaceChildren();}
  function cancelPositionRead(){const job=positionRead;positionRead=null;if(job){clearTimeout(job.timer);job.cancel?.();}}
  function stopPlayers(){cancelPositionRead();playerEpoch++;appliedPlayback=null;mountingVideo=null;videoFallback=false;stopAudio();destroyVideo();apiCancel?.();}
  function activeVideo(){return !disposed&&snapshot?.current?.type==='video'&&videoWanted&&opened&&!document.hidden;}
@@ -31,7 +32,7 @@
  }
  function observeFrame(iframe,token,key){intersection?.disconnect();if(typeof IntersectionObserver==='function'){intersection=new IntersectionObserver(entries=>{if(validPlayer(token,key)&&activeVideo()&&!collapsed&&entries.some(entry=>entry.intersectionRatio<=.5))exitVideo('影片已離開可見範圍，需要時再加入觀看。');},{threshold:[.5]});intersection.observe(iframe);}}
  function exitVideo(message='自己的影片已關閉，其他人繼續觀看。'){videoWanted=false;playerEpoch++;appliedPlayback=null;mountingVideo=null;destroyVideo();apiCancel?.();notify();if(message)status(message);}
- function settings(value=window.AudioSettings?.get?.()){if(!value)return;const music=value.music;if(audio){audio.volume=music.volume;audio.muted=!music.enabled;}if(player&&ready)try{player.setVolume(music.volume*100);music.enabled?player.unMute():player.mute();}catch{}}
+ function settings(value=window.AudioSettings?.get?.()){if(!value)return;const music=value.music;if(audio){audio.volume=music.volume;audio.muted=!music.enabled;}if(player&&ready)try{player.setVolume(music.volume*100);music.enabled&&!initialVideoPause?player.unMute():player.mute();}catch{}}
  function expectAudioTransition(clip,type,front=false){
   const record=audioTransitions.get(clip);if(!record)return;front?record.expected.unshift(type):record.expected.push(type);
   if(record.expected.length>64){record.expected.shift();record.skipped=Math.min(65536,record.skipped+1);record.intent++;record.nativePaused=null;if(interruptedAudio?.clip===clip)interruptedAudio=null;}
@@ -155,15 +156,19 @@
  function videoFrame(videoId,api=true){const iframe=document.createElement('iframe');iframe.title='本桌YouTube影片';iframe.setAttribute('referrerpolicy','strict-origin-when-cross-origin');iframe.setAttribute('allow','autoplay; encrypted-media; fullscreen; picture-in-picture');iframe.setAttribute('allowfullscreen','');iframe.src='https://www.youtube-nocookie.com/embed/'+encodeURIComponent(videoId)+'?controls=1&playsinline=1'+(api?'&enablejsapi=1&origin='+encodeURIComponent(location.origin):'');return iframe;}
  function applyVideo(force=false){
   if(!activeVideo()||!ready||!player||nativeVideo)return;const key=signature();if(!force&&appliedPlayback===key)return;if(!isVisibleEnough()){exitVideo('播放器空間不足，請放大視窗後重新加入。');return;}appliedPlayback=key;
-  try{if(snapshot.playback.state==='paused'){player.cueVideoById({videoId:snapshot.current.videoId,startSeconds:position()});player.pauseVideo();}else{player.seekTo(position(),true);player.playVideo();}}catch{status('影片尚未準備好，請按「返回全桌進度」或原生播放按鈕。',true);}
+  // An untouched iframe needs real media data before it can retain a paused frame.
+  // Bootstrap silently, then pause once in its first current PLAYING callback.
+  initialVideoPause=null;
+  try{if(snapshot.playback.state==='paused'&&!videoHasStarted){initialVideoPause={epoch:playerEpoch,key:currentKey(),playback:key,player};player.mute();player.loadVideoById({videoId:snapshot.current.videoId,startSeconds:position()});}else{settings();if(snapshot.playback.state==='paused'){player.pauseVideo();player.seekTo(position(),true);player.pauseVideo();}else{player.seekTo(position(),true);player.playVideo();}}}catch{initialVideoPause=null;settings();status('影片尚未準備好，請按「返回全桌進度」或原生播放按鈕。',true);}
  }
  async function mountVideo(){
   stopPlayers();if(!activeVideo())return;const token=playerEpoch,key=currentKey(),videoId=snapshot.current.videoId;mountingVideo=token;status('載入自己的YouTube播放器…',true);notify();
   try{const yt=await youtubeApi();if(!validPlayer(token,key)||!activeVideo())return;if(!isVisibleEnough()){exitVideo('影片至少需要200×200可見空間，請放大視窗後重新加入。');return;}
    const iframe=videoFrame(videoId);videoHost.replaceChildren(iframe);const valid=()=>validPlayer(token,key)&&activeVideo();let instance;
    const stale=target=>{if(valid())return false;retirePlayer(target);return true;};
-   instance=new yt.Player(iframe,{events:{onReady:event=>{if(stale(event?.target||instance))return;ready=true;settings();applyVideo(true);notify();const length=Number(instance.getDuration?.());if(Number.isFinite(length)&&length>0&&length<=maxPosition&&!duration())report('duration',{itemId:snapshot.current.id,durationSec:length});},onStateChange:event=>{if(stale(event.target||instance))return;if(event.data===0){status('這裡已播放完畢，等待下一筆。',true);report('ended',{itemId:snapshot.current.id});}else if(event.data===3)status('這裡正在緩衝，其他人的播放不受影響。',true);else if(event.data===1){status('',true);const length=Number(instance.getDuration?.());if(Number.isFinite(length)&&length>0&&length<=maxPosition&&!duration())report('duration',{itemId:snapshot.current.id,durationSec:length});}},onAutoplayBlocked:event=>{if(!stale(event?.target||instance))status('瀏覽器需要你允許播放，請按「在自己的裝置播放」或YouTube原生播放按鈕。',true);},onError:event=>{if(stale(event.target||instance))return;const errors={2:'影片識別碼無效。',5:'此瀏覽器無法播放這部影片。',100:'影片不存在、已移除或是私人影片。',101:'影片不允許嵌入觀看。',150:'影片不允許嵌入觀看。',153:'YouTube未能確認網站來源。'};status((errors[event.data]||'影片目前無法嵌入播放。')+' 可用原生播放器重試，或關閉自己的影片。',true);videoFallback=true;notify();}}});
+   instance=new yt.Player(iframe,{events:{onReady:event=>{if(stale(event?.target||instance))return;cancelVideoReady(event?.target||instance);ready=true;videoFallback=false;status('',true);settings();applyVideo(true);notify();const length=Number(instance.getDuration?.());if(Number.isFinite(length)&&length>0&&length<=maxPosition&&!duration())report('duration',{itemId:snapshot.current.id,durationSec:length});},onStateChange:event=>{if(stale(event.target||instance))return;if(event.data===0){initialVideoPause=null;settings();status('這裡已播放完畢，等待下一筆。',true);report('ended',{itemId:snapshot.current.id});}else if(event.data===3)status('這裡正在緩衝，其他人的播放不受影響。',true);else if(event.data===1){videoHasStarted=true;const pending=initialVideoPause;initialVideoPause=null;if(pending&&pending.epoch===playerEpoch&&pending.key===currentKey()&&pending.playback===signature()&&pending.player===player&&snapshot.playback.state==='paused'){try{player.pauseVideo();}catch{}}if(pending)settings();status('',true);const length=Number(instance.getDuration?.());if(Number.isFinite(length)&&length>0&&length<=maxPosition&&!duration())report('duration',{itemId:snapshot.current.id,durationSec:length});}},onAutoplayBlocked:event=>{if(stale(event?.target||instance))return;initialVideoPause=null;settings();status('瀏覽器需要你允許播放，請按「在自己的裝置播放」或YouTube原生播放按鈕。',true);},onError:event=>{if(stale(event.target||instance))return;cancelVideoReady(event.target||instance);initialVideoPause=null;settings();const errors={2:'影片識別碼無效。',5:'此瀏覽器無法播放這部影片。',100:'影片不存在、已移除或是私人影片。',101:'影片不允許嵌入觀看。',150:'影片不允許嵌入觀看。',153:'YouTube未能確認網站來源。'};status((errors[event.data]||'影片目前無法嵌入播放。')+' 可用原生播放器重試，或關閉自己的影片。',true);videoFallback=true;notify();}}});
    if(!valid()){stale(instance);return;}player=instance;
+   if(!ready&&!videoFallback){const job={player:instance,timer:null};videoReadyJob=job;job.timer=setTimeout(()=>{if(videoReadyJob!==job)return;videoReadyJob=null;if(!valid()||player!==instance||ready)return;videoFallback=true;status('YouTube播放器回應逾時，請重新載入，或使用原生影片播放器。',true);notify();},20000);}
    observeFrame(iframe,token,key);
   }catch(error){if(validPlayer(token,key)&&activeVideo()){status(error.message,true);videoFallback=true;notify();}}finally{if(mountingVideo===token){mountingVideo=null;notify();}}
  }
@@ -195,7 +200,7 @@
   setMarker(value){marker=value;},
   setWindow(value,bar=false){if(disposed)return;const was=opened;opened=value;collapsed=bar;if(!value){cancelPositionRead();if(snapshot?.current?.type==='video')exitVideo('');}else if(!was&&activeVideo())applyPlayback();notify();},
   joinVideo(){if(disposed)return;videoWanted=true;unlocked=true;if(activeVideo())mountVideo();notify();},exitVideo,
-  resume(){if(disposed)return;unlocked=true;window.AudioSettings?.set('music',{enabled:true},{gesture:true});if(audio)alignAudio(false);if(activeVideo()&&player&&ready)try{player.playVideo();}catch{status('請直接按YouTube播放器的播放按鈕。');}},
+  resume(){if(disposed)return;unlocked=true;window.AudioSettings?.set('music',{enabled:true},{gesture:true});if(audio)alignAudio(false);if(activeVideo()&&player&&ready)try{initialVideoPause=null;settings();player.playVideo();}catch{status('請直接按YouTube播放器的播放按鈕。');}},
   align(){if(disposed)return;unlocked=true;applyPlayback(true);notify();},
   useNativeVideo(){if(!activeVideo()||!isVisibleEnough())return;cancelPositionRead();playerEpoch++;destroyVideo();apiCancel?.();mountingVideo=null;nativeVideo=true;const iframe=videoFrame(snapshot.current.videoId,false);videoHost.replaceChildren(iframe);observeFrame(iframe,playerEpoch,currentKey());status('使用原生播放器；播放、暫停和進度只影響自己。');notify();},
   readPosition,disconnect,dispose
