@@ -9,6 +9,11 @@
   min-inline-size: 0;
 }
 .vue-page h1 { @include tokens.type(h1); }
+// Page headings must keep the named 00/C05 scale when the legacy theme is loaded.
+body[data-visual-theme] .vue-page :is(.page-heading, .library-heading, .market-heading) h1 {
+  @include tokens.type(h1);
+  letter-spacing: normal;
+}
 .vue-page h2 { @include tokens.type(h2); }
 .vue-page :is(h3, h4) { @include tokens.type(p1); }
 .vue-page :is(p, label, input, select, textarea, button) { font-size: 1rem; line-height: 1.5; }

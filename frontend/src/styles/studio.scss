@@ -1,3 +1,4 @@
+@use 'compact-header' as chrome;
 @use 'tokens';
 .vue-page.vue-studio-page {
  .studio-layout { grid-template-columns:minmax(0,1fr);gap:tokens.space(6); }
@@ -39,10 +40,7 @@
 // in document flow below; tools and long feedback scroll inside their own slots.
 @media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
  body.studio-page:not(.ui-large-text) {
-  [data-site-header].vue-site-header { min-height:0;margin:0;padding:tokens.space(2) 0; }
-  .vue-site-header-content { min-height:44px;row-gap:0; }
-  .vue-site-header-feedback { position:absolute;top:calc(100% + 8px);right:0;width:min(480px,100%);padding:tokens.space(3);border:1px solid var(--play-line);border-radius:tokens.space(3);background:var(--play-surface);z-index:140; }
-  .vue-site-header-feedback:has(.frontend-status:empty) { visibility:hidden;pointer-events:none; }
+  @include chrome.desktop;
   .vue-page.vue-studio-page {
    padding-block-start:tokens.space(2);
    #collection-return { display:inline-flex;align-items:center;min-block-size:28px;padding:0;margin-block-end:tokens.space(2); }

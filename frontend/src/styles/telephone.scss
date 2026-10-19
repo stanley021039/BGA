@@ -1,3 +1,4 @@
+@use 'compact-header' as chrome;
 @use 'tokens' as t;
 .vue-telephone-stage { height:1000px; min-height:0; grid-template-rows:auto 72px minmax(0,1fr) 112px 132px; >header { display:grid; gap:t.space(2); h1 { min-height:2.6em; } p { min-height:3em; } } }
 .vue-telephone-clock { min-width:0; min-height:72px; .vue-room-countdown { width:100%; box-sizing:border-box; } }
@@ -21,10 +22,7 @@
  body.vue-telephone-document:not(.ui-large-text) {
   margin:0;
   .vue-game-document { height:100dvh; padding:0 t.space(6) t.space(2); display:grid; grid-template-rows:auto minmax(0,1fr); }
-  [data-site-header].vue-site-header { min-height:0; margin:0; padding:t.space(2) 0; }
-  .vue-site-header-content { min-height:44px; row-gap:0; }
-  .vue-site-header-feedback { position:absolute; top:calc(100% + 8px); right:0; width:min(480px,100%); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(3); background:var(--play-surface); z-index:140; }
-  .vue-site-header-feedback:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+  @include chrome.desktop;
   #telephone-app { min-height:0; }
   .vue-game-workspace { height:100%; min-height:0; grid-template-rows:auto 48px minmax(0,1fr); gap:t.space(3); }
   .vue-game-toolbar { min-height:44px; padding-block:t.space(2); gap:t.space(3); }

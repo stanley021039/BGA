@@ -1,0 +1,45 @@
+@use 'compact-header' as chrome;
+@use 'tokens' as t;
+.vue-trpg-stage { height:1100px; min-height:0; grid-template-rows:auto 64px minmax(0,1fr) 80px 88px; >header { display:grid; gap:t.space(1); h1,p { margin:0; } } }
+.vue-trpg-resources { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:t.space(3); min-width:0; >span { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:t.space(2); min-width:0; padding:t.space(2); border:1px solid var(--play-line); border-radius:t.space(2); @include t.type(p3); } strong { @include t.type(p1); font-variant-numeric:tabular-nums; } small { @include t.type(p3); } }
+.vue-trpg-body { min-width:0; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,.8fr); gap:t.space(4); }
+.vue-trpg-story,.vue-trpg-controls { min-width:0; min-height:0; overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; display:grid; align-content:start; gap:t.space(3); padding:t.space(1); overflow-wrap:anywhere; }
+.vue-trpg-route { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:t.space(2); @include t.type(p3); li { display:grid; align-content:center; text-align:center; min-height:44px; padding:t.space(1); border:1px solid var(--play-line); border-radius:t.space(2); } li[aria-current=step] { background:var(--play-yellow); color:var(--play-ink); outline:2px solid currentColor; outline-offset:-2px; font-weight:800; } }
+.vue-trpg-approach-help { display:grid; align-content:start; gap:t.space(3); min-width:0; padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(3); dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:t.space(2); margin:0; } dl>div { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:t.space(2); } dt,dd { margin:0; @include t.type(p3); } dd { font-weight:800; font-variant-numeric:tabular-nums; } }
+.vue-trpg-controls { label { display:grid; gap:t.space(2); min-width:0; } select,input { width:100%; max-width:100%; min-width:0; min-height:44px; box-sizing:border-box; padding:t.space(2); border:1px solid var(--play-line); border-radius:t.space(2); color:var(--play-ink); background:var(--play-paper); } >p { @include t.type(p3); } }
+.vue-trpg-status { display:grid; grid-template-rows:auto auto; min-width:0; min-height:0; align-content:start; gap:t.space(1); overflow:auto; scrollbar-gutter:stable; p { overflow-wrap:anywhere; } .frontend-status { margin:0; min-height:0; min-block-size:0; block-size:auto; max-block-size:none; } .frontend-status:empty { display:none; } }
+.vue-trpg-actions { min-width:0; display:flex; flex-wrap:wrap; align-content:start; align-items:center; gap:t.space(2); overflow:auto; scrollbar-gutter:stable; button { min-height:44px; white-space:normal; } span { @include t.type(p3); overflow-wrap:anywhere; } }
+.vue-trpg-result { display:grid; gap:t.space(3); min-width:0; padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(3); .vue-trpg-formula { padding:t.space(3); border-radius:t.space(2); background:var(--play-paper); font-variant-numeric:tabular-nums; } summary { min-height:44px; display:flex; align-items:center; cursor:pointer; } ul { margin:0; padding-left:t.space(6); display:grid; gap:t.space(3); } small { display:block; @include t.type(p3); } }
+.vue-trpg-journal { display:grid; gap:t.space(3); min-width:0; >summary { min-height:44px; cursor:pointer; } >.vue-trpg-result { margin-top:t.space(3); } }
+.vue-trpg-role,.vue-trpg-offline { display:grid; gap:t.space(3); min-width:0; label { display:grid; gap:t.space(2); } select { min-width:0; width:100%; min-height:44px; box-sizing:border-box; padding:t.space(2); color:var(--play-ink); background:var(--play-paper); } button { white-space:normal; overflow-wrap:anywhere; } p { @include t.type(p3); } }
+.vue-trpg-offline { max-height:240px; overflow:auto; scrollbar-gutter:stable; }
+body.vue-trpg-document .vue-room-player-status { white-space:normal; overflow-wrap:anywhere; }
+@media(max-width:760px) { .vue-trpg-stage { height:1400px; grid-template-rows:auto 88px minmax(0,1fr) 112px 120px; } .vue-trpg-body { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(240px,1fr) minmax(360px,1fr); } .vue-trpg-resources { gap:t.space(2); >span { align-content:center; gap:t.space(1); } } .vue-trpg-route { gap:t.space(1); } .vue-trpg-actions { >button { flex:1; min-width:100px; } >span { width:100%; } } }
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ body.vue-trpg-document:not(.ui-large-text) {
+  margin:0;
+  .vue-game-document { height:100dvh; padding:0 t.space(6) t.space(2); display:grid; grid-template-rows:auto minmax(0,1fr); }
+  @include chrome.desktop;
+  #trpg-app { min-height:0; }
+  .vue-game-workspace { height:100%; min-height:0; grid-template-rows:auto 48px minmax(0,1fr); gap:t.space(3); }
+  .vue-game-toolbar { min-height:44px; padding-block:t.space(2); gap:t.space(3); }
+  .vue-game-phase { min-height:24px; }
+  .vue-game-room-feedback { min-height:48px; height:48px; }
+  .vue-game-grid { min-height:0; }
+  .vue-game-main,.vue-game-side { overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; }
+  .vue-game-main { border:1px solid var(--play-line); border-radius:t.space(4); background:var(--play-surface); }
+  .vue-game-roster-panel { min-height:0; padding:t.space(3); .vue-roster-list { min-height:0; max-height:none; } }
+  .vue-game-settings-panel { flex:none; padding:t.space(3); gap:t.space(2); >p { display:none; } }
+  .vue-game-start-slot { min-height:44px; }
+  .vue-game-side { gap:t.space(3); >.vue-room-chat { flex:1; min-height:300px; padding:t.space(3); gap:t.space(2); } }
+  .vue-room-chat-content { grid-template-rows:0 minmax(60px,1fr) 0 auto 44px 48px; gap:t.space(2); }
+  .vue-chat-notice,.vue-chat-quick:empty { visibility:hidden; min-height:0; height:0; }
+  .vue-trpg-stage { flex:none; height:100%; box-sizing:border-box; border:0; border-radius:0; padding:t.space(3); gap:t.space(2); grid-template-rows:auto 44px minmax(0,1fr) 48px 64px; >header { display:flex; flex-wrap:wrap; align-items:center; gap:t.space(2) t.space(4); h1 { @include t.type(h2); } p { @include t.type(p3); } } }
+  .vue-trpg-resources { >span { padding:t.space(1); } strong { @include t.type(p2); } }
+  .vue-trpg-status { @include t.type(p3); }
+  .vue-trpg-body { gap:t.space(3); }
+  .vue-trpg-controls { gap:t.space(2); h2 { @include t.type(p2); } label { gap:t.space(1); @include t.type(p3); } }
+  .vue-trpg-role { gap:t.space(2); p { display:none; } }
+  @media(max-height:760px) { .vue-trpg-stage { padding:t.space(2); gap:t.space(1); grid-template-rows:auto 44px minmax(0,1fr) 42px 64px; >header p { max-width:100%; } } .vue-trpg-controls { gap:t.space(1); } .vue-trpg-role select { @include t.type(p3); } }
+ }
+}

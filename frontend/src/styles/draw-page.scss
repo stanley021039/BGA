@@ -1,4 +1,11 @@
 @use 'tokens' as t;
+@use 'compact-header' as chrome;
+
+// The legacy game foundation scopes headings to body[data-game-kind].
+body[data-game-kind=draw] :is(.vue-draw-board-heading,.vue-draw-scene) h1 { @include t.type(h1); }
+body[data-game-kind=draw] .vue-draw-entry h1 { @include t.type(display); }
+body[data-game-kind=draw] [data-site-header].site-header.vue-site-header { display:block;inline-size:100%;margin-inline:0;box-sizing:border-box; }
+body[data-game-kind=draw].vue-draw-focus [data-site-header].site-header.vue-site-header { display:none; }
 
 .vue-draw-document { max-width: 1920px; margin: 0 auto; padding: t.space(6); color: var(--play-ink, #29262d); }
 .vue-draw-workspace { position: relative; min-width: 0; display: grid; gap: t.space(4); }
@@ -10,7 +17,7 @@
 .vue-draw-roster-panel, .vue-draw-board-panel, .vue-draw-settings-panel, .vue-draw-guess-panel, .vue-draw-side > .vue-room-chat { padding: t.space(6); border: 1px solid var(--play-line, #a59b96); border-radius: t.space(4); background: var(--play-surface, #fffdf8); box-sizing: border-box; min-width: 0; }
 .vue-draw-roster-panel { display: flex; .vue-room-roster { flex: 1; width: 100%; grid-template-rows: auto minmax(0, 1fr) auto; } .vue-roster-list { max-height: min(860px, 95dvh); min-height: 320px; } .vue-room-player { grid-template-columns: 2.5rem minmax(0, 1fr) 3rem; gap: t.space(2); padding: t.space(2); } }
 .vue-draw-board-panel { display: flex; flex-direction: column; gap: t.space(4); }
-.vue-draw-board-heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 160px) auto; align-items: center; gap: t.space(4); min-width: 0; > div { min-width: 0; } h1 { margin: t.space(1) 0; min-height: 2.6em; max-height: 3.9em; overflow: auto; } small { @include t.type(p3); } }
+.vue-draw-board-heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 160px) auto; align-items: center; gap: t.space(4); min-width: 0; > div { min-width: 0; } h1 { @include t.type(h1); margin: t.space(1) 0; min-height: 2.6em; max-height: 3.9em; overflow: auto; } small { @include t.type(p3); } }
 .vue-draw-secret-rule { margin: 0; min-height: 3em; max-height: 4.5em; overflow: auto; @include t.type(p3); }
 .vue-draw-round-tools { display: flex; gap: t.space(2); }
 .vue-draw-board-footer { min-height: 3em; margin: 0; @include t.type(p3); }
@@ -42,3 +49,58 @@ body.vue-draw-focus .vue-draw-document { max-width: none; }
 @media(max-width:1500px) { .vue-draw-grid { grid-template-columns: 230px minmax(0, 1fr) 280px; gap: t.space(4); } .vue-draw-roster-panel, .vue-draw-board-panel, .vue-draw-settings-panel, .vue-draw-guess-panel, .vue-draw-side > .vue-room-chat { padding: t.space(4); } .vue-draw-board-heading { grid-template-columns: minmax(0, 1fr) 140px; } .vue-draw-round-tools { grid-column: 1/-1; justify-content: flex-end; } }
 @media(max-width:1100px) { .vue-draw-grid { grid-template-columns: minmax(0, 1fr) 280px; } .vue-draw-roster-panel { grid-column: 1/-1; grid-row: 2; } .vue-draw-roster-panel .vue-roster-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: 24rem; min-height: 12rem; } .vue-draw-main, .vue-draw-side { gap: t.space(4); } }
 @media(max-width:760px) { .vue-draw-document { padding: t.space(4); } .vue-draw-grid { grid-template-columns: minmax(0, 1fr); } .vue-draw-main { grid-column: 1; grid-row: 1; } .vue-draw-side { grid-column: 1; grid-row: 2; } .vue-draw-roster-panel { grid-column: 1; grid-row: 3; } .vue-draw-roster-panel .vue-roster-list { grid-template-columns: minmax(0, 1fr); max-height: 30rem; } .vue-draw-toolbar > div { margin-left: 0; width: 100%; } .vue-draw-board-heading { grid-template-columns: minmax(0, 1fr); } .vue-draw-round-tools { grid-column: auto; } .vue-draw-board-panel .vue-drawing-frame { aspect-ratio: auto; height: 320px; } .vue-draw-board-panel .vue-drawing-frame { display: grid; align-items: center; } .vue-draw-board-panel .vue-drawing-frame > canvas { height: auto; block-size: auto; aspect-ratio: 2; background: white; outline: 1px solid var(--play-line, #a59b96); } .vue-draw-waiting { grid-template-columns: minmax(0, 1fr); > img { max-height: 120px; } } .vue-draw-candidates { grid-template-columns: minmax(0, 1fr); } .vue-draw-scene { align-content: start; } .vue-draw-entry > div { padding: t.space(6); } .vue-draw-room-feedback { grid-template-columns: minmax(0, 1fr); } }
+
+
+// Keep the document shell and all three columns inside the desktop viewport.
+// CSS grid places guessing below chat, leaving the complete canvas beside it.
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ body[data-game-kind=draw]:not(.ui-large-text) {
+  box-sizing:border-box;block-size:100dvh;min-block-size:0;max-inline-size:none;margin:0;padding:0 t.space(6) t.space(2);display:grid;grid-template-rows:auto minmax(0,1fr);overflow:hidden;
+  @include chrome.desktop;
+  .vue-draw-document { box-sizing:border-box;inline-size:100%;max-inline-size:none;block-size:100%;min-block-size:0;margin:0;padding:0; }
+  .vue-draw-entry { block-size:100%;min-block-size:0;overflow:auto; }
+  .vue-draw-workspace { block-size:100%;min-block-size:0;grid-template-rows:44px 44px minmax(0,1fr);gap:t.space(2); }
+  .vue-draw-toolbar { min-block-size:0;block-size:44px;gap:t.space(3);flex-wrap:nowrap;>div { flex-wrap:nowrap;gap:t.space(2);min-inline-size:0; } }
+  .vue-draw-phase { max-inline-size:18ch;overflow:auto;white-space:nowrap; }
+  .vue-draw-room-feedback { block-size:44px;min-block-size:0;overflow:auto;scrollbar-gutter:stable;>.frontend-status { min-block-size:0;block-size:100%;max-block-size:none; } }
+  .vue-draw-grid { grid-template-columns:200px minmax(0,1fr) 260px;grid-template-rows:minmax(0,1fr) 13rem;gap:t.space(3);min-block-size:0; }
+  .vue-draw-grid:not(:has(.vue-draw-guess-panel)) { grid-template-rows:minmax(0,1fr); }
+  .vue-draw-main { display:contents; }
+  .vue-draw-roster-panel { grid-column:1;grid-row:1/-1;min-block-size:0;padding:t.space(3);overflow:hidden;.vue-room-roster { min-block-size:0;grid-template-rows:auto minmax(0,1fr) 44px;gap:t.space(2); }.vue-roster-list { min-block-size:0;max-block-size:none;gap:t.space(2); }.vue-room-player { grid-template-columns:2rem minmax(0,1fr);grid-template-rows:auto auto;row-gap:t.space(1); }.vue-room-player>.vue-player-avatar { grid-column:1;grid-row:1/3;inline-size:2rem;block-size:2rem; }.vue-room-player-copy { grid-column:2;grid-row:1;min-inline-size:90px; }.vue-room-player-name { flex-wrap:wrap;column-gap:t.space(1);row-gap:0;>.vue-player-name { flex:1 1 90px; } }.vue-room-player-status { margin-block-start:t.space(1); }.vue-room-player-metric { grid-column:2;grid-row:2;display:flex;align-items:center;justify-content:flex-start;gap:t.space(2);min-inline-size:0; } }
+  .vue-draw-board-panel { grid-column:2;grid-row:1/-1;display:grid;grid-template-rows:88px minmax(0,1fr) 28px;gap:t.space(2);padding:t.space(3);min-block-size:0; }
+  .vue-draw-board-heading { grid-template-columns:minmax(0,1fr) 128px auto;gap:t.space(3);min-block-size:0;>div:first-child { min-block-size:0;max-block-size:88px;overflow:auto;scrollbar-gutter:stable; }h1 { @include t.type(h1);margin:0;min-block-size:1.3em;max-block-size:2.6em; }.vue-draw-secret-rule { min-block-size:0;max-block-size:3em; }.vue-draw-round-tools { grid-column:auto;justify-content:end; } }
+  .vue-draw-board-footer { min-block-size:0;max-block-size:28px;overflow:auto;scrollbar-gutter:stable;@include t.type(p3); }
+  .vue-draw-side { grid-column:3;grid-row:1;display:grid;grid-template-rows:minmax(0,1fr);gap:t.space(3);min-block-size:0; }
+  .vue-draw-side>.vue-room-chat { block-size:100%;min-block-size:0;padding:t.space(3);gap:t.space(2);grid-template-rows:28px minmax(0,1fr); }
+  .vue-room-chat-content { grid-template-rows:21px minmax(0,1fr) 44px 44px 44px 28px;gap:t.space(1);min-block-size:0; }
+  .vue-chat-notice { min-block-size:0;block-size:21px;overflow:auto; }
+  .vue-chat-feedback { min-block-size:0;block-size:28px;overflow:auto;.frontend-status { min-block-size:0;block-size:28px;max-block-size:28px; } }
+  .vue-chat-messages { min-block-size:0; }
+  .vue-chat-quick { flex-wrap:nowrap;overflow:auto; }
+  .vue-draw-settings-panel { grid-template-rows:minmax(0,1fr) 44px;gap:t.space(2);padding:t.space(3);min-block-size:0; }
+  .vue-draw-settings-panel .vue-draw-settings { block-size:100%;min-block-size:0;max-block-size:none;grid-template-rows:48px minmax(0,1fr) 48px;gap:t.space(2);>header { min-block-size:0;overflow:auto; }h2 { @include t.type(h2);margin:0; }>footer { display:flex;align-items:start;gap:t.space(2);min-block-size:0;overflow:auto;>.frontend-status { flex:1;min-inline-size:0;min-block-size:0;block-size:48px;max-block-size:48px; } } }
+  .vue-draw-guess-panel { grid-column:3;grid-row:2;grid-template-rows:24px minmax(0,1fr) 21px 44px 28px;gap:t.space(1);padding:t.space(3);min-block-size:0;h2 { @include t.type(h2); }form { min-block-size:0;>label { position:absolute;inline-size:1px;block-size:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }>div { min-block-size:0; } }>.frontend-status { min-block-size:0;block-size:28px;max-block-size:28px; } }
+  .vue-draw-guess-feed { block-size:auto;min-block-size:0; }
+  .vue-draw-guess-hint { block-size:21px;min-block-size:0;max-block-size:21px; }
+  .vue-drawing-surface { min-block-size:0;grid-template-rows:minmax(0,1fr) 28px;gap:t.space(2); }
+  .vue-drawing-surface.is-artist { grid-template-rows:minmax(0,1fr) auto 28px; }
+  .vue-drawing-surface>.frontend-status { min-block-size:0;block-size:28px;max-block-size:28px;margin:0; }
+  .vue-drawing-frame { min-block-size:0;block-size:100%;aspect-ratio:auto;display:grid;place-items:center;container-type:size;background:var(--play-surface); }
+  // The canvas element itself stays 2:1, so pointer coordinates remain accurate.
+  .vue-drawing-frame>canvas { inline-size:min(100cqw,200cqh);block-size:auto;max-inline-size:100%;max-block-size:100%;aspect-ratio:2;justify-self:center;background:white; }
+  .vue-drawing-scene { min-block-size:0;inline-size:100%;block-size:100%;overflow:auto;scrollbar-gutter:stable;padding:t.space(3); }
+  .vue-drawing-tools { gap:t.space(2); }
+  .vue-drawing-tool-row { grid-template-columns:repeat(10,minmax(0,1fr));gap:t.space(1);>button { min-inline-size:0; } }
+  .vue-drawing-color-row { gap:t.space(2); }
+  .vue-draw-scene { min-block-size:0;gap:t.space(3);align-content:start;h1 { @include t.type(h1); } }
+  .vue-draw-waiting { block-size:100%;align-content:center;>img { max-block-size:160px; }>div { gap:t.space(3); } }
+  .vue-draw-candidates { gap:t.space(2);>button { --ui-button-radius:.75rem;min-block-size:120px;padding:t.space(3);gap:t.space(2); } }
+  .vue-draw-summary { gap:t.space(3); }
+  .vue-draw-summary-grid { gap:t.space(2);>div { padding:t.space(3);grid-template-rows:auto minmax(2.8em,auto) minmax(2.8em,auto); } }
+ }
+ body[data-game-kind=draw]:is([data-draw-phase=waiting],[data-draw-phase=finished]):not(.ui-large-text) .vue-draw-side { grid-template-rows:minmax(0,1fr) minmax(0,1fr); }
+ body[data-game-kind=draw].vue-draw-focus:not(.ui-large-text) { grid-template-rows:minmax(0,1fr);padding-block-start:t.space(2); }
+}
+@media(min-width:1501px) and (min-height:640px) and (pointer:fine) {
+ body[data-game-kind=draw]:not(.ui-large-text) .vue-draw-grid { grid-template-columns:220px minmax(0,1fr) 280px; }
+}

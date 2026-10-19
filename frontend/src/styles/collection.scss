@@ -24,7 +24,7 @@
 @media(max-width:760px) {
   .vue-page.collection-page {
     .collection-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-block-end: tokens.space(4); }
-    .collection-tabs [role=tab] { block-size: 4.5rem; }
+    .collection-tabs [role=tab] { block-size: 4.5rem; flex-direction: column; justify-content: center; gap: tokens.space(1); white-space: nowrap; }
     .resource-panel { block-size: 48rem; padding: tokens.space(4); }
     .collection-tools { grid-template-columns: minmax(0, 1fr); }
     .collection-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 4rem; block-size: 13rem; }

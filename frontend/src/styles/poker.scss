@@ -1,0 +1,60 @@
+@use 'tokens' as t;
+@use 'compact-header' as chrome;
+.vue-poker-stage { position:relative; height:1100px; min-height:0; grid-template-rows:64px 48px minmax(0,1fr) 88px 160px; }
+.vue-poker-summary { display:flex; align-items:center; justify-content:space-between; gap:t.space(4); min-width:0; >div { display:flex; align-items:center; flex-wrap:wrap; gap:t.space(2); min-width:0; } strong { @include t.type(h1); font-variant-numeric:tabular-nums; } p { @include t.type(p3); max-width:26em; overflow-wrap:anywhere; } }
+.vue-poker-live { min-width:0; min-height:0; overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; display:grid; align-content:start; gap:t.space(3); padding:t.space(1); }
+.vue-poker-table { --poker-card-width:64px; display:grid; gap:t.space(4); padding:t.space(4); min-width:0; border:2px solid var(--play-line); border-radius:t.space(4); background:color-mix(in srgb,var(--play-green,#739c88) 18%,var(--play-surface)); }
+.vue-poker-community { min-width:0; display:grid; justify-items:center; align-content:start; gap:t.space(2); h2 { @include t.type(p3); } }
+.vue-poker-cards { display:flex; justify-content:center; align-items:center; gap:t.space(2); min-width:0; }
+.vue-poker-card { width:var(--poker-card-width,64px); height:calc(var(--poker-card-width,64px)*1.4); flex:none; box-sizing:border-box; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid #667974; border-radius:t.space(2); background:#fff; color:#1c302c; box-shadow:0 2px 4px #0002; strong { font-size:clamp(1rem,calc(var(--poker-card-width,64px)*.38),1.75rem); line-height:1; } >span { font-size:clamp(1rem,calc(var(--poker-card-width,64px)*.38),1.75rem); line-height:1.1; } &.is-red { color:#a12d31; } &.is-back { background:repeating-linear-gradient(45deg,#24524b,#24524b 4px,#1c443e 4px,#1c443e 8px); color:#fff; } &.is-empty { background:var(--play-paper); border-style:dashed; box-shadow:none; } &.is-compact { --poker-card-width:36px; } &.is-new { animation:vue-poker-reveal 550ms ease-out; } }
+.vue-poker-hero { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:t.space(3); width:min(100%,440px); justify-self:center; min-width:0; >div { display:grid; gap:t.space(2); min-width:0; } h2 { @include t.type(p3); text-align:center; } dl { display:grid; gap:t.space(1); min-width:0; margin:0; @include t.type(p3); >div { display:flex; flex-wrap:wrap; justify-content:space-between; gap:t.space(2); } dt,dd { margin:0; } dd { font-variant-numeric:tabular-nums; font-weight:800; } } >p { grid-column:1/-1; @include t.type(p3); } }
+.vue-poker-showdown { display:grid; gap:t.space(3); min-width:0; >header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:t.space(3); } }
+.vue-poker-payouts { list-style:none; margin:0; padding:0; display:grid; gap:t.space(2); li { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:t.space(2); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(2); overflow-wrap:anywhere; span:last-child { grid-column:1/-1; } span { font-variant-numeric:tabular-nums; } } }
+.vue-poker-public-hands { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:t.space(3); min-width:0; article { display:grid; align-content:start; gap:t.space(2); min-width:0; padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(2); } h3 { min-width:0; display:flex; flex-wrap:wrap; gap:t.space(2); @include t.type(p2); } p { overflow-wrap:anywhere; @include t.type(p3); } }
+.vue-poker-pots,.vue-poker-departed,.vue-poker-log { min-width:0; overflow-wrap:anywhere; summary { min-height:44px; display:flex; align-items:center; cursor:pointer; } article { display:grid; gap:t.space(2); padding:t.space(3); margin-top:t.space(2); border:1px solid var(--play-line); border-radius:t.space(2); } >p { margin-block:t.space(2); } }
+.vue-poker-log ol { margin:0; padding-left:t.space(6); max-height:240px; overflow:auto; scrollbar-gutter:stable; display:grid; gap:t.space(2); }
+.vue-poker-feedback { min-width:0; overflow:auto; scrollbar-gutter:stable; @include t.type(p3); p { margin:0; overflow-wrap:anywhere; } .frontend-status { min-height:0; min-block-size:0; block-size:auto; max-block-size:none; padding:0; } .frontend-status:empty { display:none; } }
+.vue-poker-actions { display:grid; align-content:start; gap:t.space(2); min-width:0; overflow:auto; scrollbar-gutter:stable; }
+.vue-poker-action-buttons { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:t.space(2); min-width:0; button { min-width:0; min-height:44px; white-space:normal; } }
+.vue-poker-raise { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:t.space(1) t.space(2); min-width:0; align-items:center; label { display:flex; align-items:center; gap:t.space(2); min-width:0; @include t.type(p3); } input { flex:1; width:80px; min-width:60px; min-height:44px; box-sizing:border-box; padding:t.space(2); color:var(--play-ink); background:var(--play-paper); border:1px solid var(--play-line); border-radius:t.space(2); } button { min-height:44px; white-space:normal; } p { grid-column:1/-1; @include t.type(p3); } }
+.vue-poker-spotlight { position:absolute; z-index:4; top:35%; left:50%; transform:translate(-50%,-50%); width:min(420px,calc(100% - 32px)); box-sizing:border-box; padding:t.space(6); border:1px solid var(--play-line); border-radius:t.space(4); box-shadow:0 8px 24px #0004; background:var(--play-surface); display:grid; justify-items:center; gap:t.space(4); overflow-wrap:anywhere; strong { text-align:center; } }
+.vue-poker-flying-chip { position:absolute; z-index:3; pointer-events:none; width:20px; height:20px; display:grid; place-items:center; color:var(--play-ink); background:var(--play-yellow); border:2px dashed currentColor; border-radius:50%; animation:vue-poker-chip 600ms cubic-bezier(.25,.75,.3,1) forwards; }
+.vue-poker-settings { display:grid; gap:t.space(2); margin:0; >div { display:flex; justify-content:space-between; gap:t.space(3); } dt,dd { margin:0; } dd { text-align:end; font-variant-numeric:tabular-nums; } }
+@keyframes vue-poker-reveal { from { opacity:0; transform:rotateY(70deg) translateY(-8px); } to { opacity:1; transform:none; } }
+@keyframes vue-poker-chip { from { opacity:1; transform:translate(var(--chip-x),var(--chip-y)) scale(1); } to { opacity:.3; transform:translate(0,0) scale(.7); } }
+body.vue-poker-document .vue-room-player-status { white-space:normal; overflow-wrap:anywhere; }
+@media(prefers-reduced-motion:reduce) { .vue-poker-card.is-new,.vue-poker-flying-chip { animation:none; } }
+@media(max-width:760px) { .vue-poker-stage { height:1200px; grid-template-rows:88px 48px minmax(0,1fr) 112px 256px; } .vue-poker-table { --poker-card-width:clamp(28px,9vw,52px); padding:t.space(2); } .vue-poker-cards { gap:t.space(1); } .vue-poker-summary { align-items:start; flex-direction:column; gap:t.space(1); } .vue-poker-hero { gap:t.space(2); grid-template-columns:auto minmax(0,1fr); dl { gap:0; >div { gap:t.space(1); } } } .vue-poker-public-hands { grid-template-columns:minmax(0,1fr); } .vue-poker-action-buttons button { padding:t.space(1); @include t.type(p3); .ui-button-icon { display:none; } } .vue-poker-raise { grid-template-columns:minmax(0,1fr); label { flex-wrap:wrap; } input { width:100%; flex-basis:100%; } p { grid-column:1; } } }
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ body.vue-poker-document:not(.ui-large-text) {
+  margin:0;
+  @include chrome.desktop;
+  .vue-game-document { height:100dvh; padding:0 t.space(6) t.space(2); display:grid; grid-template-rows:auto minmax(0,1fr); }
+  #poker-app { min-height:0; }
+  .vue-game-workspace { height:100%; min-height:0; grid-template-rows:auto 48px minmax(0,1fr); gap:t.space(3); }
+  .vue-game-toolbar { min-height:44px; padding-block:t.space(2); gap:t.space(3); }
+  .vue-game-phase { min-height:24px; }
+  .vue-game-room-feedback { min-height:48px; height:48px; }
+  .vue-game-grid { min-height:0; }
+  .vue-game-main,.vue-game-side { overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; }
+  .vue-game-main { border:1px solid var(--play-line); border-radius:t.space(4); background:var(--play-surface); }
+  .vue-game-roster-panel { min-height:0; padding:t.space(3); .vue-roster-list { min-height:0; max-height:none; } }
+  .vue-game-settings-panel { flex:none; padding:t.space(3); gap:t.space(2); >p { display:none; } }
+  .vue-game-start-slot { min-height:44px; }
+  .vue-game-side { gap:t.space(3); >.vue-room-chat { flex:1; min-height:300px; padding:t.space(3); gap:t.space(2); } }
+  .vue-room-chat-content { grid-template-rows:0 minmax(60px,1fr) 0 auto 44px 48px; gap:t.space(2); }
+  .vue-chat-notice,.vue-chat-quick:empty { visibility:hidden; min-height:0; height:0; }
+  .vue-poker-stage { flex:none; height:100%; box-sizing:border-box; border:0; border-radius:0; padding:t.space(3); gap:t.space(2); grid-template-rows:44px 40px minmax(0,1fr) 48px 128px; }
+  .vue-poker-table { --poker-card-width:clamp(42px,calc((100dvh - 500px)*.2),72px); }
+  .vue-poker-settings { @include t.type(p3); }
+  @media(max-height:760px) {
+   .vue-poker-stage { padding:t.space(2); gap:t.space(1); grid-template-rows:44px 40px minmax(0,1fr) 42px 128px; }
+   .vue-poker-table { grid-template-columns:minmax(0,1fr) minmax(200px,.8fr); gap:t.space(2); padding:t.space(2); --poker-card-width:42px; }
+   .vue-poker-cards { gap:t.space(1); }
+   .vue-poker-hero { gap:t.space(2); dl { gap:0; } >p { grid-column:1/-1; } }
+   .vue-poker-live { padding:0; gap:t.space(2); }
+   .vue-poker-actions { gap:t.space(1); }
+   .vue-poker-action-buttons button,.vue-poker-raise button { padding-inline:t.space(2); @include t.type(p3); }
+  }
+ }
+}

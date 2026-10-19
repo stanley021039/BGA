@@ -93,5 +93,45 @@
     "id": "studio",
     "document": "studio.html",
     "route": "/studio"
+  },
+  {
+    "id": "majority",
+    "document": "majority.html",
+    "route": "/majority"
+  },
+  {
+    "id": "trpg",
+    "document": "trpg.html",
+    "route": "/trpg"
+  },
+  {
+    "id": "gift",
+    "document": "gift.html",
+    "route": "/gift"
+  },
+  {
+    "id": "admin",
+    "document": "admin.html",
+    "route": "/admin"
+  },
+  {
+    "id": "poker",
+    "document": "poker.html",
+    "route": "/poker"
+  },
+  {
+    "id": "market",
+    "document": "market.html",
+    "route": "/market"
+  },
+  {
+    "id": "quacks",
+    "document": "quacks.html",
+    "route": "/quacks"
+  },
+  {
+    "id": "race",
+    "document": "race.html",
+    "route": "/race"
   }
 ]
