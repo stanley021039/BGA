@@ -1,0 +1,39 @@
+@use 'tokens';
+.vue-room-chat { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: tokens.space(4); min-inline-size: 0; min-block-size: 0; }
+.vue-room-chat > header { display: grid; grid-template-columns: minmax(0, 1fr) 6rem; gap: tokens.space(3); align-items: center; }
+.vue-room-chat h2 { margin: 0; }
+.vue-chat-unread { min-block-size: 1.5em; text-align: end; font-size: .875rem; }
+.vue-room-chat-content { display: grid; grid-template-rows: 3rem minmax(5rem, 1fr) 3rem auto 3rem 3rem; gap: tokens.space(3); min-inline-size: 0; min-block-size: 0; }
+.vue-room-chat .vue-chat-notice { margin: 0; font-size: .875rem; line-height: 1.5; overflow: auto; }
+.vue-chat-messages { margin: 0; padding: tokens.space(2); min-inline-size: 0; min-block-size: 0; overflow: auto; scrollbar-gutter: stable; list-style: none; }
+.vue-chat-messages li { padding-block: tokens.space(3); border-block-end: 1px solid var(--play-line, #a59b96); overflow-wrap: anywhere; }
+.vue-chat-messages li > div { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem; align-items: start; gap: tokens.space(2); }
+.vue-chat-messages time { font-size: .875rem; text-align: end; font-variant-numeric: tabular-nums; }
+.vue-chat-messages p { margin: tokens.space(2) 0 0; white-space: pre-wrap; }
+.vue-chat-quick, .vue-chat-tools { display: flex; flex-wrap: wrap; align-items: center; gap: tokens.space(2); min-inline-size: 0; overflow: auto; }
+.vue-chat-compose { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: tokens.space(2); }
+.vue-chat-compose input { min-inline-size: 0; inline-size: 100%; }
+.vue-chat-feedback { display: grid; grid-template-columns: minmax(0, 1fr) 2.75rem; gap: tokens.space(2); min-inline-size: 0; }
+.vue-chat-feedback .frontend-status { margin: 0; }
+.vue-reaction-content { block-size: min(28rem, 52dvh); min-block-size: 12rem; overflow: auto; scrollbar-gutter: stable; padding-block: tokens.space(4); }
+.vue-emoji-grid, .vue-expression-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); gap: tokens.space(3); }
+.vue-emoji-grid button, .vue-expression-grid button { display: grid; place-items: center; grid-template-rows: 3rem 3em; gap: tokens.space(2); min-inline-size: 0; padding: tokens.space(2); }
+.vue-emoji-grid button > span:last-child, .vue-expression-grid button > span { font-size: .875rem; line-height: 1.5; overflow: auto; max-inline-size: 100%; }
+.vue-emoji-glyph { font-size: 2rem; line-height: 1; }
+.vue-expression-grid img { inline-size: 3rem; block-size: 3rem; object-fit: contain; }
+.vue-emoji-more { margin-block-start: tokens.space(4); }
+.vue-emoji-more summary { min-block-size: 2.75rem; cursor: pointer; }
+.vue-reaction-phrases { display: grid; gap: tokens.space(3); }
+.vue-social-load-error { display: grid; gap: tokens.space(3); padding-block-end: tokens.space(4); }
+.vue-room-barrage-layer { position: absolute; inset: 0; z-index: 25; overflow: hidden; pointer-events: none; }
+.vue-room-barrage { position: absolute; left: 100%; display: block; inline-size: max-content; max-inline-size: min(72%, 36.25rem); padding: tokens.space(3) tokens.space(4); border: 1px solid #ebc78b; border-radius: 1.5rem; background: #15251de8; color: #fff8e8; box-shadow: 0 .375rem 1.375rem #0006; font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; animation: vue-room-barrage-travel 8s linear forwards; }
+.vue-room-barrage strong { margin-inline-end: tokens.space(1); }
+.vue-room-emoji-glyph { font-size: 2rem; }
+.vue-room-barrage.vue-room-barrage-static { left: tokens.space(3); animation: none; transform: none; }
+@keyframes vue-room-barrage-travel { from { transform: translateX(0); } to { transform: translateX(var(--barrage-travel)); } }
+@media(max-width:760px) {
+  .vue-room-chat { gap: tokens.space(3); }
+  .vue-room-chat-content { grid-template-rows: 4.5rem minmax(8rem, 1fr) 3rem auto 4rem 3rem; }
+  .vue-chat-feedback { grid-template-columns: minmax(0, 1fr) 5rem; }
+  .vue-emoji-grid, .vue-expression-grid { grid-template-columns: repeat(auto-fill, minmax(4.5rem, 1fr)); gap: tokens.space(2); }
+}

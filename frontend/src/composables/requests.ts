@@ -9,7 +9,7 @@ export function useRequests() {
     const controller = new AbortController(); controllers.add(controller);
     try { const value = await operation(controller.signal); controller.signal.throwIfAborted(); return value; }
     catch (error) {
-      if (!disposed && error instanceof ApiError && error.status === 401) {
+      if (!disposed && !controller.signal.aborted && error instanceof ApiError && error.status === 401) {
         location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
       }
       throw error;
@@ -18,7 +18,8 @@ export function useRequests() {
   const request = (path: string, body?: unknown) => run(signal => requestJson(path, {
     method: body === undefined ? 'GET' : 'POST', body, signal,
   }));
-  function dispose() { disposed = true; for (const c of controllers) c.abort(); controllers.clear(); }
+  function cancel() { for (const c of controllers) c.abort(); controllers.clear(); }
+  function dispose() { disposed = true; cancel(); }
   onScopeDispose(dispose);
-  return { run, request, dispose, active: () => !disposed };
+  return { run, request, cancel, dispose, active: () => !disposed };
 }

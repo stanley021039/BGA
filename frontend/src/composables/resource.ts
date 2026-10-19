@@ -18,5 +18,6 @@ export function useResource<T>(loader: (request: ReturnType<typeof useRequests>[
       return false;
     } finally { if (requests.active() && epoch === version) loading.value = false; }
   }
-  return { data, loading, error, load, requests };
+  function reset() { version++; requests.cancel(); data.value = null; loading.value = false; error.value = ''; }
+  return { data, loading, error, load, reset, requests };
 }

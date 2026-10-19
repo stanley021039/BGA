@@ -1,5 +1,6 @@
 import { onScopeDispose, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
+import type { BarrageController, BarrageRenderer, ExpressionPlayback } from '../contracts/social';
 
 type Theme = 'auto' | 'light' | 'dark';
 interface ColorState { preference: Theme; scheme: 'light' | 'dark' }
@@ -15,18 +16,19 @@ interface FrameState { version: number; enabled: boolean; selected: string }
 declare global {
   interface Window {
     ColorScheme?: { get(): ColorState; set(theme: Theme): ColorState; subscribe(fn: (state: ColorState) => void): () => void };
-    MotionPolicy?: { get(): MotionState; set(value: Partial<MotionState>): MotionState; subscribe(fn: (state: MotionState) => void): () => void };
+    MotionPolicy?: { get(): MotionState; set(value: Partial<MotionState>): MotionState; subscribe(fn: (state: MotionState) => void): () => void; createBarrageController(show: BarrageRenderer): BarrageController };
     AudioSettings?: {
       get(): AudioState; subscribe(fn: (state: AudioState) => void): () => void; bindPreview(audio: HTMLAudioElement): () => void;
       set(kind: 'music' | 'effects', value: { enabled?: boolean; volume?: number }, options?: { gesture?: boolean }): void;
       stopEffect(clip: HTMLAudioElement | null | undefined): boolean;
       playExpression(sound: { url: string; durationMs: number }, options?: { onStop?: (clip: HTMLAudioElement) => void; onError?: () => void }): HTMLAudioElement | undefined;
     };
-    ExpressionSounds?: { encodeFile(file: File | null): Promise<{ base64: string; durationMs: number }> };
+    ExpressionSounds?: { encodeFile(file: File | null): Promise<{ base64: string; durationMs: number }>; create(): ExpressionPlayback };
     BarrageFrames?: {
       options: readonly FrameOption[]; get(): FrameState; set(value: Partial<FrameState>): FrameState;
       subscribe(fn: (state: FrameState) => void): () => void;
       decorate(node: HTMLElement, frame: { kind: 'builtin'; id: string; version: 1 }, name: string, message: string): HTMLElement;
+      place(layer: HTMLElement, bubble: HTMLElement): boolean;
     };
     MediaAppearance?: { get(): string; set(id: string): string; subscribe(fn: (id: string) => void): () => void };
   }

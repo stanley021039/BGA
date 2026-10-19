@@ -1,0 +1,52 @@
+<script setup lang="ts">
+import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
+import { useChatStore } from '../stores/chat';
+import { useReactionsStore } from '../stores/reactions';
+import { useRoomStore } from '../stores/room';
+import ReactionPicker from './ReactionPicker.vue';
+import FramePicker from './FramePicker.vue';
+import UiButton from './UiButton.vue';
+import StatusSlot from './StatusSlot.vue';
+import '../styles/room-social.scss';
+const props = withDefaults(defineProps<{ inline?: boolean; notice?: string; quickReplies?: string[] }>(), { inline: true, notice: '' });
+const chat = useChatStore(), reactions = useReactionsStore(), room = useRoomStore(), prefix = useId();
+const list = ref<HTMLOListElement | null>(null), input = ref<HTMLInputElement | null>(null), framePicker = ref<InstanceType<typeof FramePicker> | null>(null), composing = ref(false);
+let disposed = false;
+const quick = computed(() => props.quickReplies || (room.type === 'draw' ? room.snapshot?.phase === 'finished' ? ['GG! 🔥','再來一局! 🔄','笑死 🤣'] : ['👏','🤣','🔥'] : []));
+const notice = computed(() => props.notice || (room.type === 'draw' ? room.snapshot?.phase === 'finished' ? '本局已結束，聊聊剛才的精彩畫作。' : '閒聊與答案分流；猜題請使用作答區。' : '朋友集結中，先聊聊這局的玩法。'));
+const blocked = computed(() => !chat.enabled || !chat.viewerId || chat.pending || reactions.pending);
+const feedback = computed(() => chat.pending || reactions.pending ? '傳送中…' : chat.status || reactions.message || (chat.loading ? '正在載入聊天訊息…' : ''));
+const time = (value: number) => new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function focusInput() { if (!disposed && !document.hidden && input.value?.isConnected && !input.value.disabled) input.value.focus(); }
+function compose(value: string) { if (chat.compose(value)) void nextTick(focusInput); }
+function limitInput() { if (!composing.value) chat.draft = [...chat.draft].slice(0, 160).join(''); }
+function compositionEnd() { composing.value = false; if (input.value) chat.draft = [...input.value.value].slice(0, 160).join(''); }
+async function submit() {
+  if (composing.value || blocked.value) return;
+  const scope = room.scope, trigger = document.activeElement;
+  await chat.send();
+  if (scope === room.scope && !document.querySelector('dialog[open]') && (document.activeElement === trigger || document.activeElement === document.body)) focusInput();
+}
+async function toggle() { chat.show(!chat.visible); if (chat.visible) { await nextTick(); if (list.value) list.value.scrollTop = list.value.scrollHeight; focusInput(); } }
+watch(() => props.inline, value => { chat.show(value); }, { immediate: true });
+watch(() => chat.messages.map(message => message.id).join('|'), async () => {
+  const element = list.value, bottom = !element || element.scrollHeight - element.scrollTop - element.clientHeight < 40;
+  await nextTick(); if (!disposed && bottom && list.value) list.value.scrollTop = list.value.scrollHeight;
+});
+onBeforeUnmount(() => { disposed = true; });
+defineExpose({ compose, focus: focusInput });
+</script>
+<template>
+  <section class="vue-room-chat" aria-label="聊天室與房間彈幕" :class="{ 'vue-chat-collapsed': !chat.visible }">
+    <header><h2 v-if="inline">聊天室</h2><UiButton v-else icon="chat" :label="chat.visible ? '收合聊天室' : '展開聊天室'" :aria-expanded="chat.visible" :aria-controls="prefix + '-content'" @click="toggle" /><span class="vue-chat-unread" role="status">{{ chat.unread ? '未讀 ' + chat.unread : '' }}</span></header>
+    <div v-show="chat.visible" :id="prefix + '-content'" class="vue-room-chat-content">
+      <p class="vue-chat-notice">{{ notice }}</p>
+      <ol ref="list" class="vue-chat-messages" aria-label="聊天訊息" tabindex="0" :aria-busy="chat.loading"><li v-if="!chat.messages.length" class="vue-chat-empty">{{ chat.loading ? '正在載入…' : chat.status ? '聊天訊息暫時無法更新。' : '還沒有訊息，跟朋友打聲招呼吧。' }}</li><li v-for="message in chat.messages" :key="message.id"><div><strong>{{ message.name }}</strong><time :datetime="new Date(message.at).toISOString()">{{ time(message.at) }}</time></div><p>{{ message.message }}</p></li></ol>
+      <div class="vue-chat-quick" aria-label="快速填入聊天室"><UiButton v-for="value in quick" :key="value" :label="'填入聊天室 ' + value" :caption="value" :disabled="blocked" @click="compose(value)" /></div>
+      <form autocomplete="off" :aria-busy="chat.pending" @submit.prevent="submit"><label :for="prefix + '-input'" class="ui-sr-only">房間彈幕</label><div class="vue-chat-compose"><input :id="prefix + '-input'" ref="input" v-model="chat.draft" maxlength="320" required autocomplete="off" placeholder="輸入彈幕（最多160字）" :aria-describedby="prefix + '-status'" :disabled="blocked" @input="limitInput" @compositionstart="composing = true" @compositionend="compositionEnd" @keydown.enter="($event.isComposing || composing) && $event.preventDefault()"><UiButton type="submit" icon="send" icon-only label="發送房間彈幕" :pending="chat.pending" :disabled="blocked" /></div></form>
+      <div class="vue-chat-tools"><ReactionPicker :disabled="chat.pending" @compose="compose" /><UiButton icon="frame" icon-only label="選擇彈幕框" caption="彈幕框" :disabled="blocked" @click="framePicker?.open($event.currentTarget as HTMLElement)" /><slot name="tools" /></div>
+      <div class="vue-chat-feedback"><StatusSlot :id="prefix + '-status'" :message="feedback" :error="!!chat.status || reactions.failed" /><UiButton v-if="chat.status && chat.enabled" icon="refresh" icon-only label="重新載入聊天室" caption="重試" :disabled="chat.pending || chat.loading" @click="chat.poll()" /></div>
+    </div>
+  </section>
+  <FramePicker v-if="chat.enabled" ref="framePicker" kind="barrage" />
+</template>

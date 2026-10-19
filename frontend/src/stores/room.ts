@@ -71,8 +71,7 @@ export const useRoomStore = defineStore('room', () => {
     if (next.code !== code.value || next.type !== type.value) throw Error('收到其他房間的狀態');
     if (previous && !sameRoom(next, previous)) {
       // A replaced room/seat cannot silently consume the old page's drafts.
-      error.value = '房間或座位已更新，請重新連線。'; disconnected.value = true;
-      terminal.value = 'replaced'; seat.value = null; cancelReads(); return false;
+      invalidateIdentity('房間或座位已更新，請重新連線。'); return false;
     }
     if (staleSnapshot(next, previous)) return false;
     snapshot.value = next; clockOffset.value = Date.now() - next.serverNow; lastReceivedAt.value = Date.now();
@@ -129,8 +128,9 @@ export const useRoomStore = defineStore('room', () => {
     } finally { clearTimeout(timer); if (epoch === scope.value && !disposed) busy.value = false; }
   }
   function lostConnection(cause?: unknown) { disconnected.value = true; if (cause instanceof Error) error.value = cause.message; }
+  function invalidateIdentity(reason: string) { if (disposed || terminal.value) return; error.value = reason; disconnected.value = true; terminal.value = 'replaced'; seat.value = null; cancelReads(); }
   const reconnect = () => open(code.value, type.value, readSnapshot);
   function dispose() { disposed = true; scope.value++; cancelReads(); recovery = null; seat.value = null; }
   onScopeDispose(dispose);
-  return { code, type, seat, snapshot, connecting, disconnected, connected, terminal, error, busy, scope, host, message, failed, clockOffset, lastReceivedAt, open, restore, reconnect, request, accept, command, lostConnection, forget, dispose };
+  return { code, type, seat, snapshot, connecting, disconnected, connected, terminal, error, busy, scope, host, message, failed, clockOffset, lastReceivedAt, open, restore, reconnect, request, accept, command, lostConnection, invalidateIdentity, forget, dispose };
 });
