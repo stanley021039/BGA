@@ -50,3 +50,67 @@ body[data-visual-theme='playful'] .vue-lobby { .library-heading { margin:0; h1 {
   }
   .vue-lobby-expressions { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+// Vue owns the lobby composition. Legacy artwork/theme rules cannot set its geometry.
+body.vue-lobby-document[data-visual-theme='playful'] .vue-lobby .lobby-stage { height:280px; }
+.vue-lobby-code-entry { display:grid; grid-template-columns:minmax(0,1fr) 44px 44px; gap:tokens.space(2); align-items:center; }
+.vue-lobby-code-entry #lobbyCodeHelp { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.vue-lobby .vue-lobby-connection:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+@media(max-width:760px) {
+  .vue-lobby .vue-button.ui-icon-button { width:44px; inline-size:44px; min-width:44px; padding:tokens.space(2); }
+  .vue-lobby .vue-button.ui-icon-button .vue-button-caption.ui-sr-only { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); clip-path:inset(50%); white-space:nowrap; }
+}
+@media(max-width:650px) { .vue-lobby-code-entry { grid-template-columns:repeat(2,minmax(0,1fr)); >input { grid-column:1/-1; } } }
+@media(min-width:960px) and (min-height:560px) and (pointer:fine) {
+  body.vue-lobby-document:not(.ui-large-text) {
+    .club { height:100dvh; max-width:none; padding:0 tokens.space(6); display:grid; grid-template-rows:auto minmax(0,1fr); }
+    [data-site-header].vue-site-header { min-height:0; height:auto; margin:0; padding:tokens.space(2) 0; }
+    .vue-site-header-content { min-height:44px; row-gap:0; }
+    .vue-site-header-feedback { position:absolute; top:calc(100% + 8px); right:0; width:min(480px,100%); padding:tokens.space(3); border:1px solid var(--play-line-strong); border-radius:tokens.space(3); background:var(--play-surface); z-index:140; }
+    .vue-site-header-feedback:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+    #lobby-app { min-height:0; }
+    .vue-lobby { height:100%; min-height:0; padding:tokens.space(2) 0; grid-template-columns:minmax(0,1fr) clamp(280px,24vw,360px); grid-template-rows:clamp(180px,26dvh,240px) 44px minmax(0,1fr) 44px; gap:tokens.space(4); }
+    .vue-lobby .library-heading { grid-column:1; grid-row:2; min-height:0; margin:0; h1 { margin:0; } >div>.kicker,>div>p { display:none; } .library-count strong { @include tokens.type(h1); } }
+    .vue-lobby .lobby-section { grid-column:1/-1; grid-row:1; display:flex; flex-direction:column; min-height:0; position:relative; padding:tokens.space(3) tokens.space(4); }
+    .vue-lobby .lobby-top { min-height:32px; flex:none; align-items:center; gap:tokens.space(3); >div { min-width:0; display:flex; gap:tokens.space(4); align-items:center; } .kicker { display:none; } h2 { @include tokens.type(h2); margin:0; flex:none; } p { @include tokens.type(p3); margin:0; } }
+    .vue-lobby .lobby-stage { flex:1; height:auto; min-height:0; margin:tokens.space(2) 0 0; }
+    .vue-lobby .lobby-visitors { inset:32px 16px 24px; }
+    .vue-lobby .lobby-avatar { width:64px; img { width:40px; height:42px; } }
+    .vue-lobby .vue-lobby-connection { position:absolute; bottom:tokens.space(3); right:tokens.space(4); left:auto; width:min(480px,calc(100% - 32px)); padding:tokens.space(2); min-height:44px; border:1px solid var(--play-line); border-radius:tokens.space(2); background:var(--play-surface); z-index:5; }
+    .vue-lobby .vue-lobby-connection:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+    .vue-lobby .game-carousel-section { grid-column:1; grid-row:3; display:flex; flex-direction:column; min-height:0; }
+    .vue-lobby .carousel-heading { flex:none; min-height:32px; }
+    .vue-lobby .game-library[data-card-carousel] { flex:1; min-height:0; height:auto; container-type:size;
+      .game-tile { top:50%; width:clamp(190px,24cqw,300px); height:clamp(124px,calc(100cqh - 24px),488px); display:flex; flex-direction:column; }
+      .tile-image { flex:none; height:clamp(48px,calc(100cqh - 190px),220px); }
+      .tile-body { flex:1; min-height:0; height:auto; display:flex; flex-direction:column; gap:tokens.space(2); padding:tokens.space(3); }
+      .tile-body h2 { @include tokens.type(h2); }
+      .tile-body .kicker { letter-spacing:normal; }
+      .tile-bottom { margin-top:auto; padding-top:tokens.space(2); gap:tokens.space(2); }
+      .select-label { display:none; }
+    }
+    .vue-lobby .carousel-footer { flex:none; min-height:44px; margin:0; padding:0; flex-wrap:nowrap; gap:tokens.space(3); }
+    .vue-lobby .carousel-controls,.vue-lobby .carousel-actions { flex-wrap:nowrap; gap:tokens.space(2); }
+    .vue-lobby .carousel-actions { margin-left:auto; }
+    .vue-lobby .carousel-actions .quiet { @include tokens.type(p3); }
+    .vue-lobby .vue-lobby-rooms { grid-column:2; grid-row:2/span 2; min-height:0; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; gap:tokens.space(3); }
+    .vue-lobby .vue-lobby-room-browser { display:flex; flex-direction:column; min-height:0; position:relative; gap:tokens.space(2); padding:tokens.space(3); }
+    .vue-lobby .vue-lobby-room-browser>header { min-height:44px; flex:none; gap:tokens.space(2); h2 { @include tokens.type(h2); margin:0; } .kicker,p { display:none; } }
+    .vue-lobby .vue-lobby-room-tools { min-width:0; gap:tokens.space(2); span { @include tokens.type(p3); } }
+    .vue-lobby .vue-lobby-room-browser>.frontend-status { position:absolute; top:60px; left:12px; right:12px; max-height:3em; margin:0; background:var(--play-surface); z-index:2; }
+    .vue-lobby .vue-lobby-room-browser>.frontend-status:empty { visibility:hidden; }
+    .vue-lobby .vue-lobby-room-list { flex:1; min-height:0; height:auto; grid-template-columns:minmax(0,1fr); }
+    .vue-lobby .vue-lobby-room { grid-template-columns:minmax(0,1fr) 100px; min-height:144px; padding:tokens.space(2); gap:tokens.space(2); }
+    .vue-lobby .vue-lobby-code { min-height:0; position:relative; padding:tokens.space(3); gap:0; >h2 { display:none; } form { gap:tokens.space(2); } label { @include tokens.type(p3); } input { height:44px; min-height:44px; padding:tokens.space(2); font-size:20px; letter-spacing:.1em; } }
+    .vue-lobby .vue-lobby-code>.frontend-status { position:absolute; bottom:calc(100% + 8px); left:0; right:0; margin:0; padding:tokens.space(2); border:1px solid var(--play-line); border-radius:tokens.space(2); background:var(--play-surface); z-index:3; }
+    .vue-lobby .vue-lobby-code>.frontend-status:empty { visibility:hidden; }
+    .vue-lobby .vue-lobby-resume { grid-column:2; grid-row:4; min-height:44px; max-height:44px; overflow:auto; justify-content:flex-end; gap:tokens.space(2); }
+    .vue-lobby .version-note { grid-column:1; grid-row:4; align-self:center; margin:0; @include tokens.type(p3); }
+  }
+}
+@media(min-width:960px) and (min-height:560px) and (max-height:800px) and (pointer:fine) {
+  body.vue-lobby-document:not(.ui-large-text) .vue-lobby .game-library[data-card-carousel] .tile-body { .kicker,p { display:none; } }
+}
+@media(min-width:960px) and (min-height:560px) and (max-height:650px) and (pointer:fine) {
+  body.vue-lobby-document:not(.ui-large-text) .vue-lobby { grid-template-rows:180px 28px minmax(0,1fr) 44px; gap:tokens.space(3); .library-heading h1 { @include tokens.type(h2); } .carousel-heading { display:none; } .game-library[data-card-carousel] .tile-body { gap:tokens.space(1); padding:tokens.space(2); } .lobby-top p { display:none; } }
+}
