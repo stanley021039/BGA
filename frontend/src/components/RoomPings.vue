@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { useRoomStore } from '../stores/room';
 import { usePingsStore } from '../stores/pings';
 import { usePreferencesStore } from '../stores/preferences';
 import { pingTypes } from '../contracts/pings';
@@ -10,7 +9,7 @@ import PingSymbol from './PingSymbol.vue';
 import UiButton from './UiButton.vue';
 import '../../../public/shared/room-pings.css';
 import '../styles/room-pings.scss';
-const room = useRoomStore(), pings = usePingsStore(), prefs = usePreferencesStore();
+const pings = usePingsStore(), prefs = usePreferencesStore();
 const layer = ref<HTMLElement | null>(null), wheel = ref<HTMLElement | null>(null), targetHost = shallowRef<HTMLElement | null>(null), wheelOpen = ref(false), selected = ref<PingType>('ping'), wheelPoint = ref({ x: 0, y: 0 });
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 type Position = { x: number; y: number; label: string; shift: number };
@@ -43,10 +42,10 @@ function downKey(event: KeyboardEvent) {
 function upKey(event: KeyboardEvent) { if (event.code !== 'KeyP') return; if (held && !used && pings.identity) void open(innerWidth / 2, innerHeight / 2, true); held = false; }
 function pointerDown(event: PointerEvent) {
   if (event.button === 2 && (gesture || armed || wheelOpen.value)) { event.preventDefault(); event.stopImmediatePropagation(); cancel(); suppressUntil = Date.now() + 400; return; }
-  if (!pings.context || !room.snapshot || !pings.identity || event.button !== 0 || event.isPrimary === false || pointers.size || gesture || editing(event.target) || event.target instanceof Node && wheel.value?.contains(event.target)) { pointers.add(event.pointerId); return; }
+  if (!pings.context || !pings.surface || !pings.identity || event.button !== 0 || event.isPrimary === false || pointers.size || gesture || editing(event.target) || event.target instanceof Node && wheel.value?.contains(event.target)) { pointers.add(event.pointerId); return; }
   if (!held && !armed) { if (wheelOpen.value) cancel(); pointers.add(event.pointerId); return; }
   if (!(event.target instanceof Element)) return;
-  used = true; const target = capturePing(pings.model, room.snapshot, pings.context, event.target, event.clientX, event.clientY); event.preventDefault(); event.stopImmediatePropagation();
+  used = true; const target = capturePing(pings.model, pings.surface, pings.context, event.target, event.clientX, event.clientY); event.preventDefault(); event.stopImmediatePropagation();
   if (armed) { const type = armed; cancel(); void pings.send(type, target); suppressUntil = Date.now() + 400; return; }
   gesture = { id: event.pointerId, x: event.clientX, y: event.clientY, target, type: 'ping', moved: false, identity: pings.identity, scene: pings.context.scene };
 }
@@ -65,10 +64,10 @@ function contextMenu(event: MouseEvent) { if (gesture || armed || wheelOpen.valu
 function lost() { pointers.clear(); cancel(); }
 function visibility() { if (document.hidden) lost(); }
 function paint() {
-  frame = 0; if (!mounted || !room.snapshot || !pings.context) return;
-  const next: Record<string, Position> = {}, anchors = pingAnchors(room.snapshot);
+  frame = 0; if (!mounted || !pings.surface || !pings.context) return;
+  const next: Record<string, Position> = {}, anchors = pingAnchors(pings.surface);
   for (const event of pings.marks) {
-    const point = resolvePing(pings.model, room.snapshot, pings.context, event, anchors), direction = Math.abs(point.dx) > Math.abs(point.dy) ? point.dx > 0 ? '→' : '←' : point.dy > 0 ? '↓' : '↑';
+    const point = resolvePing(pings.model, pings.surface, pings.context, event, anchors), direction = Math.abs(point.dx) > Math.abs(point.dy) ? point.dx > 0 ? '→' : '←' : point.dy > 0 ? '↓' : '↑';
     const label = event.name + '：' + pings.types[event.type].label + (point.edge ? ' · ' + direction + ' ' + point.label : ['畫面已更新', '目標目前不可見'].includes(point.label) ? ' · ' + point.label : '');
     const caption = [...(layer.value?.querySelectorAll<HTMLElement>('[data-ping-caption]') || [])].find(node => node.dataset.pingCaption === event.id), half = (caption?.getBoundingClientRect().width || 0) / 2;
     next[event.id] = { x: point.x, y: point.y, label, shift: Math.max(half + 8, Math.min(innerWidth - half - 8, point.x)) - point.x };

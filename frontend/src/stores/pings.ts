@@ -1,16 +1,16 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { useRoomStore } from './room';
+import { useInteractionSource } from '../services/interaction-source';
 import { readPingContext, readPingReceipt } from '../contracts/pings';
 import type { PingEvent, PingTarget, PingType } from '../contracts/pings';
 import { record } from '../services/validation';
 import '../../../public/shared/ping-model.js';
 
 export const usePingsStore = defineStore('room-pings', () => {
-  const room = useRoomStore(), model = window.PingModel;
+  const room = useInteractionSource(), model = window.PingModel;
   if (!model) throw Error('標記工具無法載入。');
-  const context = computed(() => { try { return readPingContext(room.snapshot?.pingContext); } catch { return null; } });
-  const identity = computed(() => room.seat && !room.terminal && context.value ? `${room.scope}:${room.code}:${room.snapshot?.me}:${context.value.roomInstanceId}` : '');
+  const context = computed(() => { try { return readPingContext(room.snapshot.value?.pingContext); } catch { return null; } });
+  const identity = computed(() => room.identity.value && context.value ? `${room.identity.value}:${context.value.roomInstanceId}` : '');
   const connected = ref(false), enabled = ref(true), notice = ref(''), failed = ref(false), marks = shallowRef<PingEvent[]>([]), preferences = shallowRef(model.preferences());
   const seen = new Set<string>(), requests = new Set<AbortController>();
   let source: EventSource | null = null, generation = 0, offset = 0, disposed = false, expiry: ReturnType<typeof setTimeout> | null = null, noticeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -30,7 +30,7 @@ export const usePingsStore = defineStore('room-pings', () => {
   function disconnect() { generation++; source?.close(); source = null; connected.value = false; for (const controller of requests) controller.abort(); requests.clear(); clear(); }
   function connect() {
     if (disposed || !identity.value || !context.value || source || document.hidden) return;
-    const epoch = generation, id = context.value.roomInstanceId, stream = new EventSource('/api/pings/events?code=' + encodeURIComponent(room.code)); source = stream;
+    const epoch = generation, id = context.value.roomInstanceId, stream = new EventSource('/api/pings/events?code=' + encodeURIComponent(room.code.value)); source = stream;
     stream.addEventListener('ready', event => { if (source !== stream || epoch !== generation) return; try { const data = record(JSON.parse((event as MessageEvent).data)); if (data.roomInstanceId !== id) { disconnect(); feedback('標記房間已更新，等待房間重新同步。', true); return; } if (typeof data.serverNow !== 'number' || !Number.isFinite(data.serverNow)) throw Error('標記時間資料不正確。'); offset = Date.now() - data.serverNow; connected.value = true; } catch { connected.value = false; feedback('標記連線資料暫時無法讀取。', true); } });
     stream.addEventListener('ping', event => { if (source === stream && epoch === generation && connected.value) try { receive(JSON.parse((event as MessageEvent).data)); } catch { feedback('這筆標記暫時無法顯示。', true); } });
     stream.onerror = () => { if (source === stream) { connected.value = false; clear(); } };
@@ -50,5 +50,5 @@ export const usePingsStore = defineStore('room-pings', () => {
   function visibility() { if (document.hidden) disconnect(); else connect(); }
   document.addEventListener('visibilitychange', visibility);
   onScopeDispose(() => { disposed = true; disconnect(); if (noticeTimer) clearTimeout(noticeTimer); document.removeEventListener('visibilitychange', visibility); if (window.RoomPings === bridge) delete window.RoomPings; });
-  return { context, identity, connected, enabled, notice, failed, marks, preferences, types: model.types, model, send, feedback, clear, setPreferences };
+  return { context, identity, surface: room.snapshot, connected, enabled, notice, failed, marks, preferences, types: model.types, model, send, feedback, clear, setPreferences };
 });

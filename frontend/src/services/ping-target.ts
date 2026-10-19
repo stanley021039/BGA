@@ -1,15 +1,15 @@
-import type { RoomSnapshot } from '../contracts/room';
+import type { PingSurface } from './interaction-source';
 import type { PingContext, PingEvent, PingModel, PingTarget } from '../contracts/pings';
 
-export function pingAnchors(state: RoomSnapshot): [string, HTMLElement, string][] {
+export function pingAnchors(state: PingSurface): [string, HTMLElement, string][] {
   const pairs: [string, HTMLElement | null, string][] = [['header', document.querySelector('[data-site-header]'), '頁首'], ['chat', document.querySelector('[data-ping-anchor="chat"]'), '聊天室'], ['players', document.querySelector('[data-ping-anchor="players"]'), '玩家區']];
   for (const [key, label] of [['lobby-stage', '好友大廳'], ['game-list', '遊戲選單'], ['room-list', '房間列表']]) pairs.push([key, document.querySelector(`[data-ping-anchor="${key}"]`), label]);
   const players = [...document.querySelectorAll<HTMLElement>('[data-ping-player]')];
   for (const player of state.players) { const matches = players.filter(node => node.dataset.pingPlayer === player.id), node = matches.find(node => node.getClientRects().length) || matches[0]; if (node) pairs.push(['player:' + player.id, node, player.name]); }
   return pairs.filter((entry): entry is [string, HTMLElement, string] => !!entry[1]);
 }
-const canvas = (state: RoomSnapshot) => state.type === 'draw' ? document.querySelector<HTMLCanvasElement>('canvas#drawCanvas') : null;
-export function capturePing(model: PingModel, state: RoomSnapshot, context: PingContext, node: Element, x: number, y: number): PingTarget {
+const canvas = (state: PingSurface) => state.type === 'draw' ? document.querySelector<HTMLCanvasElement>('canvas#drawCanvas') : null;
+export function capturePing(model: PingModel, state: PingSurface, context: PingContext, node: Element, x: number, y: number): PingTarget {
   const viewport = (): PingTarget => ({ kind: 'viewport', x: Math.max(0, Math.min(1, x / innerWidth)), y: Math.max(0, Math.min(1, y / innerHeight)) });
   if (node.closest('.chip-row,.q-player-tray,#hand,.hand,[data-private]')) return viewport();
   const cell = state.type === 'thunder' && node.closest<HTMLElement>('[data-ping-cell][data-x][data-y]');
@@ -18,7 +18,7 @@ export function capturePing(model: PingModel, state: RoomSnapshot, context: Ping
   for (const [key, element] of pingAnchors(state).reverse()) if (element.contains(node)) { const rect = element.getBoundingClientRect(); if (rect.width && rect.height) return { kind: 'element', key, ...model.point(rect, x, y) }; }
   return viewport();
 }
-export function resolvePing(model: PingModel, state: RoomSnapshot, context: PingContext, event: PingEvent, anchors = pingAnchors(state)) {
+export function resolvePing(model: PingModel, state: PingSurface, context: PingContext, event: PingEvent, anchors = pingAnchors(state)) {
   const fallback = (label: string) => ({ x: innerWidth / 2, y: 72, edge: false, dx: 0, dy: 0, label });
   if (event.scene !== context.scene) return fallback('畫面已更新');
   const target = event.target;
