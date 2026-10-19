@@ -1,4 +1,116 @@
 @use 'tokens';
+@use 'stitch-tokens';
+
+// Explicit component opt-in. The extra attribute also beats the legacy dark
+// playful-theme button.ui-button scope, including buttons in teleported panels.
+:root body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+  --_stitch-fill: var(--stitch-surface);
+  --_stitch-color: var(--stitch-ink);
+  --_stitch-border: var(--stitch-frame);
+  --_stitch-hover: var(--stitch-surface-hover);
+  --_stitch-active: var(--stitch-surface-hover);
+  // ui-primitives owns !important border/radius declarations; bridge its vars.
+  --ui-button-radius: var(--stitch-button-radius, var(--stitch-control-radius));
+  --ui-button-border-width: var(--stitch-button-border-width, 1px);
+  --ui-button-border-color: var(--stitch-button-border-color, var(--_stitch-border));
+  --ui-button-padding-block: var(--stitch-space-8);
+  --ui-button-padding-inline: var(--stitch-space-12);
+  --ui-control-gap: var(--stitch-space-8);
+  --ui-control-height: max(44px, var(--stitch-control-height));
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-control-gap);
+  min-inline-size: 44px;
+  min-block-size: var(--ui-control-height);
+  padding: var(--ui-button-padding-block) var(--ui-button-padding-inline);
+  background: var(--stitch-button-bg, var(--_stitch-fill));
+  color: var(--stitch-button-color, var(--_stitch-color));
+  box-shadow: var(--stitch-button-shadow, none);
+  font-family: var(--stitch-font-family);
+  font-size: var(--stitch-button-font-size, var(--stitch-font-14));
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+
+  &[data-stitch-variant='primary'] {
+    --_stitch-fill: var(--stitch-primary);
+    --_stitch-color: var(--stitch-on-primary);
+    --_stitch-hover: var(--stitch-primary-hover);
+    --_stitch-active: var(--stitch-primary-active);
+  }
+  &[data-stitch-variant='ghost'] {
+    --_stitch-fill: transparent;
+    --_stitch-border: transparent;
+  }
+  &[data-stitch-variant='danger'] {
+    --_stitch-fill: var(--stitch-danger-bg);
+    --_stitch-color: var(--stitch-danger-ink);
+    --_stitch-border: var(--stitch-danger-line);
+    --_stitch-hover: var(--stitch-danger-hover);
+    --_stitch-active: var(--stitch-danger-hover);
+  }
+  &[data-stitch-variant='success'] {
+    --_stitch-fill: var(--stitch-success-bg);
+    --_stitch-color: var(--stitch-success-ink);
+    --_stitch-border: var(--stitch-success-line);
+    --_stitch-hover: var(--stitch-success-hover);
+    --_stitch-active: var(--stitch-success-hover);
+  }
+  &[data-stitch-variant='contrast'] {
+    --_stitch-fill: var(--stitch-contrast);
+    --_stitch-color: var(--stitch-on-contrast);
+    --_stitch-border: var(--stitch-contrast);
+    --_stitch-hover: var(--stitch-contrast-hover);
+    --_stitch-active: var(--stitch-contrast-hover);
+  }
+  &:is([aria-pressed='true'], [aria-selected='true']) {
+    --_stitch-fill: var(--stitch-selected-bg);
+    --_stitch-color: var(--stitch-selected-ink);
+    --_stitch-border: var(--stitch-primary);
+  }
+  @media (hover: hover) {
+    &:hover:not(:disabled) { background: var(--stitch-button-hover-bg, var(--_stitch-hover)); }
+  }
+  &:active:not(:disabled) { background: var(--stitch-button-active-bg, var(--_stitch-active)); }
+  &:focus-visible { outline: 3px solid var(--stitch-focus); outline-offset: 2px; }
+  &:disabled { opacity: .48; cursor: not-allowed; box-shadow: none; }
+  &.is-pending { opacity: .72; cursor: progress; }
+  &.ui-icon-button { padding: var(--stitch-space-8); }
+  &.ui-icon-button:not(.has-mobile-caption) { inline-size: 44px; }
+  .ui-button-icon { inline-size: var(--stitch-icon-size); block-size: var(--stitch-icon-size); }
+  .vue-button-caption { overflow-wrap: anywhere; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] { transition: none; }
+}
+:root.motion-reduced body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] { transition: none; }
+
+:root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog {
+  --play-ink: var(--stitch-ink);
+  --play-muted: var(--stitch-muted);
+  --play-surface: var(--stitch-surface);
+  padding: var(--stitch-space-16);
+  gap: var(--stitch-space-16);
+  border: 1px solid var(--stitch-line);
+  border-radius: var(--stitch-panel-radius);
+  background: var(--stitch-surface);
+  color: var(--stitch-ink);
+  font-family: var(--stitch-font-family);
+  font-size: var(--stitch-font-16);
+  line-height: var(--stitch-line-height-body);
+  .vue-dialog-header { gap: var(--stitch-space-16); }
+  .vue-dialog-header h2 {
+    margin: 0;
+    font-size: var(--stitch-font-20);
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--stitch-ink);
+  }
+  .vue-dialog-content { padding: 0; }
+}
 
 .vue-button.ui-icon-button { padding: tokens.space(2); }
 .vue-tabs { display: flex; flex-wrap: wrap; gap: tokens.space(2); }

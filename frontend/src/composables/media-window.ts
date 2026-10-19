@@ -7,15 +7,15 @@ export function useMediaWindow(node: Ref<HTMLDialogElement | null>, opened: Ref<
   let position: Point | null = null, size: Size | null = null;
   try { const value = JSON.parse(localStorage.getItem(positionKey) || 'null'); if (Number.isFinite(value?.left) && Number.isFinite(value?.top)) position = value; } catch { /* Local geometry is optional. */ }
   try { const value = JSON.parse(localStorage.getItem(sizeKey) || 'null'); if (Number.isFinite(value?.width) && Number.isFinite(value?.height)) size = value; } catch { /* Local geometry is optional. */ }
-  const box = ref({ left: 8, top: 8, width: 800, height: 650 });
+  const box = ref({ left: 8, top: 8, width: 430, height: 720 });
   const style = computed(() => ({ left: box.value.left + 'px', top: box.value.top + 'px', width: box.value.width + 'px', height: box.value.height + 'px' }));
   let pointer: { id: number; node: HTMLElement; edge: string; x: number; y: number; before: typeof box.value; position: Point | null; size: Size | null } | null = null;
   const edges = [['n', '上邊'], ['s', '下邊'], ['w', '左邊'], ['e', '右邊'], ['nw', '左上角'], ['ne', '右上角'], ['sw', '左下角'], ['se', '右下角']];
   function viewport() { const header = document.querySelector('[data-site-header]')?.getBoundingClientRect(); const top = header && header.top <= 32 && header.bottom > 0 ? Math.min(header.bottom + 8, Math.max(8, innerHeight - 260)) : 8; return { top, width: Math.max(0, innerWidth - 16), height: Math.max(0, innerHeight - top - 8) }; }
   function layout(candidate = position) {
     const view = viewport(), bar = mode.value === 'bar', compact = mode.value === 'compact';
-    const width = Math.min(view.width, bar ? 164 : compact ? 360 : Math.max(Math.min(340, view.width), size?.width || Math.min(1000, view.width)));
-    const height = Math.min(view.height, bar ? 56 : compact ? 280 : Math.max(Math.min(420, view.height), size?.height || view.height));
+    const width = Math.min(view.width, bar ? 164 : compact ? 360 : Math.max(Math.min(340, view.width), size?.width || Math.min(430, view.width)));
+    const height = Math.min(view.height, bar ? 56 : compact ? 280 : Math.max(Math.min(420, view.height), size?.height || Math.min(720, view.height)));
     box.value = { width, height, left: Math.max(8, Math.min(innerWidth - width - 8, candidate?.left ?? innerWidth - width - 8)), top: Math.max(view.top, Math.min(innerHeight - height - 8, candidate?.top ?? view.top)) };
   }
   function persist() { try { localStorage.setItem(positionKey, JSON.stringify(position)); localStorage.setItem(sizeKey, JSON.stringify(size)); } catch { /* Still usable when storage is disabled. */ } }

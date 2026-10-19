@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import UiButton from './UiButton.vue';
-const props = withDefaults(defineProps<{ title: string; compact?: boolean; dismissible?: boolean }>(), { dismissible: true });
+const props = withDefaults(defineProps<{ title: string; compact?: boolean; stitch?: boolean; dismissible?: boolean }>(), { dismissible: true });
 const emit = defineEmits<{ closing: []; closed: [] }>();
 const dialog = ref<HTMLDialogElement | null>(null), visible = ref(false), headingId = useId();
 let trigger: HTMLElement | null = null;
@@ -20,8 +20,8 @@ onBeforeUnmount(close);
 defineExpose({ open, close });
 </script>
 <template>
-  <dialog ref="dialog" class="vue-dialog ui-dialog" :class="{ 'vue-dialog-compact': compact }" :aria-labelledby="headingId" @cancel="cancel" @close="closed">
-    <header class="vue-dialog-header"><h2 :id="headingId">{{ title }}</h2><UiButton icon="close" icon-only caption="關閉" :label="'關閉' + title" :disabled="!dismissible" @click="close" /></header>
+  <dialog ref="dialog" class="vue-dialog ui-dialog" :class="{ 'vue-dialog-compact': compact, 'vue-stitch-dialog': stitch }" :aria-labelledby="headingId" @cancel="cancel" @close="closed">
+    <header class="vue-dialog-header"><h2 :id="headingId">{{ title }}</h2><UiButton :stitch="stitch" icon="close" icon-only caption="關閉" :label="'關閉' + title" :disabled="!dismissible" @click="close" /></header>
     <div v-if="visible" class="vue-dialog-content"><slot /></div>
   </dialog>
 </template>
