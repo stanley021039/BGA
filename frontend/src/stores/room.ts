@@ -84,8 +84,10 @@ export const useRoomStore = defineStore('room', () => {
     recovery = (async () => {
       connecting.value = true;
       while (current()) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(new DOMException('恢復座位逾時，正在重試。', 'TimeoutError')), 10000);
         try {
-          const result = readSeat(await request('reconnect', {}));
+          const result = readSeat(await request('reconnect', {}, { signal: controller.signal }));
           if (!current()) return false;
           if (result.type !== type.value) { location.replace('/' + gamePath(result.type) + '/' + result.code); return false; }
           if (result.code !== code.value) throw Error('重連座位與目前房間不一致');
@@ -94,7 +96,7 @@ export const useRoomStore = defineStore('room', () => {
           if (!current() || cause instanceof DOMException && cause.name === 'AbortError') return false;
           disconnected.value = true; error.value = cause instanceof Error ? cause.message : '連線中斷，正在重試…';
           await new Promise<void>(resolve => { retry = { resolve, timer: setTimeout(() => { retry = null; resolve(); }, 3000) }; });
-        }
+        } finally { clearTimeout(timeout); }
       }
       return false;
     })().finally(() => { if (scope.value === epoch) { connecting.value = false; recovery = null; } });

@@ -68,5 +68,10 @@
     "id": "draw",
     "document": "draw.html",
     "route": "/draw"
+  },
+  {
+    "id": "musicquiz",
+    "document": "musicquiz.html",
+    "route": "/musicquiz"
   }
 ]
