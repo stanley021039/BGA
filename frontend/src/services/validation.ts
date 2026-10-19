@@ -6,6 +6,9 @@ export function array(value: unknown, message = '伺服器清單格式不正確'
   if (!Array.isArray(value)) throw new Error(message);
   return value;
 }
-export const text = (value: unknown, fallback = ''): string => typeof value === 'string' ? value : fallback;
-export const number = (value: unknown, fallback = 0): number => typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-export const strings = (value: unknown): string[] => Array.isArray(value) ? value.filter((x): x is string => typeof x === 'string') : [];
+export const text = (value: unknown, fallback = ''): string =>
+  typeof value === 'string' ? value : fallback;
+export const number = (value: unknown, fallback = 0): number =>
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+export const strings = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((x): x is string => typeof x === 'string') : [];

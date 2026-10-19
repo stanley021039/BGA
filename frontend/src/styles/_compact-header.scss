@@ -4,9 +4,31 @@
 // overlay position, so an empty or changing message cannot resize the document.
 @mixin desktop {
   // Hiding the header must also remove its grid row from compact documents.
-  &:is(.vue-game-focus,.vue-race-lesson-focus) .vue-game-document { grid-template-rows:minmax(0,1fr); }
-  [data-site-header].vue-site-header { min-height:0; margin:0; padding:t.space(2) 0; }
-  .vue-site-header-content { min-height:44px; row-gap:0; }
-  .vue-site-header-feedback { position:absolute; top:calc(100% + 8px); right:0; width:min(480px,100%); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(3); background:var(--play-surface); z-index:140; }
-  .vue-site-header-feedback:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+  &:is(.vue-game-focus, .vue-race-lesson-focus) .vue-game-document {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  [data-site-header].vue-site-header {
+    min-height: 0;
+    margin: 0;
+    padding: t.space(2) 0;
+  }
+  .vue-site-header-content {
+    min-height: 44px;
+    row-gap: 0;
+  }
+  .vue-site-header-feedback {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: min(480px, 100%);
+    padding: t.space(3);
+    border: 1px solid var(--play-line);
+    border-radius: t.space(3);
+    background: var(--play-surface);
+    z-index: 140;
+  }
+  .vue-site-header-feedback:has(.frontend-status:empty) {
+    visibility: hidden;
+    pointer-events: none;
+  }
 }

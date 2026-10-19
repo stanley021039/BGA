@@ -1,100 +1,453 @@
 @use 'tokens' as t;
 @use 'room-social';
 
-.vue-drawing-console { min-inline-size:0;min-block-size:0;container:drawing-console / inline-size; }
-.vue-drawing-console-layout { display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:t.space(2);min-inline-size:0;min-block-size:0;block-size:100%; }
-.vue-drawing-console.is-editable>.vue-drawing-console-layout { grid-template-columns:44px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr); }
-.vue-drawing-console-top { grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:t.space(2) t.space(3);min-inline-size:0;padding-block-end:t.space(2);border-block-end:1px solid var(--stitch-line,var(--play-line)); }
-.vue-drawing-console-size { display:flex;align-items:center;gap:t.space(2);min-block-size:44px;min-inline-size:0;flex:1 1 11rem;@include t.type(p3);input { flex:1;min-inline-size:44px;inline-size:6rem;max-inline-size:12rem;accent-color:var(--stitch-ink,var(--play-ink)); }output { inline-size:4ch;text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap; } }
-.vue-drawing-console-rail { grid-column:1;grid-row:2;display:flex;flex-direction:column;justify-content:space-between;gap:t.space(4);min-inline-size:0;min-block-size:0; }
-.vue-drawing-console-tools,.vue-drawing-console-history { display:flex;flex-direction:column;gap:t.space(1);min-inline-size:0; }
-.vue-drawing-console-stage { grid-column:1;grid-row:1;display:grid;place-items:center;min-inline-size:0;min-block-size:0; }
-.is-editable>.vue-drawing-console-layout>.vue-drawing-console-stage { grid-column:2;grid-row:2; }
-.vue-drawing-console-stage>.vue-drawing-frame { inline-size:100%;box-sizing:border-box; }
-.vue-color-picker { display:flex;align-items:center;flex-wrap:wrap;gap:t.space(2);min-inline-size:0;max-inline-size:100%; }
-.vue-color-swatches { display:grid;grid-template-columns:repeat(12,44px);gap:0;min-inline-size:0;max-inline-size:100%;overflow:auto;scrollbar-gutter:stable; }
-.vue-color-picker .vue-color-swatch { --ui-button-radius:.5rem;box-sizing:border-box;display:grid;place-items:center;inline-size:44px;block-size:44px;min-inline-size:44px;min-block-size:44px;padding:8px;border:2px solid transparent;border-radius:.5rem;background:transparent;color:var(--stitch-ink,var(--play-ink)); }
-.vue-color-swatch>span { display:block;inline-size:24px;block-size:24px;border:1px solid #888;border-radius:50%;box-sizing:border-box; }
-.vue-color-picker .vue-color-swatch[aria-pressed=true] { border-color:var(--stitch-ink,var(--play-ink));background:var(--stitch-surface,var(--play-surface)); }
-.vue-color-current { display:block;inline-size:20px;block-size:20px;border:1px solid #888;border-radius:50%; }
-body>.vue-social-popover:has(.vue-color-picker-content) { block-size:auto;inline-size:22rem;overflow:auto;scrollbar-gutter:stable;.vue-social-popover-body { display:block;overflow:visible; }.vue-social-popover-header { justify-content:space-between; } }
-.vue-color-picker-content { display:grid;gap:t.space(3);min-inline-size:0;margin:0;p { margin:0;@include t.type(p3); }.frontend-status { min-block-size:3em;max-block-size:4.5em;overflow:auto;margin:0;@include t.type(p3); } }
-.vue-color-plane { position:relative;block-size:10rem;min-inline-size:0;touch-action:none;border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;cursor:crosshair;background-image:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,transparent); }
-.vue-color-cursor { position:absolute;inline-size:12px;block-size:12px;box-sizing:border-box;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 1px #111;transform:translate(-50%,-50%);pointer-events:none; }
-.vue-color-hue { display:grid;grid-template-columns:3rem minmax(0,1fr);align-items:center;gap:t.space(2);min-block-size:44px;@include t.type(p3);input { inline-size:100%;min-inline-size:0;block-size:44px;accent-color:var(--stitch-ink,var(--play-ink));background:linear-gradient(to right,red,#ff0,#0f0,#0ff,#00f,#f0f,red);border-radius:.5rem; } }
-.vue-color-preview { display:flex;align-items:center;gap:t.space(2);min-block-size:32px;@include t.type(p3);font-variant-numeric:tabular-nums;>span { display:block;inline-size:32px;block-size:32px;border:1px solid #888;border-radius:.5rem; }output { overflow-wrap:anywhere; } }
-.vue-color-hex { display:grid;grid-template-columns:2.5rem minmax(0,1fr) auto;gap:t.space(2);align-items:center;@include t.type(p3);input { box-sizing:border-box;inline-size:100%;min-inline-size:0;min-block-size:44px;padding:t.space(2);border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;background:var(--stitch-surface,var(--play-surface));color:inherit; } }
+.vue-drawing-console {
+  min-inline-size: 0;
+  min-block-size: 0;
+  container: drawing-console / inline-size;
+}
+.vue-drawing-console-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: t.space(2);
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+}
+.vue-drawing-console.is-editable > .vue-drawing-console-layout {
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.vue-drawing-console-top {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: t.space(2) t.space(3);
+  min-inline-size: 0;
+  padding-block-end: t.space(2);
+  border-block-end: 1px solid var(--stitch-line, var(--play-line));
+}
+.vue-drawing-console-size {
+  display: flex;
+  align-items: center;
+  gap: t.space(2);
+  min-block-size: 44px;
+  min-inline-size: 0;
+  flex: 1 1 11rem;
+  @include t.type(p3);
+  input {
+    flex: 1;
+    min-inline-size: 44px;
+    inline-size: 6rem;
+    max-inline-size: 12rem;
+    accent-color: var(--stitch-ink, var(--play-ink));
+  }
+  output {
+    inline-size: 4ch;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}
+.vue-drawing-console-rail {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: t.space(4);
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+.vue-drawing-console-tools,
+.vue-drawing-console-history {
+  display: flex;
+  flex-direction: column;
+  gap: t.space(1);
+  min-inline-size: 0;
+}
+.vue-drawing-console-stage {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+.is-editable > .vue-drawing-console-layout > .vue-drawing-console-stage {
+  grid-column: 2;
+  grid-row: 2;
+}
+.vue-drawing-console-stage > .vue-drawing-frame {
+  inline-size: 100%;
+  box-sizing: border-box;
+}
+.vue-color-picker {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: t.space(2);
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.vue-color-swatches {
+  display: grid;
+  grid-template-columns: repeat(12, 44px);
+  gap: 0;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+.vue-color-picker .vue-color-swatch {
+  --ui-button-radius: 0.5rem;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 44px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: 8px;
+  border: 2px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--stitch-ink, var(--play-ink));
+}
+.vue-color-swatch > span {
+  display: block;
+  inline-size: 24px;
+  block-size: 24px;
+  border: 1px solid #888;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.vue-color-picker .vue-color-swatch[aria-pressed='true'] {
+  border-color: var(--stitch-ink, var(--play-ink));
+  background: var(--stitch-surface, var(--play-surface));
+}
+.vue-color-current {
+  display: block;
+  inline-size: 20px;
+  block-size: 20px;
+  border: 1px solid #888;
+  border-radius: 50%;
+}
+body > .vue-social-popover:has(.vue-color-picker-content) {
+  block-size: auto;
+  inline-size: 22rem;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  .vue-social-popover-body {
+    display: block;
+    overflow: visible;
+  }
+  .vue-social-popover-header {
+    justify-content: space-between;
+  }
+}
+.vue-color-picker-content {
+  display: grid;
+  gap: t.space(3);
+  min-inline-size: 0;
+  margin: 0;
+  p {
+    margin: 0;
+    @include t.type(p3);
+  }
+  .frontend-status {
+    min-block-size: 3em;
+    max-block-size: 4.5em;
+    overflow: auto;
+    margin: 0;
+    @include t.type(p3);
+  }
+}
+.vue-color-plane {
+  position: relative;
+  block-size: 10rem;
+  min-inline-size: 0;
+  touch-action: none;
+  border: 1px solid var(--stitch-line, var(--play-line));
+  border-radius: 0.5rem;
+  cursor: crosshair;
+  background-image:
+    linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent);
+}
+.vue-color-cursor {
+  position: absolute;
+  inline-size: 12px;
+  block-size: 12px;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #111;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.vue-color-hue {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: center;
+  gap: t.space(2);
+  min-block-size: 44px;
+  @include t.type(p3);
+  input {
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: 44px;
+    accent-color: var(--stitch-ink, var(--play-ink));
+    background: linear-gradient(to right, red, #ff0, #0f0, #0ff, #00f, #f0f, red);
+    border-radius: 0.5rem;
+  }
+}
+.vue-color-preview {
+  display: flex;
+  align-items: center;
+  gap: t.space(2);
+  min-block-size: 32px;
+  @include t.type(p3);
+  font-variant-numeric: tabular-nums;
+  > span {
+    display: block;
+    inline-size: 32px;
+    block-size: 32px;
+    border: 1px solid #888;
+    border-radius: 0.5rem;
+  }
+  output {
+    overflow-wrap: anywhere;
+  }
+}
+.vue-color-hex {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  gap: t.space(2);
+  align-items: center;
+  @include t.type(p3);
+  input {
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding: t.space(2);
+    border: 1px solid var(--stitch-line, var(--play-line));
+    border-radius: 0.5rem;
+    background: var(--stitch-surface, var(--play-surface));
+    color: inherit;
+  }
+}
 
 @mixin horizontal-tools {
- .vue-drawing-console.is-editable>.vue-drawing-console-layout { grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr); }
- .vue-drawing-console-rail { grid-column:1;grid-row:2;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:t.space(1); }
- .vue-drawing-console-tools,.vue-drawing-console-history { flex-direction:row;flex-wrap:wrap; }
- .vue-drawing-console-history { margin-inline-start:auto; }
- .is-editable>.vue-drawing-console-layout>.vue-drawing-console-stage { grid-column:1;grid-row:3; }
+  .vue-drawing-console.is-editable > .vue-drawing-console-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+  .vue-drawing-console-rail {
+    grid-column: 1;
+    grid-row: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: t.space(1);
+  }
+  .vue-drawing-console-tools,
+  .vue-drawing-console-history {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .vue-drawing-console-history {
+    margin-inline-start: auto;
+  }
+  .is-editable > .vue-drawing-console-layout > .vue-drawing-console-stage {
+    grid-column: 1;
+    grid-row: 3;
+  }
 }
-@container drawing-console (max-width:42rem) { @include horizontal-tools; }
-@media(max-height:950px), (max-width:1100px) { @include horizontal-tools; }
-@media(max-width:760px) { .vue-color-swatches { grid-template-columns:repeat(6,44px);max-inline-size:100%; }.vue-drawing-console-top { align-items:stretch; }.vue-drawing-console-size { flex-basis:100%; }.vue-drawing-console-history { margin-inline-start:0; } }
+@container drawing-console (max-width:42rem) {
+  @include horizontal-tools;
+}
+@media (max-height: 950px), (max-width: 1100px) {
+  @include horizontal-tools;
+}
+@media (max-width: 760px) {
+  .vue-color-swatches {
+    grid-template-columns: repeat(6, 44px);
+    max-inline-size: 100%;
+  }
+  .vue-drawing-console-top {
+    align-items: stretch;
+  }
+  .vue-drawing-console-size {
+    flex-basis: 100%;
+  }
+  .vue-drawing-console-history {
+    margin-inline-start: 0;
+  }
+}
 
 // The shared console replaces only the drawing task's old split tool columns.
-body.vue-telephone-document .vue-telephone-task[data-private]:has(>.vue-telephone-drawing-console) {
- grid-template-columns:minmax(0,1fr);
- >.vue-telephone-drawing-console { grid-column:1/-1;grid-row:auto;min-inline-size:0; }
- >.vue-telephone-quota { grid-column:1/-1;grid-row:auto; }
- .vue-drawing-console-stage>.vue-telephone-canvas { inline-size:100%;width:100%;max-inline-size:100%;aspect-ratio:2;box-sizing:border-box; }
+body.vue-telephone-document
+  .vue-telephone-task[data-private]:has(> .vue-telephone-drawing-console) {
+  grid-template-columns: minmax(0, 1fr);
+  > .vue-telephone-drawing-console {
+    grid-column: 1/-1;
+    grid-row: auto;
+    min-inline-size: 0;
+  }
+  > .vue-telephone-quota {
+    grid-column: 1/-1;
+    grid-row: auto;
+  }
+  .vue-drawing-console-stage > .vue-telephone-canvas {
+    inline-size: 100%;
+    width: 100%;
+    max-inline-size: 100%;
+    aspect-ratio: 2;
+    box-sizing: border-box;
+  }
 }
 
 // Legacy theme form selectors contain five :not([type=...]) clauses. This
 // explicit C04 popover/input scope takes priority without global !important.
-:root body > [popover].vue-social-popover:has(form.vue-color-picker-content) .vue-color-hex input[type=text] {
- box-sizing:border-box;inline-size:100%;min-inline-size:0;min-block-size:44px;padding:t.space(2);border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;background:var(--stitch-surface,var(--play-surface));color:inherit;
+:root
+  body
+  > [popover].vue-social-popover:has(form.vue-color-picker-content)
+  .vue-color-hex
+  input[type='text'] {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  padding: t.space(2);
+  border: 1px solid var(--stitch-line, var(--play-line));
+  border-radius: 0.5rem;
+  background: var(--stitch-surface, var(--play-surface));
+  color: inherit;
 }
-:root body .vue-drawing-console .vue-drawing-console-size input[type=range],
-:root body > [popover].vue-social-popover:has(form.vue-color-picker-content) .vue-color-hue input[type=range] {
- padding:0;border:0;margin:0;box-shadow:none;color:inherit;accent-color:var(--stitch-ink,var(--play-ink));
+:root body .vue-drawing-console .vue-drawing-console-size input[type='range'],
+:root
+  body
+  > [popover].vue-social-popover:has(form.vue-color-picker-content)
+  .vue-color-hue
+  input[type='range'] {
+  padding: 0;
+  border: 0;
+  margin: 0;
+  box-shadow: none;
+  color: inherit;
+  accent-color: var(--stitch-ink, var(--play-ink));
 }
-:root body .vue-drawing-console .vue-drawing-console-size { margin:0;color:inherit; }
-:root body > [popover].vue-social-popover:has(form.vue-color-picker-content) :is(.vue-color-hue,.vue-color-hex label) { margin:0;color:inherit; }
+:root body .vue-drawing-console .vue-drawing-console-size {
+  margin: 0;
+  color: inherit;
+}
+:root
+  body
+  > [popover].vue-social-popover:has(form.vue-color-picker-content)
+  :is(.vue-color-hue, .vue-color-hex label) {
+  margin: 0;
+  color: inherit;
+}
 
 // ui-primitives owns a border !important through these public variables.
 // Color choices keep a 44px transparent hit area; only their circular dot is inked.
 :root body .vue-drawing-console .vue-color-picker button.vue-color-swatch {
- --ui-button-border-width:0px;--ui-button-border-color:transparent;--ui-button-radius:50%;
- border:0;border-radius:50%;background:transparent;box-shadow:none;
+  --ui-button-border-width: 0px;
+  --ui-button-border-color: transparent;
+  --ui-button-radius: 50%;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
 }
-:root body .vue-drawing-console .vue-color-picker button.vue-color-swatch[aria-pressed=true] {
- border-color:transparent;background:transparent;
- >span { box-shadow:0 0 0 2px var(--stitch-surface,var(--play-surface)),0 0 0 4px var(--stitch-ink,var(--play-ink)); }
+:root body .vue-drawing-console .vue-color-picker button.vue-color-swatch[aria-pressed='true'] {
+  border-color: transparent;
+  background: transparent;
+  > span {
+    box-shadow:
+      0 0 0 2px var(--stitch-surface, var(--play-surface)),
+      0 0 0 4px var(--stitch-ink, var(--play-ink));
+  }
 }
 :root body .vue-drawing-console .vue-color-picker button.vue-color-swatch:focus-visible {
- outline:2px solid var(--stitch-ink,var(--play-ink));outline-offset:-2px;
+  outline: 2px solid var(--stitch-ink, var(--play-ink));
+  outline-offset: -2px;
 }
 
 // Desktop Telephone has a definite live grid area. Allocate it to previous /
 // console / quota, then fit the 2:1 canvas to both stage dimensions. The
 // 600px floor scrolls inside the existing live area on short desktop screens;
 // status and submit remain in their original outer slots.
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
- :root body.vue-telephone-document:not(.ui-large-text) .vue-telephone-task[data-private]:has(>.vue-telephone-drawing-console) {
-  block-size:100%;min-block-size:600px;max-block-size:none;align-content:stretch;
-  grid-template-rows:64px minmax(0,1fr) 24px;gap:t.space(2);
-  >.vue-telephone-previous { grid-column:1;grid-row:1;block-size:64px;height:64px;min-block-size:0;max-block-size:64px;overflow:auto; }
-  >.vue-telephone-drawing-console { grid-column:1;grid-row:2;block-size:100%;min-block-size:0;container-type:size; }
-  >.vue-telephone-quota { grid-column:1;grid-row:3;min-block-size:0;block-size:24px;margin:0;overflow:auto; }
-  .vue-drawing-console-layout { block-size:100%;min-block-size:0; }
-  .vue-drawing-console-stage { min-block-size:0;container-type:size; }
-  .vue-drawing-console-stage>.vue-telephone-canvas {
-   width:min(100cqw,200cqh);inline-size:min(100cqw,200cqh);height:auto;block-size:auto;
-   max-inline-size:100%;max-block-size:100%;aspect-ratio:2;align-self:center;justify-self:center;
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root
+    body.vue-telephone-document:not(.ui-large-text)
+    .vue-telephone-task[data-private]:has(> .vue-telephone-drawing-console) {
+    block-size: 100%;
+    min-block-size: 600px;
+    max-block-size: none;
+    align-content: stretch;
+    grid-template-rows: 64px minmax(0, 1fr) 24px;
+    gap: t.space(2);
+    > .vue-telephone-previous {
+      grid-column: 1;
+      grid-row: 1;
+      block-size: 64px;
+      height: 64px;
+      min-block-size: 0;
+      max-block-size: 64px;
+      overflow: auto;
+    }
+    > .vue-telephone-drawing-console {
+      grid-column: 1;
+      grid-row: 2;
+      block-size: 100%;
+      min-block-size: 0;
+      container-type: size;
+    }
+    > .vue-telephone-quota {
+      grid-column: 1;
+      grid-row: 3;
+      min-block-size: 0;
+      block-size: 24px;
+      margin: 0;
+      overflow: auto;
+    }
+    .vue-drawing-console-layout {
+      block-size: 100%;
+      min-block-size: 0;
+    }
+    .vue-drawing-console-stage {
+      min-block-size: 0;
+      container-type: size;
+    }
+    .vue-drawing-console-stage > .vue-telephone-canvas {
+      width: min(100cqw, 200cqh);
+      inline-size: min(100cqw, 200cqh);
+      height: auto;
+      block-size: auto;
+      max-inline-size: 100%;
+      max-block-size: 100%;
+      aspect-ratio: 2;
+      align-self: center;
+      justify-self: center;
+    }
   }
- }
 }
 // A short actual console can occur even on a tall screen. Reserve room for the
 // top color/size row before allowing the 472px vertical tool/history rail.
-@container drawing-console (max-height:37rem) { @include horizontal-tools; }
+@container drawing-console (max-height:37rem) {
+  @include horizontal-tools;
+}
 
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
- :root body.vue-telephone-document:not(.ui-large-text) .vue-telephone-live:has(>.vue-telephone-task[data-private]>.vue-telephone-drawing-console) {
-  grid-template-rows:minmax(0,1fr);align-content:stretch;min-block-size:0;
- }
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root
+    body.vue-telephone-document:not(.ui-large-text)
+    .vue-telephone-live:has(> .vue-telephone-task[data-private] > .vue-telephone-drawing-console) {
+    grid-template-rows: minmax(0, 1fr);
+    align-content: stretch;
+    min-block-size: 0;
+  }
 }

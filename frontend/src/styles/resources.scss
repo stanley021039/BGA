@@ -1,7 +1,10 @@
 @use 'tokens';
 @use 'mixins';
 
-.resource-workspace { align-items: stretch; min-inline-size: 0; }
+.resource-workspace {
+  align-items: stretch;
+  min-inline-size: 0;
+}
 .resource-panel {
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr) auto;
@@ -11,34 +14,123 @@
   padding: tokens.space(6);
   box-sizing: border-box;
 }
-.resource-panel-heading { min-inline-size: 0; }
-.resource-panel-filters { min-inline-size: 0; }
-.resource-panel-summary { @include mixins.stable-slot(1.5em); }
-.resource-panel-content { min-block-size: 0; overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; }
-.resource-panel-actions { min-block-size: 2.75rem; display: flex; align-items: center; gap: tokens.space(3); }
-.resource-panel-actions > button { margin: 0; }
-.resource-notice { min-block-size: 3em; overflow-wrap: anywhere; }
-.resource-error { color: var(--ui-error, #f39484); }
-.resource-status { min-block-size: 3em; max-block-size: 5em; overflow: auto; overflow-wrap: anywhere; }
-.resource-panel :is(input, select, textarea) { max-inline-size: 100%; }
-.resource-panel [hidden] { display: none; }
-.resource-word-list { display: grid; gap: tokens.space(3); }
-.resource-word-list article { display: grid; gap: tokens.space(2); }
-.resource-word-list span { overflow-wrap: anywhere; }
-.resource-compose :is(input, select, textarea) { min-inline-size: 0; max-inline-size: 100%; }
-.resource-compose .resource-status { margin-block-end: 0; }
-.resource-compose { align-self: stretch; display: flex; flex-direction: column; block-size: clamp(34rem, calc(100dvh - 12rem), 60rem); box-sizing: border-box; }
-.resource-compose form { flex: 1; min-block-size: 0; min-inline-size: 0; overflow: auto; scrollbar-gutter: stable; padding: tokens.space(1); align-content: start; }
-.resource-compose > :not(form) { flex-shrink: 0; }
-.resource-compose > button { margin-block-start: tokens.space(3); }
-.resource-image-preview { min-block-size: 10rem; display: grid; place-items: center; grid-template-rows: 8rem 2.75rem; }
-.resource-image-preview img { max-inline-size: 100%; max-block-size: 8rem; object-fit: contain; }
-.resource-image-preview > span { display: grid; place-items: center; block-size: 8rem; }
-.resource-audio-preview { inline-size: min(100%, 24rem); }
-@media(max-width:760px) {
-  .resource-panel { block-size: 42rem; max-block-size: none; }
-  .resource-panel { padding: tokens.space(4); }
-  .resource-compose { block-size: auto; }
-  .resource-compose form { overflow: visible; }
-  .resource-workspace { grid-template-columns: minmax(0,1fr); }
+.resource-panel-heading {
+  min-inline-size: 0;
+}
+.resource-panel-filters {
+  min-inline-size: 0;
+}
+.resource-panel-summary {
+  @include mixins.stable-slot(1.5em);
+}
+.resource-panel-content {
+  min-block-size: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.resource-panel-actions {
+  min-block-size: 2.75rem;
+  display: flex;
+  align-items: center;
+  gap: tokens.space(3);
+}
+.resource-panel-actions > button {
+  margin: 0;
+}
+.resource-notice {
+  min-block-size: 3em;
+  overflow-wrap: anywhere;
+}
+.resource-error {
+  color: var(--ui-error, #f39484);
+}
+.resource-status {
+  min-block-size: 3em;
+  max-block-size: 5em;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.resource-panel :is(input, select, textarea) {
+  max-inline-size: 100%;
+}
+.resource-panel [hidden] {
+  display: none;
+}
+.resource-word-list {
+  display: grid;
+  gap: tokens.space(3);
+}
+.resource-word-list article {
+  display: grid;
+  gap: tokens.space(2);
+}
+.resource-word-list span {
+  overflow-wrap: anywhere;
+}
+.resource-compose :is(input, select, textarea) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.resource-compose .resource-status {
+  margin-block-end: 0;
+}
+.resource-compose {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  block-size: clamp(34rem, calc(100dvh - 12rem), 60rem);
+  box-sizing: border-box;
+}
+.resource-compose form {
+  flex: 1;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  padding: tokens.space(1);
+  align-content: start;
+}
+.resource-compose > :not(form) {
+  flex-shrink: 0;
+}
+.resource-compose > button {
+  margin-block-start: tokens.space(3);
+}
+.resource-image-preview {
+  min-block-size: 10rem;
+  display: grid;
+  place-items: center;
+  grid-template-rows: 8rem 2.75rem;
+}
+.resource-image-preview img {
+  max-inline-size: 100%;
+  max-block-size: 8rem;
+  object-fit: contain;
+}
+.resource-image-preview > span {
+  display: grid;
+  place-items: center;
+  block-size: 8rem;
+}
+.resource-audio-preview {
+  inline-size: min(100%, 24rem);
+}
+@media (max-width: 760px) {
+  .resource-panel {
+    block-size: 42rem;
+    max-block-size: none;
+  }
+  .resource-panel {
+    padding: tokens.space(4);
+  }
+  .resource-compose {
+    block-size: auto;
+  }
+  .resource-compose form {
+    overflow: visible;
+  }
+  .resource-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

@@ -1,73 +1,95 @@
 @use 'sass:map';
 
 // Approved 00 common header/chat: named values, not scaled screenshot pixels.
-$spacing: (4: .25rem, 8: .5rem, 12: .75rem, 16: 1rem, 24: 1.5rem, 32: 2rem);
-$typography: (14: .875rem, 16: 1rem, 18: 1.125rem, 20: 1.25rem, 24: 1.5rem, 32: 2rem);
-@function space($pixels) { @return map.get($spacing, $pixels); }
-@function font($pixels) { @return map.get($typography, $pixels); }
+$spacing: (
+  4: 0.25rem,
+  8: 0.5rem,
+  12: 0.75rem,
+  16: 1rem,
+  24: 1.5rem,
+  32: 2rem,
+);
+$typography: (
+  14: 0.875rem,
+  16: 1rem,
+  18: 1.125rem,
+  20: 1.25rem,
+  24: 1.5rem,
+  32: 2rem,
+);
+@function space($pixels) {
+  @return map.get($spacing, $pixels);
+}
+@function font($pixels) {
+  @return map.get($typography, $pixels);
+}
 
 :root {
-  --stitch-primary: #F6C845;
-  --stitch-base: #F5F3EE;
-  --stitch-blue: #0051D5;
-  --stitch-success: #006C49;
-  --stitch-ink: #20211E;
-  --stitch-muted: #686A63;
-  --stitch-surface: #FFFFFF;
-  --stitch-surface-subtle: #F8F7F3;
-  --stitch-surface-hover: #EDEDE6;
-  --stitch-line: #D8D9D2;
-  --stitch-frame: #20211E;
-  --stitch-on-primary: #20211E;
-  --stitch-primary-hover: #FFD65F;
-  --stitch-primary-active: #E9B936;
-  --stitch-selected-bg: #FFF2C4;
-  --stitch-selected-ink: #20211E;
-  --stitch-link: #0051D5;
-  --stitch-focus: #0051D5;
-  --stitch-success-ink: #006C49;
-  --stitch-success-bg: #E9F4ED;
-  --stitch-success-hover: #D8EDE0;
-  --stitch-success-line: #A4CDB7;
-  --stitch-danger-ink: #AD352F;
-  --stitch-danger-bg: #FFF1EE;
-  --stitch-danger-hover: #FBE0DB;
-  --stitch-danger-line: #D9AAA3;
-  --stitch-contrast: #20211E;
-  --stitch-on-contrast: #FFFFFF;
-  --stitch-contrast-hover: #3E4038;
-  --stitch-control-radius: .5rem;
-  --stitch-panel-radius: .75rem;
+  --stitch-primary: #f6c845;
+  --stitch-base: #f5f3ee;
+  --stitch-blue: #0051d5;
+  --stitch-success: #006c49;
+  --stitch-ink: #20211e;
+  --stitch-muted: #686a63;
+  --stitch-surface: #ffffff;
+  --stitch-surface-subtle: #f8f7f3;
+  --stitch-surface-hover: #edede6;
+  --stitch-line: #d8d9d2;
+  --stitch-frame: #20211e;
+  --stitch-on-primary: #20211e;
+  --stitch-primary-hover: #ffd65f;
+  --stitch-primary-active: #e9b936;
+  --stitch-selected-bg: #fff2c4;
+  --stitch-selected-ink: #20211e;
+  --stitch-link: #0051d5;
+  --stitch-focus: #0051d5;
+  --stitch-success-ink: #006c49;
+  --stitch-success-bg: #e9f4ed;
+  --stitch-success-hover: #d8ede0;
+  --stitch-success-line: #a4cdb7;
+  --stitch-danger-ink: #ad352f;
+  --stitch-danger-bg: #fff1ee;
+  --stitch-danger-hover: #fbe0db;
+  --stitch-danger-line: #d9aaa3;
+  --stitch-contrast: #20211e;
+  --stitch-on-contrast: #ffffff;
+  --stitch-contrast-hover: #3e4038;
+  --stitch-control-radius: 0.5rem;
+  --stitch-panel-radius: 0.75rem;
   --stitch-control-height: 2.75rem;
   --stitch-icon-size: 1.25rem;
   --stitch-font-family: var(--ui-font-family, system-ui, sans-serif);
   --stitch-line-height-body: 1.5;
   --stitch-line-height-heading: 1.25;
-  @each $name, $value in $spacing { --stitch-space-#{$name}: #{$value}; }
-  @each $name, $value in $typography { --stitch-font-#{$name}: #{$value}; }
+  @each $name, $value in $spacing {
+    --stitch-space-#{$name}: #{$value};
+  }
+  @each $name, $value in $typography {
+    --stitch-font-#{$name}: #{$value};
+  }
 }
 
 // ColorScheme owns this attribute, including the resolved automatic theme.
 html[data-color-scheme='dark'] {
   --stitch-base: #171916;
-  --stitch-ink: #F5F3EE;
-  --stitch-muted: #B7BBB1;
-  --stitch-surface: #22251F;
-  --stitch-surface-subtle: #1D201B;
-  --stitch-surface-hover: #343A2F;
-  --stitch-line: #4D5546;
-  --stitch-frame: #BCC4B4;
-  --stitch-link: #91B9FF;
-  --stitch-focus: #91B9FF;
-  --stitch-success-ink: #9CDBB9;
+  --stitch-ink: #f5f3ee;
+  --stitch-muted: #b7bbb1;
+  --stitch-surface: #22251f;
+  --stitch-surface-subtle: #1d201b;
+  --stitch-surface-hover: #343a2f;
+  --stitch-line: #4d5546;
+  --stitch-frame: #bcc4b4;
+  --stitch-link: #91b9ff;
+  --stitch-focus: #91b9ff;
+  --stitch-success-ink: #9cdbb9;
   --stitch-success-bg: #183426;
-  --stitch-success-hover: #234A35;
-  --stitch-success-line: #4B8164;
-  --stitch-danger-ink: #FFC1B8;
+  --stitch-success-hover: #234a35;
+  --stitch-success-line: #4b8164;
+  --stitch-danger-ink: #ffc1b8;
   --stitch-danger-bg: #412720;
-  --stitch-danger-hover: #57332B;
-  --stitch-danger-line: #9C655B;
-  --stitch-contrast: #F5F3EE;
-  --stitch-on-contrast: #20211E;
-  --stitch-contrast-hover: #DADDD2;
+  --stitch-danger-hover: #57332b;
+  --stitch-danger-line: #9c655b;
+  --stitch-contrast: #f5f3ee;
+  --stitch-on-contrast: #20211e;
+  --stitch-contrast-hover: #daddd2;
 }

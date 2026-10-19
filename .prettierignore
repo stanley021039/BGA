@@ -1,0 +1,24 @@
+# Dependencies, output and private runtime data
+**/node_modules/**
+frontend/dist/**
+coverage/**
+.git/**
+.local/**
+.private/**
+runtime/**
+data/**
+work/**
+
+# Documentation, evidence, generated assets and exact-byte fixtures
+docs/**
+public/assets/**
+tests/fixtures/**
+**/package-lock.json
+**/*.svg
+**/*.md
+tools/prototypes/generate-motion-art.cjs
+
+# Exact source contracts: tools/check-race-teaching.cjs
+public/race.html
+src/games/thunder.js
+src/games/tutorial.js

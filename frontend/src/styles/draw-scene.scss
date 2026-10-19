@@ -1,72 +1,664 @@
 @use 'tokens' as t;
 
 // Draw stage opt-in deliberately beats old per-game compact scene rules.
-:root body[data-game-kind=draw] section.vue-draw-scene.vue-draw-scene-v2 {
- display:grid;gap:t.space(3);min-inline-size:0;min-block-size:100%;align-content:start;color:var(--stitch-ink,var(--play-ink));
- :where(h1,h2,p,dl,dd) { margin:0; }
- h1 { @include t.type(h1);letter-spacing:normal;overflow-wrap:anywhere; }
- h2 { @include t.type(h2);letter-spacing:normal; }
- p { @include t.type(p3);overflow-wrap:anywhere; }
- .vue-draw-scene-badge { display:inline-flex;align-items:center;justify-content:center;gap:t.space(1);min-block-size:24px;padding:t.space(1) t.space(2);border:1px solid color-mix(in srgb,var(--stitch-primary,#f6cf35) 60%,var(--stitch-ink,#212121));border-radius:999px;background:color-mix(in srgb,var(--stitch-primary,#f6cf35) 20%,var(--stitch-surface,var(--play-surface)));@include t.type(p3);font-weight:700;>span { font-weight:500; }.ui-icon,>span:has(svg) { inline-size:16px;block-size:16px; }svg { inline-size:100%;block-size:100%; } }
- .vue-draw-scene-actions { display:flex;flex-wrap:wrap;align-items:center;gap:t.space(2);min-inline-size:0;>button,>a { @include t.type(p3);min-block-size:44px;--ui-button-radius:.5rem;white-space:normal;overflow-wrap:anywhere; } >span { @include t.type(p3); } }
- &.vue-draw-waiting-v2 { grid-template-rows:minmax(0,1fr) auto auto;block-size:100%;align-content:stretch; }
- .vue-draw-waiting-center { display:grid;align-content:center;justify-items:center;text-align:center;gap:t.space(2);padding:t.space(3);min-inline-size:0;min-block-size:0;h1 { display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:t.space(2); }h1 small { @include t.type(p3);font-weight:500; } }
- .vue-draw-waiting-illustration { display:block;inline-size:min(16rem,80%);block-size:12rem;object-fit:contain; }
- .vue-draw-waiting-tagline { font-weight:700; }
- .vue-draw-waiting-description { max-inline-size:52ch; }
- .vue-draw-waiting-readiness { display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:t.space(2);text-align:center;min-block-size:44px;>p { flex:1 1 20rem; } }
- .vue-draw-waiting-facts { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:t.space(2);margin:0;>div { display:grid;gap:t.space(1);align-content:start;min-inline-size:0;padding:t.space(2);border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;background:var(--stitch-surface,var(--play-surface)); }dt { @include t.type(p3); }dd { @include t.type(p3);font-weight:800;overflow-wrap:anywhere; } }
- &.vue-draw-choosing-v2 { align-content:center;grid-template-rows:auto auto;min-block-size:100%; }
- .vue-draw-choosing-heading { display:grid;justify-items:center;gap:t.space(2);text-align:center;min-inline-size:0; }
- .vue-draw-candidates.vue-draw-candidates-v2 { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:t.space(3);margin-block:t.space(3);>button { --ui-button-radius:.75rem;--ui-button-border-width:1px;--ui-button-border-color:var(--stitch-line,var(--play-line));display:grid;grid-template-rows:44px 56px minmax(3em,1fr) 44px;align-items:center;justify-items:center;gap:t.space(3);min-block-size:240px;min-inline-size:0;padding:t.space(3);background:var(--stitch-surface,var(--play-surface));color:inherit;white-space:normal;box-shadow:none; }strong { @include t.type(h2);overflow-wrap:anywhere; } }
- .vue-draw-card-meta { display:flex;justify-content:space-between;align-items:start;gap:t.space(1);inline-size:100%;small { @include t.type(p3);overflow-wrap:anywhere; }small:last-child { flex:none;white-space:nowrap; } }
- .vue-draw-card-symbol { display:grid;place-items:center;inline-size:56px;block-size:56px;border-radius:.5rem;background:color-mix(in srgb,var(--stitch-ink,var(--play-ink)) 5%,var(--stitch-surface,var(--play-surface)));>span { display:block;inline-size:32px;block-size:32px; }svg { inline-size:100%;block-size:100%; } }
- .vue-draw-card-choose { display:flex;align-items:center;justify-content:center;gap:t.space(2);inline-size:100%;min-block-size:44px;border-radius:.5rem;background:color-mix(in srgb,var(--stitch-primary,#f6cf35) 16%,var(--stitch-surface,var(--play-surface)));@include t.type(p3);font-weight:700;>span { display:block;inline-size:16px;block-size:16px; }svg { inline-size:100%;block-size:100%; } }
- .vue-draw-private-notice { min-block-size:44px;text-align:center; }
- .vue-draw-await-choice { display:grid;align-content:center;justify-items:center;gap:t.space(3);text-align:center;min-block-size:20rem;>p { max-inline-size:42ch; } }
- .vue-draw-await-symbol { position:relative;display:grid;place-items:center;inline-size:88px;block-size:88px;border-radius:t.space(3);background:color-mix(in srgb,var(--stitch-primary,#f6cf35) 20%,var(--stitch-surface,var(--play-surface)));>span:first-child { inline-size:44px;block-size:44px; }>span:last-child { position:absolute;inset-block-start:-8px;inset-inline-end:-8px;display:grid;place-items:center;inline-size:32px;block-size:32px;border:1px solid var(--stitch-line,var(--play-line));border-radius:50%;background:var(--stitch-surface,var(--play-surface));>span { inline-size:16px;block-size:16px; } }svg { inline-size:100%;block-size:100%; } }
- .vue-draw-await-artist { display:flex;align-items:center;gap:t.space(2);min-inline-size:0;max-inline-size:100%;strong { @include t.type(p2);overflow-wrap:anywhere; }.vue-player-avatar { inline-size:32px;block-size:32px; } }
- &.vue-draw-reveal-v2 { align-content:start; }
- .vue-draw-reveal-heading { display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:t.space(2);text-align:start;>div { display:flex;gap:t.space(2);align-items:center;min-inline-size:0;>span { inline-size:20px;block-size:20px; } }svg { inline-size:100%;block-size:100%; }strong,small { @include t.type(p3); }strong { font-weight:800; } }
- .vue-draw-answer-banner { display:grid;justify-items:center;align-content:center;gap:t.space(1);padding:t.space(3);min-block-size:100px;box-sizing:border-box;text-align:center;border-radius:.5rem;background:color-mix(in srgb,var(--stitch-primary,#f6cf35) 32%,var(--stitch-surface,var(--play-surface)));small { @include t.type(p3); }h1 { @include t.type(h1);letter-spacing:.12em; } }
- .vue-draw-round-facts { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:t.space(2);>div { display:grid;gap:t.space(1);align-content:start;padding:t.space(2);min-inline-size:0;border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem; }dt { @include t.type(p3);overflow-wrap:anywhere; }dd { @include t.type(p1);font-variant-numeric:tabular-nums;overflow-wrap:anywhere; } }
- .vue-draw-reveal-art { display:grid;gap:t.space(2);min-inline-size:0;>header { display:flex;justify-content:space-between;align-items:center;gap:t.space(2);text-align:start; }h2 { display:flex;align-items:center;gap:t.space(2);@include t.type(p2);font-weight:800;>span { flex:none;inline-size:20px;block-size:20px; }svg { inline-size:100%;block-size:100%; } }small { @include t.type(p3); }.vue-result-frame { max-inline-size:52rem; }.frontend-status { margin:0;min-block-size:1.5em;max-block-size:3em;overflow:auto; } }
- .vue-result-vote { grid-template-columns:auto minmax(0,1fr);grid-template-rows:44px 44px;gap:t.space(2);min-inline-size:0;>button { grid-column:1;grid-row:1; }.vue-result-vote-summary { grid-column:2;grid-row:1;min-block-size:0;overflow:auto; }.frontend-status { grid-column:1/-1;grid-row:2;min-block-size:0;max-block-size:44px;overflow:auto; } }
- &.vue-draw-finished-v2 { align-content:start; }
- .vue-draw-finished-heading { display:grid;justify-items:center;gap:t.space(2);padding-block:t.space(3);text-align:center; }
- .vue-draw-final-standings { display:grid;gap:t.space(3);min-inline-size:0;>header { display:flex;align-items:center;justify-content:space-between;gap:t.space(2);flex-wrap:wrap;text-align:start;>span { @include t.type(p3); } } }
- .vue-draw-ranking { gap:t.space(2);>li { grid-template-columns:2rem 2rem minmax(0,1fr) 5rem;padding:t.space(2);gap:t.space(2);border-color:var(--stitch-line,var(--play-line));background:var(--stitch-surface,var(--play-surface));.vue-player-avatar { inline-size:32px;block-size:32px; }&.is-winner { padding:calc(#{t.space(2)} - 1px);background:color-mix(in srgb,var(--stitch-primary,#f6cf35) 12%,var(--stitch-surface,var(--play-surface))); } } }
- .vue-draw-final-art { min-inline-size:0;summary { cursor:pointer;min-block-size:44px;@include t.type(p3);overflow-wrap:anywhere; } }
- .vue-draw-summary.vue-draw-summary-v2 { display:grid;gap:t.space(3);min-inline-size:0;>header { display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;text-align:start;gap:t.space(2); }h2 { @include t.type(p2);font-weight:800; } }
- .vue-draw-summary-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:t.space(2);>div { display:grid;grid-template-rows:auto minmax(2.8em,auto) minmax(3em,auto);gap:t.space(1);padding:t.space(2);min-inline-size:0;border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;background:var(--stitch-surface,var(--play-surface)); }dt,small { @include t.type(p3);overflow-wrap:anywhere; }dd { @include t.type(p1);font-variant-numeric:tabular-nums;overflow-wrap:anywhere; } }
- .vue-draw-highlights { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:t.space(2);min-inline-size:0;>article { min-inline-size:0; } }
- .vue-draw-highlight-open { --ui-button-radius:.5rem;--ui-button-border-width:1px;--ui-button-border-color:var(--stitch-line,var(--play-line));display:grid;grid-template-rows:auto minmax(3em,auto) auto;gap:t.space(2);inline-size:100%;min-inline-size:0;padding:t.space(2);background:var(--stitch-surface,var(--play-surface));color:inherit;white-space:normal;box-shadow:none;strong { @include t.type(p3);font-weight:800;overflow-wrap:anywhere; }small { @include t.type(p3);overflow-wrap:anywhere; } }
+:root body[data-game-kind='draw'] section.vue-draw-scene.vue-draw-scene-v2 {
+  display: grid;
+  gap: t.space(3);
+  min-inline-size: 0;
+  min-block-size: 100%;
+  align-content: start;
+  color: var(--stitch-ink, var(--play-ink));
+  :where(h1, h2, p, dl, dd) {
+    margin: 0;
+  }
+  h1 {
+    @include t.type(h1);
+    letter-spacing: normal;
+    overflow-wrap: anywhere;
+  }
+  h2 {
+    @include t.type(h2);
+    letter-spacing: normal;
+  }
+  p {
+    @include t.type(p3);
+    overflow-wrap: anywhere;
+  }
+  .vue-draw-scene-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: t.space(1);
+    min-block-size: 24px;
+    padding: t.space(1) t.space(2);
+    border: 1px solid
+      color-mix(in srgb, var(--stitch-primary, #f6cf35) 60%, var(--stitch-ink, #212121));
+    border-radius: 999px;
+    background: color-mix(
+      in srgb,
+      var(--stitch-primary, #f6cf35) 20%,
+      var(--stitch-surface, var(--play-surface))
+    );
+    @include t.type(p3);
+    font-weight: 700;
+    > span {
+      font-weight: 500;
+    }
+    .ui-icon,
+    > span:has(svg) {
+      inline-size: 16px;
+      block-size: 16px;
+    }
+    svg {
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+  .vue-draw-scene-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: t.space(2);
+    min-inline-size: 0;
+    > button,
+    > a {
+      @include t.type(p3);
+      min-block-size: 44px;
+      --ui-button-radius: 0.5rem;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    > span {
+      @include t.type(p3);
+    }
+  }
+  &.vue-draw-waiting-v2 {
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    block-size: 100%;
+    align-content: stretch;
+  }
+  .vue-draw-waiting-center {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+    gap: t.space(2);
+    padding: t.space(3);
+    min-inline-size: 0;
+    min-block-size: 0;
+    h1 {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: t.space(2);
+    }
+    h1 small {
+      @include t.type(p3);
+      font-weight: 500;
+    }
+  }
+  .vue-draw-waiting-illustration {
+    display: block;
+    inline-size: min(16rem, 80%);
+    block-size: 12rem;
+    object-fit: contain;
+  }
+  .vue-draw-waiting-tagline {
+    font-weight: 700;
+  }
+  .vue-draw-waiting-description {
+    max-inline-size: 52ch;
+  }
+  .vue-draw-waiting-readiness {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: t.space(2);
+    text-align: center;
+    min-block-size: 44px;
+    > p {
+      flex: 1 1 20rem;
+    }
+  }
+  .vue-draw-waiting-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: t.space(2);
+    margin: 0;
+    > div {
+      display: grid;
+      gap: t.space(1);
+      align-content: start;
+      min-inline-size: 0;
+      padding: t.space(2);
+      border: 1px solid var(--stitch-line, var(--play-line));
+      border-radius: 0.5rem;
+      background: var(--stitch-surface, var(--play-surface));
+    }
+    dt {
+      @include t.type(p3);
+    }
+    dd {
+      @include t.type(p3);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+  }
+  &.vue-draw-choosing-v2 {
+    align-content: center;
+    grid-template-rows: auto auto;
+    min-block-size: 100%;
+  }
+  .vue-draw-choosing-heading {
+    display: grid;
+    justify-items: center;
+    gap: t.space(2);
+    text-align: center;
+    min-inline-size: 0;
+  }
+  .vue-draw-candidates.vue-draw-candidates-v2 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: t.space(3);
+    margin-block: t.space(3);
+    > button {
+      --ui-button-radius: 0.75rem;
+      --ui-button-border-width: 1px;
+      --ui-button-border-color: var(--stitch-line, var(--play-line));
+      display: grid;
+      grid-template-rows: 44px 56px minmax(3em, 1fr) 44px;
+      align-items: center;
+      justify-items: center;
+      gap: t.space(3);
+      min-block-size: 240px;
+      min-inline-size: 0;
+      padding: t.space(3);
+      background: var(--stitch-surface, var(--play-surface));
+      color: inherit;
+      white-space: normal;
+      box-shadow: none;
+    }
+    strong {
+      @include t.type(h2);
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-draw-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: t.space(1);
+    inline-size: 100%;
+    small {
+      @include t.type(p3);
+      overflow-wrap: anywhere;
+    }
+    small:last-child {
+      flex: none;
+      white-space: nowrap;
+    }
+  }
+  .vue-draw-card-symbol {
+    display: grid;
+    place-items: center;
+    inline-size: 56px;
+    block-size: 56px;
+    border-radius: 0.5rem;
+    background: color-mix(
+      in srgb,
+      var(--stitch-ink, var(--play-ink)) 5%,
+      var(--stitch-surface, var(--play-surface))
+    );
+    > span {
+      display: block;
+      inline-size: 32px;
+      block-size: 32px;
+    }
+    svg {
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+  .vue-draw-card-choose {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: t.space(2);
+    inline-size: 100%;
+    min-block-size: 44px;
+    border-radius: 0.5rem;
+    background: color-mix(
+      in srgb,
+      var(--stitch-primary, #f6cf35) 16%,
+      var(--stitch-surface, var(--play-surface))
+    );
+    @include t.type(p3);
+    font-weight: 700;
+    > span {
+      display: block;
+      inline-size: 16px;
+      block-size: 16px;
+    }
+    svg {
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+  .vue-draw-private-notice {
+    min-block-size: 44px;
+    text-align: center;
+  }
+  .vue-draw-await-choice {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: t.space(3);
+    text-align: center;
+    min-block-size: 20rem;
+    > p {
+      max-inline-size: 42ch;
+    }
+  }
+  .vue-draw-await-symbol {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 88px;
+    block-size: 88px;
+    border-radius: t.space(3);
+    background: color-mix(
+      in srgb,
+      var(--stitch-primary, #f6cf35) 20%,
+      var(--stitch-surface, var(--play-surface))
+    );
+    > span:first-child {
+      inline-size: 44px;
+      block-size: 44px;
+    }
+    > span:last-child {
+      position: absolute;
+      inset-block-start: -8px;
+      inset-inline-end: -8px;
+      display: grid;
+      place-items: center;
+      inline-size: 32px;
+      block-size: 32px;
+      border: 1px solid var(--stitch-line, var(--play-line));
+      border-radius: 50%;
+      background: var(--stitch-surface, var(--play-surface));
+      > span {
+        inline-size: 16px;
+        block-size: 16px;
+      }
+    }
+    svg {
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+  .vue-draw-await-artist {
+    display: flex;
+    align-items: center;
+    gap: t.space(2);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    strong {
+      @include t.type(p2);
+      overflow-wrap: anywhere;
+    }
+    .vue-player-avatar {
+      inline-size: 32px;
+      block-size: 32px;
+    }
+  }
+  &.vue-draw-reveal-v2 {
+    align-content: start;
+  }
+  .vue-draw-reveal-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: t.space(2);
+    text-align: start;
+    > div {
+      display: flex;
+      gap: t.space(2);
+      align-items: center;
+      min-inline-size: 0;
+      > span {
+        inline-size: 20px;
+        block-size: 20px;
+      }
+    }
+    svg {
+      inline-size: 100%;
+      block-size: 100%;
+    }
+    strong,
+    small {
+      @include t.type(p3);
+    }
+    strong {
+      font-weight: 800;
+    }
+  }
+  .vue-draw-answer-banner {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: t.space(1);
+    padding: t.space(3);
+    min-block-size: 100px;
+    box-sizing: border-box;
+    text-align: center;
+    border-radius: 0.5rem;
+    background: color-mix(
+      in srgb,
+      var(--stitch-primary, #f6cf35) 32%,
+      var(--stitch-surface, var(--play-surface))
+    );
+    small {
+      @include t.type(p3);
+    }
+    h1 {
+      @include t.type(h1);
+      letter-spacing: 0.12em;
+    }
+  }
+  .vue-draw-round-facts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: t.space(2);
+    > div {
+      display: grid;
+      gap: t.space(1);
+      align-content: start;
+      padding: t.space(2);
+      min-inline-size: 0;
+      border: 1px solid var(--stitch-line, var(--play-line));
+      border-radius: 0.5rem;
+    }
+    dt {
+      @include t.type(p3);
+      overflow-wrap: anywhere;
+    }
+    dd {
+      @include t.type(p1);
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-draw-reveal-art {
+    display: grid;
+    gap: t.space(2);
+    min-inline-size: 0;
+    > header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: t.space(2);
+      text-align: start;
+    }
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: t.space(2);
+      @include t.type(p2);
+      font-weight: 800;
+      > span {
+        flex: none;
+        inline-size: 20px;
+        block-size: 20px;
+      }
+      svg {
+        inline-size: 100%;
+        block-size: 100%;
+      }
+    }
+    small {
+      @include t.type(p3);
+    }
+    .vue-result-frame {
+      max-inline-size: 52rem;
+    }
+    .frontend-status {
+      margin: 0;
+      min-block-size: 1.5em;
+      max-block-size: 3em;
+      overflow: auto;
+    }
+  }
+  .vue-result-vote {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 44px 44px;
+    gap: t.space(2);
+    min-inline-size: 0;
+    > button {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    .vue-result-vote-summary {
+      grid-column: 2;
+      grid-row: 1;
+      min-block-size: 0;
+      overflow: auto;
+    }
+    .frontend-status {
+      grid-column: 1/-1;
+      grid-row: 2;
+      min-block-size: 0;
+      max-block-size: 44px;
+      overflow: auto;
+    }
+  }
+  &.vue-draw-finished-v2 {
+    align-content: start;
+  }
+  .vue-draw-finished-heading {
+    display: grid;
+    justify-items: center;
+    gap: t.space(2);
+    padding-block: t.space(3);
+    text-align: center;
+  }
+  .vue-draw-final-standings {
+    display: grid;
+    gap: t.space(3);
+    min-inline-size: 0;
+    > header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: t.space(2);
+      flex-wrap: wrap;
+      text-align: start;
+      > span {
+        @include t.type(p3);
+      }
+    }
+  }
+  .vue-draw-ranking {
+    gap: t.space(2);
+    > li {
+      grid-template-columns: 2rem 2rem minmax(0, 1fr) 5rem;
+      padding: t.space(2);
+      gap: t.space(2);
+      border-color: var(--stitch-line, var(--play-line));
+      background: var(--stitch-surface, var(--play-surface));
+      .vue-player-avatar {
+        inline-size: 32px;
+        block-size: 32px;
+      }
+      &.is-winner {
+        padding: calc(#{t.space(2)} - 1px);
+        background: color-mix(
+          in srgb,
+          var(--stitch-primary, #f6cf35) 12%,
+          var(--stitch-surface, var(--play-surface))
+        );
+      }
+    }
+  }
+  .vue-draw-final-art {
+    min-inline-size: 0;
+    summary {
+      cursor: pointer;
+      min-block-size: 44px;
+      @include t.type(p3);
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-draw-summary.vue-draw-summary-v2 {
+    display: grid;
+    gap: t.space(3);
+    min-inline-size: 0;
+    > header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      text-align: start;
+      gap: t.space(2);
+    }
+    h2 {
+      @include t.type(p2);
+      font-weight: 800;
+    }
+  }
+  .vue-draw-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: t.space(2);
+    > div {
+      display: grid;
+      grid-template-rows: auto minmax(2.8em, auto) minmax(3em, auto);
+      gap: t.space(1);
+      padding: t.space(2);
+      min-inline-size: 0;
+      border: 1px solid var(--stitch-line, var(--play-line));
+      border-radius: 0.5rem;
+      background: var(--stitch-surface, var(--play-surface));
+    }
+    dt,
+    small {
+      @include t.type(p3);
+      overflow-wrap: anywhere;
+    }
+    dd {
+      @include t.type(p1);
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-draw-highlights {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: t.space(2);
+    min-inline-size: 0;
+    > article {
+      min-inline-size: 0;
+    }
+  }
+  .vue-draw-highlight-open {
+    --ui-button-radius: 0.5rem;
+    --ui-button-border-width: 1px;
+    --ui-button-border-color: var(--stitch-line, var(--play-line));
+    display: grid;
+    grid-template-rows: auto minmax(3em, auto) auto;
+    gap: t.space(2);
+    inline-size: 100%;
+    min-inline-size: 0;
+    padding: t.space(2);
+    background: var(--stitch-surface, var(--play-surface));
+    color: inherit;
+    white-space: normal;
+    box-shadow: none;
+    strong {
+      @include t.type(p3);
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+    small {
+      @include t.type(p3);
+      overflow-wrap: anywhere;
+    }
+  }
 }
-@media(max-width:760px) {
- :root body[data-game-kind=draw] section.vue-draw-scene.vue-draw-scene-v2 {
-  &.vue-draw-waiting-v2 { block-size:auto;min-block-size:28rem; }
-  .vue-draw-waiting-illustration { block-size:10rem; }
-  .vue-draw-waiting-facts,.vue-draw-candidates.vue-draw-candidates-v2,.vue-draw-highlights { grid-template-columns:minmax(0,1fr); }
-  .vue-draw-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .vue-draw-round-facts { grid-template-columns:minmax(0,1fr);>div { grid-template-columns:minmax(0,1fr) auto;align-items:center; } }
-  .vue-draw-candidates.vue-draw-candidates-v2>button { min-block-size:220px; }
-  .vue-draw-ranking>li { grid-template-columns:1.5rem 2rem minmax(0,1fr);>strong:last-child { grid-column:3;text-align:start; } }
- }
+@media (max-width: 760px) {
+  :root body[data-game-kind='draw'] section.vue-draw-scene.vue-draw-scene-v2 {
+    &.vue-draw-waiting-v2 {
+      block-size: auto;
+      min-block-size: 28rem;
+    }
+    .vue-draw-waiting-illustration {
+      block-size: 10rem;
+    }
+    .vue-draw-waiting-facts,
+    .vue-draw-candidates.vue-draw-candidates-v2,
+    .vue-draw-highlights {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vue-draw-summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .vue-draw-round-facts {
+      grid-template-columns: minmax(0, 1fr);
+      > div {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+    }
+    .vue-draw-candidates.vue-draw-candidates-v2 > button {
+      min-block-size: 220px;
+    }
+    .vue-draw-ranking > li {
+      grid-template-columns: 1.5rem 2rem minmax(0, 1fr);
+      > strong:last-child {
+        grid-column: 3;
+        text-align: start;
+      }
+    }
+  }
 }
-@media(min-width:1181px) and (max-height:800px) and (pointer:fine) {
- :root body[data-game-kind=draw] section.vue-draw-scene.vue-draw-scene-v2 {
-  .vue-draw-waiting-center { gap:t.space(1);padding:t.space(1); }
-  .vue-draw-waiting-illustration { block-size:8rem; }
-  .vue-draw-candidates.vue-draw-candidates-v2>button { min-block-size:220px;gap:t.space(2); }
- }
+@media (min-width: 1181px) and (max-height: 800px) and (pointer: fine) {
+  :root body[data-game-kind='draw'] section.vue-draw-scene.vue-draw-scene-v2 {
+    .vue-draw-waiting-center {
+      gap: t.space(1);
+      padding: t.space(1);
+    }
+    .vue-draw-waiting-illustration {
+      block-size: 8rem;
+    }
+    .vue-draw-candidates.vue-draw-candidates-v2 > button {
+      min-block-size: 220px;
+      gap: t.space(2);
+    }
+  }
 }
 
-:root body[data-game-kind=draw] section.vue-draw-scene.vue-draw-scene-v2 .vue-draw-candidates.vue-draw-candidates-v2>button:is(:hover,:focus-visible):not(:disabled) {
- --ui-button-border-color:var(--stitch-ink,var(--play-ink));background:color-mix(in srgb,var(--stitch-primary,#f6cf35) 12%,var(--stitch-surface,var(--play-surface)));
+:root
+  body[data-game-kind='draw']
+  section.vue-draw-scene.vue-draw-scene-v2
+  .vue-draw-candidates.vue-draw-candidates-v2
+  > button:is(:hover, :focus-visible):not(:disabled) {
+  --ui-button-border-color: var(--stitch-ink, var(--play-ink));
+  background: color-mix(
+    in srgb,
+    var(--stitch-primary, #f6cf35) 12%,
+    var(--stitch-surface, var(--play-surface))
+  );
 }
 
 // Non-drawing scenes share theme colors; the actual drawing canvas stays white.
 // The base surface keeps a literal #fff frame, while dark scene text is light.
-:root body[data-game-kind=draw] .vue-draw-approved .vue-drawing-frame:has(> .vue-drawing-scene > .vue-draw-waiting-v2) {
- background:var(--stitch-surface,var(--play-surface));color:var(--stitch-ink,var(--play-ink));border-color:var(--stitch-line,var(--play-line));
+:root
+  body[data-game-kind='draw']
+  .vue-draw-approved
+  .vue-drawing-frame:has(> .vue-drawing-scene > .vue-draw-waiting-v2) {
+  background: var(--stitch-surface, var(--play-surface));
+  color: var(--stitch-ink, var(--play-ink));
+  border-color: var(--stitch-line, var(--play-line));
 }

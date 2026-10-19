@@ -45,5 +45,7 @@ jobs:
         run: node -e "const cp=require('node:child_process');const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();console.log('Tested commit '+sha);if(sha!==process.env.EXPECTED_TEST_SHA)throw Error('CI checkout does not match requested commit');"
       - name: Install locked dependencies
         run: npm ci
+      - name: Check source formatting
+        run: npm run format:check
       - name: Run release check and full test suite
         run: npm test

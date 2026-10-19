@@ -10,7 +10,24 @@ const documents: Plugin = {
     server.middlewares.use((request, _response, next) => {
       const url = new URL(request.url || '/', 'http://localhost');
       for (const page of pages) {
-        if (url.pathname === page.route || url.pathname === page.route + '/' || ['draw', 'musicquiz', 'minimal', 'bluff', 'telephone', 'majority', 'trpg', 'gift', 'poker', 'quacks', 'race'].includes(page.id) && new RegExp('^' + page.route + '/[a-f0-9]{6}/?$', 'i').test(url.pathname)) {
+        if (
+          url.pathname === page.route ||
+          url.pathname === page.route + '/' ||
+          ([
+            'draw',
+            'musicquiz',
+            'minimal',
+            'bluff',
+            'telephone',
+            'majority',
+            'trpg',
+            'gift',
+            'poker',
+            'quacks',
+            'race',
+          ].includes(page.id) &&
+            new RegExp('^' + page.route + '/[a-f0-9]{6}/?$', 'i').test(url.pathname))
+        ) {
           request.url = `/pages/${page.id}/index.html${url.search}`;
           break;
         }
@@ -30,7 +47,12 @@ export default defineConfig({
     manifest: true,
     target: 'es2022',
     rolldownOptions: {
-      input: Object.fromEntries(pages.map(page => [page.id, fileURLToPath(new URL(`./pages/${page.id}/index.html`, import.meta.url))])),
+      input: Object.fromEntries(
+        pages.map((page) => [
+          page.id,
+          fileURLToPath(new URL(`./pages/${page.id}/index.html`, import.meta.url)),
+        ]),
+      ),
     },
   },
   server: {

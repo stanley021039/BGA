@@ -1,7 +1,107 @@
 <script setup lang="ts">
-import {computed,reactive,watch} from 'vue';import {useQuacksStore} from '../../stores/quacks';import QuacksGlyph from './QuacksGlyph.vue';import UiButton from '../../components/UiButton.vue';import type {IngredientColor} from '../../contracts/quacks';
-const game=useQuacksStore(),pages=reactive<Partial<Record<IngredientColor,number>>>({}),row=computed(()=>game.state?.bookSelection.find(b=>b.color===game.selectedBook)||game.state?.bookSelection[0]),face=computed(()=>row.value?.candidates.find(b=>b.set===pages[row.value!.color])||row.value?.candidates.find(b=>b.set===row.value?.selected)||row.value?.candidates[0]);
-watch([()=>game.state?.bookSelection.map(b=>b.color+':'+b.selected).join(','),()=>game.state?.events.filter(e=>e.kind==='book-random').at(-1)?.id],()=>{for(const b of game.state?.bookSelection||[])pages[b.color]=b.selected;},{immediate:true});
-function turn(delta:number){const r=row.value,f=face.value;if(!r||!f)return;pages[r.color]=r.candidates[(r.candidates.findIndex(b=>b.set===f.set)+delta+r.candidates.length)%r.candidates.length]!.set;}
+import { computed, reactive, watch } from 'vue';
+import { useQuacksStore } from '../../stores/quacks';
+import QuacksGlyph from './QuacksGlyph.vue';
+import UiButton from '../../components/UiButton.vue';
+import type { IngredientColor } from '../../contracts/quacks';
+const game = useQuacksStore(),
+  pages = reactive<Partial<Record<IngredientColor, number>>>({}),
+  row = computed(
+    () =>
+      game.state?.bookSelection.find((b) => b.color === game.selectedBook) ||
+      game.state?.bookSelection[0],
+  ),
+  face = computed(
+    () =>
+      row.value?.candidates.find((b) => b.set === pages[row.value!.color]) ||
+      row.value?.candidates.find((b) => b.set === row.value?.selected) ||
+      row.value?.candidates[0],
+  );
+watch(
+  [
+    () => game.state?.bookSelection.map((b) => b.color + ':' + b.selected).join(','),
+    () => game.state?.events.filter((e) => e.kind === 'book-random').at(-1)?.id,
+  ],
+  () => {
+    for (const b of game.state?.bookSelection || []) pages[b.color] = b.selected;
+  },
+  { immediate: true },
+);
+function turn(delta: number) {
+  const r = row.value,
+    f = face.value;
+  if (!r || !f) return;
+  pages[r.color] =
+    r.candidates[
+      (r.candidates.findIndex((b) => b.set === f.set) + delta + r.candidates.length) %
+        r.candidates.length
+    ]!.set;
+}
 </script>
-<template><section class="vue-quacks-books"><p>{{ game.setup?'每種顏色都能獨立選擇效果，採用全桌最後一次選擇。':'本局藥材書已鎖定；仍可瀏覽各面效果。' }}</p><nav class="vue-quacks-tabs" aria-label="藥材顏色"><button v-for="book in game.state?.bookSelection" :key="book.color" type="button" :aria-pressed="game.selectedBook===book.color" @click="game.selectedBook=book.color"><QuacksGlyph :chip="{color:book.color,value:1}" :size="32"/>{{ book.name }}</button></nav><article v-if="row&&face" class="vue-quacks-book"><header><QuacksGlyph :chip="{color:row.color,value:1}" :size="64"/><div><h2>{{ row.name }} · {{ face.faceName }}</h2><p>{{ face.set===row.selected?'✓ 本局採用':'瀏覽中；本局採用第 '+row.selected+' 面' }}</p><small>由 {{ game.state?.players.find(p=>p.id===row?.chosenBy)?.name||'預設規則' }} 選擇</small></div></header><div class="vue-quacks-tabs"><UiButton icon="previous" label="上一面" :disabled="row.candidates.length<2" @click="turn(-1)"/><select v-model.number="pages[row.color]" aria-label="選擇要瀏覽的藥材書面"><option v-for="book in row.candidates" :key="book.set" :value="book.set">{{ book.faceName }}</option></select><UiButton icon="next" label="下一面" :disabled="row.candidates.length<2" @click="turn(1)"/></div><p class="vue-quacks-book-effect">{{ face.effect }}</p><div class="vue-quacks-book-offers"><div v-for="offer in face.offers" :key="offer.value"><QuacksGlyph :chip="{color:row.color,value:offer.value}" :size="48"/><strong>{{ offer.price }} 金幣</strong></div></div><UiButton v-if="game.setup" icon="check" label="全桌採用這一面" :disabled="!game.available||face.set===row.selected" @click="game.command('book-select',{color:row.color,set:face.set})"/></article><UiButton v-if="game.setup" icon="refresh" label="隨機挑選所有藥材書" :disabled="!game.available" @click="game.command('book-random')"/><p v-if="game.setup">每位真人都可直接選書或隨機挑選；測試 AI 不參與配書。</p></section></template>
+<template>
+  <section class="vue-quacks-books"
+    ><p>{{
+      game.setup
+        ? '每種顏色都能獨立選擇效果，採用全桌最後一次選擇。'
+        : '本局藥材書已鎖定；仍可瀏覽各面效果。'
+    }}</p
+    ><nav class="vue-quacks-tabs" aria-label="藥材顏色"
+      ><button
+        v-for="book in game.state?.bookSelection"
+        :key="book.color"
+        type="button"
+        :aria-pressed="game.selectedBook === book.color"
+        @click="game.selectedBook = book.color"
+        ><QuacksGlyph :chip="{ color: book.color, value: 1 }" :size="32" />{{ book.name }}</button
+      ></nav
+    ><article v-if="row && face" class="vue-quacks-book"
+      ><header
+        ><QuacksGlyph :chip="{ color: row.color, value: 1 }" :size="64" /><div
+          ><h2>{{ row.name }} · {{ face.faceName }}</h2
+          ><p>{{
+            face.set === row.selected ? '✓ 本局採用' : '瀏覽中；本局採用第 ' + row.selected + ' 面'
+          }}</p
+          ><small
+            >由
+            {{ game.state?.players.find((p) => p.id === row?.chosenBy)?.name || '預設規則' }}
+            選擇</small
+          ></div
+        ></header
+      ><div class="vue-quacks-tabs"
+        ><UiButton
+          icon="previous"
+          label="上一面"
+          :disabled="row.candidates.length < 2"
+          @click="turn(-1)" /><select
+          v-model.number="pages[row.color]"
+          aria-label="選擇要瀏覽的藥材書面"
+          ><option v-for="book in row.candidates" :key="book.set" :value="book.set">{{
+            book.faceName
+          }}</option></select
+        ><UiButton
+          icon="next"
+          label="下一面"
+          :disabled="row.candidates.length < 2"
+          @click="turn(1)" /></div
+      ><p class="vue-quacks-book-effect">{{ face.effect }}</p
+      ><div class="vue-quacks-book-offers"
+        ><div v-for="offer in face.offers" :key="offer.value"
+          ><QuacksGlyph :chip="{ color: row.color, value: offer.value }" :size="48" /><strong
+            >{{ offer.price }} 金幣</strong
+          ></div
+        ></div
+      ><UiButton
+        v-if="game.setup"
+        icon="check"
+        label="全桌採用這一面"
+        :disabled="!game.available || face.set === row.selected"
+        @click="game.command('book-select', { color: row.color, set: face.set })" /></article
+    ><UiButton
+      v-if="game.setup"
+      icon="refresh"
+      label="隨機挑選所有藥材書"
+      :disabled="!game.available"
+      @click="game.command('book-random')"
+    /><p v-if="game.setup">每位真人都可直接選書或隨機挑選；測試 AI 不參與配書。</p></section
+  >
+</template>

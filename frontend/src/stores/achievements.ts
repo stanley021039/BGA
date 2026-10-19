@@ -15,39 +15,89 @@ export const achievementGroups = [
   { key: 'other', label: '其他成就', icon: 'book' },
 ];
 export const achievementGroupKey = (item: Achievement): string =>
-  achievementGroups.some(group => group.key === item.game && group.key !== 'other') ? item.game : 'other';
+  achievementGroups.some((group) => group.key === item.game && group.key !== 'other')
+    ? item.game
+    : 'other';
 
 export const useAchievementsStore = defineStore('achievements', () => {
   const items = shallowRef<Achievement[]>([]);
-  const loading = ref(false), loaded = ref(false), error = ref('');
-  const gameFilter = ref('*'), statusFilter = ref('*');
+  const loading = ref(false),
+    loaded = ref(false),
+    error = ref('');
+  const gameFilter = ref('*'),
+    statusFilter = ref('*');
   let controller: AbortController | null = null;
-  const unlocked = computed(() => items.value.filter(item => item.unlockedAt).length);
-  const availableGroups = computed(() => achievementGroups.filter(group => items.value.some(item => achievementGroupKey(item) === group.key)));
-  const filtered = computed(() => items.value.filter(item =>
-    (gameFilter.value === '*' || achievementGroupKey(item) === gameFilter.value) &&
-    (statusFilter.value === '*' || (statusFilter.value === 'unlocked') === !!item.unlockedAt)));
-  const groups = computed(() => achievementGroups.flatMap(group => {
-    const visible = filtered.value.filter(item => achievementGroupKey(item) === group.key);
-    const total = items.value.filter(item => achievementGroupKey(item) === group.key);
-    return visible.length ? [{ ...group, items: visible, total: total.length, unlocked: total.filter(item => item.unlockedAt).length }] : [];
-  }));
+  const unlocked = computed(() => items.value.filter((item) => item.unlockedAt).length);
+  const availableGroups = computed(() =>
+    achievementGroups.filter((group) =>
+      items.value.some((item) => achievementGroupKey(item) === group.key),
+    ),
+  );
+  const filtered = computed(() =>
+    items.value.filter(
+      (item) =>
+        (gameFilter.value === '*' || achievementGroupKey(item) === gameFilter.value) &&
+        (statusFilter.value === '*' || (statusFilter.value === 'unlocked') === !!item.unlockedAt),
+    ),
+  );
+  const groups = computed(() =>
+    achievementGroups.flatMap((group) => {
+      const visible = filtered.value.filter((item) => achievementGroupKey(item) === group.key);
+      const total = items.value.filter((item) => achievementGroupKey(item) === group.key);
+      return visible.length
+        ? [
+            {
+              ...group,
+              items: visible,
+              total: total.length,
+              unlocked: total.filter((item) => item.unlockedAt).length,
+            },
+          ]
+        : [];
+    }),
+  );
 
   async function load(): Promise<void> {
     if (loading.value) return;
-    const request = controller = new AbortController();
-    loading.value = true; error.value = '';
+    const request = (controller = new AbortController());
+    loading.value = true;
+    error.value = '';
     try {
       const response = await requestJson('/api/achievements', { signal: request.signal });
       if (controller !== request) return;
-      items.value = readAchievements(response); loaded.value = true;
-      if (!availableGroups.value.some(group => group.key === gameFilter.value)) gameFilter.value = '*';
+      items.value = readAchievements(response);
+      loaded.value = true;
+      if (!availableGroups.value.some((group) => group.key === gameFilter.value))
+        gameFilter.value = '*';
     } catch (reason) {
       if (controller !== request || request.signal.aborted) return;
-      if (reason instanceof ApiError && reason.status === 401) { location.replace('/login'); return; }
+      if (reason instanceof ApiError && reason.status === 401) {
+        location.replace('/login');
+        return;
+      }
       error.value = reason instanceof Error ? reason.message : '無法載入成就';
-    } finally { if (controller === request) { loading.value = false; controller = null; } }
+    } finally {
+      if (controller === request) {
+        loading.value = false;
+        controller = null;
+      }
+    }
   }
-  onScopeDispose(() => { controller?.abort(); controller = null; });
-  return { items, loading, loaded, error, gameFilter, statusFilter, unlocked, availableGroups, filtered, groups, load };
+  onScopeDispose(() => {
+    controller?.abort();
+    controller = null;
+  });
+  return {
+    items,
+    loading,
+    loaded,
+    error,
+    gameFilter,
+    statusFilter,
+    unlocked,
+    availableGroups,
+    filtered,
+    groups,
+    load,
+  };
 });

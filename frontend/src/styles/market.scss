@@ -1,57 +1,724 @@
 @use 'tokens' as t;
 @use 'compact-header' as chrome;
-body.market-page .club { max-inline-size:100rem; }
-.vue-page.vue-market-page {
- padding-block:t.space(6);display:grid;gap:t.space(6);min-inline-size:0;
- h1 { @include t.type(h1); }h2 { @include t.type(h2); }h3 { @include t.type(p1); }
- :is(h1,h2,h3,p) { margin:0; }small { @include t.type(p3); }
- .vue-button { min-inline-size:0;max-inline-size:100%;white-space:normal; }.vue-button-caption { min-inline-size:0;white-space:normal;overflow-wrap:anywhere; }
- :is(input,select,textarea) { max-inline-size:100%;min-inline-size:0;box-sizing:border-box;min-block-size:2.75rem;font:inherit; }input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea { inline-size:100%; }input[type=checkbox],input[type=radio] { inline-size:1.25rem;block-size:1.25rem;min-block-size:1.25rem;flex-shrink:0; }
- label { display:grid;gap:t.space(2);min-inline-size:0; }
- .frontend-status { box-sizing:border-box;min-block-size:3rem;max-block-size:6rem;overflow:auto;scrollbar-gutter:stable;margin:0; }
- .vue-market-heading,.vue-market-navigation,.vue-market-panel-heading,.vue-market-actions,.vue-market-round-heading,.vue-market-draw-tools,.vue-market-prediction-summary,.vue-market-vote-footer,.vue-market-forecast-heading { display:flex;align-items:center;flex-wrap:wrap;gap:t.space(4);min-inline-size:0; }
- .vue-market-heading { justify-content:space-between;>div { display:grid;gap:t.space(2); } }
- .vue-market-navigation { justify-content:space-between;nav { display:flex;align-items:stretch;flex-wrap:wrap;gap:t.space(2);min-inline-size:0; }nav>button { min-block-size:2.75rem;max-inline-size:100%;padding:t.space(2) t.space(3);border:1px solid var(--play-line);border-radius:t.space(2);background:var(--play-surface);color:var(--play-ink);font:inherit;cursor:pointer; }[aria-selected=true] { outline:2px solid var(--play-primary);outline-offset:1px; } }
- .vue-market-feedback { min-block-size:4rem;display:flex;align-items:center;flex-wrap:wrap;gap:t.space(3); }
- .vue-market-automation { box-sizing:border-box;block-size:6rem;overflow:auto;scrollbar-gutter:stable;border:1px solid var(--play-line);border-radius:t.space(3);padding:t.space(4);&.needs-attention { border-style:dashed; }&[open] { block-size:15rem; }summary { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:t.space(2);min-block-size:2.75rem;cursor:pointer; }summary>span { @include t.type(p3);text-decoration:underline; } >div { display:grid;gap:t.space(3);padding-block-start:t.space(3); }p { @include t.type(p3);overflow-wrap:anywhere; } }
- .vue-market-score-strip { display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(12rem,1fr);gap:t.space(4);align-items:center;min-block-size:8rem;padding:t.space(4);border:1px solid var(--play-line);border-radius:t.space(3);background:var(--play-surface);>div { display:grid;gap:t.space(2);strong { @include t.type(display);font-variant-numeric:tabular-nums; } }p { @include t.type(p3); } }
- .vue-market-panel,.vue-market-daily { box-sizing:border-box;display:grid;align-content:start;gap:t.space(4);min-inline-size:0;padding:t.space(6);border:1px solid var(--play-line);border-radius:t.space(4);background:var(--play-surface); }
- .vue-market-prediction-summary { justify-content:space-between;>div { display:grid;gap:t.space(3); }h2 { min-block-size:1.5em; } }
- .vue-market-round-heading { justify-content:space-between;>label { min-inline-size:min(100%,18rem);flex:1;max-inline-size:30rem; } }
- .vue-market-draw-tools { justify-content:space-between;.frontend-status { flex:1;min-inline-size:12rem; } }
- .vue-market-forecast-heading { justify-content:space-between;output { min-inline-size:6rem;text-align:end;@include t.type(display);font-variant-numeric:tabular-nums; } }
- #market-forecast-tick { inline-size:100%;min-block-size:2.75rem; }
- .vue-market-curve-images { display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:t.space(3);min-inline-size:0;>article { border:1px solid var(--play-line);border-radius:t.space(3);padding:t.space(2);min-inline-size:0;display:grid;align-content:start;gap:t.space(2);>p { @include t.type(p3);overflow-wrap:anywhere; } } }
- .vue-market-image-card { min-inline-size:0;display:grid;gap:t.space(2);p { @include t.type(p3);overflow-wrap:anywhere; } }
- .vue-market-image-button { --ui-button-radius:.75rem;position:relative;display:grid;place-items:center;inline-size:100%;min-inline-size:0;block-size:12rem;padding:0;border:1px solid var(--play-line);border-radius:.75rem;overflow:hidden;background:var(--play-surface);color:var(--play-ink);cursor:zoom-in;img { inline-size:100%;block-size:100%;object-fit:contain;min-block-size:0;&.is-failed { visibility:hidden; } }.vue-market-thumbnail-status { position:absolute;inset:1rem;display:grid;place-items:center;white-space:normal;@include t.type(p3); } }
- .vue-market-preview-hint { position:absolute;bottom:0;inset-inline:0;background:var(--play-surface);color:var(--play-ink);padding:t.space(1);@include t.type(p3); }
- .vue-market-image-placeholder { box-sizing:border-box;block-size:12rem;display:grid;place-items:center;padding:t.space(3);border:1px dashed var(--play-line);border-radius:t.space(3);text-align:center;@include t.type(p3); }
- .vue-market-legacy-options { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:t.space(4);border:0;padding:0;margin:0;min-inline-size:0;>article { display:grid;align-content:start;gap:t.space(3);padding:t.space(3);border:1px solid var(--play-line);border-radius:t.space(3);min-inline-size:0; }label { display:grid;grid-template-columns:1.25rem minmax(0,1fr);align-items:center;gap:t.space(2);min-block-size:5rem;span { grid-column:2;@include t.type(p3); } } }
- .vue-market-curve { display:grid;gap:t.space(4);min-inline-size:0;padding-block-start:t.space(4);border-block-start:1px solid var(--play-line);>label { max-inline-size:20rem; }p { @include t.type(p3);overflow-wrap:anywhere; }details { display:grid;gap:t.space(3); }summary { min-block-size:2.75rem;cursor:pointer; } }
- .vue-market-curve-plot { min-block-size:15rem;display:grid;place-items:center;svg { display:block;inline-size:100%;max-block-size:24rem;aspect-ratio:600/250;overflow:visible;text { fill:var(--play-ink);font-size:14px; } } }
- .vue-market-curve-grid { stroke:var(--play-line);stroke-dasharray:4 4;fill:none; }.vue-market-curve-axis { stroke:var(--play-ink);fill:none; }.vue-market-score-curve { stroke:var(--play-primary);stroke-width:3;fill:none; }.vue-market-forecast-marker { stroke:var(--play-error);stroke-width:2;stroke-dasharray:6 4;fill:none; }
- .vue-market-vote-footer { justify-content:space-between;min-block-size:5rem;padding-block-start:t.space(4);border-block-start:1px solid var(--play-line);>p { flex:1;min-inline-size:12rem;overflow-wrap:anywhere; } }
- .vue-market-gallery-grid,.vue-market-admin-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:t.space(6);align-items:stretch; }
- .vue-market-gallery-grid>.vue-market-panel { min-block-size:50rem; }
- .vue-market-upload-preview { min-block-size:16rem;max-block-size:20rem;overflow:auto;scrollbar-gutter:stable;display:grid;place-items:center;gap:t.space(2);border:1px dashed var(--play-line);padding:t.space(3);img { inline-size:100%;block-size:12rem;object-fit:contain; }p { overflow-wrap:anywhere; } }
- .vue-market-rule-picks { display:grid;gap:t.space(4);min-inline-size:0;fieldset { display:flex;align-content:start;flex-wrap:wrap;gap:t.space(3);padding:t.space(3);border:1px solid var(--play-line);border-radius:t.space(3);margin:0;min-inline-size:0; }label { display:flex;align-items:center;gap:t.space(2);min-block-size:2.75rem; } }
- .vue-market-image-list { min-block-size:16rem;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:t.space(4);max-block-size:70rem;overflow:auto;scrollbar-gutter:stable;padding:t.space(1);align-content:start;min-inline-size:0;>article { display:grid;gap:t.space(3);padding:t.space(3);border:1px solid var(--play-line);border-radius:t.space(3);min-inline-size:0;>label { display:flex;align-items:center;gap:t.space(2);overflow-wrap:anywhere; }p,small { overflow-wrap:anywhere; } } }
- .vue-market-approval-items { display:grid;gap:t.space(3);max-block-size:26rem;overflow:auto;scrollbar-gutter:stable;p { padding:t.space(3);border-block-end:1px solid var(--play-line);overflow-wrap:anywhere; }small { display:block; } }
- .vue-market-records { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:t.space(4);>article { display:grid;gap:t.space(3);padding:t.space(4);border:1px solid var(--play-line);border-radius:t.space(3);min-inline-size:0;>div { display:flex;align-items:center;flex-wrap:wrap;gap:t.space(3);justify-content:space-between; } } }
- .vue-market-ledger { display:grid;gap:t.space(3);max-block-size:36rem;overflow:auto;scrollbar-gutter:stable;p { display:grid;gap:t.space(2);padding:t.space(3);border-block-end:1px solid var(--play-line);overflow-wrap:anywhere; } }
- .vue-market-table-scroll { max-inline-size:100%;max-block-size:50rem;overflow:auto;scrollbar-gutter:stable;min-inline-size:0;table { inline-size:100%;min-inline-size:42rem;border-collapse:collapse; }th,td { padding:t.space(3);border-block-end:1px solid var(--play-line);text-align:start;vertical-align:top; }thead th { position:sticky;top:0;background:var(--play-surface);z-index:1; }small { display:block; }tr.is-me { outline:2px solid var(--play-primary);outline-offset:-2px; } }
- .vue-market-admin { display:grid;gap:t.space(6);form { display:grid;gap:t.space(4); }.vue-market-check { display:flex;align-items:center;gap:t.space(2); }.vue-market-admin-form { grid-template-columns:repeat(2,minmax(0,1fr));align-items:end; } }
- .vue-market-full-image { max-inline-size:100%;max-block-size:70dvh;object-fit:contain;display:block;margin:auto; }
+body.market-page .club {
+  max-inline-size: 100rem;
 }
-.vue-dialog .vue-market-full-image { max-inline-size:100%;max-block-size:70dvh;object-fit:contain;display:block;margin:auto; }
-.vue-dialog .vue-market-approval-items { max-block-size:26rem;overflow:auto;scrollbar-gutter:stable;overflow-wrap:anywhere;small { display:block; } }
-body.vue-market-focus [data-site-header] { display:none; }
-@media(min-width:901px) { body.market-page {@include chrome.desktop;} }
-@media(min-width:901px) and (max-width:1100px) { .vue-page.vue-market-page .vue-market-curve-images { grid-template-columns:repeat(4,minmax(0,1fr));[data-slot=center] { display:none; } } }
-@media(min-width:651px) and (max-width:900px) { .vue-page.vue-market-page .vue-market-curve-images { grid-template-columns:repeat(3,minmax(0,1fr));:is([data-slot=fall],[data-slot=rally]) { display:none; } } }
-@media(min-width:441px) and (max-width:650px) { .vue-page.vue-market-page .vue-market-curve-images { grid-template-columns:repeat(2,minmax(0,1fr));:is([data-slot=crash],[data-slot=center],[data-slot=surge]) { display:none; } } }
-@media(max-width:900px) { .vue-page.vue-market-page { .vue-market-gallery-grid,.vue-market-admin-grid { grid-template-columns:minmax(0,1fr);gap:t.space(4); }.vue-market-score-strip { grid-template-columns:repeat(3,minmax(0,1fr));>p { grid-column:1/-1; } }.vue-market-legacy-options { grid-template-columns:repeat(2,minmax(0,1fr)); }.vue-market-automation { block-size:20rem; } } }
-@media(max-width:600px) { .vue-page.vue-market-page { gap:t.space(4);padding-block:t.space(4);.vue-market-panel,.vue-market-daily { padding:t.space(4); }.vue-market-image-list,.vue-market-records,.vue-market-legacy-options,.vue-market-admin .vue-market-admin-form { grid-template-columns:minmax(0,1fr); }.vue-market-heading { align-items:start; }.vue-market-gallery-grid>.vue-market-panel { min-block-size:0; }.vue-market-score-strip { gap:t.space(3);>div>strong { @include t.type(h1); } }.vue-market-round-heading>label { max-inline-size:100%; }.vue-market-navigation>nav { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));inline-size:100%; }.vue-market-image-button { block-size:15rem; }.vue-market-image-placeholder { block-size:15rem; } } }
-@media(max-width:440px) { .vue-page.vue-market-page .vue-market-curve-images { grid-template-columns:minmax(0,1fr);:is([data-slot=crash],[data-slot=fall],[data-slot=rally],[data-slot=surge]) { display:none; } } }
+.vue-page.vue-market-page {
+  padding-block: t.space(6);
+  display: grid;
+  gap: t.space(6);
+  min-inline-size: 0;
+  h1 {
+    @include t.type(h1);
+  }
+  h2 {
+    @include t.type(h2);
+  }
+  h3 {
+    @include t.type(p1);
+  }
+  :is(h1, h2, h3, p) {
+    margin: 0;
+  }
+  small {
+    @include t.type(p3);
+  }
+  .vue-button {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    white-space: normal;
+  }
+  .vue-button-caption {
+    min-inline-size: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  :is(input, select, textarea) {
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    min-block-size: 2.75rem;
+    font: inherit;
+  }
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    inline-size: 100%;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    min-block-size: 1.25rem;
+    flex-shrink: 0;
+  }
+  label {
+    display: grid;
+    gap: t.space(2);
+    min-inline-size: 0;
+  }
+  .frontend-status {
+    box-sizing: border-box;
+    min-block-size: 3rem;
+    max-block-size: 6rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    margin: 0;
+  }
+  .vue-market-heading,
+  .vue-market-navigation,
+  .vue-market-panel-heading,
+  .vue-market-actions,
+  .vue-market-round-heading,
+  .vue-market-draw-tools,
+  .vue-market-prediction-summary,
+  .vue-market-vote-footer,
+  .vue-market-forecast-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: t.space(4);
+    min-inline-size: 0;
+  }
+  .vue-market-heading {
+    justify-content: space-between;
+    > div {
+      display: grid;
+      gap: t.space(2);
+    }
+  }
+  .vue-market-navigation {
+    justify-content: space-between;
+    nav {
+      display: flex;
+      align-items: stretch;
+      flex-wrap: wrap;
+      gap: t.space(2);
+      min-inline-size: 0;
+    }
+    nav > button {
+      min-block-size: 2.75rem;
+      max-inline-size: 100%;
+      padding: t.space(2) t.space(3);
+      border: 1px solid var(--play-line);
+      border-radius: t.space(2);
+      background: var(--play-surface);
+      color: var(--play-ink);
+      font: inherit;
+      cursor: pointer;
+    }
+    [aria-selected='true'] {
+      outline: 2px solid var(--play-primary);
+      outline-offset: 1px;
+    }
+  }
+  .vue-market-feedback {
+    min-block-size: 4rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: t.space(3);
+  }
+  .vue-market-automation {
+    box-sizing: border-box;
+    block-size: 6rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    border: 1px solid var(--play-line);
+    border-radius: t.space(3);
+    padding: t.space(4);
+    &.needs-attention {
+      border-style: dashed;
+    }
+    &[open] {
+      block-size: 15rem;
+    }
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: t.space(2);
+      min-block-size: 2.75rem;
+      cursor: pointer;
+    }
+    summary > span {
+      @include t.type(p3);
+      text-decoration: underline;
+    }
+    > div {
+      display: grid;
+      gap: t.space(3);
+      padding-block-start: t.space(3);
+    }
+    p {
+      @include t.type(p3);
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-market-score-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(12rem, 1fr);
+    gap: t.space(4);
+    align-items: center;
+    min-block-size: 8rem;
+    padding: t.space(4);
+    border: 1px solid var(--play-line);
+    border-radius: t.space(3);
+    background: var(--play-surface);
+    > div {
+      display: grid;
+      gap: t.space(2);
+      strong {
+        @include t.type(display);
+        font-variant-numeric: tabular-nums;
+      }
+    }
+    p {
+      @include t.type(p3);
+    }
+  }
+  .vue-market-panel,
+  .vue-market-daily {
+    box-sizing: border-box;
+    display: grid;
+    align-content: start;
+    gap: t.space(4);
+    min-inline-size: 0;
+    padding: t.space(6);
+    border: 1px solid var(--play-line);
+    border-radius: t.space(4);
+    background: var(--play-surface);
+  }
+  .vue-market-prediction-summary {
+    justify-content: space-between;
+    > div {
+      display: grid;
+      gap: t.space(3);
+    }
+    h2 {
+      min-block-size: 1.5em;
+    }
+  }
+  .vue-market-round-heading {
+    justify-content: space-between;
+    > label {
+      min-inline-size: min(100%, 18rem);
+      flex: 1;
+      max-inline-size: 30rem;
+    }
+  }
+  .vue-market-draw-tools {
+    justify-content: space-between;
+    .frontend-status {
+      flex: 1;
+      min-inline-size: 12rem;
+    }
+  }
+  .vue-market-forecast-heading {
+    justify-content: space-between;
+    output {
+      min-inline-size: 6rem;
+      text-align: end;
+      @include t.type(display);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+  #market-forecast-tick {
+    inline-size: 100%;
+    min-block-size: 2.75rem;
+  }
+  .vue-market-curve-images {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: t.space(3);
+    min-inline-size: 0;
+    > article {
+      border: 1px solid var(--play-line);
+      border-radius: t.space(3);
+      padding: t.space(2);
+      min-inline-size: 0;
+      display: grid;
+      align-content: start;
+      gap: t.space(2);
+      > p {
+        @include t.type(p3);
+        overflow-wrap: anywhere;
+      }
+    }
+  }
+  .vue-market-image-card {
+    min-inline-size: 0;
+    display: grid;
+    gap: t.space(2);
+    p {
+      @include t.type(p3);
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-market-image-button {
+    --ui-button-radius: 0.75rem;
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    min-inline-size: 0;
+    block-size: 12rem;
+    padding: 0;
+    border: 1px solid var(--play-line);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: var(--play-surface);
+    color: var(--play-ink);
+    cursor: zoom-in;
+    img {
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: contain;
+      min-block-size: 0;
+      &.is-failed {
+        visibility: hidden;
+      }
+    }
+    .vue-market-thumbnail-status {
+      position: absolute;
+      inset: 1rem;
+      display: grid;
+      place-items: center;
+      white-space: normal;
+      @include t.type(p3);
+    }
+  }
+  .vue-market-preview-hint {
+    position: absolute;
+    bottom: 0;
+    inset-inline: 0;
+    background: var(--play-surface);
+    color: var(--play-ink);
+    padding: t.space(1);
+    @include t.type(p3);
+  }
+  .vue-market-image-placeholder {
+    box-sizing: border-box;
+    block-size: 12rem;
+    display: grid;
+    place-items: center;
+    padding: t.space(3);
+    border: 1px dashed var(--play-line);
+    border-radius: t.space(3);
+    text-align: center;
+    @include t.type(p3);
+  }
+  .vue-market-legacy-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: t.space(4);
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-inline-size: 0;
+    > article {
+      display: grid;
+      align-content: start;
+      gap: t.space(3);
+      padding: t.space(3);
+      border: 1px solid var(--play-line);
+      border-radius: t.space(3);
+      min-inline-size: 0;
+    }
+    label {
+      display: grid;
+      grid-template-columns: 1.25rem minmax(0, 1fr);
+      align-items: center;
+      gap: t.space(2);
+      min-block-size: 5rem;
+      span {
+        grid-column: 2;
+        @include t.type(p3);
+      }
+    }
+  }
+  .vue-market-curve {
+    display: grid;
+    gap: t.space(4);
+    min-inline-size: 0;
+    padding-block-start: t.space(4);
+    border-block-start: 1px solid var(--play-line);
+    > label {
+      max-inline-size: 20rem;
+    }
+    p {
+      @include t.type(p3);
+      overflow-wrap: anywhere;
+    }
+    details {
+      display: grid;
+      gap: t.space(3);
+    }
+    summary {
+      min-block-size: 2.75rem;
+      cursor: pointer;
+    }
+  }
+  .vue-market-curve-plot {
+    min-block-size: 15rem;
+    display: grid;
+    place-items: center;
+    svg {
+      display: block;
+      inline-size: 100%;
+      max-block-size: 24rem;
+      aspect-ratio: 600/250;
+      overflow: visible;
+      text {
+        fill: var(--play-ink);
+        font-size: 14px;
+      }
+    }
+  }
+  .vue-market-curve-grid {
+    stroke: var(--play-line);
+    stroke-dasharray: 4 4;
+    fill: none;
+  }
+  .vue-market-curve-axis {
+    stroke: var(--play-ink);
+    fill: none;
+  }
+  .vue-market-score-curve {
+    stroke: var(--play-primary);
+    stroke-width: 3;
+    fill: none;
+  }
+  .vue-market-forecast-marker {
+    stroke: var(--play-error);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    fill: none;
+  }
+  .vue-market-vote-footer {
+    justify-content: space-between;
+    min-block-size: 5rem;
+    padding-block-start: t.space(4);
+    border-block-start: 1px solid var(--play-line);
+    > p {
+      flex: 1;
+      min-inline-size: 12rem;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-market-gallery-grid,
+  .vue-market-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: t.space(6);
+    align-items: stretch;
+  }
+  .vue-market-gallery-grid > .vue-market-panel {
+    min-block-size: 50rem;
+  }
+  .vue-market-upload-preview {
+    min-block-size: 16rem;
+    max-block-size: 20rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    display: grid;
+    place-items: center;
+    gap: t.space(2);
+    border: 1px dashed var(--play-line);
+    padding: t.space(3);
+    img {
+      inline-size: 100%;
+      block-size: 12rem;
+      object-fit: contain;
+    }
+    p {
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-market-rule-picks {
+    display: grid;
+    gap: t.space(4);
+    min-inline-size: 0;
+    fieldset {
+      display: flex;
+      align-content: start;
+      flex-wrap: wrap;
+      gap: t.space(3);
+      padding: t.space(3);
+      border: 1px solid var(--play-line);
+      border-radius: t.space(3);
+      margin: 0;
+      min-inline-size: 0;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: t.space(2);
+      min-block-size: 2.75rem;
+    }
+  }
+  .vue-market-image-list {
+    min-block-size: 16rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: t.space(4);
+    max-block-size: 70rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    padding: t.space(1);
+    align-content: start;
+    min-inline-size: 0;
+    > article {
+      display: grid;
+      gap: t.space(3);
+      padding: t.space(3);
+      border: 1px solid var(--play-line);
+      border-radius: t.space(3);
+      min-inline-size: 0;
+      > label {
+        display: flex;
+        align-items: center;
+        gap: t.space(2);
+        overflow-wrap: anywhere;
+      }
+      p,
+      small {
+        overflow-wrap: anywhere;
+      }
+    }
+  }
+  .vue-market-approval-items {
+    display: grid;
+    gap: t.space(3);
+    max-block-size: 26rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    p {
+      padding: t.space(3);
+      border-block-end: 1px solid var(--play-line);
+      overflow-wrap: anywhere;
+    }
+    small {
+      display: block;
+    }
+  }
+  .vue-market-records {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: t.space(4);
+    > article {
+      display: grid;
+      gap: t.space(3);
+      padding: t.space(4);
+      border: 1px solid var(--play-line);
+      border-radius: t.space(3);
+      min-inline-size: 0;
+      > div {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: t.space(3);
+        justify-content: space-between;
+      }
+    }
+  }
+  .vue-market-ledger {
+    display: grid;
+    gap: t.space(3);
+    max-block-size: 36rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    p {
+      display: grid;
+      gap: t.space(2);
+      padding: t.space(3);
+      border-block-end: 1px solid var(--play-line);
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-market-table-scroll {
+    max-inline-size: 100%;
+    max-block-size: 50rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    min-inline-size: 0;
+    table {
+      inline-size: 100%;
+      min-inline-size: 42rem;
+      border-collapse: collapse;
+    }
+    th,
+    td {
+      padding: t.space(3);
+      border-block-end: 1px solid var(--play-line);
+      text-align: start;
+      vertical-align: top;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--play-surface);
+      z-index: 1;
+    }
+    small {
+      display: block;
+    }
+    tr.is-me {
+      outline: 2px solid var(--play-primary);
+      outline-offset: -2px;
+    }
+  }
+  .vue-market-admin {
+    display: grid;
+    gap: t.space(6);
+    form {
+      display: grid;
+      gap: t.space(4);
+    }
+    .vue-market-check {
+      display: flex;
+      align-items: center;
+      gap: t.space(2);
+    }
+    .vue-market-admin-form {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: end;
+    }
+  }
+  .vue-market-full-image {
+    max-inline-size: 100%;
+    max-block-size: 70dvh;
+    object-fit: contain;
+    display: block;
+    margin: auto;
+  }
+}
+.vue-dialog .vue-market-full-image {
+  max-inline-size: 100%;
+  max-block-size: 70dvh;
+  object-fit: contain;
+  display: block;
+  margin: auto;
+}
+.vue-dialog .vue-market-approval-items {
+  max-block-size: 26rem;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  overflow-wrap: anywhere;
+  small {
+    display: block;
+  }
+}
+body.vue-market-focus [data-site-header] {
+  display: none;
+}
+@media (min-width: 901px) {
+  body.market-page {
+    @include chrome.desktop;
+  }
+}
+@media (min-width: 901px) and (max-width: 1100px) {
+  .vue-page.vue-market-page .vue-market-curve-images {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    [data-slot='center'] {
+      display: none;
+    }
+  }
+}
+@media (min-width: 651px) and (max-width: 900px) {
+  .vue-page.vue-market-page .vue-market-curve-images {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    :is([data-slot='fall'], [data-slot='rally']) {
+      display: none;
+    }
+  }
+}
+@media (min-width: 441px) and (max-width: 650px) {
+  .vue-page.vue-market-page .vue-market-curve-images {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    :is([data-slot='crash'], [data-slot='center'], [data-slot='surge']) {
+      display: none;
+    }
+  }
+}
+@media (max-width: 900px) {
+  .vue-page.vue-market-page {
+    .vue-market-gallery-grid,
+    .vue-market-admin-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: t.space(4);
+    }
+    .vue-market-score-strip {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      > p {
+        grid-column: 1/-1;
+      }
+    }
+    .vue-market-legacy-options {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .vue-market-automation {
+      block-size: 20rem;
+    }
+  }
+}
+@media (max-width: 600px) {
+  .vue-page.vue-market-page {
+    gap: t.space(4);
+    padding-block: t.space(4);
+    .vue-market-panel,
+    .vue-market-daily {
+      padding: t.space(4);
+    }
+    .vue-market-image-list,
+    .vue-market-records,
+    .vue-market-legacy-options,
+    .vue-market-admin .vue-market-admin-form {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vue-market-heading {
+      align-items: start;
+    }
+    .vue-market-gallery-grid > .vue-market-panel {
+      min-block-size: 0;
+    }
+    .vue-market-score-strip {
+      gap: t.space(3);
+      > div > strong {
+        @include t.type(h1);
+      }
+    }
+    .vue-market-round-heading > label {
+      max-inline-size: 100%;
+    }
+    .vue-market-navigation > nav {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      inline-size: 100%;
+    }
+    .vue-market-image-button {
+      block-size: 15rem;
+    }
+    .vue-market-image-placeholder {
+      block-size: 15rem;
+    }
+  }
+}
+@media (max-width: 440px) {
+  .vue-page.vue-market-page .vue-market-curve-images {
+    grid-template-columns: minmax(0, 1fr);
+    :is([data-slot='crash'], [data-slot='fall'], [data-slot='rally'], [data-slot='surge']) {
+      display: none;
+    }
+  }
+}
 
-@media(max-width:760px) { .vue-page.vue-market-page .vue-market-automation { block-size:8rem;&[open] {block-size:18rem;} } }
+@media (max-width: 760px) {
+  .vue-page.vue-market-page .vue-market-automation {
+    block-size: 8rem;
+    &[open] {
+      block-size: 18rem;
+    }
+  }
+}

@@ -1,22 +1,214 @@
 @use 'tokens' as t;
-.vue-game-document { box-sizing:border-box; width:100%; max-width:1920px; margin:auto; padding:0 t.space(8) t.space(8); color:var(--play-ink); }
-.vue-game-entry { min-height:60dvh; display:grid; place-items:center; >div { width:min(100%,600px); padding:t.space(8); border:1px solid var(--play-line); border-radius:t.space(4); background:var(--play-surface); } }
-.vue-game-entry-actions { display:flex; align-items:center; flex-wrap:wrap; gap:t.space(4); }
-.vue-game-workspace { display:grid; gap:t.space(4); }
-.vue-game-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:t.space(4); min-height:88px; padding-block:t.space(3); >div { display:flex; align-items:center; gap:t.space(3); flex-wrap:wrap; margin-left:auto; } }
-.vue-game-phase { width:12em; max-width:100%; min-height:3em; display:flex; align-items:center; overflow-wrap:anywhere; }
-.vue-game-round { min-width:10ch; font-variant-numeric:tabular-nums; }
-.vue-game-room-feedback { display:grid; grid-template-columns:minmax(0,1fr) 44px; gap:t.space(3); align-items:center; min-height:60px; .frontend-status { margin:0; } }
-.vue-game-grid { display:grid; grid-template-columns:280px minmax(0,1fr) 320px; align-items:stretch; gap:t.space(6); min-width:0; }
-.vue-game-main,.vue-game-side { min-width:0; min-height:0; display:flex; flex-direction:column; gap:t.space(6); }
-:is(.vue-game-roster-panel,.vue-game-settings-panel,.vue-game-side>.vue-room-chat,.vue-game-panel) { min-width:0; padding:t.space(6); border:1px solid var(--play-line); border-radius:t.space(4); background:var(--play-surface); }
-.vue-game-roster-panel { display:flex; .vue-room-roster { flex:1; width:100%; grid-template-rows:auto minmax(0,1fr) auto; } .vue-roster-list { min-height:320px; max-height:min(860px,95dvh); } .vue-room-player { grid-template-columns:2.5rem minmax(0,1fr) 3rem; gap:t.space(2); padding:t.space(2); } }
-.vue-game-settings-panel { display:grid; gap:t.space(3); h2,p { margin:0; } >p { min-height:4.5em; } }
-.vue-game-start-slot { min-height:60px; display:flex; align-items:center; }
-.vue-game-panel { display:grid; gap:t.space(4); h1,h2,h3,p { margin:0; } }
-.vue-game-waiting-art { width:100%; height:150px; object-fit:contain; border-radius:t.space(3); }
-body.vue-game-focus [data-site-header] { display:none; }
-body.vue-game-focus .vue-game-document { max-width:none; }
-@media(max-width:1500px) { .vue-game-grid { grid-template-columns:250px minmax(0,1fr) 280px; gap:t.space(4); } :is(.vue-game-roster-panel,.vue-game-settings-panel,.vue-game-side>.vue-room-chat,.vue-game-panel) { padding:t.space(4); } }
-@media(max-width:1100px) { .vue-game-grid { grid-template-columns:minmax(0,1fr) 280px; } .vue-game-roster-panel { grid-column:1/-1; grid-row:2; .vue-roster-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); min-height:12rem; max-height:24rem; } } }
-@media(max-width:760px) { .vue-game-document { padding:0 t.space(4) t.space(4); } .vue-game-grid { grid-template-columns:minmax(0,1fr); } .vue-game-main { grid-column:1; grid-row:1; } .vue-game-side { grid-column:1; grid-row:2; } .vue-game-roster-panel { grid-column:1; grid-row:3; .vue-roster-list { grid-template-columns:minmax(0,1fr); max-height:30rem; } } .vue-game-toolbar>div { width:100%; margin-left:0; } .vue-game-main,.vue-game-side { gap:t.space(4); } .vue-game-entry>div { padding:t.space(6); } }
+.vue-game-document {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1920px;
+  margin: auto;
+  padding: 0 t.space(8) t.space(8);
+  color: var(--play-ink);
+}
+.vue-game-entry {
+  min-height: 60dvh;
+  display: grid;
+  place-items: center;
+  > div {
+    width: min(100%, 600px);
+    padding: t.space(8);
+    border: 1px solid var(--play-line);
+    border-radius: t.space(4);
+    background: var(--play-surface);
+  }
+}
+.vue-game-entry-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: t.space(4);
+}
+.vue-game-workspace {
+  display: grid;
+  gap: t.space(4);
+}
+.vue-game-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: t.space(4);
+  min-height: 88px;
+  padding-block: t.space(3);
+  > div {
+    display: flex;
+    align-items: center;
+    gap: t.space(3);
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+}
+.vue-game-phase {
+  width: 12em;
+  max-width: 100%;
+  min-height: 3em;
+  display: flex;
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.vue-game-round {
+  min-width: 10ch;
+  font-variant-numeric: tabular-nums;
+}
+.vue-game-room-feedback {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: t.space(3);
+  align-items: center;
+  min-height: 60px;
+  .frontend-status {
+    margin: 0;
+  }
+}
+.vue-game-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 320px;
+  align-items: stretch;
+  gap: t.space(6);
+  min-width: 0;
+}
+.vue-game-main,
+.vue-game-side {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: t.space(6);
+}
+:is(
+  .vue-game-roster-panel,
+  .vue-game-settings-panel,
+  .vue-game-side > .vue-room-chat,
+  .vue-game-panel
+) {
+  min-width: 0;
+  padding: t.space(6);
+  border: 1px solid var(--play-line);
+  border-radius: t.space(4);
+  background: var(--play-surface);
+}
+.vue-game-roster-panel {
+  display: flex;
+  .vue-room-roster {
+    flex: 1;
+    width: 100%;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+  .vue-roster-list {
+    min-height: 320px;
+    max-height: min(860px, 95dvh);
+  }
+  .vue-room-player {
+    grid-template-columns: 2.5rem minmax(0, 1fr) 3rem;
+    gap: t.space(2);
+    padding: t.space(2);
+  }
+}
+.vue-game-settings-panel {
+  display: grid;
+  gap: t.space(3);
+  h2,
+  p {
+    margin: 0;
+  }
+  > p {
+    min-height: 4.5em;
+  }
+}
+.vue-game-start-slot {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+}
+.vue-game-panel {
+  display: grid;
+  gap: t.space(4);
+  h1,
+  h2,
+  h3,
+  p {
+    margin: 0;
+  }
+}
+.vue-game-waiting-art {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  border-radius: t.space(3);
+}
+body.vue-game-focus [data-site-header] {
+  display: none;
+}
+body.vue-game-focus .vue-game-document {
+  max-width: none;
+}
+@media (max-width: 1500px) {
+  .vue-game-grid {
+    grid-template-columns: 250px minmax(0, 1fr) 280px;
+    gap: t.space(4);
+  }
+  :is(
+    .vue-game-roster-panel,
+    .vue-game-settings-panel,
+    .vue-game-side > .vue-room-chat,
+    .vue-game-panel
+  ) {
+    padding: t.space(4);
+  }
+}
+@media (max-width: 1100px) {
+  .vue-game-grid {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+  .vue-game-roster-panel {
+    grid-column: 1/-1;
+    grid-row: 2;
+    .vue-roster-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      min-height: 12rem;
+      max-height: 24rem;
+    }
+  }
+}
+@media (max-width: 760px) {
+  .vue-game-document {
+    padding: 0 t.space(4) t.space(4);
+  }
+  .vue-game-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vue-game-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .vue-game-side {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .vue-game-roster-panel {
+    grid-column: 1;
+    grid-row: 3;
+    .vue-roster-list {
+      grid-template-columns: minmax(0, 1fr);
+      max-height: 30rem;
+    }
+  }
+  .vue-game-toolbar > div {
+    width: 100%;
+    margin-left: 0;
+  }
+  .vue-game-main,
+  .vue-game-side {
+    gap: t.space(4);
+  }
+  .vue-game-entry > div {
+    padding: t.space(6);
+  }
+}

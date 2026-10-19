@@ -1,15 +1,99 @@
 // Shared compact drawing controls; the caller owns canvas order and sizing.
 @mixin rows {
-.vue-drawing-console.is-editable>.vue-drawing-console-layout { grid-template-columns:minmax(0,1fr);grid-template-rows:3.5rem 3.5rem minmax(0,1fr);gap:.25rem; }
- .vue-drawing-console-top { grid-column:1;grid-row:1;display:flex;flex-wrap:nowrap;align-items:center;gap:.5rem;min-inline-size:0;min-block-size:0;block-size:3.5rem;box-sizing:border-box;padding:0;border:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;overscroll-behavior-inline:contain; }
- .vue-drawing-console-top>.vue-color-picker { display:contents; }
- .vue-color-swatches { display:flex;flex-wrap:nowrap;flex:0 0 auto;grid-template-columns:none;gap:0;min-inline-size:0;max-inline-size:none;overflow:visible;scrollbar-gutter:auto; }
- .vue-color-swatches>.vue-color-swatch { flex:none; }
- .vue-drawing-console-top>.vue-color-picker>button { flex:none;white-space:nowrap; }
- .vue-drawing-console-size { flex:0 0 10rem;inline-size:10rem;min-inline-size:10rem;min-block-size:44px;white-space:nowrap;input { inline-size:44px;min-inline-size:44px;max-inline-size:4rem; } }
- .vue-drawing-console-rail { grid-column:1;grid-row:2;display:flex;flex-direction:row;flex-wrap:nowrap;justify-content:flex-start;align-items:center;gap:.25rem;min-inline-size:0;min-block-size:0;block-size:3.5rem;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;overscroll-behavior-inline:contain; }
- .vue-drawing-console-tools,.vue-drawing-console-history { display:flex;flex-direction:row;flex-wrap:nowrap;flex:none;gap:.25rem;min-inline-size:0; }
- .vue-drawing-console-history { margin-inline-start:auto; }
- .vue-drawing-console-rail button { flex:none;inline-size:44px;min-inline-size:44px;block-size:44px;min-block-size:44px; }
- .is-editable>.vue-drawing-console-layout>.vue-drawing-console-stage { grid-column:1;grid-row:3; }
+  .vue-drawing-console.is-editable > .vue-drawing-console-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 3.5rem 3.5rem minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+  .vue-drawing-console-top {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-inline-size: 0;
+    min-block-size: 0;
+    block-size: 3.5rem;
+    box-sizing: border-box;
+    padding: 0;
+    border: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    overscroll-behavior-inline: contain;
+  }
+  .vue-drawing-console-top > .vue-color-picker {
+    display: contents;
+  }
+  .vue-color-swatches {
+    display: flex;
+    flex-wrap: nowrap;
+    flex: 0 0 auto;
+    grid-template-columns: none;
+    gap: 0;
+    min-inline-size: 0;
+    max-inline-size: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+  }
+  .vue-color-swatches > .vue-color-swatch {
+    flex: none;
+  }
+  .vue-drawing-console-top > .vue-color-picker > button {
+    flex: none;
+    white-space: nowrap;
+  }
+  .vue-drawing-console-size {
+    flex: 0 0 10rem;
+    inline-size: 10rem;
+    min-inline-size: 10rem;
+    min-block-size: 44px;
+    white-space: nowrap;
+    input {
+      inline-size: 44px;
+      min-inline-size: 44px;
+      max-inline-size: 4rem;
+    }
+  }
+  .vue-drawing-console-rail {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.25rem;
+    min-inline-size: 0;
+    min-block-size: 0;
+    block-size: 3.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    overscroll-behavior-inline: contain;
+  }
+  .vue-drawing-console-tools,
+  .vue-drawing-console-history {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex: none;
+    gap: 0.25rem;
+    min-inline-size: 0;
+  }
+  .vue-drawing-console-history {
+    margin-inline-start: auto;
+  }
+  .vue-drawing-console-rail button {
+    flex: none;
+    inline-size: 44px;
+    min-inline-size: 44px;
+    block-size: 44px;
+    min-block-size: 44px;
+  }
+  .is-editable > .vue-drawing-console-layout > .vue-drawing-console-stage {
+    grid-column: 1;
+    grid-row: 3;
+  }
 }

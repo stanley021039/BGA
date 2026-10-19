@@ -1,3 +1,12 @@
 # Keep reviewed vector bytes stable for provenance hashes on Windows and Linux.
 public/assets/streamline-freehand/*.svg text eol=lf
 public/assets/ui/*.svg text eol=lf
+
+# Shared formatter and executable Git hooks use LF on every platform.
+.githooks/* text eol=lf
+*.js text eol=lf
+*.cjs text eol=lf
+*.ts text eol=lf
+*.vue text eol=lf
+*.css text eol=lf
+*.scss text eol=lf

@@ -8,17 +8,17 @@
   min-inline-size: 0;
   min-block-size: 22.5rem;
   padding: var(--stitch-space-24, 1.5rem);
-  border: 1px solid var(--stitch-line, #D8D9D2);
-  border-radius: var(--stitch-panel-radius, .75rem);
-  background: var(--stitch-surface-subtle, #F8F7F3);
-  color: var(--stitch-ink, #20211E);
+  border: 1px solid var(--stitch-line, #d8d9d2);
+  border-radius: var(--stitch-panel-radius, 0.75rem);
+  background: var(--stitch-surface-subtle, #f8f7f3);
+  color: var(--stitch-ink, #20211e);
   font-family: var(--stitch-font-family, system-ui, sans-serif);
   text-align: start;
   overflow-wrap: anywhere;
   .vue-room-waiting-heading {
     display: grid;
     justify-items: start;
-    gap: var(--stitch-space-12, .75rem);
+    gap: var(--stitch-space-12, 0.75rem);
     min-inline-size: 0;
     margin: 0;
     text-align: start;
@@ -27,17 +27,17 @@
     display: inline-flex;
     align-items: center;
     min-block-size: 1.5rem;
-    padding: var(--stitch-space-4, .25rem) var(--stitch-space-12, .75rem);
+    padding: var(--stitch-space-4, 0.25rem) var(--stitch-space-12, 0.75rem);
     border-radius: 999px;
-    background: var(--stitch-selected-bg, #FFF2C4);
-    color: var(--stitch-selected-ink, #20211E);
-    font-size: var(--stitch-font-14, .875rem);
+    background: var(--stitch-selected-bg, #fff2c4);
+    color: var(--stitch-selected-ink, #20211e);
+    font-size: var(--stitch-font-14, 0.875rem);
     line-height: 1.5;
   }
   .vue-room-waiting-title {
     margin: 0;
     min-block-size: 1.25em;
-    color: var(--stitch-ink, #20211E);
+    color: var(--stitch-ink, #20211e);
     font-size: var(--stitch-font-24, 1.5rem);
     font-weight: 750;
     line-height: 1.25;
@@ -45,7 +45,7 @@
   .vue-room-waiting-description {
     margin: 0;
     min-block-size: 3em;
-    color: var(--stitch-muted, #686A63);
+    color: var(--stitch-muted, #686a63);
     font-size: var(--stitch-font-16, 1rem);
     line-height: 1.5;
   }
@@ -53,7 +53,7 @@
     grid-row: 3;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--stitch-space-12, .75rem);
+    gap: var(--stitch-space-12, 0.75rem);
     min-inline-size: 0;
     margin: 0;
   }
@@ -61,16 +61,28 @@
     display: grid;
     grid-template-rows: auto minmax(2.8em, auto);
     align-content: start;
-    gap: var(--stitch-space-8, .5rem);
+    gap: var(--stitch-space-8, 0.5rem);
     min-inline-size: 0;
     min-block-size: 7rem;
     box-sizing: border-box;
-    padding: var(--stitch-space-12, .75rem);
-    border: 1px solid var(--stitch-line, #D8D9D2);
-    border-radius: var(--stitch-control-radius, .5rem);
-    background: var(--stitch-surface, #FFF);
-    dt { margin: 0; color: var(--stitch-muted, #686A63); font-size: var(--stitch-font-14, .875rem); line-height: 1.5; }
-    dd { margin: 0; color: var(--stitch-ink, #20211E); font-size: var(--stitch-font-18, 1.125rem); font-weight: 650; line-height: 1.4; font-variant-numeric: tabular-nums; }
+    padding: var(--stitch-space-12, 0.75rem);
+    border: 1px solid var(--stitch-line, #d8d9d2);
+    border-radius: var(--stitch-control-radius, 0.5rem);
+    background: var(--stitch-surface, #fff);
+    dt {
+      margin: 0;
+      color: var(--stitch-muted, #686a63);
+      font-size: var(--stitch-font-14, 0.875rem);
+      line-height: 1.5;
+    }
+    dd {
+      margin: 0;
+      color: var(--stitch-ink, #20211e);
+      font-size: var(--stitch-font-18, 1.125rem);
+      font-weight: 650;
+      line-height: 1.4;
+      font-variant-numeric: tabular-nums;
+    }
   }
   .vue-room-waiting-footer {
     grid-row: 4;
@@ -80,29 +92,58 @@
     min-inline-size: 0;
     min-block-size: 4rem;
     margin: 0;
-    &.has-actions { grid-template-columns: minmax(0, 1fr) minmax(10rem, 14rem); }
-    > p { margin: 0; color: var(--stitch-muted, #686A63); font-size: var(--stitch-font-16, 1rem); line-height: 1.5; }
+    &.has-actions {
+      grid-template-columns: minmax(0, 1fr) minmax(10rem, 14rem);
+    }
+    > p {
+      margin: 0;
+      color: var(--stitch-muted, #686a63);
+      font-size: var(--stitch-font-16, 1rem);
+      line-height: 1.5;
+    }
   }
-  .vue-room-waiting-actions { min-inline-size: 0; > button { inline-size: 100%; max-inline-size: 100%; white-space: normal; } }
+  .vue-room-waiting-actions {
+    min-inline-size: 0;
+    > button {
+      inline-size: 100%;
+      max-inline-size: 100%;
+      white-space: normal;
+    }
+  }
 }
 
 // Draw's existing DrawingSurface owns overflow: let the complete card grow in
 // its scroll slot rather than shrinking/cropping facts or the ready/start row.
-:root body .vue-drawing-scene > .vue-room-waiting-info { min-block-size: 100%; }
+:root body .vue-drawing-scene > .vue-room-waiting-info {
+  min-block-size: 100%;
+}
 // Waiting uses the C06 title/time/final notice instead of repeating the live
 // Telephone heading, empty countdown and submission footer around the card.
 :root body.vue-telephone-document .vue-game-panel.vue-telephone-stage.is-waiting {
   grid-template-rows: minmax(0, 1fr);
   gap: 0;
   padding: 0;
-  > .vue-telephone-live { display: grid; padding: 0; gap: 0; align-content: stretch; }
-  .vue-room-waiting-info { min-block-size: 100%; }
+  > .vue-telephone-live {
+    display: grid;
+    padding: 0;
+    gap: 0;
+    align-content: stretch;
+  }
+  .vue-room-waiting-info {
+    min-block-size: 100%;
+  }
 }
-@media(max-width:560px) {
+@media (max-width: 560px) {
   :root body .vue-room-waiting-info {
     padding: var(--stitch-space-16, 1rem);
-    .vue-room-waiting-facts { grid-template-columns: minmax(0, 1fr); }
-    .vue-room-waiting-fact { min-block-size: 6rem; }
-    .vue-room-waiting-footer.has-actions { grid-template-columns: minmax(0, 1fr); }
+    .vue-room-waiting-facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vue-room-waiting-fact {
+      min-block-size: 6rem;
+    }
+    .vue-room-waiting-footer.has-actions {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 }

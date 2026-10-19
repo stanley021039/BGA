@@ -1,31 +1,252 @@
 @use 'tokens' as t;
 @use 'compact-header' as chrome;
-.vue-race-lesson-page { display:grid;gap:t.space(4);min-inline-size:0; }
-.vue-race-lesson-toolbar { display:flex;justify-content:space-between;align-items:center;gap:t.space(4);flex-wrap:wrap;h1 { @include t.type(h1); }p { @include t.type(p3); }nav { display:flex;align-items:center;flex-wrap:wrap;gap:t.space(4); } }
-.vue-race-lesson-layout { display:grid;grid-template-columns:minmax(0,1fr) minmax(20rem,25rem);gap:t.space(4);min-inline-size:0;align-items:stretch; }
-.vue-race-lesson-stage { min-inline-size:0;min-block-size:0;overflow:auto;scrollbar-gutter:stable; }
-.vue-race-coach { display:grid;grid-template-rows:auto minmax(12rem,1fr) 6rem auto;gap:t.space(3);min-inline-size:0;min-block-size:0;border:1px solid var(--play-line);border-radius:t.space(4);padding:t.space(4);background:var(--play-surface);header { display:grid;gap:t.space(3); }h2 { @include t.type(h2);min-block-size:3.4rem;overflow-wrap:anywhere; }h3 { @include t.type(p1); }label { display:grid;gap:t.space(2);@include t.type(p3); }select { inline-size:100%;min-inline-size:0;max-inline-size:100%;min-block-size:2.75rem;@include t.type(p3); }footer { display:grid;gap:t.space(3);>div { display:flex;flex-wrap:wrap;gap:t.space(3); } } }
-.vue-race-lesson-kicker { @include t.type(p3); }
-.vue-race-coach-copy { min-block-size:0;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;@include t.type(p2);ul { padding-inline-start:1.25rem;margin:0;display:grid;gap:t.space(3); } }
-.vue-race-lesson-mission { display:grid;gap:t.space(3);margin-block-start:t.space(4);padding-block-start:t.space(4);border-block-start:1px solid var(--play-line); }
-.vue-race-lesson-readonly { @include t.type(p3);margin-block-start:t.space(4); }
-.vue-race-lesson-feedback { block-size:6rem;min-inline-size:0;overflow:auto;scrollbar-gutter:stable;@include t.type(p3); }
-.vue-race-lesson-stage [data-lesson-highlight] :is(.vue-race-board,.vue-race-cars,.vue-race-dice,.vue-race-command,.vue-race-round,.vue-race-roadbonus) { transition:outline-color .15s; }
-.vue-race-lesson-stage :is([data-lesson-highlight='own'],[data-lesson-highlight='size'],[data-lesson-highlight='damage']) .vue-race-cars,
-.vue-race-lesson-stage [data-lesson-highlight='dice'] :is(.vue-race-dice,.vue-race-roadbonus),
-.vue-race-lesson-stage [data-lesson-highlight='round'] :is(.vue-race-round,.vue-race-command),
-.vue-race-lesson-stage :is([data-lesson-highlight='road'],[data-lesson-highlight='terrain'],[data-lesson-highlight='heli'],[data-lesson-highlight='goal'],[data-lesson-highlight='end']) .vue-race-board { outline:2px solid var(--play-primary);outline-offset:-2px;border-radius:t.space(2); }
-body.vue-race-lesson-focus { overflow:hidden;.site-header { display:none; }.vue-game-document { block-size:100dvh;padding:t.space(3); }.vue-race-lesson-page { block-size:100%;grid-template-rows:auto minmax(0,1fr); }.vue-race-lesson-layout { min-block-size:0; } }
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine) { body.vue-race-document:has(.vue-race-lesson-page):not(.ui-large-text) { margin:0;.vue-game-document { block-size:100dvh;padding:0 t.space(6) t.space(2);display:grid;grid-template-rows:auto minmax(0,1fr); }@include chrome.desktop;#race-app { min-block-size:0; }.vue-race-lesson-page { block-size:100%;grid-template-rows:auto minmax(0,1fr);gap:t.space(3); }.vue-race-lesson-layout { min-block-size:0; }.vue-race-lesson-stage>.vue-race-scene { min-block-size:100%; } } }
-@media(max-width:1000px) { .vue-race-lesson-layout { grid-template-columns:minmax(0,1fr); }.vue-race-coach { grid-template-rows:auto minmax(12rem,22rem) 6rem auto; }.vue-race-lesson-toolbar { align-items:start; }body.vue-race-lesson-focus .vue-race-lesson-layout { overflow:auto; }.vue-race-lesson-stage { overflow:visible; } }
+.vue-race-lesson-page {
+  display: grid;
+  gap: t.space(4);
+  min-inline-size: 0;
+}
+.vue-race-lesson-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: t.space(4);
+  flex-wrap: wrap;
+  h1 {
+    @include t.type(h1);
+  }
+  p {
+    @include t.type(p3);
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: t.space(4);
+  }
+}
+.vue-race-lesson-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 25rem);
+  gap: t.space(4);
+  min-inline-size: 0;
+  align-items: stretch;
+}
+.vue-race-lesson-stage {
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+.vue-race-coach {
+  display: grid;
+  grid-template-rows: auto minmax(12rem, 1fr) 6rem auto;
+  gap: t.space(3);
+  min-inline-size: 0;
+  min-block-size: 0;
+  border: 1px solid var(--play-line);
+  border-radius: t.space(4);
+  padding: t.space(4);
+  background: var(--play-surface);
+  header {
+    display: grid;
+    gap: t.space(3);
+  }
+  h2 {
+    @include t.type(h2);
+    min-block-size: 3.4rem;
+    overflow-wrap: anywhere;
+  }
+  h3 {
+    @include t.type(p1);
+  }
+  label {
+    display: grid;
+    gap: t.space(2);
+    @include t.type(p3);
+  }
+  select {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    min-block-size: 2.75rem;
+    @include t.type(p3);
+  }
+  footer {
+    display: grid;
+    gap: t.space(3);
+    > div {
+      display: flex;
+      flex-wrap: wrap;
+      gap: t.space(3);
+    }
+  }
+}
+.vue-race-lesson-kicker {
+  @include t.type(p3);
+}
+.vue-race-coach-copy {
+  min-block-size: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  @include t.type(p2);
+  ul {
+    padding-inline-start: 1.25rem;
+    margin: 0;
+    display: grid;
+    gap: t.space(3);
+  }
+}
+.vue-race-lesson-mission {
+  display: grid;
+  gap: t.space(3);
+  margin-block-start: t.space(4);
+  padding-block-start: t.space(4);
+  border-block-start: 1px solid var(--play-line);
+}
+.vue-race-lesson-readonly {
+  @include t.type(p3);
+  margin-block-start: t.space(4);
+}
+.vue-race-lesson-feedback {
+  block-size: 6rem;
+  min-inline-size: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  @include t.type(p3);
+}
+.vue-race-lesson-stage
+  [data-lesson-highlight]
+  :is(
+    .vue-race-board,
+    .vue-race-cars,
+    .vue-race-dice,
+    .vue-race-command,
+    .vue-race-round,
+    .vue-race-roadbonus
+  ) {
+  transition: outline-color 0.15s;
+}
+.vue-race-lesson-stage
+  :is(
+    [data-lesson-highlight='own'],
+    [data-lesson-highlight='size'],
+    [data-lesson-highlight='damage']
+  )
+  .vue-race-cars,
+.vue-race-lesson-stage [data-lesson-highlight='dice'] :is(.vue-race-dice, .vue-race-roadbonus),
+.vue-race-lesson-stage [data-lesson-highlight='round'] :is(.vue-race-round, .vue-race-command),
+.vue-race-lesson-stage
+  :is(
+    [data-lesson-highlight='road'],
+    [data-lesson-highlight='terrain'],
+    [data-lesson-highlight='heli'],
+    [data-lesson-highlight='goal'],
+    [data-lesson-highlight='end']
+  )
+  .vue-race-board {
+  outline: 2px solid var(--play-primary);
+  outline-offset: -2px;
+  border-radius: t.space(2);
+}
+body.vue-race-lesson-focus {
+  overflow: hidden;
+  .site-header {
+    display: none;
+  }
+  .vue-game-document {
+    block-size: 100dvh;
+    padding: t.space(3);
+  }
+  .vue-race-lesson-page {
+    block-size: 100%;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .vue-race-lesson-layout {
+    min-block-size: 0;
+  }
+}
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  body.vue-race-document:has(.vue-race-lesson-page):not(.ui-large-text) {
+    margin: 0;
+    .vue-game-document {
+      block-size: 100dvh;
+      padding: 0 t.space(6) t.space(2);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    @include chrome.desktop;
+    #race-app {
+      min-block-size: 0;
+    }
+    .vue-race-lesson-page {
+      block-size: 100%;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: t.space(3);
+    }
+    .vue-race-lesson-layout {
+      min-block-size: 0;
+    }
+    .vue-race-lesson-stage > .vue-race-scene {
+      min-block-size: 100%;
+    }
+  }
+}
+@media (max-width: 1000px) {
+  .vue-race-lesson-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vue-race-coach {
+    grid-template-rows: auto minmax(12rem, 22rem) 6rem auto;
+  }
+  .vue-race-lesson-toolbar {
+    align-items: start;
+  }
+  body.vue-race-lesson-focus .vue-race-lesson-layout {
+    overflow: auto;
+  }
+  .vue-race-lesson-stage {
+    overflow: visible;
+  }
+}
 // Coach copy yields to navigation on short desktop viewports; each text slot scrolls.
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
- body.vue-race-document:has(.vue-race-lesson-page):not(.ui-large-text) .vue-race-coach {
-  box-sizing:border-box;block-size:100%;min-block-size:0;grid-template-rows:10.5rem minmax(0,1fr) 6rem 6.25rem;
-  :is(h2,h3,p) { margin:0; }
-  >header { min-block-size:0;grid-template-rows:21px 54px minmax(0,1fr);gap:t.space(2);overflow:auto;scrollbar-gutter:stable; }
-  h2 { min-block-size:0;block-size:54px;overflow:auto; }
-  .vue-race-coach-copy { min-block-size:0;overflow:auto; }
-  >footer { min-block-size:0;grid-template-rows:44px 44px;gap:t.space(3);>div { min-block-size:0;flex-wrap:nowrap;>button { min-inline-size:0;flex:1; } } }
- }
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  body.vue-race-document:has(.vue-race-lesson-page):not(.ui-large-text) .vue-race-coach {
+    box-sizing: border-box;
+    block-size: 100%;
+    min-block-size: 0;
+    grid-template-rows: 10.5rem minmax(0, 1fr) 6rem 6.25rem;
+    :is(h2, h3, p) {
+      margin: 0;
+    }
+    > header {
+      min-block-size: 0;
+      grid-template-rows: 21px 54px minmax(0, 1fr);
+      gap: t.space(2);
+      overflow: auto;
+      scrollbar-gutter: stable;
+    }
+    h2 {
+      min-block-size: 0;
+      block-size: 54px;
+      overflow: auto;
+    }
+    .vue-race-coach-copy {
+      min-block-size: 0;
+      overflow: auto;
+    }
+    > footer {
+      min-block-size: 0;
+      grid-template-rows: 44px 44px;
+      gap: t.space(3);
+      > div {
+        min-block-size: 0;
+        flex-wrap: nowrap;
+        > button {
+          min-inline-size: 0;
+          flex: 1;
+        }
+      }
+    }
+  }
 }
