@@ -1,0 +1,53 @@
+@use 'tokens' as t;
+.vue-bluff-stage { grid-template-rows:auto 108px minmax(0,1fr) 60px 44px; height:850px; min-height:0; >header { display:grid; gap:t.space(2); h1 { min-height:2.6em; } p { min-height:1.5em; } } }
+.vue-bluff-clock { position:sticky; top:0; z-index:2; min-width:0; min-height:108px; background:var(--play-surface); .vue-room-countdown { width:100%; box-sizing:border-box; } >p { padding:t.space(3); } }
+.vue-bluff-live { min-width:0; min-height:0; overflow:auto; scrollbar-gutter:stable; display:flex; flex-direction:column; align-items:stretch; gap:t.space(4); padding:t.space(1); }
+.vue-bluff-candidates,.vue-bluff-actions { display:grid; align-content:start; gap:t.space(4); min-width:0; }
+.vue-bluff-candidates { grid-template-columns:repeat(3,minmax(0,1fr)); >button { min-height:150px; white-space:normal; overflow-wrap:anywhere; } }
+.vue-bluff-prompt { display:grid; gap:t.space(3); min-height:100px; overflow-wrap:anywhere; }
+.vue-bluff-private-slot { min-width:0; min-height:180px; padding:t.space(4); border:1px dashed var(--play-line); border-radius:t.space(3); display:grid; align-content:start; gap:t.space(3); }
+.vue-bluff-private-card { display:grid; gap:t.space(3); overflow-wrap:anywhere; }
+.vue-bluff-people { display:grid; gap:t.space(3); >article { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:t.space(2); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(3); strong { overflow-wrap:anywhere; } >div { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:t.space(3); } } }
+.vue-bluff-retry { display:flex; align-items:center; min-height:44px; }
+.vue-bluff-settings { display:grid; gap:t.space(3); min-width:0; fieldset { display:flex; flex-wrap:wrap; gap:t.space(3); margin:0; padding:t.space(3); min-width:0; } fieldset label { display:flex; align-items:center; gap:t.space(2); min-height:44px; } >label { display:grid; gap:t.space(2); } select { min-height:44px; width:100%; } }
+.vue-bluff-review { min-height:180px; >header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:t.space(4); } label { display:grid; gap:t.space(2); min-width:0; max-width:100%; } select { min-width:0; max-width:100%; min-height:44px; } }
+.vue-bluff-result { display:grid; align-content:start; gap:t.space(4); max-height:600px; overflow:auto; scrollbar-gutter:stable; overflow-wrap:anywhere; padding:t.space(1); a { min-height:44px; display:flex; align-items:center; } }
+.vue-bluff-scores { padding:0; margin:0; list-style:none; display:grid; gap:t.space(2); li { display:grid; grid-template-columns:minmax(0,1fr) 5em 5em 6em; gap:t.space(2); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(2); span:nth-last-child(-n+2) { font-variant-numeric:tabular-nums; text-align:end; } } }
+.vue-bluff-rankings { display:grid; gap:t.space(3); padding:0; list-style:none; li { display:grid; grid-template-columns:minmax(0,1fr) 6em; gap:t.space(3); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(2); } span { text-align:end; font-variant-numeric:tabular-nums; } strong { overflow-wrap:anywhere; } }
+.vue-bluff-ban { display:grid; gap:t.space(3); }
+.vue-bluff-live>.vue-bluff-review { display:grid; gap:t.space(4); min-height:0; }
+.vue-bluff-stage .vue-bluff-result { max-height:none; overflow:visible; }
+.vue-bluff-bots { display:grid; gap:t.space(3); margin-top:t.space(4); }
+.vue-bluff-settings-details { min-width:0; summary { min-height:44px; padding-block:t.space(2); cursor:pointer; overflow-wrap:anywhere; } }
+.vue-bluff-reaction-photo { width:48px; height:38px; object-fit:contain; }
+.vue-bluff-reactions { position:fixed; top:8px; left:50%; transform:translateX(-50%); z-index:160; width:min(400px,calc(100vw - 32px)); display:grid; gap:t.space(1); pointer-events:none; max-height:calc(100dvh - 16px); overflow:auto; >div { padding:t.space(2); border:1px solid var(--play-line); border-radius:t.space(3); color:var(--play-ink); background:var(--play-surface); box-shadow:0 4px 16px #0004; text-align:center; overflow-wrap:anywhere; } }
+@media(max-width:1500px) { .vue-bluff-candidates { grid-template-columns:minmax(0,1fr); >button { min-height:64px; } } .vue-bluff-scores li { grid-template-columns:minmax(0,1fr) 5em; >strong { grid-column:1/-1; } } }
+@media(max-width:760px) { .vue-bluff-stage { height:850px; } .vue-bluff-result { max-height:700px; } .vue-bluff-scores li { grid-template-columns:minmax(0,1fr) 6em; } }
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+  body.vue-bluff-document:not(.ui-large-text) {
+    margin:0;
+    .vue-game-document { height:100dvh; padding:0 t.space(6) t.space(2); display:grid; grid-template-rows:auto minmax(0,1fr); }
+    [data-site-header].vue-site-header { min-height:0; margin:0; padding:t.space(2) 0; }
+    .vue-site-header-content { min-height:44px; row-gap:0; }
+    .vue-site-header-feedback { position:absolute; top:calc(100% + 8px); right:0; width:min(480px,100%); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(3); background:var(--play-surface); z-index:140; }
+    .vue-site-header-feedback:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+    #bluff-app { min-height:0; }
+    .vue-game-workspace { height:100%; min-height:0; grid-template-rows:auto 48px minmax(0,1fr); gap:t.space(3); }
+    .vue-game-toolbar { min-height:44px; padding-block:t.space(2); gap:t.space(3); }
+    .vue-game-phase { min-height:24px; }
+    .vue-game-room-feedback { min-height:48px; height:48px; }
+    .vue-game-grid { min-height:0; }
+    .vue-game-main,.vue-game-side { overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; }
+    .vue-game-main { border:1px solid var(--play-line); border-radius:t.space(4); background:var(--play-surface); }
+    .vue-game-roster-panel { min-height:0; padding:t.space(3); .vue-roster-list { min-height:0; max-height:none; } }
+    .vue-game-settings-panel { flex:none; padding:t.space(3); gap:t.space(2); >p { display:none; } }
+    .vue-bluff-settings { max-height:280px; overflow:auto; scrollbar-gutter:stable; }
+    .vue-game-start-slot { min-height:44px; }
+    .vue-game-side { gap:t.space(3); >.vue-room-chat { flex:1; min-height:300px; padding:t.space(3); gap:t.space(2); } }
+    .vue-room-chat-content { grid-template-rows:0 minmax(60px,1fr) 0 auto 44px 48px; gap:t.space(2); }
+    .vue-chat-notice,.vue-chat-quick:empty { visibility:hidden; min-height:0; height:0; }
+    .vue-bluff-stage { flex:none; height:100%; box-sizing:border-box; border:0; border-radius:0; padding:t.space(4); gap:t.space(3); grid-template-rows:auto 56px minmax(0,1fr) 48px 44px; >header { gap:t.space(1); h1,p { min-height:0; } small { display:none; } } }
+    .vue-bluff-clock { min-height:56px; }
+    .vue-bluff-live.is-role { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto minmax(0,1fr); gap:t.space(3); .vue-bluff-prompt { grid-column:1; min-height:0; gap:t.space(2); } .vue-bluff-private-slot { grid-column:1; grid-row:2; min-height:0; overflow:auto; padding:t.space(3); } .vue-bluff-actions { grid-column:2; grid-row:1/span 2; min-height:0; overflow:auto; scrollbar-gutter:stable; gap:t.space(3); } }
+  }
+}

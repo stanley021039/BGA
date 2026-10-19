@@ -49,9 +49,7 @@ const countdownCaption = computed(() => state.value?.phase === 'choosing' ? '選
 const connectionNotice = computed(() => room.terminal ? room.error : room.connecting ? '正在恢復房間座位…' : room.disconnected ? room.error || '房間連線中斷，正在重試…' : state.value && !stream.value ? '即時連線重新連接中，房間狀態持續更新。' : '');
 const botAllowed = computed(() => { const value = state.value?.botSupport; return !value || typeof value !== 'object' || (value as Record<string, unknown>).canAdd !== false; });
 let disposed = false, ownFullscreen = false, previousFocus: HTMLElement | null = null, previousScroll = { x: 0, y: 0 };
-interface GameSoundOwner { update(value: DrawSnapshot, options: { connected: boolean }): boolean; play(cue: string, key: string, options: { live: boolean; epoch?: number }): void; epoch(): number; disconnect(): void; destroy(): void }
-declare global { interface Window { GameSounds?: { create(): GameSoundOwner } } }
-const sounds = window.GameSounds?.create();
+const sounds: import('../../contracts/sounds').GameSoundOwner | undefined = window.GameSounds?.create();
 let lastSeconds: number | null = null, timerEpoch = '', soundBaseline = true;
 let pendingHint: { scope: number; epoch: string } | null = null;
 function tick() {

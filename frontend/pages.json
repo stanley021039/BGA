@@ -78,5 +78,10 @@
     "id": "minimal",
     "document": "minimal.html",
     "route": "/minimal"
+  },
+  {
+    "id": "bluff",
+    "document": "bluff.html",
+    "route": "/bluff"
   }
 ]

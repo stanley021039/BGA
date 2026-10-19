@@ -6,7 +6,7 @@ withDefaults(defineProps<{ label: string; caption?: string; icon?: string; iconO
 </script>
 <template>
   <button :type="type" class="ui-button vue-button" :class="{ 'ui-icon-button': iconOnly, 'has-mobile-caption': iconOnly && !!caption, 'is-pending': pending }" :aria-label="label" :title="iconOnly ? label : undefined" :disabled="disabled || pending" :aria-busy="pending">
-    <UiIcon v-if="icon" :name="icon" class="ui-button-icon" />
+    <slot name="icon"><UiIcon v-if="icon" :name="icon" class="ui-button-icon" /></slot>
     <span class="vue-button-caption" :class="{ 'ui-sr-only': iconOnly }">{{ caption || label }}</span>
   </button>
 </template>

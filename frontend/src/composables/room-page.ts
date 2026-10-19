@@ -5,15 +5,15 @@ import { useRequests } from './requests';
 import { gamePath, readSeat, type GameType, type RoomSnapshot } from '../contracts/room';
 import { requestJson } from '../services/http';
 
-// The party games retain their existing two-second state protocol, without a second controller.
-export function useRoomPage(type: GameType, reader: (value: unknown) => RoomSnapshot) {
+// Each game retains its read cadence while sharing one non-overlapping controller.
+export function useRoomPage(type: GameType, reader: (value: unknown) => RoomSnapshot, pollMs = 2000) {
   const room = useRoomStore(), session = useSessionStore(), requests = useRequests();
   const match = new RegExp('^/' + gamePath(type) + '/([a-f0-9]{6})/?$','i').exec(location.pathname);
   const entryCode = ref(match?.[1]?.toUpperCase() || ''), entryBusy = ref(false), entryError = ref(''), reading = ref(false);
   const foreground = ref(!document.hidden), connected = computed(() => room.connected && !!room.snapshot && foreground.value);
   let disposed = false, timer: ReturnType<typeof setTimeout> | null = null, job: { controller: AbortController; promise: Promise<boolean> | null } | null = null;
   function stop() { if (timer) clearTimeout(timer); timer = null; job?.controller.abort(); job = null; reading.value = false; }
-  function schedule(delay = 2000) { if (timer) clearTimeout(timer); timer = null; if (!disposed && room.seat && !room.terminal && !document.hidden) timer = setTimeout(() => { timer = null; void refresh(); }, delay); }
+  function schedule(delay = pollMs) { if (timer) clearTimeout(timer); timer = null; if (!disposed && room.seat && !room.terminal && !document.hidden) timer = setTimeout(() => { timer = null; void refresh(); }, delay); }
   async function refresh(): Promise<boolean> {
     if (disposed || !room.seat || room.terminal || document.hidden) return false;
     if (job?.promise) return job.promise;
