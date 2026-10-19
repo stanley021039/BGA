@@ -26,7 +26,7 @@ export function readRoomSnapshot(value: unknown): RoomSnapshot {
     const player = record(value);
     if (!text(player.id) || !text(player.name)) throw Error('玩家資料格式不正確');
     return { ...player, id: text(player.id), name: text(player.name), avatar: text(player.avatar) || null,
-      bot: player.bot === true, kicked: player.kicked === true, online: player.online !== false,
+      bot: player.bot === true, kicked: player.kicked === true, online: player.online !== false && player.offline !== true,
       roomRole: typeof player.roomRole === 'string' ? player.roomRole : null,
     } satisfies RoomPlayer;
   });
@@ -50,4 +50,50 @@ export function staleSnapshot(next: RoomSnapshot, current: RoomSnapshot | null):
 }
 export function isRoomHost(snapshot: RoomSnapshot | null): boolean {
   return !!snapshot && (snapshot.host === true || snapshot.host === snapshot.me || snapshot.hostId === snapshot.me);
+}
+export type RoomRole = 'host' | 'manager' | 'member' | null;
+export function myRoomRole(snapshot: RoomSnapshot | null): RoomRole {
+  if (!snapshot) return null;
+  const permissions = snapshot.permissions;
+  if (permissions && typeof permissions === 'object') {
+    const role = (permissions as Record<string, unknown>).role;
+    return role === 'host' || role === 'manager' || role === 'member' ? role : null;
+  }
+  return isRoomHost(snapshot) ? 'host' : 'member';
+}
+function permission(snapshot: RoomSnapshot, name: string): boolean {
+  return !snapshot.permissions || typeof snapshot.permissions === 'object' && (snapshot.permissions as Record<string, unknown>)[name] === true;
+}
+export function canManagePlayers(snapshot: RoomSnapshot | null): boolean {
+  return !!snapshot && ['host', 'manager'].includes(myRoomRole(snapshot) || '') && permission(snapshot, 'canManagePlayers');
+}
+export function playerRoomRole(player: RoomPlayer, snapshot: RoomSnapshot): RoomRole {
+  if (player.bot) return null;
+  if (player.roomRole === 'host' || player.roomRole === 'manager' || player.roomRole === 'member') return player.roomRole;
+  return player.id === snapshot.hostId || player.id === snapshot.me && isRoomHost(snapshot) ? 'host' : 'member';
+}
+export function mayKickPlayer(player: RoomPlayer | undefined, snapshot: RoomSnapshot | null): boolean {
+  if (!snapshot || !canManagePlayers(snapshot) || !player || player.kicked || player.id === snapshot.me || playerRoomRole(player, snapshot) === 'host') return false;
+  return myRoomRole(snapshot) === 'host' || !player.bot && playerRoomRole(player, snapshot) === 'member';
+}
+export function maySetPlayerRole(player: RoomPlayer | undefined, snapshot: RoomSnapshot | null): boolean {
+  return !!snapshot && canManagePlayers(snapshot) && myRoomRole(snapshot) === 'host' && permission(snapshot, 'canPromote') && !!player && !player.kicked && !player.bot && player.id !== snapshot.me && playerRoomRole(player, snapshot) !== 'host';
+}
+export function leaveEffect(snapshot: RoomSnapshot): string {
+  const setup = ['waiting', 'finished', 'showdown'].includes(snapshot.phase);
+  if (snapshot.type === 'trpg' && !setup) return '離席會移除自己的未結算行動；領隊離席時移交領隊，其他玩家可繼續。已揭曉的結果保留。離開後返回遊戲大廳。';
+  return ['telephone','musicquiz','minimal','bluff','quacks'].includes(snapshot.type) && !setup
+    ? '離席會中止本場遊戲，保留已完成內容。離開後返回遊戲大廳。'
+    : snapshot.type === 'draw' && !setup ? '畫者離席會揭曉本輪；人數不足時本場結束。離開後返回遊戲大廳。'
+    : '離開後返回遊戲大廳；房主離開時依遊戲規則移交房主或結束房間。';
+}
+export function kickEffect(snapshot: RoomSnapshot): string {
+  if (snapshot.phase === 'waiting') return '玩家將從等待室移除。';
+  if (snapshot.type === 'majority') return '尚未結算的答案與預備題目將移除；人數不足時會提前結束本局。';
+  if (snapshot.type === 'gift') return '玩家的未揭曉禮物與喜好將移除；人數不足時本局提前結束。';
+  if (snapshot.type === 'draw') return '畫者離開會揭曉本輪；人數不足時本局提前結束。';
+  if (['telephone','musicquiz','minimal','bluff','quacks'].includes(snapshot.type)) return '玩家離席會中止本場遊戲，保留已完成內容。';
+  if (snapshot.type === 'trpg') return '玩家的未結算行動將移除；領隊離席時移交領隊，其他玩家可繼續。已揭曉的結果保留。';
+  if (snapshot.type === 'poker' && snapshot.phase === 'showdown') return '玩家將從牌桌移除。';
+  return '對局中的車隊或牌手將由電腦接手，其他玩家繼續遊戲。';
 }

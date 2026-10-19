@@ -5,7 +5,7 @@ import { gamePath, gameTypes, isRoomHost, readRoomSnapshot, readSeat, sameRoom, 
 import type { GameType, RoomSeat, RoomSnapshot } from '../contracts/room';
 
 type Terminal = 'kicked' | 'not-seated' | 'closed' | 'replaced' | null;
-interface RequestOptions { signal?: AbortSignal }
+interface RequestOptions { signal?: AbortSignal; query?: Record<string, string | number | boolean> }
 // A document has one room owner. Game domains keep their own detailed contracts.
 export const useRoomStore = defineStore('room', () => {
   const code = ref(''), type = ref<GameType>('poker'), seat = shallowRef<RoomSeat | null>(null), snapshot = shallowRef<RoomSnapshot | null>(null);
@@ -49,7 +49,9 @@ export const useRoomStore = defineStore('room', () => {
     try {
       options.signal?.throwIfAborted();
       const post = data !== undefined;
-      const result = await requestJson('/api/' + route + (post ? '' : '?code=' + encodeURIComponent(roomCode)), {
+      const query = new URLSearchParams(Object.entries(options.query || {}).map(([key, value]) => [key, String(value)]));
+      if (!post) query.set('code', roomCode); else query.delete('code');
+      const result = await requestJson('/api/' + route + (query.size ? '?' + query.toString() : ''), {
         method: post ? 'POST' : 'GET', ...(post ? { body: { ...data, code: roomCode } } : {}), signal: controller.signal,
       });
       controller.signal.throwIfAborted();
@@ -109,9 +111,11 @@ export const useRoomStore = defineStore('room', () => {
   async function command(route: string, data: Record<string, unknown> = {}): Promise<boolean> {
     if (busy.value || !seat.value || terminal.value) return false;
     const epoch = scope.value;
+    const timeout = new AbortController();
+    const timer = setTimeout(() => timeout.abort(new DOMException('送出結果尚未確認，請查看最新房間狀態後再操作。', 'TimeoutError')), 10000);
     busy.value = true; message.value = '正在送出…'; failed.value = false;
     try {
-      const result = await request(route, data);
+      const result = await request(route, data, { signal: timeout.signal });
       if (epoch !== scope.value || disposed) return false;
       const row = result && typeof result === 'object' ? result as Record<string, unknown> : null;
       if (row?.phase && Array.isArray(row.players)) {
@@ -122,7 +126,7 @@ export const useRoomStore = defineStore('room', () => {
     } catch (cause) {
       if (epoch === scope.value && !disposed && !(cause instanceof DOMException && cause.name === 'AbortError')) { failed.value = true; message.value = cause instanceof Error ? cause.message : '送出失敗，請重試'; }
       return false;
-    } finally { if (epoch === scope.value && !disposed) busy.value = false; }
+    } finally { clearTimeout(timer); if (epoch === scope.value && !disposed) busy.value = false; }
   }
   function lostConnection(cause?: unknown) { disconnected.value = true; if (cause instanceof Error) error.value = cause.message; }
   const reconnect = () => open(code.value, type.value, readSnapshot);

@@ -1,0 +1,33 @@
+@use 'tokens';
+
+.vue-player-name { display: block; min-inline-size: 0; max-inline-size: 100%; font-size: 1rem; font-weight: 700; }
+.vue-player-avatar { position: relative; display: grid; place-items: center; inline-size: 2.5rem; block-size: 2.5rem; flex: none; overflow: hidden; border-radius: .5rem; background: var(--play-surface, #fffdf8); }
+.vue-player-avatar > img { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: contain; }
+.vue-room-roster { display: grid; grid-template-rows: auto minmax(0, 1fr) 3rem; gap: tokens.space(4); min-inline-size: 0; min-block-size: 0; }
+.vue-room-roster > header { display: grid; grid-template-columns: minmax(0, 1fr) 8ch; align-items: center; gap: tokens.space(2); }
+.vue-room-roster h2 { margin: 0; }
+.vue-roster-count { text-align: end; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.vue-roster-list { display: flex; flex-direction: column; gap: tokens.space(3); min-inline-size: 0; min-block-size: 0; margin: 0; padding: tokens.space(1); list-style: none; overflow: auto; scrollbar-gutter: stable; }
+.vue-room-player { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 4rem; align-items: start; gap: tokens.space(3); flex-shrink: 0; min-inline-size: 0; padding: tokens.space(3); border: 1px solid var(--play-line, #a59b96); border-radius: .75rem; }
+.vue-room-player[data-actor=true] { border-width: 2px; padding: calc(#{tokens.space(3)} - 1px); }
+.vue-room-player-copy { min-inline-size: 0; }
+.vue-room-player-name { display: flex; align-items: center; gap: tokens.space(2); min-inline-size: 0; }
+.vue-room-player-name > .vue-player-name { flex: 1; }
+.vue-player-self { flex: none; font-size: .875rem; }
+.vue-room-player-status { block-size: 3em; overflow: auto; margin: tokens.space(2) 0 0; font-size: .875rem; line-height: 1.5; }
+.vue-room-player-metric { display: grid; justify-items: end; gap: tokens.space(1); min-inline-size: 0; }
+.vue-room-player-metric strong { max-inline-size: 100%; overflow: auto; font-variant-numeric: tabular-nums; font-size: 1rem; }
+.vue-room-player-metric span { font-size: .875rem; }
+.vue-room-roster > footer, .vue-room-management-actions { display: flex; flex-wrap: wrap; align-items: center; gap: tokens.space(3); }
+.vue-room-management-list { display: grid; gap: tokens.space(3); max-block-size: min(28rem, 48dvh); overflow: auto; scrollbar-gutter: stable; }
+.vue-room-management-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: tokens.space(4); padding: tokens.space(3); border: 1px solid var(--play-line, #a59b96); border-radius: .5rem; }
+.vue-room-management-row > div { min-inline-size: 0; }
+.vue-room-management-row small { display: block; margin-block-start: tokens.space(2); font-size: .875rem; }
+.vue-room-leave-image { display: block; inline-size: 100%; block-size: auto; aspect-ratio: 640/361; border-radius: .5rem; }
+@media(max-width:760px) {
+  .vue-room-roster { gap: tokens.space(3); grid-template-rows: auto minmax(0, 1fr) 4rem; }
+  .vue-room-player { grid-template-columns: 2.5rem minmax(0, 1fr) 3rem; gap: tokens.space(2); padding: tokens.space(2); }
+  .vue-room-player[data-actor=true] { padding: calc(#{tokens.space(2)} - 1px); }
+  .vue-room-management-row { grid-template-columns: minmax(0, 1fr); gap: tokens.space(3); }
+  .vue-room-management-actions { justify-content: start; }
+}

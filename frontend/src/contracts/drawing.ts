@@ -29,6 +29,8 @@ function ids(value: unknown): string[] {
 export function readDrawSnapshot(value: unknown): DrawSnapshot {
   const room = readRoomSnapshot(value);
   if (room.type !== 'draw' || !['waiting', 'choosing', 'drawing', 'reveal', 'finished'].includes(room.phase)) throw Error('這不是你畫我猜房間');
+  const options = record(room.options);
+  if (typeof options.seconds !== 'number' || ![60, 90, 120].includes(options.seconds)) throw Error('作畫時間資料格式不正確');
   if (!integer(room.version) || !integer(room.round) || !integer(room.roundLimit) || !integer(room.strokeVersion) || !text(room.canvasEpoch) ||
     room.presenterId !== null && typeof room.presenterId !== 'string' || room.deadline !== null && (typeof room.deadline !== 'number' || !Number.isFinite(room.deadline))) throw Error('畫猜回合資料格式不正確');
   return { ...room, round: room.round, roundLimit: room.roundLimit, strokeVersion: room.strokeVersion, canvasEpoch: text(room.canvasEpoch),
