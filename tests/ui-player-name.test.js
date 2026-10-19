@@ -1,7 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const uiSource=fs.readFileSync(path.join(__dirname,'../public/shared/ui-components.js'),'utf8'),motionSource=fs.readFileSync(path.join(__dirname,'../public/shared/motion-policy.js'),'utf8');
 function harness({reduced=false,enabled=true}={}){
- const frames=new Map(),observers=[],resizers=[],mutations=[];let nextFrame=0,document;
+ const frames=new Map(),timers=new Map(),observers=[],resizers=[],mutations=[];let nextFrame=0,nextTimer=0,pointerX=0,document;
  function events(target){const listeners=new Map();return Object.assign(target,{addEventListener(type,fn){const entries=listeners.get(type)||new Set();entries.add(fn);listeners.set(type,entries);},dispatch(type,event={}){for(const fn of [...listeners.get(type)||[]])fn(event);}});}
  class Element{
   constructor(tag='span'){this.nodeType=1;this.tagName=tag.toUpperCase();this.children=[];this.parentElement=null;this.attributes=new Map();this.dataset={};this._text='';this.width=100;this.textWidth=100;this.reads=0;this.rect={left:520,top:360,width:100,height:40,right:620,bottom:400};
@@ -18,7 +18,7 @@ function harness({reduced=false,enabled=true}={}){
   append(...children){for(const child of children){child.parentElement=this;this.children.push(child);}mutations.push({type:'childList',target:this,addedNodes:children,removedNodes:[]});}
   replaceChildren(...children){for(const child of this.children)child.parentElement=null;this.children=[];this.append(...children);}
   contains(node){return node===this||this.children.some(child=>child.contains(node));}
-  matches(selector){return selector.split(',').some(part=>{part=part.trim();return part==='[data-ui-hint]'?this.hasAttribute('data-ui-hint'):['.ui-player-name','.ui-player-name-text','.ui-icon-button'].includes(part)&&this.classList.contains(part.slice(1));});}
+  matches(selector){return selector.split(',').some(part=>{part=part.trim();return part===':focus-visible'?document.activeElement===this&&this.focusVisible===true:part==='[data-ui-hint]'?this.hasAttribute('data-ui-hint'):['.ui-player-name','.ui-player-name-text','.ui-icon-button'].includes(part)&&this.classList.contains(part.slice(1));});}
   closest(selector){return this.matches(selector)?this:this.parentElement?.closest(selector)||null;}
   querySelectorAll(selector){return this.children.flatMap(child=>[...(child.matches(selector)?[child]:[]),...child.querySelectorAll(selector)]);}
   querySelector(selector){return this.querySelectorAll(selector)[0]||null;}
@@ -31,13 +31,16 @@ function harness({reduced=false,enabled=true}={}){
  const media=events({matches:reduced}),window=events({document,innerWidth:640,innerHeight:480,matchMedia:()=>media,requestAnimationFrame(fn){const id=++nextFrame;frames.set(id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id)}),storage=new Map();
  class MutationObserver{constructor(callback){this.callback=callback;this.targets=[];observers.push(this);}observe(target,options){this.targets.push({target,options});}disconnect(){this.targets=[];}}
  class ResizeObserver{constructor(callback){this.callback=callback;this.targets=new Set();resizers.push(this);}observe(target){this.targets.add(target);}unobserve(target){this.targets.delete(target);}disconnect(){this.targets.clear();}}
- const context=vm.createContext({window,document,MutationObserver,ResizeObserver,localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},getComputedStyle:node=>({fontSize:'16px',visibility:node.style.getPropertyValue('visibility')||'visible'})});
+ const context=vm.createContext({window,document,MutationObserver,ResizeObserver,setTimeout(fn){const id=++nextTimer;timers.set(id,fn);return id;},clearTimeout:id=>timers.delete(id),localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},getComputedStyle:node=>({fontSize:'16px',visibility:node.style.getPropertyValue('visibility')||'visible'})});
  vm.runInContext(motionSource,context);window.MotionPolicy.set({enabled});vm.runInContext(uiSource,context);
  function deliver(){const batch=mutations.splice(0);for(const observer of observers){const records=batch.filter(record=>observer.targets.some(({target,options})=>(record.target===target||options.subtree&&target.contains(record.target))&&(record.type==='attributes'?options.attributes&&(!options.attributeFilter||options.attributeFilter.includes(record.attributeName)):options[record.type])));if(records.length)observer.callback(records);}}
  function flush(){for(let rounds=0;rounds<20;rounds++){deliver();if(!frames.size){if(!mutations.length)return;continue;}const pending=[...frames.values()];frames.clear();for(const fn of pending)fn();}throw Error('observer/frame loop did not settle');}
  function name(value,{width=100,textWidth=100,tabindex=null,parent=body}={}){const slot=new Element(),text=new Element();slot.className='ui-player-name';text.className='ui-player-name-text';slot.setAttribute('title',value);if(tabindex!==null)slot.setAttribute('tabindex',tabindex);slot.width=width;text.textWidth=textWidth;text.textContent=value;slot.append(text);parent.append(slot);return{slot,text};}
  function resize(...nodes){for(const observer of resizers)observer.callback(nodes.filter(node=>observer.targets.has(node)).map(target=>({target})));}
- return{window,document,media,frames,resizers,observers,body,name,resize,flush,deliver,Element,hide(value){document.hidden=value;document.dispatch('visibilitychange');},reduce(value){media.matches=value;media.dispatch('change');}};
+ function pointerMove(target,options={}){document.dispatch('pointermove',{target,pointerType:'mouse',buttons:0,clientX:++pointerX,clientY:20,...options});}
+ function keyboardFocus(target,key='Tab'){document.dispatch('keydown',{key});document.activeElement=target;target.focusVisible=true;document.dispatch('focusin',{target});}
+ function flushTimers(){const pending=[...timers.values()];timers.clear();for(const fn of pending)fn();}
+ return{window,document,media,frames,resizers,observers,body,name,resize,flush,deliver,Element,pointerMove,keyboardFocus,flushTimers,hide(value){document.hidden=value;document.dispatch('visibilitychange');},reduce(value){media.matches=value;media.dispatch('change');}};
 }
 
 test('playerName escapes both contexts and preserves one full readable name with a title',()=>{
@@ -120,25 +123,37 @@ test('overflowText preserves escaped one-line content and opts into intent-only 
 test('icon hints reuse one top-layer node, clamp near the viewport edge and restore titles/descriptions on Escape',()=>{
  const h=harness(),button=new h.Element('button');h.body.append(button);button.setAttribute('aria-describedby','caller-help');h.window.GameUI.decorateButton(button,'remove',{iconOnly:true,label:'移除這筆媒體'});
  assert.equal(button.title,'移除這筆媒體');assert.equal(button.getAttribute('aria-label'),'移除這筆媒體');assert.equal(button.classList.contains('ui-icon-button'),true);button.setAttribute('title',button.title);
- h.document.activeElement=button;h.document.dispatch('focusin',{target:button});const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.ok(hint.popoverOpen);assert.equal(hint.textContent,'移除這筆媒體');assert.equal(button.getAttribute('title'),'');assert.equal(button.getAttribute('aria-describedby'),'caller-help ui-control-hint');
+ h.keyboardFocus(button);const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.ok(hint.popoverOpen);assert.equal(hint.textContent,'移除這筆媒體');assert.equal(button.getAttribute('title'),'');assert.equal(button.getAttribute('aria-describedby'),'caller-help ui-control-hint');
  assert.ok(parseFloat(hint.style.getPropertyValue('left'))+hint.rect.width<=632);assert.equal(hint.style.getPropertyValue('top'),'408px');
  let prevented=false;h.document.dispatch('keydown',{key:'Escape',preventDefault(){prevented=true;}});assert.equal(prevented,false,'hint cleanup must preserve the owning dialog Escape behavior');assert.equal(hint.hidden,true);assert.equal(hint.popoverOpen,false);assert.equal(button.getAttribute('title'),'移除這筆媒體');assert.equal(button.getAttribute('aria-describedby'),'caller-help');
- h.document.dispatch('pointerover',{target:button});assert.equal(h.body.children.filter(node=>node.classList.contains('ui-control-tooltip')).length,1);button.remove();h.deliver();assert.equal(hint.hidden,true);
+ h.pointerMove(button);assert.equal(hint.hidden,false);assert.equal(h.body.children.filter(node=>node.classList.contains('ui-control-tooltip')).length,1);button.remove();h.deliver();assert.equal(hint.hidden,true);
 });
 
 test('icon hints stay reachable when moving into the hint and release on pointer-down, hidden or pagehide',()=>{
- const h=harness(),button=new h.Element('button');h.body.append(button);h.window.GameUI.decorateButton(button,'add',{iconOnly:true,label:'加入播放清單'});button.setAttribute('title',button.title);h.document.dispatch('pointerover',{target:button});const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));
+ const h=harness(),button=new h.Element('button');h.body.append(button);h.window.GameUI.decorateButton(button,'add',{iconOnly:true,label:'加入播放清單'});button.setAttribute('title',button.title);h.pointerMove(button);const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));
  h.document.dispatch('pointerout',{target:button,relatedTarget:hint});assert.equal(hint.hidden,false);h.document.dispatch('pointerout',{target:hint,relatedTarget:h.body});assert.equal(hint.hidden,true);
- h.document.dispatch('focusin',{target:button});h.hide(true);assert.equal(hint.hidden,true);h.hide(false);h.document.dispatch('focusin',{target:button});h.document.dispatch('pointerdown',{target:button});assert.equal(hint.hidden,true);h.document.dispatch('focusin',{target:button});h.window.dispatch('pagehide',{persisted:true});assert.equal(hint.hidden,true);
+ h.keyboardFocus(button);assert.equal(hint.hidden,false);h.hide(true);assert.equal(hint.hidden,true);h.hide(false);h.keyboardFocus(button);assert.equal(hint.hidden,false);h.document.dispatch('pointerdown',{target:button,clientX:10,clientY:20});assert.equal(hint.hidden,true);h.keyboardFocus(button);assert.equal(hint.hidden,false);h.window.dispatch('pagehide',{persisted:true});assert.equal(hint.hidden,true);
 });
 
 test('unsupported top-layer hints keep the native title and accessible label without a visible fallback overlay',()=>{
- const h=harness(),button=new h.Element('button');h.body.append(button);h.window.GameUI.decorateButton(button,'play',{iconOnly:true,label:'全桌播放'});button.setAttribute('title',button.title);h.Element.prototype.showPopover=undefined;h.document.dispatch('focusin',{target:button});
+ const h=harness(),button=new h.Element('button');h.body.append(button);h.window.GameUI.decorateButton(button,'play',{iconOnly:true,label:'全桌播放'});button.setAttribute('title',button.title);h.Element.prototype.showPopover=undefined;h.keyboardFocus(button);
  assert.equal(button.getAttribute('title'),'全桌播放');assert.equal(button.getAttribute('aria-label'),'全桌播放');assert.equal(button.getAttribute('aria-describedby'),null);const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.notEqual(hint.hidden,false);
 });
 
 test('image-only expression cards share hover and focus hints without icon-button geometry or replacing the image',()=>{
  const h=harness(),card=new h.Element('button'),image=new h.Element('img');card.setAttribute('data-ui-hint','');card.setAttribute('aria-label','送出「開心」表情');card.setAttribute('title','送出「開心」表情');card.append(image);h.body.append(card);
- h.document.dispatch('pointerover',{target:image});const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.equal(hint.textContent,'送出「開心」表情');assert.equal(hint.popoverOpen,true);assert.equal(card.classList.contains('ui-icon-button'),false);assert.equal(card.children[0],image);
- h.document.dispatch('keydown',{key:'Escape'});assert.equal(hint.hidden,true);assert.equal(card.getAttribute('title'),'送出「開心」表情');h.document.dispatch('focusin',{target:card});assert.equal(hint.popoverOpen,true);assert.equal(card.children[0],image);card.remove();h.deliver();assert.equal(hint.hidden,true);
+ h.pointerMove(image);const hint=h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));assert.equal(hint.textContent,'送出「開心」表情');assert.equal(hint.popoverOpen,true);assert.equal(card.classList.contains('ui-icon-button'),false);assert.equal(card.children[0],image);
+ h.document.dispatch('keydown',{key:'Escape'});assert.equal(hint.hidden,true);assert.equal(card.getAttribute('title'),'送出「開心」表情');h.keyboardFocus(card);assert.equal(hint.popoverOpen,true);assert.equal(card.children[0],image);card.remove();h.deliver();assert.equal(hint.hidden,true);
+});
+
+test('layout hover and automatic focus do not open hints without fresh pointer or keyboard navigation',()=>{
+ const h=harness(),button=new h.Element('button');h.body.append(button);h.window.GameUI.decorateButton(button,'add',{iconOnly:true,label:'加入播放清單'});button.setAttribute('title',button.title);
+ const hint=()=>h.body.children.find(node=>node.classList.contains('ui-control-tooltip'));
+ h.document.dispatch('pointerover',{target:button,pointerType:'mouse',clientX:10,clientY:20});h.document.activeElement=button;button.focusVisible=true;h.document.dispatch('focusin',{target:button});assert.equal(hint(),undefined);assert.equal(button.getAttribute('title'),'加入播放清單');assert.equal(button.getAttribute('aria-describedby'),null);
+ h.pointerMove(button,{pointerType:'touch'});h.pointerMove(button,{buttons:1});assert.equal(hint(),undefined);
+ h.document.dispatch('pointerdown',{target:button,clientX:10,clientY:20});h.pointerMove(button,{clientX:10,clientY:20});assert.equal(hint(),undefined,'stationary pointer after a click must not open a hint');
+ h.pointerMove(button,{clientX:11,clientY:20});assert.equal(hint().hidden,false,'actual mouse movement opens the hint');h.document.dispatch('keydown',{key:'Escape'});assert.equal(hint().hidden,true);
+ h.document.dispatch('keydown',{key:'Tab'});h.flushTimers();h.document.dispatch('focusin',{target:button});assert.equal(hint().hidden,true,'expired keyboard intent must not leak into later automatic focus');
+ h.document.dispatch('keydown',{key:'Tab'});button.focusVisible=false;h.document.dispatch('focusin',{target:button});assert.equal(hint().hidden,true,'keyboard intent still requires visible focus');
+ h.keyboardFocus(button,'ArrowRight');assert.equal(hint().hidden,false,'keyboard navigation with visible focus opens the hint');h.document.dispatch('pointerdown',{target:button,clientX:11,clientY:20});h.document.dispatch('focusin',{target:button});assert.equal(hint().hidden,true,'pointer-down cancels keyboard intent before automatic focus');
 });
