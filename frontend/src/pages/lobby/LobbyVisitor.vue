@@ -7,13 +7,13 @@ const node = ref<HTMLElement | null>(null), speech = ref<HTMLElement | null>(nul
 const prefs = usePreferencesStore(), still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 let disposed = false, revision = 0, frame = 0, observer: ResizeObserver | null = null;
 function positionBubble() { if (!node.value || !speech.value) return; const stage = node.value.closest('.lobby-stage')?.getBoundingClientRect(), box = node.value.getBoundingClientRect(), half = speech.value.offsetWidth / 2; if (!stage) return; const center = box.left + box.width / 2, safe = Math.max(stage.left + half + 8, Math.min(stage.right - half - 8, center)); bubbleLeft.value = `calc(50% + ${safe - center}px)`; }
-watch(() => [props.visitor.moveId, props.reset], async (_, previous) => {
+watch([() => props.visitor.moveId, () => props.reset], async (_, previous) => {
   const epoch = ++revision, initial = !previous || previous[1] !== props.reset;
   if (initial) { placing.value = true; duration.value = 0; left.value = props.visitor.x; top.value = props.visitor.y; await nextTick(); if (disposed || epoch !== revision) return; node.value?.getBoundingClientRect(); }
   duration.value = props.visitor.moveId === 0 || still.value ? 0 : Math.max(350, props.visitor.remainingMs);
   placing.value = false; left.value = props.visitor.moving ? props.visitor.targetX : props.visitor.x; top.value = props.visitor.moving ? props.visitor.targetY : props.visitor.y;
 }, { immediate: true });
-watch(() => [props.visitor.x, props.visitor.y, props.visitor.emote?.id], async () => { await nextTick(); if (!disposed) { positionBubble(); if (!observer && node.value) { observer = new ResizeObserver(positionBubble); const stage = node.value.closest('.lobby-stage'); if (stage) observer.observe(stage); } } }, { immediate: true });
+watch([() => props.visitor.x, () => props.visitor.y, () => props.visitor.emote?.id], async () => { await nextTick(); if (!disposed) { positionBubble(); if (!observer && node.value) { observer = new ResizeObserver(positionBubble); const stage = node.value.closest('.lobby-stage'); if (stage) observer.observe(stage); } } }, { immediate: true });
 function transition() { if (frame) cancelAnimationFrame(frame); const epoch = revision; const tick = () => { frame = 0; if (disposed || document.hidden || !props.connected || epoch !== revision || !props.visitor.emote) return; positionBubble(); frame = requestAnimationFrame(tick); }; if (props.visitor.emote && props.connected && !document.hidden) frame = requestAnimationFrame(tick); }
 onBeforeUnmount(() => { disposed = true; revision++; observer?.disconnect(); if (frame) cancelAnimationFrame(frame); });
 </script>

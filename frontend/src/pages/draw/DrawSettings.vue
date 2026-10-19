@@ -17,7 +17,7 @@ const save = useQueuedSave<Record<string, unknown>>({ allowed: () => editable.va
 const { pending, error, saved } = save;
 const dirty = computed(() => canonical.value !== null && drawSettingsKey(draft) !== canonical.value);
 let syncing = false;
-watch(() => [JSON.stringify(props.snapshot.options), editable.value, room.scope], () => {
+watch([() => JSON.stringify(props.snapshot.options), () => editable.value, () => room.scope], () => {
   const value = readDrawSettings(props.snapshot.options), key = drawSettingsKey(value);
   const adopt = canonical.value === null || !editable.value || !pending.value && !dirty.value;
   canonical.value = key;

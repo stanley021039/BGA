@@ -26,8 +26,8 @@
 .vue-frame-filters label { display: grid; gap: tokens.space(2); }
 .vue-frame-filters :is(input, select) { inline-size: 100%; min-inline-size: 0; }
 @media(max-width:760px) {
-  .vue-button.ui-icon-button { inline-size: auto; width: auto; }
-  .vue-button .vue-button-caption.ui-sr-only { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; white-space: normal; }
+  .vue-button.ui-icon-button.has-mobile-caption { inline-size: auto; width: auto; }
+  .vue-button.has-mobile-caption .vue-button-caption.ui-sr-only { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; white-space: normal; }
   .vue-dialog { inline-size: calc(100vw - 1rem); max-inline-size: calc(100vw - 1rem); padding: tokens.space(3); }
   .vue-dialog-content, .vue-dialog .barrage-frame-grid { padding: 0; }
   .vue-frame-filters { grid-template-columns: minmax(0, 1fr); }

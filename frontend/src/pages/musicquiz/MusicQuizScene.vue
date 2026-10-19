@@ -12,13 +12,13 @@ const active=computed(()=>room.connected&&!room.terminal),blocked=computed(()=>!
 let savedKey='';
 function save(){if(!savedKey)return;try{sessionStorage.setItem(savedKey,JSON.stringify({text:draft.value}));}catch{storageNotice.value='此分頁無法保存草稿，請保持頁面開啟。';}}
 function forget(){if(savedKey)try{sessionStorage.removeItem(savedKey);}catch{}savedKey='';}
-watch(()=>[draftIdentity.value,state.value?.phase,state.value?.submitted],()=>{
+watch([()=>draftIdentity.value,()=>state.value?.phase,()=>state.value?.submitted],()=>{
   if(!state.value)return;
   if(state.value.phase!=='answering'||state.value.submitted){forget();draft.value='';localError.value='';return;}
   const next=draftIdentity.value;if(next===savedKey)return;forget();savedKey=next;draft.value='';
   try{const cached=JSON.parse(sessionStorage.getItem(next)||'null');if(typeof cached?.text==='string'&&cached.text.length<=80&&!/[\u0000-\u001f\u007f]/.test(cached.text))draft.value=cached.text;}catch{storageNotice.value='無法讀取先前草稿，請重新輸入。';}
 },{immediate:true});
-watch(()=>[room.scope,state.value?.roundId,state.value?.phase,state.value?.submitted],()=>{confirm.value?.cancel();localError.value='';});
+watch([()=>room.scope,()=>state.value?.roundId,()=>state.value?.phase,()=>state.value?.submitted],()=>{confirm.value?.cancel();localError.value='';});
 function limit(){if(!composing.value){let value='';for(const glyph of draft.value){if(value.length+glyph.length>80)break;value+=glyph;}draft.value=value;save();}}
 async function guess(){if(composing.value||blocked.value||state.value.phase!=='answering'||state.value.submitted)return;const value=draft.value.trim();if(!value){localError.value='請輸入歌名，或選擇略過。';return;}localError.value='';save();const key=draftIdentity.value;if(await actions.command('guess',{text:value})&&key===draftIdentity.value)forget();}
 async function pass(){if(blocked.value||state.value.phase!=='answering'||state.value.submitted)return;const scope=room.scope,round=state.value.roundId;if(!await confirm.value?.ask('略過後，本題不能再送出歌名。','略過這一題？'))return;if(scope===room.scope&&round===state.value.roundId&&state.value.phase==='answering'&&!state.value.submitted&&!blocked.value)await actions.command('guess',{text:'',pass:true});}

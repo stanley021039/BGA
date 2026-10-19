@@ -8,7 +8,7 @@ const props = defineProps<{ snapshot: DrawSnapshot }>(), room = useRoomStore();
 const draft = ref(''), input = ref<HTMLInputElement | null>(null), feed = ref<HTMLElement | null>(null), notice = ref(''), failed = ref(false), composing = ref(false);
 const eligible = computed(() => props.snapshot.phase === 'drawing' && props.snapshot.participantIds.includes(props.snapshot.me) && !props.snapshot.guessedIds.includes(props.snapshot.me));
 const hint = computed(() => props.snapshot.presenterId === props.snapshot.me ? '你是本輪畫者，其他朋友來猜題。' : props.snapshot.guessedIds.includes(props.snapshot.me) ? '你已猜中，等待其他朋友。' : props.snapshot.phase !== 'drawing' ? '本輪已揭曉。' : !props.snapshot.participantIds.includes(props.snapshot.me) ? '你將從下一輪開始猜題。' : '輸入答案，按 Enter 送出。');
-watch(() => [props.snapshot.canvasEpoch, room.scope], () => { draft.value = notice.value = ''; failed.value = false; });
+watch([() => props.snapshot.canvasEpoch, () => room.scope], () => { draft.value = notice.value = ''; failed.value = false; });
 watch(() => props.snapshot.guesses, async () => { const host = feed.value, follow = !host || host.scrollHeight - host.scrollTop - host.clientHeight < 40; await nextTick(); if (follow && feed.value) feed.value.scrollTop = feed.value.scrollHeight; });
 async function submit() {
   if (composing.value || !eligible.value || room.busy) return;

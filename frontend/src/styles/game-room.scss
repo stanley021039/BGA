@@ -1,5 +1,5 @@
 @use 'tokens' as t;
-.vue-game-document { width:100%; max-width:1920px; margin:auto; padding:0 t.space(8) t.space(8); color:var(--play-ink); }
+.vue-game-document { box-sizing:border-box; width:100%; max-width:1920px; margin:auto; padding:0 t.space(8) t.space(8); color:var(--play-ink); }
 .vue-game-entry { min-height:60dvh; display:grid; place-items:center; >div { width:min(100%,600px); padding:t.space(8); border:1px solid var(--play-line); border-radius:t.space(4); background:var(--play-surface); } }
 .vue-game-entry-actions { display:flex; align-items:center; flex-wrap:wrap; gap:t.space(4); }
 .vue-game-workspace { display:grid; gap:t.space(4); }

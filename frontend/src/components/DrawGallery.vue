@@ -38,7 +38,7 @@ async function favorite() {
   if (scope === room.scope && results.enabled) await results.unsave(id);
 }
 function close() { opened.value = false; confirmation.value?.cancel(); }
-watch(() => [results.filtered.map(result => result.resultId).join('|'), results.view?.selectedId], () => {
+watch([() => results.filtered.map(result => result.resultId).join('|'), () => results.view?.selectedId], () => {
   if (!opened.value || !results.enabled) return;
   if (!results.filtered.some(result => result.resultId === results.view?.selectedId)) void results.select(results.filtered[0]?.resultId || null);
 });

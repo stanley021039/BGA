@@ -62,6 +62,7 @@ function pointerUp(event: PointerEvent) {
 function click(event: MouseEvent) { if (Date.now() < suppressUntil) { event.preventDefault(); event.stopImmediatePropagation(); } }
 function contextMenu(event: MouseEvent) { if (gesture || armed || wheelOpen.value || Date.now() < suppressUntil) { event.preventDefault(); event.stopImmediatePropagation(); cancel(); } }
 function lost() { pointers.clear(); cancel(); }
+function windowBlur(event: Event) { if (event.target === window) lost(); }
 function visibility() { if (document.hidden) lost(); }
 function paint() {
   frame = 0; if (!mounted || !pings.surface || !pings.context) return;
@@ -76,9 +77,9 @@ function paint() {
   if (pings.marks.length) frame = requestAnimationFrame(paint);
 }
 watch(() => pings.marks, () => { if (mounted && !frame) frame = requestAnimationFrame(paint); });
-watch(() => [pings.identity, pings.context?.scene], () => { lost(); syncHost(); });
+watch([() => pings.identity, () => pings.context?.scene], () => { lost(); syncHost(); });
 watch(() => pings.connected, connected => { if (!connected) lost(); });
-const listeners: [string, EventListener][] = [['keydown', downKey as EventListener], ['keyup', upKey as EventListener], ['pointerdown', pointerDown as EventListener], ['pointermove', pointerMove as EventListener], ['pointerup', pointerUp as EventListener], ['pointercancel', lost], ['click', click as EventListener], ['contextmenu', contextMenu as EventListener], ['blur', lost]];
+const listeners: [string, EventListener][] = [['keydown', downKey as EventListener], ['keyup', upKey as EventListener], ['pointerdown', pointerDown as EventListener], ['pointermove', pointerMove as EventListener], ['pointerup', pointerUp as EventListener], ['pointercancel', lost], ['click', click as EventListener], ['contextmenu', contextMenu as EventListener], ['blur', windowBlur]];
 onMounted(() => {
   mounted = true; syncHost(); for (const [type, callback] of listeners) window.addEventListener(type, callback, true); document.addEventListener('visibilitychange', visibility);
   observer = new MutationObserver(entries => { if (entries.some(entry => entry.target instanceof HTMLDialogElement)) { syncHost(); if (gesture || armed || wheelOpen.value) cancel(); } }); observer.observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true });

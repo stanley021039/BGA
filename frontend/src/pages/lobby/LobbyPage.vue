@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { useSessionStore } from '../../stores/session';
-import { interactionSourceKey } from '../../services/interaction-source';
 import { isGameType, type GameType } from '../../contracts/room';
 import { gameCards, gameTitle } from './catalog';
 import GameCarousel from './GameCarousel.vue';
@@ -12,7 +11,6 @@ import UiButton from '../../components/UiButton.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 const lobby = useLobbyStore(), session = useSessionStore();
-provide(interactionSourceKey, lobby.interaction);
 const params = new URLSearchParams(location.search), requested = params.get('game') || 'thunder';
 const selected = ref(gameCards.some(card => card.id === requested) ? requested : 'thunder'), chosen = computed(() => gameCards.find(card => card.id === selected.value)!);
 const create = ref<InstanceType<typeof UiDialog> | null>(null), codeInput = ref<HTMLInputElement | null>(null), roomName = ref(''), code = ref(params.get('room') || ''), seconds = ref(60), rounds = ref(8), opened = ref(false);

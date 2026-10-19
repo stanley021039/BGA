@@ -27,7 +27,7 @@ async function loadPreview() {
   catch (cause) { if (!disposed && epoch === generation && scope === room.scope) error.value = cause instanceof Error ? cause.message : '畫作載入失敗。'; }
   finally { if (epoch === generation) loading.value = false; }
 }
-watch(() => [props.snapshot.phase, props.snapshot.result?.resultId, room.scope], loadPreview, { immediate: true });
+watch([() => props.snapshot.phase, () => props.snapshot.result?.resultId, () => room.scope], loadPreview, { immediate: true });
 onBeforeUnmount(() => { disposed = true; generation++; });
 function rank(index: number) { return rankings.value.findIndex(player => Number(player.score) === Number(rankings.value[index].score)) + 1; }
 </script>

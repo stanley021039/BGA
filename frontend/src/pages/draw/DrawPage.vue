@@ -74,7 +74,7 @@ watch(state, (value, previous) => {
 }, { flush: 'sync' });
 watch(connected, value => { if (!value) { soundBaseline = true; sounds?.disconnect(); } });
 watch(canSkip, value => { if (!value) confirm.value?.cancel(); });
-watch(() => [room.scope, state.value?.canvasEpoch, state.value?.phase], () => { confirm.value?.cancel(); hintDialog.value?.close(); pendingHint = null; });
+watch([() => room.scope, () => state.value?.canvasEpoch, () => state.value?.phase], () => { confirm.value?.cancel(); hintDialog.value?.close(); pendingHint = null; });
 async function enter() {
   if (entryBusy.value || disposed) return; entryBusy.value = true; entryError.value = '';
   try {

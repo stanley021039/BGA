@@ -1,6 +1,6 @@
 import { createApp, Fragment, h, Teleport } from 'vue';
-import type { Component } from 'vue';
-import { createPinia, disposePinia } from 'pinia';
+import type { App, Component } from 'vue';
+import { createPinia, disposePinia, type Pinia } from 'pinia';
 import { usePreferencesStore } from '../stores/preferences';
 import SiteHeader from '../components/SiteHeader.vue';
 import '../styles/foundations.scss';
@@ -8,7 +8,7 @@ import '../styles/feedback.scss';
 import '../styles/controls.scss';
 
 // Each HTML document owns its app/stores. BFCache restoration creates a fresh scope.
-export function mountPage(component: Component, selector: string): void {
+export function mountPage(component: Component, selector: string, configure?: (app: App, pinia: Pinia) => void): void {
   let stop: (() => void) | undefined;
   function start(): void {
     if (stop) return;
@@ -17,6 +17,8 @@ export function mountPage(component: Component, selector: string): void {
     if (header) { header.classList.add('vue-page', 'vue-site-header'); header.setAttribute('data-ui-owner', 'vue'); }
     const app = createApp({ render: () => h(Fragment, [header ? h(Teleport, { to: header }, h(SiteHeader)) : null, h(component)]) });
     app.use(pinia);
+    // Pinia setup runs in app.runWithContext; its injections must belong to the app.
+    configure?.(app, pinia);
     usePreferencesStore(pinia);
     document.querySelector(selector)?.classList.add('vue-page');
     // Legacy enhancement observers must not reparent Vue-owned form/dialog nodes.
