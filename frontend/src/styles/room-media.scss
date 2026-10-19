@@ -1,0 +1,57 @@
+@use 'tokens' as t;
+
+.vue-room-media {
+  --vue-media-background: var(--panel, #fffdf7);
+  --vue-media-text: var(--ink, #25252d);
+  --vue-media-line: var(--line, #7b7983);
+  --vue-media-image: none;
+  position: fixed; inset: auto; margin: 0; max-width: none; max-height: none; box-sizing: border-box;
+  padding: 0; border: 1px solid var(--vue-media-line); border-radius: t.space(4); overflow: hidden;
+  color: var(--vue-media-text); background: var(--vue-media-background); background-image: var(--vue-media-image);
+  z-index: 110; box-shadow: 0 t.space(3) t.space(8) #0004;
+  container-type: inline-size; @include t.type(p2);
+  &[open] { display: flex; flex-direction: column; }
+  :where(h3, p, ol) { margin: 0; }
+  h3 { @include t.type(h2); }
+  button, input, select { max-width: 100%; min-width: 0; }
+  .vue-button { flex: 0 0 auto; }
+  .vue-button.ui-icon-button { width: 44px; height: 44px; padding: t.space(2); }
+  .frontend-status { flex: 0 0 auto; margin: 0; }
+}
+.vue-media-header { flex: 0 0 auto; min-height: 56px; display: flex; align-items: center; justify-content: flex-end; padding: t.space(1) t.space(2); box-sizing: border-box; touch-action: none; cursor: move; border-bottom: 1px solid var(--vue-media-line); position: relative; z-index: 1; }
+.vue-media-window-tools { display: flex; gap: t.space(1); }
+.vue-media-content { display: flex; flex-direction: column; flex: 1; min-height: 0; padding: t.space(6); gap: t.space(4); position: relative; z-index: 1; }
+.vue-media-body { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, 1fr); gap: t.space(6); flex: 1; min-height: 0; overflow: auto; }
+.vue-media-primary { display: flex; flex-direction: column; gap: t.space(4); min-width: 0; min-height: 0; }
+.vue-media-current { flex: 0 0 auto; min-width: 0; min-height: 3.5rem; h3, p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } p { @include t.type(p3); } }
+.vue-media-screen { display: flex; flex: 1 0 210px; flex-direction: column; min-width: 0; min-height: 210px; position: relative; }
+.vue-media-video { min-height: 210px; min-width: 0; height: 100%; flex: 1; iframe { display: block; border: 0; width: 100%; height: 100%; min-height: 210px; } }
+.vue-media-audio { display: grid; align-content: center; min-height: 210px; audio { width: 100%; } }
+.vue-media-consent, .vue-media-empty { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: t.space(4); flex: 1; min-height: 210px; }
+.vue-media-controls-body { flex: 0 0 auto; display: grid; gap: t.space(3); }
+.vue-media-clock { font-variant-numeric: tabular-nums; @include t.type(p3); output { display: inline-block; min-width: 11rem; } }
+.vue-media-controls { display: flex; flex-wrap: wrap; align-items: center; gap: t.space(2); }
+.vue-media-volume { display: flex; flex: 1 1 120px; min-width: 120px; flex-direction: column; gap: t.space(1); @include t.type(p3); input { width: 100%; } }
+.vue-media-playlist { display: flex; flex-direction: column; gap: t.space(4); overflow: auto; overscroll-behavior: contain; min-width: 0; min-height: 0; scrollbar-gutter: stable; }
+.vue-media-entry { display: grid; gap: t.space(2); margin: 0; > div { display: flex; gap: t.space(2); align-items: center; } input, select { flex: 1; width: 100%; min-width: 0; } }
+.vue-media-permission { @include t.type(p3); min-height: 3em; }
+.vue-media-queue { list-style: none; padding: 0; display: grid; gap: t.space(2); > li { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: t.space(2); min-height: 56px; border: 1px solid var(--vue-media-line); border-radius: t.space(2); padding: t.space(2); box-sizing: border-box; > div { min-width: 0; strong, span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } span { @include t.type(p3); } } &.is-drop-target { outline: 2px solid currentColor; outline-offset: -3px; } } }
+.vue-media-queue-handle { cursor: grab; touch-action: none; }
+.vue-room-media .vue-media-queue .vue-button-caption { display: none; }
+.vue-room-media .vue-overflow-text { display: block; width: 100%; max-width: 100%; overflow: hidden; }
+.vue-room-media .vue-overflow-text > .ui-player-name-text { display: inline-block; overflow: visible; }
+.vue-media-edge { position: absolute; z-index: 3; touch-action: none; &:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; } }
+.vue-media-edge-n, .vue-media-edge-s { height: 8px; left: 12px; right: 12px; cursor: ns-resize; }
+.vue-media-edge-n { top: 0; } .vue-media-edge-s { bottom: 0; }
+.vue-media-edge-w, .vue-media-edge-e { width: 8px; top: 12px; bottom: 12px; cursor: ew-resize; }
+.vue-media-edge-w { left: 0; } .vue-media-edge-e { right: 0; }
+.vue-media-edge-nw, .vue-media-edge-ne, .vue-media-edge-sw, .vue-media-edge-se { width: 12px; height: 12px; }
+.vue-media-edge-nw { left: 0; top: 0; cursor: nwse-resize; } .vue-media-edge-se { right: 0; bottom: 0; cursor: nwse-resize; }
+.vue-media-edge-ne { right: 0; top: 0; cursor: nesw-resize; } .vue-media-edge-sw { left: 0; bottom: 0; cursor: nesw-resize; }
+.vue-media-frame-art { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.vue-room-media-themed :is(input, select, .vue-button) { color: var(--vue-media-text); background: var(--vue-media-background); border-color: var(--vue-media-line); }
+.vue-room-media-compact { .vue-media-content { padding: t.space(2); gap: 0; } .vue-media-content > .frontend-status, .vue-media-current, .vue-media-controls-body, .vue-media-playlist { display: none; } .vue-media-body { display: flex; overflow: hidden; } .vue-media-primary { flex: 1; } }
+.vue-room-media-bar { .vue-media-content { display: none; } .vue-media-header { border: 0; padding: 0 t.space(2); justify-content: center; } }
+.vue-media-consent-actions { display: flex; flex-wrap: wrap; gap: t.space(3); }
+@container (max-width: 720px) { .vue-media-content { padding: t.space(4); } .vue-media-body { display: flex; flex-direction: column; gap: t.space(4); } .vue-media-primary { flex: 0 0 auto; } .vue-media-screen { flex-basis: 240px; } .vue-media-playlist { flex: 0 0 320px; } .vue-room-media-compact .vue-media-primary { flex: 1; } .vue-room-media-compact .vue-media-screen { flex-basis: 210px; } }
+@media (max-width: 600px) { .vue-room-media .vue-button.ui-icon-button .vue-button-caption { display: none; } .vue-media-body .vue-button.ui-icon-button { width: auto; min-width: 44px; } .vue-media-body .vue-button.ui-icon-button .vue-button-caption { display: initial; position: static; width: auto; height: auto; clip: auto; clip-path: none; overflow: visible; margin: 0; white-space: normal; } }

@@ -230,3 +230,22 @@ app 掛載前為根節點加入 `data-ui-owner="vue"`。舊 GameUI 的自動 fra
 - 收藏回應綁定 resultId／canvasEpoch，重複收藏返回相同 artwork；刪除這次新建副本後須 recollect，重新收藏取得新 ID，再取消收藏移除新副本；公開結果不變。API 檢查重用既有 QA PNG 作輸入，不能證明 Vue 編碼出的像素正確，也未刪除先前卡住確認視窗所選的收藏。
 - 正常九輪的歷史存檔另存私有驗收素材，新歷史 view model 可讀取其中五十一個狀態；這不是歷史頁的瀏覽器呈現證據。
 - 仍待：完整 DrawPage、場景與媒體整合；新 Vue 清單／空篩選／快速切換、合作式呈現途中狀態、收藏新選擇與重試、取消／Escape／返焦、PNG／ZIP 真實下載與 CRC／像素核對、原生分享，以及桌機／手機布局。不能把 API 對局記為新 Vue 完整實玩通過。
+
+## 房間媒體元件（候選，2026-10-19）
+
+文件登錄仍為十二份；`RoomMedia` 尚待完整遊戲頁掛載。原 `table-media.js` 不在新元件中執行，也不並行建立舊音樂／影片控制器。
+
+- `media` Pinia domain 管理同桌唯一 current、混合 queue、播放錨點、權限、歌庫與回饋。具名 reader 驗證 schema、item、session、revision、時長與玩家身份，遊戲 marker 驅動有限 GET 重試，沒有新增進度輪詢或心跳。明確重新開窗才重設重試預算。
+- 相同操作重試沿用原 requestId；收到新的 session／revision 或改變 payload 時建立新 ID，不自動重送 mutation。接受回覆前核對 scope、instance、座位與順序；409 可帶回新的權威狀態，提示重新確認。降權立即收回前端操作能力，後端仍裁決。
+- 排序從把手開始，支援 pointer capture、局部捲動與鍵盤上下鍵。意圖凍結完整待播集合與 session／revision，更新、降權、關窗與隱藏後取消；送出前重驗，避免舊排序覆蓋其他玩家。
+- `media-player.js` 是從既有控制器抽出的播放葉節點，透過 Vite 副作用 import 隨元件建置；載入本身不建立 UI、播放器或請求。只有 audio／iframe host 由引擎管理，視窗、表單、清單與操作結構由 Vue 持有。
+- 原生 audio 的 intent／queued-event proof、visibility pause 與恢復邏輯保留。自己的原生暫停、進度與聲音不發布至全桌；明確同步才讀取一次原生時間，設兩秒逾時，並在每個 await 後核對媒體、revision、權限與視窗狀態。一般 ticks 只投影伺服器錨點。
+- YouTube 仍在個人接受後才建立 Google API／iframe；拒絕、關窗與退出只影響自己。保留原生 controls、autoplay／載入失敗提示、原生 fallback、可見面積及 200×200 檢查。duration／ended 回報必須仍有權、同 current、有效時長且接近共享終點，不以本機提早拖到底切全桌。
+- 視窗沿用個人位置／大小與本桌 consent storage，支援頂端移動、八向 resize、方向鍵／Shift／Home、完整／小窗／橫條，幾何變更不發共享命令，也不重建同一播放器。頁面銷毀清理播放器、事件、capture、observer、timer 與訂閱。
+- 外觀共用 MediaAppearance／BarrageFrames 原模板及偏好 owner，與彈幕選擇獨立；依裝飾表面套用文字／背景／邊線。長名稱改用 Vue 結構的共用 OverflowText 葉節點，沿用 GameUI 的量測、hover 與 reduced-motion 規則。SCSS 採 C05 字級／間距與區塊內捲動。
+
+### 目前證據與限制
+
+- 新元件型別、完整十二份文件建置、含媒體的 Vite `write:false` 編譯及播放腳本語法檢查通過；不執行測試套件。
+- 獨立測試站三帳號完成二十項實際 REST／reader 核對：一般房員點播、同 ID 去重／變更 payload 拒絕、host／manager／member 權限與降級、明確 pause／seek、影片／歌曲混排、完整排序／過期排序、移除／skip／stop、舊 session 拒絕與舊 watch API 只投影同一 current。使用既有隔離音樂素材，最後離席清理房間。
+- 上述不證明新 Vue 視窗已實際操作或播放；原生 audio proof、真正 YouTube 播放／autoplay、拒絕後再加入、iframe 不重建、八向滑鼠／鍵盤／手機縮放、排序競態與焦點、個人風格對比及桌機／手機外框仍待瀏覽器實測。瀏覽器先前的原生確認視窗尚未解除，不以 API 或建置代替介面驗收。
