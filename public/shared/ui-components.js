@@ -263,6 +263,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  window.GameUI={icon,symbol,playerName,overflowText,decorateButton,setBusy,setStatus,openDialog,frameDialog,createDialog,framePanel,frameField,frameFields,createField,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
  /* One hover/focus hint in the top layer, independent of clipped game panels. */
  let controlHint=null,hintOwner=null,hintObserver=null;
+ let hintKeyboardNavigation=false,hintNavigationTimer=null,hintPointerPosition=null;
  function hideControlHint(){
   hintObserver?.disconnect();
   if(hintOwner){
@@ -293,12 +294,24 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
    hintObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','open','aria-label']});
   }
  }
- document.addEventListener('pointerover',event=>{const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(control)showControlHint(control);});
- document.addEventListener('focusin',event=>{const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(control)showControlHint(control);});
+ // Layout and dialog opening can dispatch pointerover under a stationary mouse.
+ // Only an actual hover movement or keyboard navigation may open a hint.
+ document.addEventListener('pointermove',event=>{
+  if(!['mouse','pen'].includes(event.pointerType)||event.buttons)return;
+  const previous=hintPointerPosition;hintPointerPosition={x:event.clientX,y:event.clientY};
+  if(previous&&previous.x===event.clientX&&previous.y===event.clientY)return;
+  const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(control)showControlHint(control);
+ });
+ document.addEventListener('keydown',event=>{
+  if(!['Tab','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key)||event.altKey||event.ctrlKey||event.metaKey)return;
+  hintKeyboardNavigation=true;if(hintNavigationTimer!==null)clearTimeout(hintNavigationTimer);
+  hintNavigationTimer=setTimeout(()=>{hintKeyboardNavigation=false;hintNavigationTimer=null;},0);
+ },true);
+ document.addEventListener('focusin',event=>{const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(hintKeyboardNavigation&&control&&event.target.matches(':focus-visible'))showControlHint(control);});
  document.addEventListener('pointerout',event=>{if(!hintOwner||hintOwner.contains(event.relatedTarget)||controlHint?.contains(event.relatedTarget))return;const keyboardFocus=hintOwner.contains(document.activeElement)&&document.activeElement.matches(':focus-visible');if(!keyboardFocus&&(hintOwner.contains(event.target)||controlHint?.contains(event.target)))hideControlHint();});
  document.addEventListener('focusout',event=>{if(hintOwner?.contains(event.target)&&!hintOwner.matches(':hover'))hideControlHint();});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&hintOwner)hideControlHint();});
- document.addEventListener('pointerdown',hideControlHint,true);document.addEventListener('scroll',hideControlHint,true);
+ document.addEventListener('pointerdown',event=>{hintKeyboardNavigation=false;hintPointerPosition={x:event.clientX,y:event.clientY};hideControlHint();},true);document.addEventListener('scroll',hideControlHint,true);
  document.addEventListener('visibilitychange',()=>{if(document.hidden)hideControlHint();});window.addEventListener('resize',hideControlHint);window.addEventListener('pagehide',hideControlHint);
  /* One text node per name. Observers only measure names affected by DOM or size changes. */
  function observePlayerNames(){

@@ -6,6 +6,7 @@ import { gameNames, typeNames, statusNames, safeIssueUrl } from '../../contracts
 import { submitIssue } from '../../services/community-submission';
 import ResourcePanel from '../../components/ResourcePanel.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
+import UiButton from '../../components/UiButton.vue';
 
 const store = useCommunityStore();
 const { pending, message, failed, run } = useMutation();
@@ -94,7 +95,7 @@ onMounted(() => void store.load());
         <p class="small">不設定標準答案。新增的題目會保存於主機，所有朋友都能挑選或隨機抽到。</p>
       </fieldset>
     </form>
-    <button :form="tab === 'issues' ? 'issueForm' : 'questionForm'" class="button wide" :disabled="pending || !store.data" :aria-busy="pending">{{ tab === 'issues' ? '建立留言 →' : '加入共用題庫 →' }}</button>
+    <UiButton stitch variant="primary" type="submit" :form="tab === 'issues' ? 'issueForm' : 'questionForm'" class="wide" :disabled="!store.data" :pending="pending" :label="tab === 'issues' ? '建立留言' : '加入共用題庫'" icon="add" />
     <StatusSlot class="resource-status" :message="message" :error="failed" />
   </section>
   <ResourcePanel class="browse" :loading="store.loading" :error="store.error" :empty="!count" @retry="store.load()">

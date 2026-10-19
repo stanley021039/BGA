@@ -61,3 +61,15 @@
 .vue-majority-result-group.is-focused { outline:2px solid var(--play-primary);outline-offset:2px; }
 .vue-majority-footer>.vue-majority-social { overflow:visible;position:relative; }
 .vue-majority-social .vue-majority-reaction-buttons { position:absolute;inset-inline-end:0;bottom:calc(100% + .5rem);inline-size:min(21rem,70vw);padding:1rem;box-sizing:border-box;z-index:10;border:1px solid var(--play-line);border-radius:.75rem;background:var(--play-surface);box-shadow:0 .25rem 1rem #0004; }
+
+@media(max-width:760px) {
+ :root body.vue-majority-document[data-visual-theme] .vue-majority-scene {
+  block-size:auto;height:auto;min-block-size:0;grid-template-rows:4rem 4rem 15rem 3rem auto;gap:.5rem;padding:.75rem;
+  .vue-majority-scene-heading { block-size:4rem;min-block-size:0;h1 { font-size:1.25rem;line-height:1.5; } }
+  .vue-majority-live { block-size:15rem;min-block-size:0;max-block-size:15rem;overflow:auto;gap:.75rem; }
+  .vue-majority-feedback { block-size:3rem;min-block-size:3rem;max-block-size:3rem;align-content:start;overflow:auto;.frontend-status { min-block-size:0;block-size:auto;max-block-size:none;font-size:.875rem;line-height:1.5; } }
+  .vue-majority-footer { grid-template-rows:minmax(2.75rem,auto) auto;gap:.5rem; }
+  .vue-majority-primary-actions { min-block-size:2.75rem;max-block-size:6rem;overflow:auto;gap:.5rem; }
+  .vue-majority-social { min-block-size:2.75rem;gap:.5rem;align-content:start; }
+ }
+}

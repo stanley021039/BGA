@@ -5,6 +5,7 @@ import { useMutation } from '../../composables/mutation';
 import { record, text } from '../../services/validation';
 import ResourcePanel from '../../components/ResourcePanel.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
+import UiButton from '../../components/UiButton.vue';
 const store = useWordsStore();
 const { pending, message, failed, run } = useMutation();
 const query = ref(''), topic = ref(''), source = ref('all'), limit = ref(60);
@@ -32,7 +33,7 @@ onMounted(() => void store.load());
       <label>可接受別名（最多 5 個，以逗號分隔）<input v-model="draft.aliases" name="aliases" placeholder="例如：自行車，單車" :disabled="pending"></label>
       <fieldset :disabled="pending"><legend>題材</legend><div class="option-row"><label v-for="item in topics" :key="item.id"><input v-model="draft.topic" type="radio" name="topic" :value="item.id" required><span>{{ item.label }}</span></label></div></fieldset>
       <fieldset :disabled="pending"><legend>難度</legend><div class="option-row"><label v-for="item in [{id:'easy',label:'簡單'},{id:'medium',label:'一般'},{id:'hard',label:'挑戰'}]" :key="item.id"><input v-model="draft.difficulty" type="radio" name="difficulty" :value="item.id"><span>{{ item.label }}</span></label></div></fieldset>
-    </form><button form="wordForm" class="button wide" :disabled="pending" :aria-busy="pending">加入好友題庫 →</button><StatusSlot id="wordStatus" class="resource-status" :message="message" :error="failed" />
+    </form><UiButton stitch variant="primary" type="submit" form="wordForm" class="wide" icon="next" label="加入好友題庫" :pending="pending" :disabled="pending" /><StatusSlot id="wordStatus" class="resource-status" :message="message" :error="failed" />
   </section>
   <ResourcePanel class="card" :loading="store.loading" :error="store.error" :empty="!found.length" empty-label="沒有符合的題目。" @retry="store.load()">
     <template #heading><span class="eyebrow">THE WORD BANK</span><h2>大家的題目</h2><p id="wordCount">{{ store.data ? `${store.data.builtin.length} 個內建題目 · ${store.data.custom.length} 個好友投稿` : '正在讀取題庫…' }}</p></template>

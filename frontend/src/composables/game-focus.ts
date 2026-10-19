@@ -15,7 +15,7 @@ export function useGameFocus(className = 'vue-game-focus') {
     if (!document.fullscreenElement) try { await document.documentElement.requestFullscreen(); if (focused.value && !disposed) owned = true; else if (document.fullscreenElement === document.documentElement) await document.exitFullscreen(); } catch { /* CSS focus is available if native fullscreen is unavailable. */ }
   }
   function nativeChange() { if (focused.value && owned && !document.fullscreenElement) void exit(); }
-  function escape(event: KeyboardEvent) { if (!event.defaultPrevented && event.key === 'Escape' && focused.value && !document.querySelector('dialog:modal')) { event.preventDefault(); void exit(); } }
+  function escape(event: KeyboardEvent) { if (!event.defaultPrevented && event.key === 'Escape' && focused.value && !document.querySelector('dialog:modal, :popover-open')) { event.preventDefault(); void exit(); } }
   onMounted(() => { document.addEventListener('fullscreenchange',nativeChange); document.addEventListener('keydown',escape); });
   onBeforeUnmount(() => { disposed = true; document.removeEventListener('fullscreenchange',nativeChange); document.removeEventListener('keydown',escape); void exit(); });
   return { focused, toggle, exit };

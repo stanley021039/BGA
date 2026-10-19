@@ -11,7 +11,9 @@ async function open(source?: HTMLElement) {
   visible.value = true;
   dialog.value?.showModal();
   await nextTick();
-  dialog.value?.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus();
+  if (!dialog.value?.open) return;
+  const selected = dialog.value.querySelector<HTMLElement>('[aria-pressed="true"]');
+  (selected || dialog.value).focus({ preventScroll: true });
 }
 function close() { if (dialog.value?.open) { emit('closing'); dialog.value.close(); } }
 function cancel(event: Event) { if (!props.dismissible) event.preventDefault(); else emit('closing'); }
@@ -20,7 +22,7 @@ onBeforeUnmount(close);
 defineExpose({ open, close });
 </script>
 <template>
-  <dialog ref="dialog" class="vue-dialog ui-dialog" :class="{ 'vue-dialog-compact': compact, 'vue-stitch-dialog': stitch }" :aria-labelledby="headingId" @cancel="cancel" @close="closed">
+  <dialog ref="dialog" autofocus class="vue-dialog ui-dialog" :class="{ 'vue-dialog-compact': compact, 'vue-stitch-dialog': stitch }" :aria-labelledby="headingId" @cancel="cancel" @close="closed">
     <header class="vue-dialog-header"><h2 :id="headingId">{{ title }}</h2><UiButton :stitch="stitch" icon="close" icon-only caption="關閉" :label="'關閉' + title" :disabled="!dismissible" @click="close" /></header>
     <div v-if="visible" class="vue-dialog-content"><slot /></div>
   </dialog>

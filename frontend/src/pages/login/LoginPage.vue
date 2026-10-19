@@ -4,7 +4,7 @@ import type { AuthMode } from '../../contracts/auth';
 import { useSessionStore } from '../../stores/session';
 import { loginDestination } from '../../services/navigation';
 import StatusSlot from '../../components/StatusSlot.vue';
-import SubmitButton from '../../components/SubmitButton.vue';
+import UiButton from '../../components/UiButton.vue';
 
 const session = useSessionStore();
 const params = new URLSearchParams(location.search);
@@ -84,8 +84,8 @@ onBeforeUnmount(() => { disposed = true; session.dispose(); login.password = reg
     <h2 id="authTitle">{{ copy[0] }}</h2>
     <p id="authIntro" class="card-intro">{{ copy[1] }}</p>
     <div class="auth-tabs" role="tablist" aria-label="帳號操作" :hidden="mode === 'reset'">
-     <button id="tab-login" type="button" data-mode="login" role="tab" :aria-selected="mode === 'login'" aria-controls="loginForm" :tabindex="mode === 'login' ? 0 : -1" :disabled="session.pending" @click="selectMode('login')" @keydown="tabKey">登入</button>
-     <button id="tab-register" type="button" data-mode="register" role="tab" :aria-selected="mode === 'register'" aria-controls="registerForm" :tabindex="mode === 'register' ? 0 : -1" :disabled="session.pending" @click="selectMode('register')" @keydown="tabKey">邀請碼註冊</button>
+     <UiButton stitch :variant="mode === 'login' ? 'primary' : 'secondary'" label="登入" id="tab-login" type="button" data-mode="login" role="tab" :aria-selected="mode === 'login'" aria-controls="loginForm" :tabindex="mode === 'login' ? 0 : -1" :disabled="session.pending" @click="selectMode('login')" @keydown="tabKey" />
+     <UiButton stitch :variant="mode === 'register' ? 'primary' : 'secondary'" label="邀請碼註冊" id="tab-register" type="button" data-mode="register" role="tab" :aria-selected="mode === 'register'" aria-controls="registerForm" :tabindex="mode === 'register' ? 0 : -1" :disabled="session.pending" @click="selectMode('register')" @keydown="tabKey" />
     </div>
     <form id="loginForm" class="auth-form" :hidden="mode !== 'login'" @submit.prevent="submit" :aria-busy="session.pending" aria-describedby="message">
      <label>帳號<input v-model="login.username" name="username" autocomplete="username" placeholder="輸入你的帳號" required></label>
@@ -106,7 +106,7 @@ onBeforeUnmount(() => { disposed = true; session.dispose(); login.password = reg
      <label>確認新密碼<input v-model="reset.confirmPassword" name="confirmPassword" type="password" minlength="8" autocomplete="new-password" placeholder="再次輸入新密碼" required></label>
 
     </form>
-    <SubmitButton :pending="session.pending" :form="mode + 'Form'" :label="submitLabel" /><StatusSlot id="message" :message="message" :error="hasError" />
+    <UiButton stitch variant="primary" type="submit" class="frontend-submit" icon="next" :pending="session.pending" :form="mode + 'Form'" :label="submitLabel" /><StatusSlot id="message" :message="message" :error="hasError" />
    </section>
 
 </template>

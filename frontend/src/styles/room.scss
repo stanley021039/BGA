@@ -17,8 +17,8 @@
   }
   .vue-roster-empty { display: grid; align-content: center; min-block-size: 5.5rem; padding: .5rem; font-size: .875rem; line-height: 1.5; color: var(--stitch-muted, #686A63); overflow-wrap: anywhere; }
   .vue-room-player {
-    position: relative; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 2.75rem;
-    grid-template-rows: auto; align-items: start; gap: 0 .25rem; flex-shrink: 0;
+    position: relative; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr);
+    grid-template-rows: 2.8125rem auto; align-content: start; align-items: start; gap: 0 .25rem; flex-shrink: 0;
     box-sizing: border-box; min-inline-size: 0; min-block-size: 5rem; padding: .25rem;
     border: 0; border-inline-start: 3px solid transparent; border-radius: .5rem;
     background: var(--stitch-surface, #fff); color: var(--stitch-ink, #20211E);
@@ -32,14 +32,16 @@
   .vue-room-player-name > .vue-player-name { flex: 1 1 0; min-inline-size: 0; font-size: var(--stitch-font-16, 1rem); font-weight: 700; text-align: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .vue-room-player-name > .vue-player-name > .ui-player-name-text { display: block; inline-size: 100%; max-inline-size: 100%; margin: 0; padding: 0; overflow: hidden; text-overflow: ellipsis; text-align: start; white-space: nowrap; animation: none; transform: none; }
   .vue-player-self { flex: none; font-size: var(--stitch-font-14, .875rem); font-weight: 400; }
-  .vue-room-player-status { box-sizing: border-box; block-size: 3em; min-inline-size: 0; overflow: auto; overscroll-behavior: contain; margin: 0; white-space: normal; overflow-wrap: anywhere; font-size: var(--stitch-font-14, .875rem); line-height: 1.5; color: inherit; }
+  .vue-room-player-status { box-sizing: border-box; block-size: 1.3125rem; min-inline-size: 0; overflow: auto; overscroll-behavior: contain; margin: 0; white-space: normal; overflow-wrap: anywhere; font-size: var(--stitch-font-14, .875rem); line-height: 1.5; color: inherit; }
   .vue-player-role, .vue-player-ready { display: inline; margin-inline-end: .25rem; font-weight: 700; }
   .vue-player-ready { color: var(--stitch-success-ink, #006C49); }
   .vue-room-player[data-self=true] .vue-player-ready { color: var(--stitch-success, #006C49); }
-  .vue-room-player-metric { grid-column: 3; grid-row: 1; display: grid; align-content: start; justify-content: stretch; justify-items: end; gap: 0; min-inline-size: 0; max-inline-size: 100%; text-align: end; line-height: 1.5; font-variant-numeric: lining-nums tabular-nums; }
-  .vue-room-player-metric strong { display: block; max-inline-size: 100%; overflow: auto; margin: 0; font-size: var(--stitch-font-16, 1rem); line-height: 1.5; font-variant-numeric: lining-nums tabular-nums; }
-  .vue-room-player-metric span { max-inline-size: 100%; font-size: var(--stitch-font-14, .875rem); line-height: 1.5; overflow-wrap: anywhere; }
-  .vue-room-player-feedback { grid-column: 2 / -1; grid-row: 2; min-inline-size: 0; min-block-size: 1.3125rem; line-height: 1.5; }
+  // Names use the full second column; scores own a separate stable bottom row.
+  .vue-room-player-metric { grid-column: 1 / -1; grid-row: 2; display: flex; flex-wrap: nowrap; align-items: baseline; justify-content: flex-start; gap: .25rem; block-size: 1.5rem; min-inline-size: 0; max-inline-size: 100%; overflow: auto; text-align: start; line-height: 1.5; font-variant-numeric: lining-nums tabular-nums; }
+  .vue-room-player-metric strong { display: block; flex: none; max-inline-size: 100%; margin: 0; font-size: var(--stitch-font-16, 1rem); line-height: 1.5; font-variant-numeric: lining-nums tabular-nums; }
+  .vue-room-player-metric span { flex: none; max-inline-size: 100%; font-size: var(--stitch-font-14, .875rem); line-height: 1.5; white-space: nowrap; }
+  .vue-room-player-metric:has(> .vue-gift-roster-scores) { block-size: 2.875rem; }
+  .vue-room-player-feedback { grid-column: 1 / -1; grid-row: 3; min-inline-size: 0; min-block-size: 1.3125rem; line-height: 1.5; }
   .vue-room-player-feedback > .vue-draw-correct-badge { position: static; display: block; inline-size: fit-content; max-inline-size: 100%; box-sizing: border-box; margin-inline-start: auto; padding: 0 .25rem; font-size: .875rem; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; color: var(--stitch-success-ink, #006C49); background: var(--stitch-success-bg, #E9F4ED); border-color: var(--stitch-success-line, #A4CDB7); }
   > footer { display: flex; flex-wrap: wrap; align-items: center; align-content: start; gap: .5rem; min-inline-size: 0; min-block-size: 2.75rem; overflow: auto; }
   > footer > button { min-block-size: 2.75rem; max-inline-size: 100%; }

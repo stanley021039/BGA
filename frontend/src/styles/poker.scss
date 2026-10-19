@@ -25,6 +25,12 @@
 body.vue-poker-document .vue-room-player-status { white-space:normal; overflow-wrap:anywhere; }
 @media(prefers-reduced-motion:reduce) { .vue-poker-card.is-new,.vue-poker-flying-chip { animation:none; } }
 @media(max-width:760px) { .vue-poker-stage { height:1200px; grid-template-rows:88px 48px minmax(0,1fr) 112px 256px; } .vue-poker-table { --poker-card-width:clamp(28px,9vw,52px); padding:t.space(2); } .vue-poker-cards { gap:t.space(1); } .vue-poker-summary { align-items:start; flex-direction:column; gap:t.space(1); } .vue-poker-hero { gap:t.space(2); grid-template-columns:auto minmax(0,1fr); dl { gap:0; >div { gap:t.space(1); } } } .vue-poker-public-hands { grid-template-columns:minmax(0,1fr); } .vue-poker-action-buttons button { padding:t.space(1); @include t.type(p3); .ui-button-icon { display:none; } } .vue-poker-raise { grid-template-columns:minmax(0,1fr); label { flex-wrap:wrap; } input { width:100%; flex-basis:100%; } p { grid-column:1; } } }
+@media(max-width:760px) {
+ .vue-poker-stage.is-waiting {
+  height:auto;min-height:0;align-content:start;
+  grid-template-rows:88px 48px clamp(340px,50dvh,400px) 112px 256px;
+ }
+}
 @media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
  body.vue-poker-document:not(.ui-large-text) {
   margin:0;

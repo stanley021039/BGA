@@ -1,9 +1,9 @@
 @use 'tokens';
 
 .vue-page.community-main {
-  #pageTitle { min-block-size: 2.6em; }
-  .community-intro { min-block-size: 4.5em; }
-  .community-compose { padding: tokens.space(6); }
+  #pageTitle { min-block-size: 2.6em; margin-block: tokens.space(2); }
+  .community-intro { min-block-size: 3em; margin-block: 0 tokens.space(4); }
+  .community-compose { padding: tokens.space(6); block-size: 42rem; }
   .community-compose fieldset { border: 0; margin: 0; padding: 0; min-inline-size: 0; display: grid; gap: tokens.space(3); }
   .community-compose :is(label, .community-options) { display: grid; gap: tokens.space(2); min-inline-size: 0; }
   .community-compose :is(input, select, textarea) { inline-size: 100%; min-inline-size: 0; }

@@ -49,3 +49,15 @@
     .vue-bluff-live.is-role { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto minmax(0,1fr); gap:t.space(3); .vue-bluff-prompt { grid-column:1; min-height:0; gap:t.space(2); } .vue-bluff-private-slot { grid-column:1; grid-row:2; min-height:0; overflow:auto; padding:t.space(3); } .vue-bluff-actions { grid-column:2; grid-row:1/span 2; min-height:0; overflow:auto; scrollbar-gutter:stable; gap:t.space(3); } }
   }
 }
+
+@media(max-width:760px) {
+ // Only the waiting illustration cancels the 850px active-role stage.
+ :root body.vue-bluff-document[data-visual-theme] .vue-bluff-stage:has(.vue-bluff-live>.vue-game-waiting-art) {
+  block-size:auto;height:auto;min-block-size:0;grid-template-rows:auto auto auto 2.75rem 2.75rem;gap:.5rem;padding:1rem;
+  >header { gap:.25rem;h1,p { min-block-size:0;min-height:0; }h1 { font-size:1.25rem;line-height:1.5; }p { font-size:.875rem;line-height:1.5; }small { display:none; } }
+  .vue-bluff-clock { position:static;min-block-size:0;min-height:0;>p { padding:.5rem;font-size:.875rem;line-height:1.5; } }
+  .vue-bluff-live { gap:.5rem;padding:0;min-block-size:0;>.vue-game-waiting-art { block-size:150px;height:150px; }p { font-size:.875rem;line-height:1.5; } }
+  >.frontend-status { block-size:2.75rem;min-block-size:0;max-block-size:2.75rem;margin:0;overflow:auto;font-size:.875rem;line-height:1.5; }
+  .vue-bluff-retry { min-block-size:2.75rem;block-size:2.75rem; }
+ }
+}

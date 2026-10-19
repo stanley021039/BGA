@@ -11,11 +11,19 @@ export function useMediaWindow(node: Ref<HTMLDialogElement | null>, opened: Ref<
   const style = computed(() => ({ left: box.value.left + 'px', top: box.value.top + 'px', width: box.value.width + 'px', height: box.value.height + 'px' }));
   let pointer: { id: number; node: HTMLElement; edge: string; x: number; y: number; before: typeof box.value; position: Point | null; size: Size | null } | null = null;
   const edges = [['n', '上邊'], ['s', '下邊'], ['w', '左邊'], ['e', '右邊'], ['nw', '左上角'], ['ne', '右上角'], ['sw', '左下角'], ['se', '右下角']];
-  function viewport() { const header = document.querySelector('[data-site-header]')?.getBoundingClientRect(); const top = header && header.top <= 32 && header.bottom > 0 ? Math.min(header.bottom + 8, Math.max(8, innerHeight - 260)) : 8; return { top, width: Math.max(0, innerWidth - 16), height: Math.max(0, innerHeight - top - 8) }; }
+  function viewport() {
+    const header = document.querySelector('[data-site-header]')?.getBoundingClientRect();
+    const preferred = mode.value === 'bar' ? 56 : mode.value === 'compact' ? 280 : Math.max(520, size?.height || 720);
+    const reserved = Math.min(preferred, Math.max(0, innerHeight - 16));
+    // A tall mobile room header must not consume the floating player's area.
+    // Prefer below-header placement only when the complete window still fits.
+    const top = header && header.top <= 32 && header.bottom > 0 ? Math.min(header.bottom + 8, Math.max(8, innerHeight - 8 - reserved)) : 8;
+    return { top, width: Math.max(0, innerWidth - 16), height: Math.max(0, innerHeight - top - 8) };
+  }
   function layout(candidate = position) {
     const view = viewport(), bar = mode.value === 'bar', compact = mode.value === 'compact';
     const width = Math.min(view.width, bar ? 164 : compact ? 360 : Math.max(Math.min(340, view.width), size?.width || Math.min(430, view.width)));
-    const height = Math.min(view.height, bar ? 56 : compact ? 280 : Math.max(Math.min(420, view.height), size?.height || Math.min(720, view.height)));
+    const height = Math.min(view.height, bar ? 56 : compact ? 280 : Math.max(Math.min(520, view.height), size?.height || Math.min(720, view.height)));
     box.value = { width, height, left: Math.max(8, Math.min(innerWidth - width - 8, candidate?.left ?? innerWidth - width - 8)), top: Math.max(view.top, Math.min(innerHeight - height - 8, candidate?.top ?? view.top)) };
   }
   function persist() { try { localStorage.setItem(positionKey, JSON.stringify(position)); localStorage.setItem(sizeKey, JSON.stringify(size)); } catch { /* Still usable when storage is disabled. */ } }
@@ -29,7 +37,7 @@ export function useMediaWindow(node: Ref<HTMLDialogElement | null>, opened: Ref<
     target.setPointerCapture(event.pointerId);
   }
   function resize(before: typeof box.value, edge: string, dx: number, dy: number) {
-    const view = viewport(), minWidth = Math.min(340, view.width), minHeight = Math.min(420, view.height);
+    const view = viewport(), minWidth = Math.min(340, view.width), minHeight = Math.min(520, view.height);
     const width = Math.max(minWidth, Math.min(edge.includes('w') ? before.left + before.width - 8 : innerWidth - before.left - 8, before.width + (edge.includes('w') ? -dx : edge.includes('e') ? dx : 0)));
     const height = Math.max(minHeight, Math.min(edge.includes('n') ? before.top + before.height - view.top : innerHeight - before.top - 8, before.height + (edge.includes('n') ? -dy : edge.includes('s') ? dy : 0)));
     size = { width, height }; layout({ left: edge.includes('w') ? before.left + before.width - width : before.left, top: edge.includes('n') ? before.top + before.height - height : before.top });

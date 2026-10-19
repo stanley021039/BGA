@@ -64,3 +64,9 @@
 :root body[data-game-kind=draw] section.vue-draw-scene.vue-draw-scene-v2 .vue-draw-candidates.vue-draw-candidates-v2>button:is(:hover,:focus-visible):not(:disabled) {
  --ui-button-border-color:var(--stitch-ink,var(--play-ink));background:color-mix(in srgb,var(--stitch-primary,#f6cf35) 12%,var(--stitch-surface,var(--play-surface)));
 }
+
+// Non-drawing scenes share theme colors; the actual drawing canvas stays white.
+// The base surface keeps a literal #fff frame, while dark scene text is light.
+:root body[data-game-kind=draw] .vue-draw-approved .vue-drawing-frame:has(> .vue-drawing-scene > .vue-draw-waiting-v2) {
+ background:var(--stitch-surface,var(--play-surface));color:var(--stitch-ink,var(--play-ink));border-color:var(--stitch-line,var(--play-line));
+}

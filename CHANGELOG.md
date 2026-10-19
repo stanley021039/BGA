@@ -4,6 +4,8 @@
 
 ## [2.17.1] - 2026-10-19
 
+- 以已審核 00 共用元件校正媒體視窗，恢復清楚的播放清單／點播入口；修正自動 hover、手機等待空白、玩家欄寬、深色對比與全站表單間距，詳見 docs/refactors/STITCH-SITE-LAYOUT-AUDIT.md
+
 - 補齊另九張已審核大廳設定、彈幕／播放器外觀、形象設定、表情、邀請與繪畫圖庫畫面；共用完整縮放預覽與穩定操作槽，保留真實偏好、邀請及畫布流程，詳見 docs/refactors/STITCH-APPROVED-SUPPLEMENT.md
 
 - 完成已審核畫猜／傳情畫意的等待、選題、作畫、猜詞、揭曉、畫冊與畫廊頁面，接入真實資料；共用精簡工具列並修正短桌機畫布、手機按鈕、玩家列與提示槽，詳見 docs/refactors/STITCH-DRAW-TELEPHONE-PAGES.md

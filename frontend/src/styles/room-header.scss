@@ -47,5 +47,5 @@ body .vue-room-navigation-menu { display:grid; gap:8px; min-width:0; a { display
     &:not(.is-header-integrated) { grid-template-rows:auto 48px minmax(0,1fr); }
     >.vue-room-status-row { height:48px; min-height:0; overflow:visible; >.frontend-status { height:48px; max-height:48px; } }
   }
-  :root body[data-visual-theme]:not(.ui-large-text):not(.vue-game-focus):not(.vue-draw-focus) .vue-room-shell>:is(.vue-game-grid,.vue-draw-grid) { grid-template-columns:220px minmax(0,1fr) 280px; column-gap:16px; }
+  :root body[data-visual-theme]:not(.ui-large-text) .vue-room-shell>:is(.vue-game-grid,.vue-draw-grid) { grid-template-columns:220px minmax(0,1fr) 280px; column-gap:16px; }
 }

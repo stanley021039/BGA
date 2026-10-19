@@ -19,7 +19,7 @@
 @media(max-width:760px) { .vue-minimal-stage { grid-template-rows:auto 760px auto 60px; } .vue-minimal-live-slot { height:760px; } .vue-minimal-review>header,.vue-minimal-review-drawings { grid-template-columns:minmax(0,1fr); } .vue-minimal-tools { gap:t.space(2); } }
 
 .vue-minimal-review { display:block;min-width:0;>summary {min-height:44px;cursor:pointer;overflow-wrap:anywhere;strong {@include t.type(p1);margin-right:t.space(3);} span {@include t.type(p3);} } >header {margin-top:t.space(3);} }
-@media(min-width:1181px) and (min-height:800px) and (pointer:fine) {
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
  body.vue-minimal-document:not(.ui-large-text) {
   @include chrome.desktop;
   margin:0;
@@ -54,4 +54,22 @@
   .vue-minimal-review {box-sizing:border-box;padding:8px 12px;max-height:220px;overflow:auto;scrollbar-gutter:stable;>summary {min-height:32px;} >header {min-height:44px;display:block;} }
   .vue-minimal-review-content {max-height:none;gap:t.space(2);}
  }
+}
+
+// Waiting has no drawing surface: its height follows the illustration and copy.
+.vue-minimal-stage:has(.vue-minimal-waiting) {
+ grid-template-rows:auto auto 1.5rem 2.75rem;
+ .vue-minimal-heading { h1,p { min-block-size:0; } >.vue-room-countdown { display:none; } }
+ .vue-minimal-live-slot { block-size:auto;min-block-size:0; }
+ .vue-minimal-waiting { min-block-size:0;block-size:auto;padding-block:.75rem;gap:.75rem;img { block-size:clamp(8rem,25vw,11.25rem); }p { margin:0; } }
+}
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ body.vue-minimal-document:not(.ui-large-text) {
+  .vue-minimal-stage:has(.vue-minimal-waiting) { grid-template-rows:auto minmax(0,1fr) 1.5rem 2.75rem;.vue-minimal-live-slot { block-size:100%; }.vue-minimal-waiting { block-size:100%;align-content:center; } }
+  // A short screen scrolls the private task rather than collapsing the canvas.
+  @media(max-height:800px) { .vue-minimal-private { min-block-size:28rem; }.vue-minimal-private .vue-geometry-canvas { min-block-size:15rem; } }
+ }
+}
+@media(max-width:760px) {
+ .vue-minimal-stage:has(.vue-minimal-waiting) { block-size:auto;min-block-size:0;gap:.75rem;.vue-minimal-waiting img { block-size:8rem; } }
 }

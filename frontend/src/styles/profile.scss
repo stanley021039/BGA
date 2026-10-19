@@ -2,10 +2,10 @@
 
 .vue-page.profile-editor-page {
   padding-block: tokens.space(6);
-  .page-heading { margin-block-end: tokens.space(4); }
+  .page-heading { margin-block-end: tokens.space(2); }
   .page-heading h1 { @include tokens.type(h1); margin-block: tokens.space(2); gap: tokens.space(4); }
   .page-heading p { @include tokens.type(p2); }
-  .profile-load-slot { display: flex; flex-wrap: wrap; align-items: center; gap: tokens.space(3); block-size: 4rem; overflow: auto; }
+  .profile-load-slot { display: flex; flex-wrap: wrap; align-items: center; gap: tokens.space(3); block-size: 2.75rem; overflow: auto; }
   .profile-layout { grid-template-columns: minmax(18rem, .85fr) minmax(0, 1.15fr); gap: tokens.space(6); align-items: stretch; }
   .avatar-stage, .editor-panel { block-size: clamp(34rem, calc(100dvh - 18rem), 60rem); min-block-size: 0; box-sizing: border-box; }
   .avatar-stage { position: relative; top: auto; }
@@ -40,7 +40,7 @@
 }
 @media(max-width:760px) {
   .vue-page.profile-editor-page {
-    .profile-load-slot { block-size: 7rem; }
+    .profile-load-slot { block-size: 2.75rem; }
     .profile-layout { grid-template-columns: minmax(0, 1fr); gap: tokens.space(4); }
     .avatar-stage { block-size: 24rem; }
     .avatar-frame { inline-size: 11rem; block-size: 16rem; }

@@ -9,7 +9,7 @@
   label { display: grid; gap: tokens.space(2); min-inline-size: 0; }
   select { inline-size: 100%; min-inline-size: 0; }
   .history-list { display: flex; flex-direction: column; gap: tokens.space(3); min-block-size: 0; overflow: auto; scrollbar-gutter: stable; }
-  .history-list button { display: grid; gap: tokens.space(2); padding: tokens.space(4); flex-shrink: 0; inline-size: 100%; text-align: start; overflow-wrap: anywhere; border: 1px solid var(--play-line, #a59b96); border-radius: .5rem; background: var(--play-surface, #fffdf8); color: inherit; }
+  .history-list button { --ui-button-radius: var(--stitch-control-radius, .5rem); display: grid; gap: tokens.space(2); padding: tokens.space(4); flex-shrink: 0; inline-size: 100%; text-align: start; overflow-wrap: anywhere; border: 1px solid var(--play-line, #a59b96); border-radius: .5rem; background: var(--play-surface, #fffdf8); color: inherit; }
   .history-list button[aria-pressed=true] { outline: 2px solid currentColor; outline-offset: -3px; }
   .history-list small { @include tokens.type(p3); }
   .history-replay-panel { display: grid; grid-template-rows: 7rem 8rem auto minmax(0, 1fr); gap: tokens.space(3); }

@@ -52,6 +52,15 @@
  .vue-gift-card-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:t.space(2);>button {padding:t.space(2);} }
  .vue-gift-feedback { grid-template-rows:minmax(42px,auto) 48px; }
  .vue-gift-actions { >.vue-button { flex:1;min-width:0; } }
+ .vue-gift-stage:has(.vue-gift-waiting) {
+  min-height:0;height:auto;align-content:start;grid-template-rows:auto auto 72px 60px;
+  .vue-gift-live { overflow:visible; }
+  .vue-gift-feedback { min-height:0;height:72px;overflow:hidden;grid-template-rows:44px 24px;
+   >p { margin:0;min-height:0;overflow:auto; }
+   .frontend-status { min-height:0;min-block-size:0;height:24px;block-size:24px;max-height:24px;max-block-size:24px;overflow:auto; }
+  }
+  .vue-gift-actions { min-height:0;height:60px;overflow:auto; }
+ }
  .vue-gift-result-entry { grid-template-columns:44px minmax(0,1fr) 3ch;gap:t.space(2);.vue-gift-art {height:44px;} }
 }
 

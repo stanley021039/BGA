@@ -5,6 +5,7 @@ import { useMutation } from '../../composables/mutation';
 import { fileBase64 } from '../../services/files';
 import ResourcePanel from '../../components/ResourcePanel.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
+import UiButton from '../../components/UiButton.vue';
 import ArtworkPicker from '../../components/ArtworkPicker.vue';
 const store = useGiftsStore();
 const { pending, message, failed, run } = useMutation();
@@ -52,7 +53,7 @@ onBeforeUnmount(clearFile);
         <p class="small">支援 PNG、GIF、WebP，單張最多 1 MB；沒有像素尺寸限制。</p>
         <div class="gift-artwork-picker"><div class="gift-artwork-heading"><strong>或從我的圖庫選圖</strong><a href="/studio">開啟繪畫圖庫 ↗</a></div><ArtworkPicker id="giftArtworkList" :items="store.data?.artworks||[]" :model-value="selectedArtwork" :disabled="pending" @update:model-value="chooseArtwork" /></div>
         <div id="imagePreview" class="image-preview resource-image-preview"><img v-if="image" id="previewArt" :src="image" alt="待上傳的禮物圖片預覽"><span v-else>尚未選擇圖片</span><button id="removeImage" type="button" class="quiet" :disabled="pending||!image" @click="chooseArtwork(null)">移除圖片</button></div>
-      </form><button form="giftForm" id="submitGift" class="button wide" :disabled="pending||!store.data" :aria-busy="pending">加入共用禮物題庫 →</button><StatusSlot id="giftStatus" class="resource-status" :message="message" :error="failed" />
+      </form><UiButton stitch variant="primary" type="submit" form="giftForm" id="submitGift" class="wide" icon="next" label="加入共用禮物題庫" :pending="pending" :disabled="pending||!store.data" /><StatusSlot id="giftStatus" class="resource-status" :message="message" :error="failed" />
       <p class="small">投稿會保存於主機。「成人派對」分類只會在房主開啟該分類的房間中抽到。</p>
     </section>
     <ResourcePanel class="library-results" :loading="store.loading" :error="store.error" :empty="!found.length" empty-label="沒有符合的禮物。" @retry="store.load()">

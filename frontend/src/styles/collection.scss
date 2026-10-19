@@ -33,3 +33,24 @@
     #frames-grid { padding: 0; }
   }
 }
+
+// Compact existing library cards without changing their API images/actions.
+// Same-row cards still stretch equally; only owned items need a second action row.
+:root body[data-visual-theme] .vue-page.collection-page {
+ .collection-grid { align-items:stretch; }
+ .collection-card { gap:.5rem; }
+ .collection-card>.collection-image { margin-block-end:0; }
+ .collection-card>h3 { margin:0; }
+ .collection-card>.collection-current { position:absolute;inset-block-start:.75rem;inset-inline-end:.75rem;min-block-size:0;margin:0;padding:.125rem .375rem;border:1px solid var(--stitch-success-line,#A4CDB7);border-radius:.375rem;background:var(--stitch-success-bg,#E9F4ED);color:var(--stitch-success-ink,#006C49);font-size:.875rem;line-height:1.5; }
+ .collection-card>.collection-current:empty { visibility:hidden; }
+ .collection-card>.collection-meta { block-size:1.5em;min-block-size:1.5em;max-block-size:1.5em;margin:0;font-size:.875rem;line-height:1.5;overflow:auto; }
+ .collection-card>.collection-actions { block-size:auto;min-block-size:44px;grid-auto-rows:44px;align-content:start;gap:.5rem;margin-block-start:auto; }
+ .collection-actions>a.ui-button.vue-button { --ui-button-border-color:var(--stitch-line,#D8D9D2);background:var(--stitch-surface,#fff);color:var(--stitch-ink,#20211E);box-shadow:none; }
+ .collection-actions>a.ui-button.vue-button:hover { background:var(--stitch-surface-hover,#EDEDE6); }
+ .collection-actions>a.ui-button.vue-button .ui-icon { color:inherit; }
+ .collection-tabs [role=tab]>.collection-count { margin:0;padding:.125rem .5rem;border:1px solid var(--stitch-line,#D8D9D2);background:var(--stitch-surface-subtle,#F8F7F3);color:var(--stitch-ink,#20211E);font-size:.875rem;line-height:1.5;font-variant-numeric:tabular-nums; }
+ .collection-tabs [role=tab][aria-selected=true]>.collection-count { border-color:var(--stitch-contrast,#20211E);background:var(--stitch-contrast,#20211E);color:var(--stitch-on-contrast,#fff); }
+}
+@media(max-width:760px) {
+ :root body[data-visual-theme] .vue-page.collection-page .collection-card>.collection-actions { grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:44px;block-size:auto;min-block-size:44px; }
+}

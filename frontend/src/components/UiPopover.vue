@@ -65,7 +65,7 @@ defineExpose({ open, close, visible });
 
 <template>
   <Teleport to="body">
-    <div :id="id" ref="panel" popover="auto" role="dialog" :aria-label="title" class="vue-social-popover" @toggle="toggled">
+    <div :id="id" ref="panel" popover="auto" role="dialog" :aria-label="title" class="vue-social-popover" @toggle="toggled" @keydown.esc.stop.prevent="close()">
       <template v-if="visible">
         <header class="vue-social-popover-header"><slot name="header"><h2>{{ title }}</h2></slot><UiButton stitch variant="ghost" icon="close" icon-only :label="'關閉' + title" @click="close()" /></header>
         <div class="vue-social-popover-body"><slot /></div>
