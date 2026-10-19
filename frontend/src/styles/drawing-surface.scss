@@ -1,0 +1,33 @@
+@use 'tokens';
+
+.vue-drawing-surface { display: grid; grid-template-columns: minmax(0, 1fr); gap: tokens.space(3); min-inline-size: 0; container: drawing / inline-size; }
+.vue-drawing-frame { min-inline-size: 0; aspect-ratio: 2; background: #fff; border: 1px solid var(--play-line, #777); border-radius: .75rem; overflow: hidden; }
+.vue-drawing-frame > canvas { display: block; inline-size: 100%; block-size: 100%; touch-action: none; }
+.vue-drawing-frame > canvas[aria-hidden=true] { display: none; }
+.vue-drawing-scene { block-size: 100%; overflow: auto; scrollbar-gutter: stable; padding: tokens.space(4); box-sizing: border-box; }
+.vue-drawing-tool-row { display: grid; grid-template-columns: repeat(10, minmax(2.75rem, 1fr)); gap: tokens.space(2); }
+.vue-drawing-tools { display: grid; gap: tokens.space(3); min-inline-size: 0; }
+.vue-drawing-tool { display: flex; align-items: center; justify-content: center; min-inline-size: 0; min-block-size: 2.75rem; padding: tokens.space(2); }
+.vue-drawing-tool[aria-pressed=true] { outline: 2px solid currentColor; outline-offset: -3px; }
+.vue-drawing-tool-caption { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+.vue-drawing-color-row { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: tokens.space(3); }
+.vue-drawing-color-row label { display: flex; align-items: center; gap: tokens.space(2); min-inline-size: 0; }
+.vue-drawing-color-row input[type=color] { inline-size: 2.75rem; block-size: 2.75rem; padding: tokens.space(1); }
+.vue-drawing-size input { inline-size: 100%; min-inline-size: 0; }
+.vue-drawing-size output { min-inline-size: 2ch; font-variant-numeric: tabular-nums; }
+.vue-drawing-swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: tokens.space(3); }
+.vue-drawing-swatches button { min-inline-size: 2.75rem; min-block-size: 2.75rem; border: 2px solid #777; border-radius: .5rem; }
+.vue-drawing-swatches span { color: white; text-shadow: 0 0 3px #000, 0 0 3px #000; }
+@container drawing (max-width:35rem) {
+  .vue-drawing-tool-row { grid-template-columns: repeat(5, minmax(2.75rem, 1fr)); }
+}
+@container drawing (max-width:16rem) {
+  .vue-drawing-tool-row { grid-template-columns: repeat(4, minmax(2.75rem, 1fr)); }
+}
+@media(max-width:760px) {
+  .vue-drawing-tool { flex-direction: column; gap: tokens.space(1); padding: tokens.space(1); }
+  .vue-drawing-tool-caption { position: static; inline-size: auto; block-size: auto; clip-path: none; font-size: .875rem; }
+  .vue-drawing-color-row { grid-template-columns: auto minmax(0, 1fr); }
+  .vue-drawing-size { grid-column: 1/-1; }
+  .vue-drawing-scene { padding: tokens.space(4); }
+}

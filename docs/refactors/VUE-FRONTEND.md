@@ -155,3 +155,20 @@ app 掛載前為根節點加入 `data-ui-owner="vue"`。舊 GameUI 的自動 fra
 - 在獨立預覽環境，十一款遊戲各實際建立房間、加入兩位測試 AI、開局與離席，產生中斷存檔；列表／詳情 API 可讀，所有開局前／開局／離席 snapshot 及 trace 均可轉成新回看資料。這僅涵蓋早期存檔，不代表完整對局的結果、畫冊與中間動作都已驗收。
 
 尚待瀏覽器驗收：桌機／手機尺寸與狀態切換、列表鍵盤操作、快速切換／載入錯誤、步驟控制、真實下載、完整對局結果、雷霆賽道及兩款繪圖歷史的實際呈現。目前不能將此頁列為已完成實際介面驗收。
+
+## 共用房間與作畫介面準備（候選，2026-10-19）
+
+本節是遊戲遷移的前置實作，沒有新增文件登錄；仍為十二份 Vue 文件。畫猜的現行頁面尚未切換，不能將新元件編譯成功記為已遷移或實玩通過。
+
+- `contracts/room.ts` 保留十一款遊戲共用快照、座位、玩家與 host 契約，遊戲欄位原樣保留。撲克沒有房間 version；比較快照時不虛構版本。房號／遊戲／玩家及 roomInstanceId（含 media／watch）共同界定身份，同版本較早 serverNow 的回應不覆蓋目前資料。
+- `room` Pinia domain 管理重連、共用命令、401／踢人／房間關閉、固定回饋、時鐘偏移與讀取取消。重新開啟房間或銷毀 domain 時取消讀取與重試 timer，scope 防止舊回應回灌；身份替換時停止舊頁請求，提供明確重新連線狀態。座位快取只作原 localStorage 格式的提示，身份仍由 cookie 與後端驗證。
+- `contracts/drawing.ts` 分開房間 version 與 strokeVersion，驗證畫猜的回合、畫者、題目可見資訊、參與名單與 canvasEpoch。`DrawingSurface` 由 Vue 管理工具、調色盤、清空確認與提示；bitmap／ACK／增量／SSE／逐點呈現仍交原 DrawCanvasSession、DrawController、DrawTransport、DrawPlayback、StrokeCanvas 引擎。
+- `drawing-input.ts` 保留原 512×256、coalesced samples、16 點／80ms 排送、同筆相對時間、carry anchor、滑鼠／觸控及鍵盤輸入；活動筆使用起筆時的樣式。取消／離頁會清 timer 與 pointer capture，底層重送節奏、64 點 wire 分批與 quota 不變。
+- 新元件使用共用字級與間距 tokens，固定畫布比例、提示槽與操作區，手機工具重排。工具圖示沿用原 StrokeCanvas registry；hover／focus 提示接入 GameUI，同時保留中文可讀名稱。
+
+### 實際證據與限制
+
+- 型別檢查通過；以 Vite `write:false` 單獨編譯 DrawingSurface 及其依賴，JS 與 SCSS 資產非空。這只是編譯證據，不提供未完成的遊戲頁面。
+- 獨立測試後端：十一款遊戲各實際建立房間、加入 AI、開局及重連，等待／開局快照均可由新 reader 讀取，最後離席清理。撲克的實際快照確認沒有 version。
+- 畫猜實際進入真人作畫回合，送出三點 quadratic 筆畫；ACK 與 SSE stroke 版本、pointTimes 一致，權威 canvas 可讀。undo／clear 的 SSE reset 到達且不重設已使用批次／點額度。
+- 尚未驗證：新 Pinia／Vue 的實際請求生命週期、持筆未放開的途中畫面、ACK 前後不閃白、觀看者逐點時序、換輪／同房新局、弱網／斷 SSE 恢復、桌機／手機版面與真正觸控。下一步需接入完整等待室、場景、名單、聊天、媒體、最近畫作與其他房間操作後，在新頁逐項驗收；不能用這批後端證據替代新介面的遊玩證據。
