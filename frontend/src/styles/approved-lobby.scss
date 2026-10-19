@@ -1,0 +1,67 @@
+@use 'stitch-tokens' as st;
+
+// L02 uses a native modal and a right-side layout; only its body scrolls.
+:root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-site-preferences-dialog {
+ box-sizing:border-box;inline-size:400px;max-inline-size:calc(100vw - 32px);block-size:min(810px,calc(100dvh - 88px));max-block-size:calc(100dvh - 32px);
+ margin:64px 24px 0 auto;padding:0;gap:0;overflow:hidden;border-radius:16px;grid-template-rows:64px minmax(0,1fr);
+ >.vue-dialog-header { padding:8px 16px;border-block-end:1px solid var(--stitch-line);h2 { font-size:18px;line-height:27px; } }
+ >.vue-dialog-content { min-inline-size:0;min-block-size:0;padding:0;overflow:hidden; }
+}
+:root body .vue-game-preferences.vue-approved-preferences {
+ display:grid;grid-template-rows:minmax(0,1fr) auto;gap:0;block-size:100%;min-block-size:0;min-inline-size:0;color:var(--stitch-ink);font:14px/1.5 var(--stitch-font-family);
+ .vue-preferences-scroll { min-block-size:0;min-inline-size:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:12px 16px;display:grid;align-content:start;gap:12px; }
+ .vue-preferences-intro { font-size:14px;color:var(--stitch-muted);margin:0; }
+ .vue-preference-group { min-inline-size:0;display:grid;gap:8px;padding:12px;border:1px solid var(--stitch-line);border-radius:8px;background:var(--stitch-surface-subtle); }
+ .vue-preference-theme>label { display:grid;gap:8px; }
+ select { box-sizing:border-box;min-inline-size:0;inline-size:100%;min-block-size:44px;border:1px solid var(--stitch-line);border-radius:6px;padding:8px;background:var(--stitch-surface);color:var(--stitch-ink);font:16px/1.5 var(--stitch-font-family); }
+ .vue-preference-channel { display:grid;gap:4px;min-inline-size:0;>.vue-button { inline-size:100%; } }
+ .vue-preference-switch { margin:0;min-block-size:44px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px; }
+ .vue-preference-switch input[role=switch] { appearance:none;box-sizing:border-box;inline-size:36px;block-size:22px;min-inline-size:36px;min-block-size:22px;margin:0;border:2px solid var(--stitch-muted);border-radius:999px;background:var(--stitch-muted);cursor:pointer;flex:none;position:relative;
+  &::before { content:'';position:absolute;inline-size:14px;block-size:14px;inset-block-start:2px;inset-inline-start:2px;border-radius:50%;background:var(--stitch-surface); }
+  &:checked { border-color:var(--stitch-ink);background:var(--stitch-ink);&::before { inset-inline-start:16px; } }
+  &:focus-visible { outline:2px solid var(--stitch-focus);outline-offset:3px; }
+  &:disabled { opacity:.5;cursor:default; }
+ }
+ .vue-preference-volume { min-block-size:44px;margin:0;grid-template-columns:minmax(0,1fr) 4ch;gap:8px;input { min-inline-size:0;inline-size:100%;min-block-size:44px;padding:0;border:0;accent-color:var(--stitch-ink); }output { font-size:14px; } }
+ .vue-preference-group>p { margin:0;color:var(--stitch-muted);font-size:14px;line-height:21px; }
+ .vue-preference-frame { --ui-button-border-width:1px;--ui-button-border-color:var(--stitch-line);--ui-button-radius:6px;box-sizing:border-box;display:grid;grid-template-columns:20px minmax(0,1fr) minmax(0,5rem) 16px;gap:8px;align-items:center;min-inline-size:0;min-block-size:44px;padding:8px;background:var(--stitch-surface);color:var(--stitch-ink);text-align:start;box-shadow:none;font:14px/21px var(--stitch-font-family);border:1px solid var(--stitch-line);border-radius:6px;
+  >span { min-inline-size:0; }small { min-inline-size:0;color:var(--stitch-muted);font-size:14px;line-height:21px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }svg { display:block;inline-size:100%;block-size:20px; }
+  &:hover:not(:disabled) { background:var(--stitch-surface-hover); }
+  &:focus-visible { outline:2px solid var(--stitch-focus);outline-offset:2px; }
+ }
+ .frontend-status { margin:0;min-block-size:24px;font-size:14px;line-height:21px; }
+ >footer { display:grid;justify-items:center;align-content:center;gap:4px;min-block-size:44px;padding:8px 16px;border-block-start:1px solid var(--stitch-line);background:var(--stitch-surface-subtle);p { margin:0;font-size:14px;line-height:21px;color:var(--stitch-muted); } }
+}
+
+// L06 and L07 share the approved header/body/footer rhythm.
+:root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog:is(.vue-approved-inbox,.vue-approved-lobby-expressions) {
+ box-sizing:border-box;inline-size:420px;max-inline-size:calc(100vw - 32px);max-block-size:calc(100dvh - 32px);padding:0;gap:0;overflow:hidden;border-radius:16px;grid-template-rows:auto minmax(0,1fr);
+ >.vue-dialog-header { padding:8px 16px;border-block-end:1px solid var(--stitch-line);gap:8px;h2 { font-size:18px;line-height:27px; } }
+ >.vue-dialog-content { display:grid;min-block-size:0;min-inline-size:0;padding:0;overflow:hidden; }
+}
+:root body dialog.vue-approved-inbox.vue-stitch-dialog {
+ >.vue-dialog-content { grid-template-rows:auto auto minmax(160px,1fr) auto; }
+ .vue-inbox-intro { margin:0;padding:8px 16px 0;color:var(--stitch-muted);font-size:14px;line-height:21px; }
+ .vue-dialog-content>.frontend-status { margin:0;padding:4px 16px;min-block-size:24px;font-size:14px;line-height:21px;box-sizing:border-box; }
+ .vue-inbox-list { block-size:auto;max-block-size:min(320px,45dvh);display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-block-size:0;overflow:auto;overscroll-behavior:contain;margin:0;padding:0 16px 16px;gap:12px; }
+ .vue-inbox-empty { display:grid;place-items:center;align-content:center;text-align:center;gap:8px;min-block-size:200px;padding:16px;box-sizing:border-box;strong { font-size:16px;line-height:24px; }p { margin:0;max-inline-size:28ch;color:var(--stitch-muted);font-size:14px;line-height:21px; } }
+ .vue-inbox-empty-icon { display:grid;place-items:center;inline-size:64px;block-size:64px;border:1px solid var(--stitch-line);border-radius:50%;background:var(--stitch-surface-subtle);color:var(--stitch-muted);>span { display:block;inline-size:28px;block-size:28px; }svg { display:block;inline-size:100%;block-size:100%; } }
+ .vue-inbox-list>article { display:grid;grid-template-columns:minmax(0,1fr);gap:8px;min-inline-size:0;padding:12px;border:1px solid var(--stitch-line);border-radius:8px;background:var(--stitch-surface-subtle);h3,p { margin:0;overflow-wrap:anywhere; }h3 { font-size:16px;line-height:24px; }p { font-size:14px;line-height:21px; } }
+ .vue-invitation-actions { display:flex;flex-wrap:wrap;gap:8px;min-block-size:44px; }
+ .vue-inbox-footer { display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;min-block-size:44px;padding:12px 16px;border-block-start:1px solid var(--stitch-line);background:var(--stitch-surface-subtle); }
+}
+:root body dialog.vue-approved-lobby-expressions.vue-stitch-dialog {
+ >.vue-dialog-content { grid-template-rows:minmax(0,1fr) auto; }
+ .vue-lobby-expression-body { display:grid;gap:8px;min-block-size:0;overflow:auto;overscroll-behavior:contain;padding:12px 16px; }
+ .vue-lobby-expression-intro { margin:0;color:var(--stitch-muted);font-size:14px;line-height:21px; }
+ .vue-lobby-expressions { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:8px;block-size:auto;min-block-size:148px;max-block-size:none;overflow:visible;scrollbar-gutter:auto;
+  >p { grid-column:1/-1;font-size:14px;line-height:21px; }
+  >button { --ui-button-border-width:1px;--ui-button-border-color:var(--stitch-line);--ui-button-radius:8px;box-sizing:border-box;display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;justify-items:stretch;gap:8px;min-inline-size:0;min-block-size:44px;block-size:auto;padding:8px;background:var(--stitch-surface-subtle);color:var(--stitch-ink);border:1px solid var(--stitch-line);border-radius:8px;text-align:start;box-shadow:none;img { inline-size:28px;block-size:28px;object-fit:contain; }span { min-block-size:0;margin:0;font-size:14px;line-height:21px;overflow-wrap:anywhere; }&:hover:not(:disabled) { --ui-button-border-color:var(--stitch-primary);background:var(--stitch-selected-bg); } }
+ }
+ .frontend-status { margin:0;min-block-size:24px;font-size:14px;line-height:21px; }
+ .vue-lobby-expression-footer { display:grid;gap:8px;padding:12px 16px;border-block-start:1px solid var(--stitch-line);background:var(--stitch-surface-subtle);>div { display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px; }span,kbd { font-size:14px;line-height:21px;color:var(--stitch-muted); }a { min-block-size:44px;display:inline-flex;align-items:center;font-size:14px;line-height:21px;color:var(--stitch-link); } }
+}
+@media(max-width:760px) {
+ :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-site-preferences-dialog { inline-size:calc(100vw - 16px);max-inline-size:calc(100vw - 16px);block-size:calc(100dvh - 16px);max-block-size:calc(100dvh - 16px);margin:8px;grid-template-rows:60px minmax(0,1fr); }
+ :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog:is(.vue-approved-inbox,.vue-approved-lobby-expressions) { max-inline-size:calc(100vw - 16px);max-block-size:calc(100dvh - 16px); }
+}

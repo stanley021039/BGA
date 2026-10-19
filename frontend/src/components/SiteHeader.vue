@@ -106,6 +106,6 @@ onBeforeUnmount(() => { disposed = true; document.removeEventListener('click', o
       <span v-else-if="loading" class="vue-site-account-loading" aria-label="正在確認帳號" />
     </div>
     <div class="vue-site-header-feedback"><StatusSlot :message="message" :error="!!message" /><UiButton v-if="message && !session.pending" stitch variant="secondary" icon="refresh" label="重試讀取帳號" @click="loadIdentity" /></div>
-    <UiDialog ref="preferences" title="個人遊戲設定" compact><GamePreferences /></UiDialog>
+    <UiDialog ref="preferences" stitch class="vue-site-preferences-dialog" title="遊戲設定" compact><GamePreferences /></UiDialog>
   </div>
 </template>

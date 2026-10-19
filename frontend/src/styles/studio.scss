@@ -1,5 +1,6 @@
 @use 'compact-header' as chrome;
 @use 'tokens';
+@use 'studio-approved';
 .vue-page.vue-studio-page {
  .studio-layout { grid-template-columns:minmax(0,1fr);gap:tokens.space(6); }
  .studio-renderer-host,.studio-board,.studio-sidebar { min-inline-size:0; }
