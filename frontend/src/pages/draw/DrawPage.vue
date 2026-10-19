@@ -9,6 +9,7 @@ import { gamePath, readSeat } from '../../contracts/room';
 import { record, text } from '../../services/validation';
 import { requestJson } from '../../services/http';
 import { drawPhases, drawPlayerStatus, drawWaitingSummary } from './presentation';
+import { useDrawMotion } from './useDrawMotion';
 import DrawingSurface from '../../components/DrawingSurface.vue';
 import DrawGallery from '../../components/DrawGallery.vue';
 import DrawScene from './DrawScene.vue';
@@ -37,6 +38,8 @@ const entryBusy = ref(false), entryError = ref(''), identity = ref(''), stream =
 const gallery = ref<InstanceType<typeof DrawGallery> | null>(null), settings = ref<InstanceType<typeof DrawSettings> | null>(null), settingsSection = ref<HTMLElement | null>(null), chat = ref<InstanceType<typeof RoomChat> | null>(null);
 const help = ref<InstanceType<typeof UiDialog> | null>(null), hintDialog = ref<InstanceType<typeof UiDialog> | null>(null), confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 const connected = computed(() => stream.value && !room.disconnected && !room.terminal);
+const motionRoot = ref<HTMLElement | null>(null), motion = useDrawMotion(motionRoot, connected);
+const { badges, locked } = motion;
 const artist = computed(() => !!state.value && state.value.presenterId === state.value.me);
 const boardTitle = computed(() => !state.value ? '你畫我猜' : state.value.phase === 'drawing' ? artist.value ? state.value.question?.title || '本輪畫布' : '猜猜畫者畫什麼？' : state.value.phase === 'choosing' ? '第 ' + state.value.round + ' 輪，畫者正在選題' : state.value.phase === 'reveal' ? '本輪答案與畫作' : state.value.phase === 'finished' ? '本局成績' : '今晚的畫猜桌');
 const hint = computed(() => { const value = state.value?.hint; if (!value || typeof value !== 'object' || Array.isArray(value)) return null; const row = record(value); return { length: typeof row.length === 'number' ? row.length : 0, category: text(row.category), topic: text(row.topicLabel, '綜合') }; });
@@ -56,7 +59,7 @@ function tick() {
   if (!value || value.phase !== 'drawing' || !value.deadline) { lastSeconds = null; timerEpoch = ''; return; }
   const seconds = Math.ceil(Math.max(0, value.deadline - now.value + room.clockOffset) / 1000);
   if (timerEpoch === value.canvasEpoch && lastSeconds !== null && lastSeconds > 15 && seconds <= 15 && seconds > 0) sounds?.play('countdown-warning', 'draw-countdown:' + value.canvasEpoch + ':15', { live: connected.value && now.value - room.lastReceivedAt <= 2500 });
-  timerEpoch = value.canvasEpoch; lastSeconds = seconds;
+  timerEpoch = value.canvasEpoch; lastSeconds = seconds; motion.tick(value, seconds);
 }
 watch(state, (value, previous) => {
   if (!value) return;
@@ -120,16 +123,16 @@ onBeforeUnmount(() => { disposed = true; sounds?.destroy(); document.removeEvent
 
 <template>
   <div v-if="!room.seat" class="vue-draw-entry"><div><small>DRAW TOGETHER</small><h1>畫一筆，讓朋友猜一猜。</h1><p>{{ identity ? `以「${identity}」入座` : '將以你的角色名稱入座' }}</p><p v-if="entryCode">房間 {{ entryCode }}</p><p v-else>題目類別、時間與結算條件，可在建房後調整。</p><UiButton icon="play" :label="entryCode ? '加入這一桌' : '開一桌你畫我猜'" :pending="entryBusy || room.connecting" :disabled="['kicked', 'closed'].includes(room.terminal || '')" @click="enter" /><a href="/">返回大廳</a><StatusSlot :message="entryError || room.error" :error="!!entryError || !!room.error" /></div></div>
-  <div v-else class="vue-draw-workspace">
+  <div v-else ref="motionRoot" class="vue-draw-workspace">
     <nav class="vue-draw-toolbar" aria-label="遊戲操作"><strong>房間 {{ room.code }}</strong><span class="vue-draw-phase">{{ state ? drawPhases[state.phase] : '讀取房間中' }}</span><span class="vue-draw-round">{{ state?.round ? `第 ${state.round} / ${state.roundLimit} 輪` : '等待開桌' }}</span><div><RoomInvite /><DrawGallery ref="gallery" /><RoomMedia :connected="connected" /><UiButton icon="help" icon-only caption="說明" label="遊戲說明" @click="help?.open()" /><UiButton icon="expand" icon-only caption="專注" :label="focus ? '退出專注全螢幕' : '專注全螢幕'" :aria-pressed="focus" @click="toggleFocus" /><RoomManager /><RoomLeaveButton /></div></nav>
     <div class="vue-draw-room-feedback"><StatusSlot :message="connectionNotice || (preparing ? '正在確認房間設定…' : startNotice || room.message || results.message)" :error="!!room.terminal || room.disconnected || !!startNotice || room.failed || results.failed" /><UiButton v-if="room.terminal || room.disconnected" icon="refresh" label="重新確認房間座位" :pending="room.connecting" @click="room.reconnect()" /></div>
     <div class="vue-draw-grid">
-      <aside class="vue-draw-roster-panel"><RoomRoster :snapshot="state" :max-players="8" :actor-id="state?.presenterId" :loading="!state" :status="player => state ? drawPlayerStatus(player, state, room.disconnected) : '正在讀取'" ><template #actions><UiButton v-if="room.host" icon="add" label="加入電腦玩家" :disabled="room.busy || !setup || !botAllowed || (state?.players.length || 0) >= 8" @click="room.command('bot', {})" /></template></RoomRoster></aside>
+      <aside class="vue-draw-roster-panel"><RoomRoster :snapshot="state" :max-players="8" :actor-id="state?.presenterId" :loading="!state" :status="player => state ? drawPlayerStatus(player, state, room.disconnected) : '正在讀取'" ><template #feedback="{ player }"><span v-if="badges[player.id]" :key="badges[player.id].key" class="vue-draw-correct-badge" :data-correct-badge="player.id">✓ +{{ badges[player.id].points }} 分</span></template><template #actions><UiButton v-if="room.host" icon="add" label="加入電腦玩家" :disabled="room.busy || !setup || !botAllowed || (state?.players.length || 0) >= 8" @click="room.command('bot', {})" /></template></RoomRoster></aside>
       <main class="vue-draw-main"><section class="vue-draw-board-panel"><header class="vue-draw-board-heading"><div><small>{{ artist && state?.phase === 'drawing' ? '你的專屬秘密題目' : '你畫我猜' }}</small><h1>{{ boardTitle }}</h1><p class="vue-draw-secret-rule">{{ artist && state?.phase === 'drawing' ? '禁止直接寫出答案、文字或數字。' : drawWaitingSummary(state) }}</p></div><RoomCountdown v-if="state" :deadline="state.deadline" :epoch="state.canvasEpoch + ':' + state.phase" :duration="duration" :offset="room.clockOffset" :caption="countdownCaption" :urgent="state.phase === 'drawing'" :now="now" /><div class="vue-draw-round-tools"><UiButton icon="help" icon-only caption="提示" label="題庫提示" :disabled="state?.phase !== 'drawing' || !hint" @click="hintDialog?.open()" /><UiButton icon="next" icon-only caption="跳過" :label="artist ? '跳過此題' : '跳過此輪'" :disabled="!canSkip || room.busy" @click="skip" /></div></header><DrawingSurface :code="room.code" :scope="room.scope" :seat="room.seat" :snapshot="state" :busy="room.busy" :request="room.request" @snapshot="room.accept" @tick="tick" @stream="stream = $event" @disconnected="room.lostConnection"><DrawScene v-if="state" :snapshot="state" @start="start" @next="room.command('action', { action: 'next' })" @gallery="saveArtwork" @review="gallery?.open($event)" @settings="showSettings" /><p v-else>正在讀取房間與畫布…</p></DrawingSurface><p class="vue-draw-board-footer">{{ artist ? '你正在作畫中。請發揮創意，禁止直接寫出答案。' : '看畫作猜答案；房間閒聊不會送成猜題。' }}</p></section><DrawGuessPanel v-if="state && ['drawing', 'reveal'].includes(state.phase)" :snapshot="state" /></main>
       <aside class="vue-draw-side"><section v-if="state" v-show="setup" ref="settingsSection" tabindex="-1" class="vue-draw-settings-panel"><DrawSettings ref="settings" :snapshot="state" /><UiButton v-if="room.host" :icon="state.phase === 'finished' ? 'replay' : 'play'" :label="state.phase === 'finished' ? '再玩一局' : '開始遊戲'" :pending="preparing || room.busy" :disabled="state.players.length < 2" @click="start" /></section><RoomChat ref="chat" /></aside>
     </div><RoomEffects :connected="connected" /><RoomPings />
   </div>
   <UiDialog ref="help" title="你畫，我們猜。"><ol class="vue-draw-help"><li>2–8 位玩家輪流當畫者；房主可選題目類別、60／90／120 秒，以及固定題數或目標分數。</li><li>畫者有 15 秒從最多三題選一；只有畫者知道答案。可用畫筆、橡皮擦與形狀作畫，不能匯入照片或直接寫出答案。</li><li>猜題請使用作答區，可重複猜；每輪只計第一次答對。越早猜中分數越高（30–100），每人猜中讓畫者另得 15 分。</li><li>時間到或全部猜中後揭曉；新加入的朋友從下一輪開始猜題。同分共同獲勝。</li><li>最近畫作保留八輪，可投票、收藏、下載與分享；回看不會暫停全桌。</li></ol><a href="/draw-words">前往共編題庫</a></UiDialog>
   <UiDialog ref="hintDialog" title="題庫提示" compact @closed="hintClosed"><template v-if="hint"><strong>{{ hint.length }} 字 · {{ hint.category }}</strong><p>{{ hint.topic }}</p><template v-if="artist"><p>{{ state?.question?.title }}</p><small>只有當輪畫者可見題目；請使用畫作表達。</small></template><template v-else><p>可依字數與類別思考，或請畫者再加一筆。</p><UiButton icon="chat" label="要求加筆（填入聊天室）" @click="askHint" /></template></template></UiDialog>
-  <ConfirmDialog ref="confirm" />
+  <Teleport to="body"><div v-if="locked" class="vue-draw-lock" role="status" aria-live="polite" aria-atomic="true" data-game-focus-overlay><small>題目已鎖定</small><strong>{{ locked }}</strong><p>正在為你展開畫板與調色盤…</p></div></Teleport><ConfirmDialog ref="confirm" />
 </template>

@@ -1,6 +1,8 @@
 import { onScopeDispose, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
 import type { BarrageController, BarrageRenderer, ExpressionPlayback } from '../contracts/social';
+import type { RoomSnapshot } from '../contracts/room';
+export interface MotionGate { update(snapshot: RoomSnapshot, options: { connected: boolean }): boolean; take(key: string, eligible?: boolean): boolean; dispose(): void }
 
 type Theme = 'auto' | 'light' | 'dark';
 interface ColorState { preference: Theme; scheme: 'light' | 'dark' }
@@ -16,7 +18,7 @@ interface FrameState { version: number; enabled: boolean; selected: string }
 declare global {
   interface Window {
     ColorScheme?: { get(): ColorState; set(theme: Theme): ColorState; subscribe(fn: (state: ColorState) => void): () => void };
-    MotionPolicy?: { get(): MotionState; set(value: Partial<MotionState>): MotionState; subscribe(fn: (state: MotionState) => void): () => void; createBarrageController(show: BarrageRenderer): BarrageController };
+    MotionPolicy?: { get(): MotionState; set(value: Partial<MotionState>): MotionState; subscribe(fn: (state: MotionState) => void): () => void; createBarrageController(show: BarrageRenderer): BarrageController; createGate(): MotionGate; allowsMotion(): boolean; animate(node: Element | null, keyframes: Keyframe[], options: KeyframeAnimationOptions): Animation | null };
     AudioSettings?: {
       get(): AudioState; subscribe(fn: (state: AudioState) => void): () => void; bindPreview(audio: HTMLAudioElement): () => void;
       set(kind: 'music' | 'effects', value: { enabled?: boolean; volume?: number }, options?: { gesture?: boolean }): void;
