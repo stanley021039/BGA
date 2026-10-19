@@ -53,7 +53,7 @@ export const useMediaStore = defineStore('room-media', () => {
     const timer = setTimeout(() => controller.abort(new DOMException('媒體暫時無法連線，請重新開啟重試。', 'TimeoutError')), 10000);
     job.promise = (async () => {
       try {
-        const result = await room.request('room-media', undefined, { signal: controller.signal });
+        const result = await room.request('room-media', undefined, { signal: controller.signal, affectsConnection: false });
         if (read !== job || !current(tag.epoch)) return false;
         if (accept(result, tag)) { if (retry === budget) retry = null; return true; }
         if (mediaMarkerKey(snapshot.value) === mediaMarkerKey(marker.value)) return false;
@@ -77,7 +77,7 @@ export const useMediaStore = defineStore('room-media', () => {
     if (!enabled.value) return false;
     const epoch = generation, request = ++librarySequence, controller = new AbortController(); requests.add(controller); libraryLoading.value = true; libraryError.value = '';
     const timer = setTimeout(() => controller.abort(new DOMException('音樂庫載入逾時，請重試。', 'TimeoutError')), 10000);
-    try { const value = readMusicLibrary(await room.request('music', undefined, { signal: controller.signal })); if (!current(epoch) || request !== librarySequence) return false; tracks.value = value.tracks; return true; }
+    try { const value = readMusicLibrary(await room.request('music', undefined, { signal: controller.signal, affectsConnection: false })); if (!current(epoch) || request !== librarySequence) return false; tracks.value = value.tracks; return true; }
     catch (cause) { if (current(epoch) && request === librarySequence && !(cause instanceof DOMException && cause.name === 'AbortError')) libraryError.value = cause instanceof Error ? cause.message : '音樂庫載入失敗。'; return false; }
     finally { clearTimeout(timer); requests.delete(controller); if (current(epoch) && request === librarySequence) libraryLoading.value = false; }
   }
@@ -92,7 +92,7 @@ export const useMediaStore = defineStore('room-media', () => {
     if (!automatic) feedback('正在送出…');
     const timer = setTimeout(() => controller.abort(new DOMException('未收到媒體操作結果。', 'TimeoutError')), 10000);
     try {
-      const value = await room.request('room-media', body, { signal: controller.signal });
+      const value = await room.request('room-media', body, { signal: controller.signal, affectsConnection: false });
       if (!current(tag.epoch)) return false;
       retryCommand = null;
       if (!accept(value, tag)) { feedback('媒體狀態已更新，請確認最新內容。', true); return false; }

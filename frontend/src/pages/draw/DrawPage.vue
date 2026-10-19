@@ -1,0 +1,134 @@
+<script setup lang="ts">
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRoomStore } from '../../stores/room';
+import { useDrawResultsStore } from '../../stores/draw-results';
+import { useRequests } from '../../composables/requests';
+import { readDrawSnapshot } from '../../contracts/drawing';
+import type { DrawSnapshot } from '../../contracts/drawing';
+import { gamePath, readSeat } from '../../contracts/room';
+import { record, text } from '../../services/validation';
+import { requestJson } from '../../services/http';
+import { drawPhases, drawPlayerStatus, drawWaitingSummary } from './presentation';
+import DrawingSurface from '../../components/DrawingSurface.vue';
+import DrawGallery from '../../components/DrawGallery.vue';
+import DrawScene from './DrawScene.vue';
+import DrawSettings from './DrawSettings.vue';
+import DrawGuessPanel from './DrawGuessPanel.vue';
+import RoomRoster from '../../components/RoomRoster.vue';
+import RoomChat from '../../components/RoomChat.vue';
+import RoomEffects from '../../components/RoomEffects.vue';
+import RoomMedia from '../../components/RoomMedia.vue';
+import RoomManager from '../../components/RoomManager.vue';
+import RoomLeaveButton from '../../components/RoomLeaveButton.vue';
+import RoomInvite from '../../components/RoomInvite.vue';
+import RoomCountdown from '../../components/RoomCountdown.vue';
+import UiButton from '../../components/UiButton.vue';
+import UiDialog from '../../components/UiDialog.vue';
+import ConfirmDialog from '../../components/ConfirmDialog.vue';
+import StatusSlot from '../../components/StatusSlot.vue';
+import '../../styles/draw-page.scss';
+
+const room = useRoomStore(), results = useDrawResultsStore(), requests = useRequests();
+const state = computed(() => room.snapshot as DrawSnapshot | null), setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase));
+const routeCode = (location.pathname.match(/^\/draw\/([a-f0-9]{6})\/?$/i) || [])[1]?.toUpperCase() || '';
+const entryCode = ref(routeCode);
+const entryBusy = ref(false), entryError = ref(''), identity = ref(''), stream = ref(false), now = ref(Date.now()), preparing = ref(false), startNotice = ref(''), focus = ref(false);
+const gallery = ref<InstanceType<typeof DrawGallery> | null>(null), settings = ref<InstanceType<typeof DrawSettings> | null>(null), settingsSection = ref<HTMLElement | null>(null), chat = ref<InstanceType<typeof RoomChat> | null>(null);
+const help = ref<InstanceType<typeof UiDialog> | null>(null), hintDialog = ref<InstanceType<typeof UiDialog> | null>(null), confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null);
+const connected = computed(() => stream.value && !room.disconnected && !room.terminal);
+const artist = computed(() => !!state.value && state.value.presenterId === state.value.me);
+const boardTitle = computed(() => !state.value ? '你畫我猜' : state.value.phase === 'drawing' ? artist.value ? state.value.question?.title || '本輪畫布' : '猜猜畫者畫什麼？' : state.value.phase === 'choosing' ? '第 ' + state.value.round + ' 輪，畫者正在選題' : state.value.phase === 'reveal' ? '本輪答案與畫作' : state.value.phase === 'finished' ? '本局成績' : '今晚的畫猜桌');
+const hint = computed(() => { const value = state.value?.hint; if (!value || typeof value !== 'object' || Array.isArray(value)) return null; const row = record(value); return { length: typeof row.length === 'number' ? row.length : 0, category: text(row.category), topic: text(row.topicLabel, '綜合') }; });
+const canSkip = computed(() => state.value?.phase === 'drawing' && (artist.value || room.host));
+const duration = computed(() => state.value?.phase === 'choosing' ? 15000 : state.value?.phase === 'reveal' ? 8000 : Number(record(state.value?.options || {}).seconds || 90) * 1000);
+const countdownCaption = computed(() => state.value?.phase === 'choosing' ? '選題剩餘' : state.value?.phase === 'reveal' ? '下一輪' : '作畫剩餘');
+const connectionNotice = computed(() => room.terminal ? room.error : room.connecting ? '正在恢復房間座位…' : room.disconnected ? room.error || '房間連線中斷，正在重試…' : state.value && !stream.value ? '即時連線重新連接中，房間狀態持續更新。' : '');
+const botAllowed = computed(() => { const value = state.value?.botSupport; return !value || typeof value !== 'object' || (value as Record<string, unknown>).canAdd !== false; });
+let disposed = false, ownFullscreen = false, previousFocus: HTMLElement | null = null, previousScroll = { x: 0, y: 0 };
+interface GameSoundOwner { update(value: DrawSnapshot, options: { connected: boolean }): boolean; play(cue: string, key: string, options: { live: boolean; epoch?: number }): void; epoch(): number; disconnect(): void; destroy(): void }
+declare global { interface Window { GameSounds?: { create(): GameSoundOwner } } }
+const sounds = window.GameSounds?.create();
+let lastSeconds: number | null = null, timerEpoch = '', soundBaseline = true;
+let pendingHint: { scope: number; epoch: string } | null = null;
+function tick() {
+  now.value = Date.now(); const value = state.value;
+  if (!value || value.phase !== 'drawing' || !value.deadline) { lastSeconds = null; timerEpoch = ''; return; }
+  const seconds = Math.ceil(Math.max(0, value.deadline - now.value + room.clockOffset) / 1000);
+  if (timerEpoch === value.canvasEpoch && lastSeconds !== null && lastSeconds > 15 && seconds <= 15 && seconds > 0) sounds?.play('countdown-warning', 'draw-countdown:' + value.canvasEpoch + ':15', { live: connected.value && now.value - room.lastReceivedAt <= 2500 });
+  timerEpoch = value.canvasEpoch; lastSeconds = seconds;
+}
+watch(state, (value, previous) => {
+  if (!value) return;
+  document.body.dataset.drawPhase = value.phase; document.body.dataset.drawRole = value.presenterId === value.me ? 'artist' : 'guesser'; document.body.dataset.drawHost = String(room.host);
+  const live = sounds?.update(value, { connected: connected.value && !soundBaseline }) || false; soundBaseline = false;
+  const me = value.players.find(player => player.id === value.me), active = !!me && !me.kicked && !me.waitingForNextRound;
+  if (value.phase === 'choosing' && value.presenterId === value.me) sounds?.play('turn', `draw:turn:${value.canvasEpoch}:${value.me}`, { live: live && active && !!previous && previous.canvasEpoch !== value.canvasEpoch, epoch: sounds.epoch() });
+  const own = value.guesses.find(guess => guess.correct && guess.id === value.me);
+  if (own) { const age = value.serverNow - own.at, fresh = active && previous?.canvasEpoch === value.canvasEpoch && previous.phase === 'drawing' && ['drawing', 'reveal'].includes(value.phase) && !previous.guessedIds.includes(value.me) && value.participantIds.includes(value.me) && value.guessedIds.includes(value.me) && age >= 0 && age <= 5000;
+    sounds?.play('correct', `draw:correct:${value.canvasEpoch}:${value.me}`, { live: live && fresh, epoch: sounds.epoch() }); }
+  tick();
+}, { flush: 'sync' });
+watch(connected, value => { if (!value) { soundBaseline = true; sounds?.disconnect(); } });
+watch(canSkip, value => { if (!value) confirm.value?.cancel(); });
+watch(() => [room.scope, state.value?.canvasEpoch, state.value?.phase], () => { confirm.value?.cancel(); hintDialog.value?.close(); pendingHint = null; });
+async function enter() {
+  if (entryBusy.value || disposed) return; entryBusy.value = true; entryError.value = '';
+  try {
+    const seat = readSeat(await requests.run(signal => fetchSeat(signal)));
+    if (seat.type !== 'draw') { location.assign('/' + gamePath(seat.type) + '/' + seat.code); return; }
+    entryCode.value = seat.code; history.replaceState(null, '', '/draw/' + seat.code); stream.value = false; soundBaseline = true;
+    await room.open(seat.code, 'draw', readDrawSnapshot);
+  } catch (cause) { if (!disposed) entryError.value = cause instanceof Error ? cause.message : '加入失敗，請重試。'; }
+  finally { if (!disposed) entryBusy.value = false; }
+}
+async function fetchSeat(signal: AbortSignal) {
+  const controller = new AbortController(), timeout = setTimeout(() => controller.abort(new DOMException('加入結果尚未確認，請重新整理確認座位後再操作。', 'TimeoutError')), 10000);
+  try { return await requestJson('/api/' + (entryCode.value ? 'join' : 'create'), { method: 'POST', body: { type: 'draw', ...(entryCode.value ? { code: entryCode.value } : {}) }, signal: AbortSignal.any([signal, controller.signal]) }); }
+  finally { clearTimeout(timeout); }
+}
+async function start() {
+  if (!room.host || !setup.value || preparing.value || room.busy) return;
+  const scope = room.scope; preparing.value = true; startNotice.value = '';
+  try { if (!await settings.value?.flush()) { startNotice.value = settings.value?.error() || '請先完成房間設定儲存。'; return; }
+    if (scope === room.scope && room.host && setup.value) await room.command('start', {});
+  } finally { if (scope === room.scope) preparing.value = false; }
+}
+async function skip() {
+  const value = state.value; if (!value || !canSkip.value || room.busy) return;
+  const scope = room.scope, round = value.round, canvasEpoch = value.canvasEpoch;
+  if (!await confirm.value?.ask('本輪會立即揭曉，已取得的分數與畫作會保留。', '跳過這一題？')) return;
+  if (scope === room.scope && canSkip.value && state.value?.round === round && state.value.canvasEpoch === canvasEpoch) await room.command('action', { action: 'skip', round, canvasEpoch });
+}
+async function saveArtwork(id: string) { const scope = room.scope; const snapshot = await gallery.value?.open(id); if (snapshot && scope === room.scope && results.enabled) await results.save(id); }
+async function showSettings() { await nextTick(); settingsSection.value?.scrollIntoView({ block: 'nearest', behavior: 'auto' }); settingsSection.value?.focus(); }
+function askHint() { if (!state.value || state.value.phase !== 'drawing') return; pendingHint = { scope: room.scope, epoch: state.value.canvasEpoch }; hintDialog.value?.close(); }
+function hintClosed() { const pending = pendingHint; pendingHint = null; if (pending && pending.scope === room.scope && pending.epoch === state.value?.canvasEpoch && state.value.phase === 'drawing') chat.value?.compose('🤔 求提示，請再加一筆！'); }
+async function exitFocus() { const exit = ownFullscreen && document.fullscreenElement === document.documentElement; focus.value = false; ownFullscreen = false; document.body.classList.remove('vue-draw-focus'); if (exit) try { await document.exitFullscreen(); } catch { /* Local focus mode still exits. */ } if (!disposed) { window.scrollTo(previousScroll.x, previousScroll.y); if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true }); } }
+async function toggleFocus() { if (focus.value) return exitFocus(); previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null; previousScroll = { x: scrollX, y: scrollY }; focus.value = true; document.body.classList.add('vue-draw-focus'); if (!document.fullscreenElement) try { await document.documentElement.requestFullscreen(); if (focus.value) ownFullscreen = true; else await document.exitFullscreen(); } catch { /* CSS focus mode remains available. */ } }
+function fullscreen() { if (focus.value && ownFullscreen && !document.fullscreenElement) void exitFocus(); }
+function escape(event: KeyboardEvent) { if (!event.defaultPrevented && event.key === 'Escape' && focus.value && !document.querySelector('dialog:modal')) { event.preventDefault(); void exitFocus(); } }
+function visibility() { soundBaseline = true; tick(); }
+onMounted(() => {
+  document.addEventListener('visibilitychange', visibility); document.addEventListener('fullscreenchange', fullscreen); document.addEventListener('keydown', escape);
+  if (routeCode) void room.open(routeCode, 'draw', readDrawSnapshot).catch(cause => { entryError.value = cause instanceof Error ? cause.message : '無法恢復座位。'; });
+  void requests.request('/api/auth/me').then(value => { identity.value = text(record(value).displayName); }).catch(() => {});
+  if (new URLSearchParams(location.search).has('learn')) void help.value?.open();
+});
+onBeforeUnmount(() => { disposed = true; sounds?.destroy(); document.removeEventListener('visibilitychange', visibility); document.removeEventListener('fullscreenchange', fullscreen); document.removeEventListener('keydown', escape); void exitFocus(); delete document.body.dataset.drawPhase; delete document.body.dataset.drawRole; delete document.body.dataset.drawHost; });
+</script>
+
+<template>
+  <div v-if="!room.seat" class="vue-draw-entry"><div><small>DRAW TOGETHER</small><h1>畫一筆，讓朋友猜一猜。</h1><p>{{ identity ? `以「${identity}」入座` : '將以你的角色名稱入座' }}</p><p v-if="entryCode">房間 {{ entryCode }}</p><p v-else>題目類別、時間與結算條件，可在建房後調整。</p><UiButton icon="play" :label="entryCode ? '加入這一桌' : '開一桌你畫我猜'" :pending="entryBusy || room.connecting" :disabled="['kicked', 'closed'].includes(room.terminal || '')" @click="enter" /><a href="/">返回大廳</a><StatusSlot :message="entryError || room.error" :error="!!entryError || !!room.error" /></div></div>
+  <div v-else class="vue-draw-workspace">
+    <nav class="vue-draw-toolbar" aria-label="遊戲操作"><strong>房間 {{ room.code }}</strong><span class="vue-draw-phase">{{ state ? drawPhases[state.phase] : '讀取房間中' }}</span><span class="vue-draw-round">{{ state?.round ? `第 ${state.round} / ${state.roundLimit} 輪` : '等待開桌' }}</span><div><RoomInvite /><DrawGallery ref="gallery" /><RoomMedia :connected="connected" /><UiButton icon="help" icon-only caption="說明" label="遊戲說明" @click="help?.open()" /><UiButton icon="expand" icon-only caption="專注" :label="focus ? '退出專注全螢幕' : '專注全螢幕'" :aria-pressed="focus" @click="toggleFocus" /><RoomManager /><RoomLeaveButton /></div></nav>
+    <div class="vue-draw-room-feedback"><StatusSlot :message="connectionNotice || (preparing ? '正在確認房間設定…' : startNotice || room.message || results.message)" :error="!!room.terminal || room.disconnected || !!startNotice || room.failed || results.failed" /><UiButton v-if="room.terminal || room.disconnected" icon="refresh" label="重新確認房間座位" :pending="room.connecting" @click="room.reconnect()" /></div>
+    <div class="vue-draw-grid">
+      <aside class="vue-draw-roster-panel"><RoomRoster :snapshot="state" :max-players="8" :actor-id="state?.presenterId" :loading="!state" :status="player => state ? drawPlayerStatus(player, state, room.disconnected) : '正在讀取'" ><template #actions><UiButton v-if="room.host" icon="add" label="加入電腦玩家" :disabled="room.busy || !setup || !botAllowed || (state?.players.length || 0) >= 8" @click="room.command('bot', {})" /></template></RoomRoster></aside>
+      <main class="vue-draw-main"><section class="vue-draw-board-panel"><header class="vue-draw-board-heading"><div><small>{{ artist && state?.phase === 'drawing' ? '你的專屬秘密題目' : '你畫我猜' }}</small><h1>{{ boardTitle }}</h1><p class="vue-draw-secret-rule">{{ artist && state?.phase === 'drawing' ? '禁止直接寫出答案、文字或數字。' : drawWaitingSummary(state) }}</p></div><RoomCountdown v-if="state" :deadline="state.deadline" :epoch="state.canvasEpoch + ':' + state.phase" :duration="duration" :offset="room.clockOffset" :caption="countdownCaption" :urgent="state.phase === 'drawing'" :now="now" /><div class="vue-draw-round-tools"><UiButton icon="help" icon-only caption="提示" label="題庫提示" :disabled="state?.phase !== 'drawing' || !hint" @click="hintDialog?.open()" /><UiButton icon="next" icon-only caption="跳過" :label="artist ? '跳過此題' : '跳過此輪'" :disabled="!canSkip || room.busy" @click="skip" /></div></header><DrawingSurface :code="room.code" :scope="room.scope" :seat="room.seat" :snapshot="state" :busy="room.busy" :request="room.request" @snapshot="room.accept" @tick="tick" @stream="stream = $event" @disconnected="room.lostConnection"><DrawScene v-if="state" :snapshot="state" @start="start" @next="room.command('action', { action: 'next' })" @gallery="saveArtwork" @settings="showSettings" /><p v-else>正在讀取房間與畫布…</p></DrawingSurface><p class="vue-draw-board-footer">{{ artist ? '你正在作畫中。請發揮創意，禁止直接寫出答案。' : '看畫作猜答案；房間閒聊不會送成猜題。' }}</p></section><DrawGuessPanel v-if="state && ['drawing', 'reveal'].includes(state.phase)" :snapshot="state" /></main>
+      <aside class="vue-draw-side"><section v-if="state" v-show="setup" ref="settingsSection" tabindex="-1" class="vue-draw-settings-panel"><DrawSettings ref="settings" :snapshot="state" /><UiButton v-if="room.host" :icon="state.phase === 'finished' ? 'replay' : 'play'" :label="state.phase === 'finished' ? '再玩一局' : '開始遊戲'" :pending="preparing || room.busy" :disabled="state.players.length < 2" @click="start" /></section><RoomChat ref="chat" /></aside>
+    </div><RoomEffects :connected="connected" />
+  </div>
+  <UiDialog ref="help" title="你畫，我們猜。"><ol class="vue-draw-help"><li>2–8 位玩家輪流當畫者；房主可選題目類別、60／90／120 秒，以及固定題數或目標分數。</li><li>畫者有 15 秒從最多三題選一；只有畫者知道答案。可用畫筆、橡皮擦與形狀作畫，不能匯入照片或直接寫出答案。</li><li>猜題請使用作答區，可重複猜；每輪只計第一次答對。越早猜中分數越高（30–100），每人猜中讓畫者另得 15 分。</li><li>時間到或全部猜中後揭曉；新加入的朋友從下一輪開始猜題。同分共同獲勝。</li><li>最近畫作保留八輪，可投票、收藏、下載與分享；回看不會暫停全桌。</li></ol><a href="/draw-words">前往共編題庫</a></UiDialog>
+  <UiDialog ref="hintDialog" title="題庫提示" compact @closed="hintClosed"><template v-if="hint"><strong>{{ hint.length }} 字 · {{ hint.category }}</strong><p>{{ hint.topic }}</p><template v-if="artist"><p>{{ state?.question?.title }}</p><small>只有當輪畫者可見題目；請使用畫作表達。</small></template><template v-else><p>可依字數與類別思考，或請畫者再加一筆。</p><UiButton icon="chat" label="要求加筆（填入聊天室）" @click="askHint" /></template></template></UiDialog>
+  <ConfirmDialog ref="confirm" />
+</template>

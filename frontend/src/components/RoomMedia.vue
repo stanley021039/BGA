@@ -128,7 +128,7 @@ onBeforeUnmount(() => { disposed = true; mounted = false; observer?.disconnect()
 
 <template>
   <span ref="opener" tabindex="-1"><UiButton v-if="media.enabled" icon="video" icon-only caption="媒體" label="開啟媒體播放器" aria-haspopup="dialog" :aria-expanded="opened" :aria-controls="id" @click="open" /></span>
-  <Teleport to="body"><div class="vue-room-media-scope">
+  <Teleport to="body"><div class="vue-room-media-scope vue-page" data-ui-owner="vue">
     <dialog :id="id" ref="dialog" class="vue-room-media" :class="['vue-room-media-' + mode, { 'vue-room-media-themed': prefs.media !== 'default' }]" :style="style" :aria-labelledby="id + '-title'" @close="closed">
       <div ref="frameArt" class="vue-media-frame-art barrage-frame-preview" aria-hidden="true" />
       <header class="vue-media-header" tabindex="0" :aria-describedby="id + '-move'" aria-label="移動媒體視窗" @pointerdown="geometry.start($event)" @pointermove="geometry.move" @pointerup="geometry.end" @pointercancel="geometry.cancelled" @lostpointercapture="geometry.cancelled" @keydown="geometry.keyboard($event)">

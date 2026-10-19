@@ -5,7 +5,7 @@ import { gamePath, gameTypes, isRoomHost, readRoomSnapshot, readSeat, sameRoom, 
 import type { GameType, RoomSeat, RoomSnapshot } from '../contracts/room';
 
 type Terminal = 'kicked' | 'not-seated' | 'closed' | 'replaced' | null;
-interface RequestOptions { signal?: AbortSignal; query?: Record<string, string | number | boolean> }
+interface RequestOptions { signal?: AbortSignal; query?: Record<string, string | number | boolean>; affectsConnection?: boolean }
 // A document has one room owner. Game domains keep their own detailed contracts.
 export const useRoomStore = defineStore('room', () => {
   const code = ref(''), type = ref<GameType>('poker'), seat = shallowRef<RoomSeat | null>(null), snapshot = shallowRef<RoomSnapshot | null>(null);
@@ -59,7 +59,7 @@ export const useRoomStore = defineStore('room', () => {
       return result;
     } catch (cause) {
       if (!disposed && epoch === scope.value && !controller.signal.aborted && cause instanceof ApiError) {
-        if (!cause.status || cause.status >= 500 || cause.code === 'INVALID_RESPONSE') disconnected.value = true;
+        if (options.affectsConnection !== false && (!cause.status || cause.status >= 500 || cause.code === 'INVALID_RESPONSE')) disconnected.value = true;
         terminalError(cause);
       }
       throw cause;

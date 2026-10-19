@@ -12,10 +12,12 @@ export interface DrawingStroke extends DrawingDraft { version: number; pointTime
 export interface DrawingQuota { usedFills: number; usedBatches: number; usedPoints: number }
 export interface CanvasSnapshot { canvasEpoch: string; round: number; version: number; strokes: DrawingStroke[]; quota?: DrawingQuota }
 export interface DrawQuestion extends Record<string, unknown> { id?: string; title: string; category: string; topicLabel: string }
+export interface DrawGuess { id: string; name: string; correct: boolean; points: number; at: number; answer: string }
 export interface DrawSnapshot extends RoomSnapshot {
   type: 'draw'; phase: 'waiting' | 'choosing' | 'drawing' | 'reveal' | 'finished';
   round: number; roundLimit: number; presenterId: string | null; deadline: number | null; canvasEpoch: string; strokeVersion: number;
   participantIds: string[]; guessedIds: string[]; candidates: DrawQuestion[]; question: DrawQuestion | null;
+  guesses: DrawGuess[]; winner: { ids: string[]; score: number; reason: string } | null;
   result: PublicDrawResult | null; recentResults: PublicDrawResult[]; resultVotes: ResultVote[]; savedResultIds: string[];
 }
 const integer = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
@@ -36,7 +38,14 @@ export function readDrawSnapshot(value: unknown): DrawSnapshot {
   if (typeof options.seconds !== 'number' || ![60, 90, 120].includes(options.seconds)) throw Error('作畫時間資料格式不正確');
   if (!integer(room.version) || !integer(room.round) || !integer(room.roundLimit) || !integer(room.strokeVersion) || !text(room.canvasEpoch) ||
     room.presenterId !== null && typeof room.presenterId !== 'string' || room.deadline !== null && (typeof room.deadline !== 'number' || !Number.isFinite(room.deadline))) throw Error('畫猜回合資料格式不正確');
-  return { ...room, round: room.round, roundLimit: room.roundLimit, strokeVersion: room.strokeVersion, canvasEpoch: text(room.canvasEpoch),
+  const guesses = array(room.guesses).slice(-50).map(value => {
+    const guess = record(value);
+    if (!text(guess.id) || !text(guess.name) || typeof guess.correct !== 'boolean' || typeof guess.at !== 'number' || !Number.isFinite(guess.at) || guess.correct && !integer(guess.points) || !guess.correct && typeof guess.answer !== 'string') throw Error('猜題紀錄格式不正確');
+    return { id: text(guess.id), name: text(guess.name), correct: guess.correct, at: guess.at, points: guess.correct ? guess.points as number : 0, answer: text(guess.answer) };
+  });
+  let winner: DrawSnapshot['winner'] = null;
+  if (room.winner !== null) { const row = record(room.winner); if (!integer(row.score)) throw Error('排名資料格式不正確'); winner = { ids: ids(row.ids), score: row.score, reason: text(row.reason) }; }
+  return { ...room, round: room.round, roundLimit: room.roundLimit, strokeVersion: room.strokeVersion, canvasEpoch: text(room.canvasEpoch), guesses, winner,
     participantIds: ids(room.participantIds), guessedIds: ids(room.guessedIds), candidates: array(room.candidates).map(question), question: room.question === null ? null : question(room.question),
     result: room.result === null ? null : readPublicDrawResult(room.result), recentResults: array(room.recentResults).slice(0, 8).map(readPublicDrawResult),
     resultVotes: array(room.resultVotes).slice(0, 8).map(readResultVote), savedResultIds: ids(room.savedResultIds),
