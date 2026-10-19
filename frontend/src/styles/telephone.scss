@@ -1,0 +1,67 @@
+@use 'tokens' as t;
+.vue-telephone-stage { height:1000px; min-height:0; grid-template-rows:auto 72px minmax(0,1fr) 112px 132px; >header { display:grid; gap:t.space(2); h1 { min-height:2.6em; } p { min-height:3em; } } }
+.vue-telephone-clock { min-width:0; min-height:72px; .vue-room-countdown { width:100%; box-sizing:border-box; } }
+.vue-telephone-live { display:grid; align-content:start; gap:t.space(4); min-width:0; min-height:0; overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; padding:t.space(1); }
+.vue-telephone-task,.vue-telephone-review { display:grid; gap:t.space(4); min-width:0; align-content:start; }
+.vue-telephone-previous { display:grid; gap:t.space(2); min-width:0; overflow-wrap:anywhere; h2 { min-height:2.6em; } }
+.vue-telephone-canvas { width:100%; min-width:0; aspect-ratio:2; border:1px solid var(--play-line); border-radius:t.space(2); overflow:hidden; background:#fff; canvas { display:block; width:100%; height:100%; } &.is-editable canvas { touch-action:none; cursor:crosshair; } canvas:focus-visible { outline:3px solid var(--play-blue); outline-offset:-3px; } }
+.vue-telephone-tools { display:grid; grid-template-columns:repeat(5,minmax(44px,1fr)); gap:t.space(2); .vue-drawing-tool { width:100%; } }
+.vue-telephone-colors { display:flex; gap:t.space(3); align-items:center; flex-wrap:wrap; min-width:0; label { display:flex; gap:t.space(2); align-items:center; min-height:44px; } input[type=color] { width:44px; height:44px; padding:2px; border:1px solid var(--play-line); } details { position:relative; summary { min-height:44px; display:flex; align-items:center; cursor:pointer; } >div { z-index:5; position:absolute; left:0; top:100%; display:grid; grid-template-columns:repeat(5,32px); gap:t.space(2); padding:t.space(3); background:var(--play-surface); border:1px solid var(--play-line); border-radius:t.space(2); box-shadow:0 4px 16px #0003; } button { width:32px; height:32px; border:1px solid var(--play-line); border-radius:t.space(1); } } }
+.vue-telephone-size { flex:1; min-width:180px; input { flex:1; width:80px; min-width:0; } output { width:2ch; font-variant-numeric:tabular-nums; } }
+.vue-telephone-quota { font-variant-numeric:tabular-nums; min-height:24px; }
+.vue-telephone-guess { display:grid; gap:t.space(3); min-width:0; input { width:100%; min-width:0; min-height:44px; box-sizing:border-box; padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(2); background:var(--play-paper); color:var(--play-ink); } span { min-height:24px; font-variant-numeric:tabular-nums; } }
+.vue-telephone-submitted,.vue-telephone-waiting { display:grid; gap:t.space(4); align-content:center; min-height:240px; overflow-wrap:anywhere; }
+.vue-telephone-waiting { text-align:center; img { width:100%; height:180px; object-fit:contain; } }
+.vue-telephone-status { display:grid; grid-template-rows:auto minmax(48px,1fr); gap:t.space(2); min-width:0; overflow:auto; scrollbar-gutter:stable; p { overflow-wrap:anywhere; } .frontend-status { margin:0; } }
+.vue-telephone-actions { display:flex; align-items:center; gap:t.space(2); flex-wrap:wrap; min-height:44px; min-width:0; overflow:auto; align-content:start; scrollbar-gutter:stable; span { overflow-wrap:anywhere; @include t.type(p3); } >button { flex:1; min-width:100px; white-space:normal; overflow-wrap:anywhere; } }
+.vue-telephone-review { >label { display:grid; gap:t.space(2); min-width:0; } select { width:100%; min-width:0; min-height:44px; background:var(--play-paper); color:var(--play-ink); } article { display:grid; align-content:start; gap:t.space(3); min-width:0; padding:t.space(4); border:1px solid var(--play-line); border-radius:t.space(3); h3,p,small { overflow-wrap:anywhere; } } }
+.vue-telephone-settings { min-width:0; summary { min-height:44px; padding-block:t.space(2); cursor:pointer; overflow-wrap:anywhere; } fieldset { min-width:0; margin:0; padding:t.space(3); display:grid; gap:t.space(2); } label { display:flex; align-items:center; gap:t.space(2); min-height:44px; } .frontend-status { margin-block:t.space(2); } }
+@media(max-width:760px) { .vue-telephone-stage { height:1100px; grid-template-rows:auto 72px minmax(0,1fr) 132px 176px; } .vue-telephone-tools { gap:t.space(1); } .vue-telephone-actions >span { width:100%; } .vue-telephone-colors { gap:t.space(2); } .vue-telephone-review article { padding:t.space(3); } }
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ body.vue-telephone-document:not(.ui-large-text) {
+  margin:0;
+  .vue-game-document { height:100dvh; padding:0 t.space(6) t.space(2); display:grid; grid-template-rows:auto minmax(0,1fr); }
+  [data-site-header].vue-site-header { min-height:0; margin:0; padding:t.space(2) 0; }
+  .vue-site-header-content { min-height:44px; row-gap:0; }
+  .vue-site-header-feedback { position:absolute; top:calc(100% + 8px); right:0; width:min(480px,100%); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(3); background:var(--play-surface); z-index:140; }
+  .vue-site-header-feedback:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+  #telephone-app { min-height:0; }
+  .vue-game-workspace { height:100%; min-height:0; grid-template-rows:auto 48px minmax(0,1fr); gap:t.space(3); }
+  .vue-game-toolbar { min-height:44px; padding-block:t.space(2); gap:t.space(3); }
+  .vue-game-phase { min-height:24px; }
+  .vue-game-room-feedback { min-height:48px; height:48px; }
+  .vue-game-grid { min-height:0; }
+  .vue-game-main,.vue-game-side { overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; }
+  .vue-game-main { border:1px solid var(--play-line); border-radius:t.space(4); background:var(--play-surface); }
+  .vue-game-roster-panel { min-height:0; padding:t.space(3); .vue-roster-list { min-height:0; max-height:none; } }
+  .vue-game-settings-panel { flex:none; padding:t.space(3); gap:t.space(2); >p { display:none; } }
+  .vue-game-start-slot { min-height:44px; }
+  .vue-game-side { gap:t.space(3); >.vue-room-chat { flex:1; min-height:300px; padding:t.space(3); gap:t.space(2); } }
+  .vue-room-chat-content { grid-template-rows:0 minmax(60px,1fr) 0 auto 44px 48px; gap:t.space(2); }
+  .vue-chat-notice,.vue-chat-quick:empty { visibility:hidden; min-height:0; height:0; }
+  .vue-telephone-stage { flex:none; height:100%; box-sizing:border-box; border:0; border-radius:0; padding:t.space(3); gap:t.space(2); grid-template-rows:auto 48px minmax(0,1fr) 48px 72px; >header { gap:t.space(1); h1,p { min-height:0; } h1 { @include t.type(h2); } small,>p { display:none; } } }
+  .vue-telephone-clock { min-height:48px; }
+  .vue-telephone-status { grid-template-rows:auto auto; align-content:start; gap:0; @include t.type(p3); .frontend-status { min-height:0; min-block-size:0; block-size:auto; max-block-size:none; padding:0; } .frontend-status:empty { display:none; } }
+  .vue-telephone-actions { gap:t.space(1); align-content:start; >button { flex:none; min-width:100px; min-height:44px; padding-inline:t.space(2); @include t.type(p3); } >span { flex-basis:100%; } }
+  .vue-telephone-task { grid-template-columns:236px minmax(0,1fr); gap:t.space(2) t.space(4); }
+  .vue-telephone-task>.vue-telephone-previous { grid-column:1/-1; height:64px; min-height:0; overflow:auto; scrollbar-gutter:stable; align-content:start; gap:t.space(1); h2 { min-height:0; @include t.type(p2); } small { @include t.type(p3); } }
+  .vue-telephone-task>.vue-telephone-tools { grid-column:1; grid-row:2; display:flex; flex-wrap:wrap; gap:t.space(1); align-content:start; .vue-drawing-tool { flex:none; width:44px; height:44px; min-width:44px; min-height:44px; box-sizing:border-box; } }
+  .vue-telephone-task>.vue-telephone-colors { grid-column:1; grid-row:3; display:grid; grid-template-columns:44px 48px minmax(0,1fr); gap:t.space(1); >label:first-child { font-size:0; gap:0; } details summary { @include t.type(p3); } details>div { top:auto; bottom:100%; margin-bottom:t.space(1); } input[type=color] { box-sizing:border-box; } .vue-telephone-size { min-width:0; gap:2px; @include t.type(p3); input { width:100%; min-width:24px; } } }
+  .vue-telephone-task>.vue-telephone-quota { grid-column:1; grid-row:4; @include t.type(p3); }
+  .vue-telephone-task>.vue-telephone-canvas { grid-column:2; grid-row:2/span 3; align-self:start; justify-self:center; }
+  .vue-telephone-canvas { width:min(100%,512px,calc((100dvh - 530px)*2)); box-sizing:border-box; }
+  .vue-telephone-task:has(>.vue-telephone-guess),.vue-telephone-task:has(>.vue-telephone-submitted) { grid-template-columns:minmax(0,1fr) minmax(180px,236px); align-items:start; >.vue-telephone-previous { grid-column:1; grid-row:1; height:auto; overflow:visible; } >.vue-telephone-guess,>.vue-telephone-submitted { grid-column:2; grid-row:1; min-height:0; gap:t.space(2); } }
+  .vue-telephone-previous>.vue-telephone-canvas { justify-self:center; }
+  .vue-telephone-review .vue-telephone-canvas { justify-self:start; }
+  @media(max-height:800px) { .vue-telephone-task>.vue-telephone-previous { height:48px; } }
+  @media(max-height:700px) {
+   .vue-telephone-stage { padding:t.space(2); gap:t.space(1); grid-template-rows:auto 40px minmax(0,1fr) 42px 64px; }
+   .vue-telephone-clock { min-height:40px; }
+   .vue-telephone-live { padding:0; }
+   .vue-telephone-task { gap:t.space(1) t.space(3); }
+   .vue-telephone-task>.vue-telephone-previous { height:40px; }
+   .vue-telephone-task:has(>.vue-telephone-guess),.vue-telephone-task:has(>.vue-telephone-submitted) { >.vue-telephone-previous { height:auto; } }
+  }
+  .vue-telephone-settings[open] { max-height:280px; overflow:auto; scrollbar-gutter:stable; }
+ }
+}

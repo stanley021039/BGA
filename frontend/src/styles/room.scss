@@ -8,6 +8,7 @@
 .vue-roster-list { display: flex; flex-direction: column; gap: tokens.space(3); min-inline-size: 0; min-block-size: 0; margin: 0; padding: tokens.space(1); list-style: none; overflow: auto; scrollbar-gutter: stable; }
 .vue-room-player { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 4rem; align-items: start; gap: tokens.space(3); flex-shrink: 0; min-inline-size: 0; padding: tokens.space(3); border: 1px solid var(--play-line, #a59b96); border-radius: .75rem; }
 .vue-room-player[data-actor=true] { border-width: 2px; padding: calc(#{tokens.space(3)} - 1px); }
+.vue-room-roster .vue-room-player[data-no-metric=true] { grid-template-columns: 2.5rem minmax(0, 1fr); }
 .vue-room-player-copy { min-inline-size: 0; }
 .vue-room-player-name { display: flex; align-items: center; gap: tokens.space(2); min-inline-size: 0; }
 .vue-room-player-name > .vue-player-name { flex: 1; }

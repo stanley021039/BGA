@@ -83,5 +83,15 @@
     "id": "bluff",
     "document": "bluff.html",
     "route": "/bluff"
+  },
+  {
+    "id": "telephone",
+    "document": "telephone.html",
+    "route": "/telephone"
+  },
+  {
+    "id": "studio",
+    "document": "studio.html",
+    "route": "/studio"
   }
 ]
