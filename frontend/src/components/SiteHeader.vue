@@ -60,7 +60,7 @@ onBeforeUnmount(() => { disposed = true; document.removeEventListener('click', o
 </script>
 <template>
   <div ref="root" class="vue-site-header-content vue-site-header-c03" data-site-header-variant="c03" @focusout="focusout">
-    <a class="site-title vue-site-brand" href="/" aria-label="302捉猶團，返回大廳">302捉猶團</a>
+    <a class="site-title vue-site-brand" href="/" aria-label="302捉猶團，返回大廳"><img v-if="room.seat" class="vue-room-brand-image" src="/assets/stitch/room-brand.svg" width="26" height="26" alt="">302捉猶團</a>
     <nav class="vue-site-nav" aria-label="主要導覽">
       <template v-if="session.user">
         <a class="vue-site-navigation-link" href="/community?tab=issues">留言板</a>
@@ -73,6 +73,7 @@ onBeforeUnmount(() => { disposed = true; document.removeEventListener('click', o
         <a class="vue-site-navigation-link" href="/history">對局歷史</a>
       </template>
     </nav>
+    <div id="vue-room-header-portal" class="vue-room-header-portal" :hidden="!room.seat" />
     <div class="vue-site-controls">
       <UiButton stitch variant="ghost" :icon="dark ? 'sun' : 'moon'" icon-only :label="dark ? '切換為亮色模式' : '切換為深色模式'" :aria-pressed="dark" @click="theme" />
       <template v-if="session.user">

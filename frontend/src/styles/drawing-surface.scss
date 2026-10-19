@@ -5,24 +5,12 @@
 .vue-drawing-frame > canvas { display: block; inline-size: 100%; block-size: 100%; touch-action: none; }
 .vue-drawing-frame > canvas[aria-hidden=true] { display: none; }
 .vue-drawing-scene { block-size: 100%; overflow: auto; scrollbar-gutter: stable; padding: tokens.space(4); box-sizing: border-box; }
-.vue-drawing-tool-row { display: grid; grid-template-columns: repeat(10, minmax(2.75rem, 1fr)); gap: tokens.space(2); }
-.vue-drawing-tools { display: grid; gap: tokens.space(3); min-inline-size: 0; }
-.vue-drawing-color-row { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: tokens.space(3); }
-.vue-drawing-color-row label { display: flex; align-items: center; gap: tokens.space(2); min-inline-size: 0; }
-.vue-drawing-color-row input[type=color] { inline-size: 2.75rem; block-size: 2.75rem; padding: tokens.space(1); }
-.vue-drawing-size input { inline-size: 100%; min-inline-size: 0; }
-.vue-drawing-size output { min-inline-size: 2ch; font-variant-numeric: tabular-nums; }
-.vue-drawing-swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: tokens.space(3); }
-.vue-drawing-swatches button { min-inline-size: 2.75rem; min-block-size: 2.75rem; border: 2px solid #777; border-radius: .5rem; }
-.vue-drawing-swatches span { color: white; text-shadow: 0 0 3px #000, 0 0 3px #000; }
-@container drawing (max-width:35rem) {
-  .vue-drawing-tool-row { grid-template-columns: repeat(5, minmax(2.75rem, 1fr)); }
+
+// C04 has two stable surface rows: console and existing status. Its canvas is
+// never replaced when artist controls appear, disappear or change orientation.
+body section.vue-drawing-surface.vue-c04-surface { grid-template-rows:minmax(0,1fr) auto;min-block-size:0; }
+.vue-c04-surface>.vue-drawing-console { min-block-size:0;block-size:100%; }
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ :root body[data-game-kind=draw] section.vue-drawing-surface.vue-c04-surface { grid-template-rows:minmax(0,1fr) 28px; }
 }
-@container drawing (max-width:16rem) {
-  .vue-drawing-tool-row { grid-template-columns: repeat(4, minmax(2.75rem, 1fr)); }
-}
-@media(max-width:760px) {
-  .vue-drawing-color-row { grid-template-columns: auto minmax(0, 1fr); }
-  .vue-drawing-size { grid-column: 1/-1; }
-  .vue-drawing-scene { padding: tokens.space(4); }
-}
+@media(max-width:760px) { .vue-drawing-scene { padding:tokens.space(4); } }

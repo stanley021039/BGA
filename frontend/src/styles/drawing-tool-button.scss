@@ -1,5 +1,13 @@
 @use 'tokens';
-.vue-drawing-tool { display:flex; align-items:center; justify-content:center; min-inline-size:0; min-block-size:2.75rem; padding:tokens.space(2); }
-.vue-drawing-tool[aria-pressed=true] { outline:2px solid currentColor; outline-offset:-3px; }
-.vue-drawing-tool-caption { position:absolute; inline-size:1px; block-size:1px; overflow:hidden; clip-path:inset(50%); }
-@media(max-width:760px) { .vue-drawing-tool { flex-direction:column; gap:tokens.space(1); padding:tokens.space(1); } .vue-drawing-tool-caption { position:static; inline-size:auto; block-size:auto; clip-path:none; font-size:.875rem; } }
+.vue-drawing-tool { --ui-button-radius:.5rem;position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 44px;inline-size:44px;block-size:44px;min-inline-size:44px;min-block-size:44px;padding:tokens.space(2);border:1px solid transparent;border-radius:.5rem;background:transparent;color:var(--stitch-ink,var(--play-ink)); }
+.vue-drawing-tool[aria-pressed=true] { background:var(--stitch-primary,#f6cf35);color:#212121;border-color:#212121;outline:0; }
+.vue-drawing-tool:focus-visible { outline:2px solid currentColor;outline-offset:2px; }
+.vue-drawing-tool .ui-icon { inline-size:24px;block-size:24px;display:grid;place-items:center; }
+.vue-drawing-tool-caption { position:absolute;inset-inline-start:50%;inset-block-start:calc(100% + .25rem);transform:translateX(-50%);z-index:10;inline-size:max-content;max-inline-size:12rem;padding:tokens.space(2);border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;background:var(--stitch-ink,var(--play-ink));color:var(--stitch-surface,var(--play-surface));font-size:.875rem;line-height:1.5;pointer-events:none;opacity:0;visibility:hidden; }
+.vue-drawing-tool:is(:hover,:focus-visible)>.vue-drawing-tool-caption { opacity:1;visibility:visible; }
+
+// C04 opt-in wins page/theme bare-button declarations while the baseline above
+// remains available to existing callers outside the shared drawing console.
+:root body .vue-drawing-console button.vue-drawing-tool { --ui-button-radius:.5rem;position:relative;display:flex;align-items:center;justify-content:center;box-sizing:border-box;flex:0 0 44px;inline-size:44px;block-size:44px;min-inline-size:44px;min-block-size:44px;padding:tokens.space(2);border:1px solid transparent;border-radius:.5rem;background:transparent;color:var(--stitch-ink,var(--play-ink)); }
+:root body .vue-drawing-console button.vue-drawing-tool[aria-pressed=true] { background:var(--stitch-primary,#f6cf35);color:#212121;border-color:#212121;outline:0; }
+:root body .vue-drawing-console button.vue-drawing-tool:focus-visible { outline:2px solid currentColor;outline-offset:2px; }

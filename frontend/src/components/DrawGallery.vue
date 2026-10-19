@@ -10,6 +10,7 @@ import StatusSlot from './StatusSlot.vue';
 import ResultCanvas from './ResultCanvas.vue';
 import DrawVote from './DrawVote.vue';
 import '../styles/draw-gallery.scss';
+defineProps<{ stitch?: boolean }>();
 const results = useDrawResultsStore(), room = useRoomStore(), prefix = useId();
 const dialog = ref<InstanceType<typeof UiDialog> | null>(null), confirmation = ref<InstanceType<typeof ConfirmDialog> | null>(null), opened = ref(false);
 let disposed = false;
@@ -48,7 +49,7 @@ onBeforeUnmount(() => { disposed = true; close(); });
 defineExpose({ open });
 </script>
 <template>
-  <UiButton icon="frame" icon-only caption="畫作" :label="'最近畫作 · ' + results.results.length" :disabled="!results.enabled || (!results.results.length && !results.initError)" @click="open(undefined, $event.currentTarget as HTMLElement)" />
+  <UiButton :stitch="stitch" variant="ghost" icon="frame" icon-only caption="畫作" :label="'最近畫作 · ' + results.results.length" :disabled="!results.enabled || (!results.results.length && !results.initError)" @click="open(undefined, $event.currentTarget as HTMLElement)" />
   <UiDialog ref="dialog" title="最近畫作" @closing="close">
     <p>保留最近八幅已公開的畫作；查看與收藏時，遊戲繼續進行。</p>
     <UiTabs :items="tabs" :model-value="results.filter" label="篩選公開畫作" :id-prefix="prefix + '-tab'" :panel-prefix="prefix + '-panel'" @update:model-value="setFilter" />

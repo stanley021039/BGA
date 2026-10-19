@@ -3,9 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import type { DrawingController, DrawingRequest, DrawingSession, DrawingTool, DrawingView, DrawSnapshot } from '../contracts/drawing';
 import type { RoomSeat } from '../contracts/room';
 import { createDrawingInput } from '../services/drawing-input';
-import DrawingToolButton from './DrawingToolButton.vue';
-import UiButton from './UiButton.vue';
-import UiDialog from './UiDialog.vue';
+import DrawingToolbar from './DrawingToolbar.vue';
 import ConfirmDialog from './ConfirmDialog.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/drawing-surface.scss';
@@ -15,13 +13,7 @@ const emit = defineEmits<{ snapshot: [value: unknown]; tick: []; disconnected: [
 const canvas = ref<HTMLCanvasElement | null>(null), view = shallowRef<DrawingView | null>(null);
 const notice = ref(''), noticeFailed = ref(false), network = ref(''), streamLost = ref(false), ready = ref(false);
 const tool = ref<DrawingTool>('brush'), filled = ref(false), color = ref('#1b1c1c'), size = ref(6);
-const palette = ref<InstanceType<typeof UiDialog> | null>(null), confirmation = ref<InstanceType<typeof ConfirmDialog> | null>(null);
-const colors = ['#1b1c1c','#ffffff','#6b7280','#ba1a1a','#f97316','#f8c838','#16a34a','#0284c7','#4338ca','#7e22ce','#735947','#fedbc4'];
-const tools: { tool: DrawingTool; filled?: boolean; label: string }[] = [
-  { tool: 'brush', label: '畫筆' }, { tool: 'erase', label: '橡皮擦' }, { tool: 'line', label: '直線' },
-  { tool: 'rect', label: '空心矩形' }, { tool: 'ellipse', label: '空心橢圓' }, { tool: 'rect', filled: true, label: '實心矩形' },
-  { tool: 'ellipse', filled: true, label: '實心橢圓' }, { tool: 'fill', label: '油漆桶' },
-];
+const confirmation = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 const artist = computed(() => props.snapshot?.phase === 'drawing' && props.snapshot.presenterId === props.snapshot.me);
 const canDraw = computed(() => ready.value && artist.value && !view.value?.commandBusy && !view.value?.recovering && !view.value?.error);
 let session: DrawingSession | null = null, controller: DrawingController | null = null, input: ReturnType<typeof createDrawingInput> | null = null, mounted = false;
@@ -86,17 +78,16 @@ async function command(name: 'undo' | 'clear') {
   if (captured !== props.scope || engine !== session || epoch !== props.snapshot?.canvasEpoch || round !== props.snapshot?.round || !canDraw.value) return;
   await engine.command(name); refresh();
 }
-function chooseColor(value: string) { color.value = value; palette.value?.close(); }
 onMounted(() => { mounted = true; start(); document.addEventListener('visibilitychange', visibility); });
 onBeforeUnmount(() => { mounted = false; document.removeEventListener('visibilitychange', visibility); stop(); });
 defineExpose({ command, sync: () => controller?.syncCanvas(), whenIdle: () => session?.whenIdle(), view: () => session?.view() });
 </script>
 <template>
-  <section class="vue-drawing-surface" :class="{ 'is-artist': artist }" aria-label="畫布與繪畫工具">
+  <section class="vue-drawing-surface vue-c04-surface" :class="{ 'is-artist': artist }" aria-label="畫布與繪畫工具">
+    <DrawingToolbar v-model:tool="tool" v-model:filled="filled" v-model:color="color" v-model:size="size" :editable="artist" :disabled="!canDraw" :fill-disabled="(view?.quota.usedFills || 0) >= 48" :epoch="scope + ':' + snapshot?.canvasEpoch" @undo="command('undo')" @clear="command('clear')">
     <div class="vue-drawing-frame"><canvas ref="canvas" id="drawCanvas" v-show="snapshot?.phase === 'drawing'" width="512" height="256" :tabindex="artist ? 0 : -1" :aria-hidden="snapshot?.phase !== 'drawing'" :aria-busy="view?.commandBusy || view?.recovering" aria-label="你畫我猜畫布；畫者可用滑鼠、觸控或方向鍵移動與空白鍵落筆" @pointerdown="input?.down($event)" @pointermove="input?.move($event)" @pointerup="input?.finish($event)" @pointercancel="input?.finish($event)" @lostpointercapture="input?.finish($event)" @keydown="input?.key($event)" /><div v-if="snapshot?.phase !== 'drawing'" class="vue-drawing-scene"><slot /></div></div>
-    <div v-show="artist" class="vue-drawing-tools"><div class="vue-drawing-tool-row" role="group" aria-label="繪畫工具"><DrawingToolButton v-for="choice in tools" :key="choice.tool + (choice.filled ? 'Filled' : '')" :tool="choice.tool + (choice.filled ? 'Filled' : '')" :label="choice.label" :selected="choice.tool === tool && !!choice.filled === filled" :disabled="!canDraw || choice.tool === 'fill' && (view?.quota.usedFills || 0) >= 48" @click="tool = choice.tool; filled = !!choice.filled" /><DrawingToolButton tool="undo" label="復原上一筆" :disabled="!canDraw" @click="command('undo')" /><DrawingToolButton tool="clear" label="清空畫布" :disabled="!canDraw" @click="command('clear')" /></div><div class="vue-drawing-color-row"><label>顏色<input id="color" v-model="color" type="color" :disabled="!canDraw"></label><UiButton label="調色盤" icon="edit" :disabled="!canDraw" @click="palette?.open()" /><label class="vue-drawing-size">筆刷<input id="size" v-model.number="size" type="range" min="1" max="40" :disabled="!canDraw"><output>{{ size }}</output></label></div></div>
+    </DrawingToolbar>
     <StatusSlot :message="network || (streamLost ? '即時連線中斷，正在重試；房間狀態持續更新。' : notice)" :error="!!network || noticeFailed" />
   </section>
-  <UiDialog ref="palette" title="調色盤" compact><div class="vue-drawing-swatches" role="group" aria-label="常用顏色"><button v-for="value in colors" :key="value" type="button" :style="{ background: value }" :aria-label="'選擇 ' + value" :aria-pressed="color === value" @click="chooseColor(value)"><span v-if="color === value" aria-hidden="true">✓</span></button></div></UiDialog>
   <ConfirmDialog ref="confirmation" />
 </template>

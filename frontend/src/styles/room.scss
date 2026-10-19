@@ -1,32 +1,56 @@
 @use 'tokens';
 
+// Approved C03 roster. The page owns the outer 220px/280px track.
 .vue-player-name { display: block; min-inline-size: 0; max-inline-size: 100%; font-size: 1rem; font-weight: 700; }
-.vue-room-roster { display: grid; grid-template-rows: auto minmax(0, 1fr) 3rem; gap: tokens.space(4); min-inline-size: 0; min-block-size: 0; }
-.vue-room-roster > header { display: grid; grid-template-columns: minmax(0, 1fr) 8ch; align-items: center; gap: tokens.space(2); }
-.vue-room-roster h2 { margin: 0; }
-.vue-roster-count { text-align: end; font-size: .875rem; font-variant-numeric: tabular-nums; }
-.vue-roster-list { display: flex; flex-direction: column; gap: tokens.space(3); min-inline-size: 0; min-block-size: 0; margin: 0; padding: tokens.space(1); list-style: none; overflow: auto; scrollbar-gutter: stable; }
-.vue-room-player { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 4rem; align-items: start; gap: tokens.space(3); flex-shrink: 0; min-inline-size: 0; padding: tokens.space(3); border: 1px solid var(--play-line, #a59b96); border-radius: .75rem; }
-.vue-room-player[data-actor=true] { border-width: 2px; padding: calc(#{tokens.space(3)} - 1px); }
-.vue-room-roster .vue-room-player[data-no-metric=true] { grid-template-columns: 2.5rem minmax(0, 1fr); }
-.vue-room-player-copy { min-inline-size: 0; }
-.vue-room-player-name { display: flex; align-items: center; gap: tokens.space(2); min-inline-size: 0; }
-.vue-room-player-name > .vue-player-name { flex: 1; }
-.vue-player-self { flex: none; font-size: .875rem; }
-.vue-room-player-status { block-size: 3em; overflow: auto; margin: tokens.space(2) 0 0; font-size: .875rem; line-height: 1.5; }
-.vue-room-player-metric { display: grid; justify-items: end; gap: tokens.space(1); min-inline-size: 0; }
-.vue-room-player-metric strong { max-inline-size: 100%; overflow: auto; font-variant-numeric: tabular-nums; font-size: 1rem; }
-.vue-room-player-metric span { font-size: .875rem; }
-.vue-room-roster > footer, .vue-room-management-actions { display: flex; flex-wrap: wrap; align-items: center; gap: tokens.space(3); }
+:root body[data-visual-theme] section.vue-room-roster.vue-stitch-roster[data-ping-anchor=players][aria-labelledby] {
+  display: grid; grid-template-rows: auto minmax(0, 1fr) 2.75rem;
+  gap: var(--stitch-space-12, .75rem); min-inline-size: 0; min-block-size: 0;
+  color: var(--stitch-ink, #20211E); font-family: var(--stitch-font-family, inherit);
+  > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .5rem; min-block-size: 2rem; }
+  > header > h2 { margin: 0; font-size: var(--stitch-font-16, 1rem); line-height: 1.5; }
+  .vue-roster-count { margin: 0; text-align: end; white-space: nowrap; font-size: var(--stitch-font-14, .875rem); color: var(--stitch-muted, #686A63); font-variant-numeric: lining-nums tabular-nums; }
+  .vue-roster-list {
+    display: flex; flex-direction: column; gap: .25rem; min-inline-size: 0; min-block-size: 0;
+    margin: 0; padding: 0; list-style: none; overflow: auto; scrollbar-gutter: stable;
+    overscroll-behavior: contain; align-content: start;
+  }
+  .vue-roster-empty { display: grid; align-content: center; min-block-size: 5.5rem; padding: .5rem; font-size: .875rem; line-height: 1.5; color: var(--stitch-muted, #686A63); overflow-wrap: anywhere; }
+  .vue-room-player {
+    position: relative; display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 2.75rem;
+    grid-template-rows: auto; align-items: start; gap: 0 .25rem; flex-shrink: 0;
+    box-sizing: border-box; min-inline-size: 0; min-block-size: 5rem; padding: .25rem;
+    border: 0; border-inline-start: 3px solid transparent; border-radius: .5rem;
+    background: var(--stitch-surface, #fff); color: var(--stitch-ink, #20211E);
+  }
+  .vue-room-player[data-self=true] { background: var(--stitch-selected-bg, #FFF2C4); color: var(--stitch-selected-ink, #20211E); }
+  .vue-room-player[data-actor=true] { border-inline-start-color: var(--stitch-link, #0051D5); }
+  .vue-room-player[data-no-metric=true] { grid-template-columns: 2.5rem minmax(0, 1fr); }
+  .vue-room-player > .vue-player-avatar { grid-column: 1; grid-row: 1; inline-size: 2.5rem; block-size: 2.5rem; border-radius: .5rem; background: var(--stitch-surface-subtle, #F8F7F3); }
+  .vue-room-player-copy { grid-column: 2; grid-row: 1; min-inline-size: 0; }
+  .vue-room-player-name { display: flex; flex-wrap: nowrap; align-items: center; gap: .25rem; min-inline-size: 0; min-block-size: 1.5rem; line-height: 1.5; }
+  .vue-room-player-name > .vue-player-name { flex: 1 1 0; min-inline-size: 0; font-size: var(--stitch-font-16, 1rem); font-weight: 700; text-align: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vue-room-player-name > .vue-player-name > .ui-player-name-text { display: block; inline-size: 100%; max-inline-size: 100%; margin: 0; padding: 0; overflow: hidden; text-overflow: ellipsis; text-align: start; white-space: nowrap; animation: none; transform: none; }
+  .vue-player-self { flex: none; font-size: var(--stitch-font-14, .875rem); font-weight: 400; }
+  .vue-room-player-status { box-sizing: border-box; block-size: 3em; min-inline-size: 0; overflow: auto; overscroll-behavior: contain; margin: 0; white-space: normal; overflow-wrap: anywhere; font-size: var(--stitch-font-14, .875rem); line-height: 1.5; color: inherit; }
+  .vue-player-role, .vue-player-ready { display: inline; margin-inline-end: .25rem; font-weight: 700; }
+  .vue-player-ready { color: var(--stitch-success-ink, #006C49); }
+  .vue-room-player[data-self=true] .vue-player-ready { color: var(--stitch-success, #006C49); }
+  .vue-room-player-metric { grid-column: 3; grid-row: 1; display: grid; align-content: start; justify-content: stretch; justify-items: end; gap: 0; min-inline-size: 0; max-inline-size: 100%; text-align: end; line-height: 1.5; font-variant-numeric: lining-nums tabular-nums; }
+  .vue-room-player-metric strong { display: block; max-inline-size: 100%; overflow: auto; margin: 0; font-size: var(--stitch-font-16, 1rem); line-height: 1.5; font-variant-numeric: lining-nums tabular-nums; }
+  .vue-room-player-metric span { max-inline-size: 100%; font-size: var(--stitch-font-14, .875rem); line-height: 1.5; overflow-wrap: anywhere; }
+  .vue-room-player-feedback { grid-column: 2 / -1; grid-row: 2; min-inline-size: 0; min-block-size: 1.3125rem; line-height: 1.5; }
+  .vue-room-player-feedback > .vue-draw-correct-badge { position: static; display: block; inline-size: fit-content; max-inline-size: 100%; box-sizing: border-box; margin-inline-start: auto; padding: 0 .25rem; font-size: .875rem; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; color: var(--stitch-success-ink, #006C49); background: var(--stitch-success-bg, #E9F4ED); border-color: var(--stitch-success-line, #A4CDB7); }
+  > footer { display: flex; flex-wrap: wrap; align-items: center; align-content: start; gap: .5rem; min-inline-size: 0; min-block-size: 2.75rem; overflow: auto; }
+  > footer > button { min-block-size: 2.75rem; max-inline-size: 100%; }
+  .vue-roster-list:focus-visible, .vue-room-player-status:focus-visible { outline: 2px solid var(--stitch-focus, #0051D5); outline-offset: -2px; }
+}
+.vue-room-management-actions { display: flex; flex-wrap: wrap; align-items: center; gap: tokens.space(3); }
 .vue-room-management-list { display: grid; gap: tokens.space(3); max-block-size: min(28rem, 48dvh); overflow: auto; scrollbar-gutter: stable; }
 .vue-room-management-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: tokens.space(4); padding: tokens.space(3); border: 1px solid var(--play-line, #a59b96); border-radius: .5rem; }
 .vue-room-management-row > div { min-inline-size: 0; }
 .vue-room-management-row small { display: block; margin-block-start: tokens.space(2); font-size: .875rem; }
 .vue-room-leave-image { display: block; inline-size: 100%; block-size: auto; aspect-ratio: 640/361; border-radius: .5rem; }
 @media(max-width:760px) {
-  .vue-room-roster { gap: tokens.space(3); grid-template-rows: auto minmax(0, 1fr) 4rem; }
-  .vue-room-player { grid-template-columns: 2.5rem minmax(0, 1fr) 3rem; gap: tokens.space(2); padding: tokens.space(2); }
-  .vue-room-player[data-actor=true] { padding: calc(#{tokens.space(2)} - 1px); }
   .vue-room-management-row { grid-template-columns: minmax(0, 1fr); gap: tokens.space(3); }
   .vue-room-management-actions { justify-content: start; }
 }
