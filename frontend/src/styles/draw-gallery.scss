@@ -1,0 +1,37 @@
+@use 'tokens';
+.vue-gallery-layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); gap: tokens.space(6); block-size: min(44rem, 70dvh); min-block-size: 28rem; margin-block: tokens.space(4); }
+.vue-gallery-list { display: flex; flex-direction: column; gap: tokens.space(3); min-inline-size: 0; min-block-size: 0; padding: tokens.space(1); overflow: auto; scrollbar-gutter: stable; }
+.vue-gallery-list > button { display: grid; gap: tokens.space(2); flex-shrink: 0; text-align: start; min-inline-size: 0; padding: tokens.space(4); overflow-wrap: anywhere; }
+.vue-gallery-list > button[aria-pressed=true] { outline: 2px solid currentColor; outline-offset: -3px; }
+.vue-gallery-list small { font-size: .875rem; line-height: 1.5; }
+.vue-gallery-detail { display: grid; grid-template-rows: 7rem minmax(0, 1fr) 10rem; gap: tokens.space(3); min-inline-size: 0; min-block-size: 0; }
+.vue-gallery-detail > header { min-inline-size: 0; min-block-size: 0; overflow: auto; scrollbar-gutter: stable; }
+.vue-gallery-detail h2 { margin: 0; overflow-wrap: anywhere; }
+.vue-gallery-detail > header p { margin-block: tokens.space(2) 0; font-size: .875rem; line-height: 1.5; }
+.vue-gallery-detail-content { min-inline-size: 0; min-block-size: 0; overflow: auto; scrollbar-gutter: stable; }
+.vue-result-canvas { margin: 0; min-inline-size: 0; }
+.vue-result-frame, .vue-gallery-canvas-empty { inline-size: 100%; max-inline-size: 32rem; aspect-ratio: 2; margin-inline: auto; position: relative; background: white; color: #26332b; border: 1px solid var(--play-line, #a59b96); border-radius: .5rem; overflow: hidden; }
+.vue-result-frame canvas { display: block; inline-size: 100%; block-size: 100%; }
+.vue-result-placeholder, .vue-gallery-canvas-empty { display: grid; place-items: center; padding: tokens.space(4); box-sizing: border-box; }
+.vue-result-placeholder { position: absolute; inset: 0; margin: 0; overflow: auto; }
+.vue-gallery-scores { display: grid; align-content: start; gap: tokens.space(2); block-size: 10rem; padding: tokens.space(2); margin-block: tokens.space(4); list-style: none; overflow: auto; scrollbar-gutter: stable; }
+.vue-gallery-scores li { display: grid; grid-template-columns: minmax(0, 1fr) 5rem 5rem; align-items: center; gap: tokens.space(2); overflow-wrap: anywhere; }
+.vue-gallery-scores strong, .vue-gallery-scores small { text-align: end; font-size: .875rem; }
+.vue-result-vote { display: grid; grid-template-rows: 2.75rem 3rem 3rem; gap: tokens.space(2); }
+.vue-result-vote > button { justify-self: start; }
+.vue-result-vote-summary { margin: 0; font-size: .875rem; line-height: 1.5; overflow: auto; }
+.vue-result-vote .frontend-status { margin: 0; }
+.vue-gallery-detail > footer { display: grid; grid-template-rows: 3rem 3rem 3rem; gap: tokens.space(2); min-inline-size: 0; }
+.vue-gallery-detail > footer .frontend-status { margin: 0; }
+.vue-gallery-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: tokens.space(2); }
+.vue-gallery-recollect { min-inline-size: 0; overflow: auto; }
+.vue-gallery-export { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: tokens.space(4); }
+@media(max-width:760px) {
+  .vue-gallery-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: 14rem 48rem; gap: tokens.space(4); block-size: auto; min-block-size: 0; }
+  .vue-gallery-detail { grid-template-rows: 9rem minmax(0, 1fr) 11rem; }
+  .vue-gallery-scores li { grid-template-columns: minmax(0, 1fr) 4rem 4rem; }
+  .vue-gallery-detail > footer { grid-template-rows: 4rem 3rem 3rem; }
+  .vue-gallery-actions > button { min-inline-size: 0; }
+  .vue-gallery-actions .vue-button-caption { font-size: .875rem; }
+  .vue-gallery-export { grid-template-columns: minmax(0, 1fr); gap: tokens.space(3); }
+}

@@ -1,6 +1,8 @@
 import { readRoomSnapshot } from './room';
 import type { RoomSeat, RoomSnapshot } from './room';
 import { array, record, text } from '../services/validation';
+import { readPublicDrawResult, readResultVote } from './draw-results';
+import type { PublicDrawResult, ResultVote } from './draw-results';
 
 export type DrawingTool = 'brush' | 'erase' | 'line' | 'rect' | 'ellipse' | 'fill';
 export type Point = [number, number];
@@ -14,6 +16,7 @@ export interface DrawSnapshot extends RoomSnapshot {
   type: 'draw'; phase: 'waiting' | 'choosing' | 'drawing' | 'reveal' | 'finished';
   round: number; roundLimit: number; presenterId: string | null; deadline: number | null; canvasEpoch: string; strokeVersion: number;
   participantIds: string[]; guessedIds: string[]; candidates: DrawQuestion[]; question: DrawQuestion | null;
+  result: PublicDrawResult | null; recentResults: PublicDrawResult[]; resultVotes: ResultVote[]; savedResultIds: string[];
 }
 const integer = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
 function question(value: unknown): DrawQuestion {
@@ -35,6 +38,8 @@ export function readDrawSnapshot(value: unknown): DrawSnapshot {
     room.presenterId !== null && typeof room.presenterId !== 'string' || room.deadline !== null && (typeof room.deadline !== 'number' || !Number.isFinite(room.deadline))) throw Error('畫猜回合資料格式不正確');
   return { ...room, round: room.round, roundLimit: room.roundLimit, strokeVersion: room.strokeVersion, canvasEpoch: text(room.canvasEpoch),
     participantIds: ids(room.participantIds), guessedIds: ids(room.guessedIds), candidates: array(room.candidates).map(question), question: room.question === null ? null : question(room.question),
+    result: room.result === null ? null : readPublicDrawResult(room.result), recentResults: array(room.recentResults).slice(0, 8).map(readPublicDrawResult),
+    resultVotes: array(room.resultVotes).slice(0, 8).map(readResultVote), savedResultIds: ids(room.savedResultIds),
   } as DrawSnapshot;
 }
 export interface DrawingView {
@@ -66,7 +71,10 @@ export interface DrawingEngines {
 }
 declare global {
   interface Window {
-    StrokeCanvas?: { redraw(canvas: HTMLCanvasElement, values: unknown[]): void; strokeId(): string; iconMarkup(key: string): string };
+    StrokeCanvas?: { redraw(canvas: HTMLCanvasElement, values: unknown[]): void; strokeId(): string; iconMarkup(key: string): string;
+      createDrawingRenderer(canvas: HTMLCanvasElement, options?: { maxCheckpoints?: number }): { renderCooperatively(strokes: DrawingStroke[]): Promise<boolean>; reset(): void; whenIdle(): Promise<void> };
+      drawingDataURL(canvas: HTMLCanvasElement, maxBytes?: number): string;
+    };
     DrawCanvasSession?: DrawingEngines;
     DrawController?: { create(options: {
       context: () => { room: string; session: RoomSeat | null; busy: boolean; epoch?: string; round?: number; version: number };
