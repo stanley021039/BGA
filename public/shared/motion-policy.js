@@ -47,8 +47,10 @@
     if(destroyed)return;
     if(room!==state.code){clear();room=state.code;}
     const live=gate.update(state,{connected:!disconnected});disconnected=false;
+    // Event timestamps and snapshot time share the server clock, unlike the client clock.
+    const eventNow=Number.isFinite(state.serverNow)?state.serverNow:Date.now();
     for(const item of state.barrages||[]){
-     if(!gate.take(item.id,live)||!prefs.barrages||Date.now()-item.at>=8000)continue;
+     if(!gate.take(item.id,live)||!prefs.barrages||eventNow-item.at>=8000)continue;
      // Do not queue overflow: older messages should not cover a later decision.
      let lane=0;while(lanes.has(lane)&&lane<4)lane++;if(lane===4)continue;
      const moving=allowsMotion(),entry={remove:null,timer:null};lanes.set(lane,entry);
