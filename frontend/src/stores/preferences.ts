@@ -21,6 +21,7 @@ declare global {
       get(): AudioState; subscribe(fn: (state: AudioState) => void): () => void; bindPreview(audio: HTMLAudioElement): () => void;
       set(kind: 'music' | 'effects', value: { enabled?: boolean; volume?: number }, options?: { gesture?: boolean }): void;
       stopEffect(clip: HTMLAudioElement | null | undefined): boolean;
+      playEffect?(cue: string): HTMLAudioElement | undefined;
       playExpression(sound: { url: string; durationMs: number }, options?: { onStop?: (clip: HTMLAudioElement) => void; onError?: () => void }): HTMLAudioElement | undefined;
     };
     ExpressionSounds?: { encodeFile(file: File | null): Promise<{ base64: string; durationMs: number }>; create(): ExpressionPlayback };

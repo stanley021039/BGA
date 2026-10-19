@@ -1,0 +1,8 @@
+@use 'tokens' as t;
+.vue-room-pings {
+  .room-ping-wheel { grid-template: repeat(3, 64px) / repeat(3, 64px); }
+  .room-ping-wheel > [data-ping-type] small { @include t.type(p3); }
+  .room-ping-mark > span { @include t.type(p3); padding: t.space(1) t.space(2); }
+  .room-ping-status { @include t.type(p3); padding: t.space(2) t.space(3); max-height: 4.5em; overflow: auto; }
+  .room-ping-mark > strong > span, .room-ping-mark > strong svg { width: 44px; height: 44px; display: block; }
+}

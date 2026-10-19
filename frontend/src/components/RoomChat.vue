@@ -37,7 +37,7 @@ onBeforeUnmount(() => { disposed = true; });
 defineExpose({ compose, focus: focusInput });
 </script>
 <template>
-  <section class="vue-room-chat" aria-label="聊天室與房間彈幕" :class="{ 'vue-chat-collapsed': !chat.visible }">
+  <section class="vue-room-chat" data-ping-anchor="chat" aria-label="聊天室與房間彈幕" :class="{ 'vue-chat-collapsed': !chat.visible }">
     <header><h2 v-if="inline">聊天室</h2><UiButton v-else icon="chat" :label="chat.visible ? '收合聊天室' : '展開聊天室'" :aria-expanded="chat.visible" :aria-controls="prefix + '-content'" @click="toggle" /><span class="vue-chat-unread" role="status">{{ chat.unread ? '未讀 ' + chat.unread : '' }}</span></header>
     <div v-show="chat.visible" :id="prefix + '-content'" class="vue-room-chat-content">
       <p class="vue-chat-notice">{{ notice }}</p>
