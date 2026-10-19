@@ -1,0 +1,32 @@
+@use 'tokens' as t;
+
+// D06 is limited to Draw / Telephone creation. Other lobby dialogs retain
+// their previous layout and controls; Telephone is configured after entry.
+:root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-lobby-create-d06 {
+ inline-size:min(28rem,calc(100vw - 2rem));max-inline-size:calc(100vw - 2rem);max-block-size:calc(100dvh - 2rem);
+ border:1px solid var(--stitch-line,var(--play-line));border-radius:t.space(3);padding:t.space(4);background:var(--stitch-surface,var(--play-surface));color:var(--stitch-ink,var(--play-ink));
+ .vue-dialog-header { min-block-size:44px;padding-block-end:t.space(3);border-block-end:1px solid var(--stitch-line,var(--play-line));gap:t.space(3); }
+ .vue-dialog-header h2 { @include t.type(p2);font-weight:800;margin:0;letter-spacing:normal;overflow-wrap:anywhere; }
+ .vue-dialog-content { min-inline-size:0;min-block-size:0;padding:0; }
+ .vue-lobby-create { display:grid;grid-template-columns:minmax(0,1fr);gap:t.space(3);min-inline-size:0;margin:0;padding-block-start:t.space(3); }
+ .vue-lobby-create>label,.vue-lobby-create-rounds { display:grid;gap:t.space(2);margin:0;color:inherit;@include t.type(p3);font-weight:700;min-inline-size:0; }
+ .vue-lobby-create :is(select,input:not([type=radio])) { box-sizing:border-box;inline-size:100%;min-inline-size:0;min-block-size:44px;padding:t.space(2) t.space(3);border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;background:var(--stitch-base,var(--play-paper));color:inherit;@include t.type(p3); }
+ .vue-lobby-create-options { display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;align-content:start;gap:t.space(3);min-block-size:172px;min-inline-size:0; }
+ .vue-lobby-create-options>p { @include t.type(p3);margin:0;overflow-wrap:anywhere; }
+ .vue-lobby-create-seconds { display:grid;min-inline-size:0;padding:0;margin:0;border:0; }
+ .vue-lobby-create-seconds legend { @include t.type(p3);font-weight:700;padding:0;margin-block-end:t.space(2);color:inherit; }
+ .vue-lobby-create-seconds>div { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:t.space(2); }
+ .vue-lobby-create-seconds label { position:relative;display:grid;place-items:center;min-block-size:44px;min-inline-size:0;margin:0;cursor:pointer; }
+ .vue-lobby-create-seconds input { position:absolute;inset:0;inline-size:100%;block-size:100%;min-block-size:0;margin:0;opacity:0;cursor:pointer; }
+ .vue-lobby-create-seconds label>span { box-sizing:border-box;display:grid;place-items:center;inline-size:100%;min-block-size:44px;border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;background:var(--stitch-base,var(--play-paper));color:inherit;@include t.type(p3);font-weight:700;pointer-events:none; }
+ .vue-lobby-create-seconds input:checked+span { background:var(--stitch-primary,#f6cf35);color:#212121;border-color:var(--stitch-primary,#f6cf35); }
+ .vue-lobby-create-seconds input:focus-visible+span { outline:2px solid var(--stitch-ink,var(--play-ink));outline-offset:2px; }
+ .vue-lobby-create-seconds:disabled label { cursor:default;opacity:.55; }
+ .vue-lobby-create-round-field { display:grid;grid-template-columns:minmax(0,1fr) 4.5rem auto;align-items:center;gap:t.space(2);min-inline-size:0;min-block-size:44px;padding-inline:t.space(3);border:1px solid var(--stitch-line,var(--play-line));border-radius:.5rem;background:var(--stitch-base,var(--play-paper));@include t.type(p3);font-weight:500; }
+ .vue-lobby-create .vue-lobby-create-round-field input { padding:0 t.space(1);min-block-size:32px;border:0;border-radius:.25rem;background:var(--stitch-surface,var(--play-surface));text-align:center;font-variant-numeric:tabular-nums; }
+ .vue-lobby-create>.frontend-status { min-block-size:3em;max-block-size:4.5em;margin:0;padding:0;overflow:auto;@include t.type(p3); }
+ .vue-lobby-create>.vue-button { --ui-button-radius:.5rem;inline-size:100%;min-block-size:44px;white-space:normal;@include t.type(p3);font-weight:800; }
+}
+@media(max-width:480px) {
+ :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-lobby-create-d06 { inline-size:calc(100vw - 1rem);max-inline-size:calc(100vw - 1rem);max-block-size:calc(100dvh - 1rem);padding:t.space(3); }
+}

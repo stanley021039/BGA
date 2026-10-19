@@ -89,5 +89,5 @@ defineExpose({ command, sync: () => controller?.syncCanvas(), whenIdle: () => se
     </DrawingToolbar>
     <StatusSlot :message="network || (streamLost ? '即時連線中斷，正在重試；房間狀態持續更新。' : notice)" :error="!!network || noticeFailed" />
   </section>
-  <ConfirmDialog ref="confirmation" />
+  <ConfirmDialog stitch ref="confirmation" />
 </template>

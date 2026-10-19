@@ -43,12 +43,12 @@ async function retry() { queue(); await flush(); }
 defineExpose({ flush, pending: () => pending.value, error: () => error.value, dirty: () => dirty.value });
 </script>
 <template>
-  <section class="vue-draw-settings" aria-label="房間設定">
+  <section class="vue-draw-settings vue-draw-approved-settings" aria-label="房間設定">
     <header><h2>房間設定</h2><p>{{ editable ? '更改後自動儲存；開局前會確認最新設定。' : '只有房主能修改；以下為目前房間設定。' }}</p></header>
     <div class="vue-draw-settings-content">
       <fieldset :disabled="!editable">
         <legend>題目類別</legend>
-        <div class="vue-draw-topic-actions"><span>可多選</span><UiButton label="全選題目類別" caption="全選" icon="check" @click="draft.topics = drawingTopics.map(([id]) => id)" /><UiButton label="清除題目類別" caption="清除" icon="close" @click="draft.topics = []" /></div>
+        <div class="vue-draw-topic-actions"><span>可多選</span><UiButton stitch variant="ghost" label="全選題目類別" caption="全選" icon="check" @click="draft.topics = drawingTopics.map(([id]) => id)" /><UiButton stitch variant="ghost" label="清除題目類別" caption="清除" icon="close" @click="draft.topics = []" /></div>
         <div class="vue-draw-options"><label v-for="[id, label] in drawingTopics" :key="id"><input v-model="draft.topics" type="checkbox" :value="id"><span>{{ label }}</span></label></div>
         <p>自定義只使用共編題庫的投稿題目；至少選擇一個類別。</p>
       </fieldset>
@@ -65,6 +65,6 @@ defineExpose({ flush, pending: () => pending.value, error: () => error.value, di
         <p class="vue-draw-ending-hint">{{ draft.mode === 'legacy' ? '每位玩家畫一次；改用固定題數或分數後，無法切回此設定。' : draft.mode === 'score' ? '10–1000 分；當題揭曉後結算，最多 64 題。' : '1–64 題；畫者依入座順序輪替。' }}</p>
       </fieldset>
     </div>
-    <footer><StatusSlot :message="error || (pending ? '正在儲存設定…' : saved ? '房間設定已儲存。' : '')" :error="!!error" /><UiButton v-if="error && editable" icon="refresh" label="重試儲存設定" :disabled="pending || room.busy" @click="retry" /></footer>
+    <footer><StatusSlot :message="error || (pending ? '正在儲存設定…' : saved ? '房間設定已儲存。' : '')" :error="!!error" /><UiButton stitch variant="ghost" v-if="error && editable" icon="refresh" label="重試儲存設定" :disabled="pending || room.busy" @click="retry" /></footer>
   </section>
 </template>

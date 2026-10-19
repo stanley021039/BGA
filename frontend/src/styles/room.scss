@@ -1,4 +1,5 @@
 @use 'tokens';
+@use 'roster-compact';
 
 // Approved C03 roster. The page owns the outer 220px/280px track.
 .vue-player-name { display: block; min-inline-size: 0; max-inline-size: 100%; font-size: 1rem; font-weight: 700; }

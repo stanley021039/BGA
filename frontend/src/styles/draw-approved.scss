@@ -1,0 +1,82 @@
+@use 'drawing-compact' as compact;
+// Approved game pages compose the shared C03/C04 shell and real domain state.
+:root body[data-game-kind=draw] .vue-draw-approved {
+ color:var(--stitch-ink);font-family:var(--stitch-font-family);
+ :is(.vue-draw-roster-panel,.vue-draw-board-panel,.vue-draw-settings-panel,.vue-draw-guess-panel) { background:var(--stitch-surface);border:1px solid var(--stitch-line);border-radius:8px; }
+ .vue-draw-board-heading.vue-draw-approved-hud { display:grid;grid-template-columns:minmax(0,1fr) 160px auto;align-items:center;min-width:0;min-height:56px;gap:12px;padding:0 0 8px;border-bottom:1px solid var(--stitch-line); }
+ .vue-draw-hud-prompt { display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;min-width:0;max-height:56px;overflow:auto;scrollbar-gutter:stable; }
+ .vue-draw-hud-prompt h1 { min-height:0;max-height:48px;margin:0;font-size:20px;line-height:24px;overflow:auto;overflow-wrap:anywhere; }
+ .vue-draw-hud-prompt small,.vue-draw-hud-prompt>span { font-size:14px;line-height:21px; }
+ .vue-draw-hud-prompt small { padding:2px 8px;border-radius:4px;background:var(--stitch-selected-bg);color:var(--stitch-selected-ink); }
+ .vue-draw-hud-prompt>.vue-draw-hud-rule { color:var(--stitch-danger-ink,var(--play-error)); }
+ .vue-draw-board-heading .vue-room-countdown { min-width:0;min-height:44px;font-size:14px;color:var(--stitch-ink); }
+ .vue-draw-board-heading .vue-room-countdown.is-urgent { color:var(--stitch-danger-ink,var(--play-error)); }
+ .vue-draw-round-tools { grid-column:auto;justify-content:end;gap:4px; }
+ .vue-draw-board-footer { color:var(--stitch-muted);font-size:14px;line-height:21px; }
+ .vue-drawing-scene { padding:8px;box-sizing:border-box; }
+ .vue-draw-guess-panel.vue-draw-approved-guesses { gap:8px;min-width:0; }
+ .vue-draw-approved-guesses>h2 { font-size:16px;line-height:24px; }
+ .vue-draw-guess-feed { border:1px solid var(--stitch-line);border-radius:4px;padding:8px;background:var(--stitch-surface-subtle);box-sizing:border-box; }
+ .vue-draw-guess-feed>p { padding:4px 8px;font-size:14px;line-height:21px; }
+ .vue-draw-guess-feed>p.is-correct { background:var(--stitch-success-bg);color:var(--stitch-success-ink);border-radius:4px; }
+ .vue-draw-approved-guesses input { box-sizing:border-box;min-height:44px;padding:8px 12px;border:1px solid var(--stitch-line);border-radius:4px;background:var(--stitch-surface);color:var(--stitch-ink);font-size:16px; }
+ .vue-draw-settings-panel>.vue-button { width:100%; }
+ .vue-draw-settings.vue-draw-approved-settings { gap:8px; }
+ .vue-draw-approved-settings>header h2 { font-size:16px;line-height:24px; }
+ .vue-draw-approved-settings>header p { font-size:14px;line-height:21px; }
+ .vue-draw-approved-settings fieldset { border:0;border-bottom:1px solid var(--stitch-line);border-radius:0;padding:8px 0;margin:0 0 8px; }
+ .vue-draw-approved-settings legend { font-size:16px;line-height:24px; }
+ .vue-draw-approved-settings .vue-draw-topic-actions { gap:4px;margin-bottom:8px; }
+ .vue-draw-approved-settings .vue-draw-topic-actions>.vue-button { min-height:44px;padding:8px;font-size:14px; }
+ .vue-draw-approved-settings .vue-draw-options { grid-template-columns:repeat(2,minmax(0,1fr));gap:4px; }
+ .vue-draw-approved-settings .vue-draw-options>label { min-height:44px;margin:0;padding:4px 8px;border-radius:4px;background:var(--stitch-surface-subtle);gap:8px;box-sizing:border-box;font-size:14px;line-height:21px; }
+ .vue-draw-approved-settings fieldset:nth-child(2) .vue-draw-options { grid-template-columns:repeat(3,minmax(0,1fr));>label { justify-content:center;flex-wrap:wrap;gap:4px;padding:4px; } }
+ .vue-draw-approved-settings input:is([type=radio],[type=checkbox]) { width:16px;height:16px;accent-color:var(--stitch-primary); }
+ .vue-draw-approved-settings .vue-draw-ending { gap:4px; }
+ .vue-draw-approved-settings .vue-draw-ending-choice { grid-template-columns:minmax(0,1fr) 72px;gap:8px; }
+ .vue-draw-approved-settings .vue-draw-ending-value { width:72px; }
+ .vue-draw-approved-settings .vue-draw-ending-value input { box-sizing:border-box;min-width:0;padding:4px;background:var(--stitch-surface);color:var(--stitch-ink);border:1px solid var(--stitch-line);border-radius:4px;font-size:16px; }
+}
+:root body .vue-draw-help { display:grid;gap:16px;counter-reset:help;margin:0;padding:0;list-style:none;color:var(--stitch-ink);li { padding:12px;border:1px solid var(--stitch-line);border-radius:6px;background:var(--stitch-surface-subtle);font-size:16px;line-height:1.6; }li::before { counter-increment:help;content:counter(help);display:inline-grid;place-items:center;width:24px;height:24px;margin-right:8px;border-radius:50%;background:var(--stitch-primary);color:var(--stitch-on-primary);font-weight:700; } }
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ :root body[data-game-kind=draw]:not(.ui-large-text) .vue-draw-approved {
+  >.vue-draw-grid { grid-template-columns:220px minmax(0,1fr) 280px;column-gap:16px; }
+  .vue-draw-board-panel { grid-template-rows:64px minmax(0,1fr) 28px;gap:8px;padding:12px; }
+  .vue-draw-board-panel:not(:has(>.vue-draw-approved-hud)) { grid-template-rows:minmax(0,1fr) 28px; }
+  >.vue-draw-grid:has(.vue-draw-guess-panel) { grid-template-rows:minmax(0,1fr) 200px;row-gap:12px; }
+  >.vue-draw-grid:has(.vue-draw-guess-panel)>.vue-draw-main>.vue-draw-board-panel { grid-row:1; }
+  .vue-draw-guess-panel.vue-draw-approved-guesses { grid-column:2;grid-row:2;grid-template-rows:24px minmax(0,1fr) 21px 44px 24px;gap:4px;padding:12px; }
+  >.vue-draw-grid:has(.vue-draw-guess-panel)>.vue-draw-side { grid-row:1/-1; }
+  >.vue-draw-grid[data-phase=drawing][data-role=artist]>.vue-draw-main>.vue-draw-board-panel { grid-row:1/-1; }
+  >.vue-draw-grid[data-phase=drawing][data-role=artist] .vue-draw-guess-panel { grid-column:3; }
+  >.vue-draw-grid[data-phase=drawing][data-role=artist]>.vue-draw-side { grid-row:1; }
+  .vue-draw-settings-panel .vue-draw-approved-settings { grid-template-rows:64px minmax(0,1fr) 48px; }
+  .vue-draw-side { overflow:auto;scrollbar-gutter:stable; }
+ }
+}
+@media(min-width:1181px) and (max-height:800px) and (pointer:fine) {
+ :root body[data-game-kind=draw]:not(.ui-large-text) .vue-draw-approved>.vue-draw-grid:has(.vue-draw-guess-panel) { grid-template-rows:minmax(0,1fr) 208px; }
+}
+@media(max-width:760px) {
+ :root body[data-game-kind=draw] .vue-draw-approved {
+  .vue-draw-board-heading.vue-draw-approved-hud { grid-template-columns:minmax(0,1fr) auto;gap:8px; }
+  .vue-draw-hud-prompt { grid-column:1/-1;max-height:88px; }
+  .vue-draw-board-heading>.vue-room-countdown { min-width:0;width:100%; }
+  .vue-draw-round-tools { grid-column:2;grid-row:2; }
+  .vue-draw-guess-feed { height:10rem; }
+  .vue-draw-board-panel { padding:8px; }
+ }
+}
+
+:root body[data-game-kind=draw] .vue-draw-approved .vue-draw-approved-guesses .vue-draw-guess-hint { margin:0;font-size:14px;line-height:21px; }
+:root body[data-game-kind=draw] .vue-draw-approved .vue-draw-approved-guesses>.frontend-status { margin:0;min-height:24px;line-height:21px;font-size:14px; }
+
+@media(max-width:760px) {
+ :root body[data-game-kind=draw] .vue-draw-approved {
+  @include compact.rows;
+  .vue-drawing-console.is-editable>.vue-drawing-console-layout { grid-template-rows:auto 3.5rem 3.5rem; }
+  .vue-drawing-console-top { grid-row:2; }
+  .vue-drawing-console-rail { grid-row:3; }
+  .is-editable>.vue-drawing-console-layout>.vue-drawing-console-stage { grid-row:1; }
+ }
+}

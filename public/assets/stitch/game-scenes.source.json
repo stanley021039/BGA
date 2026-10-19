@@ -1,0 +1,16 @@
+{
+  "source": "Original Stitch export, compared with approved Figma reference",
+  "project": "1867867094128144637",
+  "screens": {
+    "draw-waiting.jpg": {
+      "screen": "d0499b4f475c43e0ae01ed1320cf940e",
+      "figma": "1851:9882",
+      "asset": "https://lh3.googleusercontent.com/aida-public/AB6AXuBXidPw_6hqYQX38dvxWHsk_eXqhGipoJdZS5kvtoAsjwnFi5THayYJ6mHdaB0O1XxxpNOj--Dl3uK9KEisuXVVwh9szGBm-op4Vulf10KftD-YzrD1eHpFpgkp9XsvqEvHKgCoW0dCWfvl9pvuXqFvwVrCLBvyYczK2U3LkFcYSu6mtMkU8uIng9OyPdLHxGmZxCuEQRtsyA7oWMZ6AZsK61aRMQMoTKirgw7hOfNhRCG4AvZabjXX"
+    },
+    "telephone-waiting.svg": {
+      "screen": "5917266b7c8141b5b734149d18377580",
+      "figma": "1855:10214",
+      "asset": "complete original 240x240 SVG in t01/code.html; root and paths preserved"
+    }
+  }
+}
