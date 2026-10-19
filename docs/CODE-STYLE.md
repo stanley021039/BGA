@@ -50,3 +50,9 @@ npm run format:check
 ## 排版設定
 
 兩格空白、單引號、分號、100 字元目標行寬與 LF。HTML 使用嚴格空白敏感度；Vue 的 script／style 同樣排版。其他檔案的嵌入語言維持原內容，避免無關的範本字串重寫。
+
+## Windows 行尾回歸（2026-10-20，PR #145）
+
+Windows CI 原先因 Git 自動轉為 CRLF，讓 34 份 JSON／HTML／YAML 檔案不符合 LF 格式。`.gitattributes` 現已涵蓋格式工具納管的所有副檔名，讓 `core.autocrlf=true` 的 checkout 仍保留 LF；不放寬 Prettier、不重建 legacy 基準。回歸以獨立 checkout 啟用 autocrlf，檢查檔案實際 bytes 及執行 format:check，完整套件由新 head 的雙平台 CI 驗證。
+
+本次回歸：Linux 與 Windows 各 354 份格式檢查、565 份未改 legacy，0 failures。Windows Git core.autocrlf=true：舊規則重新 checkout frontend/package.json 實際含 CRLF，套用修正重新 checkout 後為 LF。Linux format --write 為 0 formatted，git diff --check 通過；未在本機跑完整套件，未修改 UI 或部署。

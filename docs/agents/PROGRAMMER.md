@@ -786,3 +786,9 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 2026-10-19 實際 UI 接續：已恢復瀏覽器驗收，修正大廳桌機組合與公開標記 app-level provide、輪盤 blur 與一般快照取消問題；不要沿用「瀏覽器仍被舊確認框阻擋」的歷史描述。大廳雙帳號角色／標記、四房列表及離線恢復，猜歌原生六秒播放狀態／單人三題／草稿 reload／略過取消返焦，畫猜對端持續送筆畫時保留猜題草稿與提示已實際觀察。相同多來源 watch 問題已修至畫猜／猜歌／極簡相關場景，部分結果及極簡確認回歸仍待驗；完整全站遷移與所有遊戲正常／失敗 UI 驗收尚未完成。證據界線以 [Vue 前端遷移](../refactors/VUE-FRONTEND.md) 最新區為準。
 
 2026-10-19 瞎掰接續：候選文件增至十七份、四款遊戲。瞎掰已接 Vue；三個 QA 帳號 API 六十四項及本人＋腳本兩席的實際 UI 三輪、秘密卡刷新／十秒截止、質疑／選人取消確認、實際加減分與並列回顧、斷線人工重試已觀察。桌機三欄適配與完整設定按需展開，詳細證據與手機／專注最新狀態見 [Vue 前端遷移](../refactors/VUE-FRONTEND.md)。九真人反應／真實聽感／全部 UI 競態未驗，不把候選接入數當全站完成率。
+
+## 2026-10-20 PR #145 Windows 格式檢查修復
+
+原 head 7e5c184 的 Linux CI 通過，Windows 在格式步驟因 34 份 JSON／HTML／YAML 的 CRLF 失敗，全套未執行。補齊 .gitattributes 的 formatter 副檔名 LF 契約；在獨立 worktree 處理，未納入其他工作區待提交 UI 變更。不放寬格式檢查、不改 baseline 或產品程式，最新跨平台驗證以 PR head CI 為準。
+
+本次回歸：Linux 與 Windows 各 354 份格式檢查、565 份未改 legacy，0 failures。Windows Git core.autocrlf=true：舊規則重新 checkout frontend/package.json 實際含 CRLF，套用修正重新 checkout 後為 LF。Linux format --write 為 0 formatted，git diff --check 通過；未在本機跑完整套件，未修改 UI 或部署。
