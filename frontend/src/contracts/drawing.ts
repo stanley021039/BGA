@@ -84,7 +84,10 @@ export interface DrawingEngines {
 }
 declare global {
   interface Window {
+    PartyShapes?: { toStrokes(values:unknown[]):unknown[] };
     StrokeCanvas?: { redraw(canvas: HTMLCanvasElement, values: unknown[]): void; strokeId(): string; iconMarkup(key: string): string;
+      createRenderer(canvas:HTMLCanvasElement,options?:{atomicPresentation?:boolean;maxStrokes?:number;maxPoints?:number;maxCheckpoints?:number}):{render(strokes:unknown[]):unknown;reset():void};
+      pointFrom(event:{clientX:number;clientY:number},canvas:HTMLCanvasElement,width:number,height:number):[number,number];
       createDrawingRenderer(canvas: HTMLCanvasElement, options?: { maxCheckpoints?: number }): { renderCooperatively(strokes: DrawingStroke[]): Promise<boolean>; reset(): void; whenIdle(): Promise<void> };
       drawingDataURL(canvas: HTMLCanvasElement, maxBytes?: number): string;
     };

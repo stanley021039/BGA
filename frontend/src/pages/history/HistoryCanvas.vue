@@ -3,7 +3,6 @@ import { onMounted, ref, watch } from 'vue';
 import type {} from '../../contracts/drawing';
 const props = defineProps<{ values: unknown[]; shapes: boolean; label: string }>();
 const canvas = ref<HTMLCanvasElement | null>(null), error = ref('');
-declare global { interface Window { PartyShapes?: { toStrokes(values: unknown[]): unknown[] } } }
 function render() {
   if (!canvas.value) return;
   error.value = '';

@@ -1,0 +1,5 @@
+@use 'tokens';
+.vue-drawing-tool { display:flex; align-items:center; justify-content:center; min-inline-size:0; min-block-size:2.75rem; padding:tokens.space(2); }
+.vue-drawing-tool[aria-pressed=true] { outline:2px solid currentColor; outline-offset:-3px; }
+.vue-drawing-tool-caption { position:absolute; inline-size:1px; block-size:1px; overflow:hidden; clip-path:inset(50%); }
+@media(max-width:760px) { .vue-drawing-tool { flex-direction:column; gap:tokens.space(1); padding:tokens.space(1); } .vue-drawing-tool-caption { position:static; inline-size:auto; block-size:auto; clip-path:none; font-size:.875rem; } }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import '../styles/room-countdown.scss';
 const props = defineProps<{ deadline: number | null; duration: number; offset: number; epoch: string; caption: string; urgent?: boolean; now: number }>();
 const fill = ref<HTMLElement | null>(null), seconds = computed(() => Math.ceil(Math.max(0, (props.deadline || 0) - props.now + props.offset) / 1000));
 const fraction = computed(() => Math.min(1, Math.max(0, ((props.deadline || 0) - props.now + props.offset) / props.duration)));

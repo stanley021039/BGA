@@ -10,7 +10,7 @@ const documents: Plugin = {
     server.middlewares.use((request, _response, next) => {
       const url = new URL(request.url || '/', 'http://localhost');
       for (const page of pages) {
-        if (url.pathname === page.route || url.pathname === page.route + '/' || ['draw', 'musicquiz'].includes(page.id) && new RegExp('^' + page.route + '/[a-f0-9]{6}/?$', 'i').test(url.pathname)) {
+        if (url.pathname === page.route || url.pathname === page.route + '/' || ['draw', 'musicquiz', 'minimal'].includes(page.id) && new RegExp('^' + page.route + '/[a-f0-9]{6}/?$', 'i').test(url.pathname)) {
           request.url = `/pages/${page.id}/index.html${url.search}`;
           break;
         }

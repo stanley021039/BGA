@@ -73,5 +73,10 @@
     "id": "musicquiz",
     "document": "musicquiz.html",
     "route": "/musicquiz"
+  },
+  {
+    "id": "minimal",
+    "document": "minimal.html",
+    "route": "/minimal"
   }
 ]
