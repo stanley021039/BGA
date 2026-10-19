@@ -3,6 +3,8 @@ import type { RoomSeat, RoomSnapshot } from './room';
 import { array, record, text } from '../services/validation';
 import { readPublicDrawResult, readResultVote } from './draw-results';
 import type { PublicDrawResult, ResultVote } from './draw-results';
+import { readDrawSummary } from './draw-summary';
+import type { DrawMatchSummary } from './draw-summary';
 
 export type DrawingTool = 'brush' | 'erase' | 'line' | 'rect' | 'ellipse' | 'fill';
 export type Point = [number, number];
@@ -18,6 +20,7 @@ export interface DrawSnapshot extends RoomSnapshot {
   round: number; roundLimit: number; presenterId: string | null; deadline: number | null; canvasEpoch: string; strokeVersion: number;
   participantIds: string[]; guessedIds: string[]; candidates: DrawQuestion[]; question: DrawQuestion | null;
   guesses: DrawGuess[]; winner: { ids: string[]; score: number; reason: string } | null;
+  matchSummary?: DrawMatchSummary;
   result: PublicDrawResult | null; recentResults: PublicDrawResult[]; resultVotes: ResultVote[]; savedResultIds: string[];
 }
 const integer = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
@@ -46,6 +49,7 @@ export function readDrawSnapshot(value: unknown): DrawSnapshot {
   let winner: DrawSnapshot['winner'] = null;
   if (room.winner !== null) { const row = record(room.winner); if (!integer(row.score)) throw Error('排名資料格式不正確'); winner = { ids: ids(row.ids), score: row.score, reason: text(row.reason) }; }
   return { ...room, round: room.round, roundLimit: room.roundLimit, strokeVersion: room.strokeVersion, canvasEpoch: text(room.canvasEpoch), guesses, winner,
+    ...(room.phase === 'finished' ? { matchSummary: readDrawSummary(room.matchSummary) } : {}),
     participantIds: ids(room.participantIds), guessedIds: ids(room.guessedIds), candidates: array(room.candidates).map(question), question: room.question === null ? null : question(room.question),
     result: room.result === null ? null : readPublicDrawResult(room.result), recentResults: array(room.recentResults).slice(0, 8).map(readPublicDrawResult),
     resultVotes: array(room.resultVotes).slice(0, 8).map(readResultVote), savedResultIds: ids(room.savedResultIds),
