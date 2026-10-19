@@ -1,0 +1,30 @@
+@use 'tokens' as t;
+[data-site-header].vue-site-header { display: block; padding: t.space(6) 0; margin-bottom: t.space(6); min-height: 132px; @include t.type(p2); z-index: 120; }
+.vue-site-header-content { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: t.space(4) t.space(6); min-width: 0; position: relative; }
+.vue-site-nav { display: flex; flex-wrap: wrap; align-items: center; gap: t.space(2); min-width: 0; min-height: 44px; }
+.vue-site-header .vue-site-brand { grid-column: 2; grid-row: 1; @include t.type(display); letter-spacing: 2px; }
+.vue-site-controls { grid-column: 3; grid-row: 1; justify-self: end; display: flex; align-items: center; gap: t.space(2); width: 200px; min-width: 200px; min-height: 44px; justify-content: flex-end; }
+.vue-site-header .site-avatar-button { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 44px; padding: 0; }
+.vue-site-account-loading { width: 44px; height: 44px; flex: none; }
+.vue-site-more { position: relative; }
+.vue-site-popup { position: fixed; overflow: auto; top: calc(100% + #{t.space(2)}); left: 0; width: 240px; max-width: calc(100vw - 2rem); box-sizing: border-box; border: 1px solid var(--play-line, #a59b96); border-radius: t.space(3); padding: t.space(3); color: var(--play-ink, #29262d); background: var(--play-surface, #fffdf8); box-shadow: 0 t.space(3) t.space(8) #0004; z-index: 130; a { display: block; padding: t.space(3); border-radius: t.space(2); } }
+.vue-site-account-popup { left: auto; right: 0; width: 360px; max-height: min(760px, 75dvh); overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; nav { display: grid; gap: t.space(2); } }
+.vue-site-header-feedback { grid-column: 1/-1; display: flex; align-items: center; gap: t.space(3); min-height: 3em; .frontend-status { flex: 1; margin: 0; } }
+.vue-header-profile { display: grid; gap: t.space(3); padding-bottom: t.space(4); border-bottom: 1px solid var(--play-line, #a59b96); h2, p { margin: 0; } form { display: grid; grid-template-columns: minmax(0, 1fr) 44px; align-items: end; gap: t.space(2); } label { display: grid; gap: t.space(2); } input { width: 100%; min-width: 0; } }
+.vue-header-character-preview { display: flex; align-items: center; gap: t.space(3); min-height: 44px; }
+.vue-header-characters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: t.space(2); min-height: 8rem; max-height: 12rem; overflow: auto; scrollbar-gutter: stable; button { display: grid; gap: t.space(1); min-width: 0; padding: t.space(2); height: 88px; white-space: normal; } img { width: 44px; height: 44px; object-fit: contain; justify-self: center; } span { @include t.type(p3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
+.vue-game-preferences { display: grid; gap: t.space(4); > p, p { margin: 0; } > label { display: grid; gap: t.space(2); } }
+.vue-preference-group { display: grid; gap: t.space(3); padding-top: t.space(4); border-top: 1px solid var(--play-line, #a59b96); }
+.vue-preference-switch { display: flex; justify-content: space-between; align-items: center; gap: t.space(3); min-height: 44px; }
+.vue-preference-volume { display: grid; grid-template-columns: minmax(0, 1fr) 4ch; align-items: center; gap: t.space(3); input { width: 100%; min-width: 0; } output { text-align: end; font-variant-numeric: tabular-nums; } }
+.vue-invitation-button { position: relative; display: inline-flex; }
+.vue-invitation-count { position: absolute; inset-block-start: -#{t.space(1)}; inset-inline-end: -#{t.space(1)}; min-width: 2ch; padding: 0 t.space(1); border-radius: t.space(2); background: #7b2531; color: #fff; @include t.type(p3); text-align: center; pointer-events: none; }
+.vue-invitation-list { display: grid; gap: t.space(4); article { display: grid; gap: t.space(3); border: 1px solid var(--play-line, #a59b96); border-radius: t.space(3); padding: t.space(4); } h3, p { margin: 0; } }
+.vue-invitation-actions { display: flex; flex-wrap: wrap; gap: t.space(3); align-items: center; }
+.vue-invitation-list { height: min(320px, 40dvh); overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; align-content: start; }
+.vue-invitation-list article:has(> .vue-player-avatar) { grid-template-columns: 2.5rem minmax(0, 1fr) auto; align-items: center; strong { overflow-wrap: anywhere; min-width: 0; } button { min-width: 5.5rem; } }
+.vue-room-invite-panel { min-height: min(440px, 55dvh); display: grid; align-content: start; gap: t.space(3); min-width: 0; label { display: grid; gap: t.space(2); } input { width: 100%; min-width: 0; } }
+@media(max-width:1180px) { .vue-site-header-content { grid-template-columns: minmax(0, 1fr) auto; } .vue-site-header .vue-site-brand { grid-column: 1/-1; grid-row: 1; } .vue-site-nav { grid-column: 1; grid-row: 2; } .vue-site-controls { grid-column: 2; grid-row: 2; } }
+@media(max-width:760px) { [data-site-header].vue-site-header { padding: t.space(4) 0; margin-bottom: t.space(4); } .vue-site-header-content { grid-template-columns: minmax(0, 1fr); gap: t.space(3); } .vue-site-header .vue-site-brand { grid-column: 1; grid-row: 1; } .vue-site-nav { grid-column: 1; grid-row: 3; } .vue-site-controls { grid-column: 1; grid-row: 2; justify-self: center; } .vue-site-nav { justify-content: center; } .vue-site-popup { max-width: calc(100vw - 2rem); } .vue-site-account-popup { left: 50%; right: auto; transform: none; } }
+
+@media(max-width:760px) { .vue-site-controls { min-height: 60px; } .vue-site-controls .vue-button.ui-icon-button { display: flex; flex-direction: column; width: 44px; min-width: 44px; height: 60px; padding: 4px; gap: 4px; } .vue-site-controls .vue-button-caption { font-size: .875rem; } }

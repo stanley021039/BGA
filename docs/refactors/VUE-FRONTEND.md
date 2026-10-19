@@ -301,3 +301,22 @@ app 掛載前為根節點加入 `data-ui-owner="vue"`。舊 GameUI 的自動 fra
 - 浮標透過 RoomRoster 的 Vue feedback slot 呈現，絕對定位且不攔截輸入，不增加玩家卡尺寸；鎖題提示也是 Vue 的個人 overlay，不重排操作列。換輪、離開作畫階段、失去連線、隱藏、停用動態及卸載時，清理適用提示、timer 與 animation。
 - DOM 查詢只在 Vue 更新後定位自身動畫葉節點，不改動清單結構或 reparent Vue 節點。晚到的 nextTick callback 再核對 scope、canvasEpoch、phase、連線與動態偏好，不能在新畫面啟動舊動畫。
 - 本節只有型別／建置、靜態資源與程式生命週期檢查；新 Vue 的動畫途中呈現、重連不補播、與持筆／對話框／專注模式同時操作、reduced-motion 及桌機／手機實際觀察仍待驗。共用導覽中的即時個人設定、其餘頁面與全站實玩驗收尚未完成。
+
+## 共用導覽與房間邀請接續（候選，2026-10-19）
+
+- 十二份原本含導覽的 Vue 文件改用同一 SiteHeader；獨立授權說明頁保留原本沒有導覽的版面。十三份 Vue 文件不再載入舊 site-header.js，也不動態載入原 RoomInvites DOM 控制器。其他尚未遷移的文件維持原入口。
+- mountPage 的單一 app／Pinia 同時持有頁面與 Teleport 導覽，header target 明確標記 Vue ownership；BFCache 重建、卸載與偏好訂閱仍在同一 scope，不建立第二套帳號或偏好狀態。
+- 共用 session 的 refresh 合併同時讀取，保留登入／註冊／重設流程的 generation；帳號請求有十秒時限。導覽的 focus／visible／profile-updated 讀取共用該 owner，舊回應不覆蓋新登入結果。外部帳號切換會停止舊房間操作並重載；明確登入的導向仍交登入頁處理。
+- SiteHeader 保留導航、管理者入口、獨立頭像、主題切換、帳號選單、遊戲偏好及登出。HeaderProfile 沿用既有暱稱與 appearance API，角色變更只更新遊戲角色，不覆寫獨立頭像。暱稱 IME／Unicode 長度規則與主要設定頁相同；外部形象更新在需要時重新讀取，不覆蓋正在編輯的暱稱。
+- GamePreferences 共用 AudioSettings／MotionPolicy／BarrageFrames／MediaAppearance 原 owner，保留兩種音量、音效試聽、動畫／彈幕、框開關、兩種外觀入口、主題與版本。關閉偏好視窗時停止自己的試聽；沒有另寫 localStorage schema。
+- useFloatingPanel 只沿用 UIPopover 的純 placement 計算，Vue 持有可見狀態與尺寸。原生 keyboard focus、Escape、外點／焦點移出、ResizeObserver、視窗／捲動／visualViewport 更新與卸載清理各自明確。選單保留固定欄寬、最大可用高度及內部捲動；開啟時 focus 不捲動頁面。
+- invitations Pinia domain 取代原輪詢與 DOM 控制器，前景五秒／背景三十秒、同時讀取合併、十秒請求時限、401／404 停止與明確重試。接收列表、可加入狀態與 sender 候選有具名 reader；切帳號、換房、關窗與舊回應以 generation／sender version 隔離。
+- RoomInvite 共用 UiTabs 呈現線上朋友與邀請連結。剪貼簿失敗不阻塞線上清單，好友確認前不入座；收件匣可婉拒或接受，接受後保存既有座位快取並前往正確遊戲路徑。原 API 的同 sender／room／recipient 去重、五分鐘有效期與有效席位權限不變。
+- 登出成功才清除十一款遊戲的座位提示、通知同瀏覽器分頁並返回登入；保留個人音量／外觀等偏好。其他分頁收到登出會停止舊房間操作。這些是前端接線，跨分頁與 BFCache 實際操作仍待驗。
+- Avatar 的固定槽樣式移入 PlayerAvatar，導覽與候選列表可共用同一元件；SCSS 沿用 C05 tokens。邀請列表內部固定高度捲動，徽章絕對定位、個人工具與手機短標籤使用固定槽，避免 pending／計數改變欄寬。
+
+### 證據與未驗範圍
+
+- 型別與十三份文件建置通過；十二個 header target、零個舊 header script 的靜態檢查符合來源。測試站文件與全部三十五份建置 JS／CSS 等資產的實際 HTTP／HEAD 檢查通過，不只檢查 HTML 直接引用。
+- 隔離測試帳號核對十四項實際 API：管理者／一般帳號、版本、暱稱、角色與獨立頭像、指定自有 QA 收件人的線上候選、重複邀請、收件匣、婉拒、接受後有效座位、舊邀請不可重播、資料完整還原，以及登出一份測試 cookie 後同帳號另一份 cookie 與另一帳號仍有效。沒有向真實使用者送邀請，測試房間已離席清理。
+- 上述沒有執行新 Vue UI；導覽掛載與 BFCache、選單焦點／返焦／Escape／外點、十秒逾時、角色編輯競態、跨分頁登出、音效實播、兩種外觀入口及桌機／手機／放大文字的幾何仍待原生瀏覽器驗收。之前卡住的收藏刪除原生確認框尚未解除，不能以 API 與 bundle 結果替代畫面證據。

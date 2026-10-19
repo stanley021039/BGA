@@ -1,8 +1,6 @@
 @use 'tokens';
 
 .vue-player-name { display: block; min-inline-size: 0; max-inline-size: 100%; font-size: 1rem; font-weight: 700; }
-.vue-player-avatar { position: relative; display: grid; place-items: center; inline-size: 2.5rem; block-size: 2.5rem; flex: none; overflow: hidden; border-radius: .5rem; background: var(--play-surface, #fffdf8); }
-.vue-player-avatar > img { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: contain; }
 .vue-room-roster { display: grid; grid-template-rows: auto minmax(0, 1fr) 3rem; gap: tokens.space(4); min-inline-size: 0; min-block-size: 0; }
 .vue-room-roster > header { display: grid; grid-template-columns: minmax(0, 1fr) 8ch; align-items: center; gap: tokens.space(2); }
 .vue-room-roster h2 { margin: 0; }

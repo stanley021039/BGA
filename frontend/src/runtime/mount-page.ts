@@ -1,7 +1,8 @@
-import { createApp } from 'vue';
+import { createApp, Fragment, h, Teleport } from 'vue';
 import type { Component } from 'vue';
 import { createPinia, disposePinia } from 'pinia';
 import { usePreferencesStore } from '../stores/preferences';
+import SiteHeader from '../components/SiteHeader.vue';
 import '../styles/foundations.scss';
 import '../styles/feedback.scss';
 import '../styles/controls.scss';
@@ -12,7 +13,9 @@ export function mountPage(component: Component, selector: string): void {
   function start(): void {
     if (stop) return;
     const pinia = createPinia();
-    const app = createApp(component);
+    const header = document.querySelector<HTMLElement>('#site-header-app');
+    if (header) { header.classList.add('vue-page', 'vue-site-header'); header.setAttribute('data-ui-owner', 'vue'); }
+    const app = createApp({ render: () => h(Fragment, [header ? h(Teleport, { to: header }, h(SiteHeader)) : null, h(component)]) });
     app.use(pinia);
     usePreferencesStore(pinia);
     document.querySelector(selector)?.classList.add('vue-page');
