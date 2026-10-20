@@ -143,9 +143,10 @@ export function usePokerPresentation(root: Ref<HTMLElement | null>) {
         top = target.top + target.height / 2 - bounds.top;
       chips.value = movers
         .flatMap((p) => {
-          const origin = document
-            .querySelector('[data-player-id="' + CSS.escape(p.id) + '"]')
-            ?.getBoundingClientRect();
+          const origin = (
+            root.value?.querySelector('[data-poker-seat="' + CSS.escape(p.id) + '"]') ||
+            document.querySelector('[data-player-id="' + CSS.escape(p.id) + '"]')
+          )?.getBoundingClientRect();
           return origin
             ? [
                 {

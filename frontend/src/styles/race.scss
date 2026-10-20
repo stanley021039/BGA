@@ -850,3 +850,225 @@
     }
   }
 }
+
+// RaceVehicleEffects still owns the SVG/WebGL leaves. Restore their original
+// race.css contract locally, without importing the retired whole-page layout.
+.vue-race-scene {
+  position: relative;
+  .race-vehicle-effect,
+  .race-vehicle-effect * {
+    pointer-events: none;
+  }
+  .race-vehicle-label rect {
+    fill: #17231af2;
+    stroke: #edc88c;
+    stroke-width: 1.2;
+  }
+  .race-vehicle-label text {
+    fill: #ffe4ab;
+    font: 700 24px var(--ui-font-family);
+    paint-order: stroke;
+    stroke: #17231a;
+    stroke-width: 2px;
+  }
+  .race-vehicle-exhaust {
+    animation: race-vehicle-thrust 0.16s ease-in-out infinite alternate;
+    animation-delay: var(--vehicle-effect-delay, 0ms);
+    transform-origin: 0 0;
+  }
+  .race-vehicle-flame-outer {
+    fill: #ed814b;
+    filter: drop-shadow(0 0 5px #faad58);
+  }
+  .race-vehicle-flame-inner {
+    fill: #ffe39c;
+  }
+  .race-vehicle-skid-wrapper {
+    transform-origin: 0 0;
+    animation: race-vehicle-spin 0.85s ease-out both;
+    animation-delay: var(--vehicle-effect-delay, 0ms);
+  }
+  .race-vehicle-skid-marks {
+    fill: none;
+    stroke: #141c14;
+    stroke-width: 3;
+    stroke-linecap: round;
+    opacity: 0.85;
+  }
+  .race-vehicle-shot-trail {
+    stroke: #ffdd8b;
+    stroke-width: 2;
+    stroke-dasharray: 4 7;
+    opacity: 0.45;
+  }
+  .race-vehicle-shot-bullet {
+    fill: #fff4b0;
+    filter: drop-shadow(0 0 6px #ffbd5c);
+    animation: race-vehicle-bullet 0.55s linear both;
+    animation-delay: var(--vehicle-effect-delay, 0ms);
+  }
+  .race-vehicle-bullet-glow {
+    fill: #ffb35c55;
+  }
+  .race-vehicle-shot-hit {
+    fill: none;
+    stroke: #ffde8e;
+    stroke-width: 3;
+    animation: race-vehicle-hit 0.45s ease-out both;
+    animation-delay: calc(var(--vehicle-effect-delay, 0ms) + 0.55s);
+  }
+  .race-vehicle-shot-hit.is-miss {
+    stroke: #bdcbbf;
+    stroke-dasharray: 4 4;
+  }
+  .race-vehicle-projectile[data-reduced='true'] .race-vehicle-shot-hit {
+    animation: none;
+    opacity: 0.8;
+  }
+}
+@keyframes race-vehicle-thrust {
+  from {
+    transform: scaleX(0.78);
+    opacity: 0.8;
+  }
+  to {
+    transform: scaleX(1.12);
+    opacity: 1;
+  }
+}
+@keyframes race-vehicle-spin {
+  0% {
+    transform: rotate(0);
+  }
+  38% {
+    transform: rotate(170deg);
+  }
+  74% {
+    transform: rotate(330deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes race-vehicle-bullet {
+  0% {
+    transform: translate(var(--shot-from-x), var(--shot-from-y));
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--shot-to-x), var(--shot-to-y));
+    opacity: 0;
+  }
+}
+@keyframes race-vehicle-hit {
+  from {
+    opacity: 0;
+    stroke-width: 7;
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.3;
+    stroke-width: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vue-race-scene {
+    .race-vehicle-skid-wrapper,
+    .race-vehicle-exhaust,
+    .race-vehicle-shot-bullet,
+    .race-vehicle-shot-hit {
+      animation: none !important;
+    }
+    .race-vehicle-shot-bullet,
+    .race-vehicle-exhaust {
+      display: none;
+    }
+  }
+}
+
+// Keep the original Race garage illustration beside the shared waiting details.
+:root body .vue-race-waiting {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: stretch;
+  justify-content: stretch;
+  gap: 16px;
+  min-inline-size: 0;
+  .vue-race-waiting-art {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    min-inline-size: 0;
+    margin: 0;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--play-surface);
+    span {
+      justify-self: start;
+      font-size: clamp(1.75rem, 3vw, 3rem);
+      font-weight: 900;
+      line-height: 1;
+      em {
+        color: #c75a2a;
+      }
+    }
+    img {
+      display: block;
+      inline-size: 100%;
+      max-inline-size: 28rem;
+      block-size: auto;
+      max-block-size: 22rem;
+      object-fit: contain;
+    }
+  }
+  .vue-room-waiting-info {
+    padding: 16px;
+    .vue-room-waiting-facts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vue-room-waiting-fact {
+      min-block-size: 0;
+      grid-template-rows: auto auto;
+    }
+    .vue-room-waiting-footer.has-actions {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  .vue-race-waiting-lesson {
+    display: flex;
+    align-items: center;
+    min-block-size: 44px;
+  }
+  .vue-room-waiting-actions small {
+    display: block;
+  }
+}
+@media (max-width: 760px) {
+  :root body .vue-race-waiting {
+    grid-template-columns: minmax(0, 1fr);
+    .vue-race-waiting-art {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+      align-items: center;
+      gap: 16px;
+      img {
+        max-block-size: 12rem;
+      }
+    }
+  }
+}
+
+.vue-race-board .race-terrain-art .cell-symbol {
+  font:
+    bold 17px 'Segoe UI',
+    sans-serif;
+  dominant-baseline: central;
+}
+
+.vue-race-board .map-car.disabled-car {
+  opacity: 0.5;
+}
