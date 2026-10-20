@@ -1001,14 +1001,15 @@
     }
     .vue-quacks-risk {
       flex-wrap: wrap;
-      min-height: 58px;
+      min-height: 96px;
+      align-content: center;
     }
     .vue-quacks-control-deck {
-      grid-template-rows: 64px 80px 24px;
-      min-height: 180px;
+      grid-template-rows: 96px 80px 24px;
+      min-height: 212px;
     }
     .vue-quacks-stage {
-      grid-template-rows: 44px minmax(420px, 1fr) 180px;
+      grid-template-rows: 44px minmax(420px, 1fr) 212px;
     }
     .vue-quacks-draw-action img,
     .vue-quacks-stop-action img {
