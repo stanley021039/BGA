@@ -1,0 +1,65 @@
+@use 'compact-header' as chrome;
+@use 'tokens' as t;
+.vue-musicquiz-stage { min-height:600px; grid-template-rows:auto 220px 300px auto 60px; align-content:start; header { display:grid; gap:t.space(2); h1 { min-height:2.6em; } p { min-height:3em; } } }
+.vue-musicquiz-audio-slot { min-width:0; height:220px; overflow:auto; display:grid; align-items:center; padding:t.space(4); background:var(--play-paper); border:1px solid var(--play-line); border-radius:t.space(3); }
+.vue-room-audio-clip { display:grid; gap:t.space(2); min-width:0; audio { width:100%; max-width:100%; min-width:0; } p { min-height:3em; @include t.type(p3); } button { min-height:44px; justify-self:start; } }
+.vue-musicquiz-action-slot { display:grid; align-content:start; gap:t.space(4); min-width:0; height:300px; overflow:auto; scrollbar-gutter:stable; padding:t.space(1); form { display:grid; gap:t.space(3); } input { width:100%; min-width:0; padding:t.space(3); background:var(--play-paper); color:var(--play-ink); border:1px solid var(--play-line); border-radius:t.space(2); } }
+.vue-musicquiz-buttons { display:flex; flex-wrap:wrap; gap:t.space(3); }
+.vue-musicquiz-progress { min-height:24px; font-variant-numeric:tabular-nums; }
+.vue-musicquiz-submitted { display:grid; align-content:start; gap:t.space(3); min-height:150px; overflow-wrap:anywhere; }
+.vue-musicquiz-retry-slot { min-height:60px; display:flex; align-items:center; }
+.vue-musicquiz-rankings { list-style:none; margin:0; padding:0; display:grid; gap:t.space(3); max-height:320px; overflow:auto; scrollbar-gutter:stable; li { display:grid; grid-template-columns:minmax(0,1fr) 7ch; gap:t.space(3); padding:t.space(3); border:1px solid var(--play-line); border-radius:t.space(2); } strong { overflow-wrap:anywhere; } span { text-align:end; font-variant-numeric:tabular-nums; } }
+.vue-musicquiz-review>ol { display:grid; gap:t.space(4); list-style:none; padding:0; margin:0; max-height:480px; overflow:auto; scrollbar-gutter:stable; >li { display:grid; gap:t.space(3); padding:t.space(4); border:1px solid var(--play-line); border-radius:t.space(3); } ul { display:grid; gap:t.space(2); list-style:none; padding:0; } ul>li { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 7ch; gap:t.space(3); overflow-wrap:anywhere; } }
+@media(max-width:760px) { .vue-musicquiz-stage { min-height:600px; } .vue-musicquiz-review>ol { max-height:600px; >li { padding:t.space(3); } ul>li { grid-template-columns:minmax(0,1fr) 7ch; >strong { grid-column:1/-1; } } } }
+
+// Listening/answering owns a bounded player and answer area, not an unbounded
+// sum of the old 220px + 300px desktop slots. Recaps remain in the main scroll.
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ body:has(#musicquiz-app .vue-game-workspace):not(.ui-large-text) {
+  margin:0;
+  .vue-game-document { block-size:100dvh;height:100dvh;padding:0 24px 8px;display:grid;grid-template-rows:auto minmax(0,1fr); }
+  @include chrome.desktop;
+  #musicquiz-app { min-block-size:0; }.vue-game-workspace { block-size:100%;min-block-size:0;grid-template-rows:auto 48px minmax(0,1fr);gap:.75rem; }
+  .vue-game-workspace.is-header-integrated { grid-template-rows:48px minmax(0,1fr); }
+  .vue-game-grid { min-block-size:0; }.vue-game-main,.vue-game-side { min-block-size:0;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;gap:.5rem; }
+  .vue-game-roster-panel { min-block-size:0;padding:.75rem;.vue-roster-list { min-block-size:0;max-block-size:none; } }
+  .vue-game-settings-panel { flex:none;padding:.75rem;gap:.5rem;>p { min-block-size:0; } }.vue-game-start-slot { min-block-size:44px; }
+ }
+ :root body[data-visual-theme] #musicquiz-app .vue-musicquiz-stage {
+  flex:none;block-size:auto;height:auto;min-block-size:0;min-height:0;grid-template-rows:auto 6rem 13rem 2.75rem 2.75rem;gap:.25rem;padding:.75rem;
+  >header { gap:.25rem;h1,p { min-block-size:0;min-height:0; }h1 { font-size:1.25rem;line-height:1.4; }p { font-size:.875rem;line-height:1.5; }small { display:none; } }
+  .vue-musicquiz-audio-slot { block-size:6rem;height:6rem;min-block-size:0;padding:.25rem .5rem;overflow:auto; }
+  .vue-room-audio-clip { grid-template-columns:minmax(0,1fr) auto;grid-template-rows:54px auto;gap:.25rem .5rem;align-items:center;audio { grid-column:1;grid-row:1; }button { grid-column:2;grid-row:1;min-block-size:44px;padding-inline:.5rem; }p { grid-column:1/-1;grid-row:2;min-height:0;min-block-size:0;max-block-size:2.625rem;margin:0;overflow:auto; } }
+  .vue-musicquiz-action-slot { block-size:13rem;height:13rem;min-block-size:0;gap:.5rem;form { gap:.5rem; }input { min-block-size:44px;padding:.5rem; }.vue-musicquiz-progress { min-block-size:1.3125rem;margin:0;font-size:.875rem;line-height:1.5; } }
+  .vue-musicquiz-buttons { gap:.5rem; }.vue-musicquiz-submitted { min-height:0;gap:.5rem; }
+  >.frontend-status { block-size:2.75rem;min-block-size:0;max-block-size:2.75rem;margin:0;overflow:auto;font-size:.875rem;line-height:1.5; }
+  .vue-musicquiz-retry-slot { block-size:2.75rem;min-block-size:2.75rem; }
+ }
+ :root body[data-visual-theme] #musicquiz-app .vue-musicquiz-review { flex:none;min-block-size:0;max-block-size:18rem;padding:.75rem;gap:.5rem;overflow:auto;h2 { font-size:1.125rem;line-height:1.5; }p { font-size:.875rem;line-height:1.5; } }
+}
+@media(max-width:760px) {
+ // This marker exists only in the waiting task; active audio/answering is unchanged.
+ :root body[data-visual-theme] #musicquiz-app .vue-musicquiz-stage:has(.vue-game-waiting-art) {
+  block-size:auto;height:auto;min-block-size:0;min-height:0;grid-template-rows:auto auto auto 2.75rem 2.75rem;gap:.5rem;padding:1rem;
+  >header { gap:.25rem;h1,p { min-height:0;min-block-size:0; }h1 { font-size:1.25rem;line-height:1.5; }p { font-size:.875rem;line-height:1.5; }small { display:none; } }
+  .vue-musicquiz-audio-slot { block-size:auto;height:auto;min-block-size:2.75rem;padding:.5rem;p { font-size:.875rem;line-height:1.5; } }
+  .vue-musicquiz-action-slot { block-size:auto;height:auto;min-block-size:0;gap:.5rem;padding:0;>.vue-game-waiting-art { block-size:150px;height:150px; }p { font-size:.875rem;line-height:1.5; } }
+  >.frontend-status { block-size:2.75rem;min-block-size:0;max-block-size:2.75rem;margin:0;overflow:auto;font-size:.875rem;line-height:1.5; }
+  .vue-musicquiz-retry-slot { block-size:2.75rem;min-block-size:2.75rem; }
+ }
+}
+
+// Active mobile phases share bounded slots so reveal/submission never shifts
+// the frame. Padding and borders stay inside the matching grid tracks.
+@media(max-width:760px) {
+ :root body[data-visual-theme] #musicquiz-app .vue-musicquiz-stage:not(:has(.vue-game-waiting-art)) {
+  flex:none;box-sizing:border-box;block-size:auto;height:auto;min-block-size:0;min-height:0;grid-template-rows:100px 220px 208px 44px 44px;gap:.5rem;padding:.75rem;
+  >header { box-sizing:border-box;block-size:100px;min-block-size:0;gap:.25rem;align-content:start;overflow:auto;h1 { min-height:3em;min-block-size:3em;margin:0;font-size:1.25rem;line-height:1.5; }p { min-height:0;min-block-size:0;margin:0;font-size:.875rem;line-height:1.5; }small { display:none; } }
+  .vue-musicquiz-audio-slot { box-sizing:border-box;block-size:220px;height:220px;min-block-size:0;overflow:auto;padding:.75rem; }
+  .vue-room-audio-clip { gap:.5rem;button { min-block-size:44px; }p { font-size:.875rem;line-height:1.5; } }
+  .vue-musicquiz-action-slot { box-sizing:border-box;block-size:208px;height:208px;min-block-size:0;overflow:auto;gap:.5rem;padding:.25rem;form { gap:.5rem; }input { box-sizing:border-box;min-block-size:44px;padding:.5rem; }button { min-block-size:44px; }h2,p { margin:0; } }
+  .vue-musicquiz-buttons { gap:.5rem; }.vue-musicquiz-submitted { min-height:0;min-block-size:0;gap:.5rem; }
+  >.frontend-status { box-sizing:border-box;block-size:44px;min-block-size:0;max-block-size:44px;margin:0;overflow:auto;font-size:.875rem;line-height:1.5; }
+  .vue-musicquiz-retry-slot { box-sizing:border-box;block-size:44px;min-block-size:44px;max-block-size:44px;overflow:auto;button { min-block-size:44px; } }
+ }
+}

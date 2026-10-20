@@ -1,0 +1,96 @@
+@use 'tokens';
+
+// C01 owns its inner rows. The body/section scope also beats legacy per-game
+// compact chat row rules, without changing any game's outer column geometry.
+:is(body, body[data-game-kind]) section.vue-room-chat.vue-chat-c01[data-ping-anchor="chat"][aria-label] {
+  --chat-notice-size: 3.25rem;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: tokens.space(2);
+  min-inline-size: 0;
+  min-block-size: 0;
+  color: var(--stitch-ink, var(--play-ink, #212121));
+
+  > .vue-chat-header { display: grid; grid-template: 1.5rem 2.75rem / minmax(0, 1fr); gap: tokens.space(1); min-inline-size: 0; min-block-size: 0; align-content: start; }
+  > .vue-chat-header.vue-chat-toggle-header { grid-template-rows: 2.75rem 2.75rem; }
+  .vue-chat-heading { display: grid; grid-template-columns: minmax(0, 1fr) 3.75rem; align-items: center; gap: tokens.space(1); min-inline-size: 0; }
+  .vue-chat-heading h2 { @include tokens.type(p2); font-weight: 800; margin: 0; overflow-wrap: anywhere; }
+  .vue-chat-heading > .vue-button { justify-content: start; padding-inline: 0; min-inline-size: 0; }
+  .vue-chat-unread { @include tokens.type(p3); min-block-size: 1.5em; white-space: nowrap; text-align: end; font-variant-numeric: tabular-nums; }
+  .vue-chat-tools { display: flex; flex-wrap: nowrap; align-items: center; justify-content: flex-end; gap: tokens.space(2); min-inline-size: 0; min-block-size: 2.75rem; overflow: visible; }
+  .vue-chat-tools > * { flex: 0 0 auto; }
+  .vue-chat-tools > .vue-button { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
+
+  > .vue-room-chat-content.vue-chat-c01-content { display: grid; grid-template-rows: var(--chat-notice-size) minmax(0, 1fr) 2.75rem 1.5rem 2.75rem; gap: tokens.space(2); min-inline-size: 0; min-block-size: 0; }
+  .vue-chat-notice { @include tokens.type(p3); box-sizing: border-box; margin: 0; padding: tokens.space(1) tokens.space(2); block-size: var(--chat-notice-size); min-block-size: 0; visibility: visible; overflow: auto; scrollbar-gutter: auto; border-radius: tokens.space(2); background: color-mix(in srgb, var(--stitch-blue, #3389ec) 10%, var(--stitch-surface, var(--play-surface, #fff))); color: inherit; overflow-wrap: anywhere; }
+  .vue-chat-messages { margin: 0; padding: 0 tokens.space(1); min-inline-size: 0; min-block-size: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; list-style: none; }
+  .vue-chat-messages li { padding-block: tokens.space(2); min-inline-size: 0; border: 0; overflow-wrap: anywhere; }
+  .vue-chat-messages li:not(.vue-chat-empty) { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); gap: tokens.space(2); }
+  .vue-chat-avatar { @include tokens.type(p3); display: grid; place-items: center; inline-size: 1.75rem; block-size: 1.75rem; border-radius: 50%; background: color-mix(in srgb, var(--stitch-ink, var(--play-ink, #212121)) 10%, var(--stitch-surface, var(--play-surface, #fff))); font-weight: 800; }
+  .vue-chat-message-copy { min-inline-size: 0; }
+  .vue-chat-message-copy > div { display: grid; grid-template-columns: minmax(0, 1fr) 3rem; align-items: start; gap: tokens.space(2); }
+  .vue-chat-messages strong, .vue-chat-messages time { @include tokens.type(p3); }
+  .vue-chat-messages strong { font-weight: 700; }
+  .vue-chat-messages time { text-align: end; font-variant-numeric: tabular-nums; opacity: .75; }
+  .vue-chat-messages p { @include tokens.type(p2); margin: tokens.space(1) 0 0; padding: tokens.space(2) tokens.space(3); border-radius: tokens.space(3); background: color-mix(in srgb, var(--stitch-ink, var(--play-ink, #212121)) 5%, var(--stitch-surface, var(--play-surface, #fff))); white-space: pre-wrap; }
+  .vue-chat-empty { @include tokens.type(p3); opacity: .75; }
+  form { margin: 0; min-inline-size: 0; min-block-size: 0; }
+  .vue-chat-compose { display: grid; grid-template-columns: minmax(0, 1fr) 4.5rem; gap: tokens.space(2); align-items: stretch; min-inline-size: 0; block-size: 2.75rem; }
+  .vue-chat-compose input { @include tokens.type(p3); box-sizing: border-box; inline-size: 100%; min-inline-size: 0; min-block-size: 2.75rem; padding: tokens.space(2); border: 1px solid var(--stitch-line, var(--play-line, #aaa)); border-radius: tokens.space(2); background: var(--stitch-surface, var(--play-surface, #fff)); color: inherit; }
+  .vue-chat-send.vue-button { --ui-button-radius: .5rem; padding-inline: tokens.space(2); gap: tokens.space(1); }
+  .vue-chat-send .ui-button-icon { inline-size: 1rem; block-size: 1rem; }
+  .vue-chat-footer { @include tokens.type(p3); display: grid; grid-template-columns: minmax(0, 1fr) 4rem; gap: tokens.space(1); min-inline-size: 0; min-block-size: 1.5rem; overflow: auto; color: inherit; opacity: .75; }
+  .vue-chat-count { white-space: nowrap; text-align: end; font-variant-numeric: tabular-nums; }
+  .vue-chat-count.is-over-limit { color: var(--play-danger, #b42318); }
+  .vue-chat-feedback { display: grid; grid-template-columns: minmax(0, 1fr) 2.75rem; gap: tokens.space(1); block-size: 2.75rem; min-block-size: 0; min-inline-size: 0; overflow: visible; }
+  .vue-chat-feedback > .frontend-status { @include tokens.type(p3); margin: 0; padding: 0; block-size: 2.75rem; max-block-size: 2.75rem; min-block-size: 0; overflow: auto; scrollbar-gutter: stable; overflow-wrap: anywhere; }
+  &.vue-chat-collapsed { grid-template-rows: 2.75rem; > .vue-chat-header { grid-template-rows: 2.75rem; } }
+}
+
+// Native top-layer popover remains outside clipped, fixed-height game panels.
+body > .vue-social-popover {
+  position: fixed; inset: auto; margin: 0; box-sizing: border-box;
+  inline-size: 22rem; block-size: min(34rem, calc(100dvh - 1rem)); max-inline-size: calc(100vw - 1rem); max-block-size: calc(100dvh - 1rem);
+  padding: tokens.space(3); border: 1px solid var(--stitch-line, var(--play-line, #aaa)); border-radius: tokens.space(3);
+  color: var(--stitch-ink, var(--play-ink, #212121)); background: var(--stitch-surface, var(--play-surface, #fff));
+  box-shadow: 0 .5rem 2rem #0003; overflow: hidden;
+  &:popover-open { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: tokens.space(2); }
+  .vue-social-popover-header { display: flex; gap: tokens.space(2); align-items: center; min-inline-size: 0; min-block-size: 2.75rem; }
+  .vue-social-popover-header h2 { @include tokens.type(p2); margin: 0; }
+  .vue-social-popover-header > .vue-button { flex: 0 0 2.75rem; }
+  .vue-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: tokens.space(1); flex: 1; margin: 0; padding: 0; min-inline-size: 0; }
+  .vue-tabs > button { @include tokens.type(p3); --ui-button-radius: .5rem; box-sizing: border-box; min-inline-size: 0; min-block-size: 2.75rem; padding: tokens.space(1); margin: 0; border: 1px solid transparent; border-radius: .5rem; background: transparent; color: inherit; white-space: normal; }
+  .vue-tabs > button[aria-selected=true] { background: var(--stitch-primary, #f6cf35); color: #212121; border-color: color-mix(in srgb, #212121 15%, transparent); font-weight: 800; }
+  .vue-social-popover-body { display: grid; grid-template-rows: minmax(0, 1fr) 2.75rem; gap: tokens.space(2); min-inline-size: 0; min-block-size: 0; }
+  .vue-social-popover-body > .frontend-status { @include tokens.type(p3); min-block-size: 0; block-size: 2.75rem; max-block-size: 2.75rem; margin: 0; padding: 0; overflow: auto; }
+  .vue-reaction-content { block-size: auto; min-block-size: 0; min-inline-size: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+  .vue-reaction-hint { @include tokens.type(p3); margin: 0 0 tokens.space(2); }
+  .vue-emoji-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr)); gap: tokens.space(2); }
+  .vue-emoji-grid > button { --ui-button-radius: .5rem; display: grid; place-items: center; min-inline-size: 2.75rem; min-block-size: 2.75rem; padding: tokens.space(1); border: 1px solid transparent; border-radius: .5rem; background: transparent; color: inherit; }
+  .vue-emoji-grid > button:hover:not(:disabled) { background: color-mix(in srgb, var(--stitch-primary, #f6cf35) 25%, transparent); }
+  .vue-emoji-glyph { font-size: 1.75rem; line-height: 1; }
+  .vue-expression-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: tokens.space(2); }
+  .vue-expression-grid > button { --ui-button-radius: .5rem; display: grid; grid-template-columns: 2.75rem minmax(0, 1fr); align-items: center; justify-items: start; gap: tokens.space(3); min-inline-size: 0; min-block-size: 3.75rem; padding: tokens.space(2); border: 1px solid var(--stitch-line, var(--play-line, #aaa)); border-radius: .5rem; background: var(--stitch-surface, var(--play-surface, #fff)); color: inherit; text-align: start; }
+  .vue-expression-grid img { inline-size: 2.75rem; block-size: 2.75rem; object-fit: contain; }
+  .vue-expression-grid span { @include tokens.type(p2); min-inline-size: 0; overflow-wrap: anywhere; }
+  .vue-reaction-phrases { margin-block-start: tokens.space(3); summary { @include tokens.type(p3); cursor: pointer; min-block-size: 2.75rem; align-content: center; } > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: tokens.space(2); } .vue-button { white-space: normal; overflow-wrap: anywhere; } }
+  .vue-social-load-error { display: grid; gap: tokens.space(2); padding-block-end: tokens.space(3); p { @include tokens.type(p3); margin: 0; } }
+}
+
+@media(min-width:1181px) and (max-height:780px) and (pointer:fine) {
+  :is(body, body[data-game-kind]) section.vue-room-chat.vue-chat-c01[data-ping-anchor="chat"][aria-label] {
+    --chat-notice-size: 3.25rem;
+    gap: tokens.space(1);
+    > .vue-room-chat-content.vue-chat-c01-content { gap: tokens.space(1); }
+  }
+}
+@media(max-width:760px) {
+  :is(body, body[data-game-kind]) section.vue-room-chat.vue-chat-c01[data-ping-anchor="chat"][aria-label] > .vue-room-chat-content.vue-chat-c01-content { grid-template-rows: var(--chat-notice-size) minmax(10rem, 1fr) 2.75rem 1.5rem 2.75rem; }
+}
+
+.vue-room-barrage-layer { position: absolute; inset: 0; z-index: 25; overflow: hidden; pointer-events: none; }
+.vue-room-barrage { position: absolute; left: 100%; display: block; inline-size: max-content; max-inline-size: min(72%, 36.25rem); padding: tokens.space(3) tokens.space(4); border: 1px solid #ebc78b; border-radius: 1.5rem; background: #15251de8; color: #fff8e8; box-shadow: 0 .375rem 1.375rem #0006; font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; animation: vue-room-barrage-travel 8s linear forwards; }
+.vue-room-barrage strong { margin-inline-end: tokens.space(1); }
+.vue-room-emoji-glyph { font-size: 2rem; }
+.vue-room-barrage.vue-room-barrage-static { left: tokens.space(3); animation: none; transform: none; }
+@keyframes vue-room-barrage-travel { from { transform: translateX(0); } to { transform: translateX(var(--barrage-travel)); } }

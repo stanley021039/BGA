@@ -1,0 +1,68 @@
+@use 'compact-header' as chrome;
+@use 'tokens' as t;
+.vue-gift-stage { box-sizing:border-box;min-width:0;grid-template-rows:auto minmax(0,1fr) 84px 60px;min-height:850px;
+ >header { display:grid;gap:t.space(2);h1 {@include t.type(h1);} p {@include t.type(p3);} }
+}
+.vue-gift-live { min-width:0;min-height:0;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;display:flex;flex-direction:column;gap:t.space(3); }
+.vue-gift-summaries { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:t.space(3);min-width:0;>div { min-width:0;padding:t.space(3);border:1px solid var(--play-line);border-radius:t.space(3); } h2 {@include t.type(p2);} ul,ol { display:grid;gap:t.space(2);list-style:none;padding:0;margin:t.space(2) 0 0;max-height:160px;overflow:auto;scrollbar-gutter:stable; } li { display:grid;grid-template-columns:minmax(0,1fr);gap:t.space(1);min-width:0;overflow-wrap:anywhere;@include t.type(p3); } }
+.vue-gift-tabs { display:flex;flex-wrap:wrap;gap:t.space(2);min-width:0;>button { min-height:44px;max-width:100%;padding:t.space(2) t.space(3);overflow-wrap:anywhere;white-space:normal;border:1px solid var(--play-line);border-radius:t.space(2);background:var(--play-surface);color:var(--play-ink); } [aria-pressed=true] { outline:2px solid var(--play-accent,var(--play-ink));outline-offset:-2px; } }
+.vue-gift-choice-area { display:grid;gap:t.space(3);min-width:0;>h2 {@include t.type(h2);} >p {@include t.type(p3);} }
+.vue-gift-card-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:t.space(3);>button { --ui-button-radius:.75rem;display:grid;grid-template-rows:84px auto minmax(42px,auto);align-content:start;gap:t.space(2);min-width:0;min-height:190px;padding:t.space(3);border:1px solid var(--play-line);border-radius:t.space(3);background:var(--play-surface);color:var(--play-ink);text-align:center;overflow-wrap:anywhere; } strong {@include t.type(p2);} small {@include t.type(p3);} [aria-pressed=true] { outline:3px solid var(--play-accent,var(--play-ink));outline-offset:-3px;background:var(--play-paper,var(--play-surface)); } }
+.vue-gift-art { display:grid;place-items:center;min-width:0;width:100%;height:84px;>img { width:100%;height:100%;object-fit:contain; } >span { font-size:2.5rem; } }
+.vue-gift-feedback { display:grid;grid-template-rows:24px 48px;gap:t.space(1);min-width:0;>p {@include t.type(p3);} .frontend-status { margin:0;min-height:48px;height:48px;max-height:48px;overflow:auto; } }
+.vue-gift-actions { display:flex;flex-wrap:wrap;align-items:center;gap:t.space(2);min-height:60px;>span { @include t.type(p3); } }
+.vue-gift-delivery,.vue-gift-review,.vue-gift-waiting { display:grid;gap:t.space(3);min-width:0;align-content:start; }
+.vue-gift-waiting>img { max-width:100%;height:180px;object-fit:contain;justify-self:center; }
+.vue-gift-current { display:flex;gap:t.space(3);align-items:center;h2 {@include t.type(h2);overflow-wrap:anywhere;} }
+.vue-gift-delivery-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:t.space(3);article { display:grid;gap:t.space(2);padding:t.space(3);border:1px solid var(--play-line);border-radius:t.space(3);min-width:0;overflow-wrap:anywhere; } h3 {@include t.type(p2);} p {@include t.type(p3);} }
+.vue-gift-score-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr));gap:t.space(2);article { display:grid;gap:t.space(1);padding:t.space(2);border:1px solid var(--play-line);border-radius:t.space(2);min-width:0;overflow-wrap:anywhere; } span {@include t.type(p3);} meter { width:100%;min-width:0;height:12px; } }
+.vue-gift-result-entry { display:grid;grid-template-columns:64px minmax(0,1fr) 3ch;gap:t.space(3);align-items:center;border-bottom:1px solid var(--play-line);padding-block:t.space(3);.vue-gift-art { height:64px; } >div { min-width:0;overflow-wrap:anywhere; } p,small {@include t.type(p3);} >b { font-variant-numeric:tabular-nums;text-align:right; } .is-negative { color:var(--play-error,#a12d31); } }
+.vue-gift-roster-scores { display:grid;gap:t.space(1);width:100%;span { display:flex;justify-content:space-between;gap:t.space(1);@include t.type(p3); } }
+.vue-gift-document .vue-game-roster-panel .vue-room-player { grid-template-columns:2.5rem minmax(0,1fr) 3.5rem; }
+.vue-gift-settings { min-width:0;max-height:280px;overflow:auto;scrollbar-gutter:stable;summary { min-height:44px;cursor:pointer; } label { display:grid;gap:t.space(2);margin-block:t.space(3); } p {@include t.type(p3);} input,select { min-width:0;width:100%; } }
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ body.vue-gift-document:not(.ui-large-text) {
+  margin:0;
+  .vue-game-document { height:100dvh;padding:0 t.space(6) t.space(2);display:grid;grid-template-rows:auto minmax(0,1fr); }
+  @include chrome.desktop;
+  #gift-app { min-height:0; }
+  .vue-game-workspace { height:100%;min-height:0;grid-template-rows:auto 48px minmax(0,1fr);gap:t.space(3); }
+  .vue-game-toolbar { min-height:44px;padding-block:t.space(2);gap:t.space(3); }
+  .vue-game-phase { min-height:24px; }
+  .vue-game-room-feedback { min-height:48px;height:48px; }
+  .vue-game-grid { min-height:0; }
+  .vue-game-main,.vue-game-side { overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain; }
+  .vue-game-main { border:1px solid var(--play-line);border-radius:t.space(4);background:var(--play-surface); }
+  .vue-game-roster-panel { min-height:0;padding:t.space(3);.vue-roster-list { min-height:0;max-height:none; } }
+  .vue-game-settings-panel { flex:none;padding:t.space(3);gap:t.space(2);>p {display:none;} }
+  .vue-game-start-slot { min-height:44px; }
+  .vue-game-side { gap:t.space(3);>.vue-room-chat { flex:1;min-height:280px;padding:t.space(3);gap:t.space(2); } }
+  .vue-room-chat-content { grid-template-rows:0 minmax(60px,1fr) 0 auto 44px 48px;gap:t.space(2); }
+  .vue-chat-notice,.vue-chat-quick:empty { visibility:hidden;min-height:0;height:0; }
+  .vue-gift-stage { flex:none;height:100%;min-height:0;padding:t.space(4);border:0;border-radius:0;gap:t.space(3);grid-template-rows:auto minmax(0,1fr) 80px 48px;>header {gap:t.space(1);small {display:none;}} }
+  .vue-gift-actions { min-height:48px;overflow:auto; }
+  .vue-gift-live:has(>.vue-gift-summaries) { display:grid;grid-template-rows:clamp(96px,16dvh,160px) 44px minmax(0,1fr);gap:t.space(2);overflow:hidden; }
+  .vue-gift-summaries { min-height:0;>div {display:grid;grid-template-rows:auto minmax(0,1fr);padding:t.space(2);min-height:0;} ul,ol {min-height:0;max-height:none;margin-block-start:t.space(1);} }
+  .vue-gift-choice-area {min-height:0;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;}
+ }
+}
+@media(max-width:760px) {
+ .vue-gift-stage { min-height:1000px;padding:t.space(4);grid-template-rows:auto minmax(0,1fr) 105px auto; }
+ .vue-gift-summaries { grid-template-columns:minmax(0,1fr);ul,ol {max-height:200px;} }
+ .vue-gift-card-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:t.space(2);>button {padding:t.space(2);} }
+ .vue-gift-feedback { grid-template-rows:minmax(42px,auto) 48px; }
+ .vue-gift-actions { >.vue-button { flex:1;min-width:0; } }
+ .vue-gift-stage:has(.vue-gift-waiting) {
+  min-height:0;height:auto;align-content:start;grid-template-rows:auto auto 72px 60px;
+  .vue-gift-live { overflow:visible; }
+  .vue-gift-feedback { min-height:0;height:72px;overflow:hidden;grid-template-rows:44px 24px;
+   >p { margin:0;min-height:0;overflow:auto; }
+   .frontend-status { min-height:0;min-block-size:0;height:24px;block-size:24px;max-height:24px;max-block-size:24px;overflow:auto; }
+  }
+  .vue-gift-actions { min-height:0;height:60px;overflow:auto; }
+ }
+ .vue-gift-result-entry { grid-template-columns:44px minmax(0,1fr) 3ch;gap:t.space(2);.vue-gift-art {height:44px;} }
+}
+
+.vue-gift-spotlight { display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:12px;min-height:104px;border:1px solid var(--play-line);border-radius:12px;padding:12px;.vue-gift-art {height:64px;} >p:first-child {grid-column:1/3;} }
+@media(max-width:760px) { .vue-gift-spotlight {grid-template-columns:44px minmax(0,1fr);>.vue-button {grid-column:1/-1;}} }

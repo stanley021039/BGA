@@ -1,0 +1,7 @@
+import type { RaceCell } from '../../contracts/race';
+export const sizes=['輕型','中型','重型'];
+export const commands=[{id:'nitro',label:'氮氣加速 · 1–3'},{id:'drift',label:'甩尾穿越 · 3–5'},{id:'repair',label:'維修 · 6'},{id:'airstrike',label:'直升機空襲 · 任意骰'}];
+export const accepts=(kind:string,value:number)=>kind==='nitro'?value<=3:kind==='drift'?value>=3&&value<=5:kind==='repair'?value===6:kind==='airstrike';
+export const terrains:Record<string,{name:string;color:string;symbol:string;help:string}>={R:{name:'公路',color:'#777869',symbol:'',help:'進入花 1 點；全程公路可取得加速資格。'},O:{name:'荒地',color:'#b59961',symbol:'',help:'進入花 1 點。'},M:{name:'泥地',color:'#594431',symbol:'≈',help:'進入花 2 點；剩餘 1 點仍可進入。'},X:{name:'岩壁',color:'#675144',symbol:'▰',help:'進入立即淘汰，不能以損傷抵擋。'},G:{name:'毒液',color:'#405f32',symbol:'☣',help:'進入花 1 點並停止移動。'},V:{name:'玻璃',color:'#377883',symbol:'◇',help:'進入後沿原方向再滑一格。'},J:{name:'跳台',color:'#985b32',symbol:'↟',help:'只能從正後方進入；其他方向進入會淘汰。'},F:{name:'火焰',color:'#a53f23',symbol:'♨',help:'進入後車輛著火。'},S:{name:'鹽灘',color:'#b6b6a0',symbol:'✧',help:'可取得公路加速資格；滑行除外。'}};
+export function terrain(cell:RaceCell){const kind=cell.hazard?.face?({mud:'M',road:'R',oil:'R',glass:'V',ramp:'J',fire:'F',pit:'X'} as Record<string,string>)[cell.hazard.kind]||cell.kind:cell.kind;return terrains[kind]||terrains.O!;}
+export const hazardSymbols:Record<string,string>={road:'✓',mud:'≈',oil:'◉',mine:'✹',wreck:'▰',glass:'◇',ramp:'↟',fire:'♨',pit:'⊗',quake:'≋',worm:'〰'};

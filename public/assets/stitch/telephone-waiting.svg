@@ -1,0 +1,45 @@
+<svg class="relative w-48 h-48 drop-shadow-md" fill="none" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+<!-- 陰影 -->
+<ellipse cx="120" cy="205" fill="#E4E2DF" opacity="0.6" rx="70" ry="10"></ellipse>
+<!-- 蝸牛身體主體 -->
+<path d="M45 195C55 195 80 192 105 192C140 192 175 193 195 195C202 195 208 188 204 182C198 172 185 155 170 148C165 145 160 150 162 156C163 162 166 172 155 178C140 185 100 185 85 185C65 185 50 188 45 195Z" fill="#F6C845" stroke="#755B00" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></path>
+<!-- 蝸牛頭部與觸角 -->
+<circle cx="52" cy="182" fill="#F6C845" r="16" stroke="#755B00" stroke-width="3"></circle>
+<!-- 眼睛1 -->
+<path d="M42 170L36 150" stroke="#755B00" stroke-linecap="round" stroke-width="3"></path>
+<circle cx="35" cy="148" fill="#755B00" r="4"></circle>
+<!-- 眼睛2 -->
+<path d="M50 168L48 146" stroke="#755B00" stroke-linecap="round" stroke-width="3"></path>
+<circle cx="48" cy="144" fill="#755B00" r="4"></circle>
+<!-- 俏皮笑臉 -->
+<path d="M44 186C48 190 54 189 57 185" stroke="#755B00" stroke-linecap="round" stroke-width="2.5"></path>
+<circle cx="42" cy="184" fill="#FF8577" opacity="0.8" r="2.5"></circle>
+<circle cx="58" cy="182" fill="#FF8577" opacity="0.8" r="2.5"></circle>
+<!-- 蝸牛殼：轉化為一本翻開的可愛速寫簿本子 -->
+<g transform="translate(90, 80) rotate(-6)">
+<!-- 筆記本底殼 -->
+<rect fill="#FFFFFF" height="100" rx="8" stroke="#755B00" stroke-width="3.5" width="86" x="0" y="8"></rect>
+<rect fill="#FBF9F6" height="100" rx="8" stroke="#755B00" stroke-width="3" width="86" x="4" y="4"></rect>
+<!-- 信封袋背在背上 -->
+<rect fill="#F6C845" height="46" rx="4" stroke="#755B00" stroke-width="2.5" width="66" x="14" y="24"></rect>
+<path d="M14 26L47 50L80 26" stroke="#755B00" stroke-linejoin="round" stroke-width="2.5"></path>
+<!-- 愛心火漆章 -->
+<circle cx="47" cy="48" fill="#BA1A1A" r="7"></circle>
+<path d="M44 48C44 46.5 45.5 45.5 47 47C48.5 45.5 50 46.5 50 48C50 49.5 47 51 47 51C47 51 44 49.5 44 48Z" fill="#FFFFFF"></path>
+<!-- 螺旋圈裝訂 -->
+<circle cx="8" cy="18" fill="#755B00" r="3.5"></circle>
+<circle cx="8" cy="36" fill="#755B00" r="3.5"></circle>
+<circle cx="8" cy="54" fill="#755B00" r="3.5"></circle>
+<circle cx="8" cy="72" fill="#755B00" r="3.5"></circle>
+<circle cx="8" cy="90" fill="#755B00" r="3.5"></circle>
+</g>
+<!-- 傳情畫意小鉛筆插在後方 -->
+<g transform="translate(160, 75) rotate(28)">
+<polygon fill="#2D2824" points="12,0 18,12 6,12"></polygon>
+<rect fill="#0051D5" height="38" width="12" x="6" y="12"></rect>
+<rect fill="#FFDAD6" height="10" width="12" x="6" y="44"></rect>
+</g>
+<!-- 裝飾小星星 -->
+<path d="M30 110L32 116L38 118L32 120L30 126L28 120L22 118L28 116Z" fill="#F6C845"></path>
+<path d="M190 60L191.5 64.5L196 66L191.5 67.5L190 72L188.5 67.5L184 66L188.5 64.5Z" fill="#316BF3"></path>
+</svg>

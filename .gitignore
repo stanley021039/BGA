@@ -16,3 +16,6 @@ Thumbs.db
 
 # Local persistent collaboration memory
 /PERMANENT-MEMORY.md
+
+# Compiled frontend
+/frontend/dist/

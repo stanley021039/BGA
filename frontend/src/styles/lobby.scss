@@ -1,0 +1,139 @@
+@use 'tokens';
+.vue-lobby { display:grid; gap:tokens.space(6); padding-block:tokens.space(6); min-width:0;
+  .library-heading { margin:0; gap:tokens.space(4); h1 { @include tokens.type(display); } }
+  .library-count { flex:none; gap:tokens.space(4); strong { @include tokens.type(display); } }
+  .carousel-heading,.carousel-footer,.carousel-actions,.carousel-controls { gap:tokens.space(4); flex-wrap:wrap; }
+  .carousel-footer { min-height:88px; padding-block:tokens.space(4); }
+  .vue-carousel-counter { width:7ch; text-align:center; font-variant-numeric:tabular-nums; }
+  .game-carousel-section { min-width:0; }
+  .lobby-section { margin:0; padding:tokens.space(6); min-width:0; }
+  .lobby-top { gap:tokens.space(4); align-items:start; h2 { margin-block:tokens.space(2); } }
+  .lobby-count { min-width:8.5em; text-align:center; font-variant-numeric:tabular-nums; }
+  .lobby-stage { margin-block:tokens.space(4); height:280px; container-type:inline-size; }
+  .lobby-avatar { min-height:0; }
+  .lobby-speech { max-width:min(12em,calc(100cqw - 16px)); }
+  .lobby-avatar.is-emoting .lobby-speech { animation:vue-lobby-emote .35s ease-out both; }
+  .vue-lobby-connection { display:grid; grid-template-columns:minmax(0,1fr) 44px; align-items:center; gap:tokens.space(3); min-height:60px; .frontend-status { margin:0; } }
+  .vue-lobby-resume { display:flex; align-items:center; flex-wrap:wrap; gap:tokens.space(3); min-height:60px; max-height:180px; overflow:auto; }
+  .vue-lobby-rooms { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:tokens.space(6); align-items:stretch; }
+  :is(.vue-lobby-room-browser,.vue-lobby-code) { min-width:0; padding:tokens.space(6); border:var(--play-border); border-radius:var(--play-radius); background:var(--play-surface); box-shadow:var(--play-shadow); }
+  .vue-lobby-room-browser>header { display:flex; gap:tokens.space(4); justify-content:space-between; align-items:center; min-height:76px; h2,p { margin-block:tokens.space(2); } }
+  .vue-lobby-room-tools { display:flex; flex:none; align-items:center; gap:tokens.space(3); min-width:9em; font-variant-numeric:tabular-nums; }
+  .vue-lobby-room-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); align-content:start; gap:tokens.space(4); height:400px; overflow:auto; scrollbar-gutter:stable; padding:tokens.space(1); }
+  .vue-lobby-room { display:grid; grid-template-columns:minmax(0,1fr) 124px; gap:tokens.space(4); padding:tokens.space(4); min-height:160px; border:1px solid var(--play-line-strong); border-radius:12px; background:var(--play-paper); overflow-wrap:anywhere;
+    h3 { margin-block:tokens.space(2); } p,span { @include tokens.type(p3); margin:0; } }
+  .vue-lobby-room-actions { display:grid; grid-template-rows:minmax(3em,1fr) auto; text-align:center; gap:tokens.space(2); align-items:center; button { width:100%; white-space:normal; } }
+  .vue-lobby-code { display:flex; flex-direction:column; gap:tokens.space(4); h2 { margin:0; } form { display:grid; gap:tokens.space(3); } input { text-align:center; font-size:24px; letter-spacing:.2em; text-transform:uppercase; } p { margin:0; } .frontend-status { margin-top:auto; } }
+  .version-note { margin:0; }
+}
+body[data-visual-theme='playful'] .vue-lobby .game-library[data-card-carousel] { height:550px;
+  .game-tile { width:min(340px,calc(100% - 32px)); height:488px; }
+  .tile-image { height:220px; }
+  .tile-body { padding:tokens.space(4); display:grid; grid-template-rows:minmax(3em,auto) auto minmax(4.5em,auto) auto; gap:tokens.space(2); height:262px; overflow:auto; scrollbar-gutter:stable; }
+  .tile-body h2 { @include tokens.type(h1); margin:0; }
+  .tile-body .kicker,.tile-body p,.tile-bottom { @include tokens.type(p3); margin:0; }
+  .tile-bottom { display:flex; flex-wrap:wrap; gap:tokens.space(2); }
+}
+body[data-visual-theme='playful'] .vue-lobby { .library-heading { margin:0; h1 { @include tokens.type(display); letter-spacing:normal; } } .carousel-footer { margin:0; } }
+@keyframes vue-lobby-emote { from { opacity:0; transform:translateX(-50%) translateY(9px) scale(.8); } to { opacity:1; transform:translateX(-50%); } }
+.vue-lobby-create { display:grid; gap:tokens.space(4); label { display:grid; gap:tokens.space(2); } }
+.vue-lobby-create-options { min-height:110px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:tokens.space(4); p { grid-column:1/-1; } }
+.vue-lobby-expressions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:tokens.space(3); height:min(320px,40dvh); overflow:auto; scrollbar-gutter:stable; align-content:start;
+  >p { grid-column:1/-1; } button { display:grid; gap:tokens.space(2); justify-items:center; padding:tokens.space(3); min-width:0; border:1px solid var(--play-line-strong); border-radius:12px; background:var(--play-paper); color:var(--play-ink); } img { width:64px; height:64px; object-fit:contain; } span { min-height:3em; overflow-wrap:anywhere; } }
+@media(max-width:900px) { .vue-lobby .vue-lobby-rooms { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:650px) {
+  .vue-lobby { gap:tokens.space(4); padding-block:tokens.space(4); .lobby-section,:is(.vue-lobby-room-browser,.vue-lobby-code) { padding:tokens.space(4); }
+    .lobby-top { flex-wrap:wrap; } .lobby-count { min-height:32px; } .library-count { display:none; }
+    .vue-lobby-room-browser>header { flex-wrap:wrap; gap:tokens.space(3); }
+    .vue-lobby-room-tools { justify-content:space-between; width:100%; } .vue-lobby-room { grid-template-columns:minmax(0,1fr) 108px; gap:tokens.space(3); padding:tokens.space(3); }
+    .carousel-actions { width:100%; justify-content:space-between; }
+  }
+  .vue-lobby-expressions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+// Vue owns the lobby composition. Legacy artwork/theme rules cannot set its geometry.
+body.vue-lobby-document[data-visual-theme='playful'] .vue-lobby .lobby-stage { height:280px; }
+.vue-lobby-code-entry { display:grid; grid-template-columns:minmax(0,1fr) 44px 44px; gap:tokens.space(2); align-items:center; }
+.vue-lobby-code-entry #lobbyCodeHelp { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.vue-lobby .vue-lobby-connection:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+@media(max-width:760px) {
+  .vue-lobby .vue-button.ui-icon-button { width:44px; inline-size:44px; min-width:44px; padding:tokens.space(2); }
+  .vue-lobby .vue-button.ui-icon-button .vue-button-caption.ui-sr-only { position:absolute; width:1px; height:1px; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); clip-path:inset(50%); white-space:nowrap; }
+}
+@media(max-width:650px) { .vue-lobby-code-entry { grid-template-columns:repeat(2,minmax(0,1fr)); >input { grid-column:1/-1; } } }
+@media(min-width:960px) and (min-height:560px) and (pointer:fine) {
+  body.vue-lobby-document:not(.ui-large-text) {
+    .club { height:100dvh; max-width:none; padding:0 tokens.space(6); display:grid; grid-template-rows:auto minmax(0,1fr); }
+    [data-site-header].vue-site-header { min-height:0; height:auto; margin:0; padding:tokens.space(2) 0; }
+    .vue-site-header-content { min-height:44px; row-gap:0; }
+    .vue-site-header-feedback { position:absolute; top:calc(100% + 8px); right:0; width:min(480px,100%); padding:tokens.space(3); border:1px solid var(--play-line-strong); border-radius:tokens.space(3); background:var(--play-surface); z-index:140; }
+    .vue-site-header-feedback:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+    #lobby-app { min-height:0; }
+    .vue-lobby { height:100%; min-height:0; padding:tokens.space(2) 0; grid-template-columns:minmax(0,1fr) clamp(280px,24vw,360px); grid-template-rows:clamp(180px,26dvh,240px) 44px minmax(0,1fr) 44px; gap:tokens.space(4); }
+    .vue-lobby .library-heading { grid-column:1; grid-row:2; min-height:0; margin:0; h1 { margin:0; } >div>.kicker,>div>p { display:none; } .library-count strong { @include tokens.type(h1); } }
+    .vue-lobby .lobby-section { grid-column:1/-1; grid-row:1; display:flex; flex-direction:column; min-height:0; position:relative; padding:tokens.space(3) tokens.space(4); }
+    .vue-lobby .lobby-top { min-height:32px; flex:none; align-items:center; gap:tokens.space(3); >div { min-width:0; display:flex; gap:tokens.space(4); align-items:center; } .kicker { display:none; } h2 { @include tokens.type(h2); margin:0; flex:none; } p { @include tokens.type(p3); margin:0; } }
+    .vue-lobby .lobby-stage { flex:1; height:auto; min-height:0; margin:tokens.space(2) 0 0; }
+    .vue-lobby .lobby-visitors { inset:32px 16px 24px; }
+    .vue-lobby .lobby-avatar { width:64px; img { width:40px; height:42px; } }
+    .vue-lobby .vue-lobby-connection { position:absolute; bottom:tokens.space(3); right:tokens.space(4); left:auto; width:min(480px,calc(100% - 32px)); padding:tokens.space(2); min-height:44px; border:1px solid var(--play-line); border-radius:tokens.space(2); background:var(--play-surface); z-index:5; }
+    .vue-lobby .vue-lobby-connection:has(.frontend-status:empty) { visibility:hidden; pointer-events:none; }
+    .vue-lobby .game-carousel-section { grid-column:1; grid-row:3; display:flex; flex-direction:column; min-height:0; }
+    .vue-lobby .carousel-heading { flex:none; min-height:32px; }
+    .vue-lobby .game-library[data-card-carousel] { flex:1; min-height:0; height:auto; container-type:size;
+      .game-tile { top:50%; width:clamp(190px,24cqw,300px); height:clamp(124px,calc(100cqh - 24px),488px); display:flex; flex-direction:column; }
+      .tile-image { flex:none; height:clamp(48px,calc(100cqh - 190px),220px); }
+      .tile-body { flex:1; min-height:0; height:auto; display:flex; flex-direction:column; gap:tokens.space(2); padding:tokens.space(3); }
+      .tile-body h2 { @include tokens.type(h2); }
+      .tile-body .kicker { letter-spacing:normal; }
+      .tile-bottom { margin-top:auto; padding-top:tokens.space(2); gap:tokens.space(2); }
+      .select-label { display:none; }
+    }
+    .vue-lobby .carousel-footer { flex:none; min-height:44px; margin:0; padding:0; flex-wrap:nowrap; gap:tokens.space(3); }
+    .vue-lobby .carousel-controls,.vue-lobby .carousel-actions { flex-wrap:nowrap; gap:tokens.space(2); }
+    .vue-lobby .carousel-actions { margin-left:auto; }
+    .vue-lobby .carousel-actions .quiet { @include tokens.type(p3); }
+    .vue-lobby .vue-lobby-rooms { grid-column:2; grid-row:2/span 2; min-height:0; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; gap:tokens.space(3); }
+    .vue-lobby .vue-lobby-room-browser { display:flex; flex-direction:column; min-height:0; position:relative; gap:tokens.space(2); padding:tokens.space(3); }
+    .vue-lobby .vue-lobby-room-browser>header { min-height:44px; flex:none; gap:tokens.space(2); h2 { @include tokens.type(h2); margin:0; } .kicker,p { display:none; } }
+    .vue-lobby .vue-lobby-room-tools { min-width:0; gap:tokens.space(2); span { @include tokens.type(p3); } }
+    .vue-lobby .vue-lobby-room-browser>.frontend-status { position:absolute; top:60px; left:12px; right:12px; max-height:3em; margin:0; background:var(--play-surface); z-index:2; }
+    .vue-lobby .vue-lobby-room-browser>.frontend-status:empty { visibility:hidden; }
+    .vue-lobby .vue-lobby-room-list { flex:1; min-height:0; height:auto; grid-template-columns:minmax(0,1fr); }
+    .vue-lobby .vue-lobby-room { grid-template-columns:minmax(0,1fr) 100px; min-height:144px; padding:tokens.space(2); gap:tokens.space(2); }
+    .vue-lobby .vue-lobby-code { min-height:0; position:relative; padding:tokens.space(3); gap:0; >h2 { display:none; } form { gap:tokens.space(2); } label { @include tokens.type(p3); } input { height:44px; min-height:44px; padding:tokens.space(2); font-size:20px; letter-spacing:.1em; } }
+    .vue-lobby .vue-lobby-code>.frontend-status { position:absolute; bottom:calc(100% + 8px); left:0; right:0; margin:0; padding:tokens.space(2); border:1px solid var(--play-line); border-radius:tokens.space(2); background:var(--play-surface); z-index:3; }
+    .vue-lobby .vue-lobby-code>.frontend-status:empty { visibility:hidden; }
+    .vue-lobby .vue-lobby-resume { grid-column:2; grid-row:4; min-height:44px; max-height:44px; overflow:auto; justify-content:flex-end; gap:tokens.space(2); }
+    .vue-lobby .version-note { grid-column:1; grid-row:4; align-self:center; margin:0; @include tokens.type(p3); }
+  }
+}
+@media(min-width:960px) and (min-height:560px) and (max-height:800px) and (pointer:fine) {
+  body.vue-lobby-document:not(.ui-large-text) .vue-lobby .game-library[data-card-carousel] .tile-body { .kicker,p { display:none; } }
+}
+@media(min-width:960px) and (min-height:560px) and (max-height:650px) and (pointer:fine) {
+  body.vue-lobby-document:not(.ui-large-text) .vue-lobby { grid-template-rows:180px 28px minmax(0,1fr) 44px; gap:tokens.space(3); .library-heading h1 { @include tokens.type(h2); } .carousel-heading { display:none; } .game-library[data-card-carousel] .tile-body { gap:tokens.space(1); padding:tokens.space(2); } .lobby-top p { display:none; } }
+}
+
+// Mobile keeps explicit interaction/list/feedback slots without the desktop
+// room browser's 400px list or a second row of code-entry buttons.
+@media(max-width:900px) {
+ :root body.vue-lobby-document[data-visual-theme] #lobby-app .vue-lobby {
+  .lobby-section.vue-lobby-stage-panel { display:grid;grid-template-rows:auto 15rem 2.75rem;align-content:start;gap:.5rem;block-size:auto;min-block-size:0;padding:1rem; }
+  .vue-lobby-stage-panel .lobby-top { display:flex;align-items:start;flex-wrap:wrap;gap:.5rem;min-inline-size:0;h2 { margin:.25rem 0;font-size:1.25rem;line-height:1.5; }p { margin:0;font-size:.875rem;line-height:1.5; } }
+  .vue-lobby-stage-panel .lobby-stage { block-size:15rem;height:15rem;min-block-size:15rem;margin:0; }
+  .vue-lobby-stage-panel .vue-lobby-connection { grid-template-columns:minmax(0,1fr) 44px;gap:.5rem;min-block-size:2.75rem;block-size:2.75rem; }
+  .vue-lobby-stage-panel .vue-lobby-connection>.frontend-status { block-size:2.75rem;min-block-size:0;max-block-size:2.75rem;margin:0;font-size:.875rem;line-height:1.5;overflow:auto; }
+  .vue-lobby-rooms { gap:1rem;align-items:start; }
+  .vue-lobby-room-browser { display:grid;grid-template-rows:auto 2.75rem 14rem;align-content:start;gap:.5rem;min-block-size:0;padding:1rem; }
+  .vue-lobby-room-browser>header { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:.5rem;min-block-size:0;h2 { margin:.25rem 0;font-size:1.25rem;line-height:1.5; }p { margin:0;font-size:.875rem;line-height:1.5; } }
+  .vue-lobby-room-tools { display:flex;flex-direction:column;align-items:center;gap:.25rem;inline-size:auto;width:auto;min-inline-size:0;min-width:0;>span { font-size:.875rem;line-height:1.5; } }
+  .vue-lobby-room-browser>.frontend-status { block-size:2.75rem;min-block-size:0;max-block-size:2.75rem;margin:0;font-size:.875rem;line-height:1.5;overflow:auto; }
+  .vue-lobby-room-list { display:grid;grid-template-columns:minmax(0,1fr);grid-auto-rows:min-content;align-content:start;gap:.5rem;block-size:14rem;height:14rem;min-block-size:0;max-block-size:14rem;padding:.25rem;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;>p { margin:0;font-size:.875rem;line-height:1.5; } }
+  .vue-lobby-room { grid-template-columns:minmax(0,1fr) 100px;min-block-size:9rem;min-height:9rem;gap:.5rem;padding:.75rem; }
+  .vue-lobby-room-actions { min-inline-size:0;button { min-block-size:44px; } }
+  .vue-lobby-code { display:grid;grid-template-rows:auto auto 2.75rem;align-content:start;gap:.5rem;min-block-size:0;padding:1rem;h2 { margin:0;font-size:1.25rem;line-height:1.5; }form { gap:.5rem;min-inline-size:0; }label { margin:0;font-size:.875rem;line-height:1.5; } }
+  .vue-lobby-code-entry { grid-template-columns:minmax(0,1fr) 44px 44px;gap:.5rem;min-inline-size:0;>input { grid-column:auto;inline-size:100%;width:100%;min-inline-size:0;block-size:44px;min-block-size:44px;padding:.5rem;font-size:1.25rem;letter-spacing:.1em; } }
+  .vue-lobby-code>.frontend-status { block-size:2.75rem;min-block-size:0;max-block-size:2.75rem;margin:0;font-size:.875rem;line-height:1.5;overflow:auto; }
+ }
+}

@@ -1,0 +1,27 @@
+@use 'tokens' as t;
+
+// Image choices contain a picture and readable text, rather than an icon button.
+.vue-page .vue-image-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: t.space(2);
+  min-inline-size: 0;
+  > .vue-image-choice {
+    --ui-button-radius: .75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: t.space(1);
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    padding: t.space(2);
+    border-radius: t.space(3);
+    white-space: normal;
+    text-align: center;
+    > img { flex: none; inline-size: 100%; block-size: 6.5625rem; margin: 0; object-fit: contain; }
+    > span, > small { inline-size: 100%; min-inline-size: 0; margin: 0; font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; }
+    > span { min-block-size: 3em; }
+  }
+  &.expression-gallery > .vue-image-choice > img { block-size: 4.125rem; }
+}

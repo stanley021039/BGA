@@ -1,6 +1,6 @@
 {
   "name": "afterhours-poker",
-  "version": "2.17.0",
+  "version": "2.17.1",
   "private": true,
   "scripts": {
     "start": "node server.js",
@@ -10,7 +10,10 @@
     "test": "node --test tests/*.test.js",
     "data:transfer": "node tools/server-data.cjs",
     "data:transfer:ui": "node tools/server-data-ui.cjs",
-    "test:affected": "node tools/test-affected.cjs"
+    "test:affected": "node tools/test-affected.cjs",
+    "frontend:install": "npm --prefix frontend ci",
+    "frontend:build": "npm --prefix frontend run build",
+    "frontend:typecheck": "npm --prefix frontend run typecheck"
   },
   "engines": {
     "node": ">=22.13"

@@ -1,0 +1,137 @@
+[
+  {
+    "id": "lobby",
+    "document": "index.html",
+    "route": "/"
+  },
+  {
+    "id": "login",
+    "document": "login.html",
+    "route": "/login"
+  },
+  {
+    "id": "achievements",
+    "document": "achievements.html",
+    "route": "/achievements"
+  },
+  {
+    "id": "draw-words",
+    "document": "draw-words.html",
+    "route": "/draw-words"
+  },
+  {
+    "id": "gifts",
+    "document": "gifts.html",
+    "route": "/gifts"
+  },
+  {
+    "id": "music",
+    "document": "music.html",
+    "route": "/music"
+  },
+  {
+    "id": "community",
+    "document": "community.html",
+    "route": "/community"
+  },
+  {
+    "id": "credits",
+    "document": "credits.html",
+    "route": "/credits"
+  },
+  {
+    "id": "rules",
+    "document": "rules.html",
+    "route": "/rules"
+  },
+  {
+    "id": "settings",
+    "document": "settings.html",
+    "route": "/settings"
+  },
+  {
+    "id": "collection",
+    "document": "collection.html",
+    "route": "/collection"
+  },
+  {
+    "id": "profile",
+    "document": "profile.html",
+    "route": "/profile"
+  },
+  {
+    "id": "history",
+    "document": "history.html",
+    "route": "/history"
+  },
+  {
+    "id": "draw",
+    "document": "draw.html",
+    "route": "/draw"
+  },
+  {
+    "id": "musicquiz",
+    "document": "musicquiz.html",
+    "route": "/musicquiz"
+  },
+  {
+    "id": "minimal",
+    "document": "minimal.html",
+    "route": "/minimal"
+  },
+  {
+    "id": "bluff",
+    "document": "bluff.html",
+    "route": "/bluff"
+  },
+  {
+    "id": "telephone",
+    "document": "telephone.html",
+    "route": "/telephone"
+  },
+  {
+    "id": "studio",
+    "document": "studio.html",
+    "route": "/studio"
+  },
+  {
+    "id": "majority",
+    "document": "majority.html",
+    "route": "/majority"
+  },
+  {
+    "id": "trpg",
+    "document": "trpg.html",
+    "route": "/trpg"
+  },
+  {
+    "id": "gift",
+    "document": "gift.html",
+    "route": "/gift"
+  },
+  {
+    "id": "admin",
+    "document": "admin.html",
+    "route": "/admin"
+  },
+  {
+    "id": "poker",
+    "document": "poker.html",
+    "route": "/poker"
+  },
+  {
+    "id": "market",
+    "document": "market.html",
+    "route": "/market"
+  },
+  {
+    "id": "quacks",
+    "document": "quacks.html",
+    "route": "/quacks"
+  },
+  {
+    "id": "race",
+    "document": "race.html",
+    "route": "/race"
+  }
+]

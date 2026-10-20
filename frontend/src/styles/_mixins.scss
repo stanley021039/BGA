@@ -1,0 +1,5 @@
+@mixin stable-slot($height: 1.5em) {
+  min-inline-size: 0;
+  min-block-size: $height;
+  overflow-wrap: anywhere;
+}

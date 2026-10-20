@@ -1,0 +1,103 @@
+import { readRoomSnapshot } from './room';
+import type { RoomSeat, RoomSnapshot } from './room';
+import { array, record, text } from '../services/validation';
+import { readPublicDrawResult, readResultVote } from './draw-results';
+import type { PublicDrawResult, ResultVote } from './draw-results';
+import { readDrawSummary } from './draw-summary';
+import type { DrawMatchSummary } from './draw-summary';
+
+export type DrawingTool = 'brush' | 'erase' | 'line' | 'rect' | 'ellipse' | 'fill';
+export type Point = [number, number];
+export interface DrawingStyle { tool: DrawingTool; color: string; size: number; filled: boolean }
+export interface DrawingDraft extends DrawingStyle { strokeId: string; points: Point[]; curve?: 'quadratic' }
+export interface DrawingStroke extends DrawingDraft { version: number; pointTimes?: number[] }
+export interface DrawingQuota { usedFills: number; usedBatches: number; usedPoints: number }
+export interface CanvasSnapshot { canvasEpoch: string; round: number; version: number; strokes: DrawingStroke[]; quota?: DrawingQuota }
+export interface DrawQuestion extends Record<string, unknown> { id?: string; title: string; category: string; topicLabel: string }
+export interface DrawGuess { id: string; name: string; correct: boolean; points: number; at: number; answer: string }
+export interface DrawSnapshot extends RoomSnapshot {
+  type: 'draw'; phase: 'waiting' | 'choosing' | 'drawing' | 'reveal' | 'finished';
+  round: number; roundLimit: number; presenterId: string | null; deadline: number | null; canvasEpoch: string; strokeVersion: number;
+  participantIds: string[]; guessedIds: string[]; candidates: DrawQuestion[]; question: DrawQuestion | null;
+  guesses: DrawGuess[]; winner: { ids: string[]; score: number; reason: string } | null;
+  matchSummary?: DrawMatchSummary;
+  result: PublicDrawResult | null; recentResults: PublicDrawResult[]; resultVotes: ResultVote[]; savedResultIds: string[];
+}
+const integer = (value: unknown): value is number => Number.isSafeInteger(value) && (value as number) >= 0;
+function question(value: unknown): DrawQuestion {
+  const row = record(value);
+  if (!text(row.title)) throw Error('題目資料格式不正確');
+  return { ...row, title: text(row.title), category: text(row.category), topicLabel: text(row.topicLabel), ...(typeof row.id === 'string' ? { id: row.id } : {}) } as DrawQuestion;
+}
+function ids(value: unknown): string[] {
+  const values = array(value);
+  if (!values.every(value => typeof value === 'string')) throw Error('參與玩家資料格式不正確');
+  return values as string[];
+}
+export function readDrawSnapshot(value: unknown): DrawSnapshot {
+  const room = readRoomSnapshot(value);
+  if (room.type !== 'draw' || !['waiting', 'choosing', 'drawing', 'reveal', 'finished'].includes(room.phase)) throw Error('這不是你畫我猜房間');
+  const options = record(room.options);
+  if (typeof options.seconds !== 'number' || ![60, 90, 120].includes(options.seconds)) throw Error('作畫時間資料格式不正確');
+  if (!integer(room.version) || !integer(room.round) || !integer(room.roundLimit) || !integer(room.strokeVersion) || !text(room.canvasEpoch) ||
+    room.presenterId !== null && typeof room.presenterId !== 'string' || room.deadline !== null && (typeof room.deadline !== 'number' || !Number.isFinite(room.deadline))) throw Error('畫猜回合資料格式不正確');
+  const guesses = array(room.guesses).slice(-50).map(value => {
+    const guess = record(value);
+    if (!text(guess.id) || !text(guess.name) || typeof guess.correct !== 'boolean' || typeof guess.at !== 'number' || !Number.isFinite(guess.at) || guess.correct && !integer(guess.points) || !guess.correct && typeof guess.answer !== 'string') throw Error('猜題紀錄格式不正確');
+    return { id: text(guess.id), name: text(guess.name), correct: guess.correct, at: guess.at, points: guess.correct ? guess.points as number : 0, answer: text(guess.answer) };
+  });
+  let winner: DrawSnapshot['winner'] = null;
+  if (room.winner !== null) { const row = record(room.winner); if (!integer(row.score)) throw Error('排名資料格式不正確'); winner = { ids: ids(row.ids), score: row.score, reason: text(row.reason) }; }
+  return { ...room, round: room.round, roundLimit: room.roundLimit, strokeVersion: room.strokeVersion, canvasEpoch: text(room.canvasEpoch), guesses, winner,
+    ...(room.phase === 'finished' ? { matchSummary: readDrawSummary(room.matchSummary) } : {}),
+    participantIds: ids(room.participantIds), guessedIds: ids(room.guessedIds), candidates: array(room.candidates).map(question), question: room.question === null ? null : question(room.question),
+    result: room.result === null ? null : readPublicDrawResult(room.result), recentResults: array(room.recentResults).slice(0, 8).map(readPublicDrawResult),
+    resultVotes: array(room.resultVotes).slice(0, 8).map(readResultVote), savedResultIds: ids(room.savedResultIds),
+  } as DrawSnapshot;
+}
+export interface DrawingView {
+  version: number; round: number; strokeCount: number; pointCount: number; draftCount: number; pendingBatches: number;
+  quota: DrawingQuota; commandBusy: boolean; recovering: boolean; error: Error | null;
+}
+export interface DrawingSession {
+  view(): DrawingView; canDraw(): boolean; hasCapacity(extra?: number): boolean;
+  beginDraft(draft: DrawingDraft): boolean; appendDraft(id: string, point: Point, shape?: boolean): void; finishDraft(id: string, failed?: boolean): void;
+  enqueue(points: Point[], id: string, style: DrawingStyle, times?: number[]): Promise<unknown>;
+  schedulePreview(): void; cancelPreview(): void; redraw(): unknown;
+  transition(snapshot: DrawSnapshot): void; applySnapshot(value: unknown, reset?: boolean): boolean; receiveStroke(value: unknown): void;
+  command(name: 'undo' | 'clear'): Promise<void>; whenIdle(): Promise<void>; suspend(): void; dispose(): void; finishPlayback(): void;
+}
+export interface DrawingRequestOptions { signal?: AbortSignal }
+export type DrawingRequest = (route: string, data?: Record<string, unknown>, options?: DrawingRequestOptions) => Promise<unknown>;
+export interface DrawingController {
+  start(): void; dispose(): void; cancel(options?: { cancelSync?: boolean }): void; cancelSync(): void;
+  syncCanvas(): Promise<unknown>; poll(): Promise<void>; connectEvents(): void;
+}
+export interface DrawingEngines {
+  create(options: {
+    canvas: HTMLCanvasElement; request: DrawingRequest; syncCanvas: () => Promise<unknown>;
+    cancelInput: (failed?: boolean) => void; cancelNetwork: (options?: { cancelSync?: boolean }) => void;
+    feedback: (message: string, kind?: string, options?: { onlyRecovering?: boolean }) => void; notify: (message: string) => void;
+    onRendered?: () => void; onBusy?: () => void; onQuota?: () => void; now?: () => number;
+  }): DrawingSession;
+  validSnapshot(value: unknown): boolean;
+}
+declare global {
+  interface Window {
+    PartyShapes?: { toStrokes(values:unknown[]):unknown[] };
+    StrokeCanvas?: { redraw(canvas: HTMLCanvasElement, values: unknown[]): void; strokeId(): string; iconMarkup(key: string): string;
+      createRenderer(canvas:HTMLCanvasElement,options?:{atomicPresentation?:boolean;maxStrokes?:number;maxPoints?:number;maxCheckpoints?:number}):{render(strokes:unknown[]):unknown;reset():void};
+      pointFrom(event:{clientX:number;clientY:number},canvas:HTMLCanvasElement,width:number,height:number):[number,number];
+      createDrawingRenderer(canvas: HTMLCanvasElement, options?: { maxCheckpoints?: number }): { renderCooperatively(strokes: DrawingStroke[]): Promise<boolean>; reset(): void; whenIdle(): Promise<void> };
+      drawingDataURL(canvas: HTMLCanvasElement, maxBytes?: number): string;
+    };
+    DrawCanvasSession?: DrawingEngines;
+    DrawController?: { create(options: {
+      context: () => { room: string; session: RoomSeat | null; busy: boolean; epoch?: string; round?: number; version: number };
+      request: DrawingRequest; receive: (value: unknown) => void; applySnapshot: (value: unknown, reset?: boolean) => unknown; receiveStroke: (value: unknown) => void;
+      onSyncError?: (error: Error) => void; onSyncSuccess?: () => void; onPollError?: (error: Error) => void; onPollSuccess?: () => void;
+      onStreamReady?: () => void; onStreamError?: () => void; cancelWork?: () => void; tick?: () => void;
+      createStream?: (url: string) => EventSource;
+    }): DrawingController };
+  }
+}

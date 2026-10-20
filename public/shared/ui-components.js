@@ -66,6 +66,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   notice:'<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/>',
   unknown:'<path d="M8 8a4 4 0 0 1 8 0c0 3-4 3-4 6"/><circle cx="12" cy="19" r=".6"/>',
   users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-4-5"/>',
+  mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
   invite:'<circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M19 8v8M15 12h8"/>',
   bot:'<path d="M12 3v3M2 12v5M22 12v5"/><rect x="5" y="6" width="14" height="15" rx="3"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M9 17h6"/>',
   gift:'<rect x="3" y="7" width="18" height="4" rx="1"/><path d="M5 11v10h14V11M12 7v14M12 7C8 7 6 6 6 4a2 2 0 0 1 4-1l2 4Zm0 0c4 0 6-1 6-3a2 2 0 0 0-4-1l-2 4Z"/>',
@@ -120,7 +121,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  }
  /* One frame for static and dynamically mounted native dialogs. Keep nodes and handlers. */
  function frameDialog(dialog){
-  if(!dialog||dialog.dataset.uiDialogFrame==='true')return dialog;
+  if(!dialog||dialog.dataset.uiDialogFrame==='true'||dialog.closest('[data-ui-owner="vue"]'))return dialog;
   // Floating media owns its drag header, resize handles and internal scroll regions.
   if(dialog.matches('.table-media-window')){dialog.classList.add('ui-dialog','ui-dialog-window');dialog.dataset.uiDialogFrame='true';return dialog;}
   const doc=dialog.ownerDocument||document;
@@ -178,7 +179,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  const fieldControls='input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=button]):not([type=submit]):not([type=reset]):not([type=image]),select,textarea';
  const inlineFields='[data-ui-field-layout="inline"],.ui-sr-only,.ui-control-row,.chat-compose,.table-media-local,.table-watch-volume,.table-watch-seek,.tool-row,.color-row,.size-pick';
  function frameField(label,control){
-  if(!label||!control||!control.matches(fieldControls)||label.closest(inlineFields))return null;
+  if(!label||!control||!control.matches(fieldControls)||label.closest(inlineFields)||label.closest('[data-ui-owner="vue"]'))return null;
   let field=label.closest('.ui-field,.ui-room-setting-field');
   if(field&&!field.contains(control))return null;
   if(!field){
@@ -262,6 +263,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  window.GameUI={icon,symbol,playerName,overflowText,decorateButton,setBusy,setStatus,openDialog,frameDialog,createDialog,framePanel,frameField,frameFields,createField,bindPopover:(...args)=>window.UIPopover?.bindDetails(...args)};
  /* One hover/focus hint in the top layer, independent of clipped game panels. */
  let controlHint=null,hintOwner=null,hintObserver=null;
+ let hintKeyboardNavigation=false,hintNavigationTimer=null,hintPointerPosition=null;
  function hideControlHint(){
   hintObserver?.disconnect();
   if(hintOwner){
@@ -292,12 +294,24 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
    hintObserver.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','open','aria-label']});
   }
  }
- document.addEventListener('pointerover',event=>{const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(control)showControlHint(control);});
- document.addEventListener('focusin',event=>{const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(control)showControlHint(control);});
+ // Layout and dialog opening can dispatch pointerover under a stationary mouse.
+ // Only an actual hover movement or keyboard navigation may open a hint.
+ document.addEventListener('pointermove',event=>{
+  if(!['mouse','pen'].includes(event.pointerType)||event.buttons)return;
+  const previous=hintPointerPosition;hintPointerPosition={x:event.clientX,y:event.clientY};
+  if(previous&&previous.x===event.clientX&&previous.y===event.clientY)return;
+  const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(control)showControlHint(control);
+ });
+ document.addEventListener('keydown',event=>{
+  if(!['Tab','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Home','End'].includes(event.key)||event.altKey||event.ctrlKey||event.metaKey)return;
+  hintKeyboardNavigation=true;if(hintNavigationTimer!==null)clearTimeout(hintNavigationTimer);
+  hintNavigationTimer=setTimeout(()=>{hintKeyboardNavigation=false;hintNavigationTimer=null;},0);
+ },true);
+ document.addEventListener('focusin',event=>{const control=event.target?.closest?.('.ui-icon-button,[data-ui-hint]');if(hintKeyboardNavigation&&control&&event.target.matches(':focus-visible'))showControlHint(control);});
  document.addEventListener('pointerout',event=>{if(!hintOwner||hintOwner.contains(event.relatedTarget)||controlHint?.contains(event.relatedTarget))return;const keyboardFocus=hintOwner.contains(document.activeElement)&&document.activeElement.matches(':focus-visible');if(!keyboardFocus&&(hintOwner.contains(event.target)||controlHint?.contains(event.target)))hideControlHint();});
  document.addEventListener('focusout',event=>{if(hintOwner?.contains(event.target)&&!hintOwner.matches(':hover'))hideControlHint();});
  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&hintOwner)hideControlHint();});
- document.addEventListener('pointerdown',hideControlHint,true);document.addEventListener('scroll',hideControlHint,true);
+ document.addEventListener('pointerdown',event=>{hintKeyboardNavigation=false;hintPointerPosition={x:event.clientX,y:event.clientY};hideControlHint();},true);document.addEventListener('scroll',hideControlHint,true);
  document.addEventListener('visibilitychange',()=>{if(document.hidden)hideControlHint();});window.addEventListener('resize',hideControlHint);window.addEventListener('pagehide',hideControlHint);
  /* One text node per name. Observers only measure names affected by DOM or size changes. */
  function observePlayerNames(){

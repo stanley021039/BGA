@@ -1,0 +1,25 @@
+// Draw's 220px roster gives names the full width beside the 40px avatar.
+// Metrics and transient feedback share the same reserved second row, so an
+// empty feedback slot never adds another 21px and correct badges do not jump.
+:root body[data-visual-theme][data-game-kind=draw] section.vue-room-roster.vue-stitch-roster[data-ping-anchor=players][aria-labelledby] {
+ .vue-room-player { grid-template-columns:40px minmax(0,1fr);grid-template-rows:45px 24px;align-content:start;align-items:start;gap:0 4px;block-size:80px;min-block-size:80px;padding:4px; }
+ .vue-room-player>.vue-player-avatar { grid-column:1;grid-row:1;inline-size:40px;block-size:40px; }
+ .vue-room-player-copy { grid-column:2;grid-row:1;min-inline-size:0; }
+ .vue-room-player-name { min-block-size:24px;block-size:24px;flex-wrap:nowrap; }
+ .vue-room-player-status { block-size:21px;min-block-size:0;margin:0;padding:0;font-size:14px;line-height:21px;overflow:auto;scrollbar-gutter:auto;white-space:normal;overflow-wrap:normal; }
+ .vue-room-player-metric { grid-column:1/-1;grid-row:2;display:flex;flex-direction:row;flex-wrap:nowrap;justify-self:start;align-items:baseline;justify-content:flex-start;gap:4px;inline-size:fit-content;max-inline-size:calc(50% - 4px);block-size:24px;min-block-size:0;overflow:auto;white-space:nowrap;text-align:start; }
+ .vue-room-player-metric strong { flex:none;min-inline-size:0;max-inline-size:none;line-height:24px;overflow:visible; }
+ .vue-room-player-metric span { flex:none;max-inline-size:none;white-space:nowrap;line-height:21px; }
+ .vue-room-player-feedback { grid-column:1/-1;grid-row:2;justify-self:end;inline-size:fit-content;max-inline-size:calc(50% - 4px);block-size:24px;min-block-size:24px;margin:0;overflow:auto; }
+ .vue-room-player-feedback>.vue-draw-correct-badge { margin:0;max-inline-size:100%;line-height:21px;white-space:nowrap; }
+}
+
+// The header is a title plus a two-line hint, not a nested scrolling panel.
+// Settings body remains the scroll owner; footer/start slots are unchanged.
+:root body[data-game-kind=draw] .vue-draw-approved .vue-draw-settings-panel section.vue-draw-settings.vue-draw-approved-settings {
+ grid-template-rows:auto minmax(0,1fr) 48px;
+ >header { display:grid;grid-template-rows:24px minmax(42px,auto);gap:4px;block-size:auto;min-block-size:70px;max-block-size:none;overflow:visible;scrollbar-gutter:auto; }
+ >header h2 { margin:0;min-block-size:24px;font-size:16px;line-height:24px; }
+ >header p { margin:0;min-block-size:42px;font-size:14px;line-height:21px; }
+ .vue-draw-settings-content { min-block-size:0;overflow:auto; }
+}

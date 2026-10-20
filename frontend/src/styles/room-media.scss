@@ -1,0 +1,128 @@
+@use 'tokens' as t;
+
+// C02 is an independent personal window. Every pane keeps its native player
+// nodes mounted; queue/request switching never hides the video above the tabs.
+:root body .vue-room-media-scope.vue-stitch-scope {
+ .vue-room-media {
+  --vue-media-background:var(--stitch-surface,#fff);--vue-media-text:var(--stitch-ink,#20211E);--vue-media-line:var(--stitch-line,#D8D9D2);--vue-media-image:none;
+  position:fixed;inset:auto;margin:0;box-sizing:border-box;max-inline-size:none;max-block-size:none;padding:0;
+  border:1px solid var(--vue-media-line);border-radius:12px;overflow:hidden;z-index:140;
+  color:var(--vue-media-text);background:var(--vue-media-background);background-image:var(--vue-media-image);
+  box-shadow:0 12px 32px #0003;font-family:var(--stitch-font-family);font-size:var(--stitch-font-16);line-height:1.5;
+  container-type:inline-size;
+  &[open] { display:flex;flex-direction:column; }
+  :where(h2,h3,p,ol) { margin:0; }
+  button,input,select { box-sizing:border-box;max-inline-size:100%;min-inline-size:0; }
+  .ui-icon { display:inline-block;inline-size:20px;block-size:20px;flex:none; }
+  .vue-button { flex:none; }
+  .vue-button.ui-icon-button { inline-size:44px;block-size:44px;min-inline-size:44px;min-block-size:44px;padding:8px; }
+  .vue-button.ui-icon-button>.vue-button-caption { position:absolute;inline-size:1px;block-size:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap; }
+  .frontend-status { margin:0; }
+ }
+ .vue-room-media-themed { --stitch-button-bg:var(--vue-media-background);--stitch-button-color:var(--vue-media-text);--stitch-button-border-color:var(--vue-media-line);--stitch-button-hover-bg:var(--vue-media-background);--stitch-button-active-bg:var(--vue-media-background); }
+ .vue-media-frame-art { position:absolute;inset:0;inline-size:100%;max-inline-size:none;block-size:100%;min-block-size:0;pointer-events:none;overflow:hidden;border-radius:inherit; }
+ .vue-media-header { display:flex;align-items:center;justify-content:space-between;flex:0 0 56px;gap:8px;min-inline-size:0;block-size:56px;height:56px;min-block-size:56px;max-block-size:56px;margin:0;padding:4px 8px;box-sizing:border-box;position:relative;z-index:1;border-block-end:1px solid var(--vue-media-line);touch-action:none;cursor:move; }
+ .vue-media-window-title { display:flex;align-items:center;gap:8px;flex:1;min-inline-size:0;margin:0;color:inherit;font-size:var(--stitch-font-14);font-weight:700;line-height:1.5;white-space:nowrap; }
+ .vue-media-window-tools { display:flex;align-items:center;justify-content:flex-end;gap:4px;flex:none; }
+ .vue-media-content { display:grid;grid-template-rows:44px minmax(0,1fr) 48px;gap:8px;flex:1;min-inline-size:0;min-block-size:0;padding:12px;position:relative;z-index:1;overflow:hidden;box-sizing:border-box;
+  &.has-video { grid-template-rows:auto 44px minmax(0,1fr) 48px; }
+ }
+ .vue-media-screen { display:block;inline-size:100%;min-inline-size:0;min-block-size:200px;max-block-size:260px;aspect-ratio:16/9;position:relative;overflow:hidden;border:1px solid var(--vue-media-line);border-radius:8px;background:#171917;box-sizing:border-box; }
+ .vue-media-video { display:block;inline-size:100%;block-size:100%;min-inline-size:200px;min-block-size:200px;iframe { display:block;border:0;inline-size:100%;block-size:100%;min-block-size:200px; } }
+ .vue-media-consent { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px;box-sizing:border-box;color:#fff;background:#171917;text-align:center;>p { max-inline-size:26rem;font-size:var(--stitch-font-14);line-height:1.5; } }
+ .vue-media-tabs { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:44px;min-inline-size:0;block-size:44px;height:44px;min-block-size:44px;max-block-size:44px;gap:0;margin:0;padding:0;border-block-end:1px solid var(--vue-media-line);box-sizing:border-box;
+  >button { --ui-button-radius:0px;--ui-button-border-width:0px;display:flex;align-items:center;justify-content:center;gap:4px;min-inline-size:0;min-block-size:44px;padding:8px 4px;border:0;border-radius:0;background:transparent;color:inherit;font-family:inherit;font-size:var(--stitch-font-14);line-height:1.5;white-space:nowrap;box-shadow:none;
+   &[aria-selected=true] { box-shadow:inset 0 -3px var(--stitch-primary);font-weight:700; }
+   &:focus-visible { outline:2px solid var(--stitch-focus);outline-offset:-2px; }
+   >.ui-badge { display:inline-block;inline-size:auto;min-inline-size:2ch;max-inline-size:4ch;margin:0;padding:0 4px;color:inherit;background:transparent;font-size:inherit;line-height:inherit;font-variant-numeric:tabular-nums; }
+  }
+ }
+ .vue-media-panels { display:block;min-inline-size:0;min-block-size:0;overflow:hidden;position:relative; }
+ .vue-media-primary,.vue-media-request { display:flex;flex-direction:column;gap:8px;min-inline-size:0;block-size:100%;min-block-size:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;box-sizing:border-box; }
+ .vue-media-current { display:flex;align-items:center;flex:none;gap:12px;min-inline-size:0;min-block-size:64px;padding:8px;box-sizing:border-box;border:1px solid var(--vue-media-line);border-radius:8px;
+  >div { flex:1;min-inline-size:0; }
+  h3 { min-inline-size:0;margin:0;color:inherit;font-size:var(--stitch-font-16);line-height:1.5;font-weight:700; }
+  p { min-inline-size:0;margin:4px 0 0;max-block-size:3em;overflow:auto;overflow-wrap:anywhere;font-size:var(--stitch-font-14);line-height:1.5; }
+ }
+ .vue-media-track-icon { display:grid;place-items:center;inline-size:44px;block-size:44px;flex:none;border:1px solid var(--vue-media-line);border-radius:8px; }
+ .vue-media-sync-badge { flex:none;max-inline-size:7em;padding:2px 6px;border:1px solid var(--vue-media-line);border-radius:6px;overflow-wrap:anywhere;font-size:var(--stitch-font-14);line-height:1.5; }
+ .vue-media-audio { flex:none;min-inline-size:0;min-block-size:54px;audio { display:block;inline-size:100%;block-size:54px; } }
+ .vue-media-controls-body { display:grid;gap:8px;min-inline-size:0;flex:none; }
+ .vue-media-sync { display:grid;gap:4px;min-inline-size:0;min-block-size:40px;padding:8px;box-sizing:border-box;border:1px solid var(--vue-media-line);border-radius:8px; }
+ .vue-media-clock { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;min-inline-size:0;font-size:var(--stitch-font-14);line-height:1.5;font-variant-numeric:tabular-nums;output { min-inline-size:11ch;text-align:end; } }
+ .vue-media-progress { display:block;inline-size:100%;block-size:6px;accent-color:var(--stitch-primary); }
+ .vue-media-controls { display:grid;grid-template-columns:repeat(6,44px) minmax(0,1fr);align-items:center;gap:2px;min-inline-size:0; }
+ .vue-media-volume { display:flex;align-items:center;gap:4px;min-inline-size:0;margin:0;padding:0;font-size:var(--stitch-font-14);line-height:1.5;
+  >.vue-button { inline-size:44px;min-inline-size:44px;padding-inline:4px; }
+  input[type=range] { flex:1;inline-size:100%;min-inline-size:20px;block-size:44px;margin:0;padding:0;border:0;background:transparent;accent-color:var(--stitch-primary);box-shadow:none; }
+  output { min-inline-size:3.5ch;font-size:var(--stitch-font-14);line-height:1.5;font-variant-numeric:tabular-nums;text-align:end; }
+ }
+ .vue-media-publish-reason { min-block-size:3em;max-block-size:3em;margin:0;overflow:auto;font-size:var(--stitch-font-14);line-height:1.5; }
+ .vue-media-local-options { min-inline-size:0;font-size:var(--stitch-font-14);line-height:1.5;
+  >summary { display:list-item;min-block-size:44px;padding:8px 4px;box-sizing:border-box;cursor:pointer; }
+  >div { display:flex;flex-wrap:wrap;gap:8px;padding-block-end:8px; }
+ }
+ .vue-media-shortcuts { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-inline-size:0;>button { min-inline-size:0;white-space:normal; } }
+ .vue-media-playlist { display:flex;flex-direction:column;gap:8px;min-inline-size:0;min-block-size:0;block-size:100%;overflow:auto;overscroll-behavior:contain; }
+ .vue-media-panel-heading { display:flex;align-items:start;justify-content:space-between;flex:none;gap:8px;min-inline-size:0;min-block-size:44px;
+  >div { flex:1;min-inline-size:0; }
+  h3 { margin:0;color:inherit;font-size:var(--stitch-font-16);line-height:1.5;font-weight:700; }
+  p { min-inline-size:0;max-block-size:3em;margin:4px 0 0;overflow:auto;overflow-wrap:anywhere;font-size:var(--stitch-font-14);line-height:1.5; }
+ }
+ .vue-media-queue-count { display:inline-block;min-inline-size:2ch;text-align:center;font-variant-numeric:tabular-nums; }
+ .vue-media-permission { flex:none;block-size:3rem;min-block-size:0;margin:0;overflow:auto;font-size:var(--stitch-font-14);line-height:1.5; }
+ .vue-media-queue { display:flex;flex-direction:column;gap:8px;flex:1 0 88px;min-inline-size:0;min-block-size:88px;margin:0;padding:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;list-style:none;
+  >li { display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;flex:none;gap:8px;min-inline-size:0;min-block-size:64px;padding:8px;box-sizing:border-box;border:1px solid var(--vue-media-line);border-radius:8px;
+   >div { min-inline-size:0;strong,span { display:block;min-inline-size:0; } strong { font-size:var(--stitch-font-14);line-height:1.5; }span { font-size:var(--stitch-font-14);line-height:1.5; } }
+   &.is-drop-target { outline:2px solid currentColor;outline-offset:-3px; }
+  }
+  >li.vue-media-queue-empty { display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;min-block-size:160px;padding:16px;text-align:center;>p { font-size:var(--stitch-font-14);line-height:1.5; } }
+ }
+ .vue-media-queue-number { display:inline;font-variant-numeric:tabular-nums; }
+ .vue-media-queue-handle { cursor:grab;touch-action:none; }
+ .vue-media-queue .vue-overflow-text,.vue-media-current .vue-overflow-text { display:block;inline-size:100%;max-inline-size:100%;overflow:hidden; }
+ .vue-overflow-text>.ui-player-name-text { display:inline-block;overflow:visible; }
+ .vue-media-entry { display:grid;gap:8px;flex:none;min-inline-size:0;margin:0;padding:12px;border:1px solid var(--vue-media-line);border-radius:8px;
+  >label { margin:0;color:inherit;font-size:var(--stitch-font-14);font-weight:600;line-height:1.5; }
+  >div { display:flex;align-items:center;gap:8px;min-inline-size:0; }
+  input[type=url],select { flex:1;inline-size:100%;min-inline-size:0;max-inline-size:100%;min-block-size:44px;margin:0;padding:8px;border:1px solid var(--vue-media-line);border-radius:8px;color:var(--vue-media-text);background:var(--vue-media-background);font-family:inherit;font-size:var(--stitch-font-14);line-height:1.5;box-shadow:none; }
+ }
+ .vue-media-request-note { min-inline-size:0;margin:0;font-size:var(--stitch-font-14);line-height:1.5;overflow-wrap:anywhere; }
+ .vue-media-library-link { display:flex;align-items:center;min-block-size:44px;color:inherit;font-size:var(--stitch-font-14);line-height:1.5;text-decoration:underline; }
+ .vue-media-feedback { display:grid;grid-template-rows:24px 24px;gap:0;min-inline-size:0;min-block-size:0;block-size:48px;overflow:hidden;border-block-start:1px solid var(--vue-media-line);
+  >.frontend-status { box-sizing:border-box;min-inline-size:0;min-block-size:0;block-size:24px;max-block-size:24px;margin:0;padding:0;overflow:auto;font-size:var(--stitch-font-14);line-height:1.5; }
+ }
+ .vue-media-edge { position:absolute;z-index:3;touch-action:none;&:focus-visible { outline:2px solid currentColor;outline-offset:-2px; } }
+ .vue-media-edge-n,.vue-media-edge-s { block-size:8px;left:12px;right:12px;cursor:ns-resize; }.vue-media-edge-n { top:0; }.vue-media-edge-s { bottom:0; }
+ .vue-media-edge-w,.vue-media-edge-e { inline-size:8px;top:12px;bottom:12px;cursor:ew-resize; }.vue-media-edge-w { left:0; }.vue-media-edge-e { right:0; }
+ .vue-media-edge-nw,.vue-media-edge-ne,.vue-media-edge-sw,.vue-media-edge-se { inline-size:12px;block-size:12px; }
+ .vue-media-edge-nw { left:0;top:0;cursor:nwse-resize; }.vue-media-edge-ne { right:0;top:0;cursor:nesw-resize; }.vue-media-edge-sw { left:0;bottom:0;cursor:nesw-resize; }.vue-media-edge-se { right:0;bottom:0;cursor:nwse-resize; }
+ .vue-room-media-compact {
+  .vue-media-window-title { position:absolute;inline-size:1px;block-size:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
+  .vue-media-window-tools { inline-size:100%;justify-content:flex-end; }
+  .vue-media-content { display:grid;grid-template-rows:minmax(0,1fr);padding:8px;gap:0; }
+  .vue-media-tabs,.vue-media-feedback,.vue-media-controls-body { display:none; }
+  .vue-media-screen { min-block-size:200px;max-block-size:none;block-size:100%; }
+  .vue-media-content.has-video>.vue-media-panels { display:none; }
+  .vue-media-content:not(.has-video)>.vue-media-panels { display:block; }
+  .vue-media-panels>.vue-media-playlist,.vue-media-panels>.vue-media-request { display:none; }
+ }
+ .vue-room-media-bar { .vue-media-content { display:none; }.vue-media-header { justify-content:center;padding:0 4px; }.vue-media-window-title { display:none; }.vue-media-window-tools { gap:0; } }
+ .vue-media-consent-actions { display:flex;flex-wrap:wrap;gap:12px; }
+}
+@container (max-width:410px) {
+ :root body .vue-room-media-scope.vue-stitch-scope {
+  .vue-media-controls { grid-template-columns:repeat(6,minmax(44px,1fr));gap:2px;>.vue-button { justify-self:center; } }
+  .vue-media-volume { grid-column:1/-1;inline-size:100%;>.vue-button { inline-size:44px;min-inline-size:44px; } }
+  .vue-media-current { flex-wrap:wrap;>.vue-media-sync-badge { margin-inline-start:auto; } }
+ }
+}
+@container (max-width:340px) {
+ :root body .vue-room-media-scope.vue-stitch-scope {
+  .vue-media-window-title { position:absolute;inline-size:1px;block-size:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap; }
+  .vue-media-window-tools { inline-size:100%;justify-content:flex-end;gap:2px; }
+  .vue-media-content { padding:8px; }
+  .vue-media-controls { gap:0; }
+  .vue-media-entry { padding:8px;>div { gap:4px; } }
+ }
+}

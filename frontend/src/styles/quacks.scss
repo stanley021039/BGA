@@ -1,0 +1,88 @@
+@use 'tokens' as t;
+@use 'compact-header' as chrome;
+.vue-quacks-stage { box-sizing:border-box;min-width:0;min-height:1000px;grid-template-rows:auto minmax(0,1fr) 48px auto;>header {display:grid;gap:t.space(2);min-width:0;h1 {@include t.type(h2);overflow-wrap:anywhere;}} }
+.vue-quacks-topbar { display:grid;grid-template-columns:minmax(0,1fr) repeat(4,44px);align-items:center;gap:t.space(2);min-width:0;>label {display:grid;grid-template-columns:4.5rem minmax(0,1fr);align-items:center;gap:t.space(2);margin:0;@include t.type(p3);} select {width:100%;min-width:0;min-height:44px;padding:6px;} }
+.vue-quacks-resources { display:flex;align-items:center;flex-wrap:wrap;gap:t.space(2) t.space(3);min-height:42px;max-height:84px;overflow:auto;font-variant-numeric:tabular-nums;>span {display:inline-flex;align-items:center;gap:t.space(1);@include t.type(p3);} }
+.vue-quacks-resources .vue-quacks-white { padding:t.space(1) t.space(2);border:1px solid var(--play-line);border-radius:t.space(2);background:var(--play-paper,var(--play-surface));@include t.type(p2);strong {font-size:22px;line-height:1.3;white-space:nowrap;} &.is-critical {outline:2px solid #d2a33b;box-shadow:0 0 16px #dbad3855;animation:vue-quacks-warning 1.8s ease-in-out infinite alternate;} }
+.vue-quacks-fortune-summary { min-width:0;min-height:24px;height:24px;overflow:auto;>button {display:block;min-height:24px!important;width:100%;padding:0;border:0;background:none;color:inherit;text-align:left;@include t.type(p3);white-space:normal;} }
+.vue-quacks-live { min-height:0;min-width:0;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain; }
+.vue-quacks-play { display:grid;gap:t.space(3);min-width:0;>p,h2,h3 {margin:0;} }
+.vue-quacks-footer { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:t.space(2);min-width:0;min-height:60px; }
+.vue-quacks-commands { display:flex;flex-wrap:wrap;align-items:center;gap:t.space(2);min-width:0;>span {@include t.type(p3);overflow-wrap:anywhere;} }
+.vue-quacks-quick,.vue-quacks-tabs { display:flex;flex-wrap:wrap;align-items:center;gap:t.space(2);min-width:0; }
+.vue-quacks-tabs>button,.vue-quacks-choice-grid>button,.vue-quacks-market-offers>button,.vue-quacks-essence-track>button { --ui-button-radius:.75rem;min-width:0;min-height:44px;padding:t.space(2) t.space(3);border:1px solid var(--play-line);border-radius:.75rem;background:var(--play-surface);color:var(--play-ink);white-space:normal;overflow-wrap:anywhere; }
+:is(.vue-quacks-tabs,.vue-quacks-choice-grid,.vue-quacks-market-offers,.vue-quacks-essence-track) [aria-pressed=true] { outline:2px solid var(--play-accent,var(--play-ink));outline-offset:-2px; }
+.vue-quacks-tabs>button,.vue-quacks-tabs>span { display:inline-flex;align-items:center;gap:t.space(2); }
+.vue-quacks-tabs select {width:auto;max-width:100%;min-height:44px;}
+.vue-quacks-glyph { display:inline-grid;place-items:center;flex:none;vertical-align:middle;>svg {width:100%;height:100%;display:block;} }
+.vue-quacks-feedback { min-width:0;display:flex;gap:t.space(2);align-items:center;>.frontend-status {flex:1;margin:0;min-height:48px;height:48px;max-height:48px;overflow:auto;} }
+.vue-quacks-pot { display:grid;grid-template-rows:minmax(200px,1fr) 72px;gap:t.space(2);min-width:0; }
+.vue-quacks-pot-art { min-width:0;min-height:0;display:grid;place-items:center;background:radial-gradient(ellipse,#254b40,#192f31);border-radius:t.space(4);>svg {height:100%;width:100%;max-height:560px;object-fit:contain;} }
+.vue-quacks-insight { height:72px;overflow:auto;padding:t.space(2);border:1px solid var(--play-line);border-radius:t.space(2);@include t.type(p3);p {margin:0;} }
+.vue-quacks-books,.vue-quacks-book,.vue-quacks-alchemy,.vue-quacks-witches,.vue-quacks-records,.vue-quacks-customize { display:grid;gap:t.space(3);min-width:0; }
+.vue-quacks-book>header,.vue-quacks-alchemy>header,.vue-quacks-patients article>header,.vue-quacks-witches article>header,.vue-quacks-market article>header {display:flex;align-items:center;gap:t.space(3);min-width:0;}
+.vue-quacks-book>header>div {min-width:0;overflow-wrap:anywhere;}
+.vue-quacks-book-effect { white-space:pre-line;min-height:10rem;padding:t.space(4);border:1px solid var(--play-line);border-radius:t.space(3); }
+.vue-quacks-book-offers { display:flex;flex-wrap:wrap;gap:t.space(3);>div {display:flex;gap:t.space(2);align-items:center;} }
+.vue-quacks-choice,.vue-quacks-market { display:grid;gap:t.space(3);min-width:0; }
+.vue-quacks-choice-grid,.vue-quacks-market-grid,.vue-quacks-patients,.vue-quacks-essence-track { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:t.space(3);min-width:0; }
+.vue-quacks-choice-grid>button {display:grid;justify-items:center;align-content:start;gap:t.space(2);padding:t.space(3);min-height:100px;}
+.vue-quacks-market-grid>article,.vue-quacks-patients>article,.vue-quacks-witches>article,.vue-quacks-records>article { min-width:0;border:1px solid var(--play-line);border-radius:t.space(3);padding:t.space(3);display:grid;gap:t.space(3); }
+.vue-quacks-market-grid>article>p {white-space:pre-line;@include t.type(p3);}
+.vue-quacks-market-offers { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:t.space(2);>button {display:grid;justify-items:center;gap:t.space(1);padding:t.space(2);min-width:0;span {@include t.type(p3);} } }
+.vue-quacks-bag-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,120px),1fr));gap:t.space(3);>div {display:flex;align-items:center;gap:t.space(2);padding:t.space(2);border:1px solid var(--play-line);border-radius:t.space(2);} }
+.vue-quacks-extra { display:grid;gap:t.space(3);min-width:0; }
+.vue-quacks-reserve-row {display:flex;align-items:center;flex-wrap:wrap;gap:t.space(2);padding:t.space(2);border-bottom:1px solid var(--play-line);}
+.vue-quacks-effect-row {display:flex;align-items:start;gap:t.space(3);padding-block:t.space(3);border-bottom:1px solid var(--play-line);p {white-space:pre-line;flex:1;min-width:0;}}
+.vue-quacks-essence-track>button {display:grid;align-content:start;gap:t.space(2);min-height:96px;text-align:left;span {@include t.type(p3);}}
+.vue-quacks-fortune-draw { display:grid;place-items:center;min-height:240px;>button {display:grid;place-items:center;gap:t.space(3);border:0;background:none;color:var(--play-ink);padding:t.space(3);min-width:0;max-width:100%;img {display:block;width:min(100%,220px);height:280px;object-fit:contain;}} }
+.vue-quacks-round-intro { min-height:260px;display:grid;place-items:center;align-content:center;gap:t.space(4);text-align:center;>h2 {font-size:clamp(32px,6vw,64px);line-height:1.2;} }
+.vue-quacks-scoreboard { min-width:0;>div>svg {display:block;width:100%;height:auto;max-height:65dvh;} }
+.vue-quacks-score-legend {display:flex;flex-wrap:wrap;gap:t.space(3);>span {display:flex;gap:t.space(2);align-items:center;&:before {content:'';width:12px;height:18px;background:var(--pawn-color);border-radius:6px;}}}
+.vue-quacks-draw-action img,.vue-quacks-stop-action img {width:56px;height:40px;object-fit:contain;}
+.vue-quacks-settings { min-width:0;max-height:280px;overflow:auto;scrollbar-gutter:stable;summary {min-height:44px;cursor:pointer;} fieldset {min-width:0;} label {display:flex;align-items:center;gap:t.space(2);margin-block:t.space(3);} input[type=checkbox] {width:20px;height:20px;flex:none;} p {@include t.type(p3);} }
+.vue-quacks-customize input {width:100%;min-width:0;}
+.vue-quacks-customize .vue-quacks-choice-grid>button {border-left:12px solid var(--pot-color);}
+@keyframes vue-quacks-warning {from {box-shadow:0 0 8px #dbad3833;}to {box-shadow:0 0 20px #dbad3888;}}
+@media(prefers-reduced-motion:reduce) {.vue-quacks-white.is-critical {animation:none!important;}}
+.motion-reduced .vue-quacks-white.is-critical {animation:none!important;}
+@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
+ body.vue-quacks-document:not(.ui-large-text) {
+  @include chrome.desktop;
+  margin:0;
+  .vue-game-document {height:100dvh;padding:0 t.space(4) t.space(2);display:grid;grid-template-rows:auto minmax(0,1fr);}
+  #quacks-app {min-height:0;}
+  .vue-game-workspace {height:100%;min-height:0;grid-template-rows:auto 48px minmax(0,1fr);gap:t.space(3);}
+  .vue-game-toolbar {min-height:44px;padding-block:t.space(2);gap:t.space(3);}
+  .vue-game-phase {min-height:24px;}
+  .vue-game-room-feedback {min-height:48px;height:48px;}
+  .vue-game-grid {min-height:0;grid-template-columns:220px minmax(0,1fr) 270px;gap:t.space(3);}
+  .vue-game-main,.vue-game-side {overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain;}
+  .vue-game-main {border:1px solid var(--play-line);border-radius:t.space(4);background:var(--play-surface);}
+  .vue-game-roster-panel {min-height:0;padding:t.space(3);.vue-roster-list {min-height:0;max-height:none;}}
+  .vue-game-settings-panel {flex:none;padding:t.space(3);gap:t.space(2);>p {display:none;}}
+  .vue-game-start-slot {min-height:44px;}
+  .vue-game-side {gap:t.space(3);>.vue-room-chat {flex:1;min-height:280px;padding:t.space(3);gap:t.space(2);}}
+  .vue-room-chat-content {grid-template-rows:0 minmax(60px,1fr) 0 auto 44px 48px;gap:t.space(2);}
+  .vue-chat-notice,.vue-chat-quick:empty {visibility:hidden;min-height:0;height:0;}
+  .vue-quacks-stage {flex:none;height:100%;min-height:0;padding:t.space(3);border:0;border-radius:0;gap:t.space(2);grid-template-rows:auto minmax(0,1fr) 48px 88px;>header {gap:t.space(1);h1 {font-size:20px;line-height:1.35;}}}
+  .vue-quacks-resources {max-height:42px;}
+  .vue-quacks-play:has(>.vue-quacks-pot):not(:has(>.vue-quacks-extra)) {height:100%;min-height:0;}
+  .vue-quacks-pot {min-height:0;height:100%;grid-template-rows:minmax(0,1fr) 48px;}
+  .vue-quacks-insight {height:48px;}
+  .vue-quacks-pot-art>svg {max-height:none;}
+  .vue-quacks-footer {height:88px;min-height:88px;overflow:auto;scrollbar-gutter:stable;}
+  .vue-quacks-round-intro,.vue-quacks-fortune-draw {min-height:0;height:100%;}
+  .vue-quacks-fortune-draw>button {height:100%;min-height:0;grid-template-rows:minmax(0,1fr) auto;img {height:100%;max-height:280px;width:auto;max-width:100%;}}
+ }
+}
+@media(max-width:760px) {
+ .vue-quacks-stage {min-height:1100px;padding:t.space(4);}
+ .vue-quacks-topbar {grid-template-columns:repeat(4,44px);justify-content:start;>label {grid-column:1/-1;} >.vue-button.ui-icon-button {inline-size:44px;width:44px;height:64px;min-height:64px;flex-direction:column;gap:2px;padding:4px 2px;--ui-button-radius:.75rem;} >.vue-button .vue-button-caption {font-size:12px;line-height:16px;white-space:nowrap;}}
+ .vue-quacks-footer {grid-template-columns:minmax(0,1fr);}
+ .vue-quacks-commands>.vue-button {flex:1;min-width:0;max-width:100%;}
+ .vue-quacks-pot {grid-template-rows:360px 96px;}.vue-quacks-insight {height:96px;}
+ .vue-quacks-market-offers {grid-template-columns:repeat(3,minmax(0,1fr));}
+ .vue-quacks-market-offers>button {padding:4px;font-size:14px;}
+ .vue-quacks-choice-grid,.vue-quacks-market-grid,.vue-quacks-patients,.vue-quacks-essence-track {grid-template-columns:minmax(0,1fr);}
+}
