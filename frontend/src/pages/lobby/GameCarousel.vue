@@ -3,6 +3,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { gameCards } from './catalog';
 import { usePreferencesStore } from '../../stores/preferences';
 import UiButton from '../../components/UiButton.vue';
+import quacksArt from '../../assets/quacks/game-quacks.svg';
+import minimalArt from '../minimal/minimal-waiting.svg';
 const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: [] }>();
 const root = ref<HTMLElement | null>(null),
@@ -19,10 +21,7 @@ const index = computed(() =>
   ),
   chosen = computed(() => gameCards[index.value]);
 const visibleCount = computed(() =>
-  Math.min(
-    gameCards.length,
-    width.value >= 1000 ? 6 : width.value >= 700 ? 5 : width.value >= 340 ? 3 : 1,
-  ),
+  Math.min(gameCards.length, width.value >= 700 ? 5 : width.value >= 340 ? 3 : 1),
 );
 const radius = computed(() => Math.floor(visibleCount.value / 2)),
   step = computed(() =>
@@ -183,7 +182,16 @@ onBeforeUnmount(() => {
         @click="click($event, i)"
       >
         <div class="tile-image"
-          ><img :src="'/assets/playful/game-' + card.art + '.svg'" alt="" draggable="false" /></div
+          ><img
+            :src="
+              card.id === 'quacks'
+                ? quacksArt
+                : card.id === 'minimal'
+                  ? minimalArt
+                  : '/assets/playful/game-' + card.art + '.svg'
+            "
+            alt=""
+            draggable="false" /></div
         ><div class="tile-body"
           ><div class="kicker">{{ card.english }}</div
           ><h2>{{ card.title }}</h2

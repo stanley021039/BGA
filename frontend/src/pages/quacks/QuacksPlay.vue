@@ -29,7 +29,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
 }
 </script>
 <template>
-  <section class="vue-quacks-play">
+  <section class="vue-quacks-play vue-quacks-play-rq" :data-phase="s.phase" :data-stage="s.stage">
     <p v-if="s.interrupted">有人離席，本場已中止；保留已完成回合。由房主重新開始或返回大廳。</p>
     <QuacksBooks v-else-if="s.phase === 'waiting'" />
     <section v-else-if="s.phase === 'round-intro'" class="vue-quacks-round-intro"
@@ -48,18 +48,29 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
     >
     <QuacksAlchemy v-else-if="s.phase === 'patients' || s.stage === 'essence'" />
     <section v-else-if="s.phase === 'fortune'" class="vue-quacks-fortune-draw"
-      ><template v-if="s.me === s.roundStarterId"
-        ><button
-          type="button"
+      ><img
+        src="/assets/quacks/fortune-back.svg"
+        alt="本輪待抽取的占卜牌背面"
+        width="230"
+        height="360" />
+      <div
+        ><h2>第 {{ s.round }}／9 回合</h2>
+        <p>{{
+          s.me === s.roundStarterId
+            ? '由你親自抽取本輪占卜牌。'
+            : '等待 ' +
+              (s.players.find((p) => p.id === s.roundStarterId)?.name || '本輪起始玩家') +
+              ' 親自抽取本輪占卜牌。'
+        }}</p>
+        <UiButton
+          v-if="s.me === s.roundStarterId"
+          stitch
+          variant="secondary"
+          label="抽取占卜牌"
           :disabled="!game.available"
-          aria-label="點擊抽取本輪占卜牌"
           @click="game.drawFortune()"
-          ><img src="/assets/quacks/fortune-back.svg" alt="" /><strong>點一下抽牌</strong></button
-        ></template
-      ><p v-else
-        >等待 {{ s.players.find((p) => p.id === s.roundStarterId)?.name }} 親自抽取本輪占卜牌。</p
-      ></section
-    >
+        /> </div
+    ></section>
     <template v-else-if="s.phase === 'brewing'"
       ><QuacksPot v-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /><section
         v-if="m?.reserve.length || m?.alchemy?.pool.length || m?.alchemy?.returnable.length"
@@ -122,7 +133,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
           v-if="!overlay && game.viewed"
           :state="s"
           :recipe="game.viewed" /></template
-      ><section v-else-if="s.stage === 'bonus'"
+      ><section v-else-if="s.stage === 'bonus'" class="vue-quacks-bonus-panel"
         ><h2>獎勵骰</h2
         ><p>{{
           m.bonusEligible
@@ -136,7 +147,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
               .join('、')
           }}</p
         ></section
-      ><section v-else-if="s.stage === 'effects-confirm'"
+      ><section v-else-if="s.stage === 'effects-confirm'" class="vue-quacks-effects-panel"
         ><h2>綠色、黑色與紫色藥材結算</h2
         ><article
           v-for="(effect, index) in m.effectSummary"
@@ -146,9 +157,11 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
             v-if="['black', 'green', 'purple'].includes(effect.color)"
             :chip="{ color: effect.color as 'black' | 'green' | 'purple', value: 1 }"
           /><p>{{ effect.text }}</p
-          ><strong v-if="effect.triggered">已觸發</strong></article
+          ><strong v-if="effect.triggered" class="vue-quacks-effect-triggered"
+            >已觸發</strong
+          ></article
         ><p>確認不會重複領取；全員確認後才進入格位獎勵。</p></section
-      ><section v-else-if="s.stage === 'rewards'"
+      ><section v-else-if="s.stage === 'rewards'" class="vue-quacks-rewards-panel"
         ><h2>領取結算位置獎勵</h2
         ><p
           >大釜第 {{ own.position }} 格，結算位置

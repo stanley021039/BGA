@@ -258,17 +258,16 @@
 }
 .vue-gift-roster-scores {
   display: grid;
-  gap: t.space(1);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: t.space(3);
   width: 100%;
   span {
     display: flex;
+    min-inline-size: 0;
     justify-content: space-between;
     gap: t.space(1);
     @include t.type(p3);
   }
-}
-.vue-gift-document .vue-game-roster-panel .vue-room-player {
-  grid-template-columns: 2.5rem minmax(0, 1fr) 3.5rem;
 }
 .vue-gift-settings {
   min-width: 0;

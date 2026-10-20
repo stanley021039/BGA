@@ -1,0 +1,711 @@
+// RQ03 waiting hero: exact Figma vector layers keep their intrinsic dimensions.
+:root body.vue-quacks-document[data-visual-theme] {
+  .vue-quacks-stage.is-waiting {
+    display: block;
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+    min-height: 0;
+    overflow: visible;
+  }
+  .vue-quacks-stage.is-waiting .vue-quacks-waiting {
+    display: grid;
+    grid-template-rows: repeat(3, max-content);
+    grid-auto-rows: max-content;
+    align-content: start;
+    align-items: start;
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+    min-height: 0;
+    max-block-size: none;
+    gap: 12px;
+    padding: 16px;
+    overflow: visible;
+    box-sizing: border-box;
+    > .vue-quacks-setup-slot,
+    > .vue-quacks-setup-slot > .vue-game-settings-panel {
+      block-size: auto;
+      height: auto;
+      min-block-size: 0;
+      min-height: 0;
+      max-block-size: none;
+      align-self: start;
+    }
+  }
+  .vue-quacks-rq03-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 0.38fr) minmax(0, 0.62fr);
+    min-inline-size: 0;
+    min-block-size: 260px;
+    border: 1px solid #e7e2d9;
+    border-radius: 12px;
+    overflow: hidden;
+    color: #2a2927;
+    background: #fff6df;
+  }
+  .vue-quacks-rq03-art {
+    position: relative;
+    container-type: inline-size;
+    min-inline-size: 0;
+    min-block-size: 220px;
+    background: #143e34;
+  }
+  .vue-quacks-rq03-art-layers {
+    position: absolute;
+    inset-inline-start: 50%;
+    inset-block-start: 50%;
+    inline-size: 156.926px;
+    block-size: 82.5px;
+    transform: translate(-50%, -50%);
+    img {
+      position: absolute;
+      display: block;
+      inline-size: auto;
+      block-size: auto;
+      max-inline-size: none;
+      max-block-size: none;
+    }
+    .rq03-vector {
+      left: 16.588px;
+      top: 0;
+    }
+    .rq03-pot {
+      left: 42.122px;
+      top: 4.843px;
+    }
+    .rq03-chips {
+      left: 65.67px;
+      top: 28.875px;
+    }
+    .rq03-steam {
+      left: 54.532px;
+      top: 6.806px;
+    }
+    .rq03-number {
+      position: absolute;
+      font:
+        700 5.775px/1.25 system-ui,
+        sans-serif;
+      color: #f8ebc0;
+      text-align: center;
+    }
+    .rq03-one {
+      left: 69.39px;
+      top: 31.56px;
+    }
+    .rq03-two {
+      left: 80.14px;
+      top: 29.49px;
+    }
+    .rq03-four {
+      left: 84.58px;
+      top: 36.5px;
+    }
+  }
+  .vue-quacks-rq03-copy {
+    display: grid;
+    align-content: center;
+    gap: 20px;
+    padding: 24px;
+    min-inline-size: 0;
+    small {
+      color: #6e6b65;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    h1 {
+      margin: 0;
+      color: #2a2927;
+      font-size: 1.5rem;
+      line-height: 1.35;
+    }
+    p {
+      margin: 0;
+      color: #2a2927;
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+  }
+  .vue-quacks-rq03-book-entry > button {
+    inline-size: 100%;
+  }
+}
+@container (min-width: 200px) {
+  :root body.vue-quacks-document[data-visual-theme] .vue-quacks-rq03-art-layers {
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+@container (min-width: 260px) {
+  :root body.vue-quacks-document[data-visual-theme] .vue-quacks-rq03-art-layers {
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+@container (min-width: 340px) {
+  :root body.vue-quacks-document[data-visual-theme] .vue-quacks-rq03-art-layers {
+    transform: translate(-50%, -50%) scale(2);
+  }
+}
+@container (min-width: 420px) {
+  :root body.vue-quacks-document[data-visual-theme] .vue-quacks-rq03-art-layers {
+    transform: translate(-50%, -50%) scale(2.6666667);
+  }
+}
+@media (max-width: 760px) {
+  :root body.vue-quacks-document[data-visual-theme] .vue-quacks-rq03-hero {
+    grid-template-columns: minmax(0, 1fr);
+    .vue-quacks-rq03-art {
+      min-block-size: 180px;
+    }
+    .vue-quacks-rq03-copy {
+      padding: 20px;
+      gap: 16px;
+    }
+  }
+}
+
+// RQ04–RQ15/RQ19–RQ26/RQ36 use one native-dialog owner and the 00 tokens.
+:root body.vue-quacks-document[data-visual-theme] {
+  dialog.vue-dialog:is(.vue-quacks-tools-dialog, .vue-quacks-score-zoom-dialog) {
+    inline-size: min(1160px, calc(100vw - 48px));
+    max-inline-size: calc(100vw - 48px);
+    max-block-size: calc(100dvh - 48px);
+    padding: 24px;
+    border: 1px solid var(--stitch-line, #e7e2d9);
+    border-radius: 16px;
+    background: var(--stitch-surface, #fbf9f6);
+    color: var(--stitch-ink, #2a2927);
+    box-shadow: 0 24px 64px #25252130;
+    > .vue-dialog-header {
+      min-block-size: 44px;
+      overflow: visible;
+      margin: 0 0 16px;
+      padding: 0;
+      align-items: center;
+      h2 {
+        margin: 0;
+        font-size: 1.25rem;
+        line-height: 1.5;
+        color: inherit;
+      }
+    }
+    > .vue-dialog-content {
+      min-inline-size: 0;
+      min-block-size: 0;
+      overflow: auto;
+      scrollbar-gutter: stable;
+      overscroll-behavior: contain;
+    }
+    button {
+      --ui-button-radius: 0.5rem;
+    }
+  }
+  dialog.vue-quacks-tools-dialog .vue-quacks-books-rq {
+    .vue-quacks-codex-heading h2 {
+      font-size: 1.25rem;
+      line-height: 1.5;
+    }
+    .vue-quacks-codex-spread {
+      border-color: #cdb16b;
+      border-width: 2px;
+    }
+    .vue-quacks-codex-page {
+      padding: 22px;
+    }
+    .vue-quacks-codex-cover h3 {
+      font-size: 1.5rem;
+    }
+    .vue-quacks-codex-prices {
+      min-block-size: 136px;
+    }
+    .vue-quacks-codex-controls > .vue-button {
+      inline-size: 100%;
+    }
+    .vue-quacks-codex-effect-stack {
+      min-block-size: 3em;
+    }
+    .vue-quacks-codex-note {
+      color: var(--stitch-ink, #2a2927);
+    }
+  }
+  .vue-quacks-fortune-card {
+    inline-size: min(100%, 480px);
+    min-inline-size: 0;
+    min-block-size: 220px;
+    box-sizing: border-box;
+    margin: 24px auto;
+    padding: 28px;
+    border: 4px solid #c9a954;
+    border-radius: 18px;
+    background: #eee1b9;
+    color: #342d19;
+    box-shadow: 0 8px 16px #30250f25;
+    h2 {
+      margin: 0 0 16px;
+      padding-block-end: 12px;
+      border-block-end: 1px solid #c9a954;
+      text-align: center;
+      font-size: 1.25rem;
+      line-height: 1.5;
+      color: #342d19;
+    }
+    h3 {
+      margin: 16px 0 8px;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: #342d19;
+    }
+    p {
+      margin: 4px 0;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: #342d19;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-quacks-customize {
+    display: grid;
+    gap: 16px;
+    min-inline-size: 0;
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    input {
+      inline-size: 100%;
+      min-block-size: 44px;
+      box-sizing: border-box;
+      padding: 8px 12px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+    }
+    > .vue-button {
+      inline-size: 100%;
+    }
+    h2 {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    .vue-quacks-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .vue-quacks-choice-grid > button {
+      min-inline-size: 0;
+      min-block-size: 100px;
+      padding: 12px;
+      border: 1px solid var(--stitch-line);
+      border-inline-start: 10px solid var(--pot-color);
+      border-radius: 8px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      font-size: 0.875rem;
+      line-height: 1.5;
+      &[aria-pressed='true'] {
+        outline: 2px solid var(--stitch-ink);
+        outline-offset: -2px;
+      }
+      &:disabled {
+        opacity: 0.45;
+      }
+    }
+  }
+  dialog.vue-dialog.vue-quacks-bag-dialog {
+    inline-size: min(640px, calc(100vw - 48px));
+    max-inline-size: calc(100vw - 48px);
+    max-block-size: calc(100dvh - 48px);
+    padding: 24px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 16px;
+    color: var(--stitch-ink);
+    background: var(--stitch-surface);
+    &.has-peek {
+      inline-size: min(900px, calc(100vw - 48px));
+    }
+    .vue-dialog-header {
+      align-items: center;
+      overflow: visible;
+      min-block-size: 44px;
+      margin: 0 0 16px;
+      h2 {
+        font-size: 1.25rem;
+        line-height: 1.5;
+        color: inherit;
+      }
+    }
+    .vue-dialog-content {
+      min-inline-size: 0;
+      min-block-size: 300px;
+      text-align: center;
+      overflow: auto;
+      scrollbar-gutter: stable;
+    }
+    h3 {
+      margin: 16px 0 8px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    p {
+      margin: 12px 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .frontend-status {
+      margin: 8px 0 0;
+      min-block-size: 24px;
+      text-align: start;
+    }
+    .vue-quacks-bag-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+      gap: 12px;
+      margin: 12px 0;
+      text-align: start;
+      > div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-inline-size: 0;
+        min-block-size: 64px;
+        padding: 8px 12px;
+        border: 1px solid var(--stitch-line);
+        border-radius: 8px;
+        background: var(--stitch-surface);
+        box-sizing: border-box;
+      }
+      strong {
+        font-size: 1rem;
+        font-variant-numeric: tabular-nums;
+      }
+    }
+  }
+  .vue-quacks-scoreboard-rq {
+    min-inline-size: 0;
+    .vue-quacks-score-art {
+      min-inline-size: 0;
+      cursor: zoom-in;
+      svg {
+        display: block;
+        inline-size: 100%;
+        block-size: auto;
+        max-block-size: 68dvh;
+      }
+      &:focus-visible {
+        outline: 3px solid var(--stitch-primary);
+        outline-offset: 3px;
+      }
+    }
+    .round-lantern.current-round ellipse {
+      fill: #a47e35;
+      stroke: #fff2b8;
+      stroke-width: 4;
+    }
+    .round-lantern.current-round text {
+      fill: #fff9df;
+      font-weight: 700;
+    }
+    .vue-quacks-score-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-block-start: 8px;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    > p {
+      margin: 8px 0 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    &.is-zoomed .vue-quacks-score-art {
+      overflow: auto;
+      cursor: default;
+      svg {
+        min-inline-size: 760px;
+        max-block-size: none;
+      }
+    }
+  }
+  .vue-quacks-records-rq {
+    min-inline-size: 0;
+    display: grid;
+    gap: 24px;
+    .vue-quacks-records-empty {
+      display: grid;
+      place-items: center;
+      min-block-size: 260px;
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    > article {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+    h2 {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+      line-height: 1.5;
+    }
+    h3,
+    h4 {
+      margin: 16px 0 8px;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    p {
+      margin: 4px 0;
+      font-size: 0.875rem;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+    }
+    .vue-quacks-record-player {
+      margin: 0;
+      padding: 0 0 20px;
+      border: 0;
+    }
+    .vue-quacks-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 16px;
+      min-block-size: 44px;
+    }
+  }
+  .vue-quacks-pot-tooltip {
+    inline-size: min(320px, calc(100vw - 16px));
+    padding: 20px;
+    border: 1px solid #e7e2d9;
+    border-radius: 12px;
+    background: #fff;
+    color: #2a2927;
+    box-shadow: 0 10px 24px #25252130;
+    font-size: 1rem;
+    line-height: 1.6;
+    strong,
+    p {
+      color: #2a2927;
+    }
+    small {
+      color: #6e6b65;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+  }
+  .vue-quacks-scene-header-rq {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    min-inline-size: 0;
+    h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      line-height: 1.5;
+      color: var(--stitch-ink);
+    }
+    p {
+      margin: 4px 0 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: var(--stitch-muted);
+    }
+    select {
+      min-block-size: 44px;
+      inline-size: min(100%, 240px);
+      max-inline-size: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      font-size: 0.875rem;
+    }
+  }
+  .vue-quacks-sr-only {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .vue-quacks-resource-strip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    min-inline-size: 0;
+    min-block-size: 28px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+  .vue-quacks-white-count {
+    padding: 2px 8px;
+    border: 1px solid #e6d7a4;
+    border-radius: 6px;
+    background: #fff6df;
+    color: #7a6226;
+  }
+  .vue-quacks-fortune-strip {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    inline-size: 100%;
+    min-block-size: 44px;
+    padding: 8px 12px;
+    border: 1px solid #ead8a0;
+    border-radius: 10px;
+    background: #fff9e8;
+    color: #3f3824;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    text-align: start;
+  }
+}
+@media (max-width: 760px) {
+  :root body.vue-quacks-document[data-visual-theme] {
+    dialog.vue-dialog:is(
+        .vue-quacks-tools-dialog,
+        .vue-quacks-score-zoom-dialog,
+        .vue-quacks-bag-dialog
+      ) {
+      inline-size: calc(100vw - 24px);
+      max-inline-size: calc(100vw - 24px);
+      max-block-size: calc(100dvh - 24px);
+      padding: 16px;
+      border-radius: 12px;
+    }
+    dialog.vue-dialog.vue-quacks-bag-dialog.has-peek {
+      inline-size: calc(100vw - 24px);
+    }
+    dialog.vue-quacks-tools-dialog .vue-quacks-books-rq {
+      .vue-quacks-codex-page {
+        padding: 16px;
+      }
+      .vue-quacks-codex-prices {
+        min-block-size: 0;
+      }
+    }
+    .vue-quacks-customize .vue-quacks-choice-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .vue-quacks-fortune-card {
+      padding: 20px;
+      margin: 16px auto;
+    }
+    .vue-quacks-scene-header-rq {
+      align-items: start;
+      flex-direction: column;
+      gap: 8px;
+      .vue-quacks-view-select,
+      select {
+        inline-size: 100%;
+      }
+    }
+  }
+}
+
+// RQ14's tools-dialog witch cards are separate from the live stage cards.
+:root
+  body.vue-quacks-document[data-visual-theme]
+  dialog.vue-quacks-tools-dialog
+  .vue-quacks-witches {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  inline-size: min(100%, 530px);
+  min-inline-size: 0;
+  margin: 16px auto 0;
+  > h2 {
+    margin: 0;
+    text-align: center;
+    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+  > article {
+    display: grid;
+    gap: 16px;
+    min-inline-size: 0;
+    min-block-size: 166px;
+    padding: 16px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 12px;
+    background: var(--stitch-surface);
+    box-sizing: border-box;
+  }
+  > article > header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-inline-size: 0;
+  }
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--stitch-ink);
+  }
+  p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--stitch-ink);
+    overflow-wrap: anywhere;
+  }
+  article > .vue-button {
+    --ui-button-radius: 0.5rem;
+    inline-size: 100%;
+    min-block-size: 44px;
+    background: var(--stitch-primary, #f6c845);
+    color: #2a2927;
+    border: 1px solid #e2b53d;
+  }
+}
+
+// The desktop shell owns a bounded viewport; the complete three-row waiting
+// content scrolls here. Phones keep natural document flow instead.
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root body.vue-quacks-document[data-visual-theme] .vue-quacks-stage.is-waiting {
+    block-size: 100%;
+    height: 100%;
+    min-block-size: 0;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+  }
+}
+
+// Secondary tools are progressive disclosure; the three header tools open alone.
+:root body.vue-quacks-document[data-visual-theme] {
+  dialog.vue-quacks-tools-dialog .vue-quacks-tools-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    align-items: stretch;
+    gap: 12px;
+    > .vue-button {
+      min-block-size: 44px;
+      inline-size: 100%;
+      white-space: normal;
+    }
+  }
+  dialog.vue-quacks-tools-dialog .vue-quacks-tools-back {
+    margin-block-end: 12px;
+  }
+}

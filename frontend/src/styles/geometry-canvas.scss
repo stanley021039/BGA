@@ -36,15 +36,6 @@
     opacity: 1;
   }
 }
-.vue-geometry-instructions {
-  min-height: 4.5em;
-  @include t.type(p3);
-  span {
-    display: block;
-    min-width: 12ch;
-    font-variant-numeric: tabular-nums;
-  }
-}
 .vue-geometry-canvas > .frontend-status {
   margin: 0;
 }

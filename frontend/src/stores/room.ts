@@ -264,7 +264,7 @@ export const useRoomStore = defineStore('room', () => {
           return false;
         }
       }
-      message.value = route === 'settings' ? '房間設定已儲存。' : '';
+      message.value = '';
       return true;
     } catch (cause) {
       if (

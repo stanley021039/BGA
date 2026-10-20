@@ -6,7 +6,16 @@
   --ui-focus: var(--page-orange, #f6a54b);
 }
 .achievements-page .achievements-panel {
-  max-width: 1100px;
+  inline-size: 100%;
+  max-inline-size: none;
+}
+// Groups organize cards; they are not another framed panel inside the panel.
+:root body[data-visual-theme].achievements-page .achievement-group {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 .achievements-page .page-heading p,
 .achievements-page .panel-heading p {

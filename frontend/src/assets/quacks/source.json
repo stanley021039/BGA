@@ -1,0 +1,42 @@
+{
+  "source": "Approved Figma RQ03; official high-fidelity design context",
+  "fileKey": "swrZgTpIsRS4JSGBa4mQhq",
+  "nodeId": "2053:25911",
+  "downloadMethod": "curl -L as instructed by official design context",
+  "callsite": "frontend/src/pages/quacks/QuacksWaitingHero.vue",
+  "notes": "Original SVG bytes and root width/height preserved. Layer containers reproduce the approved illustration; responsive container transforms scale the composition, not individual image proportions. No screenshot is used as an application asset.",
+  "assets": [
+    {
+      "file": "vector.svg",
+      "figmaAssetId": "24312b78-4238-41ac-be7d-8b527b93d436",
+      "role": "background",
+      "width": "123.75",
+      "height": "82.5",
+      "sha256": "8ad45f50b550bb8e455eb8a0eaa532e20358103c01037c194e94c464a7b1b31e"
+    },
+    {
+      "file": "pot.svg",
+      "figmaAssetId": "43f0a04e-0083-4eb0-b574-223c92592e7e",
+      "role": "pot",
+      "width": "72.6849",
+      "height": "68.894",
+      "sha256": "76bbf53ccceba473accf32fbd038353e43c07fff72d2b1eb915ca94c69572fb2"
+    },
+    {
+      "file": "chips.svg",
+      "figmaAssetId": "ab7b36cc-bb59-4601-929f-b20ba80297c3",
+      "role": "ingredient chips",
+      "width": "26.4",
+      "height": "15.8812",
+      "sha256": "31883c0671541be58c281473faf1489b4939d893f64c2350dc6e073464ec86b8"
+    },
+    {
+      "file": "steam.svg",
+      "figmaAssetId": "d1bd1826-b0b3-421d-ba1b-b7f1f894e945",
+      "role": "steam and bubbles",
+      "width": "48.2625",
+      "height": "20.625",
+      "sha256": "efbd1d47077817623d84337589939f7b24ad142071dc073eab8feba3b8f83a47"
+    }
+  ]
+}

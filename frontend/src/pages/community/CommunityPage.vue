@@ -141,24 +141,28 @@ onMounted(() => void store.load());
       : '找一題、存成自己的清單，或寫下大家有感的台灣生活問題。'
   }}</p>
   <div class="tabs" role="group" aria-label="共編內容">
-    <button
+    <UiButton
       id="issuesTab"
+      stitch
+      variant="secondary"
+      label="留言板"
       :class="{ on: tab === 'issues' }"
       :aria-pressed="tab === 'issues'"
       :disabled="pending"
       @click="tab = 'issues'"
-      >留言板</button
-    >
-    <button
+    />
+    <UiButton
       id="questionsTab"
+      stitch
+      variant="secondary"
+      label="自選題庫"
       :class="{ on: tab === 'questions' }"
       :aria-pressed="tab === 'questions'"
       :disabled="pending"
       @click="tab = 'questions'"
-      >自選題庫</button
-    >
+    />
   </div>
-  <section class="card resource-compose community-compose">
+  <section class="card resource-compose community-compose vue-stitch-panel">
     <label for="nickname">登入暱稱</label
     ><input
       id="nickname"

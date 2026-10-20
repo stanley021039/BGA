@@ -6,16 +6,13 @@ import UiButton from './UiButton.vue';
 import UiPopover from './UiPopover.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/room-header.scss';
-const props = defineProps<{ title: string; maxPlayers: number; focused: boolean }>();
+const props = defineProps<{ title: string; focused: boolean }>();
 const emit = defineEmits<{ integrated: [value: boolean] }>();
 const room = useRoomStore(),
   ready = ref(false),
   navigation = ref<InstanceType<typeof UiPopover> | null>(null),
   notice = ref('');
 const integrated = computed(() => ready.value && !props.focused);
-const players = computed(
-  () => room.snapshot?.players.filter((player) => !player.kicked).length || 0,
-);
 let timer: ReturnType<typeof setTimeout> | null = null,
   disposed = false;
 watch(integrated, (value) => emit('integrated', value), { immediate: true });
@@ -66,11 +63,7 @@ async function copyCode() {
           class="vue-room-code-button"
           :label="'複製房間代碼 ' + room.code"
           :caption="'房間 ' + room.code"
-          @click="copyCode" /><span
-          class="vue-room-seats"
-          :aria-label="players + ' 人已入座，最多 ' + maxPlayers + ' 人'"
-          ><span aria-hidden="true">●</span> {{ players }} / {{ maxPlayers }} 人</span
-        ><RoomInvite stitch
+          @click="copyCode" /><RoomInvite stitch
       /></div>
       <div class="vue-room-topbar-navigation"
         ><a class="vue-room-nav-home" href="/">遊戲大廳</a
@@ -86,7 +79,11 @@ async function copyCode() {
           aria-controls="vue-room-navigation"
           @click="navigation?.open($event.currentTarget as HTMLElement)" /><slot name="navigation"
       /></div>
-      <div class="vue-room-topbar-actions"><slot /></div>
+      <div class="vue-room-topbar-actions"
+        ><div v-if="$slots['game-actions']" class="vue-room-game-actions"
+          ><slot name="game-actions" /></div
+        ><slot
+      /></div>
       <div class="vue-room-code-feedback"><StatusSlot :message="notice" /></div>
     </nav>
   </Teleport>

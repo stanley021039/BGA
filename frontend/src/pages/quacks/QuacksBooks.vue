@@ -59,7 +59,11 @@ function keydown(event: KeyboardEvent) {
 }
 </script>
 <template>
-  <section class="vue-quacks-books vue-quacks-codex">
+  <section
+    class="vue-quacks-books vue-quacks-codex vue-quacks-books-rq"
+    :data-quacks-book="row?.color"
+    :data-book-set="face?.set"
+  >
     <header class="vue-quacks-codex-heading"
       ><h2>{{ game.setup ? '本局藥材書選擇' : '本局藥材書' }}</h2
       ><UiButton

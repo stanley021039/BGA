@@ -1,6 +1,19 @@
 @use 'tokens';
 @use 'stitch-tokens';
 
+// Explicit panel opt-in keeps legacy page selectors from changing the shared frame.
+// The music form retains an old ID selector, so its adapter needs the same scope.
+:root body[data-visual-theme] .vue-stitch-panel,
+:root body[data-visual-theme] .music-library #music-upload.vue-stitch-panel {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  border: 1px solid var(--stitch-line);
+  border-radius: var(--stitch-panel-radius);
+  background: var(--stitch-surface);
+  color: var(--stitch-ink);
+  box-shadow: none;
+}
+
 // Explicit component opt-in. The extra attribute also beats the legacy dark
 // playful-theme button.ui-button scope, including buttons in teleported panels.
 :root body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] {

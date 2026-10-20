@@ -91,11 +91,7 @@ function status(player: RoomPlayer) {
               ></select
             ></label
           ><StatusSlot
-            :message="
-              bluff.settingsPending
-                ? '正在儲存設定…'
-                : bluff.settingsError || (bluff.settingsSaved ? '設定已儲存。' : '')
-            "
+            :message="bluff.settingsPending ? '正在儲存設定…' : bluff.settingsError || ''"
             :error="!!bluff.settingsError" /><UiButton
             v-if="bluff.settingsError && bluff.editable"
             icon="refresh"
