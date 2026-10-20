@@ -12,6 +12,7 @@ import QuacksBooks from './QuacksBooks.vue';
 import UiButton from '../../components/UiButton.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import { useRoomStore } from '../../stores/room';
+defineProps<{ overlay?: boolean }>();
 const game = useQuacksStore(),
   room = useRoomStore(),
   s = computed(() => game.state!),
@@ -60,7 +61,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
       ></section
     >
     <template v-else-if="s.phase === 'brewing'"
-      ><QuacksPot v-if="game.viewed" :state="s" :recipe="game.viewed" /><section
+      ><QuacksPot v-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /><section
         v-if="m?.reserve.length || m?.alchemy?.pool.length || m?.alchemy?.returnable.length"
         class="vue-quacks-extra"
         ><h2>暫存與特效藥選擇</h2
@@ -114,11 +115,11 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
     <template v-else-if="s.phase === 'settlement' && m"
       ><template v-if="m.ready"
         ><p>你已完成本階段，等待其他人。</p
-        ><QuacksPot v-if="game.viewed" :state="s" :recipe="game.viewed" /></template
+        ><QuacksPot v-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /></template
       ><template v-else-if="s.stage === 'witches'"
         ><h2>全員大釜已公開，先決定適用女巫</h2><p>可先使用符合條件的女巫，再按下方準備結算。</p
         ><QuacksWitches /><QuacksPot
-          v-if="game.viewed"
+          v-if="!overlay && game.viewed"
           :state="s"
           :recipe="game.viewed" /></template
       ><section v-else-if="s.stage === 'bonus'"

@@ -4,15 +4,32 @@
   .collection-tabs {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: tokens.space(2);
+    gap: tokens.space(3);
+    padding: tokens.space(3);
+    border: 1px solid var(--stitch-line, var(--collection-line));
+    border-radius: tokens.space(3);
+    background: var(--stitch-surface, var(--collection-panel));
     margin-block-end: tokens.space(6);
   }
   .collection-tabs [role='tab'] {
-    padding: tokens.space(2);
+    min-inline-size: 0;
+    padding: tokens.space(2) tokens.space(3);
     block-size: 3.5rem;
+    gap: tokens.space(2);
   }
   .resource-panel {
-    block-size: clamp(34rem, calc(100dvh - 19rem), 64rem);
+    block-size: auto;
+    max-block-size: none;
+    grid-template-rows: repeat(5, auto);
+    align-content: start;
+  }
+  .resource-panel-content {
+    overflow: visible;
+    scrollbar-gutter: auto;
+    overscroll-behavior: auto;
+  }
+  .resource-panel-actions:empty {
+    display: none;
   }
   .collection-tools {
     margin: 0;
@@ -93,14 +110,16 @@
       margin-block-end: tokens.space(4);
     }
     .collection-tabs [role='tab'] {
-      block-size: 4.5rem;
-      flex-direction: column;
+      block-size: auto;
+      min-block-size: 3.5rem;
+      flex-direction: row;
+      flex-wrap: wrap;
       justify-content: center;
-      gap: tokens.space(1);
-      white-space: nowrap;
+      gap: tokens.space(2);
+      white-space: normal;
     }
     .resource-panel {
-      block-size: 48rem;
+      block-size: auto;
       padding: tokens.space(4);
     }
     .collection-tools {
@@ -143,6 +162,10 @@
   }
   .collection-card > h3 {
     margin: 0;
+    block-size: auto;
+    min-block-size: 1.5em;
+    overflow: visible;
+    overflow-wrap: anywhere;
   }
   .collection-card > .collection-current {
     position: absolute;
@@ -162,13 +185,14 @@
     visibility: hidden;
   }
   .collection-card > .collection-meta {
-    block-size: 1.5em;
+    block-size: auto;
     min-block-size: 1.5em;
-    max-block-size: 1.5em;
+    max-block-size: none;
     margin: 0;
     font-size: 0.875rem;
     line-height: 1.5;
-    overflow: auto;
+    overflow: visible;
+    overflow-wrap: anywhere;
   }
   .collection-card > .collection-actions {
     block-size: auto;

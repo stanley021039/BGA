@@ -32,9 +32,6 @@ const dark = computed(() => prefs.color?.scheme === 'dark'),
   accountTitle = computed(() =>
     session.user ? `${session.user.displayName}（${session.user.username}）` : '帳號選單',
   );
-const musicEnabled = computed(() => prefs.audio?.music.enabled === true),
-  musicVolume = computed(() => Math.round((prefs.audio?.music.volume || 0) * 100)),
-  audioAvailable = computed(() => !!prefs.audio && !!window.AudioSettings);
 const morePanel = ref<HTMLElement | null>(null),
   accountPosition = useFloatingPanel(accountButton, account, accountOpen, 360),
   morePosition = useFloatingPanel(moreButton, morePanel, moreOpen, 240, 'start');
@@ -67,19 +64,6 @@ function theme() {
 function openPreferences() {
   close();
   void preferences.value?.open(accountButton.value || undefined);
-}
-function toggleMusic() {
-  if (audioAvailable.value)
-    window.AudioSettings?.set('music', { enabled: !musicEnabled.value }, { gesture: true });
-}
-function setMusicVolume(event: Event) {
-  const volume = Number((event.target as HTMLInputElement).value);
-  if (audioAvailable.value && Number.isFinite(volume))
-    window.AudioSettings?.set(
-      'music',
-      { volume: Math.max(0, Math.min(100, volume)) / 100 },
-      { gesture: true },
-    );
 }
 async function loadIdentity() {
   if (disposed || document.hidden) return;
@@ -219,7 +203,6 @@ onBeforeUnmount(() => {
   >
     <a class="site-title vue-site-brand" href="/" aria-label="302捉猶團，返回大廳"
       ><img
-        v-if="room.seat"
         class="vue-room-brand-image"
         src="/assets/stitch/room-brand.svg"
         width="26"
@@ -313,39 +296,6 @@ onBeforeUnmount(() => {
             >
             <span v-if="room.seat && room.host" class="vue-site-account-badge">房主</span>
           </header>
-          <section class="vue-site-personal-audio" aria-label="只影響自己的背景音樂">
-            <div
-              ><label for="site-personal-music-volume">我的背景音樂音量</label
-              ><UiButton
-                stitch
-                variant="ghost"
-                :icon="musicEnabled ? 'sound' : 'muted'"
-                icon-only
-                :label="musicEnabled ? '靜音我的背景音樂' : '開啟我的背景音樂'"
-                :aria-pressed="musicEnabled"
-                :disabled="!audioAvailable"
-                @click="toggleMusic"
-            /></div>
-            <div class="vue-site-volume-control"
-              ><input
-                id="site-personal-music-volume"
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                :value="musicVolume"
-                :disabled="!audioAvailable"
-                aria-describedby="site-personal-audio-note"
-                :aria-valuetext="musicVolume + '%' + (musicEnabled ? '' : '，目前靜音')"
-                @input="setMusicVolume"
-              /><output for="site-personal-music-volume">{{ musicVolume }}%</output></div
-            >
-            <p id="site-personal-audio-note">{{
-              musicEnabled
-                ? '只影響我的裝置，不變更房間播放。'
-                : '目前靜音；調整音量不會開啟播放，也不影響其他人。'
-            }}</p>
-          </section>
           <nav class="vue-site-account-actions" aria-label="帳號功能">
             <UiButton
               stitch

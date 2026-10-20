@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import QuacksRoster from './QuacksRoster.vue';
 import { useQuacksStore } from '../../stores/quacks';
 import { readQuacksSnapshot } from '../../contracts/quacks';
 import type { RoomPlayer } from '../../contracts/room';
@@ -7,6 +8,8 @@ import GameRoomPage from '../../components/GameRoomPage.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import QuacksScene from './QuacksScene.vue';
+const scene = ref<InstanceType<typeof QuacksScene> | null>(null),
+  booksReady = ref(false);
 const game = useQuacksStore(),
   state = computed(() => game.state),
   stageNames: Record<string, string> = {
@@ -35,6 +38,15 @@ const phase = computed(() =>
           finished: '九回合完成',
         }[state.value?.phase as 'waiting'] || '正在讀取',
 );
+watch([() => state.value?.code, () => state.value?.phase], () => {
+  if (state.value?.phase === 'waiting') booksReady.value = false;
+});
+function prepareOrStart() {
+  if (state.value?.phase === 'waiting' && !booksReady.value) {
+    booksReady.value = true;
+    scene.value?.open('books');
+  } else void game.start();
+}
 function status(player: RoomPlayer) {
   const p = state.value?.recipes.find((p) => p.id === player.id);
   return p
@@ -74,19 +86,52 @@ function status(player: RoomPlayer) {
     :phase="phase"
     :round="state?.round ? `第 ${state.round}／9 回合` : ''"
     :max-players="8"
-    :status="status"
+    :status="state?.phase === 'waiting' ? () => '' : status"
+    :show-metrics="state?.phase !== 'waiting'"
     :setup="game.setup"
-    :can-start="(state?.players.length || 0) >= 2 && !game.settingsPending && !game.settingsError"
-    :start-label="state?.phase === 'finished' ? '再玩一局' : '開始煮藥'"
-    @start="game.start()"
-    ><template #player-metric="{ player }"
+    :can-start="
+      ((state?.phase === 'waiting' && !booksReady) || (state?.players.length || 0) >= 2) &&
+      !game.settingsPending &&
+      !game.settingsError
+    "
+    :start-label="
+      state?.phase === 'finished' ? '再玩一局' : !booksReady ? '設定完成，選藥材書' : '開始煮藥'
+    "
+    @start="prepareOrStart"
+    ><template #toolbar
+      ><UiButton
+        stitch
+        variant="ghost"
+        icon="crown"
+        icon-only
+        label="環形記分板"
+        @click="scene?.open('score')" /><UiButton
+        stitch
+        variant="ghost"
+        icon="book"
+        icon-only
+        label="藥材寶典"
+        @click="scene?.open('books')" /><UiButton
+        stitch
+        variant="ghost"
+        icon="cards"
+        icon-only
+        :label="state?.fortune ? '占卜：' + state.fortune.name : '本輪占卜牌'"
+        @click="scene?.open('fortune')"
+    /></template>
+    <template v-if="state && state.phase !== 'waiting' && state.phase !== 'finished'" #roster
+      ><QuacksRoster
+    /></template>
+    <template #player-metric="{ player }"
       ><strong>{{ player.score }}</strong
       ><span>分數</span
       ><span>寶石 {{ state?.recipes.find((p) => p.id === player.id)?.rubies || 0 }}</span></template
-    ><QuacksScene v-if="state" /><section v-else class="vue-game-panel"
+    ><QuacksScene v-if="state" ref="scene" @books-opened="booksReady = true" /><section
+      v-else
+      class="vue-game-panel"
       ><h1>正在讀取郎中房間…</h1></section
     ><template #settings
-      ><details class="vue-quacks-settings"
+      ><details class="vue-quacks-settings" open
         ><summary
           >{{ state?.options.witches ? '草藥女巫' : '基本版'
           }}{{ state?.options.alchemists ? '＋煉金術士' : '' }} ·

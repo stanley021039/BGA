@@ -628,14 +628,12 @@ onBeforeUnmount(() => {
             />
           </div>
         </header>
-        <span :id="id + '-move'" class="ui-sr-only"
-          >拖曳頂端移動，方向鍵微調，Home 重設位置；只影響自己。</span
-        >
+        <span :id="id + '-move'" class="ui-sr-only">拖曳頂端移動，方向鍵微調，Home 重設位置。</span>
         <div class="vue-media-content" :class="{ 'has-video': item?.type === 'video' }">
           <div v-show="item?.type === 'video'" class="vue-media-screen">
             <div v-show="videoActive" ref="videoHost" class="vue-media-video" />
             <div v-if="item?.type === 'video' && !videoActive" class="vue-media-consent"
-              ><UiIcon class="ui-icon" name="video" /><p>影片只在你接受後載入，其他人可繼續觀看。</p
+              ><UiIcon class="ui-icon" name="video" /><p>接受後載入影片。</p
               ><UiButton
                 stitch
                 variant="primary"

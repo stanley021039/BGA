@@ -54,13 +54,14 @@ watch(
 </script>
 <template>
   <UiButton
-    icon="bag"
-    icon-only
-    caption="藥袋"
-    label="查看藥袋"
+    class="vue-quacks-bag-button"
+    :data-quacks-bag="game.viewed?.id"
+    :caption="String(game.viewed?.bagCount ?? 0)"
+    :label="(game.viewed?.name || '我的') + '的藥袋，剩餘 ' + (game.viewed?.bagCount ?? 0) + ' 片'"
     :disabled="!game.state"
     @click="open"
-  /><UiDialog
+    ><template #icon><QuacksGlyph resource="bag" :size="42" /></template></UiButton
+  ><UiDialog
     ref="dialog"
     :title="(own ? '我的' : person?.name + '的') + '藥袋'"
     :dismissible="!commitClose"

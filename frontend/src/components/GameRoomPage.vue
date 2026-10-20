@@ -94,6 +94,8 @@ defineExpose({ refresh: page.refresh });
   <div
     v-else
     class="vue-game-workspace vue-room-shell"
+    :data-room-kind="type"
+    :data-room-phase="room.snapshot?.phase"
     :class="{ 'is-header-integrated': headerIntegrated }"
     ><RoomHeader
       :title="title"
@@ -131,21 +133,22 @@ defineExpose({ refresh: page.refresh });
     /></div>
     <div class="vue-game-grid"
       ><aside class="vue-game-roster-panel"
-        ><RoomRoster
-          :snapshot="room.snapshot"
-          :loading="!room.snapshot"
-          :max-players="maxPlayers"
-          :status="status"
-          :show-metric="showMetrics !== false"
-          ><template v-if="$slots['player-metric']" #metric="{ player }"
-            ><slot name="player-metric" :player="player" /></template
-          ><template #actions
-            ><UiButton
-              v-if="room.host && setup"
-              icon="add"
-              label="加入電腦玩家"
-              :disabled="room.busy || !botAllowed"
-              @click="room.command('bot', {})" /></template></RoomRoster></aside
+        ><slot name="roster" :bot-allowed="botAllowed"
+          ><RoomRoster
+            :snapshot="room.snapshot"
+            :loading="!room.snapshot"
+            :max-players="maxPlayers"
+            :status="status"
+            :show-metric="showMetrics !== false"
+            ><template v-if="$slots['player-metric']" #metric="{ player }"
+              ><slot name="player-metric" :player="player" /></template
+            ><template #actions
+              ><UiButton
+                v-if="room.host && setup"
+                icon="add"
+                label="加入電腦玩家"
+                :disabled="room.busy || !botAllowed"
+                @click="room.command('bot', {})" /></template></RoomRoster></slot></aside
       ><main class="vue-game-main"><slot /></main
       ><aside class="vue-game-side"
         ><section v-if="setup" class="vue-game-settings-panel"

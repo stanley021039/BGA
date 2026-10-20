@@ -480,6 +480,36 @@
     z-index: 2;
   }
 }
+@media (min-width: 901px) {
+  :root body[data-visual-theme] main#settings-app.vue-page.settings-page {
+    // The two columns share one height. Their final cards absorb the spare
+    // space, so the media and character panels finish on the same baseline.
+    .settings-l05-layout {
+      align-items: stretch;
+    }
+    .settings-account-column {
+      grid-template-rows: auto auto minmax(0, 1fr);
+      align-content: stretch;
+    }
+    #settings-form,
+    .settings-fields {
+      display: grid;
+      min-block-size: 0;
+    }
+    .settings-grid {
+      grid-template-rows: auto minmax(0, 1fr);
+      align-content: stretch;
+    }
+    .settings-character-panel {
+      grid-template-rows: auto auto minmax(15rem, 1fr) auto auto;
+      min-block-size: 0;
+    }
+    .settings-characters {
+      block-size: auto;
+      min-block-size: 15rem;
+    }
+  }
+}
 @media (max-width: 900px) {
   :root body[data-visual-theme] main#settings-app.vue-page.settings-page {
     padding: 1rem;

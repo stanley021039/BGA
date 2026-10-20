@@ -202,8 +202,17 @@ body .vue-frame-preview-viewport > .vue-frame-preview-stage {
     font-size: var(--stitch-font-14);
     line-height: 1.5;
     > .ui-icon {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
       inline-size: 16px;
       block-size: 16px;
+      > svg.ui-icon {
+        inline-size: 100%;
+        block-size: 100%;
+        margin: 0;
+      }
     }
   }
   &.is-media-picker .vue-frame-picker-type {
@@ -212,7 +221,7 @@ body .vue-frame-preview-viewport > .vue-frame-preview-stage {
   }
   .vue-frame-picker-note {
     display: flex;
-    align-items: start;
+    align-items: center;
     gap: var(--stitch-space-8);
     margin: 0;
     padding: var(--stitch-space-8) var(--stitch-space-24);
@@ -222,10 +231,18 @@ body .vue-frame-preview-viewport > .vue-frame-preview-stage {
     font-size: var(--stitch-font-14);
     line-height: 1.5;
     > .ui-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       flex: none;
       inline-size: 16px;
       block-size: 16px;
-      margin-block-start: 2px;
+      margin-block-start: 0;
+      > svg.ui-icon {
+        inline-size: 100%;
+        block-size: 100%;
+        margin: 0;
+      }
     }
   }
   .vue-frame-picker-scroll {

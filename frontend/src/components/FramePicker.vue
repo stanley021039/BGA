@@ -35,17 +35,11 @@ defineExpose({ open: (source?: HTMLElement) => dialog.value?.open(source) });
           kind === 'media' ? '共用主題外觀' : '共 ' + prefs.frames.length + ' 款樣式'
         }}</span
       ><p>{{
-        kind === 'media'
-          ? '延伸彈幕框風格，只改自己的外觀，與彈幕框共用模板。'
-          : '個性化你的彈幕，全站遊戲文字與 emoji 彈幕共用。'
+        kind === 'media' ? '預覽播放器外觀，選擇喜歡的框飾。' : '全站遊戲文字與 emoji 彈幕共用。'
       }}</p></div
     >
     <p class="vue-frame-picker-note"
-      ><UiIcon class="ui-icon" name="help" />{{
-        kind === 'media'
-          ? '更換後立即套用至自己的播放器，不影響其他玩家。'
-          : '點選即套用至這個瀏覽器的遊戲彈幕，不影響其他玩家。'
-      }}</p
+      ><UiIcon class="ui-icon" name="help" />點選款式即可套用並儲存。</p
     >
     <div class="vue-frame-picker-scroll"
       ><div v-if="filterable" class="vue-frame-filters"
@@ -63,7 +57,7 @@ defineExpose({ open: (source?: HTMLElement) => dialog.value?.open(source) });
       ><div
         ><span>{{ kind === 'media' ? '當前外觀：' : '目前使用：' }}</span
         ><strong class="vue-frame-current-selection">✓ {{ selectedLabel }}</strong
-        ><span class="vue-frame-picker-save-note">點選即儲存此瀏覽器</span></div
+        ><span class="vue-frame-picker-save-note">點選即儲存</span></div
       ><UiButton stitch variant="contrast" label="關閉視窗" @click="dialog?.close()"
     /></footer>
   </UiDialog>

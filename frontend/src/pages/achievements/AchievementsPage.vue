@@ -10,7 +10,7 @@ onMounted(() => void store.load());
 <template>
   <div class="page-heading"
     ><div class="kicker">YOUR TABLE MOMENTS</div><h1>成就收藏冊<span>✦</span></h1
-    ><p>記下玩過的桌遊時刻。徽章只供自己收藏，不影響分數與遊戲能力。</p></div
+    ><p>記下玩過的桌遊時刻。</p></div
   >
   <section class="page-panel achievements-panel" aria-labelledby="achievementHeading">
     <div class="panel-heading"

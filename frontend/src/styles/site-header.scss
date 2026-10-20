@@ -368,6 +368,9 @@ $c03: 'body[data-visual-theme] [data-site-header].site-header.vue-site-header:ha
     position: relative;
   }
   .vue-site-header-c03 > .vue-site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: t.space(2);
     grid-column: 1;
     grid-row: 1;
     justify-self: start;
@@ -386,6 +389,12 @@ $c03: 'body[data-visual-theme] [data-site-header].site-header.vue-site-header:ha
     &::after {
       content: none;
     }
+  }
+  .vue-room-brand-image {
+    display: block;
+    flex: 0 0 26px;
+    inline-size: 26px;
+    block-size: 26px;
   }
   .vue-site-header-c03 > .vue-site-nav {
     grid-column: 2;
@@ -567,59 +576,6 @@ $c03: 'body[data-visual-theme] [data-site-header].site-header.vue-site-header:ha
     font-size: 12px;
     line-height: 18px;
     white-space: nowrap;
-  }
-  .vue-site-personal-audio {
-    display: grid;
-    gap: 4px;
-    min-inline-size: 0;
-    padding-block: t.space(3);
-    border-block-end: 1px solid var(--stitch-line, var(--play-line));
-    > div:first-child {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: t.space(2);
-      min-block-size: 44px;
-    }
-    label {
-      font-size: 14px;
-      line-height: 21px;
-      font-weight: 700;
-      color: inherit;
-    }
-    > p {
-      box-sizing: border-box;
-      block-size: 42px;
-      min-block-size: 42px;
-      max-block-size: 42px;
-      margin: 0;
-      overflow: auto;
-      color: var(--stitch-muted, var(--play-muted));
-      font-size: 12px;
-      line-height: 21px;
-    }
-  }
-  .vue-site-volume-control {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 4ch;
-    align-items: center;
-    gap: t.space(3);
-    min-block-size: 28px;
-    input {
-      display: block;
-      inline-size: 100%;
-      min-inline-size: 0;
-      min-block-size: 24px;
-      margin: 0;
-      padding: 0;
-      accent-color: var(--stitch-blue, #0051d5);
-    }
-    output {
-      font-size: 12px;
-      line-height: 18px;
-      text-align: end;
-      font-variant-numeric: tabular-nums;
-    }
   }
   .vue-site-account-actions {
     display: grid;

@@ -1,0 +1,266 @@
+@use 'tokens' as t;
+
+// A dedicated public-resource card avoids the generic roster's score column.
+// The room shell owns its outer track; only this list scrolls on desktop.
+:root body[data-visual-theme] section.vue-quacks-roster {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  flex: 1;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  gap: t.space(3);
+  color: var(--stitch-ink);
+  > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: t.space(2);
+    min-block-size: 2rem;
+    h2 {
+      margin: 0;
+      @include t.type(p2);
+      font-weight: 700;
+    }
+    > span {
+      @include t.type(p3);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+  .vue-quacks-roster-list {
+    display: grid;
+    align-content: start;
+    gap: t.space(2);
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+  }
+  .vue-quacks-roster-empty {
+    margin: 0;
+    padding: t.space(3);
+    @include t.type(p3);
+  }
+  .vue-quacks-player {
+    display: grid;
+    align-content: start;
+    gap: t.space(2);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    padding: t.space(2);
+    border: 1px solid var(--stitch-line);
+    border-inline-start: 3px solid var(--quacks-roster-pot, var(--stitch-line));
+    border-radius: t.space(2);
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    &[data-self='true'] {
+      background: var(--stitch-selected-bg);
+      color: var(--stitch-selected-ink);
+    }
+    &[data-viewed='true'] {
+      outline: 1px solid var(--stitch-focus);
+      outline-offset: -1px;
+    }
+    &[data-exploded='true'] {
+      border-block-end-color: var(--stitch-danger-ink);
+    }
+  }
+  .vue-quacks-player-heading {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    gap: t.space(2);
+    min-inline-size: 0;
+    min-block-size: 2.8125rem;
+    > .vue-player-avatar {
+      inline-size: 40px;
+      block-size: 40px;
+    }
+  }
+  .vue-quacks-player-copy {
+    min-inline-size: 0;
+    > p {
+      margin: 0;
+      block-size: 1.3125rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      @include t.type(p3);
+    }
+  }
+  .vue-quacks-player-name {
+    display: flex;
+    align-items: center;
+    gap: t.space(1);
+    min-inline-size: 0;
+    min-block-size: 1.5rem;
+    > .vue-player-name {
+      display: block;
+      flex: 1;
+      min-inline-size: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      @include t.type(p2);
+      font-weight: 700;
+      > .ui-player-name-text {
+        display: block;
+        inline-size: 100%;
+        max-inline-size: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        animation: none;
+        transform: none;
+      }
+    }
+    > small {
+      flex: none;
+      @include t.type(p3);
+    }
+  }
+  .vue-quacks-player-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: t.space(2);
+    min-inline-size: 0;
+    min-block-size: 2.75rem;
+    > button {
+      flex: none;
+    }
+  }
+  .vue-quacks-player-score {
+    display: flex;
+    align-items: baseline;
+    gap: t.space(1);
+    min-inline-size: 0;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    strong {
+      @include t.type(h2);
+      min-inline-size: 3ch;
+      text-align: end;
+      overflow-wrap: anywhere;
+    }
+    > span {
+      @include t.type(p3);
+    }
+  }
+  .vue-quacks-player-resources {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: t.space(1);
+    min-inline-size: 0;
+    > span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 2px;
+      min-inline-size: 0;
+      min-block-size: 1.75rem;
+    }
+    strong {
+      @include t.type(p3);
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-quacks-glyph {
+    display: block;
+    flex: none;
+    > svg {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+  .vue-quacks-player-risk {
+    display: grid;
+    grid-template-rows: auto 6px 1.3125rem;
+    gap: t.space(1);
+    min-inline-size: 0;
+    min-block-size: 3.25rem;
+    > p {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: t.space(1);
+      margin: 0;
+      @include t.type(p3);
+    }
+    > small {
+      grid-row: 3;
+      @include t.type(p3);
+    }
+    &[data-danger='true'],
+    &[data-exploded='true'] {
+      --quacks-risk-color: var(--stitch-danger-ink);
+    }
+  }
+  .vue-quacks-player-risk-track {
+    min-inline-size: 0;
+    block-size: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    > span {
+      display: block;
+      block-size: 100%;
+      background: var(--quacks-risk-color, var(--stitch-success));
+    }
+  }
+  .vue-quacks-player-tray {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    align-content: start;
+    gap: t.space(1);
+    min-block-size: 3.5rem;
+    min-inline-size: 0;
+    > p {
+      margin: 0;
+      @include t.type(p3);
+    }
+  }
+  .vue-quacks-player-omitted {
+    display: grid;
+    place-items: center;
+    min-inline-size: 26px;
+    block-size: 26px;
+    @include t.type(p3);
+    font-variant-numeric: tabular-nums;
+  }
+  .vue-quacks-player-coins {
+    display: flex;
+    align-items: center;
+    gap: t.space(2);
+    min-block-size: 1.75rem;
+    @include t.type(p3);
+    > span[data-used='true'] {
+      opacity: 0.4;
+      filter: grayscale(1);
+    }
+  }
+  .vue-quacks-roster-list:focus-visible {
+    outline: 2px solid var(--stitch-focus);
+    outline-offset: -2px;
+  }
+}
+@media (max-width: 1100px) and (min-width: 761px) {
+  :root body[data-visual-theme] section.vue-quacks-roster .vue-quacks-roster-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-block-size: 28rem;
+  }
+}
+@media (max-width: 760px) {
+  :root body[data-visual-theme] section.vue-quacks-roster .vue-quacks-roster-list {
+    max-block-size: 36rem;
+  }
+}

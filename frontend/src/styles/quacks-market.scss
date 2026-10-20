@@ -1,0 +1,192 @@
+// Keep the shopping tray compact; full rules remain one book button away.
+:root body[data-visual-theme] .vue-quacks-market.vue-quacks-compact-market {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-inline-size: 0;
+  .vue-quacks-market-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-block-end: 8px;
+    border-block-end: 1px solid var(--play-line);
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    > span {
+      font-size: 14px;
+    }
+  }
+  .vue-quacks-market-budget {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-block-size: 64px;
+    padding: 12px;
+    border-radius: 8px;
+    background: var(--stitch-primary, #f6c845);
+    color: var(--stitch-primary-ink, #292410);
+    font-variant-numeric: tabular-nums;
+    > strong {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-size: 24px;
+    }
+    > strong > span {
+      font-size: 14px;
+    }
+    > span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 24px;
+    }
+  }
+  .vue-quacks-market-note {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .vue-quacks-market-cart {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    block-size: 44px;
+    min-inline-size: 0;
+    padding: 4px 8px;
+    overflow: auto;
+    border-radius: 8px;
+    background: var(--play-paper);
+    > span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: none;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+  }
+  .vue-quacks-market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    align-items: stretch;
+    gap: 8px;
+    min-inline-size: 0;
+  }
+  .vue-quacks-market-grid > article {
+    display: grid;
+    grid-template-rows: 44px auto;
+    align-content: start;
+    gap: 8px;
+    min-inline-size: 0;
+    padding: 8px;
+    border: 1px solid var(--play-line);
+    border-radius: 8px;
+    background: var(--play-paper);
+    > header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-inline-size: 0;
+    }
+  }
+  .vue-quacks-market-offers {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    min-inline-size: 0;
+    > button:only-child {
+      grid-column: 1 / -1;
+    }
+  }
+  .vue-quacks-market-offers > button {
+    --ui-button-radius: 8px;
+    --ui-button-border-width: 1px;
+    --ui-button-border-color: var(--play-line);
+    position: relative;
+    display: grid;
+    grid-template-rows: 52px 24px 16px;
+    place-items: center;
+    align-content: center;
+    gap: 4px;
+    min-inline-size: 0;
+    min-block-size: 108px;
+    padding: 4px;
+    background: var(--play-surface);
+    color: var(--play-ink);
+    font-size: 14px;
+    line-height: 1.5;
+    &[aria-pressed='true'] {
+      background: var(--stitch-selected-bg);
+      color: var(--stitch-selected-ink);
+      outline: 2px solid var(--stitch-primary);
+      outline-offset: -2px;
+    }
+    &:focus-visible {
+      outline: 3px solid var(--stitch-focus);
+      outline-offset: 2px;
+    }
+    &:disabled {
+      cursor: default;
+      opacity: 0.5;
+    }
+    &[aria-pressed='true']:disabled {
+      opacity: 0.8;
+    }
+    > .vue-quacks-market-price {
+      font-size: 16px;
+      line-height: 1.5;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+    > .vue-quacks-market-mark {
+      display: grid;
+      place-items: center;
+      inline-size: 16px;
+      block-size: 16px;
+      > span,
+      svg {
+        display: block;
+        inline-size: 16px;
+        block-size: 16px;
+      }
+    }
+  }
+}
+:root body dialog.vue-dialog.ui-dialog.vue-quacks-market-book-dialog {
+  inline-size: min(1040px, calc(100vw - 24px));
+  max-inline-size: calc(100vw - 24px);
+}
+@media (max-width: 760px) {
+  :root body[data-visual-theme] .vue-quacks-market.vue-quacks-compact-market {
+    .vue-quacks-market-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .vue-quacks-market-offers {
+      grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+    }
+    .vue-quacks-market-offers > button {
+      grid-template-rows: 44px 24px 16px;
+      min-block-size: 100px;
+      > .vue-quacks-glyph {
+        inline-size: 44px !important;
+        block-size: 44px !important;
+      }
+    }
+  }
+}
+@media (max-width: 420px) {
+  :root
+    body[data-visual-theme]
+    .vue-quacks-market.vue-quacks-compact-market
+    .vue-quacks-market-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

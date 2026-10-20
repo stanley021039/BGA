@@ -1,0 +1,23 @@
+// Keep the switch thumb centered even when inherited input metrics change.
+// The surrounding label retains the full 44px interaction target.
+:root body .vue-game-preferences.vue-approved-preferences {
+  .vue-preference-switch input[type='checkbox'][role='switch'] {
+    padding: 0;
+    line-height: 1;
+    &::before {
+      inset-block-start: 50%;
+      transform: translateY(-50%);
+    }
+  }
+  .vue-preference-volume {
+    display: grid;
+    align-items: center;
+    output {
+      display: flex;
+      align-items: center;
+      min-block-size: 2.75rem;
+      margin: 0;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}

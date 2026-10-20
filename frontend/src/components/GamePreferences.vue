@@ -6,6 +6,7 @@ import { record, text } from '../services/validation';
 import UiButton from './UiButton.vue';
 import UiIcon from './UiIcon.vue';
 import '../styles/approved-lobby.scss';
+import '../styles/game-preferences.scss';
 import FramePicker from './FramePicker.vue';
 import StatusSlot from './StatusSlot.vue';
 const prefs = usePreferencesStore(),
@@ -13,6 +14,7 @@ const prefs = usePreferencesStore(),
   media = ref<InstanceType<typeof FramePicker> | null>(null),
   status = ref('');
 let clip: HTMLAudioElement | undefined;
+let lastVolumeCue = -Infinity;
 const version = useResource(async (request) => {
   const value = text(record(await request('/api/version')).version);
   if (!/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(value) || value.length > 30)
@@ -27,12 +29,20 @@ function theme(event: Event) {
 }
 function audio(kind: 'music' | 'effects', event: Event, volume = false) {
   const input = event.target as HTMLInputElement;
-  window.AudioSettings?.set(
-    kind,
-    volume ? { volume: Number(input.value) / 100 } : { enabled: input.checked },
-    { gesture: true },
-  );
+  const settings = window.AudioSettings;
+  const previousVolume = settings?.get()[kind].volume;
+  settings?.set(kind, volume ? { volume: Number(input.value) / 100 } : { enabled: input.checked }, {
+    gesture: event.isTrusted,
+  });
   status.value = '';
+  if (
+    kind === 'effects' &&
+    volume &&
+    event.isTrusted &&
+    previousVolume !== Number(input.value) / 100
+  ) {
+    previewVolume();
+  }
 }
 function barrages(event: Event) {
   window.MotionPolicy?.set({ barrages: (event.target as HTMLInputElement).checked });
@@ -40,10 +50,17 @@ function barrages(event: Event) {
 function frames(event: Event) {
   window.BarrageFrames?.set({ enabled: (event.target as HTMLInputElement).checked });
 }
-function preview() {
-  if (clip) window.AudioSettings?.stopEffect(clip);
-  status.value = '';
-  clip = window.AudioSettings?.playEffect?.('confirm', {
+function previewVolume() {
+  const settings = window.AudioSettings;
+  const effects = settings?.get().effects;
+  if (!effects?.enabled || !effects.volume || document.hidden) return;
+  const now = performance.now();
+  // A drag updates the current clip's gain through AudioSettings; do not queue
+  // a new sound for every input event or replay anything after the gesture.
+  if (now - lastVolumeCue < 350) return;
+  if (clip) settings?.stopEffect(clip);
+  lastVolumeCue = now;
+  clip = settings?.playEffect?.('turn', {
     onError: () => {
       status.value = '無法播放音效，請再試一次。';
     },
@@ -56,7 +73,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="vue-game-preferences vue-approved-preferences">
     <div class="vue-preferences-scroll">
-      <p class="vue-preferences-intro">全遊戲共用 · 只調整你的體驗</p>
+      <p class="vue-preferences-intro">全遊戲共用</p>
       <section class="vue-preference-group vue-preference-theme"
         ><label
           >外觀模式<select :value="prefs.color?.preference || 'auto'" @change="theme"
@@ -93,15 +110,6 @@ onBeforeUnmount(() => {
               @input="audio(kind, $event, true)"
             /><output>{{ Math.round((prefs.audio?.[kind].volume || 0) * 100) }}%</output></label
           >
-          <UiButton
-            v-if="kind === 'effects'"
-            stitch
-            variant="secondary"
-            icon="sound"
-            label="試聽音效"
-            :disabled="!prefs.audio?.effects.enabled || !prefs.audio.effects.volume"
-            @click="preview"
-          />
         </div>
       </section>
       <section class="vue-preference-group"

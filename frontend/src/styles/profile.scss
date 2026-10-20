@@ -1,185 +1,469 @@
-@use 'tokens';
+@use 'tokens' as t;
 
-.vue-page.profile-editor-page {
-  padding-block: tokens.space(6);
-  .page-heading {
-    margin-block-end: tokens.space(2);
-  }
-  .page-heading h1 {
-    @include tokens.type(h1);
-    margin-block: tokens.space(2);
-    gap: tokens.space(4);
-  }
-  .page-heading p {
-    @include tokens.type(p2);
-  }
-  .profile-load-slot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: tokens.space(3);
-    block-size: 2.75rem;
-    overflow: auto;
-  }
-  .profile-layout {
-    grid-template-columns: minmax(18rem, 0.85fr) minmax(0, 1.15fr);
-    gap: tokens.space(6);
-    align-items: stretch;
-  }
-  .avatar-stage,
-  .editor-panel {
-    block-size: clamp(34rem, calc(100dvh - 18rem), 60rem);
-    min-block-size: 0;
+:root body[data-visual-theme].profile-page {
+  --profile-background: #faf8f5;
+  background: var(--profile-background);
+  color: var(--stitch-ink);
+  .vue-page.profile-editor-page {
     box-sizing: border-box;
+    inline-size: min(100%, 1280px);
+    max-inline-size: 1280px;
+    margin-inline: auto;
+    padding: 24px 32px 40px;
+    color: var(--stitch-ink);
+    .profile-heading {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      margin: 0;
+      text-align: center;
+      .kicker {
+        margin: 0;
+        color: var(--stitch-muted);
+        font-size: var(--stitch-font-14);
+        letter-spacing: 0.04em;
+      }
+      h1 {
+        @include t.type(h1);
+        margin: 0;
+        color: var(--stitch-ink);
+        letter-spacing: 0;
+      }
+      p {
+        @include t.type(p3);
+        margin: 0;
+        color: var(--stitch-muted);
+      }
+    }
+    .profile-load-slot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      block-size: 32px;
+      overflow: auto;
+      font-size: var(--stitch-font-14);
+    }
+    .profile-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.285fr) minmax(0, 0.715fr);
+      align-items: stretch;
+      gap: 24px;
+      min-inline-size: 0;
+    }
+    .profile-preview-card,
+    .profile-gallery-card {
+      box-sizing: border-box;
+      min-inline-size: 0;
+      min-block-size: 669px;
+      margin: 0;
+      padding: 20px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 12px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      h2 {
+        @include t.type(p1);
+        margin: 0;
+        color: inherit;
+      }
+      h3 {
+        @include t.type(p2);
+        margin: 0;
+        color: inherit;
+      }
+    }
+    .profile-preview-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .profile-preview-image {
+      display: grid;
+      place-items: center;
+      inline-size: 100%;
+      aspect-ratio: 1;
+      min-inline-size: 0;
+      overflow: hidden;
+      border-radius: 8px;
+      background: var(--stitch-surface-subtle);
+      > img {
+        display: block;
+        inline-size: 88%;
+        block-size: 88%;
+        max-inline-size: 100%;
+        max-block-size: 100%;
+        object-fit: contain;
+      }
+      > span {
+        padding: 16px;
+        font-size: var(--stitch-font-14);
+      }
+    }
+    .profile-preview-name {
+      min-block-size: 24px;
+      margin: 0;
+      text-align: center;
+      color: var(--stitch-muted);
+      font-size: var(--stitch-font-14);
+      overflow-wrap: anywhere;
+    }
+    .profile-expression-section {
+      display: grid;
+      gap: 8px;
+      margin-block-start: 8px;
+    }
+    .profile-expression-choices {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      > button {
+        min-inline-size: 0;
+        padding-inline: 4px;
+        font-size: var(--stitch-font-14);
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      > button[aria-pressed='true'] {
+        --stitch-button-border-color: var(--stitch-primary);
+        --stitch-button-fill: var(--stitch-selected-bg);
+        background: var(--stitch-selected-bg);
+      }
+    }
+    .profile-preview-actions {
+      display: grid;
+      gap: 8px;
+      margin-block-start: 4px;
+    }
+    .profile-studio-link {
+      --ui-button-radius: 8px;
+      --ui-button-border-color: var(--stitch-line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-sizing: border-box;
+      inline-size: 100%;
+      min-block-size: 44px;
+      min-inline-size: 0;
+      margin: 0;
+      padding: 8px 12px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      font-size: var(--stitch-font-14);
+      text-decoration: none;
+      white-space: normal;
+    }
+    .profile-preview-actions .frontend-status {
+      margin: 0;
+      padding: 0;
+      min-block-size: 0;
+      block-size: 24px;
+      max-block-size: 24px;
+      overflow: auto;
+      font-size: var(--stitch-font-14);
+    }
+    .profile-gallery-card {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .profile-gallery-heading {
+      display: grid;
+      gap: 8px;
+      padding: 0;
+      margin: 0;
+      min-block-size: 0;
+    }
+    .profile-gallery-heading > p {
+      margin: 0;
+      font-size: var(--stitch-font-14);
+      color: var(--stitch-muted);
+    }
+    .preset-section {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    .vue-image-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      max-block-size: none;
+      overflow: visible;
+    }
+    .preset-gallery > button.vue-image-choice {
+      --ui-button-radius: 8px;
+      --ui-button-border-color: var(--stitch-line);
+      --ui-button-border-width: 1px;
+      display: grid;
+      grid-template-rows: 72px minmax(21px, auto) minmax(21px, auto);
+      align-content: start;
+      gap: 8px;
+      min-inline-size: 0;
+      margin: 0;
+      padding: 12px 8px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      box-shadow: none;
+      > img {
+        inline-size: 100%;
+        block-size: 72px;
+        min-block-size: 0;
+        object-fit: contain;
+        margin: 0;
+      }
+      > span,
+      > small {
+        min-block-size: 0;
+        margin: 0;
+        font-size: var(--stitch-font-14);
+        line-height: 1.5;
+        color: inherit;
+        overflow-wrap: anywhere;
+      }
+      > small {
+        color: var(--stitch-muted);
+      }
+      &[aria-pressed='true'] {
+        --ui-button-border-color: var(--stitch-primary);
+        border-color: var(--stitch-primary);
+        background: var(--stitch-selected-bg);
+        color: var(--stitch-selected-ink);
+        outline: 1px solid var(--stitch-primary);
+        outline-offset: -1px;
+      }
+      &:focus-visible {
+        outline: 2px solid var(--stitch-focus);
+        outline-offset: 2px;
+      }
+    }
+    .gallery-empty {
+      box-sizing: border-box;
+      min-block-size: 48px;
+      margin: 0;
+      padding: 12px 16px;
+      border: 1px dashed var(--stitch-line);
+      border-radius: 8px;
+      color: var(--stitch-muted);
+      font-size: var(--stitch-font-14);
+    }
+    .sharing-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+      font-size: var(--stitch-font-14);
+    }
+    .profile-gallery-card > .frontend-status {
+      min-block-size: 0;
+      margin: 0;
+      font-size: var(--stitch-font-14);
+    }
+    .profile-gallery-card > .frontend-status:empty {
+      display: none;
+    }
+    .artist-templates {
+      box-sizing: border-box;
+      margin-block-start: 24px;
+      padding: 0 24px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 12px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      font-size: var(--stitch-font-16);
+      > summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-block-size: 64px;
+        list-style: none;
+        color: inherit;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      > summary::-webkit-details-marker {
+        display: none;
+      }
+      .profile-upload-plus {
+        flex: none;
+        font-size: var(--stitch-font-24);
+        font-weight: 400;
+      }
+      &[open] .profile-upload-plus {
+        transform: rotate(45deg);
+      }
+      > p {
+        margin: 0 0 16px;
+        color: var(--stitch-muted);
+        font-size: var(--stitch-font-14);
+      }
+    }
+    .artist-templates .profile-upload-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      align-items: stretch;
+    }
+    .upload-group,
+    .expression-sound {
+      margin: 0 0 24px;
+      padding: 20px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface-subtle);
+      color: var(--stitch-ink);
+    }
+    .upload-group h3,
+    .expression-sound h3 {
+      @include t.type(p2);
+      color: inherit;
+    }
+    .upload-group > p,
+    .expression-sound > p {
+      margin: 8px 0 16px;
+      color: var(--stitch-muted);
+      font-size: var(--stitch-font-14);
+    }
+    .character-upload {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
+      margin: 0;
+    }
+    .character-upload label,
+    .expression-sound label {
+      display: grid;
+      gap: 8px;
+      min-inline-size: 0;
+      font-size: var(--stitch-font-16);
+      color: inherit;
+    }
+    .character-upload input,
+    .expression-sound input {
+      box-sizing: border-box;
+      inline-size: 100%;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      min-block-size: 44px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      font-size: var(--stitch-font-16);
+    }
+    .artist-templates .upload-drop {
+      display: grid;
+      place-items: center;
+      min-block-size: 88px;
+      margin: 0;
+      padding: 16px;
+      border: 1px dashed var(--stitch-line);
+      border-radius: 8px;
+      color: var(--stitch-muted);
+      background: var(--stitch-surface);
+      font-size: var(--stitch-font-14);
+    }
+    .artist-templates .artwork-picker {
+      display: block;
+      margin: 0;
+    }
+    .artist-templates .artwork-picker > strong {
+      display: block;
+      margin-block-end: 8px;
+      color: inherit;
+      font-size: var(--stitch-font-14);
+    }
+    .artist-templates .artwork-choices {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 12px;
+      max-block-size: 240px;
+      overflow: auto;
+    }
+    .expression-sound-actions,
+    .expression-sound-upload {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin: 12px 0;
+    }
+    .expression-sound-actions > span,
+    .expression-sound-upload > p {
+      font-size: var(--stitch-font-14);
+    }
+    .expression-sound .frontend-status {
+      min-block-size: 24px;
+      margin: 0;
+    }
   }
-  .avatar-stage {
-    position: relative;
-    top: auto;
-  }
-  .avatar-frame {
-    inline-size: min(70%, 16.875rem);
-    block-size: min(70%, 24.375rem);
-  }
-  .stage-caption {
-    position: relative;
-    inset: auto;
-    inline-size: calc(100% - 3rem);
-    margin-block-start: tokens.space(6);
-    gap: tokens.space(2);
-  }
-  .stage-caption span {
-    font-size: 0.875rem;
-    letter-spacing: 0.08em;
-  }
-  .stage-caption strong {
-    @include tokens.type(h2);
-  }
-  .editor-panel {
-    display: flex;
-    flex-direction: column;
-    padding: tokens.space(6);
-  }
-  .panel-heading {
-    flex-shrink: 0;
-  }
-  .panel-number {
-    font-size: 0.875rem;
-  }
-  .profile-editor-content {
-    flex: 1;
-    min-block-size: 0;
-    overflow: auto;
-    scrollbar-gutter: stable;
-    padding: tokens.space(1);
-  }
-  .editor-actions {
-    flex-shrink: 0;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: tokens.space(3);
-    margin-block-start: tokens.space(4);
-    padding-block-start: tokens.space(4);
-  }
-  .editor-actions .frontend-status {
-    margin: 0;
-  }
-  .editor-actions .studio-link {
-    grid-column: 1/-1;
-    margin: 0;
-  }
-  .preset-section {
-    padding-block-end: tokens.space(4);
-    margin-block-end: tokens.space(4);
-  }
-  .preset-section h3 {
-    font-size: 1.125rem;
-    letter-spacing: 0;
-  }
-  .preset-gallery,
-  .expression-gallery {
-    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-    gap: tokens.space(2);
-  }
-  :is(.preset-card, .expression-card) :is(span, small) {
-    font-size: 0.875rem;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-  }
-  .gallery-empty {
-    font-size: 0.875rem;
-  }
-  .artist-templates {
-    font-size: 1rem;
-  }
-  .artist-templates .artwork-picker > strong {
-    font-size: 0.875rem;
-  }
-  .artist-templates .artwork-choices {
-    gap: tokens.space(2);
-  }
-  .artwork-choice :is(span, small) {
-    font-size: 0.875rem;
-  }
-  .character-upload {
-    grid-template-columns: minmax(0, 1fr);
-    gap: tokens.space(3);
-  }
-  .character-upload :is(label, input) {
-    min-inline-size: 0;
-    font-size: 1rem;
-  }
-  .character-upload .frontend-status {
-    grid-column: 1/-1;
-  }
-  .sharing-controls {
-    flex-wrap: wrap;
-    gap: tokens.space(3);
-    font-size: 0.875rem;
-  }
-  .expression-sound {
-    padding: tokens.space(4);
-  }
-  .upload-group h3,
-  .expression-sound h3 {
-    @include tokens.type(p1);
-  }
-  .expression-sound :is(input, label) {
-    min-inline-size: 0;
-    max-inline-size: 100%;
-  }
-  .expression-sound-actions,
-  .expression-sound-upload {
-    gap: tokens.space(3);
+}
+:root[data-color-scheme='dark'] body[data-visual-theme].profile-page {
+  --profile-background: var(--stitch-base);
+}
+@media (max-width: 1000px) {
+  :root body[data-visual-theme].profile-page .vue-page.profile-editor-page {
+    .profile-layout {
+      grid-template-columns: minmax(230px, 0.32fr) minmax(0, 0.68fr);
+    }
+    .vue-image-choice-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 }
 @media (max-width: 760px) {
-  .vue-page.profile-editor-page {
-    .profile-load-slot {
-      block-size: 2.75rem;
-    }
+  :root body[data-visual-theme].profile-page .vue-page.profile-editor-page {
+    padding: 24px 16px 32px;
     .profile-layout {
       grid-template-columns: minmax(0, 1fr);
-      gap: tokens.space(4);
+      gap: 16px;
     }
-    .avatar-stage {
-      block-size: 24rem;
+    .profile-preview-card,
+    .profile-gallery-card {
+      min-block-size: 0;
+      padding: 16px;
     }
-    .avatar-frame {
-      inline-size: 11rem;
-      block-size: 16rem;
+    .profile-preview-image {
+      inline-size: min(100%, 320px);
+      align-self: center;
     }
-    .stage-caption {
-      margin-block-start: tokens.space(4);
+    .profile-gallery-card {
+      gap: 24px;
     }
-    .editor-panel {
-      block-size: 48rem;
-      padding: tokens.space(4);
+    .vue-image-choice-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
     }
-    .editor-actions {
+    .preset-gallery > button.vue-image-choice {
+      padding: 8px 4px;
+      grid-template-rows: 64px minmax(42px, auto) minmax(21px, auto);
+      > img {
+        block-size: 64px;
+      }
+    }
+    .artist-templates {
+      margin-block-start: 16px;
+      padding-inline: 16px;
+    }
+
+    .artist-templates .profile-upload-grid {
       grid-template-columns: minmax(0, 1fr);
+      gap: 16px;
     }
-    .editor-actions .page-button {
-      min-inline-size: 0;
+    .upload-group,
+    .expression-sound {
+      padding: 16px;
     }
   }
 }

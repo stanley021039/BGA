@@ -28,6 +28,7 @@ const game = useQuacksStore(),
         ><template v-if="m.canDraw"
           ><UiButton
             class="vue-quacks-draw-action"
+            data-quacks-action="draw"
             icon="draw-bag"
             label="還要爽爽 · 繼續抽藥"
             :disabled="!game.available"
@@ -35,6 +36,7 @@ const game = useQuacksStore(),
             ><template #icon><img src="/assets/quacks/draw-777.png" alt="" /></template></UiButton
           ><UiButton
             class="vue-quacks-stop-action"
+            data-quacks-action="stop"
             icon="close"
             label="我不抽了 QQ · 安全停手"
             :disabled="!game.available"
@@ -45,13 +47,7 @@ const game = useQuacksStore(),
                 alt="" /></template></UiButton></template
         ><span v-else>{{
           game.own?.stopped ? '你已停止，等待其他人。' : '已選擇，等待同步揭曉。'
-        }}</span
-        ><UiButton
-          v-if="m.canPotion"
-          icon="undo"
-          label="藥水瓶：收回最後白色炸彈"
-          :disabled="!game.available"
-          @click="game.command('potion')" /></template
+        }}</span></template
       ><UiButton
         v-else-if="s.stage === 'reserves'"
         icon="check"

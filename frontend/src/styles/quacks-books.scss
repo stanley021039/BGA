@@ -1,0 +1,271 @@
+// The pre-Vue codex: illustration/prices on the left, rules/face controls on the right.
+:root body[data-visual-theme] .vue-quacks-books.vue-quacks-codex {
+  display: grid;
+  min-inline-size: 0;
+  gap: 12px;
+  .vue-quacks-codex-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.5;
+    }
+  }
+  .vue-quacks-codex-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-inline-size: 0;
+    > button {
+      --ui-button-radius: 8px;
+      --ui-button-border-width: 1px;
+      --ui-button-border-color: var(--play-line);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-inline-size: 0;
+      min-block-size: 44px;
+      padding: 4px 8px;
+      font-size: 14px;
+      line-height: 1.5;
+      background: var(--play-surface);
+      color: var(--play-ink);
+      &[aria-pressed='true'] {
+        background: var(--stitch-selected-bg);
+        color: var(--stitch-selected-ink);
+        outline: 2px solid var(--stitch-primary);
+        outline-offset: -2px;
+      }
+    }
+  }
+  .vue-quacks-codex-spread {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    min-inline-size: 0;
+    padding: 0;
+    border: 2px solid #c7b27d;
+    border-radius: 9px;
+    overflow: hidden;
+    background: #f5e7c8;
+    color: #2c261d;
+    box-shadow: 0 12px 22px #30250f28;
+  }
+  .vue-quacks-codex-page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-inline-size: 0;
+    padding: 22px;
+    background: linear-gradient(105deg, #fff9e9, #f8ebd0);
+    font-size: 16px;
+    line-height: 1.5;
+    :is(h3, p, small, strong) {
+      color: inherit;
+    }
+    :is(h3, p) {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+    > small {
+      color: #795e25;
+      font-size: 14px;
+      font-weight: 700;
+    }
+  }
+  .vue-quacks-codex-left {
+    border-inline-end: 4px double #b69d68;
+    box-shadow: inset -9px 0 14px #6d53251a;
+  }
+  .vue-quacks-codex-right {
+    background: linear-gradient(85deg, #f6e7c9, #fff9e9);
+    box-shadow: inset 9px 0 14px #6d53251a;
+  }
+  .vue-quacks-codex-seal {
+    align-self: end;
+    display: grid;
+    place-items: center;
+    block-size: 68px;
+    min-block-size: 68px;
+    max-inline-size: 100%;
+    padding: 4px 12px;
+    border: 1px solid #8b5144;
+    border-radius: 8px;
+    color: #8b3029;
+    font-size: 14px;
+    font-weight: 700;
+    &.is-selected {
+      inline-size: 68px;
+      block-size: 68px;
+      border: 4px double #a64a38;
+      border-radius: 50%;
+      transform: rotate(-12deg);
+    }
+  }
+  .vue-quacks-codex-cover {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-inline-size: 0;
+    > div {
+      min-inline-size: 0;
+    }
+    h3 {
+      font-size: 24px;
+      line-height: 1.5;
+    }
+    p {
+      font-size: 14px;
+    }
+  }
+  .vue-quacks-codex-prices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 8px;
+    min-block-size: 136px;
+    > div {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-inline-size: 0;
+      padding: 7px;
+      border: 1px solid #d8caa8;
+      border-radius: 8px;
+      background: #fffaf0;
+    }
+    strong {
+      font-size: 14px;
+      line-height: 1.5;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+  .vue-quacks-codex-caption {
+    font-size: 14px;
+  }
+  .vue-quacks-codex-effect {
+    min-block-size: 110px;
+    padding: 14px 16px;
+    border: 1px solid #c8ae73;
+    border-radius: 8px;
+    background: #fff9e9;
+    > strong {
+      display: block;
+      margin-block-end: 8px;
+      color: #66460e;
+    }
+  }
+  .vue-quacks-codex-effect-stack {
+    display: grid;
+    > p {
+      grid-area: 1 / 1;
+      white-space: pre-line;
+      line-height: 1.55;
+    }
+    .is-measure {
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+  .vue-quacks-codex-controls {
+    display: grid;
+    gap: 8px;
+    min-inline-size: 0;
+  }
+  .vue-quacks-codex-faces {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    > button {
+      --ui-button-radius: 8px;
+      --ui-button-border-width: 1px;
+      --ui-button-border-color: #bba26b;
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+      justify-content: start;
+      gap: 4px;
+      min-inline-size: 0;
+      min-block-size: 76px;
+      padding: 8px;
+      background: #fffaf0;
+      color: #2c261d;
+      font-size: 14px;
+      line-height: 1.5;
+      text-align: start;
+      &[aria-pressed='true'] {
+        background: #f8e19a;
+        outline: 2px solid #9d7624;
+        outline-offset: -2px;
+      }
+      > span {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        overflow-wrap: anywhere;
+      }
+    }
+  }
+  .vue-quacks-codex-turn {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 8px;
+    > span {
+      text-align: center;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-quacks-codex-result {
+    display: grid;
+    gap: 4px;
+    margin-block-start: auto;
+    font-size: 14px;
+    > span {
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-quacks-codex-note {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+}
+:root body dialog.vue-dialog.ui-dialog:has(.vue-quacks-codex) {
+  inline-size: min(1040px, calc(100vw - 24px));
+  max-inline-size: calc(100vw - 24px);
+}
+@media (max-width: 760px) {
+  :root body[data-visual-theme] .vue-quacks-books.vue-quacks-codex {
+    .vue-quacks-codex-spread {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vue-quacks-codex-page {
+      padding: 14px;
+    }
+    .vue-quacks-codex-left {
+      border-inline-end: 0;
+      border-block-end: 4px double #b69d68;
+    }
+    .vue-quacks-codex-seal {
+      position: absolute;
+      inset-inline-end: 14px;
+      inset-block-start: 14px;
+    }
+    .vue-quacks-codex-cover {
+      padding-block-start: 44px;
+    }
+    .vue-quacks-codex-prices {
+      min-block-size: 0;
+    }
+    .vue-quacks-codex-tabs > button {
+      flex: 1 1 8rem;
+    }
+  }
+}

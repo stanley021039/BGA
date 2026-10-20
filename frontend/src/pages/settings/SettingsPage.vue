@@ -262,7 +262,7 @@ onMounted(() => {
         aria-labelledby="media-settings-heading"
       >
         <header class="settings-card-heading"
-          ><h2 id="media-settings-heading">播放器外觀</h2><span>只影響你的播放器</span></header
+          ><h2 id="media-settings-heading">播放器外觀</h2></header
         >
         <div class="settings-appearance-choice"
           ><p id="settings-media-frame-status" role="status" aria-live="polite"
