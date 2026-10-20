@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, useId } from 'vue';
 import type {
   RaceSnapshot,
   RaceVisual,
@@ -25,6 +25,7 @@ const emit = defineEmits<{
   }>(),
   svg = ref<SVGSVGElement | null>(null);
 defineExpose({ svg });
+const grainId = 'race-grain-' + useId();
 const pos = (x: number, y: number) => ({
     x: 48 + (y - props.visual.min) * 44 + (x % 2) * 22,
     y: 81 + x * 44,
@@ -36,6 +37,19 @@ const cells = computed(() =>
       row.map((cell, j) => {
         const y = t.start + j,
           info = terrain(cell),
+          kind = cell.hazard?.face
+            ? (
+                {
+                  mud: 'M',
+                  road: 'R',
+                  oil: 'R',
+                  glass: 'V',
+                  ramp: 'J',
+                  fire: 'F',
+                  pit: 'X',
+                } as Record<string, string>
+              )[cell.hazard.kind] || cell.kind
+            : cell.kind,
           occupied =
             props.state.cars.some((c) => !c.dead && c.x === x && c.y === y) ||
             props.state.players.some((p) => p.chopper?.x === x && p.chopper.y === y),
@@ -54,6 +68,7 @@ const cells = computed(() =>
           y,
           cell,
           info,
+          kind,
           route,
           legal,
           adjacent: props.state.legalMoves.some((p) => p.x === x && p.y === y),
@@ -106,6 +121,12 @@ function boundary(start: number) {
       xmlns="http://www.w3.org/2000/svg"
       aria-label="向右前進的六線賽道；亮框格子可移動"
     >
+      <defs>
+        <pattern :id="grainId" width="11" height="13" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="4" r=".8" fill="#201b1240" />
+          <circle cx="9" cy="11" r=".6" fill="#e7ca8130" />
+        </pattern>
+      </defs>
       <g class="race-world">
         <g v-for="(tile, i) in visual.tiles" :key="tile.start">
           <text :x="44 + (tile.start - visual.min) * 44" y="24" class="map-label">
@@ -146,15 +167,52 @@ function boundary(start: number) {
             points="-22,-14 0,-28 22,-14 22,14 0,28 -22,14"
             :fill="c.info.color"
           />
-          <text class="cell-symbol" y="5">
-            {{
-              c.cell.hazard
-                ? c.cell.hazard.face
-                  ? hazardSymbols[c.cell.hazard.kind] || '!'
-                  : '⚠'
-                : c.info.symbol
-            }}
-          </text>
+          <g
+            pointer-events="none"
+            aria-hidden="true"
+            class="race-terrain-art"
+            :data-race-terrain="c.kind"
+          >
+            <polygon points="-22,-14 0,-28 22,-14 22,14 0,28 -22,14" :fill="`url(#${grainId})`" />
+            <path
+              v-if="c.kind === 'R'"
+              d="M-17,-18L-7,-22M8,22L17,18"
+              stroke="#e4d2a750"
+              stroke-width="1"
+            />
+            <template v-if="c.kind === 'X'">
+              <path
+                d="M-16,11L-12,-10L2,-19L17,-6L12,15L-5,20Z"
+                fill="#493f35"
+                stroke="#c0a25d"
+                stroke-width="2"
+              />
+              <path d="M2,-19L0,5L12,15M0,5L-16,11" stroke="#88715a" fill="none" />
+            </template>
+            <path
+              v-if="c.kind === 'M'"
+              d="M-14,-7Q0,-16 12,-3M-12,6Q0,17 13,6"
+              stroke="#96704b70"
+              stroke-width="3"
+              fill="none"
+            />
+            <text
+              v-if="['G', 'V', 'J', 'F', 'S'].includes(c.kind)"
+              class="cell-symbol terrain-symbol"
+              style="fill: #fff2ce"
+              y="1"
+            >
+              {{ c.info.symbol }}
+            </text>
+            <text
+              v-if="c.cell.hazard"
+              class="cell-symbol"
+              :style="{ fill: c.cell.hazard.face ? '#edcb8b' : '#ffcf77' }"
+              y="1"
+            >
+              {{ c.cell.hazard.face ? hazardSymbols[c.cell.hazard.kind] || '!' : '⚠' }}
+            </text>
+          </g>
         </g>
         <path
           v-for="tile in visual.tiles.slice(1)"

@@ -481,3 +481,23 @@
     }
   }
 }
+
+@media (max-width: 480px) {
+  :root body.vue-minimal-document[data-visual-theme] .vue-minimal-sync {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto minmax(44px, auto) minmax(44px, auto);
+    gap: 8px;
+    min-block-size: 0;
+    > button {
+      grid-column: 1 / -1;
+      inline-size: 100%;
+      min-inline-size: 0;
+      max-inline-size: 100%;
+      block-size: auto;
+      min-block-size: 44px;
+      padding: 8px 12px;
+      white-space: normal;
+      writing-mode: horizontal-tb;
+    }
+  }
+}

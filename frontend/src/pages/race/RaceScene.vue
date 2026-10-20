@@ -136,7 +136,7 @@ const usedCommand = computed(() => {
 <template>
   <section
     v-if="model.state"
-    class="vue-race-scene"
+    class="vue-race-scene race-stage"
     :data-lesson-highlight="model.lessonFocus"
     :aria-busy="model.busy || presentation.locked.value"
   >
@@ -177,7 +177,7 @@ const usedCommand = computed(() => {
         ></article
       ></div
     >
-    <div class="vue-race-track-shell"
+    <div id="boardScroll" class="vue-race-track-shell"
       ><RaceBoard
         v-if="presentation.visual.value"
         ref="board"

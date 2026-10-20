@@ -1,30 +1,25 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ size: number; color: string; disabled?: boolean }>(), {
+import { computed } from 'vue';
+const props = withDefaults(defineProps<{ size: number; color: string; disabled?: boolean }>(), {
   disabled: false,
 });
+const width = computed(() => [30, 36, 42][props.size] || 30),
+  height = computed(() => [16, 20, 25][props.size] || 16);
 </script>
 <template>
-  <g :transform="disabled ? 'rotate(180)' : undefined"
-    ><rect
-      :x="-([30, 36, 42][size] || 30) / 2"
-      :y="-([16, 20, 25][size] || 16) / 2 - 3"
-      :width="[30, 36, 42][size]"
-      height="6"
-      rx="2"
-      fill="#202720" /><rect
-      :x="-([30, 36, 42][size] || 30) / 2"
-      :y="([16, 20, 25][size] || 16) / 2 - 3"
-      :width="[30, 36, 42][size]"
-      height="6"
-      rx="2"
-      fill="#202720" /><path
-      :d="`M -${(size + 3) * 4},-${(size + 3) * 2} L ${(size + 3) * 3},-${(size + 3) * 2} L ${(size + 3) * 4},0 L ${(size + 3) * 3},${(size + 3) * 2} L -${(size + 3) * 4},${(size + 3) * 2} Z`"
+  <g :transform="disabled ? 'rotate(180)' : undefined">
+    <rect :x="-width / 2 + 2" :y="-height / 2 - 4" width="9" height="6" rx="2" fill="#111711" />
+    <rect :x="width / 2 - 11" :y="-height / 2 - 4" width="9" height="6" rx="2" fill="#111711" />
+    <rect :x="-width / 2 + 2" :y="height / 2 - 2" width="9" height="6" rx="2" fill="#111711" />
+    <rect :x="width / 2 - 11" :y="height / 2 - 2" width="9" height="6" rx="2" fill="#111711" />
+    <path
+      :d="`M${-width / 2},${-height / 2 + 3} L${width / 2 - 5},${-height / 2} L${width / 2},${-height / 2 + 5} V${height / 2 - 5} L${width / 2 - 5},${height / 2} L${-width / 2},${height / 2 - 3}Z`"
       :fill="color"
-      stroke="#17251b"
-      stroke-width="2" /><path
-      d="M-5,-6H4L8,0L4,6H-5Z"
-      fill="#253a35"
-      stroke="#e8dfb5"
-      stroke-width="1" /><path v-if="size === 2" d="M4,0H21" stroke="#243324" stroke-width="4"
-  /></g>
+      stroke="#eff2d880"
+      stroke-width="1"
+    />
+    <rect x="-4" :y="-height / 2 + 3" width="9" :height="height - 6" rx="2" fill="#17251f" />
+    <path :d="`M9,-2H${width / 2 + 4}M9,2H${width / 2 + 4}`" stroke="#262d24" stroke-width="2" />
+    <path :d="`M${-width / 2 + 3},0H-7`" stroke="#f9eac6" stroke-width="2" />
+  </g>
 </template>

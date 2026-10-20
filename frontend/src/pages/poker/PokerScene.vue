@@ -4,6 +4,8 @@ import { usePokerStore } from '../../stores/poker';
 import { useRoomStore } from '../../stores/room';
 import { usePokerPresentation } from './usePokerPresentation';
 import PokerCard from './PokerCard.vue';
+import PokerSeats from './PokerSeats.vue';
+import RoomWaitingInfo from '../../components/RoomWaitingInfo.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
@@ -37,42 +39,57 @@ const turnHint = computed(() =>
     class="vue-game-panel vue-poker-stage"
     :class="{ 'is-waiting': state.phase === 'waiting' }"
     aria-label="德州撲克牌桌"
-    ><header class="vue-poker-summary"
-      ><div data-poker-pot
-        ><span>本手底池</span><strong>{{ state.pot.toLocaleString() }}</strong></div
-      ><p
-        >本街最高 {{ state.currentBet.toLocaleString() }} · 完整加注幅度
-        {{ state.minRaise.toLocaleString() }}</p
-      ></header
-    >
-    <RoomCountdown
-      :deadline="poker.deadline"
-      :duration="45000"
-      :offset="poker.offset"
-      :epoch="state.hand + ':' + state.phase + ':' + state.turn + ':' + state.deadline"
-      caption="本次行動剩餘"
-      :now="poker.now"
-      :empty-value="state.phase === 'showdown' ? '本手結束' : '等待開桌'"
-      urgent
-    />
-    <div class="vue-poker-live"
-      ><section class="vue-poker-table" aria-label="公共牌與你的私人底牌"
-        ><div class="vue-poker-community"
-          ><h2>公共牌</h2
-          ><div class="vue-poker-cards"
-            ><PokerCard
-              v-for="index in 5"
-              :key="index"
-              :card="state.board[index - 1]"
-              :revealed="presentation.newCards.value.includes(index - 1)" /></div></div
-        ><section class="vue-poker-hero" data-private aria-label="你的私人底牌與籌碼"
-          ><div
-            ><h2>你的底牌</h2
-            ><div class="vue-poker-cards"
-              ><PokerCard
-                v-for="index in 2"
-                :key="index"
-                :card="poker.me?.cards[index - 1]" /></div></div
+    ><div v-if="state.phase === 'waiting'" class="vue-poker-waiting" data-poker-waiting>
+      <div class="vue-poker-waiting-art"
+        ><img src="/assets/playful/game-poker.svg" alt="德州撲克遊戲插畫"
+      /></div>
+      <RoomWaitingInfo
+        title="好牌已備，等你入座。"
+        description="2–6 人一起玩。跟注、加注，或把這一手全部押上。"
+        mode-label="德州撲克"
+        :facts="[
+          { label: '入座人數', value: state.players.length + '／6 位' },
+          { label: '起始籌碼', value: '2,000' },
+          { label: '盲注', value: '10／20' },
+        ]"
+        :notice="room.host ? '邀請朋友入座，設定好就能開始。' : '等待房主開始遊戲。'"
+      />
+    </div>
+    <template v-else
+      ><header class="vue-poker-summary"
+        ><div data-poker-pot
+          ><span>本手底池</span><strong>{{ state.pot.toLocaleString() }}</strong></div
+        ><p
+          >本街最高 {{ state.currentBet.toLocaleString() }} · 完整加注幅度
+          {{ state.minRaise.toLocaleString() }}</p
+        ></header
+      >
+      <RoomCountdown
+        :deadline="poker.deadline"
+        :duration="45000"
+        :offset="poker.offset"
+        :epoch="state.hand + ':' + state.phase + ':' + state.turn + ':' + state.deadline"
+        caption="本次行動剩餘"
+        :now="poker.now"
+        :empty-value="state.phase === 'showdown' ? '本手結束' : '等待開桌'"
+        urgent
+      />
+      <div class="vue-poker-live"
+        ><section class="vue-poker-table" aria-label="環桌座位與公共牌">
+          <PokerSeats :state="state">
+            <div class="vue-poker-community"
+              ><span class="vue-poker-felt-brand" aria-hidden="true">AFTERHOURS ♠</span
+              ><h2>公共牌</h2
+              ><div class="vue-poker-cards"
+                ><PokerCard
+                  v-for="index in 5"
+                  :key="index"
+                  :card="state.board[index - 1]"
+                  :revealed="presentation.newCards.value.includes(index - 1)" /></div
+            ></div>
+          </PokerSeats>
+        </section>
+        <section class="vue-poker-hero" data-private aria-label="你的籌碼與投入"
           ><dl
             ><div
               ><dt>你的籌碼</dt><dd>{{ poker.me?.stack.toLocaleString() }}</dd></div
@@ -89,134 +106,128 @@ const turnHint = computed(() =>
           ><p v-else-if="poker.active && poker.me?.stack === 0"
             >你已 ALL IN，等待其他席位與派彩。</p
           ></section
-        ></section
-      >
-      <section
-        v-if="state.phase === 'showdown'"
-        class="vue-poker-showdown"
-        aria-labelledby="pokerResults"
-        ><header
-          ><h2 id="pokerResults">本手派彩</h2
-          ><UiButton
-            v-if="presentation.canReplay.value"
-            icon="replay"
-            label="重播結算演出"
-            @click="presentation.replay()" /></header
-        ><ul class="vue-poker-payouts"
-          ><li v-for="(result, index) in state.results" :key="index"
-            ><strong>{{ result.name }}</strong
-            ><span>派彩 {{ result.amount.toLocaleString() }}</span
-            ><span>{{ result.hand }}</span></li
-          ></ul
-        ><p>派彩金額包含投入返還，不代表本手淨獲利。</p
-        ><div class="vue-poker-public-hands"
-          ><article v-for="player in state.players" :key="player.id"
-            ><h3><PlayerName :name="player.name" />{{ player.id === state.me ? ' · 你' : '' }}</h3
-            ><div class="vue-poker-cards"
-              ><PokerCard
-                v-for="(card, index) in player.cards"
-                :key="index"
-                :card="card"
-                compact /></div
+        >
+        <section
+          v-if="state.phase === 'showdown'"
+          class="vue-poker-showdown"
+          aria-labelledby="pokerResults"
+          ><header
+            ><h2 id="pokerResults">本手派彩</h2
+            ><UiButton
+              v-if="presentation.canReplay.value"
+              icon="replay"
+              label="重播結算演出"
+              @click="presentation.replay()" /></header
+          ><ul class="vue-poker-payouts"
+            ><li v-for="(result, index) in state.results" :key="index"
+              ><strong>{{ result.name }}</strong
+              ><span>派彩 {{ result.amount.toLocaleString() }}</span
+              ><span>{{ result.hand }}</span></li
+            ></ul
+          ><p>派彩金額包含投入返還，不代表本手淨獲利。</p
+          ><div class="vue-poker-public-hands"
+            ><article v-for="player in state.players" :key="player.id"
+              ><h3><PlayerName :name="player.name" />{{ player.id === state.me ? ' · 你' : '' }}</h3
+              ><p
+                >{{
+                  !player.cards.length
+                    ? '未參與本手'
+                    : player.folded
+                      ? '棄牌'
+                      : player.kicked
+                        ? '離席後由電腦接手'
+                        : '參與攤牌'
+                }}
+                · 籌碼 {{ player.stack.toLocaleString() }} · 投入
+                {{ player.total.toLocaleString() }}</p
+              ></article
+            ></div
+          ></section
+        >
+        <details class="vue-poker-pots"
+          ><summary>查看投入分層 · {{ poker.tiers.length }} 層</summary
+          ><p v-if="!poker.tiers.length">本手尚無投入。</p
+          ><p>依本手總投入計算各層金額；實際派彩以上方伺服器結果為準。</p
+          ><article v-for="(tier, index) in poker.tiers" :key="tier.to"
+            ><h3>{{ index ? '邊池 ' + index : '主池' }} · {{ tier.amount.toLocaleString() }}</h3
             ><p
-              >{{
-                !player.cards.length
-                  ? '未參與本手'
-                  : player.folded
-                    ? '棄牌'
-                    : player.kicked
-                      ? '離席後由電腦接手'
-                      : '參與攤牌'
-              }}
-              · 籌碼 {{ player.stack.toLocaleString() }} · 投入
-              {{ player.total.toLocaleString() }}</p
-            ></article
-          ></div
-        ></section
+              >每席投入區間 {{ tier.from.toLocaleString() }}–{{ tier.to.toLocaleString() }}，共
+              {{ tier.contributors.length }} 位。</p
+            ><p>出資：{{ tier.contributors.map((p) => p.name).join('、') }}</p
+            ><p>未棄牌：{{ tier.eligible.map((p) => p.name).join('、') || '無' }}</p></article
+          ></details
+        >
+        <details v-if="departed.length" class="vue-poker-departed"
+          ><summary>離席後由電腦接手的席位（{{ departed.length }}）</summary
+          ><p v-for="player in departed" :key="player.id"
+            >{{ player.name }} · 籌碼 {{ player.stack.toLocaleString() }} · 本街
+            {{ player.bet.toLocaleString() }} · 本手 {{ player.total.toLocaleString() }} ·
+            {{
+              player.folded ? '棄牌' : player.stack === 0 ? 'ALL IN' : player.action || '等待行動'
+            }}</p
+          ></details
+        >
+        <details class="vue-poker-log"
+          ><summary>牌局動態 · 最近 {{ state.log.length }} 筆</summary
+          ><ol tabindex="0" aria-label="最近牌局動態，可捲動"
+            ><li v-for="(line, index) in state.log" :key="index">{{ line }}</li></ol
+          ></details
+        >
+      </div>
+      <div class="vue-poker-feedback"
+        ><p>{{ turnHint }}</p
+        ><StatusSlot :message="poker.notice" :error="poker.failed" /><p
+          v-if="presentation.earned.value.length"
+          >解鎖成就：{{ presentation.earned.value.join('、') }}。<a href="/achievements"
+            >查看收藏冊</a
+          ></p
+        ></div
       >
-      <details class="vue-poker-pots"
-        ><summary>查看投入分層 · {{ poker.tiers.length }} 層</summary
-        ><p v-if="!poker.tiers.length">本手尚無投入。</p
-        ><p>依本手總投入計算各層金額；實際派彩以上方伺服器結果為準。</p
-        ><article v-for="(tier, index) in poker.tiers" :key="tier.to"
-          ><h3>{{ index ? '邊池 ' + index : '主池' }} · {{ tier.amount.toLocaleString() }}</h3
-          ><p
-            >每席投入區間 {{ tier.from.toLocaleString() }}–{{ tier.to.toLocaleString() }}，共
-            {{ tier.contributors.length }} 位。</p
-          ><p>出資：{{ tier.contributors.map((p) => p.name).join('、') }}</p
-          ><p>未棄牌：{{ tier.eligible.map((p) => p.name).join('、') || '無' }}</p></article
-        ></details
+      <footer class="vue-poker-actions"
+        ><div class="vue-poker-action-buttons"
+          ><UiButton
+            icon="close"
+            label="棄牌"
+            :disabled="!poker.canAct"
+            @click="poker.act('fold')" /><UiButton
+            icon="check"
+            :label="callLabel"
+            :disabled="!poker.canAct"
+            @click="poker.act(poker.due ? 'call' : 'check')" /><UiButton
+            label="ALL IN"
+            :disabled="!poker.canAllIn"
+            @click="poker.act('allin')" /></div
+        ><form class="vue-poker-raise" @submit.prevent="poker.act('raise')"
+          ><label for="pokerRaiseAmount"
+            >本街加注至<input
+              id="pokerRaiseAmount"
+              v-model="poker.amount"
+              type="number"
+              inputmode="numeric"
+              step="1"
+              :min="poker.minimum"
+              :max="poker.maximum"
+              :disabled="!poker.canRaise"
+              aria-describedby="pokerRaiseHint" /></label
+          ><UiButton
+            type="submit"
+            icon="add"
+            label="確認加注"
+            :disabled="!poker.canRaise || !poker.raiseValid"
+          /><p id="pokerRaiseHint">{{
+            poker.myTurn && !state.canRaise
+              ? '短額 ALL IN 尚未重新開放加注。'
+              : poker.canRaise
+                ? '最低 ' +
+                  poker.minimum.toLocaleString() +
+                  '，最多 ' +
+                  poker.maximum.toLocaleString() +
+                  '。'
+                : '輪到你時，依當前下注額開放合法操作。'
+          }}</p></form
+        ></footer
       >
-      <details v-if="departed.length" class="vue-poker-departed"
-        ><summary>離席後由電腦接手的席位（{{ departed.length }}）</summary
-        ><p v-for="player in departed" :key="player.id"
-          >{{ player.name }} · 籌碼 {{ player.stack.toLocaleString() }} · 本街
-          {{ player.bet.toLocaleString() }} · 本手 {{ player.total.toLocaleString() }} ·
-          {{
-            player.folded ? '棄牌' : player.stack === 0 ? 'ALL IN' : player.action || '等待行動'
-          }}</p
-        ></details
-      >
-      <details class="vue-poker-log"
-        ><summary>牌局動態 · 最近 {{ state.log.length }} 筆</summary
-        ><ol tabindex="0" aria-label="最近牌局動態，可捲動"
-          ><li v-for="(line, index) in state.log" :key="index">{{ line }}</li></ol
-        ></details
-      >
-    </div>
-    <div class="vue-poker-feedback"
-      ><p>{{ turnHint }}</p
-      ><StatusSlot :message="poker.notice" :error="poker.failed" /><p
-        v-if="presentation.earned.value.length"
-        >解鎖成就：{{ presentation.earned.value.join('、') }}。<a href="/achievements"
-          >查看收藏冊</a
-        ></p
-      ></div
-    >
-    <footer class="vue-poker-actions"
-      ><div class="vue-poker-action-buttons"
-        ><UiButton
-          icon="close"
-          label="棄牌"
-          :disabled="!poker.canAct"
-          @click="poker.act('fold')" /><UiButton
-          icon="check"
-          :label="callLabel"
-          :disabled="!poker.canAct"
-          @click="poker.act(poker.due ? 'call' : 'check')" /><UiButton
-          label="ALL IN"
-          :disabled="!poker.canAllIn"
-          @click="poker.act('allin')" /></div
-      ><form class="vue-poker-raise" @submit.prevent="poker.act('raise')"
-        ><label for="pokerRaiseAmount"
-          >本街加注至<input
-            id="pokerRaiseAmount"
-            v-model="poker.amount"
-            type="number"
-            inputmode="numeric"
-            step="1"
-            :min="poker.minimum"
-            :max="poker.maximum"
-            :disabled="!poker.canRaise"
-            aria-describedby="pokerRaiseHint" /></label
-        ><UiButton
-          type="submit"
-          icon="add"
-          label="確認加注"
-          :disabled="!poker.canRaise || !poker.raiseValid"
-        /><p id="pokerRaiseHint">{{
-          poker.myTurn && !state.canRaise
-            ? '短額 ALL IN 尚未重新開放加注。'
-            : poker.canRaise
-              ? '最低 ' +
-                poker.minimum.toLocaleString() +
-                '，最多 ' +
-                poker.maximum.toLocaleString() +
-                '。'
-              : '輪到你時，依當前下注額開放合法操作。'
-        }}</p></form
-      ></footer
-    >
+    </template>
     <div v-if="presentation.focus.value" class="vue-poker-spotlight" aria-live="polite"
       ><strong>{{ presentation.focus.value }}</strong
       ><UiButton label="跳過演出" icon="next" @click="presentation.stopFocus()" /></div

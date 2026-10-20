@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GameRoomPage from '../../components/GameRoomPage.vue';
-import UiButton from '../../components/UiButton.vue';
+import RoomWaitingInfo from '../../components/RoomWaitingInfo.vue';
 import { useRaceStore } from '../../stores/race';
 import { useRoomStore } from '../../stores/room';
 import { readRaceSnapshot } from '../../contracts/race';
@@ -56,10 +56,35 @@ const lessonHref = computed(
     ><RaceScene v-if="s && s.phase !== 'waiting'" :key="room.scope" :model="race" /><section
       v-else
       class="vue-game-panel vue-race-waiting"
-      ><h1>準備踏上雷霆之路</h1
-      ><p>每支車隊有輕、中、重型戰車；選擇骰子移動，用碰撞與射擊爭先抵達終點。</p
-      ><a :href="lessonHref">進入獨立本機教學桌 →</a
-      ><p>六種實作情境、17 個章節，可自由重試；教學不占線上房間座位。</p></section
+      aria-label="雷霆之路等待開賽"
+      ><figure class="vue-race-waiting-art"
+        ><span aria-hidden="true">READY.<br />AIM.<br /><em>DRIVE.</em></span
+        ><img
+          src="/assets/playful/game-thunder.svg"
+          alt="雷霆之路競速遊戲插畫"
+          width="640"
+          height="480" /></figure
+      ><RoomWaitingInfo
+        title="引擎已熱，等你上路。"
+        description="每人指揮輕、中、重型三輛車。選骰、下指令、移動、射擊，活著衝過終點。"
+        mode-label="車隊集結中"
+        :facts="[
+          {
+            label: '賽道模式',
+            value: s?.options.devilsRun ? '惡魔賽道 · 地形／危險試玩' : '主遊戲 · 自製賽道',
+          },
+          {
+            label: '入座車隊',
+            value: `${s?.players.filter((p) => !p.kicked).length || 0}／4 支 · 至少 2 支開賽`,
+          },
+          { label: '戰車編制', value: '每隊輕、中、重型各 1 輛' },
+        ]"
+        :notice="room.host ? '邀請朋友入座，設定好賽道模式就能開始。' : '等待房主開始比賽。'"
+        ><template #actions
+          ><a class="vue-race-waiting-lesson" :href="lessonHref">第一次玩？進入獨立本機教學桌 →</a
+          ><small>六種實作情境、17 個章節；教學不占線上房間座位。</small></template
+        ></RoomWaitingInfo
+      ></section
     >
     <template #settings
       ><label class="vue-race-mode"
