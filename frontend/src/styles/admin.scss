@@ -1,55 +1,298 @@
 @use 'tokens' as t;
 @use 'compact-header' as chrome;
 .vue-page.vue-admin-page {
- padding-block:t.space(6);
- .page-heading { margin-block-end:t.space(4); }
- .page-heading h1 { @include t.type(h1); margin-block:t.space(2); }
- .page-heading p { @include t.type(p2); }
- .vue-button { min-inline-size:0;max-inline-size:100%;white-space:normal; }.vue-button-caption { min-inline-size:0;white-space:normal;overflow-wrap:anywhere; }
- h1 { @include t.type(h1); }h2 { @include t.type(h2); }h3 { @include t.type(p1); }
- .vue-admin-access,.vue-admin-actions,.vue-admin-secret-heading,.vue-admin-members-heading { display:flex;align-items:center;flex-wrap:wrap;gap:t.space(3); }
- .vue-admin-access { margin-block-end:t.space(6); }
- .vue-admin-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:t.space(6); }
- .page-panel { box-sizing:border-box;min-inline-size:0;padding:t.space(6); }
- .invite-panel,.sync-panel { display:flex;flex-direction:column;gap:t.space(4);block-size:54rem;min-block-size:0; }
- .panel-heading { display:grid;align-content:start;gap:t.space(3);min-block-size:7rem;flex-shrink:0;h2,p { margin:0; }p { @include t.type(p3); } }
- .vue-admin-inline-form { display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:t.space(3);min-inline-size:0; }
- label { display:grid;gap:t.space(2);min-inline-size:0;@include t.type(p2); }
- input { box-sizing:border-box;inline-size:100%;min-inline-size:0;min-block-size:2.75rem;max-inline-size:100%;font:inherit; }
- .frontend-status { box-sizing:border-box;margin:0;min-block-size:3rem;max-block-size:4.5rem;overflow:auto;scrollbar-gutter:stable; }
- .vue-admin-secret-slot { flex:1;min-block-size:21rem;min-inline-size:0;overflow:auto;scrollbar-gutter:stable;display:flex;flex-direction:column;gap:t.space(3);border:1px solid var(--play-line);border-radius:t.space(3);padding:t.space(4); }
- .vue-admin-secret-heading { justify-content:space-between;min-block-size:2.75rem;h3 { margin:0; } }
- .vue-admin-secret { display:grid;gap:t.space(3);min-inline-size:0;p { margin:0;overflow-wrap:anywhere; }input { font-family:ui-monospace,monospace;font-size:.875rem; } }
- .vue-admin-link-button { display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-block-size:2.75rem;padding:t.space(2) t.space(3);border:1px solid var(--play-line);border-radius:t.space(2);text-align:center;color:var(--play-ink);overflow-wrap:anywhere; }
- .vue-admin-submission-list { flex:1;min-block-size:12rem;overflow:auto;scrollbar-gutter:stable;display:grid;align-content:start;gap:t.space(4);padding:t.space(1);>article { display:grid;gap:t.space(3);padding:t.space(4);border:1px solid var(--play-line);border-radius:t.space(3);min-inline-size:0;>div { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:t.space(3); }code,p { overflow-wrap:anywhere;white-space:normal;margin:0; }code { font-size:.875rem; } } }
- .vue-admin-submission-error { color:var(--play-error); }
- .members-panel { margin-block-start:t.space(6);display:grid;gap:t.space(4); }
- .vue-admin-members-heading { justify-content:space-between;>div { min-inline-size:0; }h2,p { margin:0; }p { margin-block-start:t.space(3);@include t.type(p3); } }
- .vue-admin-table-scroll { min-inline-size:0;max-inline-size:100%;max-block-size:44rem;overflow:auto;scrollbar-gutter:stable; }
- table { inline-size:100%;border-collapse:collapse;table-layout:fixed;min-inline-size:40rem; }
- th,td { padding:t.space(3);border-block-end:1px solid var(--play-line);text-align:start;vertical-align:middle;overflow-wrap:anywhere; }
- th { position:sticky;top:0;background:var(--play-surface);z-index:1; }
- th:last-child { inline-size:18rem; }
- .vue-admin-uncertain { margin:0;min-block-size:3rem;max-block-size:6rem;overflow:auto;@include t.type(p3); }
+  padding-block: t.space(6);
+  .page-heading {
+    margin-block-end: t.space(4);
+  }
+  .page-heading h1 {
+    @include t.type(h1);
+    margin-block: t.space(2);
+  }
+  .page-heading p {
+    @include t.type(p2);
+  }
+  .vue-button {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    white-space: normal;
+  }
+  .vue-button-caption {
+    min-inline-size: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  h1 {
+    @include t.type(h1);
+  }
+  h2 {
+    @include t.type(h2);
+  }
+  h3 {
+    @include t.type(p1);
+  }
+  .vue-admin-access,
+  .vue-admin-actions,
+  .vue-admin-secret-heading,
+  .vue-admin-members-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: t.space(3);
+  }
+  .vue-admin-access {
+    margin-block-end: t.space(6);
+  }
+  .vue-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: t.space(6);
+  }
+  .page-panel {
+    box-sizing: border-box;
+    min-inline-size: 0;
+    padding: t.space(6);
+  }
+  .invite-panel,
+  .sync-panel {
+    display: flex;
+    flex-direction: column;
+    gap: t.space(4);
+    block-size: 54rem;
+    min-block-size: 0;
+  }
+  .panel-heading {
+    display: grid;
+    align-content: start;
+    gap: t.space(3);
+    min-block-size: 7rem;
+    flex-shrink: 0;
+    h2,
+    p {
+      margin: 0;
+    }
+    p {
+      @include t.type(p3);
+    }
+  }
+  .vue-admin-inline-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: t.space(3);
+    min-inline-size: 0;
+  }
+  label {
+    display: grid;
+    gap: t.space(2);
+    min-inline-size: 0;
+    @include t.type(p2);
+  }
+  input {
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 2.75rem;
+    max-inline-size: 100%;
+    font: inherit;
+  }
+  .frontend-status {
+    box-sizing: border-box;
+    margin: 0;
+    min-block-size: 3rem;
+    max-block-size: 4.5rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+  }
+  .vue-admin-secret-slot {
+    flex: 1;
+    min-block-size: 21rem;
+    min-inline-size: 0;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    display: flex;
+    flex-direction: column;
+    gap: t.space(3);
+    border: 1px solid var(--play-line);
+    border-radius: t.space(3);
+    padding: t.space(4);
+  }
+  .vue-admin-secret-heading {
+    justify-content: space-between;
+    min-block-size: 2.75rem;
+    h3 {
+      margin: 0;
+    }
+  }
+  .vue-admin-secret {
+    display: grid;
+    gap: t.space(3);
+    min-inline-size: 0;
+    p {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+    input {
+      font-family: ui-monospace, monospace;
+      font-size: 0.875rem;
+    }
+  }
+  .vue-admin-link-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    min-block-size: 2.75rem;
+    padding: t.space(2) t.space(3);
+    border: 1px solid var(--play-line);
+    border-radius: t.space(2);
+    text-align: center;
+    color: var(--play-ink);
+    overflow-wrap: anywhere;
+  }
+  .vue-admin-submission-list {
+    flex: 1;
+    min-block-size: 12rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    display: grid;
+    align-content: start;
+    gap: t.space(4);
+    padding: t.space(1);
+    > article {
+      display: grid;
+      gap: t.space(3);
+      padding: t.space(4);
+      border: 1px solid var(--play-line);
+      border-radius: t.space(3);
+      min-inline-size: 0;
+      > div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: t.space(3);
+      }
+      code,
+      p {
+        overflow-wrap: anywhere;
+        white-space: normal;
+        margin: 0;
+      }
+      code {
+        font-size: 0.875rem;
+      }
+    }
+  }
+  .vue-admin-submission-error {
+    color: var(--play-error);
+  }
+  .members-panel {
+    margin-block-start: t.space(6);
+    display: grid;
+    gap: t.space(4);
+  }
+  .vue-admin-members-heading {
+    justify-content: space-between;
+    > div {
+      min-inline-size: 0;
+    }
+    h2,
+    p {
+      margin: 0;
+    }
+    p {
+      margin-block-start: t.space(3);
+      @include t.type(p3);
+    }
+  }
+  .vue-admin-table-scroll {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    max-block-size: 44rem;
+    overflow: auto;
+    scrollbar-gutter: stable;
+  }
+  table {
+    inline-size: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    min-inline-size: 40rem;
+  }
+  th,
+  td {
+    padding: t.space(3);
+    border-block-end: 1px solid var(--play-line);
+    text-align: start;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+  }
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--play-surface);
+    z-index: 1;
+  }
+  th:last-child {
+    inline-size: 18rem;
+  }
+  .vue-admin-uncertain {
+    margin: 0;
+    min-block-size: 3rem;
+    max-block-size: 6rem;
+    overflow: auto;
+    @include t.type(p3);
+  }
 }
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
- body.admin-page:not(.ui-large-text) { @include chrome.desktop; }
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  body.admin-page:not(.ui-large-text) {
+    @include chrome.desktop;
+  }
 }
-@media(max-width:900px) {
- .vue-page.vue-admin-page {
-  .vue-admin-grid { grid-template-columns:minmax(0,1fr);gap:t.space(4); }
-  .invite-panel,.sync-panel { block-size:auto;min-block-size:0; }
-  .panel-heading { min-block-size:0; }
-  .vue-admin-secret-slot { min-block-size:22rem;max-block-size:32rem;flex:auto; }
-  .vue-admin-submission-list { flex:auto;max-block-size:32rem; }
- }
+@media (max-width: 900px) {
+  .vue-page.vue-admin-page {
+    .vue-admin-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: t.space(4);
+    }
+    .invite-panel,
+    .sync-panel {
+      block-size: auto;
+      min-block-size: 0;
+    }
+    .panel-heading {
+      min-block-size: 0;
+    }
+    .vue-admin-secret-slot {
+      min-block-size: 22rem;
+      max-block-size: 32rem;
+      flex: auto;
+    }
+    .vue-admin-submission-list {
+      flex: auto;
+      max-block-size: 32rem;
+    }
+  }
 }
-@media(max-width:600px) {
- .vue-page.vue-admin-page {
-  .page-panel { padding:t.space(4); }
-  .vue-admin-inline-form { grid-template-columns:minmax(0,1fr); }
-  .vue-admin-access { align-items:stretch;flex-direction:column; }
-  .vue-admin-secret-slot { padding:t.space(3); }
-  .vue-admin-secret-heading { align-items:stretch;flex-direction:column; }
- }
+@media (max-width: 600px) {
+  .vue-page.vue-admin-page {
+    .page-panel {
+      padding: t.space(4);
+    }
+    .vue-admin-inline-form {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vue-admin-access {
+      align-items: stretch;
+      flex-direction: column;
+    }
+    .vue-admin-secret-slot {
+      padding: t.space(3);
+    }
+    .vue-admin-secret-heading {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
 }

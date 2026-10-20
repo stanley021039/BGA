@@ -1,50 +1,561 @@
-import { array,record,text,strings } from '../services/validation';
-export interface MarketOption {id:string;name:string;color:string}
-interface BaseRules {version:1|2|3;timeZone:string;cutoffTime:string;settlementTime:string}
-export interface LegacyMarketRules extends BaseRules {version:1|2;options:MarketOption[];thresholds:number[];hit:number;miss:number;tie:number;maxReturn:number}
-export interface CurveMarketRules extends BaseRules {version:3;frozenAt:string;targetDate:string;scaleTau:number;probabilities:number[];normalizationD:number;estimation:{method:string;sampleCount:number;minObservations:number;fallbackScale:number;historyStart:string|null;historyEnd:string|null};observations:{targetDate:string;returnPct:number;fetchedAt:string;sourceUrl:string}[]}
-export type MarketRules=LegacyMarketRules|CurveMarketRules;
-export interface MarketRound {id:string;targetDate:string;cutoffAt:string;settlementAfter:string;rules:MarketRules;phase:'open'|'closed'|'settled'|'void';voidReason:string;vote:{optionId?:string;forecastTick?:number;revision:number;updatedAt:string}|null;result:{revision:number;returnPct:number;bucket:string;points:number|null;settledAt:string;reason:string;actorSource:string}|null;voteCount:number|null;settlementHistory:{revision:number;returnPct:number;reason:string;at:string;administrator:string;actorSource:string}[]}
-export interface MarketRank {rank:number;displayName:string;score:number;played:number;isMe:boolean}
-export interface MarketAutomation {enabled:boolean;status:string;nightAttempts:number;lastAttemptAt:string|null;lastSuccessAt:string|null;nextAttemptAt:string|null;nextTradingDate:string|null;calendarYears:number[];waitingDates:string[];reviewDates:string[];manualRequiredDates:string[];dailyFetch:{targetDate:string;automaticAttempts:number;manualAttempts:number;firstValidObservedAt:string|null}|null}
-export interface MarketState {me:{id:string;username:string;displayName:string;role:'admin'|'member'};serverNow:string;rules:LegacyMarketRules;stats:{score:number;played:number;hits:number;ties:number};rounds:MarketRound[];ledger:{id:string;points:number;targetDate:string;revision:number;kind:'award'|'reversal';reversesRevision:number|null;at:string;reason:string}[];leaderboard:{rows:MarketRank[];totalParticipants:number;ownRank:MarketRank|null};automation:MarketAutomation;marketHistory:{from:string;to:string;waitingDates:string[];rows:{targetDate:string;close:number;change:number;returnPct:number;sourceUrl:string;fetchedAt:string;firstValidObservedAt:string|null;reviewRequired:boolean;returnPctSource:string}[]}}
-export interface MarketImage {id:string;version:number;authorName:string;buckets:string[];weekdays:number[];width:number;height:number;status:'pending'|'approved';createdAt:string;url:string}
-export interface MarketImageLimits {maxUploadBytes:number;maxImageBytes:number;maxDimension:number;maxPixels:number;maxPerUser:number;maxImages:number;maxStorageBytes:number;maxApprovalBatch:number}
-export interface MarketPreview {roundId:string;targetDate:string;returnPct:number;bucket:string;counts:Record<string,number>;voteCount:number;expectedRevision:number;ownPrevious:number;ownNext:number;ownScoreAfter:number;serverNow:string}
-export const marketBuckets=['crash','fall','dip','rise','rally','surge'] as const;
-export const marketWeekdays=['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
-export const marketCurveSlots=[{id:'crash',anchor:-8,label:'−10% ～ −6%',rank:4},{id:'fall',anchor:-4,label:'−6% ～ −2%',rank:2},{id:'center',anchor:0,label:'−2% ～ +2%',rank:1},{id:'rally',anchor:4,label:'+2% ～ +6%',rank:3},{id:'surge',anchor:8,label:'+6% ～ +10%',rank:5}];
-export const defaultMarketImageLimits:MarketImageLimits={maxUploadBytes:2097152,maxImageBytes:4194304,maxDimension:4096,maxPixels:8000000,maxPerUser:100,maxImages:1000,maxStorageBytes:268435456,maxApprovalBatch:1000};
-export function marketNumber(value:unknown):number {if(typeof value!=='number'||!Number.isFinite(value))throw Error('股市資料數值格式不正確');return value;}
-function integer(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER){const n=marketNumber(value);if(!Number.isSafeInteger(n)||n<min||n>max)throw Error('股市資料整數格式不正確');return n;}
-function identifier(value:unknown){if(typeof value!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value))throw Error('股市資料識別碼格式不正確');return value;}
-function stamp(value:unknown){if(typeof value!=='string'||!Number.isFinite(Date.parse(value)))throw Error('股市時間資料格式不正確');return value;}
-const optionalStamp=(value:unknown)=>value===null||value===undefined?null:stamp(value);
-export function validMarketDate(value:unknown):value is string{return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number(value.slice(0,4))>=2000&&Number(value.slice(0,4))<=2199&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;}
-function date(value:unknown){if(!validMarketDate(value))throw Error('交易日資料格式不正確');return value;}
-const dates=(value:unknown)=>array(value).map(date);
-export function officialMarketUrl(value:string){try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&['twse.com.tw','www.twse.com.tw','openapi.twse.com.tw'].includes(url.hostname)?url.href:'';}catch{return '';}}
-export function readMarketRules(value:unknown):MarketRules {if(!window.MarketRules||!window.MarketCurve)throw Error('計分規則尚未載入，請重新整理');window.MarketRules.validate(value);const rules=record(value);if(rules.version!==3){array(rules.options).forEach(value=>{const option=record(value);if(typeof option.id!=='string'||typeof option.name!=='string'||typeof option.color!=='string'||!/^#[0-9a-f]{6}$/i.test(option.color))throw Error('區間選項資料格式不正確');});}return value as MarketRules;}
-function rank(value:unknown):MarketRank {const r=record(value);return {rank:integer(r.rank,1),displayName:text(r.displayName),score:marketNumber(r.score),played:integer(r.played),isMe:r.isMe===true};}
-function round(value:unknown):MarketRound {const r=record(value),rules=readMarketRules(r.rules),vote=r.vote?record(r.vote):null,result=r.result?record(r.result):null;if(!['open','closed','settled','void'].includes(String(r.phase)))throw Error('交易日狀態格式不正確');return {id:identifier(r.id),targetDate:date(r.targetDate),cutoffAt:stamp(r.cutoffAt),settlementAfter:stamp(r.settlementAfter),rules,phase:r.phase as MarketRound['phase'],voidReason:text(r.voidReason),vote:vote?{revision:integer(vote.revision,1),updatedAt:stamp(vote.updatedAt),...(rules.version===3?{forecastTick:integer(vote.forecastTick,-100,100)}:{optionId:text(vote.optionId)})}:null,result:result?{revision:integer(result.revision,1),returnPct:marketNumber(result.returnPct),bucket:text(result.bucket),points:result.points===null?null:marketNumber(result.points),settledAt:stamp(result.settledAt),reason:text(result.reason),actorSource:text(result.actorSource)}:null,voteCount:r.voteCount===undefined?null:integer(r.voteCount),settlementHistory:r.settlementHistory===undefined?[]:array(r.settlementHistory).map(value=>{const h=record(value);return {revision:integer(h.revision,1),returnPct:marketNumber(h.returnPct),reason:text(h.reason),at:stamp(h.at),administrator:text(h.administrator),actorSource:text(h.actorSource)};})};}
-export function readMarketState(value:unknown):MarketState {
- const x=record(value),me=record(x.me),stats=record(x.stats),board=record(x.leaderboard),a=record(x.automation),h=record(x.marketHistory),fetch=a.dailyFetch?record(a.dailyFetch):null,rules=readMarketRules(x.rules);
- if(!['admin','member'].includes(String(me.role))||rules.version===3)throw Error('股市帳號或預設規則格式不正確');
- return {me:{id:identifier(me.id),username:text(me.username),displayName:text(me.displayName),role:me.role as 'admin'|'member'},serverNow:stamp(x.serverNow),rules,stats:{score:marketNumber(stats.score),played:integer(stats.played),hits:integer(stats.hits),ties:integer(stats.ties)},rounds:array(x.rounds).map(round),ledger:array(x.ledger).map(value=>{const l=record(value);if(l.kind!=='award'&&l.kind!=='reversal')throw Error('積分異動類型不正確');return {id:identifier(l.id),points:marketNumber(l.points),targetDate:date(l.targetDate),revision:integer(l.revision,1),kind:l.kind,reversesRevision:l.reverses_revision===null?null:integer(l.reverses_revision,1),at:stamp(l.at),reason:text(l.reason)};}),leaderboard:{rows:array(board.rows).map(rank),totalParticipants:integer(board.totalParticipants),ownRank:board.ownRank?rank(board.ownRank):null},automation:{enabled:a.enabled===true,status:text(a.status,'unavailable'),nightAttempts:integer(a.nightAttempts??0),lastAttemptAt:optionalStamp(a.lastAttemptAt),lastSuccessAt:optionalStamp(a.lastSuccessAt),nextAttemptAt:optionalStamp(a.nextAttemptAt),nextTradingDate:a.nextTradingDate?date(a.nextTradingDate):null,calendarYears:array(a.calendarYears).map(v=>integer(v,2000,2199)),waitingDates:dates(a.waitingDates),reviewDates:dates(a.reviewDates),manualRequiredDates:dates(a.manualRequiredDates||[]),dailyFetch:fetch?{targetDate:date(fetch.targetDate),automaticAttempts:integer(fetch.automaticAttempts),manualAttempts:integer(fetch.manualAttempts),firstValidObservedAt:optionalStamp(fetch.firstValidObservedAt)}:null},marketHistory:{from:date(h.from),to:date(h.to),waitingDates:dates(h.waitingDates),rows:array(h.rows).map(value=>{const row=record(value);return {targetDate:date(row.targetDate),close:marketNumber(row.close),change:marketNumber(row.change),returnPct:marketNumber(row.returnPct),sourceUrl:text(row.sourceUrl),fetchedAt:stamp(row.fetchedAt),firstValidObservedAt:optionalStamp(row.firstValidObservedAt),reviewRequired:row.reviewRequired===true,returnPctSource:text(row.returnPctSource)};})}};
+import { array, record, text, strings } from '../services/validation';
+export interface MarketOption {
+  id: string;
+  name: string;
+  color: string;
 }
-export function readMarketImage(value:unknown):MarketImage {const i=record(value),id=identifier(i.id),buckets=strings(i.buckets),weekdays=array(i.weekdays).map(v=>integer(v,0,6));if(!['pending','approved'].includes(String(i.status))||!buckets.length||buckets.some(v=>!marketBuckets.includes(v as typeof marketBuckets[number]))||!weekdays.length||new Set(buckets).size!==buckets.length||new Set(weekdays).size!==weekdays.length||text(i.url)!=='/api/market/images/'+id+'/media')throw Error('預測圖片資料格式不正確');return {id,version:integer(i.version,1),authorName:text(i.authorName),buckets,weekdays,width:integer(i.width,1,4096),height:integer(i.height,1,4096),status:i.status as MarketImage['status'],createdAt:stamp(i.createdAt),url:text(i.url)};}
-export function readMarketImages(value:unknown){const x=record(value),limits=record(x.limits);return {images:array(x.images).map(readMarketImage),limits:Object.fromEntries(Object.keys(defaultMarketImageLimits).map(key=>[key,integer(limits[key],1)])) as unknown as MarketImageLimits};}
-export function readMarketDraw(value:unknown,targetDate:string,curve:boolean){const x=record(value);if(x.targetDate!==targetDate||(curve?x.layout!=='curve-five':x.layout!==undefined))throw Error('圖片交易日或排列不符');const images=record(x.images),ids=curve?marketCurveSlots.map(s=>s.id):[...marketBuckets];return Object.fromEntries(ids.map(id=>{const image=images[id]===null?null:readMarketImage(images[id]);if(image&&image.status!=='approved')throw Error('抽選圖片尚未核准');return [id,image];}));}
-export function readMarketPreview(value:unknown):MarketPreview {const p=record(value);return {roundId:identifier(p.roundId),targetDate:date(p.targetDate),returnPct:marketNumber(p.returnPct),bucket:text(p.bucket),counts:Object.fromEntries(Object.entries(record(p.counts)).map(([key,value])=>[key,integer(value)])),voteCount:integer(p.voteCount),expectedRevision:integer(p.expectedRevision),ownPrevious:marketNumber(p.ownPrevious),ownNext:marketNumber(p.ownNext),ownScoreAfter:marketNumber(p.ownScoreAfter),serverNow:stamp(p.serverNow)};}
-export function readMarketOK(value:unknown){const x=record(value);if(x.ok!==true)throw Error('伺服器尚未確認操作');return x;}
-export const marketRequestId=()=>[...crypto.getRandomValues(new Uint8Array(16))].map(n=>n.toString(16).padStart(2,'0')).join('');
-export const marketPoints=(value:number)=>{const n=Number(value.toFixed(2));return (n>0?'+':'')+n.toFixed(2);};
-export const marketSigned=(n:number)=>(n>0?'+':'')+n;
-export const marketTime=(value:string|number|null)=>value===null?'—':new Intl.DateTimeFormat('zh-TW',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(value));
-export const marketVoteLabel=(r:MarketRound)=>!r.vote?'未投票':r.rules.version===3?marketSigned((r.vote.forecastTick??0)/10)+'%':r.rules.options.find(o=>o.id===r.vote?.optionId)?.name||'—';
-export const marketImageRules=(i:MarketImage)=>i.buckets.map(id=>window.MarketRules?.CONFIG.options.find(o=>o.id===id)?.name||id).join('、')+' · '+(i.weekdays.length===7?'不限星期':i.weekdays.map(day=>marketWeekdays[day]).join('、'));
-declare global {interface Window {MarketRules?:{CONFIG:LegacyMarketRules;validate(value:unknown):unknown;labels(rules:LegacyMarketRules):string[];parseReturn(value:string|number,rules:MarketRules):number};MarketCurve?:{scorePrediction(tick:number,actual:number,rules:CurveMarketRules):number;validateCurveSnapshot(value:unknown):unknown}}}
+interface BaseRules {
+  version: 1 | 2 | 3;
+  timeZone: string;
+  cutoffTime: string;
+  settlementTime: string;
+}
+export interface LegacyMarketRules extends BaseRules {
+  version: 1 | 2;
+  options: MarketOption[];
+  thresholds: number[];
+  hit: number;
+  miss: number;
+  tie: number;
+  maxReturn: number;
+}
+export interface CurveMarketRules extends BaseRules {
+  version: 3;
+  frozenAt: string;
+  targetDate: string;
+  scaleTau: number;
+  probabilities: number[];
+  normalizationD: number;
+  estimation: {
+    method: string;
+    sampleCount: number;
+    minObservations: number;
+    fallbackScale: number;
+    historyStart: string | null;
+    historyEnd: string | null;
+  };
+  observations: { targetDate: string; returnPct: number; fetchedAt: string; sourceUrl: string }[];
+}
+export type MarketRules = LegacyMarketRules | CurveMarketRules;
+export interface MarketRound {
+  id: string;
+  targetDate: string;
+  cutoffAt: string;
+  settlementAfter: string;
+  rules: MarketRules;
+  phase: 'open' | 'closed' | 'settled' | 'void';
+  voidReason: string;
+  vote: { optionId?: string; forecastTick?: number; revision: number; updatedAt: string } | null;
+  result: {
+    revision: number;
+    returnPct: number;
+    bucket: string;
+    points: number | null;
+    settledAt: string;
+    reason: string;
+    actorSource: string;
+  } | null;
+  voteCount: number | null;
+  settlementHistory: {
+    revision: number;
+    returnPct: number;
+    reason: string;
+    at: string;
+    administrator: string;
+    actorSource: string;
+  }[];
+}
+export interface MarketRank {
+  rank: number;
+  displayName: string;
+  score: number;
+  played: number;
+  isMe: boolean;
+}
+export interface MarketAutomation {
+  enabled: boolean;
+  status: string;
+  nightAttempts: number;
+  lastAttemptAt: string | null;
+  lastSuccessAt: string | null;
+  nextAttemptAt: string | null;
+  nextTradingDate: string | null;
+  calendarYears: number[];
+  waitingDates: string[];
+  reviewDates: string[];
+  manualRequiredDates: string[];
+  dailyFetch: {
+    targetDate: string;
+    automaticAttempts: number;
+    manualAttempts: number;
+    firstValidObservedAt: string | null;
+  } | null;
+}
+export interface MarketState {
+  me: { id: string; username: string; displayName: string; role: 'admin' | 'member' };
+  serverNow: string;
+  rules: LegacyMarketRules;
+  stats: { score: number; played: number; hits: number; ties: number };
+  rounds: MarketRound[];
+  ledger: {
+    id: string;
+    points: number;
+    targetDate: string;
+    revision: number;
+    kind: 'award' | 'reversal';
+    reversesRevision: number | null;
+    at: string;
+    reason: string;
+  }[];
+  leaderboard: { rows: MarketRank[]; totalParticipants: number; ownRank: MarketRank | null };
+  automation: MarketAutomation;
+  marketHistory: {
+    from: string;
+    to: string;
+    waitingDates: string[];
+    rows: {
+      targetDate: string;
+      close: number;
+      change: number;
+      returnPct: number;
+      sourceUrl: string;
+      fetchedAt: string;
+      firstValidObservedAt: string | null;
+      reviewRequired: boolean;
+      returnPctSource: string;
+    }[];
+  };
+}
+export interface MarketImage {
+  id: string;
+  version: number;
+  authorName: string;
+  buckets: string[];
+  weekdays: number[];
+  width: number;
+  height: number;
+  status: 'pending' | 'approved';
+  createdAt: string;
+  url: string;
+}
+export interface MarketImageLimits {
+  maxUploadBytes: number;
+  maxImageBytes: number;
+  maxDimension: number;
+  maxPixels: number;
+  maxPerUser: number;
+  maxImages: number;
+  maxStorageBytes: number;
+  maxApprovalBatch: number;
+}
+export interface MarketPreview {
+  roundId: string;
+  targetDate: string;
+  returnPct: number;
+  bucket: string;
+  counts: Record<string, number>;
+  voteCount: number;
+  expectedRevision: number;
+  ownPrevious: number;
+  ownNext: number;
+  ownScoreAfter: number;
+  serverNow: string;
+}
+export const marketBuckets = ['crash', 'fall', 'dip', 'rise', 'rally', 'surge'] as const;
+export const marketWeekdays = [
+  '星期日',
+  '星期一',
+  '星期二',
+  '星期三',
+  '星期四',
+  '星期五',
+  '星期六',
+];
+export const marketCurveSlots = [
+  { id: 'crash', anchor: -8, label: '−10% ～ −6%', rank: 4 },
+  { id: 'fall', anchor: -4, label: '−6% ～ −2%', rank: 2 },
+  { id: 'center', anchor: 0, label: '−2% ～ +2%', rank: 1 },
+  { id: 'rally', anchor: 4, label: '+2% ～ +6%', rank: 3 },
+  { id: 'surge', anchor: 8, label: '+6% ～ +10%', rank: 5 },
+];
+export const defaultMarketImageLimits: MarketImageLimits = {
+  maxUploadBytes: 2097152,
+  maxImageBytes: 4194304,
+  maxDimension: 4096,
+  maxPixels: 8000000,
+  maxPerUser: 100,
+  maxImages: 1000,
+  maxStorageBytes: 268435456,
+  maxApprovalBatch: 1000,
+};
+export function marketNumber(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) throw Error('股市資料數值格式不正確');
+  return value;
+}
+function integer(value: unknown, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  const n = marketNumber(value);
+  if (!Number.isSafeInteger(n) || n < min || n > max) throw Error('股市資料整數格式不正確');
+  return n;
+}
+function identifier(value: unknown) {
+  if (
+    typeof value !== 'string' ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  )
+    throw Error('股市資料識別碼格式不正確');
+  return value;
+}
+function stamp(value: unknown) {
+  if (typeof value !== 'string' || !Number.isFinite(Date.parse(value)))
+    throw Error('股市時間資料格式不正確');
+  return value;
+}
+const optionalStamp = (value: unknown) =>
+  value === null || value === undefined ? null : stamp(value);
+export function validMarketDate(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number(value.slice(0, 4)) >= 2000 &&
+    Number(value.slice(0, 4)) <= 2199 &&
+    Number.isFinite(Date.parse(value + 'T00:00:00Z')) &&
+    new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) === value
+  );
+}
+function date(value: unknown) {
+  if (!validMarketDate(value)) throw Error('交易日資料格式不正確');
+  return value;
+}
+const dates = (value: unknown) => array(value).map(date);
+export function officialMarketUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' &&
+      !url.username &&
+      !url.password &&
+      !url.port &&
+      ['twse.com.tw', 'www.twse.com.tw', 'openapi.twse.com.tw'].includes(url.hostname)
+      ? url.href
+      : '';
+  } catch {
+    return '';
+  }
+}
+export function readMarketRules(value: unknown): MarketRules {
+  if (!window.MarketRules || !window.MarketCurve) throw Error('計分規則尚未載入，請重新整理');
+  window.MarketRules.validate(value);
+  const rules = record(value);
+  if (rules.version !== 3) {
+    array(rules.options).forEach((value) => {
+      const option = record(value);
+      if (
+        typeof option.id !== 'string' ||
+        typeof option.name !== 'string' ||
+        typeof option.color !== 'string' ||
+        !/^#[0-9a-f]{6}$/i.test(option.color)
+      )
+        throw Error('區間選項資料格式不正確');
+    });
+  }
+  return value as MarketRules;
+}
+function rank(value: unknown): MarketRank {
+  const r = record(value);
+  return {
+    rank: integer(r.rank, 1),
+    displayName: text(r.displayName),
+    score: marketNumber(r.score),
+    played: integer(r.played),
+    isMe: r.isMe === true,
+  };
+}
+function round(value: unknown): MarketRound {
+  const r = record(value),
+    rules = readMarketRules(r.rules),
+    vote = r.vote ? record(r.vote) : null,
+    result = r.result ? record(r.result) : null;
+  if (!['open', 'closed', 'settled', 'void'].includes(String(r.phase)))
+    throw Error('交易日狀態格式不正確');
+  return {
+    id: identifier(r.id),
+    targetDate: date(r.targetDate),
+    cutoffAt: stamp(r.cutoffAt),
+    settlementAfter: stamp(r.settlementAfter),
+    rules,
+    phase: r.phase as MarketRound['phase'],
+    voidReason: text(r.voidReason),
+    vote: vote
+      ? {
+          revision: integer(vote.revision, 1),
+          updatedAt: stamp(vote.updatedAt),
+          ...(rules.version === 3
+            ? { forecastTick: integer(vote.forecastTick, -100, 100) }
+            : { optionId: text(vote.optionId) }),
+        }
+      : null,
+    result: result
+      ? {
+          revision: integer(result.revision, 1),
+          returnPct: marketNumber(result.returnPct),
+          bucket: text(result.bucket),
+          points: result.points === null ? null : marketNumber(result.points),
+          settledAt: stamp(result.settledAt),
+          reason: text(result.reason),
+          actorSource: text(result.actorSource),
+        }
+      : null,
+    voteCount: r.voteCount === undefined ? null : integer(r.voteCount),
+    settlementHistory:
+      r.settlementHistory === undefined
+        ? []
+        : array(r.settlementHistory).map((value) => {
+            const h = record(value);
+            return {
+              revision: integer(h.revision, 1),
+              returnPct: marketNumber(h.returnPct),
+              reason: text(h.reason),
+              at: stamp(h.at),
+              administrator: text(h.administrator),
+              actorSource: text(h.actorSource),
+            };
+          }),
+  };
+}
+export function readMarketState(value: unknown): MarketState {
+  const x = record(value),
+    me = record(x.me),
+    stats = record(x.stats),
+    board = record(x.leaderboard),
+    a = record(x.automation),
+    h = record(x.marketHistory),
+    fetch = a.dailyFetch ? record(a.dailyFetch) : null,
+    rules = readMarketRules(x.rules);
+  if (!['admin', 'member'].includes(String(me.role)) || rules.version === 3)
+    throw Error('股市帳號或預設規則格式不正確');
+  return {
+    me: {
+      id: identifier(me.id),
+      username: text(me.username),
+      displayName: text(me.displayName),
+      role: me.role as 'admin' | 'member',
+    },
+    serverNow: stamp(x.serverNow),
+    rules,
+    stats: {
+      score: marketNumber(stats.score),
+      played: integer(stats.played),
+      hits: integer(stats.hits),
+      ties: integer(stats.ties),
+    },
+    rounds: array(x.rounds).map(round),
+    ledger: array(x.ledger).map((value) => {
+      const l = record(value);
+      if (l.kind !== 'award' && l.kind !== 'reversal') throw Error('積分異動類型不正確');
+      return {
+        id: identifier(l.id),
+        points: marketNumber(l.points),
+        targetDate: date(l.targetDate),
+        revision: integer(l.revision, 1),
+        kind: l.kind,
+        reversesRevision: l.reverses_revision === null ? null : integer(l.reverses_revision, 1),
+        at: stamp(l.at),
+        reason: text(l.reason),
+      };
+    }),
+    leaderboard: {
+      rows: array(board.rows).map(rank),
+      totalParticipants: integer(board.totalParticipants),
+      ownRank: board.ownRank ? rank(board.ownRank) : null,
+    },
+    automation: {
+      enabled: a.enabled === true,
+      status: text(a.status, 'unavailable'),
+      nightAttempts: integer(a.nightAttempts ?? 0),
+      lastAttemptAt: optionalStamp(a.lastAttemptAt),
+      lastSuccessAt: optionalStamp(a.lastSuccessAt),
+      nextAttemptAt: optionalStamp(a.nextAttemptAt),
+      nextTradingDate: a.nextTradingDate ? date(a.nextTradingDate) : null,
+      calendarYears: array(a.calendarYears).map((v) => integer(v, 2000, 2199)),
+      waitingDates: dates(a.waitingDates),
+      reviewDates: dates(a.reviewDates),
+      manualRequiredDates: dates(a.manualRequiredDates || []),
+      dailyFetch: fetch
+        ? {
+            targetDate: date(fetch.targetDate),
+            automaticAttempts: integer(fetch.automaticAttempts),
+            manualAttempts: integer(fetch.manualAttempts),
+            firstValidObservedAt: optionalStamp(fetch.firstValidObservedAt),
+          }
+        : null,
+    },
+    marketHistory: {
+      from: date(h.from),
+      to: date(h.to),
+      waitingDates: dates(h.waitingDates),
+      rows: array(h.rows).map((value) => {
+        const row = record(value);
+        return {
+          targetDate: date(row.targetDate),
+          close: marketNumber(row.close),
+          change: marketNumber(row.change),
+          returnPct: marketNumber(row.returnPct),
+          sourceUrl: text(row.sourceUrl),
+          fetchedAt: stamp(row.fetchedAt),
+          firstValidObservedAt: optionalStamp(row.firstValidObservedAt),
+          reviewRequired: row.reviewRequired === true,
+          returnPctSource: text(row.returnPctSource),
+        };
+      }),
+    },
+  };
+}
+export function readMarketImage(value: unknown): MarketImage {
+  const i = record(value),
+    id = identifier(i.id),
+    buckets = strings(i.buckets),
+    weekdays = array(i.weekdays).map((v) => integer(v, 0, 6));
+  if (
+    !['pending', 'approved'].includes(String(i.status)) ||
+    !buckets.length ||
+    buckets.some((v) => !marketBuckets.includes(v as (typeof marketBuckets)[number])) ||
+    !weekdays.length ||
+    new Set(buckets).size !== buckets.length ||
+    new Set(weekdays).size !== weekdays.length ||
+    text(i.url) !== '/api/market/images/' + id + '/media'
+  )
+    throw Error('預測圖片資料格式不正確');
+  return {
+    id,
+    version: integer(i.version, 1),
+    authorName: text(i.authorName),
+    buckets,
+    weekdays,
+    width: integer(i.width, 1, 4096),
+    height: integer(i.height, 1, 4096),
+    status: i.status as MarketImage['status'],
+    createdAt: stamp(i.createdAt),
+    url: text(i.url),
+  };
+}
+export function readMarketImages(value: unknown) {
+  const x = record(value),
+    limits = record(x.limits);
+  return {
+    images: array(x.images).map(readMarketImage),
+    limits: Object.fromEntries(
+      Object.keys(defaultMarketImageLimits).map((key) => [key, integer(limits[key], 1)]),
+    ) as unknown as MarketImageLimits,
+  };
+}
+export function readMarketDraw(value: unknown, targetDate: string, curve: boolean) {
+  const x = record(value);
+  if (x.targetDate !== targetDate || (curve ? x.layout !== 'curve-five' : x.layout !== undefined))
+    throw Error('圖片交易日或排列不符');
+  const images = record(x.images),
+    ids = curve ? marketCurveSlots.map((s) => s.id) : [...marketBuckets];
+  return Object.fromEntries(
+    ids.map((id) => {
+      const image = images[id] === null ? null : readMarketImage(images[id]);
+      if (image && image.status !== 'approved') throw Error('抽選圖片尚未核准');
+      return [id, image];
+    }),
+  );
+}
+export function readMarketPreview(value: unknown): MarketPreview {
+  const p = record(value);
+  return {
+    roundId: identifier(p.roundId),
+    targetDate: date(p.targetDate),
+    returnPct: marketNumber(p.returnPct),
+    bucket: text(p.bucket),
+    counts: Object.fromEntries(
+      Object.entries(record(p.counts)).map(([key, value]) => [key, integer(value)]),
+    ),
+    voteCount: integer(p.voteCount),
+    expectedRevision: integer(p.expectedRevision),
+    ownPrevious: marketNumber(p.ownPrevious),
+    ownNext: marketNumber(p.ownNext),
+    ownScoreAfter: marketNumber(p.ownScoreAfter),
+    serverNow: stamp(p.serverNow),
+  };
+}
+export function readMarketOK(value: unknown) {
+  const x = record(value);
+  if (x.ok !== true) throw Error('伺服器尚未確認操作');
+  return x;
+}
+export const marketRequestId = () =>
+  [...crypto.getRandomValues(new Uint8Array(16))]
+    .map((n) => n.toString(16).padStart(2, '0'))
+    .join('');
+export const marketPoints = (value: number) => {
+  const n = Number(value.toFixed(2));
+  return (n > 0 ? '+' : '') + n.toFixed(2);
+};
+export const marketSigned = (n: number) => (n > 0 ? '+' : '') + n;
+export const marketTime = (value: string | number | null) =>
+  value === null
+    ? '—'
+    : new Intl.DateTimeFormat('zh-TW', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }).format(new Date(value));
+export const marketVoteLabel = (r: MarketRound) =>
+  !r.vote
+    ? '未投票'
+    : r.rules.version === 3
+      ? marketSigned((r.vote.forecastTick ?? 0) / 10) + '%'
+      : r.rules.options.find((o) => o.id === r.vote?.optionId)?.name || '—';
+export const marketImageRules = (i: MarketImage) =>
+  i.buckets
+    .map((id) => window.MarketRules?.CONFIG.options.find((o) => o.id === id)?.name || id)
+    .join('、') +
+  ' · ' +
+  (i.weekdays.length === 7 ? '不限星期' : i.weekdays.map((day) => marketWeekdays[day]).join('、'));
+declare global {
+  interface Window {
+    MarketRules?: {
+      CONFIG: LegacyMarketRules;
+      validate(value: unknown): unknown;
+      labels(rules: LegacyMarketRules): string[];
+      parseReturn(value: string | number, rules: MarketRules): number;
+    };
+    MarketCurve?: {
+      scorePrediction(tick: number, actual: number, rules: CurveMarketRules): number;
+      validateCurveSnapshot(value: unknown): unknown;
+    };
+  }
+}
 
-export function readMarketRecheck(value:unknown,targetDate:string){const x=record(value);if(x.targetDate!==targetDate||x.disabled!==true&&(['received','failed','review'].some(key=>typeof x[key]!=='boolean')||typeof x.status!=='string'))throw Error('官方重查回應格式不正確');return {received:x.received===true,failed:x.failed===true,review:x.review===true,status:text(x.status),disabled:x.disabled===true};}
+export function readMarketRecheck(value: unknown, targetDate: string) {
+  const x = record(value);
+  if (
+    x.targetDate !== targetDate ||
+    (x.disabled !== true &&
+      (['received', 'failed', 'review'].some((key) => typeof x[key] !== 'boolean') ||
+        typeof x.status !== 'string'))
+  )
+    throw Error('官方重查回應格式不正確');
+  return {
+    received: x.received === true,
+    failed: x.failed === true,
+    review: x.review === true,
+    status: text(x.status),
+    disabled: x.disabled === true,
+  };
+}
 
-export const marketBucketLabel=(round:MarketRound,bucket:string)=>bucket==='curve'?'曲線計分':bucket==='tie'?'和局':round.rules.version!==3?round.rules.options.find(o=>o.id===bucket)?.name || '—':'—';
+export const marketBucketLabel = (round: MarketRound, bucket: string) =>
+  bucket === 'curve'
+    ? '曲線計分'
+    : bucket === 'tie'
+      ? '和局'
+      : round.rules.version !== 3
+        ? round.rules.options.find((o) => o.id === bucket)?.name || '—'
+        : '—';

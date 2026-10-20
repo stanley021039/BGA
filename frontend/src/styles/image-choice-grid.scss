@@ -7,7 +7,7 @@
   gap: t.space(2);
   min-inline-size: 0;
   > .vue-image-choice {
-    --ui-button-radius: .75rem;
+    --ui-button-radius: 0.75rem;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -19,9 +19,27 @@
     border-radius: t.space(3);
     white-space: normal;
     text-align: center;
-    > img { flex: none; inline-size: 100%; block-size: 6.5625rem; margin: 0; object-fit: contain; }
-    > span, > small { inline-size: 100%; min-inline-size: 0; margin: 0; font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; }
-    > span { min-block-size: 3em; }
+    > img {
+      flex: none;
+      inline-size: 100%;
+      block-size: 6.5625rem;
+      margin: 0;
+      object-fit: contain;
+    }
+    > span,
+    > small {
+      inline-size: 100%;
+      min-inline-size: 0;
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+    > span {
+      min-block-size: 3em;
+    }
   }
-  &.expression-gallery > .vue-image-choice > img { block-size: 4.125rem; }
+  &.expression-gallery > .vue-image-choice > img {
+    block-size: 4.125rem;
+  }
 }

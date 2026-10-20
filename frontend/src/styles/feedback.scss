@@ -14,8 +14,14 @@
   position: relative;
   min-block-size: var(--ui-control-height, 2.75rem);
 
-  .frontend-submit-caption { display: inline-flex; gap: tokens.space(2); align-items: center; }
-  .is-pending { opacity: 0; }
+  .frontend-submit-caption {
+    display: inline-flex;
+    gap: tokens.space(2);
+    align-items: center;
+  }
+  .is-pending {
+    opacity: 0;
+  }
   .frontend-submit-progress {
     position: absolute;
     inset: 0;

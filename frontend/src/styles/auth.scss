@@ -17,21 +17,38 @@
     min-block-size: 0;
     overflow-y: auto;
     scrollbar-gutter: stable;
-    padding: .25rem;
+    padding: 0.25rem;
     align-content: start;
   }
-  > .frontend-submit { flex-shrink: 0; inline-size: 100%; margin-block-start: tokens.space(3); }
+  > .frontend-submit {
+    flex-shrink: 0;
+    inline-size: 100%;
+    margin-block-start: tokens.space(3);
+  }
 }
 
-.auth-page [data-auth-root] { min-inline-size: 0; }
-.auth-page .auth-form[hidden], .auth-page .auth-tabs[hidden] { display: none; }
+.auth-page [data-auth-root] {
+  min-inline-size: 0;
+}
+.auth-page .auth-form[hidden],
+.auth-page .auth-tabs[hidden] {
+  display: none;
+}
 
 // Only the confirmed 00 shared controls change; the auth composition and
 // registration-height reservation keep their existing layout and behavior.
-:root body.auth-page[data-visual-theme] .auth-card::before { background:var(--stitch-primary,#F6C845); }
-:root body.auth-page[data-visual-theme] .auth-card .auth-tabs { border-radius:var(--stitch-control-radius,.5rem); }
-:root body.auth-page[data-visual-theme] .auth-card .auth-tabs button.vue-button[role=tab][aria-selected=true] {
- --stitch-button-bg:var(--stitch-primary,#F6C845);
- --stitch-button-color:var(--stitch-on-primary,#20211E);
- --stitch-button-hover-bg:var(--stitch-primary-hover,#FFD65F);
+:root body.auth-page[data-visual-theme] .auth-card::before {
+  background: var(--stitch-primary, #f6c845);
+}
+:root body.auth-page[data-visual-theme] .auth-card .auth-tabs {
+  border-radius: var(--stitch-control-radius, 0.5rem);
+}
+:root
+  body.auth-page[data-visual-theme]
+  .auth-card
+  .auth-tabs
+  button.vue-button[role='tab'][aria-selected='true'] {
+  --stitch-button-bg: var(--stitch-primary, #f6c845);
+  --stitch-button-color: var(--stitch-on-primary, #20211e);
+  --stitch-button-hover-bg: var(--stitch-primary-hover, #ffd65f);
 }

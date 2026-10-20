@@ -1,36 +1,339 @@
-import {nextTick,onScopeDispose,ref,shallowRef,watch} from 'vue';
-import type {RaceDomain,RaceEvent,RaceMotion,RaceSnapshot,RaceVisual} from '../../contracts/race';
+import { nextTick, onScopeDispose, ref, shallowRef, watch } from 'vue';
+import type {
+  RaceDomain,
+  RaceEvent,
+  RaceMotion,
+  RaceSnapshot,
+  RaceVisual,
+} from '../../contracts/race';
 import type {} from '../../stores/preferences';
-import {useAchievementsStore} from '../../stores/achievements';
-export function useRacePresentation(model:RaceDomain,svg:()=>SVGSVGElement|null){
- const visual=shallowRef<RaceVisual|null>(null),locked=ref(false),cue=ref<RaceEvent[]>([]),focus=ref(false),earned=ref<string[]>([]),achievements=useAchievementsStore();
- let disposed=false,previous:RaceSnapshot|null=null,latest:RaceSnapshot|null=null,baseline=true,frame:{live:boolean;soundLive:boolean;epoch:number;events:RaceEvent[];motions:RaceMotion[];finish:boolean;deferred:boolean}|null=null,focusTimer:ReturnType<typeof setTimeout>|null=null,known:Set<string>|null=null;
- let gate=window.MotionPolicy?.createGate();const sounds=window.RaceGameSounds?.create(),effects=window.RaceVehicleEffects?.mount();
- const clips=new Set<HTMLAudioElement>();
- function sound(name:string){if(document.hidden||!model.connected)return;const clip=window.AudioSettings?.playEffect?.(name);if(clip){clips.add(clip);clip.addEventListener('ended',()=>clips.delete(clip),{once:true});if(clips.size>4){const old=clips.values().next().value;window.AudioSettings?.stopEffect(old);if(old)clips.delete(old);}}}
- function stopFocus(){if(focusTimer)clearTimeout(focusTimer);focusTimer=null;focus.value=false;}
- function replay(){stopFocus();if(!latest?.winner||document.hidden||!window.MotionPolicy?.allowsMotion())return;focus.value=true;focusTimer=setTimeout(stopFocus,2200);}
- async function checkAchievements(initial=false){if(model.lesson)return;await achievements.load();if(disposed||!achievements.loaded||achievements.error)return;const items=achievements.items.filter(i=>i.unlockedAt);if(!initial&&known)earned.value=items.filter(i=>!known!.has(i.id)).map(i=>i.title);known=new Set([...(known||[]),...items.map(i=>i.id)]);}
- const dice=window.RaceDiceDialog?.mount({onRolling:cycle=>sounds?.rolling(cycle),onAction:async(action,data)=>{if(!await run(action,data))throw Error(model.notice||'目前無法操作，請依最新狀態再選擇。');}});
- const movement=window.RaceMovement?.mount({onCue:({events,duration})=>{if(!latest||document.hidden)return;cue.value=duration>0?events:[];locked.value=true;model.setLessonMoving?.(true);effects?.show(events,latest,{min:visual.value?.min||0});sounds?.events(events);},onMove:group=>{cue.value=[];locked.value=true;model.setLessonMoving?.(true);sounds?.motion(group);if(latest)effects?.show(group.moves.filter(m=>m.car).map(m=>({id:`motion:${group.id}:${m.car}`,kind:'motion',motion:group.kind,car:m.car,text:''})) as unknown as RaceEvent[],latest,{min:visual.value?.min||0});},onSettled:result=>queueMicrotask(()=>{if(disposed||movement?.locked())return;if(result.cancelled&&frame){frame.live=false;frame.soundLive=false;frame.events=[];frame.motions=[];frame.finish=false;}locked.value=false;model.setLessonMoving?.(false);cue.value=[];if(latest)visual.value=movement?.view(latest)||fallback(latest);void attach();present();})});
- function fallback(s:RaceSnapshot):RaceVisual{return {min:s.tiles[0]?.start||0,tiles:s.tiles,cars:s.cars,players:s.players};}
- async function attach(){await nextTick();const node=svg();if(!disposed&&node&&visual.value)movement?.attach(node,visual.value.min);}
- function present(){if(!latest||disposed||document.hidden||!model.connected)return;const f=frame;frame=null;dice?.show(latest,{live:f?.live||false,deferred:f?.deferred,soundLive:f?.soundLive,soundEpoch:f?.epoch});if(f){sounds?.events(f.events.filter(e=>!movement?.claims(e.id)));if(!f.deferred)sounds?.motions(f.motions);if(f.finish){replay();sound('reveal');void checkAchievements();}}effects?.show([],latest,{min:visual.value?.min||0});}
- function reset(){baseline=true;frame=null;cue.value=[];stopFocus();movement?.cancel();movement?.reset();dice?.reset();effects?.reset();sounds?.reset();gate?.dispose();gate=window.MotionPolicy?.createGate();locked.value=false;model.setLessonMoving?.(false);for(const clip of clips)window.AudioSettings?.stopEffect(clip);clips.clear();if(model.state){latest=model.state;visual.value=fallback(model.state);void attach();}}
- watch(()=>model.state,s=>{if(!s||disposed)return;latest=s;if(previous&&s.version===previous.version&&s.code===previous.code&&!baseline){previous.serverNow=s.serverNow;sounds?.update(s,{connected:model.connected});gate?.update(s,{connected:model.connected});return;}
-  const prior=previous,sf=sounds?.update(s,{connected:model.connected}),eligible=gate?.update(s,{connected:model.connected})??(!baseline&&model.connected&&!document.hidden),live=(model.lesson||eligible)&&!baseline&&model.connected&&!document.hidden&&!!prior&&prior.code===s.code&&(model.lesson||s.serverNow-prior.serverNow<5000);baseline=false;
-  const events=live?s.events.filter(e=>e.id>(prior?.events.at(-1)?.id??-1)):[],fallbackMoves=live?s.cars.flatMap(c=>{const old=prior?.cars.find(p=>p.id===c.id);return old&&old.x!==null&&c.x!==null&&(old.x!==c.x||old.y!==c.y)?[{from:old,to:c}]:[];}):[];
-  previous=JSON.parse(JSON.stringify(s)) as RaceSnapshot;
-  if(prior&&s.round<prior.round||prior?.phase==='finished'&&s.phase!=='finished'){stopFocus();earned.value=[];movement?.reset();}
-  movement?.prepare(s,events,fallbackMoves,{live,previous:prior});visual.value=movement?.view(s)||fallback(s);locked.value=movement?.locked()||false;model.setLessonMoving?.(locked.value);
-  const old=frame;frame={live,soundLive:sf?.live||false,epoch:sf?.epoch||0,events:[...new Map([...(old?.events||[]),...(sf?.events||[])].map(e=>[e.id,e])).values()].slice(-64),motions:[...new Map([...(old?.motions||[]),...(sf?.motions||[])].map(g=>[g.id,g])).values()].slice(-64),finish:!!old?.finish||live&&prior?.phase!=='finished'&&s.phase==='finished',deferred:!!old?.deferred||locked.value};
-  effects?.show(events.filter(e=>!movement?.claims(e.id)),s,{min:visual.value.min});if(locked.value){dice?.reset();sounds?.events((sf?.events||[]).filter(e=>!movement?.claims(e.id)),{reveal:false});}else present();void attach();
- },{immediate:true,flush:'post'});
- async function run(action:string,data:Record<string,unknown>={}){if(locked.value||disposed)return false;const before=latest?.events.at(-1)?.id??-1,beforeMotion=latest?.motions.at(-1)?.id??-1;const accepted=await model.run(action,data);const s=model.state;if(accepted&&s&&s.phase!=='finished'&&!['rollDice','rerollDice'].includes(action)&&!s.events.some(e=>e.id>before&&(['slam','shot','damage','eliminated','hazard','trap','quake','jump','fire','fireDie','airstrike'].includes(e.kind)||e.kind==='command'&&e.command==='nitro'))&&!s.motions.some(g=>g.id>beforeMotion&&['oil','skid'].includes(g.kind)))sound('confirm');return accepted;}
- function visibility(){reset();if(!document.hidden&&model.state)present();}
- document.addEventListener('visibilitychange',visibility);watch(()=>model.connected,connected=>{reset();if(connected)present();});const unsubscribe=window.MotionPolicy?.subscribe(()=>{if(!window.MotionPolicy?.allowsMotion())reset();});
- function escape(event:KeyboardEvent){if(event.key==='Escape'&&!document.querySelector('dialog[open]')){if(cue.value.length)movement?.skipCue();stopFocus();}}
- document.addEventListener('keydown',escape);void checkAchievements(true);
- onScopeDispose(()=>{disposed=true;stopFocus();model.setLessonMoving?.(false);movement?.destroy();dice?.destroy();effects?.destroy();sounds?.destroy();gate?.dispose();unsubscribe?.();for(const clip of clips)window.AudioSettings?.stopEffect(clip);document.removeEventListener('visibilitychange',visibility);document.removeEventListener('keydown',escape);});
- return {visual,locked,cue,focus,earned,replay,stopFocus,run,skipCue:()=>movement?.skipCue(),ready:!!movement&&!!dice&&!!window.RacePaths};
+import { useAchievementsStore } from '../../stores/achievements';
+export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement | null) {
+  const visual = shallowRef<RaceVisual | null>(null),
+    locked = ref(false),
+    cue = ref<RaceEvent[]>([]),
+    focus = ref(false),
+    earned = ref<string[]>([]),
+    achievements = useAchievementsStore();
+  let disposed = false,
+    previous: RaceSnapshot | null = null,
+    latest: RaceSnapshot | null = null,
+    baseline = true,
+    frame: {
+      live: boolean;
+      soundLive: boolean;
+      epoch: number;
+      events: RaceEvent[];
+      motions: RaceMotion[];
+      finish: boolean;
+      deferred: boolean;
+    } | null = null,
+    focusTimer: ReturnType<typeof setTimeout> | null = null,
+    known: Set<string> | null = null;
+  let gate = window.MotionPolicy?.createGate();
+  const sounds = window.RaceGameSounds?.create(),
+    effects = window.RaceVehicleEffects?.mount();
+  const clips = new Set<HTMLAudioElement>();
+  function sound(name: string) {
+    if (document.hidden || !model.connected) return;
+    const clip = window.AudioSettings?.playEffect?.(name);
+    if (clip) {
+      clips.add(clip);
+      clip.addEventListener('ended', () => clips.delete(clip), { once: true });
+      if (clips.size > 4) {
+        const old = clips.values().next().value;
+        window.AudioSettings?.stopEffect(old);
+        if (old) clips.delete(old);
+      }
+    }
+  }
+  function stopFocus() {
+    if (focusTimer) clearTimeout(focusTimer);
+    focusTimer = null;
+    focus.value = false;
+  }
+  function replay() {
+    stopFocus();
+    if (!latest?.winner || document.hidden || !window.MotionPolicy?.allowsMotion()) return;
+    focus.value = true;
+    focusTimer = setTimeout(stopFocus, 2200);
+  }
+  async function checkAchievements(initial = false) {
+    if (model.lesson) return;
+    await achievements.load();
+    if (disposed || !achievements.loaded || achievements.error) return;
+    const items = achievements.items.filter((i) => i.unlockedAt);
+    if (!initial && known)
+      earned.value = items.filter((i) => !known!.has(i.id)).map((i) => i.title);
+    known = new Set([...(known || []), ...items.map((i) => i.id)]);
+  }
+  const dice = window.RaceDiceDialog?.mount({
+    onRolling: (cycle) => sounds?.rolling(cycle),
+    onAction: async (action, data) => {
+      if (!(await run(action, data)))
+        throw Error(model.notice || '目前無法操作，請依最新狀態再選擇。');
+    },
+  });
+  const movement = window.RaceMovement?.mount({
+    onCue: ({ events, duration }) => {
+      if (!latest || document.hidden) return;
+      cue.value = duration > 0 ? events : [];
+      locked.value = true;
+      model.setLessonMoving?.(true);
+      effects?.show(events, latest, { min: visual.value?.min || 0 });
+      sounds?.events(events);
+    },
+    onMove: (group) => {
+      cue.value = [];
+      locked.value = true;
+      model.setLessonMoving?.(true);
+      sounds?.motion(group);
+      if (latest)
+        effects?.show(
+          group.moves
+            .filter((m) => m.car)
+            .map((m) => ({
+              id: `motion:${group.id}:${m.car}`,
+              kind: 'motion',
+              motion: group.kind,
+              car: m.car,
+              text: '',
+            })) as unknown as RaceEvent[],
+          latest,
+          { min: visual.value?.min || 0 },
+        );
+    },
+    onSettled: (result) =>
+      queueMicrotask(() => {
+        if (disposed || movement?.locked()) return;
+        if (result.cancelled && frame) {
+          frame.live = false;
+          frame.soundLive = false;
+          frame.events = [];
+          frame.motions = [];
+          frame.finish = false;
+        }
+        locked.value = false;
+        model.setLessonMoving?.(false);
+        cue.value = [];
+        if (latest) visual.value = movement?.view(latest) || fallback(latest);
+        void attach();
+        present();
+      }),
+  });
+  function fallback(s: RaceSnapshot): RaceVisual {
+    return { min: s.tiles[0]?.start || 0, tiles: s.tiles, cars: s.cars, players: s.players };
+  }
+  async function attach() {
+    await nextTick();
+    const node = svg();
+    if (!disposed && node && visual.value) movement?.attach(node, visual.value.min);
+  }
+  function present() {
+    if (!latest || disposed || document.hidden || !model.connected) return;
+    const f = frame;
+    frame = null;
+    dice?.show(latest, {
+      live: f?.live || false,
+      deferred: f?.deferred,
+      soundLive: f?.soundLive,
+      soundEpoch: f?.epoch,
+    });
+    if (f) {
+      sounds?.events(f.events.filter((e) => !movement?.claims(e.id)));
+      if (!f.deferred) sounds?.motions(f.motions);
+      if (f.finish) {
+        replay();
+        sound('reveal');
+        void checkAchievements();
+      }
+    }
+    effects?.show([], latest, { min: visual.value?.min || 0 });
+  }
+  function reset() {
+    baseline = true;
+    frame = null;
+    cue.value = [];
+    stopFocus();
+    movement?.cancel();
+    movement?.reset();
+    dice?.reset();
+    effects?.reset();
+    sounds?.reset();
+    gate?.dispose();
+    gate = window.MotionPolicy?.createGate();
+    locked.value = false;
+    model.setLessonMoving?.(false);
+    for (const clip of clips) window.AudioSettings?.stopEffect(clip);
+    clips.clear();
+    if (model.state) {
+      latest = model.state;
+      visual.value = fallback(model.state);
+      void attach();
+    }
+  }
+  watch(
+    () => model.state,
+    (s) => {
+      if (!s || disposed) return;
+      latest = s;
+      if (previous && s.version === previous.version && s.code === previous.code && !baseline) {
+        previous.serverNow = s.serverNow;
+        sounds?.update(s, { connected: model.connected });
+        gate?.update(s, { connected: model.connected });
+        return;
+      }
+      const prior = previous,
+        sf = sounds?.update(s, { connected: model.connected }),
+        eligible =
+          gate?.update(s, { connected: model.connected }) ??
+          (!baseline && model.connected && !document.hidden),
+        live =
+          (model.lesson || eligible) &&
+          !baseline &&
+          model.connected &&
+          !document.hidden &&
+          !!prior &&
+          prior.code === s.code &&
+          (model.lesson || s.serverNow - prior.serverNow < 5000);
+      baseline = false;
+      const events = live ? s.events.filter((e) => e.id > (prior?.events.at(-1)?.id ?? -1)) : [],
+        fallbackMoves = live
+          ? s.cars.flatMap((c) => {
+              const old = prior?.cars.find((p) => p.id === c.id);
+              return old && old.x !== null && c.x !== null && (old.x !== c.x || old.y !== c.y)
+                ? [{ from: old, to: c }]
+                : [];
+            })
+          : [];
+      previous = JSON.parse(JSON.stringify(s)) as RaceSnapshot;
+      if (
+        (prior && s.round < prior.round) ||
+        (prior?.phase === 'finished' && s.phase !== 'finished')
+      ) {
+        stopFocus();
+        earned.value = [];
+        movement?.reset();
+      }
+      movement?.prepare(s, events, fallbackMoves, { live, previous: prior });
+      visual.value = movement?.view(s) || fallback(s);
+      locked.value = movement?.locked() || false;
+      model.setLessonMoving?.(locked.value);
+      const old = frame;
+      frame = {
+        live,
+        soundLive: sf?.live || false,
+        epoch: sf?.epoch || 0,
+        events: [
+          ...new Map(
+            [...(old?.events || []), ...(sf?.events || [])].map((e) => [e.id, e]),
+          ).values(),
+        ].slice(-64),
+        motions: [
+          ...new Map(
+            [...(old?.motions || []), ...(sf?.motions || [])].map((g) => [g.id, g]),
+          ).values(),
+        ].slice(-64),
+        finish: !!old?.finish || (live && prior?.phase !== 'finished' && s.phase === 'finished'),
+        deferred: !!old?.deferred || locked.value,
+      };
+      effects?.show(
+        events.filter((e) => !movement?.claims(e.id)),
+        s,
+        { min: visual.value.min },
+      );
+      if (locked.value) {
+        dice?.reset();
+        sounds?.events(
+          (sf?.events || []).filter((e) => !movement?.claims(e.id)),
+          { reveal: false },
+        );
+      } else present();
+      void attach();
+    },
+    { immediate: true, flush: 'post' },
+  );
+  async function run(action: string, data: Record<string, unknown> = {}) {
+    if (locked.value || disposed) return false;
+    const before = latest?.events.at(-1)?.id ?? -1,
+      beforeMotion = latest?.motions.at(-1)?.id ?? -1;
+    const accepted = await model.run(action, data);
+    const s = model.state;
+    if (
+      accepted &&
+      s &&
+      s.phase !== 'finished' &&
+      !['rollDice', 'rerollDice'].includes(action) &&
+      !s.events.some(
+        (e) =>
+          e.id > before &&
+          ([
+            'slam',
+            'shot',
+            'damage',
+            'eliminated',
+            'hazard',
+            'trap',
+            'quake',
+            'jump',
+            'fire',
+            'fireDie',
+            'airstrike',
+          ].includes(e.kind) ||
+            (e.kind === 'command' && e.command === 'nitro')),
+      ) &&
+      !s.motions.some((g) => g.id > beforeMotion && ['oil', 'skid'].includes(g.kind))
+    )
+      sound('confirm');
+    return accepted;
+  }
+  function visibility() {
+    reset();
+    if (!document.hidden && model.state) present();
+  }
+  document.addEventListener('visibilitychange', visibility);
+  watch(
+    () => model.connected,
+    (connected) => {
+      reset();
+      if (connected) present();
+    },
+  );
+  const unsubscribe = window.MotionPolicy?.subscribe(() => {
+    if (!window.MotionPolicy?.allowsMotion()) reset();
+  });
+  function escape(event: KeyboardEvent) {
+    if (event.key === 'Escape' && !document.querySelector('dialog[open]')) {
+      if (cue.value.length) movement?.skipCue();
+      stopFocus();
+    }
+  }
+  document.addEventListener('keydown', escape);
+  void checkAchievements(true);
+  onScopeDispose(() => {
+    disposed = true;
+    stopFocus();
+    model.setLessonMoving?.(false);
+    movement?.destroy();
+    dice?.destroy();
+    effects?.destroy();
+    sounds?.destroy();
+    gate?.dispose();
+    unsubscribe?.();
+    for (const clip of clips) window.AudioSettings?.stopEffect(clip);
+    document.removeEventListener('visibilitychange', visibility);
+    document.removeEventListener('keydown', escape);
+  });
+  return {
+    visual,
+    locked,
+    cue,
+    focus,
+    earned,
+    replay,
+    stopFocus,
+    run,
+    skipCue: () => movement?.skipCue(),
+    ready: !!movement && !!dice && !!window.RacePaths,
+  };
 }

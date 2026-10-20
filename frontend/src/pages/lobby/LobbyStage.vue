@@ -5,23 +5,218 @@ import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
-const lobby = useLobbyStore(), stage = ref<HTMLElement | null>(null), dialog = ref<InstanceType<typeof UiDialog> | null>(null), opened = ref(false);
-const sounds = window.ExpressionSounds?.create(); let disposed = false, keyboardTarget: { x: number; y: number } | null = null;
-watch(() => lobby.snapshot, value => { if (!value || !lobby.connected || document.hidden) { sounds?.reset(); return; } sounds?.update({ contextId: 'lobby:' + value.selfId, serverNow: value.serverNow, events: value.visitors.flatMap(visitor => visitor.emote ? [{ id: visitor.emote.id, kind: 'expression' as const, at: visitor.emote.at, sound: visitor.emote.sound }] : []) }); });
-watch(() => lobby.connected, value => { if (!value) { sounds?.reset(); dialog.value?.close(); keyboardTarget = null; } });
-watch(() => lobby.destination, value => { if (!value) keyboardTarget = null; });
-async function open(trigger: HTMLElement) { if (!lobby.connected) return; opened.value = true; await dialog.value?.open(trigger); void lobby.loadExpressions(); }
-async function use(expression: string) { if (await lobby.emote(expression)) { dialog.value?.close(); await nextTick(); if (!disposed) stage.value?.querySelector<HTMLButtonElement>('.is-self')?.focus({ preventScroll: true }); } }
-function move(event: MouseEvent) { if (!lobby.connected || !stage.value || event.target instanceof Element && event.target.closest('.lobby-avatar')) return; const rect = (stage.value.querySelector<HTMLElement>('.lobby-visitors') || stage.value).getBoundingClientRect(); if (rect.width && rect.height) { keyboardTarget = null; lobby.move({ x: (event.clientX - rect.left) / rect.width * 100, y: (event.clientY - rect.top) / rect.height * 100 }); stage.value.focus({ preventScroll: true }); } }
-function key(event: KeyboardEvent) { if (event.target !== stage.value || !lobby.connected) return; const directions: Record<string, [number,number]> = { ArrowLeft: [-5,0], ArrowRight: [5,0], ArrowUp: [0,-5], ArrowDown: [0,5] }, own = lobby.snapshot?.visitors.find(visitor => visitor.id === lobby.snapshot?.selfId); if (!own || !directions[event.key]) return; event.preventDefault(); const [x,y] = directions[event.key], base = keyboardTarget || own; keyboardTarget = { x: Math.max(15,Math.min(85,base.x + x)), y: Math.max(32,Math.min(92,base.y + y)) }; lobby.move(keyboardTarget); }
-function visibility() { if (document.hidden) { sounds?.reset(); dialog.value?.close(); } }
-function profile() { dialog.value?.close(); }
-document.addEventListener('visibilitychange', visibility); window.addEventListener('profile-updated', profile);
-onBeforeUnmount(() => { disposed = true; sounds?.destroy(); document.removeEventListener('visibilitychange', visibility); window.removeEventListener('profile-updated', profile); });
+const lobby = useLobbyStore(),
+  stage = ref<HTMLElement | null>(null),
+  dialog = ref<InstanceType<typeof UiDialog> | null>(null),
+  opened = ref(false);
+const sounds = window.ExpressionSounds?.create();
+let disposed = false,
+  keyboardTarget: { x: number; y: number } | null = null;
+watch(
+  () => lobby.snapshot,
+  (value) => {
+    if (!value || !lobby.connected || document.hidden) {
+      sounds?.reset();
+      return;
+    }
+    sounds?.update({
+      contextId: 'lobby:' + value.selfId,
+      serverNow: value.serverNow,
+      events: value.visitors.flatMap((visitor) =>
+        visitor.emote
+          ? [
+              {
+                id: visitor.emote.id,
+                kind: 'expression' as const,
+                at: visitor.emote.at,
+                sound: visitor.emote.sound,
+              },
+            ]
+          : [],
+      ),
+    });
+  },
+);
+watch(
+  () => lobby.connected,
+  (value) => {
+    if (!value) {
+      sounds?.reset();
+      dialog.value?.close();
+      keyboardTarget = null;
+    }
+  },
+);
+watch(
+  () => lobby.destination,
+  (value) => {
+    if (!value) keyboardTarget = null;
+  },
+);
+async function open(trigger: HTMLElement) {
+  if (!lobby.connected) return;
+  opened.value = true;
+  await dialog.value?.open(trigger);
+  void lobby.loadExpressions();
+}
+async function use(expression: string) {
+  if (await lobby.emote(expression)) {
+    dialog.value?.close();
+    await nextTick();
+    if (!disposed)
+      stage.value?.querySelector<HTMLButtonElement>('.is-self')?.focus({ preventScroll: true });
+  }
+}
+function move(event: MouseEvent) {
+  if (
+    !lobby.connected ||
+    !stage.value ||
+    (event.target instanceof Element && event.target.closest('.lobby-avatar'))
+  )
+    return;
+  const rect = (
+    stage.value.querySelector<HTMLElement>('.lobby-visitors') || stage.value
+  ).getBoundingClientRect();
+  if (rect.width && rect.height) {
+    keyboardTarget = null;
+    lobby.move({
+      x: ((event.clientX - rect.left) / rect.width) * 100,
+      y: ((event.clientY - rect.top) / rect.height) * 100,
+    });
+    stage.value.focus({ preventScroll: true });
+  }
+}
+function key(event: KeyboardEvent) {
+  if (event.target !== stage.value || !lobby.connected) return;
+  const directions: Record<string, [number, number]> = {
+      ArrowLeft: [-5, 0],
+      ArrowRight: [5, 0],
+      ArrowUp: [0, -5],
+      ArrowDown: [0, 5],
+    },
+    own = lobby.snapshot?.visitors.find((visitor) => visitor.id === lobby.snapshot?.selfId);
+  if (!own || !directions[event.key]) return;
+  event.preventDefault();
+  const [x, y] = directions[event.key],
+    base = keyboardTarget || own;
+  keyboardTarget = {
+    x: Math.max(15, Math.min(85, base.x + x)),
+    y: Math.max(32, Math.min(92, base.y + y)),
+  };
+  lobby.move(keyboardTarget);
+}
+function visibility() {
+  if (document.hidden) {
+    sounds?.reset();
+    dialog.value?.close();
+  }
+}
+function profile() {
+  dialog.value?.close();
+}
+document.addEventListener('visibilitychange', visibility);
+window.addEventListener('profile-updated', profile);
+onBeforeUnmount(() => {
+  disposed = true;
+  sounds?.destroy();
+  document.removeEventListener('visibilitychange', visibility);
+  window.removeEventListener('profile-updated', profile);
+});
 </script>
-<template><section class="lobby-section vue-lobby-stage-panel" aria-labelledby="lobbyHeading" data-ping-anchor="lobby-stage">
-  <div class="lobby-top"><div><div class="kicker">THE COMMON ROOM / 好友大廳</div><h2 id="lobbyHeading">進來走走，遇見朋友</h2><p id="lobbyInstructions">點擊目的地，或聚焦場地後用方向鍵移動。點選自己的角色使用表情。</p></div><span class="ui-badge lobby-count">{{ lobby.snapshot ? lobby.snapshot.visitors.length + ' 位在大廳' : '連線中…' }}</span></div>
-  <div ref="stage" class="lobby-stage" tabindex="0" aria-label="好友大廳場地" aria-describedby="lobbyInstructions" :aria-busy="!lobby.connected" @click="move" @keydown="key"><div class="lobby-rug" aria-hidden="true"></div><div class="lobby-lamp lamp-left" aria-hidden="true">✦</div><div class="lobby-lamp lamp-right" aria-hidden="true">✦</div><div class="lobby-visitors"><div v-if="lobby.destination" class="lobby-destination" :style="{ left: lobby.destination.x + '%', top: lobby.destination.y + '%' }" aria-hidden="true"></div><LobbyVisitor v-for="visitor in lobby.snapshot?.visitors || []" :key="visitor.id" :visitor="visitor" :self="visitor.id === lobby.snapshot?.selfId" :reset="lobby.positionReset" :open="opened" :connected="lobby.connected" @select="open" /></div></div>
-  <div class="vue-lobby-connection"><StatusSlot :message="lobby.presenceStatus" :error="!lobby.connected && !!lobby.snapshot" /><UiButton icon="refresh" icon-only label="重新連接大廳" :disabled="lobby.connected" @click="lobby.sync()" /></div>
-  <UiDialog ref="dialog" stitch class="vue-approved-lobby-expressions" title="選擇角色表情" compact @closing="opened = false" @closed="opened = false"><div class="vue-lobby-expression-body"><p class="vue-lobby-expression-intro">使用目前角色的表情；聲音依照你的音效設定播放。</p><div class="vue-lobby-expressions" :aria-busy="lobby.expressionsLoading"><p v-if="lobby.expressionsLoading">正在載入表情…</p><p v-else-if="!lobby.expressions.length">{{ lobby.expressionStatus || '這個角色尚無表情，可到「我的角色」新增。' }}</p><button v-for="expression in lobby.expressions" :key="expression.expression" type="button" :aria-label="expression.label" :disabled="lobby.emotePending || !lobby.connected" @click="use(expression.expression)"><img :src="expression.image" alt=""><span>{{ expression.label }}</span></button></div><StatusSlot :message="lobby.emotePending ? '正在送出表情…' : lobby.expressionStatus" :error="!!lobby.expressionStatus" /></div><footer class="vue-lobby-expression-footer"><div><span>點選立即在大廳展示</span><kbd>Esc 關閉</kbd></div><div><a href="/profile">我的角色</a><UiButton stitch variant="ghost" icon="refresh" label="重新載入表情" :disabled="lobby.expressionsLoading || lobby.emotePending" @click="lobby.loadExpressions(true)" /></div></footer></UiDialog>
-</section></template>
+<template>
+  <section
+    class="lobby-section vue-lobby-stage-panel"
+    aria-labelledby="lobbyHeading"
+    data-ping-anchor="lobby-stage"
+  >
+    <div class="lobby-top"
+      ><div
+        ><div class="kicker">THE COMMON ROOM / 好友大廳</div
+        ><h2 id="lobbyHeading">進來走走，遇見朋友</h2
+        ><p id="lobbyInstructions"
+          >點擊目的地，或聚焦場地後用方向鍵移動。點選自己的角色使用表情。</p
+        ></div
+      ><span class="ui-badge lobby-count">{{
+        lobby.snapshot ? lobby.snapshot.visitors.length + ' 位在大廳' : '連線中…'
+      }}</span></div
+    >
+    <div
+      ref="stage"
+      class="lobby-stage"
+      tabindex="0"
+      aria-label="好友大廳場地"
+      aria-describedby="lobbyInstructions"
+      :aria-busy="!lobby.connected"
+      @click="move"
+      @keydown="key"
+      ><div class="lobby-rug" aria-hidden="true"></div
+      ><div class="lobby-lamp lamp-left" aria-hidden="true">✦</div
+      ><div class="lobby-lamp lamp-right" aria-hidden="true">✦</div
+      ><div class="lobby-visitors"
+        ><div
+          v-if="lobby.destination"
+          class="lobby-destination"
+          :style="{ left: lobby.destination.x + '%', top: lobby.destination.y + '%' }"
+          aria-hidden="true"
+        ></div
+        ><LobbyVisitor
+          v-for="visitor in lobby.snapshot?.visitors || []"
+          :key="visitor.id"
+          :visitor="visitor"
+          :self="visitor.id === lobby.snapshot?.selfId"
+          :reset="lobby.positionReset"
+          :open="opened"
+          :connected="lobby.connected"
+          @select="open" /></div
+    ></div>
+    <div class="vue-lobby-connection"
+      ><StatusSlot
+        :message="lobby.presenceStatus"
+        :error="!lobby.connected && !!lobby.snapshot" /><UiButton
+        icon="refresh"
+        icon-only
+        label="重新連接大廳"
+        :disabled="lobby.connected"
+        @click="lobby.sync()"
+    /></div>
+    <UiDialog
+      ref="dialog"
+      stitch
+      class="vue-approved-lobby-expressions"
+      title="選擇角色表情"
+      compact
+      @closing="opened = false"
+      @closed="opened = false"
+      ><div class="vue-lobby-expression-body"
+        ><p class="vue-lobby-expression-intro">使用目前角色的表情；聲音依照你的音效設定播放。</p
+        ><div class="vue-lobby-expressions" :aria-busy="lobby.expressionsLoading"
+          ><p v-if="lobby.expressionsLoading">正在載入表情…</p
+          ><p v-else-if="!lobby.expressions.length">{{
+            lobby.expressionStatus || '這個角色尚無表情，可到「我的角色」新增。'
+          }}</p
+          ><button
+            v-for="expression in lobby.expressions"
+            :key="expression.expression"
+            type="button"
+            :aria-label="expression.label"
+            :disabled="lobby.emotePending || !lobby.connected"
+            @click="use(expression.expression)"
+            ><img :src="expression.image" alt="" /><span>{{ expression.label }}</span></button
+          ></div
+        ><StatusSlot
+          :message="lobby.emotePending ? '正在送出表情…' : lobby.expressionStatus"
+          :error="!!lobby.expressionStatus" /></div
+      ><footer class="vue-lobby-expression-footer"
+        ><div><span>點選立即在大廳展示</span><kbd>Esc 關閉</kbd></div
+        ><div
+          ><a href="/profile">我的角色</a
+          ><UiButton
+            stitch
+            variant="ghost"
+            icon="refresh"
+            label="重新載入表情"
+            :disabled="lobby.expressionsLoading || lobby.emotePending"
+            @click="lobby.loadExpressions(true)" /></div></footer
+    ></UiDialog>
+  </section>
+</template>

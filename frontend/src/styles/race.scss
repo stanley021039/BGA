@@ -1,25 +1,852 @@
 @use 'tokens' as t;
 @use 'compact-header' as chrome;
-.vue-race-document{--race-panel:var(--play-surface,#fff);--race-border:var(--play-line,#c7d3c8);--race-text:var(--play-ink,#263d30);.vue-game-stage{min-width:0}.vue-game-live-viewport{overflow:auto}.vue-game-panel{min-width:0}}
-.vue-race-scene{display:flex;flex-direction:column;gap:12px;min-width:0;color:var(--race-text);h2,p{margin:0}h2{font-size:16px}button,select{font:inherit}button{cursor:pointer}button:disabled{cursor:default}select{width:100%;min-height:44px;border:1px solid var(--race-border);border-radius:8px;padding:8px;background:var(--race-panel);color:inherit}button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid #ce863a;outline-offset:3px}}
-.vue-race-racebar{display:flex;align-items:center;gap:16px;min-height:48px;>div:first-child{display:flex;gap:12px;align-items:center;flex:1;min-width:0}strong{font-size:18px;overflow-wrap:anywhere}.vue-race-round{white-space:nowrap;font-variant-numeric:tabular-nums}.vue-race-roadbonus{display:flex;align-items:center;gap:8px;white-space:nowrap;.vue-race-die{width:32px;height:32px}}}
-.vue-race-crews{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;article{min-width:0;border:1px solid var(--race-border);border-top:4px solid var(--crew-color);border-radius:8px;padding:8px;min-height:80px;background:var(--race-panel);>div:first-child{display:flex;justify-content:space-between;gap:4px;font-size:14px;strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}span{white-space:nowrap;font-size:12px}}&.current{box-shadow:0 0 0 2px var(--crew-color)}}}
-.vue-race-crew-dice{display:flex;align-items:center;gap:8px;height:32px;margin-top:4px;span{font-size:14px}.vue-race-die{height:28px;width:28px}}
-.vue-race-die{display:block;width:32px;height:32px;color:#f6e6bd;filter:drop-shadow(0 1px 1px #0005);flex:none;&.spent{opacity:.3}}
-.vue-race-track-shell{position:relative;min-width:0;border:1px solid #6a7963;border-radius:12px;background:#263728;overflow:hidden}.vue-race-board{overflow-x:auto;overflow-y:hidden;overscroll-behavior:contain;max-width:100%;svg{display:block;width:100%;min-width:760px;height:auto;max-height:330px}.map-label{font-size:14px;fill:#f1dab0;font-weight:700}.map-index{font-size:12px;fill:#d1c29f}.hex{stroke:#273827;stroke-width:1.4}.hex.legal{stroke:#ffe58b;stroke-width:3}.hex.multi-legal{stroke-dasharray:5 3}.cell-interactive:focus-visible .hex{stroke:#fff;stroke-width:4}.cell-symbol{pointer-events:none;fill:#ffdda0;text-anchor:middle;font-size:20px}.road-boundary{fill:none;stroke:#ffe0a0;stroke-width:3;stroke-dasharray:8 5;pointer-events:none}.race-active-ring{fill:none;stroke:#ffdd80;stroke-width:2}.race-target-ring{fill:none;stroke:#ff8066;stroke-width:2;stroke-dasharray:4 3}.car-label{font-size:10px;text-anchor:middle;fill:#fff0d0}.map-car:focus-visible{outline:none;.race-car-motion{filter:drop-shadow(0 0 4px #fff)}}.race-route-line{fill:none;stroke:#fff0a1;stroke-width:4;stroke-dasharray:6 4}.race-route-dot{fill:#fff0a1;stroke:#263728;stroke-width:1}.race-route-number{fill:#263728;font-size:11px;text-anchor:middle;font-weight:700}.race-annotation{fill:#fff0a1;font-size:12px;text-anchor:middle;font-weight:700}}
-.vue-race-cue,.vue-race-focus{position:absolute;inset:16px auto auto 50%;transform:translateX(-50%);z-index:3;max-width:calc(100% - 32px);width:360px;padding:16px;background:#17251bf2;color:#fff0d0;border:1px solid #dfb96d;border-radius:12px;box-shadow:0 8px 24px #0005;text-align:center;p{margin:0 0 8px}.ui-button{--ui-button-radius:8px}}.vue-race-focus{top:50%;transform:translate(-50%,-50%);strong{font-size:24px}}
-.vue-race-dashboard{display:grid;grid-template-columns:minmax(200px,.95fr) minmax(200px,1.05fr) minmax(200px,1fr);gap:12px;align-items:stretch;>div{min-width:0;padding:12px;border:1px solid var(--race-border);border-radius:12px;background:var(--race-panel)}}
-.vue-race-cars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:128px;padding:8px 4px;border:1px solid var(--race-border);border-radius:8px;color:inherit;background:transparent;svg{width:60px;max-width:100%;height:44px}strong{font-size:14px}span{font-size:12px;white-space:nowrap}&:disabled{opacity:.65}&.selected{background:#e4ce9a33;border:2px solid #b67b32;padding:7px 3px;opacity:1}}}.vue-race-damage{letter-spacing:3px;color:#a44c38}
-.vue-race-dice>div{display:flex;gap:8px;margin:8px 0;min-height:62px;button{display:flex;align-items:center;flex-direction:column;gap:4px;flex:1;min-width:0;padding:4px;border:1px solid var(--race-border);border-radius:8px;background:transparent;color:inherit;small{font-size:12px;white-space:nowrap}&.selected{outline:2px solid #b67b32}&.spent{opacity:.3}&.reserved{background:#dba94c22}}}.vue-race-command{position:relative;summary{cursor:pointer;font-size:14px;min-height:32px;overflow-wrap:anywhere}.vue-race-command-fields{position:absolute;z-index:4;right:0;top:32px;width:320px;max-width:calc(100vw - 48px);display:grid;gap:12px;padding:16px;border:1px solid var(--race-border);border-radius:12px;background:var(--race-panel);box-shadow:0 12px 32px #0003;label{display:grid;gap:4px;font-size:14px}}}
-.vue-race-actions{display:flex;flex-direction:column;gap:8px;min-height:184px;justify-content:space-between;.vue-room-countdown{min-width:0}.vue-race-main-actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;min-height:88px;max-height:124px;overflow:auto;>.ui-button{flex:1 1 auto}.ui-button{--ui-button-radius:8px;min-width:0}.vue-race-targets{display:flex;flex-wrap:wrap;gap:8px;width:100%}}}
-.vue-race-feedback{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,.7fr);gap:12px;min-height:48px;font-size:14px;>p{max-height:64px;overflow:auto;line-height:1.5}.vue-status-slot{min-width:0}}.vue-race-winner{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:12px;border:1px solid var(--race-border);border-radius:12px;h2{font-size:20px}.ui-button{margin-left:auto}}
-.vue-race-log{border-top:1px solid var(--race-border);padding-top:8px;min-width:0;summary{cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}ol{max-height:160px;overflow:auto;padding-left:24px;font-size:14px}p{font-size:14px;margin-top:8px}}.vue-race-terrain-legend{display:grid;gap:12px;div{display:grid;grid-template-columns:80px 1fr;gap:12px}dt{font-weight:700}dd{margin:0}}.vue-race-mode{display:grid;gap:8px;select{min-height:44px;max-width:100%;width:100%}}.vue-race-waiting{display:flex;flex-direction:column;justify-content:center;gap:16px}.vue-race-lesson-link{display:block;padding:8px 0}
-.vue-race-scene{flex:none;>header,>.vue-race-crews,>.vue-race-track-shell,>.vue-race-dashboard,>.vue-race-feedback,>.vue-race-log{flex-shrink:0}}.vue-race-cars button,.vue-race-dice button{--ui-button-radius:8px}.vue-race-track-shell{flex:none}
-@media(min-width:1000px){.vue-race-document{@include chrome.desktop;}.vue-race-document .vue-race-scene{gap:8px}.vue-race-document .vue-race-dashboard>div{padding:8px}.vue-race-document .vue-race-actions{min-height:160px}.vue-race-document .vue-race-cars button{min-height:112px}}
-@media(min-width:1000px) and (max-height:800px){.vue-race-document .vue-race-board svg{max-height:225px;min-width:680px}.vue-race-document .vue-race-crews article{min-height:64px;padding:4px 8px}.vue-race-document .vue-race-dashboard{grid-template-columns:minmax(180px,1fr) minmax(190px,1fr) minmax(180px,1fr)}.vue-race-document .vue-race-cars button{min-height:96px;svg{height:30px}}.vue-race-document .vue-race-actions{min-height:140px}.vue-race-document .vue-race-actions .vue-race-main-actions{min-height:60px;max-height:80px}.vue-race-document .vue-race-feedback{min-height:40px;>p{max-height:42px}}}
-@media(max-width:999px){.vue-race-crews{grid-template-columns:repeat(2,minmax(0,1fr))}.vue-race-dashboard{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.vue-race-actions{grid-column:1/-1;min-height:132px}.vue-race-racebar{flex-wrap:wrap;gap:8px;>div:first-child{flex-basis:100%}}.vue-race-feedback{grid-template-columns:1fr}.vue-race-command .vue-race-command-fields{right:0}}
-@media(max-width:560px){.vue-race-scene{gap:8px}.vue-race-dashboard{grid-template-columns:minmax(0,1fr);gap:8px}.vue-race-garage,.vue-race-decision,.vue-race-actions{grid-column:1}.vue-race-cars button{min-height:112px}.vue-race-actions{min-height:144px}.vue-race-racebar strong{font-size:16px}.vue-race-racebar>div:first-child{flex-wrap:wrap}.vue-race-cue,.vue-race-focus{padding:12px}.vue-race-board svg{min-width:760px;max-height:none}.vue-race-command .vue-race-command-fields{left:0;right:auto;width:100%}.vue-race-crews article>div:first-child{flex-direction:column}.vue-race-crews article{min-height:94px}.vue-race-crew-dice{gap:4px;.vue-race-die{width:24px;height:24px}}}
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine){body.vue-race-document:not(:has(.vue-race-lesson-page)):not(.ui-large-text){margin:0;.vue-game-document{height:100dvh;padding:0 24px 8px;display:grid;grid-template-rows:auto minmax(0,1fr)}&.vue-game-focus .vue-game-document{grid-template-rows:minmax(0,1fr)}#race-app{min-height:0}.vue-game-workspace{height:100%;min-height:0;grid-template-rows:44px 36px minmax(0,1fr);gap:8px}.vue-game-toolbar{min-height:44px;padding:0;gap:8px}.vue-game-phase{min-height:24px;width:8em}.vue-game-room-feedback{min-height:36px;height:36px}.vue-game-grid{grid-template-columns:180px minmax(0,1fr) 240px;gap:12px;min-height:0}.vue-game-main,.vue-game-side{overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain}.vue-game-main{border:1px solid var(--play-line);border-radius:12px;background:var(--play-surface);padding:12px}.vue-game-roster-panel{min-height:0;padding:12px;.vue-roster-list{min-height:0;max-height:none}}.vue-game-side{gap:8px;>.vue-room-chat{flex:1;min-height:260px;padding:12px;gap:8px}}.vue-game-settings-panel{padding:12px;gap:8px;>p{min-height:0}}.vue-game-start-slot{min-height:44px}.vue-room-chat-content{grid-template-rows:0 minmax(60px,1fr) 0 auto 44px 48px;gap:8px}.vue-chat-notice,.vue-chat-quick:empty{visibility:hidden;min-height:0;height:0}.vue-race-scene{min-height:100%}.vue-race-log{margin-top:auto}.vue-race-dashboard{grid-template-columns:minmax(160px,1fr) minmax(180px,1fr) minmax(160px,1fr)}}}
-@media(min-width:1181px) and (max-height:800px) and (min-height:640px) and (pointer:fine){body.vue-race-document:not(:has(.vue-race-lesson-page)):not(.ui-large-text){.vue-game-main{padding:8px}.vue-race-scene{gap:6px}.vue-race-racebar{min-height:40px;gap:8px;strong{font-size:16px}}.vue-race-crews article{min-height:56px;padding:4px}.vue-race-crew-dice{height:24px;.vue-race-die{width:24px;height:24px}}.vue-race-board svg{max-height:200px}.vue-race-dashboard{gap:8px}.vue-race-dashboard>div{padding:8px}.vue-race-actions{min-height:132px}.vue-race-cars{gap:4px}.vue-race-cars button{min-height:88px;padding:4px 2px;strong{font-size:12px}}.vue-race-feedback{min-height:36px;font-size:12px;>p{max-height:36px}}.vue-race-log{padding-top:4px}}}
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine){body.vue-race-document:not(.ui-large-text){.vue-race-board svg{height:clamp(180px,calc(100dvh - 650px),330px);max-height:none}.vue-race-crews article{min-height:72px;padding:6px}.vue-race-dashboard>div{padding:8px}.vue-race-actions{min-height:160px}.vue-race-cars button{min-height:112px}.vue-race-racebar{min-height:44px}}}
-@media(min-width:1181px) and (min-height:640px) and (max-height:800px) and (pointer:fine){body.vue-race-document:not(.ui-large-text){.vue-race-crews article{min-height:56px;padding:4px}.vue-race-actions{min-height:132px}.vue-race-cars button{min-height:88px}}}
+.vue-race-document {
+  --race-panel: var(--play-surface, #fff);
+  --race-border: var(--play-line, #c7d3c8);
+  --race-text: var(--play-ink, #263d30);
+  .vue-game-stage {
+    min-width: 0;
+  }
+  .vue-game-live-viewport {
+    overflow: auto;
+  }
+  .vue-game-panel {
+    min-width: 0;
+  }
+}
+.vue-race-scene {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  color: var(--race-text);
+  h2,
+  p {
+    margin: 0;
+  }
+  h2 {
+    font-size: 16px;
+  }
+  button,
+  select {
+    font: inherit;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  select {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--race-border);
+    border-radius: 8px;
+    padding: 8px;
+    background: var(--race-panel);
+    color: inherit;
+  }
+  button:focus-visible,
+  summary:focus-visible,
+  select:focus-visible {
+    outline: 3px solid #ce863a;
+    outline-offset: 3px;
+  }
+}
+.vue-race-racebar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 48px;
+  > div:first-child {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
+  strong {
+    font-size: 18px;
+    overflow-wrap: anywhere;
+  }
+  .vue-race-round {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .vue-race-roadbonus {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    .vue-race-die {
+      width: 32px;
+      height: 32px;
+    }
+  }
+}
+.vue-race-crews {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  article {
+    min-width: 0;
+    border: 1px solid var(--race-border);
+    border-top: 4px solid var(--crew-color);
+    border-radius: 8px;
+    padding: 8px;
+    min-height: 80px;
+    background: var(--race-panel);
+    > div:first-child {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      font-size: 14px;
+      strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      span {
+        white-space: nowrap;
+        font-size: 12px;
+      }
+    }
+    &.current {
+      box-shadow: 0 0 0 2px var(--crew-color);
+    }
+  }
+}
+.vue-race-crew-dice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  margin-top: 4px;
+  span {
+    font-size: 14px;
+  }
+  .vue-race-die {
+    height: 28px;
+    width: 28px;
+  }
+}
+.vue-race-die {
+  display: block;
+  width: 32px;
+  height: 32px;
+  color: #f6e6bd;
+  filter: drop-shadow(0 1px 1px #0005);
+  flex: none;
+  &.spent {
+    opacity: 0.3;
+  }
+}
+.vue-race-track-shell {
+  position: relative;
+  min-width: 0;
+  border: 1px solid #6a7963;
+  border-radius: 12px;
+  background: #263728;
+  overflow: hidden;
+}
+.vue-race-board {
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+  max-width: 100%;
+  svg {
+    display: block;
+    width: 100%;
+    min-width: 760px;
+    height: auto;
+    max-height: 330px;
+  }
+  .map-label {
+    font-size: 14px;
+    fill: #f1dab0;
+    font-weight: 700;
+  }
+  .map-index {
+    font-size: 12px;
+    fill: #d1c29f;
+  }
+  .hex {
+    stroke: #273827;
+    stroke-width: 1.4;
+  }
+  .hex.legal {
+    stroke: #ffe58b;
+    stroke-width: 3;
+  }
+  .hex.multi-legal {
+    stroke-dasharray: 5 3;
+  }
+  .cell-interactive:focus-visible .hex {
+    stroke: #fff;
+    stroke-width: 4;
+  }
+  .cell-symbol {
+    pointer-events: none;
+    fill: #ffdda0;
+    text-anchor: middle;
+    font-size: 20px;
+  }
+  .road-boundary {
+    fill: none;
+    stroke: #ffe0a0;
+    stroke-width: 3;
+    stroke-dasharray: 8 5;
+    pointer-events: none;
+  }
+  .race-active-ring {
+    fill: none;
+    stroke: #ffdd80;
+    stroke-width: 2;
+  }
+  .race-target-ring {
+    fill: none;
+    stroke: #ff8066;
+    stroke-width: 2;
+    stroke-dasharray: 4 3;
+  }
+  .car-label {
+    font-size: 10px;
+    text-anchor: middle;
+    fill: #fff0d0;
+  }
+  .map-car:focus-visible {
+    outline: none;
+    .race-car-motion {
+      filter: drop-shadow(0 0 4px #fff);
+    }
+  }
+  .race-route-line {
+    fill: none;
+    stroke: #fff0a1;
+    stroke-width: 4;
+    stroke-dasharray: 6 4;
+  }
+  .race-route-dot {
+    fill: #fff0a1;
+    stroke: #263728;
+    stroke-width: 1;
+  }
+  .race-route-number {
+    fill: #263728;
+    font-size: 11px;
+    text-anchor: middle;
+    font-weight: 700;
+  }
+  .race-annotation {
+    fill: #fff0a1;
+    font-size: 12px;
+    text-anchor: middle;
+    font-weight: 700;
+  }
+}
+.vue-race-cue,
+.vue-race-focus {
+  position: absolute;
+  inset: 16px auto auto 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  max-width: calc(100% - 32px);
+  width: 360px;
+  padding: 16px;
+  background: #17251bf2;
+  color: #fff0d0;
+  border: 1px solid #dfb96d;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px #0005;
+  text-align: center;
+  p {
+    margin: 0 0 8px;
+  }
+  .ui-button {
+    --ui-button-radius: 8px;
+  }
+}
+.vue-race-focus {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  strong {
+    font-size: 24px;
+  }
+}
+.vue-race-dashboard {
+  display: grid;
+  grid-template-columns: minmax(200px, 0.95fr) minmax(200px, 1.05fr) minmax(200px, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  > div {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--race-border);
+    border-radius: 12px;
+    background: var(--race-panel);
+  }
+}
+.vue-race-cars {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 128px;
+    padding: 8px 4px;
+    border: 1px solid var(--race-border);
+    border-radius: 8px;
+    color: inherit;
+    background: transparent;
+    svg {
+      width: 60px;
+      max-width: 100%;
+      height: 44px;
+    }
+    strong {
+      font-size: 14px;
+    }
+    span {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    &:disabled {
+      opacity: 0.65;
+    }
+    &.selected {
+      background: #e4ce9a33;
+      border: 2px solid #b67b32;
+      padding: 7px 3px;
+      opacity: 1;
+    }
+  }
+}
+.vue-race-damage {
+  letter-spacing: 3px;
+  color: #a44c38;
+}
+.vue-race-dice > div {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+  min-height: 62px;
+  button {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    padding: 4px;
+    border: 1px solid var(--race-border);
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    small {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    &.selected {
+      outline: 2px solid #b67b32;
+    }
+    &.spent {
+      opacity: 0.3;
+    }
+    &.reserved {
+      background: #dba94c22;
+    }
+  }
+}
+.vue-race-command {
+  position: relative;
+  summary {
+    cursor: pointer;
+    font-size: 14px;
+    min-height: 32px;
+    overflow-wrap: anywhere;
+  }
+  .vue-race-command-fields {
+    position: absolute;
+    z-index: 4;
+    right: 0;
+    top: 32px;
+    width: 320px;
+    max-width: calc(100vw - 48px);
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--race-border);
+    border-radius: 12px;
+    background: var(--race-panel);
+    box-shadow: 0 12px 32px #0003;
+    label {
+      display: grid;
+      gap: 4px;
+      font-size: 14px;
+    }
+  }
+}
+.vue-race-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 184px;
+  justify-content: space-between;
+  .vue-room-countdown {
+    min-width: 0;
+  }
+  .vue-race-main-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-height: 88px;
+    max-height: 124px;
+    overflow: auto;
+    > .ui-button {
+      flex: 1 1 auto;
+    }
+    .ui-button {
+      --ui-button-radius: 8px;
+      min-width: 0;
+    }
+    .vue-race-targets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+    }
+  }
+}
+.vue-race-feedback {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 0.7fr);
+  gap: 12px;
+  min-height: 48px;
+  font-size: 14px;
+  > p {
+    max-height: 64px;
+    overflow: auto;
+    line-height: 1.5;
+  }
+  .vue-status-slot {
+    min-width: 0;
+  }
+}
+.vue-race-winner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--race-border);
+  border-radius: 12px;
+  h2 {
+    font-size: 20px;
+  }
+  .ui-button {
+    margin-left: auto;
+  }
+}
+.vue-race-log {
+  border-top: 1px solid var(--race-border);
+  padding-top: 8px;
+  min-width: 0;
+  summary {
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+  }
+  ol {
+    max-height: 160px;
+    overflow: auto;
+    padding-left: 24px;
+    font-size: 14px;
+  }
+  p {
+    font-size: 14px;
+    margin-top: 8px;
+  }
+}
+.vue-race-terrain-legend {
+  display: grid;
+  gap: 12px;
+  div {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
+  }
+  dt {
+    font-weight: 700;
+  }
+  dd {
+    margin: 0;
+  }
+}
+.vue-race-mode {
+  display: grid;
+  gap: 8px;
+  select {
+    min-height: 44px;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+.vue-race-waiting {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+.vue-race-lesson-link {
+  display: block;
+  padding: 8px 0;
+}
+.vue-race-scene {
+  flex: none;
+  > header,
+  > .vue-race-crews,
+  > .vue-race-track-shell,
+  > .vue-race-dashboard,
+  > .vue-race-feedback,
+  > .vue-race-log {
+    flex-shrink: 0;
+  }
+}
+.vue-race-cars button,
+.vue-race-dice button {
+  --ui-button-radius: 8px;
+}
+.vue-race-track-shell {
+  flex: none;
+}
+@media (min-width: 1000px) {
+  .vue-race-document {
+    @include chrome.desktop;
+  }
+  .vue-race-document .vue-race-scene {
+    gap: 8px;
+  }
+  .vue-race-document .vue-race-dashboard > div {
+    padding: 8px;
+  }
+  .vue-race-document .vue-race-actions {
+    min-height: 160px;
+  }
+  .vue-race-document .vue-race-cars button {
+    min-height: 112px;
+  }
+}
+@media (min-width: 1000px) and (max-height: 800px) {
+  .vue-race-document .vue-race-board svg {
+    max-height: 225px;
+    min-width: 680px;
+  }
+  .vue-race-document .vue-race-crews article {
+    min-height: 64px;
+    padding: 4px 8px;
+  }
+  .vue-race-document .vue-race-dashboard {
+    grid-template-columns: minmax(180px, 1fr) minmax(190px, 1fr) minmax(180px, 1fr);
+  }
+  .vue-race-document .vue-race-cars button {
+    min-height: 96px;
+    svg {
+      height: 30px;
+    }
+  }
+  .vue-race-document .vue-race-actions {
+    min-height: 140px;
+  }
+  .vue-race-document .vue-race-actions .vue-race-main-actions {
+    min-height: 60px;
+    max-height: 80px;
+  }
+  .vue-race-document .vue-race-feedback {
+    min-height: 40px;
+    > p {
+      max-height: 42px;
+    }
+  }
+}
+@media (max-width: 999px) {
+  .vue-race-crews {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .vue-race-dashboard {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .vue-race-actions {
+    grid-column: 1/-1;
+    min-height: 132px;
+  }
+  .vue-race-racebar {
+    flex-wrap: wrap;
+    gap: 8px;
+    > div:first-child {
+      flex-basis: 100%;
+    }
+  }
+  .vue-race-feedback {
+    grid-template-columns: 1fr;
+  }
+  .vue-race-command .vue-race-command-fields {
+    right: 0;
+  }
+}
+@media (max-width: 560px) {
+  .vue-race-scene {
+    gap: 8px;
+  }
+  .vue-race-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .vue-race-garage,
+  .vue-race-decision,
+  .vue-race-actions {
+    grid-column: 1;
+  }
+  .vue-race-cars button {
+    min-height: 112px;
+  }
+  .vue-race-actions {
+    min-height: 144px;
+  }
+  .vue-race-racebar strong {
+    font-size: 16px;
+  }
+  .vue-race-racebar > div:first-child {
+    flex-wrap: wrap;
+  }
+  .vue-race-cue,
+  .vue-race-focus {
+    padding: 12px;
+  }
+  .vue-race-board svg {
+    min-width: 760px;
+    max-height: none;
+  }
+  .vue-race-command .vue-race-command-fields {
+    left: 0;
+    right: auto;
+    width: 100%;
+  }
+  .vue-race-crews article > div:first-child {
+    flex-direction: column;
+  }
+  .vue-race-crews article {
+    min-height: 94px;
+  }
+  .vue-race-crew-dice {
+    gap: 4px;
+    .vue-race-die {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  body.vue-race-document:not(:has(.vue-race-lesson-page)):not(.ui-large-text) {
+    margin: 0;
+    .vue-game-document {
+      height: 100dvh;
+      padding: 0 24px 8px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    &.vue-game-focus .vue-game-document {
+      grid-template-rows: minmax(0, 1fr);
+    }
+    #race-app {
+      min-height: 0;
+    }
+    .vue-game-workspace {
+      height: 100%;
+      min-height: 0;
+      grid-template-rows: 44px 36px minmax(0, 1fr);
+      gap: 8px;
+    }
+    .vue-game-toolbar {
+      min-height: 44px;
+      padding: 0;
+      gap: 8px;
+    }
+    .vue-game-phase {
+      min-height: 24px;
+      width: 8em;
+    }
+    .vue-game-room-feedback {
+      min-height: 36px;
+      height: 36px;
+    }
+    .vue-game-grid {
+      grid-template-columns: 180px minmax(0, 1fr) 240px;
+      gap: 12px;
+      min-height: 0;
+    }
+    .vue-game-main,
+    .vue-game-side {
+      overflow: auto;
+      scrollbar-gutter: stable;
+      overscroll-behavior: contain;
+    }
+    .vue-game-main {
+      border: 1px solid var(--play-line);
+      border-radius: 12px;
+      background: var(--play-surface);
+      padding: 12px;
+    }
+    .vue-game-roster-panel {
+      min-height: 0;
+      padding: 12px;
+      .vue-roster-list {
+        min-height: 0;
+        max-height: none;
+      }
+    }
+    .vue-game-side {
+      gap: 8px;
+      > .vue-room-chat {
+        flex: 1;
+        min-height: 260px;
+        padding: 12px;
+        gap: 8px;
+      }
+    }
+    .vue-game-settings-panel {
+      padding: 12px;
+      gap: 8px;
+      > p {
+        min-height: 0;
+      }
+    }
+    .vue-game-start-slot {
+      min-height: 44px;
+    }
+    .vue-room-chat-content {
+      grid-template-rows: 0 minmax(60px, 1fr) 0 auto 44px 48px;
+      gap: 8px;
+    }
+    .vue-chat-notice,
+    .vue-chat-quick:empty {
+      visibility: hidden;
+      min-height: 0;
+      height: 0;
+    }
+    .vue-race-scene {
+      min-height: 100%;
+    }
+    .vue-race-log {
+      margin-top: auto;
+    }
+    .vue-race-dashboard {
+      grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) minmax(160px, 1fr);
+    }
+  }
+}
+@media (min-width: 1181px) and (max-height: 800px) and (min-height: 640px) and (pointer: fine) {
+  body.vue-race-document:not(:has(.vue-race-lesson-page)):not(.ui-large-text) {
+    .vue-game-main {
+      padding: 8px;
+    }
+    .vue-race-scene {
+      gap: 6px;
+    }
+    .vue-race-racebar {
+      min-height: 40px;
+      gap: 8px;
+      strong {
+        font-size: 16px;
+      }
+    }
+    .vue-race-crews article {
+      min-height: 56px;
+      padding: 4px;
+    }
+    .vue-race-crew-dice {
+      height: 24px;
+      .vue-race-die {
+        width: 24px;
+        height: 24px;
+      }
+    }
+    .vue-race-board svg {
+      max-height: 200px;
+    }
+    .vue-race-dashboard {
+      gap: 8px;
+    }
+    .vue-race-dashboard > div {
+      padding: 8px;
+    }
+    .vue-race-actions {
+      min-height: 132px;
+    }
+    .vue-race-cars {
+      gap: 4px;
+    }
+    .vue-race-cars button {
+      min-height: 88px;
+      padding: 4px 2px;
+      strong {
+        font-size: 12px;
+      }
+    }
+    .vue-race-feedback {
+      min-height: 36px;
+      font-size: 12px;
+      > p {
+        max-height: 36px;
+      }
+    }
+    .vue-race-log {
+      padding-top: 4px;
+    }
+  }
+}
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  body.vue-race-document:not(.ui-large-text) {
+    .vue-race-board svg {
+      height: clamp(180px, calc(100dvh - 650px), 330px);
+      max-height: none;
+    }
+    .vue-race-crews article {
+      min-height: 72px;
+      padding: 6px;
+    }
+    .vue-race-dashboard > div {
+      padding: 8px;
+    }
+    .vue-race-actions {
+      min-height: 160px;
+    }
+    .vue-race-cars button {
+      min-height: 112px;
+    }
+    .vue-race-racebar {
+      min-height: 44px;
+    }
+  }
+}
+@media (min-width: 1181px) and (min-height: 640px) and (max-height: 800px) and (pointer: fine) {
+  body.vue-race-document:not(.ui-large-text) {
+    .vue-race-crews article {
+      min-height: 56px;
+      padding: 4px;
+    }
+    .vue-race-actions {
+      min-height: 132px;
+    }
+    .vue-race-cars button {
+      min-height: 88px;
+    }
+  }
+}

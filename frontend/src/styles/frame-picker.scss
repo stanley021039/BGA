@@ -1,78 +1,444 @@
 // Every caller gets a measurable viewport. The separate stage owns scale,
 // because the original frame renderer deliberately sets transform:none!important.
-body .vue-frame-preview-viewport { display:block;position:relative;box-sizing:border-box;inline-size:100%;min-inline-size:0;max-inline-size:100%;block-size:148px;min-block-size:0;overflow:hidden; }
-body .vue-frame-preview-viewport>.vue-frame-preview-stage { display:block;position:absolute;left:50%;top:50%;inline-size:360px;block-size:148px;transform-origin:center; }
+body .vue-frame-preview-viewport {
+  display: block;
+  position: relative;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  block-size: 148px;
+  min-block-size: 0;
+  overflow: hidden;
+}
+body .vue-frame-preview-viewport > .vue-frame-preview-stage {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  inline-size: 360px;
+  block-size: 148px;
+  transform-origin: center;
+}
 // L05 used a 64px barrage cell. Both previews need a readable, stable height;
 // the component then fits the complete artwork to the available cell width.
-:root body[data-visual-theme] main#settings-app.vue-page.settings-page .settings-barrage-preview-slot { display:block;block-size:148px;min-block-size:148px;overflow:hidden;scrollbar-gutter:auto; }
-:root body[data-visual-theme] main#settings-app.vue-page.settings-page .settings-barrage-preview-slot>.vue-frame-preview-viewport { inline-size:100%;block-size:100%;min-block-size:0;max-inline-size:none; }
+:root
+  body[data-visual-theme]
+  main#settings-app.vue-page.settings-page
+  .settings-barrage-preview-slot {
+  display: block;
+  block-size: 148px;
+  min-block-size: 148px;
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+:root
+  body[data-visual-theme]
+  main#settings-app.vue-page.settings-page
+  .settings-barrage-preview-slot
+  > .vue-frame-preview-viewport {
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 0;
+  max-inline-size: none;
+}
 
 // Shared read-only player preview. Original frame artwork is still decorated
 // by BarrageFrames; these shapes describe player chrome, never play media.
 .vue-frame-media-preview {
-  --frame-preview-background:var(--stitch-surface,#fff);
-  --frame-preview-ink:var(--stitch-ink,#20211E);
-  --frame-preview-line:var(--stitch-line,#D8D9D2);
-  --frame-preview-image:none;
-  display:block;position:relative;isolation:isolate;box-sizing:border-box;
-  inline-size:100%;max-inline-size:360px;aspect-ratio:360/148;overflow:hidden;
-  border:1px solid var(--frame-preview-line);border-radius:8px;
-  color:var(--frame-preview-ink);background:var(--frame-preview-background);background-image:var(--frame-preview-image);
-  >.vue-frame-media-art { position:absolute;inset:0;pointer-events:none;max-inline-size:none; }
-  .vue-frame-media-demo { position:absolute;inset:8px;z-index:1;display:grid;grid-template-rows:24px minmax(0,1fr) 10px;gap:8px;min-inline-size:0;padding:8px;color:inherit;font:500 14px/1.5 var(--stitch-font-family,system-ui); }
-  .vue-frame-media-demo-header { display:flex;align-items:center;gap:6px;border-block-end:1px solid var(--frame-preview-line);padding-block-end:6px;>i { inline-size:6px;block-size:6px;border-radius:50%;background:currentColor;opacity:.6; } >span { flex:1;font-size:12px; } }
-  .vue-frame-media-demo-body { display:flex;align-items:center;gap:12px;min-inline-size:0; }
-  .vue-frame-media-demo-cover { display:grid;place-items:center;inline-size:48px;block-size:48px;border:1px solid currentColor;border-radius:4px;flex:none;>.ui-icon { inline-size:24px;block-size:24px; } }
-  .vue-frame-media-demo-lines { flex:1;display:grid;gap:8px;min-inline-size:0;>i { display:block;block-size:6px;inline-size:75%;border-radius:4px;background:currentColor;opacity:.75; &:nth-child(2) { inline-size:55%;opacity:.45; }&:nth-child(3) { inline-size:35%;opacity:.25; } } }
-  .vue-frame-media-demo-progress { display:block;block-size:3px;background:var(--frame-preview-line);>i { display:block;inline-size:40%;block-size:100%;background:currentColor; } }
+  --frame-preview-background: var(--stitch-surface, #fff);
+  --frame-preview-ink: var(--stitch-ink, #20211e);
+  --frame-preview-line: var(--stitch-line, #d8d9d2);
+  --frame-preview-image: none;
+  display: block;
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: 360px;
+  aspect-ratio: 360/148;
+  overflow: hidden;
+  border: 1px solid var(--frame-preview-line);
+  border-radius: 8px;
+  color: var(--frame-preview-ink);
+  background: var(--frame-preview-background);
+  background-image: var(--frame-preview-image);
+  > .vue-frame-media-art {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    max-inline-size: none;
+  }
+  .vue-frame-media-demo {
+    position: absolute;
+    inset: 8px;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: 24px minmax(0, 1fr) 10px;
+    gap: 8px;
+    min-inline-size: 0;
+    padding: 8px;
+    color: inherit;
+    font: 500 14px/1.5 var(--stitch-font-family, system-ui);
+  }
+  .vue-frame-media-demo-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-block-end: 1px solid var(--frame-preview-line);
+    padding-block-end: 6px;
+    > i {
+      inline-size: 6px;
+      block-size: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.6;
+    }
+    > span {
+      flex: 1;
+      font-size: 12px;
+    }
+  }
+  .vue-frame-media-demo-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-inline-size: 0;
+  }
+  .vue-frame-media-demo-cover {
+    display: grid;
+    place-items: center;
+    inline-size: 48px;
+    block-size: 48px;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    flex: none;
+    > .ui-icon {
+      inline-size: 24px;
+      block-size: 24px;
+    }
+  }
+  .vue-frame-media-demo-lines {
+    flex: 1;
+    display: grid;
+    gap: 8px;
+    min-inline-size: 0;
+    > i {
+      display: block;
+      block-size: 6px;
+      inline-size: 75%;
+      border-radius: 4px;
+      background: currentColor;
+      opacity: 0.75;
+      &:nth-child(2) {
+        inline-size: 55%;
+        opacity: 0.45;
+      }
+      &:nth-child(3) {
+        inline-size: 35%;
+        opacity: 0.25;
+      }
+    }
+  }
+  .vue-frame-media-demo-progress {
+    display: block;
+    block-size: 3px;
+    background: var(--frame-preview-line);
+    > i {
+      display: block;
+      inline-size: 40%;
+      block-size: 100%;
+      background: currentColor;
+    }
+  }
 }
 
 // L03 / L04 share the same 24 real catalogue entries, their original artwork,
 // and an immediate personal preference. The footer is outside the scroll area.
 :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-frame-picker-dialog {
-  inline-size:min(64rem,calc(100vw - 2rem));block-size:min(49rem,calc(100dvh - 2rem));max-block-size:calc(100dvh - 2rem);
-  padding:0;gap:0;
-  >.vue-dialog-header { min-block-size:44px;padding:var(--stitch-space-12) var(--stitch-space-24);border-block-end:1px solid var(--stitch-line); }
-  >.vue-dialog-content { display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;min-inline-size:0;min-block-size:0;overflow:hidden;scrollbar-gutter:auto;padding:0; }
-  .vue-frame-picker-context { display:flex;align-items:center;flex-wrap:wrap;gap:var(--stitch-space-8) var(--stitch-space-12);padding:var(--stitch-space-8) var(--stitch-space-24);min-inline-size:0;>p { flex:1 1 20rem;margin:0;color:var(--stitch-muted);font-size:var(--stitch-font-14);line-height:1.5; } }
-  .vue-frame-picker-type { display:inline-flex;align-items:center;gap:var(--stitch-space-4);padding:var(--stitch-space-4) var(--stitch-space-8);min-block-size:24px;border-radius:999px;background:var(--stitch-selected-bg);color:var(--stitch-selected-ink);font-size:var(--stitch-font-14);line-height:1.5;>.ui-icon { inline-size:16px;block-size:16px; } }
-  &.is-media-picker .vue-frame-picker-type { background:var(--stitch-success-bg);color:var(--stitch-success-ink); }
-  .vue-frame-picker-note { display:flex;align-items:start;gap:var(--stitch-space-8);margin:0;padding:var(--stitch-space-8) var(--stitch-space-24);min-block-size:24px;color:var(--stitch-selected-ink);background:var(--stitch-selected-bg);font-size:var(--stitch-font-14);line-height:1.5;>.ui-icon { flex:none;inline-size:16px;block-size:16px;margin-block-start:2px; } }
-  .vue-frame-picker-scroll { min-inline-size:0;min-block-size:0;padding:var(--stitch-space-16) var(--stitch-space-24);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable; }
-  .vue-frame-filters { gap:var(--stitch-space-12);margin:0 0 var(--stitch-space-16);font-size:var(--stitch-font-14);label { min-inline-size:0; } }
-  .barrage-frame-grid.vue-stitch-frame-grid { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:start;gap:var(--stitch-space-12);min-inline-size:0;padding:0;margin:0; }
-  .vue-stitch-frame-grid>.barrage-frame-choice {
-    --ui-button-radius:var(--stitch-control-radius);--ui-button-border-width:1px;--ui-button-border-color:var(--stitch-line);
-    display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:88px minmax(24px,auto);gap:var(--stitch-space-8);
-    position:relative;box-sizing:border-box;container:frame-card / inline-size;
-    min-inline-size:0;inline-size:100%;block-size:auto;min-block-size:130px;padding:var(--stitch-space-12);
-    border:1px solid var(--stitch-line);border-radius:var(--stitch-control-radius);overflow:visible;
-    background:var(--stitch-surface);color:var(--stitch-ink);box-shadow:none;font-family:var(--stitch-font-family);font-size:var(--stitch-font-14);line-height:1.5;
-    &[aria-pressed=true] { --ui-button-border-color:var(--stitch-primary);background:var(--stitch-selected-bg);color:var(--stitch-selected-ink);outline:2px solid var(--stitch-primary);outline-offset:-2px; }
-    &:focus-visible { outline:2px solid var(--stitch-focus);outline-offset:2px; }
+  inline-size: min(64rem, calc(100vw - 2rem));
+  block-size: min(49rem, calc(100dvh - 2rem));
+  max-block-size: calc(100dvh - 2rem);
+  padding: 0;
+  gap: 0;
+  > .vue-dialog-header {
+    min-block-size: 44px;
+    padding: var(--stitch-space-12) var(--stitch-space-24);
+    border-block-end: 1px solid var(--stitch-line);
   }
-  .vue-frame-preview-slot { grid-row:1;display:block;position:relative;box-sizing:border-box;min-inline-size:0;inline-size:100%;block-size:88px;overflow:hidden;border-radius:var(--stitch-control-radius);background:var(--stitch-surface-subtle);pointer-events:none;
-    >.vue-frame-preview-viewport { inline-size:100%;block-size:100%; }
+  > .vue-dialog-content {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: hidden;
+    scrollbar-gutter: auto;
+    padding: 0;
   }
-  .barrage-frame-label { grid-row:2;display:block;min-inline-size:0;margin:0;font-size:var(--stitch-font-14);line-height:1.5;font-weight:600;text-align:center;white-space:normal;overflow-wrap:anywhere; }
-  .barrage-frame-selection { display:none; }
-  .barrage-frame-choice[aria-pressed=true]>.barrage-frame-selection { display:block;position:absolute;inset-block-start:-8px;inset-inline-end:8px;min-block-size:0;padding:0 var(--stitch-space-8);border:1px solid var(--stitch-primary);border-radius:999px;background:var(--stitch-selected-bg);color:var(--stitch-selected-ink);font-size:var(--stitch-font-14);line-height:1.5;white-space:nowrap; }
-  .barrage-frame-empty { grid-column:1/-1;min-block-size:8rem;margin:0;padding:var(--stitch-space-24);color:var(--stitch-muted);font-size:var(--stitch-font-16);line-height:1.5;text-align:center; }
-  .vue-frame-picker-footer { display:flex;justify-content:space-between;align-items:center;gap:var(--stitch-space-16);min-inline-size:0;min-block-size:68px;box-sizing:border-box;padding:var(--stitch-space-12) var(--stitch-space-24);border-block-start:1px solid var(--stitch-line);background:var(--stitch-surface);>div { display:flex;align-items:center;flex-wrap:wrap;gap:var(--stitch-space-4) var(--stitch-space-8);min-inline-size:0;max-block-size:4.5rem;overflow:auto;font-size:var(--stitch-font-14);line-height:1.5; }>button { flex:none; } }
-  .vue-frame-current-selection { padding:var(--stitch-space-4) var(--stitch-space-8);border-radius:999px;background:var(--stitch-selected-bg);color:var(--stitch-selected-ink);overflow-wrap:anywhere; }
-  .vue-frame-picker-save-note { color:var(--stitch-muted); }
+  .vue-frame-picker-context {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--stitch-space-8) var(--stitch-space-12);
+    padding: var(--stitch-space-8) var(--stitch-space-24);
+    min-inline-size: 0;
+    > p {
+      flex: 1 1 20rem;
+      margin: 0;
+      color: var(--stitch-muted);
+      font-size: var(--stitch-font-14);
+      line-height: 1.5;
+    }
+  }
+  .vue-frame-picker-type {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--stitch-space-4);
+    padding: var(--stitch-space-4) var(--stitch-space-8);
+    min-block-size: 24px;
+    border-radius: 999px;
+    background: var(--stitch-selected-bg);
+    color: var(--stitch-selected-ink);
+    font-size: var(--stitch-font-14);
+    line-height: 1.5;
+    > .ui-icon {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      inline-size: 16px;
+      block-size: 16px;
+      > svg.ui-icon {
+        inline-size: 100%;
+        block-size: 100%;
+        margin: 0;
+      }
+    }
+  }
+  &.is-media-picker .vue-frame-picker-type {
+    background: var(--stitch-success-bg);
+    color: var(--stitch-success-ink);
+  }
+  .vue-frame-picker-note {
+    display: flex;
+    align-items: center;
+    gap: var(--stitch-space-8);
+    margin: 0;
+    padding: var(--stitch-space-8) var(--stitch-space-24);
+    min-block-size: 24px;
+    color: var(--stitch-selected-ink);
+    background: var(--stitch-selected-bg);
+    font-size: var(--stitch-font-14);
+    line-height: 1.5;
+    > .ui-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      inline-size: 16px;
+      block-size: 16px;
+      margin-block-start: 0;
+      > svg.ui-icon {
+        inline-size: 100%;
+        block-size: 100%;
+        margin: 0;
+      }
+    }
+  }
+  .vue-frame-picker-scroll {
+    min-inline-size: 0;
+    min-block-size: 0;
+    padding: var(--stitch-space-16) var(--stitch-space-24);
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  .vue-frame-filters {
+    gap: var(--stitch-space-12);
+    margin: 0 0 var(--stitch-space-16);
+    font-size: var(--stitch-font-14);
+    label {
+      min-inline-size: 0;
+    }
+  }
+  .barrage-frame-grid.vue-stitch-frame-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: start;
+    gap: var(--stitch-space-12);
+    min-inline-size: 0;
+    padding: 0;
+    margin: 0;
+  }
+  .vue-stitch-frame-grid > .barrage-frame-choice {
+    --ui-button-radius: var(--stitch-control-radius);
+    --ui-button-border-width: 1px;
+    --ui-button-border-color: var(--stitch-line);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 88px minmax(24px, auto);
+    gap: var(--stitch-space-8);
+    position: relative;
+    box-sizing: border-box;
+    container: frame-card / inline-size;
+    min-inline-size: 0;
+    inline-size: 100%;
+    block-size: auto;
+    min-block-size: 130px;
+    padding: var(--stitch-space-12);
+    border: 1px solid var(--stitch-line);
+    border-radius: var(--stitch-control-radius);
+    overflow: visible;
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    box-shadow: none;
+    font-family: var(--stitch-font-family);
+    font-size: var(--stitch-font-14);
+    line-height: 1.5;
+    &[aria-pressed='true'] {
+      --ui-button-border-color: var(--stitch-primary);
+      background: var(--stitch-selected-bg);
+      color: var(--stitch-selected-ink);
+      outline: 2px solid var(--stitch-primary);
+      outline-offset: -2px;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--stitch-focus);
+      outline-offset: 2px;
+    }
+  }
+  .vue-frame-preview-slot {
+    grid-row: 1;
+    display: block;
+    position: relative;
+    box-sizing: border-box;
+    min-inline-size: 0;
+    inline-size: 100%;
+    block-size: 88px;
+    overflow: hidden;
+    border-radius: var(--stitch-control-radius);
+    background: var(--stitch-surface-subtle);
+    pointer-events: none;
+    > .vue-frame-preview-viewport {
+      inline-size: 100%;
+      block-size: 100%;
+    }
+  }
+  .barrage-frame-label {
+    grid-row: 2;
+    display: block;
+    min-inline-size: 0;
+    margin: 0;
+    font-size: var(--stitch-font-14);
+    line-height: 1.5;
+    font-weight: 600;
+    text-align: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .barrage-frame-selection {
+    display: none;
+  }
+  .barrage-frame-choice[aria-pressed='true'] > .barrage-frame-selection {
+    display: block;
+    position: absolute;
+    inset-block-start: -8px;
+    inset-inline-end: 8px;
+    min-block-size: 0;
+    padding: 0 var(--stitch-space-8);
+    border: 1px solid var(--stitch-primary);
+    border-radius: 999px;
+    background: var(--stitch-selected-bg);
+    color: var(--stitch-selected-ink);
+    font-size: var(--stitch-font-14);
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .barrage-frame-empty {
+    grid-column: 1/-1;
+    min-block-size: 8rem;
+    margin: 0;
+    padding: var(--stitch-space-24);
+    color: var(--stitch-muted);
+    font-size: var(--stitch-font-16);
+    line-height: 1.5;
+    text-align: center;
+  }
+  .vue-frame-picker-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--stitch-space-16);
+    min-inline-size: 0;
+    min-block-size: 68px;
+    box-sizing: border-box;
+    padding: var(--stitch-space-12) var(--stitch-space-24);
+    border-block-start: 1px solid var(--stitch-line);
+    background: var(--stitch-surface);
+    > div {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: var(--stitch-space-4) var(--stitch-space-8);
+      min-inline-size: 0;
+      max-block-size: 4.5rem;
+      overflow: auto;
+      font-size: var(--stitch-font-14);
+      line-height: 1.5;
+    }
+    > button {
+      flex: none;
+    }
+  }
+  .vue-frame-current-selection {
+    padding: var(--stitch-space-4) var(--stitch-space-8);
+    border-radius: 999px;
+    background: var(--stitch-selected-bg);
+    color: var(--stitch-selected-ink);
+    overflow-wrap: anywhere;
+  }
+  .vue-frame-picker-save-note {
+    color: var(--stitch-muted);
+  }
 }
-@media(max-width:760px) {
+@media (max-width: 760px) {
   :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-frame-picker-dialog {
-    inline-size:calc(100vw - 1rem);max-inline-size:calc(100vw - 1rem);block-size:calc(100dvh - 1rem);max-block-size:calc(100dvh - 1rem);
-    >.vue-dialog-header { padding:var(--stitch-space-8) var(--stitch-space-12); }
-    .vue-frame-picker-context,.vue-frame-picker-note { padding-inline:var(--stitch-space-12); }
-    .vue-frame-picker-context>p { flex-basis:100%; }
-    .vue-frame-picker-scroll { padding:var(--stitch-space-16) var(--stitch-space-12); }
-    .barrage-frame-grid.vue-stitch-frame-grid { grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--stitch-space-12); }
-    .vue-stitch-frame-grid>.barrage-frame-choice { padding:var(--stitch-space-8);grid-template-rows:72px minmax(24px,auto);min-block-size:112px; }
-    .vue-frame-preview-slot { block-size:72px; }
-    .vue-frame-picker-footer { gap:var(--stitch-space-8);padding:var(--stitch-space-8) var(--stitch-space-12);min-block-size:72px; }
-    .vue-frame-picker-save-note { flex-basis:100%; }
+    inline-size: calc(100vw - 1rem);
+    max-inline-size: calc(100vw - 1rem);
+    block-size: calc(100dvh - 1rem);
+    max-block-size: calc(100dvh - 1rem);
+    > .vue-dialog-header {
+      padding: var(--stitch-space-8) var(--stitch-space-12);
+    }
+    .vue-frame-picker-context,
+    .vue-frame-picker-note {
+      padding-inline: var(--stitch-space-12);
+    }
+    .vue-frame-picker-context > p {
+      flex-basis: 100%;
+    }
+    .vue-frame-picker-scroll {
+      padding: var(--stitch-space-16) var(--stitch-space-12);
+    }
+    .barrage-frame-grid.vue-stitch-frame-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--stitch-space-12);
+    }
+    .vue-stitch-frame-grid > .barrage-frame-choice {
+      padding: var(--stitch-space-8);
+      grid-template-rows: 72px minmax(24px, auto);
+      min-block-size: 112px;
+    }
+    .vue-frame-preview-slot {
+      block-size: 72px;
+    }
+    .vue-frame-picker-footer {
+      gap: var(--stitch-space-8);
+      padding: var(--stitch-space-8) var(--stitch-space-12);
+      min-block-size: 72px;
+    }
+    .vue-frame-picker-save-note {
+      flex-basis: 100%;
+    }
   }
 }

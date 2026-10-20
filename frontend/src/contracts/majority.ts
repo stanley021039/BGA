@@ -1,40 +1,311 @@
 import { readRoomSnapshot } from './room';
-import type { RoomSnapshot,RoomPlayer } from './room';
-import { array,record,text,strings } from '../services/validation';
-export type MajorityKind='two'|'three'|'blank';
-export type MajorityPhase='waiting'|'choosing'|'answering'|'review'|'reveal'|'finished';
-export interface MajorityQuestion { id:string|null;type:MajorityKind;topic:string;prompt:string;options:string[];images:string[];pack:string;shared:boolean;reused:boolean }
-export interface MajorityGroup {id:string;label:string;playerIds:string[];count:number;winner:boolean}
-export interface MajorityResult {round:number;question?:MajorityQuestion;points:number;presenterPenalty:number;groups:MajorityGroup[];answers:Record<string,string|number>;gains:Record<string,number>;teamGains:Record<string,number>;missingIds:string[];reason:string;solo:boolean}
-export interface MajorityTeam {id:string;name:string;members:string[];score:number}
-export interface MajorityOptions {mode:'majority'|'cruel';rounds:number;customPercent:number|null;cruelRules:'teams'|'individual';cruelScoring:'majority'|'minority'}
-export interface MajorityPlayer extends RoomPlayer {score:number;waitingForNextRound:boolean}
-export interface MajoritySnapshot extends RoomSnapshot {type:'majority';phase:MajorityPhase;players:MajorityPlayer[];round:number;roundLimit:number;presenterId:string|null;options:MajorityOptions;question:MajorityQuestion|null;candidates:MajorityQuestion[];topics:{id:string;label:string}[];deadline:number|null;ownAnswer:string|number|null;participantIds:string[];answeredIds:string[];groups:MajorityGroup[];answers:Record<string,string|number>;result:MajorityResult|null;winner:{ids:string[];score:number;reason:string;teamIds:string[]}|null;departed:{id:string;name:string}[];queueCount:number;ownQueue:{id:string;owner:string;question:MajorityQuestion}[];cruel:{rules:'teams'|'individual';scoring:'majority'|'minority';teams:MajorityTeam[];skipRemaining:boolean;canReplace:boolean;questionId:string|null;solo:boolean;recap:MajorityResult[]}|null;reactions:{id:number;player:string;emoji:string;at:number}[];normalization:string}
-function integer(value:unknown,min=0,max=Number.MAX_SAFE_INTEGER){if(!Number.isSafeInteger(value)||(value as number)<min||(value as number)>max)throw Error('同頻資料數值格式不正確');return value as number;}
-export function readMajorityQuestion(value:unknown):MajorityQuestion{
- const q=record(value),type=q.type;if(type!=='two'&&type!=='three'&&type!=='blank')throw Error('同頻題型格式不正確');
- const options=strings(q.options),images=strings(q.images);if(!text(q.prompt)||options.length!==(type==='blank'?0:type==='two'?2:3)||images.some(url=>!/^\/assets\/majority-cruel\/cruel-two-\d{3}-[ab]\.svg$/.test(url))||(images.length&&images.length!==options.length))throw Error('同頻題目資料格式不正確');
- return {id:typeof q.id==='string'?q.id:null,type,topic:text(q.topic),prompt:text(q.prompt),options,images,pack:text(q.pack,'內建生活題庫'),shared:q.shared===true,reused:q.reused===true};
+import type { RoomSnapshot, RoomPlayer } from './room';
+import { array, record, text, strings } from '../services/validation';
+export type MajorityKind = 'two' | 'three' | 'blank';
+export type MajorityPhase = 'waiting' | 'choosing' | 'answering' | 'review' | 'reveal' | 'finished';
+export interface MajorityQuestion {
+  id: string | null;
+  type: MajorityKind;
+  topic: string;
+  prompt: string;
+  options: string[];
+  images: string[];
+  pack: string;
+  shared: boolean;
+  reused: boolean;
 }
-function groups(value:unknown):MajorityGroup[]{return array(value).map(value=>{const g=record(value),playerIds=strings(g.playerIds),count=integer(g.count,1,12);if(!text(g.id)||count!==playerIds.length)throw Error('答案分組格式不正確');return {id:text(g.id),label:text(g.label),playerIds,count,winner:g.winner===true};});}
-function answers(value:unknown):Record<string,string|number>{return Object.fromEntries(Object.entries(record(value)).map(([id,answer])=>{if(typeof answer!=='string'&&!(Number.isInteger(answer)&&(answer as number)>=0&&(answer as number)<=2))throw Error('答案資料格式不正確');return [id,answer as string|number];}));}
-function gains(value:unknown):Record<string,number>{return Object.fromEntries(Object.entries(value===undefined?{}:record(value)).map(([id,value])=>[id,integer(value,-1000,1000)]));}
-function result(value:unknown):MajorityResult{const r=record(value);return {round:integer(r.round),...(r.question?{question:readMajorityQuestion(r.question)}:{}),points:integer(r.points),presenterPenalty:integer(r.presenterPenalty),groups:groups(r.groups),answers:answers(r.answers),gains:gains(r.gains),teamGains:gains(r.teamGains),missingIds:strings(r.missingIds),reason:text(r.reason),solo:r.solo===true};}
-export function readMajorityLibrary(value:unknown){const x=record(value);return {questions:array(x.questions).map(value=>{const q=readMajorityQuestion(value);if(!q.id)throw Error('共用題庫缺少題目識別碼');return q;}),topics:array(x.topics).map(value=>{const t=record(value);return {id:text(t.id),label:text(t.label)};})};}
-export function readMajoritySnapshot(value:unknown):MajoritySnapshot{
- const base=readRoomSnapshot(value),x=record(value),o=record(x.options),phase=x.phase;
- if(base.type!=='majority'||!['waiting','choosing','answering','review','reveal','finished'].includes(String(phase)))throw Error('同頻房間資料格式不正確');
- const visible=['review','reveal','finished'].includes(String(phase)),question=x.question?readMajorityQuestion(x.question):null,candidates=array(x.candidates).map(readMajorityQuestion);
- if(!visible&&(array(x.groups).length||x.answers&&Object.keys(record(x.answers)).length||x.result))throw Error('未揭曉的答案不應公開');
- if(candidates.length&&(phase!=='choosing'||x.presenterId!==base.me))throw Error('候選題目尚未公開');
- if((phase==='answering'||phase==='review'||phase==='reveal')&&!question)throw Error('目前題目尚未讀取');
- const ownAnswer=x.ownAnswer===null||x.ownAnswer===undefined?null:typeof x.ownAnswer==='string'?x.ownAnswer:integer(x.ownAnswer,0,2);
- const cruel=x.cruel?record(x.cruel):null,winner=x.winner?record(x.winner):null;
- return {...base,type:'majority',phase:phase as MajorityPhase,players:base.players.map(p=>({...p,score:integer(p.score,-10000,10000),waitingForNextRound:p.waitingForNextRound===true})),round:integer(x.round),roundLimit:integer(x.roundLimit,3,30),presenterId:typeof x.presenterId==='string'?x.presenterId:null,
- options:{mode:o.mode==='cruel'?'cruel':'majority',rounds:integer(o.rounds,3,30),customPercent:o.customPercent===null||o.customPercent===undefined?null:integer(o.customPercent,0,100),cruelRules:o.cruelRules==='individual'?'individual':'teams',cruelScoring:o.cruelScoring==='minority'?'minority':'majority'},question,candidates,topics:array(x.topics).map(value=>{const t=record(value);return {id:text(t.id),label:text(t.label)};}),deadline:x.deadline===null||x.deadline===undefined?null:integer(x.deadline),ownAnswer,participantIds:strings(x.participantIds),answeredIds:strings(x.answeredIds),groups:visible?groups(x.groups):[],answers:visible?answers(x.answers):{},result:x.result?result(x.result):null,
- winner:winner?{ids:strings(winner.ids),score:integer(winner.score,-10000,10000),reason:text(winner.reason),teamIds:strings(winner.teamIds)}:null,departed:array(x.departed).map(value=>{const p=record(value);return {id:text(p.id),name:text(p.name)};}),queueCount:integer(x.queueCount,0,60),ownQueue:array(x.ownQueue).map(value=>{const q=record(value);if(q.owner!==base.me)throw Error('預備題目必須屬於本人');return {id:text(q.id),owner:text(q.owner),question:readMajorityQuestion(q.question)};}),
- cruel:cruel?{rules:cruel.rules==='individual'?'individual':'teams',scoring:cruel.scoring==='minority'?'minority':'majority',teams:array(cruel.teams).map(value=>{const t=record(value);return {id:text(t.id),name:text(t.name),members:strings(t.members),score:integer(t.score)};}),skipRemaining:cruel.skipRemaining===true,canReplace:cruel.canReplace===true,questionId:typeof cruel.questionId==='string'?cruel.questionId:null,solo:cruel.solo===true,recap:phase==='finished'?array(cruel.recap).map(result):[]}:null,
- reactions:array(x.reactions).map(value=>{const r=record(value);return {id:integer(r.id),player:text(r.player),emoji:text(r.emoji),at:integer(r.at)};}),normalization:text(x.normalization)};
+export interface MajorityGroup {
+  id: string;
+  label: string;
+  playerIds: string[];
+  count: number;
+  winner: boolean;
 }
-export const majorityKindLabels:Record<MajorityKind,string>={two:'二選一',three:'三選一',blank:'填空題'};
-export function questionDraft(value:{type:MajorityKind;topic:string;prompt:string;options:string[]}){const prompt=value.prompt.trim(),count=value.type==='blank'?0:value.type==='two'?2:3,options=value.options.slice(0,count).map(v=>v.trim());if(!prompt||prompt.length>160)throw Error('題目需為 1 至 160 字');if(options.some(o=>!o||o.length>60)||options.length!==count)throw Error('選項需為 1 至 60 字');if(new Set(options.map(o=>o.normalize('NFKC').toLowerCase().replace(/\s+/gu,' '))).size!==count)throw Error('選項不可重複');return {type:value.type,topic:value.topic,prompt,options};}
+export interface MajorityResult {
+  round: number;
+  question?: MajorityQuestion;
+  points: number;
+  presenterPenalty: number;
+  groups: MajorityGroup[];
+  answers: Record<string, string | number>;
+  gains: Record<string, number>;
+  teamGains: Record<string, number>;
+  missingIds: string[];
+  reason: string;
+  solo: boolean;
+}
+export interface MajorityTeam {
+  id: string;
+  name: string;
+  members: string[];
+  score: number;
+}
+export interface MajorityOptions {
+  mode: 'majority' | 'cruel';
+  rounds: number;
+  customPercent: number | null;
+  cruelRules: 'teams' | 'individual';
+  cruelScoring: 'majority' | 'minority';
+}
+export interface MajorityPlayer extends RoomPlayer {
+  score: number;
+  waitingForNextRound: boolean;
+}
+export interface MajoritySnapshot extends RoomSnapshot {
+  type: 'majority';
+  phase: MajorityPhase;
+  players: MajorityPlayer[];
+  round: number;
+  roundLimit: number;
+  presenterId: string | null;
+  options: MajorityOptions;
+  question: MajorityQuestion | null;
+  candidates: MajorityQuestion[];
+  topics: { id: string; label: string }[];
+  deadline: number | null;
+  ownAnswer: string | number | null;
+  participantIds: string[];
+  answeredIds: string[];
+  groups: MajorityGroup[];
+  answers: Record<string, string | number>;
+  result: MajorityResult | null;
+  winner: { ids: string[]; score: number; reason: string; teamIds: string[] } | null;
+  departed: { id: string; name: string }[];
+  queueCount: number;
+  ownQueue: { id: string; owner: string; question: MajorityQuestion }[];
+  cruel: {
+    rules: 'teams' | 'individual';
+    scoring: 'majority' | 'minority';
+    teams: MajorityTeam[];
+    skipRemaining: boolean;
+    canReplace: boolean;
+    questionId: string | null;
+    solo: boolean;
+    recap: MajorityResult[];
+  } | null;
+  reactions: { id: number; player: string; emoji: string; at: number }[];
+  normalization: string;
+}
+function integer(value: unknown, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  if (!Number.isSafeInteger(value) || (value as number) < min || (value as number) > max)
+    throw Error('同頻資料數值格式不正確');
+  return value as number;
+}
+export function readMajorityQuestion(value: unknown): MajorityQuestion {
+  const q = record(value),
+    type = q.type;
+  if (type !== 'two' && type !== 'three' && type !== 'blank') throw Error('同頻題型格式不正確');
+  const options = strings(q.options),
+    images = strings(q.images);
+  if (
+    !text(q.prompt) ||
+    options.length !== (type === 'blank' ? 0 : type === 'two' ? 2 : 3) ||
+    images.some((url) => !/^\/assets\/majority-cruel\/cruel-two-\d{3}-[ab]\.svg$/.test(url)) ||
+    (images.length && images.length !== options.length)
+  )
+    throw Error('同頻題目資料格式不正確');
+  return {
+    id: typeof q.id === 'string' ? q.id : null,
+    type,
+    topic: text(q.topic),
+    prompt: text(q.prompt),
+    options,
+    images,
+    pack: text(q.pack, '內建生活題庫'),
+    shared: q.shared === true,
+    reused: q.reused === true,
+  };
+}
+function groups(value: unknown): MajorityGroup[] {
+  return array(value).map((value) => {
+    const g = record(value),
+      playerIds = strings(g.playerIds),
+      count = integer(g.count, 1, 12);
+    if (!text(g.id) || count !== playerIds.length) throw Error('答案分組格式不正確');
+    return { id: text(g.id), label: text(g.label), playerIds, count, winner: g.winner === true };
+  });
+}
+function answers(value: unknown): Record<string, string | number> {
+  return Object.fromEntries(
+    Object.entries(record(value)).map(([id, answer]) => {
+      if (
+        typeof answer !== 'string' &&
+        !(Number.isInteger(answer) && (answer as number) >= 0 && (answer as number) <= 2)
+      )
+        throw Error('答案資料格式不正確');
+      return [id, answer as string | number];
+    }),
+  );
+}
+function gains(value: unknown): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(value === undefined ? {} : record(value)).map(([id, value]) => [
+      id,
+      integer(value, -1000, 1000),
+    ]),
+  );
+}
+function result(value: unknown): MajorityResult {
+  const r = record(value);
+  return {
+    round: integer(r.round),
+    ...(r.question ? { question: readMajorityQuestion(r.question) } : {}),
+    points: integer(r.points),
+    presenterPenalty: integer(r.presenterPenalty),
+    groups: groups(r.groups),
+    answers: answers(r.answers),
+    gains: gains(r.gains),
+    teamGains: gains(r.teamGains),
+    missingIds: strings(r.missingIds),
+    reason: text(r.reason),
+    solo: r.solo === true,
+  };
+}
+export function readMajorityLibrary(value: unknown) {
+  const x = record(value);
+  return {
+    questions: array(x.questions).map((value) => {
+      const q = readMajorityQuestion(value);
+      if (!q.id) throw Error('共用題庫缺少題目識別碼');
+      return q;
+    }),
+    topics: array(x.topics).map((value) => {
+      const t = record(value);
+      return { id: text(t.id), label: text(t.label) };
+    }),
+  };
+}
+export function readMajoritySnapshot(value: unknown): MajoritySnapshot {
+  const base = readRoomSnapshot(value),
+    x = record(value),
+    o = record(x.options),
+    phase = x.phase;
+  if (
+    base.type !== 'majority' ||
+    !['waiting', 'choosing', 'answering', 'review', 'reveal', 'finished'].includes(String(phase))
+  )
+    throw Error('同頻房間資料格式不正確');
+  const visible = ['review', 'reveal', 'finished'].includes(String(phase)),
+    question = x.question ? readMajorityQuestion(x.question) : null,
+    candidates = array(x.candidates).map(readMajorityQuestion);
+  if (
+    !visible &&
+    (array(x.groups).length || (x.answers && Object.keys(record(x.answers)).length) || x.result)
+  )
+    throw Error('未揭曉的答案不應公開');
+  if (candidates.length && (phase !== 'choosing' || x.presenterId !== base.me))
+    throw Error('候選題目尚未公開');
+  if ((phase === 'answering' || phase === 'review' || phase === 'reveal') && !question)
+    throw Error('目前題目尚未讀取');
+  const ownAnswer =
+    x.ownAnswer === null || x.ownAnswer === undefined
+      ? null
+      : typeof x.ownAnswer === 'string'
+        ? x.ownAnswer
+        : integer(x.ownAnswer, 0, 2);
+  const cruel = x.cruel ? record(x.cruel) : null,
+    winner = x.winner ? record(x.winner) : null;
+  return {
+    ...base,
+    type: 'majority',
+    phase: phase as MajorityPhase,
+    players: base.players.map((p) => ({
+      ...p,
+      score: integer(p.score, -10000, 10000),
+      waitingForNextRound: p.waitingForNextRound === true,
+    })),
+    round: integer(x.round),
+    roundLimit: integer(x.roundLimit, 3, 30),
+    presenterId: typeof x.presenterId === 'string' ? x.presenterId : null,
+    options: {
+      mode: o.mode === 'cruel' ? 'cruel' : 'majority',
+      rounds: integer(o.rounds, 3, 30),
+      customPercent:
+        o.customPercent === null || o.customPercent === undefined
+          ? null
+          : integer(o.customPercent, 0, 100),
+      cruelRules: o.cruelRules === 'individual' ? 'individual' : 'teams',
+      cruelScoring: o.cruelScoring === 'minority' ? 'minority' : 'majority',
+    },
+    question,
+    candidates,
+    topics: array(x.topics).map((value) => {
+      const t = record(value);
+      return { id: text(t.id), label: text(t.label) };
+    }),
+    deadline: x.deadline === null || x.deadline === undefined ? null : integer(x.deadline),
+    ownAnswer,
+    participantIds: strings(x.participantIds),
+    answeredIds: strings(x.answeredIds),
+    groups: visible ? groups(x.groups) : [],
+    answers: visible ? answers(x.answers) : {},
+    result: x.result ? result(x.result) : null,
+    winner: winner
+      ? {
+          ids: strings(winner.ids),
+          score: integer(winner.score, -10000, 10000),
+          reason: text(winner.reason),
+          teamIds: strings(winner.teamIds),
+        }
+      : null,
+    departed: array(x.departed).map((value) => {
+      const p = record(value);
+      return { id: text(p.id), name: text(p.name) };
+    }),
+    queueCount: integer(x.queueCount, 0, 60),
+    ownQueue: array(x.ownQueue).map((value) => {
+      const q = record(value);
+      if (q.owner !== base.me) throw Error('預備題目必須屬於本人');
+      return { id: text(q.id), owner: text(q.owner), question: readMajorityQuestion(q.question) };
+    }),
+    cruel: cruel
+      ? {
+          rules: cruel.rules === 'individual' ? 'individual' : 'teams',
+          scoring: cruel.scoring === 'minority' ? 'minority' : 'majority',
+          teams: array(cruel.teams).map((value) => {
+            const t = record(value);
+            return {
+              id: text(t.id),
+              name: text(t.name),
+              members: strings(t.members),
+              score: integer(t.score),
+            };
+          }),
+          skipRemaining: cruel.skipRemaining === true,
+          canReplace: cruel.canReplace === true,
+          questionId: typeof cruel.questionId === 'string' ? cruel.questionId : null,
+          solo: cruel.solo === true,
+          recap: phase === 'finished' ? array(cruel.recap).map(result) : [],
+        }
+      : null,
+    reactions: array(x.reactions).map((value) => {
+      const r = record(value);
+      return { id: integer(r.id), player: text(r.player), emoji: text(r.emoji), at: integer(r.at) };
+    }),
+    normalization: text(x.normalization),
+  };
+}
+export const majorityKindLabels: Record<MajorityKind, string> = {
+  two: '二選一',
+  three: '三選一',
+  blank: '填空題',
+};
+export function questionDraft(value: {
+  type: MajorityKind;
+  topic: string;
+  prompt: string;
+  options: string[];
+}) {
+  const prompt = value.prompt.trim(),
+    count = value.type === 'blank' ? 0 : value.type === 'two' ? 2 : 3,
+    options = value.options.slice(0, count).map((v) => v.trim());
+  if (!prompt || prompt.length > 160) throw Error('題目需為 1 至 160 字');
+  if (options.some((o) => !o || o.length > 60) || options.length !== count)
+    throw Error('選項需為 1 至 60 字');
+  if (
+    new Set(options.map((o) => o.normalize('NFKC').toLowerCase().replace(/\s+/gu, ' '))).size !==
+    count
+  )
+    throw Error('選項不可重複');
+  return { type: value.type, topic: value.topic, prompt, options };
+}

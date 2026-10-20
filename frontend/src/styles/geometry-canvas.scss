@@ -1,6 +1,50 @@
 @use 'tokens' as t;
-.vue-geometry-canvas { margin:0; display:grid; gap:t.space(3); min-width:0; }
-.vue-geometry-surface { position:relative; width:100%; aspect-ratio:2; background:white; border:1px solid var(--play-line); border-radius:t.space(3); overflow:hidden; >canvas { display:block; width:100%; height:100%; } >canvas:focus-visible { outline:3px solid var(--play-ink); outline-offset:-4px; } }
-.vue-geometry-cursor { position:absolute; width:12px; height:12px; border:1px solid #e23443; border-radius:50%; transform:translate(-50%,-50%); pointer-events:none; opacity:0; .vue-geometry-surface:focus-within & { opacity:1; } }
-.vue-geometry-instructions { min-height:4.5em; @include t.type(p3); span { display:block; min-width:12ch; font-variant-numeric:tabular-nums; } }
-.vue-geometry-canvas>.frontend-status { margin:0; }
+.vue-geometry-canvas {
+  margin: 0;
+  display: grid;
+  gap: t.space(3);
+  min-width: 0;
+}
+.vue-geometry-surface {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2;
+  background: white;
+  border: 1px solid var(--play-line);
+  border-radius: t.space(3);
+  overflow: hidden;
+  > canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  > canvas:focus-visible {
+    outline: 3px solid var(--play-ink);
+    outline-offset: -4px;
+  }
+}
+.vue-geometry-cursor {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #e23443;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  .vue-geometry-surface:focus-within & {
+    opacity: 1;
+  }
+}
+.vue-geometry-instructions {
+  min-height: 4.5em;
+  @include t.type(p3);
+  span {
+    display: block;
+    min-width: 12ch;
+    font-variant-numeric: tabular-nums;
+  }
+}
+.vue-geometry-canvas > .frontend-status {
+  margin: 0;
+}

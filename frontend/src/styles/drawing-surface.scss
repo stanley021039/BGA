@@ -1,16 +1,54 @@
 @use 'tokens';
 
-.vue-drawing-surface { display: grid; grid-template-columns: minmax(0, 1fr); gap: tokens.space(3); min-inline-size: 0; container: drawing / inline-size; }
-.vue-drawing-frame { min-inline-size: 0; aspect-ratio: 2; background: #fff; border: 1px solid var(--play-line, #777); border-radius: .75rem; overflow: hidden; }
-.vue-drawing-frame > canvas { display: block; inline-size: 100%; block-size: 100%; touch-action: none; }
-.vue-drawing-frame > canvas[aria-hidden=true] { display: none; }
-.vue-drawing-scene { block-size: 100%; overflow: auto; scrollbar-gutter: stable; padding: tokens.space(4); box-sizing: border-box; }
+.vue-drawing-surface {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: tokens.space(3);
+  min-inline-size: 0;
+  container: drawing / inline-size;
+}
+.vue-drawing-frame {
+  min-inline-size: 0;
+  aspect-ratio: 2;
+  background: #fff;
+  border: 1px solid var(--play-line, #777);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.vue-drawing-frame > canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  touch-action: none;
+}
+.vue-drawing-frame > canvas[aria-hidden='true'] {
+  display: none;
+}
+.vue-drawing-scene {
+  block-size: 100%;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  padding: tokens.space(4);
+  box-sizing: border-box;
+}
 
 // C04 has two stable surface rows: console and existing status. Its canvas is
 // never replaced when artist controls appear, disappear or change orientation.
-body section.vue-drawing-surface.vue-c04-surface { grid-template-rows:minmax(0,1fr) auto;min-block-size:0; }
-.vue-c04-surface>.vue-drawing-console { min-block-size:0;block-size:100%; }
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
- :root body[data-game-kind=draw] section.vue-drawing-surface.vue-c04-surface { grid-template-rows:minmax(0,1fr) 28px; }
+body section.vue-drawing-surface.vue-c04-surface {
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-block-size: 0;
 }
-@media(max-width:760px) { .vue-drawing-scene { padding:tokens.space(4); } }
+.vue-c04-surface > .vue-drawing-console {
+  min-block-size: 0;
+  block-size: 100%;
+}
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root body[data-game-kind='draw'] section.vue-drawing-surface.vue-c04-surface {
+    grid-template-rows: minmax(0, 1fr) 28px;
+  }
+}
+@media (max-width: 760px) {
+  .vue-drawing-scene {
+    padding: tokens.space(4);
+  }
+}

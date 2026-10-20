@@ -9,7 +9,8 @@ export async function fileBase64(file: File, maxBytes = 1024 * 1024): Promise<st
 }
 
 export async function audioDuration(file: File, signal: AbortSignal): Promise<number> {
-  const audio = new Audio(), url = URL.createObjectURL(file);
+  const audio = new Audio(),
+    url = URL.createObjectURL(file);
   let timer: ReturnType<typeof setTimeout> | undefined;
   let cancel: () => void = () => {};
   try {
@@ -17,13 +18,23 @@ export async function audioDuration(file: File, signal: AbortSignal): Promise<nu
       cancel = () => reject(signal.reason);
       signal.addEventListener('abort', cancel, { once: true });
       if (signal.aborted) return cancel();
-      timer = setTimeout(() => reject(new Error('無法讀取音樂長度，請換一個有效的音樂檔案。')), 15000);
-      audio.onloadedmetadata = () => Number.isFinite(audio.duration) ? resolve(audio.duration) : reject(new Error('無法讀取音樂長度。'));
+      timer = setTimeout(
+        () => reject(new Error('無法讀取音樂長度，請換一個有效的音樂檔案。')),
+        15000,
+      );
+      audio.onloadedmetadata = () =>
+        Number.isFinite(audio.duration)
+          ? resolve(audio.duration)
+          : reject(new Error('無法讀取音樂長度。'));
       audio.onerror = () => reject(new Error('瀏覽器無法解碼這個音樂檔案。'));
       audio.src = url;
     });
   } finally {
-    clearTimeout(timer); signal.removeEventListener('abort', cancel);
-    audio.onloadedmetadata = audio.onerror = null; audio.removeAttribute('src'); audio.load(); URL.revokeObjectURL(url);
+    clearTimeout(timer);
+    signal.removeEventListener('abort', cancel);
+    audio.onloadedmetadata = audio.onerror = null;
+    audio.removeAttribute('src');
+    audio.load();
+    URL.revokeObjectURL(url);
   }
 }

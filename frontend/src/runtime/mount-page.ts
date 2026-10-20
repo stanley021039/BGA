@@ -8,14 +8,24 @@ import '../styles/feedback.scss';
 import '../styles/controls.scss';
 
 // Each HTML document owns its app/stores. BFCache restoration creates a fresh scope.
-export function mountPage(component: Component, selector: string, configure?: (app: App, pinia: Pinia) => void): void {
+export function mountPage(
+  component: Component,
+  selector: string,
+  configure?: (app: App, pinia: Pinia) => void,
+): void {
   let stop: (() => void) | undefined;
   function start(): void {
     if (stop) return;
     const pinia = createPinia();
     const header = document.querySelector<HTMLElement>('#site-header-app');
-    if (header) { header.classList.add('vue-page', 'vue-site-header'); header.setAttribute('data-ui-owner', 'vue'); }
-    const app = createApp({ render: () => h(Fragment, [header ? h(Teleport, { to: header }, h(SiteHeader)) : null, h(component)]) });
+    if (header) {
+      header.classList.add('vue-page', 'vue-site-header');
+      header.setAttribute('data-ui-owner', 'vue');
+    }
+    const app = createApp({
+      render: () =>
+        h(Fragment, [header ? h(Teleport, { to: header }, h(SiteHeader)) : null, h(component)]),
+    });
     app.use(pinia);
     // Pinia setup runs in app.runWithContext; its injections must belong to the app.
     configure?.(app, pinia);
@@ -25,9 +35,15 @@ export function mountPage(component: Component, selector: string, configure?: (a
     document.querySelector<HTMLElement>(selector)?.setAttribute('data-ui-owner', 'vue');
     app.mount(selector);
     document.documentElement.dataset.frontend = 'vue';
-    stop = () => { app.unmount(); disposePinia(pinia); stop = undefined; };
+    stop = () => {
+      app.unmount();
+      disposePinia(pinia);
+      stop = undefined;
+    };
   }
   start();
   window.addEventListener('pagehide', () => stop?.());
-  window.addEventListener('pageshow', event => { if (event.persisted) start(); });
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) start();
+  });
 }

@@ -2,81 +2,324 @@
 @use 'tokens';
 @use 'studio-approved';
 .vue-page.vue-studio-page {
- .studio-layout { grid-template-columns:minmax(0,1fr);gap:tokens.space(6); }
- .studio-renderer-host,.studio-board,.studio-sidebar { min-inline-size:0; }
- .page-panel { padding:tokens.space(6); }
- h1,.page-heading h1 { @include tokens.type(h1); } h2 { @include tokens.type(h2); } h3 { @include tokens.type(p1); }
- .studio-board-heading { gap:tokens.space(3);margin-block-end:tokens.space(4); }
- .studio-board-heading p,.studio-hint,.studio-layer-content>p,.studio-size-note,.studio-controls summary,.studio-layer-panel summary,.studio-swatches>strong { @include tokens.type(p3); }
- .studio-workbench { grid-template-columns:minmax(18rem,20rem) minmax(0,1fr);gap:tokens.space(4);block-size:max(50rem,calc(100dvh - 19rem)); }
- .studio-controls,.studio-drawing { padding:tokens.space(4);gap:tokens.space(3); }
- .studio-controls .studio-spectrum { gap:tokens.space(2); }
- .studio-controls .studio-sliders { gap:tokens.space(3); }
- .studio-controls .studio-tools { gap:tokens.space(2);margin-block-end:tokens.space(3); }
- .studio-icon-button,.studio-controls .studio-tools .studio-icon-button,.studio-controls .studio-spectrum .studio-palette-heading .studio-icon-button { inline-size:2.75rem;min-inline-size:2.75rem;block-size:2.75rem;min-block-size:2.75rem; }
- .studio-controls .studio-swatches .paint-palette,.studio-controls .studio-swatches .paint-recent { grid-template-columns:repeat(auto-fill,minmax(2.75rem,1fr));gap:tokens.space(2); }
- .paint-swatch { min-inline-size:2.75rem;min-block-size:2.75rem; }
- .studio-drawing { grid-template-rows:auto 3rem 3rem auto 3rem minmax(12rem,1fr) auto; }
- .studio-drawing :is(.frontend-status,#paint-status) { margin:0;min-block-size:3rem;max-block-size:3rem;overflow:auto;@include tokens.type(p3); }
- .studio-drawing .studio-save { gap:tokens.space(3);flex-wrap:wrap; }
- .studio-drawing .studio-save label { flex:1;min-inline-size:10rem;width:auto; }
- .studio-save input,.studio-upload input { min-inline-size:0;max-inline-size:100%; }
- .studio-photo-import { position:relative;justify-self:start;display:inline-flex;inline-size:2.75rem;block-size:2.75rem;min-inline-size:2.75rem;min-block-size:2.75rem; }
- .studio-photo-import input[type=file] { position:absolute;inset:0;inline-size:100%;block-size:100%;opacity:0;cursor:pointer; }
- .studio-layer-panel { scrollbar-gutter:stable; }
- .studio-layer-panel .studio-layer-actions { flex-wrap:wrap;gap:tokens.space(2); }
- .studio-size-settings { flex-wrap:wrap;gap:tokens.space(2); }
- .studio-size-settings input { max-inline-size:6rem; }
- .studio-upload { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:tokens.space(4); }
- .studio-upload>p,.studio-upload-actions,.studio-upload .frontend-status { grid-column:1/-1; }
- .studio-upload-actions,.artwork-library-heading,.artwork-actions { display:flex;align-items:center;flex-wrap:wrap;gap:tokens.space(3); }
- .artwork-library { margin-block-start:tokens.space(6); }
- .artwork-grid { gap:tokens.space(4);grid-template-columns:repeat(auto-fill,minmax(min(100%,15rem),1fr)); }
- .artwork-card { min-inline-size:0;padding:tokens.space(4);gap:tokens.space(3); }
- .artwork-card>strong { overflow-wrap:anywhere;@include tokens.type(p2); }
- .artwork-card img { inline-size:100%;block-size:12rem;object-fit:contain; }
- .vue-studio-art-link { display:inline-flex;align-items:center;justify-content:center;min-block-size:2.75rem;padding-inline:tokens.space(3);border:1px solid currentColor;border-radius:.5rem;font-size:.875rem; }
+  .studio-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: tokens.space(6);
+  }
+  .studio-renderer-host,
+  .studio-board,
+  .studio-sidebar {
+    min-inline-size: 0;
+  }
+  .page-panel {
+    padding: tokens.space(6);
+  }
+  h1,
+  .page-heading h1 {
+    @include tokens.type(h1);
+  }
+  h2 {
+    @include tokens.type(h2);
+  }
+  h3 {
+    @include tokens.type(p1);
+  }
+  .studio-board-heading {
+    gap: tokens.space(3);
+    margin-block-end: tokens.space(4);
+  }
+  .studio-board-heading p,
+  .studio-hint,
+  .studio-layer-content > p,
+  .studio-size-note,
+  .studio-controls summary,
+  .studio-layer-panel summary,
+  .studio-swatches > strong {
+    @include tokens.type(p3);
+  }
+  .studio-workbench {
+    grid-template-columns: minmax(18rem, 20rem) minmax(0, 1fr);
+    gap: tokens.space(4);
+    block-size: max(50rem, calc(100dvh - 19rem));
+  }
+  .studio-controls,
+  .studio-drawing {
+    padding: tokens.space(4);
+    gap: tokens.space(3);
+  }
+  .studio-controls .studio-spectrum {
+    gap: tokens.space(2);
+  }
+  .studio-controls .studio-sliders {
+    gap: tokens.space(3);
+  }
+  .studio-controls .studio-tools {
+    gap: tokens.space(2);
+    margin-block-end: tokens.space(3);
+  }
+  .studio-icon-button,
+  .studio-controls .studio-tools .studio-icon-button,
+  .studio-controls .studio-spectrum .studio-palette-heading .studio-icon-button {
+    inline-size: 2.75rem;
+    min-inline-size: 2.75rem;
+    block-size: 2.75rem;
+    min-block-size: 2.75rem;
+  }
+  .studio-controls .studio-swatches .paint-palette,
+  .studio-controls .studio-swatches .paint-recent {
+    grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+    gap: tokens.space(2);
+  }
+  .paint-swatch {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+  }
+  .studio-drawing {
+    grid-template-rows: auto 3rem 3rem auto 3rem minmax(12rem, 1fr) auto;
+  }
+  .studio-drawing :is(.frontend-status, #paint-status) {
+    margin: 0;
+    min-block-size: 3rem;
+    max-block-size: 3rem;
+    overflow: auto;
+    @include tokens.type(p3);
+  }
+  .studio-drawing .studio-save {
+    gap: tokens.space(3);
+    flex-wrap: wrap;
+  }
+  .studio-drawing .studio-save label {
+    flex: 1;
+    min-inline-size: 10rem;
+    width: auto;
+  }
+  .studio-save input,
+  .studio-upload input {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+  .studio-photo-import {
+    position: relative;
+    justify-self: start;
+    display: inline-flex;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+  }
+  .studio-photo-import input[type='file'] {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .studio-layer-panel {
+    scrollbar-gutter: stable;
+  }
+  .studio-layer-panel .studio-layer-actions {
+    flex-wrap: wrap;
+    gap: tokens.space(2);
+  }
+  .studio-size-settings {
+    flex-wrap: wrap;
+    gap: tokens.space(2);
+  }
+  .studio-size-settings input {
+    max-inline-size: 6rem;
+  }
+  .studio-upload {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: tokens.space(4);
+  }
+  .studio-upload > p,
+  .studio-upload-actions,
+  .studio-upload .frontend-status {
+    grid-column: 1/-1;
+  }
+  .studio-upload-actions,
+  .artwork-library-heading,
+  .artwork-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: tokens.space(3);
+  }
+  .artwork-library {
+    margin-block-start: tokens.space(6);
+  }
+  .artwork-grid {
+    gap: tokens.space(4);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  }
+  .artwork-card {
+    min-inline-size: 0;
+    padding: tokens.space(4);
+    gap: tokens.space(3);
+  }
+  .artwork-card > strong {
+    overflow-wrap: anywhere;
+    @include tokens.type(p2);
+  }
+  .artwork-card img {
+    inline-size: 100%;
+    block-size: 12rem;
+    object-fit: contain;
+  }
+  .vue-studio-art-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: 2.75rem;
+    padding-inline: tokens.space(3);
+    border: 1px solid currentColor;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+  }
 }
 // Desktop editing fits beneath its own compact header. The upload/library remain
 // in document flow below; tools and long feedback scroll inside their own slots.
-@media(min-width:1181px) and (min-height:640px) and (pointer:fine) {
- body.studio-page:not(.ui-large-text) {
-  @include chrome.desktop;
-  .vue-page.vue-studio-page {
-   padding-block-start:tokens.space(2);
-   #collection-return { display:inline-flex;align-items:center;min-block-size:28px;padding:0;margin-block-end:tokens.space(2); }
-   .page-heading { margin:0 0 tokens.space(2); }
-   .page-heading h1 { margin:0;letter-spacing:0; }
-   .studio-board { padding:tokens.space(4); }
-   .studio-board-heading { margin-block-end:tokens.space(2);gap:tokens.space(2); }
-   .studio-board-heading h2 { margin:0; }
-   .studio-workbench { height:calc(100dvh - 250px);block-size:calc(100dvh - 250px);min-block-size:0;gap:tokens.space(3); }
-   .studio-controls { overflow:auto;overscroll-behavior:contain;min-block-size:0;padding:tokens.space(3);gap:tokens.space(2); }
-   .studio-controls>* { flex-shrink:0; }
-   .studio-drawing { min-block-size:0;padding:tokens.space(2);gap:tokens.space(1);grid-template-rows:auto 24px 24px 44px 24px minmax(0,1fr) auto; }
-   .studio-drawing :is(.frontend-status,#paint-status) { block-size:24px;min-block-size:24px;max-block-size:24px;margin:0;padding-block:0;line-height:21px;overflow:auto; }
-   .studio-drawing .studio-save { flex-wrap:nowrap;gap:tokens.space(2); }
-   .studio-drawing .studio-save label { margin:0;gap:tokens.space(1); }
-   .studio-drawing .studio-save input { min-block-size:44px;block-size:44px;padding-block:tokens.space(2); }
-   .studio-photo-import { margin:0; }
-   .studio-board #studio-canvas-frame { min-block-size:0;block-size:100%;max-block-size:100%;padding:tokens.space(2);margin:0;overflow:auto; }
-   .studio-drawing .studio-layer-panel { min-block-size:44px;max-block-size:min(160px,20dvh);padding:tokens.space(2);overflow:auto;overscroll-behavior:contain; }
-   .studio-layer-panel summary { min-block-size:26px;align-items:center; }
-   .studio-hint { margin:tokens.space(2) 0 0; }
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  body.studio-page:not(.ui-large-text) {
+    @include chrome.desktop;
+    .vue-page.vue-studio-page {
+      padding-block-start: tokens.space(2);
+      #collection-return {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 28px;
+        padding: 0;
+        margin-block-end: tokens.space(2);
+      }
+      .page-heading {
+        margin: 0 0 tokens.space(2);
+      }
+      .page-heading h1 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+      .studio-board {
+        padding: tokens.space(4);
+      }
+      .studio-board-heading {
+        margin-block-end: tokens.space(2);
+        gap: tokens.space(2);
+      }
+      .studio-board-heading h2 {
+        margin: 0;
+      }
+      .studio-workbench {
+        height: calc(100dvh - 250px);
+        block-size: calc(100dvh - 250px);
+        min-block-size: 0;
+        gap: tokens.space(3);
+      }
+      .studio-controls {
+        overflow: auto;
+        overscroll-behavior: contain;
+        min-block-size: 0;
+        padding: tokens.space(3);
+        gap: tokens.space(2);
+      }
+      .studio-controls > * {
+        flex-shrink: 0;
+      }
+      .studio-drawing {
+        min-block-size: 0;
+        padding: tokens.space(2);
+        gap: tokens.space(1);
+        grid-template-rows: auto 24px 24px 44px 24px minmax(0, 1fr) auto;
+      }
+      .studio-drawing :is(.frontend-status, #paint-status) {
+        block-size: 24px;
+        min-block-size: 24px;
+        max-block-size: 24px;
+        margin: 0;
+        padding-block: 0;
+        line-height: 21px;
+        overflow: auto;
+      }
+      .studio-drawing .studio-save {
+        flex-wrap: nowrap;
+        gap: tokens.space(2);
+      }
+      .studio-drawing .studio-save label {
+        margin: 0;
+        gap: tokens.space(1);
+      }
+      .studio-drawing .studio-save input {
+        min-block-size: 44px;
+        block-size: 44px;
+        padding-block: tokens.space(2);
+      }
+      .studio-photo-import {
+        margin: 0;
+      }
+      .studio-board #studio-canvas-frame {
+        min-block-size: 0;
+        block-size: 100%;
+        max-block-size: 100%;
+        padding: tokens.space(2);
+        margin: 0;
+        overflow: auto;
+      }
+      .studio-drawing .studio-layer-panel {
+        min-block-size: 44px;
+        max-block-size: min(160px, 20dvh);
+        padding: tokens.space(2);
+        overflow: auto;
+        overscroll-behavior: contain;
+      }
+      .studio-layer-panel summary {
+        min-block-size: 26px;
+        align-items: center;
+      }
+      .studio-hint {
+        margin: tokens.space(2) 0 0;
+      }
+    }
   }
- }
 }
-@media(max-width:760px) {
- .vue-page.vue-studio-page {
-  .page-panel { padding:tokens.space(4); }
-  .studio-workbench { display:flex;flex-direction:column;block-size:auto; }
-  .studio-controls { overflow:visible; }
-  .studio-controls .studio-spectrum { grid-template-columns:7.5rem minmax(0,1fr); }
-  .studio-controls .paint-sv { inline-size:7.5rem; }
-  .studio-drawing { block-size:auto;min-block-size:50rem;grid-template-rows:auto 3rem 3rem auto 3rem 24rem auto; }
-  .studio-drawing .studio-save { flex-direction:column;align-items:stretch; }
-  .studio-drawing .studio-save label { min-inline-size:0;flex:auto; }
-  .studio-upload { grid-template-columns:minmax(0,1fr); }
-  .studio-upload-actions { align-items:stretch;flex-direction:column; }
- }
+@media (max-width: 760px) {
+  .vue-page.vue-studio-page {
+    .page-panel {
+      padding: tokens.space(4);
+    }
+    .studio-workbench {
+      display: flex;
+      flex-direction: column;
+      block-size: auto;
+    }
+    .studio-controls {
+      overflow: visible;
+    }
+    .studio-controls .studio-spectrum {
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+    }
+    .studio-controls .paint-sv {
+      inline-size: 7.5rem;
+    }
+    .studio-drawing {
+      block-size: auto;
+      min-block-size: 50rem;
+      grid-template-rows: auto 3rem 3rem auto 3rem 24rem auto;
+    }
+    .studio-drawing .studio-save {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .studio-drawing .studio-save label {
+      min-inline-size: 0;
+      flex: auto;
+    }
+    .studio-upload {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .studio-upload-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
 }
