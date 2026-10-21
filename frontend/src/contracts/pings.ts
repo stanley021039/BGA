@@ -27,7 +27,7 @@ export interface PingReceipt {
 }
 export interface PingPreference {
   imageUrl?: string;
-  sound?: { effect: string } | { url: string; durationMs: number };
+  sound?: { effect: string } | { url: string; durationMs: number } | null;
 }
 export type PingPreferences = Record<PingType, PingPreference>;
 const finite = (value: unknown): value is number =>

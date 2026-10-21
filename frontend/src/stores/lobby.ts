@@ -334,23 +334,11 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
   async function enter(
-    options:
-      { code: string } | { type: GameType; roomName: string; seconds: number; rounds: number },
+    options: { code: string } | { type: GameType; roomName: string },
   ): Promise<boolean> {
     if (entryPending.value || !identity.value) return false;
     if ('code' in options && !/^[a-f0-9]{6}$/i.test(options.code.trim())) {
       entryStatus.value = '請輸入正確的 6 碼房間代碼。';
-      return false;
-    }
-    if (
-      'type' in options &&
-      options.type === 'draw' &&
-      (![60, 90, 120].includes(options.seconds) ||
-        !Number.isInteger(options.rounds) ||
-        options.rounds < 1 ||
-        options.rounds > 64)
-    ) {
-      entryStatus.value = '作畫時間需為 60、90、120 秒，總題數需為 1–64 題。';
       return false;
     }
     entryPending.value = true;
@@ -364,7 +352,7 @@ export const useLobbyStore = defineStore('lobby', () => {
             type: options.type,
             roomName: options.roomName.trim().slice(0, 24),
             ...(options.type === 'draw'
-              ? { seconds: options.seconds, ending: { mode: 'rounds', value: options.rounds } }
+              ? { seconds: 60, ending: { mode: 'rounds', value: 8 } }
               : {}),
           };
     try {

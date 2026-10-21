@@ -23,6 +23,15 @@ const positions = shallowRef<Record<string, Position>>({});
 let held = false,
   used = false,
   armed: PingType | null = null,
+  cursor: { x: number; y: number; node: Element } | null = null,
+  hover: {
+    x: number;
+    y: number;
+    target: PingTarget;
+    type: PingType;
+    identity: string;
+    scene: string;
+  } | null = null,
   suppressUntil = 0,
   mounted = false,
   disposed = false,
@@ -74,6 +83,7 @@ function cancel() {
   const returnFocus =
     document.activeElement instanceof Node && wheel.value?.contains(document.activeElement);
   held = false;
+  hover = null;
   gesture = null;
   armed = null;
   wheelOpen.value = false;
@@ -124,13 +134,42 @@ function downKey(event: KeyboardEvent) {
   ) {
     held = true;
     used = false;
+    if (cursor && pings.surface && pings.context)
+      hover = {
+        x: cursor.x,
+        y: cursor.y,
+        target: capturePing(
+          pings.model,
+          pings.surface,
+          pings.context,
+          cursor.node,
+          cursor.x,
+          cursor.y,
+        ),
+        type: 'ping',
+        identity: pings.identity,
+        scene: pings.context.scene,
+      };
     event.preventDefault();
   }
 }
 function upKey(event: KeyboardEvent) {
   if (event.code !== 'KeyP') return;
+  if (
+    held &&
+    hover &&
+    hover.type !== 'ping' &&
+    hover.identity === pings.identity &&
+    hover.scene === pings.context?.scene
+  ) {
+    const choice = hover;
+    cancel();
+    void pings.send(choice.type, choice.target);
+    return;
+  }
   if (held && !used && pings.identity) void open(innerWidth / 2, innerHeight / 2, true);
   held = false;
+  hover = null;
 }
 function pointerDown(event: PointerEvent) {
   if (event.button === 2 && (gesture || armed || wheelOpen.value)) {
@@ -161,6 +200,7 @@ function pointerDown(event: PointerEvent) {
   }
   if (!(event.target instanceof Element)) return;
   used = true;
+  hover = null;
   const target = capturePing(
     pings.model,
     pings.surface,
@@ -190,8 +230,21 @@ function pointerDown(event: PointerEvent) {
   };
 }
 function pointerMove(event: PointerEvent) {
+  if (event.target instanceof Element && !wheel.value?.contains(event.target))
+    cursor = { x: event.clientX, y: event.clientY, node: event.target };
   const active = gesture;
-  if (!active || event.pointerId !== active.id) return;
+  if (!active || event.pointerId !== active.id) {
+    if (held && hover && !pointers.size && !editing(event.target)) {
+      const type = pings.model.pick(event.clientX - hover.x, event.clientY - hover.y);
+      hover.type = type;
+      if (type !== 'ping') {
+        used = true;
+        if (!wheelOpen.value) void open(hover.x, hover.y);
+        selected.value = type;
+      } else if (wheelOpen.value) selected.value = type;
+    }
+    return;
+  }
   event.preventDefault();
   event.stopImmediatePropagation();
   active.type = pings.model.pick(event.clientX - active.x, event.clientY - active.y);
