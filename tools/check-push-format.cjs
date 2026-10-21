@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');
+const { extractArchive } = require('./extract-archive.cjs');
 
 const root = path.resolve(__dirname, '..');
 
@@ -50,7 +51,7 @@ function check() {
       const tree = path.join(temporary, 'tree');
       fs.mkdirSync(tree);
       git(['archive', '--format=tar', `--output=${archive}`, sha]);
-      execFileSync('tar', ['-xmf', archive, '-C', tree], { stdio: 'inherit' });
+      extractArchive(archive, tree);
       const required = [
         '.prettierrc.json',
         '.prettierignore',
