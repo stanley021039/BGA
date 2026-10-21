@@ -93,14 +93,6 @@ async function clear() {
   )
     if (scope === room.scope && step === state.value.stepId && !blocked.value) telephone.clear();
 }
-async function skip() {
-  if (blocked.value) return;
-  const scope = room.scope,
-    step = state.value.stepId;
-  if (await confirm.value?.ask('這頁會標記為略過，已畫或已輸入的內容不會送出。', '略過這頁'))
-    if (scope === room.scope && step === state.value.stepId && !blocked.value)
-      await telephone.submit(true);
-}
 function input(event: Event) {
   if (composing.value) return;
   const target = event.target as HTMLInputElement;
@@ -318,22 +310,12 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         :message="displayedNotice"
         :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
     /></div>
-    <footer class="vue-telephone-actions">
+    <footer
+      v-if="drawing || state.phase !== 'passing' || state.task?.submitted"
+      class="vue-telephone-actions"
+    >
       <template v-if="state.phase === 'passing' && !state.task?.submitted">
-        <div class="vue-telephone-secondary-actions">
-          <UiButton
-            stitch
-            variant="ghost"
-            icon="refresh"
-            label="同步草稿"
-            :pending="telephone.saving"
-            :disabled="!telephone.allowed || telephone.finishing || room.busy || !telephone.dirty"
-            @click="telephone.sync()"
-          />
-          <UiButton stitch variant="ghost" label="略過這頁" :disabled="blocked" @click="skip" />
-        </div>
         <UiButton
-          v-if="drawing"
           stitch
           variant="primary"
           class="vue-telephone-submit"
@@ -349,15 +331,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           ? '已提交，等待共同倒數結束後傳頁。'
           : '想再玩一次？由房主從房間設定開始新一場。'
       }}</span>
-      <UiButton
-        v-if="actions.canRetry"
-        stitch
-        variant="secondary"
-        icon="refresh"
-        label="重試同一操作"
-        :disabled="room.busy || !room.connected"
-        @click="actions.retrySame()"
-      />
     </footer>
   </section>
   <ConfirmDialog ref="confirm" stitch />

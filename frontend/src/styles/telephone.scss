@@ -344,11 +344,6 @@
     padding-block-start: 8px;
     border-block-start: 1px solid var(--telephone-line);
   }
-  .vue-telephone-secondary-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
   .vue-telephone-actions button {
     min-block-size: 44px;
   }
@@ -618,10 +613,6 @@
     }
     .vue-telephone-actions {
       align-items: stretch;
-    }
-    .vue-telephone-secondary-actions {
-      flex: 1 1 100%;
-      justify-content: space-between;
     }
     .vue-telephone-submit {
       flex: 1 1 100%;
