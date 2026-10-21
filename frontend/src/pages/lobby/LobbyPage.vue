@@ -5,7 +5,7 @@ import { useSessionStore } from '../../stores/session';
 import { isGameType, type GameType } from '../../contracts/room';
 import { gameCards, gameTitle } from './catalog';
 import GameCarousel from './GameCarousel.vue';
-import LobbyStage from './LobbyStage.vue';
+import LobbyBackdrop from './LobbyBackdrop.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiDialog from '../../components/UiDialog.vue';
@@ -58,11 +58,7 @@ async function entranceOnce() {
   entrancePlayed = true;
   await nextTick();
   if (disposed || !window.MotionPolicy?.allowsMotion()) return;
-  [
-    ...scene.value.querySelectorAll(
-      '.library-heading,.lobby-section,.game-tile.selected .tile-image',
-    ),
-  ]
+  [...scene.value.querySelectorAll('.library-heading,.game-tile.selected .tile-image')]
     .filter((node) => {
       const box = node.getBoundingClientRect();
       return box.bottom > 0 && box.top < innerHeight;
@@ -91,6 +87,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <div ref="scene" class="vue-lobby">
+    <div class="vue-lobby-floor" aria-hidden="true"></div>
     <div class="library-heading"
       ><div
         ><div class="kicker">YOUR TABLE. YOUR PEOPLE.</div><h1>今晚，玩哪一桌？</h1
@@ -101,7 +98,7 @@ onBeforeUnmount(() => {
       ></div
     >
     <GameCarousel v-model="selected" @create="open" />
-    <LobbyStage />
+    <LobbyBackdrop />
     <div class="vue-lobby-resume" aria-label="已入座的房間"
       ><span v-if="!resumes.length">{{
         lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'

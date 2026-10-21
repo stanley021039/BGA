@@ -1086,7 +1086,7 @@ function initializeApp(config, dataLock, acquired) {
         if (['/api/market', '/api/market/vote'].includes(url.pathname))
           throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作不支援此方法');
         if (url.pathname === '/api/lobby' && req.method === 'GET')
-          return send(lobbyHandlers.view(user));
+          return send(lobbyHandlers.view(user, url.searchParams.get('entrance')));
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
           return send(lobbyHandlers.move(user, data));
         if (url.pathname === '/api/lobby/emotes' && req.method === 'GET')
