@@ -1,259 +1,420 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { usePartyActionsStore } from '../../stores/party-actions';
+import { usePreferencesStore } from '../../stores/preferences';
+import { useQueuedSave } from '../../composables/queued-save';
 import type { MusicQuizSnapshot } from '../../contracts/musicquiz';
-import RoomAudioClip from '../../components/RoomAudioClip.vue';
 import UiButton from '../../components/UiButton.vue';
-import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
+import FramePreview from '../../components/FramePreview.vue';
+import GameSongClip from '../../components/GameSongClip.vue';
+import RoomCountdown from '../../components/RoomCountdown.vue';
+import '../../../../public/shared/song-title-zh.js';
+import '../../styles/stitch-party-content.scss';
+const emit = defineEmits<{ dirty: [value: boolean] }>();
 const room = useRoomStore(),
+  prefs = usePreferencesStore(),
   actions = usePartyActionsStore(),
-  state = computed(() => room.snapshot as MusicQuizSnapshot),
-  draft = ref(''),
-  composing = ref(false),
-  storageNotice = ref(''),
-  localError = ref(''),
-  confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null);
-const active = computed(() => room.connected && !room.terminal),
-  blocked = computed(() => !active.value || room.busy || actions.pending),
-  draftIdentity = computed(() =>
-    state.value ? `musicquiz:${room.code}:${state.value.me}:${state.value.roundId}` : '',
-  );
-let savedKey = '';
-function save() {
-  if (!savedKey) return;
-  try {
-    sessionStorage.setItem(savedKey, JSON.stringify({ text: draft.value }));
-  } catch {
-    storageNotice.value = '此分頁無法保存草稿，請保持頁面開啟。';
-  }
+  s = computed(() => room.snapshot as MusicQuizSnapshot),
+  setup = computed(() => ['waiting', 'finished'].includes(s.value.phase)),
+  blocked = computed(() => !room.connected || room.busy || actions.pending),
+  dj = computed(() => s.value.players.find((p) => p.id === s.value.djId)),
+  me = computed(() => s.value.me === s.value.djId),
+  banks = ref<string[]>([]),
+  genres = ref<string[]>([]),
+  target = ref(10),
+  obscure = ref(false),
+  custom = ref(''),
+  error = ref(''),
+  dirty = ref(false);
+watch(dirty, (value) => emit('dirty', value));
+const settingsSave = useQueuedSave<void>({
+  allowed: () => setup.value && room.host && !room.terminal,
+  blocked: () => blocked.value,
+  save,
+  failure: () => actions.notice || error.value,
+});
+function markSettingsInput(event: Event) {
+  // Checkbox v-model commits on change. Rendering on its earlier input event
+  // can restore the old checked value before that change handler reads it.
+  const type = (event.target as HTMLInputElement | null)?.type;
+  if (type !== 'checkbox' && type !== 'radio') dirty.value = true;
 }
-function forget() {
-  if (savedKey)
-    try {
-      sessionStorage.removeItem(savedKey);
-    } catch {}
-  savedKey = '';
+function queueSettings() {
+  dirty.value = true;
+  error.value = '';
+  settingsSave.enqueue(undefined);
+}
+async function saveNow() {
+  if (!settingsSave.pending.value) settingsSave.enqueue(undefined);
+  await settingsSave.flush();
 }
 watch(
-  [() => draftIdentity.value, () => state.value?.phase, () => state.value?.submitted],
-  () => {
-    if (!state.value) return;
-    if (state.value.phase !== 'answering' || state.value.submitted) {
-      forget();
-      draft.value = '';
-      localError.value = '';
-      return;
-    }
-    const next = draftIdentity.value;
-    if (next === savedKey) return;
-    forget();
-    savedKey = next;
-    draft.value = '';
-    try {
-      const cached = JSON.parse(sessionStorage.getItem(next) || 'null');
-      if (
-        typeof cached?.text === 'string' &&
-        cached.text.length <= 80 &&
-        !/[\u0000-\u001f\u007f]/.test(cached.text)
+  () => s.value.settings,
+  (v) => {
+    if (dirty.value || settingsSave.pending.value) return;
+    banks.value = [...v.banks];
+    genres.value = [...v.genres];
+    target.value = v.target;
+    obscure.value = v.obscure;
+    custom.value = s.value.customSongs
+      .map((x) =>
+        [x.title, x.artist, x.year, x.videoId, x.introStart, x.highlightStart].join(' | '),
       )
-        draft.value = cached.text;
-    } catch {
-      storageNotice.value = '無法讀取先前草稿，請重新輸入。';
-    }
+      .join('\n');
   },
   { immediate: true },
 );
+async function save() {
+  try {
+    const customSongs = custom.value.trim()
+      ? custom.value
+          .trim()
+          .split(/\r?\n/)
+          .filter(Boolean)
+          .map((line) => {
+            const a = line.split('|').map((x) => x.trim());
+            let videoId = a[3] || '';
+            if (videoId.startsWith('https://')) {
+              const u = new URL(videoId);
+              if (u.hostname === 'youtu.be') videoId = u.pathname.slice(1);
+              else if (['youtube.com', 'www.youtube.com'].includes(u.hostname))
+                videoId = u.searchParams.get('v') || '';
+            }
+            return {
+              title: a[0],
+              artist: a[1],
+              year: Number(a[2]),
+              videoId,
+              introStart: Number(a[4] || 0),
+              highlightStart: Number(a[5] || 60),
+              aiGenerated: false,
+            };
+          })
+      : [];
+    if (
+      await actions.command('configure', {
+        banks: [...banks.value],
+        genres: [...genres.value],
+        target: target.value,
+        obscure: obscure.value,
+        customSongs,
+      })
+    ) {
+      dirty.value = false;
+      error.value = '題庫已儲存';
+      return true;
+    }
+    return false;
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '題庫格式錯誤';
+    return false;
+  }
+}
+const enteredAt = ref(Date.now());
 watch(
-  [
-    () => room.scope,
-    () => state.value?.roundId,
-    () => state.value?.phase,
-    () => state.value?.submitted,
-  ],
+  () => s.value.roundId + ':' + s.value.phase,
   () => {
-    confirm.value?.cancel();
-    localError.value = '';
+    enteredAt.value = Date.now();
   },
 );
-function limit() {
-  if (!composing.value) {
-    let value = '';
-    for (const glyph of draft.value) {
-      if (value.length + glyph.length > 80) break;
-      value += glyph;
+const now = ref(Date.now()),
+  clock = setInterval(() => (now.value = Date.now()), 250);
+onBeforeUnmount(() => clearInterval(clock));
+const preparing = computed(
+  () => ['timeline', 'challenge'].includes(s.value.phase) && now.value < enteredAt.value + 3000,
+);
+const resultReading = computed(() => now.value < enteredAt.value + 7000);
+const phaseGuide = computed(
+  () =>
+    ({
+      waiting: '',
+      finished: '',
+      pick: '接下來：全員聽8秒前奏，從10個歌名選答案。由DJ按開始。',
+      intro:
+        '全員選歌名。接下來由DJ聽精華、排列年代；前奏個人判定即時播放音效；歌名與年份最後公開。',
+      timeline: me.value
+        ? '輪到你：聽精華，把歌放入自己的年代時間軸；同一年放在相鄰任一側都算對。接著其他玩家可插歌。'
+        : '現在由DJ排列年代。接下來你有15秒決定是否花1枚標記插歌，請先看看時間軸。',
+      challenge: me.value
+        ? '其他玩家正在決定是否插歌。接下來揭曉歌名、年份和得卡者。'
+        : '15秒內花1枚標記選不同位置，或選「這次不插歌」。DJ放錯且你放對才能取得卡片。',
+      reveal: '先看本輪結果。接下來換下一位DJ；房主或本輪DJ按「下一首」才會繼續。',
+    })[s.value.phase] || '',
+);
+const translated = (title: string, language?: string) =>
+  (
+    window as unknown as {
+      SongTitleZh?: { hint: (title: string, language?: string) => string | undefined };
     }
-    draft.value = value;
-    save();
-  }
-}
-async function guess() {
-  if (
-    composing.value ||
-    blocked.value ||
-    state.value.phase !== 'answering' ||
-    state.value.submitted
-  )
-    return;
-  const value = draft.value.trim();
-  if (!value) {
-    localError.value = '請輸入歌名，或選擇略過。';
-    return;
-  }
-  localError.value = '';
-  save();
-  const key = draftIdentity.value;
-  if ((await actions.command('guess', { text: value })) && key === draftIdentity.value) forget();
-}
-async function pass() {
-  if (blocked.value || state.value.phase !== 'answering' || state.value.submitted) return;
-  const scope = room.scope,
-    round = state.value.roundId;
-  if (!(await confirm.value?.ask('略過後，本題不能再送出歌名。', '略過這一題？'))) return;
-  if (
-    scope === room.scope &&
-    round === state.value.roundId &&
-    state.value.phase === 'answering' &&
-    !state.value.submitted &&
-    !blocked.value
-  )
-    await actions.command('guess', { text: '', pass: true });
-}
-function visibility() {
-  if (document.hidden) {
-    save();
-    confirm.value?.cancel();
-  }
-}
-document.addEventListener('visibilitychange', visibility);
-onBeforeUnmount(() => {
-  save();
-  document.removeEventListener('visibilitychange', visibility);
-});
+  ).SongTitleZh?.hint(title, language);
+const songLabel = (title: string, language?: string) => {
+  const hint = translated(title, language);
+  return hint ? title + '；' + hint : title;
+};
+const canSlot = (i: number) =>
+  !blocked.value &&
+  !preparing.value &&
+  (s.value.phase === 'timeline'
+    ? me.value
+    : !me.value &&
+      s.value.mine.tokens > 0 &&
+      s.value.placement !== i &&
+      !Object.values(s.value.challenges).includes(i) &&
+      !Object.hasOwn(s.value.challenges, s.value.me) &&
+      !s.value.passed.includes(s.value.me));
 </script>
 <template>
-  <section class="vue-game-panel vue-musicquiz-stage" aria-labelledby="musicquizHeading"
-    ><header
-      ><small>LISTEN · GUESS · REVEAL</small
-      ><h1 id="musicquizHeading">{{
-        state.phase === 'waiting'
-          ? '聽六秒，你猜得出嗎？'
-          : state.phase === 'answering'
-            ? '先聽旋律，再填入歌名'
-            : state.phase === 'reveal'
-              ? '本題答案已揭曉'
-              : state.interrupted
-                ? '本場中止'
-                : '本場成績'
-      }}</h1
-      ><p>自製傳統／古典旋律，不按速度計分。</p></header
-    ><div class="vue-musicquiz-audio-slot"
-      ><RoomAudioClip
-        v-if="state.audioUrl"
-        :key="state.roundId || 'waiting'"
-        :src="state.audioUrl"
-        title="本題六秒旋律開頭"
-        :active="active"
-      /><p v-else>房主開始後，這裡會出現本題播放器。</p></div
-    ><div class="vue-musicquiz-action-slot">
-      <template v-if="state.phase === 'answering'"
-        ><p class="vue-musicquiz-progress"
-          >{{ state.readyIds.length }}／{{ state.players.length }} 位已作答</p
-        ><form v-if="!state.submitted" @submit.prevent="guess"
-          ><label for="musicquizAnswer">歌名（最多 80 字元）</label
-          ><input
-            id="musicquizAnswer"
-            v-model="draft"
-            maxlength="80"
-            autocomplete="off"
-            :disabled="blocked"
-            @input="limit"
-            @compositionstart="composing = true"
-            @compositionend="
-              composing = false;
-              limit();
-            "
-            @keydown.enter="
-              (composing || $event.isComposing || $event.keyCode === 229) && $event.preventDefault()
-            " /><div class="vue-musicquiz-buttons"
-            ><UiButton
-              icon="send"
-              type="submit"
-              label="送出猜測"
-              :disabled="blocked || composing || !draft.trim()" /><UiButton
-              icon="next"
-              label="這題略過"
-              :disabled="blocked"
-              @click="pass" /></div></form
-        ><div v-else class="vue-musicquiz-submitted"
-          ><strong>已作答</strong><p>你的答案：{{ state.myAnswer || '略過' }}</p
-          ><p>等待全桌完成後，由房主揭曉。</p></div
-        ><UiButton
-          v-if="room.host"
-          icon="check"
-          label="全員作答，揭曉答案"
-          :disabled="blocked || !state.canReveal"
-          @click="actions.command('reveal')"
-        /> </template
-      ><template v-else-if="state.phase === 'reveal'"
-        ><h2>{{ state.results.at(-1)?.title }}</h2
-        ><UiButton
-          v-if="room.host"
-          icon="next"
-          label="下一題"
-          :disabled="blocked"
-          @click="actions.command('next')"
-        /><p v-else>等待房主開始下一題。</p></template
-      ><template v-else-if="state.phase === 'finished'"
-        ><p v-if="state.interrupted">玩家離席，本場中止。只保留已完成的回合與分數。</p
-        ><template v-else-if="state.winner"
-          ><h2>最高分 {{ state.winner.score }} 分</h2
-          ><p
-            >{{ state.winner.names.join('、')
-            }}{{ state.winner.names.length > 1 ? ' 並列' : '' }}獲勝</p
-          ></template
-        ><ol class="vue-musicquiz-rankings"
-          ><li
-            v-for="player in [...state.players].sort((a, b) => Number(b.score) - Number(a.score))"
-            :key="player.id"
-            ><strong>{{ player.name }}</strong
-            ><span>{{ player.score }} 分</span></li
-          ></ol
-        ></template
-      ><template v-else
-        ><img
-          class="vue-game-waiting-art"
-          :src="room.host ? '/assets/stitch/waiting-host.jpg' : '/assets/stitch/waiting-guest.jpg'"
-          alt=""
-        /><p>{{
-          room.host ? '一個人也可以開始，或邀請朋友一起猜歌。' : '等待房主開始，先和朋友打聲招呼。'
-        }}</p></template
-      > </div
-    ><StatusSlot
-      :message="localError || actions.notice || storageNotice"
-      :error="!!localError || (!actions.pending && !!actions.notice) || !!storageNotice" /><div
-      class="vue-musicquiz-retry-slot"
+  <section class="vue-game-panel vue-musicquiz-stage stitch-music-content"
+    ><template v-if="setup"
+      ><h1>{{ s.phase === 'finished' ? '本場結果' : '挑選本局題庫' }}</h1
+      ><p v-if="s.winner">年代冠軍：{{ s.winner.names.join('、') }} · {{ s.winner.score }}張</p
+      ><fieldset
+        :disabled="!room.host || blocked"
+        @input="markSettingsInput"
+        @change="queueSettings"
+        ><legend>語言與分類</legend
+        ><div class="mq-banks"
+          ><label v-for="bank in s.banks" :key="bank.id" class="mq-bank"
+            ><input v-model="banks" type="checkbox" :value="bank.id" /><strong>{{
+              bank.label
+            }}</strong
+            ><span>{{ bank.count }}首</span></label
+          ></div
+        ><details
+          ><summary>曲風篩選</summary
+          ><label v-for="genre in s.genres" :key="genre"
+            ><input v-model="genres" type="checkbox" :value="genre" />{{ genre }}</label
+          ></details
+        ><label>年代卡目標<input v-model.number="target" type="number" min="3" max="10" /></label
+        ><label><input v-model="obscure" type="checkbox" />混入冷門挑戰（最多約10%）</label
+        ><details
+          ><summary>自己的題庫</summary
+          ><p>每行：歌名 | 歌手 | 首發年 | YouTube網址或ID | 前奏起點 | 精華起點</p
+          ><textarea v-model="custom" rows="4" aria-label="自選歌曲題庫" /></details></fieldset
       ><UiButton
-        v-if="actions.canRetry"
+        v-if="room.host && settingsSave.error.value"
         icon="refresh"
-        label="重試同一操作"
+        label="重試儲存題庫"
         :disabled="blocked"
-        @click="actions.retrySame()" /></div></section
-  ><section class="vue-game-panel vue-musicquiz-review" aria-labelledby="musicquizReview"
-    ><h2 id="musicquizReview">本場回顧</h2
-    ><p v-if="!state.results.length">完成一題後，答案與全桌猜測會顯示在這裡。</p
-    ><ol v-else
-      ><li v-for="result in state.results" :key="result.round"
-        ><h3>第 {{ result.round }} 題 · {{ result.title }}</h3
-        ><ul
-          ><li v-for="(answer, index) in result.answers" :key="result.round + ':' + index"
-            ><strong>{{ answer.name }}</strong
-            ><span>{{ answer.pass ? '略過' : answer.text }}</span
-            ><span>{{ answer.correct ? '✓ +1 分' : '未猜中' }}</span></li
-          ></ul
-        ></li
-      ></ol
-    ></section
-  ><ConfirmDialog ref="confirm" />
+        @click="saveNow"
+      /><p role="status"
+        >目前可抽 {{ s.availableCount }} 首{{
+          settingsSave.pending.value
+            ? ' · 正在儲存題庫…'
+            : dirty
+              ? ' · 儲存未完成，請重試儲存'
+              : ' · 可開始遊戲'
+        }}</p
+      ></template
+    >
+    <template v-else
+      ><header
+        ><small class="stitch-content-kicker">TUNE TIMELINE · 第 {{ s.round }} 首</small
+        ><h1>{{
+          s.phase === 'intro'
+            ? '前奏10選1'
+            : s.phase === 'timeline'
+              ? '歌曲精華 · 年代排序'
+              : s.phase === 'challenge'
+                ? '歌王插歌'
+                : s.phase === 'reveal'
+                  ? '本輪揭曉'
+                  : '準備下一首'
+        }}</h1
+        ><p>{{
+          s.song
+            ? s.song.title + ' · ' + s.song.artist + ' · ' + s.song.year
+            : '先聽音樂，答案揭曉前隱藏歌名與年份'
+        }}</p></header
+      ><div class="mq-current-dj" :class="{ 'is-me': me }"
+        ><span>{{ me ? '你是本輪 DJ' : '本輪 DJ' }}</span
+        ><strong>{{ dj?.name || '等待 DJ' }}</strong></div
+      ><aside class="mq-phase-guide" role="status" aria-live="polite"
+        ><strong>{{
+          preparing
+            ? '準備下一環節 · ' + Math.max(1, Math.ceil((enteredAt + 3000 - now) / 1000)) + '秒'
+            : '玩法提示'
+        }}</strong
+        ><p>{{ phaseGuide }}</p></aside
+      ><section v-if="s.playback" class="stitch-vinyl-stage" :class="{ 'is-revealed': !!s.song }"
+        ><div class="stitch-vinyl-record" aria-hidden="true"><span>♪</span></div
+        ><div
+          ><small>{{
+            s.song ? '歌曲身分揭曉' : s.playback.stage === 'intro' ? '全員前奏挑戰' : '神秘年代卡'
+          }}</small
+          ><h2
+            :title="s.song ? translated(s.song.title, s.song.language) : undefined"
+            :data-ui-hint="s.song && translated(s.song.title, s.song.language) ? '' : undefined"
+            :tabindex="s.song ? 0 : undefined"
+            >{{ s.song?.title || '神秘曲目 #' + s.round }}</h2
+          >
+          ><p>{{
+            s.song
+              ? s.song.artist + ' · ' + s.song.year
+              : s.playback.seconds + '秒片段 · 歌名與年份待揭曉'
+          }}</p></div
+        ></section
+      ><RoomCountdown
+        v-if="s.deadline"
+        :deadline="s.deadline"
+        :duration="s.phase === 'intro' ? 30000 : s.phase === 'timeline' ? 60000 : 15000"
+        :offset="room.clockOffset"
+        :now="now"
+        :epoch="s.roundId + ':' + s.phase"
+        caption="本階段剩餘時間"
+        urgent /><GameSongClip
+        v-if="s.playback"
+        :key="s.roundId + ':' + s.playback.stage"
+        :playback="s.playback"
+        :active="room.connected && !preparing" />
+      <template v-if="s.phase === 'pick'"
+        ><UiButton
+          v-if="me"
+          icon="play"
+          label="全員開始聽前奏"
+          :disabled="blocked"
+          @click="actions.command('listen')" /><p v-else>等待 {{ dj?.name }} 開始播放</p
+        ><UiButton
+          v-if="s.mine.tokens >= 3"
+          label="買歌 · 3枚"
+          :disabled="blocked"
+          @click="actions.command('buy')"
+      /></template>
+      <template v-if="s.phase === 'intro'"
+        ><p>聽8秒，30秒內選擇；答對 +1前奏分與1枚標記。</p
+        ><div v-if="!s.submitted" class="mq-answer-choices"
+          ><button
+            v-for="choice in s.introChoices"
+            :key="choice.id"
+            :title="translated(choice.title, choice.language)"
+            :aria-label="songLabel(choice.title, choice.language)"
+            :data-ui-hint="translated(choice.title, choice.language) ? '' : undefined"
+            :disabled="blocked"
+            @click="actions.command('guess', { choiceId: choice.id })"
+            >{{ choice.title }}</button
+          ></div
+        ><UiButton
+          v-if="!s.submitted"
+          label="略過前奏"
+          :disabled="blocked"
+          @click="actions.command('guess', { pass: true })"
+        /><p v-else
+          >已選：{{ s.myAnswer?.text || '略過' }} ·
+          {{
+            s.myAnswer?.titleCorrect === true
+              ? '答對'
+              : s.myAnswer?.titleCorrect === false
+                ? '答錯'
+                : '已略過'
+          }}
+          · 等待大家作答</p
+        ></template
+      >
+      <template v-if="['timeline', 'challenge'].includes(s.phase)"
+        ><h2>{{ dj?.name }} 的年代時間軸</h2
+        ><div class="mq-timeline"
+          ><template v-for="i in (dj?.timeline.length || 0) + 1" :key="i"
+            ><UiButton
+              :label="
+                s.placement === i - 1
+                  ? 'DJ放置點'
+                  : s.phase === 'timeline'
+                    ? '插槽 ' + i + ' · 放在這裡'
+                    : '插槽 ' + i + ' · 插歌這裡'
+              "
+              :disabled="!canSlot(i - 1)"
+              :aria-pressed="s.placement === i - 1 || s.challenges[s.me] === i - 1"
+              @click="
+                actions.command(s.phase === 'timeline' ? 'place' : 'challenge', { slot: i - 1 })
+              " /><article
+              v-if="dj?.timeline[i - 1]"
+              class="mq-timeline-card"
+              :title="translated(dj.timeline[i - 1]!.title, dj.timeline[i - 1]!.language)"
+              :data-ui-hint="
+                translated(dj.timeline[i - 1]!.title, dj.timeline[i - 1]!.language) ? '' : undefined
+              "
+              tabindex="0"
+              ><FramePreview
+                portrait
+                :frame="dj.musicCardFrame?.id || 'default'"
+                :name="String(dj.timeline[i - 1]!.year)"
+                :message="dj.timeline[i - 1]!.title"
+                :lines="[
+                  String(dj.timeline[i - 1]!.year),
+                  dj.timeline[i - 1]!.title,
+                  dj.timeline[i - 1]!.artist,
+                ]" /></article></template></div
+        ><UiButton
+          v-if="
+            s.phase === 'challenge' &&
+            !me &&
+            !s.passed.includes(s.me) &&
+            !Object.hasOwn(s.challenges, s.me)
+          "
+          label="這次不插歌"
+          :disabled="blocked || preparing"
+          @click="actions.command('pass')"
+      /></template>
+      <template v-if="s.phase === 'reveal'"
+        ><p v-if="resultReading">請先看結果與聽判定音效，稍後可開始下一首。</p
+        ><h2>{{ s.results.at(-1)?.receiverName || '本輪無人' }}取得年代卡</h2
+        ><p v-for="answer in s.results.at(-1)?.answers || []" :key="answer.id"
+          >{{ answer.name }}：前奏 +{{ answer.bonus }}分</p
+        ><UiButton
+          v-if="room.host || me"
+          icon="next"
+          label="下一首"
+          :disabled="blocked || resultReading"
+          @click="actions.command('next')" /></template
+      ><UiButton
+        v-if="me && ['pick', 'intro', 'timeline'].includes(s.phase)"
+        label="切歌 · 1枚"
+        :disabled="blocked || s.mine.tokens < 1"
+        @click="actions.command('skip')" /></template
+    ><StatusSlot
+      :message="settingsSave.error.value || actions.notice || error"
+      :error="!!settingsSave.error.value || !!actions.notice" /><UiButton
+      v-if="actions.canRetry"
+      label="重試同一操作"
+      @click="actions.retrySame()"
+  /></section>
+  <section class="vue-game-panel"
+    ><h2>大家的音樂卡</h2
+    ><label
+      >我的音樂卡外觀<select
+        :value="s.players.find((p) => p.id === s.me)?.musicCardFrame?.id || 'default'"
+        :disabled="blocked"
+        @change="
+          actions.command('card-frame', { frameId: ($event.target as HTMLSelectElement).value })
+        "
+        ><option
+          v-for="frame in prefs.frames"
+          :key="frame.id"
+          :value="frame.id"
+          :disabled="!prefs.canUse(frame.id)"
+          >{{ frame.label }}</option
+        ></select
+      ></label
+    ><details v-for="player in s.players" :key="player.id" :open="player.id === s.me"
+      ><summary
+        >{{ player.name }} · {{ player.timeline.length }}張 · 前奏{{ player.bonus }}分 · 標記{{
+          player.tokens
+        }}</summary
+      ><div class="mq-collection-grid"
+        ><div
+          v-for="card in player.timeline"
+          :key="card.id"
+          :title="translated(card.title, card.language)"
+          :aria-label="songLabel(card.title, card.language)"
+          :data-ui-hint="translated(card.title, card.language) ? '' : undefined"
+          tabindex="0"
+          ><FramePreview
+            portrait
+            :frame="player.musicCardFrame?.id || 'default'"
+            :name="String(card.year)"
+            :message="card.title + ' · ' + card.artist"
+            :lines="[String(card.year), card.title, card.artist]" /></div></div></details
+  ></section>
 </template>

@@ -1,1 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>拒絕並勸他自首</title><desc>原創插畫：朋友犯下嚴重罪行請你藏證據，你會；拒絕並勸他自首</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><g transform="rotate(-22)"><rect x="-65" y="-52" width="97" height="43" rx="10" fill="#bc987d"/><path d="M-17-9V78" stroke="#bc987d" stroke-width="20"/></g><path d="M-74 84H68" stroke="#8e7871" stroke-width="15"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="law"><title>拒絕並勸他自首</title><desc>朋友犯下嚴重罪行請你藏證據，你會：拒絕並勸他自首</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Impact shockwave stars & arcs -->
+          <path d="M155 170 C145 155 140 140 140 125" stroke="#E5A93C" stroke-width="4" stroke-linecap="round"></path>
+          <path d="M225 175 C240 160 250 145 250 130" stroke="#E5A93C" stroke-width="4" stroke-linecap="round"></path>
+          <circle cx="130" cy="150" r="5" fill="#FDE047" stroke="#141312" stroke-width="2"></circle>
+          <circle cx="260" cy="150" r="5" fill="#FDE047" stroke="#141312" stroke-width="2"></circle>
+          <!-- Gavel Sound Block (Base) -->
+          <rect x="120" y="220" width="160" height="30" rx="8" fill="#BAE6FD" stroke="#141312" stroke-width="4.5"></rect>
+          <rect x="135" y="208" width="130" height="14" rx="4" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></rect>
+          <!-- Tilted Gavel striking the block -->
+          <g transform="rotate(-25 190 150)">
+            <!-- Long Handle -->
+            <rect x="183" y="25" width="14" height="135" rx="7" fill="#E5A93C" stroke="#141312" stroke-width="4"></rect>
+            <!-- Handle Grip Rings -->
+            <line x1="183" y1="40" x2="197" y2="40" stroke="#141312" stroke-width="3"></line>
+            <line x1="183" y1="52" x2="197" y2="52" stroke="#141312" stroke-width="3"></line>
+            <!-- Gavel Head (Pastel Pink cylinder) -->
+            <rect x="135" y="140" width="110" height="48" rx="10" fill="#FBCFE8" stroke="#141312" stroke-width="4.5"></rect>
+            <!-- Gold Brass Bands around gavel head -->
+            <rect x="150" y="140" width="12" height="48" fill="#E5A93C" stroke="#141312" stroke-width="3"></rect>
+            <rect x="218" y="140" width="12" height="48" fill="#E5A93C" stroke="#141312" stroke-width="3"></rect>
+          </g>
+        </svg>

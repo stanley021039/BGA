@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-label="food-hotpot">
+            <rect width="400" height="300" rx="16" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- Double-flavor Split Hotpot (Yin Yang Hotpot) -->
+            <ellipse cx="200" cy="195" rx="140" ry="60" fill="#E2E8F0" stroke="#141312" stroke-width="4"></ellipse>
+            <!-- Inner pot broth -->
+            <ellipse cx="200" cy="190" rx="125" ry="50" fill="#EF4444" stroke="#141312" stroke-width="3"></ellipse>
+            <!-- S-curved separator -->
+            <path d="M75 190 C140 215 160 165 200 190 C240 215 260 165 325 190" fill="none" stroke="#141312" stroke-width="4"></path>
+            <!-- Left Spicy soup, Right Clear broth -->
+            <path d="M75 190 C140 215 160 165 200 190 C160 230 110 220 75 190 Z" fill="#DC2626"></path>
+            <path d="M200 190 C240 215 260 165 325 190 C310 225 250 235 200 190 Z" fill="#FEF08A"></path>
+            <!-- Giant Boiling Taro Chunks (Melting into purple mush) -->
+            <!-- Taro 1 (held by chopsticks or floating) -->
+            <rect x="230" y="170" width="38" height="34" rx="6" fill="#C084FC" stroke="#141312" stroke-width="2.5"></rect>
+            <circle cx="240" cy="180" r="3" fill="#A855F7"></circle>
+            <circle cx="255" cy="192" r="3" fill="#A855F7"></circle>
+            <!-- Taro 2 dissolving -->
+            <rect x="260" y="190" width="42" height="30" rx="8" fill="#D8B4FE" stroke="#141312" stroke-width="2.5"></rect>
+            <path d="M265 210 Q285 225 305 215" stroke="#A855F7" stroke-width="3" fill="none"></path>
+            <!-- Hotpot Steam & Chili Peppers -->
+            <path d="M120 145 Q130 115 120 85" stroke="#F59E0B" stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+            <path d="M190 135 Q205 105 195 75" stroke="#F59E0B" stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+            <path d="M260 145 Q270 115 260 85" stroke="#C084FC" stroke-width="3.5" fill="none" stroke-linecap="round"></path>
+            <!-- Floating chili pepper on left -->
+            <path d="M110 185 Q130 175 140 190" stroke="#B91C1C" stroke-width="5" fill="none" stroke-linecap="round"></path>
+            <!-- Chopsticks grabbing food -->
+            <line x1="335" y1="55" x2="250" y2="175" stroke="#78350F" stroke-width="4.5" stroke-linecap="round"></line>
+            <line x1="345" y1="65" x2="265" y2="175" stroke="#78350F" stroke-width="4.5" stroke-linecap="round"></line>
+          </svg>

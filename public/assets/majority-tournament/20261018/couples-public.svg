@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-label="couples-public">
+            <rect width="400" height="300" rx="16" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- Couple left side -->
+            <ellipse cx="145" cy="140" rx="36" ry="36" fill="#FDE047" stroke="#141312" stroke-width="3.5"></ellipse>
+            <ellipse cx="205" cy="140" rx="36" ry="36" fill="#F472B6" stroke="#141312" stroke-width="3.5"></ellipse>
+            <!-- Entwined giant heart -->
+            <path d="M175 60 C160 30 120 40 135 75 C150 110 175 130 175 130 C175 130 200 110 215 75 C230 40 190 30 175 60 Z" fill="#EF4444" stroke="#141312" stroke-width="3.5"></path>
+            <!-- Sparkles -->
+            <polygon points="120,45 124,53 132,57 124,61 120,69 116,61 108,57 116,53" fill="#F59E0B" stroke="#141312" stroke-width="2"></polygon>
+            <polygon points="230,45 234,53 242,57 234,61 230,69 226,61 218,57 226,53" fill="#F59E0B" stroke="#141312" stroke-width="2"></polygon>
+            <!-- Couple Clinking Cocktail Glasses -->
+            <path d="M160 210 L170 175 L180 175 L190 210 Z" fill="#FBBF24" stroke="#141312" stroke-width="3"></path>
+            <line x1="175" y1="210" x2="175" y2="235" stroke="#141312" stroke-width="3.5"></line>
+            <line x1="165" y1="235" x2="185" y2="235" stroke="#141312" stroke-width="3.5"></line>
+            <!-- Awkward third-wheel on right with black sunglasses -->
+            <rect x="270" y="115" width="85" height="120" rx="14" fill="#CBD5E1" stroke="#141312" stroke-width="3.5"></rect>
+            <!-- Sunglasses frame -->
+            <rect x="282" y="138" width="26" height="16" rx="3" fill="#1E293B" stroke="#141312" stroke-width="2.5"></rect>
+            <rect x="318" y="138" width="26" height="16" rx="3" fill="#1E293B" stroke="#141312" stroke-width="2.5"></rect>
+            <line x1="308" y1="146" x2="318" y2="146" stroke="#141312" stroke-width="3"></line>
+            <!-- Cold sweat drop -->
+            <path d="M346 118 C346 128 340 131 336 126 C332 121 341 113 346 118 Z" fill="#38BDF8" stroke="#141312" stroke-width="2"></path>
+            <!-- Cup with straw -->
+            <rect x="295" y="195" width="35" height="42" rx="4" fill="#FEF08A" stroke="#141312" stroke-width="2.5"></rect>
+            <line x1="312" y1="195" x2="322" y2="170" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round"></line>
+          </svg>

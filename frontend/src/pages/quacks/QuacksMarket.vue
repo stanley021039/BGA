@@ -2,7 +2,7 @@
 import { computed, ref, useId } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
 import QuacksGlyph from './QuacksGlyph.vue';
-import type { QuacksBook } from '../../contracts/quacks';
+import type { QuacksBook, IngredientColor } from '../../contracts/quacks';
 import QuacksBooks from './QuacksBooks.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiDialog from '../../components/UiDialog.vue';
@@ -24,6 +24,8 @@ function selected(book: QuacksBook, value: number) {
 function disabled(book: QuacksBook, value: number, price: number) {
   const item = selected(book, value);
   return (
+    (!!game.state?.market.turnPlayerId && game.state.market.turnPlayerId !== game.state.me) ||
+    (!selected(book, value) && (game.state?.market.stock[book.color + ':' + value] ?? 1) < 1) ||
     !game.available ||
     game.mine?.ready ||
     !!game.mine?.pending ||
@@ -51,6 +53,19 @@ function choose(book: QuacksBook, value: number) {
       ><h2>{{ extra ? '幽靈氣息獨立採購' : '藥材市集' }}</h2
       ><span>第 {{ game.state?.round }}／9 回合</span></header
     >
+    <p role="status"
+      >輪到
+      {{
+        game.state?.players.find((p) => p.id === game.state?.market.turnPlayerId)?.name || '結算中'
+      }}
+      購買；基本版＋擴充固定總量，整場共用庫存。</p
+    >
+    <p v-for="notice in game.state?.market.notices.slice(-4) || []" :key="notice.id"
+      >{{ notice.name }} 購買
+      <QuacksGlyph
+        :chip="{ color: notice.color as IngredientColor, value: notice.value }"
+        :size="32"
+    /></p>
     <div class="vue-quacks-market-budget"
       ><strong :aria-label="'剩餘預算 ' + budget + ' 金幣'">{{ budget }}<span>金幣</span></strong
       ><span :aria-label="'已買 ' + bought.length + '／2 片'"
@@ -90,6 +105,7 @@ function choose(book: QuacksBook, value: number) {
           ><button
             v-for="offer in book.offers"
             :key="offer.value"
+            :title="book.name + ' ' + offer.value + '：' + book.effect"
             type="button"
             data-ui-hint
             :aria-pressed="!!selected(book, offer.value)"
@@ -105,7 +121,9 @@ function choose(book: QuacksBook, value: number) {
                 ? selected(book, offer.value)?.canUndo
                   ? '，再點一次取消並退還預算'
                   : '，已鎖定，無法取消'
-                : '')
+                : '') +
+              '，效果：' +
+              book.effect
             "
             :aria-describedby="id + '-effect-' + book.color"
             :disabled="disabled(book, offer.value, offer.price)"
@@ -113,6 +131,10 @@ function choose(book: QuacksBook, value: number) {
             ><QuacksGlyph :chip="{ color: book.color, value: offer.value }" :size="52" /><strong
               class="vue-quacks-market-price"
               >{{ offer.price }}<span class="ui-sr-only">金幣</span></strong
+            ><span class="vue-quacks-market-stock"
+              >剩 {{ game.state?.market.stock[book.color + ':' + offer.value] ?? 0 }}／{{
+                game.state?.market.capacity?.[book.color + ':' + offer.value] ?? 0
+              }}片</span
             ><span class="vue-quacks-market-mark" aria-hidden="true"
               ><UiIcon
                 v-if="selected(book, offer.value)"

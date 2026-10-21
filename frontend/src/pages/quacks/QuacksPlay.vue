@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import QuacksRuleVisual from './QuacksRuleVisual.vue';
 import { computed } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
 import { ingredientNames } from '../../contracts/quacks';
@@ -9,6 +10,7 @@ import QuacksAlchemy from './QuacksAlchemy.vue';
 import QuacksWitches from './QuacksWitches.vue';
 import QuacksPot from './QuacksPot.vue';
 import QuacksBooks from './QuacksBooks.vue';
+import QuacksScoreboard from './QuacksScoreboard.vue';
 import UiButton from '../../components/UiButton.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import { useRoomStore } from '../../stores/room';
@@ -18,6 +20,16 @@ const game = useQuacksStore(),
   s = computed(() => game.state!),
   m = computed(() => game.mine),
   own = computed(() => game.own!);
+const compactEffects = computed(() =>
+  ['black', 'green', 'purple'].map((color) => {
+    const entries = m.value?.effectSummary.filter((e) => e.color === color) || [];
+    return {
+      color,
+      triggered: entries.some((e) => e.triggered),
+      text: entries.map((e) => e.text).join('；'),
+    };
+  }),
+);
 function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
   return (
     !game.available ||
@@ -114,15 +126,15 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
     >
     <template v-else-if="s.phase === 'settlement' && m"
       ><template v-if="m.ready"
-        ><p>你已完成本階段，等待其他人。</p
+        ><section class="vue-quacks-stage-message vue-quacks-stage-complete" role="status"
+          ><h2>你已完成本階段</h2><p>等待其他玩家完成後，一起進入下一階段。</p></section
         ><QuacksPot v-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /></template
       ><template v-else-if="s.stage === 'witches'"
-        ><h2>全員大釜已公開，先決定適用女巫</h2><p>可先使用符合條件的女巫，再按下方準備結算。</p
-        ><QuacksWitches /><QuacksPot
-          v-if="!overlay && game.viewed"
-          :state="s"
-          :recipe="game.viewed" /></template
-      ><section v-else-if="s.stage === 'bonus'"
+        ><section class="vue-quacks-stage-message vue-quacks-witches-intro"
+          ><h2>全員大釜已公開，先決定適用女巫</h2><p>可先使用符合條件的女巫，再按下方準備結算。</p
+          ><QuacksWitches /></section
+        ><QuacksPot v-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /></template
+      ><section v-else-if="s.stage === 'bonus'" class="vue-quacks-stage-message"
         ><h2>獎勵骰</h2
         ><p>{{
           m.bonusEligible
@@ -136,19 +148,20 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
               .join('、')
           }}</p
         ></section
-      ><section v-else-if="s.stage === 'effects-confirm'"
+      ><section v-else-if="s.stage === 'effects-confirm'" class="vue-quacks-effects-compact"
         ><h2>綠色、黑色與紫色藥材結算</h2
         ><article
-          v-for="(effect, index) in m.effectSummary"
+          v-for="(effect, index) in compactEffects"
           :key="index"
           class="vue-quacks-effect-row"
-          ><QuacksGlyph
-            v-if="['black', 'green', 'purple'].includes(effect.color)"
+          :class="{ 'is-triggered': effect.triggered }"
+          :title="effect.text"
+          ><QuacksRuleVisual
+            :text="effect.text"
             :chip="{ color: effect.color as 'black' | 'green' | 'purple', value: 1 }"
-          /><p>{{ effect.text }}</p
-          ><strong v-if="effect.triggered">已觸發</strong></article
+          /><span class="ui-sr-only">{{ effect.triggered ? '已觸發' : '未觸發' }}</span></article
         ><p>確認不會重複領取；全員確認後才進入格位獎勵。</p></section
-      ><section v-else-if="s.stage === 'rewards'"
+      ><section v-else-if="s.stage === 'rewards'" class="vue-quacks-stage-message"
         ><h2>領取結算位置獎勵</h2
         ><p
           >大釜第 {{ own.position }} 格，結算位置
@@ -221,7 +234,9 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
         ></div
       ></section
     >
-    <p v-else-if="s.phase === 'between'">本輪已完成，由房主開始下一回合。</p>
+    <section v-else-if="s.phase === 'between'"
+      ><h2>本輪環形計分板</h2><QuacksScoreboard /><p>查看後由房主開始下一回合。</p></section
+    >
     <UiButton
       v-if="m?.canGoodNeighbor"
       icon="add"

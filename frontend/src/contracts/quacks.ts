@@ -107,6 +107,7 @@ export interface QuacksRecipe {
   } | null;
 }
 export interface QuacksChoiceOption {
+  rewards?: { resource: string; amount: number }[];
   id: string;
   label: string;
   disabled: boolean;
@@ -190,6 +191,12 @@ export interface QuacksResult {
 }
 export interface QuacksSnapshot extends RoomSnapshot {
   events: { id: number; kind: string; text: string }[];
+  market: {
+    turnPlayerId: string | null;
+    stock: Record<string, number>;
+    capacity: Record<string, number>;
+    notices: { id: string; name: string; text: string; color: string; value: number }[];
+  };
   type: 'quacks';
   phase:
     | 'waiting'
@@ -440,6 +447,10 @@ function pending(v: unknown): QuacksPending | null {
         id: string(o.id),
         label: string(o.label),
         disabled: bool(o.disabled),
+        rewards: array(o.rewards || []).map((v) => ({
+          resource: string(record(v).resource),
+          amount: natural(record(v).amount),
+        })),
         ...(o.coin !== undefined ? { coin: coin(o.coin) } : {}),
         ...(o.ingredient ? { ingredient: choiceIngredient(o.ingredient) } : {}),
         ...(o.ingredients ? { ingredients: array(o.ingredients).map(choiceIngredient) } : {}),
@@ -610,6 +621,7 @@ export function readQuacksSnapshot(value: unknown): QuacksSnapshot {
   }
   return {
     ...base,
+    market: r.market as QuacksSnapshot['market'],
     events: array(r.events).map((v) => {
       const e = record(v);
       return { id: natural(e.id), kind: string(e.kind), text: string(e.text) };
@@ -696,7 +708,10 @@ export interface QuacksLeafOwner {
 declare global {
   interface Window {
     QuacksArt?: {
-      token(chip: Ingredient, options?: { size?: number; decorative?: boolean }): SVGElement;
+      token(
+        chip: Ingredient,
+        options?: { size?: number; decorative?: boolean; showValue?: boolean },
+      ): SVGElement;
       resource(kind: string, options?: { size?: number; decorative?: boolean }): SVGElement;
       cauldron(
         state: QuacksSnapshot,

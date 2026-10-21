@@ -4,6 +4,13 @@ import { useRoomStore } from '../stores/room';
 import type { BarrageController, ExpressionPlayback } from '../contracts/social';
 import { readBarrages, readExpressions } from '../contracts/social';
 import '../styles/room-social.scss';
+import '../../../public/shared/game-result-sounds.js';
+declare global {
+  interface Window {
+    GameResultSounds?: { create(): { update(snapshot: unknown): void; dispose(): void } };
+  }
+}
+let results: ReturnType<NonNullable<Window['GameResultSounds']>['create']> | undefined;
 const props = withDefaults(defineProps<{ connected?: boolean }>(), { connected: true });
 const room = useRoomStore(),
   layer = ref<HTMLElement | null>(null);
@@ -22,8 +29,12 @@ function update() {
   if (!props.connected || room.disconnected) {
     barrages?.disconnect();
     sounds?.reset();
+    results?.dispose();
+    results = undefined;
     return;
   }
+  results ??= window.GameResultSounds?.create();
+  results?.update(state);
   barrages?.update({ ...state, barrages: readBarrages(state.barrages) });
   sounds?.update({
     contextId: context.value,
@@ -32,6 +43,8 @@ function update() {
   });
 }
 function stop() {
+  results?.dispose();
+  results = undefined;
   resize?.disconnect();
   resize = null;
   barrages?.dispose();

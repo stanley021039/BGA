@@ -17,20 +17,6 @@
       "sha256": "d1fbf62d2be1b7ad1a3efbb4c152b78c8ed0a0ff0e2ece839f9bda3db7dbfbb6"
     },
     {
-      "file": "quacks-draw.wav",
-      "durationMs": 540,
-      "sampleRate": 24000,
-      "channels": 1,
-      "sha256": "a6395b9f7fdecd5973fdcfb53337e40762a893398d9bde0b5bd6b7fad16c26ac"
-    },
-    {
-      "file": "quacks-potion-synth.wav",
-      "durationMs": 550,
-      "sampleRate": 24000,
-      "channels": 1,
-      "sha256": "0ac402dddaf03bba320daa6f7e38515adf7452660b886ab2faba67ee06052acd"
-    },
-    {
       "file": "quacks-ruby.wav",
       "durationMs": 460,
       "sampleRate": 24000,

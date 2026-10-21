@@ -13,6 +13,7 @@ export interface MajorityQuestion {
   pack: string;
   shared: boolean;
   reused: boolean;
+  entries?: TournamentEntry[];
 }
 export interface MajorityGroup {
   id: string;
@@ -41,7 +42,9 @@ export interface MajorityTeam {
   score: number;
 }
 export interface MajorityOptions {
-  mode: 'majority' | 'cruel';
+  mode: 'majority' | 'cruel' | 'music' | 'scenario';
+  theme?: string;
+  bracketSize?: number;
   rounds: number;
   customPercent: number | null;
   cruelRules: 'teams' | 'individual';
@@ -51,8 +54,29 @@ export interface MajorityPlayer extends RoomPlayer {
   score: number;
   waitingForNextRound: boolean;
 }
+export interface TournamentEntry {
+  id: string;
+  label: string;
+  detail?: string;
+  image?: string;
+  audioUrl?: string;
+  audioSeconds?: number;
+  rank?: number;
+}
+export interface TournamentView {
+  mode: 'music' | 'scenario';
+  themes: { id: string; label: string; count: number }[];
+  size: number;
+  stage: number;
+  pair: number;
+  champion: TournamentEntry | null;
+  ranking: { id: string; name: string; score: number; rank: number }[];
+  entryRanking: TournamentEntry[];
+  completed: boolean;
+}
 export interface MajoritySnapshot extends RoomSnapshot {
   type: 'majority';
+  tournament: TournamentView | null;
   phase: MajorityPhase;
   players: MajorityPlayer[];
   round: number;
@@ -100,11 +124,30 @@ export function readMajorityQuestion(value: unknown): MajorityQuestion {
   if (
     !text(q.prompt) ||
     options.length !== (type === 'blank' ? 0 : type === 'two' ? 2 : 3) ||
-    images.some((url) => !/^\/assets\/majority-cruel\/cruel-two-\d{3}-[ab]\.svg$/.test(url)) ||
+    images.some(
+      (url) =>
+        !/^\/assets\/(?:majority-cruel\/cruel-two-\d{3}-[ab]\.svg|majority-tournament\/(?:[a-zA-Z0-9_-]+\.png|20261018\/[a-zA-Z0-9_-]+\.svg)|playful\/game-musicquiz\.svg)$/.test(
+          url,
+        ),
+    ) ||
     (images.length && images.length !== options.length)
   )
     throw Error('同頻題目資料格式不正確');
+  const entries = q.entries
+    ? array(q.entries).map((v) => {
+        const e = record(v);
+        if (
+          e.audioUrl &&
+          (!String(e.audioUrl).startsWith('/api/game-song-audio?') ||
+            new URL(String(e.audioUrl), 'http://afterhours.invalid').pathname !==
+              '/api/game-song-audio')
+        )
+          throw Error('歌曲來源不正確');
+        return e as unknown as TournamentEntry;
+      })
+    : undefined;
   return {
+    entries,
     id: typeof q.id === 'string' ? q.id : null,
     type,
     topic: text(q.topic),
@@ -215,11 +258,16 @@ export function readMajoritySnapshot(value: unknown): MajoritySnapshot {
       waitingForNextRound: p.waitingForNextRound === true,
     })),
     round: integer(x.round),
-    roundLimit: integer(x.roundLimit, 3, 30),
+    tournament: x.tournament as TournamentView | null,
+    roundLimit: integer(x.roundLimit, 3, 255),
     presenterId: typeof x.presenterId === 'string' ? x.presenterId : null,
     options: {
-      mode: o.mode === 'cruel' ? 'cruel' : 'majority',
-      rounds: integer(o.rounds, 3, 30),
+      mode: ['cruel', 'music', 'scenario'].includes(String(o.mode))
+        ? (o.mode as MajorityOptions['mode'])
+        : 'majority',
+      theme: typeof o.theme === 'string' ? o.theme : undefined,
+      bracketSize: typeof o.bracketSize === 'number' ? integer(o.bracketSize, 8, 256) : undefined,
+      rounds: integer(o.rounds, 3, 255),
       customPercent:
         o.customPercent === null || o.customPercent === undefined
           ? null

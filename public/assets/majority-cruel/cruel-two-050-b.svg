@@ -1,1 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>所有人知道你昨天跳的怪舞</title><desc>原創插畫：酒醒後只有一個後果，你選；所有人知道你昨天跳的怪舞</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><path d="M-70 43L-23-69 27 43Z" fill="#df9fab"/><path d="M-42-24L-5-10M-53 3L9 28" stroke="#f3d482" stroke-width="10"/><path d="M47-55L69-68M45-18L75-13M41 20L60 38M-70-56L-84-78" stroke="#8aacb7" stroke-width="7"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="party" width="100%" height="100%" fill="none"><title>所有人知道你昨天跳的怪舞</title><desc>酒醒後只有一個後果，你選：所有人知道你昨天跳的怪舞</desc>
+            <!-- Background Fill for self-containment -->
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Party streamers -->
+            <path d="M 28 32 Q 45 18 58 35 T 88 30" stroke="#F472B6" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
+            <path d="M 180 28 Q 195 42 210 25 T 226 38" stroke="#38BDF8" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
+            <path d="M 145 18 Q 155 32 170 20" stroke="#34D399" stroke-width="3" stroke-linecap="round" fill="none"></path>
+            <!-- Balloons strings -->
+            <path d="M 85 86 Q 78 115 92 138" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></path>
+            <path d="M 120 78 Q 124 105 118 138" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></path>
+            <path d="M 155 86 Q 162 110 148 138" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></path>
+            <!-- Left Pink Balloon -->
+            <ellipse cx="85" cy="58" rx="26" ry="32" fill="#FBCFE8" stroke="#141312" stroke-width="3.5"></ellipse>
+            <path d="M 72 42 A 18 24 0 0 1 82 32" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+            <polygon points="85,90 81,95 89,95" fill="#F472B6" stroke="#141312" stroke-width="2.5"></polygon>
+            <!-- Right Blue Balloon -->
+            <ellipse cx="155" cy="58" rx="26" ry="32" fill="#BAE6FD" stroke="#141312" stroke-width="3.5"></ellipse>
+            <path d="M 142 42 A 18 24 0 0 1 152 32" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"></path>
+            <polygon points="155,90 151,95 159,95" fill="#38BDF8" stroke="#141312" stroke-width="2.5"></polygon>
+            <!-- Center Golden Main Balloon -->
+            <ellipse cx="120" cy="50" rx="28" ry="34" fill="#FDE047" stroke="#141312" stroke-width="3.5"></ellipse>
+            <path d="M 106 34 A 20 25 0 0 1 116 24" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"></path>
+            <polygon points="120,84 115,90 125,90" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></polygon>
+            <!-- Confetti stars and circles -->
+            <polygon points="45,95 48,102 55,102 49,106 51,113 45,109 39,113 41,106 35,102 42,102" fill="#E5A93C" stroke="#141312" stroke-width="2"></polygon>
+            <polygon points="195,95 198,102 205,102 199,106 201,113 195,109 189,113 191,106 185,102 192,102" fill="#34D399" stroke="#141312" stroke-width="2"></polygon>
+            <circle cx="58" cy="65" r="4.5" fill="#38BDF8" stroke="#141312" stroke-width="2"></circle>
+            <circle cx="182" cy="72" r="4.5" fill="#F472B6" stroke="#141312" stroke-width="2"></circle>
+            <circle cx="120" cy="142" r="3.5" fill="#E5A93C" stroke="#141312" stroke-width="2"></circle>
+          </svg>

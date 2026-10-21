@@ -1,1 +1,75 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>邊剝邊吃才有儀式感</title><desc>原創插畫：吃柑橘時你偏愛；邊剝邊吃才有儀式感</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><circle cx="-23" cy="20" r="45" fill="#f1af4e"/><path d="M11-23Q41-42 57-6Q25 13 11-23Z" fill="#92b69d"/><path d="M11-23Q16-57 40-59" fill="none"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="100%" height="100%" aria-label="orange" class="w-full max-w-[360px] h-auto drop-shadow-sm"><title>邊剝邊吃才有儀式感</title><desc>吃柑橘時你偏愛：邊剝邊吃才有儀式感</desc>
+          <defs>
+            <!-- 柔和微漸層與光澤 -->
+            <radialGradient id="orangeGlow" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#FDBA74"></stop>
+              <stop offset="65%" stop-color="#FB923C"></stop>
+              <stop offset="100%" stop-color="#EA580C"></stop>
+            </radialGradient>
+            <radialGradient id="sliceGlow" cx="45%" cy="35%" r="60%">
+              <stop offset="0%" stop-color="#FED7AA"></stop>
+              <stop offset="70%" stop-color="#FB923C"></stop>
+              <stop offset="100%" stop-color="#F97316"></stop>
+            </radialGradient>
+          </defs>
+
+          <!-- 投影陰影（符合粗邊風格） -->
+          <ellipse cx="98" cy="138" rx="56" ry="10" fill="#E7E5E4" opacity="0.85"></ellipse>
+          <ellipse cx="178" cy="138" rx="30" ry="7" fill="#E7E5E4" opacity="0.85"></ellipse>
+
+          <!-- ========== 主體：整顆飽滿近圓形橘子 (Mandarin Orange) ========== -->
+          <!-- 橘子外輪廓與果肉本體 -->
+          <ellipse cx="96" cy="94" rx="52" ry="46" fill="url(#orangeGlow)" stroke="#141312" stroke-width="4" stroke-linejoin="round"></ellipse>
+
+          <!-- 橘皮表面精緻細節：小毛孔與高光 -->
+          <!-- 高光弧線與柔和光斑 -->
+          <path d="M64 74 C68 62 82 56 94 56" stroke="#FFEDD5" stroke-width="4.5" stroke-linecap="round" fill="none" opacity="0.9"></path>
+          <circle cx="62" cy="85" r="2.5" fill="#FFEDD5" opacity="0.9"></circle>
+
+          <!-- 橘皮毛孔微質感點（深橘微點，無文字） -->
+          <circle cx="82" cy="78" r="1.5" fill="#C2410C" opacity="0.6"></circle>
+          <circle cx="112" cy="82" r="1.5" fill="#C2410C" opacity="0.6"></circle>
+          <circle cx="75" cy="102" r="1.5" fill="#C2410C" opacity="0.6"></circle>
+          <circle cx="95" cy="116" r="1.5" fill="#C2410C" opacity="0.6"></circle>
+          <circle cx="118" cy="106" r="1.5" fill="#C2410C" opacity="0.6"></circle>
+          <circle cx="132" cy="92" r="1.5" fill="#C2410C" opacity="0.6"></circle>
+
+          <!-- 頂部橘子蒂頭果臍 (Calyx / Stem button) -->
+          <ellipse cx="96" cy="51" rx="6" ry="3.5" fill="#E5A93C" stroke="#141312" stroke-width="3"></ellipse>
+
+          <!-- 頂部綠色短枝 (Stem) -->
+          <path d="M96 50 C96 42 100 37 103 34" stroke="#141312" stroke-width="4" stroke-linecap="round" fill="none"></path>
+          <path d="M96 50 C96 42 100 37 103 34" stroke="#15803D" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+
+          <!-- 頂部鮮嫩綠葉 1（向右傾斜伸展） -->
+          <path d="M101 41 C115 32 134 38 138 46 C124 54 105 48 101 41 Z" fill="#34D399" stroke="#141312" stroke-width="3.5" stroke-linejoin="round"></path>
+          <!-- 葉脈 -->
+          <path d="M104 42 C114 43 125 45 133 46" stroke="#059669" stroke-width="2" stroke-linecap="round" fill="none"></path>
+
+          <!-- 頂部小嫩葉 2（向左微展） -->
+          <path d="M94 45 C84 39 74 44 72 49 C80 54 90 51 94 45 Z" fill="#10B981" stroke="#141312" stroke-width="3" stroke-linejoin="round"></path>
+
+          <!-- ========== 旁邊：獨立一片飽滿鮮嫩橘瓣 (Orange Slice / Wedge) ========== -->
+          <!-- 橘瓣本體（月牙弧形立體果肉） -->
+          <g transform="rotate(12 178 105)">
+            <!-- 果瓣底座與囊皮 -->
+            <path d="M152 124 C148 94 165 72 195 76 C198 98 186 126 152 124 Z" fill="url(#sliceGlow)" stroke="#141312" stroke-width="4" stroke-linejoin="round"></path>
+
+            <!-- 橘瓣內部透明晶瑩多汁紋理 -->
+            <path d="M158 116 C155 96 168 82 188 83" stroke="#FEF08A" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.85"></path>
+            <path d="M165 118 C163 103 172 92 184 92" stroke="#FFF7ED" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.75"></path>
+
+            <!-- 晶瑩果肉小汁胞顆粒 -->
+            <ellipse cx="172" cy="100" rx="3" ry="5" fill="#EA580C" opacity="0.4" transform="rotate(-15 172 100)"></ellipse>
+            <ellipse cx="178" cy="108" rx="2.5" ry="4" fill="#EA580C" opacity="0.4" transform="rotate(-10 178 108)"></ellipse>
+            <ellipse cx="166" cy="108" rx="2" ry="3.5" fill="#EA580C" opacity="0.4" transform="rotate(10 166 108)"></ellipse>
+          </g>
+
+          <!-- 點綴性小幾何光芒（延續 A/B/C 系列活潑風格） -->
+          <!-- 暖金四角小星星 -->
+          <path d="M38 52 Q44 52 44 46 Q44 52 50 52 Q44 52 44 58 Q44 52 38 52 Z" fill="#E5A93C" stroke="#141312" stroke-width="1.5"></path>
+          <path d="M210 58 Q214 58 214 54 Q214 58 218 58 Q214 58 214 62 Q214 58 210 58 Z" fill="#FBCFE8" stroke="#141312" stroke-width="1.5"></path>
+          <!-- 飄浮小果汁水滴 -->
+          <circle cx="198" cy="126" r="3" fill="#BAE6FD" stroke="#141312" stroke-width="1.8"></circle>
+          <circle cx="48" cy="116" r="2.5" fill="#FDE047" stroke="#141312" stroke-width="1.5"></circle>
+        </svg>

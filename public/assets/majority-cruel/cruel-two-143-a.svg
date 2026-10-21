@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="heart"><title>最值得珍惜的一段關係</title><desc>未來的你只留下一項資訊：最值得珍惜的一段關係</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Surrounding sparkle cross & dots -->
+          <path d="M100 80 L108 65 L116 80 L131 88 L116 96 L108 111 L100 96 L85 88 Z" fill="#FDE047" stroke="#141312" stroke-width="2.5"></path>
+          <circle cx="295" cy="85" r="9" fill="#BAE6FD" stroke="#141312" stroke-width="3"></circle>
+          <circle cx="310" cy="180" r="6" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></circle>
+          <circle cx="95" cy="205" r="5" fill="#FBCFE8" stroke="#141312" stroke-width="2"></circle>
+          <!-- Shadow hint -->
+          <ellipse cx="200" cy="265" rx="45" ry="9" fill="#FBCFE8" opacity="0.6"></ellipse>
+          <!-- Big Cute Heart -->
+          <path d="M200 85 C175 40 105 45 105 125 C105 185 180 235 200 250 C220 235 295 185 295 125 C295 45 225 40 200 85 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+          <!-- Inner Warm Accent Arc / Highlight -->
+          <path d="M140 100 C130 115 130 135 135 150" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round"></path>
+          <circle cx="150" cy="88" r="4.5" fill="#FFFFFF"></circle>
+          <!-- Subtle gold mini patch / badge -->
+          <circle cx="240" cy="130" r="12" fill="#E5A93C" stroke="#141312" stroke-width="3"></circle>
+          <path d="M236 130 L244 130" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></path>
+          <path d="M240 126 L240 134" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></path>
+        </svg>

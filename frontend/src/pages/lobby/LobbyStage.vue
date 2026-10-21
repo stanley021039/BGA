@@ -5,6 +5,7 @@ import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
+import LobbyBarrage from './LobbyBarrage.vue';
 const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
@@ -136,6 +137,13 @@ onBeforeUnmount(() => {
         ><p id="lobbyInstructions"
           >點擊目的地，或聚焦場地後用方向鍵移動。點選自己的角色使用表情。</p
         ></div
+      ><div class="vue-lobby-social-tools"
+        ><UiButton
+          icon="emoji"
+          icon-only
+          label="選擇角色表情"
+          :disabled="!lobby.connected"
+          @click="open($event.currentTarget as HTMLElement)" /><LobbyBarrage /></div
       ><span class="ui-badge lobby-count">{{
         lobby.snapshot ? lobby.snapshot.visitors.length + ' 位在大廳' : '連線中…'
       }}</span></div
@@ -220,3 +228,12 @@ onBeforeUnmount(() => {
     ></UiDialog>
   </section>
 </template>
+
+<style scoped>
+.vue-lobby-social-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+</style>

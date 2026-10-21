@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>鞋子左右不同顏色</title><desc>原創插畫：一整天衣服出問題，你選；鞋子左右不同顏色</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><path d="M-71 30V-25H-16Q-10 11 34 17L66 27Q84 31 79 63H-72Z" fill="#9ebcc0"/><path d="M-72 49H79M-12 2L4-10M1 13L17 0" fill="none"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="shoe" width="100%" height="100%" fill="none"><title>鞋子左右不同顏色</title><desc>一整天衣服出問題，你選：鞋子左右不同顏色</desc>
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Speed / Motion lines behind sneaker -->
+            <line x1="32" y1="108" x2="52" y2="108" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="24" y1="118" x2="48" y2="118" stroke="#E5A93C" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="38" y1="128" x2="58" y2="128" stroke="#34D399" stroke-width="3" stroke-linecap="round"></line>
+            <!-- Sneaker Upper Body -->
+            <path d="M 62 118 L 62 72 C 62 65 72 58 84 58 L 102 58 L 118 78 L 158 82 C 178 82 195 95 198 118 Z" fill="#38BDF8" stroke="#141312" stroke-width="3.5" stroke-linejoin="round"></path>
+            <!-- Front Toe Cap -->
+            <path d="M 166 118 C 166 98 178 95 198 118 Z" fill="#FEF3C7" stroke="#141312" stroke-width="2.5"></path>
+            <!-- Heel Collar / Cushion -->
+            <path d="M 62 72 C 68 62 82 62 88 74 L 102 74" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></path>
+            <!-- Shoe Laces -->
+            <line x1="102" y1="68" x2="115" y2="78" stroke="#FDE047" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="110" y1="74" x2="124" y2="82" stroke="#FDE047" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="120" y1="80" x2="134" y2="88" stroke="#FDE047" stroke-width="3" stroke-linecap="round"></line>
+            <!-- Side Dynamic Stripe -->
+            <path d="M 88 102 Q 120 102 148 90 Q 125 110 92 114 Z" fill="#34D399" stroke="#141312" stroke-width="2"></path>
+            <!-- Thick Chunky Sole -->
+            <path d="M 54 118 L 204 118 C 208 128 202 136 188 136 L 60 136 C 52 136 48 128 54 118 Z" fill="#FFFFFF" stroke="#141312" stroke-width="3.5"></path>
+            <!-- Sole Grip Grooves -->
+            <line x1="75" y1="126" x2="95" y2="126" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></line>
+            <line x1="115" y1="126" x2="140" y2="126" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></line>
+            <line x1="160" y1="126" x2="185" y2="126" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></line>
+          </svg>

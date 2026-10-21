@@ -108,7 +108,7 @@ const game = useQuacksStore(),
         v-else-if="s.stage === 'shopping'"
         icon="check"
         label="完成本輪結算"
-        :disabled="!game.available"
+        :disabled="!game.available || (!!s.market.turnPlayerId && s.market.turnPlayerId !== s.me)"
         @click="game.command('shop-ready')"
     /></template>
     <UiButton

@@ -1,1 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>馬上回覆怕錯過聊天</title><desc>原創插畫：收到喜歡的人訊息，你會；馬上回覆怕錯過聊天</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><rect x="-44" y="-66" width="88" height="144" rx="16" fill="#778bad"/><rect x="-34" y="-46" width="68" height="94" rx="4" fill="#fff4db"/><path d="M-19-20H23M-19-3H12M-19 14H23" stroke="#8da6b2"/><circle cy="62" r="5" fill="#fff4db"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="phone" width="100%" height="100%" fill="none"><title>馬上回覆怕錯過聊天</title><desc>收到喜歡的人訊息，你會：馬上回覆怕錯過聊天</desc>
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Vibration / Sound wave bars -->
+            <path d="M 68 55 Q 60 78 68 105" stroke="#E5A93C" stroke-width="3" stroke-linecap="round"></path>
+            <path d="M 58 65 Q 52 78 58 95" stroke="#E5A93C" stroke-width="2.5" stroke-linecap="round"></path>
+            <path d="M 172 55 Q 180 78 172 105" stroke="#E5A93C" stroke-width="3" stroke-linecap="round"></path>
+            <path d="M 182 65 Q 188 78 182 95" stroke="#E5A93C" stroke-width="2.5" stroke-linecap="round"></path>
+            <!-- Phone body -->
+            <rect x="85" y="20" width="70" height="120" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="3.5"></rect>
+            <!-- Screen area -->
+            <rect x="92" y="32" width="56" height="96" rx="8" fill="#BAE6FD" stroke="#141312" stroke-width="2.5"></rect>
+            <!-- Dynamic Island / Speaker -->
+            <rect x="110" y="24" width="20" height="4" rx="2" fill="#141312"></rect>
+            <!-- Notification Card on Screen -->
+            <rect x="97" y="44" width="46" height="24" rx="5" fill="#FFFFFF" stroke="#141312" stroke-width="2"></rect>
+            <circle cx="106" cy="56" r="4" fill="#F472B6"></circle>
+            <line x1="115" y1="53" x2="136" y2="53" stroke="#141312" stroke-width="2" stroke-linecap="round"></line>
+            <line x1="115" y1="59" x2="128" y2="59" stroke="#E5A93C" stroke-width="2" stroke-linecap="round"></line>
+            <!-- App Icons -->
+            <rect x="99" y="80" width="12" height="12" rx="3" fill="#FDE047" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="114" y="80" width="12" height="12" rx="3" fill="#34D399" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="129" y="80" width="12" height="12" rx="3" fill="#F472B6" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="99" y="98" width="12" height="12" rx="3" fill="#38BDF8" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="114" y="98" width="12" height="12" rx="3" fill="#E5A93C" stroke="#141312" stroke-width="1.5"></rect>
+            <circle cx="135" cy="104" r="6" fill="#F472B6" stroke="#141312" stroke-width="1.5"></circle>
+            <!-- Home Bar Indicator -->
+            <line x1="108" y1="122" x2="132" y2="122" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></line>
+          </svg>

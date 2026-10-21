@@ -1,0 +1,63 @@
+{
+  "sourceRepository": "https://github.com/darrenprx/lolPing",
+  "commit": "3abde6c972ef02a64750964c60b48a6abec4856b",
+  "attribution": "League of Legends audio assets: Riot Games. Retrieved from community extraction repository; not project-original or CC0.",
+  "processing": "PCM16 mono 24kHz conversion only; no pitch, speed or creative changes",
+  "clips": [
+    {
+      "cue": "ping-ping",
+      "label": "一般標記",
+      "sourceFile": "sources/lol-ping/Base.wav",
+      "sourceUrl": "https://raw.githubusercontent.com/darrenprx/lolPing/3abde6c972ef02a64750964c60b48a6abec4856b/assets/sounds/Base.wav",
+      "sourceSha256": "5faeb0973e85fc3b768afad2f88943a51289469d302cad836623eb037d0bcb24",
+      "file": "ping-ping.wav",
+      "sha256": "ed5d8ce303b962304a8bd7a6ea14f095584ce72525ad9cc7532a3e7ba8ce6edd",
+      "durationMs": 976,
+      "bytes": 46928
+    },
+    {
+      "cue": "ping-attention",
+      "label": "危險／撤退",
+      "sourceFile": "sources/lol-ping/SRP_12.wav",
+      "sourceUrl": "https://raw.githubusercontent.com/darrenprx/lolPing/3abde6c972ef02a64750964c60b48a6abec4856b/assets/sounds/SRP_12.wav",
+      "sourceSha256": "f4e81383452cfd4ad9bf6651748d3f6a33b7a73c48ff58aaebbc91b8ab34b752",
+      "file": "ping-attention.wav",
+      "sha256": "4375f950a020d3d0069e4c95d3245cda8834ce321d66db2473484661e0d3a5cc",
+      "durationMs": 2463,
+      "bytes": 118300
+    },
+    {
+      "cue": "ping-question",
+      "label": "敵人消失",
+      "sourceFile": "sources/lol-ping/MIA.wav",
+      "sourceUrl": "https://raw.githubusercontent.com/darrenprx/lolPing/3abde6c972ef02a64750964c60b48a6abec4856b/assets/sounds/MIA.wav",
+      "sourceSha256": "b44481bc4dadf360925097887f34a5114f42f324206ba6cfa4c0f117c9fe0498",
+      "file": "ping-question.wav",
+      "sha256": "9db2f4f2a8239a9760282fe19caf92579ee6cf97d98ba28d218f484d90ba3251",
+      "durationMs": 981,
+      "bytes": 47156
+    },
+    {
+      "cue": "ping-help",
+      "label": "請求協助",
+      "sourceFile": "sources/lol-ping/ComeHere.wav",
+      "sourceUrl": "https://raw.githubusercontent.com/darrenprx/lolPing/3abde6c972ef02a64750964c60b48a6abec4856b/assets/sounds/ComeHere.wav",
+      "sourceSha256": "f6cdc7f17be6e39450e0e7cd9d418e78b3e22fd41abd9d80a84b73f779314ba9",
+      "file": "ping-help.wav",
+      "sha256": "17f91aa1145d43ca260d78daddb9b241a1ab865221d898225cc1e9766c1d8cf0",
+      "durationMs": 2652,
+      "bytes": 127382
+    },
+    {
+      "cue": "ping-look",
+      "label": "正在路上",
+      "sourceFile": "sources/lol-ping/OnMyWay.wav",
+      "sourceUrl": "https://raw.githubusercontent.com/darrenprx/lolPing/3abde6c972ef02a64750964c60b48a6abec4856b/assets/sounds/OnMyWay.wav",
+      "sourceSha256": "bbc00430b8a919662a9a668a68beedc944b88cd5369241481ae3eb8538851a56",
+      "file": "ping-look.wav",
+      "sha256": "9264338b7f9904846ecb589709b97ed270fb62265dbe0d5b746c3ea696351464",
+      "durationMs": 1556,
+      "bytes": 74754
+    }
+  ]
+}

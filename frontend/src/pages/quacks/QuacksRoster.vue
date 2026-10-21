@@ -182,8 +182,8 @@ function view(id: string) {
               row.recipe.hidden
                 ? '大釜進度隱藏中'
                 : row.white !== null && row.threshold !== null
-                  ? '白彈 ' + row.white + ' / ' + row.threshold
-                  : '白彈進度未提供'
+                  ? '炸彈 ' + row.white + ' / ' + row.threshold
+                  : '炸彈進度未提供'
             }}</span
             ><span>{{ row.status }}</span></p
           >

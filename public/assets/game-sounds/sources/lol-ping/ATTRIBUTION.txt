@@ -1,0 +1,3 @@
+League of Legends sound assets © Riot Games.
+Retrieved from https://github.com/darrenprx/lolPing at 3abde6c972ef02a64750964c60b48a6abec4856b.
+These game assets are not covered by this project's original-synthesis attribution.

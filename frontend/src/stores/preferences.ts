@@ -76,6 +76,7 @@ declare global {
     };
     BarrageFrames?: {
       options: readonly FrameOption[];
+      canUse?(id: string): boolean;
       get(): FrameState;
       set(value: Partial<FrameState>): FrameState;
       subscribe(fn: (state: FrameState) => void): () => void;
@@ -142,6 +143,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
     else window.MediaAppearance?.set(id);
   }
   return {
+    canUse: (id: string) => window.BarrageFrames?.canUse?.(id) !== false,
     color,
     motion,
     audio,

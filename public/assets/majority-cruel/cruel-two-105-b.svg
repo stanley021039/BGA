@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="plate" width="100%" height="100%" fill="none"><title>每週見一次但只一頓飯</title><desc>同樣相愛的遠距離關係，你選：每週見一次但只一頓飯</desc>
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Left Fork -->
+            <path d="M 42 125 L 42 75 M 34 50 L 34 68 C 34 78 50 78 50 68 L 50 50 M 42 50 L 42 75" stroke="#141312" stroke-width="3" stroke-linecap="round"></path>
+            <rect x="38" y="95" width="8" height="32" rx="4" fill="#E5A93C" stroke="#141312" stroke-width="2"></rect>
+            <!-- Right Knife -->
+            <path d="M 198 125 L 198 50 C 198 50 206 58 206 85 C 206 95 198 98 198 98" fill="#BAE6FD" stroke="#141312" stroke-width="3" stroke-linecap="round"></path>
+            <rect x="194" y="95" width="8" height="32" rx="4" fill="#E5A93C" stroke="#141312" stroke-width="2"></rect>
+            <!-- Large Dish Plate -->
+            <ellipse cx="120" cy="85" rx="55" ry="48" fill="#FDFBF7" stroke="#141312" stroke-width="3.5"></ellipse>
+            <!-- Inner Plate Ring -->
+            <ellipse cx="120" cy="85" rx="38" ry="34" fill="#FEF3C7" stroke="#141312" stroke-width="2.5"></ellipse>
+            <!-- Food on Plate: Fried Egg & Greens -->
+            <!-- Salad Greens -->
+            <circle cx="106" cy="74" r="10" fill="#34D399" stroke="#141312" stroke-width="2"></circle>
+            <circle cx="118" cy="70" r="8" fill="#10B981" stroke="#141312" stroke-width="2"></circle>
+            <!-- Sunny side up Egg White -->
+            <path d="M 115 88 C 105 85 96 95 106 104 C 114 112 135 112 138 98 C 140 88 128 85 115 88 Z" fill="#FFFFFF" stroke="#141312" stroke-width="2.5"></path>
+            <!-- Egg Yolk -->
+            <circle cx="122" cy="95" r="9" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+            <circle cx="125" cy="92" r="2.5" fill="#FFFFFF"></circle>
+            <!-- Steaming Aroma above plate -->
+            <path d="M 112 30 Q 116 22 110 16" stroke="#F472B6" stroke-width="2.5" stroke-linecap="round"></path>
+            <path d="M 125 32 Q 130 20 124 14" stroke="#E5A93C" stroke-width="2.5" stroke-linecap="round"></path>
+          </svg>

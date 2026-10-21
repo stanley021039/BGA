@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-label="power-clock">
+            <rect width="400" height="300" rx="16" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- Vintage Mechanical Pocket Watch / Stopwatch -->
+            <circle cx="200" cy="165" r="95" fill="#FEF08A" stroke="#141312" stroke-width="4.5"></circle>
+            <!-- Watch inner dial face -->
+            <circle cx="200" cy="165" r="78" fill="#FFFFFF" stroke="#141312" stroke-width="3"></circle>
+            <!-- Top crown winder & ring -->
+            <rect x="190" y="45" width="20" height="25" rx="3" fill="#E5A93C" stroke="#141312" stroke-width="3"></rect>
+            <path d="M180 50 A20 20 0 0 1 220 50" fill="none" stroke="#141312" stroke-width="4"></path>
+            <!-- Ticking marks -->
+            <line x1="200" y1="92" x2="200" y2="102" stroke="#141312" stroke-width="3"></line>
+            <line x1="200" y1="228" x2="200" y2="238" stroke="#141312" stroke-width="3"></line>
+            <line x1="127" y1="165" x2="137" y2="165" stroke="#141312" stroke-width="3"></line>
+            <line x1="263" y1="165" x2="273" y2="165" stroke="#141312" stroke-width="3"></line>
+            <!-- Shattered / Frozen Lightning crack splitting the dial -->
+            <path d="M200 90 L208 125 L192 145 L215 170 L195 205 L200 240" stroke="#EF4444" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+            <!-- Clock Hands physically frozen by a massive lock or pause bars -->
+            <line x1="200" y1="165" x2="200" y2="115" stroke="#141312" stroke-width="5" stroke-linecap="round"></line>
+            <line x1="200" y1="165" x2="245" y2="165" stroke="#141312" stroke-width="5" stroke-linecap="round"></line>
+            <!-- Two Pause Bars (||) overlapping the center -->
+            <rect x="184" y="145" width="10" height="40" rx="3" fill="#3B82F6" stroke="#141312" stroke-width="2"></rect>
+            <rect x="206" y="145" width="10" height="40" rx="3" fill="#3B82F6" stroke="#141312" stroke-width="2"></rect>
+            <!-- Suspended floating water drops frozen mid-air outside -->
+            <circle cx="85" cy="115" r="7" fill="#38BDF8" stroke="#141312" stroke-width="2.5"></circle>
+            <circle cx="70" cy="180" r="10" fill="#38BDF8" stroke="#141312" stroke-width="2.5"></circle>
+            <circle cx="320" cy="110" r="9" fill="#38BDF8" stroke="#141312" stroke-width="2.5"></circle>
+            <circle cx="335" cy="190" r="6" fill="#38BDF8" stroke="#141312" stroke-width="2.5"></circle>
+          </svg>

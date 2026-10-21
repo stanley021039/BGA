@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-label="cruel-money">
+            <rect width="400" height="300" rx="16" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- Balance Scale Fulcrum & Beam -->
+            <polygon points="200,200 180,260 220,260" fill="#64748B" stroke="#141312" stroke-width="3.5"></polygon>
+            <!-- Tilting Beam -->
+            <line x1="90" y1="135" x2="310" y2="165" stroke="#141312" stroke-width="5" stroke-linecap="round"></line>
+            <circle cx="200" cy="150" r="10" fill="#E5A93C" stroke="#141312" stroke-width="3"></circle>
+            <!-- Left Pan (Heavier with Money): Hanging Strings -->
+            <line x1="90" y1="135" x2="60" y2="185" stroke="#141312" stroke-width="2"></line>
+            <line x1="90" y1="135" x2="120" y2="185" stroke="#141312" stroke-width="2"></line>
+            <ellipse cx="90" cy="185" rx="36" ry="12" fill="#E2E8F0" stroke="#141312" stroke-width="2.5"></ellipse>
+            <!-- Huge Stack of Gold Coins -->
+            <ellipse cx="90" cy="180" rx="24" ry="7" fill="#FACC15" stroke="#141312" stroke-width="2"></ellipse>
+            <ellipse cx="90" cy="172" rx="24" ry="7" fill="#FACC15" stroke="#141312" stroke-width="2"></ellipse>
+            <ellipse cx="90" cy="164" rx="24" ry="7" fill="#FACC15" stroke="#141312" stroke-width="2"></ellipse>
+            <!-- Dollar sign circle badge -->
+            <circle cx="90" cy="148" r="14" fill="#EAB308" stroke="#141312" stroke-width="2.5"></circle>
+            <line x1="90" y1="140" x2="90" y2="156" stroke="#78350F" stroke-width="2.5"></line>
+            <circle cx="90" cy="148" r="5" fill="#78350F"></circle>
+            <!-- Right Pan (Lighter with Friendship Handshake): Hanging Strings -->
+            <line x1="310" y1="165" x2="280" y2="215" stroke="#141312" stroke-width="2"></line>
+            <line x1="310" y1="165" x2="340" y2="215" stroke="#141312" stroke-width="2"></line>
+            <ellipse cx="310" cy="215" rx="36" ry="12" fill="#E2E8F0" stroke="#141312" stroke-width="2.5"></ellipse>
+            <!-- Warm Two Hands Shaking / Clasping Heart -->
+            <rect x="290" y="175" width="40" height="35" rx="8" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></rect>
+            <path d="M310 183 C305 175 295 180 300 190 L310 200 L320 190 C325 180 315 175 310 183 Z" fill="#EF4444" stroke="#141312" stroke-width="1.5"></path>
+          </svg>

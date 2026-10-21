@@ -1,1 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>願意了解彼此約定</title><desc>原創插畫：熟識的成年人坦白有開放式關係，你會；願意了解彼此約定</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><g transform="translate(-35 0) scale(.7)"><path d="M0 12C-42-24-49-57-23-69C-11-75-2-69 0-57C5-73 24-76 35-66C65-36 17-3 0 12Z" fill="#ed7a92"/></g><g transform="translate(30 40) scale(.75)"><path d="M0 12C-42-24-49-57-23-69C-11-75-2-69 0-57C5-73 24-76 35-66C65-36 17-3 0 12Z" fill="#ed7a92"/></g></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="hearts"><title>願意了解彼此約定</title><desc>熟識的成年人坦白有開放式關係，你會：願意了解彼此約定</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Sparkles & floating rings -->
+          <circle cx="200" cy="60" r="8" fill="#FDE047" stroke="#141312" stroke-width="3"></circle>
+          <path d="M85 100 L91 88 L97 100 L109 106 L97 112 L91 124 L85 112 L73 106 Z" fill="#BAE6FD" stroke="#141312" stroke-width="2.5"></path>
+          <circle cx="320" cy="115" r="7" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></circle>
+          <!-- Back / Right Heart (Pastel Blue, tilted right) -->
+          <g transform="rotate(16 235 155)">
+            <path d="M235 95 C215 60 160 65 160 125 C160 175 220 215 235 228 C250 215 310 175 310 125 C310 65 255 60 235 95 Z" fill="#BAE6FD" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+            <path d="M185 105 C178 116 178 130 182 142" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"></path>
+          </g>
+          <!-- Front / Left Heart (Pastel Pink, tilted left, overlapping) -->
+          <g transform="rotate(-14 165 170)">
+            <path d="M165 100 C145 65 90 70 90 130 C90 180 150 220 165 235 C180 220 240 180 240 130 C240 70 185 65 165 100 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+            <!-- Cute highlight -->
+            <path d="M115 110 C108 122 108 136 112 148" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"></path>
+            <!-- Warm Gold bow/pin linking them -->
+            <circle cx="165" cy="140" r="9" fill="#E5A93C" stroke="#141312" stroke-width="3"></circle>
+          </g>
+        </svg>

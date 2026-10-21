@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="book" role="img"><title>先各自整理需求再談</title><desc>成年伴侶親密需求不一致，你選：先各自整理需求再談</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 精裝書外殼底座 -->
+            <path d="M60 215 Q200 245 340 215 L348 225 Q200 255 52 225 Z" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></path>
+            <!-- 書頁左翼 -->
+            <path d="M200 215 C150 205 90 200 65 105 C115 108 165 118 200 135 Z" fill="#F8FAFC" stroke="#141312" stroke-width="3.5"></path>
+            <!-- 書頁右翼 -->
+            <path d="M200 215 C250 205 310 200 335 105 C285 108 235 118 200 135 Z" fill="#F8FAFC" stroke="#141312" stroke-width="3.5"></path>
+            <!-- 翻動書頁層疊（低彩藍與粉色夾頁） -->
+            <path d="M200 195 C160 185 110 180 85 95 C130 98 175 108 200 125 Z" fill="#BAE6FD" stroke="#141312" stroke-width="2.5"></path>
+            <path d="M200 195 C240 185 290 180 315 95 C270 98 225 108 200 125 Z" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></path>
+            <!-- 象徵書籤絲帶（暖金垂墜） -->
+            <path d="M200 130 C200 170 215 210 210 240 L195 230 L185 242 C190 215 198 170 198 130 Z" fill="#FDE047" stroke="#141312" stroke-width="2"></path>
+            <!-- 抽象幾何排版條紋（無字） -->
+            <line x1="110" y1="125" x2="165" y2="135" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="105" y1="145" x2="170" y2="155" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="110" y1="165" x2="160" y2="175" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="235" y1="135" x2="290" y2="125" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="230" y1="155" x2="295" y2="145" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="240" y1="175" x2="290" y2="165" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"></line>
+          </svg>

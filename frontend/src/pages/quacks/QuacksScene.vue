@@ -10,7 +10,6 @@ import QuacksGlyph from './QuacksGlyph.vue';
 import QuacksBag from './QuacksBag.vue';
 import QuacksBooks from './QuacksBooks.vue';
 import QuacksScoreboard from './QuacksScoreboard.vue';
-import QuacksRecords from './QuacksRecords.vue';
 import QuacksAlchemy from './QuacksAlchemy.vue';
 import QuacksWitches from './QuacksWitches.vue';
 import QuacksEffects from './QuacksEffects.vue';
@@ -32,17 +31,23 @@ const tabs = {
     fortune: '本輪占卜牌',
     witches: '草藥女巫',
     alchemy: '煉金術士',
-    records: '回合紀錄',
     pot: '大釜設定',
   },
   title = computed(() => tabs[tab.value as keyof typeof tabs] || '遊戲工具'),
   own = computed(() => game.own),
   mine = computed(() => game.mine),
   state = computed(() => game.state!);
+const viewedPatient = computed(() =>
+  state.value.patients.find((p) => p.id === game.viewed?.alchemy?.patientId),
+);
+const inspecting = ref(false);
 const viewed = computed(() => game.viewed),
   isOwnPot = computed(() => viewed.value?.id === state.value.me),
   boardVisible = computed(
-    () => ['brewing', 'settlement'].includes(state.value.phase) && !!viewed.value,
+    () =>
+      (inspecting.value ||
+        (['brewing', 'settlement'].includes(state.value.phase) && !complex.value)) &&
+      !!viewed.value,
   ),
   complex = computed(
     () =>
@@ -127,22 +132,65 @@ onBeforeUnmount(() => {
             type="button"
             :aria-pressed="game.viewed?.id === person.id"
             :disabled="person.hidden && person.id !== state.me"
-            @click="game.selectedPot = person.id"
+            @click="
+              game.selectedPot = person.id;
+              inspecting = true;
+            "
             >{{ person.name
             }}{{ person.id === state.me ? '（你）' : person.hidden ? ' · 未公開' : '' }}</button
           > </nav
+        ><button
+          v-if="state.fortune"
+          type="button"
+          class="vue-quacks-current-fortune"
+          :data-timing="state.fortune.timing"
+          :aria-label="state.fortune.name + '：' + state.fortune.text"
+          data-ui-hint
+          @click="open('fortune')"
+          ><strong>{{ state.fortune.name }}</strong></button
         ><div class="vue-quacks-scene-tools"
           ><UiButton
             stitch
             variant="ghost"
+            icon-only
+            label="檢視目前大釜"
+            :aria-pressed="inspecting"
+            @click="inspecting = true"
+            ><template #icon
+              ><svg
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                aria-hidden="true"
+              >
+                <path
+                  d="M5 9h14l-1.5 10h-11L5 9ZM5 11H2v4h4m13-4h3v4h-4M9 6V3m6 3V3M4 21h16"
+                /></svg></template></UiButton
+          ><UiButton
+            :disabled="!inspecting"
+            stitch
+            variant="ghost"
+            icon="previous"
+            icon-only
+            label="返回目前階段"
+            @click="inspecting = false" /><UiButton
+            stitch
+            variant="ghost"
             icon="settings"
             icon-only
-            label="占卜、女巫、特效藥、紀錄與大釜設定"
+            label="占卜、女巫、特效藥與大釜設定"
             @click="open('fortune')" /></div
       ></header>
       <div
         class="vue-quacks-board-space"
-        :class="{ 'has-overlay': complex, 'is-shopping': state.stage === 'shopping' }"
+        :class="{
+          'has-overlay': !inspecting && complex,
+          'is-shopping': state.stage === 'shopping',
+          'is-phase-view': !boardVisible,
+        }"
       >
         <QuacksPot
           v-if="boardVisible && viewed && !viewed.hidden"
@@ -166,7 +214,7 @@ onBeforeUnmount(() => {
               ><QuacksGlyph resource="ruby" :size="18" />{{ viewed.rubies }}</span
             ><span>藥袋 {{ viewed.bagCount }}</span
             ><span>分數 {{ viewed.score }}</span
-            ><span>白彈 {{ viewed.white }}／{{ viewed.threshold }}</span></div
+            ><span>炸彈 {{ viewed.white }}／{{ viewed.threshold }}</span></div
           ></div
         >
         <div v-if="boardVisible" class="vue-quacks-pot-dock" aria-label="藥水瓶與藥袋">
@@ -187,9 +235,19 @@ onBeforeUnmount(() => {
               mine?.potion ? '滿瓶' : '空瓶'
             }}</span></button
           >
-          <QuacksBag />
+          <QuacksBag /><span
+            v-if="viewedPatient"
+            class="vue-quacks-patient-badge"
+            data-ui-hint
+            :title="viewedPatient.name + '：' + viewedPatient.text"
+            :aria-label="viewedPatient.name + '：' + viewedPatient.text"
+            tabindex="0"
+            ><QuacksGlyph :patient="viewedPatient.id" :size="64"
+          /></span>
         </div>
-        <div v-show="(isOwnPot && complex) || !boardVisible" class="vue-quacks-stage-overlay"
+        <div
+          v-show="!inspecting && ((isOwnPot && complex) || !boardVisible)"
+          class="vue-quacks-stage-overlay"
           ><QuacksPlay overlay
         /></div>
         <UiButton
@@ -219,7 +277,10 @@ onBeforeUnmount(() => {
                 v-if="state.witches[color]"
                 type="button"
                 :disabled="!game.available || !mine?.witchAvailable[color]"
-                :aria-label="'使用' + state.witches[color]!.name"
+                :aria-label="
+                  '使用' + state.witches[color]!.name + '：' + state.witches[color]!.text
+                "
+                data-ui-hint
                 :title="state.witches[color]!.text"
                 @click="game.command('witch', { color })"
                 ><QuacksGlyph :resource="color" :size="24" /><span>{{
@@ -240,8 +301,8 @@ onBeforeUnmount(() => {
               label="查看女巫能力與條件"
               @click="open('witches')" /></div
         ></div>
-        <QuacksCommands v-if="isOwnPot || !boardVisible" /><UiButton
-          v-else
+        <QuacksCommands v-if="!inspecting && (isOwnPot || !boardVisible)" /><UiButton
+          v-else-if="!inspecting"
           stitch
           variant="secondary"
           icon="previous"
@@ -272,10 +333,11 @@ onBeforeUnmount(() => {
         >{{ label }}</button
       ></nav
     ><QuacksBooks v-if="tab === 'books'" /><QuacksScoreboard
-      v-else-if="tab === 'score'" /><QuacksRecords v-else-if="tab === 'records'" /><QuacksWitches
-      v-else-if="tab === 'witches'" /><QuacksAlchemy v-else-if="tab === 'alchemy'" /><section
+      v-else-if="tab === 'score'" /><QuacksWitches v-else-if="tab === 'witches'" /><QuacksAlchemy
+      v-else-if="tab === 'alchemy'" /><section
       v-else-if="tab === 'fortune'"
       class="vue-quacks-fortune-card"
+      :data-timing="state.fortune?.timing"
       ><h2>{{ state.fortune?.name || '尚未抽牌' }}</h2
       ><p>{{ state.fortune?.text || '每輪由起始玩家親自點擊抽牌。' }}</p
       ><p v-if="state.fortune">{{
@@ -304,13 +366,18 @@ onBeforeUnmount(() => {
           v-for="(theme, color) in state.potColors"
           :key="color"
           type="button"
-          :style="{ '--pot-color': theme.liquid[1] }"
+          :style="{
+            '--pot-color': theme.liquid[1],
+            '--pot-light': theme.liquid[0],
+            '--pot-dark': theme.liquid[2],
+          }"
+          class="vue-quacks-color-choice"
           :aria-pressed="own?.potColor === color"
           :disabled="
             !game.available || state.recipes.some((p) => p.id !== state.me && p.potColor === color)
           "
           @click="game.command('color-pot', { color })"
-          >{{ theme.name
+          ><span class="vue-quacks-color-swatch" aria-hidden="true"></span>{{ theme.name
           }}{{
             state.recipes.some((p) => p.id !== state.me && p.potColor === color) ? ' · 使用中' : ''
           }}</button

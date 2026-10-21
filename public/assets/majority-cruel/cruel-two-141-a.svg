@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="music"><title>你的登場配樂大家都聽得到</title><desc>每次見面都會出現一種效果：你的登場配樂大家都聽得到</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Vinyl Record Disc (Left) -->
+          <circle cx="160" cy="155" r="95" fill="#141312" stroke="#141312" stroke-width="4"></circle>
+          <!-- Vinyl Groove Rings -->
+          <circle cx="160" cy="155" r="80" stroke="#2A2826" stroke-width="3" stroke-dasharray="14 6"></circle>
+          <circle cx="160" cy="155" r="65" stroke="#2A2826" stroke-width="3" stroke-dasharray="12 8"></circle>
+          <circle cx="160" cy="155" r="50" stroke="#2A2826" stroke-width="2.5"></circle>
+          <!-- Vinyl Center Label (Warm Gold) -->
+          <circle cx="160" cy="155" r="35" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></circle>
+          <circle cx="160" cy="155" r="22" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></circle>
+          <!-- Spindle Hole -->
+          <circle cx="160" cy="155" r="7" fill="#FDFBF7" stroke="#141312" stroke-width="3"></circle>
+          <!-- Floating Musical Notes (Right) -->
+          <!-- Double Note (Eighth notes joined by beam) -->
+          <g transform="translate(45, -15)">
+            <ellipse cx="240" cy="140" rx="14" ry="10" transform="rotate(-25 240 140)" fill="#141312"></ellipse>
+            <ellipse cx="285" cy="120" rx="14" ry="10" transform="rotate(-25 285 120)" fill="#141312"></ellipse>
+            <line x1="250" y1="135" x2="250" y2="70" stroke="#141312" stroke-width="4.5" stroke-linecap="round"></line>
+            <line x1="295" y1="115" x2="295" y2="50" stroke="#141312" stroke-width="4.5" stroke-linecap="round"></line>
+            <!-- Note Beam (Warm Gold) -->
+            <polygon points="248,70 297,50 297,64 248,84" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></polygon>
+          </g>
+          <!-- Single Beamed Note (Top right) -->
+          <g transform="translate(15, 20)">
+            <ellipse cx="255" cy="205" rx="13" ry="9" transform="rotate(-25 255 205)" fill="#BAE6FD" stroke="#141312" stroke-width="3.5"></ellipse>
+            <line x1="265" y1="200" x2="265" y2="150" stroke="#141312" stroke-width="4" stroke-linecap="round"></line>
+            <path d="M265 150 C280 155 285 168 285 178" stroke="#141312" stroke-width="4" stroke-linecap="round" fill="none"></path>
+          </g>
+          <!-- Little Stars around melody -->
+          <circle cx="340" cy="85" r="7" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+          <circle cx="310" cy="225" r="5" fill="#FBCFE8" stroke="#141312" stroke-width="2"></circle>
+        </svg>

@@ -11,6 +11,11 @@ export const achievementGroups = [
   { key: 'poker', label: '德州撲克', icon: 'cards' },
   { key: 'thunder', label: '雷霆之路', icon: 'car' },
   { key: 'quacks', label: '郎中闖江湖', icon: 'table' },
+  { key: 'musicquiz', label: '猜歌挑戰', icon: 'sound' },
+  { key: 'bluff', label: '瞎掰王', icon: 'emoji' },
+  { key: 'telephone', label: '傳情畫意', icon: 'edit' },
+  { key: 'minimal', label: '極簡藝術家', icon: 'edit' },
+  { key: 'trpg', label: '故事冒險', icon: 'book' },
   { key: 'all', label: '跨桌探索', icon: 'table' },
   { key: 'other', label: '其他成就', icon: 'book' },
 ];

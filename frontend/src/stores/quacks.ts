@@ -127,6 +127,8 @@ export const useQuacksStore = defineStore('quacks', () => {
       if (disposed || controller !== request || attempt.scope !== room.scope) return false;
       room.accept(value);
       notice.value = '';
+      if (!room.terminal && attempt.payload.action === 'next' && !document.hidden)
+        window.AudioSettings?.playEffect?.('turn');
       return !room.terminal;
     } catch (cause) {
       if (

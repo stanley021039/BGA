@@ -8,6 +8,7 @@ import GameRoomPage from '../../components/GameRoomPage.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import MajorityScene from './MajorityScene.vue';
+import TournamentScene from './TournamentScene.vue';
 const room = useRoomStore(),
   game = useMajorityStore(),
   s = computed(() => game.state);
@@ -61,9 +62,10 @@ function status(player: RoomPlayer) {
     :can-start="game.canStart && !game.settingsPending && !game.settingsError && !game.uncertain"
     :start-label="s?.phase === 'finished' ? '再玩一局' : undefined"
     @start="game.start()"
-    ><MajorityScene v-if="s" :key="room.scope" /><section v-else class="vue-game-panel"
-      ><h1>正在讀取同頻房間…</h1></section
-    >
+    ><TournamentScene v-if="s?.tournament" :key="room.scope" /><MajorityScene
+      v-else-if="s"
+      :key="room.scope"
+    /><section v-else class="vue-game-panel"><h1>正在讀取同頻房間…</h1></section>
     <template #settings
       ><details class="vue-majority-settings"
         ><summary
@@ -83,9 +85,37 @@ function status(player: RoomPlayer) {
           ><label
             >這局玩法<select v-model="game.settings.mode" @change="game.queue()"
               ><option value="majority">一般同頻</option
+              ><option value="music">猜歌2選1</option
+              ><option value="scenario">情境2選1</option
               ><option value="cruel">殘酷2選1・圖片題</option></select
             ></label
-          ><template v-if="game.settings.mode === 'cruel'"
+          ><template v-if="['music', 'scenario'].includes(game.settings.mode)"
+            ><label
+              >主題<select v-model="game.settings.theme" @change="game.queue()"
+                ><option
+                  v-for="theme in s?.tournament?.themes || []"
+                  :key="theme.id"
+                  :value="theme.id"
+                  >{{ theme.label }} · {{ theme.count }}項</option
+                ></select
+              ></label
+            ><label
+              >隨機抽幾項比較？<select
+                v-model.number="game.settings.bracketSize"
+                @change="game.queue()"
+                ><option
+                  v-for="n in [8, 16, 32, 64, 128, 256]"
+                  :key="n"
+                  :value="n"
+                  :disabled="
+                    n >
+                    (s?.tournament?.themes.find((t) => t.id === game.settings.theme)?.count || 0)
+                  "
+                  >{{ n }}強（{{ n - 1 }}場）</option
+                ></select
+              ></label
+            ><p>每場秘密投票，選到多數 +1分；平票抽籤晉級不加分，最後選出冠軍。</p></template
+          ><template v-else-if="game.settings.mode === 'cruel'"
             ><label
               >計分玩法<select v-model="game.settings.cruelRules" @change="game.queue()"
                 ><option value="teams">雙人組隊（4／6／8 人）</option
@@ -142,7 +172,7 @@ function status(player: RoomPlayer) {
           NFKC、英文大小寫與空白。最大組未超過全體玩家三分之一時，出題人 -1。</li
         ><li>每人最多預備五題，依提交順序自動出題。晚入座者從下一題參與。</li
         ><li
-          >殘酷2選1 使用 60 張原創雙圖題，固定十題。雙人組隊限 4／6／8
+          >殘酷2選1 使用擴充的原創雙圖題，固定十題。雙人組隊限 4／6／8
           人，兩位隊員都交卷且答案相同，隊伍 +1；座位分數顯示隊伍總分。</li
         ><li
           >殘酷個人玩法 1–12

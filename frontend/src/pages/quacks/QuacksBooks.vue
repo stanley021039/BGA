@@ -140,7 +140,7 @@ function keydown(event: KeyboardEvent) {
               :aria-pressed="candidate.set === face.set"
               :aria-label="'查看' + row.name + '第 ' + candidate.set + ' 面：' + candidate.effect"
               @click="pages[row.color] = candidate.set"
-              ><strong>第 {{ candidate.set }} 面</strong><span>{{ candidate.effect }}</span></button
+              ><strong>第 {{ candidate.set }} 面</strong>{{ candidate.effect }}</button
             ></div
           >
           <div class="vue-quacks-codex-turn"

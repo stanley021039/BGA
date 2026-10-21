@@ -166,7 +166,8 @@ defineExpose({ refresh: page.refresh });
             /><span v-else>由房主開始遊戲</span></div
           ></section
         ><slot name="side-actions" /><RoomChat
-          ><template #tools><RoomMedia :connected="connected" /></template></RoomChat></aside></div
+          ><template #tools
+            ><RoomMedia :connected="room.connected" /></template></RoomChat></aside></div
     ><RoomEffects :connected="connected" /><RoomPings /> </div
   ><UiDialog ref="help" :title="title + '玩法'"
     ><slot name="help" /><a :href="'/?game=' + type">回大廳開一桌</a></UiDialog

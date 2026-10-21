@@ -2,7 +2,7 @@
 from pathlib import Path
 import math,random,wave,struct
 p=Path(__file__).resolve().parents[1]
-cues={'quacks-draw':540,'quacks-danger':420,'quacks-potion-synth':550,'quacks-buy':380,'quacks-ruby':460,'quacks-witch':750}
+cues={'quacks-danger':420,'quacks-buy':380,'quacks-ruby':460,'quacks-witch':750}
 # Soft original synthesis: seeded noise, low resonances and faded envelopes.
 rate=24000; rnd=random.Random(1014)
 for cue,ms in cues.items():

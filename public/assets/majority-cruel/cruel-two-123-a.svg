@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="coins" role="img"><title>訂清楚還款計畫再給機會</title><desc>朋友借錢又失約，你選：訂清楚還款計畫再給機會</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 疊放的金幣柱（左側） -->
+            <g transform="translate(90, 80)">
+              <!-- 底層 -->
+              <ellipse cx="60" cy="140" rx="45" ry="18" fill="#E5A93C" stroke="#141312" stroke-width="3"></ellipse>
+              <path d="M15 140 v-15 a45 18 0 0 0 90 0 v15 Z" fill="#E5A93C" stroke="#141312" stroke-width="3"></path>
+              <!-- 中層 -->
+              <ellipse cx="60" cy="115" rx="45" ry="18" fill="#FDE047" stroke="#141312" stroke-width="3"></ellipse>
+              <path d="M15 115 v-15 a45 18 0 0 0 90 0 v15 Z" fill="#FDE047" stroke="#141312" stroke-width="3"></path>
+              <!-- 頂層 -->
+              <ellipse cx="60" cy="90" rx="45" ry="18" fill="#FDE047" stroke="#141312" stroke-width="3.5"></ellipse>
+              <ellipse cx="60" cy="90" rx="32" ry="12" fill="#FDFBF7" stroke="#141312" stroke-width="2"></ellipse>
+              <rect x="52" y="84" width="16" height="12" rx="3" fill="#E5A93C" stroke="#141312" stroke-width="2"></rect>
+            </g>
+            <!-- 前景立體大金幣（右側正面展示） -->
+            <g transform="translate(225, 120)">
+              <circle cx="50" cy="50" r="58" fill="#E5A93C" stroke="#141312" stroke-width="4"></circle>
+              <circle cx="50" cy="50" r="48" fill="#FDE047" stroke="#141312" stroke-width="3"></circle>
+              <!-- 內圈雕花（低彩粉星星幾何，無字） -->
+              <polygon points="50,22 56,38 72,40 60,52 64,68 50,60 36,68 40,52 28,40 44,38" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></polygon>
+              <!-- 高光弧度 -->
+              <path d="M20 35 A40 40 0 0 1 75 18" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+            </g>
+            <!-- 閃閃發光的小金星 -->
+            <polygon points="120,65 123,72 130,73 124,78 126,85 120,80 114,85 116,78 110,73 117,72" fill="#E5A93C"></polygon>
+            <polygon points="325,85 327,90 333,91 328,95 330,100 325,97 320,100 322,95 317,91 323,90" fill="#E5A93C"></polygon>
+          </svg>

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="clock" role="img"><title>先聊近況等名字出現</title><desc>在路上遇到不記得名字的熟人，你選：先聊近況等名字出現</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 鬧鐘頂部敲擊雙耳鈴鐺（暖金） -->
+            <circle cx="115" cy="75" r="32" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></circle>
+            <circle cx="285" cy="75" r="32" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></circle>
+            <path d="M180 50 Q200 35 220 50" stroke="#141312" stroke-width="4" stroke-linecap="round" fill="none"></path>
+            <circle cx="200" cy="42" r="5" fill="#141312"></circle>
+            <!-- 鬧鐘支撐斜腳 -->
+            <line x1="125" y1="235" x2="95" y2="265" stroke="#141312" stroke-width="6" stroke-linecap="round"></line>
+            <line x1="275" y1="235" x2="305" y2="265" stroke="#141312" stroke-width="6" stroke-linecap="round"></line>
+            <!-- 時鐘圓形外殼主體（低彩粉） -->
+            <circle cx="200" cy="155" r="95" fill="#FBCFE8" stroke="#141312" stroke-width="4.5"></circle>
+            <!-- 白色錶盤內圈 -->
+            <circle cx="200" cy="155" r="76" fill="#FFFFFF" stroke="#141312" stroke-width="3.5"></circle>
+            <!-- 刻度（無文字，四個方位幾何方塊） -->
+            <rect x="197" y="85" width="6" height="14" rx="2" fill="#141312"></rect>
+            <rect x="197" y="211" width="6" height="14" rx="2" fill="#141312"></rect>
+            <rect x="130" y="152" width="14" height="6" rx="2" fill="#141312"></rect>
+            <rect x="256" y="152" width="14" height="6" rx="2" fill="#141312"></rect>
+            <!-- 時針（粗黑指向 10 點） -->
+            <line x1="200" y1="155" x2="160" y2="120" stroke="#141312" stroke-width="5" stroke-linecap="round"></line>
+            <!-- 分針（指向 2 點） -->
+            <line x1="200" y1="155" x2="245" y2="125" stroke="#141312" stroke-width="4" stroke-linecap="round"></line>
+            <!-- 秒針（粉藍跳色） -->
+            <line x1="200" y1="155" x2="200" y2="210" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round"></line>
+            <!-- 中心圓鈕 -->
+            <circle cx="200" cy="155" r="8" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></circle>
+          </svg>

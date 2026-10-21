@@ -1,3 +1,4 @@
+import { readBarrages, type BarrageEvent } from './social';
 import { array, record, text } from '../services/validation';
 import { isGameType, type GameType } from './room';
 import { readPingContext, type PingContext } from './pings';
@@ -36,6 +37,7 @@ export interface LobbyVisitor {
   emote: LobbyEmote | null;
 }
 export interface LobbySnapshot {
+  barrages: BarrageEvent[];
   selfId: string;
   serverNow: number;
   visitors: LobbyVisitor[];
@@ -146,6 +148,13 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
   )
     throw Error('大廳角色身分不一致。');
   return {
+    // Older lobby servers sent plain messages without the room event discriminator.
+    barrages: readBarrages(
+      array(row.barrages).map((value) => {
+        const item = record(value);
+        return item.kind === undefined ? { ...item, kind: 'barrage' } : item;
+      }),
+    ),
     selfId: text(row.selfId),
     serverNow: row.serverNow,
     visitors,

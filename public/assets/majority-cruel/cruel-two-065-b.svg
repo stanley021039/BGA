@@ -1,1 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>每口都要有邊有心</title><desc>原創插畫：早餐吐司你選；每口都要有邊有心</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><path d="M-43-17L-83-38V32L-43 10M43-17L83-38V32L43 10" fill="#cd9fc0"/><ellipse rx="50" ry="39" fill="#e8c47e"/><path d="M-23-34L-9 36M10-38L25 32" stroke="#d99cae" stroke-width="11"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="candy" role="img"><title>每口都要有邊有心</title><desc>早餐吐司你選：每口都要有邊有心</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 旋轉包裝紙（左翼蝴蝶結形狀） -->
+            <polygon points="140,150 70,95 60,150 70,205" fill="#BAE6FD" stroke="#141312" stroke-width="3.5" stroke-linejoin="round"></polygon>
+            <line x1="75" y1="120" x2="130" y2="150" stroke="#141312" stroke-width="2.5"></line>
+            <line x1="75" y1="180" x2="130" y2="150" stroke="#141312" stroke-width="2.5"></line>
+            <!-- 旋轉包裝紙（右翼蝴蝶結形狀） -->
+            <polygon points="260,150 330,95 340,150 330,205" fill="#BAE6FD" stroke="#141312" stroke-width="3.5" stroke-linejoin="round"></polygon>
+            <line x1="325" y1="120" x2="270" y2="150" stroke="#141312" stroke-width="2.5"></line>
+            <line x1="325" y1="180" x2="270" y2="150" stroke="#141312" stroke-width="2.5"></line>
+            <!-- 糖果主體圓球（低彩粉與暖金） -->
+            <circle cx="200" cy="150" r="70" fill="#FBCFE8" stroke="#141312" stroke-width="4"></circle>
+            <!-- 糖果幾何螺旋彩帶花紋 -->
+            <path d="M150 100 Q200 150 250 200" stroke="#FDE047" stroke-width="16" fill="none" stroke-linecap="round"></path>
+            <path d="M150 100 Q200 150 250 200" stroke="#141312" stroke-width="3.5" fill="none"></path>
+            <path d="M190 82 Q230 110 265 140" stroke="#E5A93C" stroke-width="10" fill="none"></path>
+            <path d="M135 160 Q170 190 210 218" stroke="#E5A93C" stroke-width="10" fill="none"></path>
+            <!-- 小顆裝飾小糖球浮空 -->
+            <circle cx="95" cy="70" r="12" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+            <circle cx="305" cy="235" r="14" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></circle>
+          </svg>

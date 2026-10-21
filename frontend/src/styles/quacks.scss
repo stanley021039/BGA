@@ -483,7 +483,7 @@
     min-height: 0;
     min-width: 0;
     display: grid;
-    grid-template-rows: 44px minmax(380px, 1fr) 132px;
+    grid-template-rows: auto minmax(380px, 1fr) 132px;
     gap: 8px;
     padding: 8px;
   }
@@ -933,7 +933,7 @@
     .vue-quacks-stage {
       height: 100%;
       min-height: 0;
-      grid-template-rows: 44px minmax(0, 1fr) 132px;
+      grid-template-rows: auto minmax(0, 1fr) 132px;
     }
     .vue-quacks-play {
       min-height: 0;
@@ -1009,7 +1009,7 @@
       min-height: 212px;
     }
     .vue-quacks-stage {
-      grid-template-rows: 44px minmax(420px, 1fr) 212px;
+      grid-template-rows: auto minmax(420px, 1fr) 212px;
     }
     .vue-quacks-draw-action img,
     .vue-quacks-stop-action img {
@@ -1075,5 +1075,270 @@
     flex-wrap: wrap;
     min-width: 0;
     max-width: 100%;
+  }
+}
+
+// Required effect choices own the stage; inspection is an explicit, reversible view.
+:root body.vue-quacks-document {
+  .vue-quacks-scene-tools {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+  }
+  .vue-quacks-board-space.is-phase-view > .vue-quacks-stage-overlay {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    padding: 16px;
+  }
+  .vue-quacks-stage-overlay > .vue-quacks-play {
+    min-height: 0;
+  }
+}
+
+:root body.vue-quacks-document {
+  .vue-quacks-fortune-card {
+    background: #143d65;
+    color: #f2f7ff;
+    border-color: #75b8ed;
+  }
+  .vue-quacks-fortune-card[data-timing='immediate'] {
+    background: #512b70;
+    border-color: #d3a2ee;
+  }
+  .vue-quacks-fortune-card :is(h2, h3, p) {
+    color: inherit;
+  }
+  .vue-quacks-fortune-card > h2 {
+    border-color: currentColor;
+  }
+  .vue-quacks-play:has(> .vue-quacks-stage-message),
+  .vue-quacks-play:has(> .vue-quacks-effects-compact) {
+    min-height: 100%;
+    align-content: center;
+  }
+  .vue-quacks-stage-message {
+    text-align: center;
+    margin: auto;
+    width: min(100%, 760px);
+    font-size: clamp(18px, 1.5vw, 24px);
+    line-height: 1.7;
+  }
+  .vue-quacks-stage-message h2 {
+    font-size: clamp(26px, 2vw, 36px);
+  }
+  .vue-quacks-effects-compact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+  }
+  .vue-quacks-effects-compact > :is(h2, p) {
+    flex-basis: 100%;
+  }
+  .vue-quacks-effects-compact .vue-quacks-effect-row {
+    display: grid;
+    place-items: center;
+    flex: 0 0 88px;
+    min-height: 88px;
+    padding: 8px;
+    border: 1px solid var(--play-line);
+    border-radius: 16px;
+    opacity: 0.55;
+  }
+  .vue-quacks-effects-compact .is-triggered {
+    opacity: 1;
+    border-color: #f4cf66;
+    box-shadow:
+      0 0 12px #f4cf66aa,
+      inset 0 0 18px #f4cf6626;
+  }
+  .vue-quacks-effects-compact .quacks-rule-visual {
+    transform: scale(1.4);
+  }
+  .vue-quacks-color-choice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .vue-quacks-color-swatch {
+    display: block;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid #e9d49b;
+    background: radial-gradient(
+      circle at 30% 25%,
+      var(--pot-light),
+      var(--pot-color) 55%,
+      var(--pot-dark)
+    );
+    box-shadow: 0 4px 10px #0006;
+    flex: none;
+  }
+  .vue-quacks-patient-badge {
+    display: grid;
+    place-items: center;
+    min-height: 76px;
+    border: 1px solid #ac93c8;
+    border-radius: 12px;
+    background: #2f263c;
+    cursor: help;
+  }
+  .vue-quacks-market > p:has(.vue-quacks-glyph) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .vue-quacks-glyph[title] {
+    cursor: help;
+  }
+}
+
+:root body.vue-quacks-document {
+  .vue-quacks-play:has(> .vue-quacks-choice) {
+    min-height: 100%;
+    align-content: center;
+  }
+  .vue-quacks-choice {
+    text-align: center;
+    width: 100%;
+    margin: auto;
+  }
+  .vue-quacks-choice-grid {
+    align-items: stretch;
+    justify-content: center;
+  }
+  .vue-quacks-choice-grid > button {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  .vue-quacks-choice-label {
+    flex-basis: 100%;
+  }
+  .vue-quacks-choice-reward {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 30px;
+  }
+}
+
+// Quacks inspection tips share the cauldron tooltip appearance.
+:root body.vue-quacks-document {
+  .ui-control-tooltip {
+    width: min(330px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
+    padding: 15px;
+    overflow: auto;
+    border: 1px solid var(--stitch-line);
+    border-radius: 14px;
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    box-shadow: 0 8px 30px #0004;
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .vue-quacks-fortune-draw > button {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .vue-quacks-fortune-draw > button:focus-visible {
+    outline: 3px solid var(--play-accent);
+    outline-offset: 4px;
+  }
+  .vue-quacks-scene-header {
+    flex-wrap: wrap;
+  }
+  .vue-quacks-current-fortune {
+    display: grid;
+    gap: 4px;
+    flex: 1 1 220px;
+    min-width: 0;
+    padding: 8px 12px;
+    text-align: center;
+    border: 1px solid #75b8ed;
+    border-radius: 12px;
+    background: #143d65;
+    color: #f2f7ff;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .vue-quacks-current-fortune[data-timing='immediate'] {
+    background: #512b70;
+    border-color: #d3a2ee;
+  }
+  .vue-quacks-stage-message h2,
+  .vue-quacks-effects-compact > h2,
+  .vue-quacks-choice > h2 {
+    font-size: clamp(26px, 2.5vw, 36px);
+    line-height: 1.4;
+  }
+  .vue-quacks-stage-message p,
+  .vue-quacks-effects-compact > p {
+    font-size: clamp(18px, 1.8vw, 24px);
+    line-height: 1.7;
+  }
+  .vue-quacks-choice-grid > button {
+    align-content: center;
+    min-height: 140px;
+    padding: 20px;
+    font-size: clamp(22px, 2vw, 28px);
+  }
+  .vue-quacks-choice-grid > button > .vue-quacks-tabs {
+    justify-content: center;
+  }
+  .vue-quacks-choice-label {
+    text-align: center;
+  }
+}
+
+:root body.vue-quacks-document {
+  .vue-quacks-fortune-draw > button {
+    --ui-button-border-width: 0px;
+    --ui-button-radius: 0px;
+  }
+  .vue-quacks-current-fortune {
+    --ui-button-radius: 10px;
+    flex: 0 1 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+  }
+  .vue-quacks-current-fortune > span {
+    font-size: 14px;
+  }
+  .vue-quacks-choice-label {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+    word-break: normal;
+    overflow-wrap: break-word;
+    text-wrap: pretty;
+  }
+  .vue-quacks-choice-label > span {
+    display: block;
+  }
+  .vue-quacks-stage-complete {
+    padding: clamp(20px, 4vw, 40px);
+    border: 1px solid var(--play-line);
+    border-radius: 16px;
+    background: var(--play-surface);
   }
 }

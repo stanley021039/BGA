@@ -50,6 +50,9 @@ const labels = { gold: '金幣', copper: '銅幣', silver: '銀幣' };
     ><div class="vue-quacks-choice-grid"
       ><button
         v-for="option in options"
+        :title="option.label"
+        data-ui-hint
+        :aria-label="option.label"
         :key="option.id"
         type="button"
         :disabled="!game.available || option.disabled"
@@ -60,8 +63,20 @@ const labels = { gold: '金幣', copper: '銅幣', silver: '銀幣' };
               ><QuacksGlyph
                 :chip="{ color: c.fromColor || c.color, value: c.fromValue }"
               />→</template
-            ><QuacksGlyph :chip="c" :size="48" /></template></span
-        ><strong>{{ option.label }}</strong
+            ><QuacksGlyph :chip="c" :size="64" /></template></span
+        ><span
+          v-for="(reward, index) in option.label.length > 10 ? option.rewards || [] : []"
+          :key="index"
+          class="vue-quacks-choice-reward"
+          ><span v-if="reward.resource === 'dice'" aria-hidden="true">🎲</span
+          ><QuacksGlyph v-else :resource="reward.resource" :size="40" /><strong
+            >+{{ reward.amount }}</strong
+          ></span
+        ><span v-if="!option.ingredient" class="vue-quacks-choice-label"
+          ><span v-for="(line, index) in option.label.split(/[，；]/)" :key="index">{{
+            line
+          }}</span></span
+        ><span class="ui-sr-only">{{ option.label }}</span
         ><span v-if="option.cost" class="vue-quacks-tabs"
           ><QuacksGlyph :resource="option.cost.resource" :size="24" />−{{
             option.cost.amount
