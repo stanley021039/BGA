@@ -41,6 +41,10 @@ $typography: (
   --stitch-primary-active: #e9b936;
   --stitch-selected-bg: #fff2c4;
   --stitch-selected-ink: #20211e;
+  // Selected paper stays light in both themes, including secondary text/links.
+  --stitch-selected-muted: #5a5b52;
+  --stitch-selected-link: #0051d5;
+  --stitch-selected-focus: #0051d5;
   --stitch-link: #0051d5;
   --stitch-focus: #0051d5;
   --stitch-success-ink: #006c49;

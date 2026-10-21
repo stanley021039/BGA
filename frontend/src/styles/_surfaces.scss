@@ -1,0 +1,9 @@
+// A surface owns its text pair. Do not rebind page-wide Stitch/play tokens here:
+// nested controls and dialogs still need their own surface/variant colors.
+@mixin selected {
+  --surface-muted: var(--stitch-selected-muted);
+  --surface-link: var(--stitch-selected-link);
+  --surface-focus: var(--stitch-selected-focus);
+  background: var(--stitch-selected-bg);
+  color: var(--stitch-selected-ink);
+}
