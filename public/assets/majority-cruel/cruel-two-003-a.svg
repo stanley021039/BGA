@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>永遠不用洗碗</title><desc>原創插畫：一輩子只能有一種生活便利；永遠不用洗碗</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><ellipse cy="43" rx="78" ry="30" fill="#f0e8d0"/><ellipse cy="40" rx="59" ry="18" fill="#d9e4d6"/><path d="M-31 28Q-40-20-3-15Q40-40 41 22Z" fill="#e6b456"/><path d="M-2 15Q-14 1-6-16" fill="none"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="plate" width="100%" height="100%" fill="none"><title>永遠不用洗碗</title><desc>一輩子只能有一種生活便利：永遠不用洗碗</desc>
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Left Fork -->
+            <path d="M 42 125 L 42 75 M 34 50 L 34 68 C 34 78 50 78 50 68 L 50 50 M 42 50 L 42 75" stroke="#141312" stroke-width="3" stroke-linecap="round"></path>
+            <rect x="38" y="95" width="8" height="32" rx="4" fill="#E5A93C" stroke="#141312" stroke-width="2"></rect>
+            <!-- Right Knife -->
+            <path d="M 198 125 L 198 50 C 198 50 206 58 206 85 C 206 95 198 98 198 98" fill="#BAE6FD" stroke="#141312" stroke-width="3" stroke-linecap="round"></path>
+            <rect x="194" y="95" width="8" height="32" rx="4" fill="#E5A93C" stroke="#141312" stroke-width="2"></rect>
+            <!-- Large Dish Plate -->
+            <ellipse cx="120" cy="85" rx="55" ry="48" fill="#FDFBF7" stroke="#141312" stroke-width="3.5"></ellipse>
+            <!-- Inner Plate Ring -->
+            <ellipse cx="120" cy="85" rx="38" ry="34" fill="#FEF3C7" stroke="#141312" stroke-width="2.5"></ellipse>
+            <!-- Food on Plate: Fried Egg & Greens -->
+            <!-- Salad Greens -->
+            <circle cx="106" cy="74" r="10" fill="#34D399" stroke="#141312" stroke-width="2"></circle>
+            <circle cx="118" cy="70" r="8" fill="#10B981" stroke="#141312" stroke-width="2"></circle>
+            <!-- Sunny side up Egg White -->
+            <path d="M 115 88 C 105 85 96 95 106 104 C 114 112 135 112 138 98 C 140 88 128 85 115 88 Z" fill="#FFFFFF" stroke="#141312" stroke-width="2.5"></path>
+            <!-- Egg Yolk -->
+            <circle cx="122" cy="95" r="9" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+            <circle cx="125" cy="92" r="2.5" fill="#FFFFFF"></circle>
+            <!-- Steaming Aroma above plate -->
+            <path d="M 112 30 Q 116 22 110 16" stroke="#F472B6" stroke-width="2.5" stroke-linecap="round"></path>
+            <path d="M 125 32 Q 130 20 124 14" stroke="#E5A93C" stroke-width="2.5" stroke-linecap="round"></path>
+          </svg>

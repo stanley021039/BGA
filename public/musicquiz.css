@@ -1,0 +1,655 @@
+body[data-game-kind='musicquiz'] {
+  --mq-gold: var(--ui-accent, #e5a93c);
+  --mq-panel: var(--ui-surface-panel, #25221e);
+  --mq-ink: var(--ui-text, #f7f0df);
+}
+body[data-game-kind='musicquiz'] .telephone-shell {
+  max-width: 1800px;
+  margin: auto;
+  padding: 0 16px;
+}
+body[data-game-kind='musicquiz'] #game {
+  display: grid;
+  grid-template-columns: minmax(200px, 3fr) minmax(380px, 7fr) minmax(240px, 3fr);
+  gap: 16px;
+  align-items: stretch;
+}
+body[data-game-kind='musicquiz'] #game[hidden] {
+  display: none;
+}
+body[data-game-kind='musicquiz'] .mq-roster {
+  min-width: 0;
+  max-height: calc(100dvh - 130px);
+  overflow: auto;
+}
+body[data-game-kind='musicquiz'] .mq-stage {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+body[data-game-kind='musicquiz'] #controls {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+body[data-game-kind='musicquiz'] #controls > h2 {
+  font-size: 22px;
+  margin: 0;
+}
+body[data-game-kind='musicquiz'] #controls p {
+  margin: 0;
+}
+body[data-game-kind='musicquiz'] #controls :is(input, select, textarea) {
+  font: inherit;
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+body[data-game-kind='musicquiz'] #controls > input {
+  width: 100%;
+}
+body[data-game-kind='musicquiz'] #controls textarea {
+  width: 100%;
+  min-height: 140px;
+  white-space: pre;
+}
+body[data-game-kind='musicquiz'] .mq-banks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+body[data-game-kind='musicquiz'] .mq-bank {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  background: var(--ui-surface);
+}
+body[data-game-kind='musicquiz'] .mq-bank input {
+  grid-row: span 2;
+  min-height: 24px;
+}
+body[data-game-kind='musicquiz'] .mq-bank span {
+  grid-column: 2;
+  font-size: 14px;
+}
+body[data-game-kind='musicquiz'] .mq-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 0;
+}
+body[data-game-kind='musicquiz'] .mq-genres label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+body[data-game-kind='musicquiz'] .mq-genres input {
+  min-height: 24px;
+}
+.mq-cover {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 24px;
+  border: 1px solid var(--ui-border, #817254);
+  border-radius: 18px;
+  background: radial-gradient(at 12% 0%, #e5a93c28, transparent 60%), var(--mq-panel);
+  color: var(--mq-ink);
+  overflow: hidden;
+}
+.mq-cover :is(h2, p, small) {
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.mq-cover small {
+  letter-spacing: 0.16em;
+  font-size: 12px;
+}
+.mq-cover h2 {
+  font-size: clamp(24px, 2.5vw, 36px);
+}
+.mq-vinyl {
+  width: clamp(100px, 16vw, 180px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: repeating-radial-gradient(circle, #151515 0 2px, #35322c 3px, #121212 5px 7px);
+  box-shadow: 8px 10px 0 #0004;
+  border: 2px solid #756746;
+}
+.mq-vinyl > span {
+  display: grid;
+  place-items: center;
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  background: #e5a93c;
+  color: #201b13;
+  font-size: 36px;
+  border: 6px solid #edcc7c;
+}
+.mq-year {
+  font-size: 38px;
+  line-height: 1.2;
+  color: var(--mq-gold);
+}
+#mqPlayback {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+#mqPlayback iframe {
+  display: block;
+  max-width: 100%;
+  min-width: 200px;
+  min-height: 200px;
+  aspect-ratio: 16/9;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+}
+.mq-playback-note {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.mq-timeline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: auto;
+  padding: 12px 0;
+  min-height: 140px;
+}
+.mq-timeline-card {
+  display: grid;
+  gap: 4px;
+  flex: 0 0 110px;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  background: var(--ui-surface);
+  padding: 12px;
+  min-height: 100px;
+}
+.mq-timeline-card strong {
+  font-size: 26px;
+  color: var(--mq-gold);
+}
+.mq-slot {
+  flex: 0 0 88px;
+  min-height: 110px !important;
+  border-style: dashed !important;
+}
+.mq-placement {
+  flex: 0 0 80px;
+  text-align: center;
+  border: 2px solid var(--mq-gold);
+  padding: 12px;
+}
+body[data-game-kind='musicquiz'] #mqChat {
+  min-width: 0;
+}
+body[data-game-kind='musicquiz'] #mqHistory {
+  grid-column: 1/-1;
+}
+body[data-game-kind='musicquiz'] .ui-room-waiting-layout {
+  grid-column: 1/-1;
+}
+body[data-game-kind='musicquiz'][data-room-phase='waiting'] [data-waiting-layout-hidden] {
+  display: none;
+}
+@media (max-width: 1000px) {
+  body[data-game-kind='musicquiz'] #game {
+    grid-template-columns: minmax(160px, 1fr) minmax(0, 3fr);
+  }
+  body[data-game-kind='musicquiz'] #mqChat {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 620px) {
+  body[data-game-kind='musicquiz'] #game {
+    display: flex;
+    flex-direction: column;
+  }
+  body[data-game-kind='musicquiz'] .mq-roster {
+    max-height: 240px;
+  }
+  body[data-game-kind='musicquiz'] .mq-banks {
+    grid-template-columns: 1fr;
+  }
+  .mq-timeline {
+    max-width: 100%;
+  }
+  .mq-cover {
+    padding: 20px;
+  }
+  .mq-vinyl {
+    width: 120px;
+  }
+}
+
+body[data-game-kind='musicquiz'] :is(.room-waiting-template, .ui-room-roster) {
+  display: none !important;
+}
+body[data-game-kind='musicquiz'] #game > .mq-roster {
+  display: block !important;
+}
+body[data-game-kind='musicquiz'] .telephone-shell > :is(h1, .ui-info-actions) {
+  display: none;
+}
+body[data-game-kind='musicquiz'][data-room-phase] .telephone-shell > #guide {
+  display: none;
+}
+body[data-game-kind='musicquiz'] .telephone-shell > p:not(#feedback):not(#connection) {
+  display: none;
+}
+body[data-game-kind='musicquiz'] .ui-room-controls .ui-room-settings-card,
+body[data-game-kind='musicquiz'] .ui-room-controls .ui-panel-header {
+  display: none;
+}
+body[data-game-kind='musicquiz'] .ui-room-controls {
+  margin-top: 12px;
+}
+body[data-game-kind='musicquiz'][data-room-phase='waiting'] #mqCover {
+  display: none;
+}
+@media (min-width: 1001px) {
+  body[data-game-kind='musicquiz'] .mq-stage,
+  body[data-game-kind='musicquiz'] #mqChat {
+    max-height: calc(100dvh - 138px);
+    overflow: auto;
+  }
+  body[data-game-kind='musicquiz'] #game {
+    margin-top: 12px;
+  }
+}
+
+body[data-game-kind='musicquiz'] .mq-cover {
+  grid-template-columns: 100px minmax(0, 1fr);
+  text-align: left;
+  justify-items: start;
+  padding: 16px;
+  gap: 4px 16px;
+}
+body[data-game-kind='musicquiz'] .mq-vinyl {
+  width: 100px;
+  grid-column: 1;
+  grid-row: 1/5;
+}
+body[data-game-kind='musicquiz'] .mq-cover :is(h2, p, small, .mq-year) {
+  grid-column: 2;
+}
+body[data-game-kind='musicquiz'] .mq-cover h2 {
+  font-size: 26px;
+}
+body[data-game-kind='musicquiz'] #mqPlayback iframe {
+  height: 210px;
+  max-height: 210px;
+  object-fit: contain;
+}
+body[data-game-kind='musicquiz'] #controls > button {
+  justify-self: stretch;
+}
+body[data-game-kind='musicquiz'] .mq-roster .ui-player-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Explicit slots keep generic room ordering from moving the friends/chat columns. */
+body[data-game-kind='musicquiz'] #game > .panel {
+  margin: 0;
+  min-height: 0;
+}
+body[data-game-kind='musicquiz'] #game > .mq-roster {
+  grid-column: 1;
+  grid-row: 1;
+  order: 0 !important;
+}
+body[data-game-kind='musicquiz'] #game > .mq-stage {
+  grid-column: 2;
+  grid-row: 1;
+  order: 1 !important;
+}
+body[data-game-kind='musicquiz'] #game > #mqChat {
+  grid-column: 3;
+  grid-row: 1;
+  order: 2 !important;
+  width: auto;
+  align-self: stretch;
+}
+body[data-game-kind='musicquiz'] #game > #mqHistory {
+  grid-column: 1/-1;
+  grid-row: 2;
+  order: 3;
+}
+body[data-game-kind='musicquiz'] #players {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+body[data-game-kind='musicquiz'] .mq-bank input {
+  width: 24px !important;
+}
+body[data-game-kind='musicquiz'] #controls input[type='checkbox'] {
+  width: 24px;
+  min-height: 24px;
+}
+@media (min-width: 1001px) {
+  body[data-game-kind='musicquiz'] #game > .panel {
+    height: calc(100dvh - 150px);
+    overflow: auto;
+  }
+}
+@media (max-width: 1000px) and (min-width: 621px) {
+  body[data-game-kind='musicquiz'] #game > #mqChat {
+    grid-column: 1/-1;
+    grid-row: 2;
+  }
+}
+@media (max-width: 620px) {
+  body[data-game-kind='musicquiz'] #game > .panel {
+    height: auto;
+    max-height: none;
+  }
+  body[data-game-kind='musicquiz'] #game > .mq-roster {
+    max-height: 240px;
+    overflow: auto;
+  }
+  body[data-game-kind='musicquiz'] #game > #mqChat {
+    height: 420px;
+  }
+}
+
+.mq-answer-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mq-answer-choice {
+  min-height: 48px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  padding: 12px 16px;
+}
+.mq-answer-choice:focus-visible {
+  outline: 3px solid var(--accent, #ffd348);
+  outline-offset: 3px;
+}
+@media (max-width: 560px) {
+  .mq-answer-choices {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Music room: keep entry actions outside the independently scrolling song settings. */
+body[data-game-kind='musicquiz'] .site-header.ui-room-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  min-height: 88px;
+  padding: 12px 0;
+}
+body[data-game-kind='musicquiz'] .site-header .st-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+body[data-game-kind='musicquiz'] .site-header .st-brand-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+}
+body[data-game-kind='musicquiz'] .site-header .st-brand-mark svg {
+  width: 24px;
+  height: 24px;
+}
+body[data-game-kind='musicquiz'] .site-header .st-brand-copy {
+  display: grid;
+  gap: 2px;
+}
+body[data-game-kind='musicquiz'] .site-header #roomTag {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 180px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+body[data-game-kind='musicquiz'] .site-header .site-links {
+  margin-left: auto;
+}
+body[data-game-kind='musicquiz'] #game {
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(260px, 320px);
+  align-items: stretch;
+}
+body[data-game-kind='musicquiz'] #game > .mq-roster {
+  display: flex !important;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+body[data-game-kind='musicquiz'] .mq-roster h2 {
+  font-size: 22px;
+  margin: 0;
+}
+body[data-game-kind='musicquiz'] #players {
+  overflow: auto;
+  min-height: 0;
+  align-content: start;
+}
+body[data-game-kind='musicquiz'] .mq-room-actions {
+  margin-top: auto;
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--ui-border);
+  padding-top: 16px;
+}
+body[data-game-kind='musicquiz'] .mq-invite-row,
+body[data-game-kind='musicquiz'] .mq-session-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+body[data-game-kind='musicquiz'] .mq-room-actions button {
+  margin: 0;
+  min-height: 44px;
+}
+body[data-game-kind='musicquiz'] .mq-session-actions [data-room-action='start'] {
+  width: 100%;
+}
+body[data-game-kind='musicquiz'] #mqRoomHint {
+  font-size: 14px;
+  margin: 0;
+}
+body[data-game-kind='musicquiz'] #game > #mqChat {
+  padding: 0 !important;
+  overflow: hidden;
+}
+body[data-game-kind='musicquiz'] #mqChat .shared-chat {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 16px;
+  box-sizing: border-box;
+  box-shadow: none !important;
+}
+body[data-game-kind='musicquiz'] #mqChat > .shared-chat.chat-inline {
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: 100% !important;
+}
+body[data-game-kind='musicquiz'] #controls .mq-bank {
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 12px;
+  min-height: 60px;
+}
+body[data-game-kind='musicquiz'] #controls .mq-bank input {
+  grid-row: auto;
+}
+body[data-game-kind='musicquiz'] #controls .mq-bank span {
+  grid-column: 3;
+  white-space: nowrap;
+}
+body[data-game-kind='musicquiz'] #controls .mq-bank strong {
+  font-size: 16px;
+}
+body[data-game-kind='musicquiz'] .mq-stage {
+  scrollbar-gutter: stable;
+}
+@media (min-width: 1001px) {
+  body[data-game-kind='musicquiz'] #game > .panel {
+    height: calc(100dvh - 150px);
+    min-height: 380px;
+  }
+}
+@media (max-width: 1000px) {
+  body[data-game-kind='musicquiz'] #game {
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  }
+  body[data-game-kind='musicquiz'] #game > #mqChat {
+    height: 380px;
+  }
+}
+@media (max-width: 620px) {
+  body[data-game-kind='musicquiz'] .site-header.ui-room-header {
+    gap: 8px;
+    min-height: 72px;
+  }
+  body[data-game-kind='musicquiz'] .site-header .st-brand {
+    flex-basis: 170px;
+  }
+  body[data-game-kind='musicquiz'] #game {
+    display: flex;
+  }
+  body[data-game-kind='musicquiz'] #game > .mq-roster {
+    max-height: none;
+  }
+  body[data-game-kind='musicquiz'] #players {
+    max-height: 240px;
+  }
+  body[data-game-kind='musicquiz'] .mq-stage {
+    max-height: none;
+    overflow: visible;
+  }
+  body[data-game-kind='musicquiz'] #controls .mq-bank {
+    min-height: 52px;
+  }
+  body[data-game-kind='musicquiz'] #game > .panel {
+    height: auto;
+    min-height: 0;
+  }
+  body[data-game-kind='musicquiz'] #game > #mqChat {
+    height: 420px;
+  }
+}
+
+/* Roster space survives short desktop viewports and large inherited button padding. */
+body[data-game-kind='musicquiz'] #game > .mq-roster > #players {
+  flex: 1 1 180px;
+  min-height: 120px;
+}
+body[data-game-kind='musicquiz'] .mq-room-actions {
+  flex: 0 0 auto;
+  margin-top: 0;
+  gap: 8px;
+  padding-top: 12px;
+}
+body[data-game-kind='musicquiz'] .mq-invite-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+}
+body[data-game-kind='musicquiz'] .mq-session-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+}
+body[data-game-kind='musicquiz'] .mq-room-actions button {
+  height: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+body[data-game-kind='musicquiz'] .mq-session-actions [data-room-action='start'] {
+  width: auto;
+  min-width: 0;
+}
+body[data-game-kind='musicquiz'] :is(#mqCopyRoom, .mq-session-actions [data-room-action='bot']) {
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  padding: 0;
+}
+@media (max-width: 620px) {
+  body[data-game-kind='musicquiz'] #game > .mq-roster > #players {
+    flex: 0 1 auto;
+    min-height: 72px;
+    max-height: 240px;
+  }
+}
+
+body[data-game-kind='musicquiz'] #mqPlayback audio {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 44px;
+}
+
+#mqCollection {
+  margin-top: 1.5rem;
+  min-width: 0;
+}
+#mqCollection details {
+  margin-block: 1rem;
+}
+#mqCollection select {
+  max-width: 100%;
+  margin: 0.5rem;
+}
+.mq-timeline-card.barrage-frame-preview {
+  position: relative;
+  min-width: 145px;
+  margin: 24px 10px;
+  overflow: visible;
+}
+.mq-timeline-card .barrage-frame-content {
+  display: grid;
+  gap: 0.4rem;
+  white-space: normal;
+}
+body .mq-timeline-card.barrage-frame-preview {
+  flex: 0 0 280px;
+  width: 280px;
+  min-width: 280px !important;
+  max-width: none;
+  height: 220px;
+  min-height: 220px;
+  margin: 8px 0 !important;
+}
+body .mq-timeline-card.barrage-frame-preview > .barrage-frame-content {
+  display: grid;
+  gap: 6px;
+  line-height: 1.5;
+  white-space: normal;
+}
+body .mq-timeline-card.barrage-frame-preview > .barrage-frame-content strong {
+  font-size: 26px;
+}
+.mq-timeline {
+  padding: 24px 8px 52px;
+  align-items: flex-start;
+}

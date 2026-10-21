@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-label="work-phone">
+            <rect width="400" height="300" rx="16" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- Wall clock showing midnight 23:45 -->
+            <circle cx="95" cy="85" r="38" fill="#F8FAFC" stroke="#141312" stroke-width="3.5"></circle>
+            <circle cx="95" cy="85" r="4" fill="#E5A93C"></circle>
+            <line x1="95" y1="85" x2="95" y2="60" stroke="#141312" stroke-width="3.5" stroke-linecap="round"></line>
+            <line x1="95" y1="85" x2="115" y2="92" stroke="#EF4444" stroke-width="3.5" stroke-linecap="round"></line>
+            <!-- Cold steaming mug below clock -->
+            <path d="M75 190 h35 a12 12 0 0 1 12 12 v25 a12 12 0 0 1 -12 12 h-35 a8 8 0 0 1 -8 -8 v-33 a8 8 0 0 1 8 -8 z" fill="#E2E8F0" stroke="#141312" stroke-width="3"></path>
+            <path d="M122 202 h10 a8 8 0 0 1 8 8 v8 a8 8 0 0 1 -8 8 h-10" fill="none" stroke="#141312" stroke-width="3"></path>
+            <path d="M82 178 q6 -8 0 -16" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"></path>
+            <path d="M96 175 q6 -8 0 -16" stroke="#94A3B8" stroke-width="2" fill="none" stroke-linecap="round"></path>
+            <!-- Huge glowing smartphone with urgent red alerts -->
+            <rect x="180" y="45" width="160" height="225" rx="22" fill="#1E293B" stroke="#141312" stroke-width="4"></rect>
+            <rect x="235" y="55" width="50" height="6" rx="3" fill="#475569"></rect>
+            <!-- Slack notification 1 (Urgent red banner) -->
+            <rect x="195" y="80" width="130" height="48" rx="10" fill="#EF4444" fill-opacity="0.2" stroke="#EF4444" stroke-width="2"></rect>
+            <circle cx="212" cy="96" r="6" fill="#EF4444"></circle>
+            <line x1="225" y1="92" x2="305" y2="92" stroke="#EF4444" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="225" y1="104" x2="280" y2="104" stroke="#EF4444" stroke-width="2.5" stroke-linecap="round"></line>
+            <!-- Slack notification 2 (Warning amber banner) -->
+            <rect x="195" y="140" width="130" height="52" rx="10" fill="#F59E0B" fill-opacity="0.2" stroke="#F59E0B" stroke-width="2"></rect>
+            <circle cx="212" cy="158" r="6" fill="#F59E0B"></circle>
+            <line x1="225" y1="154" x2="310" y2="154" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="225" y1="166" x2="265" y2="166" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"></line>
+            <!-- Giant 99+ Unread Notification Badge -->
+            <circle cx="335" cy="45" r="18" fill="#DC2626" stroke="#141312" stroke-width="3"></circle>
+            <!-- Exclamation icon inside circle -->
+            <circle cx="335" cy="53" r="2.5" fill="#FFFFFF"></circle>
+            <line x1="335" y1="36" x2="335" y2="47" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"></line>
+          </svg>

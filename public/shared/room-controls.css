@@ -1,165 +1,733 @@
-:root{--ui-room-control-gap:12px;--ui-room-setting-gap:12px}
-[data-room-native-action]{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;clip-path:inset(50%)!important;overflow:hidden!important;pointer-events:none!important}
-.ui-room-controls{display:grid;gap:var(--ui-room-control-gap);min-width:0;width:100%;margin:0 0 12px}
-.ui-room-controls[hidden],.ui-room-controls [hidden]{display:none!important}
-.ui-room-settings-card{display:grid;gap:var(--ui-room-setting-gap);min-width:0;border:0;border-block:1px solid var(--play-ink,var(--ui-border,#aaa));border-radius:0;padding:12px 0;background:transparent;color:var(--ui-text,var(--play-ink,#292639))}
-.ui-room-settings-card>h2{font-size:1rem;margin:0;min-height:24px;line-height:1.5}
-.ui-room-settings-source{margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important;min-width:0;max-width:100%;display:grid;gap:var(--ui-room-setting-gap)}
-.ui-room-settings-source>:is(h2,summary){display:none!important}
-.ui-room-settings-slot,.ui-room-setting-grid,.ui-room-settings-source :is(.settings,.fields,.room-settings,.room-settings-body){display:grid;grid-template-columns:minmax(0,1fr)!important;gap:var(--ui-room-setting-gap);min-width:0}
-.ui-room-settings-slot{max-height:220px;overflow:auto;scrollbar-gutter:stable;overscroll-behavior:contain}
-.ui-room-setting-field{display:grid;gap:8px;min-width:0;margin:0;text-align:left}
-.ui-room-setting-choice{display:inline-flex;align-items:center;gap:8px;min-height:44px}
-.ui-room-setting-field>label,.ui-room-setting-field>input,.ui-room-setting-field>select{margin:0;max-width:100%;min-width:0}
-.ui-room-setting-field>:is(input,select){width:100%;min-height:44px}
-.ui-room-settings-note{font-size:.875rem;margin:0;overflow-wrap:anywhere}
-.ui-room-session-actions{display:grid;grid-template-columns:minmax(0,1fr) 44px 44px;align-items:center;gap:var(--ui-room-control-gap);min-height:44px}
-.ui-room-session-actions>.ui-room-action{margin:0!important;min-height:44px;max-width:100%}
-.ui-room-action[data-room-action=start]{grid-column:1;min-width:0;width:100%}
-.ui-room-action[data-room-action=bot]{grid-column:2}
-.ui-room-action[data-room-action=leave]{grid-column:3}
-.ui-room-controls[data-ai-placement=roster] .ui-room-session-actions{grid-template-columns:minmax(0,1fr) 44px}
-.ui-room-controls[data-ai-placement=roster] [data-room-action=leave]{grid-column:2}
-.ui-room-control-status{margin:0;min-height:24px;font-size:.875rem;overflow-wrap:anywhere}
-.room-leave-dialog{max-width:min(440px,calc(100vw - 24px))}.room-leave-dialog .ui-control-row{flex-wrap:wrap;gap:12px}.ui-room-leave-status{min-height:24px;overflow-wrap:anywhere}
-.chat-room-tools{flex-wrap:wrap;gap:12px;min-height:44px;margin-top:12px}.chat-room-tools>.room-media-slot{flex:0 0 44px}.chat-room-tools button{margin:0!important}
-.chat-compose{gap:12px}
-.chat-room-tools>#shared-error{flex:1 0 100%;min-height:24px;margin:0}
-.game-barrage:not(.game-emoji-barrage),.game-barrage .barrage-frame-content{white-space:nowrap}
-.game-barrage:not(.game-emoji-barrage){max-width:none}
-.game-barrage:not(.game-emoji-barrage).game-barrage-static{max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
-.game-barrage-static .barrage-frame-content{overflow:hidden;text-overflow:ellipsis}
-@media(max-width:400px){.ui-room-session-actions{gap:8px}}
+:root {
+  --ui-room-control-gap: 12px;
+  --ui-room-setting-gap: 12px;
+}
+[data-room-native-action] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+.ui-room-controls {
+  display: grid;
+  gap: var(--ui-room-control-gap);
+  min-width: 0;
+  width: 100%;
+  margin: 0 0 12px;
+}
+.ui-room-controls[hidden],
+.ui-room-controls [hidden] {
+  display: none !important;
+}
+.ui-room-settings-card {
+  display: grid;
+  gap: var(--ui-room-setting-gap);
+  min-width: 0;
+  border: 0;
+  border-block: 1px solid var(--play-ink, var(--ui-border, #aaa));
+  border-radius: 0;
+  padding: 12px 0;
+  background: transparent;
+  color: var(--ui-text, var(--play-ink, #292639));
+}
+.ui-room-settings-card > h2 {
+  font-size: 1rem;
+  margin: 0;
+  min-height: 24px;
+  line-height: 1.5;
+}
+.ui-room-settings-source {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  min-width: 0;
+  max-width: 100%;
+  display: grid;
+  gap: var(--ui-room-setting-gap);
+}
+.ui-room-settings-source > :is(h2, summary) {
+  display: none !important;
+}
+.ui-room-settings-slot,
+.ui-room-setting-grid,
+.ui-room-settings-source :is(.settings, .fields, .room-settings, .room-settings-body) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: var(--ui-room-setting-gap);
+  min-width: 0;
+}
+.ui-room-settings-slot {
+  max-height: 220px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.ui-room-setting-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  text-align: left;
+}
+.ui-room-setting-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.ui-room-setting-field > label,
+.ui-room-setting-field > input,
+.ui-room-setting-field > select {
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+}
+.ui-room-setting-field > :is(input, select) {
+  width: 100%;
+  min-height: 44px;
+}
+.ui-room-settings-note {
+  font-size: 0.875rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.ui-room-session-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px 44px;
+  align-items: center;
+  gap: var(--ui-room-control-gap);
+  min-height: 44px;
+}
+.ui-room-session-actions > .ui-room-action {
+  margin: 0 !important;
+  min-height: 44px;
+  max-width: 100%;
+}
+.ui-room-action[data-room-action='start'] {
+  grid-column: 1;
+  min-width: 0;
+  width: 100%;
+}
+.ui-room-action[data-room-action='bot'] {
+  grid-column: 2;
+}
+.ui-room-action[data-room-action='leave'] {
+  grid-column: 3;
+}
+.ui-room-controls[data-ai-placement='roster'] .ui-room-session-actions {
+  grid-template-columns: minmax(0, 1fr) 44px;
+}
+.ui-room-controls[data-ai-placement='roster'] [data-room-action='leave'] {
+  grid-column: 2;
+}
+.ui-room-control-status {
+  margin: 0;
+  min-height: 24px;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.room-leave-dialog {
+  max-width: min(440px, calc(100vw - 24px));
+}
+.room-leave-dialog .ui-control-row {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.ui-room-leave-status {
+  min-height: 24px;
+  overflow-wrap: anywhere;
+}
+.chat-room-tools {
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 44px;
+  margin-top: 12px;
+}
+.chat-room-tools > .room-media-slot {
+  flex: 0 0 44px;
+}
+.chat-room-tools button {
+  margin: 0 !important;
+}
+.chat-compose {
+  gap: 12px;
+}
+.chat-room-tools > #shared-error {
+  flex: 1 0 100%;
+  min-height: 24px;
+  margin: 0;
+}
+.game-barrage:not(.game-emoji-barrage),
+.game-barrage .barrage-frame-content {
+  white-space: nowrap;
+}
+.game-barrage:not(.game-emoji-barrage) {
+  max-width: none;
+}
+.game-barrage:not(.game-emoji-barrage).game-barrage-static {
+  max-width: calc(100% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.game-barrage-static .barrage-frame-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 400px) {
+  .ui-room-session-actions {
+    gap: 8px;
+  }
+}
 
-.ui-room-controls[data-has-manage=true] .ui-room-session-actions{grid-template-columns:minmax(0,1fr) 44px 44px 44px}
-.ui-room-controls[data-has-manage=true] [data-room-action=manage]{grid-column:3;width:44px;min-width:44px}
-.ui-room-controls[data-has-manage=true] [data-room-action=leave]{grid-column:4}
-.ui-room-controls[data-has-manage=true][data-ai-placement=roster] .ui-room-session-actions{grid-template-columns:minmax(0,1fr) 44px 44px}
-.ui-room-controls[data-has-manage=true][data-ai-placement=roster] [data-room-action=manage]{grid-column:2}
-.ui-room-controls[data-has-manage=true][data-ai-placement=roster] [data-room-action=leave]{grid-column:3}
+.ui-room-controls[data-has-manage='true'] .ui-room-session-actions {
+  grid-template-columns: minmax(0, 1fr) 44px 44px 44px;
+}
+.ui-room-controls[data-has-manage='true'] [data-room-action='manage'] {
+  grid-column: 3;
+  width: 44px;
+  min-width: 44px;
+}
+.ui-room-controls[data-has-manage='true'] [data-room-action='leave'] {
+  grid-column: 4;
+}
+.ui-room-controls[data-has-manage='true'][data-ai-placement='roster'] .ui-room-session-actions {
+  grid-template-columns: minmax(0, 1fr) 44px 44px;
+}
+.ui-room-controls[data-has-manage='true'][data-ai-placement='roster'] [data-room-action='manage'] {
+  grid-column: 2;
+}
+.ui-room-controls[data-has-manage='true'][data-ai-placement='roster'] [data-room-action='leave'] {
+  grid-column: 3;
+}
 
 /* One settings content viewport with a stable bottom action row for every game. */
-.ui-room-controls{grid-template-rows:minmax(0,1fr) 24px auto;min-height:0;height:var(--ui-room-settings-height,360px);margin-bottom:0;overflow:hidden}
-.ui-room-controls>.ui-room-settings-card{grid-template-rows:auto minmax(0,1fr);min-height:0;overflow:hidden;align-content:stretch}
-.ui-room-settings-card:has(>h2[hidden]){grid-template-rows:minmax(0,1fr)}
-.ui-room-controls .ui-room-settings-slot{min-height:0;max-height:none;overflow:auto;align-content:start;scrollbar-gutter:stable}
-.ui-room-controls>.ui-room-control-status{min-height:0;max-height:24px;overflow:auto;margin:0}
-.ui-room-controls>.ui-room-session-actions{align-self:end;min-width:0}
-.ui-room-waiting-layout>.ui-room-waiting-controls:not(.race-side-column){display:flex!important;flex-direction:column;overflow:hidden!important;scrollbar-gutter:auto}
-.ui-room-waiting-controls>#controls{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;min-width:0}
-.ui-room-waiting-controls .ui-room-controls{flex:1 1 auto;height:auto;min-height:0}
-.ui-room-waiting-controls>h2{flex:none}
-.ui-room-waiting-layout>.race-side-column>.race-controls{display:flex;flex-direction:column;min-height:0!important;overflow:hidden}
-.ui-room-waiting-layout>.race-side-column>.race-controls>.ui-room-controls{flex:1 1 auto;height:auto;min-height:0}
+.ui-room-controls {
+  grid-template-rows: minmax(0, 1fr) 24px auto;
+  min-height: 0;
+  height: var(--ui-room-settings-height, 360px);
+  margin-bottom: 0;
+  overflow: hidden;
+}
+.ui-room-controls > .ui-room-settings-card {
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  align-content: stretch;
+}
+.ui-room-settings-card:has(> h2[hidden]) {
+  grid-template-rows: minmax(0, 1fr);
+}
+.ui-room-controls .ui-room-settings-slot {
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+  align-content: start;
+  scrollbar-gutter: stable;
+}
+.ui-room-controls > .ui-room-control-status {
+  min-height: 0;
+  max-height: 24px;
+  overflow: auto;
+  margin: 0;
+}
+.ui-room-controls > .ui-room-session-actions {
+  align-self: end;
+  min-width: 0;
+}
+.ui-room-waiting-layout > .ui-room-waiting-controls:not(.race-side-column) {
+  display: flex !important;
+  flex-direction: column;
+  overflow: hidden !important;
+  scrollbar-gutter: auto;
+}
+.ui-room-waiting-controls > #controls {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+.ui-room-waiting-controls .ui-room-controls {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
+.ui-room-waiting-controls > h2 {
+  flex: none;
+}
+.ui-room-waiting-layout > .race-side-column > .race-controls {
+  display: flex;
+  flex-direction: column;
+  min-height: 0 !important;
+  overflow: hidden;
+}
+.ui-room-waiting-layout > .race-side-column > .race-controls > .ui-room-controls {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
+}
 
 /* During play, the settings content is closed; avoid reserving its waiting-room height. */
-body[data-room-phase]:not([data-room-phase=waiting]) .ui-room-controls:has(>.ui-room-settings-card[hidden]){height:auto;grid-template-rows:24px auto;flex:none}
+body[data-room-phase]:not([data-room-phase='waiting'])
+  .ui-room-controls:has(.ui-room-settings-card[hidden]) {
+  height: auto;
+  grid-template-rows: 24px auto;
+  flex: none;
+}
 
 /* All games use one heading outside the bordered settings content. */
-.ui-room-controls{grid-template-rows:auto minmax(0,1fr) 24px auto}
-.ui-room-controls>.ui-room-settings-heading{margin:0;min-height:28px;font-size:var(--ui-text-section,1.25rem);line-height:1.4}
-.ui-room-controls>.ui-room-settings-card{grid-template-rows:minmax(0,1fr)}
+.ui-room-controls {
+  grid-template-rows: auto minmax(0, 1fr) 24px auto;
+}
+.ui-room-controls > .ui-room-settings-heading {
+  margin: 0;
+  min-height: 28px;
+  font-size: var(--ui-text-section, 1.25rem);
+  line-height: 1.4;
+}
+.ui-room-controls > .ui-room-settings-card {
+  grid-template-rows: minmax(0, 1fr);
+}
 
 /* Management is a grid action, not the legacy floating viewport button. */
-.ui-room-session-actions>.host-manage[data-room-action=manage]{position:static!important;inset:auto!important;transform:none!important;align-self:center;justify-self:center;height:44px;min-height:44px;width:44px;min-width:44px;padding:0!important;margin:0!important;z-index:auto}
+.ui-room-session-actions > .host-manage[data-room-action='manage'] {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  align-self: center;
+  justify-self: center;
+  height: 44px;
+  min-height: 44px;
+  width: 44px;
+  min-width: 44px;
+  padding: 0 !important;
+  margin: 0 !important;
+  z-index: auto;
+}
 
 /* Native game settings contribute fields only, never another title or framed viewport. */
-.ui-room-settings-slot>.ui-room-settings-source>h2{display:none!important}
-.ui-room-settings-slot>.ui-room-settings-source,.ui-room-settings-slot .room-settings-body{margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important;max-height:none!important;min-height:0!important}
-.ui-room-settings-slot .room-settings-scroll{overflow:visible!important;max-height:none!important;height:auto!important}
-.ui-room-settings-slot .room-settings-fields{min-width:0;max-width:100%;box-sizing:border-box}
-body[data-room-phase=waiting] #drawActionSlot:has(>[data-room-native-action]),body[data-room-phase=waiting] #drawActionSlot:has(#drawActions:empty){display:none}
+.ui-room-settings-slot > .ui-room-settings-source > h2 {
+  display: none !important;
+}
+.ui-room-settings-slot > .ui-room-settings-source,
+.ui-room-settings-slot .room-settings-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  max-height: none !important;
+  min-height: 0 !important;
+}
+.ui-room-settings-slot .room-settings-scroll {
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+}
+.ui-room-settings-slot .room-settings-fields {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+body[data-room-phase='waiting'] #drawActionSlot:has(> [data-room-native-action]),
+body[data-room-phase='waiting'] #drawActionSlot:has(#drawActions:empty) {
+  display: none;
+}
 
 /* In-game actions share the chat tools row, with management and leave on its right. */
-.shared-chat[data-game-chat=true] .chat-room-tools>[data-room-action=manage]{margin-left:auto!important}
-.shared-chat[data-game-chat=true] .chat-room-tools>[data-room-action=leave]:not(:has(+*)){flex:none}
-.shared-chat[data-game-chat=true] .chat-room-tools>[data-room-action=leave]:first-child{margin-left:auto!important}
-.shared-chat[data-game-chat=true] .chat-room-tools>[data-room-action]{position:static!important;inset:auto!important;transform:none!important;align-self:center;grid-column:auto!important;width:44px!important;min-width:44px;height:44px;padding:0!important;margin-top:0!important;margin-bottom:0!important}
-body:not([data-room-phase=waiting]) #drawActionSlot:has(#drawActions:empty){display:none}
-body:not([data-room-phase=waiting]) :is(#bot,[data-do=bot],[data-room-action=bot]){display:none!important}
+.shared-chat[data-game-chat='true'] .chat-room-tools > [data-room-action='manage'] {
+  margin-left: auto !important;
+}
+.shared-chat[data-game-chat='true'] .chat-room-tools > [data-room-action='leave']:not(:has(+ *)) {
+  flex: none;
+}
+.shared-chat[data-game-chat='true'] .chat-room-tools > [data-room-action='leave']:first-child {
+  margin-left: auto !important;
+}
+.shared-chat[data-game-chat='true'] .chat-room-tools > [data-room-action] {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  align-self: center;
+  grid-column: auto !important;
+  width: 44px !important;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+body:not([data-room-phase='waiting']) #drawActionSlot:has(#drawActions:empty) {
+  display: none;
+}
+body:not([data-room-phase='waiting']) :is(#bot, [data-do='bot'], [data-room-action='bot']) {
+  display: none !important;
+}
 
-.ui-room-controls[data-title-external=true]{grid-template-rows:minmax(0,1fr) 24px auto}
+.ui-room-controls[data-title-external='true'] {
+  grid-template-rows: minmax(0, 1fr) 24px auto;
+}
 
 /* Feedback inside the scrolling fields does not introduce another framed footer. */
-.ui-room-settings-slot .room-settings-actions{border:0!important;padding:0!important;margin:0!important;background:transparent!important;position:static!important}
-.ui-room-settings-slot .room-settings-actions:has(>.ui-status:empty){display:none}
+.ui-room-settings-slot .room-settings-actions {
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  position: static !important;
+}
+.ui-room-settings-slot .room-settings-actions:has(> .ui-status:empty) {
+  display: none;
+}
 
 /* Header spacing matches the waiting-room chat header, without a legacy empty slot. */
-.ui-room-controls>.ui-room-settings-heading{margin:0;min-height:28px;line-height:1.4;font-size:var(--ui-text-section,1.25rem)}
-body[data-room-phase=waiting][data-game-kind=draw] #drawActionSlot{display:none}
+.ui-room-controls > .ui-room-settings-heading {
+  margin: 0;
+  min-height: 28px;
+  line-height: 1.4;
+  font-size: var(--ui-text-section, 1.25rem);
+}
+body[data-room-phase='waiting'][data-game-kind='draw'] #drawActionSlot {
+  display: none;
+}
 
-body[data-room-phase=waiting] .ui-room-waiting-controls :is(.shared-game-ui,.room-action-dock){display:none!important}
+body[data-room-phase='waiting'] .ui-room-waiting-controls :is(.shared-game-ui, .room-action-dock) {
+  display: none !important;
+}
 
-body[data-room-phase=waiting] #controls>.ui-control-group:has([data-room-native-action]):not(:has(input,select,textarea)){display:none}
-:root{--ui-room-panel-padding:20px;--ui-room-panel-border-width:2px}
-.ui-room-waiting-layout :is(.shared-chat,.ui-room-waiting-controls:not(.race-side-column)){padding:var(--ui-room-panel-padding)!important;border-width:var(--ui-room-panel-border-width)!important}
-@media(max-width:600px){:root{--ui-room-panel-padding:16px}}
+body[data-room-phase='waiting']
+  #controls
+  > .ui-control-group:has([data-room-native-action]):not(:has(input, select, textarea)) {
+  display: none;
+}
+:root {
+  --ui-room-panel-padding: 20px;
+  --ui-room-panel-border-width: 2px;
+}
+.ui-room-waiting-layout :is(.shared-chat, .ui-room-waiting-controls:not(.race-side-column)) {
+  padding: var(--ui-room-panel-padding) !important;
+  border-width: var(--ui-room-panel-border-width) !important;
+}
+@media (max-width: 600px) {
+  :root {
+    --ui-room-panel-padding: 16px;
+  }
+}
 
 /* Settings adopts the shared panel frame instead of reserving an empty feedback row. */
-.ui-room-controls.ui-panel-frame{display:flex;flex-direction:column;gap:var(--ui-panel-gap);min-height:0}
-.ui-room-controls.ui-panel-frame .ui-room-settings-card{display:block}
-.ui-room-controls.ui-panel-frame .ui-room-settings-slot{min-height:0;max-height:none;overflow:visible;scrollbar-gutter:auto;padding:12px 0}
-.ui-room-controls.ui-panel-frame .ui-room-settings-footer>.ui-room-control-status{min-height:0;max-height:48px;margin:0;overflow:auto}
-.ui-room-settings-footer>.ui-room-session-actions{flex:none}
+.ui-room-controls.ui-panel-frame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ui-panel-gap);
+  min-height: 0;
+}
+.ui-room-controls.ui-panel-frame .ui-room-settings-card {
+  display: block;
+}
+.ui-room-controls.ui-panel-frame .ui-room-settings-slot {
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+  scrollbar-gutter: auto;
+  padding: 12px 0;
+}
+.ui-room-controls.ui-panel-frame .ui-room-settings-footer > .ui-room-control-status {
+  min-height: 0;
+  max-height: 48px;
+  margin: 0;
+  overflow: auto;
+}
+.ui-room-settings-footer > .ui-room-session-actions {
+  flex: none;
+}
 
 /* Keep native action availability measurable while their old containers take no space. */
-body[data-room-phase=waiting] .ui-room-waiting-controls #drawActionSlot,
-body[data-room-phase=waiting] #controls>.ui-control-group:has([data-room-native-action]):not(:has(input,select,textarea)){
- display:block!important;position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;margin:-1px!important;padding:0!important;clip-path:inset(50%)!important;overflow:hidden!important;pointer-events:none!important
+body[data-room-phase='waiting'] .ui-room-waiting-controls #drawActionSlot,
+body[data-room-phase='waiting']
+  #controls
+  > .ui-control-group:has([data-room-native-action]):not(:has(input, select, textarea)) {
+  display: block !important;
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Native placeholders keep handlers available without consuming the common frame. */
-body[data-room-phase=waiting] .ui-room-native-placeholder{position:absolute!important;width:1px!important;height:1px!important;min-height:0!important;min-width:0!important;margin:-1px!important;padding:0!important;clip-path:inset(50%)!important;overflow:hidden!important;pointer-events:none!important}
-body[data-room-phase=waiting] .ui-room-panel-host{min-height:0;min-width:0}
-.ui-room-waiting-layout .race-controls.ui-room-panel-host{padding:var(--ui-room-panel-padding)!important;border-width:var(--ui-room-panel-border-width)!important;flex:1;min-height:0!important;box-sizing:border-box}
-
-/* A persistent green start action fills the space left of management and leave. */
-.ui-room-settings-footer>.ui-room-session-actions{display:flex;flex-wrap:nowrap;align-items:center;gap:var(--ui-room-control-gap);width:100%}
-.ui-room-settings-footer>.ui-room-session-actions>[data-room-action=start]{flex:1 1 0;min-width:0;width:auto!important;background:var(--play-bright-green,#35e47a)!important;color:var(--play-on-accent,#121212)!important}
-.ui-room-settings-footer>.ui-room-session-actions>[data-room-action]:not([data-room-action=start]){flex:0 0 44px;width:44px;min-width:44px;max-width:44px}
-
-/* Legacy roster height matching remains available for callers outside play columns. */
-.ui-chat-height-peer{min-height:var(--ui-room-row-height,440px)!important}
-.ui-chat-height-peer[data-chat-height-bound=true]{box-sizing:border-box;height:var(--ui-chat-fixed-height)!important;max-height:var(--ui-chat-fixed-height)!important;overflow:hidden!important;display:flex;flex-direction:column}
-.ui-chat-height-peer[data-chat-height-bound=true]>:is(#players,.ui-room-roster-list){flex:1 1 0;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
-
-
-/* Shared, independent frames for gameplay operations and room chat. */
-:root{--ui-game-operations-height:220px;--ui-game-tools-height:calc(var(--ui-game-operations-height) + var(--ui-room-gap,16px) + var(--ui-room-row-height,440px))}
-body.game-room .ui-room-play-tools,
-body.ui-drawing-play-mode .ui-drawing-play-layout>.ui-drawing-play-chat.ui-room-play-tools{display:flex!important;flex-direction:column;gap:var(--ui-room-gap,16px)!important;width:100%!important;min-width:0;min-height:0!important;height:auto!important;max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;align-self:start!important}
-.ui-room-play-tools>.ui-game-operations{box-sizing:border-box;flex:none;width:100%;height:var(--ui-game-operations-height);min-height:0;padding:var(--ui-room-panel-padding,20px);border:var(--play-card-border,2px solid var(--ui-border));border-radius:var(--play-radius,16px);background:var(--play-surface,var(--ui-surface));color:var(--play-ink,var(--ui-text));box-shadow:var(--play-shadow,3px 4px 0 #0001)}
-.ui-game-operations-content>.ui-game-operation-source{height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
-.ui-game-operations-content>h2.ui-game-operation-source{display:none}
-.ui-game-operations-content p{overflow-wrap:anywhere}
-.ui-game-operations-content .ui-room-controls>.ui-panel-header{font-size:1rem}
-.ui-room-play-tools>:is(.shared-game-ui,.room-action-dock){display:none!important}
-.ui-operation-native-action{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;clip-path:inset(50%)!important;overflow:hidden!important;pointer-events:none!important}
-.ui-game-word-choices{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--ui-space-3,12px)}
-.ui-game-word-choices>button{display:grid;gap:4px;width:100%;min-width:0;margin:0!important;text-align:left;white-space:normal}
-.ui-game-word-choices>button>small{font-size:.75rem;line-height:1.4}
-.ui-game-word-choices>button>strong{overflow-wrap:anywhere}
-@media(min-width:1101px){body.ui-drawing-play-mode .ui-room-play-tools{--ui-game-operations-height:max(220px,calc(var(--ui-drawing-row-height) - var(--ui-room-row-height,440px) - var(--ui-room-gap,16px)))}}
-@media(max-width:1100px){.ui-drawing-play-layout:has(>.ui-room-play-tools){grid-template-rows:var(--ui-drawing-row-height) var(--ui-game-tools-height) auto!important}}
-body.game-room audio{max-width:100%}
-
-/* Compact template viewports scroll the two frames as a column, never shrink chat. */
-@media(min-width:1101px) and (min-height:680px){
- body[data-ui-template]:not(.ui-large-text) .ui-drawing-play-layout>.ui-drawing-play-chat.ui-room-play-tools{height:var(--tpl-game-height)!important;max-height:var(--tpl-game-height)!important;overflow:auto!important;scrollbar-gutter:stable}
+body[data-room-phase='waiting'] .ui-room-native-placeholder {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+body[data-room-phase='waiting'] .ui-room-panel-host {
+  min-height: 0;
+  min-width: 0;
+}
+.ui-room-waiting-layout .race-controls.ui-room-panel-host {
+  padding: var(--ui-room-panel-padding) !important;
+  border-width: var(--ui-room-panel-border-width) !important;
+  flex: 1;
+  min-height: 0 !important;
+  box-sizing: border-box;
 }
 
-.ui-game-operations-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.ui-game-operations-header>h2{margin:0;font-size:inherit}
-.ui-game-operations-header>[data-room-action=invite]{flex:none;width:44px;height:44px;margin:0}
+/* A persistent green start action fills the space left of management and leave. */
+.ui-room-settings-footer > .ui-room-session-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--ui-room-control-gap);
+  width: 100%;
+}
+.ui-room-settings-footer > .ui-room-session-actions > [data-room-action='start'] {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto !important;
+  background: var(--play-bright-green, #35e47a) !important;
+  color: var(--play-on-accent, #121212) !important;
+}
+.ui-room-settings-footer
+  > .ui-room-session-actions
+  > [data-room-action]:not([data-room-action='start']) {
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+}
+
+/* Legacy roster height matching remains available for callers outside play columns. */
+.ui-chat-height-peer {
+  min-height: var(--ui-room-row-height, 440px) !important;
+}
+.ui-chat-height-peer[data-chat-height-bound='true'] {
+  box-sizing: border-box;
+  height: var(--ui-chat-fixed-height) !important;
+  max-height: var(--ui-chat-fixed-height) !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+.ui-chat-height-peer[data-chat-height-bound='true'] > :is(#players, .ui-room-roster-list) {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* Shared, independent frames for gameplay operations and room chat. */
+:root {
+  --ui-game-operations-height: 220px;
+  --ui-game-tools-height: calc(
+    var(--ui-game-operations-height) + var(--ui-room-gap, 16px) + var(--ui-room-row-height, 440px)
+  );
+}
+body.game-room .ui-room-play-tools,
+body.ui-drawing-play-mode .ui-drawing-play-layout > .ui-drawing-play-chat.ui-room-play-tools {
+  display: flex !important;
+  flex-direction: column;
+  gap: var(--ui-room-gap, 16px) !important;
+  width: 100% !important;
+  min-width: 0;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  align-self: start !important;
+}
+.ui-room-play-tools > .ui-game-operations {
+  box-sizing: border-box;
+  flex: none;
+  width: 100%;
+  height: var(--ui-game-operations-height);
+  min-height: 0;
+  padding: var(--ui-room-panel-padding, 20px);
+  border: var(--play-card-border, 2px solid var(--ui-border));
+  border-radius: var(--play-radius, 16px);
+  background: var(--play-surface, var(--ui-surface));
+  color: var(--play-ink, var(--ui-text));
+  box-shadow: var(--play-shadow, 3px 4px 0 #0001);
+}
+.ui-game-operations-content > .ui-game-operation-source {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+.ui-game-operations-content > h2.ui-game-operation-source {
+  display: none;
+}
+.ui-game-operations-content p {
+  overflow-wrap: anywhere;
+}
+.ui-game-operations-content .ui-room-controls > .ui-panel-header {
+  font-size: 1rem;
+}
+.ui-room-play-tools > :is(.shared-game-ui, .room-action-dock) {
+  display: none !important;
+}
+.ui-operation-native-action {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+.ui-game-word-choices {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ui-space-3, 12px);
+}
+.ui-game-word-choices > button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+  text-align: left;
+  white-space: normal;
+}
+.ui-game-word-choices > button > small {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+.ui-game-word-choices > button > strong {
+  overflow-wrap: anywhere;
+}
+@media (min-width: 1101px) {
+  body.ui-drawing-play-mode .ui-room-play-tools {
+    --ui-game-operations-height: max(
+      220px,
+      calc(
+        var(--ui-drawing-row-height) - var(--ui-room-row-height, 440px) - var(--ui-room-gap, 16px)
+      )
+    );
+  }
+}
+@media (max-width: 1100px) {
+  .ui-drawing-play-layout:has(> .ui-room-play-tools) {
+    grid-template-rows: var(--ui-drawing-row-height) var(--ui-game-tools-height) auto !important;
+  }
+}
+body.game-room audio {
+  max-width: 100%;
+}
+
+/* Compact template viewports scroll the two frames as a column, never shrink chat. */
+@media (min-width: 1101px) and (min-height: 680px) {
+  body[data-ui-template]:not(.ui-large-text)
+    .ui-drawing-play-layout
+    > .ui-drawing-play-chat.ui-room-play-tools {
+    height: var(--tpl-game-height) !important;
+    max-height: var(--tpl-game-height) !important;
+    overflow: auto !important;
+    scrollbar-gutter: stable;
+  }
+}
+
+.ui-game-operations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ui-game-operations-header > h2 {
+  margin: 0;
+  font-size: inherit;
+}
+.ui-game-operations-header > [data-room-action='invite'] {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+}
 
 /* One management entry in the shared upper-right header, in every phase. */
-.room-management-slot{display:flex;align-items:center;justify-content:flex-end;flex:none;gap:8px}
-.room-management-slot #managePlayers{position:static!important;inset:auto!important;transform:none!important;align-self:center;justify-self:center;z-index:auto;margin:0!important;min-width:44px;min-height:44px}
+.room-management-slot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: none;
+  gap: 8px;
+}
+.room-management-slot #managePlayers {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  align-self: center;
+  justify-self: center;
+  z-index: auto;
+  margin: 0 !important;
+  min-width: 44px;
+  min-height: 44px;
+}
 
 /* Keep the added action from overlapping the brand on narrow shared headers. */
-@media(max-width:620px){
-body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot){grid-template-columns:minmax(0,1fr)!important;row-gap:10px!important}
-body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)>.site-title{grid-column:1!important;grid-row:1!important;justify-self:start!important}
-body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)>.site-account{grid-column:1!important;grid-row:2!important;justify-self:end!important}
-body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)>.site-links{grid-column:1!important;grid-row:3!important;justify-self:start!important}
+@media (max-width: 620px) {
+  body [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot) {
+    grid-template-columns: minmax(0, 1fr) !important;
+    row-gap: 10px !important;
+  }
+  body
+    [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)
+    > .site-title {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    justify-self: start !important;
+  }
+  body
+    [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)
+    > .site-account {
+    grid-column: 1 !important;
+    grid-row: 2 !important;
+    justify-self: end !important;
+  }
+  body
+    [data-site-header]:not(.q-header):not([data-stitch-mounted]):has(.room-management-slot)
+    > .site-links {
+    grid-column: 1 !important;
+    grid-row: 3 !important;
+    justify-self: start !important;
+  }
+}
+
+/* A closed settings body still needs its session footer to take up space. */
+body[data-room-phase]:not([data-room-phase='waiting'])
+  .ui-room-controls.ui-panel-frame:has(.ui-room-settings-card[hidden])
+  > .ui-panel-body {
+  flex: 0 0 auto;
 }

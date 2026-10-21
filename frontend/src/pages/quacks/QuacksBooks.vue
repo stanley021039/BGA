@@ -59,11 +59,7 @@ function keydown(event: KeyboardEvent) {
 }
 </script>
 <template>
-  <section
-    class="vue-quacks-books vue-quacks-codex vue-quacks-books-rq"
-    :data-quacks-book="row?.color"
-    :data-book-set="face?.set"
-  >
+  <section class="vue-quacks-books vue-quacks-codex">
     <header class="vue-quacks-codex-heading"
       ><h2>{{ game.setup ? '本局藥材書選擇' : '本局藥材書' }}</h2
       ><UiButton
@@ -144,7 +140,7 @@ function keydown(event: KeyboardEvent) {
               :aria-pressed="candidate.set === face.set"
               :aria-label="'查看' + row.name + '第 ' + candidate.set + ' 面：' + candidate.effect"
               @click="pages[row.color] = candidate.set"
-              ><strong>第 {{ candidate.set }} 面</strong><span>{{ candidate.effect }}</span></button
+              ><strong>第 {{ candidate.set }} 面</strong>{{ candidate.effect }}</button
             ></div
           >
           <div class="vue-quacks-codex-turn"

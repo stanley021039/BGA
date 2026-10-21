@@ -1,0 +1,287 @@
+'use strict';
+const { test } = require('node:test'),
+  assert = require('node:assert/strict'),
+  fs = require('node:fs'),
+  path = require('node:path'),
+  vm = require('node:vm');
+const ts = require('../node_modules/typescript'),
+  vue = require('../node_modules/vue'),
+  { parse, compileScript } = require('../node_modules/vue/compiler-sfc');
+function loader(mocks = {}) {
+  const cache = new Map();
+  return function load(file) {
+    file = path.resolve(file);
+    if (cache.has(file)) return cache.get(file).exports;
+    const module = { exports: {} };
+    cache.set(file, module);
+    const requireLocal = (id) =>
+      Object.hasOwn(mocks, id)
+        ? mocks[id]
+        : id.startsWith('.')
+          ? load(path.resolve(path.dirname(file), id + '.ts'))
+          : require(id);
+    const source = fs.readFileSync(file, 'utf8'),
+      code = ts.transpileModule(source, {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+      }).outputText;
+    vm.runInNewContext(
+      code,
+      {
+        module,
+        exports: module.exports,
+        require: requireLocal,
+        setTimeout,
+        clearTimeout,
+        console,
+        AbortController,
+        DOMException,
+        structuredClone,
+        crypto: require('node:crypto').webcrypto,
+        document: { hidden: false, addEventListener() {}, removeEventListener() {} },
+      },
+      { filename: file },
+    );
+    return module.exports;
+  };
+}
+test('actual lobby messages survive the Vue contract, including older servers without kind', () => {
+  const { createLobby } = require('../../src/rooms/lobby'),
+    lobby = createLobby(() => 1000),
+    user = { id: 'viewer', display_name: '玩家' };
+  lobby.view(user);
+  const raw = {
+    ...lobby.barrage(user, {
+      message: '看得到的彈幕',
+      builtinFrameId: 'default',
+      requestId: require('node:crypto').randomUUID(),
+    }),
+    serverNow: 1000,
+  };
+  const { readLobbySnapshot } = loader()(path.join(__dirname, '../src/contracts/lobby.ts'));
+  for (const legacy of [false, true]) {
+    const payload = structuredClone(raw);
+    if (legacy) delete payload.barrages[0].kind;
+    const parsed = readLobbySnapshot(payload);
+    assert.equal(parsed.barrages.length, 1);
+    assert.equal(parsed.barrages[0].message, '看得到的彈幕');
+    assert.equal(parsed.barrages[0].kind, 'barrage');
+  }
+});
+test('new waiting rooms save through the real party action store with a null round token', async () => {
+  const pinia = require('pinia'),
+    { MusicQuizRoom } = require('../../src/games/musicquiz');
+  const engine = new MusicQuizRoom(
+      'ABCDEF',
+      'test',
+      () => 0,
+      () => 1000,
+    ),
+    host = engine.add('host');
+  const readSnapshot = loader()(
+    path.join(__dirname, '../src/contracts/musicquiz.ts'),
+  ).readMusicQuizSnapshot;
+  const requests = [],
+    room = vue.reactive({
+      type: 'musicquiz',
+      scope: 1,
+      seat: {},
+      terminal: null,
+      connected: true,
+      busy: false,
+      snapshot: readSnapshot({ ...engine.view(host.id), serverNow: 1000 }),
+    });
+  room.request = async (_route, payload) => {
+    requests.push(payload);
+    engine.act(host.id, payload.action, payload);
+    return engine.view(host.id);
+  };
+  room.accept = (value) => {
+    room.snapshot = readSnapshot({ ...value, serverNow: 1000 });
+    return true;
+  };
+  const instance = pinia.createPinia();
+  pinia.setActivePinia(instance);
+  const load = loader({ vue, pinia, './room': { useRoomStore: () => room } });
+  const actions = load(
+    path.join(__dirname, '../src/stores/party-actions.ts'),
+  ).usePartyActionsStore();
+  try {
+    assert.equal(room.snapshot.roundId, null);
+    assert.equal(
+      await actions.command('configure', { banks: ['jp'], genres: [], target: 3, customSongs: [] }),
+      true,
+    );
+    assert.equal(requests[0].roundId, null);
+    assert.deepEqual(engine.settings.banks, ['jp']);
+    assert.equal(await actions.command('guess', { pass: true }), false);
+    assert.equal(requests.length, 1);
+    engine.start();
+    assert.equal(engine.current.bank, 'jp');
+  } finally {
+    pinia.disposePinia(instance);
+  }
+});
+test('changing music banks saves the latest selection and re-enables starting; failed saves remain dirty', async () => {
+  const room = vue.reactive({
+      host: true,
+      terminal: false,
+      connected: true,
+      busy: false,
+      snapshot: {
+        phase: 'waiting',
+        roundId: 'r',
+        settings: { banks: ['zh'], genres: [], target: 10, obscure: false },
+        customSongs: [],
+        players: [],
+      },
+    }),
+    calls = [],
+    events = [];
+  let succeed = true;
+  const actions = vue.reactive({
+    pending: false,
+    notice: '',
+    command: async (action, payload) => {
+      calls.push({ action, payload });
+      if (!succeed) {
+        actions.notice = '儲存失敗';
+        return false;
+      }
+      room.snapshot.settings = { ...room.snapshot.settings, ...payload };
+      return true;
+    },
+  });
+  const load = loader({ vue: vue }),
+    queued = load(path.join(__dirname, '../src/composables/queued-save.ts'));
+  const filename = path.join(__dirname, '../src/pages/musicquiz/MusicQuizScene.vue'),
+    script = compileScript(parse(fs.readFileSync(filename, 'utf8')).descriptor, {
+      id: 'bank-regression',
+    }).content;
+  const module = { exports: {} },
+    mocks = {
+      vue: { ...vue, onBeforeUnmount() {} },
+      '../../stores/room': { useRoomStore: () => room },
+      '../../stores/party-actions': { usePartyActionsStore: () => actions },
+      '../../stores/preferences': { usePreferencesStore: () => ({}) },
+      '../../composables/queued-save': queued,
+    };
+  vm.runInNewContext(
+    ts.transpileModule(script, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText,
+    {
+      module,
+      exports: module.exports,
+      require: (id) => mocks[id] || {},
+      setInterval: () => 1,
+      clearInterval() {},
+      console,
+    },
+  );
+  const scope = vue.effectScope();
+  let state;
+  scope.run(() => {
+    state = module.exports.default.setup({}, { expose() {}, emit: (...e) => events.push(e) });
+  });
+  try {
+    // Model the browser's input -> microtask/render -> change ordering using
+    // Vue's real checkbox directive, rather than assigning the array directly.
+    const handlers = {},
+      checkbox = {
+        type: 'checkbox',
+        checked: true,
+        _value: 'zh',
+        addEventListener(name, callback) {
+          handlers[name] = callback;
+        },
+      },
+      vnode = {
+        props: {
+          value: 'zh',
+          'onUpdate:modelValue': (value) => {
+            state.banks.value = value;
+          },
+        },
+      };
+    vue.vModelCheckbox.created(checkbox, {}, vnode);
+    vue.vModelCheckbox.mounted(checkbox, { value: state.banks.value }, vnode);
+    const stopRender = vue.watchEffect(() => {
+      state.dirty.value;
+      vue.vModelCheckbox.beforeUpdate(checkbox, { value: state.banks.value }, vnode);
+    });
+    checkbox.checked = false;
+    state.markSettingsInput({ target: checkbox });
+    await vue.nextTick();
+    assert.equal(checkbox.checked, false, 'input must not restore a checkbox before change');
+    handlers.change();
+    assert.deepEqual(Array.from(state.banks.value), [], 'the last bank can be unchecked locally');
+    stopRender();
+    state.markSettingsInput({ target: { type: 'text' } });
+    assert.equal(state.dirty.value, true, 'typing still protects the draft from polling');
+    state.banks.value = ['jp'];
+    state.queueSettings();
+    state.banks.value = ['tw'];
+    state.queueSettings();
+    await state.settingsSave.flush();
+    await vue.nextTick();
+    assert.equal(calls.length, 1);
+    assert.deepEqual(Array.from(calls[0].payload.banks), ['tw']);
+    assert.equal(state.dirty.value, false);
+    assert.equal(events.at(-1)[1], false);
+    succeed = false;
+    state.banks.value = ['yue'];
+    state.queueSettings();
+    await state.settingsSave.flush();
+    assert.equal(state.dirty.value, true);
+    assert.equal(state.settingsSave.error.value, '儲存失敗');
+    succeed = true;
+    await state.saveNow();
+    assert.equal(state.dirty.value, false);
+  } finally {
+    scope.stop();
+  }
+});
+test('song translations remain registered when the browser bundle also exposes CommonJS', () => {
+  const window = {},
+    module = { exports: {} };
+  vm.runInNewContext(
+    fs.readFileSync(path.join(__dirname, '../../public/shared/song-title-zh.js'), 'utf8'),
+    { window, module },
+  );
+  assert.equal(window.SongTitleZh, module.exports);
+  assert.equal(window.SongTitleZh.titles['ブルーバード'], '青鳥');
+  const { CATALOG } = require('../../src/games/musicquiz-library');
+  assert.deepEqual(
+    CATALOG.filter((s) => s.bank === 'foreign' && !window.SongTitleZh.titles[s.title]).map(
+      (s) => s.title,
+    ),
+    [],
+  );
+});
+test('each builtin bank can be selected alone and start with ten song choices', () => {
+  const { MusicQuizRoom } = require('../../src/games/musicquiz'),
+    { BANKS } = require('../../src/games/musicquiz-library');
+  for (const bank of BANKS.filter((b) => b.id !== 'custom')) {
+    const room = new MusicQuizRoom(
+        'BANKQA',
+        'test',
+        () => 0,
+        () => 1000,
+      ),
+      host = room.add('host');
+    room.add('peer');
+    room.configure(host.id, { banks: [bank.id], genres: [], target: 3 });
+    room.start();
+    assert.equal(room.current.bank, bank.id);
+    assert.equal(room.introChoices.length, 10, bank.id);
+  }
+});
+
+test('song hints omit Chinese and English songs while retaining distinct foreign translations', () => {
+  const { hint } = require('../../public/shared/song-title-zh.js');
+  assert.equal(hint('天黑黑', 'zh'), undefined);
+  assert.equal(hint('Shape of You', 'en'), undefined);
+  assert.equal(hint('群青', 'jp'), undefined);
+  assert.equal(hint('ブルーバード', 'jp'), '中文參考譯名：青鳥');
+  assert.equal(hint('Despacito', 'es'), '中文參考譯名：慢慢來');
+});

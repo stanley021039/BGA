@@ -483,7 +483,7 @@
     min-height: 0;
     min-width: 0;
     display: grid;
-    grid-template-rows: 44px minmax(380px, 1fr) 132px;
+    grid-template-rows: auto minmax(380px, 1fr) 132px;
     gap: 8px;
     padding: 8px;
   }
@@ -493,6 +493,34 @@
     justify-content: space-between;
     gap: 8px;
     min-width: 0;
+  }
+  .vue-quacks-pot-tabs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .vue-quacks-pot-tabs > button {
+    flex: 0 0 auto;
+    min-height: 36px;
+    max-width: 12rem;
+    padding: 6px 12px;
+    border: 1px solid var(--play-line);
+    border-radius: 8px;
+    background: var(--play-paper);
+    color: var(--play-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vue-quacks-pot-tabs [aria-pressed='true'] {
+    background: var(--stitch-primary, #f6c845);
+    color: #252116;
+  }
+  .vue-quacks-scene-tools {
+    flex: none;
   }
   .vue-quacks-board-space {
     position: relative;
@@ -517,6 +545,77 @@
     height: 100%;
     max-height: none;
     width: 100%;
+  }
+  .vue-quacks-pot-caption {
+    position: absolute;
+    inset: 8px auto auto 8px;
+    z-index: 2;
+    display: grid;
+    justify-items: start;
+    gap: 4px;
+    max-width: calc(100% - 110px);
+    color: #f4eab7;
+    font-size: 14px;
+    line-height: 1.5;
+    pointer-events: none;
+  }
+  .vue-quacks-pot-caption h1 {
+    margin: 0;
+    padding: 3px 8px;
+    max-width: 100%;
+    border: 1px solid #dec87680;
+    border-radius: 6px;
+    background: #102c25d9;
+    color: #f4eab7;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .vue-quacks-pot-markers,
+  .vue-quacks-viewed-resources {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: #0b241de8;
+  }
+  .vue-quacks-pot-caption span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .vue-quacks-pot-dock {
+    position: absolute;
+    z-index: 3;
+    inset: 56px 8px auto auto;
+    display: grid;
+    gap: 8px;
+    width: 76px;
+  }
+  .vue-quacks-pot-dock > button {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 4px;
+    min-height: 76px;
+    padding: 6px;
+    border: 1px solid #8aa898;
+    border-radius: 10px;
+    background: #e0f1df;
+    color: #1c352c;
+  }
+  .vue-quacks-pot-dock > .vue-quacks-bag-button {
+    background: #d5e8f2;
+  }
+  .vue-quacks-pot-dock > button:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+  .vue-quacks-pot-dock .vue-button-caption {
+    font-size: 14px;
+    line-height: 18px;
   }
   .vue-quacks-pot-customize {
     position: absolute;
@@ -556,6 +655,44 @@
     gap: 6px;
     min-width: 0;
     min-height: 132px;
+  }
+  .vue-quacks-risk {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 8px;
+    border: 1px solid var(--play-line);
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .vue-quacks-risk > strong {
+    font-size: 22px;
+    color: var(--stitch-primary, #c9972d);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .vue-quacks-risk.is-critical {
+    outline: 2px solid #b48b23;
+  }
+  .vue-quacks-witch-coins {
+    margin-inline-start: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .vue-quacks-witch-coins > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 28px;
+    padding: 0 6px;
+    border: 1px solid var(--play-line);
+    border-radius: 6px;
+    color: inherit;
+    background: var(--play-paper);
   }
   .vue-quacks-commands {
     min-height: 64px;
@@ -602,12 +739,9 @@
   }
   .vue-quacks-commands .vue-button-caption {
     white-space: normal;
-    text-align: center;
+    text-align: start;
     font-size: 16px;
     line-height: 1.4;
-  }
-  .vue-quacks-commands > :is(.vue-quacks-draw-action, .vue-quacks-stop-action) .vue-button-caption {
-    text-align: start;
   }
   .vue-quacks-feedback {
     min-height: 24px;
@@ -648,6 +782,57 @@
     gap: 12px;
     height: 100%;
     min-height: 480px;
+  }
+  .vue-quacks-ready {
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    padding: 12px 16px;
+    border: 1px solid var(--play-line);
+    border-radius: 12px;
+    background: var(--play-paper);
+  }
+  .vue-quacks-ready span {
+    font-size: 14px;
+  }
+  .vue-quacks-waiting-hero {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 16px;
+    padding: 24px;
+    border: 1px solid var(--play-line);
+    border-radius: 12px;
+    text-align: center;
+    background: var(--play-paper);
+  }
+  .vue-quacks-waiting-hero > img {
+    width: clamp(100px, 12vw, 180px);
+    height: clamp(100px, 12vw, 180px);
+  }
+  .vue-quacks-waiting-hero h1 {
+    margin: 0;
+    font-size: 28px;
+  }
+  .vue-quacks-waiting-hero p {
+    margin: 0;
+    max-width: 48ch;
+    line-height: 1.6;
+  }
+  .vue-quacks-waiting-facts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-self: end;
+    gap: 8px;
+    width: 100%;
+    margin-top: 12px;
+  }
+  .vue-quacks-waiting-facts > span {
+    padding: 12px 4px;
+    border-radius: 8px;
+    background: var(--play-surface);
+    font-size: 14px;
+    line-height: 1.6;
   }
   .vue-quacks-settings {
     max-height: none;
@@ -748,7 +933,7 @@
     .vue-quacks-stage {
       height: 100%;
       min-height: 0;
-      grid-template-rows: 44px minmax(0, 1fr) 132px;
+      grid-template-rows: auto minmax(0, 1fr) 132px;
     }
     .vue-quacks-play {
       min-height: 0;
@@ -789,12 +974,42 @@
     .vue-quacks-stage-overlay {
       inset: 100px 8px 8px;
     }
+    .vue-quacks-pot-caption {
+      max-width: calc(100% - 92px);
+    }
+    .vue-quacks-pot-dock {
+      width: 64px;
+      inset-block-start: 88px;
+    }
+    .vue-quacks-pot-dock > button {
+      min-height: 64px;
+    }
+    .vue-quacks-pot-dock .vue-quacks-glyph {
+      width: 32px !important;
+      height: 32px !important;
+    }
+    .vue-quacks-risk {
+      gap: 4px;
+      font-size: 12px;
+      padding-inline: 4px;
+    }
+    .vue-quacks-risk > strong {
+      font-size: 20px;
+    }
+    .vue-quacks-risk > span:last-of-type {
+      flex: 1 1 100%;
+    }
+    .vue-quacks-risk {
+      flex-wrap: wrap;
+      min-height: 96px;
+      align-content: center;
+    }
     .vue-quacks-control-deck {
       grid-template-rows: 96px 80px 24px;
       min-height: 212px;
     }
     .vue-quacks-stage {
-      grid-template-rows: 44px minmax(420px, 1fr) 212px;
+      grid-template-rows: auto minmax(420px, 1fr) 212px;
     }
     .vue-quacks-draw-action img,
     .vue-quacks-stop-action img {
@@ -810,6 +1025,21 @@
       font-size: 14px;
       line-height: 1.4;
     }
+    .vue-quacks-witch-coins {
+      gap: 2px;
+    }
+    .vue-quacks-witch-coins > button {
+      padding: 0 2px;
+    }
+    .vue-quacks-witch-coins > button > span:last-child {
+      display: none;
+    }
+    .vue-quacks-waiting-hero {
+      padding: 16px;
+    }
+    .vue-quacks-waiting-facts {
+      grid-template-columns: 1fr;
+    }
   }
 }
 
@@ -817,6 +1047,9 @@
   .vue-quacks-pot svg .pot-name,
   .vue-quacks-pot svg .pot-nameplate {
     display: none;
+  }
+  .vue-quacks-pot-dock > button {
+    border-radius: 10px;
   }
 }
 @media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
@@ -829,8 +1062,12 @@
 }
 
 :root body[data-visual-theme].vue-quacks-document {
+  .vue-quacks-pot-dock > button,
   .vue-quacks-commands > .vue-button {
     border-radius: 10px !important;
+  }
+  .vue-quacks-pot-tabs > button {
+    border-radius: 8px !important;
   }
 }
 @media (max-width: 1180px) {
@@ -841,615 +1078,267 @@
   }
 }
 
-// RQ16–18, 25, 27, 29–30 and 32–35: approved native Figma gameplay.
-// The common room chrome remains owned by the shared components.
-:root body.vue-quacks-document[data-visual-theme] {
-  --quacks-rq-panel: var(--stitch-surface-subtle, #f3f2ee);
-  .vue-quacks-board-space {
-    background: #153c30;
-    border: 1px solid #416051;
-    border-radius: 12px;
-  }
-  .vue-quacks-stage-overlay {
-    inset: 16px;
-    padding: 24px 32px;
-    display: grid;
-    align-items: safe center;
-    border: 1px solid var(--stitch-line, #e7e2d9);
-    border-radius: 12px;
-    color: var(--stitch-ink, #2a2927);
-    background: color-mix(in srgb, var(--quacks-rq-panel) 96%, transparent);
-  }
-  .vue-quacks-stage-overlay > .vue-quacks-play-rq {
-    min-block-size: 0;
-    inline-size: 100%;
-    align-content: center;
-    gap: 16px;
-  }
-  .vue-quacks-play-rq {
-    h2 {
-      font-size: 18px;
-      line-height: 1.5;
-      font-weight: 750;
-    }
-    h3 {
-      font-size: 16px;
-      line-height: 1.5;
-      font-weight: 700;
-    }
-    p {
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    .vue-quacks-glyph {
-      flex: none;
-    }
-    .vue-quacks-fortune-draw {
-      display: grid;
-      grid-template-columns: 230px minmax(0, 22rem);
-      align-items: center;
-      justify-content: center;
-      gap: 40px;
-      min-inline-size: 0;
-      padding-block: 24px;
-      > img {
-        display: block;
-        inline-size: 230px;
-        block-size: 360px;
-        max-inline-size: 100%;
-        object-fit: contain;
-        border: 0;
-      }
-      > div {
-        display: grid;
-        align-content: center;
-        justify-items: start;
-        gap: 16px;
-        min-inline-size: 0;
-      }
-      h2 {
-        font-size: 28px;
-        line-height: 1.3;
-      }
-      .vue-button {
-        inline-size: auto;
-      }
-    }
-    .vue-quacks-choice > h2,
-    .vue-quacks-alchemy > h2,
-    .vue-quacks-alchemy > p,
-    .vue-quacks-witches > h2 {
-      text-align: center;
-    }
-    .vue-quacks-choice-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-      > button {
-        display: grid;
-        grid-template-rows: minmax(48px, auto) minmax(2.8em, auto) auto;
-        justify-items: center;
-        align-content: center;
-        gap: 8px;
-        min-block-size: 128px;
-        min-inline-size: 0;
-        padding: 12px;
-        border: 1px solid var(--stitch-line, #e7e2d9);
-        border-radius: 8px;
-        background: var(--stitch-surface, #fff);
-        color: var(--stitch-ink, #2a2927);
-        font-size: 14px;
-        line-height: 1.5;
-        overflow-wrap: anywhere;
-        strong {
-          font-size: 14px;
-        }
-        .vue-quacks-tabs {
-          justify-content: center;
-        }
-      }
-    }
-    .vue-quacks-patients {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      align-items: stretch;
-      gap: 32px;
-      > article {
-        grid-template-rows: auto minmax(7em, auto) auto auto;
-        align-content: start;
-        gap: 16px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        > header {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        > details {
-          min-block-size: 44px;
-          font-size: 14px;
-        }
-        > details > summary {
-          min-block-size: 44px;
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-        }
-        > details > summary::before {
-          content: '▸';
-          margin-inline-end: 4px;
-        }
-        > details[open] > summary::before {
-          content: '▾';
-        }
-        > .vue-button {
-          inline-size: 100%;
-        }
-      }
-    }
-    .vue-quacks-witches {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      > h2 {
-        grid-column: 1 / -1;
-      }
-      > article {
-        display: grid;
-        grid-template-rows: auto minmax(3em, auto) auto;
-        gap: 12px;
-        padding: 16px;
-        border: 1px solid var(--stitch-line, #e7e2d9);
-        border-radius: 12px;
-        background: var(--stitch-surface, #fff);
-        > header {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        > .vue-button {
-          inline-size: 100%;
-          align-self: end;
-        }
-        &:empty {
-          display: none;
-        }
-      }
-    }
-    .vue-quacks-bonus-panel,
-    .vue-quacks-rewards-panel,
-    .vue-quacks-round-intro {
-      display: grid;
-      justify-items: center;
-      align-content: center;
-      gap: 24px;
-      min-block-size: 260px;
-      inline-size: min(100%, 56rem);
-      margin-inline: auto;
-      text-align: center;
-      h2 {
-        font-size: 28px;
-      }
-    }
-    .vue-quacks-effects-panel {
-      display: grid;
-      gap: 12px;
-      > h2 {
-        text-align: center;
-      }
-      .vue-quacks-effect-row {
-        display: flex;
-        align-items: start;
-        gap: 12px;
-        padding: 0;
-        border: 0;
-        > p {
-          white-space: pre-line;
-          min-inline-size: 0;
-        }
-      }
-      .vue-quacks-effect-triggered {
-        flex: none;
-        font-size: 14px;
-        color: var(--stitch-success-ink, #2e6445);
-      }
-    }
-    .vue-quacks-market.vue-quacks-compact-market {
-      gap: 8px;
-      .vue-quacks-market-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-      }
-      .vue-quacks-market-heading {
-        justify-content: start;
-        gap: 12px;
-        padding: 0;
-        border: 0;
-      }
-      .vue-quacks-market-budget {
-        flex: none;
-        min-block-size: 44px;
-        padding: 0;
-        gap: 24px;
-        background: transparent;
-        color: inherit;
-        > strong,
-        > span {
-          font-size: 20px;
-        }
-        > strong {
-          gap: 0;
-        }
-        > strong > span {
-          font-size: 16px;
-        }
-      }
-      .vue-quacks-market-note {
-        text-align: center;
-      }
-      .vue-quacks-market-cart {
-        justify-content: center;
-        padding: 0;
-        background: transparent;
-      }
-      .vue-quacks-market-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-        > article {
-          padding: 8px;
-          gap: 8px;
-          border-radius: 12px;
-          background: var(--stitch-surface, #fff);
-        }
-        > article > header {
-          justify-content: center;
-        }
-      }
-      .vue-quacks-market-offers {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-      }
-      .vue-quacks-market-offers > button {
-        flex: 0 1 64px;
-        padding: 4px;
-        min-block-size: 72px;
-      }
-    }
-    .vue-quacks-ruby {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 16px;
-      padding: 8px 16px;
-      border: 1px solid var(--stitch-line, #e7e2d9);
-      border-radius: 10px;
-      background: var(--stitch-selected-bg, #fff6d8);
-      h2 {
-        font-size: 16px;
-      }
-    }
-  }
-  .vue-quacks-commands-rq {
-    justify-content: center;
+// Required effect choices own the stage; inspection is an explicit, reversible view.
+:root body.vue-quacks-document {
+  .vue-quacks-scene-tools {
+    display: flex;
+    flex: none;
     align-items: center;
-    > .vue-button {
-      flex: 0 1 auto;
-      min-block-size: 44px;
-      max-inline-size: 100%;
-    }
-    > :is(.vue-quacks-draw-action, .vue-quacks-stop-action) {
-      flex: 1 1 0;
-      min-block-size: 76px;
-      img {
-        inline-size: 96px;
-        block-size: 60px;
-      }
-    }
+    gap: 6px;
   }
-}
-@media (max-width: 900px) {
-  :root body.vue-quacks-document[data-visual-theme] {
-    .vue-quacks-stage-overlay {
-      padding: 20px;
-    }
-    .vue-quacks-play-rq {
-      .vue-quacks-choice-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .vue-quacks-patients {
-        gap: 16px;
-      }
-      .vue-quacks-market-top {
-        flex-wrap: wrap;
-      }
-      .vue-quacks-market.vue-quacks-compact-market .vue-quacks-market-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-      .vue-quacks-market.vue-quacks-compact-market .vue-quacks-market-offers > button {
-        flex-basis: 56px;
-      }
-    }
-  }
-}
-@media (max-width: 600px) {
-  :root body.vue-quacks-document[data-visual-theme] {
-    .vue-quacks-stage-overlay {
-      inset: 12px;
-      padding: 16px;
-    }
-    .vue-quacks-play-rq {
-      .vue-quacks-fortune-draw {
-        grid-template-columns: minmax(0, 1fr);
-        justify-items: center;
-        gap: 20px;
-        padding-block: 8px;
-        > img {
-          inline-size: 138px;
-          block-size: 216px;
-        }
-        > div {
-          justify-items: center;
-          text-align: center;
-        }
-        h2 {
-          font-size: 24px;
-        }
-      }
-      .vue-quacks-patients,
-      .vue-quacks-witches,
-      .vue-quacks-market.vue-quacks-compact-market .vue-quacks-market-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-      .vue-quacks-patients > article {
-        grid-template-rows: auto auto auto auto;
-        padding: 16px 0;
-        border-block-end: 1px solid var(--stitch-line, #e7e2d9);
-      }
-      .vue-quacks-ruby {
-        align-items: stretch;
-        > .vue-quacks-tabs {
-          inline-size: 100%;
-          > .vue-button {
-            flex: 1 1 100%;
-          }
-        }
-      }
-      .vue-quacks-bonus-panel,
-      .vue-quacks-rewards-panel {
-        min-block-size: 200px;
-        h2 {
-          font-size: 24px;
-        }
-      }
-    }
-    .vue-quacks-commands-rq {
-      flex-wrap: wrap;
-      > :is(.vue-quacks-draw-action, .vue-quacks-stop-action) {
-        gap: 8px;
-        padding: 4px;
-        img {
-          inline-size: 48px;
-          block-size: 52px;
-        }
-        .vue-button-caption {
-          font-size: 14px;
-        }
-      }
-    }
-  }
-}
-
-:root
-  body.vue-quacks-document[data-visual-theme]
-  .vue-quacks-commands-rq:has(> .vue-quacks-potion-action) {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  > .vue-quacks-potion-action,
-  > span,
-  > .vue-button:not(.vue-quacks-draw-action, .vue-quacks-stop-action) {
-    grid-column: 1 / -1;
-  }
-  > .vue-quacks-potion-action {
-    inline-size: 100%;
-    min-block-size: 44px;
-  }
-}
-
-:root body.vue-quacks-document[data-visual-theme] {
-  .vue-quacks-board-space:not(:has(> .vue-quacks-pot)) {
-    box-sizing: border-box;
+  .vue-quacks-board-space.is-phase-view > .vue-quacks-stage-overlay {
+    position: absolute;
+    inset: 0;
+    height: auto;
     padding: 16px;
   }
-  .vue-quacks-stage-overlay:has(.vue-quacks-bonus-panel, .vue-quacks-rewards-panel) {
-    inset: 0;
-    border: 0;
-    background: #153c30;
-    .vue-quacks-bonus-panel,
-    .vue-quacks-rewards-panel {
-      box-sizing: border-box;
-      min-block-size: 320px;
-      padding: 32px;
-      border: 1px solid var(--stitch-line, #e7e2d9);
-      border-radius: 12px;
-      background: var(--quacks-rq-panel);
-      box-shadow: 0 16px 32px #08271c33;
-    }
-  }
-}
-@media (max-width: 600px) {
-  :root body.vue-quacks-document[data-visual-theme] {
-    .vue-quacks-board-space:not(:has(> .vue-quacks-pot)) {
-      padding: 12px;
-    }
-    .vue-quacks-stage-overlay:has(.vue-quacks-bonus-panel, .vue-quacks-rewards-panel) {
-      padding: 12px;
-      .vue-quacks-bonus-panel,
-      .vue-quacks-rewards-panel {
-        padding: 20px;
-        min-block-size: 240px;
-      }
-    }
+  .vue-quacks-stage-overlay > .vue-quacks-play {
+    min-height: 0;
   }
 }
 
-// Scene supplies five stable rows; waiting owns a separate approved layout.
-:root body.vue-quacks-document[data-visual-theme] {
-  .vue-quacks-stage:not(.is-waiting) {
-    min-block-size: 0;
-    grid-template-rows: auto auto auto minmax(320px, 1fr) auto;
+:root body.vue-quacks-document {
+  .vue-quacks-fortune-card {
+    background: #143d65;
+    color: #f2f7ff;
+    border-color: #75b8ed;
   }
-  .vue-quacks-control-deck {
-    grid-template-rows: auto auto 24px;
-    min-block-size: 0;
-    gap: 8px;
+  .vue-quacks-fortune-card[data-timing='immediate'] {
+    background: #512b70;
+    border-color: #d3a2ee;
   }
-  .vue-quacks-commands-rq {
-    min-block-size: 44px;
+  .vue-quacks-fortune-card :is(h2, h3, p) {
+    color: inherit;
   }
-}
-@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
-  :root
-    body.vue-quacks-document[data-visual-theme]:not(.ui-large-text)
-    .vue-quacks-stage:not(.is-waiting) {
-    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
-    min-block-size: 0;
-    block-size: 100%;
+  .vue-quacks-fortune-card > h2 {
+    border-color: currentColor;
   }
-}
-@media (max-width: 1180px), (max-height: 639px), (pointer: coarse) {
-  :root body.vue-quacks-document[data-visual-theme] .vue-quacks-stage:not(.is-waiting) {
-    grid-template-rows: auto auto auto minmax(420px, auto) auto;
-    block-size: auto;
-    height: auto;
-    min-block-size: 0;
-    .vue-quacks-board-space {
-      min-block-size: 420px;
-    }
+  .vue-quacks-play:has(> .vue-quacks-stage-message),
+  .vue-quacks-play:has(> .vue-quacks-effects-compact) {
+    min-height: 100%;
+    align-content: center;
   }
-}
-
-// The private bag and secondary tool menu share one stable two-button row.
-:root body.vue-quacks-document[data-visual-theme] .vue-quacks-stage:not(.is-waiting) {
-  > .vue-quacks-control-deck {
+  .vue-quacks-stage-message {
+    text-align: center;
+    margin: auto;
+    width: min(100%, 760px);
+    font-size: clamp(18px, 1.5vw, 24px);
+    line-height: 1.7;
+  }
+  .vue-quacks-stage-message h2 {
+    font-size: clamp(26px, 2vw, 36px);
+  }
+  .vue-quacks-effects-compact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+  }
+  .vue-quacks-effects-compact > :is(h2, p) {
+    flex-basis: 100%;
+  }
+  .vue-quacks-effects-compact .vue-quacks-effect-row {
     display: grid;
-    grid-template-rows: 44px minmax(44px, auto) 24px;
-    min-block-size: 0;
-    gap: 8px;
-    > .vue-quacks-stage-shortcuts {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      align-items: stretch;
-      justify-content: stretch;
-      min-inline-size: 0;
-      block-size: 44px;
-      min-block-size: 0;
-      gap: 8px;
-      > .vue-button {
-        box-sizing: border-box;
-        inline-size: 100%;
-        min-inline-size: 0;
-        max-inline-size: 100%;
-        block-size: 44px;
-        min-block-size: 44px;
-        max-block-size: 44px;
-        margin: 0;
-        padding: 4px 8px;
-        white-space: normal;
-        .vue-button-caption {
-          font-size: 14px;
-          line-height: 18px;
-          white-space: normal;
-          overflow-wrap: anywhere;
-        }
-      }
-    }
-    > .vue-quacks-feedback {
-      block-size: 24px;
-      min-block-size: 0;
-      max-block-size: 24px;
-      overflow: auto;
-    }
+    place-items: center;
+    flex: 0 0 88px;
+    min-height: 88px;
+    padding: 8px;
+    border: 1px solid var(--play-line);
+    border-radius: 16px;
+    opacity: 0.55;
   }
-  > .vue-quacks-board-space {
-    container-type: size;
+  .vue-quacks-effects-compact .is-triggered {
+    opacity: 1;
+    border-color: #f4cf66;
+    box-shadow:
+      0 0 12px #f4cf66aa,
+      inset 0 0 18px #f4cf6626;
   }
-  .vue-quacks-fortune-draw {
-    padding-block: 0;
-    > img {
-      inline-size: auto;
-      block-size: min(360px, max(100px, calc(100cqh - 80px)));
-      max-block-size: 360px;
-      justify-self: center;
-    }
+  .vue-quacks-effects-compact .quacks-rule-visual {
+    transform: scale(1.4);
   }
-}
-@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
-  :root
-    body.vue-quacks-document[data-visual-theme]:not(.ui-large-text)
-    .vue-quacks-stage:not(.is-waiting) {
-    grid-template-rows: auto auto auto minmax(200px, 1fr) auto;
+  .vue-quacks-color-choice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .vue-quacks-color-swatch {
+    display: block;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid #e9d49b;
+    background: radial-gradient(
+      circle at 30% 25%,
+      var(--pot-light),
+      var(--pot-color) 55%,
+      var(--pot-dark)
+    );
+    box-shadow: 0 4px 10px #0006;
+    flex: none;
+  }
+  .vue-quacks-patient-badge {
+    display: grid;
+    place-items: center;
+    min-height: 76px;
+    border: 1px solid #ac93c8;
+    border-radius: 12px;
+    background: #2f263c;
+    cursor: help;
+  }
+  .vue-quacks-market > p:has(.vue-quacks-glyph) {
+    display: flex;
+    align-items: center;
     gap: 6px;
-    > .vue-quacks-board-space {
-      min-block-size: 200px;
-    }
+  }
+  .vue-quacks-glyph[title] {
+    cursor: help;
   }
 }
 
-@media (min-width: 1181px) and (min-height: 640px) and (max-height: 800px) and (pointer: fine) {
-  :root body.vue-quacks-document[data-visual-theme] .vue-quacks-stage:not(.is-waiting) {
-    > .vue-quacks-board-space > .vue-quacks-stage-overlay {
-      padding: 12px 16px;
-    }
-    .vue-quacks-fortune-draw {
-      gap: 20px;
-      > div {
-        gap: 12px;
-      }
-      h2 {
-        font-size: 24px;
-      }
-    }
+:root body.vue-quacks-document {
+  .vue-quacks-play:has(> .vue-quacks-choice) {
+    min-height: 100%;
+    align-content: center;
+  }
+  .vue-quacks-choice {
+    text-align: center;
+    width: 100%;
+    margin: auto;
+  }
+  .vue-quacks-choice-grid {
+    align-items: stretch;
+    justify-content: center;
+  }
+  .vue-quacks-choice-grid > button {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  .vue-quacks-choice-label {
+    flex-basis: 100%;
+  }
+  .vue-quacks-choice-reward {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 30px;
   }
 }
 
-@media (max-width: 360px) {
-  :root
-    body.vue-quacks-document[data-visual-theme]
-    .vue-quacks-stage:not(.is-waiting)
-    > .vue-quacks-control-deck {
-    grid-template-rows: 44px auto 24px;
-    block-size: auto;
-    > .vue-quacks-commands-rq:has(> .vue-quacks-potion-action) {
-      grid-template-columns: minmax(0, 1fr);
-      grid-auto-rows: auto;
-      block-size: auto;
-      > :is(.vue-quacks-draw-action, .vue-quacks-stop-action) {
-        grid-column: 1;
-        inline-size: 100%;
-        min-block-size: 76px;
-        block-size: auto;
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-        padding: 8px 12px;
-        img {
-          inline-size: 64px;
-          block-size: 52px;
-        }
-        .vue-button-caption {
-          min-inline-size: 0;
-          white-space: normal;
-          text-align: start;
-        }
-      }
-      > .vue-quacks-potion-action {
-        grid-column: 1;
-      }
-    }
+// Quacks inspection tips share the cauldron tooltip appearance.
+:root body.vue-quacks-document {
+  .ui-control-tooltip {
+    width: min(330px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
+    padding: 15px;
+    overflow: auto;
+    border: 1px solid var(--stitch-line);
+    border-radius: 14px;
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    box-shadow: 0 8px 30px #0004;
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .vue-quacks-fortune-draw > button {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .vue-quacks-fortune-draw > button:focus-visible {
+    outline: 3px solid var(--play-accent);
+    outline-offset: 4px;
+  }
+  .vue-quacks-scene-header {
+    flex-wrap: wrap;
+  }
+  .vue-quacks-current-fortune {
+    display: grid;
+    gap: 4px;
+    flex: 1 1 220px;
+    min-width: 0;
+    padding: 8px 12px;
+    text-align: center;
+    border: 1px solid #75b8ed;
+    border-radius: 12px;
+    background: #143d65;
+    color: #f2f7ff;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .vue-quacks-current-fortune[data-timing='immediate'] {
+    background: #512b70;
+    border-color: #d3a2ee;
+  }
+  .vue-quacks-stage-message h2,
+  .vue-quacks-effects-compact > h2,
+  .vue-quacks-choice > h2 {
+    font-size: clamp(26px, 2.5vw, 36px);
+    line-height: 1.4;
+  }
+  .vue-quacks-stage-message p,
+  .vue-quacks-effects-compact > p {
+    font-size: clamp(18px, 1.8vw, 24px);
+    line-height: 1.7;
+  }
+  .vue-quacks-choice-grid > button {
+    align-content: center;
+    min-height: 140px;
+    padding: 20px;
+    font-size: clamp(22px, 2vw, 28px);
+  }
+  .vue-quacks-choice-grid > button > .vue-quacks-tabs {
+    justify-content: center;
+  }
+  .vue-quacks-choice-label {
+    text-align: center;
+  }
+}
+
+:root body.vue-quacks-document {
+  .vue-quacks-fortune-draw > button {
+    --ui-button-border-width: 0px;
+    --ui-button-radius: 0px;
+  }
+  .vue-quacks-current-fortune {
+    --ui-button-radius: 10px;
+    flex: 0 1 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+  }
+  .vue-quacks-current-fortune > span {
+    font-size: 14px;
+  }
+  .vue-quacks-choice-label {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    width: 100%;
+    word-break: normal;
+    overflow-wrap: break-word;
+    text-wrap: pretty;
+  }
+  .vue-quacks-choice-label > span {
+    display: block;
+  }
+  .vue-quacks-stage-complete {
+    padding: clamp(20px, 4vw, 40px);
+    border: 1px solid var(--play-line);
+    border-radius: 16px;
+    background: var(--play-surface);
   }
 }

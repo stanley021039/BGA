@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="camera" role="img"><title>所有照片永不遺失</title><desc>手機只能保留一項便利：所有照片永不遺失</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 快門按鈕與轉盤 -->
+            <rect x="105" y="65" width="38" height="20" rx="4" fill="#E5A93C" stroke="#141312" stroke-width="3"></rect>
+            <rect x="260" y="70" width="30" height="15" rx="3" fill="#141312"></rect>
+            <!-- 閃光燈凸台 -->
+            <path d="M155 85 L170 65 L230 65 L245 85 Z" fill="#FDE047" stroke="#141312" stroke-width="3"></path>
+            <!-- 相機機身 -->
+            <rect x="70" y="85" width="260" height="150" rx="16" fill="#FBCFE8" stroke="#141312" stroke-width="4"></rect>
+            <!-- 飾板條紋（粉藍） -->
+            <rect x="70" y="115" width="260" height="90" fill="#BAE6FD" stroke="#141312" stroke-width="3"></rect>
+            <!-- 大鏡頭同心圓 -->
+            <circle cx="200" cy="160" r="58" fill="#141312" stroke="#141312" stroke-width="3.5"></circle>
+            <circle cx="200" cy="160" r="46" fill="#FDFBF7" stroke="#141312" stroke-width="3"></circle>
+            <circle cx="200" cy="160" r="34" fill="#38BDF8" stroke="#141312" stroke-width="2.5"></circle>
+            <!-- 鏡頭高光玻璃反射 -->
+            <ellipse cx="190" cy="150" rx="14" ry="10" transform="rotate(-30 190 150)" fill="#FFFFFF" fill-opacity="0.8"></ellipse>
+            <circle cx="215" cy="172" r="5" fill="#FFFFFF" fill-opacity="0.8"></circle>
+            <!-- 取景小窗與測距孔 -->
+            <rect x="95" y="100" width="22" height="16" rx="4" fill="#FFFFFF" stroke="#141312" stroke-width="2"></rect>
+            <circle cx="285" cy="108" r="8" fill="#EF4444" stroke="#141312" stroke-width="2"></circle>
+          </svg>

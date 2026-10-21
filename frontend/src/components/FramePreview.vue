@@ -3,26 +3,33 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch 
 import UiIcon from './UiIcon.vue';
 import '../styles/frame-picker.scss';
 const props = withDefaults(
-  defineProps<{ frame: string; name?: string; message?: string; kind?: 'barrage' | 'media' }>(),
+  defineProps<{
+    frame: string;
+    name?: string;
+    message?: string;
+    lines?: string[];
+    portrait?: boolean;
+    kind?: 'barrage' | 'media';
+  }>(),
   { name: '小雨', message: '這一桌好好玩！', kind: 'barrage' },
 );
 const root = ref<HTMLElement | null>(null);
 const viewport = ref<HTMLElement | null>(null),
   scale = ref(0);
-const nativeSize: Record<string, string> = {
+const nativeSize = computed<Record<string, string>>(() => ({
   display: 'block',
   position: 'relative',
   left: 'auto',
   top: 'auto',
-  inlineSize: '360px',
-  width: '360px',
+  inlineSize: props.portrait ? '240px' : '360px',
+  width: props.portrait ? '240px' : '360px',
   maxInlineSize: 'none',
   maxWidth: 'none',
-  blockSize: '148px',
-  height: '148px',
-  minBlockSize: '148px',
+  blockSize: props.portrait ? '336px' : '148px',
+  height: props.portrait ? '336px' : '148px',
+  minBlockSize: props.portrait ? '336px' : '148px',
   boxSizing: 'border-box',
-};
+}));
 const stageStyle = computed(() => ({
   transform: 'translate(-50%,-50%) scale(' + scale.value + ')',
 }));
@@ -33,7 +40,14 @@ let generation = 0,
 function fit() {
   const box = viewport.value;
   if (!box || disposed) return;
-  scale.value = Math.max(0, Math.min(1, (box.clientWidth - 8) / 360, (box.clientHeight - 8) / 148));
+  scale.value = Math.max(
+    0,
+    Math.min(
+      1,
+      (box.clientWidth - 8) / (props.portrait ? 240 : 360),
+      (box.clientHeight - 8) / (props.portrait ? 336 : 148),
+    ),
+  );
 }
 async function draw() {
   const epoch = ++generation;
@@ -48,7 +62,22 @@ async function draw() {
     props.name,
     props.message,
   );
-  if (props.kind !== 'media') return;
+  if (props.kind !== 'media') {
+    if (props.lines) {
+      const content = host.querySelector('.barrage-frame-content');
+      if (content) {
+        content.replaceChildren(
+          ...props.lines.map((text, index) => {
+            const line = document.createElement(index === 0 ? 'strong' : 'span');
+            line.textContent = text;
+            return line;
+          }),
+        );
+        content.classList.add('mq-card-lines');
+      }
+    }
+    return;
+  }
   host.querySelector('.barrage-frame-content')?.remove();
   await nextTick();
   if (disposed || epoch !== generation || !host.isConnected || props.kind !== 'media') return;
@@ -103,7 +132,9 @@ onMounted(() => {
   if (viewport.value) observer?.observe(viewport.value);
   window.addEventListener('resize', fit);
 });
-watch(() => [props.frame, props.name, props.message, props.kind], draw, { flush: 'post' });
+watch(() => [props.frame, props.name, props.message, props.kind, props.lines], draw, {
+  flush: 'post',
+});
 onBeforeUnmount(() => {
   disposed = true;
   generation++;
@@ -112,8 +143,10 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <span ref="viewport" class="vue-frame-preview-viewport"
-    ><span class="vue-frame-preview-stage" :style="stageStyle"
+  <span ref="viewport" class="vue-frame-preview-viewport" :class="{ 'is-music-card': portrait }"
+    ><span
+      class="vue-frame-preview-stage"
+      :style="[stageStyle, portrait ? { inlineSize: '240px', blockSize: '336px' } : {}]"
       ><span
         v-if="kind === 'barrage'"
         ref="root"

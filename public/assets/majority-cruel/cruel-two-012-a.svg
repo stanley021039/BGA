@@ -1,1 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>對方安排好每個驚喜</title><desc>原創插畫：約會時你比較心動；對方安排好每個驚喜</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><rect x="-64" y="-15" width="128" height="95" rx="7" fill="#df9ead"/><rect x="-73" y="-31" width="146" height="29" rx="8" fill="#ecd0b0"/><path d="M0-31V80" stroke="#f5d580" stroke-width="13"/><path d="M0-30Q-63-84-46-91Q-21-106 0-30Q24-103 48-89Q67-76 0-30Z" fill="#f5d580"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="gift"><title>對方安排好每個驚喜</title><desc>約會時你比較心動：對方安排好每個驚喜</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Decorative dots / stars -->
+          <circle cx="90" cy="110" r="6" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+          <circle cx="310" cy="120" r="7" fill="#BAE6FD" stroke="#141312" stroke-width="2.5"></circle>
+          <!-- Ribbon Bows at top -->
+          <!-- Left loop -->
+          <path d="M195 95 C160 50 120 70 145 105 C165 115 190 102 195 95 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4"></path>
+          <!-- Right loop -->
+          <path d="M205 95 C240 50 280 70 255 105 C235 115 210 102 205 95 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4"></path>
+          <!-- Bow Knot -->
+          <circle cx="200" cy="98" r="14" fill="#E5A93C" stroke="#141312" stroke-width="4"></circle>
+          <!-- Hanging ribbons -->
+          <path d="M190 105 C175 125 160 135 150 150" stroke="#141312" stroke-width="4" stroke-linecap="round"></path>
+          <path d="M210 105 C225 125 240 135 250 150" stroke="#141312" stroke-width="4" stroke-linecap="round"></path>
+          <!-- Gift Lid -->
+          <rect x="110" y="105" width="180" height="38" rx="7" fill="#E5A93C" stroke="#141312" stroke-width="4.5"></rect>
+          <!-- Lid Ribbon -->
+          <rect x="185" y="105" width="30" height="38" fill="#FBCFE8" stroke="#141312" stroke-width="3.5"></rect>
+          <!-- Gift Body -->
+          <rect x="125" y="143" width="150" height="110" rx="6" fill="#BAE6FD" stroke="#141312" stroke-width="4.5"></rect>
+          <!-- Vertical Body Ribbon -->
+          <rect x="185" y="143" width="30" height="110" fill="#FBCFE8" stroke="#141312" stroke-width="3.5"></rect>
+          <!-- Horizontal Body Ribbon -->
+          <rect x="125" y="185" width="150" height="24" fill="#FBCFE8" stroke="#141312" stroke-width="3.5"></rect>
+          <!-- Center ribbon cross patch -->
+          <rect x="185" y="185" width="30" height="24" fill="#E5A93C" stroke="#141312" stroke-width="3"></rect>
+        </svg>

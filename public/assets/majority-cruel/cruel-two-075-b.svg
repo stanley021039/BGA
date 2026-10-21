@@ -1,1 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>覺得不適合就結束關係</title><desc>原創插畫：伴侶坦白曾拍過成人作品，你會；覺得不適合就結束關係</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><path d="M0 12C-42-24-49-57-23-69C-11-75-2-69 0-57C5-73 24-76 35-66C65-36 17-3 0 12Z" fill="#ed7a92"/><path d="M0-59L-9-37 9-19-4 6" stroke="#fff0dd" fill="none" stroke-width="7"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="brokenheart" role="img"><title>覺得不適合就結束關係</title><desc>伴侶坦白曾拍過成人作品，你會：覺得不適合就結束關係</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 左半心（低彩粉）向左傾斜分離 -->
+            <g transform="translate(-14, 0)">
+              <path d="M190 70 C140 30 75 75 80 135 C85 180 130 215 190 250 L190 210 L170 190 L195 160 L165 130 L190 100 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4" stroke-linejoin="round"></path>
+              <ellipse cx="120" cy="110" rx="18" ry="25" fill="#FFFFFF" fill-opacity="0.6"></ellipse>
+              <!-- 縫合小線段或創口貼 -->
+              <rect x="100" y="150" width="35" height="14" rx="4" transform="rotate(-25 100 150)" fill="#FDE047" stroke="#141312" stroke-width="2"></rect>
+            </g>
+            <!-- 右半心（低彩粉藍）向右傾斜分離 -->
+            <g transform="translate(14, 0)">
+              <path d="M210 70 C260 30 325 75 320 135 C315 180 270 215 210 250 L210 210 L190 190 L215 160 L185 130 L210 100 Z" fill="#BAE6FD" stroke="#141312" stroke-width="4" stroke-linejoin="round"></path>
+              <ellipse cx="280" cy="110" rx="18" ry="25" fill="#FFFFFF" fill-opacity="0.6"></ellipse>
+              <!-- 縫合小線段 -->
+              <rect x="260" y="170" width="35" height="14" rx="4" transform="rotate(30 260 170)" fill="#FDE047" stroke="#141312" stroke-width="2"></rect>
+            </g>
+            <!-- 中間懸浮裂痕小火花碎片 -->
+            <polygon points="200,85 204,95 214,97 205,103 207,112 200,106 193,112 195,103 186,97 196,95" fill="#E5A93C"></polygon>
+            <polygon points="200,165 203,172 210,174 204,178 205,185 200,180 195,185 196,178 190,174 197,172" fill="#E5A93C"></polygon>
+          </svg>

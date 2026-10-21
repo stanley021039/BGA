@@ -1,17 +1,223 @@
 'use strict';
-const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{chromium}=require('playwright'),{openDatabase}=require('../../src/db'),{createAuth}=require('../../src/auth'),{createApp}=require('../../src/app'),{QuacksRoom}=require('../../src/games/quacks'),{BluffRoom}=require('../../src/games/bluff');
-const out=path.resolve(__dirname,'../../work/qa/three-game-refinement');fs.mkdirSync(out,{recursive:true});
-(async()=>{const dir=fs.mkdtempSync(path.join(out,'data-')),dbFile=path.join(dir,'qa.sqlite'),db=openDatabase(dbFile);await createAuth(db).bootstrap('refinement_qa','synthetic-browser-password');db.close();const app=createApp({host:'127.0.0.1',port:0,dbFile,historyDir:path.join(dir,'history'),communityDir:path.join(dir,'community'),musicDir:path.join(dir,'music'),achievementPurpose:'test',externalSideEffectsEnabled:false,marketAutomationEnabled:false,githubClient:{configured:false}});let browser;const evidence=[];
-try{const {port}=await app.listen(),base='http://127.0.0.1:'+port;browser=await chromium.launch({channel:'msedge',headless:true});for(const width of [1440,390]){const ctx=await browser.newContext({viewport:{width,height:900}});await ctx.request.post(base+'/api/auth/login',{data:{username:'refinement_qa',password:'synthetic-browser-password'}});
-const r=new QuacksRoom('ABCDEF','UI QA',()=>0),a=r.add('甲'),b=r.add('乙');r.start();r.drawFortune();let snapshot=r.view(a.id);const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.addLocatorHandler(page.locator('#tableMediaConsent[open]'),()=>page.locator('#mediaConsentDecline').click());
-await page.addInitScript(()=>{window.__clips=[];const Native=window.Audio;window.Audio=function(...args){const clip=new Native(...args);clip.addEventListener('playing',()=>window.__clips.push({src:clip.src,volume:clip.volume}));return clip;};window.Audio.prototype=Native.prototype;});
-await page.route('**/api/reconnect',route=>route.fulfill({json:{type:'quacks',code:'ABCDEF'}}));await page.route('**/api/state?*',route=>route.fulfill({json:snapshot}));await page.goto(base+'/quacks/ABCDEF');await page.locator('.draw-action').waitFor();await page.evaluate(()=>AudioSettings.set('effects',{enabled:true,volume:.25}));await page.locator('#phase').click();
-r.act(a.id,'stop',{roundId:r.roundId,requestId:require('crypto').randomUUID(),step:r.step});snapshot=r.view(a.id);await page.waitForFunction(()=>__clips.some(c=>c.src.includes('quacks-stop-user.wav')));assert.equal(await page.evaluate(()=>__clips.filter(c=>c.src.includes('quacks-stop-user.wav')).length),1);
-r.phase='settlement';r.stage='shopping';a.ready=false;b.ready=false;a.budget=30;r.version++;snapshot=r.view(a.id);await page.locator('.purchase-grid').first().waitFor();await page.waitForFunction(()=>__clips.some(c=>c.src.includes('quacks-settlement-user.wav')));await page.waitForTimeout(1400);assert.equal(await page.evaluate(()=>__clips.filter(c=>c.src.includes('quacks-stop-user.wav')).length),1);
-const offers=page.locator('.purchase-grid [data-quacks-hint]');assert.ok(await offers.count()>3);for(const index of [0,Math.floor((await offers.count())/2),(await offers.count())-1]){await offers.nth(index).hover();await page.locator('#potTooltip').waitFor({state:'visible'});const bounds=await page.locator('#potTooltip').evaluate(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:innerWidth,height:innerHeight,text:n.textContent};});assert.ok(bounds.x>=7&&bounds.y>=7&&bounds.right<=bounds.width-7&&bounds.bottom<=bounds.height-7,JSON.stringify(bounds));await page.keyboard.press('Escape');}
-const clipped=await page.locator('.ingredient-purchase').evaluateAll(nodes=>nodes.map(n=>{const b=n.getBoundingClientRect(),p=n.querySelector('.purchase-price').getBoundingClientRect();return {right:p.right,edge:b.right,left:p.left,start:b.left};}).filter(x=>x.right>x.edge-2||x.left<x.start));assert.deepEqual(clipped,[]);await page.screenshot({path:path.join(out,'market-'+width+'.png'),fullPage:true});
-r.stage='effects-confirm';a.effectSummary=[{color:'black',text:'本輪黑色結果',triggered:true},{color:'green',text:'本輪綠色結果',triggered:true},{color:'purple',text:'本輪紫色結果',triggered:true}];r.version++;snapshot=r.view(a.id);await page.locator('[data-effect-color="black"]').waitFor();for(const color of ['black','green','purple']){await page.locator('[data-effect-color="'+color+'"]').hover();await page.locator('#potTooltip').waitFor({state:'visible'});assert.equal(await page.locator('#potTooltip small').textContent(),'');assert.ok((await page.locator('#potTooltip p').textContent()).includes('本輪'));await page.keyboard.press('Escape');}
-await page.reload();await page.locator('[data-effect-color="black"]').waitFor();assert.equal(await page.evaluate(()=>__clips.length),0);
-assert.deepEqual(errors,[]);evidence.push({width,tooltips:'left/middle/right within viewport',stopPlaying:1,settlementPlaying:1,reload:'silent',errors});await page.close();
-const br=new BluffRoom('ABC123','bluff QA',()=>0),people=[br.add('想想'),br.add('老實人'),br.add('瞎掰人')];br.start();br.act(br.thinkerId,'choose',{questionId:br.choices[0].id,roundId:br.roundId,requestId:require('crypto').randomUUID()});const honest=people.find(p=>br.roles[p.id]==='honest');let bluff=br.view(honest.id);const bp=await ctx.newPage();await bp.addLocatorHandler(bp.locator('#tableMediaConsent[open]'),()=>bp.locator('#mediaConsentDecline').click());await bp.route('**/api/reconnect',route=>route.fulfill({json:{type:'bluff',code:'ABC123'}}));await bp.route('**/api/state?*',route=>route.fulfill({json:bluff}));await bp.goto(base+'/bluff/ABC123');await bp.locator('#source details').waitFor();await bp.locator('#source details summary').click();assert.equal(await bp.locator('#source details h4').allTextContents().then(x=>x.join(',')),'詳細解釋');assert.equal(await bp.locator('#source details p').count(),1);assert.equal(await bp.locator('#source details p').textContent(),br.question.explanation.detail);br.beginDiscussion();br.version++;bluff=br.view(honest.id);await bp.getByRole('button',{name:'哦是哦',exact:true}).waitFor();await bp.screenshot({path:path.join(out,'bluff-'+width+'.png'),fullPage:true});await bp.close();await ctx.close();}
-fs.writeFileSync(path.join(out,'evidence.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence));}finally{await browser?.close();await app.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+const fs = require('fs'),
+  path = require('path'),
+  assert = require('assert/strict'),
+  { chromium } = require('playwright'),
+  { openDatabase } = require('../../src/db'),
+  { createAuth } = require('../../src/auth'),
+  { createApp } = require('../../src/app'),
+  { QuacksRoom } = require('../../src/games/quacks'),
+  { BluffRoom } = require('../../src/games/bluff');
+const out = path.resolve(__dirname, '../../work/qa/three-game-refinement');
+fs.mkdirSync(out, { recursive: true });
+(async () => {
+  const dir = fs.mkdtempSync(path.join(out, 'data-')),
+    dbFile = path.join(dir, 'qa.sqlite'),
+    db = openDatabase(dbFile);
+  await createAuth(db).bootstrap('refinement_qa', 'synthetic-browser-password');
+  db.close();
+  const app = createApp({
+    host: '127.0.0.1',
+    port: 0,
+    dbFile,
+    historyDir: path.join(dir, 'history'),
+    communityDir: path.join(dir, 'community'),
+    musicDir: path.join(dir, 'music'),
+    achievementPurpose: 'test',
+    externalSideEffectsEnabled: false,
+    marketAutomationEnabled: false,
+    githubClient: { configured: false },
+  });
+  let browser;
+  const evidence = [];
+  try {
+    const { port } = await app.listen(),
+      base = 'http://127.0.0.1:' + port;
+    browser = await chromium.launch({ channel: 'msedge', headless: true });
+    for (const width of [1440, 390]) {
+      const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+      await ctx.request.post(base + '/api/auth/login', {
+        data: { username: 'refinement_qa', password: 'synthetic-browser-password' },
+      });
+      const r = new QuacksRoom('ABCDEF', 'UI QA', () => 0),
+        a = r.add('甲'),
+        b = r.add('乙');
+      r.start();
+      r.drawFortune();
+      let snapshot = r.view(a.id);
+      const page = await ctx.newPage(),
+        errors = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+      await page.addLocatorHandler(page.locator('#tableMediaConsent[open]'), () =>
+        page.locator('#mediaConsentDecline').click(),
+      );
+      await page.addInitScript(() => {
+        window.__clips = [];
+        const Native = window.Audio;
+        window.Audio = function (...args) {
+          const clip = new Native(...args);
+          clip.addEventListener('playing', () =>
+            window.__clips.push({ src: clip.src, volume: clip.volume }),
+          );
+          return clip;
+        };
+        window.Audio.prototype = Native.prototype;
+      });
+      await page.route('**/api/reconnect', (route) =>
+        route.fulfill({ json: { type: 'quacks', code: 'ABCDEF' } }),
+      );
+      await page.route('**/api/state?*', (route) => route.fulfill({ json: snapshot }));
+      await page.goto(base + '/quacks/ABCDEF');
+      await page.locator('.draw-action').waitFor();
+      await page.evaluate(() => AudioSettings.set('effects', { enabled: true, volume: 0.25 }));
+      await page.locator('#phase').click();
+      r.act(a.id, 'stop', {
+        roundId: r.roundId,
+        requestId: require('crypto').randomUUID(),
+        step: r.step,
+      });
+      snapshot = r.view(a.id);
+      await page.waitForFunction(() =>
+        __clips.some((c) => c.src.includes('quacks-decline-user.wav')),
+      );
+      assert.equal(
+        await page.evaluate(
+          () => __clips.filter((c) => c.src.includes('quacks-decline-user.wav')).length,
+        ),
+        1,
+      );
+      r.phase = 'settlement';
+      r.stage = 'shopping';
+      a.ready = false;
+      b.ready = false;
+      a.budget = 30;
+      r.version++;
+      snapshot = r.view(a.id);
+      await page.locator('.purchase-grid').first().waitFor();
+      await page.waitForFunction(() =>
+        __clips.some((c) => c.src.includes('quacks-settlement-user.wav')),
+      );
+      await page.waitForTimeout(1400);
+      assert.equal(
+        await page.evaluate(
+          () => __clips.filter((c) => c.src.includes('quacks-decline-user.wav')).length,
+        ),
+        1,
+      );
+      const offers = page.locator('.purchase-grid [data-quacks-hint]');
+      assert.ok((await offers.count()) > 3);
+      for (const index of [0, Math.floor((await offers.count()) / 2), (await offers.count()) - 1]) {
+        await offers.nth(index).hover();
+        await page.locator('#potTooltip').waitFor({ state: 'visible' });
+        const bounds = await page.locator('#potTooltip').evaluate((n) => {
+          const r = n.getBoundingClientRect();
+          return {
+            x: r.x,
+            y: r.y,
+            right: r.right,
+            bottom: r.bottom,
+            width: innerWidth,
+            height: innerHeight,
+            text: n.textContent,
+          };
+        });
+        assert.ok(
+          bounds.x >= 7 &&
+            bounds.y >= 7 &&
+            bounds.right <= bounds.width - 7 &&
+            bounds.bottom <= bounds.height - 7,
+          JSON.stringify(bounds),
+        );
+        await page.keyboard.press('Escape');
+      }
+      const clipped = await page.locator('.ingredient-purchase').evaluateAll((nodes) =>
+        nodes
+          .map((n) => {
+            const b = n.getBoundingClientRect(),
+              p = n.querySelector('.purchase-price').getBoundingClientRect();
+            return { right: p.right, edge: b.right, left: p.left, start: b.left };
+          })
+          .filter((x) => x.right > x.edge - 2 || x.left < x.start),
+      );
+      assert.deepEqual(clipped, []);
+      await page.screenshot({ path: path.join(out, 'market-' + width + '.png'), fullPage: true });
+      r.stage = 'effects-confirm';
+      a.effectSummary = [
+        { color: 'black', text: '本輪黑色結果', triggered: true },
+        { color: 'green', text: '本輪綠色結果', triggered: true },
+        { color: 'purple', text: '本輪紫色結果', triggered: true },
+      ];
+      r.version++;
+      snapshot = r.view(a.id);
+      await page.locator('[data-effect-color="black"]').waitFor();
+      for (const color of ['black', 'green', 'purple']) {
+        await page.locator('[data-effect-color="' + color + '"]').hover();
+        await page.locator('#potTooltip').waitFor({ state: 'visible' });
+        assert.equal(await page.locator('#potTooltip small').textContent(), '');
+        assert.ok((await page.locator('#potTooltip p').textContent()).includes('本輪'));
+        await page.keyboard.press('Escape');
+      }
+      await page.reload();
+      await page.locator('[data-effect-color="black"]').waitFor();
+      assert.equal(await page.evaluate(() => __clips.length), 0);
+      assert.deepEqual(errors, []);
+      evidence.push({
+        width,
+        tooltips: 'left/middle/right within viewport',
+        stopPlaying: 1,
+        settlementPlaying: 1,
+        reload: 'silent',
+        errors,
+      });
+      await page.close();
+      const br = new BluffRoom('ABC123', 'bluff QA', () => 0),
+        people = [br.add('想想'), br.add('老實人'), br.add('瞎掰人')];
+      br.start();
+      br.act(br.thinkerId, 'choose', {
+        questionId: br.choices[0].id,
+        roundId: br.roundId,
+        requestId: require('crypto').randomUUID(),
+      });
+      const honest = people.find((p) => br.roles[p.id] === 'honest');
+      let bluff = br.view(honest.id);
+      const bp = await ctx.newPage();
+      await bp.addLocatorHandler(bp.locator('#tableMediaConsent[open]'), () =>
+        bp.locator('#mediaConsentDecline').click(),
+      );
+      await bp.route('**/api/reconnect', (route) =>
+        route.fulfill({ json: { type: 'bluff', code: 'ABC123' } }),
+      );
+      await bp.route('**/api/state?*', (route) => route.fulfill({ json: bluff }));
+      await bp.goto(base + '/bluff/ABC123');
+      await bp.locator('#source details').waitFor();
+      await bp.locator('#source details summary').click();
+      assert.equal(
+        await bp
+          .locator('#source details h4')
+          .allTextContents()
+          .then((x) => x.join(',')),
+        '詳細解釋',
+      );
+      assert.equal(await bp.locator('#source details p').count(), 1);
+      assert.equal(
+        await bp.locator('#source details p').textContent(),
+        br.question.explanation.detail,
+      );
+      br.beginDiscussion();
+      br.version++;
+      bluff = br.view(honest.id);
+      await bp.getByRole('button', { name: '哦是哦', exact: true }).waitFor();
+      await bp.screenshot({ path: path.join(out, 'bluff-' + width + '.png'), fullPage: true });
+      await bp.close();
+      await ctx.close();
+    }
+    fs.writeFileSync(path.join(out, 'evidence.json'), JSON.stringify(evidence, null, 2));
+    console.log(JSON.stringify(evidence));
+  } finally {
+    await browser?.close();
+    await app.close();
+  }
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

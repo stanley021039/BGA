@@ -1,1 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>睡覺會大聲說夢話</title><desc>原創插畫：全部朋友知道你一個弱點；睡覺會大聲說夢話</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><path d="M-78-8H78V70H-78Z" fill="#a4b9c2"/><path d="M-78-53V86M78 50V86" stroke-width="10"/><rect x="-69" y="-22" width="51" height="31" rx="9" fill="#f6e8cd"/><path d="M-12-8H78V51H-12Z" fill="#cb9bb4"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="bed" role="img"><title>睡覺會大聲說夢話</title><desc>全部朋友知道你一個弱點：睡覺會大聲說夢話</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 臥室床頭板 -->
+            <rect x="65" y="60" width="270" height="110" rx="12" fill="#E2E8F0" stroke="#141312" stroke-width="3.5"></rect>
+            <line x1="125" y1="60" x2="125" y2="170" stroke="#CBD5E1" stroke-width="3"></line>
+            <line x1="200" y1="60" x2="200" y2="170" stroke="#CBD5E1" stroke-width="3"></line>
+            <line x1="275" y1="60" x2="275" y2="170" stroke="#CBD5E1" stroke-width="3"></line>
+            <!-- 床架與床墊主體 -->
+            <rect x="50" y="160" width="300" height="90" rx="10" fill="#F8FAFC" stroke="#141312" stroke-width="3.5"></rect>
+            <!-- 兩顆柔軟枕頭（低彩粉與粉藍） -->
+            <rect x="80" y="125" width="105" height="45" rx="10" fill="#FBCFE8" stroke="#141312" stroke-width="3.5"></rect>
+            <path d="M95 145 Q132 155 170 145" stroke="#141312" stroke-width="2.5" fill="none" stroke-linecap="round"></path>
+            <rect x="215" y="125" width="105" height="45" rx="10" fill="#BAE6FD" stroke="#141312" stroke-width="3.5"></rect>
+            <path d="M230 145 Q267 155 305 145" stroke="#141312" stroke-width="2.5" fill="none" stroke-linecap="round"></path>
+            <!-- 溫暖蓬鬆棉被與折角（暖金與摺疊線） -->
+            <path d="M50 175 C50 165 70 160 110 160 L290 160 C330 160 350 165 350 175 L350 245 C350 250 345 252 340 252 L60 252 C55 252 50 250 50 245 Z" fill="#FDE047" stroke="#141312" stroke-width="3.5"></path>
+            <path d="M50 190 Q200 215 350 190" stroke="#141312" stroke-width="3" fill="none"></path>
+            <polygon points="50,175 120,175 90,205 50,195" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></polygon>
+            <!-- 床腳 -->
+            <rect x="65" y="250" width="18" height="25" rx="4" fill="#141312"></rect>
+            <rect x="317" y="250" width="18" height="25" rx="4" fill="#141312"></rect>
+          </svg>

@@ -18,12 +18,16 @@
     }
   }
   function get() {
-    return options().some((option) => option.id === selected) ? selected : 'default';
+    return options().some((option) => option.id === selected) &&
+      window.BarrageFrames?.canUse?.(selected) !== false
+      ? selected
+      : 'default';
   }
   function notify() {
     for (const listener of listeners) listener(get());
   }
   function set(id) {
+    if (window.BarrageFrames?.canUse?.(id) === false) return get();
     selected = options().some((option) => option.id === id) ? id : 'default';
     try {
       localStorage.setItem(key, selected);
@@ -72,8 +76,11 @@
   }
   function syncChoices() {
     if (!picker) return;
-    for (const button of picker.querySelectorAll('[data-media-frame-choice]'))
+    for (const button of picker.querySelectorAll('[data-media-frame-choice]')) {
+      const locked = window.BarrageFrames?.canUse?.(button.dataset.mediaFrameChoice) === false;
+      button.classList.toggle('reward-locked', locked);
       button.setAttribute('aria-pressed', String(button.dataset.mediaFrameChoice === get()));
+    }
   }
   function openPicker(source) {
     trigger = source;
@@ -101,7 +108,16 @@
           '我的風格',
         );
         choice.append(label, preview);
+        if (option.achievementId) {
+          const hint = document.createElement('small');
+          hint.textContent = '成就獎勵 · ' + option.achievementTitle;
+          choice.append(hint);
+        }
         choice.onclick = () => {
+          if (window.BarrageFrames?.canUse?.(option.id) === false) {
+            location.href = '/achievements';
+            return;
+          }
           set(option.id);
           picker.close();
         };
@@ -113,6 +129,10 @@
     picker.querySelector('[aria-pressed="true"]')?.focus();
     return picker;
   }
+  window.BarrageFrames?.subscribe?.(() => {
+    notify();
+    syncChoices();
+  });
   window.MediaAppearance = {
     get,
     set,

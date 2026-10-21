@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import QuacksRuleVisual from './QuacksRuleVisual.vue';
 import { useQuacksStore } from '../../stores/quacks';
 import QuacksGlyph from './QuacksGlyph.vue';
 import UiButton from '../../components/UiButton.vue';
@@ -14,8 +15,9 @@ const game = useQuacksStore();
         ><QuacksGlyph :resource="game.state.visitingWitch.color || 'gold'" /><h3
           >免費來訪 · {{ game.state.visitingWitch.name }}</h3
         ></header
-      ><p>{{ game.state.visitingWitch.text }}</p
-      ><p>{{
+      ><QuacksRuleVisual
+        :text="game.state.visitingWitch.text"
+        :resource="game.state.visitingWitch.color || 'gold'" /><p>{{
         game.mine?.visitorUsed
           ? '本輪已使用'
           : game.mine?.canVisit
@@ -23,8 +25,6 @@ const game = useQuacksStore();
             : '等待符合能力使用條件。'
       }}</p
       ><UiButton
-        stitch
-        variant="secondary"
         icon="check"
         label="使用免費來訪女巫"
         :disabled="!game.available || !game.mine?.canVisit"
@@ -35,10 +35,7 @@ const game = useQuacksStore();
           ><QuacksGlyph :resource="String(color)" /><h3
             >{{ witch.name }} · {{ game.mine?.coins[color] ? '幣尚未使用' : '幣已使用' }}</h3
           ></header
-        ><p>{{ witch.text }}</p
-        ><UiButton
-          stitch
-          variant="secondary"
+        ><QuacksRuleVisual :text="witch.text" :resource="String(color)" /><UiButton
           icon="check"
           :label="'使用' + witch.name"
           :disabled="!game.available || !game.mine?.witchAvailable[color]"

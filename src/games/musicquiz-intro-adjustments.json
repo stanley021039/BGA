@@ -1,0 +1,615 @@
+{
+  "date": "2026-10-21",
+  "criteria": {
+    "clipSeconds": 8,
+    "audibleFrameThresholdDb": -50,
+    "sustainedMs": 200,
+    "windowMs": 300,
+    "preRollMs": 200,
+    "channels": 2,
+    "sampleRate": 4000
+  },
+  "songs": [
+    {
+      "id": "x3bDhtuC5yk",
+      "title": "浪子回頭",
+      "artist": "茄子蛋",
+      "bank": "tw",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 11.94
+    },
+    {
+      "id": "YQHsXMglC9A",
+      "title": "Hello",
+      "artist": "Adele",
+      "bank": "en",
+      "rmsDb": -69.34,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 19.56
+    },
+    {
+      "id": "sOnqjkJTMaA",
+      "title": "Thriller",
+      "artist": "Michael Jackson",
+      "bank": "en",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 39.22
+    },
+    {
+      "id": "KSSyJwlijAc",
+      "title": "修煉愛情",
+      "artist": "林俊傑",
+      "bank": "zh",
+      "rmsDb": -99.22,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 15.06
+    },
+    {
+      "id": "GFSxfxxwhIU",
+      "title": "CHE.R.RY",
+      "artist": "YUI",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 11.84
+    },
+    {
+      "id": "I3tkHg6SbrM",
+      "title": "Rolling star",
+      "artist": "YUI",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.28
+    },
+    {
+      "id": "DHT0SQDuK9M",
+      "title": "LIFE",
+      "artist": "YUI",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 12.46
+    },
+    {
+      "id": "d0w9pXONGXM",
+      "title": "LOVE & TRUTH",
+      "artist": "YUI",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 14.38
+    },
+    {
+      "id": "3aWjrSLQ3zk",
+      "title": "to Mother",
+      "artist": "YUI",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 14.16
+    },
+    {
+      "id": "VpwAq7hiij0",
+      "title": "披星戴月的想你",
+      "artist": "告五人",
+      "bank": "zh",
+      "rmsDb": -57.73,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 95.36
+    },
+    {
+      "id": "vsBf_0gDxSM",
+      "title": "可惜沒如果",
+      "artist": "林俊傑",
+      "bank": "zh",
+      "rmsDb": -55.29,
+      "audibleSeconds": 0.14,
+      "previousStart": 0,
+      "introStart": 20.7
+    },
+    {
+      "id": "pvqvBAA-0AE",
+      "title": "白い恋人達",
+      "artist": "桑田佳祐",
+      "bank": "jp",
+      "rmsDb": -92.46,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 10.16
+    },
+    {
+      "id": "K0-Dm4wMJpQ",
+      "title": "波乗りジョニー",
+      "artist": "桑田佳祐",
+      "bank": "jp",
+      "rmsDb": -79.85,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 25.36
+    },
+    {
+      "id": "mHxFKmpvEmM",
+      "title": "祭りのあと",
+      "artist": "桑田佳祐",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 13.38
+    },
+    {
+      "id": "mFULNjf3KdI",
+      "title": "真夜中のダンディー",
+      "artist": "桑田佳祐",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.22
+    },
+    {
+      "id": "Uis0osR0Wi4",
+      "title": "黄金魂",
+      "artist": "湘南乃風",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 11.82
+    },
+    {
+      "id": "4rn1adrUu-E",
+      "title": "炎天夏",
+      "artist": "湘南乃風",
+      "bank": "jp",
+      "rmsDb": -146.09,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.38
+    },
+    {
+      "id": "J9ZLO7wZlXk",
+      "title": "INNOCENCE",
+      "artist": "藍井エイル",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 16.28
+    },
+    {
+      "id": "p2wIPUQu4JQ",
+      "title": "ラピスラズリ",
+      "artist": "藍井エイル",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 12.06
+    },
+    {
+      "id": "sdmZOvuSBMY",
+      "title": "流星",
+      "artist": "藍井エイル",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 14.72
+    },
+    {
+      "id": "xPU-cgPjZKk",
+      "title": "收斂水",
+      "artist": "蛋堡",
+      "bank": "zh",
+      "rmsDb": -60.69,
+      "audibleSeconds": 0.04,
+      "previousStart": 0,
+      "introStart": 11.74
+    },
+    {
+      "id": "4IjdkeIygoE",
+      "title": "我恨妳",
+      "artist": "信",
+      "bank": "zh",
+      "rmsDb": -61.58,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 14.16
+    },
+    {
+      "id": "_xCqx9pK54k",
+      "title": "波麗露",
+      "artist": "拉威爾",
+      "bank": "classical",
+      "rmsDb": -59.53,
+      "audibleSeconds": 0.04,
+      "previousStart": 0,
+      "introStart": 117.64
+    },
+    {
+      "id": "TVjsnSJlULg",
+      "title": "我最親愛的",
+      "artist": "張惠妹",
+      "bank": "zh",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 15.96
+    },
+    {
+      "id": "zi8z6RPYGV0",
+      "title": "天黑黑",
+      "artist": "孫燕姿",
+      "bank": "zh",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 8.24
+    },
+    {
+      "id": "NuiAOSii_sk",
+      "title": "想自由",
+      "artist": "林宥嘉",
+      "bank": "zh",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 23.36
+    },
+    {
+      "id": "6rHySk9Kcuo",
+      "title": "ひび割れた世界",
+      "artist": "majiko",
+      "bank": "jp",
+      "rmsDb": -67.02,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 12.66
+    },
+    {
+      "id": "VvRVu78IHHo",
+      "title": "The Wrong Direction",
+      "artist": "Passenger",
+      "bank": "en",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 8.74
+    },
+    {
+      "id": "FrG4TEcSuRg",
+      "title": "Daddy",
+      "artist": "PSY",
+      "bank": "kr",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 10.14
+    },
+    {
+      "id": "mGeiABBB5f8",
+      "title": "泡沫",
+      "artist": "鄧紫棋",
+      "bank": "zh",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.86
+    },
+    {
+      "id": "lz8frtP6_kk",
+      "title": "YELL",
+      "artist": "いきものがかり",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 13.56
+    },
+    {
+      "id": "LjUXm0Zy_dk",
+      "title": "Starry Night",
+      "artist": "MAMAMOO",
+      "bank": "kr",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.08
+    },
+    {
+      "id": "AlMdDpUWFFI",
+      "title": "光",
+      "artist": "宇多田ヒカル",
+      "bank": "jp",
+      "rmsDb": -76.64,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 12.44
+    },
+    {
+      "id": "bJ61ijAVT4w",
+      "title": "我愛你",
+      "artist": "盧廣仲",
+      "bank": "zh",
+      "rmsDb": -85.49,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 19.04
+    },
+    {
+      "id": "or4oehKklSQ",
+      "title": "愛你一萬年",
+      "artist": "劉德華",
+      "bank": "zh",
+      "rmsDb": -58.08,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.64
+    },
+    {
+      "id": "bA1MhSK8wBE",
+      "title": "Kẻ Cắp Gặp Bà Già",
+      "artist": "Hoàng Thuỳ Linh",
+      "bank": "foreign",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 13.1
+    },
+    {
+      "id": "Q6ZNsHvspEg",
+      "title": "Gieo Quẻ",
+      "artist": "Hoàng Thuỳ Linh",
+      "bank": "foreign",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 8.84
+    },
+    {
+      "id": "Zp1aDnVySf8",
+      "title": "Waltz of the Flowers",
+      "artist": "柴可夫斯基",
+      "bank": "classical",
+      "rmsDb": -63.08,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.62
+    },
+    {
+      "id": "FS7V5Yxl4qQ",
+      "title": "La Cenerentola Overture",
+      "artist": "羅西尼",
+      "bank": "classical",
+      "rmsDb": -57.8,
+      "audibleSeconds": 0.12,
+      "previousStart": 0,
+      "introStart": 22.66
+    },
+    {
+      "id": "2_c8JRCKq1A",
+      "title": "Pavane pour une infante defunte",
+      "artist": "拉威爾",
+      "bank": "classical",
+      "rmsDb": -63.12,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 10.7
+    },
+    {
+      "id": "Id2a2gbW1Zs",
+      "title": "エミリーと15の約束",
+      "artist": "majiko",
+      "bank": "jp",
+      "rmsDb": -114.31,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.38
+    },
+    {
+      "id": "cYchjzfQ2RU",
+      "title": "為愛痴狂",
+      "artist": "劉若英",
+      "bank": "zh",
+      "rmsDb": -93.21,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 12.8
+    },
+    {
+      "id": "Jsc6bPHe4tM",
+      "title": "LEveL",
+      "artist": "SawanoHiroyuki[nZk]",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 11.8
+    },
+    {
+      "id": "YGOX7Tj0dMY",
+      "title": "Avid",
+      "artist": "SawanoHiroyuki[nZk]",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 12.02
+    },
+    {
+      "id": "accaMcuY9FA",
+      "title": "RAY OF LIGHT",
+      "artist": "中川翔子",
+      "bank": "jp",
+      "rmsDb": -94.35,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 10.36
+    },
+    {
+      "id": "UuOL3kV2mEs",
+      "title": "LINE",
+      "artist": "スキマスイッチ",
+      "bank": "jp",
+      "rmsDb": -117.72,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 9.86
+    },
+    {
+      "id": "KVs_U-FA0rc",
+      "title": "虹",
+      "artist": "Aqua Timez",
+      "bank": "jp",
+      "rmsDb": -118.99,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 10.02
+    },
+    {
+      "id": "m0z1XfphYzU",
+      "title": "一千年以後",
+      "artist": "林俊傑",
+      "bank": "zh",
+      "rmsDb": -85.53,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 13.66
+    },
+    {
+      "id": "I14e0OAotEQ",
+      "title": "雙棲動物",
+      "artist": "蔡健雅",
+      "bank": "zh",
+      "rmsDb": -86.54,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 11.58
+    },
+    {
+      "id": "-baxAeq-MlU",
+      "title": "ยังคู่กัน (Still Together)",
+      "artist": "Bright 瓦奇拉維特 & Win 梅塔文",
+      "bank": "foreign",
+      "rmsDb": -67.98,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 24.94
+    },
+    {
+      "id": "vR-kX2Lgx3M",
+      "title": "VIVID VICE",
+      "artist": "Who-ya Extended",
+      "bank": "jp",
+      "rmsDb": -61.22,
+      "audibleSeconds": 0.1,
+      "previousStart": 0,
+      "introStart": 10.5
+    },
+    {
+      "id": "C-xF2MAFw5s",
+      "title": "C.h.a.o.s.m.y.t.h.",
+      "artist": "ONE OK ROCK",
+      "bank": "jp",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 11.1
+    },
+    {
+      "id": "V4GUy2EHMMs",
+      "title": "海闊天空",
+      "artist": "Beyond",
+      "bank": "yue",
+      "rmsDb": -80.94,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 7.96
+    },
+    {
+      "id": "E4jPiazznkY",
+      "title": "心淡",
+      "artist": "容祖兒",
+      "bank": "yue",
+      "rmsDb": -67.3,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 20.68
+    },
+    {
+      "id": "aQmieaqmLmU",
+      "title": "習慣失戀",
+      "artist": "容祖兒",
+      "bank": "yue",
+      "rmsDb": -64.91,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 20.44
+    },
+    {
+      "id": "t0EG6pSwcBk",
+      "title": "一絲不掛",
+      "artist": "陳奕迅",
+      "bank": "yue",
+      "rmsDb": -180,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 25.26
+    },
+    {
+      "id": "DFO6Yu2gSj0",
+      "title": "左右手",
+      "artist": "張國榮",
+      "bank": "yue",
+      "rmsDb": -85.58,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 10.58
+    },
+    {
+      "id": "IOXoAvF6r_A",
+      "title": "長城",
+      "artist": "Beyond",
+      "bank": "yue",
+      "rmsDb": -65.58,
+      "audibleSeconds": 0.013,
+      "previousStart": 0,
+      "introStart": 7.78
+    },
+    {
+      "id": "MH74E4YFHWI",
+      "title": "人生公路",
+      "artist": "詹雅雯",
+      "bank": "tw",
+      "rmsDb": -100.47,
+      "audibleSeconds": 0,
+      "previousStart": 0,
+      "introStart": 14.44
+    },
+    {
+      "id": "Uh6dkL1M9DM",
+      "title": "Flamingo",
+      "artist": "米津玄師",
+      "bank": "jp",
+      "rmsDb": -27.92,
+      "audibleSeconds": 0.06,
+      "previousStart": 0,
+      "introStart": 7.74
+    }
+  ],
+  "status": "restored-with-adjusted-onsets"
+}

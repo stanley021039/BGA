@@ -9,6 +9,10 @@ const name = (id: string) =>
   s.value?.players.find((p) => p.id === id)?.name ||
   s.value?.departed.find((p) => p.id === id)?.name ||
   '已離席';
+const voters = (i: number) =>
+  Object.entries(s.value?.answers || {})
+    .filter(([, a]) => a === i)
+    .map(([id]) => id);
 const sorted = computed(() => [...(s.value?.groups || [])].sort((a, b) => b.count - a.count));
 function answerText(id: string) {
   const a = s.value?.answers[id];
@@ -22,13 +26,18 @@ function answerText(id: string) {
     ><template v-if="s.question && s.cruel && !(props.recap && s.cruel.solo)"
       ><QuestionPreview :question="s.question" /><div class="vue-majority-answer-members"
         ><p v-for="(option, i) in s.question.options" :key="i"
-          ><strong>{{ String.fromCharCode(65 + i) }} · {{ option }}</strong
+          ><strong
+            >{{ String.fromCharCode(65 + i) }} · {{ option }} · {{ voters(i).length }}票</strong
           ><span>{{
             Object.entries(s.answers)
               .filter(([, answer]) => answer === i)
               .map(([id]) => name(id))
               .join('、') || '沒有人選擇'
-          }}</span></p
+          }}</span
+          ><span v-for="id in voters(i)" :key="id" class="stitch-member-result"
+            >{{ name(id) }}{{ id === s.me ? '（你）' : '' }} ·
+            {{ (s.result?.gains[id] || 0) > 0 ? '+' + s.result!.gains[id] + '分' : '未得分' }}</span
+          ></p
         ></div
       ></template
     ><template v-else-if="!s.cruel"

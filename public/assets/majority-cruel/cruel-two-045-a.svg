@@ -1,1 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>唱一首不熟的歌</title><desc>原創插畫：在婚禮上你會選；唱一首不熟的歌</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><path d="M-20 36V-49L55-70V13" fill="none" stroke-width="12"/><ellipse cx="-39" cy="40" rx="27" ry="18" fill="#ac9ecd"/><ellipse cx="35" cy="17" rx="27" ry="18" fill="#ac9ecd"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="music"><title>唱一首不熟的歌</title><desc>在婚禮上你會選：唱一首不熟的歌</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Vinyl Record Disc (Left) -->
+          <circle cx="160" cy="155" r="95" fill="#141312" stroke="#141312" stroke-width="4"></circle>
+          <!-- Vinyl Groove Rings -->
+          <circle cx="160" cy="155" r="80" stroke="#2A2826" stroke-width="3" stroke-dasharray="14 6"></circle>
+          <circle cx="160" cy="155" r="65" stroke="#2A2826" stroke-width="3" stroke-dasharray="12 8"></circle>
+          <circle cx="160" cy="155" r="50" stroke="#2A2826" stroke-width="2.5"></circle>
+          <!-- Vinyl Center Label (Warm Gold) -->
+          <circle cx="160" cy="155" r="35" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></circle>
+          <circle cx="160" cy="155" r="22" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></circle>
+          <!-- Spindle Hole -->
+          <circle cx="160" cy="155" r="7" fill="#FDFBF7" stroke="#141312" stroke-width="3"></circle>
+          <!-- Floating Musical Notes (Right) -->
+          <!-- Double Note (Eighth notes joined by beam) -->
+          <g transform="translate(45, -15)">
+            <ellipse cx="240" cy="140" rx="14" ry="10" transform="rotate(-25 240 140)" fill="#141312"></ellipse>
+            <ellipse cx="285" cy="120" rx="14" ry="10" transform="rotate(-25 285 120)" fill="#141312"></ellipse>
+            <line x1="250" y1="135" x2="250" y2="70" stroke="#141312" stroke-width="4.5" stroke-linecap="round"></line>
+            <line x1="295" y1="115" x2="295" y2="50" stroke="#141312" stroke-width="4.5" stroke-linecap="round"></line>
+            <!-- Note Beam (Warm Gold) -->
+            <polygon points="248,70 297,50 297,64 248,84" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></polygon>
+          </g>
+          <!-- Single Beamed Note (Top right) -->
+          <g transform="translate(15, 20)">
+            <ellipse cx="255" cy="205" rx="13" ry="9" transform="rotate(-25 255 205)" fill="#BAE6FD" stroke="#141312" stroke-width="3.5"></ellipse>
+            <line x1="265" y1="200" x2="265" y2="150" stroke="#141312" stroke-width="4" stroke-linecap="round"></line>
+            <path d="M265 150 C280 155 285 168 285 178" stroke="#141312" stroke-width="4" stroke-linecap="round" fill="none"></path>
+          </g>
+          <!-- Little Stars around melody -->
+          <circle cx="340" cy="85" r="7" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+          <circle cx="310" cy="225" r="5" fill="#FBCFE8" stroke="#141312" stroke-width="2"></circle>
+        </svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="shield" width="100%" height="100%" fill="none"><title>自在表達拒絕</title><desc>長期關係只能改善一項：自在表達拒絕</desc>
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Background defense sparkles -->
+            <polygon points="48,45 51,52 58,52 52,56 54,63 48,59 42,63 44,56 38,52 45,52" fill="#E5A93C" stroke="#141312" stroke-width="1.5"></polygon>
+            <polygon points="192,45 195,52 202,52 196,56 198,63 192,59 186,63 188,56 182,52 189,52" fill="#34D399" stroke="#141312" stroke-width="1.5"></polygon>
+            <!-- Outer Shield -->
+            <path d="M 120 22 C 160 22 175 32 175 58 C 175 105 138 132 120 142 C 102 132 65 105 65 58 C 65 32 80 22 120 22 Z" fill="#BAE6FD" stroke="#141312" stroke-width="4"></path>
+            <!-- Inner Shield Panel (Dual-tone) -->
+            <path d="M 120 32 C 150 32 162 40 162 62 C 162 98 132 122 120 130 L 120 32 Z" fill="#38BDF8"></path>
+            <path d="M 120 32 C 90 32 78 40 78 62 C 78 98 108 122 120 130 L 120 32 Z" fill="#FDE047"></path>
+            <path d="M 120 32 C 150 32 162 40 162 62 C 162 98 132 122 120 130 C 108 122 78 98 78 62 C 78 40 90 32 120 32 Z" stroke="#141312" stroke-width="3" fill="none"></path>
+            <line x1="120" y1="32" x2="120" y2="130" stroke="#141312" stroke-width="3"></line>
+            <!-- Golden Star Emblem in Center -->
+            <circle cx="120" cy="74" r="18" fill="#FDFBF7" stroke="#141312" stroke-width="3"></circle>
+            <polygon points="120,60 124,69 133,70 126,76 128,85 120,80 112,85 114,76 107,70 116,69" fill="#E5A93C" stroke="#141312" stroke-width="2"></polygon>
+          </svg>

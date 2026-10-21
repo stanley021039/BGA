@@ -1,0 +1,232 @@
+// Stitch ZIP 2026-10-20: contents only. Shared room shell, frames and chat stay owned by their existing components.
+.stitch-content-kicker {
+  display: block;
+  color: var(--play-accent, #d8af53);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+}
+.stitch-vinyl-stage {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  border-radius: 14px;
+  background:
+    repeating-radial-gradient(circle at 20% 50%, #ffffff05 0 2px, transparent 3px 8px),
+    var(--stitch-surface, #25221d);
+  color: var(--play-ink);
+  min-width: 0;
+}
+.stitch-vinyl-stage > div:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.stitch-vinyl-stage h2 {
+  margin: 8px 0;
+  font-size: clamp(24px, 2.2vw, 36px);
+}
+.stitch-vinyl-stage small {
+  color: var(--play-accent, #d8af53);
+}
+.stitch-vinyl-record {
+  display: grid;
+  place-items: center;
+  flex: 0 0 104px;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #171717 0 4px, #292929 5px 6px);
+  box-shadow:
+    0 0 0 3px #d9b665,
+    0 8px 18px #0005;
+}
+.stitch-vinyl-record > span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #e7bd62;
+  color: #201708;
+  font-size: 24px;
+}
+#musicquiz-app .mq-bank {
+  position: relative;
+  flex-wrap: wrap;
+  min-height: 112px;
+  padding: 18px;
+  background: color-mix(in srgb, var(--stitch-surface, #24211d) 94%, #d8af53);
+}
+#musicquiz-app .mq-bank:has(input:checked) {
+  box-shadow: inset 0 0 0 2px #d8af53;
+}
+#musicquiz-app .mq-timeline {
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 16px 8px;
+}
+#musicquiz-app .mq-timeline > .vue-button {
+  flex: 0 0 112px;
+  border-style: dashed;
+  white-space: normal;
+  min-height: 180px;
+}
+#musicquiz-app .mq-timeline > .vue-button[aria-pressed='true'] {
+  outline: 3px solid var(--play-accent, #d8af53);
+  outline-offset: 2px;
+}
+#musicquiz-app .mq-timeline-card {
+  flex: 0 0 200px;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+}
+.stitch-club-content .stitch-duel-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  background: #eda820;
+  color: #241904;
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 #0007;
+}
+.stitch-club-content .stitch-option-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.stitch-club-content .stitch-option-heading strong {
+  display: inline-block;
+  background: #24221e;
+  color: #fff9e9;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+.stitch-club-content .vue-tournament-pair article {
+  background: #fff9e9;
+  color: #29251d;
+  padding: 18px;
+  box-shadow: 5px 5px 0 #0007;
+  border-radius: 8px;
+}
+.stitch-club-content .vue-tournament-pair article :is(h3, p) {
+  color: inherit;
+}
+.stitch-club-content .vue-tournament-pair article img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: #f6edce;
+  border-radius: 8px;
+}
+.stitch-club-content .vue-tournament-pair .is-my-choice {
+  outline: 3px solid #e5a320;
+  outline-offset: 3px;
+}
+.stitch-club-content .vue-tournament-pair .is-majority {
+  background: #fff0be;
+}
+.stitch-vote-result {
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 2px solid #756b55;
+}
+.stitch-vote-result > strong {
+  font-size: 24px;
+}
+.stitch-vote-result meter {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+}
+.stitch-vote-result > p {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #c9b77d;
+}
+.stitch-club-content .vue-majority-answer-options > button {
+  box-shadow: 4px 4px 0 #0005;
+}
+.stitch-club-content .vue-majority-member-chips > span {
+  border-radius: 6px;
+}
+@media (max-width: 650px) {
+  .stitch-vinyl-stage {
+    padding: 16px;
+    gap: 16px;
+  }
+  .stitch-vinyl-record {
+    flex-basis: 72px;
+    width: 72px;
+    height: 72px;
+  }
+  #musicquiz-app .mq-timeline {
+    flex-wrap: wrap;
+  }
+  #musicquiz-app .mq-timeline > .vue-button {
+    min-height: 60px;
+    flex-basis: 100%;
+  }
+  #musicquiz-app .mq-timeline-card {
+    flex-basis: 100%;
+  }
+}
+
+.stitch-club-content .vue-majority-result-group {
+  background: #fff9e9;
+  color: #29251d;
+  box-shadow: 4px 4px 0 #0005;
+}
+.stitch-club-content .vue-majority-result-group :is(h3, strong, span) {
+  color: inherit;
+}
+.stitch-club-content .vue-majority-result-group.is-winner {
+  background: #fff0be;
+}
+.stitch-club-content .vue-majority-answer-members > p {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--stitch-surface, #24211d);
+}
+.stitch-club-content .stitch-member-result {
+  padding: 8px 12px;
+  border-left: 4px solid var(--play-accent, #d8af53);
+}
+.mq-current-dj {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 16px;
+  margin: 12px 0;
+  border: 1px solid var(--play-line);
+  border-radius: 12px;
+  background: var(--stitch-surface, #25221d);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.mq-current-dj > span {
+  font-size: 20px;
+  font-weight: 700;
+}
+.mq-current-dj > strong {
+  font-size: clamp(30px, 3vw, 44px);
+  line-height: 1.3;
+  color: var(--play-accent);
+}
+.mq-current-dj.is-me {
+  border-color: var(--play-accent);
+}

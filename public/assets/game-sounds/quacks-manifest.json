@@ -14,31 +14,6 @@
     "fadeOutMs": 60,
     "generator": "tools/convert-quacks-sounds.cjs"
   },
-  "ingredient": {
-    "file": "quacks-ingredient.wav",
-    "durationMs": 650,
-    "bytes": 31244,
-    "sha256": "b9991755a4f67c32aea3f295ecfd4c83005209d35a8fdf3ae69c1496324406d8",
-    "peak": 13107,
-    "source": "User-supplied 抽藥.mp3",
-    "sourceSha256": "2c49223bd48fc56e4d1145e419811ae994423ab89468cab8d0f13a211404487d",
-    "trimStartSeconds": 10.8,
-    "lowpassHz": 2800,
-    "peakTarget": 0.4,
-    "fadeInMs": 10,
-    "fadeOutMs": 60,
-    "generator": "tools/convert-quacks-sounds.cjs"
-  },
-  "potion": {
-    "file": "quacks-potion.wav",
-    "durationMs": 600,
-    "bytes": 28844,
-    "sha256": "003f247056f374c3018b0c524ff83969488f0e75f1c9be64b903e2f9efb9043b",
-    "peak": 6377,
-    "seed": 83119,
-    "source": "Project-original synthesis: low liquid bubbles and filtered noise, no third-party sample",
-    "generator": "tools/generate-quacks-sounds.cjs"
-  },
   "settlement": {
     "file": "quacks-settlement.wav",
     "durationMs": 420,
@@ -63,19 +38,6 @@
     "lowpassHz": 6500,
     "generator": "tools/convert-quacks-explosion.cjs"
   },
-  "stopUser": {
-    "file": "quacks-stop-user.wav",
-    "durationMs": 1765,
-    "bytes": 84750,
-    "sha256": "f2d742cad441db5d5503b125d0bcb50cfc4f911ec277f46d1c19989fef3746e6",
-    "source": "User-supplied 不抽了.mp3",
-    "sourceSha256": "0f2a1af2586db9f0659993049eceb0cb5dbccef6a10c13e2b78d0b3aa1b5ab78",
-    "peakTarget": 0.35,
-    "fadeInMs": 10,
-    "fadeOutMs": 30,
-    "lowpassHz": 6500,
-    "generator": "tools/convert-quacks-stop-settlement.cjs"
-  },
   "settlementUser": {
     "file": "quacks-settlement-user.wav",
     "durationMs": 660,
@@ -87,6 +49,44 @@
     "fadeInMs": 10,
     "fadeOutMs": 30,
     "lowpassHz": 6500,
-    "generator": "tools/convert-quacks-stop-settlement.cjs"
+    "generator": "tools/convert-quacks-stop-settlement.cjs",
+    "peak": 11468
+  },
+  "ingredient": {
+    "file": "quacks-push-user.wav",
+    "durationMs": 580,
+    "source": "要拚!.mp3",
+    "sourceSha256": "81c50675a171cfba9a0d796e8b1612210830f6bf46783fdc0519bdc550ab8ec1",
+    "sha256": "abc233027693b870d3e671f6155adfcddef877137d340cff983a5f77ed9565c1",
+    "sampleRate": 24000,
+    "peakTarget": 0.45,
+    "fadeInMs": 10,
+    "fadeOutMs": 40,
+    "highpassHz": 65,
+    "lowpassHz": 5000,
+    "bytes": 27884,
+    "peak": 14745
+  },
+  "stopUser": {
+    "file": "quacks-decline-user.wav",
+    "durationMs": 1811,
+    "source": "不要.mp3",
+    "sourceSha256": "d44a657de11849965af23142605b3cb86309d756b2414e80c487ab5e503ca0a6",
+    "sha256": "ed16aac88009e7d08b55d487d9ff713339340e945b679cf59b1d01d6ba77afa9",
+    "sampleRate": 24000,
+    "peakTarget": 0.4,
+    "fadeInMs": 10,
+    "fadeOutMs": 40,
+    "highpassHz": 65,
+    "lowpassHz": 5000,
+    "bytes": 86980,
+    "peak": 13107
+  },
+  "potion": {
+    "file": "quacks-drink-real.mp3",
+    "bytes": 62099,
+    "sha256": "be02337539efacf301e00a898bf78a820a51eb40e96a558c08e137e54ec722fb",
+    "durationMs": 2590,
+    "source": "Real drink recording; see quacks-drink-real.LICENSE.txt"
   }
 }

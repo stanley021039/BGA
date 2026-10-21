@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>性生活合拍但沒話聊</title><desc>原創插畫：成年伴侶只能選一種相處；性生活合拍但沒話聊</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><path d="M0-78Q63-10 49 49Q10 107-39 60Q-74 25-29-34Q-33 10-12 18Q7-10 0-78Z" fill="#e99670"/><path d="M8-9Q46 46 16 72Q-17 93-20 47Z" fill="#f3d88b"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="flame"><title>性生活合拍但沒話聊</title><desc>成年伴侶只能選一種相處：性生活合拍但沒話聊</desc>
+          <!-- Background Base Card inside SVG -->
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Little floating sparks -->
+          <circle cx="110" cy="110" r="7" fill="#FDE047" stroke="#141312" stroke-width="3"></circle>
+          <circle cx="295" cy="95" r="9" fill="#FBCFE8" stroke="#141312" stroke-width="3"></circle>
+          <circle cx="280" cy="155" r="6" fill="#BAE6FD" stroke="#141312" stroke-width="2.5"></circle>
+          <path d="M95 160 L105 150 L115 160 L105 170 Z" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></path>
+          <!-- Outer Flame (warm gold / amber) -->
+          <path d="M200 45 C150 90 120 150 120 200 C120 245 155 265 200 265 C245 265 280 245 280 200 C280 145 235 110 235 75 C215 105 210 115 200 45 Z" fill="#E5A93C" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+          <!-- Mid Flame (soft pinkish low-saturation) -->
+          <path d="M195 105 C165 140 145 175 145 210 C145 245 170 255 195 255 C225 255 250 240 250 205 C250 165 220 145 220 125 C205 145 200 150 195 105 Z" fill="#FBCFE8" stroke="#141312" stroke-width="3.5" stroke-linejoin="round"></path>
+          <!-- Core Flame (bright pastel blue/yellow fusion) -->
+          <path d="M198 165 C180 185 170 205 170 225 C170 245 182 250 198 250 C214 250 226 242 226 220 C226 195 210 185 205 175 C200 188 198 188 198 165 Z" fill="#BAE6FD" stroke="#141312" stroke-width="3" stroke-linejoin="round"></path>
+          <!-- Little coal / log base hint -->
+          <path d="M130 265 C170 270 230 270 270 265" stroke="#141312" stroke-width="4.5" stroke-linecap="round"></path>
+        </svg>

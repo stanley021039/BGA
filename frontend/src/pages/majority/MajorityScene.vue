@@ -12,6 +12,7 @@ import PrepareDialog from './PrepareDialog.vue';
 import MajorityTeams from './MajorityTeams.vue';
 import MajorityResults from './MajorityResults.vue';
 import { majorityKindLabels } from '../../contracts/majority';
+import '../../styles/stitch-party-content.scss';
 import { useMajorityPresentation } from './useMajorityPresentation';
 const room = useRoomStore(),
   game = useMajorityStore(),
@@ -52,7 +53,7 @@ watch(
 );
 </script>
 <template>
-  <section v-if="s" ref="root" class="vue-majority-scene vue-game-panel"
+  <section v-if="s" ref="root" class="vue-majority-scene vue-game-panel stitch-club-content"
     ><header class="vue-majority-scene-heading"
       ><small
         >{{

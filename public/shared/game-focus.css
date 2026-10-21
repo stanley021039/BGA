@@ -1,62 +1,241 @@
+.game-focus-toggle {
+  position: fixed;
+  right: 1rem;
+  top: 1rem;
+  bottom: auto;
+  z-index: 2147483000;
+  min-width: 44px;
+  min-height: 44px;
+  background: var(--ui-surface-floating, #fffdf8);
+  color: var(--ui-text, #292639);
+  border: 2px solid var(--ui-border, #292639);
+  border-radius: 1rem;
+}
+[data-site-header] .game-focus-toggle.game-focus-in-header {
+  position: static;
+  inset: auto;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+  margin: 0;
+  z-index: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+body.game-focus-active .game-focus-excluded {
+  display: none !important;
+}
+body.game-focus-active {
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 100dvh;
+}
+body.game-focus-active
+  :is(.shell, .club, .draw-shell, .gift-shell, .telephone-shell, .adventure-shell, .market-shell) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 1rem !important;
+}
+body.game-focus-active
+  :is(
+    .game-layout,
+    .play-layout,
+    .gift-layout,
+    .draw-layout,
+    .race-layout,
+    .task-layout,
+    .adventure-layout
+  ) {
+  max-width: none;
+  width: 100%;
+}
+body.game-focus-active
+  :is(.table-sidebar .chat-panel, .room-social, .social-panel, #tableMediaOpen, #tableWatchOpen) {
+  display: none !important;
+}
+body.game-focus-active [data-game-focus-root] {
+  min-height: calc(100dvh - 2rem);
+  padding-bottom: 4rem;
+}
 
-.game-focus-toggle{position:fixed;right:1rem;bottom:1rem;z-index:2147483000;min-width:44px;min-height:44px;background:var(--ui-surface-floating,#fffdf8);color:var(--ui-text,#292639);border:2px solid var(--ui-border,#292639);border-radius:1rem}
-body.game-focus-active .game-focus-excluded{display:none!important}
-body.game-focus-active{margin:0!important;padding:0!important;min-height:100dvh}
-body.game-focus-active :is(.shell,.club,.draw-shell,.gift-shell,.telephone-shell,.adventure-shell,.market-shell){width:100%!important;max-width:none!important;margin:0!important;padding:1rem!important}
-body.game-focus-active :is(.game-layout,.play-layout,.gift-layout,.draw-layout,.race-layout,.task-layout,.adventure-layout){max-width:none;width:100%}
-body.game-focus-active :is(.table-sidebar .chat-panel,.room-social,.social-panel,#tableMediaOpen,#tableWatchOpen){display:none!important}
-body.game-focus-active [data-game-focus-root]{min-height:calc(100dvh - 2rem);padding-bottom:4rem}
+body.game-focus-active [data-site-header] {
+  display: none !important;
+}
 
-body.game-focus-active [data-site-header]{display:none!important}
+body.game-focus-active .chat-panel {
+  display: none !important;
+}
 
-body.game-focus-active .chat-panel{display:none!important}
+body.game-focus-active .shared-chat {
+  display: none !important;
+}
 
-body.game-focus-active .shared-chat{display:none!important}
+body.game-focus-active
+  :is(
+    .shared-head,
+    .shared-expressions-heading,
+    .shared-barrage-heading,
+    #shared-expressions,
+    #shared-barrage,
+    #shared-emoji-picker,
+    .room-game-info,
+    .room-tools,
+    #invite
+  ) {
+  display: none !important;
+}
 
-body.game-focus-active :is(.shared-head,.shared-expressions-heading,.shared-barrage-heading,#shared-expressions,#shared-barrage,#shared-emoji-picker,.room-game-info,.room-tools,#invite){display:none!important}
+body.game-focus-active :is(.room-action-dock, .race-utility-panel) {
+  display: none !important;
+}
 
-body.game-focus-active :is(.room-action-dock,.race-utility-panel){display:none!important}
-
-body.game-focus-active :is(.shell,.club,.draw-shell,.gift-shell,.telephone-shell,.adventure-shell,.market-shell){display:block!important}
+body.game-focus-active
+  :is(.shell, .club, .draw-shell, .gift-shell, .telephone-shell, .adventure-shell, .market-shell) {
+  display: block !important;
+}
 
 /* Restore shell space and retain all necessary game actions. */
-body.game-focus-active [data-game-focus-container]{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;box-sizing:border-box}
-body.game-focus-active [data-game-focus-root]{width:100%!important;max-width:none!important;min-width:0!important;margin-inline:0!important;box-sizing:border-box}
-body.game-focus-active :is(.play-layout,.gift-layout,.draw-layout,.game-layout,.race-main){display:flex!important;flex-direction:column!important;gap:var(--ui-row-gap,12px)!important;grid-template-columns:minmax(0,1fr)!important;grid-template-areas:none!important;grid-template-rows:auto!important}
-body.game-focus-active :is(.play-layout,.gift-layout,.draw-layout,.game-layout,.race-main)>*{grid-area:auto!important;grid-column:auto!important;grid-row:auto!important;min-width:0;max-width:100%;box-sizing:border-box}
-body.game-focus-active :is(.race-main,.draw-layout){padding-inline:var(--ui-page-gutter,8px)!important}
-body.game-focus-active .race-main :is(#racePlay,#waiting,.race-roster,.race-side-column){width:100%!important}
-body.game-focus-active .race-main #racePlay{order:0}
-body.game-focus-active .race-main .race-roster{order:1}
-body.game-focus-active .race-main .race-side-column{order:2;height:auto!important;min-height:0!important;position:static!important}
-body.game-focus-active .race-main .race-controls{height:auto!important;overflow:visible!important}
-body.game-focus-active .race-main .dashboard{height:auto!important;min-height:0!important;max-height:none!important}
-body.game-focus-active .race-main .board-scroll svg{width:100%;height:auto;min-width:850px}
-body.game-focus-active .draw-layout>main{order:0;width:100%}
-body.game-focus-active .draw-layout>.draw-roster{order:2;max-height:none!important}
-body.game-focus-active .draw-layout>.room-sidebar{order:1;width:100%;max-height:none!important}
-body.game-focus-active .board-section{height:auto!important;min-height:440px!important}
-body.game-focus-active .draw-layout .canvas-frame{min-height:400px}
-body.game-focus-active :is(.table-sidebar,.room-sidebar){max-height:none!important;height:auto!important}
-body.game-focus-active .game-layout>.play-area{width:100%}
-body.game-focus-active .build-note{display:none}
+body.game-focus-active [data-game-focus-container] {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+body.game-focus-active [data-game-focus-root] {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin-inline: 0 !important;
+  box-sizing: border-box;
+}
+body.game-focus-active :is(.play-layout, .gift-layout, .draw-layout, .game-layout, .race-main) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--ui-row-gap, 12px) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-areas: none !important;
+  grid-template-rows: auto !important;
+}
+body.game-focus-active :is(.play-layout, .gift-layout, .draw-layout, .game-layout, .race-main) > * {
+  grid-area: auto !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+body.game-focus-active :is(.race-main, .draw-layout) {
+  padding-inline: var(--ui-page-gutter, 8px) !important;
+}
+body.game-focus-active .race-main :is(#racePlay, #waiting, .race-roster, .race-side-column) {
+  width: 100% !important;
+}
+body.game-focus-active .race-main #racePlay {
+  order: 0;
+}
+body.game-focus-active .race-main .race-roster {
+  order: 1;
+}
+body.game-focus-active .race-main .race-side-column {
+  order: 2;
+  height: auto !important;
+  min-height: 0 !important;
+  position: static !important;
+}
+body.game-focus-active .race-main .race-controls {
+  height: auto !important;
+  overflow: visible !important;
+}
+body.game-focus-active .race-main .dashboard {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+body.game-focus-active .race-main .board-scroll svg {
+  width: 100%;
+  height: auto;
+  min-width: 850px;
+}
+body.game-focus-active .draw-layout > main {
+  order: 0;
+  width: 100%;
+}
+body.game-focus-active .draw-layout > .draw-roster {
+  order: 2;
+  max-height: none !important;
+}
+body.game-focus-active .draw-layout > .room-sidebar {
+  order: 1;
+  width: 100%;
+  max-height: none !important;
+}
+body.game-focus-active .board-section {
+  height: auto !important;
+  min-height: 440px !important;
+}
+body.game-focus-active .draw-layout .canvas-frame {
+  min-height: 400px;
+}
+body.game-focus-active :is(.table-sidebar, .room-sidebar) {
+  max-height: none !important;
+  height: auto !important;
+}
+body.game-focus-active .game-layout > .play-area {
+  width: 100%;
+}
+body.game-focus-active .build-note {
+  display: none;
+}
 
-body.game-focus-active .race-main .board-scroll svg{max-height:none!important}
+body.game-focus-active .race-main .board-scroll svg {
+  max-height: none !important;
+}
 
-body.game-focus-active :is(.play-layout,.gift-layout,.draw-layout,.game-layout,.race-main){align-items:stretch!important}
-body.game-focus-active :is(.play-layout,.gift-layout,.draw-layout,.game-layout,.race-main)>*{align-self:stretch!important;width:100%}
-body.game-focus-active :is(.play-layout,.gift-layout)>main{max-height:none!important;overflow:visible!important}
+body.game-focus-active :is(.play-layout, .gift-layout, .draw-layout, .game-layout, .race-main) {
+  align-items: stretch !important;
+}
+body.game-focus-active :is(.play-layout, .gift-layout, .draw-layout, .game-layout, .race-main) > * {
+  align-self: stretch !important;
+  width: 100%;
+}
+body.game-focus-active :is(.play-layout, .gift-layout) > main {
+  max-height: none !important;
+  overflow: visible !important;
+}
 
-body.game-focus-active [hidden]{display:none!important}
+body.game-focus-active [hidden] {
+  display: none !important;
+}
 
-body.game-focus-active .draw-layout .board-section .canvas-frame{min-height:400px!important}
+body.game-focus-active .draw-layout .board-section .canvas-frame {
+  min-height: 400px !important;
+}
 
 /* Drawing must retain its intrinsic 2:1 ratio while using the wider column. */
-body.game-focus-active[data-game-kind=draw] .board-section.is-drawing .canvas-frame{width:100%!important;min-height:0!important;aspect-ratio:2/1!important;align-self:start}
-body.game-focus-active[data-game-kind=draw] .board-section.is-drawing .draw-countdown{width:100%!important}
+body.game-focus-active[data-game-kind='draw'] .board-section.is-drawing .canvas-frame {
+  width: 100% !important;
+  min-height: 0 !important;
+  aspect-ratio: 2/1 !important;
+  align-self: start;
+}
+body.game-focus-active[data-game-kind='draw'] .board-section.is-drawing .draw-countdown {
+  width: 100% !important;
+}
 
 /* The race utility column now contains required game operations. */
-body.game-focus-active .race-utility-panel.ui-room-play-tools{display:flex!important}
+body.game-focus-active .race-utility-panel.ui-room-play-tools {
+  display: flex !important;
+}
 
 /* Floating media controls stay clickable when they share the bottom-right corner. */
-body:has(#tableMedia[open],#tableMediaPlaylist[open]) #gameFocusToggle{z-index:179}
+body:has(#tableMedia[open], #tableMediaPlaylist[open]) #gameFocusToggle {
+  z-index: 179;
+}

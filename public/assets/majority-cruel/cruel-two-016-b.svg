@@ -1,1 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>不用開口就有人分擔家事</title><desc>原創插畫：你最想被哪種方式愛著；不用開口就有人分擔家事</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><path d="M-69-3L0-64 69-3V76H-69Z" fill="#b6c2bd"/><path d="M-84 0L0-77 83 0" fill="none" stroke-width="10" stroke="#ec9e78"/><rect x="-16" y="25" width="34" height="51" fill="#eac97a"/><rect x="-48" y="17" width="21" height="24" fill="#ebf2eb"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="home"><title>不用開口就有人分擔家事</title><desc>你最想被哪種方式愛著：不用開口就有人分擔家事</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Chimney & Smoke -->
+          <rect x="250" y="80" width="28" height="50" rx="4" fill="#BAE6FD" stroke="#141312" stroke-width="4"></rect>
+          <ellipse cx="264" cy="65" rx="14" ry="7" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></ellipse>
+          <ellipse cx="275" cy="48" rx="10" ry="5" fill="#FDFBF7" stroke="#141312" stroke-width="2.5"></ellipse>
+          <!-- Triangular Roof (Warm Gold) -->
+          <polygon points="200,60 90,145 310,145" fill="#E5A93C" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></polygon>
+          <!-- Attic Round Window -->
+          <circle cx="200" cy="115" r="16" fill="#FDFBF7" stroke="#141312" stroke-width="3.5"></circle>
+          <line x1="200" y1="99" x2="200" y2="131" stroke="#141312" stroke-width="3"></line>
+          <line x1="184" y1="115" x2="216" y2="115" stroke="#141312" stroke-width="3"></line>
+          <!-- House Walls (Pastel Blue) -->
+          <rect x="115" y="145" width="170" height="110" rx="6" fill="#BAE6FD" stroke="#141312" stroke-width="4.5"></rect>
+          <!-- Front Door (Pastel Pink) -->
+          <rect x="175" y="180" width="50" height="75" rx="5" fill="#FBCFE8" stroke="#141312" stroke-width="4"></rect>
+          <!-- Door Knob (Gold) -->
+          <circle cx="186" cy="218" r="4.5" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></circle>
+          <!-- Ground line & Little Plant pot -->
+          <line x1="70" y1="255" x2="330" y2="255" stroke="#141312" stroke-width="4.5" stroke-linecap="round"></line>
+          <rect x="135" y="175" width="26" height="26" rx="4" fill="#FDE047" stroke="#141312" stroke-width="3"></rect>
+          <line x1="148" y1="175" x2="148" y2="201" stroke="#141312" stroke-width="2.5"></line>
+          <!-- Bush on right -->
+          <path d="M245 255 C240 240 255 230 268 238 C280 230 295 240 290 255 Z" fill="#E5A93C" stroke="#141312" stroke-width="3"></path>
+        </svg>

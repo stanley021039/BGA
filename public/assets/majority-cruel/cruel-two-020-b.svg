@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>只要界線清楚就不必報備</title><desc>原創插畫：伴侶的前任變成同事，你希望；只要界線清楚就不必報備</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><rect x="-48" y="-14" width="96" height="88" rx="16" fill="#e7bf68"/><path d="M-27-16V-38A27 27 0 0 1 27-38V-16" fill="none" stroke-width="10"/><circle cy="23" r="8" fill="#505465"/><path d="M0 25V47"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="lock"><title>只要界線清楚就不必報備</title><desc>伴侶的前任變成同事，你希望：只要界線清楚就不必報備</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Little security sparkles -->
+          <path d="M100 95 L106 82 L112 95 L125 101 L112 107 L106 120 L100 107 L87 101 Z" fill="#FDE047" stroke="#141312" stroke-width="2.5"></path>
+          <circle cx="300" cy="100" r="7" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></circle>
+          <!-- Shackle (Heavy metal curved loop) -->
+          <path d="M150 145 V100 C150 68 172 45 200 45 C228 45 250 68 250 100 V145" fill="none" stroke="#BAE6FD" stroke-width="22" stroke-linecap="round"></path>
+          <path d="M150 145 V100 C150 68 172 45 200 45 C228 45 250 68 250 100 V145" fill="none" stroke="#141312" stroke-width="5" stroke-linecap="round"></path>
+          <!-- Lock Body (Warm Gold rounded rectangle) -->
+          <rect x="125" y="130" width="150" height="125" rx="24" fill="#E5A93C" stroke="#141312" stroke-width="5"></rect>
+          <!-- Inner Plate (Pastel Pink badge) -->
+          <rect x="145" y="150" width="110" height="85" rx="14" fill="#FBCFE8" stroke="#141312" stroke-width="3.5"></rect>
+          <!-- Keyhole -->
+          <circle cx="200" cy="180" r="13" fill="#141312"></circle>
+          <polygon points="194,182 206,182 209,208 191,208" fill="#141312"></polygon>
+          <circle cx="200" cy="179" r="4" fill="#FDFBF7"></circle>
+        </svg>

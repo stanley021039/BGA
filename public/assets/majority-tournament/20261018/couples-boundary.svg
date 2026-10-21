@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-label="couples-boundary">
+            <rect width="400" height="300" rx="16" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- Bed / Pillow Base -->
+            <rect x="50" y="80" width="300" height="175" rx="18" fill="#F3F4F6" stroke="#141312" stroke-width="3.5"></rect>
+            <path d="M50 160 C120 170 280 170 350 160 L350 255 L50 255 Z" fill="#E5E7EB" stroke="#141312" stroke-width="3.5"></path>
+            <!-- Sleeping face silhouette left -->
+            <circle cx="105" cy="125" r="28" fill="#FDE047" stroke="#141312" stroke-width="3"></circle>
+            <!-- Sleeping eyes "Zzz" line -->
+            <path d="M92 125 Q105 133 118 125" stroke="#141312" stroke-width="3" fill="none" stroke-linecap="round"></path>
+            <!-- Glowing Phone on the nightstand/bed center -->
+            <rect x="180" y="90" width="85" height="135" rx="12" fill="#1E293B" stroke="#141312" stroke-width="3.5"></rect>
+            <!-- Glowing screen rays -->
+            <path d="M190 102 L255 102 L255 210 L190 210 Z" fill="#BAE6FD" stroke="#141312" stroke-width="2"></path>
+            <!-- Secret lock / message box on phone -->
+            <rect x="198" y="115" width="69" height="34" rx="6" fill="#FEF08A" stroke="#141312" stroke-width="2"></rect>
+            <circle cx="212" cy="132" r="5" fill="#EF4444"></circle>
+            <line x1="223" y1="127" x2="258" y2="127" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></line>
+            <line x1="223" y1="137" x2="248" y2="137" stroke="#141312" stroke-width="2.5" stroke-linecap="round"></line>
+            <!-- Sneaking peeking eye & hand from right -->
+            <path d="M265 60 Q315 25 365 60 Q315 95 265 60 Z" fill="#FFFFFF" stroke="#141312" stroke-width="3.5"></path>
+            <circle cx="315" cy="60" r="14" fill="#38BDF8" stroke="#141312" stroke-width="2.5"></circle>
+            <circle cx="315" cy="60" r="6" fill="#141312"></circle>
+            <!-- Reaching hand fingers -->
+            <path d="M315 160 C290 150 270 145 260 145 C255 145 250 148 250 152 C250 156 256 160 268 165 C256 167 252 172 254 176 C256 180 265 180 275 180" stroke="#141312" stroke-width="3.5" fill="#FBCFE8" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>

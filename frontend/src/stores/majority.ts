@@ -17,13 +17,17 @@ export const useMajorityStore = defineStore('majority', () => {
       customPercent: null,
       cruelRules: 'teams',
       cruelScoring: 'majority',
+      theme: 'all',
+      bracketSize: 16,
     }),
     canonical = ref('');
   const settingsKey = (o: MajorityOptions) =>
       JSON.stringify(
-        o.mode === 'cruel'
-          ? { ...o, rounds: 10 }
-          : { mode: 'majority', rounds: o.rounds, customPercent: o.customPercent },
+        ['music', 'scenario'].includes(o.mode)
+          ? { mode: o.mode, theme: o.theme, bracketSize: o.bracketSize }
+          : o.mode === 'cruel'
+            ? { ...o, rounds: 10 }
+            : { mode: 'majority', rounds: o.rounds, customPercent: o.customPercent },
       ),
     dirty = computed(() => !!canonical.value && settingsKey(settings) !== canonical.value);
   const save = useQueuedSave<MajorityOptions>({
@@ -46,6 +50,13 @@ export const useMajorityStore = defineStore('majority', () => {
   );
   function queue() {
     if (!editable.value) return;
+    if (['music', 'scenario'].includes(settings.mode)) {
+      if (state.value?.options.mode !== settings.mode)
+        settings.theme = settings.mode === 'music' ? 'all' : 'work';
+      settings.rounds = (settings.bracketSize || 16) - 1;
+      save.enqueue({ ...settings });
+      return;
+    }
     if (settings.mode === 'cruel') settings.rounds = 10;
     if (!Number.isInteger(settings.rounds) || settings.rounds < 3 || settings.rounds > 30) {
       save.invalidate('題數請輸入 3 至 30 的整數。');
@@ -221,7 +232,7 @@ export const useMajorityStore = defineStore('majority', () => {
       const payload = structuredClone({
         ...data,
         action,
-        ...(s.cruel && ['answer', 'withdraw', 'replace'].includes(action)
+        ...((s.cruel || s.tournament) && ['answer', 'withdraw', 'replace'].includes(action)
           ? { questionId: s.question?.id }
           : {}),
       });

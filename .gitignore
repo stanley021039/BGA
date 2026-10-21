@@ -19,3 +19,7 @@ Thumbs.db
 
 # Compiled frontend
 /frontend/dist/
+
+PERMANENT-MEMORY.md
+/local-audio/
+/audio-exports/

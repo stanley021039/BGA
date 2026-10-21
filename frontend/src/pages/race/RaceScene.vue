@@ -150,7 +150,7 @@ const usedCommand = computed(() => {
     /></header>
     <div class="vue-race-crews" aria-label="各車隊公開狀態"
       ><article
-        v-for="p in s.players"
+        v-for="(p, playerIndex) in s.players"
         :key="p.id"
         :style="{ '--crew-color': p.color }"
         :class="{ current: p.id === s.actor }"
@@ -172,6 +172,8 @@ const usedCommand = computed(() => {
             v-for="(d, i) in p.dice"
             :key="i"
             :value="d.value"
+            :color="p.color"
+            :variant="playerIndex"
             :class="{ spent: d.used }"
           /><span v-if="!p.dice.length">骰子尚未公開</span></div
         ></article
@@ -250,13 +252,18 @@ const usedCommand = computed(() => {
               type="button"
               :disabled="!assign || d.used || (!!command && i === commandDie)"
               :aria-pressed="die === i"
-              :aria-label="`第 ${i + 1} 顆，${d.value} 點${d.used ? '，已使用' : command && i === commandDie ? '，指令用' : ''}`"
+              :aria-label="`第 ${i + 1} 顆，${d.value} 點${d.used ? '，已使用' : command && i === commandDie ? '，指令用' : die === i ? '，已選取' : ''}`"
               :class="{ selected: die === i, spent: d.used, reserved: command && i === commandDie }"
               @click="
                 die = i;
                 selection.normalize();
               "
-              ><RaceDie :value="d.value" /><small>{{
+              ><span v-if="die === i" class="vue-race-die-check" aria-hidden="true">✓</span
+              ><RaceDie
+                :value="d.value"
+                :color="player?.color"
+                :variant="s.players.findIndex((p) => p.id === player?.id)"
+              /><small>{{
                 d.used ? '已使用' : command && i === commandDie ? '指令用' : '第 ' + (i + 1) + ' 顆'
               }}</small></button
             ><span v-if="!player?.dice.length">本輪擲骰後公開</span></div

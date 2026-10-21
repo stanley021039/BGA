@@ -1,1 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>保持禮貌但減少見面</title><desc>原創插畫：朋友與前任交往了，你會；保持禮貌但減少見面</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><path d="M-38-83H38L83 83H-83Z" fill="#a2a8af"/><path d="M0-75V75" stroke="#fff0bc" stroke-width="8" stroke-dasharray="20 17"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="street" width="100%" height="100%" fill="none"><title>保持禮貌但減少見面</title><desc>朋友與前任交往了，你會：保持禮貌但減少見面</desc>
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Sun / Moon in sky -->
+            <circle cx="186" cy="38" r="14" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+            <!-- Buildings in background -->
+            <rect x="35" y="46" width="36" height="60" rx="4" fill="#BAE6FD" stroke="#141312" stroke-width="3"></rect>
+            <rect x="42" y="56" width="8" height="10" rx="2" fill="#FFFFFF" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="56" y="56" width="8" height="10" rx="2" fill="#FFFFFF" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="42" y="72" width="8" height="10" rx="2" fill="#FFFFFF" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="56" y="72" width="8" height="10" rx="2" fill="#FFFFFF" stroke="#141312" stroke-width="1.5"></rect>
+            <!-- Central Tower -->
+            <rect x="78" y="28" width="46" height="78" rx="4" fill="#FBCFE8" stroke="#141312" stroke-width="3"></rect>
+            <polygon points="76,28 101,14 126,28" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></polygon>
+            <rect x="88" y="38" width="10" height="12" rx="2" fill="#FDE047" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="104" y="38" width="10" height="12" rx="2" fill="#FDE047" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="88" y="56" width="10" height="12" rx="2" fill="#FDE047" stroke="#141312" stroke-width="1.5"></rect>
+            <rect x="104" y="56" width="10" height="12" rx="2" fill="#FDE047" stroke="#141312" stroke-width="1.5"></rect>
+            <!-- Right House / Shop with Awning -->
+            <rect x="132" y="52" width="42" height="54" rx="4" fill="#FEF3C7" stroke="#141312" stroke-width="3"></rect>
+            <!-- Striped awning -->
+            <path d="M 128 66 L 178 66 L 174 76 L 124 76 Z" fill="#34D399" stroke="#141312" stroke-width="2"></path>
+            <!-- Street Lamp -->
+            <path d="M 195 106 L 195 58 Q 195 48 206 50" stroke="#141312" stroke-width="2.5" fill="none"></path>
+            <path d="M 202 50 L 210 50 L 206 58 Z" fill="#FDE047" stroke="#141312" stroke-width="2"></path>
+            <!-- Sidewalk Curb -->
+            <rect x="15" y="104" width="210" height="8" fill="#E2E8F0" stroke="#141312" stroke-width="2.5"></rect>
+            <!-- Main Street Asphalt -->
+            <rect x="15" y="112" width="210" height="34" rx="4" fill="#475569" stroke="#141312" stroke-width="3"></rect>
+            <!-- Yellow Road Center Dashes -->
+            <line x1="35" y1="129" x2="65" y2="129" stroke="#FDE047" stroke-width="3.5" stroke-linecap="round"></line>
+            <line x1="95" y1="129" x2="135" y2="129" stroke="#FDE047" stroke-width="3.5" stroke-linecap="round"></line>
+            <line x1="165" y1="129" x2="200" y2="129" stroke="#FDE047" stroke-width="3.5" stroke-linecap="round"></line>
+          </svg>

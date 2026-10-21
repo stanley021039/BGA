@@ -1,1 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>大家真心哭得很慘</title><desc>原創插畫：你的葬禮只能留下一種印象；大家真心哭得很慘</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><path d="M-39-76H39L62-40 46 80H-46L-62-40Z" fill="#b59a91"/><path d="M0-33V18M-21-8H21" stroke="#e9dbbb" stroke-width="10"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="coffin" role="img"><title>大家真心哭得很慘</title><desc>你的葬禮只能留下一種印象：大家真心哭得很慘</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 棺木陰影與基座 -->
+            <ellipse cx="200" cy="255" rx="90" ry="15" fill="#E2E8F0"></ellipse>
+            <!-- 棺木主體（經典六角形狀，低彩粉藍色調） -->
+            <polygon points="175,45 225,45 270,105 240,250 160,250 130,105" fill="#BAE6FD" stroke="#141312" stroke-width="4" stroke-linejoin="round"></polygon>
+            <!-- 棺蓋內嵌階梯層次（暖金金邊線條） -->
+            <polygon points="180,60 220,60 255,110 230,235 170,235 145,110" fill="#F8FAFC" stroke="#141312" stroke-width="3" stroke-linejoin="round"></polygon>
+            <!-- 裝飾幾何十字徽章（典雅金色，不恐怖） -->
+            <rect x="193" y="90" width="14" height="50" rx="4" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></rect>
+            <rect x="180" y="105" width="40" height="14" rx="4" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></rect>
+            <!-- 兩側把手金屬飾扣 -->
+            <circle cx="150" cy="150" r="6" fill="#FDE047" stroke="#141312" stroke-width="2"></circle>
+            <circle cx="250" cy="150" r="6" fill="#FDE047" stroke="#141312" stroke-width="2"></circle>
+            <circle cx="158" cy="195" r="6" fill="#FDE047" stroke="#141312" stroke-width="2"></circle>
+            <circle cx="242" cy="195" r="6" fill="#FDE047" stroke="#141312" stroke-width="2"></circle>
+            <!-- 象徵長眠的寧靜睡夢小月亮符號 -->
+            <path d="M194 175 A15 15 0 0 0 206 195 A13 13 0 0 1 194 175 Z" fill="#FDE047" stroke="#141312" stroke-width="2"></path>
+          </svg>

@@ -13,6 +13,7 @@ import UiDialog from '../../components/UiDialog.vue';
 import ImageChoiceGrid from '../../components/ImageChoiceGrid.vue';
 import ImageSourceField from '../../components/ImageSourceField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
+import ExpressionEditor from '../../components/ExpressionEditor.vue';
 
 const profile = useProfileStore();
 const appearance = ref<Appearance | null>(null),
@@ -434,6 +435,17 @@ onBeforeUnmount(() => {
         />
         <StatusSlot id="message" :message="saveMessage" :error="saveFailed" />
       </footer>
+      <ExpressionEditor
+        v-if="selected && appearance"
+        :character="selected"
+        :expression="appearance.expression"
+        @changed="
+          (removed) => {
+            if (removed) chooseExpression('neutral');
+            profile.load();
+          }
+        "
+      />
       <section
         v-if="appearance?.expression !== 'neutral' && (soundEditable || sound)"
         id="expression-sound"

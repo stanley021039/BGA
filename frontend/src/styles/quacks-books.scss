@@ -269,3 +269,37 @@
     }
   }
 }
+
+// Preserve the compact local book navigator; never turn each face into a prose card.
+:root body.vue-quacks-document .vue-quacks-codex-faces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  > button {
+    flex-direction: row;
+    align-items: center;
+    min-block-size: 44px;
+    padding: 6px 10px;
+  }
+  .quacks-rule-visual {
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
+:root body.vue-quacks-document .vue-quacks-codex-right {
+  color: #302818;
+  .vue-quacks-codex-effect-stack > p {
+    color: #302818;
+    font-size: 18px;
+  }
+  .vue-quacks-codex-faces {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .vue-quacks-codex-faces > button {
+    display: block;
+    white-space: pre-line;
+    color: #302818;
+  }
+}

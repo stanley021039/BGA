@@ -839,3 +839,11 @@
     }
   }
 }
+
+.vue-media-window,
+.vue-media-frame-art {
+  overflow: visible;
+}
+.vue-media-content {
+  overflow: hidden;
+}

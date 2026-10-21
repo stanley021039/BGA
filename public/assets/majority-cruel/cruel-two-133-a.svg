@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="mouth"><title>承認太冷再換話題</title><desc>自己的冷笑話沒人笑，你選：承認太冷再換話題</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Mouth Lips Profile / Front-Quarter View -->
+          <!-- Upper Lip (Pastel Pink) -->
+          <path d="M75 150 C110 125 135 120 155 135 C175 120 200 125 235 150 C195 158 175 148 155 152 C135 148 115 158 75 150 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+          <!-- Lower Lip (Warm Gold & Pastel Pink) -->
+          <path d="M75 150 C105 190 205 190 235 150 C195 168 115 168 75 150 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+          <!-- Mouth Inner (Dark Warm Cavity) -->
+          <path d="M90 150 C120 162 190 162 220 150 C190 155 120 155 90 150 Z" fill="#141312"></path>
+          <!-- Pearly Tooth hint -->
+          <path d="M135 148 H175 V154 H135 Z" fill="#FFFFFF" stroke="#141312" stroke-width="2"></path>
+          <!-- Speaking Breath / Wind Airflow Waves (Low-saturation Blue & Gold) -->
+          <!-- Stream 1 -->
+          <path d="M250 135 C275 125 295 130 315 115 C325 108 335 110 340 120" fill="none" stroke="#BAE6FD" stroke-width="4.5" stroke-linecap="round"></path>
+          <!-- Stream 2 (Main) -->
+          <path d="M255 150 C280 150 300 165 325 150 C335 142 345 148 350 158" fill="none" stroke="#E5A93C" stroke-width="5" stroke-linecap="round"></path>
+          <!-- Stream 3 -->
+          <path d="M250 168 C270 175 290 172 310 185 C320 192 330 190 335 180" fill="none" stroke="#BAE6FD" stroke-width="4" stroke-linecap="round"></path>
+          <!-- Floating little sound/air bubbles -->
+          <circle cx="280" cy="115" r="5" fill="#BAE6FD" stroke="#141312" stroke-width="2"></circle>
+          <circle cx="340" cy="138" r="7" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+          <circle cx="300" cy="195" r="4" fill="#FBCFE8" stroke="#141312" stroke-width="2"></circle>
+        </svg>

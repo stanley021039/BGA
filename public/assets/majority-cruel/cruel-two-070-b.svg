@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>一萬個陌生人按讚支持</title><desc>原創插畫：你發的難過貼文只能換來；一萬個陌生人按讚支持</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><rect x="-64" y="-58" width="128" height="130" rx="16" fill="#f5e9d2"/><circle cy="-18" r="25" fill="#cf9ead"/><path d="M-30 10Q0-1 31 10V31H-30Z" fill="#8db7b8"/><path d="M-42 49H-22M-9 49H42" stroke="#809eaf"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="social" width="100%" height="100%" fill="none"><title>一萬個陌生人按讚支持</title><desc>你發的難過貼文只能換來：一萬個陌生人按讚支持</desc>
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Floating reaction heart and thumb up -->
+            <circle cx="196" cy="38" r="14" fill="#F472B6" stroke="#141312" stroke-width="2.5"></circle>
+            <path d="M 196 34 C 193 30 188 31 189 35 C 190 39 196 42 196 42 C 196 42 202 39 203 35 C 204 31 199 30 196 34 Z" fill="#FFFFFF"></path>
+            <!-- Left Green Speech Bubble (Sent) -->
+            <path d="M 45 42 C 45 30 60 22 86 22 L 134 22 C 158 22 172 30 172 48 C 172 65 158 74 134 74 L 72 74 L 52 88 L 56 72 C 48 66 45 55 45 42 Z" fill="#34D399" stroke="#141312" stroke-width="3.5" stroke-linejoin="round"></path>
+            <!-- Typing Dots in Left Bubble -->
+            <circle cx="82" cy="48" r="5" fill="#141312"></circle>
+            <circle cx="106" cy="48" r="5" fill="#141312"></circle>
+            <circle cx="130" cy="48" r="5" fill="#141312"></circle>
+            <!-- Right Yellow/Pink Speech Bubble (Reply) -->
+            <path d="M 195 105 C 195 118 180 126 154 126 L 110 126 L 88 142 L 94 124 C 82 118 78 108 78 95 C 78 78 96 70 122 70 L 166 70 C 188 70 195 82 195 105 Z" fill="#FEF08A" stroke="#141312" stroke-width="3.5" stroke-linejoin="round"></path>
+            <!-- Message Lines in Right Bubble -->
+            <line x1="106" y1="92" x2="165" y2="92" stroke="#141312" stroke-width="3.5" stroke-linecap="round"></line>
+            <line x1="106" y1="104" x2="145" y2="104" stroke="#F472B6" stroke-width="3.5" stroke-linecap="round"></line>
+          </svg>

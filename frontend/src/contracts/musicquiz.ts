@@ -1,115 +1,197 @@
-import { array, record, text } from '../services/validation';
-import { readRoomSnapshot, type RoomSnapshot } from './room';
-export interface MusicAnswer {
-  name: string;
-  text: string;
-  pass: boolean;
-  correct: boolean;
-}
-export interface MusicRound {
-  round: number;
+import { array, record, text, strings } from '../services/validation';
+import { readRoomSnapshot, type RoomSnapshot, type RoomPlayer } from './room';
+export interface MusicCard {
+  id: string;
   title: string;
+  language?: string;
+  artist: string;
+  year: number;
+}
+export interface MusicAnswer {
+  id: string;
+  name: string;
+  choiceId: string | null;
+  text: string;
+  titleCorrect: boolean;
+  bonus: number;
+  tokenEarned: boolean;
+}
+export interface MusicRound extends MusicCard {
+  round: number;
   answers: MusicAnswer[];
+  djId: string;
+  djCorrect: boolean;
+  receiverId: string | null;
+  receiverName: string | null;
+  challenges: Record<string, number>;
+}
+export interface MusicPlayer extends RoomPlayer {
+  timeline: MusicCard[];
+  tokens: number;
+  bonus: number;
+  musicCardFrame: { id: string; kind: 'builtin'; version: 1 };
 }
 export interface MusicQuizSnapshot extends RoomSnapshot {
   type: 'musicquiz';
-  phase: 'waiting' | 'answering' | 'reveal' | 'finished';
+  phase: 'waiting' | 'pick' | 'intro' | 'timeline' | 'challenge' | 'reveal' | 'finished';
   round: number;
-  roundLimit: number;
   roundId: string | null;
+  roundLimit: number;
+  players: MusicPlayer[];
   interrupted: boolean;
   submitted: boolean;
-  myAnswer: string;
+  myAnswer: { text: string; choiceId: string | null; titleCorrect: boolean | null } | null;
   readyIds: string[];
-  canReveal: boolean;
-  clipSeconds: 6;
-  audioUrl: string | null;
+  djId: string | null;
+  deadline: number | null;
+  introChoices: { id: string; title: string; language?: string }[];
+  placement: number | null;
+  challenges: Record<string, number>;
+  passed: string[];
+  song: MusicCard | null;
   results: MusicRound[];
   winner: { score: number; names: string[] } | null;
+  settings: {
+    banks: string[];
+    genres: string[];
+    target: number;
+    introSeconds: number;
+    obscure: boolean;
+  };
+  banks: { id: string; label: string; count: number }[];
+  genres: string[];
+  customSongs: Record<string, unknown>[];
+  availableCount: number;
+  mine: { tokens: number; bonus: number; timeline: MusicCard[] };
+  playback: {
+    provider: 'audio' | 'youtube';
+    url?: string;
+    videoId?: string;
+    start: number;
+    seconds: number;
+    stage: 'intro' | 'highlight';
+  } | null;
 }
-const integer = (value: unknown): value is number =>
-  Number.isSafeInteger(value) && Number(value) >= 0;
-function invalid(): never {
-  throw Error('猜歌房間資料格式不正確。');
+function number(v: unknown) {
+  if (!Number.isFinite(v) || typeof v !== 'number') throw Error('猜歌數值格式不正確');
+  return v;
+}
+function card(v: unknown): MusicCard {
+  const s = record(v);
+  if (!text(s.title) || !text(s.artist) || !Number.isInteger(s.year))
+    throw Error('歌曲資料格式不正確');
+  return {
+    id: text(s.id),
+    title: text(s.title),
+    language: text(s.language),
+    artist: text(s.artist),
+    year: number(s.year),
+  };
 }
 export function readMusicQuizSnapshot(value: unknown): MusicQuizSnapshot {
   const room = readRoomSnapshot(value),
-    row = record(value);
+    r = record(value),
+    settings = record(r.settings),
+    mine = record(r.mine);
   if (
     room.type !== 'musicquiz' ||
-    !['waiting', 'answering', 'reveal', 'finished'].includes(room.phase) ||
-    !integer(row.round) ||
-    !integer(row.roundLimit) ||
-    row.round > row.roundLimit ||
-    row.clipSeconds !== 6 ||
-    !['submitted', 'canReveal', 'interrupted'].every((key) => typeof row[key] === 'boolean') ||
-    typeof row.myAnswer !== 'string'
-  )
-    return invalid();
-  if (room.phase === 'waiting' ? row.roundId !== null : !text(row.roundId)) return invalid();
-  if (!room.players.every((player) => integer(player.score))) return invalid();
-  const readyIds = array(row.readyIds);
-  if (!readyIds.every((id) => typeof id === 'string') || new Set(readyIds).size !== readyIds.length)
-    return invalid();
-  const results = array(row.results).map((value) => {
-    const result = record(value);
-    if (!integer(result.round) || result.round < 1 || !text(result.title)) return invalid();
-    const answers = array(result.answers).map((value) => {
-      const answer = record(value);
-      if (
-        !text(answer.name) ||
-        typeof answer.text !== 'string' ||
-        typeof answer.pass !== 'boolean' ||
-        typeof answer.correct !== 'boolean'
-      )
-        return invalid();
-      return {
-        name: text(answer.name),
-        text: answer.text,
-        pass: answer.pass,
-        correct: answer.correct,
-      };
-    });
-    return { round: result.round, title: text(result.title), answers };
-  });
-  if (new Set(results.map((result) => result.round)).size !== results.length) return invalid();
-  let winner: MusicQuizSnapshot['winner'] = null;
-  if (row.winner !== null) {
-    const item = record(row.winner);
-    if (!integer(item.score)) return invalid();
-    const names = array(item.names);
-    if (!names.length || !names.every((name) => typeof name === 'string' && name)) return invalid();
-    winner = { score: item.score, names: names as string[] };
-  }
-  let audioUrl: string | null = null;
-  if (row.audioUrl !== null) {
-    if (typeof row.audioUrl !== 'string' || !row.audioUrl.startsWith('/api/musicquiz-clip?'))
-      return invalid();
-    const url = new URL(row.audioUrl, 'http://afterhours.invalid');
-    if (
-      url.pathname !== '/api/musicquiz-clip' ||
-      url.searchParams.get('code')?.toUpperCase() !== room.code ||
-      url.searchParams.get('roundId') !== row.roundId
+    !['waiting', 'pick', 'intro', 'timeline', 'challenge', 'reveal', 'finished'].includes(
+      room.phase,
     )
-      return invalid();
-    audioUrl = row.audioUrl;
+  )
+    throw Error('猜歌房間資料格式不正確');
+  const media = r.playback ? record(r.playback) : null;
+  let playback: MusicQuizSnapshot['playback'] = null;
+  if (media) {
+    if (
+      !['audio', 'youtube'].includes(String(media.provider)) ||
+      !['intro', 'highlight'].includes(String(media.stage))
+    )
+      throw Error('歌曲播放格式不正確');
+    if (media.provider === 'audio') {
+      const u = new URL(text(media.url), 'http://afterhours.invalid');
+      if (
+        !text(media.url).startsWith('/api/game-song-audio?') ||
+        u.pathname !== '/api/game-song-audio' ||
+        u.searchParams.get('code')?.toUpperCase() !== room.code ||
+        u.searchParams.get('roundId') !== r.roundId
+      )
+        throw Error('歌曲來源不正確');
+    } else if (!/^[\w-]{11}$/.test(text(media.videoId))) throw Error('影片來源不正確');
+    playback = {
+      provider: media.provider as 'audio' | 'youtube',
+      url: typeof media.url === 'string' ? media.url : undefined,
+      videoId: typeof media.videoId === 'string' ? media.videoId : undefined,
+      start: number(media.start),
+      seconds: number(media.seconds),
+      stage: media.stage as 'intro' | 'highlight',
+    };
   }
-  if (room.phase === 'answering' && !audioUrl) return invalid();
   return {
     ...room,
     type: 'musicquiz',
     phase: room.phase as MusicQuizSnapshot['phase'],
-    round: row.round,
-    roundLimit: row.roundLimit,
-    roundId: typeof row.roundId === 'string' ? row.roundId : null,
-    interrupted: row.interrupted === true,
-    submitted: row.submitted === true,
-    myAnswer: row.myAnswer,
-    readyIds: readyIds as string[],
-    canReveal: row.canReveal === true,
-    clipSeconds: 6,
-    audioUrl,
-    results,
-    winner,
+    round: number(r.round),
+    roundLimit: number(r.roundLimit),
+    roundId: r.roundId === null ? null : text(r.roundId),
+    interrupted: r.interrupted === true,
+    submitted: r.submitted === true,
+    myAnswer: r.myAnswer
+      ? {
+          titleCorrect:
+            typeof record(r.myAnswer).titleCorrect === 'boolean'
+              ? (record(r.myAnswer).titleCorrect as boolean)
+              : null,
+          text: text(record(r.myAnswer).text),
+          choiceId:
+            typeof record(r.myAnswer).choiceId === 'string'
+              ? String(record(r.myAnswer).choiceId)
+              : null,
+        }
+      : null,
+    readyIds: strings(r.readyIds),
+    djId: typeof r.djId === 'string' ? r.djId : null,
+    deadline: r.deadline === null ? null : number(r.deadline),
+    introChoices: array(r.introChoices).map((v) => ({
+      id: text(record(v).id),
+      title: text(record(v).title),
+      language: text(record(v).language),
+    })),
+    placement: r.placement === null ? null : number(r.placement),
+    challenges: record(r.challenges) as Record<string, number>,
+    passed: strings(r.passed),
+    song: r.song ? card(r.song) : null,
+    results: array(r.results) as unknown as MusicRound[],
+    winner: r.winner
+      ? { score: number(record(r.winner).score), names: strings(record(r.winner).names) }
+      : null,
+    players: room.players.map((p) => ({
+      ...p,
+      timeline: array(p.timeline).map(card),
+      tokens: number(p.tokens),
+      bonus: number(p.bonus),
+      musicCardFrame: p.musicCardFrame as MusicPlayer['musicCardFrame'],
+    })),
+    settings: {
+      banks: strings(settings.banks),
+      genres: strings(settings.genres),
+      target: number(settings.target),
+      introSeconds: number(settings.introSeconds),
+      obscure: settings.obscure === true,
+    },
+    banks: array(r.banks).map((v) => ({
+      id: text(record(v).id),
+      label: text(record(v).label),
+      count: number(record(v).count),
+    })),
+    genres: strings(r.genres),
+    customSongs: array(r.customSongs).map((v) => record(v)),
+    availableCount: number(r.availableCount),
+    mine: {
+      tokens: number(mine.tokens),
+      bonus: number(mine.bonus),
+      timeline: array(mine.timeline).map(card),
+    },
+    playback,
   };
 }

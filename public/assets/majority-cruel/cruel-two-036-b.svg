@@ -1,1 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>拒絕去找收入較低的工作</title><desc>原創插畫：一項工作待遇很好但與價值觀衝突；拒絕去找收入較低的工作</desc><rect width="420" height="270" rx="24" fill="#dbeaf0"/><circle cx="294" cy="139" r="105" fill="#60869c" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#60869c" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#9b92b9"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 41L-53 12-77-36M25 41L58 18 85-22" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(4) scale(.97)"><ellipse cy="54" rx="62" ry="16" fill="#dca94f"/><path d="M-62 31V54M62 31V54" stroke-width="8" stroke="#dca94f"/><ellipse cy="29" rx="62" ry="16" fill="#f2d883"/><circle cx="13" cy="-24" r="42" fill="#f2d883"/><path d="M13-50V2M28-41Q-10-51-4-28Q35-14 17-2" fill="none"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#60869c" fill="none"/><circle cx="370" cy="35" r="4" fill="#60869c" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#60869c"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="coins" role="img"><title>拒絕去找收入較低的工作</title><desc>一項工作待遇很好但與價值觀衝突：拒絕去找收入較低的工作</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 疊放的金幣柱（左側） -->
+            <g transform="translate(90, 80)">
+              <!-- 底層 -->
+              <ellipse cx="60" cy="140" rx="45" ry="18" fill="#E5A93C" stroke="#141312" stroke-width="3"></ellipse>
+              <path d="M15 140 v-15 a45 18 0 0 0 90 0 v15 Z" fill="#E5A93C" stroke="#141312" stroke-width="3"></path>
+              <!-- 中層 -->
+              <ellipse cx="60" cy="115" rx="45" ry="18" fill="#FDE047" stroke="#141312" stroke-width="3"></ellipse>
+              <path d="M15 115 v-15 a45 18 0 0 0 90 0 v15 Z" fill="#FDE047" stroke="#141312" stroke-width="3"></path>
+              <!-- 頂層 -->
+              <ellipse cx="60" cy="90" rx="45" ry="18" fill="#FDE047" stroke="#141312" stroke-width="3.5"></ellipse>
+              <ellipse cx="60" cy="90" rx="32" ry="12" fill="#FDFBF7" stroke="#141312" stroke-width="2"></ellipse>
+              <rect x="52" y="84" width="16" height="12" rx="3" fill="#E5A93C" stroke="#141312" stroke-width="2"></rect>
+            </g>
+            <!-- 前景立體大金幣（右側正面展示） -->
+            <g transform="translate(225, 120)">
+              <circle cx="50" cy="50" r="58" fill="#E5A93C" stroke="#141312" stroke-width="4"></circle>
+              <circle cx="50" cy="50" r="48" fill="#FDE047" stroke="#141312" stroke-width="3"></circle>
+              <!-- 內圈雕花（低彩粉星星幾何，無字） -->
+              <polygon points="50,22 56,38 72,40 60,52 64,68 50,60 36,68 40,52 28,40 44,38" fill="#FBCFE8" stroke="#141312" stroke-width="2.5"></polygon>
+              <!-- 高光弧度 -->
+              <path d="M20 35 A40 40 0 0 1 75 18" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+            </g>
+            <!-- 閃閃發光的小金星 -->
+            <polygon points="120,65 123,72 130,73 124,78 126,85 120,80 114,85 116,78 110,73 117,72" fill="#E5A93C"></polygon>
+            <polygon points="325,85 327,90 333,91 328,95 330,100 325,97 320,100 322,95 317,91 323,90" fill="#E5A93C"></polygon>
+          </svg>

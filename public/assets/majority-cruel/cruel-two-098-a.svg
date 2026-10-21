@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="chair" role="img"><title>有座位但要轉兩次車</title><desc>通勤時間相同，你選：有座位但要轉兩次車</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 現代單人休閒椅靠背（暖金/黃） -->
+            <rect x="130" y="55" width="140" height="110" rx="18" fill="#FDE047" stroke="#141312" stroke-width="4"></rect>
+            <!-- 靠背縱向縫線裝飾 -->
+            <line x1="165" y1="70" x2="165" y2="150" stroke="#E5A93C" stroke-width="3.5" stroke-linecap="round"></line>
+            <line x1="200" y1="70" x2="200" y2="150" stroke="#E5A93C" stroke-width="3.5" stroke-linecap="round"></line>
+            <line x1="235" y1="70" x2="235" y2="150" stroke="#E5A93C" stroke-width="3.5" stroke-linecap="round"></line>
+            <!-- 坐墊厚度（粉藍） -->
+            <rect x="110" y="155" width="180" height="35" rx="12" fill="#BAE6FD" stroke="#141312" stroke-width="4"></rect>
+            <!-- 左右扶手 -->
+            <rect x="95" y="125" width="25" height="50" rx="8" fill="#E2E8F0" stroke="#141312" stroke-width="3"></rect>
+            <rect x="280" y="125" width="25" height="50" rx="8" fill="#E2E8F0" stroke="#141312" stroke-width="3"></rect>
+            <!-- 斜向金屬/木質椅腳 -->
+            <line x1="135" y1="190" x2="105" y2="255" stroke="#141312" stroke-width="5" stroke-linecap="round"></line>
+            <line x1="265" y1="190" x2="295" y2="255" stroke="#141312" stroke-width="5" stroke-linecap="round"></line>
+            <line x1="165" y1="190" x2="150" y2="245" stroke="#141312" stroke-width="4" stroke-linecap="round"></line>
+            <line x1="235" y1="190" x2="250" y2="245" stroke="#141312" stroke-width="4" stroke-linecap="round"></line>
+            <!-- 椅下橫桿固定架 -->
+            <line x1="118" y1="225" x2="282" y2="225" stroke="#141312" stroke-width="2.5"></line>
+          </svg>

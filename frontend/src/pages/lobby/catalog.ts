@@ -14,7 +14,7 @@ export const gameCards: GameCard[] = [
     id: 'musicquiz',
     title: '猜歌挑戰',
     english: 'MUSIC QUIZ',
-    description: '聽六秒旋律開頭，每人猜一次，揭曉後一起回顧。',
+    description: '8秒前奏10選1、年代排序與歌王插歌。',
     seats: '1–8 人',
     category: '派對・音樂',
     art: 'musicquiz',

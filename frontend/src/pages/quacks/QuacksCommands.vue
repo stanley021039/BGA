@@ -7,7 +7,7 @@ const game = useQuacksStore(),
   m = computed(() => game.mine);
 </script>
 <template>
-  <div class="vue-quacks-commands vue-quacks-commands-rq">
+  <div class="vue-quacks-commands">
     <template v-if="game.setup"
       ><span>{{
         s.phase === 'waiting' ? '準備好後，由房主開始遊戲。' : '由房主按房間設定中的再玩一局。'
@@ -16,9 +16,13 @@ const game = useQuacksStore(),
     <span v-else-if="s.interrupted">本場中止，已完成回合保留。</span>
     <span v-else-if="m?.pending">請完成上方必要效果選擇。</span
     ><span v-else-if="m?.waitingEffect">等待其他人完成效果。</span>
-    <span v-else-if="s.phase === 'fortune'">{{
-      s.me === s.roundStarterId ? '請點選上方抽取本輪占卜牌。' : '等待起始玩家抽取本輪占卜牌。'
-    }}</span>
+    <UiButton
+      v-else-if="s.phase === 'fortune' && s.me === s.roundStarterId"
+      icon="play"
+      label="抽取本輪占卜牌"
+      :disabled="!game.available"
+      @click="game.drawFortune()"
+    />
     <template v-else-if="s.phase === 'brewing' && m"
       ><template v-if="s.stage === 'drawing'"
         ><template v-if="m.canDraw"
@@ -45,8 +49,6 @@ const game = useQuacksStore(),
           game.own?.stopped ? '你已停止，等待其他人。' : '已選擇，等待同步揭曉。'
         }}</span></template
       ><UiButton
-        stitch
-        variant="primary"
         v-else-if="s.stage === 'reserves'"
         icon="check"
         label="暫存決定完成，其餘保留"
@@ -56,16 +58,12 @@ const game = useQuacksStore(),
     <template v-else-if="s.phase === 'settlement' && m"
       ><template v-if="s.stage === 'essence'"
         ><UiButton
-          stitch
-          variant="primary"
           v-if="m.alchemy?.diceRemaining"
           icon="dice"
           :label="'擲特效藥骰（剩' + m.alchemy.diceRemaining + '次）'"
           :disabled="!game.available"
           @click="game.command('essence-roll')"
         /><UiButton
-          stitch
-          variant="primary"
           v-else-if="!m.alchemy?.confirmed"
           icon="check"
           :label="'確認特效藥第 ' + m.alchemy?.max + ' 格'"
@@ -74,60 +72,46 @@ const game = useQuacksStore(),
         /><span v-else>特效藥已確認，等待其他人及額外效果。</span></template
       ><span v-else-if="m.ready">你已完成，等待其他人。</span
       ><UiButton
-        stitch
-        variant="primary"
         v-else-if="s.stage === 'witches'"
         icon="check"
         label="準備結算"
         :disabled="!game.available"
         @click="game.command('settle-ready')" /><template v-else-if="s.stage === 'bonus'"
         ><UiButton
-          stitch
-          variant="primary"
           v-if="m.bonusEligible && !m.bonusRolled"
           icon="dice"
           label="擲獎勵骰"
           :disabled="!game.available"
           @click="game.command('roll-bonus')" /><UiButton
-          stitch
-          variant="primary"
           v-else
           icon="check"
           label="獎勵骰完成，查看藥材效果"
           :disabled="!game.available"
           @click="game.command('bonus-ready')" /></template
       ><UiButton
-        stitch
-        variant="primary"
         v-else-if="s.stage === 'effects-confirm'"
         icon="check"
         label="確認藥材效果"
         :disabled="!game.available"
         @click="game.command('confirm-effects')" /><template v-else-if="s.stage === 'rewards'"
         ><UiButton
-          stitch
-          variant="primary"
+          icon="star"
           :label="game.own?.exploded ? '我要勝利分數' : '領取本輪獎勵'"
           :disabled="!game.available"
           @click="game.command('reward', { mode: 'score' })" /><UiButton
-          stitch
-          variant="primary"
           v-if="game.own?.exploded"
+          icon="ingredient"
           label="我要買藥材"
           :disabled="!game.available"
           @click="game.command('reward', { mode: 'buy' })" /></template
       ><UiButton
-        stitch
-        variant="primary"
         v-else-if="s.stage === 'shopping'"
         icon="check"
         label="完成本輪結算"
-        :disabled="!game.available"
+        :disabled="!game.available || (!!s.market.turnPlayerId && s.market.turnPlayerId !== s.me)"
         @click="game.command('shop-ready')"
     /></template>
     <UiButton
-      stitch
-      variant="primary"
       v-else-if="s.phase === 'between'"
       icon="next"
       label="下一回合"
@@ -141,18 +125,6 @@ const game = useQuacksStore(),
           : '等待其他玩家。'
     }}</span>
     <UiButton
-      v-if="s.phase === 'brewing' && m"
-      stitch
-      variant="secondary"
-      class="vue-quacks-potion-action"
-      data-quacks-potion
-      label="使用藥水瓶：收回最後白色炸彈"
-      :disabled="!game.available || !m.canPotion"
-      @click="game.command('potion')"
-    />
-    <UiButton
-      stitch
-      variant="primary"
       v-if="game.canRetry"
       icon="refresh"
       label="重試同一操作"

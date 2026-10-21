@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" aria-label="social-cancel">
+            <rect width="400" height="300" rx="16" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- Cafe Round Table -->
+            <ellipse cx="200" cy="220" rx="140" ry="42" fill="#E2E8F0" stroke="#141312" stroke-width="4"></ellipse>
+            <path d="M195 220 V275" stroke="#141312" stroke-width="8" stroke-linecap="round"></path>
+            <line x1="160" y1="275" x2="240" y2="275" stroke="#141312" stroke-width="6" stroke-linecap="round"></line>
+            <!-- Single cup of coffee on left -->
+            <rect x="130" y="180" width="30" height="32" rx="4" fill="#FFFFFF" stroke="#141312" stroke-width="2.5"></rect>
+            <ellipse cx="145" cy="180" rx="15" ry="5" fill="#78350F" stroke="#141312" stroke-width="2"></ellipse>
+            <path d="M160 190 H168 A6 6 0 0 1 174 196 V200 A6 6 0 0 1 168 206 H160" fill="none" stroke="#141312" stroke-width="2.5"></path>
+            <!-- Empty dashed phantom chair on right -->
+            <rect x="245" y="125" width="45" height="65" rx="8" fill="#F1F5F9" fill-opacity="0.4" stroke="#94A3B8" stroke-width="3" stroke-dasharray="6 6"></rect>
+            <path d="M245 190 L235 235 M290 190 L300 235" stroke="#94A3B8" stroke-width="3" stroke-dasharray="6 6"></path>
+            <!-- Tumbleweed / Gust of wind blowing through -->
+            <path d="M225 155 Q255 135 285 155 T320 145" stroke="#64748B" stroke-width="2.5" fill="none" stroke-linecap="round"></path>
+            <path d="M235 170 Q255 160 275 170" stroke="#64748B" stroke-width="2" fill="none" stroke-linecap="round"></path>
+            <!-- Delayed/Cancel message popup floating above table -->
+            <rect x="135" y="55" width="135" height="52" rx="12" fill="#FCA5A5" fill-opacity="0.3" stroke="#EF4444" stroke-width="2.5"></rect>
+            <circle cx="160" cy="81" r="11" fill="#EF4444"></circle>
+            <path d="M160 76 V82 L164 85" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"></path>
+            <line x1="180" y1="76" x2="250" y2="76" stroke="#EF4444" stroke-width="3" stroke-linecap="round"></line>
+            <line x1="180" y1="87" x2="230" y2="87" stroke="#EF4444" stroke-opacity="0.6" stroke-width="3" stroke-linecap="round"></line>
+          </svg>

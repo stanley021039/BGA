@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>親密時叫錯名字</title><desc>原創插畫：與伴侶挑一個尷尬經驗，你選；親密時叫錯名字</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><path d="M-70-5Q-40-41-2-14Q33-44 70-5Q34 70-3 63Q-45 68-70-5Z" fill="#d88791"/><path d="M-56 0Q0 19 56 0Q22 42-21 34Z" fill="#fff0db"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="mouth"><title>親密時叫錯名字</title><desc>與伴侶挑一個尷尬經驗，你選：親密時叫錯名字</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Mouth Lips Profile / Front-Quarter View -->
+          <!-- Upper Lip (Pastel Pink) -->
+          <path d="M75 150 C110 125 135 120 155 135 C175 120 200 125 235 150 C195 158 175 148 155 152 C135 148 115 158 75 150 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+          <!-- Lower Lip (Warm Gold & Pastel Pink) -->
+          <path d="M75 150 C105 190 205 190 235 150 C195 168 115 168 75 150 Z" fill="#FBCFE8" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+          <!-- Mouth Inner (Dark Warm Cavity) -->
+          <path d="M90 150 C120 162 190 162 220 150 C190 155 120 155 90 150 Z" fill="#141312"></path>
+          <!-- Pearly Tooth hint -->
+          <path d="M135 148 H175 V154 H135 Z" fill="#FFFFFF" stroke="#141312" stroke-width="2"></path>
+          <!-- Speaking Breath / Wind Airflow Waves (Low-saturation Blue & Gold) -->
+          <!-- Stream 1 -->
+          <path d="M250 135 C275 125 295 130 315 115 C325 108 335 110 340 120" fill="none" stroke="#BAE6FD" stroke-width="4.5" stroke-linecap="round"></path>
+          <!-- Stream 2 (Main) -->
+          <path d="M255 150 C280 150 300 165 325 150 C335 142 345 148 350 158" fill="none" stroke="#E5A93C" stroke-width="5" stroke-linecap="round"></path>
+          <!-- Stream 3 -->
+          <path d="M250 168 C270 175 290 172 310 185 C320 192 330 190 335 180" fill="none" stroke="#BAE6FD" stroke-width="4" stroke-linecap="round"></path>
+          <!-- Floating little sound/air bubbles -->
+          <circle cx="280" cy="115" r="5" fill="#BAE6FD" stroke="#141312" stroke-width="2"></circle>
+          <circle cx="340" cy="138" r="7" fill="#FDE047" stroke="#141312" stroke-width="2.5"></circle>
+          <circle cx="300" cy="195" r="4" fill="#FBCFE8" stroke="#141312" stroke-width="2"></circle>
+        </svg>

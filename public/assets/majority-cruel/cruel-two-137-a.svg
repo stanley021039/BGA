@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" fill="none" aria-label="ghost"><title>影子比你晚三秒動</title><desc>每天有一種無害的怪事，你選：影子比你晚三秒動</desc>
+          <rect width="400" height="300" rx="14" fill="#FDFBF7"></rect>
+          <!-- Little floaty stars -->
+          <path d="M95 90 L102 75 L109 90 L124 97 L109 104 L102 119 L95 104 L80 97 Z" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></path>
+          <circle cx="305" cy="80" r="10" fill="#FDE047" stroke="#141312" stroke-width="3"></circle>
+          <circle cx="310" cy="180" r="5" fill="#BAE6FD" stroke="#141312" stroke-width="2"></circle>
+          <!-- Soft Shadow underneath -->
+          <ellipse cx="200" cy="265" rx="65" ry="10" fill="#BAE6FD" opacity="0.6"></ellipse>
+          <!-- Ghost Body -->
+          <path d="M130 150 C130 80 160 50 200 50 C240 50 270 80 270 150 C270 190 280 220 280 230 C280 240 265 240 255 230 C245 220 235 220 225 230 C215 240 205 240 195 230 C185 220 175 220 165 230 C155 240 145 240 135 230 C125 220 130 180 130 150 Z" fill="#BAE6FD" stroke="#141312" stroke-width="4.5" stroke-linejoin="round"></path>
+          <!-- Ghost cute wave arms -->
+          <path d="M130 165 C105 160 95 180 115 190 C125 195 132 185 132 185" fill="#BAE6FD" stroke="#141312" stroke-width="4" stroke-linejoin="round"></path>
+          <path d="M270 165 C295 155 305 175 285 185 C275 190 268 180 268 180" fill="#BAE6FD" stroke="#141312" stroke-width="4" stroke-linejoin="round"></path>
+          <!-- Eyes -->
+          <circle cx="178" cy="125" r="9" fill="#141312"></circle>
+          <circle cx="175" cy="122" r="3" fill="#FFFFFF"></circle>
+          <circle cx="222" cy="125" r="9" fill="#141312"></circle>
+          <circle cx="219" cy="122" r="3" fill="#FFFFFF"></circle>
+          <!-- Cute blush cheeks (pastel pink) -->
+          <ellipse cx="160" cy="140" rx="10" ry="6" fill="#FBCFE8" stroke="#141312" stroke-width="2"></ellipse>
+          <ellipse cx="240" cy="140" rx="10" ry="6" fill="#FBCFE8" stroke="#141312" stroke-width="2"></ellipse>
+          <!-- Cute open mouth -->
+          <path d="M192 138 C192 148 208 148 208 138 Z" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></path>
+        </svg>

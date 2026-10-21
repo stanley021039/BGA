@@ -76,9 +76,13 @@
           ])
         : null;
     }
-    function validPlayer(token, key) {
+    function validPlayer(token, key, allowHidden = false) {
       return (
-        !disposed && token === playerEpoch && key === currentKey() && !!room && !document.hidden
+        !disposed &&
+        token === playerEpoch &&
+        key === currentKey() &&
+        !!room &&
+        (allowHidden || !document.hidden)
       );
     }
     function notify() {
@@ -155,13 +159,7 @@
       apiCancel?.();
     }
     function activeVideo() {
-      return (
-        !disposed &&
-        snapshot?.current?.type === 'video' &&
-        videoWanted &&
-        opened &&
-        !document.hidden
-      );
+      return !disposed && snapshot?.current?.type === 'video' && videoWanted && opened;
     }
     function isVisibleEnough() {
       if (collapsed) return true;
@@ -756,20 +754,23 @@
       });
       return apiPromise;
     }
-    function videoFrame(videoId, api = true) {
+    function videoFrame(videoId, api = true, embedHost = 'www.youtube-nocookie.com') {
       const iframe = document.createElement('iframe');
       iframe.title = '本桌YouTube影片';
       iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
       iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
       iframe.setAttribute('allowfullscreen', '');
       iframe.src =
-        'https://www.youtube-nocookie.com/embed/' +
+        'https://' +
+        embedHost +
+        '/embed/' +
         encodeURIComponent(videoId) +
         '?controls=1&playsinline=1' +
         (api ? '&enablejsapi=1&origin=' + encodeURIComponent(location.origin) : '');
       return iframe;
     }
     function applyVideo(force = false) {
+      if (document.hidden) return;
       if (!activeVideo() || !ready || !player || nativeVideo) return;
       const key = signature();
       if (!force && appliedPlayback === key) return;
@@ -803,7 +804,8 @@
         status('影片尚未準備好，請按「返回全桌進度」或原生播放按鈕。', true);
       }
     }
-    async function mountVideo() {
+    async function mountVideo(embedHost = 'www.youtube-nocookie.com') {
+      if (document.hidden) return;
       stopPlayers();
       if (!activeVideo()) return;
       const token = playerEpoch,
@@ -819,9 +821,9 @@
           exitVideo('影片至少需要200×200可見空間，請放大視窗後重新加入。');
           return;
         }
-        const iframe = videoFrame(videoId);
+        const iframe = videoFrame(videoId, true, embedHost);
         videoHost.replaceChildren(iframe);
-        const valid = () => validPlayer(token, key) && activeVideo();
+        const valid = () => validPlayer(token, key, true) && activeVideo();
         let instance;
         const stale = (target) => {
           if (valid()) return false;
@@ -885,6 +887,16 @@
               cancelVideoReady(event.target || instance);
               initialVideoPause = null;
               settings();
+              if (
+                [101, 150, 153].includes(event.data) &&
+                embedHost === 'www.youtube-nocookie.com'
+              ) {
+                status('YouTube回報錯誤 ' + event.data + '，正在以一般嵌入播放器重試。');
+                Promise.resolve().then(() => {
+                  if (valid()) mountVideo('www.youtube.com');
+                });
+                return;
+              }
               const errors = {
                 2: '影片識別碼無效。',
                 5: '此瀏覽器無法播放這部影片。',
@@ -895,7 +907,9 @@
               };
               status(
                 (errors[event.data] || '影片目前無法嵌入播放。') +
-                  ' 可用原生播放器重試，或關閉自己的影片。',
+                  '（YouTube錯誤 ' +
+                  event.data +
+                  '）可用原生播放器重試，或至YouTube觀看。',
                 true,
               );
               videoFallback = true;
@@ -1062,8 +1076,11 @@
             );
           else pauseAudio(audio);
         }
-        if (snapshot?.current?.type === 'video') exitVideo('');
-      } else resumeInterruptedAudio();
+        // A tab switch must not destroy an already accepted YouTube player.
+      } else {
+        resumeInterruptedAudio();
+        if (activeVideo()) applyPlayback();
+      }
     }
     const unbind = window.AudioSettings?.subscribe?.((value, { gesture = false } = {}) => {
       settings(value);

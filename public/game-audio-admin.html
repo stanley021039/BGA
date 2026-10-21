@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-Hant"
+  ><head
+    ><script src="/shared/color-scheme.js"></script
+    ><meta charset="utf-8" /><meta
+      name="viewport"
+      content="width=device-width,initial-scale=1"
+    /><title>猜歌音檔管理</title
+    ><link rel="stylesheet" href="/club.css" /><link rel="stylesheet" href="/club-pages.css" /><link
+      rel="stylesheet"
+      href="/shared/ui-primitives.css"
+    /><link rel="stylesheet" href="/shared/playful-theme.css" /><style>
+      body{max-width:1000px;margin:auto;padding:24px;font-family:system-ui}section{border:1px solid var(--ui-border,#888);border-radius:16px;padding:24px;margin-block:24px}label{display:block;margin-block:16px}select,input,button{font:inherit;max-width:100%;padding:10px}progress,audio{width:100%}#status{min-height:1.5em}#draft audio{margin-bottom:16px}#draft .review-confirm{display:flex;align-items:center;gap:10px}#draft #reviewed{display:inline-block;width:24px;min-width:24px;height:24px;margin:0;padding:0;flex:0 0 24px}#report{white-space:pre-wrap;overflow-wrap:anywhere}small{display:block}
+    </style></head
+  ><body class="club-page admin-page" data-visual-theme="playful"
+    ><main class="inner-page"
+      ><a href="/admin">← 管理後台</a><h1>猜歌音檔管理</h1
+      ><p>前奏8秒、精華30秒。上傳MP3片段，兩段齊全後自動供遊戲使用。</p
+      ><label
+        >分類
+        <select id="category"
+          ><option value="">全部分類</option></select
+        ></label
+      ><label
+        >歌曲
+        <select id="song"></select></label
+      ><section class="page-panel"
+        ><h2>完整音檔自動切片</h2
+        ><p>上傳完整歌曲，先產生8秒前奏和30秒精華草稿。試聽後可調整起點，再套用到遊戲。</p
+        ><p id="converter-status" role="status"></p
+        ><label
+          >完整音檔（最多100MB、30分鐘）<input
+            id="source-file"
+            type="file"
+            accept=".mp3,.m4a,.wav,.ogg,.flac,.webm,audio/*" /></label
+        ><button class="page-button" id="full-upload">上傳並自動切片</button
+        ><button class="page-button" id="restore-full" hidden>載入已保存完整音檔</button
+        ><div id="pending-drafts" hidden
+          ><label>尚未套用的草稿<select id="pending-draft"></select></label
+          ><button class="page-button" id="restore-draft">繼續編輯草稿</button></div
+        ><div id="draft" hidden
+          ><h3>試聽與調整切點</h3><p id="draft-summary"></p
+          ><p>自動精華依音量與靜音分析提出建議，不保證是副歌。</p
+          ><label>前奏起點（秒）<input id="intro-start" type="number" min="0" step="0.1" /></label
+          ><audio id="intro-preview" controls preload="none" aria-label="前奏試聽"></audio
+          ><label
+            >精華起點（秒）<input id="highlight-start" type="number" min="0" step="0.1" /></label
+          ><audio id="highlight-preview" controls preload="none" aria-label="精華試聽"></audio
+          ><button class="page-button" id="reclip">依新起點重新切片</button
+          ><label class="review-confirm"
+            ><input id="reviewed" type="checkbox" />已試聽並確認切點</label
+          ><button class="page-button" id="publish">套用到遊戲</button
+          ><button class="page-button" id="discard">刪除待套用草稿</button
+          ><p>完整音檔會保存在伺服器，供之後重新切片；遊戲玩家只會取得目前題目的片段。</p></div
+        ></section
+      ><section class="page-panel"
+        ><h2>上傳單一歌曲</h2
+        ><label>前奏（8秒）<input id="intro" type="file" accept=".mp3,audio/mpeg" /></label
+        ><label>精華（30秒）<input id="highlight" type="file" accept=".mp3,audio/mpeg" /></label
+        ><button class="page-button" id="single">上傳所選片段</button></section
+      ><section class="page-panel"
+        ><h2>整批上傳音檔包</h2
+        ><p>先在電腦解壓縮音檔包，再選擇 clips 資料夾。可用上方分類只上傳某一類，檔名須保留原樣。</p
+        ><input
+          aria-label="選擇片段資料夾"
+          id="folder"
+          type="file"
+          webkitdirectory
+          multiple
+          accept=".mp3"
+        /><button class="page-button" id="batch">開始批次上傳</button
+        ><button class="page-button" id="cancel" disabled>停止後續上傳</button
+        ><p>成功上傳的片段會保留；中止後可重新選擇資料夾補傳。</p></section
+      ><progress aria-label="音檔處理進度" id="progress" value="0" max="1"></progress
+      ><p id="status" role="status"></p><pre id="report"></pre
+      ><script src="/game-audio-admin.js"></script></main></body
+></html>

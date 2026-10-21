@@ -5,7 +5,7 @@ import { ApiError } from '../services/http';
 
 interface Attempt {
   scope: number;
-  turnId: string;
+  turnId: string | null;
   tokenField: 'roundId' | 'stepId';
   phase: string;
   target: string;
@@ -25,7 +25,7 @@ export const usePartyActionsStore = defineStore('party-actions', () => {
   );
   const turnId = computed(() => {
       const value = room.snapshot?.[tokenField.value];
-      return typeof value === 'string' ? value : '';
+      return value === null ? null : typeof value === 'string' ? value : '';
     }),
     phase = computed(() => room.snapshot?.phase || '');
   const current = (attempt: Attempt) =>
@@ -90,7 +90,13 @@ export const usePartyActionsStore = defineStore('party-actions', () => {
     }
   }
   function command(action: string, data: Record<string, unknown> = {}) {
-    if (!turnId.value || !room.snapshot || room.terminal) return Promise.resolve(false);
+    const setupCommand =
+      room.type === 'musicquiz' &&
+      action === 'configure' &&
+      phase.value === 'waiting' &&
+      turnId.value === null;
+    if ((!turnId.value && !setupCommand) || !room.snapshot || room.terminal)
+      return Promise.resolve(false);
     return execute({
       scope: room.scope,
       turnId: turnId.value,

@@ -1173,6 +1173,7 @@
       window.MediaAppearance.subscribe((id) => {
         selectedFrame = id;
         syncFrame();
+        queueLayout();
       });
       return;
     }
@@ -1984,15 +1985,17 @@
         : fallback;
   }
   function mediaViewport() {
-    const header = document.querySelector('[data-site-header]')?.getBoundingClientRect(),
+    const gutter = !collapsed && selectedFrame !== 'default' ? 40 : 8,
+      header = document.querySelector('[data-site-header]')?.getBoundingClientRect(),
       top =
         header && header.top <= 32 && header.bottom > 0
-          ? Math.min(header.bottom + 8, Math.max(8, window.innerHeight - 260))
+          ? Math.min(header.bottom + gutter, Math.max(8, window.innerHeight - 260))
           : 8;
-    return { top, height: Math.max(0, window.innerHeight - top - 8) };
+    return { top, gutter, height: Math.max(0, window.innerHeight - top - gutter) };
   }
   function layout(next = drag || sizeDrag ? windowPosition : positionPreference) {
-    const viewport = mediaViewport();
+    const viewport = mediaViewport(),
+      gutter = viewport.gutter;
     if (collapsed) {
       const tools = q('.table-media-window-tools'),
         buttons = [...tools.querySelectorAll('button')].filter((b) => !b.hidden),
@@ -2028,19 +2031,25 @@
       return;
     }
     if (minimized) {
-      const width = Math.min(360, Math.max(0, window.innerWidth - 16)),
+      const width = Math.min(360, Math.max(0, window.innerWidth - gutter * 2)),
         chrome = measured(q('#mediaWindowBar'), 72) + 26,
         height = Math.min(viewport.height, Math.max(340, chrome + 210));
       dialog.style.width = width + 'px';
       dialog.style.height = height + 'px';
       windowSize = { width, height };
       const left = Math.max(
-          8,
-          Math.min(next?.left ?? window.innerWidth - width - 16, window.innerWidth - width - 8),
+          gutter,
+          Math.min(
+            next?.left ?? window.innerWidth - width - gutter,
+            window.innerWidth - width - gutter,
+          ),
         ),
         top = Math.max(
           viewport.top,
-          Math.min(next?.top ?? window.innerHeight - height - 16, window.innerHeight - height - 8),
+          Math.min(
+            next?.top ?? window.innerHeight - height - gutter,
+            window.innerHeight - height - gutter,
+          ),
         );
       windowPosition = { left, top };
       dialog.style.left = left + 'px';
@@ -2052,7 +2061,7 @@
     if (!dialog.open) return;
     const width = Math.min(
         Math.max(280, sizePreference?.width || 900),
-        Math.max(0, window.innerWidth - 16),
+        Math.max(0, window.innerWidth - gutter * 2),
       ),
       narrow = width < 760;
     dialog.style.width = width + 'px';
@@ -2089,10 +2098,10 @@
     dialog.style.setProperty('--media-queue-height', queueHeight + 'px');
     dialog.classList.toggle('media-too-small', width < 240 || height - chrome - currentInfo < 210);
     const box = dialog.getBoundingClientRect(),
-      maxLeft = Math.max(8, window.innerWidth - box.width - 8),
-      maxTop = Math.max(viewport.top, window.innerHeight - box.height - 8);
+      maxLeft = Math.max(gutter, window.innerWidth - box.width - gutter),
+      maxTop = Math.max(viewport.top, window.innerHeight - box.height - gutter);
     windowPosition = {
-      left: Math.max(8, Math.min(maxLeft, next?.left ?? maxLeft)),
+      left: Math.max(gutter, Math.min(maxLeft, next?.left ?? maxLeft)),
       top: Math.max(viewport.top, Math.min(maxTop, next?.top ?? maxTop)),
     };
     dialog.style.left = windowPosition.left + 'px';

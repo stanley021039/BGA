@@ -1,1 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>衣服有味道</title><desc>原創插畫：出門約會你最不能接受；衣服有味道</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><path d="M-30-53L-72-37-87-4-54 13-43-5V76H43V-5L54 13 87-4 72-37 30-53Q0-20-30-53Z" fill="#c2a5c2"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" aria-label="shirt" width="100%" height="100%" fill="none"><title>衣服有味道</title><desc>出門約會你最不能接受：衣服有味道</desc>
+            <rect width="240" height="160" rx="10" fill="#FDFBF7"></rect>
+            <!-- Hanger on top -->
+            <path d="M 120 18 C 125 18 130 22 126 27 C 122 32 118 32 120 38 L 120 44" stroke="#141312" stroke-width="2.5" stroke-linecap="round" fill="none"></path>
+            <path d="M 85 54 L 120 40 L 155 54" stroke="#E5A93C" stroke-width="3" stroke-linecap="round"></path>
+            <!-- Main T-Shirt Body -->
+            <path d="M 96 42 C 105 48 135 48 144 42 L 182 56 L 168 85 L 152 78 L 152 136 L 88 136 L 88 78 L 72 85 L 58 56 Z" fill="#FBCFE8" stroke="#141312" stroke-width="3.5" stroke-linejoin="round"></path>
+            <!-- Collar rib -->
+            <path d="M 96 42 C 104 54 136 54 144 42" stroke="#141312" stroke-width="3" fill="#FEF3C7"></path>
+            <!-- Cute Pocket with green sprout -->
+            <rect x="98" y="70" width="22" height="24" rx="4" fill="#FDE047" stroke="#141312" stroke-width="2.5"></rect>
+            <!-- Sprout / Flower -->
+            <path d="M 109 70 C 109 64 104 62 104 62 C 104 62 108 67 109 70 Z" fill="#34D399" stroke="#141312" stroke-width="1.5"></path>
+            <path d="M 109 70 C 109 64 114 62 114 62 C 114 62 110 67 109 70 Z" fill="#34D399" stroke="#141312" stroke-width="1.5"></path>
+            <!-- Sleeve Stitching -->
+            <line x1="72" y1="85" x2="88" y2="78" stroke="#141312" stroke-width="2"></line>
+            <line x1="168" y1="85" x2="152" y2="78" stroke="#141312" stroke-width="2"></line>
+            <!-- Hem detail -->
+            <line x1="94" y1="128" x2="146" y2="128" stroke="#F472B6" stroke-width="2.5" stroke-dasharray="4 3"></line>
+          </svg>

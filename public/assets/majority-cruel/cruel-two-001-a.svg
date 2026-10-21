@@ -1,1 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 270" role="img"><title>震到整張床都在跳</title><desc>原創插畫：吵醒你的鬧鐘只能選一種；震到整張床都在跳</desc><rect width="420" height="270" rx="24" fill="#fae0df"/><circle cx="294" cy="139" r="105" fill="#b76b83" opacity=".13"/><path d="M24 237Q210 216 397 237" stroke="#b76b83" stroke-width="3" fill="none"/><g stroke="#404654" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><g transform="translate(99 116)"><path d="M-30 110Q-44 52-25 30L26 30Q45 53 30 110Z" fill="#87b8ac"/><circle cy="0" r="35" fill="#f6c9a1"/><path d="M-35-2Q-43-42-2-42Q42-45 35 0L19-18-6-13-19-26Z" fill="#434955"/><circle cx="-11" cy="3" r="2.6" fill="#343544" stroke="none"/><circle cx="11" cy="3" r="2.6" fill="#343544" stroke="none"/><path d="M-7 17Q0 24 9 16" fill="none"/><path d="M-26 40L-54 77M26 40L58 77" fill="none" stroke-width="13"/></g><g transform="translate(287 128) rotate(-4) scale(.97)"><circle r="66" fill="#f5ecd2"/><circle r="54" fill="#a8c4bf"/><path d="M0-39V0L29 20"/><circle r="4" fill="#414957"/></g><path d="M171 89Q189 62 209 61M172 179L196 182" stroke="#b76b83" fill="none"/><circle cx="370" cy="35" r="4" fill="#b76b83" stroke="none"/><path d="M39 34V47M33 41H46" stroke="#b76b83"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="100%" height="100%" aria-label="clock" role="img"><title>震到整張床都在跳</title><desc>吵醒你的鬧鐘只能選一種：震到整張床都在跳</desc>
+            <rect width="400" height="300" rx="14" fill="#FDFBF7" stroke="#141312" stroke-width="4"></rect>
+            <!-- 鬧鐘頂部敲擊雙耳鈴鐺（暖金） -->
+            <circle cx="115" cy="75" r="32" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></circle>
+            <circle cx="285" cy="75" r="32" fill="#E5A93C" stroke="#141312" stroke-width="3.5"></circle>
+            <path d="M180 50 Q200 35 220 50" stroke="#141312" stroke-width="4" stroke-linecap="round" fill="none"></path>
+            <circle cx="200" cy="42" r="5" fill="#141312"></circle>
+            <!-- 鬧鐘支撐斜腳 -->
+            <line x1="125" y1="235" x2="95" y2="265" stroke="#141312" stroke-width="6" stroke-linecap="round"></line>
+            <line x1="275" y1="235" x2="305" y2="265" stroke="#141312" stroke-width="6" stroke-linecap="round"></line>
+            <!-- 時鐘圓形外殼主體（低彩粉） -->
+            <circle cx="200" cy="155" r="95" fill="#FBCFE8" stroke="#141312" stroke-width="4.5"></circle>
+            <!-- 白色錶盤內圈 -->
+            <circle cx="200" cy="155" r="76" fill="#FFFFFF" stroke="#141312" stroke-width="3.5"></circle>
+            <!-- 刻度（無文字，四個方位幾何方塊） -->
+            <rect x="197" y="85" width="6" height="14" rx="2" fill="#141312"></rect>
+            <rect x="197" y="211" width="6" height="14" rx="2" fill="#141312"></rect>
+            <rect x="130" y="152" width="14" height="6" rx="2" fill="#141312"></rect>
+            <rect x="256" y="152" width="14" height="6" rx="2" fill="#141312"></rect>
+            <!-- 時針（粗黑指向 10 點） -->
+            <line x1="200" y1="155" x2="160" y2="120" stroke="#141312" stroke-width="5" stroke-linecap="round"></line>
+            <!-- 分針（指向 2 點） -->
+            <line x1="200" y1="155" x2="245" y2="125" stroke="#141312" stroke-width="4" stroke-linecap="round"></line>
+            <!-- 秒針（粉藍跳色） -->
+            <line x1="200" y1="155" x2="200" y2="210" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round"></line>
+            <!-- 中心圓鈕 -->
+            <circle cx="200" cy="155" r="8" fill="#E5A93C" stroke="#141312" stroke-width="2.5"></circle>
+          </svg>
