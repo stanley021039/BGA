@@ -303,7 +303,7 @@ const canSlot = (i: number) =>
             :tabindex="s.song ? 0 : undefined"
             >{{ s.song?.title || '神秘曲目 #' + s.round }}</h2
           >
-          ><p>{{
+          <p>{{
             s.song
               ? s.song.artist + ' · ' + s.song.year
               : s.playback.seconds + '秒片段 · 歌名與年份待揭曉'
