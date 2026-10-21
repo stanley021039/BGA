@@ -42,7 +42,7 @@
   .vue-roster-list {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--stitch-space-12, 0.75rem);
     min-inline-size: 0;
     min-block-size: 0;
     margin: 0;
@@ -74,11 +74,10 @@
     flex-shrink: 0;
     box-sizing: border-box;
     min-inline-size: 0;
-    min-block-size: 5rem;
-    padding: 0.25rem;
-    border: 0;
-    border-inline-start: 3px solid transparent;
-    border-radius: 0.5rem;
+    min-block-size: 6rem;
+    padding: 0.625rem;
+    border: 1.5px solid var(--stitch-frame, #20211e);
+    border-radius: var(--stitch-panel-radius, 0.75rem);
     background: var(--stitch-surface, #fff);
     color: var(--stitch-ink, #20211e);
   }
@@ -87,7 +86,7 @@
     color: var(--stitch-selected-ink, #20211e);
   }
   .vue-room-player[data-actor='true'] {
-    border-inline-start-color: var(--stitch-link, #0051d5);
+    box-shadow: inset 3px 0 0 var(--stitch-link, #0051d5);
   }
   .vue-room-player[data-no-metric='true'] {
     grid-template-columns: 2.5rem minmax(0, 1fr);
@@ -200,9 +199,6 @@
     line-height: 1.5;
     white-space: nowrap;
   }
-  .vue-room-player-metric:has(> .vue-gift-roster-scores) {
-    block-size: 2.875rem;
-  }
   .vue-room-player-feedback {
     grid-column: 1 / -1;
     grid-row: 3;
@@ -229,6 +225,7 @@
   > footer {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
     align-content: start;
     gap: 0.5rem;

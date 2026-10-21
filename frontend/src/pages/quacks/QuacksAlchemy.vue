@@ -33,6 +33,8 @@ const game = useQuacksStore(),
               ></ol
             ></details
           ><UiButton
+            stitch
+            variant="secondary"
             icon="check"
             :label="a?.patientId === p.id ? '已選擇' : '選擇治療' + p.name"
             :disabled="!game.available || a?.patientId === p.id"

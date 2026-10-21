@@ -47,14 +47,16 @@ function choose(book: QuacksBook, value: number) {
 </script>
 <template>
   <section v-if="game.mine" class="vue-quacks-market vue-quacks-compact-market"
-    ><header class="vue-quacks-market-heading"
-      ><h2>{{ extra ? '幽靈氣息獨立採購' : '藥材市集' }}</h2
-      ><span>第 {{ game.state?.round }}／9 回合</span></header
-    >
-    <div class="vue-quacks-market-budget"
-      ><strong :aria-label="'剩餘預算 ' + budget + ' 金幣'">{{ budget }}<span>金幣</span></strong
-      ><span :aria-label="'已買 ' + bought.length + '／2 片'"
-        ><QuacksGlyph resource="bag" :size="32" /><strong>{{ bought.length }}／2</strong></span
+    ><div class="vue-quacks-market-top"
+      ><header class="vue-quacks-market-heading"
+        ><h2>{{ extra ? '幽靈氣息獨立採購' : '藥材市集' }}</h2
+        ><span>第 {{ game.state?.round }}／9 回合</span></header
+      >
+      <div class="vue-quacks-market-budget"
+        ><strong :aria-label="'剩餘預算 ' + budget + ' 金幣'">{{ budget }}<span>金幣</span></strong
+        ><span :aria-label="'已買 ' + bought.length + '／2 片'"
+          ><QuacksGlyph resource="bag" :size="32" /><strong>{{ bought.length }}／2</strong></span
+        ></div
       ></div
     >
     <p class="vue-quacks-market-note"
@@ -121,7 +123,11 @@ function choose(book: QuacksBook, value: number) {
                 " /></span></button></div></article></div
     ><p v-else
       >第九輪不再購買藥材；完成結算時，可用普通預算每 5 金幣轉 1 分。獨立預算依規則另行計分。</p
-    ><UiDialog ref="bookDialog" stitch title="本局藥材書" class="vue-quacks-market-book-dialog"
+    ><UiDialog
+      ref="bookDialog"
+      stitch
+      title="本局藥材書"
+      class="vue-quacks-market-book-dialog vue-quacks-tools-dialog"
       ><QuacksBooks /></UiDialog
   ></section>
 </template>

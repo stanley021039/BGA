@@ -97,9 +97,7 @@ const lessonHref = computed(
         ></label
       ><p>設定會自動儲存；至少兩支車隊開始，可加入電腦練習。</p
       ><p v-if="race.settingsError" role="alert">{{ race.settingsError }}</p
-      ><p v-else role="status">{{
-        race.settingsPending ? '正在儲存…' : race.settingsSaved ? '已儲存' : ''
-      }}</p></template
+      ><p v-else role="status">{{ race.settingsPending ? '正在儲存…' : '' }}</p></template
     >
     <template #side-actions
       ><a class="vue-race-lesson-link" :href="lessonHref">獨立本機教學桌 →</a

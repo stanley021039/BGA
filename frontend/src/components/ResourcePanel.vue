@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UiButton from './UiButton.vue';
 withDefaults(
   defineProps<{
     loading?: boolean;
@@ -18,7 +19,7 @@ defineEmits<{ retry: [] }>();
 </script>
 
 <template>
-  <section class="resource-panel">
+  <section class="resource-panel vue-stitch-panel">
     <header class="resource-panel-heading"><slot name="heading" /></header>
     <div class="resource-panel-filters"><slot name="filters" /></div>
     <div class="resource-panel-summary" role="status" aria-live="polite" aria-atomic="true"
@@ -32,9 +33,14 @@ defineEmits<{ retry: [] }>();
       <slot v-else />
     </div>
     <footer class="resource-panel-actions">
-      <button v-if="error" type="button" class="button outline" @click="$emit('retry')"
-        >重新載入</button
-      >
+      <UiButton
+        v-if="error"
+        stitch
+        variant="secondary"
+        icon="refresh"
+        label="重新載入"
+        @click="$emit('retry')"
+      />
       <slot v-else name="actions" />
     </footer>
   </section>

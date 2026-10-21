@@ -1,0 +1,87 @@
+@use 'tokens' as t;
+
+:root body[data-visual-theme].vue-quacks-document {
+  .vue-quacks-setup-slot {
+    min-width: 0;
+    .vue-game-settings-panel {
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      gap: t.space(3);
+      > h2 {
+        margin: 0;
+        @include t.type(h2);
+      }
+      > p {
+        min-height: 0;
+        @include t.type(p3);
+      }
+    }
+    .vue-game-start-slot {
+      justify-content: flex-end;
+      min-height: 60px;
+      padding-block: t.space(3);
+      border-top: 1px solid var(--play-line);
+      > button {
+        min-width: 12rem;
+      }
+    }
+  }
+  .vue-quacks-setup-options {
+    min-width: 0;
+    legend {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    fieldset {
+      display: grid;
+      min-width: 0;
+      gap: t.space(3);
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+  }
+  .vue-quacks-setup-option {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    align-items: start;
+    gap: t.space(3);
+    min-height: 4.5rem;
+    margin: 0;
+    padding: t.space(4);
+    border: 1px solid var(--play-line);
+    border-radius: t.space(3);
+    background: var(--play-paper, var(--play-surface));
+    input {
+      width: 1.125rem;
+      height: 1.125rem;
+      margin: 0.2rem 0 0;
+      accent-color: var(--play-yellow);
+    }
+    > span {
+      display: grid;
+      min-width: 0;
+      gap: t.space(1);
+    }
+    strong {
+      @include t.type(p2);
+    }
+    small {
+      @include t.type(p3);
+      color: var(--play-muted);
+      overflow-wrap: anywhere;
+    }
+  }
+  @media (max-width: 480px) {
+    .vue-quacks-setup-slot .vue-game-start-slot > button {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+}

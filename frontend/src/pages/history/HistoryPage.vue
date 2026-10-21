@@ -36,7 +36,7 @@ onMounted(() => void store.load());
     ><p>選擇已結束的對局，逐步回看棋局。</p></div
   >
   <div class="history-layout">
-    <aside class="page-panel history-catalog" aria-label="對局列表">
+    <aside class="page-panel vue-stitch-panel history-catalog" aria-label="對局列表">
       <header
         ><h2>對局列表</h2
         ><label for="filter"
@@ -82,7 +82,7 @@ onMounted(() => void store.load());
       >
     </aside>
     <section
-      class="page-panel history-replay-panel"
+      class="page-panel vue-stitch-panel history-replay-panel"
       aria-label="對局回看"
       :aria-busy="store.opening"
     >

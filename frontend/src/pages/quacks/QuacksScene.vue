@@ -4,6 +4,7 @@ import { useQuacksStore } from '../../stores/quacks';
 import { useRoomStore } from '../../stores/room';
 import { useAchievementsStore } from '../../stores/achievements';
 import QuacksPlay from './QuacksPlay.vue';
+import QuacksWaitingHero from './QuacksWaitingHero.vue';
 import QuacksPot from './QuacksPot.vue';
 import QuacksCommands from './QuacksCommands.vue';
 import QuacksGlyph from './QuacksGlyph.vue';
@@ -35,7 +36,7 @@ const tabs = {
     records: '回合紀錄',
     pot: '大釜設定',
   },
-  title = computed(() => tabs[tab.value as keyof typeof tabs] || '遊戲工具'),
+  title = computed(() => tabs[tab.value as keyof typeof tabs] || '更多工具'),
   own = computed(() => game.own),
   mine = computed(() => game.mine),
   state = computed(() => game.state!);
@@ -56,7 +57,7 @@ const viewed = computed(() => game.viewed),
   );
 defineExpose({ open });
 function open(key: string) {
-  tab.value = key;
+  tab.value = key in tabs ? key : 'overview';
   if (key === 'books') emit('books-opened');
   void tools.value?.open();
 }
@@ -94,52 +95,57 @@ onBeforeUnmount(() => {
     :class="{ 'is-waiting': state.phase === 'waiting', 'has-board': boardVisible }"
   >
     <section v-if="state.phase === 'waiting'" class="vue-quacks-waiting" aria-label="組隊房間介紹">
-      <div class="vue-quacks-ready" role="status"
-        ><strong>{{
-          state.players.length >= 2 ? '人數達標，房主可隨時開始' : '入座成功，等朋友一起開桌'
-        }}</strong
-        ><span>目前 {{ state.players.length }} 人已入座，藥袋與大釜已備妥</span></div
-      >
-      <div class="vue-quacks-waiting-hero"
-        ><span>CLASSIC MODE · 2–8 人一起煮藥</span
-        ><img src="/assets/playful/game-quacks.svg" alt="郎中闖江湖遊戲插畫" /><h1
-          >郎中闖江湖 <small>Quacks</small></h1
-        ><p>朋友集結中，藥袋已備，等房主開釜。</p
-        ><p>九回合同步抽藥，逐色共選本局藥材效果。可加入草藥女巫與煉金術士。</p
+      <QuacksWaitingHero />
+      <div id="quacks-setup-slot" class="vue-quacks-setup-slot"></div>
+      <div class="vue-quacks-rq03-book-entry"
         ><UiButton
           stitch
           variant="secondary"
           icon="book"
           label="搭配本局藥材書"
           @click="open('books')"
-        /><div class="vue-quacks-waiting-facts"
-          ><span>全員一起抽<br />同步煮藥</span><span>9 回合累計<br />對局回合</span
-          ><span>逐色共選效果<br />本局藥材</span></div
-        ></div
-      >
+      /></div>
     </section>
     <template v-else>
-      <header class="vue-quacks-scene-header"
-        ><nav class="vue-quacks-pot-tabs" aria-label="切換大釜">
-          <button
-            v-for="person in state.recipes"
-            :key="person.id"
-            type="button"
-            :aria-pressed="game.viewed?.id === person.id"
-            :disabled="person.hidden && person.id !== state.me"
-            @click="game.selectedPot = person.id"
-            >{{ person.name
-            }}{{ person.id === state.me ? '（你）' : person.hidden ? ' · 未公開' : '' }}</button
-          > </nav
-        ><div class="vue-quacks-scene-tools"
-          ><UiButton
-            stitch
-            variant="ghost"
-            icon="settings"
-            icon-only
-            label="占卜、女巫、特效藥、紀錄與大釜設定"
-            @click="open('fortune')" /></div
-      ></header>
+      <header class="vue-quacks-scene-header vue-quacks-scene-header-rq"
+        ><div
+          ><h1>{{ viewed?.potName || '郎中闖江湖' }}</h1
+          ><p>{{
+            isOwnPot
+              ? '查看自己的大釜與資源'
+              : '查看 ' + (viewed?.name || '玩家') + ' 的公開大釜與資源'
+          }}</p></div
+        ><label class="vue-quacks-view-select"
+          ><span class="vue-quacks-sr-only">切換查看的大釜</span
+          ><select v-model="game.selectedPot" aria-label="切換查看的大釜"
+            ><option
+              v-for="person in state.recipes"
+              :key="person.id"
+              :value="person.id"
+              :disabled="person.hidden && person.id !== state.me"
+              >{{ person.name
+              }}{{ person.id === state.me ? '（你）' : person.hidden ? ' · 未公開' : '' }}</option
+            ></select
+          ></label
+        ></header
+      >
+      <div v-if="viewed" class="vue-quacks-resource-strip" aria-label="目前大釜與資源"
+        ><span class="vue-quacks-white-count"
+          >白色炸彈
+          {{
+            viewed.hidden ? '未公開' : (viewed.white ?? 0) + '／' + (viewed.threshold ?? 7)
+          }}</span
+        ><span>位置 {{ viewed.hidden ? '未公開' : (viewed.position ?? 0) }}</span
+        ><span>水滴 {{ viewed.droplet }}</span
+        ><span>鼠尾 {{ viewed.rat }}</span
+        ><span :data-quacks-ruby="viewed.id"
+          ><QuacksGlyph resource="ruby" :size="18" />紅寶石 {{ viewed.rubies }}</span
+        ><span>藥袋 {{ viewed.bagCount }}</span
+        ><span v-if="isOwnPot">瓶：{{ mine?.potion ? '滿' : '空' }}</span></div
+      >
+      <div class="vue-quacks-fortune-strip"
+        ><strong>本輪占卜牌</strong><span>{{ state.fortune?.name || '尚未抽牌' }}</span></div
+      >
       <div
         class="vue-quacks-board-space"
         :class="{ 'has-overlay': complex, 'is-shopping': state.stage === 'shopping' }"
@@ -150,45 +156,6 @@ onBeforeUnmount(() => {
           :recipe="viewed"
         />
         <p v-else-if="viewed?.hidden" class="vue-quacks-hidden-pot">這位玩家的大釜尚未公開。</p>
-        <div
-          v-if="boardVisible && viewed"
-          class="vue-quacks-pot-caption"
-          :aria-label="'目前大釜：' + viewed.name"
-          ><div class="vue-quacks-pot-markers"
-            ><span><QuacksGlyph resource="droplet" :size="16" />水滴 {{ viewed.droplet }}</span
-            ><span
-              ><QuacksGlyph resource="rat" :size="16" />起點
-              {{ viewed.hidden ? '未公開' : viewed.startPosition }}</span
-            ><span>當前 {{ viewed.hidden ? '未公開' : viewed.position }}</span></div
-          ><h1>{{ viewed.potName }}</h1
-          ><div v-if="!viewed.hidden" class="vue-quacks-viewed-resources"
-            ><span data-quacks-ruby
-              ><QuacksGlyph resource="ruby" :size="18" />{{ viewed.rubies }}</span
-            ><span>藥袋 {{ viewed.bagCount }}</span
-            ><span>分數 {{ viewed.score }}</span
-            ><span>白彈 {{ viewed.white }}／{{ viewed.threshold }}</span></div
-          ></div
-        >
-        <div v-if="boardVisible" class="vue-quacks-pot-dock" aria-label="藥水瓶與藥袋">
-          <button
-            v-if="isOwnPot"
-            data-quacks-potion
-            type="button"
-            :disabled="!game.available || !mine?.canPotion"
-            :aria-label="
-              mine?.canPotion
-                ? '使用藥水瓶：收回最後白色炸彈'
-                : mine?.potion
-                  ? '藥水瓶已裝滿，目前不能使用'
-                  : '藥水瓶是空瓶'
-            "
-            @click="game.command('potion')"
-            ><QuacksGlyph resource="potion" :size="42" /><span>{{
-              mine?.potion ? '滿瓶' : '空瓶'
-            }}</span></button
-          >
-          <QuacksBag />
-        </div>
         <div v-show="(isOwnPot && complex) || !boardVisible" class="vue-quacks-stage-overlay"
           ><QuacksPlay overlay
         /></div>
@@ -204,42 +171,14 @@ onBeforeUnmount(() => {
         />
       </div>
       <footer class="vue-quacks-control-deck"
-        ><div
-          class="vue-quacks-risk"
-          :class="{ 'is-critical': !own?.exploded && own?.white === own?.threshold }"
-          ><span>{{ isOwnPot ? '白色炸彈' : '你的白色炸彈' }}</span
-          ><strong>{{ own?.white ?? 0 }}／{{ own?.threshold ?? 7 }}</strong
-          ><span>（超過 {{ own?.threshold ?? 7 }} 爆炸）</span
-          ><div
-            v-if="isOwnPot && (state.options.witches || state.visitingWitch)"
-            class="vue-quacks-witch-coins"
-            aria-label="女巫幣"
-            ><template v-for="color in ['gold', 'copper', 'silver'] as const" :key="color"
-              ><button
-                v-if="state.witches[color]"
-                type="button"
-                :disabled="!game.available || !mine?.witchAvailable[color]"
-                :aria-label="'使用' + state.witches[color]!.name"
-                :title="state.witches[color]!.text"
-                @click="game.command('witch', { color })"
-                ><QuacksGlyph :resource="color" :size="24" /><span>{{
-                  { gold: '金', copper: '銅', silver: '銀' }[color]
-                }}</span></button
-              ></template
-            ><button
-              v-if="state.fortune?.id === 'witch-visit' && state.visitingWitch"
-              type="button"
-              aria-label="查看免費來訪女巫效果"
-              @click="open('witches')"
-              >免</button
-            ><UiButton
-              stitch
-              variant="ghost"
-              icon="help"
-              icon-only
-              label="查看女巫能力與條件"
-              @click="open('witches')" /></div
-        ></div>
+        ><nav class="vue-quacks-stage-shortcuts" aria-label="大釜工具"
+          ><QuacksBag /><UiButton
+            stitch
+            variant="secondary"
+            icon="settings"
+            label="更多工具"
+            @click="open('overview')"
+        /></nav>
         <QuacksCommands v-if="isOwnPot || !boardVisible" /><UiButton
           v-else
           stitch
@@ -257,21 +196,33 @@ onBeforeUnmount(() => {
       </footer>
     </template>
   </section>
-  <UiDialog ref="tools" :title="title"
-    ><nav class="vue-quacks-tabs" aria-label="遊戲工具"
-      ><button
+  <UiDialog
+    ref="tools"
+    :title="title"
+    stitch
+    class="vue-quacks-tools-dialog"
+    :data-quacks-tool="tab"
+    ><nav v-if="tab === 'overview'" class="vue-quacks-tools-overview" aria-label="更多工具"
+      ><UiButton
         v-for="(label, key) in tabs"
         :key="key"
-        type="button"
-        :aria-pressed="tab === key"
+        stitch
+        variant="secondary"
+        :label="label"
         :disabled="
           (key === 'alchemy' && !state.options.alchemists) ||
           (key === 'witches' && !state.options.witches && !state.visitingWitch)
         "
-        @click="tab = key"
-        >{{ label }}</button
-      ></nav
-    ><QuacksBooks v-if="tab === 'books'" /><QuacksScoreboard
+        @click="open(key)" /></nav
+    ><UiButton
+      v-if="['witches', 'alchemy', 'records', 'pot'].includes(tab)"
+      class="vue-quacks-tools-back"
+      stitch
+      variant="ghost"
+      icon="previous"
+      label="返回更多工具"
+      @click="tab = 'overview'" />
+    <QuacksBooks v-if="tab === 'books'" /><QuacksScoreboard
       v-else-if="tab === 'score'" /><QuacksRecords v-else-if="tab === 'records'" /><QuacksWitches
       v-else-if="tab === 'witches'" /><QuacksAlchemy v-else-if="tab === 'alchemy'" /><section
       v-else-if="tab === 'fortune'"
@@ -298,6 +249,8 @@ onBeforeUnmount(() => {
         label="儲存大釜名稱"
         :disabled="!game.available"
         @click="game.setName()"
+        stitch
+        variant="secondary"
       /><h2>大釜顏色（同桌不能重複）</h2
       ><div class="vue-quacks-choice-grid"
         ><button

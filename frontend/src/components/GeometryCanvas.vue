@@ -209,8 +209,6 @@ defineExpose({ cancel });
         aria-hidden="true"
         :style="{ left: (cursor.x / 512) * 100 + '%', top: (cursor.y / 256) * 100 + '%' }"
       ></span></div
-    ><figcaption v-if="editable" class="vue-geometry-instructions"
-      >{{ keyboardHelp }}<span>游標 {{ cursor.x }}，{{ cursor.y }}</span></figcaption
     ><StatusSlot :message="error" :error="!!error"
   /></figure>
 </template>

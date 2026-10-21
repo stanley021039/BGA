@@ -23,6 +23,8 @@ const game = useQuacksStore();
             : '等待符合能力使用條件。'
       }}</p
       ><UiButton
+        stitch
+        variant="secondary"
         icon="check"
         label="使用免費來訪女巫"
         :disabled="!game.available || !game.mine?.canVisit"
@@ -35,6 +37,8 @@ const game = useQuacksStore();
           ></header
         ><p>{{ witch.text }}</p
         ><UiButton
+          stitch
+          variant="secondary"
           icon="check"
           :label="'使用' + witch.name"
           :disabled="!game.available || !game.mine?.witchAvailable[color]"

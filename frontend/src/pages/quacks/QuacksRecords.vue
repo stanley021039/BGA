@@ -4,12 +4,15 @@ import QuacksGlyph from './QuacksGlyph.vue';
 const game = useQuacksStore();
 </script>
 <template>
-  <section class="vue-quacks-records"
-    ><p v-if="!game.state?.results.length">尚無已完成回合。</p
-    ><article v-for="result in game.state?.results" :key="result.round"
+  <section class="vue-quacks-records vue-quacks-records-rq"
+    ><p v-if="!game.state?.results.length" class="vue-quacks-records-empty">尚無已完成回合。</p
+    ><article
+      v-for="result in game.state?.results"
+      :key="result.round"
+      :data-quacks-record-round="result.round"
       ><h2>第 {{ result.round }} 回合 · {{ result.fortune.name }}</h2
       ><p>{{ result.fortune.text }}</p
-      ><section v-for="p in result.players" :key="p.id"
+      ><section v-for="p in result.players" :key="p.id" class="vue-quacks-record-player"
         ><h3>{{ p.name }} · 累計 {{ p.score }} 分</h3
         ><p
           >{{ p.exploded ? '爆炸' : '安全' }} · 位置 {{ p.position }} · 普通抽藥 {{ p.draws }} 片 ·

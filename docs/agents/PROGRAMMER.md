@@ -794,3 +794,18 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 原 head 7e5c184 的 Linux CI 通過，Windows 在格式步驟因 34 份 JSON／HTML／YAML 的 CRLF 失敗，全套未執行。補齊 .gitattributes 的 formatter 副檔名 LF 契約；在獨立 worktree 處理，未納入其他工作區待提交 UI 變更。不放寬格式檢查、不改 baseline 或產品程式，最新跨平台驗證以 PR head CI 為準。
 
 本次回歸：Linux 與 Windows 各 354 份格式檢查、565 份未改 legacy，0 failures。Windows Git core.autocrlf=true：舊規則重新 checkout frontend/package.json 實際含 CRLF，套用修正重新 checkout 後為 LF。Linux format --write 為 0 formatted，git diff --check 通過；未在本機跑完整套件，未修改 UI 或部署。
+
+
+## 2026-10-21 共用房間介面精簡
+
+2.17.5 先修共用 RoomChat／RoomHeader，移除指定提示、字數 footer、彈幕框入口與房間手動更新；媒體／表情同式置於輸入框上方。郎中等待中央只留當局設定與配書／開局，遊玩三工具移頂欄，獨立工具視窗替代七分頁；極簡移除回顧及可見鍵盤提示、預留單行倒數與等高聊天室。無呼叫端的 expose／席位參數與舊導覽／樣式已清除。第三份 Figma 原生共用元件及 42 張相關畫板同步，RQ13 改更多工具並保留 frame ID。實際桌機／手機取樣、選書開局、聊天／表情／媒體開合、幾何自動同步與十秒截止已觀察；型別／多頁建置／格式／版本／diff check 通過。詳細範圍、尺寸與未驗分支見 [本批紀錄](../refactors/SHARED-ROOM-UI-SIMPLIFICATION.md)；不把本輪局部驗收外推成全站完整回歸或所有音效／播放皆通過。
+
+
+## 2026-10-21 玩家卡片與間距（2.17.6）
+
+依 C02 恢復共用玩家卡片框線／圓角／留白與間距，名單操作置中；聊天回饋槽移到分隔線上，工具列上下皆 8px。郎中占卜列 border-box 避免裁切，獎勵選擇移除空圖示，UiIcon 無圖案時不佔位。實際桌機／手機、亮暗色、畫猜與極簡共用名單及郎中爆炸後領獎觀察通過；完整證據與未驗範圍見 [共用房間精簡紀錄](../refactors/SHARED-ROOM-UI-SIMPLIFICATION.md)。
+
+
+## 2026-10-21 全站共用介面巡檢（2.17.7）
+
+共用 ResourcePanel 及指定頁面外框統一採 Stitch 1px／12px／無額外陰影，成就標題與主框對齊並移除群組重框；共編分頁、房間開始／加電腦與資源重試接 UiButton。收藏手機分頁固定等高且計數不換行，送禮名單雙分數同列並清除過時槽位樣式。16 個一般／工具入口、11 款等待室及 7 款遊玩狀態已有桌機／手機取樣；320px 收藏與共編另驗。建置含型別、格式、版本與 diff 檢查通過，未跑自動測試套件。完整依據、實測數值及未驗界線見 [全站版面巡檢](../refactors/STITCH-SITE-LAYOUT-AUDIT.md) 最新區；不可外推為全款完整對局驗收。

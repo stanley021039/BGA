@@ -93,7 +93,9 @@ onBeforeUnmount(clearFile);
     ><p>寫下禮物名稱，圖片可以不放。投稿後，新的遊戲輪次就有機會抽到它。</p></div
   >
   <div class="library-layout resource-workspace">
-    <section class="card submit-card resource-compose" aria-labelledby="submitTitle"
+    <section
+      class="card submit-card resource-compose vue-stitch-panel"
+      aria-labelledby="submitTitle"
       ><span class="eyebrow">ADD A GIFT</span><h2 id="submitTitle">新增禮物</h2>
       <form id="giftForm" @submit.prevent="submit" :aria-busy="pending">
         <label for="giftTitle">禮物名稱</label

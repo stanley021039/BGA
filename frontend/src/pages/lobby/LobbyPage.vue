@@ -35,6 +35,7 @@ const feedback = computed(() =>
       (params.has('closedRoom') ? '房間已結束或你已離開，請重新開桌或加入房間。' : ''),
 );
 const drawingCreate = computed(() => selected.value === 'draw' || selected.value === 'telephone');
+const quacksCreate = computed(() => selected.value === 'quacks');
 const resumes = computed(() => lobby.rooms.filter((room) => room.seated));
 function open() {
   if (selected.value === 'market') return;
@@ -223,9 +224,9 @@ onBeforeUnmount(() => {
     <p class="version-note"><a href="/credits">素材來源與授權</a> · 德州撲克：純娛樂籌碼</p>
     <UiDialog
       ref="create"
-      :stitch="drawingCreate"
+      :stitch="drawingCreate || quacksCreate"
       :compact="drawingCreate"
-      :class="{ 'vue-lobby-create-d06': drawingCreate }"
+      :class="{ 'vue-lobby-create-d06': drawingCreate, 'vue-lobby-create-quacks': quacksCreate }"
       :title="'開一桌' + chosen.title"
       :dismissible="!lobby.entryPending"
       @closing="opened = false"
@@ -279,8 +280,8 @@ onBeforeUnmount(() => {
             ></template
           ><p v-else>進入房間後，由房主調整本桌設定。</p></div
         ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /><UiButton
-          :stitch="drawingCreate"
-          :variant="drawingCreate ? 'primary' : 'secondary'"
+          :stitch="drawingCreate || quacksCreate"
+          :variant="drawingCreate || quacksCreate ? 'primary' : 'secondary'"
           :icon="drawingCreate ? 'next' : 'add'"
           type="submit"
           :label="'建立' + chosen.title + '房間'"

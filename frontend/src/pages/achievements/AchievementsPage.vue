@@ -12,7 +12,10 @@ onMounted(() => void store.load());
     ><div class="kicker">YOUR TABLE MOMENTS</div><h1>成就收藏冊<span>✦</span></h1
     ><p>記下玩過的桌遊時刻。</p></div
   >
-  <section class="page-panel achievements-panel" aria-labelledby="achievementHeading">
+  <section
+    class="page-panel vue-stitch-panel achievements-panel"
+    aria-labelledby="achievementHeading"
+  >
     <div class="panel-heading"
       ><span class="panel-number">YOUR COLLECTION / 01</span
       ><h2 id="achievementHeading">成就徽章</h2>
