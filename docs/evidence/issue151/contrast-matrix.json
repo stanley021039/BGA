@@ -1,0 +1,2126 @@
+{
+  "date": "2026-10-21",
+  "version": "2.19.2",
+  "base": "61fffe2f3c3f1d84af178111b3851ca9ea19a7ae",
+  "scope": "Entry/waiting samples, not all gameplay states. Auto resolves to system dark. Artwork/gradient/opacity cases remain manual.",
+  "screenshots": 147,
+  "pages": [
+    {
+      "id": "lobby",
+      "route": "/",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 53,
+          "manual": 9,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 71,
+          "manual": 1,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 64,
+          "manual": 1,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 64,
+          "manual": 1,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 62,
+          "manual": 1,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 55,
+          "manual": 1,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "login",
+      "route": "/login",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 17,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 17,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 17,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 17,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 15,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 15,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "achievements",
+      "route": "/achievements",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 90,
+          "manual": 48,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 90,
+          "manual": 48,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 76,
+          "manual": 48,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 76,
+          "manual": 48,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 83,
+          "manual": 48,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 72,
+          "manual": 48,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "draw-words",
+      "route": "/draw-words",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 48,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 48,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 41,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 41,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 46,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "gifts",
+      "route": "/gifts",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 49,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 49,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 33,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 33,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 47,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 31,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "music",
+      "route": "/music",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 15,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 15,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 15,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 15,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 13,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 13,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "community",
+      "route": "/community",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 24,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 24,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 24,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 24,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 22,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 22,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "credits",
+      "route": "/credits",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 27,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 27,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 27,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 27,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 27,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 27,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "rules",
+      "route": "/rules",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 37,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 37,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 37,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 37,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 35,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 35,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "route": "/settings",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 47,
+          "manual": 2,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 47,
+          "manual": 2,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 45,
+          "manual": 2,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 45,
+          "manual": 2,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 45,
+          "manual": 2,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 43,
+          "manual": 2,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "collection",
+      "route": "/collection",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 62,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 62,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 62,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 62,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "profile",
+      "route": "/profile",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 59,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 59,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 59,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 59,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 57,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 57,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "history",
+      "route": "/history",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 31,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 31,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 24,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 24,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 28,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 21,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "draw",
+      "route": "/draw",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 55,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 55,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 57,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 57,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 50,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 52,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "musicquiz",
+      "route": "/musicquiz",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 80,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 80,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 85,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 85,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 75,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 80,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "minimal",
+      "route": "/minimal",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 43,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 43,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 33,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "bluff",
+      "route": "/bluff",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 34,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 33,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "telephone",
+      "route": "/telephone",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 51,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 51,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 50,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 50,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 46,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 45,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "studio",
+      "route": "/studio",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 47,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 47,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 47,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 47,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 42,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 42,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "majority",
+      "route": "/majority",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 51,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 51,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 50,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 50,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 46,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 45,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "trpg",
+      "route": "/trpg",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 48,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 48,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 48,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 48,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 43,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 43,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "gift",
+      "route": "/gift",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 38,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 33,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 33,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "admin",
+      "route": "/admin",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 33,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 33,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 31,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 31,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 31,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 29,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "poker",
+      "route": "/poker",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 44,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 44,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 44,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 44,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "market",
+      "route": "/market",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 41,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 41,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 41,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 41,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 39,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "quacks",
+      "route": "/quacks",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 45,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 45,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 44,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 44,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 37,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 36,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "race",
+      "route": "/race",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 42,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 42,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 41,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 41,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 37,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 36,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "admin-game-audio",
+      "route": "/admin/game-audio",
+      "fixedPalette": false,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 18,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "light",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 18,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 18,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "light",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 18,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 18,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 18,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    },
+    {
+      "id": "sound-library",
+      "route": "/sound-library",
+      "fixedPalette": true,
+      "samples": [
+        {
+          "mode": "dark-desktop",
+          "scheme": "fixed-dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 117,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-desktop",
+          "scheme": "fixed-dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 117,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "dark-mobile",
+          "scheme": "fixed-dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 117,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "light-mobile",
+          "scheme": "fixed-dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 117,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-desktop-final",
+          "scheme": "fixed-dark",
+          "viewport": [
+            1920,
+            1080
+          ],
+          "checked": 117,
+          "manual": 0,
+          "lowContrast": 0
+        },
+        {
+          "mode": "auto-mobile-final",
+          "scheme": "fixed-dark",
+          "viewport": [
+            390,
+            844
+          ],
+          "checked": 117,
+          "manual": 0,
+          "lowContrast": 0
+        }
+      ]
+    }
+  ]
+}
