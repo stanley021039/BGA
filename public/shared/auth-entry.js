@@ -4,6 +4,7 @@
   let playing;
   window.EntryIntro = {
     playFrom(image, destination) {
+      if (window.EntryPreferences?.get().enabled === false) return Promise.resolve();
       if (playing) return playing;
       if (!image || !image.complete || !image.naturalWidth) return Promise.resolve();
       const rect = image.getBoundingClientRect();

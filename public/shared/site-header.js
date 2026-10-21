@@ -58,6 +58,21 @@
   const preview = settings.querySelector('#site-effects-preview');
   settings.querySelector('#site-effects-enabled').closest('.site-audio-group').append(preview);
   preview.setAttribute('aria-describedby', 'site-audio-status');
+  if (window.EntryPreferences) {
+    const group = document.createElement('div');
+    group.className = 'site-audio-group';
+    group.innerHTML =
+      '<label class="site-audio-switch"><span>進入網頁時播放開場動畫</span><input type="checkbox" role="switch" aria-describedby="site-entry-note"></label><p id="site-entry-note" class="site-settings-note" role="status"></p>';
+    settings.append(group);
+    window.EntryPreferences.subscribe((value) => {
+      group.querySelector('input').checked = value.enabled;
+      group.querySelector('p').textContent = value.persisted
+        ? '關閉後直接進入網頁；設定只儲存在此瀏覽器。'
+        : '瀏覽器無法保存此設定，請允許網站儲存後再試。';
+    });
+    group.querySelector('input').onchange = (event) =>
+      window.EntryPreferences.set(event.target.checked);
+  }
   if (window.MotionPolicy) {
     const group = document.createElement('div');
     group.className = 'site-audio-group';

@@ -18,6 +18,10 @@ interface MotionState {
   barrages: boolean;
   reduced: boolean;
 }
+interface EntryState {
+  enabled: boolean;
+  persisted: boolean;
+}
 interface AudioState {
   version: number;
   music: { enabled: boolean; volume: number };
@@ -36,6 +40,11 @@ interface FrameState {
 
 declare global {
   interface Window {
+    EntryPreferences?: {
+      get(): EntryState;
+      set(enabled: boolean): EntryState;
+      subscribe(fn: (state: EntryState) => void): () => void;
+    };
     ColorScheme?: {
       get(): ColorState;
       set(theme: Theme): ColorState;
@@ -100,11 +109,18 @@ declare global {
 export const usePreferencesStore = defineStore('preferences', () => {
   const color = shallowRef<ColorState | null>(null);
   const motion = shallowRef<MotionState | null>(null);
+  const entry = shallowRef<EntryState | null>(null);
   const audio = shallowRef<AudioState | null>(null);
   const barrage = shallowRef<FrameState | null>(null),
     media = shallowRef('default');
   const frames = window.BarrageFrames?.options || [];
   const unsubscribers: (() => void)[] = [];
+  if (window.EntryPreferences)
+    unsubscribers.push(
+      window.EntryPreferences.subscribe((value) => {
+        entry.value = value;
+      }),
+    );
   if (window.ColorScheme)
     unsubscribers.push(
       window.ColorScheme.subscribe((value) => {
@@ -146,12 +162,14 @@ export const usePreferencesStore = defineStore('preferences', () => {
     canUse: (id: string) => window.BarrageFrames?.canUse?.(id) !== false,
     color,
     motion,
+    entry,
     audio,
     barrage,
     media,
     frames,
     setFrame,
     setMotion: (enabled: boolean) => window.MotionPolicy?.set({ enabled }),
+    setEntryIntro: (enabled: boolean) => window.EntryPreferences?.set(enabled),
     setTheme: (theme: Theme) => window.ColorScheme?.set(theme),
   };
 });
