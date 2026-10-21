@@ -222,11 +222,7 @@ onBeforeUnmount(() => {
       ><div class="carousel-actions"
         ><a class="quiet carousel-guide" :href="chosen.guide">{{ chosen.title }}玩法 ↗</a
         ><div class="carousel-create"
-          ><slot name="before-create" /><a
-            v-if="chosen.id === 'market'"
-            class="button orange"
-            href="/market"
-            >進入股市冥燈 ↗</a
+          ><a v-if="chosen.id === 'market'" class="button orange" href="/market">進入股市冥燈 ↗</a
           ><UiButton
             v-else
             icon="add"

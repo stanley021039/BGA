@@ -34,6 +34,8 @@ export function setEntranceEffect(id: EntranceEffectId) {
     // Storage may be unavailable; the choice still applies for this page.
   }
 }
-addEventListener('storage', (event) => {
-  if (event.key === KEY) entranceEffect.value = read();
-});
+// Guarded so contract/store code can load outside a browser (frontend tests).
+if (typeof window !== 'undefined')
+  window.addEventListener('storage', (event) => {
+    if (event.key === KEY) entranceEffect.value = read();
+  });

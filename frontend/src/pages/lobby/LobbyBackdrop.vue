@@ -5,6 +5,8 @@ import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
+import LobbyBarrage from './LobbyBarrage.vue';
+import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // Visitors live behind the page. A click that lands on the page's empty floor
 // (not on any UI) walks the own character there; clicking the own character
 // opens its expressions. UI keeps every pointer interaction it covers: controls,
@@ -15,10 +17,12 @@ const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   opened = ref(false),
+  activity = ref<'chat' | 'expression'>('chat'),
   selfHover = ref(false),
   arrivals = ref(new Set<string>());
 const sounds = window.ExpressionSounds?.create();
 let disposed = false,
+  controller: BarrageController | null = null,
   known: Set<string> | null = null,
   hoverFrame = 0,
   keyboardTarget: { x: number; y: number } | null = null;
@@ -57,6 +61,31 @@ watch(
     });
   },
 );
+// Lobby chat messages show as speech bubbles above their characters.
+watch(
+  [() => lobby.snapshot, () => lobby.connected],
+  ([value]) => {
+    if (!value) return;
+    controller ??=
+      window.MotionPolicy?.createBarrageController((item: BarrageEvent) =>
+        lobby.showSpeech(item),
+      ) || null;
+    if (!lobby.connected) {
+      controller?.disconnect();
+      return;
+    }
+    controller?.update({
+      ...value,
+      code: 'lobby',
+      type: 'majority',
+      me: value.selfId,
+      phase: 'lobby',
+      host: false,
+      players: [],
+    } as never);
+  },
+  { flush: 'post' },
+);
 watch(
   () => lobby.connected,
   (value) => {
@@ -80,9 +109,13 @@ function arrived(id: string) {
 }
 async function open(trigger: HTMLElement) {
   if (!lobby.connected) return;
+  activity.value = 'chat';
   opened.value = true;
   await dialog.value?.open(trigger);
-  void lobby.loadExpressions();
+}
+function chooseActivity(value: 'chat' | 'expression') {
+  activity.value = value;
+  if (value === 'expression') void lobby.loadExpressions();
 }
 async function use(expression: string) {
   if (await lobby.emote(expression)) {
@@ -195,6 +228,7 @@ document.addEventListener('visibilitychange', visibility);
 window.addEventListener('profile-updated', profile);
 onBeforeUnmount(() => {
   disposed = true;
+  controller?.dispose();
   sounds?.destroy();
   if (hoverFrame) cancelAnimationFrame(hoverFrame);
   document.body.classList.remove('lobby-self-hover');
@@ -211,7 +245,7 @@ onBeforeUnmount(() => {
       class="lobby-backdrop"
       :class="{ 'is-self-hover': selfHover }"
       tabindex="0"
-      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色選擇表情；聚焦此處可用方向鍵移動"
+      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色對話或發表情；聚焦此處可用方向鍵移動"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
       @keydown="key"
@@ -226,6 +260,7 @@ onBeforeUnmount(() => {
           v-for="visitor in lobby.snapshot?.visitors || []"
           :key="visitor.id"
           :visitor="visitor"
+          :message="lobby.speeches[visitor.id]"
           :self="visitor.id === lobby.snapshot?.selfId"
           :reset="lobby.positionReset"
           :open="opened"
@@ -247,11 +282,27 @@ onBeforeUnmount(() => {
     ref="dialog"
     stitch
     class="vue-approved-lobby-expressions"
-    title="選擇角色表情"
+    title="角色對話與表情"
     compact
     @closing="opened = false"
     @closed="opened = false"
-    ><div class="vue-lobby-expression-body"
+    ><div class="vue-lobby-activity-tabs" role="tablist" aria-label="角色互動"
+      ><button
+        type="button"
+        role="tab"
+        :aria-selected="activity === 'chat'"
+        @click="chooseActivity('chat')"
+        >對話</button
+      ><button
+        type="button"
+        role="tab"
+        :aria-selected="activity === 'expression'"
+        @click="chooseActivity('expression')"
+        >表情</button
+      ></div
+    ><div v-if="activity === 'chat'" class="vue-lobby-activity-chat"
+      ><LobbyBarrage @sent="dialog?.close()" /></div
+    ><div v-else class="vue-lobby-expression-body"
       ><p class="vue-lobby-expression-intro">使用目前角色的表情；聲音依照你的音效設定播放。</p
       ><div class="vue-lobby-expressions" :aria-busy="lobby.expressionsLoading"
         ><p v-if="lobby.expressionsLoading">正在載入表情…</p
@@ -272,3 +323,25 @@ onBeforeUnmount(() => {
         :error="!!lobby.expressionStatus" /></div
   ></UiDialog>
 </template>
+
+<style scoped>
+.vue-lobby-activity-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.vue-lobby-activity-tabs button {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--play-border, #8c805e);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.vue-lobby-activity-tabs button[aria-selected='true'] {
+  background: var(--play-accent, #e8b441);
+  color: #1a1a18;
+  font-weight: 700;
+}
+</style>

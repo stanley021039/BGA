@@ -6,7 +6,6 @@ import { isGameType, type GameType } from '../../contracts/room';
 import { gameCards, gameTitle } from './catalog';
 import GameCarousel from './GameCarousel.vue';
 import LobbyBackdrop from './LobbyBackdrop.vue';
-import LobbyBarrage from './LobbyBarrage.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiDialog from '../../components/UiDialog.vue';
@@ -98,9 +97,7 @@ onBeforeUnmount(() => {
         ><span>款遊戲<br />隨時開桌</span></div
       ></div
     >
-    <GameCarousel v-model="selected" @create="open"
-      ><template #before-create><LobbyBarrage /></template
-    ></GameCarousel>
+    <GameCarousel v-model="selected" @create="open" />
     <LobbyBackdrop />
     <div class="vue-lobby-resume" aria-label="已入座的房間"
       ><span v-if="!resumes.length">{{
