@@ -94,6 +94,18 @@
     }
   }
   // This small blocking bootstrap runs before body parsing, avoiding a second overlay flash.
+  // A full document load can still be an internal room/link navigation. Reloads
+  // retain the introduction even when their referrer is another page here.
+  try {
+    const kind = window.performance?.getEntriesByType?.('navigation')?.[0]?.type;
+    skipInitial ||=
+      kind === 'back_forward' ||
+      (kind === 'navigate' &&
+        !!document.referrer &&
+        new URL(document.referrer).origin === window.location.origin);
+  } catch {
+    // Missing navigation/referrer information keeps the normal entry fallback.
+  }
   if (skipInitial) document.documentElement.classList.add('entry-intro-skipped');
   function boot() {
     const panel = document.getElementById('entry-intro');
@@ -175,7 +187,7 @@
     });
     window.addEventListener('pagehide', finish);
     window.addEventListener('pageshow', (event) => {
-      if (event.persisted) play();
+      if (event.persisted) hide();
     });
     window.EntryPreferences.subscribe((value) => {
       if (!value.enabled) hide();
