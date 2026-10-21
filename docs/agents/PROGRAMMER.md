@@ -865,6 +865,7 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 2026-10-21 #151：共用 heading／label 繼承容器，selected surface mixin 配對 ink／muted／link／focus，不重綁全域 ink。唯讀 DOM 對比工具區分 hidden／disabled／人工項目，包含原錯誤反例回歸。29 頁量測摘要入版控，147 張原生圖與測試資料只留忽略目錄；全頁畫布不讀應用私有狀態。詳 [表面配色驗收](../specs/SURFACE-CONTRAST-151.md)，保持 Draft 待人工最後檢查／CI，未部署。
 
 2026-10-21 #154 候選2.20.0：entry-intro head bootstrap持有唯一EntryPreferences，Vue／legacy共用，auth成功動畫檢查同一偏好；預設開啟、本瀏覽器保存，關閉不建立可見遮罩或三秒等待。20項回歸及原生雙宿主／四組設定取樣完成，限制見 [開場偏好](../specs/ENTRY-INTRO-PREFERENCE-154.md)。#153已合併f183242，第三份Figma仍受唯讀／額度阻擋，沒有成功同步；本票保持Draft、未部署。
+
 ## 2026-10-21 聊天室原稿排版與外框（2.17.8）
 
 C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下，還原原生稿邏輯尺寸並保留 44px 操作區；時間沿用原時間戳／房間 offset，timer 卸載清理。C00 桌機單一矩形框與側欄分隔集中 room-surfaces.scss，手機保留換列並固定聊天室高度、長訊息內捲，遊戲棋盤／內容卡／浮層不套外框清除。共用暖灰色票、body margin、側欄捲動與猜歌空白 gutter 一併整理。11 款桌機／手機、7 款遊玩取樣、320px 長訊息／純文字／返焦及媒體／表情開關已有實際觀察；型別／多頁建置與格式版本檢查通過，未跑自動套件。證據數值與原生全螢幕等未驗界線見 [全站版面巡檢](../refactors/STITCH-SITE-LAYOUT-AUDIT.md) 最新區，不外推為全遊戲功能回歸。
