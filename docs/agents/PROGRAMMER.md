@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-21／候選 2.20.2：#157 修正共用進頁 bootstrap 將開房完整導航誤判為新進站；同 origin navigate／history 不重播，reload 與直接進入仍播放，#154 偏好與登入原圖演出保留。完整 2,543 項及前端 6 項通過，Vue 開房／刷新／返回有原生證據；metadata 缺失保守播放與未驗項目見 [導航規格](../specs/ENTRY-INTRO-NAVIGATION-157.md)。尚未合併或部署。
+
 2026-10-21／候選 2.18.2：依最新已審核 C02 v3 實作共用 RoomPlayerCard、十一款 RoomWaitingTemplate／GameSettingsPanel，保留真實資訊並整合郎中公開資源與雷霆教學；接續 RT 22／RW 30 與九款等待室設計。來源、契約與實際驗收界線見[共用與同頻／傳情](../refactors/STITCH-SHARED-PAIR-APPROVED.md)。
 
 2026-10-21／候選 2.18.1：依使用者指定以 main c0ec416 為主整合本地未提交 UI，四個衝突已解。保留 main 功能／郎中／後端與音效，共用 RoomRoster、RoomChat 及線上／教學 RaceCrewDice／RaceDie；來源、決策與驗收見[整合紀錄](../refactors/MAIN-2180-UI-INTEGRATION.md)。未提交、未 push、未 PR、未正式部署。

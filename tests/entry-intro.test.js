@@ -14,6 +14,10 @@ function fixture({
   cookie = '',
   entryStored = null,
   writeBlocked = false,
+  referrer = '',
+  navigationType = 'navigate',
+  navigationAvailable = true,
+  navigationError = false,
 } = {}) {
   const { document } = dom(
     '<button id="before">Before</button><dialog id="entry-intro" open><div class="entry-intro-art"><img></div><button>略過開場</button></dialog>',
@@ -21,6 +25,7 @@ function fixture({
   document.documentElement = document.createElement('html');
   document.readyState = loading ? 'loading' : 'complete';
   document.cookie = cookie;
+  document.referrer = referrer;
   const panel = document.getElementById('entry-intro');
   const art = panel.querySelector('.entry-intro-art');
   Object.assign(art, { offsetWidth: 1000, offsetHeight: 562.5, offsetLeft: 200, offsetTop: 100 });
@@ -50,7 +55,15 @@ function fixture({
     }
   }
   const window = {
-    location: { pathname: '/', search: '' },
+    location: { origin: 'https://bga.example', pathname: '/', search: '' },
+    performance: navigationAvailable
+      ? {
+          getEntriesByType() {
+            if (navigationError) throw Error('unavailable');
+            return [{ type: navigationType }];
+          },
+        }
+      : undefined,
     MutationObserver: Observer,
     sessionStorage: {
       getItem(key) {
@@ -72,6 +85,7 @@ function fixture({
   vm.runInNewContext(fs.readFileSync('public/shared/entry-intro.js', 'utf8'), {
     window,
     document,
+    URL,
     location: { pathname: '/', search: '' },
     MutationObserver: Observer,
     localStorage: {
@@ -148,8 +162,8 @@ test('auth page stays visible; destination consumes completion once without repl
   const other = fixture({ completed: { ...completed, path: '/settings' } });
   assert.equal(other.timers.size, 1);
   next.events.get('pageshow')({ persisted: true });
-  assert.equal(next.panel.hidden, false);
-  assert.equal(next.timers.size, 1);
+  assert.equal(next.panel.hidden, true);
+  assert.equal(next.timers.size, 0);
 });
 test('completed auth suppresses the overlay before body parsing, including cookie fallback', () => {
   const completed = { at: Date.now(), path: '/' };
@@ -214,16 +228,15 @@ test('skip and Escape finish immediately without waiting or changing login/sessi
   }
 });
 
-test('BFCache entry plays again while pagehide cancels the previous timer and observer', () => {
+test('BFCache return stays visible without replay while pagehide cancels the old entry', () => {
   const f = fixture();
   f.events.get('pagehide')();
   assert.equal(f.timers.size, 0);
   f.events.get('pageshow')({ persisted: true });
-  assert.equal(f.panel.hidden, false);
-  assert.equal(f.timers.size, 1);
+  assert.equal(f.panel.hidden, true);
+  assert.equal(f.timers.size, 0);
   f.events.get('pageshow')({ persisted: true });
-  assert.equal(f.timers.size, 1);
-  f.finish();
+  assert.equal(f.timers.size, 0);
 });
 
 test('late scripts, blocked storage and reduced-motion preference cannot strand the page', () => {
@@ -308,8 +321,14 @@ test('switching entry preference persists, cancels active entry, and re-enables 
     'changing the setting must not replay an intro over the settings dialog',
   );
   f.events.get('pageshow')({ persisted: true });
-  assert.equal(f.timers.size, 1);
-  assert.equal(f.panel.hidden, false);
+  assert.equal(f.timers.size, 0);
+  assert.equal(f.panel.hidden, true);
+  const reload = fixture({
+    entryStored: f.preferences.get('bga-entry-intro-settings'),
+    navigationType: 'reload',
+  });
+  assert.equal(reload.timers.size, 1);
+  assert.equal(reload.panel.hidden, false);
   assert.deepEqual(values, [true, false, true]);
   unsubscribe();
   f.window.EntryPreferences.set(false);
@@ -352,4 +371,81 @@ test('auth documents load the same blocking preference owner before the deferred
   );
   assert.match(html, /<script defer src="\/shared\/auth-entry.js"/);
   assert.doesNotMatch(html, /id="entry-intro"/);
+});
+
+test('same-origin room and link navigations suppress the overlay before body parsing', () => {
+  for (const referrer of [
+    'https://bga.example/',
+    'https://bga.example/poker/ABC123',
+    'https://bga.example/profile?tab=own',
+  ]) {
+    const f = fixture({ loading: true, referrer });
+    assert.equal(f.document.documentElement.classList.contains('entry-intro-skipped'), true);
+    assert.equal(f.timers.size, 0);
+    f.document.body.dispatch('DOMContentLoaded');
+    assert.equal(f.panel.hidden, true);
+    assert.equal(f.panel.open, false);
+    assert.equal(f.timers.size, 0);
+  }
+});
+
+test('reload always retains the entry even with an internal referrer', () => {
+  for (const referrer of ['', 'https://bga.example/', 'https://bga.example/poker/ABC123']) {
+    const f = fixture({ navigationType: 'reload', referrer });
+    assert.equal(f.panel.hidden, false);
+    assert.equal(f.timers.size, 1);
+    assert.equal(f.document.documentElement.classList.contains('entry-intro-skipped'), false);
+  }
+});
+
+test('direct and external entries are not mistaken for internal navigation', () => {
+  for (const referrer of [
+    '',
+    'https://elsewhere.example/',
+    'https://bga.example.evil/',
+    'http://bga.example/',
+    'https://bga.example:8443/',
+    'not a URL',
+  ]) {
+    const f = fixture({ referrer });
+    assert.equal(f.panel.hidden, false);
+    assert.equal(f.timers.size, 1);
+  }
+});
+
+test('history document loads and BFCache returns do not replay the introduction', () => {
+  const history = fixture({ navigationType: 'back_forward', loading: true });
+  assert.equal(history.document.documentElement.classList.contains('entry-intro-skipped'), true);
+  history.document.body.dispatch('DOMContentLoaded');
+  assert.equal(history.panel.hidden, true);
+  assert.equal(history.timers.size, 0);
+  const cached = fixture();
+  cached.events.get('pageshow')({ persisted: true });
+  assert.equal(cached.panel.hidden, true);
+  assert.equal(cached.timers.size, 0);
+});
+
+test('navigation metadata failures fall back to the default entry without trapping the document', () => {
+  for (const options of [
+    { navigationAvailable: false },
+    { navigationError: true },
+    { navigationType: null },
+    { navigationType: 'unknown' },
+  ]) {
+    const f = fixture({ ...options, referrer: 'https://bga.example/' });
+    assert.equal(f.timers.size, 1);
+    f.finish();
+    assert.equal(f.panel.hidden, true);
+  }
+});
+
+test('opt-out dominates direct/reload/history entries and internal navigation works without storage', () => {
+  for (const navigationType of ['navigate', 'reload', 'back_forward']) {
+    const f = fixture({ navigationType, entryStored: '{"version":1,"enabled":false}' });
+    assert.equal(f.panel.hidden, true);
+    assert.equal(f.timers.size, 0);
+  }
+  const noStorage = fixture({ brokenStorage: true, referrer: 'https://bga.example/' });
+  assert.equal(noStorage.panel.hidden, true);
+  assert.equal(noStorage.timers.size, 0);
 });
