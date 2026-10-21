@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import QuacksRuleVisual from './QuacksRuleVisual.vue';
+import QuacksWaiting from './QuacksWaiting.vue';
 import { computed } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
 import { ingredientNames } from '../../contracts/quacks';
@@ -55,9 +56,16 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
         caption="準備下一回合"
     /></section>
     <template v-else-if="m?.pending"><QuacksChoices /></template>
-    <p v-else-if="m?.waitingEffect"
-      >等待其他人完成藥材或占卜牌的效果選擇；下一次抽藥稍後一起進行。</p
-    >
+    <QuacksWaiting
+      v-else-if="m?.waitingEffect"
+      title="等待其他玩家完成效果"
+      detail="藥材或占卜牌選擇完成後，大家再一起抽藥。"
+    />
+    <QuacksWaiting
+      v-else-if="s.stage === 'essence' && m?.alchemy?.confirmed && !m.alchemy.diceRemaining"
+      title="特效藥已確認"
+      detail="等待其他玩家完成調製與額外效果。"
+    />
     <QuacksAlchemy v-else-if="s.phase === 'patients' || s.stage === 'essence'" />
     <section v-else-if="s.phase === 'fortune'" class="vue-quacks-fortune-draw"
       ><template v-if="s.me === s.roundStarterId"
@@ -68,12 +76,21 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
           @click="game.drawFortune()"
           ><img src="/assets/quacks/fortune-back.svg" alt="" /><strong>點一下抽牌</strong></button
         ></template
-      ><p v-else
-        >等待 {{ s.players.find((p) => p.id === s.roundStarterId)?.name }} 親自抽取本輪占卜牌。</p
-      ></section
-    >
+      ><QuacksWaiting
+        v-else
+        :title="
+          '等待 ' +
+          (s.players.find((p) => p.id === s.roundStarterId)?.name || '本輪起始玩家') +
+          ' 抽占卜牌'
+        "
+        detail="抽牌後一起揭曉本輪效果。"
+    /></section>
     <template v-else-if="s.phase === 'brewing'"
-      ><QuacksPot v-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /><section
+      ><QuacksWaiting
+        v-if="s.stage === 'drawing' && !m?.canDraw"
+        :title="own.stopped ? '你已停手，等待其他玩家' : '已選擇，等待大家抽藥'"
+        detail="全員決定後，一起揭曉本次結果。"
+      /><QuacksPot v-else-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /><section
         v-if="m?.reserve.length || m?.alchemy?.pool.length || m?.alchemy?.returnable.length"
         class="vue-quacks-extra"
         ><h2>暫存與特效藥選擇</h2
@@ -186,8 +203,8 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
               label="永久水滴前進一格"
               :disabled="!game.available || own.rubies < m.discount"
               @click="game.command('ruby', { mode: 'droplet' })" /></div></section></template
-      ><p v-else>等待必要效果結算完成。</p></template
-    >
+      ><QuacksWaiting v-else title="等待必要效果結算" detail="完成後會一起進入下一階段。"
+    /></template>
     <section v-else-if="s.phase === 'finished'" class="vue-quacks-final"
       ><h2>{{
         s.interrupted

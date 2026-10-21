@@ -707,3 +707,58 @@ test('potion returns to the actual pre-bomb space even after a forgotten chip le
   act(r, a, 'potion');
   assert.equal(a.position, 7);
 });
+
+test('live stop estimate updates without changing the flask and does not expose hidden pots', () => {
+  const { r, a, b } = fixture('eyes');
+  a.pot = [
+    chip(r, 'orange', 1, 1),
+    chip(r, 'blue', 1, 2),
+    chip(r, 'blue', 2, 4),
+    chip(r, 'white', 3, 7),
+    chip(r, 'white', 3, 10),
+    chip(r, 'white', 1, 11),
+  ];
+  const before = JSON.stringify(a.alchemy),
+    version = r.version;
+  const own = () => r.view(a.id).recipes.find((p) => p.id === a.id).alchemy.stopEstimate;
+  assert.equal(own(), 3);
+  assert.equal(r.view(b.id).recipes.find((p) => p.id === a.id).alchemy.stopEstimate, null);
+  b.exploded = true;
+  assert.equal(own(), 4, 'one exploded neighbour is counted once in a two-player table');
+  a.pot = a.pot.filter((c) => c.color !== 'blue');
+  assert.equal(own(), 3, 'removing the last chip of a colour updates the preview');
+  assert.equal(JSON.stringify(a.alchemy), before);
+  assert.equal(r.version, version, 'reading an estimate does not change gameplay');
+  const estimate = own();
+  r.beginAlchemy();
+  assert.equal(a.alchemy.max, estimate);
+  assert.equal(a.alchemy.essence, estimate);
+});
+
+test('stop estimate and settlement share locoweed, fortune and ten-space cap rules', () => {
+  const { r, a, b } = fixture('eyes', true);
+  r.activeBooks.locoweed = 7;
+  a.pot = [
+    'orange',
+    'blue',
+    'red',
+    'green',
+    'yellow',
+    'purple',
+    'black',
+    'locoweed',
+    'locoweed',
+  ].map((color, i) => chip(r, color, i === 8 ? 4 : 1, i + 1));
+  b.exploded = true;
+  r.fortune = EXTRA.find((f) => f.id === 'alchemy-last');
+  assert.equal(r.estimateAlchemy(a).calculation.locoweed, 2);
+  assert.equal(r.estimateAlchemy(a).calculation.fortune, 4);
+  assert.equal(r.view(a.id).recipes.find((p) => p.id === a.id).alchemy.stopEstimate, 10);
+  a.exploded = true;
+  r.fortune = EXTRA.find((f) => f.id === 'alchemy-misfortune');
+  const estimate = r.estimateAlchemy(a);
+  assert.equal(estimate.calculation.fortune, 2);
+  r.beginAlchemy();
+  assert.deepEqual(a.alchemy.calculation, estimate.calculation);
+  assert.equal(a.alchemy.max, 10);
+});

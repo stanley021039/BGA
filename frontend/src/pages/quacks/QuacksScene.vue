@@ -13,6 +13,7 @@ import QuacksBag from './QuacksBag.vue';
 import QuacksBooks from './QuacksBooks.vue';
 import QuacksScoreboard from './QuacksScoreboard.vue';
 import QuacksAlchemy from './QuacksAlchemy.vue';
+import QuacksFlask from './QuacksFlask.vue';
 import QuacksWitches from './QuacksWitches.vue';
 import QuacksEffects from './QuacksEffects.vue';
 import UiButton from '../../components/UiButton.vue';
@@ -24,6 +25,7 @@ const game = useQuacksStore(),
   achievements = useAchievementsStore(),
   tools = ref<InstanceType<typeof UiDialog> | null>(null),
   tab = ref('books'),
+  alchemyInspection = ref<string | null>(null),
   achievementNotice = ref('');
 let disposed = false,
   known: Set<string> | null = null;
@@ -42,13 +44,25 @@ const tabs = {
 const viewedPatient = computed(() =>
   state.value.patients.find((p) => p.id === game.viewed?.alchemy?.patientId),
 );
+const patientEstimate = computed(() =>
+  state.value.phase === 'brewing'
+    ? (game.viewed?.alchemy?.stopEstimate ?? null)
+    : (game.viewed?.alchemy?.essence ?? null),
+);
+const inspectedRecipe = computed(() =>
+  state.value.recipes.find((p) => p.id === alchemyInspection.value),
+);
+const inspectedPatient = computed(() =>
+  state.value.patients.find((p) => p.id === inspectedRecipe.value?.alchemy?.patientId),
+);
 const inspecting = ref(false);
 const viewed = computed(() => game.viewed),
   isOwnPot = computed(() => viewed.value?.id === state.value.me),
   boardVisible = computed(
     () =>
       (inspecting.value ||
-        (['brewing', 'settlement'].includes(state.value.phase) && !complex.value)) &&
+        (['brewing', 'settlement'].includes(state.value.phase) &&
+          (!isOwnPot.value || !complex.value))) &&
       !!viewed.value,
   ),
   complex = computed(
@@ -57,15 +71,23 @@ const viewed = computed(() => game.viewed),
       state.value.stage !== 'drawing' ||
       !!mine.value?.pending ||
       !!mine.value?.waitingEffect ||
+      (!!mine.value && !mine.value.canDraw) ||
       !!mine.value?.reserve.length ||
       !!mine.value?.alchemy?.drawablePool.length ||
       !!mine.value?.alchemy?.returnable.length,
   );
 defineExpose({ open });
 function open(key: string) {
+  alchemyInspection.value = null;
   tab.value = key;
   if (key === 'books') emit('books-opened');
   void tools.value?.open();
+}
+function openPatient() {
+  const id = game.viewed?.id;
+  if (!id || !viewedPatient.value) return;
+  open('alchemy');
+  alchemyInspection.value = id;
 }
 async function checkAchievements() {
   await achievements.load();
@@ -226,19 +248,47 @@ onBeforeUnmount(() => {
               mine?.potion ? '滿瓶' : '空瓶'
             }}</span></button
           >
-          <QuacksBag /><span
+          <QuacksBag /><button
             v-if="viewedPatient"
+            type="button"
             class="vue-quacks-patient-badge"
             data-ui-hint
-            :title="viewedPatient.name + '：' + viewedPatient.text"
-            :aria-label="viewedPatient.name + '：' + viewedPatient.text"
-            tabindex="0"
-            ><QuacksGlyph :patient="viewedPatient.id" :size="64"
-          /></span>
+            :title="
+              viewedPatient.name +
+              '：' +
+              viewedPatient.text +
+              (state.phase === 'brewing'
+                ? '\n現在停手預估 ' +
+                  (patientEstimate ?? '未知') +
+                  ' 格；按目前狀態計算，鄰座後續爆鍋或其他效果仍會更新。'
+                : '')
+            "
+            :aria-label="
+              '開啟' +
+              viewedPatient.name +
+              '的特效藥' +
+              (patientEstimate !== null
+                ? '；' +
+                  (state.phase === 'brewing' ? '現在停手預估 ' : '特效藥 ') +
+                  patientEstimate +
+                  ' 格'
+                : '')
+            "
+            @click="openPatient()"
+            ><span aria-hidden="true" inert
+              ><QuacksGlyph :patient="viewedPatient.id" :size="64" /></span
+            ><strong class="vue-quacks-patient-estimate"
+              >{{ patientEstimate ?? '—'
+              }}<small v-if="patientEstimate !== null"> 格</small></strong
+            ></button
+          >
         </div>
         <div
           v-show="!inspecting && ((isOwnPot && complex) || !boardVisible)"
           class="vue-quacks-stage-overlay"
+          :class="{
+            'is-distilling': state.stage === 'essence' && !mine?.pending && !mine?.waitingEffect,
+          }"
           ><QuacksPlay overlay
         /></div>
         <UiButton
@@ -320,12 +370,28 @@ onBeforeUnmount(() => {
           (key === 'alchemy' && !state.options.alchemists) ||
           (key === 'witches' && !state.options.witches && !state.visitingWitch)
         "
-        @click="tab = key"
+        @click="
+          tab = key;
+          alchemyInspection = null;
+        "
         >{{ label }}</button
       ></nav
     ><QuacksBooks v-if="tab === 'books'" /><QuacksScoreboard
-      v-else-if="tab === 'score'" /><QuacksWitches v-else-if="tab === 'witches'" /><QuacksAlchemy
-      v-else-if="tab === 'alchemy'" /><section
+      v-else-if="tab === 'score'" /><QuacksWitches v-else-if="tab === 'witches'" />
+    <section
+      v-else-if="
+        tab === 'alchemy' && inspectedRecipe && inspectedRecipe.id !== state.me && inspectedPatient
+      "
+      :aria-label="inspectedRecipe.name + '的特效藥'"
+    >
+      <QuacksFlask
+        :patient="inspectedPatient"
+        :value="inspectedRecipe.alchemy?.essence || 0"
+        :calculation="inspectedRecipe.alchemy?.calculation"
+        :tone="state.potColors[inspectedRecipe.potColor]?.liquid[1]"
+        :final="state.round === 9"
+      /> </section
+    ><QuacksAlchemy v-else-if="tab === 'alchemy'" /><section
       v-else-if="tab === 'fortune'"
       class="vue-quacks-fortune-card"
       :data-timing="state.fortune?.timing"

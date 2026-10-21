@@ -20,14 +20,19 @@ test('ingredient and effect surfaces retain graphic aliases and the complete hov
   assert.match(read('QuacksBooks.vue'), /\{\{ candidate.effect \}\}/);
   assert.doesNotMatch(read('QuacksBooks.vue'), /<QuacksRuleVisual/);
 });
-test('alchemy uses the original flask art and retains every reward tooltip and guarded action', () => {
+test('alchemy uses the approved distillery and retains every reward tooltip and guarded action', () => {
   const s = read('QuacksFlask.vue');
-  assert.match(s, /QuacksArt\?\.essenceFlask/);
+  assert.match(s, /quacks-distillery-pipes/);
   assert.match(s, /props.patient.track\[n\]/);
   assert.match(s, /aria-label/);
-  assert.match(s, /createElementNS/);
+  assert.match(s, /data-ui-hint/);
+  assert.match(s, /aria-label="開啟調製規則"/);
+  assert.match(s, /\{\{ patient.text \}\}/);
+  assert.match(s, /@focus=/);
   assert.match(s, /props.selecting/);
   assert.match(s, /n <= \(props.max/);
+  assert.match(s, /game.available/);
+  assert.match(s, /QuacksEssenceReward/);
   assert.match(read('QuacksAlchemy.vue'), /<QuacksFlask/);
   assert.doesNotMatch(read('QuacksAlchemy.vue'), /vue-quacks-essence-track/);
 });

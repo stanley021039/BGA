@@ -11,6 +11,7 @@ import StatusSlot from '../../components/StatusSlot.vue';
 import FramePreview from '../../components/FramePreview.vue';
 import GameSongClip from '../../components/GameSongClip.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
+import UiIcon from '../../components/UiIcon.vue';
 import '../../../../public/shared/song-title-zh.js';
 import '../../styles/stitch-party-content.scss';
 const emit = defineEmits<{ dirty: [value: boolean] }>();
@@ -190,28 +191,54 @@ const canSlot = (i: number) =>
         :to="s.phase === 'waiting' ? '#room-waiting-settings-content-musicquiz' : 'body'"
         :disabled="s.phase !== 'waiting'"
         defer
-        ><div class="vue-waiting-music-settings"
-          ><h1>{{ s.phase === 'finished' ? '本場結果' : '挑選本局題庫' }}</h1
+        ><div class="vue-waiting-music-settings stitch-music-content"
+          ><header class="stitch-setup-heading"
+            ><div
+              ><small>TUNE TIMELINE · 題庫設定</small
+              ><h1>{{ s.phase === 'finished' ? '本場結果' : '題庫挑選與競賽規則' }}</h1
+              ><p>選取本局的音樂年代題庫，從8秒前奏開始挑戰，再將歌曲排入個人時間軸。</p></div
+            ><span class="stitch-host-badge">{{
+              room.host ? '房主自訂中' : '全桌共用題庫'
+            }}</span></header
           ><p v-if="s.winner">年代冠軍：{{ s.winner.names.join('、') }} · {{ s.winner.score }}張</p
           ><fieldset
             :disabled="!room.host || blocked"
             @input="markSettingsInput"
             @change="queueSettings"
-            ><legend>語言與分類</legend
+            class="stitch-setup-sheet"
+            ><legend><UiIcon name="cards" />語言與分類</legend
             ><div class="mq-banks"
               ><label v-for="bank in s.banks" :key="bank.id" class="mq-bank"
-                ><input v-model="banks" type="checkbox" :value="bank.id" /><strong>{{
-                  bank.label
-                }}</strong
-                ><span>{{ bank.count }}首</span></label
+                ><input v-model="banks" type="checkbox" :value="bank.id" /><UiIcon
+                  :name="bank.id === 'viral' ? 'star' : bank.id === 'custom' ? 'edit' : 'music'"
+                  class="mq-bank-icon"
+                /><span class="mq-bank-check" aria-hidden="true">{{
+                  banks.includes(bank.id) ? '✓' : '○'
+                }}</span
+                ><strong>{{ bank.label }}</strong
+                ><span class="mq-bank-description">{{
+                  bank.id === 'custom'
+                    ? '本局匯入的自選歌曲'
+                    : bank.id === 'foreign'
+                      ? '英文以外的其他外文'
+                      : '熱門代表作與經典歌曲'
+                }}</span
+                ><span class="mq-bank-count">{{ bank.count }} 首</span></label
               ></div
             ><details
               ><summary>曲風篩選</summary
               ><label v-for="genre in s.genres" :key="genre"
                 ><input v-model="genres" type="checkbox" :value="genre" />{{ genre }}</label
               ></details
-            ><label
-              >年代卡目標<input v-model.number="target" type="number" min="3" max="10" /></label
+            ><div class="stitch-settings-grid"
+              ><label
+                >獲勝目標<strong>率先集齊年代卡</strong
+                ><input v-model.number="target" type="number" min="3" max="10" /></label
+              ><div
+                ><small>前奏猜答限制</small
+                ><strong>{{ s.settings.introSeconds }} 秒試聽前奏</strong></div
+              ><div><small>年代排序規則</small><strong>依年代排列，同年可相鄰</strong></div
+              ><div><small>歌王插歌起始標記</small><strong>每人起始 2 枚標記</strong></div></div
             ><label><input v-model="obscure" type="checkbox" />混入冷門挑戰（最多約10%）</label
             ><details
               ><summary>自己的題庫</summary
@@ -276,7 +303,7 @@ const canSlot = (i: number) =>
             :tabindex="s.song ? 0 : undefined"
             >{{ s.song?.title || '神秘曲目 #' + s.round }}</h2
           >
-          ><p>{{
+          <p>{{
             s.song
               ? s.song.artist + ' · ' + s.song.year
               : s.playback.seconds + '秒片段 · 歌名與年份待揭曉'

@@ -245,6 +245,7 @@ class QuacksRoom extends PartyRoom {
         overflow: [],
         reserve: [],
         drawEvents: [],
+        drawDecisionEvents: [],
         potionEvents: [],
         stopEvents: [],
         settlementEvents: [],
@@ -513,6 +514,7 @@ class QuacksRoom extends PartyRoom {
         explosionId: null,
         draws: 0,
         drawEvents: [],
+        drawDecisionEvents: [],
         potionEvents: [],
         stopEvents: [],
         settlementEvents: [],
@@ -1672,6 +1674,16 @@ class QuacksRoom extends PartyRoom {
         }
         this.quacksAchievements.decision(p);
         this.intents[id] = action;
+        if (action === 'draw') {
+          p.drawDecisionEvents ??= [];
+          p.drawDecisionEvents.push({
+            id: randomUUID(),
+            at: this.now(),
+            decision: true,
+            step: this.step,
+          });
+          p.drawDecisionEvents = p.drawDecisionEvents.slice(-64);
+        }
         if (action === 'stop') {
           p.stopEvents ??= [];
           p.stopEvents.push({ id: randomUUID(), at: this.now() });
@@ -1914,6 +1926,7 @@ class QuacksRoom extends PartyRoom {
                 patientId: q.alchemy.patientId,
                 essence: q.alchemy.essence,
                 confirmed: q.alchemy.confirmed,
+                stopEstimate: show && this.phase === 'brewing' ? this.estimateAlchemy(q).max : null,
                 calculation: revealed ? q.alchemy.calculation : null,
               }
             : null,
@@ -1969,6 +1982,7 @@ class QuacksRoom extends PartyRoom {
       mine: p.bag
         ? {
             drawEvents: p.drawEvents || [],
+            drawDecisionEvents: p.drawDecisionEvents || [],
             potionEvents: p.potionEvents || [],
             stopEvents: p.stopEvents || [],
             settlementEvents: p.settlementEvents || [],

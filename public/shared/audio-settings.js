@@ -279,7 +279,12 @@
           options.onStop?.();
         },
         game: true,
-        maxStartDelayMs: kind === 'confirm' || kind === 'reveal' ? 10000 : 1000,
+        maxStartDelayMs:
+          kind === 'confirm' || kind === 'reveal'
+            ? 10000
+            : ['ingredient-draw', 'quacks-draw', 'quacks-stop'].includes(kind)
+              ? 3000
+              : 1000,
       });
       if (!clip) release?.();
       return clip;

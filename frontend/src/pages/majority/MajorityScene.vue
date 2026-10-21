@@ -14,6 +14,7 @@ import QuestionPreview from './QuestionPreview.vue';
 import PrepareDialog from './PrepareDialog.vue';
 import MajorityTeams from './MajorityTeams.vue';
 import MajorityResults from './MajorityResults.vue';
+import MajoritySetup from './MajoritySetup.vue';
 import { majorityKindLabels } from '../../contracts/majority';
 import { useMajorityPresentation } from './useMajorityPresentation';
 const room = useRoomStore(),
@@ -125,6 +126,7 @@ onBeforeUnmount(() => {
         :disabled="blocked"
         @click="prepare?.open($event.currentTarget as HTMLElement)" /></template
     ><template #summary-extra><MajorityTeams /></template
+    ><template #settings><MajoritySetup /></template
   ></RoomWaitingTemplate>
 
   <section v-else-if="s" ref="root" class="vue-majority-scene" :data-phase="s.phase"

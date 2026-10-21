@@ -1,5 +1,9 @@
 # 程式架構 agent 記憶
 
+2026-10-21本批郎中停手預估：`estimateAlchemy`與`beginAlchemy`共用計算，讀取無副作用；`stopEstimate`僅對可見recipe投影，隱藏他人鍋為null。新增顏色／鄰座去重／占卜／愚人草／上限及隱私回歸。大廳對話延用原API及事件閘門，最新同人訊息替換並以ID守護清理；依playerId而非姓名綁定。範圍見 `docs/UI-REFINEMENTS-20261021.md`。
+
+2026-10-21大廳泡泡與角色選單：角色互動視窗的訊息表單可在關閉時卸載，因此彈幕事件controller由常駐`LobbyStage`持有；選取框由`BarrageFrames.decorate`加到DOM的`barrage-frame-ornate` class同步進Vue reactive class，避免移動定位覆蓋。實際390px Edge驗證選取neon、送出、框內裝飾、148px高度和無橫向溢出；詳 `docs/UI-REFINEMENTS-20261021.md`。
+
 2026-10-21／#158 CI 追修：首輪 Linux 通過、Windows 唯一失敗為系統 tar 未還原中文 PDF（run 39605036532），非動畫回歸。解壓改為固定 Node tar 開發依賴與 strict 模式，追加長中文／emoji 路徑和二進位 bytes 回歸；保留格式 hook。新 head 的測試／CI以PR為準，詳 [故障證據](../specs/ENTRY-INTRO-NAVIGATION-157.md)。
 
 2026-10-21／候選 2.20.2：#157 修正共用進頁 bootstrap 將開房完整導航誤判為新進站；同 origin navigate／history 不重播，reload 與直接進入仍播放，#154 偏好與登入原圖演出保留。完整 2,543 項及前端 6 項通過，Vue 開房／刷新／返回有原生證據；metadata 缺失保守播放與未驗項目見 [導航規格](../specs/ENTRY-INTRO-NAVIGATION-157.md)。尚未合併或部署。

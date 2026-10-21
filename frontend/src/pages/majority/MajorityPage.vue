@@ -71,7 +71,7 @@ function status(player: RoomPlayer) {
         :disabled="s?.phase !== 'finished'"
         :to="s?.phase === 'finished' ? '#majority-next-settings' : 'body'"
         defer
-        ><details :open="s?.phase === 'waiting'" class="vue-majority-settings"
+        ><details v-if="s?.phase === 'finished'" open class="vue-majority-settings"
           ><summary
             >{{
               s?.phase === 'finished'

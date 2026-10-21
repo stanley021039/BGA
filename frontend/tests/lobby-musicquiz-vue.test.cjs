@@ -38,6 +38,7 @@ function loader(mocks = {}) {
         structuredClone,
         crypto: require('node:crypto').webcrypto,
         document: { hidden: false, addEventListener() {}, removeEventListener() {} },
+        window: { addEventListener() {}, removeEventListener() {} },
       },
       { filename: file },
     );
@@ -284,4 +285,59 @@ test('song hints omit Chinese and English songs while retaining distinct foreign
   assert.equal(hint('群青', 'jp'), undefined);
   assert.equal(hint('ブルーバード', 'jp'), '中文參考譯名：青鳥');
   assert.equal(hint('Despacito', 'es'), '中文參考譯名：慢慢來');
+});
+
+test('lobby speech follows author identity and expiring an older message keeps the latest bubble', () => {
+  const pinia = require('pinia'),
+    instance = pinia.createPinia();
+  pinia.setActivePinia(instance);
+  const session = vue.reactive({ user: null });
+  const load = loader({ vue, pinia, './session': { useSessionStore: () => session } });
+  const lobby = load(path.join(__dirname, '../src/stores/lobby.ts')).useLobbyStore();
+  lobby.snapshot = {
+    selfId: 'a',
+    serverNow: 1000,
+    visitors: [{ id: 'a' }, { id: 'b' }],
+    barrages: [],
+    pingContext: null,
+  };
+  lobby.connected = true;
+  const event = (id, playerId, message) => ({
+    id,
+    playerId,
+    message,
+    kind: 'barrage',
+    name: 'same name',
+    at: 1000,
+    emoji: '',
+    frame: { kind: 'builtin', id: 'default', version: 1 },
+  });
+  try {
+    const old = lobby.showSpeech(event('one', 'a', 'first'));
+    const peer = lobby.showSpeech(event('peer', 'b', 'another speaker'));
+    const latest = lobby.showSpeech(event('two', 'a', 'latest'));
+    assert.equal(typeof old, 'function');
+    assert.equal(typeof peer, 'function');
+    assert.equal(typeof latest, 'function');
+    assert.equal(lobby.speeches.a.message, 'latest');
+    assert.equal(lobby.speeches.b.message, 'another speaker');
+    old();
+    assert.equal(lobby.speeches.a.message, 'latest');
+    assert.equal(
+      lobby.showSpeech(event('two', 'a', 'latest')),
+      false,
+      'same event is not replayed',
+    );
+    assert.equal(lobby.showSpeech(event('missing', 'absent', 'unknown sender')), false);
+    assert.equal(lobby.showSpeech(event('no-id', undefined, 'unknown sender')), false);
+    latest();
+    assert.equal(lobby.speeches.a, undefined);
+    assert.equal(lobby.speeches.b.message, 'another speaker');
+    lobby.connected = false;
+    assert.equal(lobby.showSpeech(event('offline', 'a', 'offline')), false);
+    peer();
+    assert.deepEqual(Object.keys(lobby.speeches), []);
+  } finally {
+    pinia.disposePinia(instance);
+  }
 });

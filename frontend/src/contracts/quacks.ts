@@ -51,7 +51,22 @@ export interface QuacksPatient {
   id: string;
   name: string;
   text: string;
-  track: { position: number; text: string }[];
+  track: QuacksEssenceReward[];
+}
+export interface QuacksEssenceReward {
+  position: number;
+  text: string;
+  rat?: number;
+  points?: number;
+  preview?: number;
+  draw?: number;
+  buy?: number;
+  rubies?: number;
+  chip?: Ingredient;
+  upgrade?: number;
+  refill?: boolean;
+  dice?: number;
+  droplet?: number;
 }
 export interface QuacksCalculation {
   colors: number;
@@ -103,6 +118,7 @@ export interface QuacksRecipe {
     patientId: string | null;
     essence: number;
     confirmed: boolean;
+    stopEstimate?: number | null;
     calculation: QuacksCalculation | null;
   } | null;
 }
@@ -134,6 +150,7 @@ export interface QuacksPurchase extends Ingredient {
 }
 export interface QuacksMine {
   drawEvents: QuacksEvent[];
+  drawDecisionEvents?: QuacksEvent[];
   potionEvents: QuacksEvent[];
   stopEvents: QuacksEvent[];
   settlementEvents: QuacksEvent[];
@@ -347,6 +364,15 @@ function patient(v: unknown, raw = false): QuacksPatient {
       return {
         position: natural(t.position, index),
         text: raw && t.text === undefined ? '' : string(t.text),
+        ...Object.fromEntries(
+          ['rat', 'points', 'preview', 'draw', 'buy', 'rubies', 'upgrade', 'dice', 'droplet']
+            .filter((key) => t[key] !== undefined)
+            .map((key) => [key, natural(t[key])]),
+        ),
+        ...(t.refill === undefined ? {} : { refill: bool(t.refill) }),
+        ...(t.chip === undefined
+          ? {}
+          : { chip: { color: color(record(t.chip).color), value: natural(record(t.chip).value) } }),
       };
     }),
   };
@@ -394,6 +420,12 @@ function recipe(v: unknown): QuacksRecipe {
       patientId: nullable(x.patientId),
       essence: natural(x.essence),
       confirmed: bool(x.confirmed),
+      stopEstimate:
+        x.stopEstimate == null
+          ? null
+          : natural(x.stopEstimate) <= 10
+            ? natural(x.stopEstimate)
+            : bad(),
       calculation: calculation(x.calculation),
     };
   }
@@ -491,6 +523,9 @@ function mine(v: unknown): QuacksMine | null {
   }
   return {
     drawEvents: events(r.drawEvents),
+    ...(r.drawDecisionEvents === undefined
+      ? {}
+      : { drawDecisionEvents: events(r.drawDecisionEvents) }),
     potionEvents: events(r.potionEvents),
     stopEvents: events(r.stopEvents),
     settlementEvents: events(r.settlementEvents),

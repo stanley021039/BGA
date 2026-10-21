@@ -11,6 +11,7 @@ interface Reward {
   frameId: string;
   label: string;
   achievementTitle: string;
+  condition: string;
   earned: boolean;
   claimedAt: string | null;
 }
@@ -19,12 +20,19 @@ const prefs = usePreferencesStore(),
   selected = ref(''),
   resource = useResource(async (request) => {
     const data = record(await request('/api/achievements'));
+    const conditions = new Map(
+      array(data.achievements).map((value) => {
+        const item = record(value);
+        return [text(item.id || item.achievement_id), text(item.description)];
+      }),
+    );
     return array(data.rewards).map((v) => {
       const r = record(v);
       return {
         frameId: text(r.frameId),
         label: text(r.label),
         achievementTitle: text(r.achievementTitle),
+        condition: conditions.get(text(r.achievementId)) || '請至成就徽章查看完整條件。',
         earned: r.earned === true,
         claimedAt: typeof r.claimedAt === 'string' ? r.claimedAt : null,
       } as Reward;
@@ -58,6 +66,7 @@ function apply(kind: 'barrage' | 'media', id: string) {
       ><article v-for="reward in resource.data.value || []" :key="reward.frameId"
         ><h3>{{ reward.label }}</h3
         ><p>達成「{{ reward.achievementTitle }}」</p
+        ><p class="vue-reward-condition"><strong>解鎖條件：</strong>{{ reward.condition }}</p
         ><FramePreview
           :frame="reward.frameId"
           name="我的成就"
@@ -92,5 +101,10 @@ function apply(kind: 'barrage' | 'media', id: string) {
   padding: 16px;
   border: 1px solid currentColor;
   border-radius: 16px;
+}
+.vue-reward-condition {
+  font-size: 1rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 </style>
