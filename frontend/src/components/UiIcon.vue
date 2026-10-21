@@ -17,6 +17,7 @@ const allowed = new Set([
   'sound',
   'help',
   'refresh',
+  'undo',
   'close',
   'upload',
   'remove',
@@ -61,4 +62,4 @@ const markup = computed(() =>
 );
 </script>
 
-<template><span aria-hidden="true" v-html="markup"></span></template>
+<template><span v-if="markup" aria-hidden="true" v-html="markup"></span></template>

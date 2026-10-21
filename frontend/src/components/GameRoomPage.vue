@@ -28,6 +28,8 @@ const props = withDefaults(
     setup: boolean;
     canStart: boolean;
     startLabel?: string;
+    startIcon?: string;
+    setupTarget?: string;
     pollMs?: number;
     showMetrics?: boolean;
   }>(),
@@ -62,13 +64,6 @@ const connection = computed(() =>
 onMounted(() => {
   if (new URLSearchParams(location.search).has('learn')) void help.value?.open();
 });
-async function refreshManually() {
-  if (await page.refresh()) {
-    room.failed = false;
-    room.message = '';
-  }
-}
-defineExpose({ refresh: page.refresh });
 </script>
 <template>
   <section v-if="!room.seat" class="vue-game-entry"
@@ -97,12 +92,9 @@ defineExpose({ refresh: page.refresh });
     :data-room-kind="type"
     :data-room-phase="room.snapshot?.phase"
     :class="{ 'is-header-integrated': headerIntegrated }"
-    ><RoomHeader
-      :title="title"
-      :max-players="maxPlayers"
-      :focused="focused"
-      @integrated="headerIntegrated = $event"
-      ><slot name="toolbar" /><UiButton
+    ><RoomHeader :title="title" :focused="focused" @integrated="headerIntegrated = $event"
+      ><template v-if="$slots.toolbar" #game-actions><slot name="toolbar" /></template
+      ><UiButton
         stitch
         variant="ghost"
         icon="help"
@@ -122,14 +114,7 @@ defineExpose({ refresh: page.refresh });
         ><span class="vue-room-round">{{ round || '等待開桌' }}</span></div
       ><StatusSlot
         :message="connection || room.message"
-        :error="!!room.terminal || room.disconnected || room.failed" /><UiButton
-        stitch
-        variant="ghost"
-        icon="refresh"
-        icon-only
-        label="更新房間狀態"
-        :disabled="!room.seat || room.busy"
-        @click="refreshManually()"
+        :error="!!room.terminal || room.disconnected || room.failed"
     /></div>
     <div class="vue-game-grid"
       ><aside class="vue-game-roster-panel"
@@ -145,26 +130,30 @@ defineExpose({ refresh: page.refresh });
             ><template #actions
               ><UiButton
                 v-if="room.host && setup"
+                stitch
+                variant="secondary"
                 icon="add"
                 label="加入電腦玩家"
                 :disabled="room.busy || !botAllowed"
                 @click="room.command('bot', {})" /></template></RoomRoster></slot></aside
       ><main class="vue-game-main"><slot /></main
       ><aside class="vue-game-side"
-        ><section v-if="setup" class="vue-game-settings-panel"
-          ><h2>房間設定</h2><slot name="settings" /><p>{{
-            room.host ? '邀請朋友入座，準備好就開始。' : '等待房主開始。'
-          }}</p
-          ><div class="vue-game-start-slot"
-            ><UiButton
-              v-if="room.host"
-              :icon="startLabel ? 'replay' : 'play'"
-              :label="startLabel || '開始遊戲'"
-              :pending="room.busy"
-              :disabled="!setup || !canStart"
-              @click="emit('start')"
-            /><span v-else>由房主開始遊戲</span></div
-          ></section
+        ><Teleport v-if="setup" :to="setupTarget || 'body'" :disabled="!setupTarget" defer
+          ><section class="vue-game-settings-panel" :class="{ 'is-in-stage': !!setupTarget }"
+            ><h2>房間設定</h2><slot name="settings" /><p v-if="!room.host">等待房主開始。</p
+            ><div class="vue-game-start-slot"
+              ><UiButton
+                v-if="room.host"
+                stitch
+                variant="primary"
+                :icon="startIcon || (startLabel ? 'replay' : 'play')"
+                :label="startLabel || '開始遊戲'"
+                :pending="room.busy"
+                :disabled="!setup || !canStart"
+                @click="emit('start')"
+              /><span v-else>由房主開始遊戲</span></div
+            ></section
+          ></Teleport
         ><slot name="side-actions" /><RoomChat
           ><template #tools
             ><RoomMedia :connected="room.connected" /></template></RoomChat></aside></div

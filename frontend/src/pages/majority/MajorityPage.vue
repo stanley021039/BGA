@@ -150,7 +150,7 @@ function status(player: RoomPlayer) {
           :message="
             game.settingsPending
               ? '正在儲存設定…'
-              : game.settingsError || (game.settingsSaved ? '設定已儲存。' : '修改後自動儲存。')
+              : game.settingsError || (game.settingsSaved ? '' : '修改後自動儲存。')
           "
           :error="!!game.settingsError" /><UiButton
           v-if="game.settingsError && game.editable"

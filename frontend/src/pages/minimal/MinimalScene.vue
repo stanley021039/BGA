@@ -10,6 +10,7 @@ import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
+import MinimalWaiting from './MinimalWaiting.vue';
 const editor = useMinimalStore(),
   room = useRoomStore(),
   actions = usePartyActionsStore(),
@@ -18,14 +19,9 @@ const editor = useMinimalStore(),
 const tool = ref<'line' | 'circle'>('line'),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
   input = ref<HTMLInputElement | null>(null),
-  composing = ref(false),
-  review = ref(0);
+  composing = ref(false);
 let disposed = false;
-const selected = computed(
-    () =>
-      state.value.results.find((result) => result.round === review.value) ||
-      state.value.results.at(-1),
-  ),
+const latest = computed(() => state.value.results.at(-1)),
   blocked = computed(() => !room.connected || room.busy || actions.pending),
   syncMessage = computed(() =>
     editor.expired
@@ -49,17 +45,6 @@ watch(
     () => editor.expired,
   ],
   () => confirm.value?.cancel(),
-);
-watch(
-  () => state.value?.results.length,
-  () => {
-    if (
-      !state.value?.results.some((result) => result.round === review.value) ||
-      review.value === state.value?.results.at(-2)?.round
-    )
-      review.value = state.value?.results.at(-1)?.round || 0;
-  },
-  { immediate: true },
 );
 async function clear() {
   if (!editor.editable || editor.activeStroke) return;
@@ -111,65 +96,88 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <section class="vue-game-panel vue-minimal-stage" aria-labelledby="minimalHeading"
-    ><header class="vue-minimal-heading"
-      ><div
-        ><small>LINES · CIRCLES · ONE GUESS</small
-        ><h1 id="minimalHeading">{{
-          state.phase === 'waiting'
-            ? '少一筆，也能讓朋友猜中'
-            : state.phase === 'drawing'
-              ? guesser
-                ? '你是本輪猜題者'
-                : '用幾何，畫出秘密題目'
-              : state.phase === 'guessing'
-                ? '從最少筆畫開始猜'
-                : state.phase === 'reveal'
-                  ? '本輪答案與畫作'
-                  : state.interrupted
-                    ? '本場中止'
-                    : '本場成績'
-        }}</h1
-        ><p>{{
-          state.phase === 'drawing' && guesser
-            ? '畫家正在作畫，答案與私人草稿不會公開。'
-            : '只用直線與完整封閉圓，每個圖形算一筆。'
-        }}</p></div
-      ><RoomCountdown
-        :deadline="state.deadline"
-        :duration="10000"
-        :offset="room.clockOffset"
-        :epoch="state.roundId || 'waiting'"
-        caption="最後畫家剩餘"
-        :now="editor.now"
-        urgent
-    /></header>
-    <div class="vue-minimal-live-slot"
-      ><section
-        v-if="state.phase === 'drawing' && !guesser"
-        class="vue-minimal-private"
-        data-private
-        ><h2>秘密題目：{{ state.prompt }}</h2
-        ><div class="vue-minimal-tools"
-          ><DrawingToolButton
+  <MinimalWaiting v-if="state.phase === 'waiting'" />
+  <section
+    v-else
+    class="vue-minimal-stage"
+    :data-phase="state.phase"
+    aria-labelledby="minimalHeading"
+  >
+    <header
+      class="vue-minimal-task-header"
+      :data-private="state.phase === 'drawing' && !guesser ? '' : undefined"
+      ><div>
+        <h1 id="minimalHeading">{{
+          state.phase === 'drawing'
+            ? guesser
+              ? '畫家正在作畫'
+              : '秘密題目：' + state.prompt
+            : state.phase === 'guessing'
+              ? state.currentDrawing?.name + ' · ' + state.currentDrawing?.count + ' 筆'
+              : state.phase === 'reveal'
+                ? '本輪揭曉：' + latest?.title
+                : state.interrupted
+                  ? '本場中止'
+                  : '本場成績'
+        }}</h1>
+        <p>{{
+          state.phase === 'drawing'
+            ? guesser
+              ? '等待畫家完成，題目與私人草稿不會公開。'
+              : '僅畫家看見'
+            : state.phase === 'guessing'
+              ? '從少筆畫到多筆畫依序展示'
+              : state.phase === 'reveal'
+                ? '每輪只用直線與封閉圓。'
+                : '已完成回合的分數與畫作'
+        }}</p> </div
+      ><div class="vue-minimal-task-meta"
+        ><span v-if="state.phase === 'drawing' && !guesser" class="vue-minimal-badge"
+          >{{ editor.shapes.length }}／40 筆</span
+        ><div class="vue-minimal-countdown-slot"
+          ><RoomCountdown
+            v-if="state.deadline"
+            :deadline="state.deadline"
+            :duration="10000"
+            :offset="room.clockOffset"
+            :epoch="state.roundId || ''"
+            caption="最後畫家剩餘"
+            :now="editor.now"
+            urgent /></div></div
+    ></header>
+    <section
+      v-if="state.phase === 'drawing' && !guesser"
+      class="vue-minimal-task-panel vue-minimal-private"
+      data-private
+    >
+      <div class="vue-minimal-drawing-area"
+        ><div class="vue-minimal-tools" aria-label="幾何畫具">
+          <DrawingToolButton
             tool="line"
             label="直線"
             :selected="tool === 'line'"
             :disabled="!editor.editable || editor.activeStroke"
-            @click="tool = 'line'" /><DrawingToolButton
+            @click="tool = 'line'"
+          />
+          <DrawingToolButton
             tool="ellipse"
             label="封閉圓"
             :selected="tool === 'circle'"
             :disabled="!editor.editable || editor.activeStroke"
-            @click="tool = 'circle'" /><DrawingToolButton
+            @click="tool = 'circle'"
+          />
+          <DrawingToolButton
             tool="undo"
             label="復原上一個圖形"
             :disabled="!editor.editable || editor.activeStroke || !editor.shapes.length"
-            @click="editor.undo()" /><DrawingToolButton
+            @click="editor.undo()"
+          />
+          <DrawingToolButton
             tool="clear"
             label="清除畫布"
             :disabled="!editor.editable || editor.activeStroke || !editor.shapes.length"
-            @click="clear" /></div
+            @click="clear"
+          /> </div
         ><GeometryCanvas
           :shapes="state.submitted || editor.expired ? state.myShapes : editor.shapes"
           :label="'你的私人幾何畫布，秘密題目 ' + state.prompt"
@@ -178,10 +186,20 @@ onBeforeUnmount(() => {
           :tool="tool"
           @commit="editor.append"
           @active="editor.activeStroke = $event"
-        /><div class="vue-minimal-sync"
+      /></div>
+      <p class="vue-minimal-drawing-note"
+        >直線與封閉圓，每個圖形算一筆，最多 40 筆。放開後同步私人草稿；只剩一位未完成時倒數 10
+        秒，時間到保留已同步圖形。</p
+      >
+      <footer class="vue-minimal-footer vue-minimal-sync"
+        ><div class="vue-minimal-sync-counts"
           ><strong>本地 {{ editor.shapes.length }}／40 筆</strong
           ><strong>已同步 {{ state.myShapes.length }} 筆</strong
+          ><span>完成後不可修改；空畫布視為本輪略過。</span></div
+        ><div class="vue-minimal-submit-actions"
           ><UiButton
+            stitch
+            variant="secondary"
             icon="refresh"
             label="同步草稿"
             :pending="editor.saving"
@@ -189,6 +207,8 @@ onBeforeUnmount(() => {
               !editor.drawingAllowed || editor.finishing || editor.activeStroke || !editor.dirty
             "
             @click="editor.sync()" /><UiButton
+            stitch
+            variant="primary"
             icon="check"
             label="完成作畫"
             :pending="editor.finishing"
@@ -196,138 +216,137 @@ onBeforeUnmount(() => {
               !editor.drawingAllowed || editor.activeStroke || (room.busy && !editor.saving)
             "
             @click="submit" /></div
-        ><p>{{ syncMessage }}</p
-        ><p>送出後不能修改；倒數只保留伺服器已接受的圖形。</p></section
-      >
-      <section
-        v-else-if="state.phase === 'guessing' && state.currentDrawing"
-        class="vue-minimal-public"
-        ><h2>{{ state.currentDrawing.name }} · {{ state.currentDrawing.count }} 筆</h2
+      ></footer>
+    </section>
+    <section
+      v-else-if="state.phase === 'guessing' && state.currentDrawing"
+      class="vue-minimal-task-panel vue-minimal-public"
+    >
+      <div class="vue-minimal-public-canvas"
         ><GeometryCanvas
           :shapes="state.currentDrawing.shapes"
           :label="state.currentDrawing.name + ' 的公開畫作，' + state.currentDrawing.count + ' 筆'"
           :epoch="state.roundId + ':' + state.attempts.length"
-        /><p>每張猜一次；猜中畫家 +2、猜題者 +1。</p
+      /></div>
+      <footer class="vue-minimal-guess-footer"
         ><form v-if="guesser" @submit.prevent="answer"
           ><label for="minimalAnswer">你猜圖上是什麼？</label
-          ><input
-            id="minimalAnswer"
-            ref="input"
-            :value="editor.guess"
-            maxlength="80"
-            autocomplete="off"
-            :disabled="blocked"
-            @input="value"
-            @compositionstart="composing = true"
-            @compositionend="
-              composing = false;
-              value($event);
-            "
-            @keydown.enter="
-              (composing || $event.isComposing || $event.keyCode === 229) && $event.preventDefault()
-            " /><UiButton
-            type="submit"
-            icon="send"
-            label="送出猜詞"
-            :disabled="blocked || composing || !editor.guess.trim()" /></form
+          ><div
+            ><input
+              id="minimalAnswer"
+              ref="input"
+              :value="editor.guess"
+              maxlength="80"
+              placeholder="輸入你的猜測"
+              autocomplete="off"
+              :disabled="blocked"
+              @input="value"
+              @compositionstart="composing = true"
+              @compositionend="
+                composing = false;
+                value($event);
+              "
+              @keydown.enter="
+                (composing || $event.isComposing || $event.keyCode === 229) &&
+                $event.preventDefault()
+              " /><UiButton
+              stitch
+              variant="primary"
+              type="submit"
+              icon="send"
+              label="送出猜測"
+              :disabled="blocked || composing || !editor.guess.trim()" /></div
+          ><small>每張作品猜一次。猜中畫家 +2 分、猜題者 +1 分。</small></form
         ><p v-else>等待本輪猜題者作答。</p
-        ><ol class="vue-minimal-order" aria-label="由少到多的展示順序"
-          ><li
-            v-for="(drawing, index) in state.order"
-            :key="index"
-            :aria-current="index === state.attempts.length ? 'step' : undefined"
-            >{{ drawing.name }} · {{ drawing.count }} 筆{{
-              index === state.attempts.length ? ' · 目前展示' : ''
-            }}</li
-          ></ol
-        ></section
+        ><details class="vue-minimal-order"
+          ><summary
+            >展示順序 · 第 {{ state.attempts.length + 1 }}／{{ state.order.length }} 張</summary
+          ><ol
+            ><li
+              v-for="(drawing, index) in state.order"
+              :key="index"
+              :aria-current="index === state.attempts.length ? 'step' : undefined"
+              >{{ drawing.name }} · {{ drawing.count }} 筆{{
+                index === state.attempts.length ? ' · 目前展示' : ''
+              }}</li
+            ></ol
+          ></details
+        ></footer
       >
-      <section v-else-if="state.phase === 'reveal'" class="vue-minimal-summary"
-        ><h2>答案：{{ state.results.at(-1)?.title }}</h2
-        ><p>{{
-          state.results.at(-1)?.attempts.some((attempt) => attempt.correct)
-            ? '猜中了！回顧下方畫作與猜詞。'
-            : '本輪未猜中；已完成畫作保留於下方回顧。'
-        }}</p
+    </section>
+    <section
+      v-else-if="state.phase === 'drawing'"
+      class="vue-minimal-task-panel vue-minimal-pending"
+      ><div
+        ><h2>等待畫家完成</h2
+        ><p>{{ state.readyIds.length }}／{{ state.players.length - 1 }} 位畫家已完成</p
+        ><p>只剩一位未完成時會開始十秒倒數。</p></div
+      ></section
+    >
+    <section v-else class="vue-minimal-task-panel vue-minimal-summary"
+      ><div class="vue-minimal-result-content">
+        <template v-if="state.phase === 'reveal'"
+          ><h2>答案：{{ latest?.title }}</h2
+          ><p>{{
+            latest?.attempts.some((a) => a.correct)
+              ? '猜中了！分數已更新。'
+              : '本輪未猜中；以下展示本輪已完成的畫作。'
+          }}</p
+          ><div class="vue-minimal-reveal-drawings"
+            ><article v-for="(drawing, index) in latest?.drawings" :key="index"
+              ><h3>{{ drawing.name }} · {{ drawing.count }} 筆</h3
+              ><GeometryCanvas
+                :shapes="drawing.shapes"
+                :label="drawing.name + ' 的揭曉畫作'"
+                :epoch="'reveal:' + state.roundId" /></article></div
+        ></template>
+        <template v-else
+          ><p v-if="state.interrupted">有人離席，本場中止。只保留已完成回合與分數。</p
+          ><template v-else-if="state.winner"
+            ><h2>最高分 {{ state.winner.score }} 分</h2
+            ><p
+              >{{ state.winner.names.join('、')
+              }}{{ state.winner.names.length > 1 ? ' 並列' : '' }}獲勝</p
+            ></template
+          ><ol class="vue-minimal-rankings"
+            ><li
+              v-for="player in [...state.players].sort((a, b) => Number(b.score) - Number(a.score))"
+              :key="player.id"
+              ><strong>{{ player.name }}</strong
+              ><span>{{ player.score }} 分</span></li
+            ></ol
+          ></template
+        > </div
+      ><footer class="vue-minimal-footer"
+        ><span>{{ state.phase === 'reveal' ? '本輪揭曉' : '本場結束' }}</span
         ><UiButton
-          v-if="room.host"
+          v-if="state.phase === 'reveal' && room.host"
+          stitch
+          variant="primary"
           icon="next"
           label="下一輪"
           :disabled="blocked"
           @click="actions.command('next')"
-        /><p v-else>等待房主開始下一輪。</p></section
-      >
-      <section v-else-if="state.phase === 'finished'" class="vue-minimal-summary"
-        ><p v-if="state.interrupted">有人離席，本場中止。僅保留已完成的回合與分數。</p
-        ><template v-else-if="state.winner"
-          ><h2>最高分 {{ state.winner.score }} 分</h2
-          ><p
-            >{{ state.winner.names.join('、')
-            }}{{ state.winner.names.length > 1 ? ' 並列' : '' }}獲勝</p
-          ></template
-        ><ol class="vue-minimal-rankings"
-          ><li
-            v-for="player in [...state.players].sort((a, b) => Number(b.score) - Number(a.score))"
-            :key="player.id"
-            ><strong>{{ player.name }}</strong
-            ><span>{{ player.score }} 分</span></li
-          ></ol
-        ></section
-      >
-      <section v-else class="vue-minimal-waiting"
-        ><img
-          :src="room.host ? '/assets/stitch/waiting-host.jpg' : '/assets/stitch/waiting-guest.jpg'"
-          alt=""
-        /><p>{{
-          state.phase === 'drawing'
-            ? '等待其他畫家完成；只剩一人時會開始十秒倒數。'
-            : '邀請三至六位朋友，或加入腳本夥伴測試流程。'
-        }}</p></section
-      ></div
-    ><StatusSlot
-      :message="actions.notice || editor.notice || editor.storageNotice"
-      :error="(!actions.pending && !!actions.notice) || !!editor.storageNotice" /><div
-      class="vue-minimal-retry"
-      ><UiButton
+        /><div v-else-if="state.phase === 'finished'" id="minimal-setup-slot"></div
+        ><span v-else>等待房主開始下一輪。</span></footer
+      ></section
+    >
+    <div class="vue-minimal-feedback"
+      ><StatusSlot
+        :message="
+          actions.notice ||
+          editor.notice ||
+          editor.storageNotice ||
+          (state.phase === 'drawing' && !guesser ? syncMessage : '')
+        "
+        :error="(!actions.pending && !!actions.notice) || !!editor.storageNotice" /><UiButton
         v-if="actions.canRetry"
+        stitch
         icon="refresh"
         label="重試同一操作"
         :disabled="blocked"
-        @click="actions.retrySame()" /></div
-  ></section>
-  <details class="vue-game-panel vue-minimal-review"
-    ><summary
-      ><strong id="minimalReview">本場回顧</strong
-      ><span
-        >{{
-          state.roundLimit ? state.results.length + '／' + state.roundLimit + ' 輪' : '尚未開始'
-        }}
-        · 展開查看題目、畫作與猜詞</span
-      ></summary
-    ><header
-      ><label v-if="state.results.length"
-        >選擇回合<select v-model.number="review"
-          ><option v-for="result in state.results" :key="result.round" :value="result.round"
-            >第 {{ result.round }} 輪 · {{ result.title }}</option
-          ></select
-        ></label
-      ></header
-    ><p v-if="!selected">完成一輪後，題目、畫作與猜詞會保留於這裡。</p
-    ><div v-else class="vue-minimal-review-content"
-      ><h3>第 {{ selected.round }} 輪 · {{ selected.title }}</h3
-      ><p>猜題者：{{ selected.guesserName }}</p
-      ><ul
-        ><li v-if="!selected.attempts.length">本輪全部空白，中性揭曉。</li
-        ><li v-for="(attempt, index) in selected.attempts" :key="index"
-          >{{ selected.guesserName }} 猜「{{ attempt.text }}」 · {{ attempt.artistName
-          }}{{ attempt.correct ? ' ✓ 畫家 +2，猜題者 +1' : ' · 未猜中' }}</li
-        ></ul
-      ><div class="vue-minimal-review-drawings"
-        ><article v-for="(drawing, index) in selected.drawings" :key="selected.round + ':' + index"
-          ><h3>{{ drawing.name }} · {{ drawing.count }} 筆</h3
-          ><GeometryCanvas
-            :shapes="drawing.shapes"
-            :label="drawing.name + ' 的回顧畫作，' + drawing.count + ' 筆'"
-            :epoch="'review:' + selected.round" /></article></div></div></details
-  ><ConfirmDialog ref="confirm" />
+        @click="actions.retrySame()"
+    /></div>
+  </section>
+  <ConfirmDialog ref="confirm" />
 </template>

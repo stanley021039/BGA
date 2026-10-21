@@ -39,7 +39,6 @@ const state = computed(() => room.snapshot as DrawSnapshot | null),
 const routeCode =
   (location.pathname.match(/^\/draw\/([a-f0-9]{6})\/?$/i) || [])[1]?.toUpperCase() || '';
 const entryCode = ref(routeCode);
-const refreshing = ref(false);
 const entryBusy = ref(false),
   entryError = ref(''),
   identity = ref(''),
@@ -241,25 +240,6 @@ async function fetchSeat(signal: AbortSignal) {
     clearTimeout(timeout);
   }
 }
-async function refreshManually() {
-  if (refreshing.value || room.busy || !room.seat || room.terminal) return;
-  const scope = room.scope;
-  refreshing.value = true;
-  try {
-    const value = await room.request('state');
-    if (!disposed && scope === room.scope && room.accept(value)) {
-      room.failed = false;
-      room.message = '';
-    }
-  } catch (cause) {
-    if (!disposed && scope === room.scope) {
-      room.failed = true;
-      room.message = cause instanceof Error ? cause.message : '更新失敗，請重試。';
-    }
-  } finally {
-    if (!disposed) refreshing.value = false;
-  }
-}
 async function start() {
   if (!room.host || !setup.value || preparing.value || room.busy) return;
   const scope = room.scope;
@@ -416,11 +396,7 @@ onBeforeUnmount(() => {
     class="vue-draw-workspace vue-room-shell vue-draw-approved"
     :class="{ 'is-header-integrated': headerIntegrated }"
   >
-    <RoomHeader
-      title="你畫我猜"
-      :max-players="8"
-      :focused="focus"
-      @integrated="headerIntegrated = $event"
+    <RoomHeader title="你畫我猜" :focused="focus" @integrated="headerIntegrated = $event"
       ><template #navigation><DrawGallery stitch ref="gallery" /></template
       ><UiButton
         stitch
@@ -458,16 +434,7 @@ onBeforeUnmount(() => {
         icon-only
         label="重新確認房間座位"
         :pending="room.connecting"
-        @click="room.reconnect()" /><UiButton
-        stitch
-        variant="ghost"
-        v-else
-        icon="refresh"
-        icon-only
-        label="更新房間狀態"
-        :pending="refreshing"
-        :disabled="room.busy || preparing"
-        @click="refreshManually"
+        @click="room.reconnect()"
     /></div>
     <div
       class="vue-draw-grid"

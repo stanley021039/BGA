@@ -143,9 +143,10 @@ defineExpose({ open });
 <template>
   <UiButton
     stitch
-    variant="ghost"
+    variant="secondary"
+    class="vue-social-tool-trigger"
     icon="emoji"
-    icon-only
+    caption="表情"
     label="表情與角色動作"
     :aria-expanded="!!popover?.visible"
     :aria-controls="prefix + '-popover'"

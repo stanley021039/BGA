@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
     error
   />
   <div class="admin-grid vue-admin-grid">
-    <section class="page-panel invite-panel" aria-labelledby="admin-invite-heading"
+    <section class="page-panel vue-stitch-panel invite-panel" aria-labelledby="admin-invite-heading"
       ><header class="panel-heading"
         ><h2 id="admin-invite-heading">邀請與一次性連結</h2
         ><p
@@ -195,7 +195,7 @@ onBeforeUnmount(() => {
         ></section
       >
     </section>
-    <section class="page-panel sync-panel" aria-labelledby="admin-sync-heading"
+    <section class="page-panel vue-stitch-panel sync-panel" aria-labelledby="admin-sync-heading"
       ><header class="panel-heading"
         ><h2 id="admin-sync-heading">待確認提交</h2
         ><p>結果不明時，請先到 GitHub 查核；確認沒有建立後才能重試。</p></header
@@ -242,7 +242,7 @@ onBeforeUnmount(() => {
       >
     </section>
   </div>
-  <section class="page-panel members-panel" aria-labelledby="admin-members-heading"
+  <section class="page-panel vue-stitch-panel members-panel" aria-labelledby="admin-members-heading"
     ><header class="vue-admin-members-heading"
       ><div
         ><h2 id="admin-members-heading">會員名單</h2

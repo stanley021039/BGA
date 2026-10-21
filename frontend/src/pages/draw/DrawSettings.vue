@@ -31,7 +31,7 @@ const save = useQueuedSave<Record<string, unknown>>({
   save: (value) => room.command('settings', value),
   failure: () => room.message,
 });
-const { pending, error, saved } = save;
+const { pending, error } = save;
 const dirty = computed(
   () => canonical.value !== null && drawSettingsKey(draft) !== canonical.value,
 );
@@ -197,9 +197,7 @@ defineExpose({
       </fieldset>
     </div>
     <footer
-      ><StatusSlot
-        :message="error || (pending ? '正在儲存設定…' : saved ? '房間設定已儲存。' : '')"
-        :error="!!error" /><UiButton
+      ><StatusSlot :message="error || (pending ? '正在儲存設定…' : '')" :error="!!error" /><UiButton
         stitch
         variant="ghost"
         v-if="error && editable"

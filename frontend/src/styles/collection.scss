@@ -110,13 +110,13 @@
       margin-block-end: tokens.space(4);
     }
     .collection-tabs [role='tab'] {
-      block-size: auto;
-      min-block-size: 3.5rem;
-      flex-direction: row;
-      flex-wrap: wrap;
+      block-size: 5rem;
+      min-block-size: 5rem;
+      flex-direction: column;
+      flex-wrap: nowrap;
       justify-content: center;
       gap: tokens.space(2);
-      white-space: normal;
+      white-space: nowrap;
     }
     .resource-panel {
       block-size: auto;
@@ -216,12 +216,13 @@
   }
   .collection-tabs [role='tab'] > .collection-count {
     margin: 0;
-    padding: 0.125rem 0.5rem;
+    padding: 0.125rem 0;
     border: 1px solid var(--stitch-line, #d8d9d2);
     background: var(--stitch-surface-subtle, #f8f7f3);
     color: var(--stitch-ink, #20211e);
     font-size: 0.875rem;
     line-height: 1.5;
+    white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
   .collection-tabs [role='tab'][aria-selected='true'] > .collection-count {

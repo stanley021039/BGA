@@ -47,7 +47,7 @@ onMounted(() => void store.load());
 </script>
 
 <template>
-  <section class="card resource-compose"
+  <section class="card resource-compose vue-stitch-panel"
     ><span class="eyebrow">ADD A WORD</span><h1>留一個畫得出來的題目。</h1
     ><p>好友投稿會加入選題池。題目與別名在遊戲揭曉前只給畫者看。</p>
     <form id="wordForm" @submit.prevent="submit" :aria-busy="pending">

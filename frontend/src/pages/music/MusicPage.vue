@@ -60,7 +60,7 @@ onMounted(() => void store.load());
   ><p
     >上傳後所有已登入會員都能收聽，同房玩家都可在遊戲桌選曲播放。每首最多 20 MB，每人最多 20 首。</p
   >
-  <form id="music-upload" @submit.prevent="upload" :aria-busy="pending"
+  <form id="music-upload" class="vue-stitch-panel" @submit.prevent="upload" :aria-busy="pending"
     ><label
       >曲名<input
         id="upload-title"

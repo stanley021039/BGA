@@ -531,7 +531,8 @@ onBeforeUnmount(() => {
       stitch
       v-if="media.enabled"
       icon="video"
-      variant="primary"
+      variant="secondary"
+      class="vue-social-tool-trigger"
       caption="媒體"
       label="開啟媒體播放器"
       aria-haspopup="dialog"
