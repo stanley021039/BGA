@@ -73,7 +73,7 @@ for (const [name, form] of Object.entries(forms))
         mode('login');
         $('#message').textContent = '密碼已更新，請重新登入。';
       } else {
-        window.EntryIntro?.prepareFrom(artwork.querySelector('img'));
+        await window.EntryIntro?.playFrom(artwork.querySelector('img'), returnTo);
         location.replace(returnTo);
       }
     } catch (error) {

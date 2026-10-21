@@ -89,7 +89,11 @@ test('merged app serves every HTML script and stylesheet, market entry and game 
       .replace(/>\s+</g, '><');
     if (file === 'login.html') assert.doesNotMatch(html, /id="entry-intro"/, route);
     else assert.match(html, /id="entry-intro"/, route);
-    assert.match(html, /\/shared\/entry-intro\.js/, route);
+    assert.match(
+      html,
+      file === 'login.html' ? /\/shared\/auth-entry\.js/ : /\/shared\/entry-intro\.js/,
+      route,
+    );
     for (const match of html.matchAll(
       /<script\b[^>]*\bsrc="([^"]+)"|<link\b[^>]*\bhref="([^"]+)"/g,
     )) {

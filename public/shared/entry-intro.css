@@ -56,7 +56,8 @@ html.entry-intro-active dialog:not(#entry-intro) {
   letter-spacing: 0.2em;
   color: #d7c6a3;
 }
-#entry-intro .entry-intro-skip {
+#entry-intro .entry-intro-skip,
+.entry-auth-skip {
   position: absolute;
   right: max(24px, env(safe-area-inset-right));
   bottom: max(24px, env(safe-area-inset-bottom));
@@ -122,27 +123,8 @@ html.entry-intro-active dialog:not(#entry-intro) {
     border-radius: 0;
   }
 }
-#entry-intro.entry-intro-from-auth .entry-intro-art {
-  animation-name: entry-intro-from-auth;
-}
-@keyframes entry-intro-from-auth {
-  0% {
-    opacity: 1;
-    transform: translate(var(--entry-from-x), var(--entry-from-y))
-      scale(var(--entry-from-sx), var(--entry-from-sy));
-  }
-  76% {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(0, 0) scale(1.08);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  #entry-intro .entry-intro-art,
-  #entry-intro.entry-intro-from-auth .entry-intro-art {
+  #entry-intro .entry-intro-art {
     animation-name: entry-intro-still;
   }
 }
@@ -160,4 +142,43 @@ html.motion-reduced #entry-intro .entry-intro-art {
     opacity: 0;
     transform: none;
   }
+}
+html.entry-intro-skipped #entry-intro {
+  display: none !important;
+}
+html.entry-auth-playing body {
+  background: #0a1215 !important;
+}
+html.entry-auth-playing body * {
+  visibility: hidden !important;
+}
+html.entry-auth-playing .entry-auth-image,
+html.entry-auth-playing .entry-auth-skip,
+html.entry-auth-playing .entry-auth-skip * {
+  visibility: visible !important;
+}
+html.entry-auth-playing .entry-auth-ancestor {
+  overflow: visible !important;
+  z-index: 2147483000 !important;
+}
+html.entry-auth-playing .entry-auth-image {
+  position: relative;
+  z-index: 2147483001;
+  will-change: transform, opacity;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  pointer-events: none;
+}
+.entry-auth-skip {
+  position: fixed;
+  z-index: 2147483002;
+}
+.entry-auth-skip[hidden] {
+  display: none !important;
+}
+.entry-auth-skip:focus-visible {
+  outline: 3px solid #f6c845;
+  outline-offset: 4px;
 }

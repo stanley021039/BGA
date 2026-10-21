@@ -2572,6 +2572,7 @@ function initializeApp(config, dataLock, acquired) {
         for (const width of [64, 88, 176])
           files[`/assets/auth/${name}-${width}.webp`] = `assets/auth/${name}-${width}.webp`;
       files['/shared/entry-intro.js'] = 'shared/entry-intro.js';
+      files['/shared/auth-entry.js'] = 'shared/auth-entry.js';
       files['/shared/entry-intro.css'] = 'shared/entry-intro.css';
       const file = roomPath ? roomPath[1] + '.html' : files[url.pathname];
       if (!file) {

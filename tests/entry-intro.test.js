@@ -5,18 +5,29 @@ const vm = require('node:vm');
 const { withEntryIntro } = require('../src/http/entry-intro');
 const { dom } = require('./helpers/widget-dom.cjs');
 
-function fixture({ elapsed = 0, stored = null, brokenStorage = false, origin = null } = {}) {
+function fixture({
+  elapsed = 0,
+  stored = null,
+  brokenStorage = false,
+  completed = null,
+  loading = false,
+  cookie = '',
+} = {}) {
   const { document } = dom(
     '<button id="before">Before</button><dialog id="entry-intro" open><div class="entry-intro-art"><img></div><button>略過開場</button></dialog>',
   );
   document.documentElement = document.createElement('html');
+  document.readyState = loading ? 'loading' : 'complete';
+  document.cookie = cookie;
   const panel = document.getElementById('entry-intro');
   const art = panel.querySelector('.entry-intro-art');
   Object.assign(art, { offsetWidth: 1000, offsetHeight: 562.5, offsetLeft: 200, offsetTop: 100 });
   art.style.setProperty = (key, value) => {
     art.style[key] = value;
   };
-  const storage = new Map(origin ? [['bga-entry-intro-origin', JSON.stringify(origin)]] : []);
+  const storage = new Map(
+    completed ? [['bga-entry-intro-completed', JSON.stringify(completed)]] : [],
+  );
   panel.getAnimations = () => [{ animationName: 'entry-intro-curtain', currentTime: elapsed }];
   document.getElementById('before').focus();
   const timers = new Map(),
@@ -34,6 +45,7 @@ function fixture({ elapsed = 0, stored = null, brokenStorage = false, origin = n
     }
   }
   const window = {
+    location: { pathname: '/', search: '' },
     MutationObserver: Observer,
     sessionStorage: {
       getItem(key) {
@@ -55,6 +67,7 @@ function fixture({ elapsed = 0, stored = null, brokenStorage = false, origin = n
   vm.runInNewContext(fs.readFileSync('public/shared/entry-intro.js', 'utf8'), {
     window,
     document,
+    location: { pathname: '/', search: '' },
     MutationObserver: Observer,
     localStorage: {
       getItem() {
@@ -97,7 +110,7 @@ test('entry decoration preserves Vue/legacy markup and adds one external bootstr
     const result = withEntryIntro(Buffer.from(html));
     assert.equal((result.match(/id="entry-intro"/g) || []).length, 1);
     assert.match(result, /entry-intro\.css/);
-    assert.match(result, /defer src="\/shared\/entry-intro.js"/);
+    assert.match(result, /src="\/shared\/entry-intro.js"/);
     assert.ok(
       result.includes(
         html.includes('form') ? '<form action="/api/auth/login">' : '<main id="app">',
@@ -108,33 +121,43 @@ test('entry decoration preserves Vue/legacy markup and adds one external bootstr
   assert.equal(withEntryIntro('<main>not a document</main>'), '<main>not a document</main>');
 });
 
-test('auth page stays visible and successful auth hands the original image geometry to one entry', () => {
+test('auth page stays visible; destination consumes completion once without replaying', () => {
   const html = withEntryIntro('<html><head></head><body><main id="auth"></main></body></html>', {
     authPage: true,
   });
   assert.doesNotMatch(html, /id="entry-intro"/);
-  assert.match(html, /entry-intro.js/);
-  const f = fixture();
-  f.window.EntryIntro.prepareFrom({
-    currentSrc: '/assets/auth/register-576.webp',
-    getBoundingClientRect: () => ({ x: 20, y: 80, width: 500, height: 281.25 }),
-  });
-  const origin = JSON.parse(f.storage.get('bga-entry-intro-origin'));
-  assert.equal(origin.kind, 'register');
-  assert.equal(origin.width, 500);
-  const next = fixture({ origin });
-  assert.equal(next.storage.has('bga-entry-intro-origin'), false);
-  assert.equal(next.panel.classList.contains('entry-intro-from-auth'), true);
-  assert.equal(next.panel.querySelector('.entry-intro-art').style['--entry-from-sx'], '0.5');
-  assert.equal(next.panel.querySelector('img').src, '/assets/auth/register-576.webp');
-  const stale = fixture({ origin: { ...origin, at: Date.now() - 60000 } });
-  assert.equal(stale.panel.classList.contains('entry-intro-from-auth'), false);
-  const blocked = fixture({ brokenStorage: true });
-  assert.doesNotThrow(() =>
-    blocked.window.EntryIntro.prepareFrom({
-      getBoundingClientRect: () => ({ x: 0, y: 0, width: 500, height: 281 }),
-    }),
-  );
+  assert.match(html, /auth-entry.js/);
+  const completed = { at: Date.now(), path: '/' };
+  const next = fixture({ completed });
+  assert.equal(next.panel.hidden, true);
+  assert.equal(next.panel.open, false);
+  assert.equal(next.timers.size, 0);
+  assert.equal(next.storage.size, 0);
+  const stale = fixture({ completed: { ...completed, at: Date.now() - 60000 } });
+  assert.equal(stale.timers.size, 1);
+  const other = fixture({ completed: { ...completed, path: '/settings' } });
+  assert.equal(other.timers.size, 1);
+  next.events.get('pageshow')({ persisted: true });
+  assert.equal(next.panel.hidden, false);
+  assert.equal(next.timers.size, 1);
+});
+test('completed auth suppresses the overlay before body parsing, including cookie fallback', () => {
+  const completed = { at: Date.now(), path: '/' };
+  for (const options of [
+    { completed },
+    {
+      brokenStorage: true,
+      cookie: 'bga_entry_intro=' + encodeURIComponent(JSON.stringify(completed)),
+    },
+  ]) {
+    const f = fixture({ ...options, loading: true });
+    assert.equal(f.document.documentElement.classList.contains('entry-intro-skipped'), true);
+    assert.equal(f.timers.size, 0);
+    f.document.body.dispatch('DOMContentLoaded');
+    assert.equal(f.panel.hidden, true);
+    assert.equal(f.panel.open, false);
+    assert.equal(f.document.documentElement.classList.contains('entry-intro-skipped'), false);
+  }
 });
 
 test('shared dialog framing leaves the owned intro artwork centered and skip button in place', () => {
