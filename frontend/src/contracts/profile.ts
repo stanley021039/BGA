@@ -1,4 +1,6 @@
 import { array, number, record, text } from '../services/validation';
+import { pingTypes } from './pings';
+import type { PingPreference, PingType } from './pings';
 
 export interface Appearance {
   version: 5;
@@ -25,6 +27,7 @@ export interface Character {
 export interface ProfileSettings {
   appearance: Appearance;
   avatar: Avatar;
+  pings: Partial<Record<PingType, PingPreference>>;
 }
 const dictionary = (value: unknown): Record<string, string> =>
   value && typeof value === 'object' && !Array.isArray(value)
@@ -60,7 +63,24 @@ export function readSettings(value: unknown): ProfileSettings {
           characterId: text(a.characterId),
           expression: text(a.expression, 'neutral'),
         };
-  return { appearance: readAppearance(x.appearance), avatar };
+  const pings: ProfileSettings['pings'] = {};
+  if (x.pings && typeof x.pings === 'object' && !Array.isArray(x.pings))
+    for (const type of pingTypes) {
+      const value = (x.pings as Record<string, unknown>)[type];
+      if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+      const item = value as Record<string, unknown>,
+        choice: PingPreference = {};
+      if (typeof item.imageUrl === 'string') choice.imageUrl = item.imageUrl;
+      if (item.sound === null) choice.sound = null;
+      else if (item.sound && typeof item.sound === 'object') {
+        const sound = item.sound as Record<string, unknown>;
+        if (typeof sound.effect === 'string') choice.sound = { effect: sound.effect };
+        else if (typeof sound.url === 'string' && typeof sound.durationMs === 'number')
+          choice.sound = { url: sound.url, durationMs: sound.durationMs };
+      }
+      pings[type] = choice;
+    }
+  return { appearance: readAppearance(x.appearance), avatar, pings };
 }
 export function readCharacterOptions(value: unknown) {
   const x = record(value);

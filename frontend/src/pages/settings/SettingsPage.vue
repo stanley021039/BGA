@@ -6,6 +6,8 @@ import { usePreferencesStore } from '../../stores/preferences';
 import { useMutation } from '../../composables/mutation';
 import { readSettings, avatarKey } from '../../contracts/profile';
 import type { Appearance, Avatar } from '../../contracts/profile';
+import { pingTypes } from '../../contracts/pings';
+import type { PingPreference, PingType } from '../../contracts/pings';
 import { readArtwork } from '../../contracts/libraries';
 import { readUser } from '../../contracts/auth';
 import { fileBase64 } from '../../services/files';
@@ -13,6 +15,7 @@ import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FramePicker from '../../components/FramePicker.vue';
 import FramePreview from '../../components/FramePreview.vue';
+import PingSymbol from '../../components/PingSymbol.vue';
 
 const profile = useProfileStore(),
   session = useSessionStore(),
@@ -24,7 +27,71 @@ const nickname = ref(''),
   nameLoading = ref(false),
   nameLoadError = ref('');
 const appearance = ref<Appearance | null>(null),
-  avatar = ref<Avatar | null>(null);
+  avatar = ref<Avatar | null>(null),
+  pingChoices = ref<Partial<Record<PingType, PingPreference>>>({});
+const pingLabels: Record<PingType, string> = {
+  ping: '這裡',
+  attention: '注意',
+  question: '疑問',
+  help: '幫忙',
+  look: '看這裡',
+};
+const pingIcons: Record<PingType, string> = {
+  ping: 'ping',
+  attention: 'ping-attention',
+  question: 'ping-question',
+  help: 'ping-help',
+  look: 'ping-look',
+};
+const soundChoices = computed(() => [
+  ...pingTypes.map((type) => ({ key: 'effect:ping-' + type, label: '內建 · ' + pingLabels[type] })),
+  ...characters.value.flatMap((character) =>
+    Object.entries(character.sounds).map(([expression, sound]) => ({
+      key: 'sound:' + sound.url.split('?')[0],
+      label: character.name + ' · ' + (character.labels[expression] || expression),
+      durationMs: sound.durationMs,
+    })),
+  ),
+]);
+function pingSoundValue(type: PingType) {
+  const choice = pingChoices.value[type];
+  if (!choice || !Object.hasOwn(choice, 'sound')) return 'default';
+  if (choice.sound === null) return 'silent';
+  return choice.sound && 'effect' in choice.sound
+    ? 'effect:' + choice.sound.effect
+    : 'sound:' + choice.sound?.url.split('?')[0];
+}
+function changePingImage(type: PingType, url: string) {
+  pingChoices.value = {
+    ...pingChoices.value,
+    [type]: { ...pingChoices.value[type], ...(url ? { imageUrl: url } : {}) },
+  };
+  if (!url) delete pingChoices.value[type]?.imageUrl;
+  unsaved();
+}
+function changePingSound(type: PingType, key: string) {
+  const choice: PingPreference = { ...pingChoices.value[type] };
+  if (key === 'default') delete choice.sound;
+  else if (key === 'silent') choice.sound = null;
+  else if (key.startsWith('effect:')) choice.sound = { effect: key.slice(7) };
+  else {
+    const sound = soundChoices.value.find((item) => item.key === key);
+    if (sound && 'durationMs' in sound && typeof sound.durationMs === 'number')
+      choice.sound = { url: key.slice(6), durationMs: sound.durationMs };
+  }
+  pingChoices.value = { ...pingChoices.value, [type]: choice };
+  unsaved();
+}
+function previewPing(type: PingType) {
+  const selected = pingChoices.value[type]?.sound;
+  if (selected === null) return;
+  if (selected && 'url' in selected) window.AudioSettings?.playExpression(selected);
+  else window.AudioSettings?.playEffect?.(selected?.effect || 'ping-' + type);
+}
+function resetPings() {
+  pingChoices.value = {};
+  unsaved();
+}
 const barragePicker = ref<InstanceType<typeof FramePicker> | null>(null),
   mediaPicker = ref<InstanceType<typeof FramePicker> | null>(null);
 const characters = computed(() => profile.data?.characters || []);
@@ -86,6 +153,7 @@ watch(
     if (selected.value && !selected.value.expressions[appearance.value.expression])
       appearance.value.expression = 'neutral';
     avatar.value = { ...data.avatar };
+    pingChoices.value = structuredClone(data.pings);
     if (!choices.value.some((c) => c.key === avatarKey(data.avatar)) && choices.value[0])
       avatar.value = { ...choices.value[0].value };
   },
@@ -155,12 +223,14 @@ async function save() {
       await request('/api/profile/settings', {
         appearance: { ...appearance.value },
         avatar: { ...avatar.value },
+        pings: pingChoices.value,
       }),
     );
     appearance.value = result.appearance;
     avatar.value = result.avatar;
+    pingChoices.value = result.pings;
     window.dispatchEvent(new Event('profile-updated'));
-  }, '頭像與角色已儲存。');
+  }, '形象與標記設定已儲存。');
 }
 onMounted(() => {
   void profile.load();
@@ -389,13 +459,62 @@ onMounted(() => {
               ></select
             ></section
           >
+          <section class="page-panel settings-pings-panel" aria-labelledby="ping-settings-heading"
+            ><header class="settings-card-heading"
+              ><div
+                ><h2 id="ping-settings-heading">房間標記</h2
+                ><p class="settings-intro">五種標記可分別選圖片與音效，設定會跟著帳號儲存。</p></div
+              ><button type="button" class="settings-pings-reset" @click="resetPings"
+                >全部恢復預設</button
+              ></header
+            ><div class="settings-pings-list"
+              ><div v-for="type in pingTypes" :key="type" class="settings-ping-row"
+                ><span class="settings-ping-preview"
+                  ><PingSymbol :icon="pingIcons[type]" :image="pingChoices[type]?.imageUrl" />{{
+                    pingLabels[type]
+                  }}</span
+                ><label
+                  >圖片<select
+                    :value="pingChoices[type]?.imageUrl || ''"
+                    @change="changePingImage(type, ($event.target as HTMLSelectElement).value)"
+                    ><option value="">原本圖示</option
+                    ><option
+                      v-for="artwork in profile.data?.artworks || []"
+                      :key="artwork.id"
+                      :value="artwork.url"
+                      >{{ artwork.name }}</option
+                    ></select
+                  ></label
+                ><label
+                  >音效<select
+                    :value="pingSoundValue(type)"
+                    @change="changePingSound(type, ($event.target as HTMLSelectElement).value)"
+                    ><option value="default">原本音效</option
+                    ><option value="silent">靜音</option
+                    ><option v-for="choice in soundChoices" :key="choice.key" :value="choice.key">{{
+                      choice.label
+                    }}</option></select
+                  ></label
+                ><button
+                  type="button"
+                  class="settings-ping-play"
+                  :disabled="pingSoundValue(type) === 'silent'"
+                  :aria-label="'試聽' + pingLabels[type] + '標記音效'"
+                  @click="previewPing(type)"
+                  >試聽</button
+                ></div
+              ></div
+            ><p class="settings-intro"
+              >目前可用內建標記音效及已收藏角色的短音效；新音檔日後加入。</p
+            ></section
+          >
         </div>
       </fieldset>
     </form>
   </div>
   <footer class="settings-actions"
     ><div class="settings-save-feedback"
-      ><p>頭像與角色需儲存；彈幕與播放器外觀會即時套用。</p
+      ><p>頭像、角色與房間標記需儲存；彈幕與播放器外觀會即時套用。</p
       ><StatusSlot id="settings-message" :message="message" :error="failed" /></div
     ><UiButton
       id="settings-save"

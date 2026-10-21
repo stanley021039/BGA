@@ -136,6 +136,50 @@
       line-height: 1.5;
     }
   }
+  .settings-pings-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+  .settings-ping-row {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.5rem;
+    min-inline-size: 0;
+    padding: 0.5rem;
+    border: 1px solid var(--stitch-line, #d8d9d2);
+    border-radius: 0.5rem;
+  }
+  .settings-ping-preview {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-block-size: 2.75rem;
+    font-weight: 700;
+  }
+  .settings-ping-preview img,
+  .settings-ping-preview svg {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    object-fit: contain;
+  }
+  .settings-ping-row label {
+    display: grid;
+    gap: 0.25rem;
+    min-inline-size: 0;
+    font-size: 0.75rem;
+  }
+  .settings-ping-play,
+  .settings-pings-reset {
+    min-block-size: 2.75rem;
+    padding-inline: 0.75rem;
+    border: 1px solid var(--stitch-line, #d8d9d2);
+    border-radius: 0.5rem;
+    background: var(--stitch-surface-subtle, #f8f7f3);
+    color: var(--stitch-ink, #20211e);
+    font: inherit;
+    cursor: pointer;
+  }
   .nickname-panel {
     min-block-size: 14.5rem;
   }
@@ -497,7 +541,7 @@
       min-block-size: 0;
     }
     .settings-grid {
-      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto;
       align-content: stretch;
     }
     .settings-character-panel {
@@ -544,6 +588,16 @@
     padding: 0.75rem;
     .page-panel {
       padding: 0.75rem;
+    }
+    .settings-ping-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .settings-ping-row label {
+      grid-column: 1 / -1;
+    }
+    .settings-ping-play {
+      grid-column: 2;
+      grid-row: 1;
     }
     .settings-card-heading {
       align-items: center;

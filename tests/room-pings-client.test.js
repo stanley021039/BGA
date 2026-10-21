@@ -151,6 +151,25 @@ function setup() {
 const flush = async () => {
   for (let i = 0; i < 5; i++) await Promise.resolve();
 };
+test('holding P and hovering a direction sends at the original cursor position without a click', async () => {
+  for (const [dx, dy, type] of [
+    [0, -50, 'attention'],
+    [-50, 0, 'question'],
+    [0, 50, 'help'],
+    [50, 0, 'look'],
+  ]) {
+    const f = setup();
+    f.fire('pointermove', { clientX: 300, clientY: 300 });
+    f.fire('keydown');
+    f.fire('pointermove', { clientX: 300 + dx, clientY: 300 + dy });
+    f.fire('keyup');
+    await flush();
+    assert.equal(f.requests.length, 1);
+    assert.equal(f.requests[0].type, type);
+    assert.equal(f.requests[0].target.x, 0.3);
+    assert.equal(f.requests[0].target.y, 0.375);
+  }
+});
 test('lobby uses an isolated stream and sends to its own scope without moving an avatar', async () => {
   const f = setup();
   f.window.RoomPings.update({
