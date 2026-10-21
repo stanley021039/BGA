@@ -8,6 +8,12 @@ export interface User {
 
 export type AuthMode = 'login' | 'register' | 'reset';
 
+declare global {
+  interface Window {
+    EntryIntro?: { playFrom(image: HTMLImageElement | null, destination: string): Promise<void> };
+  }
+}
+
 export interface Credentials {
   username: string;
   password: string;
