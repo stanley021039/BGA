@@ -171,27 +171,34 @@ const methods = {
       p.bag.push(...chips.filter((c) => c.color === 'white'));
     }
   },
+  estimateAlchemy(p) {
+    const i = this.players.indexOf(p),
+      neighbors = new Set([
+        this.players[(i + 1) % this.players.length],
+        this.players[(i + this.players.length - 1) % this.players.length],
+      ]);
+    const colors = new Set(p.pot.filter((c) => c.color !== 'white').map((c) => c.color)).size;
+    const exactSeven =
+      p.pot.filter((c) => c.color === 'white').reduce((n, c) => n + c.value, 0) === 7 ? 1 : 0;
+    const explosions = [...neighbors].filter((q) => q !== p && q.exploded).length;
+    const locoweed =
+      this.setFor('locoweed') === 7 ? p.pot.filter((c) => c.color === 'locoweed').length : 0;
+    const fortune =
+      (this.fortune?.id === 'alchemy-misfortune' && p.exploded ? 2 : 0) +
+      (this.fortune?.id === 'alchemy-last' ? p.pot.at(-1)?.value || 0 : 0);
+    return {
+      calculation: { colors, exactSeven, explosions, locoweed, fortune },
+      max: Math.min(10, colors + exactSeven + explosions + locoweed + fortune),
+    };
+  },
   beginAlchemy() {
     this.stage = 'essence';
     this.intents = {};
     for (const p of this.players) {
       const a = p.alchemy,
-        i = this.players.indexOf(p),
-        neighbors = new Set([
-          this.players[(i + 1) % this.players.length],
-          this.players[(i + this.players.length - 1) % this.players.length],
-        ]);
-      const colors = new Set(p.pot.filter((c) => c.color !== 'white').map((c) => c.color)).size;
-      const exactSeven =
-        p.pot.filter((c) => c.color === 'white').reduce((n, c) => n + c.value, 0) === 7 ? 1 : 0;
-      const explosions = [...neighbors].filter((q) => q !== p && q.exploded).length;
-      const locoweed =
-        this.setFor('locoweed') === 7 ? p.pot.filter((c) => c.color === 'locoweed').length : 0;
-      const fortune =
-        (this.fortune.id === 'alchemy-misfortune' && p.exploded ? 2 : 0) +
-        (this.fortune.id === 'alchemy-last' ? p.pot.at(-1)?.value || 0 : 0);
-      a.calculation = { colors, exactSeven, explosions, locoweed, fortune };
-      a.max = Math.min(10, colors + exactSeven + explosions + locoweed + fortune);
+        estimate = this.estimateAlchemy(p);
+      a.calculation = estimate.calculation;
+      a.max = estimate.max;
       a.essence = a.max;
       a.confirmed = false;
       p.ready = false;

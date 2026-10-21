@@ -19,6 +19,7 @@ import {
   type RoomSeat,
 } from '../contracts/room';
 import type { InteractionSource } from '../services/interaction-source';
+import type { BarrageEvent } from '../contracts/social';
 
 export const useLobbyStore = defineStore('lobby', () => {
   const session = useSessionStore();
@@ -26,6 +27,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     rooms = shallowRef<PublicRoom[]>([]),
     expressions = shallowRef<LobbyExpression[]>([]);
   const connected = ref(false),
+    speeches = shallowRef<Record<string, BarrageEvent>>({}),
     presenceStatus = ref('正在進入大廳…'),
     roomsStatus = ref('正在載入房間…'),
     expressionStatus = ref(''),
@@ -50,6 +52,24 @@ export const useLobbyStore = defineStore('lobby', () => {
     backoff = 500;
   const controllers = new Set<AbortController>();
   const identity = computed(() => session.user?.id || '');
+  function showSpeech(event: BarrageEvent): false | (() => void) {
+    const id = event.playerId;
+    if (
+      !connected.value ||
+      !id ||
+      event.kind !== 'barrage' ||
+      !snapshot.value?.visitors.some((v) => v.id === id) ||
+      speeches.value[id]?.id === event.id
+    )
+      return false;
+    speeches.value = { ...speeches.value, [id]: event };
+    return () => {
+      if (speeches.value[id]?.id !== event.id) return;
+      const next = { ...speeches.value };
+      delete next[id];
+      speeches.value = next;
+    };
+  }
   const current = (epoch: number, account: string) =>
     !disposed && epoch === generation && !!account && account === identity.value;
   function invalidateIdentity(message: string) {
@@ -107,6 +127,10 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
     if (snapshot.value && next.serverNow < snapshot.value.serverNow) return;
     snapshot.value = next;
+    const present = new Set(next.visitors.map((visitor) => visitor.id));
+    speeches.value = Object.fromEntries(
+      Object.entries(speeches.value).filter(([id]) => present.has(id)),
+    );
     connected.value = true;
     presenceStatus.value = '';
     const own = next.visitors.find((visitor) => visitor.id === next.selfId);
@@ -388,6 +412,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
   function reset() {
+    speeches.value = {};
     generation++;
     expressionRevision++;
     clearTimers();
@@ -481,6 +506,8 @@ export const useLobbyStore = defineStore('lobby', () => {
   };
   return {
     snapshot,
+    speeches,
+    showSpeech,
     rooms,
     expressions,
     connected,

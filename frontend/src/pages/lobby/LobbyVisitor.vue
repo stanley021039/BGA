@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
+import type { BarrageEvent } from '../../contracts/social';
 import { usePreferencesStore } from '../../stores/preferences';
 const props = defineProps<{
     visitor: LobbyVisitor;
+    message?: BarrageEvent;
     self: boolean;
     reset: number;
     open: boolean;
@@ -16,8 +18,16 @@ const node = ref<HTMLElement | null>(null),
   top = ref(props.visitor.y),
   duration = ref(0),
   placing = ref(true),
-  bubbleLeft = ref('50%');
+  bubbleLeft = ref('50%'),
+  messageLeft = ref('0px'),
+  messageTop = ref('0px'),
+  messageOnscreen = ref(true),
+  tailShift = ref('0px'),
+  bubbleBelow = ref(false),
+  bubbleHeight = ref('180px'),
+  ornate = ref(false);
 const prefs = usePreferencesStore(),
+  hasSpeech = computed(() => !!props.message || !!props.visitor.emote),
   still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 let disposed = false,
   revision = 0,
@@ -29,10 +39,55 @@ function positionBubble() {
     box = node.value.getBoundingClientRect(),
     half = speech.value.offsetWidth / 2;
   if (!stage) return;
+  if (props.message) {
+    const width = document.documentElement.clientWidth,
+      height = window.innerHeight;
+    const center = box.left + box.width / 2;
+    const safe = Math.max(half + 24, Math.min(width - half - 24, center));
+    const above = box.top - 72,
+      below = height - box.bottom - 16;
+    bubbleBelow.value = speech.value.scrollHeight > above && below > above;
+    bubbleHeight.value = Math.max(60, bubbleBelow.value ? below : above) + 'px';
+    messageLeft.value = safe + 'px';
+    messageTop.value = (bubbleBelow.value ? box.bottom + 10 : box.top - 10) + 'px';
+    messageOnscreen.value = box.bottom > 0 && box.top < height && box.right > 0 && box.left < width;
+    tailShift.value = center - safe + 'px';
+    return;
+  }
   const center = box.left + box.width / 2,
     safe = Math.max(stage.left + half + 8, Math.min(stage.right - half - 8, center));
   bubbleLeft.value = `calc(50% + ${safe - center}px)`;
+  tailShift.value = center - safe + 'px';
+  const above = box.top - stage.top - 12,
+    below = stage.bottom - box.bottom - 12;
+  bubbleBelow.value = speech.value.scrollHeight > above && below > above;
+  bubbleHeight.value = Math.max(60, bubbleBelow.value ? below : above) + 'px';
 }
+watch(
+  () => props.message?.id,
+  async () => {
+    await nextTick();
+    if (disposed || !props.message || !speech.value) return;
+    speech.value.replaceChildren();
+    if (window.BarrageFrames)
+      window.BarrageFrames.decorate(
+        speech.value,
+        props.message.frame,
+        props.message.name,
+        props.message.message,
+      );
+    else speech.value.textContent = props.message.message;
+    const pointer = document.createElement('span');
+    pointer.className = 'lobby-chat-pointer';
+    pointer.setAttribute('aria-hidden', 'true');
+    speech.value.append(pointer);
+    ornate.value = speech.value.classList.contains('barrage-frame-ornate');
+    await nextTick();
+    positionBubble();
+    transition();
+  },
+  { immediate: true, flush: 'post' },
+);
 watch(
   [() => props.visitor.moveId, () => props.reset],
   async (_, previous) => {
@@ -52,11 +107,18 @@ watch(
     placing.value = false;
     left.value = props.visitor.moving ? props.visitor.targetX : props.visitor.x;
     top.value = props.visitor.moving ? props.visitor.targetY : props.visitor.y;
+    await nextTick();
+    if (!disposed && epoch === revision) transition();
   },
   { immediate: true },
 );
 watch(
-  [() => props.visitor.x, () => props.visitor.y, () => props.visitor.emote?.id],
+  [
+    () => props.visitor.x,
+    () => props.visitor.y,
+    () => props.visitor.emote?.id,
+    () => props.message?.id,
+  ],
   async () => {
     await nextTick();
     if (!disposed) {
@@ -75,26 +137,23 @@ function transition() {
   const epoch = revision;
   const tick = () => {
     frame = 0;
-    if (
-      disposed ||
-      document.hidden ||
-      !props.connected ||
-      epoch !== revision ||
-      !props.visitor.emote
-    )
+    if (disposed || document.hidden || !props.connected || epoch !== revision || !hasSpeech.value)
       return;
     positionBubble();
     frame = requestAnimationFrame(tick);
   };
-  if (props.visitor.emote && props.connected && !document.hidden)
-    frame = requestAnimationFrame(tick);
+  if (hasSpeech.value && props.connected && !document.hidden) frame = requestAnimationFrame(tick);
 }
 onBeforeUnmount(() => {
   disposed = true;
   revision++;
   observer?.disconnect();
   if (frame) cancelAnimationFrame(frame);
+  window.removeEventListener('scroll', positionBubble, true);
+  window.removeEventListener('resize', positionBubble);
 });
+window.addEventListener('scroll', positionBubble, true);
+window.addEventListener('resize', positionBubble);
 </script>
 <template>
   <component
@@ -112,19 +171,38 @@ onBeforeUnmount(() => {
     :style="{
       left: left + '%',
       top: top + '%',
-      zIndex: Math.round(visitor.y),
+      zIndex: (hasSpeech ? 200 : 0) + Math.round(visitor.y),
       '--lobby-move-duration': duration + 'ms',
     }"
     :data-ping-player="visitor.id"
-    :aria-label="self ? visitor.name + '（你），選擇表情' : undefined"
+    :aria-label="self ? visitor.name + '（你），對話或發表情' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"
     @click.stop="self && node && emit('select', node)"
     @transitionrun="transition"
   >
+    <Teleport to="body"
+      ><div
+        v-if="message"
+        :key="message.id"
+        ref="speech"
+        class="lobby-chat-bubble game-barrage game-barrage-framed"
+        :data-speaker-id="visitor.id"
+        role="status"
+        :class="{ 'is-below': bubbleBelow, 'barrage-frame-ornate': ornate }"
+        :style="{
+          left: messageLeft,
+          top: messageTop,
+          visibility: messageOnscreen ? undefined : 'hidden',
+          '--speech-height': bubbleHeight,
+          '--tail-shift': tailShift,
+          transform: bubbleBelow ? 'translate(-50%, 0)' : 'translate(-50%, -100%)',
+        }"
+        @click.stop
+    /></Teleport>
     <div
-      v-if="visitor.emote"
+      v-if="!message && visitor.emote"
       :key="visitor.emote.id"
       ref="speech"
       class="lobby-speech"

@@ -44,8 +44,8 @@ function fit() {
     0,
     Math.min(
       1,
-      (box.clientWidth - 8) / (props.portrait ? 240 : 360),
-      (box.clientHeight - 8) / (props.portrait ? 336 : 148),
+      (box.clientWidth - 8) / (props.portrait ? 240 : props.kind === 'media' ? 408 : 360),
+      (box.clientHeight - 8) / (props.portrait ? 336 : props.kind === 'media' ? 208 : 148),
     ),
   );
 }
@@ -143,7 +143,10 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <span ref="viewport" class="vue-frame-preview-viewport" :class="{ 'is-music-card': portrait }"
+  <span
+    ref="viewport"
+    class="vue-frame-preview-viewport"
+    :class="{ 'is-music-card': portrait, 'is-media-preview': kind === 'media' && !portrait }"
     ><span
       class="vue-frame-preview-stage"
       :style="[stageStyle, portrait ? { inlineSize: '240px', blockSize: '336px' } : {}]"

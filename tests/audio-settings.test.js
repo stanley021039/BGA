@@ -80,6 +80,8 @@ function harness(saved = {}, blocked = false, storageBlocked = false, musicNetwo
     }
   }
   const timers = new Map();
+  const deadlines = new Map();
+  let elapsed = 0;
   let timerId = 0;
   const context = {
     window,
@@ -96,12 +98,16 @@ function harness(saved = {}, blocked = false, storageBlocked = false, musicNetwo
       },
     },
     Date,
-    setTimeout(fn) {
+    setTimeout(fn, ms) {
       const id = ++timerId;
       timers.set(id, fn);
+      deadlines.set(id, elapsed + (ms || 0));
       return id;
     },
-    clearTimeout: (id) => timers.delete(id),
+    clearTimeout: (id) => {
+      timers.delete(id);
+      deadlines.delete(id);
+    },
     setInterval() {},
     MutationObserver: class {
       observe() {}
@@ -140,6 +146,19 @@ function harness(saved = {}, blocked = false, storageBlocked = false, musicNetwo
     requests,
     document,
     window,
+    advance(ms) {
+      const until = elapsed + ms;
+      for (;;) {
+        const next = [...deadlines].filter(([, at]) => at <= until).sort((a, b) => a[1] - b[1])[0];
+        if (!next) break;
+        elapsed = next[1];
+        const fn = timers.get(next[0]);
+        timers.delete(next[0]);
+        deadlines.delete(next[0]);
+        fn?.();
+      }
+      elapsed = until;
+    },
     loadMusic(room = { code: 'ABC123', host: false }) {
       vm.runInNewContext(source('table-music.js'), context);
       window.TableMusic.update(room);
@@ -150,6 +169,23 @@ function harness(saved = {}, blocked = false, storageBlocked = false, musicNetwo
   };
 }
 const tick = () => new Promise((resolve) => setImmediate(resolve));
+test('draw and decline recordings tolerate slow startup and keep their full playback window', () => {
+  for (const [cue, duration] of [
+    ['ingredient-draw', 1580],
+    ['quacks-stop', 1811],
+  ]) {
+    const ui = harness(),
+      clip = ui.api.playEffect(cue);
+    assert.ok(clip);
+    ui.advance(1500);
+    assert.ok(clip.src, cue + ' must not be discarded before delayed decoding starts');
+    clip.onplaying();
+    ui.advance(duration - 50);
+    assert.ok(clip.src, cue + ' keeps its duration after actual start');
+    ui.advance(100);
+    assert.equal(clip.src, undefined);
+  }
+});
 const musicSnapshot = (trackId = 'sample', version = 1) => ({
   version,
   serverNow: Date.now(),

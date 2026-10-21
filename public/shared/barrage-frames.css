@@ -2617,3 +2617,423 @@ body :is(.game-barrage-framed, .barrage-frame-preview)[data-frame-id='mask'] .re
   fill: var(--barrage-frame-background);
   stroke: var(--barrage-frame-line);
 }
+
+/* Shared interior artwork: clipped inside the surface, below readable content.
+   The first collection uses ambient textures; challenges use directed motion. */
+.reward-art .reward-surface {
+  overflow: hidden;
+}
+.reward-art .reward-surface::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: var(--reward-pattern);
+  background-size: var(--reward-pattern-size, 100% 100%);
+  animation: var(--reward-inner-motion, reward-ambient-drift) var(--reward-inner-duration, 9s)
+    ease-in-out infinite alternate;
+}
+/* First collection: pigment wash, ribbon sheen, ripples, suits, dust, bubbles,
+   ruled paper, lantern glow, geometry, market ticks, grooves and spotlights. */
+[data-frame-id='palette'] {
+  --reward-pattern:
+    radial-gradient(ellipse at 12% 20%, #c69be6 0 13%, transparent 40%),
+    radial-gradient(ellipse at 88% 80%, #ffbd91 0 8%, transparent 36%);
+}
+[data-frame-id='giftbox'] {
+  --reward-pattern: linear-gradient(
+    112deg,
+    transparent 28%,
+    #ffdfc5 32% 35%,
+    transparent 39% 61%,
+    #ffbad5 65% 68%,
+    transparent 72%
+  );
+  --reward-inner-motion: reward-ribbon-glide;
+}
+[data-frame-id='signal'] {
+  --reward-pattern: repeating-radial-gradient(
+    ellipse at 90% 110%,
+    transparent 0 15px,
+    #86ded0 17px 18px,
+    transparent 20px 33px
+  );
+  --reward-inner-motion: reward-signal-breathe;
+}
+[data-frame-id='ace'] {
+  --reward-pattern: repeating-conic-gradient(from 45deg, transparent 0 25%, #e2bc70 0 50%);
+  --reward-pattern-size: 32px 32px;
+  --reward-inner-motion: reward-suit-drift;
+  --reward-inner-duration: 12s;
+}
+[data-frame-id='dust'] {
+  --reward-pattern: radial-gradient(circle, #dba264 0 1.5px, transparent 2px);
+  --reward-pattern-size: 23px 17px;
+  --reward-inner-motion: reward-dust-flow;
+}
+[data-frame-id='cauldro'] {
+  --reward-pattern:
+    radial-gradient(circle at 20% 70%, transparent 0 5px, #a3d77f 6px 7px, transparent 8px),
+    radial-gradient(circle at 75% 35%, transparent 0 3px, #a3d77f 4px 5px, transparent 6px);
+  --reward-pattern-size: 71px 57px;
+  --reward-inner-motion: reward-bubble-rise;
+}
+[data-frame-id='letters'] {
+  --reward-pattern:
+    repeating-linear-gradient(0deg, transparent 0 13px, #a88150 14px 15px),
+    linear-gradient(100deg, transparent 30%, #e5ad67 50%, transparent 70%);
+  --reward-inner-motion: reward-paper-light;
+}
+[data-frame-id='lantern'] {
+  --reward-pattern: radial-gradient(ellipse at 80% 80%, #f9d99b 0, transparent 65%);
+  --reward-inner-motion: reward-lantern-breathe;
+  --reward-inner-duration: 6s;
+}
+[data-frame-id='geo'] {
+  --reward-pattern: conic-gradient(
+    from 30deg at 50% 50%,
+    transparent 0 30%,
+    #456d72 31% 33%,
+    transparent 34% 64%,
+    #456d72 65% 67%,
+    transparent 68%
+  );
+  --reward-pattern-size: 45px 45px;
+  --reward-inner-motion: reward-geometry-drift;
+}
+[data-frame-id='market'] {
+  --reward-pattern:
+    repeating-linear-gradient(90deg, transparent 0 26px, #e6c476 27px 28px),
+    repeating-linear-gradient(0deg, transparent 0 16px, #e6c476 17px 18px);
+  --reward-inner-motion: reward-market-ticks;
+}
+[data-frame-id='vinyl'] {
+  --reward-pattern: repeating-radial-gradient(
+    circle at 15% 50%,
+    transparent 0 6px,
+    #e3b96b 7px 8px,
+    transparent 9px 15px
+  );
+  --reward-inner-motion: reward-groove-pulse;
+}
+[data-frame-id='mic'] {
+  --reward-pattern:
+    conic-gradient(
+      from 155deg at 22% -30%,
+      transparent 0 12deg,
+      #f3bded 13deg 32deg,
+      transparent 34deg
+    ),
+    conic-gradient(
+      from 170deg at 78% -30%,
+      transparent 0 12deg,
+      #e2a5c7 13deg 32deg,
+      transparent 34deg
+    );
+  --reward-inner-motion: reward-spotlight-sway;
+}
+
+/* Challenge collection: brush strokes, shooting stars, linked wave fronts,
+   card lanes, speed trails, witch sparks, relay colors, compass mist,
+   three-shape tessellation, rising chart, equalizer and theatre beams. */
+[data-frame-id='easel'] {
+  --reward-pattern: repeating-linear-gradient(
+    164deg,
+    transparent 0 15px,
+    #ddc9ff 16px 19px,
+    transparent 20px 25px
+  );
+  --reward-inner-motion: reward-brush-sweep;
+  --reward-inner-duration: 5s;
+}
+[data-frame-id='wish'] {
+  --reward-pattern:
+    linear-gradient(135deg, transparent 42%, #ffaddb 48%, #fff3da 50%, transparent 52%),
+    radial-gradient(circle at 75% 25%, #ffaddb 0 2px, transparent 3px);
+  --reward-pattern-size: 120px 70px;
+  --reward-inner-motion: reward-star-trail;
+  --reward-inner-duration: 7s;
+}
+[data-frame-id='sync'] {
+  --reward-pattern:
+    repeating-radial-gradient(
+      circle at 25% 50%,
+      transparent 0 10px,
+      #8ce8da 11px 12px,
+      transparent 13px 24px
+    ),
+    repeating-radial-gradient(
+      circle at 75% 50%,
+      transparent 0 10px,
+      #8ce8da 11px 12px,
+      transparent 13px 24px
+    );
+  --reward-inner-motion: reward-linked-waves;
+  --reward-inner-duration: 4s;
+}
+[data-frame-id='runfive'] {
+  --reward-pattern: repeating-linear-gradient(
+    110deg,
+    transparent 0 22px,
+    #ffe29a 23px 25px,
+    transparent 26px 36px
+  );
+  --reward-inner-motion: reward-card-lanes;
+  --reward-inner-duration: 5s;
+}
+[data-frame-id='finish'] {
+  --reward-pattern: repeating-linear-gradient(
+    0deg,
+    transparent 0 11px,
+    #ffba85 12px 14px,
+    transparent 15px 27px
+  );
+  --reward-pattern-size: 78% 100%;
+  --reward-inner-motion: reward-speed-trails;
+  --reward-inner-duration: 3s;
+}
+[data-frame-id='witches'] {
+  --reward-pattern:
+    radial-gradient(circle at 15% 70%, #e0b4ff 0 3px, transparent 5px),
+    radial-gradient(circle at 50% 40%, #88e6ba 0 3px, transparent 6px),
+    radial-gradient(circle at 85% 80%, #ffdb82 0 2px, transparent 5px);
+  --reward-pattern-size: 85px 64px;
+  --reward-inner-motion: reward-witch-sparks;
+  --reward-inner-duration: 5s;
+}
+[data-frame-id='sketch'] {
+  --reward-pattern: repeating-linear-gradient(
+    15deg,
+    transparent 0 14px,
+    #f799b9 15px 17px,
+    transparent 18px 28px,
+    #b1e8ff 29px 31px,
+    transparent 32px 43px,
+    #d2aaff 44px 46px
+  );
+  --reward-inner-motion: reward-relay-strokes;
+  --reward-inner-duration: 6s;
+}
+[data-frame-id='compass'] {
+  --reward-pattern:
+    conic-gradient(
+      from 35deg at 80% 50%,
+      transparent,
+      #7dd8cf,
+      transparent 35%,
+      transparent 65%,
+      #e9c788,
+      transparent
+    ),
+    radial-gradient(ellipse at 15% 80%, #7dd8cf, transparent 60%);
+  --reward-inner-motion: reward-compass-mist;
+  --reward-inner-duration: 10s;
+}
+[data-frame-id='triform'] {
+  --reward-pattern:
+    radial-gradient(circle at 25% 50%, transparent 0 10px, #a9dce6 11px 13px, transparent 14px),
+    conic-gradient(from 45deg at 75% 50%, transparent 0 25%, #a9dce6 26% 28%, transparent 29%);
+  --reward-pattern-size: 70px 54px;
+  --reward-inner-motion: reward-three-shapes;
+  --reward-inner-duration: 8s;
+}
+[data-frame-id='rebound'] {
+  --reward-pattern: repeating-linear-gradient(
+    145deg,
+    transparent 0 21px,
+    #e9d67a 22px 25px,
+    transparent 26px 45px
+  );
+  --reward-inner-motion: reward-chart-rise;
+  --reward-inner-duration: 4s;
+}
+[data-frame-id='encore'] {
+  --reward-pattern: repeating-linear-gradient(
+    90deg,
+    transparent 0 8px,
+    #c9a4ff 9px 12px,
+    transparent 13px 19px
+  );
+  --reward-pattern-size: 100% 65%;
+  --reward-inner-motion: reward-equalizer;
+  --reward-inner-duration: 2.8s;
+}
+[data-frame-id='mask'] {
+  --reward-pattern:
+    conic-gradient(
+      from 160deg at 15% -20%,
+      transparent 0 10deg,
+      #ffaddb 11deg 30deg,
+      transparent 31deg
+    ),
+    conic-gradient(
+      from 170deg at 85% -20%,
+      transparent 0 10deg,
+      #eab6ff 11deg 30deg,
+      transparent 31deg
+    );
+  --reward-inner-motion: reward-stage-beams;
+  --reward-inner-duration: 6s;
+}
+
+@keyframes reward-ambient-drift {
+  to {
+    background-position: 24px -8px;
+    opacity: 0.22;
+  }
+}
+@keyframes reward-ribbon-glide {
+  to {
+    transform: translateX(8%);
+    opacity: 0.24;
+  }
+}
+@keyframes reward-signal-breathe {
+  to {
+    background-size: 115% 140%;
+    opacity: 0.24;
+  }
+}
+@keyframes reward-suit-drift {
+  to {
+    background-position: 32px 16px;
+    opacity: 0.09;
+  }
+}
+@keyframes reward-dust-flow {
+  to {
+    background-position: -46px 17px;
+  }
+}
+@keyframes reward-bubble-rise {
+  to {
+    background-position: 8px -57px;
+  }
+}
+@keyframes reward-paper-light {
+  to {
+    background-position:
+      0 0,
+      55px 0;
+    opacity: 0.11;
+  }
+}
+@keyframes reward-lantern-breathe {
+  to {
+    opacity: 0.3;
+    transform: scale(1.08);
+  }
+}
+@keyframes reward-geometry-drift {
+  to {
+    background-position: 22px 22px;
+  }
+}
+@keyframes reward-market-ticks {
+  to {
+    background-position:
+      -28px 0,
+      0 18px;
+  }
+}
+@keyframes reward-groove-pulse {
+  to {
+    background-size: 108% 108%;
+    opacity: 0.23;
+  }
+}
+@keyframes reward-spotlight-sway {
+  to {
+    transform: translateX(-6%);
+    opacity: 0.25;
+  }
+}
+@keyframes reward-brush-sweep {
+  to {
+    background-position: 60px 0;
+    opacity: 0.24;
+  }
+}
+@keyframes reward-star-trail {
+  to {
+    background-position: 120px 70px;
+    opacity: 0.25;
+  }
+}
+@keyframes reward-linked-waves {
+  to {
+    background-position:
+      -15px 0,
+      15px 0;
+    opacity: 0.24;
+  }
+}
+@keyframes reward-card-lanes {
+  to {
+    background-position: 36px 0;
+    transform: skewX(-3deg);
+  }
+}
+@keyframes reward-speed-trails {
+  to {
+    background-position: -110px 0;
+    opacity: 0.24;
+  }
+}
+@keyframes reward-witch-sparks {
+  to {
+    background-position: -8px -64px;
+    opacity: 0.25;
+  }
+}
+@keyframes reward-relay-strokes {
+  to {
+    background-position: 65px 15px;
+  }
+}
+@keyframes reward-compass-mist {
+  to {
+    transform: scale(1.12) rotate(4deg);
+    opacity: 0.24;
+  }
+}
+@keyframes reward-three-shapes {
+  to {
+    background-position: 35px 0;
+    transform: skewX(3deg);
+  }
+}
+@keyframes reward-chart-rise {
+  to {
+    background-position: 45px -25px;
+    opacity: 0.25;
+  }
+}
+@keyframes reward-equalizer {
+  50% {
+    background-size: 100% 90%;
+    opacity: 0.25;
+  }
+  to {
+    background-size: 100% 40%;
+  }
+}
+@keyframes reward-stage-beams {
+  to {
+    transform: translateX(8%);
+    opacity: 0.26;
+  }
+}
+.barrage-art-hidden .reward-surface::before,
+html.motion-reduced .reward-surface::before,
+.game-barrage-static .reward-surface::before {
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reward-surface::before {
+    animation: none !important;
+    opacity: 0.1;
+  }
+}

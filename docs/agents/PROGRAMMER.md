@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-21停手預估：estimateAlchemy與beginAlchemy共用計算，讀取無副作用；stopEstimate僅對可見recipe投影，隱藏他人鍋null。新增顏色／鄰座去重／占卜／愚人草／上限及隱私回歸，完整2515通過。大廳對話延用原API及事件閘門，最新同人訊息替換並以ID守護清理；依playerId而非姓名綁定。範圍見本批UI-REFINEMENTS-20261021.md。
+
 2026-10-20：帳號／收藏庫細節修正與角色管理 A01／A09 已依核稿重排，型別／Vite 建置及相關桌機／手機瀏覽器驗證完成；本輪未執行套件，詳 [介面巡檢追加](../refactors/STITCH-SITE-LAYOUT-AUDIT.md)。
 
 2026-10-19 最新：全站27文件／11遊戲已接入，型別／Vite及78資產HTTP核對通過。十一款正常結局均有實際瀏覽器觀察，部分同桌席位為API QA或原生電腦；最新版面、專注模式、教學重試與斷線回歸已補完；保留實機觸控／IME與罕見時序的證據界線。保留Node規則／REST／SSE及Canvas、媒體、純計算leaf，無Vue Router。共用設定僅在等待／完局準備階段顯示。以下較早接入數為歷史紀錄；以[最新接入、證據與界線](../refactors/VUE-FRONTEND.md)為準。
@@ -855,3 +857,6 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 ## 2026-10-21 全站共用介面巡檢（2.17.7）
 
 共用 ResourcePanel 及指定頁面外框統一採 Stitch 1px／12px／無額外陰影，成就標題與主框對齊並移除群組重框；共編分頁、房間開始／加電腦與資源重試接 UiButton。收藏手機分頁固定等高且計數不換行，送禮名單雙分數同列並清除過時槽位樣式。16 個一般／工具入口、11 款等待室及 7 款遊玩狀態已有桌機／手機取樣；320px 收藏與共編另驗。建置含型別、格式、版本與 diff 檢查通過，未跑自動測試套件。完整依據、實測數值及未驗界線見 [全站版面巡檢](../refactors/STITCH-SITE-LAYOUT-AUDIT.md) 最新區；不可外推為全款完整對局驗收。
+# 2026-10-21 大廳泡泡與角色選單
+
+角色互動視窗的訊息表單可在關閉時卸載，因此彈幕事件 controller 必須由常駐 `LobbyStage` 擁有；選取框由 `BarrageFrames.decorate` 加到 DOM 的 `barrage-frame-ornate` class 須同步進 Vue reactive class，避免移動定位造成下一次 patch 將它移除。實際雙頁面與390px Edge 驗證選取 neon、送出、框內裝飾、148px 高度和無橫向溢出；詳 `docs/UI-REFINEMENTS-20261021.md`。

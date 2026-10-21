@@ -20,6 +20,9 @@ body .vue-frame-preview-viewport > .vue-frame-preview-stage {
   block-size: 148px;
   transform-origin: center;
 }
+body .vue-frame-preview-viewport.is-media-preview {
+  block-size: 208px;
+}
 // L05 used a 64px barrage cell. Both previews need a readable, stable height;
 // the component then fits the complete artwork to the available cell width.
 :root
@@ -57,7 +60,7 @@ body .vue-frame-preview-viewport > .vue-frame-preview-stage {
   inline-size: 100%;
   max-inline-size: 360px;
   aspect-ratio: 360/148;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--frame-preview-line);
   border-radius: 8px;
   color: var(--frame-preview-ink);
@@ -68,6 +71,7 @@ body .vue-frame-preview-viewport > .vue-frame-preview-stage {
     inset: 0;
     pointer-events: none;
     max-inline-size: none;
+    overflow: visible;
   }
   .vue-frame-media-demo {
     position: absolute;

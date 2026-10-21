@@ -140,7 +140,8 @@ onMounted(() => {
       ><aside class="vue-game-side"
         ><Teleport v-if="setup" :to="setupTarget || 'body'" :disabled="!setupTarget" defer
           ><section class="vue-game-settings-panel" :class="{ 'is-in-stage': !!setupTarget }"
-            ><h2>房間設定</h2><slot name="settings" /><p v-if="!room.host">等待房主開始。</p
+            ><h2 v-if="$slots.settings">房間設定</h2><slot name="settings" /><p v-if="!room.host"
+              >等待房主開始。</p
             ><div class="vue-game-start-slot"
               ><UiButton
                 v-if="room.host"

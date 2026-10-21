@@ -327,10 +327,8 @@ button.lobby-avatar {
   appearance: none;
 }
 button.lobby-avatar:focus-visible,
-button.lobby-avatar[aria-expanded='true'] {
-  outline: 2px solid var(--ui-focus, #f6a54b);
-  outline-offset: 4px;
-  border-radius: 8px;
+button.lobby-avatar:focus-visible img {
+  filter: drop-shadow(0 0 5px var(--ui-focus, #f6a54b));
 }
 
 .lobby-top [data-lobby-barrage] {
