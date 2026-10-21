@@ -1,252 +1,470 @@
 @use 'tokens' as t;
 @use 'compact-header' as chrome;
+
+body.vue-race-document:has(.vue-race-lesson-page) {
+  margin: 0;
+  .vue-game-document,
+  .vue-race-lesson-page,
+  .vue-race-lesson-page *,
+  .vue-race-lesson-page *::before,
+  .vue-race-lesson-page *::after {
+    box-sizing: border-box;
+  }
+}
+
+// RD07–23: local lesson, with live model data and the original interactive SVG.
 .vue-race-lesson-page {
   display: grid;
-  gap: t.space(4);
+  gap: 16px;
   min-inline-size: 0;
-}
-.vue-race-lesson-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: t.space(4);
-  flex-wrap: wrap;
-  h1 {
-    @include t.type(h1);
-  }
-  p {
-    @include t.type(p3);
-  }
-  nav {
+  color: var(--stitch-ink);
+  .vue-race-lesson-toolbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
-    gap: t.space(4);
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 12px;
+    background: var(--stitch-surface);
   }
-}
-.vue-race-lesson-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(20rem, 25rem);
-  gap: t.space(4);
-  min-inline-size: 0;
-  align-items: stretch;
-}
-.vue-race-lesson-stage {
-  min-inline-size: 0;
-  min-block-size: 0;
-  overflow: auto;
-  scrollbar-gutter: stable;
-}
-.vue-race-coach {
-  display: grid;
-  grid-template-rows: auto minmax(12rem, 1fr) 6rem auto;
-  gap: t.space(3);
-  min-inline-size: 0;
-  min-block-size: 0;
-  border: 1px solid var(--play-line);
-  border-radius: t.space(4);
-  padding: t.space(4);
-  background: var(--play-surface);
-  header {
+  .vue-race-lesson-toolbar h1 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  .vue-race-lesson-toolbar p {
+    margin: 0;
+    color: var(--stitch-muted);
+    font-size: 14px;
+  }
+  .vue-race-lesson-toolbar nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .vue-race-lesson-layout {
     display: grid;
-    gap: t.space(3);
+    grid-template-columns: 220px minmax(0, 1fr) 300px;
+    gap: 16px;
+    min-inline-size: 0;
+    min-block-size: 0;
+    align-items: stretch;
   }
-  h2 {
-    @include t.type(h2);
-    min-block-size: 3.4rem;
+  .vue-race-lesson-stage {
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: auto;
+    scrollbar-gutter: stable;
+  }
+  .vue-race-lesson-roster,
+  .vue-race-coach {
+    border: 1px solid var(--stitch-line);
+    border-radius: 12px;
+    background: var(--stitch-surface);
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+  .vue-race-lesson-roster {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+  }
+  .vue-race-lesson-roster > .vue-room-roster {
+    flex: 1;
+    block-size: 100%;
+    min-block-size: 0;
+  }
+  .vue-race-lesson-initial {
+    display: grid;
+    place-items: center;
+    inline-size: 40px;
+    block-size: 40px;
+    border: 1px solid var(--crew-color, var(--stitch-frame));
+    border-radius: 50%;
+    background: var(--stitch-subtle);
+    color: var(--stitch-ink);
+    font-weight: 700;
+  }
+  .vue-race-lesson-local {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 28px;
+    padding: 2px 6px;
+    border: 1px solid var(--stitch-frame);
+    border-radius: 3px;
+    background: var(--stitch-primary);
+    color: var(--stitch-selected-ink);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .vue-race-coach {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) 66px auto;
+    gap: 16px;
+    padding: 18px;
+    overflow: hidden;
+  }
+  .vue-race-coach > header {
+    display: grid;
+    gap: 14px;
+  }
+  .vue-race-coach h2 {
+    font-size: 20px;
+    line-height: 1.5;
+    min-block-size: 60px;
+    margin: 0;
     overflow-wrap: anywhere;
   }
-  h3 {
-    @include t.type(p1);
+  .vue-race-coach h3 {
+    font-size: 16px;
+    margin: 0;
   }
-  label {
+  .vue-race-coach label {
     display: grid;
-    gap: t.space(2);
-    @include t.type(p3);
+    gap: 8px;
+    font-size: 14px;
   }
-  select {
+  .vue-race-coach select {
+    box-sizing: border-box;
     inline-size: 100%;
     min-inline-size: 0;
-    max-inline-size: 100%;
-    min-block-size: 2.75rem;
-    @include t.type(p3);
+    min-block-size: 44px;
+    font-size: 14px;
   }
-  footer {
+  .vue-race-lesson-kicker {
+    font-size: 12px;
+    color: var(--stitch-muted);
+    margin: 0;
+  }
+  .vue-race-coach-copy {
+    min-block-size: 0;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    font-size: 16px;
+    line-height: 1.8;
+  }
+  .vue-race-coach-copy ul {
+    margin: 0;
+    padding-inline-start: 20px;
+  }
+  .vue-race-coach-copy li {
+    margin-block-end: 14px;
+  }
+  .vue-race-lesson-readonly {
+    font-size: 14px;
+    color: var(--stitch-muted);
+  }
+  .vue-race-lesson-mission {
+    border-block-start: 1px solid var(--stitch-line);
+    padding-block-start: 14px;
+    margin-block-start: 16px;
+  }
+  .vue-race-lesson-feedback {
+    box-sizing: border-box;
+    block-size: 66px;
+    overflow: auto;
+    padding: 1px 8px;
+    border-radius: 8px;
+    background: var(--stitch-subtle);
+    font-size: 14px;
+    line-height: 21px;
+  }
+  .vue-race-lesson-feedback .frontend-status {
+    min-block-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 14px;
+    line-height: 21px;
+  }
+  .vue-race-lesson-feedback > p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 21px;
+  }
+  .vue-race-coach footer,
+  .vue-race-coach footer > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .vue-race-coach footer > div {
+    flex: 1 1 100%;
+  }
+  .vue-race-coach footer button {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  // Scoped above the live-game stylesheet; no geometry or hit-area changes to Board.
+  .vue-race-lesson-stage > .vue-race-lesson-scene {
     display: grid;
-    gap: t.space(3);
-    > div {
+    grid-template-rows: auto minmax(240px, 1fr) auto auto auto;
+    gap: 12px;
+    min-block-size: 100%;
+    block-size: auto;
+    overflow: visible;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+
+    > .vue-race-racebar {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
       flex-wrap: wrap;
-      gap: t.space(3);
+      gap: 8px;
+      padding: 10px 16px;
+      min-block-size: 54px;
+      background: var(--stitch-surface);
+      border: 1px solid var(--stitch-line);
+      border-radius: 12px;
+    }
+    > .vue-race-track-shell {
+      min-block-size: 240px;
+      overflow: auto;
+      border-radius: 12px;
+      background: #253b2e;
+      padding: 16px 12px;
+    }
+    .vue-race-board {
+      min-inline-size: 640px;
+      background: transparent;
+      border: 0;
+      padding: 0;
+    }
+    .vue-race-board > svg {
+      display: block;
+      inline-size: 100%;
+      block-size: auto;
+      min-block-size: 0;
+      max-block-size: none;
+    }
+    > .vue-race-dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      overflow: visible;
+    }
+    .vue-race-dashboard > div {
+      min-inline-size: 0;
+      padding: 12px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 12px;
+      background: var(--stitch-surface);
+    }
+    .vue-race-dashboard h2 {
+      font-size: 16px;
+      margin: 0 0 12px;
+    }
+    .vue-race-cars {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .vue-race-cars > button {
+      min-inline-size: 0;
+      padding: 8px 4px;
+      display: grid;
+      justify-items: center;
+      gap: 6px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+    }
+    .vue-race-cars > button.selected {
+      border-color: var(--stitch-primary);
+      background: var(--stitch-hover);
+    }
+    .vue-race-cars svg {
+      inline-size: 55px;
+      block-size: 55px;
+    }
+    .vue-race-cars span {
+      font-size: 12px;
+    }
+    .vue-race-actions {
+      grid-column: 1/-1;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .vue-race-main-actions {
+      display: flex;
+
+      gap: 8px;
+    }
+    .vue-race-actions .vue-countdown {
+      min-inline-size: 0;
+    }
+    .vue-race-feedback {
+      min-block-size: 0;
+      block-size: auto;
+      padding: 0 8px;
+      overflow: visible;
+      font-size: 14px;
+    }
+    .vue-race-log {
+      min-inline-size: 0;
+      max-block-size: 120px;
+      overflow: auto;
+      font-size: 14px;
     }
   }
 }
-.vue-race-lesson-kicker {
-  @include t.type(p3);
-}
-.vue-race-coach-copy {
-  min-block-size: 0;
-  overflow: auto;
-  scrollbar-gutter: stable;
-  overscroll-behavior: contain;
-  @include t.type(p2);
-  ul {
-    padding-inline-start: 1.25rem;
-    margin: 0;
-    display: grid;
-    gap: t.space(3);
-  }
-}
-.vue-race-lesson-mission {
-  display: grid;
-  gap: t.space(3);
-  margin-block-start: t.space(4);
-  padding-block-start: t.space(4);
-  border-block-start: 1px solid var(--play-line);
-}
-.vue-race-lesson-readonly {
-  @include t.type(p3);
-  margin-block-start: t.space(4);
-}
-.vue-race-lesson-feedback {
-  block-size: 6rem;
-  min-inline-size: 0;
-  overflow: auto;
-  scrollbar-gutter: stable;
-  @include t.type(p3);
-}
-.vue-race-lesson-stage
-  [data-lesson-highlight]
-  :is(
-    .vue-race-board,
-    .vue-race-cars,
-    .vue-race-dice,
-    .vue-race-command,
-    .vue-race-round,
-    .vue-race-roadbonus
-  ) {
-  transition: outline-color 0.15s;
-}
-.vue-race-lesson-stage
-  :is(
-    [data-lesson-highlight='own'],
-    [data-lesson-highlight='size'],
-    [data-lesson-highlight='damage']
-  )
-  .vue-race-cars,
-.vue-race-lesson-stage [data-lesson-highlight='dice'] :is(.vue-race-dice, .vue-race-roadbonus),
-.vue-race-lesson-stage [data-lesson-highlight='round'] :is(.vue-race-round, .vue-race-command),
-.vue-race-lesson-stage
-  :is(
-    [data-lesson-highlight='road'],
-    [data-lesson-highlight='terrain'],
-    [data-lesson-highlight='heli'],
-    [data-lesson-highlight='goal'],
-    [data-lesson-highlight='end']
-  )
-  .vue-race-board {
-  outline: 2px solid var(--play-primary);
-  outline-offset: -2px;
-  border-radius: t.space(2);
-}
 body.vue-race-lesson-focus {
-  overflow: hidden;
   .site-header {
     display: none;
   }
   .vue-game-document {
-    block-size: 100dvh;
-    padding: t.space(3);
+    min-block-size: 100dvh;
   }
-  .vue-race-lesson-page {
-    block-size: 100%;
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-  .vue-race-lesson-layout {
-    min-block-size: 0;
+}
+.vue-race-lesson-stage {
+  :is(
+      [data-lesson-highlight='own'],
+      [data-lesson-highlight='size'],
+      [data-lesson-highlight='damage']
+    )
+    .vue-race-cars,
+  [data-lesson-highlight='dice'] :is(.vue-race-dice, .vue-race-roadbonus),
+  [data-lesson-highlight='round'] :is(.vue-race-round, .vue-race-command),
+  :is(
+      [data-lesson-highlight='road'],
+      [data-lesson-highlight='terrain'],
+      [data-lesson-highlight='heli'],
+      [data-lesson-highlight='goal'],
+      [data-lesson-highlight='end']
+    )
+    .vue-race-board {
+    outline: 2px solid var(--stitch-primary);
+    outline-offset: -2px;
+    border-radius: 8px;
   }
 }
 @media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
   body.vue-race-document:has(.vue-race-lesson-page):not(.ui-large-text) {
-    margin: 0;
+    @include chrome.desktop;
     .vue-game-document {
       block-size: 100dvh;
-      padding: 0 t.space(6) t.space(2);
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
+      padding: 0 12px 12px;
     }
-    @include chrome.desktop;
     #race-app {
       min-block-size: 0;
     }
     .vue-race-lesson-page {
       block-size: 100%;
       grid-template-rows: auto minmax(0, 1fr);
-      gap: t.space(3);
+      gap: 12px;
     }
     .vue-race-lesson-layout {
       min-block-size: 0;
     }
-    .vue-race-lesson-stage > .vue-race-scene {
+    .vue-race-coach {
+      block-size: 100%;
+      box-sizing: border-box;
+    }
+    .vue-race-lesson-stage > .vue-race-lesson-scene {
       min-block-size: 100%;
-    }
-  }
-}
-@media (max-width: 1000px) {
-  .vue-race-lesson-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .vue-race-coach {
-    grid-template-rows: auto minmax(12rem, 22rem) 6rem auto;
-  }
-  .vue-race-lesson-toolbar {
-    align-items: start;
-  }
-  body.vue-race-lesson-focus .vue-race-lesson-layout {
-    overflow: auto;
-  }
-  .vue-race-lesson-stage {
-    overflow: visible;
-  }
-}
-// Coach copy yields to navigation on short desktop viewports; each text slot scrolls.
-@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
-  body.vue-race-document:has(.vue-race-lesson-page):not(.ui-large-text) .vue-race-coach {
-    box-sizing: border-box;
-    block-size: 100%;
-    min-block-size: 0;
-    grid-template-rows: 10.5rem minmax(0, 1fr) 6rem 6.25rem;
-    :is(h2, h3, p) {
-      margin: 0;
-    }
-    > header {
-      min-block-size: 0;
-      grid-template-rows: 21px 54px minmax(0, 1fr);
-      gap: t.space(2);
-      overflow: auto;
-      scrollbar-gutter: stable;
-    }
-    h2 {
-      min-block-size: 0;
-      block-size: 54px;
-      overflow: auto;
-    }
-    .vue-race-coach-copy {
-      min-block-size: 0;
-      overflow: auto;
-    }
-    > footer {
-      min-block-size: 0;
-      grid-template-rows: 44px 44px;
-      gap: t.space(3);
-      > div {
-        min-block-size: 0;
-        flex-wrap: nowrap;
-        > button {
-          min-inline-size: 0;
-          flex: 1;
-        }
+      > .vue-race-dashboard {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 0.8fr);
+        align-items: stretch;
+        gap: 8px;
       }
+      .vue-race-dashboard > div {
+        padding: 8px;
+      }
+      .vue-race-cars {
+        gap: 4px;
+      }
+      .vue-race-cars > button {
+        min-inline-size: 44px;
+        min-block-size: 44px;
+        padding: 6px 2px;
+        gap: 4px;
+      }
+      .vue-race-cars svg {
+        inline-size: 44px;
+        block-size: 44px;
+      }
+      .vue-race-dice > div {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(44px, 1fr));
+        gap: 4px;
+        overflow-x: auto;
+      }
+      .vue-race-dice > div > button {
+        min-inline-size: 44px;
+        min-block-size: 44px;
+        padding: 4px 2px;
+      }
+      .vue-race-dice .vue-race-die {
+        inline-size: 28px;
+        block-size: 28px;
+      }
+      .vue-race-actions {
+        grid-column: auto;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+      }
+      .vue-race-main-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .vue-race-main-actions > button {
+        min-block-size: 44px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+    }
+  }
+}
+@media (max-width: 1400px) {
+  .vue-race-lesson-page .vue-race-lesson-layout {
+    grid-template-columns: 220px minmax(0, 1fr) 280px;
+    gap: 12px;
+  }
+}
+@media (max-width: 1100px) {
+  .vue-race-lesson-page {
+    .vue-race-lesson-layout {
+      grid-template-columns: minmax(0, 1fr) 280px;
+    }
+    .vue-race-lesson-roster {
+      grid-column: 1/-1;
+    }
+  }
+}
+@media (max-width: 760px) {
+  .vue-race-lesson-page {
+    .vue-race-lesson-layout {
+      display: flex;
+      flex-direction: column;
+    }
+    .vue-race-coach {
+      min-block-size: 560px;
+      grid-template-rows: auto minmax(160px, 1fr) 66px auto;
+    }
+    .vue-race-lesson-stage > .vue-race-lesson-scene > .vue-race-dashboard {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .vue-race-lesson-stage > .vue-race-lesson-scene .vue-race-actions {
+      grid-column: auto;
     }
   }
 }

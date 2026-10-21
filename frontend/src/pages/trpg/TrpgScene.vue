@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import { computed, ref, watch } from 'vue';
 import { useTrpgStore } from '../../stores/trpg';
 import { useRoomStore } from '../../stores/room';
@@ -37,7 +38,21 @@ function input(event: Event) {
 }
 </script>
 <template>
-  <section class="vue-game-panel vue-trpg-stage" aria-labelledby="trpgHeading"
+  <RoomWaitingTemplate
+    v-if="state.phase === 'waiting'"
+    type="trpg"
+    title="霧港跑團"
+    hero-title="冒險就此出發"
+    description="1–6 人合作冒險 · 六幕原創故事"
+    art="/assets/playful/game-trpg.svg"
+    :facts="[
+      { label: '冒險', value: state.adventure },
+      { label: '篇幅', value: '六幕短篇' },
+      { label: '角色', value: trpg.me?.roleName || '尚未選擇' },
+    ]"
+  />
+
+  <section v-else class="vue-game-panel vue-trpg-stage" aria-labelledby="trpgHeading"
     ><header
       ><h1 id="trpgHeading">{{ state.winner?.title || state.adventure }}</h1
       ><p>規則主持 · 不連 AI、不消耗 token</p></header

@@ -1,41 +1,48 @@
 @use 'tokens';
 
-// C01 owns its inner rows. The body/section scope also beats legacy per-game
-// compact chat row rules, without changing any game's outer column geometry.
+// C03: the approved stream is a single column of metadata and message bubbles.
+// This explicit scope wins over legacy game chat rules; outer tracks stay owned
+// by the room layout and all controls retain their existing action handlers.
 :is(body, body[data-game-kind])
   section.vue-room-chat.vue-chat-c01[data-ping-anchor='chat'][aria-label] {
+  box-sizing: border-box;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0;
-  padding: tokens.space(4);
+  padding: 0;
   min-inline-size: 0;
   min-block-size: 0;
-  color: var(--stitch-ink, var(--play-ink, #212121));
+  border: 1px solid var(--stitch-line);
+  border-radius: var(--stitch-panel-radius);
+  background: var(--stitch-surface);
+  color: var(--stitch-ink);
+  box-shadow: none;
+  overflow: hidden;
+  font-family: var(--stitch-font-family);
 
   > .vue-chat-header {
+    box-sizing: border-box;
     display: grid;
-    grid-template: minmax(2.75rem, auto) / minmax(0, 1fr);
-    padding-block-end: tokens.space(2);
-    border-block-end: 1px solid var(--stitch-line, var(--play-line, #aaa));
-    gap: tokens.space(1);
+    align-content: center;
     min-inline-size: 0;
-    min-block-size: 0;
-    align-content: start;
-  }
-  > .vue-chat-header.vue-chat-toggle-header {
-    grid-template-rows: 2.75rem;
+    min-block-size: 36px;
+    padding: 8px 12px;
+    border-block-end: 1px solid var(--stitch-line);
+    background: var(--stitch-surface-subtle);
   }
   .vue-chat-heading {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 3.75rem;
+    grid-template-columns: minmax(0, max-content) 6px minmax(0, 1fr);
     align-items: center;
-    gap: tokens.space(1);
+    gap: 6px;
     min-inline-size: 0;
   }
   .vue-chat-heading h2 {
-    @include tokens.type(p2);
-    font-weight: 800;
     margin: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1rem;
+    letter-spacing: -0.025em;
     overflow-wrap: anywhere;
   }
   .vue-chat-heading > .vue-button {
@@ -43,70 +50,56 @@
     padding-inline: 0;
     min-inline-size: 0;
   }
+  .vue-chat-connection {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: 50%;
+    background: var(--stitch-muted);
+    &[data-connected='true'] {
+      background: #10b981;
+    }
+  }
   .vue-chat-unread {
-    @include tokens.type(p3);
-    min-block-size: 1.5em;
+    min-inline-size: 0;
+    min-block-size: 1rem;
+    font-size: 0.625rem;
+    line-height: 1rem;
     white-space: nowrap;
     text-align: end;
+    color: var(--stitch-muted);
     font-variant-numeric: tabular-nums;
   }
-  .vue-chat-tools {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: tokens.space(2);
-    min-inline-size: 0;
-    min-block-size: 2.75rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
-  }
-  .vue-chat-tools > * {
-    flex: 0 0 auto;
-  }
-  .vue-chat-tools .vue-social-tool-trigger,
-  .vue-chat-tools > .vue-button {
-    box-sizing: border-box;
-    min-inline-size: 2.75rem;
-    min-block-size: 2.75rem;
-    block-size: 2.75rem;
-    padding: tokens.space(2) tokens.space(3);
-    gap: tokens.space(2);
-    white-space: nowrap;
-  }
-
   > .vue-room-chat-content.vue-chat-c01-content {
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) 1.5rem auto;
+    grid-template-rows: auto minmax(0, 1fr) 24px auto;
     gap: 0;
     min-inline-size: 0;
     min-block-size: 0;
   }
   .vue-chat-notice {
-    @include tokens.type(p3);
-    box-sizing: border-box;
-    margin: 0;
-    padding: tokens.space(1) tokens.space(2);
     grid-row: 1;
-    max-block-size: 3.25rem;
+    box-sizing: border-box;
+    margin: 8px 12px 0;
+    padding: 6px 10px;
+    min-inline-size: 0;
     min-block-size: 0;
-    visibility: visible;
+    max-block-size: 3.25rem;
+    border-radius: 8px;
+    background: var(--stitch-surface-subtle);
+    color: var(--stitch-muted);
+    font-size: 0.75rem;
+    line-height: 1.5;
     overflow: auto;
-    scrollbar-gutter: auto;
-    border-radius: tokens.space(2);
-    background: color-mix(
-      in srgb,
-      var(--stitch-blue, #3389ec) 10%,
-      var(--stitch-surface, var(--play-surface, #fff))
-    );
-    color: inherit;
     overflow-wrap: anywhere;
   }
   .vue-chat-messages {
     grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
     margin: 0;
-    padding: 0 tokens.space(1);
+    padding: 12px;
     min-inline-size: 0;
     min-block-size: 0;
     overflow: auto;
@@ -114,117 +107,160 @@
     scrollbar-gutter: stable;
     list-style: none;
   }
-  .vue-chat-messages li {
-    padding-block: tokens.space(2);
+  .vue-chat-messages > li {
+    flex: none;
+    display: block;
+    padding: 0;
     min-inline-size: 0;
     border: 0;
+    background: transparent;
+    box-shadow: none;
     overflow-wrap: anywhere;
   }
-  .vue-chat-messages li:not(.vue-chat-empty) {
-    display: grid;
-    grid-template-columns: 1.75rem minmax(0, 1fr);
-    gap: tokens.space(2);
-  }
-  .vue-chat-avatar {
-    @include tokens.type(p3);
-    display: grid;
-    place-items: center;
-    inline-size: 1.75rem;
-    block-size: 1.75rem;
-    border-radius: 50%;
-    background: color-mix(
-      in srgb,
-      var(--stitch-ink, var(--play-ink, #212121)) 10%,
-      var(--stitch-surface, var(--play-surface, #fff))
-    );
-    font-weight: 800;
-  }
   .vue-chat-message-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 2px;
     min-inline-size: 0;
   }
-  .vue-chat-message-copy > div {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 3rem;
-    align-items: start;
-    gap: tokens.space(2);
+  .vue-chat-message-meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0 4px;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    color: var(--stitch-muted);
+    font-size: 0.625rem;
+    line-height: 1rem;
   }
-  .vue-chat-messages strong,
-  .vue-chat-messages time {
-    @include tokens.type(p3);
-  }
-  .vue-chat-messages strong {
+  .vue-chat-message-meta strong {
+    min-inline-size: 0;
+    color: var(--stitch-ink);
+    font-size: inherit;
     font-weight: 700;
+    line-height: inherit;
+    overflow-wrap: anywhere;
   }
-  .vue-chat-messages time {
-    text-align: end;
+  .vue-chat-message-meta time {
+    flex: none;
+    color: inherit;
+    font-size: inherit;
+    font-weight: 400;
+    line-height: inherit;
+    white-space: nowrap;
     font-variant-numeric: tabular-nums;
-    opacity: 0.75;
   }
   .vue-chat-messages p {
-    @include tokens.type(p2);
-    margin: tokens.space(1) 0 0;
-    padding: tokens.space(2) tokens.space(3);
-    border-radius: tokens.space(3);
-    background: color-mix(
-      in srgb,
-      var(--stitch-ink, var(--play-ink, #212121)) 5%,
-      var(--stitch-surface, var(--play-surface, #fff))
-    );
+    box-sizing: border-box;
+    inline-size: fit-content;
+    max-inline-size: 90%;
+    min-inline-size: 0;
+    margin: 0;
+    padding: 6px 10px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 12px;
+    background: var(--stitch-surface-subtle);
+    color: var(--stitch-ink);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.625;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   .vue-chat-empty {
-    @include tokens.type(p3);
-    opacity: 0.75;
+    color: var(--stitch-muted);
+    font-size: 0.75rem;
+    line-height: 1.5;
   }
   form {
     grid-row: 4;
     display: grid;
-    grid-template-rows: auto 2.75rem;
-    gap: tokens.space(2);
-    padding-block-start: tokens.space(2);
-    border-block-start: 1px solid var(--stitch-line, var(--play-line, #aaa));
-    margin: 0;
+    grid-template-rows: auto 44px;
+    gap: 8px;
+    margin: 0 10px 10px;
+    padding-block-start: 8px;
+    border-block-start: 1px solid var(--stitch-line);
     min-inline-size: 0;
     min-block-size: 0;
   }
-  .vue-chat-compose {
+  .vue-chat-tools {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 4.5rem;
-    gap: tokens.space(2);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: stretch;
+    gap: 12px;
     min-inline-size: 0;
-    block-size: 2.75rem;
+    min-block-size: 44px;
+    &:has(> .vue-chat-retry) {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) 44px;
+      gap: 8px;
+    }
   }
-  .vue-chat-compose input {
-    @include tokens.type(p3);
+  .vue-chat-tools > span {
+    min-inline-size: 0;
+  }
+  .vue-chat-tools .vue-social-tool-trigger,
+  .vue-chat-tools > .vue-button {
+    --stitch-button-border-color: var(--stitch-line);
+    --stitch-button-radius: 8px;
     box-sizing: border-box;
     inline-size: 100%;
     min-inline-size: 0;
-    min-block-size: 2.75rem;
-    padding: tokens.space(2);
-    border: 1px solid var(--stitch-line, var(--play-line, #aaa));
-    border-radius: tokens.space(2);
-    background: var(--stitch-surface, var(--play-surface, #fff));
+    block-size: 44px;
+    min-block-size: 44px;
+    padding: 8px;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .vue-chat-compose {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: 8px;
+    align-items: stretch;
+    min-inline-size: 0;
+    block-size: 44px;
+  }
+  .vue-chat-compose input {
+    box-sizing: border-box;
+    inline-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding: 8px 10px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 8px;
+    background: var(--stitch-surface-subtle);
     color: inherit;
+    font: 500 0.75rem/1.5 var(--stitch-font-family);
+    &:focus {
+      outline: 2px solid var(--stitch-focus);
+      outline-offset: 2px;
+      box-shadow: none;
+    }
   }
   .vue-chat-send.vue-button {
-    --ui-button-radius: 0.5rem;
-    padding-inline: tokens.space(2);
-    gap: tokens.space(1);
+    --stitch-button-radius: 8px;
+    --stitch-button-border-color: var(--stitch-line);
+    --stitch-button-bg: var(--stitch-surface-subtle);
+    --stitch-button-color: var(--stitch-ink);
+    padding: 8px;
   }
   .vue-chat-send .ui-button-icon {
-    inline-size: 1rem;
-    block-size: 1rem;
+    inline-size: 20px;
+    block-size: 20px;
   }
   .vue-chat-feedback {
     grid-row: 3;
     min-inline-size: 0;
     min-block-size: 0;
-    block-size: 1.5rem;
+    block-size: 24px;
+    padding-inline: 12px;
     overflow: auto;
   }
   .vue-chat-feedback > .form-message.frontend-status {
-    @include tokens.type(p3);
     box-sizing: border-box;
     display: block;
     margin: 0;
@@ -235,14 +271,15 @@
     block-size: auto;
     max-height: none;
     max-block-size: none;
-    line-height: 21px;
+    font-size: 0.75rem;
+    line-height: 1.5;
     overflow-wrap: anywhere;
   }
   &.vue-chat-collapsed {
-    grid-template-rows: 2.75rem;
+    grid-template-rows: 44px;
     > .vue-chat-header {
-      grid-template-rows: 2.75rem;
-      padding-block-end: 0;
+      min-block-size: 44px;
+      padding-block: 0;
       border-block-end: 0;
     }
   }
@@ -427,9 +464,17 @@ body > .vue-social-popover {
 
 @media (max-width: 760px) {
   :is(body, body[data-game-kind])
+    section.vue-room-chat.vue-chat-c01[data-ping-anchor='chat'][aria-label] {
+    // The source C03 is 752px high. Fit it to the mobile viewport while keeping
+    // the stream bounded; new messages must never push the composer down-page.
+    flex: 0 0 auto;
+    block-size: min(47rem, calc(100dvh - 2rem));
+    min-block-size: 24rem;
+  }
+  :is(body, body[data-game-kind])
     section.vue-room-chat.vue-chat-c01[data-ping-anchor='chat'][aria-label]
     > .vue-room-chat-content.vue-chat-c01-content {
-    grid-template-rows: auto minmax(10rem, 1fr) auto;
+    grid-template-rows: auto minmax(10rem, 1fr) 24px auto;
   }
 }
 

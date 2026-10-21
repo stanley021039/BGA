@@ -1,5 +1,11 @@
 # 程式架構 agent 記憶
 
+2026-10-21／候選 2.18.2：依最新已審核 C02 v3 實作共用 RoomPlayerCard、十一款 RoomWaitingTemplate／GameSettingsPanel，保留真實資訊並整合郎中公開資源與雷霆教學；接續 RT 22／RW 30 與九款等待室設計。來源、契約與實際驗收界線見[共用與同頻／傳情](../refactors/STITCH-SHARED-PAIR-APPROVED.md)。
+
+2026-10-21／候選 2.18.1：依使用者指定以 main c0ec416 為主整合本地未提交 UI，四個衝突已解。保留 main 功能／郎中／後端與音效，共用 RoomRoster、RoomChat 及線上／教學 RaceCrewDice／RaceDie；來源、決策與驗收見[整合紀錄](../refactors/MAIN-2180-UI-INTEGRATION.md)。未提交、未 push、未 PR、未正式部署。
+
+2026-10-21／候選 2.17.9：C02 玩家卡片及本機車隊共用收斂完成，新增已審核瞎掰王 20 狀態、雷霆之路 42 狀態（含 17 章教學與十地形）。十一遊戲桌機／手機共用區、瞎掰三回合與再玩、Race 開賽及六本機練習已有實際瀏覽器證據；完整範圍、來源與未驗界線見[已審核稿實作](../refactors/STITCH-BLUFF-RACE-APPROVED.md)。未跑測試套件、未發 PR 或正式部署。
+
 2026-10-20：帳號／收藏庫細節修正與角色管理 A01／A09 已依核稿重排，型別／Vite 建置及相關桌機／手機瀏覽器驗證完成；本輪未執行套件，詳 [介面巡檢追加](../refactors/STITCH-SITE-LAYOUT-AUDIT.md)。
 
 2026-10-19 最新：全站27文件／11遊戲已接入，型別／Vite及78資產HTTP核對通過。十一款正常結局均有實際瀏覽器觀察，部分同桌席位為API QA或原生電腦；最新版面、專注模式、教學重試與斷線回歸已補完；保留實機觸控／IME與罕見時序的證據界線。保留Node規則／REST／SSE及Canvas、媒體、純計算leaf，無Vue Router。共用設定僅在等待／完局準備階段顯示。以下較早接入數為歷史紀錄；以[最新接入、證據與界線](../refactors/VUE-FRONTEND.md)為準。
@@ -859,3 +865,6 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 2026-10-21 #151：共用 heading／label 繼承容器，selected surface mixin 配對 ink／muted／link／focus，不重綁全域 ink。唯讀 DOM 對比工具區分 hidden／disabled／人工項目，包含原錯誤反例回歸。29 頁量測摘要入版控，147 張原生圖與測試資料只留忽略目錄；全頁畫布不讀應用私有狀態。詳 [表面配色驗收](../specs/SURFACE-CONTRAST-151.md)，保持 Draft 待人工最後檢查／CI，未部署。
 
 2026-10-21 #154 候選2.20.0：entry-intro head bootstrap持有唯一EntryPreferences，Vue／legacy共用，auth成功動畫檢查同一偏好；預設開啟、本瀏覽器保存，關閉不建立可見遮罩或三秒等待。20項回歸及原生雙宿主／四組設定取樣完成，限制見 [開場偏好](../specs/ENTRY-INTRO-PREFERENCE-154.md)。#153已合併f183242，第三份Figma仍受唯讀／額度阻擋，沒有成功同步；本票保持Draft、未部署。
+## 2026-10-21 聊天室原稿排版與外框（2.17.8）
+
+C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下，還原原生稿邏輯尺寸並保留 44px 操作區；時間沿用原時間戳／房間 offset，timer 卸載清理。C00 桌機單一矩形框與側欄分隔集中 room-surfaces.scss，手機保留換列並固定聊天室高度、長訊息內捲，遊戲棋盤／內容卡／浮層不套外框清除。共用暖灰色票、body margin、側欄捲動與猜歌空白 gutter 一併整理。11 款桌機／手機、7 款遊玩取樣、320px 長訊息／純文字／返焦及媒體／表情開關已有實際觀察；型別／多頁建置與格式版本檢查通過，未跑自動套件。證據數值與原生全螢幕等未驗界線見 [全站版面巡檢](../refactors/STITCH-SITE-LAYOUT-AUDIT.md) 最新區，不外推為全遊戲功能回歸。

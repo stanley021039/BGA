@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { useChatStore } from '../stores/chat';
 import { useReactionsStore } from '../stores/reactions';
 import { useRoomStore } from '../stores/room';
@@ -19,6 +19,8 @@ const list = ref<HTMLOListElement | null>(null),
   input = ref<HTMLInputElement | null>(null),
   composing = ref(false);
 let disposed = false;
+const clock = ref(Date.now());
+let clockTimer: ReturnType<typeof setInterval> | undefined;
 const quick = computed(
   () =>
     props.quickReplies ||
@@ -45,8 +47,13 @@ const feedback = computed(() =>
     ? '傳送中…'
     : chat.status || reactions.message || (chat.loading ? '正在載入聊天訊息…' : ''),
 );
-const time = (value: number) =>
-  new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+function time(value: number) {
+  const seconds = Math.max(0, Math.floor((clock.value - room.clockOffset - value) / 1000));
+  if (seconds < 5) return '剛剛';
+  if (seconds < 60) return `${seconds}秒前`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}分鐘前`;
+  return new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 function focusInput() {
   if (!disposed && !document.hidden && input.value?.isConnected && !input.value.disabled)
     input.value.focus();
@@ -97,8 +104,14 @@ watch(
     if (!disposed && bottom && list.value) list.value.scrollTop = list.value.scrollHeight;
   },
 );
+onMounted(() => {
+  clockTimer = setInterval(() => {
+    if (!document.hidden) clock.value = Date.now();
+  }, 5000);
+});
 onBeforeUnmount(() => {
   disposed = true;
+  clearInterval(clockTimer);
 });
 defineExpose({ compose, focus: focusInput });
 </script>
@@ -123,7 +136,17 @@ defineExpose({ compose, focus: focusInput });
           :aria-expanded="chat.visible"
           :aria-controls="prefix + '-content'"
           @click="toggle"
-        /><span class="vue-chat-unread" role="status">{{
+        /><span
+          class="vue-chat-connection"
+          role="img"
+          :data-connected="chat.enabled && room.connected && !chat.status"
+          :aria-label="
+            chat.enabled && room.connected && !chat.status
+              ? '聊天室已連線'
+              : '聊天室連線中斷或載入中'
+          "
+        ></span
+        ><span class="vue-chat-unread" role="status">{{
           chat.unread ? '未讀 ' + chat.unread : ''
         }}</span></div
       >
@@ -143,14 +166,16 @@ defineExpose({ compose, focus: focusInput });
         ><li v-if="!chat.messages.length && (chat.loading || chat.status)" class="vue-chat-empty">{{
           chat.loading ? '正在載入…' : '聊天訊息暫時無法更新。'
         }}</li
-        ><li v-for="message in chat.messages" :key="message.id"
-          ><span class="vue-chat-avatar" aria-hidden="true">{{ [...message.name][0] || '？' }}</span
+        ><li v-for="message in chat.messages" :key="message.id" class="vue-chat-message"
           ><div class="vue-chat-message-copy"
-            ><div
+            ><div class="vue-chat-message-meta"
               ><strong>{{ message.name }}</strong
-              ><time :datetime="new Date(message.at).toISOString()">{{
-                time(message.at)
-              }}</time></div
+              ><span aria-hidden="true">•</span
+              ><time
+                :datetime="new Date(message.at).toISOString()"
+                :title="new Date(message.at).toLocaleString()"
+                >{{ time(message.at) }}</time
+              ></div
             ><p>{{ message.message }}</p></div
           ></li
         ></ol
@@ -168,6 +193,7 @@ defineExpose({ compose, focus: focusInput });
             v-if="chat.status && chat.enabled"
             stitch
             variant="secondary"
+            class="vue-chat-retry"
             icon="refresh"
             icon-only
             label="重新載入聊天室"
@@ -197,8 +223,8 @@ defineExpose({ compose, focus: focusInput });
             type="submit"
             class="vue-chat-send"
             icon="send"
+            icon-only
             label="發送房間彈幕"
-            caption="發送"
             :pending="chat.pending"
             :disabled="blocked" /></div
       ></form>

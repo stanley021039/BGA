@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { RaceDomain, RacePoint, RaceRoute } from '../../contracts/race';
 import UiButton from '../../components/UiButton.vue';
-import UiDialog from '../../components/UiDialog.vue';
+import RaceTerrainDialog from './RaceTerrainDialog.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import RaceBoard from './RaceBoard.vue';
@@ -10,16 +10,36 @@ import RaceVehicle from './RaceVehicle.vue';
 import RaceDie from './RaceDie.vue';
 import { useRaceSelection } from './useRaceSelection';
 import { useRacePresentation } from './useRacePresentation';
-import { commands, accepts, sizes, terrains } from './race-meta';
+import { commands, accepts, sizes } from './race-meta';
 const props = defineProps<{ model: RaceDomain }>(),
   model = props.model,
   s = computed(() => model.state!),
   board = ref<InstanceType<typeof RaceBoard> | null>(null),
-  legend = ref<InstanceType<typeof UiDialog> | null>(null),
+  legend = ref<InstanceType<typeof RaceTerrainDialog> | null>(null),
   commandPanel = ref<HTMLDetailsElement | null>(null),
   selection = useRaceSelection(model),
   presentation = useRacePresentation(model, () => board.value?.svg || null),
-  previewPoint = ref<RacePoint | null>(null);
+  previewPoint = ref<RacePoint | null>(null),
+  reviewing = ref(false);
+const resultVisible = computed(
+    () =>
+      s.value.phase === 'finished' &&
+      !!s.value.winner &&
+      !presentation.locked.value &&
+      !presentation.focus.value &&
+      !reviewing.value,
+  ),
+  winnerPlayer = computed(() => s.value.players.find((p) => p.id === s.value.winner?.id)),
+  winnerCars = computed(() => {
+    const id = s.value.winner?.id;
+    return s.value.cars.filter((c) => !!id && c.owner === id);
+  });
+watch(
+  () => s.value.phase,
+  () => {
+    reviewing.value = false;
+  },
+);
 const { car, die, command, commandDie, repairCar, player, cars, selected } = selection;
 const enabled = computed(() => model.canAct && !presentation.locked.value && presentation.ready),
   assign = computed(
@@ -136,50 +156,21 @@ const usedCommand = computed(() => {
 <template>
   <section
     v-if="model.state"
-    class="vue-race-scene race-stage"
+    class="vue-race-scene vue-race-scene-rd race-stage"
+    :class="{ 'is-result': resultVisible }"
+    :data-phase="s.phase"
     :data-lesson-highlight="model.lessonFocus"
     :aria-busy="model.busy || presentation.locked.value"
   >
-    <header class="vue-race-racebar"
+    <header v-show="!resultVisible" class="vue-race-racebar"
       ><div
         ><span class="vue-race-round">第 {{ s.round || '—' }} 輪</span
         ><strong>{{ instruction }}</strong></div
       ><div class="vue-race-roadbonus"
         >公路骰 <RaceDie v-if="s.roadDie" :value="s.roadDie" /><b v-else>—</b></div
-      ><UiButton label="地形圖例" icon="help" @click="legend?.open()"
+      ><UiButton stitch variant="secondary" label="地形圖例" icon="help" @click="legend?.open()"
     /></header>
-    <div class="vue-race-crews" aria-label="各車隊公開狀態"
-      ><article
-        v-for="(p, playerIndex) in s.players"
-        :key="p.id"
-        :style="{ '--crew-color': p.color }"
-        :class="{ current: p.id === s.actor }"
-        ><div
-          ><strong>{{ p.name }}{{ p.id === s.me ? '（你）' : '' }}</strong
-          ><span>{{
-            p.out
-              ? '出局'
-              : p.id === s.actor
-                ? '行動中'
-                : p.kicked
-                  ? '電腦接手'
-                  : !p.online
-                    ? '暫時離線'
-                    : '等待'
-          }}</span></div
-        ><div class="vue-race-crew-dice"
-          ><RaceDie
-            v-for="(d, i) in p.dice"
-            :key="i"
-            :value="d.value"
-            :color="p.color"
-            :variant="playerIndex"
-            :class="{ spent: d.used }"
-          /><span v-if="!p.dice.length">骰子尚未公開</span></div
-        ></article
-      ></div
-    >
-    <div id="boardScroll" class="vue-race-track-shell"
+    <div v-show="!resultVisible" id="boardScroll" class="vue-race-track-shell"
       ><RaceBoard
         v-if="presentation.visual.value"
         ref="board"
@@ -203,7 +194,7 @@ const usedCommand = computed(() => {
         ><p>{{ s.winner.reason }}</p
         ><UiButton label="略過演出" icon="skip_next" @click="presentation.stopFocus()" /></div
     ></div>
-    <div class="vue-race-dashboard"
+    <div v-show="!resultVisible" class="vue-race-dashboard"
       ><div class="vue-race-garage"
         ><h2>你的車隊</h2
         ><div class="vue-race-cars"
@@ -318,7 +309,12 @@ const usedCommand = computed(() => {
                   >{{ sizes[c.size] }} · {{ c.damage.length }} 損傷</option
                 ></select
               ></label
-            ><UiButton label="完成指令設定" icon="check" @click="completeCommand" /></div
+            ><UiButton
+              stitch
+              variant="secondary"
+              label="完成指令設定"
+              icon="check"
+              @click="completeCommand" /></div
         ></details> </div
       ><div class="vue-race-actions"
         ><RoomCountdown
@@ -332,16 +328,22 @@ const usedCommand = computed(() => {
         /><div class="vue-race-main-actions"
           ><template v-if="s.pending && !s.diceCheck"
             ><UiButton
+              stitch
+              variant="primary"
               label="保留結果"
               icon="check"
               :disabled="!enabled"
               @click="run('slam', { reroll: false })" /><UiButton
+              stitch
+              variant="secondary"
               label="重擲骰子"
               icon="refresh"
               :disabled="!enabled"
               @click="run('slam', { reroll: true })" /></template
           ><UiButton
             v-else-if="s.phase === 'assign' && !s.diceCheck"
+            stitch
+            variant="primary"
             :label="selected?.moved ? '滑行 1 格' : '確認出發'"
             icon="play_arrow"
             :pending="model.busy"
@@ -349,10 +351,14 @@ const usedCommand = computed(() => {
             @click="begin"
           /><template v-else-if="s.phase === 'bonus' && !s.diceCheck"
             ><UiButton
+              stitch
+              variant="primary"
               :label="'加速 +' + s.roadDie"
               icon="bolt"
               :disabled="!enabled"
               @click="run('bonus', { use: true })" /><UiButton
+              stitch
+              variant="secondary"
               label="略過加速"
               icon="skip_next"
               :disabled="!enabled"
@@ -362,6 +368,8 @@ const usedCommand = computed(() => {
               ><UiButton
                 v-for="id in s.targets"
                 :key="id"
+                stitch
+                variant="primary"
                 :label="
                   (s.players.find((p) => p.id === s.cars.find((c) => c.id === id)?.owner)?.name ||
                     '殘骸') +
@@ -372,6 +380,8 @@ const usedCommand = computed(() => {
                 :disabled="!enabled"
                 @click="run('shoot', { target: id })" /></div
             ><UiButton
+              stitch
+              variant="secondary"
               label="略過射擊"
               icon="skip_next"
               :disabled="!enabled"
@@ -392,7 +402,7 @@ const usedCommand = computed(() => {
         ></div
       ></div
     >
-    <div class="vue-race-feedback"
+    <div v-show="!resultVisible" class="vue-race-feedback"
       ><p>{{
         preview
           ? `${preview.path.length} 格 · 消耗 ${preview.cost} 點。${preview.warnings.join('；') || '優先繞開已知危險。'}`
@@ -403,17 +413,75 @@ const usedCommand = computed(() => {
         :error="model.failed || !presentation.ready"
     /></div>
     <section
-      v-if="s.phase === 'finished' && s.winner && !presentation.locked.value"
-      class="vue-race-winner"
-      ><h2>⚑ {{ s.winner.name }}{{ s.winner.id ? ' 獲勝！' : '' }}</h2
-      ><p>{{ s.winner.reason }}</p
-      ><UiButton label="重播結算演出" icon="replay" @click="presentation.replay()" /><p
-        v-if="presentation.earned.value.length"
-        >解鎖成就：{{ presentation.earned.value.join('、') }} ·
-        <a href="/achievements">查看收藏冊</a></p
-      ></section
+      v-if="s.phase === 'finished' && s.winner"
+      v-show="resultVisible"
+      class="vue-race-results"
+      aria-label="比賽結果"
     >
-    <details class="vue-race-log"
+      <div v-if="winnerCars.length" class="vue-race-results-cars" aria-label="獲勝車隊的戰車">
+        <svg
+          v-for="c in winnerCars"
+          :key="c.id"
+          viewBox="-30 -23 60 46"
+          role="img"
+          :aria-label="sizes[c.size] + (c.dead ? ' · 已淘汰' : '')"
+        >
+          <RaceVehicle
+            :size="c.size"
+            :color="winnerPlayer?.color || '#9d7655'"
+            :disabled="c.dead || c.damage.length >= 2"
+          />
+        </svg>
+      </div>
+      <span class="vue-race-result-badge">比賽結束</span>
+      <h1>{{
+        s.winner.id === s.me ? '你的車隊獲勝' : s.winner.name + (s.winner.id ? ' 獲勝' : '')
+      }}</h1>
+      <p>{{ s.winner.reason }}</p>
+      <div class="vue-race-result-actions">
+        <UiButton
+          stitch
+          variant="secondary"
+          label="結算回顧"
+          icon="history"
+          @click="reviewing = true"
+        />
+        <a href="/achievements">查看獲得成就</a>
+      </div>
+      <p v-if="presentation.earned.value.length" class="vue-race-earned"
+        >解鎖成就：{{ presentation.earned.value.join('、') }}</p
+      >
+      <div id="race-finished-setup-slot" class="vue-race-finished-setup-slot"></div>
+      <StatusSlot :message="model.notice" :error="model.failed" />
+    </section>
+    <section
+      v-if="
+        s.phase === 'finished' &&
+        s.winner &&
+        !resultVisible &&
+        !presentation.locked.value &&
+        !presentation.focus.value
+      "
+      class="vue-race-winner"
+    >
+      <h2>{{ s.winner.name }}{{ s.winner.id ? ' 獲勝！' : '' }}</h2
+      ><p>{{ s.winner.reason }}</p>
+      <UiButton
+        stitch
+        variant="secondary"
+        label="返回結算摘要"
+        icon="previous"
+        @click="reviewing = false"
+      />
+      <UiButton
+        stitch
+        variant="secondary"
+        label="重播結算演出"
+        icon="replay"
+        @click="presentation.replay()"
+      />
+    </section>
+    <details v-show="!resultVisible" class="vue-race-log"
       ><summary>比賽紀錄 · {{ s.log[0] || '準備就緒' }}</summary
       ><ol
         ><li v-for="(line, i) in s.log" :key="i">{{ line }}</li></ol
@@ -423,14 +491,6 @@ const usedCommand = computed(() => {
           : '通過前段會接新道路、移除後段；落在後段的車輛淘汰。'
       }}</p></details
     >
-    <UiDialog ref="legend" title="地形與危險圖例"
-      ><dl class="vue-race-terrain-legend"
-        ><div v-for="(t, key) in terrains" :key="key"
-          ><dt>{{ t.symbol }} {{ t.name }}</dt
-          ><dd>{{ t.help }}</dd></div
-        ></dl
-      ><p>⚠ 表示未揭露危險；規劃路線只使用已公開地形，抵達後才揭示。直升機不能部署在任何危險格。</p
-      ><p>惡魔賽道為地形／危險試玩；目前沒有 21 張持續效果牌。</p></UiDialog
-    >
+    <RaceTerrainDialog ref="legend" />
   </section>
 </template>

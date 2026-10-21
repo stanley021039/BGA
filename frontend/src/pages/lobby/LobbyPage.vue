@@ -34,8 +34,9 @@ const feedback = computed(() =>
     : lobby.entryStatus ||
       (params.has('closedRoom') ? '房間已結束或你已離開，請重新開桌或加入房間。' : ''),
 );
-const drawingCreate = computed(() => selected.value === 'draw' || selected.value === 'telephone');
-const quacksCreate = computed(() => selected.value === 'quacks');
+const drawingCreate = computed(() => selected.value === 'draw');
+const pairCreate = computed(() => ['telephone', 'majority'].includes(selected.value));
+const roomCreate = computed(() => ['quacks', 'thunder', 'bluff'].includes(selected.value));
 const resumes = computed(() => lobby.rooms.filter((room) => room.seated));
 function open() {
   if (selected.value === 'market') return;
@@ -224,14 +225,18 @@ onBeforeUnmount(() => {
     <p class="version-note"><a href="/credits">素材來源與授權</a> · 德州撲克：純娛樂籌碼</p>
     <UiDialog
       ref="create"
-      :stitch="drawingCreate || quacksCreate"
-      :compact="drawingCreate"
-      :class="{ 'vue-lobby-create-d06': drawingCreate, 'vue-lobby-create-quacks': quacksCreate }"
+      :stitch="drawingCreate || roomCreate || pairCreate"
+      :compact="drawingCreate || pairCreate"
+      :class="{
+        'vue-lobby-create-d06': drawingCreate || pairCreate,
+        'vue-lobby-create-room': roomCreate,
+        'vue-lobby-create-pair': pairCreate,
+      }"
       :title="'開一桌' + chosen.title"
       :dismissible="!lobby.entryPending"
       @closing="opened = false"
       @closed="opened = false"
-      ><p v-if="!drawingCreate">使用帳號暱稱入座，遊戲條件可在房間內調整。</p
+      ><p v-if="!drawingCreate && !pairCreate">使用帳號暱稱入座，遊戲條件可在房間內調整。</p
       ><form class="vue-lobby-create" @submit.prevent="submit"
         ><label
           >挑選遊戲<select v-model="selected" :disabled="lobby.entryPending"
@@ -280,12 +285,12 @@ onBeforeUnmount(() => {
             ></template
           ><p v-else>進入房間後，由房主調整本桌設定。</p></div
         ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /><UiButton
-          :stitch="drawingCreate || quacksCreate"
-          :variant="drawingCreate || quacksCreate ? 'primary' : 'secondary'"
-          :icon="drawingCreate ? 'next' : 'add'"
+          :stitch="drawingCreate || roomCreate || pairCreate"
+          :variant="drawingCreate || roomCreate || pairCreate ? 'primary' : 'secondary'"
+          :icon="pairCreate ? undefined : drawingCreate ? 'next' : 'add'"
           type="submit"
           :label="'建立' + chosen.title + '房間'"
-          :caption="drawingCreate ? '建立並進入房間' : undefined"
+          :caption="drawingCreate || pairCreate ? '建立並進入房間' : undefined"
           :pending="lobby.entryPending"
           :disabled="!session.user" /></form
     ></UiDialog>

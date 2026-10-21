@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { useGiftStore } from '../../stores/gift';
 import { useRoomStore } from '../../stores/room';
@@ -72,7 +73,24 @@ document.addEventListener('visibilitychange', visibility);
 onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibility));
 </script>
 <template>
-  <section ref="stage" class="vue-game-panel vue-gift-stage"
+  <RoomWaitingTemplate
+    v-if="state.phase === 'waiting'"
+    type="gift"
+    title="送禮達人"
+    hero-title="朋友集結中，禮物已備，等你送出。"
+    description="3–8 人 · 猜朋友心意，讓送禮與收禮雙分數達標。"
+    art="/assets/playful/game-gift.svg"
+    :facts="[
+      { label: '雙分數共同目標', value: state.target + ' 分' },
+      {
+        label: '玩家投稿禮物比例',
+        value: state.customPercent === null ? '依題庫比例' : state.customPercent + '%',
+      },
+      { label: '開局人數', value: state.players.length + '／8 人；至少 3 人' },
+    ]"
+  />
+
+  <section v-else ref="stage" class="vue-game-panel vue-gift-stage"
     ><header
       ><small>GIVE A LITTLE · KNOW EACH OTHER</small><h1>{{ title }}</h1
       ><p
@@ -82,13 +100,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
       ></header
     >
     <div class="vue-gift-live">
-      <section v-if="state.phase === 'waiting'" class="vue-gift-waiting"
-        ><img src="/assets/stitch/waiting-host.jpg" alt="" /><h2>3–8 位朋友，兩種心意</h2
-        ><p
-          >每輪為每位朋友挑不同禮物，再依序選四件自己的心願。兩項都完成後，由收禮者依序確認，最後一起揭曉分數。</p
-        ><a href="/gifts">查看／投稿自訂禮物</a></section
-      >
-      <template v-else-if="state.phase === 'choosing'">
+      <template v-if="state.phase === 'choosing'">
         <section class="vue-gift-summaries" aria-label="自己的秘密送禮與心願摘要" data-private
           ><div
             ><h2>送禮{{ state.ownAssignments ? ' · 已鎖定' : ' · 尚未鎖定' }}</h2
