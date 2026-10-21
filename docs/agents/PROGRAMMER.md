@@ -1,6 +1,18 @@
 # 程式架構 agent 記憶
 
-2026-10-21停手預估：estimateAlchemy與beginAlchemy共用計算，讀取無副作用；stopEstimate僅對可見recipe投影，隱藏他人鍋null。新增顏色／鄰座去重／占卜／愚人草／上限及隱私回歸，完整2515通過。大廳對話延用原API及事件閘門，最新同人訊息替換並以ID守護清理；依playerId而非姓名綁定。範圍見本批UI-REFINEMENTS-20261021.md。
+2026-10-21本批郎中停手預估：`estimateAlchemy`與`beginAlchemy`共用計算，讀取無副作用；`stopEstimate`僅對可見recipe投影，隱藏他人鍋為null。新增顏色／鄰座去重／占卜／愚人草／上限及隱私回歸。大廳對話延用原API及事件閘門，最新同人訊息替換並以ID守護清理；依playerId而非姓名綁定。範圍見 `docs/UI-REFINEMENTS-20261021.md`。
+
+2026-10-21大廳泡泡與角色選單：角色互動視窗的訊息表單可在關閉時卸載，因此彈幕事件controller由常駐`LobbyStage`持有；選取框由`BarrageFrames.decorate`加到DOM的`barrage-frame-ornate` class同步進Vue reactive class，避免移動定位覆蓋。實際390px Edge驗證選取neon、送出、框內裝飾、148px高度和無橫向溢出；詳 `docs/UI-REFINEMENTS-20261021.md`。
+
+2026-10-21／#158 CI 追修：首輪 Linux 通過、Windows 唯一失敗為系統 tar 未還原中文 PDF（run 39605036532），非動畫回歸。解壓改為固定 Node tar 開發依賴與 strict 模式，追加長中文／emoji 路徑和二進位 bytes 回歸；保留格式 hook。新 head 的測試／CI以PR為準，詳 [故障證據](../specs/ENTRY-INTRO-NAVIGATION-157.md)。
+
+2026-10-21／候選 2.20.2：#157 修正共用進頁 bootstrap 將開房完整導航誤判為新進站；同 origin navigate／history 不重播，reload 與直接進入仍播放，#154 偏好與登入原圖演出保留。完整 2,543 項及前端 6 項通過，Vue 開房／刷新／返回有原生證據；metadata 缺失保守播放與未驗項目見 [導航規格](../specs/ENTRY-INTRO-NAVIGATION-157.md)。尚未合併或部署。
+
+2026-10-21／候選 2.18.2：依最新已審核 C02 v3 實作共用 RoomPlayerCard、十一款 RoomWaitingTemplate／GameSettingsPanel，保留真實資訊並整合郎中公開資源與雷霆教學；接續 RT 22／RW 30 與九款等待室設計。來源、契約與實際驗收界線見[共用與同頻／傳情](../refactors/STITCH-SHARED-PAIR-APPROVED.md)。
+
+2026-10-21／候選 2.18.1：依使用者指定以 main c0ec416 為主整合本地未提交 UI，四個衝突已解。保留 main 功能／郎中／後端與音效，共用 RoomRoster、RoomChat 及線上／教學 RaceCrewDice／RaceDie；來源、決策與驗收見[整合紀錄](../refactors/MAIN-2180-UI-INTEGRATION.md)。未提交、未 push、未 PR、未正式部署。
+
+2026-10-21／候選 2.17.9：C02 玩家卡片及本機車隊共用收斂完成，新增已審核瞎掰王 20 狀態、雷霆之路 42 狀態（含 17 章教學與十地形）。十一遊戲桌機／手機共用區、瞎掰三回合與再玩、Race 開賽及六本機練習已有實際瀏覽器證據；完整範圍、來源與未驗界線見[已審核稿實作](../refactors/STITCH-BLUFF-RACE-APPROVED.md)。未跑測試套件、未發 PR 或正式部署。
 
 2026-10-20：帳號／收藏庫細節修正與角色管理 A01／A09 已依核稿重排，型別／Vite 建置及相關桌機／手機瀏覽器驗證完成；本輪未執行套件，詳 [介面巡檢追加](../refactors/STITCH-SITE-LAYOUT-AUDIT.md)。
 
@@ -857,6 +869,11 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 ## 2026-10-21 全站共用介面巡檢（2.17.7）
 
 共用 ResourcePanel 及指定頁面外框統一採 Stitch 1px／12px／無額外陰影，成就標題與主框對齊並移除群組重框；共編分頁、房間開始／加電腦與資源重試接 UiButton。收藏手機分頁固定等高且計數不換行，送禮名單雙分數同列並清除過時槽位樣式。16 個一般／工具入口、11 款等待室及 7 款遊玩狀態已有桌機／手機取樣；320px 收藏與共編另驗。建置含型別、格式、版本與 diff 檢查通過，未跑自動測試套件。完整依據、實測數值及未驗界線見 [全站版面巡檢](../refactors/STITCH-SITE-LAYOUT-AUDIT.md) 最新區；不可外推為全款完整對局驗收。
-# 2026-10-21 大廳泡泡與角色選單
 
-角色互動視窗的訊息表單可在關閉時卸載，因此彈幕事件 controller 必須由常駐 `LobbyStage` 擁有；選取框由 `BarrageFrames.decorate` 加到 DOM 的 `barrage-frame-ornate` class 須同步進 Vue reactive class，避免移動定位造成下一次 patch 將它移除。實際雙頁面與390px Edge 驗證選取 neon、送出、框內裝飾、148px 高度和無橫向溢出；詳 `docs/UI-REFINEMENTS-20261021.md`。
+2026-10-21 #151：共用 heading／label 繼承容器，selected surface mixin 配對 ink／muted／link／focus，不重綁全域 ink。唯讀 DOM 對比工具區分 hidden／disabled／人工項目，包含原錯誤反例回歸。29 頁量測摘要入版控，147 張原生圖與測試資料只留忽略目錄；全頁畫布不讀應用私有狀態。詳 [表面配色驗收](../specs/SURFACE-CONTRAST-151.md)，保持 Draft 待人工最後檢查／CI，未部署。
+
+2026-10-21 #154 候選2.20.0：entry-intro head bootstrap持有唯一EntryPreferences，Vue／legacy共用，auth成功動畫檢查同一偏好；預設開啟、本瀏覽器保存，關閉不建立可見遮罩或三秒等待。20項回歸及原生雙宿主／四組設定取樣完成，限制見 [開場偏好](../specs/ENTRY-INTRO-PREFERENCE-154.md)。#153已合併f183242，第三份Figma仍受唯讀／額度阻擋，沒有成功同步；本票保持Draft、未部署。
+
+## 2026-10-21 聊天室原稿排版與外框（2.17.8）
+
+C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下，還原原生稿邏輯尺寸並保留 44px 操作區；時間沿用原時間戳／房間 offset，timer 卸載清理。C00 桌機單一矩形框與側欄分隔集中 room-surfaces.scss，手機保留換列並固定聊天室高度、長訊息內捲，遊戲棋盤／內容卡／浮層不套外框清除。共用暖灰色票、body margin、側欄捲動與猜歌空白 gutter 一併整理。11 款桌機／手機、7 款遊玩取樣、320px 長訊息／純文字／返焦及媒體／表情開關已有實際觀察；型別／多頁建置與格式版本檢查通過，未跑自動套件。證據數值與原生全螢幕等未驗界線見 [全站版面巡檢](../refactors/STITCH-SITE-LAYOUT-AUDIT.md) 最新區，不外推為全遊戲功能回歸。

@@ -24,3 +24,5 @@
 Node 回歸測試讀實際 light／dark tokens、解析 alias 並計算相對亮度，正文／次要／選取／錯誤／紙卡配對至少 4.5:1；另外保留舊不合適配對低於 1.2:1 的反例。這不取代完整 cascade 或畫面驗收。
 
 `tests/fixtures/theme-contrast.html` 是測試 fixture，不接 app 路由／DB。瀏覽器載入真實 shared、market、collection CSS，21 個樣本在日夜兩種模式皆至少 5.57:1；含裸 button、既有頁面 tab class、纸卡標題及連結、電話畫猜回顧卡與其原有白色畫布樣式。切換立即取樣通過，390px 寬度無水平溢出，hidden 卡不可見、畫布仍白色。這是共用元件 fixture，沒有認列所有正式頁面／真人遊玩／讀屏、手機實機或其他開發者 bluff 驗收。
+
+2026-10-21 #151 後續表面配對策略、29 頁量測及人工檢查界線見 [表面配色驗收](SURFACE-CONTRAST-151.md)。

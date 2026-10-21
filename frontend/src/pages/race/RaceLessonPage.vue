@@ -2,8 +2,9 @@
 import UiButton from '../../components/UiButton.vue';
 import { useGameFocus } from '../../composables/game-focus';
 import { useRaceLesson } from './useRaceLesson';
-import RaceScene from './RaceScene.vue';
+import RaceLessonScene from './RaceLessonScene.vue';
 import RaceLessonCoach from './RaceLessonCoach.vue';
+import RaceLessonRoster from './RaceLessonRoster.vue';
 import '../../styles/race-lesson.scss';
 const lesson = useRaceLesson(),
   { focused, toggle } = useGameFocus('vue-race-lesson-focus');
@@ -15,12 +16,15 @@ const lesson = useRaceLesson(),
       ><nav aria-label="教學操作"
         ><a class="quiet" :href="lesson.exitHref">離開教學</a
         ><UiButton
+          stitch
           :label="focused ? '退出專注' : '專注全螢幕'"
           :icon="focused ? 'fullscreen_exit' : 'fullscreen'"
           @click="toggle" /></nav></header
     ><div class="vue-race-lesson-layout"
-      ><section class="vue-race-lesson-stage" aria-label="教學棋盤"
-        ><RaceScene
+      ><RaceLessonRoster v-if="lesson.model.state" :state="lesson.model.state" /><section
+        class="vue-race-lesson-stage"
+        aria-label="教學棋盤"
+        ><RaceLessonScene
           v-if="lesson.model.state"
           :key="lesson.sceneKey.value"
           :model="lesson.model" /></section

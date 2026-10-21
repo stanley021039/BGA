@@ -89,6 +89,7 @@ const { HistoryStore } = require('./history/store'),
   { CommunityStore } = require('./community/store');
 const { createRoomRuntime } = require('./rooms/runtime');
 const { createFrontend } = require('./http/frontend');
+const { withEntryIntro } = require('./http/entry-intro');
 const { createRoomTransitions } = require('./rooms/transitions');
 const { botSupport, addTestBot } = require('./ai');
 const { reconnectPlayer } = require('./rooms/reconnect');
@@ -2570,6 +2571,9 @@ function initializeApp(config, dataLock, acquired) {
       for (const name of ['stanley021039', 'x55662306', 'azrael04'])
         for (const width of [64, 88, 176])
           files[`/assets/auth/${name}-${width}.webp`] = `assets/auth/${name}-${width}.webp`;
+      files['/shared/entry-intro.js'] = 'shared/entry-intro.js';
+      files['/shared/auth-entry.js'] = 'shared/auth-entry.js';
+      files['/shared/entry-intro.css'] = 'shared/entry-intro.css';
       const file = roomPath ? roomPath[1] + '.html' : files[url.pathname];
       if (!file) {
         res.writeHead(404);
@@ -2640,8 +2644,12 @@ function initializeApp(config, dataLock, acquired) {
                                                 ? 'text/javascript; charset=utf-8'
                                                 : 'text/html; charset=utf-8',
       );
+      const document =
+        frontend?.readPage(file) || fs.readFileSync(path.join(__dirname, '..', 'public', file));
       res.end(
-        frontend?.readPage(file) || fs.readFileSync(path.join(__dirname, '..', 'public', file)),
+        file.endsWith('.html')
+          ? withEntryIntro(document, { authPage: file === 'login.html' })
+          : document,
       );
     } catch (e) {
       writeError(res, e);

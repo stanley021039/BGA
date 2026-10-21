@@ -34,6 +34,7 @@ function status(p: RoomPlayer) {
 <template>
   <GameRoomPage
     type="musicquiz"
+    score-label="張"
     title="猜歌挑戰"
     description="8秒前奏10選1 · 歌曲年代排序 · 歌王插歌"
     :reader="readMusicQuizSnapshot"
@@ -45,7 +46,9 @@ function status(p: RoomPlayer) {
     :can-start="!dirty && !!s && s.availableCount >= s.players.length + 2"
     @start="room.command('start', {})"
     ><MusicQuizScene v-if="s" :key="room.scope" @dirty="dirty = $event" /><template #settings
-      ><p>在中央選擇題庫並儲存設定。大家共用題庫，音量各自調整。</p></template
+      ><p v-if="s?.phase !== 'waiting'"
+        >在中央選擇題庫並儲存設定。大家共用題庫，音量各自調整。</p
+      ></template
     ><template #help
       ><ol
         ><li

@@ -1,0 +1,102 @@
+// C00 owns the room frame. C02 cards and C03 chat keep their own inner borders;
+// game boards, choice cards, drawing surfaces and top-layer overlays are content.
+:root body[data-visual-theme]:has(.vue-room-shell) {
+  margin: 0;
+}
+
+:root body[data-visual-theme] .vue-room-shell {
+  :is(
+    .vue-game-roster-panel,
+    .vue-game-settings-panel,
+    .vue-game-panel,
+    .vue-draw-roster-panel,
+    .vue-draw-board-panel,
+    .vue-draw-settings-panel,
+    .vue-draw-guess-panel
+  ) {
+    box-sizing: border-box;
+    border: 1px solid var(--stitch-line);
+    border-radius: var(--stitch-panel-radius);
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    box-shadow: none;
+  }
+  .vue-stitch-roster > header {
+    padding-block-end: 8px;
+    border-block-end: 1px solid var(--stitch-line);
+  }
+}
+
+// The roster is a direct room track on every page, including Draw's adapter.
+:root
+  body[data-visual-theme]
+  :is(.vue-game-workspace, .vue-draw-workspace).vue-room-shell
+  > :is(.vue-game-grid, .vue-draw-grid)
+  > :is(.vue-game-roster-panel, .vue-draw-roster-panel) {
+  border: 1px solid var(--stitch-line);
+  border-radius: var(--stitch-panel-radius);
+  box-shadow: none;
+}
+
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root body[data-visual-theme] :is(.vue-game-document, .vue-draw-document):has(.vue-room-shell) {
+    padding-inline: 12px;
+  }
+
+  :root
+    body[data-visual-theme]:not(.ui-large-text)
+    :is(.vue-game-workspace, .vue-draw-workspace).vue-room-shell
+    > :is(.vue-game-grid, .vue-draw-grid) {
+    box-sizing: border-box;
+    column-gap: 0;
+    border: 1px solid var(--stitch-frame);
+    border-radius: 0;
+    background: var(--stitch-base);
+    box-shadow: none;
+
+    > :is(.vue-game-roster-panel, .vue-draw-roster-panel) {
+      border: 0;
+      border-inline-end: 1px solid var(--stitch-frame);
+      border-radius: 0;
+      padding: 12px;
+      background: var(--stitch-base);
+      box-shadow: none;
+    }
+    > :is(.vue-game-main, .vue-draw-main) {
+      box-sizing: border-box;
+      min-inline-size: 0;
+      padding: 12px;
+      border: 0;
+      border-radius: 0;
+      background: var(--stitch-base);
+      box-shadow: none;
+      > .vue-game-panel {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+    > :is(.vue-game-side, .vue-draw-side) {
+      border-inline-start: 1px solid var(--stitch-frame);
+      border-radius: 0;
+      background: var(--stitch-base);
+      box-shadow: none;
+      overflow: hidden;
+      scrollbar-gutter: auto;
+      > :is(.vue-game-settings-panel, .vue-draw-settings-panel) {
+        flex: 0 1 auto;
+        min-block-size: 0;
+        max-block-size: 50%;
+        overflow: auto;
+        scrollbar-gutter: stable;
+      }
+      > .vue-room-chat.vue-chat-c01 {
+        flex: 1 1 0;
+        inline-size: 100%;
+        max-inline-size: none;
+        min-block-size: 0;
+        max-block-size: none;
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import type { QuacksSnapshot, QuacksRecipe, QuacksInsight } from '../../contracts/quacks';
 import '../../styles/quacks-pot.scss';
+import QuacksPublicTray from './QuacksPublicTray.vue';
 const props = defineProps<{ state: QuacksSnapshot; recipe: QuacksRecipe }>(),
   host = ref<HTMLElement | null>(null),
   tooltip = ref<HTMLDivElement | null>(null),
@@ -155,6 +156,7 @@ onBeforeUnmount(() => {
     :class="{ 'is-danger': danger, 'is-exploded': recipe.exploded, 'is-motion-enabled': motion }"
   >
     <div ref="host" class="vue-quacks-pot-art" />
+    <QuacksPublicTray :recipe="recipe" />
     <p v-if="error || recipe.hidden" class="vue-quacks-pot-message" role="status">{{
       error || '這位玩家的大釜尚未公開；爆炸或結算後可查看。'
     }}</p>

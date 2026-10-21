@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { usePartyActionsStore } from '../../stores/party-actions';
@@ -6,11 +7,11 @@ import { usePreferencesStore } from '../../stores/preferences';
 import { useQueuedSave } from '../../composables/queued-save';
 import type { MusicQuizSnapshot } from '../../contracts/musicquiz';
 import UiButton from '../../components/UiButton.vue';
-import UiIcon from '../../components/UiIcon.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FramePreview from '../../components/FramePreview.vue';
 import GameSongClip from '../../components/GameSongClip.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
+import UiIcon from '../../components/UiIcon.vue';
 import '../../../../public/shared/song-title-zh.js';
 import '../../styles/stitch-party-content.scss';
 const emit = defineEmits<{ dirty: [value: boolean] }>();
@@ -167,74 +168,98 @@ const canSlot = (i: number) =>
       !s.value.passed.includes(s.value.me));
 </script>
 <template>
-  <section class="vue-game-panel vue-musicquiz-stage stitch-music-content"
+  <RoomWaitingTemplate
+    v-if="s.phase === 'waiting'"
+    type="musicquiz"
+    title="猜歌挑戰"
+    hero-title="旋律已備，等你聽題。"
+    description="1–8 人 · 前奏猜歌與年代排序"
+    art="/assets/playful/game-musicquiz.svg"
+    :facts="[
+      { label: '年代卡目標', value: target + ' 張' },
+      { label: '所選題庫', value: banks.length + ' 種' },
+      { label: '目前可抽', value: s.availableCount + ' 首' },
+    ]"
+    ><template #settings><div id="room-waiting-settings-content-musicquiz"></div></template
+  ></RoomWaitingTemplate>
+
+  <section
+    v-show="s.phase !== 'waiting'"
+    class="vue-game-panel vue-musicquiz-stage stitch-music-content"
     ><template v-if="setup"
-      ><header class="stitch-setup-heading"
-        ><div
-          ><small>TUNE TIMELINE · 題庫設定</small
-          ><h1>{{ s.phase === 'finished' ? '本場結果' : '題庫挑選與競賽規則' }}</h1
-          ><p>選取本局的音樂年代題庫，從8秒前奏開始挑戰，再將歌曲排入個人時間軸。</p></div
-        ><span class="stitch-host-badge">{{
-          room.host ? '房主自訂中' : '全桌共用題庫'
-        }}</span></header
-      ><p v-if="s.winner">年代冠軍：{{ s.winner.names.join('、') }} · {{ s.winner.score }}張</p
-      ><fieldset
-        :disabled="!room.host || blocked"
-        @input="markSettingsInput"
-        @change="queueSettings"
-        class="stitch-setup-sheet"
-        ><legend><UiIcon name="cards" />語言與分類</legend
-        ><div class="mq-banks"
-          ><label v-for="bank in s.banks" :key="bank.id" class="mq-bank"
-            ><input v-model="banks" type="checkbox" :value="bank.id" /><UiIcon
-              :name="bank.id === 'viral' ? 'star' : bank.id === 'custom' ? 'edit' : 'music'"
-              class="mq-bank-icon"
-            /><span class="mq-bank-check" aria-hidden="true">{{
-              banks.includes(bank.id) ? '✓' : '○'
-            }}</span
-            ><strong>{{ bank.label }}</strong
-            ><span class="mq-bank-description">{{
-              bank.id === 'custom'
-                ? '本局匯入的自選歌曲'
-                : bank.id === 'foreign'
-                  ? '英文以外的其他外文'
-                  : '熱門代表作與經典歌曲'
-            }}</span
-            ><span class="mq-bank-count">{{ bank.count }} 首</span></label
+      ><Teleport
+        :to="s.phase === 'waiting' ? '#room-waiting-settings-content-musicquiz' : 'body'"
+        :disabled="s.phase !== 'waiting'"
+        defer
+        ><div class="vue-waiting-music-settings stitch-music-content"
+          ><header class="stitch-setup-heading"
+            ><div
+              ><small>TUNE TIMELINE · 題庫設定</small
+              ><h1>{{ s.phase === 'finished' ? '本場結果' : '題庫挑選與競賽規則' }}</h1
+              ><p>選取本局的音樂年代題庫，從8秒前奏開始挑戰，再將歌曲排入個人時間軸。</p></div
+            ><span class="stitch-host-badge">{{
+              room.host ? '房主自訂中' : '全桌共用題庫'
+            }}</span></header
+          ><p v-if="s.winner">年代冠軍：{{ s.winner.names.join('、') }} · {{ s.winner.score }}張</p
+          ><fieldset
+            :disabled="!room.host || blocked"
+            @input="markSettingsInput"
+            @change="queueSettings"
+            class="stitch-setup-sheet"
+            ><legend><UiIcon name="cards" />語言與分類</legend
+            ><div class="mq-banks"
+              ><label v-for="bank in s.banks" :key="bank.id" class="mq-bank"
+                ><input v-model="banks" type="checkbox" :value="bank.id" /><UiIcon
+                  :name="bank.id === 'viral' ? 'star' : bank.id === 'custom' ? 'edit' : 'music'"
+                  class="mq-bank-icon"
+                /><span class="mq-bank-check" aria-hidden="true">{{
+                  banks.includes(bank.id) ? '✓' : '○'
+                }}</span
+                ><strong>{{ bank.label }}</strong
+                ><span class="mq-bank-description">{{
+                  bank.id === 'custom'
+                    ? '本局匯入的自選歌曲'
+                    : bank.id === 'foreign'
+                      ? '英文以外的其他外文'
+                      : '熱門代表作與經典歌曲'
+                }}</span
+                ><span class="mq-bank-count">{{ bank.count }} 首</span></label
+              ></div
+            ><details
+              ><summary>曲風篩選</summary
+              ><label v-for="genre in s.genres" :key="genre"
+                ><input v-model="genres" type="checkbox" :value="genre" />{{ genre }}</label
+              ></details
+            ><div class="stitch-settings-grid"
+              ><label
+                >獲勝目標<strong>率先集齊年代卡</strong
+                ><input v-model.number="target" type="number" min="3" max="10" /></label
+              ><div
+                ><small>前奏猜答限制</small
+                ><strong>{{ s.settings.introSeconds }} 秒試聽前奏</strong></div
+              ><div><small>年代排序規則</small><strong>依年代排列，同年可相鄰</strong></div
+              ><div><small>歌王插歌起始標記</small><strong>每人起始 2 枚標記</strong></div></div
+            ><label><input v-model="obscure" type="checkbox" />混入冷門挑戰（最多約10%）</label
+            ><details
+              ><summary>自己的題庫</summary
+              ><p>每行：歌名 | 歌手 | 首發年 | YouTube網址或ID | 前奏起點 | 精華起點</p
+              ><textarea v-model="custom" rows="4" aria-label="自選歌曲題庫" /></details></fieldset
+          ><UiButton
+            v-if="room.host && settingsSave.error.value"
+            icon="refresh"
+            label="重試儲存題庫"
+            :disabled="blocked"
+            @click="saveNow"
+          /><p role="status"
+            >目前可抽 {{ s.availableCount }} 首{{
+              settingsSave.pending.value
+                ? ' · 正在儲存題庫…'
+                : dirty
+                  ? ' · 儲存未完成，請重試儲存'
+                  : ' · 可開始遊戲'
+            }}</p
           ></div
-        ><details
-          ><summary>曲風篩選</summary
-          ><label v-for="genre in s.genres" :key="genre"
-            ><input v-model="genres" type="checkbox" :value="genre" />{{ genre }}</label
-          ></details
-        ><div class="stitch-settings-grid"
-          ><label
-            >獲勝目標<strong>率先集齊年代卡</strong
-            ><input v-model.number="target" type="number" min="3" max="10" /></label
-          ><div
-            ><small>前奏猜答限制</small
-            ><strong>{{ s.settings.introSeconds }} 秒試聽前奏</strong></div
-          ><div><small>年代排序規則</small><strong>依年代排列，同年可相鄰</strong></div
-          ><div><small>歌王插歌起始標記</small><strong>每人起始 2 枚標記</strong></div></div
-        ><label><input v-model="obscure" type="checkbox" />混入冷門挑戰（最多約10%）</label
-        ><details
-          ><summary>自己的題庫</summary
-          ><p>每行：歌名 | 歌手 | 首發年 | YouTube網址或ID | 前奏起點 | 精華起點</p
-          ><textarea v-model="custom" rows="4" aria-label="自選歌曲題庫" /></details></fieldset
-      ><UiButton
-        v-if="room.host && settingsSave.error.value"
-        icon="refresh"
-        label="重試儲存題庫"
-        :disabled="blocked"
-        @click="saveNow"
-      /><p role="status"
-        >目前可抽 {{ s.availableCount }} 首{{
-          settingsSave.pending.value
-            ? ' · 正在儲存題庫…'
-            : dirty
-              ? ' · 儲存未完成，請重試儲存'
-              : ' · 可開始遊戲'
-        }}</p
+        ></Teleport
       ></template
     >
     <template v-else
@@ -277,6 +302,7 @@ const canSlot = (i: number) =>
             :data-ui-hint="s.song && translated(s.song.title, s.song.language) ? '' : undefined"
             :tabindex="s.song ? 0 : undefined"
             >{{ s.song?.title || '神秘曲目 #' + s.round }}</h2
+          >
           ><p>{{
             s.song
               ? s.song.artist + ' · ' + s.song.year

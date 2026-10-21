@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { Teleport, computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useDrawResultsStore } from '../../stores/draw-results';
 import { useRequests } from '../../composables/requests';
@@ -443,6 +443,7 @@ onBeforeUnmount(() => {
     >
       <aside class="vue-draw-roster-panel"
         ><RoomRoster
+          :show-metric="state?.phase !== 'waiting'"
           :snapshot="state"
           :max-players="8"
           :actor-id="state?.presenterId"
@@ -550,21 +551,25 @@ onBeforeUnmount(() => {
           :snapshot="state"
       /></main>
       <aside class="vue-draw-side"
-        ><section
-          v-if="state"
-          v-show="setup"
-          ref="settingsSection"
-          tabindex="-1"
-          class="vue-draw-settings-panel"
-          ><DrawSettings ref="settings" :snapshot="state" /><UiButton
-            stitch
-            variant="primary"
-            v-if="room.host"
-            :icon="state.phase === 'finished' ? 'replay' : 'play'"
-            :label="state.phase === 'finished' ? '再玩一局' : '開始遊戲'"
-            :pending="preparing || room.busy"
-            :disabled="state.players.length < 2"
-            @click="start" /></section
+        ><Teleport
+          :to="state?.phase === 'waiting' ? '#room-waiting-settings-draw' : 'body'"
+          :disabled="state?.phase !== 'waiting'"
+          defer
+          ><section
+            v-if="state"
+            v-show="setup"
+            ref="settingsSection"
+            tabindex="-1"
+            class="vue-draw-settings-panel"
+            ><DrawSettings ref="settings" :snapshot="state" /><UiButton
+              stitch
+              variant="primary"
+              v-if="room.host"
+              :icon="state.phase === 'finished' ? 'replay' : 'play'"
+              :label="state.phase === 'finished' ? '再玩一局' : '開始遊戲'"
+              :pending="preparing || room.busy"
+              :disabled="state.players.length < 2"
+              @click="start" /></section></Teleport
         ><RoomChat ref="chat"
           ><template #tools><RoomMedia :connected="connected" /></template></RoomChat
       ></aside> </div

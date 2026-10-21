@@ -65,7 +65,7 @@ function status(p: RoomPlayer) {
       ></template
     >
     <template #settings
-      ><details class="vue-gift-settings"
+      ><details :open="state?.phase === 'waiting'" class="vue-gift-settings"
         ><summary
           >雙分數目標 {{ state?.target }} · 投稿
           {{ state?.customPercent === null ? '依題庫比例' : state?.customPercent + '%' }}</summary

@@ -1,0 +1,81 @@
+// RB02 is an unseated entry card; RD05 shares the lobby creation dialog.
+:root body[data-visual-theme] .vue-game-entry.vue-game-entry-approved {
+  box-sizing: border-box;
+  min-block-size: calc(100dvh - 128px);
+  padding: 24px;
+  > div {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 40px;
+    inline-size: min(980px, 100%);
+    min-inline-size: 0;
+    padding: 32px;
+    border: 1px solid var(--stitch-line);
+    border-radius: var(--stitch-panel-radius);
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    box-shadow: none;
+  }
+  .vue-game-entry-art {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    border-radius: 16px;
+  }
+  .vue-game-entry-copy {
+    min-inline-size: 0;
+    small {
+      color: var(--stitch-muted);
+      font-size: 12px;
+      line-height: 18px;
+    }
+    h1 {
+      margin: 0 0 24px;
+      font-size: 36px;
+      line-height: 1.5;
+    }
+    p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 24px;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-game-entry-actions {
+    gap: 12px;
+    margin-block-start: 24px;
+    min-block-size: 44px;
+    > a {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+      color: var(--stitch-link);
+    }
+  }
+  .frontend-status {
+    min-block-size: 24px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 24px;
+  }
+}
+@media (max-width: 760px) {
+  :root body[data-visual-theme] .vue-game-entry.vue-game-entry-approved {
+    padding: 12px 0;
+    > div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+      padding: 20px;
+    }
+    .vue-game-entry-art {
+      max-inline-size: 436px;
+      margin-inline: auto;
+    }
+    .vue-game-entry-copy h1 {
+      font-size: 28px;
+      margin-block-end: 12px;
+    }
+  }
+}

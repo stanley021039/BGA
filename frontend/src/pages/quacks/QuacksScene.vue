@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
 import { useRoomStore } from '../../stores/room';
 import { useAchievementsStore } from '../../stores/achievements';
 import QuacksPlay from './QuacksPlay.vue';
+import QuacksWaitingHero from './QuacksWaitingHero.vue';
 import QuacksPot from './QuacksPot.vue';
 import QuacksCommands from './QuacksCommands.vue';
 import QuacksGlyph from './QuacksGlyph.vue';
@@ -120,31 +122,20 @@ onBeforeUnmount(() => {
     class="vue-game-panel vue-quacks-stage"
     :class="{ 'is-waiting': state.phase === 'waiting', 'has-board': boardVisible }"
   >
-    <section v-if="state.phase === 'waiting'" class="vue-quacks-waiting" aria-label="組隊房間介紹">
-      <div class="vue-quacks-ready" role="status"
-        ><strong>{{
-          state.players.length >= 2 ? '人數達標，房主可隨時開始' : '入座成功，等朋友一起開桌'
-        }}</strong
-        ><span>目前 {{ state.players.length }} 人已入座，藥袋與大釜已備妥</span></div
-      >
-      <div class="vue-quacks-waiting-hero"
-        ><span>CLASSIC MODE · 2–8 人一起煮藥</span
-        ><img src="/assets/playful/game-quacks.svg" alt="郎中闖江湖遊戲插畫" /><h1
-          >郎中闖江湖 <small>Quacks</small></h1
-        ><p>朋友集結中，藥袋已備，等房主開釜。</p
-        ><p>九回合同步抽藥，逐色共選本局藥材效果。可加入草藥女巫與煉金術士。</p
-        ><UiButton
-          stitch
-          variant="secondary"
-          icon="book"
-          label="搭配本局藥材書"
-          @click="open('books')"
-        /><div class="vue-quacks-waiting-facts"
-          ><span>全員一起抽<br />同步煮藥</span><span>9 回合累計<br />對局回合</span
-          ><span>逐色共選效果<br />本局藥材</span></div
-        ></div
-      >
-    </section>
+    <RoomWaitingTemplate
+      v-if="state.phase === 'waiting'"
+      type="quacks"
+      title="郎中闖江湖"
+      hero-title="藥袋已備，等房主開釜。"
+      description="2–8 人 · 九回合同步煮藥"
+      hero-description="九回合同步抽藥，逐色共選本局藥材效果。可加入草藥女巫與煉金術士。"
+      :facts="[
+        { label: '草藥女巫', value: state.options.witches ? '已啟用' : '未啟用' },
+        { label: '煉金術士', value: state.options.alchemists ? '已啟用' : '未啟用' },
+        { label: '大釜進度', value: state.options.hiddenProgress ? '隱藏他人' : '公開' },
+      ]"
+      ><template #art><QuacksWaitingHero art-only /></template
+    ></RoomWaitingTemplate>
     <template v-else>
       <header class="vue-quacks-scene-header"
         ><nav class="vue-quacks-pot-tabs" aria-label="切換大釜">
@@ -369,7 +360,7 @@ onBeforeUnmount(() => {
     </template>
   </section>
   <UiDialog ref="tools" :title="title"
-    ><nav class="vue-quacks-tabs" aria-label="遊戲工具"
+    ><nav v-if="tab !== 'books'" class="vue-quacks-tabs" aria-label="遊戲工具"
       ><button
         v-for="(label, key) in tabs"
         :key="key"

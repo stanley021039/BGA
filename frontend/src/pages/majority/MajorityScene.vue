@@ -1,27 +1,35 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useMajorityStore } from '../../stores/majority';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
+import UiIcon from '../../components/UiIcon.vue';
+import UiPopover from '../../components/UiPopover.vue';
 import QuestionEditor from './QuestionEditor.vue';
 import QuestionPreview from './QuestionPreview.vue';
 import PrepareDialog from './PrepareDialog.vue';
 import MajorityTeams from './MajorityTeams.vue';
 import MajorityResults from './MajorityResults.vue';
+import MajoritySetup from './MajoritySetup.vue';
 import { majorityKindLabels } from '../../contracts/majority';
-import '../../styles/stitch-party-content.scss';
 import { useMajorityPresentation } from './useMajorityPresentation';
 const room = useRoomStore(),
   game = useMajorityStore(),
   s = computed(() => game.state),
   root = ref<HTMLElement | null>(null),
+  live = ref<HTMLElement | null>(null),
+  composing = ref(false),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
-  prepare = ref<InstanceType<typeof PrepareDialog> | null>(null);
+  prepare = ref<InstanceType<typeof PrepareDialog> | null>(null),
+  reactor = ref<InstanceType<typeof UiPopover> | null>(null);
 const presentation = useMajorityPresentation(root),
-  blocked = computed(() => room.busy || game.uncertain || !!room.terminal),
+  blocked = computed(
+    () => !room.connected || room.busy || game.pending || game.uncertain || !!room.terminal,
+  ),
   spectator = computed(
     () => !!s.value?.players.find((p) => p.id === s.value?.me)?.waitingForNextRound,
   ),
@@ -49,11 +57,79 @@ async function confirmed(action: string, text: string) {
 }
 watch(
   () => game.context,
-  () => confirm.value?.cancel(),
+  () => {
+    confirm.value?.cancel();
+    reactor.value?.close(false);
+  },
 );
+let disposed = false,
+  scrollRevision = 0;
+watch([() => room.scope, () => s.value?.round, () => s.value?.phase], async () => {
+  composing.value = false;
+  const revision = ++scrollRevision;
+  await nextTick();
+  if (!disposed && revision === scrollRevision && live.value) live.value.scrollTop = 0;
+});
+async function submitAnswer() {
+  if (composing.value || blocked.value || game.expired) return;
+  await game.answer();
+}
+onBeforeUnmount(() => {
+  disposed = true;
+  scrollRevision++;
+  confirm.value?.cancel();
+});
 </script>
 <template>
-  <section v-if="s" ref="root" class="vue-majority-scene vue-game-panel stitch-club-content"
+  <RoomWaitingTemplate
+    v-if="s && s.phase === 'waiting'"
+    type="majority"
+    :title="
+      s.tournament?.mode === 'music'
+        ? '猜歌2選1'
+        : s.tournament?.mode === 'scenario'
+          ? '情境2選1'
+          : s.cruel
+            ? '殘酷2選1'
+            : '同頻俱樂部'
+    "
+    hero-title="朋友到齊，默契就位。"
+    description="一起選題、回答，看看誰與你最同頻。"
+    art="/assets/playful/game-majority.svg"
+    :facts="[
+      {
+        label: s.tournament ? '淘汰賽規模' : '本局題數',
+        value: s.tournament
+          ? s.tournament.size + ' 強 · ' + s.roundLimit + ' 場'
+          : s.roundLimit + ' 題',
+      },
+      { label: '開局人數', value: s.players.length + ' 人' },
+      {
+        label: '計分玩法',
+        value: s.tournament
+          ? '秘密投票 · 多數晉級'
+          : s.cruel?.solo
+            ? '單人偏好回顧'
+            : s.cruel?.rules === 'teams'
+              ? '兩人一隊'
+              : s.cruel
+                ? '殘酷2選1'
+                : '同頻回答',
+      },
+    ]"
+    ><template #hero-actions
+      ><UiButton
+        v-if="!s.cruel && !s.tournament"
+        stitch
+        icon="book"
+        :label="`預備題目（我 ${s.ownQueue.length}/5）`"
+        :disabled="blocked"
+        @click="prepare?.open($event.currentTarget as HTMLElement)" /></template
+    ><template #summary-extra><MajorityTeams /></template
+    ><template #settings><MajoritySetup /></template
+  ></RoomWaitingTemplate>
+
+  <section v-else-if="s" ref="root" class="vue-majority-scene" :data-phase="s.phase"
     ><header class="vue-majority-scene-heading"
       ><small
         >{{
@@ -85,28 +161,20 @@ watch(
         urgent
       /><span>{{ s.answeredIds.length }} / {{ s.participantIds.length }} 人交卷</span></div
     >
-    <div class="vue-majority-live">
-      <template v-if="s.phase === 'waiting'"
-        ><p>{{
-          s.cruel
-            ? s.cruel.rules === 'teams'
-              ? '4／6／8 人，兩人一隊，隊友答案相同得 1 分。'
-              : '1–12 人，固定十題；單人只記錄偏好。'
-            : '3–12 人，輪流挑題，所有人都能回答。選擇題同頻 +1 分，填空題 +2 分。'
-        }}</p
-        ><MajorityTeams /><p v-if="s.cruel"
-          >60 張原創雙圖題，每人整局可換題一次。開局參與者離席會中止本局。</p
-        ><p v-else>可以先挑共用題庫或寫預備題，未揭題前只有本人能看到內容。</p></template
-      >
-      <template v-else-if="s.phase === 'choosing'"
+    <div ref="live" class="vue-majority-live">
+      <template v-if="s.phase === 'choosing'"
         ><p v-if="spectator">你會從下一題開始參與，現在可以先準備題目。</p
         ><template v-else-if="game.canAsk"
           ><div class="vue-majority-tabs"
             ><UiButton
+              stitch
               label="自動抽題"
+              :variant="game.source === 'bank' ? 'primary' : 'secondary'"
               :aria-pressed="game.source === 'bank'"
               @click="game.source = 'bank'" /><UiButton
+              stitch
               label="自己出題"
+              :variant="game.source === 'custom' ? 'primary' : 'secondary'"
               :aria-pressed="game.source === 'custom'"
               @click="game.source = 'custom'" /></div
           ><template v-if="game.source === 'bank'"
@@ -135,7 +203,9 @@ watch(
                 :key="question.id || i"
                 ><QuestionPreview :question="question" compact
                   ><UiButton
+                    stitch
                     icon="check"
+                    variant="primary"
                     label="使用這題"
                     :disabled="blocked"
                     @click="
@@ -159,7 +229,10 @@ watch(
           ><div
             v-if="s.question.type !== 'blank'"
             class="vue-majority-answer-options"
-            :class="{ 'has-three': s.question.type === 'three' }"
+            :class="{
+              'has-three': s.question.type === 'three',
+              'has-images': s.question.images.length > 0,
+            }"
             ><button
               v-for="(option, i) in s.question.options"
               :key="i"
@@ -168,21 +241,27 @@ watch(
               :disabled="blocked || !game.participant || s.ownAnswer !== null || game.expired"
               :class="{ 'is-selected': (s.ownAnswer ?? game.choice) === i }"
               @click="game.choice = i"
-              ><span
-                >{{ String.fromCharCode(65 + i)
-                }}{{ (s.ownAnswer ?? game.choice) === i ? ' · 我的選擇 ✓' : '' }}</span
+              ><span>{{ String.fromCharCode(65 + i) }}</span
               ><img
                 v-if="s.question.images[i]"
                 :src="s.question.images[i]"
                 :alt="option"
                 width="420"
                 height="270"
-              /><strong>{{ option }}</strong></button
+              /><strong>{{ option }}</strong
+              ><span class="vue-majority-choice-mark"
+                ><UiIcon
+                  v-if="(s.ownAnswer ?? game.choice) === i"
+                  :name="s.ownAnswer !== null ? 'lock' : 'check'"
+                /><span v-if="(s.ownAnswer ?? game.choice) === i" class="ui-sr-only">{{
+                  s.ownAnswer !== null ? '已鎖定' : '已選擇'
+                }}</span></span
+              ></button
             ></div
           ><form
             v-else-if="s.ownAnswer === null && game.participant"
             id="majority-answer-form"
-            @submit.prevent="game.answer()"
+            @submit.prevent="submitAnswer"
             ><label
               >你覺得最多人會想到什麼？<input
                 v-model="game.draft"
@@ -190,6 +269,12 @@ watch(
                 required
                 autocomplete="off"
                 :disabled="blocked || game.expired"
+                @compositionstart="composing = true"
+                @compositionend="composing = false"
+                @keydown.enter="
+                  ($event.isComposing || composing || $event.keyCode === 229) &&
+                  $event.preventDefault()
+                "
                 placeholder="一個簡短、具體的答案" /></label></form
           ><p v-if="s.ownAnswer !== null" class="vue-majority-banner"
             >答案已鎖定：{{
@@ -207,7 +292,12 @@ watch(
         ><MajorityResults :focus-id="presentation.focusId.value" /><div
           v-if="s.phase === 'reveal' && !s.cruel"
           class="vue-majority-actions"
-          ><UiButton icon="replay" label="重播答案焦點" @click="presentation.replay()" /><UiButton
+          ><UiButton
+            stitch
+            icon="replay"
+            label="重播答案焦點"
+            @click="presentation.replay()" /><UiButton
+            stitch
             v-if="presentation.focus.value"
             label="略過演出"
             @click="presentation.stop()" /></div
@@ -225,6 +315,7 @@ watch(
               ></select
             ></label
           ><UiButton
+            stitch
             icon="check"
             label="合併答案"
             :disabled="
@@ -248,9 +339,8 @@ watch(
             ><strong>{{ player.name }}</strong
             ><span>{{ player.score }} 分</span></p
           ></div
-        ><MajorityResults :recap="!!s.cruel"
-      /></template>
-    </div>
+        ><MajorityResults :recap="!!s.cruel" /></template
+    ></div>
     <div class="vue-majority-feedback"
       ><StatusSlot
         :message="
@@ -259,6 +349,7 @@ watch(
         "
         :error="game.failed"
       /><UiButton
+        stitch
         v-if="game.uncertain"
         icon="refresh"
         label="更新狀態後再操作"
@@ -270,19 +361,26 @@ watch(
     >
     <footer class="vue-majority-footer"
       ><div class="vue-majority-primary-actions"
+        ><div v-if="s.phase === 'finished'" id="majority-next-settings"></div
+        ><div v-if="s.phase === 'finished'" id="majority-replay-slot"></div
         ><template v-if="s.phase === 'choosing'"
           ><UiButton
+            stitch
             v-if="game.canAsk && game.source === 'bank'"
             icon="shuffle"
+            variant="primary"
             :label="s.candidates.length ? '再抽三題' : '抽三題'"
             :disabled="blocked"
             @click="game.act('draw', { topic: game.topic, type: game.kind })" /><UiButton
+            stitch
             v-else-if="game.canAsk"
             type="submit"
             form="majority-custom-form"
             icon="send"
+            variant="primary"
             label="送出題目"
             :disabled="blocked" /><UiButton
+            stitch
             v-else-if="room.host"
             icon="next"
             label="換下一位出題"
@@ -290,72 +388,91 @@ watch(
             @click="game.act('pass')" /></template
         ><template v-if="s.phase === 'answering' && game.participant"
           ><UiButton
+            stitch
             v-if="s.ownAnswer === null"
             icon="lock"
+            variant="primary"
             label="鎖定答案"
             :disabled="
               blocked ||
               game.expired ||
+              composing ||
               (s.question?.type === 'blank' ? !game.draft.trim() : game.choice === null)
             "
-            @click="game.answer()" /><UiButton
+            @click="submitAnswer" /><UiButton
+            stitch
             v-else
             icon="undo"
             label="收回答案"
             :disabled="blocked || game.expired"
             @click="game.act('withdraw')" /><UiButton
+            stitch
             v-if="s.cruel"
             icon="refresh"
             :label="s.cruel.skipRemaining ? '換一題（剩 1 次）' : '換題已用完'"
             :disabled="blocked || game.expired || !s.cruel.canReplace"
             @click="confirmed('replace', '使用本局唯一一次換題？目前尚未有人交卷。')" /><UiButton
+            stitch
             v-if="room.host && !s.cruel"
             label="提前結束作答"
             :disabled="blocked"
             @click="confirmed('close', '提前結束本題？未交卷的朋友本題不計分。')" /></template
         ><template v-if="s.phase === 'review' && room.host"
           ><UiButton
+            stitch
             icon="undo"
             label="還原原始分組"
             :disabled="blocked"
             @click="game.act('resetGroups')" /><UiButton
+            stitch
             icon="check"
+            variant="primary"
             label="確認計分"
             :disabled="blocked"
             @click="game.act('score')" /></template
         ><UiButton
+          stitch
           v-if="s.phase === 'reveal' && (room.host || s.presenterId === s.me)"
           icon="next"
+          variant="primary"
           :label="s.round >= s.roundLimit ? '查看本局結果' : '開始下一題'"
           :disabled="blocked"
           @click="game.act('next')" /></div
-      ><div v-if="!s.cruel" class="vue-majority-social"
+      ><div v-if="!s.cruel && s.phase !== 'finished'" class="vue-majority-social"
         ><UiButton
+          stitch
           icon="book"
           :label="`預備題目（我 ${s.ownQueue.length}/5）`"
-          :disabled="blocked || s.phase === 'finished'"
-          @click="prepare?.open($event.currentTarget as HTMLElement)"
-        /><details
-          ><summary>表情互動 · 全桌預備 {{ s.queueCount }} 題</summary
-          ><div class="vue-majority-reaction-buttons"
-            ><button
-              v-for="emoji in ['👍', '❤️', '😂', '😮', '😭', '🔥', '👏', '🤔']"
-              :key="emoji"
-              type="button"
-              :aria-label="'送出 ' + emoji"
-              :disabled="blocked"
-              @click="game.act('react', { emoji })"
-              >{{ emoji }}</button
-            ></div
-          ></details
-        ></div
-      ></footer
-    >
+          :disabled="blocked"
+          @click="prepare?.open($event.currentTarget as HTMLElement)" /><UiButton
+          stitch
+          variant="secondary"
+          icon="emoji"
+          :label="'表情互動 · 全桌預備 ' + s.queueCount + ' 題'"
+          :aria-expanded="!!reactor?.visible"
+          aria-controls="majority-game-reactions"
+          aria-haspopup="dialog"
+          :disabled="blocked"
+          @click="reactor?.open($event.currentTarget as HTMLElement)" /></div
+    ></footer>
     <div class="vue-majority-reactions" aria-hidden="true"
       ><p v-for="reaction in game.reactions" :key="reaction.id"
         >{{ reaction.emoji }} <small>{{ name(reaction.player) }}</small></p
       ></div
     >
-    <ConfirmDialog ref="confirm" /><PrepareDialog ref="prepare" />
+    <UiPopover id="majority-game-reactions" ref="reactor" title="同頻表情互動"
+      ><div class="vue-majority-reaction-buttons"
+        ><button
+          v-for="emoji in ['👍', '❤️', '😂', '😮', '😭', '🔥', '👏', '🤔']"
+          :key="emoji"
+          type="button"
+          :aria-label="'送出 ' + emoji"
+          :disabled="blocked"
+          @click="game.act('react', { emoji })"
+          >{{ emoji }}</button
+        ></div
+      ></UiPopover
+    ><ConfirmDialog stitch ref="confirm" />
   </section>
+  <PrepareDialog ref="prepare" />
 </template>

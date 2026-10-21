@@ -35,7 +35,7 @@ npm run format:check
 
 ## 安裝與平台
 
-工具使用 Node.js、Git 及系統 `tar`；Windows 可使用 Git for Windows 與系統 `tar.exe`，Linux 使用一般 Git／tar。hook 使用 LF 行尾，Linux 安裝工具會將其設為可執行。
+工具使用 Node.js、Git 及 lockfile 固定的開發依賴 `tar`。兩平台以同一個 Node 解壓實作還原 Git UTF-8 路徑，使用同步 strict 模式；損壞封存或不安全路徑報錯並阻擋推送。避免 Windows 系統 bsdtar 版本／locale 導致中文路徑遺失，以及 MSYS tar 將磁碟機冒號視為遠端路徑。hook 使用 LF 行尾，Linux 安裝工具會將其設為可執行。
 
 安裝工具在 CI 及不含 `.git` 的來源封存包中跳過，此設定作用於本機 Git repository，共用它的 worktree 也會沿用；各 worktree 應先更新至包含 `.githooks` 的版本。若已有不同的 `core.hooksPath`，安裝會明確失敗並保留原設定；請先整合既有 hooks，再重新安裝，不能直接覆蓋其他檢查。使用 `--ignore-scripts` 安裝依賴後，必須另行執行 `npm run hooks:install`。
 

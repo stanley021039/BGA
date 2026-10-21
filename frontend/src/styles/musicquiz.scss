@@ -149,7 +149,7 @@
     .vue-game-document {
       block-size: 100dvh;
       height: 100dvh;
-      padding: 0 24px 8px;
+      padding: 0 12px 8px;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
     }
@@ -169,12 +169,15 @@
     .vue-game-grid {
       min-block-size: 0;
     }
-    .vue-game-main,
-    .vue-game-side {
+    .vue-game-main {
       min-block-size: 0;
       overflow: auto;
       scrollbar-gutter: stable;
       overscroll-behavior: contain;
+      gap: 0.5rem;
+    }
+    .vue-game-side {
+      min-block-size: 0;
       gap: 0.5rem;
     }
     .vue-game-roster-panel {
