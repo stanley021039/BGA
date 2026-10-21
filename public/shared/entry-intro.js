@@ -1,6 +1,70 @@
 /* Three-second entry animation; authentication credentials remain untouched. */
 (() => {
   'use strict';
+  // One browser-wide preference owner, shared by Vue, legacy and auth entry.
+  // This script is blocking in <head>, before the overlay can be painted.
+  const preferenceKey = 'bga-entry-intro-settings';
+  const listeners = new Set();
+  function readPreference() {
+    let saved;
+    try {
+      saved = localStorage.getItem(preferenceKey);
+    } catch {
+      return { enabled: true, persisted: false };
+    }
+    try {
+      const value = JSON.parse(saved || 'null');
+      return { enabled: !(value?.version === 1 && value.enabled === false), persisted: true };
+    } catch {
+      return { enabled: true, persisted: true };
+    }
+  }
+  function clearCompletion() {
+    try {
+      window.sessionStorage.removeItem('bga-entry-intro-completed');
+    } catch {
+      /* Optional UI state. */
+    }
+    try {
+      document.cookie = 'bga_entry_intro=; Max-Age=0; Path=/; SameSite=Lax';
+    } catch {
+      /* Optional UI state. */
+    }
+  }
+  function notifyPreference() {
+    const value = readPreference();
+    document.documentElement.classList.toggle('entry-intro-disabled', !value.enabled);
+    if (!value.enabled) clearCompletion();
+    for (const listener of listeners) listener({ ...value });
+    return value;
+  }
+  window.EntryPreferences = {
+    get: readPreference,
+    set(enabled) {
+      if (typeof enabled !== 'boolean') return readPreference();
+      try {
+        localStorage.setItem(preferenceKey, JSON.stringify({ version: 1, enabled }));
+      } catch {
+        // Do not pretend the browser saved an opt-out it cannot restore.
+        const value = { ...readPreference(), persisted: false };
+        document.documentElement.classList.toggle('entry-intro-disabled', !value.enabled);
+        for (const listener of listeners) listener({ ...value });
+        return value;
+      }
+      clearCompletion();
+      return notifyPreference();
+    },
+    subscribe(listener) {
+      listeners.add(listener);
+      listener(readPreference());
+      return () => listeners.delete(listener);
+    },
+  };
+  window.addEventListener('storage', (event) => {
+    if (event.key === null || event.key === preferenceKey) notifyPreference();
+  });
+  window.addEventListener('pageshow', notifyPreference);
+  notifyPreference();
   let skipInitial = false;
   try {
     const record = JSON.parse(window.sessionStorage.getItem('bga-entry-intro-completed') || 'null');
@@ -14,12 +78,12 @@
   } catch {
     /* Optional handoff state must never block entry. */
   }
-  if (!skipInitial) {
+  {
     try {
       const match = (document.cookie || '').match(/(?:^|;\s*)bga_entry_intro=([^;]+)/);
       const record = match && JSON.parse(decodeURIComponent(match[1]));
       if (match) document.cookie = 'bga_entry_intro=; Max-Age=0; Path=/; SameSite=Lax';
-      skipInitial =
+      skipInitial ||=
         !!record &&
         Number.isFinite(record.at) &&
         Date.now() - record.at >= 0 &&
@@ -49,6 +113,12 @@
       if (previous?.isConnected && previous !== document.body)
         previous.focus({ preventScroll: true });
     }
+    function hide() {
+      finish();
+      if (panel.open) panel.close();
+      panel.hidden = true;
+      document.documentElement.classList.remove('entry-intro-active');
+    }
     function promote() {
       if (!active || !panel.showModal) return;
       try {
@@ -59,6 +129,10 @@
       }
     }
     function play() {
+      if (!window.EntryPreferences.get().enabled) {
+        hide();
+        return;
+      }
       if (active) return;
       active = true;
       previous = document.activeElement;
@@ -102,6 +176,9 @@
     window.addEventListener('pagehide', finish);
     window.addEventListener('pageshow', (event) => {
       if (event.persisted) play();
+    });
+    window.EntryPreferences.subscribe((value) => {
+      if (!value.enabled) hide();
     });
     if (skipInitial) {
       if (panel.open) panel.close();

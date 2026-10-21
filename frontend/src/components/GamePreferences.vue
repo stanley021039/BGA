@@ -112,6 +112,24 @@ onBeforeUnmount(() => {
           >
         </div>
       </section>
+      <section class="vue-preference-group">
+        <label class="vue-preference-switch">
+          <span>進入網頁時播放開場動畫</span>
+          <input
+            type="checkbox"
+            role="switch"
+            :checked="prefs.entry?.enabled ?? true"
+            :disabled="!prefs.entry"
+            aria-describedby="entry-preference-note"
+            @change="prefs.setEntryIntro(($event.target as HTMLInputElement).checked)"
+          />
+        </label>
+        <p id="entry-preference-note" role="status">{{
+          prefs.entry?.persisted === false
+            ? '瀏覽器無法保存此設定，請允許網站儲存後再試。'
+            : '關閉後直接進入網頁；設定只儲存在此瀏覽器。'
+        }}</p>
+      </section>
       <section class="vue-preference-group"
         ><label class="vue-preference-switch"
           ><span>遊戲動畫</span

@@ -18,7 +18,7 @@ function withEntryIntro(document, { authPage = false } = {}) {
     !/<(?:body|main)\b/i.test(html)
   )
     return document;
-  const assets = `${authPage ? '' : '<link rel="preload" as="image" href="/assets/auth/login-864.webp">'}<link rel="stylesheet" href="/shared/entry-intro.css"><script ${authPage ? 'defer ' : ''}src="/shared/${authPage ? 'auth-entry' : 'entry-intro'}.js"></script>`;
+  const assets = `<script src="/shared/entry-intro.js"></script>${authPage ? '' : '<link rel="preload" as="image" href="/assets/auth/login-864.webp">'}<link rel="stylesheet" href="/shared/entry-intro.css">${authPage ? '<script defer src="/shared/auth-entry.js"></script>' : ''}`;
   const overlay = authPage ? '' : markup;
   // Some legacy documents omit optional head/body tags. Keep those documents intact.
   if (!/<body\b/i.test(html)) return html.replace(/<main\b/i, assets + overlay + '<main');

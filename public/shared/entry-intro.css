@@ -17,7 +17,8 @@
   background: radial-gradient(ellipse at 50% 42%, #253637, #0a1215 72%);
   animation: entry-intro-curtain 3s ease-in-out both;
 }
-#entry-intro[hidden] {
+#entry-intro[hidden],
+html.entry-intro-disabled #entry-intro {
   display: none !important;
 }
 #entry-intro::backdrop {

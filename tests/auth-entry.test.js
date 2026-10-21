@@ -4,7 +4,12 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const { dom } = require('./helpers/widget-dom.cjs');
 
-function fixture({ reduced = false, blocked = false, animationError = false } = {}) {
+function fixture({
+  reduced = false,
+  blocked = false,
+  animationError = false,
+  entryEnabled = true,
+} = {}) {
   const { document } = dom(
     '<main><figure id="authArtwork"><img src="/assets/auth/login-576.webp"></figure><form><button>登入</button></form></main>',
   );
@@ -35,6 +40,7 @@ function fixture({ reduced = false, blocked = false, animationError = false } = 
     storage = new Map(),
     events = new Map();
   const window = {
+    EntryPreferences: { get: () => ({ enabled: entryEnabled }) },
     innerWidth: 1920,
     innerHeight: 1080,
     location: new URL('http://localhost/login'),
@@ -141,4 +147,15 @@ test('blocked storage and unavailable animation still complete, and failed navig
   [...f.timers.values()].find((t) => t.delay === 10000).fn();
   assert.equal(f.document.documentElement.classList.contains('entry-auth-playing'), false);
   assert.equal(f.document.querySelector('.entry-auth-skip'), null);
+});
+
+test('disabled entry returns immediately without hiding auth UI, creating timers or completion records', async () => {
+  const f = fixture({ entryEnabled: false });
+  await f.start();
+  assert.equal(f.frames, undefined);
+  assert.equal(f.timers.size, 0);
+  assert.equal(f.storage.size, 0);
+  assert.equal(f.document.documentElement.classList.contains('entry-auth-playing'), false);
+  assert.equal(f.document.querySelector('.entry-auth-skip'), null);
+  assert.equal(f.image.style.opacity, undefined);
 });
