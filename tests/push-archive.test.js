@@ -23,6 +23,10 @@ test('push archive extracts exact Git bytes and Chinese paths, and rejects inval
   const bytes = Buffer.from('UTF-8 路徑回歸\n');
   fs.mkdirSync(path.dirname(path.join(repo, name)), { recursive: true });
   fs.writeFileSync(path.join(repo, name), bytes);
+  const longName = `深層目錄/${'繁體中文路徑'.repeat(12)}/音效 🎵.bin`;
+  const binary = Buffer.from([0, 255, 13, 10, 128, 42]);
+  fs.mkdirSync(path.dirname(path.join(repo, longName)), { recursive: true });
+  fs.writeFileSync(path.join(repo, longName), binary);
   fs.writeFileSync(path.join(repo, '.prettierrc.json'), '{"endOfLine":"lf"}\n');
   const git = (args) =>
     execFileSync('git', ['-c', 'core.autocrlf=false', '-C', repo, ...args], {
@@ -36,6 +40,7 @@ test('push archive extracts exact Git bytes and Chinese paths, and rejects inval
   git(['archive', '--format=tar', '--output=' + archive, sha]);
   extractArchive(archive, tree);
   assert.deepEqual(fs.readFileSync(path.join(tree, name)), bytes);
+  assert.deepEqual(fs.readFileSync(path.join(tree, longName)), binary);
   assert.equal(
     fs.readFileSync(path.join(tree, '.prettierrc.json'), 'utf8'),
     '{"endOfLine":"lf"}\n',

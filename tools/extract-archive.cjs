@@ -1,23 +1,11 @@
 'use strict';
-const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const tar = require('tar');
 
 function extractArchive(archive, tree) {
-  if (process.platform !== 'win32') {
-    execFileSync('tar', ['-xmf', archive, '-C', tree], { stdio: 'inherit' });
-    return;
-  }
-  // Git's MSYS tar treats drive letters as remote hosts, so use Windows bsdtar.
-  // Older bsdtar builds need explicit UTF-8 decoding for non-ASCII Git archive
-  // paths; newer runner images reject that option's conversion, so fall back.
-  const command = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
-  try {
-    execFileSync(command, ['--options', 'hdrcharset=UTF-8', '-xmf', archive, '-C', tree], {
-      stdio: 'inherit',
-    });
-  } catch {
-    execFileSync(command, ['-xmf', archive, '-C', tree], { stdio: 'inherit' });
-  }
+  // Decode Git's UTF-8 paths independently of Windows bsdtar's current locale.
+  // Strict mode rejects corrupt archives and unsafe paths instead of silently
+  // leaving an incomplete tree for the committed-content format check.
+  tar.x({ file: archive, cwd: tree, sync: true, strict: true, noMtime: true });
 }
 
 module.exports = { extractArchive };

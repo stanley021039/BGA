@@ -24,3 +24,9 @@
 - 未新增畫面或元件；第三份 Figma 既有唯讀／額度限制仍由 #151 追蹤，不宣稱已同步。未部署。
 
 目前為開發候選；PR、固定 head 的雙平台 CI、兩輪審查及合併狀態以 #157 的連結與紀錄為準。
+
+## PR #158 的 Windows CI 追修
+
+首個 head `abc065cceb0fe5f808f155bb672622d35e911af7`，CI run `39605036532`：Linux job `119238923615` 通過；Windows job `119238924019` 為 2,542 通過／1 失敗。兩平台日誌的實際 checkout 均為此 head。唯一失敗在 `tests/push-archive.test.js`：系統 tar 報「Archive entry has empty or unreadable filename」，還原後缺少中文 PDF，讀取拋 ENOENT。動畫測試通過，不能將此 run 整體標為通過。
+
+同 PR 追修改為固定開發依賴 `tar@7.5.22`，兩平台皆用 Node UTF-8 路徑解壓，避免依賴 Windows 系統 tar 的 locale／版本；同步 strict 模式保留錯誤阻擋，不略過格式 hook。回歸保留原中文 PDF、LF 原始內容與非法封存拒絕，追加超過 tar 短檔名欄位的多層中文／emoji 路徑和二進位 bytes 比對。沒有新增產品功能或再升一次 patch。focused 27/27 通過；新 head 的完整本機及雙平台 CI 結果另記 PR，不沿用首輪綠燈。
