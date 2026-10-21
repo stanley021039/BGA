@@ -23,20 +23,26 @@ const index = computed(() =>
 const visibleCount = computed(() =>
   Math.min(gameCards.length, width.value >= 700 ? 5 : width.value >= 340 ? 3 : 1),
 );
+// Outer cards shrink faster so five cards still leave side gutters for characters.
+const cardScale = (distance: number) => [1, 0.8, 0.56][distance] ?? 0.56;
 const radius = computed(() => Math.floor(visibleCount.value / 2)),
   step = computed(() =>
-    radius.value
+    // Five cards: half a card apart, so each side card shows clearly past the one in front.
+    radius.value === 2
       ? Math.min(
-          260,
-          Math.max(
-            50,
-            (width.value / 2 -
-              (cardWidth.value * Math.max(0.48, 1 - radius.value * 0.18)) / 2 -
-              40) /
-              radius.value,
-          ),
+          cardWidth.value * 0.5,
+          (width.value / 2 - (cardWidth.value * cardScale(2)) / 2) / 2,
         )
-      : 0,
+      : radius.value
+        ? Math.min(
+            260,
+            Math.max(
+              50,
+              (width.value / 2 - (cardWidth.value * cardScale(radius.value)) / 2 - 40) /
+                radius.value,
+            ),
+          )
+        : 0,
   );
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 let observer: ResizeObserver | null = null,
@@ -53,7 +59,7 @@ function cardStyle(value: number) {
     '--slot': offset,
     '--rotation': offset * 6 + 'deg',
     '--dip': distance * 18 + 'px',
-    '--scale': Math.max(0.48, 1 - distance * 0.18),
+    '--scale': cardScale(distance),
     '--card-z': 10 - distance,
     '--card-opacity': visible(value) ? 1 : 0,
     visibility: visible(value) ? ('visible' as const) : ('hidden' as const),
@@ -214,13 +220,18 @@ onBeforeUnmount(() => {
           >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
         ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
       ><div class="carousel-actions"
-        ><a v-if="chosen.id === 'market'" class="button orange" href="/market">進入股市冥燈 ↗</a
-        ><UiButton v-else icon="add" :label="'開一桌' + chosen.title" @click="emit('create')" /><a
-          class="quiet"
-          :href="chosen.guide"
-          >{{ chosen.title }}玩法 ↗</a
-        ></div
-      ></div
-    >
+        ><a class="quiet carousel-guide" :href="chosen.guide">{{ chosen.title }}玩法 ↗</a
+        ><div class="carousel-create"
+          ><slot name="before-create" /><a
+            v-if="chosen.id === 'market'"
+            class="button orange"
+            href="/market"
+            >進入股市冥燈 ↗</a
+          ><UiButton
+            v-else
+            icon="add"
+            :label="'開一桌' + chosen.title"
+            @click="emit('create')" /></div></div
+    ></div>
   </section>
 </template>

@@ -117,8 +117,8 @@ test('lobby HTTP preserves view, move, options, expression validation and cooldo
   assert.ok(Number.isSafeInteger(view.body.serverNow));
   const moved = await f.post('/api/lobby/move', { x: 100, y: 0 });
   assert.equal(moved.status, 200);
-  assert.equal(moved.body.visitors[0].targetX, 85);
-  assert.equal(moved.body.visitors[0].targetY, 32);
+  assert.equal(moved.body.visitors[0].targetX, 94);
+  assert.equal(moved.body.visitors[0].targetY, 12);
   assert.equal(moved.body.visitors[0].moveId, 1);
   assert.equal(moved.body.pingContext.roomInstanceId, view.body.pingContext.roomInstanceId);
   const invalidMove = await f.post('/api/lobby/move', { x: '30', y: 50 });

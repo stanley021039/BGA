@@ -1,0 +1,400 @@
+// Lobby entrance effects (see pages/lobby/apparition.ts). Overlays are placed in
+// layer coordinates; the arriving character animates via [data-entrance].
+.lobby-fx {
+  position: absolute;
+  pointer-events: none;
+  z-index: 200;
+}
+.lobby-fx-canvas.is-fallback {
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff0c8e6 0 8%, #6e5aa08c 30%, transparent 62%);
+  animation: entrance-puff 0.9s ease-out forwards;
+}
+
+// A: smoke vortex + crack ring
+.lobby-fx-smoke {
+  width: 200px;
+  height: 200px;
+  margin: -100px 0 0 -100px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #1c1430,
+    #6b4fa0 15%,
+    transparent 30%,
+    #2a1d44 45%,
+    #8e74c4 60%,
+    transparent 75%,
+    #1c1430
+  );
+  mask: radial-gradient(circle, transparent 0 16%, #000 30% 58%, transparent 72%);
+  animation: entrance-smoke 1s cubic-bezier(0.5, 0, 0.8, 0.6) forwards;
+}
+.lobby-fx-ring {
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 3px solid #fff1c8;
+  border-radius: 50%;
+  box-shadow:
+    0 0 12px #ffe39a,
+    inset 0 0 8px #ffe39a;
+  opacity: 0;
+  animation: entrance-ring 1s ease-out forwards;
+}
+// C: ink blot
+.lobby-fx-ink {
+  width: 170px;
+  height: 56px;
+  margin: -28px 0 0 -85px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 18% 40%, #1d1a2b 0 14%, transparent 15%),
+    radial-gradient(circle at 84% 55%, #1d1a2b 0 10%, transparent 11%),
+    radial-gradient(circle at 70% 18%, #1d1a2b 0 6%, transparent 7%),
+    radial-gradient(ellipse at 50% 50%, #1d1a2b 0 42%, transparent 44%);
+  animation: entrance-ink 1.1s ease-out forwards;
+}
+// D: rune circle + light column
+.lobby-fx-runes {
+  width: 160px;
+  height: 160px;
+  margin: -80px 0 0 -80px;
+  animation: entrance-runes 1.3s linear forwards;
+  svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    fill: none;
+    stroke: #f2bd3d;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 4px #ffd970);
+  }
+  .outer {
+    stroke-dasharray: 340;
+    stroke-dashoffset: 340;
+    animation: entrance-draw 0.55s ease-out forwards;
+  }
+  .inner {
+    stroke-dasharray: 6 5;
+    stroke-width: 2;
+  }
+  .star {
+    stroke-width: 1.5;
+    opacity: 0.8;
+  }
+}
+.lobby-fx-column {
+  width: 90px;
+  height: 230px;
+  margin: -230px 0 0 -45px;
+  border-radius: 45px 45px 8px 8px;
+  background: linear-gradient(to top, #ffd678c0, #ffeeb000);
+  filter: blur(2px);
+  transform-origin: 50% 100%;
+  animation: entrance-column 1.3s ease-out forwards;
+}
+// E: rift + dust
+.lobby-fx-rift {
+  width: 6px;
+  height: 160px;
+  margin: -80px 0 0 -3px;
+  border-radius: 3px;
+  background: linear-gradient(#fff, #e8d6ff, #fff);
+  box-shadow:
+    0 0 12px 4px #be96ffe6,
+    0 0 30px 10px #8c64e680;
+  animation: entrance-rift 1.2s ease-in-out forwards;
+}
+.lobby-fx-dust {
+  width: 130px;
+  height: 34px;
+  margin: -17px 0 0 -65px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #aa9682a0, transparent 70%);
+  opacity: 0;
+  animation: entrance-dust 1.2s ease-out forwards;
+}
+
+// Arriving character
+.is-apparating {
+  img,
+  > span {
+    animation-fill-mode: both;
+  }
+  > span {
+    animation: entrance-name 0.9s linear both;
+  }
+  &[data-entrance='classic'] img {
+    animation: entrance-twist 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  &[data-entrance='smoke'] img {
+    animation: entrance-twist 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+  &[data-entrance='sparks'] img {
+    animation: entrance-glow 1.2s ease-out both;
+  }
+  &[data-entrance='ink'] img {
+    transform-origin: 50% 100%;
+    animation: entrance-ink-rise 1.1s ease-out both;
+  }
+  &[data-entrance='runes'] img {
+    animation: entrance-materialise 1.3s ease-out both;
+  }
+  &[data-entrance='rift'] img {
+    animation: entrance-step-out 1.2s ease-out both;
+  }
+  &[data-entrance='particles'] img {
+    animation: entrance-assembled 1.5s linear both;
+  }
+  &[data-entrance='particles'] > span,
+  &[data-entrance='runes'] > span {
+    animation-duration: 1.4s;
+  }
+}
+
+@keyframes entrance-puff {
+  0% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.3) rotate(240deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}
+@keyframes entrance-smoke {
+  0% {
+    opacity: 0;
+    transform: scale(1.3) rotate(0);
+  }
+  15% {
+    opacity: 0.9;
+  }
+  58% {
+    opacity: 0.9;
+    transform: scale(0.05) rotate(900deg);
+  }
+  60%,
+  100% {
+    opacity: 0;
+    transform: scale(0.05) rotate(900deg);
+  }
+}
+@keyframes entrance-ring {
+  0%,
+  57% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(9);
+  }
+}
+@keyframes entrance-ink {
+  0% {
+    opacity: 1;
+    transform: scale(0);
+  }
+  18% {
+    transform: scale(1.15);
+  }
+  28% {
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
+  }
+}
+@keyframes entrance-runes {
+  0% {
+    opacity: 1;
+    transform: scaleY(0.35) rotate(0);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(0.35) rotate(160deg);
+  }
+}
+@keyframes entrance-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes entrance-column {
+  0%,
+  30% {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(1);
+  }
+}
+@keyframes entrance-rift {
+  0% {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1, 1);
+  }
+  40%,
+  68% {
+    transform: scale(5, 1);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(0.3, 1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3, 0);
+  }
+}
+@keyframes entrance-dust {
+  0%,
+  72% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  84% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+@keyframes entrance-twist {
+  0%,
+  45% {
+    opacity: 0;
+    transform: scale(0.05, 1.6) rotate(-220deg);
+  }
+  58% {
+    opacity: 1;
+    transform: scale(1.25, 0.8) rotate(0);
+  }
+  72% {
+    transform: scale(0.94, 1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes entrance-glow {
+  0%,
+  50% {
+    opacity: 0;
+    transform: scale(0.6);
+    filter: brightness(2.5);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes entrance-ink-rise {
+  0%,
+  22% {
+    opacity: 0;
+    transform: scaleY(0.1);
+    filter: brightness(0);
+  }
+  30% {
+    opacity: 1;
+  }
+  55% {
+    transform: scaleY(1);
+    filter: brightness(0);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes entrance-materialise {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateY(12px);
+    filter: blur(6px) brightness(1.8);
+  }
+  80% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0) brightness(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes entrance-step-out {
+  0%,
+  32% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  60% {
+    opacity: 1;
+    transform: scaleX(1.08);
+  }
+  72%,
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes entrance-assembled {
+  0%,
+  82% {
+    opacity: 0;
+  }
+  92%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes entrance-name {
+  0%,
+  55% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}

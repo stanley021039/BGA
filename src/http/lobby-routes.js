@@ -11,8 +11,8 @@ function createLobbyHandlers({
   expressionLabels,
   characterMedia,
 }) {
-  function view(user) {
-    return withLobbyMedia(user, lobby.view(user));
+  function view(user, entrance) {
+    return withLobbyMedia(user, lobby.view(user, { entrance }));
   }
   function move(user, data) {
     return withLobbyMedia(user, lobby.move(user, data));
