@@ -1,0 +1,155 @@
+// Approved C02 v3: 34px design character stage at 2× logical size.
+:root body[data-visual-theme] .vue-player-card {
+  position: relative;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  min-block-size: 74px;
+  padding: 2px 8px;
+  border: 1.5px solid var(--stitch-frame);
+  border-radius: 12px;
+  background: var(--stitch-surface);
+  color: var(--stitch-ink);
+  font-family: var(--stitch-font-family, inherit);
+  &[data-progress='complete'] {
+    border-color: var(--stitch-success-ink);
+  }
+  &[data-progress='pending'] {
+    border-color: var(--stitch-primary);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--stitch-focus);
+    outline-offset: 2px;
+  }
+  .vue-player-card-heading {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    min-block-size: 68px;
+    min-inline-size: 0;
+    position: relative;
+  }
+  .vue-player-card-avatar {
+    display: grid;
+    place-items: center;
+    inline-size: 68px;
+    block-size: 68px;
+    min-inline-size: 0;
+    > .vue-player-avatar {
+      inline-size: 68px;
+      block-size: 68px;
+      background: transparent;
+      border-radius: 0;
+      overflow: visible;
+    }
+    img {
+      object-fit: contain;
+    }
+  }
+  .vue-player-card-copy {
+    min-inline-size: 0;
+    padding-block-start: 1px;
+  }
+  .vue-player-name {
+    display: block;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    block-size: 22px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 22px;
+    text-align: start;
+    > .ui-player-name-text {
+      display: block;
+      inline-size: 100%;
+      max-inline-size: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      animation: none;
+      transform: none;
+    }
+  }
+  .vue-player-card-score {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-block-size: 22px;
+    min-inline-size: 0;
+    font-size: 14px;
+    line-height: 22px;
+    font-variant-numeric: tabular-nums;
+  }
+  .vue-player-card-roles {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-block-size: 16px;
+  }
+  .vue-player-role {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 20px;
+    block-size: 20px;
+    color: inherit;
+  }
+  .vue-player-role > .ui-icon {
+    inline-size: 16px;
+    block-size: 16px;
+  }
+  .vue-player-role > [role='tooltip'] {
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline-start: 0;
+    display: none;
+    z-index: 4;
+    padding: 4px 6px;
+    background: var(--stitch-ink);
+    color: var(--stitch-surface);
+    border-radius: 4px;
+    white-space: nowrap;
+    font-size: 14px;
+  }
+  .vue-player-role:is(:hover, :focus-visible) > [role='tooltip'] {
+    display: block;
+  }
+  .vue-player-card-details {
+    min-inline-size: 0;
+    padding-block: 4px;
+    font-size: 14px;
+    line-height: 21px;
+  }
+  .vue-player-card-status {
+    position: absolute;
+    z-index: 5;
+    inset-inline: 4px;
+    inset-block-end: 4px;
+    padding: 4px 6px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 4px;
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    font-size: 14px;
+    line-height: 21px;
+    overflow-wrap: anywhere;
+    opacity: 0;
+    pointer-events: none;
+  }
+  &:is(:hover, :focus-visible) > .vue-player-card-status {
+    opacity: 1;
+  }
+  .vue-player-card-action {
+    position: absolute;
+    inset-inline-end: -4px;
+    inset-block-end: -2px;
+  }
+  &[data-high-info='true'] {
+    min-block-size: 144px;
+    padding-block: 6px;
+  }
+}

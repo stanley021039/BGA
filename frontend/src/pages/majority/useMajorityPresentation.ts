@@ -97,7 +97,7 @@ export function useMajorityPresentation(root: Ref<HTMLElement | null>) {
       for (const [i, chip] of [...stage.querySelectorAll<HTMLElement>('[data-member]')].entries()) {
         const target = chip.getBoundingClientRect(),
           seat = document.querySelector<HTMLElement>(
-            `.vue-room-player[data-player-id="${CSS.escape(chip.dataset.member || '')}"]`,
+            `.vue-player-card[data-player-id="${CSS.escape(chip.dataset.member || '')}"]`,
           ),
           from = seat?.getBoundingClientRect();
         const x = from ? from.left + from.width / 2 : rect.left + rect.width / 2,

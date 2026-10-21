@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import GameRoomPage from '../../components/GameRoomPage.vue';
-import RoomWaitingInfo from '../../components/RoomWaitingInfo.vue';
+import RaceWaiting from './RaceWaiting.vue';
+import RaceCrewDice from './RaceCrewDice.vue';
+import StatusSlot from '../../components/StatusSlot.vue';
 import { useRaceStore } from '../../stores/race';
 import { useRoomStore } from '../../stores/room';
 import { readRaceSnapshot } from '../../contracts/race';
@@ -43,7 +45,14 @@ const lessonHref = computed(
     :phase="phases[s?.phase || 'waiting']"
     :round="s?.round ? `第 ${s.round} 輪` : '準備開賽'"
     :max-players="4"
-    :show-metrics="false"
+    :show-metrics="s?.phase !== 'waiting'"
+    :setup-target="
+      s?.phase === 'waiting'
+        ? '#race-setup-slot'
+        : s?.phase === 'finished'
+          ? '#race-finished-setup-slot'
+          : undefined
+    "
     :status="status"
     :setup="race.setup"
     :can-start="
@@ -53,39 +62,16 @@ const lessonHref = computed(
     "
     :start-label="s?.phase === 'finished' ? '再比一場' : undefined"
     @start="race.start()"
-    ><RaceScene v-if="s && s.phase !== 'waiting'" :key="room.scope" :model="race" /><section
-      v-else
-      class="vue-game-panel vue-race-waiting"
-      aria-label="雷霆之路等待開賽"
-      ><figure class="vue-race-waiting-art"
-        ><span aria-hidden="true">READY.<br />AIM.<br /><em>DRIVE.</em></span
-        ><img
-          src="/assets/playful/game-thunder.svg"
-          alt="雷霆之路競速遊戲插畫"
-          width="640"
-          height="480" /></figure
-      ><RoomWaitingInfo
-        title="引擎已熱，等你上路。"
-        description="每人指揮輕、中、重型三輛車。選骰、下指令、移動、射擊，活著衝過終點。"
-        mode-label="車隊集結中"
-        :facts="[
-          {
-            label: '賽道模式',
-            value: s?.options.devilsRun ? '惡魔賽道 · 地形／危險試玩' : '主遊戲 · 自製賽道',
-          },
-          {
-            label: '入座車隊',
-            value: `${s?.players.filter((p) => !p.kicked).length || 0}／4 支 · 至少 2 支開賽`,
-          },
-          { label: '戰車編制', value: '每隊輕、中、重型各 1 輛' },
-        ]"
-        :notice="room.host ? '邀請朋友入座，設定好賽道模式就能開始。' : '等待房主開始比賽。'"
-        ><template #actions
-          ><a class="vue-race-waiting-lesson" :href="lessonHref">第一次玩？進入獨立本機教學桌 →</a
-          ><small>六種實作情境、17 個章節；教學不占線上房間座位。</small></template
-        ></RoomWaitingInfo
-      ></section
-    >
+    ><RaceScene v-if="s && s.phase !== 'waiting'" :key="room.scope" :model="race" />
+    <RaceWaiting v-else-if="s" :model="race" />
+    <section v-else class="vue-game-panel"><h1>正在讀取雷霆之路…</h1></section>
+    <template #player-metric="{ player }">
+      <RaceCrewDice
+        v-if="s?.players.find((crew) => crew.id === player.id)"
+        :player="s.players.find((crew) => crew.id === player.id)!"
+        :variant="s.players.findIndex((crew) => crew.id === player.id)"
+      />
+    </template>
     <template #settings
       ><label class="vue-race-mode"
         >賽道模式<select
@@ -95,16 +81,10 @@ const lessonHref = computed(
           ><option :value="false">主遊戲 · 自製賽道</option
           ><option :value="true">惡魔賽道 · 地形／危險試玩</option></select
         ></label
-      ><p>設定會自動儲存；至少兩支車隊開始，可加入電腦練習。</p
-      ><p v-if="race.settingsError" role="alert">{{ race.settingsError }}</p
-      ><p v-else role="status">{{ race.settingsPending ? '正在儲存…' : '' }}</p></template
-    >
-    <template #side-actions
-      ><a class="vue-race-lesson-link" :href="lessonHref">獨立本機教學桌 →</a
-      ><p v-if="s">{{
-        s.options.devilsRun ? '惡魔賽道 · 地形／危險試玩' : '主遊戲 · 自製賽道'
-      }}</p></template
-    >
+      ><StatusSlot
+        :message="race.settingsError || (race.settingsPending ? '正在儲存…' : '')"
+        :error="!!race.settingsError"
+    /></template>
     <template #help
       ><ol
         ><li>每隊三輛不同車型，損傷滿兩格暫時失能，可用維修指令恢復；淘汰車不能修復。</li

@@ -26,16 +26,16 @@ $typography: (
 
 :root {
   --stitch-primary: #f6c845;
-  --stitch-base: #f5f3ee;
+  --stitch-base: #fcf9f8;
   --stitch-blue: #0051d5;
   --stitch-success: #006c49;
-  --stitch-ink: #20211e;
-  --stitch-muted: #686a63;
+  --stitch-ink: #1b1c1c;
+  --stitch-muted: #766f66;
   --stitch-surface: #ffffff;
-  --stitch-surface-subtle: #f8f7f3;
-  --stitch-surface-hover: #edede6;
-  --stitch-line: #d8d9d2;
-  --stitch-frame: #20211e;
+  --stitch-surface-subtle: #f5f3ef;
+  --stitch-surface-hover: #eeebe6;
+  --stitch-line: #e6e1d8;
+  --stitch-frame: #1b1c1c;
   --stitch-on-primary: #20211e;
   --stitch-primary-hover: #ffd65f;
   --stitch-primary-active: #e9b936;
@@ -75,14 +75,14 @@ $typography: (
 
 // ColorScheme owns this attribute, including the resolved automatic theme.
 html[data-color-scheme='dark'] {
-  --stitch-base: #171916;
-  --stitch-ink: #f5f3ee;
-  --stitch-muted: #b7bbb1;
-  --stitch-surface: #22251f;
-  --stitch-surface-subtle: #1d201b;
-  --stitch-surface-hover: #343a2f;
-  --stitch-line: #4d5546;
-  --stitch-frame: #bcc4b4;
+  --stitch-base: #151516;
+  --stitch-ink: #f5f3ef;
+  --stitch-muted: #b5afa7;
+  --stitch-surface: #222224;
+  --stitch-surface-subtle: #2c2b2a;
+  --stitch-surface-hover: #363534;
+  --stitch-line: #4b4742;
+  --stitch-frame: #bcb8b2;
   --stitch-link: #91b9ff;
   --stitch-focus: #91b9ff;
   --stitch-success-ink: #9cdbb9;

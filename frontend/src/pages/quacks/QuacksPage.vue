@@ -43,7 +43,6 @@ watch([() => state.value?.code, () => state.value?.phase], () => {
 });
 function prepareOrStart() {
   if (state.value?.phase === 'waiting' && !booksReady.value) {
-    booksReady.value = true;
     scene.value?.open('books');
   } else void game.start();
 }
@@ -90,15 +89,14 @@ function status(player: RoomPlayer) {
     :show-metrics="state?.phase !== 'waiting'"
     :setup="game.setup"
     :can-start="
-      ((state?.phase === 'waiting' && !booksReady) || (state?.players.length || 0) >= 2) &&
+      (state?.phase !== 'waiting' || booksReady) &&
+      (state?.players.length || 0) >= 2 &&
       !game.settingsPending &&
       !game.settingsError
     "
-    :start-label="
-      state?.phase === 'finished' ? '再玩一局' : !booksReady ? '設定完成，選藥材書' : '開始煮藥'
-    "
+    :start-label="state?.phase === 'finished' ? '再玩一局' : '開始煮藥'"
     @start="prepareOrStart"
-    ><template #toolbar
+    ><template v-if="state && state.phase !== 'waiting'" #toolbar
       ><UiButton
         stitch
         variant="ghost"
@@ -130,7 +128,15 @@ function status(player: RoomPlayer) {
       v-else
       class="vue-game-panel"
       ><h1>正在讀取郎中房間…</h1></section
-    ><template #settings
+    ><template #waiting-before-start
+      ><UiButton
+        stitch
+        variant="secondary"
+        icon="book"
+        label="搭配本局藥材書"
+        @click="scene?.open('books')"
+    /></template>
+    <template #settings
       ><details class="vue-quacks-settings" open
         ><summary
           >{{ state?.options.witches ? '草藥女巫' : '基本版'
@@ -159,11 +165,7 @@ function status(player: RoomPlayer) {
           ></fieldset
         ><p>各色書面可在舞台「藥典」選擇；全桌採用最後一次選擇。開始後鎖定。</p
         ><StatusSlot
-          :message="
-            game.settingsPending
-              ? '正在儲存設定…'
-              : game.settingsError || (game.settingsSaved ? '設定已儲存。' : '')
-          "
+          :message="game.settingsPending ? '正在儲存設定…' : game.settingsError || ''"
           :error="!!game.settingsError" /><UiButton
           v-if="game.settingsError && game.editableSettings"
           icon="refresh"

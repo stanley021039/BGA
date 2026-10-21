@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import { computed, ref } from 'vue';
 import { usePokerStore } from '../../stores/poker';
 import { useRoomStore } from '../../stores/room';
 import { usePokerPresentation } from './usePokerPresentation';
 import PokerCard from './PokerCard.vue';
 import PokerSeats from './PokerSeats.vue';
-import RoomWaitingInfo from '../../components/RoomWaitingInfo.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
@@ -39,22 +39,19 @@ const turnHint = computed(() =>
     class="vue-game-panel vue-poker-stage"
     :class="{ 'is-waiting': state.phase === 'waiting' }"
     aria-label="德州撲克牌桌"
-    ><div v-if="state.phase === 'waiting'" class="vue-poker-waiting" data-poker-waiting>
-      <div class="vue-poker-waiting-art"
-        ><img src="/assets/playful/game-poker.svg" alt="德州撲克遊戲插畫"
-      /></div>
-      <RoomWaitingInfo
-        title="好牌已備，等你入座。"
-        description="2–6 人一起玩。跟注、加注，或把這一手全部押上。"
-        mode-label="德州撲克"
-        :facts="[
-          { label: '入座人數', value: state.players.length + '／6 位' },
-          { label: '起始籌碼', value: '2,000' },
-          { label: '盲注', value: '10／20' },
-        ]"
-        :notice="room.host ? '邀請朋友入座，設定好就能開始。' : '等待房主開始遊戲。'"
-      />
-    </div>
+    ><RoomWaitingTemplate
+      v-if="state.phase === 'waiting'"
+      type="poker"
+      title="德州撲克"
+      hero-title="好牌已備，等你入座。"
+      description="2–6 人一起玩。跟注、加注，或把這一手全部押上。"
+      art="/assets/playful/game-poker.svg"
+      :facts="[
+        { label: '入座人數', value: state.players.length + '／6 位' },
+        { label: '起始籌碼', value: '2,000' },
+        { label: '盲注', value: '10／20' },
+      ]"
+    />
     <template v-else
       ><header class="vue-poker-summary"
         ><div data-poker-pot

@@ -1,0 +1,65 @@
+.vue-dialog.vue-race-terrain-dialog {
+  inline-size: min(750px, calc(100vw - 24px));
+  max-inline-size: calc(100vw - 24px);
+  background: var(--stitch-base);
+  .vue-dialog-content {
+    padding: 24px;
+  }
+  .vue-race-terrain-detail {
+    display: grid;
+    justify-items: center;
+    gap: 24px;
+    min-inline-size: 0;
+  }
+  .vue-race-terrain-detail > img {
+    inline-size: 160px;
+    block-size: 160px;
+    object-fit: contain;
+  }
+  p {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+  }
+  .vue-race-terrain-index {
+    display: grid;
+    gap: 20px;
+  }
+  .vue-race-terrain-options {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .vue-race-terrain-options > button {
+    display: grid;
+    justify-items: center;
+    min-inline-size: 0;
+    padding: 12px 4px;
+    white-space: normal;
+  }
+  .vue-race-terrain-options img {
+    inline-size: 64px;
+    block-size: 64px;
+    object-fit: contain;
+  }
+  .vue-race-terrain-footer {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-block-start: 24px;
+    padding-block-start: 16px;
+    border-block-start: 1px solid var(--stitch-line);
+  }
+}
+@media (max-width: 600px) {
+  .vue-dialog.vue-race-terrain-dialog {
+    .vue-dialog-content {
+      padding: 16px;
+    }
+    .vue-race-terrain-options {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}

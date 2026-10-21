@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useTelephoneStore } from '../../stores/telephone';
 import { useRoomStore } from '../../stores/room';
@@ -92,14 +93,6 @@ async function clear() {
   )
     if (scope === room.scope && step === state.value.stepId && !blocked.value) telephone.clear();
 }
-async function skip() {
-  if (blocked.value) return;
-  const scope = room.scope,
-    step = state.value.stepId;
-  if (await confirm.value?.ask('這頁會標記為略過，已畫或已輸入的內容不會送出。', '略過這頁'))
-    if (scope === room.scope && step === state.value.stepId && !blocked.value)
-      await telephone.submit(true);
-}
 function input(event: Event) {
   if (composing.value) return;
   const target = event.target as HTMLInputElement;
@@ -113,34 +106,42 @@ document.addEventListener('visibilitychange', visibility);
 onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibility));
 </script>
 <template>
+  <RoomWaitingTemplate
+    v-if="state.phase === 'waiting'"
+    type="telephone"
+    title="傳情畫意"
+    hero-title="經典紙筆畫猜接力！"
+    description="只看上一棒，最後回看故事演變。"
+    hero-description="每位玩家擁有一本專屬傳遞簿，題目與畫作輪流交替傳遞。只看上一棒，最後一起揭曉故事演變。"
+    art="/assets/stitch/telephone-waiting.svg"
+    :facts="waitingFacts"
+  />
   <section
+    v-else
     class="vue-game-panel vue-telephone-stage"
     data-telephone
-    :class="{
-      'is-waiting': state.phase === 'waiting',
-      'is-passing': state.phase === 'passing',
-      'is-finished': state.phase === 'finished',
-    }"
+    :class="{ 'is-passing': state.phase === 'passing', 'is-finished': state.phase === 'finished' }"
     aria-labelledby="telephoneHeading"
   >
     <header v-if="state.phase === 'passing' && state.task" class="vue-telephone-hud" data-private>
-      <div class="vue-telephone-hud-prompt"
-        ><span class="vue-telephone-private">{{
+      <div class="vue-telephone-hud-prompt">
+        <span class="vue-telephone-private">{{
           drawing ? '你的專屬秘密題目' : '接到上一棒傳遞簿'
-        }}</span
-        ><h1 id="telephoneHeading">{{
+        }}</span>
+        <h1 id="telephoneHeading">{{
           drawing ? state.task.previous.text : '只看上一張圖，猜一句話'
-        }}</h1
-        ><span class="vue-telephone-private-note">{{
+        }}</h1>
+        <span class="vue-telephone-private-note">{{
           drawing ? '只給你看；把文字畫成一張圖' : `來自 ${state.task.previous.authorName} 的畫作`
-        }}</span></div
-      >
-      <span class="vue-telephone-page-number"
-        >第 {{ String(state.round).padStart(2, '0') }}／{{
-          String(state.roundLimit).padStart(2, '0')
-        }}
-        頁 · {{ state.task.submitted ? '本頁已送出' : drawing ? '限時作畫中' : '看圖猜詞中' }}</span
-      >
+        }}</span>
+        <span class="vue-telephone-page-number"
+          >第 {{ String(state.round).padStart(2, '0') }}／{{
+            String(state.roundLimit).padStart(2, '0')
+          }}
+          頁 ·
+          {{ state.task.submitted ? '本頁已送出' : drawing ? '限時作畫中' : '看圖猜詞中' }}</span
+        >
+      </div>
       <RoomCountdown
         :deadline="state.deadline"
         :duration="90000"
@@ -152,13 +153,21 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         urgent
       />
     </header>
-    <header v-else-if="state.phase === 'finished'" class="vue-telephone-finished-heading"
-      ><span class="vue-telephone-private">全部故事揭曉</span
-      ><h1 id="telephoneHeading">{{
-        state.interrupted ? '傳遞中止，回看已完成的頁面' : '故事傳了一圈，變成什麼模樣？'
-      }}</h1
-      ><p>每一頁都是不同朋友留下的想像，不計分，也不排名。</p></header
-    >
+    <header v-else-if="state.phase === 'finished'" class="vue-telephone-finished-heading">
+      <div
+        ><h1 id="telephoneHeading">{{
+          state.interrupted ? '傳遞中止，回看已完成的頁面' : '故事傳了一圈，變成什麼模樣？'
+        }}</h1
+        ><p>不計分，也不排名。</p></div
+      >
+      <label for="telephoneBook"
+        >選擇傳遞簿<select id="telephoneBook" v-model.number="book">
+          <option v-for="(value, index) in state.books" :key="value.ownerId" :value="index"
+            >{{ value.ownerName }} 的故事</option
+          >
+        </select></label
+      >
+    </header>
     <div class="vue-telephone-live">
       <section
         v-if="state.phase === 'passing' && state.task"
@@ -170,20 +179,22 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         }"
         data-private
       >
-        <div v-if="!drawing" class="vue-telephone-previous"
-          ><div class="vue-telephone-sheet-heading"
-            ><h2>上一棒傳給你的內容</h2><span>只看上一頁，其餘頁面仍保密</span></div
-          ><TelephoneCanvas
+        <div v-if="!drawing" class="vue-telephone-previous">
+          <div class="vue-telephone-sheet-heading"
+            ><h2>上一棒傳給你的內容</h2><span>其餘頁面仍保密</span></div
+          >
+          <TelephoneCanvas
             :strokes="state.task.previous.strokes || []"
             :epoch="state.stepId + ':previous'"
             label="上一位玩家的畫作"
-          /><p v-if="state.task.previous.skipped" class="vue-telephone-skipped"
+          />
+          <p v-if="state.task.previous.skipped" class="vue-telephone-skipped"
             >上一頁略過；可以自由猜一句話或略過本頁。</p
-          ></div
-        >
+          >
+        </div>
         <template v-if="!state.task.submitted">
-          <template v-if="drawing"
-            ><DrawingToolbar
+          <template v-if="drawing">
+            <DrawingToolbar
               v-model:tool="tool"
               v-model:filled="filled"
               v-model:color="color"
@@ -209,16 +220,18 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
                 @change="telephone.changeStrokes"
                 @active="telephone.activeStroke = $event"
                 @notice="telephone.notice = $event"
-              /> </DrawingToolbar
-            ><p class="vue-telephone-quota" title="顏色與工具列可左右滑動"
+              />
+            </DrawingToolbar>
+            <p class="vue-telephone-quota" title="顏色與工具列可左右滑動"
               >本地 {{ telephone.strokes.length }}／100 筆 · {{ points }}／3,000 點 · 伺服器已接受
               {{ telephone.acceptedCount }} 筆</p
-            ></template
-          >
-          <label v-else class="vue-telephone-guess" for="telephoneGuess"
-            ><span class="vue-telephone-guess-heading"
-              >猜猜此圖含義 <small>答案即為下一棒題目</small></span
-            ><input
+            >
+          </template>
+          <div v-else class="vue-telephone-guess">
+            <label for="telephoneGuess" class="vue-telephone-guess-heading"
+              >猜猜此圖含義 <small>答案即為下一棒題目</small></label
+            >
+            <input
               id="telephoneGuess"
               :value="telephone.text"
               autocomplete="off"
@@ -231,134 +244,94 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
                 composing = false;
                 input($event);
               "
-            /><span id="telephoneGuessCount" class="vue-telephone-guess-count"
+            />
+            <span id="telephoneGuessCount" class="vue-telephone-guess-count"
               >{{ [...telephone.text].length }}／80 字 · 已接受
               {{ telephone.acceptedCount }} 字；不能換行</span
-            ></label
-          >
+            >
+            <UiButton
+              stitch
+              variant="primary"
+              class="vue-telephone-guess-submit"
+              icon="check"
+              label="提交猜詞答案"
+              :pending="telephone.finishing"
+              :disabled="blocked || composing || !telephone.text.trim()"
+              @click="telephone.submit()"
+            />
+          </div>
         </template>
-        <div v-else class="vue-telephone-submitted" role="status"
-          ><span class="vue-telephone-submitted-mark" aria-hidden="true">✓</span
-          ><h2>這一頁，完成了！</h2
-          ><p>已收到你的提交。時間到才傳下一頁，現在可以看看朋友的傳遞狀態，或在聊天室聊聊天。</p
-          ><small>其他頁面與朋友的私人草稿仍然保密。</small></div
-        >
+        <div v-else class="vue-telephone-submitted" role="status">
+          <span class="vue-telephone-submitted-mark" aria-hidden="true">✓</span
+          ><h2>這一頁，完成了！</h2>
+          <p>已收到你的提交。時間到才傳下一頁，現在可以看看朋友的傳遞狀態，或在聊天室聊聊天。</p>
+          <small>其他頁面與朋友的私人草稿仍然保密。</small>
+        </div>
       </section>
-      <section v-else-if="state.phase === 'finished'" class="vue-telephone-review"
-        ><div class="vue-telephone-review-toolbar"
-          ><label for="telephoneBook"
-            >選擇傳遞簿<select id="telephoneBook" v-model.number="book"
-              ><option v-for="(value, index) in state.books" :key="value.ownerId" :value="index"
-                >{{ value.ownerName }} 的故事</option
-              ></select
-            ></label
-          ><span>{{ state.books.length }} 本故事 · 固定入座順序</span></div
-        ><p v-if="state.interrupted" class="vue-telephone-review-notice"
+      <section v-else-if="state.phase === 'finished'" class="vue-telephone-review">
+        <p v-if="state.interrupted" class="vue-telephone-review-notice"
           >有人離席，本場中止；只保留已送出的頁面，不包含尚未送出的私人草稿。</p
-        ><template v-if="selected"
-          ><div class="vue-telephone-book-heading"
-            ><h2>{{ selected.ownerName }} 的傳遞簿</h2
-            ><span>{{ selected.pages.length }} 頁已揭曉</span></div
-          ><article
+        >
+        <template v-if="selected">
+          <article
             v-for="(page, index) in selected.pages"
             :key="selected.ownerId + ':' + index"
             class="vue-telephone-book-page"
-            ><header
-              ><span class="vue-telephone-book-number">{{ String(index).padStart(2, '0') }}</span
+          >
+            <header
               ><div
-                ><h3>{{ index ? '第 ' + index + ' 頁' : '起始情境' }} · {{ page.authorName }}</h3
-                ><span>{{ page.kind === 'drawing' ? '畫圖' : '猜詞／情境' }}</span></div
-              ></header
-            ><p v-if="page.skipped" class="vue-telephone-skipped"
+                ><span class="vue-telephone-book-number">{{ String(index).padStart(2, '0') }}</span
+                ><h3
+                  >{{ index ? '第 ' + index + ' 頁' : '起始情境' }} · {{ page.authorName }}</h3
+                ></div
+              ><span>{{ page.kind === 'drawing' ? '畫圖' : '猜詞／情境' }}</span></header
+            >
+            <p v-if="page.skipped" class="vue-telephone-skipped"
               >本頁略過{{ page.timedOut ? ' · 時間到時沒有已同步的內容' : '' }}</p
-            ><template v-else
-              ><TelephoneCanvas
+            >
+            <template v-else>
+              <TelephoneCanvas
                 v-if="page.kind === 'drawing'"
                 :strokes="page.strokes || []"
                 :epoch="state.stepId + ':' + selected.ownerId + ':' + index"
                 :label="page.authorName + ' 的第 ' + index + ' 頁畫作'"
-              /><p v-else class="vue-telephone-book-text">{{ page.text }}</p
-              ><small v-if="page.timedOut">時間到，採用已同步的私人草稿</small></template
-            ></article
-          ></template
-        ><p v-else>尚無可揭曉的傳遞簿。</p></section
-      >
-      <section v-else class="vue-telephone-waiting"
-        ><div class="vue-telephone-waiting-mode"
-          ><span>TELESTRATIONS · 傳情畫意</span><span>紙筆猜詞接力</span></div
-        ><div class="vue-telephone-waiting-illustration"
-          ><img
-            src="/assets/stitch/telephone-waiting.svg"
-            width="192"
-            height="192"
-            alt=""
-            loading="eager" /></div
-        ><div class="vue-telephone-waiting-copy"
-          ><h1 id="telephoneHeading">經典紙筆畫猜接力！</h1
-          ><p
-            >每位玩家擁有一本專屬傳遞簿，題目與畫作輪流交替傳遞。只看上一棒的內容，直到傳回自己手中揭曉爆笑演變！</p
-          ></div
-        ><dl class="vue-telephone-waiting-facts"
-          ><div v-for="fact in waitingFacts" :key="fact.label"
-            ><dt>{{ fact.label }}</dt
-            ><dd
-              >{{ fact.value }}<small>{{ fact.note }}</small></dd
-            ></div
-          ></dl
-        ><p class="vue-telephone-waiting-notice">{{
-          room.host
-            ? '你是房主，邀請至少 3 人入座，再從右側房間設定開始。'
-            : '等待房主開始；每人只看上一頁，最後一起揭曉。'
-        }}</p></section
-      >
+              />
+              <p v-else class="vue-telephone-book-text">{{ page.text }}</p
+              ><small v-if="page.timedOut">時間到，採用已同步的私人草稿</small>
+            </template>
+          </article>
+        </template>
+        <p v-else>尚無可揭曉的傳遞簿。</p>
+      </section>
     </div>
-    <div v-if="state.phase !== 'waiting'" class="vue-telephone-status"
+    <div class="vue-telephone-status"
       ><p>{{ syncMessage }}</p
       ><StatusSlot
         :message="displayedNotice"
         :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
     /></div>
-    <footer v-if="state.phase !== 'waiting'" class="vue-telephone-actions"
-      ><template v-if="state.phase === 'passing' && !state.task?.submitted"
-        ><div class="vue-telephone-secondary-actions"
-          ><UiButton
-            stitch
-            variant="ghost"
-            icon="refresh"
-            label="同步草稿"
-            :pending="telephone.saving"
-            :disabled="!telephone.allowed || telephone.finishing || room.busy || !telephone.dirty"
-            @click="telephone.sync()" /><UiButton
-            stitch
-            variant="ghost"
-            label="略過這頁"
-            :disabled="blocked"
-            @click="skip" /></div
-        ><UiButton
+    <footer
+      v-if="drawing || state.phase !== 'passing' || state.task?.submitted"
+      class="vue-telephone-actions"
+    >
+      <template v-if="state.phase === 'passing' && !state.task?.submitted">
+        <UiButton
           stitch
           variant="primary"
           class="vue-telephone-submit"
           icon="check"
-          :label="drawing ? '完成並提交這一頁' : '提交猜詞答案'"
+          label="完成並提交這一頁"
           :pending="telephone.finishing"
-          :disabled="
-            blocked || composing || (drawing ? !telephone.strokes.length : !telephone.text.trim())
-          "
-          @click="telephone.submit()" /></template
-      ><span v-else class="vue-telephone-action-note">{{
+          :disabled="blocked || !telephone.strokes.length"
+          @click="telephone.submit()"
+        />
+      </template>
+      <span v-else class="vue-telephone-action-note">{{
         state.phase === 'passing'
           ? '已提交，等待共同倒數結束後傳頁。'
           : '想再玩一次？由房主從房間設定開始新一場。'
-      }}</span
-      ><UiButton
-        v-if="actions.canRetry"
-        stitch
-        variant="secondary"
-        icon="refresh"
-        label="重試同一操作"
-        :disabled="room.busy || !room.connected"
-        @click="actions.retrySame()"
-    /></footer>
+      }}</span>
+    </footer>
   </section>
-  <ConfirmDialog ref="confirm" />
+  <ConfirmDialog ref="confirm" stitch />
 </template>

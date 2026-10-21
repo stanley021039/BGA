@@ -1,3 +1,5 @@
+@use 'room-surfaces';
+
 // C03 room navigation is owned by the seated page and moves without remounting.
 :root body[data-visual-theme] [data-site-header].vue-site-header:has(.vue-room-topbar) {
   .vue-site-header-content.vue-site-header-c03 {

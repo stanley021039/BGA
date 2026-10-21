@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import type { DrawSnapshot } from '../../contracts/drawing';
 import type { PublicDrawSnapshot } from '../../contracts/draw-results';
@@ -46,8 +47,14 @@ const correctCounts = computed(() => {
 const settings = computed(() => readDrawSettings(props.snapshot.options));
 const waitingFacts = computed(() => [
   { label: '每輪時間', value: settings.value.seconds + ' 秒／題' },
-  { label: '計分規則', value: '畫者與猜題者皆可得分' },
-  { label: '繪畫工具', value: '12 色＋幾何圖形' },
+  { label: '結束條件', value: matchRule.value },
+  {
+    label: '題目類別',
+    value:
+      settings.value.topics.length +
+      ' 類；' +
+      (settings.value.topics.includes('custom') ? '含自訂' : '自訂未選'),
+  },
 ]);
 const matchRule = computed(() =>
   settings.value.mode === 'score'
@@ -121,51 +128,33 @@ function rank(index: number) {
 }
 </script>
 <template>
-  <section
+  <RoomWaitingTemplate
     v-if="snapshot.phase === 'waiting'"
-    class="vue-draw-scene vue-draw-scene-v2 vue-draw-waiting-v2"
-    aria-label="你畫我猜等待房間"
-  >
-    <div class="vue-draw-waiting-center">
-      <img
-        class="vue-draw-waiting-illustration"
-        :src="waitingIllustration"
-        width="512"
-        height="279"
-        alt="你畫我猜的畫室插畫"
-      />
-      <span class="vue-draw-scene-badge"
-        >CLASSIC MODE <span>· {{ matchRule }}</span></span
-      >
-      <h1>你畫我猜 <small>Draw &amp; Guess</small></h1>
-      <p class="vue-draw-waiting-tagline">朋友集結中，畫筆已備，等房主開畫。</p>
-      <p class="vue-draw-waiting-description"
-        >輪流挑選題目作畫，其他朋友一起猜答案。用創意換得分數，讓這桌充滿意外的默契。</p
-      >
-    </div>
-    <footer class="vue-draw-waiting-readiness"
-      ><p>{{
-        room.host
-          ? '你是房主，邀請朋友、調整規則，兩人到齊就能開始。'
-          : '入座後可先點就緒，等待房主開始。'
-      }}</p
-      ><UiButton
-        v-if="!room.host"
-        stitch
-        variant="secondary"
-        icon="check"
-        :label="me?.ready ? '已就緒（點擊切換）' : '準備好了！點擊就緒'"
-        :aria-pressed="me?.ready === true"
-        :pending="room.busy"
-        @click="room.command('action', { action: 'ready', ready: !me?.ready })"
-    /></footer>
-    <dl class="vue-draw-waiting-facts"
-      ><div v-for="fact in waitingFacts" :key="fact.label"
-        ><dt>{{ fact.label }}</dt
-        ><dd>{{ fact.value }}</dd></div
-      ></dl
-    >
-  </section>
+    type="draw"
+    title="你畫我猜"
+    hero-title="朋友集結中，畫筆已備，等房主開畫。"
+    description="輪流挑選題目作畫，其他朋友一起猜答案。"
+    :art="waitingIllustration"
+    art-alt="你畫我猜的畫室插畫"
+    :facts="waitingFacts"
+    ><template #summary-extra>
+      <div class="vue-waiting-ready"
+        ><p>{{
+          room.host
+            ? '你是房主，邀請朋友、調整規則，兩人到齊就能開始。'
+            : '入座後可先點就緒，等待房主開始。'
+        }}</p
+        ><UiButton
+          v-if="!room.host"
+          stitch
+          variant="secondary"
+          icon="check"
+          :label="me?.ready ? '已就緒（點擊切換）' : '準備好了！點擊就緒'"
+          :aria-pressed="me?.ready === true"
+          :pending="room.busy"
+          @click="room.command('action', { action: 'ready', ready: !me?.ready })"
+      /></div> </template
+  ></RoomWaitingTemplate>
   <section
     v-else-if="snapshot.phase === 'choosing'"
     class="vue-draw-scene vue-draw-scene-v2 vue-draw-choosing-v2"

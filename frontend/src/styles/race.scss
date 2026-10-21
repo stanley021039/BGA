@@ -678,165 +678,6 @@
   }
 }
 @media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
-  body.vue-race-document:not(:has(.vue-race-lesson-page)):not(.ui-large-text) {
-    margin: 0;
-    .vue-game-document {
-      height: 100dvh;
-      padding: 0 24px 8px;
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-    }
-    &.vue-game-focus .vue-game-document {
-      grid-template-rows: minmax(0, 1fr);
-    }
-    #race-app {
-      min-height: 0;
-    }
-    .vue-game-workspace {
-      height: 100%;
-      min-height: 0;
-      grid-template-rows: 44px 36px minmax(0, 1fr);
-      gap: 8px;
-    }
-    .vue-game-toolbar {
-      min-height: 44px;
-      padding: 0;
-      gap: 8px;
-    }
-    .vue-game-phase {
-      min-height: 24px;
-      width: 8em;
-    }
-    .vue-game-room-feedback {
-      min-height: 36px;
-      height: 36px;
-    }
-    .vue-game-grid {
-      grid-template-columns: 180px minmax(0, 1fr) 240px;
-      gap: 12px;
-      min-height: 0;
-    }
-    .vue-game-main,
-    .vue-game-side {
-      overflow: auto;
-      scrollbar-gutter: stable;
-      overscroll-behavior: contain;
-    }
-    .vue-game-main {
-      border: 1px solid var(--play-line);
-      border-radius: 12px;
-      background: var(--play-surface);
-      padding: 12px;
-    }
-    .vue-game-roster-panel {
-      min-height: 0;
-      padding: 12px;
-      .vue-roster-list {
-        min-height: 0;
-        max-height: none;
-      }
-    }
-    .vue-game-side {
-      gap: 8px;
-      > .vue-room-chat {
-        flex: 1;
-        min-height: 260px;
-        padding: 12px;
-        gap: 8px;
-      }
-    }
-    .vue-game-settings-panel {
-      padding: 12px;
-      gap: 8px;
-      > p {
-        min-height: 0;
-      }
-    }
-    .vue-game-start-slot {
-      min-height: 44px;
-    }
-    .vue-room-chat-content {
-      grid-template-rows: 0 minmax(60px, 1fr) 0 auto 44px 48px;
-      gap: 8px;
-    }
-    .vue-chat-notice,
-    .vue-chat-quick:empty {
-      visibility: hidden;
-      min-height: 0;
-      height: 0;
-    }
-    .vue-race-scene {
-      min-height: 100%;
-    }
-    .vue-race-log {
-      margin-top: auto;
-    }
-    .vue-race-dashboard {
-      grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) minmax(160px, 1fr);
-    }
-  }
-}
-@media (min-width: 1181px) and (max-height: 800px) and (min-height: 640px) and (pointer: fine) {
-  body.vue-race-document:not(:has(.vue-race-lesson-page)):not(.ui-large-text) {
-    .vue-game-main {
-      padding: 8px;
-    }
-    .vue-race-scene {
-      gap: 6px;
-    }
-    .vue-race-racebar {
-      min-height: 40px;
-      gap: 8px;
-      strong {
-        font-size: 16px;
-      }
-    }
-    .vue-race-crews article {
-      min-height: 56px;
-      padding: 4px;
-    }
-    .vue-race-crew-dice {
-      height: 24px;
-      .vue-race-die {
-        width: 24px;
-        height: 24px;
-      }
-    }
-    .vue-race-board svg {
-      max-height: 200px;
-    }
-    .vue-race-dashboard {
-      gap: 8px;
-    }
-    .vue-race-dashboard > div {
-      padding: 8px;
-    }
-    .vue-race-actions {
-      min-height: 132px;
-    }
-    .vue-race-cars {
-      gap: 4px;
-    }
-    .vue-race-cars button {
-      min-height: 88px;
-      padding: 4px 2px;
-      strong {
-        font-size: 12px;
-      }
-    }
-    .vue-race-feedback {
-      min-height: 36px;
-      font-size: 12px;
-      > p {
-        max-height: 36px;
-      }
-    }
-    .vue-race-log {
-      padding-top: 4px;
-    }
-  }
-}
-@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
   body.vue-race-document:not(.ui-large-text) {
     .vue-race-board svg {
       height: clamp(180px, calc(100dvh - 650px), 330px);
@@ -1095,4 +936,794 @@
 
 .vue-race-board .map-car.disabled-car {
   opacity: 0.5;
+}
+
+// RD01–04 and RD-X: live game composition. LessonScene retains its own layout.
+:root body.vue-race-document[data-visual-theme] {
+  .vue-race-scene-rd {
+    --race-panel: var(--stitch-surface, #fff);
+    --race-border: var(--stitch-line, #e7e2d9);
+    --race-text: var(--stitch-ink, #2a2927);
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    min-block-size: 100%;
+    gap: 12px;
+    color: var(--race-text);
+    font-size: 14px;
+    line-height: 1.5;
+    > .vue-race-racebar {
+      min-block-size: 54px;
+      padding: 8px 16px;
+      gap: 12px;
+      border: 1px solid var(--race-border);
+      border-radius: 12px;
+      background: var(--race-panel);
+      strong {
+        font-size: 16px;
+      }
+      > div:first-child {
+        gap: 12px;
+      }
+      .vue-race-round {
+        padding: 4px 8px;
+        border: 1px solid var(--race-border);
+        border-radius: 6px;
+        background: var(--stitch-base, #f3efe6);
+        font-size: 14px;
+      }
+      .vue-race-roadbonus {
+        font-size: 14px;
+      }
+    }
+    > .vue-race-track-shell {
+      padding: 20px;
+      background: #233e2f;
+      border: 1px solid #48634e;
+      border-radius: 14px;
+      min-block-size: 0;
+      > .vue-race-board {
+        svg {
+          inline-size: 100%;
+          min-inline-size: 760px;
+          block-size: auto;
+          height: auto;
+          max-block-size: none;
+          max-height: none;
+          aspect-ratio: 1180 / 398;
+        }
+      }
+    }
+    .vue-race-dashboard {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.65fr) minmax(0, 1fr);
+      align-items: stretch;
+      gap: 12px;
+      > div {
+        min-block-size: 260px;
+        padding: 14px;
+        border: 1px solid var(--race-border);
+        border-radius: 12px;
+        background: var(--race-panel);
+      }
+      h2 {
+        font-size: 16px;
+        line-height: 1.5;
+      }
+    }
+    .vue-race-cars {
+      margin-block-start: 12px;
+      gap: 8px;
+      > button {
+        display: grid;
+        grid-template-rows: 72px auto auto auto;
+        align-content: start;
+        justify-items: center;
+        gap: 4px;
+        min-inline-size: 0;
+        min-block-size: 176px;
+        padding: 12px 6px;
+        border: 1px solid var(--race-border);
+        border-radius: 8px;
+        background: var(--race-panel);
+        color: var(--race-text);
+        --ui-button-radius: 8px;
+        svg {
+          align-self: center;
+          inline-size: 72px;
+          max-inline-size: 100%;
+          block-size: 56px;
+        }
+        strong {
+          font-size: 16px;
+        }
+        span {
+          font-size: 14px;
+          white-space: normal;
+        }
+        &:disabled {
+          opacity: 0.6;
+        }
+        &.selected {
+          border-color: #a57a16;
+          outline: 2px solid #f6c845;
+          outline-offset: -2px;
+          background: #fff8df;
+          color: #2a2927;
+          padding: 12px 6px;
+          opacity: 1;
+        }
+      }
+    }
+    .vue-race-dice > div {
+      margin: 12px 0;
+      min-block-size: 80px;
+      gap: 8px;
+      > button {
+        flex: 1 1 0;
+        min-inline-size: 0;
+        padding: 8px 4px;
+        border: 1px solid var(--race-border);
+        border-radius: 8px;
+        background: var(--race-panel);
+        color: var(--race-text);
+        small {
+          font-size: 14px;
+          white-space: normal;
+        }
+        &.selected {
+          outline: 2px solid #be8c18;
+          outline-offset: -2px;
+          background: #fff8df;
+          color: #2a2927;
+        }
+        &.spent {
+          opacity: 0.4;
+        }
+        &.reserved {
+          background: #fff3ca;
+          color: #2a2927;
+        }
+      }
+      .vue-race-die {
+        inline-size: 40px;
+        block-size: 40px;
+      }
+    }
+    .vue-race-command {
+      padding-block-start: 8px;
+      border-block-start: 1px solid var(--race-border);
+      summary {
+        min-block-size: 44px;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .vue-race-command-fields {
+        position: static;
+        inline-size: 100%;
+        max-inline-size: 100%;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+        gap: 12px;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        background: transparent;
+        label {
+          font-size: 14px;
+          min-inline-size: 0;
+        }
+        > .vue-button {
+          grid-column: 1 / -1;
+          justify-self: start;
+        }
+      }
+    }
+    .vue-race-actions {
+      min-block-size: 260px;
+      justify-content: space-between;
+      gap: 16px;
+      .vue-room-countdown {
+        align-content: start;
+        min-block-size: 80px;
+        span {
+          color: var(--race-text);
+          font-size: 14px;
+        }
+        strong {
+          color: var(--race-text);
+          font-size: 28px;
+          line-height: 1.5;
+        }
+      }
+      .vue-race-main-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-content: end;
+        min-block-size: 88px;
+        max-block-size: none;
+        overflow: visible;
+        > .vue-button {
+          inline-size: 100%;
+          min-block-size: 44px;
+        }
+        > span {
+          min-block-size: 44px;
+          align-content: center;
+        }
+        .vue-race-targets {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    }
+    .vue-race-feedback {
+      min-block-size: 42px;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 4px;
+      font-size: 14px;
+      > p {
+        max-block-size: 63px;
+        line-height: 1.5;
+      }
+    }
+    .vue-race-log {
+      margin-block-start: auto;
+      padding-block-start: 8px;
+      summary,
+      ol,
+      p {
+        font-size: 14px;
+      }
+    }
+    &.is-result {
+      flex: 1 0 auto;
+    }
+    .vue-race-results {
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 24px;
+      min-block-size: 560px;
+      flex: 1;
+      padding: 40px 24px;
+      border: 1px solid var(--race-border);
+      border-radius: 12px;
+      background: var(--race-panel);
+      text-align: center;
+      h1 {
+        font-size: 32px;
+        color: var(--race-text);
+        margin: 0;
+        line-height: 1.4;
+      }
+      p {
+        font-size: 16px;
+        overflow-wrap: anywhere;
+      }
+    }
+    .vue-race-results-cars {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      svg {
+        inline-size: 96px;
+        block-size: 72px;
+      }
+    }
+    .vue-race-result-badge {
+      padding: 4px 8px;
+      border: 1px solid #e6d8a8;
+      border-radius: 6px;
+      background: #fff7d7;
+      color: #725a1d;
+      font-size: 14px;
+    }
+    .vue-race-result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      a {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 44px;
+        padding: 8px 16px;
+        border: 1px solid var(--race-border);
+        border-radius: 8px;
+        background: var(--race-panel);
+        color: var(--race-text);
+      }
+    }
+  }
+  .vue-race-roster-details {
+    display: grid;
+    gap: 8px;
+    min-inline-size: 0;
+    inline-size: 100%;
+    > span {
+      font-size: 14px;
+      color: var(--stitch-ink);
+    }
+  }
+  .vue-race-roster-dice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 28px;
+    .vue-race-die {
+      inline-size: 28px;
+      block-size: 28px;
+    }
+    .spent {
+      opacity: 0.35;
+    }
+    > span {
+      font-size: 14px;
+    }
+  }
+  .vue-race-waiting-rd {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    gap: 12px;
+    min-inline-size: 0;
+    min-block-size: 100%;
+    padding: 0;
+    color: var(--stitch-ink);
+    .vue-race-waiting-heading {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-block-size: 64px;
+      padding: 12px 16px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 12px;
+      background: var(--stitch-surface);
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.5;
+      }
+      p {
+        margin: 0;
+        font-size: 14px;
+      }
+      > span {
+        padding: 4px 8px;
+        border: 1px solid #e6d8a8;
+        border-radius: 6px;
+        background: #fff7d7;
+        color: #725a1d;
+        font-size: 14px;
+      }
+    }
+    .vue-race-waiting-body {
+      display: grid;
+      align-content: start;
+      gap: 20px;
+      flex: 1;
+      min-inline-size: 0;
+      padding: 20px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 12px;
+      background: var(--stitch-surface);
+    }
+    .vue-race-waiting-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      align-items: center;
+      gap: 24px;
+      margin: 0;
+      padding: 24px;
+      border-radius: 12px;
+      background: #fff6df;
+      color: #2a2927;
+      img {
+        display: block;
+        inline-size: 100%;
+        max-inline-size: 408px;
+        block-size: auto;
+        justify-self: center;
+      }
+      figcaption {
+        display: grid;
+        align-content: center;
+        gap: 24px;
+      }
+      h2 {
+        margin: 0;
+        font-size: 32px;
+        line-height: 1.4;
+        color: #2a2927;
+      }
+      p {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+    }
+    .vue-race-setup-slot {
+      min-inline-size: 0;
+      > .vue-game-settings-panel {
+        block-size: auto;
+        max-block-size: none;
+        overflow: visible;
+      }
+    }
+    .vue-race-waiting-lesson {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 44px;
+      padding: 8px 12px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      font-size: 16px;
+    }
+  }
+}
+
+// Original native dice owner keeps all timing/authority. Only the RD03 skin changes.
+:root body.vue-race-document[data-visual-theme] .race-dice-dialog {
+  inline-size: min(750px, calc(100vw - 32px));
+  max-inline-size: calc(100vw - 32px);
+  max-block-size: calc(100dvh - 32px);
+  border: 1px solid var(--stitch-line, #e7e2d9);
+  border-radius: 16px;
+  background: var(--stitch-surface, #fff);
+  color: var(--stitch-ink, #2a2927);
+  .race-dice-header,
+  .race-dice-footer {
+    padding: 20px 24px;
+    background: var(--stitch-surface, #fff);
+    color: var(--stitch-ink);
+    border-color: var(--stitch-line);
+  }
+  .race-dice-header h2 {
+    color: var(--stitch-ink);
+    font-size: 24px;
+  }
+  .race-dice-condition {
+    font-size: 16px;
+  }
+  .race-dice-body {
+    padding: 24px;
+    background: var(--stitch-base, #faf8f5);
+  }
+  .race-dice-participants {
+    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .race-dice-participants[data-count='1'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .race-dice-participant,
+  .race-dice-general {
+    padding: 16px;
+    background: var(--stitch-surface, #fff);
+    color: var(--stitch-ink);
+    border: 1px solid var(--stitch-line);
+    border-radius: 10px;
+  }
+  .race-dice-participant {
+    border-block-start: 3px solid var(--race-dice-color);
+  }
+  .race-dice-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .race-dice-tile {
+    min-block-size: 72px;
+    padding: 4px;
+    border: 0;
+    background: transparent;
+    color: var(--stitch-ink);
+  }
+  .race-dice-face {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    font-size: 28px;
+    .race-die-icon {
+      inline-size: 44px;
+      block-size: 44px;
+    }
+  }
+  .race-dice-value-label,
+  .race-dice-caption {
+    font-size: 14px;
+  }
+  .race-dice-general {
+    background: #fff6d8;
+    color: #2a2927;
+  }
+  .race-dice-result {
+    font-size: 16px;
+  }
+  .race-dice-action {
+    min-block-size: 44px;
+    padding: 8px 16px;
+    border: 1px solid #e5ba39;
+    border-radius: 8px;
+    background: #f6c845;
+    color: #2a2927;
+    font-size: 16px;
+  }
+  .race-dice-action[data-dice-action='rerollDice'] {
+    background: var(--stitch-surface);
+    border-color: var(--stitch-line);
+    color: var(--stitch-ink);
+  }
+  .race-dice-status {
+    color: var(--stitch-ink);
+    font-size: 14px;
+  }
+  .race-dice-error {
+    color: var(--ui-danger, #a83b2d);
+    font-size: 14px;
+  }
+}
+@media (max-width: 999px) {
+  :root body.vue-race-document[data-visual-theme] .vue-race-scene-rd .vue-race-dashboard {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    .vue-race-actions {
+      grid-column: 1 / -1;
+      min-block-size: 160px;
+    }
+  }
+}
+@media (max-width: 600px) {
+  :root body.vue-race-document[data-visual-theme] {
+    .vue-race-scene-rd {
+      > .vue-race-racebar {
+        gap: 8px;
+        padding: 8px;
+        > div:first-child {
+          flex-wrap: wrap;
+        }
+      }
+      > .vue-race-track-shell {
+        padding: 12px;
+      }
+      .vue-race-dashboard {
+        grid-template-columns: minmax(0, 1fr);
+        > div {
+          min-block-size: 0;
+          padding: 12px;
+        }
+      }
+      .vue-race-cars > button {
+        min-block-size: 152px;
+        grid-template-rows: 56px auto auto auto;
+        svg {
+          block-size: 44px;
+        }
+      }
+      .vue-race-dice > div {
+        > button small {
+          font-size: 14px;
+        }
+        .vue-race-die {
+          inline-size: 32px;
+          block-size: 32px;
+        }
+      }
+      .vue-race-actions {
+        min-block-size: 180px;
+      }
+      .vue-race-results {
+        min-block-size: 440px;
+        padding: 24px 16px;
+        h1 {
+          font-size: 28px;
+        }
+      }
+    }
+    .vue-race-waiting-rd {
+      .vue-race-waiting-body {
+        padding: 12px;
+      }
+      .vue-race-waiting-hero {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 16px;
+        gap: 20px;
+        img {
+          max-inline-size: 320px;
+        }
+        figcaption {
+          gap: 16px;
+        }
+        h2 {
+          font-size: 28px;
+        }
+      }
+    }
+    .race-dice-dialog {
+      .race-dice-header,
+      .race-dice-footer,
+      .race-dice-body {
+        padding: 16px;
+      }
+      .race-dice-participants {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .race-dice-grid {
+        gap: 4px;
+      }
+    }
+  }
+}
+
+:root body.vue-race-document[data-visual-theme] .vue-race-finished-setup-slot {
+  inline-size: min(100%, 560px);
+  min-inline-size: 0;
+  text-align: start;
+  > .vue-game-settings-panel {
+    block-size: auto;
+    max-block-size: none;
+    overflow: visible;
+  }
+}
+
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root body.vue-race-document[data-visual-theme] .vue-race-scene-rd {
+    .vue-race-dashboard > div {
+      block-size: 284px;
+      min-block-size: 284px;
+      overflow: auto;
+      scrollbar-gutter: stable;
+      overscroll-behavior: contain;
+    }
+    .vue-race-actions .vue-race-main-actions {
+      max-block-size: 160px;
+      overflow: auto;
+      scrollbar-gutter: stable;
+    }
+  }
+}
+
+// Live Race owns a viewport budget; the common components own their contents.
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root
+    body.vue-race-document[data-visual-theme]:not(.ui-large-text):not(:has(.vue-race-lesson-page)) {
+    margin: 0;
+    .vue-game-document:has(.vue-game-workspace) {
+      box-sizing: border-box;
+      block-size: 100dvh;
+      height: 100dvh;
+      min-block-size: 0;
+      padding: 0 24px 12px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    &.vue-game-focus .vue-game-document:has(.vue-game-workspace) {
+      grid-template-rows: minmax(0, 1fr);
+    }
+    #race-app:has(.vue-game-workspace),
+    .vue-game-workspace,
+    .vue-game-grid {
+      min-block-size: 0;
+      min-height: 0;
+      min-inline-size: 0;
+    }
+    .vue-game-workspace {
+      block-size: 100%;
+      height: 100%;
+      gap: 12px;
+      &.is-header-integrated {
+        grid-template-rows: 48px minmax(0, 1fr);
+      }
+      &:not(.is-header-integrated) {
+        grid-template-rows: auto 48px minmax(0, 1fr);
+      }
+    }
+    .vue-game-grid {
+      grid-template-columns: 220px minmax(0, 1fr) 280px;
+      grid-template-rows: minmax(0, 1fr);
+      align-items: stretch;
+      gap: 16px;
+    }
+    .vue-game-main,
+    .vue-game-roster-panel,
+    .vue-game-side {
+      box-sizing: border-box;
+      min-block-size: 0;
+      min-height: 0;
+      max-block-size: 100%;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+    .vue-game-side {
+      > .vue-room-chat {
+        box-sizing: border-box;
+        flex: 1 1 0;
+        min-block-size: 0;
+        min-height: 0;
+        block-size: 100%;
+      }
+    }
+    .vue-race-waiting-rd {
+      box-sizing: border-box;
+      block-size: 100%;
+      height: 100%;
+      min-block-size: 0;
+      min-height: 0;
+      flex: 1 1 0;
+      gap: 12px;
+      overflow: visible;
+      > .vue-race-waiting-heading {
+        box-sizing: border-box;
+        flex: 0 0 auto;
+        min-block-size: 64px;
+        padding: 8px 16px;
+      }
+      > .vue-race-waiting-body {
+        box-sizing: border-box;
+        min-block-size: 0;
+        min-height: 0;
+        flex: 1 1 0;
+        overflow: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
+      }
+    }
+  }
+}
+@media (min-width: 1501px) and (min-height: 640px) and (pointer: fine) {
+  :root
+    body.vue-race-document[data-visual-theme]:not(.ui-large-text):not(:has(.vue-race-lesson-page))
+    .vue-game-grid {
+    grid-template-columns: 240px minmax(0, 1fr) 300px;
+  }
+}
+:root body.vue-race-document[data-visual-theme] {
+  .vue-race-waiting-rd,
+  .vue-race-waiting-heading,
+  .vue-race-waiting-body,
+  .vue-race-waiting-hero,
+  .vue-race-setup-slot,
+  .vue-race-finished-setup-slot,
+  .vue-race-scene-rd .vue-race-dashboard > div {
+    box-sizing: border-box;
+  }
+  :is(.vue-race-setup-slot, .vue-race-finished-setup-slot) > .vue-game-settings-panel {
+    box-sizing: border-box;
+    min-block-size: 0;
+    min-height: 0;
+    block-size: auto;
+    height: auto;
+    grid-template-rows: none;
+    grid-auto-rows: max-content;
+    align-content: start;
+    gap: 12px;
+    padding: 16px;
+    > p {
+      min-block-size: 0;
+      min-height: 0;
+      margin: 0;
+    }
+    > .frontend-status {
+      block-size: 24px;
+      min-block-size: 24px;
+      max-block-size: 24px;
+      overflow: auto;
+    }
+    > .vue-game-start-slot {
+      min-block-size: 44px;
+      min-height: 44px;
+    }
+  }
+}
+
+// The general dice strip stays pale in both themes; its labels use dark ink.
+:root body.vue-race-document[data-visual-theme] .race-dice-dialog .race-dice-general {
+  h3,
+  .race-dice-caption,
+  .race-dice-value-label {
+    color: #2a2927;
+  }
 }

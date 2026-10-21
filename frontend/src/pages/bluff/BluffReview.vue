@@ -36,9 +36,10 @@ const result = computed(
         ><p>易混淆：{{ result.explanation.clarification }}</p></template
       ><ul class="vue-bluff-scores"
         ><li v-for="(player, index) in result.roles" :key="index"
-          ><strong>{{ player.name }}</strong
-          ><span>{{ bluffRoles[player.role] }}</span
-          ><span>{{ player.delta >= 0 ? '+' : '' }}{{ player.delta }} 分</span
+          ><strong>{{ player.name }} · {{ bluffRoles[player.role] }}</strong
+          ><span
+            :data-delta="player.delta > 0 ? 'positive' : player.delta < 0 ? 'negative' : 'neutral'"
+            >{{ player.delta >= 0 ? '+' : '' }}{{ player.delta }} 分</span
           ><span>累計 {{ player.score }}</span></li
         ></ul
       ><a :href="result.source.url" target="_blank" rel="noopener noreferrer"
@@ -46,6 +47,8 @@ const result = computed(
       ><div v-if="result.ban" class="vue-bluff-ban"
         ><p>禁題票數 {{ result.ban.votes }}／{{ result.ban.required }}（本輪真人過半數）</p
         ><UiButton
+          stitch
+          variant="secondary"
           icon="help"
           :label="
             result.ban.banned ? '已全站禁用' : result.ban.voted ? '已投票禁用' : '投票禁用此題'

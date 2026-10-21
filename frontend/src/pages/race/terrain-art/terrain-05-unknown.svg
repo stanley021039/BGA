@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30 -34 60 68" width="160" height="160"><style>.map-label{fill:#f1dab0;font-size:14px;font-weight:700}
+.map-index{fill:#d1c29f;font-size:12px}
+.hex{stroke:#273827;stroke-width:1.4px}
+.hex.legal{stroke:#ffe58b;stroke-width:3px}
+.hex.multi-legal{stroke-dasharray:5 3}
+.cell-interactive:focus-visible .hex{stroke:#fff;stroke-width:4px}
+.cell-symbol{pointer-events:none;fill:#ffdda0;text-anchor:middle;font-size:20px}
+.road-boundary{fill:none;stroke:#ffe0a0;stroke-width:3px;stroke-dasharray:8 5;pointer-events:none}
+.race-active-ring{fill:none;stroke:#ffdd80;stroke-width:2px}
+.race-target-ring{fill:none;stroke:#ff8066;stroke-width:2px;stroke-dasharray:4 3}
+.car-label{text-anchor:middle;fill:#fff0d0;font-size:10px}
+.map-car:focus-visible{outline:none}
+.map-car:focus-visible .race-car-motion{filter:drop-shadow(0 0 4px #fff)}
+.race-route-line{fill:none;stroke:#fff0a1;stroke-width:4px;stroke-dasharray:6 4}
+.race-route-dot{fill:#fff0a1;stroke:#263728;stroke-width:1px}
+.race-route-number{fill:#263728;text-anchor:middle;font-size:11px;font-weight:700}
+.race-annotation{fill:#fff0a1;text-anchor:middle;font-size:12px;font-weight:700}
+.race-terrain-art .cell-symbol{dominant-baseline:central;font:700 17px Segoe UI,sans-serif}
+.map-car.disabled-car{opacity:.5}</style><defs xmlns="http://www.w3.org/2000/svg"><pattern id="race-grain-v-1" width="11" height="13" patternUnits="userSpaceOnUse"><circle cx="3" cy="4" r=".8" fill="#201b1240"/><circle cx="9" cy="11" r=".6" fill="#e7ca8130"/></pattern></defs><g class="cell-interactive"><title>未知危險：進入才揭露並結算效果。</title><polygon class="hex" points="-22,-14 0,-28 22,-14 22,14 0,28 -22,14" fill="#b59961"/><g pointer-events="none" aria-hidden="true" class="race-terrain-art" data-race-terrain="O"><polygon points="-22,-14 0,-28 22,-14 22,14 0,28 -22,14" fill="url(#race-grain-v-1)"/><text class="cell-symbol" style="fill:#ffcf77" y="1">⚠</text></g></g></svg>

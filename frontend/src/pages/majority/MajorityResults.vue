@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useRoomStore } from '../../stores/room';
 import { useMajorityStore } from '../../stores/majority';
 import QuestionPreview from './QuestionPreview.vue';
 const props = defineProps<{ recap?: boolean; focusId?: string }>(),
   game = useMajorityStore(),
-  s = computed(() => game.state);
+  s = computed(() => game.state),
+  room = useRoomStore(),
+  recapIndex = ref(0),
+  recaps = computed(() => s.value?.cruel?.recap || []),
+  recapEntry = computed(() => recaps.value[recapIndex.value]);
+watch([() => room.scope, () => recaps.value.length], () => {
+  if (recapIndex.value >= recaps.value.length) recapIndex.value = 0;
+});
 const name = (id: string) =>
   s.value?.players.find((p) => p.id === id)?.name ||
   s.value?.departed.find((p) => p.id === id)?.name ||
@@ -23,7 +31,7 @@ function answerText(id: string) {
   <div v-if="s" class="vue-majority-results"
     ><p v-if="s.phase === 'review'" class="vue-majority-banner"
       >答案已公開，分數尚未計入。請房主確認同義答案分組。</p
-    ><template v-if="s.question && s.cruel && !(props.recap && s.cruel.solo)"
+    ><template v-if="s.question && s.cruel && !props.recap"
       ><QuestionPreview :question="s.question" /><div class="vue-majority-answer-members"
         ><p v-for="(option, i) in s.question.options" :key="i"
           ><strong
@@ -104,17 +112,26 @@ function answerText(id: string) {
         ></div
       ></template
     >
-    <template v-if="props.recap && s.cruel"
-      ><article v-for="(entry, i) in s.cruel.recap" :key="i" class="vue-majority-recap"
-        ><h3>第 {{ i + 1 }} 題</h3
-        ><QuestionPreview v-if="entry.question" :question="entry.question" compact /><p
+    <section v-if="props.recap && s.cruel" class="vue-majority-recap-browser"
+      ><header
+        ><h2>{{ s.cruel.solo ? '單人偏好回顧' : '本局題目回顧' }}</h2
+        ><label v-if="recaps.length"
+          >查看題目<select v-model.number="recapIndex"
+            ><option v-for="(entry, i) in recaps" :key="i" :value="i"
+              >第 {{ i + 1 }} 題 · {{ entry.question?.prompt || '已完成題目' }}</option
+            ></select
+          ></label
+        ></header
+      ><article v-if="recapEntry" :key="recapIndex" class="vue-majority-recap"
+        ><h3>第 {{ recapIndex + 1 }} 題</h3
+        ><QuestionPreview v-if="recapEntry.question" :question="recapEntry.question" compact /><p
           >你的選擇：{{
-            typeof entry.answers[s.me] === 'number'
-              ? entry.question?.options[Number(entry.answers[s.me])] || '未交卷'
-              : entry.answers[s.me] || '未交卷'
+            typeof recapEntry.answers[s.me] === 'number'
+              ? recapEntry.question?.options[Number(recapEntry.answers[s.me])] || '未交卷'
+              : recapEntry.answers[s.me] || '未交卷'
           }}</p
         ></article
-      ></template
+      ><p v-else>本局尚無已完成的題目。</p></section
     >
     <a v-if="s.phase === 'finished'" href="/history">查看對局歷史</a>
   </div>

@@ -34,15 +34,17 @@ const phase = computed(() =>
       : '等待入座',
 );
 function status(player: RoomPlayer) {
-  return !player.online
-    ? '暫時離線'
-    : state.value?.phase === 'passing'
+  const label =
+    state.value?.phase === 'passing'
       ? player.ready
         ? '已送出，等待傳頁'
         : '正在完成本頁'
       : state.value?.phase === 'finished'
-        ? '一起回看故事'
+        ? state.value.interrupted
+          ? '傳遞中止 · 回看已送出頁面'
+          : '本局結束 · 一起回看故事'
         : '等待開始';
+  return player.online ? label : `${label} · 暫時離線`;
 }
 </script>
 <template>
@@ -67,7 +69,7 @@ function status(player: RoomPlayer) {
       ><h1>正在讀取傳情畫意房間…</h1></section
     >
     <template #settings
-      ><details class="vue-telephone-settings"
+      ><details :open="state?.phase === 'waiting'" class="vue-telephone-settings"
         ><summary
           ><span>情境題庫</span><strong>{{ sourceLabel }}</strong></summary
         ><fieldset :disabled="!telephone.settingsEditable || room.busy"

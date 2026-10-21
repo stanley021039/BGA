@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { usePartyActionsStore } from '../../stores/party-actions';
@@ -166,47 +167,72 @@ const canSlot = (i: number) =>
       !s.value.passed.includes(s.value.me));
 </script>
 <template>
-  <section class="vue-game-panel vue-musicquiz-stage stitch-music-content"
+  <RoomWaitingTemplate
+    v-if="s.phase === 'waiting'"
+    type="musicquiz"
+    title="猜歌挑戰"
+    hero-title="旋律已備，等你聽題。"
+    description="1–8 人 · 前奏猜歌與年代排序"
+    art="/assets/playful/game-musicquiz.svg"
+    :facts="[
+      { label: '年代卡目標', value: target + ' 張' },
+      { label: '所選題庫', value: banks.length + ' 種' },
+      { label: '目前可抽', value: s.availableCount + ' 首' },
+    ]"
+    ><template #settings><div id="room-waiting-settings-content-musicquiz"></div></template
+  ></RoomWaitingTemplate>
+
+  <section
+    v-show="s.phase !== 'waiting'"
+    class="vue-game-panel vue-musicquiz-stage stitch-music-content"
     ><template v-if="setup"
-      ><h1>{{ s.phase === 'finished' ? '本場結果' : '挑選本局題庫' }}</h1
-      ><p v-if="s.winner">年代冠軍：{{ s.winner.names.join('、') }} · {{ s.winner.score }}張</p
-      ><fieldset
-        :disabled="!room.host || blocked"
-        @input="markSettingsInput"
-        @change="queueSettings"
-        ><legend>語言與分類</legend
-        ><div class="mq-banks"
-          ><label v-for="bank in s.banks" :key="bank.id" class="mq-bank"
-            ><input v-model="banks" type="checkbox" :value="bank.id" /><strong>{{
-              bank.label
-            }}</strong
-            ><span>{{ bank.count }}首</span></label
+      ><Teleport
+        :to="s.phase === 'waiting' ? '#room-waiting-settings-content-musicquiz' : 'body'"
+        :disabled="s.phase !== 'waiting'"
+        defer
+        ><div class="vue-waiting-music-settings"
+          ><h1>{{ s.phase === 'finished' ? '本場結果' : '挑選本局題庫' }}</h1
+          ><p v-if="s.winner">年代冠軍：{{ s.winner.names.join('、') }} · {{ s.winner.score }}張</p
+          ><fieldset
+            :disabled="!room.host || blocked"
+            @input="markSettingsInput"
+            @change="queueSettings"
+            ><legend>語言與分類</legend
+            ><div class="mq-banks"
+              ><label v-for="bank in s.banks" :key="bank.id" class="mq-bank"
+                ><input v-model="banks" type="checkbox" :value="bank.id" /><strong>{{
+                  bank.label
+                }}</strong
+                ><span>{{ bank.count }}首</span></label
+              ></div
+            ><details
+              ><summary>曲風篩選</summary
+              ><label v-for="genre in s.genres" :key="genre"
+                ><input v-model="genres" type="checkbox" :value="genre" />{{ genre }}</label
+              ></details
+            ><label
+              >年代卡目標<input v-model.number="target" type="number" min="3" max="10" /></label
+            ><label><input v-model="obscure" type="checkbox" />混入冷門挑戰（最多約10%）</label
+            ><details
+              ><summary>自己的題庫</summary
+              ><p>每行：歌名 | 歌手 | 首發年 | YouTube網址或ID | 前奏起點 | 精華起點</p
+              ><textarea v-model="custom" rows="4" aria-label="自選歌曲題庫" /></details></fieldset
+          ><UiButton
+            v-if="room.host && settingsSave.error.value"
+            icon="refresh"
+            label="重試儲存題庫"
+            :disabled="blocked"
+            @click="saveNow"
+          /><p role="status"
+            >目前可抽 {{ s.availableCount }} 首{{
+              settingsSave.pending.value
+                ? ' · 正在儲存題庫…'
+                : dirty
+                  ? ' · 儲存未完成，請重試儲存'
+                  : ' · 可開始遊戲'
+            }}</p
           ></div
-        ><details
-          ><summary>曲風篩選</summary
-          ><label v-for="genre in s.genres" :key="genre"
-            ><input v-model="genres" type="checkbox" :value="genre" />{{ genre }}</label
-          ></details
-        ><label>年代卡目標<input v-model.number="target" type="number" min="3" max="10" /></label
-        ><label><input v-model="obscure" type="checkbox" />混入冷門挑戰（最多約10%）</label
-        ><details
-          ><summary>自己的題庫</summary
-          ><p>每行：歌名 | 歌手 | 首發年 | YouTube網址或ID | 前奏起點 | 精華起點</p
-          ><textarea v-model="custom" rows="4" aria-label="自選歌曲題庫" /></details></fieldset
-      ><UiButton
-        v-if="room.host && settingsSave.error.value"
-        icon="refresh"
-        label="重試儲存題庫"
-        :disabled="blocked"
-        @click="saveNow"
-      /><p role="status"
-        >目前可抽 {{ s.availableCount }} 首{{
-          settingsSave.pending.value
-            ? ' · 正在儲存題庫…'
-            : dirty
-              ? ' · 儲存未完成，請重試儲存'
-              : ' · 可開始遊戲'
-        }}</p
+        ></Teleport
       ></template
     >
     <template v-else

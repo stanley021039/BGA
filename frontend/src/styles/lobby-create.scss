@@ -1,7 +1,6 @@
 @use 'tokens' as t;
 
-// D06 is limited to Draw / Telephone creation. Other lobby dialogs retain
-// their previous layout and controls; Telephone is configured after entry.
+// Draw uses D06; the approved telephone/majority entry dialog shares its fields.
 :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-lobby-create-d06 {
   inline-size: min(28rem, calc(100vw - 2rem));
   max-inline-size: calc(100vw - 2rem);
@@ -187,8 +186,8 @@
   }
 }
 
-// RQ02: room creation has a stable central form and bottom submit slot.
-:root body dialog.vue-dialog.ui-dialog.vue-lobby-create-quacks {
+// RQ02 / RD05: room creation has a stable central form and bottom submit slot.
+:root body dialog.vue-dialog.ui-dialog.vue-lobby-create-room {
   inline-size: min(56.25rem, calc(100vw - 2rem));
   block-size: min(41.25rem, calc(100dvh - 2rem));
   max-block-size: calc(100dvh - 2rem);
@@ -252,12 +251,19 @@
   }
 }
 @media (max-width: 480px) {
-  :root body dialog.vue-dialog.ui-dialog.vue-lobby-create-quacks {
+  :root body dialog.vue-dialog.ui-dialog.vue-lobby-create-room {
     padding: t.space(4);
     .vue-dialog-header,
     .vue-dialog-content,
     .vue-lobby-create {
       gap: t.space(3);
     }
+  }
+}
+
+:root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-lobby-create-pair {
+  inline-size: min(590px, calc(100vw - 32px));
+  .vue-lobby-create-options {
+    min-block-size: 40px;
   }
 }
