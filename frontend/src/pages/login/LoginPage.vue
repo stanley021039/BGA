@@ -96,6 +96,7 @@ async function submit(): Promise<void> {
       );
       if (disposed) return;
       login.password = registration.password = registration.confirmPassword = '';
+      window.EntryIntro?.prepareFrom(document.querySelector<HTMLImageElement>('#authArtwork img'));
       location.replace(destination);
     }
   } catch (error) {

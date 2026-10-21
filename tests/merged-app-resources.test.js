@@ -55,6 +55,20 @@ async function fixture(t) {
   return { get, post, user };
 }
 
+test('entry intro repeats on refresh while authentication and deep-link redirects remain intact', async (t) => {
+  const f = await fixture(t);
+  for (let refresh = 0; refresh < 2; refresh++) {
+    const response = await f.get('/');
+    assert.equal(response.status, 200);
+    assert.match(await response.text(), /id="entry-intro"/);
+    assert.equal(response.headers.get('set-cookie'), null);
+  }
+  const anonymous = await f.get('/quacks/ABC123', true);
+  assert.equal(anonymous.status, 302);
+  assert.equal(anonymous.headers.get('location'), '/login?next=%2Fquacks%2FABC123');
+  assert.equal((await f.get('/api/auth/me')).status, 200);
+});
+
 test('merged app serves every HTML script and stylesheet, market entry and game sound assets together', async (t) => {
   const f = await fixture(t),
     resources = new Set(),
@@ -73,6 +87,9 @@ test('merged app serves every HTML script and stylesheet, market entry and game 
       .replace(/\s+/g, ' ')
       .replace(/\s+>/g, '>')
       .replace(/>\s+</g, '><');
+    if (file === 'login.html') assert.doesNotMatch(html, /id="entry-intro"/, route);
+    else assert.match(html, /id="entry-intro"/, route);
+    assert.match(html, /\/shared\/entry-intro\.js/, route);
     for (const match of html.matchAll(
       /<script\b[^>]*\bsrc="([^"]+)"|<link\b[^>]*\bhref="([^"]+)"/g,
     )) {
