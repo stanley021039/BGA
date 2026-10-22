@@ -60,6 +60,15 @@ test('thumbnails are WebP, never enlarged, keep animation and are shared by iden
 
   const reloaded = new MediaThumbnails({ directory: root });
   assert.deepEqual((await reloaded.variant(png, 128)).bytes, small.bytes);
+
+  // A backfill over the remaining originals drops the deleted GIF's set.
+  const past = new Date(Date.now() - 60000);
+  for (const name of fs.readdirSync(root)) fs.utimesSync(path.join(root, name), past, past);
+  await reloaded.backfill([() => png]);
+  assert.deepEqual(
+    fs.readdirSync(root).map((name) => name.slice(0, 64)),
+    Array(3).fill(contentHash(png)),
+  );
 });
 
 test('an original no larger than its thumbnail, or one that cannot be decoded, is served as is', async (t) => {

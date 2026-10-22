@@ -126,7 +126,10 @@ class MediaThumbnails {
     }
   }
   // Fills derivatives for every listed original without blocking requests.
+  // Then removes derivatives of originals that no longer exist.
   async backfill(sources) {
+    const started = Date.now(),
+      live = new Set();
     for (const read of sources) {
       if (this.stopped) return;
       let bytes = null;
@@ -135,8 +138,24 @@ class MediaThumbnails {
       } catch {
         // A row deleted or a file removed since listing is simply skipped.
       }
-      if (bytes) await this.prepare(bytes).catch(() => {});
+      if (bytes) {
+        live.add(contentHash(bytes));
+        await this.prepare(bytes).catch(() => {});
+      }
       await new Promise((resolve) => setImmediate(resolve));
+    }
+    await this.prune(live, started);
+  }
+  async prune(live, since) {
+    for (const [key, kind] of [...this.known]) {
+      if (this.stopped) return;
+      if (live.has(key.slice(0, 64)) || this.pending.has(key)) continue;
+      const file = this.file(key, kind);
+      // Uploaded after the source list was taken: not stale, just not listed.
+      const stat = await fs.stat(file).catch(() => null);
+      if (stat && stat.mtimeMs >= since) continue;
+      await fs.rm(file, { force: true });
+      this.known.delete(key);
     }
   }
   async stop() {
