@@ -94,9 +94,10 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     ><header
       ><small>GIVE A LITTLE · KNOW EACH OTHER</small><h1>{{ title }}</h1
       ><p
-        >送禮與收禮分數都達 {{ state.target }} 分才能獲勝；每件禮物逐件結算，分數保持 0–{{
-          state.target
-        }}。</p
+        >送禮與收禮分數都達
+        {{ state.target }}
+        分以上才能獲勝，多人同時達標時兩項加總最高者勝；每件禮物逐件結算，分數最低
+        0、可超過目標。</p
       ></header
     >
     <div class="vue-gift-live">

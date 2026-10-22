@@ -87,7 +87,7 @@ function entry(value: unknown): GiftEntry {
     !Object.hasOwn(points, text(r.rank)) ||
     r.points !== points[r.rank as keyof typeof points] ||
     ['giveAfter', 'getAfter'].some(
-      (k) => r[k] !== undefined && (!int(r[k]) || (r[k] as number) < 0 || (r[k] as number) > 30),
+      (k) => r[k] !== undefined && (!int(r[k]) || (r[k] as number) < 0),
     )
   )
     return invalid();
@@ -117,16 +117,9 @@ export function readGiftSnapshot(value: unknown): GiftSnapshot {
     (r.dealerId !== null && !text(r.dealerId))
   )
     return invalid();
-  const target = r.target;
+  // Scores may pass the target (#172); only the 0 floor is enforced.
   const players = base.players.map((p) => {
-    if (
-      !int(p.giveScore) ||
-      !int(p.getScore) ||
-      p.giveScore < 0 ||
-      p.giveScore > target ||
-      p.getScore < 0 ||
-      p.getScore > target
-    )
+    if (!int(p.giveScore) || !int(p.getScore) || p.giveScore < 0 || p.getScore < 0)
       return invalid();
     return { ...p, giveScore: p.giveScore, getScore: p.getScore };
   });
