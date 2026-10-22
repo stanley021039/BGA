@@ -2,7 +2,7 @@ const http = require('node:http'),
   fs = require('node:fs'),
   path = require('node:path'),
   os = require('node:os');
-const { randomBytes, randomUUID } = require('node:crypto');
+const { createHash, randomBytes, randomUUID } = require('node:crypto');
 // Reviewed local vectors only; never resolve arbitrary SVG paths or uploaded SVGs.
 const CRUEL_ASSETS = Object.fromEntries(
   require('./games/majority-cruel-catalog').CRUEL_QUESTIONS.flatMap((q) =>
@@ -101,6 +101,14 @@ const { createRoomInvitations } = require('./rooms/invitations');
 const { createLobbyHandlers } = require('./http/lobby-routes');
 const { HttpError, writeError } = require('./http/errors');
 const { clientAddress, setSecurityHeaders } = require('./http/security');
+const {
+  PRIVATE_REVALIDATE,
+  etagFor,
+  readStatic,
+  sendCached,
+  sendStatic,
+  sendVersioned,
+} = require('./http/static-cache');
 const { openDatabase } = require('./db/index');
 const { createAuth } = require('./auth/index');
 const { BoardStore } = require('./community/board');
@@ -356,7 +364,7 @@ function initializeApp(config, dataLock, acquired) {
         entry.res.end();
       }
   };
-  const lobby = createLobby();
+  const lobby = createLobby(undefined, (userId) => portraitUrl(userId));
   const lobbyPingRoom = { code: '__LOBBY__', type: 'lobby', phase: 'lobby', players: [] };
   const expireRooms = () => runtime.expireRooms(history);
   const gameAudio = new GameAudioLibrary(
@@ -534,7 +542,7 @@ function initializeApp(config, dataLock, acquired) {
       },
     );
     departed?.delete(user.id);
-    p.avatar = `/characters/${user.id}`;
+    p.avatar = portraitUrl(user.id);
     seats.get(room.code).set(user.id, p.id);
     return { code: room.code, type: room.type || 'poker' };
   }
@@ -568,6 +576,54 @@ function initializeApp(config, dataLock, acquired) {
     if (lobbyAudience) audiences.push(lobbyAudience);
     return audiences;
   });
+  // A portrait URL names its bytes so browsers may keep it. A stale version still
+  // serves the current image, just without the immutable cache.
+  function portrait(viewerId, userId) {
+    const selected = characterMedia.avatar(userId);
+    if (!selected) throw new HttpError(404, 'CHARACTER_NOT_FOUND', '找不到角色外觀');
+    let bytes, mime, etag;
+    if (USER_IMAGE_PATH.test(selected.url)) {
+      const row = characterMedia.image(viewerId, selected.url);
+      if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
+      bytes = row.bytes;
+      mime = row.mime;
+      etag = etagFor(row.bytes);
+    } else {
+      ({ bytes, etag } = readStatic(path.join(__dirname, '..', 'public', selected.url)));
+      mime = selected.url.endsWith('.gif') ? 'image/gif' : 'image/png';
+    }
+    const version = createHash('sha256')
+      .update(selected.url)
+      .update(etag)
+      .digest('base64url')
+      .slice(0, 16);
+    return { bytes, mime, version };
+  }
+  // Lobby views are built on every poll, so versions are memoized. Any profile or
+  // admin change may alter anyone's portrait (shared characters, disabled
+  // owners), so each one drops the memo and re-versions every seat.
+  const portraitVersions = new Map();
+  function portraitUrl(userId) {
+    if (!portraitVersions.has(userId)) {
+      let version = null;
+      try {
+        version = portrait(userId, userId).version;
+      } catch (error) {
+        if (!(error instanceof HttpError)) throw error;
+      }
+      portraitVersions.set(userId, version);
+    }
+    const version = portraitVersions.get(userId);
+    return `/characters/${userId}` + (version ? `?v=${version}` : '');
+  }
+  function refreshPortraits() {
+    portraitVersions.clear();
+    for (const room of rooms.values())
+      for (const [accountId, playerId] of seats.get(room.code) || []) {
+        const player = room.players.find((p) => p.id === playerId);
+        if (player?.avatar?.startsWith('/characters/')) player.avatar = portraitUrl(accountId);
+      }
+  }
   const withLobbyMedia = (user, view) => {
     const serverNow = Date.now();
     lobbyPingRoom.players = view.visitors;
@@ -779,6 +835,8 @@ function initializeApp(config, dataLock, acquired) {
     try {
       const url = new URL(req.url, 'http://localhost');
       if (frontend?.serveAsset(req, res, url.pathname)) return;
+      if (req.method === 'POST' && /^\/api\/(?:profile|admin)\//.test(url.pathname))
+        res.once('finish', refreshPortraits);
       if (
         req.method === 'GET' &&
         url.searchParams.get('embed') === '1' &&
@@ -1140,7 +1198,7 @@ function initializeApp(config, dataLock, acquired) {
           for (const room of rooms.values()) {
             const playerId = seats.get(room.code)?.get(user.id);
             const player = room.players.find((p) => p.id === playerId);
-            if (player) player.avatar = `/characters/${user.id}`;
+            if (player) player.avatar = portraitUrl(user.id);
           }
           return send(settings);
         }
@@ -1209,8 +1267,7 @@ function initializeApp(config, dataLock, acquired) {
           for (const room of rooms.values())
             for (const [accountId, playerId] of seats.get(room.code) || []) {
               const player = room.players.find((p) => p.id === playerId);
-              if (player?.avatar?.split('?')[0] === removed)
-                player.avatar = '/characters/' + accountId;
+              if (player?.avatar?.split('?')[0] === removed) player.avatar = portraitUrl(accountId);
             }
           return send(result);
         }
@@ -1234,7 +1291,7 @@ function initializeApp(config, dataLock, acquired) {
           for (const room of rooms.values()) {
             const playerId = seats.get(room.code)?.get(user.id);
             const player = room.players.find((p) => p.id === playerId);
-            if (player) player.avatar = `/characters/${user.id}`;
+            if (player) player.avatar = portraitUrl(user.id);
           }
           return send({ appearance });
         }
@@ -1571,7 +1628,7 @@ function initializeApp(config, dataLock, acquired) {
             endRoomHistory(history, room, '建立房間未完成');
             throw error;
           }
-          p.avatar = `/characters/${user.id}`;
+          p.avatar = portraitUrl(user.id);
           rooms.set(code, room);
           seats.set(code, new Map([[user.id, p.id]]));
           return send({ code, type: room.type || 'poker' });
@@ -2155,7 +2212,7 @@ function initializeApp(config, dataLock, acquired) {
           'Content-Type',
           file.endsWith('.css') ? 'text/css' : 'text/javascript; charset=utf-8',
         );
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', file)));
+        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
       }
       const musicAsset = url.pathname.match(/^\/assets\/music\/([a-f0-9-]{36})$/);
       if (Object.hasOwn(TOURNAMENT_ART, url.pathname)) {
@@ -2163,13 +2220,15 @@ function initializeApp(config, dataLock, acquired) {
         res.setHeader('Content-Type', file.endsWith('.svg') ? 'image/svg+xml' : 'image/png');
         if (file.endsWith('.svg'))
           res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', file)));
+        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
       }
       if (Object.hasOwn(FREEHAND_ASSETS, url.pathname)) {
         res.setHeader('Content-Type', 'image/svg+xml');
         res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
-        return res.end(
-          fs.readFileSync(path.join(__dirname, '..', 'public', FREEHAND_ASSETS[url.pathname])),
+        return sendStatic(
+          req,
+          res,
+          path.join(__dirname, '..', 'public', FREEHAND_ASSETS[url.pathname]),
         );
       }
       if (
@@ -2202,7 +2261,7 @@ function initializeApp(config, dataLock, acquired) {
           'Content-Type',
           file.endsWith('.css') ? 'text/css' : 'text/javascript; charset=utf-8',
         );
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', file)));
+        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
       }
       if (musicAsset) {
         auth.requireUser(req);
@@ -2217,7 +2276,7 @@ function initializeApp(config, dataLock, acquired) {
         if (!image) throw new HttpError(404, 'ARTWORK_NOT_FOUND', '找不到你的作品');
         res.setHeader('Content-Type', image.mime);
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(image.bytes);
+        return sendCached(req, res, image.bytes, { cacheControl: PRIVATE_REVALIDATE });
       }
       const sharedGift = url.pathname.match(/^\/assets\/gifts\/shared\/([a-f0-9-]{36})$/);
       if (sharedGift) {
@@ -2226,23 +2285,27 @@ function initializeApp(config, dataLock, acquired) {
         if (!image?.bytes) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到禮物圖片');
         res.setHeader('Content-Type', image.mime);
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(image.bytes);
+        return sendCached(req, res, image.bytes, { cacheControl: PRIVATE_REVALIDATE });
       }
       if (GIFTS.some((gift) => gift.image === url.pathname)) {
         auth.requireUser(req);
         res.setHeader('Content-Type', 'image/png');
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', url.pathname)));
+        return sendStatic(
+          req,
+          res,
+          path.join(__dirname, '..', 'public', url.pathname),
+          PRIVATE_REVALIDATE,
+        );
       }
+      // characterMedia rejects a ?v= that no longer names the stored bytes.
       if (USER_SOUND_PATH.test(url.pathname)) {
         const viewer = auth.requireUser(req),
           row = characterMedia.sound(viewer.id, url.href);
         if (!row) throw new HttpError(404, 'SOUND_NOT_FOUND', '找不到表情音效');
         res.setHeader('Content-Type', row.mime);
-        res.setHeader('Content-Length', row.bytes.length);
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        if (req.method === 'HEAD') return res.end();
-        return res.end(row.bytes);
+        return sendVersioned(req, res, row.bytes, url.searchParams.has('v'));
       }
       const media = url.pathname.match(USER_IMAGE_PATH);
       if (media) {
@@ -2251,7 +2314,7 @@ function initializeApp(config, dataLock, acquired) {
         if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
         res.setHeader('Content-Type', row.mime);
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(row.bytes);
+        return sendVersioned(req, res, row.bytes, url.searchParams.has('v'));
       }
       if (url.pathname.startsWith('/assets/characters/')) {
         auth.requireUser(req);
@@ -2261,26 +2324,20 @@ function initializeApp(config, dataLock, acquired) {
         if (!asset) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
         res.setHeader('Content-Type', asset.endsWith('.gif') ? 'image/gif' : 'image/png');
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', asset)));
+        return sendStatic(
+          req,
+          res,
+          path.join(__dirname, '..', 'public', asset),
+          PRIVATE_REVALIDATE,
+        );
       }
       const characterId = url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];
       if (characterId) {
         const viewer = auth.requireUser(req),
-          selected = characterMedia.avatar(characterId);
-        if (!selected) throw new HttpError(404, 'CHARACTER_NOT_FOUND', '找不到角色外觀');
-        let bytes, mime;
-        if (USER_IMAGE_PATH.test(selected.url)) {
-          const row = characterMedia.image(viewer.id, selected.url);
-          if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
-          bytes = row.bytes;
-          mime = row.mime;
-        } else {
-          bytes = fs.readFileSync(path.join(__dirname, '..', 'public', selected.url));
-          mime = selected.url.endsWith('.gif') ? 'image/gif' : 'image/png';
-        }
+          { bytes, mime, version } = portrait(viewer.id, characterId);
         res.setHeader('Content-Type', mime);
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(bytes);
+        return sendVersioned(req, res, bytes, url.searchParams.get('v') === version);
       }
       const files = {
         '/assets/stitch/room-brand.svg': 'assets/stitch/room-brand.svg',
@@ -2644,13 +2701,11 @@ function initializeApp(config, dataLock, acquired) {
                                                 ? 'text/javascript; charset=utf-8'
                                                 : 'text/html; charset=utf-8',
       );
+      if (!file.endsWith('.html'))
+        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
       const document =
         frontend?.readPage(file) || fs.readFileSync(path.join(__dirname, '..', 'public', file));
-      res.end(
-        file.endsWith('.html')
-          ? withEntryIntro(document, { authPage: file === 'login.html' })
-          : document,
-      );
+      res.end(withEntryIntro(document, { authPage: file === 'login.html' }));
     } catch (e) {
       writeError(res, e);
     }

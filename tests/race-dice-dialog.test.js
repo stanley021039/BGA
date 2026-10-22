@@ -1030,7 +1030,7 @@ test('the optional dice renderer has one exact public asset route and loads befo
       response = await fetch(base + script);
     assert.equal(response.status, 200);
     assert.match(response.headers.get('content-type'), /^text\/javascript/);
-    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('cache-control'), 'no-cache');
     assert.equal(
       await response.text(),
       fs.readFileSync(path.join(__dirname, '../public/shared/race-dice-webgl.js'), 'utf8'),

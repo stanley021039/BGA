@@ -881,3 +881,5 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 2026-10-21 候選2.22.0：大廳場地移除，LobbyBackdrop 將角色 teleport 到 body 後方；點擊目標往上沒有控制項、文字或有底色／框線的面板才算地板。前後端移動邊界同為 X 6–94%、Y 12–97%。進場特效 7 款（apparition.ts），選擇存 localStorage，經 GET /api/lobby?entrance= 送伺服器白名單後隨訪客下發。保留 #159 角色對話。
 
 2026-10-22 候選2.23.0：ProfilePage 上傳改為 createDialog／expressionDialog，關閉即清除未送出草稿；ImageChoiceGrid 新增 append slot 放「我的作品」＋卡片，ExpressionEditor 新增 actions／sound slot（音效狀態仍由 ProfilePage 管理以保留離開提醒）。好友角色只保留頁面上的試聽區。MAX_CHARACTERS=20 於 src/profiles/uploads.js，前端常數同步。設定頁 EntrancePreview 以 apparate 播放目前角色，左欄最後一卡吸收剩餘高度。
+
+2026-10-22 候選2.24.0：src/http/static-cache.js 提供快取標頭；setSecurityHeaders 仍先設 no-store，HTML／API／遊戲音訊不變。/frontend-assets 為 public immutable；公開靜態檔 no-cache＋內容 ETag（記憶體快取，stat 變更即重讀）；需登入的檔案為 private no-cache；角色圖與音效帶 ?v= 時 private immutable（characterMedia 已拒絕過期版本）。座位與大廳頭像為 /characters/<id>?v=<內容版本>，由 app.js portraitUrl 記憶；任何 /api/profile/ 或 /api/admin/ POST 完成後 refreshPortraits 清除並更新所有座位。量測腳本 tools/qa/perf-measure.cjs，紀錄在 docs/performance-measurements.md。
