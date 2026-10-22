@@ -904,3 +904,5 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 2026-10-22 #182 候選2.31.0：TelephoneRoom.revealIndex／review 快照及房主 reveal 指令，expectedIndex＋receipt 防重送跳頁；Vue／legacy 每次只呈現一個片段，結算房主移交及新局重置。9項引擎／HTTP、前端30、當時全套2583通過；最後CSS後Vue3與原生Chrome三席9片段／1920亮390暗／重整專注通過。既有完整books／歷史公開規則不變，非新增資料保密。Figma額度阻擋重取，未宣稱已同步。證據界線見 docs/specs/TELEPHONE-REVEAL-182.md；CI／審查以PR為準，未部署。
 
 2026-10-22 #183 候選2.32.1：傳情畫意移除常駐同步／畫布額度列，store一般草稿同步保持notice空白；失敗、本地儲存／恢復及配額訊息仍顯示。固定44px回饋槽避免提交跳位。Vue／store5項通過，原生Chrome1920亮390暗持筆／ACK／放開與注入503皆驗，狀態切換外框等尺寸且像素無白屏；不含真人觸控／完整換輪。詳 docs/specs/TELEPHONE-NOTICES-183.md，CI／審查以PR為準，未部署。
+
+2026-10-23 #184 候選2.34.0：開局 prompting 第零輪先各自出題，90秒／全員送出早開；逾時採已同步非空主題、空白選定題庫備援，下一席作畫並重設期限。歷史替換主題頁、舊出題receipt無副作用重試及畫猜成就排除均有回歸；編譯Vue／Pinia電話七項通過。最終原生三席與整合測試／雙平台CI、失敗紀錄以PR為準，未部署。詳 docs/specs/TELEPHONE-TOPICS-184.md。

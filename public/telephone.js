@@ -4,6 +4,7 @@
     code = location.pathname.match(/\/telephone\/([a-f0-9]{6})\/?$/i)?.[1].toUpperCase();
   let state,
     busy = false,
+    composingText = false,
     disposed = false,
     reading = false,
     lifetime,
@@ -76,7 +77,9 @@
     });
   }
   function beforeDeadline() {
-    return state?.phase === 'passing' && Date.now() - clockOffset < state.deadline;
+    return (
+      ['prompting', 'passing'].includes(state?.phase) && Date.now() - clockOffset < state.deadline
+    );
   }
   function scheduleDraft() {
     if (
@@ -188,13 +191,14 @@
   function lock() {
     roomActions.refresh();
     for (const n of $('#controls').querySelectorAll('button,input,select,textarea'))
-      n.disabled = busy || (state?.phase === 'passing' && !beforeDeadline());
+      n.disabled = busy || (['prompting', 'passing'].includes(state?.phase) && !beforeDeadline());
     $('#leave').disabled = busy;
     $('#retry').disabled = busy;
     const submit = $('#submit');
     if (submit)
       submit.disabled =
         busy ||
+        composingText ||
         !beforeDeadline() ||
         !!state.task?.submitted ||
         (state.task?.kind === 'drawing' ? !strokes.length : !$('#guess')?.value.trim());
@@ -271,7 +275,8 @@
     const label = $('#telephoneTimer'),
       progress = $('#telephoneTimerProgress');
     if (!label || !progress) return;
-    const timed = state?.phase === 'passing' && Number.isFinite(state.deadline);
+    const timed =
+      ['prompting', 'passing'].includes(state?.phase) && Number.isFinite(state.deadline);
     $('#telephoneCountdown').hidden = !timed;
     if (!timed) {
       countdownBar?.reset();
@@ -539,6 +544,13 @@
         card.append(canvas);
         paint(canvas, p.strokes);
       }
+      if (p.timedOut)
+        card.append(
+          el(
+            'small',
+            p.topicFallback ? '時間到，由情境題庫補上主題。' : '時間到，採用已同步的私人草稿。',
+          ),
+        );
       box.append(card);
     } else box.append(el('p', '等待房主開始播放故事。'));
     if (review && review.index < review.total - 1) {
@@ -567,18 +579,20 @@
     $('#roomTag').textContent = '房號 ' + code;
     $('#leave').hidden = false;
     $('#phase').textContent =
-      state.phase === 'passing'
-        ? '第 ' +
-          state.round +
-          '／' +
-          state.roundLimit +
-          ' 頁 · ' +
-          (state.task.kind === 'drawing' ? '畫圖' : '猜詞')
-        : state.phase === 'finished'
-          ? state.interrupted
-            ? '傳遞中止，回看已送出的頁面'
-            : '全部揭曉！'
-          : '等待入座';
+      state.phase === 'prompting'
+        ? '先各自想一個主題'
+        : state.phase === 'passing'
+          ? '第 ' +
+            state.round +
+            '／' +
+            state.roundLimit +
+            ' 頁 · ' +
+            (state.task.kind === 'drawing' ? '畫圖' : '猜詞')
+          : state.phase === 'finished'
+            ? state.interrupted
+              ? '傳遞中止，回看已送出的頁面'
+              : '全部揭曉！'
+            : '等待入座';
     $('#players').innerHTML = state.players
       .map((p) =>
         window.GameShell.playerRow(p, {
@@ -589,12 +603,14 @@
       )
       .join('');
     $('#readiness').textContent =
-      state.phase === 'passing'
-        ? (state.players
-            .filter((p) => !p.ready)
-            .map((p) => p.name)
-            .join('、') || '全員已送出') + '；時間到自動傳下一頁。'
-        : '固定入座順序傳遞，不計個人分數。';
+      state.phase === 'prompting'
+        ? '90 秒內出題，全員送出可提早開始；逾時空白由題庫補上。'
+        : state.phase === 'passing'
+          ? (state.players
+              .filter((p) => !p.ready)
+              .map((p) => p.name)
+              .join('、') || '全員已送出') + '；時間到自動傳下一頁。'
+          : '固定入座順序傳遞，不計個人分數。';
     const nextKey = JSON.stringify([
       state.phase,
       state.stepId,
@@ -606,10 +622,11 @@
     ]);
     if (nextKey !== key) {
       key = nextKey;
+      composingText = false;
       finishStroke();
       const previousDraft = draftKey;
       const nextDraft =
-        state.phase === 'passing' && !state.task.submitted
+        ['prompting', 'passing'].includes(state.phase) && !state.task.submitted
           ? 'telephone:' + code + ':' + state.me + ':' + state.stepId
           : '';
       if (previousDraft && previousDraft !== nextDraft) forget();
@@ -663,9 +680,17 @@
           waiting.className = 'ui-drawing-board telephone-submitted';
           const head = el('div');
           head.className = 'board-head';
-          head.append(el('h3', '本頁已送出'));
+          head.append(el('h3', state.phase === 'prompting' ? '主題已送出' : '本頁已送出'));
           waiting.append(head, makeCountdown('傳頁剩餘'));
-          box.append(waiting, el('p', '這頁已送出，時間到自動傳下一頁；其他頁面仍保密。'));
+          box.append(
+            waiting,
+            el(
+              'p',
+              state.phase === 'prompting'
+                ? '等待其他玩家出題；全員送出即可開始，最多等到倒數結束。'
+                : '這頁已送出，時間到自動傳下一頁；其他頁面仍保密。',
+            ),
+          );
         } else {
           let saved;
           try {
@@ -676,24 +701,48 @@
           saved ||= state.task.draft;
           if (state.task.kind === 'drawing') drawControls(box, saved);
           else {
-            const { canvas } = board(box, '只看這張圖，猜一句話', false);
-            paint(canvas, p.strokes);
+            if (state.phase === 'prompting')
+              box.append(el('h3', '先想一個主題，交給下一位作畫'), makeCountdown('出題剩餘'));
+            else {
+              const { canvas } = board(box, '只看這張圖，猜一句話', false);
+              paint(canvas, p.strokes);
+            }
             if (p.skipped) box.append(el('p', '上一頁略過，可自由猜或略過。'));
-            const label = el('label', '你覺得圖上是什麼？');
+            const label = el(
+              'label',
+              state.phase === 'prompting' ? '寫下你的主題（1–80 字）' : '你覺得圖上是什麼？',
+            );
             label.htmlFor = 'guess';
             const input = el('input');
             input.id = 'guess';
-            input.maxLength = 80;
             input.value = saved?.text || '';
-            input.oninput = () => {
+            const changed = () => {
+              if (composingText || !beforeDeadline()) return;
+              input.value = [...input.value.replace(/[\u0000-\u001f\u007f]/g, '')]
+                .slice(0, 80)
+                .join('');
               save();
               lock();
             };
+            input.oncompositionstart = () => {
+              composingText = true;
+              lock();
+            };
+            input.oncompositionend = () => {
+              composingText = false;
+              changed();
+            };
+            input.oninput = changed;
             box.append(label, input);
           }
-          const warning = el('p', '送出後不能修改；時間到自動傳下一頁，並保留已同步的內容。');
+          const warning = el(
+            'p',
+            state.phase === 'prompting'
+              ? '主題送出後不能修改；全員送出可提早開始，逾時空白由題庫補上。'
+              : '送出後不能修改；時間到自動傳下一頁，並保留已同步的內容。',
+          );
           warning.id = 'submitWarning';
-          const submit = btn('確認送出這一頁', () => {
+          const submit = btn(state.phase === 'prompting' ? '送出主題' : '確認送出這一頁', () => {
             finishStroke();
             return command(
               'submit',
@@ -707,8 +756,15 @@
           actions.className = 'telephone-actions';
           actions.append(
             submit,
-            btn('略過這頁', () => {
-              if (confirm('這頁會標記為略過，確定嗎？')) return command('skip');
+            btn(state.phase === 'prompting' ? '使用題庫主題' : '略過這頁', () => {
+              if (
+                confirm(
+                  state.phase === 'prompting'
+                    ? '使用題庫提供的主題？'
+                    : '這頁會標記為略過，確定嗎？',
+                )
+              )
+                return command('skip');
             }),
           );
           box.append(warning, actions);
@@ -758,7 +814,7 @@
     if (
       busy ||
       !confirm(
-        state.phase === 'passing'
+        ['prompting', 'passing'].includes(state.phase)
           ? '離席會中止全桌傳遞並揭曉已送出的頁面，確定離開？'
           : '離開房間？',
       )

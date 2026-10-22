@@ -250,7 +250,7 @@ test('Minimal nonempty submissions and guesses count, while empty drawings alone
     assert.equal(r.matchAchievements.completed.participants[0].eligible, !empty);
   }
 });
-test('Telephone must finish all committed pages; skipped pages and timed-out blank drafts are not personal submissions', (t) => {
+test('Telephone requires drawing and guessing pages; topics cannot replace skipped or timed-out pages', (t) => {
   const f = fixture(t),
     { TelephoneRoom } = require('../src/games/telephone');
   for (const skip of [false, true]) {
@@ -265,6 +265,7 @@ test('Telephone must finish all committed pages; skipped pages and timed-out bla
     r.add('a', true);
     r.add('b', true);
     r.start();
+    require('./helpers/telephone.cjs').completeTelephoneTopics(r);
     while (r.phase !== 'finished') {
       for (const q of r.players)
         r.act(q.id, skip && q.id === p.id ? 'skip' : 'submit', {
@@ -297,6 +298,40 @@ test('Telephone must finish all committed pages; skipped pages and timed-out bla
     }
   }
 });
+test('replaying a topic receipt cannot replace a missing drawing for achievements', (t) => {
+  const f = fixture(t),
+    { TelephoneRoom } = require('../src/games/telephone');
+  let now = 1000000;
+  const room = new TelephoneRoom(
+    'ABCDEF',
+    '重送',
+    () => 0,
+    () => now,
+  );
+  const player = bind(room, f.ids[0]);
+  room.add('a', true);
+  room.add('b', true);
+  room.start();
+  const topic = { stepId: room.stepId, requestId: randomUUID(), text: '我的主題' };
+  room.act(player.id, 'submit', topic);
+  for (const peer of room.players.slice(1))
+    room.act(peer.id, 'submit', { stepId: room.stepId, requestId: randomUUID(), text: '同伴主題' });
+  room.act(player.id, 'submit', topic);
+  assert.equal(room.submissions[player.id], undefined);
+  now = room.deadline;
+  room.auto();
+  for (const peer of room.players)
+    room.act(peer.id, 'submit', {
+      stepId: room.stepId,
+      requestId: randomUUID(),
+      text: '第二頁猜詞',
+    });
+  now = room.deadline;
+  room.auto();
+  room.matchAchievements.finish();
+  assert.equal(room.matchAchievements.completed.participants[0].eligible, false);
+});
+
 test('market milestones count settled days once, including corrections, and ignore nonvoters', (t) => {
   const f = fixture(t),
     { MarketStore } = require('../src/market/store');

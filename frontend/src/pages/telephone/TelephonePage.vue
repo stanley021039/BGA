@@ -25,25 +25,31 @@ const pageCount = computed(
     (players.value >= 3 ? (players.value % 2 ? players.value - 1 : players.value) : 0),
 );
 const phase = computed(() =>
-  state.value?.phase === 'passing'
-    ? '畫圖與猜詞傳遞中'
-    : state.value?.phase === 'finished'
-      ? state.value.interrupted
-        ? '有人離席，傳遞中止'
-        : '全部故事揭曉'
-      : '等待入座',
+  state.value?.phase === 'prompting'
+    ? '先各自想一個主題'
+    : state.value?.phase === 'passing'
+      ? '畫圖與猜詞傳遞中'
+      : state.value?.phase === 'finished'
+        ? state.value.interrupted
+          ? '有人離席，傳遞中止'
+          : '全部故事揭曉'
+        : '等待入座',
 );
 function status(player: RoomPlayer) {
   const label =
-    state.value?.phase === 'passing'
+    state.value?.phase === 'prompting'
       ? player.ready
-        ? '已送出，等待傳頁'
-        : '正在完成本頁'
-      : state.value?.phase === 'finished'
-        ? state.value.interrupted
-          ? '傳遞中止 · 回看已送出頁面'
-          : '本局結束 · 一起回看故事'
-        : '等待開始';
+        ? '主題已送出'
+        : '正在想主題'
+      : state.value?.phase === 'passing'
+        ? player.ready
+          ? '已送出，等待傳頁'
+          : '正在完成本頁'
+        : state.value?.phase === 'finished'
+          ? state.value.interrupted
+            ? '傳遞中止 · 回看已送出頁面'
+            : '本局結束 · 一起回看故事'
+          : '等待開始';
   return player.online ? label : `${label} · 暫時離線`;
 }
 </script>
@@ -51,10 +57,16 @@ function status(player: RoomPlayer) {
   <GameRoomPage
     type="telephone"
     title="傳情畫意"
-    description="3–8 人 · 每頁 90 秒 · 畫圖與猜詞交替，不計個人分數"
+    description="3–8 人 · 先各自出題，再畫圖與猜詞交替 · 不計個人分數"
     :reader="readTelephoneSnapshot"
     :phase="phase"
-    :round="state?.round ? `第 ${state.round}／${state.roundLimit} 頁` : ''"
+    :round="
+      state?.phase === 'prompting'
+        ? '出題階段'
+        : state?.round
+          ? `第 ${state.round}／${state.roundLimit} 頁`
+          : ''
+    "
     :max-players="8"
     :show-metrics="false"
     :status="status"
@@ -71,9 +83,9 @@ function status(player: RoomPlayer) {
     <template #settings
       ><details :open="state?.phase === 'waiting'" class="vue-telephone-settings"
         ><summary
-          ><span>情境題庫</span><strong>{{ sourceLabel }}</strong></summary
+          ><span>逾時備援題庫</span><strong>{{ sourceLabel }}</strong></summary
         ><fieldset :disabled="!telephone.settingsEditable || room.busy"
-          ><legend>獨立情境題庫（至少一種）</legend
+          ><legend>空白主題的備援題庫（至少一種）</legend
           ><label v-for="source in state?.sources" :key="source.id"
             ><input
               v-model="telephone.sources"
@@ -94,23 +106,28 @@ function status(player: RoomPlayer) {
         ><div
           ><dt>傳遞頁數</dt
           ><dd>{{ pageCount ? pageCount + ' 頁（依本局入座人數）' : '3–8 人入座後確定' }}</dd></div
-        ><div><dt>換頁機制</dt><dd>每頁 90 秒，到時自動傳頁</dd></div
-        ><div><dt>揭曉方式</dt><dd>無計分，最後回看完整故事</dd></div></dl
+        ><div><dt>出題階段</dt><dd>限時 90 秒，全員送出可提早開始；逾時空白用題庫補上</dd></div>
+        <div><dt>換頁機制</dt><dd>每頁 90 秒，到時自動傳頁</dd></div
+        ><div><dt>揭曉方式</dt><dd>無計分，由房主逐頁播放故事</dd></div></dl
       ></template
     >
     <template #help
       ><ol
         ><li
-          >3–8 人，依固定入座順序傳遞；每個人從不同情境題目開始。奇數人傳 n−1 頁、偶數人傳 n
-          頁，最後一頁是猜詞。</li
+          >3–8 人先各自輸入 1–80 字主題，限時 90
+          秒，全員送出可提早開始。逾時保留已同步主題；空白由所選題庫補上。</li
+        >
+        <li>主題依固定入座順序交給下一位作畫。奇數人傳 n−1 頁、偶數人傳 n 頁，最後一頁是猜詞。</li
         ><li>畫圖時只看上一頁文字；猜詞時只看上一張圖。傳遞中看不到其他頁面或別人的私人草稿。</li
-        ><li>每頁固定 90 秒，全員提早送出也等時間到才換頁。送出或略過後不能修改。</li
+        ><li>作畫／猜詞每頁固定 90 秒，全員提早送出也等時間到才換頁。送出或略過後不能修改。</li
         ><li
           >未送出時，時間到採用伺服器已接受的私人草稿；沒有內容標記略過。最後一刻尚未同步的內容不保證納入。</li
         ><li
           >畫作最多 100 筆、3,000 點，每筆最多 256 點；猜詞最多 80
           字。畫布可用滑鼠、觸控，或方向鍵搭配空白鍵操作；幾何工具以兩次空白鍵設定起點與終點。</li
-        ><li>最後一起回看完整傳遞簿，不計分或排名。有人離席會中止，只揭曉已送出的頁面。</li></ol
+        ><li
+          >最後由房主逐頁播放完整傳遞簿，不計分或排名。有人離席會中止，只揭曉已送出的頁面。</li
+        ></ol
       ><p
         >重新整理不延長期限；本分頁草稿與伺服器私人草稿可供恢復。伺服器重啟不續局；腳本夥伴只用於試玩流程。</p
       ></template

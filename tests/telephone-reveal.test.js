@@ -1,4 +1,5 @@
 'use strict';
+const { completeTelephoneTopics } = require('./helpers/telephone.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { randomUUID } = require('node:crypto');
@@ -13,6 +14,7 @@ function fixture(count = 3) {
   );
   const players = Array.from({ length: count }, (_, i) => room.add('玩家' + i));
   room.start();
+  completeTelephoneTopics(room);
   while (room.phase === 'passing') {
     now = room.deadline;
     room.auto();
@@ -42,6 +44,7 @@ for (const count of [3, 4, 5, 6, 7, 8])
     const finalBooks = structuredClone(room.books);
     assert.deepEqual(room.view(players[1].id).books, finalBooks, 'archive data stays unchanged');
     room.start();
+    completeTelephoneTopics(room);
     assert.equal(room.revealIndex, -1);
     assert.equal(room.view(players[0].id).review, null);
   });
@@ -68,6 +71,7 @@ test('reveal rejects visitors, stale positions, conflicting receipts and stale g
     (e) => e.code === 'STALE_REVIEW',
   );
   room.start();
+  completeTelephoneTopics(room);
   assert.throws(
     () => room.act(players[0].id, 'reveal', data),
     (e) => e.code === 'STALE_STEP',
@@ -81,6 +85,7 @@ test('interrupted books can be revealed and a new host continues the same positi
   const room = new TelephoneRoom('ABCDEF', '中止', () => 0);
   const players = Array.from({ length: 3 }, (_, i) => room.add('玩家' + i));
   room.start();
+  completeTelephoneTopics(room);
   room.kick(players[0].id, players[0].id, true);
   assert.equal(room.interrupted, true);
   assert.equal(room.host, players[1].id);

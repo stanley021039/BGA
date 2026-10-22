@@ -79,6 +79,11 @@ const { TelephoneRoom } = require('../../src/games/telephone');
       await current.page.locator('.vue-game-main').waitFor();
     }
     let state = await post(clients[0].context, 'start', { code });
+    for (let tries = 0; state.phase === 'prompting' && tries < 60; tries++) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      state = await (await clients[0].context.request.get(base + '/api/state?code=' + code)).json();
+    }
+    assert.equal(state.phase, 'passing');
     const stroke = {
       tool: 'brush',
       color: '#123456',

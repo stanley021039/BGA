@@ -75,7 +75,11 @@ export const useTelephoneStore = defineStore('telephone', () => {
   const offset = computed(() => now.value - serverTime.value),
     expired = computed(() => !!state.value?.deadline && serverTime.value >= state.value.deadline),
     context = computed(() =>
-      room.seat && !room.terminal && state.value?.phase === 'passing' && state.value.stepId
+      room.seat &&
+      !room.terminal &&
+      state.value &&
+      ['prompting', 'passing'].includes(state.value.phase) &&
+      state.value.stepId
         ? `${room.scope}:${room.code}:${state.value.me}:${state.value.stepId}`
         : '',
     ),
@@ -374,7 +378,12 @@ export const useTelephoneStore = defineStore('telephone', () => {
     if (clock) clearInterval(clock);
     clock = null;
     tick();
-    if (state.value?.phase === 'passing' && !expired.value && !document.hidden)
+    if (
+      state.value &&
+      ['prompting', 'passing'].includes(state.value.phase) &&
+      !expired.value &&
+      !document.hidden
+    )
       clock = setInterval(tick, 250);
   }
   watch(

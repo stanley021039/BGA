@@ -30,6 +30,8 @@ const reviewPages = computed(() =>
   selected = computed(() => reviewPages.value[state.value.review?.index ?? -1]),
   blocked = computed(() => !telephone.editable || telephone.activeStroke);
 const drawing = computed(() => state.value.task?.kind === 'drawing');
+const prompting = computed(() => state.value.phase === 'prompting');
+const playing = computed(() => ['prompting', 'passing'].includes(state.value.phase));
 const guess = computed({
   get: () => telephone.text,
   set: (value: string) => telephone.changeText(value),
@@ -50,14 +52,18 @@ const waitingFacts = computed(() => [
         ? `本局 ${playerCount.value % 2 ? playerCount.value - 1 : playerCount.value} 頁`
         : '3–8 人入座',
   },
-  { label: '每頁作畫／猜詞', value: `${state.value.options.seconds} 秒`, note: '全員同步傳頁' },
-  { label: '情境題庫', value: selectedSources.value, note: '畫圖與猜詞交替' },
+  {
+    label: '出題／每頁畫猜',
+    value: `${state.value.options.seconds} 秒`,
+    note: '出題全員送出可提前開始',
+  },
+  { label: '空白主題備援', value: selectedSources.value, note: '先各自出題，再畫圖與猜詞交替' },
 ]);
 const displayedNotice = computed(
   () =>
     actions.notice ||
     telephone.storageNotice ||
-    (state.value.phase === 'passing' && state.value.task?.submitted ? '' : telephone.notice),
+    (playing.value && state.value.task?.submitted ? '' : telephone.notice),
 );
 watch(
   [
@@ -99,7 +105,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     title="傳情畫意"
     hero-title="經典紙筆畫猜接力！"
     description="只看上一棒，最後回看故事演變。"
-    hero-description="每位玩家擁有一本專屬傳遞簿，題目與畫作輪流交替傳遞。只看上一棒，最後一起揭曉故事演變。"
+    hero-description="先各自想一個主題，交給下一位畫圖，再交替猜詞與作畫。只看上一棒，最後由房主逐頁揭曉故事演變。"
     art="/assets/stitch/telephone-waiting.svg"
     :facts="waitingFacts"
   />
@@ -107,21 +113,37 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     v-else
     class="vue-game-panel vue-telephone-stage"
     data-telephone
-    :class="{ 'is-passing': state.phase === 'passing', 'is-finished': state.phase === 'finished' }"
+    :class="{
+      'is-passing': playing,
+      'is-prompting': prompting,
+      'is-finished': state.phase === 'finished',
+    }"
     aria-labelledby="telephoneHeading"
   >
-    <header v-if="state.phase === 'passing' && state.task" class="vue-telephone-hud" data-private>
-      <div class="vue-telephone-hud-prompt">
+    <header v-if="playing && state.task" class="vue-telephone-hud" data-private>
+      <div
+        class="vue-telephone-hud-prompt"
+        tabindex="0"
+        role="group"
+        aria-labelledby="telephoneHeading"
+      >
         <span class="vue-telephone-private">{{
-          drawing ? '你的專屬秘密題目' : '接到上一棒傳遞簿'
+          prompting ? '為你的故事出題' : drawing ? '你的專屬秘密題目' : '接到上一棒傳遞簿'
         }}</span>
         <h1 id="telephoneHeading">{{
-          drawing ? state.task.previous.text : '只看上一張圖，猜一句話'
+          prompting ? '先想一個主題' : drawing ? state.task.previous.text : '只看上一張圖，猜一句話'
         }}</h1>
         <span class="vue-telephone-private-note">{{
-          drawing ? '只給你看；把文字畫成一張圖' : `來自 ${state.task.previous.authorName} 的畫作`
+          prompting
+            ? '送出後會交給下一位玩家作畫。'
+            : drawing
+              ? '只給你看；把文字畫成一張圖'
+              : `來自 ${state.task.previous.authorName} 的畫作`
         }}</span>
-        <span class="vue-telephone-page-number"
+        <span v-if="prompting" class="vue-telephone-page-number">{{
+          state.task.submitted ? '主題已送出，等待其他玩家' : '90 秒內出題；全員送出即可開始'
+        }}</span>
+        <span v-else class="vue-telephone-page-number"
           >第 {{ String(state.round).padStart(2, '0') }}／{{
             String(state.roundLimit).padStart(2, '0')
           }}
@@ -135,7 +157,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         :offset="telephone.offset"
         :epoch="state.stepId || 'waiting'"
         :now="telephone.now"
-        caption="本頁剩餘"
+        :caption="prompting ? '出題剩餘' : '本頁剩餘'"
         empty-value="每頁 90 秒"
         urgent
       />
@@ -156,16 +178,17 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     </header>
     <div class="vue-telephone-live">
       <section
-        v-if="state.phase === 'passing' && state.task"
+        v-if="playing && state.task"
         class="vue-telephone-task"
         :class="{
           'is-drawing': drawing,
-          'is-guessing': !drawing,
+          'is-guessing': !drawing && !prompting,
+          'is-prompting': prompting,
           'is-submitted': state.task.submitted,
         }"
         data-private
       >
-        <div v-if="!drawing" class="vue-telephone-previous">
+        <div v-if="!drawing && !prompting" class="vue-telephone-previous">
           <div class="vue-telephone-sheet-heading"
             ><h2>上一棒傳給你的內容</h2><span>其餘頁面仍保密</span></div
           >
@@ -211,14 +234,17 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           </template>
           <div v-else class="vue-telephone-guess">
             <label for="telephoneGuess" class="vue-telephone-guess-heading"
-              >猜猜此圖含義 <small>答案即為下一棒題目</small></label
+              >{{ prompting ? '寫下你的主題' : '猜猜此圖含義' }}
+              <small>{{
+                prompting ? '逾時空白由題庫補上主題' : '答案即為下一棒題目'
+              }}</small></label
             >
             <input
               id="telephoneGuess"
               :key="room.scope + ':' + state.stepId"
               v-model="guess"
               autocomplete="off"
-              placeholder="輸入你推測的詞彙或短句"
+              :placeholder="prompting ? '想一個有趣的詞彙或短句' : '輸入你推測的詞彙或短句'"
               :disabled="!telephone.editable"
               aria-describedby="telephoneGuessCount"
               @input="input"
@@ -237,7 +263,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
               variant="primary"
               class="vue-telephone-guess-submit"
               icon="check"
-              label="提交猜詞答案"
+              :label="prompting ? '送出主題' : '提交猜詞答案'"
               :pending="telephone.finishing"
               :disabled="blocked || composing || !telephone.text.trim()"
               @click="telephone.submit()"
@@ -246,8 +272,12 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         </template>
         <div v-else class="vue-telephone-submitted" role="status">
           <span class="vue-telephone-submitted-mark" aria-hidden="true">✓</span
-          ><h2>這一頁，完成了！</h2>
-          <p>已收到你的提交。時間到才傳下一頁，現在可以看看朋友的傳遞狀態，或在聊天室聊聊天。</p>
+          ><h2>{{ prompting ? '主題已送出！' : '這一頁，完成了！' }}</h2>
+          <p>{{
+            prompting
+              ? '等待其他玩家出題；全員送出就開始作畫，最多等到倒數結束。'
+              : '已收到你的提交。時間到才傳下一頁，現在可以看看朋友的傳遞狀態，或在聊天室聊聊天。'
+          }}</p>
           <small>其他頁面與朋友的私人草稿仍然保密。</small>
         </div>
       </section>
@@ -280,7 +310,11 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
                 :label="selected.page.authorName + ' 的第 ' + selected.index + ' 頁畫作'"
               />
               <p v-else class="vue-telephone-book-text">{{ selected.page.text }}</p
-              ><small v-if="selected.page.timedOut">時間到，採用已同步的私人草稿</small>
+              ><small v-if="selected.page.timedOut">{{
+                selected.page.topicFallback
+                  ? '時間到，由情境題庫補上主題。'
+                  : '時間到，採用已同步的私人草稿'
+              }}</small>
             </template>
           </article>
         </template>
@@ -293,10 +327,10 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
     /></div>
     <footer
-      v-if="drawing || state.phase !== 'passing' || state.task?.submitted"
+      v-if="prompting || drawing || !playing || state.task?.submitted"
       class="vue-telephone-actions"
     >
-      <template v-if="state.phase === 'passing' && !state.task?.submitted">
+      <template v-if="drawing && playing && !state.task?.submitted">
         <UiButton
           stitch
           variant="primary"
@@ -308,6 +342,9 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           @click="telephone.submit()"
         />
       </template>
+      <span v-else-if="prompting" class="vue-telephone-action-note">{{
+        state.task?.submitted ? '等待其他玩家完成或倒數結束。' : '主題會交給下一位玩家作畫。'
+      }}</span>
       <template v-else-if="state.phase === 'finished' && state.review">
         <span class="vue-telephone-action-note">{{
           state.review.index >= state.review.total - 1
@@ -328,8 +365,10 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         />
       </template>
       <span v-else class="vue-telephone-action-note">{{
-        state.phase === 'passing'
-          ? '已提交，等待共同倒數結束後傳頁。'
+        playing
+          ? prompting
+            ? '已出題，等待其他玩家完成或倒數結束。'
+            : '已提交，等待共同倒數結束後傳頁。'
           : '想再玩一次？由房主從房間設定開始新一場。'
       }}</span>
     </footer>

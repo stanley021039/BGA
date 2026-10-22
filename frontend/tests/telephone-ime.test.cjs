@@ -162,6 +162,29 @@ test('drawing scene omits routine sync text and quotas but retains actionable no
   }
 });
 
+test('opening topic entry shows a text task and retains Chinese composition across updates', async () => {
+  const h = harness();
+  try {
+    h.telephone.state.phase = 'prompting';
+    h.telephone.state.round = 0;
+    await vue.nextTick();
+    assert.equal(h.host.querySelector('.vue-telephone-previous'), null);
+    assert.match(h.host.textContent, /寫下你的主題/);
+    h.event('compositionstart');
+    h.event('input', '正在組字');
+    h.telephone.now += 1500;
+    h.telephone.state = { ...h.telephone.state };
+    await vue.nextTick();
+    assert.equal(h.input().value, '正在組字');
+    assert.equal(h.telephone.text, '');
+    h.event('compositionend', '我出的主題');
+    await vue.nextTick();
+    assert.equal(h.telephone.text, '我出的主題');
+  } finally {
+    h.dispose();
+  }
+});
+
 test('completed input still normalizes controls and limits Unicode code points', async () => {
   const h = harness();
   try {
