@@ -49,7 +49,7 @@ jobs:
         run: npm run format:check
       - name: Install locked frontend dependencies
         run: npm --prefix frontend ci
-      - name: Run telephone IME regression
-        run: node --test frontend/tests/telephone-ime.test.cjs
+      - name: Run telephone frontend regressions
+        run: node --test frontend/tests/telephone-*.test.cjs
       - name: Run release check and full test suite
         run: npm test
