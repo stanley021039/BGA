@@ -221,7 +221,8 @@
       color: var(--stitch-ink);
       box-shadow: none;
       > img {
-        inline-size: 100%;
+        inline-size: 72px;
+        max-inline-size: 100%;
         block-size: 72px;
         min-block-size: 0;
         object-fit: contain;
