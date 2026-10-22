@@ -103,7 +103,9 @@
             esc(name) +
             (id === s.me ? '（你）' : '') +
             '</span>' +
-            (showGain ? '<strong>' + (gain ? '+1 分' : '未加分') + '</strong>' : '') +
+            (showGain
+              ? '<strong>' + (gain > 0 ? '+1 分' : gain < 0 ? '-1 分' : '未加分') + '</strong>'
+              : '') +
             '</li>'
           );
         })
@@ -182,7 +184,7 @@
         t.size +
         ' 強淘汰賽</div><h1>' +
         title(s) +
-        '</h1><p>3–12 人一起選邊，選到唯一多數每人 +1 分。最後選出全桌冠軍，也比一比誰最懂大家。</p>' +
+        '</h1><p>3–12 人一起選邊，選到唯一多數每人 +1 分，只有 1 人選另一邊時該人 -1 分。最後選出全桌冠軍，也比一比誰最懂大家。</p>' +
         (s.host
           ? settings(s)
           : '<p>主題：' +
@@ -190,7 +192,7 @@
             ' · ' +
             t.size +
             ' 強</p>') +
-        '<div class="tournament-rules"><span>秘密投票</span><span>平票不加分・抽籤晉級</span><span>選項冠軍＋玩家排行</span></div><p class="small">各主題隨機抽出 ' +
+        '<div class="tournament-rules"><span>秘密投票</span><span>唯一少數 -1 分</span><span>平票不加分・抽籤晉級</span><span>選項冠軍＋玩家排行</span></div><p class="small">各主題隨機抽出 ' +
         t.size +
         ' 個不同選項。' +
         (t.mode === 'music'
@@ -225,7 +227,8 @@
                 '」晉級。'
               : '「' +
                 esc(s.result.tournament.advanced.label) +
-                '」獲勝，選到多數的玩家各 +1 分。') +
+                '」獲勝，選到多數的玩家各 +1 分' +
+                (s.result.tournament.lonePenaltyId ? '，唯一選另一邊的玩家 -1 分。' : '。')) +
             (s.result.missingIds.length
               ? ' ' +
                 s.result.missingIds.length +
@@ -364,7 +367,7 @@
     if (info && s.phase === 'waiting') {
       info.querySelector('h2').textContent = title(s);
       info.querySelector('p').textContent =
-        s.tournament.size + ' 強淘汰賽・多數 +1 分・選出全桌冠軍';
+        s.tournament.size + ' 強淘汰賽・多數 +1 分・唯一少數 -1 分・選出全桌冠軍';
     }
     for (const b of stage.querySelectorAll('[data-tournament-listen]')) {
       w.GameUI?.decorateButton(b, 'play', { label: '試聽這首歌' });

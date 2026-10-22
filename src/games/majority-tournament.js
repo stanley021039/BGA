@@ -134,6 +134,11 @@ const methods = {
     const tied = counts[0] === counts[1],
       win = tied ? this.rng(2) : counts[0] > counts[1] ? 0 : 1,
       gains = Object.fromEntries(this.players.map((p) => [p.id, 0]));
+    // #189: when the clear majority faces exactly one voter, that lone guesser loses 1 point.
+    const loneId =
+      !tied && counts[1 - win] === 1
+        ? this.groups.find((g) => Number(g.key) !== win)?.playerIds[0]
+        : null;
     for (const g of this.groups) {
       g.winner = !tied && Number(g.key) === win;
       if (g.winner)
@@ -141,6 +146,10 @@ const methods = {
           gains[id] = 1;
           this.player(id).score++;
         }
+    }
+    if (loneId) {
+      gains[loneId] = -1;
+      this.player(loneId).score--;
     }
     const t = this.tournamentState,
       entry = this.question.entries[win],
@@ -174,13 +183,17 @@ const methods = {
         tied,
         counts,
         decidedBy: tied ? 'draw' : 'votes',
+        lonePenaltyId: loneId,
       },
     };
     this.event(
       'reveal',
       tied
         ? '平票不加分，抽籤由「' + entry.label + '」晉級'
-        : '「' + entry.label + '」晉級，選到多數的玩家各得 1 分',
+        : '「' +
+            entry.label +
+            '」晉級，選到多數的玩家各得 1 分' +
+            (loneId ? '；唯一選另一邊的玩家扣 1 分' : ''),
     );
     this.completeAchievementUnit('rules_completed');
   },
