@@ -204,6 +204,9 @@
       --ui-button-border-color: var(--stitch-line);
       --ui-button-border-width: 1px;
       display: grid;
+      // One full-width column: the inherited justify-content: flex-start would
+      // otherwise pin an auto-sized column, and its content, to the left edge.
+      grid-template-columns: minmax(0, 1fr);
       grid-template-rows: 72px minmax(21px, auto) minmax(21px, auto);
       align-content: start;
       justify-items: center;
