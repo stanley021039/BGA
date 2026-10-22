@@ -1,4 +1,5 @@
 @use 'compact-header' as chrome;
+@use 'surfaces';
 
 // RW03–RW09 and RW-X01–X28: approved task cards, current shared room shell.
 @mixin panel {
@@ -417,8 +418,9 @@
       }
     }
     &.is-winner {
+      // #186: the light selected surface must bring its own dark text in night mode.
+      @include surfaces.selected;
       border: 2px solid var(--stitch-primary);
-      background: var(--stitch-selected-bg);
     }
     &.is-focused {
       outline: 2px solid var(--stitch-primary);
@@ -732,8 +734,8 @@
         margin-block-start: auto;
       }
       &.is-my-choice {
+        @include surfaces.selected;
         border: 2px solid var(--stitch-primary);
-        background: var(--stitch-selected-bg);
       }
       &.is-majority {
         outline: 2px solid var(--stitch-primary);

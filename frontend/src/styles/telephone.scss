@@ -30,7 +30,7 @@
   --telephone-line: var(--stitch-line);
   box-sizing: border-box;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) 56px auto;
+  grid-template-rows: auto minmax(0, 1fr) 44px auto;
   gap: 12px;
   inline-size: 100%;
   min-inline-size: 0;
@@ -152,7 +152,7 @@
   }
   .vue-telephone-task[data-private]:has(> .vue-telephone-drawing-console) {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) 24px;
+    grid-template-rows: minmax(0, 1fr);
     min-block-size: 320px;
     block-size: 100%;
     max-block-size: none;
@@ -163,17 +163,6 @@
       block-size: 100%;
       min-block-size: 0;
       container-type: size;
-    }
-    > .vue-telephone-quota {
-      grid-column: 1;
-      grid-row: 2;
-      block-size: 24px;
-      margin: 0;
-      overflow: auto;
-      text-align: end;
-      font-size: 12px;
-      color: var(--stitch-muted);
-      font-variant-numeric: tabular-nums;
     }
     .vue-drawing-console-layout {
       block-size: 100%;
@@ -311,18 +300,14 @@
   }
   .vue-telephone-status {
     display: grid;
-    grid-template-rows: auto auto;
+    grid-template-rows: auto;
     align-content: start;
     min-inline-size: 0;
-    block-size: 56px;
-    padding: 4px 12px;
+    block-size: 44px;
+    padding: 2px 12px;
     border-radius: 8px;
     background: var(--stitch-subtle);
     overflow: auto;
-  }
-  .vue-telephone-status > p {
-    font-size: 12px;
-    line-height: 24px;
   }
   .vue-telephone-status > .frontend-status {
     min-block-size: 0;
@@ -551,7 +536,7 @@
     min-block-size: 0;
     padding: 12px;
     gap: 12px;
-    grid-template-rows: auto auto 56px auto;
+    grid-template-rows: auto auto 44px auto;
     .vue-telephone-hud {
       grid-template-columns: minmax(0, 1fr) 88px;
       min-block-size: 120px;
@@ -590,9 +575,6 @@
     .vue-telephone-task[data-private]:has(> .vue-telephone-drawing-console) {
       block-size: 480px;
       min-block-size: 480px;
-    }
-    .vue-telephone-quota {
-      text-align: start;
     }
     .vue-telephone-actions {
       align-items: stretch;
