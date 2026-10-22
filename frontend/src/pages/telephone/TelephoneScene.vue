@@ -121,7 +121,12 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     aria-labelledby="telephoneHeading"
   >
     <header v-if="playing && state.task" class="vue-telephone-hud" data-private>
-      <div class="vue-telephone-hud-prompt">
+      <div
+        class="vue-telephone-hud-prompt"
+        tabindex="0"
+        role="group"
+        aria-labelledby="telephoneHeading"
+      >
         <span class="vue-telephone-private">{{
           prompting ? '為你的故事出題' : drawing ? '你的專屬秘密題目' : '接到上一棒傳遞簿'
         }}</span>

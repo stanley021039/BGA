@@ -121,7 +121,7 @@ const { TelephoneRoom } = require('../../src/games/telephone');
     assert.equal(a.initial.phase, 'prompting');
     assert.equal(a.initial.round, 0);
     await snapshots('opening');
-    const themes = ['狗狗在月球上吃火鍋', '會跳舞的仙人掌', '搭火箭的章魚'];
+    const themes = ['狗狗在月球上吃火鍋' + '😀'.repeat(71), '會跳舞的仙人掌', '搭火箭的章魚'];
     await clients[0].page.bringToFront();
     const hostInput = clients[0].page.locator('#telephoneGuess');
     await hostInput.click();
@@ -171,6 +171,8 @@ const { TelephoneRoom } = require('../../src/games/telephone');
       assert.equal(await client.page.locator('#telephoneGuess').count(), 0);
     }
     await snapshots('first-drawing');
+    assert.equal([...themes[0]].length, 80);
+    assert.equal((await state(clients[1], a.code)).task.previous.text, themes[0]);
     // Complete the later draw/guess pages through real HTTP; only their deadlines
     // are accelerated in this isolated server, after all three have submitted.
     for (let round = 1; round <= 2; round++) {
@@ -214,9 +216,11 @@ const { TelephoneRoom } = require('../../src/games/telephone');
     // B: keep one blank and one synced but unsubmitted topic; do not shorten time.
     const b = await openRoom(['silly']);
     await clients[0].page.bringToFront();
+    await clients[0].page.locator('#telephoneGuess').click();
     await clients[0].page.locator('#telephoneGuess').fill('手動出題');
     await clients[0].page.getByRole('button', { name: '送出主題', exact: true }).click();
     await clients[1].page.bringToFront();
+    await clients[1].page.locator('#telephoneGuess').click();
     await clients[1].page.locator('#telephoneGuess').fill('已同步未送出的主題');
     await until(
       () => state(clients[1], b.code),
