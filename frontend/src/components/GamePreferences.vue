@@ -9,6 +9,7 @@ import '../styles/approved-lobby.scss';
 import '../styles/game-preferences.scss';
 import FramePicker from './FramePicker.vue';
 import StatusSlot from './StatusSlot.vue';
+import OpeningPicker from './OpeningPicker.vue';
 import LobbyBackgroundPicker from './LobbyBackgroundPicker.vue';
 const prefs = usePreferencesStore(),
   barrage = ref<InstanceType<typeof FramePicker> | null>(null),
@@ -84,7 +85,7 @@ onBeforeUnmount(() => {
           ></label
         ></section
       >
-      <LobbyBackgroundPicker />
+      <LobbyBackgroundPicker /><OpeningPicker />
       <section class="vue-preference-group vue-preference-audio">
         <div
           v-for="kind in ['music', 'effects'] as const"

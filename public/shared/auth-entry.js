@@ -3,9 +3,14 @@
   'use strict';
   let playing;
   window.EntryIntro = {
-    playFrom(image, destination) {
+    playFrom(image, destination, opening) {
       if (window.EntryPreferences?.get().enabled === false) return Promise.resolve();
       if (playing) return playing;
+      if (!opening && window.EntryOpening)
+        return window.EntryOpening.resolve().then((theme) =>
+          window.EntryIntro.playFrom(image, destination, theme),
+        );
+      const duration = opening?.duration || 3000;
       if (!image || !image.complete || !image.naturalWidth) return Promise.resolve();
       const rect = image.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return Promise.resolve();
@@ -48,7 +53,7 @@
       }
       function playSound() {
         stopSound();
-        sound = window.AudioSettings?.playEffect?.('entry-intro', {
+        sound = window.AudioSettings?.playEffect?.(opening?.sound || 'entry-intro', {
           onError: () => {
             if (!finished) soundButton.hidden = false;
           },
@@ -62,6 +67,7 @@
         image.style.removeProperty('opacity');
         root.classList.remove('entry-auth-playing');
         image.classList.remove('entry-auth-image');
+        image.classList.remove('entry-auth-soul-world');
         for (const node of ancestors) node.classList.remove('entry-auth-ancestor');
         skip.remove();
         soundButton.remove();
@@ -116,11 +122,12 @@
         animation = undefined;
         image.style.opacity = '1';
         clearTimeout(timer);
-        timer = setTimeout(finish, 2300);
+        timer = setTimeout(finish, opening?.id === 'soul-world' ? duration : 2300);
         playSound();
       });
       root.classList.add('entry-auth-playing');
       image.classList.add('entry-auth-image');
+      if (opening?.id === 'soul-world') image.classList.add('entry-auth-soul-world');
       for (const node of ancestors) node.classList.add('entry-auth-ancestor');
       let reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
       try {
@@ -145,12 +152,12 @@
             { offset: 0.78, transform: reduced ? 'none' : transform, opacity: 1 },
             { transform: reduced ? 'none' : transform, opacity: 0 },
           ],
-          { duration: 3000, easing: 'cubic-bezier(.2,.65,.3,1)', fill: 'forwards' },
+          { duration, easing: 'cubic-bezier(.2,.65,.3,1)', fill: 'forwards' },
         );
       } catch {
         /* The timeout still completes when Web Animations is unavailable. */
       }
-      timer = setTimeout(finish, 3000);
+      timer = setTimeout(finish, duration);
       playSound();
       skip.focus({ preventScroll: true });
       return playing;

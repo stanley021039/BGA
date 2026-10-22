@@ -53,32 +53,21 @@ class AchievementStore {
       achievements: definitions.map((item) => ({
         ...item,
         unlockedAt: unlocked.get(item.id) || null,
+        rewardLabels: require('./bonus-rewards').rewardLabels(item.id),
         progress:
           item.id.endsWith('-regular') || item.id.endsWith('-veteran')
             ? { current: counts[item.game] || 0, target: item.id.endsWith('-regular') ? 3 : 10 }
             : null,
       })),
       rewards: extras.rewardList(this, userId),
+      bonusRewards: require('./bonus-rewards').owned(this, userId),
     };
   }
   claim(userId, frameId) {
     return require('./reward-store').claimReward(this, userId, frameId);
   }
-  resetAll() {
-    return transaction(this.db, () => {
-      const counts = {};
-      for (const table of [
-        'user_cosmetic_rewards',
-        'achievement_progress',
-        'user_achievements',
-        'processed_unit_events',
-        'achievement_match_events',
-      ]) {
-        counts[table] = this.db.prepare('SELECT COUNT(*) AS n FROM ' + table).get().n;
-        this.db.prepare('DELETE FROM ' + table).run();
-      }
-      return { ok: true, counts };
-    });
+  redeem(userId, code) {
+    return require('./redemption').redeem(this, userId, code);
   }
   assertFrame(userId, id) {
     return require('./reward-store').assertFrame(this, userId, id);
@@ -132,6 +121,8 @@ class AchievementStore {
         facts,
       );
       for (const p of effectiveParticipants(unit)) {
+        if (unit.completed_at <= require('./reset-cutoff').resetCutoff(this.db, p.user_id))
+          continue;
         if (users.get(p.user_id).disabled) continue;
         this.progress.run(p.user_id, unit.game_type, unit.unit_event_id, unit.completed_at);
         const ids = participantAwards(unit, p);
@@ -221,6 +212,8 @@ class AchievementStore {
     const awards = [];
     transaction(this.db, () => {
       for (const p of result.participants) {
+        if (result.completed_at <= require('./reset-cutoff').resetCutoff(this.db, p.user_id))
+          continue;
         if (
           !p.eligible ||
           !this.db.prepare('SELECT id FROM users WHERE id=? AND disabled=0').get(p.user_id)
@@ -232,6 +225,7 @@ class AchievementStore {
           ['noExplosion', 'quacks-no-explosion'],
           ['threeWitches', 'quacks-three-witches'],
           ['fiftyPoints', 'quacks-fifty-points'],
+          ['doubleExplosion', 'quacks-double-explosion'],
         ])
           if (p[flag]) ids.push(id);
         for (const id of ids)

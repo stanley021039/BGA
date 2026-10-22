@@ -66,12 +66,23 @@
     const host = [...document.querySelectorAll('dialog[open]')].at(-1) || document.body;
     if (layer.parentElement !== host) host.append(layer);
   }
+  const center = () => M.wheel(preferences)[0];
+  let wheelSelection = null;
   function open(x, y) {
+    if (context)
+      wheelSelection = {
+        target:
+          hover?.target ||
+          gesture?.target ||
+          capture(cursor?.node || document.body, cursor?.x ?? x, cursor?.y ?? y),
+        identity: context.roomInstanceId,
+        scene: context.scene,
+      };
     syncLayer();
     wheel.hidden = false;
     wheel.style.left = Math.max(110, Math.min(innerWidth - 110, x)) + 'px';
     wheel.style.top = Math.max(110, Math.min(innerHeight - 110, y)) + 'px';
-    highlight('ping');
+    highlight(center());
   }
   function highlight(type) {
     for (const b of wheel.querySelectorAll('[data-ping-type]'))
@@ -79,11 +90,21 @@
   }
   for (const [type, def] of Object.entries(M.types)) {
     const b = control(def.label, def.icon, () => {
+      const choice = wheelSelection;
+      if (choice && choice.identity === context?.roomInstanceId && choice.scene === context.scene) {
+        cancel();
+        send(type, choice.target);
+        return;
+      }
       armed = type;
       wheel.hidden = true;
       notify('點選要標記的位置；Esc 取消');
     });
     b.dataset.pingType = type;
+    const slot = M.wheel(preferences).indexOf(type);
+    b.dataset.pingSlot = ['ping', 'attention', 'question', 'help', 'look'][slot] || '';
+    b.hidden = slot < 0;
+    if (slot < 0) b.style.display = 'none';
     b.classList.remove('ui-icon-button');
     b.removeAttribute('title');
     for (const [key, value] of Object.entries({
@@ -103,14 +124,15 @@
   options.append(visibility);
   wheel.append(options);
   function renderIcon(node, type) {
-    node.innerHTML = window.GameUI?.icon(M.types[type].icon) || '';
-    const url = preferences[type].imageUrl;
+    const iconType = preferences[type].iconType || type;
+    node.innerHTML = window.GameUI?.icon(M.types[iconType].icon) || '';
+    const url = preferences[type].iconType ? undefined : preferences[type].imageUrl;
     if (!url) return;
     const img = document.createElement('img');
     img.src = url;
     img.alt = '';
     img.onerror = () => {
-      node.innerHTML = window.GameUI?.icon(M.types[type].icon) || '';
+      node.innerHTML = window.GameUI?.icon(M.types[iconType].icon) || '';
     };
     node.replaceChildren(img);
   }
@@ -118,6 +140,14 @@
   function setPreferences(value) {
     preferences = M.preferences(value);
     for (const b of wheel.querySelectorAll('[data-ping-type]')) {
+      const index = M.wheel(preferences).indexOf(b.dataset.pingType);
+      b.hidden = index < 0;
+      b.style.display = index < 0 ? 'none' : '';
+      b.dataset.pingSlot = ['ping', 'attention', 'question', 'help', 'look'][index] || '';
+      b.style.setProperty(
+        '--ping-color',
+        M.colors[preferences[b.dataset.pingType].iconType || b.dataset.pingType],
+      );
       const slot = b.querySelector('.ui-button-icon');
       if (slot) renderIcon(slot, b.dataset.pingType);
     }
@@ -321,6 +351,7 @@
     const n = document.createElement('div');
     n.className = 'room-ping-mark';
     n.dataset.type = event.type;
+    n.style.setProperty('--ping-color', M.colors[preferences[event.type].iconType || event.type]);
     const icon = document.createElement('strong');
     renderIcon(icon, event.type);
     const caption = document.createElement('span');
@@ -361,6 +392,7 @@
     }
   }
   function cancel() {
+    wheelSelection = null;
     held = false;
     gesture = null;
     armed = null;
@@ -434,14 +466,17 @@
       ) {
         e.preventDefault();
         if (e.key === 'Enter') {
-          armed = wheel.querySelector('.is-selected')?.dataset.pingType || 'ping';
+          armed = wheel.querySelector('.is-selected')?.dataset.pingType || center();
           wheel.hidden = true;
           notify('點選要標記的位置；Esc 取消');
         } else
           highlight(
-            { ArrowUp: 'attention', ArrowLeft: 'question', ArrowDown: 'help', ArrowRight: 'look' }[
-              e.key
-            ],
+            {
+              ArrowUp: M.wheel(preferences)[1],
+              ArrowLeft: M.wheel(preferences)[2],
+              ArrowDown: M.wheel(preferences)[3],
+              ArrowRight: M.wheel(preferences)[4],
+            }[e.key],
           );
         return;
       }
@@ -463,11 +498,12 @@
               x: cursor.x,
               y: cursor.y,
               target: capture(cursor.node, cursor.x, cursor.y),
-              type: 'ping',
+              type: center(),
               identity: context.roomInstanceId,
               scene: context.scene,
             }
           : null;
+        if (cursor) open(cursor.x, cursor.y);
         e.preventDefault();
       }
     },
@@ -480,7 +516,7 @@
       if (
         held &&
         hover &&
-        hover.type !== 'ping' &&
+        hover.type !== center() &&
         hover.identity === context?.roomInstanceId &&
         hover.scene === context.scene
       ) {
@@ -490,7 +526,7 @@
         return;
       }
       if (held && !pUsed && context) {
-        open(innerWidth / 2, innerHeight / 2);
+        open(cursor?.x ?? innerWidth / 2, cursor?.y ?? innerHeight / 2);
         wheel.querySelector('button').focus();
       }
       held = false;
@@ -535,31 +571,56 @@
         suppressUntil = Date.now() + 400;
         return;
       }
-      gesture = { id: e.pointerId, x: e.clientX, y: e.clientY, target, type: 'ping', moved: false };
+      gesture = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        target,
+        type: center(),
+        moved: false,
+      };
     },
     true,
   );
   window.addEventListener(
     'pointermove',
     (e) => {
+      if (!wheel.hidden && !held && !gesture && wheelSelection && !editing(e.target)) {
+        const type = M.pick(
+          e.clientX - parseFloat(wheel.style.left),
+          e.clientY - parseFloat(wheel.style.top),
+          48,
+          preferences,
+        );
+        if (type !== center()) {
+          const choice = wheelSelection;
+          cancel();
+          if (choice.identity === context?.roomInstanceId && choice.scene === context.scene)
+            send(type, choice.target);
+          suppressUntil = Date.now() + 400;
+          return;
+        }
+      }
       if (e.target && !wheel.contains(e.target))
         cursor = { x: e.clientX, y: e.clientY, node: e.target };
       if (!gesture || e.pointerId !== gesture.id) {
         if (held && hover && !pointers.size && !editing(e.target)) {
-          const type = M.pick(e.clientX - hover.x, e.clientY - hover.y);
+          const type = M.pick(e.clientX - hover.x, e.clientY - hover.y, 48, preferences);
           hover.type = type;
-          if (type !== 'ping') {
-            pUsed = true;
-            if (wheel.hidden) open(hover.x, hover.y);
-            highlight(type);
+          if (type !== center()) {
+            const choice = hover;
+            cancel();
+            if (choice.identity === context?.roomInstanceId && choice.scene === context.scene)
+              send(type, choice.target);
+            suppressUntil = Date.now() + 400;
           }
         }
         return;
       }
       e.preventDefault();
       e.stopImmediatePropagation();
-      gesture.type = M.pick(e.clientX - gesture.x, e.clientY - gesture.y);
-      if (gesture.type !== 'ping') {
+      gesture.type = M.pick(e.clientX - gesture.x, e.clientY - gesture.y, 24, preferences);
+      if (gesture.type !== center()) {
         gesture.moved = true;
         if (wheel.hidden) open(gesture.x, gesture.y);
       }
@@ -578,7 +639,7 @@
         type = g.type;
       suppressUntil = Date.now() + 400;
       cancel();
-      if (type !== 'ping' || !g.moved) send(type, g.target);
+      if (type !== center() || !g.moved) send(type, g.target);
     },
     true,
   );

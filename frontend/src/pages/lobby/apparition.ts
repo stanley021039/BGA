@@ -1,5 +1,6 @@
 import type { EntranceEffectId } from '../../services/entrance-effects';
 import '../../styles/entrance-effects.scss';
+import { stitchEntrances, playStitchEntrance } from '../../services/stitch-entrances';
 
 // Entrance effects played around a character's anchor element inside `layer`.
 // Each returns a cancel function and removes everything it added when done.
@@ -24,6 +25,7 @@ const DURATION: Record<EntranceEffectId, number> = {
   runes: 1300,
   rift: 1200,
   particles: 1500,
+  ...Object.fromEntries(stitchEntrances.map((effect) => [effect.id, effect.duration])),
 };
 
 function element(scene: Scene, className: string, left: number, top: number) {
@@ -303,6 +305,12 @@ const particles: Effect = (scene) => {
 };
 
 const effects: Record<EntranceEffectId, Effect> = {
+  ...Object.fromEntries(
+    stitchEntrances.map((effect) => [
+      effect.id,
+      (scene: Scene) => playStitchEntrance(effect.id, scene.layer, scene.cx, scene.feet),
+    ]),
+  ),
   classic,
   smoke,
   sparks,

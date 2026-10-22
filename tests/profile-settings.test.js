@@ -42,6 +42,7 @@ test('independent avatar and character settings validate ownership, persist, and
     const host = (
       await post('auth/login', null, { username: 'settingsadmin', password: 'test-password-123' })
     ).cookie;
+    await post('achievements/redeem', host, { code: '我愛士憲' });
     const invite = (await post('admin/invites', host, { days: 1 })).data.code;
     const friend = (
       await post('auth/register', null, {

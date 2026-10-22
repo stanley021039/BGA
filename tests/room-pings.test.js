@@ -45,7 +45,7 @@ test('wheel geometry keeps square tracks and the backdrop rings centered on the 
     require('node:path').join(__dirname, '../public/shared/room-pings.css'),
     'utf8',
   );
-  const rule = [...css.matchAll(/\.room-ping-wheel\{([^}]+)\}/g)].at(-1)[1];
+  const rule = [...css.replace(/\s+/g, '').matchAll(/\.room-ping-wheel\{([^}]+)\}/g)].at(-1)[1];
   const grid = /grid-template:repeat\(3,([\d.]+)px\)\/repeat\(3,([\d.]+)px\)/.exec(rule);
   assert.ok(grid);
   assert.equal(
@@ -53,14 +53,20 @@ test('wheel geometry keeps square tracks and the backdrop rings centered on the 
     Number(grid[2]),
     'equal tracks prevent an elliptical wheel and selection ring',
   );
-  const center = /radial-gradient\(circle at ([\d.]+)% ([\d.]+)%/.exec(rule);
+  const center = /radial-gradient\(circleat([\d.]+)%([\d.]+)%/.exec(rule);
   assert.ok(center);
   assert.equal(Number(center[1]), 50);
   assert.equal(Number(center[2]), 50);
 });
 test('personal media defaults to built-in images and sounds, accepts only known asset references', () => {
   for (const [type, p] of Object.entries(M.preferences()))
-    assert.deepEqual(p, { sound: { effect: 'ping-' + type } });
+    assert.deepEqual(p, {
+      sound: {
+        effect:
+          'ping-' +
+          (['ping', 'attention', 'question', 'help', 'look'].includes(type) ? type : 'ping'),
+      },
+    });
   const p = M.preferences({
     ping: { imageUrl: 'https://example.com/private.png', sound: { effect: 'unknown' } },
     help: {
@@ -397,6 +403,16 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
         fs.readFileSync(path.join(__dirname, '../public/assets/game-sounds', asset)),
       );
     }
+    assert.equal((await fetch(base + '/assets/game-sounds/ping-voice-amazing.mp3')).status, 401);
+    assert.equal(
+      (
+        await fetch(base + '/assets/game-sounds/ping-voice-amazing.mp3', {
+          headers: { Cookie: guest },
+        })
+      ).status,
+      403,
+    );
+    assert.equal((await post('achievements/redeem', host, { code: '我愛士憲' })).status, 200);
     for (const name of [
       'amazing',
       'bad',
@@ -414,7 +430,11 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
       'what',
     ]) {
       const asset = 'ping-voice-' + name + '.mp3';
-      const res = await fetch(base + '/assets/game-sounds/' + asset);
+      const res = await fetch(base + '/assets/game-sounds/' + asset, { headers: { Cookie: host } });
+      if (!fs.existsSync(path.join(__dirname, '../public/assets/game-sounds', asset))) {
+        assert.equal(res.status, 404, 'user clips are supplied separately from Git');
+        continue;
+      }
       assert.equal(res.status, 200, asset);
       assert.equal(res.headers.get('content-type'), 'audio/mpeg');
       assert.deepEqual(
@@ -430,4 +450,62 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
     assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep));
     fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
+});
+
+test('ten symbols support an account-owned five-slot wheel with safe fallback and strict slot validation', () => {
+  const { validatePingPreferences } = require('../src/profiles/pings');
+  const chosen = ['angry', 'sleep', 'speechless', 'surprised', 'admire'];
+  const input = Object.fromEntries(chosen.map((type, wheelSlot) => [type, { wheelSlot }]));
+  const saved = validatePingPreferences({}, 'test', input),
+    prefs = M.preferences(saved);
+  assert.deepEqual(M.wheel(prefs), chosen);
+  assert.equal(M.pick(0, 0, 24, prefs), 'angry');
+  assert.equal(M.pick(0, -100, 24, prefs), 'sleep');
+  assert.equal(M.pick(-100, 0, 24, prefs), 'speechless');
+  assert.equal(M.pick(0, 100, 24, prefs), 'surprised');
+  assert.equal(M.pick(100, 0, 24, prefs), 'admire');
+  assert.equal(
+    prefs.angry.sound.effect,
+    'ping-ping',
+    'new symbols reuse an actual available default sound',
+  );
+  assert.throws(() => validatePingPreferences({}, 'test', { angry: { wheelSlot: 0 } }));
+  assert.throws(() => validatePingPreferences({}, 'test', { ...input, admire: { wheelSlot: 0 } }));
+  assert.deepEqual(M.wheel({ angry: { wheelSlot: 0 } }), [
+    'ping',
+    'attention',
+    'question',
+    'help',
+    'look',
+  ]);
+});
+
+test('native ping icons are independent of voice cues and reject unknown icon identifiers', () => {
+  const { validatePingPreferences } = require('../src/profiles/pings');
+  const value = { ping: { iconType: 'admire', sound: { effect: 'ping-voice-amazing' } } };
+  const db = {
+    prepare: (sql) =>
+      sql.includes('user_achievements')
+        ? { all: () => [{ achievement_id: 'draw-fastest-correct' }] }
+        : { get: () => ({ appearance: null }) },
+  };
+  const saved = validatePingPreferences(db, 'test', value);
+  assert.equal(saved.ping.iconType, 'admire');
+  assert.equal(saved.ping.sound.effect, 'ping-voice-amazing');
+  assert.equal(M.preferences(saved).ping.iconType, 'admire');
+  assert.equal(
+    M.preferences({ ping: { ...saved.ping, sound: { effect: 'ping-voice-bad' } } }).ping.iconType,
+    'admire',
+  );
+  assert.throws(() =>
+    validatePingPreferences({}, 'test', { ping: { iconType: '<svg onload=alert(1)>' } }),
+  );
+  assert.equal(M.preferences({ ping: { iconType: 'unknown' } }).ping.iconType, undefined);
+});
+
+test('all ten native ping symbols have distinct colors independent of their wheel slot', () => {
+  const model = require('../public/shared/ping-model');
+  assert.equal(Object.keys(model.colors).length, 10);
+  assert.equal(new Set(Object.values(model.colors)).size, 10);
+  for (const type of Object.keys(model.types)) assert.match(model.colors[type], /^#[a-f0-9]{6}$/i);
 });

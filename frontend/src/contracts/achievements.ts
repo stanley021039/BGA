@@ -1,4 +1,5 @@
 export interface Achievement {
+  rewardLabels: string[];
   id: string;
   title: string;
   description: string;
@@ -33,6 +34,9 @@ export function readAchievements(value: unknown): Achievement[] {
     return [
       {
         id,
+        rewardLabels: Array.isArray(row.rewardLabels)
+          ? row.rewardLabels.filter((v): v is string => typeof v === 'string')
+          : [],
         title: typeof row.title === 'string' ? row.title : '未命名成就',
         description: typeof row.description === 'string' ? row.description : '',
         game: typeof row.game === 'string' ? row.game : 'other',

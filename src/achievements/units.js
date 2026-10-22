@@ -125,11 +125,18 @@ function normalizeUnit(input, { legacy = false } = {}) {
       if (item.challenges !== undefined) {
         if (!Challenges.validChallenges(game, item.challenges, Challenges.unit)) invalid();
         row.challenges = [...item.challenges].sort();
+        if (
+          row.challenges.includes('draw-fastest-correct') &&
+          (!row.correctGuess || !row.guessAccepted)
+        )
+          invalid();
       }
       return Object.freeze(row);
     })
     .sort((a, b) => (a.user_id < b.user_id ? -1 : a.user_id > b.user_id ? 1 : 0));
   if (participants.filter((p) => p.artist).length > 1) invalid();
+  if (participants.filter((p) => p.challenges?.includes('draw-fastest-correct')).length > 1)
+    invalid();
   const metrics = input.metrics === undefined ? {} : input.metrics;
   plain(metrics, ['participantCount', 'allSame', 'tiedLargest']);
   const participantCount =

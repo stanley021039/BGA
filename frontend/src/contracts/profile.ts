@@ -70,6 +70,14 @@ export function readSettings(value: unknown): ProfileSettings {
       if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
       const item = value as Record<string, unknown>,
         choice: PingPreference = {};
+      if (
+        Number.isInteger(item.wheelSlot) &&
+        Number(item.wheelSlot) >= 0 &&
+        Number(item.wheelSlot) < 5
+      )
+        choice.wheelSlot = Number(item.wheelSlot);
+      if (pingTypes.includes(item.iconType as PingType))
+        choice.iconType = item.iconType as PingType;
       if (typeof item.imageUrl === 'string') choice.imageUrl = item.imageUrl;
       if (item.sound === null) choice.sound = null;
       else if (item.sound && typeof item.sound === 'object') {

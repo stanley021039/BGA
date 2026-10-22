@@ -8,6 +8,7 @@ const match = Object.freeze({
   quacks: [],
 });
 const unit = Object.freeze({
+  draw: ['draw-fastest-correct'],
   poker: ['poker-showdown-straight'],
   thunder: ['thunder-race-winner'],
 });

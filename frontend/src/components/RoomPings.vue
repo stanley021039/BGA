@@ -17,6 +17,8 @@ const layer = ref<HTMLElement | null>(null),
   wheelOpen = ref(false),
   selected = ref<PingType>('ping'),
   wheelPoint = ref({ x: 0, y: 0 });
+const slotOrder = ['ping', 'attention', 'question', 'help', 'look'];
+const wheelTypes = computed(() => pings.model?.wheel(pings.preferences) || pingTypes.slice(0, 5));
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 type Position = { x: number; y: number; label: string; shift: number };
 const positions = shallowRef<Record<string, Position>>({});
@@ -49,6 +51,7 @@ let gesture: {
   scene: string;
 } | null = null;
 const pointers = new Set<number>();
+let wheelSelection: { target: PingTarget; identity: string; scene: string } | null = null;
 function editing(node: EventTarget | null) {
   return (
     node instanceof Element &&
@@ -64,12 +67,21 @@ function syncHost() {
   if (targetHost.value !== host) targetHost.value = host;
 }
 async function open(x: number, y: number, focus = false) {
+  if (pings.context && pings.surface && pings.identity) {
+    const target =
+      hover?.target ||
+      gesture?.target ||
+      (cursor
+        ? capturePing(pings.model, pings.surface, pings.context, cursor.node, cursor.x, cursor.y)
+        : { kind: 'viewport' as const, x: x / innerWidth, y: y / innerHeight });
+    wheelSelection = { target, identity: pings.identity, scene: pings.context.scene };
+  }
   syncHost();
   if (!wheelOpen.value)
     previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   wheelPoint.value = { x, y };
   wheelOpen.value = true;
-  selected.value = 'ping';
+  selected.value = wheelTypes.value[0];
   await nextTick();
   if (!wheelOpen.value || !wheel.value) return;
   const rect = wheel.value.getBoundingClientRect();
@@ -77,9 +89,10 @@ async function open(x: number, y: number, focus = false) {
     x: Math.max(rect.width / 2 + 8, Math.min(innerWidth - rect.width / 2 - 8, x)),
     y: Math.max(rect.height / 2 + 8, Math.min(innerHeight - rect.height / 2 - 8, y)),
   };
-  if (focus) wheel.value.querySelector<HTMLButtonElement>('[data-ping-type="ping"]')?.focus();
+  if (focus) wheel.value.querySelector<HTMLButtonElement>('[data-ping-slot="ping"]')?.focus();
 }
 function cancel() {
+  wheelSelection = null;
   const returnFocus =
     document.activeElement instanceof Node && wheel.value?.contains(document.activeElement);
   held = false;
@@ -90,7 +103,12 @@ function cancel() {
   if (returnFocus && previous?.isConnected) previous.focus({ preventScroll: true });
 }
 function arm(type: PingType) {
+  const choice = wheelSelection;
   cancel();
+  if (choice && choice.identity === pings.identity && choice.scene === pings.context?.scene) {
+    void pings.send(type, choice.target);
+    return;
+  }
   armed = type;
   pings.feedback('點選要標記的位置；Esc 取消');
 }
@@ -111,10 +129,10 @@ function downKey(event: KeyboardEvent) {
     else
       selected.value = (
         {
-          ArrowUp: 'attention',
-          ArrowLeft: 'question',
-          ArrowDown: 'help',
-          ArrowRight: 'look',
+          ArrowUp: wheelTypes.value[1],
+          ArrowLeft: wheelTypes.value[2],
+          ArrowDown: wheelTypes.value[3],
+          ArrowRight: wheelTypes.value[4],
         } as Record<string, PingType>
       )[event.key];
     return;
@@ -146,10 +164,11 @@ function downKey(event: KeyboardEvent) {
           cursor.x,
           cursor.y,
         ),
-        type: 'ping',
+        type: wheelTypes.value[0],
         identity: pings.identity,
         scene: pings.context.scene,
       };
+    if (cursor) void open(cursor.x, cursor.y);
     event.preventDefault();
   }
 }
@@ -158,7 +177,7 @@ function upKey(event: KeyboardEvent) {
   if (
     held &&
     hover &&
-    hover.type !== 'ping' &&
+    hover.type !== wheelTypes.value[0] &&
     hover.identity === pings.identity &&
     hover.scene === pings.context?.scene
   ) {
@@ -167,7 +186,8 @@ function upKey(event: KeyboardEvent) {
     void pings.send(choice.type, choice.target);
     return;
   }
-  if (held && !used && pings.identity) void open(innerWidth / 2, innerHeight / 2, true);
+  if (held && !used && pings.identity)
+    void open(cursor?.x ?? innerWidth / 2, cursor?.y ?? innerHeight / 2, true);
   held = false;
   hover = null;
 }
@@ -223,32 +243,60 @@ function pointerDown(event: PointerEvent) {
     x: event.clientX,
     y: event.clientY,
     target,
-    type: 'ping',
+    type: wheelTypes.value[0],
     moved: false,
     identity: pings.identity,
     scene: pings.context.scene,
   };
 }
 function pointerMove(event: PointerEvent) {
+  if (wheelOpen.value && !held && !gesture && wheelSelection && !editing(event.target)) {
+    const type = pings.model.pick(
+      event.clientX - wheelPoint.value.x,
+      event.clientY - wheelPoint.value.y,
+      48,
+      pings.preferences,
+    );
+    if (type !== wheelTypes.value[0]) {
+      const choice = wheelSelection;
+      cancel();
+      if (choice.identity === pings.identity && choice.scene === pings.context?.scene)
+        void pings.send(type, choice.target);
+      suppressUntil = Date.now() + 400;
+      return;
+    }
+  }
   if (event.target instanceof Element && !wheel.value?.contains(event.target))
     cursor = { x: event.clientX, y: event.clientY, node: event.target };
   const active = gesture;
   if (!active || event.pointerId !== active.id) {
     if (held && hover && !pointers.size && !editing(event.target)) {
-      const type = pings.model.pick(event.clientX - hover.x, event.clientY - hover.y);
+      const type = pings.model.pick(
+        event.clientX - hover.x,
+        event.clientY - hover.y,
+        48,
+        pings.preferences,
+      );
       hover.type = type;
-      if (type !== 'ping') {
-        used = true;
-        if (!wheelOpen.value) void open(hover.x, hover.y);
-        selected.value = type;
+      if (type !== wheelTypes.value[0]) {
+        const choice = hover;
+        cancel();
+        if (choice.identity === pings.identity && choice.scene === pings.context?.scene)
+          void pings.send(type, choice.target);
+        suppressUntil = Date.now() + 400;
       } else if (wheelOpen.value) selected.value = type;
     }
     return;
   }
   event.preventDefault();
   event.stopImmediatePropagation();
-  active.type = pings.model.pick(event.clientX - active.x, event.clientY - active.y);
-  if (active.type !== 'ping') {
+  active.type = pings.model.pick(
+    event.clientX - active.x,
+    event.clientY - active.y,
+    24,
+    pings.preferences,
+  );
+  if (active.type !== wheelTypes.value[0]) {
     active.moved = true;
     if (!wheelOpen.value) void open(active.x, active.y);
   }
@@ -265,7 +313,7 @@ function pointerUp(event: PointerEvent) {
   if (
     active.identity === pings.identity &&
     active.scene === pings.context?.scene &&
-    (active.type !== 'ping' || !active.moved)
+    (active.type !== wheelTypes.value[0] || !active.moved)
   )
     void pings.send(active.type, active.target);
 }
@@ -400,18 +448,22 @@ onBeforeUnmount(() => {
         aria-label="快速標記：方向鍵選擇，Enter 確認，Esc 取消"
         :style="{ left: wheelPoint.x + 'px', top: wheelPoint.y + 'px' }"
         ><button
-          v-for="type in pingTypes"
+          v-for="(type, index) in wheelTypes"
           :key="type"
           type="button"
           :data-ping-type="type"
+          :style="{ '--ping-color': pings.model.colors[pings.preferences[type].iconType || type] }"
+          :data-ping-slot="slotOrder[index]"
           :class="{ 'is-selected': selected === type }"
           :aria-label="pings.types[type].label"
           :aria-pressed="selected === type"
           @click="arm(type)"
           ><span class="ui-button-icon"
             ><PingSymbol
-              :icon="pings.types[type].icon"
-              :image="pings.preferences[type].imageUrl" /></span
+              :icon="pings.types[pings.preferences[type].iconType || type].icon"
+              :image="
+                pings.preferences[type].iconType ? undefined : pings.preferences[type].imageUrl
+              " /></span
           ><small>{{ pings.types[type].label }}</small></button
         ><div class="room-ping-settings"
           ><UiButton
@@ -426,14 +478,19 @@ onBeforeUnmount(() => {
         class="room-ping-mark"
         :data-type="mark.type"
         :style="{
+          '--ping-color': pings.model.colors[pings.preferences[mark.type].iconType || mark.type],
           left: (positions[mark.id]?.x || 0) + 'px',
           top: (positions[mark.id]?.y || 0) + 'px',
           visibility: positions[mark.id] ? 'visible' : 'hidden',
         }"
         ><strong
           ><PingSymbol
-            :icon="pings.types[mark.type].icon"
-            :image="pings.preferences[mark.type].imageUrl" /></strong
+            :icon="pings.types[pings.preferences[mark.type].iconType || mark.type].icon"
+            :image="
+              pings.preferences[mark.type].iconType
+                ? undefined
+                : pings.preferences[mark.type].imageUrl
+            " /></strong
         ><span
           :data-ping-caption="mark.id"
           :style="{ transform: `translateX(${positions[mark.id]?.shift || 0}px)` }"

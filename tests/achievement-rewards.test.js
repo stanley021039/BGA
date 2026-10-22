@@ -29,7 +29,7 @@ test('all twelve games have distinct original rewards and additional attainable 
   assert.equal(rewards.length, 24);
   assert.equal(new Set(rewards.map((r) => r.game)).size, 12);
   assert.equal(new Set(rewards.map((r) => r.frameId)).size, 24);
-  assert.equal(definitions.length, 57);
+  assert.equal(definitions.length, 70);
   for (const r of rewards) {
     assert.ok(definitions.some((d) => d.id === r.achievementId));
     assert.ok(definitions.some((d) => d.id === r.game + '-regular'));
@@ -394,4 +394,83 @@ test('previously claimed shared-frame records survive the new reward split witho
   );
   restored.claim(a, 'encore');
   assert.equal(validateRewardsDatabase(f.db), true);
+});
+
+test('sound rewards grant two cues and cross-game website opening ownership survives reload without a global reset API', (t) => {
+  const f = fixture(t),
+    a = f.ids[0],
+    b = f.ids[1];
+  const bonus = require('../src/achievements/bonus-rewards');
+  assert.equal(bonus.pairs.length, 10);
+  assert.ok(bonus.pairs.every((pair) => pair[2].length === 2 && pair[3].length === 2));
+  assert.equal(new Set(bonus.pairs.map((pair) => pair[1])).size, 10);
+  for (const game of ['musicquiz', 'telephone', 'trpg']) f.store.recordMatch(match(a, game));
+  assert.deepEqual(
+    f.store.list(a).bonusRewards.openings,
+    ['home-family'],
+    'TRPG does not count toward the new website opening',
+  );
+  f.store.recordMatch(match(a, 'minimal'));
+  assert.deepEqual(f.store.list(a).bonusRewards.openings, ['home-family', 'soul-world']);
+  assert.deepEqual(f.store.list(b).bonusRewards.openings, ['home-family']);
+  assert.equal(new AchievementStore(f.db).list(a).bonusRewards.sounds.length, 4);
+  assert.equal(validateRewardsDatabase(f.db), true);
+  assert.equal(typeof f.store.resetAll, 'undefined');
+  assert.deepEqual(new AchievementStore(f.db).list(a).bonusRewards.openings, [
+    'home-family',
+    'soul-world',
+  ]);
+});
+
+test('website opening selection is account-owned, survives appearance edits and can be switched back to default', (t) => {
+  const f = fixture(t),
+    a = f.ids[0],
+    b = f.ids[1];
+  const { openingTheme } = require('../src/profiles/opening');
+  const { preserveAvatar } = require('../src/profiles/settings');
+  assert.equal(openingTheme(f.db, f.store, a).theme, 'default');
+  assert.throws(
+    () => openingTheme(f.db, f.store, a, { theme: 'soul-world' }),
+    (error) => error.code === 'OPENING_LOCKED',
+  );
+  assert.throws(
+    () => openingTheme(f.db, f.store, a, { theme: 'unknown' }),
+    (error) => error.code === 'INVALID_OPENING',
+  );
+  for (const game of ['musicquiz', 'telephone', 'minimal']) f.store.recordMatch(match(a, game));
+  assert.equal(openingTheme(f.db, f.store, a, { theme: 'soul-world' }).theme, 'soul-world');
+  assert.equal(openingTheme(f.db, new AchievementStore(f.db), a).theme, 'soul-world');
+  assert.equal(openingTheme(f.db, f.store, b).theme, 'default');
+  assert.equal(
+    preserveAvatar(f.db, a, { version: 5, characterId: 'traveler', expression: 'happy' })
+      .entryIntroTheme,
+    'soul-world',
+  );
+  assert.equal(openingTheme(f.db, f.store, a, { theme: 'default' }).theme, 'default');
+  assert.deepEqual(openingTheme(f.db, f.store, a).unlocked, ['home-family', 'soul-world']);
+});
+
+test('Stitch backgrounds and entrance rewards use trusted personal progress and survive store reload', (t) => {
+  const f = fixture(t),
+    a = f.ids[0],
+    b = f.ids[1];
+  f.store.recordMatch(match(a, 'musicquiz'));
+  let result = f.store.list(a);
+  assert.ok(result.bonusRewards.backgrounds.includes('cosmic'));
+  assert.ok(result.achievements.find((item) => item.id === 'background-cosmic').unlockedAt);
+  assert.ok(!f.store.list(b).bonusRewards.backgrounds.includes('cosmic'));
+  for (let i = 0; i < 3; i++) f.store.recordMatch(match(a, 'minimal'));
+  result = f.store.list(a);
+  assert.ok(result.bonusRewards.backgrounds.includes('aurora'));
+  assert.ok(result.bonusRewards.entrances.includes('stitch-explosion'));
+  assert.equal(validateRewardsDatabase(f.db), true);
+  assert.ok(new AchievementStore(f.db).list(a).bonusRewards.backgrounds.includes('cosmic'));
+});
+
+test('every account can choose the family opening without completing an achievement', (t) => {
+  const f = fixture(t),
+    id = f.ids[0],
+    { openingTheme } = require('../src/profiles/opening');
+  assert.equal(openingTheme(f.db, f.store, id, { theme: 'home-family' }).theme, 'home-family');
+  assert.ok(f.store.list(id).achievements.every((a) => !a.unlockedAt));
 });

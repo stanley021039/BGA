@@ -17,9 +17,11 @@ function loader(mocks = {}) {
     const requireLocal = (id) =>
       Object.hasOwn(mocks, id)
         ? mocks[id]
-        : id.startsWith('.')
-          ? load(path.resolve(path.dirname(file), id + '.ts'))
-          : require(id);
+        : id.endsWith('.json')
+          ? { default: require(path.resolve(path.dirname(file), id)) }
+          : id.startsWith('.')
+            ? load(path.resolve(path.dirname(file), id + '.ts'))
+            : require(id);
     const source = fs.readFileSync(file, 'utf8'),
       code = ts.transpileModule(source, {
         compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },

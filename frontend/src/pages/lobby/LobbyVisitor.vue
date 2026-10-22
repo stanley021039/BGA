@@ -43,9 +43,9 @@ let disposed = false,
   observer: ResizeObserver | null = null,
   stopArrival: (() => void) | null = null;
 watch(
-  () => props.arrive,
-  async (value) => {
-    if (!value) return;
+  [() => props.arrive, () => props.visitor.teleportId],
+  async ([value, id], previous) => {
+    if (!value && !(previous && id > 0 && id !== previous[1])) return;
     await nextTick();
     const layer = node.value?.closest<HTMLElement>('.lobby-backdrop');
     if (
@@ -121,10 +121,11 @@ watch(
   { immediate: true, flush: 'post' },
 );
 watch(
-  [() => props.visitor.moveId, () => props.reset],
+  [() => props.visitor.moveId, () => props.reset, () => props.visitor.teleportId],
   async (_, previous) => {
     const epoch = ++revision,
-      initial = !previous || previous[1] !== props.reset;
+      initial =
+        !previous || previous[1] !== props.reset || previous[2] !== props.visitor.teleportId;
     if (initial) {
       placing.value = true;
       duration.value = 0;
@@ -208,7 +209,7 @@ window.addEventListener('resize', positionBubble);
       '--lobby-move-duration': duration + 'ms',
     }"
     :data-ping-player="visitor.id"
-    :aria-label="self ? visitor.name + '（你），發表情' : undefined"
+    :aria-label="self ? visitor.name + '（你），點一下發表情，R 鍵隨機換位' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"

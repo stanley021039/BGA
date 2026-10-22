@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref } from 'vue';
 import { useResource } from '../composables/resource';
 import { useMutation } from '../composables/mutation';
 import { usePreferencesStore } from '../stores/preferences';
@@ -38,7 +38,12 @@ const prefs = usePreferencesStore(),
       } as Reward;
     });
   });
-onMounted(() => resource.load());
+const refresh = () => void resource.load();
+onMounted(() => {
+  refresh();
+  window.addEventListener('achievement-rewards-updated', refresh);
+});
+onBeforeUnmount(() => window.removeEventListener('achievement-rewards-updated', refresh));
 async function claim(frameId: string) {
   await mutation.run(async (request) => {
     const data = await request('/api/achievements/claim', { frameId });
@@ -63,7 +68,11 @@ function apply(kind: 'barrage' | 'media', id: string) {
       v-if="resource.error.value"
       label="重新讀取獎勵"
       @click="resource.load()" /><div class="vue-reward-grid"
-      ><article v-for="reward in resource.data.value || []" :key="reward.frameId"
+      ><article
+        v-for="reward in resource.data.value || []"
+        :key="reward.frameId"
+        class="achievement-reward-card"
+        :class="{ unlocked: !!reward.claimedAt }"
         ><h3>{{ reward.label }}</h3
         ><p>達成「{{ reward.achievementTitle }}」</p
         ><p class="vue-reward-condition"><strong>解鎖條件：</strong>{{ reward.condition }}</p

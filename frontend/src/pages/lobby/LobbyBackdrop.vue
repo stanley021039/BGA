@@ -7,6 +7,7 @@ import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
+import LobbyBackgroundArt from '../../components/LobbyBackgroundArt.vue';
 import LobbyBarrage from './LobbyBarrage.vue';
 import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // Visitors live behind the page. A click that lands on the page's empty floor
@@ -114,6 +115,10 @@ function closeDialogs() {
   dialog.value?.close();
   chatDialog.value?.close();
 }
+function teleport() {
+  closeDialogs();
+  void lobby.teleport();
+}
 async function open(trigger: HTMLElement, mode: 'chat' | 'expression' = 'expression') {
   if (!lobby.connected) return;
   if (mode === 'chat') {
@@ -210,6 +215,13 @@ function key(event: KeyboardEvent) {
     ![stage.value, document.body, selfAvatar()].includes(event.target as HTMLElement)
   )
     return;
+  if (event.key.toLowerCase() === 'r') {
+    if (document.hidden || event.repeat) return;
+    event.preventDefault();
+    keyboardTarget = null;
+    teleport();
+    return;
+  }
   const directions: Record<string, [number, number]> = {
       ArrowLeft: [-5, 0],
       ArrowRight: [5, 0],
@@ -263,13 +275,11 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <div class="lobby-actions"
-    ><button
-      type="button"
+    ><UiButton
+      label="對話"
       :disabled="!lobby.connected"
       @click.stop="open($event.currentTarget as HTMLElement, 'chat')"
-      >對話</button
-    ></div
-  >
+  /></div>
   <Teleport to="body"
     ><div
       ref="stage"
@@ -277,16 +287,11 @@ onBeforeUnmount(() => {
       :data-background="background.selected"
       :class="{ 'is-self-hover': selfHover }"
       tabindex="0"
-      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話輸入訊息；聚焦此處可用 WASD 或方向鍵移動"
+      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話輸入訊息；聚焦此處可用 WASD 或方向鍵移動，R 鍵隨機換位並播放進場特效"
+      aria-keyshortcuts="R"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
-      ><div class="lobby-visitors"
-        ><div
-          v-if="lobby.destination"
-          class="lobby-destination"
-          :style="{ left: lobby.destination.x + '%', top: lobby.destination.y + '%' }"
-          aria-hidden="true"
-        ></div
+      ><LobbyBackgroundArt :id="background.selected" /><div class="lobby-visitors"
         ><LobbyVisitor
           v-for="visitor in lobby.snapshot?.visitors || []"
           :key="visitor.id"

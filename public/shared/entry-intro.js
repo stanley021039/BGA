@@ -116,6 +116,9 @@
       sound,
       active = false;
     const soundButton = panel.querySelector('.entry-intro-sound');
+    let opening,
+      resolving = false,
+      resolved = false;
     function stopSound() {
       if (!sound) return;
       if (!window.AudioSettings?.stopEffect?.(sound)) {
@@ -145,11 +148,19 @@
         panel.classList.add('entry-intro-audio-pending');
       };
       if (window.AudioSettings?.playEffect) {
-        sound = window.AudioSettings.playEffect('entry-intro', { onError: blocked });
+        sound = window.AudioSettings.playEffect(opening?.sound || 'entry-intro', {
+          onError: blocked,
+        });
         return;
       }
       try {
-        sound = new Audio('/assets/game-sounds/entry-intro-user.mp3');
+        sound = new Audio(
+          opening?.id === 'home-family'
+            ? '/assets/game-sounds/entry-home-family.mp3'
+            : opening?.id === 'soul-world'
+              ? '/assets/game-sounds/entrance-soul-world.mp3'
+              : '/assets/game-sounds/entry-intro-user.mp3',
+        );
         sound.volume = effects?.volume ?? 0.25;
         Promise.resolve(sound.play()).catch(blocked);
       } catch {
@@ -190,7 +201,24 @@
         return;
       }
       if (active) return;
+      if (!resolved && window.EntryOpening) {
+        if (resolving) return;
+        resolving = true;
+        window.EntryOpening.resolve().then((theme) => {
+          opening = theme;
+          resolved = true;
+          resolving = false;
+          play();
+        });
+        return;
+      }
       active = true;
+      if (opening) {
+        const image = panel.querySelector('img');
+        image.src = opening.image;
+        image.alt = opening.label;
+        panel.style.setProperty('--entry-intro-duration', opening.duration + 'ms');
+      }
       previous = document.activeElement;
       panel.hidden = false;
       try {
@@ -205,7 +233,7 @@
             ?.currentTime,
         ) || 0;
       // Do not block for another three seconds if the script arrived after the CSS animation.
-      timer = setTimeout(finish, Math.max(0, 3000 - elapsed));
+      timer = setTimeout(finish, Math.max(0, (opening?.duration || 3000) - elapsed));
       document.documentElement.classList.add('entry-intro-active');
       promote();
       playSound();
@@ -230,7 +258,7 @@
       soundButton.hidden = true;
       playSound();
       clearTimeout(timer);
-      timer = setTimeout(finish, 2300);
+      timer = setTimeout(finish, opening?.id !== 'default' && opening ? opening.duration : 2300);
     });
     panel.addEventListener('cancel', (event) => {
       event.preventDefault();

@@ -40,6 +40,17 @@ interface FrameState {
 
 declare global {
   interface Window {
+    EntryOpening?: {
+      get: () => string;
+      remember: (id: string) => void;
+      resolve: () => Promise<{
+        id: string;
+        image: string;
+        sound: string;
+        duration: number;
+        label: string;
+      }>;
+    };
     EntryPreferences?: {
       get(): EntryState;
       set(enabled: boolean): EntryState;

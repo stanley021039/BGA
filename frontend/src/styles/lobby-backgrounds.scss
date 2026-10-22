@@ -1,0 +1,41 @@
+.lobby-backdrop[data-background='castle'],
+.lobby-background-swatch[data-background='castle'] {
+  background: #090e1a url('../assets/lobby-castle-stitch.svg') center / cover no-repeat;
+}
+.lobby-backdrop[data-background='garden'],
+.lobby-background-swatch[data-background='garden'] {
+  background: #090e1a url('../assets/lobby-garden-stitch.svg') center / cover no-repeat;
+}
+.lobby-backdrop[data-background='courtroom'],
+.lobby-background-swatch[data-background='courtroom'] {
+  background: #090e1a url('../assets/lobby-courtroom-stitch.svg') center / cover no-repeat;
+}
+.lobby-backdrop[data-background='cosmic'],
+.lobby-background-swatch[data-background='cosmic'] {
+  background: #090e1a url('../assets/lobby-cosmic-stitch.svg') center / cover no-repeat;
+}
+.lobby-backdrop[data-background='ballroom'],
+.lobby-background-swatch[data-background='ballroom'] {
+  background: #090e1a url('../assets/lobby-ballroom-stitch.svg') center / cover no-repeat;
+}
+.lobby-backdrop[data-background='classroom'],
+.lobby-background-swatch[data-background='classroom'] {
+  background: #090e1a url('../assets/lobby-classroom-stitch.svg') center / cover no-repeat;
+}
+.lobby-backdrop[data-background='prison'],
+.lobby-background-swatch[data-background='prison'] {
+  background: #090e1a url('../assets/lobby-prison-stitch.svg') center / cover no-repeat;
+}
+.lobby-backdrop[data-background='lab'],
+.lobby-background-swatch[data-background='lab'] {
+  background: #090e1a url('../assets/lobby-lab-stitch.svg') center / cover no-repeat;
+}
+.lobby-backdrop[data-background='aurora'],
+.lobby-background-swatch[data-background='aurora'] {
+  background: #090e1a url('../assets/lobby-aurora-stitch.svg') center / cover no-repeat;
+}
+
+// Adjust the artwork for dark mode; text keeps the same styles as every backdrop.
+html[data-color-scheme='dark'] .lobby-live-art[data-scene='courtroom'] > svg {
+  filter: brightness(0.53);
+}

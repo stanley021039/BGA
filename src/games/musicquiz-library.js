@@ -1,19 +1,34 @@
 'use strict';
 // Future languages outside the named banks always share the foreign pool.
 const BANK_ALIASES = Object.freeze({ th: 'foreign', es: 'foreign', vi: 'foreign' });
-const CORE_BANKS = new Set(['zh', 'tw', 'jp', 'en', 'kr', 'yue', 'viral', 'classical', 'custom']);
+const CORE_BANKS = new Set([
+  'zh',
+  'tw',
+  'jp',
+  'anime',
+  'en',
+  'kr',
+  'yue',
+  'viral',
+  'classical',
+  'custom',
+]);
 function normalizeBank(bank) {
   return CORE_BANKS.has(bank) ? bank : 'foreign';
 }
 const CATALOG = Object.freeze(
   require('./musicquiz-songs.json').map((s) =>
-    Object.freeze({ ...s, bank: normalizeBank(s.bank) }),
+    Object.freeze({
+      ...s,
+      bank: s.bank === 'jp' && s.genres?.includes('動漫') ? 'anime' : normalizeBank(s.bank),
+    }),
   ),
 );
 const BANKS = Object.freeze([
   { id: 'zh', label: '華語' },
   { id: 'tw', label: '台語' },
   { id: 'jp', label: '日語' },
+  { id: 'anime', label: '動漫' },
   { id: 'kr', label: '韓語' },
   { id: 'yue', label: '粵語' },
   { id: 'viral', label: '抖音歌' },

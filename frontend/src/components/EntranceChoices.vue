@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { onBeforeUnmount } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { requestJson } from '../services/http';
+import requirements from '../../../public/shared/entrance-requirements.json';
 import { apparate } from '../pages/lobby/apparition';
 import {
   entranceEffect,
@@ -9,6 +11,27 @@ import {
 } from '../services/entrance-effects';
 import { usePreferencesStore } from '../stores/preferences';
 const prefs = usePreferencesStore();
+const unlocked = ref<string[]>([]),
+  conditions = ref<Record<string, string>>({});
+const allowed = (id: string) => !id.startsWith('stitch-') || unlocked.value.includes(id);
+const condition = (id: string) =>
+  conditions.value[requirements.find((item) => item.id === id)?.achievementId || ''] ||
+  '完成對應成就解鎖；詳見成就頁';
+onMounted(async () => {
+  try {
+    const data = (await requestJson('/api/achievements')) as {
+      bonusRewards: { entrances: string[] };
+      achievements: { id: string; description: string }[];
+    };
+    unlocked.value = data.bonusRewards.entrances;
+    conditions.value = Object.fromEntries(
+      data.achievements.map((item) => [item.id, item.description]),
+    );
+    if (!allowed(entranceEffect.value)) setEntranceEffect('classic');
+  } catch {
+    /* Server also verifies reward ownership. */
+  }
+});
 const stages = new Map<EntranceEffectId, HTMLElement>(),
   stops = new Map<EntranceEffectId, () => void>();
 const still = () =>
@@ -18,11 +41,16 @@ const still = () =>
 function play(id: EntranceEffectId) {
   const stage = stages.get(id),
     actor = stage?.querySelector<HTMLElement>('.entrance-preview-actor');
-  stops.get(id)?.();
+  for (const stop of stops.values()) stop();
+  stops.clear();
   if (!stage || !actor || still()) return;
   stops.set(id, apparate(actor, stage, id));
 }
 function choose(id: EntranceEffectId) {
+  if (!allowed(id)) {
+    play(id);
+    return;
+  }
   setEntranceEffect(id);
   play(id);
 }
@@ -39,8 +67,10 @@ onBeforeUnmount(() => {
       class="entrance-choice"
       :aria-label="effect.label + '進場特效'"
       :aria-pressed="entranceEffect === effect.id"
+      :aria-disabled="!allowed(effect.id)"
       @click="choose(effect.id)"
       @mouseenter="play(effect.id)"
+      @focus="play(effect.id)"
       ><span
         :ref="(node) => node && stages.set(effect.id, node as HTMLElement)"
         class="entrance-stage"
@@ -53,7 +83,11 @@ onBeforeUnmount(() => {
       ><strong>{{ effect.label }}</strong
       ><span class="entrance-description">{{ effect.description }}</span
       ><span class="entrance-selection">{{
-        entranceEffect === effect.id ? '✓ 使用中' : '套用特效'
+        !allowed(effect.id)
+          ? '🔒 ' + condition(effect.id)
+          : entranceEffect === effect.id
+            ? '✓ 使用中'
+            : '套用特效'
       }}</span></button
     >
   </div>

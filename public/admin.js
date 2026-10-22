@@ -135,19 +135,3 @@ $('#submissions').onclick = async (event) => {
   }
 };
 submissions().catch((error) => show(error.message));
-$('#resetAchievements').onclick = async () => {
-  const confirmation = prompt(
-    '這會清除所有玩家的成就進度與已領獎勵。若確定，請輸入 RESET ALL ACHIEVEMENTS',
-  );
-  if (confirmation !== 'RESET ALL ACHIEVEMENTS') return;
-  const button = $('#resetAchievements');
-  button.disabled = true;
-  try {
-    const result = await api('achievements/reset', { confirmation });
-    show('成就已重設：' + JSON.stringify(result.counts));
-  } catch (error) {
-    show(error.message);
-  } finally {
-    button.disabled = false;
-  }
-};

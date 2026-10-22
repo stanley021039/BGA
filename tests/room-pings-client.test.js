@@ -41,8 +41,12 @@ function setup() {
     GameUI: {
       decorateButton(b, icon, { label }) {
         b.setAttribute('aria-label', label);
+        const slot = document.createElement('span');
+        slot.className = 'ui-button-icon';
+        slot.innerHTML = window.GameUI.icon(icon);
+        b.append(slot);
       },
-      icon: () => '',
+      icon: (icon) => '<span data-symbol="' + icon + '"></span>',
     },
     AudioSettings: {
       playEffect() {
@@ -162,6 +166,8 @@ test('holding P and hovering a direction sends at the original cursor position w
     f.fire('pointermove', { clientX: 300, clientY: 300 });
     f.fire('keydown');
     f.fire('pointermove', { clientX: 300 + dx, clientY: 300 + dy });
+    await flush();
+    assert.equal(f.requests.length, 1, 'direction sends while P is still held');
     f.fire('keyup');
     await flush();
     assert.equal(f.requests.length, 1);
@@ -169,6 +175,20 @@ test('holding P and hovering a direction sends at the original cursor position w
     assert.equal(f.requests[0].target.x, 0.3);
     assert.equal(f.requests[0].target.y, 0.375);
   }
+});
+
+test('tapping P then moving toward a direction sends once without clicking', async () => {
+  const f = setup();
+  f.fire('pointermove', { clientX: 300, clientY: 300 });
+  f.fire('keydown');
+  f.fire('keyup');
+  f.fire('pointermove', { clientX: 351, clientY: 300 });
+  await flush();
+  assert.equal(f.requests.length, 1);
+  assert.equal(f.requests[0].type, 'look');
+  f.fire('pointermove', { clientX: 370, clientY: 300 });
+  await flush();
+  assert.equal(f.requests.length, 1);
 });
 test('lobby uses an isolated stream and sends to its own scope without moving an avatar', async () => {
   const f = setup();
@@ -325,8 +345,8 @@ test('default markers play current built-in sounds; personal media can be cleare
       serverNow: 10000,
     });
   for (const type of Object.keys(model.types)) receive(type);
-  assert.equal(f.window.played, 5);
-  assert.equal(f.document.querySelectorAll('.room-ping-mark').length, 5);
+  assert.equal(f.window.played, Object.keys(model.types).length);
+  assert.equal(f.document.querySelectorAll('.room-ping-mark').length, 8);
   assert.equal(f.document.querySelectorAll('.room-ping-settings button').length, 1);
   f.window.RoomPings.setPreferences({
     ping: {
@@ -335,13 +355,56 @@ test('default markers play current built-in sounds; personal media can be cleare
     },
   });
   receive('ping');
-  assert.equal(f.window.played, 6);
+  assert.equal(f.window.played, Object.keys(model.types).length + 1);
   const img = f.document.querySelector('.room-ping-mark img');
   assert.ok(img);
   img.onerror();
   assert.equal(f.document.querySelector('.room-ping-mark img'), null);
   f.window.RoomPings.setPreferences();
   receive('ping');
-  assert.equal(f.window.played, 7);
+  assert.equal(f.window.played, Object.keys(model.types).length + 2);
   assert.equal(f.document.querySelector('.room-ping-mark img'), null);
+});
+
+test('an independently selected native icon renders in both the wheel and received marks', () => {
+  const f = setup();
+  f.window.RoomPings.setPreferences({
+    ping: { iconType: 'admire', sound: { effect: 'ping-voice-amazing' } },
+  });
+  assert.ok(
+    f.document.querySelector(
+      '.room-ping-wheel [data-ping-type="ping"] [data-symbol="ping-admire"]',
+    ),
+  );
+  f.sources[0].emit('ping', {
+    event: {
+      id: 'native-icon',
+      roomInstanceId: 'instance',
+      scene: 'scene-1',
+      type: 'ping',
+      name: 'A',
+      target: { kind: 'viewport', x: 0.5, y: 0.5 },
+      at: 10000,
+      expiresAt: 15000,
+    },
+    serverNow: 10000,
+  });
+  assert.ok(f.document.querySelector('.room-ping-mark [data-symbol="ping-admire"]'));
+  assert.equal(f.window.played, 1);
+  assert.equal(
+    f.document.querySelector('.room-ping-mark').style['--ping-color'],
+    model.colors.admire,
+  );
+  assert.equal(
+    f.document.querySelector('[data-ping-type="ping"]').style['--ping-color'],
+    model.colors.admire,
+  );
+  f.window.RoomPings.setPreferences({
+    ping: { iconType: 'admire', sound: { effect: 'ping-voice-bad' } },
+  });
+  assert.ok(
+    f.document.querySelector(
+      '.room-ping-wheel [data-ping-type="ping"] [data-symbol="ping-admire"]',
+    ),
+  );
 });

@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import stitchEffects from '../../../public/shared/entrance-requirements.json';
 
 // Lobby entrance effects. Ids must match ENTRANCE_EFFECTS in src/rooms/lobby.js.
 export const entranceEffects = [
@@ -9,8 +10,9 @@ export const entranceEffects = [
   { id: 'runes', label: '地面魔法陣', description: '符文陣畫出光柱，角色在光中成形。' },
   { id: 'rift', label: '時空裂縫', description: '空中撕開發光裂縫，角色走出來。' },
   { id: 'particles', label: '粒子組合', description: '粒子飛來由腳到頭拼出角色。' },
+  ...stitchEffects,
 ] as const;
-export type EntranceEffectId = (typeof entranceEffects)[number]['id'];
+export type EntranceEffectId = string;
 
 const KEY = 'bga-entrance-effect';
 export const isEntranceEffect = (value: unknown): value is EntranceEffectId =>

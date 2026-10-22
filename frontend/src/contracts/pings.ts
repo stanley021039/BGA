@@ -1,6 +1,28 @@
 import { record, text } from '../services/validation';
-export const pingTypes = ['ping', 'attention', 'question', 'help', 'look'] as const;
+export const pingTypes = [
+  'ping',
+  'attention',
+  'question',
+  'help',
+  'look',
+  'angry',
+  'sleep',
+  'speechless',
+  'surprised',
+  'admire',
+] as const;
 export type PingType = (typeof pingTypes)[number];
+export function pingWheel(value: Partial<Record<PingType, PingPreference>>): PingType[] {
+  const selected = pingTypes.filter(
+    (type) =>
+      Number.isInteger(value[type]?.wheelSlot) &&
+      Number(value[type]?.wheelSlot) >= 0 &&
+      Number(value[type]?.wheelSlot) < 5,
+  );
+  return selected.length === 5 && new Set(selected.map((type) => value[type]?.wheelSlot)).size === 5
+    ? selected.sort((a, b) => Number(value[a]?.wheelSlot) - Number(value[b]?.wheelSlot))
+    : pingTypes.slice(0, 5);
+}
 export type PingTarget =
   | { kind: 'viewport'; x: number; y: number }
   | { kind: 'element'; key: string; x: number; y: number }
@@ -26,6 +48,8 @@ export interface PingReceipt {
   serverNow: number;
 }
 export interface PingPreference {
+  iconType?: PingType;
+  wheelSlot?: number;
   imageUrl?: string;
   sound?: { effect: string } | { url: string; durationMs: number } | null;
 }
@@ -105,8 +129,10 @@ export function readPingReceipt(value: unknown): PingReceipt {
   };
 }
 export interface PingModel {
+  colors: Record<PingType, string>;
   types: Record<PingType, { label: string; icon: string }>;
-  pick(dx: number, dy: number, threshold?: number): PingType;
+  pick(dx: number, dy: number, threshold?: number, preferences?: unknown): PingType;
+  wheel(preferences?: unknown): PingType[];
   point(rect: DOMRect, x: number, y: number): { x: number; y: number };
   place(
     rect: { left: number; top: number; width: number; height: number },

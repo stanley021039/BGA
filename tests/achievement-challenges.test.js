@@ -177,4 +177,28 @@ test('countertrend reward needs a real positive settlement against more than hal
   );
   f.store.claim(f.ids[0], 'rebound');
   assert.equal(validateRewardsDatabase(f.db), true);
+  const ledgers = f.db.prepare('SELECT COUNT(*) n FROM market_ledger').get().n;
+  // A historical pre-removal reset snapshot still suppresses regrant from old history.
+  const cutoff = new Date().toISOString();
+  for (const user of f.ids)
+    f.db
+      .prepare('UPDATE users SET appearance=? WHERE id=?')
+      .run(JSON.stringify({ achievementResetAt: cutoff }), user);
+  f.db.exec(
+    'DELETE FROM user_cosmetic_rewards; DELETE FROM achievement_progress; DELETE FROM user_achievements; DELETE FROM processed_unit_events; DELETE FROM achievement_match_events;',
+  );
+  assert.deepEqual(
+    f.store.list(f.ids[0]).achievements.filter((item) => item.unlockedAt),
+    [],
+  );
+  const reopened = new AchievementStore(f.db);
+  assert.deepEqual(
+    reopened.list(f.ids[0]).achievements.filter((item) => item.unlockedAt),
+    [],
+  );
+  assert.equal(
+    f.db.prepare('SELECT COUNT(*) n FROM market_ledger').get().n,
+    ledgers,
+    'reset leaves trading history intact',
+  );
 });

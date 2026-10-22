@@ -19,7 +19,7 @@ class MusicQuizRoom extends PartyRoom {
     super('musicquiz', code, name, 8, 1, rng, now);
     Object.assign(this, {
       settings: {
-        banks: ['zh', 'tw', 'jp', 'kr', 'yue', 'viral', 'en', 'foreign'],
+        banks: ['zh', 'tw', 'jp', 'anime', 'kr', 'yue', 'viral', 'en', 'foreign'],
         genres: [],
         target: 10,
         introSeconds: 8,

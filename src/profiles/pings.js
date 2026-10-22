@@ -1,6 +1,17 @@
 const { HttpError } = require('../http/errors');
 
-const types = ['ping', 'attention', 'question', 'help', 'look'];
+const types = [
+  'ping',
+  'attention',
+  'question',
+  'help',
+  'look',
+  'angry',
+  'sleep',
+  'speechless',
+  'surprised',
+  'admire',
+];
 const voiceCues = [
   'amazing',
   'bad',
@@ -43,6 +54,15 @@ function validate(db, userId, input, { lenient = false } = {}) {
       const choice = input[type];
       if (!choice || typeof choice !== 'object' || Array.isArray(choice)) invalid();
       const item = {};
+      if (Object.hasOwn(choice, 'iconType')) {
+        if (!types.includes(choice.iconType)) invalid();
+        item.iconType = choice.iconType;
+      }
+      if (Object.hasOwn(choice, 'wheelSlot')) {
+        if (!Number.isInteger(choice.wheelSlot) || choice.wheelSlot < 0 || choice.wheelSlot > 4)
+          invalid();
+        item.wheelSlot = choice.wheelSlot;
+      }
       if (Object.hasOwn(choice, 'imageUrl')) {
         const match = typeof choice.imageUrl === 'string' && artworkPath.exec(choice.imageUrl);
         if (
@@ -63,11 +83,21 @@ function validate(db, userId, input, { lenient = false } = {}) {
           sound &&
           typeof sound === 'object' &&
           !Array.isArray(sound) &&
-          (types.some((name) => sound.effect === 'ping-' + name) ||
+          (types.slice(0, 5).some((name) => sound.effect === 'ping-' + name) ||
             voiceCues.includes(sound.effect))
-        )
-          item.sound = { effect: sound.effect };
-        else {
+        ) {
+          if (
+            voiceCues.includes(sound.effect) &&
+            !require('../achievements/bonus-rewards').ownedSounds(db, userId).includes(sound.effect)
+          ) {
+            if (!lenient)
+              throw new HttpError(
+                403,
+                'PING_SOUND_LOCKED',
+                '請先取得對應成就音效，或兌換 Ping 獎勵',
+              );
+          } else item.sound = { effect: sound.effect };
+        } else {
           const match = typeof sound?.url === 'string' && soundPath.exec(sound.url);
           if (!match) invalid();
           const row = db
@@ -87,6 +117,10 @@ function validate(db, userId, input, { lenient = false } = {}) {
       if (!lenient) throw error;
     }
   }
+  const slots = Object.values(result)
+    .filter((item) => item.wheelSlot !== undefined)
+    .map((item) => item.wheelSlot);
+  if (!lenient && slots.length && (slots.length !== 5 || new Set(slots).size !== 5)) invalid();
   return result;
 }
 module.exports = { types, validatePingPreferences: validate };

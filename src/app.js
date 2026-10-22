@@ -908,6 +908,15 @@ function initializeApp(config, dataLock, acquired) {
     );
   };
   const lobbyHandlers = createLobbyHandlers({
+    entranceAllowed: (user, id) =>
+      ['classic', 'smoke', 'sparks', 'ink', 'runes', 'rift', 'particles'].includes(id) ||
+      require('./achievements/bonus-rewards')
+        .owned(achievementStore, user.id)
+        .entrances.includes(id),
+    backgroundAllowed: (user, id) =>
+      require('./achievements/bonus-rewards')
+        .owned(achievementStore, user.id)
+        .backgrounds.includes(id),
     assertFrame: (user, id) => achievementStore.assertFrame(user.id, id),
     lobby,
     withLobbyMedia,
@@ -1239,6 +1248,12 @@ function initializeApp(config, dataLock, acquired) {
           return send(lobbyHandlers.view(user, url.searchParams.get('entrance')));
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
           return send(lobbyHandlers.move(user, data));
+        if (url.pathname === '/api/lobby/teleport' && req.method === 'POST') {
+          limitAccount(user);
+          return send(lobbyHandlers.teleport(user, data));
+        }
+        if (url.pathname === '/api/lobby/background' && req.method === 'POST')
+          return send(lobbyHandlers.background(user, data));
         if (url.pathname === '/api/lobby/emotes' && req.method === 'GET')
           return send(lobbyHandlers.emotes(user));
         if (url.pathname === '/api/lobby/emote' && req.method === 'POST')
@@ -1281,6 +1296,17 @@ function initializeApp(config, dataLock, acquired) {
         if (artworkDelete && req.method === 'POST') {
           limitAccount(user);
           return send(artworkStore.remove(user.id, artworkDelete[1]));
+        }
+        if (url.pathname === '/api/profile/opening' && ['GET', 'POST'].includes(req.method)) {
+          if (req.method === 'POST') limitAccount(user);
+          return send(
+            require('./profiles/opening').openingTheme(
+              db,
+              achievementStore,
+              user.id,
+              req.method === 'POST' ? data : undefined,
+            ),
+          );
         }
         if (url.pathname === '/api/profile/settings' && req.method === 'GET')
           return send(getProfileSettings(db, user.id));
@@ -1411,17 +1437,6 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname.startsWith('/api/admin/')) {
           if (user.role !== 'admin')
             throw new HttpError(403, 'ADMIN_REQUIRED', '只有管理者可以操作');
-
-          if (url.pathname === '/api/admin/achievements/reset' && req.method === 'POST') {
-            if (data?.confirmation !== 'RESET ALL ACHIEVEMENTS')
-              throw new HttpError(
-                400,
-                'CONFIRMATION_REQUIRED',
-                '請再次確認要重設所有玩家的成就與獎勵',
-              );
-            limitRate(accountRate, 'achievement-reset:' + user.id, 2);
-            return send(achievementStore.resetAll());
-          }
 
           if (url.pathname === '/api/admin/market/images' && req.method === 'GET') {
             limitRate(accountRate, 'market-pending:' + user.id, 60);
@@ -1569,6 +1584,10 @@ function initializeApp(config, dataLock, acquired) {
           limitCommunity(req);
           limitAccount(user);
           return send(drawWordStore.add(user, data));
+        }
+        if (url.pathname === '/api/achievements/redeem' && req.method === 'POST') {
+          limitRate(accountRate, 'reward-code:' + user.id, 10);
+          return send(achievementStore.redeem(user.id, data.code));
         }
         if (url.pathname === '/api/achievements/claim' && req.method === 'POST') {
           limitRate(accountRate, 'reward:' + user.id, 30);
@@ -2555,6 +2574,7 @@ function initializeApp(config, dataLock, acquired) {
         '/shared/expression-sounds.js': 'shared/expression-sounds.js',
         '/shared/game-sounds.js': 'shared/game-sounds.js',
         '/shared/race-game-sounds.js': 'shared/race-game-sounds.js',
+        '/assets/game-sounds/entrance-soul-world.mp3': 'assets/game-sounds/entrance-soul-world.mp3',
         '/assets/game-sounds/turn.wav': 'assets/game-sounds/turn.wav',
         '/assets/game-sounds/dice-roll.wav': 'assets/game-sounds/dice-roll.wav',
         '/assets/game-sounds/shot.wav': 'assets/game-sounds/shot.wav',
@@ -2615,6 +2635,7 @@ function initializeApp(config, dataLock, acquired) {
         '/achievements': 'achievements.html',
         '/achievements.js': 'achievements.js',
         '/achievements.css': 'achievements.css',
+        '/shared/achievement-glow.css': 'shared/achievement-glow.css',
         '/app.js': 'app.js',
         '/style.css': 'style.css',
         '/hub.js': 'hub.js',
@@ -2741,6 +2762,8 @@ function initializeApp(config, dataLock, acquired) {
       for (const type of ['ping', 'attention', 'question', 'help', 'look'])
         files['/assets/game-sounds/ping-' + type + '.wav'] =
           'assets/game-sounds/ping-' + type + '.wav';
+      files['/assets/game-sounds/entry-home-family.mp3'] =
+        'assets/game-sounds/entry-home-family.mp3';
       files['/assets/game-sounds/entry-intro-user.mp3'] = 'assets/game-sounds/entry-intro-user.mp3';
       for (const name of [
         'amazing',
@@ -2768,11 +2791,14 @@ function initializeApp(config, dataLock, acquired) {
         'login-480.webp',
         'login-576.webp',
         'login-864.webp',
+        'soul-world.webp',
+        'home-family.jpg',
       ])
         files['/assets/auth/' + name] = 'assets/auth/' + name;
       for (const name of ['stanley021039', 'x55662306', 'azrael04'])
         for (const width of [64, 88, 176])
           files[`/assets/auth/${name}-${width}.webp`] = `assets/auth/${name}-${width}.webp`;
+      files['/shared/opening-theme.js'] = 'shared/opening-theme.js';
       files['/shared/entry-intro.js'] = 'shared/entry-intro.js';
       files['/shared/auth-entry.js'] = 'shared/auth-entry.js';
       files['/shared/entry-intro.css'] = 'shared/entry-intro.css';
@@ -2780,6 +2806,16 @@ function initializeApp(config, dataLock, acquired) {
       if (!file) {
         res.writeHead(404);
         return res.end();
+      }
+      const voiceAsset = /^\/assets\/game-sounds\/(ping-voice-[a-z-]+)\.mp3$/.exec(url.pathname);
+      if (voiceAsset) {
+        res.setHeader('Cache-Control', 'private, no-store');
+        res.setHeader('Vary', 'Cookie');
+        const owner = auth.requireUser(req);
+        if (
+          !require('./achievements/bonus-rewards').ownedSounds(db, owner.id).includes(voiceAsset[1])
+        )
+          throw new HttpError(403, 'PING_SOUND_LOCKED', '請先取得對應成就音效，或兌換 Ping 獎勵');
       }
       if (file.endsWith('.html') && file !== 'login.html') {
         const visitor = auth.sessionFrom(req);
@@ -2847,7 +2883,12 @@ function initializeApp(config, dataLock, acquired) {
                                                 : 'text/html; charset=utf-8',
       );
       if (!file.endsWith('.html'))
-        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
+        return sendStatic(
+          req,
+          res,
+          path.join(__dirname, '..', 'public', file),
+          voiceAsset ? 'private, no-store' : PRIVATE_REVALIDATE,
+        );
       const document =
         frontend?.readPage(file) || fs.readFileSync(path.join(__dirname, '..', 'public', file));
       res.end(withEntryIntro(document, { authPage: file === 'login.html' }));

@@ -68,7 +68,23 @@ function setProfileSettings(db, userId, data) {
     { lenient: data.pings === undefined },
   );
   db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
-    JSON.stringify({ ...appearance, avatar, pings }),
+    JSON.stringify({
+      ...appearance,
+      avatar,
+      pings,
+      ...(savedProfile(db, userId).entryIntroTheme
+        ? { entryIntroTheme: savedProfile(db, userId).entryIntroTheme }
+        : {}),
+      ...(savedProfile(db, userId).achievementRewardCodes
+        ? { achievementRewardCodes: savedProfile(db, userId).achievementRewardCodes }
+        : {}),
+      ...(savedProfile(db, userId).achievementRewardCodeAt
+        ? { achievementRewardCodeAt: savedProfile(db, userId).achievementRewardCodeAt }
+        : {}),
+      ...(savedProfile(db, userId).achievementResetAt
+        ? { achievementResetAt: savedProfile(db, userId).achievementResetAt }
+        : {}),
+    }),
     userId,
   );
   return getProfileSettings(db, userId);
@@ -77,7 +93,22 @@ function avatarContent(db, userId) {
   return validAvatar(db, userId, getProfileSettings(db, userId).avatar);
 }
 function preserveAvatar(db, userId, appearance) {
-  const { avatar, pings } = savedProfile(db, userId);
-  return { ...appearance, ...(avatar ? { avatar } : {}), ...(pings ? { pings } : {}) };
+  const {
+    avatar,
+    pings,
+    achievementResetAt,
+    entryIntroTheme,
+    achievementRewardCodeAt,
+    achievementRewardCodes,
+  } = savedProfile(db, userId);
+  return {
+    ...appearance,
+    ...(avatar ? { avatar } : {}),
+    ...(pings ? { pings } : {}),
+    ...(entryIntroTheme ? { entryIntroTheme } : {}),
+    ...(achievementResetAt ? { achievementResetAt } : {}),
+    ...(achievementRewardCodeAt ? { achievementRewardCodeAt } : {}),
+    ...(achievementRewardCodes ? { achievementRewardCodes } : {}),
+  };
 }
 module.exports = { getProfileSettings, setProfileSettings, avatarContent, preserveAvatar };

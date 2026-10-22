@@ -7,7 +7,7 @@ const { CATALOG, BANKS, normalizeBank } = require('../src/games/musicquiz-librar
 test('eight named banks preserve future foreign languages and retain legacy language metadata', () => {
   assert.deepEqual(
     BANKS.filter((b) => b.id !== 'custom').map((b) => b.id),
-    ['zh', 'tw', 'jp', 'kr', 'yue', 'viral', 'classical', 'en', 'foreign'],
+    ['zh', 'tw', 'jp', 'anime', 'kr', 'yue', 'viral', 'classical', 'en', 'foreign'],
   );
   for (const language of ['th', 'es', 'vi', 'fr', 'de', 'it', 'unknown-future-language'])
     assert.equal(normalizeBank(language), 'foreign');
@@ -65,4 +65,22 @@ test('legacy quiz selections coalesce without permitting unknown configuration v
   const previous = [...r.settings.banks];
   assert.throws(() => r.configure(p.id, { banks: ['foreign', 'invalid-bank'] }));
   assert.deepEqual(r.settings.banks, previous);
+});
+
+test('Japanese anime metadata splits banks without changing song or audio IDs', () => {
+  const raw = require('../src/games/musicquiz-songs.json');
+  const { CATALOG, BANKS } = require('../src/games/musicquiz-library');
+  assert.ok(BANKS.some((bank) => bank.id === 'anime'));
+  const selected = raw.filter((song) => song.bank === 'jp' && song.genres.includes('動漫'));
+  assert.ok(selected.length > 0);
+  for (const song of selected) {
+    const mapped = CATALOG.find((row) => row.id === song.id);
+    assert.equal(mapped.bank, 'anime');
+    assert.equal(mapped.videoId, song.videoId);
+    assert.equal(mapped.introStart, song.introStart);
+  }
+  assert.ok(
+    CATALOG.filter((song) => song.bank === 'jp').every((song) => !song.genres.includes('動漫')),
+  );
+  assert.equal(CATALOG.length, raw.length);
 });

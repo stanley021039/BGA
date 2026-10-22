@@ -1,0 +1,2970 @@
+/* User export 特效.zip / 20_x/code.html: five selected updates, scoped independently. */
+*,
+::before,
+::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style: /* intentionally empty */;
+}
+::backdrop {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-pan-x:  ;
+  --tw-pan-y:  ;
+  --tw-pinch-zoom:  ;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-gradient-from-position:  ;
+  --tw-gradient-via-position:  ;
+  --tw-gradient-to-position:  ;
+  --tw-ordinal:  ;
+  --tw-slashed-zero:  ;
+  --tw-numeric-figure:  ;
+  --tw-numeric-spacing:  ;
+  --tw-numeric-fraction:  ;
+  --tw-ring-inset:  ;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-blur:  ;
+  --tw-brightness:  ;
+  --tw-contrast:  ;
+  --tw-grayscale:  ;
+  --tw-hue-rotate:  ;
+  --tw-invert:  ;
+  --tw-saturate:  ;
+  --tw-sepia:  ;
+  --tw-drop-shadow:  ;
+  --tw-backdrop-blur:  ;
+  --tw-backdrop-brightness:  ;
+  --tw-backdrop-contrast:  ;
+  --tw-backdrop-grayscale:  ;
+  --tw-backdrop-hue-rotate:  ;
+  --tw-backdrop-invert:  ;
+  --tw-backdrop-opacity:  ;
+  --tw-backdrop-saturate:  ;
+  --tw-backdrop-sepia:  ;
+  --tw-contain-size:  ;
+  --tw-contain-layout:  ;
+  --tw-contain-paint:  ;
+  --tw-contain-style: /* intentionally empty */;
+}
+.stitch-vfx-update .pointer-events-none {
+  pointer-events: none;
+}
+.stitch-vfx-update .absolute {
+  position: absolute;
+}
+.stitch-vfx-update .inset-0 {
+  inset: 0px;
+}
+.stitch-vfx-update .inset-1 {
+  inset: 0.25rem;
+}
+.stitch-vfx-update .inset-2 {
+  inset: 0.5rem;
+}
+.stitch-vfx-update .inset-3 {
+  inset: 0.75rem;
+}
+.stitch-vfx-update .inset-4 {
+  inset: 1rem;
+}
+.stitch-vfx-update .-left-1 {
+  left: -0.25rem;
+}
+.stitch-vfx-update .-right-1 {
+  right: -0.25rem;
+}
+.stitch-vfx-update .-top-1 {
+  top: -0.25rem;
+}
+.stitch-vfx-update .-top-6 {
+  top: -1.5rem;
+}
+.stitch-vfx-update .bottom-1 {
+  bottom: 0.25rem;
+}
+.stitch-vfx-update .left-0 {
+  left: 0px;
+}
+.stitch-vfx-update .top-4 {
+  top: 1rem;
+}
+.stitch-vfx-update .top-\[52px\] {
+  top: 52px;
+}
+.stitch-vfx-update .z-10 {
+  z-index: 10;
+}
+.stitch-vfx-update .z-20 {
+  z-index: 20;
+}
+.stitch-vfx-update .z-30 {
+  z-index: 30;
+}
+.stitch-vfx-update .-ml-1 {
+  margin-left: -0.25rem;
+}
+.stitch-vfx-update .-ml-2 {
+  margin-left: -0.5rem;
+}
+.stitch-vfx-update .-ml-2\.5 {
+  margin-left: -0.625rem;
+}
+.stitch-vfx-update .-ml-24 {
+  margin-left: -6rem;
+}
+.stitch-vfx-update .-ml-3 {
+  margin-left: -0.75rem;
+}
+.stitch-vfx-update .-mr-1 {
+  margin-right: -0.25rem;
+}
+.stitch-vfx-update .-mt-3 {
+  margin-top: -0.75rem;
+}
+.stitch-vfx-update .flex {
+  display: flex;
+}
+.stitch-vfx-update .h-1 {
+  height: 0.25rem;
+}
+.stitch-vfx-update .h-1\.5 {
+  height: 0.375rem;
+}
+.stitch-vfx-update .h-10 {
+  height: 2.5rem;
+}
+.stitch-vfx-update .h-14 {
+  height: 3.5rem;
+}
+.stitch-vfx-update .h-16 {
+  height: 4rem;
+}
+.stitch-vfx-update .h-2 {
+  height: 0.5rem;
+}
+.stitch-vfx-update .h-2\.5 {
+  height: 0.625rem;
+}
+.stitch-vfx-update .h-20 {
+  height: 5rem;
+}
+.stitch-vfx-update .h-24 {
+  height: 6rem;
+}
+.stitch-vfx-update .h-28 {
+  height: 7rem;
+}
+.stitch-vfx-update .h-3 {
+  height: 0.75rem;
+}
+.stitch-vfx-update .h-3\.5 {
+  height: 0.875rem;
+}
+.stitch-vfx-update .h-32 {
+  height: 8rem;
+}
+.stitch-vfx-update .h-36 {
+  height: 9rem;
+}
+.stitch-vfx-update .h-40 {
+  height: 10rem;
+}
+.stitch-vfx-update .h-44 {
+  height: 11rem;
+}
+.stitch-vfx-update .h-48 {
+  height: 12rem;
+}
+.stitch-vfx-update .h-5 {
+  height: 1.25rem;
+}
+.stitch-vfx-update .h-52 {
+  height: 13rem;
+}
+.stitch-vfx-update .h-56 {
+  height: 14rem;
+}
+.stitch-vfx-update .h-6 {
+  height: 1.5rem;
+}
+.stitch-vfx-update .h-7 {
+  height: 1.75rem;
+}
+.stitch-vfx-update .h-8 {
+  height: 2rem;
+}
+.stitch-vfx-update .h-full {
+  height: 100%;
+}
+.stitch-vfx-update .w-1 {
+  width: 0.25rem;
+}
+.stitch-vfx-update .w-1\.5 {
+  width: 0.375rem;
+}
+.stitch-vfx-update .w-10 {
+  width: 2.5rem;
+}
+.stitch-vfx-update .w-14 {
+  width: 3.5rem;
+}
+.stitch-vfx-update .w-16 {
+  width: 4rem;
+}
+.stitch-vfx-update .w-2 {
+  width: 0.5rem;
+}
+.stitch-vfx-update .w-2\.5 {
+  width: 0.625rem;
+}
+.stitch-vfx-update .w-20 {
+  width: 5rem;
+}
+.stitch-vfx-update .w-24 {
+  width: 6rem;
+}
+.stitch-vfx-update .w-28 {
+  width: 7rem;
+}
+.stitch-vfx-update .w-3 {
+  width: 0.75rem;
+}
+.stitch-vfx-update .w-3\.5 {
+  width: 0.875rem;
+}
+.stitch-vfx-update .w-32 {
+  width: 8rem;
+}
+.stitch-vfx-update .w-36 {
+  width: 9rem;
+}
+.stitch-vfx-update .w-4 {
+  width: 1rem;
+}
+.stitch-vfx-update .w-40 {
+  width: 10rem;
+}
+.stitch-vfx-update .w-44 {
+  width: 11rem;
+}
+.stitch-vfx-update .w-48 {
+  width: 12rem;
+}
+.stitch-vfx-update .w-5 {
+  width: 1.25rem;
+}
+.stitch-vfx-update .w-52 {
+  width: 13rem;
+}
+.stitch-vfx-update .w-56 {
+  width: 14rem;
+}
+.stitch-vfx-update .w-6 {
+  width: 1.5rem;
+}
+.stitch-vfx-update .w-60 {
+  width: 15rem;
+}
+.stitch-vfx-update .w-7 {
+  width: 1.75rem;
+}
+.stitch-vfx-update .w-8 {
+  width: 2rem;
+}
+.stitch-vfx-update .w-full {
+  width: 100%;
+}
+.stitch-vfx-update .rotate-12 {
+  --tw-rotate: 12deg;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate))
+    skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x))
+    scaleY(var(--tw-scale-y));
+}
+.stitch-vfx-update .rotate-45 {
+  --tw-rotate: 45deg;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate))
+    skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x))
+    scaleY(var(--tw-scale-y));
+}
+.stitch-vfx-update .flex-col {
+  flex-direction: column;
+}
+.stitch-vfx-update .items-center {
+  align-items: center;
+}
+.stitch-vfx-update .justify-center {
+  justify-content: center;
+}
+.stitch-vfx-update .justify-between {
+  justify-content: space-between;
+}
+.stitch-vfx-update .gap-1 {
+  gap: 0.25rem;
+}
+.stitch-vfx-update .gap-6 {
+  gap: 1.5rem;
+}
+.stitch-vfx-update .rounded {
+  border-radius: 0.25rem;
+}
+.stitch-vfx-update .rounded-3xl {
+  border-radius: 1.5rem;
+}
+.stitch-vfx-update .rounded-full {
+  border-radius: 9999px;
+}
+.stitch-vfx-update .rounded-md {
+  border-radius: 0.375rem;
+}
+.stitch-vfx-update .rounded-sm {
+  border-radius: 0.125rem;
+}
+.stitch-vfx-update .border {
+  border-width: 1px;
+}
+.stitch-vfx-update .border-2 {
+  border-width: 2px;
+}
+.stitch-vfx-update .border-4 {
+  border-width: 4px;
+}
+.stitch-vfx-update .border-b {
+  border-bottom-width: 1px;
+}
+.stitch-vfx-update .border-r-2 {
+  border-right-width: 2px;
+}
+.stitch-vfx-update .border-t {
+  border-top-width: 1px;
+}
+.stitch-vfx-update .border-dashed {
+  border-style: dashed;
+}
+.stitch-vfx-update .border-amber-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(252 211 77 / var(--tw-border-opacity, 1));
+}
+.stitch-vfx-update .border-amber-300\/50 {
+  border-color: rgb(252 211 77 / 0.5);
+}
+.stitch-vfx-update .border-amber-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(251 191 36 / var(--tw-border-opacity, 1));
+}
+.stitch-vfx-update .border-amber-500\/40 {
+  border-color: rgb(245 158 11 / 0.4);
+}
+.stitch-vfx-update .border-emerald-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(52 211 153 / var(--tw-border-opacity, 1));
+}
+.stitch-vfx-update .border-fuchsia-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(232 121 249 / var(--tw-border-opacity, 1));
+}
+.stitch-vfx-update .border-purple-400\/80 {
+  border-color: rgb(192 132 252 / 0.8);
+}
+.stitch-vfx-update .border-red-500\/50 {
+  border-color: rgb(239 68 68 / 0.5);
+}
+.stitch-vfx-update .border-white {
+  --tw-border-opacity: 1;
+  border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
+}
+.stitch-vfx-update .border-white\/60 {
+  border-color: rgb(255 255 255 / 0.6);
+}
+.stitch-vfx-update .border-white\/70 {
+  border-color: rgb(255 255 255 / 0.7);
+}
+.stitch-vfx-update .border-white\/80 {
+  border-color: rgb(255 255 255 / 0.8);
+}
+.stitch-vfx-update .border-yellow-200 {
+  --tw-border-opacity: 1;
+  border-color: rgb(254 240 138 / var(--tw-border-opacity, 1));
+}
+.stitch-vfx-update .border-yellow-200\/50 {
+  border-color: rgb(254 240 138 / 0.5);
+}
+.stitch-vfx-update .border-yellow-200\/60 {
+  border-color: rgb(254 240 138 / 0.6);
+}
+.stitch-vfx-update .border-yellow-300 {
+  --tw-border-opacity: 1;
+  border-color: rgb(253 224 71 / var(--tw-border-opacity, 1));
+}
+.stitch-vfx-update .bg-amber-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(252 211 77 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-amber-300\/30 {
+  background-color: rgb(252 211 77 / 0.3);
+}
+.stitch-vfx-update .bg-amber-400\/20 {
+  background-color: rgb(251 191 36 / 0.2);
+}
+.stitch-vfx-update .bg-amber-400\/25 {
+  background-color: rgb(251 191 36 / 0.25);
+}
+.stitch-vfx-update .bg-amber-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(245 158 11 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-amber-500\/20 {
+  background-color: rgb(245 158 11 / 0.2);
+}
+.stitch-vfx-update .bg-amber-600\/70 {
+  background-color: rgb(217 119 6 / 0.7);
+}
+.stitch-vfx-update .bg-emerald-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(110 231 183 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-orange-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(251 146 60 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-pink-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(236 72 153 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-purple-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(147 51 234 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-red-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-stone-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(214 211 209 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-teal-200 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(153 246 228 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-white {
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-yellow-100 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 249 195 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-yellow-300 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(253 224 71 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-yellow-400 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(250 204 21 / var(--tw-bg-opacity, 1));
+}
+.stitch-vfx-update .bg-yellow-400\/20 {
+  background-color: rgb(250 204 21 / 0.2);
+}
+.stitch-vfx-update .bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+.stitch-vfx-update .bg-gradient-to-t {
+  background-image: linear-gradient(to top, var(--tw-gradient-stops));
+}
+.stitch-vfx-update .bg-gradient-to-tr {
+  background-image: linear-gradient(to top right, var(--tw-gradient-stops));
+}
+.stitch-vfx-update .from-amber-400 {
+  --tw-gradient-from: #fbbf24 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(251 191 36 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-amber-500 {
+  --tw-gradient-from: #f59e0b var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(245 158 11 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-amber-600 {
+  --tw-gradient-from: #d97706 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(217 119 6 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-amber-700 {
+  --tw-gradient-from: #b45309 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(180 83 9 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-black {
+  --tw-gradient-from: #000 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-emerald-300 {
+  --tw-gradient-from: #6ee7b7 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(110 231 183 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-emerald-600 {
+  --tw-gradient-from: #059669 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(5 150 105 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-purple-950\/70 {
+  --tw-gradient-from: rgb(59 7 100 / 0.7) var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(59 7 100 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-red-600 {
+  --tw-gradient-from: #dc2626 var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(220 38 38 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-transparent {
+  --tw-gradient-from: transparent var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-yellow-200 {
+  --tw-gradient-from: #fef08a var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(254 240 138 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .from-zinc-950 {
+  --tw-gradient-from: #09090b var(--tw-gradient-from-position);
+  --tw-gradient-to: rgb(9 9 11 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-amber-200 {
+  --tw-gradient-to: rgb(253 230 138 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #fde68a var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-amber-400 {
+  --tw-gradient-to: rgb(251 191 36 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #fbbf24 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-amber-400\/20 {
+  --tw-gradient-to: rgb(251 191 36 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), rgb(251 191 36 / 0.2) var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-amber-500 {
+  --tw-gradient-to: rgb(245 158 11 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #f59e0b var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-emerald-600 {
+  --tw-gradient-to: rgb(5 150 105 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #059669 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-indigo-600\/40 {
+  --tw-gradient-to: rgb(79 70 229 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), rgb(79 70 229 / 0.4) var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-orange-400 {
+  --tw-gradient-to: rgb(251 146 60 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #fb923c var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-red-600 {
+  --tw-gradient-to: rgb(220 38 38 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #dc2626 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-teal-200 {
+  --tw-gradient-to: rgb(153 246 228 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #99f6e4 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-white {
+  --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #fff var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-yellow-100 {
+  --tw-gradient-to: rgb(254 249 195 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #fef9c3 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-yellow-200 {
+  --tw-gradient-to: rgb(254 240 138 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #fef08a var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-yellow-300 {
+  --tw-gradient-to: rgb(253 224 71 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #fde047 var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .via-zinc-900 {
+  --tw-gradient-to: rgb(24 24 27 / 0) var(--tw-gradient-to-position);
+  --tw-gradient-stops:
+    var(--tw-gradient-from), #18181b var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.stitch-vfx-update .to-amber-300 {
+  --tw-gradient-to: #fcd34d var(--tw-gradient-to-position);
+}
+.stitch-vfx-update .to-emerald-600 {
+  --tw-gradient-to: #059669 var(--tw-gradient-to-position);
+}
+.stitch-vfx-update .to-fuchsia-500\/30 {
+  --tw-gradient-to: rgb(217 70 239 / 0.3) var(--tw-gradient-to-position);
+}
+.stitch-vfx-update .to-teal-200 {
+  --tw-gradient-to: #99f6e4 var(--tw-gradient-to-position);
+}
+.stitch-vfx-update .to-white {
+  --tw-gradient-to: #fff var(--tw-gradient-to-position);
+}
+.stitch-vfx-update .to-white\/60 {
+  --tw-gradient-to: rgb(255 255 255 / 0.6) var(--tw-gradient-to-position);
+}
+.stitch-vfx-update .to-yellow-100 {
+  --tw-gradient-to: #fef9c3 var(--tw-gradient-to-position);
+}
+.stitch-vfx-update .to-yellow-200 {
+  --tw-gradient-to: #fef08a var(--tw-gradient-to-position);
+}
+.stitch-vfx-update .fill-white {
+  fill: #fff;
+}
+.stitch-vfx-update .px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.stitch-vfx-update .px-2\.5 {
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
+}
+.stitch-vfx-update .py-0\.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+.stitch-vfx-update .py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.stitch-vfx-update .text-\[10px\] {
+  font-size: 10px;
+}
+.stitch-vfx-update .text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.stitch-vfx-update .font-black {
+  font-weight: 900;
+}
+.stitch-vfx-update .font-bold {
+  font-weight: 700;
+}
+.stitch-vfx-update .tracking-tighter {
+  letter-spacing: -0.05em;
+}
+.stitch-vfx-update .text-amber-100 {
+  --tw-text-opacity: 1;
+  color: rgb(254 243 199 / var(--tw-text-opacity, 1));
+}
+.stitch-vfx-update .text-white {
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+}
+.stitch-vfx-update .text-yellow-200 {
+  --tw-text-opacity: 1;
+  color: rgb(254 240 138 / var(--tw-text-opacity, 1));
+}
+.stitch-vfx-update .text-zinc-950 {
+  --tw-text-opacity: 1;
+  color: rgb(9 9 11 / var(--tw-text-opacity, 1));
+}
+.stitch-vfx-update .opacity-0 {
+  opacity: 0;
+}
+.stitch-vfx-update .opacity-40 {
+  opacity: 0.4;
+}
+.stitch-vfx-update .opacity-50 {
+  opacity: 0.5;
+}
+.stitch-vfx-update .opacity-90 {
+  opacity: 0.9;
+}
+.stitch-vfx-update .opacity-95 {
+  opacity: 0.95;
+}
+.stitch-vfx-update .mix-blend-screen {
+  mix-blend-mode: screen;
+}
+.stitch-vfx-update .shadow-2xl {
+  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_10px_\#34d399\] {
+  --tw-shadow: 0 0 10px #34d399;
+  --tw-shadow-colored: 0 0 10px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_10px_\#fbbf24\] {
+  --tw-shadow: 0 0 10px #fbbf24;
+  --tw-shadow-colored: 0 0 10px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_10px_\#ffffff\] {
+  --tw-shadow: 0 0 10px #ffffff;
+  --tw-shadow-colored: 0 0 10px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_12px_\#10b981\] {
+  --tw-shadow: 0 0 12px #10b981;
+  --tw-shadow-colored: 0 0 12px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_12px_\#ea580c\] {
+  --tw-shadow: 0 0 12px #ea580c;
+  --tw-shadow-colored: 0 0 12px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_12px_\#fbbf24\] {
+  --tw-shadow: 0 0 12px #fbbf24;
+  --tw-shadow-colored: 0 0 12px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_12px_\#ffffff\] {
+  --tw-shadow: 0 0 12px #ffffff;
+  --tw-shadow-colored: 0 0 12px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_14px_\#ef4444\] {
+  --tw-shadow: 0 0 14px #ef4444;
+  --tw-shadow-colored: 0 0 14px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_14px_\#f59e0b\] {
+  --tw-shadow: 0 0 14px #f59e0b;
+  --tw-shadow-colored: 0 0 14px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_14px_\#ffffff\] {
+  --tw-shadow: 0 0 14px #ffffff;
+  --tw-shadow-colored: 0 0 14px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_16px_\#fbbf24\] {
+  --tw-shadow: 0 0 16px #fbbf24;
+  --tw-shadow-colored: 0 0 16px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_18px_\#10b981\] {
+  --tw-shadow: 0 0 18px #10b981;
+  --tw-shadow-colored: 0 0 18px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_18px_\#f59e0b\] {
+  --tw-shadow: 0 0 18px #f59e0b;
+  --tw-shadow-colored: 0 0 18px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_20px_\#f59e0b\] {
+  --tw-shadow: 0 0 20px #f59e0b;
+  --tw-shadow-colored: 0 0 20px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_20px_\#ffffff\] {
+  --tw-shadow: 0 0 20px #ffffff;
+  --tw-shadow-colored: 0 0 20px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_24px_\#ea580c\] {
+  --tw-shadow: 0 0 24px #ea580c;
+  --tw-shadow-colored: 0 0 24px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_24px_\#f59e0b\] {
+  --tw-shadow: 0 0 24px #f59e0b;
+  --tw-shadow-colored: 0 0 24px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_25px_\#10b981\] {
+  --tw-shadow: 0 0 25px #10b981;
+  --tw-shadow-colored: 0 0 25px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_28px_\#fbbf24\] {
+  --tw-shadow: 0 0 28px #fbbf24;
+  --tw-shadow-colored: 0 0 28px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_30px_\#ffffff\] {
+  --tw-shadow: 0 0 30px #ffffff;
+  --tw-shadow-colored: 0 0 30px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_35px_\#a855f7\] {
+  --tw-shadow: 0 0 35px #a855f7;
+  --tw-shadow-colored: 0 0 35px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_40px_\#ffffff\] {
+  --tw-shadow: 0 0 40px #ffffff;
+  --tw-shadow-colored: 0 0 40px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_45px_\#dc2626\] {
+  --tw-shadow: 0 0 45px #dc2626;
+  --tw-shadow-colored: 0 0 45px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_6px_\#ffffff\] {
+  --tw-shadow: 0 0 6px #ffffff;
+  --tw-shadow-colored: 0 0 6px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_8px_\#34d399\] {
+  --tw-shadow: 0 0 8px #34d399;
+  --tw-shadow-colored: 0 0 8px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_8px_\#f59e0b\] {
+  --tw-shadow: 0 0 8px #f59e0b;
+  --tw-shadow-colored: 0 0 8px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .shadow-\[0_0_8px_\#ffffff\] {
+  --tw-shadow: 0 0 8px #ffffff;
+  --tw-shadow-colored: 0 0 8px var(--tw-shadow-color);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.stitch-vfx-update .blur-\[1px\] {
+  --tw-blur: blur(1px);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .blur-\[2px\] {
+  --tw-blur: blur(2px);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .blur-sm {
+  --tw-blur: blur(4px);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_10px_\#ffffff\] {
+  --tw-drop-shadow: drop-shadow(0 0 10px #ffffff);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_12px_\#ffffff\] {
+  --tw-drop-shadow: drop-shadow(0 0 12px #ffffff);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_14px_\#fbbf24\] {
+  --tw-drop-shadow: drop-shadow(0 0 14px #fbbf24);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_16px_\#c084fc\] {
+  --tw-drop-shadow: drop-shadow(0 0 16px #c084fc);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_16px_\#fbbf24\] {
+  --tw-drop-shadow: drop-shadow(0 0 16px #fbbf24);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_18px_\#059669\] {
+  --tw-drop-shadow: drop-shadow(0 0 18px #059669);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_18px_\#f472b6\] {
+  --tw-drop-shadow: drop-shadow(0 0 18px #f472b6);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_24px_\#ffffff\] {
+  --tw-drop-shadow: drop-shadow(0 0 24px #ffffff);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .drop-shadow-\[0_0_30px_\#f59e0b\] {
+  --tw-drop-shadow: drop-shadow(0 0 30px #f59e0b);
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+.stitch-vfx-update .filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
+    var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
+/* Base Styles */
+.stitch-vfx-update .tactile-glass {
+  background: rgba(23, 31, 51, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.5);
+}
+.stitch-vfx-update .tactile-glass:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow:
+    0 16px 40px -4px rgba(0, 0, 0, 0.7),
+    0 0 24px rgba(245, 158, 11, 0.16);
+}
+.stitch-vfx-update .chibi-char {
+  animation: stitch-update-char-idle 3s ease-in-out infinite;
+}
+.stitch-vfx-update .vfx-elem {
+  pointer-events: none;
+}
+@keyframes stitch-update-char-idle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* 01. 千本櫻景嚴 */
+@keyframes stitch-update-blade-rise {
+  0% {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+  30% {
+    transform: translateY(0);
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(244, 114, 182, 0.6));
+  }
+  60% {
+    transform: translateY(-4px);
+    opacity: 1;
+    filter: brightness(1.7) drop-shadow(0 0 16px #ec4899);
+  }
+  80% {
+    transform: translateY(-8px) scale(1.05);
+    opacity: 0;
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-petal-storm {
+  0%,
+  30% {
+    transform: scale(0.2) rotate(0deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1) rotate(90deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 16px #f472b6);
+  }
+  80% {
+    transform: scale(1.4) rotate(220deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.8) rotate(360deg);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+/* 02. 大紅蓮冰輪丸 */
+@keyframes stitch-update-ice-wings {
+  0% {
+    transform: scale(0.4) rotate(0deg);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1.1) rotate(2deg);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 20px #38bdf8);
+  }
+  75% {
+    transform: scale(1.05) rotate(-2deg);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-ice-ring {
+  0% {
+    transform: rotate(0deg) scale(0.6);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #7dd3fc);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.3);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-ice-spikes {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scaleY(1.2);
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #38bdf8);
+  }
+  100% {
+    transform: scaleY(1.1);
+    opacity: 0;
+  }
+}
+
+/* 03. 皆盡 */
+@keyframes stitch-update-minazuki-cross {
+  0% {
+    transform: scale(0.1) rotate(45deg);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.2) rotate(45deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 20px #ef4444);
+  }
+  60% {
+    transform: scale(1) rotate(45deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.5) rotate(45deg);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-minazuki-blood {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.2);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 35px #991b1b);
+  }
+  100% {
+    transform: scale(0.7) translateY(-30px);
+    opacity: 0;
+  }
+}
+
+/* 04. 殘火太刀 (四向奧義神髓：西殘日獄衣+東旭日刃熱浪焦黑) */
+@keyframes stitch-update-zanka-sun-cloak {
+  0% {
+    transform: scale(0.7) translateY(10px);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.05) translateY(0);
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 25px #f97316);
+  }
+  50% {
+    transform: scale(1.15) translateY(-3px);
+    opacity: 0.95;
+    filter: brightness(1.7) drop-shadow(0 0 45px #dc2626);
+  }
+  100% {
+    transform: scale(1.3) translateY(-15px);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@keyframes stitch-update-zanka-embers {
+  0% {
+    transform: translate(var(--ex, 0), 20px) scale(0.3);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px #f59e0b);
+  }
+  100% {
+    transform: translate(calc(var(--ex, 0) + var(--edx, 15px)), -80px) scale(1.2);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-zanka-heat-haze {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.3;
+    filter: blur(2px);
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+    filter: blur(4px);
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@keyframes stitch-update-zanka-ground-magma {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  30%,
+  75% {
+    opacity: 1;
+    transform: scale(1);
+    filter: drop-shadow(0 0 16px #ea580c);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+/* 05. 王之財寶 (向右前方32度同向齊射) */
+@keyframes stitch-update-babylon-portals {
+  0% {
+    transform: scale(0.2) rotate(0deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1) rotate(45deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 18px #f59e0b);
+  }
+  75% {
+    transform: scale(1.1) rotate(90deg);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 24px #fbbf24);
+  }
+  100% {
+    transform: scale(1.2) rotate(120deg);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-babylon-projectile {
+  0% {
+    transform: translate(-80px, -60px) rotate(32deg) scale(0.3);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  60% {
+    transform: translate(30px, 20px) rotate(32deg) scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 16px #fbbf24);
+  }
+  100% {
+    transform: translate(180px, 130px) rotate(32deg) scale(1.3);
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+/* 06. 虛式「茈」 */
+@keyframes stitch-update-red-pull {
+  0% {
+    transform: translate(-70px, -15px) scale(0.2);
+    opacity: 0;
+  }
+  40% {
+    transform: translate(-30px, -6px) scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #ef4444);
+  }
+  60%,
+  100% {
+    transform: translate(0, 0) scale(0);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-blue-pull {
+  0% {
+    transform: translate(70px, 15px) scale(0.2);
+    opacity: 0;
+  }
+  40% {
+    transform: translate(30px, 6px) scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #3b82f6);
+  }
+  60%,
+  100% {
+    transform: translate(0, 0) scale(0);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-purple-orb {
+  0%,
+  50% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(0.6);
+    opacity: 1;
+    filter: drop-shadow(0 0 25px #a855f7);
+  }
+  75% {
+    transform: scale(2.6);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 45px #9333ea);
+  }
+  100% {
+    transform: scale(3.6);
+    opacity: 0;
+  }
+}
+
+/* 07. 青眼白龍 */
+@keyframes stitch-update-dragon-roar {
+  0% {
+    transform: translateY(40px) scale(0.5);
+    opacity: 0;
+  }
+  35% {
+    transform: translateY(-8px) scale(1.05);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 24px #93c5fd);
+  }
+  100% {
+    transform: translateY(-30px) scale(1.2);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-dragon-beam {
+  0%,
+  40% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  55% {
+    transform: scaleY(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 28px #ffffff);
+  }
+  100% {
+    transform: scaleY(1.3) scaleX(2);
+    opacity: 0;
+  }
+}
+
+/* 08. 破道之九十·黑棺 */
+@keyframes stitch-update-coffin-left {
+  0% {
+    transform: translateX(-80px);
+    opacity: 0;
+  }
+  30%,
+  70% {
+    transform: translateX(0);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-coffin-right {
+  0% {
+    transform: translateX(80px);
+    opacity: 0;
+  }
+  30%,
+  70% {
+    transform: translateX(0);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-coffin-needle {
+  0%,
+  35% {
+    transform: scale(0) rotate(var(--rot, 0deg));
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(var(--rot, 0deg));
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #c084fc);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4) rotate(var(--rot, 0deg));
+  }
+}
+
+/* 09. 聖杯之泥 */
+@keyframes stitch-update-mud-pool {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.1);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 25px #dc2626);
+  }
+  100% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-shadow-claws {
+  0% {
+    transform: translateY(50px) scale(0.3);
+    opacity: 0;
+  }
+  40% {
+    transform: translateY(-12px) scale(1.1) rotate(var(--crot, 0deg));
+    opacity: 0.95;
+    filter: drop-shadow(0 0 14px #ef4444);
+  }
+  100% {
+    transform: translateY(40px) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* 10. 替身·近身狂拳 (超高張力·漫天神速重拳+漫畫字彈窗) */
+@keyframes stitch-update-stand-phantom {
+  0% {
+    transform: translateY(30px) scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    transform: translateY(-10px) scale(1.1);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 25px #a855f7);
+  }
+  100% {
+    transform: translateY(-30px) scale(1.25);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-ora-fist {
+  0% {
+    opacity: 0;
+    transform: translate(var(--fx-start, 0px), var(--fy-start, 0px)) scale(0.4);
+  }
+  35% {
+    opacity: 1;
+    filter: drop-shadow(0 0 18px #d8b4fe);
+  }
+  60% {
+    transform: translate(var(--fx-end, 40px), var(--fy-end, 10px)) scale(1.4);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--fx-end, 40px) * 1.3), calc(var(--fy-end, 10px) * 1.3))
+      scale(1.6);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-speed-lines {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+@keyframes stitch-update-manga-badge {
+  0% {
+    transform: scale(0) rotate(var(--mrot, -8deg));
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.3) rotate(var(--mrot, -8deg));
+    opacity: 1;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1.05) rotate(var(--mrot, -8deg));
+  }
+  100% {
+    transform: scale(1.4) rotate(var(--mrot, -8deg));
+    opacity: 0;
+  }
+}
+
+/* 11. 替身·時之領域 (負片反色震盪+羅馬數字齒輪定格) */
+@keyframes stitch-update-time-clock {
+  0% {
+    transform: scale(0.3) rotate(0deg);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.1) rotate(180deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 28px #f59e0b);
+  }
+  85% {
+    transform: scale(1.05) rotate(360deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.4) rotate(420deg);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-time-invert {
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+    filter: invert(0);
+  }
+  45% {
+    opacity: 0;
+  }
+  48% {
+    transform: scale(0.3);
+    opacity: 0.95;
+    filter: invert(1) contrast(200%);
+  }
+  70% {
+    transform: scale(2);
+    opacity: 0.85;
+    filter: invert(1) contrast(180%);
+  }
+  100% {
+    transform: scale(3.2);
+    opacity: 0;
+    filter: invert(0);
+  }
+}
+
+/* 12. 替身·翠綠連彈 (法皇全向能量網絡+翡翠光彈激射) */
+@keyframes stitch-update-emerald-web {
+  0% {
+    stroke-dashoffset: 400;
+    opacity: 0;
+  }
+  30% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    filter: drop-shadow(0 0 10px #34d399);
+  }
+  80% {
+    stroke-dashoffset: 0;
+    opacity: 0.9;
+  }
+  100% {
+    stroke-dashoffset: -200;
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-emerald-bullets {
+  0% {
+    transform: translate(var(--ebx, 0), var(--eby, 0)) scale(0.2) rotate(var(--erot, 0deg));
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #34d399);
+  }
+  75% {
+    transform: translate(
+        calc(var(--ebx, 0) + var(--edx, 90px)),
+        calc(var(--eby, 0) + var(--edy, 60px))
+      )
+      scale(1.2) rotate(var(--erot, 0deg));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+        calc(var(--ebx, 0) + var(--edx, 90px) * 1.5),
+        calc(var(--eby, 0) + var(--edy, 60px) * 1.5)
+      )
+      scale(1.4) rotate(var(--erot, 0deg));
+    opacity: 0;
+  }
+}
+
+/* 13. 烏爾奇奧拉·破面二段歸刃 (黑綠遮天蝠翼+雷霆之槍翡翠光柱) */
+@keyframes stitch-update-murcielago-wings {
+  0% {
+    transform: scale(0.3) translateY(20px);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.15) translateY(-5px);
+    opacity: 0.98;
+    filter: drop-shadow(0 0 25px #059669);
+  }
+  70% {
+    transform: scale(1.05) translateY(-3px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.3) translateY(-25px);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-lanza-spear {
+  0% {
+    transform: translateY(-120px) scale(0.4);
+    opacity: 0;
+  }
+  30% {
+    transform: translateY(0) scale(1.2);
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 30px #34d399);
+  }
+  80% {
+    transform: translateY(4px) scale(1.05);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(15px) scale(1.2);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-cero-pillar {
+  0%,
+  30% {
+    transform: scaleY(0) scaleX(0.2);
+    opacity: 0;
+  }
+  45% {
+    transform: scaleY(1.3) scaleX(1.1);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 40px #10b981);
+  }
+  100% {
+    transform: scaleY(1.2) scaleX(1.8);
+    opacity: 0;
+  }
+}
+
+/* 14. 超級賽亞人 (純金烈焰氣焰柱+天藍曲折電弧+失重碎石浮空+衝擊波) */
+@keyframes stitch-update-saiyan-ki-column {
+  0% {
+    transform: scaleY(0.4) scaleX(0.7);
+    opacity: 0;
+  }
+  25% {
+    transform: scaleY(1.25) scaleX(1.1);
+    opacity: 0.95;
+    filter: brightness(1.9) drop-shadow(0 0 35px #f59e0b);
+  }
+  50% {
+    transform: scaleY(1.15) scaleX(1.02);
+    opacity: 0.9;
+    filter: brightness(2.2) drop-shadow(0 0 45px #fbbf24);
+  }
+  75% {
+    transform: scaleY(1.22) scaleX(1.08);
+    opacity: 0.92;
+  }
+  100% {
+    transform: scaleY(1.35) scaleX(1.2);
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+@keyframes stitch-update-saiyan-shockwave {
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+    border-width: 6px;
+  }
+  30% {
+    transform: scale(0.9);
+    opacity: 1;
+    border-color: #fef08a;
+    filter: drop-shadow(0 0 18px #f59e0b);
+  }
+  70% {
+    transform: scale(1.6);
+    opacity: 0.6;
+    border-width: 2px;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-cyan-lightning {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  15%,
+  25%,
+  55%,
+  65%,
+  85% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px #38bdf8) drop-shadow(0 0 20px #0284c7);
+  }
+  20%,
+  60% {
+    opacity: 0.1;
+  }
+}
+@keyframes stitch-update-floating-rocks {
+  0% {
+    transform: translate(var(--dx, 0), 25px) rotate(0deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  75% {
+    transform: translate(calc(var(--dx, 0) + var(--ddx, 6px)), -50px) rotate(160deg);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(calc(var(--dx, 0) + var(--ddx, 12px)), -90px) rotate(320deg);
+    opacity: 0;
+  }
+}
+
+/* 15. 天罰閃電 */
+@keyframes stitch-update-thunder-bolt {
+  0% {
+    stroke-dashoffset: 300;
+    opacity: 0;
+  }
+  20% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    filter: drop-shadow(0 0 16px #c0c1ff);
+  }
+  40% {
+    opacity: 0.2;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stitch-vfx-update .vfx-elem,
+  .stitch-vfx-update .chibi-char {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+@keyframes stitch-update-exodia-seal-ring {
+  0% {
+    transform: rotate(0deg) scale(0.3);
+    opacity: 0;
+  }
+  30% {
+    transform: rotate(90deg) scale(1.05);
+    opacity: 1;
+    filter: drop-shadow(0 0 20px #f59e0b);
+  }
+  70% {
+    transform: rotate(180deg) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: rotate(270deg) scale(1.2);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-exodia-shackles-arm-left {
+  0% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(-15px) scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #fbbf24);
+  }
+  50% {
+    transform: translateX(-40px) rotate(-25deg) scale(1.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(-90px) rotate(-60deg) scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-exodia-shackles-arm-right {
+  0% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  35% {
+    transform: translateX(15px) scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #fbbf24);
+  }
+  50% {
+    transform: translateX(40px) rotate(25deg) scale(1.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(90px) rotate(60deg) scale(0.4);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-exodia-shackles-leg-left {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(-15px, 20px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-45px, 60px) rotate(-45deg) scale(0.2);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-exodia-shackles-leg-right {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(15px, 20px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(45px, 60px) rotate(45deg) scale(0.2);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-exodia-chain-snap {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 15px #f59e0b);
+  }
+  45% {
+    transform: scale(1.3);
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 25px #ffffff);
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@keyframes stitch-update-exodia-titan-rise {
+  0% {
+    transform: translateY(50px) scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    transform: translateY(-5px) scale(1.05);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 30px #f59e0b);
+  }
+  65% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+    filter: brightness(1.2);
+  }
+  100% {
+    transform: translateY(-25px) scale(1.15);
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+@keyframes stitch-update-exodia-red-eyes {
+  0%,
+  25% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 16px #ef4444);
+  }
+  75% {
+    opacity: 0.95;
+    transform: scale(1);
+    filter: drop-shadow(0 0 24px #dc2626);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+@keyframes stitch-update-exodia-obliterate-core {
+  0%,
+  35% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(0.8) rotate(45deg);
+    opacity: 0.9;
+    filter: drop-shadow(0 0 30px #ea580c);
+  }
+  70% {
+    transform: scale(1.5) rotate(120deg);
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 50px #dc2626);
+  }
+  100% {
+    transform: scale(2.2) rotate(180deg);
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+@keyframes stitch-update-exodia-obliterate-beam {
+  0%,
+  45% {
+    transform: scaleY(0) scaleX(0.2);
+    opacity: 0;
+  }
+  60% {
+    transform: scaleY(1.3) scaleX(1.2);
+    opacity: 1;
+    filter: drop-shadow(0 0 45px #f59e0b);
+  }
+  85% {
+    transform: scaleY(1.5) scaleX(1.8);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scaleY(1.8) scaleX(2.4);
+    opacity: 0;
+    filter: blur(10px);
+  }
+}
+@keyframes stitch-update-exodia-armored-leg-left {
+  0% {
+    transform: translate(-30px, 45px) scale(0.4) rotate(15deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    transform: translate(-35px, 20px) scale(1.05) rotate(5deg);
+    filter: drop-shadow(0 0 16px #fbbf24);
+  }
+  65% {
+    transform: translate(-40px, 12px) scale(1) rotate(0deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(-70px, 55px) scale(0.6) rotate(-25deg);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-exodia-armored-leg-right {
+  0% {
+    transform: translate(30px, 45px) scale(0.4) rotate(-15deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    transform: translate(35px, 20px) scale(1.05) rotate(-5deg);
+    filter: drop-shadow(0 0 16px #fbbf24);
+  }
+  65% {
+    transform: translate(40px, 12px) scale(1) rotate(0deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(70px, 55px) scale(0.6) rotate(25deg);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-exodia-rune-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+    filter: drop-shadow(0 0 25px #10b981) brightness(1.3);
+  }
+}
+
+@keyframes stitch-update-guanyin-lotus-mandala {
+  0% {
+    transform: scale(0.2) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.05) rotate(90deg);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 18px #f59e0b);
+  }
+  65% {
+    transform: scale(1) rotate(180deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.2) rotate(270deg);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes stitch-update-guanyin-buddha-descent {
+  0% {
+    transform: translateY(40px) scale(0.65);
+    opacity: 0;
+  }
+  28% {
+    transform: translateY(-4px) scale(1.04);
+    opacity: 1;
+    filter: drop-shadow(0 0 24px #f59e0b) brightness(1.25);
+  }
+  65% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 16px #fbbf24) brightness(1.1);
+  }
+  85% {
+    transform: translateY(-6px) scale(1.03);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-25px) scale(1.1);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-guanyin-arms-wheel {
+  0% {
+    transform: scale(0.5) rotate(-30deg);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.06) rotate(0deg);
+    opacity: 0.98;
+    filter: drop-shadow(0 0 20px #f59e0b);
+  }
+  65% {
+    transform: scale(1) rotate(6deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.18) rotate(18deg);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes stitch-update-guanyin-third-eye-halo {
+  0%,
+  20% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  35% {
+    opacity: 1;
+    transform: scale(1.25);
+    filter: drop-shadow(0 0 12px #fff);
+  }
+  70% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.4);
+  }
+}
+@keyframes stitch-update-guanyin-palm-barrage {
+  0% {
+    opacity: 0;
+    transform: translate(var(--gpx-start, 0px), var(--gpy-start, 20px)) scale(0.4);
+  }
+  30% {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #fde047);
+  }
+  60% {
+    transform: translate(var(--gpx-end, 15px), var(--gpy-end, -20px)) scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(var(--gpx-end, 15px) * 1.35), calc(var(--gpy-end, -20px) * 1.35))
+      scale(1.45);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-guanyin-prayer-glow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.9);
+  }
+  40%,
+  65% {
+    opacity: 1;
+    transform: scale(1.15);
+    filter: drop-shadow(0 0 20px #fef08a);
+  }
+}
+
+@keyframes stitch-update-thunder-strike-main {
+  0%,
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 400;
+  }
+  5%,
+  15% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 16px #67e8f9) drop-shadow(0 0 28px #38bdf8);
+  }
+  8% {
+    opacity: 0.3;
+  }
+  12% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0;
+    stroke-dashoffset: -200;
+  }
+}
+@keyframes stitch-update-thunder-strike-purple {
+  0%,
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 350;
+  }
+  22%,
+  35% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 14px #c084fc) drop-shadow(0 0 24px #a855f7);
+  }
+  26% {
+    opacity: 0.2;
+  }
+  30% {
+    opacity: 0.95;
+  }
+  40% {
+    opacity: 0;
+    stroke-dashoffset: -150;
+  }
+}
+@keyframes stitch-update-thunder-strike-cyan {
+  0%,
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 380;
+  }
+  45%,
+  60% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 16px #38bdf8) drop-shadow(0 0 25px #0284c7);
+  }
+  48% {
+    opacity: 0.3;
+  }
+  54% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-thunder-strike-white {
+  0%,
+  100% {
+    opacity: 0;
+    stroke-dashoffset: 320;
+  }
+  65%,
+  78% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+    filter: drop-shadow(0 0 20px #ffffff) drop-shadow(0 0 35px #60a5fa);
+  }
+  70% {
+    opacity: 0.4;
+  }
+  74% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-thunder-ground-ring {
+  0%,
+  100% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  8%,
+  20% {
+    transform: scale(1.1);
+    opacity: 0.9;
+    filter: drop-shadow(0 0 16px #38bdf8);
+  }
+  25% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  68%,
+  78% {
+    transform: scale(1.2);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 20px #c084fc);
+  }
+  85% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-thunder-strobe-flash {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  6%,
+  14% {
+    opacity: 0.35;
+  }
+  8% {
+    opacity: 0.05;
+  }
+  46%,
+  56% {
+    opacity: 0.28;
+  }
+  66%,
+  74% {
+    opacity: 0.42;
+  }
+}
+@keyframes stitch-update-thunder-spark-jitter {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.4);
+  }
+  10%,
+  30% {
+    opacity: 1;
+    transform: translate(var(--tsx, 5px), var(--tsy, -8px)) scale(1.2);
+    filter: drop-shadow(0 0 8px #67e8f9);
+  }
+  35% {
+    opacity: 0;
+    transform: translate(calc(var(--tsx, 5px) * 1.5), calc(var(--tsy, -8px) * 1.5)) scale(0.2);
+  }
+  60%,
+  80% {
+    opacity: 1;
+    transform: translate(var(--tsx, -6px), var(--tsy, -12px)) scale(1.3);
+    filter: drop-shadow(0 0 10px #ffffff);
+  }
+  85% {
+    opacity: 0;
+  }
+}
+
+@keyframes stitch-update-timestop-clock-spin {
+  0% {
+    transform: scale(0.4) rotate(-90deg);
+    opacity: 0;
+    filter: drop-shadow(0 0 10px #f59e0b);
+  }
+  25% {
+    transform: scale(1.1) rotate(15deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 35px #fbbf24) drop-shadow(0 0 15px #f59e0b);
+  }
+  40% {
+    transform: scale(1.02) rotate(0deg);
+    opacity: 0.98;
+    filter: drop-shadow(0 0 25px #f59e0b);
+  }
+  80% {
+    transform: scale(1.05) rotate(5deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.3) rotate(30deg);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-timestop-gear-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes stitch-update-timestop-gear-reverse {
+  0% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes stitch-update-timestop-hand-hour {
+  0% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(120deg);
+  }
+  45%,
+  85% {
+    transform: rotate(120deg);
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}
+@keyframes stitch-update-timestop-hand-minute {
+  0% {
+    transform: rotate(45deg);
+  }
+  35% {
+    transform: rotate(260deg);
+  }
+  45%,
+  85% {
+    transform: rotate(260deg);
+  }
+  100% {
+    transform: rotate(380deg);
+  }
+}
+@keyframes stitch-update-timestop-hand-second {
+  0% {
+    transform: rotate(90deg);
+  }
+  25% {
+    transform: rotate(340deg);
+  }
+  35% {
+    transform: rotate(360deg);
+  }
+  40% {
+    transform: rotate(360deg);
+  }
+  42% {
+    transform: rotate(361deg);
+  }
+  44% {
+    transform: rotate(360deg);
+  }
+  85% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(450deg);
+  }
+}
+@keyframes stitch-update-timestop-shockwave-ring {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+    border-width: 5px;
+  }
+  30% {
+    transform: scale(1);
+    opacity: 0.95;
+    border-width: 3px;
+    filter: drop-shadow(0 0 20px #fbbf24);
+  }
+  60% {
+    transform: scale(1.6);
+    opacity: 0.5;
+    border-width: 1.5px;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+@keyframes stitch-update-hyorinmaru-wings-surge {
+  0% {
+    transform: scale(0.3) translateY(20px) rotate(0deg);
+    opacity: 0;
+    filter: drop-shadow(0 0 5px #0284c7);
+  }
+  25% {
+    transform: scale(1.12) translateY(-6px) rotate(-1.5deg);
+    opacity: 0.98;
+    filter: drop-shadow(0 0 25px #38bdf8) drop-shadow(0 0 10px #ffffff);
+  }
+  50% {
+    transform: scale(1.02) translateY(0px) rotate(1deg);
+    opacity: 0.95;
+  }
+  75% {
+    transform: scale(1.06) translateY(-3px) rotate(-0.5deg);
+    opacity: 0.92;
+    filter: drop-shadow(0 0 20px #0ea5e9);
+  }
+  100% {
+    transform: scale(1.18) translateY(-15px) rotate(2deg);
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-hyorinmaru-tail-whip {
+  0% {
+    transform: scale(0.5) rotate(-15deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1.05) rotate(5deg);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 16px #38bdf8);
+  }
+  70% {
+    transform: scale(1) rotate(-3deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.15) rotate(10deg);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes stitch-update-hyorinmaru-flos-spin {
+  0% {
+    transform: rotate(0deg) scale(0.4);
+    opacity: 0;
+  }
+  25% {
+    transform: rotate(90deg) scale(1.1);
+    opacity: 1;
+    filter: drop-shadow(0 0 18px #c084fc) drop-shadow(0 0 10px #7dd3fc);
+  }
+  70% {
+    transform: rotate(180deg) scale(1.02);
+    opacity: 0.95;
+  }
+  100% {
+    transform: rotate(270deg) scale(1.2);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes stitch-update-hyorinmaru-blizzard-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.95) rotate(0deg);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.15) rotate(180deg);
+    filter: drop-shadow(0 0 25px #38bdf8);
+  }
+}
+@keyframes stitch-update-hyorinmaru-frost-burst {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  25% {
+    transform: scaleY(1.3);
+    opacity: 1;
+    filter: drop-shadow(0 0 20px #38bdf8) brightness(1.6);
+  }
+  65% {
+    transform: scaleY(1.05);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scaleY(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes stitch-update-explosion-circle {
+  0% {
+    transform: scale(0.2) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.05) rotate(90deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 16px #ef4444);
+  }
+  60% {
+    transform: scale(1) rotate(210deg);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 24px #dc2626);
+  }
+  75% {
+    transform: scale(1.4) rotate(270deg);
+    opacity: 0.8;
+    filter: brightness(2) drop-shadow(0 0 35px #f59e0b);
+  }
+  100% {
+    transform: scale(2) rotate(360deg);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@keyframes stitch-update-explosion-core-blast {
+  0%,
+  40% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(0.6);
+    opacity: 1;
+    filter: brightness(2.5) drop-shadow(0 0 30px #ffffff);
+  }
+  70% {
+    transform: scale(2.2);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 50px #ef4444);
+  }
+  85% {
+    transform: scale(3);
+    opacity: 0.85;
+    filter: blur(4px);
+  }
+  100% {
+    transform: scale(3.8);
+    opacity: 0;
+    filter: blur(10px);
+  }
+}
+@keyframes stitch-update-explosion-ring {
+  0%,
+  45% {
+    transform: scale(0.2);
+    opacity: 0;
+    border-width: 8px;
+  }
+  65% {
+    transform: scale(1.3);
+    opacity: 1;
+    border-width: 4px;
+    filter: drop-shadow(0 0 20px #f59e0b);
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+    border-width: 1px;
+    filter: blur(4px);
+  }
+}
+@keyframes stitch-update-starburst-slash-left {
+  0% {
+    transform: translate(-80px, -60px) rotate(-45deg) scale(0.2);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    filter: drop-shadow(0 0 16px #38bdf8);
+  }
+  50% {
+    transform: translate(30px, 20px) rotate(-45deg) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(120px, 90px) rotate(-45deg) scale(1.4);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-starburst-slash-right {
+  0% {
+    transform: translate(80px, -60px) rotate(45deg) scale(0.2);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    filter: drop-shadow(0 0 16px #34d399);
+  }
+  50% {
+    transform: translate(-30px, 20px) rotate(45deg) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-120px, 90px) rotate(45deg) scale(1.4);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-starburst-cross-burst {
+  0%,
+  40% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.3) rotate(45deg);
+    filter: drop-shadow(0 0 24px #38bdf8) brightness(2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2) rotate(90deg);
+    filter: blur(6px);
+  }
+}
+@keyframes stitch-update-getsuga-crescent-slash {
+  0% {
+    transform: translate(-60px, -50px) scale(0.3) rotate(-25deg);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    filter: drop-shadow(0 0 20px #ef4444);
+  }
+  60% {
+    transform: translate(25px, 20px) scale(1.3) rotate(-15deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 35px #dc2626) brightness(1.3);
+  }
+  100% {
+    transform: translate(120px, 90px) scale(1.7) rotate(-10deg);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@keyframes stitch-update-getsuga-crimson-lightning {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  20%,
+  35%,
+  65%,
+  80% {
+    opacity: 1;
+    filter: drop-shadow(0 0 14px #ef4444) drop-shadow(0 0 24px #7f1d1d);
+  }
+  30%,
+  70% {
+    opacity: 0.15;
+  }
+}
+@keyframes stitch-update-ora-fist-rush-1 {
+  0% {
+    transform: translate(-30px, -10px) scale(0.3) rotate(-10deg);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    filter: drop-shadow(0 0 16px #e879f9);
+  }
+  65% {
+    transform: translate(35px, 20px) scale(1.3) rotate(5deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 24px #c084fc);
+  }
+  100% {
+    transform: translate(80px, 40px) scale(1.6) rotate(10deg);
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+@keyframes stitch-update-ora-fist-rush-2 {
+  0% {
+    transform: translate(30px, -15px) scale(0.3) rotate(15deg);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+    filter: drop-shadow(0 0 18px #f472b6);
+  }
+  70% {
+    transform: translate(-30px, 25px) scale(1.4) rotate(-5deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 26px #e879f9);
+  }
+  100% {
+    transform: translate(-75px, 50px) scale(1.7) rotate(-15deg);
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+@keyframes stitch-update-ora-fist-rush-center {
+  0% {
+    transform: translate(0, 25px) scale(0.4);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+    filter: drop-shadow(0 0 20px #ffffff);
+  }
+  60% {
+    transform: translate(0, -35px) scale(1.5);
+    opacity: 1;
+    filter: drop-shadow(0 0 30px #d8b4fe) brightness(1.3);
+  }
+  100% {
+    transform: translate(0, -70px) scale(1.8);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes stitch-update-ora-impact-ring {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1.1);
+    opacity: 0.9;
+    filter: drop-shadow(0 0 16px #c084fc);
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-zanka-blade-slash {
+  0% {
+    transform: translate(-70px, -60px) rotate(-35deg) scale(0.3);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+    filter: drop-shadow(0 0 24px #ea580c) brightness(2);
+  }
+  55% {
+    transform: translate(20px, 15px) rotate(-15deg) scale(1.35);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(110px, 80px) rotate(-5deg) scale(1.6);
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+@keyframes stitch-update-zanka-sun-robe-core {
+  0%,
+  100% {
+    transform: scale(0.92) translateY(0);
+    filter: drop-shadow(0 0 25px #ea580c) brightness(1.3);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.18) translateY(-6px);
+    filter: drop-shadow(0 0 45px #dc2626) brightness(1.9);
+    opacity: 1;
+  }
+}
+@keyframes stitch-update-zanka-heat-distort {
+  0% {
+    transform: scale(0.9) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(1.4) rotate(360deg);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-babylon-ripples-pulse {
+  0%,
+  100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+    filter: drop-shadow(0 0 26px #fbbf24);
+  }
+}
+@keyframes stitch-update-babylon-hypersonic-barrage {
+  0% {
+    transform: translate(-100px, -75px) rotate(32deg) scale(0.3);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+    filter: drop-shadow(0 0 20px #fbbf24) brightness(1.8);
+  }
+  55% {
+    transform: translate(35px, 25px) rotate(32deg) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(220px, 160px) rotate(32deg) scale(1.4);
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+@keyframes stitch-update-babylon-sonic-cone {
+  0% {
+    transform: translate(-50px, -35px) rotate(32deg) scale(0.2);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.9;
+  }
+  60% {
+    transform: translate(80px, 60px) rotate(32deg) scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(200px, 150px) rotate(32deg) scale(1.5);
+    opacity: 0;
+  }
+}
+@keyframes stitch-update-murcielago-x-slash-1 {
+  0%,
+  35% {
+    transform: scale(0.2) rotate(45deg);
+    opacity: 0;
+  }
+  45% {
+    transform: scale(1.1) rotate(45deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 25px #10b981) brightness(2.2);
+  }
+  65% {
+    transform: scale(1) rotate(45deg);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 35px #059669);
+  }
+  85% {
+    transform: scale(1.12) rotate(45deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.3) rotate(45deg);
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+@keyframes stitch-update-murcielago-x-slash-2 {
+  0%,
+  38% {
+    transform: scale(0.2) rotate(-45deg);
+    opacity: 0;
+  }
+  48% {
+    transform: scale(1.1) rotate(-45deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 25px #34d399) brightness(2.2);
+  }
+  65% {
+    transform: scale(1) rotate(-45deg);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 35px #059669);
+  }
+  85% {
+    transform: scale(1.12) rotate(-45deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.3) rotate(-45deg);
+    opacity: 0;
+    filter: blur(5px);
+  }
+}
+@keyframes stitch-update-murcielago-x-impact-burst {
+  0%,
+  42% {
+    transform: scale(0) rotate(0deg);
+    opacity: 0;
+  }
+  52% {
+    transform: scale(1.4) rotate(45deg);
+    opacity: 1;
+    filter: drop-shadow(0 0 30px #ffffff) brightness(2.5);
+  }
+  75% {
+    transform: scale(1.8) rotate(90deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4) rotate(135deg);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@keyframes stitch-update-murcielago-x-shockwave {
+  0%,
+  45% {
+    transform: scale(0.1);
+    opacity: 0;
+    border-width: 6px;
+  }
+  55% {
+    transform: scale(1.2);
+    opacity: 0.95;
+    border-width: 3.5px;
+    filter: drop-shadow(0 0 20px #10b981);
+  }
+  80% {
+    transform: scale(1.8);
+    opacity: 0.4;
+    border-width: 1.5px;
+  }
+  100% {
+    transform: scale(2.3);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+@keyframes stitch-update-murcielago-x-spark {
+  0%,
+  45% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.2);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(var(--msx, 25px), var(--msy, -25px)) scale(1.3);
+    filter: drop-shadow(0 0 10px #34d399);
+  }
+  85% {
+    opacity: 0.8;
+    transform: translate(calc(var(--msx, 25px) * 1.5), calc(var(--msy, -25px) * 1.5)) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--msx, 25px) * 1.8), calc(var(--msy, -25px) * 1.8)) scale(0.2);
+  }
+}
