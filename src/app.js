@@ -1244,6 +1244,17 @@ function initializeApp(config, dataLock, acquired) {
           if (user.role !== 'admin')
             throw new HttpError(403, 'ADMIN_REQUIRED', '只有管理者可以操作');
 
+          if (url.pathname === '/api/admin/achievements/reset' && req.method === 'POST') {
+            if (data?.confirmation !== 'RESET ALL ACHIEVEMENTS')
+              throw new HttpError(
+                400,
+                'CONFIRMATION_REQUIRED',
+                '請再次確認要重設所有玩家的成就與獎勵',
+              );
+            limitRate(accountRate, 'achievement-reset:' + user.id, 2);
+            return send(achievementStore.resetAll());
+          }
+
           if (url.pathname === '/api/admin/market/images' && req.method === 'GET') {
             limitRate(accountRate, 'market-pending:' + user.id, 60);
             if (['buckets', 'weekdays'].some((key) => url.searchParams.getAll(key).length > 1))
@@ -2558,6 +2569,25 @@ function initializeApp(config, dataLock, acquired) {
       for (const type of ['ping', 'attention', 'question', 'help', 'look'])
         files['/assets/game-sounds/ping-' + type + '.wav'] =
           'assets/game-sounds/ping-' + type + '.wav';
+      files['/assets/game-sounds/entry-intro-user.mp3'] = 'assets/game-sounds/entry-intro-user.mp3';
+      for (const name of [
+        'amazing',
+        'bad',
+        'card-check',
+        'sleep',
+        'look',
+        'legacy',
+        'no-bluff',
+        'cry',
+        'coward',
+        'goodnight',
+        'senior',
+        'practice',
+        'huh',
+        'what',
+      ])
+        files['/assets/game-sounds/ping-voice-' + name + '.mp3'] =
+          'assets/game-sounds/ping-voice-' + name + '.mp3';
       for (const name of [
         'register-320.webp',
         'register-480.webp',

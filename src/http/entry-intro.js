@@ -6,6 +6,7 @@ const markup = `<dialog id="entry-intro" data-ui-dialog-frame="true" open aria-l
     <span class="entry-intro-brand">302捉猶團</span>
   </div>
   <button class="entry-intro-skip" type="button" aria-label="略過開場動畫">略過開場 <span aria-hidden="true">→</span></button>
+  <button class="entry-intro-sound" type="button" hidden>播放入場音效 ♪</button>
 </dialog>`;
 
 // Decorate both Vue and legacy HTML after the normal authorization checks.

@@ -75,6 +75,9 @@ test('personal media defaults to built-in images and sounds, accepts only known 
   assert.equal(p.help.sound.durationMs, 320);
   assert.deepEqual(p.look, {});
   assert.equal(p.help.imageUrl, undefined);
+  assert.deepEqual(M.preferences({ look: { sound: { effect: 'ping-voice-look' } } }).look, {
+    sound: { effect: 'ping-voice-look' },
+  });
 });
 test('component coordinates survive different layout sizes and offscreen targets get edge guidance', () => {
   const p = M.point({ left: 100, top: 50, width: 400, height: 200 }, 200, 100);
@@ -391,6 +394,31 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
       assert.equal(bytes.toString('ascii', 8, 12), 'WAVE');
       assert.deepEqual(
         bytes,
+        fs.readFileSync(path.join(__dirname, '../public/assets/game-sounds', asset)),
+      );
+    }
+    for (const name of [
+      'amazing',
+      'bad',
+      'card-check',
+      'sleep',
+      'look',
+      'legacy',
+      'no-bluff',
+      'cry',
+      'coward',
+      'goodnight',
+      'senior',
+      'practice',
+      'huh',
+      'what',
+    ]) {
+      const asset = 'ping-voice-' + name + '.mp3';
+      const res = await fetch(base + '/assets/game-sounds/' + asset);
+      assert.equal(res.status, 200, asset);
+      assert.equal(res.headers.get('content-type'), 'audio/mpeg');
+      assert.deepEqual(
+        Buffer.from(await res.arrayBuffer()),
         fs.readFileSync(path.join(__dirname, '../public/assets/game-sounds', asset)),
       );
     }

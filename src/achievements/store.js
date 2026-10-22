@@ -64,6 +64,22 @@ class AchievementStore {
   claim(userId, frameId) {
     return require('./reward-store').claimReward(this, userId, frameId);
   }
+  resetAll() {
+    return transaction(this.db, () => {
+      const counts = {};
+      for (const table of [
+        'user_cosmetic_rewards',
+        'achievement_progress',
+        'user_achievements',
+        'processed_unit_events',
+        'achievement_match_events',
+      ]) {
+        counts[table] = this.db.prepare('SELECT COUNT(*) AS n FROM ' + table).get().n;
+        this.db.prepare('DELETE FROM ' + table).run();
+      }
+      return { ok: true, counts };
+    });
+  }
   assertFrame(userId, id) {
     return require('./reward-store').assertFrame(this, userId, id);
   }

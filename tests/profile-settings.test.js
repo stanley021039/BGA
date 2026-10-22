@@ -71,6 +71,7 @@ test('independent avatar and character settings validate ownership, persist, and
     assert.deepEqual(saved.data.avatar, avatar);
     const pings = {
       ping: { imageUrl: artwork.url, sound: { effect: 'ping-attention' } },
+      attention: { sound: { effect: 'ping-voice-senior' } },
       help: { sound: null },
     };
     const pingSaved = await post('profile/settings', host, { appearance, avatar, pings });
@@ -124,7 +125,10 @@ test('independent avatar and character settings validate ownership, persist, and
     const fallback = (await get('profile/settings', host)).data;
     assert.equal(fallback.avatar.kind, 'character');
     assert.equal(fallback.avatar.characterId, 'builtin:woods');
-    assert.deepEqual(fallback.pings, { help: { sound: null } });
+    assert.deepEqual(fallback.pings, {
+      attention: { sound: { effect: 'ping-voice-senior' } },
+      help: { sound: null },
+    });
     const switched = await post('profile/settings', host, {
       appearance,
       avatar: { kind: 'character', characterId: 'builtin:mage', expression: 'neutral' },

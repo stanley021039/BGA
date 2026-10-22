@@ -233,6 +233,13 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
   gap: 12px;
 }
+#musicquiz-app .vue-waiting-settings .mq-banks {
+  grid-template-columns: minmax(0, 1fr);
+}
+#musicquiz-app .vue-waiting-settings .mq-bank {
+  min-height: 0;
+  padding: 12px;
+}
 #musicquiz-app .mq-bank {
   position: relative;
   display: grid;
@@ -347,6 +354,19 @@
   box-shadow:
     0 0 0 3px #d9b665,
     0 8px 18px #0005;
+}
+.stitch-vinyl-stage.is-playing .stitch-vinyl-record {
+  animation: stitch-vinyl-spin 2.8s linear infinite;
+}
+@keyframes stitch-vinyl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stitch-vinyl-stage.is-playing .stitch-vinyl-record {
+    animation: none;
+  }
 }
 .stitch-vinyl-record > span {
   display: grid;

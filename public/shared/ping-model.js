@@ -7,6 +7,22 @@
     help: { label: '幫忙', icon: 'ping-help' },
     look: { label: '看這裡', icon: 'ping-look' },
   };
+  const voiceCues = [
+    'amazing',
+    'bad',
+    'card-check',
+    'sleep',
+    'look',
+    'legacy',
+    'no-bluff',
+    'cry',
+    'coward',
+    'goodnight',
+    'senior',
+    'practice',
+    'huh',
+    'what',
+  ].map((name) => 'ping-voice-' + name);
   function pick(dx, dy, threshold = 24) {
     if (Math.hypot(dx, dy) < threshold) return 'ping';
     return Math.abs(dx) > Math.abs(dy)
@@ -51,7 +67,8 @@
         item.imageUrl = value.imageUrl;
       if (
         typeof value?.sound?.effect === 'string' &&
-        Object.keys(types).some((t) => value.sound.effect === 'ping-' + t)
+        (Object.keys(types).some((t) => value.sound.effect === 'ping-' + t) ||
+          voiceCues.includes(value.sound.effect))
       )
         item.sound = { effect: value.sound.effect };
       else if (

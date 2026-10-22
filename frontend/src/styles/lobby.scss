@@ -846,13 +846,17 @@ body.lobby-self-hover {
 }
 
 // Lobby messages follow the sender; room barrages retain their own renderer.
+body .lobby-backdrop[data-background='castle'] {
+  background: #090e1a url('../assets/lobby-castle-stitch.svg') center / cover no-repeat;
+}
 :root body .lobby-chat-bubble.game-barrage-framed {
-  position: fixed;
+  position: absolute;
   bottom: auto;
   z-index: 180;
   width: max-content;
   min-width: 160px;
-  max-width: min(320px, calc(100vw - 48px));
+  max-width: min(320px, calc(100cqw - 24px));
+  margin: 0;
   text-align: start;
   white-space: normal;
   pointer-events: auto;
@@ -865,7 +869,7 @@ body.lobby-self-hover {
 
 :root body .lobby-chat-bubble.game-barrage-framed.barrage-frame-ornate {
   width: max-content;
-  min-width: min(300px, calc(100vw - 48px));
+  min-width: min(300px, calc(100cqw - 24px));
   min-height: 148px;
   padding: 48px 50px;
 }
@@ -895,4 +899,25 @@ body.lobby-self-hover {
   top: -6px;
   bottom: auto;
   transform: translateX(-50%) rotate(225deg);
+}
+
+.lobby-actions {
+  position: relative;
+  z-index: 150;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 0;
+  > button {
+    border: 1px solid var(--play-line, #a89b78);
+    border-radius: 999px;
+    padding: 7px 14px;
+    background: var(--play-surface, #242a22);
+    color: var(--play-ink, #fff);
+    cursor: pointer;
+  }
+}
+.lobby-backdrop {
+  container-type: inline-size;
 }

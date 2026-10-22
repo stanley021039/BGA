@@ -67,6 +67,13 @@ async function fixture(t, purpose = 'production', { uppercaseIds = false } = {})
   return {
     users,
     api,
+    raw(seat, route, data) {
+      return fetch(base + '/api/' + route, {
+        method: 'POST',
+        headers: { Cookie: users[seat].cookie, 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    },
     async ask(code, data) {
       let views = await Promise.all(users.map((_, i) => api(i, 'state?code=' + code))),
         seat = views.findIndex((v) => v.me === v.presenterId);
@@ -107,6 +114,36 @@ async function fixture(t, purpose = 'production', { uppercaseIds = false } = {})
 }
 const unlocked = (body) =>
   body.achievements.filter((item) => item.unlockedAt).map((item) => item.id);
+test('only a confirmed administrator can reset every player achievement and reward receipt', async (t) => {
+  const f = await fixture(t),
+    code = await f.room('majority');
+  await f.ask(code, { type: 'two', prompt: '重設測試', options: ['一起', '另一種'] });
+  for (let seat = 0; seat < 3; seat++)
+    await f.api(seat, 'action', { code, action: 'answer', answer: 0 });
+  assert.ok(unlocked(await f.api(0, 'achievements')).length);
+  assert.equal(
+    (await f.raw(1, 'admin/achievements/reset', { confirmation: 'RESET ALL ACHIEVEMENTS' })).status,
+    403,
+  );
+  assert.equal((await f.raw(0, 'admin/achievements/reset', { confirmation: 'wrong' })).status, 400);
+  assert.ok(unlocked(await f.api(0, 'achievements')).length);
+  const result = await f.api(0, 'admin/achievements/reset', {
+    confirmation: 'RESET ALL ACHIEVEMENTS',
+  });
+  assert.ok(result.counts.user_achievements > 0);
+  for (let seat = 0; seat < 3; seat++)
+    assert.deepEqual(unlocked(await f.api(seat, 'achievements')), []);
+  f.read((db) => {
+    for (const table of [
+      'user_cosmetic_rewards',
+      'achievement_progress',
+      'user_achievements',
+      'processed_unit_events',
+      'achievement_match_events',
+    ])
+      assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ' + table).get().n, 0, table);
+  });
+});
 test('app factory rejects an explicit invalid purpose and releases its data locks', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-achievement-purpose-')),
     config = {

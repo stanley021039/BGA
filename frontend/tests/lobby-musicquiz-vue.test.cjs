@@ -259,7 +259,7 @@ test('song translations remain registered when the browser bundle also exposes C
     [],
   );
 });
-test('each builtin bank can be selected alone and start with ten song choices', () => {
+test('each builtin bank can be selected alone and start with six song choices', () => {
   const { MusicQuizRoom } = require('../../src/games/musicquiz'),
     { BANKS } = require('../../src/games/musicquiz-library');
   for (const bank of BANKS.filter((b) => b.id !== 'custom')) {
@@ -274,7 +274,7 @@ test('each builtin bank can be selected alone and start with ten song choices', 
     room.configure(host.id, { banks: [bank.id], genres: [], target: 3 });
     room.start();
     assert.equal(room.current.bank, bank.id);
-    assert.equal(room.introChoices.length, 10, bank.id);
+    assert.equal(room.introChoices.length, 6, bank.id);
   }
 });
 

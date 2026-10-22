@@ -45,6 +45,22 @@ const pingIcons: Record<PingType, string> = {
 };
 const soundChoices = computed(() => [
   ...pingTypes.map((type) => ({ key: 'effect:ping-' + type, label: '內建 · ' + pingLabels[type] })),
+  ...[
+    ['amazing', '太神啦'],
+    ['bad', '他很壞'],
+    ['card-check', '窩咬驗牌'],
+    ['sleep', '那我也要睡了啦'],
+    ['look', '讓我看看'],
+    ['legacy', '傳承精神'],
+    ['no-bluff', '不要瞎掰'],
+    ['cry', '你在哭哦'],
+    ['coward', '俗仔'],
+    ['goodnight', '晚安'],
+    ['senior', '野獸前輩'],
+    ['practice', '菜就多練'],
+    ['huh', '蛤'],
+    ['what', '靠北三小'],
+  ].map(([name, label]) => ({ key: 'effect:ping-voice-' + name, label: '語音 · ' + label })),
   ...characters.value.flatMap((character) =>
     Object.entries(character.sounds).map(([expression, sound]) => ({
       key: 'sound:' + sound.url.split('?')[0],

@@ -14,7 +14,7 @@ const dirty = ref(false),
       ({
         waiting: '等待開桌',
         pick: 'DJ準備',
-        intro: '前奏10選1',
+        intro: '前奏6選1',
         timeline: '年代排序',
         challenge: '歌王插歌',
         reveal: '本輪揭曉',
@@ -36,7 +36,7 @@ function status(p: RoomPlayer) {
     type="musicquiz"
     score-label="張"
     title="猜歌挑戰"
-    description="8秒前奏10選1 · 歌曲年代排序 · 歌王插歌"
+    description="8秒前奏6選1 · 歌曲年代排序 · 歌王插歌"
     :reader="readMusicQuizSnapshot"
     :phase="phase"
     :round="s?.round ? '第 ' + s.round + ' 首' : ''"
@@ -52,7 +52,7 @@ function status(p: RoomPlayer) {
     ><template #help
       ><ol
         ><li
-          >1–8人，前奏播放8秒，30秒內從10個歌名選1個。每人只能提交一次；答對
+          >1–8人，前奏播放8秒，30秒內從6個歌名選1個。每人只能提交一次；答對
           +1前奏分、+1歌王標記（最多5枚），略過不扣分。提交後播放個人答對／答錯音效；年份與年代排序結果最後揭曉。</li
         ><li
           >聽30秒精華，DJ在60秒內放入年代時間軸。同年相鄰兩側皆可；逾時放最前方。DJ放對即得卡，全員放錯則棄牌。</li

@@ -93,8 +93,9 @@ onBeforeUnmount(() => {
         ><span>款遊戲<br />隨時開桌</span></div
       ></div
     >
-    <GameCarousel v-model="selected" @create="open" />
-    <LobbyBackdrop />
+    <GameCarousel v-model="selected" @create="open"
+      ><template #before-create><LobbyBackdrop /></template
+    ></GameCarousel>
     <div class="vue-lobby-resume" aria-label="已入座的房間"
       ><span v-if="!resumes.length">{{
         lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'

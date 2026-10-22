@@ -113,11 +113,54 @@
     let timer,
       observer,
       previous,
+      sound,
       active = false;
+    const soundButton = panel.querySelector('.entry-intro-sound');
+    function stopSound() {
+      if (!sound) return;
+      if (!window.AudioSettings?.stopEffect?.(sound)) {
+        try {
+          sound.pause();
+        } catch {
+          /* The overlay can still close. */
+        }
+      }
+      sound = null;
+    }
+    function playSound() {
+      if (typeof Audio !== 'function') return;
+      let effects = window.AudioSettings?.get?.().effects;
+      if (!effects) {
+        try {
+          effects = JSON.parse(localStorage.getItem('ah-audio-settings') || 'null')?.effects;
+        } catch {
+          /* Use normal effect defaults. */
+        }
+      }
+      if (effects?.enabled === false || effects?.volume === 0) return;
+      stopSound();
+      const blocked = () => {
+        if (!active) return;
+        soundButton.hidden = false;
+        panel.classList.add('entry-intro-audio-pending');
+      };
+      if (window.AudioSettings?.playEffect) {
+        sound = window.AudioSettings.playEffect('entry-intro', { onError: blocked });
+        return;
+      }
+      try {
+        sound = new Audio('/assets/game-sounds/entry-intro-user.mp3');
+        sound.volume = effects?.volume ?? 0.25;
+        Promise.resolve(sound.play()).catch(blocked);
+      } catch {
+        blocked();
+      }
+    }
     function finish() {
       if (!active) return;
       active = false;
       clearTimeout(timer);
+      stopSound();
       observer?.disconnect();
       if (panel.open) panel.close();
       panel.hidden = true;
@@ -127,6 +170,7 @@
     }
     function hide() {
       finish();
+      stopSound();
       if (panel.open) panel.close();
       panel.hidden = true;
       document.documentElement.classList.remove('entry-intro-active');
@@ -164,6 +208,7 @@
       timer = setTimeout(finish, Math.max(0, 3000 - elapsed));
       document.documentElement.classList.add('entry-intro-active');
       promote();
+      playSound();
       if (window.MutationObserver) {
         observer = new MutationObserver((entries) => {
           if (
@@ -181,6 +226,12 @@
       }
     }
     panel.querySelector('button').addEventListener('click', finish);
+    soundButton?.addEventListener('click', () => {
+      soundButton.hidden = true;
+      playSound();
+      clearTimeout(timer);
+      timer = setTimeout(finish, 2300);
+    });
     panel.addEventListener('cancel', (event) => {
       event.preventDefault();
       finish();

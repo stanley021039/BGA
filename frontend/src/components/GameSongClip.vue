@@ -6,12 +6,14 @@ const props = defineProps<{
     playback: NonNullable<MusicQuizSnapshot['playback']>;
     active: boolean;
   }>(),
+  emit = defineEmits<{ playing: [value: boolean] }>(),
   audio = ref<HTMLAudioElement | null>(null),
   error = ref(''),
   accepted = ref(false);
 let unbind: (() => void) | undefined;
 function stop() {
   audio.value?.pause();
+  emit('playing', false);
 }
 function play() {
   if (!props.active) {
@@ -19,6 +21,7 @@ function play() {
     return;
   }
   error.value = '';
+  emit('playing', true);
 }
 watch(
   () => props.active,
@@ -53,6 +56,8 @@ onBeforeUnmount(() => {
         preload="metadata"
         :aria-label="playback.stage === 'intro' ? '本輪8秒前奏' : '本輪30秒精華'"
         @play="play"
+        @pause="emit('playing', false)"
+        @ended="emit('playing', false)"
         @error="error = '音檔暫時無法播放，請檢查連線或稍後再試。'"
       /><p>{{ playback.seconds }}秒 · {{ error || '音量只影響自己' }}</p></template
     ><template v-else

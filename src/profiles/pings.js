@@ -1,6 +1,22 @@
 const { HttpError } = require('../http/errors');
 
 const types = ['ping', 'attention', 'question', 'help', 'look'];
+const voiceCues = [
+  'amazing',
+  'bad',
+  'card-check',
+  'sleep',
+  'look',
+  'legacy',
+  'no-bluff',
+  'cry',
+  'coward',
+  'goodnight',
+  'senior',
+  'practice',
+  'huh',
+  'what',
+].map((name) => 'ping-voice-' + name);
 const uuid = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
 const artworkPath = new RegExp('^/assets/artworks/(' + uuid + ')$', 'i');
 const soundPath = new RegExp(
@@ -47,7 +63,8 @@ function validate(db, userId, input, { lenient = false } = {}) {
           sound &&
           typeof sound === 'object' &&
           !Array.isArray(sound) &&
-          types.some((name) => sound.effect === 'ping-' + name)
+          (types.some((name) => sound.effect === 'ping-' + name) ||
+            voiceCues.includes(sound.effect))
         )
           item.sound = { effect: sound.effect };
         else {

@@ -426,7 +426,7 @@ const rows = [
     'musicquiz-intro-streak',
     'musicquiz',
     '前奏三連星',
-    '正常完局且有效參與至少三首，其中連續三首前奏10選1答對。',
+    '正常完局且有效參與至少三首，其中連續三首前奏6選1答對。',
     'musicquiz-intro-streak.rules-completed',
     'check',
     'fun',

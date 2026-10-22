@@ -1,0 +1,75 @@
+<!-- Stitch project 16226792553515652128; castle scene selected by user, 2026-10-22. -->
+<svg preserveAspectRatio="xMidYMid slice" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="nightSky" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#050814"></stop>
+<stop offset="100%" stop-color="#141c30"></stop>
+</linearGradient>
+<radialGradient cx="50%" cy="50%" id="torchWarmth" r="50%">
+<stop offset="0%" stop-color="#ffb95f" stop-opacity="0.8"></stop>
+<stop offset="40%" stop-color="#ea580c" stop-opacity="0.35"></stop>
+<stop offset="100%" stop-color="#0b1326" stop-opacity="0"></stop>
+</radialGradient>
+<linearGradient id="bannerCrimson" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#991b1b"></stop>
+<stop offset="60%" stop-color="#7f1d1d"></stop>
+<stop offset="100%" stop-color="#450a0a"></stop>
+</linearGradient>
+<linearGradient id="stoneFloorGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#171f33" stop-opacity="0.2"></stop>
+<stop offset="50%" stop-color="#0b1326" stop-opacity="0.85"></stop>
+<stop offset="100%" stop-color="#060e20" stop-opacity="0.98"></stop>
+</linearGradient>
+</defs>
+<!-- Back Wall & Gothic Arched Windows -->
+<rect fill="url(#nightSky)" height="900" width="1600"></rect>
+<!-- Stained Glass Gothic Windows (Moonlit) -->
+<g opacity="0.45">
+<path d="M 280 120 C 280 60, 360 40, 400 40 C 440 40, 520 60, 520 120 L 520 420 L 280 420 Z" fill="#1e293b" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="3"></path>
+<path d="M 1080 120 C 1080 60, 1160 40, 1200 40 C 1240 40, 1320 60, 1320 120 L 1320 420 L 1080 420 Z" fill="#1e293b" stroke="#38bdf8" stroke-opacity="0.4" stroke-width="3"></path>
+<!-- Stained glass geometric mullions -->
+<line stroke="#38bdf8" stroke-opacity="0.3" stroke-width="2" x1="400" x2="400" y1="40" y2="420"></line>
+<line stroke="#38bdf8" stroke-opacity="0.3" stroke-width="2" x1="280" x2="520" y1="260" y2="260"></line>
+<line stroke="#38bdf8" stroke-opacity="0.3" stroke-width="2" x1="1200" x2="1200" y1="40" y2="420"></line>
+<line stroke="#38bdf8" stroke-opacity="0.3" stroke-width="2" x1="1080" x2="1320" y1="260" y2="260"></line>
+</g>
+<!-- High Gothic Stone Vault Arches -->
+<path d="M 0 0 L 240 0 C 380 200, 480 340, 540 520 L 0 520 Z" fill="#101728" opacity="0.9"></path>
+<path d="M 1600 0 L 1360 0 C 1220 200, 1120 340, 1060 520 L 1600 520 Z" fill="#101728" opacity="0.9"></path>
+<path d="M 520 0 C 600 160, 720 220, 800 220 C 880 220, 1000 160, 1080 0 Z" fill="#0d1424" opacity="0.8"></path>
+<!-- Heraldic Banners hanging from stonework -->
+<g>
+<!-- Left Banner -->
+<path d="M 220 180 L 320 180 L 320 460 L 270 410 L 220 460 Z" fill="url(#bannerCrimson)" opacity="0.85" stroke="#f59e0b" stroke-width="2"></path>
+<polygon fill="#f59e0b" opacity="0.75" points="270,250 250,290 290,290"></polygon>
+<!-- Right Banner -->
+<path d="M 1280 180 L 1380 180 L 1380 460 L 1330 410 L 1280 460 Z" fill="url(#bannerCrimson)" opacity="0.85" stroke="#f59e0b" stroke-width="2"></path>
+<polygon fill="#f59e0b" opacity="0.75" points="1330,250 1310,290 1350,290"></polygon>
+</g>
+<!-- Grand Wrought-Iron Chandelier Centerpiece -->
+<g opacity="0.8">
+<line stroke="#334155" stroke-width="5" x1="800" x2="800" y1="0" y2="150"></line>
+<ellipse cx="800" cy="160" fill="none" rx="200" ry="24" stroke="#475569" stroke-width="6"></ellipse>
+<!-- Chandelier candle lights -->
+<circle cx="620" cy="155" fill="url(#torchWarmth)" r="18"></circle>
+<circle cx="700" cy="165" fill="url(#torchWarmth)" r="22"></circle>
+<circle cx="800" cy="170" fill="url(#torchWarmth)" r="26"></circle>
+<circle cx="900" cy="165" fill="url(#torchWarmth)" r="22"></circle>
+<circle cx="980" cy="155" fill="url(#torchWarmth)" r="18"></circle>
+</g>
+<!-- Left & Right Glowing Sconces -->
+<circle cx="160" cy="380" fill="url(#torchWarmth)" r="140"></circle>
+<rect fill="#334155" height="40" width="10" x="155" y="380"></rect>
+<circle cx="1440" cy="380" fill="url(#torchWarmth)" r="140"></circle>
+<rect fill="#334155" height="40" width="10" x="1435" y="380"></rect>
+<!-- High-Contrast Darkened Stone Floor Gradient for Avatars (Critical UX Requirement) -->
+<rect fill="url(#stoneFloorGrad)" height="540" width="1600" x="0" y="360"></rect>
+<!-- Subtle Stone Tile Perspective Grid -->
+<line stroke="#334155" stroke-opacity="0.3" stroke-width="1.5" x1="100" x2="600" y1="900" y2="480"></line>
+<line stroke="#334155" stroke-opacity="0.25" stroke-width="1.5" x1="500" x2="740" y1="900" y2="480"></line>
+<line stroke="#334155" stroke-opacity="0.25" stroke-width="1.5" x1="1100" x2="860" y1="900" y2="480"></line>
+<line stroke="#334155" stroke-opacity="0.3" stroke-width="1.5" x1="1500" x2="1000" y1="900" y2="480"></line>
+<!-- Horizontal depth lines -->
+<line stroke="#334155" stroke-opacity="0.2" stroke-width="1" x1="300" x2="1300" y1="580" y2="580"></line>
+<line stroke="#334155" stroke-opacity="0.25" stroke-width="1.5" x1="150" x2="1450" y1="720" y2="720"></line>
+</svg>

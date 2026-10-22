@@ -24,25 +24,47 @@
       skip.className = 'entry-auth-skip';
       skip.textContent = '略過開場 →';
       skip.setAttribute('aria-label', '略過開場動畫');
+      const soundButton = document.createElement('button');
+      soundButton.type = 'button';
+      soundButton.className = 'entry-auth-sound';
+      soundButton.textContent = '播放開場音效 ♪';
+      soundButton.hidden = true;
       const prefetch = document.createElement('link');
       prefetch.rel = 'prefetch';
       prefetch.href = target.href;
       prefetch.as = 'document';
       document.head.append(prefetch);
       document.body.append(skip);
+      document.body.append(soundButton);
       let animation,
+        sound,
         timer,
         recovery,
         finished = false;
+      function stopSound() {
+        if (!sound) return;
+        if (!window.AudioSettings?.stopEffect?.(sound)) sound.pause?.();
+        sound = null;
+      }
+      function playSound() {
+        stopSound();
+        sound = window.AudioSettings?.playEffect?.('entry-intro', {
+          onError: () => {
+            if (!finished) soundButton.hidden = false;
+          },
+        });
+      }
       const cleanup = () => {
         clearTimeout(timer);
         clearTimeout(recovery);
         animation?.cancel();
+        stopSound();
         image.style.removeProperty('opacity');
         root.classList.remove('entry-auth-playing');
         image.classList.remove('entry-auth-image');
         for (const node of ancestors) node.classList.remove('entry-auth-ancestor');
         skip.remove();
+        soundButton.remove();
         prefetch.remove();
         document.removeEventListener('keydown', escape);
         window.removeEventListener('pagehide', cleanup);
@@ -58,6 +80,7 @@
         if (finished) return;
         finished = true;
         clearTimeout(timer);
+        stopSound();
         const record = JSON.stringify({ at: Date.now(), path: target.pathname + target.search });
         try {
           window.sessionStorage.setItem('bga-entry-intro-completed', record);
@@ -73,6 +96,7 @@
         animation = undefined;
         image.style.opacity = '0';
         skip.hidden = true;
+        soundButton.hidden = true;
         recovery = setTimeout(() => {
           image.style.removeProperty('opacity');
           cleanup();
@@ -85,6 +109,16 @@
       window.addEventListener('pagehide', cleanup);
       document.addEventListener('keydown', escape);
       skip.addEventListener('click', finish);
+      soundButton.addEventListener('click', () => {
+        if (finished) return;
+        soundButton.hidden = true;
+        animation?.cancel();
+        animation = undefined;
+        image.style.opacity = '1';
+        clearTimeout(timer);
+        timer = setTimeout(finish, 2300);
+        playSound();
+      });
       root.classList.add('entry-auth-playing');
       image.classList.add('entry-auth-image');
       for (const node of ancestors) node.classList.add('entry-auth-ancestor');
@@ -117,6 +151,7 @@
         /* The timeout still completes when Web Animations is unavailable. */
       }
       timer = setTimeout(finish, 3000);
+      playSound();
       skip.focus({ preventScroll: true });
       return playing;
     },

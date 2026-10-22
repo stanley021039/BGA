@@ -1,5 +1,13 @@
 # 程式架構 agent 記憶
 
+2026-10-22大廳互動續修：對話入口透過GameCarousel具名slot放在開桌左側，角色只開表情，兩個獨立dialog不再顯示切換分頁。背景改用共用lobby-background store，以既有每帳號localStorage key在GamePreferences與LobbyBackdrop間同步，只提供原本／Stitch城堡；補帳號隔離及儲存拒絕回歸。登入成功動畫auth-entry先前漏接entry-intro音效，已補一次播放、靜音、略過／離頁停止與手勢重試。2558全套、66focused、Vue型別／建置通過；隔離Edge實際登入收到MP3 playing事件，並驗偏好位置／保存、獨立訊息與表情、對話在開桌左側及390px。證據見本機ignored work/lobby-settings-qa-12V5Qw（後續縮圖尺寸校正另驗），未推送／PR／部署。
+
+## 2026-10-22：本機整合 main PR #160
+
+本機功能分支已合併 origin/main 1e613a5，合併提交 91ee01e。保留新版整頁背景角色、五張遊戲輪播及七款角色入場特效，將本機個人背景選擇、WASD、分開對話／表情入口移至 LobbyBackdrop；文字泡泡傳送至同一背景層。郎中檔案與合併前本機快照一致；其餘未提交功能和音效仍保留，stash 安全快照未刪。
+
+Windows 受影響選取回退全套：2555／2555；Vue 型別、前端建置、格式及差異檢查通過。真 Edge 隔離測試驗背景重整保留、WASD、輸入及快捷鍵不誤移動、背景層對話、分開表情入口、390px 無水平溢出及無 pageerror；本機證據位於 ignored work/integration-qa-dyGkPR。舊測試啟動器漏設 frontendEnabled 已修正供下次啟動使用，現有測試服務未重啟。未推送、發 PR、部署或重設玩家資料。
+
 2026-10-21本批郎中停手預估：`estimateAlchemy`與`beginAlchemy`共用計算，讀取無副作用；`stopEstimate`僅對可見recipe投影，隱藏他人鍋為null。新增顏色／鄰座去重／占卜／愚人草／上限及隱私回歸。大廳對話延用原API及事件閘門，最新同人訊息替換並以ID守護清理；依playerId而非姓名綁定。範圍見 `docs/UI-REFINEMENTS-20261021.md`。
 
 2026-10-21大廳泡泡與角色選單：角色互動視窗的訊息表單可在關閉時卸載，因此彈幕事件controller由常駐`LobbyStage`持有；選取框由`BarrageFrames.decorate`加到DOM的`barrage-frame-ornate` class同步進Vue reactive class，避免移動定位覆蓋。實際390px Edge驗證選取neon、送出、框內裝飾、148px高度和無橫向溢出；詳 `docs/UI-REFINEMENTS-20261021.md`。

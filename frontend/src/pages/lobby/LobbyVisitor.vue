@@ -71,18 +71,18 @@ function positionBubble() {
     half = speech.value.offsetWidth / 2;
   if (!stage) return;
   if (props.message) {
-    const width = document.documentElement.clientWidth,
-      height = window.innerHeight;
+    const width = stage.width;
     const center = box.left + box.width / 2;
-    const safe = Math.max(half + 24, Math.min(width - half - 24, center));
-    const above = box.top - 72,
-      below = height - box.bottom - 16;
+    const safe = Math.max(half + 16, Math.min(width - half - 16, center - stage.left));
+    const above = box.top - stage.top - 24,
+      below = stage.bottom - box.bottom - 24;
     bubbleBelow.value = speech.value.scrollHeight > above && below > above;
     bubbleHeight.value = Math.max(60, bubbleBelow.value ? below : above) + 'px';
     messageLeft.value = safe + 'px';
-    messageTop.value = (bubbleBelow.value ? box.bottom + 10 : box.top - 10) + 'px';
-    messageOnscreen.value = box.bottom > 0 && box.top < height && box.right > 0 && box.left < width;
-    tailShift.value = center - safe + 'px';
+    messageTop.value =
+      (bubbleBelow.value ? box.bottom - stage.top + 18 : box.top - stage.top - 18) + 'px';
+    messageOnscreen.value = box.bottom > stage.top && box.top < stage.bottom;
+    tailShift.value = center - stage.left - safe + 'px';
     return;
   }
   const center = box.left + box.width / 2,
@@ -207,14 +207,14 @@ window.addEventListener('resize', positionBubble);
       '--lobby-move-duration': duration + 'ms',
     }"
     :data-ping-player="visitor.id"
-    :aria-label="self ? visitor.name + '（你），對話或發表情' : undefined"
+    :aria-label="self ? visitor.name + '（你），發表情' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"
     @click.stop="self && node && emit('select', node)"
     @transitionrun="transition"
   >
-    <Teleport to="body"
+    <Teleport to=".lobby-backdrop"
       ><div
         v-if="message"
         :key="message.id"
