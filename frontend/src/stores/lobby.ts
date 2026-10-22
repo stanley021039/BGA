@@ -1,3 +1,5 @@
+import { preloadAllowed, warm, whenIdle } from '../services/preload';
+import { sizedImage } from '../services/image-size';
 import { computed, markRaw, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useSessionStore } from './session';
@@ -127,7 +129,10 @@ export const useLobbyStore = defineStore('lobby', () => {
       return;
     }
     if (snapshot.value && next.serverNow < snapshot.value.serverNow) return;
+    const first = !snapshot.value;
     snapshot.value = next;
+    // The expression menu opens instantly once the lobby has settled.
+    if (first) whenIdle(() => void warmExpressions());
     const present = new Set(next.visitors.map((visitor) => visitor.id));
     speeches.value = Object.fromEntries(
       Object.entries(speeches.value).filter(([id]) => present.has(id)),
@@ -207,6 +212,11 @@ export const useLobbyStore = defineStore('lobby', () => {
         x: Math.max(6, Math.min(94, target.x)),
         y: Math.max(12, Math.min(97, target.y)),
       });
+  }
+  async function warmExpressions() {
+    if (!preloadAllowed()) return;
+    await loadExpressions();
+    warm(expressions.value.map((item) => sizedImage(item.image, 128)));
   }
   async function loadExpressions(force = false) {
     if (expressionsJob) return expressionsJob;
