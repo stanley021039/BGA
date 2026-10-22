@@ -1,5 +1,9 @@
 # 程式架構 agent 記憶
 
+2026-10-22／#176 候選2.29.0：使用者在 #175 驗收時要求網址紀錄改片名，已接續實作本機帳號隔離的十筆最近播放、點選填網址與鍵盤清單；來源為 playing 的 current，provider 名稱以 videoId 核對，缺名不覆蓋既有片名。尚未合併／部署，詳 [最近影片規格](../specs/MEDIA-RECENT-VIDEOS-176.md)，取代下筆「#176 尚未實作」狀態。
+
+2026-10-22／#175 候選2.29.0：共用Vue媒體改為播放中／點播雙分頁，視窗關閉與面板隱藏不再清除已接受的YouTube觀看意圖；leaf第三參數續播opt-in保留舊呼叫預設，退出／離房仍清理。實際影片同iframe及字幕前進、leaf與編譯Vue setup回歸有證據；未合併／部署、最近10筆另#176，詳 [介面與驗收](../specs/MEDIA-TWO-TABS-175.md)。
+
 2026-10-21本批郎中停手預估：`estimateAlchemy`與`beginAlchemy`共用計算，讀取無副作用；`stopEstimate`僅對可見recipe投影，隱藏他人鍋為null。新增顏色／鄰座去重／占卜／愚人草／上限及隱私回歸。大廳對話延用原API及事件閘門，最新同人訊息替換並以ID守護清理；依playerId而非姓名綁定。範圍見 `docs/UI-REFINEMENTS-20261021.md`。
 
 2026-10-21大廳泡泡與角色選單：角色互動視窗的訊息表單可在關閉時卸載，因此彈幕事件controller由常駐`LobbyStage`持有；選取框由`BarrageFrames.decorate`加到DOM的`barrage-frame-ornate` class同步進Vue reactive class，避免移動定位覆蓋。實際390px Edge驗證選取neon、送出、框內裝飾、148px高度和無橫向溢出；詳 `docs/UI-REFINEMENTS-20261021.md`。

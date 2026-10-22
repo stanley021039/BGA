@@ -182,6 +182,8 @@ export function formatMediaTime(value: number) {
 }
 
 export interface MediaPlayerView {
+  videoTitle?: string;
+  videoTitleId?: string;
   videoWanted: boolean;
   ready: boolean;
   nativeVideo: boolean;
@@ -191,7 +193,7 @@ export interface MediaPlayerView {
 }
 export interface MediaPlayer {
   update(value: MediaSnapshot, marker: MediaMarker | null, serverNow: number): void;
-  setWindow(open: boolean, collapsed?: boolean): void;
+  setWindow(open: boolean, collapsed?: boolean, keepVideo?: boolean): void;
   setMarker(value: MediaMarker | null): void;
   joinVideo(): void;
   exitVideo(message?: string): void;
