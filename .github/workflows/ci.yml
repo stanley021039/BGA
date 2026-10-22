@@ -43,6 +43,21 @@ jobs:
         env:
           EXPECTED_TEST_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: node -e "const cp=require('node:child_process');const sha=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();console.log('Tested commit '+sha);if(sha!==process.env.EXPECTED_TEST_SHA)throw Error('CI checkout does not match requested commit');"
+      # The runner VM is discarded after each job; real-time scanning made file-heavy tests
+      # (history fsync, data transfer, market images) several times slower than on Linux.
+      - name: Disable Defender real-time scanning on the Windows runner
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $before = Get-MpComputerStatus -ErrorAction SilentlyContinue
+          Write-Host "Before: RealTimeProtectionEnabled=$($before.RealTimeProtectionEnabled)"
+          try {
+            Set-MpPreference -DisableRealtimeMonitoring $true -ErrorAction Stop
+          } catch {
+            Write-Warning "Could not disable real-time monitoring: $_"
+          }
+          $after = Get-MpComputerStatus -ErrorAction SilentlyContinue
+          Write-Host "After: RealTimeProtectionEnabled=$($after.RealTimeProtectionEnabled)"
       - name: Install locked dependencies
         run: npm ci
       - name: Check source formatting
