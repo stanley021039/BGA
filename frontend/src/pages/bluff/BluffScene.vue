@@ -351,7 +351,7 @@ function rank(index: number) {
                   ><template #icon
                     ><img
                       class="vue-bluff-reaction-photo"
-                      src="/assets/bluff-reaction-photo.png"
+                      src="/assets/bluff-reaction-photo.webp"
                       alt="" /></template></UiButton
                 ><section v-if="Object.keys(state.botStatements).length" class="vue-bluff-bots"
                   ><h3>腳本夥伴說詞</h3

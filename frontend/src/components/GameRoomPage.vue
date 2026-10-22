@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { warmGame } from '../services/game-assets';
 import type { GameType, RoomPlayer, RoomSnapshot } from '../contracts/room';
 import { useRoomPage } from '../composables/room-page';
 import { useGameFocus } from '../composables/game-focus';
@@ -79,6 +80,13 @@ const connection = computed(() =>
         : !room.snapshot
           ? '正在讀取房間…'
           : '',
+);
+watch(
+  waiting,
+  (now) => {
+    if (now) warmGame(props.type);
+  },
+  { immediate: true },
 );
 onMounted(() => {
   if (new URLSearchParams(location.search).has('learn')) void help.value?.open();
