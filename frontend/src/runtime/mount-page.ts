@@ -3,6 +3,7 @@ import type { App, Component } from 'vue';
 import { createPinia, disposePinia, type Pinia } from 'pinia';
 import { usePreferencesStore } from '../stores/preferences';
 import SiteHeader from '../components/SiteHeader.vue';
+import { resetMediaConsentOnReload } from '../services/media-consent';
 import '../styles/foundations.scss';
 import '../styles/feedback.scss';
 import '../styles/controls.scss';
@@ -13,6 +14,8 @@ export function mountPage(
   selector: string,
   configure?: (app: App, pinia: Pinia) => void,
 ): void {
+  // Before any room media reads it: a reload of any page asks for video consent again.
+  resetMediaConsentOnReload();
   let stop: (() => void) | undefined;
   function start(): void {
     if (stop) return;

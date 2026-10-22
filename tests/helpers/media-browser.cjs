@@ -71,7 +71,6 @@ function mediaHarness({
   enabled = false,
   storageFailure = false,
   session = new Map(),
-  navigationType = 'navigate',
   beforeLoad,
   randomSource = { randomUUID, getRandomValues: (bytes) => webcrypto.getRandomValues(bytes) },
 } = {}) {
@@ -576,10 +575,7 @@ function mediaHarness({
     },
     location: { origin: 'https://example.test' },
     crypto: randomSource,
-    performance: {
-      now: () => now,
-      getEntriesByType: (type) => (type === 'navigation' ? [{ type: navigationType }] : []),
-    },
+    performance: { now: () => now },
     sessionStorage: {
       getItem: (key) => {
         if (storageFailure) throw Error('blocked');

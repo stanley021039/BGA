@@ -57,7 +57,6 @@
     "public/settings.js": "2b9741e4b89f5b1c7304613636687a5c70e333ec8d3935632a828e1e7b8bff53",
     "public/shared/api.js": "748a47f8b792e6931b9aef9ae7bc91160563a47d0cc4b3fea2af593a2650aa5f",
     "public/shared/artwork-export.js": "02a2e99e2564f437023424bd825298c40c4ef3cc0deb6c5983f9bd2da277d941",
-    "public/shared/color-scheme.js": "a8d0d28be50f91b880c735d5361bb185fbc529451c3217fe8dbaddba3a4d024d",
     "public/shared/countdown-bar.js": "c170a11e572a26ee1515ed0ab08e2af14aa39ff2b37340cfcae4fc2e0c838d09",
     "public/shared/draw-canvas-session.js": "378aa115d721d84657eb5b6c52f6657ac274b804573a01f67911b1849a7a861b",
     "public/shared/draw-controller.js": "2110047074d8ee9127d718d7042a7d8182865039763b4a23fcddf3930cf212dc",

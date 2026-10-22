@@ -1,5 +1,8 @@
 const { test } = require('node:test'),
-  assert = require('node:assert/strict');
+  assert = require('node:assert/strict'),
+  fs = require('node:fs'),
+  path = require('node:path'),
+  vm = require('node:vm');
 const {
   mediaHarness,
   mediaSnapshot,
@@ -3115,23 +3118,45 @@ test('enqueue succeeds without redundant added-to-queue status text', async () =
   assert.equal(f.document.querySelector('#mediaPlaylistStatus'), null);
 });
 
-test('one video decision covers other rooms in the tab and a reload asks again', async () => {
+// Runs the shared <head> boot script as another page (e.g. the lobby) in the same tab.
+function bootPage(session, navigationType) {
+  const storage = {
+    getItem: (key) => session.get(key) ?? null,
+    setItem: (key, value) => session.set(key, value),
+    removeItem: (key) => session.delete(key),
+  };
+  const context = vm.createContext({
+    window: { addEventListener() {} },
+    document: { documentElement: { dataset: {} } },
+    localStorage: { getItem: () => null, setItem() {} },
+    sessionStorage: storage,
+    performance: { getEntriesByType: () => [{ type: navigationType }] },
+  });
+  vm.runInContext(
+    fs.readFileSync(path.join(__dirname, '../public/shared/color-scheme.js'), 'utf8'),
+    context,
+  );
+}
+test('one video decision covers other rooms in the tab and a reload of any page asks again', async () => {
   for (const accepted of [false, true]) {
     const session = new Map();
     const first = mediaHarness({ session });
     await first.update(roomState());
     await first.click(accepted ? 'mediaConsentAccept' : 'mediaConsentDecline');
     assert.equal(session.get('bga.media.consent.v2'), accepted ? 'accepted' : 'declined');
+    bootPage(session, 'navigate');
+    bootPage(session, 'back_forward');
     const next = mediaSnapshot({ roomInstanceId: 'another-table' });
     const entered = mediaHarness({ session, fetchHandler: () => json(next) });
     await entered.update(roomState(next));
     assert.equal(entered.node('tableMediaConsent').open, false, 'another room reuses the choice');
     assert.equal(entered.players.length, accepted ? 1 : 0);
-    const reloaded = mediaHarness({ session, navigationType: 'reload' });
-    await reloaded.update(roomState());
-    assert.equal(reloaded.node('tableMediaConsent').open, true, 'a reload asks again');
-    assert.equal(reloaded.players.length, 0);
-    assert.equal(session.has('bga.media.consent.v2'), false);
+    bootPage(session, 'reload');
+    assert.equal(session.has('bga.media.consent.v2'), false, 'reloading the lobby clears it');
+    const after = mediaHarness({ session });
+    await after.update(roomState());
+    assert.equal(after.node('tableMediaConsent').open, true, 'the next room asks again');
+    assert.equal(after.players.length, 0);
   }
 });
 test('the old per-room consent record is removed and never grants video', async () => {

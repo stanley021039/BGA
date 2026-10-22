@@ -185,22 +185,17 @@
     automaticPending = [],
     requests = new Set(),
     retiredPlayers = new WeakSet();
-  // One video decision per browser tab: other rooms reuse it, a reload asks again.
-  // Must match frontend/src/services/media-consent.ts.
+  // One video decision per browser tab: other rooms reuse it. color-scheme.js clears it when
+  // any page reloads. Must match frontend/src/services/media-consent.ts.
   const consentStorageKey = 'bga.media.consent.v2';
   let consentDecision;
   try {
     localStorage.removeItem('bga.media.consents.v1');
   } catch {}
   try {
-    const navigation = performance.getEntriesByType?.('navigation')[0];
-    const reload = navigation ? navigation.type === 'reload' : performance.navigation?.type === 1;
-    if (reload) sessionStorage.removeItem(consentStorageKey);
-    else {
-      const saved = sessionStorage.getItem(consentStorageKey);
-      if (saved === 'accepted') consentDecision = true;
-      else if (saved === 'declined') consentDecision = false;
-    }
+    const saved = sessionStorage.getItem(consentStorageKey);
+    if (saved === 'accepted') consentDecision = true;
+    else if (saved === 'declined') consentDecision = false;
   } catch {}
   const audioTransitions = new WeakMap();
   let audioPreviewGesture = null;

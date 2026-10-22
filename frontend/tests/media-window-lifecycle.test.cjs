@@ -32,7 +32,7 @@ function harness() {
     ),
   );
   const session = vue.reactive({ user: { id: 'account-a' } }),
-    consent = consentModule.exports.createMediaConsent(null, null, 'navigate');
+    consent = consentModule.exports.createMediaConsent(null, null);
   const media = vue.reactive({
     context: 1,
     enabled: true,
@@ -292,19 +292,41 @@ function memoryStorage(entries = []) {
   };
 }
 
-test('one video decision covers other rooms in the tab and a reload asks again', () => {
-  const { createMediaConsent, MEDIA_CONSENT_KEY } = consentModule.exports;
+test('one video decision covers other rooms in the tab and a reload of any page asks again', () => {
+  const { createMediaConsent, clearMediaConsentOnReload, MEDIA_CONSENT_KEY } =
+    consentModule.exports;
   for (const accepted of [false, true]) {
     const session = memoryStorage(),
       local = memoryStorage([['bga.media.consents.v1', '[["room-a:host",true]]']]);
-    const first = createMediaConsent(session, local, 'navigate');
+    const first = createMediaConsent(session, local);
     assert.equal(first.get(), undefined, 'the old per-room record never answers');
     assert.equal(local.saved.has('bga.media.consents.v1'), false);
     first.set(accepted);
-    assert.equal(createMediaConsent(session, local, 'navigate').get(), accepted);
-    assert.equal(createMediaConsent(session, local, 'back_forward').get(), accepted);
-    assert.equal(createMediaConsent(session, local, 'reload').get(), undefined);
+    for (const type of ['navigate', 'back_forward', 'prerender']) {
+      clearMediaConsentOnReload(session, type);
+      assert.equal(createMediaConsent(session, local).get(), accepted, type);
+    }
+    // e.g. the lobby reloads: its page boot clears the choice before the next room reads it.
+    clearMediaConsentOnReload(session, 'reload');
     assert.equal(session.saved.has(MEDIA_CONSENT_KEY), false);
+    assert.equal(createMediaConsent(session, local).get(), undefined);
+  }
+});
+
+test('every Vue page boot clears the consent on reload before mounting', () => {
+  const source = fs.readFileSync(path.resolve(__dirname, '../src/runtime/mount-page.ts'), 'utf8');
+  const body = source.slice(source.indexOf('export function mountPage('));
+  assert.ok(body.indexOf('resetMediaConsentOnReload()') > 0);
+  assert.ok(body.indexOf('resetMediaConsentOnReload()') < body.indexOf('function start()'));
+  const pages = path.resolve(__dirname, '../src/pages');
+  for (const page of fs.readdirSync(pages)) {
+    const entry = path.join(pages, page, 'main.ts');
+    if (fs.existsSync(entry))
+      assert.match(
+        fs.readFileSync(entry, 'utf8'),
+        /mountPage\(/,
+        page + ' boots through mountPage',
+      );
   }
 });
 
@@ -321,12 +343,12 @@ test('unavailable or malformed consent storage keeps asking without inferring ac
       throw Error('blocked');
     },
   };
-  const page = createMediaConsent(blocked, blocked, 'navigate');
+  const page = createMediaConsent(blocked, blocked);
   assert.equal(page.get(), undefined);
   page.set(true);
   assert.equal(page.get(), true, 'the choice still holds for this page');
   assert.equal(
-    createMediaConsent(memoryStorage([[MEDIA_CONSENT_KEY, 'yes']]), null, 'navigate').get(),
+    createMediaConsent(memoryStorage([[MEDIA_CONSENT_KEY, 'yes']]), null).get(),
     undefined,
   );
 });

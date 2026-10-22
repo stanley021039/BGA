@@ -1,5 +1,5 @@
-// One video decision per browser tab: entering other rooms keeps it, a reload asks again.
-// Must match the legacy rule in public/shared/table-media.js.
+// One video decision per browser tab: entering other rooms keeps it, reloading any page asks again.
+// Must match public/shared/table-media.js and the legacy reset in public/shared/color-scheme.js.
 export const MEDIA_CONSENT_KEY = 'bga.media.consent.v2';
 const LEGACY_KEY = 'bga.media.consents.v1';
 type StoragePort = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -7,7 +7,6 @@ type StoragePort = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 export function createMediaConsent(
   session: StoragePort | null,
   local: Pick<Storage, 'removeItem'> | null,
-  navigationType: string,
 ) {
   let decision: boolean | undefined;
   try {
@@ -16,12 +15,9 @@ export function createMediaConsent(
     /* The old per-room record is only cleanup. */
   }
   try {
-    if (navigationType === 'reload') session?.removeItem(MEDIA_CONSENT_KEY);
-    else {
-      const saved = session?.getItem(MEDIA_CONSENT_KEY);
-      if (saved === 'accepted') decision = true;
-      else if (saved === 'declined') decision = false;
-    }
+    const saved = session?.getItem(MEDIA_CONSENT_KEY);
+    if (saved === 'accepted') decision = true;
+    else if (saved === 'declined') decision = false;
   } catch {
     /* Without storage the decision lives for this page only. */
   }
@@ -36,6 +32,18 @@ export function createMediaConsent(
       }
     },
   };
+}
+
+export function clearMediaConsentOnReload(
+  session: Pick<Storage, 'removeItem'> | null,
+  navigationType: string,
+) {
+  if (navigationType !== 'reload') return;
+  try {
+    session?.removeItem(MEDIA_CONSENT_KEY);
+  } catch {
+    /* Nothing was stored. */
+  }
 }
 
 function navigationType() {
@@ -56,13 +64,13 @@ function storage(name: 'sessionStorage' | 'localStorage') {
   }
 }
 
+// Called once per document by mountPage, so reloading the lobby or any other page counts.
+export function resetMediaConsentOnReload() {
+  clearMediaConsentOnReload(storage('sessionStorage'), navigationType());
+}
+
 let shared: ReturnType<typeof createMediaConsent> | null = null;
-// Evaluated once per page load so remounting the media window never clears a fresh choice.
 export function mediaConsent() {
-  shared ??= createMediaConsent(
-    storage('sessionStorage'),
-    storage('localStorage'),
-    navigationType(),
-  );
+  shared ??= createMediaConsent(storage('sessionStorage'), storage('localStorage'));
   return shared;
 }
