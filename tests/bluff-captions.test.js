@@ -233,3 +233,40 @@ test('the caption route only serves seated players in 瞎掰王 rooms', async (t
     400,
   );
 });
+
+test('the round result lists everyone, script partners included, in speaking order', () => {
+  let now = 1000;
+  const r = new BluffRoom(
+    'ABC125',
+    '合併',
+    () => 0,
+    () => now,
+  );
+  r.add('真人');
+  addTestBot(r);
+  addTestBot(r);
+  r.start();
+  toDiscussion(r);
+  const human = r.players.find((p) => !p.bot),
+    bots = r.players.filter((p) => p.bot && p.id !== r.thinkerId);
+  const speakers = r.players.filter((p) => p.id !== r.thinkerId);
+  for (const p of speakers) {
+    now += 1000;
+    if (p.bot) act(r, p.id, 'spoken', { text: p.name + ' 的腳本說詞' });
+    else {
+      r.caption(p.id, {
+        roundId: r.roundId,
+        utteranceId: randomUUID(),
+        text: '我是真人',
+        final: true,
+      });
+      act(r, p.id, 'spoken');
+    }
+  }
+  act(r, r.thinkerId, 'guess', { targetId: speakers[0].id, confirmed: true });
+  assert.deepEqual(
+    r.view(human.id).results[0].transcript,
+    speakers.map((p) => ({ name: p.name, text: p.bot ? p.name + ' 的腳本說詞' : '我是真人' })),
+  );
+  assert.ok(bots.length >= 1);
+});

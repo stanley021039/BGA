@@ -92,7 +92,7 @@ const fakeRecognizer = () => {
   await talk.click({ timeout: 5000 });
   await people[speaker].page.waitForTimeout(1000);
   const mine = await people[speaker].page
-    .locator('.vue-bluff-speech-mine')
+    .locator('.vue-bluff-speech-log')
     .textContent()
     .catch(() => '');
   await people[listener].page.waitForTimeout(1800);

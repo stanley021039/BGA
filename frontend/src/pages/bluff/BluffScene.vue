@@ -11,8 +11,9 @@ import UiButton from '../../components/UiButton.vue';
 import UiIcon from '../../components/UiIcon.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import BluffReview from './BluffReview.vue';
-import BluffSpeech from './BluffSpeech.vue';
+import BluffSpeechLog from './BluffSpeechLog.vue';
 import BluffSettings from './BluffSettings.vue';
+import { useBluffSpeech } from './bluff-speech';
 const room = useRoomStore(),
   bluff = useBluffStore(),
   actions = usePartyActionsStore(),
@@ -27,7 +28,8 @@ let disposed = false,
   scrollRevision = 0;
 const blocked = computed(() => !room.connected || room.busy || actions.pending || !!room.terminal),
   thinker = computed(() => state.value.players.find((p) => p.id === state.value.thinkerId)),
-  isThinker = computed(() => state.value.me === state.value.thinkerId);
+  isThinker = computed(() => state.value.me === state.value.thinkerId),
+  talk = useBluffSpeech(() => state.value);
 const publicReview = computed(() => ['reveal', 'finished'].includes(state.value.phase)),
   rankings = computed(() =>
     [...state.value.players].sort((a, b) => Number(b.score) - Number(a.score)),
@@ -355,33 +357,54 @@ function rank(index: number) {
                           @click="
                             choosePerson('guess', player.id, player.name)
                           " /></div></article></div></template
-                ><div v-else class="vue-bluff-speech-slot"
-                  ><strong>{{
+                ><div class="vue-bluff-speech-slot" :class="{ 'is-thinker': isThinker }"
+                  ><strong v-if="!isThinker">{{
                     state.spokenIds.includes(state.me)
                       ? '說明已完成，可繼續接受口頭質問。'
                       : '輪到你說明時，請向同桌口頭解釋。'
                   }}</strong
-                  ><UiButton
-                    stitch
-                    variant="primary"
-                    icon="check"
-                    :label="state.spokenIds.includes(state.me) ? '已完成說明' : '我已口頭說明完畢'"
-                    :pending="actions.pending"
-                    :disabled="blocked || state.spokenIds.includes(state.me)"
-                    @click="actions.command('spoken')" /></div></div
+                  ><div class="vue-bluff-actions"
+                    ><UiButton
+                      stitch
+                      :variant="talk.listening.value ? 'primary' : 'secondary'"
+                      :icon="talk.listening.value ? 'stop' : 'sound'"
+                      :caption="talk.listening.value ? '停止講話' : '講話'"
+                      :label="talk.listening.value ? '停止講話並結束字幕' : '開始講話並轉成字幕'"
+                      :aria-pressed="talk.listening.value"
+                      :disabled="!talk.supported || (blocked && !talk.listening.value)"
+                      @click="talk.toggle" /><UiButton
+                      stitch
+                      variant="secondary"
+                      label="哦是哦"
+                      :disabled="blocked"
+                      @click="actions.command('reaction')"
+                      ><template #icon
+                        ><img
+                          class="vue-bluff-reaction-photo"
+                          src="/assets/bluff-reaction-photo.webp"
+                          alt="" /></template></UiButton
+                    ><UiButton
+                      v-if="!isThinker"
+                      stitch
+                      variant="primary"
+                      icon="check"
+                      :label="
+                        state.spokenIds.includes(state.me) ? '已完成說明' : '我已口頭說明完畢'
+                      "
+                      :pending="actions.pending"
+                      :disabled="blocked || state.spokenIds.includes(state.me)"
+                      @click="actions.command('spoken')" /></div
+                  ><p
+                    class="vue-bluff-speech-status"
+                    :class="{ 'is-error': talk.failed.value }"
+                    role="status"
+                    >{{ talk.status.value }}</p
+                  ></div
+                ></div
               ><aside class="vue-bluff-discussion-right"
-                ><BluffSpeech :state="state" :blocked="blocked" /><UiButton
-                  stitch
-                  variant="secondary"
-                  label="哦是哦"
-                  :disabled="blocked"
-                  @click="actions.command('reaction')"
-                  ><template #icon
-                    ><img
-                      class="vue-bluff-reaction-photo"
-                      src="/assets/bluff-reaction-photo.webp"
-                      alt="" /></template></UiButton
-                ><section v-if="Object.keys(state.botStatements).length" class="vue-bluff-bots"
+                ><BluffSpeechLog :state="state" :interim="talk.interim.value" /><section
+                  v-if="Object.keys(state.botStatements).length"
+                  class="vue-bluff-bots"
                   ><h3>腳本夥伴說詞</h3
                   ><p v-for="(statement, id) in state.botStatements" :key="id"
                     >{{ state.players.find((p) => p.id === id)?.name || 'AI' }} 說：「{{

@@ -14,6 +14,7 @@ class BluffRoom extends PartyRoom {
     this.spokenIds = [];
     this.challenges = [];
     this.botStatements = {};
+    this.botStatementAt = {};
     this.thinkerId = null;
     this.question = null;
     this.choices = [];
@@ -108,6 +109,7 @@ class BluffRoom extends PartyRoom {
     this.spokenIds = [];
     this.challenges = [];
     this.botStatements = {};
+    this.botStatementAt = {};
     this.captions = {};
     this.transcript = [];
     this.phase = 'selecting';
@@ -186,6 +188,7 @@ class BluffRoom extends PartyRoom {
           const statement = text(data.text, 240);
           if (!statement) fail('INVALID_TEXT', '測試說詞不可空白', 400);
           this.botStatements[id] = statement;
+          this.botStatementAt[id] = this.now();
         }
         this.spokenIds.push(id);
         this.event('spoken', p.name + ' 已說明');
@@ -242,7 +245,17 @@ class BluffRoom extends PartyRoom {
           selectedName: target.name,
           correct: target.id === honest.id,
           challenges: this.challenges.map((pid) => this.player(pid).name),
-          transcript: this.transcript.map((e) => ({ name: e.name, text: e.text })),
+          // Everyone's words in the order they were said, script partners included.
+          transcript: [
+            ...this.transcript,
+            ...Object.entries(this.botStatements).map(([pid, statement]) => ({
+              name: this.player(pid)?.name || 'AI',
+              text: statement,
+              at: this.botStatementAt[pid] ?? 0,
+            })),
+          ]
+            .sort((a, b) => a.at - b.at)
+            .map((e) => ({ name: e.name, text: e.text })),
           roles: this.players.map((q) => ({
             name: q.name,
             role: this.roles[q.id],
@@ -297,7 +310,13 @@ class BluffRoom extends PartyRoom {
     const known = this.transcript.find((e) => e.id === data.utteranceId && e.playerId === id);
     if (known) known.text = line;
     else if (this.transcript.length < 120)
-      this.transcript.push({ id: data.utteranceId, playerId: id, name: p.name, text: line });
+      this.transcript.push({
+        id: data.utteranceId,
+        playerId: id,
+        name: p.name,
+        text: line,
+        at: this.now(),
+      });
   }
   beginDiscussion() {
     this.phase = 'discussion';
