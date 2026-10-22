@@ -39,6 +39,22 @@ function createFrontend({
   }
   return {
     readPage: (file) => documents.get(file) || null,
+    // Same-origin scripts and styles a compiled page loads, for prefetching.
+    pageAssets(file) {
+      const html = documents.get(file);
+      if (!html) return [];
+      return [
+        ...new Set(
+          [
+            ...html
+              .toString()
+              .matchAll(
+                /(?:src|href)="(\/(?:frontend-assets|shared)\/[A-Za-z0-9_./-]+\.(?:js|css))"/g,
+              ),
+          ].map((match) => match[1]),
+        ),
+      ];
+    },
     serveAsset(req, res, pathname) {
       if (!pathname.startsWith('/frontend-assets/')) return false;
       if (!['GET', 'HEAD'].includes(req.method))

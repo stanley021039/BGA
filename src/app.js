@@ -1311,6 +1311,17 @@ function initializeApp(config, dataLock, acquired) {
           res.writeHead(302, { Location: location.pathname + location.search });
           return res.end();
         }
+        if (url.pathname === '/api/frontend/page-assets' && req.method === 'GET') {
+          const type = url.searchParams.get('type'),
+            page = type === 'thunder' ? 'race' : type;
+          if (
+            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks)$/.test(
+              page || '',
+            )
+          )
+            throw new HttpError(400, 'INVALID_PAGE', '頁面不正確');
+          return send({ assets: frontend?.pageAssets(page + '.html') || [] });
+        }
         if (url.pathname === '/api/profile/options' && req.method === 'GET') {
           return send({ defaults, expressionLabels, characters: galleryFor(db, user.id) });
         }
