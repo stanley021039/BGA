@@ -56,7 +56,6 @@ function recentKey(event: KeyboardEvent) {
   if (event.key === 'Escape' && recentOpen.value) {
     event.preventDefault();
     event.stopPropagation();
-    recentOpen.value = false;
     urlInput.value?.focus();
     recentOpen.value = false;
   } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -915,7 +914,7 @@ onBeforeUnmount(() => {
                     href="/collection?section=music"
                     target="_blank"
                     rel="noopener"
-                    >上傳新歌曲↗</a
+                    >上傳新歌曲<span aria-hidden="true">↗</span></a
                   > </div
                 ><div
                   ><select :id="id + '-track'" v-model="track" :disabled="media.busy"
@@ -954,6 +953,7 @@ onBeforeUnmount(() => {
                       v-model="url"
                       type="url"
                       autocomplete="off"
+                      role="combobox"
                       :aria-expanded="recentOpen"
                       :aria-controls="id + '-recent'"
                       @focus="recentOpen = true"
@@ -967,6 +967,7 @@ onBeforeUnmount(() => {
                       :id="id + '-recent'"
                       class="vue-media-recent"
                       aria-label="最近播放影片"
+                      @mousedown.prevent
                     >
                       <ul v-if="recentVideos.length">
                         <li v-for="entry in recentVideos" :key="entry.videoId">
