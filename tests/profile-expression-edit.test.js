@@ -201,9 +201,9 @@ test('HTTP edit/delete enforce ownership, accept the 4 MB image budget and inval
     const state = await (
       await fetch(base + '/api/state?code=' + room.code, { headers: { Cookie: cookie } })
     ).json();
-    assert.equal(
+    assert.match(
       state.players.find((p) => p.name === 'emoteeditor').avatar,
-      '/characters/' + login.data.id,
+      new RegExp(`^/characters/${login.data.id}\\?v=[\\w-]{16}&size=256$`),
     );
     assert.equal(
       (await post('profile/characters/' + id + '/expressions/neutral/delete', cookie)).data.code,

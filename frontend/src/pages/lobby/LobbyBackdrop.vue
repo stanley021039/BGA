@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../../services/image-size';
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { useLobbyBackgroundStore } from '../../stores/lobby-background';
@@ -330,7 +331,9 @@ onBeforeUnmount(() => {
           :aria-label="expression.label"
           :disabled="lobby.emotePending || !lobby.connected"
           @click="use(expression.expression)"
-          ><img :src="expression.image" alt="" /><span>{{ expression.label }}</span></button
+          ><img :src="sizedImage(expression.image, 128)" alt="" /><span>{{
+            expression.label
+          }}</span></button
         ></div
       ><StatusSlot
         :message="lobby.emotePending ? '正在送出表情…' : lobby.expressionStatus"

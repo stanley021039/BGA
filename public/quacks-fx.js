@@ -377,7 +377,7 @@
       const portrait = node('div');
       portrait.className = 'explosion-portrait';
       const img = node('img');
-      img.src = '/assets/quacks/explosion-reference-v1.png';
+      img.src = '/assets/quacks/explosion-reference-v1.webp';
       img.alt = '爆鍋後哭哭的表情';
       img.width = 1592;
       img.height = 988;

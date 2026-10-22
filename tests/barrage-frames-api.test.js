@@ -262,7 +262,7 @@ test('old clients get default frames, later selection cannot rewrite a previous 
   });
 });
 
-test('new frame assets use exact public routes, canonical bytes, correct MIME and no-store', async (t) => {
+test('new frame assets use exact public routes, canonical bytes, correct MIME and revalidation', async (t) => {
   const f = await fixture(t);
   for (const extension of ['js', 'css']) {
     const asset = '/shared/barrage-frames.' + extension,
@@ -272,7 +272,7 @@ test('new frame assets use exact public routes, canonical bytes, correct MIME an
       response.headers.get('content-type'),
       extension === 'js' ? /^text\/javascript; charset=utf-8$/ : /^text\/css$/,
     );
-    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('cache-control'), 'private, no-cache');
     assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
     assert.deepEqual(
       Buffer.from(await response.arrayBuffer()),

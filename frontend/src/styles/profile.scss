@@ -14,6 +14,7 @@
     color: var(--stitch-ink);
     .profile-heading {
       display: grid;
+      justify-content: center;
       justify-items: center;
       gap: 8px;
       margin: 0;
@@ -205,6 +206,8 @@
       display: grid;
       grid-template-rows: 72px minmax(21px, auto) minmax(21px, auto);
       align-content: start;
+      justify-items: center;
+      text-align: center;
       gap: 8px;
       min-inline-size: 0;
       margin: 0;
@@ -219,6 +222,7 @@
         block-size: 72px;
         min-block-size: 0;
         object-fit: contain;
+        object-position: center;
         margin: 0;
       }
       > span,
@@ -243,6 +247,45 @@
       &:focus-visible {
         outline: 2px solid var(--surface-focus, var(--stitch-focus));
         outline-offset: 2px;
+      }
+    }
+    // "+" tile at the end of 我的作品 opens the character upload dialog.
+    .preset-gallery > button.profile-add-card {
+      border-style: dashed;
+      color: var(--stitch-muted);
+      .profile-add-icon {
+        display: grid;
+        place-items: center;
+        inline-size: 72px;
+        block-size: 72px;
+        font-size: 40px;
+        line-height: 1;
+      }
+    }
+    .profile-upload-dialog .profile-upload-hint {
+      margin: 0 0 16px;
+      color: var(--stitch-muted);
+      font-size: var(--stitch-font-14);
+    }
+    // Expression edit/delete actions sit centred with breathing room.
+    .expression-editor {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      > .frontend-status {
+        flex-basis: 100%;
+        margin: 0;
+        text-align: center;
+      }
+      > .frontend-status:empty {
+        display: none;
+      }
+      // 新增表情 sits on its own row under edit/delete.
+      > .expression-add-row {
+        display: flex;
+        flex-basis: 100%;
+        justify-content: center;
       }
     }
     .gallery-empty {
@@ -270,49 +313,6 @@
     }
     .profile-gallery-card > .frontend-status:empty {
       display: none;
-    }
-    .artist-templates {
-      box-sizing: border-box;
-      margin-block-start: 24px;
-      padding: 0 24px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 12px;
-      background: var(--stitch-surface);
-      color: var(--stitch-ink);
-      font-size: var(--stitch-font-16);
-      > summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        min-block-size: 64px;
-        list-style: none;
-        color: inherit;
-        cursor: pointer;
-        font-weight: 700;
-      }
-      > summary::-webkit-details-marker {
-        display: none;
-      }
-      .profile-upload-plus {
-        flex: none;
-        font-size: var(--stitch-font-24);
-        font-weight: 400;
-      }
-      &[open] .profile-upload-plus {
-        transform: rotate(45deg);
-      }
-      > p {
-        margin: 0 0 16px;
-        color: var(--stitch-muted);
-        font-size: var(--stitch-font-14);
-      }
-    }
-    .artist-templates .profile-upload-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 24px;
-      align-items: stretch;
     }
     .upload-group,
     .expression-sound {
@@ -362,7 +362,7 @@
       color: var(--stitch-ink);
       font-size: var(--stitch-font-16);
     }
-    .artist-templates .upload-drop {
+    .profile-upload-dialog .upload-drop {
       display: grid;
       place-items: center;
       min-block-size: 88px;
@@ -374,17 +374,17 @@
       background: var(--stitch-surface);
       font-size: var(--stitch-font-14);
     }
-    .artist-templates .artwork-picker {
+    .profile-upload-dialog .artwork-picker {
       display: block;
       margin: 0;
     }
-    .artist-templates .artwork-picker > strong {
+    .profile-upload-dialog .artwork-picker > strong {
       display: block;
       margin-block-end: 8px;
       color: inherit;
       font-size: var(--stitch-font-14);
     }
-    .artist-templates .artwork-choices {
+    .profile-upload-dialog .artwork-choices {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
       gap: 12px;
@@ -451,15 +451,6 @@
       > img {
         block-size: 64px;
       }
-    }
-    .artist-templates {
-      margin-block-start: 16px;
-      padding-inline: 16px;
-    }
-
-    .artist-templates .profile-upload-grid {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 16px;
     }
     .upload-group,
     .expression-sound {

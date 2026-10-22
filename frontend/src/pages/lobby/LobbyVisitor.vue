@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
 import type { BarrageEvent } from '../../contracts/social';
@@ -240,8 +241,10 @@ window.addEventListener('resize', positionBubble);
       class="lobby-speech"
       :style="{ left: bubbleLeft, transform: 'translateX(-50%)' }"
       >{{ visitor.emote.label }}</div
-    ><img :src="visitor.emote?.image || visitor.image" alt="" draggable="false" /><span>{{
-      shortName
-    }}</span>
+    ><img
+      :src="sizedImage(visitor.emote?.image || visitor.image, 256)"
+      alt=""
+      draggable="false"
+    /><span>{{ shortName }}</span>
   </component>
 </template>

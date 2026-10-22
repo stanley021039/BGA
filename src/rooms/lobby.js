@@ -23,7 +23,7 @@ const PRESENCE_MS = 15000,
 const WALK_X_PER_SECOND = 12,
   WALK_Y_PER_SECOND = 16;
 
-function createLobby(now = () => Date.now()) {
+function createLobby(now = () => Date.now(), portrait = (userId) => `/characters/${userId}`) {
   const visitors = new Map(),
     barrages = [],
     receipts = new Map();
@@ -93,7 +93,7 @@ function createLobby(now = () => Date.now()) {
         ),
         facing: visitor.facing,
         moving: Math.hypot(visitor.targetX - visitor.x, visitor.targetY - visitor.y) > 0.05,
-        image: `/characters/${visitor.id}`,
+        image: portrait(visitor.id),
         emote: visitor.emote && visitor.emote.until > time ? visitor.emote : null,
         entrance: visitor.entrance || 'classic',
       })),

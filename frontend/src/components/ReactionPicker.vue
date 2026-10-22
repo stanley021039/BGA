@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../services/image-size';
 import { computed, onBeforeUnmount, ref, useId, watch } from 'vue';
 import { useRoomStore } from '../stores/room';
 import { useReactionsStore } from '../stores/reactions';
@@ -233,7 +234,9 @@ defineExpose({ open });
             :aria-label="'送出「' + choice.label + '」角色動作'"
             :disabled="blocked"
             @click="send('expression', choice.id)"
-            ><img :src="choice.url" alt="" loading="lazy" /><span>{{ choice.label }}</span></button
+            ><img :src="sizedImage(choice.url, 128)" alt="" loading="lazy" /><span>{{
+              choice.label
+            }}</span></button
           ></div
         >
         <details v-if="phrases.length" class="vue-reaction-phrases"

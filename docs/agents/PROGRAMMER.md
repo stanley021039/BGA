@@ -887,3 +887,17 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下，還原原生稿邏輯尺寸並保留 44px 操作區；時間沿用原時間戳／房間 offset，timer 卸載清理。C00 桌機單一矩形框與側欄分隔集中 room-surfaces.scss，手機保留換列並固定聊天室高度、長訊息內捲，遊戲棋盤／內容卡／浮層不套外框清除。共用暖灰色票、body margin、側欄捲動與猜歌空白 gutter 一併整理。11 款桌機／手機、7 款遊玩取樣、320px 長訊息／純文字／返焦及媒體／表情開關已有實際觀察；型別／多頁建置與格式版本檢查通過，未跑自動套件。證據數值與原生全螢幕等未驗界線見 [全站版面巡檢](../refactors/STITCH-SITE-LAYOUT-AUDIT.md) 最新區，不外推為全遊戲功能回歸。
 
 2026-10-21 候選2.22.0：大廳場地移除，LobbyBackdrop 將角色 teleport 到 body 後方；點擊目標往上沒有控制項、文字或有底色／框線的面板才算地板。前後端移動邊界同為 X 6–94%、Y 12–97%。進場特效 7 款（apparition.ts），選擇存 localStorage，經 GET /api/lobby?entrance= 送伺服器白名單後隨訪客下發。保留 #159 角色對話。
+
+2026-10-22 候選2.23.0：ProfilePage 上傳改為 createDialog／expressionDialog，關閉即清除未送出草稿；ImageChoiceGrid 新增 append slot 放「我的作品」＋卡片，ExpressionEditor 新增 actions／sound slot（音效狀態仍由 ProfilePage 管理以保留離開提醒）。好友角色只保留頁面上的試聽區。MAX_CHARACTERS=20 於 src/profiles/uploads.js，前端常數同步。設定頁 EntrancePreview 以 apparate 播放目前角色，左欄最後一卡吸收剩餘高度。
+
+2026-10-22 候選2.24.0：src/http/static-cache.js 提供快取標頭；setSecurityHeaders 仍先設 no-store，HTML／API／遊戲音訊不變。/frontend-assets 為 public immutable；公開靜態檔 no-cache＋內容 ETag（記憶體快取，stat 變更即重讀）；需登入的檔案為 private no-cache；角色圖與音效帶 ?v= 時 private immutable（characterMedia 已拒絕過期版本）。座位與大廳頭像為 /characters/<id>?v=<內容版本>，由 app.js portraitUrl 記憶；任何 /api/profile/ 或 /api/admin/ POST 完成後 refreshPortraits 清除並更新所有座位。量測腳本 tools/qa/perf-measure.cjs，紀錄在 docs/performance-measurements.md。
+
+2026-10-22 2.24.1：正式站實測 Cloudflare 把 origin 的 `no-cache` 改寫成 `max-age=14400`（區域 Browser Cache TTL 4 小時，只會延長較短的 TTL）。`no-store` 與 `private` 不受影響，所以可重新驗證的回應一律用 `private, no-cache`；immutable 打包檔不受影響。若日後把 Cloudflare 的 Browser Cache TTL 改為 Respect Existing Headers，可再考慮讓公開檔被邊緣快取。
+
+2026-10-22 候選2.25.0：src/media/thumbnails.js 以原圖 sha256 為鍵，在 `<db>.media-thumbnails/` 存 128／256／512 WebP（`.same` 代表原圖已不大於縮圖，或原圖無法解碼）。原圖與權限仍在 SQLite，縮圖可隨時刪除重建。角色圖、內建角色、`/characters/<id>`、作品與 `/api/profile/avatar` 都接受 `?size=`；縮圖尚未產生時回原圖並標 `private, no-cache`，不會被當成該尺寸快取。正式設定（config.settings）會在啟動時，以及角色／作品 POST 完成後依序補齊縮圖；測試與嵌入式 app 只在有人要求尺寸時才產生。前端以 services/image-size.ts 的 `sizedImage` 加上尺寸；座位與大廳頭像由伺服器帶 `size=256`。
+
+2026-10-22 候選2.26.0：六張內建大圖改為 800 px WebP，`src/app.js` 檔案表保留舊 `.png` 網址並指向 WebP（`public/bluff.js` 與兩支 QA 腳本是舊格式檔，所以沒有改）。`src/media/audio.js` 以 WAV 內容雜湊在 `<db>.media-audio/` 存 96 kbps 單聲道 MP3：只有正式設定（`expressionSoundMp3`）會轉換，轉換中回 WAV 並標 `private, no-cache`；找不到 ffmpeg 時不留下任何紀錄，安裝並重新啟動後就會補齊。原始 WAV 仍是 SQLite 中驗證過的原檔。
+
+2026-10-22 候選2.27.0：`frontend/src/services/preload.ts` 的 `warm()` 在閒置時以 `<link rel=prefetch>` 預先抓取，每個網址只抓一次；`preloadAllowed()` 在 Save-Data 或 slow-2g／2g／3g 時回 false。`services/game-assets.ts` 列出各遊戲進行中才用到的資源（音效依 `public/shared/audio-settings.js` 的登記表），GameRoomPage 在 waiting 時呼叫 `warmGame`；GameCarousel 在 pointerenter／pointerdown／focus 時呼叫 `warmGamePage`，向 `/api/frontend/page-assets?type=` 取得編譯後房間頁的 `/frontend-assets`、`/shared` 腳本與樣式（thunder 對應 race）。大廳 store 在第一份快照後於閒置時載入表情與 128 px 縮圖。新增遊戲的進行中素材時，請一併更新 game-assets。
+
+2026-10-22 2.27.1（#165）：RoomMedia 原本在任何其他 `dialog:modal` 開啟時呼叫 `close()`，而 `setWindow(false)` 會讓 YouTube 影片 `exitVideo()`，所以邀請朋友、遊戲說明或確認視窗都會中斷影片。現在其他 modal 只蓋在點播視窗上面；Escape 在有 modal 時本來就不處理。回歸測試在 `frontend/tests/media-modal.test.cjs`，實機重現腳本在 `tools/qa/media-modal-continuity.cjs`。

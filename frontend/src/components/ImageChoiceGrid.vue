@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../services/image-size';
 import '../styles/image-choice-grid.scss';
 withDefaults(
   defineProps<{
@@ -28,8 +29,8 @@ defineEmits<{ 'update:modelValue': [id: string] }>();
       :aria-pressed="modelValue === item.id"
       :aria-label="item.ariaLabel || item.label"
       @click="$emit('update:modelValue', item.id)"
-      ><img :src="item.url" alt="" loading="lazy" /><span>{{ item.label }}</span
+      ><img :src="sizedImage(item.url, 256)" alt="" loading="lazy" /><span>{{ item.label }}</span
       ><small v-if="item.caption">{{ item.caption }}</small></button
-    ></div
-  >
+    ><slot name="append"
+  /></div>
 </template>

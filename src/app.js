@@ -2,7 +2,7 @@ const http = require('node:http'),
   fs = require('node:fs'),
   path = require('node:path'),
   os = require('node:os');
-const { randomBytes, randomUUID } = require('node:crypto');
+const { createHash, randomBytes, randomUUID } = require('node:crypto');
 // Reviewed local vectors only; never resolve arbitrary SVG paths or uploaded SVGs.
 const CRUEL_ASSETS = Object.fromEntries(
   require('./games/majority-cruel-catalog').CRUEL_QUESTIONS.flatMap((q) =>
@@ -101,6 +101,17 @@ const { createRoomInvitations } = require('./rooms/invitations');
 const { createLobbyHandlers } = require('./http/lobby-routes');
 const { HttpError, writeError } = require('./http/errors');
 const { clientAddress, setSecurityHeaders } = require('./http/security');
+const {
+  PRIVATE_IMMUTABLE,
+  PRIVATE_REVALIDATE,
+  etagFor,
+  readStatic,
+  sendCached,
+  sendStatic,
+  sendVersioned,
+} = require('./http/static-cache');
+const { MediaThumbnails, thumbnailSize } = require('./media/thumbnails');
+const { MediaAudio } = require('./media/audio');
 const { openDatabase } = require('./db/index');
 const { createAuth } = require('./auth/index');
 const { BoardStore } = require('./community/board');
@@ -356,7 +367,7 @@ function initializeApp(config, dataLock, acquired) {
         entry.res.end();
       }
   };
-  const lobby = createLobby();
+  const lobby = createLobby(undefined, (userId) => portraitUrl(userId));
   const lobbyPingRoom = { code: '__LOBBY__', type: 'lobby', phase: 'lobby', players: [] };
   const expireRooms = () => runtime.expireRooms(history);
   const gameAudio = new GameAudioLibrary(
@@ -534,7 +545,7 @@ function initializeApp(config, dataLock, acquired) {
       },
     );
     departed?.delete(user.id);
-    p.avatar = `/characters/${user.id}`;
+    p.avatar = portraitUrl(user.id);
     seats.get(room.code).set(user.id, p.id);
     return { code: room.code, type: room.type || 'poker' };
   }
@@ -568,6 +579,141 @@ function initializeApp(config, dataLock, acquired) {
     if (lobbyAudience) audiences.push(lobbyAudience);
     return audiences;
   });
+  // A portrait URL names its bytes so browsers may keep it. A stale version still
+  // serves the current image, just without the immutable cache.
+  function portrait(viewerId, userId) {
+    const selected = characterMedia.avatar(userId);
+    if (!selected) throw new HttpError(404, 'CHARACTER_NOT_FOUND', '找不到角色外觀');
+    let bytes, mime, etag;
+    if (USER_IMAGE_PATH.test(selected.url)) {
+      const row = characterMedia.image(viewerId, selected.url);
+      if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
+      bytes = row.bytes;
+      mime = row.mime;
+      etag = etagFor(row.bytes);
+    } else {
+      ({ bytes, etag } = readStatic(path.join(__dirname, '..', 'public', selected.url)));
+      mime = selected.url.endsWith('.gif') ? 'image/gif' : 'image/png';
+    }
+    const version = createHash('sha256')
+      .update(selected.url)
+      .update(etag)
+      .digest('base64url')
+      .slice(0, 16);
+    return { bytes, mime, version };
+  }
+  // Lobby views are built on every poll, so versions are memoized. Any profile or
+  // admin change may alter anyone's portrait (shared characters, disabled
+  // owners), so each one drops the memo and re-versions every seat.
+  const portraitVersions = new Map();
+  function portraitUrl(userId) {
+    if (!portraitVersions.has(userId)) {
+      let version = null;
+      try {
+        version = portrait(userId, userId).version;
+      } catch (error) {
+        if (!(error instanceof HttpError)) throw error;
+      }
+      portraitVersions.set(userId, version);
+    }
+    const version = portraitVersions.get(userId);
+    return `/characters/${userId}?` + (version ? `v=${version}&` : '') + 'size=256';
+  }
+  const mediaThumbnails = new MediaThumbnails({
+      directory: config.dbFile + '.media-thumbnails',
+    }),
+    mediaAudio = new MediaAudio({
+      directory: config.dbFile + '.media-audio',
+      ffmpegPath: config.ffmpegPath,
+    });
+  // Expression sounds are sent as MP3 once converted (production only). While
+  // a conversion is pending the WAV is sent, never cached under the URL.
+  async function sendSound(req, res, url, { bytes, mime }) {
+    const versioned = url.searchParams.has('v'),
+      mp3 = config.expressionSoundMp3 ? await mediaAudio.variant(bytes) : { same: true };
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    if (mp3?.bytes) {
+      res.setHeader('Content-Type', 'audio/mpeg');
+      return sendVersioned(req, res, mp3.bytes, versioned);
+    }
+    res.setHeader('Content-Type', mime);
+    if (!mp3) return sendCached(req, res, bytes, { cacheControl: PRIVATE_REVALIDATE });
+    return sendVersioned(req, res, bytes, versioned);
+  }
+  function soundSources() {
+    const sound = db.prepare(
+      'SELECT bytes FROM character_sounds WHERE character_id=? AND expression=?',
+    );
+    return db
+      .prepare('SELECT character_id,expression FROM character_sounds')
+      .all()
+      .map((row) => () => sound.get(row.character_id, row.expression)?.bytes);
+  }
+  // Serves an image, or its WebP thumbnail when ?size= asks for one. While a
+  // thumbnail is being prepared the original is sent, never cached as the size.
+  async function sendImage(req, res, url, { bytes, mime }, versioned) {
+    const cacheControl = versioned ? PRIVATE_IMMUTABLE : PRIVATE_REVALIDATE,
+      size = thumbnailSize(url.searchParams.get('size')),
+      sized = size ? await mediaThumbnails.variant(bytes, size) : null;
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    if (sized?.bytes) {
+      res.setHeader('Content-Type', 'image/webp');
+      return sendCached(req, res, sized.bytes, { cacheControl });
+    }
+    res.setHeader('Content-Type', mime);
+    return sendCached(req, res, bytes, {
+      cacheControl: size && !sized ? PRIVATE_REVALIDATE : cacheControl,
+    });
+  }
+  // Production pre-builds every thumbnail at start and after each upload, so
+  // only the first viewer of a brand-new image waits on the original.
+  function thumbnailSources() {
+    const image = db.prepare(
+        'SELECT bytes FROM character_images WHERE character_id=? AND expression=?',
+      ),
+      artwork = db.prepare('SELECT bytes FROM user_artworks WHERE id=?');
+    return [
+      ...[...new Set(builtinCharacters.flatMap((c) => Object.values(c.expressions)))].map(
+        (file) => () => readStatic(path.join(__dirname, '..', 'public', file)).bytes,
+      ),
+      ...db
+        .prepare('SELECT character_id,expression FROM character_images')
+        .all()
+        .map((row) => () => image.get(row.character_id, row.expression)?.bytes),
+      ...db
+        .prepare('SELECT id FROM user_artworks')
+        .all()
+        .map((row) => () => artwork.get(row.id)?.bytes),
+    ];
+  }
+  let thumbnailBackfill = null,
+    thumbnailRerun = false;
+  function refreshThumbnails() {
+    if (!config.mediaThumbnailBackfill || closed) return;
+    if (thumbnailBackfill) {
+      thumbnailRerun = true;
+      return;
+    }
+    thumbnailBackfill = mediaThumbnails
+      .backfill(thumbnailSources())
+      .then(() => config.expressionSoundMp3 && mediaAudio.backfill(soundSources()))
+      .catch(() => {})
+      .finally(() => {
+        thumbnailBackfill = null;
+        if (thumbnailRerun) {
+          thumbnailRerun = false;
+          refreshThumbnails();
+        }
+      });
+  }
+  function refreshPortraits() {
+    portraitVersions.clear();
+    for (const room of rooms.values())
+      for (const [accountId, playerId] of seats.get(room.code) || []) {
+        const player = room.players.find((p) => p.id === playerId);
+        if (player?.avatar?.startsWith('/characters/')) player.avatar = portraitUrl(accountId);
+      }
+  }
   const withLobbyMedia = (user, view) => {
     const serverNow = Date.now();
     lobbyPingRoom.players = view.visitors;
@@ -779,6 +925,10 @@ function initializeApp(config, dataLock, acquired) {
     try {
       const url = new URL(req.url, 'http://localhost');
       if (frontend?.serveAsset(req, res, url.pathname)) return;
+      if (req.method === 'POST' && /^\/api\/(?:profile|admin)\//.test(url.pathname))
+        res.once('finish', refreshPortraits);
+      if (req.method === 'POST' && /^\/api\/(?:profile\/characters|artworks)\b/.test(url.pathname))
+        res.once('finish', refreshThumbnails);
       if (
         req.method === 'GET' &&
         url.searchParams.get('embed') === '1' &&
@@ -1140,18 +1290,37 @@ function initializeApp(config, dataLock, acquired) {
           for (const room of rooms.values()) {
             const playerId = seats.get(room.code)?.get(user.id);
             const player = room.players.find((p) => p.id === playerId);
-            if (player) player.avatar = `/characters/${user.id}`;
+            if (player) player.avatar = portraitUrl(user.id);
           }
           return send(settings);
         }
         if (url.pathname === '/api/profile/avatar' && req.method === 'GET') {
           const selection = avatarContent(db, user.id);
-          if (selection.content) {
-            res.setHeader('Content-Type', selection.content.mime);
-            return res.end(Buffer.from(selection.content.bytes));
-          }
-          res.writeHead(302, { Location: selection.url });
+          if (selection.content)
+            return sendImage(
+              req,
+              res,
+              url,
+              { bytes: Buffer.from(selection.content.bytes), mime: selection.content.mime },
+              false,
+            );
+          // Header avatars ask for a thumbnail; the redirect keeps that request.
+          const location = new URL(selection.url, 'http://localhost'),
+            size = thumbnailSize(url.searchParams.get('size'));
+          if (size) location.searchParams.set('size', String(size));
+          res.writeHead(302, { Location: location.pathname + location.search });
           return res.end();
+        }
+        if (url.pathname === '/api/frontend/page-assets' && req.method === 'GET') {
+          const type = url.searchParams.get('type'),
+            page = type === 'thunder' ? 'race' : type;
+          if (
+            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks)$/.test(
+              page || '',
+            )
+          )
+            throw new HttpError(400, 'INVALID_PAGE', '頁面不正確');
+          return send({ assets: frontend?.pageAssets(page + '.html') || [] });
         }
         if (url.pathname === '/api/profile/options' && req.method === 'GET') {
           return send({ defaults, expressionLabels, characters: galleryFor(db, user.id) });
@@ -1209,8 +1378,7 @@ function initializeApp(config, dataLock, acquired) {
           for (const room of rooms.values())
             for (const [accountId, playerId] of seats.get(room.code) || []) {
               const player = room.players.find((p) => p.id === playerId);
-              if (player?.avatar?.split('?')[0] === removed)
-                player.avatar = '/characters/' + accountId;
+              if (player?.avatar?.split('?')[0] === removed) player.avatar = portraitUrl(accountId);
             }
           return send(result);
         }
@@ -1234,7 +1402,7 @@ function initializeApp(config, dataLock, acquired) {
           for (const room of rooms.values()) {
             const playerId = seats.get(room.code)?.get(user.id);
             const player = room.players.find((p) => p.id === playerId);
-            if (player) player.avatar = `/characters/${user.id}`;
+            if (player) player.avatar = portraitUrl(user.id);
           }
           return send({ appearance });
         }
@@ -1582,7 +1750,7 @@ function initializeApp(config, dataLock, acquired) {
             endRoomHistory(history, room, '建立房間未完成');
             throw error;
           }
-          p.avatar = `/characters/${user.id}`;
+          p.avatar = portraitUrl(user.id);
           rooms.set(code, room);
           seats.set(code, new Map([[user.id, p.id]]));
           return send({ code, type: room.type || 'poker' });
@@ -2166,7 +2334,7 @@ function initializeApp(config, dataLock, acquired) {
           'Content-Type',
           file.endsWith('.css') ? 'text/css' : 'text/javascript; charset=utf-8',
         );
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', file)));
+        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
       }
       const musicAsset = url.pathname.match(/^\/assets\/music\/([a-f0-9-]{36})$/);
       if (Object.hasOwn(TOURNAMENT_ART, url.pathname)) {
@@ -2174,13 +2342,15 @@ function initializeApp(config, dataLock, acquired) {
         res.setHeader('Content-Type', file.endsWith('.svg') ? 'image/svg+xml' : 'image/png');
         if (file.endsWith('.svg'))
           res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', file)));
+        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
       }
       if (Object.hasOwn(FREEHAND_ASSETS, url.pathname)) {
         res.setHeader('Content-Type', 'image/svg+xml');
         res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
-        return res.end(
-          fs.readFileSync(path.join(__dirname, '..', 'public', FREEHAND_ASSETS[url.pathname])),
+        return sendStatic(
+          req,
+          res,
+          path.join(__dirname, '..', 'public', FREEHAND_ASSETS[url.pathname]),
         );
       }
       if (
@@ -2213,7 +2383,7 @@ function initializeApp(config, dataLock, acquired) {
           'Content-Type',
           file.endsWith('.css') ? 'text/css' : 'text/javascript; charset=utf-8',
         );
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', file)));
+        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
       }
       if (musicAsset) {
         auth.requireUser(req);
@@ -2226,9 +2396,7 @@ function initializeApp(config, dataLock, acquired) {
         const viewer = auth.requireUser(req),
           image = artworkStore.image(viewer.id, artworkAsset[1]);
         if (!image) throw new HttpError(404, 'ARTWORK_NOT_FOUND', '找不到你的作品');
-        res.setHeader('Content-Type', image.mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(image.bytes);
+        return sendImage(req, res, url, image, false);
       }
       const sharedGift = url.pathname.match(/^\/assets\/gifts\/shared\/([a-f0-9-]{36})$/);
       if (sharedGift) {
@@ -2237,32 +2405,32 @@ function initializeApp(config, dataLock, acquired) {
         if (!image?.bytes) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到禮物圖片');
         res.setHeader('Content-Type', image.mime);
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(image.bytes);
+        return sendCached(req, res, image.bytes, { cacheControl: PRIVATE_REVALIDATE });
       }
       if (GIFTS.some((gift) => gift.image === url.pathname)) {
         auth.requireUser(req);
         res.setHeader('Content-Type', 'image/png');
         res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', url.pathname)));
+        return sendStatic(
+          req,
+          res,
+          path.join(__dirname, '..', 'public', url.pathname),
+          PRIVATE_REVALIDATE,
+        );
       }
+      // characterMedia rejects a ?v= that no longer names the stored bytes.
       if (USER_SOUND_PATH.test(url.pathname)) {
         const viewer = auth.requireUser(req),
           row = characterMedia.sound(viewer.id, url.href);
         if (!row) throw new HttpError(404, 'SOUND_NOT_FOUND', '找不到表情音效');
-        res.setHeader('Content-Type', row.mime);
-        res.setHeader('Content-Length', row.bytes.length);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        if (req.method === 'HEAD') return res.end();
-        return res.end(row.bytes);
+        return sendSound(req, res, url, row);
       }
       const media = url.pathname.match(USER_IMAGE_PATH);
       if (media) {
         const viewer = auth.requireUser(req),
           row = characterMedia.image(viewer.id, url.href);
         if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
-        res.setHeader('Content-Type', row.mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(row.bytes);
+        return sendImage(req, res, url, row, url.searchParams.has('v'));
       }
       if (url.pathname.startsWith('/assets/characters/')) {
         auth.requireUser(req);
@@ -2270,28 +2438,20 @@ function initializeApp(config, dataLock, acquired) {
           .flatMap((character) => Object.values(character.expressions))
           .find((value) => value === url.pathname);
         if (!asset) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
-        res.setHeader('Content-Type', asset.endsWith('.gif') ? 'image/gif' : 'image/png');
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(fs.readFileSync(path.join(__dirname, '..', 'public', asset)));
+        const { bytes } = readStatic(path.join(__dirname, '..', 'public', asset));
+        return sendImage(
+          req,
+          res,
+          url,
+          { bytes, mime: asset.endsWith('.gif') ? 'image/gif' : 'image/png' },
+          false,
+        );
       }
       const characterId = url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];
       if (characterId) {
         const viewer = auth.requireUser(req),
-          selected = characterMedia.avatar(characterId);
-        if (!selected) throw new HttpError(404, 'CHARACTER_NOT_FOUND', '找不到角色外觀');
-        let bytes, mime;
-        if (USER_IMAGE_PATH.test(selected.url)) {
-          const row = characterMedia.image(viewer.id, selected.url);
-          if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
-          bytes = row.bytes;
-          mime = row.mime;
-        } else {
-          bytes = fs.readFileSync(path.join(__dirname, '..', 'public', selected.url));
-          mime = selected.url.endsWith('.gif') ? 'image/gif' : 'image/png';
-        }
-        res.setHeader('Content-Type', mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return res.end(bytes);
+          image = portrait(viewer.id, characterId);
+        return sendImage(req, res, url, image, url.searchParams.get('v') === image.version);
       }
       const files = {
         '/assets/stitch/room-brand.svg': 'assets/stitch/room-brand.svg',
@@ -2307,10 +2467,14 @@ function initializeApp(config, dataLock, acquired) {
         '/shared/drawing-layout.js': 'shared/drawing-layout.js',
         '/shared/draw-canvas-session.js': 'shared/draw-canvas-session.js',
         '/shared/room-ui.js': 'shared/room-ui.js',
-        '/assets/quacks/draw-777.png': 'assets/quacks/draw-777.png',
+        '/assets/quacks/draw-777.webp': 'assets/quacks/draw-777.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/quacks/draw-777.png': 'assets/quacks/draw-777.webp',
         '/assets/game-sounds/quacks-push-user.wav': 'assets/game-sounds/quacks-push-user.wav',
         '/assets/game-sounds/quacks-decline-user.wav': 'assets/game-sounds/quacks-decline-user.wav',
-        '/assets/bluff-reaction-photo.png': 'assets/bluff-reaction-photo.png',
+        '/assets/bluff-reaction-photo.webp': 'assets/bluff-reaction-photo.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/bluff-reaction-photo.png': 'assets/bluff-reaction-photo.webp',
         '/quacks-auto-fortune.js': 'quacks-auto-fortune.js',
         '/assets/game-sounds/quacks-settlement-user.wav':
           'assets/game-sounds/quacks-settlement-user.wav',
@@ -2460,7 +2624,9 @@ function initializeApp(config, dataLock, acquired) {
         '/race.js': 'race.js',
         '/race.css': 'race.css',
         '/assets/thunder-components.png': 'assets/thunder-components.png',
-        '/assets/thunder-box.png': 'assets/thunder-box.png',
+        '/assets/thunder-box.webp': 'assets/thunder-box.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/thunder-box.png': 'assets/thunder-box.webp',
         '/assets/gift-sounds/open_001.wav': 'assets/gift-sounds/open_001.wav',
         '/assets/gift-sounds/confirmation_001.wav': 'assets/gift-sounds/confirmation_001.wav',
         '/room-reconnect.js': 'shared/room-reconnect.js',
@@ -2481,9 +2647,15 @@ function initializeApp(config, dataLock, acquired) {
         '/shared/api.js': 'shared/api.js',
         '/assets/game-sounds/quacks-settlement.wav': 'assets/game-sounds/quacks-settlement.wav',
         '/assets/game-sounds/quacks-card.wav': 'assets/game-sounds/quacks-card.wav',
-        '/assets/quacks/draw-portrait-v1.png': 'assets/quacks/draw-portrait-v1.png',
-        '/assets/quacks/stop-portrait-v1.png': 'assets/quacks/stop-portrait-v1.png',
-        '/assets/quacks/explosion-reference-v1.png': 'assets/quacks/explosion-reference-v1.png',
+        '/assets/quacks/draw-portrait-v1.webp': 'assets/quacks/draw-portrait-v1.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/quacks/draw-portrait-v1.png': 'assets/quacks/draw-portrait-v1.webp',
+        '/assets/quacks/stop-portrait-v1.webp': 'assets/quacks/stop-portrait-v1.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/quacks/stop-portrait-v1.png': 'assets/quacks/stop-portrait-v1.webp',
+        '/assets/quacks/explosion-reference-v1.webp': 'assets/quacks/explosion-reference-v1.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/quacks/explosion-reference-v1.png': 'assets/quacks/explosion-reference-v1.webp',
         '/assets/room-leave-thumbnail.jpg': 'assets/room-leave-thumbnail.jpg',
         '/sound-library': 'sound-library.html',
         '/sound-library.js': 'sound-library.js',
@@ -2674,13 +2846,11 @@ function initializeApp(config, dataLock, acquired) {
                                                 ? 'text/javascript; charset=utf-8'
                                                 : 'text/html; charset=utf-8',
       );
+      if (!file.endsWith('.html'))
+        return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
       const document =
         frontend?.readPage(file) || fs.readFileSync(path.join(__dirname, '..', 'public', file));
-      res.end(
-        file.endsWith('.html')
-          ? withEntryIntro(document, { authPage: file === 'login.html' })
-          : document,
-      );
+      res.end(withEntryIntro(document, { authPage: file === 'login.html' }));
     } catch (e) {
       writeError(res, e);
     }
@@ -2720,6 +2890,7 @@ function initializeApp(config, dataLock, acquired) {
       submissions.recover();
       marketAutomation.start();
       marketImageStore.startThumbnails();
+      refreshThumbnails();
       return server.address();
     })();
     // close waits for the raw startup, never for this recovery promise.
@@ -2759,6 +2930,8 @@ function initializeApp(config, dataLock, acquired) {
         : Promise.resolve();
       await attempt(() => marketAutomation.stop());
       await attempt(() => marketImageStore.stopThumbnails());
+      await attempt(() => mediaThumbnails.stop());
+      await attempt(() => mediaAudio.stop());
       await attempt(() => runtime.drainStreams());
       await serverClosed;
       for (const room of rooms.values()) await attempt(() => awardRoomAchievements(room));

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../../services/image-size';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useProfileStore } from '../../stores/profile';
 import { useSessionStore } from '../../stores/session';
@@ -16,6 +17,10 @@ import StatusSlot from '../../components/StatusSlot.vue';
 import FramePicker from '../../components/FramePicker.vue';
 import FramePreview from '../../components/FramePreview.vue';
 import PingSymbol from '../../components/PingSymbol.vue';
+import UiDialog from '../../components/UiDialog.vue';
+import EntranceChoices from '../../components/EntranceChoices.vue';
+import EntrancePreview from '../../components/EntrancePreview.vue';
+import { entranceEffect, entranceEffects } from '../../services/entrance-effects';
 
 const profile = useProfileStore(),
   session = useSessionStore(),
@@ -109,7 +114,11 @@ function resetPings() {
   unsaved();
 }
 const barragePicker = ref<InstanceType<typeof FramePicker> | null>(null),
-  mediaPicker = ref<InstanceType<typeof FramePicker> | null>(null);
+  mediaPicker = ref<InstanceType<typeof FramePicker> | null>(null),
+  entrancePicker = ref<InstanceType<typeof UiDialog> | null>(null);
+const entranceLabel = computed(
+  () => entranceEffects.find((effect) => effect.id === entranceEffect.value)?.label || '',
+);
 const characters = computed(() => profile.data?.characters || []);
 const selected = computed(
   () => characters.value.find((c) => c.id === appearance.value?.characterId) || characters.value[0],
@@ -369,6 +378,33 @@ onMounted(() => {
           ><FramePreview kind="media" :frame="prefs.media" name="播放器" message="我的風格"
         /></div>
       </section>
+      <section
+        class="page-panel settings-barrage-panel settings-entrance-panel"
+        aria-labelledby="entrance-settings-heading"
+      >
+        <header class="settings-card-heading"
+          ><h2 id="entrance-settings-heading">進場特效</h2
+          ><a href="/collection?section=entrance">前往收藏庫 ↗</a></header
+        >
+        <div class="settings-appearance-choice"
+          ><p id="settings-entrance-status" role="status" aria-live="polite"
+            >目前特效：<strong>{{ entranceLabel }}</strong></p
+          ><UiButton
+            id="settings-entrance-effect"
+            stitch
+            variant="ghost"
+            icon="next"
+            label="選擇進場特效"
+            @click="entrancePicker?.open($event.currentTarget as HTMLElement)"
+        /></div>
+        <div class="settings-preview-heading">進場特效即時預覽</div
+        ><div class="settings-barrage-preview-slot settings-entrance-preview-slot"
+          ><EntrancePreview
+            :effect="entranceEffect"
+            :image="selected?.expressions.neutral || '/assets/characters/traveler-neutral.png'"
+            :name="nickname || session.user?.displayName || '玩家'"
+        /></div>
+      </section>
     </div>
     <form id="settings-form" :aria-busy="pending || profile.loading" @submit.prevent="save">
       <fieldset class="settings-fields" :disabled="pending || !appearance || !avatar">
@@ -385,7 +421,7 @@ onMounted(() => {
                   v-if="selectedAvatar"
                   id="avatar-preview"
                   class="settings-avatar"
-                  :src="selectedAvatar.url"
+                  :src="sizedImage(selectedAvatar.url, 256)"
                   alt="目前選擇的帳號頭像"
                 /><span v-else>正在載入頭像…</span></div
               ><div class="settings-avatar-options"
@@ -418,7 +454,12 @@ onMounted(() => {
                   v-if="selected"
                   id="character-preview"
                   class="settings-character"
-                  :src="selected.expressions[selectedExpression] || selected.expressions.neutral"
+                  :src="
+                    sizedImage(
+                      selected.expressions[selectedExpression] || selected.expressions.neutral,
+                      512,
+                    )
+                  "
                   :alt="
                     selected.name +
                     '－' +
@@ -450,9 +491,11 @@ onMounted(() => {
                 :aria-label="'選擇' + character.name"
                 :aria-pressed="selected?.id === character.id"
                 @click="chooseCharacter(character.id)"
-                ><img :src="character.expressions.neutral" alt="" loading="lazy" /><span>{{
-                  character.name
-                }}</span
+                ><img
+                  :src="sizedImage(character.expressions.neutral, 128)"
+                  alt=""
+                  loading="lazy"
+                /><span>{{ character.name }}</span
                 ><span
                   v-if="selected?.id === character.id"
                   class="settings-character-check"
@@ -544,4 +587,5 @@ onMounted(() => {
       :disabled="!appearance || !avatar"
   /></footer>
   <FramePicker ref="barragePicker" kind="barrage" /><FramePicker ref="mediaPicker" kind="media" />
+  <UiDialog ref="entrancePicker" stitch title="選擇進場特效"><EntranceChoices /></UiDialog>
 </template>

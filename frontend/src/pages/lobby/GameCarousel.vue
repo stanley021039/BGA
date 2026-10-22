@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { warmGamePage } from '../../services/game-assets';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { gameCards } from './catalog';
 import { usePreferencesStore } from '../../stores/preferences';
@@ -186,6 +187,9 @@ onBeforeUnmount(() => {
         :aria-pressed="i === index"
         :aria-hidden="!visible(i)"
         @click="click($event, i)"
+        @pointerenter="warmGamePage(card.id)"
+        @pointerdown="warmGamePage(card.id)"
+        @focus="warmGamePage(card.id)"
       >
         <div class="tile-image"
           ><img

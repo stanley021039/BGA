@@ -1707,8 +1707,8 @@
               const portrait = node('img');
               portrait.src =
                 icon === 'draw-bag'
-                  ? '/assets/quacks/draw-777.png'
-                  : '/assets/quacks/stop-portrait-v1.png';
+                  ? '/assets/quacks/draw-777.webp'
+                  : '/assets/quacks/stop-portrait-v1.webp';
               portrait.alt = '';
               portrait.width = 240;
               portrait.height = 160;
