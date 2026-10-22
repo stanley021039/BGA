@@ -27,6 +27,10 @@ const selected = computed(() => state.value.books[book.value] || state.value.boo
   points = computed(() => telephone.strokes.reduce((sum, s) => sum + s.points.length, 0)),
   blocked = computed(() => !telephone.editable || telephone.activeStroke);
 const drawing = computed(() => state.value.task?.kind === 'drawing');
+const guess = computed({
+  get: () => telephone.text,
+  set: (value: string) => telephone.changeText(value),
+});
 const selectedSources = computed(() =>
   state.value.sources
     .filter((source) => state.value.options.sources.includes(source.id))
@@ -96,7 +100,6 @@ async function clear() {
 function input(event: Event) {
   if (composing.value) return;
   const target = event.target as HTMLInputElement;
-  telephone.changeText(target.value);
   target.value = telephone.text;
 }
 function visibility() {
@@ -233,7 +236,8 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
             >
             <input
               id="telephoneGuess"
-              :value="telephone.text"
+              :key="room.scope + ':' + state.stepId"
+              v-model="guess"
               autocomplete="off"
               placeholder="輸入你推測的詞彙或短句"
               :disabled="!telephone.editable"
