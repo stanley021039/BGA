@@ -7,6 +7,16 @@ const vm = require('node:vm');
 const vue = require('vue');
 const ts = require('typescript');
 const { parse, compileScript } = require('@vue/compiler-sfc');
+const historyModule = { exports: {} };
+vm.runInNewContext(
+  ts.transpileModule(
+    fs.readFileSync(path.resolve(__dirname, '../src/services/media-history.ts'), 'utf8'),
+    {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    },
+  ).outputText,
+  { module: historyModule, exports: historyModule.exports },
+);
 
 function harness() {
   const calls = [],
@@ -17,6 +27,7 @@ function harness() {
       (...args) => calls.push([key, ...args]),
     ]),
   );
+  const session = vue.reactive({ user: { id: 'account-a' } });
   const media = vue.reactive({
     context: 1,
     enabled: true,
@@ -61,18 +72,22 @@ function harness() {
             }
           : id.includes('stores/media')
             ? { useMediaStore: () => media }
-            : id.includes('stores/preferences')
-              ? {
-                  usePreferencesStore: () => ({
-                    media: 'default',
-                    audio: { music: { enabled: true, volume: 0.3 } },
-                  }),
-                }
-              : id.includes('composables/media-window')
-                ? { useMediaWindow: () => geometry }
-                : id.includes('contracts/media')
-                  ? { mediaCurrentKey: () => '', mediaPlaybackKey: () => '' }
-                  : {},
+            : id.includes('stores/session')
+              ? { useSessionStore: () => session }
+              : id.includes('services/media-history')
+                ? historyModule.exports
+                : id.includes('stores/preferences')
+                  ? {
+                      usePreferencesStore: () => ({
+                        media: 'default',
+                        audio: { music: { enabled: true, volume: 0.3 } },
+                      }),
+                    }
+                  : id.includes('composables/media-window')
+                    ? { useMediaWindow: () => geometry }
+                    : id.includes('contracts/media')
+                      ? { mediaCurrentKey: () => '', mediaPlaybackKey: () => '' }
+                      : {},
       localStorage: { getItem: () => null },
       window: {
         RoomMediaPlayer: {
@@ -118,6 +133,7 @@ function harness() {
     component,
     calls,
     media,
+    session,
     dispose() {
       lifecycle.unmount();
       scope.stop();
@@ -167,4 +183,93 @@ test('actual Vue window opts into hidden video playback across request, close, E
     h.dispose();
   }
   assert.equal(h.calls.filter((c) => c[0] === 'dispose').length, 1);
+});
+
+test('recent videos are bounded, deduplicated, account isolated and survive a new room instance', () => {
+  const saved = new Map();
+  const storage = {
+    getItem: (key) => saved.get(key) || null,
+    setItem: (key, value) => saved.set(key, value),
+  };
+  const history = historyModule.exports.createMediaHistory(storage);
+  history.selectAccount('a');
+  let rows;
+  for (let i = 0; i < 12; i++)
+    rows = history.record('play-' + i, { videoId: String(i).padStart(11, '0'), title: '片名' + i });
+  assert.equal(rows.length, 10);
+  assert.equal(rows[0].title, '片名11');
+  rows = history.record('replay', { videoId: '00000000004', title: '重播名稱' });
+  assert.equal(rows[0].title, '重播名稱');
+  assert.equal(rows.filter((row) => row.videoId === '00000000004').length, 1);
+  assert.equal(history.selectAccount('b').length, 0);
+  assert.equal(history.selectAccount('a')[0].title, '重播名稱');
+  const reloaded = historyModule.exports.createMediaHistory(storage);
+  assert.equal(reloaded.selectAccount('a')[0].title, '重播名稱');
+  assert.equal(reloaded.selectAccount('').length, 0);
+});
+
+test('corrupt storage and blocked persistence never break playback or allow unsafe URLs', () => {
+  const history = historyModule.exports.createMediaHistory({
+    getItem: () => '{',
+    setItem: () => {
+      throw Error('blocked');
+    },
+  });
+  assert.equal(history.selectAccount('a').length, 0);
+  assert.equal(
+    history.record('one', { videoId: 'M7lc1UVf-VE', title: '真實片名' })[0].title,
+    '真實片名',
+  );
+  assert.equal(history.record('bad', { videoId: 'javascript:alert(1)', title: 'bad' }).length, 1);
+  assert.equal(historyModule.exports.recentVideoUrl('javascript:alert(1)'), '');
+  assert.equal(
+    historyModule.exports.recentVideoUrl('M7lc1UVf-VE'),
+    'https://www.youtube.com/watch?v=M7lc1UVf-VE',
+  );
+});
+
+test('actual Vue records playing current videos only, fills a title selection without enqueue and closes on Escape', async () => {
+  const h = harness();
+  try {
+    const video = { id: 'item-a', type: 'video', videoId: 'M7lc1UVf-VE', title: '影片名稱' };
+    h.media.snapshot = {
+      roomInstanceId: 'room-a',
+      playbackSessionId: 'play-a',
+      current: null,
+      queue: [video],
+      playback: { state: 'playing' },
+    };
+    await vue.nextTick();
+    assert.equal(h.component.recentVideos.value.length, 0);
+    h.media.snapshot.current = video;
+    h.media.snapshot.playback.state = 'paused';
+    await vue.nextTick();
+    assert.equal(h.component.recentVideos.value.length, 0);
+    h.media.snapshot.playback.state = 'playing';
+    await vue.nextTick();
+    assert.equal(h.component.recentVideos.value[0].title, '影片名稱');
+    h.component.chooseRecent(h.component.recentVideos.value[0]);
+    assert.equal(h.component.url.value, 'https://www.youtube.com/watch?v=M7lc1UVf-VE');
+    assert.equal(h.component.recentOpen.value, false);
+    h.component.recentOpen.value = true;
+    let stopped = false;
+    h.component.recentKey({
+      key: 'Escape',
+      preventDefault() {},
+      stopPropagation() {
+        stopped = true;
+      },
+    });
+    assert.equal(stopped, true);
+    assert.equal(h.component.recentOpen.value, false);
+    h.session.user = { id: 'account-b' };
+    await vue.nextTick();
+    assert.equal(
+      h.component.recentVideos.value.length,
+      0,
+      'account change must not record the previous snapshot',
+    );
+  } finally {
+    h.dispose();
+  }
 });

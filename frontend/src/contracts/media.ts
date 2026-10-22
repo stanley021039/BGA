@@ -182,6 +182,8 @@ export function formatMediaTime(value: number) {
 }
 
 export interface MediaPlayerView {
+  videoTitle?: string;
+  videoTitleId?: string;
   videoWanted: boolean;
   ready: boolean;
   nativeVideo: boolean;

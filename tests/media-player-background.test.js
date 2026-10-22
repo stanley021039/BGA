@@ -38,7 +38,22 @@ test('Vue YouTube player survives tab visibility changes and still stops on expl
   await h.flush();
   assert.equal(h.players.length, 1);
   const yt = h.players[0];
+  yt.getVideoData = () => ({ video_id: snapshot.current.videoId, title: '實際影片名稱' });
   yt.ready();
+  assert.equal(views.at(-1).videoTitle, '實際影片名稱');
+  assert.equal(views.at(-1).videoTitleId, snapshot.current.videoId);
+  yt.getVideoData = () => ({ video_id: 'other-video', title: '前一部影片' });
+  yt.state(3);
+  assert.equal(
+    views.at(-1).videoTitle,
+    '',
+    'stale provider metadata must not rename another video',
+  );
+  yt.getVideoData = () => {
+    throw Error('metadata unavailable');
+  };
+  yt.state(3);
+  assert.equal(views.at(-1).videoWanted, true, 'metadata failure does not interrupt playback');
   h.hide(true);
   yt.state(3);
   assert.equal(yt.destroyed, false);

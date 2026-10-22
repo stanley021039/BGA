@@ -2,6 +2,9 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { useMediaStore } from '../stores/media';
 import { usePreferencesStore } from '../stores/preferences';
+import { useSessionStore } from '../stores/session';
+import { createMediaHistory, recentVideoUrl } from '../services/media-history';
+import type { RecentVideo } from '../services/media-history';
 import { useMediaWindow } from '../composables/media-window';
 import { formatMediaTime, mediaCurrentKey, mediaPlaybackKey } from '../contracts/media';
 import type { MediaOrderIntent, MediaPlayer, MediaPlayerView } from '../contracts/media';
@@ -35,6 +38,51 @@ const opened = ref(false),
   publishing = ref(false),
   targetId = ref('');
 const activeTab = ref('player');
+const session = useSessionStore(),
+  history = createMediaHistory({
+    getItem: (key) => localStorage.getItem(key),
+    setItem: (key, value) => localStorage.setItem(key, value),
+  }),
+  recentVideos = ref<RecentVideo[]>([]),
+  recentOpen = ref(false),
+  recentArea = ref<HTMLElement | null>(null),
+  urlInput = ref<HTMLInputElement | null>(null);
+function chooseRecent(entry: RecentVideo) {
+  url.value = recentVideoUrl(entry.videoId);
+  urlInput.value?.focus();
+  recentOpen.value = false;
+}
+function recentKey(event: KeyboardEvent) {
+  if (event.key === 'Escape' && recentOpen.value) {
+    event.preventDefault();
+    event.stopPropagation();
+    recentOpen.value = false;
+    urlInput.value?.focus();
+    recentOpen.value = false;
+  } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    recentOpen.value = true;
+    void nextTick(() => {
+      const buttons = [
+        ...(recentArea.value?.querySelectorAll<HTMLButtonElement>('.vue-media-recent button') ||
+          []),
+      ];
+      if (!buttons.length) return;
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      const down = event.key === 'ArrowDown';
+      const target =
+        index < 0
+          ? down
+            ? 0
+            : buttons.length - 1
+          : (index + (down ? 1 : -1) + buttons.length) % buttons.length;
+      buttons[target]?.focus();
+    });
+  }
+}
+function recentBlur(event: FocusEvent) {
+  if (!recentArea.value?.contains(event.relatedTarget as Node | null)) recentOpen.value = false;
+}
 const view = ref<MediaPlayerView>({
   videoWanted: false,
   ready: false,
@@ -43,6 +91,43 @@ const view = ref<MediaPlayerView>({
   loading: false,
   publishReason: '目前沒有可同步的媒體。',
 });
+watch(
+  () => [
+    session.user?.id,
+    media.snapshot?.roomInstanceId,
+    media.snapshot?.playbackSessionId,
+    media.snapshot?.current?.id,
+    media.snapshot?.current?.title,
+    media.snapshot?.playback?.state,
+    media.receipt,
+    view.value.videoTitle,
+  ],
+  (value, previous) => {
+    recentVideos.value = history.selectAccount(session.user?.id || '');
+    if (previous && value[0] !== previous[0]) {
+      recentOpen.value = false;
+      return;
+    }
+    const current = media.snapshot?.current;
+    if (
+      media.enabled &&
+      media.snapshot?.playback?.state === 'playing' &&
+      current?.type === 'video' &&
+      current.videoId
+    )
+      recentVideos.value = history.record(
+        `${media.snapshot.roomInstanceId}:${media.snapshot.playbackSessionId}:${current.id}`,
+        {
+          videoId: current.videoId,
+          title:
+            view.value.videoTitleId === current.videoId && view.value.videoTitle
+              ? view.value.videoTitle
+              : current.title,
+        },
+      );
+  },
+  { immediate: true },
+);
 const geometry = useMediaWindow(dialog, opened, mode),
   frameSurface = ref<Record<string, string>>({});
 const style = computed(() => ({ ...geometry.style.value, ...frameSurface.value }));
@@ -131,6 +216,7 @@ function cancelQueue() {
 function closed() {
   if (dialog.value?.open || !opened.value) return;
   opened.value = false;
+  recentOpen.value = false;
   geometry.cancel();
   cancelQueue();
   media.cancelSnapshot();
@@ -823,13 +909,13 @@ onBeforeUnmount(() => {
               <form class="vue-media-entry" @submit.prevent="enqueueMusic"
                 ><div class="vue-media-entry-heading">
                   <label :for="id + '-track'">共用音樂庫</label>
+                  <span aria-hidden="true">·</span>
                   <a
                     class="vue-media-library-link"
                     href="/collection?section=music"
                     target="_blank"
                     rel="noopener"
-                    ><span aria-hidden="true">·</span> 上傳新歌曲
-                    <span aria-hidden="true">↗</span></a
+                    >上傳新歌曲↗</a
                   > </div
                 ><div
                   ><select :id="id + '-track'" v-model="track" :disabled="media.busy"
@@ -853,13 +939,24 @@ onBeforeUnmount(() => {
                     :pending="media.libraryLoading"
                     @click="media.library" /></div
               ></form>
-              <form class="vue-media-entry" @submit.prevent="enqueueVideo"
+              <form
+                ref="recentArea"
+                class="vue-media-entry"
+                @submit.prevent="enqueueVideo"
+                @focusout="recentBlur"
+                @keydown="recentKey"
                 ><label :for="id + '-url'">YouTube 網址</label
                 ><div
                   ><input
                     :id="id + '-url'"
+                    ref="urlInput"
                     v-model="url"
                     type="url"
+                    autocomplete="off"
+                    :aria-expanded="recentOpen"
+                    :aria-controls="id + '-recent'"
+                    @focus="recentOpen = true"
+                    @click="recentOpen = true"
                     required
                     placeholder="貼上 YouTube 影片網址"
                     :disabled="media.busy" /><UiButton
@@ -869,8 +966,25 @@ onBeforeUnmount(() => {
                     icon="add"
                     icon-only
                     label="加入影片至播放清單"
-                    :disabled="!url.trim() || !media.snapshot || media.busy" /></div
-              ></form>
+                    :disabled="!url.trim() || !media.snapshot || media.busy"
+                /></div>
+                <section
+                  v-if="recentOpen"
+                  :id="id + '-recent'"
+                  class="vue-media-recent"
+                  aria-label="最近播放影片"
+                >
+                  <p>最近播放</p>
+                  <ul v-if="recentVideos.length">
+                    <li v-for="entry in recentVideos" :key="entry.videoId">
+                      <button type="button" :disabled="media.busy" @click="chooseRecent(entry)">{{
+                        entry.title
+                      }}</button>
+                    </li>
+                  </ul>
+                  <p v-else>尚無最近播放紀錄</p>
+                </section>
+              </form>
               <StatusSlot
                 v-if="feedback"
                 :message="feedback"

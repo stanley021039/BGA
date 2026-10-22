@@ -88,6 +88,17 @@
       );
     }
     function notify() {
+      let videoTitle = '';
+      try {
+        const data = ready && player?.getVideoData?.();
+        if (data?.video_id === snapshot?.current?.videoId && typeof data.title === 'string')
+          videoTitle = data.title
+            .replace(/[\u0000-\u001f\u007f]/g, ' ')
+            .trim()
+            .slice(0, 500);
+      } catch {
+        /* Metadata is optional; playback must continue. */
+      }
       if (!disposed)
         options.onChange({
           videoWanted,
@@ -96,6 +107,8 @@
           videoFallback,
           loading: mountingVideo !== null || videoReadyJob !== null,
           publishReason: publishReason(),
+          videoTitle,
+          videoTitleId: videoTitle ? snapshot?.current?.videoId : '',
         });
     }
     function stopAudio() {
@@ -883,6 +896,7 @@
                 if (Number.isFinite(length) && length > 0 && length <= maxPosition && !duration())
                   report('duration', { itemId: snapshot.current.id, durationSec: length });
               }
+              notify();
             },
             onAutoplayBlocked: (event) => {
               if (stale(event?.target || instance)) return;
