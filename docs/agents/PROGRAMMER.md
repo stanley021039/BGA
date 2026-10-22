@@ -898,5 +898,5 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 
 2026-10-22 2.27.1（#165）：RoomMedia 原本在任何其他 `dialog:modal` 開啟時呼叫 `close()`，而 `setWindow(false)` 會讓 YouTube 影片 `exitVideo()`，所以邀請朋友、遊戲說明或確認視窗都會中斷影片。現在其他 modal 只蓋在點播視窗上面；Escape 在有 modal 時本來就不處理。回歸測試在 `frontend/tests/media-modal.test.cjs`，實機重現腳本在 `tools/qa/media-modal-continuity.cjs`。
 
-2026-10-22 #181 候選2.29.3：TelephoneScene 猜詞改原生 v-model 組字保護，computed setter 沿用 changeText，scope／stepId key 隔離新頁。實際元件反例先失敗，修正後2項及前端29項通過，Chrome CDP原生IME 1920／390驗證通過；真人輸入法／實機未驗。證據與界線見 docs/specs/TELEPHONE-IME-181.md；未部署，最終CI／審查以PR為準。
+2026-10-22 #181 候選2.30.1：TelephoneScene 猜詞改原生 v-model 組字保護，computed setter 沿用 changeText，scope／stepId key 隔離新頁。實際元件反例先失敗，修正後2項及前端29項通過，Chrome CDP原生IME 1920／390驗證通過；真人輸入法／實機未驗。證據與界線見 docs/specs/TELEPHONE-IME-181.md；未部署，最終CI／審查以PR為準。
 2026-10-22 候選2.30.0：瞎掰王語音字幕。前端 `composables/speech-captions.ts` 使用瀏覽器的 `SpeechRecognition`（zh-TW，Chrome／Edge 送 Google、Safari 送 Apple；Firefox 不支援，按鈕會停用並說明）。只有按下「講話」才收音，再按一次停止；換輪、離開口說階段、斷線或分頁隱藏時自動停止。只送文字：中途字幕每 0.7 秒最多一次，完整句子立即送出。伺服器 `POST /api/bluff/caption` 不經 action 歷史與 mutation 配額（每分鐘 150 次），`BluffRoom.caption` 只在 discussion 接受目前回合；中途字幕在記憶體中顯示 6 秒，完整句子進入 `transcript`（上限 120 句、每句 200 字），揭曉時複製到 `results[].transcript`。src/games/bluff.js 已在獨立 commit 中格式化。實機重現：`tools/qa/bluff-speech-captions.cjs`（以替身辨識器模擬，因為 headless 沒有麥克風）。
