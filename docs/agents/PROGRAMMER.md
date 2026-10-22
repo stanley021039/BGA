@@ -1,5 +1,7 @@
 # 程式架構 agent 記憶
 
+2026-10-23 #190／#192 候選2.34.1：雷霆引導路線 Map 範圍排除 SVG title／舊版延遲提示，保留一般地形／車輛說明與點選；線上／教學改為獨立 watch sources，等價 presence 不清預覽。純呈現 RaceDirections 同時供 DOM／WebGL 與結果補充，後方對應畫面左方，六方向以真引擎 neighbor 與 DOM 投影回歸，不改骰值／機率／位移。驗收、初輪 fixture 格式失敗及固定 head CI／審查界線見 [規格](../specs/RACE-GUIDANCE-DIRECTIONS-190-192.md)，未部署。
+
 2026-10-22／#176 候選2.29.0：使用者在 #175 驗收時要求網址紀錄改片名，已接續實作本機帳號隔離的十筆最近播放、點選填網址與鍵盤清單；來源為 playing 的 current，provider 名稱以 videoId 核對，缺名不覆蓋既有片名。尚未合併／部署，詳 [最近影片規格](../specs/MEDIA-RECENT-VIDEOS-176.md)，取代下筆「#176 尚未實作」狀態。
 
 2026-10-22／#175 候選2.29.0：共用Vue媒體改為播放中／點播雙分頁，視窗關閉與面板隱藏不再清除已接受的YouTube觀看意圖；leaf第三參數續播opt-in保留舊呼叫預設，退出／離房仍清理。實際影片同iframe及字幕前進、leaf與編譯Vue setup回歸有證據；未合併／部署、最近10筆另#176，詳 [介面與驗收](../specs/MEDIA-TWO-TABS-175.md)。

@@ -199,6 +199,7 @@ function fixture({
       },
     };
   const root = target({
+    RaceDirections: require('../public/shared/race-directions'),
     document: doc,
     MotionPolicy: policy,
     devicePixelRatio: 3,
@@ -297,6 +298,23 @@ function fixture({
 function rolling(f, key = 'one', dice = [f.die()], extra = {}) {
   return f.layer.show({ key, stage: 'rolling', dice, ...extra });
 }
+test('all six WebGL face arrows point along the actual board displacement', () => {
+  const { neighbor } = require('../src/games/thunder');
+  const values = ['前左', '前方', '前右', '後左', '後方', '後右'];
+  const f = fixture();
+  rolling(f, 'screen-directions', [f.die('後方', values)]);
+  const rotations = f.calls.filter((c) => c.name === '2d.rotate').map((c) => c.args[0]);
+  assert.equal(rotations.length, 6);
+  for (const [i, angle] of rotations.entries()) {
+    const p = neighbor(2, 4, i),
+      dx = (p.y - 4) * 44 + (p.x % 2) * 22,
+      dy = (p.x - 2) * 44;
+    const length = Math.hypot(dx, dy);
+    assert.ok(Math.abs(Math.sin(angle) - dx / length) < 1e-10, values[i]);
+    assert.ok(Math.abs(-Math.cos(angle) - dy / length) < 1e-10, values[i]);
+  }
+  f.layer.destroy();
+});
 test('one lazy context covers the batch with actual textured 3D indexed cubes', () => {
   const f = fixture();
   assert.equal(f.calls.length, 0);

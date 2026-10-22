@@ -202,9 +202,8 @@
         ctx.arc(px, py - 0.6, 4.9, 0, Math.PI * 2);
         ctx.fill();
       }
-    } else if (/^(前|後|左|右|前方|後方|前左|前右|後左|後右)$/.test(label)) {
-      const dx = label.includes('左') ? -1 : label.includes('右') ? 1 : 0,
-        dy = label.includes('前') ? -1 : label.includes('後') ? 1 : 0;
+    } else if (root.RaceDirections?.get(label)) {
+      const { dx, dy } = root.RaceDirections.get(label);
       ctx.translate(32, 32);
       ctx.rotate(Math.atan2(dy, dx) + Math.PI / 2);
       ctx.beginPath();
