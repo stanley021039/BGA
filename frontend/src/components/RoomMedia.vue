@@ -504,11 +504,9 @@ onMounted(() => {
   syncPlayback();
   document.addEventListener('visibilitychange', visibility);
   document.addEventListener('keydown', escape);
-  observer = new MutationObserver(() => {
-    const modal = document.querySelector('dialog:modal');
-    if (opened.value && modal && !modal.closest('.vue-room-media-scope')) close();
-    void maybeConsent();
-  });
+  // Another modal (invite, confirm, help) only covers the player. Closing the
+  // player here destroyed a playing YouTube video (issue #165).
+  observer = new MutationObserver(() => void maybeConsent());
   observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
 });
 onBeforeUnmount(() => {
