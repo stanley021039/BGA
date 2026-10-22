@@ -95,11 +95,12 @@ test('secret votes earn majority +1 in EVERY match; champion and tied player cha
       assert.throws(() => r.act(r.host, action, {}));
     r.act(r.players[1].id, 'answer', { questionId: r.question.id, answer: 0 });
     r.act(r.players[2].id, 'answer', { questionId: r.question.id, answer: 1 });
+    // 2:1 — the lone minority voter loses 1 point every match (#189).
     assert.deepEqual(
       r.players.map((x) => x.score),
-      [i + 1, i + 1, 0],
+      [i + 1, i + 1, -(i + 1)],
     );
-    assert.deepEqual(Object.values(r.result.gains), [1, 1, 0]);
+    assert.deepEqual(Object.values(r.result.gains), [1, 1, -1]);
     assert.equal(r.result.tournament.decidedBy, 'votes');
     advancers.add(r.result.tournament.advanced.id);
     const oldScore = r.players[0].score;
@@ -130,6 +131,60 @@ test('secret votes earn majority +1 in EVERY match; champion and tied player cha
   assert.equal(r.tournamentState.eliminated.length, 0);
   assert.equal(r.tournamentState.champion, null);
   assert.ok(r.players.every((x) => x.score === 0));
+});
+test('a lone voter against a clear majority loses 1 point in scenario and music modes only', () => {
+  const cases = [
+    { n: 4, votes: [0, 0, 0, 1], gains: [1, 1, 1, -1] },
+    { n: 3, votes: [1, 0, 1], gains: [1, -1, 1] },
+    { n: 5, votes: [0, 0, 0, 1, 1], gains: [1, 1, 1, 0, 0] },
+    { n: 4, votes: [0, 1, 0, 1], gains: [0, 0, 0, 0] },
+    { n: 4, votes: [1, 1, 1, 1], gains: [1, 1, 1, 1] },
+    // P3 never votes: 2:1 among valid votes still penalises P2, and missing P3 is untouched.
+    { n: 4, votes: [0, 0, 1], gains: [1, 1, -1, 0] },
+  ];
+  for (const mode of ['scenario', 'music'])
+    for (const c of cases) {
+      const r = room(c.n, mode);
+      r.start();
+      vote(r, c.votes);
+      if (r.phase === 'answering') r.act(r.host, 'close');
+      assert.deepEqual(Object.values(r.result.gains), c.gains, mode + ' ' + c.votes.join(''));
+      assert.deepEqual(
+        r.players.map((x) => x.score),
+        c.gains,
+      );
+      const lone = c.gains.indexOf(-1);
+      assert.equal(r.result.tournament.lonePenaltyId, lone < 0 ? null : r.players[lone].id);
+      if (lone >= 0) assert.match(r.events.at(-1).text, /唯一選另一邊的玩家扣 1 分/);
+      assert.throws(() => r.score(), /已結算/);
+      assert.deepEqual(
+        r.players.map((x) => x.score),
+        c.gains,
+        'settling twice must not deduct again',
+      );
+    }
+});
+test('negative tournament scores stay negative in the view, ranking and final winner', () => {
+  const r = room(3);
+  r.start();
+  for (let i = 0; i < 7; i++) {
+    vote(r, [0, 0, 1]);
+    const v = r.view(r.players[2].id);
+    assert.equal(v.result.gains[r.players[2].id], -1);
+    assert.equal(v.players.find((p) => p.id === r.players[2].id).score, -(i + 1));
+    assert.deepEqual(
+      v.tournament.ranking.map((x) => [x.score, x.rank]),
+      [
+        [i + 1, 1],
+        [i + 1, 1],
+        [-(i + 1), 3],
+      ],
+    );
+    r.act(r.host, 'next');
+  }
+  assert.equal(r.phase, 'finished');
+  assert.deepEqual(r.winner.ids, [r.players[0].id, r.players[1].id]);
+  assert.equal(r.results.at(-1).gains[r.players[2].id], -1);
 });
 test('ties advance by announced draw without giving points, timeout empty cannot manufacture champion', () => {
   const r = room(4);
@@ -220,7 +275,7 @@ test('large random brackets sample distinct candidates and complete exactly N mi
     assert.equal(r.view(r.host).tournament.entryRanking.length, size);
     assert.deepEqual(
       r.players.map((p) => p.score),
-      [size - 1, 0, size - 1],
+      [size - 1, -(size - 1), size - 1],
     );
   }
 });
