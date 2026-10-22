@@ -43,6 +43,7 @@ export interface TelephoneSnapshot extends RoomSnapshot {
   sources: { id: string; label: string }[];
   task: TelephoneTask | null;
   books: TelephoneBook[];
+  review: { index: number; total: number } | null;
 }
 const integer = (v: unknown): v is number => Number.isSafeInteger(v);
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -213,6 +214,14 @@ export function readTelephoneSnapshot(value: unknown): TelephoneSnapshot {
     new Set(books.map((b) => b.ownerId)).size !== books.length
   )
     return invalid();
+  let review: TelephoneSnapshot['review'] = null;
+  if (base.phase === 'finished') {
+    const value = record(r.review);
+    const total = books.reduce((sum, book) => sum + book.pages.length, 0);
+    if (!integer(value.index) || value.index < -1 || value.index >= total || value.total !== total)
+      return invalid();
+    review = { index: value.index, total };
+  } else if (r.review != null) return invalid();
   return {
     ...base,
     type: 'telephone',
@@ -226,5 +235,6 @@ export function readTelephoneSnapshot(value: unknown): TelephoneSnapshot {
     sources,
     task,
     books,
+    review,
   };
 }

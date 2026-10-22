@@ -373,28 +373,10 @@
     color: var(--stitch-muted);
     margin-block-start: 4px;
   }
-  .vue-telephone-finished-heading label {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    min-inline-size: 0;
-    font-size: 14px;
-  }
-  select#telephoneBook {
-    max-inline-size: 100%;
-    min-inline-size: 0;
-    min-block-size: 44px;
-    padding: 8px 12px;
-    border: 1px solid var(--telephone-line);
-    border-radius: 8px;
-    background: var(--stitch-surface);
-    color: var(--stitch-ink);
-    font-size: 16px;
-  }
   .vue-telephone-review {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
     align-content: start;
     gap: 16px;
     min-inline-size: 0;
@@ -402,6 +384,7 @@
   }
   .vue-telephone-book-page {
     display: grid;
+    grid-auto-rows: max-content;
     align-content: start;
     gap: 16px;
     min-inline-size: 0;
@@ -619,12 +602,8 @@
       margin: 0;
       inline-size: 100%;
     }
-    .vue-telephone-finished-heading label {
-      inline-size: 100%;
-      justify-content: space-between;
-    }
-    select#telephoneBook {
-      flex: 1;
+    &.is-finished .vue-telephone-live {
+      block-size: 24rem;
     }
     .vue-telephone-book-page {
       padding: 16px;
