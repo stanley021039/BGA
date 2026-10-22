@@ -30,8 +30,12 @@ const voters = (i: number) =>
 const totalVotes = computed(() => Object.keys(s.value.answers).length);
 const percent = (i: number) =>
   totalVotes.value ? Math.round((voters(i).length / totalVotes.value) * 100) : 0;
-const isMajority = (i: number) =>
-  revealed.value && voters(i).some((id) => (s.value.result?.gains[id] || 0) > 0);
+const gain = (id: string) => s.value.result?.gains[id] || 0;
+const isMajority = (i: number) => revealed.value && voters(i).some((id) => gain(id) > 0);
+// #189: a lone voter against a clear majority loses 1 point.
+const isLone = (i: number) => revealed.value && voters(i).some((id) => gain(id) < 0);
+const gainText = (id: string) =>
+  gain(id) > 0 ? '+' + gain(id) + '分' : gain(id) < 0 ? gain(id) + '分' : '未得分';
 let disposed = false,
   revision = 0;
 watch([() => room.scope, () => s.value.question?.id, () => s.value.phase], async () => {
@@ -97,7 +101,8 @@ onBeforeUnmount(() => {
             ><header class="vue-tournament-option-heading"
               ><strong>選項 {{ i === 0 ? 'A' : 'B' }}</strong
               ><span v-if="s.ownAnswer === i">✓ 我的選擇</span
-              ><span v-if="isMajority(i)">多數 +1 分</span></header
+              ><span v-if="isMajority(i)">多數 +1 分</span
+              ><span v-if="isLone(i)">唯一少數 -1 分</span></header
             ><img v-if="entry.image" :src="entry.image" :alt="entry.label" /><h2>{{
               entry.label
             }}</h2
@@ -133,9 +138,7 @@ onBeforeUnmount(() => {
                 :aria-label="entry.label + ' 得票率'"
               /><p v-for="id in voters(i)" :key="id"
                 ><strong>{{ name(id) }}{{ id === s.me ? '（你）' : '' }}</strong
-                ><span>{{
-                  (s.result?.gains[id] || 0) > 0 ? '+' + s.result!.gains[id] + '分' : '未得分'
-                }}</span></p
+                ><span>{{ gainText(id) }}</span></p
               ><p v-if="!voters(i).length">沒有人選擇</p></div
             ></article
           ></div
@@ -223,7 +226,7 @@ onBeforeUnmount(() => {
       ><p class="vue-tournament-footer-note">{{
         t.mode === 'music'
           ? '試聽由你主動播放；投票猜全桌偏好。'
-          : '每場選到唯一多數 +1 分；平票不加分。'
+          : '每場選到唯一多數 +1 分；只有 1 人選另一邊時該人 -1 分；平票不加分。'
       }}</p></footer
     >
     <ConfirmDialog ref="confirm" stitch />
