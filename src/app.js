@@ -111,6 +111,7 @@ const {
   sendVersioned,
 } = require('./http/static-cache');
 const { MediaThumbnails, thumbnailSize } = require('./media/thumbnails');
+const { MediaAudio } = require('./media/audio');
 const { openDatabase } = require('./db/index');
 const { createAuth } = require('./auth/index');
 const { BoardStore } = require('./community/board');
@@ -619,8 +620,35 @@ function initializeApp(config, dataLock, acquired) {
     return `/characters/${userId}?` + (version ? `v=${version}&` : '') + 'size=256';
   }
   const mediaThumbnails = new MediaThumbnails({
-    directory: config.dbFile + '.media-thumbnails',
-  });
+      directory: config.dbFile + '.media-thumbnails',
+    }),
+    mediaAudio = new MediaAudio({
+      directory: config.dbFile + '.media-audio',
+      ffmpegPath: config.ffmpegPath,
+    });
+  // Expression sounds are sent as MP3 once converted (production only). While
+  // a conversion is pending the WAV is sent, never cached under the URL.
+  async function sendSound(req, res, url, { bytes, mime }) {
+    const versioned = url.searchParams.has('v'),
+      mp3 = config.expressionSoundMp3 ? await mediaAudio.variant(bytes) : { same: true };
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    if (mp3?.bytes) {
+      res.setHeader('Content-Type', 'audio/mpeg');
+      return sendVersioned(req, res, mp3.bytes, versioned);
+    }
+    res.setHeader('Content-Type', mime);
+    if (!mp3) return sendCached(req, res, bytes, { cacheControl: PRIVATE_REVALIDATE });
+    return sendVersioned(req, res, bytes, versioned);
+  }
+  function soundSources() {
+    const sound = db.prepare(
+      'SELECT bytes FROM character_sounds WHERE character_id=? AND expression=?',
+    );
+    return db
+      .prepare('SELECT character_id,expression FROM character_sounds')
+      .all()
+      .map((row) => () => sound.get(row.character_id, row.expression)?.bytes);
+  }
   // Serves an image, or its WebP thumbnail when ?size= asks for one. While a
   // thumbnail is being prepared the original is sent, never cached as the size.
   async function sendImage(req, res, url, { bytes, mime }, versioned) {
@@ -668,6 +696,7 @@ function initializeApp(config, dataLock, acquired) {
     }
     thumbnailBackfill = mediaThumbnails
       .backfill(thumbnailSources())
+      .then(() => config.expressionSoundMp3 && mediaAudio.backfill(soundSources()))
       .catch(() => {})
       .finally(() => {
         thumbnailBackfill = null;
@@ -2372,9 +2401,7 @@ function initializeApp(config, dataLock, acquired) {
         const viewer = auth.requireUser(req),
           row = characterMedia.sound(viewer.id, url.href);
         if (!row) throw new HttpError(404, 'SOUND_NOT_FOUND', '找不到表情音效');
-        res.setHeader('Content-Type', row.mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return sendVersioned(req, res, row.bytes, url.searchParams.has('v'));
+        return sendSound(req, res, url, row);
       }
       const media = url.pathname.match(USER_IMAGE_PATH);
       if (media) {
@@ -2418,10 +2445,14 @@ function initializeApp(config, dataLock, acquired) {
         '/shared/drawing-layout.js': 'shared/drawing-layout.js',
         '/shared/draw-canvas-session.js': 'shared/draw-canvas-session.js',
         '/shared/room-ui.js': 'shared/room-ui.js',
-        '/assets/quacks/draw-777.png': 'assets/quacks/draw-777.png',
+        '/assets/quacks/draw-777.webp': 'assets/quacks/draw-777.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/quacks/draw-777.png': 'assets/quacks/draw-777.webp',
         '/assets/game-sounds/quacks-push-user.wav': 'assets/game-sounds/quacks-push-user.wav',
         '/assets/game-sounds/quacks-decline-user.wav': 'assets/game-sounds/quacks-decline-user.wav',
-        '/assets/bluff-reaction-photo.png': 'assets/bluff-reaction-photo.png',
+        '/assets/bluff-reaction-photo.webp': 'assets/bluff-reaction-photo.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/bluff-reaction-photo.png': 'assets/bluff-reaction-photo.webp',
         '/quacks-auto-fortune.js': 'quacks-auto-fortune.js',
         '/assets/game-sounds/quacks-settlement-user.wav':
           'assets/game-sounds/quacks-settlement-user.wav',
@@ -2571,7 +2602,9 @@ function initializeApp(config, dataLock, acquired) {
         '/race.js': 'race.js',
         '/race.css': 'race.css',
         '/assets/thunder-components.png': 'assets/thunder-components.png',
-        '/assets/thunder-box.png': 'assets/thunder-box.png',
+        '/assets/thunder-box.webp': 'assets/thunder-box.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/thunder-box.png': 'assets/thunder-box.webp',
         '/assets/gift-sounds/open_001.wav': 'assets/gift-sounds/open_001.wav',
         '/assets/gift-sounds/confirmation_001.wav': 'assets/gift-sounds/confirmation_001.wav',
         '/room-reconnect.js': 'shared/room-reconnect.js',
@@ -2592,9 +2625,15 @@ function initializeApp(config, dataLock, acquired) {
         '/shared/api.js': 'shared/api.js',
         '/assets/game-sounds/quacks-settlement.wav': 'assets/game-sounds/quacks-settlement.wav',
         '/assets/game-sounds/quacks-card.wav': 'assets/game-sounds/quacks-card.wav',
-        '/assets/quacks/draw-portrait-v1.png': 'assets/quacks/draw-portrait-v1.png',
-        '/assets/quacks/stop-portrait-v1.png': 'assets/quacks/stop-portrait-v1.png',
-        '/assets/quacks/explosion-reference-v1.png': 'assets/quacks/explosion-reference-v1.png',
+        '/assets/quacks/draw-portrait-v1.webp': 'assets/quacks/draw-portrait-v1.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/quacks/draw-portrait-v1.png': 'assets/quacks/draw-portrait-v1.webp',
+        '/assets/quacks/stop-portrait-v1.webp': 'assets/quacks/stop-portrait-v1.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/quacks/stop-portrait-v1.png': 'assets/quacks/stop-portrait-v1.webp',
+        '/assets/quacks/explosion-reference-v1.webp': 'assets/quacks/explosion-reference-v1.webp',
+        // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
+        '/assets/quacks/explosion-reference-v1.png': 'assets/quacks/explosion-reference-v1.webp',
         '/assets/room-leave-thumbnail.jpg': 'assets/room-leave-thumbnail.jpg',
         '/sound-library': 'sound-library.html',
         '/sound-library.js': 'sound-library.js',
@@ -2851,6 +2890,7 @@ function initializeApp(config, dataLock, acquired) {
       await attempt(() => marketAutomation.stop());
       await attempt(() => marketImageStore.stopThumbnails());
       await attempt(() => mediaThumbnails.stop());
+      await attempt(() => mediaAudio.stop());
       await attempt(() => runtime.drainStreams());
       await serverClosed;
       for (const room of rooms.values()) await attempt(() => awardRoomAchievements(room));

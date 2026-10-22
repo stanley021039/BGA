@@ -82,6 +82,7 @@ function settings(env = process.env) {
     marketAutomationEnabled: marketAutomation === 'true',
     // Embedded apps and tests build thumbnails only when a size is requested.
     mediaThumbnailBackfill: true,
+    expressionSoundMp3: true,
   };
 }
 module.exports = { loadEnv, settings };

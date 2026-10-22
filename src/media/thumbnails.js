@@ -128,6 +128,7 @@ class MediaThumbnails {
   // Fills derivatives for every listed original without blocking requests.
   // Then removes derivatives of originals that no longer exist.
   async backfill(sources) {
+    await this.load();
     const started = Date.now(),
       live = new Set();
     for (const read of sources) {
