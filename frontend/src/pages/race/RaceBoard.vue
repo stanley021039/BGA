@@ -144,14 +144,14 @@ function boundary(start: number) {
           :data-y="c.y"
           :tabindex="c.legal ? 0 : undefined"
           :role="c.legal ? 'button' : undefined"
-          :aria-label="`${c.y + 1} 段 ${c.x + 1} 車道 ${c.info.name}${c.legal ? ' 可前往' : ''}${c.route ? '，消耗 ' + c.route.cost + ' 點' : ''}`"
+          :aria-label="`${c.y + 1} 段 ${c.x + 1} 車道 ${c.info.name}：${c.info.help}${c.legal ? ' 可前往' : ''}${c.route ? '，消耗 ' + c.route.cost + ' 點' : ''}${c.cell.hazard ? (c.cell.hazard.face ? ' · 危險：' + c.cell.hazard.kind : ' · 未揭露危險，抵達後才揭示') : ''}`"
           @click="c.legal && emit('point', { x: c.x, y: c.y })"
           @keydown="activate($event, () => c.legal && emit('point', { x: c.x, y: c.y }))"
           @pointerenter="emit('preview', { x: c.x, y: c.y })"
           @focus="emit('preview', { x: c.x, y: c.y })"
           class="cell-interactive"
         >
-          <title>
+          <title v-if="!c.route">
             {{ c.info.name }}：{{ c.info.help
             }}{{
               c.cell.hazard
@@ -285,7 +285,7 @@ function boundary(start: number) {
           @pointerenter="emit('preview', { x: car.x!, y: car.y })"
           @focus="emit('preview', { x: car.x!, y: car.y })"
         >
-          <title>
+          <title v-if="!routes.has(key(car.x!, car.y))">
             {{ owner(car.owner)?.name || '殘骸' }} · {{ sizes[car.size] }} ·
             {{ car.damage.length }} 損傷
           </title>
