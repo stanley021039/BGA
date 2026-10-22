@@ -28,7 +28,6 @@ const reviewPages = computed(() =>
     ),
   ),
   selected = computed(() => reviewPages.value[state.value.review?.index ?? -1]),
-  points = computed(() => telephone.strokes.reduce((sum, s) => sum + s.points.length, 0)),
   blocked = computed(() => !telephone.editable || telephone.activeStroke);
 const drawing = computed(() => state.value.task?.kind === 'drawing');
 const guess = computed({
@@ -54,19 +53,6 @@ const waitingFacts = computed(() => [
   { label: '每頁作畫／猜詞', value: `${state.value.options.seconds} 秒`, note: '全員同步傳頁' },
   { label: '情境題庫', value: selectedSources.value, note: '畫圖與猜詞交替' },
 ]);
-const syncMessage = computed(() =>
-  state.value.phase !== 'passing'
-    ? '固定入座順序，不計個人分數。'
-    : telephone.expired
-      ? '本頁截止，正在傳下一頁；以伺服器接受的內容為準。'
-      : state.value.task?.submitted
-        ? '本頁已送出；送出後不能修改，時間到才傳下一頁。'
-        : telephone.saving
-          ? '正在同步私人草稿…'
-          : telephone.dirty
-            ? '有本地內容尚未同步；到時只採用伺服器接受的內容。'
-            : '目前草稿已與伺服器同步。',
-);
 const displayedNotice = computed(
   () =>
     actions.notice ||
@@ -222,10 +208,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
                 @notice="telephone.notice = $event"
               />
             </DrawingToolbar>
-            <p class="vue-telephone-quota" title="顏色與工具列可左右滑動"
-              >本地 {{ telephone.strokes.length }}／100 筆 · {{ points }}／3,000 點 · 伺服器已接受
-              {{ telephone.acceptedCount }} 筆</p
-            >
           </template>
           <div v-else class="vue-telephone-guess">
             <label for="telephoneGuess" class="vue-telephone-guess-heading"
@@ -306,7 +288,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
       </section>
     </div>
     <div class="vue-telephone-status"
-      ><p>{{ syncMessage }}</p
       ><StatusSlot
         :message="displayedNotice"
         :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
