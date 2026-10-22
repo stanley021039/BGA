@@ -2,6 +2,7 @@ import { readBarrages, type BarrageEvent } from './social';
 import { array, record, text } from '../services/validation';
 import { isGameType, type GameType } from './room';
 import { readPingContext, type PingContext } from './pings';
+import { isEntranceEffect, type EntranceEffectId } from '../services/entrance-effects';
 
 export interface PublicRoom {
   code: string;
@@ -35,6 +36,7 @@ export interface LobbyVisitor {
   moving: boolean;
   facing: 'left' | 'right';
   emote: LobbyEmote | null;
+  entrance: EntranceEffectId;
 }
 export interface LobbySnapshot {
   barrages: BarrageEvent[];
@@ -140,6 +142,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       moving: item.moving,
       facing: item.facing as 'left' | 'right',
       emote,
+      entrance: isEntranceEffect(item.entrance) ? item.entrance : 'classic',
     };
   });
   if (

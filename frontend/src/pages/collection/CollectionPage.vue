@@ -15,6 +15,8 @@ import UiLink from '../../components/UiLink.vue';
 import UiTabs from '../../components/UiTabs.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FrameChoices from '../../components/FrameChoices.vue';
+import EntranceChoices from '../../components/EntranceChoices.vue';
+import { entranceEffects } from '../../services/entrance-effects';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 
 const profile = useProfileStore(),
@@ -22,7 +24,7 @@ const profile = useProfileStore(),
   prefs = usePreferencesStore();
 const { pending, message, failed, run } = useMutation();
 const activeAction = ref('');
-const names = ['avatars', 'characters', 'music', 'frames'] as const;
+const names = ['avatars', 'characters', 'music', 'frames', 'entrance'] as const;
 type Section = (typeof names)[number];
 function sectionFromUrl(): Section {
   const value = new URLSearchParams(location.search).get('section');
@@ -90,6 +92,7 @@ const tabs = computed(() => [
   },
   { id: 'music', label: '音樂', count: music.data ? music.data.tracks.length + ' 首' : '讀取中…' },
   { id: 'frames', label: '彈幕框', count: prefs.frames.length + ' 款' },
+  { id: 'entrance', label: '進場特效', count: entranceEffects.length + ' 款' },
 ]);
 const duration = (seconds: number) =>
   Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2, '0');
@@ -500,6 +503,23 @@ onBeforeUnmount(() => {
       :group="frameGroup"
       @select="frameSelected"
     />
+  </ResourcePanel>
+  <ResourcePanel
+    v-show="section === 'entrance'"
+    id="section-entrance"
+    class="collection-section"
+    role="tabpanel"
+    aria-labelledby="collection-tab-entrance"
+  >
+    <template #heading><h2>進場特效</h2></template>
+    <template #summary
+      ><span>{{
+        prefs.motion?.reduced || prefs.motion?.enabled === false
+          ? '目前關閉動態效果，預覽不會播放；選擇仍會套用。'
+          : '點選即套用並預覽；進入好友大廳時，大家都會看到你的進場特效。'
+      }}</span></template
+    >
+    <EntranceChoices />
   </ResourcePanel>
   <ConfirmDialog ref="confirmation" />
 </template>

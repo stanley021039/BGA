@@ -3,6 +3,8 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
 import type { BarrageEvent } from '../../contracts/social';
 import { usePreferencesStore } from '../../stores/preferences';
+import { apparate, entranceDuration } from './apparition';
+const NAME_LIMIT = 10;
 const props = defineProps<{
     visitor: LobbyVisitor;
     message?: BarrageEvent;
@@ -10,8 +12,9 @@ const props = defineProps<{
     reset: number;
     open: boolean;
     connected: boolean;
+    arrive?: boolean;
   }>(),
-  emit = defineEmits<{ select: [element: HTMLElement] }>();
+  emit = defineEmits<{ select: [element: HTMLElement]; arrived: [] }>();
 const node = ref<HTMLElement | null>(null),
   speech = ref<HTMLElement | null>(null),
   left = ref(props.visitor.x),
@@ -26,16 +29,44 @@ const node = ref<HTMLElement | null>(null),
   bubbleBelow = ref(false),
   bubbleHeight = ref('180px'),
   ornate = ref(false);
+const shortName = computed(() => {
+  const chars = [...props.visitor.name];
+  return chars.length > NAME_LIMIT ? chars.slice(0, NAME_LIMIT).join('') + '…' : props.visitor.name;
+});
 const prefs = usePreferencesStore(),
   hasSpeech = computed(() => !!props.message || !!props.visitor.emote),
   still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 let disposed = false,
   revision = 0,
   frame = 0,
-  observer: ResizeObserver | null = null;
+  observer: ResizeObserver | null = null,
+  stopArrival: (() => void) | null = null;
+watch(
+  () => props.arrive,
+  async (value) => {
+    if (!value) return;
+    await nextTick();
+    const layer = node.value?.closest<HTMLElement>('.lobby-backdrop');
+    if (
+      disposed ||
+      !node.value ||
+      !layer ||
+      still.value ||
+      document.hidden ||
+      !window.MotionPolicy?.allowsMotion()
+    ) {
+      emit('arrived');
+      return;
+    }
+    stopArrival?.();
+    stopArrival = apparate(node.value, layer, props.visitor.entrance);
+    setTimeout(() => !disposed && emit('arrived'), entranceDuration(props.visitor.entrance) + 50);
+  },
+  { immediate: true },
+);
 function positionBubble() {
   if (!node.value || !speech.value) return;
-  const stage = node.value.closest('.lobby-stage')?.getBoundingClientRect(),
+  const stage = node.value.closest('.lobby-backdrop')?.getBoundingClientRect(),
     box = node.value.getBoundingClientRect(),
     half = speech.value.offsetWidth / 2;
   if (!stage) return;
@@ -125,7 +156,7 @@ watch(
       positionBubble();
       if (!observer && node.value) {
         observer = new ResizeObserver(positionBubble);
-        const stage = node.value.closest('.lobby-stage');
+        const stage = node.value.closest('.lobby-backdrop');
         if (stage) observer.observe(stage);
       }
     }
@@ -148,6 +179,7 @@ onBeforeUnmount(() => {
   disposed = true;
   revision++;
   observer?.disconnect();
+  stopArrival?.();
   if (frame) cancelAnimationFrame(frame);
   window.removeEventListener('scroll', positionBubble, true);
   window.removeEventListener('resize', positionBubble);
@@ -208,8 +240,8 @@ window.addEventListener('resize', positionBubble);
       class="lobby-speech"
       :style="{ left: bubbleLeft, transform: 'translateX(-50%)' }"
       >{{ visitor.emote.label }}</div
-    ><img :src="visitor.emote?.image || visitor.image" alt="" draggable="false" /><span
-      >{{ visitor.name }}{{ self ? '（你）' : '' }}</span
-    >
+    ><img :src="visitor.emote?.image || visitor.image" alt="" draggable="false" /><span>{{
+      shortName
+    }}</span>
   </component>
 </template>

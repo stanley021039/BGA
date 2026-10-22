@@ -20,6 +20,7 @@ import {
 } from '../contracts/room';
 import type { InteractionSource } from '../services/interaction-source';
 import type { BarrageEvent } from '../contracts/social';
+import { entranceEffect } from '../services/entrance-effects';
 
 export const useLobbyStore = defineStore('lobby', () => {
   const session = useSessionStore();
@@ -170,7 +171,12 @@ export const useLobbyStore = defineStore('lobby', () => {
     queued = null;
     const job = (async () => {
       try {
-        consume(await request(next ? '/api/lobby/move' : '/api/lobby', next || undefined));
+        consume(
+          await request(
+            next ? '/api/lobby/move' : '/api/lobby?entrance=' + entranceEffect.value,
+            next || undefined,
+          ),
+        );
         if (current(epoch, account)) backoff = 500;
       } catch (cause) {
         if (
@@ -198,8 +204,8 @@ export const useLobbyStore = defineStore('lobby', () => {
   function move(target: { x: number; y: number }) {
     if (connected.value)
       void sync({
-        x: Math.max(15, Math.min(85, target.x)),
-        y: Math.max(32, Math.min(92, target.y)),
+        x: Math.max(6, Math.min(94, target.x)),
+        y: Math.max(12, Math.min(97, target.y)),
       });
   }
   async function loadExpressions(force = false) {

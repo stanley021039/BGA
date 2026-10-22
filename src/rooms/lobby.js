@@ -2,10 +2,21 @@ const { HttpError } = require('../http/errors');
 const { randomBytes } = require('node:crypto');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
-const MIN_X = 15,
-  MAX_X = 85,
-  MIN_Y = 32,
-  MAX_Y = 92;
+// Percentages of the lobby page background, below the site header.
+const MIN_X = 6,
+  MAX_X = 94,
+  MIN_Y = 12,
+  MAX_Y = 97;
+// Entrance effects a visitor may pick (frontend services/entrance-effects.ts).
+const ENTRANCE_EFFECTS = new Set([
+  'classic',
+  'smoke',
+  'sparks',
+  'ink',
+  'runes',
+  'rift',
+  'particles',
+]);
 const PRESENCE_MS = 15000,
   EMOTE_MS = 5000,
   MAX_VISITORS = 80;
@@ -32,15 +43,16 @@ function createLobby(now = () => Date.now()) {
     visitor.y += dy * ratio;
     visitor.updatedAt = time;
   }
-  function enter(user) {
+  function enter(user, entrance) {
     const time = now();
     clean(time);
     let visitor = visitors.get(user.id);
     if (!visitor) {
       if (visitors.size >= MAX_VISITORS) throw new HttpError(503, 'LOBBY_FULL', '大廳目前已滿');
       const seed = [...user.id].reduce((sum, char) => sum + char.charCodeAt(0), 0);
-      const x = 22 + (seed % 7) * 9,
-        y = 37 + (seed % 3) * 15;
+      // Arrive in the open gutters beside the three-card game carousel.
+      const x = seed % 2 ? 67 + (seed % 3) * 2 : 4 + (seed % 3) * 3,
+        y = 40 + (seed % 4) * 10;
       visitor = {
         id: user.id,
         x,
@@ -55,10 +67,11 @@ function createLobby(now = () => Date.now()) {
     }
     visitor.name = user.display_name;
     visitor.seenAt = time;
+    if (ENTRANCE_EFFECTS.has(entrance)) visitor.entrance = entrance;
     return visitor;
   }
-  function view(user) {
-    enter(user);
+  function view(user, { entrance } = {}) {
+    enter(user, entrance);
     const time = now();
     for (const visitor of visitors.values()) advance(visitor, time);
     return {
@@ -82,6 +95,7 @@ function createLobby(now = () => Date.now()) {
         moving: Math.hypot(visitor.targetX - visitor.x, visitor.targetY - visitor.y) > 0.05,
         image: `/characters/${visitor.id}`,
         emote: visitor.emote && visitor.emote.until > time ? visitor.emote : null,
+        entrance: visitor.entrance || 'classic',
       })),
     };
   }
