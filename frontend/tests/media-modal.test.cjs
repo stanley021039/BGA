@@ -4,8 +4,8 @@ const { test } = require('node:test'),
   fs = require('node:fs'),
   path = require('node:path');
 
-// Issue #165: closing the media window exits a playing YouTube video, so other
-// dialogs (invite, confirm, help) must leave it open underneath them.
+// Issue #165: other dialogs must not change the media window presentation.
+// Issue #175 separately makes the window's own close action retain playback.
 test('opening another modal does not close the room media window', () => {
   const source = fs.readFileSync(
     path.resolve(__dirname, '../src/components/RoomMedia.vue'),

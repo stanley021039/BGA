@@ -1,7 +1,7 @@
 @use 'tokens' as t;
 
 // C02 is an independent personal window. Every pane keeps its native player
-// nodes mounted; queue/request switching never hides the video above the tabs.
+// nodes mounted; request switching hides the video without retiring the player.
 :root body .vue-room-media-scope.vue-stitch-scope {
   .vue-room-media {
     --vue-media-background: var(--stitch-surface, #fff);
@@ -132,7 +132,7 @@
   }
   .vue-media-content {
     display: grid;
-    grid-template-rows: 44px minmax(0, 1fr) 48px;
+    grid-template-rows: 44px minmax(0, 1fr);
     gap: 8px;
     flex: 1;
     min-inline-size: 0;
@@ -142,12 +142,10 @@
     z-index: 1;
     overflow: hidden;
     box-sizing: border-box;
-    &.has-video {
-      grid-template-rows: auto 44px minmax(0, 1fr) 48px;
-    }
   }
   .vue-media-screen {
     display: block;
+    flex: none;
     inline-size: 100%;
     min-inline-size: 0;
     min-block-size: 200px;
@@ -195,7 +193,7 @@
   }
   .vue-media-tabs {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: 44px;
     min-inline-size: 0;
     block-size: 44px;
@@ -370,7 +368,7 @@
   }
   .vue-media-controls {
     display: grid;
-    grid-template-columns: repeat(6, minmax(44px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
     align-items: center;
     gap: 8px 2px;
     min-inline-size: 0;
@@ -451,13 +449,19 @@
     }
   }
   .vue-media-playlist {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: block;
+    flex: none;
     min-inline-size: 0;
     min-block-size: 0;
-    block-size: 100%;
-    overflow: auto;
+    > summary {
+      min-block-size: 44px;
+      padding: 8px 4px;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+    .vue-media-queue {
+      max-block-size: 280px;
+    }
     overscroll-behavior: contain;
   }
   .vue-media-panel-heading {
@@ -756,11 +760,8 @@
       max-block-size: none;
       block-size: 100%;
     }
-    .vue-media-content.has-video > .vue-media-panels {
+    .vue-media-content.has-video .vue-media-current {
       display: none;
-    }
-    .vue-media-content:not(.has-video) > .vue-media-panels {
-      display: block;
     }
     .vue-media-panels > .vue-media-playlist,
     .vue-media-panels > .vue-media-request {
