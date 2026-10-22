@@ -4,6 +4,7 @@ import { useMediaStore } from '../stores/media';
 import { usePreferencesStore } from '../stores/preferences';
 import { useSessionStore } from '../stores/session';
 import { createMediaHistory, recentVideoUrl } from '../services/media-history';
+import { mediaConsent } from '../services/media-consent';
 import type { RecentVideo } from '../services/media-history';
 import { useMediaWindow } from '../composables/media-window';
 import { formatMediaTime, mediaCurrentKey, mediaPlaybackKey } from '../contracts/media';
@@ -168,21 +169,8 @@ const musicEnabled = computed(() => prefs.audio?.music.enabled === true),
 const consentKey = computed(() =>
   media.snapshot ? `${media.snapshot.roomInstanceId}:${media.snapshot.myPlayerId}` : '',
 );
-const consents = new Map<string, boolean>();
-try {
-  const rows = JSON.parse(localStorage.getItem('bga.media.consents.v1') || '[]');
-  if (Array.isArray(rows))
-    for (const row of rows.slice(-64))
-      if (
-        Array.isArray(row) &&
-        typeof row[0] === 'string' &&
-        row[0].length <= 200 &&
-        typeof row[1] === 'boolean'
-      )
-        consents.set(row[0], row[1]);
-} catch {
-  /* Personal consent can remain in memory. */
-}
+const consentStore = mediaConsent(),
+  videoConsent = ref(consentStore.get());
 let player: MediaPlayer | null = null,
   mounted = false,
   disposed = false,
@@ -276,7 +264,7 @@ function syncPlayback() {
   if (!mounted || !state || !player || !props.connected || !media.connected) return;
   if (lastConsent !== consentKey.value) {
     lastConsent = consentKey.value;
-    wantsVideo = consents.get(lastConsent) === true;
+    wantsVideo = videoConsent.value === true;
   }
   const key = mediaCurrentKey(state),
     changed = key !== lastItem;
@@ -285,12 +273,7 @@ function syncPlayback() {
   player.setMarker(media.marker);
   player.update(state, media.marker, media.serverNow());
   sharedClock.value = media.position();
-  if (
-    changed &&
-    state.current?.type === 'video' &&
-    wantsVideo &&
-    consents.get(consentKey.value) === true
-  )
+  if (changed && state.current?.type === 'video' && wantsVideo && videoConsent.value === true)
     void nextTick().then(() => {
       if (
         key === mediaCurrentKey(media.snapshot) &&
@@ -308,7 +291,7 @@ async function maybeConsent() {
     !props.connected ||
     !media.connected ||
     !consentKey.value ||
-    consents.has(consentKey.value) ||
+    videoConsent.value !== undefined ||
     document.hidden ||
     prompt ||
     document.querySelector('dialog:modal')
@@ -320,13 +303,8 @@ async function maybeConsent() {
 async function chooseVideo(accept: boolean) {
   const key = prompt || consentKey.value;
   if (!key || key !== consentKey.value) return;
-  consents.set(key, accept);
-  while (consents.size > 64) consents.delete(consents.keys().next().value!);
-  try {
-    localStorage.setItem('bga.media.consents.v1', JSON.stringify([...consents]));
-  } catch {
-    /* Never infer acceptance from unavailable storage. */
-  }
+  consentStore.set(accept);
+  videoConsent.value = accept;
   prompt = '';
   consent.value?.close();
   wantsVideo = accept;
@@ -731,7 +709,7 @@ onBeforeUnmount(() => {
                     stitch
                     variant="primary"
                     icon="play"
-                    :label="consents.get(consentKey) ? '重新加入觀看' : '接受並觀看影片'"
+                    :label="videoConsent ? '重新加入觀看' : '接受並觀看影片'"
                     @click="chooseVideo(true)"
                 /></div>
               </div>
@@ -1074,13 +1052,15 @@ onBeforeUnmount(() => {
         stitch
         ref="consent"
         class="vue-media-consent-dialog"
-        title="接受這一桌的影片嗎？"
+        title="接受載入房間影片嗎？"
         compact
         @closed="consentClosed"
         ><p
-          >接受後，這一桌點播的 YouTube
+          >接受後，房間點播的 YouTube
           影片會在你的媒體視窗顯示。瀏覽器仍可能需要你按播放器才能開始播放。</p
-        ><p>略過就不載入 Google 播放器；之後可從「媒體」重新接受。</p
+        ><p
+          >這個分頁進其他房間沿用本次選擇，重新整理後會再詢問。略過就不載入 Google
+          播放器；之後可從「媒體」重新接受。</p
         ><p
           ><a href="https://policies.google.com/privacy" target="_blank" rel="noopener"
             >Google 隱私權政策</a
