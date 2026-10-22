@@ -7,7 +7,7 @@ import UiButton from '../../components/UiButton.vue';
 import quacksArt from '../../assets/quacks/game-quacks.svg';
 import minimalArt from '../minimal/minimal-waiting.svg';
 const props = defineProps<{ modelValue: string }>(),
-  emit = defineEmits<{ 'update:modelValue': [value: string]; create: [] }>();
+  emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
   width = ref(1000),
   cardWidth = ref(300),
@@ -226,7 +226,16 @@ onBeforeUnmount(() => {
       ><div class="carousel-actions"
         ><a class="quiet carousel-guide" :href="chosen.guide">{{ chosen.title }}玩法 ↗</a
         ><div class="carousel-create"
-          ><a v-if="chosen.id === 'market'" class="button orange" href="/market">進入股市冥燈 ↗</a
+          ><UiButton
+            variant="secondary"
+            icon="users"
+            label="找一桌加入"
+            aria-haspopup="dialog"
+            @click="emit('join')" /><a
+            v-if="chosen.id === 'market'"
+            class="button orange"
+            href="/market"
+            >進入股市冥燈 ↗</a
           ><UiButton
             v-else
             icon="add"
