@@ -232,7 +232,7 @@ export const useTelephoneStore = defineStore('telephone', () => {
     };
     job = next;
     saving.value = true;
-    notice.value = '正在同步私人草稿…';
+    notice.value = '';
     const timeout = setTimeout(
       () =>
         next.controller.abort(
@@ -251,10 +251,7 @@ export const useTelephoneStore = defineStore('telephone', () => {
         if (attempt.context !== context.value) return false;
         accepted.value = attempt.serialized;
         retry = null;
-        notice.value =
-          attempt.revision === revision
-            ? '草稿已獲伺服器接受。'
-            : '較早的草稿已接受，還有新內容尚未同步。';
+        notice.value = '';
         return true;
       } catch (cause) {
         if (
@@ -284,7 +281,7 @@ export const useTelephoneStore = defineStore('telephone', () => {
     actions.setTarget(context.value + ':' + revision);
     retry = null;
     automatic = true;
-    notice.value = '有本地內容尚未同步。';
+    notice.value = '';
     cache();
     schedule();
   }
