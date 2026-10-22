@@ -1,3 +1,5 @@
+2026-10-23 #193：極簡畫家接共用倒數警示音，新增 owner 處理最後畫家、基線及背景／BFCache／斷線生命週期；7 項針對性回歸、型別／建置及隔離測試站三席播放事件已驗。候選 2.35.0，完整固定 head CI 以 PR 為準。詳 [本輪證據](../specs/MINIMAL-COUNTDOWN-SOUNDS-193.md)。#190／#192 已隨 PR #201 合併，不重做；正式站及 Figma 狀態不因此改變。
+
 # 程式架構 agent 記憶
 
 2026-10-23 #190／#192 候選2.34.1：雷霆引導路線 Map 範圍排除 SVG title／舊版延遲提示，保留一般地形／車輛說明與點選；線上／教學改為獨立 watch sources，等價 presence 不清預覽。純呈現 RaceDirections 同時供 DOM／WebGL 與結果補充，後方對應畫面左方，六方向以真引擎 neighbor 與 DOM 投影回歸，不改骰值／機率／位移。驗收、初輪 fixture 格式失敗及固定 head CI／審查界線見 [規格](../specs/RACE-GUIDANCE-DIRECTIONS-190-192.md)，未部署。
