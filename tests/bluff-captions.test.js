@@ -147,6 +147,20 @@ test('the caption route only serves seated players in 瞎掰王 rooms', async (t
     return { status: r.status, body: await r.json() };
   };
   const { code } = (await post('captionhost', 'create', { type: 'bluff', roomName: '字幕' })).body;
+  // Only the 瞎掰王 room page may ask for the microphone.
+  const page = await fetch(base + '/bluff/' + code, { headers: { Cookie: cookies.captionhost } });
+  assert.equal(
+    page.headers.get('permissions-policy'),
+    'camera=(), microphone=(self), geolocation=()',
+  );
+  for (const route of ['/', '/majority/ABCDEF', '/login'])
+    assert.match(
+      (
+        await fetch(base + route, { headers: { Cookie: cookies.captionhost }, redirect: 'manual' })
+      ).headers.get('permissions-policy'),
+      /microphone=\(\)/,
+      route,
+    );
   await post('captiona', 'join', { code });
   await post('captionb', 'join', { code });
   let state = (await post('captionhost', 'start', { code })).body;

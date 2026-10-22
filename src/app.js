@@ -2828,6 +2828,10 @@ function initializeApp(config, dataLock, acquired) {
       );
       if (!file.endsWith('.html'))
         return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
+      // 瞎掰王's talk button uses the browser's speech recognizer, which needs the
+      // microphone; every other page keeps it blocked.
+      if (file === 'bluff.html')
+        res.setHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
       const document =
         frontend?.readPage(file) || fs.readFileSync(path.join(__dirname, '..', 'public', file));
       res.end(withEntryIntro(document, { authPage: file === 'login.html' }));

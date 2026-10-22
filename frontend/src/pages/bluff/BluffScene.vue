@@ -314,7 +314,6 @@ function rank(index: number) {
                 @click="actions.command('ready')" /></div
           ></div>
           <template v-else
-            ><p class="vue-bluff-role-ended">看身分時間已結束，秘密卡已收起。</p
             ><div class="vue-bluff-discussion-grid"
               ><div class="vue-bluff-discussion-left"
                 ><template v-if="isThinker"
