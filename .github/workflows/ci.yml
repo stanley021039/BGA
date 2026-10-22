@@ -47,5 +47,9 @@ jobs:
         run: npm ci
       - name: Check source formatting
         run: npm run format:check
+      - name: Install locked frontend dependencies
+        run: npm --prefix frontend ci
+      - name: Run telephone IME regression
+        run: node --test frontend/tests/telephone-ime.test.cjs
       - name: Run release check and full test suite
         run: npm test
