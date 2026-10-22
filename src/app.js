@@ -1758,6 +1758,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/reconnect',
             '/api/state',
             '/api/telephone/draft',
+            '/api/bluff/caption',
             '/api/game-song-audio',
             '/api/musicquiz-clip',
             '/api/action',
@@ -2177,6 +2178,15 @@ function initializeApp(config, dataLock, acquired) {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
           limitRate(roomRate, 'telephone-draft:' + user.id, 120);
           room.saveDraft(p.id, data);
+          return send(withSocial(room, room.view(p.id)));
+        }
+        if (url.pathname === '/api/bluff/caption') {
+          if (room.type !== 'bluff') throw new HttpError(400, 'WRONG_GAME', '這不是瞎掰王房間');
+          if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
+          // Interim subtitles are frequent and in-memory only, so they skip the
+          // action history and its mutation budget.
+          limitRate(roomRate, 'bluff-caption:' + user.id, 150);
+          room.caption(p.id, data);
           return send(withSocial(room, room.view(p.id)));
         }
         if (url.pathname === '/api/state') {
@@ -2818,6 +2828,10 @@ function initializeApp(config, dataLock, acquired) {
       );
       if (!file.endsWith('.html'))
         return sendStatic(req, res, path.join(__dirname, '..', 'public', file));
+      // 瞎掰王's talk button uses the browser's speech recognizer, which needs the
+      // microphone; every other page keeps it blocked.
+      if (file === 'bluff.html')
+        res.setHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
       const document =
         frontend?.readPage(file) || fs.readFileSync(path.join(__dirname, '..', 'public', file));
       res.end(withEntryIntro(document, { authPage: file === 'login.html' }));
