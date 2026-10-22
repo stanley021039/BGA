@@ -15,6 +15,7 @@ import ImageChoiceGrid from '../../components/ImageChoiceGrid.vue';
 import ImageSourceField from '../../components/ImageSourceField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import ExpressionEditor from '../../components/ExpressionEditor.vue';
+import FilePickField from '../../components/FilePickField.vue';
 
 const profile = useProfileStore();
 const appearance = ref<Appearance | null>(null),
@@ -87,6 +88,10 @@ const {
   remove: removeSound,
   preview: previewSound,
 } = useExpressionSound(soundTarget, profile.load);
+// The sound composable clears the native input after an upload or removal.
+function bindSoundField(field: unknown) {
+  soundInput.value = (field as InstanceType<typeof FilePickField> | null)?.input ?? null;
+}
 const expressionLabel = (character: Character | undefined, expression: string) =>
   character?.labels[expression] || profile.data?.expressionLabels[expression] || expression;
 const groups = computed(() =>
@@ -502,10 +507,6 @@ onBeforeUnmount(() => {
             class="expression-sound"
             aria-labelledby="expression-sound-heading"
             ><h3 id="expression-sound-heading">表情音效</h3
-            ><p id="expression-sound-description"
-              >「{{
-                expressionLabel(selected, appearance?.expression || '')
-              }}」送出時可播放一段音效。音效會隨分享角色一起供好友使用。</p
             ><div class="expression-sound-actions"
               ><span id="expression-sound-duration">{{
                 sound
@@ -532,17 +533,19 @@ onBeforeUnmount(() => {
               class="expression-sound-upload"
               :aria-busy="soundPending"
               @submit.prevent="uploadSound"
-              ><label
-                >選擇音檔<input
-                  id="expression-sound-file"
-                  ref="soundInput"
-                  type="file"
-                  accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.webm,.opus"
-                  :disabled="soundPending"
-                  @change="
-                    chooseSound(($event.target as HTMLInputElement).files?.[0] || null)
-                  " /></label
-              ><UiButton
+              ><FilePickField
+                :ref="bindSoundField"
+                input-id="expression-sound-file"
+                label="選擇音檔"
+                accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.webm,.opus"
+                :current="
+                  sound
+                    ? `目前：${(sound.durationMs / 1000).toFixed(2).replace(/0$/, '')} 秒音效`
+                    : '目前：尚未設定音效'
+                "
+                :disabled="soundPending"
+                @change="chooseSound"
+              /><UiButton
                 stitch
                 id="save-expression-sound"
                 type="submit"
