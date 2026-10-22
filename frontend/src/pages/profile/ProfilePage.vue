@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../../services/image-size';
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { useProfileStore } from '../../stores/profile';
 import { useMutation } from '../../composables/mutation';
@@ -428,8 +429,11 @@ onBeforeUnmount(() => {
           v-if="selected"
           id="preview"
           :src="
-            selected.expressions[appearance?.expression || 'neutral'] ||
-            selected.expressions.neutral
+            sizedImage(
+              selected.expressions[appearance?.expression || 'neutral'] ||
+                selected.expressions.neutral,
+              512,
+            )
           "
           :alt="
             selected.name + '－' + expressionLabel(selected, appearance?.expression || 'neutral')

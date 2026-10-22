@@ -80,6 +80,8 @@ function settings(env = process.env) {
       : path.join(path.dirname(dbFile), 'music'),
     externalSideEffectsEnabled: external === 'true',
     marketAutomationEnabled: marketAutomation === 'true',
+    // Embedded apps and tests build thumbnails only when a size is requested.
+    mediaThumbnailBackfill: true,
   };
 }
 module.exports = { loadEnv, settings };

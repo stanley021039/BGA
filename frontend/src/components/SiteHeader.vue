@@ -264,7 +264,7 @@ onBeforeUnmount(() => {
           <img
             v-if="!avatarFailed"
             id="site-avatar"
-            :src="'/api/profile/avatar?v=' + avatarVersion"
+            :src="'/api/profile/avatar?size=128&v=' + avatarVersion"
             alt="我的頭像"
             @error="avatarFailed = true"
           /><span v-else aria-hidden="true">{{ [...session.user.displayName][0] || '我' }}</span>
@@ -283,7 +283,7 @@ onBeforeUnmount(() => {
             <span class="vue-site-account-avatar"
               ><img
                 v-if="!avatarFailed"
-                :src="'/api/profile/avatar?v=' + avatarVersion"
+                :src="'/api/profile/avatar?size=128&v=' + avatarVersion"
                 alt=""
                 @error="avatarFailed = true"
               /><span v-else aria-hidden="true">{{

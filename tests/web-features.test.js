@@ -168,12 +168,13 @@ test(
       let view = await api('state?code=' + host.code, undefined, host);
       assert.equal(view.queueCount, 1);
       assert.ok(!JSON.stringify(view).includes('測試早餐'));
-      assert.match(view.players[1].avatar, /^\/characters\/[a-f0-9-]+\?v=[\w-]{16}$/);
-      assert.equal(
+      assert.match(view.players[1].avatar, /^\/characters\/[a-f0-9-]+\?v=[\w-]{16}&size=256$/);
+      // The seat asks for a 256 px thumbnail: the original until it is prepared.
+      assert.match(
         (await fetch(base + view.players[1].avatar, { headers: { Cookie: cookie } })).headers.get(
           'content-type',
         ),
-        'image/png',
+        /^image\/(?:png|webp)$/,
       );
       await api('start', { code: host.code }, host);
       view = await api('state?code=' + host.code, undefined, host);
@@ -258,7 +259,7 @@ test(
         const p = await api('create', { type, name: 'Avatar' });
         assert.match(
           (await api('state?code=' + p.code, undefined, p)).players[0].avatar,
-          /^\/characters\/[a-f0-9-]+\?v=[\w-]{16}$/,
+          /^\/characters\/[a-f0-9-]+\?v=[\w-]{16}&size=256$/,
         );
       }
     } finally {

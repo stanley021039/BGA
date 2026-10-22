@@ -175,7 +175,7 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
     });
     assert.equal(saved.status, 200);
     const view = await (await fetch(base + '/api/state?code=' + code, { headers })).json();
-    assert.match(view.players[0].avatar, /^\/characters\/[a-f0-9-]+\?v=[\w-]{16}$/);
+    assert.match(view.players[0].avatar, /^\/characters\/[a-f0-9-]+\?v=[\w-]{16}&size=256$/);
     const avatar = await fetch(base + view.players[0].avatar, { headers });
     assert.equal(avatar.headers.get('content-type'), 'image/gif');
     assert.equal(Buffer.from(await avatar.arrayBuffer()).toString('ascii', 0, 6), 'GIF89a');

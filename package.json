@@ -1,6 +1,6 @@
 {
   "name": "afterhours-poker",
-  "version": "2.24.1",
+  "version": "2.25.0",
   "private": true,
   "scripts": {
     "start": "node server.js",

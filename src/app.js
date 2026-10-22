@@ -102,6 +102,7 @@ const { createLobbyHandlers } = require('./http/lobby-routes');
 const { HttpError, writeError } = require('./http/errors');
 const { clientAddress, setSecurityHeaders } = require('./http/security');
 const {
+  PRIVATE_IMMUTABLE,
   PRIVATE_REVALIDATE,
   etagFor,
   readStatic,
@@ -109,6 +110,7 @@ const {
   sendStatic,
   sendVersioned,
 } = require('./http/static-cache');
+const { MediaThumbnails, thumbnailSize } = require('./media/thumbnails');
 const { openDatabase } = require('./db/index');
 const { createAuth } = require('./auth/index');
 const { BoardStore } = require('./community/board');
@@ -614,7 +616,66 @@ function initializeApp(config, dataLock, acquired) {
       portraitVersions.set(userId, version);
     }
     const version = portraitVersions.get(userId);
-    return `/characters/${userId}` + (version ? `?v=${version}` : '');
+    return `/characters/${userId}?` + (version ? `v=${version}&` : '') + 'size=256';
+  }
+  const mediaThumbnails = new MediaThumbnails({
+    directory: config.dbFile + '.media-thumbnails',
+  });
+  // Serves an image, or its WebP thumbnail when ?size= asks for one. While a
+  // thumbnail is being prepared the original is sent, never cached as the size.
+  async function sendImage(req, res, url, { bytes, mime }, versioned) {
+    const cacheControl = versioned ? PRIVATE_IMMUTABLE : PRIVATE_REVALIDATE,
+      size = thumbnailSize(url.searchParams.get('size')),
+      sized = size ? await mediaThumbnails.variant(bytes, size) : null;
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    if (sized?.bytes) {
+      res.setHeader('Content-Type', 'image/webp');
+      return sendCached(req, res, sized.bytes, { cacheControl });
+    }
+    res.setHeader('Content-Type', mime);
+    return sendCached(req, res, bytes, {
+      cacheControl: size && !sized ? PRIVATE_REVALIDATE : cacheControl,
+    });
+  }
+  // Production pre-builds every thumbnail at start and after each upload, so
+  // only the first viewer of a brand-new image waits on the original.
+  function thumbnailSources() {
+    const image = db.prepare(
+        'SELECT bytes FROM character_images WHERE character_id=? AND expression=?',
+      ),
+      artwork = db.prepare('SELECT bytes FROM user_artworks WHERE id=?');
+    return [
+      ...[...new Set(builtinCharacters.flatMap((c) => Object.values(c.expressions)))].map(
+        (file) => () => readStatic(path.join(__dirname, '..', 'public', file)).bytes,
+      ),
+      ...db
+        .prepare('SELECT character_id,expression FROM character_images')
+        .all()
+        .map((row) => () => image.get(row.character_id, row.expression)?.bytes),
+      ...db
+        .prepare('SELECT id FROM user_artworks')
+        .all()
+        .map((row) => () => artwork.get(row.id)?.bytes),
+    ];
+  }
+  let thumbnailBackfill = null,
+    thumbnailRerun = false;
+  function refreshThumbnails() {
+    if (!config.mediaThumbnailBackfill || closed) return;
+    if (thumbnailBackfill) {
+      thumbnailRerun = true;
+      return;
+    }
+    thumbnailBackfill = mediaThumbnails
+      .backfill(thumbnailSources())
+      .catch(() => {})
+      .finally(() => {
+        thumbnailBackfill = null;
+        if (thumbnailRerun) {
+          thumbnailRerun = false;
+          refreshThumbnails();
+        }
+      });
   }
   function refreshPortraits() {
     portraitVersions.clear();
@@ -837,6 +898,8 @@ function initializeApp(config, dataLock, acquired) {
       if (frontend?.serveAsset(req, res, url.pathname)) return;
       if (req.method === 'POST' && /^\/api\/(?:profile|admin)\//.test(url.pathname))
         res.once('finish', refreshPortraits);
+      if (req.method === 'POST' && /^\/api\/(?:profile\/characters|artworks)\b/.test(url.pathname))
+        res.once('finish', refreshThumbnails);
       if (
         req.method === 'GET' &&
         url.searchParams.get('embed') === '1' &&
@@ -1204,11 +1267,19 @@ function initializeApp(config, dataLock, acquired) {
         }
         if (url.pathname === '/api/profile/avatar' && req.method === 'GET') {
           const selection = avatarContent(db, user.id);
-          if (selection.content) {
-            res.setHeader('Content-Type', selection.content.mime);
-            return res.end(Buffer.from(selection.content.bytes));
-          }
-          res.writeHead(302, { Location: selection.url });
+          if (selection.content)
+            return sendImage(
+              req,
+              res,
+              url,
+              { bytes: Buffer.from(selection.content.bytes), mime: selection.content.mime },
+              false,
+            );
+          // Header avatars ask for a thumbnail; the redirect keeps that request.
+          const location = new URL(selection.url, 'http://localhost'),
+            size = thumbnailSize(url.searchParams.get('size'));
+          if (size) location.searchParams.set('size', String(size));
+          res.writeHead(302, { Location: location.pathname + location.search });
           return res.end();
         }
         if (url.pathname === '/api/profile/options' && req.method === 'GET') {
@@ -2274,9 +2345,7 @@ function initializeApp(config, dataLock, acquired) {
         const viewer = auth.requireUser(req),
           image = artworkStore.image(viewer.id, artworkAsset[1]);
         if (!image) throw new HttpError(404, 'ARTWORK_NOT_FOUND', '找不到你的作品');
-        res.setHeader('Content-Type', image.mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return sendCached(req, res, image.bytes, { cacheControl: PRIVATE_REVALIDATE });
+        return sendImage(req, res, url, image, false);
       }
       const sharedGift = url.pathname.match(/^\/assets\/gifts\/shared\/([a-f0-9-]{36})$/);
       if (sharedGift) {
@@ -2312,9 +2381,7 @@ function initializeApp(config, dataLock, acquired) {
         const viewer = auth.requireUser(req),
           row = characterMedia.image(viewer.id, url.href);
         if (!row) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
-        res.setHeader('Content-Type', row.mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return sendVersioned(req, res, row.bytes, url.searchParams.has('v'));
+        return sendImage(req, res, url, row, url.searchParams.has('v'));
       }
       if (url.pathname.startsWith('/assets/characters/')) {
         auth.requireUser(req);
@@ -2322,22 +2389,20 @@ function initializeApp(config, dataLock, acquired) {
           .flatMap((character) => Object.values(character.expressions))
           .find((value) => value === url.pathname);
         if (!asset) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
-        res.setHeader('Content-Type', asset.endsWith('.gif') ? 'image/gif' : 'image/png');
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return sendStatic(
+        const { bytes } = readStatic(path.join(__dirname, '..', 'public', asset));
+        return sendImage(
           req,
           res,
-          path.join(__dirname, '..', 'public', asset),
-          PRIVATE_REVALIDATE,
+          url,
+          { bytes, mime: asset.endsWith('.gif') ? 'image/gif' : 'image/png' },
+          false,
         );
       }
       const characterId = url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];
       if (characterId) {
         const viewer = auth.requireUser(req),
-          { bytes, mime, version } = portrait(viewer.id, characterId);
-        res.setHeader('Content-Type', mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return sendVersioned(req, res, bytes, url.searchParams.get('v') === version);
+          image = portrait(viewer.id, characterId);
+        return sendImage(req, res, url, image, url.searchParams.get('v') === image.version);
       }
       const files = {
         '/assets/stitch/room-brand.svg': 'assets/stitch/room-brand.svg',
@@ -2745,6 +2810,7 @@ function initializeApp(config, dataLock, acquired) {
       submissions.recover();
       marketAutomation.start();
       marketImageStore.startThumbnails();
+      refreshThumbnails();
       return server.address();
     })();
     // close waits for the raw startup, never for this recovery promise.
@@ -2784,6 +2850,7 @@ function initializeApp(config, dataLock, acquired) {
         : Promise.resolve();
       await attempt(() => marketAutomation.stop());
       await attempt(() => marketImageStore.stopThumbnails());
+      await attempt(() => mediaThumbnails.stop());
       await attempt(() => runtime.drainStreams());
       await serverClosed;
       for (const room of rooms.values()) await attempt(() => awardRoomAchievements(room));
