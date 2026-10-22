@@ -618,6 +618,6 @@ test('read-only YouTube titles can be enabled independently and reach current an
   const asset = await fetch(f.base + '/shared/media-appearance.js');
   assert.equal(asset.status, 200);
   assert.match(asset.headers.get('content-type'), /javascript/);
-  assert.equal(asset.headers.get('cache-control'), 'no-cache');
+  assert.equal(asset.headers.get('cache-control'), 'private, no-cache');
   assert.match(await asset.text(), /window.MediaAppearance/);
 });

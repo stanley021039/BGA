@@ -33,7 +33,7 @@ test('new shared component assets are fixed routes with correct content types an
         response.headers.get('content-type'),
         asset.endsWith('.css') ? /^text\/css/ : /^text\/javascript/,
       );
-      assert.equal(response.headers.get('cache-control'), 'no-cache');
+      assert.equal(response.headers.get('cache-control'), 'private, no-cache');
       assert.equal(
         await response.text(),
         fs.readFileSync(path.join(__dirname, '../public/shared', asset), 'utf8'),

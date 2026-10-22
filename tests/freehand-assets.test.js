@@ -67,7 +67,7 @@ test('only reviewed local vectors are served as SVG, with restrictive CSP and ex
       const response = await fetch(base + '/' + file);
       assert.equal(response.status, 200, file);
       assert.equal(response.headers.get('content-type'), 'image/svg+xml');
-      assert.equal(response.headers.get('cache-control'), 'no-cache');
+      assert.equal(response.headers.get('cache-control'), 'private, no-cache');
       assert.match(response.headers.get('content-security-policy'), /default-src 'none'; sandbox/);
       assert.equal(await response.text(), fs.readFileSync(path.join(root, file), 'utf8'));
     }
@@ -82,7 +82,7 @@ test('only reviewed local vectors are served as SVG, with restrictive CSP and ex
     const css = await fetch(base + '/shared/freehand-ui.css');
     assert.equal(css.status, 200);
     assert.match(css.headers.get('content-type'), /^text\/css/);
-    assert.equal(css.headers.get('cache-control'), 'no-cache');
+    assert.equal(css.headers.get('cache-control'), 'private, no-cache');
     assert.equal(
       await css.text(),
       fs.readFileSync(path.join(root, 'shared/freehand-ui.css'), 'utf8'),
