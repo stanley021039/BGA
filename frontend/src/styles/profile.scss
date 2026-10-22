@@ -411,6 +411,113 @@
       min-block-size: 24px;
       margin: 0;
     }
+    // 編輯表情: name, image and sound are equal framed sections with one gap;
+    // 儲存表情 closes the dialog at the bottom.
+    .expression-edit-body,
+    .expression-edit-form {
+      display: grid;
+      gap: 16px;
+    }
+    .expression-edit-section,
+    .expression-edit-body > .expression-sound {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 16px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface-subtle);
+      color: var(--stitch-ink);
+      > h3,
+      .expression-edit-title {
+        @include t.type(p2);
+        margin: 0;
+        color: inherit;
+      }
+      .expression-sound-actions,
+      .expression-sound-upload {
+        margin: 0;
+      }
+      .frontend-status:empty {
+        display: none;
+      }
+    }
+    .expression-edit-section label {
+      display: grid;
+      gap: 8px;
+    }
+    .expression-edit-section input:not([type='file']) {
+      box-sizing: border-box;
+      inline-size: 100%;
+      min-block-size: 44px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      font-size: var(--stitch-font-16);
+    }
+    .expression-edit-preview {
+      inline-size: 96px;
+      block-size: 96px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: var(--stitch-surface);
+    }
+    .expression-edit-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      > .frontend-status {
+        margin: 0;
+      }
+    }
+    // The native file input is invisible but covers the row, so clicking or
+    // focusing it still works; the row shows what is in use.
+    .file-pick-field {
+      display: grid;
+      gap: 8px;
+      min-inline-size: 0;
+      flex: 1 1 240px;
+    }
+    .file-pick-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-block-size: 44px;
+      padding: 6px 12px 6px 6px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 8px;
+      background: var(--stitch-surface);
+      &:focus-within {
+        outline: 2px solid var(--surface-focus, var(--stitch-focus));
+        outline-offset: 2px;
+      }
+    }
+    .file-pick-input {
+      position: absolute;
+      inset: 0;
+      inline-size: 100%;
+      block-size: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .file-pick-button {
+      flex: none;
+      padding: 6px 12px;
+      border: 1px solid var(--stitch-line);
+      border-radius: 6px;
+      font-size: var(--stitch-font-14);
+    }
+    .file-pick-name {
+      min-inline-size: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: var(--stitch-font-14);
+    }
   }
 }
 :root[data-color-scheme='dark'] body[data-visual-theme].profile-page {
