@@ -947,19 +947,40 @@ onBeforeUnmount(() => {
                 @keydown="recentKey"
                 ><label :for="id + '-url'">YouTube 網址</label
                 ><div
-                  ><input
-                    :id="id + '-url'"
-                    ref="urlInput"
-                    v-model="url"
-                    type="url"
-                    autocomplete="off"
-                    :aria-expanded="recentOpen"
-                    :aria-controls="id + '-recent'"
-                    @focus="recentOpen = true"
-                    @click="recentOpen = true"
-                    required
-                    placeholder="貼上 YouTube 影片網址"
-                    :disabled="media.busy" /><UiButton
+                  ><div class="vue-media-url-field"
+                    ><input
+                      :id="id + '-url'"
+                      ref="urlInput"
+                      v-model="url"
+                      type="url"
+                      autocomplete="off"
+                      :aria-expanded="recentOpen"
+                      :aria-controls="id + '-recent'"
+                      @focus="recentOpen = true"
+                      @click="recentOpen = true"
+                      required
+                      placeholder="貼上 YouTube 影片網址"
+                      :disabled="media.busy"
+                    />
+                    <section
+                      v-if="recentOpen"
+                      :id="id + '-recent'"
+                      class="vue-media-recent"
+                      aria-label="最近播放影片"
+                    >
+                      <ul v-if="recentVideos.length">
+                        <li v-for="entry in recentVideos" :key="entry.videoId">
+                          <button
+                            type="button"
+                            :disabled="media.busy"
+                            @click="chooseRecent(entry)"
+                            >{{ entry.title }}</button
+                          >
+                        </li>
+                      </ul>
+                      <p v-else>尚無最近播放紀錄</p>
+                    </section> </div
+                  ><UiButton
                     stitch
                     variant="primary"
                     type="submit"
@@ -968,22 +989,6 @@ onBeforeUnmount(() => {
                     label="加入影片至播放清單"
                     :disabled="!url.trim() || !media.snapshot || media.busy"
                 /></div>
-                <section
-                  v-if="recentOpen"
-                  :id="id + '-recent'"
-                  class="vue-media-recent"
-                  aria-label="最近播放影片"
-                >
-                  <p>最近播放</p>
-                  <ul v-if="recentVideos.length">
-                    <li v-for="entry in recentVideos" :key="entry.videoId">
-                      <button type="button" :disabled="media.busy" @click="chooseRecent(entry)">{{
-                        entry.title
-                      }}</button>
-                    </li>
-                  </ul>
-                  <p v-else>尚無最近播放紀錄</p>
-                </section>
               </form>
               <StatusSlot
                 v-if="feedback"

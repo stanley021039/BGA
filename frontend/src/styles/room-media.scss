@@ -646,31 +646,58 @@
     line-height: 1.5;
     text-decoration: underline;
   }
-  .vue-media-recent {
+  .vue-media-url-field {
+    position: relative;
+    flex: 1;
     min-inline-size: 0;
+    input[aria-expanded='true'] {
+      border-end-start-radius: 0;
+      border-end-end-radius: 0;
+    }
+  }
+  .vue-media-recent {
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline: 0;
+    z-index: 5;
+    box-sizing: border-box;
+    min-inline-size: 0;
+    border: 1px solid var(--vue-media-line);
+    border-block-start: 0;
+    border-radius: 0 0 8px 8px;
+    color: var(--vue-media-text);
+    background: var(--vue-media-background);
+    box-shadow: 0 8px 16px #0003;
+    overflow: hidden;
     p {
       margin: 0;
+      padding: 10px 12px;
       font-size: var(--stitch-font-14);
     }
     ul {
       list-style: none;
-      margin: 4px 0 0;
+      margin: 0;
       padding: 0;
       max-block-size: 176px;
       overflow: auto;
     }
     button {
+      --ui-button-radius: 0;
+      --ui-button-border-width: 0;
       display: block;
       inline-size: 100%;
       min-block-size: 44px;
-      padding: 8px;
+      padding: 10px 12px;
       border: 0;
-      border-radius: 4px;
+      border-radius: 0;
       background: transparent;
       color: var(--vue-media-text);
       font: inherit;
+      font-size: var(--stitch-font-14);
       text-align: start;
-      overflow-wrap: anywhere;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       cursor: pointer;
       &:hover,
       &:focus-visible {
