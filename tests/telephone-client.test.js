@@ -1,4 +1,5 @@
 'use strict';
+const { completeTelephoneTopics } = require('./helpers/telephone.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
@@ -15,6 +16,7 @@ function fixture({ room, storage = new Map(), guess = false } = {}) {
     r.add('peer');
     r.add('peer2');
     r.start();
+    completeTelephoneTopics(r);
     if (guess) {
       for (const p of r.players) r.act(p.id, 'skip', { stepId: r.stepId, requestId: randomUUID() });
       r.deadline = r.now();
@@ -354,6 +356,7 @@ test('last-moment input syncs immediately and expired controls cannot keep drawi
   r.add('peer');
   r.add('peer2');
   r.start();
+  completeTelephoneTopics(r);
   const f = fixture({ room: r });
   await flush();
   const canvas = f.ids.get('#drawing'),
@@ -371,7 +374,7 @@ test('last-moment input syncs immediately and expired controls cannot keep drawi
   await f.poll();
   assert.equal(r.round, 2);
   assert.ok(f.ids.get('#guess'));
-  assert.equal(r.books[0].pages[1].strokes.length, 1);
+  assert.equal(r.books.at(-1).pages[1].strokes.length, 1);
 });
 
 test('legacy settlement follows the shared reveal cursor and renders one page', async () => {
@@ -380,6 +383,7 @@ test('legacy settlement follows the shared reveal cursor and renders one page', 
   r.add('peer');
   r.add('peer2');
   r.start();
+  completeTelephoneTopics(r);
   while (r.phase === 'passing') {
     r.deadline = r.now();
     r.auto();
@@ -396,4 +400,32 @@ test('legacy settlement follows the shared reveal cursor and renders one page', 
   await flush();
   assert.equal(r.revealIndex, 1);
   assert.equal(f.ids.get('#book').querySelectorAll('article').length, 1);
+});
+
+test('legacy opening topic form preserves Chinese preedit and does not start drawing immediately', async () => {
+  const room = new TelephoneRoom('ABCDEF', '先出題', () => 0);
+  room.add('reader');
+  room.add('peer');
+  room.add('peer2');
+  room.start();
+  const f = fixture({ room });
+  await flush();
+  assert.equal(f.ids.get('#drawing'), undefined);
+  const input = f.ids.get('#guess');
+  input.oncompositionstart();
+  input.value = '注音組字中';
+  input.oninput();
+  await f.poll();
+  assert.equal(f.ids.get('#guess'), input);
+  assert.equal(input.value, '注音組字中');
+  assert.equal(f.ids.get('#submit').disabled, true);
+  assert.equal(room.drafts[f.p.id], undefined);
+  input.value = '我的主題';
+  input.oncompositionend();
+  await f.poll();
+  assert.equal(room.drafts[f.p.id].text, '我的主題');
+  await f.ids.get('#submit').onclick();
+  await flush();
+  assert.equal(room.phase, 'prompting');
+  assert.equal(room.books[0].pages[0].text, '我的主題');
 });

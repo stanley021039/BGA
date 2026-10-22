@@ -14,7 +14,10 @@ function advanceTimedPhase(room, history) {
   if (room.type === 'quacks')
     due = room.phase === 'round-intro' && room.nextRoundAt != null && now >= room.nextRoundAt;
   if (room.type === 'telephone')
-    due = room.phase === 'passing' && room.deadline != null && now >= room.deadline;
+    due =
+      ['prompting', 'passing'].includes(room.phase) &&
+      room.deadline != null &&
+      now >= room.deadline;
   if (room.type === 'minimal')
     due = room.phase === 'drawing' && room.deadline != null && now >= room.deadline;
   if (room.type === 'majority')

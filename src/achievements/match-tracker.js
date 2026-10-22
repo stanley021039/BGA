@@ -119,6 +119,7 @@ function attachMatchAchievements(room) {
   Object.defineProperty(room, 'act', {
     value: function (id, action, data = {}) {
       const round = this.round,
+        stepId = this.stepId,
         p = this.player(id),
         targetRole = this.roles?.[data.targetId],
         artistId = this.order?.[this.shown],
@@ -139,7 +140,7 @@ function attachMatchAchievements(room) {
             : this.type === 'minimal'
               ? (action === 'submit' && data.shapes?.length > 0) || action === 'guess'
               : this.type === 'telephone'
-                ? action === 'submit'
+                ? action === 'submit' && round > 0 && data.stepId === stepId
                 : action === 'plan';
       if (current && p && !p.bot && effective) {
         if (!current.decisions.has(id)) current.decisions.set(id, new Set());

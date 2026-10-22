@@ -189,6 +189,11 @@
     align-items: stretch;
     min-block-size: 300px;
   }
+  .vue-telephone-task.is-prompting .vue-telephone-guess {
+    inline-size: 100%;
+    max-inline-size: 40rem;
+    justify-self: center;
+  }
   .vue-telephone-previous {
     display: grid;
     grid-template-rows: auto auto auto;
@@ -584,7 +589,8 @@
       margin: 0;
       inline-size: 100%;
     }
-    &.is-finished .vue-telephone-live {
+    &.is-finished .vue-telephone-live,
+    &.is-prompting .vue-telephone-live {
       block-size: 24rem;
     }
     .vue-telephone-book-page {

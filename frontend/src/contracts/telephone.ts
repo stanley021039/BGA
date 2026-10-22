@@ -16,6 +16,7 @@ export interface TelephonePage {
   authorId?: string;
   skipped?: boolean;
   timedOut?: boolean;
+  topicFallback?: boolean;
   strokes?: TelephoneStroke[];
   text?: string;
 }
@@ -33,7 +34,7 @@ export interface TelephoneTask {
 }
 export interface TelephoneSnapshot extends RoomSnapshot {
   type: 'telephone';
-  phase: 'waiting' | 'passing' | 'finished';
+  phase: 'waiting' | 'prompting' | 'passing' | 'finished';
   round: number;
   roundLimit: number;
   stepId: string | null;
@@ -100,7 +101,8 @@ function page(value: unknown): TelephonePage {
     !text(p.authorName) ||
     (p.authorId !== undefined && !text(p.authorId)) ||
     (p.skipped !== undefined && typeof p.skipped !== 'boolean') ||
-    (p.timedOut !== undefined && typeof p.timedOut !== 'boolean')
+    (p.timedOut !== undefined && typeof p.timedOut !== 'boolean') ||
+    (p.topicFallback !== undefined && typeof p.topicFallback !== 'boolean')
   )
     return invalid();
   const metadata = {
@@ -108,6 +110,7 @@ function page(value: unknown): TelephonePage {
     ...(typeof p.authorId === 'string' ? { authorId: p.authorId } : {}),
     ...(typeof p.skipped === 'boolean' ? { skipped: p.skipped } : {}),
     ...(typeof p.timedOut === 'boolean' ? { timedOut: p.timedOut } : {}),
+    ...(typeof p.topicFallback === 'boolean' ? { topicFallback: p.topicFallback } : {}),
   };
   if (p.kind === 'drawing') {
     const strokes = readTelephoneStrokes(p.strokes);
@@ -129,7 +132,7 @@ export function readTelephoneSnapshot(value: unknown): TelephoneSnapshot {
   const selected = array(options.sources);
   if (
     base.type !== 'telephone' ||
-    !['waiting', 'passing', 'finished'].includes(base.phase) ||
+    !['waiting', 'prompting', 'passing', 'finished'].includes(base.phase) ||
     !integer(r.round) ||
     r.round < 0 ||
     !integer(r.roundLimit) ||
@@ -152,21 +155,23 @@ export function readTelephoneSnapshot(value: unknown): TelephoneSnapshot {
   )
     return invalid();
   if (
-    base.phase === 'passing'
-      ? !finite(r.deadline) || r.round < 1 || r.roundLimit < 2
+    ['prompting', 'passing'].includes(base.phase)
+      ? !finite(r.deadline) ||
+        (base.phase === 'prompting' ? r.round !== 0 : r.round < 1) ||
+        r.roundLimit < 2
       : r.deadline !== null
   )
     return invalid();
   if (!base.players.every((p) => typeof p.ready === 'boolean' || p.ready === undefined))
     return invalid();
   let task: TelephoneTask | null = null;
-  if (base.phase === 'passing') {
+  if (['prompting', 'passing'].includes(base.phase)) {
     const t = record(r.task),
       kind = r.round % 2 ? 'drawing' : 'text',
       previous = page(t.previous);
     if (
       t.kind !== kind ||
-      previous.kind === kind ||
+      (base.phase === 'prompting' ? previous.kind !== 'text' : previous.kind === kind) ||
       typeof t.submitted !== 'boolean' ||
       (t.submitted && t.draft !== null)
     )

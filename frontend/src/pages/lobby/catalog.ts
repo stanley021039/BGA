@@ -54,7 +54,7 @@ export const gameCards: GameCard[] = [
     id: 'telephone',
     title: '傳情畫意',
     english: 'DRAW · PASS · GUESS',
-    description: '同時畫圖、猜詞，最後揭曉故事如何變形。',
+    description: '先各自想主題，再傳畫猜詞，最後逐頁揭曉故事。',
     seats: '3–8 人',
     category: '派對・傳畫',
     art: 'telephone',

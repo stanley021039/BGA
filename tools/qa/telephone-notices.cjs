@@ -42,7 +42,21 @@ const { appFixture } = require('../../tests/helpers/app-fixture.cjs');
       const { code } = await post('create', { type: 'telephone' });
       await post('bot', { code });
       await post('bot', { code });
-      await post('start', { code });
+      const opening = await post('start', { code });
+      await post('action', {
+        code,
+        action: 'submit',
+        stepId: opening.stepId,
+        requestId: require('node:crypto').randomUUID(),
+        text: '通知驗收主題',
+      });
+      let drawing;
+      for (let tries = 0; tries < 100; tries++) {
+        drawing = await (await context.request.get(base + '/api/state?code=' + code)).json();
+        if (drawing.phase === 'passing') break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      assert.equal(drawing.phase, 'passing');
       const page = await context.newPage();
       page.on('pageerror', (error) => errors.push(error.message));
       await page.addLocatorHandler(page.locator('.vue-media-consent-dialog[open]'), () =>

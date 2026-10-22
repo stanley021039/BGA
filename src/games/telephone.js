@@ -100,6 +100,7 @@ class TelephoneRoom {
     Object.defineProperty(this, 'now', { value: now, enumerable: false });
     Object.defineProperty(this, 'drafts', { value: {}, writable: true, enumerable: false });
     Object.defineProperty(this, 'draftReceipts', { value: new Map(), enumerable: false });
+    Object.defineProperty(this, 'topicReceipts', { value: new Map(), enumerable: false });
     this.runId = null;
     this.pageCommits = [];
   }
@@ -164,7 +165,9 @@ class TelephoneRoom {
         ownerId: p.id,
         ownerName: p.name,
         promptId: prompt.id,
-        pages: [{ kind: 'text', authorName: '情境題庫', text: prompt.text }],
+        pages: [
+          { kind: 'text', authorName: p.name, authorId: p.id, skipped: true, text: '（尚未出題）' },
+        ],
       });
     }
     this.players = active;
@@ -172,9 +175,9 @@ class TelephoneRoom {
     this.books = books;
     this.runId = randomUUID();
     this.pageCommits = [];
-    this.round = 1;
+    this.round = 0;
     this.roundLimit = active.length % 2 ? active.length - 1 : active.length;
-    this.phase = 'passing';
+    this.phase = 'prompting';
     this.deadline = this.now() + this.options.seconds * 1000;
     this.stepId = randomUUID();
     this.submissions = {};
@@ -182,17 +185,38 @@ class TelephoneRoom {
     this.draftReceipts.clear();
     this.interrupted = false;
     this.receipts.clear();
+    this.topicReceipts.clear();
     this.revealIndex = -1;
-    this.event('start', '每人只看上一頁，畫圖與猜詞交替；最後一起揭曉。');
+    this.event('start', '先各自想一個主題；90 秒內全員送出即可提早開始作畫。');
   }
   bookFor(id) {
     const seat = this.roster.indexOf(id);
-    return this.books[(seat - this.round + 1 + this.roster.length) % this.roster.length];
+    return this.books[(seat - this.round + this.roster.length) % this.roster.length];
+  }
+  topicPage(player, data, fallback = false, timedOut = false) {
+    const book = this.books[this.roster.indexOf(player.id)];
+    const prompt = fallback ? PROMPTS.find((row) => row.id === book.promptId) : null;
+    return {
+      kind: 'text',
+      authorName: fallback ? '情境題庫' : player.name,
+      ...(fallback ? { topicFallback: true } : { authorId: player.id }),
+      text: fallback ? prompt.text : guessText(data.text),
+      ...(timedOut ? { timedOut: true } : {}),
+    };
+  }
+  beginDrawing(now) {
+    this.phase = 'passing';
+    this.round = 1;
+    this.deadline = now + this.options.seconds * 1000;
+    this.stepId = randomUUID();
+    this.submissions = {};
+    this.drafts = {};
+    this.draftReceipts.clear();
+    this.event('pass', '主題已備妥，傳給下一位玩家開始作畫。');
   }
   act(id, action, data = {}) {
     const p = this.player(id);
     if (!p) fail('NOT_SEATED', '尚未入座', 403);
-    if (data.stepId !== this.stepId) fail('STALE_STEP', '已換頁，請更新畫面');
     if (typeof data.requestId !== 'string' || !/^[a-zA-Z0-9-]{8,80}$/.test(data.requestId))
       fail('INVALID_REQUEST_ID', '操作識別碼不正確', 400);
     const key = id + ':' + data.requestId,
@@ -207,6 +231,14 @@ class TelephoneRoom {
           ]),
         )
         .digest('hex');
+    if (data.stepId !== this.stepId) {
+      const receipt = this.topicReceipts.get(key);
+      if (this.phase === 'passing' && this.round === 1 && receipt?.stepId === data.stepId) {
+        if (receipt.fingerprint !== fingerprint) fail('REQUEST_CONFLICT', '操作識別碼內容不一致');
+        return;
+      }
+      fail('STALE_STEP', '已換頁，請更新畫面');
+    }
     if (this.receipts.has(key)) {
       if (this.receipts.get(key) !== fingerprint) fail('REQUEST_CONFLICT', '操作識別碼內容不一致');
       return;
@@ -224,11 +256,24 @@ class TelephoneRoom {
       if (this.receipts.size > 128) this.receipts.delete(this.receipts.keys().next().value);
       return;
     }
-    if (this.phase !== 'passing') fail('INVALID_PHASE', '這場已結束');
+    if (!['prompting', 'passing'].includes(this.phase)) fail('INVALID_PHASE', '這場已結束');
     if (action === 'advance') fail('TIMED_PASSING', '時間到會自動傳下一頁，不能提早傳頁');
     if (this.now() >= this.deadline) fail('PAGE_CLOSED', '本頁時間已到，正在傳下一頁');
     if (action !== 'submit' && action !== 'skip') fail('INVALID_ACTION', '不支援的操作', 400);
     if (this.submissions[id]) fail('ALREADY_SUBMITTED', '這頁已送出');
+    if (this.phase === 'prompting') {
+      const page = this.topicPage(p, data, action === 'skip');
+      const bookIndex = this.roster.indexOf(id);
+      this.books[bookIndex].pages[0] = page;
+      this.pageCommits = [{ bookIndex, round: 0, page }];
+      this.submissions[id] = page;
+      delete this.drafts[id];
+      this.receipts.set(key, fingerprint);
+      this.topicReceipts.set(key, { stepId: data.stepId, fingerprint });
+      this.event('topic', p.name + ' 已送出主題');
+      if (this.roster.every((seat) => this.submissions[seat])) this.beginDrawing(this.now());
+      return;
+    }
     this.submissions[id] = makePage(p, this.round, data, action === 'skip');
     delete this.drafts[id];
     this.event('submit', p.name + ' 已送出');
@@ -240,7 +285,7 @@ class TelephoneRoom {
     const p = this.player(id);
     if (!p) fail('NOT_SEATED', '尚未入座', 403);
     if (data.stepId !== this.stepId) fail('STALE_STEP', '已換頁，請更新畫面');
-    if (this.phase !== 'passing') fail('INVALID_PHASE', '這場已結束');
+    if (!['prompting', 'passing'].includes(this.phase)) fail('INVALID_PHASE', '這場已結束');
     if (typeof data.requestId !== 'string' || !/^[a-zA-Z0-9-]{8,80}$/.test(data.requestId))
       fail('INVALID_REQUEST_ID', '操作識別碼不正確', 400);
     const key = id + ':' + data.requestId,
@@ -268,8 +313,26 @@ class TelephoneRoom {
   }
   auto() {
     const now = this.now();
-    if (this.phase !== 'passing' || !Number.isFinite(this.deadline) || now < this.deadline)
+    if (
+      !['prompting', 'passing'].includes(this.phase) ||
+      !Number.isFinite(this.deadline) ||
+      now < this.deadline
+    )
       return false;
+    if (this.phase === 'prompting') {
+      this.pageCommits = [];
+      for (const seat of this.roster) {
+        const bookIndex = this.roster.indexOf(seat);
+        const draft = this.drafts[seat];
+        const page =
+          this.submissions[seat] ||
+          this.topicPage(this.player(seat), draft || {}, !draft?.text, true);
+        this.books[bookIndex].pages[0] = page;
+        this.pageCommits.push({ bookIndex, round: 0, page });
+      }
+      this.beginDrawing(now);
+      return true;
+    }
     for (const seat of this.roster)
       if (!this.submissions[seat]) {
         const draft = this.drafts[seat],
@@ -300,7 +363,7 @@ class TelephoneRoom {
     if (!p) fail('PLAYER_NOT_FOUND', '找不到玩家', 404);
     p.kicked = true;
     if (this.host === targetId) this.host = this.activePlayers()[0]?.id ?? null;
-    if (this.phase === 'passing') {
+    if (['prompting', 'passing'].includes(this.phase)) {
       this.commitPages();
       this.drafts = {};
       this.draftReceipts.clear();
@@ -317,7 +380,8 @@ class TelephoneRoom {
       const page = this.submissions[seat];
       if (!page) continue;
       const book = this.bookFor(seat);
-      book.pages.push(page);
+      if (this.phase === 'prompting') book.pages[0] = page;
+      else book.pages.push(page);
       this.pageCommits.push({ bookIndex: this.books.indexOf(book), round: this.round, page });
     }
     this.submissions = {};
@@ -328,7 +392,7 @@ class TelephoneRoom {
   }
   view(id) {
     if (!this.player(id)) fail('NOT_SEATED', '尚未入座', 403);
-    const passing = this.phase === 'passing',
+    const passing = ['prompting', 'passing'].includes(this.phase),
       book = passing ? this.bookFor(id) : null;
     return clone({
       type: this.type,
@@ -357,7 +421,10 @@ class TelephoneRoom {
       task: passing
         ? {
             kind: this.round % 2 ? 'drawing' : 'text',
-            previous: book.pages.at(-1),
+            previous:
+              this.phase === 'prompting'
+                ? { kind: 'text', authorName: '你', text: '想一個主題，交給下一位玩家作畫。' }
+                : book.pages.at(-1),
             submitted: !!this.submissions[id],
             draft: this.submissions[id] ? null : this.drafts[id] || null,
           }

@@ -213,7 +213,7 @@ registerTestAI('telephone', {
   maxPlayers: 8,
   plan(room, p) {
     const s = room.view(p.id);
-    if (s.phase !== 'passing' || s.task.submitted) return null;
+    if (!['prompting', 'passing'].includes(s.phase) || s.task.submitted) return null;
     return action(p.id, 'submit', {
       stepId: s.stepId,
       requestId: randomUUID(),
@@ -233,7 +233,7 @@ registerTestAI('telephone', {
               },
             ],
           }
-        : { text: '神祕小動物' }),
+        : { text: s.phase === 'prompting' ? '搭公車的神祕小動物' : '神祕小動物' }),
     });
   },
 });

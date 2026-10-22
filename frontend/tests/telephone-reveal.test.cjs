@@ -1,4 +1,5 @@
 'use strict';
+const { completeTelephoneTopics } = require('../../tests/helpers/telephone.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -57,6 +58,7 @@ function completedGame() {
   );
   const players = Array.from({ length: 3 }, (_, i) => engine.add('玩家' + i));
   engine.start();
+  completeTelephoneTopics(engine);
   for (let round = 1; round <= engine.roundLimit; round++) {
     for (const player of players)
       engine.act(player.id, 'submit', {
@@ -103,6 +105,14 @@ function client(engine, player) {
     './party-actions': { usePartyActionsStore: () => actions },
   });
   const reader = load(path.join(__dirname, '../src/contracts/telephone.ts')).readTelephoneSnapshot;
+  room.request = async (_route, payload) => {
+    engine.saveDraft(player.id, payload);
+    return engine.view(player.id);
+  };
+  room.accept = (raw) => {
+    room.snapshot = reader(raw);
+    return true;
+  };
   function refresh() {
     room.snapshot = reader(engine.view(player.id));
     room.host = player.id === engine.host;
@@ -219,6 +229,7 @@ test('routine draft changes and success stay quiet while sync failure remains vi
   const engine = new TelephoneRoom('ABCDEF', '草稿訊息', () => 0);
   const players = Array.from({ length: 3 }, (_, i) => engine.add('玩家' + i));
   engine.start();
+  completeTelephoneTopics(engine);
   const current = client(engine, players[0]);
   let failed = false;
   current.room.request = async (_route, payload) => {
@@ -243,5 +254,34 @@ test('routine draft changes and success stay quiet while sync failure remains vi
     assert.match(current.store.notice, /同步失敗/);
   } finally {
     current.dispose();
+  }
+});
+
+test('three actual topic forms submit before drawing and route each theme to the next seat', async () => {
+  const engine = new TelephoneRoom('ABCDEF', '先出題', () => 0);
+  const players = Array.from({ length: 3 }, (_, i) => engine.add('玩家' + i));
+  engine.start();
+  const clients = players.map((player) => client(engine, player));
+  try {
+    for (const [index, current] of clients.entries()) {
+      assert.equal(current.store.state.phase, 'prompting');
+      assert.equal(current.host.querySelector('.vue-telephone-previous'), null);
+      const input = current.host.querySelector('#telephoneGuess');
+      input.value = '玩家主題' + index;
+      input.dispatchEvent(new window.Event('input', { bubbles: true }));
+      await vue.nextTick();
+      assert.equal(await current.store.submit(), true);
+      if (index < clients.length - 1) assert.equal(engine.phase, 'prompting');
+    }
+    for (const current of clients) current.refresh();
+    await vue.nextTick();
+    for (const [index, current] of clients.entries()) {
+      assert.equal(current.store.state.phase, 'passing');
+      assert.equal(current.store.state.task.kind, 'drawing');
+      assert.equal(current.store.state.task.previous.text, '玩家主題' + ((index + 2) % 3));
+      assert.equal(current.store.text, '', 'topic text must not become a drawing-page draft');
+    }
+  } finally {
+    clients.forEach((current) => current.dispose());
   }
 });
