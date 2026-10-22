@@ -8,6 +8,7 @@ import { bluffRoles } from '../../contracts/bluff';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiIcon from '../../components/UiIcon.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import BluffReview from './BluffReview.vue';
 import BluffSettings from './BluffSettings.vue';
@@ -18,7 +19,9 @@ const room = useRoomStore(),
   secretOpen = ref(false),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
   reviewId = ref(''),
-  live = ref<HTMLElement | null>(null);
+  live = ref<HTMLElement | null>(null),
+  revealCard = ref<HTMLButtonElement | null>(null),
+  hideButton = ref<InstanceType<typeof UiButton> | null>(null);
 let disposed = false,
   scrollRevision = 0;
 const blocked = computed(() => !room.connected || room.busy || actions.pending || !!room.terminal),
@@ -96,6 +99,19 @@ async function choosePerson(action: 'challenge' | 'guess', id: string, name: str
       targetId: id,
       ...(action === 'guess' ? { confirmed: true } : {}),
     });
+}
+// The concealed card is itself the reveal control; move focus between the card
+// and its hide button so keyboard users can flip it back and forth in place.
+async function revealSecret() {
+  if (blocked.value || !bluff.secretVisible) return;
+  secretOpen.value = true;
+  await nextTick();
+  (hideButton.value?.$el as HTMLElement | undefined)?.focus();
+}
+async function hideSecret() {
+  secretOpen.value = false;
+  await nextTick();
+  revealCard.value?.focus();
 }
 function visibility() {
   if (document.hidden) {
@@ -213,51 +229,63 @@ function rank(index: number) {
           >
           <div v-if="state.phase === 'preparing'" class="vue-bluff-role-grid"
             ><div class="vue-bluff-private-slot" data-private
-              ><UiButton
-                stitch
-                variant="secondary"
-                icon="lock"
-                :label="
-                  !bluff.secretVisible
-                    ? '看身分已結束'
-                    : secretOpen
-                      ? '收起我的秘密角色'
-                      : '查看我的秘密角色'
+              ><button
+                v-if="!bluff.secretVisible || !secretOpen"
+                ref="revealCard"
+                type="button"
+                class="vue-bluff-private-card is-concealed"
+                data-ui-hint
+                :aria-label="
+                  bluff.secretVisible
+                    ? '查看我的秘密角色：點卡片翻開，請勿讓其他人看螢幕'
+                    : '看身分已結束，秘密卡已收起'
                 "
-                :aria-expanded="bluff.secretVisible && secretOpen"
+                aria-expanded="false"
                 :disabled="blocked || !bluff.secretVisible"
-                @click="secretOpen = !secretOpen"
-              /><article
-                class="vue-bluff-private-card"
-                :class="{ 'is-concealed': !bluff.secretVisible || !secretOpen }"
-                :data-role="bluff.secretVisible && secretOpen ? state.myRole : undefined"
-                ><template v-if="bluff.secretVisible && secretOpen"
-                  ><span class="vue-bluff-role-badge">我的秘密角色</span
-                  ><h3>{{ state.myRole ? bluffRoles[state.myRole] : '' }}</h3
-                  ><p v-if="state.myRole === 'thinker'">聽完大家說法後，找出老實人。</p
-                  ><p v-else-if="state.myRole === 'bluffer'"
-                    >請臨場編出可信的解釋，網站不提供正解。</p
-                  ><template v-else-if="state.myRole === 'honest'"
-                    ><strong>{{ state.secretAnswer }}</strong
-                    ><p>{{ state.secretExplanation?.detail }}</p
-                    ><details
-                      v-if="
-                        state.secretExplanation?.example || state.secretExplanation?.clarification
-                      "
-                      class="vue-bluff-private-extra"
-                      ><summary>口說參考</summary
-                      ><p v-if="state.secretExplanation?.example"
-                        >例子：{{ state.secretExplanation.example }}</p
-                      ><p v-if="state.secretExplanation?.clarification"
-                        >易混淆：{{ state.secretExplanation.clarification }}</p
-                      ></details
-                    ></template
-                  ></template
-                ><p v-else>{{
+                @click="revealSecret"
+                ><UiIcon name="lock" class="vue-bluff-private-lock" /><strong>{{
+                  bluff.secretVisible ? '點卡片查看我的秘密角色' : '看身分已結束'
+                }}</strong
+                ><span>{{
                   bluff.secretVisible
                     ? '秘密卡預設收起，請勿讓其他人看螢幕。'
                     : '看身分時間已結束，秘密卡已收起。正在同步口說階段…'
-                }}</p></article
+                }}</span></button
+              ><article
+                v-else
+                class="vue-bluff-private-card"
+                :data-role="state.myRole"
+                aria-label="我的秘密角色"
+                ><UiButton
+                  ref="hideButton"
+                  stitch
+                  icon-only
+                  variant="ghost"
+                  icon="lock"
+                  class="vue-bluff-private-hide"
+                  label="收起我的秘密角色"
+                  aria-expanded="true"
+                  @click="hideSecret"
+                /><span class="vue-bluff-role-badge">我的秘密角色</span
+                ><h3>{{ state.myRole ? bluffRoles[state.myRole] : '' }}</h3
+                ><p v-if="state.myRole === 'thinker'">聽完大家說法後，找出老實人。</p
+                ><p v-else-if="state.myRole === 'bluffer'">請臨場編出可信的解釋，網站不提供正解。</p
+                ><template v-else-if="state.myRole === 'honest'"
+                  ><strong>{{ state.secretAnswer }}</strong
+                  ><p>{{ state.secretExplanation?.detail }}</p
+                  ><details
+                    v-if="
+                      state.secretExplanation?.example || state.secretExplanation?.clarification
+                    "
+                    class="vue-bluff-private-extra"
+                    ><summary>口說參考</summary
+                    ><p v-if="state.secretExplanation?.example"
+                      >例子：{{ state.secretExplanation.example }}</p
+                    ><p v-if="state.secretExplanation?.clarification"
+                      >易混淆：{{ state.secretExplanation.clarification }}</p
+                    ></details
+                  ></template
+                ></article
               ></div
             ><div class="vue-bluff-prepare-controls"
               ><div class="vue-bluff-clock"
