@@ -291,7 +291,7 @@
     }
   });
   function refreshAvatar() {
-    header.querySelector('#site-avatar').src = '/api/profile/avatar?v=' + Date.now();
+    header.querySelector('#site-avatar').src = '/api/profile/avatar?size=128&v=' + Date.now();
   }
   let identityRequest = 0;
   async function refreshIdentity() {

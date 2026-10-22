@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../services/image-size';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useSessionStore } from '../stores/session';
 import { useResource } from '../composables/resource';
@@ -139,7 +140,7 @@ async function select(id: string) {
         :aria-label="'選用' + character.name"
         :aria-pressed="character.id === resource.data.value?.appearance.characterId"
         @click="select(character.id)"
-        ><img :src="character.expressions.neutral" alt="" loading="lazy" /><span>{{
+        ><img :src="sizedImage(character.expressions.neutral, 128)" alt="" loading="lazy" /><span>{{
           character.name
         }}</span></button
       ></div

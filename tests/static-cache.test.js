@@ -86,9 +86,9 @@ test('portrait URLs name their bytes and follow appearance and image changes', a
   const seat = async () => (await (await get('/api/state?code=' + code)).json()).players[0].avatar;
 
   const first = await lobbyImage();
-  assert.match(first, new RegExp(`^/characters/${me}\\?v=[\\w-]{16}$`));
+  assert.match(first, new RegExp(`^/characters/${me}\\?v=[\\w-]{16}&size=256$`));
   assert.equal(await seat(), first);
-  const current = await get(first);
+  const current = await get(first.replace('&size=256', ''));
   assert.equal(current.status, 200);
   assert.equal(current.headers.get('cache-control'), PRIVATE_IMMUTABLE);
   const stale = await get(`/characters/${me}?v=AAAAAAAAAAAAAAAA`);
@@ -133,6 +133,7 @@ test('portrait URLs name their bytes and follow appearance and image changes', a
   const replaced = await lobbyImage();
   assert.notEqual(replaced, uploaded);
   assert.equal(await seat(), replaced);
-  assert.equal((await get(replaced)).headers.get('cache-control'), PRIVATE_IMMUTABLE);
-  assert.equal((await get(uploaded)).headers.get('cache-control'), 'private, no-cache');
+  const original = (url) => get(url.replace('&size=256', ''));
+  assert.equal((await original(replaced)).headers.get('cache-control'), PRIVATE_IMMUTABLE);
+  assert.equal((await original(uploaded)).headers.get('cache-control'), 'private, no-cache');
 });

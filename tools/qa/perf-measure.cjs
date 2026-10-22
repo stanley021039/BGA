@@ -1,6 +1,7 @@
 // Page-load measurement: requests, transferred bytes and load time per scene,
 // on a cold visit and on a revisit in the same browser profile.
 // PERF_BASE=https://host PERF_CREDENTIALS_FILE=login.json [PERF_SCENES=lobby,quacks,musicquiz]
+// A scene starting with "/" (e.g. /profile) is measured as that page.
 // [PERF_OUT=result.json] node tools/qa/perf-measure.cjs
 // The credentials file is {"username":"...","password":"..."}; rooms are created
 // (and left afterwards) with that account, so point it at a test account only.
@@ -127,7 +128,8 @@ async function visit(context, url) {
         }
         let path = '/',
           code = null;
-        if (scene !== 'lobby') {
+        if (scene.startsWith('/')) path = scene;
+        else if (scene !== 'lobby') {
           const response = await context.request.post(base + '/api/create', {
             data: { type: scene, roomName: 'perf ' + scene },
           });

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../../services/image-size';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useProfileStore } from '../../stores/profile';
 import { useSessionStore } from '../../stores/session';
@@ -334,7 +335,7 @@ onMounted(() => {
                   v-if="selectedAvatar"
                   id="avatar-preview"
                   class="settings-avatar"
-                  :src="selectedAvatar.url"
+                  :src="sizedImage(selectedAvatar.url, 256)"
                   alt="目前選擇的帳號頭像"
                 /><span v-else>正在載入頭像…</span></div
               ><div class="settings-avatar-options"
@@ -367,7 +368,12 @@ onMounted(() => {
                   v-if="selected"
                   id="character-preview"
                   class="settings-character"
-                  :src="selected.expressions[selectedExpression] || selected.expressions.neutral"
+                  :src="
+                    sizedImage(
+                      selected.expressions[selectedExpression] || selected.expressions.neutral,
+                      512,
+                    )
+                  "
                   :alt="
                     selected.name +
                     '－' +
@@ -399,9 +405,11 @@ onMounted(() => {
                 :aria-label="'選擇' + character.name"
                 :aria-pressed="selected?.id === character.id"
                 @click="chooseCharacter(character.id)"
-                ><img :src="character.expressions.neutral" alt="" loading="lazy" /><span>{{
-                  character.name
-                }}</span
+                ><img
+                  :src="sizedImage(character.expressions.neutral, 128)"
+                  alt=""
+                  loading="lazy"
+                /><span>{{ character.name }}</span
                 ><span
                   v-if="selected?.id === character.id"
                   class="settings-character-check"

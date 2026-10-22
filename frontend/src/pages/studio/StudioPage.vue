@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../../services/image-size';
 import { onMounted, onBeforeUnmount, ref, shallowRef } from 'vue';
 import { useStudioStore } from '../../stores/studio';
 import type { StudioEditor, StudioArtwork } from '../../contracts/studio';
@@ -211,7 +212,7 @@ onBeforeUnmount(() => {
       :error="studio.failed || studio.imageFailed"
     /><div id="artwork-list" class="artwork-grid"
       ><article v-for="artwork in studio.artworks || []" :key="artwork.id" class="artwork-card"
-        ><img :src="artwork.url" :alt="artwork.name" loading="lazy" /><strong>{{
+        ><img :src="sizedImage(artwork.url, 256)" :alt="artwork.name" loading="lazy" /><strong>{{
           artwork.name
         }}</strong
         ><div class="artwork-actions"

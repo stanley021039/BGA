@@ -885,3 +885,5 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 2026-10-22 候選2.24.0：src/http/static-cache.js 提供快取標頭；setSecurityHeaders 仍先設 no-store，HTML／API／遊戲音訊不變。/frontend-assets 為 public immutable；公開靜態檔 no-cache＋內容 ETag（記憶體快取，stat 變更即重讀）；需登入的檔案為 private no-cache；角色圖與音效帶 ?v= 時 private immutable（characterMedia 已拒絕過期版本）。座位與大廳頭像為 /characters/<id>?v=<內容版本>，由 app.js portraitUrl 記憶；任何 /api/profile/ 或 /api/admin/ POST 完成後 refreshPortraits 清除並更新所有座位。量測腳本 tools/qa/perf-measure.cjs，紀錄在 docs/performance-measurements.md。
 
 2026-10-22 2.24.1：正式站實測 Cloudflare 把 origin 的 `no-cache` 改寫成 `max-age=14400`（區域 Browser Cache TTL 4 小時，只會延長較短的 TTL）。`no-store` 與 `private` 不受影響，所以可重新驗證的回應一律用 `private, no-cache`；immutable 打包檔不受影響。若日後把 Cloudflare 的 Browser Cache TTL 改為 Respect Existing Headers，可再考慮讓公開檔被邊緣快取。
+
+2026-10-22 候選2.25.0：src/media/thumbnails.js 以原圖 sha256 為鍵，在 `<db>.media-thumbnails/` 存 128／256／512 WebP（`.same` 代表原圖已不大於縮圖，或原圖無法解碼）。原圖與權限仍在 SQLite，縮圖可隨時刪除重建。角色圖、內建角色、`/characters/<id>`、作品與 `/api/profile/avatar` 都接受 `?size=`；縮圖尚未產生時回原圖並標 `private, no-cache`，不會被當成該尺寸快取。正式設定（config.settings）會在啟動時，以及角色／作品 POST 完成後依序補齊縮圖；測試與嵌入式 app 只在有人要求尺寸時才產生。前端以 services/image-size.ts 的 `sizedImage` 加上尺寸；座位與大廳頭像由伺服器帶 `size=256`。
