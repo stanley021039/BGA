@@ -68,7 +68,16 @@ function harness() {
               ? { useRoomStore: () => room }
               : id.includes('stores/party-actions')
                 ? { usePartyActionsStore: () => ({}) }
-                : { default: stub },
+                : {
+                    default: id.endsWith('StatusSlot.vue')
+                      ? {
+                          props: ['message'],
+                          setup(props) {
+                            return () => vue.h('p', { role: 'status' }, props.message);
+                          },
+                        }
+                      : stub,
+                  },
     },
   );
   const host = document.createElement('div');
@@ -86,6 +95,7 @@ function harness() {
     changes,
     input,
     event,
+    host,
     dispose() {
       app.unmount();
       host.remove();
@@ -128,6 +138,25 @@ test('actual scene retains Chinese composition through countdown and snapshot re
     h.event('input', '新頁');
     await vue.nextTick();
     assert.equal(h.telephone.text, '新頁');
+  } finally {
+    h.dispose();
+  }
+});
+
+test('drawing scene omits routine sync text and quotas but retains actionable notices', async () => {
+  const h = harness();
+  try {
+    h.telephone.state.task.kind = 'drawing';
+    await vue.nextTick();
+    assert.equal(h.host.querySelector('.vue-telephone-quota'), null);
+    assert.doesNotMatch(h.host.textContent, /目前草稿已與伺服器同步|伺服器已接受.*筆|3,000 點/);
+    h.telephone.storageNotice = '本地草稿無法讀取，已恢復伺服器接受的內容。';
+    await vue.nextTick();
+    assert.match(h.host.textContent, /本地草稿無法讀取/);
+    h.telephone.storageNotice = '';
+    h.telephone.notice = '私人草稿同步失敗，可手動重試。';
+    await vue.nextTick();
+    assert.match(h.host.textContent, /私人草稿同步失敗/);
   } finally {
     h.dispose();
   }

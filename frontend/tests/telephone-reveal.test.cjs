@@ -31,6 +31,9 @@ function loader(mocks = {}) {
         document,
         performance,
         structuredClone,
+        crypto: { randomUUID },
+        AbortController,
+        DOMException,
         sessionStorage: { getItem: () => null, removeItem() {}, setItem() {} },
         setTimeout,
         clearTimeout,
@@ -209,5 +212,36 @@ test('three actual scenes follow one server reveal position and render only one 
     assert.throws(() => clients[0].reader(invalid));
   } finally {
     clients.forEach((current) => current.dispose());
+  }
+});
+
+test('routine draft changes and success stay quiet while sync failure remains visible', async () => {
+  const engine = new TelephoneRoom('ABCDEF', '草稿訊息', () => 0);
+  const players = Array.from({ length: 3 }, (_, i) => engine.add('玩家' + i));
+  engine.start();
+  const current = client(engine, players[0]);
+  let failed = false;
+  current.room.request = async (_route, payload) => {
+    if (failed) throw Error('私人草稿同步失敗');
+    engine.saveDraft(players[0].id, payload);
+    return engine.view(players[0].id);
+  };
+  current.room.accept = (raw) => {
+    current.room.snapshot = current.reader(raw);
+    return true;
+  };
+  const strokes = [{ tool: 'brush', color: '#123456', size: 2, points: [[1, 1]] }];
+  try {
+    current.store.changeStrokes(strokes);
+    assert.equal(current.store.notice, '');
+    assert.equal(await current.store.sync(), true);
+    assert.equal(current.store.notice, '');
+    assert.equal(engine.drafts[players[0].id].strokes.length, 1);
+    failed = true;
+    current.store.changeStrokes([...strokes, ...strokes]);
+    assert.equal(await current.store.sync(), false);
+    assert.match(current.store.notice, /同步失敗/);
+  } finally {
+    current.dispose();
   }
 });
