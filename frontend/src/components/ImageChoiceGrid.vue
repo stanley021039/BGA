@@ -30,6 +30,6 @@ defineEmits<{ 'update:modelValue': [id: string] }>();
       @click="$emit('update:modelValue', item.id)"
       ><img :src="item.url" alt="" loading="lazy" /><span>{{ item.label }}</span
       ><small v-if="item.caption">{{ item.caption }}</small></button
-    ></div
-  >
+    ><slot name="append"
+  /></div>
 </template>

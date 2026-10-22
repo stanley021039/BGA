@@ -13,6 +13,10 @@ import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FramePicker from '../../components/FramePicker.vue';
 import FramePreview from '../../components/FramePreview.vue';
+import UiDialog from '../../components/UiDialog.vue';
+import EntranceChoices from '../../components/EntranceChoices.vue';
+import EntrancePreview from '../../components/EntrancePreview.vue';
+import { entranceEffect, entranceEffects } from '../../services/entrance-effects';
 
 const profile = useProfileStore(),
   session = useSessionStore(),
@@ -26,7 +30,11 @@ const nickname = ref(''),
 const appearance = ref<Appearance | null>(null),
   avatar = ref<Avatar | null>(null);
 const barragePicker = ref<InstanceType<typeof FramePicker> | null>(null),
-  mediaPicker = ref<InstanceType<typeof FramePicker> | null>(null);
+  mediaPicker = ref<InstanceType<typeof FramePicker> | null>(null),
+  entrancePicker = ref<InstanceType<typeof UiDialog> | null>(null);
+const entranceLabel = computed(
+  () => entranceEffects.find((effect) => effect.id === entranceEffect.value)?.label || '',
+);
 const characters = computed(() => profile.data?.characters || []);
 const selected = computed(
   () => characters.value.find((c) => c.id === appearance.value?.characterId) || characters.value[0],
@@ -283,6 +291,33 @@ onMounted(() => {
           ><FramePreview kind="media" :frame="prefs.media" name="播放器" message="我的風格"
         /></div>
       </section>
+      <section
+        class="page-panel settings-barrage-panel settings-entrance-panel"
+        aria-labelledby="entrance-settings-heading"
+      >
+        <header class="settings-card-heading"
+          ><h2 id="entrance-settings-heading">進場特效</h2
+          ><a href="/collection?section=entrance">前往收藏庫 ↗</a></header
+        >
+        <div class="settings-appearance-choice"
+          ><p id="settings-entrance-status" role="status" aria-live="polite"
+            >目前特效：<strong>{{ entranceLabel }}</strong></p
+          ><UiButton
+            id="settings-entrance-effect"
+            stitch
+            variant="ghost"
+            icon="next"
+            label="選擇進場特效"
+            @click="entrancePicker?.open($event.currentTarget as HTMLElement)"
+        /></div>
+        <div class="settings-preview-heading">進場特效即時預覽</div
+        ><div class="settings-barrage-preview-slot settings-entrance-preview-slot"
+          ><EntrancePreview
+            :effect="entranceEffect"
+            :image="selected?.expressions.neutral || '/assets/characters/traveler-neutral.png'"
+            :name="nickname || session.user?.displayName || '玩家'"
+        /></div>
+      </section>
     </div>
     <form id="settings-form" :aria-busy="pending || profile.loading" @submit.prevent="save">
       <fieldset class="settings-fields" :disabled="pending || !appearance || !avatar">
@@ -409,4 +444,5 @@ onMounted(() => {
       :disabled="!appearance || !avatar"
   /></footer>
   <FramePicker ref="barragePicker" kind="barrage" /><FramePicker ref="mediaPicker" kind="media" />
+  <UiDialog ref="entrancePicker" stitch title="選擇進場特效"><EntranceChoices /></UiDialog>
 </template>

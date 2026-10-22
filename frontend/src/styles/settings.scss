@@ -487,8 +487,10 @@
     .settings-l05-layout {
       align-items: stretch;
     }
+    // Entrance effects is now the last card, so it absorbs the spare height
+    // and the character panel ends on its baseline.
     .settings-account-column {
-      grid-template-rows: auto auto minmax(0, 1fr);
+      grid-template-rows: auto auto auto minmax(0, 1fr);
       align-content: stretch;
     }
     #settings-form,
@@ -633,4 +635,12 @@
     justify-self: stretch;
     align-self: stretch;
   }
+}
+
+// Entrance preview fits the same 148px preview slot as barrage/media.
+.settings-entrance-preview-slot .entrance-stage {
+  height: 120px;
+}
+.settings-entrance-preview-slot .entrance-preview-actor {
+  bottom: 8px;
 }

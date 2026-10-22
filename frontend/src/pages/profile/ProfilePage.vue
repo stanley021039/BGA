@@ -23,6 +23,18 @@ const selected = computed(
   () => characters.value.find((c) => c.id === appearance.value?.characterId) || characters.value[0],
 );
 const ownArtworks = computed(() => (profile.data?.artworks || []).filter((a) => a.owned));
+// Mirrors MAX_CHARACTERS / MAX_CUSTOM_EXPRESSIONS in src/profiles/uploads.js.
+const MAX_CHARACTERS = 20,
+  MAX_CUSTOM_EXPRESSIONS = 15;
+const ownedCount = computed(
+  () => (profile.data?.characters || []).filter((c) => c.owned && c.id.startsWith('user:')).length,
+);
+const characterLimitReached = computed(() => ownedCount.value >= MAX_CHARACTERS);
+const expressionLimitReached = computed(
+  () =>
+    Object.keys(selected.value?.expressions || {}).filter((key) => key.startsWith('emote-'))
+      .length >= MAX_CUSTOM_EXPRESSIONS,
+);
 const key = (value: Appearance | null) =>
   value ? JSON.stringify([value.characterId, value.expression]) : '';
 let selectionVersion = 0;
@@ -55,7 +67,8 @@ const createSource = ref<InstanceType<typeof ImageSourceField> | null>(null),
   expressionSource = ref<InstanceType<typeof ImageSourceField> | null>(null);
 const createForm = ref<HTMLFormElement | null>(null),
   expressionForm = ref<HTMLFormElement | null>(null),
-  templatesOpen = ref(false);
+  createDialog = ref<InstanceType<typeof UiDialog> | null>(null),
+  expressionDialog = ref<InstanceType<typeof UiDialog> | null>(null);
 const soundTarget = computed(() => ({
   character: selected.value,
   expression: appearance.value?.expression || 'neutral',
@@ -87,7 +100,7 @@ const groups = computed(() =>
       id: 'my-characters',
       title: '我的作品',
       items: characters.value.filter((c) => c.owned),
-      empty: '還沒有作品。可以上傳圖片，或使用下方繪圖工具。',
+      empty: '還沒有作品。按＋上傳角色，可用自己的圖片或繪畫圖庫的作品。',
     },
     {
       id: 'shared-characters',
@@ -152,8 +165,7 @@ watch(
     const artwork = ownArtworks.value.find((a) => a.id === query.get('artwork'));
     if (artwork) {
       createArtwork.value = expressionArtwork.value = artwork.id;
-      templatesOpen.value = true;
-      saveMessage.value = `已選擇圖庫作品「${artwork.name}」。可建立主角色，或選擇自己的角色新增表情。`;
+      saveMessage.value = `已選擇圖庫作品「${artwork.name}」。可在「我的作品」按＋建立角色，或選擇自己的角色後按「新增表情」。`;
     }
   },
 );
@@ -249,6 +261,31 @@ async function addExpression(): Promise<boolean> {
     saveMessage.value = '表情已新增到角色。若要將它設為預設外觀，再按「保存角色」。';
   });
   return completed && ready;
+}
+// Uploads live in their own dialogs; closing one discards its unsent draft.
+function openCreate(trigger: HTMLElement) {
+  void createDialog.value?.open(trigger);
+}
+function openExpression(trigger: HTMLElement) {
+  void expressionDialog.value?.open(trigger);
+}
+function discardCreate() {
+  if (createPending.value) return;
+  createName.value = '';
+  createFile.value = null;
+  createArtwork.value = null;
+}
+function discardExpression() {
+  if (expressionPending.value) return;
+  expressionName.value = '';
+  expressionFile.value = null;
+  expressionArtwork.value = null;
+}
+async function submitCreate() {
+  if (await createCharacter()) createDialog.value?.close();
+}
+async function submitExpression() {
+  if (await addExpression()) expressionDialog.value?.close();
 }
 const createDraft = computed(
   () => !!(createName.value.trim() || createFile.value || createArtwork.value),
@@ -445,64 +482,96 @@ onBeforeUnmount(() => {
             profile.load();
           }
         "
-      />
+        ><template #actions
+          ><div class="expression-add-row"
+            ><UiButton
+              id="open-upload-expression"
+              icon="add"
+              :label="
+                expressionLimitReached ? `表情已達上限（${MAX_CUSTOM_EXPRESSIONS} 個）` : '新增表情'
+              "
+              :disabled="expressionPending || expressionLimitReached"
+              @click="openExpression($event.currentTarget as HTMLElement)" /></div></template
+        ><template v-if="soundEditable" #sound
+          ><section
+            id="expression-sound"
+            class="expression-sound"
+            aria-labelledby="expression-sound-heading"
+            ><h3 id="expression-sound-heading">表情音效</h3
+            ><p id="expression-sound-description"
+              >「{{
+                expressionLabel(selected, appearance?.expression || '')
+              }}」送出時可播放一段音效。音效會隨分享角色一起供好友使用。</p
+            ><div class="expression-sound-actions"
+              ><span id="expression-sound-duration">{{
+                sound
+                  ? `已設定 ${(sound.durationMs / 1000).toFixed(2).replace(/0$/, '')} 秒音效`
+                  : '尚未設定音效'
+              }}</span
+              ><UiButton
+                stitch
+                v-if="sound"
+                id="preview-expression-sound"
+                icon="sound"
+                label="試聽音效"
+                :disabled="soundPending"
+                @click="previewSound" /><UiButton
+                stitch
+                v-if="sound"
+                id="remove-expression-sound"
+                icon="remove"
+                label="移除音效"
+                :pending="soundPending"
+                @click="removeSound" /></div
+            ><form
+              id="upload-expression-sound"
+              class="expression-sound-upload"
+              :aria-busy="soundPending"
+              @submit.prevent="uploadSound"
+              ><label
+                >選擇音檔<input
+                  id="expression-sound-file"
+                  ref="soundInput"
+                  type="file"
+                  accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.webm,.opus"
+                  :disabled="soundPending"
+                  @change="
+                    chooseSound(($event.target as HTMLInputElement).files?.[0] || null)
+                  " /></label
+              ><UiButton
+                stitch
+                id="save-expression-sound"
+                type="submit"
+                icon="upload"
+                label="上傳音效"
+                :pending="soundPending"
+              /><p>最多 10 秒、10 MB；超過 10 秒請先縮短。可用格式依瀏覽器支援。</p></form
+            ><StatusSlot
+              id="expression-sound-status"
+              :message="soundMessage"
+              :error="soundFailed" /></section></template
+      ></ExpressionEditor>
+      <!-- Friends' characters: the author's sound can only be previewed. -->
       <section
-        v-if="appearance?.expression !== 'neutral' && (soundEditable || sound)"
+        v-if="appearance?.expression !== 'neutral' && !soundEditable && sound"
         id="expression-sound"
         class="expression-sound"
         aria-labelledby="expression-sound-heading"
         ><h3 id="expression-sound-heading">表情音效</h3
         ><p id="expression-sound-description"
-          >「{{ expressionLabel(selected, appearance?.expression || '') }}」{{
-            soundEditable
-              ? '送出時可播放一段音效。音效會隨分享角色一起供好友使用。'
-              : '的音效由角色作者設定。'
-          }}</p
+          >「{{
+            expressionLabel(selected, appearance?.expression || '')
+          }}」的音效由角色作者設定。</p
         ><div class="expression-sound-actions"
-          ><span id="expression-sound-duration">{{
-            sound
-              ? `已設定 ${(sound.durationMs / 1000).toFixed(2).replace(/0$/, '')} 秒音效`
-              : '尚未設定音效'
-          }}</span
+          ><span id="expression-sound-duration"
+            >已設定 {{ (sound.durationMs / 1000).toFixed(2).replace(/0$/, '') }} 秒音效</span
           ><UiButton
             stitch
-            v-if="sound"
             id="preview-expression-sound"
             icon="sound"
             label="試聽音效"
             :disabled="soundPending"
-            @click="previewSound" /><UiButton
-            stitch
-            v-if="soundEditable && sound"
-            id="remove-expression-sound"
-            icon="remove"
-            label="移除音效"
-            :pending="soundPending"
-            @click="removeSound" /></div
-        ><form
-          v-if="soundEditable"
-          id="upload-expression-sound"
-          class="expression-sound-upload"
-          :aria-busy="soundPending"
-          @submit.prevent="uploadSound"
-          ><label
-            >選擇音檔<input
-              id="expression-sound-file"
-              ref="soundInput"
-              type="file"
-              accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.flac,.webm,.opus"
-              :disabled="soundPending"
-              @change="
-                chooseSound(($event.target as HTMLInputElement).files?.[0] || null)
-              " /></label
-          ><UiButton
-            stitch
-            id="save-expression-sound"
-            type="submit"
-            icon="upload"
-            label="上傳音效"
-            :pending="soundPending"
-          /><p>最多 10 秒、10 MB；超過 10 秒請先縮短。可用格式依瀏覽器支援。</p></form
+            @click="previewSound" /></div
         ><StatusSlot id="expression-sound-status" :message="soundMessage" :error="soundFailed"
       /></section>
     </section>
@@ -523,7 +592,22 @@ onBeforeUnmount(() => {
           :items="group.items"
           :model-value="selected?.id || ''"
           @update:model-value="chooseCharacter"
-        />
+          ><template v-if="group.id === 'my-characters'" #append
+            ><button
+              id="open-create-character"
+              type="button"
+              class="vue-image-choice preset-card profile-add-card"
+              :aria-label="
+                characterLimitReached ? `角色已達上限（${MAX_CHARACTERS} 個）` : '上傳新角色'
+              "
+              :disabled="createPending || characterLimitReached"
+              @click="openCreate($event.currentTarget as HTMLElement)"
+              ><span class="profile-add-icon" aria-hidden="true">＋</span
+              ><span>{{ characterLimitReached ? '已達上限' : '上傳角色' }}</span
+              ><small>{{ ownedCount }} / {{ MAX_CHARACTERS }}</small></button
+            ></template
+          ></ImageChoiceGrid
+        >
         <p v-if="!group.items.length && group.empty" class="gallery-empty">{{ group.empty }}</p>
       </section>
       <div v-if="selected?.owned" id="sharing-controls" class="sharing-controls"
@@ -544,92 +628,91 @@ onBeforeUnmount(() => {
       />
     </section>
   </div>
-  <details
-    :open="templatesOpen"
-    class="artist-templates"
-    @toggle="templatesOpen = ($event.target as HTMLDetailsElement).open"
-    ><summary
-      ><span>上傳自己的角色與表情</span
-      ><span class="profile-upload-plus" aria-hidden="true">＋</span></summary
-    ><p
-      >主角色與表情可使用 PNG、GIF、WebP；不限制像素尺寸，每張最多 4
-      MB。可以拖放檔案，略過選檔視窗。</p
-    >
-    <div class="profile-upload-grid">
-      <section class="upload-group"
-        ><h3>A. 主角色</h3><p>先建立一位角色，主圖片會作為平常顯示的外觀。</p
-        ><form
-          id="create-character"
-          ref="createForm"
-          class="character-upload"
-          :aria-busy="createPending"
-          @submit.prevent="createCharacter"
-          ><label
-            >角色名稱<input
-              id="character-name"
-              v-model="createName"
-              maxlength="32"
-              required
-              placeholder="我的角色"
-              :disabled="createPending" /></label
-          ><ImageSourceField
-            ref="createSource"
-            v-model:file="createFile"
-            v-model:artwork-id="createArtwork"
-            input-id="character-file"
-            label="主角色圖片"
-            :artworks="ownArtworks"
-            :disabled="createPending" /><UiButton
-            stitch
-            type="submit"
-            variant="primary"
-            label="建立主角色"
-            icon="add"
-            :pending="createPending" /><StatusSlot
-            :message="createMessage"
-            :error="createFailed" /></form
-      ></section>
-      <section class="upload-group"
-        ><h3>B. 新增表情</h3
-        ><p id="emote-target">{{
-          selected?.owned
-            ? `正在為「${selected.name}」新增表情（最多 15 個）。`
-            : '先從「我的作品」選擇自己的角色。'
-        }}</p
-        ><form
-          v-show="selected?.owned"
-          id="upload-expression"
-          ref="expressionForm"
-          class="character-upload"
-          :aria-busy="expressionPending"
-          @submit.prevent="addExpression"
-          ><label
-            >表情名稱（最長 20 字）<input
-              id="expression-name"
-              v-model="expressionName"
-              maxlength="20"
-              required
-              placeholder="例如：開心大笑"
-              :disabled="expressionPending" /></label
-          ><ImageSourceField
-            ref="expressionSource"
-            v-model:file="expressionFile"
-            v-model:artwork-id="expressionArtwork"
-            input-id="expression-file"
-            label="表情圖片"
-            :artworks="ownArtworks"
-            :disabled="expressionPending" /><UiButton
-            stitch
-            type="submit"
-            variant="primary"
-            label="新增表情"
-            icon="add"
-            :pending="expressionPending" /><StatusSlot
-            :message="expressionMessage"
-            :error="expressionFailed" /></form
-      ></section>
-    </div>
-  </details>
+  <UiDialog
+    ref="createDialog"
+    stitch
+    class="profile-upload-dialog"
+    title="上傳角色"
+    :dismissible="!createPending"
+    @closed="discardCreate"
+    ><p class="profile-upload-hint"
+      >主圖片會作為平常顯示的外觀。可上傳 PNG、GIF、WebP（每張最多 4
+      MB，可拖放），或從繪畫圖庫選一張作品。</p
+    ><form
+      id="create-character"
+      ref="createForm"
+      class="character-upload"
+      :aria-busy="createPending"
+      @submit.prevent="submitCreate"
+      ><label
+        >角色名稱<input
+          id="character-name"
+          v-model="createName"
+          maxlength="32"
+          required
+          placeholder="我的角色"
+          :disabled="createPending" /></label
+      ><ImageSourceField
+        ref="createSource"
+        v-model:file="createFile"
+        v-model:artwork-id="createArtwork"
+        input-id="character-file"
+        label="主角色圖片"
+        :artworks="ownArtworks"
+        :disabled="createPending" /><UiButton
+        stitch
+        type="submit"
+        variant="primary"
+        label="建立主角色"
+        icon="add"
+        :pending="createPending" /><StatusSlot
+        :message="createMessage"
+        :error="createFailed" /></form
+  ></UiDialog>
+  <UiDialog
+    ref="expressionDialog"
+    stitch
+    class="profile-upload-dialog"
+    title="新增表情"
+    :dismissible="!expressionPending"
+    @closed="discardExpression"
+    ><p id="emote-target" class="profile-upload-hint">{{
+      selected?.owned
+        ? `正在為「${selected.name}」新增表情（最多 15 個）。可上傳圖片，或從繪畫圖庫選一張作品。`
+        : '先從「我的作品」選擇自己的角色。'
+    }}</p
+    ><form
+      v-show="selected?.owned"
+      id="upload-expression"
+      ref="expressionForm"
+      class="character-upload"
+      :aria-busy="expressionPending"
+      @submit.prevent="submitExpression"
+      ><label
+        >表情名稱（最長 20 字）<input
+          id="expression-name"
+          v-model="expressionName"
+          maxlength="20"
+          required
+          placeholder="例如：開心大笑"
+          :disabled="expressionPending" /></label
+      ><ImageSourceField
+        ref="expressionSource"
+        v-model:file="expressionFile"
+        v-model:artwork-id="expressionArtwork"
+        input-id="expression-file"
+        label="表情圖片"
+        :artworks="ownArtworks"
+        :disabled="expressionPending" /><UiButton
+        stitch
+        type="submit"
+        variant="primary"
+        label="新增表情"
+        icon="add"
+        :pending="expressionPending" /><StatusSlot
+        :message="expressionMessage"
+        :error="expressionFailed" /></form
+  ></UiDialog>
   <UiDialog
     ref="leaveDialog"
     title="角色檔案尚未儲存"

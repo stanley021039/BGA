@@ -7,6 +7,7 @@ const MAX_BYTES = 1024 * 1024;
 const MAX_CHARACTER_IMAGE_BYTES = 4 * 1024 * 1024;
 const MAX_CHARACTER_IMAGE_BODY_BYTES = 4 * Math.ceil(MAX_CHARACTER_IMAGE_BYTES / 3) + 8192;
 const MAX_CUSTOM_EXPRESSIONS = 15;
+const MAX_CHARACTERS = 20;
 function invalid(message = '圖片格式不正確') {
   throw new HttpError(400, 'INVALID_CHARACTER_IMAGE', message);
 }
@@ -90,7 +91,8 @@ function createCharacter(db, ownerId, data) {
   const count = db
     .prepare('SELECT COUNT(*) AS count FROM player_characters WHERE owner_id=?')
     .get(ownerId).count;
-  if (count >= 10) throw new HttpError(400, 'CHARACTER_LIMIT', '每個帳號最多上傳 10 個角色');
+  if (count >= MAX_CHARACTERS)
+    throw new HttpError(400, 'CHARACTER_LIMIT', `每個帳號最多上傳 ${MAX_CHARACTERS} 個角色`);
   db.exec('BEGIN IMMEDIATE');
   try {
     db.prepare('INSERT INTO player_characters(id,owner_id,name,created_at) VALUES(?,?,?,?)').run(
