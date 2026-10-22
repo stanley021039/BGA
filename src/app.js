@@ -2641,6 +2641,7 @@ function initializeApp(config, dataLock, acquired) {
         '/shared/immersion.js': 'shared/immersion.js',
         '/shared/race-event-cues.js': 'shared/race-event-cues.js',
         '/shared/race-vehicle-effects.js': 'shared/race-vehicle-effects.js',
+        '/shared/race-directions.js': 'shared/race-directions.js',
         '/shared/race-dice-dialog.js': 'shared/race-dice-dialog.js',
         '/shared/race-terrain-help.js': 'shared/race-terrain-help.js',
         '/shared/api.js': 'shared/api.js',

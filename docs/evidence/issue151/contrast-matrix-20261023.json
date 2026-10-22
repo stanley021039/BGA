@@ -1,0 +1,3789 @@
+{
+  "date": "2026-10-23",
+  "baseCommit": "2a25686f0b967df96af8f958b70ffb035c42153f",
+  "version": "2.35.1",
+  "scope": "29 entry pages, light/dark/auto (system dark), desktop/mobile; not all gameplay branches; sound-library has its own palette",
+  "summary": {
+    "samples": 174,
+    "checkedTextSamples": 7275,
+    "failureSamples": 0,
+    "pageErrorSamples": 0,
+    "manualSamples": 423
+  },
+  "screenshots": [
+    {
+      "file": "draw-1920-auto.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "draw-1920-dark.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "draw-1920-light.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "draw-390-auto.png",
+      "width": 390,
+      "height": 2977
+    },
+    {
+      "file": "draw-390-dark.png",
+      "width": 390,
+      "height": 2977
+    },
+    {
+      "file": "draw-390-light.png",
+      "width": 390,
+      "height": 2977
+    },
+    {
+      "file": "login-1920-auto.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "login-1920-dark.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "login-1920-light.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "login-390-auto.png",
+      "width": 390,
+      "height": 1310
+    },
+    {
+      "file": "login-390-dark.png",
+      "width": 390,
+      "height": 1310
+    },
+    {
+      "file": "login-390-light.png",
+      "width": 390,
+      "height": 1310
+    },
+    {
+      "file": "minimal-1920-auto.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "minimal-1920-dark.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "minimal-1920-light.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "minimal-390-auto.png",
+      "width": 390,
+      "height": 2215
+    },
+    {
+      "file": "minimal-390-dark.png",
+      "width": 390,
+      "height": 2215
+    },
+    {
+      "file": "minimal-390-light.png",
+      "width": 390,
+      "height": 2215
+    },
+    {
+      "file": "musicquiz-focus-1920-dark.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "musicquiz-focus-1920-light.png",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "file": "musicquiz-focus-390-dark.png",
+      "width": 390,
+      "height": 4830
+    },
+    {
+      "file": "musicquiz-focus-390-light.png",
+      "width": 390,
+      "height": 4830
+    },
+    {
+      "file": "profile-1920-auto.png",
+      "width": 1920,
+      "height": 1122
+    },
+    {
+      "file": "profile-1920-dark.png",
+      "width": 1920,
+      "height": 1122
+    },
+    {
+      "file": "profile-1920-light.png",
+      "width": 1920,
+      "height": 1122
+    },
+    {
+      "file": "profile-390-auto.png",
+      "width": 390,
+      "height": 2256
+    },
+    {
+      "file": "profile-390-dark.png",
+      "width": 390,
+      "height": 2256
+    },
+    {
+      "file": "profile-390-light.png",
+      "width": 390,
+      "height": 2256
+    },
+    {
+      "file": "settings-1920-auto.png",
+      "width": 1920,
+      "height": 1504
+    },
+    {
+      "file": "settings-1920-dark.png",
+      "width": 1920,
+      "height": 1504
+    },
+    {
+      "file": "settings-1920-light.png",
+      "width": 1920,
+      "height": 1504
+    },
+    {
+      "file": "settings-390-auto.png",
+      "width": 390,
+      "height": 2589
+    },
+    {
+      "file": "settings-390-dark.png",
+      "width": 390,
+      "height": 2589
+    },
+    {
+      "file": "settings-390-light.png",
+      "width": 390,
+      "height": 2589
+    }
+  ],
+  "samples": [
+    {
+      "page": "achievements",
+      "route": "/achievements",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 120,
+        "hidden": 223,
+        "disabled": 24
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 48
+    },
+    {
+      "page": "admin",
+      "route": "/admin",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 24,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "bluff",
+      "route": "/bluff",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "collection",
+      "route": "/collection",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 206,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "community",
+      "route": "/community",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 22,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "credits",
+      "route": "/credits",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 27,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "draw",
+      "route": "/draw",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 53,
+        "hidden": 62,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "draw-words",
+      "route": "/draw-words",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 145,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "game-audio",
+      "route": "/admin/game-audio",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 1430,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "gift",
+      "route": "/gift",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 32,
+        "hidden": 59,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "gifts",
+      "route": "/gifts",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 88,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "history",
+      "route": "/history",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "lobby",
+      "route": "/",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 31,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "login",
+      "route": "/login",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 15,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "majority",
+      "route": "/majority",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 58,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 13
+    },
+    {
+      "page": "market",
+      "route": "/market",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 22,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "minimal",
+      "route": "/minimal",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 37,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "music",
+      "route": "/music",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 13,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "musicquiz",
+      "route": "/musicquiz",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 105,
+        "hidden": 100,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "poker",
+      "route": "/poker",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "profile",
+      "route": "/profile",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 20,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "quacks",
+      "route": "/quacks",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 34,
+        "hidden": 53,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "race",
+      "route": "/race",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 30,
+        "hidden": 53,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "rules",
+      "route": "/rules",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 38,
+        "hidden": 52,
+        "disabled": 15
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 50,
+        "hidden": 80,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "sound-library",
+      "route": "/sound-library",
+      "width": 390,
+      "preference": "auto",
+      "scheme": null,
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 117,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "studio",
+      "route": "/studio",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 28,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "telephone",
+      "route": "/telephone",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "trpg",
+      "route": "/trpg",
+      "width": 390,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "achievements",
+      "route": "/achievements",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 120,
+        "hidden": 223,
+        "disabled": 24
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 48
+    },
+    {
+      "page": "admin",
+      "route": "/admin",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 24,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "bluff",
+      "route": "/bluff",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "collection",
+      "route": "/collection",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 206,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "community",
+      "route": "/community",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 22,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "credits",
+      "route": "/credits",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 27,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "draw",
+      "route": "/draw",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 53,
+        "hidden": 62,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "draw-words",
+      "route": "/draw-words",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 145,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "game-audio",
+      "route": "/admin/game-audio",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 1430,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "gift",
+      "route": "/gift",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 32,
+        "hidden": 59,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "gifts",
+      "route": "/gifts",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 88,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "history",
+      "route": "/history",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "lobby",
+      "route": "/",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 31,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "login",
+      "route": "/login",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 15,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "majority",
+      "route": "/majority",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 58,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 13
+    },
+    {
+      "page": "market",
+      "route": "/market",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 22,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "minimal",
+      "route": "/minimal",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 37,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "music",
+      "route": "/music",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 13,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "musicquiz",
+      "route": "/musicquiz",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 105,
+        "hidden": 100,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "poker",
+      "route": "/poker",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "profile",
+      "route": "/profile",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 20,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "quacks",
+      "route": "/quacks",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 34,
+        "hidden": 53,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "race",
+      "route": "/race",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 30,
+        "hidden": 53,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "rules",
+      "route": "/rules",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 38,
+        "hidden": 52,
+        "disabled": 15
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 50,
+        "hidden": 80,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "sound-library",
+      "route": "/sound-library",
+      "width": 390,
+      "preference": "dark",
+      "scheme": null,
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 117,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "studio",
+      "route": "/studio",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 28,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "telephone",
+      "route": "/telephone",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "trpg",
+      "route": "/trpg",
+      "width": 390,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "achievements",
+      "route": "/achievements",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 120,
+        "hidden": 223,
+        "disabled": 24
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 48
+    },
+    {
+      "page": "admin",
+      "route": "/admin",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 24,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "bluff",
+      "route": "/bluff",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "collection",
+      "route": "/collection",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 206,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "community",
+      "route": "/community",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 22,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "credits",
+      "route": "/credits",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 27,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "draw",
+      "route": "/draw",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 53,
+        "hidden": 62,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "draw-words",
+      "route": "/draw-words",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 145,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "game-audio",
+      "route": "/admin/game-audio",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 1430,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "gift",
+      "route": "/gift",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 32,
+        "hidden": 59,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "gifts",
+      "route": "/gifts",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 88,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "history",
+      "route": "/history",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "lobby",
+      "route": "/",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 31,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "login",
+      "route": "/login",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 15,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "majority",
+      "route": "/majority",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 58,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 13
+    },
+    {
+      "page": "market",
+      "route": "/market",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 22,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "minimal",
+      "route": "/minimal",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 37,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "music",
+      "route": "/music",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 13,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "musicquiz",
+      "route": "/musicquiz",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 105,
+        "hidden": 100,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "poker",
+      "route": "/poker",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "profile",
+      "route": "/profile",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 20,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "quacks",
+      "route": "/quacks",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 34,
+        "hidden": 53,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "race",
+      "route": "/race",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 30,
+        "hidden": 53,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "rules",
+      "route": "/rules",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 38,
+        "hidden": 52,
+        "disabled": 15
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 50,
+        "hidden": 80,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "sound-library",
+      "route": "/sound-library",
+      "width": 390,
+      "preference": "light",
+      "scheme": null,
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 117,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "studio",
+      "route": "/studio",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 28,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "telephone",
+      "route": "/telephone",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "trpg",
+      "route": "/trpg",
+      "width": 390,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        390,
+        844
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "achievements",
+      "route": "/achievements",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 131,
+        "hidden": 212,
+        "disabled": 24
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 48
+    },
+    {
+      "page": "admin",
+      "route": "/admin",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 18,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "bluff",
+      "route": "/bluff",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 36,
+        "hidden": 54,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "collection",
+      "route": "/collection",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 206,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "community",
+      "route": "/community",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 22,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "credits",
+      "route": "/credits",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 27,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "draw",
+      "route": "/draw",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 44,
+        "hidden": 71,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "draw-words",
+      "route": "/draw-words",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 46,
+        "hidden": 138,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "game-audio",
+      "route": "/admin/game-audio",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 1430,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "gift",
+      "route": "/gift",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 33,
+        "hidden": 58,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "gifts",
+      "route": "/gifts",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 72,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "history",
+      "route": "/history",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "lobby",
+      "route": "/",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 50,
+        "hidden": 34,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "login",
+      "route": "/login",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 15,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "majority",
+      "route": "/majority",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 71,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 4
+    },
+    {
+      "page": "market",
+      "route": "/market",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 22,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "minimal",
+      "route": "/minimal",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 38,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "music",
+      "route": "/music",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 13,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "musicquiz",
+      "route": "/musicquiz",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 40,
+        "hidden": 165,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "poker",
+      "route": "/poker",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 36,
+        "hidden": 50,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "profile",
+      "route": "/profile",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 20,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "quacks",
+      "route": "/quacks",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "race",
+      "route": "/race",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "rules",
+      "route": "/rules",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 37,
+        "hidden": 53,
+        "disabled": 15
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 52,
+        "hidden": 78,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "sound-library",
+      "route": "/sound-library",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": null,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 117,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "studio",
+      "route": "/studio",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 28,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "telephone",
+      "route": "/telephone",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "trpg",
+      "route": "/trpg",
+      "width": 1920,
+      "preference": "auto",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "achievements",
+      "route": "/achievements",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 131,
+        "hidden": 212,
+        "disabled": 24
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 48
+    },
+    {
+      "page": "admin",
+      "route": "/admin",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 18,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "bluff",
+      "route": "/bluff",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 36,
+        "hidden": 54,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "collection",
+      "route": "/collection",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 206,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "community",
+      "route": "/community",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 22,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "credits",
+      "route": "/credits",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 27,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "draw",
+      "route": "/draw",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 44,
+        "hidden": 71,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "draw-words",
+      "route": "/draw-words",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 46,
+        "hidden": 138,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "game-audio",
+      "route": "/admin/game-audio",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 1430,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "gift",
+      "route": "/gift",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 33,
+        "hidden": 58,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "gifts",
+      "route": "/gifts",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 72,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "history",
+      "route": "/history",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "lobby",
+      "route": "/",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 50,
+        "hidden": 34,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "login",
+      "route": "/login",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 15,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "majority",
+      "route": "/majority",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 71,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 4
+    },
+    {
+      "page": "market",
+      "route": "/market",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 22,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "minimal",
+      "route": "/minimal",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 38,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "music",
+      "route": "/music",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 13,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "musicquiz",
+      "route": "/musicquiz",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 40,
+        "hidden": 165,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "poker",
+      "route": "/poker",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 36,
+        "hidden": 50,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "profile",
+      "route": "/profile",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 20,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "quacks",
+      "route": "/quacks",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "race",
+      "route": "/race",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "rules",
+      "route": "/rules",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 37,
+        "hidden": 53,
+        "disabled": 15
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 52,
+        "hidden": 78,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "sound-library",
+      "route": "/sound-library",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": null,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 117,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "studio",
+      "route": "/studio",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 28,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "telephone",
+      "route": "/telephone",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "trpg",
+      "route": "/trpg",
+      "width": 1920,
+      "preference": "dark",
+      "scheme": "dark",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "achievements",
+      "route": "/achievements",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 131,
+        "hidden": 212,
+        "disabled": 24
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 48
+    },
+    {
+      "page": "admin",
+      "route": "/admin",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 18,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "bluff",
+      "route": "/bluff",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 36,
+        "hidden": 54,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "collection",
+      "route": "/collection",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 41,
+        "hidden": 206,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "community",
+      "route": "/community",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 22,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "credits",
+      "route": "/credits",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 27,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "draw",
+      "route": "/draw",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 44,
+        "hidden": 71,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "draw-words",
+      "route": "/draw-words",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 46,
+        "hidden": 138,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "game-audio",
+      "route": "/admin/game-audio",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 1430,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "gift",
+      "route": "/gift",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 33,
+        "hidden": 58,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "gifts",
+      "route": "/gifts",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 72,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "history",
+      "route": "/history",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 17,
+        "hidden": 30,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "lobby",
+      "route": "/",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 50,
+        "hidden": 34,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "login",
+      "route": "/login",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 15,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "majority",
+      "route": "/majority",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 71,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 4
+    },
+    {
+      "page": "market",
+      "route": "/market",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 39,
+        "hidden": 22,
+        "disabled": 2
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "minimal",
+      "route": "/minimal",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 38,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "music",
+      "route": "/music",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 13,
+        "hidden": 17,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "musicquiz",
+      "route": "/musicquiz",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 40,
+        "hidden": 165,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "poker",
+      "route": "/poker",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 36,
+        "hidden": 50,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "profile",
+      "route": "/profile",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 47,
+        "hidden": 20,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "quacks",
+      "route": "/quacks",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 35,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "race",
+      "route": "/race",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 52,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "rules",
+      "route": "/rules",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 37,
+        "hidden": 53,
+        "disabled": 15
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "settings",
+      "route": "/settings",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 52,
+        "hidden": 78,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 2
+    },
+    {
+      "page": "sound-library",
+      "route": "/sound-library",
+      "width": 1920,
+      "preference": "light",
+      "scheme": null,
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 117,
+        "hidden": 0,
+        "disabled": 0
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "studio",
+      "route": "/studio",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 28,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 0
+    },
+    {
+      "page": "telephone",
+      "route": "/telephone",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 42,
+        "hidden": 51,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    },
+    {
+      "page": "trpg",
+      "route": "/trpg",
+      "width": 1920,
+      "preference": "light",
+      "scheme": "light",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "counts": {
+        "checked": 31,
+        "hidden": 55,
+        "disabled": 1
+      },
+      "failures": [],
+      "errors": [],
+      "overflow": false,
+      "manualCount": 1
+    }
+  ],
+  "focusedStates": [
+    {
+      "width": 1920,
+      "scheme": "light",
+      "before": {
+        "width": 263.75,
+        "height": 160,
+        "x": 980.5,
+        "y": 598,
+        "checked": false,
+        "focused": true,
+        "outlineColor": "rgb(0, 81, 213)",
+        "outlineWidth": "3px",
+        "borderColor": "rgba(41, 38, 57, 0.208)",
+        "textColor": "rgb(27, 28, 28)"
+      },
+      "after": {
+        "width": 263.75,
+        "height": 160,
+        "x": 980.5,
+        "y": 598,
+        "checked": true,
+        "focused": true,
+        "outlineColor": "rgb(0, 81, 213)",
+        "outlineWidth": "3px",
+        "borderColor": "rgba(41, 38, 57, 0.208)",
+        "textColor": "rgb(27, 28, 28)"
+      },
+      "errors": []
+    },
+    {
+      "width": 1920,
+      "scheme": "dark",
+      "before": {
+        "width": 263.75,
+        "height": 160,
+        "x": 980.5,
+        "y": 598,
+        "checked": false,
+        "focused": true,
+        "outlineColor": "rgb(145, 185, 255)",
+        "outlineWidth": "3px",
+        "borderColor": "rgba(247, 241, 231, 0.314)",
+        "textColor": "rgb(245, 243, 239)"
+      },
+      "after": {
+        "width": 263.75,
+        "height": 160,
+        "x": 980.5,
+        "y": 598,
+        "checked": true,
+        "focused": true,
+        "outlineColor": "rgb(145, 185, 255)",
+        "outlineWidth": "3px",
+        "borderColor": "rgba(247, 241, 231, 0.314)",
+        "textColor": "rgb(245, 243, 239)"
+      },
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scheme": "light",
+      "before": {
+        "width": 268,
+        "height": 160,
+        "x": 61,
+        "y": 341.59375,
+        "checked": false,
+        "focused": true,
+        "outlineColor": "rgb(0, 81, 213)",
+        "outlineWidth": "3px",
+        "borderColor": "rgba(41, 38, 57, 0.208)",
+        "textColor": "rgb(27, 28, 28)"
+      },
+      "after": {
+        "width": 268,
+        "height": 160,
+        "x": 61,
+        "y": 341.59375,
+        "checked": true,
+        "focused": true,
+        "outlineColor": "rgb(0, 81, 213)",
+        "outlineWidth": "3px",
+        "borderColor": "rgba(41, 38, 57, 0.208)",
+        "textColor": "rgb(27, 28, 28)"
+      },
+      "errors": []
+    },
+    {
+      "width": 390,
+      "scheme": "dark",
+      "before": {
+        "width": 268,
+        "height": 160,
+        "x": 61,
+        "y": 341.59375,
+        "checked": false,
+        "focused": true,
+        "outlineColor": "rgb(145, 185, 255)",
+        "outlineWidth": "3px",
+        "borderColor": "rgba(247, 241, 231, 0.314)",
+        "textColor": "rgb(245, 243, 239)"
+      },
+      "after": {
+        "width": 268,
+        "height": 160,
+        "x": 61,
+        "y": 341.59375,
+        "checked": true,
+        "focused": true,
+        "outlineColor": "rgb(145, 185, 255)",
+        "outlineWidth": "3px",
+        "borderColor": "rgba(247, 241, 231, 0.314)",
+        "textColor": "rgb(245, 243, 239)"
+      },
+      "errors": []
+    }
+  ],
+  "cssSha256": {
+    "frontend/src/styles/stitch-tokens.scss": "11059ed3805aa86d6536a9a17e627fa4d11ceffda7ae0905f364781cb3e39bf6",
+    "frontend/src/styles/stitch-party-content.scss": "e7274cf31b9d01b1a9ea5013122e0c151aa18c50a9fe62143b35f722c377025a"
+  }
+}
