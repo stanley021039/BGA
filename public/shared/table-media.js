@@ -52,7 +52,7 @@
   consent.setAttribute('aria-labelledby', 'mediaConsentTitle');
   consent.setAttribute('autofocus', '');
   consent.innerHTML =
-    '<h2 id="mediaConsentTitle">接受這一桌的影片嗎？</h2><p>接受後，這一桌點播的YouTube影片會在你的媒體視窗顯示。瀏覽器仍可能需要你按播放器才能開始播放。</p><p>選擇暫不觀看就不載入Google播放器；之後可從「媒體」重新接受。</p><div data-dialog-actions><button id="mediaConsentAccept" type="button">接受影片</button><button id="mediaConsentDecline" type="button">暫不觀看</button></div><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google隱私權政策 ↗</a>';
+    '<h2 id="mediaConsentTitle">接受載入房間影片嗎？</h2><p>接受後，房間點播的YouTube影片會在你的媒體視窗顯示。瀏覽器仍可能需要你按播放器才能開始播放。</p><p>這個分頁進其他房間沿用本次選擇，重新整理後會再詢問。選擇暫不觀看就不載入Google播放器；之後可從「媒體」重新接受。</p><div data-dialog-actions><button id="mediaConsentAccept" type="button">接受影片</button><button id="mediaConsentDecline" type="button">暫不觀看</button></div><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google隱私權政策 ↗</a>';
   window.GameUI?.frameDialog?.(consent);
   document.body.append(dialog, consent);
   const q = (selector) => dialog.querySelector(selector),
@@ -181,24 +181,26 @@
   q('#mediaPermission').classList.add('ui-sr-only');
   const positionKey = 'bga.media.window.v1',
     sizeKey = 'bga.media.size.v1',
-    consents = new Map(),
     automaticSeen = new Set(),
     automaticPending = [],
     requests = new Set(),
     retiredPlayers = new WeakSet();
-  const consentStorageKey = 'bga.media.consents.v1';
+  // One video decision per browser tab: other rooms reuse it, a reload asks again.
+  // Must match frontend/src/services/media-consent.ts.
+  const consentStorageKey = 'bga.media.consent.v2';
+  let consentDecision;
   try {
-    const saved = JSON.parse(localStorage.getItem(consentStorageKey));
-    if (Array.isArray(saved))
-      for (const entry of saved.slice(-64)) {
-        if (
-          Array.isArray(entry) &&
-          typeof entry[0] === 'string' &&
-          entry[0].length <= 200 &&
-          typeof entry[1] === 'boolean'
-        )
-          consents.set(entry[0], entry[1]);
-      }
+    localStorage.removeItem('bga.media.consents.v1');
+  } catch {}
+  try {
+    const navigation = performance.getEntriesByType?.('navigation')[0];
+    const reload = navigation ? navigation.type === 'reload' : performance.navigation?.type === 1;
+    if (reload) sessionStorage.removeItem(consentStorageKey);
+    else {
+      const saved = sessionStorage.getItem(consentStorageKey);
+      if (saved === 'accepted') consentDecision = true;
+      else if (saved === 'declined') consentDecision = false;
+    }
   } catch {}
   const audioTransitions = new WeakMap();
   let audioPreviewGesture = null;
@@ -331,7 +333,7 @@
       !!snapshot?.current &&
       snapshot.current.type === 'video' &&
       videoWanted &&
-      consents.get(consentKey) === true &&
+      consentDecision === true &&
       dialog.open &&
       !document.hidden
     );
@@ -1273,10 +1275,9 @@
   }
   function chooseVideo(accept) {
     if (promptKey && promptKey !== consentKey) return;
-    consents.set(consentKey, accept);
-    while (consents.size > 64) consents.delete(consents.keys().next().value);
+    consentDecision = accept;
     try {
-      localStorage.setItem(consentStorageKey, JSON.stringify([...consents]));
+      sessionStorage.setItem(consentStorageKey, accept ? 'accepted' : 'declined');
     } catch {}
     pendingConsent = false;
     promptKey = null;
@@ -1341,13 +1342,12 @@
       hasCurrent: !!next.current,
     };
     consentKey = `${next.roomInstanceId}:${room.me}`;
-    if (!consents.has(consentKey)) pendingConsent = true;
-    else if (oldConsentKey !== consentKey) videoWanted = consents.get(consentKey) === true;
+    if (consentDecision === undefined) pendingConsent = true;
+    else if (oldConsentKey !== consentKey) videoWanted = consentDecision === true;
     if (oldKey !== currentKey()) {
       stopPlayers();
       automaticPending.length = 0;
-      if (next.current?.type === 'video' && videoWanted && consents.get(consentKey) === true)
-        openWindow();
+      if (next.current?.type === 'video' && videoWanted && consentDecision === true) openWindow();
     }
     render();
     if (oldKey !== currentKey() || oldSignature !== signature()) applyPlayback(true);
@@ -1936,7 +1936,7 @@
     q('#mediaMusicNative').hidden = !music;
     q('#mediaVideoExit').hidden = !video || !activeVideo();
     q('#mediaVideoJoin').disabled = !video || submitting;
-    const joinLabel = consents.get(consentKey) ? '重新加入觀看' : '接受並觀看影片';
+    const joinLabel = consentDecision ? '重新加入觀看' : '接受並觀看影片';
     if (q('#mediaVideoJoin').getAttribute('aria-label') !== joinLabel)
       iconButton(q('#mediaVideoJoin'), 'video', joinLabel);
     q('#mediaNativeVideo').hidden = !video || !activeVideo() || !videoFallback || nativeVideo;

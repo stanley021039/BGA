@@ -7,27 +7,32 @@ const vm = require('node:vm');
 const vue = require('vue');
 const ts = require('typescript');
 const { parse, compileScript } = require('@vue/compiler-sfc');
-const historyModule = { exports: {} };
-vm.runInNewContext(
-  ts.transpileModule(
-    fs.readFileSync(path.resolve(__dirname, '../src/services/media-history.ts'), 'utf8'),
-    {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-    },
-  ).outputText,
-  { module: historyModule, exports: historyModule.exports },
-);
+function loadService(name) {
+  const loaded = { exports: {} };
+  vm.runInNewContext(
+    ts.transpileModule(
+      fs.readFileSync(path.resolve(__dirname, `../src/services/${name}.ts`), 'utf8'),
+      {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+      },
+    ).outputText,
+    { module: loaded, exports: loaded.exports },
+  );
+  return loaded;
+}
+const historyModule = loadService('media-history'),
+  consentModule = loadService('media-consent');
 
 function harness() {
   const calls = [],
     lifecycle = {};
   const provider = Object.fromEntries(
-    ['setWindow', 'setMarker', 'update', 'disconnect', 'dispose', 'joinVideo'].map((key) => [
-      key,
-      (...args) => calls.push([key, ...args]),
-    ]),
+    ['setWindow', 'setMarker', 'update', 'disconnect', 'dispose', 'joinVideo', 'exitVideo'].map(
+      (key) => [key, (...args) => calls.push([key, ...args])],
+    ),
   );
-  const session = vue.reactive({ user: { id: 'account-a' } });
+  const session = vue.reactive({ user: { id: 'account-a' } }),
+    consent = consentModule.exports.createMediaConsent(null, null, 'navigate');
   const media = vue.reactive({
     context: 1,
     enabled: true,
@@ -76,18 +81,20 @@ function harness() {
               ? { useSessionStore: () => session }
               : id.includes('services/media-history')
                 ? historyModule.exports
-                : id.includes('stores/preferences')
-                  ? {
-                      usePreferencesStore: () => ({
-                        media: 'default',
-                        audio: { music: { enabled: true, volume: 0.3 } },
-                      }),
-                    }
-                  : id.includes('composables/media-window')
-                    ? { useMediaWindow: () => geometry }
-                    : id.includes('contracts/media')
-                      ? { mediaCurrentKey: () => '', mediaPlaybackKey: () => '' }
-                      : {},
+                : id.includes('services/media-consent')
+                  ? { mediaConsent: () => consent }
+                  : id.includes('stores/preferences')
+                    ? {
+                        usePreferencesStore: () => ({
+                          media: 'default',
+                          audio: { music: { enabled: true, volume: 0.3 } },
+                        }),
+                      }
+                    : id.includes('composables/media-window')
+                      ? { useMediaWindow: () => geometry }
+                      : id.includes('contracts/media')
+                        ? { mediaCurrentKey: () => '', mediaPlaybackKey: () => '' }
+                        : {},
       localStorage: { getItem: () => null },
       window: {
         RoomMediaPlayer: {
@@ -134,6 +141,7 @@ function harness() {
     calls,
     media,
     session,
+    consent,
     dispose() {
       lifecycle.unmount();
       scope.stop();
@@ -269,6 +277,70 @@ test('actual Vue records playing current videos only, fills a title selection wi
       0,
       'account change must not record the previous snapshot',
     );
+  } finally {
+    h.dispose();
+  }
+});
+
+function memoryStorage(entries = []) {
+  const saved = new Map(entries);
+  return {
+    saved,
+    getItem: (key) => saved.get(key) ?? null,
+    setItem: (key, value) => saved.set(key, value),
+    removeItem: (key) => saved.delete(key),
+  };
+}
+
+test('one video decision covers other rooms in the tab and a reload asks again', () => {
+  const { createMediaConsent, MEDIA_CONSENT_KEY } = consentModule.exports;
+  for (const accepted of [false, true]) {
+    const session = memoryStorage(),
+      local = memoryStorage([['bga.media.consents.v1', '[["room-a:host",true]]']]);
+    const first = createMediaConsent(session, local, 'navigate');
+    assert.equal(first.get(), undefined, 'the old per-room record never answers');
+    assert.equal(local.saved.has('bga.media.consents.v1'), false);
+    first.set(accepted);
+    assert.equal(createMediaConsent(session, local, 'navigate').get(), accepted);
+    assert.equal(createMediaConsent(session, local, 'back_forward').get(), accepted);
+    assert.equal(createMediaConsent(session, local, 'reload').get(), undefined);
+    assert.equal(session.saved.has(MEDIA_CONSENT_KEY), false);
+  }
+});
+
+test('unavailable or malformed consent storage keeps asking without inferring acceptance', () => {
+  const { createMediaConsent, MEDIA_CONSENT_KEY } = consentModule.exports;
+  const blocked = {
+    getItem() {
+      throw Error('blocked');
+    },
+    setItem() {
+      throw Error('blocked');
+    },
+    removeItem() {
+      throw Error('blocked');
+    },
+  };
+  const page = createMediaConsent(blocked, blocked, 'navigate');
+  assert.equal(page.get(), undefined);
+  page.set(true);
+  assert.equal(page.get(), true, 'the choice still holds for this page');
+  assert.equal(
+    createMediaConsent(memoryStorage([[MEDIA_CONSENT_KEY, 'yes']]), null, 'navigate').get(),
+    undefined,
+  );
+});
+
+test('actual Vue window asks once and reuses the tab decision for a new room', async () => {
+  const h = harness();
+  try {
+    assert.equal(h.component.videoConsent.value, undefined);
+    await h.component.chooseVideo(false);
+    assert.equal(h.component.videoConsent.value, false);
+    assert.equal(h.consent.get(), false, 'the choice is stored for the whole tab');
+    h.media.snapshot = { ...h.media.snapshot, roomInstanceId: 'room-b' };
+    await vue.nextTick();
+    assert.equal(h.component.videoConsent.value, false, 'a new room keeps the tab decision');
   } finally {
     h.dispose();
   }

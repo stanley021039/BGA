@@ -275,7 +275,6 @@
     "tests/helpers/market-legacy-schema.cjs": "9cff41a728b1c6a0db4d5d7ad5f87f5c4197c3f2dcb6f1f29785f00f2e0cd754",
     "tests/helpers/market-worker.cjs": "b048ca6283644636b3c5cf4270920502049830794e42adf4c74aeadfbadffd25",
     "tests/helpers/media-audio-browser.cjs": "600eb72916d1eaed791046a7f63c2b0d6a1d118ae138216102b95095975b5539",
-    "tests/helpers/media-browser.cjs": "be1020e7f61f483fc85234e494c02989f4f98f9dff98f8eabfbb53e3d506957d",
     "tests/helpers/motion.js": "fd94ef987ef13e4753d473b8f612e9f08a51877e781e8f7457b3f43171190d34",
     "tests/helpers/quacks-art-dom.cjs": "c559da0e6c0428ffff60c4635f4dc4c37c518cb8f325163caea627ef5f97eb65",
     "tests/helpers/race-dice.js": "bf47c06df30dacd27750d256d9153d3d3dd43f9cfc028adbd6f66fe103cdac4c",
