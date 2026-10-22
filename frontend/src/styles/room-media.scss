@@ -370,12 +370,17 @@
   }
   .vue-media-controls {
     display: grid;
-    grid-template-columns: repeat(6, 44px) minmax(0, 1fr);
+    grid-template-columns: repeat(6, minmax(44px, 1fr));
     align-items: center;
-    gap: 2px;
+    gap: 8px 2px;
     min-inline-size: 0;
+    > .vue-button {
+      justify-self: center;
+    }
   }
   .vue-media-volume {
+    grid-column: 1 / -1;
+    inline-size: 100%;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -785,21 +790,6 @@
 }
 @container (max-width:410px) {
   :root body .vue-room-media-scope.vue-stitch-scope {
-    .vue-media-controls {
-      grid-template-columns: repeat(6, minmax(44px, 1fr));
-      gap: 2px;
-      > .vue-button {
-        justify-self: center;
-      }
-    }
-    .vue-media-volume {
-      grid-column: 1/-1;
-      inline-size: 100%;
-      > .vue-button {
-        inline-size: 44px;
-        min-inline-size: 44px;
-      }
-    }
     .vue-media-current {
       flex-wrap: wrap;
       > .vue-media-sync-badge {
@@ -829,7 +819,7 @@
       padding: 8px;
     }
     .vue-media-controls {
-      gap: 0;
+      gap: 8px 0;
     }
     .vue-media-entry {
       padding: 8px;
