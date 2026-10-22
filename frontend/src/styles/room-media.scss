@@ -453,10 +453,11 @@
     flex: none;
     min-inline-size: 0;
     min-block-size: 0;
-    > summary {
+    > h3 {
+      margin: 0;
+      font-size: var(--stitch-font-14);
       min-block-size: 44px;
       padding: 8px 4px;
-      cursor: pointer;
       box-sizing: border-box;
     }
     .vue-media-queue {
@@ -644,6 +645,19 @@
     font-size: var(--stitch-font-14);
     line-height: 1.5;
     text-decoration: underline;
+  }
+  .vue-media-entry-heading {
+    flex-wrap: wrap;
+    label {
+      margin: 0;
+      color: inherit;
+      font-size: var(--stitch-font-14);
+      font-weight: 600;
+      line-height: 1.5;
+    }
+    .vue-media-library-link {
+      gap: 4px;
+    }
   }
   .vue-media-feedback {
     display: grid;

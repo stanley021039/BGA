@@ -821,7 +821,16 @@ onBeforeUnmount(() => {
               :aria-labelledby="id + '-tab-request'"
             >
               <form class="vue-media-entry" @submit.prevent="enqueueMusic"
-                ><label :for="id + '-track'">共用音樂庫</label
+                ><div class="vue-media-entry-heading">
+                  <a
+                    class="vue-media-library-link"
+                    href="/collection?section=music"
+                    target="_blank"
+                    rel="noopener"
+                    ><span aria-hidden="true">·</span> 上傳新歌曲
+                    <span aria-hidden="true">↗</span></a
+                  >
+                  <label :for="id + '-track'">共用音樂庫</label> </div
                 ><div
                   ><select :id="id + '-track'" v-model="track" :disabled="media.busy"
                     ><option value="">選擇歌曲</option
@@ -862,20 +871,13 @@ onBeforeUnmount(() => {
                     label="加入影片至播放清單"
                     :disabled="!url.trim() || !media.snapshot || media.busy" /></div
               ></form>
-              <a
-                class="vue-media-library-link"
-                href="/collection?section=music"
-                target="_blank"
-                rel="noopener"
-                >前往音樂收藏庫／上傳歌曲 ↗</a
-              >
               <StatusSlot
                 v-if="feedback"
                 :message="feedback"
                 :error="media.failed || !!media.libraryError"
               />
-              <details class="vue-media-playlist" @toggle="cancelQueue">
-                <summary>播放清單（{{ media.snapshot?.queue.length || 0 }}）</summary>
+              <section class="vue-media-playlist" aria-label="播放清單">
+                <h3>播放清單（{{ media.snapshot?.queue.length || 0 }}）</h3>
                 <ol ref="queueArea" class="vue-media-queue" aria-label="待播媒體，可捲動查看"
                   ><li
                     v-for="(entry, index) in media.snapshot?.queue || []"
@@ -918,7 +920,7 @@ onBeforeUnmount(() => {
                     ><UiIcon class="ui-icon" name="cards" /><p>播放清單目前是空的。</p></li
                   ></ol
                 >
-              </details>
+              </section>
             </section>
           </div>
         </div>
