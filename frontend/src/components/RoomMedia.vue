@@ -822,6 +822,7 @@ onBeforeUnmount(() => {
             >
               <form class="vue-media-entry" @submit.prevent="enqueueMusic"
                 ><div class="vue-media-entry-heading">
+                  <label :for="id + '-track'">共用音樂庫</label>
                   <a
                     class="vue-media-library-link"
                     href="/collection?section=music"
@@ -829,8 +830,7 @@ onBeforeUnmount(() => {
                     rel="noopener"
                     ><span aria-hidden="true">·</span> 上傳新歌曲
                     <span aria-hidden="true">↗</span></a
-                  >
-                  <label :for="id + '-track'">共用音樂庫</label> </div
+                  > </div
                 ><div
                   ><select :id="id + '-track'" v-model="track" :disabled="media.busy"
                     ><option value="">選擇歌曲</option
