@@ -89,6 +89,8 @@ const { TelephoneRoom } = require('../../src/games/telephone');
       for (const current of clients) {
         await current.page.goto(base + '/telephone/' + code);
         await current.page.locator('.vue-game-main').waitFor();
+        // Trigger the consent handler before screenshots or starting the timer.
+        await current.page.locator('.vue-game-main').click({ position: { x: 5, y: 5 } });
       }
       const initial = await post(clients[0], 'start', { code });
       for (const current of clients) {
