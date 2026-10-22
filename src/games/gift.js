@@ -13,7 +13,8 @@ const freeze = (value) => {
   return value;
 };
 const rankPoints = { great: 3, good: 2, ok: 1, noWay: -4 };
-const clamp = (value, target) => Math.max(0, Math.min(target, value));
+// Scores keep a floor of 0 but may pass the target (#172).
+const floor = (value) => Math.max(0, value);
 const MAX_PENDING_ACHIEVEMENT_UNITS = 256;
 const CANONICAL_USER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -389,17 +390,20 @@ class GiftRoom {
     for (const entry of entries) {
       const giver = this.player(entry.giverId),
         recipient = this.player(entry.recipientId);
-      giver.giveScore = clamp(giver.giveScore + entry.points, this.target);
-      recipient.getScore = clamp(recipient.getScore + entry.points, this.target);
+      giver.giveScore = floor(giver.giveScore + entry.points);
+      recipient.getScore = floor(recipient.getScore + entry.points);
       entry.giveAfter = giver.giveScore;
       entry.getAfter = recipient.getScore;
     }
     this.result = { ...this.pendingResult, entries };
     this.pendingResult = null;
     this.delivery = null;
-    const winners = players.filter(
-      (player) => player.giveScore === this.target && player.getScore === this.target,
+    // Everyone with both tracks at or past the target qualifies; the highest combined total wins, ties share it.
+    const qualified = players.filter(
+      (player) => player.giveScore >= this.target && player.getScore >= this.target,
     );
+    const best = Math.max(...qualified.map((player) => player.giveScore + player.getScore));
+    const winners = qualified.filter((player) => player.giveScore + player.getScore === best);
     this.phase = winners.length ? 'finished' : 'reveal';
     if (winners.length)
       this.winner = { ids: winners.map((player) => player.id), round: this.round };

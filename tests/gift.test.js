@@ -304,14 +304,97 @@ test('gift rounds keep choices secret, score both tracks, and finish only after 
   assert.ok(room.gifts.every((gift) => !previousGifts.has(gift.id)));
   runRound();
   assert.equal(room.phase, 'finished');
+  // Scores pass the target instead of capping at it; highest combined total wins (#172).
   assert.deepEqual(
-    room.winner.ids,
-    players.map((player) => player.id),
+    room.players.map((player) => [player.giveScore, player.getScore]),
+    [
+      [10, 10],
+      [12, 10],
+      [8, 10],
+    ],
   );
-  assert.ok(room.players.every((player) => player.giveScore === 8 && player.getScore === 8));
+  assert.deepEqual(room.winner.ids, [players[1].id]);
   room.start();
   assert.equal(room.phase, 'choosing');
   assert.equal(room.round, 1);
+});
+
+test('gift scores keep a 0 floor, may pass the target, and ties on the combined total share the win', () => {
+  const play = (setup) => {
+    const room = new GiftRoom('UNC172', '送禮達人', () => 0),
+      players = ['阿星', '小河', '雨點'].map((name) => room.add(name));
+    room.configure(players[0].id, { target: 8 });
+    room.start();
+    setup(room.players);
+    const [a, b, c] = players.map((player) => player.id),
+      [g0, g1, g2, g3] = room.gifts.map((gift) => gift.id);
+    room.act(a, 'give', { assignments: { [b]: g0, [c]: g1 } });
+    room.act(b, 'give', { assignments: { [a]: g0, [c]: g2 } });
+    room.act(c, 'give', { assignments: { [a]: g1, [b]: g2 } });
+    room.act(a, 'wish', { ranking: { great: g0, good: g1, ok: g2, noWay: g3 } });
+    room.act(b, 'wish', { ranking: { great: g0, good: g2, ok: g1, noWay: g3 } });
+    room.act(c, 'wish', { ranking: { great: g2, good: g1, ok: g0, noWay: g3 } });
+    receiveAll(room);
+    return { room, players };
+  };
+  // One round adds [5,5],[6,5],[4,5]; seed scores so all three land on exactly 8／8.
+  let { room, players } = play(([a, b, c]) => {
+    a.giveScore = 3;
+    a.getScore = 3;
+    b.giveScore = 2;
+    b.getScore = 3;
+    c.giveScore = 4;
+    c.getScore = 3;
+  });
+  assert.equal(room.phase, 'finished');
+  assert.deepEqual(
+    room.winner.ids,
+    players.map((player) => player.id),
+    'equal combined totals share the win',
+  );
+  // A huge give track does not win while the receive track is still short of the target.
+  ({ room, players } = play(([a, b, c]) => {
+    a.giveScore = 3;
+    a.getScore = 3;
+    b.giveScore = 20;
+    b.getScore = 2;
+    c.giveScore = 0;
+    c.getScore = 0;
+  }));
+  assert.deepEqual(
+    room.players.map((player) => [player.giveScore, player.getScore]),
+    [
+      [8, 8],
+      [26, 7],
+      [4, 5],
+    ],
+  );
+  assert.deepEqual(room.winner.ids, [players[0].id]);
+  assert.ok(
+    room.result.entries.some((entry) => entry.giveAfter === 26),
+    'entry snapshots keep the uncapped score',
+  );
+  // Nobody qualifies: the round continues even with scores above the target on one track.
+  ({ room } = play(([a]) => {
+    a.giveScore = 30;
+  }));
+  assert.equal(room.phase, 'reveal');
+  assert.equal(room.winner, null);
+  // The 0 floor still applies.
+  const floorRoom = new GiftRoom('FLR172', '送禮達人', () => 0),
+    seated = ['甲', '乙', '丙'].map((name) => floorRoom.add(name));
+  floorRoom.configure(seated[0].id, { target: 8 });
+  floorRoom.start();
+  const [x, y, z] = seated.map((player) => player.id),
+    [h0, h1, h2, h3] = floorRoom.gifts.map((gift) => gift.id);
+  floorRoom.act(x, 'give', { assignments: { [y]: h3, [z]: h3 === h0 ? h1 : h0 } });
+  floorRoom.act(y, 'give', { assignments: { [x]: h3, [z]: h1 } });
+  floorRoom.act(z, 'give', { assignments: { [x]: h2, [y]: h1 } });
+  for (const id of [x, y, z])
+    floorRoom.act(id, 'wish', { ranking: { great: h0, good: h1, ok: h2, noWay: h3 } });
+  receiveAll(floorRoom);
+  assert.ok(floorRoom.players.every((player) => player.giveScore >= 0 && player.getScore >= 0));
+  assert.ok(floorRoom.result.entries.some((entry) => entry.points < 0));
 });
 
 test('invalid input cannot leak choices or alter a locked round; kicking a player cannot stall it', () => {
@@ -686,7 +769,15 @@ test('authenticated players can create, join and reconnect to a gift room withou
     }
     assert.equal(state.phase, 'finished');
     assert.equal(state.result.entries.length, 6);
-    assert.equal(state.winner.ids.length, 3);
+    assert.deepEqual(
+      state.winner.ids,
+      [b],
+      'highest combined total wins once everyone passes the target (#172)',
+    );
+    assert.ok(
+      state.players.some((player) => player.giveScore > state.target),
+      'view keeps scores above the target',
+    );
     assert.equal((await getAchievements(host))[0].unlockedAt, unlockedAt);
     const finishedHistory = await (
       await fetch(base + '/api/history', { headers: { Cookie: host } })
@@ -695,5 +786,40 @@ test('authenticated players can create, join and reconnect to a gift room withou
   } finally {
     await app.close();
     fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('gift frontend contract and rules no longer cap scores at the target (#172)', () => {
+  const contract = fs.readFileSync(
+    path.join(__dirname, '../frontend/src/contracts/gift.ts'),
+    'utf8',
+  );
+  assert.doesNotMatch(
+    contract,
+    /giveScore\s*>\s*target|getScore\s*>\s*target/,
+    'player scores above target must parse',
+  );
+  assert.doesNotMatch(contract, /as number\)\s*>\s*30/, 'entry snapshots above 30 must parse');
+  assert.match(contract, /p\.giveScore < 0 \|\| p\.getScore < 0/, '0 floor still enforced');
+  const page = fs.readFileSync(
+      path.join(__dirname, '../frontend/src/pages/gift/GiftPage.vue'),
+      'utf8',
+    ),
+    scene = fs.readFileSync(
+      path.join(__dirname, '../frontend/src/pages/gift/GiftScene.vue'),
+      'utf8',
+    ),
+    legacy = fs.readFileSync(path.join(__dirname, '../public/gift.html'), 'utf8');
+  for (const [name, source] of [
+    ['GiftPage', page],
+    ['GiftScene', scene],
+    ['gift.html', legacy],
+  ]) {
+    assert.doesNotMatch(
+      source,
+      /最高目標分數|不超過目標|分數保持 0–/,
+      name + ' still describes the old cap',
+    );
+    assert.match(source, /加總最高/, name + ' explains the combined-total tiebreak');
   }
 });
