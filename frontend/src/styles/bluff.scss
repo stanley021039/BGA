@@ -500,7 +500,7 @@
   .vue-bluff-speech-log {
     max-block-size: 240px;
     overflow-y: auto;
-    .is-live span {
+    .is-live {
       font-style: italic;
       opacity: 0.8;
     }
