@@ -883,3 +883,5 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 2026-10-22 候選2.23.0：ProfilePage 上傳改為 createDialog／expressionDialog，關閉即清除未送出草稿；ImageChoiceGrid 新增 append slot 放「我的作品」＋卡片，ExpressionEditor 新增 actions／sound slot（音效狀態仍由 ProfilePage 管理以保留離開提醒）。好友角色只保留頁面上的試聽區。MAX_CHARACTERS=20 於 src/profiles/uploads.js，前端常數同步。設定頁 EntrancePreview 以 apparate 播放目前角色，左欄最後一卡吸收剩餘高度。
 
 2026-10-22 候選2.24.0：src/http/static-cache.js 提供快取標頭；setSecurityHeaders 仍先設 no-store，HTML／API／遊戲音訊不變。/frontend-assets 為 public immutable；公開靜態檔 no-cache＋內容 ETag（記憶體快取，stat 變更即重讀）；需登入的檔案為 private no-cache；角色圖與音效帶 ?v= 時 private immutable（characterMedia 已拒絕過期版本）。座位與大廳頭像為 /characters/<id>?v=<內容版本>，由 app.js portraitUrl 記憶；任何 /api/profile/ 或 /api/admin/ POST 完成後 refreshPortraits 清除並更新所有座位。量測腳本 tools/qa/perf-measure.cjs，紀錄在 docs/performance-measurements.md。
+
+2026-10-22 2.24.1：正式站實測 Cloudflare 把 origin 的 `no-cache` 改寫成 `max-age=14400`（區域 Browser Cache TTL 4 小時，只會延長較短的 TTL）。`no-store` 與 `private` 不受影響，所以可重新驗證的回應一律用 `private, no-cache`；immutable 打包檔不受影響。若日後把 Cloudflare 的 Browser Cache TTL 改為 Respect Existing Headers，可再考慮讓公開檔被邊緣快取。

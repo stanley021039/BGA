@@ -33,7 +33,7 @@ test('hashed build assets are immutable, public files revalidate by ETag and doc
   const shared = await fetch(base + '/shared/ui-widgets.js'),
     etag = shared.headers.get('etag');
   assert.equal(shared.status, 200);
-  assert.equal(shared.headers.get('cache-control'), 'no-cache');
+  assert.equal(shared.headers.get('cache-control'), 'private, no-cache');
   assert.match(etag, /^"[\w-]{27}"$/);
   assert.equal(
     await shared.text(),

@@ -6,7 +6,9 @@ const fs = require('node:fs');
 // as no-store; HTML, APIs and game audio keep that.
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 const PRIVATE_IMMUTABLE = 'private, max-age=31536000, immutable';
-const REVALIDATE = 'no-cache';
+// Revalidated responses are private even for public files: Cloudflare raises a
+// shorter browser TTL to the zone's Browser Cache TTL (4 h), which would keep
+// stale shared scripts after a deploy, but leaves private responses alone.
 const PRIVATE_REVALIDATE = 'private, no-cache';
 
 const etagFor = (bytes) =>
@@ -25,7 +27,12 @@ function fresh(req, etag) {
 
 // Answers 304 when the browser already holds these bytes. Callers check access
 // first, so a revalidation never outlives a revoked session.
-function sendCached(req, res, bytes, { cacheControl = REVALIDATE, etag = etagFor(bytes) } = {}) {
+function sendCached(
+  req,
+  res,
+  bytes,
+  { cacheControl = PRIVATE_REVALIDATE, etag = etagFor(bytes) } = {},
+) {
   res.setHeader('Cache-Control', cacheControl);
   res.setHeader('ETag', etag);
   if (fresh(req, etag)) {
@@ -49,7 +56,7 @@ function readStatic(location) {
   return entry;
 }
 
-function sendStatic(req, res, location, cacheControl = REVALIDATE) {
+function sendStatic(req, res, location, cacheControl = PRIVATE_REVALIDATE) {
   const { bytes, etag } = readStatic(location);
   return sendCached(req, res, bytes, { cacheControl, etag });
 }
@@ -64,7 +71,6 @@ function sendVersioned(req, res, bytes, versioned) {
 module.exports = {
   IMMUTABLE,
   PRIVATE_IMMUTABLE,
-  REVALIDATE,
   PRIVATE_REVALIDATE,
   etagFor,
   readStatic,
