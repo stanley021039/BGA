@@ -299,11 +299,9 @@
     min-inline-size: 0;
     display: grid;
     gap: 16px;
-    > .vue-button {
-      justify-self: start;
-    }
   }
   .vue-bluff-private-card {
+    position: relative;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -333,6 +331,46 @@
       align-items: center;
       text-align: center;
       background: var(--stitch-surface-subtle);
+    }
+    // The concealed card is the reveal button itself (tap, click, Enter/Space).
+    // ui-primitives styles every button as a pill with !important borders.
+    &:is(button) {
+      appearance: none;
+      min-block-size: 0;
+      border: 1px solid var(--stitch-line) !important;
+      border-radius: 12px !important;
+      color: var(--stitch-ink);
+      font: inherit;
+      cursor: pointer;
+      transition:
+        border-color 0.15s,
+        background-color 0.15s;
+      &:hover:not(:disabled) {
+        border-color: var(--stitch-primary) !important;
+        background: var(--stitch-surface-hover);
+      }
+      &:focus-visible {
+        outline: 3px solid var(--stitch-focus);
+        outline-offset: 2px;
+      }
+      &:disabled {
+        cursor: default;
+        color: var(--stitch-muted);
+      }
+      > span:last-child {
+        font-size: 16px;
+        line-height: 1.8;
+        color: var(--stitch-muted);
+      }
+    }
+    .vue-bluff-private-lock svg {
+      inline-size: 32px;
+      block-size: 32px;
+    }
+    > .vue-bluff-private-hide {
+      position: absolute;
+      inset-block-start: 12px;
+      inset-inline-end: 12px;
     }
   }
   .vue-bluff-role-badge {
