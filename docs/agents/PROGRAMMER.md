@@ -879,3 +879,5 @@ PR #134 已合併；本輪僅分析，未修改測試或 CI。Actions run 388427
 C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下，還原原生稿邏輯尺寸並保留 44px 操作區；時間沿用原時間戳／房間 offset，timer 卸載清理。C00 桌機單一矩形框與側欄分隔集中 room-surfaces.scss，手機保留換列並固定聊天室高度、長訊息內捲，遊戲棋盤／內容卡／浮層不套外框清除。共用暖灰色票、body margin、側欄捲動與猜歌空白 gutter 一併整理。11 款桌機／手機、7 款遊玩取樣、320px 長訊息／純文字／返焦及媒體／表情開關已有實際觀察；型別／多頁建置與格式版本檢查通過，未跑自動套件。證據數值與原生全螢幕等未驗界線見 [全站版面巡檢](../refactors/STITCH-SITE-LAYOUT-AUDIT.md) 最新區，不外推為全遊戲功能回歸。
 
 2026-10-21 候選2.22.0：大廳場地移除，LobbyBackdrop 將角色 teleport 到 body 後方；點擊目標往上沒有控制項、文字或有底色／框線的面板才算地板。前後端移動邊界同為 X 6–94%、Y 12–97%。進場特效 7 款（apparition.ts），選擇存 localStorage，經 GET /api/lobby?entrance= 送伺服器白名單後隨訪客下發。保留 #159 角色對話。
+
+2026-10-22 候選2.23.0：ProfilePage 上傳改為 createDialog／expressionDialog，關閉即清除未送出草稿；ImageChoiceGrid 新增 append slot 放「我的作品」＋卡片，ExpressionEditor 新增 actions／sound slot（音效狀態仍由 ProfilePage 管理以保留離開提醒）。好友角色只保留頁面上的試聽區。MAX_CHARACTERS=20 於 src/profiles/uploads.js，前端常數同步。設定頁 EntrancePreview 以 apparate 播放目前角色，左欄最後一卡吸收剩餘高度。

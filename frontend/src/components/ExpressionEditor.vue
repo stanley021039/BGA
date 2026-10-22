@@ -81,7 +81,7 @@ async function remove() {
       icon="remove"
       label="刪除目前表情"
       :disabled="mutation.pending.value"
-      @click="remove" /><StatusSlot
+      @click="remove" /><slot name="actions" /><StatusSlot
       :message="mutation.message.value"
       :error="mutation.failed.value" /><UiDialog ref="dialog" title="編輯表情"
       ><form @submit.prevent="save"
@@ -103,7 +103,8 @@ async function remove() {
           label="儲存表情"
           :disabled="mutation.pending.value" /><StatusSlot
           :message="mutation.message.value"
-          :error="mutation.failed.value" /></form></UiDialog
+          :error="mutation.failed.value" /></form
+      ><slot name="sound" /></UiDialog
     ><ConfirmDialog ref="confirm"
   /></section>
 </template>
