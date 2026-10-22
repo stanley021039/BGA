@@ -36,6 +36,8 @@
       apiCancel = null,
       intersection = null,
       opened = false,
+      backgroundVideo = false,
+      keepVideoPlaying = false,
       collapsed = false,
       disposed = false;
     const status = (message) => {
@@ -86,6 +88,17 @@
       );
     }
     function notify() {
+      let videoTitle = '';
+      try {
+        const data = ready && player?.getVideoData?.();
+        if (data?.video_id === snapshot?.current?.videoId && typeof data.title === 'string')
+          videoTitle = data.title
+            .replace(/[\u0000-\u001f\u007f]/g, ' ')
+            .trim()
+            .slice(0, 500);
+      } catch {
+        /* Metadata is optional; playback must continue. */
+      }
       if (!disposed)
         options.onChange({
           videoWanted,
@@ -94,6 +107,8 @@
           videoFallback,
           loading: mountingVideo !== null || videoReadyJob !== null,
           publishReason: publishReason(),
+          videoTitle,
+          videoTitleId: videoTitle ? snapshot?.current?.videoId : '',
         });
     }
     function stopAudio() {
@@ -159,10 +174,15 @@
       apiCancel?.();
     }
     function activeVideo() {
-      return !disposed && snapshot?.current?.type === 'video' && videoWanted && opened;
+      return (
+        !disposed &&
+        snapshot?.current?.type === 'video' &&
+        videoWanted &&
+        (opened || backgroundVideo)
+      );
     }
     function isVisibleEnough() {
-      if (collapsed) return true;
+      if (collapsed || keepVideoPlaying) return true;
       const box = videoHost.getBoundingClientRect();
       if (box.width < 200 || box.height < 200) return false;
       let left = Math.max(0, box.left),
@@ -192,6 +212,7 @@
               validPlayer(token, key) &&
               activeVideo() &&
               !collapsed &&
+              !keepVideoPlaying &&
               entries.some((entry) => entry.intersectionRatio <= 0.5)
             )
               exitVideo('影片已離開可見範圍，需要時再加入觀看。');
@@ -875,6 +896,7 @@
                 if (Number.isFinite(length) && length > 0 && length <= maxPosition && !duration())
                   report('duration', { itemId: snapshot.current.id, durationSec: length });
               }
+              notify();
             },
             onAutoplayBlocked: (event) => {
               if (stale(event?.target || instance)) return;
@@ -1131,14 +1153,16 @@
       setMarker(value) {
         marker = value;
       },
-      setWindow(value, bar = false) {
+      setWindow(value, bar = false, keepVideo = false) {
         if (disposed) return;
         const was = opened;
         opened = value;
-        collapsed = bar;
+        backgroundVideo = !value && keepVideo;
+        keepVideoPlaying = keepVideo;
+        collapsed = bar || backgroundVideo;
         if (!value) {
           cancelPositionRead();
-          if (snapshot?.current?.type === 'video') exitVideo('');
+          if (!keepVideo && snapshot?.current?.type === 'video') exitVideo('');
         } else if (!was && activeVideo()) applyPlayback();
         notify();
       },

@@ -15,10 +15,10 @@ const block = (source, selector, from = 0) => {
   assert.ok(start >= 0, selector);
   return source.slice(start, source.indexOf('}', start));
 };
-test('room media volume gets its own full-width row below the six control buttons', () => {
+test('room media volume stays below wrapping playback controls in its own full-width row', () => {
   const controls = block(scss, '.vue-media-controls'),
     volume = block(scss, '.vue-media-volume');
-  assert.match(controls, /grid-template-columns:\s*repeat\(6,\s*minmax\(44px,\s*1fr\)\)/);
+  assert.match(controls, /grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(44px,\s*1fr\)\)/);
   assert.match(controls, /gap:\s*8px\s+2px/);
   assert.match(volume, /grid-column:\s*1\s*\/\s*-1/);
   assert.match(volume, /inline-size:\s*100%/);
@@ -31,9 +31,12 @@ test('room media volume gets its own full-width row below the six control button
   );
   const group = vue.slice(
     vue.indexOf('class="vue-media-controls"'),
-    vue.indexOf('class="vue-media-publish-reason"'),
+    vue.indexOf('</section>', vue.indexOf('class="vue-media-controls"')),
   );
-  assert.equal((group.match(/<UiButton/g) || []).length, 7, 'six controls plus the mute toggle');
+  assert.ok(
+    group.includes('label="退出自己的影片"'),
+    'explicit exit is distinct from hiding the window',
+  );
   assert.ok(
     group.indexOf('class="vue-media-volume"') > group.lastIndexOf('icon="share"'),
     'volume row follows the control buttons',
