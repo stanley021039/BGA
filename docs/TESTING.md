@@ -38,12 +38,22 @@ npm run test:affected -- --base origin/main
 ## CI 與提交身分
 
 1. 本機執行受影響測試，記錄指令、選取範圍、head／工作區與結果；未提交狀態的測試不是另一個 commit 的 CI 證據。
-2. 提交後開／更新 Draft PR；`.github/workflows/ci.yml` 對 PR 明確 checkout `pull_request.head.sha`，push／手動執行使用該事件 SHA。CI 會印出並核對真正受測 SHA，再在 Linux 與 Windows Node22 各跑完整 `npm test`，不改成受影響選取。
-3. 核對目前 PR head SHA、workflow／job 及實際 checkout SHA；兩平台完整測試都必須成功。舊 head 的通過、pending、取消、跳過、未設定或無法查看均不算通過。本機不必再重跑相同完整套件。
+2. 提交後開／更新 Draft PR；`.github/workflows/ci.yml` 對 PR 明確 checkout `pull_request.head.sha`，push／手動執行使用該事件 SHA。CI 會印出並核對真正受測 SHA，PR 在 Linux Node22 跑完整 `npm test`；push 到 main 與手動執行另跑 Windows Node22 完整測試，不改成受影響選取。
+3. 核對目前 PR head SHA、workflow／job 及實際 checkout SHA；Linux 必要檢查 `test-linux-node22` 的完整測試必須成功；Windows 不擋 PR 合併。舊 head 的通過、pending、取消、跳過、未設定或無法查看均不算通過。本機不必再重跑相同完整套件。
 4. 兩輪審查分別完成並留下 base／head 與證據。修正後複驗受影響部分；head 改變後等待新 head 的完整 CI，更新受影響的審查結論。
 5. 合併前 fetch main。若 base 前進，整合新 main、複驗受影響部分、跑新 head 的 CI 並更新兩輪審查，避免只驗舊分支而漏掉整合問題。所有必要檢查通過且無未解重大問題後才轉 Ready／合併。
 
-無可用 CI 時不能把受影響測試當作全套驗證。可先完成本機工作並保持 Draft；若需改用本機全套作為例外，必須記錄原因、環境、固定 SHA、缺少的平台與風險並由使用者明確決定，不能自行宣稱符合雙平台 CI 門檻。
+無可用 CI 時不能把受影響測試當作全套驗證。可先完成本機工作並保持 Draft；若需改用本機全套作為例外，必須記錄原因、環境、固定 SHA、缺少的平台與風險並由使用者明確決定，不能自行宣稱符合 Linux 必要 CI 門檻。
+
+## Windows 合併後追蹤與 main 保護設定
+
+PR 僅建立 `test-linux-node22`；main push 與 `workflow_dispatch` 建立 Linux／Windows 兩個 job。兩者保留 SHA 核對、`npm ci`、格式檢查與完整 `npm test`。Windows 不使用 `continue-on-error`，失敗會在 Actions 顯示失敗，依 GitHub 個人 Actions 通知設定接收通知。
+
+main 的 required status checks 必須只留 `test-linux-node22`，保留既有 strict 等其他保護設定。workflow 與必要檢查須配套生效，否則 PR 會卡在不存在的 Windows 檢查。實際設定、PR job 與合併後結果須在 PR 記錄，不以文件文字代替設定驗收。
+
+main 的 Windows job 失敗時，維護者先查看該 run 的 SHA、日誌與 Linux 結果，建立 issue 連結失敗 run 並記錄影響與修復安排，在後續 PR 修復；若為跨平台開發工具問題，使用 Windows 環境複驗。若暴露共用邏輯或正式 Linux 風險，應優先處理，不因 Windows 非必要檢查而忽略。Windows 故障不回溯阻擋已合併 PR；尚未看到合併後 run 時，明確標為待驗證。
+
+此分工取代舊紀錄中的雙平台合併門檻；歷史雙平台結果仍僅作當次證據。CI／文件調整不影響產品，不升產品版號。
 
 ## 版號與 tag
 
@@ -57,7 +67,7 @@ npm run test:affected -- --base origin/main
 
 仍測正式預設張數的 cold-export 整合案例保留真資料與完整拒絕流程，資料準備採 transaction 批次寫入。媒體 HTTP fixture 各自建立資料庫與帳號，批次預建成員並透過真登入取得每位使用者的 session；邀請／註冊流程由 auth 測試覆蓋。郎中三種 purpose 都保留完整九輪、歷史及成就差異，retry 保留刪房後重試與不重複授獎；共通權限／靜態資源檢查集中在 production purpose 執行一次。
 
-不關閉 fsync／SQLite durability、不共用可變資料庫、不縮減 1000 次加入／離開壓力測試；全套雙平台 CI 與兩輪審查門檻維持不變。效能改善應記錄測試範圍與環境，不能把單項或少量並行案例的比例外推為全套收益。
+不關閉 fsync／SQLite durability、不共用可變資料庫、不縮減 1000 次加入／離開壓力測試；Linux 全套 CI 與兩輪審查門檻維持不變；Windows 依上述分工在合併後追蹤。效能改善應記錄測試範圍與環境，不能把單項或少量並行案例的比例外推為全套收益。
 
 ## 2026-10-16 初版驗收
 本機Windows Node22.22.3，實際 `npm run test:affected` 選出工具／打版2個測試檔，共17項通過、fail/cancel/skip 0；未在本機重跑完整套件。測試涵蓋暫存／工作區互相抵銷、分支共同祖先、未追蹤與ignore、改名／刪除／空白檔名、套件窄例外、缺基準／衝突、只列計畫、真實失敗CLI及錯誤碼／訊號傳遞。子程序會清除Node內部測試context，避免由測試程序呼叫時反而略過測試。最新固定head兩輪審查、實際受測SHA與雙平台全套結果以本次PR對話為準。這些檢查不宣稱完整相依圖，也不等於已執行產品UI驗收；本次未改產品UI。
