@@ -10,7 +10,7 @@
   min-width: 0;
 }
 .stitch-setup-heading small {
-  color: var(--play-accent, #d8af53);
+  color: var(--stitch-ink, #1b1c1c);
   font-weight: 800;
   letter-spacing: 0.07em;
 }
@@ -27,7 +27,7 @@
 .stitch-host-badge {
   flex: none;
   padding: 5px 10px;
-  color: var(--play-accent, #d8af53);
+  color: var(--stitch-ink, #1b1c1c);
   border: 1px solid currentColor;
   border-radius: 6px;
   font-size: 0.875rem;
@@ -226,7 +226,7 @@
   grid-column: 1 / -1;
 }
 .stitch-setup-sheet :is(button, input, select):focus-visible {
-  outline: 3px solid var(--play-accent, #d8af53);
+  outline: 3px solid var(--stitch-focus);
   outline-offset: 3px;
 }
 #musicquiz-app .mq-banks {
@@ -253,8 +253,8 @@
   background: #83724a12;
 }
 #musicquiz-app .mq-bank:has(input:checked) {
-  border-color: #d8af53;
-  box-shadow: inset 0 0 0 1px #d8af53;
+  border-color: var(--stitch-focus);
+  box-shadow: inset 0 0 0 1px var(--stitch-focus);
   background: #997f2e15;
 }
 #musicquiz-app .mq-bank > input {
@@ -267,7 +267,7 @@
   cursor: pointer;
 }
 #musicquiz-app .mq-bank:focus-within {
-  outline: 3px solid #d8af53;
+  outline: 3px solid var(--stitch-focus);
   outline-offset: 3px;
 }
 #musicquiz-app .mq-bank-icon {
@@ -276,13 +276,13 @@
   padding: 8px;
   border-radius: 50%;
   background: #d8af5326;
-  color: #f0c65f;
+  color: var(--stitch-ink, #1b1c1c);
 }
 #musicquiz-app .mq-bank-check {
   position: absolute;
   right: 14px;
   top: 14px;
-  color: #f0c65f;
+  color: var(--stitch-ink, #1b1c1c);
   font-weight: 800;
 }
 #musicquiz-app .mq-bank > strong {
@@ -294,7 +294,7 @@
   color: var(--play-muted, #b4a88a);
 }
 #musicquiz-app .mq-bank-count {
-  color: #f0c65f;
+  color: var(--stitch-ink, #1b1c1c);
   font-size: 0.875rem;
   font-weight: 700;
 }
@@ -391,7 +391,7 @@
   min-height: 180px;
 }
 #musicquiz-app .mq-timeline > .vue-button[aria-pressed='true'] {
-  outline: 3px solid var(--play-accent, #d8af53);
+  outline: 3px solid var(--stitch-focus);
   outline-offset: 2px;
 }
 #musicquiz-app .mq-timeline-card {

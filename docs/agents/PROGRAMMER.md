@@ -1,3 +1,7 @@
+2026-10-23 #151 接續：排除開場與媒體遮罩後確認 subtle muted 4.47:1、猜歌金色標籤2.06:1與手機曲庫數量1.46:1；修正普通 muted／setup與曲庫必要前景／focus tokens。候選2.35.1，最後174入口組合、7275文字樣本零低對比與pageerror，423不確定樣本另列人工；8項對比回歸與型別／建置通過。RM03 Figma 原件描述註記已重開確認；其他設計同步仍待，#151不關票。詳[本輪證據](../specs/SURFACE-CONTRAST-151.md)。
+
+2026-10-23 #193：極簡畫家接共用倒數警示音，新增 owner 處理最後畫家、基線及背景／BFCache／斷線生命週期；7 項針對性回歸、型別／建置及隔離測試站三席播放事件已驗。候選 2.35.0，完整固定 head CI 以 PR 為準。詳 [本輪證據](../specs/MINIMAL-COUNTDOWN-SOUNDS-193.md)。#190／#192 已隨 PR #201 合併，不重做；正式站及 Figma 狀態不因此改變。
+
 # 程式架構 agent 記憶
 
 2026-10-22大廳互動續修：對話入口透過GameCarousel具名slot放在開桌左側，角色只開表情，兩個獨立dialog不再顯示切換分頁。背景改用共用lobby-background store，以既有每帳號localStorage key在GamePreferences與LobbyBackdrop間同步，只提供原本／Stitch城堡；補帳號隔離及儲存拒絕回歸。登入成功動畫auth-entry先前漏接entry-intro音效，已補一次播放、靜音、略過／離頁停止與手勢重試。2558全套、66focused、Vue型別／建置通過；隔離Edge實際登入收到MP3 playing事件，並驗偏好位置／保存、獨立訊息與表情、對話在開桌左側及390px。證據見本機ignored work/lobby-settings-qa-12V5Qw（後續縮圖尺寸校正另驗），未推送／PR／部署。
@@ -7,6 +11,11 @@
 本機功能分支已合併 origin/main 1e613a5，合併提交 91ee01e。保留新版整頁背景角色、五張遊戲輪播及七款角色入場特效，將本機個人背景選擇、WASD、分開對話／表情入口移至 LobbyBackdrop；文字泡泡傳送至同一背景層。郎中檔案與合併前本機快照一致；其餘未提交功能和音效仍保留，stash 安全快照未刪。
 
 Windows 受影響選取回退全套：2555／2555；Vue 型別、前端建置、格式及差異檢查通過。真 Edge 隔離測試驗背景重整保留、WASD、輸入及快捷鍵不誤移動、背景層對話、分開表情入口、390px 無水平溢出及無 pageerror；本機證據位於 ignored work/integration-qa-dyGkPR。舊測試啟動器漏設 frontendEnabled 已修正供下次啟動使用，現有測試服務未重啟。未推送、發 PR、部署或重設玩家資料。
+2026-10-23 #190／#192 候選2.34.1：雷霆引導路線 Map 範圍排除 SVG title／舊版延遲提示，保留一般地形／車輛說明與點選；線上／教學改為獨立 watch sources，等價 presence 不清預覽。純呈現 RaceDirections 同時供 DOM／WebGL 與結果補充，後方對應畫面左方，六方向以真引擎 neighbor 與 DOM 投影回歸，不改骰值／機率／位移。驗收、初輪 fixture 格式失敗及固定 head CI／審查界線見 [規格](../specs/RACE-GUIDANCE-DIRECTIONS-190-192.md)，未部署。
+
+2026-10-22／#176 候選2.29.0：使用者在 #175 驗收時要求網址紀錄改片名，已接續實作本機帳號隔離的十筆最近播放、點選填網址與鍵盤清單；來源為 playing 的 current，provider 名稱以 videoId 核對，缺名不覆蓋既有片名。尚未合併／部署，詳 [最近影片規格](../specs/MEDIA-RECENT-VIDEOS-176.md)，取代下筆「#176 尚未實作」狀態。
+
+2026-10-22／#175 候選2.29.0：共用Vue媒體改為播放中／點播雙分頁，視窗關閉與面板隱藏不再清除已接受的YouTube觀看意圖；leaf第三參數續播opt-in保留舊呼叫預設，退出／離房仍清理。實際影片同iframe及字幕前進、leaf與編譯Vue setup回歸有證據；未合併／部署、最近10筆另#176，詳 [介面與驗收](../specs/MEDIA-TWO-TABS-175.md)。
 
 2026-10-21本批郎中停手預估：`estimateAlchemy`與`beginAlchemy`共用計算，讀取無副作用；`stopEstimate`僅對可見recipe投影，隱藏他人鍋為null。新增顏色／鄰座去重／占卜／愚人草／上限及隱私回歸。大廳對話延用原API及事件閘門，最新同人訊息替換並以ID守護清理；依playerId而非姓名綁定。範圍見 `docs/UI-REFINEMENTS-20261021.md`。
 
@@ -913,3 +922,11 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 2026-10-23 最新：截圖指定九款卡片背景動態、法院灰藍石材與日夜文字對比、全廳 30 秒；四組兌換分開開獎勵，試玩不再預填成就。Issue #204 四向跨邊界僅開票；詳 [來源及驗證](../BACKGROUNDS-REWARD-CODES-20261023.md)。
 
 2026-10-23 最新調整：[介面與新開場](../LOBBY-CLEANUP-OPENING-20261023.md)。
+2026-10-22 #181 候選2.30.1：TelephoneScene 猜詞改原生 v-model 組字保護，computed setter 沿用 changeText，scope／stepId key 隔離新頁。實際元件反例先失敗，修正後2項及前端29項通過，Chrome CDP原生IME 1920／390驗證通過；真人輸入法／實機未驗。證據與界線見 docs/specs/TELEPHONE-IME-181.md；未部署，最終CI／審查以PR為準。
+2026-10-22 候選2.30.0：瞎掰王語音字幕。前端 `composables/speech-captions.ts` 使用瀏覽器的 `SpeechRecognition`（zh-TW，Chrome／Edge 送 Google、Safari 送 Apple；Firefox 不支援，按鈕會停用並說明）。只有按下「講話」才收音，再按一次停止；換輪、離開口說階段、斷線或分頁隱藏時自動停止。只送文字：中途字幕每 0.7 秒最多一次，完整句子立即送出。伺服器 `POST /api/bluff/caption` 不經 action 歷史與 mutation 配額（每分鐘 150 次），`BluffRoom.caption` 只在 discussion 接受目前回合；中途字幕在記憶體中顯示 6 秒，完整句子進入 `transcript`（上限 120 句、每句 200 字），揭曉時複製到 `results[].transcript`。src/games/bluff.js 已在獨立 commit 中格式化。實機重現：`tools/qa/bluff-speech-captions.cjs`（以替身辨識器模擬，因為 headless 沒有麥克風）。
+
+2026-10-22 #182 候選2.31.0：TelephoneRoom.revealIndex／review 快照及房主 reveal 指令，expectedIndex＋receipt 防重送跳頁；Vue／legacy 每次只呈現一個片段，結算房主移交及新局重置。9項引擎／HTTP、前端30、當時全套2583通過；最後CSS後Vue3與原生Chrome三席9片段／1920亮390暗／重整專注通過。既有完整books／歷史公開規則不變，非新增資料保密。Figma額度阻擋重取，未宣稱已同步。證據界線見 docs/specs/TELEPHONE-REVEAL-182.md；CI／審查以PR為準，未部署。
+
+2026-10-22 #183 候選2.32.1：傳情畫意移除常駐同步／畫布額度列，store一般草稿同步保持notice空白；失敗、本地儲存／恢復及配額訊息仍顯示。固定44px回饋槽避免提交跳位。Vue／store5項通過，原生Chrome1920亮390暗持筆／ACK／放開與注入503皆驗，狀態切換外框等尺寸且像素無白屏；不含真人觸控／完整換輪。詳 docs/specs/TELEPHONE-NOTICES-183.md，CI／審查以PR為準，未部署。
+
+2026-10-23 #184 候選2.34.0：開局 prompting 第零輪先各自出題，90秒／全員送出早開；逾時採已同步非空主題、空白選定題庫備援，下一席作畫並重設期限。歷史替換主題頁、舊出題receipt無副作用重試及畫猜成就排除均有回歸；編譯Vue／Pinia電話七項通過。最終原生三席與整合測試／雙平台CI、失敗紀錄以PR為準，未部署。詳 docs/specs/TELEPHONE-TOPICS-184.md。

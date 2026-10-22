@@ -25,6 +25,7 @@ export interface BluffResult {
   selectedName: string;
   correct: boolean;
   challenges: string[];
+  transcript: { name: string; text: string }[];
   roles: { name: string; role: BluffRole; delta: number; score: number }[];
   ban: {
     votes: number;
@@ -40,6 +41,17 @@ export interface BluffReaction {
   text: string;
   at: number;
   roundId: string;
+}
+export interface BluffCaption {
+  playerId: string;
+  text: string;
+  final: boolean;
+}
+export interface BluffSpeechLine {
+  id: string;
+  playerId: string;
+  name: string;
+  text: string;
 }
 export interface BluffSnapshot extends RoomSnapshot {
   type: 'bluff';
@@ -61,6 +73,8 @@ export interface BluffSnapshot extends RoomSnapshot {
   spokenIds: string[];
   challenges: string[];
   botStatements: Record<string, string>;
+  captions: BluffCaption[];
+  transcript: BluffSpeechLine[];
   reactions: BluffReaction[];
   results: BluffResult[];
   winner: { score: number; names: string[] } | null;
@@ -173,6 +187,19 @@ export function readBluffSnapshot(value: unknown): BluffSnapshot {
       roundId: text(e.roundId),
     };
   });
+  // Older servers send no subtitles; treat that as none.
+  const captions = (r.captions === undefined ? [] : array(r.captions)).map((v) => {
+    const e = record(v);
+    if (!text(e.playerId) || typeof e.text !== 'string' || typeof e.final !== 'boolean')
+      return invalid();
+    return { playerId: text(e.playerId), text: e.text, final: e.final };
+  });
+  const transcript = (r.transcript === undefined ? [] : array(r.transcript)).map((v) => {
+    const e = record(v);
+    if (!text(e.id) || !text(e.playerId) || !text(e.name) || typeof e.text !== 'string')
+      return invalid();
+    return { id: text(e.id), playerId: text(e.playerId), name: text(e.name), text: e.text };
+  });
   const results = array(r.results).map((v) => {
     const a = record(v),
       source = record(a.source);
@@ -228,6 +255,11 @@ export function readBluffSnapshot(value: unknown): BluffSnapshot {
       selectedName: text(a.selectedName),
       correct: a.correct,
       challenges: strings(a.challenges),
+      transcript: (a.transcript === undefined ? [] : array(a.transcript)).map((v) => {
+        const line = record(v);
+        if (!text(line.name) || typeof line.text !== 'string') return invalid();
+        return { name: text(line.name), text: line.text };
+      }),
       roles,
       ban,
     };
@@ -261,6 +293,8 @@ export function readBluffSnapshot(value: unknown): BluffSnapshot {
     spokenIds,
     challenges,
     botStatements: statements as Record<string, string>,
+    captions,
+    transcript,
     reactions,
     results,
     winner,

@@ -146,6 +146,7 @@ function harness({
   trigger.focus();
   const prefs = new Set(),
     window = {
+      RaceDirections: require('../public/shared/race-directions'),
       MotionPolicy: {
         get: () => ({ enabled }),
         allowsMotion: () => enabled && !reduced,
@@ -265,6 +266,53 @@ function check(overrides = {}) {
   };
 }
 const state = (diceCheck, me = 'A') => ({ me, diceCheck });
+test('six direction faces share screen labels across masking, polling and WebGL fallback', () => {
+  const values = ['前左', '前方', '前右', '後左', '後方', '後右'];
+  for (const [i, value] of values.entries()) {
+    const h = harness({ webgl: true });
+    const c = check({
+      dice: [{ label: '方向骰', faces: values }],
+      status: 'rolling',
+      startedAt: 10000,
+      readyAt: 11000,
+      serverNow: 10000,
+    });
+    const done = {
+      ...c,
+      status: 'result',
+      serverNow: 11000,
+      result: { faces: [value], text: '車輛向' + value },
+    };
+    h.api.show(state(c));
+    h.api.show(state(done));
+    assert.equal(h.dialog.dataset.stage, 'rolling');
+    assert.doesNotMatch(h.find('race-dice-result').textContent, /畫面方向/);
+    h.advance(1000);
+    const face = h.find('race-dice-face'),
+      tile = h.find('race-dice-tile'),
+      info = h.window.RaceDirections.byIndex(i);
+    assert.equal(tile.dataset.direction, value);
+    assert.match(face.innerHTML, /<svg/);
+    assert.equal(
+      face.dataset.symbol,
+      'false',
+      'direction name remains visible alongside optional WebGL',
+    );
+    assert.equal(h.find('race-dice-value-label').textContent, '向' + info.label);
+    assert.match(tile.getAttribute('aria-label'), new RegExp('向' + info.label));
+    assert.match(h.find('race-dice-result').textContent, new RegExp('畫面方向：' + info.arrow));
+    const content = face.innerHTML;
+    h.api.show(state(done));
+    h.setFxActive(false);
+    assert.equal(face.innerHTML, content);
+    assert.equal(
+      h.fx.calls.at(-1).dice[0].value,
+      value,
+      'renderer never rewrites server dice values',
+    );
+    h.api.destroy();
+  }
+});
 
 test('awaiting check keeps condition, both participants and unknown faces visible; only owner can roll', () => {
   const calls = [],

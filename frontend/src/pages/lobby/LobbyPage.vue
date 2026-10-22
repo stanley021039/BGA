@@ -18,9 +18,14 @@ const params = new URLSearchParams(location.search),
 const selected = ref(gameCards.some((card) => card.id === requested) ? requested : 'thunder'),
   chosen = computed(() => gameCards.find((card) => card.id === selected.value)!);
 const create = ref<InstanceType<typeof UiDialog> | null>(null),
+  join = ref<InstanceType<typeof UiDialog> | null>(null),
   codeInput = ref<HTMLInputElement | null>(null),
   roomName = ref(''),
   code = ref(params.get('room') || ''),
+  // ?join=1 opens the join dialog with the room code focused.
+  joinRequested = params.get('join') === '1',
+  seconds = ref(60),
+  rounds = ref(8),
   opened = ref(false);
 const scene = ref<HTMLElement | null>(null),
   entrance: Animation[] = [];
@@ -41,6 +46,29 @@ function open() {
   lobby.entryStatus = '';
   opened.value = true;
   void create.value?.open();
+}
+// 找一桌加入 lives in its own dialog, opened from beside 開一桌.
+async function openJoin(focusCode = false) {
+  void lobby.refreshRooms();
+  await join.value?.open();
+  if (focusCode) focusCodeAfterIntro();
+}
+// The entrance intro may start just after the dialog opens and restores its own
+// saved focus when it ends, so focus the code now and again once it finishes.
+function focusCodeAfterIntro() {
+  const root = document.documentElement,
+    focus = () => requestAnimationFrame(() => codeInput.value?.focus());
+  focus();
+  let introSeen = root.classList.contains('entry-intro-active');
+  const observer = new MutationObserver(() => {
+    if (root.classList.contains('entry-intro-active')) introSeen = true;
+    else if (introSeen) {
+      observer.disconnect();
+      focus();
+    }
+  });
+  observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+  setTimeout(() => observer.disconnect(), 10000);
 }
 async function submit() {
   if (isGameType(selected.value))
@@ -73,7 +101,8 @@ async function entranceOnce() {
 }
 watch(() => lobby.snapshot, entranceOnce);
 onMounted(() => {
-  if (params.get('join') === '1') codeInput.value?.focus();
+  // Invite links, ?join=1 and a closed-room redirect all land on the join dialog.
+  if (joinRequested || params.has('room') || params.has('closedRoom')) void openJoin(joinRequested);
   void entranceOnce();
 });
 onBeforeUnmount(() => {
@@ -93,9 +122,8 @@ onBeforeUnmount(() => {
         ><span>款遊戲<br />隨時開桌</span></div
       ></div
     >
-    <GameCarousel v-model="selected" @create="open"
-      ><template #before-create><LobbyBackdrop /></template
-    ></GameCarousel>
+    <GameCarousel v-model="selected" @create="open" @join="openJoin()" />
+    <LobbyBackdrop />
     <div class="vue-lobby-resume" aria-label="已入座的房間"
       ><span v-if="!resumes.length">{{
         lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'
@@ -107,115 +135,113 @@ onBeforeUnmount(() => {
         :label="'返回' + gameTitle(room.type) + ' ' + room.code"
         :caption="'返回' + gameTitle(room.type)"
         :disabled="lobby.entryPending || lobby.roomsLoading"
-        @click="lobby.resume(room)"
+        @click="lobby.resume(room)" /><StatusSlot :message="feedback" :error="!!lobby.entryStatus"
     /></div>
-    <section class="vue-lobby-rooms" aria-labelledby="roomsHeading"
-      ><div class="vue-lobby-room-browser" data-ping-anchor="room-list"
-        ><header
-          ><div
-            ><div class="kicker">OPEN TABLES / 目前房間</div><h2 id="roomsHeading">找一桌加入</h2
-            ><p>看看現在有哪些房間，再選擇要加入的遊戲。</p></div
-          ><div class="vue-lobby-room-tools"
-            ><span>{{ lobby.rooms.length }} 間房間</span
-            ><UiButton
-              icon="refresh"
-              icon-only
-              label="重新整理房間列表"
-              :pending="lobby.roomsLoading"
-              @click="lobby.refreshRooms()" /></div></header
-        ><StatusSlot
-          :message="lobby.roomsLoading ? '正在更新房間列表…' : lobby.roomsStatus"
-          :error="!!lobby.roomsStatus && !lobby.roomsLoading"
-        />
-        <div
-          class="vue-lobby-room-list"
-          :aria-busy="lobby.roomsLoading"
-          tabindex="0"
-          aria-label="目前房間"
-          ><p v-if="!lobby.rooms.length">{{
-            lobby.roomsStatus || '目前還沒有房間。選擇上方遊戲，開一桌邀請朋友吧！'
-          }}</p
-          ><article v-for="room in lobby.rooms" :key="room.code" class="vue-lobby-room"
-            ><div
-              ><span>{{ gameTitle(room.type) }}</span
-              ><h3>{{ room.name }}</h3
-              ><p>房號 {{ room.code }} · {{ room.playerCount }}／{{ room.maxPlayers }} 席</p></div
-            ><div class="vue-lobby-room-actions"
-              ><span>{{
-                room.seated
-                  ? '已入座'
-                  : room.kicked
-                    ? '無法加入'
-                    : room.phase === 'waiting'
-                      ? '等待玩家'
-                      : ['showdown', 'finished'].includes(room.phase)
-                        ? '本局結束'
-                        : '遊戲進行中'
-              }}</span
+    <UiDialog ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
+      ><div class="vue-lobby-join"
+        ><section class="vue-lobby-room-browser" data-ping-anchor="room-list" aria-label="目前房間"
+          ><header
+            ><p>看看現在有哪些房間，再選擇要加入的遊戲。</p
+            ><div class="vue-lobby-room-tools"
+              ><span>{{ lobby.rooms.length }} 間房間</span
               ><UiButton
-                :icon="room.seated ? 'replay' : 'add'"
-                :label="
-                  (room.seated
-                    ? '返回房間 '
-                    : room.joinable
-                      ? '加入房間 '
-                      : room.kicked
-                        ? '無法加入 '
-                        : room.playerCount >= room.maxPlayers
-                          ? '人數已滿 '
-                          : '已開始 ') + room.code
-                "
-                :caption="
+                icon="refresh"
+                icon-only
+                label="重新整理房間列表"
+                :pending="lobby.roomsLoading"
+                @click="lobby.refreshRooms()" /></div></header
+          ><StatusSlot
+            :message="lobby.roomsLoading ? '正在更新房間列表…' : lobby.roomsStatus"
+            :error="!!lobby.roomsStatus && !lobby.roomsLoading" />
+          <div
+            class="vue-lobby-room-list"
+            :aria-busy="lobby.roomsLoading"
+            tabindex="0"
+            aria-label="目前房間"
+            ><p v-if="!lobby.rooms.length">{{
+              lobby.roomsStatus || '目前還沒有房間。選擇上方遊戲，開一桌邀請朋友吧！'
+            }}</p
+            ><article v-for="room in lobby.rooms" :key="room.code" class="vue-lobby-room"
+              ><div
+                ><span>{{ gameTitle(room.type) }}</span
+                ><h3>{{ room.name }}</h3
+                ><p>房號 {{ room.code }} · {{ room.playerCount }}／{{ room.maxPlayers }} 席</p></div
+              ><div class="vue-lobby-room-actions"
+                ><span>{{
                   room.seated
-                    ? '返回房間'
-                    : room.joinable
-                      ? '加入房間'
-                      : room.kicked
-                        ? '無法加入'
-                        : room.playerCount >= room.maxPlayers
-                          ? '人數已滿'
-                          : '已開始'
-                "
-                :disabled="!room.joinable || lobby.entryPending"
-                @click="lobby.enter({ code: room.code })" /></div></article
-        ></div> </div
-      ><aside class="vue-lobby-code"
-        ><h2>朋友已經開桌？</h2
-        ><form @submit.prevent="lobby.enter({ code })"
-          ><label for="lobbyCode">輸入 6 碼房間代碼</label
-          ><div class="vue-lobby-code-entry"
-            ><input
-              id="lobbyCode"
-              ref="codeInput"
-              v-model="code"
-              maxlength="6"
-              autocomplete="off"
-              autocapitalize="characters"
-              spellcheck="false"
-              pattern="[a-fA-F0-9]{6}"
-              required
-              :disabled="lobby.entryPending"
-              aria-describedby="lobbyCodeHelp" /><p id="lobbyCodeHelp">英文字母 A–F 與數字 0–9。</p
-            ><UiButton
-              icon="add"
-              type="submit"
-              icon-only
-              caption="加入"
-              label="加入房間"
-              :pending="lobby.entryPending"
-              :disabled="!session.user" /><UiButton
-              icon="refresh"
-              icon-only
-              caption="重填"
-              label="重新輸入"
-              :disabled="lobby.entryPending"
-              @click="
-                code = '';
-                lobby.entryStatus = '';
-                codeInput?.focus();
-              " /></div></form
-        ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /></aside
-    ></section>
+                    ? '已入座'
+                    : room.kicked
+                      ? '無法加入'
+                      : room.phase === 'waiting'
+                        ? '等待玩家'
+                        : ['showdown', 'finished'].includes(room.phase)
+                          ? '本局結束'
+                          : '遊戲進行中'
+                }}</span
+                ><UiButton
+                  :icon="room.seated ? 'replay' : 'add'"
+                  :label="
+                    (room.seated
+                      ? '返回房間 '
+                      : room.joinable
+                        ? '加入房間 '
+                        : room.kicked
+                          ? '無法加入 '
+                          : room.playerCount >= room.maxPlayers
+                            ? '人數已滿 '
+                            : '已開始 ') + room.code
+                  "
+                  :caption="
+                    room.seated
+                      ? '返回房間'
+                      : room.joinable
+                        ? '加入房間'
+                        : room.kicked
+                          ? '無法加入'
+                          : room.playerCount >= room.maxPlayers
+                            ? '人數已滿'
+                            : '已開始'
+                  "
+                  :disabled="!room.joinable || lobby.entryPending"
+                  @click="lobby.enter({ code: room.code })" /></div></article></div></section
+        ><section class="vue-lobby-code"
+          ><h2>朋友已經開桌？</h2
+          ><form @submit.prevent="lobby.enter({ code })"
+            ><label for="lobbyCode">輸入 6 碼房間代碼</label
+            ><div class="vue-lobby-code-entry"
+              ><input
+                id="lobbyCode"
+                ref="codeInput"
+                v-model="code"
+                maxlength="6"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                pattern="[a-fA-F0-9]{6}"
+                required
+                :disabled="lobby.entryPending"
+                aria-describedby="lobbyCodeHelp" /><p id="lobbyCodeHelp"
+                >英文字母 A–F 與數字 0–9。</p
+              ><UiButton
+                icon="add"
+                type="submit"
+                icon-only
+                caption="加入"
+                label="加入房間"
+                :pending="lobby.entryPending"
+                :disabled="!session.user" /><UiButton
+                icon="refresh"
+                icon-only
+                caption="重填"
+                label="重新輸入"
+                :disabled="lobby.entryPending"
+                @click="
+                  code = '';
+                  lobby.entryStatus = '';
+                  codeInput?.focus();
+                " /></div></form
+          ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /></section></div
+    ></UiDialog>
     <p class="version-note"><a href="/credits">素材來源與授權</a> · 德州撲克：純娛樂籌碼</p>
     <UiDialog
       ref="create"

@@ -1,5 +1,8 @@
 const { test } = require('node:test'),
-  assert = require('node:assert/strict');
+  assert = require('node:assert/strict'),
+  fs = require('node:fs'),
+  path = require('node:path'),
+  vm = require('node:vm');
 const {
   mediaHarness,
   mediaSnapshot,
@@ -341,7 +344,7 @@ test('pending API load cannot create an old iframe after the room changes or the
   });
   set(other);
   await f.update(roomState(other, { code: 'DEF456' }));
-  assert.equal(f.node('tableMediaConsent').open, true);
+  assert.equal(f.node('tableMediaConsent').open, false, 'the tab-level choice covers the new room');
   assert.equal(f.audioClips[0].src, undefined);
 });
 test('blocked music and YouTube retain native retry and local close without an app external-video option', async () => {
@@ -3115,26 +3118,55 @@ test('enqueue succeeds without redundant added-to-queue status text', async () =
   assert.equal(f.document.querySelector('#mediaPlaylistStatus'), null);
 });
 
-test('video acceptance and rejection survive reload for the same table seat, new tables ask again', async () => {
+// Runs the shared <head> boot script as another page (e.g. the lobby) in the same tab.
+function bootPage(session, navigationType) {
+  const storage = {
+    getItem: (key) => session.get(key) ?? null,
+    setItem: (key, value) => session.set(key, value),
+    removeItem: (key) => session.delete(key),
+  };
+  const context = vm.createContext({
+    window: { addEventListener() {} },
+    document: { documentElement: { dataset: {} } },
+    localStorage: { getItem: () => null, setItem() {} },
+    sessionStorage: storage,
+    performance: { getEntriesByType: () => [{ type: navigationType }] },
+  });
+  vm.runInContext(
+    fs.readFileSync(path.join(__dirname, '../public/shared/color-scheme.js'), 'utf8'),
+    context,
+  );
+}
+test('one video decision covers other rooms in the tab and a reload of any page asks again', async () => {
   for (const accepted of [false, true]) {
-    const first = mediaHarness();
+    const session = new Map();
+    const first = mediaHarness({ session });
     await first.update(roomState());
     await first.click(accepted ? 'mediaConsentAccept' : 'mediaConsentDecline');
-    const saved = first.storage.get('bga.media.consents.v1');
-    assert.ok(saved);
-    const reloaded = mediaHarness({
-      beforeLoad: (c) => c.localStorage.setItem('bga.media.consents.v1', saved),
-    });
-    await reloaded.update(roomState());
-    assert.equal(reloaded.node('tableMediaConsent').open, false);
-    assert.equal(reloaded.players.length, accepted ? 1 : 0);
+    assert.equal(session.get('bga.media.consent.v2'), accepted ? 'accepted' : 'declined');
+    bootPage(session, 'navigate');
+    bootPage(session, 'back_forward');
     const next = mediaSnapshot({ roomInstanceId: 'another-table' });
-    reloaded.setFetch((request) =>
-      request.route === '/api/music' ? json({ tracks: [] }) : json(next),
-    );
-    await reloaded.update(roomState(next));
-    assert.equal(reloaded.node('tableMediaConsent').open, true);
+    const entered = mediaHarness({ session, fetchHandler: () => json(next) });
+    await entered.update(roomState(next));
+    assert.equal(entered.node('tableMediaConsent').open, false, 'another room reuses the choice');
+    assert.equal(entered.players.length, accepted ? 1 : 0);
+    bootPage(session, 'reload');
+    assert.equal(session.has('bga.media.consent.v2'), false, 'reloading the lobby clears it');
+    const after = mediaHarness({ session });
+    await after.update(roomState());
+    assert.equal(after.node('tableMediaConsent').open, true, 'the next room asks again');
+    assert.equal(after.players.length, 0);
   }
+});
+test('the old per-room consent record is removed and never grants video', async () => {
+  const f = mediaHarness({
+    beforeLoad: (c) =>
+      c.localStorage.setItem('bga.media.consents.v1', JSON.stringify([['room-a:host', true]])),
+  });
+  await f.update(roomState());
+  assert.equal(f.node('tableMediaConsent').open, true);
+  assert.equal(f.storage.has('bga.media.consents.v1'), false);
 });
 test('malformed or unavailable saved consent keeps the explicit choice prompt', async () => {
   for (const storageFailure of [false, true]) {
@@ -3321,13 +3353,7 @@ test('automatically opened video loads the integrated music library once without
   for (const saved of [false, true]) {
     const state = mediaSnapshot(),
       f = mediaHarness({
-        beforeLoad: (c) => {
-          if (saved)
-            c.localStorage.setItem(
-              'bga.media.consents.v1',
-              JSON.stringify([['room-a:host', true]]),
-            );
-        },
+        session: new Map(saved ? [['bga.media.consent.v2', 'accepted']] : []),
         fetchHandler: (r) =>
           r.route === '/api/music'
             ? json({ tracks: [{ id: 'song-a', title: '測試歌曲', author: '測試作者' }] })

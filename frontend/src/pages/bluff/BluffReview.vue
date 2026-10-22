@@ -30,6 +30,14 @@ const result = computed(
           result.honestName
         }}</p
       ><p v-if="result.challenges.length">公三小：{{ result.challenges.join('、') }}</p
+      ><section v-if="result.transcript.length" class="vue-bluff-review-speech"
+        ><h4>大家說了什麼</h4
+        ><ol
+          ><li v-for="(line, index) in result.transcript" :key="index"
+            ><strong>{{ line.name }}</strong
+            ><span>{{ line.text }}</span></li
+          ></ol
+        ></section
       ><template v-if="result.explanation"
         ><p>{{ result.explanation.detail }}</p
         ><p>例子：{{ result.explanation.example }}</p
@@ -54,13 +62,6 @@ const result = computed(
             result.ban.banned ? '已全站禁用' : result.ban.voted ? '已投票禁用' : '投票禁用此題'
           "
           :disabled="disabled || result.ban.banned || result.ban.voted || !result.ban.canVote"
-          @click="emit('ban', result.resultId)" /></div
-      ><details v-if="result.resultId === state.roundId && Object.keys(state.botStatements).length"
-        ><summary>本輪腳本夥伴說詞</summary
-        ><p v-for="(statement, id) in state.botStatements" :key="id"
-          >{{ state.players.find((p) => p.id === id)?.name || 'AI' }} 說：「{{ statement }}」</p
-        ></details
-      ></article
-    ></section
-  >
+          @click="emit('ban', result.resultId)" /></div></article
+  ></section>
 </template>

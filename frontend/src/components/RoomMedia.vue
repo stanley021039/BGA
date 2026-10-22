@@ -2,6 +2,10 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { useMediaStore } from '../stores/media';
 import { usePreferencesStore } from '../stores/preferences';
+import { useSessionStore } from '../stores/session';
+import { createMediaHistory, recentVideoUrl } from '../services/media-history';
+import { mediaConsent } from '../services/media-consent';
+import type { RecentVideo } from '../services/media-history';
 import { useMediaWindow } from '../composables/media-window';
 import { formatMediaTime, mediaCurrentKey, mediaPlaybackKey } from '../contracts/media';
 import type { MediaOrderIntent, MediaPlayer, MediaPlayerView } from '../contracts/media';
@@ -35,6 +39,50 @@ const opened = ref(false),
   publishing = ref(false),
   targetId = ref('');
 const activeTab = ref('player');
+const session = useSessionStore(),
+  history = createMediaHistory({
+    getItem: (key) => localStorage.getItem(key),
+    setItem: (key, value) => localStorage.setItem(key, value),
+  }),
+  recentVideos = ref<RecentVideo[]>([]),
+  recentOpen = ref(false),
+  recentArea = ref<HTMLElement | null>(null),
+  urlInput = ref<HTMLInputElement | null>(null);
+function chooseRecent(entry: RecentVideo) {
+  url.value = recentVideoUrl(entry.videoId);
+  urlInput.value?.focus();
+  recentOpen.value = false;
+}
+function recentKey(event: KeyboardEvent) {
+  if (event.key === 'Escape' && recentOpen.value) {
+    event.preventDefault();
+    event.stopPropagation();
+    urlInput.value?.focus();
+    recentOpen.value = false;
+  } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+    recentOpen.value = true;
+    void nextTick(() => {
+      const buttons = [
+        ...(recentArea.value?.querySelectorAll<HTMLButtonElement>('.vue-media-recent button') ||
+          []),
+      ];
+      if (!buttons.length) return;
+      const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      const down = event.key === 'ArrowDown';
+      const target =
+        index < 0
+          ? down
+            ? 0
+            : buttons.length - 1
+          : (index + (down ? 1 : -1) + buttons.length) % buttons.length;
+      buttons[target]?.focus();
+    });
+  }
+}
+function recentBlur(event: FocusEvent) {
+  if (!recentArea.value?.contains(event.relatedTarget as Node | null)) recentOpen.value = false;
+}
 const view = ref<MediaPlayerView>({
   videoWanted: false,
   ready: false,
@@ -43,17 +91,53 @@ const view = ref<MediaPlayerView>({
   loading: false,
   publishReason: '目前沒有可同步的媒體。',
 });
+watch(
+  () => [
+    session.user?.id,
+    media.snapshot?.roomInstanceId,
+    media.snapshot?.playbackSessionId,
+    media.snapshot?.current?.id,
+    media.snapshot?.current?.title,
+    media.snapshot?.playback?.state,
+    media.receipt,
+    view.value.videoTitle,
+  ],
+  (value, previous) => {
+    recentVideos.value = history.selectAccount(session.user?.id || '');
+    if (previous && value[0] !== previous[0]) {
+      recentOpen.value = false;
+      return;
+    }
+    const current = media.snapshot?.current;
+    if (
+      media.enabled &&
+      media.snapshot?.playback?.state === 'playing' &&
+      current?.type === 'video' &&
+      current.videoId
+    )
+      recentVideos.value = history.record(
+        `${media.snapshot.roomInstanceId}:${media.snapshot.playbackSessionId}:${current.id}`,
+        {
+          videoId: current.videoId,
+          title:
+            view.value.videoTitleId === current.videoId && view.value.videoTitle
+              ? view.value.videoTitle
+              : current.title,
+        },
+      );
+  },
+  { immediate: true },
+);
 const geometry = useMediaWindow(dialog, opened, mode),
   frameSurface = ref<Record<string, string>>({});
 const style = computed(() => ({ ...geometry.style.value, ...frameSurface.value }));
 const item = computed(() => media.snapshot?.current),
   videoActive = computed(
-    () => !!item.value && item.value.type === 'video' && view.value.videoWanted && opened.value,
+    () => !!item.value && item.value.type === 'video' && view.value.videoWanted,
   );
 const playing = computed(() => media.snapshot?.playback.state === 'playing');
 const tabs = computed(() => [
   { id: 'player', label: '播放中' },
-  { id: 'queue', label: '播放清單', count: String(media.snapshot?.queue.length || 0) },
   { id: 'request', label: '點播' },
 ]);
 const syncLabel = computed(() =>
@@ -69,26 +153,24 @@ const syncLabel = computed(() =>
             ? '全桌播放中'
             : '全桌暫停',
 );
+const feedback = computed(() =>
+  media.loading
+    ? '正在同步媒體…'
+    : activeTab.value === 'request' && media.libraryLoading
+      ? '正在讀取曲庫…'
+      : activeTab.value === 'request' && media.libraryError
+        ? media.libraryError
+        : media.failed
+          ? media.message
+          : '',
+);
 const musicEnabled = computed(() => prefs.audio?.music.enabled === true),
   volume = computed(() => Math.round((prefs.audio?.music.volume || 0) * 100));
 const consentKey = computed(() =>
   media.snapshot ? `${media.snapshot.roomInstanceId}:${media.snapshot.myPlayerId}` : '',
 );
-const consents = new Map<string, boolean>();
-try {
-  const rows = JSON.parse(localStorage.getItem('bga.media.consents.v1') || '[]');
-  if (Array.isArray(rows))
-    for (const row of rows.slice(-64))
-      if (
-        Array.isArray(row) &&
-        typeof row[0] === 'string' &&
-        row[0].length <= 200 &&
-        typeof row[1] === 'boolean'
-      )
-        consents.set(row[0], row[1]);
-} catch {
-  /* Personal consent can remain in memory. */
-}
+const consentStore = mediaConsent(),
+  videoConsent = ref(consentStore.get());
 let player: MediaPlayer | null = null,
   mounted = false,
   disposed = false,
@@ -121,11 +203,11 @@ function cancelQueue() {
 function closed() {
   if (dialog.value?.open || !opened.value) return;
   opened.value = false;
+  recentOpen.value = false;
   geometry.cancel();
   cancelQueue();
   media.cancelSnapshot();
-  wantsVideo = false;
-  player?.setWindow(false);
+  updatePresentation();
   if (timer) clearInterval(timer);
   timer = null;
   opener.value?.querySelector<HTMLButtonElement>('button')?.focus();
@@ -142,7 +224,7 @@ async function show(load = true) {
   await nextTick();
   if (disposed || !opened.value) return;
   if (!dialog.value?.open) dialog.value?.show();
-  player?.setWindow(true, mode.value === 'bar');
+  updatePresentation();
   syncFrame();
   if (!timer)
     timer = setInterval(() => {
@@ -164,43 +246,38 @@ async function minimize(value: 'compact' | 'bar' | 'full') {
   geometry.cancel();
   cancelQueue();
   mode.value = value;
+  if (value === 'compact') activeTab.value = 'player';
   await show(false);
-  player?.setWindow(true, value === 'bar');
+  updatePresentation();
+}
+function updatePresentation() {
+  player?.setWindow(opened.value, mode.value === 'bar' || activeTab.value !== 'player', true);
 }
 function setTab(value: string) {
-  if (!['player', 'queue', 'request'].includes(value)) return;
+  if (!['player', 'request'].includes(value)) return;
   cancelQueue();
   activeTab.value = value;
-}
-async function revealQueue() {
-  setTab('queue');
-  if (mode.value !== 'full') await minimize('full');
+  updatePresentation();
 }
 function syncPlayback() {
   const state = media.snapshot;
   if (!mounted || !state || !player || !props.connected || !media.connected) return;
   if (lastConsent !== consentKey.value) {
     lastConsent = consentKey.value;
-    wantsVideo = consents.get(lastConsent) === true;
+    wantsVideo = videoConsent.value === true;
   }
   const key = mediaCurrentKey(state),
     changed = key !== lastItem;
   lastItem = key;
+  updatePresentation();
   player.setMarker(media.marker);
   player.update(state, media.marker, media.serverNow());
   sharedClock.value = media.position();
-  if (
-    changed &&
-    state.current?.type === 'video' &&
-    wantsVideo &&
-    consents.get(consentKey.value) === true
-  )
-    void show().then(async () => {
-      await nextTick();
+  if (changed && state.current?.type === 'video' && wantsVideo && videoConsent.value === true)
+    void nextTick().then(() => {
       if (
         key === mediaCurrentKey(media.snapshot) &&
         wantsVideo &&
-        opened.value &&
         !document.hidden &&
         !view.value.videoWanted
       )
@@ -214,7 +291,7 @@ async function maybeConsent() {
     !props.connected ||
     !media.connected ||
     !consentKey.value ||
-    consents.has(consentKey.value) ||
+    videoConsent.value !== undefined ||
     document.hidden ||
     prompt ||
     document.querySelector('dialog:modal')
@@ -226,13 +303,8 @@ async function maybeConsent() {
 async function chooseVideo(accept: boolean) {
   const key = prompt || consentKey.value;
   if (!key || key !== consentKey.value) return;
-  consents.set(key, accept);
-  while (consents.size > 64) consents.delete(consents.keys().next().value!);
-  try {
-    localStorage.setItem('bga.media.consents.v1', JSON.stringify([...consents]));
-  } catch {
-    /* Never infer acceptance from unavailable storage. */
-  }
+  consentStore.set(accept);
+  videoConsent.value = accept;
   prompt = '';
   consent.value?.close();
   wantsVideo = accept;
@@ -260,14 +332,8 @@ function setVolume(event: Event) {
     { gesture: true },
   );
 }
-function selectTrack() {
-  if (track.value !== '__upload_music__') return;
-  track.value = '';
-  window.open('/collection?section=music', '_blank', 'noopener');
-}
 async function enqueueMusic() {
-  if (track.value && track.value !== '__upload_music__')
-    await media.command('enqueue', { type: 'music', trackId: track.value });
+  if (track.value) await media.command('enqueue', { type: 'music', trackId: track.value });
 }
 async function enqueueVideo() {
   const value = url.value.trim(),
@@ -445,8 +511,7 @@ function visibility() {
 function escape(event: KeyboardEvent) {
   if (event.key !== 'Escape' || !opened.value || document.querySelector('dialog:modal')) return;
   event.preventDefault();
-  if (mode.value === 'full' && item.value?.type === 'video') void minimize('bar');
-  else close();
+  close();
 }
 watch(() => media.receipt, syncPlayback);
 watch(
@@ -582,14 +647,6 @@ onBeforeUnmount(() => {
             <UiButton
               stitch
               variant="ghost"
-              icon="cards"
-              icon-only
-              label="開啟播放清單"
-              @click="revealQueue"
-            />
-            <UiButton
-              stitch
-              variant="ghost"
               v-show="mode !== 'bar'"
               icon="minimize"
               icon-only
@@ -620,27 +677,13 @@ onBeforeUnmount(() => {
               data-media-close
               icon="close"
               icon-only
-              :label="
-                item?.type === 'video' ? '停止自己的影片並關閉視窗' : '關閉媒體視窗，音樂續播'
-              "
+              label="關閉媒體視窗，繼續播放"
               @click="close"
             />
           </div>
         </header>
         <span :id="id + '-move'" class="ui-sr-only">拖曳頂端移動，方向鍵微調，Home 重設位置。</span>
         <div class="vue-media-content" :class="{ 'has-video': item?.type === 'video' }">
-          <div v-show="item?.type === 'video'" class="vue-media-screen">
-            <div v-show="videoActive" ref="videoHost" class="vue-media-video" />
-            <div v-if="item?.type === 'video' && !videoActive" class="vue-media-consent"
-              ><UiIcon class="ui-icon" name="video" /><p>接受後載入影片。</p
-              ><UiButton
-                stitch
-                variant="primary"
-                icon="play"
-                :label="consents.get(consentKey) ? '重新加入觀看' : '接受並觀看影片'"
-                @click="chooseVideo(true)"
-            /></div>
-          </div>
           <UiTabs
             class="vue-media-tabs"
             :items="tabs"
@@ -652,12 +695,24 @@ onBeforeUnmount(() => {
           />
           <div class="vue-media-panels">
             <section
-              v-show="activeTab === 'player' || mode === 'compact'"
+              v-show="activeTab === 'player'"
               :id="id + '-panel-player'"
               class="vue-media-primary"
               role="tabpanel"
               :aria-labelledby="id + '-tab-player'"
             >
+              <div v-show="item?.type === 'video'" class="vue-media-screen">
+                <div v-show="videoActive" ref="videoHost" class="vue-media-video" />
+                <div v-if="item?.type === 'video' && !videoActive" class="vue-media-consent"
+                  ><UiIcon class="ui-icon" name="video" /><p>接受後載入影片。</p
+                  ><UiButton
+                    stitch
+                    variant="primary"
+                    icon="play"
+                    :label="videoConsent ? '重新加入觀看' : '接受並觀看影片'"
+                    @click="chooseVideo(true)"
+                /></div>
+              </div>
               <div class="vue-media-current" :class="{ 'is-music': item?.type === 'music' }"
                 ><span v-if="item?.type !== 'video'" class="vue-media-track-icon" aria-hidden="true"
                   ><UiIcon class="ui-icon" name="sound" /></span
@@ -673,6 +728,10 @@ onBeforeUnmount(() => {
                   }}</p></div
                 ><span class="vue-media-sync-badge">{{ syncLabel }}</span></div
               >
+              <div class="vue-media-inline-status">
+                <StatusSlot v-if="feedback" :message="feedback" :error="media.failed" />
+                <StatusSlot v-if="playbackStatus" :message="playbackStatus" />
+              </div>
               <div v-show="item?.type === 'music'" ref="audioHost" class="vue-media-audio" />
               <div class="vue-media-controls-body">
                 <div class="vue-media-sync"
@@ -753,6 +812,48 @@ onBeforeUnmount(() => {
                     :pending="publishing"
                     @click="publish"
                   />
+                  <UiButton
+                    v-if="videoActive"
+                    stitch
+                    variant="ghost"
+                    icon="close"
+                    icon-only
+                    label="退出自己的影片"
+                    @click="exitVideo"
+                  />
+                  <UiButton
+                    v-if="playbackStatus && item"
+                    stitch
+                    variant="ghost"
+                    icon="play"
+                    icon-only
+                    label="恢復自己的播放／啟用聲音"
+                    @click="player?.resume()"
+                  />
+                  <UiButton
+                    v-if="videoActive && view.videoFallback && !view.nativeVideo"
+                    stitch
+                    variant="ghost"
+                    icon="refresh"
+                    icon-only
+                    label="重新載入自己的 YouTube 播放器"
+                    @click="player?.joinVideo()"
+                  />
+                  <UiButton
+                    v-if="videoActive && view.videoFallback && !view.nativeVideo"
+                    stitch
+                    variant="ghost"
+                    icon="video"
+                    icon-only
+                    label="使用原生影片播放器"
+                    @click="player?.useNativeVideo()"
+                  />
+                  <p :id="id + '-publish'" class="ui-sr-only">{{
+                    view.publishReason ||
+                    (media.canControl
+                      ? '可將自己的原生播放進度同步至全桌。'
+                      : '全桌播放由房主或管理者控制。')
+                  }}</p>
                   <div class="vue-media-volume" role="group" aria-label="個人媒體音量"
                     ><UiButton
                       stitch
@@ -773,133 +874,7 @@ onBeforeUnmount(() => {
                     /><output>{{ volume }}%</output></div
                   >
                 </div>
-                <p :id="id + '-publish'" class="vue-media-publish-reason">{{
-                  view.publishReason ||
-                  (media.canControl
-                    ? '可將自己的原生播放進度同步至全桌。'
-                    : '全桌播放由房主或管理者控制；你仍可點播與調整個人音量。')
-                }}</p>
-                <details class="vue-media-local-options" :open="videoActive && view.videoFallback"
-                  ><summary>本機播放與疑難排解</summary
-                  ><div
-                    ><UiButton
-                      stitch
-                      variant="secondary"
-                      icon="play"
-                      label="在自己的裝置播放"
-                      :disabled="!item || (item.type === 'video' && !videoActive)"
-                      @click="player?.resume()" /><UiButton
-                      stitch
-                      v-if="videoActive"
-                      variant="secondary"
-                      icon="close"
-                      label="退出自己的影片"
-                      @click="exitVideo" /><UiButton
-                      stitch
-                      v-if="videoActive && view.videoFallback && !view.nativeVideo"
-                      variant="secondary"
-                      icon="refresh"
-                      label="重新載入自己的 YouTube 播放器"
-                      @click="player?.joinVideo()" /><UiButton
-                      stitch
-                      v-if="videoActive && view.videoFallback && !view.nativeVideo"
-                      variant="secondary"
-                      icon="video"
-                      label="使用原生影片播放器"
-                      @click="player?.useNativeVideo()" /><UiButton
-                      stitch
-                      variant="ghost"
-                      icon="refresh"
-                      label="恢復視窗位置與大小"
-                      @click="geometry.reset" /></div
-                ></details>
-                <div class="vue-media-shortcuts"
-                  ><UiButton
-                    stitch
-                    variant="secondary"
-                    icon="cards"
-                    :label="'播放清單（' + (media.snapshot?.queue.length || 0) + '）'"
-                    @click="setTab('queue')" /><UiButton
-                    stitch
-                    variant="secondary"
-                    icon="add"
-                    label="曲庫／YouTube 點播"
-                    @click="setTab('request')"
-                /></div>
               </div>
-            </section>
-            <section
-              v-show="activeTab === 'queue'"
-              :id="id + '-panel-queue'"
-              class="vue-media-playlist"
-              role="tabpanel"
-              :aria-labelledby="id + '-tab-queue'"
-            >
-              <header class="vue-media-panel-heading"
-                ><div
-                  ><h3
-                    >播放清單
-                    <span class="vue-media-queue-count">{{
-                      media.snapshot?.queue.length || 0
-                    }}</span></h3
-                  ><p>{{ item ? '正在播放：' + item.title : '目前尚未播放' }}</p></div
-                ><UiButton
-                  stitch
-                  variant="primary"
-                  icon="add"
-                  label="點播"
-                  @click="setTab('request')"
-              /></header>
-              <p class="vue-media-permission">{{
-                media.canManageQueue
-                  ? '從把手拖曳或按上下鍵排序。'
-                  : '所有人都可點播；房主或管理者控制全桌播放與清單排序。'
-              }}</p>
-              <ol ref="queueArea" class="vue-media-queue" aria-label="待播媒體，可捲動查看"
-                ><li
-                  v-for="(entry, index) in media.snapshot?.queue || []"
-                  :key="entry.id"
-                  :data-media-item="entry.id"
-                  :class="{ 'is-drop-target': targetId === entry.id }"
-                  ><UiButton
-                    stitch
-                    variant="ghost"
-                    icon="dragHandle"
-                    icon-only
-                    :label="'排序：' + entry.title + '；上下鍵移動'"
-                    class="vue-media-queue-handle"
-                    :disabled="!media.canManageQueue || media.busy"
-                    @pointerdown="queueStart($event, entry.id)"
-                    @pointermove="queueMove"
-                    @pointerup="queueEnd"
-                    @pointercancel="queueCancel"
-                    @lostpointercapture="queueCancel"
-                    @keydown="queueKey($event, entry.id)" /><div
-                    ><strong
-                      ><span class="vue-media-queue-number">{{ index + 1 }}.</span>
-                      <OverflowText :text="entry.title" /></strong
-                    ><span
-                      ><OverflowText
-                        :text="
-                          (entry.type === 'video' ? '影片' : '歌曲') + ' · ' + entry.requestedByName
-                        " /></span></div
-                  ><UiButton
-                    stitch
-                    variant="ghost"
-                    icon="remove"
-                    icon-only
-                    :label="'移除待播：' + entry.title"
-                    :disabled="!media.canManageQueue || media.busy"
-                    @click="media.command('remove', { itemId: entry.id })" /></li
-                ><li v-if="!media.snapshot?.queue.length" class="vue-media-queue-empty"
-                  ><UiIcon class="ui-icon" name="cards" /><p>播放清單目前是空的。</p
-                  ><UiButton
-                    stitch
-                    variant="primary"
-                    icon="add"
-                    label="加入第一筆點播"
-                    @click="setTab('request')" /></li
-              ></ol>
             </section>
             <section
               v-show="activeTab === 'request'"
@@ -908,24 +883,19 @@ onBeforeUnmount(() => {
               role="tabpanel"
               :aria-labelledby="id + '-tab-request'"
             >
-              <header class="vue-media-panel-heading"
-                ><h3>點播媒體</h3
-                ><UiButton
-                  stitch
-                  variant="secondary"
-                  icon="cards"
-                  label="查看播放清單"
-                  @click="setTab('queue')"
-              /></header>
               <form class="vue-media-entry" @submit.prevent="enqueueMusic"
-                ><label :for="id + '-track'">共用音樂庫</label
+                ><div class="vue-media-entry-heading">
+                  <label :for="id + '-track'">共用音樂庫</label>
+                  <span aria-hidden="true">·</span>
+                  <a
+                    class="vue-media-library-link"
+                    href="/collection?section=music"
+                    target="_blank"
+                    rel="noopener"
+                    >上傳新歌曲<span aria-hidden="true">↗</span></a
+                  > </div
                 ><div
-                  ><select
-                    :id="id + '-track'"
-                    v-model="track"
-                    :disabled="media.busy"
-                    @change="selectTrack"
-                    ><option value="__upload_music__">上傳歌曲 ↗</option
+                  ><select :id="id + '-track'" v-model="track" :disabled="media.busy"
                     ><option value="">選擇歌曲</option
                     ><option v-for="song in media.tracks" :key="song.id" :value="song.id"
                       >{{ song.title }} · {{ song.author }}</option
@@ -946,51 +916,111 @@ onBeforeUnmount(() => {
                     :pending="media.libraryLoading"
                     @click="media.library" /></div
               ></form>
-              <form class="vue-media-entry" @submit.prevent="enqueueVideo"
+              <form
+                ref="recentArea"
+                class="vue-media-entry"
+                @submit.prevent="enqueueVideo"
+                @focusout="recentBlur"
+                @keydown="recentKey"
                 ><label :for="id + '-url'">YouTube 網址</label
                 ><div
-                  ><input
-                    :id="id + '-url'"
-                    v-model="url"
-                    type="url"
-                    required
-                    placeholder="貼上 YouTube 影片網址"
-                    :disabled="media.busy" /><UiButton
+                  ><div class="vue-media-url-field"
+                    ><input
+                      :id="id + '-url'"
+                      ref="urlInput"
+                      v-model="url"
+                      type="url"
+                      autocomplete="off"
+                      role="combobox"
+                      :aria-expanded="recentOpen"
+                      :aria-controls="id + '-recent'"
+                      @focus="recentOpen = true"
+                      @click="recentOpen = true"
+                      required
+                      placeholder="貼上 YouTube 影片網址"
+                      :disabled="media.busy"
+                    />
+                    <section
+                      v-if="recentOpen"
+                      :id="id + '-recent'"
+                      class="vue-media-recent"
+                      aria-label="最近播放影片"
+                      @mousedown.prevent
+                    >
+                      <ul v-if="recentVideos.length">
+                        <li v-for="entry in recentVideos" :key="entry.videoId">
+                          <button
+                            type="button"
+                            :disabled="media.busy"
+                            @click="chooseRecent(entry)"
+                            >{{ entry.title }}</button
+                          >
+                        </li>
+                      </ul>
+                      <p v-else>尚無最近播放紀錄</p>
+                    </section> </div
+                  ><UiButton
                     stitch
                     variant="primary"
                     type="submit"
                     icon="add"
                     icon-only
                     label="加入影片至播放清單"
-                    :disabled="!url.trim() || !media.snapshot || media.busy" /></div
-              ></form>
-              <p class="vue-media-request-note"
-                >所有房員都可以點播；影片只在每位玩家同意後載入。上傳歌曲會開啟你的收藏庫。</p
-              >
-              <a
-                class="vue-media-library-link"
-                href="/collection?section=music"
-                target="_blank"
-                rel="noopener"
-                >前往音樂收藏庫／上傳歌曲 ↗</a
-              >
+                    :disabled="!url.trim() || !media.snapshot || media.busy"
+                /></div>
+              </form>
+              <StatusSlot
+                v-if="feedback"
+                :message="feedback"
+                :error="media.failed || !!media.libraryError"
+              />
+              <section class="vue-media-playlist" aria-label="播放清單">
+                <h3>播放清單（{{ media.snapshot?.queue.length || 0 }}）</h3>
+                <ol ref="queueArea" class="vue-media-queue" aria-label="待播媒體，可捲動查看"
+                  ><li
+                    v-for="(entry, index) in media.snapshot?.queue || []"
+                    :key="entry.id"
+                    :data-media-item="entry.id"
+                    :class="{ 'is-drop-target': targetId === entry.id }"
+                    ><UiButton
+                      stitch
+                      variant="ghost"
+                      icon="dragHandle"
+                      icon-only
+                      :label="'排序：' + entry.title + '；上下鍵移動'"
+                      class="vue-media-queue-handle"
+                      :disabled="!media.canManageQueue || media.busy"
+                      @pointerdown="queueStart($event, entry.id)"
+                      @pointermove="queueMove"
+                      @pointerup="queueEnd"
+                      @pointercancel="queueCancel"
+                      @lostpointercapture="queueCancel"
+                      @keydown="queueKey($event, entry.id)" /><div
+                      ><strong
+                        ><span class="vue-media-queue-number">{{ index + 1 }}.</span>
+                        <OverflowText :text="entry.title" /></strong
+                      ><span
+                        ><OverflowText
+                          :text="
+                            (entry.type === 'video' ? '影片' : '歌曲') +
+                            ' · ' +
+                            entry.requestedByName
+                          " /></span></div
+                    ><UiButton
+                      stitch
+                      variant="ghost"
+                      icon="remove"
+                      icon-only
+                      :label="'移除待播：' + entry.title"
+                      :disabled="!media.canManageQueue || media.busy"
+                      @click="media.command('remove', { itemId: entry.id })" /></li
+                  ><li v-if="!media.snapshot?.queue.length" class="vue-media-queue-empty"
+                    ><UiIcon class="ui-icon" name="cards" /><p>播放清單目前是空的。</p></li
+                  ></ol
+                >
+              </section>
             </section>
           </div>
-          <footer class="vue-media-feedback"
-            ><StatusSlot
-              :message="
-                media.loading
-                  ? '正在同步媒體…'
-                  : activeTab === 'request' && media.libraryLoading
-                    ? '正在讀取曲庫…'
-                    : activeTab === 'request' && media.libraryError
-                      ? media.libraryError
-                      : media.message
-              "
-              :error="
-                media.failed || (activeTab === 'request' && !!media.libraryError)
-              " /><StatusSlot :message="playbackStatus"
-          /></footer>
         </div>
         <div
           v-for="[edge, label] in geometry.edges"
@@ -1022,13 +1052,15 @@ onBeforeUnmount(() => {
         stitch
         ref="consent"
         class="vue-media-consent-dialog"
-        title="接受這一桌的影片嗎？"
+        title="接受載入房間影片嗎？"
         compact
         @closed="consentClosed"
         ><p
-          >接受後，這一桌點播的 YouTube
+          >接受後，房間點播的 YouTube
           影片會在你的媒體視窗顯示。瀏覽器仍可能需要你按播放器才能開始播放。</p
-        ><p>略過就不載入 Google 播放器；之後可從「媒體」重新接受。</p
+        ><p
+          >這個分頁進其他房間沿用本次選擇，重新整理後會再詢問。略過就不載入 Google
+          播放器；之後可從「媒體」重新接受。</p
         ><p
           ><a href="https://policies.google.com/privacy" target="_blank" rel="noopener"
             >Google 隱私權政策</a

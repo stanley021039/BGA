@@ -252,7 +252,6 @@
     border-color: var(--stitch-danger-ink);
   }
   .vue-bluff-waiting-choice,
-  .vue-bluff-role-ended,
   .vue-bluff-instruction {
     padding: 16px;
     border: 1px solid var(--stitch-line);
@@ -299,11 +298,9 @@
     min-inline-size: 0;
     display: grid;
     gap: 16px;
-    > .vue-button {
-      justify-self: start;
-    }
   }
   .vue-bluff-private-card {
+    position: relative;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -333,6 +330,46 @@
       align-items: center;
       text-align: center;
       background: var(--stitch-surface-subtle);
+    }
+    // The concealed card is the reveal button itself (tap, click, Enter/Space).
+    // ui-primitives styles every button as a pill with !important borders.
+    &:is(button) {
+      appearance: none;
+      min-block-size: 0;
+      border: 1px solid var(--stitch-line) !important;
+      border-radius: 12px !important;
+      color: var(--stitch-ink);
+      font: inherit;
+      cursor: pointer;
+      transition:
+        border-color 0.15s,
+        background-color 0.15s;
+      &:hover:not(:disabled) {
+        border-color: var(--stitch-primary) !important;
+        background: var(--stitch-surface-hover);
+      }
+      &:focus-visible {
+        outline: 3px solid var(--stitch-focus);
+        outline-offset: 2px;
+      }
+      &:disabled {
+        cursor: default;
+        color: var(--stitch-muted);
+      }
+      > span:last-child {
+        font-size: 16px;
+        line-height: 1.8;
+        color: var(--stitch-muted);
+      }
+    }
+    .vue-bluff-private-lock svg {
+      inline-size: 32px;
+      block-size: 32px;
+    }
+    > .vue-bluff-private-hide {
+      position: absolute;
+      inset-block-start: 12px;
+      inset-inline-end: 12px;
     }
   }
   .vue-bluff-role-badge {
@@ -408,6 +445,72 @@
   }
   .vue-bluff-discussion-right > .vue-button {
     align-self: start;
+  }
+  .vue-bluff-speech {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 10px;
+    background: var(--stitch-surface-subtle);
+  }
+  // 講話、哦是哦 and 說明完畢 share one row; the status line keeps two lines
+  // reserved so starting or stopping recognition never moves the row.
+  .vue-bluff-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    > .vue-button {
+      flex: none;
+      white-space: nowrap;
+    }
+  }
+  .vue-bluff-speech-slot.is-thinker {
+    min-block-size: 0;
+    gap: 12px;
+  }
+  .vue-bluff-speech h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+  // Fixed two-line status so toggling does not shift the log below.
+  .vue-bluff-speech-status {
+    min-block-size: 2lh;
+    margin: 0;
+    font-size: 14px;
+    text-align: center;
+    &.is-error {
+      color: var(--stitch-danger, #b42318);
+    }
+  }
+  .vue-bluff-speech-log,
+  .vue-bluff-review-speech ol {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    li {
+      display: grid;
+      gap: 2px;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-bluff-speech-log {
+    max-block-size: 240px;
+    overflow-y: auto;
+    .is-live {
+      font-style: italic;
+      opacity: 0.8;
+    }
+    .is-empty {
+      font-size: 14px;
+      opacity: 0.75;
+    }
+  }
+  .vue-bluff-review-speech h4 {
+    margin: 0 0 8px;
   }
   .vue-bluff-progress {
     min-block-size: 24px;

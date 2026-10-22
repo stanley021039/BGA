@@ -79,12 +79,9 @@ const tip = computed(() =>
           } as Record<string, string>
         )[s.value.phase] || '至少兩支車隊即可開始比賽。',
 );
-watch(
-  () => [s.value.version, s.value.phase],
-  () => {
-    previewPoint.value = null;
-  },
-);
+watch([() => s.value.version, () => s.value.phase], () => {
+  previewPoint.value = null;
+});
 async function run(action: string, data: Record<string, unknown> = {}) {
   previewPoint.value = null;
   if (enabled.value) return presentation.run(action, data);

@@ -124,7 +124,10 @@ function status(player: RoomPlayer) {
                     >{{ n }}強（{{ n - 1 }}場）</option
                   ></select
                 ></label
-              ><p>每場秘密投票，選到多數 +1分；平票抽籤晉級不加分，最後選出冠軍。</p></template
+              ><p
+                >每場秘密投票，選到多數 +1分；只有 1 人選另一邊時該人
+                -1分；平票抽籤晉級不加分，最後選出冠軍。</p
+              ></template
             ><template v-else-if="game.settings.mode === 'cruel'"
               ><label
                 >計分玩法<select v-model="game.settings.cruelRules" @change="game.queue()"

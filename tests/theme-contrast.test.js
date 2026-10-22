@@ -111,3 +111,74 @@ test('Stitch selected paper keeps body, muted, link and focus pairs readable in 
     'page muted is not selected-paper muted',
   );
 });
+
+// #186: night mode left white page ink on 同頻's light selected cards.
+test('同頻 selected and winning cards pair the selected paper with its own ink', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../frontend/src/styles/majority.scss'), 'utf8');
+  const unpaired = [],
+    stack = [];
+  for (let i = 0; i < css.length; i++) {
+    if (css[i] === '{') stack.push(i);
+    else if (css[i] === '}') {
+      const start = stack.pop(),
+        own = css.slice(start + 1, i).replace(/\{[^]*\}/g, '');
+      if (
+        /background:\s*var\(--stitch-selected-bg\)/.test(own) &&
+        !/color:\s*var\(--stitch-selected-ink\)/.test(own)
+      )
+        unpaired.push(css.slice(0, start).split('\n').length);
+    }
+  }
+  assert.deepEqual(unpaired, [], 'selected background without selected ink at lines');
+  for (const selector of ['&.is-my-choice {', '&.is-winner {']) {
+    const at = css.indexOf(selector);
+    assert.ok(at > 0, selector);
+    assert.match(css.slice(at, css.indexOf('}', at)), /@include surfaces\.selected;/, selector);
+  }
+});
+
+test('Stitch ordinary muted text and setup status stay readable on each theme surface', () => {
+  const css = fs.readFileSync(
+    path.join(__dirname, '../frontend/src/styles/stitch-tokens.scss'),
+    'utf8',
+  );
+  const night = css.indexOf("html[data-color-scheme='dark']");
+  const day = declarations(css.slice(css.indexOf(':root {'), night));
+  const themes = [day, { ...day, ...declarations(css.slice(night)) }];
+  for (const tokens of themes) {
+    for (const background of [
+      '--stitch-base',
+      '--stitch-surface',
+      '--stitch-surface-subtle',
+      '--stitch-surface-hover',
+    ]) {
+      for (const foreground of ['--stitch-muted', '--stitch-ink', '--stitch-focus']) {
+        assert.ok(
+          contrast(resolve(tokens, foreground), resolve(tokens, background)) >= 4.5,
+          foreground + ' on ' + background,
+        );
+      }
+    }
+  }
+  const setup = fs.readFileSync(
+    path.join(__dirname, '../frontend/src/styles/stitch-party-content.scss'),
+    'utf8',
+  );
+  for (const selector of [
+    '.stitch-setup-heading small',
+    '.stitch-host-badge',
+    '#musicquiz-app .mq-bank-count',
+    '#musicquiz-app .mq-bank-icon',
+    '#musicquiz-app .mq-bank-check',
+  ]) {
+    const at = setup.indexOf(selector + ' {');
+    assert.ok(at >= 0, selector);
+    const rule = setup.slice(at, setup.indexOf('}', at));
+    assert.match(rule, /color:\s*var\(--stitch-ink(?:, [^)]+)?\)/);
+  }
+  assert.ok(contrast('#766f66', '#f5f3ef') < 4.5, 'old muted pairing must fail');
+  assert.ok(contrast('#d8af53', '#ffffff') < 4.5, 'old gold-on-white must fail');
+  assert.ok(contrast('#f0c65f', '#f7f3e7') < 4.5, 'old bank count pairing must fail');
+  const focus = setup.slice(setup.indexOf('#musicquiz-app .mq-bank:focus-within'));
+  assert.match(focus.slice(0, focus.indexOf('}')), /outline: 3px solid var\(--stitch-focus\)/);
+});

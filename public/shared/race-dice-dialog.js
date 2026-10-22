@@ -327,21 +327,31 @@
     }
     function paintFace(tile, value, mode, index) {
       const die = check.dice[index],
+        direction = root.RaceDirections?.get(value),
         numeric = typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 6,
         display = value === 'out' ? '熄滅' : value === 'eliminate' ? '淘汰' : String(value ?? '?'),
         caption =
           mode === 'result'
             ? numeric
               ? value + ' 點'
-              : display
+              : direction
+                ? '向' + direction.label
+                : display
             : mode === 'rolling'
               ? '擲骰中'
               : '尚未擲骰';
-      if (numeric) tile.face.innerHTML = faceMarkup(value);
+      if (direction) tile.face.innerHTML = root.RaceDirections.markup(value);
+      else if (numeric) tile.face.innerHTML = faceMarkup(value);
       else tile.face.textContent = display;
-      tile.face.dataset.symbol = String(!numeric);
+      tile.face.dataset.symbol = String(!numeric && !direction);
+      tile.el.dataset.direction = direction?.value || '';
       tile.valueLabel.textContent = caption;
-      tile.el.setAttribute('aria-label', (die.label || '骰子 ' + (index + 1)) + '，' + caption);
+      tile.el.setAttribute(
+        'aria-label',
+        (die.label || '骰子 ' + (index + 1)) +
+          '，' +
+          (mode === 'result' && direction ? direction.description : caption),
+      );
     }
     function stage() {
       if (check.status === 'awaiting') return 'awaiting';
@@ -388,7 +398,12 @@
         root.clearTimeout(animationTimer);
         animationTimer = null;
         tiles.forEach((tile, index) => paintFace(tile, check.result.faces[index], 'result', index));
-        write(result, check.result.text || '擲骰完成。');
+        write(
+          result,
+          root.RaceDirections?.resultText(check.result.text, check.result.faces) ||
+            check.result.text ||
+            '擲骰完成。',
+        );
       } else {
         write(result, '');
         if (currentStage !== 'rolling' || reduced())

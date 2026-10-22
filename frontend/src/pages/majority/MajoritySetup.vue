@@ -114,7 +114,8 @@ function selectMode(id: MajorityOptions['mode']) {
         ></label
       >
       <p class="stitch-setup-note"
-        >隨機抽出候選，兩兩投票。每場選到多數 +1分；平票抽籤晉級、不加分。</p
+        >隨機抽出候選，兩兩投票。每場選到多數 +1分；只有 1 人選另一邊時該人
+        -1分；平票抽籤晉級、不加分。</p
       >
     </fieldset>
     <fieldset v-else :disabled="!game.editable || room.busy || game.uncertain">

@@ -1,0 +1,23 @@
+# 傳情畫意：房主逐頁播放結算（#182）
+
+2026-10-22，候選 2.31.0。使用者要求結算像 Gartic Phone，由房主按一次揭曉一段文字或一張圖，不一次展開整本。沿用目前卡片、頁首、操作槽與 UiButton，不新增自動播放、轉場、上一頁或自由選冊功能。
+
+## 規則與資料
+
+結算先等待房主開始。伺服器持有 `revealIndex=-1`，將 books 依原簿順序攤平成片段；每個 `reveal` 指令驗證當前席位、房主、finished、stepId、requestId 與 expectedIndex，成功才增加一格。快照帶 `review: {index,total}`，Vue 及 legacy 只顯示當前片段，其他人顯示等待房主。最後一格顯示播放完畢，停用繼續推進；新局清回 -1。
+
+同 requestId／相同內容重試不再次前進；改內容衝突、新 requestId／舊 expectedIndex 拒絕。離席中止也可播放已提交頁面；結算時房主離席，下一房主接續原位置。草稿、提交、90 秒傳頁、作畫 renderer、完整 books 與歷史 delta 格式不變。這是同步呈現控制，不是結算資料的新保密權限：既有完成後 books 與歷史資料仍保留完整內容；主畫面不提前呈現後續頁面。
+
+## 驗證
+
+- `tests/telephone-reveal.test.js`：9 項通過。3～8 席完整順序、非房主、重送／內容衝突、舊進度／舊局、結束邊界、重開、中止／房主接續；真實三帳戶 HTTP 驗越權、重送、重連、離席後新房主繼續。
+- `frontend/tests/telephone-reveal.test.cjs`：實際引擎、快照 reader、Pinia telephone store 與編譯後 Vue 場景，三席逐片段核對、每次只一張卡、非房主 disabled、重連及壞 review.total 拒絕。連同 IME 回歸 3/3；前端全套 30/30。
+- `npm run test:affected` 保守回退 282 檔：2583/2583，fail/cancel/skip/todo=0，432.72s，Windows Node26。這次全套在最後兩項 CSS 調整與 legacy 揭曉回歸新增前；之後修正結算標題被自動 grid track 壓縮、手機結算內容預留 24rem，補 legacy 單卡／共享進度回歸，targeted client／reveal 17/17，再跑 Vue 回歸 3/3、型別／建置與原生瀏覽器。交付 head 完整套件以雙平台 CI 為準。
+- `tools/qa/telephone-reveal.cjs`：三個隔離真人帳戶 HTTP 完成兩頁遊玩，Chrome 房主按九次，三席各核對 9 個片段；1920×1080 淺色／390×844 深色、重新整理與專注開關／Esc 通過，pageerror=0，無水平溢出。桌機 stage 1370×925、操作列 1338×56 在文字／畫作／末頁一致；手機 stage 358×667.78、操作列 332×56 一致，長圖保留局部捲動。標題與卡片無交疊。第一輪 QA 被媒體同意 dialog 擋住，腳本改為正常點選略過後重跑通過，未繞過實際按鈕。
+- 截圖／尺寸資料在忽略的 `work/qa-telephone-reveal/`，不包含帳密或正式資料。formatter 將修改到的 legacy engine／client 正規化並移除其舊格式豁免。
+
+## 設計與界線
+
+依既有已審核 `1855:10214`、共用頁首／卡片／操作槽契約延伸行為；嘗試重新取得第三份 Figma 畫面時，工具回覆 Starter 方案 MCP 額度已用盡。未產生新 Stitch 最終稿或宣稱 Figma 已同步；本次沒有以未核對生成 HTML 取代設計依據。實作畫面以本機原生截圖核對。
+
+沒有真人多設備聚會、實體觸控、Safari 或長時間弱網驗收。單元與 HTTP 回歸包含越權／重送等反例，瀏覽器不冒稱涵蓋全部競態。#183 提示移除與 #184 自訂出題分票處理。PR 維持 Draft 到固定 head 的必要 CI 與兩輪審查完成；未部署。

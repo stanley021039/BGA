@@ -69,12 +69,6 @@
     max-height: 180px;
     overflow: auto;
   }
-  .vue-lobby-rooms {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 300px;
-    gap: tokens.space(6);
-    align-items: stretch;
-  }
   :is(.vue-lobby-room-browser, .vue-lobby-code) {
     min-width: 0;
     padding: tokens.space(6);
@@ -107,7 +101,7 @@
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
     align-content: start;
     gap: tokens.space(4);
-    height: 400px;
+    height: min(400px, 50dvh);
     overflow: auto;
     scrollbar-gutter: stable;
     padding: tokens.space(1);
@@ -347,9 +341,17 @@ body.lobby-self-hover {
     overflow-wrap: anywhere;
   }
 }
-@media (max-width: 900px) {
-  .vue-lobby .vue-lobby-rooms {
-    grid-template-columns: minmax(0, 1fr);
+// 找一桌加入 dialog: open rooms above the room-code entry.
+.vue-lobby-join-dialog {
+  inline-size: min(760px, calc(100vw - 32px));
+  max-inline-size: none;
+}
+.vue-lobby .vue-lobby-join {
+  display: grid;
+  gap: tokens.space(4);
+  min-inline-size: 0;
+  :is(.vue-lobby-room-browser, .vue-lobby-code) {
+    box-shadow: none;
   }
 }
 @media (max-width: 650px) {
@@ -464,12 +466,12 @@ body.lobby-self-hover {
       height: 100%;
       min-height: 0;
       padding: tokens.space(2) 0;
-      grid-template-columns: minmax(0, 1fr) clamp(280px, 24vw, 360px);
+      grid-template-columns: minmax(0, 1fr) auto;
       grid-template-rows: 44px minmax(0, 1fr) 44px;
       gap: tokens.space(4);
     }
     .vue-lobby .library-heading {
-      grid-column: 1;
+      grid-column: 1 / -1;
       grid-row: 1;
       min-height: 0;
       margin: 0;
@@ -489,7 +491,7 @@ body.lobby-self-hover {
       display: none;
     }
     .vue-lobby .game-carousel-section {
-      grid-column: 1;
+      grid-column: 1 / -1;
       grid-row: 2;
       display: flex;
       flex-direction: column;
@@ -563,107 +565,10 @@ body.lobby-self-hover {
     .vue-lobby .carousel-actions .quiet {
       @include tokens.type(p3);
     }
-    .vue-lobby .vue-lobby-rooms {
-      grid-column: 2;
-      grid-row: 1 / span 2;
-      min-height: 0;
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: minmax(0, 1fr) auto;
-      gap: tokens.space(3);
-    }
-    .vue-lobby .vue-lobby-room-browser {
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      position: relative;
-      gap: tokens.space(2);
-      padding: tokens.space(3);
-    }
-    .vue-lobby .vue-lobby-room-browser > header {
-      min-height: 44px;
-      flex: none;
-      gap: tokens.space(2);
-      h2 {
-        @include tokens.type(h2);
-        margin: 0;
-      }
-      .kicker,
-      p {
-        display: none;
-      }
-    }
-    .vue-lobby .vue-lobby-room-tools {
-      min-width: 0;
-      gap: tokens.space(2);
-      span {
-        @include tokens.type(p3);
-      }
-    }
-    .vue-lobby .vue-lobby-room-browser > .frontend-status {
-      position: absolute;
-      top: 60px;
-      left: 12px;
-      right: 12px;
-      max-height: 3em;
-      margin: 0;
-      background: var(--play-surface);
-      z-index: 2;
-    }
-    .vue-lobby .vue-lobby-room-browser > .frontend-status:empty {
-      visibility: hidden;
-    }
-    .vue-lobby .vue-lobby-room-list {
-      flex: 1;
-      min-height: 0;
-      height: auto;
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .vue-lobby .vue-lobby-room {
-      grid-template-columns: minmax(0, 1fr) 100px;
-      min-height: 144px;
-      padding: tokens.space(2);
-      gap: tokens.space(2);
-    }
-    .vue-lobby .vue-lobby-code {
-      min-height: 0;
-      position: relative;
-      padding: tokens.space(3);
-      gap: 0;
-      > h2 {
-        display: none;
-      }
-      form {
-        gap: tokens.space(2);
-      }
-      label {
-        @include tokens.type(p3);
-      }
-      input {
-        height: 44px;
-        min-height: 44px;
-        padding: tokens.space(2);
-        font-size: 20px;
-        letter-spacing: 0.1em;
-      }
-    }
-    .vue-lobby .vue-lobby-code > .frontend-status {
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 0;
-      right: 0;
-      margin: 0;
-      padding: tokens.space(2);
-      border: 1px solid var(--play-line);
-      border-radius: tokens.space(2);
-      background: var(--play-surface);
-      z-index: 3;
-    }
-    .vue-lobby .vue-lobby-code > .frontend-status:empty {
-      visibility: hidden;
-    }
     .vue-lobby .vue-lobby-resume {
       grid-column: 2;
       grid-row: 3;
+      flex-wrap: nowrap;
       min-height: 44px;
       max-height: 44px;
       overflow: auto;
@@ -711,10 +616,6 @@ body.lobby-self-hover {
 // room browser's 400px list or a second row of code-entry buttons.
 @media (max-width: 900px) {
   :root body.vue-lobby-document[data-visual-theme] #lobby-app .vue-lobby {
-    .vue-lobby-rooms {
-      gap: 1rem;
-      align-items: start;
-    }
     .vue-lobby-room-browser {
       display: grid;
       grid-template-rows: auto 2.75rem 14rem;
@@ -902,15 +803,39 @@ body .lobby-backdrop[data-background='castle'] {
   transform: translateX(-50%) rotate(225deg);
 }
 
-.lobby-actions {
-  position: relative;
-  z-index: 150;
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-block: 0;
+// The join dialog sizes to its rooms; it outranks the mobile room-browser
+// slots above, which reserved space for an always-visible side panel.
+:root body.vue-lobby-document[data-visual-theme] #lobby-app .vue-lobby .vue-lobby-join {
+  .vue-lobby-room-browser,
+  .vue-lobby-code {
+    display: grid;
+    grid-template-rows: none;
+    align-content: start;
+    gap: tokens.space(3);
+    min-block-size: 0;
+    padding: tokens.space(4);
+  }
+  .vue-lobby-room-browser > header {
+    min-block-size: 0;
+    min-height: 0;
+    p {
+      margin: 0;
+    }
+  }
+  .vue-lobby-room-list {
+    block-size: auto;
+    height: auto;
+    min-block-size: 0;
+    max-block-size: min(360px, 45dvh);
+  }
+  .vue-lobby-code h2 {
+    margin: 0;
+  }
+  .frontend-status:empty {
+    display: none;
+  }
 }
+
 .lobby-backdrop {
   container-type: inline-size;
 }

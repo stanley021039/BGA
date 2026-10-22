@@ -75,7 +75,11 @@ export const useTelephoneStore = defineStore('telephone', () => {
   const offset = computed(() => now.value - serverTime.value),
     expired = computed(() => !!state.value?.deadline && serverTime.value >= state.value.deadline),
     context = computed(() =>
-      room.seat && !room.terminal && state.value?.phase === 'passing' && state.value.stepId
+      room.seat &&
+      !room.terminal &&
+      state.value &&
+      ['prompting', 'passing'].includes(state.value.phase) &&
+      state.value.stepId
         ? `${room.scope}:${room.code}:${state.value.me}:${state.value.stepId}`
         : '',
     ),
@@ -232,7 +236,7 @@ export const useTelephoneStore = defineStore('telephone', () => {
     };
     job = next;
     saving.value = true;
-    notice.value = '正在同步私人草稿…';
+    notice.value = '';
     const timeout = setTimeout(
       () =>
         next.controller.abort(
@@ -251,10 +255,7 @@ export const useTelephoneStore = defineStore('telephone', () => {
         if (attempt.context !== context.value) return false;
         accepted.value = attempt.serialized;
         retry = null;
-        notice.value =
-          attempt.revision === revision
-            ? '草稿已獲伺服器接受。'
-            : '較早的草稿已接受，還有新內容尚未同步。';
+        notice.value = '';
         return true;
       } catch (cause) {
         if (
@@ -284,7 +285,7 @@ export const useTelephoneStore = defineStore('telephone', () => {
     actions.setTarget(context.value + ':' + revision);
     retry = null;
     automatic = true;
-    notice.value = '有本地內容尚未同步。';
+    notice.value = '';
     cache();
     schedule();
   }
@@ -304,6 +305,37 @@ export const useTelephoneStore = defineStore('telephone', () => {
   function clear() {
     if (!activeStroke.value) changeStrokes([]);
   }
+  const canReveal = computed(() => {
+    const review = state.value?.review;
+    return (
+      !!review &&
+      room.host &&
+      room.connected &&
+      !room.terminal &&
+      !room.busy &&
+      !actions.pending &&
+      review.index < review.total - 1
+    );
+  });
+  function reveal() {
+    if (!canReveal.value) return Promise.resolve(false);
+    return actions.command('reveal', { expectedIndex: state.value!.review!.index });
+  }
+  watch(
+    [
+      () => room.scope,
+      () => state.value?.stepId,
+      () => state.value?.review?.index,
+      () => room.host,
+    ],
+    () => {
+      if (state.value?.review)
+        actions.setTarget(
+          `review:${room.scope}:${state.value.stepId}:${state.value.review.index}:${room.host}`,
+        );
+    },
+    { flush: 'sync' },
+  );
   async function submit(skip = false) {
     if (!allowed.value || finishing.value || actions.pending || room.busy || activeStroke.value)
       return false;
@@ -346,7 +378,12 @@ export const useTelephoneStore = defineStore('telephone', () => {
     if (clock) clearInterval(clock);
     clock = null;
     tick();
-    if (state.value?.phase === 'passing' && !expired.value && !document.hidden)
+    if (
+      state.value &&
+      ['prompting', 'passing'].includes(state.value.phase) &&
+      !expired.value &&
+      !document.hidden
+    )
       clock = setInterval(tick, 250);
   }
   watch(
@@ -434,6 +471,8 @@ export const useTelephoneStore = defineStore('telephone', () => {
     changeText,
     undo,
     clear,
+    canReveal,
+    reveal,
     submit,
   };
 });
