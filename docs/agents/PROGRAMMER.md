@@ -891,3 +891,5 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 2026-10-22 候選2.26.0：六張內建大圖改為 800 px WebP，`src/app.js` 檔案表保留舊 `.png` 網址並指向 WebP（`public/bluff.js` 與兩支 QA 腳本是舊格式檔，所以沒有改）。`src/media/audio.js` 以 WAV 內容雜湊在 `<db>.media-audio/` 存 96 kbps 單聲道 MP3：只有正式設定（`expressionSoundMp3`）會轉換，轉換中回 WAV 並標 `private, no-cache`；找不到 ffmpeg 時不留下任何紀錄，安裝並重新啟動後就會補齊。原始 WAV 仍是 SQLite 中驗證過的原檔。
 
 2026-10-22 候選2.27.0：`frontend/src/services/preload.ts` 的 `warm()` 在閒置時以 `<link rel=prefetch>` 預先抓取，每個網址只抓一次；`preloadAllowed()` 在 Save-Data 或 slow-2g／2g／3g 時回 false。`services/game-assets.ts` 列出各遊戲進行中才用到的資源（音效依 `public/shared/audio-settings.js` 的登記表），GameRoomPage 在 waiting 時呼叫 `warmGame`；GameCarousel 在 pointerenter／pointerdown／focus 時呼叫 `warmGamePage`，向 `/api/frontend/page-assets?type=` 取得編譯後房間頁的 `/frontend-assets`、`/shared` 腳本與樣式（thunder 對應 race）。大廳 store 在第一份快照後於閒置時載入表情與 128 px 縮圖。新增遊戲的進行中素材時，請一併更新 game-assets。
+
+2026-10-22 2.27.1（#165）：RoomMedia 原本在任何其他 `dialog:modal` 開啟時呼叫 `close()`，而 `setWindow(false)` 會讓 YouTube 影片 `exitVideo()`，所以邀請朋友、遊戲說明或確認視窗都會中斷影片。現在其他 modal 只蓋在點播視窗上面；Escape 在有 modal 時本來就不處理。回歸測試在 `frontend/tests/media-modal.test.cjs`，實機重現腳本在 `tools/qa/media-modal-continuity.cjs`。
