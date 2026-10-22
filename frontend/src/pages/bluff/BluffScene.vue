@@ -11,6 +11,7 @@ import UiButton from '../../components/UiButton.vue';
 import UiIcon from '../../components/UiIcon.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import BluffReview from './BluffReview.vue';
+import BluffSpeech from './BluffSpeech.vue';
 import BluffSettings from './BluffSettings.vue';
 const room = useRoomStore(),
   bluff = useBluffStore(),
@@ -172,7 +173,7 @@ function rank(index: number) {
 
   <section v-else class="vue-bluff-screen" :data-phase="state.phase" aria-labelledby="bluffHeading">
     <header class="vue-bluff-game-info"
-      ><div><h1>瞎掰王</h1><p>3–9 人 · 外部語音或面對面口說</p></div
+      ><div><h1>瞎掰王</h1><p>3–9 人 · 講話轉字幕、外部語音或面對面口說</p></div
       ><span class="vue-bluff-state-badge">{{
         thinker && state.round ? '本輪想想：' + thinker.name : '等待朋友集結'
       }}</span></header
@@ -370,7 +371,7 @@ function rank(index: number) {
                     :disabled="blocked || state.spokenIds.includes(state.me)"
                     @click="actions.command('spoken')" /></div></div
               ><aside class="vue-bluff-discussion-right"
-                ><UiButton
+                ><BluffSpeech :state="state" :blocked="blocked" /><UiButton
                   stitch
                   variant="secondary"
                   label="哦是哦"

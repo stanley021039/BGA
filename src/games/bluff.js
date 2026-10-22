@@ -20,6 +20,8 @@ class BluffRoom extends PartyRoom {
     this.banBallots = {};
     this.reactions = [];
     this.reactionTimes = {};
+    this.captions = {};
+    this.transcript = [];
   }
   offeredChoices() {
     const seen = new Set();
@@ -106,6 +108,8 @@ class BluffRoom extends PartyRoom {
     this.spokenIds = [];
     this.challenges = [];
     this.botStatements = {};
+    this.captions = {};
+    this.transcript = [];
     this.phase = 'selecting';
     this.deadline = null;
     this.botMemories = {};
@@ -238,6 +242,7 @@ class BluffRoom extends PartyRoom {
           selectedName: target.name,
           correct: target.id === honest.id,
           challenges: this.challenges.map((pid) => this.player(pid).name),
+          transcript: this.transcript.map((e) => ({ name: e.name, text: e.text })),
           roles: this.players.map((q) => ({
             name: q.name,
             role: this.roles[q.id],
@@ -256,6 +261,43 @@ class BluffRoom extends PartyRoom {
         this.nextRound();
       } else fail('INVALID_ACTION', '不支援的操作', 400);
     });
+  }
+  // Live subtitles from the speaker's own browser speech recognizer. They stay in
+  // memory, outside the action history; final lines join this round's speech
+  // log, which is kept with the round result.
+  caption(id, data) {
+    const p = this.player(id);
+    if (!p) fail('NOT_SEATED', '尚未入座', 403);
+    if (p.bot) fail('HUMAN_ONLY', '測試 AI 不使用語音', 403);
+    if (this.phase !== 'discussion') fail('INVALID_PHASE', '口說階段才能錄製發言');
+    if (data.roundId !== this.roundId) fail('STALE_ROUND', '已換輪，請更新畫面');
+    if (typeof data.utteranceId !== 'string' || !/^[a-zA-Z0-9-]{8,80}$/.test(data.utteranceId))
+      fail('INVALID_UTTERANCE', '發言識別碼不正確', 400);
+    if (
+      typeof data.final !== 'boolean' ||
+      (data.text !== undefined && typeof data.text !== 'string')
+    )
+      fail('INVALID_CAPTION', '字幕格式不正確', 400);
+    const line = String(data.text || '')
+      .replace(/[\u0000-\u001f\u007f]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 200);
+    if (!line) {
+      if (this.captions[id]?.utteranceId === data.utteranceId) delete this.captions[id];
+      return;
+    }
+    this.captions[id] = {
+      utteranceId: data.utteranceId,
+      text: line,
+      final: data.final,
+      at: this.now(),
+    };
+    if (!data.final) return;
+    const known = this.transcript.find((e) => e.id === data.utteranceId && e.playerId === id);
+    if (known) known.text = line;
+    else if (this.transcript.length < 120)
+      this.transcript.push({ id: data.utteranceId, playerId: id, name: p.name, text: line });
   }
   beginDiscussion() {
     this.phase = 'discussion';
@@ -335,6 +377,19 @@ class BluffRoom extends PartyRoom {
                   : [],
           }
         : null,
+      // Subtitles last six seconds; the speech log is public while people talk.
+      captions:
+        this.phase === 'discussion'
+          ? Object.entries(this.captions)
+              .filter(([pid, c]) => this.player(pid) && this.now() - c.at < 6000)
+              .map(([playerId, c]) => ({ playerId, text: c.text, final: c.final }))
+          : [],
+      transcript:
+        this.phase === 'discussion'
+          ? this.transcript
+              .filter((e) => this.player(e.playerId))
+              .map((e) => ({ id: e.id, playerId: e.playerId, name: e.name, text: e.text }))
+          : [],
       readyIds: this.readyIds,
       spokenIds: this.spokenIds,
       challenges: this.challenges,

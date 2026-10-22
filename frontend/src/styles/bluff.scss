@@ -447,6 +447,64 @@
   .vue-bluff-discussion-right > .vue-button {
     align-self: start;
   }
+  .vue-bluff-speech {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 10px;
+    background: var(--stitch-surface-subtle);
+  }
+  .vue-bluff-speech-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    > .vue-button {
+      flex: none;
+      white-space: nowrap;
+    }
+  }
+  // Fixed two-line status so toggling does not shift the log below.
+  .vue-bluff-speech-status {
+    min-block-size: 2lh;
+    margin: 0;
+    font-size: 14px;
+    &.is-error {
+      color: var(--stitch-danger, #b42318);
+    }
+  }
+  .vue-bluff-speech-mine {
+    margin: 0;
+    font-style: italic;
+  }
+  .vue-bluff-speech-log,
+  .vue-bluff-review-speech ol {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    li {
+      display: grid;
+      gap: 2px;
+      overflow-wrap: anywhere;
+    }
+  }
+  .vue-bluff-speech-log {
+    max-block-size: 240px;
+    overflow-y: auto;
+    .is-live span {
+      font-style: italic;
+      opacity: 0.8;
+    }
+    .is-empty {
+      font-size: 14px;
+      opacity: 0.75;
+    }
+  }
+  .vue-bluff-review-speech h4 {
+    margin: 0 0 8px;
+  }
   .vue-bluff-progress {
     min-block-size: 24px;
     font-weight: 700;

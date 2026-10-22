@@ -42,6 +42,14 @@ const result = computed(
             >{{ player.delta >= 0 ? '+' : '' }}{{ player.delta }} 分</span
           ><span>累計 {{ player.score }}</span></li
         ></ul
+      ><section v-if="result.transcript.length" class="vue-bluff-review-speech"
+        ><h4>發言字幕</h4
+        ><ol
+          ><li v-for="(line, index) in result.transcript" :key="index"
+            ><strong>{{ line.name }}</strong
+            ><span>{{ line.text }}</span></li
+          ></ol
+        ></section
       ><a :href="result.source.url" target="_blank" rel="noopener noreferrer"
         >查證來源：{{ result.source.title }}</a
       ><div v-if="result.ban" class="vue-bluff-ban"
