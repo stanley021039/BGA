@@ -900,3 +900,5 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 
 2026-10-22 #181 候選2.30.1：TelephoneScene 猜詞改原生 v-model 組字保護，computed setter 沿用 changeText，scope／stepId key 隔離新頁。實際元件反例先失敗，修正後2項及前端29項通過，Chrome CDP原生IME 1920／390驗證通過；真人輸入法／實機未驗。證據與界線見 docs/specs/TELEPHONE-IME-181.md；未部署，最終CI／審查以PR為準。
 2026-10-22 候選2.30.0：瞎掰王語音字幕。前端 `composables/speech-captions.ts` 使用瀏覽器的 `SpeechRecognition`（zh-TW，Chrome／Edge 送 Google、Safari 送 Apple；Firefox 不支援，按鈕會停用並說明）。只有按下「講話」才收音，再按一次停止；換輪、離開口說階段、斷線或分頁隱藏時自動停止。只送文字：中途字幕每 0.7 秒最多一次，完整句子立即送出。伺服器 `POST /api/bluff/caption` 不經 action 歷史與 mutation 配額（每分鐘 150 次），`BluffRoom.caption` 只在 discussion 接受目前回合；中途字幕在記憶體中顯示 6 秒，完整句子進入 `transcript`（上限 120 句、每句 200 字），揭曉時複製到 `results[].transcript`。src/games/bluff.js 已在獨立 commit 中格式化。實機重現：`tools/qa/bluff-speech-captions.cjs`（以替身辨識器模擬，因為 headless 沒有麥克風）。
+
+2026-10-22 #182 候選2.31.0：TelephoneRoom.revealIndex／review 快照及房主 reveal 指令，expectedIndex＋receipt 防重送跳頁；Vue／legacy 每次只呈現一個片段，結算房主移交及新局重置。9項引擎／HTTP、前端30、當時全套2583通過；最後CSS後Vue3與原生Chrome三席9片段／1920亮390暗／重整專注通過。既有完整books／歷史公開規則不變，非新增資料保密。Figma額度阻擋重取，未宣稱已同步。證據界線見 docs/specs/TELEPHONE-REVEAL-182.md；CI／審查以PR為準，未部署。

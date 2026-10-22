@@ -21,9 +21,13 @@ const telephone = useTelephoneStore(),
   filled = ref(false),
   color = ref('#273942'),
   size = ref(6),
-  book = ref(0),
   composing = ref(false);
-const selected = computed(() => state.value.books[book.value] || state.value.books[0]),
+const reviewPages = computed(() =>
+    state.value.books.flatMap((book) =>
+      book.pages.map((page, index) => ({ ...book, page, index })),
+    ),
+  ),
+  selected = computed(() => reviewPages.value[state.value.review?.index ?? -1]),
   points = computed(() => telephone.strokes.reduce((sum, s) => sum + s.points.length, 0)),
   blocked = computed(() => !telephone.editable || telephone.activeStroke);
 const drawing = computed(() => state.value.task?.kind === 'drawing');
@@ -80,12 +84,6 @@ watch(
   () => {
     confirm.value?.cancel();
     composing.value = false;
-  },
-);
-watch(
-  () => state.value.phase,
-  (phase) => {
-    if (phase !== 'finished') book.value = 0;
   },
 );
 async function clear() {
@@ -163,12 +161,11 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         }}</h1
         ><p>不計分，也不排名。</p></div
       >
-      <label for="telephoneBook"
-        >選擇傳遞簿<select id="telephoneBook" v-model.number="book">
-          <option v-for="(value, index) in state.books" :key="value.ownerId" :value="index"
-            >{{ value.ownerName }} 的故事</option
-          >
-        </select></label
+      <p role="status"
+        >{{ Math.max(0, (state.review?.index ?? -1) + 1) }}／{{
+          state.review?.total || 0
+        }}
+        個片段</p
       >
     </header>
     <div class="vue-telephone-live">
@@ -277,35 +274,35 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           >有人離席，本場中止；只保留已送出的頁面，不包含尚未送出的私人草稿。</p
         >
         <template v-if="selected">
-          <article
-            v-for="(page, index) in selected.pages"
-            :key="selected.ownerId + ':' + index"
-            class="vue-telephone-book-page"
-          >
+          <h2>{{ selected.ownerName }} 的故事</h2>
+          <article :key="selected.ownerId + ':' + selected.index" class="vue-telephone-book-page">
             <header
               ><div
-                ><span class="vue-telephone-book-number">{{ String(index).padStart(2, '0') }}</span
+                ><span class="vue-telephone-book-number">{{
+                  String(selected.index).padStart(2, '0')
+                }}</span
                 ><h3
-                  >{{ index ? '第 ' + index + ' 頁' : '起始情境' }} · {{ page.authorName }}</h3
+                  >{{ selected.index ? '第 ' + selected.index + ' 頁' : '起始情境' }} ·
+                  {{ selected.page.authorName }}</h3
                 ></div
-              ><span>{{ page.kind === 'drawing' ? '畫圖' : '猜詞／情境' }}</span></header
+              ><span>{{ selected.page.kind === 'drawing' ? '畫圖' : '猜詞／情境' }}</span></header
             >
-            <p v-if="page.skipped" class="vue-telephone-skipped"
-              >本頁略過{{ page.timedOut ? ' · 時間到時沒有已同步的內容' : '' }}</p
+            <p v-if="selected.page.skipped" class="vue-telephone-skipped"
+              >本頁略過{{ selected.page.timedOut ? ' · 時間到時沒有已同步的內容' : '' }}</p
             >
             <template v-else>
               <TelephoneCanvas
-                v-if="page.kind === 'drawing'"
-                :strokes="page.strokes || []"
-                :epoch="state.stepId + ':' + selected.ownerId + ':' + index"
-                :label="page.authorName + ' 的第 ' + index + ' 頁畫作'"
+                v-if="selected.page.kind === 'drawing'"
+                :strokes="selected.page.strokes || []"
+                :epoch="state.stepId + ':' + selected.ownerId + ':' + selected.index"
+                :label="selected.page.authorName + ' 的第 ' + selected.index + ' 頁畫作'"
               />
-              <p v-else class="vue-telephone-book-text">{{ page.text }}</p
-              ><small v-if="page.timedOut">時間到，採用已同步的私人草稿</small>
+              <p v-else class="vue-telephone-book-text">{{ selected.page.text }}</p
+              ><small v-if="selected.page.timedOut">時間到，採用已同步的私人草稿</small>
             </template>
           </article>
         </template>
-        <p v-else>尚無可揭曉的傳遞簿。</p>
+        <p v-else>等待房主開始播放故事。</p>
       </section>
     </div>
     <div class="vue-telephone-status"
@@ -328,6 +325,25 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           :pending="telephone.finishing"
           :disabled="blocked || !telephone.strokes.length"
           @click="telephone.submit()"
+        />
+      </template>
+      <template v-else-if="state.phase === 'finished' && state.review">
+        <span class="vue-telephone-action-note">{{
+          state.review.index >= state.review.total - 1
+            ? '所有故事已播放完畢。'
+            : room.host
+              ? '按一下揭曉下一個片段。'
+              : '等待房主播放下一頁。'
+        }}</span>
+        <UiButton
+          v-if="state.review.index < state.review.total - 1 && room.host"
+          stitch
+          variant="primary"
+          :icon="state.review.index < 0 ? 'play' : 'next'"
+          :label="state.review.index < 0 ? '開始播放故事' : '播放下一頁'"
+          :pending="actions.pending"
+          :disabled="!telephone.canReveal"
+          @click="telephone.reveal()"
         />
       </template>
       <span v-else class="vue-telephone-action-note">{{

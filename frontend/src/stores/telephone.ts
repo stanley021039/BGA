@@ -304,6 +304,37 @@ export const useTelephoneStore = defineStore('telephone', () => {
   function clear() {
     if (!activeStroke.value) changeStrokes([]);
   }
+  const canReveal = computed(() => {
+    const review = state.value?.review;
+    return (
+      !!review &&
+      room.host &&
+      room.connected &&
+      !room.terminal &&
+      !room.busy &&
+      !actions.pending &&
+      review.index < review.total - 1
+    );
+  });
+  function reveal() {
+    if (!canReveal.value) return Promise.resolve(false);
+    return actions.command('reveal', { expectedIndex: state.value!.review!.index });
+  }
+  watch(
+    [
+      () => room.scope,
+      () => state.value?.stepId,
+      () => state.value?.review?.index,
+      () => room.host,
+    ],
+    () => {
+      if (state.value?.review)
+        actions.setTarget(
+          `review:${room.scope}:${state.value.stepId}:${state.value.review.index}:${room.host}`,
+        );
+    },
+    { flush: 'sync' },
+  );
   async function submit(skip = false) {
     if (!allowed.value || finishing.value || actions.pending || room.busy || activeStroke.value)
       return false;
@@ -434,6 +465,8 @@ export const useTelephoneStore = defineStore('telephone', () => {
     changeText,
     undo,
     clear,
+    canReveal,
+    reveal,
     submit,
   };
 });
