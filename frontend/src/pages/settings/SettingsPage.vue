@@ -469,12 +469,6 @@ onMounted(() => {
         /></div>
       </section>
     </div>
-    <section class="page-panel settings-attack-panel" aria-labelledby="attack-settings-heading"
-      ><header class="settings-card-heading"
-        ><h2 id="attack-settings-heading">Q／E 攻擊特效</h2
-        ><a href="/collection?section=attack">前往收藏庫 ↗</a></header
-      ><UiButton label="選擇Q／E攻擊特效" @click="attackPicker?.open()"
-    /></section>
     <form
       id="settings-form"
       tabindex="0"
@@ -482,6 +476,12 @@ onMounted(() => {
       :aria-busy="pending || profile.loading"
       @submit.prevent="save"
     >
+      <section class="page-panel settings-attack-panel" aria-labelledby="attack-settings-heading"
+        ><header class="settings-card-heading"
+          ><h2 id="attack-settings-heading">Q／E 攻擊特效</h2
+          ><a href="/collection?section=attack">前往收藏庫 ↗</a></header
+        ><UiButton label="選擇Q／E攻擊特效" @click="attackPicker?.open()"
+      /></section>
       <fieldset class="settings-fields" :disabled="pending || !appearance || !avatar">
         <div class="settings-grid">
           <section

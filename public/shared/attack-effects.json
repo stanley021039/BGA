@@ -54,12 +54,6 @@
     "description": "多重逆轉紅蓮魔法陣吟唱、全屏高熱閃光、核爆級蕈狀烈焰巨響。"
   },
   {
-    "id": "damage_text",
-    "label": "傷害數字跳出",
-    "color": "#ffd556",
-    "description": "動漫風爆擊金光、物理重力拋物線飄字、浮誇萬級爽快連跳。"
-  },
-  {
     "id": "blade_aura",
     "label": "藍黑半月劍氣",
     "color": "#00d0ff",
@@ -81,7 +75,7 @@
     "id": "frost_spikes",
     "label": "寒冰結晶／極地霜刺",
     "color": "#7df4ff",
-    "description": "菱形冰稜破土突刺、冰晶霜華環形蔓延、極致碎冰破甲爆裂。"
+    "description": "九根立體寒冰地刺向上突起，亮面冰晶與地面霜裂擴散。"
   },
   {
     "id": "arrow_volley",
@@ -93,6 +87,6 @@
     "id": "flame_vortex",
     "label": "炎獄烈焰龍捲",
     "color": "#ff3366",
-    "description": "高溫螺旋烈焰火柱沖天、強烈聚攏氣流、碎屑火雨飛散引導。"
+    "description": "金紅火流從地面螺旋捲升，逐漸形成高聳烈焰龍捲與上升火星。"
   }
 ]

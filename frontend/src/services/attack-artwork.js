@@ -19,7 +19,7 @@ export function playAttackArtwork(surface, options) {
     density: 1,
     damageMult: 1,
     screenShake: false,
-    showDmgPopups: options.effect === 'damage_text',
+    showDmgPopups: !defensive,
     autoSparks: true,
     shakeAmount: 0,
     combo: 0,
@@ -321,18 +321,6 @@ export function playAttackArtwork(surface, options) {
         }, 300);
         break;
 
-      case 10: // 10 // 戰鬥爆擊傷害跳字 (Combat Crit Numbers Shower)
-        for (let i = 0; i < 7; i++) {
-          later(() => {
-            const cx = targetX + (Math.random() - 0.5) * 90;
-            const cy = targetY + (Math.random() - 0.5) * 70;
-            spawnDamageText(cx, cy, Math.floor(Math.random() * 88000 + 45000), true);
-            spawnImpactSparks(cx, cy, 10, '#ffd556');
-            triggerShockwave(cx, cy, 45, '#ffd556', 2);
-          }, i * 65);
-        }
-        break;
-
       case 11:
         spawnCrescentSlash(originX, originY - 15, targetX, targetY - 15, state.bladeMode, -0.05);
         later(
@@ -547,7 +535,6 @@ export function playAttackArtwork(surface, options) {
     funnel: 7,
     singularity: 8,
     explosion: 9,
-    damage_text: 10,
     blade_aura: 11,
     blade_aura_crimson: 11,
     chain_lightning: 12,
@@ -674,6 +661,7 @@ export function playAttackArtwork(surface, options) {
           if (dist < state.dummy.radius + p.radius * 0.45 || p.life <= 0) {
             triggerShockwave(p.x, p.y, 110, p.config.glowColor, 7);
             spawnImpactSparks(p.x, p.y, 32, p.config.glowColor);
+            spawnDamageText(p.x, p.y, 168000, true);
             spawnSpaceCut(
               p.x - Math.cos(p.angle) * 70,
               p.y - Math.sin(p.angle) * 70,
@@ -888,24 +876,63 @@ export function playAttackArtwork(surface, options) {
             projectiles.splice(i, 1);
           }
         } else if (p.type === 'ice_spikes') {
-          const progress = 1 - p.life / p.maxLife;
+          const elapsed = 1 - p.life / p.maxLife,
+            grow = Math.min(1, elapsed * 5),
+            fade = Math.min(1, p.life / 12);
+          const baseY = p.y + 42,
+            rise = Math.min(170, height * 0.54, Math.max(35, p.y + 42 - 28)),
+            spread = Math.min(145, width * 0.24);
           ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.strokeStyle = p.color;
-          ctx.fillStyle = 'rgba(125, 244, 255, 0.25)';
+          ctx.translate(p.x, baseY);
+          ctx.globalAlpha = fade;
+          ctx.shadowBlur = 18;
+          ctx.shadowColor = '#67e8f9';
+          ctx.beginPath();
+          ctx.ellipse(0, 0, spread, 20, 0, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(34,211,238,0.18)';
+          ctx.fill();
+          ctx.strokeStyle = '#a5f3fc';
           ctx.lineWidth = 2;
-          p.spikes.forEach((sp) => {
-            const currentLen = sp.len * Math.min(progress * 2.5, 1);
-            const xTarget = Math.cos(sp.angle) * currentLen;
-            const yTarget = Math.sin(sp.angle) * currentLen;
+          ctx.stroke();
+          for (let j = 0; j < 9; j++) {
+            const x = ((j - 4) * spread) / 4.5,
+              delay = Math.abs(j - 4) * 0.035;
+            const g = Math.max(0, Math.min(1, (elapsed - delay) * 6));
+            const h = rise * (0.64 + 0.36 * Math.cos((j - 4) * 0.5)) * g,
+              half = 12 + (j % 3) * 3,
+              tip = x + (j - 4) * 5;
+            const ice = ctx.createLinearGradient(x, 0, tip, -h);
+            ice.addColorStop(0, '#0369a1');
+            ice.addColorStop(0.5, '#22d3ee');
+            ice.addColorStop(1, '#ecfeff');
+            ctx.fillStyle = ice;
+            ctx.strokeStyle = '#cffafe';
+            ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(xTarget + 7, yTarget);
-            ctx.lineTo(xTarget, yTarget + 9);
+            ctx.moveTo(x - half, 0);
+            ctx.lineTo(tip, -h);
+            ctx.lineTo(x + half, 0);
             ctx.closePath();
             ctx.fill();
             ctx.stroke();
-          });
+            ctx.fillStyle = 'rgba(255,255,255,0.72)';
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(tip, -h);
+            ctx.lineTo(x + half * 0.7, -h * 0.15);
+            ctx.closePath();
+            ctx.fill();
+          }
+          for (let j = 0; j < 12; j++) {
+            const angle = (j * Math.PI) / 6;
+            const r = spread * grow;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * 18 * grow);
+            ctx.strokeStyle = 'rgba(165,243,252,0.65)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
           ctx.restore();
           if (p.life <= 0) projectiles.splice(i, 1);
         } else if (p.type === 'sacred_arrow') {
@@ -927,24 +954,56 @@ export function playAttackArtwork(surface, options) {
             projectiles.splice(i, 1);
           }
         } else if (p.type === 'inferno_vortex') {
-          const progress = p.life / p.maxLife;
+          const elapsed = 1 - p.life / p.maxLife,
+            growth = Math.min(1, elapsed * 3.5),
+            fade = Math.min(1, p.life / 16);
+          const tower = Math.min(230, height * 0.65, Math.max(35, p.y + 42 - 28)) * growth,
+            baseY = p.y + 42,
+            spin = elapsed * Math.PI * 11;
           ctx.save();
-          ctx.translate(p.x, p.y);
-          for (let ring = 0; ring < 3; ring++) {
-            ctx.rotate(0.12 + ring * 0.05);
-            ctx.strokeStyle = ring % 2 === 0 ? p.color1 : p.color2;
-            ctx.lineWidth = 5;
+          ctx.translate(p.x, baseY);
+          ctx.globalAlpha = fade;
+          const glow = ctx.createRadialGradient(
+            0,
+            -tower * 0.45,
+            5,
+            0,
+            -tower * 0.45,
+            Math.max(10, tower * 0.65),
+          );
+          glow.addColorStop(0, 'rgba(255,190,30,0.22)');
+          glow.addColorStop(1, 'rgba(255,40,0,0)');
+          ctx.fillStyle = glow;
+          ctx.fillRect(-120, -tower - 30, 240, tower + 70);
+          for (let strand = 0; strand < 5; strand++) {
             ctx.beginPath();
-            ctx.ellipse(
-              0,
-              0,
-              p.radius * (1 - progress * 0.25),
-              p.radius * 0.42 * (1 - progress * 0.25),
-              0,
-              0,
-              Math.PI * 2,
-            );
+            for (let step = 0; step <= 60; step++) {
+              const t = step / 60,
+                radius = (18 + 65 * t) * growth,
+                phase = spin + strand * Math.PI * 0.4 + t * Math.PI * 6;
+              const x = Math.sin(phase) * radius,
+                y = -t * tower + Math.cos(phase) * radius * 0.18;
+              if (step === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = strand % 2 ? p.color1 : p.color2;
+            ctx.shadowColor = ctx.strokeStyle;
+            ctx.shadowBlur = 18;
+            ctx.lineWidth = 5 + (strand % 2) * 2;
             ctx.stroke();
+          }
+          for (let j = 0; j < 30; j++) {
+            const t = (elapsed * 1.8 + j / 30) % 1,
+              phase = spin + j * 2.4 + t * 8,
+              radius = (15 + 60 * t) * growth;
+            const x = Math.sin(phase) * radius,
+              y = -t * tower + Math.cos(phase) * 7;
+            ctx.fillStyle = j % 3 ? '#fb923c' : '#fff7b2';
+            ctx.shadowColor = '#ff6b00';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 2.5, 5 + (j % 3), phase, 0, Math.PI * 2);
+            ctx.fill();
           }
           ctx.restore();
           if (p.life <= 0) projectiles.splice(i, 1);

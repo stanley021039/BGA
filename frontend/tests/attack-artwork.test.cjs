@@ -6,11 +6,12 @@ const { test } = require('node:test'),
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
   .replace('export function playAttackArtwork', 'function playAttackArtwork');
-function run(effect, color) {
+function run(effect, color, frames = 7) {
   const colors = [],
     arcs = [],
     lines = [],
-    transforms = [];
+    transforms = [],
+    texts = [];
   let callback;
   const gradient = {
     addColorStop(_p, c) {
@@ -24,6 +25,9 @@ function run(effect, color) {
         transforms.push({ x, y });
       },
       clearRect() {},
+      fillText(text) {
+        texts.push(text);
+      },
       createRadialGradient() {
         return gradient;
       },
@@ -72,10 +76,10 @@ function run(effect, color) {
     { getContext: () => context },
     { effect, color, width: 800, height: 600, from: { x: 120, y: 240 }, to: { x: 640, y: 380 } },
   );
-  for (let i = 1; i <= 7; i++) callback?.(i * 17);
+  for (let i = 1; i <= frames; i++) callback?.(i * 17);
   stop();
   assert.equal(callback, null);
-  return { colors, arcs, lines, transforms };
+  return { colors, arcs, lines, transforms, texts };
 }
 test('rainbow barrage paints multiple distinct authored shot colours', () => {
   const r = run('barrage', '#00f0ff');
@@ -100,4 +104,14 @@ test('shield geometry stays on the caster and the beam paints a visible cross', 
   const beam = run('beam', '#7df4ff');
   assert.ok(beam.lines.some((p) => p.x === 25 && p.y === 0));
   assert.ok(beam.lines.some((p) => p.x === 0 && p.y === 38));
+});
+
+test('offensive effects show damage automatically, defensive effects do not', () => {
+  assert.ok(run('beam', '#7df4ff').texts.some((t) => /\d/.test(t)));
+  assert.equal(run('shield', '#00f0ff').texts.length, 0);
+  assert.equal(run('sphere', '#10b981').texts.length, 0);
+});
+test('ice spikes grow upwards and the fire vortex rises into a column', () => {
+  assert.ok(run('frost_spikes', '#7df4ff', 18).lines.some((p) => p.y < -100));
+  assert.ok(run('flame_vortex', '#ff3366', 24).lines.some((p) => p.y < -150));
 });

@@ -3,8 +3,7 @@ import { onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyAttack, LobbySnapshot } from '../../contracts/lobby';
 import AttackArtwork from '../../components/AttackArtwork.vue';
 const props = defineProps<{ snapshot: LobbySnapshot | null; connected: boolean }>();
-const active = ref<LobbyAttack[]>([]),
-  announcement = ref('');
+const active = ref<LobbyAttack[]>([]);
 const seen = new Set<string>(),
   timers = new Set<ReturnType<typeof setTimeout>>();
 let identity = '',
@@ -42,7 +41,6 @@ watch(
       if (baseline || snapshot.serverNow - event.at > 1200 || event.at > snapshot.serverNow + 1000)
         continue;
       active.value = [...active.value.slice(-2), event];
-      announcement.value = event.fromName + ' 向 ' + event.toName + ' 發射特效';
       const timer = setTimeout(() => {
         active.value = active.value.filter((item) => item.id !== event.id);
         timers.delete(timer);
@@ -89,10 +87,8 @@ onBeforeUnmount(() => {
         :from="{ x: event.fromX, y: event.fromY }"
         :to="{ x: event.toX, y: event.toY }"
       />
-      <span class="lobby-attack-caption">{{ event.fromName }} → {{ event.toName }}</span>
     </div>
   </div>
-  <span class="ui-sr-only" role="status">{{ announcement }}</span>
 </template>
 <style scoped>
 .lobby-attack-layer {
@@ -101,20 +97,5 @@ onBeforeUnmount(() => {
   pointer-events: none;
   overflow: hidden;
   z-index: 5;
-}
-.lobby-attack-caption {
-  position: absolute;
-  left: var(--to-x);
-  top: calc(var(--to-y) + 8px);
-  transform: translateX(-50%);
-  max-width: 180px;
-  padding: 3px 8px;
-  border-radius: 8px;
-  background: #111827;
-  color: #fef3c7;
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 </style>
