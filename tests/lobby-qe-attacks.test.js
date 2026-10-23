@@ -5,6 +5,33 @@ const { appFixture } = require('./helpers/app-fixture.cjs');
 const { createAuth } = require('../src/auth');
 const { createLobby } = require('../src/rooms/lobby');
 
+test('defensive artwork targets its caster even in an otherwise empty lobby', () => {
+  let time = 1000;
+  const lobby = createLobby(() => time),
+    user = { id: 'shield-user', display_name: 'Caster' };
+  lobby.view(user);
+  for (const effect of ['shield', 'sphere']) {
+    const event = lobby.attack(user, {
+      requestId: 'self-' + effect + '-test',
+      aspectRatio: 1.5,
+      effect,
+      slot: 'q',
+    }).attacks[0];
+    assert.equal(event.toId, user.id);
+    assert.equal(event.fromX, event.toX);
+    assert.equal(event.fromY, event.toY);
+    time += 2000;
+  }
+});
+
+test('both crescent variants are separate selectable persistent artwork IDs', () => {
+  const effects = require('../public/shared/attack-effects.json');
+  assert.equal(effects.length, 16);
+  assert.equal(new Set(effects.map((e) => e.id)).size, 16);
+  assert.equal(effects.find((e) => e.id === 'blade_aura').label, '藍黑半月劍氣');
+  assert.equal(effects.find((e) => e.id === 'blade_aura_crimson').label, '紅黑半月劍氣');
+});
+
 test('Q and E have independent cooldowns, stable event artwork and deduplicated retries', () => {
   let time = 1000;
   const lobby = createLobby(() => time),
@@ -73,6 +100,14 @@ test('account attack choices persist, preserve appearance changes, and determine
   const get = (path) => request(path, { cookie: owner.cookie }),
     post = (path, body) => request(path, { method: 'POST', body, cookie: owner.cookie });
   assert.deepEqual((await get('/api/profile/attacks')).body, { q: 'barrage', e: 'beam' });
+  assert.equal(
+    (await post('/api/profile/attacks', { q: 'blade_aura_crimson', e: 'blade_aura' })).status,
+    200,
+  );
+  assert.deepEqual((await get('/api/profile/attacks')).body, {
+    q: 'blade_aura_crimson',
+    e: 'blade_aura',
+  });
   for (const body of [
     { q: 'unknown', e: 'beam' },
     { q: 'beam' },

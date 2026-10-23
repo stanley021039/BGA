@@ -1,0 +1,103 @@
+const { test } = require('node:test'),
+  assert = require('node:assert/strict'),
+  fs = require('node:fs'),
+  vm = require('node:vm'),
+  path = require('node:path');
+const source = fs
+  .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
+  .replace('export function playAttackArtwork', 'function playAttackArtwork');
+function run(effect, color) {
+  const colors = [],
+    arcs = [],
+    lines = [],
+    transforms = [];
+  let callback;
+  const gradient = {
+    addColorStop(_p, c) {
+      colors.push(c);
+    },
+  };
+  const context = new Proxy(
+    {
+      setTransform() {},
+      translate(x, y) {
+        transforms.push({ x, y });
+      },
+      clearRect() {},
+      createRadialGradient() {
+        return gradient;
+      },
+      createLinearGradient() {
+        return gradient;
+      },
+      arc(x, y, r) {
+        arcs.push({ x, y, r });
+      },
+      lineTo(x, y) {
+        lines.push({ x, y });
+      },
+    },
+    {
+      get(t, k) {
+        return k in t ? t[k] : () => {};
+      },
+      set(t, k, v) {
+        if (['strokeStyle', 'fillStyle', 'shadowColor'].includes(k) && typeof v === 'string')
+          colors.push(v);
+        t[k] = v;
+        return true;
+      },
+    },
+  );
+  const sandbox = {
+    document: { hidden: false },
+    performance: { now: () => 0 },
+    requestAnimationFrame(fn) {
+      callback = fn;
+      return 1;
+    },
+    cancelAnimationFrame() {
+      callback = null;
+    },
+    setTimeout() {
+      return 1;
+    },
+    clearTimeout() {},
+    Math,
+    Date,
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(source, sandbox);
+  const stop = sandbox.playAttackArtwork(
+    { getContext: () => context },
+    { effect, color, width: 800, height: 600, from: { x: 120, y: 240 }, to: { x: 640, y: 380 } },
+  );
+  for (let i = 1; i <= 7; i++) callback?.(i * 17);
+  stop();
+  assert.equal(callback, null);
+  return { colors, arcs, lines, transforms };
+}
+test('rainbow barrage paints multiple distinct authored shot colours', () => {
+  const r = run('barrage', '#00f0ff');
+  for (const c of ['#00f0ff', '#ff2a5f', '#ffea00', '#a855f7', '#10b981', '#ff007f', '#ff8800'])
+    assert.ok(r.colors.includes(c), c);
+});
+test('red and blue obsidian crescents paint independent palettes', () => {
+  for (const [id, color, other] of [
+    ['blade_aura', '#00d0ff', '#ff0f3f'],
+    ['blade_aura_crimson', '#ff0f3f', '#00d0ff'],
+  ]) {
+    const r = run(id, color);
+    assert.ok(r.colors.includes(color));
+    assert.ok(!r.colors.includes(other));
+    assert.ok(r.colors.some((c) => c === '#090003' || c === '#000714'));
+  }
+});
+test('shield geometry stays on the caster and the beam paints a visible cross', () => {
+  const r = run('shield', '#00f0ff');
+  assert.ok(r.transforms.some((a) => a.x === 120 && a.y === 240));
+  assert.ok(!r.transforms.some((a) => a.x === 640 && a.y === 380));
+  const beam = run('beam', '#7df4ff');
+  assert.ok(beam.lines.some((p) => p.x === 25 && p.y === 0));
+  assert.ok(beam.lines.some((p) => p.x === 0 && p.y === 38));
+});

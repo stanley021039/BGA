@@ -3,19 +3,19 @@
     "id": "barrage",
     "label": "連射／散射能量彈",
     "color": "#00f0ff",
-    "description": "高頻彈幕噴射、流體流光拖尾、受擊處多重噴濺與粒子回彈。"
+    "description": "七色能量彈連射，彩色流光拖尾與著彈火花同步綻放。"
   },
   {
     "id": "beam",
-    "label": "超人力霸王式光線",
-    "color": "#ffb2ba",
+    "label": "超人力霸王十字光線",
+    "color": "#7df4ff",
     "description": "蓄力十字手勢幾何電光、高能集束貫通射線、連續震顫衝擊。"
   },
   {
     "id": "shield",
     "label": "六角形能量護盾",
     "color": "#00f0ff",
-    "description": "力場蜂巢受擊擴散、微波光暈流轉、碎裂晶格能量碎片飛散。"
+    "description": "自己的角色展開蜂巢護盾，光彈碰撞晶格後碎裂反彈。"
   },
   {
     "id": "chains",
@@ -26,8 +26,8 @@
   {
     "id": "sphere",
     "label": "球形能量結界",
-    "color": "#00f0ff",
-    "description": "3D 經緯流光環繞、多重相位防護罩、脈衝力場波動擴散。"
+    "color": "#00ff88",
+    "description": "自己的角色展開綠色球形結界，立體經緯光環旋轉擴散。"
   },
   {
     "id": "orbital",
@@ -61,9 +61,15 @@
   },
   {
     "id": "blade_aura",
-    "label": "疾風／月牙劍氣",
-    "color": "#00f0ff",
-    "description": "刀光月牙半月破空、居合極限蓄力巨型斬擊、貫通刀痕殘影。"
+    "label": "藍黑半月劍氣",
+    "color": "#00d0ff",
+    "description": "幽藍鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。"
+  },
+  {
+    "id": "blade_aura_crimson",
+    "label": "紅黑半月劍氣",
+    "color": "#ff0f3f",
+    "description": "暗紅鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。"
   },
   {
     "id": "chain_lightning",

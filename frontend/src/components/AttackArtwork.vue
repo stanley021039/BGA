@@ -14,6 +14,9 @@ const prefs = usePreferencesStore(),
   stage = ref<HTMLElement | null>(null);
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 const color = computed(() => attackEffects.find((e) => e.id === props.effect)?.color || '#00f0ff');
+const target = computed(() =>
+  ['shield', 'sphere'].includes(props.effect) ? props.from : props.to,
+);
 let cleanup: (() => void) | null = null,
   revision = 0,
   mounted = false;
@@ -71,7 +74,7 @@ onBeforeUnmount(() => {
     ><span
       v-if="still"
       class="attack-static-hit"
-      :style="{ left: to.x + '%', top: 'calc(' + to.y + '% - 42px)', borderColor: color }"
+      :style="{ left: target.x + '%', top: 'calc(' + target.y + '% - 42px)', borderColor: color }"
     ></span
   ></div>
 </template>

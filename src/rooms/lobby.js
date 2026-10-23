@@ -184,9 +184,11 @@ function createLobby(
       throw new HttpError(429, 'ATTACK_COOLDOWN', slot.toUpperCase() + ' 攻擊冷卻中，請稍候 2 秒');
     for (const visitor of visitors.values()) advance(visitor, time);
     const distance = (v) => Math.hypot((v.x - self.x) * input.aspectRatio, v.y - self.y);
-    const target = [...visitors.values()]
-      .filter((v) => v.id !== user.id)
-      .sort((a, b) => distance(a) - distance(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
+    const target = ['shield', 'sphere'].includes(effect)
+      ? self
+      : [...visitors.values()]
+          .filter((v) => v.id !== user.id)
+          .sort((a, b) => distance(a) - distance(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '目前沒有其他玩家可以互動');
     self.lastAttacks ||= {};
     self.lastAttacks[slot] = time;
