@@ -1,3 +1,7 @@
+## 2026-10-23 個人化設定完整清單與目前預覽候選（取代本輪固定高度清單）
+
+使用者最新要求：攻擊特效、彈幕、播放器、進場特效直接列出所有選項；上方顯示目前套用預覽；選項高度改為 auto 並盡量向下展開，取代本輪先前固定高度局部捲動。SettingsPage 只掛載目前分類，沿用 FrameChoices 各 48 款與 EntranceChoices 31 款；AttackChoices 在設定頁顯示目前 Q／E 的兩個獨立預覽與重播按鈕，既有 15 款試播與 Q／E 分別設定保留。分類切換時若內容頂端已離開畫面，捲回新分類頂端。沿用 preferences.canUse 獎勵更新修正，相關回歸與攻擊設定共 4 項通過。使用者已要求 PR 與正式發布；本批整合 main 80cc7d94d35f 後候選 2.42.2，發布結論以本批 PR 與部署證據為準。Chrome 1920×1080 與 390×844、深淺色已觀察；目前框飾／進場選擇即時預覽、進場重新整理保留、Q／E 預覽重播、31 款進場直接顯示、長清單末端切分類後預覽回到畫面內已驗。frontend:build（含 vue-tsc）、ui:check、perf:check --build、release:check 與 diff check 通過；整合後前端回歸 90/90、本機 test:affected 因共用／未知路徑回退 292 個檔案，完整 2692/2692 通過，無略過／失敗；未驗實機觸控、所有效果生命週期或 GPU FPS。獨立預覽 127.0.0.5:3168，截圖位於本機 work/settings-auto-entrance-desktop.png、settings-auto-media-desktop.png、settings-auto-attack-desktop.png 與 settings-auto-mobile.png。
+
 2026-10-23 #215 第二輪：使用者指定角色點擊表情、聊天室只留emoji、地板光點、280ms滑動、中央64×128px空白框邊與置中箭頭。共用ReactionPicker按mode分入口，RoomSidePanel沿用UiPanel raised；手機聊天操作列固定到底部。1920／390／320、草稿、焦點、專注模式及雙席表情過期實驗已驗，5項針對性回歸與型別／建置通過。未提交候選，原Figma對照板未同步新修訂；詳[本輪證據](../specs/ROOM-BACKGROUND-215.md)。
 
 2026-10-23 #215 候選 2.41.0：郎中首先接入共用側欄收合與同房背景角色；桌機／手機初始均收合，開關不改中央尺寸，階段切換沿用手動狀態。兩席實際同步、聊天未讀／草稿、390／320px 抽屜外側關閉與鍵盤焦點、專注全螢幕已驗。Stitch 原生可編輯對照板已入第三份 Figma，但 Component／Instance 關聯與既有逐畫面替換仍待完成，不宣稱設計同步完成；完整九回合／實機未驗。來源與限制見 [本輪紀錄](../specs/ROOM-BACKGROUND-215.md)。

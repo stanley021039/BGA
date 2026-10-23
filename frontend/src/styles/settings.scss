@@ -189,6 +189,60 @@
     min-block-size: 12.5rem;
     align-items: start;
   }
+  .settings-current-preview {
+    min-inline-size: 0;
+    block-size: 10rem;
+    > .vue-frame-preview-viewport {
+      block-size: 100%;
+    }
+  }
+  .settings-current-media-preview {
+    block-size: 13rem;
+  }
+  .settings-current-entrance-preview {
+    block-size: 12rem;
+  }
+  .settings-frame-status {
+    min-block-size: 3em;
+    overflow-wrap: anywhere;
+  }
+  .settings-frame-choices,
+  .settings-entrance-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    grid-auto-rows: max-content;
+    align-content: start;
+    align-items: stretch;
+    gap: var(--stitch-gap-controls);
+    min-inline-size: 0;
+    padding: var(--stitch-space-8);
+    margin: 0;
+    > .barrage-frame-choice {
+      min-inline-size: 0;
+      inline-size: 100%;
+    }
+    .vue-frame-preview-slot {
+      display: block;
+      min-inline-size: 0;
+      inline-size: 100%;
+      block-size: 10rem;
+      pointer-events: none;
+      > .vue-frame-preview-viewport {
+        block-size: 100%;
+      }
+    }
+    .barrage-frame-label {
+      min-block-size: 3em;
+      overflow-wrap: anywhere;
+    }
+    .barrage-frame-selection {
+      min-block-size: 1.5em;
+      overflow-wrap: anywhere;
+    }
+    .barrage-frame-empty {
+      grid-column: 1 / -1;
+    }
+  }
   .settings-appearance-choice {
     display: flex;
     align-items: center;
@@ -362,12 +416,22 @@
 }
 @media (min-width: 901px) {
   :root body[data-visual-theme] main#settings-app.vue-page.settings-page .settings-panels {
-    // One fixed viewport and gutter serves all five panels; long content stays inside it.
+    // One fixed viewport and gutter serves all categories; long content stays inside it.
     block-size: max(28rem, calc(100dvh - 22rem));
     box-sizing: border-box;
     overflow-y: auto;
     scrollbar-gutter: stable;
     overscroll-behavior: contain;
+  }
+}
+@media (min-width: 901px) {
+  :root
+    body[data-visual-theme]
+    main#settings-app.vue-page.settings-page
+    .settings-panels.settings-panels-auto {
+    block-size: auto;
+    overflow: visible;
+    scrollbar-gutter: auto;
   }
 }
 @media (min-width: 1101px) {
