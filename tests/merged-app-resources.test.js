@@ -123,10 +123,10 @@ test('merged app serves every HTML script and stylesheet, market entry and game 
     const route = '/assets/game-sounds/' + name + '.wav',
       response = await f.get(route, true);
     assert.equal(response.status, 200, route);
-    assert.equal(response.headers.get('content-type'), 'audio/wav', route);
+    assert.equal(response.headers.get('content-type'), 'audio/mpeg', route);
     assert.deepEqual(
       Buffer.from(await response.arrayBuffer()),
-      fs.readFileSync(path.join(publicDir, route)),
+      fs.readFileSync(path.join(publicDir, route.replace(/\.wav$/, '.mp3'))),
       route,
     );
   }

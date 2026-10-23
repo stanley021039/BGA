@@ -1,4 +1,11 @@
 import type { EntranceEffectId } from '../../services/entrance-effects';
+import {
+  acquireEffectContext,
+  motionAllowed,
+  watchMotionCancellation,
+} from '../../services/motion-lifetime';
+const activeEntrances = new Set<() => void>();
+const MAX_ENTRANCES = 6;
 import '../../styles/entrance-effects.scss';
 import { stitchEntrances, playStitchEntrance } from '../../services/stitch-entrances';
 
@@ -90,21 +97,43 @@ function compile(gl: WebGLRenderingContext, type: number, source: string) {
   if (!shader) return null;
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
-  return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+  if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
+  gl.deleteShader(shader);
+  return null;
 }
 function webgl(node: HTMLCanvasElement) {
+  const releaseBudget = acquireEffectContext(node);
+  if (!releaseBudget) return null;
   const gl = node.getContext('webgl', { premultipliedAlpha: true, alpha: true });
-  if (!gl) return null;
+  if (!gl) {
+    releaseBudget();
+    return null;
+  }
   const vs = compile(gl, gl.VERTEX_SHADER, vertex),
     fs = compile(gl, gl.FRAGMENT_SHADER, fragment),
     program = gl.createProgram();
-  if (!vs || !fs || !program) return null;
+  const buffer = gl.createBuffer();
+  const release = () => {
+    if (vs) gl.deleteShader(vs);
+    if (fs) gl.deleteShader(fs);
+    if (program) gl.deleteProgram(program);
+    if (buffer) gl.deleteBuffer(buffer);
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    releaseBudget();
+  };
+  if (!vs || !fs || !program || !buffer) {
+    release();
+    return null;
+  }
   gl.attachShader(program, vs);
   gl.attachShader(program, fs);
   gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null;
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    release();
+    return null;
+  }
   gl.useProgram(program);
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
   const position = gl.getAttribLocation(program, 'p');
   gl.enableVertexAttribArray(position);
@@ -119,9 +148,7 @@ function webgl(node: HTMLCanvasElement) {
       gl.uniform1f(time, t);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     },
-    release() {
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
-    },
+    release,
   };
 }
 const classic: Effect = (scene) => {
@@ -326,6 +353,7 @@ export function apparate(
   layer: HTMLElement,
   kind: EntranceEffectId = 'classic',
 ): () => void {
+  if (!motionAllowed() || activeEntrances.size >= MAX_ENTRANCES) return () => {};
   const img = anchor.querySelector('img'),
     origin = layer.getBoundingClientRect(),
     box = (img || anchor).getBoundingClientRect(),
@@ -342,12 +370,17 @@ export function apparate(
   anchor.dataset.entrance = kind;
   anchor.classList.add('is-apparating');
   const cancel = (effects[kind] || classic)(scene);
-  let done = false;
+  let done = false,
+    releaseMotion = () => {};
   const timer = setTimeout(finish, DURATION[kind] || DURATION.classic);
+  activeEntrances.add(finish);
+  releaseMotion = watchMotionCancellation(finish);
   function finish() {
     if (done) return;
     done = true;
     clearTimeout(timer);
+    activeEntrances.delete(finish);
+    releaseMotion();
     cancel();
     anchor.classList.remove('is-apparating');
     delete anchor.dataset.entrance;

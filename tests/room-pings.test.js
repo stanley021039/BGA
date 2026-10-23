@@ -394,13 +394,13 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
       const asset = 'ping-' + type + '.wav',
         res = await fetch(base + '/assets/game-sounds/' + asset);
       assert.equal(res.status, 200, asset);
-      assert.equal(res.headers.get('content-type'), 'audio/wav');
+      assert.equal(res.headers.get('content-type'), 'audio/mpeg');
       const bytes = Buffer.from(await res.arrayBuffer());
-      assert.equal(bytes.toString('ascii', 0, 4), 'RIFF');
-      assert.equal(bytes.toString('ascii', 8, 12), 'WAVE');
       assert.deepEqual(
         bytes,
-        fs.readFileSync(path.join(__dirname, '../public/assets/game-sounds', asset)),
+        fs.readFileSync(
+          path.join(__dirname, '../public/assets/game-sounds', asset.replace(/\.wav$/, '.mp3')),
+        ),
       );
     }
     assert.equal((await fetch(base + '/assets/game-sounds/ping-voice-amazing.mp3')).status, 401);
@@ -439,7 +439,9 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
       assert.equal(res.headers.get('content-type'), 'audio/mpeg');
       assert.deepEqual(
         Buffer.from(await res.arrayBuffer()),
-        fs.readFileSync(path.join(__dirname, '../public/assets/game-sounds', asset)),
+        fs.readFileSync(
+          path.join(__dirname, '../public/assets/game-sounds', asset.replace(/\.wav$/, '.mp3')),
+        ),
       );
     }
     await app.close(); // Active SSE streams must not make shutdown wait forever.

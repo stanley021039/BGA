@@ -2,7 +2,7 @@
 
 const markup = `<dialog id="entry-intro" data-ui-dialog-frame="true" open aria-label="網站開場" tabindex="-1">
   <div class="entry-intro-art">
-    <img src="/assets/auth/login-864.webp" width="864" height="486" fetchpriority="high" alt="歡迎來到 Ave Mujica 的世界">
+    <img data-entry-src="/assets/auth/login-864.webp" width="864" height="486" fetchpriority="high" alt="歡迎來到 Ave Mujica 的世界">
     <span class="entry-intro-brand">302捉猶團</span>
   </div>
   <button class="entry-intro-skip" type="button" aria-label="略過開場動畫">略過開場 <span aria-hidden="true">→</span></button>
@@ -19,7 +19,7 @@ function withEntryIntro(document, { authPage = false } = {}) {
     !/<(?:body|main)\b/i.test(html)
   )
     return document;
-  const assets = `<script src="/shared/opening-theme.js"></script><script src="/shared/entry-intro.js"></script>${authPage ? '' : '<link rel="preload" as="image" href="/assets/auth/login-864.webp">'}<link rel="stylesheet" href="/shared/entry-intro.css">${authPage ? '<script defer src="/shared/auth-entry.js"></script>' : ''}`;
+  const assets = `<script src="/shared/opening-theme.js"></script><script src="/shared/entry-intro.js"></script><link rel="stylesheet" href="/shared/entry-intro.css">${authPage ? '<script defer src="/shared/auth-entry.js"></script>' : ''}`;
   const overlay = authPage ? '' : markup;
   // Some legacy documents omit optional head/body tags. Keep those documents intact.
   if (!/<body\b/i.test(html)) return html.replace(/<main\b/i, assets + overlay + '<main');

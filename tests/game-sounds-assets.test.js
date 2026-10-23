@@ -76,11 +76,11 @@ test('game cue controllers and WAV routes are served exactly, unrelated files re
       assert.equal(response.status, 200, file);
       assert.match(
         response.headers.get('content-type'),
-        file.endsWith('.wav') ? /audio\/wav/ : /javascript/,
+        file.endsWith('.wav') ? /audio\/mpeg/ : /javascript/,
       );
       assert.deepEqual(
         Buffer.from(await response.arrayBuffer()),
-        fs.readFileSync(path.join(__dirname, '../public', file)),
+        fs.readFileSync(path.join(__dirname, '../public', file.replace(/\.wav$/, '.mp3'))),
       );
     }
     for (const file of [
