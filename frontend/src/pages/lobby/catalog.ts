@@ -11,6 +11,16 @@ export interface GameCard {
 }
 export const gameCards: GameCard[] = [
   {
+    id: 'ceo',
+    title: '王牌執行長',
+    english: '1ST CEO',
+    description: '收購公司、買進股票與分配股利；本站替代牌庫試玩版。',
+    seats: '3–6 人',
+    category: '策略・經營',
+    art: 'ceo',
+    guide: '/ceo?learn=1',
+  },
+  {
     id: 'musicquiz',
     title: '猜歌挑戰',
     english: 'MUSIC QUIZ',

@@ -192,7 +192,9 @@ onBeforeUnmount(() => {
         @focus="warmGamePage(card.id)"
       >
         <div class="tile-image"
+          ><strong v-if="card.id === 'ceo'">1st CEO · 集團經營</strong
           ><img
+            v-else
             :src="
               card.id === 'quacks'
                 ? quacksArt

@@ -44,6 +44,9 @@
   gap: var(--stitch-gap-label);
   min-inline-size: 44px;
   min-block-size: max(44px, var(--stitch-control-height));
+  border: var(--stitch-border-width-strong) solid
+    var(--stitch-button-border-color, var(--_stitch-border));
+  border-radius: var(--stitch-radius-button);
   padding: var(--stitch-control-padding-block) var(--stitch-control-padding-inline);
   background: var(--stitch-button-bg, var(--_stitch-fill));
   color: var(--stitch-button-color, var(--_stitch-color));
@@ -131,6 +134,7 @@
   }
   &.ui-icon-button:not(.has-mobile-caption) {
     inline-size: 44px;
+    border-radius: var(--stitch-radius-pill);
   }
   position: relative;
   .ui-button-icon-slot {

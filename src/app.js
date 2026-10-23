@@ -1358,7 +1358,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo)$/.test(
               page || '',
             )
           )
@@ -1633,8 +1633,8 @@ function initializeApp(config, dataLock, acquired) {
           return send({ rooms: listRooms(rooms, seats, kickedUsers, user.id) });
         }
         if (url.pathname === '/api/create' && req.method === 'POST') {
-          // The new UI must complete Stitch/Figma review before this is enabled publicly.
-          if (data.type === 'ceo' && config.ceoEnabled !== true)
+          // CEO has a Vue-only page; legacy hosts do not expose it by default.
+          if (data.type === 'ceo' && !(config.ceoEnabled ?? config.frontendEnabled === true))
             throw new HttpError(400, 'GAME_NOT_ENABLED', 'CEO 仍在開發，尚未開放建立房間');
           if (pendingAchievementUnits.size >= 4096)
             throw new HttpError(
@@ -2674,6 +2674,7 @@ function initializeApp(config, dataLock, acquired) {
         '/': 'index.html',
         '/poker': 'poker.html',
         '/race': 'race.html',
+        '/ceo': 'ceo.html',
         '/rules': 'rules.html',
         '/history': 'history.html',
         '/history.js': 'history.js',
@@ -2741,7 +2742,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -2855,6 +2856,13 @@ function initializeApp(config, dataLock, acquired) {
       files['/shared/entry-intro.js'] = 'shared/entry-intro.js';
       files['/shared/auth-entry.js'] = 'shared/auth-entry.js';
       files['/shared/entry-intro.css'] = 'shared/entry-intro.css';
+      if (
+        (url.pathname === '/ceo' || roomPath?.[1] === 'ceo') &&
+        (!frontend || config.ceoEnabled === false)
+      ) {
+        res.writeHead(404);
+        return res.end();
+      }
       const file = roomPath ? roomPath[1] + '.html' : files[url.pathname];
       if (!file) {
         res.writeHead(404);
@@ -2882,7 +2890,8 @@ function initializeApp(config, dataLock, acquired) {
               file === 'musicquiz.html' ||
               file === 'minimal.html' ||
               file === 'bluff.html' ||
-              file === 'quacks.html'
+              file === 'quacks.html' ||
+              file === 'ceo.html'
                 ? '/login?next=' + encodeURIComponent(url.pathname)
                 : '/login',
           });

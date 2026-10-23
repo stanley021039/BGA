@@ -2,6 +2,7 @@ import { array, number, record, strings, text } from '../services/validation';
 
 export const gameNames: Readonly<Record<string, string>> = {
   quacks: '郎中闖江湖',
+  ceo: '王牌執行長',
   bluff: '瞎掰王',
   thunder: '雷霆之路',
   poker: '德州撲克',

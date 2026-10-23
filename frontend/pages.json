@@ -133,5 +133,10 @@
     "id": "race",
     "document": "race.html",
     "route": "/race"
+  },
+  {
+    "id": "ceo",
+    "document": "ceo.html",
+    "route": "/ceo"
   }
 ]

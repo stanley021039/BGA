@@ -22,6 +22,8 @@ test('CEO HTTP: disabled by default until reviewed UI is available', async (t) =
   });
   assert.equal(res.status, 400);
   assert.equal((await res.json()).code, 'GAME_NOT_ENABLED');
+  assert.equal((await fetch(base + '/ceo')).status, 404);
+  assert.equal((await fetch(base + '/ceo/ABCDEF')).status, 404);
 });
 
 test('CEO HTTP: authenticated game, secrecy, receipt retry, listing, history, leave and restart', async (t) => {

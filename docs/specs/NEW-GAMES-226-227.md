@@ -2,6 +2,22 @@
 
 日期：2026-10-24。來源：使用者提供的兩份 RAR 附件與本聊天授權。
 
+## 最新接續（2026-10-24，取代下方舊 UI 阻擋狀態）
+
+使用者明確指定先不用管 Figma，並授權依序完成可做的工作。CEO 已推送首批 `5a523c4`；本輪沿原分支新增 Vue 多人試玩頁、市場收購／買股／股利、私人增減牌、六集團持股及結果明細。共用等待室新增 flow 模式，適用未固定高度的宿主；共用 UiButton／UiIcon 自帶必要幾何與圖示樣式，不新增舊 ui-primitives 樣式依賴。
+
+Vue 啟用環境現在提供 CEO 大廳卡與 `/ceo`／`/ceo/:code`。建立房間預設跟隨 `frontendEnabled`，可信任 `ceoEnabled` 仍可明確覆寫；未啟用 Vue 時仍預設禁用 CEO，且無可用 Vue 文件時路由 404。不新增 legacy 頁面。原版卡表、平衡及耗盡裁定仍待驗收，沿用替代卡，不能冒稱原版完成。
+
+隔離試玩位於 `http://127.0.0.1:3046/ceo`，資料只在 ignored `work/ceo-226`，測試玩家只解鎖獎勵、不預填成就。Figma 稿未匯入、未核准；本輪為依共用元件完成的功能介面，不宣稱逐畫面還原 Stitch 最終稿。
+
+驗證：本輪第一次完整 affected 295 檔 2721/2721 通過（285841.6051ms）；之後補共用樣式及前端回歸，最終結果另記，不能將較早 run 混成最終工作樹。前端 94/94、型別及正式 build 通過；HTTP／Vue route focused 4/4；UI 檢查及 build 效能預算通過。實際 Edge 三席買股、收購／股利、完整終局、最後一輪禁止買股、重新整理、專注／Esc、桌機及 390／320 深淺色已驗；後續修訂會複驗。
+
+最終交付驗證：`test:affected` 依核心／共用／未知 Vue 路徑保守回退 295 檔，2721/2721 通過，fail/cancel/skip/todo 0，293849.7148ms。最後僅調整共用 icon-only 隱藏文字的 clip 幾何與註解，隨後重新完成前端 94/94、型別／正式 build、build 效能預算及下述 Edge 全流程。未將本機結果當作 Linux CI。
+
+Edge 最終三席 24 組檢查：等待／操作／結果三階段 × 1920×1080、390×844、320×844 × 深淺色，另驗買股、三種行動、503 失敗與同筆重試、專注／Esc、重整及最後一輪禁買股，零 pageerror。畫面狀態、所有局部格子及下方計分明細均有完整高度截圖；`*-viewport.png` 為指定 viewport 尺寸，`*-desktop.png` 等全頁圖則保留其真實長度。ignored 證據在 `work/ceo-226/{browser.cjs,browser-results.json,affected-final.log,frontend-final.log,build-final.log}`。
+
+已進入第 4 階段準備人工驗收，仍有以下未決事項：替代牌庫平衡、原版完整卡表／增減牌分布與原版耗盡裁定；Figma 稿同步與獨立美術仍未做（已依最新指示擱置）；實機觸控、Safari、原生 OS 全螢幕及聲卡聽感未驗。正式人工驗收、兩輪固定 base/head 審查、最終 Linux CI 均未完成。不建立 PR、不觸發 CI、不合併或部署。Second Wind #227 仍依序排在 CEO 後。
+
 ## 流程與順序
 
 依最新 AGENTS 六階段執行。CEO [#226](https://github.com/stanley021039/BGA/issues/226) 先做，運動員 [#227](https://github.com/stanley021039/BGA/issues/227) 後做；每票獨立分支與 PR。先搜尋同需求，實作前確認未有人進行，再加 `in progress`。本批從 `origin/main` 的 `cfcc116` 建立獨立工作樹，不混入原工作區未提交修改。
