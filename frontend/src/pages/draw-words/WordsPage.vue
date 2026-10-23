@@ -101,7 +101,6 @@ onMounted(() => void store.load());
         ></fieldset
       > </form
     ><UiButton
-      stitch
       variant="primary"
       type="submit"
       form="wordForm"

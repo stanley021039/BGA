@@ -23,6 +23,9 @@ function rewardLabels(id) {
     ...require('../../public/shared/lobby-backgrounds.json')
       .filter((background) => background.achievementId === id)
       .map((background) => '大廳背景：' + background.label),
+    ...require('../../public/shared/attack-effects.json')
+      .filter((effect) => effect.achievementId === id)
+      .map((effect) => '攻擊特效：' + effect.label),
     ...(id === 'all-three-games' ? ['網站開場：歡迎來到我的屍魂界'] : []),
   ];
 }
@@ -30,6 +33,7 @@ function owned(store, userId) {
   const ids = new Set(store.find.all(userId).map((row) => row.achievement_id));
   const grants = require('./redemption').grants(store.db, userId);
   return {
+    attacks: require('./attack-rewards').ownedAttacks(store.db, userId),
     sounds: [
       ...new Set(
         pairs

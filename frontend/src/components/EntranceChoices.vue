@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { requestJson } from '../services/http';
+import { sizedImage } from '../services/image-size';
 import requirements from '../../../public/shared/entrance-requirements.json';
 import { apparate } from '../pages/lobby/apparition';
 import {
@@ -10,6 +11,7 @@ import {
   type EntranceEffectId,
 } from '../services/entrance-effects';
 import { usePreferencesStore } from '../stores/preferences';
+import UiChoiceCard from './UiChoiceCard.vue';
 const prefs = usePreferencesStore();
 const unlocked = ref<string[]>([]),
   conditions = ref<Record<string, string>>({});
@@ -60,14 +62,14 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <div class="entrance-grid" role="group" aria-label="可用進場特效">
-    <button
+    <UiChoiceCard
       v-for="effect in entranceEffects"
       :key="effect.id"
-      type="button"
       class="entrance-choice"
+      :label="effect.label"
       :aria-label="effect.label + '進場特效'"
-      :aria-pressed="entranceEffect === effect.id"
-      :aria-disabled="!allowed(effect.id)"
+      :selected="entranceEffect === effect.id"
+      :unavailable="!allowed(effect.id)"
       @click="choose(effect.id)"
       @mouseenter="play(effect.id)"
       @focus="play(effect.id)"
@@ -76,19 +78,24 @@ onBeforeUnmount(() => {
         class="entrance-stage"
         aria-hidden="true"
         ><span class="entrance-preview-actor"
-          ><img src="/assets/characters/traveler-neutral.png" alt="" draggable="false" /><span
-            >小雨</span
-          ></span
+          ><img
+            :src="sizedImage('/assets/characters/traveler-neutral.png', 128)"
+            alt=""
+            draggable="false"
+          /><span>小雨</span></span
         ></span
-      ><strong>{{ effect.label }}</strong
+      ><strong class="ui-choice-label">{{ effect.label }}</strong
       ><span class="entrance-description">{{ effect.description }}</span
-      ><span class="entrance-selection">{{
-        !allowed(effect.id)
-          ? '🔒 ' + condition(effect.id)
-          : entranceEffect === effect.id
-            ? '✓ 使用中'
-            : '套用特效'
-      }}</span></button
+      ><template #label></template
+      ><template #selection
+        ><span class="entrance-selection ui-choice-state">{{
+          !allowed(effect.id)
+            ? '🔒 ' + condition(effect.id)
+            : entranceEffect === effect.id
+              ? '✓ 使用中'
+              : '套用特效'
+        }}</span></template
+      ></UiChoiceCard
     >
   </div>
 </template>
@@ -96,62 +103,50 @@ onBeforeUnmount(() => {
 .entrance-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
-  gap: 16px;
-}
-// ui-primitives.css forces a pill border/radius on every button.
-.entrance-choice {
-  display: grid;
-  gap: 6px;
-  justify-items: start;
-  padding: 12px;
-  border: 1px solid var(--play-line-strong, #8f8676) !important;
-  border-radius: 12px !important;
-  background: var(--play-paper, #fff);
-  color: var(--play-ink, inherit);
-  text-align: start;
-  cursor: pointer;
-}
-.entrance-choice[aria-pressed='true'] {
-  border-color: var(--play-ink, #292639) !important;
-  box-shadow: 0 0 0 2px var(--play-yellow, #f6c453);
+  align-items: stretch;
+  gap: var(--stitch-gap-controls);
+  padding: var(--stitch-space-8);
 }
 .entrance-stage {
   position: relative;
   display: block;
-  width: 100%;
-  height: 160px;
+  inline-size: 100%;
+  block-size: 160px;
   overflow: hidden;
-  border-radius: 8px;
-  background: var(--play-surface, #fff8ee);
+  border-radius: var(--stitch-radius-control);
+  background: var(--stitch-surface);
 }
 .entrance-preview-actor {
   position: absolute;
   left: 50%;
-  bottom: 18px;
+  bottom: var(--stitch-space-20);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: var(--stitch-space-2);
   transform: translateX(-50%);
   img {
-    width: 72px;
-    height: 78px;
+    inline-size: 72px;
+    block-size: 78px;
     object-fit: contain;
   }
   > span {
-    padding: 0 8px;
-    border: 1px solid var(--play-ink, #292639);
-    border-radius: 16px;
-    background: var(--play-yellow, #f6c453);
-    font-size: 11px;
+    padding: 0 var(--stitch-space-8);
+    border: var(--stitch-border);
+    border-radius: var(--stitch-radius-pill);
+    background: var(--stitch-primary);
+    color: var(--stitch-on-primary);
+    font-size: var(--stitch-text-hint);
   }
 }
 .entrance-description {
-  font-size: 13px;
-  line-height: 1.5;
+  min-block-size: 3em;
+  font-size: var(--stitch-text-hint);
+  line-height: var(--stitch-line-height-body);
 }
 .entrance-selection {
-  font-size: 13px;
-  font-weight: 700;
+  min-block-size: 3em;
+  font-size: var(--stitch-text-hint);
+  font-weight: var(--stitch-weight-title);
 }
 </style>

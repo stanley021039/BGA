@@ -8,6 +8,7 @@ import { bluffRoles } from '../../contracts/bluff';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiField from '../../components/UiField.vue';
 import UiIcon from '../../components/UiIcon.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import BluffReview from './BluffReview.vue';
@@ -229,7 +230,6 @@ function rank(index: number) {
                 >難度 {{ choice.level }} 級</span
               ><h3>{{ choice.title }}</h3
               ><UiButton
-                stitch
                 variant="primary"
                 label="選擇此題"
                 :aria-label="'選擇題目：' + choice.title"
@@ -284,7 +284,6 @@ function rank(index: number) {
                 aria-label="我的秘密角色"
                 ><UiButton
                   ref="hideButton"
-                  stitch
                   icon-only
                   variant="ghost"
                   icon="lock"
@@ -326,7 +325,6 @@ function rank(index: number) {
                   :urgent="bluff.seconds <= 5" /></div
               ><p>{{ state.readyIds.length }}／{{ state.players.length }} 位已準備</p
               ><UiButton
-                stitch
                 variant="primary"
                 icon="check"
                 :label="
@@ -386,7 +384,6 @@ function rank(index: number) {
                   ><div class="vue-bluff-seat-actions"
                     ><UiButton
                       v-if="state.spokenIds.includes(player.id)"
-                      stitch
                       variant="secondary"
                       icon="chat"
                       :caption="shown.includes(player.id) ? '收起答案' : '看答案'"
@@ -396,7 +393,6 @@ function rank(index: number) {
                       :aria-expanded="shown.includes(player.id)"
                       @click="toggleShown(player.id)" /><template v-else-if="player.id === state.me"
                       ><UiButton
-                        stitch
                         :variant="talk.listening.value ? 'danger' : 'secondary'"
                         :icon="talk.listening.value ? 'stop' : 'sound'"
                         :caption="talk.listening.value ? '結束' : '答題'"
@@ -404,7 +400,6 @@ function rank(index: number) {
                         :pending="talk.waiting.value"
                         :disabled="!talk.supported || writing || (blocked && !talk.listening.value)"
                         @click="talk.listening.value ? talk.finish() : talk.start()" /><UiButton
-                        stitch
                         :variant="writing ? 'primary' : 'secondary'"
                         icon="edit"
                         caption="答題"
@@ -417,7 +412,6 @@ function rank(index: number) {
                     role="group"
                     :aria-label="'想想對 ' + player.name + ' 的判斷'"
                     ><UiButton
-                      stitch
                       :variant="state.draft.challenges.includes(player.id) ? 'danger' : 'ghost'"
                       icon="help"
                       caption="公三小"
@@ -439,7 +433,6 @@ function rank(index: number) {
                           state.draft.challenges.length >= 2)
                       "
                       @click="mark('challenge', player.id)" /><UiButton
-                      stitch
                       :variant="state.draft.honestId === player.id ? 'success' : 'ghost'"
                       icon="check"
                       caption="老實人"
@@ -467,13 +460,13 @@ function rank(index: number) {
                     class="vue-bluff-answer is-live"
                     >{{ talk.preview.value || '請開始說話…' }}</p
                   ><form v-if="writing" class="vue-bluff-write" @submit.prevent="answer(written)"
-                    ><input
+                    ><UiField
+                      label="輸入你的答案"
                       v-model="written"
                       type="text"
                       maxlength="240"
                       aria-label="輸入你的答案"
                       placeholder="輸入你的解釋…" /><UiButton
-                      stitch
                       type="submit"
                       variant="primary"
                       icon="check"
@@ -491,7 +484,6 @@ function rank(index: number) {
               ></ul
             ><div class="vue-bluff-reaction-row"
               ><UiButton
-                stitch
                 variant="secondary"
                 label="哦是哦"
                 :disabled="blocked"
@@ -538,7 +530,6 @@ function rank(index: number) {
         }}</span
         ><UiButton
           v-if="state.phase === 'discussion' && isThinker"
-          stitch
           variant="primary"
           icon="check"
           label="確定"
@@ -549,7 +540,6 @@ function rank(index: number) {
         ><div v-if="state.phase === 'finished'" id="bluff-start-slot"></div
         ><UiButton
           v-else-if="state.phase === 'reveal' && room.host"
-          stitch
           variant="primary"
           icon="next"
           label="下一輪"
@@ -561,15 +551,17 @@ function rank(index: number) {
     >
     <div class="vue-bluff-feedback"
       ><StatusSlot
+        :persistent="actions.pending || actions.canRetry"
         :message="actions.notice"
-        :error="!!actions.notice && !actions.pending" /><UiButton
-        v-if="actions.canRetry"
-        stitch
-        variant="secondary"
-        icon="refresh"
-        label="重試同一操作"
-        :disabled="blocked"
-        @click="actions.retrySame()" /></div
+        :error="!!actions.notice && !actions.pending" /><div class="vue-bluff-retry-slot"
+        ><UiButton
+          v-if="actions.canRetry"
+          variant="secondary"
+          icon="refresh"
+          icon-only
+          label="重試同一操作"
+          :disabled="blocked"
+          @click="actions.retrySame()" /></div></div
   ></section>
   <Teleport to="body"
     ><div
@@ -581,5 +573,5 @@ function rank(index: number) {
       data-game-focus-overlay
       ><div v-for="event in bluff.liveReactions" :key="event.id">{{ event.name }} 質疑你</div></div
     ></Teleport
-  ><ConfirmDialog ref="confirm" stitch />
+  ><ConfirmDialog ref="confirm" />
 </template>

@@ -143,7 +143,7 @@ const usedCommand = computed(() => {
         ><strong>{{ instruction }}</strong></div
       ><div class="vue-race-roadbonus"
         >公路骰 <RaceDie v-if="s.roadDie" :value="s.roadDie" /><b v-else>—</b></div
-      ><UiButton stitch label="地形圖例" icon="help" @click="legend?.open()"
+      ><UiButton label="地形圖例" icon="help" @click="legend?.open()"
     /></header>
     <div id="boardScroll" class="vue-race-track-shell"
       ><RaceBoard
@@ -163,19 +163,11 @@ const usedCommand = computed(() => {
         class="vue-race-cue"
         role="status"
         ><p v-for="event in presentation.cue.value" :key="event.id">{{ event.text }}</p
-        ><UiButton
-          stitch
-          label="略過事件提示"
-          icon="skip_next"
-          @click="presentation.skipCue()" /></div
+        ><UiButton label="略過事件提示" icon="skip_next" @click="presentation.skipCue()" /></div
       ><div v-if="presentation.focus.value && s.winner" class="vue-race-focus" role="status"
         ><strong>⚑ {{ s.winner.name }}</strong
         ><p>{{ s.winner.reason }}</p
-        ><UiButton
-          stitch
-          label="略過演出"
-          icon="skip_next"
-          @click="presentation.stopFocus()" /></div
+        ><UiButton label="略過演出" icon="skip_next" @click="presentation.stopFocus()" /></div
     ></div>
     <div class="vue-race-dashboard"
       ><div class="vue-race-garage"
@@ -292,7 +284,7 @@ const usedCommand = computed(() => {
                   >{{ sizes[c.size] }} · {{ c.damage.length }} 損傷</option
                 ></select
               ></label
-            ><UiButton stitch label="完成指令設定" icon="check" @click="completeCommand" /></div
+            ><UiButton label="完成指令設定" icon="check" @click="completeCommand" /></div
         ></details> </div
       ><div class="vue-race-actions"
         ><RoomCountdown
@@ -306,18 +298,15 @@ const usedCommand = computed(() => {
         /><div class="vue-race-main-actions"
           ><template v-if="s.pending && !s.diceCheck"
             ><UiButton
-              stitch
               label="保留結果"
               icon="check"
               :disabled="!enabled"
               @click="run('slam', { reroll: false })" /><UiButton
-              stitch
               label="重擲骰子"
               icon="refresh"
               :disabled="!enabled"
               @click="run('slam', { reroll: true })" /></template
           ><UiButton
-            stitch
             v-else-if="s.phase === 'assign' && !s.diceCheck"
             :label="selected?.moved ? '滑行 1 格' : '確認出發'"
             variant="primary"
@@ -327,12 +316,10 @@ const usedCommand = computed(() => {
             @click="begin"
           /><template v-else-if="s.phase === 'bonus' && !s.diceCheck"
             ><UiButton
-              stitch
               :label="'加速 +' + s.roadDie"
               icon="bolt"
               :disabled="!enabled"
               @click="run('bonus', { use: true })" /><UiButton
-              stitch
               label="略過加速"
               icon="skip_next"
               :disabled="!enabled"
@@ -340,7 +327,6 @@ const usedCommand = computed(() => {
           ><template v-else-if="['shoot', 'airshoot'].includes(s.phase) && !s.diceCheck"
             ><div class="vue-race-targets"
               ><UiButton
-                stitch
                 v-for="id in s.targets"
                 :key="id"
                 :label="
@@ -353,7 +339,6 @@ const usedCommand = computed(() => {
                 :disabled="!enabled"
                 @click="run('shoot', { target: id })" /></div
             ><UiButton
-              stitch
               label="略過射擊"
               icon="skip_next"
               :disabled="!enabled"
@@ -381,6 +366,7 @@ const usedCommand = computed(() => {
           : tip
       }}</p
       ><StatusSlot
+        :persistent="!presentation.ready || model.busy"
         :message="presentation.ready ? model.notice : '賽道元件未完成載入，請重新整理後再操作。'"
         :error="model.failed || !presentation.ready"
     /></div>
@@ -389,7 +375,7 @@ const usedCommand = computed(() => {
       class="vue-race-winner"
       ><h2>⚑ {{ s.winner.name }}{{ s.winner.id ? ' 獲勝！' : '' }}</h2
       ><p>{{ s.winner.reason }}</p
-      ><UiButton stitch label="重播結算演出" icon="replay" @click="presentation.replay()"
+      ><UiButton label="重播結算演出" icon="replay" @click="presentation.replay()"
     /></section>
     <details class="vue-race-log"
       ><summary>比賽紀錄 · {{ s.log[0] || '準備就緒' }}</summary

@@ -100,13 +100,11 @@ defineExpose({
         <div class="vue-draw-topic-actions"
           ><span>可多選</span
           ><UiButton
-            stitch
             variant="ghost"
             label="全選題目類別"
             caption="全選"
             icon="check"
             @click="draft.topics = drawingTopics.map(([id]) => id)" /><UiButton
-            stitch
             variant="ghost"
             label="清除題目類別"
             caption="清除"
@@ -197,8 +195,10 @@ defineExpose({
       </fieldset>
     </div>
     <footer
-      ><StatusSlot :message="error || (pending ? '正在儲存設定…' : '')" :error="!!error" /><UiButton
-        stitch
+      ><StatusSlot
+        :persistent="pending || !!error"
+        :message="error || (pending ? '正在儲存設定…' : '')"
+        :error="!!error" /><UiButton
         variant="ghost"
         v-if="error && editable"
         icon="refresh"

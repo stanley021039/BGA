@@ -388,7 +388,10 @@ onBeforeUnmount(() => {
         :pending="entryBusy || room.connecting"
         :disabled="['kicked', 'closed'].includes(room.terminal || '')"
         @click="enter" /><a href="/">返回大廳</a
-      ><StatusSlot :message="entryError || room.error" :error="!!entryError || !!room.error" /></div
+      ><StatusSlot
+        persistent
+        :message="entryError || room.error"
+        :error="!!entryError || !!room.error" /></div
   ></div>
   <div
     v-else
@@ -397,21 +400,19 @@ onBeforeUnmount(() => {
     :class="{ 'is-header-integrated': headerIntegrated }"
   >
     <RoomHeader title="你畫我猜" :focused="focus" @integrated="headerIntegrated = $event"
-      ><template #navigation><DrawGallery stitch ref="gallery" /></template
+      ><template #navigation><DrawGallery ref="gallery" /></template
       ><UiButton
-        stitch
         variant="ghost"
         icon="help"
         icon-only
         label="遊戲說明"
         @click="help?.open()" /><UiButton
-        stitch
         variant="ghost"
         icon="expand"
         icon-only
         :label="focus ? '退出專注全螢幕' : '專注全螢幕'"
         :aria-pressed="focus"
-        @click="toggleFocus" /><RoomManager stitch /><RoomLeaveButton stitch
+        @click="toggleFocus" /><RoomManager /><RoomLeaveButton
     /></RoomHeader>
     <div class="vue-draw-room-feedback vue-room-status-row"
       ><div class="vue-room-phase-slot"
@@ -420,6 +421,7 @@ onBeforeUnmount(() => {
           state?.round ? `第 ${state.round} / ${state.roundLimit} 輪` : '等待開桌'
         }}</span></div
       ><StatusSlot
+        :persistent="!!connectionNotice || preparing || !!startNotice || room.busy"
         :message="
           connectionNotice ||
           (preparing ? '正在確認房間設定…' : startNotice || room.message || results.message)
@@ -427,7 +429,6 @@ onBeforeUnmount(() => {
         :error="
           !!room.terminal || room.disconnected || !!startNotice || room.failed || results.failed
         " /><UiButton
-        stitch
         variant="ghost"
         v-if="room.terminal || room.disconnected"
         icon="refresh"
@@ -461,7 +462,6 @@ onBeforeUnmount(() => {
             ></template
           ><template #actions
             ><UiButton
-              stitch
               variant="ghost"
               v-if="room.host && setup"
               icon="add"
@@ -505,7 +505,6 @@ onBeforeUnmount(() => {
               :urgent="state.phase === 'drawing'"
               :now="now" /><div class="vue-draw-round-tools"
               ><UiButton
-                stitch
                 variant="ghost"
                 icon="help"
                 icon-only
@@ -513,7 +512,6 @@ onBeforeUnmount(() => {
                 label="題庫提示"
                 :disabled="state.phase !== 'drawing' || !hint"
                 @click="hintDialog?.open()" /><UiButton
-                stitch
                 variant="ghost"
                 icon="next"
                 icon-only
@@ -562,7 +560,6 @@ onBeforeUnmount(() => {
             tabindex="-1"
             class="vue-draw-settings-panel"
             ><DrawSettings ref="settings" :snapshot="state" /><UiButton
-              stitch
               variant="primary"
               v-if="room.host"
               :icon="state.phase === 'finished' ? 'replay' : 'play'"
@@ -575,7 +572,7 @@ onBeforeUnmount(() => {
       ></aside> </div
     ><RoomEffects :connected="connected" /><RoomPings />
   </div>
-  <UiDialog stitch ref="help" title="你畫，我們猜。"
+  <UiDialog ref="help" title="你畫，我們猜。"
     ><ol class="vue-draw-help"
       ><li>2–8 位玩家輪流當畫者；房主可選題目類別、60／90／120 秒，以及固定題數或目標分數。</li
       ><li
@@ -588,7 +585,7 @@ onBeforeUnmount(() => {
       ><li>最近畫作保留八輪，可投票、收藏、下載與分享；回看不會暫停全桌。</li></ol
     ><a href="/draw-words">前往共編題庫</a></UiDialog
   >
-  <UiDialog stitch ref="hintDialog" title="題庫提示" compact @closed="hintClosed"
+  <UiDialog ref="hintDialog" title="題庫提示" compact @closed="hintClosed"
     ><template v-if="hint"
       ><strong>{{ hint.length }} 字 · {{ hint.category }}</strong
       ><p>{{ hint.topic }}</p
@@ -613,5 +610,5 @@ onBeforeUnmount(() => {
       ><small>題目已鎖定</small><strong>{{ locked }}</strong
       ><p>正在為你展開畫板與調色盤…</p></div
     ></Teleport
-  ><ConfirmDialog stitch ref="confirm" />
+  ><ConfirmDialog ref="confirm" />
 </template>

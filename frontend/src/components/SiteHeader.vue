@@ -23,6 +23,7 @@ const accountOpen = ref(false),
   moreOpen = ref(false),
   profileExpanded = ref(false),
   message = ref(''),
+  noticeKey = ref(0),
   avatarVersion = ref(Date.now()),
   avatarFailed = ref(false),
   loading = ref(true);
@@ -68,6 +69,7 @@ function openPreferences() {
 async function loadIdentity() {
   if (disposed || document.hidden) return;
   if (refresh) return refresh;
+  noticeKey.value++;
   const job = (async () => {
     try {
       await session.refresh();
@@ -93,6 +95,7 @@ async function loadIdentity() {
 async function logout() {
   if (loggingOut.value) return;
   loggingOut.value = true;
+  noticeKey.value++;
   message.value = '';
   try {
     await session.logout();
@@ -215,7 +218,6 @@ onBeforeUnmount(() => {
         <a class="vue-site-navigation-link" href="/community?tab=issues">留言板</a>
         <div ref="moreButton" class="vue-site-more">
           <UiButton
-            stitch
             variant="ghost"
             label="遊戲題庫"
             :aria-expanded="moreOpen"
@@ -239,7 +241,6 @@ onBeforeUnmount(() => {
     <div id="vue-room-header-portal" class="vue-room-header-portal" :hidden="!room.seat" />
     <div class="vue-site-controls">
       <UiButton
-        stitch
         variant="ghost"
         :icon="dark ? 'sun' : 'moon'"
         icon-only
@@ -298,18 +299,16 @@ onBeforeUnmount(() => {
           </header>
           <nav class="vue-site-account-actions" aria-label="帳號功能">
             <UiButton
-              stitch
               variant="secondary"
               icon="settings"
               label="個人遊戲設定"
               @click="openPreferences"
             />
-            <a href="/settings">帳號與形象設定</a><a href="/collection">收藏庫</a
+            <a href="/settings">帳號與個人化設定</a><a href="/collection">收藏庫</a
             ><a href="/achievements">成就收藏冊</a>
             <a v-if="session.user.role === 'admin'" id="site-admin" href="/admin">管理</a>
             <UiButton
               id="site-logout"
-              stitch
               variant="danger"
               icon="leave"
               label="登出"
@@ -330,15 +329,19 @@ onBeforeUnmount(() => {
       <span v-else-if="loading" class="vue-site-account-loading" aria-label="正在確認帳號" />
     </div>
     <div class="vue-site-header-feedback"
-      ><StatusSlot :message="message" :error="!!message" /><UiButton
-        v-if="message && !session.pending"
-        stitch
+      ><StatusSlot
+        :message="message"
+        :error="!!message"
+        :notice-key="noticeKey"
+        :persistent="!!message" /><UiButton
+        v-if="message"
+        :pending="session.pending"
         variant="secondary"
         icon="refresh"
         label="重試讀取帳號"
         @click="loadIdentity"
     /></div>
-    <UiDialog ref="preferences" stitch class="vue-site-preferences-dialog" title="遊戲設定" compact
+    <UiDialog ref="preferences" class="vue-site-preferences-dialog" title="遊戲設定" compact
       ><GamePreferences
     /></UiDialog>
   </div>

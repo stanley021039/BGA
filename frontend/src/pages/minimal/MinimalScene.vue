@@ -198,7 +198,6 @@ onBeforeUnmount(() => {
           ><span>完成後不可修改；空畫布視為本輪略過。</span></div
         ><div class="vue-minimal-submit-actions"
           ><UiButton
-            stitch
             variant="secondary"
             icon="refresh"
             label="同步草稿"
@@ -207,7 +206,6 @@ onBeforeUnmount(() => {
               !editor.drawingAllowed || editor.finishing || editor.activeStroke || !editor.dirty
             "
             @click="editor.sync()" /><UiButton
-            stitch
             variant="primary"
             icon="check"
             label="完成作畫"
@@ -250,7 +248,6 @@ onBeforeUnmount(() => {
                 (composing || $event.isComposing || $event.keyCode === 229) &&
                 $event.preventDefault()
               " /><UiButton
-              stitch
               variant="primary"
               type="submit"
               icon="send"
@@ -321,7 +318,6 @@ onBeforeUnmount(() => {
         ><span>{{ state.phase === 'reveal' ? '本輪揭曉' : '本場結束' }}</span
         ><UiButton
           v-if="state.phase === 'reveal' && room.host"
-          stitch
           variant="primary"
           icon="next"
           label="下一輪"
@@ -333,6 +329,15 @@ onBeforeUnmount(() => {
     >
     <div class="vue-minimal-feedback"
       ><StatusSlot
+        :persistent="
+          actions.pending ||
+          actions.canRetry ||
+          editor.saving ||
+          editor.finishing ||
+          editor.dirty ||
+          !!editor.storageNotice ||
+          (!actions.notice && !editor.notice && state.phase === 'drawing' && !guesser)
+        "
         :message="
           actions.notice ||
           editor.notice ||
@@ -341,7 +346,6 @@ onBeforeUnmount(() => {
         "
         :error="(!actions.pending && !!actions.notice) || !!editor.storageNotice" /><UiButton
         v-if="actions.canRetry"
-        stitch
         icon="refresh"
         label="重試同一操作"
         :disabled="blocked"

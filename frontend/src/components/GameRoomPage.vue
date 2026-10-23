@@ -113,18 +113,17 @@ onMounted(() => {
         ><p v-if="entryCode">房間 {{ entryCode }}</p
         ><div class="vue-game-entry-actions"
           ><UiButton
-            :stitch="!!entryArt"
             :variant="entryArt ? 'primary' : 'secondary'"
             icon="play"
             :label="entryCode ? '加入這一桌' : '開一桌' + title"
             :pending="entryBusy || room.connecting"
             :disabled="['kicked', 'closed'].includes(room.terminal || '')"
             @click="page.enter()"
-          /><UiButton :stitch="!!entryArt" icon="help" label="遊戲說明" @click="help?.open()" /><a
-            href="/"
+          /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><a href="/"
             >返回大廳</a
           ></div
         ><StatusSlot
+          persistent
           :message="entryError || room.error"
           :error="!!entryError || !!room.error" /></div></div
   ></section>
@@ -137,24 +136,23 @@ onMounted(() => {
     ><RoomHeader :title="title" :focused="focused" @integrated="headerIntegrated = $event"
       ><template v-if="$slots.toolbar" #game-actions><slot name="toolbar" /></template
       ><UiButton
-        stitch
         variant="ghost"
         icon="help"
         icon-only
         label="遊戲說明"
         @click="help?.open()" /><UiButton
-        stitch
         variant="ghost"
         icon="expand"
         icon-only
         :label="focused ? '退出專注全螢幕' : '專注全螢幕'"
         :aria-pressed="focused"
-        @click="toggle" /><RoomManager stitch /><RoomLeaveButton stitch /></RoomHeader
+        @click="toggle" /><RoomManager /><RoomLeaveButton /></RoomHeader
     ><div class="vue-game-room-feedback vue-room-status-row"
       ><div class="vue-room-phase-slot"
         ><slot name="round-progress" /><span class="vue-room-phase">{{ phase }}</span
         ><span class="vue-room-round">{{ round || '等待開桌' }}</span></div
       ><StatusSlot
+        :persistent="!!connection || room.busy"
         :message="connection || room.message"
         :error="!!room.terminal || room.disconnected || room.failed"
     /></div>
@@ -174,7 +172,6 @@ onMounted(() => {
             ><template #actions
               ><UiButton
                 v-if="room.host && setup"
-                stitch
                 variant="secondary"
                 icon="add"
                 label="加入電腦玩家"
@@ -195,7 +192,6 @@ onMounted(() => {
             <template #start
               ><UiButton
                 v-if="room.host"
-                stitch
                 variant="primary"
                 :icon="startIcon || (startLabel ? 'replay' : 'play')"
                 :label="startLabel || '開始遊戲'"

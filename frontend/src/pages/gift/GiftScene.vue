@@ -317,7 +317,10 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           ? '看完禮物後，由目前收禮者確認。'
           : '每份心意都會計入送禮與收禮兩條分數。'
       }}</p
-      ><StatusSlot :message="gift.notice" :error="gift.uncertain"
+      ><StatusSlot
+        :persistent="gift.uncertain || gift.refreshing || room.busy"
+        :message="gift.notice"
+        :error="gift.uncertain"
     /></div>
     <footer class="vue-gift-actions"
       ><template v-if="state.phase === 'choosing'"

@@ -16,16 +16,23 @@
 
 // Explicit component opt-in. The extra attribute also beats the legacy dark
 // playful-theme button.ui-button scope, including buttons in teleported panels.
-:root body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+:root body :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+  // Raised buttons: 2px frame, 12px radius, hard shadow on primary (Figma 03
+  // C05/C07-R2). Pages size and place buttons; they never reshape or recolour
+  // them, so the shape vars are locked here. ui-primitives applies them with
+  // !important, which is why the lock also needs it.
   --_stitch-fill: var(--stitch-surface);
   --_stitch-color: var(--stitch-ink);
   --_stitch-border: var(--stitch-frame);
   --_stitch-hover: var(--stitch-surface-hover);
   --_stitch-active: var(--stitch-surface-hover);
-  // ui-primitives owns !important border/radius declarations; bridge its vars.
-  --ui-button-radius: var(--stitch-button-radius, var(--stitch-control-radius));
-  --ui-button-border-width: var(--stitch-button-border-width, 1px);
-  --ui-button-border-color: var(--stitch-button-border-color, var(--_stitch-border));
+  --_stitch-shadow: var(--stitch-shadow-raised-sm);
+  // ui-check-allow important: 覆蓋 ui-primitives 既有 important 圓角，維持共用按鈕 12px 契約。
+  --ui-button-radius: var(--stitch-radius-button) !important;
+  // ui-check-allow important: 覆蓋 ui-primitives 既有 important 邊寬，維持共用按鈕 2px 契約。
+  --ui-button-border-width: var(--stitch-border-width-strong) !important;
+  // ui-check-allow important: 覆蓋 ui-primitives 既有 important 邊色，保留唯一的共用 variant 與播放器主題入口。
+  --ui-button-border-color: var(--stitch-button-border-color, var(--_stitch-border)) !important;
   --ui-button-padding-block: var(--stitch-space-8);
   --ui-button-padding-inline: var(--stitch-space-12);
   --ui-control-gap: var(--stitch-space-8);
@@ -34,16 +41,16 @@
   box-sizing: border-box;
   align-items: center;
   justify-content: center;
-  gap: var(--ui-control-gap);
+  gap: var(--stitch-gap-label);
   min-inline-size: 44px;
-  min-block-size: var(--ui-control-height);
-  padding: var(--ui-button-padding-block) var(--ui-button-padding-inline);
+  min-block-size: max(44px, var(--stitch-control-height));
+  padding: var(--stitch-control-padding-block) var(--stitch-control-padding-inline);
   background: var(--stitch-button-bg, var(--_stitch-fill));
   color: var(--stitch-button-color, var(--_stitch-color));
-  box-shadow: var(--stitch-button-shadow, none);
+  box-shadow: var(--_stitch-shadow);
   font-family: var(--stitch-font-family);
-  font-size: var(--stitch-button-font-size, var(--stitch-font-14));
-  font-weight: 600;
+  font-size: var(--stitch-text-button);
+  font-weight: var(--stitch-weight-button);
   line-height: 1.4;
   text-decoration: none;
   transition:
@@ -56,15 +63,17 @@
     --_stitch-color: var(--stitch-on-primary);
     --_stitch-hover: var(--stitch-primary-hover);
     --_stitch-active: var(--stitch-primary-active);
+    --_stitch-shadow: var(--stitch-shadow-button-primary);
   }
   &[data-stitch-variant='ghost'] {
     --_stitch-fill: transparent;
     --_stitch-border: transparent;
+    --_stitch-shadow: none;
   }
   &[data-stitch-variant='danger'] {
     --_stitch-fill: var(--stitch-danger-bg);
     --_stitch-color: var(--stitch-danger-ink);
-    --_stitch-border: var(--stitch-danger-line);
+    --_stitch-border: var(--stitch-frame);
     --_stitch-hover: var(--stitch-danger-hover);
     --_stitch-active: var(--stitch-danger-hover);
   }
@@ -94,25 +103,72 @@
   }
   &:active:not(:disabled) {
     background: var(--stitch-button-active-bg, var(--_stitch-active));
+    box-shadow: none;
   }
   &:focus-visible {
     outline: 3px solid var(--stitch-focus);
     outline-offset: 2px;
   }
-  &:disabled {
-    opacity: 0.48;
+  &:disabled:not(.is-stitch-pending) {
+    --_stitch-fill: var(--stitch-disabled-bg);
+    --_stitch-color: var(--stitch-disabled-ink);
+    --_stitch-border: var(--stitch-disabled-line);
+    --_stitch-shadow: none;
     cursor: not-allowed;
-    box-shadow: none;
   }
-  &.is-pending {
+  &[data-stitch-variant='ghost']:disabled {
+    --_stitch-fill: transparent;
+    --_stitch-border: transparent;
+  }
+  &.is-stitch-pending {
     opacity: 0.72;
     cursor: progress;
   }
   &.ui-icon-button {
+    // ui-check-allow important: 覆蓋同一 legacy 按鈕圓角鎖，維持 icon-only 圓形命中區。
+    --ui-button-radius: var(--stitch-radius-pill) !important;
     padding: var(--stitch-space-8);
   }
   &.ui-icon-button:not(.has-mobile-caption) {
     inline-size: 44px;
+  }
+  position: relative;
+  .ui-button-icon-slot {
+    display: inline-flex;
+    position: relative;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--stitch-icon-size);
+    min-block-size: var(--stitch-icon-size);
+    block-size: auto;
+    &[data-pending] > :not(.ui-button-spinner) {
+      visibility: hidden;
+    }
+  }
+  .ui-button-spinner {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    inline-size: var(--stitch-space-16);
+    block-size: var(--stitch-space-16);
+    margin: auto;
+    border: var(--stitch-border-width-strong) solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: var(--stitch-radius-pill);
+    animation: ui-stitch-pending-spin 0.75s linear infinite;
+  }
+  // A text-only button keeps its existing width; the decorative cue occupies its padding.
+  .ui-button-edge-spinner {
+    inset-inline-start: auto;
+    inset-inline-end: var(--stitch-space-2);
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+  }
+  &.ui-icon-button > .ui-button-edge-spinner {
+    inset: 0;
+    inline-size: var(--stitch-space-16);
+    block-size: var(--stitch-space-16);
   }
   .ui-button-icon {
     inline-size: var(--stitch-icon-size);
@@ -123,11 +179,13 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  :root body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+  :root body :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
     transition: none;
   }
 }
-:root.motion-reduced body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+:root.motion-reduced
+  body
+  :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
   transition: none;
 }
 
@@ -137,9 +195,10 @@
   --play-surface: var(--stitch-surface);
   padding: var(--stitch-space-16);
   gap: var(--stitch-space-16);
-  border: 1px solid var(--stitch-line);
-  border-radius: var(--stitch-panel-radius);
+  border: var(--stitch-border-strong);
+  border-radius: var(--stitch-radius-dialog);
   background: var(--stitch-surface);
+  box-shadow: var(--stitch-shadow-raised);
   color: var(--stitch-ink);
   font-family: var(--stitch-font-family);
   font-size: var(--stitch-font-16);
@@ -162,20 +221,51 @@
 .vue-button.ui-icon-button {
   padding: tokens.space(2);
 }
-.vue-tabs {
+// Underline tabs (Figma 03 C07 收藏分頁). Pages place the tab list; the tab
+// look stays here. ui-primitives borders every button with !important through
+// its vars, so those are zeroed and the underline is an inset shadow.
+:root body .vue-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: tokens.space(2);
+  gap: var(--stitch-space-24);
+  border-block-end: var(--stitch-border);
 }
-.vue-tabs [role='tab'] {
+:root body .vue-tabs > [role='tab'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stitch-space-8);
   min-inline-size: 0;
-  gap: tokens.space(2);
+  min-block-size: var(--stitch-control-height);
+  // ui-check-allow important: 覆蓋 ui-primitives 的 important 按鈕邊寬，避免原生分頁出現按鈕外框。
+  --ui-button-border-width: 0px !important;
+  // ui-check-allow important: 覆蓋 ui-primitives 的 important 按鈕圓角，維持底線分頁而非膠囊外框。
+  --ui-button-radius: 0px !important;
+  margin: 0;
+  padding: var(--stitch-space-8) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--stitch-ink);
+  box-shadow: none;
+  font: inherit;
+  font-size: var(--stitch-text-button);
+  font-weight: var(--stitch-weight-body);
+  cursor: pointer;
+  &[aria-selected='true'] {
+    box-shadow: inset 0 calc(-1 * var(--stitch-border-width-strong)) 0 var(--stitch-primary);
+    font-weight: var(--stitch-weight-title);
+  }
+  &:focus-visible {
+    outline: var(--stitch-focus-ring);
+    outline-offset: var(--stitch-focus-offset);
+  }
+  &:disabled {
+    color: var(--stitch-disabled-ink);
+    cursor: not-allowed;
+  }
 }
-.vue-tabs [aria-selected='true'] {
-  background: var(--ui-selected, #d4e6a4);
-  color: var(--ui-selected-text, #18231a);
-}
-.vue-tabs .collection-count {
+.vue-tabs .ui-tab-count {
   inline-size: 4.5em;
   min-inline-size: 4.5em;
   padding-inline: 0;
@@ -205,7 +295,7 @@
 }
 .vue-confirm-list {
   display: grid;
-  gap: tokens.space(1);
+  gap: var(--stitch-space-4);
   margin: 0;
   padding-inline-start: 1.25em;
   overflow-wrap: anywhere;
@@ -214,7 +304,7 @@
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: tokens.space(3);
+  gap: var(--stitch-gap-controls);
 }
 .vue-dialog::backdrop {
   background: #0008;
@@ -290,4 +380,18 @@
   .vue-frame-filters {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+@keyframes ui-stitch-pending-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root body .ui-stitch-button .ui-button-spinner {
+    animation: none;
+  }
+}
+:root.motion-reduced body .ui-stitch-button .ui-button-spinner {
+  animation: none;
 }

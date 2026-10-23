@@ -173,8 +173,11 @@ const turnHint = computed(() =>
       </div>
       <div class="vue-poker-feedback"
         ><p>{{ turnHint }}</p
-        ><StatusSlot :message="poker.notice" :error="poker.failed" /><p
-          v-if="presentation.earned.value.length"
+        ><StatusSlot
+          :persistent="poker.pending || poker.uncertain"
+          :message="poker.notice"
+          :error="poker.failed"
+        /><p v-if="presentation.earned.value.length"
           >解鎖成就：{{ presentation.earned.value.join('、') }}。<a href="/achievements"
             >查看收藏冊</a
           ></p

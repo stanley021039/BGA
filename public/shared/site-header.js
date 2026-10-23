@@ -305,7 +305,7 @@
       button.setAttribute('aria-label', me.displayName + ' 的帳號選單');
       header.querySelector('#site-account-id').textContent = me.displayName;
       const profileLink = menu.querySelector('a[href="/settings"]');
-      if (profileLink) profileLink.textContent = '帳號與形象設定';
+      if (profileLink) profileLink.textContent = '帳號與個人化設定';
       if (me.role === 'admin' && !header.querySelector('#site-admin')) {
         const link = document.createElement('a');
         link.id = 'site-admin';

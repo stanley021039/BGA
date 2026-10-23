@@ -32,7 +32,7 @@ function open() {
       }}</small
       ><UiIcon name="next" />
     </button>
-    <UiDialog ref="dialog" title="選擇大廳共用背景" stitch>
+    <UiDialog ref="dialog" title="選擇大廳共用背景">
       <div class="lobby-background-options" role="group" aria-label="大廳共用背景">
         <button
           v-for="item in lobbyBackgrounds"

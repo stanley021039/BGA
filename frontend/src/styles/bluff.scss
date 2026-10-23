@@ -508,18 +508,8 @@
   .vue-bluff-write {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 8px;
-    input {
-      box-sizing: border-box;
-      min-inline-size: 0;
-      min-block-size: 44px;
-      padding: 8px 12px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      background: var(--stitch-surface);
-      color: var(--stitch-ink);
-      font: inherit;
-    }
+    align-items: end;
+    gap: var(--stitch-gap-controls);
   }
   .vue-bluff-speech-status {
     margin: 0;
@@ -712,27 +702,21 @@
   }
   .vue-bluff-feedback {
     box-sizing: border-box;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--stitch-control-height);
     align-items: start;
-    gap: 8px;
+    gap: var(--stitch-gap-controls);
     min-inline-size: 0;
-    block-size: 44px;
+    block-size: var(--stitch-control-height);
     overflow: auto;
     > .form-message.frontend-status {
-      flex: 1;
-      min-height: 0;
-      min-block-size: 0;
+      min-inline-size: 0;
       margin: 0;
-      padding: 0;
-      font-size: 14px;
-      line-height: 21px;
     }
-    > button {
-      flex: none;
-    }
-    &:has(> button) {
-      block-size: 44px;
-    }
+  }
+  .vue-bluff-retry-slot {
+    inline-size: var(--stitch-control-height);
+    block-size: var(--stitch-control-height);
   }
 }
 .vue-bluff-reactions {

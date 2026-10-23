@@ -12,7 +12,6 @@ import DrawVote from './DrawVote.vue';
 import PlayerAvatar from './PlayerAvatar.vue';
 import DrawGalleryThumbnail from './DrawGalleryThumbnail.vue';
 import '../styles/draw-gallery.scss';
-defineProps<{ stitch?: boolean }>();
 const results = useDrawResultsStore(),
   room = useRoomStore(),
   prefix = useId();
@@ -130,7 +129,6 @@ defineExpose({ open });
 </script>
 <template>
   <UiButton
-    :stitch="stitch"
     variant="ghost"
     icon="frame"
     icon-only
@@ -141,7 +139,6 @@ defineExpose({ open });
   />
   <UiDialog
     ref="dialog"
-    stitch
     class="vue-draw-gallery-dialog"
     title="最近畫作 · 往期檢視"
     @closing="close"
@@ -263,7 +260,6 @@ defineExpose({ open });
       /></div>
       <div class="vue-gallery-actions">
         <UiButton
-          stitch
           variant="ghost"
           icon="download"
           icon-only
@@ -273,7 +269,6 @@ defineExpose({ open });
           @click="results.download()"
         />
         <UiButton
-          stitch
           variant="ghost"
           icon="refresh"
           icon-only
@@ -283,7 +278,6 @@ defineExpose({ open });
           @click="results.select(results.view?.selectedId, true)"
         />
         <UiButton
-          stitch
           variant="secondary"
           icon="save"
           :caption="selectedSaved ? '取消收藏' : '收藏畫作'"
@@ -301,7 +295,6 @@ defineExpose({ open });
         />
         <UiButton
           v-if="recollect"
-          stitch
           variant="secondary"
           icon="save"
           label="重新收藏這幅畫"
@@ -309,7 +302,6 @@ defineExpose({ open });
           @click="results.save(results.view?.selectedId, true)"
         />
         <UiButton
-          stitch
           variant="primary"
           icon="download"
           label="匯出畫作集 ZIP"

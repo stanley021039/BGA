@@ -82,6 +82,7 @@ const lessonHref = computed(
           ><option :value="true">惡魔賽道 · 地形／危險試玩</option></select
         ></label
       ><StatusSlot
+        :persistent="race.settingsPending || !!race.settingsError"
         :message="race.settingsError || (race.settingsPending ? '正在儲存…' : '')"
         :error="!!race.settingsError"
     /></template>

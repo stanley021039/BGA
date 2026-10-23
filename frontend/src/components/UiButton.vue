@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import UiIcon from './UiIcon.vue';
-// Stitch is opt-in: a variant alone never changes existing game controls.
+// The only button look (Figma 03 C05/C07). Pick a role with `variant`.
 withDefaults(
   defineProps<{
     label: string;
@@ -10,7 +10,6 @@ withDefaults(
     pending?: boolean;
     disabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
-    stitch?: boolean;
     variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'contrast';
   }>(),
   {
@@ -18,7 +17,6 @@ withDefaults(
     iconOnly: false,
     pending: false,
     disabled: false,
-    stitch: false,
     variant: 'secondary',
   },
 );
@@ -26,20 +24,27 @@ withDefaults(
 <template>
   <button
     :type="type"
-    class="ui-button vue-button"
+    class="ui-button vue-button ui-stitch-button"
     :class="{
       'ui-icon-button': iconOnly,
       'has-mobile-caption': iconOnly && !!caption,
-      'is-pending': pending,
-      'ui-stitch-button': stitch,
+      'is-stitch-pending': pending,
     }"
-    :data-stitch-variant="stitch ? variant : undefined"
+    :data-stitch-variant="variant"
     :aria-label="label"
     :title="iconOnly ? label : undefined"
     :disabled="disabled || pending"
     :aria-busy="pending"
   >
-    <slot name="icon"><UiIcon v-if="icon" :name="icon" class="ui-button-icon" /></slot>
+    <span
+      v-if="icon || $slots.icon"
+      class="ui-button-icon-slot"
+      :data-pending="pending || undefined"
+    >
+      <slot name="icon"><UiIcon v-if="icon" :name="icon" class="ui-button-icon" /></slot>
+      <span v-if="pending" class="ui-button-spinner" aria-hidden="true" />
+    </span>
+    <span v-else-if="pending" class="ui-button-spinner ui-button-edge-spinner" aria-hidden="true" />
     <span class="vue-button-caption" :class="{ 'ui-sr-only': iconOnly }">{{
       caption || label
     }}</span>

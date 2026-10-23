@@ -46,7 +46,6 @@ const help = computed(() => {
       ><h2>{{ choice.title }}</h2
       ><UiButton
         v-if="help"
-        stitch
         variant="ghost"
         icon="help"
         icon-only

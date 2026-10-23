@@ -213,7 +213,6 @@ onBeforeUnmount(() => {
             <h1>{{ viewed.potName }}</h1>
             <UiButton
               v-if="isOwnPot"
-              stitch
               variant="ghost"
               icon="edit"
               icon-only
@@ -321,7 +320,6 @@ onBeforeUnmount(() => {
         <UiButton
           v-if="actionsOpen"
           class="vue-quacks-pot-peek"
-          stitch
           variant="secondary"
           icon="previous"
           label="返回大釜"
@@ -330,7 +328,6 @@ onBeforeUnmount(() => {
         <UiButton
           v-else-if="canPeekPot"
           class="vue-quacks-pot-peek"
-          stitch
           variant="secondary"
           :icon="potPeek ? 'previous' : 'eye'"
           :label="potPeek ? (mine?.pending ? '返回選擇' : '返回結算') : '查看大釜'"
@@ -338,7 +335,6 @@ onBeforeUnmount(() => {
         />
         <UiButton
           class="vue-quacks-board-settings"
-          stitch
           variant="ghost"
           icon="settings"
           icon-only
@@ -379,7 +375,6 @@ onBeforeUnmount(() => {
                 @click="open('witches')"
                 >免</button
               ><UiButton
-                stitch
                 variant="ghost"
                 icon="help"
                 icon-only
@@ -389,7 +384,6 @@ onBeforeUnmount(() => {
           <QuacksCommands v-if="isOwnPot || !boardVisible" />
           <UiButton
             v-else
-            stitch
             icon="previous"
             label="返回我的大釜"
             @click="game.selectedPot = state.me"
@@ -399,6 +393,7 @@ onBeforeUnmount(() => {
       <footer class="vue-quacks-control-deck">
         <div class="vue-quacks-feedback"
           ><StatusSlot
+            :persistent="game.pending || game.canRetry"
             :message="game.notice || achievementNotice || (game.pending ? '正在送出…' : '')"
             :error="!!game.notice && !game.pending"
           /><a v-if="achievementNotice" href="/achievements">查看收藏冊</a></div
@@ -493,6 +488,9 @@ onBeforeUnmount(() => {
           }}</button
         ></div
       ></section
-    ><StatusSlot :message="game.notice" :error="!!game.notice && !game.pending" /></UiDialog
+    ><StatusSlot
+      :persistent="game.pending || game.canRetry"
+      :message="game.notice"
+      :error="!!game.notice && !game.pending" /></UiDialog
   ><QuacksEffects />
 </template>

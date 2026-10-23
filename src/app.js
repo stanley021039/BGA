@@ -908,6 +908,7 @@ function initializeApp(config, dataLock, acquired) {
     );
   };
   const lobbyHandlers = createLobbyHandlers({
+    attackLoadout: (user) => require('./profiles/settings').getAttackSettings(db, user.id),
     entranceAllowed: (user, id) =>
       ['classic', 'smoke', 'sparks', 'ink', 'runes', 'rift', 'particles'].includes(id) ||
       require('./achievements/bonus-rewards')
@@ -1248,6 +1249,10 @@ function initializeApp(config, dataLock, acquired) {
           return send(lobbyHandlers.view(user, url.searchParams.get('entrance')));
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
           return send(lobbyHandlers.move(user, data));
+        if (url.pathname === '/api/lobby/attack' && req.method === 'POST') {
+          limitRate(socialRate, 'lobby-attack:' + user.id, 80);
+          return send(lobbyHandlers.attack(user, data));
+        }
         if (url.pathname === '/api/lobby/teleport' && req.method === 'POST') {
           limitAccount(user);
           return send(lobbyHandlers.teleport(user, data));
@@ -1307,6 +1312,12 @@ function initializeApp(config, dataLock, acquired) {
               req.method === 'POST' ? data : undefined,
             ),
           );
+        }
+        if (url.pathname === '/api/profile/attacks' && req.method === 'GET')
+          return send(require('./profiles/settings').getAttackSettings(db, user.id));
+        if (url.pathname === '/api/profile/attacks' && req.method === 'POST') {
+          limitAccount(user);
+          return send(require('./profiles/settings').setAttackSettings(db, user.id, data));
         }
         if (url.pathname === '/api/profile/settings' && req.method === 'GET')
           return send(getProfileSettings(db, user.id));
@@ -2809,6 +2820,12 @@ function initializeApp(config, dataLock, acquired) {
       for (const name of ['stanley021039', 'x55662306', 'azrael04'])
         for (const width of [64, 88, 176])
           files[`/assets/auth/${name}-${width}.webp`] = `assets/auth/${name}-${width}.webp`;
+      // Old WAV URLs remain compatible, but deliver the checked compressed bytes.
+      for (const sound of require('../public/assets/game-sounds/compressed-manifest.json').sounds) {
+        for (const name of [sound.source, sound.file])
+          files['/assets/' + sound.directory + '/' + name] =
+            'assets/' + sound.directory + '/' + sound.file;
+      }
       files['/shared/opening-theme.js'] = 'shared/opening-theme.js';
       files['/shared/entry-intro.js'] = 'shared/entry-intro.js';
       files['/shared/auth-entry.js'] = 'shared/auth-entry.js';

@@ -7,7 +7,6 @@ import UiButton from './UiButton.vue';
 import UiDialog from './UiDialog.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/room.scss';
-defineProps<{ stitch?: boolean }>();
 const room = useRoomStore(),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   pending = ref(false),
@@ -82,29 +81,24 @@ onBeforeUnmount(() => controller?.abort());
 </script>
 <template>
   <UiButton
-    :stitch="stitch"
     variant="danger"
     class="vue-room-leave-trigger"
     icon="leave"
-    :icon-only="!stitch"
-    :caption="stitch ? '離開' : undefined"
+    caption="離開"
     label="離開房間"
     :disabled="!room.seat || room.busy || pending"
     @click="open"
-  /><UiDialog
-    :stitch="stitch"
-    ref="dialog"
-    title="確定離開這個房間？"
-    compact
-    :dismissible="!pending"
+  /><UiDialog ref="dialog" title="確定離開這個房間？" compact :dismissible="!pending"
     ><img
       class="vue-room-leave-image"
       src="/assets/room-leave-thumbnail.jpg"
       width="640"
       height="361"
       alt="離別場景，字幕：多麼虎頭蛇尾的結局" /><p>{{ effect }}</p
-    ><StatusSlot :message="pending ? '正在離開房間…' : message" :error="!!message" /><div
-      class="vue-confirm-actions"
+    ><StatusSlot
+      :persistent="pending || !!message"
+      :message="pending ? '正在離開房間…' : message"
+      :error="!!message" /><div class="vue-confirm-actions"
       ><UiButton icon="leave" label="確認離開" :pending="pending" @click="leave" /><UiButton
         icon="close"
         label="留在房間"

@@ -392,7 +392,7 @@ test('four reward codes grant independent categories without unlocking gameplay 
   assert.equal(repeat.redemption.alreadyRedeemed, true);
   assert.equal(repeat.redemption.redeemedAt, frames.redemption.redeemedAt);
   const entrances = await f.api(1, 'achievements/redeem', { code: '我愛其學' });
-  assert.equal(entrances.bonusRewards.entrances.length, 20);
+  assert.equal(entrances.bonusRewards.entrances.length, 24);
   assert.deepEqual(entrances.bonusRewards.openings, ['home-family', 'soul-world']);
   assert.equal(entrances.bonusRewards.sounds.length, 0);
   const pings = await f.api(2, 'achievements/redeem', { code: '我愛士憲' });
@@ -411,7 +411,7 @@ test('four reward codes grant independent categories without unlocking gameplay 
   await f.restart();
   const persisted = await f.api(1, 'achievements');
   assert.ok(persisted.rewards.every((r) => r.claimedAt));
-  assert.equal(persisted.bonusRewards.entrances.length, 20);
+  assert.equal(persisted.bonusRewards.entrances.length, 24);
   assert.deepEqual(unlocked(persisted), []);
   await f.api(1, 'profile/opening', { theme: 'soul-world' });
   f.read((db) => assert.equal(db.prepare('SELECT COUNT(*) n FROM user_achievements').get().n, 0));

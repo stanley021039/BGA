@@ -115,7 +115,6 @@ function status(player: RoomPlayer) {
       ><h1>正在讀取郎中房間…</h1></section
     ><template #waiting-before-start
       ><UiButton
-        stitch
         variant="secondary"
         icon="book"
         label="搭配本局藥材書"
@@ -150,6 +149,7 @@ function status(player: RoomPlayer) {
           ></fieldset
         ><p>各色書面可在舞台「藥典」選擇；全桌採用最後一次選擇。開始後鎖定。</p
         ><StatusSlot
+          :persistent="game.settingsPending || !!game.settingsError"
           :message="game.settingsPending ? '正在儲存設定…' : game.settingsError || ''"
           :error="!!game.settingsError" /><UiButton
           v-if="game.settingsError && game.editableSettings"

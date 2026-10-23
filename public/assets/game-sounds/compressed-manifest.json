@@ -1,0 +1,222 @@
+{
+  "schema": 1,
+  "encoder": "ffmpeg libmp3lame, 96 kbps mono",
+  "sounds": [
+    {
+      "source": "dice-roll.wav",
+      "file": "dice-roll.mp3",
+      "sourceSha256": "f224a3a4ae9e5c6dc7572276f60f7bf96909e88c0b2a22295e3a99dec41b343e",
+      "sha256": "bc171d891f47825ffa69d4591b108a62b48c9b1fc0e4b64dc7a031a1cc4c11cc",
+      "sourceBytes": 31244,
+      "bytes": 8972,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "nitro.wav",
+      "file": "nitro.mp3",
+      "sourceSha256": "a81a343e0d085090421888eebd41a29040ca518d54f5560641331ecf61eed521",
+      "sha256": "358bba2a74bf735089c6900ac5bfaf676bde5cdb564c9f3627f060ad6759494f",
+      "sourceBytes": 62444,
+      "bytes": 16748,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "ping-attention.wav",
+      "file": "ping-attention.mp3",
+      "sourceSha256": "4375f950a020d3d0069e4c95d3245cda8834ce321d66db2473484661e0d3a5cc",
+      "sha256": "6bfee038f043e312570849ae01b01fba720d02b57a1888a1154c27966b0b4df2",
+      "sourceBytes": 118300,
+      "bytes": 30572,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "ping-help.wav",
+      "file": "ping-help.mp3",
+      "sourceSha256": "17f91aa1145d43ca260d78daddb9b241a1ab865221d898225cc1e9766c1d8cf0",
+      "sha256": "0e982efaaffc6dcc59318cde6f17f0693c26fe1fa64eb8e8af7e8274a046c503",
+      "sourceBytes": 127382,
+      "bytes": 32876,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "ping-look.wav",
+      "file": "ping-look.mp3",
+      "sourceSha256": "9264338b7f9904846ecb589709b97ed270fb62265dbe0d5b746c3ea696351464",
+      "sha256": "7e8e707a8d67051f8e5738207f643a23227227485aa384b5a401ef5bc871bc2f",
+      "sourceBytes": 74754,
+      "bytes": 19628,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "ping-ping.wav",
+      "file": "ping-ping.mp3",
+      "sourceSha256": "ed5d8ce303b962304a8bd7a6ea14f095584ce72525ad9cc7532a3e7ba8ce6edd",
+      "sha256": "1812d009409ddd0fddfccf68425d7bd7fb3324e4a4abd6efe3916652cb480fd0",
+      "sourceBytes": 46928,
+      "bytes": 12716,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "ping-question.wav",
+      "file": "ping-question.mp3",
+      "sourceSha256": "9db2f4f2a8239a9760282fe19caf92579ee6cf97d98ba28d218f484d90ba3251",
+      "sha256": "0f45806fa16030d256b4056a93d9abb3b21718ee86e186283a4bd446df65548b",
+      "sourceBytes": 47156,
+      "bytes": 12716,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-buy.wav",
+      "file": "quacks-buy.mp3",
+      "sourceSha256": "a202f0e14a381426fdb2b1fe7ed89bd4955079e84dd5313ffea4d4f27863a2dd",
+      "sha256": "9ae41c5ee71093c31c537013b97a94cb1d249dc2a0ccf997c71c43cd9ed530d1",
+      "sourceBytes": 18284,
+      "bytes": 5516,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-card.wav",
+      "file": "quacks-card.mp3",
+      "sourceSha256": "89e64e4126947a84da2054934fc1ff1b5b1ebe8c331884194b3bdce95d40b937",
+      "sha256": "1f1bcd538df03b78efed97f1ed685c24392b7801ee6cc98524591322754d7381",
+      "sourceBytes": 72044,
+      "bytes": 19052,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-danger.wav",
+      "file": "quacks-danger.mp3",
+      "sourceSha256": "d1fbf62d2be1b7ad1a3efbb4c152b78c8ed0a0ff0e2ece839f9bda3db7dbfbb6",
+      "sha256": "38292cdbf0448c916f53dfa8bb8e0926ee744f35e745b4c059b043f7fb572655",
+      "sourceBytes": 20204,
+      "bytes": 6092,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-decline-user.wav",
+      "file": "quacks-decline-user.mp3",
+      "sourceSha256": "ed16aac88009e7d08b55d487d9ff713339340e945b679cf59b1d01d6ba77afa9",
+      "sha256": "a836ac7ef922d16ab3f33e51d56df8276d31974626dd87eedc96cfca242c909b",
+      "sourceBytes": 86980,
+      "bytes": 22796,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-explosion-fish.wav",
+      "file": "quacks-explosion-fish.mp3",
+      "sourceSha256": "71129dd08c6b2f6dd81f25c56a07c804399e50ad7c6a8d96af83ba41e4672ec0",
+      "sha256": "7b8ae191c2f6b3e72afb36ef812f9cdecc3e093a7a7bfa3650d748af577f7a9b",
+      "sourceBytes": 68552,
+      "bytes": 18188,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-explosion.wav",
+      "file": "quacks-explosion.mp3",
+      "sourceSha256": "0f65343c445582c6d62782dd989680d0956417fe538d073115b5732ee2e5f82f",
+      "sha256": "2fabe3e644b7419f1020bdf0950baf51110dad86f71656cf698b33ba8d21c851",
+      "sourceBytes": 72044,
+      "bytes": 19052,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-push-user.wav",
+      "file": "quacks-push-user.mp3",
+      "sourceSha256": "abc233027693b870d3e671f6155adfcddef877137d340cff983a5f77ed9565c1",
+      "sha256": "5564ab9a4f78adfdb097f3fced4bee2bc8bef77b08044af61f6629ed3366ceea",
+      "sourceBytes": 27884,
+      "bytes": 8108,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-ruby.wav",
+      "file": "quacks-ruby.mp3",
+      "sourceSha256": "cef8c515c3c4be1ae1c95eb7e2319099ddf87cf4c9bcba8429379bdab4925ff7",
+      "sha256": "bc1fce692ab203570d8c6cda9401429e6a5b94fcb78e63d4f35f78302a769241",
+      "sourceBytes": 22124,
+      "bytes": 6668,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-settlement-user.wav",
+      "file": "quacks-settlement-user.mp3",
+      "sourceSha256": "8fb0b5222c9ad83de8f8d75d2e31c7ab06d309ac884ec7d96e604abb03d9f42d",
+      "sha256": "6c2528b93656523daceeac468a00158131bc98cd901ee4a75705ed09b11b4e23",
+      "sourceBytes": 31708,
+      "bytes": 8972,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-settlement.wav",
+      "file": "quacks-settlement.mp3",
+      "sourceSha256": "45a4652a12dcfbadf8d2a9e358d726c3b0a0cb671dc9dcce52739c1a1c63e09d",
+      "sha256": "4fcaf199a918fcd1524760e96b1168f86a933793dd08ca6dc32acab3b7cca282",
+      "sourceBytes": 20204,
+      "bytes": 6092,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "quacks-witch.wav",
+      "file": "quacks-witch.mp3",
+      "sourceSha256": "e764b9266125460d20fe6a9ae97409e0aaf42d0e35ecec7d890a7b84dc757302",
+      "sha256": "20a9a145774538681ba94a25d752764f6cb558be2842500bd3d7520b8246a163",
+      "sourceBytes": 36044,
+      "bytes": 10124,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "shot.wav",
+      "file": "shot.mp3",
+      "sourceSha256": "abcf3bc2f5c04e065bf03a78808b7a2a1535f026c34520bc0689a0cea03b12ae",
+      "sha256": "5ae84c510765e5a69cbbd6e5672c4faf42495ca3cf377330b3c442cfcc9278cd",
+      "sourceBytes": 65324,
+      "bytes": 17324,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "skid.wav",
+      "file": "skid.mp3",
+      "sourceSha256": "62e84cb22a291cee4bf1d6fa9462c50c45e63a27a1133005ebee990ef80f9135",
+      "sha256": "ca0737bd29478947d2a3d0751baed77325f1d019b5c11c069ad8ccb1fa599ce9",
+      "sourceBytes": 31724,
+      "bytes": 8972,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "slam.wav",
+      "file": "slam.mp3",
+      "sourceSha256": "fcdb0340ea2b52f99c438a4a3459e3d5366d44f302f7784d80db0d3987803c31",
+      "sha256": "8b200a81b3320d0c6ba86ce913274c86ee5458da22a30831a1ef9147e6e057b7",
+      "sourceBytes": 28844,
+      "bytes": 8108,
+      "directory": "game-sounds"
+    },
+    {
+      "source": "turn.wav",
+      "file": "turn.mp3",
+      "sourceSha256": "dcb147cd520f7d0e09242579febb9d90899be648a4e2563a7e3a7f721f65869e",
+      "sha256": "079e783ebcf9600f894eb388dfc8b41b6de4daf64067cc12e513881c6c358d47",
+      "sourceBytes": 26924,
+      "bytes": 7820,
+      "directory": "game-sounds"
+    },
+    {
+      "directory": "gift-sounds",
+      "source": "confirmation_001.wav",
+      "file": "confirmation_001.mp3",
+      "sourceSha256": "40c4d7e085858a253ab768df4c06faa21fc223654efc98d2694a146074385506",
+      "sha256": "5f655c879451d8b13d6d4b251efeeae5a7aa604dc2c7e08bf8314fd102a9a96a",
+      "sourceBytes": 25608,
+      "bytes": 4432
+    },
+    {
+      "directory": "gift-sounds",
+      "source": "open_001.wav",
+      "file": "open_001.mp3",
+      "sourceSha256": "54fa76ff25d13d1256732882051a38c2cb5f730d76a068e853bc29857857ab6f",
+      "sha256": "ee60dfe0fd4493e9ed22aebb12656fa18cd120c456c5640bcf67704fba8f8305",
+      "sourceBytes": 26924,
+      "bytes": 7820
+    }
+  ]
+}

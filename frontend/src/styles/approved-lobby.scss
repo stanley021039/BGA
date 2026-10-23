@@ -406,40 +406,13 @@
       line-height: 21px;
     }
     > button {
-      --ui-button-border-width: 1px;
-      --ui-button-border-color: var(--stitch-line);
-      --ui-button-radius: 8px;
       box-sizing: border-box;
-      display: grid;
-      grid-template-columns: 28px minmax(0, 1fr);
-      align-items: center;
-      justify-items: stretch;
-      gap: 8px;
       min-inline-size: 0;
-      min-block-size: 44px;
-      block-size: auto;
-      padding: 8px;
-      background: var(--stitch-surface-subtle);
-      color: var(--stitch-ink);
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      text-align: start;
-      box-shadow: none;
+      inline-size: 100%;
       img {
         inline-size: 28px;
         block-size: 28px;
         object-fit: contain;
-      }
-      span {
-        min-block-size: 0;
-        margin: 0;
-        font-size: 14px;
-        line-height: 21px;
-        overflow-wrap: anywhere;
-      }
-      &:hover:not(:disabled) {
-        --ui-button-border-color: var(--stitch-primary);
-        background: var(--stitch-selected-bg);
       }
     }
   }

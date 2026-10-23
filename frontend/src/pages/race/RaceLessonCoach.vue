@@ -35,7 +35,6 @@ function selectChapter(event: Event, lesson: ReturnType<typeof useRaceLesson>) {
         ><h3>本關目標</h3><p>{{ lesson.mission.value.goal }}</p
         ><p>{{ lesson.mission.value.why }}</p
         ><UiButton
-          stitch
           :label="lesson.hint.value ? '收起提示' : '查看操作提示'"
           @click="lesson.hint.value = !lesson.hint.value"
         /><p v-if="lesson.hint.value">{{ lesson.mission.value.hint }}</p></section
@@ -45,6 +44,7 @@ function selectChapter(event: Event, lesson: ReturnType<typeof useRaceLesson>) {
     >
     <div class="vue-race-lesson-feedback"
       ><StatusSlot
+        persistent
         :message="
           lesson.result.value?.text ||
           lesson.feedback.value ||
@@ -58,18 +58,15 @@ function selectChapter(event: Event, lesson: ReturnType<typeof useRaceLesson>) {
     <footer @pointerdown="clearSelection"
       ><div
         ><UiButton
-          stitch
           label="上一章"
           icon="arrow_back"
           :disabled="lesson.chapter.value === 0"
           @click="lesson.go(lesson.chapter.value - 1)" /><UiButton
-          stitch
           v-if="lesson.practice.value"
           label="重試本關"
           icon="refresh"
           @click="lesson.retry()" /></div
       ><UiButton
-        stitch
         :label="
           lesson.chapter.value === lesson.steps.length - 1
             ? '完成教學'

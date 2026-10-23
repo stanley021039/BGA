@@ -42,7 +42,7 @@ test('isolated playtests unlock only rewards and preserve real achievement progr
     first = store.list(id);
   assert.ok(first.achievements.every((achievement) => !achievement.unlockedAt));
   assert.ok(first.rewards.every((reward) => reward.claimedAt));
-  assert.equal(first.bonusRewards.entrances.length, 20);
+  assert.equal(first.bonusRewards.entrances.length, 24);
   assert.equal(first.bonusRewards.backgrounds.length, 10);
   assert.deepEqual(first.bonusRewards.openings, ['home-family', 'soul-world']);
   store.insert.run(id, 'all-first-table', 'fixture-real-game', new Date().toISOString());

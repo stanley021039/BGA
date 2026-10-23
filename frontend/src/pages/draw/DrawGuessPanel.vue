@@ -99,7 +99,6 @@ async function submit() {
           @compositionstart="composing = true"
           @compositionend="composing = false"
           @keydown.enter="($event.isComposing || composing) && $event.preventDefault()" /><UiButton
-          stitch
           variant="primary"
           type="submit"
           icon="send"

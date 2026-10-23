@@ -16,7 +16,6 @@ const lesson = useRaceLesson(),
       ><nav aria-label="教學操作"
         ><a class="quiet" :href="lesson.exitHref">離開教學</a
         ><UiButton
-          stitch
           :label="focused ? '退出專注' : '專注全螢幕'"
           :icon="focused ? 'fullscreen_exit' : 'fullscreen'"
           @click="toggle" /></nav></header

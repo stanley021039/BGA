@@ -73,7 +73,6 @@ function keydown(event: KeyboardEvent) {
       }}</h2
       ><UiButton
         v-if="game.setup && !currentOnly"
-        stitch
         icon="refresh"
         icon-only
         label="隨機挑選藥材書"
@@ -180,14 +179,12 @@ function keydown(event: KeyboardEvent) {
           >
           <div class="vue-quacks-codex-turn"
             ><UiButton
-              stitch
               icon="previous"
               icon-only
               :label="row.name + '上一面'"
               :disabled="row.candidates.length < 2"
               @click="turn(-1)" /><span>{{ face.faceName }}</span
             ><UiButton
-              stitch
               icon="next"
               icon-only
               :label="row.name + '下一面'"
@@ -196,7 +193,6 @@ function keydown(event: KeyboardEvent) {
           /></div>
           <UiButton
             v-if="game.setup && !currentOnly"
-            stitch
             variant="primary"
             icon="check"
             :label="face.set === row.selected ? '本局已採用' : '選擇這一面'"

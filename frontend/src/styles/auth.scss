@@ -43,12 +43,3 @@
 :root body.auth-page[data-visual-theme] .auth-card .auth-tabs {
   border-radius: var(--stitch-control-radius, 0.5rem);
 }
-:root
-  body.auth-page[data-visual-theme]
-  .auth-card
-  .auth-tabs
-  button.vue-button[role='tab'][aria-selected='true'] {
-  --stitch-button-bg: var(--stitch-primary, #f6c845);
-  --stitch-button-color: var(--stitch-on-primary, #20211e);
-  --stitch-button-hover-bg: var(--stitch-primary-hover, #ffd65f);
-}

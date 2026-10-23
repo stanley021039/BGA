@@ -714,7 +714,6 @@
     flex: 1 1 0;
     min-width: 0;
     max-width: 100%;
-    border-radius: 8px;
     min-height: 64px;
     justify-content: center;
   }
@@ -1076,15 +1075,6 @@
   }
 }
 
-:root body[data-visual-theme].vue-quacks-document {
-  .vue-quacks-pot-dock > button,
-  .vue-quacks-commands > .vue-button {
-    border-radius: 10px !important;
-  }
-  .vue-quacks-pot-tabs > button {
-    border-radius: 8px !important;
-  }
-}
 @media (max-width: 1180px) {
   :root body[data-visual-theme].vue-quacks-document .vue-room-topbar-actions {
     flex-wrap: wrap;

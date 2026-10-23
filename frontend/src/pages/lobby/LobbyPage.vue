@@ -9,14 +9,24 @@ import LobbyBackdrop from './LobbyBackdrop.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiDialog from '../../components/UiDialog.vue';
+import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import '../../styles/lobby-create.scss';
 const lobby = useLobbyStore(),
   session = useSessionStore();
+const entryNoticeKey = ref(0);
+watch(
+  () => lobby.entryPending,
+  (pending, previous) => {
+    if (previous && !pending) entryNoticeKey.value++;
+  },
+  { flush: 'sync' },
+);
 const params = new URLSearchParams(location.search),
   requested = params.get('game') || 'thunder';
 const selected = ref(gameCards.some((card) => card.id === requested) ? requested : 'thunder'),
   chosen = computed(() => gameCards.find((card) => card.id === selected.value)!);
+const backdrop = ref<InstanceType<typeof LobbyBackdrop> | null>(null);
 const create = ref<InstanceType<typeof UiDialog> | null>(null),
   join = ref<InstanceType<typeof UiDialog> | null>(null),
   codeInput = ref<HTMLInputElement | null>(null),
@@ -122,21 +132,34 @@ onBeforeUnmount(() => {
         ><span>款遊戲<br />隨時開桌</span></div
       ></div
     >
-    <GameCarousel v-model="selected" @create="open" @join="openJoin()" />
-    <LobbyBackdrop />
-    <div class="vue-lobby-resume" aria-label="已入座的房間"
-      ><span v-if="!resumes.length">{{
-        lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'
-      }}</span
-      ><UiButton
-        v-for="room in resumes"
-        :key="room.code"
-        icon="replay"
-        :label="'返回' + gameTitle(room.type) + ' ' + room.code"
-        :caption="'返回' + gameTitle(room.type)"
-        :disabled="lobby.entryPending || lobby.roomsLoading"
-        @click="lobby.resume(room)" /><StatusSlot :message="feedback" :error="!!lobby.entryStatus"
-    /></div>
+    <GameCarousel v-model="selected" @create="open" @join="openJoin()"
+      ><template #lobby-action
+        ><UiButton
+          icon="chat"
+          caption="對話"
+          label="對話"
+          aria-haspopup="dialog"
+          :disabled="!lobby.connected"
+          @click="backdrop?.openChat()"
+      /></template>
+      <template #lobby-resume
+        ><div class="vue-lobby-resume" aria-label="已入座的房間"
+          ><span v-if="!resumes.length">{{
+            lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'
+          }}</span
+          ><UiButton
+            v-for="room in resumes"
+            :key="room.code"
+            icon="replay"
+            :label="'返回' + gameTitle(room.type) + ' ' + room.code"
+            :caption="'返回' + gameTitle(room.type)"
+            :disabled="lobby.entryPending || lobby.roomsLoading"
+            @click="lobby.resume(room)" /><StatusSlot
+            :message="feedback"
+            :error="!!lobby.entryStatus" /></div
+      ></template>
+    </GameCarousel>
+    <LobbyBackdrop ref="backdrop" /><StatusSlot :message="lobby.attackStatus" />
     <UiDialog ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
       ><div class="vue-lobby-join"
         ><section class="vue-lobby-room-browser" data-ping-anchor="room-list" aria-label="目前房間"
@@ -240,12 +263,15 @@ onBeforeUnmount(() => {
                   lobby.entryStatus = '';
                   codeInput?.focus();
                 " /></div></form
-          ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /></section></div
+          ><StatusSlot
+            :message="feedback"
+            :error="!!lobby.entryStatus"
+            :notice-key="entryNoticeKey"
+            :persistent="lobby.entryPending" /></section></div
     ></UiDialog>
     <p class="version-note"><a href="/credits">素材來源與授權</a> · 德州撲克：純娛樂籌碼</p>
     <UiDialog
       ref="create"
-      :stitch="drawingCreate || roomCreate || pairCreate"
       :compact="drawingCreate || pairCreate"
       :class="{
         'vue-lobby-create-d06': drawingCreate || pairCreate,
@@ -258,24 +284,29 @@ onBeforeUnmount(() => {
       @closed="opened = false"
       ><p v-if="!drawingCreate && !pairCreate">使用帳號暱稱入座，遊戲條件可在房間內調整。</p
       ><form class="vue-lobby-create" @submit.prevent="submit"
-        ><label
-          >挑選遊戲<select v-model="selected" :disabled="lobby.entryPending"
-            ><option
-              v-for="card in gameCards.filter((card) => card.id !== 'market')"
-              :key="card.id"
-              :value="card.id"
-              >{{ card.title }}</option
-            ></select
-          ></label
-        ><label
-          >房間名稱<input
-            v-model="roomName"
-            maxlength="24"
-            placeholder="好友局"
-            :disabled="lobby.entryPending" /></label
-        ><div class="vue-lobby-create-options"><p>進入房間後，由房主調整本桌設定。</p></div
-        ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /><UiButton
-          :stitch="drawingCreate || roomCreate || pairCreate"
+        ><UiField
+          label="挑選遊戲"
+          control="select"
+          v-model="selected"
+          :disabled="lobby.entryPending"
+          ><option
+            v-for="card in gameCards.filter((card) => card.id !== 'market')"
+            :key="card.id"
+            :value="card.id"
+            >{{ card.title }}</option
+          ></UiField
+        ><UiField
+          label="房間名稱"
+          v-model="roomName"
+          maxlength="24"
+          placeholder="好友局"
+          :disabled="lobby.entryPending" />
+        <div class="vue-lobby-create-options"><p>進入房間後，由房主調整本桌設定。</p></div
+        ><StatusSlot
+          :message="feedback"
+          :error="!!lobby.entryStatus"
+          :notice-key="entryNoticeKey"
+          :persistent="lobby.entryPending" /><UiButton
           :variant="drawingCreate || roomCreate || pairCreate ? 'primary' : 'secondary'"
           :icon="pairCreate ? undefined : drawingCreate ? 'next' : 'add'"
           type="submit"

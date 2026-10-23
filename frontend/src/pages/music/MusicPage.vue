@@ -80,7 +80,6 @@ onMounted(() => void store.load());
         @change="file = ($event.target as HTMLInputElement).files?.[0] || null" /></label
     ><p>支援 MP3、M4A、OGG。請分享你有權公開播放的音樂。</p
     ><UiButton
-      stitch
       variant="primary"
       type="submit"
       id="upload-button"

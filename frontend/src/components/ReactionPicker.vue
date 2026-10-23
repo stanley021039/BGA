@@ -143,7 +143,6 @@ defineExpose({ open });
 
 <template>
   <UiButton
-    stitch
     variant="secondary"
     class="vue-social-tool-trigger"
     icon="emoji"
@@ -180,7 +179,6 @@ defineExpose({ open });
         <div v-if="reactions.emojiError" class="vue-social-load-error"
           ><p>{{ reactions.emojiError }}</p
           ><UiButton
-            stitch
             variant="secondary"
             icon="refresh"
             label="重新載入表情"
@@ -219,7 +217,6 @@ defineExpose({ open });
         <div v-if="reactions.characterError" class="vue-social-load-error"
           ><p>{{ reactions.characterError }}</p
           ><UiButton
-            stitch
             variant="secondary"
             icon="refresh"
             label="重新載入角色動作"
@@ -245,7 +242,6 @@ defineExpose({ open });
             ><UiButton
               v-for="phrase in phrases"
               :key="phrase"
-              stitch
               variant="secondary"
               :label="phrase"
               :disabled="blocked"
