@@ -24,11 +24,4 @@ PERMANENT-MEMORY.md
 /local-audio/
 /audio-exports/
 
-# User-supplied voice/opening clips ship as a separate local asset package.
-/public/assets/game-sounds/ping-voice-*.mp3
-/public/assets/game-sounds/ping-voice-manifest.json
-/public/assets/game-sounds/entry-intro-user.mp3
-/public/assets/game-sounds/entry-intro-user-manifest.json
-/public/assets/game-sounds/entrance-soul-world.mp3
-
-/public/assets/game-sounds/entry-home-family.mp3
+# Guess-song source audio and exports stay local; UI sounds and opening clips are tracked.

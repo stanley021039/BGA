@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "source": "User-provided MP3 files, 2026-10-21–22",
+  "processing": "Original bytes copied without trimming or transcoding",
+  "cues": [
+    {
+      "id": "ping-voice-amazing",
+      "label": "太神啦",
+      "file": "ping-voice-amazing.mp3",
+      "durationMs": 3360,
+      "sha256": "64e5647ce8ea4c5dd78fa6f9e21436ca6c77b000d4c5a5afafe65e5a14c68b62"
+    },
+    {
+      "id": "ping-voice-bad",
+      "label": "他很壞",
+      "file": "ping-voice-bad.mp3",
+      "durationMs": 4880,
+      "sha256": "fb01165924fe9bbaf2705c7adaea53bcf5fe08a0cca3d160f0eea75066c5dc6e"
+    },
+    {
+      "id": "ping-voice-sleep",
+      "label": "那我也要睡了啦",
+      "file": "ping-voice-sleep.mp3",
+      "durationMs": 1120,
+      "sha256": "deeac2c23563e7eead88fd84e6bd84ddc09da60de60433e50510eb2192d83a66"
+    },
+    {
+      "id": "ping-voice-look",
+      "label": "讓我看看",
+      "file": "ping-voice-look.mp3",
+      "durationMs": 910,
+      "sha256": "c947ca5909b5c9a255391a2281f13b3018a1fc2a2e5f40763b4e67ae02c2eb16"
+    },
+    {
+      "id": "ping-voice-legacy",
+      "label": "傳承精神",
+      "file": "ping-voice-legacy.mp3",
+      "durationMs": 4250,
+      "sha256": "6e2276af27cb97facbeefd6243780bb5e90d75eb164b103fa4dec248a0e49a4a"
+    },
+    {
+      "id": "ping-voice-no-bluff",
+      "label": "不要瞎掰",
+      "file": "ping-voice-no-bluff.mp3",
+      "durationMs": 2510,
+      "sha256": "e0a92de00490271ed9f32eb44e46d2761f7f95a7dbc1d5f3a46d076330281d4c"
+    },
+    {
+      "id": "ping-voice-cry",
+      "label": "你在哭哦",
+      "file": "ping-voice-cry.mp3",
+      "durationMs": 700,
+      "sha256": "1ce9c65e9536c8a45f75976b0c52aedd1e9cb6d70f7a82e13a460d983ddd7118"
+    },
+    {
+      "id": "ping-voice-coward",
+      "label": "俗仔",
+      "file": "ping-voice-coward.mp3",
+      "durationMs": 2420,
+      "sha256": "69079d08515239e9c006221b21edc2bd3e8f18d1b3a3c9a1bf38662989d90c3a"
+    },
+    {
+      "id": "ping-voice-goodnight",
+      "label": "晚安",
+      "file": "ping-voice-goodnight.mp3",
+      "durationMs": 3550,
+      "sha256": "3931b519eb3ac05dd77fed522a3e2cc05cc55d60199ee98f8c35503fcbf76fd8"
+    },
+    {
+      "id": "ping-voice-senior",
+      "label": "野獸前輩",
+      "file": "ping-voice-senior.mp3",
+      "durationMs": 8500,
+      "sha256": "e38fa971468099926cc7852a5d83dda4a4a0f2c17ae1cb35325e0b4a29f707fa"
+    },
+    {
+      "id": "ping-voice-practice",
+      "label": "菜就多練",
+      "file": "ping-voice-practice.mp3",
+      "durationMs": 1570,
+      "sha256": "e7360ff328616637892c48069c53f33dc69f2f5d1f8b8fe7c814ec451d86d57a"
+    },
+    {
+      "id": "ping-voice-huh",
+      "label": "蛤",
+      "file": "ping-voice-huh.mp3",
+      "durationMs": 910,
+      "sha256": "752f671db43d57c31504b4d083af623d42bdf8205f41cf376befd856ad4dd693"
+    },
+    {
+      "id": "ping-voice-what",
+      "label": "靠北三小",
+      "file": "ping-voice-what.mp3",
+      "durationMs": 2040,
+      "sha256": "3541f0db70515a5c03f41cc2da686aaf9ae593b781240f09c8f00855f302f939"
+    },
+    {
+      "id": "ping-voice-card-check",
+      "label": "窩咬驗牌",
+      "file": "ping-voice-card-check.mp3",
+      "durationMs": 1180,
+      "sha256": "a9d122c9218727047f40aa2efe4c29f31007ca40da1d863d0459114ade159c0b"
+    }
+  ]
+}

@@ -24,6 +24,6 @@
 
 舊單碼停用，已取得資格保留。
 
-F 攻擊最近玩家僅開 [Issue #197](https://github.com/stanley021039/BGA/issues/197)；四向跨邊界僅開 [Issue #204](https://github.com/stanley021039/BGA/issues/204)，兩者尚未實裝。使用者 MP3 另有本機素材包，不提交 Git。
+F 攻擊最近玩家僅開 [Issue #197](https://github.com/stanley021039/BGA/issues/197)；四向跨邊界僅開 [Issue #204](https://github.com/stanley021039/BGA/issues/204)，兩者尚未實裝。依最新授權，本批 Ping／網站開場 MP3 隨程式提交；只有猜歌曲庫音檔維持外存。
 
 - 我們這一家網站開場直接獲得；移除午後花田、戶外泳池與法院文字專用底板，對話改框內送出。
