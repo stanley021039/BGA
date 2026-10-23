@@ -77,6 +77,7 @@ function fixture({
     window,
     document,
     URL,
+    AbortController,
     localStorage: { getItem: () => null },
     setTimeout(fn, delay) {
       timers.set(++id, { fn, delay });
@@ -215,4 +216,115 @@ test('disabled entry returns immediately without hiding auth UI, creating timers
   assert.equal(f.document.documentElement.classList.contains('entry-auth-playing'), false);
   assert.equal(f.document.querySelector('.entry-auth-skip'), null);
   assert.equal(f.image.style.opacity, undefined);
+});
+
+test('submit unlocks audio before async authentication and the opening reuses that context', async () => {
+  const f = fixture({ withAudio: true });
+  let resumed = 0,
+    started = 0,
+    stopped = 0;
+  const context = {
+    state: 'suspended',
+    destination: {},
+    resume() {
+      resumed++;
+      this.state = 'running';
+      return Promise.resolve();
+    },
+    decodeAudioData: async () => ({}),
+    createBufferSource: () => ({
+      connect: () => ({ connect() {} }),
+      start() {
+        started++;
+      },
+      stop() {
+        stopped++;
+      },
+    }),
+    createGain: () => ({ gain: {} }),
+  };
+  f.window.AudioContext = function () {
+    return context;
+  };
+  f.window.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(1) });
+  f.window.EntryIntro.prepareSound();
+  assert.equal(resumed, 1, 'resume runs in the submit call, before awaiting login');
+  await Promise.resolve();
+  const playing = f.start();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(started, 1);
+  assert.equal(f.sounds.length, 0, 'no second HTML audio playback');
+  f.finish();
+  await playing;
+  assert.equal(stopped, 1);
+});
+
+test('skipping an opening while audio downloads prevents late playback', async () => {
+  const f = fixture({ withAudio: true });
+  let release,
+    started = 0;
+  f.window.AudioContext = function () {
+    return {
+      state: 'running',
+      resume: async () => {},
+      decodeAudioData: async () => ({}),
+      createBufferSource() {
+        started++;
+        throw Error('late playback');
+      },
+    };
+  };
+  f.window.fetch = () =>
+    new Promise((resolve) => {
+      release = resolve;
+    });
+  f.window.EntryIntro.prepareSound();
+  const playing = f.start();
+  f.finish();
+  await playing;
+  release({ ok: true, arrayBuffer: async () => new ArrayBuffer(1) });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(started, 0);
+});
+
+test('unlocked opening audio follows live volume and mute preferences and unsubscribes on exit', async () => {
+  const f = fixture({ withAudio: true });
+  const gain = { gain: {} };
+  let listener,
+    stopped = 0,
+    unsubscribed = 0;
+  f.window.AudioSettings.get = () => ({ effects: { enabled: true, volume: 0.25 } });
+  f.window.AudioSettings.subscribe = (callback) => {
+    listener = callback;
+    return () => unsubscribed++;
+  };
+  f.window.AudioContext = function () {
+    return {
+      state: 'running',
+      destination: {},
+      resume: async () => {},
+      decodeAudioData: async () => ({}),
+      createGain: () => gain,
+      createBufferSource: () => ({
+        connect: () => ({ connect() {} }),
+        start() {},
+        stop() {
+          stopped++;
+        },
+      }),
+    };
+  };
+  f.window.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(1) });
+  f.window.EntryIntro.prepareSound();
+  const playing = f.start();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(gain.gain.value, 0.25);
+  listener({ effects: { enabled: true, volume: 0.1 } });
+  assert.equal(gain.gain.value, 0.1, 'a running opening must follow nonzero volume changes');
+  listener({ effects: { enabled: false, volume: 0.1 } });
+  assert.equal(stopped, 1);
+  f.finish();
+  await playing;
+  f.events.get('pagehide')();
+  assert.equal(unsubscribed, 1);
 });

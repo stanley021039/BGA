@@ -2,7 +2,20 @@
 (() => {
   'use strict';
   let playing;
+  let entryAudio;
   window.EntryIntro = {
+    prepareSound() {
+      if (window.EntryPreferences?.get().enabled === false) return;
+      const settings = window.AudioSettings?.get?.().effects;
+      if (settings?.enabled === false || settings?.volume === 0) return;
+      try {
+        const Context = window.AudioContext || window.webkitAudioContext;
+        if (!Context) return;
+        if (!entryAudio || entryAudio.state === 'closed') entryAudio = new Context();
+        // Resume synchronously in the submit gesture, before authentication awaits.
+        Promise.resolve(entryAudio.resume()).catch(() => {});
+      } catch {}
+    },
     playFrom(image, destination, opening) {
       if (window.EntryPreferences?.get().enabled === false) return Promise.resolve();
       if (playing) return playing;
@@ -46,13 +59,60 @@
         timer,
         recovery,
         finished = false;
+      let source,
+        gain,
+        audioRequest,
+        unsubscribe,
+        soundRevision = 0;
       function stopSound() {
+        soundRevision++;
+        audioRequest?.abort();
+        audioRequest = null;
+        try {
+          source?.stop();
+        } catch {}
+        source = null;
+        gain = null;
         if (!sound) return;
         if (!window.AudioSettings?.stopEffect?.(sound)) sound.pause?.();
         sound = null;
       }
       function playSound() {
         stopSound();
+        const settings = window.AudioSettings?.get?.().effects;
+        if (settings?.enabled === false || settings?.volume === 0) return;
+        if (entryAudio?.state === 'running') {
+          const revision = soundRevision;
+          const url =
+            opening?.id === 'home-family'
+              ? '/assets/game-sounds/entry-home-family.mp3'
+              : opening?.id === 'soul-world'
+                ? '/assets/game-sounds/entrance-soul-world.mp3'
+                : '/assets/game-sounds/entry-intro-user.mp3';
+          audioRequest = new AbortController();
+          window
+            .fetch(url, { signal: audioRequest.signal })
+            .then((response) => {
+              if (!response.ok) throw Error('audio unavailable');
+              return response.arrayBuffer();
+            })
+            .then((bytes) => entryAudio.decodeAudioData(bytes))
+            .then((buffer) => {
+              if (finished || revision !== soundRevision) return;
+              const current = window.AudioSettings?.get?.().effects;
+              if (current?.enabled === false || current?.volume === 0) return;
+              source = entryAudio.createBufferSource();
+              source.buffer = buffer;
+              gain = entryAudio.createGain();
+              gain.gain.value = current?.volume ?? 0.25;
+              source.connect(gain).connect(entryAudio.destination);
+              source.start();
+            })
+            .catch(() => {
+              if (!finished && revision === soundRevision) soundButton.hidden = false;
+            });
+          return;
+        }
         sound = window.AudioSettings?.playEffect?.(opening?.sound || 'entry-intro', {
           onError: () => {
             if (!finished) soundButton.hidden = false;
@@ -60,6 +120,7 @@
         });
       }
       const cleanup = () => {
+        unsubscribe?.();
         clearTimeout(timer);
         clearTimeout(recovery);
         animation?.cancel();
@@ -113,6 +174,10 @@
         resolve = done;
       });
       window.addEventListener('pagehide', cleanup);
+      unsubscribe = window.AudioSettings?.subscribe?.((settings) => {
+        if (settings.effects.enabled === false || settings.effects.volume === 0) stopSound();
+        else if (gain) gain.gain.value = settings.effects.volume;
+      });
       document.addEventListener('keydown', escape);
       skip.addEventListener('click', finish);
       soundButton.addEventListener('click', () => {

@@ -67,6 +67,7 @@ for (const [name, form] of Object.entries(forms))
       if (name !== 'login' && values.password !== values.confirmPassword)
         throw Error('兩次密碼輸入不一致');
       if (name === 'reset') values.token = resetToken;
+      if (name !== 'reset') window.EntryIntro?.prepareSound?.();
       await send(name, values);
       if (name === 'reset') {
         history.replaceState(null, '', '/login');

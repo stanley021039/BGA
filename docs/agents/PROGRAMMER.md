@@ -950,3 +950,27 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 2026-10-23 #215第三輪：依使用者追加修訂聊天表情紀錄、彈幕垂直安全帶、超寬互動背景、32×64px收合框與22px視覺把手（44px點擊槽），以平均側欄寬置中遊戲。語意回歸9項及真實HTTP通過；瀏覽器控制逾時，新增桌機／手機外觀未驗收。未提交／未正式發布，詳 [最新規格與界線](../specs/ROOM-BACKGROUND-215.md)。
 
 2026-10-23 #215第四輪：提示由focus-within改為受控4秒及互動清除；22px箭頭貼視窗左右、依面板高度置中，收合空白框改回原面板全高。32×64px短框決策已被此輪取代，3項真實Vue回歸通過；詳ROOM-BACKGROUND-215第四輪。
+
+## 2026-10-23：大廳對話裁切修正（本機待驗收）
+
+基線 abbdbd8，僅修改 LobbyBarrage 輸入列及本批 CHANGELOG。送出鈕使用共用網格列保持在輸入框右側，44px 操作區；焦點向內顯示的 selector 高於全站主題，避免主題的外擴 outline 被 dialog 捲動槽裁切。原截圖的按鈕掉列未在目前建置直接重現，不能宣稱已確認該部分的唯一成因；焦點框裁切已在實際 Edge 截圖確認並修正。
+
+Windows Edge 自動回歸涵蓋 1920×1080、1280×720、390×844、320×568、640×360 深淺色及 200% 文字、hover、pending 幾何、失敗保草稿、Enter 成功送出／關閉與 Escape 返焦，14 組檢查及零 pageerror。Vue 型別／正式建置、前端57項通過。test:affected --base HEAD 因 Vue 未映射回退289檔全套：2651通過、1檔因本機缺 tar 未載入、1條件略過；於 ignored 測試依賴補齊固定 tar 7.5.22 後，該檔獨立重跑1項通過。前端缺少的 linkedom 0.18.13 亦只放 ignored 測試目錄，未變更版本控管的依賴。
+
+證據：ignored work/playtest/chat-clipping-{regression.cjs,results.json,final.png,affected.log,archive-retest.log,frontend-tests.log,build.log}。隔離試玩 http://127.0.0.1:3030/，外部 Edge 已登入並開啟對話供驗收。未 commit／push／新PR／部署，依 AGENTS 等待使用者驗收。
+
+2026-10-23 網站開場音效接登入手勢：Vue及legacy登入在認證await前呼叫EntryIntro.prepareSound，於原生submit同步resume AudioContext；成功後三款開場以同一context解碼播放，保留關閉／音量／略過與pagehide清理，取消下載及revision阻止晚到播放。無WebAudio或resume失敗沿用HTML音訊及手動恢復入口，不保證直接首次開網址能自動發聲。59項focused、Vue型別與建置通過；Edge全新context + document-user-activation-required + 800ms登入延遲，三款真MP3皆source.start且context running、零額外播放點擊與pageerror。聲卡聽感及Safari實機未驗。證據ignored work/playtest/entry-gesture-{tests.log,browser.cjs,browser-results.json,build.log,affected.log}。本機3031獨立資料，未提交／推送／發布；正式站尚未更新。
+
+2026-10-23 上述入場音效最終驗證補記：test:affected --base HEAD回退全套，2654通過、0失敗、1環境條件略過；前端57通過。外部Edge以真登入操作完成開場後進入3031大廳。所有變更維持未提交。
+
+2026-10-23 PR準備更新：先前213已納入main，改基底c73c093、新分支codex/chat-opening-audio-fix、版號2.40.2。保留main共用按鈕及壓縮音檔；補200%字體時輸入框stretch和按鈕rem尺寸。最新後端2685通過／1條件略過、前端71通過、型別／建置／Edge14項布局及3款登入音訊均通過。QA pending改用aria-busy配合main新元件。局部樣式續修後重跑瀏覽器；後端完整結果不冒稱對後續純樣式另重跑。兩輪本機差異審查核對本次範圍、取消／靜音／登入時序及無憑證，無未解重大問題；Safari實機與首次直接進站自動有聲仍不保證。證據ignored work/playtest/chat-pr-*。尚未提交／推送／建立PR，等待本次具體發布確認。
+
+## 2026-10-23 PR #219 main 整合與複驗（2.42.1）
+
+依使用者「拉下來解衝突後合併」授權，在獨立 worktree 將 main 38a186ca444a7a9d21fac470d75a778b52559217 合入原 PR 96752b3。四個衝突檔僅為 CHANGELOG、package／lock 及本角色紀錄；保留 main 的 #214／#215 與本 PR 歷史，原 2.40.2 候選改為 2.42.1，不重建已存在版本。相對 main 只有原 PR 十個檔案，郎中與共用房間修改沿用 main，不覆寫。
+
+審查重現 Web Audio 路徑播放途中非零音量變更未生效，新增真實行為回歸先失敗後修正：保留 GainNode 並在 AudioSettings 訂閱時更新音量；略過、靜音及離頁仍取消下載／音源與訂閱。auth-entry 11項通過；Windows Node26.2.0 前端89項、正式 build（含型別）、UI ratchet（固定 base 38a186c）、效能 build 預算、release patch 及格式檢查通過。本機 test:affected 回退292檔全套，完整結果與最終同SHA CI另記原PR；不可沿用上一輪2685作為本輪總數。
+
+新 Edge 工作階段、嚴格 document-user-activation-required 政策、800ms認證延遲：三款真MP3各自同context running播放，不需恢復點擊，播放中音量0.1立即生效。1920×1080／390×844／320×844、深淺色及200%字體共12組對話操作（pending幾何、503保草稿、Escape關閉、Enter真HTTP送出）通過；加三款音訊共15組、零pageerror。驗收腳本首輪因連續發送觸發既有1500ms防刷而失敗，改為等待3200ms後通過，未改正式防刷規則。隔離帳號只兌換獎勵、不造已達成成就。證據ignored work/qa-pr219/{browser.cjs,results.json,chat-mobile-dark.png,transfer-retest.log}及根目錄各測試log；Safari、實機觸控與聲卡聽感未新增驗證。此筆取代上節未提交／尚待發布的狀態描述；遠端合併／CI以PR最終紀錄為準，未部署或操作正式資料。
+
+本輪本機全套結果補記：292檔、2691項，2689通過／2失敗／0略過；兩項均為未修改的data-transfer schema4／5 HTTP驗證，Node26 fetch回報bad port（系統隨機埠被Fetch禁用），非資料斷言失敗。同環境單獨重跑兩項全通過。最終新增音量回歸另跑auth-entry 11／11通過；不得把原全套寫成零失敗或宣稱包含新增測試。Linux Node22最終同SHA完整CI仍是合併必要門檻。
