@@ -304,7 +304,7 @@ onBeforeUnmount(() => {
               label="個人遊戲設定"
               @click="openPreferences"
             />
-            <a href="/settings">帳號與形象設定</a><a href="/collection">收藏庫</a
+            <a href="/settings">帳號與個人化設定</a><a href="/collection">收藏庫</a
             ><a href="/achievements">成就收藏冊</a>
             <a v-if="session.user.role === 'admin'" id="site-admin" href="/admin">管理</a>
             <UiButton
