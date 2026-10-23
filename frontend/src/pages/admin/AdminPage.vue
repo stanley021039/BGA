@@ -86,6 +86,7 @@ onBeforeUnmount(() => {
       @click="admin.refreshAccess()"
   /></div>
   <StatusSlot
+    persistent
     v-if="admin.forbidden"
     message="只有管理者可以操作此頁。請使用具有管理權限的帳號。"
     error
@@ -207,6 +208,7 @@ onBeforeUnmount(() => {
         :disabled="admin.pending || admin.forbidden"
         @click="admin.loadSubmissions()"
       /><StatusSlot
+        :persistent="admin.submissionsLoading || !!admin.submissionsError"
         :message="admin.submissionsError || (admin.submissionsLoading ? '正在讀取提交清單…' : '')"
         :error="!!admin.submissionsError"
       /><StatusSlot id="admin-sync-status" :message="admin.syncMessage" :error="admin.syncFailed" />
@@ -254,6 +256,7 @@ onBeforeUnmount(() => {
         :disabled="admin.pending || admin.forbidden"
         @click="admin.loadUsers()" /></header
     ><StatusSlot
+      :persistent="admin.usersLoading || !!admin.usersError"
       :message="admin.usersError || (admin.usersLoading ? '正在讀取會員名單…' : '')"
       :error="!!admin.usersError"
     /><StatusSlot

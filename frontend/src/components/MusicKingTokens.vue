@@ -26,46 +26,47 @@ const count = computed(() =>
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: var(--stitch-space-4);
   max-width: 100%;
   vertical-align: middle;
 }
 .mq-king-token-label {
   display: inline-flex;
   align-items: baseline;
-  gap: 8px;
-  color: var(--play-ink, #292639);
-  font-size: 14px;
-  line-height: 1.5;
+  gap: var(--stitch-gap-label);
+  color: var(--stitch-ink);
+  font-size: var(--stitch-text-hint);
+  line-height: var(--stitch-line-height-body);
 }
 .mq-king-token-label strong {
-  font-size: 20px;
+  font-size: var(--stitch-text-section);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 .mq-king-token-label small {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--stitch-text-hint);
+  font-weight: var(--stitch-weight-body);
 }
 .mq-king-token-slots {
   display: flex;
-  gap: 4px;
+  gap: var(--stitch-space-4);
 }
 .mq-king-token-slot {
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  width: 24px;
-  height: 24px;
-  border: 1px dashed var(--play-line, #8e8594);
-  border-radius: 50%;
+  width: var(--stitch-space-24);
+  height: var(--stitch-space-24);
+  border: var(--stitch-border);
+  border-style: dashed;
+  border-radius: var(--stitch-radius-pill);
 }
 .mq-king-token-slot.is-owned {
   border: none;
 }
 .mq-king-token-slot img {
   display: block;
-  width: 24px;
-  height: 24px;
+  width: var(--stitch-space-24);
+  height: var(--stitch-space-24);
 }
 </style>

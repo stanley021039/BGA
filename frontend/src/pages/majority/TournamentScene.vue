@@ -120,7 +120,6 @@ onBeforeUnmount(() => {
               }"
             /><UiButton
               v-if="s.phase === 'answering'"
-              stitch
               :variant="game.choice === i || s.ownAnswer === i ? 'primary' : 'secondary'"
               :label="
                 s.ownAnswer === i ? '已選擇此項' : game.choice === i ? '已挑選，請鎖定' : '選這一項'
@@ -178,13 +177,13 @@ onBeforeUnmount(() => {
     </div>
     <div class="vue-majority-feedback"
       ><StatusSlot
+        :persistent="game.pending || game.uncertain || (game.expired && s.phase === 'answering')"
         :message="
           game.message ||
           (game.expired && s.phase === 'answering' ? '時間已到，等待伺服器確認投票進度。' : '')
         "
         :error="game.failed" /><UiButton
         v-if="game.uncertain"
-        stitch
         icon="refresh"
         label="更新狀態後再操作"
         :disabled="room.busy || !room.connected"
@@ -197,7 +196,6 @@ onBeforeUnmount(() => {
         ><template v-else-if="s.phase === 'answering'"
           ><UiButton
             v-if="s.ownAnswer === null"
-            stitch
             variant="primary"
             icon="lock"
             label="鎖定答案"
@@ -205,19 +203,16 @@ onBeforeUnmount(() => {
             :disabled="blocked || !game.participant || game.choice === null || game.expired"
             @click="game.answer()" /><UiButton
             v-else
-            stitch
             icon="undo"
             label="收回答案"
             :disabled="blocked || game.expired"
             @click="game.act('withdraw')" /><UiButton
             v-if="room.host"
-            stitch
             label="提前結束作答"
             :disabled="blocked"
             @click="closeAnswering" /></template
         ><UiButton
           v-if="s.phase === 'reveal' && (room.host || s.presenterId === s.me)"
-          stitch
           variant="primary"
           icon="next"
           :label="s.round >= s.roundLimit ? '查看冠軍' : '下一組'"
@@ -229,6 +224,6 @@ onBeforeUnmount(() => {
           : '每場選到唯一多數 +1 分；只有 1 人選另一邊時該人 -1 分；平票不加分。'
       }}</p></footer
     >
-    <ConfirmDialog ref="confirm" stitch />
+    <ConfirmDialog ref="confirm" />
   </section>
 </template>

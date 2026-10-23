@@ -193,7 +193,6 @@ onBeforeUnmount(() => {
       }}</p
       ><UiButton
         v-if="version.error.value"
-        stitch
         variant="ghost"
         icon="refresh"
         label="重試載入版本"

@@ -27,6 +27,7 @@ const game = useQuacksStore();
       </label>
     </fieldset>
     <StatusSlot
+      :persistent="game.settingsPending || !!game.settingsError"
       :message="game.settingsPending ? '正在儲存設定…' : game.settingsError"
       :error="!!game.settingsError"
     />

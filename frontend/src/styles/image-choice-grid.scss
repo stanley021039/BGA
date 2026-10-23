@@ -1,23 +1,17 @@
-@use 'tokens' as t;
-
-// Image choices contain a picture and readable text, rather than an icon button.
+// Images and names occupy stable slots inside the shared C choice card.
 .vue-page .vue-image-choice-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  gap: t.space(2);
+  grid-auto-rows: max-content;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(var(--stitch-choice-min-inline, 8.5rem), 100%), 1fr)
+  );
+  gap: var(--stitch-gap-controls);
   min-inline-size: 0;
+  padding: var(--stitch-space-8);
   > .vue-image-choice {
-    --ui-button-radius: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: t.space(1);
     min-inline-size: 0;
     max-inline-size: 100%;
-    padding: t.space(2);
-    border-radius: t.space(3);
-    white-space: normal;
     text-align: center;
     > img {
       flex: none;
@@ -26,17 +20,17 @@
       margin: 0;
       object-fit: contain;
     }
-    > span,
-    > small {
-      inline-size: 100%;
-      min-inline-size: 0;
-      margin: 0;
-      font-size: 0.875rem;
-      line-height: 1.5;
-      overflow-wrap: anywhere;
-    }
-    > span {
+    > .ui-choice-label {
       min-block-size: 3em;
+    }
+    > small {
+      min-block-size: 1.5em;
+      inline-size: 100%;
+      margin: 0;
+      color: var(--stitch-muted);
+      font-size: var(--stitch-text-hint);
+      line-height: var(--stitch-line-height-body);
+      overflow-wrap: anywhere;
     }
   }
   &.expression-gallery > .vue-image-choice > img {

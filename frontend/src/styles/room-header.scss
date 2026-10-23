@@ -94,6 +94,10 @@
     left: 0;
     width: min(320px, calc(100vw - 32px));
     z-index: 160;
+    &:has(.ui-notice-slot):not(:has(.ui-notice-slot[data-visible])) {
+      visibility: hidden;
+      pointer-events: none;
+    }
     .frontend-status {
       min-height: 24px;
       margin: 0;
@@ -103,9 +107,6 @@
       border: 1px solid var(--stitch-line);
       border-radius: 8px;
       font-size: 14px;
-      &:empty {
-        display: none;
-      }
     }
   }
   &.is-local {

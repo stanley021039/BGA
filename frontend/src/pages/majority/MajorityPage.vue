@@ -160,13 +160,13 @@ function status(player: RoomPlayer) {
               ><p>投稿不足時以內建題補足；0% 只抽內建。手動與預備題不受比例限制。</p></template
             ></fieldset
           ><StatusSlot
+            :persistent="game.settingsPending || !!game.settingsError"
             :message="
               game.settingsPending
                 ? '正在儲存設定…'
                 : game.settingsError || (game.settingsSaved ? '' : '修改後自動儲存。')
             "
             :error="!!game.settingsError" /><UiButton
-            stitch
             v-if="game.settingsError && game.editable"
             icon="refresh"
             label="重試儲存設定"

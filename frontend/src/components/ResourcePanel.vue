@@ -35,7 +35,6 @@ defineEmits<{ retry: [] }>();
     <footer class="resource-panel-actions">
       <UiButton
         v-if="error"
-        stitch
         variant="secondary"
         icon="refresh"
         label="重新載入"

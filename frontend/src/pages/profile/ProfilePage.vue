@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { sizedImage } from '../../services/image-size';
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, shallowRef, watch } from 'vue';
 import { useProfileStore } from '../../stores/profile';
 import { useMutation } from '../../composables/mutation';
 import { useExpressionSound } from '../../composables/expression-sound';
@@ -15,9 +15,17 @@ import ImageChoiceGrid from '../../components/ImageChoiceGrid.vue';
 import ImageSourceField from '../../components/ImageSourceField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import ExpressionEditor from '../../components/ExpressionEditor.vue';
-import FilePickField from '../../components/FilePickField.vue';
+import UiFilePick from '../../components/UiFilePick.vue';
+import UiField from '../../components/UiField.vue';
+import UiHeading from '../../components/UiHeading.vue';
+import UiPanel from '../../components/UiPanel.vue';
+import UiList from '../../components/UiList.vue';
+import UiListRow from '../../components/UiListRow.vue';
+import UiChoiceCard from '../../components/UiChoiceCard.vue';
+import UiNotice from '../../components/UiNotice.vue';
 
 const profile = useProfileStore();
+const noticeKeys = reactive({ save: 0, share: 0, create: 0, expression: 0, sound: 0, leave: 0 });
 const appearance = ref<Appearance | null>(null),
   savedKey = ref<string | null>(null);
 const characters = computed(() => profile.data?.characters || []);
@@ -83,14 +91,42 @@ const {
   input: soundInput,
   sound,
   editable: soundEditable,
-  choose: chooseSound,
+  choose: selectSoundFile,
   upload: uploadSound,
   remove: removeSound,
-  preview: previewSound,
+  preview: playSoundPreview,
 } = useExpressionSound(soundTarget, profile.load);
-// The sound composable clears the native input after an upload or removal.
+const actionKeys = ['save', 'share', 'create', 'expression', 'sound'] as const;
+watch(
+  [savePending, sharePending, createPending, expressionPending, soundPending],
+  (values, previous) => {
+    for (const [index, key] of actionKeys.entries()) {
+      if (previous[index] && !values[index]) noticeKeys[key]++;
+    }
+  },
+  { flush: 'sync' },
+);
+const soundField = ref<InstanceType<typeof UiFilePick> | null>(null);
+// Keep both the visible pick and native input in sync with upload/remove/target resets.
 function bindSoundField(field: unknown) {
-  soundInput.value = (field as InstanceType<typeof FilePickField> | null)?.input ?? null;
+  soundField.value = field as InstanceType<typeof UiFilePick> | null;
+  soundInput.value = soundField.value?.input ?? null;
+}
+watch(
+  soundFile,
+  (value) => {
+    if (!value) soundField.value?.clear();
+  },
+  { flush: 'sync' },
+);
+function chooseSound(value: File | null) {
+  noticeKeys.sound++;
+  selectSoundFile(value);
+}
+function previewSound() {
+  if (soundPending.value || !sound.value) return;
+  noticeKeys.sound++;
+  playSoundPreview();
 }
 const expressionLabel = (character: Character | undefined, expression: string) =>
   character?.labels[expression] || profile.data?.expressionLabels[expression] || expression;
@@ -179,11 +215,13 @@ function chooseCharacter(id: string) {
   appearance.value = { version: 5, characterId: id, expression: 'neutral' };
   saveMessage.value = '已選擇角色，按「保存角色」才會套用。';
   saveFailed.value = false;
+  noticeKeys.save++;
 }
 function chooseExpression(expression: string) {
   if (appearance.value) appearance.value = { ...appearance.value, expression };
   saveMessage.value = '已選擇表情，按「保存角色」才會套用。';
   saveFailed.value = false;
+  noticeKeys.save++;
 }
 async function save(): Promise<boolean> {
   return saveAction.run(async (request) => {
@@ -319,6 +357,13 @@ const dirty = computed(
 const leaveDialog = ref<InstanceType<typeof UiDialog> | null>(null),
   leavePending = ref(false),
   leaveMessage = ref('');
+watch(
+  leavePending,
+  (value, previous) => {
+    if (previous && !value) noticeKeys.leave++;
+  },
+  { flush: 'sync' },
+);
 let nextUrl: string | null = null,
   allowLeave = false,
   leaveGeneration = 0;
@@ -416,19 +461,19 @@ onBeforeUnmount(() => {
 <template>
   <div class="page-heading profile-heading">
     <div class="kicker">YOUR LOOK / YOUR SEAT</div>
-    <h1>我的角色</h1>
+    <UiHeading :level="1" kind="page">我的角色</UiHeading>
     <p>選用內建角色、好友分享的作品，或親手畫一張。</p>
   </div>
   <div class="profile-load-slot" role="status">
     <span v-if="profile.loading">正在載入角色圖庫…</span>
     <template v-else-if="profile.error">
       <span class="resource-error">{{ profile.error }}</span>
-      <UiButton stitch icon="refresh" label="重新載入角色圖庫" @click="profile.load()" />
+      <UiButton icon="refresh" label="重新載入角色圖庫" @click="profile.load()" />
     </template>
   </div>
   <div class="profile-layout">
-    <section class="profile-preview-card" aria-labelledby="profile-preview-title">
-      <h2 id="profile-preview-title">角色預覽</h2>
+    <UiPanel class="profile-preview-card" aria-labelledby="profile-preview-title">
+      <UiHeading id="profile-preview-title">角色預覽</UiHeading>
       <div class="profile-preview-image">
         <img
           v-if="selected"
@@ -448,23 +493,27 @@ onBeforeUnmount(() => {
       </div>
       <p class="profile-preview-name">{{ selected?.name || '選擇今晚的角色' }}</p>
       <section class="profile-expression-section" aria-labelledby="profile-expression-title">
-        <h3 id="profile-expression-title">表情</h3>
-        <div id="expressions" class="profile-expression-choices">
-          <UiButton
+        <UiHeading :level="3" id="profile-expression-title">表情</UiHeading>
+        <UiList
+          id="expressions"
+          class="profile-expression-choices"
+          aria-labelledby="profile-expression-title"
+        >
+          <UiListRow
             v-for="expression in expressions"
             :key="expression.id"
-            stitch
-            variant="secondary"
-            :label="expression.label"
-            :aria-pressed="appearance?.expression === expression.id"
-            @click="chooseExpression(expression.id)"
-          />
-        </div>
+            :active="appearance?.expression === expression.id"
+            ><UiButton
+              variant="ghost"
+              :label="expression.label"
+              :aria-pressed="appearance?.expression === expression.id"
+              @click="chooseExpression(expression.id)"
+          /></UiListRow>
+        </UiList>
       </section>
       <footer class="profile-preview-actions">
         <UiButton
           id="save"
-          stitch
           variant="primary"
           icon="save"
           label="保存角色"
@@ -479,7 +528,12 @@ onBeforeUnmount(() => {
           label="開啟我的繪畫圖庫"
           href="/studio"
         />
-        <StatusSlot id="message" :message="saveMessage" :error="saveFailed" />
+        <StatusSlot
+          id="message"
+          :message="saveMessage"
+          :error="saveFailed"
+          :notice-key="noticeKeys.save"
+        />
       </footer>
       <ExpressionEditor
         v-if="selected && appearance"
@@ -502,11 +556,11 @@ onBeforeUnmount(() => {
               :disabled="expressionPending || expressionLimitReached"
               @click="openExpression($event.currentTarget as HTMLElement)" /></div></template
         ><template v-if="soundEditable" #sound
-          ><section
+          ><UiPanel
             id="expression-sound"
             class="expression-sound"
             aria-labelledby="expression-sound-heading"
-            ><h3 id="expression-sound-heading">表情音效</h3
+            ><UiHeading :level="3" id="expression-sound-heading">表情音效</UiHeading
             ><div class="expression-sound-actions"
               ><span id="expression-sound-duration">{{
                 sound
@@ -514,14 +568,12 @@ onBeforeUnmount(() => {
                   : '尚未設定音效'
               }}</span
               ><UiButton
-                stitch
                 v-if="sound"
                 id="preview-expression-sound"
                 icon="sound"
                 label="試聽音效"
                 :disabled="soundPending"
                 @click="previewSound" /><UiButton
-                stitch
                 v-if="sound"
                 id="remove-expression-sound"
                 icon="remove"
@@ -533,7 +585,7 @@ onBeforeUnmount(() => {
               class="expression-sound-upload"
               :aria-busy="soundPending"
               @submit.prevent="uploadSound"
-              ><FilePickField
+              ><UiFilePick
                 :ref="bindSoundField"
                 input-id="expression-sound-file"
                 label="選擇音檔"
@@ -546,7 +598,6 @@ onBeforeUnmount(() => {
                 :disabled="soundPending"
                 @change="chooseSound"
               /><UiButton
-                stitch
                 id="save-expression-sound"
                 type="submit"
                 icon="upload"
@@ -556,15 +607,16 @@ onBeforeUnmount(() => {
             ><StatusSlot
               id="expression-sound-status"
               :message="soundMessage"
-              :error="soundFailed" /></section></template
+              :notice-key="noticeKeys.sound"
+              :error="soundFailed" /></UiPanel></template
       ></ExpressionEditor>
       <!-- Friends' characters: the author's sound can only be previewed. -->
-      <section
+      <UiPanel
         v-if="appearance?.expression !== 'neutral' && !soundEditable && sound"
         id="expression-sound"
         class="expression-sound"
         aria-labelledby="expression-sound-heading"
-        ><h3 id="expression-sound-heading">表情音效</h3
+        ><UiHeading :level="3" id="expression-sound-heading">表情音效</UiHeading
         ><p id="expression-sound-description"
           >「{{
             expressionLabel(selected, appearance?.expression || '')
@@ -573,18 +625,21 @@ onBeforeUnmount(() => {
           ><span id="expression-sound-duration"
             >已設定 {{ (sound.durationMs / 1000).toFixed(2).replace(/0$/, '') }} 秒音效</span
           ><UiButton
-            stitch
             id="preview-expression-sound"
             icon="sound"
             label="試聽音效"
             :disabled="soundPending"
             @click="previewSound" /></div
-        ><StatusSlot id="expression-sound-status" :message="soundMessage" :error="soundFailed"
-      /></section>
-    </section>
-    <section class="profile-gallery-card" aria-labelledby="profile-gallery-title">
+        ><StatusSlot
+          id="expression-sound-status"
+          :message="soundMessage"
+          :error="soundFailed"
+          :notice-key="noticeKeys.sound"
+      /></UiPanel>
+    </UiPanel>
+    <UiPanel class="profile-gallery-card" aria-labelledby="profile-gallery-title">
       <header class="profile-gallery-heading">
-        <h2 id="profile-gallery-title">角色圖庫</h2>
+        <UiHeading id="profile-gallery-title">角色圖庫</UiHeading>
         <p>好友分享的角色可以直接選用；只有作者能編輯自己的作品。</p>
       </header>
       <section
@@ -593,51 +648,52 @@ onBeforeUnmount(() => {
         class="preset-section"
         :aria-labelledby="group.id + '-title'"
       >
-        <h3 :id="group.id + '-title'">{{ group.title }}</h3>
+        <UiHeading :level="3" :id="group.id + '-title'">{{ group.title }}</UiHeading>
         <ImageChoiceGrid
           :id="group.id"
           :items="group.items"
           :model-value="selected?.id || ''"
           @update:model-value="chooseCharacter"
           ><template v-if="group.id === 'my-characters'" #append
-            ><button
+            ><UiChoiceCard
               id="open-create-character"
-              type="button"
               class="vue-image-choice preset-card profile-add-card"
-              :aria-label="
-                characterLimitReached ? `角色已達上限（${MAX_CHARACTERS} 個）` : '上傳新角色'
-              "
+              action
+              :label="characterLimitReached ? `角色已達上限（${MAX_CHARACTERS} 個）` : '上傳新角色'"
               :disabled="createPending || characterLimitReached"
               @click="openCreate($event.currentTarget as HTMLElement)"
               ><span class="profile-add-icon" aria-hidden="true">＋</span
-              ><span>{{ characterLimitReached ? '已達上限' : '上傳角色' }}</span
-              ><small>{{ ownedCount }} / {{ MAX_CHARACTERS }}</small></button
+              ><small>{{ ownedCount }} / {{ MAX_CHARACTERS }}</small></UiChoiceCard
             ></template
           ></ImageChoiceGrid
         >
-        <p v-if="!group.items.length && group.empty" class="gallery-empty">{{ group.empty }}</p>
+        <UiNotice
+          v-if="!group.items.length && group.empty"
+          class="gallery-empty"
+          :message="group.empty"
+          persistent
+        />
       </section>
-      <div v-if="selected?.owned" id="sharing-controls" class="sharing-controls"
+      <UiPanel
+        v-if="selected?.owned"
+        as="div"
+        density="compact"
+        id="sharing-controls"
+        class="sharing-controls"
         ><span>{{
           selected.shared ? '好友可在圖庫選用這位角色與表情。' : '目前只有你可以選用這位角色。'
         }}</span
         ><UiButton
-          stitch
           id="toggle-sharing"
           :icon="selected.shared ? 'lock' : 'users'"
           :label="selected.shared ? '停止分享' : '分享給會員'"
           :pending="sharePending"
-          @click="toggleSharing" /></div
-      ><StatusSlot
-        v-if="selected?.owned || shareMessage"
-        :message="shareMessage"
-        :error="shareFailed"
-      />
-    </section>
+          @click="toggleSharing" /></UiPanel
+      ><StatusSlot :message="shareMessage" :error="shareFailed" :notice-key="noticeKeys.share" />
+    </UiPanel>
   </div>
   <UiDialog
     ref="createDialog"
-    stitch
     class="profile-upload-dialog"
     title="上傳角色"
     :dismissible="!createPending"
@@ -651,15 +707,15 @@ onBeforeUnmount(() => {
       class="character-upload"
       :aria-busy="createPending"
       @submit.prevent="submitCreate"
-      ><label
-        >角色名稱<input
-          id="character-name"
-          v-model="createName"
-          maxlength="32"
-          required
-          placeholder="我的角色"
-          :disabled="createPending" /></label
-      ><ImageSourceField
+      ><UiField
+        label="角色名稱"
+        id="character-name"
+        v-model="createName"
+        maxlength="32"
+        required
+        placeholder="我的角色"
+        :disabled="createPending" />
+      <ImageSourceField
         ref="createSource"
         v-model:file="createFile"
         v-model:artwork-id="createArtwork"
@@ -667,18 +723,17 @@ onBeforeUnmount(() => {
         label="主角色圖片"
         :artworks="ownArtworks"
         :disabled="createPending" /><UiButton
-        stitch
         type="submit"
         variant="primary"
         label="建立主角色"
         icon="add"
         :pending="createPending" /><StatusSlot
         :message="createMessage"
+        :notice-key="noticeKeys.create"
         :error="createFailed" /></form
   ></UiDialog>
   <UiDialog
     ref="expressionDialog"
-    stitch
     class="profile-upload-dialog"
     title="新增表情"
     :dismissible="!expressionPending"
@@ -695,15 +750,15 @@ onBeforeUnmount(() => {
       class="character-upload"
       :aria-busy="expressionPending"
       @submit.prevent="submitExpression"
-      ><label
-        >表情名稱（最長 20 字）<input
-          id="expression-name"
-          v-model="expressionName"
-          maxlength="20"
-          required
-          placeholder="例如：開心大笑"
-          :disabled="expressionPending" /></label
-      ><ImageSourceField
+      ><UiField
+        label="表情名稱（最長 20 字）"
+        id="expression-name"
+        v-model="expressionName"
+        maxlength="20"
+        required
+        placeholder="例如：開心大笑"
+        :disabled="expressionPending" />
+      <ImageSourceField
         ref="expressionSource"
         v-model:file="expressionFile"
         v-model:artwork-id="expressionArtwork"
@@ -711,13 +766,13 @@ onBeforeUnmount(() => {
         label="表情圖片"
         :artworks="ownArtworks"
         :disabled="expressionPending" /><UiButton
-        stitch
         type="submit"
         variant="primary"
         label="新增表情"
         icon="add"
         :pending="expressionPending" /><StatusSlot
         :message="expressionMessage"
+        :notice-key="noticeKeys.expression"
         :error="expressionFailed" /></form
   ></UiDialog>
   <UiDialog
@@ -726,19 +781,19 @@ onBeforeUnmount(() => {
     compact
     @closing="cancelLeave"
     @closed="cancelLeave"
-    ><p>要先儲存變更再離開嗎？</p><StatusSlot :message="leaveMessage" /><div
-      class="vue-confirm-actions"
+    ><p>要先儲存變更再離開嗎？</p
+    ><StatusSlot
+      :message="leaveMessage"
+      :notice-key="noticeKeys.leave"
+      :persistent="leavePending" /><div class="vue-confirm-actions"
       ><UiButton
-        stitch
         label="儲存後離開"
         icon="save"
         :pending="leavePending"
         @click="saveAndLeave" /><UiButton
-        stitch
         label="不儲存離開"
         :disabled="leavePending"
         @click="leave" /><UiButton
-        stitch
         label="繼續編輯"
         :disabled="leavePending"
         @click="leaveDialog?.close()" /></div

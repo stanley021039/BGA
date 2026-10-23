@@ -25,7 +25,6 @@ async function vote(event: MouseEvent) {
 <template>
   <section class="vue-result-vote vue-stitch-result-vote" aria-label="題目停用投票"
     ><UiButton
-      stitch
       variant="ghost"
       icon="ban"
       :caption="presentation.label"

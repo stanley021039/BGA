@@ -2,7 +2,6 @@
 import { onBeforeUnmount, ref } from 'vue';
 import UiDialog from './UiDialog.vue';
 import UiButton from './UiButton.vue';
-defineProps<{ stitch?: boolean }>();
 const dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   message = ref(''),
   items = ref<string[]>([]),
@@ -29,13 +28,12 @@ onBeforeUnmount(() => finish(false));
 defineExpose({ ask, cancel: () => finish(false) });
 </script>
 <template>
-  <UiDialog ref="dialog" :stitch="stitch" compact title="確認操作" @closed="finish(false)"
+  <UiDialog ref="dialog" compact title="確認操作" @closed="finish(false)"
     ><p class="vue-confirm-message">{{ message }}</p
     ><ul v-if="items.length" class="vue-confirm-list"
       ><li v-for="item in items" :key="item">{{ item }}</li></ul
     ><div class="vue-confirm-actions"
-      ><UiButton :stitch="stitch" label="取消" @click="finish(false)" /><UiButton
-        :stitch="stitch"
+      ><UiButton label="取消" @click="finish(false)" /><UiButton
         variant="primary"
         :label="label"
         @click="finish(true)" /></div

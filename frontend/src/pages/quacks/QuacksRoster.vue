@@ -84,7 +84,6 @@ function view(id: string) {
         >
         <template #action
           ><UiButton
-            stitch
             variant="ghost"
             icon="next"
             icon-only

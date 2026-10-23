@@ -282,7 +282,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
               {{ telephone.acceptedCount }} 字；不能換行</span
             >
             <UiButton
-              stitch
               variant="primary"
               class="vue-telephone-guess-submit"
               icon="check"
@@ -345,6 +344,14 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     </div>
     <div class="vue-telephone-status"
       ><StatusSlot
+        :persistent="
+          actions.pending ||
+          actions.canRetry ||
+          telephone.saving ||
+          telephone.finishing ||
+          telephone.dirty ||
+          !!telephone.storageNotice
+        "
         :message="displayedNotice"
         :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
     /></div>
@@ -354,7 +361,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     >
       <template v-if="drawing && playing && !state.task?.submitted">
         <UiButton
-          stitch
           variant="primary"
           class="vue-telephone-submit"
           icon="check"
@@ -377,7 +383,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         }}</span>
         <UiButton
           v-if="state.review.index < state.review.total - 1 && room.host"
-          stitch
           variant="primary"
           :icon="state.review.index < 0 ? 'play' : 'next'"
           :label="state.review.index < 0 ? '開始播放故事' : '播放下一頁'"
@@ -395,5 +400,5 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
       }}</span>
     </footer>
   </section>
-  <ConfirmDialog ref="confirm" stitch />
+  <ConfirmDialog ref="confirm" />
 </template>

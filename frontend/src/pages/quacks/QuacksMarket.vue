@@ -92,7 +92,6 @@ function choose(book: QuacksBook, value: number) {
             class="ui-sr-only"
             >{{ book.name }}</h3
           ><UiButton
-            stitch
             icon="book"
             icon-only
             :label="'查閱' + book.name + '藥材書'"
@@ -143,7 +142,7 @@ function choose(book: QuacksBook, value: number) {
                 " /></span></button></div></article></div
     ><p v-else
       >第九輪不再購買藥材；完成結算時，可用普通預算每 5 金幣轉 1 分。獨立預算依規則另行計分。</p
-    ><UiDialog ref="bookDialog" stitch title="本局藥材書" class="vue-quacks-market-book-dialog"
+    ><UiDialog ref="bookDialog" title="本局藥材書" class="vue-quacks-market-book-dialog"
       ><QuacksBooks /></UiDialog
   ></section>
 </template>

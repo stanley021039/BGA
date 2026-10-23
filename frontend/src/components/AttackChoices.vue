@@ -6,10 +6,28 @@ import { attackEffects, useAttackLoadoutStore, type AttackSlot } from '../stores
 import AttackArtwork from './AttackArtwork.vue';
 import StatusSlot from './StatusSlot.vue';
 import UiButton from './UiButton.vue';
+import UiChoiceCard from './UiChoiceCard.vue';
+import UiField from './UiField.vue';
 const store = useAttackLoadoutStore(),
   preview = ref('barrage'),
-  revision = ref(0);
-onMounted(() => void store.load());
+  revision = ref(0),
+  noticeKey = ref(0),
+  loadPending = ref(false),
+  selection = ref({ ...store.loadout });
+async function loadLoadout() {
+  noticeKey.value++;
+  loadPending.value = true;
+  try {
+    await store.load();
+  } finally {
+    loadPending.value = false;
+  }
+}
+onMounted(() => void loadLoadout());
+watch(
+  () => store.loadout,
+  (loadout) => (selection.value = { ...loadout }),
+);
 const owned = ref<string[]>(['barrage', 'beam']),
   conditions = ref<Record<string, string>>({}),
   ownershipError = ref(''),
@@ -20,6 +38,7 @@ async function loadOwnership() {
   owned.value = ['barrage', 'beam'];
   conditions.value = {};
   ownershipError.value = '';
+  noticeKey.value++;
   if (!session.user?.id) return;
   const request = (ownershipRequest = new AbortController());
   try {
@@ -32,6 +51,8 @@ async function loadOwnership() {
     conditions.value = Object.fromEntries(data.achievements.map((a) => [a.id, a.description]));
   } catch {
     if (!request.signal.aborted) ownershipError.value = '無法讀取解鎖狀態，請重新開啟選單';
+  } finally {
+    if (ownershipRequest === request && !request.signal.aborted) noticeKey.value++;
   }
 }
 watch(() => session.user?.id, loadOwnership, { immediate: true });
@@ -42,10 +63,15 @@ onBeforeUnmount(() => {
 });
 const allowed = (id: string) => owned.value.includes(id);
 
-async function change(slot: AttackSlot, event: Event) {
-  const select = event.target as HTMLSelectElement;
-  await store.choose(slot, select.value);
-  select.value = store.loadout[slot];
+async function change(slot: AttackSlot, value: string | number | null | undefined) {
+  selection.value[slot] = String(value ?? '');
+  noticeKey.value++;
+  try {
+    await store.choose(slot, selection.value[slot]);
+  } finally {
+    selection.value = { ...store.loadout };
+    noticeKey.value++;
+  }
 }
 function play(id: string) {
   preview.value = id;
@@ -56,33 +82,40 @@ function play(id: string) {
   <div class="attack-choices"
     ><p>在大廳按 Q、E 向最近玩家施放。兩鍵各冷卻 2 秒；所有效果與數字僅供視覺互動。</p
     ><div class="attack-loadout"
-      ><label v-for="slot in ['q', 'e'] as const" :key="slot"
-        ><kbd>{{ slot.toUpperCase() }}</kbd> 攻擊特效<select
-          :aria-label="slot.toUpperCase() + ' 鍵攻擊特效'"
-          :value="store.loadout[slot]"
-          :disabled="!store.ready || store.pending"
-          @change="change(slot, $event)"
-          ><option
-            v-for="effect in attackEffects"
-            :key="effect.id"
-            :value="effect.id"
-            :disabled="!allowed(effect.id)"
-            >{{ effect.label + (allowed(effect.id) ? '' : '（未解鎖）') }}</option
-          ></select
-        ></label
+      ><UiField
+        v-for="slot in ['q', 'e'] as const"
+        :key="slot"
+        control="select"
+        :label="slot.toUpperCase() + ' 鍵攻擊特效'"
+        :model-value="selection[slot]"
+        :disabled="!store.ready || store.pending"
+        @update:model-value="change(slot, $event)"
+        ><option
+          v-for="effect in attackEffects"
+          :key="effect.id"
+          :value="effect.id"
+          :disabled="!allowed(effect.id)"
+          >{{ effect.label + (allowed(effect.id) ? '' : '（未解鎖）') }}</option
+        ></UiField
       ></div
-    ><StatusSlot
-      :message="
-        ownershipError ||
-        store.message ||
-        (!store.ready ? '正在讀取攻擊設定…' : store.pending ? '正在儲存…' : '')
-      "
-      :error="!!store.message || !!ownershipError"
-    /><UiButton
-      v-if="!store.ready && store.message"
-      label="重新讀取攻擊設定"
-      @click="store.load()"
-    /><div class="attack-preview" aria-label="攻擊特效預覽"
+    ><div class="attack-feedback"
+      ><StatusSlot
+        :message="
+          ownershipError ||
+          store.message ||
+          (!store.ready ? '正在讀取攻擊設定…' : store.pending ? '正在儲存…' : '')
+        "
+        :notice-key="noticeKey"
+        :persistent="loadPending || store.pending || (!store.ready && !!store.message)"
+        :error="!!store.message || !!ownershipError" /><div class="attack-retry-slot"
+        ><UiButton
+          v-if="!store.ready && store.message"
+          icon="refresh"
+          icon-only
+          label="重新讀取攻擊設定"
+          :pending="loadPending"
+          @click="loadLoadout" /></div></div
+    ><div class="attack-preview" aria-label="攻擊特效預覽"
       ><AttackArtwork
         :effect="preview"
         :play-key="revision"
@@ -91,20 +124,32 @@ function play(id: string) {
       /><span class="attack-preview-label">{{
         attackEffects.find((e) => e.id === preview)?.label
       }}</span></div
-    ><div class="attack-effect-grid"
-      ><button
+    ><div class="attack-effect-grid" role="group" aria-label="攻擊特效預覽選擇"
+      ><UiChoiceCard
         v-for="effect in attackEffects"
         :key="effect.id"
-        type="button"
-        :aria-label="effect.label + '預覽'"
-        :aria-pressed="preview === effect.id"
+        :label="effect.label + '預覽' + (allowed(effect.id) ? '' : '（未解鎖）')"
+        :selected="preview === effect.id"
         @click="play(effect.id)"
-        ><span class="attack-color" :style="{ background: effect.color }"></span
-        ><span>{{ effect.label }}</span
-        ><small>{{ allowed(effect.id) ? '已解鎖・預覽' : '未解鎖・預覽' }}</small
-        ><small v-if="effect.achievementId && !allowed(effect.id)">{{
-          conditions[effect.achievementId] || '完成對應成就解鎖'
-        }}</small></button
+        ><template #label
+          ><span class="attack-effect-heading"
+            ><span
+              class="attack-color"
+              :style="{ background: effect.color }"
+              aria-hidden="true"
+            ></span
+            ><span class="ui-choice-label">{{ effect.label }}</span></span
+          ><span class="attack-effect-detail">{{
+            allowed(effect.id) ? '已解鎖・預覽' : '未解鎖・預覽'
+          }}</span
+          ><span v-if="effect.achievementId && !allowed(effect.id)" class="attack-effect-detail">{{
+            conditions[effect.achievementId] || '完成對應成就解鎖'
+          }}</span></template
+        ><template #selection
+          ><span class="ui-choice-state" aria-hidden="true">{{
+            preview === effect.id ? '✓ 正在預覽' : ''
+          }}</span></template
+        ></UiChoiceCard
       ></div
     ></div
   >
@@ -112,8 +157,8 @@ function play(id: string) {
 <style scoped>
 .attack-choices {
   display: grid;
-  gap: 16px;
-  min-width: 0;
+  gap: var(--stitch-gap-controls);
+  min-inline-size: 0;
 }
 .attack-choices p {
   margin: 0;
@@ -121,66 +166,53 @@ function play(id: string) {
 .attack-loadout {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--stitch-gap-controls);
 }
-.attack-loadout label {
+.attack-feedback {
   display: grid;
-  gap: 8px;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) var(--stitch-control-height);
+  align-items: start;
+  gap: var(--stitch-gap-inline);
+  min-inline-size: 0;
 }
-.attack-loadout select {
-  width: 100%;
-  min-width: 0;
-}
-.attack-loadout kbd {
-  font-weight: bold;
+.attack-retry-slot {
+  min-block-size: var(--stitch-control-height);
 }
 .attack-preview {
   position: relative;
-  height: 200px;
+  block-size: 200px;
   overflow: hidden;
-  border: 1px solid var(--play-line);
-  border-radius: 12px;
-  background: #10182b;
+  border: var(--stitch-border);
+  border-radius: var(--stitch-radius-panel);
+  background: var(--stitch-artwork-preview-bg);
 }
 .attack-preview-label {
   position: absolute;
-  left: 12px;
-  bottom: 12px;
-  color: #fff;
-  font-size: 14px;
+  inset-inline-start: var(--stitch-space-12);
+  inset-block-end: var(--stitch-space-12);
+  color: var(--stitch-artwork-preview-ink);
+  font-size: var(--stitch-text-hint);
 }
 .attack-effect-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--stitch-gap-controls);
+  padding: var(--stitch-space-8);
 }
-.attack-effect-grid button {
+.attack-effect-heading {
   display: flex;
   align-items: center;
-  gap: 8px;
-  text-align: start;
-  min-height: 44px;
-  padding: 10px;
-  border: 1px solid var(--play-line);
-  border-radius: 8px;
-  color: inherit;
-  background: var(--play-surface);
-  cursor: pointer;
+  gap: var(--stitch-gap-label);
 }
-.attack-effect-grid button[aria-pressed='true'] {
-  outline: 2px solid var(--play-accent);
-  outline-offset: -2px;
-}
-.attack-effect-grid small {
-  margin-left: auto;
-  white-space: nowrap;
+.attack-effect-detail {
+  font-size: var(--stitch-text-hint);
+  line-height: var(--stitch-line-height-body);
 }
 .attack-color {
-  width: 10px;
-  height: 10px;
+  inline-size: var(--stitch-space-12);
+  block-size: var(--stitch-space-12);
   flex: none;
-  border-radius: 50%;
+  border-radius: var(--stitch-radius-pill);
 }
 @media (max-width: 600px) {
   .attack-loadout,

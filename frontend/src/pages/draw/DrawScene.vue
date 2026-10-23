@@ -146,7 +146,6 @@ function rank(index: number) {
         }}</p
         ><UiButton
           v-if="!room.host"
-          stitch
           variant="secondary"
           icon="check"
           :label="me?.ready ? '已就緒（點擊切換）' : '準備好了！點擊就緒'"
@@ -250,7 +249,6 @@ function rank(index: number) {
         >{{ loading ? '正在讀取本輪畫作…' : '畫作尚未載入。'
         }}<UiButton
           v-if="error"
-          stitch
           variant="secondary"
           icon="refresh"
           label="重新載入畫作"
@@ -261,7 +259,6 @@ function rank(index: number) {
     <footer class="vue-draw-scene-actions"
       ><UiButton
         v-if="snapshot.result"
-        stitch
         variant="secondary"
         icon="save"
         label="收藏這幅畫"
@@ -269,7 +266,6 @@ function rank(index: number) {
         @click="emit('gallery', snapshot.result.resultId)"
       /><UiButton
         v-if="snapshot.result"
-        stitch
         variant="secondary"
         icon="share"
         label="分享畫作"
@@ -277,7 +273,6 @@ function rank(index: number) {
         @click="results.share(snapshot.result.resultId)"
       /><UiButton
         v-if="room.host"
-        stitch
         variant="primary"
         icon="next"
         label="下一位畫者"
@@ -320,7 +315,6 @@ function rank(index: number) {
         :message="error || (loading ? '正在讀取畫作…' : '')"
         :error="!!error" /><UiButton
         v-if="error"
-        stitch
         variant="secondary"
         icon="refresh"
         label="重新載入畫作"
@@ -329,21 +323,18 @@ function rank(index: number) {
     <footer class="vue-draw-scene-actions"
       ><a class="ui-button" href="/">返回大廳</a
       ><UiButton
-        stitch
         variant="secondary"
         icon="download"
         label="匯出本局畫作集"
         :disabled="results.busy || !results.results.length"
         @click="results.exportAll(true)"
       /><UiButton
-        stitch
         variant="secondary"
         icon="settings"
         label="下一局設定"
         @click="emit('settings')"
       /><UiButton
         v-if="room.host"
-        stitch
         variant="primary"
         icon="replay"
         label="再來一局（同桌再戰）"

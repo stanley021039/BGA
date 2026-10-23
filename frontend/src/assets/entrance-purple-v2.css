@@ -25,12 +25,12 @@
   --tw-numeric-fraction:  ;
   --tw-ring-inset:  ;
   --tw-ring-offset-width: 0px;
-  --tw-ring-offset-color: #fff;
+  --tw-ring-offset-color: var(--stitch-artwork-swatch-ffffff);
   --tw-ring-color: rgb(59 130 246 / 0.5);
-  --tw-ring-offset-shadow: 0 0 #0000;
-  --tw-ring-shadow: 0 0 #0000;
-  --tw-shadow: 0 0 #0000;
-  --tw-shadow-colored: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 transparent;
+  --tw-ring-shadow: 0 0 transparent;
+  --tw-shadow: 0 0 transparent;
+  --tw-shadow-colored: 0 0 transparent;
   --tw-blur:  ;
   --tw-brightness:  ;
   --tw-contrast:  ;
@@ -78,12 +78,12 @@
   --tw-numeric-fraction:  ;
   --tw-ring-inset:  ;
   --tw-ring-offset-width: 0px;
-  --tw-ring-offset-color: #fff;
+  --tw-ring-offset-color: var(--stitch-artwork-swatch-ffffff);
   --tw-ring-color: rgb(59 130 246 / 0.5);
-  --tw-ring-offset-shadow: 0 0 #0000;
-  --tw-ring-shadow: 0 0 #0000;
-  --tw-shadow: 0 0 #0000;
-  --tw-shadow-colored: 0 0 #0000;
+  --tw-ring-offset-shadow: 0 0 transparent;
+  --tw-ring-shadow: 0 0 transparent;
+  --tw-shadow: 0 0 transparent;
+  --tw-shadow-colored: 0 0 transparent;
   --tw-blur:  ;
   --tw-brightness:  ;
   --tw-contrast:  ;
@@ -343,32 +343,32 @@
   background-image: linear-gradient(to top right, var(--tw-gradient-stops));
 }
 .stitch-purple-v2 .from-black {
-  --tw-gradient-from: #000 var(--tw-gradient-from-position);
+  --tw-gradient-from: var(--stitch-artwork-swatch-000000) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(0 0 0 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 .stitch-purple-v2 .from-blue-600 {
-  --tw-gradient-from: #2563eb var(--tw-gradient-from-position);
+  --tw-gradient-from: var(--stitch-artwork-swatch-2563eb) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(37 99 235 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 .stitch-purple-v2 .from-purple-200 {
-  --tw-gradient-from: #e9d5ff var(--tw-gradient-from-position);
+  --tw-gradient-from: var(--stitch-artwork-swatch-e9d5ff) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(233 213 255 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 .stitch-purple-v2 .from-purple-600 {
-  --tw-gradient-from: #9333ea var(--tw-gradient-from-position);
+  --tw-gradient-from: var(--stitch-artwork-swatch-9333ea) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(147 51 234 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 .stitch-purple-v2 .from-purple-950 {
-  --tw-gradient-from: #3b0764 var(--tw-gradient-from-position);
+  --tw-gradient-from: var(--stitch-artwork-swatch-3b0764) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(59 7 100 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 .stitch-purple-v2 .from-red-600 {
-  --tw-gradient-from: #dc2626 var(--tw-gradient-from-position);
+  --tw-gradient-from: var(--stitch-artwork-swatch-dc2626) var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(220 38 38 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
@@ -380,17 +380,20 @@
 .stitch-purple-v2 .via-cyan-500 {
   --tw-gradient-to: rgb(6 182 212 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops:
-    var(--tw-gradient-from), #06b6d4 var(--tw-gradient-via-position), var(--tw-gradient-to);
+    var(--tw-gradient-from), var(--stitch-artwork-swatch-06b6d4) var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
 }
 .stitch-purple-v2 .via-fuchsia-300 {
   --tw-gradient-to: rgb(240 171 252 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops:
-    var(--tw-gradient-from), #f0abfc var(--tw-gradient-via-position), var(--tw-gradient-to);
+    var(--tw-gradient-from), var(--stitch-artwork-swatch-f0abfc) var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
 }
 .stitch-purple-v2 .via-fuchsia-500 {
   --tw-gradient-to: rgb(217 70 239 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops:
-    var(--tw-gradient-from), #d946ef var(--tw-gradient-via-position), var(--tw-gradient-to);
+    var(--tw-gradient-from), var(--stitch-artwork-swatch-d946ef) var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
 }
 .stitch-purple-v2 .via-purple-900\/60 {
   --tw-gradient-to: rgb(88 28 135 / 0) var(--tw-gradient-to-position);
@@ -401,32 +404,35 @@
 .stitch-purple-v2 .via-purple-950 {
   --tw-gradient-to: rgb(59 7 100 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops:
-    var(--tw-gradient-from), #3b0764 var(--tw-gradient-via-position), var(--tw-gradient-to);
+    var(--tw-gradient-from), var(--stitch-artwork-swatch-3b0764) var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
 }
 .stitch-purple-v2 .via-rose-500 {
   --tw-gradient-to: rgb(244 63 94 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops:
-    var(--tw-gradient-from), #f43f5e var(--tw-gradient-via-position), var(--tw-gradient-to);
+    var(--tw-gradient-from), var(--stitch-artwork-swatch-f43f5e) var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
 }
 .stitch-purple-v2 .via-white {
   --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position);
   --tw-gradient-stops:
-    var(--tw-gradient-from), #fff var(--tw-gradient-via-position), var(--tw-gradient-to);
+    var(--tw-gradient-from), var(--stitch-artwork-swatch-ffffff) var(--tw-gradient-via-position),
+    var(--tw-gradient-to);
 }
 .stitch-purple-v2 .to-purple-600 {
-  --tw-gradient-to: #9333ea var(--tw-gradient-to-position);
+  --tw-gradient-to: var(--stitch-artwork-swatch-9333ea) var(--tw-gradient-to-position);
 }
 .stitch-purple-v2 .to-red-400 {
-  --tw-gradient-to: #f87171 var(--tw-gradient-to-position);
+  --tw-gradient-to: var(--stitch-artwork-swatch-f87171) var(--tw-gradient-to-position);
 }
 .stitch-purple-v2 .to-sky-400 {
-  --tw-gradient-to: #38bdf8 var(--tw-gradient-to-position);
+  --tw-gradient-to: var(--stitch-artwork-swatch-38bdf8) var(--tw-gradient-to-position);
 }
 .stitch-purple-v2 .to-transparent {
   --tw-gradient-to: transparent var(--tw-gradient-to-position);
 }
 .stitch-purple-v2 .to-white {
-  --tw-gradient-to: #fff var(--tw-gradient-to-position);
+  --tw-gradient-to: var(--stitch-artwork-swatch-ffffff) var(--tw-gradient-to-position);
 }
 .stitch-purple-v2 .bg-clip-text {
   -webkit-background-clip: text;
@@ -512,89 +518,117 @@
 .stitch-purple-v2 .mix-blend-screen {
   mix-blend-mode: screen;
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_10px_\#38bdf8\] {
-  --tw-shadow: 0 0 10px #38bdf8;
+  --tw-shadow: 0 0 10px var(--stitch-artwork-swatch-38bdf8);
   --tw-shadow-colored: 0 0 10px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_10px_\#c084fc\] {
-  --tw-shadow: 0 0 10px #c084fc;
+  --tw-shadow: 0 0 10px var(--stitch-artwork-swatch-c084fc);
   --tw-shadow-colored: 0 0 10px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_10px_\#ef4444\] {
-  --tw-shadow: 0 0 10px #ef4444;
+  --tw-shadow: 0 0 10px var(--stitch-artwork-swatch-ef4444);
   --tw-shadow-colored: 0 0 10px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_12px_\#c084fc\] {
-  --tw-shadow: 0 0 12px #c084fc;
+  --tw-shadow: 0 0 12px var(--stitch-artwork-swatch-c084fc);
   --tw-shadow-colored: 0 0 12px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_12px_\#f472b6\] {
-  --tw-shadow: 0 0 12px #f472b6;
+  --tw-shadow: 0 0 12px var(--stitch-artwork-swatch-f472b6);
   --tw-shadow-colored: 0 0 12px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_12px_\#ffffff\] {
-  --tw-shadow: 0 0 12px #ffffff;
+  --tw-shadow: 0 0 12px var(--stitch-artwork-swatch-ffffff);
   --tw-shadow-colored: 0 0 12px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_16px_\#38bdf8\] {
-  --tw-shadow: 0 0 16px #38bdf8;
+  --tw-shadow: 0 0 16px var(--stitch-artwork-swatch-38bdf8);
   --tw-shadow-colored: 0 0 16px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_16px_\#ef4444\] {
-  --tw-shadow: 0 0 16px #ef4444;
+  --tw-shadow: 0 0 16px var(--stitch-artwork-swatch-ef4444);
   --tw-shadow-colored: 0 0 16px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_24px_\#38bdf8\] {
-  --tw-shadow: 0 0 24px #38bdf8;
+  --tw-shadow: 0 0 24px var(--stitch-artwork-swatch-38bdf8);
   --tw-shadow-colored: 0 0 24px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_24px_\#a855f7\] {
-  --tw-shadow: 0 0 24px #a855f7;
+  --tw-shadow: 0 0 24px var(--stitch-artwork-swatch-a855f7);
   --tw-shadow-colored: 0 0 24px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_24px_\#ef4444\] {
-  --tw-shadow: 0 0 24px #ef4444;
+  --tw-shadow: 0 0 24px var(--stitch-artwork-swatch-ef4444);
   --tw-shadow-colored: 0 0 24px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_24px_\#ffffff\] {
-  --tw-shadow: 0 0 24px #ffffff;
+  --tw-shadow: 0 0 24px var(--stitch-artwork-swatch-ffffff);
   --tw-shadow-colored: 0 0 24px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_30px_\#ffffff\] {
-  --tw-shadow: 0 0 30px #ffffff;
+  --tw-shadow: 0 0 30px var(--stitch-artwork-swatch-ffffff);
   --tw-shadow-colored: 0 0 30px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .shadow-\[0_0_45px_\#a855f7\] {
-  --tw-shadow: 0 0 45px #a855f7;
+  --tw-shadow: 0 0 45px var(--stitch-artwork-swatch-a855f7);
   --tw-shadow-colored: 0 0 45px var(--tw-shadow-color);
   box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    var(--tw-ring-offset-shadow, 0 0 transparent), var(--tw-ring-shadow, 0 0 transparent),
+    var(--tw-shadow);
 }
 .stitch-purple-v2 .blur-md {
   --tw-blur: blur(12px);
@@ -611,18 +645,21 @@
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
     var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .drop-shadow-\[0_0_14px_\#c084fc\] {
-  --tw-drop-shadow: drop-shadow(0 0 14px #c084fc);
+  --tw-drop-shadow: drop-shadow(0 0 14px var(--stitch-artwork-swatch-c084fc));
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
     var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .drop-shadow-\[0_0_30px_\#ffffff\] {
-  --tw-drop-shadow: drop-shadow(0 0 30px #ffffff);
+  --tw-drop-shadow: drop-shadow(0 0 30px var(--stitch-artwork-swatch-ffffff));
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
     var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
+/* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .drop-shadow-\[0_0_50px_\#a855f7\] {
-  --tw-drop-shadow: drop-shadow(0 0 50px #a855f7);
+  --tw-drop-shadow: drop-shadow(0 0 50px var(--stitch-artwork-swatch-a855f7));
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
     var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
@@ -645,12 +682,12 @@
   0% {
     transform: translate(85px, 20px) scale(0.3) rotate(0deg);
     opacity: 0;
-    filter: drop-shadow(0 0 6px #0284c7);
+    filter: drop-shadow(0 0 6px var(--stitch-artwork-swatch-0284c7));
   }
   25% {
     transform: translate(35px, 8px) scale(1.1) rotate(180deg);
     opacity: 1;
-    filter: drop-shadow(0 0 20px #38bdf8) brightness(2);
+    filter: drop-shadow(0 0 20px var(--stitch-artwork-swatch-38bdf8)) brightness(2);
   }
   42% {
     transform: translate(6px, 2px) scale(0.6) rotate(360deg);
@@ -666,12 +703,12 @@
   0% {
     transform: translate(-85px, -20px) scale(0.3) rotate(0deg);
     opacity: 0;
-    filter: drop-shadow(0 0 6px #dc2626);
+    filter: drop-shadow(0 0 6px var(--stitch-artwork-swatch-dc2626));
   }
   25% {
     transform: translate(-35px, -8px) scale(1.1) rotate(-180deg);
     opacity: 1;
-    filter: drop-shadow(0 0 20px #ef4444) brightness(2);
+    filter: drop-shadow(0 0 20px var(--stitch-artwork-swatch-ef4444)) brightness(2);
   }
   42% {
     transform: translate(-6px, -2px) scale(0.6) rotate(-360deg);
@@ -692,17 +729,18 @@
   48% {
     transform: scale(0.3) rotate(45deg);
     opacity: 1;
-    filter: drop-shadow(0 0 35px #ffffff) brightness(3);
+    filter: drop-shadow(0 0 35px var(--stitch-artwork-swatch-ffffff)) brightness(3);
   }
   58% {
     transform: scale(1.3) rotate(180deg);
     opacity: 1;
-    filter: drop-shadow(0 0 45px #c084fc) drop-shadow(0 0 25px #3b0764);
+    filter: drop-shadow(0 0 45px var(--stitch-artwork-swatch-c084fc))
+      drop-shadow(0 0 25px var(--stitch-artwork-swatch-3b0764));
   }
   78% {
     transform: scale(1.8) rotate(360deg);
     opacity: 0.95;
-    filter: drop-shadow(0 0 55px #a855f7) blur(1px);
+    filter: drop-shadow(0 0 55px var(--stitch-artwork-swatch-a855f7)) blur(1px);
   }
   90% {
     transform: scale(2.8);
@@ -727,7 +765,7 @@
   65% {
     transform: scale(1.4) rotate(360deg);
     opacity: 1;
-    filter: drop-shadow(0 0 30px #d946ef);
+    filter: drop-shadow(0 0 30px var(--stitch-artwork-swatch-d946ef));
   }
   85% {
     transform: scale(2.2) rotate(600deg);
@@ -749,7 +787,7 @@
     transform: scale(1.1);
     opacity: 1;
     border-width: 4px;
-    filter: drop-shadow(0 0 25px #a855f7);
+    filter: drop-shadow(0 0 25px var(--stitch-artwork-swatch-a855f7));
   }
   80% {
     transform: scale(2.2);
@@ -772,12 +810,13 @@
   15% {
     transform: scale(1.15) translateY(-2px);
     opacity: 1;
-    filter: drop-shadow(0 0 16px #c084fc) drop-shadow(0 0 25px #ffffff);
+    filter: drop-shadow(0 0 16px var(--stitch-artwork-swatch-c084fc))
+      drop-shadow(0 0 25px var(--stitch-artwork-swatch-ffffff));
   }
   38% {
     transform: scale(1) translateY(0);
     opacity: 1;
-    filter: drop-shadow(0 0 12px #a855f7);
+    filter: drop-shadow(0 0 12px var(--stitch-artwork-swatch-a855f7));
   }
   46% {
     transform: scale(1.3) translateY(-8px);
@@ -799,17 +838,19 @@
   54% {
     transform: scale(1.5) rotate(4deg);
     opacity: 1;
-    filter: drop-shadow(0 0 35px #ffffff) drop-shadow(0 0 50px #a855f7) brightness(2.2);
+    filter: drop-shadow(0 0 35px var(--stitch-artwork-swatch-ffffff))
+      drop-shadow(0 0 50px var(--stitch-artwork-swatch-a855f7)) brightness(2.2);
   }
   65% {
     transform: scale(1.2) rotate(0deg);
     opacity: 1;
-    filter: drop-shadow(0 0 30px #c084fc) drop-shadow(0 0 45px #7e22ce);
+    filter: drop-shadow(0 0 30px var(--stitch-artwork-swatch-c084fc))
+      drop-shadow(0 0 45px var(--stitch-artwork-swatch-7e22ce));
   }
   82% {
     transform: scale(1.28) rotate(2deg);
     opacity: 0.95;
-    filter: drop-shadow(0 0 25px #a855f7);
+    filter: drop-shadow(0 0 25px var(--stitch-artwork-swatch-a855f7));
   }
   94% {
     transform: scale(1.7) rotate(5deg);
@@ -831,7 +872,7 @@
   54% {
     transform: scale(1.3);
     opacity: 0.9;
-    filter: drop-shadow(0 0 30px #d946ef);
+    filter: drop-shadow(0 0 30px var(--stitch-artwork-swatch-d946ef));
   }
   75% {
     transform: scale(1.8);

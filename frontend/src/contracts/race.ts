@@ -129,6 +129,7 @@ export interface RaceDomain {
   canAct: boolean;
   notice: string;
   failed: boolean;
+  uncertain?: boolean;
   now: number;
   offset: number;
   lesson: boolean;

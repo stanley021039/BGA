@@ -11,7 +11,6 @@ import { useInvitationsStore } from '../stores/invitations';
 import { useSessionStore } from '../stores/session';
 import PlayerAvatar from './PlayerAvatar.vue';
 import UiTabs from './UiTabs.vue';
-defineProps<{ stitch?: boolean }>();
 const room = useRoomStore(),
   requests = useRequests(),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
@@ -81,17 +80,15 @@ onBeforeUnmount(close);
 </script>
 <template>
   <UiButton
-    :stitch="stitch"
     variant="secondary"
     class="vue-room-invite-trigger"
     icon="invite"
-    :icon-only="!stitch"
-    :caption="stitch ? '邀請朋友' : '邀請'"
+    caption="邀請朋友"
     label="邀請朋友加入這桌"
     :disabled="!room.seat"
     @click="open($event.currentTarget as HTMLElement)"
   />
-  <UiDialog :stitch="stitch" ref="dialog" title="邀請朋友" compact @closing="close">
+  <UiDialog ref="dialog" title="邀請朋友" compact @closing="close">
     <UiTabs
       v-model="tab"
       :items="[

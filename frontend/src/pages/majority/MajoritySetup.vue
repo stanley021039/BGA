@@ -156,6 +156,7 @@ function selectMode(id: MajorityOptions['mode']) {
       </div>
     </fieldset>
     <StatusSlot
+      :persistent="game.settingsPending || !!game.settingsError"
       :message="game.settingsPending ? '正在儲存設定…' : game.settingsError || '修改後自動儲存。'"
       :error="!!game.settingsError"
     />

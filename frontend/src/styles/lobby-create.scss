@@ -1,269 +1,95 @@
-@use 'tokens' as t;
-
-// Draw uses D06; the approved telephone/majority entry dialog shares its fields.
+// Room-entry variants define geometry; UiDialog and UiField own their appearance.
 :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-lobby-create-d06 {
   inline-size: min(28rem, calc(100vw - 2rem));
   max-inline-size: calc(100vw - 2rem);
   max-block-size: calc(100dvh - 2rem);
-  border: 1px solid var(--stitch-line, var(--play-line));
-  border-radius: t.space(3);
-  padding: t.space(4);
-  background: var(--stitch-surface, var(--play-surface));
-  color: var(--stitch-ink, var(--play-ink));
-  .vue-dialog-header {
-    min-block-size: 44px;
-    padding-block-end: t.space(3);
-    border-block-end: 1px solid var(--stitch-line, var(--play-line));
-    gap: t.space(3);
-  }
-  .vue-dialog-header h2 {
-    @include t.type(p2);
-    font-weight: 800;
-    margin: 0;
-    letter-spacing: normal;
-    overflow-wrap: anywhere;
-  }
   .vue-dialog-content {
     min-inline-size: 0;
     min-block-size: 0;
-    padding: 0;
   }
   .vue-lobby-create {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: t.space(3);
+    gap: var(--stitch-gap-fields);
     min-inline-size: 0;
     margin: 0;
-    padding-block-start: t.space(3);
-  }
-  .vue-lobby-create > label,
-  .vue-lobby-create-rounds {
-    display: grid;
-    gap: t.space(2);
-    margin: 0;
-    color: inherit;
-    @include t.type(p3);
-    font-weight: 700;
-    min-inline-size: 0;
-  }
-  .vue-lobby-create :is(select, input:not([type='radio'])) {
-    box-sizing: border-box;
-    inline-size: 100%;
-    min-inline-size: 0;
-    min-block-size: 44px;
-    padding: t.space(2) t.space(3);
-    border: 1px solid var(--stitch-line, var(--play-line));
-    border-radius: 0.5rem;
-    background: var(--stitch-base, var(--play-paper));
-    color: inherit;
-    @include t.type(p3);
+    padding-block-start: var(--stitch-space-16);
   }
   .vue-lobby-create-options {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto;
     align-content: start;
-    gap: t.space(3);
-    min-block-size: 172px;
+    min-block-size: 10.75rem;
     min-inline-size: 0;
-  }
-  .vue-lobby-create-options > p {
-    @include t.type(p3);
-    margin: 0;
-    overflow-wrap: anywhere;
-  }
-  .vue-lobby-create-seconds {
-    display: grid;
-    min-inline-size: 0;
-    padding: 0;
-    margin: 0;
-    border: 0;
-  }
-  .vue-lobby-create-seconds legend {
-    @include t.type(p3);
-    font-weight: 700;
-    padding: 0;
-    margin-block-end: t.space(2);
-    color: inherit;
-  }
-  .vue-lobby-create-seconds > div {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: t.space(2);
-  }
-  .vue-lobby-create-seconds label {
-    position: relative;
-    display: grid;
-    place-items: center;
-    min-block-size: 44px;
-    min-inline-size: 0;
-    margin: 0;
-    cursor: pointer;
-  }
-  .vue-lobby-create-seconds input {
-    position: absolute;
-    inset: 0;
-    inline-size: 100%;
-    block-size: 100%;
-    min-block-size: 0;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-  .vue-lobby-create-seconds label > span {
-    box-sizing: border-box;
-    display: grid;
-    place-items: center;
-    inline-size: 100%;
-    min-block-size: 44px;
-    border: 1px solid var(--stitch-line, var(--play-line));
-    border-radius: 0.5rem;
-    background: var(--stitch-base, var(--play-paper));
-    color: inherit;
-    @include t.type(p3);
-    font-weight: 700;
-    pointer-events: none;
-  }
-  .vue-lobby-create-seconds input:checked + span {
-    background: var(--stitch-primary, #f6cf35);
-    color: #212121;
-    border-color: var(--stitch-primary, #f6cf35);
-  }
-  .vue-lobby-create-seconds input:focus-visible + span {
-    outline: 2px solid var(--stitch-ink, var(--play-ink));
-    outline-offset: 2px;
-  }
-  .vue-lobby-create-seconds:disabled label {
-    cursor: default;
-    opacity: 0.55;
-  }
-  .vue-lobby-create-round-field {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 4.5rem auto;
-    align-items: center;
-    gap: t.space(2);
-    min-inline-size: 0;
-    min-block-size: 44px;
-    padding-inline: t.space(3);
-    border: 1px solid var(--stitch-line, var(--play-line));
-    border-radius: 0.5rem;
-    background: var(--stitch-base, var(--play-paper));
-    @include t.type(p3);
-    font-weight: 500;
-  }
-  .vue-lobby-create .vue-lobby-create-round-field input {
-    padding: 0 t.space(1);
-    min-block-size: 32px;
-    border: 0;
-    border-radius: 0.25rem;
-    background: var(--stitch-surface, var(--play-surface));
-    text-align: center;
-    font-variant-numeric: tabular-nums;
+    > p {
+      margin: 0;
+      overflow-wrap: anywhere;
+      font-size: var(--stitch-text-body);
+    }
   }
   .vue-lobby-create > .frontend-status {
-    min-block-size: 3em;
-    max-block-size: 4.5em;
-    margin: 0;
-    padding: 0;
-    overflow: auto;
-    @include t.type(p3);
+    min-inline-size: 0;
   }
   .vue-lobby-create > .vue-button {
-    --ui-button-radius: 0.5rem;
     inline-size: 100%;
-    min-block-size: 44px;
     white-space: normal;
-    @include t.type(p3);
-    font-weight: 800;
   }
 }
 @media (max-width: 480px) {
   :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-lobby-create-d06 {
-    inline-size: calc(100vw - 1rem);
-    max-inline-size: calc(100vw - 1rem);
-    max-block-size: calc(100dvh - 1rem);
-    padding: t.space(3);
+    inline-size: calc(100vw - 2rem);
+    max-inline-size: calc(100vw - 2rem);
+    max-block-size: calc(100dvh - 2rem);
   }
 }
-
-// RQ02 / RD05: room creation has a stable central form and bottom submit slot.
+// RQ02/RD05 retain a stable central form and bottom submit slot.
 :root body dialog.vue-dialog.ui-dialog.vue-lobby-create-room {
   inline-size: min(56.25rem, calc(100vw - 2rem));
   block-size: min(41.25rem, calc(100dvh - 2rem));
   max-block-size: calc(100dvh - 2rem);
-  padding: t.space(6);
-  border-radius: t.space(4);
   &[open] {
     display: flex;
     flex-direction: column;
   }
   .vue-dialog-header {
     flex: none;
-    min-block-size: 44px;
-    margin-block-end: t.space(4);
   }
   .vue-dialog-content {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: t.space(4);
+    gap: var(--stitch-gap-fields);
     min-block-size: 0;
     overflow: auto;
+    scrollbar-gutter: stable;
     > p {
       margin: 0;
-      @include t.type(p3);
+      font-size: var(--stitch-text-body);
     }
   }
   .vue-lobby-create {
     flex: 1;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(48px, 1fr) minmax(24px, auto) auto;
-    gap: t.space(4);
+    grid-template-rows: auto auto minmax(3rem, 1fr) auto auto;
+    gap: var(--stitch-gap-fields);
     margin: 0;
     min-inline-size: 0;
-    > label {
-      display: grid;
-      gap: t.space(2);
-      min-inline-size: 0;
-      @include t.type(p2);
-    }
-    input,
-    select {
-      box-sizing: border-box;
-      inline-size: 100%;
-      min-inline-size: 0;
-      min-block-size: 48px;
-      padding: t.space(3);
-    }
     .vue-lobby-create-options {
       min-block-size: 0;
       align-content: start;
       > p {
         margin: 0;
-        @include t.type(p3);
       }
     }
     > button {
       inline-size: 100%;
-      min-block-size: 52px;
     }
   }
 }
-@media (max-width: 480px) {
-  :root body dialog.vue-dialog.ui-dialog.vue-lobby-create-room {
-    padding: t.space(4);
-    .vue-dialog-header,
-    .vue-dialog-content,
-    .vue-lobby-create {
-      gap: t.space(3);
-    }
-  }
-}
-
 :root body dialog.vue-dialog.ui-dialog.vue-stitch-dialog.vue-lobby-create-pair {
-  inline-size: min(590px, calc(100vw - 32px));
+  inline-size: min(36.875rem, calc(100vw - 2rem));
   .vue-lobby-create-options {
-    min-block-size: 40px;
+    min-block-size: 2.5rem;
   }
 }

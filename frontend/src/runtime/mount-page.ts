@@ -1,3 +1,4 @@
+import '../styles/noto-sans-tc.css';
 import { createApp, Fragment, h, Teleport } from 'vue';
 import type { App, Component } from 'vue';
 import { createPinia, disposePinia, type Pinia } from 'pinia';
@@ -7,6 +8,7 @@ import { resetMediaConsentOnReload } from '../services/media-consent';
 import '../styles/foundations.scss';
 import '../styles/feedback.scss';
 import '../styles/controls.scss';
+import '../styles/ui-components.scss';
 
 // Each HTML document owns its app/stores. BFCache restoration creates a fresh scope.
 export function mountPage(

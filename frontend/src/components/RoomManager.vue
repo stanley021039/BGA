@@ -16,7 +16,6 @@ import UiButton from './UiButton.vue';
 import PlayerName from './PlayerName.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/room.scss';
-defineProps<{ stitch?: boolean }>();
 const room = useRoomStore(),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   confirmation = ref<InstanceType<typeof ConfirmDialog> | null>(null);
@@ -157,16 +156,14 @@ onBeforeUnmount(() => confirmation.value?.cancel());
 </script>
 <template>
   <UiButton
-    :stitch="stitch"
     variant="secondary"
     class="vue-room-manage-trigger"
     icon="users"
-    :icon-only="!stitch"
     label="房間管理"
     :disabled="!allowed || room.busy"
     @click="open"
   />
-  <UiDialog :stitch="stitch" ref="dialog" title="房間管理" :dismissible="!room.busy"
+  <UiDialog ref="dialog" title="房間管理" :dismissible="!room.busy"
     ><p>{{
       myRoomRole(room.snapshot) === 'host'
         ? '房主可設定房間管理者，並踢出其他玩家。房間角色不影響網站帳戶權限。'
@@ -203,8 +200,10 @@ onBeforeUnmount(() => confirmation.value?.cancel());
             :label="'踢出：' + player.name"
             :disabled="room.busy"
             @click="kick(player)" /></div></article></div
-    ><StatusSlot :message="room.busy ? '處理中…' : message" :error="failed" /><footer
-      class="vue-room-management-actions"
+    ><StatusSlot
+      :persistent="room.busy"
+      :message="room.busy ? '處理中…' : message"
+      :error="failed" /><footer class="vue-room-management-actions"
       ><slot name="invite" /><UiButton
         v-if="room.type === 'draw' && room.host"
         icon="leave"

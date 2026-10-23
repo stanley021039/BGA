@@ -2,6 +2,7 @@
 import { computed, useId } from 'vue';
 import { playerRoomRole, type RoomPlayer, type RoomSnapshot } from '../contracts/room';
 import RoomPlayerCard from './RoomPlayerCard.vue';
+import UiBadge from './UiBadge.vue';
 import '../styles/room.scss';
 const props = withDefaults(
   defineProps<{
@@ -84,9 +85,9 @@ const rows = computed(() =>
   >
     <header
       ><h2 :id="heading">{{ title }}</h2
-      ><span class="vue-roster-count">{{
+      ><UiBadge counter class="vue-roster-count">{{
         countLabel ?? players.length + (maxPlayers ? ' / ' + maxPlayers : '') + ' 位'
-      }}</span></header
+      }}</UiBadge></header
     >
     <ul
       class="vue-roster-list"

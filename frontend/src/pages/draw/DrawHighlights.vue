@@ -116,7 +116,6 @@ onBeforeUnmount(() => {
     ><p v-if="!highlights.length">本局還沒有公開畫作。</p
     ><UiButton
       v-if="failures.size"
-      stitch
       variant="secondary"
       icon="refresh"
       label="重試載入精選縮圖"

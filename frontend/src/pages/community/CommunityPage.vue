@@ -143,7 +143,6 @@ onMounted(() => void store.load());
   <div class="tabs" role="group" aria-label="共編內容">
     <UiButton
       id="issuesTab"
-      stitch
       variant="secondary"
       label="留言板"
       :class="{ on: tab === 'issues' }"
@@ -153,7 +152,6 @@ onMounted(() => void store.load());
     />
     <UiButton
       id="questionsTab"
-      stitch
       variant="secondary"
       label="自選題庫"
       :class="{ on: tab === 'questions' }"
@@ -254,7 +252,6 @@ onMounted(() => void store.load());
       </fieldset>
     </form>
     <UiButton
-      stitch
       variant="primary"
       type="submit"
       :form="tab === 'issues' ? 'issueForm' : 'questionForm'"

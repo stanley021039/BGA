@@ -314,33 +314,22 @@ body.lobby-self-hover {
 .vue-lobby-expressions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: tokens.space(3);
-  height: min(320px, 40dvh);
+  gap: var(--stitch-gap-controls);
+  block-size: min(320px, 40dvh);
+  padding: var(--stitch-space-8);
   overflow: auto;
   scrollbar-gutter: stable;
   align-content: start;
   > p {
     grid-column: 1/-1;
   }
-  button {
-    display: grid;
-    gap: tokens.space(2);
-    justify-items: center;
-    padding: tokens.space(3);
-    min-width: 0;
-    border: 1px solid var(--play-line-strong);
-    border-radius: 12px;
-    background: var(--play-paper);
-    color: var(--play-ink);
+  > button {
+    min-inline-size: 0;
   }
   img {
-    width: 64px;
-    height: 64px;
+    inline-size: 64px;
+    block-size: 64px;
     object-fit: contain;
-  }
-  span {
-    min-height: 3em;
-    overflow-wrap: anywhere;
   }
 }
 // 找一桌加入 dialog: open rooms above the room-code entry.
@@ -457,7 +446,7 @@ body.lobby-self-hover {
       background: var(--play-surface);
       z-index: 140;
     }
-    .vue-site-header-feedback:has(.frontend-status:empty) {
+    .vue-site-header-feedback:has(.ui-notice-slot):not(:has(.ui-notice-slot[data-visible])) {
       visibility: hidden;
       pointer-events: none;
     }

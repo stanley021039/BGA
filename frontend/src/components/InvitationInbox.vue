@@ -17,7 +17,6 @@ function open(source: HTMLElement) {
 <template>
   <span class="vue-invitation-button"
     ><UiButton
-      stitch
       variant="ghost"
       icon="invite"
       icon-only
@@ -30,7 +29,6 @@ function open(source: HTMLElement) {
   >
   <UiDialog
     ref="dialog"
-    stitch
     class="vue-approved-inbox"
     title="收到的房間邀請"
     compact
@@ -65,13 +63,11 @@ function open(source: HTMLElement) {
         ><p v-if="!item.canJoin">房間已滿或目前無法加入。</p
         ><div class="vue-invitation-actions"
           ><UiButton
-            stitch
             variant="primary"
             icon="check"
             label="加入房間"
             :disabled="!item.canJoin || !!invites.responding"
             @click="invites.respond(item, 'accept')" /><UiButton
-            stitch
             variant="secondary"
             icon="close"
             label="婉拒"
@@ -82,13 +78,11 @@ function open(source: HTMLElement) {
     <footer class="vue-inbox-footer"
       ><UiButton
         v-if="invites.error"
-        stitch
         variant="secondary"
         icon="refresh"
         label="重新取得邀請"
         :disabled="invites.loading || !!invites.responding"
         @click="invites.poll(true)" /><UiButton
-        stitch
         variant="contrast"
         label="關閉邀請"
         caption="關閉"

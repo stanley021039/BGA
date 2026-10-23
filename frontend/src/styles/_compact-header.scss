@@ -27,7 +27,7 @@
     background: var(--play-surface);
     z-index: 140;
   }
-  .vue-site-header-feedback:has(.frontend-status:empty) {
+  .vue-site-header-feedback:has(.ui-notice-slot):not(:has(.ui-notice-slot[data-visible])) {
     visibility: hidden;
     pointer-events: none;
   }

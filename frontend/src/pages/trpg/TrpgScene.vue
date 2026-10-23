@@ -186,7 +186,10 @@ function input(event: Event) {
     >
     <div class="vue-trpg-status"
       ><p>{{ readiness }}</p
-      ><StatusSlot :message="trpg.notice" :error="trpg.failed" /></div
+      ><StatusSlot
+        :persistent="trpg.pending || trpg.canRetry || trpg.dirty"
+        :message="trpg.notice"
+        :error="trpg.failed" /></div
     ><footer class="vue-trpg-actions"
       ><UiButton
         v-if="state.phase === 'planning'"

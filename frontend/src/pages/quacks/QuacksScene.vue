@@ -163,7 +163,6 @@ onBeforeUnmount(() => {
           ><strong>{{ state.fortune.name }}</strong></button
         ><div class="vue-quacks-scene-tools"
           ><UiButton
-            stitch
             variant="ghost"
             icon-only
             label="檢視目前大釜"
@@ -184,13 +183,11 @@ onBeforeUnmount(() => {
                 /></svg></template></UiButton
           ><UiButton
             :disabled="!inspecting"
-            stitch
             variant="ghost"
             icon="previous"
             icon-only
             label="返回目前階段"
             @click="inspecting = false" /><UiButton
-            stitch
             variant="ghost"
             icon="settings"
             icon-only
@@ -294,7 +291,6 @@ onBeforeUnmount(() => {
         <UiButton
           v-if="boardVisible && isOwnPot"
           class="vue-quacks-pot-customize"
-          stitch
           variant="ghost"
           icon="settings"
           icon-only
@@ -335,7 +331,6 @@ onBeforeUnmount(() => {
               @click="open('witches')"
               >免</button
             ><UiButton
-              stitch
               variant="ghost"
               icon="help"
               icon-only
@@ -344,7 +339,6 @@ onBeforeUnmount(() => {
         ></div>
         <QuacksCommands v-if="!inspecting && (isOwnPot || !boardVisible)" /><UiButton
           v-else-if="!inspecting"
-          stitch
           variant="secondary"
           icon="previous"
           label="返回自己的大釜繼續操作"
@@ -352,6 +346,7 @@ onBeforeUnmount(() => {
         />
         <div class="vue-quacks-feedback"
           ><StatusSlot
+            :persistent="game.pending || game.canRetry"
             :message="game.notice || achievementNotice || (game.pending ? '正在送出…' : '')"
             :error="!!game.notice && !game.pending"
           /><a v-if="achievementNotice" href="/achievements">查看收藏冊</a></div
@@ -440,6 +435,9 @@ onBeforeUnmount(() => {
           }}</button
         ></div
       ></section
-    ><StatusSlot :message="game.notice" :error="!!game.notice && !game.pending" /></UiDialog
+    ><StatusSlot
+      :persistent="game.pending || game.canRetry"
+      :message="game.notice"
+      :error="!!game.notice && !game.pending" /></UiDialog
   ><QuacksEffects />
 </template>

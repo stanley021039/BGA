@@ -13,7 +13,9 @@ const prefs = usePreferencesStore(),
   surface = ref<HTMLCanvasElement | null>(null),
   stage = ref<HTMLElement | null>(null);
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
-const color = computed(() => attackEffects.find((e) => e.id === props.effect)?.color || '#00f0ff');
+const color = computed(
+  () => attackEffects.find((e) => e.id === props.effect)?.color || attackEffects[0].color,
+);
 const target = computed(() =>
   ['shield', 'sphere'].includes(props.effect) ? props.from : props.to,
 );
