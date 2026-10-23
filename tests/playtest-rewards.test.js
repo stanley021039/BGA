@@ -8,6 +8,7 @@ const { openDatabase } = require('../src/db'),
   { AchievementStore } = require('../src/achievements/store');
 const { unlockPlaytestRewards } = require('../tools/playtest-rewards.cjs');
 test('isolated playtests unlock only rewards and preserve real achievement progress and reward dates', (t) => {
+  fs.mkdirSync(path.resolve(__dirname, '../work'), { recursive: true });
   const work = fs.realpathSync(path.resolve(__dirname, '../work')),
     root = fs.mkdtempSync(path.join(work, 'test-unlocked-rewards-')),
     file = path.join(root, 'test.sqlite');
