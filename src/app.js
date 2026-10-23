@@ -63,6 +63,7 @@ const { Room } = require('./games/poker'),
   { GiftRoom } = require('./games/gift');
 const { TrpgRoom } = require('./games/trpg');
 const { QuacksRoom } = require('./games/quacks');
+const { CeoRoom } = require('./games/ceo-room');
 const { BluffRoom } = require('./games/bluff');
 const { TelephoneRoom } = require('./games/telephone');
 const { MusicQuizRoom } = require('./games/musicquiz'),
@@ -1632,6 +1633,9 @@ function initializeApp(config, dataLock, acquired) {
           return send({ rooms: listRooms(rooms, seats, kickedUsers, user.id) });
         }
         if (url.pathname === '/api/create' && req.method === 'POST') {
+          // The new UI must complete Stitch/Figma review before this is enabled publicly.
+          if (data.type === 'ceo' && config.ceoEnabled !== true)
+            throw new HttpError(400, 'GAME_NOT_ENABLED', 'CEO 仍在開發，尚未開放建立房間');
           if (pendingAchievementUnits.size >= 4096)
             throw new HttpError(
               503,
@@ -1654,6 +1658,7 @@ function initializeApp(config, dataLock, acquired) {
               'minimal',
               'bluff',
               'quacks',
+              'ceo',
             ].includes(data.type)
           )
             throw new HttpError(400, 'INVALID_GAME', '不支援的遊戲');
@@ -1666,7 +1671,8 @@ function initializeApp(config, dataLock, acquired) {
           do {
             code = randomBytes(3).toString('hex').toUpperCase();
           } while (rooms.has(code));
-          const quacks = data.type === 'quacks',
+          const ceo = data.type === 'ceo',
+            quacks = data.type === 'quacks',
             bluff = data.type === 'bluff',
             musicquiz = data.type === 'musicquiz',
             minimal = data.type === 'minimal',
@@ -1676,52 +1682,56 @@ function initializeApp(config, dataLock, acquired) {
             majority = data.type === 'majority',
             gift = data.type === 'gift';
           const room = new (
-            quacks
-              ? QuacksRoom
-              : bluff
-                ? BluffRoom
-                : musicquiz
-                  ? MusicQuizRoom
-                  : minimal
-                    ? MinimalRoom
-                    : telephone
-                      ? TelephoneRoom
-                      : trpg
-                        ? TrpgRoom
-                        : draw
-                          ? DrawGuessRoom
-                          : gift
-                            ? GiftRoom
-                            : majority
-                              ? MajorityRoom
-                              : thunder
-                                ? ThunderRoom
-                                : Room
+            ceo
+              ? CeoRoom
+              : quacks
+                ? QuacksRoom
+                : bluff
+                  ? BluffRoom
+                  : musicquiz
+                    ? MusicQuizRoom
+                    : minimal
+                      ? MinimalRoom
+                      : telephone
+                        ? TelephoneRoom
+                        : trpg
+                          ? TrpgRoom
+                          : draw
+                            ? DrawGuessRoom
+                            : gift
+                              ? GiftRoom
+                              : majority
+                                ? MajorityRoom
+                                : thunder
+                                  ? ThunderRoom
+                                  : Room
           )(
             code,
             String(
               data.roomName ||
-                (quacks
-                  ? '郎中闖江湖好友局'
-                  : bluff
-                    ? '瞎掰王好友局'
-                    : musicquiz
-                      ? '猜歌挑戰好友局'
-                      : minimal
-                        ? '極簡畫家好友局'
-                        : telephone
-                          ? '傳情畫意好友局'
-                          : trpg
-                            ? '霧港鐘聲冒險隊'
-                            : draw
-                              ? '你畫我猜好友局'
-                              : gift
-                                ? '送禮達人好友局'
-                                : majority
-                                  ? '同頻俱樂部'
-                                  : thunder
-                                    ? '末路狂飆好友局'
-                                    : '深夜好友局'),
+                (ceo
+                  ? '王牌執行長好友局'
+                  : quacks
+                    ? '郎中闖江湖好友局'
+                    : bluff
+                      ? '瞎掰王好友局'
+                      : musicquiz
+                        ? '猜歌挑戰好友局'
+                        : minimal
+                          ? '極簡畫家好友局'
+                          : telephone
+                            ? '傳情畫意好友局'
+                            : trpg
+                              ? '霧港鐘聲冒險隊'
+                              : draw
+                                ? '你畫我猜好友局'
+                                : gift
+                                  ? '送禮達人好友局'
+                                  : majority
+                                    ? '同頻俱樂部'
+                                    : thunder
+                                      ? '末路狂飆好友局'
+                                      : '深夜好友局'),
             ).slice(0, 24),
           );
           if (quacks) room.configure(room.host, data);
@@ -2371,6 +2381,7 @@ function initializeApp(config, dataLock, acquired) {
                   'minimal',
                   'bluff',
                   'quacks',
+                  'ceo',
                 ].includes(room.type) ||
                 !['waiting', 'showdown'].includes(room.phase) ||
                 p.stack > 0

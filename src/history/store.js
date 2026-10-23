@@ -23,6 +23,7 @@ const finished = (r) =>
     'minimal',
     'bluff',
     'quacks',
+    'ceo',
   ].includes(r.type)
     ? r.phase === 'finished'
     : r.phase === 'showdown';
@@ -90,6 +91,7 @@ function importedSessionHeader(file) {
         'minimal',
         'bluff',
         'quacks',
+        'ceo',
       ].includes(header.type) &&
       typeof header.room === 'string' &&
       /^[a-f0-9]{6}$/i.test(header.room) &&
@@ -394,27 +396,29 @@ class HistoryStore {
             __dirname,
             '..',
             'games',
-            type === 'quacks'
-              ? 'quacks.js'
-              : type === 'bluff'
-                ? 'bluff.js'
-                : type === 'musicquiz'
-                  ? 'musicquiz.js'
-                  : type === 'minimal'
-                    ? 'minimal.js'
-                    : type === 'telephone'
-                      ? 'telephone.js'
-                      : type === 'trpg'
-                        ? 'trpg.js'
-                        : type === 'majority'
-                          ? 'majority.js'
-                          : type === 'thunder'
-                            ? 'thunder.js'
-                            : type === 'gift'
-                              ? 'gift.js'
-                              : type === 'draw'
-                                ? 'draw-guess.js'
-                                : 'poker.js',
+            type === 'ceo'
+              ? 'ceo-room.js'
+              : type === 'quacks'
+                ? 'quacks.js'
+                : type === 'bluff'
+                  ? 'bluff.js'
+                  : type === 'musicquiz'
+                    ? 'musicquiz.js'
+                    : type === 'minimal'
+                      ? 'minimal.js'
+                      : type === 'telephone'
+                        ? 'telephone.js'
+                        : type === 'trpg'
+                          ? 'trpg.js'
+                          : type === 'majority'
+                            ? 'majority.js'
+                            : type === 'thunder'
+                              ? 'thunder.js'
+                              : type === 'gift'
+                                ? 'gift.js'
+                                : type === 'draw'
+                                  ? 'draw-guess.js'
+                                  : 'poker.js',
           ),
           'utf8',
         );
@@ -436,6 +440,19 @@ class HistoryStore {
         meta: m,
         initial: before,
         engine: {
+          ...(type === 'ceo'
+            ? {
+                rulesCore: fs.readFileSync(path.join(__dirname, '..', 'games', 'ceo.js'), 'utf8'),
+                provisionalCatalog: fs.readFileSync(
+                  path.join(__dirname, '..', 'games', 'ceo-catalog.js'),
+                  'utf8',
+                ),
+                partyBase: fs.readFileSync(
+                  path.join(__dirname, '..', 'games', 'party-base.js'),
+                  'utf8',
+                ),
+              }
+            : {}),
           ...(['musicquiz', 'minimal', 'bluff', 'quacks'].includes(type)
             ? {
                 partyBase: fs.readFileSync(
@@ -618,7 +635,7 @@ class HistoryStore {
           ctx.current = null;
         } else if (finished(room)) {
           m.status =
-            ['telephone', 'musicquiz', 'minimal', 'bluff', 'quacks'].includes(room.type) &&
+            ['telephone', 'musicquiz', 'minimal', 'bluff', 'quacks', 'ceo'].includes(room.type) &&
             room.interrupted
               ? 'interrupted'
               : 'finished';
