@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { sizedImage } from '../../services/image-size';
+import { focusFromPointer } from '../../services/pointer-focus';
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { useLobbyBackgroundStore } from '../../stores/lobby-background';
@@ -189,7 +190,7 @@ function click(event: MouseEvent) {
     rect = visitors?.getBoundingClientRect();
   if (!lobby.connected || !rect?.width || !rect.height) return;
   keyboardTarget = null;
-  stage.value?.focus({ preventScroll: true });
+  focusFromPointer(stage.value);
   lobby.move({
     x: ((event.clientX - rect.left) / rect.width) * 100,
     y: ((event.clientY - rect.top) / rect.height) * 100,
