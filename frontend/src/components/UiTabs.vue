@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import UiBadge from './UiBadge.vue';
 import { useId } from 'vue';
 const props = defineProps<{
   items: { id: string; label: string; count?: string }[];
@@ -43,9 +44,9 @@ function keydown(event: KeyboardEvent) {
       :disabled="disabled"
       @click="emit('update:modelValue', item.id)"
       >{{ item.label
-      }}<span v-if="item.count !== undefined" class="ui-badge collection-count">{{
+      }}<UiBadge v-if="item.count !== undefined" class="ui-tab-count" counter>{{
         item.count
-      }}</span></button
+      }}</UiBadge></button
     ></nav
   >
 </template>

@@ -346,6 +346,7 @@
 // moving the approved brand, navigation, or account controls.
 $c03: 'body[data-visual-theme] [data-site-header].site-header.vue-site-header:has(>.vue-site-header-c03)';
 #{$c03} {
+  font-family: var(--stitch-font-family);
   display: block;
   box-sizing: border-box;
   inline-size: 100%;
@@ -631,7 +632,7 @@ $c03: 'body[data-visual-theme] [data-site-header].site-header.vue-site-header:ha
     border-radius: 8px;
     background: var(--stitch-surface, var(--play-surface));
     z-index: 140;
-    &:has(.frontend-status:empty) {
+    &:has(.ui-notice-slot):not(:has(.ui-notice-slot[data-visible])) {
       visibility: hidden;
       pointer-events: none;
     }

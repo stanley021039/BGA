@@ -262,7 +262,7 @@ watch(
           caption="套用"
           :disabled="disabled"
       /></div>
-      <StatusSlot :id="prefix + '-error'" :message="error" :error="!!error" />
+      <StatusSlot persistent :id="prefix + '-error'" :message="error" :error="!!error" />
     </form>
   </UiPopover>
 </template>

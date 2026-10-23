@@ -20,6 +20,7 @@ $typography: (
   18: 1.125rem,
   20: 1.25rem,
   24: 1.5rem,
+  28: 1.75rem,
   32: 2rem,
 );
 @function space($pixels) {
@@ -30,6 +31,74 @@ $typography: (
 }
 
 :root {
+  // Fixed artwork stage colours preserve attack previews across light/dark themes.
+  --stitch-artwork-preview-bg: #10182b;
+  --stitch-artwork-preview-ink: #fff;
+  // Fixed colours from the approved entrance artwork, shared without theme remapping.
+  --stitch-artwork-swatch-000000: #000000;
+  --stitch-artwork-swatch-0284c7: #0284c7;
+  --stitch-artwork-swatch-059669: #059669;
+  --stitch-artwork-swatch-060e20: #060e20;
+  --stitch-artwork-swatch-06b6d4: #06b6d4;
+  --stitch-artwork-swatch-09090b: #09090b;
+  --stitch-artwork-swatch-0c0a09: #0c0a09;
+  --stitch-artwork-swatch-0ea5e9: #0ea5e9;
+  --stitch-artwork-swatch-10b981: #10b981;
+  --stitch-artwork-swatch-1c1917: #1c1917;
+  --stitch-artwork-swatch-2563eb: #2563eb;
+  --stitch-artwork-swatch-292524: #292524;
+  --stitch-artwork-swatch-34d399: #34d399;
+  --stitch-artwork-swatch-38bdf8: #38bdf8;
+  --stitch-artwork-swatch-3b0764: #3b0764;
+  --stitch-artwork-swatch-3b82f6: #3b82f6;
+  --stitch-artwork-swatch-450a0a: #450a0a;
+  --stitch-artwork-swatch-451a03: #451a03;
+  --stitch-artwork-swatch-4a044e: #4a044e;
+  --stitch-artwork-swatch-581c87: #581c87;
+  --stitch-artwork-swatch-60a5fa: #60a5fa;
+  --stitch-artwork-swatch-67e8f9: #67e8f9;
+  --stitch-artwork-swatch-6ee7b7: #6ee7b7;
+  --stitch-artwork-swatch-7dd3fc: #7dd3fc;
+  --stitch-artwork-swatch-7e22ce: #7e22ce;
+  --stitch-artwork-swatch-7f1d1d: #7f1d1d;
+  --stitch-artwork-swatch-9333ea: #9333ea;
+  --stitch-artwork-swatch-93c5fd: #93c5fd;
+  --stitch-artwork-swatch-991b1b: #991b1b;
+  --stitch-artwork-swatch-99f6e4: #99f6e4;
+  --stitch-artwork-swatch-a5f3fc: #a5f3fc;
+  --stitch-artwork-swatch-a855f7: #a855f7;
+  --stitch-artwork-swatch-b45309: #b45309;
+  --stitch-artwork-swatch-c026d3: #c026d3;
+  --stitch-artwork-swatch-c084fc: #c084fc;
+  --stitch-artwork-swatch-c0c1ff: #c0c1ff;
+  --stitch-artwork-swatch-c4b5fd: #c4b5fd;
+  --stitch-artwork-swatch-d8b4fe: #d8b4fe;
+  --stitch-artwork-swatch-d946ef: #d946ef;
+  --stitch-artwork-swatch-d97706: #d97706;
+  --stitch-artwork-swatch-dc2626: #dc2626;
+  --stitch-artwork-swatch-e0f2fe: #e0f2fe;
+  --stitch-artwork-swatch-e11d48: #e11d48;
+  --stitch-artwork-swatch-e879f9: #e879f9;
+  --stitch-artwork-swatch-e9d5ff: #e9d5ff;
+  --stitch-artwork-swatch-ea580c: #ea580c;
+  --stitch-artwork-swatch-eab308: #eab308;
+  --stitch-artwork-swatch-ec4899: #ec4899;
+  --stitch-artwork-swatch-ef4444: #ef4444;
+  --stitch-artwork-swatch-f0abfc: #f0abfc;
+  --stitch-artwork-swatch-f43f5e: #f43f5e;
+  --stitch-artwork-swatch-f472b6: #f472b6;
+  --stitch-artwork-swatch-f59e0b: #f59e0b;
+  --stitch-artwork-swatch-f87171: #f87171;
+  --stitch-artwork-swatch-f97316: #f97316;
+  --stitch-artwork-swatch-fb7185: #fb7185;
+  --stitch-artwork-swatch-fb923c: #fb923c;
+  --stitch-artwork-swatch-fbbf24: #fbbf24;
+  --stitch-artwork-swatch-fcd34d: #fcd34d;
+  --stitch-artwork-swatch-fde047: #fde047;
+  --stitch-artwork-swatch-fde68a: #fde68a;
+  --stitch-artwork-swatch-fef08a: #fef08a;
+  --stitch-artwork-swatch-fef9c3: #fef9c3;
+  --stitch-artwork-swatch-ffffff: #ffffff;
   --stitch-primary: #f6c845;
   --stitch-base: #fcf9f8;
   --stitch-blue: #0051d5;
@@ -70,17 +139,19 @@ $typography: (
   --stitch-panel-radius: 0.75rem;
   --stitch-control-height: 2.75rem;
   --stitch-icon-size: 1.25rem;
-  --stitch-font-family: var(--ui-font-family, system-ui, sans-serif);
+  --stitch-font-family: 'Noto Sans TC', system-ui, sans-serif;
   --stitch-line-height-body: 1.5;
   --stitch-line-height-heading: 1.25;
 
   // Rule set from Figma 03 「00｜共用元件」 C07 基礎元件 (1919:18254). Use these
   // names instead of raw values; docs/UI-COMPONENTS.md lists where each applies.
-  // Radius: badge < control (button, input, select) < panel < raised card < pill.
-  --stitch-radius-badge: 0.25rem;
+  // Approved geometry: fields 8, buttons/panels/choices 12, overlays 16, badges pill.
+  --stitch-radius-badge: var(--stitch-radius-pill);
   --stitch-radius-control: var(--stitch-control-radius);
   --stitch-radius-panel: var(--stitch-panel-radius);
   --stitch-radius-card: 1rem;
+  --stitch-radius-dialog: var(--stitch-radius-card);
+  --stitch-radius-popover: var(--stitch-radius-dialog);
   --stitch-radius-button: 0.75rem;
   --stitch-radius-pill: 9999px;
   // Border: hairline for panels/fields, strong for raised cards and frames.
@@ -91,6 +162,7 @@ $typography: (
   // Shadow: flat by default; raised cards use the hard Stitch offset.
   --stitch-shadow-raised: 0 0.25rem 0 var(--stitch-frame);
   --stitch-shadow-raised-sm: 0 0.125rem 0 var(--stitch-frame);
+  --stitch-shadow-button-primary: 0 0.1875rem 0 var(--stitch-frame);
   --stitch-shadow-overlay: 0 0.25rem 0.75rem rgb(0 0 0 / 12%);
   // Focus: one ring for every interactive element.
   --stitch-focus-ring-width: 3px;
@@ -109,23 +181,90 @@ $typography: (
   // Panel padding: regular 24, compact 16 (dense sidebars, settings cards).
   --stitch-panel-padding: var(--stitch-space-24);
   --stitch-panel-padding-compact: var(--stitch-space-16);
-  // Controls: buttons, inputs and selects share height, radius and type size.
+  // Controls share a minimum height; buttons/labels are 14, input text is 16.
   --stitch-control-padding-block: var(--stitch-space-8);
   --stitch-control-padding-inline: var(--stitch-space-12);
-  --stitch-field-padding-block: var(--stitch-space-12);
+  --stitch-field-padding-block: var(--stitch-space-8);
   --stitch-field-padding-inline: var(--stitch-space-16);
-  --stitch-control-font-size: var(--stitch-font-14);
+  --stitch-control-font-size: var(--stitch-text-button);
+  --stitch-field-message-height: calc(var(--stitch-text-hint) * var(--stitch-line-height-body));
+  --stitch-field-message-height-mobile: calc(
+    2 * var(--stitch-text-hint) * var(--stitch-line-height-body)
+  );
   --stitch-checkbox-size: 1rem;
   --stitch-select-chevron-size: var(--stitch-icon-size);
   // Dropdown menus (UiPopover lists): item rows match control height.
   --stitch-menu-padding: var(--stitch-space-8);
   --stitch-menu-item-padding: var(--stitch-space-8) var(--stitch-space-12);
   --stitch-menu-gap: var(--stitch-space-4);
-  // Type roles: page title, panel title, body/label, hint.
-  --stitch-text-page: var(--stitch-font-24);
-  --stitch-text-section: var(--stitch-font-18);
-  --stitch-text-body: var(--stitch-font-14);
-  --stitch-text-hint: var(--stitch-font-12);
+  // Readable B roles. Game-specific information retains its own named scale.
+  --stitch-text-page: var(--stitch-font-28);
+  --stitch-text-section: var(--stitch-font-20);
+  --stitch-text-body: var(--stitch-font-16);
+  --stitch-text-hint: var(--stitch-font-14);
+  --stitch-text-data: var(--stitch-font-32);
+  --stitch-text-button: var(--stitch-font-14);
+  --stitch-text-label: var(--stitch-font-14);
+  --stitch-text-input: var(--stitch-font-16);
+  // Choice C: the selected state keeps the same neutral fill and box size.
+  --stitch-choice-bg: var(--stitch-surface-subtle);
+  --stitch-choice-selected-bg: var(--stitch-choice-bg);
+  --stitch-choice-hover-bg: var(--stitch-surface-hover);
+  --stitch-choice-ink: var(--stitch-ink);
+  --stitch-choice-muted: var(--stitch-muted);
+  --stitch-choice-disabled-bg: var(--stitch-disabled-bg);
+  --stitch-choice-disabled-ink: var(--stitch-disabled-ink);
+  --stitch-choice-border: var(--stitch-border-width-strong) solid transparent;
+  --stitch-choice-radius: var(--stitch-radius-panel);
+  --stitch-choice-padding: var(--stitch-space-20);
+  --stitch-choice-ring: 3px solid var(--stitch-frame);
+  --stitch-choice-ring-offset: 2px;
+  // Heading A: page divider and the fixed 4 x 20 section accent.
+  --stitch-heading-bar-width: var(--stitch-space-4);
+  --stitch-heading-bar-height: var(--stitch-font-20);
+  --stitch-heading-bar-color: var(--stitch-primary);
+  --stitch-heading-bar-radius: var(--stitch-space-2);
+  --stitch-heading-gap: var(--stitch-space-12);
+  --stitch-page-heading-rule: var(--stitch-border);
+  --stitch-list-row-bg: var(--stitch-surface);
+  --stitch-list-row-alt-bg: #f9f8f6;
+  // Badge B and Notice A use the R6 tints. Success/warning ink is slightly
+  // darker than the source so 14px text clears the shared 4.5:1 threshold.
+  --stitch-info-bg: #e2edff;
+  --stitch-info-ink: #1d4ed8;
+  --stitch-info-line: #a7bfe9;
+  --stitch-warning-bg: #fff0d4;
+  --stitch-warning-ink: #a94d08;
+  --stitch-warning-line: #d5b681;
+  --stitch-badge-neutral-bg: var(--stitch-surface);
+  --stitch-badge-neutral-ink: var(--stitch-ink);
+  --stitch-badge-primary-bg: var(--stitch-primary);
+  --stitch-badge-primary-ink: var(--stitch-on-primary);
+  --stitch-badge-success-bg: #d1f2d9;
+  --stitch-badge-success-ink: #137237;
+  --stitch-badge-info-bg: var(--stitch-info-bg);
+  --stitch-badge-info-ink: var(--stitch-info-ink);
+  --stitch-badge-warning-bg: var(--stitch-warning-bg);
+  --stitch-badge-warning-ink: var(--stitch-warning-ink);
+  --stitch-badge-danger-bg: #ffe3e3;
+  --stitch-badge-danger-ink: #b91c1c;
+  --stitch-badge-disabled-bg: #eeeeee;
+  --stitch-badge-disabled-ink: #666666;
+  --stitch-badge-border: var(--stitch-border-strong);
+  --stitch-badge-padding-block: var(--stitch-space-4);
+  --stitch-badge-padding-inline: 0.875rem;
+  --stitch-notice-info-bg: var(--stitch-badge-info-bg);
+  --stitch-notice-info-ink: var(--stitch-badge-info-ink);
+  --stitch-notice-success-bg: var(--stitch-badge-success-bg);
+  --stitch-notice-success-ink: var(--stitch-badge-success-ink);
+  --stitch-notice-warning-bg: var(--stitch-badge-warning-bg);
+  --stitch-notice-warning-ink: var(--stitch-badge-warning-ink);
+  --stitch-notice-danger-bg: var(--stitch-badge-danger-bg);
+  --stitch-notice-danger-ink: var(--stitch-badge-danger-ink);
+  --stitch-notice-neutral-bg: var(--stitch-surface-subtle);
+  --stitch-notice-neutral-ink: var(--stitch-ink);
+  --stitch-notice-radius: var(--stitch-radius-control);
+  --stitch-notice-padding: 0.875rem;
   --stitch-weight-title: 700;
   --stitch-weight-button: 700;
   --stitch-weight-body: 400;
@@ -164,4 +303,17 @@ html[data-color-scheme='dark'] {
   --stitch-contrast: #f5f3ee;
   --stitch-on-contrast: #20211e;
   --stitch-contrast-hover: #daddd2;
+  --stitch-list-row-alt-bg: var(--stitch-surface-subtle);
+  --stitch-info-bg: #1b2f50;
+  --stitch-info-ink: #a4c4ff;
+  --stitch-info-line: #4d6e9b;
+  --stitch-warning-bg: #40301a;
+  --stitch-warning-ink: #f4ca8b;
+  --stitch-warning-line: #977749;
+  --stitch-badge-success-bg: #173524;
+  --stitch-badge-success-ink: #a2ddb4;
+  --stitch-badge-danger-bg: #442424;
+  --stitch-badge-danger-ink: #ffb8b8;
+  --stitch-badge-disabled-bg: var(--stitch-disabled-bg);
+  --stitch-badge-disabled-ink: var(--stitch-muted);
 }

@@ -1075,14 +1075,6 @@
   }
 }
 
-:root body[data-visual-theme].vue-quacks-document {
-  .vue-quacks-pot-dock > button {
-    border-radius: 10px !important;
-  }
-  .vue-quacks-pot-tabs > button {
-    border-radius: 8px !important;
-  }
-}
 @media (max-width: 1180px) {
   :root body[data-visual-theme].vue-quacks-document .vue-room-topbar-actions {
     flex-wrap: wrap;

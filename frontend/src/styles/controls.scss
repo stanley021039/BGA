@@ -21,14 +21,17 @@
   // C05/C07-R2). Pages size and place buttons; they never reshape or recolour
   // them, so the shape vars are locked here. ui-primitives applies them with
   // !important, which is why the lock also needs it.
-  --_stitch-fill: var(--stitch-surface-subtle);
+  --_stitch-fill: var(--stitch-surface);
   --_stitch-color: var(--stitch-ink);
   --_stitch-border: var(--stitch-frame);
   --_stitch-hover: var(--stitch-surface-hover);
   --_stitch-active: var(--stitch-surface-hover);
-  --_stitch-shadow: none;
+  --_stitch-shadow: var(--stitch-shadow-raised-sm);
+  // ui-check-allow important: 覆蓋 ui-primitives 既有 important 圓角，維持共用按鈕 12px 契約。
   --ui-button-radius: var(--stitch-radius-button) !important;
+  // ui-check-allow important: 覆蓋 ui-primitives 既有 important 邊寬，維持共用按鈕 2px 契約。
   --ui-button-border-width: var(--stitch-border-width-strong) !important;
+  // ui-check-allow important: 覆蓋 ui-primitives 既有 important 邊色，保留唯一的共用 variant 與播放器主題入口。
   --ui-button-border-color: var(--stitch-button-border-color, var(--_stitch-border)) !important;
   --ui-button-padding-block: var(--stitch-space-8);
   --ui-button-padding-inline: var(--stitch-space-12);
@@ -38,15 +41,15 @@
   box-sizing: border-box;
   align-items: center;
   justify-content: center;
-  gap: var(--ui-control-gap);
+  gap: var(--stitch-gap-label);
   min-inline-size: 44px;
-  min-block-size: var(--ui-control-height);
-  padding: var(--ui-button-padding-block) var(--ui-button-padding-inline);
+  min-block-size: max(44px, var(--stitch-control-height));
+  padding: var(--stitch-control-padding-block) var(--stitch-control-padding-inline);
   background: var(--stitch-button-bg, var(--_stitch-fill));
   color: var(--stitch-button-color, var(--_stitch-color));
   box-shadow: var(--_stitch-shadow);
   font-family: var(--stitch-font-family);
-  font-size: var(--stitch-button-font-size, var(--stitch-font-14));
+  font-size: var(--stitch-text-button);
   font-weight: var(--stitch-weight-button);
   line-height: 1.4;
   text-decoration: none;
@@ -60,16 +63,17 @@
     --_stitch-color: var(--stitch-on-primary);
     --_stitch-hover: var(--stitch-primary-hover);
     --_stitch-active: var(--stitch-primary-active);
-    --_stitch-shadow: var(--stitch-shadow-raised-sm);
+    --_stitch-shadow: var(--stitch-shadow-button-primary);
   }
   &[data-stitch-variant='ghost'] {
     --_stitch-fill: transparent;
     --_stitch-border: transparent;
+    --_stitch-shadow: none;
   }
   &[data-stitch-variant='danger'] {
     --_stitch-fill: var(--stitch-danger-bg);
     --_stitch-color: var(--stitch-danger-ink);
-    --_stitch-border: var(--stitch-danger-ink);
+    --_stitch-border: var(--stitch-frame);
     --_stitch-hover: var(--stitch-danger-hover);
     --_stitch-active: var(--stitch-danger-hover);
   }
@@ -105,7 +109,7 @@
     outline: 3px solid var(--stitch-focus);
     outline-offset: 2px;
   }
-  &:disabled:not(.is-pending) {
+  &:disabled:not(.is-stitch-pending) {
     --_stitch-fill: var(--stitch-disabled-bg);
     --_stitch-color: var(--stitch-disabled-ink);
     --_stitch-border: var(--stitch-disabled-line);
@@ -116,16 +120,55 @@
     --_stitch-fill: transparent;
     --_stitch-border: transparent;
   }
-  &.is-pending {
+  &.is-stitch-pending {
     opacity: 0.72;
     cursor: progress;
   }
   &.ui-icon-button {
+    // ui-check-allow important: 覆蓋同一 legacy 按鈕圓角鎖，維持 icon-only 圓形命中區。
     --ui-button-radius: var(--stitch-radius-pill) !important;
     padding: var(--stitch-space-8);
   }
   &.ui-icon-button:not(.has-mobile-caption) {
     inline-size: 44px;
+  }
+  position: relative;
+  .ui-button-icon-slot {
+    display: inline-flex;
+    position: relative;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: var(--stitch-icon-size);
+    min-block-size: var(--stitch-icon-size);
+    block-size: auto;
+    &[data-pending] > :not(.ui-button-spinner) {
+      visibility: hidden;
+    }
+  }
+  .ui-button-spinner {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    inline-size: var(--stitch-space-16);
+    block-size: var(--stitch-space-16);
+    margin: auto;
+    border: var(--stitch-border-width-strong) solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: var(--stitch-radius-pill);
+    animation: ui-stitch-pending-spin 0.75s linear infinite;
+  }
+  // A text-only button keeps its existing width; the decorative cue occupies its padding.
+  .ui-button-edge-spinner {
+    inset-inline-start: auto;
+    inset-inline-end: var(--stitch-space-2);
+    inline-size: 0.625rem;
+    block-size: 0.625rem;
+  }
+  &.ui-icon-button > .ui-button-edge-spinner {
+    inset: 0;
+    inline-size: var(--stitch-space-16);
+    block-size: var(--stitch-space-16);
   }
   .ui-button-icon {
     inline-size: var(--stitch-icon-size);
@@ -153,7 +196,7 @@
   padding: var(--stitch-space-16);
   gap: var(--stitch-space-16);
   border: var(--stitch-border-strong);
-  border-radius: var(--stitch-radius-card);
+  border-radius: var(--stitch-radius-dialog);
   background: var(--stitch-surface);
   box-shadow: var(--stitch-shadow-raised);
   color: var(--stitch-ink);
@@ -194,7 +237,9 @@
   gap: var(--stitch-space-8);
   min-inline-size: 0;
   min-block-size: var(--stitch-control-height);
+  // ui-check-allow important: 覆蓋 ui-primitives 的 important 按鈕邊寬，避免原生分頁出現按鈕外框。
   --ui-button-border-width: 0px !important;
+  // ui-check-allow important: 覆蓋 ui-primitives 的 important 按鈕圓角，維持底線分頁而非膠囊外框。
   --ui-button-radius: 0px !important;
   margin: 0;
   padding: var(--stitch-space-8) 0;
@@ -204,7 +249,7 @@
   color: var(--stitch-ink);
   box-shadow: none;
   font: inherit;
-  font-size: var(--stitch-text-body);
+  font-size: var(--stitch-text-button);
   font-weight: var(--stitch-weight-body);
   cursor: pointer;
   &[aria-selected='true'] {
@@ -220,7 +265,7 @@
     cursor: not-allowed;
   }
 }
-.vue-tabs .collection-count {
+.vue-tabs .ui-tab-count {
   inline-size: 4.5em;
   min-inline-size: 4.5em;
   padding-inline: 0;
@@ -250,7 +295,7 @@
 }
 .vue-confirm-list {
   display: grid;
-  gap: tokens.space(1);
+  gap: var(--stitch-space-4);
   margin: 0;
   padding-inline-start: 1.25em;
   overflow-wrap: anywhere;
@@ -335,4 +380,18 @@
   .vue-frame-filters {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+@keyframes ui-stitch-pending-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root body .ui-stitch-button .ui-button-spinner {
+    animation: none;
+  }
+}
+:root.motion-reduced body .ui-stitch-button .ui-button-spinner {
+  animation: none;
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, useAttrs, useId } from 'vue';
+import { computed, useAttrs, useId, type StyleValue } from 'vue';
 // A labelled input, select (dropdown) or textarea (Figma 03 C07 「按鈕與表單」).
-// class goes to the label; every other attribute goes to the control.
+// class/style belong to the label; the remaining attributes belong to the control.
 defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
@@ -10,9 +10,10 @@ const props = withDefaults(
     options?: readonly { value: string | number; label: string; disabled?: boolean }[];
     hint?: string;
     error?: string;
+    reserveMessage?: boolean;
     id?: string;
   }>(),
-  { control: 'input' },
+  { control: 'input', reserveMessage: undefined },
 );
 const [model, modifiers] = defineModel<string | number | null | undefined, 'number' | 'trim'>({
   set(value) {
@@ -28,8 +29,11 @@ const attrs = useAttrs(),
   generatedId = useId();
 const fieldId = computed(() => props.id || generatedId),
   messageId = computed(() => fieldId.value + '-message');
+const hasMessageSlot = computed(
+  () => props.reserveMessage ?? (props.hint !== undefined || props.error !== undefined),
+);
 const controlAttrs = computed(() => {
-  const { class: _class, ...rest } = attrs;
+  const { class: _class, style: _style, ...rest } = attrs;
   const describedBy = [rest['aria-describedby'], props.hint || props.error ? messageId.value : '']
     .filter(Boolean)
     .join(' ');
@@ -46,6 +50,7 @@ const controlAttrs = computed(() => {
   <label
     class="ui-field"
     :class="attrs.class"
+    :style="attrs.style as StyleValue"
     :for="fieldId"
     :data-control="control"
     :data-invalid="error ? '' : undefined"
@@ -65,11 +70,58 @@ const controlAttrs = computed(() => {
       v-model="model"
       v-bind="controlAttrs"
     /><span
-      v-if="hint || error"
-      :id="messageId"
-      class="ui-field-message"
-      :role="error ? 'alert' : undefined"
-      >{{ error || hint }}</span
+      v-if="hasMessageSlot"
+      class="ui-field-message-slot"
+      :tabindex="hint || error ? 0 : undefined"
+      :role="hint || error ? 'region' : undefined"
+      :aria-label="hint || error ? label + '的欄位說明' : undefined"
+      ><span
+        v-if="hint || error"
+        :id="messageId"
+        class="ui-field-message"
+        :role="error ? 'alert' : undefined"
+        >{{ error || hint }}</span
+      ></span
     ></label
   >
 </template>
+
+<style scoped>
+:root body .ui-field,
+:root body .ui-field-label {
+  font-family: var(--stitch-font-family);
+  font-size: var(--stitch-text-label);
+  line-height: var(--stitch-line-height-body);
+}
+:root body .ui-field-control {
+  font-size: var(--stitch-text-input);
+  line-height: var(--stitch-line-height-body);
+}
+.ui-field-message-slot {
+  box-sizing: border-box;
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: var(--stitch-field-message-height);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  font-size: var(--stitch-text-hint);
+  line-height: var(--stitch-line-height-body);
+}
+.ui-field-message-slot:focus-visible {
+  outline: var(--stitch-focus-ring);
+  outline-offset: var(--stitch-focus-offset);
+}
+.ui-field-message-slot > .ui-field-message {
+  display: block;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+@media (max-width: 760px) {
+  .ui-field-message-slot {
+    block-size: var(--stitch-field-message-height-mobile);
+  }
+}
+</style>

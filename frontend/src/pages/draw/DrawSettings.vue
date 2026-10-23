@@ -195,7 +195,10 @@ defineExpose({
       </fieldset>
     </div>
     <footer
-      ><StatusSlot :message="error || (pending ? '正在儲存設定…' : '')" :error="!!error" /><UiButton
+      ><StatusSlot
+        :persistent="pending || !!error"
+        :message="error || (pending ? '正在儲存設定…' : '')"
+        :error="!!error" /><UiButton
         variant="ghost"
         v-if="error && editable"
         icon="refresh"

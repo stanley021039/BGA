@@ -8,6 +8,7 @@ import { bluffRoles } from '../../contracts/bluff';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiField from '../../components/UiField.vue';
 import UiIcon from '../../components/UiIcon.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import BluffReview from './BluffReview.vue';
@@ -459,7 +460,8 @@ function rank(index: number) {
                     class="vue-bluff-answer is-live"
                     >{{ talk.preview.value || '請開始說話…' }}</p
                   ><form v-if="writing" class="vue-bluff-write" @submit.prevent="answer(written)"
-                    ><input
+                    ><UiField
+                      label="輸入你的答案"
                       v-model="written"
                       type="text"
                       maxlength="240"
@@ -549,14 +551,17 @@ function rank(index: number) {
     >
     <div class="vue-bluff-feedback"
       ><StatusSlot
+        :persistent="actions.pending || actions.canRetry"
         :message="actions.notice"
-        :error="!!actions.notice && !actions.pending" /><UiButton
-        v-if="actions.canRetry"
-        variant="secondary"
-        icon="refresh"
-        label="重試同一操作"
-        :disabled="blocked"
-        @click="actions.retrySame()" /></div
+        :error="!!actions.notice && !actions.pending" /><div class="vue-bluff-retry-slot"
+        ><UiButton
+          v-if="actions.canRetry"
+          variant="secondary"
+          icon="refresh"
+          icon-only
+          label="重試同一操作"
+          :disabled="blocked"
+          @click="actions.retrySame()" /></div></div
   ></section>
   <Teleport to="body"
     ><div
@@ -568,5 +573,5 @@ function rank(index: number) {
       data-game-focus-overlay
       ><div v-for="event in bluff.liveReactions" :key="event.id">{{ event.name }} 質疑你</div></div
     ></Teleport
-  ><ConfirmDialog ref="confirm" stitch />
+  ><ConfirmDialog ref="confirm" />
 </template>

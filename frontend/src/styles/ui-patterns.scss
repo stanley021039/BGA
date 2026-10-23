@@ -1,0 +1,235 @@
+// R6, S-20261023: badges B, notices A, choices C, headings A, lists C.
+:root body .ui-stitch-badge {
+  display: inline-flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stitch-gap-inline);
+  min-block-size: 1.875rem;
+  max-inline-size: 100%;
+  padding: var(--stitch-badge-padding-block) var(--stitch-badge-padding-inline);
+  border: var(--stitch-badge-border);
+  border-radius: var(--stitch-radius-pill);
+  background: var(--stitch-badge-neutral-bg);
+  color: var(--stitch-badge-neutral-ink);
+  font: var(--stitch-weight-title) var(--stitch-text-hint) / 1.3 var(--stitch-font-family);
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+  @each $tone in primary, success, info, warning, danger, neutral, disabled {
+    &[data-tone='#{$tone}'] {
+      background: var(--stitch-badge-#{$tone}-bg);
+      color: var(--stitch-badge-#{$tone}-ink);
+    }
+  }
+  &[data-counter] {
+    min-inline-size: 1.75rem;
+    min-block-size: 1.75rem;
+    padding: var(--stitch-space-2) var(--stitch-space-4);
+    font-variant-numeric: tabular-nums;
+  }
+}
+:root body .ui-notice-slot {
+  box-sizing: border-box;
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 0;
+  --_notice-height: calc(var(--stitch-control-height) + var(--stitch-space-8));
+  block-size: var(--_notice-height);
+  min-block-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  &[data-density='compact'] {
+    --_notice-height: var(--stitch-control-height);
+    > .ui-notice {
+      padding-block: var(--stitch-space-2);
+      font-size: var(--stitch-text-hint);
+    }
+  }
+  > .ui-notice {
+    display: grid;
+    box-sizing: border-box;
+    align-content: safe center;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    padding: var(--stitch-space-8) var(--stitch-space-12);
+    border: 0;
+    border-radius: var(--stitch-radius-control);
+    color: var(--stitch-notice-info-ink);
+    background: var(--stitch-notice-info-bg);
+    font: var(--stitch-weight-body) var(--stitch-text-body) / var(--stitch-line-height-body)
+      var(--stitch-font-family);
+    overflow: auto;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    scrollbar-gutter: stable;
+    @each $tone in info, success, warning, danger {
+      &[data-tone='#{$tone}'] {
+        background: var(--stitch-notice-#{$tone}-bg);
+        color: var(--stitch-notice-#{$tone}-ink);
+      }
+    }
+    &[hidden] {
+      display: none;
+    }
+    &:focus-visible {
+      outline: var(--stitch-focus-ring);
+      outline-offset: var(--stitch-focus-offset);
+    }
+  }
+}
+:root body .ui-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stitch-heading-gap);
+  min-inline-size: 0;
+  margin: 0;
+  color: var(--stitch-ink);
+  font-family: var(--stitch-font-family);
+  font-size: var(--stitch-text-section);
+  font-weight: var(--stitch-weight-title);
+  line-height: var(--stitch-line-height-heading);
+  .ui-heading-text {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+  &[data-kind='section']::before {
+    content: '';
+    flex: none;
+    inline-size: var(--stitch-heading-bar-width);
+    block-size: var(--stitch-heading-bar-height);
+    margin-block-start: 0.125em;
+    border-radius: var(--stitch-heading-bar-radius);
+    background: var(--stitch-heading-bar-color);
+  }
+  &[data-kind='page'] {
+    display: block;
+    padding-block-end: var(--stitch-space-12);
+    border-block-end: var(--stitch-page-heading-rule);
+    font-size: var(--stitch-text-page);
+  }
+}
+:root body button.ui-choice-card[data-choice-state] {
+  --ui-button-border-width: 0px;
+  --ui-button-radius: var(--stitch-radius-panel);
+  display: flex;
+  position: relative;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: var(--stitch-gap-label);
+  min-inline-size: var(--stitch-control-height);
+  min-block-size: var(--stitch-control-height);
+  max-inline-size: 100%;
+  margin: 0;
+  padding: var(--stitch-space-16);
+  border: 0;
+  border-radius: var(--stitch-radius-panel);
+  background: var(--stitch-choice-bg);
+  color: var(--stitch-ink);
+  box-shadow: none;
+  font: var(--stitch-weight-body) var(--stitch-text-body) / var(--stitch-line-height-body)
+    var(--stitch-font-family);
+  white-space: normal;
+  text-align: start;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+  transition: background-color var(--stitch-transition);
+  &[data-choice-state='selected'] {
+    outline: var(--stitch-choice-ring);
+    outline-offset: var(--stitch-choice-ring-offset);
+    background: var(--stitch-choice-selected-bg);
+  }
+  &:focus-visible {
+    outline: var(--stitch-focus-ring);
+    outline-offset: var(--stitch-focus-offset);
+  }
+  &:disabled,
+  &[aria-disabled='true'] {
+    color: var(--stitch-disabled-ink);
+    cursor: not-allowed;
+  }
+  .ui-choice-label {
+    display: block;
+    min-inline-size: 0;
+    font-size: var(--stitch-text-body);
+    font-weight: var(--stitch-weight-title);
+    line-height: var(--stitch-line-height-body);
+  }
+  .ui-choice-state {
+    display: block;
+    min-block-size: 1.5em;
+    font-size: var(--stitch-text-hint);
+    line-height: 1.5;
+  }
+  @media (hover: hover) {
+    &:hover:not(:disabled) {
+      background: var(--stitch-choice-hover-bg);
+    }
+  }
+}
+:root body .ui-stitch-list {
+  display: block;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: var(--stitch-border);
+  border-radius: var(--stitch-radius-panel);
+  background: var(--stitch-list-row-bg);
+  color: var(--stitch-ink);
+  list-style: none;
+  > .ui-stitch-list-row {
+    display: flex;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--stitch-gap-controls);
+    min-inline-size: 0;
+    min-block-size: var(--stitch-control-height);
+    padding: var(--stitch-space-16);
+    border: 0;
+    border-block-end: var(--stitch-border);
+    font-size: var(--stitch-text-body);
+    line-height: var(--stitch-line-height-body);
+    overflow-wrap: anywhere;
+    &:nth-child(even) {
+      background: var(--stitch-list-row-alt-bg);
+    }
+    &:first-child {
+      border-start-start-radius: var(--stitch-radius-panel);
+      border-start-end-radius: var(--stitch-radius-panel);
+    }
+    &:last-child {
+      border-block-end: 0;
+      border-end-start-radius: var(--stitch-radius-panel);
+      border-end-end-radius: var(--stitch-radius-panel);
+    }
+    > * {
+      min-inline-size: 0;
+      max-inline-size: 100%;
+    }
+  }
+  .ui-list-row-actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--stitch-gap-controls);
+    margin-inline-start: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root body button.ui-choice-card[data-choice-state] {
+    transition: none;
+  }
+}
+
+// An explicit hidden state always wins over the layout supplied by a component.
+:root
+  body
+  :is(.ui-stitch-badge, .ui-notice-slot, .ui-heading, .ui-stitch-list, .ui-stitch-list-row)[hidden],
+:root body button.ui-choice-card[hidden] {
+  display: none;
+}

@@ -94,6 +94,7 @@ function status(p: RoomPlayer) {
           >比例取近似值；投稿不足或尚未輪到重複抽取時，以內建禮物補足。內建題庫包含成人派對題材。</p
         ><a href="/gifts" target="_blank" rel="noopener">查看／投稿自訂禮物 ↗</a
         ><StatusSlot
+          :persistent="gift.settingsPending || !!gift.settingsError"
           :message="gift.settingsPending ? '正在儲存設定…' : gift.settingsError || ''"
           :error="!!gift.settingsError" /><UiButton
           v-if="gift.settingsError && gift.settingsEditable"

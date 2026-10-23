@@ -23,6 +23,7 @@ const accountOpen = ref(false),
   moreOpen = ref(false),
   profileExpanded = ref(false),
   message = ref(''),
+  noticeKey = ref(0),
   avatarVersion = ref(Date.now()),
   avatarFailed = ref(false),
   loading = ref(true);
@@ -68,6 +69,7 @@ function openPreferences() {
 async function loadIdentity() {
   if (disposed || document.hidden) return;
   if (refresh) return refresh;
+  noticeKey.value++;
   const job = (async () => {
     try {
       await session.refresh();
@@ -93,6 +95,7 @@ async function loadIdentity() {
 async function logout() {
   if (loggingOut.value) return;
   loggingOut.value = true;
+  noticeKey.value++;
   message.value = '';
   try {
     await session.logout();
@@ -326,8 +329,13 @@ onBeforeUnmount(() => {
       <span v-else-if="loading" class="vue-site-account-loading" aria-label="正在確認帳號" />
     </div>
     <div class="vue-site-header-feedback"
-      ><StatusSlot :message="message" :error="!!message" /><UiButton
-        v-if="message && !session.pending"
+      ><StatusSlot
+        :message="message"
+        :error="!!message"
+        :notice-key="noticeKey"
+        :persistent="!!message" /><UiButton
+        v-if="message"
+        :pending="session.pending"
         variant="secondary"
         icon="refresh"
         label="重試讀取帳號"

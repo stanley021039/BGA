@@ -180,7 +180,10 @@ defineExpose({ compose, focus: focusInput });
         ></ol
       >
       <div :id="prefix + '-status'" class="vue-chat-feedback"
-        ><StatusSlot v-if="feedback" :message="feedback" :error="!!chat.status || reactions.failed"
+        ><StatusSlot
+          :persistent="chat.pending || chat.loading || reactions.pending || !!chat.status"
+          :message="feedback"
+          :error="!!chat.status || reactions.failed"
       /></div>
       <form autocomplete="off" :aria-busy="chat.pending" @submit.prevent="submit">
         <div class="vue-chat-tools" aria-label="房間社交工具"

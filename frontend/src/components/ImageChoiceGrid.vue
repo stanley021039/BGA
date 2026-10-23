@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { sizedImage } from '../services/image-size';
+import UiChoiceCard from './UiChoiceCard.vue';
 import '../styles/image-choice-grid.scss';
 withDefaults(
   defineProps<{
@@ -16,21 +17,22 @@ defineEmits<{ 'update:modelValue': [id: string] }>();
   <div
     class="vue-image-choice-grid"
     :class="variant === 'character' ? 'preset-gallery' : 'expression-gallery'"
-    ><button
+    ><UiChoiceCard
       v-for="item in items"
       :key="item.id"
-      type="button"
       :class="[
         'vue-image-choice',
         variant === 'character' ? 'preset-card' : 'expression-card',
         { active: modelValue === item.id },
       ]"
+      :label="item.label"
       :disabled="disabled"
-      :aria-pressed="modelValue === item.id"
+      :selected="modelValue === item.id"
       :aria-label="item.ariaLabel || item.label"
       @click="$emit('update:modelValue', item.id)"
-      ><img :src="sizedImage(item.url, 256)" alt="" loading="lazy" /><span>{{ item.label }}</span
-      ><small v-if="item.caption">{{ item.caption }}</small></button
+      ><img :src="sizedImage(item.url, 256)" alt="" loading="lazy" /><small v-if="item.caption">{{
+        item.caption
+      }}</small></UiChoiceCard
     ><slot name="append"
   /></div>
 </template>

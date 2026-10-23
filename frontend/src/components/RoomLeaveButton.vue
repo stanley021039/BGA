@@ -95,8 +95,10 @@ onBeforeUnmount(() => controller?.abort());
       width="640"
       height="361"
       alt="離別場景，字幕：多麼虎頭蛇尾的結局" /><p>{{ effect }}</p
-    ><StatusSlot :message="pending ? '正在離開房間…' : message" :error="!!message" /><div
-      class="vue-confirm-actions"
+    ><StatusSlot
+      :persistent="pending || !!message"
+      :message="pending ? '正在離開房間…' : message"
+      :error="!!message" /><div class="vue-confirm-actions"
       ><UiButton icon="leave" label="確認離開" :pending="pending" @click="leave" /><UiButton
         icon="close"
         label="留在房間"

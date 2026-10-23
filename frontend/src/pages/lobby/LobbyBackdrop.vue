@@ -6,6 +6,7 @@ import { useLobbyStore } from '../../stores/lobby';
 import { useLobbyBackgroundStore } from '../../stores/lobby-background';
 import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiChoiceCard from '../../components/UiChoiceCard.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
 import LobbyAttackLayer from './LobbyAttackLayer.vue';
@@ -18,6 +19,7 @@ import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // the site header, painted surfaces (background, border, shadow) and text.
 const INTERACTIVE =
   'a, button, input, select, textarea, label, summary, dialog, [role="button"], [contenteditable], .game-tile, [data-site-header]';
+const expressionNoticeKey = ref(0);
 const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
@@ -113,6 +115,13 @@ function teleport() {
   closeDialogs();
   void lobby.teleport();
 }
+watch(
+  () => lobby.emotePending,
+  (pending, previous) => {
+    if (previous && !pending) expressionNoticeKey.value++;
+  },
+  { flush: 'sync' },
+);
 async function open(trigger: HTMLElement) {
   if (!lobby.connected) return;
   void lobby.loadExpressions();
@@ -325,6 +334,7 @@ defineExpose({ openChat });
     ><div v-if="lobby.presenceStatus" class="vue-lobby-presence"
       ><StatusSlot
         :message="lobby.presenceStatus"
+        persistent
         :error="!lobby.connected && !!lobby.snapshot" /><UiButton
         icon="refresh"
         icon-only
@@ -346,20 +356,19 @@ defineExpose({ openChat });
         ><p v-else-if="!lobby.expressions.length">{{
           lobby.expressionStatus || '這個角色尚無表情，可到「我的角色」新增。'
         }}</p
-        ><button
+        ><UiChoiceCard
           v-for="expression in lobby.expressions"
           :key="expression.expression"
-          type="button"
-          :aria-label="expression.label"
+          :label="expression.label"
+          action
           :disabled="lobby.emotePending || !lobby.connected"
           @click="use(expression.expression)"
-          ><img :src="sizedImage(expression.image, 128)" alt="" /><span>{{
-            expression.label
-          }}</span></button
-        ></div
+          ><img :src="sizedImage(expression.image, 128)" alt="" /></UiChoiceCard></div
       ><StatusSlot
         :message="lobby.emotePending ? '正在送出表情…' : lobby.expressionStatus"
+        :notice-key="expressionNoticeKey"
+        :persistent="lobby.emotePending"
         :error="!!lobby.expressionStatus" /></div
   ></UiDialog>
-  <UiDialog ref="chat" stitch title="對話" compact><LobbyBarrage @sent="chat?.close()" /></UiDialog>
+  <UiDialog ref="chat" title="對話" compact><LobbyBarrage @sent="chat?.close()" /></UiDialog>
 </template>

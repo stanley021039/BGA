@@ -200,8 +200,10 @@ onBeforeUnmount(() => confirmation.value?.cancel());
             :label="'踢出：' + player.name"
             :disabled="room.busy"
             @click="kick(player)" /></div></article></div
-    ><StatusSlot :message="room.busy ? '處理中…' : message" :error="failed" /><footer
-      class="vue-room-management-actions"
+    ><StatusSlot
+      :persistent="room.busy"
+      :message="room.busy ? '處理中…' : message"
+      :error="failed" /><footer class="vue-room-management-actions"
       ><slot name="invite" /><UiButton
         v-if="room.type === 'draw' && room.host"
         icon="leave"

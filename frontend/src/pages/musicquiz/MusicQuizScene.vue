@@ -468,6 +468,13 @@ const canSlot = (i: number) =>
         :disabled="blocked || s.mine.tokens < 1"
         @click="actions.command('skip')" /></template
     ><StatusSlot
+      :persistent="
+        settingsSave.pending.value ||
+        actions.pending ||
+        actions.canRetry ||
+        !!settingsSave.error.value ||
+        !!error
+      "
       :message="settingsSave.error.value || actions.notice || error"
       :error="!!settingsSave.error.value || !!actions.notice" /><UiButton
       v-if="actions.canRetry"

@@ -344,6 +344,14 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     </div>
     <div class="vue-telephone-status"
       ><StatusSlot
+        :persistent="
+          actions.pending ||
+          actions.canRetry ||
+          telephone.saving ||
+          telephone.finishing ||
+          telephone.dirty ||
+          !!telephone.storageNotice
+        "
         :message="displayedNotice"
         :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
     /></div>

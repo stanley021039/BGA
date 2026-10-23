@@ -9,10 +9,19 @@ import LobbyBackdrop from './LobbyBackdrop.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiDialog from '../../components/UiDialog.vue';
+import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import '../../styles/lobby-create.scss';
 const lobby = useLobbyStore(),
   session = useSessionStore();
+const entryNoticeKey = ref(0);
+watch(
+  () => lobby.entryPending,
+  (pending, previous) => {
+    if (previous && !pending) entryNoticeKey.value++;
+  },
+  { flush: 'sync' },
+);
 const params = new URLSearchParams(location.search),
   requested = params.get('game') || 'thunder';
 const selected = ref(gameCards.some((card) => card.id === requested) ? requested : 'thunder'),
@@ -254,7 +263,11 @@ onBeforeUnmount(() => {
                   lobby.entryStatus = '';
                   codeInput?.focus();
                 " /></div></form
-          ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /></section></div
+          ><StatusSlot
+            :message="feedback"
+            :error="!!lobby.entryStatus"
+            :notice-key="entryNoticeKey"
+            :persistent="lobby.entryPending" /></section></div
     ></UiDialog>
     <p class="version-note"><a href="/credits">素材來源與授權</a> · 德州撲克：純娛樂籌碼</p>
     <UiDialog
@@ -271,23 +284,29 @@ onBeforeUnmount(() => {
       @closed="opened = false"
       ><p v-if="!drawingCreate && !pairCreate">使用帳號暱稱入座，遊戲條件可在房間內調整。</p
       ><form class="vue-lobby-create" @submit.prevent="submit"
-        ><label
-          >挑選遊戲<select v-model="selected" :disabled="lobby.entryPending"
-            ><option
-              v-for="card in gameCards.filter((card) => card.id !== 'market')"
-              :key="card.id"
-              :value="card.id"
-              >{{ card.title }}</option
-            ></select
-          ></label
-        ><label
-          >房間名稱<input
-            v-model="roomName"
-            maxlength="24"
-            placeholder="好友局"
-            :disabled="lobby.entryPending" /></label
-        ><div class="vue-lobby-create-options"><p>進入房間後，由房主調整本桌設定。</p></div
-        ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /><UiButton
+        ><UiField
+          label="挑選遊戲"
+          control="select"
+          v-model="selected"
+          :disabled="lobby.entryPending"
+          ><option
+            v-for="card in gameCards.filter((card) => card.id !== 'market')"
+            :key="card.id"
+            :value="card.id"
+            >{{ card.title }}</option
+          ></UiField
+        ><UiField
+          label="房間名稱"
+          v-model="roomName"
+          maxlength="24"
+          placeholder="好友局"
+          :disabled="lobby.entryPending" />
+        <div class="vue-lobby-create-options"><p>進入房間後，由房主調整本桌設定。</p></div
+        ><StatusSlot
+          :message="feedback"
+          :error="!!lobby.entryStatus"
+          :notice-key="entryNoticeKey"
+          :persistent="lobby.entryPending" /><UiButton
           :variant="drawingCreate || roomCreate || pairCreate ? 'primary' : 'secondary'"
           :icon="pairCreate ? undefined : drawingCreate ? 'next' : 'add'"
           type="submit"

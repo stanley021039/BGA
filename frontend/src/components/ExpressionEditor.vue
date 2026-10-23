@@ -6,6 +6,7 @@ import { fileBase64 } from '../services/files';
 import { sizedImage } from '../services/image-size';
 import UiButton from './UiButton.vue';
 import UiFilePick from './UiFilePick.vue';
+import UiField from './UiField.vue';
 import UiDialog from './UiDialog.vue';
 import ConfirmDialog from './ConfirmDialog.vue';
 import StatusSlot from './StatusSlot.vue';
@@ -90,17 +91,19 @@ async function remove() {
       :disabled="mutation.pending.value"
       @click="remove" /><slot name="actions" /><StatusSlot
       :message="mutation.message.value"
-      :error="mutation.failed.value" /><UiDialog ref="dialog" title="編輯表情"
+      :error="mutation.failed.value"
+      :notice-key="mutation.pending.value ? 'pending' : mutation.message.value" /><UiDialog
+      ref="dialog"
+      title="編輯表情"
       ><div class="expression-edit-body"
         ><form :id="formId" class="expression-edit-form" @submit.prevent="save"
           ><section class="expression-edit-section"
-            ><label
-              ><span class="expression-edit-title">表情名稱</span
-              ><input
-                v-model="name"
-                maxlength="20"
-                required
-                :disabled="mutation.pending.value" /></label></section
+            ><UiField
+              v-model="name"
+              label="表情名稱"
+              maxlength="20"
+              required
+              :disabled="mutation.pending.value" /></section
           ><section class="expression-edit-section"
             ><h3 class="expression-edit-title">表情圖片</h3
             ><img
@@ -122,7 +125,10 @@ async function remove() {
             label="儲存表情"
             :disabled="mutation.pending.value" /><StatusSlot
             :message="mutation.message.value"
-            :error="mutation.failed.value" /></footer></div></UiDialog
+            :error="mutation.failed.value"
+            :notice-key="
+              mutation.pending.value ? 'pending' : mutation.message.value
+            " /></footer></div></UiDialog
     ><ConfirmDialog ref="confirm"
   /></section>
 </template>

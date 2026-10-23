@@ -388,7 +388,10 @@ onBeforeUnmount(() => {
         :pending="entryBusy || room.connecting"
         :disabled="['kicked', 'closed'].includes(room.terminal || '')"
         @click="enter" /><a href="/">返回大廳</a
-      ><StatusSlot :message="entryError || room.error" :error="!!entryError || !!room.error" /></div
+      ><StatusSlot
+        persistent
+        :message="entryError || room.error"
+        :error="!!entryError || !!room.error" /></div
   ></div>
   <div
     v-else
@@ -418,6 +421,7 @@ onBeforeUnmount(() => {
           state?.round ? `第 ${state.round} / ${state.roundLimit} 輪` : '等待開桌'
         }}</span></div
       ><StatusSlot
+        :persistent="!!connectionNotice || preparing || !!startNotice || room.busy"
         :message="
           connectionNotice ||
           (preparing ? '正在確認房間設定…' : startNotice || room.message || results.message)

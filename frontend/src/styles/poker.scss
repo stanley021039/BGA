@@ -436,6 +436,25 @@ body.vue-poker-document .vue-room-player-status {
       display: none;
     }
   }
+  // Text-only mobile actions keep their width; pending uses the existing padding cue.
+  :root
+    body
+    .vue-poker-action-buttons
+    button.ui-button.vue-button.ui-stitch-button[data-stitch-variant]
+    .ui-button-icon-slot {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: var(--stitch-space-2);
+    margin-block: auto;
+    min-inline-size: 0;
+    min-block-size: 0;
+    inline-size: var(--stitch-space-16);
+    block-size: var(--stitch-space-16);
+    .ui-button-spinner {
+      inline-size: 0.625rem;
+      block-size: 0.625rem;
+    }
+  }
   .vue-poker-raise {
     grid-template-columns: minmax(0, 1fr);
     label {

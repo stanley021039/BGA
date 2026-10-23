@@ -123,6 +123,7 @@ onMounted(() => {
             >返回大廳</a
           ></div
         ><StatusSlot
+          persistent
           :message="entryError || room.error"
           :error="!!entryError || !!room.error" /></div></div
   ></section>
@@ -151,6 +152,7 @@ onMounted(() => {
         ><span class="vue-room-phase">{{ phase }}</span
         ><span class="vue-room-round">{{ round || '等待開桌' }}</span></div
       ><StatusSlot
+        :persistent="!!connection || room.busy"
         :message="connection || room.message"
         :error="!!room.terminal || room.disconnected || room.failed"
     /></div>

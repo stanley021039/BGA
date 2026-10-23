@@ -136,6 +136,7 @@
   min-block-size: var(--stitch-control-height);
   color: var(--stitch-ink);
   font-size: var(--stitch-text-body);
+  font-weight: var(--stitch-weight-body);
   cursor: pointer;
 }
 :root body .ui-checkbox-input {
@@ -143,7 +144,7 @@
   inline-size: var(--stitch-checkbox-size);
   block-size: var(--stitch-checkbox-size);
   margin: 0;
-  accent-color: var(--stitch-primary);
+  accent-color: var(--stitch-frame);
   &:focus-visible {
     outline: var(--stitch-focus-ring);
     outline-offset: var(--stitch-focus-offset);
@@ -157,6 +158,7 @@
   gap: var(--stitch-gap-label);
   min-inline-size: 0;
   font-size: var(--stitch-text-body);
+  font-weight: var(--stitch-weight-body);
   .file-pick-row {
     position: relative;
     display: flex;

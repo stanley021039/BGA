@@ -278,6 +278,14 @@ defineExpose({
       ></div>
     </DrawingToolbar>
     <StatusSlot
+      :persistent="
+        !!network ||
+        streamLost ||
+        !ready ||
+        !!view?.recovering ||
+        !!view?.error ||
+        !!view?.commandBusy
+      "
       :message="network || (streamLost ? '即時連線中斷，正在重試；房間狀態持續更新。' : notice)"
       :error="!!network || noticeFailed"
     />

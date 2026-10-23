@@ -333,6 +333,7 @@ onBeforeUnmount(() => {
     ></div>
     <div class="vue-majority-feedback"
       ><StatusSlot
+        :persistent="game.pending || game.uncertain || (game.expired && s.phase === 'answering')"
         :message="
           game.message ||
           (game.expired && s.phase === 'answering' ? '時間已到，等待伺服器結算。' : '')

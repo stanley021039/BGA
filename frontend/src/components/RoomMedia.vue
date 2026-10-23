@@ -722,8 +722,16 @@ onBeforeUnmount(() => {
                 ><span class="vue-media-sync-badge">{{ syncLabel }}</span></div
               >
               <div class="vue-media-inline-status">
-                <StatusSlot v-if="feedback" :message="feedback" :error="media.failed" />
-                <StatusSlot v-if="playbackStatus" :message="playbackStatus" />
+                <StatusSlot
+                  :persistent="
+                    media.loading ||
+                    media.failed ||
+                    (activeTab === 'request' && (media.libraryLoading || !!media.libraryError))
+                  "
+                  :message="feedback"
+                  :error="media.failed"
+                />
+                <StatusSlot :message="playbackStatus" />
               </div>
               <div v-show="item?.type === 'music'" ref="audioHost" class="vue-media-audio" />
               <div class="vue-media-controls-body">
@@ -949,7 +957,11 @@ onBeforeUnmount(() => {
                 /></div>
               </form>
               <StatusSlot
-                v-if="feedback"
+                :persistent="
+                  media.loading ||
+                  media.failed ||
+                  (activeTab === 'request' && (media.libraryLoading || !!media.libraryError))
+                "
                 :message="feedback"
                 :error="media.failed || !!media.libraryError"
               />

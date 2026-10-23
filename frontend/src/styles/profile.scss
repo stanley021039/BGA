@@ -1,85 +1,61 @@
-@use 'tokens' as t;
-@use 'surfaces';
-
+// The page sizes components; their common styles own frames and interactive states.
 :root body[data-visual-theme].profile-page {
-  --profile-background: #faf8f5;
-  background: var(--profile-background);
+  background: var(--stitch-base);
   color: var(--stitch-ink);
   .vue-page.profile-editor-page {
     box-sizing: border-box;
-    inline-size: min(100%, 1280px);
-    max-inline-size: 1280px;
+    inline-size: min(100%, 80rem);
+    max-inline-size: 80rem;
     margin-inline: auto;
-    padding: 24px 32px 40px;
+    padding: var(--stitch-space-24) var(--stitch-page-gutter) var(--stitch-space-40);
     color: var(--stitch-ink);
+    font-size: var(--stitch-text-body);
     .profile-heading {
       display: grid;
-      justify-content: center;
-      justify-items: center;
-      gap: 8px;
+      gap: var(--stitch-gap-label);
       margin: 0;
-      text-align: center;
       .kicker {
         margin: 0;
         color: var(--stitch-muted);
-        font-size: var(--stitch-font-14);
+        font-size: var(--stitch-text-hint);
         letter-spacing: 0.04em;
       }
-      h1 {
-        @include t.type(h1);
-        margin: 0;
-        color: var(--stitch-ink);
-        letter-spacing: 0;
-      }
       p {
-        @include t.type(p3);
         margin: 0;
         color: var(--stitch-muted);
+        font-size: var(--stitch-text-hint);
       }
     }
     .profile-load-slot {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      block-size: 32px;
+      gap: var(--stitch-gap-inline);
+      block-size: var(--stitch-control-height);
       overflow: auto;
-      font-size: var(--stitch-font-14);
+      font-size: var(--stitch-text-hint);
     }
     .profile-layout {
       display: grid;
       grid-template-columns: minmax(0, 0.285fr) minmax(0, 0.715fr);
       align-items: stretch;
-      gap: 24px;
+      gap: var(--stitch-gap-section);
       min-inline-size: 0;
     }
     .profile-preview-card,
     .profile-gallery-card {
-      box-sizing: border-box;
       min-inline-size: 0;
-      min-block-size: 669px;
-      margin: 0;
-      padding: 20px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 12px;
-      background: var(--stitch-surface);
-      color: var(--stitch-ink);
-      h2 {
-        @include t.type(p1);
-        margin: 0;
-        color: inherit;
-      }
-      h3 {
-        @include t.type(p2);
-        margin: 0;
-        color: inherit;
-      }
+      min-block-size: 42rem;
     }
     .profile-preview-card {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: var(--stitch-gap-controls);
+    }
+    .profile-gallery-card {
+      display: flex;
+      flex-direction: column;
+      gap: var(--stitch-gap-section);
     }
     .profile-preview-image {
       display: grid;
@@ -88,7 +64,7 @@
       aspect-ratio: 1;
       min-inline-size: 0;
       overflow: hidden;
-      border-radius: 8px;
+      border-radius: var(--stitch-radius-control);
       background: var(--stitch-surface-subtle);
       > img {
         display: block;
@@ -99,279 +75,141 @@
         object-fit: contain;
       }
       > span {
-        padding: 16px;
-        font-size: var(--stitch-font-14);
+        padding: var(--stitch-space-16);
+        font-size: var(--stitch-text-hint);
       }
     }
     .profile-preview-name {
-      min-block-size: 24px;
+      min-block-size: 1.5rem;
       margin: 0;
       text-align: center;
-      color: var(--stitch-muted);
-      font-size: var(--stitch-font-14);
+      font-size: var(--stitch-text-body);
       overflow-wrap: anywhere;
     }
     .profile-expression-section {
       display: grid;
-      gap: 8px;
-      margin-block-start: 8px;
+      gap: var(--stitch-gap-label);
     }
     .profile-expression-choices {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      > button {
+      min-inline-size: 0;
+      max-block-size: 18rem;
+      overflow: auto;
+      scrollbar-gutter: stable;
+      .ui-button {
+        inline-size: 100%;
         min-inline-size: 0;
-        padding-inline: 4px;
-        font-size: var(--stitch-font-14);
+        justify-content: start;
         white-space: normal;
-        overflow-wrap: anywhere;
       }
     }
     .profile-preview-actions {
       display: grid;
-      gap: 8px;
-      margin-block-start: 4px;
+      gap: var(--stitch-gap-controls);
+      margin-block-start: var(--stitch-space-4);
     }
     .profile-studio-link {
-      --ui-button-radius: 8px;
-      --ui-button-border-color: var(--stitch-line);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-sizing: border-box;
       inline-size: 100%;
-      min-block-size: 44px;
       min-inline-size: 0;
-      margin: 0;
-      padding: 8px 12px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      background: var(--stitch-surface);
-      color: var(--stitch-ink);
-      font-size: var(--stitch-font-14);
-      text-decoration: none;
       white-space: normal;
     }
     .profile-preview-actions .frontend-status {
-      margin: 0;
-      padding: 0;
-      min-block-size: 0;
-      block-size: 24px;
-      max-block-size: 24px;
-      overflow: auto;
-      font-size: var(--stitch-font-14);
-    }
-    .profile-gallery-card {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+      min-inline-size: 0;
     }
     .profile-gallery-heading {
       display: grid;
-      gap: 8px;
-      padding: 0;
+      gap: var(--stitch-gap-label);
       margin: 0;
       min-block-size: 0;
     }
     .profile-gallery-heading > p {
       margin: 0;
-      font-size: var(--stitch-font-14);
+      font-size: var(--stitch-text-hint);
       color: var(--stitch-muted);
     }
     .preset-section {
       display: grid;
-      gap: 12px;
+      gap: var(--stitch-gap-controls);
       margin: 0;
-      padding: 0;
-      border: 0;
+      min-inline-size: 0;
     }
     .vue-image-choice-grid {
-      display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 12px;
       max-block-size: none;
       overflow: visible;
     }
-    .preset-gallery > button.vue-image-choice {
-      --ui-button-radius: 8px;
-      --ui-button-border-color: var(--stitch-line);
-      --ui-button-border-width: 1px;
-      display: grid;
-      // One full-width column: the inherited justify-content: flex-start would
-      // otherwise pin an auto-sized column, and its content, to the left edge.
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: 72px minmax(21px, auto) minmax(21px, auto);
-      align-content: start;
-      justify-items: center;
-      text-align: center;
-      gap: 8px;
-      min-inline-size: 0;
-      margin: 0;
-      padding: 12px 8px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      background: var(--stitch-surface);
-      color: var(--stitch-ink);
-      box-shadow: none;
-      > img {
-        inline-size: 72px;
-        max-inline-size: 100%;
-        block-size: 72px;
-        min-block-size: 0;
-        object-fit: contain;
-        object-position: center;
-        margin: 0;
-      }
-      > span,
-      > small {
-        min-block-size: 0;
-        margin: 0;
-        font-size: var(--stitch-font-14);
-        line-height: 1.5;
-        color: inherit;
-        overflow-wrap: anywhere;
-      }
-      > small {
-        color: var(--surface-muted, var(--stitch-muted));
-      }
-      &[aria-pressed='true'] {
-        @include surfaces.selected;
-        --ui-button-border-color: var(--stitch-primary);
-        border-color: var(--stitch-primary);
-        outline: 1px solid var(--stitch-primary);
-        outline-offset: -1px;
-      }
-      &:focus-visible {
-        outline: 2px solid var(--surface-focus, var(--stitch-focus));
-        outline-offset: 2px;
-      }
+    .preset-gallery > .ui-choice-card > img {
+      inline-size: 4.5rem;
+      max-inline-size: 100%;
+      block-size: 4.5rem;
+      object-fit: contain;
     }
-    // "+" tile at the end of 我的作品 opens the character upload dialog.
-    .preset-gallery > button.profile-add-card {
-      border-style: dashed;
-      color: var(--stitch-muted);
-      .profile-add-icon {
-        display: grid;
-        place-items: center;
-        inline-size: 72px;
-        block-size: 72px;
-        font-size: 40px;
-        line-height: 1;
-      }
+    .profile-add-icon {
+      display: grid;
+      place-items: center;
+      inline-size: 4.5rem;
+      block-size: 4.5rem;
+      font-size: var(--stitch-text-data);
+      line-height: 1;
     }
     .profile-upload-dialog .profile-upload-hint {
-      margin: 0 0 16px;
+      margin: 0 0 var(--stitch-space-16);
       color: var(--stitch-muted);
-      font-size: var(--stitch-font-14);
+      font-size: var(--stitch-text-hint);
     }
-    // Expression edit/delete actions sit centred with breathing room.
     .expression-editor {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 12px;
+      gap: var(--stitch-gap-controls);
       > .frontend-status {
         flex-basis: 100%;
-        margin: 0;
-        text-align: center;
       }
-      > .frontend-status:empty {
-        display: none;
-      }
-      // 新增表情 sits on its own row under edit/delete.
       > .expression-add-row {
         display: flex;
         flex-basis: 100%;
         justify-content: center;
       }
     }
-    .gallery-empty {
-      box-sizing: border-box;
-      min-block-size: 48px;
-      margin: 0;
-      padding: 12px 16px;
-      border: 1px dashed var(--stitch-line);
-      border-radius: 8px;
-      color: var(--stitch-muted);
-      font-size: var(--stitch-font-14);
-    }
     .sharing-controls {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
+      gap: var(--stitch-gap-controls);
       margin: 0;
-      font-size: var(--stitch-font-14);
-    }
-    .profile-gallery-card > .frontend-status {
-      min-block-size: 0;
-      margin: 0;
-      font-size: var(--stitch-font-14);
-    }
-    .profile-gallery-card > .frontend-status:empty {
-      display: none;
+      font-size: var(--stitch-text-body);
     }
     .upload-group,
     .expression-sound {
-      margin: 0 0 24px;
-      padding: 20px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      background: var(--stitch-surface-subtle);
-      color: var(--stitch-ink);
-    }
-    .upload-group h3,
-    .expression-sound h3 {
-      @include t.type(p2);
-      color: inherit;
+      margin: 0 0 var(--stitch-space-24);
+      min-inline-size: 0;
     }
     .upload-group > p,
     .expression-sound > p {
-      margin: 8px 0 16px;
+      margin: var(--stitch-space-8) 0 var(--stitch-space-16);
       color: var(--stitch-muted);
-      font-size: var(--stitch-font-14);
+      font-size: var(--stitch-text-hint);
     }
     .character-upload {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
-      gap: 16px;
+      gap: var(--stitch-gap-fields);
       margin: 0;
     }
-    .character-upload label,
+    .character-upload > label,
     .expression-sound label {
-      display: grid;
-      gap: 8px;
       min-inline-size: 0;
-      font-size: var(--stitch-font-16);
-      color: inherit;
-    }
-    .character-upload input,
-    .expression-sound input {
-      box-sizing: border-box;
-      inline-size: 100%;
-      min-inline-size: 0;
-      max-inline-size: 100%;
-      min-block-size: 44px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      padding: 8px 12px;
-      background: var(--stitch-surface);
-      color: var(--stitch-ink);
-      font-size: var(--stitch-font-16);
     }
     .profile-upload-dialog .upload-drop {
       display: grid;
       place-items: center;
-      min-block-size: 88px;
+      min-block-size: 5.5rem;
       margin: 0;
-      padding: 16px;
-      border: 1px dashed var(--stitch-line);
-      border-radius: 8px;
+      padding: var(--stitch-space-16);
+      border: var(--stitch-border);
+      border-radius: var(--stitch-radius-control);
       color: var(--stitch-muted);
-      background: var(--stitch-surface);
-      font-size: var(--stitch-font-14);
+      background: var(--stitch-surface-subtle);
+      font-size: var(--stitch-text-hint);
     }
     .profile-upload-dialog .artwork-picker {
       display: block;
@@ -379,108 +217,71 @@
     }
     .profile-upload-dialog .artwork-picker > strong {
       display: block;
-      margin-block-end: 8px;
-      color: inherit;
-      font-size: var(--stitch-font-14);
+      margin-block-end: var(--stitch-space-8);
+      font-size: var(--stitch-text-body);
     }
     .profile-upload-dialog .artwork-choices {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 12px;
-      max-block-size: 240px;
+      grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr));
+      gap: var(--stitch-gap-controls);
+      max-block-size: 15rem;
       overflow: auto;
+      scrollbar-gutter: stable;
     }
     .expression-sound-actions,
     .expression-sound-upload {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
-      margin: 12px 0;
+      gap: var(--stitch-gap-controls);
+      margin-block: var(--stitch-space-16);
     }
     .expression-sound-actions > span,
     .expression-sound-upload > p {
-      font-size: var(--stitch-font-14);
+      font-size: var(--stitch-text-hint);
     }
-    .expression-sound .frontend-status {
-      min-block-size: 24px;
-      margin: 0;
-    }
-    // 編輯表情: name, image and sound are equal framed sections with one gap;
-    // 儲存表情 closes the dialog at the bottom.
     .expression-edit-body,
     .expression-edit-form {
       display: grid;
-      gap: 16px;
+      gap: var(--stitch-gap-fields);
     }
     .expression-edit-section,
     .expression-edit-body > .expression-sound {
       display: grid;
-      gap: 12px;
+      gap: var(--stitch-gap-controls);
       margin: 0;
-      padding: 16px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      background: var(--stitch-surface-subtle);
-      color: var(--stitch-ink);
-      > h3,
-      .expression-edit-title {
-        @include t.type(p2);
-        margin: 0;
-        color: inherit;
-      }
+      min-inline-size: 0;
       .expression-sound-actions,
       .expression-sound-upload {
         margin: 0;
       }
-      .frontend-status:empty {
-        display: none;
-      }
     }
     .expression-edit-section label {
-      display: grid;
-      gap: 8px;
-    }
-    .expression-edit-section input:not([type='file']) {
-      box-sizing: border-box;
-      inline-size: 100%;
-      min-block-size: 44px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      padding: 8px 12px;
-      background: var(--stitch-surface);
-      color: var(--stitch-ink);
-      font-size: var(--stitch-font-16);
+      min-inline-size: 0;
     }
     .expression-edit-preview {
-      inline-size: 96px;
-      block-size: 96px;
+      inline-size: 6rem;
+      block-size: 6rem;
       object-fit: contain;
-      border-radius: 8px;
+      border-radius: var(--stitch-radius-control);
       background: var(--stitch-surface);
     }
     .expression-edit-footer {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
-      > .frontend-status {
-        margin: 0;
-      }
+      gap: var(--stitch-gap-controls);
     }
-    // UiFilePick owns its look; the profile only sizes it in the row.
     .ui-file-pick {
-      flex: 1 1 240px;
+      flex: 1 1 15rem;
+      min-inline-size: 0;
     }
   }
-}
-:root[data-color-scheme='dark'] body[data-visual-theme].profile-page {
-  --profile-background: var(--stitch-base);
 }
 @media (max-width: 1000px) {
   :root body[data-visual-theme].profile-page .vue-page.profile-editor-page {
     .profile-layout {
-      grid-template-columns: minmax(230px, 0.32fr) minmax(0, 0.68fr);
+      grid-template-columns: minmax(14rem, 0.32fr) minmax(0, 0.68fr);
     }
     .vue-image-choice-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -489,37 +290,20 @@
 }
 @media (max-width: 760px) {
   :root body[data-visual-theme].profile-page .vue-page.profile-editor-page {
-    padding: 24px 16px 32px;
+    padding-inline: var(--stitch-page-gutter-mobile);
     .profile-layout {
       grid-template-columns: minmax(0, 1fr);
-      gap: 16px;
     }
     .profile-preview-card,
     .profile-gallery-card {
       min-block-size: 0;
-      padding: 16px;
     }
     .profile-preview-image {
-      inline-size: min(100%, 320px);
+      inline-size: min(100%, 20rem);
       align-self: center;
     }
-    .profile-gallery-card {
-      gap: 24px;
-    }
     .vue-image-choice-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-    }
-    .preset-gallery > button.vue-image-choice {
-      padding: 8px 4px;
-      grid-template-rows: 64px minmax(42px, auto) minmax(21px, auto);
-      > img {
-        block-size: 64px;
-      }
-    }
-    .upload-group,
-    .expression-sound {
-      padding: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 }

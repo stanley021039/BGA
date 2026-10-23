@@ -41,6 +41,8 @@
 - 面板與輸入欄：細邊——1px 淺線；面板圓角 12、輸入欄與下拉選單圓角 8、無陰影。立體只給按鈕、彈窗、浮動選單與 `UiPanel tone="raised"` 重點卡片。
 - 彈窗與浮動選單：立體——2px 深色邊、圓角 16、硬陰影（同 C07-R2 加入房間）。
 - 分頁：底線式——列底 1px 線、分頁間距 24、選取加粗與 2px 黃色底線。
+- 最新 R6 五類模式：徽章深邊膠囊、提示淡色無框且狀態解除或約 4 秒隱藏、選擇卡中性無框底加 3px 深色選取圈、頁首細分隔／區塊黃條、單框交錯底清單。使用 UiBadge／UiNotice／UiChoiceCard／UiHeading／UiList，不另寫外觀。真正空狀態、未確認操作與必要遊戲資訊不能定時隱藏。
+- R6 字級為 28／20／16／14／32；按鈕與 label 14、輸入內容 16。提示與選取狀態保留寬高槽位；長內容在槽位捲動或依斷點重排。
 - 間距：同列按鈕 16、label 與欄位 8、表單欄位之間 20、面板內距 24（側欄等密集區 16）、面板之間 24。
 
 **要**
@@ -57,7 +59,8 @@
 - 不在 `frontend/src/pages/` 寫原生 `<button>`、`<input>`、`<select>`、`<textarea>`。
 - 不寫原始 hex 色碼；不用 `tokens.space()`／`tokens.type()`、`stitch-tokens` 的 `space()`／`font()`、`var(--play-*)`、`var(--ui-*)`。
 - 不加 `!important`，不以逐頁位移或覆寫修補共用元件；問題在元件就修元件。
-- 不手改 `.ui-baseline.json` 讓數字變大。清掉舊寫法後跑 `npm run ui:baseline` 降低基準；確有必要的例外，在該行或上一行寫 `ui-check-allow <規則>: <理由>`，審查時逐一說明。
+- 不手改 schema 2 的 `.ui-baseline.json` 增加額度，也不以刪舊加新交換違規。`ui:check` 對照可信任 Git base，同時檢查數量、Git 新增行及 selector／模板祖先與同名區塊的身分；相同文字搬到新區塊仍算新增。新增檔與未追蹤檔全算新增；base、diff 或脈絡無法可靠確認時不放行。本機預設 base 為已提交的 `HEAD`；整個分支驗證須明確設定 `UI_CHECK_BASE_SHA`，CI 必須指定實際 base。
+- 必要例外只能放在真正註解內，寫 `ui-check-allow <已知規則>: <具體理由>`；理由不能空白或只有標點。註解需在匹配涵蓋行內或匹配起始行的前一行；跨行寫法按完整匹配計算。字串中的同名文字不產生豁免，未知規則或無效理由會失敗。清理不強制更新基準；`npm run ui:baseline`（`--update`）先通過相同檢查才只降不升。`--migrate` 僅供 schema 1 一次性遷移，額度受可信任已提交來源與原基準約束，不從未提交程式擴充。詳細邊界見 [共用元件的防倒退檢查](docs/UI-COMPONENTS.md)。
 - 不新增 `public/` 舊頁、`GameUI` 或 `public/shared/ui-primitives.css` 的用法；舊頁只維護。
 
 **設計來源與優先順序**：使用者最新明確指示 > 本檔 > 較新的已確認規格。歷史提案、舊截圖與進度紀錄不能覆蓋後續決策；規格存在不代表已實作或已驗收。需要時再讀：[桌機介面設計規格](docs/DESKTOP-DESIGN-SPEC.md)、[共用對齊規格](docs/specs/SHARED-UI-ALIGNMENT.md)、[遊戲資訊優先級](docs/UI-INFORMATION-PRIORITY.md)、[Stitch UI 實作約定](docs/STITCH-UI-IMPLEMENTATION.md)，以及個別遊戲的 `docs/specs/`。

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useMajorityStore } from '../../stores/majority';
 import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import QuestionEditor from './QuestionEditor.vue';
 import QuestionPreview from './QuestionPreview.vue';
@@ -12,6 +13,14 @@ const room = useRoomStore(),
   game = useMajorityStore(),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   tab = ref<'bank' | 'custom'>('bank');
+const prepareNoticeKey = ref(0);
+watch(
+  [() => game.pending, () => game.libraryLoading],
+  (pending, previous) => {
+    if (pending.some((value, index) => previous[index] && !value)) prepareNoticeKey.value++;
+  },
+  { flush: 'sync' },
+);
 const blocked = computed(
   () =>
     !room.connected ||
@@ -42,7 +51,11 @@ defineExpose({ open });
       ><p
         >每人最多排 5
         題，依提交順序揭題。未揭題前只有你能看到自己的預備內容；殘酷模式使用獨立牌庫。</p
-      ><StatusSlot :message="game.message" :error="game.failed" /><div class="vue-majority-tabs"
+      ><StatusSlot
+        :message="game.message"
+        :error="game.failed"
+        :notice-key="prepareNoticeKey"
+      /><div class="vue-majority-tabs"
         ><UiButton
           label="共用題庫"
           :variant="tab === 'bank' ? 'primary' : 'secondary'"
@@ -55,32 +68,25 @@ defineExpose({ open });
       /></div>
       <section v-show="tab === 'bank'" class="vue-majority-library"
         ><div class="vue-majority-library-filters"
-          ><label>搜尋題目、題庫名稱<input v-model="game.search" type="search" /></label
-          ><label
-            >題庫<select v-model="game.pack"
-              ><option value="">所有題庫</option
-              ><option value="favorites">我的收藏</option
-              ><option v-for="pack in game.packs" :key="pack" :value="pack">{{
-                pack
-              }}</option></select
-            ></label
-          ><label
-            >主題<select v-model="game.libraryTopic"
-              ><option value="">全部主題</option
-              ><option
-                v-for="topic in game.library?.topics || []"
-                :key="topic.id"
-                :value="topic.id"
-                >{{ topic.label }}</option
-              ></select
-            ></label
-          ><label
-            >題型<select v-model="game.libraryKind"
-              ><option value="">全部題型</option
-              ><option v-for="(label, key) in majorityKindLabels" :key="key" :value="key">{{
-                label
-              }}</option></select
-            ></label
+          ><UiField label="搜尋題目、題庫名稱" v-model="game.search" type="search" />
+          <UiField label="題庫" control="select" v-model="game.pack"
+            ><option value="">所有題庫</option><option value="favorites">我的收藏</option
+            ><option v-for="pack in game.packs" :key="pack" :value="pack">{{
+              pack
+            }}</option></UiField
+          ><UiField label="主題" control="select" v-model="game.libraryTopic"
+            ><option value="">全部主題</option
+            ><option
+              v-for="topic in game.library?.topics || []"
+              :key="topic.id"
+              :value="topic.id"
+              >{{ topic.label }}</option
+            ></UiField
+          ><UiField label="題型" control="select" v-model="game.libraryKind"
+            ><option value="">全部題型</option
+            ><option v-for="(label, key) in majorityKindLabels" :key="key" :value="key">{{
+              label
+            }}</option></UiField
           ></div
         ><div class="vue-majority-actions"
           ><UiButton
@@ -105,6 +111,8 @@ defineExpose({ open });
               : game.libraryError || `找到 ${game.filtered.length} 題`
           "
           :error="!!game.libraryError"
+          :notice-key="prepareNoticeKey"
+          persistent
         /><div class="vue-majority-library-results"
           ><article
             v-for="(question, i) in game.filtered.slice(0, game.limit)"

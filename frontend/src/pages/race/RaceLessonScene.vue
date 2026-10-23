@@ -366,6 +366,7 @@ const usedCommand = computed(() => {
           : tip
       }}</p
       ><StatusSlot
+        :persistent="!presentation.ready || model.busy"
         :message="presentation.ready ? model.notice : '賽道元件未完成載入，請重新整理後再操作。'"
         :error="model.failed || !presentation.ready"
     /></div>

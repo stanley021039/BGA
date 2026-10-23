@@ -346,6 +346,7 @@ onBeforeUnmount(() => {
         />
         <div class="vue-quacks-feedback"
           ><StatusSlot
+            :persistent="game.pending || game.canRetry"
             :message="game.notice || achievementNotice || (game.pending ? '正在送出…' : '')"
             :error="!!game.notice && !game.pending"
           /><a v-if="achievementNotice" href="/achievements">查看收藏冊</a></div
@@ -434,6 +435,9 @@ onBeforeUnmount(() => {
           }}</button
         ></div
       ></section
-    ><StatusSlot :message="game.notice" :error="!!game.notice && !game.pending" /></UiDialog
+    ><StatusSlot
+      :persistent="game.pending || game.canRetry"
+      :message="game.notice"
+      :error="!!game.notice && !game.pending" /></UiDialog
   ><QuacksEffects />
 </template>

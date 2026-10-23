@@ -1,6 +1,6 @@
 # 共用 UI 元件與 token
 
-2026-10-23 起全站只有一種外觀：Stitch，依 Figma 第三份「BGA｜03 Stitch 最終設計・共用元件」頁面「00｜共用元件」（C07 基礎元件 node `1919:18254`、C07 共用元件區 `1117:2`、C05 主要按鈕 `1189:659`）。Vue 頁面（`frontend/src/pages/`）只用本頁列出的元件與 `--stitch-*` token；`npm run ui:check` 在 CI 擋下新增的原始色碼、頁面原生控制項與舊 token。
+2026-10-23 起全站只有一種外觀：Stitch，依 Figma 第三份「BGA｜03 Stitch 最終設計・共用元件」頁面「00｜共用元件」（最新共用規範 R6 node `2179:11730`；Stitch source `e7a7b9d5e7de4aac884b16f2ed44fb0b`；未被 R6 取代的 C07／C05 專用元件仍沿用）。Vue 頁面（`frontend/src/pages/`）只用本頁列出的元件與 `--stitch-*` token；`npm run ui:check` 在 CI 擋下新增的原始色碼、頁面原生控制項與舊 token。
 
 ## 快速對照
 
@@ -16,8 +16,20 @@
 | 分頁 | `UiTabs` | 自製 `role="tab"` |
 | 按鈕旁的選單、面板 | `UiPopover` | 自製浮動 `<div>` |
 | 圖示 | `UiIcon` | 內嵌 SVG、emoji 當圖示 |
+| 狀態標籤、計數 | `UiBadge` | 頁面手畫徽章外框 |
+| 短暫回饋 | `UiNotice`、相容 `StatusSlot` | 永久留著成功／錯誤提示 |
+| 圖片／偏好選擇卡 | `UiChoiceCard`、`ImageChoiceGrid` | 頁面另寫選取框 |
+| 頁首、區塊標題 | `UiHeading` | 逐頁黃條與分隔線 |
+| 交錯底色清單 | `UiList`、`UiListRow` | 每列重畫一張卡 |
 
 元件都在 `frontend/src/components/`。缺元件或缺變體時擴充這些元件並更新本頁，不在頁面另做一份。
+
+`ImageChoiceGrid` 依可用容器寬度自動換欄，預設最小欄寬 8.5rem；宿主可用幾何變數 `--stitch-choice-min-inline` 調整（設定頁 7rem），不要另鎖桌機／手機欄數而壓窄選擇卡。圖片、名稱與選取狀態的槽位仍由共用元件控制。
+
+字體由 `frontend/src/runtime/mount-page.ts` 單一匯入 `frontend/src/styles/noto-sans-tc.css`：108 個 Google Fonts 官方 Noto Sans TC 可變 WOFF2 Unicode 分片放在 `frontend/src/assets/fonts/noto-sans-tc/`，隨 Vite 雜湊打包並自託管，不向 Google 字體服務發出執行期請求。字重範圍 100–900，共用正文使用 400、標題／按鈕使用 700。這是含繁中與拉丁字元的官方網頁子集，不代表全 Unicode CJK 覆蓋；缺字沿既有 sans-serif 字體堆疊回退。
+
+授權為 SIL Open Font License 1.1，完整來源檔為 `frontend/src/assets/fonts/noto-sans-tc/OFL.txt`；CSS 同時包含完整 `/*! … */` 授權原文，建置成品須保留著作權及授權，不只複製字檔。
+
 
 ## 元件
 
@@ -32,7 +44,7 @@
 - `variant`：`primary`（一個區塊最多一個主要操作）、`secondary`（預設）、`ghost`（行內低強調）、`danger`（刪除、離開等破壞性操作）、`success`、`contrast`。選取狀態用 `aria-pressed`／`aria-selected`，自動換成選取色。
 - `label` 是可及名稱；`caption` 可給較短的可見文字；`icon-only` 時 `label` 會成為 tooltip 與 aria-label，手機可用 `caption` 顯示文字。
 - `pending` 會停用按鈕並標 `aria-busy`；不要另外再管理同一顆按鈕的 disabled。
-- 規格（立體按鈕，Figma 03 C05／C07-R2，2026-10-23 使用者選定）：高 `--stitch-control-height`（44px）、2px `--stitch-frame` 深色邊、圓角 `--stitch-radius-button`（12px）、字 14px／700、內距 8／12px、圖示 20px。次要按鈕底色 `--stitch-surface-subtle`；主要按鈕 `--stitch-primary` 加硬陰影 `--stitch-shadow-raised-sm`（按下時陰影消失）；危險按鈕紅底紅邊；ghost 無底無邊。icon-only 為 44×44 圓形（`--stitch-radius-pill`）。停用為 `--stitch-disabled-*` 灰底灰邊、無陰影；送出中維持原色並半透明。焦點 `--stitch-focus-ring`。
+- 規格（立體按鈕，Figma 03 C05／C07-R2，2026-10-23 使用者選定）：高 `--stitch-control-height`（44px）、2px `--stitch-frame` 深色邊、圓角 `--stitch-radius-button`（12px）、字 14px／700、內距 8／12px、圖示 `--stitch-icon-size`（20px）。次要按鈕底色 `--stitch-surface` 加 2px 硬陰影；主要按鈕 `--stitch-primary` 加 3px 硬陰影 `--stitch-shadow-button-primary`（按下時陰影消失）；危險按鈕淡紅底、紅字、深色框及 2px 硬影；ghost 無底無邊。icon-only 為 44×44 圓形（`--stitch-radius-pill`）。停用為 `--stitch-disabled-*` 灰底灰邊、無陰影；送出中維持原色並半透明。焦點 `--stitch-focus-ring`。
 - 頁面只能決定按鈕尺寸與位置；圓角、邊框寬度與顏色在 `controls.scss` 鎖定，頁面的 `--ui-button-radius` 等覆寫對共用按鈕無效。唯一的換色入口是 `--stitch-button-bg`／`-color`／`-border-color`，只給使用者可選的播放器外觀主題使用。
 - 面板、輸入欄維持細邊（1px `--stitch-line`），立體只用在按鈕與 `UiPanel tone="raised"` 的重點卡片。
 
@@ -82,7 +94,7 @@
 - `control`：`input`（預設，`type` 照原生）、`select`（下拉選單）、`textarea`。下拉選項可用 `options` 或預設 slot 放 `<option>`／`<optgroup>`。
 - `class`／`style` 給外層 label；其他屬性（`id`、`name`、`disabled`、`aria-*`、`maxlength`…）給控制項。`hint` 與 `error` 會自動接到 `aria-describedby`，`error` 時標 `aria-invalid`。
 - 唯讀顯示用 `:model-value="…" readonly`，不要用 `:value`。
-- 規格：label 與控制項間距 8px、14px／400；控制項高至少 44px、內距 12／16px、1px `--stitch-line` 邊、圓角 8px、白底；停用／唯讀為次要底色與灰字；錯誤為危險底色與邊；焦點 `--stitch-focus-ring`。
+- 規格：label 與控制項間距 8px、14px／400；控制項文字 16px、高至少 44px、內距 8／16px、1px `--stitch-line` 邊、圓角 8px、白底；停用／唯讀為次要底色與灰字；錯誤為危險底色與邊；焦點 `--stitch-focus-ring`。
 
 **下拉選單（dropdown）**：表單裡的選擇一律用 `UiField control="select"`（原生 select，保留鍵盤與讀屏行為，只統一外觀與箭頭）。需要圖片、搜尋或多欄的選擇器用按鈕開 `UiPopover` 或 `UiDialog`，列表項高 44px、內距 8／12px、間距 4px，選取用 `--stitch-selected-*`。
 
@@ -93,7 +105,7 @@
 <UiCheckbox :model-value="isOn" label="常用" @update:model-value="toggle" />
 ```
 
-框 16px、與文字間距 8px、勾選色 `--stitch-primary`、整列至少 44px 高可點。
+框 16px、與文字間距 8px、勾選色 `--stitch-frame`（深色框）、label 14px／400、整列至少 44px 高可點。
 
 ### UiFilePick
 
@@ -101,7 +113,7 @@
 <UiFilePick label="上傳頭像" accept="image/png,image/webp" :current="avatarName" @change="upload" />
 ```
 
-原生 file input 透明覆蓋整列，顯示目前使用中的檔名；外觀同 `UiField`。
+原生 file input 透明覆蓋整列，label 14px、檔名 16px；選檔鈕使用 44px／2px 深邊／12px 圓角與硬影。每次選檔先保留 `File` 與可見檔名，再清空原生 `input.value`，最後以 `change` 發出 `File | null`；成功或失敗後再次選同一檔案都能觸發事件。`clear()` 清除已選名稱及原生 input，不重發事件，供儲存成功或切換目標時同步顯示；`current` 改變也會自動清除舊的選檔名稱。保留 `input` expose 供既有選圖／拖放介面操作。
 
 ### UiTabs、UiPopover、UiIcon
 
@@ -111,7 +123,7 @@
 <UiIcon name="save" />
 ```
 
-`UiTabs` 有方向鍵／Home／End 與 `aria-controls`；外觀為底線式（Figma C07 收藏分頁）：列底 1px 線、分頁間距 24px、文字 14px，選取分頁 700 字重加 2px `--stitch-primary` 底線，高 44px。頁面只排分頁列的位置與欄數。`UiPopover` 依按鈕位置在上方或下方開啟、限制在視窗內並在關閉時返焦。`UiIcon` 只接受登錄名稱（見 `UiIcon.vue`），24 viewBox、1.8 stroke、`currentColor`；新增圖示加到登錄表。
+`UiTabs` 有方向鍵／Home／End 與 `aria-controls`；外觀為底線式（Figma C07 收藏分頁）：列底 1px 線、分頁間距 24px、文字 14px，選取分頁 700 字重加 2px `--stitch-primary` 底線，高 44px。頁面只排分頁列的位置與欄數；計數使用 `UiBadge counter` 與獨立的 `ui-tab-count` class，避免沿用舊 `collection-count` 樣式。`UiPopover` 依按鈕位置在上方或下方開啟、限制在視窗內並在關閉時返焦。`UiIcon` 只接受登錄名稱（見 `UiIcon.vue`），24 viewBox、1.8 stroke、`currentColor`；新增圖示加到登錄表。
 
 ## Token（`frontend/src/styles/stitch-tokens.scss`）
 
@@ -134,44 +146,76 @@
 | | `--stitch-gap-panel` 20 | 面板內各區塊 |
 | | `--stitch-gap-section` 24 | 面板與面板之間 |
 | | `--stitch-page-gutter` 32／`-mobile` 16 | 頁面左右留白 |
-| 圓角 | `--stitch-radius-badge` 4 | 徽章、小標籤 |
+| 圓角 | `--stitch-radius-badge` 膠囊 | 徽章、小標籤 |
 | | `--stitch-radius-control` 8 | 輸入、下拉 |
 | | `--stitch-radius-button` 12 | 文字按鈕（立體） |
-| | `--stitch-radius-panel` 12 | 面板、彈窗、選單 |
+| | `--stitch-radius-panel` 12 | 一般面板 |
+| | `--stitch-radius-dialog`／`-popover` 16 | 彈窗、浮動選單 |
 | | `--stitch-radius-card` 16 | 立體卡（`UiPanel tone="raised"`） |
 | | `--stitch-radius-pill` | 膠囊、圓形頭像、開關 |
 | 邊框 | `--stitch-border`（1px line）、`--stitch-border-strong`（2px frame） | 一般／立體卡 |
 | 陰影 | 預設無陰影；`--stitch-shadow-raised`（0 4px 0）、`-raised-sm`（0 2px 0）、`-overlay` | 立體卡、彈出層 |
 | 焦點 | `--stitch-focus-ring`（3px）、`--stitch-focus-offset`（2px） | 所有可互動元素 |
-| 控制項 | `--stitch-control-height` 44、`--stitch-control-padding-*` 8／12、`--stitch-field-padding-*` 12／16、`--stitch-checkbox-size` 16 | 按鈕、欄位 |
+| 控制項 | `--stitch-control-height` 44、`--stitch-control-padding-*` 8／12、`--stitch-field-padding-*` 8／16、`--stitch-checkbox-size` 16 | 按鈕、欄位 |
 | 選單 | `--stitch-menu-padding` 8、`--stitch-menu-item-padding` 8／12、`--stitch-menu-gap` 4 | 下拉、Popover 列表 |
-| 字級 | `--stitch-text-page` 24、`-section` 18、`-body` 14、`-hint` 12；`--stitch-font-12…32` | 頁標題、區塊標題、內文／label、輔助 |
+| 字級 | `--stitch-text-page` 28、`-section` 20、`-body` 16、`-hint` 14、`-data` 32；`--stitch-font-12…32`（含 28） | 頁標題、區塊標題、內文／label、輔助 |
 | 字重 | `--stitch-weight-title` 700、`-button` 700、`-body` 400 | |
 | 行高 | `--stitch-line-height-body` 1.5、`-heading` 1.25 | |
 | 動態 | `--stitch-transition` 0.15s | hover／選取；`prefers-reduced-motion` 時關閉 |
+
+## R6 五類共用模式
+
+- `UiBadge`：`tone=primary|success|info|warning|danger|neutral|disabled`，深邊 2px、膠囊、14px／700；`counter` 保留 28px 計數槽。只表達狀態，不額外偽造可點語意。
+- `UiNotice`：`message`、`tone`、`error`、`active`、`noticeKey`、`duration`（預設 4000ms）、`persistent`。狀態解除立刻隱藏；短暫訊息到時隱藏；保留外層寬高，內文過長可局部捲動。相同訊息再次發生時增加 `noticeKey`，重新開始計時。卸載會清除計時器。`StatusSlot` 轉交同一 API，使用 44px／14px 緊湊樣式；既有遊戲有明確較矮槽位時沿用該固定布局並允許內文捲動。
+- 未確認的操作結果、必須重試的狀態、必要遊戲決策／指令及真正空狀態不能定時清除；依來源條件設定 `persistent`，並在狀態解除時清空 `message` 或關閉 `active`。不要將所有 error 一律永久顯示。
+- `UiChoiceCard`：`label`、`selected`、`disabled`；淡色中性底、預設無邊，選取時同一底色、3px 深色外圈加 2px offset，以及可見的勾選文字。標記保留槽位，不改外框尺寸。`action` 表示立即操作，不附加持續選取語意；`unavailable` 表示只能預覽的鎖定內容。`#label`／`#selection` 可保留既有可讀內容，但不能隱藏必要資訊。`ImageChoiceGrid`、`FrameChoices`、`EntranceChoices`、`ArtworkPicker` 都沿用這個外觀。
+- `UiHeading`：`level=1|2|3`，`kind=page|section`。page 為 28px 與細分隔線；section 為 20px 與黃色直條；允許自然換行，不能縮小字或截掉字。
+- `UiList as=div|ul|ol`、`UiListRow as=div|li`：單一細邊面板、交錯底色；列內最小操作槽 44px，標題、內容和 `#actions` 對齊。長內容換行，不能為等高刪減資訊。
+
+字級 roles 為頁首 28、區塊 20、正文 16、輔助 14、數據 32；控制按鈕與 label 保持 14，輸入內容 16。UiField 宣告 hint／error（可用空字串）或 reserve-message 時，固定保留桌機 21px、手機 42px 的槽位；完全沒有說明／錯誤的欄位不造空槽，初始值可能 undefined 的非同步驗證請明確傳 reserve-message；超長文字可鍵盤或觸控捲動。成功／等待的小字對比在元件化時修為至少 4.5:1。
 
 ## 版面規則
 
 - 同列面板對齊上下緣；相鄰區塊的邊線、欄寬、列間距與框內留白一致，用 Grid／Flex 與語意間距 token，不逐頁零散位移。
 - 動態區塊預留寬高；狀態文字、倒數、非同步載入、按鈕顯隱或捲軸不應造成反覆縮放與位移。
 - 長內容在既定區域換行或局部捲動；窄螢幕可換列。不得裁切必要資訊或隱藏決策資訊。
+- 卡片選擇區需要內部捲動時，使用 `grid-auto-rows: max-content` 與靠上排列，讓卡片保留內容高度；捲動邊緣為 3px 選取外圈加 2px offset 至少預留 5px，通常使用 `--stitch-space-8`（8px）。檢查四邊及 hover／focus，不能因裁切或平均分配剩餘列高而藏住外圈與內容。
 - 混合標題、標籤、數字與按鈕的橫列用 `align-items: center`；控制項維持 44px 以上。
 - 操作按鈕可 icon-only，但保留中文可讀名稱、鍵盤焦點與觸控可理解的說明，不能只有 hover 或原生 title。
 
 ## 防倒退檢查（`npm run ui:check`）
 
-`tools/ui-check.cjs` 以 `.ui-baseline.json` 記錄每個檔案現有的舊寫法數量，CI 失敗條件：
+`tools/ui-check.cjs` 同時檢查每個檔案的數量基準、可信任 Git base 的新增行，以及違規所在的程式區塊。清理舊寫法不用更新基準，但刪除一筆舊違規不能換成一筆新的；把相同文字搬到新區塊也不能沿用舊額度。
 
 | 規則 | 範圍 | 擋下 |
 | --- | --- | --- |
-| `hex` | `frontend/src` 的 `.vue`／`.scss`／`.css`（token 定義檔除外） | 原始 `#rgb`／`#rrggbb` 色碼 |
-| `raw-control` | `frontend/src/pages/**/*.vue` | `<button>`、`<input>`、`<select>`、`<textarea>` |
-| `old-token` | `frontend/src` 的 `.vue`／`.scss` | `tokens.space()` 等 SCSS 函式、`var(--play-*)`、`var(--ui-*)` |
+| `hex` | `frontend/src` 的 `.vue`／`.scss`／`.css`（token 定義檔除外） | 原始 `#rgb`／`#rrggbb` 及帶 alpha 的色碼；CSS 色彩函式 `rgb`／`rgba`／`hsl`／`hsla`／`hwb`／`lab`／`lch`／`oklab`／`oklch`／`color` |
+| `raw-control` | `frontend/src/pages/**/*.vue` | `<button>`、`<input>`、`<select>`、`<textarea>`（不分大小寫），以及 `component` 的靜態原生 `is`／`:is`／`v-bind:is` |
+| `old-token` | `frontend/src` 的 `.vue`／`.scss`／`.css` | 淘汰的 `space()`／`font()`、`tokens.type()` 等函式，以及 `var(--play-*)`／`var(--ui-*)`（含空白、換行寫法） |
+| `important` | `frontend/src` 的 `.vue`／`.scss`／`.css` | 新增的 `!important`（含 `!` 與 `important` 分行的寫法） |
 
-- 只擋增加：某檔案的數量超過基準就失敗；清掉舊寫法不會失敗（2026-10-23 決定，減少平行 PR 衝突）。方便時執行 `npm run ui:baseline` 把基準降到目前數量並提交。
-- 基準只能由 `npm run ui:baseline` 降低，不得手改調高；PR 審查時 `.ui-baseline.json` 的差異只能是減少。
-- 真的需要例外（例如第三方品牌色、遊戲牌面語意色），在該行或上一行寫 `ui-check-allow <規則>: <理由>`。
-- 合併 main 遇到 `.ui-baseline.json` 衝突：任取一邊，再執行 `npm run ui:baseline`。
+掃描以完整字串匹配後回填起訖行號，不以逐行搜尋略過跨行語法；色彩函式包含完整括號及巢狀內容，跨行修改參數也算新增位置。Vue 的 `#add` 等 slot 簡寫不當成色碼，屬性內的比較式也不能截斷 slot 辨識。
+
+色彩函式掃描整份 CSS／SCSS 及 Vue 的 `<style>`；Vue 的 script／template 另攔數字起始的固定色彩構造，以及 `color(display-p3 1 0 0)` 等色彩空間加數字常值。使用者選色的變數運算不直接視為原始固定色碼，相關動態樣式仍須審查。`component is="input"`、`:is="'input'"` 及對應 `v-bind:is` 常值都會被攔；真正動態的 `:is="kind"`／條件式無法由此靜態規則判定，審查時須確認不繞過共用控制項。
+
+- **可信任來源**：本機預設比較已提交的 `HEAD` 與工作目錄；需要整個分支的證據時，明確設定 `UI_CHECK_BASE_SHA` 為實際基底提交。CI 指定 PR base SHA 或 push before SHA，手動執行則比較 `HEAD^`，並取得完整歷史。工具輸出解析後的 base SHA；base 無法解析或 CI 未指定 base 時失敗，不默認放行。
+- **新增位置**：使用可信任 base 的 Git diff 新增行；匹配跨越的任一行是新增行就會失敗。新增檔與未追蹤檔全算新增，不能挪用其他檔案或同檔已清理的額度。
+- **區塊身分**：即使 Git 把搬動的相同文字對齊為 unchanged，工具仍比對 selector、模板祖先與同名同層區塊的序號。搬到新 selector／模板區塊不能冒充原位置。script 區塊不作細部語法推斷，而以清理註解、正規化空白後的整塊內容比對；內容改變後其中的既有違規須清理或逐項給必要例外；無法可靠建立的其他脈絡也採保守比對。Git 路徑、diff 或工作目錄變更無法可靠核對時失敗。
+- **schema 2 基準**：`.ui-baseline.json` 的規則、檔案路徑及計數都須有效，每筆額度必須是非負安全整數。工具與可信任 base 比較，拒絕手改增加額度；已有額度不是新增違規的預算。`hex` 的數字基準保留原始 hex 計數；新增涵蓋的色彩函式只比對可信任 base 中的既有位置、文字與脈絡，不轉成可交換的數字額度，也不提高 baseline。新增、搬移或修改函式內容都不能靠刪除另一個既有色碼抵銷。
+- **只降不升**：`npm run ui:baseline` 即 `node tools/ui-check.cjs --update`，先通過相同檢查才把目前基準降低。清理後不更新也可繼續開發；不能用更新基準替代修正新增違規。
+- **一次性遷移**：schema 1 使用 `node tools/ui-check.cjs --migrate` 遷移到 schema 2，只能執行於舊 schema。新增掃描範圍的既有額度受可信任已提交來源與原基準約束，不能從未提交的新程式放寬，也不是一般開發重建或提高 baseline 的入口。
+- **衝突處理**：合併 `.ui-baseline.json` 衝突時保留兩邊較低的既有額度，再執行檢查；不能任取較高一邊掩蓋新增違規。
+
+必要例外只能放在真正的 `//`、`/* … */` 或 `<!-- … -->` 註解，格式為 `ui-check-allow <已知規則>: <具體理由>`。理由不能空白或只有標點；未知規則及無效理由會使檢查失敗。JavaScript 字串或 HTML 屬性中的同名文字不產生豁免。
+
+註解需落在該次匹配涵蓋的行內，或匹配起始行的前一行；跨行 `var()`／`!important` 按完整匹配範圍處理。例外會豁免範圍內的同一規則，應保持程式列及理由精確，不用一條籠統註解遮住無關問題。例如既有原生 UI 相容層可寫：
+
+```scss
+// ui-check-allow important: 此變數必須覆蓋既有 ui-primitives 的 important 形狀契約
+--ui-button-radius: var(--stitch-radius-button) !important;
+```
+
+Stitch 匯出特效的 CSS 類名包含既有色碼字元時，僅在該選擇器前標註精確的 `hex` 例外以保留素材類名；實際色彩宣告仍必須使用 `--stitch-artwork-swatch-*` 固定色票。這些色票不隨明暗主題改色，避免改變已確認的特效美術；選擇器例外不得延伸到新的色彩宣告。
 
 ## 舊頁（`public/`）與 GameUI
 

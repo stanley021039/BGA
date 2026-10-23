@@ -1,8 +1,21 @@
 /* Collection library: scoped to .collection-page; follows club.css colors. */
-.collection-page .collection-section > :is(.collection-tools,.collection-editor,p){margin:16px 20px}
-.collection-page .collection-section > .collection-grid{margin:20px}
-.collection-page .collection-heading{display:flex;justify-content:space-between;gap:16px;align-items:center}
-.collection-page .collection-share input{width:auto;display:inline;margin-right:8px}
+.collection-page .collection-section > :is(.collection-tools, .collection-editor, p) {
+  margin: 16px 20px;
+}
+.collection-page .collection-section > .collection-grid {
+  margin: 20px;
+}
+.collection-page .collection-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.collection-page .collection-share input {
+  width: auto;
+  display: inline;
+  margin-right: 8px;
+}
 .collection-page {
   --collection-bg: var(--bg, #101613);
   --collection-panel: var(--panel, #1a221c);
@@ -19,21 +32,35 @@
 
 .collection-page *,
 .collection-page *::before,
-.collection-page *::after { box-sizing: border-box; }
+.collection-page *::after {
+  box-sizing: border-box;
+}
 
 .collection-page button,
 .collection-page input,
-.collection-page select { font: inherit; }
-.collection-page a { color: inherit; }
+.collection-page select {
+  font: inherit;
+}
+.collection-page a {
+  color: inherit;
+}
 .collection-page button,
-.collection-page a { touch-action: manipulation; }
+.collection-page a {
+  touch-action: manipulation;
+}
 .collection-page :is(button, a, input, select, summary):focus-visible {
   outline: 2px solid var(--collection-orange);
   outline-offset: 3px;
 }
-.collection-page [hidden] { display: none !important; }
+.collection-page [hidden] {
+  display: none !important;
+}
 
-.collection-page > h1 { margin: 0 0 22px; font-size: clamp(1.8rem, 4vw, 2.4rem); letter-spacing: .04em; }
+.collection-page > h1 {
+  margin: 0 0 22px;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  letter-spacing: 0.04em;
+}
 .collection-section {
   margin: 0 0 20px;
   border: 1px solid var(--collection-line);
@@ -48,14 +75,20 @@
   padding: 16px 20px;
   color: var(--collection-lime);
 }
-.collection-section-heading h2 { margin: 0; font-size: 20px; font-weight: 650; }
-.collection-count{
+.collection-section-heading h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+}
+.collection-count {
   margin-left: auto;
   border: 1px solid var(--collection-line);
   color: var(--collection-muted);
-  font-size: .78rem;
+  font-size: 0.78rem;
 }
-.collection-section-content { padding: 0 20px 20px; }
+.collection-section-content {
+  padding: 0 20px 20px;
+}
 
 .collection-tools {
   display: grid;
@@ -64,7 +97,7 @@
   align-items: center;
   margin: 2px 0 16px;
 }
-.collection-page :is(input:not([type="checkbox"]), select) {
+.collection-page :is(input:not([type='checkbox']), select) {
   width: 100%;
   min-width: 0;
   padding: 10px 12px;
@@ -86,15 +119,25 @@
   background: #273229;
   color: var(--collection-text);
   text-decoration: none;
-  font-size: .9rem;
+  font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
 }
 .collection-tools a,
-.collection-upload button { border-color: transparent; background: var(--collection-orange); color: #241b12; }
-.collection-page :is(button, a) { transition: border-color .16s ease, background-color .16s ease; }
-.collection-page :is(button, a):hover { border-color: var(--collection-lime); }
+.collection-upload button {
+  border-color: transparent;
+  background: var(--collection-orange);
+  color: #241b12;
+}
+.collection-page :is(button, a) {
+  transition:
+    border-color 0.16s ease,
+    background-color 0.16s ease;
+}
+.collection-page :is(button, a):hover {
+  border-color: var(--collection-lime);
+}
 
 .collection-upload {
   display: flex;
@@ -107,12 +150,33 @@
   border-radius: 9px;
   background: #111913;
 }
-.collection-upload label { display: grid; gap: 6px; color: var(--collection-muted); font-size: .8rem; }
-.collection-upload label:has(input[type="file"]) { flex: 1 1 230px; }
-.collection-upload input[type="file"] { max-width: 100%; color: var(--collection-muted); }
-.collection-upload label:has(input[type="checkbox"]) { display: flex; align-items: center; gap: 8px; }
-.collection-upload input[type="checkbox"] { accent-color: var(--collection-lime); }
-.collection-upload p { flex-basis: 100%; margin: 0; color: var(--collection-muted); font-size: .85rem; }
+.collection-upload label {
+  display: grid;
+  gap: 6px;
+  color: var(--collection-muted);
+  font-size: 0.8rem;
+}
+.collection-upload label:has(input[type='file']) {
+  flex: 1 1 230px;
+}
+.collection-upload input[type='file'] {
+  max-width: 100%;
+  color: var(--collection-muted);
+}
+.collection-upload label:has(input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.collection-upload input[type='checkbox'] {
+  accent-color: var(--collection-lime);
+}
+.collection-upload p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--collection-muted);
+  font-size: 0.85rem;
+}
 
 .collection-grid {
   display: grid;
@@ -126,9 +190,14 @@
   border: 1px solid var(--collection-line);
   border-radius: 11px;
   background: #141c16;
-  transition: border-color .16s ease, box-shadow .16s ease;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
-.collection-card:hover,.collection-card:focus-within { border-color: #69785d; }
+.collection-card:hover,
+.collection-card:focus-within {
+  border-color: #69785d;
+}
 .collection-image {
   display: block;
   width: 100%;
@@ -145,8 +214,16 @@
   border-radius: 50%;
   object-fit: cover;
 }
-.collection-card h3 { margin: 0 0 5px; font-size: 1.02rem; line-height: 1.35; }
-.collection-meta { margin: 0 0 12px; color: var(--collection-muted); font-size: .82rem; }
+.collection-card h3 {
+  margin: 0 0 5px;
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+.collection-meta {
+  margin: 0 0 12px;
+  color: var(--collection-muted);
+  font-size: 0.82rem;
+}
 .collection-badge {
   display: inline-flex;
   align-items: center;
@@ -156,11 +233,25 @@
   border: 1px solid #536048;
   border-radius: 999px;
   color: var(--collection-lime);
-  font-size: .72rem;
+  font-size: 0.72rem;
 }
-.collection-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
-.collection-actions :is(button, a) { min-height: 35px; padding: 7px 10px; font-size: .8rem; }
-.collection-card audio { display: block; width: 100%; max-width: 100%; margin-top: 12px; }
+.collection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+.collection-actions :is(button, a) {
+  min-height: 35px;
+  padding: 7px 10px;
+  font-size: 0.8rem;
+}
+.collection-card audio {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 12px;
+}
 
 .collection-editor {
   margin-top: 20px;
@@ -169,39 +260,137 @@
   background: #141c16;
   overflow: hidden;
 }
-.collection-editor > summary { padding: 14px 16px; color: var(--collection-lime); cursor: pointer; }
-.collection-editor select { margin: 0 16px 14px; width: calc(100% - 32px); }
-.collection-editor form { display: grid; gap: 12px; padding: 0 16px 16px; }
-.collection-editor form label { display: grid; gap: 6px; color: var(--collection-muted); font-size: .85rem; }
-.collection-editor form button { justify-self: start; }
-#collection-message { margin: 12px 0; color: var(--collection-lime); }
-.collection-empty { padding: 26px 16px; border: 1px dashed #536048; border-radius: 9px; color: var(--collection-muted); text-align: center; }
-
-@media (max-width: 650px) {
-  .collection-page { padding: 18px 4% 32px; }
-  .collection-section-heading { padding: 14px; }
-  .collection-section-content { padding: 0 14px 14px; }
-  .collection-tools { grid-template-columns: 1fr; }
-  .collection-tools a { width: 100%; }
-  .collection-upload { align-items: stretch; }
-  .collection-upload button { width: 100%; }
-  .collection-grid { grid-template-columns: 1fr; }
-  .collection-card { padding: 13px; }
-  .collection-editor form button { width: 100%; }
+.collection-editor > summary {
+  padding: 14px 16px;
+  color: var(--collection-lime);
+  cursor: pointer;
+}
+.collection-editor select {
+  margin: 0 16px 14px;
+  width: calc(100% - 32px);
+}
+.collection-editor form {
+  display: grid;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+.collection-editor form label {
+  display: grid;
+  gap: 6px;
+  color: var(--collection-muted);
+  font-size: 0.85rem;
+}
+.collection-editor form button {
+  justify-self: start;
+}
+#collection-message {
+  margin: 12px 0;
+  color: var(--collection-lime);
+}
+.collection-empty {
+  padding: 26px 16px;
+  border: 1px dashed #536048;
+  border-radius: 9px;
+  color: var(--collection-muted);
+  text-align: center;
 }
 
-.collection-page{--ui-widget-panel:var(--collection-panel);--ui-widget-text:var(--collection-text);--ui-widget-line:var(--collection-line);--ui-widget-selected:var(--collection-lime);--ui-widget-selected-text:#18231a;--ui-widget-focus:var(--collection-orange);--ui-widget-card-focus:#738769;--ui-widget-error:#f1a084}
-.collection-tabs{margin-bottom:20px;gap:8px}
-.collection-tabs .collection-count{margin-left:0;border-color:currentColor;color:inherit;font-size:14px;}
-.collection-page .collection-tabs [role="tab"]{font-size:16px}
-.collection-section-heading{border-bottom:1px solid var(--collection-line)}
-.collection-current{display:block;min-height:22px;color:var(--collection-lime);font-size:14px;line-height:22px;font-weight:600}
-.collection-page .collection-actions .ui-icon-button,.collection-page .collection-upload .ui-icon-button{width:44px;height:44px;min-height:44px;padding:10px;flex:none}
-.collection-page .collection-editor form .ui-icon-button{width:44px;justify-self:start}
-.collection-page .collection-heading .ui-icon-button{flex:none}
-.collection-page .collection-upload :is(label,p),.collection-page .collection-editor form label,.collection-meta{font-size:14px}
-.collection-card[data-selected="true"]{border-color:var(--collection-lime);box-shadow:inset 0 0 0 1px var(--collection-lime)}
-@media(prefers-reduced-motion:reduce){.collection-page :is(button,a,.collection-card){transition:none}}
-html.motion-reduced .collection-page :is(button,a,.collection-card){transition:none}
+@media (max-width: 650px) {
+  .collection-page {
+    padding: 18px 4% 32px;
+  }
+  .collection-section-heading {
+    padding: 14px;
+  }
+  .collection-section-content {
+    padding: 0 14px 14px;
+  }
+  .collection-tools {
+    grid-template-columns: 1fr;
+  }
+  .collection-tools a {
+    width: 100%;
+  }
+  .collection-upload {
+    align-items: stretch;
+  }
+  .collection-upload button {
+    width: 100%;
+  }
+  .collection-grid {
+    grid-template-columns: 1fr;
+  }
+  .collection-card {
+    padding: 13px;
+  }
+  .collection-editor form button {
+    width: 100%;
+  }
+}
 
-
+.collection-page {
+  --ui-widget-panel: var(--collection-panel);
+  --ui-widget-text: var(--collection-text);
+  --ui-widget-line: var(--collection-line);
+  --ui-widget-selected: var(--collection-lime);
+  --ui-widget-selected-text: #18231a;
+  --ui-widget-focus: var(--collection-orange);
+  --ui-widget-card-focus: #738769;
+  --ui-widget-error: #f1a084;
+}
+.collection-tabs:not(.vue-tabs) {
+  margin-bottom: 20px;
+  gap: 8px;
+}
+.collection-tabs:not(.vue-tabs) .collection-count {
+  margin-left: 0;
+  border-color: currentColor;
+  color: inherit;
+  font-size: 14px;
+}
+.collection-page .collection-tabs:not(.vue-tabs) [role='tab'] {
+  font-size: 16px;
+}
+.collection-section-heading {
+  border-bottom: 1px solid var(--collection-line);
+}
+.collection-current {
+  display: block;
+  min-height: 22px;
+  color: var(--collection-lime);
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.collection-page .collection-actions .ui-icon-button,
+.collection-page .collection-upload .ui-icon-button {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 10px;
+  flex: none;
+}
+.collection-page .collection-editor form .ui-icon-button {
+  width: 44px;
+  justify-self: start;
+}
+.collection-page .collection-heading .ui-icon-button {
+  flex: none;
+}
+.collection-page .collection-upload :is(label, p),
+.collection-page .collection-editor form label,
+.collection-meta {
+  font-size: 14px;
+}
+.collection-card[data-selected='true'] {
+  border-color: var(--collection-lime);
+  box-shadow: inset 0 0 0 1px var(--collection-lime);
+}
+@media (prefers-reduced-motion: reduce) {
+  .collection-page :is(button, a, .collection-card) {
+    transition: none;
+  }
+}
+html.motion-reduced .collection-page :is(button, a, .collection-card) {
+  transition: none;
+}

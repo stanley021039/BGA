@@ -398,6 +398,7 @@ const usedCommand = computed(() => {
           : tip
       }}</p
       ><StatusSlot
+        :persistent="!presentation.ready || model.busy || !!model.uncertain"
         :message="presentation.ready ? model.notice : '賽道元件未完成載入，請重新整理後再操作。'"
         :error="model.failed || !presentation.ready"
     /></div>
@@ -435,7 +436,11 @@ const usedCommand = computed(() => {
         >解鎖成就：{{ presentation.earned.value.join('、') }}</p
       >
       <div id="race-finished-setup-slot" class="vue-race-finished-setup-slot"></div>
-      <StatusSlot :message="model.notice" :error="model.failed" />
+      <StatusSlot
+        :persistent="model.busy || !!model.uncertain"
+        :message="model.notice"
+        :error="model.failed"
+      />
     </section>
     <section
       v-if="

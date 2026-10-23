@@ -28,7 +28,7 @@ withDefaults(
     :class="{
       'ui-icon-button': iconOnly,
       'has-mobile-caption': iconOnly && !!caption,
-      'is-pending': pending,
+      'is-stitch-pending': pending,
     }"
     :data-stitch-variant="variant"
     :aria-label="label"
@@ -36,7 +36,15 @@ withDefaults(
     :disabled="disabled || pending"
     :aria-busy="pending"
   >
-    <slot name="icon"><UiIcon v-if="icon" :name="icon" class="ui-button-icon" /></slot>
+    <span
+      v-if="icon || $slots.icon"
+      class="ui-button-icon-slot"
+      :data-pending="pending || undefined"
+    >
+      <slot name="icon"><UiIcon v-if="icon" :name="icon" class="ui-button-icon" /></slot>
+      <span v-if="pending" class="ui-button-spinner" aria-hidden="true" />
+    </span>
+    <span v-else-if="pending" class="ui-button-spinner ui-button-edge-spinner" aria-hidden="true" />
     <span class="vue-button-caption" :class="{ 'ui-sr-only': iconOnly }">{{
       caption || label
     }}</span>

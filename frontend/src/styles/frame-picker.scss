@@ -268,48 +268,18 @@ body .vue-frame-preview-viewport.is-media-preview {
   .barrage-frame-grid.vue-stitch-frame-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    align-items: start;
-    gap: var(--stitch-space-12);
+    align-items: stretch;
+    gap: var(--stitch-gap-controls);
     min-inline-size: 0;
-    padding: 0;
+    padding: var(--stitch-space-4);
     margin: 0;
   }
   .vue-stitch-frame-grid > .barrage-frame-choice {
-    --ui-button-radius: var(--stitch-control-radius);
-    --ui-button-border-width: 1px;
-    --ui-button-border-color: var(--stitch-line);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 88px minmax(24px, auto);
-    gap: var(--stitch-space-8);
-    position: relative;
-    box-sizing: border-box;
     container: frame-card / inline-size;
     min-inline-size: 0;
     inline-size: 100%;
     block-size: auto;
-    min-block-size: 130px;
-    padding: var(--stitch-space-12);
-    border: 1px solid var(--stitch-line);
-    border-radius: var(--stitch-control-radius);
     overflow: visible;
-    background: var(--stitch-surface);
-    color: var(--stitch-ink);
-    box-shadow: none;
-    font-family: var(--stitch-font-family);
-    font-size: var(--stitch-font-14);
-    line-height: 1.5;
-    &[aria-pressed='true'] {
-      --ui-button-border-color: var(--stitch-primary);
-      background: var(--stitch-selected-bg);
-      color: var(--stitch-selected-ink);
-      outline: 2px solid var(--stitch-primary);
-      outline-offset: -2px;
-    }
-    &:focus-visible {
-      outline: 2px solid var(--stitch-focus);
-      outline-offset: 2px;
-    }
   }
   .vue-frame-preview-slot {
     grid-row: 1;
@@ -329,34 +299,24 @@ body .vue-frame-preview-viewport.is-media-preview {
     }
   }
   .barrage-frame-label {
-    grid-row: 2;
     display: block;
     min-inline-size: 0;
+    min-block-size: 3em;
     margin: 0;
-    font-size: var(--stitch-font-14);
-    line-height: 1.5;
-    font-weight: 600;
+    font-size: var(--stitch-text-body);
+    line-height: var(--stitch-line-height-body);
+    font-weight: var(--stitch-weight-title);
     text-align: center;
     white-space: normal;
     overflow-wrap: anywhere;
   }
   .barrage-frame-selection {
-    display: none;
-  }
-  .barrage-frame-choice[aria-pressed='true'] > .barrage-frame-selection {
     display: block;
-    position: absolute;
-    inset-block-start: -8px;
-    inset-inline-end: 8px;
-    min-block-size: 0;
-    padding: 0 var(--stitch-space-8);
-    border: 1px solid var(--stitch-primary);
-    border-radius: 999px;
-    background: var(--stitch-selected-bg);
-    color: var(--stitch-selected-ink);
-    font-size: var(--stitch-font-14);
-    line-height: 1.5;
-    white-space: nowrap;
+    min-block-size: 1.5em;
+    font-size: var(--stitch-text-hint);
+    line-height: var(--stitch-line-height-body);
+    text-align: center;
+    overflow-wrap: anywhere;
   }
   .barrage-frame-empty {
     grid-column: 1/-1;

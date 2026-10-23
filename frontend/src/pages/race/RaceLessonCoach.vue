@@ -44,6 +44,7 @@ function selectChapter(event: Event, lesson: ReturnType<typeof useRaceLesson>) {
     >
     <div class="vue-race-lesson-feedback"
       ><StatusSlot
+        persistent
         :message="
           lesson.result.value?.text ||
           lesson.feedback.value ||

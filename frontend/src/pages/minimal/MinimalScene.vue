@@ -329,6 +329,15 @@ onBeforeUnmount(() => {
     >
     <div class="vue-minimal-feedback"
       ><StatusSlot
+        :persistent="
+          actions.pending ||
+          actions.canRetry ||
+          editor.saving ||
+          editor.finishing ||
+          editor.dirty ||
+          !!editor.storageNotice ||
+          (!actions.notice && !editor.notice && state.phase === 'drawing' && !guesser)
+        "
         :message="
           actions.notice ||
           editor.notice ||

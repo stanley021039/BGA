@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useId } from 'vue';
+import UiHeading from './UiHeading.vue';
 // The framed section from Figma 03 C07. Pages set layout (grid area, size)
 // only; border, radius, surface and padding belong here.
 withDefaults(
@@ -26,7 +27,7 @@ const headingId = useId();
   >
     <header v-if="title || $slots.actions" class="ui-panel-heading"
       ><div v-if="title" class="ui-panel-title"
-        ><component :is="`h${headingLevel}`" :id="headingId">{{ title }}</component
+        ><UiHeading :level="headingLevel" kind="section" :id="headingId">{{ title }}</UiHeading
         ><p v-if="description" class="ui-panel-description">{{ description }}</p></div
       ><span v-if="note" class="ui-panel-note">{{ note }}</span
       ><slot name="actions"

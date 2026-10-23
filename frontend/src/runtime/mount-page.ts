@@ -1,3 +1,4 @@
+import '../styles/noto-sans-tc.css';
 import { createApp, Fragment, h, Teleport } from 'vue';
 import type { App, Component } from 'vue';
 import { createPinia, disposePinia, type Pinia } from 'pinia';

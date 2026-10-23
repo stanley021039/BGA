@@ -209,6 +209,6 @@ defineExpose({ cancel });
         aria-hidden="true"
         :style="{ left: (cursor.x / 512) * 100 + '%', top: (cursor.y / 256) * 100 + '%' }"
       ></span></div
-    ><StatusSlot :message="error" :error="!!error"
+    ><StatusSlot persistent :message="error" :error="!!error"
   /></figure>
 </template>
