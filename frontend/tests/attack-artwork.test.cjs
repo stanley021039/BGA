@@ -6,12 +6,13 @@ const { test } = require('node:test'),
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
   .replace('export function playAttackArtwork', 'function playAttackArtwork');
-function run(effect, color, frames = 7) {
+function run(effect, color, frames = 7, random = Math.random) {
   const colors = [],
     arcs = [],
     lines = [],
     transforms = [],
-    texts = [];
+    texts = [],
+    positions = [];
   let callback;
   const gradient = {
     addColorStop(_p, c) {
@@ -25,7 +26,8 @@ function run(effect, color, frames = 7) {
         transforms.push({ x, y });
       },
       clearRect() {},
-      fillText(text) {
+      fillText(text, x, y) {
+        positions.push({ x, y });
         texts.push(text);
       },
       createRadialGradient() {
@@ -67,7 +69,7 @@ function run(effect, color, frames = 7) {
       return 1;
     },
     clearTimeout() {},
-    Math,
+    Math: Object.assign(Object.create(Math), { random }),
     Date,
   };
   vm.createContext(sandbox);
@@ -79,7 +81,7 @@ function run(effect, color, frames = 7) {
   for (let i = 1; i <= frames; i++) callback?.(i * 17);
   stop();
   assert.equal(callback, null);
-  return { colors, arcs, lines, transforms, texts };
+  return { colors, arcs, lines, transforms, texts, positions };
 }
 test('rainbow barrage paints multiple distinct authored shot colours', () => {
   const r = run('barrage', '#00f0ff');
@@ -114,4 +116,14 @@ test('offensive effects show damage automatically, defensive effects do not', ()
 test('ice spikes grow upwards and the fire vortex rises into a column', () => {
   assert.ok(run('frost_spikes', '#7df4ff', 18).lines.some((p) => p.y < -100));
   assert.ok(run('flame_vortex', '#ff3366', 24).lines.some((p) => p.y < -150));
+});
+
+test('damage values and popup locations vary within a bounded range', () => {
+  const low = run('beam', '#7df4ff', 7, () => 0),
+    high = run('beam', '#7df4ff', 7, () => 0.999);
+  const value = (r) => Number(r.texts[0].replace(/[^0-9]/g, ''));
+  assert.ok(value(low) >= 158000 * 0.65);
+  assert.ok(value(high) <= 158000 * 1.35);
+  assert.notEqual(value(low), value(high));
+  assert.notDeepEqual(low.positions[0], high.positions[0]);
 });

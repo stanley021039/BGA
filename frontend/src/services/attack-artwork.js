@@ -96,14 +96,19 @@ export function playAttackArtwork(surface, options) {
   }
   function spawnDamageText(x, y, dmg, isCrit = true, customLabel = null) {
     if (!state.showDmgPopups) return;
+    const amount = Math.max(
+      dmg > 0 ? 1 : 0,
+      Math.floor(dmg * state.damageMult * (0.65 + Math.random() * 0.7)),
+    );
+    const number = amount.toLocaleString();
     const textStr = customLabel
-      ? customLabel
+      ? customLabel.replace(/\d[\d,]*/g, number)
       : isCrit
-        ? `CRITICAL ${Math.floor(dmg * state.damageMult).toLocaleString()}!`
-        : `${Math.floor(dmg * state.damageMult).toLocaleString()}`;
+        ? `CRITICAL ${number}!`
+        : number;
     floatingTexts.push({
       x: x + (Math.random() - 0.5) * 44,
-      y: y - 20,
+      y: y - 20 + (Math.random() - 0.5) * 24,
       vx: (Math.random() - 0.5) * 3.5,
       vy: -(Math.random() * 4 + 4.5),
       text: textStr,
