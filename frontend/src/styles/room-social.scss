@@ -202,8 +202,6 @@
   }
   .vue-chat-tools .vue-social-tool-trigger,
   .vue-chat-tools > .vue-button {
-    --stitch-button-border-color: var(--stitch-line);
-    --stitch-button-radius: 8px;
     box-sizing: border-box;
     inline-size: 100%;
     min-inline-size: 0;
@@ -242,10 +240,6 @@
     }
   }
   .vue-chat-send.vue-button {
-    --stitch-button-radius: 8px;
-    --stitch-button-border-color: var(--stitch-line);
-    --stitch-button-bg: var(--stitch-surface-subtle);
-    --stitch-button-color: var(--stitch-ink);
     padding: 8px;
   }
   .vue-chat-send .ui-button-icon {

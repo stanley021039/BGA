@@ -202,18 +202,6 @@
     gap: 0.5rem;
     margin-block-start: auto;
   }
-  .collection-actions > a.ui-button.vue-button {
-    --ui-button-border-color: var(--stitch-line, #d8d9d2);
-    background: var(--stitch-surface, #fff);
-    color: var(--stitch-ink, #20211e);
-    box-shadow: none;
-  }
-  .collection-actions > a.ui-button.vue-button:hover {
-    background: var(--stitch-surface-hover, #edede6);
-  }
-  .collection-actions > a.ui-button.vue-button .ui-icon {
-    color: inherit;
-  }
   .collection-tabs [role='tab'] > .collection-count {
     margin: 0;
     padding: 0.125rem 0;

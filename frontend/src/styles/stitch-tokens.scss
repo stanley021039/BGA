@@ -40,6 +40,9 @@ $typography: (
   --stitch-surface-subtle: #f5f3ef;
   --stitch-surface-hover: #eeebe6;
   --stitch-line: #e6e1d8;
+  --stitch-disabled-bg: #e5e5e5;
+  --stitch-disabled-line: #a3a3a3;
+  --stitch-disabled-ink: #8a8580;
   --stitch-frame: #1b1c1c;
   --stitch-on-primary: #20211e;
   --stitch-primary-hover: #ffd65f;
@@ -78,6 +81,7 @@ $typography: (
   --stitch-radius-control: var(--stitch-control-radius);
   --stitch-radius-panel: var(--stitch-panel-radius);
   --stitch-radius-card: 1rem;
+  --stitch-radius-button: 0.75rem;
   --stitch-radius-pill: 9999px;
   // Border: hairline for panels/fields, strong for raised cards and frames.
   --stitch-border-width: 1px;
@@ -123,7 +127,7 @@ $typography: (
   --stitch-text-body: var(--stitch-font-14);
   --stitch-text-hint: var(--stitch-font-12);
   --stitch-weight-title: 700;
-  --stitch-weight-button: 600;
+  --stitch-weight-button: 700;
   --stitch-weight-body: 400;
   --stitch-transition: 0.15s ease;
   @each $name, $value in $spacing {
@@ -143,6 +147,9 @@ html[data-color-scheme='dark'] {
   --stitch-surface-subtle: #2c2b2a;
   --stitch-surface-hover: #363534;
   --stitch-line: #4b4742;
+  --stitch-disabled-bg: #2c2b2a;
+  --stitch-disabled-line: #5c5853;
+  --stitch-disabled-ink: #8f8a84;
   --stitch-frame: #bcb8b2;
   --stitch-link: #91b9ff;
   --stitch-focus: #91b9ff;

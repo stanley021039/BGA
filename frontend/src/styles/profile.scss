@@ -127,11 +127,6 @@
         white-space: normal;
         overflow-wrap: anywhere;
       }
-      > button[aria-pressed='true'] {
-        --stitch-button-border-color: var(--stitch-primary);
-        --stitch-button-fill: var(--stitch-selected-bg);
-        background: var(--stitch-selected-bg);
-      }
     }
     .profile-preview-actions {
       display: grid;

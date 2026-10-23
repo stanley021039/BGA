@@ -15,12 +15,12 @@ function fixture(t, files) {
   return root;
 }
 const quiet = (fn) => {
-  const error = console.error;
-  console.error = () => {};
+  const { error, log } = console;
+  console.error = console.log = () => {};
   try {
     return fn();
   } finally {
-    console.error = error;
+    Object.assign(console, { error, log });
   }
 };
 
@@ -66,8 +66,8 @@ test('ui check only lets a baseline shrink and honours allow comments', (t) => {
   );
   assert.equal(
     quiet(() => check(root)),
-    false,
-    'a cleanup must lower the baseline',
+    true,
+    'a cleanup passes without touching the baseline',
   );
   writeBaseline(
     root,

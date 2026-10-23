@@ -32,7 +32,9 @@
 - `variant`：`primary`（一個區塊最多一個主要操作）、`secondary`（預設）、`ghost`（行內低強調）、`danger`（刪除、離開等破壞性操作）、`success`、`contrast`。選取狀態用 `aria-pressed`／`aria-selected`，自動換成選取色。
 - `label` 是可及名稱；`caption` 可給較短的可見文字；`icon-only` 時 `label` 會成為 tooltip 與 aria-label，手機可用 `caption` 顯示文字。
 - `pending` 會停用按鈕並標 `aria-busy`；不要另外再管理同一顆按鈕的 disabled。
-- 規格：高 `--stitch-control-height`（44px）、圓角 `--stitch-radius-control`（8px）、1px `--stitch-frame` 邊、字 14px／600、內距 8／12px、圖示 20px、icon-only 44×44、停用 48% 透明、焦點 `--stitch-focus-ring`。
+- 規格（立體按鈕，Figma 03 C05／C07-R2，2026-10-23 使用者選定）：高 `--stitch-control-height`（44px）、2px `--stitch-frame` 深色邊、圓角 `--stitch-radius-button`（12px）、字 14px／700、內距 8／12px、圖示 20px。次要按鈕底色 `--stitch-surface-subtle`；主要按鈕 `--stitch-primary` 加硬陰影 `--stitch-shadow-raised-sm`（按下時陰影消失）；危險按鈕紅底紅邊；ghost 無底無邊。icon-only 為 44×44 圓形（`--stitch-radius-pill`）。停用為 `--stitch-disabled-*` 灰底灰邊、無陰影；送出中維持原色並半透明。焦點 `--stitch-focus-ring`。
+- 頁面只能決定按鈕尺寸與位置；圓角、邊框寬度與顏色在 `controls.scss` 鎖定，頁面的 `--ui-button-radius` 等覆寫對共用按鈕無效。唯一的換色入口是 `--stitch-button-bg`／`-color`／`-border-color`，只給使用者可選的播放器外觀主題使用。
+- 面板、輸入欄維持細邊（1px `--stitch-line`），立體只用在按鈕與 `UiPanel tone="raised"` 的重點卡片。
 
 ### UiLink
 
@@ -123,6 +125,7 @@
 | | `--stitch-primary`、`-primary-hover`、`-primary-active`、`-on-primary` | 主要按鈕與強調 |
 | | `--stitch-selected-bg`、`-selected-ink`、`-selected-muted` | 選取狀態 |
 | | `--stitch-success-*`、`--stitch-danger-*`、`--stitch-contrast*` | 成功、危險、反白（各有 `-bg`／`-ink`／`-line`／`-hover`） |
+| | `--stitch-disabled-bg`、`-line`、`-ink` | 停用的按鈕 |
 | 間距 | `--stitch-space-2/4/8/12/16/20/24/32/40/48` | 0.125–3rem |
 | 語意間距 | `--stitch-gap-label` 8 | label 與欄位、圖示與文字 |
 | | `--stitch-gap-inline` 8 | 同一列緊密的小元素（徽章、標籤） |
@@ -132,7 +135,8 @@
 | | `--stitch-gap-section` 24 | 面板與面板之間 |
 | | `--stitch-page-gutter` 32／`-mobile` 16 | 頁面左右留白 |
 | 圓角 | `--stitch-radius-badge` 4 | 徽章、小標籤 |
-| | `--stitch-radius-control` 8 | 按鈕、輸入、下拉 |
+| | `--stitch-radius-control` 8 | 輸入、下拉 |
+| | `--stitch-radius-button` 12 | 文字按鈕（立體） |
 | | `--stitch-radius-panel` 12 | 面板、彈窗、選單 |
 | | `--stitch-radius-card` 16 | 立體卡（`UiPanel tone="raised"`） |
 | | `--stitch-radius-pill` | 膠囊、圓形頭像、開關 |
@@ -142,7 +146,7 @@
 | 控制項 | `--stitch-control-height` 44、`--stitch-control-padding-*` 8／12、`--stitch-field-padding-*` 12／16、`--stitch-checkbox-size` 16 | 按鈕、欄位 |
 | 選單 | `--stitch-menu-padding` 8、`--stitch-menu-item-padding` 8／12、`--stitch-menu-gap` 4 | 下拉、Popover 列表 |
 | 字級 | `--stitch-text-page` 24、`-section` 18、`-body` 14、`-hint` 12；`--stitch-font-12…32` | 頁標題、區塊標題、內文／label、輔助 |
-| 字重 | `--stitch-weight-title` 700、`-button` 600、`-body` 400 | |
+| 字重 | `--stitch-weight-title` 700、`-button` 700、`-body` 400 | |
 | 行高 | `--stitch-line-height-body` 1.5、`-heading` 1.25 | |
 | 動態 | `--stitch-transition` 0.15s | hover／選取；`prefers-reduced-motion` 時關閉 |
 
@@ -164,7 +168,7 @@
 | `raw-control` | `frontend/src/pages/**/*.vue` | `<button>`、`<input>`、`<select>`、`<textarea>` |
 | `old-token` | `frontend/src` 的 `.vue`／`.scss` | `tokens.space()` 等 SCSS 函式、`var(--play-*)`、`var(--ui-*)` |
 
-- 數量只能減少。清掉舊寫法後執行 `npm run ui:baseline` 降低基準並一起提交；CI 也會要求這一步，避免基準留著可再加回去的空間。
+- 只擋增加：某檔案的數量超過基準就失敗；清掉舊寫法不會失敗（2026-10-23 決定，減少平行 PR 衝突）。方便時執行 `npm run ui:baseline` 把基準降到目前數量並提交。
 - 基準只能由 `npm run ui:baseline` 降低，不得手改調高；PR 審查時 `.ui-baseline.json` 的差異只能是減少。
 - 真的需要例外（例如第三方品牌色、遊戲牌面語意色），在該行或上一行寫 `ui-check-allow <規則>: <理由>`。
 - 合併 main 遇到 `.ui-baseline.json` 衝突：任取一邊，再執行 `npm run ui:baseline`。

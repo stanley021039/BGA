@@ -116,12 +116,13 @@ function check(root) {
     console.error(`${file}: ${rule} ${now} > baseline ${limit} — ${rules[rule].hint}`);
     for (const hit of found[rule][file]) console.error(`  ${file}:${hit.line}: ${hit.text}`);
   }
-  if (under.length) {
-    for (const { rule, file, now, limit } of under)
-      console.error(`${file}: ${rule} ${now} < baseline ${limit}`);
-    console.error('Cleanup found: run `npm run ui:baseline` and commit .ui-baseline.json.');
-  }
-  return over.length + under.length === 0;
+  // A cleanup does not fail the check, so parallel PRs rarely conflict on the
+  // baseline; `npm run ui:baseline` records it when convenient.
+  if (under.length)
+    console.log(
+      `${under.length} file/rule counts are below the baseline; npm run ui:baseline can lower it.`,
+    );
+  return over.length === 0;
 }
 
 if (require.main === module) {

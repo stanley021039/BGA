@@ -17,15 +17,19 @@
 // Explicit component opt-in. The extra attribute also beats the legacy dark
 // playful-theme button.ui-button scope, including buttons in teleported panels.
 :root body :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
-  --_stitch-fill: var(--stitch-surface);
+  // Raised buttons: 2px frame, 12px radius, hard shadow on primary (Figma 03
+  // C05/C07-R2). Pages size and place buttons; they never reshape or recolour
+  // them, so the shape vars are locked here. ui-primitives applies them with
+  // !important, which is why the lock also needs it.
+  --_stitch-fill: var(--stitch-surface-subtle);
   --_stitch-color: var(--stitch-ink);
   --_stitch-border: var(--stitch-frame);
   --_stitch-hover: var(--stitch-surface-hover);
   --_stitch-active: var(--stitch-surface-hover);
-  // ui-primitives owns !important border/radius declarations; bridge its vars.
-  --ui-button-radius: var(--stitch-button-radius, var(--stitch-control-radius));
-  --ui-button-border-width: var(--stitch-button-border-width, 1px);
-  --ui-button-border-color: var(--stitch-button-border-color, var(--_stitch-border));
+  --_stitch-shadow: none;
+  --ui-button-radius: var(--stitch-radius-button) !important;
+  --ui-button-border-width: var(--stitch-border-width-strong) !important;
+  --ui-button-border-color: var(--stitch-button-border-color, var(--_stitch-border)) !important;
   --ui-button-padding-block: var(--stitch-space-8);
   --ui-button-padding-inline: var(--stitch-space-12);
   --ui-control-gap: var(--stitch-space-8);
@@ -40,10 +44,10 @@
   padding: var(--ui-button-padding-block) var(--ui-button-padding-inline);
   background: var(--stitch-button-bg, var(--_stitch-fill));
   color: var(--stitch-button-color, var(--_stitch-color));
-  box-shadow: var(--stitch-button-shadow, none);
+  box-shadow: var(--_stitch-shadow);
   font-family: var(--stitch-font-family);
   font-size: var(--stitch-button-font-size, var(--stitch-font-14));
-  font-weight: 600;
+  font-weight: var(--stitch-weight-button);
   line-height: 1.4;
   text-decoration: none;
   transition:
@@ -56,6 +60,7 @@
     --_stitch-color: var(--stitch-on-primary);
     --_stitch-hover: var(--stitch-primary-hover);
     --_stitch-active: var(--stitch-primary-active);
+    --_stitch-shadow: var(--stitch-shadow-raised-sm);
   }
   &[data-stitch-variant='ghost'] {
     --_stitch-fill: transparent;
@@ -64,7 +69,7 @@
   &[data-stitch-variant='danger'] {
     --_stitch-fill: var(--stitch-danger-bg);
     --_stitch-color: var(--stitch-danger-ink);
-    --_stitch-border: var(--stitch-danger-line);
+    --_stitch-border: var(--stitch-danger-ink);
     --_stitch-hover: var(--stitch-danger-hover);
     --_stitch-active: var(--stitch-danger-hover);
   }
@@ -94,21 +99,29 @@
   }
   &:active:not(:disabled) {
     background: var(--stitch-button-active-bg, var(--_stitch-active));
+    box-shadow: none;
   }
   &:focus-visible {
     outline: 3px solid var(--stitch-focus);
     outline-offset: 2px;
   }
-  &:disabled {
-    opacity: 0.48;
+  &:disabled:not(.is-pending) {
+    --_stitch-fill: var(--stitch-disabled-bg);
+    --_stitch-color: var(--stitch-disabled-ink);
+    --_stitch-border: var(--stitch-disabled-line);
+    --_stitch-shadow: none;
     cursor: not-allowed;
-    box-shadow: none;
+  }
+  &[data-stitch-variant='ghost']:disabled {
+    --_stitch-fill: transparent;
+    --_stitch-border: transparent;
   }
   &.is-pending {
     opacity: 0.72;
     cursor: progress;
   }
   &.ui-icon-button {
+    --ui-button-radius: var(--stitch-radius-pill) !important;
     padding: var(--stitch-space-8);
   }
   &.ui-icon-button:not(.has-mobile-caption) {
