@@ -1,0 +1,294 @@
+// #215 is opt-in per room; other game compositions retain their existing tracks.
+:root
+  body[data-visual-theme]
+  .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
+  > .vue-game-grid {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  border-color: transparent;
+  > .vue-room-side-panel[data-panel-side] {
+    position: relative;
+    z-index: 3;
+  }
+  > .vue-game-main {
+    position: relative;
+    z-index: 1;
+  }
+}
+:root body[data-visual-theme] {
+  :is(
+    .vue-game-workspace.has-room-space > .vue-game-grid > .vue-room-side-panel[data-panel-side],
+    .vue-room-side-panel[data-panel-side]
+  ) {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+    pointer-events: none;
+    .vue-room-panel-content {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      padding: 12px;
+      border: 1px solid var(--stitch-line);
+      border-radius: var(--stitch-panel-radius);
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      pointer-events: auto;
+      > :is(.vue-room-roster, .vue-quacks-roster, .vue-room-chat) {
+        flex: 1;
+        min-width: 0;
+        min-height: 0;
+      }
+      > section > header {
+        box-sizing: border-box;
+        min-height: 52px;
+      }
+    }
+    &[data-panel-side='left'] .vue-room-panel-content > section > header {
+      padding-inline-end: 44px;
+    }
+    &[data-panel-side='right'] .vue-room-panel-content > section > header {
+      padding-inline-start: 44px;
+    }
+    .vue-room-chat {
+      box-sizing: border-box;
+      height: 100%;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+    .vue-roster-list,
+    .vue-quacks-roster-list {
+      min-height: 0;
+      max-height: none;
+      overflow: auto;
+      scrollbar-gutter: stable;
+    }
+    &[data-panel-open='true'] {
+      pointer-events: auto;
+      .vue-room-panel-handle-slot {
+        inset-block-start: 8px;
+      }
+      &[data-panel-side='left'] .vue-room-panel-handle-slot {
+        inset-inline-start: auto;
+        inset-inline-end: 8px;
+      }
+      &[data-panel-side='right'] .vue-room-panel-handle-slot {
+        inset-inline-end: auto;
+        inset-inline-start: 8px;
+      }
+    }
+  }
+  .vue-room-panel-handle-slot {
+    position: absolute;
+    inset-block-start: 16px;
+    z-index: 4;
+    width: 44px;
+    height: 44px;
+    pointer-events: auto;
+  }
+  [data-panel-side='left'] .vue-room-panel-handle-slot {
+    inset-inline-start: 0;
+  }
+  [data-panel-side='right'] .vue-room-panel-handle-slot {
+    inset-inline-end: 0;
+  }
+  .vue-room-panel-handle {
+    box-sizing: border-box;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--stitch-line);
+    border-radius: var(--stitch-panel-radius);
+    background: var(--stitch-surface);
+  }
+  .vue-room-panel-tooltip {
+    display: none;
+    position: absolute;
+    inset-block-start: calc(100% + 8px);
+    inset-inline-start: 0;
+    width: max-content;
+    max-width: min(12rem, 65vw);
+    padding: 6px 10px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 8px;
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  [data-panel-side='right'] .vue-room-panel-tooltip {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+  }
+  .vue-room-panel-handle-slot:is(:hover, :focus-within) .vue-room-panel-tooltip {
+    display: block;
+  }
+  .vue-room-panel-unread {
+    position: absolute;
+    inset-block-start: -6px;
+    inset-inline-end: -6px;
+    box-sizing: border-box;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 22px;
+    border-radius: 12px;
+    background: var(--stitch-error, #b42318);
+    color: #fff;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+  .vue-room-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: auto;
+    background: #143029 url('/assets/playful/lobby-room-dark.svg') center / cover;
+    outline: none;
+    &:focus-visible {
+      outline: 3px solid var(--stitch-focus);
+      outline-offset: -3px;
+    }
+    .lobby-visitors {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .lobby-avatar {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100px;
+      transform: translate(-50%, -78%);
+      pointer-events: none;
+      img {
+        width: 81px;
+        height: 87px;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 3px #07160eaa);
+      }
+      > span {
+        width: max-content;
+        max-width: 160px;
+        padding: 2px 8px;
+        border: 1px solid #667d64;
+        border-radius: 16px;
+        background: #13231eeb;
+        color: #fff;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      &.is-self > span {
+        border-color: var(--stitch-primary);
+      }
+      &.facing-left img {
+        transform: scaleX(-1);
+      }
+      &.is-moving img {
+        animation: room-space-step 0.22s ease-in-out infinite alternate;
+      }
+    }
+    .vue-room-movement-error {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      padding: 8px;
+      background: var(--stitch-surface);
+      pointer-events: none;
+    }
+  }
+}
+:root[data-color-scheme='light'] body .has-room-space .vue-room-background {
+  background-image: url('/assets/playful/lobby-room-light.svg');
+}
+@keyframes room-space-step {
+  to {
+    translate: 0 -3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vue-room-background .lobby-avatar.is-moving img {
+    animation: none !important;
+  }
+}
+@media (max-width: 1180px) {
+  :root
+    body[data-visual-theme]
+    .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
+    > .vue-game-grid {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 65dvh;
+    > .vue-game-main {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+  :root body[data-visual-theme] > .vue-room-side-panel[data-panel-side] {
+    box-sizing: border-box;
+    padding: 0;
+    height: calc(100dvh - 24px);
+    position: fixed;
+    inset-block: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom));
+    width: min(85vw, 360px);
+    max-height: calc(100dvh - 24px);
+    z-index: 2001;
+    &[data-panel-side='left'] {
+      inset-inline-start: 0;
+    }
+    &[data-panel-side='right'] {
+      inset-inline-end: 0;
+    }
+    .vue-room-panel-content {
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+    .vue-roster-list {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    &[data-panel-open='false'] .vue-room-panel-handle-slot {
+      inset-block-start: calc(50dvh - 34px);
+    }
+  }
+  :root body[data-visual-theme] > .vue-room-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #0008;
+    cursor: default;
+    touch-action: none;
+  }
+}
+:root
+  body.vue-game-focus[data-visual-theme]
+  .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
+  > .vue-game-grid {
+  grid-template-columns: minmax(0, 1fr);
+  > .vue-room-side-panel[data-panel-side] {
+    display: none;
+  }
+  > .vue-game-main {
+    grid-column: 1 / -1;
+  }
+}
