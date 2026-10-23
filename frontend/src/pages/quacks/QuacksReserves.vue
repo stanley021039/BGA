@@ -21,6 +21,11 @@ const redPool = computed(() =>
     (c) => c.color === 'red' && (s.value.options.books?.red ?? s.value.options.bookSet) === 2,
   ),
 );
+// Reserve chips only come from the red book (its 2nd face holds red chips; the 6th
+// draws an extra chip that must be placed), so the red book names their source.
+const reserveSource = computed(() => s.value.books.find((b) => b.color === 'red'));
+// Pre-drawn and returnable chips exist because of the treated patient.
+const patient = computed(() => s.value.patients.find((p) => p.id === m.value?.alchemy?.patientId));
 function act(action: string, chip: { id: string; must?: boolean; effectColor?: string }) {
   if (
     action === 'reserve' ? reserveBlocked(chip) : !game.available || own.value.chosen || chip.must
@@ -41,6 +46,13 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
 <template>
   <section v-if="count" class="vue-quacks-choice vue-quacks-chip-actions" aria-label="藥材操作"
     ><h2>藥材操作</h2
+    ><small
+      v-if="patient && m?.canDraw && m.alchemy?.drawablePool.length"
+      class="vue-quacks-action-source"
+      data-ui-hint
+      tabindex="0"
+      :title="patient.name + '：' + patient.text"
+      >因「{{ patient.name }}」的效果</small
     ><div
       v-if="m?.canDraw && m.alchemy?.drawablePool.length"
       class="vue-quacks-choice-grid"
@@ -72,6 +84,17 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
           (s.books.find((book) => book.color === c.color)?.effect || '')
         "
         ><QuacksGlyph :chip="c" :size="56" /></span
+      ><div class="vue-quacks-reserve-text"
+        ><strong
+          >{{ ingredientNames[c.color] }} {{ c.value }}{{ c.must ? ' · 本輪必須投入' : '' }}</strong
+        ><small
+          v-if="reserveSource"
+          class="vue-quacks-action-source"
+          data-ui-hint
+          tabindex="0"
+          :title="reserveSource.name + '：' + reserveSource.effect"
+          >因「{{ reserveSource.name }}」的效果</small
+        ></div
       ><UiButton
         icon="play"
         label="投入暫存"
@@ -91,6 +114,13 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
         :label="'投入預抽紅色 ' + c.value"
         :disabled="!game.available"
         @click="game.command('alchemy-pool', { chipId: c.id })" /></div
+    ><small
+      v-if="patient && m?.alchemy?.returnable.length"
+      class="vue-quacks-action-source"
+      data-ui-hint
+      tabindex="0"
+      :title="patient.name + '：' + patient.text"
+      >因「{{ patient.name }}」的效果</small
     ><div v-if="m?.alchemy?.returnable.length" class="vue-quacks-choice-grid"
       ><button
         v-for="c in m.alchemy.returnable"
@@ -121,6 +151,17 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
 }
 .vue-quacks-reserve-card > .vue-quacks-reserve-chip {
   display: inline-flex;
-  margin-inline-end: auto;
+}
+.vue-quacks-action-source {
+  justify-self: start;
+  color: var(--play-muted, inherit);
+  cursor: help;
+}
+.vue-quacks-reserve-text {
+  display: grid;
+  flex: 1;
+  min-width: 200px;
+  gap: 4px;
+  line-height: 1.5;
 }
 </style>

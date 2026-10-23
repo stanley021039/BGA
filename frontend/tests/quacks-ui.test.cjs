@@ -329,11 +329,12 @@ test('player cards switch public pots, keep the selected pot read only, and reje
     );
     assert.equal(ui.element.querySelector('[aria-label="切換大釜"]'), null);
     assert.equal(ui.element.querySelector('.vue-quacks-scene-header'), null);
-    assert.ok(ui.element.querySelector('.vue-quacks-pot-heading [aria-label="大釜命名與換色"]'));
-    assert.ok(
-      ui.element.querySelector(
-        '.vue-quacks-board-space [aria-label="占卜、女巫、特效藥與大釜設定"]',
-      ),
+    const info = '.vue-quacks-pot-heading .vue-quacks-info-button';
+    assert.ok(ui.element.querySelector(info), 'the edit pencil merged into one info icon');
+    assert.equal(
+      !!ui.element.querySelector('.vue-quacks-board-settings'),
+      false,
+      'the board gear is replaced by the caption info icon',
     );
     const roster = f.mount('QuacksRoster');
     try {
@@ -345,7 +346,7 @@ test('player cards switch public pots, keep the selected pot read only, and reje
         ui.element.querySelector('[data-pot-owner]').getAttribute('data-pot-owner'),
         f.peer.id,
       );
-      assert.equal(ui.element.querySelector('[aria-label="大釜命名與換色"]'), null);
+      assert.ok(ui.element.querySelector(info), 'info stays available on a viewed pot');
       assert.equal(ui.element.querySelector('.vue-quacks-bag-button'), null);
       assert.equal(ui.element.querySelector('.vue-quacks-board-reserves'), null);
       await click(ui.element.querySelector('[aria-label="返回我的大釜"]'));

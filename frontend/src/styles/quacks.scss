@@ -2067,3 +2067,86 @@
     }
   }
 }
+// Dock flush to the board edge now that the gear lives in the caption info icon.
+@media (min-width: 1181px) {
+  :root body[data-visual-theme].vue-quacks-document {
+    .vue-quacks-board-space:not(.is-phase-view) > .vue-quacks-pot-dock {
+      inset-inline-end: 8px;
+    }
+    .vue-quacks-board-space:not(.is-phase-view):has(> .vue-quacks-pot-peek) > .vue-quacks-pot-dock {
+      inset-inline-end: 160px;
+    }
+  }
+}
+:root
+  body[data-visual-theme].vue-quacks-document
+  :is(
+    button,
+    a
+  ).ui-button.vue-button.ui-stitch-button[data-stitch-variant].vue-quacks-pot-peek.is-edge {
+  inset: 8px 8px auto auto;
+}
+// Compact risk box: count on one line, witch coins as round tokens.
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-board-space .vue-quacks-risk {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  > strong {
+    font-size: 22px;
+  }
+  .vue-quacks-witch-coins {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding-inline-start: 12px;
+    border-inline-start: 1px solid #dec87666;
+  }
+  .vue-quacks-witch-coin {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    color: #f4eab7;
+    font-weight: 800;
+    cursor: help;
+    &:disabled {
+      opacity: 1;
+    }
+    &.is-used {
+      filter: grayscale(1);
+      opacity: 0.35;
+    }
+    &.is-ready {
+      border-color: #f4cf66;
+      box-shadow: 0 0 10px #f4cf6680;
+      cursor: pointer;
+    }
+    &.is-visitor {
+      border-color: #dec87680;
+    }
+  }
+}
+:root
+  body[data-visual-theme].vue-quacks-document
+  :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant]:is(
+    .vue-quacks-draw-action,
+    .vue-quacks-stop-action
+  ) {
+  // The shared icon-button pill radius is an !important token; meme buttons opt out.
+  --ui-button-radius: 10px !important;
+  border-radius: 10px;
+  img {
+    border-radius: 8px;
+  }
+}

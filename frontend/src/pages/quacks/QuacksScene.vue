@@ -212,6 +212,7 @@ onBeforeUnmount(() => {
           ><div class="vue-quacks-pot-heading">
             <h1>{{ viewed.potName }}</h1>
             <UiButton
+              class="vue-quacks-info-button"
               variant="ghost"
               icon="info"
               icon-only
@@ -318,7 +319,7 @@ onBeforeUnmount(() => {
         /></div>
         <UiButton
           v-if="actionsOpen"
-          class="vue-quacks-pot-peek"
+          class="vue-quacks-pot-peek is-edge"
           variant="secondary"
           icon="previous"
           label="返回大釜"
@@ -327,13 +328,14 @@ onBeforeUnmount(() => {
         <UiButton
           v-else-if="canPeekPot"
           class="vue-quacks-pot-peek"
+          :class="{ 'is-edge': boardVisible }"
           variant="secondary"
           :icon="potPeek ? 'previous' : 'eye'"
           :label="potPeek ? (mine?.pending ? '返回選擇' : '返回結算') : '查看大釜'"
           @click="potPeek = !potPeek"
         />
         <UiButton
-          v-if="!boardVisible"
+          v-if="!boardVisible && !actionsOpen"
           class="vue-quacks-board-settings"
           variant="ghost"
           icon="info"
@@ -348,7 +350,6 @@ onBeforeUnmount(() => {
             :class="{ 'is-critical': !viewed?.exploded && viewed?.white === viewed?.threshold }"
             ><span>白色炸彈</span
             ><strong>{{ viewed?.white ?? 0 }}／{{ viewed?.threshold ?? 7 }}</strong
-            ><span>（超過 {{ viewed?.threshold ?? 7 }} 爆炸）</span
             ><div
               v-if="isOwnPot && (state.options.witches || state.visitingWitch)"
               class="vue-quacks-witch-coins"
@@ -357,34 +358,48 @@ onBeforeUnmount(() => {
                 ><button
                   v-if="state.witches[color]"
                   type="button"
+                  class="vue-quacks-witch-coin"
+                  :class="{
+                    'is-used': !mine?.coins[color],
+                    'is-ready': game.available && mine?.witchAvailable[color],
+                  }"
                   :disabled="!game.available || !mine?.witchAvailable[color]"
                   :aria-label="
-                    '使用' + state.witches[color]!.name + '：' + state.witches[color]!.text
+                    '使用' +
+                    state.witches[color]!.name +
+                    '：' +
+                    state.witches[color]!.text +
+                    (mine?.coins[color] ? '' : '（已使用）')
                   "
                   data-ui-hint
-                  :title="state.witches[color]!.text"
+                  :title="
+                    state.witches[color]!.name +
+                    (mine?.coins[color]
+                      ? mine?.witchAvailable[color]
+                        ? '（可使用）'
+                        : '（目前條件不符）'
+                      : '（已使用）') +
+                    '：' +
+                    state.witches[color]!.text
+                  "
                   @click="game.command('witch', { color })"
-                  ><QuacksGlyph :resource="color" :size="24" /><span>{{
-                    { gold: '金', copper: '銅', silver: '銀' }[color]
-                  }}</span></button
-                ></template
+                  ><QuacksGlyph :resource="color" :size="32" /></button></template
               ><button
                 v-if="state.fortune?.id === 'witch-visit' && state.visitingWitch"
                 type="button"
-                aria-label="查看免費來訪女巫效果"
+                class="vue-quacks-witch-coin is-visitor"
+                data-ui-hint
+                :title="'免費來訪 · ' + state.visitingWitch.name + '：' + state.visitingWitch.text"
+                :aria-label="'查看免費來訪女巫：' + state.visitingWitch.name"
                 @click="open('witches')"
                 >免</button
-              ><UiButton
-                variant="ghost"
-                icon="help"
-                icon-only
-                label="查看女巫能力與條件"
-                @click="open('witches')" /></div
-          ></div>
+              ></div
+            ></div
+          >
           <QuacksBag v-if="boardVisible && isOwnPot" />
-          <QuacksCommands v-if="isOwnPot || !boardVisible" />
+          <QuacksCommands v-if="(isOwnPot || !boardVisible) && !actionsOpen" />
           <UiButton
-            v-else
+            v-else-if="!actionsOpen"
             icon="previous"
             label="返回我的大釜"
             @click="game.selectedPot = state.me"
