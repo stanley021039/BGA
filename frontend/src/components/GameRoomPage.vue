@@ -191,7 +191,7 @@ onMounted(() => {
         @click="toggle" /><RoomManager /><RoomLeaveButton /></RoomHeader
     ><div class="vue-game-room-feedback vue-room-status-row"
       ><div class="vue-room-phase-slot"
-        ><span class="vue-room-phase">{{ phase }}</span
+        ><slot name="round-progress" /><span class="vue-room-phase">{{ phase }}</span
         ><span class="vue-room-round">{{ round || '等待開桌' }}</span></div
       ><StatusSlot
         :persistent="!!connection || room.busy"

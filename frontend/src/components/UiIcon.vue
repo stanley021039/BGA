@@ -16,6 +16,7 @@ const allowed = new Set([
   'save',
   'sound',
   'help',
+  'info',
   'refresh',
   'undo',
   'close',

@@ -149,6 +149,8 @@ export interface QuacksPurchase extends Ingredient {
   canUndo: boolean;
 }
 export interface QuacksMine {
+  shoppingBag?: Ingredient[] | null;
+  rewardPreview?: { points: number; coins: number; both: boolean; choice: string | null } | null;
   drawEvents: QuacksEvent[];
   drawDecisionEvents?: QuacksEvent[];
   potionEvents: QuacksEvent[];
@@ -534,6 +536,19 @@ function mine(v: unknown): QuacksMine | null {
     visitorUsed: bool(r.visitorUsed),
     canGoodNeighbor: bool(r.canGoodNeighbor),
     bagCount: natural(r.bagCount),
+    shoppingBag: r.shoppingBag == null ? null : array(r.shoppingBag).map(ingredient),
+    rewardPreview:
+      r.rewardPreview == null
+        ? null
+        : (() => {
+            const reward = record(r.rewardPreview);
+            return {
+              points: natural(reward.points),
+              coins: natural(reward.coins),
+              both: bool(reward.both),
+              choice: reward.choice == null ? null : string(reward.choice),
+            };
+          })(),
     bagPeek: peek,
     peekUsed: bool(r.peekUsed),
     peekAvailable: bool(r.peekAvailable),

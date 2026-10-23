@@ -2,7 +2,10 @@
 import { nextTick, onBeforeUnmount, ref } from 'vue';
 import UiButton from './UiButton.vue';
 
-defineProps<{ id: string; title: string }>();
+const props = withDefaults(
+  defineProps<{ id: string; title: string; placement?: 'bottom' | 'right'; compact?: boolean }>(),
+  { placement: 'bottom', compact: false },
+);
 const emit = defineEmits<{ closed: [] }>();
 const panel = ref<HTMLElement | null>(null),
   visible = ref(false);
@@ -21,6 +24,18 @@ function position() {
     gap = 8;
   if (!trigger.getClientRects().length) {
     close(false);
+    return;
+  }
+  if (props.placement === 'right') {
+    element.style.maxBlockSize = Math.max(0, window.innerHeight - gap * 2) + 'px';
+    const bounds = element.getBoundingClientRect();
+    const right = anchor.right + gap;
+    const preferredLeft =
+      right + bounds.width <= window.innerWidth - gap ? right : anchor.left - bounds.width - gap;
+    element.style.left =
+      Math.max(gap, Math.min(preferredLeft, window.innerWidth - bounds.width - gap)) + 'px';
+    element.style.top =
+      Math.max(gap, Math.min(anchor.top, window.innerHeight - bounds.height - gap)) + 'px';
     return;
   }
   const below = window.innerHeight - anchor.bottom - gap * 2,
@@ -110,11 +125,12 @@ defineExpose({ open, close, visible });
       role="dialog"
       :aria-label="title"
       class="vue-social-popover"
+      :class="{ 'is-compact': compact }"
       @toggle="toggled"
       @keydown.esc.stop.prevent="close()"
     >
       <template v-if="visible">
-        <header class="vue-social-popover-header"
+        <header v-if="!compact" class="vue-social-popover-header"
           ><slot name="header"
             ><h2>{{ title }}</h2></slot
           ><UiButton
@@ -129,3 +145,15 @@ defineExpose({ open, close, visible });
     </div>
   </Teleport>
 </template>
+
+<style scoped>
+.vue-social-popover.is-compact {
+  inline-size: max-content;
+  block-size: auto;
+  max-inline-size: calc(100vw - 16px);
+  grid-template-rows: minmax(0, 1fr);
+}
+.vue-social-popover.is-compact > .vue-social-popover-body {
+  grid-template-rows: minmax(0, 1fr);
+}
+</style>

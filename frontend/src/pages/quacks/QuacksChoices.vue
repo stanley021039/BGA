@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
 import QuacksGlyph from './QuacksGlyph.vue';
 import UiButton from '../../components/UiButton.vue';
+import QuacksShoppingBag from './QuacksShoppingBag.vue';
 const game = useQuacksStore(),
   choice = computed(() => game.mine?.pending),
   grouped = computed(
@@ -21,10 +22,41 @@ const game = useQuacksStore(),
       : choice.value?.options.filter((o) => !grouped.value || !o.coin),
   );
 const labels = { gold: '金幣', copper: '銅幣', silver: '銀幣' };
+// Choice titles start with the source's name; show that source's full rule on hover.
+const help = computed(() => {
+  const title = choice.value?.title || '',
+    s = game.state;
+  if (!s) return '';
+  const sources = [
+    s.fortune,
+    ...Object.values(s.witches || {}),
+    s.visitingWitch,
+    ...s.books.map((b) => ({ name: b.name, text: b.effect })),
+    ...s.patients,
+  ].filter((x): x is { name: string; text: string } => !!x?.name && !!x.text);
+  const hit = sources.find(
+    (x) => title === x.name || title.startsWith(x.name + '：') || title.endsWith('· ' + x.name),
+  );
+  return hit ? hit.name + '：' + hit.text : '';
+});
 </script>
 <template>
   <section v-if="choice" class="vue-quacks-choice"
-    ><h2>{{ choice.title }}</h2
+    ><header class="vue-quacks-choice-heading"
+      ><h2>{{ choice.title }}</h2
+      ><UiButton
+        v-if="help"
+        variant="ghost"
+        icon="help"
+        icon-only
+        data-ui-hint
+        :label="help" /></header
+    ><div v-if="game.own" class="vue-quacks-choice-status" aria-label="目前狀態"
+      ><span><QuacksGlyph resource="droplet" :size="20" />水滴 {{ game.own.droplet }}</span
+      ><span><QuacksGlyph resource="rat" :size="20" />起點 {{ game.own.startPosition }}</span
+      ><span>當前 {{ game.own.position }}</span
+      ><span><QuacksGlyph resource="ruby" :size="20" />紅寶石 {{ game.own.rubies }}</span
+      ><QuacksShoppingBag /></div
     ><template v-if="grouped && !game.coinFilter"
       ><p>先選擇要棄掉的女巫幣。</p
       ><div class="vue-quacks-tabs"
@@ -86,3 +118,32 @@ const labels = { gold: '金幣', copper: '銅幣', silver: '銀幣' };
     ></section
   >
 </template>
+<style scoped>
+.vue-quacks-choice-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 20px;
+  font-size: 1.125rem;
+}
+.vue-quacks-choice-status > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.vue-quacks-choice-status > :deep(.vue-button) {
+  width: 56px;
+  height: 56px;
+  padding: 4px;
+}
+.vue-quacks-choice-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.vue-quacks-choice-heading > h2 {
+  margin: 0;
+}
+</style>

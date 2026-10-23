@@ -62,6 +62,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     video: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 6 4-6 4Z"/>',
     pause: '<path d="M8 5v14M16 5v14"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 4M12 17h.01"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
     'ping-attention':
       '<path d="M10 2h4l-1 12h-2Z" fill="currentColor"/><circle cx="12" cy="19" r="2" fill="currentColor"/>',
     'ping-question':

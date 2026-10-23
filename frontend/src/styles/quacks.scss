@@ -1380,3 +1380,788 @@
     max-width: min(900px, calc((100cqh - 76px) * 1.8));
   }
 }
+
+// #214: the player's own table contains its controls; no separate pot-switch row.
+:root body[data-visual-theme].vue-quacks-document {
+  .vue-quacks-stage:not(.is-waiting) {
+    grid-template-rows: minmax(500px, 1fr) 24px;
+    gap: 8px;
+    min-height: 0;
+  }
+  .vue-quacks-control-deck {
+    display: block;
+    min-height: 24px;
+    height: 24px;
+  }
+  .vue-quacks-board-space {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: 500px;
+    background: var(--stitch-artwork-swatch-10362a);
+  }
+  .vue-quacks-board-space > .vue-quacks-pot {
+    position: relative;
+    box-sizing: border-box;
+    min-height: 0;
+    height: 100%;
+    padding-block: 96px 8px;
+    padding-inline: 8px 92px;
+  }
+  .vue-quacks-board-space:has(> .vue-quacks-board-reserves) > .vue-quacks-pot {
+    padding-inline-start: min(264px, calc(32% + 24px));
+  }
+  .vue-quacks-pot-caption {
+    pointer-events: auto;
+  }
+  .vue-quacks-pot-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .vue-quacks-pot-heading > .vue-button {
+    --stitch-button-color: var(--stitch-artwork-swatch-f4eab7);
+    --stitch-button-bg: var(--stitch-artwork-swatch-102c25);
+    flex: none;
+  }
+  .vue-quacks-board-settings {
+    --stitch-button-color: var(--stitch-artwork-swatch-f4eab7);
+    --stitch-button-bg: var(--stitch-artwork-swatch-102c25);
+    position: absolute;
+    z-index: 4;
+    inset: 8px 8px auto auto;
+    color: var(--stitch-artwork-swatch-f4eab7);
+  }
+  .vue-quacks-board-controls {
+    z-index: 3;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 16px;
+    padding: 12px;
+    color: var(--stitch-artwork-swatch-f4eab7);
+    background: var(--stitch-artwork-swatch-0c2a22);
+  }
+  .vue-quacks-risk {
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    min-height: 64px;
+    padding: 8px;
+    background: var(--stitch-artwork-swatch-102c25);
+    border-color: var(--stitch-artwork-swatch-dec87680);
+    font-size: 14px;
+  }
+  .vue-quacks-risk > span:last-of-type {
+    flex-basis: auto;
+  }
+  .vue-quacks-witch-coins {
+    margin-inline-start: 0;
+  }
+  .vue-quacks-witch-coins > button {
+    min-height: 44px;
+    background: var(--stitch-artwork-swatch-143e34);
+  }
+  .vue-quacks-board-controls > .vue-quacks-commands {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    max-width: 420px;
+    min-height: 64px;
+  }
+  .vue-quacks-board-controls
+    .vue-quacks-commands
+    > :is(.vue-quacks-draw-action, .vue-quacks-stop-action) {
+    flex: 0 0 auto;
+    width: 112px;
+    height: 72px;
+    min-height: 72px;
+    padding: 4px;
+    justify-content: center;
+  }
+  .vue-quacks-board-controls :is(.vue-quacks-draw-action, .vue-quacks-stop-action) img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .vue-quacks-board-controls.is-phase-controls {
+    grid-column: 1;
+    grid-row: 2;
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+    .vue-quacks-risk {
+      display: none;
+    }
+    .vue-quacks-commands {
+      grid-column: 1 / -1;
+      width: 100%;
+      max-width: none;
+    }
+  }
+  .vue-quacks-board-space.is-phase-view > .vue-quacks-stage-overlay {
+    position: relative;
+    grid-row: 1;
+    inset: auto;
+    min-height: 0;
+    padding: 56px 16px 16px;
+  }
+  .vue-quacks-board-reserves {
+    position: absolute;
+    z-index: 3;
+    inset: 142px auto auto 12px;
+    width: min(240px, 32%);
+    max-height: calc(100% - 250px);
+    overflow: auto;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+    align-content: start;
+    padding: 12px;
+    border: 1px solid var(--stitch-artwork-swatch-dec87680);
+    border-radius: 10px;
+    background: var(--stitch-artwork-swatch-102c25f2);
+    color: var(--stitch-artwork-swatch-f4eab7);
+    box-sizing: border-box;
+    h2,
+    h3 {
+      font-size: 16px;
+      margin: 0;
+    }
+    .vue-quacks-reserve-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .vue-quacks-choice-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vue-quacks-choice-grid > button {
+      min-height: 60px;
+      font-size: 14px;
+      padding: 8px;
+    }
+  }
+  .vue-quacks-pot .vue-quacks-public-tray {
+    position: absolute;
+    inset: auto auto 8px 12px;
+    max-width: calc(100% - 110px);
+  }
+  .vue-quacks-waiting-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 24px;
+    min-height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  .vue-quacks-waiting-game {
+    display: grid;
+    align-content: center;
+    gap: 32px;
+    padding: 24px;
+    text-align: center;
+    background: var(--stitch-artwork-swatch-fff8e6);
+    color: var(--stitch-artwork-swatch-2a2927);
+    border-radius: 12px;
+    h1 {
+      color: inherit;
+      margin: 0;
+      font-size: 32px;
+    }
+    .vue-quacks-rq03-hero {
+      display: block;
+      min-height: 260px;
+    }
+    .vue-quacks-rq03-art {
+      min-height: 300px;
+    }
+  }
+  .vue-quacks-waiting-layout > .vue-waiting-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    padding: 24px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 12px;
+    h2 {
+      margin: 0;
+    }
+    .vue-game-settings-panel {
+      border: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: auto;
+      min-height: 0;
+      max-height: none;
+    }
+    .vue-quacks-settings legend {
+      position: static;
+      clip-path: none;
+      width: auto;
+      height: auto;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .vue-quacks-settings fieldset {
+      display: grid;
+      gap: 12px;
+    }
+    .vue-quacks-settings label {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .vue-quacks-settings > p {
+      display: none;
+    }
+    .vue-waiting-settings-target {
+      flex: 1;
+      min-height: 0;
+    }
+    .vue-game-start-slot {
+      margin-top: auto;
+    }
+  }
+  .vue-quacks-bag-dialog {
+    width: min(960px, calc(100vw - 32px));
+  }
+  @media (max-width: 1180px) {
+    .vue-quacks-stage:not(.is-waiting) {
+      min-height: 680px;
+    }
+    .vue-quacks-board-space {
+      min-height: 620px;
+    }
+    .vue-quacks-waiting-layout {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 12px;
+    }
+    .vue-quacks-waiting-game .vue-quacks-rq03-art {
+      min-height: 220px;
+    }
+    .vue-quacks-waiting-game {
+      gap: 16px;
+      padding: 16px;
+    }
+  }
+  @media (max-width: 600px) {
+    .vue-quacks-pot-caption h1 {
+      font-size: 20px;
+    }
+    .vue-quacks-board-space > .vue-quacks-pot {
+      padding-top: 136px;
+      padding-inline-end: 72px;
+    }
+    .vue-quacks-pot-dock {
+      inset-block-start: 136px;
+    }
+    .vue-quacks-board-controls {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 8px;
+    }
+    .vue-quacks-board-controls > .vue-quacks-commands {
+      max-width: none;
+    }
+    .vue-quacks-board-space:has(> .vue-quacks-board-reserves) > .vue-quacks-pot {
+      padding-inline-start: 8px;
+    }
+    .vue-quacks-board-reserves {
+      position: relative;
+      inset: auto;
+      grid-row: 2;
+      width: 100%;
+      max-height: 220px;
+    }
+    .vue-quacks-board-controls {
+      grid-row: 3;
+    }
+    .vue-quacks-board-controls.is-phase-controls {
+      grid-row: 2;
+    }
+    .vue-quacks-codex-dialog {
+      width: calc(100vw - 16px);
+      max-width: calc(100vw - 16px);
+    }
+  }
+}
+
+:root body[data-visual-theme].vue-quacks-document {
+  .vue-quacks-board-reserves.is-reserve-only {
+    inline-size: auto;
+    max-inline-size: 76px;
+    padding: 4px;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+    + .vue-quacks-board-controls {
+      min-width: 0;
+    }
+  }
+  .vue-quacks-board-space:has(> .vue-quacks-board-reserves.is-reserve-only) > .vue-quacks-pot {
+    padding-inline-start: 84px;
+  }
+  .vue-quacks-reserve-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .vue-quacks-reserve-chip {
+    --ui-button-border-width: 0px;
+    --ui-button-radius: 50%;
+    width: 60px;
+    height: 60px;
+    padding: 6px;
+    background: transparent;
+    border-radius: 50%;
+    box-shadow: none;
+    > span:first-child {
+      display: inline-flex;
+    }
+    &[aria-expanded='true'] {
+      outline: 2px solid var(--stitch-artwork-swatch-f4cf66);
+      outline-offset: 2px;
+    }
+  }
+  .vue-quacks-reserve-actions {
+    display: grid;
+    gap: 8px;
+  }
+  .vue-quacks-roster .vue-player-card[role='button'] {
+    cursor: pointer;
+  }
+  .vue-quacks-roster .vue-player-card[role='button']:hover {
+    border-color: var(--stitch-focus);
+  }
+  .vue-quacks-roster .vue-player-card[aria-disabled='true'] {
+    cursor: default;
+  }
+  .vue-room-status-row:has(.vue-quacks-round-progress) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    .vue-room-phase-slot {
+      flex-wrap: nowrap;
+    }
+    .vue-room-phase,
+    .vue-room-round {
+      flex: none;
+    }
+    @media (max-width: 1180px) {
+      grid-template-columns: minmax(0, 1fr);
+      .vue-room-phase-slot {
+        flex-wrap: wrap;
+      }
+    }
+  }
+  .vue-quacks-round-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    position: relative;
+    min-width: 0;
+    margin: 0;
+    padding: 2px 0;
+    list-style: none;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    font-size: 14px;
+    line-height: 24px;
+    white-space: nowrap;
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    li > span:last-child {
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    [aria-current='step'] > span:last-child {
+      background: var(--stitch-selected-bg);
+      color: var(--stitch-selected-ink);
+      outline: 1px solid var(--stitch-primary);
+      outline-offset: -1px;
+      font-weight: 700;
+    }
+  }
+  @media (max-width: 1180px) {
+    .vue-quacks-round-progress {
+      flex-basis: 100%;
+    }
+  }
+  @media (max-width: 600px) {
+    .vue-quacks-board-space:has(> .vue-quacks-board-reserves) > .vue-quacks-pot,
+    .vue-quacks-board-space:has(> .vue-quacks-board-reserves.is-reserve-only) > .vue-quacks-pot {
+      padding-inline-start: 8px;
+    }
+    .vue-quacks-board-reserves.is-reserve-only {
+      max-inline-size: 100%;
+      padding: 8px;
+    }
+  }
+}
+
+// #214 follow-up: on wide tables the cauldron fills the board; the dock, overflow
+// basin and draw controls share the free right column instead of a bottom row.
+@media (min-width: 1181px) {
+  :root body[data-visual-theme].vue-quacks-document {
+    .vue-quacks-board-space:not(.is-phase-view) {
+      grid-template-rows: minmax(0, 1fr);
+      > .vue-quacks-pot,
+      &:has(> .vue-quacks-board-reserves) > .vue-quacks-pot {
+        padding: 40px 8px 8px;
+      }
+      &:has(> .vue-quacks-board-reserves:not(.is-reserve-only)) > .vue-quacks-pot {
+        padding-inline-start: min(264px, calc(32% + 24px));
+      }
+      &:has(> .vue-quacks-board-reserves.is-reserve-only) > .vue-quacks-pot {
+        padding-inline-start: 84px;
+      }
+      > .vue-quacks-pot-dock {
+        inset: 8px 60px auto auto;
+        grid-auto-flow: column;
+        grid-auto-columns: 76px;
+        width: auto;
+      }
+      > .vue-quacks-board-controls {
+        position: absolute;
+        inset: auto 8px 8px auto;
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: end;
+        gap: 8px;
+        width: min(320px, 30%);
+        padding: 0;
+        background: transparent;
+        pointer-events: none;
+        > * {
+          pointer-events: auto;
+        }
+      }
+      .vue-quacks-risk {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+  }
+}
+
+:root
+  body[data-visual-theme].vue-quacks-document
+  .vue-quacks-play:has(> :is(.vue-quacks-witches.is-compact, .vue-quacks-reward-columns)) {
+  min-height: 100%;
+  align-content: center;
+}
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-witches.is-compact > .vue-button {
+  border-radius: 16px;
+}
+// The essence board keeps its instruction line and the whole track inside the stage.
+@container quacks-essence-space (min-width: 700px) and (min-height: 410px) {
+  .vue-quacks-alchemy.is-distilling .quacks-patient-board-scroll .quacks-distillery {
+    max-width: min(1120px, calc((100cqh - 56px) * 1.8));
+  }
+}
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-shop-footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  > .vue-quacks-ruby {
+    flex: 1;
+    min-width: 0;
+  }
+}
+// Shopping header: coins | bag viewer (centered) | bought count.
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-market-budget {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  > .vue-quacks-market-count {
+    grid-column: 3;
+    justify-self: end;
+    font-size: 20px;
+  }
+  > .vue-quacks-shopping-bag-button {
+    grid-column: 2;
+    width: 64px;
+    height: 64px;
+    padding: 4px;
+  }
+}
+// In-game 本局藥材: one row per price tier, cheapest first, each with its effect.
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-current-offers {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  > li {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--stitch-line);
+    border-radius: 12px;
+    background: var(--stitch-surface-subtle);
+    color: var(--stitch-ink);
+  }
+  strong {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 18px;
+  }
+  strong > span {
+    font-variant-numeric: tabular-nums;
+  }
+  p {
+    margin: 4px 0 0;
+    line-height: 1.6;
+  }
+}
+:root body dialog.vue-dialog.ui-dialog.vue-quacks-tools-dialog {
+  inline-size: min(960px, calc(100vw - 24px));
+  max-inline-size: calc(100vw - 24px);
+}
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-current-stack {
+  display: grid;
+  margin-top: 16px;
+  > .vue-quacks-current-offers {
+    grid-area: 1 / 1;
+    align-content: start;
+    margin: 0;
+    visibility: hidden;
+  }
+  > .vue-quacks-current-offers.is-shown {
+    visibility: visible;
+  }
+}
+// Flip between a covering choice/settlement screen and the own cauldron.
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-pot-peek {
+  position: absolute;
+  z-index: 5;
+  inset: 8px 60px auto auto;
+}
+@media (min-width: 1181px) {
+  :root
+    body[data-visual-theme].vue-quacks-document
+    .vue-quacks-board-space:not(.is-phase-view):has(> .vue-quacks-pot-peek)
+    > .vue-quacks-pot-dock {
+    inset-inline-end: 200px;
+  }
+}
+// Chip-action badge in the dock: count bubble like a notification.
+:root
+  body[data-visual-theme].vue-quacks-document
+  .vue-quacks-pot-dock
+  > .vue-quacks-chip-actions-button {
+  position: relative;
+  background: var(--stitch-artwork-swatch-f4e6c4);
+  > .vue-quacks-action-badge {
+    position: absolute;
+    inset: -8px -8px auto auto;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    box-sizing: border-box;
+    border-radius: 12px;
+    background: var(--stitch-artwork-swatch-d1453b);
+    color: var(--stitch-artwork-swatch-fff);
+    font-size: 14px;
+    line-height: 24px;
+    text-align: center;
+  }
+}
+// 2.40 makes every UiButton a Stitch button with stronger base rules; restate the
+// Quacks-specific placement and sizes at a specificity that outranks them.
+:root
+  body[data-visual-theme].vue-quacks-document
+  :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+  &.vue-quacks-board-settings {
+    position: absolute;
+    inset: 8px 8px auto auto;
+  }
+  &.vue-quacks-pot-peek {
+    position: absolute;
+    inset: 8px 60px auto auto;
+  }
+  &:is(.vue-quacks-draw-action, .vue-quacks-stop-action) {
+    inline-size: 112px;
+    width: 112px;
+    height: 72px;
+    min-height: 72px;
+    padding: 4px;
+    overflow: hidden;
+    border-radius: 8px;
+    .ui-button-icon-slot {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    img {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+    }
+  }
+  &.vue-quacks-shopping-bag-button {
+    inline-size: 64px;
+    width: 64px;
+    height: 64px;
+    padding: 4px;
+  }
+}
+:root
+  body[data-visual-theme].vue-quacks-document
+  .vue-quacks-witches.is-compact
+  > :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  height: auto;
+  min-height: 180px;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 1.125rem;
+}
+// Bottom band on wide tables: white bombs and witch coins bottom-left, bag above
+// the draw/stop memes bottom-right.
+@media (min-width: 1181px) {
+  :root body[data-visual-theme].vue-quacks-document {
+    .vue-quacks-board-space:not(.is-phase-view) > .vue-quacks-board-controls {
+      inset: auto 8px 8px 8px;
+      width: auto;
+      grid-template-columns: min(320px, 30%) minmax(0, 1fr) auto;
+      grid-template-areas:
+        'risk . bag'
+        'risk . commands';
+      align-items: end;
+      > .vue-quacks-risk {
+        grid-area: risk;
+        align-self: end;
+      }
+      > .vue-quacks-bag-button {
+        grid-area: bag;
+        justify-self: end;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 4px;
+        inline-size: 76px;
+        width: 76px;
+        height: auto;
+        min-height: 76px;
+        padding: 6px;
+        border-radius: 10px;
+        background: var(--stitch-artwork-swatch-d5e8f2);
+        color: var(--stitch-artwork-swatch-1c352c);
+      }
+      > .vue-quacks-commands {
+        grid-area: commands;
+        justify-self: end;
+      }
+    }
+    // Draw history fills the empty right column under the overflow basin, wrapping.
+    .vue-quacks-board-space:not(.is-phase-view) .vue-quacks-pot .vue-quacks-public-tray {
+      inset: 55% 8px auto auto;
+      inline-size: min(300px, 28%);
+      max-inline-size: none;
+      max-block-size: 22%;
+      overflow-y: auto;
+      align-content: flex-start;
+      margin: 0;
+      border: 1px solid var(--stitch-artwork-swatch-dec87680);
+      border-radius: 10px;
+      background: var(--stitch-artwork-swatch-102c25e6);
+      color: var(--stitch-artwork-swatch-f4eab7);
+    }
+  }
+}
+// Dock flush to the board edge now that the gear lives in the caption info icon.
+@media (min-width: 1181px) {
+  :root body[data-visual-theme].vue-quacks-document {
+    .vue-quacks-board-space:not(.is-phase-view) > .vue-quacks-pot-dock {
+      inset-inline-end: 8px;
+    }
+    .vue-quacks-board-space:not(.is-phase-view):has(> .vue-quacks-pot-peek) > .vue-quacks-pot-dock {
+      inset-inline-end: 160px;
+    }
+  }
+}
+:root
+  body[data-visual-theme].vue-quacks-document
+  :is(
+    button,
+    a
+  ).ui-button.vue-button.ui-stitch-button[data-stitch-variant].vue-quacks-pot-peek.is-edge {
+  inset: 8px 8px auto auto;
+}
+// Compact risk box: count on one line, witch coins as round tokens.
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-board-space .vue-quacks-risk {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  > strong {
+    font-size: 22px;
+  }
+  .vue-quacks-witch-coins {
+    display: flex;
+    gap: 6px;
+    margin: 0;
+    padding-inline-start: 12px;
+    border-inline-start: 1px solid var(--stitch-artwork-swatch-dec87666);
+  }
+  .vue-quacks-witch-coin {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--stitch-artwork-swatch-f4eab7);
+    font-weight: 800;
+    cursor: help;
+    &:disabled {
+      opacity: 1;
+    }
+    &.is-used {
+      filter: grayscale(1);
+      opacity: 0.35;
+    }
+    &.is-ready {
+      border-color: var(--stitch-artwork-swatch-f4cf66);
+      box-shadow: 0 0 10px var(--stitch-artwork-swatch-f4cf6680);
+      cursor: pointer;
+    }
+    &.is-visitor {
+      border-color: var(--stitch-artwork-swatch-dec87680);
+    }
+  }
+}
+:root
+  body[data-visual-theme].vue-quacks-document
+  :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant]:is(
+    .vue-quacks-draw-action,
+    .vue-quacks-stop-action
+  ) {
+  // ui-check-allow important: 共用 icon 按鈕以 !important 圓角 token 強制膠囊形，抽／停梗圖按鈕需覆蓋為 10px
+  --ui-button-radius: 10px !important;
+  border-radius: 10px;
+  img {
+    border-radius: 8px;
+  }
+}
+
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-board-space .vue-quacks-risk > span {
+  white-space: nowrap;
+}

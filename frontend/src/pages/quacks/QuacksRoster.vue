@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
+import { useRoomStore } from '../../stores/room';
 import { playerRoomRole } from '../../contracts/room';
 import type { WitchColor } from '../../contracts/quacks';
 import RoomPlayerCard from '../../components/RoomPlayerCard.vue';
 import QuacksGlyph from './QuacksGlyph.vue';
 import '../../styles/quacks-roster.scss';
 const game = useQuacksStore(),
+  room = useRoomStore(),
   heading = useId();
 const coins: WitchColor[] = ['gold', 'copper', 'silver'];
 const coinNames = { gold: '金女巫幣', copper: '銅女巫幣', silver: '銀女巫幣' };
@@ -38,6 +40,18 @@ const rows = computed(
       ];
     }) || [],
 );
+function canView(id: string) {
+  const recipe = game.state?.recipes.find((p) => p.id === id);
+  return !!recipe && !recipe.hidden && !room.terminal;
+}
+function view(id: string) {
+  if (canView(id)) game.selectedPot = id;
+}
+function keyView(event: KeyboardEvent, id: string) {
+  if (event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return;
+  event.preventDefault();
+  view(id);
+}
 function coinLabel(color: WitchColor, value: boolean | undefined) {
   const witch = game.state?.witches[color];
   return (
@@ -70,6 +84,12 @@ function coinLabel(color: WitchColor, value: boolean | undefined) {
         :data-quacks-player="row.recipe.id"
         :data-viewed="row.viewed"
         :data-exploded="row.recipe.exploded"
+        role="button"
+        :aria-label="row.player.name + (canView(row.recipe.id) ? '，查看大釜' : '，大釜尚未公開')"
+        :aria-pressed="row.viewed"
+        :aria-disabled="!canView(row.recipe.id)"
+        @click="view(row.recipe.id)"
+        @keydown="keyView($event, row.recipe.id)"
       >
         <template #score
           ><span :data-quacks-score="row.recipe.id">{{ row.recipe.score }}</span
