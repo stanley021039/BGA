@@ -14,12 +14,12 @@ import { readUser } from '../../contracts/auth';
 import { fileBase64 } from '../../services/files';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
-import FramePicker from '../../components/FramePicker.vue';
+import FrameChoices from '../../components/FrameChoices.vue';
+import FramePreview from '../../components/FramePreview.vue';
+import EntrancePreview from '../../components/EntrancePreview.vue';
 import OpeningPicker from '../../components/OpeningPicker.vue';
 import LobbyBackgroundPicker from '../../components/LobbyBackgroundPicker.vue';
-import FramePreview from '../../components/FramePreview.vue';
 import PingSymbol from '../../components/PingSymbol.vue';
-import UiDialog from '../../components/UiDialog.vue';
 import AttackChoices from '../../components/AttackChoices.vue';
 import UiPanel from '../../components/UiPanel.vue';
 import UiField from '../../components/UiField.vue';
@@ -31,7 +31,6 @@ import UiList from '../../components/UiList.vue';
 import UiListRow from '../../components/UiListRow.vue';
 import ImageChoiceGrid from '../../components/ImageChoiceGrid.vue';
 import EntranceChoices from '../../components/EntranceChoices.vue';
-import EntrancePreview from '../../components/EntrancePreview.vue';
 import '../../../../public/shared/ping-model.js';
 import { record, array, text } from '../../services/validation';
 import { requestJson } from '../../services/http';
@@ -42,7 +41,9 @@ const panels = [
   { id: 'character', label: '角色設定', saved: true },
   { id: 'pings', label: '房間標記', saved: true },
   { id: 'lobby', label: '大廳與開場', saved: false },
-  { id: 'barrage', label: '彈幕與播放器', saved: false },
+  { id: 'attack', label: '攻擊特效', saved: false },
+  { id: 'barrage', label: '彈幕', saved: false },
+  { id: 'media', label: '播放器', saved: false },
   { id: 'entrance', label: '進場特效', saved: false },
 ] as const;
 type PanelId = (typeof panels)[number]['id'];
@@ -60,8 +61,19 @@ function revealActiveTab() {
     navBox = nav.getBoundingClientRect();
   nav.scrollLeft += box.left - navBox.left - (navBox.width - box.width) / 2;
 }
-watch(activePanel, () => void nextTick(revealActiveTab));
-const attackPicker = ref<InstanceType<typeof UiDialog> | null>(null);
+const settingsPanels = ref<HTMLElement | null>(null);
+watch(
+  activePanel,
+  () =>
+    void nextTick(() => {
+      revealActiveTab();
+      if (settingsPanels.value) {
+        settingsPanels.value.scrollTop = 0;
+        if (settingsPanels.value.getBoundingClientRect().top < 0)
+          settingsPanels.value.scrollIntoView({ block: 'start' });
+      }
+    }),
+);
 const pingColor = (type: PingType) => window.PingModel?.colors[type];
 const profile = useProfileStore(),
   session = useSessionStore(),
@@ -207,9 +219,6 @@ function resetPings() {
   selectedPings.value = pingTypes.slice(0, 5);
   unsaved();
 }
-const barragePicker = ref<InstanceType<typeof FramePicker> | null>(null),
-  mediaPicker = ref<InstanceType<typeof FramePicker> | null>(null),
-  entrancePicker = ref<InstanceType<typeof UiDialog> | null>(null);
 const entranceLabel = computed(
   () => entranceEffects.find((effect) => effect.id === entranceEffect.value)?.label || '',
 );
@@ -411,7 +420,15 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         :aria-current="activePanel === panel.id ? 'page' : undefined"
         >{{ panel.label }}</a
       > </nav
-    ><div class="settings-panels" tabindex="0" role="region" aria-label="個人化設定內容"
+    ><div
+      ref="settingsPanels"
+      class="settings-panels"
+      :class="{
+        'settings-panels-auto': ['attack', 'barrage', 'media', 'entrance'].includes(activePanel),
+      }"
+      tabindex="0"
+      role="region"
+      aria-label="個人化設定內容"
       ><section
         v-show="activePanel === 'character'"
         id="settings-panel-character"
@@ -655,81 +672,120 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         class="settings-panel settings-panel-lobby"
         aria-labelledby="settings-tab-lobby"
         ><UiPanel class="settings-background-panel" title="大廳與開場" note="選擇後立即套用"
-          ><LobbyBackgroundPicker /><OpeningPicker /></UiPanel
-        ><UiPanel class="settings-attack-panel" title="Q／E 攻擊特效" note="選擇後立即套用"
+          ><LobbyBackgroundPicker /><OpeningPicker /></UiPanel></section
+      ><section
+        v-show="activePanel === 'attack'"
+        id="settings-panel-attack"
+        class="settings-panel settings-panel-attack"
+        aria-labelledby="settings-tab-attack"
+        ><UiPanel
+          class="settings-attack-panel"
+          title="攻擊特效"
+          description="設定 Q／E 快捷鍵使用的攻擊特效。"
+          note="選擇後立即套用"
           ><template #actions><a href="/collection?section=attack">前往收藏庫 ↗</a></template
-          ><UiButton
-            label="選擇Q／E攻擊特效"
-            @click="attackPicker?.open($event.currentTarget as HTMLElement)" /></UiPanel></section
+          ><AttackChoices v-if="activePanel === 'attack'" show-current /></UiPanel></section
       ><section
         v-show="activePanel === 'barrage'"
         id="settings-panel-barrage"
         class="settings-panel settings-panel-barrage"
         aria-labelledby="settings-tab-barrage"
-        ><div class="settings-panel-columns"
-          ><UiPanel class="settings-barrage-panel" title="彈幕外觀" note="設定保存在此瀏覽器">
-            <div class="settings-appearance-choice"
-              ><p id="settings-barrage-frame-status" role="status" aria-live="polite"
-                >目前彈幕框：<strong>{{
-                  labelForFrame(prefs.barrage?.selected || 'default')
-                }}</strong></p
-              ><UiButton
-                id="settings-barrage-frame"
-                variant="ghost"
-                icon="next"
-                label="選擇彈幕框"
-                :disabled="!prefs.frames.length"
-                @click="barragePicker?.open($event.currentTarget as HTMLElement)"
-            /></div>
-            <div class="settings-preview-heading">彈幕即時預覽</div
-            ><div class="settings-barrage-preview-slot" aria-label="目前使用的彈幕預覽"
-              ><FramePreview
-                :frame="prefs.barrage?.selected || 'default'"
-                :name="nickname || session.user?.displayName || '玩家'"
-                message="這一桌好好玩！"
-            /></div> </UiPanel
-          ><UiPanel class="settings-barrage-panel settings-media-panel" title="播放器外觀">
-            <div class="settings-appearance-choice"
-              ><p id="settings-media-frame-status" role="status" aria-live="polite"
-                >目前外觀：<strong>{{ labelForFrame(prefs.media) }}</strong></p
-              ><UiButton
-                id="settings-media-frame"
-                variant="ghost"
-                icon="next"
-                label="選擇播放器外觀"
-                :disabled="!prefs.frames.length"
-                @click="mediaPicker?.open($event.currentTarget as HTMLElement)"
-            /></div>
-            <div class="settings-preview-heading">播放器外觀即時預覽</div
-            ><div
-              class="settings-barrage-preview-slot settings-media-preview-slot"
-              aria-label="目前使用的播放器外觀預覽"
-              ><FramePreview kind="media" :frame="prefs.media" name="播放器" message="我的風格"
-            /></div> </UiPanel></div></section
+        ><UiPanel
+          class="settings-barrage-panel"
+          title="彈幕外觀"
+          note="點選即套用，設定保存在此瀏覽器"
+        >
+          <p
+            id="settings-barrage-frame-status"
+            class="settings-frame-status"
+            role="status"
+            aria-live="polite"
+          >
+            目前彈幕框：<strong>{{ labelForFrame(prefs.barrage?.selected || 'default') }}</strong>
+          </p>
+          <div
+            v-if="activePanel === 'barrage'"
+            class="settings-current-preview"
+            aria-label="目前彈幕外觀預覽"
+          >
+            <FramePreview
+              :frame="prefs.barrage?.selected || 'default'"
+              :name="nickname || session.user?.displayName || '玩家'"
+              message="這一桌好好玩！"
+            />
+          </div>
+          <FrameChoices
+            v-if="activePanel === 'barrage'"
+            class="settings-frame-choices"
+            tabindex="0"
+            kind="barrage"
+          /> </UiPanel></section
+      ><section
+        v-show="activePanel === 'media'"
+        id="settings-panel-media"
+        class="settings-panel settings-panel-media"
+        aria-labelledby="settings-tab-media"
+        ><UiPanel
+          class="settings-barrage-panel settings-media-panel"
+          title="播放器外觀"
+          note="點選即套用，設定保存在此瀏覽器"
+        >
+          <p
+            id="settings-media-frame-status"
+            class="settings-frame-status"
+            role="status"
+            aria-live="polite"
+          >
+            目前外觀：<strong>{{ labelForFrame(prefs.media) }}</strong>
+          </p>
+          <div
+            v-if="activePanel === 'media'"
+            class="settings-current-preview settings-current-media-preview"
+            aria-label="目前播放器外觀預覽"
+          >
+            <FramePreview kind="media" :frame="prefs.media" name="播放器" message="我的風格" />
+          </div>
+          <FrameChoices
+            v-if="activePanel === 'media'"
+            class="settings-frame-choices"
+            tabindex="0"
+            kind="media"
+          /> </UiPanel></section
       ><section
         v-show="activePanel === 'entrance'"
         id="settings-panel-entrance"
         class="settings-panel settings-panel-entrance"
         aria-labelledby="settings-tab-entrance"
-        ><UiPanel class="settings-barrage-panel settings-entrance-panel" title="進場特效">
+        ><UiPanel
+          class="settings-barrage-panel settings-entrance-panel"
+          title="進場特效"
+          note="點選即套用，設定保存在此瀏覽器"
+        >
           <template #actions><a href="/collection?section=entrance">前往收藏庫 ↗</a></template>
-          <div class="settings-appearance-choice"
-            ><p id="settings-entrance-status" role="status" aria-live="polite"
-              >目前特效：<strong>{{ entranceLabel }}</strong></p
-            ><UiButton
-              id="settings-entrance-effect"
-              variant="ghost"
-              icon="next"
-              label="選擇進場特效"
-              @click="entrancePicker?.open($event.currentTarget as HTMLElement)"
-          /></div>
-          <div class="settings-preview-heading">進場特效即時預覽</div
-          ><div class="settings-barrage-preview-slot settings-entrance-preview-slot"
-            ><EntrancePreview
+          <p
+            id="settings-entrance-status"
+            class="settings-frame-status"
+            role="status"
+            aria-live="polite"
+          >
+            目前特效：<strong>{{ entranceLabel }}</strong>
+          </p>
+          <div
+            v-if="activePanel === 'entrance'"
+            class="settings-current-preview settings-current-entrance-preview"
+            aria-label="目前進場特效預覽"
+          >
+            <EntrancePreview
               :effect="entranceEffect"
               :image="selected?.expressions.neutral || '/assets/characters/traveler-neutral.png'"
               :name="nickname || session.user?.displayName || '玩家'"
-          /></div> </UiPanel></section></div></div
+            />
+          </div>
+          <EntranceChoices
+            v-if="activePanel === 'entrance'"
+            class="settings-entrance-choices"
+            tabindex="0"
+          /> </UiPanel></section></div></div
   ><form
     id="settings-form"
     aria-label="角色與房間標記設定"
@@ -752,10 +808,6 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
       icon="check"
       label="儲存設定"
       :pending="pending"
-      :disabled="!appearance || !avatar || selectedPings.length !== 5" /></footer
-  ><FramePicker ref="barragePicker" kind="barrage" /><FramePicker
-    ref="mediaPicker"
-    kind="media"
-  /><UiDialog ref="attackPicker" title="選擇攻擊特效"><AttackChoices /></UiDialog
-  ><UiDialog ref="entrancePicker" title="選擇進場特效"><EntranceChoices /></UiDialog>
+      :disabled="!appearance || !avatar || selectedPings.length !== 5"
+  /></footer>
 </template>

@@ -170,7 +170,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
     else window.MediaAppearance?.set(id);
   }
   return {
-    canUse: (id: string) => window.BarrageFrames?.canUse?.(id) !== false,
+    canUse: (id: string) => {
+      // Reward notifications share the barrage subscription, even for player-only views.
+      void barrage.value;
+      return window.BarrageFrames?.canUse?.(id) !== false;
+    },
     color,
     motion,
     entry,

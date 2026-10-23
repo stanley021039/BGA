@@ -8,6 +8,9 @@ import StatusSlot from './StatusSlot.vue';
 import UiButton from './UiButton.vue';
 import UiChoiceCard from './UiChoiceCard.vue';
 import UiField from './UiField.vue';
+import UiPanel from './UiPanel.vue';
+withDefaults(defineProps<{ showCurrent?: boolean }>(), { showCurrent: false });
+const currentRevision = ref({ q: 0, e: 0 });
 const store = useAttackLoadoutStore(),
   preview = ref('barrage'),
   revision = ref(0),
@@ -80,6 +83,38 @@ function play(id: string) {
 </script>
 <template>
   <div class="attack-choices"
+    ><div
+      v-if="showCurrent"
+      class="attack-current-previews"
+      role="group"
+      aria-label="目前攻擊特效預覽"
+    >
+      <UiPanel
+        v-for="slot in ['q', 'e'] as const"
+        :key="slot"
+        :title="slot.toUpperCase() + ' 鍵目前特效'"
+        :description="
+          store.ready
+            ? attackEffects.find((effect) => effect.id === store.loadout[slot])?.label
+            : '正在讀取攻擊設定…'
+        "
+      >
+        <div class="attack-preview" :aria-label="slot.toUpperCase() + ' 鍵目前特效預覽'">
+          <AttackArtwork
+            v-if="store.ready"
+            :effect="store.loadout[slot]"
+            :play-key="currentRevision[slot]"
+            :from="{ x: 18, y: 65 }"
+            :to="{ x: 78, y: 65 }"
+          />
+        </div>
+        <UiButton
+          icon="play"
+          :label="'重播 ' + slot.toUpperCase() + ' 鍵目前特效'"
+          :disabled="!store.ready"
+          @click="currentRevision[slot]++"
+        />
+      </UiPanel> </div
     ><p>在大廳按 Q、E 向最近玩家施放。兩鍵各冷卻 2 秒；所有效果與數字僅供視覺互動。</p
     ><div class="attack-loadout"
       ><UiField
@@ -162,6 +197,12 @@ function play(id: string) {
 }
 .attack-choices p {
   margin: 0;
+}
+.attack-current-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--stitch-gap-controls);
+  min-inline-size: 0;
 }
 .attack-loadout {
   display: grid;
