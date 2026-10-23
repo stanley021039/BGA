@@ -2025,3 +2025,45 @@
   border-radius: 16px;
   font-size: 1.125rem;
 }
+// Bottom band on wide tables: white bombs and witch coins bottom-left, bag above
+// the draw/stop memes bottom-right.
+@media (min-width: 1181px) {
+  :root body[data-visual-theme].vue-quacks-document {
+    .vue-quacks-board-space:not(.is-phase-view) > .vue-quacks-board-controls {
+      inset: auto 8px 8px 8px;
+      width: auto;
+      grid-template-columns: min(320px, 30%) minmax(0, 1fr) auto;
+      grid-template-areas:
+        'risk . bag'
+        'risk . commands';
+      align-items: end;
+      > .vue-quacks-risk {
+        grid-area: risk;
+        align-self: end;
+      }
+      > .vue-quacks-bag-button {
+        grid-area: bag;
+        justify-self: end;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 4px;
+        inline-size: 76px;
+        width: 76px;
+        height: auto;
+        min-height: 76px;
+        padding: 6px;
+        border-radius: 10px;
+        background: #d5e8f2;
+        color: #1c352c;
+      }
+      > .vue-quacks-commands {
+        grid-area: commands;
+        justify-self: end;
+      }
+    }
+    .vue-quacks-board-space:not(.is-phase-view) .vue-quacks-pot .vue-quacks-public-tray {
+      inset-block-end: 132px;
+    }
+  }
+}

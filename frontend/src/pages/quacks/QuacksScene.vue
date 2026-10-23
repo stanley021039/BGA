@@ -212,12 +212,11 @@ onBeforeUnmount(() => {
           ><div class="vue-quacks-pot-heading">
             <h1>{{ viewed.potName }}</h1>
             <UiButton
-              v-if="isOwnPot"
               variant="ghost"
-              icon="edit"
+              icon="info"
               icon-only
-              label="大釜命名與換色"
-              @click="open('pot')"
+              label="遊戲資訊：占卜、女巫、特效藥、記分板與大釜設定"
+              @click="open('fortune')"
             />
           </div>
           <div class="vue-quacks-pot-markers">
@@ -274,7 +273,7 @@ onBeforeUnmount(() => {
               mine?.potion ? '滿瓶' : '空瓶'
             }}</span></button
           >
-          <QuacksBag v-if="isOwnPot" /><button
+          <button
             v-if="viewedPatient"
             type="button"
             class="vue-quacks-patient-badge"
@@ -334,11 +333,12 @@ onBeforeUnmount(() => {
           @click="potPeek = !potPeek"
         />
         <UiButton
+          v-if="!boardVisible"
           class="vue-quacks-board-settings"
           variant="ghost"
-          icon="settings"
+          icon="info"
           icon-only
-          label="占卜、女巫、特效藥與大釜設定"
+          label="遊戲資訊：占卜、女巫、特效藥、記分板與大釜設定"
           @click="open('fortune')"
         />
         <div class="vue-quacks-board-controls" :class="{ 'is-phase-controls': !boardVisible }">
@@ -381,6 +381,7 @@ onBeforeUnmount(() => {
                 label="查看女巫能力與條件"
                 @click="open('witches')" /></div
           ></div>
+          <QuacksBag v-if="boardVisible && isOwnPot" />
           <QuacksCommands v-if="isOwnPot || !boardVisible" />
           <UiButton
             v-else
