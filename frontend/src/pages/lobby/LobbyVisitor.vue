@@ -220,7 +220,7 @@ window.addEventListener('resize', positionBubble);
       '--lobby-move-duration': duration + 'ms',
     }"
     :data-ping-player="visitor.id"
-    :aria-label="self ? visitor.name + '（你），點一下對話或發表情，R 鍵隨機換位' : undefined"
+    :aria-label="self ? visitor.name + '（你），點一下發表情，R 鍵隨機換位' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"

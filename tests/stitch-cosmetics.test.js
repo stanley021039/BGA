@@ -8,9 +8,9 @@ const effects = require('../public/shared/entrance-stitch.json'),
 const backgrounds = require('../public/shared/lobby-backgrounds.json'),
   { definitions } = require('../src/achievements/catalog');
 const root = path.resolve(__dirname, '..');
-test('all twenty imported entrance artworks have complete local animation definitions and safe static markup', () => {
-  assert.equal(effects.length, 20);
-  assert.equal(new Set(effects.map((e) => e.id)).size, 20);
+test('all twenty-four final imported entrance artworks have complete local animation definitions and safe static markup', () => {
+  assert.equal(effects.length, 24);
+  assert.equal(new Set(effects.map((e) => e.id)).size, 24);
   const css = ['entrance-stitch.css', 'entrance-stitch-repairs.css', 'entrance-stitch-update.css']
     .map((file) => fs.readFileSync(path.join(root, 'frontend/src/assets', file), 'utf8'))
     .join('\n');
@@ -54,7 +54,7 @@ test('all twenty imported entrance artworks have complete local animation defini
     }
     assert.ok(count > 0, effect.id + ' includes real animation');
   }
-  assert.equal(requirements.length, 20);
+  assert.equal(requirements.length, 24);
   for (const reward of requirements) {
     assert.ok([...reward.description].length <= 28);
     assert.ok(reward.description.endsWith('。'));

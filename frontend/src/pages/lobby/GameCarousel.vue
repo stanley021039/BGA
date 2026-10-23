@@ -240,7 +240,7 @@ onBeforeUnmount(() => {
             v-else
             icon="add"
             :label="'開一桌' + chosen.title"
-            @click="emit('create')" /></div></div
+            @click="emit('create')" /><slot name="lobby-resume" /></div></div
     ></div>
   </section>
 </template>

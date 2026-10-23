@@ -1,6 +1,5 @@
 import effects from '../../../public/shared/entrance-stitch.json';
 import '../assets/entrance-stitch.css';
-import '../assets/entrance-stitch-update.css';
 import '../assets/entrance-stitch-repairs.css';
 import '../styles/sakura-fall.scss';
 
@@ -17,16 +16,6 @@ export function playStitchEntrance(
   if (!effect) return () => {};
   const node = document.createElement('div');
   node.className = 'lobby-fx stitch-vfx';
-  if (
-    [
-      'stitch-zanka',
-      'stitch-gilgamesh',
-      'stitch-stand-fists',
-      'stitch-ulquiorra',
-      'stitch-exodia',
-    ].includes(id)
-  )
-    node.classList.add('stitch-vfx-update');
   node.setAttribute('aria-hidden', 'true');
   Object.assign(node.style, {
     position: 'absolute',

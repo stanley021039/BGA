@@ -65,9 +65,10 @@
     align-items: center;
     flex-wrap: wrap;
     gap: tokens.space(3);
-    min-height: 60px;
-    max-height: 180px;
-    overflow: auto;
+    flex-direction: column;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
   }
   :is(.vue-lobby-room-browser, .vue-lobby-code) {
     min-width: 0;
@@ -222,6 +223,7 @@ body[data-visual-theme='playful'] .vue-lobby {
 }
 // Visitors are teleported behind the whole page; the page itself sits above.
 body.vue-lobby-document .club {
+  overflow-x: clip;
   position: relative;
   z-index: 1;
 }
@@ -507,8 +509,11 @@ body.lobby-self-hover {
       height: auto;
       width: 100%;
       max-width: 720px;
+      width: calc(100% - 220px);
+      align-self: center;
+      isolation: isolate;
       overflow: visible;
-      margin-inline: auto;
+      margin-inline: 0 220px;
       container-type: size;
       .game-tile {
         top: 50%;
@@ -546,6 +551,7 @@ body.lobby-self-hover {
       }
     }
     .vue-lobby .carousel-footer {
+      position: relative;
       flex: none;
       min-height: 44px;
       margin: 0;
@@ -560,6 +566,10 @@ body.lobby-self-hover {
       gap: tokens.space(2);
     }
     .vue-lobby .carousel-actions {
+      position: absolute;
+      z-index: 4;
+      right: 0;
+      bottom: 0;
       margin-left: auto;
     }
     .vue-lobby .carousel-actions .quiet {
@@ -569,10 +579,11 @@ body.lobby-self-hover {
       grid-column: 2;
       grid-row: 3;
       flex-wrap: nowrap;
-      min-height: 44px;
-      max-height: 44px;
-      overflow: auto;
-      justify-content: flex-end;
+      min-height: 0;
+      max-height: none;
+      overflow: visible;
+      justify-content: flex-start;
+      align-items: stretch;
       gap: tokens.space(2);
     }
     .vue-lobby .version-note {
@@ -841,5 +852,16 @@ body .lobby-backdrop[data-background='castle'] {
 }
 
 .vue-lobby .carousel-create {
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  min-width: 170px;
+}
+.vue-lobby .carousel-create > .vue-lobby-resume {
+  flex-direction: column;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
 }
