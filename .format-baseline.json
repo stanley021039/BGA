@@ -192,7 +192,6 @@
     "tests/bluff-http.test.js": "b4de0a1824e2631cb475ad099941d054070f24c3893dd336db4396bfd2281051",
     "tests/bluff-reactions.test.js": "aba703254ea93a51771dc3b46790da70093acc9f4bd9680d440c50de17519e78",
     "tests/bluff-round-options.test.js": "4b785f9d2966c0186ae418282e2c85739c461a019cf026fcf3ad50ccdace897c",
-    "tests/bluff.test.js": "653431d9f4a79f15bfdb346ee9a8907dec5531bc4961f22b37affea04c191251",
     "tests/carousel-selection.test.js": "6d28a5d0c2d4c899c32fec5d4838652d4121b1b8d2771c98a674511b69b9e288",
     "tests/character-image-size.test.js": "38fe640b4c71d14681a92c06cf856f6b0ec4623ae6861fb486b516420da8e1ad",
     "tests/character-sharing.test.js": "b33f3f5eb015d8f7b9173394576a2a2469f06262c157174a3274394dbcf32589",

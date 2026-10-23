@@ -15,6 +15,9 @@ class BluffRoom extends PartyRoom {
     this.challenges = [];
     this.botStatements = {};
     this.botStatementAt = {};
+    this.answers = {};
+    this.answerAt = {};
+    this.draft = { challenges: [], honestId: null };
     this.thinkerId = null;
     this.question = null;
     this.choices = [];
@@ -110,6 +113,9 @@ class BluffRoom extends PartyRoom {
     this.challenges = [];
     this.botStatements = {};
     this.botStatementAt = {};
+    this.answers = {};
+    this.answerAt = {};
+    this.draft = { challenges: [], honestId: null };
     this.captions = {};
     this.transcript = [];
     this.phase = 'selecting';
@@ -192,12 +198,47 @@ class BluffRoom extends PartyRoom {
         }
         this.spokenIds.push(id);
         this.event('spoken', p.name + ' 已說明');
+      } else if (action === 'answer') {
+        if (this.phase !== 'discussion' || id === this.thinkerId)
+          fail('INVALID_PHASE', '只有解釋者能答題');
+        if (p.bot) fail('HUMAN_ONLY', '測試 AI 使用腳本說詞', 403);
+        if (this.spokenIds.includes(id)) fail('ALREADY_SPOKEN', '已答題');
+        const answer = text(data.text, 240);
+        if (!answer) fail('INVALID_TEXT', '答案不可空白', 400);
+        this.answers[id] = answer;
+        this.answerAt[id] = this.now();
+        this.spokenIds.push(id);
+        this.event('spoken', p.name + ' 已答題');
+      } else if (action === 'mark') {
+        // The thinker's pending marks are public so the whole table can follow along.
+        this.requireThinker(id);
+        const challenges = Array.isArray(data.challenges) ? data.challenges : null,
+          honestId = data.honestId ?? null;
+        if (
+          !challenges ||
+          challenges.length > 2 ||
+          new Set(challenges).size !== challenges.length ||
+          challenges.some((v) => typeof v !== 'string')
+        )
+          fail('INVALID_MARK', '公三小最多兩張，且不能重複', 400);
+        challenges.forEach((v) => this.target(v));
+        if (honestId !== null) this.target(honestId);
+        this.draft = { challenges: challenges.slice(), honestId };
+      } else if (action === 'decide') {
+        this.requireThinker(id);
+        if (!this.draft.honestId) fail('NO_TARGET', '請先標記一位老實人', 400);
+        if (this.spokenIds.length !== this.players.length - 1)
+          fail('NOT_READY', '請等每位解釋者答題');
+        if (data.confirmed !== true) fail('CONFIRM_REQUIRED', '請確認你的選擇', 400);
+        this.challenges = this.draft.challenges.slice();
+        this.resolve(this.target(this.draft.honestId));
       } else if (action === 'challenge') {
         this.requireThinker(id);
         this.target(data.targetId);
         if (this.challenges.includes(data.targetId) || this.challenges.length >= 2)
           fail('NO_CHALLENGE', '每輪最多兩張，且不能重複質疑同一人');
         this.challenges.push(data.targetId);
+        this.draft = { ...this.draft, challenges: this.challenges.slice() };
         this.event('challenge', '想想質疑 ' + this.player(data.targetId).name + '：公三小！');
       } else if (action === 'guess') {
         this.requireThinker(id);
@@ -205,69 +246,7 @@ class BluffRoom extends PartyRoom {
         if (this.spokenIds.length !== this.players.length - 1)
           fail('NOT_READY', '請等每位解釋者標記說明完畢');
         if (data.confirmed !== true) fail('CONFIRM_REQUIRED', '請確認你的選擇', 400);
-        const honest = this.players.find((q) => this.roles[q.id] === 'honest'),
-          thinker = this.player(this.thinkerId),
-          deltas = Object.fromEntries(this.players.map((q) => [q.id, 0]));
-        if (target.id === honest.id) {
-          deltas[thinker.id] += this.question.level;
-          deltas[honest.id] += this.question.level;
-        } else deltas[target.id] += this.question.level;
-        for (const challenged of this.challenges) {
-          if (challenged === honest.id) deltas[thinker.id] -= 3;
-          else {
-            deltas[challenged]--;
-            deltas[thinker.id]++;
-          }
-        }
-        this.players.forEach((q) => (q.score += deltas[q.id]));
-        const resultId = this.roundId,
-          electorate = this.activePlayers()
-            .filter((q) => !q.bot)
-            .map((q) => q.id);
-        this.banBallots[resultId] = {
-          questionId: this.question.id,
-          electorate,
-          votes: [],
-          required: Math.floor(electorate.length / 2) + 1,
-          banned: false,
-        };
-        this.results.push({
-          resultId,
-          questionId: this.question.id,
-          round: this.round,
-          title: this.question.title,
-          level: this.question.level,
-          answer: this.question.answer,
-          explanation: this.question.explanation,
-          source: this.question.source,
-          thinkerName: thinker.name,
-          honestName: honest.name,
-          selectedName: target.name,
-          correct: target.id === honest.id,
-          challenges: this.challenges.map((pid) => this.player(pid).name),
-          // Everyone's words in the order they were said, script partners included.
-          transcript: [
-            ...this.transcript,
-            ...Object.entries(this.botStatements).map(([pid, statement]) => ({
-              name: this.player(pid)?.name || 'AI',
-              text: statement,
-              at: this.botStatementAt[pid] ?? 0,
-            })),
-          ]
-            .sort((a, b) => a.at - b.at)
-            .map((e) => ({ name: e.name, text: e.text })),
-          roles: this.players.map((q) => ({
-            name: q.name,
-            role: this.roles[q.id],
-            delta: deltas[q.id],
-            score: q.score,
-          })),
-        });
-        this.deadline = null;
-        this.botMemories = {};
-        this.phase = 'reveal';
-        this.event('reveal', '老實人是 ' + honest.name + '，本輪已計分。');
-        if (this.round === this.roundLimit) this.finish();
+        this.resolve(target);
       } else if (action === 'next') {
         if (id !== this.host) fail('HOST_ONLY', '只有房主可以換輪', 403);
         if (this.phase !== 'reveal') fail('INVALID_PHASE', '先完成本輪');
@@ -317,6 +296,76 @@ class BluffRoom extends PartyRoom {
         text: line,
         at: this.now(),
       });
+  }
+  resolve(target) {
+    const honest = this.players.find((q) => this.roles[q.id] === 'honest'),
+      thinker = this.player(this.thinkerId),
+      deltas = Object.fromEntries(this.players.map((q) => [q.id, 0]));
+    if (target.id === honest.id) {
+      deltas[thinker.id] += this.question.level;
+      deltas[honest.id] += this.question.level;
+    } else deltas[target.id] += this.question.level;
+    for (const challenged of this.challenges) {
+      if (challenged === honest.id) deltas[thinker.id] -= 3;
+      else {
+        deltas[challenged]--;
+        deltas[thinker.id]++;
+      }
+    }
+    this.players.forEach((q) => (q.score += deltas[q.id]));
+    const resultId = this.roundId,
+      electorate = this.activePlayers()
+        .filter((q) => !q.bot)
+        .map((q) => q.id);
+    this.banBallots[resultId] = {
+      questionId: this.question.id,
+      electorate,
+      votes: [],
+      required: Math.floor(electorate.length / 2) + 1,
+      banned: false,
+    };
+    this.results.push({
+      resultId,
+      questionId: this.question.id,
+      round: this.round,
+      title: this.question.title,
+      level: this.question.level,
+      answer: this.question.answer,
+      explanation: this.question.explanation,
+      source: this.question.source,
+      thinkerName: thinker.name,
+      honestName: honest.name,
+      selectedName: target.name,
+      correct: target.id === honest.id,
+      challenges: this.challenges.map((pid) => this.player(pid).name),
+      // Everyone's words in the order they were said, script partners included.
+      transcript: [
+        ...this.transcript,
+        ...Object.entries(this.botStatements).map(([pid, statement]) => ({
+          name: this.player(pid)?.name || 'AI',
+          text: statement,
+          at: this.botStatementAt[pid] ?? 0,
+        })),
+        ...Object.entries(this.answers).map(([pid, answer]) => ({
+          name: this.player(pid)?.name || '玩家',
+          text: answer,
+          at: this.answerAt[pid] ?? 0,
+        })),
+      ]
+        .sort((a, b) => a.at - b.at)
+        .map((e) => ({ name: e.name, text: e.text })),
+      roles: this.players.map((q) => ({
+        name: q.name,
+        role: this.roles[q.id],
+        delta: deltas[q.id],
+        score: q.score,
+      })),
+    });
+    this.deadline = null;
+    this.botMemories = {};
+    this.phase = 'reveal';
+    this.event('reveal', '老實人是 ' + honest.name + '，本輪已計分。');
+    if (this.round === this.roundLimit) this.finish();
   }
   beginDiscussion() {
     this.phase = 'discussion';
@@ -413,6 +462,12 @@ class BluffRoom extends PartyRoom {
       spokenIds: this.spokenIds,
       challenges: this.challenges,
       botStatements: this.botStatements,
+      // Answers are open to the table once given; the thinker's marks are a live draft.
+      answers: this.phase === 'discussion' ? { ...this.botStatements, ...this.answers } : {},
+      draft:
+        this.phase === 'discussion'
+          ? { challenges: this.draft.challenges, honestId: this.draft.honestId }
+          : { challenges: [], honestId: null },
       canGuess:
         this.phase === 'discussion' &&
         id === this.thinkerId &&
