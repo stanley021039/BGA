@@ -91,6 +91,10 @@ onBeforeUnmount(() => {
   </div>
 </template>
 <style scoped>
+.lobby-attack {
+  position: absolute;
+  inset: 0;
+}
 .lobby-attack-layer {
   position: absolute;
   inset: 0;

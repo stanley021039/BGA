@@ -5,9 +5,10 @@ const attackEffects = new Set(require('../../public/shared/attack-effects.json')
 
 function getAttackSettings(db, userId) {
   const saved = savedProfile(db, userId).attackLoadout;
+  const owned = new Set(require('../achievements/attack-rewards').ownedAttacks(db, userId));
   return {
-    q: attackEffects.has(saved?.q) ? saved.q : 'barrage',
-    e: attackEffects.has(saved?.e) ? saved.e : 'beam',
+    q: owned.has(saved?.q) ? saved.q : 'barrage',
+    e: owned.has(saved?.e) ? saved.e : 'beam',
   };
 }
 function setAttackSettings(db, userId, data) {
@@ -20,6 +21,13 @@ function setAttackSettings(db, userId, data) {
     !attackEffects.has(data.e)
   )
     throw new HttpError(400, 'INVALID_ATTACK_LOADOUT', '請選擇有效的 Q、E 攻擊特效');
+  const owned = new Set(require('../achievements/attack-rewards').ownedAttacks(db, userId));
+  if (!owned.has(data.q) || !owned.has(data.e))
+    throw new HttpError(
+      403,
+      'ATTACK_REWARD_LOCKED',
+      '此攻擊特效尚未解鎖，請完成對應成就或兌換其他獎勵',
+    );
   db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
     JSON.stringify({ ...savedProfile(db, userId), attackLoadout: { q: data.q, e: data.e } }),
     userId,

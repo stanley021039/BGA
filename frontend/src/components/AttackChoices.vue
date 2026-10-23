@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { requestJson } from '../services/http';
+import { useSessionStore } from '../stores/session';
 import { attackEffects, useAttackLoadoutStore, type AttackSlot } from '../stores/attack-loadout';
 import AttackArtwork from './AttackArtwork.vue';
 import StatusSlot from './StatusSlot.vue';
@@ -8,6 +10,38 @@ const store = useAttackLoadoutStore(),
   preview = ref('barrage'),
   revision = ref(0);
 onMounted(() => void store.load());
+const owned = ref<string[]>(['barrage', 'beam']),
+  conditions = ref<Record<string, string>>({}),
+  ownershipError = ref(''),
+  session = useSessionStore();
+let ownershipRequest: AbortController | null = null;
+async function loadOwnership() {
+  ownershipRequest?.abort();
+  owned.value = ['barrage', 'beam'];
+  conditions.value = {};
+  ownershipError.value = '';
+  if (!session.user?.id) return;
+  const request = (ownershipRequest = new AbortController());
+  try {
+    const data = (await requestJson('/api/achievements', { signal: request.signal })) as {
+      bonusRewards: { attacks: string[] };
+      achievements: { id: string; description: string }[];
+    };
+    if (ownershipRequest !== request || request.signal.aborted) return;
+    owned.value = data.bonusRewards.attacks;
+    conditions.value = Object.fromEntries(data.achievements.map((a) => [a.id, a.description]));
+  } catch {
+    if (!request.signal.aborted) ownershipError.value = '無法讀取解鎖狀態，請重新開啟選單';
+  }
+}
+watch(() => session.user?.id, loadOwnership, { immediate: true });
+onMounted(() => window.addEventListener('achievement-rewards-updated', loadOwnership));
+onBeforeUnmount(() => {
+  ownershipRequest?.abort();
+  window.removeEventListener('achievement-rewards-updated', loadOwnership);
+});
+const allowed = (id: string) => owned.value.includes(id);
+
 async function change(slot: AttackSlot, event: Event) {
   const select = event.target as HTMLSelectElement;
   await store.choose(slot, select.value);
@@ -28,16 +62,22 @@ function play(id: string) {
           :value="store.loadout[slot]"
           :disabled="!store.ready || store.pending"
           @change="change(slot, $event)"
-          ><option v-for="effect in attackEffects" :key="effect.id" :value="effect.id">{{
-            effect.label
-          }}</option></select
+          ><option
+            v-for="effect in attackEffects"
+            :key="effect.id"
+            :value="effect.id"
+            :disabled="!allowed(effect.id)"
+            >{{ effect.label + (allowed(effect.id) ? '' : '（未解鎖）') }}</option
+          ></select
         ></label
       ></div
     ><StatusSlot
       :message="
-        store.message || (!store.ready ? '正在讀取攻擊設定…' : store.pending ? '正在儲存…' : '')
+        ownershipError ||
+        store.message ||
+        (!store.ready ? '正在讀取攻擊設定…' : store.pending ? '正在儲存…' : '')
       "
-      :error="!!store.message"
+      :error="!!store.message || !!ownershipError"
     /><UiButton
       v-if="!store.ready && store.message"
       label="重新讀取攻擊設定"
@@ -61,7 +101,10 @@ function play(id: string) {
         @click="play(effect.id)"
         ><span class="attack-color" :style="{ background: effect.color }"></span
         ><span>{{ effect.label }}</span
-        ><small>預覽</small></button
+        ><small>{{ allowed(effect.id) ? '已解鎖・預覽' : '未解鎖・預覽' }}</small
+        ><small v-if="effect.achievementId && !allowed(effect.id)">{{
+          conditions[effect.achievementId] || '完成對應成就解鎖'
+        }}</small></button
       ></div
     ></div
   >

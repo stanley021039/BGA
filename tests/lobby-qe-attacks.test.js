@@ -100,6 +100,17 @@ test('account attack choices persist, preserve appearance changes, and determine
   const get = (path) => request(path, { cookie: owner.cookie }),
     post = (path, body) => request(path, { method: 'POST', body, cookie: owner.cookie });
   assert.deepEqual((await get('/api/profile/attacks')).body, { q: 'barrage', e: 'beam' });
+  assert.equal((await post('/api/profile/attacks', { q: 'shield', e: 'beam' })).status, 403);
+  const initial = await get('/api/achievements');
+  assert.deepEqual(initial.body.bonusRewards.attacks, ['barrage', 'beam']);
+  const redeemed = await post('/api/achievements/redeem', { code: '我愛作者' });
+  assert.equal(redeemed.status, 200);
+  assert.equal(redeemed.body.bonusRewards.attacks.length, 15);
+  assert.deepEqual(
+    redeemed.body.achievements.map((a) => a.unlockedAt),
+    initial.body.achievements.map((a) => a.unlockedAt),
+  );
+
   assert.equal(
     (await post('/api/profile/attacks', { q: 'blade_aura_crimson', e: 'blade_aura' })).status,
     200,
@@ -167,4 +178,43 @@ test('account attack choices persist, preserve appearance changes, and determine
     ).status,
     400,
   );
+});
+
+test('earned achievements unlock only their mapped attack and stale locked loadouts fall back', async (t) => {
+  const { base } = await appFixture(t, {
+    seed: async (db) => {
+      await createAuth(db).bootstrap('attack_earned', 'test-password-123');
+      const user = db.prepare('SELECT id FROM users WHERE username=?').get('attack_earned');
+      db.prepare(
+        'INSERT INTO user_achievements(user_id,achievement_id,source_key,unlocked_at) VALUES(?,?,?,?)',
+      ).run(user.id, 'gift-first-gift', 'test:gift', new Date().toISOString());
+      db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
+        JSON.stringify({ attackLoadout: { q: 'blade_aura_crimson', e: 'flame_vortex' } }),
+        user.id,
+      );
+    },
+  });
+  const login = await fetch(base + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'attack_earned', password: 'test-password-123' }),
+    }),
+    cookie = login.headers.get('set-cookie').split(';')[0];
+  const data = await fetch(base + '/api/achievements', { headers: { Cookie: cookie } }).then((r) =>
+    r.json(),
+  );
+  assert.deepEqual(data.bonusRewards.attacks, ['barrage', 'beam', 'shield']);
+  assert.deepEqual(
+    await fetch(base + '/api/profile/attacks', { headers: { Cookie: cookie } }).then((r) =>
+      r.json(),
+    ),
+    { q: 'barrage', e: 'beam' },
+  );
+  const effects = require('../public/shared/attack-effects.json'),
+    { definitions } = require('../src/achievements/catalog');
+  for (const e of effects.slice(2)) {
+    const a = definitions.find((x) => x.id === e.achievementId);
+    assert.ok(a);
+    assert.ok(!['trpg', 'market'].includes(a.game));
+  }
 });
