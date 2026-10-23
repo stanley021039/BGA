@@ -4,6 +4,8 @@
 
 # 程式架構 agent 記憶
 
+2026-10-23 #182 驗收修正：使用者指定同一人的故事逐次累積題目／畫／猜詞，換出題者清空；Vue 穩定卡片 key 保留已播放畫布，每次新進度及重新載入捲到操作列，相同游標輪詢不搶閱讀位置。legacy 同步累積規則。候選2.36.1，三席真場景／捲動與 legacy 回歸已補；CI 與原生驗收以本次 PR 記錄為準。此決策取代舊版單卡呈現，詳[逐頁結算規格](../specs/TELEPHONE-REVEAL-182.md)。其他已驗收項目不變，未部署。
+
 2026-10-22大廳互動續修：對話入口透過GameCarousel具名slot放在開桌左側，角色只開表情，兩個獨立dialog不再顯示切換分頁。背景改用共用lobby-background store，以既有每帳號localStorage key在GamePreferences與LobbyBackdrop間同步，只提供原本／Stitch城堡；補帳號隔離及儲存拒絕回歸。登入成功動畫auth-entry先前漏接entry-intro音效，已補一次播放、靜音、略過／離頁停止與手勢重試。2558全套、66focused、Vue型別／建置通過；隔離Edge實際登入收到MP3 playing事件，並驗偏好位置／保存、獨立訊息與表情、對話在開桌左側及390px。證據見本機ignored work/lobby-settings-qa-12V5Qw（後續縮圖尺寸校正另驗），未推送／PR／部署。
 
 ## 2026-10-22：本機整合 main PR #160

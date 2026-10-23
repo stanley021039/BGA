@@ -377,7 +377,7 @@ test('last-moment input syncs immediately and expired controls cannot keep drawi
   assert.equal(r.books.at(-1).pages[1].strokes.length, 1);
 });
 
-test('legacy settlement follows the shared reveal cursor and renders one page', async () => {
+test('legacy settlement accumulates each story then clears it for the next owner', async () => {
   const r = new TelephoneRoom('ABCDEF', 'review', () => 0);
   r.add('reader');
   r.add('peer');
@@ -399,6 +399,13 @@ test('legacy settlement follows the shared reveal cursor and renders one page', 
   await f.ids.get('#telephoneReveal').onclick();
   await flush();
   assert.equal(r.revealIndex, 1);
+  assert.equal(f.ids.get('#book').querySelectorAll('article').length, 2);
+  await f.ids.get('#telephoneReveal').onclick();
+  await flush();
+  assert.equal(f.ids.get('#book').querySelectorAll('article').length, 3);
+  await f.ids.get('#telephoneReveal').onclick();
+  await flush();
+  assert.equal(r.revealIndex, 3);
   assert.equal(f.ids.get('#book').querySelectorAll('article').length, 1);
 });
 
