@@ -52,15 +52,16 @@ defineExpose({ open, close });
   >
     <header class="vue-dialog-header"
       ><h2 :id="headingId">{{ title }}</h2
-      ><UiButton
-        :stitch="stitch"
-        icon="close"
-        icon-only
-        caption="關閉"
-        :label="'關閉' + title"
-        :disabled="!dismissible"
-        @click="close"
-    /></header>
+      ><slot name="close"
+        ><UiButton
+          :stitch="stitch"
+          icon="close"
+          icon-only
+          caption="關閉"
+          :label="'關閉' + title"
+          :disabled="!dismissible"
+          @click="close" /></slot
+    ></header>
     <div v-if="visible" class="vue-dialog-content"><slot /></div>
   </dialog>
 </template>

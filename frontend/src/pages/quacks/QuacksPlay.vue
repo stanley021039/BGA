@@ -3,10 +3,11 @@ import QuacksRuleVisual from './QuacksRuleVisual.vue';
 import QuacksWaiting from './QuacksWaiting.vue';
 import { computed } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
-import { ingredientNames } from '../../contracts/quacks';
 import QuacksGlyph from './QuacksGlyph.vue';
 import QuacksChoices from './QuacksChoices.vue';
 import QuacksMarket from './QuacksMarket.vue';
+import QuacksFortuneCard from './QuacksFortuneCard.vue';
+import QuacksRewards from './QuacksRewards.vue';
 import QuacksAlchemy from './QuacksAlchemy.vue';
 import QuacksWitches from './QuacksWitches.vue';
 import QuacksPot from './QuacksPot.vue';
@@ -15,7 +16,7 @@ import QuacksScoreboard from './QuacksScoreboard.vue';
 import UiButton from '../../components/UiButton.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import { useRoomStore } from '../../stores/room';
-defineProps<{ overlay?: boolean }>();
+defineProps<{ overlay?: boolean; revealing?: boolean }>();
 const game = useQuacksStore(),
   room = useRoomStore(),
   s = computed(() => game.state!),
@@ -31,15 +32,6 @@ const compactEffects = computed(() =>
     };
   }),
 );
-function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
-  return (
-    !game.available ||
-    own.value.chosen ||
-    ((s.value.options.books?.red ?? s.value.options.bookSet) === 2 &&
-      c.effectColor === 'red' &&
-      !own.value.stopped)
-  );
-}
 </script>
 <template>
   <section class="vue-quacks-play">
@@ -55,9 +47,9 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
         :epoch="s.roundId || ''"
         caption="準備下一回合"
     /></section>
-    <template v-else-if="m?.pending"><QuacksChoices /></template>
+    <template v-else-if="m?.pending && !revealing"><QuacksChoices /></template>
     <QuacksWaiting
-      v-else-if="m?.waitingEffect"
+      v-else-if="m?.waitingEffect && !revealing"
       title="等待其他玩家完成效果"
       detail="藥材或占卜牌選擇完成後，大家再一起抽藥。"
     />
@@ -67,90 +59,41 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
       detail="等待其他玩家完成調製與額外效果。"
     />
     <QuacksAlchemy v-else-if="s.phase === 'patients' || s.stage === 'essence'" />
-    <section v-else-if="s.phase === 'fortune'" class="vue-quacks-fortune-draw"
-      ><template v-if="s.me === s.roundStarterId"
-        ><button
-          type="button"
-          :disabled="!game.available"
-          aria-label="點擊抽取本輪占卜牌"
-          @click="game.drawFortune()"
-          ><img src="/assets/quacks/fortune-back.svg" alt="" /><strong>點一下抽牌</strong></button
-        ></template
-      ><QuacksWaiting
-        v-else
-        :title="
-          '等待 ' +
-          (s.players.find((p) => p.id === s.roundStarterId)?.name || '本輪起始玩家') +
-          ' 抽占卜牌'
-        "
-        detail="抽牌後一起揭曉本輪效果。"
-    /></section>
+    <QuacksFortuneCard
+      v-else-if="revealing || s.phase === 'fortune'"
+      :fortune="s.fortune"
+      :flipped="!!revealing"
+      :can-draw="!revealing && s.me === s.roundStarterId && game.available"
+      :caption="
+        revealing
+          ? (s.players.find((p) => p.id === s.roundStarterId)?.name || '起始玩家') + ' 抽出的占卜牌'
+          : s.me === s.roundStarterId
+            ? '點一下抽牌'
+            : '等待 ' +
+              (s.players.find((p) => p.id === s.roundStarterId)?.name || '本輪起始玩家') +
+              ' 抽占卜牌'
+      "
+      @draw="game.drawFortune()"
+    />
     <template v-else-if="s.phase === 'brewing'"
       ><QuacksWaiting
         v-if="s.stage === 'drawing' && !m?.canDraw"
         :title="own.stopped ? '你已停手，等待其他玩家' : '已選擇，等待大家抽藥'"
-        detail="全員決定後，一起揭曉本次結果。"
-      /><QuacksPot v-else-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /><section
-        v-if="m?.reserve.length || m?.alchemy?.pool.length || m?.alchemy?.returnable.length"
-        class="vue-quacks-extra"
-        ><h2>暫存與特效藥選擇</h2
-        ><div v-if="m?.canDraw && m.alchemy?.drawablePool.length" data-private
-          ><h3>可用私人預抽取代這次隨機抽藥</h3
-          ><div class="vue-quacks-choice-grid"
-            ><button
-              v-for="c in m.alchemy.drawablePool"
-              :key="c.id"
-              type="button"
-              :disabled="!game.available"
-              @click="game.command('draw', { step: s.step, chipId: c.id })"
-              ><QuacksGlyph :chip="c" />改放 {{ ingredientNames[c.color] }} {{ c.value }}</button
-            ></div
-          ></div
-        ><div v-for="c in m?.reserve || []" :key="c.id" class="vue-quacks-reserve-row"
-          ><QuacksGlyph :chip="c" /><span
-            >{{ ingredientNames[c.color] }} {{ c.value }} ·
-            {{ c.must ? '本輪必須投入' : '可保留到下輪' }}</span
-          ><UiButton
-            icon="play"
-            label="投入暫存"
-            :disabled="reserveBlocked(c)"
-            @click="game.command('reserve', { chipId: c.id })" /><UiButton
-            v-if="!c.must"
-            icon="undo"
-            label="放回藥袋"
-            :disabled="!game.available || own.chosen"
-            @click="game.command('reserve-return', { chipId: c.id })" /></div
-        ><div v-if="s.stage === 'reserves'"
-          ><template v-for="c in m?.alchemy?.pool || []" :key="c.id"
-            ><UiButton
-              v-if="c.color === 'red' && (s.options.books?.red ?? s.options.bookSet) === 2"
-              icon="play"
-              :label="'投入預抽紅色 ' + c.value"
-              :disabled="!game.available"
-              @click="game.command('alchemy-pool', { chipId: c.id })" /></template></div
-        ><div v-if="m?.alchemy?.returnable.length" class="vue-quacks-choice-grid"
-          ><button
-            v-for="c in m.alchemy.returnable"
-            :key="c.id"
-            type="button"
-            :disabled="!game.available"
-            @click="game.command('alchemy-return', { chipId: c.id })"
-            ><QuacksGlyph :chip="c" />收回 {{ ingredientNames[c.color] }} {{ c.value }} · 花
-            {{ c.value }} 格特效藥</button
-          ></div
-        ></section
-      ></template
-    >
+        detail="全員決定後，一起揭曉本次結果。" /><QuacksPot
+        v-else-if="!overlay && game.viewed"
+        :state="s"
+        :recipe="game.viewed" /><QuacksReserves
+    /></template>
     <template v-else-if="s.phase === 'settlement' && m"
       ><template v-if="m.ready"
         ><section class="vue-quacks-stage-message vue-quacks-stage-complete" role="status"
           ><h2>你已完成本階段</h2><p>等待其他玩家完成後，一起進入下一階段。</p></section
         ><QuacksPot v-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /></template
       ><template v-else-if="s.stage === 'witches'"
-        ><section class="vue-quacks-stage-message vue-quacks-witches-intro"
-          ><h2>全員大釜已公開，先決定適用女巫</h2><p>可先使用符合條件的女巫，再按下方準備結算。</p
-          ><QuacksWitches /></section
-        ><QuacksPot v-if="!overlay && game.viewed" :state="s" :recipe="game.viewed" /></template
+        ><QuacksWitches compact /><QuacksPot
+          v-if="!overlay && game.viewed"
+          :state="s"
+          :recipe="game.viewed" /></template
       ><section v-else-if="s.stage === 'bonus'" class="vue-quacks-stage-message"
         ><h2>獎勵骰</h2
         ><p>{{
@@ -178,31 +121,24 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
             :chip="{ color: effect.color as 'black' | 'green' | 'purple', value: 1 }"
           /><span class="ui-sr-only">{{ effect.triggered ? '已觸發' : '未觸發' }}</span></article
         ><p>確認不會重複領取；全員確認後才進入格位獎勵。</p></section
-      ><section v-else-if="s.stage === 'rewards'" class="vue-quacks-stage-message"
-        ><h2>領取結算位置獎勵</h2
-        ><p
-          >大釜第 {{ own.position }} 格，結算位置
-          {{ s.board[Math.min(s.board.length - 1, (own.position || 0) + 1)]?.position }}。</p
-        ><p>{{
-          own.exploded
-            ? '大釜爆炸，通常需選勝利分數或購物；保護效果可能讓你兩者兼得。'
-            : '安全完成，可同時取得勝利分數與購物預算。'
-        }}</p></section
-      ><template v-else-if="s.stage === 'shopping'"
-        ><QuacksMarket /><QuacksMarket
-          v-if="m.extraBudget > 0 || m.extraBought.length"
-          extra /><section v-if="s.round < 9" class="vue-quacks-ruby"
-          ><h2>使用紅寶石 · 每次 {{ m.discount }} 顆</h2
-          ><div class="vue-quacks-tabs"
-            ><UiButton
-              icon="refresh"
-              label="補滿藥水瓶"
-              :disabled="!game.available || m.potion || own.rubies < m.discount"
-              @click="game.command('ruby', { mode: 'refill' })" /><UiButton
-              icon="next"
-              label="永久水滴前進一格"
-              :disabled="!game.available || own.rubies < m.discount"
-              @click="game.command('ruby', { mode: 'droplet' })" /></div></section></template
+      ><QuacksRewards v-else-if="s.stage === 'rewards'" /><template
+        v-else-if="s.stage === 'shopping'"
+        ><QuacksMarket /><QuacksMarket v-if="m.extraBudget > 0 || m.extraBought.length" extra /><div
+          class="vue-quacks-shop-footer"
+          ><section v-if="s.round < 9" class="vue-quacks-ruby"
+            ><h2>使用紅寶石 · 每次 {{ m.discount }} 顆</h2
+            ><div class="vue-quacks-tabs"
+              ><UiButton
+                icon="refresh"
+                label="補滿藥水瓶"
+                :disabled="!game.available || m.potion || own.rubies < m.discount"
+                @click="game.command('ruby', { mode: 'refill' })" /><UiButton
+                icon="next"
+                label="永久水滴前進一格"
+                :disabled="!game.available || own.rubies < m.discount"
+                @click="
+                  game.command('ruby', { mode: 'droplet' })
+                " /></div></section></div></template
       ><QuacksWaiting v-else title="等待必要效果結算" detail="完成後會一起進入下一階段。"
     /></template>
     <section v-else-if="s.phase === 'finished'" class="vue-quacks-final"

@@ -21,7 +21,11 @@ function label(chip: QuacksChip) {
 }
 </script>
 <template>
-  <div class="vue-quacks-public-tray" aria-label="已公開投入的藥材">
+  <div
+    v-if="recipe.hidden || chips.length"
+    class="vue-quacks-public-tray"
+    aria-label="已公開投入的藥材"
+  >
     <p v-if="recipe.hidden">投入藥材尚未公開</p>
     <template v-else-if="chips.length"
       ><span v-if="omitted" :aria-label="'另有 ' + omitted + ' 片較早投入的藥材'"
@@ -34,6 +38,5 @@ function label(chip: QuacksChip) {
         :title="label(chip)"
         ><QuacksGlyph :chip="chip" :size="26" /></span
     ></template>
-    <p v-else>尚未投入藥材</p>
   </div>
 </template>

@@ -10,6 +10,7 @@ const props = defineProps<{ state: QuacksSnapshot; recipe: QuacksRecipe }>(),
   error = ref(''),
   motion = ref(false),
   tipId = useId();
+const wide = window.matchMedia?.('(min-width: 1181px)');
 let anchor: Element | null = null,
   generation = 0,
   disposed = false,
@@ -88,6 +89,11 @@ function render() {
   }
   try {
     const node = window.QuacksArt.cauldron(props.state, props.recipe, inspect, dismiss);
+    // Wide tables give the pot full height; the overflow basin sits in a right column.
+    if (wide?.matches) {
+      node.setAttribute('viewBox', '0 0 1040 680');
+      node.querySelector('.overflow-basin')?.setAttribute('transform', 'translate(330 -500)');
+    }
     node.addEventListener('pointerleave', (event) => {
       if ((event as PointerEvent).pointerType !== 'touch') dismiss();
     });
@@ -136,6 +142,7 @@ onMounted(() => {
   document.addEventListener('visibilitychange', visibility);
   window.addEventListener('resize', viewportChanged);
   window.addEventListener('scroll', viewportChanged, true);
+  wide?.addEventListener('change', render);
 });
 watch(signature, render, { flush: 'post' });
 onBeforeUnmount(() => {
@@ -147,6 +154,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', visibility);
   window.removeEventListener('resize', viewportChanged);
   window.removeEventListener('scroll', viewportChanged, true);
+  wide?.removeEventListener('change', render);
 });
 </script>
 <template>
@@ -175,7 +183,7 @@ onBeforeUnmount(() => {
       <template v-if="insight"
         ><strong>{{ insight.title }}</strong
         ><p>{{ insight.effect }}</p
-        ><small>{{ insight.caption }}</small></template
+        ><small v-if="insight.caption">{{ insight.caption }}</small></template
       >
     </div>
   </Teleport>

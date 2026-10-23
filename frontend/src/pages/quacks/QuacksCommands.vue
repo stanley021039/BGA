@@ -28,6 +28,7 @@ const game = useQuacksStore(),
         ><template v-if="m.canDraw"
           ><UiButton
             class="vue-quacks-draw-action"
+            icon-only
             data-quacks-action="draw"
             icon="draw-bag"
             label="還要爽爽 · 繼續抽藥"
@@ -36,6 +37,7 @@ const game = useQuacksStore(),
             ><template #icon><img src="/assets/quacks/draw-777.webp" alt="" /></template></UiButton
           ><UiButton
             class="vue-quacks-stop-action"
+            icon-only
             data-quacks-action="stop"
             icon="close"
             label="我不抽了 QQ · 安全停手"
@@ -95,19 +97,15 @@ const game = useQuacksStore(),
         :disabled="!game.available"
         @click="game.command('confirm-effects')" /><template v-else-if="s.stage === 'rewards'"
         ><UiButton
+          v-if="m.rewardPreview?.both ?? !game.own?.exploded"
           icon="star"
-          :label="game.own?.exploded ? '我要勝利分數' : '領取本輪獎勵'"
+          label="領取本輪獎勵"
           :disabled="!game.available"
-          @click="game.command('reward', { mode: 'score' })" /><UiButton
-          v-if="game.own?.exploded"
-          icon="ingredient"
-          label="我要買藥材"
-          :disabled="!game.available"
-          @click="game.command('reward', { mode: 'buy' })" /></template
+          @click="game.command('reward', { mode: 'score' })" /></template
       ><UiButton
         v-else-if="s.stage === 'shopping'"
         icon="check"
-        label="完成本輪結算"
+        label="完成本輪購物"
         :disabled="!game.available || (!!s.market.turnPlayerId && s.market.turnPlayerId !== s.me)"
         @click="game.command('shop-ready')"
     /></template>

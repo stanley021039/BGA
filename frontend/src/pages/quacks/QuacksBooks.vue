@@ -6,13 +6,20 @@ import QuacksGlyph from './QuacksGlyph.vue';
 import UiButton from '../../components/UiButton.vue';
 import type { IngredientColor } from '../../contracts/quacks';
 import '../../styles/quacks-books.scss';
+// currentOnly: in-game view that lists only the faces this match uses.
+const props = defineProps<{ currentOnly?: boolean }>();
 const game = useQuacksStore(),
   room = useRoomStore(),
+  selections = computed(() =>
+    (game.state?.bookSelection || []).map((row) =>
+      props.currentOnly
+        ? { ...row, candidates: row.candidates.filter((c) => c.set === row.selected) }
+        : row,
+    ),
+  ),
   pages = reactive<Partial<Record<IngredientColor, number>>>({}),
   row = computed(
-    () =>
-      game.state?.bookSelection.find((b) => b.color === game.selectedBook) ||
-      game.state?.bookSelection[0],
+    () => selections.value.find((b) => b.color === game.selectedBook) || selections.value[0],
   ),
   face = computed(
     () =>
@@ -61,9 +68,11 @@ function keydown(event: KeyboardEvent) {
 <template>
   <section class="vue-quacks-books vue-quacks-codex">
     <header class="vue-quacks-codex-heading"
-      ><h2>{{ game.setup ? '本局藥材書選擇' : '本局藥材書' }}</h2
+      ><h2 :class="{ 'ui-sr-only': currentOnly }">{{
+        currentOnly ? '本局藥材' : game.setup ? '本局藥材書選擇' : '本局藥材書'
+      }}</h2
       ><UiButton
-        v-if="game.setup"
+        v-if="game.setup && !currentOnly"
         stitch
         icon="refresh"
         icon-only
@@ -73,7 +82,7 @@ function keydown(event: KeyboardEvent) {
     /></header>
     <nav class="vue-quacks-codex-tabs" aria-label="藥材顏色"
       ><button
-        v-for="book in game.state?.bookSelection"
+        v-for="book in selections"
         :key="book.color"
         type="button"
         :aria-pressed="row?.color === book.color"
@@ -83,8 +92,28 @@ function keydown(event: KeyboardEvent) {
         }}</span></button
       ></nav
     >
+    <div v-if="currentOnly && row" class="vue-quacks-current-stack"
+      ><!-- Every color is laid out in one cell so the height fits the longest list. --><ol
+        v-for="book in selections"
+        :key="book.color"
+        class="vue-quacks-current-offers"
+        :class="{ 'is-shown': book.color === row.color }"
+        :aria-label="book.name + '各價位效果'"
+        :aria-hidden="book.color === row.color ? undefined : 'true'"
+        :data-ingredient="book.color"
+        ><li
+          v-for="offer in [...(book.candidates[0]?.offers || [])].sort((a, b) => a.price - b.price)"
+          :key="offer.value"
+          ><QuacksGlyph :chip="{ color: book.color, value: offer.value }" :size="56" /><div
+            ><strong
+              >{{ book.name }} {{ offer.value }}<span>{{ offer.price }} 金幣</span></strong
+            ><p>{{ book.candidates[0]?.effect }}</p></div
+          ></li
+        ></ol
+      ></div
+    >
     <article
-      v-if="row && face"
+      v-else-if="row && face"
       class="vue-quacks-codex-spread"
       :aria-label="row.name + '藥材書'"
       :data-ingredient="row.color"
@@ -92,7 +121,11 @@ function keydown(event: KeyboardEvent) {
       <section class="vue-quacks-codex-page vue-quacks-codex-left">
         <small>本局藥材 · {{ row.name }}</small>
         <span class="vue-quacks-codex-seal" :class="{ 'is-selected': face.set === row.selected }">{{
-          face.set === row.selected ? '已選' : '已選第 ' + row.selected + ' 面'
+          face.set === row.selected
+            ? currentOnly
+              ? '本局'
+              : '已選'
+            : '已選第 ' + row.selected + ' 面'
         }}</span>
         <header class="vue-quacks-codex-cover"
           ><QuacksGlyph :chip="{ color: row.color, value: 1 }" :size="76" /><div
@@ -115,7 +148,9 @@ function keydown(event: KeyboardEvent) {
         <p class="vue-quacks-codex-caption">藥材數值與購買價格依這一面顯示。</p>
       </section>
       <section class="vue-quacks-codex-page vue-quacks-codex-right">
-        <small>效果翻頁 · {{ row.candidates.length }} 面</small>
+        <small>{{
+          currentOnly ? '本局效果' : '效果翻頁 · ' + row.candidates.length + ' 面'
+        }}</small>
         <div class="vue-quacks-codex-effect"
           ><strong>第 {{ face.set }} 面效果</strong
           ><div class="vue-quacks-codex-effect-stack"
@@ -128,7 +163,7 @@ function keydown(event: KeyboardEvent) {
             ></div
           ></div
         >
-        <div class="vue-quacks-codex-controls" @keydown="keydown">
+        <div v-if="!currentOnly" class="vue-quacks-codex-controls" @keydown="keydown">
           <div
             class="vue-quacks-codex-faces"
             role="group"
@@ -160,7 +195,7 @@ function keydown(event: KeyboardEvent) {
               @click="turn(1)"
           /></div>
           <UiButton
-            v-if="game.setup"
+            v-if="game.setup && !currentOnly"
             stitch
             variant="primary"
             icon="check"
@@ -171,7 +206,7 @@ function keydown(event: KeyboardEvent) {
           />
         </div>
         <div class="vue-quacks-codex-result"
-          ><strong>{{
+          ><strong v-if="!currentOnly">{{
             row.candidates.length === 1 ? '固定書面' : '本局採用第 ' + row.selected + ' 面'
           }}</strong
           ><span>{{
@@ -180,8 +215,12 @@ function keydown(event: KeyboardEvent) {
         >
       </section>
     </article>
-    <p class="vue-quacks-codex-note">{{
-      game.setup ? '每位真人都可選書；全桌採用最後一次選擇。' : '本局藥材書已鎖定；翻面僅供查閱。'
+    <p v-if="!currentOnly" class="vue-quacks-codex-note">{{
+      currentOnly
+        ? '只列出本局採用的藥材書面。'
+        : game.setup
+          ? '每位真人都可選書；全桌採用最後一次選擇。'
+          : '本局藥材書已鎖定；翻面僅供查閱。'
     }}</p>
   </section>
 </template>

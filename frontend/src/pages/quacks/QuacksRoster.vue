@@ -5,7 +5,6 @@ import { useRoomStore } from '../../stores/room';
 import { playerRoomRole } from '../../contracts/room';
 import type { WitchColor } from '../../contracts/quacks';
 import RoomPlayerCard from '../../components/RoomPlayerCard.vue';
-import UiButton from '../../components/UiButton.vue';
 import QuacksGlyph from './QuacksGlyph.vue';
 import '../../styles/quacks-roster.scss';
 const game = useQuacksStore(),
@@ -41,6 +40,18 @@ const rows = computed(
       ];
     }) || [],
 );
+function canView(id: string) {
+  const recipe = game.state?.recipes.find((p) => p.id === id);
+  return !!recipe && !recipe.hidden && !room.terminal;
+}
+function view(id: string) {
+  if (canView(id)) game.selectedPot = id;
+}
+function keyView(event: KeyboardEvent, id: string) {
+  if (event.target !== event.currentTarget || !['Enter', ' '].includes(event.key)) return;
+  event.preventDefault();
+  view(id);
+}
 function coinLabel(color: WitchColor, value: boolean | undefined) {
   const witch = game.state?.witches[color];
   return (
@@ -48,10 +59,6 @@ function coinLabel(color: WitchColor, value: boolean | undefined) {
     (value === true ? '尚未使用' : value === false ? '已使用' : '尚未公開') +
     (witch ? '；' + witch.name + '：' + witch.text : '')
   );
-}
-function view(id: string) {
-  const recipe = game.state?.recipes.find((item) => item.id === id);
-  if (recipe && !recipe.hidden && !room.terminal) game.selectedPot = id;
 }
 </script>
 <template>
@@ -77,26 +84,17 @@ function view(id: string) {
         :data-quacks-player="row.recipe.id"
         :data-viewed="row.viewed"
         :data-exploded="row.recipe.exploded"
+        role="button"
+        :aria-label="row.player.name + (canView(row.recipe.id) ? '，查看大釜' : '，大釜尚未公開')"
+        :aria-pressed="row.viewed"
+        :aria-disabled="!canView(row.recipe.id)"
+        @click="view(row.recipe.id)"
+        @keydown="keyView($event, row.recipe.id)"
       >
         <template #score
           ><span :data-quacks-score="row.recipe.id">{{ row.recipe.score }}</span
           ><span>分</span></template
         >
-        <template #action
-          ><UiButton
-            stitch
-            variant="ghost"
-            icon="next"
-            icon-only
-            :label="
-              row.recipe.hidden
-                ? row.recipe.name + '的大釜尚未公開'
-                : '查看' + row.recipe.name + '的大釜'
-            "
-            :aria-pressed="row.viewed"
-            :disabled="row.recipe.hidden || !!room.terminal"
-            @click="view(row.recipe.id)"
-        /></template>
         <template #details>
           <div class="vue-quacks-player-resources" aria-label="公開資源">
             <span
