@@ -1248,6 +1248,10 @@ function initializeApp(config, dataLock, acquired) {
           return send(lobbyHandlers.view(user, url.searchParams.get('entrance')));
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
           return send(lobbyHandlers.move(user, data));
+        if (url.pathname === '/api/lobby/attack' && req.method === 'POST') {
+          limitRate(socialRate, 'lobby-attack:' + user.id, 40);
+          return send(lobbyHandlers.attack(user, data));
+        }
         if (url.pathname === '/api/lobby/teleport' && req.method === 'POST') {
           limitAccount(user);
           return send(lobbyHandlers.teleport(user, data));

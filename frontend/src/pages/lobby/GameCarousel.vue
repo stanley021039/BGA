@@ -231,7 +231,7 @@ onBeforeUnmount(() => {
             icon="users"
             label="找一桌加入"
             aria-haspopup="dialog"
-            @click="emit('join')" /><a
+            @click="emit('join')" /><slot name="lobby-action" /><a
             v-if="chosen.id === 'market'"
             class="button orange"
             href="/market"

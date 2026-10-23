@@ -32,10 +32,12 @@ function createLobby(
   let background = { id: 'default', changedAt: now(), nextChangeAt: 0 };
   const visitors = new Map(),
     barrages = [],
+    attacks = [],
     receipts = new Map();
   function clean(time) {
     for (const [id, visitor] of visitors)
       if (time - visitor.seenAt > PRESENCE_MS) visitors.delete(id);
+    while (attacks.length && time - attacks[0].at >= 1800) attacks.shift();
     while (barrages.length && time - barrages[0].at >= 8000) barrages.shift();
     for (const [key, value] of receipts) if (time - value.at > 60000) receipts.delete(key);
   }
@@ -45,8 +47,15 @@ function createLobby(
       dy = visitor.targetY - visitor.y;
     const duration = Math.hypot(dx / WALK_X_PER_SECOND, dy / WALK_Y_PER_SECOND);
     const ratio = duration ? Math.min(1, elapsed / duration) : 1;
-    visitor.x += dx * ratio;
-    visitor.y += dy * ratio;
+    const rawX = visitor.x + dx * ratio,
+      rawY = visitor.y + dy * ratio;
+    const shiftX = Math.floor(rawX / 100) * 100,
+      shiftY = Math.floor(rawY / 100) * 100;
+    visitor.x = rawX - shiftX;
+    visitor.y = rawY - shiftY;
+    visitor.targetX -= shiftX;
+    visitor.targetY -= shiftY;
+    if (shiftX || shiftY) visitor.wrapId = (visitor.wrapId || 0) + 1;
     visitor.updatedAt = time;
   }
   function enter(user, entrance) {
@@ -67,6 +76,7 @@ function createLobby(
         targetY: y,
         moveId: 0,
         teleportId: 0,
+        wrapId: 0,
         updatedAt: time,
         facing: 'right',
       };
@@ -83,6 +93,7 @@ function createLobby(
     for (const visitor of visitors.values()) advance(visitor, time);
     return {
       selfId: user.id,
+      attacks: attacks.filter((event) => time - event.at < 1800),
       background: { ...background },
       barrages: barrages.filter((event) => time - event.at < 8000),
       visitors: [...visitors.values()].map((visitor) => ({
@@ -94,6 +105,7 @@ function createLobby(
         targetY: visitor.targetY,
         moveId: visitor.moveId,
         teleportId: visitor.teleportId,
+        wrapId: visitor.wrapId || 0,
         remainingMs: Math.ceil(
           Math.hypot(
             (visitor.targetX - visitor.x) / WALK_X_PER_SECOND,
@@ -109,7 +121,18 @@ function createLobby(
     };
   }
   function move(user, input) {
-    if (
+    const step = input && (Object.hasOwn(input, 'dx') || Object.hasOwn(input, 'dy'));
+    if (step) {
+      if (
+        ![input.dx, input.dy].every(
+          (v) => typeof v === 'number' && Number.isFinite(v) && Math.abs(v) <= 1,
+        ) ||
+        (!input.dx && !input.dy) ||
+        Object.hasOwn(input, 'x') ||
+        Object.hasOwn(input, 'y')
+      )
+        throw new HttpError(400, 'INVALID_MOVEMENT', '方向不正確');
+    } else if (
       !input ||
       typeof input !== 'object' ||
       ![input.x, input.y].every(
@@ -121,11 +144,61 @@ function createLobby(
     const visitor = enter(user),
       time = now();
     advance(visitor, time);
-    visitor.targetX = Math.max(MIN_X, Math.min(MAX_X, input.x));
-    visitor.targetY = Math.max(MIN_Y, Math.min(MAX_Y, input.y));
+    visitor.targetX = step ? visitor.x + input.dx * 5 : Math.max(MIN_X, Math.min(MAX_X, input.x));
+    visitor.targetY = step ? visitor.y + input.dy * 5 : Math.max(MIN_Y, Math.min(MAX_Y, input.y));
     visitor.moveId += 1;
     if (visitor.targetX < visitor.x - 0.1) visitor.facing = 'left';
     if (visitor.targetX > visitor.x + 0.1) visitor.facing = 'right';
+    return view(user);
+  }
+  function attack(user, input) {
+    const time = now();
+    clean(time);
+    const self = visitors.get(user.id);
+    if (!self) throw new HttpError(403, 'LOBBY_PRESENCE_REQUIRED', '請先進入大廳');
+    if (
+      !input ||
+      typeof input !== 'object' ||
+      typeof input.requestId !== 'string' ||
+      !/^[a-zA-Z0-9-]{8,80}$/.test(input.requestId) ||
+      !Number.isFinite(input.aspectRatio) ||
+      input.aspectRatio < 0.2 ||
+      input.aspectRatio > 5 ||
+      Object.keys(input).some((k) => !['requestId', 'aspectRatio'].includes(k))
+    )
+      throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
+    const key = 'attack:' + user.id + ':' + input.requestId,
+      prior = receipts.get(key);
+    if (prior) {
+      if (prior.fingerprint !== input.aspectRatio)
+        throw new HttpError(409, 'REQUEST_CONFLICT', '同一操作內容不一致');
+      return view(user);
+    }
+    if (self.lastAttackAt !== undefined && time - self.lastAttackAt < 2000)
+      throw new HttpError(429, 'ATTACK_COOLDOWN', '攻擊冷卻中，請稍候 2 秒');
+    for (const visitor of visitors.values()) advance(visitor, time);
+    const distance = (v) => Math.hypot((v.x - self.x) * input.aspectRatio, v.y - self.y);
+    const target = [...visitors.values()]
+      .filter((v) => v.id !== user.id)
+      .sort((a, b) => distance(a) - distance(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
+    if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '目前沒有其他玩家可以互動');
+    self.lastAttackAt = time;
+    attacks.push({
+      id: randomBytes(12).toString('hex'),
+      fromId: self.id,
+      toId: target.id,
+      fromName: self.name,
+      toName: target.name,
+      fromX: self.x,
+      fromY: self.y,
+      toX: target.x,
+      toY: target.y,
+      at: time,
+      until: time + 1800,
+    });
+    if (attacks.length > 40) attacks.shift();
+    receipts.set(key, { at: time, fingerprint: input.aspectRatio });
+    if (receipts.size > 4000) receipts.delete(receipts.keys().next().value);
     return view(user);
   }
   function emote(user, selected) {
@@ -236,6 +309,7 @@ function createLobby(
   return {
     view,
     move,
+    attack,
     emote,
     barrage,
     mediaAudience,

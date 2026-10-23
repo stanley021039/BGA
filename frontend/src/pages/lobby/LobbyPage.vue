@@ -122,8 +122,17 @@ onBeforeUnmount(() => {
         ><span>款遊戲<br />隨時開桌</span></div
       ></div
     >
-    <GameCarousel v-model="selected" @create="open" @join="openJoin()" />
-    <LobbyBackdrop />
+    <GameCarousel v-model="selected" @create="open" @join="openJoin()"
+      ><template #lobby-action
+        ><UiButton
+          icon="send"
+          icon-only
+          label="向最近玩家發射特效（F）"
+          aria-keyshortcuts="F"
+          :disabled="!lobby.connected || lobby.attackPending"
+          @click="lobby.attack()" /></template
+    ></GameCarousel>
+    <LobbyBackdrop /><StatusSlot :message="lobby.attackStatus" />
     <div class="vue-lobby-resume" aria-label="已入座的房間"
       ><span v-if="!resumes.length">{{
         lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'

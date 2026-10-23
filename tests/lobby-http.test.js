@@ -43,9 +43,47 @@ const routes = [
   ['/api/lobby', 'GET'],
   ['/api/lobby/move', 'POST'],
   ['/api/lobby/teleport', 'POST'],
+  ['/api/lobby/attack', 'POST'],
   ['/api/lobby/emotes', 'GET'],
   ['/api/lobby/emote', 'POST'],
 ];
+
+test('attack route accepts a present caller, broadcasts a server chosen target and keeps game state unchanged', async (t) => {
+  const f = await fixture(t),
+    input = { requestId: 'request-first', aspectRatio: 1.6 };
+  assert.equal((await f.post('/api/lobby/attack', input)).status, 403);
+  await f.get('/api/lobby');
+  assert.equal((await f.post('/api/lobby/attack', input)).body.code, 'NO_ATTACK_TARGET');
+  const invite = await f.post('/api/admin/invites', {});
+  const peer = await f.request('/api/auth/register', {
+    method: 'POST',
+    body: {
+      username: 'attack_peer',
+      password: 'test-password-123',
+      confirmPassword: 'test-password-123',
+      invite: invite.body.code,
+    },
+  });
+  assert.equal(peer.status, 200);
+  await f.request('/api/lobby', { cookie: peer.cookie });
+  const before = (await f.get('/api/rooms')).body;
+  const attacked = await f.post('/api/lobby/attack', input);
+  assert.equal(attacked.status, 200);
+  assert.equal(attacked.body.attacks[0].toId, peer.body.id);
+  assert.equal(attacked.body.attacks[0].fromId, f.owner.body.id);
+  const observed = await f.request('/api/lobby', { cookie: peer.cookie });
+  assert.deepEqual(observed.body.attacks, attacked.body.attacks);
+  assert.equal((await f.post('/api/lobby/attack', input)).body.attacks.length, 1);
+  assert.equal(
+    (await f.post('/api/lobby/attack', { ...input, requestId: 'request-second' })).status,
+    429,
+  );
+  assert.equal(
+    (await f.post('/api/lobby/attack', { ...input, targetId: peer.body.id })).status,
+    400,
+  );
+  assert.deepEqual((await f.get('/api/rooms')).body, before);
+});
 
 test('teleport uses the authenticated caller, chooses its own destination and enforces entrance ownership', async (t) => {
   const f = await fixture(t),
@@ -136,6 +174,7 @@ test('lobby HTTP preserves view, move, options, expression validation and cooldo
   assert.equal(view.status, 200);
   assert.equal(view.body.selfId, f.owner.body.id);
   assert.deepEqual(Object.keys(view.body).sort(), [
+    'attacks',
     'background',
     'barrages',
     'pingContext',

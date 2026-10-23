@@ -839,3 +839,7 @@ body .lobby-backdrop[data-background='castle'] {
 .lobby-backdrop {
   container-type: inline-size;
 }
+
+.vue-lobby .carousel-create {
+  flex-wrap: wrap;
+}

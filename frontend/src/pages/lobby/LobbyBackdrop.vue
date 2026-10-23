@@ -7,6 +7,7 @@ import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
+import LobbyAttackLayer from './LobbyAttackLayer.vue';
 import LobbyBackgroundArt from '../../components/LobbyBackgroundArt.vue';
 import LobbyBarrage from './LobbyBarrage.vue';
 import type { BarrageController, BarrageEvent } from '../../contracts/social';
@@ -28,8 +29,7 @@ const sounds = window.ExpressionSounds?.create();
 let disposed = false,
   controller: BarrageController | null = null,
   known: Set<string> | null = null,
-  hoverFrame = 0,
-  keyboardTarget: { x: number; y: number } | null = null;
+  hoverFrame = 0;
 watch(
   () => lobby.snapshot,
   (value) => {
@@ -96,14 +96,7 @@ watch(
     if (!value) {
       sounds?.reset();
       closeDialogs();
-      keyboardTarget = null;
     }
-  },
-);
-watch(
-  () => lobby.destination,
-  (value) => {
-    if (!value) keyboardTarget = null;
   },
 );
 function arrived(id: string) {
@@ -188,7 +181,6 @@ function click(event: MouseEvent) {
   const visitors = stage.value?.querySelector<HTMLElement>('.lobby-visitors'),
     rect = visitors?.getBoundingClientRect();
   if (!lobby.connected || !rect?.width || !rect.height) return;
-  keyboardTarget = null;
   stage.value?.focus({ preventScroll: true });
   lobby.move({
     x: ((event.clientX - rect.left) / rect.width) * 100,
@@ -204,6 +196,23 @@ function hover(event: MouseEvent) {
     document.body.classList.toggle('lobby-self-hover', selfHover.value);
   });
 }
+const held = new Set<string>();
+const directions: Record<string, [number, number]> = {
+  arrowleft: [-1, 0],
+  arrowright: [1, 0],
+  arrowup: [0, -1],
+  arrowdown: [0, 1],
+  a: [-1, 0],
+  d: [1, 0],
+  w: [0, -1],
+  s: [0, 1],
+};
+function release(event: KeyboardEvent) {
+  held.delete(event.key.toLowerCase());
+}
+function clearKeys() {
+  held.clear();
+}
 function key(event: KeyboardEvent) {
   if (
     !lobby.connected ||
@@ -211,41 +220,48 @@ function key(event: KeyboardEvent) {
     event.metaKey ||
     event.altKey ||
     event.isComposing ||
-    ![stage.value, document.body, selfAvatar()].includes(event.target as HTMLElement)
+    document.hidden ||
+    (event.target instanceof Element &&
+      event.target.closest(
+        'input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]',
+      )) ||
+    document.querySelector('dialog[open]')
   )
     return;
-  if (event.key.toLowerCase() === 'r') {
-    if (document.hidden || event.repeat) return;
+  const name = event.key.toLowerCase();
+  if (name === 'f' || name === 'r') {
+    if (event.repeat) return;
     event.preventDefault();
-    keyboardTarget = null;
-    teleport();
+    if (name === 'f') void lobby.attack();
+    else {
+      held.clear();
+      teleport();
+    }
     return;
   }
-  const directions: Record<string, [number, number]> = {
-      ArrowLeft: [-5, 0],
-      ArrowRight: [5, 0],
-      ArrowUp: [0, -5],
-      ArrowDown: [0, 5],
-      a: [-5, 0],
-      d: [5, 0],
-      w: [0, -5],
-      s: [0, 5],
-    },
-    own = lobby.snapshot?.visitors.find((visitor) => visitor.id === lobby.snapshot?.selfId);
-  const direction = directions[event.key.toLowerCase()] || directions[event.key];
-  if (!own || !direction) return;
+  if (
+    ![stage.value, document.body, selfAvatar()].includes(event.target as HTMLElement) ||
+    !directions[name]
+  )
+    return;
   event.preventDefault();
-  const [x, y] = direction,
-    base = keyboardTarget || own;
-  keyboardTarget = {
-    x: Math.max(6, Math.min(94, base.x + x)),
-    y: Math.max(12, Math.min(97, base.y + y)),
-  };
-  lobby.move(keyboardTarget);
+  held.add(name);
+  let dx = 0,
+    dy = 0;
+  for (const key of held) {
+    const d = directions[key];
+    if (d) {
+      dx += d[0];
+      dy += d[1];
+    }
+  }
+  if (dx || dy) lobby.step(Math.sign(dx), Math.sign(dy));
 }
+
 function visibility() {
   if (document.hidden) {
     sounds?.reset();
+    held.clear();
     closeDialogs();
   }
 }
@@ -255,6 +271,8 @@ function profile() {
 onMounted(() => {
   document.addEventListener('click', click);
   document.addEventListener('keydown', key);
+  document.addEventListener('keyup', release);
+  window.addEventListener('blur', clearKeys);
   document.addEventListener('mousemove', hover, { passive: true });
 });
 document.addEventListener('visibilitychange', visibility);
@@ -267,6 +285,8 @@ onBeforeUnmount(() => {
   document.body.classList.remove('lobby-self-hover');
   document.removeEventListener('click', click);
   document.removeEventListener('keydown', key);
+  document.removeEventListener('keyup', release);
+  window.removeEventListener('blur', clearKeys);
   document.removeEventListener('mousemove', hover);
   document.removeEventListener('visibilitychange', visibility);
   window.removeEventListener('profile-updated', profile);
@@ -280,11 +300,14 @@ onBeforeUnmount(() => {
       :data-background="background.selected"
       :class="{ 'is-self-hover': selfHover }"
       tabindex="0"
-      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話輸入訊息；聚焦此處可用 WASD 或方向鍵移動，R 鍵隨機換位並播放進場特效"
-      aria-keyshortcuts="R"
+      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色對話或發表情；聚焦此處可用 WASD 或方向鍵移動，四邊可穿越，R 鍵隨機換位，F 鍵向最近玩家發射特效"
+      aria-keyshortcuts="R F"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
-      ><LobbyBackgroundArt :id="background.selected" /><div class="lobby-visitors"
+      ><LobbyAttackLayer
+        :snapshot="lobby.snapshot"
+        :connected="lobby.connected" /><LobbyBackgroundArt :id="background.selected" /><div
+        class="lobby-visitors"
         ><LobbyVisitor
           v-for="visitor in lobby.snapshot?.visitors || []"
           :key="visitor.id"

@@ -120,28 +120,38 @@ watch(
   },
   { immediate: true, flush: 'post' },
 );
+let moveFrame = 0;
+const wrap = (value: number) => ((value % 100) + 100) % 100;
 watch(
-  [() => props.visitor.moveId, () => props.reset, () => props.visitor.teleportId],
-  async (_, previous) => {
+  [() => props.visitor, () => props.reset, () => props.connected, still],
+  async () => {
+    if (moveFrame) cancelAnimationFrame(moveFrame);
     const epoch = ++revision,
-      initial =
-        !previous || previous[1] !== props.reset || previous[2] !== props.visitor.teleportId;
-    if (initial) {
-      placing.value = true;
-      duration.value = 0;
-      left.value = props.visitor.x;
-      top.value = props.visitor.y;
-      await nextTick();
-      if (disposed || epoch !== revision) return;
-      node.value?.getBoundingClientRect();
-    }
-    duration.value =
-      props.visitor.moveId === 0 || still.value ? 0 : Math.max(350, props.visitor.remainingMs);
-    placing.value = false;
-    left.value = props.visitor.moving ? props.visitor.targetX : props.visitor.x;
-    top.value = props.visitor.moving ? props.visitor.targetY : props.visitor.y;
+      visitor = props.visitor;
+    placing.value = true;
+    duration.value = 0;
+    left.value = visitor.x;
+    top.value = visitor.y;
     await nextTick();
-    if (!disposed && epoch === revision) transition();
+    if (disposed || epoch !== revision) return;
+    placing.value = false;
+    if (!props.connected || document.hidden) return;
+    if (still.value || !visitor.moving || !visitor.remainingMs) {
+      left.value = wrap(visitor.targetX);
+      top.value = wrap(visitor.targetY);
+      return;
+    }
+    const started = performance.now();
+    const tick = (time: number) => {
+      moveFrame = 0;
+      if (disposed || epoch !== revision || document.hidden || !props.connected) return;
+      const progress = Math.min(1, (time - started) / visitor.remainingMs);
+      left.value = wrap(visitor.x + (visitor.targetX - visitor.x) * progress);
+      top.value = wrap(visitor.y + (visitor.targetY - visitor.y) * progress);
+      if (hasSpeech.value) positionBubble();
+      if (progress < 1) moveFrame = requestAnimationFrame(tick);
+    };
+    moveFrame = requestAnimationFrame(tick);
   },
   { immediate: true },
 );
@@ -180,6 +190,7 @@ function transition() {
 onBeforeUnmount(() => {
   disposed = true;
   revision++;
+  if (moveFrame) cancelAnimationFrame(moveFrame);
   observer?.disconnect();
   stopArrival?.();
   if (frame) cancelAnimationFrame(frame);
@@ -209,7 +220,7 @@ window.addEventListener('resize', positionBubble);
       '--lobby-move-duration': duration + 'ms',
     }"
     :data-ping-player="visitor.id"
-    :aria-label="self ? visitor.name + '（你），點一下發表情，R 鍵隨機換位' : undefined"
+    :aria-label="self ? visitor.name + '（你），點一下對話或發表情，R 鍵隨機換位' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"

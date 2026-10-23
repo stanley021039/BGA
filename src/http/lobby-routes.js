@@ -20,6 +20,9 @@ function createLobbyHandlers({
   function move(user, data) {
     return withLobbyMedia(user, lobby.move(user, data));
   }
+  function attack(user, data) {
+    return withLobbyMedia(user, lobby.attack(user, data));
+  }
   function teleport(user, data) {
     const entrance = entranceAllowed(user, data?.entrance) ? data?.entrance : 'classic';
     return withLobbyMedia(user, lobby.teleport(user, entrance));
@@ -67,6 +70,6 @@ function createLobbyHandlers({
       throw new HttpError(403, 'BACKGROUND_LOCKED', '請先完成對應成就以解鎖這個背景');
     return withLobbyMedia(user, lobby.changeBackground(user, data));
   }
-  return { view, move, emotes, emote, barrage, background, teleport };
+  return { view, move, emotes, emote, barrage, background, teleport, attack };
 }
 module.exports = { createLobbyHandlers };

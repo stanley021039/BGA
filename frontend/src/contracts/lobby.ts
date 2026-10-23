@@ -34,13 +34,28 @@ export interface LobbyVisitor {
   targetY: number;
   moveId: number;
   teleportId: number;
+  wrapId: number;
   remainingMs: number;
   moving: boolean;
   facing: 'left' | 'right';
   emote: LobbyEmote | null;
   entrance: EntranceEffectId;
 }
+export interface LobbyAttack {
+  id: string;
+  fromId: string;
+  toId: string;
+  fromName: string;
+  toName: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  at: number;
+  until: number;
+}
 export interface LobbySnapshot {
+  attacks: LobbyAttack[];
   background: { id: string; changedAt: number; nextChangeAt: number };
   barrages: BarrageEvent[];
   selfId: string;
@@ -93,7 +108,8 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       !text(item.id) ||
       !text(item.name) ||
       !text(item.image) ||
-      ![item.x, item.y, item.targetX, item.targetY].every(coordinate) ||
+      ![item.x, item.y].every(coordinate) ||
+      ![item.targetX, item.targetY].every((v) => finite(v) && v >= -5 && v <= 105) ||
       !Number.isSafeInteger(item.moveId) ||
       Number(item.moveId) < 0 ||
       !finite(item.remainingMs) ||
@@ -141,6 +157,8 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       targetX: Number(item.targetX),
       targetY: Number(item.targetY),
       moveId: Number(item.moveId),
+      wrapId:
+        Number.isSafeInteger(item.wrapId) && Number(item.wrapId) >= 0 ? Number(item.wrapId) : 0,
       teleportId:
         Number.isSafeInteger(item.teleportId) && Number(item.teleportId) >= 0
           ? Number(item.teleportId)
@@ -165,6 +183,32 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         return item.kind === undefined ? { ...item, kind: 'barrage' } : item;
       }),
     ),
+    attacks: array(row.attacks || [])
+      .slice(-40)
+      .map((value) => {
+        const a = record(value);
+        if (
+          !['id', 'fromId', 'toId', 'fromName', 'toName'].every((k) => text(a[k])) ||
+          ![a.fromX, a.fromY, a.toX, a.toY].every(coordinate) ||
+          !finite(a.at) ||
+          !finite(a.until) ||
+          a.until - a.at !== 1800
+        )
+          throw Error('大廳攻擊資料格式不正確。');
+        return {
+          id: text(a.id),
+          fromId: text(a.fromId),
+          toId: text(a.toId),
+          fromName: text(a.fromName),
+          toName: text(a.toName),
+          fromX: Number(a.fromX),
+          fromY: Number(a.fromY),
+          toX: Number(a.toX),
+          toY: Number(a.toY),
+          at: a.at,
+          until: a.until,
+        };
+      }),
     selfId: text(row.selfId),
     background: (() => {
       const bg = record(row.background || {});
