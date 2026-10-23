@@ -220,3 +220,18 @@ Stitch 匯出特效的 CSS 類名包含既有色碼字元時，僅在該選擇�
 ## 舊頁（`public/`）與 GameUI
 
 `public/` 的舊頁仍使用 `public/shared/ui-primitives.css`、`ui-foundation.css` 與 `window.GameUI`（`icon`、`decorateButton`、`setBusy`、`setStatus`、`openDialog`、`bindPopover`）。這一層只維護、不擴充：新功能寫在 Vue 頁面。修改舊頁時沿用 [舊頁 GameUI 合約](UI-GAMEUI-LEGACY.md) 與 [共用對齊規格](specs/SHARED-UI-ALIGNMENT.md)。
+
+
+### 房間收合與角色互動（#215，候選）
+
+`RoomSidePanel` 以 `UiPanel tone="raised"` 呈現可滑動的面板；保留既有 grid 欄位，收合露出32px寬、與原面板同高的空白框邊，22px 視覺箭頭（保留44px透明點擊槽）貼齊視窗左右並位於面板垂直中央。面板與把手使用同一個 280ms 節奏，依減少動態／動畫偏好停用位移過渡；內容保留 DOM，收合時 inert 並隱藏資訊。
+
+`ReactionPicker` 預設 `mode="all"` 保留既有角色／emoji 分頁；`mode="emoji"` 只載入並顯示 emoji，`mode="character" external-trigger` 由角色元素呼叫公開 `open(element)`，只顯示角色表情。郎中使用這兩個獨立入口，其他遊戲維持原預設。
+
+`UiMoveMarker` 在宿主背景內以百分比 `point` 顯示目的地光點，採主色 token、pointer-events:none；動畫偏好關閉時保留靜態標記，由宿主清除。詳 [驗收紀錄](specs/ROOM-BACKGROUND-215.md)。
+
+#215最新候選：郎中超寬背景延伸至可見視窗寬度，桌機原左右欄寬取平均保持遊戲尺寸並置中；專注全螢幕仍為單欄。RoomEffects以可見視窗25%–75%與頁首下緣作彈幕垂直安全帶，內側保留32px裝飾空間，依實際高度放置，空間不足略過但保留聊天原文。此輪新增外觀未完成瀏覽器驗收，見ROOM-BACKGROUND-215第三輪。
+
+RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱藏，點擊／離開／失焦／Esc與狀態改變立即清除；不使用focus-within維持顯示，觸控不觸發黏住的hover。按鈕保留中文名稱與鍵盤焦點。
+
+郎中已入座房間的超寬toolbar延伸至外層視窗；遊戲app保留原內容上限與置中，手機沿用既有換列，其他遊戲不套用。

@@ -12,12 +12,14 @@ const props = defineProps<{
     disabled?: boolean;
     composeEmoji?: boolean;
     quickReplies?: string[];
+    mode?: 'all' | 'emoji' | 'character';
+    externalTrigger?: boolean;
   }>(),
   emit = defineEmits<{ compose: [text: string] }>();
 const room = useRoomStore(),
   reactions = useReactionsStore(),
   popover = ref<InstanceType<typeof UiPopover> | null>(null),
-  tab = ref('character'),
+  tab = ref(props.mode === 'emoji' ? 'emoji' : 'character'),
   prefix = useId();
 const featured = [
   ['😂', '笑死'],
@@ -75,6 +77,13 @@ const emojiChoices = computed(() => {
       ]),
   ];
 });
+const title = computed(() =>
+  props.mode === 'emoji'
+    ? 'emoji 表情'
+    : props.mode === 'character'
+      ? '角色表情'
+      : '表情與角色動作',
+);
 const tabs = [
   { id: 'character', label: '角色動作' },
   { id: 'emoji', label: '表情' },
@@ -90,12 +99,16 @@ const phrases = computed(() => [
   ]),
 ]);
 const blocked = computed(() => !!props.disabled || reactions.pending || !reactions.enabled);
-function open(event: MouseEvent) {
+function open(event: MouseEvent | HTMLElement) {
   if (blocked.value) return;
   if (popover.value?.visible) popover.value.close();
   else {
-    void popover.value?.open(event.currentTarget as HTMLElement);
-    void reactions.load();
+    void popover.value?.open(
+      event instanceof HTMLElement ? event : (event.currentTarget as HTMLElement),
+    );
+    if (props.mode === 'emoji') void reactions.loadEmojis();
+    else if (props.mode === 'character') void reactions.loadCharacter();
+    else void reactions.load();
   }
 }
 async function send(kind: 'emoji' | 'expression', value: string) {
@@ -132,30 +145,34 @@ watch(
   () => {
     queuedCompose = null;
     popover.value?.close(false);
-    tab.value = 'character';
+    tab.value = props.mode === 'emoji' ? 'emoji' : 'character';
   },
 );
 onBeforeUnmount(() => {
   queuedCompose = null;
 });
-defineExpose({ open });
+function close() {
+  popover.value?.close(false);
+}
+defineExpose({ open, close, visible: computed(() => !!popover.value?.visible) });
 </script>
 
 <template>
   <UiButton
+    v-if="!externalTrigger"
     variant="secondary"
     class="vue-social-tool-trigger"
     icon="emoji"
     caption="表情"
-    label="表情與角色動作"
+    :label="title"
     :aria-expanded="!!popover?.visible"
     :aria-controls="prefix + '-popover'"
     aria-haspopup="dialog"
     :disabled="blocked"
     @click="open"
   />
-  <UiPopover :id="prefix + '-popover'" ref="popover" title="表情與角色動作" @closed="closed">
-    <template #header
+  <UiPopover :id="prefix + '-popover'" ref="popover" :title="title" @closed="closed">
+    <template v-if="!mode || mode === 'all'" #header
       ><UiTabs
         v-model="tab"
         :items="tabs"
@@ -166,10 +183,11 @@ defineExpose({ open });
     /></template>
     <div class="vue-reaction-content">
       <section
-        v-show="tab === 'emoji'"
+        v-if="mode !== 'character'"
+        v-show="mode === 'emoji' || tab === 'emoji'"
         :id="prefix + '-panel-emoji'"
-        role="tabpanel"
-        :aria-labelledby="prefix + '-tab-emoji'"
+        :role="!mode || mode === 'all' ? 'tabpanel' : undefined"
+        :aria-labelledby="!mode || mode === 'all' ? prefix + '-tab-emoji' : undefined"
         :aria-busy="reactions.emojiLoading"
       >
         <p class="vue-reaction-hint">{{
@@ -199,10 +217,11 @@ defineExpose({ open });
         >
       </section>
       <section
-        v-show="tab === 'character'"
+        v-if="mode !== 'emoji'"
+        v-show="mode === 'character' || tab === 'character'"
         :id="prefix + '-panel-character'"
-        role="tabpanel"
-        :aria-labelledby="prefix + '-tab-character'"
+        :role="!mode || mode === 'all' ? 'tabpanel' : undefined"
+        :aria-labelledby="!mode || mode === 'all' ? prefix + '-tab-character' : undefined"
         :aria-busy="reactions.characterLoading"
       >
         <p
@@ -236,7 +255,7 @@ defineExpose({ open });
             }}</span></button
           ></div
         >
-        <details v-if="phrases.length" class="vue-reaction-phrases"
+        <details v-if="phrases.length && mode !== 'character'" class="vue-reaction-phrases"
           ><summary>常用語・填入輸入框</summary
           ><div
             ><UiButton
