@@ -528,30 +528,32 @@
     );
     const current = pages[review?.index ?? -1];
     if (current) {
-      const { book, page: p, index: i } = current;
+      const { book } = current;
       box.append(el('h3', book.ownerName + ' 的傳遞簿'));
-      const card = el('article');
-      card.className = 'page-card ui-content-card';
-      card.append(el('h4', (i ? '第 ' + i + ' 頁' : '起始情境') + ' · ' + p.authorName));
-      if (p.skipped)
-        card.append(el('p', '本頁略過' + (p.timedOut ? ' · 時間到時沒有已同步的內容' : '')));
-      else if (p.kind === 'text') card.append(el('p', p.text));
-      else {
-        const canvas = el('canvas');
-        canvas.width = 512;
-        canvas.height = 256;
-        canvas.setAttribute('aria-label', p.authorName + ' 的畫作');
-        card.append(canvas);
-        paint(canvas, p.strokes);
+      for (const [i, p] of book.pages.slice(0, current.index + 1).entries()) {
+        const card = el('article');
+        card.className = 'page-card ui-content-card';
+        card.append(el('h4', (i ? '第 ' + i + ' 頁' : '起始情境') + ' · ' + p.authorName));
+        if (p.skipped)
+          card.append(el('p', '本頁略過' + (p.timedOut ? ' · 時間到時沒有已同步的內容' : '')));
+        else if (p.kind === 'text') card.append(el('p', p.text));
+        else {
+          const canvas = el('canvas');
+          canvas.width = 512;
+          canvas.height = 256;
+          canvas.setAttribute('aria-label', p.authorName + ' 的畫作');
+          card.append(canvas);
+          paint(canvas, p.strokes);
+        }
+        if (p.timedOut)
+          card.append(
+            el(
+              'small',
+              p.topicFallback ? '時間到，由情境題庫補上主題。' : '時間到，採用已同步的私人草稿。',
+            ),
+          );
+        box.append(card);
       }
-      if (p.timedOut)
-        card.append(
-          el(
-            'small',
-            p.topicFallback ? '時間到，由情境題庫補上主題。' : '時間到，採用已同步的私人草稿。',
-          ),
-        );
-      box.append(card);
     } else box.append(el('p', '等待房主開始播放故事。'));
     if (review && review.index < review.total - 1) {
       if (state.host === state.me) {
@@ -566,6 +568,8 @@
         $('#controls').append(next);
       } else box.append(el('p', '等待房主播放下一頁。'));
     } else if (review) box.append(el('p', '所有故事已播放完畢。'));
+    if (current)
+      ($('#telephoneReveal') || box).scrollIntoView?.({ block: 'end', behavior: 'auto' });
   }
   function render(next) {
     if (disposed || next.type !== 'telephone' || (state && next.version < state.version)) return;

@@ -130,12 +130,17 @@ const { TelephoneRoom } = require('../../src/games/telephone');
               ?.textContent?.startsWith(position + '／'),
           index + 1,
         );
-        assert.equal(await current.page.locator('.vue-telephone-book-page').count(), 1);
-        const text = current.page.locator('.vue-telephone-book-text');
-        assert.equal(
-          (await text.count()) ? await text.textContent() : '',
-          pages[index].kind === 'text' ? pages[index].text : '',
-        );
+        const localIndex = index % state.books[0].pages.length;
+        const cards = current.page.locator('.vue-telephone-book-page');
+        assert.equal(await cards.count(), localIndex + 1);
+        for (let offset = 0; offset <= localIndex; offset++) {
+          const page = pages[index - localIndex + offset];
+          const text = cards.nth(offset).locator('.vue-telephone-book-text');
+          assert.equal(
+            (await text.count()) ? await text.textContent() : '',
+            page.kind === 'text' ? page.text : '',
+          );
+        }
       }
       if (index <= 2 || index === pages.length - 1) {
         for (const [i, current] of clients.slice(0, 2).entries()) {
@@ -152,12 +157,16 @@ const { TelephoneRoom } = require('../../src/games/telephone');
               headingOverlapsCard: heading.bottom > card.top,
               viewport: [innerWidth, innerHeight],
               horizontalOverflow: document.documentElement.scrollWidth > innerWidth,
+              playbackBottom: document
+                .querySelector('.vue-telephone-actions')
+                .getBoundingClientRect().bottom,
               stage: rect('.vue-telephone-stage'),
               actions: rect('.vue-telephone-actions'),
             };
           });
           assert.equal(metrics.horizontalOverflow, false);
           assert.equal(metrics.headingOverlapsCard, false);
+          assert.ok(metrics.playbackBottom <= metrics.viewport[1] + 2);
           geometry.push({ index, seat: i, ...metrics });
           await current.page.screenshot({
             path: path.join(out, `page-${index}-seat-${i}.png`),
