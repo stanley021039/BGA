@@ -1,0 +1,72 @@
+[
+  {
+    "id": "default",
+    "label": "原本",
+    "game": null,
+    "target": 0,
+    "achievementId": null
+  },
+  {
+    "id": "castle",
+    "label": "城堡",
+    "game": null,
+    "target": 0,
+    "achievementId": null
+  },
+  {
+    "id": "garden",
+    "label": "暮色花園",
+    "game": "gift",
+    "target": 1,
+    "achievementId": "background-garden"
+  },
+  {
+    "id": "courtroom",
+    "label": "莊嚴法庭",
+    "game": "bluff",
+    "target": 1,
+    "achievementId": "background-courtroom"
+  },
+  {
+    "id": "cosmic",
+    "label": "星際夜空",
+    "game": "musicquiz",
+    "target": 1,
+    "achievementId": "background-cosmic"
+  },
+  {
+    "id": "ballroom",
+    "label": "華麗舞廳",
+    "game": "majority",
+    "target": 3,
+    "achievementId": "background-ballroom"
+  },
+  {
+    "id": "classroom",
+    "label": "晴日教室",
+    "game": "draw",
+    "target": 1,
+    "achievementId": "background-classroom"
+  },
+  {
+    "id": "prison",
+    "label": "鐵牢密室",
+    "game": "poker",
+    "target": 1,
+    "achievementId": "background-prison"
+  },
+  {
+    "id": "lab",
+    "label": "生化實驗室",
+    "game": "quacks",
+    "target": 1,
+    "achievementId": "background-lab"
+  },
+  {
+    "id": "aurora",
+    "label": "極光雪峰",
+    "game": "minimal",
+    "target": 3,
+    "achievementId": "background-aurora"
+  }
+]

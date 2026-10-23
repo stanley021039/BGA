@@ -6,7 +6,7 @@
     <title>成就收藏冊｜Afterhours</title>
     <link rel="stylesheet" href="/club.css" /><link rel="stylesheet" href="/club-pages.css" /><link
       rel="stylesheet"
-      href="/achievements.css" />
+      href="/achievements.css" /><link rel="stylesheet" href="/shared/achievement-glow.css" />
     <link rel="stylesheet" href="/shared/site-header.css" /><link
       rel="stylesheet"
       href="/shared/ui-primitives.css" /><link
@@ -85,6 +85,17 @@
             >重新載入成就</button
           >
         </section>
+        <section class="page-panel achievement-redemption"
+          ><h2>獎勵兌換</h2
+          ><form id="achievementRedeemForm"
+            ><label for="achievementRewardCode">兌換碼</label
+            ><input id="achievementRewardCode" maxlength="80" autocomplete="off" required /><button
+              type="submit"
+              class="page-button"
+              >兌換獎勵</button
+            ></form
+          ><p id="achievementRedeemStatus" role="status" aria-live="polite"></p
+        ></section>
       </main>
     </div>
     <script src="/shared/ui-components.js?v=2.14.1"></script

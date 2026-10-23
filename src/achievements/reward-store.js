@@ -4,6 +4,7 @@ const { transaction } = require('../db');
 const { HttpError } = require('../http/errors');
 const { rewards } = require('./rewards');
 const Challenges = require('./challenges');
+const { resetCutoff } = require('./reset-cutoff');
 const { normalizeUnit, effectiveParticipants, UUID } = require('./units');
 const MATCH_GAMES = new Set(['quacks', 'musicquiz', 'bluff', 'minimal', 'telephone', 'trpg']);
 const bad = () => {
@@ -62,20 +63,21 @@ function normalizeMatch(input) {
 }
 const fingerprint = (value) => createHash('sha256').update(JSON.stringify(value)).digest('hex');
 function progressCounts(db, userId) {
+  const cutoff = resetCutoff(db, userId);
   const counts = {};
   for (const row of db
     .prepare('SELECT facts_json FROM processed_unit_events WHERE purpose=? AND status=?')
     .iterate('production', 'rules_completed')) {
     const raw = JSON.parse(row.facts_json),
       unit = normalizeUnit(raw, { legacy: ['poker', 'thunder'].includes(raw.game_type) });
-    if (effectiveParticipants(unit).some((p) => p.user_id === userId))
+    if (unit.completed_at > cutoff && effectiveParticipants(unit).some((p) => p.user_id === userId))
       counts[unit.game_type] = (counts[unit.game_type] || 0) + 1;
   }
   for (const row of db
     .prepare("SELECT facts_json FROM achievement_match_events WHERE purpose='production'")
     .iterate()) {
     const m = normalizeMatch(JSON.parse(row.facts_json));
-    if (m.participants.some((p) => p.user_id === userId && p.eligible))
+    if (m.completed_at > cutoff && m.participants.some((p) => p.user_id === userId && p.eligible))
       counts[m.game] = (counts[m.game] || 0) + 1;
   }
   // Count each settled trading day once, including numeric forecasts; revisions
@@ -91,7 +93,8 @@ function progressCounts(db, userId) {
     'SELECT l.round_id FROM ' +
     table +
     " l JOIN market_rounds r ON r.id=l.round_id AND r.result_revision=l.revision WHERE l.user_id=? AND l.kind='award' " +
-    (hasVoid ? ' AND r.void_at IS NULL' : '');
+    (hasVoid ? ' AND r.void_at IS NULL' : '') +
+    ' AND (SELECT s.created_at FROM market_settlements s WHERE s.round_id=l.round_id AND s.revision=l.revision)>?';
   const market = db
     .prepare(
       'SELECT COUNT(DISTINCT round_id) n FROM (' +
@@ -99,7 +102,7 @@ function progressCounts(db, userId) {
         (hasCurve ? ' UNION ' + select('market_curve_ledger') : '') +
         ')',
     )
-    .get(...(hasCurve ? [userId, userId] : [userId]));
+    .get(...(hasCurve ? [userId, cutoff, userId, cutoff] : [userId, cutoff]));
   counts.market = market.n;
   return counts;
 }
@@ -110,7 +113,7 @@ function marketCountertrend(db, userId, roundId = null, revision = null) {
   const select = (table, points) =>
     'SELECT l.round_id,l.revision,l.user_id,' +
     points +
-    ' AS points FROM ' +
+    ' AS points,(SELECT s.created_at FROM market_settlements s WHERE s.round_id=l.round_id AND s.revision=l.revision) AS settled_at FROM ' +
     table +
     " l JOIN market_rounds r ON r.id=l.round_id WHERE l.kind='award' " +
     (roundId
@@ -133,6 +136,7 @@ function marketCountertrend(db, userId, roundId = null, revision = null) {
   return [...groups.values()]
     .filter(
       (rows) =>
+        rows[0].settled_at > resetCutoff(db, userId) &&
         rows.length >= 3 &&
         rows.some((r) => r.user_id === userId && r.points > 0) &&
         rows.filter((r) => r.points < 0).length > rows.length / 2,
@@ -142,6 +146,9 @@ function marketCountertrend(db, userId, roundId = null, revision = null) {
 function refreshMilestones(store, userId, at = new Date().toISOString()) {
   if (!store.db.prepare('SELECT 1 FROM users WHERE id=? AND disabled=0').get(userId)) return {};
   const counts = progressCounts(store.db, userId);
+  for (const background of require('../../public/shared/lobby-backgrounds.json'))
+    if (background.achievementId && (counts[background.game] || 0) >= background.target)
+      store.insert.run(userId, background.achievementId, 'background:' + background.id, at);
   for (const e of marketCountertrend(store.db, userId))
     store.insert.run(
       userId,
@@ -158,6 +165,11 @@ function refreshMilestones(store, userId, at = new Date().toISOString()) {
         store.insert.run(userId, game + '-' + suffix, 'milestone:' + game + ':' + threshold, at);
   if (Object.values(counts).filter((n) => n > 0).length >= 2)
     store.insert.run(userId, 'all-two-tables', 'milestone:all:2', at);
+  if (
+    Object.entries(counts).filter(([game, n]) => !['trpg', 'market'].includes(game) && n > 0)
+      .length >= 3
+  )
+    store.insert.run(userId, 'all-three-games', 'milestone:all:3', at);
   return counts;
 }
 function recordMatch(store, input) {
@@ -180,6 +192,7 @@ function recordMatch(store, input) {
       .run(match.id, match.game, match.completed_at, match.purpose, hash, text);
     const awards = [];
     for (const p of match.participants) {
+      if (match.completed_at <= resetCutoff(store.db, p.user_id)) continue;
       if (
         !p.eligible ||
         !store.db.prepare('SELECT 1 FROM users WHERE id=? AND disabled=0').get(p.user_id)
@@ -205,6 +218,7 @@ function earnedRewardId(store, userId, reward) {
   return legacy ? reward.legacyAchievementId : null;
 }
 function rewardList(store, userId) {
+  const redemption = require('./redemption').redeemedAt(store.db, userId, 'frames');
   const claimed = new Map(
     store.db
       .prepare('SELECT frame_id,claimed_at FROM user_cosmetic_rewards WHERE user_id=?')
@@ -213,14 +227,15 @@ function rewardList(store, userId) {
   );
   return rewards.map((r) => ({
     ...r,
-    earned: !!earnedRewardId(store, userId, r),
-    claimedAt: claimed.get(r.frameId) || null,
+    earned: !!redemption || !!earnedRewardId(store, userId, r),
+    claimedAt: claimed.get(r.frameId) || redemption || null,
   }));
 }
 function assertFrame(store, userId, id) {
   const reward = rewards.find((r) => r.frameId === id);
   if (
     reward &&
+    !require('./redemption').redeemedAt(store.db, userId, 'frames') &&
     !store.db
       .prepare('SELECT 1 FROM user_cosmetic_rewards WHERE user_id=? AND frame_id=?')
       .get(userId, id)
@@ -230,6 +245,7 @@ function assertFrame(store, userId, id) {
 function claimReward(store, userId, frameId) {
   const reward = rewards.find((r) => r.frameId === frameId);
   if (!reward) throw new HttpError(400, 'INVALID_REWARD', '找不到這個成就獎勵');
+  if (require('./redemption').redeemedAt(store.db, userId, 'frames')) return store.list(userId);
   transaction(store.db, () => {
     refreshMilestones(store, userId);
     if (
@@ -289,9 +305,11 @@ function validateRewardsDatabase(db) {
         c = getCounts(row.user_id);
       if (game === 'all') {
         if (
-          n !== '2' ||
-          row.achievement_id !== 'all-two-tables' ||
-          Object.values(c).filter((v) => v > 0).length < 2
+          !['2', '3'].includes(n) ||
+          row.achievement_id !== (n === '2' ? 'all-two-tables' : 'all-three-games') ||
+          Object.entries(c).filter(
+            ([type, value]) => value > 0 && (n === '2' || !['market', 'trpg'].includes(type)),
+          ).length < Number(n)
         )
           bad();
       } else if (
@@ -312,6 +330,19 @@ function validateRewardsDatabase(db) {
       !Number.isSafeInteger(Number(rev)) ||
       Number(rev) < 1 ||
       !marketCountertrend(db, row.user_id, id, Number(rev)).length
+    )
+      bad();
+  }
+  for (const row of db
+    .prepare("SELECT * FROM user_achievements WHERE source_key LIKE 'background:%'")
+    .iterate()) {
+    const background = require('../../public/shared/lobby-backgrounds.json').find(
+      (item) => item.id === row.source_key.slice(11),
+    );
+    if (
+      !background ||
+      row.achievement_id !== background.achievementId ||
+      (getCounts(row.user_id)[background.game] || 0) < background.target
     )
       bad();
   }

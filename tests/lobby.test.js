@@ -2,6 +2,32 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createLobby } = require('../src/rooms/lobby');
 
+test('random teleport moves only the caller, stops walking and publishes a new entrance revision to peers', () => {
+  let time = 1000;
+  const lobby = createLobby(
+    () => time,
+    (id) => '/character/' + id,
+    () => 0,
+  );
+  const alice = { id: 'alice', display_name: 'A' },
+    bob = { id: 'bob', display_name: 'B' };
+  lobby.view(alice);
+  const before = lobby.view(bob).visitors.find((v) => v.id === 'bob');
+  const first = lobby.teleport(alice, 'sparks').visitors.find((v) => v.id === 'alice');
+  assert.equal(first.teleportId, 1);
+  assert.equal(first.moving, false);
+  assert.equal(first.remainingMs, 0);
+  assert.equal(first.entrance, 'sparks');
+  assert.ok(first.x >= 6 && first.x <= 74 && first.y >= 40 && first.y <= 93);
+  time += 100;
+  const observed = lobby.view(bob);
+  assert.equal(observed.visitors.find((v) => v.id === 'alice').teleportId, 1);
+  assert.equal(observed.visitors.find((v) => v.id === 'bob').x, before.x);
+  const second = lobby.teleport(alice, 'sparks').visitors.find((v) => v.id === 'alice');
+  assert.equal(second.teleportId, 2);
+  assert.notEqual(second.x, first.x);
+});
+
 test('click destinations advance at bounded speed and emotes expire for other visitors', () => {
   let time = 1000;
   const lobby = createLobby(() => time);
@@ -129,4 +155,42 @@ test('entrance effect is remembered per visitor and only allows known effects', 
   lobby.view(alice, { entrance: '<script>' });
   lobby.view(alice);
   assert.equal(entrance(), 'particles');
+});
+
+test('lobby background is shared and a global cooldown prevents alternating users bypassing it', () => {
+  let now = 1000;
+  const lobby = createLobby(() => now),
+    a = { id: 'a', display_name: 'A' },
+    b = { id: 'b', display_name: 'B' };
+  lobby.changeBackground(a, { id: 'castle' });
+  assert.equal(lobby.view(b).background.id, 'castle');
+  assert.throws(
+    () => lobby.changeBackground(b, { id: 'default' }),
+    (error) => error.status === 429,
+  );
+  assert.throws(
+    () => lobby.changeBackground(b, { id: 'unknown' }),
+    (error) => error.status === 400,
+  );
+  const copy = lobby.view(b).background;
+  copy.id = 'default';
+  assert.equal(lobby.view(a).background.id, 'castle');
+  now += 29999;
+  assert.throws(
+    () => lobby.changeBackground(b, { id: 'default' }),
+    (error) => error.status === 429,
+  );
+  now += 1;
+  lobby.changeBackground(b, { id: 'default' });
+  assert.equal(lobby.view(a).background.id, 'default');
+});
+
+test('removed pool and afternoon garden backgrounds cannot be selected', () => {
+  const lobby = createLobby(() => 1000),
+    user = { id: 'a', display_name: 'A' };
+  for (const id of ['pool', 'garden-day'])
+    assert.throws(
+      () => lobby.changeBackground(user, { id }),
+      (error) => error.status === 400,
+    );
 });

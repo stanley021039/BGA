@@ -1,3 +1,4 @@
+import backgrounds from '../../../public/shared/lobby-backgrounds.json';
 import { readBarrages, type BarrageEvent } from './social';
 import { array, record, text } from '../services/validation';
 import { isGameType, type GameType } from './room';
@@ -32,6 +33,7 @@ export interface LobbyVisitor {
   targetX: number;
   targetY: number;
   moveId: number;
+  teleportId: number;
   remainingMs: number;
   moving: boolean;
   facing: 'left' | 'right';
@@ -39,6 +41,7 @@ export interface LobbyVisitor {
   entrance: EntranceEffectId;
 }
 export interface LobbySnapshot {
+  background: { id: string; changedAt: number; nextChangeAt: number };
   barrages: BarrageEvent[];
   selfId: string;
   serverNow: number;
@@ -138,6 +141,10 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       targetX: Number(item.targetX),
       targetY: Number(item.targetY),
       moveId: Number(item.moveId),
+      teleportId:
+        Number.isSafeInteger(item.teleportId) && Number(item.teleportId) >= 0
+          ? Number(item.teleportId)
+          : 0,
       remainingMs: item.remainingMs,
       moving: item.moving,
       facing: item.facing as 'left' | 'right',
@@ -159,6 +166,14 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       }),
     ),
     selfId: text(row.selfId),
+    background: (() => {
+      const bg = record(row.background || {});
+      return {
+        id: backgrounds.some((item) => item.id === bg.id) ? String(bg.id) : 'default',
+        changedAt: finite(bg.changedAt) ? bg.changedAt : 0,
+        nextChangeAt: finite(bg.nextChangeAt) ? bg.nextChangeAt : 0,
+      };
+    })(),
     serverNow: row.serverNow,
     visitors,
     pingContext: readPingContext(row.pingContext),

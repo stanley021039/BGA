@@ -34,14 +34,14 @@ function resolve(r, p) {
   act(r, r.dj(), 'place', { slot });
   for (const q of p) if (q !== r.dj()) act(r, q, 'pass');
 }
-test('ten unique opaque song-title options are stable, shared, and reveal neither artist nor correctness', () => {
+test('six unique opaque song-title options are stable, shared, and reveal neither artist nor correctness', () => {
   const { r, p } = setup();
   assert.deepEqual(r.view(p[0].id).introChoices, []);
   act(r, r.dj(), 'listen');
   const a = r.view(p[0].id),
     b = r.view(p[1].id);
-  assert.equal(a.introChoices.length, 10);
-  assert.equal(new Set(a.introChoices.map((x) => normalize(x.title))).size, 10);
+  assert.equal(a.introChoices.length, 6);
+  assert.equal(new Set(a.introChoices.map((x) => normalize(x.title))).size, 6);
   assert.deepEqual(a.introChoices, b.introChoices);
   assert.deepEqual(a.introChoices, r.view(p[0].id).introChoices);
   assert.equal(a.introChoices.filter((x) => x.title === r.current.title).length, 1);
@@ -104,7 +104,7 @@ test('free text, fabricated choice IDs and previous-round requests cannot earn p
     (e) => e.code === 'INVALID_CHOICE',
   );
 });
-test('tiny custom pools still offer ten choices, token cap and timeout preserve flow', () => {
+test('tiny custom pools still offer six choices, token cap and timeout preserve flow', () => {
   const { r } = setup(1);
   const custom = new MusicQuizRoom('CUSTOM', 'custom', () => 0),
     q = custom.add('p');
@@ -120,7 +120,7 @@ test('tiny custom pools still offer ten choices, token cap and timeout preserve 
   });
   custom.start();
   act(custom, q, 'listen');
-  assert.equal(custom.view(q.id).introChoices.length, 10);
+  assert.equal(custom.view(q.id).introChoices.length, 6);
   q.tokens = 5;
   act(custom, q, 'guess', { choiceId: custom.correctChoiceId });
   resolve(custom, [q]);

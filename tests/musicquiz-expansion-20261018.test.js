@@ -50,7 +50,7 @@ test('YUI songs use her official channel, documented original release years, and
   for (const title of yuiTitles) {
     const s = CATALOG.find((s) => s.artist === 'YUI' && s.title === title);
     assert.ok(s, title);
-    assert.equal(s.bank, 'jp');
+    assert.equal(s.bank, s.genres.includes('動漫') ? 'anime' : 'jp');
     assert.equal(s.metadataAuthor, 'YUI OFFICIAL YouTube CHANNEL');
     assert.match(s.yearSource, /^https:\/\/www.sonymusic.co.jp\/artist\/Yui\/discography\//);
     assert.ok(s.year >= 2005 && s.year <= 2011);

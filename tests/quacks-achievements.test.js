@@ -243,3 +243,17 @@ test('rat marks repeat at even scores and actual droplet is separate from round 
     assert.equal(a.rat, expected);
   }
 });
+
+test('two explosions in the same completed match award the paired sound achievement', (t) => {
+  const { r, a, store, ids } = fixture(t);
+  r.quacksAchievements.explosion(a);
+  r.quacksAchievements.explosion(a);
+  play(r);
+  assert.equal(r.quacksAchievements.completed.participants[0].doubleExplosion, true);
+  store.awardQuacksFinish(r);
+  const achievement = store
+    .list(ids[0])
+    .achievements.find((item) => item.id === 'quacks-double-explosion');
+  assert.ok(achievement.unlockedAt);
+  assert.equal(achievement.rewardLabels.filter((label) => label.startsWith('音效：')).length, 2);
+});

@@ -23,6 +23,7 @@ import {
 import type { InteractionSource } from '../services/interaction-source';
 import type { BarrageEvent } from '../contracts/social';
 import { entranceEffect } from '../services/entrance-effects';
+import { useLobbyBackgroundStore } from './lobby-background';
 
 export const useLobbyStore = defineStore('lobby', () => {
   const session = useSessionStore();
@@ -40,6 +41,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     expressionsReady = ref(false),
     entryPending = ref(false),
     emotePending = ref(false),
+    teleportPending = ref(false),
     positionReset = ref(0),
     roomRevision = ref(0);
   const destination = shallowRef<{ x: number; y: number } | null>(null);
@@ -131,6 +133,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     if (snapshot.value && next.serverNow < snapshot.value.serverNow) return;
     const first = !snapshot.value;
     snapshot.value = next;
+    useLobbyBackgroundStore().receive(next.background);
     // The expression menu opens instantly once the lobby has settled.
     if (first) whenIdle(() => void warmExpressions());
     const present = new Set(next.visitors.map((visitor) => visitor.id));
@@ -146,6 +149,26 @@ export const useLobbyStore = defineStore('lobby', () => {
       Math.hypot(own.x - destination.value.x, own.y - destination.value.y) < 1
     )
       destination.value = null;
+  }
+  async function teleport() {
+    if (!connected.value || teleportPending.value || disposed) return;
+    teleportPending.value = true;
+    queued = null;
+    destination.value = null;
+    if (presenceTimer) clearTimeout(presenceTimer);
+    const epoch = generation,
+      account = identity.value;
+    try {
+      await presenceJob;
+      if (!current(epoch, account)) return;
+      consume(await request('/api/lobby/teleport', { entrance: entranceEffect.value }));
+    } catch (error) {
+      if (current(epoch, account))
+        presenceStatus.value = error instanceof Error ? error.message : '暫時無法隨機移動';
+    } finally {
+      teleportPending.value = false;
+      if (current(epoch, account)) schedulePresence(200);
+    }
   }
   function clearTimers() {
     if (presenceTimer) clearTimeout(presenceTimer);
@@ -167,7 +190,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       queued = target;
       destination.value = target;
     }
-    if (presenceJob || emotePending.value) return presenceJob;
+    if (presenceJob || emotePending.value || teleportPending.value) return presenceJob;
     if (presenceTimer) clearTimeout(presenceTimer);
     presenceTimer = null;
     const epoch = generation,
@@ -350,23 +373,11 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
   }
   async function enter(
-    options:
-      { code: string } | { type: GameType; roomName: string; seconds: number; rounds: number },
+    options: { code: string } | { type: GameType; roomName: string },
   ): Promise<boolean> {
     if (entryPending.value || !identity.value) return false;
     if ('code' in options && !/^[a-f0-9]{6}$/i.test(options.code.trim())) {
       entryStatus.value = '請輸入正確的 6 碼房間代碼。';
-      return false;
-    }
-    if (
-      'type' in options &&
-      options.type === 'draw' &&
-      (![60, 90, 120].includes(options.seconds) ||
-        !Number.isInteger(options.rounds) ||
-        options.rounds < 1 ||
-        options.rounds > 64)
-    ) {
-      entryStatus.value = '作畫時間需為 60、90、120 秒，總題數需為 1–64 題。';
       return false;
     }
     entryPending.value = true;
@@ -380,7 +391,7 @@ export const useLobbyStore = defineStore('lobby', () => {
             type: options.type,
             roomName: options.roomName.trim().slice(0, 24),
             ...(options.type === 'draw'
-              ? { seconds: options.seconds, ending: { mode: 'rounds', value: options.rounds } }
+              ? { seconds: 60, ending: { mode: 'rounds', value: 8 } }
               : {}),
           };
     try {
@@ -536,11 +547,13 @@ export const useLobbyStore = defineStore('lobby', () => {
     expressionsReady,
     entryPending,
     emotePending,
+    teleportPending,
     positionReset,
     roomRevision,
     destination,
     interaction: markRaw(interaction),
     move,
+    teleport,
     sync,
     refreshRooms,
     loadExpressions,

@@ -19,7 +19,7 @@ class MusicQuizRoom extends PartyRoom {
     super('musicquiz', code, name, 8, 1, rng, now);
     Object.assign(this, {
       settings: {
-        banks: ['zh', 'tw', 'jp', 'kr', 'yue', 'viral', 'en', 'foreign'],
+        banks: ['zh', 'tw', 'jp', 'anime', 'kr', 'yue', 'viral', 'en', 'foreign'],
         genres: [],
         target: 10,
         introSeconds: 8,
@@ -226,9 +226,9 @@ class MusicQuizRoom extends PartyRoom {
     const preferred = unique.filter((t) => sameBank.has(t)),
       rest = unique.filter((t) => !sameBank.has(t));
     for (const group of [preferred, rest])
-      while (group.length && titles.length < 10)
+      while (group.length && titles.length < 6)
         titles.push(group.splice(this.random(group.length), 1)[0]);
-    if (titles.length !== 10) fail('NOT_ENOUGH_CHOICES', '歌名選項不足10個', 400);
+    if (titles.length !== 6) fail('NOT_ENOUGH_CHOICES', '歌名選項不足6個', 400);
     const options = titles.map((title) => ({
       id: randomUUID(),
       title,
@@ -362,7 +362,7 @@ class MusicQuizRoom extends PartyRoom {
         if (this.phase !== 'pick') fail('INVALID_PHASE', '已開始聆聽');
         this.phase = 'intro';
         this.deadline = this.now() + 30000;
-        this.event('intro', '聽8秒前奏；30秒內從10個歌名選1個，或略過。');
+        this.event('intro', '聽8秒前奏；30秒內從6個歌名選1個，或略過。');
       } else if (action === 'guess') {
         if (this.phase !== 'intro' || this.now() >= this.deadline)
           fail('INVALID_PHASE', '前奏已結束');

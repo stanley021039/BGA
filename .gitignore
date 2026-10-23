@@ -23,3 +23,5 @@ Thumbs.db
 PERMANENT-MEMORY.md
 /local-audio/
 /audio-exports/
+
+# Guess-song source audio and exports stay local; UI sounds and opening clips are tracked.

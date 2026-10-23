@@ -9,6 +9,9 @@ function fixture({
   blocked = false,
   animationError = false,
   entryEnabled = true,
+  withAudio = false,
+  audioBlocked = false,
+  effectsEnabled = true,
 } = {}) {
   const { document } = dom(
     '<main><figure id="authArtwork"><img src="/assets/auth/login-576.webp"></figure><form><button>登入</button></form></main>',
@@ -38,8 +41,24 @@ function fixture({
   };
   const timers = new Map(),
     storage = new Map(),
-    events = new Map();
+    events = new Map(),
+    sounds = [];
   const window = {
+    AudioSettings: withAudio
+      ? {
+          playEffect(kind, options) {
+            if (!effectsEnabled) return;
+            const sound = { kind, stopped: false };
+            sounds.push(sound);
+            if (audioBlocked && sounds.length === 1) options.onError();
+            return sound;
+          },
+          stopEffect(sound) {
+            sound.stopped = true;
+            return true;
+          },
+        }
+      : undefined,
     EntryPreferences: { get: () => ({ enabled: entryEnabled }) },
     innerWidth: 1920,
     innerHeight: 1080,
@@ -68,6 +87,7 @@ function fixture({
     },
   });
   return {
+    sounds,
     document,
     image,
     storage,
@@ -147,6 +167,43 @@ test('blocked storage and unavailable animation still complete, and failed navig
   [...f.timers.values()].find((t) => t.delay === 10000).fn();
   assert.equal(f.document.documentElement.classList.contains('entry-auth-playing'), false);
   assert.equal(f.document.querySelector('.entry-auth-skip'), null);
+});
+
+test('successful auth entrance plays its cue once and stops it when skipped', async () => {
+  const f = fixture({ withAudio: true });
+  const playing = f.start();
+  assert.equal(f.sounds.length, 1);
+  assert.equal(f.sounds[0].kind, 'entry-intro');
+  assert.equal(f.start(), playing);
+  assert.equal(f.sounds.length, 1);
+  f.document.querySelector('.entry-auth-skip').dispatch('click');
+  await playing;
+  assert.equal(f.sounds[0].stopped, true);
+});
+
+test('auth entrance preserves mute and stops audio on pagehide', () => {
+  const muted = fixture({ withAudio: true, effectsEnabled: false });
+  muted.start();
+  assert.equal(muted.sounds.length, 0);
+  const playing = fixture({ withAudio: true });
+  playing.start();
+  playing.events.get('pagehide')();
+  assert.equal(playing.sounds[0].stopped, true);
+  assert.equal(playing.document.querySelector('.entry-auth-sound'), null);
+});
+
+test('blocked auth entrance audio offers a gesture retry without stalling navigation', async () => {
+  const f = fixture({ withAudio: true, audioBlocked: true });
+  const playing = f.start();
+  const retry = f.document.querySelector('.entry-auth-sound');
+  assert.equal(retry.hidden, false);
+  retry.dispatch('click');
+  assert.equal(retry.hidden, true);
+  assert.equal(f.sounds.length, 2);
+  assert.equal(f.sounds[0].stopped, true);
+  [...f.timers.values()].find((timer) => timer.delay === 2300).fn();
+  await playing;
+  assert.equal(f.sounds[1].stopped, true);
 });
 
 test('disabled entry returns immediately without hiding auth UI, creating timers or completion records', async () => {

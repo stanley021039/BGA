@@ -1,6 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { createHash } = require('node:crypto');
 const vm = require('node:vm');
 const { withEntryIntro } = require('../src/http/entry-intro');
 const { dom } = require('./helpers/widget-dom.cjs');
@@ -18,9 +19,10 @@ function fixture({
   navigationType = 'navigate',
   navigationAvailable = true,
   navigationError = false,
+  withAudio = false,
 } = {}) {
   const { document } = dom(
-    '<button id="before">Before</button><dialog id="entry-intro" open><div class="entry-intro-art"><img></div><button>略過開場</button></dialog>',
+    '<button id="before">Before</button><dialog id="entry-intro" open><div class="entry-intro-art"><img></div><button>略過開場</button><button class="entry-intro-sound" hidden>播放入場音效</button></dialog>',
   );
   document.documentElement = document.createElement('html');
   document.readyState = loading ? 'loading' : 'complete';
@@ -82,8 +84,23 @@ function fixture({
       events.set(type, callback);
     },
   };
+  const sounds = [];
+  if (withAudio)
+    window.AudioSettings = {
+      get: () => ({ effects: { enabled: true, volume: 0.25 } }),
+      playEffect(kind) {
+        const sound = { kind };
+        sounds.push(sound);
+        return sound;
+      },
+      stopEffect(sound) {
+        sound.stopped = true;
+        return true;
+      },
+    };
   vm.runInNewContext(fs.readFileSync('public/shared/entry-intro.js', 'utf8'), {
     window,
+    Audio: withAudio ? class Audio {} : undefined,
     document,
     URL,
     location: { pathname: '/', search: '' },
@@ -114,6 +131,7 @@ function fixture({
     preferences,
     events,
     timers,
+    sounds,
     observer,
     get disconnected() {
       return disconnected;
@@ -143,6 +161,26 @@ test('entry decoration preserves Vue/legacy markup and adds one external bootstr
     assert.equal(withEntryIntro(result), result);
   }
   assert.equal(withEntryIntro('<main>not a document</main>'), '<main>not a document</main>');
+});
+test('the entrance cue plays with the animation and stops when it closes', () => {
+  const f = fixture({ withAudio: true });
+  assert.deepEqual(
+    f.sounds.map((sound) => sound.kind),
+    ['entry-intro'],
+  );
+  f.finish();
+  assert.equal(f.sounds[0].stopped, true);
+  assert.equal(
+    fixture({ withAudio: true, completed: { at: Date.now(), path: '/' } }).sounds.length,
+    0,
+  );
+});
+test('the supplied entrance recording is unchanged', () => {
+  const manifest = JSON.parse(
+    fs.readFileSync('public/assets/game-sounds/entry-intro-user-manifest.json'),
+  );
+  const bytes = fs.readFileSync('public/assets/game-sounds/' + manifest.file);
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), manifest.sha256);
 });
 
 test('auth page stays visible; destination consumes completion once without replaying', () => {

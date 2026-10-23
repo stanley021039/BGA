@@ -16,6 +16,7 @@ const ENTRANCE_EFFECTS = new Set([
   'runes',
   'rift',
   'particles',
+  ...require('../../public/shared/entrance-requirements.json').map((effect) => effect.id),
 ]);
 const PRESENCE_MS = 15000,
   EMOTE_MS = 5000,
@@ -23,7 +24,12 @@ const PRESENCE_MS = 15000,
 const WALK_X_PER_SECOND = 12,
   WALK_Y_PER_SECOND = 16;
 
-function createLobby(now = () => Date.now(), portrait = (userId) => `/characters/${userId}`) {
+function createLobby(
+  now = () => Date.now(),
+  portrait = (userId) => `/characters/${userId}`,
+  random = Math.random,
+) {
+  let background = { id: 'default', changedAt: now(), nextChangeAt: 0 };
   const visitors = new Map(),
     barrages = [],
     receipts = new Map();
@@ -60,6 +66,7 @@ function createLobby(now = () => Date.now(), portrait = (userId) => `/characters
         targetX: x,
         targetY: y,
         moveId: 0,
+        teleportId: 0,
         updatedAt: time,
         facing: 'right',
       };
@@ -76,6 +83,7 @@ function createLobby(now = () => Date.now(), portrait = (userId) => `/characters
     for (const visitor of visitors.values()) advance(visitor, time);
     return {
       selfId: user.id,
+      background: { ...background },
       barrages: barrages.filter((event) => time - event.at < 8000),
       visitors: [...visitors.values()].map((visitor) => ({
         id: visitor.id,
@@ -85,6 +93,7 @@ function createLobby(now = () => Date.now(), portrait = (userId) => `/characters
         targetX: visitor.targetX,
         targetY: visitor.targetY,
         moveId: visitor.moveId,
+        teleportId: visitor.teleportId,
         remainingMs: Math.ceil(
           Math.hypot(
             (visitor.targetX - visitor.x) / WALK_X_PER_SECOND,
@@ -189,7 +198,52 @@ function createLobby(now = () => Date.now(), portrait = (userId) => `/characters
     for (const visitor of visitors.values())
       if (visitor.emote?.image?.split('?')[0] === image) delete visitor.emote;
   }
-  return { view, move, emote, barrage, mediaAudience, rename, clearExpression };
+  function teleport(user, entrance) {
+    const visitor = enter(user, entrance);
+    // Open gutters and the lower floor keep arrivals clear of the game carousel.
+    const zones = [
+      [6, 18, 45, 76],
+      [66, 74, 40, 75],
+      [8, 70, 82, 93],
+    ];
+    const zone = zones[Math.min(2, Math.floor(random() * zones.length))];
+    let x = zone[0] + random() * (zone[1] - zone[0]),
+      y = zone[2] + random() * (zone[3] - zone[2]);
+    if (Math.hypot(x - visitor.x, y - visitor.y) < 2) x = x + 3 <= zone[1] ? x + 3 : x - 3;
+    visitor.x = visitor.targetX = x;
+    visitor.y = visitor.targetY = y;
+    visitor.updatedAt = now();
+    visitor.moveId++;
+    visitor.teleportId++;
+    return view(user);
+  }
+  function changeBackground(user, input) {
+    if (
+      !require('../../public/shared/lobby-backgrounds.json').some((item) => item.id === input?.id)
+    )
+      throw new HttpError(400, 'INVALID_BACKGROUND', '請選擇可用的大廳背景');
+    if (input.id === background.id) return view(user);
+    const time = now();
+    if (time < background.nextChangeAt)
+      throw new HttpError(429, 'BACKGROUND_COOLDOWN', '大廳背景每 30 秒只能更換一次');
+    background = {
+      id: input.id,
+      changedAt: Math.max(time, background.changedAt + 1),
+      nextChangeAt: time + 30000,
+    };
+    return view(user);
+  }
+  return {
+    view,
+    move,
+    emote,
+    barrage,
+    mediaAudience,
+    rename,
+    clearExpression,
+    changeBackground,
+    teleport,
+  };
 }
 
 module.exports = { createLobby };

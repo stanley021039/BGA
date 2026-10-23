@@ -42,9 +42,41 @@ async function fixture(t) {
 const routes = [
   ['/api/lobby', 'GET'],
   ['/api/lobby/move', 'POST'],
+  ['/api/lobby/teleport', 'POST'],
   ['/api/lobby/emotes', 'GET'],
   ['/api/lobby/emote', 'POST'],
 ];
+
+test('teleport uses the authenticated caller, chooses its own destination and enforces entrance ownership', async (t) => {
+  const f = await fixture(t),
+    before = (await f.get('/api/lobby')).body;
+  const response = await f.post('/api/lobby/teleport', {
+    userId: 'another-player',
+    x: 0,
+    y: 0,
+    entrance: 'stitch-minazuki',
+  });
+  assert.equal(response.status, 200);
+  assert.equal(response.body.selfId, before.selfId);
+  const own = response.body.visitors.find((visitor) => visitor.id === before.selfId);
+  assert.equal(own.teleportId, 1);
+  assert.equal(own.entrance, 'classic');
+  assert.ok(own.x > 0 && own.y > 0);
+  assert.equal((await f.request('/api/lobby/teleport', { method: 'POST', body: {} })).status, 401);
+});
+
+test('new cosmetics are enforced by the server and website opening stays separate from avatar entrance', async (t) => {
+  const f = await fixture(t);
+  assert.equal((await f.post('/api/lobby/background', { id: 'garden' })).status, 403);
+  assert.equal((await f.post('/api/lobby/background', { id: 'castle' })).status, 200);
+  assert.equal((await f.post('/api/lobby/background', { id: 'default' })).status, 429);
+  const locked = await f.get('/api/lobby?entrance=stitch-senbonzakura');
+  assert.ok(locked.body.visitors.every((visitor) => visitor.entrance === 'classic'));
+  assert.equal((await f.get('/api/profile/opening')).body.theme, 'default');
+  assert.equal((await f.post('/api/profile/opening', { theme: 'soul-world' })).status, 403);
+  assert.equal((await f.post('/api/profile/opening', { theme: 'unknown' })).status, 400);
+  assert.equal((await f.request('/api/profile/opening')).status, 401);
+});
 
 test('lobby HTTP keeps authentication, parsing, method fallthrough and exact paths', async (t) => {
   const f = await fixture(t);
@@ -104,6 +136,7 @@ test('lobby HTTP preserves view, move, options, expression validation and cooldo
   assert.equal(view.status, 200);
   assert.equal(view.body.selfId, f.owner.body.id);
   assert.deepEqual(Object.keys(view.body).sort(), [
+    'background',
     'barrages',
     'pingContext',
     'selfId',

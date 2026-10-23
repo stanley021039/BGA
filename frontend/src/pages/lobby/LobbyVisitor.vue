@@ -43,9 +43,9 @@ let disposed = false,
   observer: ResizeObserver | null = null,
   stopArrival: (() => void) | null = null;
 watch(
-  () => props.arrive,
-  async (value) => {
-    if (!value) return;
+  [() => props.arrive, () => props.visitor.teleportId],
+  async ([value, id], previous) => {
+    if (!value && !(previous && id > 0 && id !== previous[1])) return;
     await nextTick();
     const layer = node.value?.closest<HTMLElement>('.lobby-backdrop');
     if (
@@ -72,18 +72,18 @@ function positionBubble() {
     half = speech.value.offsetWidth / 2;
   if (!stage) return;
   if (props.message) {
-    const width = document.documentElement.clientWidth,
-      height = window.innerHeight;
+    const width = stage.width;
     const center = box.left + box.width / 2;
-    const safe = Math.max(half + 24, Math.min(width - half - 24, center));
-    const above = box.top - 72,
-      below = height - box.bottom - 16;
+    const safe = Math.max(half + 16, Math.min(width - half - 16, center - stage.left));
+    const above = box.top - stage.top - 24,
+      below = stage.bottom - box.bottom - 24;
     bubbleBelow.value = speech.value.scrollHeight > above && below > above;
     bubbleHeight.value = Math.max(60, bubbleBelow.value ? below : above) + 'px';
     messageLeft.value = safe + 'px';
-    messageTop.value = (bubbleBelow.value ? box.bottom + 10 : box.top - 10) + 'px';
-    messageOnscreen.value = box.bottom > 0 && box.top < height && box.right > 0 && box.left < width;
-    tailShift.value = center - safe + 'px';
+    messageTop.value =
+      (bubbleBelow.value ? box.bottom - stage.top + 18 : box.top - stage.top - 18) + 'px';
+    messageOnscreen.value = box.bottom > stage.top && box.top < stage.bottom;
+    tailShift.value = center - stage.left - safe + 'px';
     return;
   }
   const center = box.left + box.width / 2,
@@ -121,10 +121,11 @@ watch(
   { immediate: true, flush: 'post' },
 );
 watch(
-  [() => props.visitor.moveId, () => props.reset],
+  [() => props.visitor.moveId, () => props.reset, () => props.visitor.teleportId],
   async (_, previous) => {
     const epoch = ++revision,
-      initial = !previous || previous[1] !== props.reset;
+      initial =
+        !previous || previous[1] !== props.reset || previous[2] !== props.visitor.teleportId;
     if (initial) {
       placing.value = true;
       duration.value = 0;
@@ -208,14 +209,14 @@ window.addEventListener('resize', positionBubble);
       '--lobby-move-duration': duration + 'ms',
     }"
     :data-ping-player="visitor.id"
-    :aria-label="self ? visitor.name + '（你），對話或發表情' : undefined"
+    :aria-label="self ? visitor.name + '（你），點一下發表情，R 鍵隨機換位' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"
     @click.stop="self && node && emit('select', node)"
     @transitionrun="transition"
   >
-    <Teleport to="body"
+    <Teleport to=".lobby-backdrop"
       ><div
         v-if="message"
         :key="message.id"

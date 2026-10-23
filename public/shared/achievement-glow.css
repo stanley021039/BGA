@@ -1,0 +1,26 @@
+/* Earned and collected borders stay luminous, including when motion is reduced. */
+.achievements-page .achievement-card.unlocked,
+.achievements-page .achievement-reward-card.unlocked {
+  border: 2px solid #edbd50;
+  box-shadow:
+    0 0 0 1px #ffe4a0aa,
+    inset 0 0 16px #efb93625,
+    0 0 14px #e9ad4555;
+}
+.achievements-page .achievement-card.unlocked .achievement-mark {
+  box-shadow: 0 0 12px #f6c65588;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.motion-reduced) .achievements-page .achievement-card.unlocked,
+  html:not(.motion-reduced) .achievements-page .achievement-reward-card.unlocked {
+    animation: achievement-border-glow 1.8s ease-in-out 2;
+  }
+}
+@keyframes achievement-border-glow {
+  50% {
+    box-shadow:
+      0 0 0 1px #fff0bb,
+      inset 0 0 20px #ffd15a40,
+      0 0 24px #ffc44c99;
+  }
+}

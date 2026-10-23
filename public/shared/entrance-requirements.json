@@ -1,0 +1,122 @@
+[
+  {
+    "id": "stitch-senbonzakura",
+    "label": "千本櫻景嚴",
+    "achievementId": "draw-fastest-correct",
+    "description": "巨刃升起，櫻色刀花環繞角色散開。"
+  },
+  {
+    "id": "stitch-hyorinmaru",
+    "label": "大紅蓮冰輪丸",
+    "achievementId": "quacks-double-explosion",
+    "description": "冰翼張開，冰晶與白霧繞身浮現。"
+  },
+  {
+    "id": "stitch-minazuki",
+    "label": "皆盡",
+    "achievementId": "bluff-convincing",
+    "description": "血幕垂落，深紅斬光交錯綻放。"
+  },
+  {
+    "id": "stitch-zanka",
+    "label": "殘火太刀",
+    "achievementId": "quacks-regular",
+    "description": "烈焰升騰，灼熱刀光劃開空間。"
+  },
+  {
+    "id": "stitch-gilgamesh",
+    "label": "王之財寶",
+    "achievementId": "poker-first-hand",
+    "description": "金色門扉展開，寶具接連射出。"
+  },
+  {
+    "id": "stitch-purple",
+    "label": "虛式「茈」",
+    "achievementId": "musicquiz-rescue",
+    "description": "紅藍光球融合，紫色能量向外爆開。"
+  },
+  {
+    "id": "stitch-blue-eyes",
+    "label": "青眼白龍",
+    "achievementId": "gift-first-gift",
+    "description": "白龍環繞，冰藍吐息照亮登場。"
+  },
+  {
+    "id": "stitch-black-coffin",
+    "label": "破道之九十·黑棺",
+    "achievementId": "bluff-regular",
+    "description": "黑棺升起，暗色長劍穿透四周。"
+  },
+  {
+    "id": "stitch-grail-mud",
+    "label": "聖杯之泥",
+    "achievementId": "minimal-first-match",
+    "description": "黑泥湧出，怨影與紅焰向上伸展。"
+  },
+  {
+    "id": "stitch-stand-fists",
+    "label": "替身 · 近身狂拳",
+    "achievementId": "thunder-first-drive",
+    "description": "替身現身，連續拳影在身邊爆發。"
+  },
+  {
+    "id": "stitch-stand-time",
+    "label": "替身 · 時之領域",
+    "achievementId": "majority-one-channel",
+    "description": "金色時鐘展開，波紋凝住周圍時間。"
+  },
+  {
+    "id": "stitch-stand-emerald",
+    "label": "替身 · 翠綠連彈",
+    "achievementId": "telephone-first-match",
+    "description": "綠色替身浮現，翡翠光彈向外散射。"
+  },
+  {
+    "id": "stitch-ulquiorra",
+    "label": "黑翼大魔 · 歸刃",
+    "achievementId": "poker-regular",
+    "description": "漆黑雙翼展開，綠色靈壓迸出。"
+  },
+  {
+    "id": "stitch-saiyan",
+    "label": "超級賽亞人",
+    "achievementId": "majority-regular",
+    "description": "金色氣焰升起，角色在光中覺醒。"
+  },
+  {
+    "id": "stitch-lightning",
+    "label": "天罰閃電",
+    "achievementId": "thunder-regular",
+    "description": "紫白雷電劈落，電光沿地面炸開。"
+  },
+  {
+    "id": "stitch-exodia",
+    "label": "黑暗大法師",
+    "achievementId": "gift-regular",
+    "description": "封印碎裂，金色魔神在光中現身。"
+  },
+  {
+    "id": "stitch-water-breathing",
+    "label": "水之呼吸",
+    "achievementId": "telephone-regular",
+    "description": "藍色水流繞身，浪花隨刀勢展開。"
+  },
+  {
+    "id": "stitch-explosion",
+    "label": "爆裂魔法",
+    "achievementId": "minimal-regular",
+    "description": "紅色法陣展開，爆裂光柱衝上天空。"
+  },
+  {
+    "id": "stitch-starburst",
+    "label": "星爆氣流斬",
+    "achievementId": "draw-regular",
+    "description": "藍綠雙劍連斬，交叉光芒瞬間爆發。"
+  },
+  {
+    "id": "stitch-black-moon",
+    "label": "月牙天沖 · 黑月",
+    "achievementId": "musicquiz-regular",
+    "description": "黑色月牙斬出，紅色雷光撕開夜幕。"
+  }
+]

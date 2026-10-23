@@ -40,7 +40,7 @@ test('all published songs have human origin, metadata identity and playable desc
     assert.ok(s.genres.length);
     assert.ok(s.highlightStart >= 0);
   }
-  assert.equal(new Set(CATALOG.map((s) => s.bank)).size, 9);
+  assert.equal(new Set(CATALOG.map((s) => s.bank)).size, 10);
 });
 test('start creates private shuffled deck, revealed anchors and random DJ independent from room management', () => {
   const { r, p } = setup();

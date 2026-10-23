@@ -4,6 +4,13 @@
 
 # 程式架構 agent 記憶
 
+2026-10-22大廳互動續修：對話入口透過GameCarousel具名slot放在開桌左側，角色只開表情，兩個獨立dialog不再顯示切換分頁。背景改用共用lobby-background store，以既有每帳號localStorage key在GamePreferences與LobbyBackdrop間同步，只提供原本／Stitch城堡；補帳號隔離及儲存拒絕回歸。登入成功動畫auth-entry先前漏接entry-intro音效，已補一次播放、靜音、略過／離頁停止與手勢重試。2558全套、66focused、Vue型別／建置通過；隔離Edge實際登入收到MP3 playing事件，並驗偏好位置／保存、獨立訊息與表情、對話在開桌左側及390px。證據見本機ignored work/lobby-settings-qa-12V5Qw（後續縮圖尺寸校正另驗），未推送／PR／部署。
+
+## 2026-10-22：本機整合 main PR #160
+
+本機功能分支已合併 origin/main 1e613a5，合併提交 91ee01e。保留新版整頁背景角色、五張遊戲輪播及七款角色入場特效，將本機個人背景選擇、WASD、分開對話／表情入口移至 LobbyBackdrop；文字泡泡傳送至同一背景層。郎中檔案與合併前本機快照一致；其餘未提交功能和音效仍保留，stash 安全快照未刪。
+
+Windows 受影響選取回退全套：2555／2555；Vue 型別、前端建置、格式及差異檢查通過。真 Edge 隔離測試驗背景重整保留、WASD、輸入及快捷鍵不誤移動、背景層對話、分開表情入口、390px 無水平溢出及無 pageerror；本機證據位於 ignored work/integration-qa-dyGkPR。舊測試啟動器漏設 frontendEnabled 已修正供下次啟動使用，現有測試服務未重啟。未推送、發 PR、部署或重設玩家資料。
 2026-10-23 #190／#192 候選2.34.1：雷霆引導路線 Map 範圍排除 SVG title／舊版延遲提示，保留一般地形／車輛說明與點選；線上／教學改為獨立 watch sources，等價 presence 不清預覽。純呈現 RaceDirections 同時供 DOM／WebGL 與結果補充，後方對應畫面左方，六方向以真引擎 neighbor 與 DOM 投影回歸，不改骰值／機率／位移。驗收、初輪 fixture 格式失敗及固定 head CI／審查界線見 [規格](../specs/RACE-GUIDANCE-DIRECTIONS-190-192.md)，未部署。
 
 2026-10-22／#176 候選2.29.0：使用者在 #175 驗收時要求網址紀錄改片名，已接續實作本機帳號隔離的十筆最近播放、點選填網址與鍵盤清單；來源為 playing 的 current，provider 名稱以 videoId 核對，缺名不覆蓋既有片名。尚未合併／部署，詳 [最近影片規格](../specs/MEDIA-RECENT-VIDEOS-176.md)，取代下筆「#176 尚未實作」狀態。
@@ -904,6 +911,17 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 
 2026-10-22 2.27.1（#165）：RoomMedia 原本在任何其他 `dialog:modal` 開啟時呼叫 `close()`，而 `setWindow(false)` 會讓 YouTube 影片 `exitVideo()`，所以邀請朋友、遊戲說明或確認視窗都會中斷影片。現在其他 modal 只蓋在點播視窗上面；Escape 在有 modal 時本來就不處理。回歸測試在 `frontend/tests/media-modal.test.cjs`，實機重現腳本在 `tools/qa/media-modal-continuity.cjs`。
 
+2026-10-23：本機候選2.28.0接入使用者Stitch匯出20款進場、11款共用背景與成就、獨立屍魂界網站開場、即滑即送Ping及管理員重設隔離。來源缺失修補、試用音效政策、驗證與發布限制見[本批整合](../STITCH-COSMETICS-20261023.md)。本筆取代較舊「背景僅本機」及「屍魂界是角色特效」描述。
+
+2026-10-23後續：大廳隨機換位依最新指示改按 R，點角色仍立即開表情。獨立試玩初始化預設全成就／獎勵解鎖，正式資料不變；新介面與完整驗證見[本批整合](../STITCH-COSMETICS-20261023.md)最後一節。
+
+2026-10-23 補充：Ping 原生圖示與音效分開保存；千本櫻新增中央花瓣飄落；網站開場維持原樣。詳見 [本次改動清單](../CHANGES-2.28.0.md)。
+
+2026-10-23 同批追加：只更新特效.zip 中指定五款、保留千本櫻落花；成就及獎勵卡發光、帳號獎勵兌換與重設隔離、Ping 圖示同色光暈。具體範圍與證據見 [修訂與兌換](../EFFECTS-REDEMPTION-20261023.md)。
+
+2026-10-23 最新：截圖指定九款卡片背景動態、法院灰藍石材與日夜文字對比、全廳 30 秒；四組兌換分開開獎勵，試玩不再預填成就。Issue #204 四向跨邊界僅開票；詳 [來源及驗證](../BACKGROUNDS-REWARD-CODES-20261023.md)。
+
+2026-10-23 最新調整：[介面與新開場](../LOBBY-CLEANUP-OPENING-20261023.md)。
 2026-10-22 #181 候選2.30.1：TelephoneScene 猜詞改原生 v-model 組字保護，computed setter 沿用 changeText，scope／stepId key 隔離新頁。實際元件反例先失敗，修正後2項及前端29項通過，Chrome CDP原生IME 1920／390驗證通過；真人輸入法／實機未驗。證據與界線見 docs/specs/TELEPHONE-IME-181.md；未部署，最終CI／審查以PR為準。
 2026-10-22 候選2.30.0：瞎掰王語音字幕。前端 `composables/speech-captions.ts` 使用瀏覽器的 `SpeechRecognition`（zh-TW，Chrome／Edge 送 Google、Safari 送 Apple；Firefox 不支援，按鈕會停用並說明）。只有按下「講話」才收音，再按一次停止；換輪、離開口說階段、斷線或分頁隱藏時自動停止。只送文字：中途字幕每 0.7 秒最多一次，完整句子立即送出。伺服器 `POST /api/bluff/caption` 不經 action 歷史與 mutation 配額（每分鐘 150 次），`BluffRoom.caption` 只在 discussion 接受目前回合；中途字幕在記憶體中顯示 6 秒，完整句子進入 `transcript`（上限 120 句、每句 200 字），揭曉時複製到 `results[].transcript`。src/games/bluff.js 已在獨立 commit 中格式化。實機重現：`tools/qa/bluff-speech-captions.cjs`（以替身辨識器模擬，因為 headless 沒有麥克風）。
 
