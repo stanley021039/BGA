@@ -161,7 +161,7 @@ watch(
               required
               :disabled="locked"
             />我已確認此日期為交易日</label
-          ><UiButton
+          ><UiButton legacy
             type="submit"
             icon="add"
             label="確認建立交易日"
@@ -209,7 +209,7 @@ watch(
               maxlength="240"
               :required="!!round?.result"
               :disabled="locked" /></label
-          ><UiButton
+          ><UiButton legacy
             type="submit"
             icon="expand"
             label="預覽結算影響"
@@ -253,7 +253,7 @@ watch(
             required
             :disabled="locked"
           />我已核對日期及官方公告</label
-        ><UiButton type="submit" icon="check" label="套用日曆修正" :disabled="locked" /></form
+        ><UiButton legacy type="submit" icon="check" label="套用日曆修正" :disabled="locked" /></form
     ></section>
     <section class="vue-market-panel"
       ><h2>指定日期官方資料重查</h2
@@ -277,7 +277,7 @@ watch(
             required
             :disabled="locked || !market.state?.automation.enabled"
           />我已確認日期，要求重新取得官方收盤資料</label
-        ><UiButton
+        ><UiButton legacy
           type="submit"
           icon="refresh"
           label="重查指定日期官方資料"
@@ -301,7 +301,7 @@ watch(
         ></div
       ></details
     >
-    <UiDialog
+    <UiDialog legacy
       ref="settlement"
       title="確認結算影響"
       :dismissible="!market.busy"
@@ -328,14 +328,14 @@ watch(
           {{ marketPoints(market.preview.details.ownNext) }}；累積將為
           {{ marketPoints(market.preview.details.ownScoreAfter) }} 分。</p
         ><div class="vue-market-actions"
-          ><UiButton
+          ><UiButton legacy
             label="返回修改"
             :disabled="market.busy"
-            @click="settlement?.close()" /><UiButton
+            @click="settlement?.close()" /><UiButton legacy
             icon="check"
             label="確認結算"
             :disabled="market.busy"
             @click="settle()" /></div></template></UiDialog
-    ><ConfirmDialog ref="confirm" />
+    ><ConfirmDialog legacy ref="confirm" />
   </section>
 </template>

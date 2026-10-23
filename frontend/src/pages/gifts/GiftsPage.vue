@@ -150,7 +150,6 @@ onBeforeUnmount(clearFile);
           ></div
         > </form
       ><UiButton
-        stitch
         variant="primary"
         type="submit"
         form="giftForm"

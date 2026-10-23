@@ -24,7 +24,6 @@ defineExpose({ open: (source?: HTMLElement) => dialog.value?.open(source) });
 <template>
   <UiDialog
     ref="dialog"
-    stitch
     :title="title"
     class="vue-frame-picker-dialog"
     :class="{ 'is-media-picker': kind === 'media' }"
@@ -51,14 +50,14 @@ defineExpose({ open: (source?: HTMLElement) => dialog.value?.open(source) });
           ></label
         ></div
       >
-      <FrameChoices stitch :kind="kind" :query="query" :group="group" />
+      <FrameChoices :kind="kind" :query="query" :group="group" />
     </div>
     <footer class="vue-frame-picker-footer"
       ><div
         ><span>{{ kind === 'media' ? '當前外觀：' : '目前使用：' }}</span
         ><strong class="vue-frame-current-selection">✓ {{ selectedLabel }}</strong
         ><span class="vue-frame-picker-save-note">點選即儲存</span></div
-      ><UiButton stitch variant="contrast" label="關閉視窗" @click="dialog?.close()"
+      ><UiButton variant="contrast" label="關閉視窗" @click="dialog?.close()"
     /></footer>
   </UiDialog>
 </template>

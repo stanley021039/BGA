@@ -120,7 +120,6 @@ onBeforeUnmount(() => {
     ><template #hero-actions
       ><UiButton
         v-if="!s.cruel && !s.tournament"
-        stitch
         icon="book"
         :label="`預備題目（我 ${s.ownQueue.length}/5）`"
         :disabled="blocked"
@@ -167,12 +166,10 @@ onBeforeUnmount(() => {
         ><template v-else-if="game.canAsk"
           ><div class="vue-majority-tabs"
             ><UiButton
-              stitch
               label="自動抽題"
               :variant="game.source === 'bank' ? 'primary' : 'secondary'"
               :aria-pressed="game.source === 'bank'"
               @click="game.source = 'bank'" /><UiButton
-              stitch
               label="自己出題"
               :variant="game.source === 'custom' ? 'primary' : 'secondary'"
               :aria-pressed="game.source === 'custom'"
@@ -203,7 +200,6 @@ onBeforeUnmount(() => {
                 :key="question.id || i"
                 ><QuestionPreview :question="question" compact
                   ><UiButton
-                    stitch
                     icon="check"
                     variant="primary"
                     label="使用這題"
@@ -293,11 +289,9 @@ onBeforeUnmount(() => {
           v-if="s.phase === 'reveal' && !s.cruel"
           class="vue-majority-actions"
           ><UiButton
-            stitch
             icon="replay"
             label="重播答案焦點"
             @click="presentation.replay()" /><UiButton
-            stitch
             v-if="presentation.focus.value"
             label="略過演出"
             @click="presentation.stop()" /></div
@@ -315,7 +309,6 @@ onBeforeUnmount(() => {
               ></select
             ></label
           ><UiButton
-            stitch
             icon="check"
             label="合併答案"
             :disabled="
@@ -349,7 +342,6 @@ onBeforeUnmount(() => {
         "
         :error="game.failed"
       /><UiButton
-        stitch
         v-if="game.uncertain"
         icon="refresh"
         label="更新狀態後再操作"
@@ -365,14 +357,12 @@ onBeforeUnmount(() => {
         ><div v-if="s.phase === 'finished'" id="majority-replay-slot"></div
         ><template v-if="s.phase === 'choosing'"
           ><UiButton
-            stitch
             v-if="game.canAsk && game.source === 'bank'"
             icon="shuffle"
             variant="primary"
             :label="s.candidates.length ? '再抽三題' : '抽三題'"
             :disabled="blocked"
             @click="game.act('draw', { topic: game.topic, type: game.kind })" /><UiButton
-            stitch
             v-else-if="game.canAsk"
             type="submit"
             form="majority-custom-form"
@@ -380,7 +370,6 @@ onBeforeUnmount(() => {
             variant="primary"
             label="送出題目"
             :disabled="blocked" /><UiButton
-            stitch
             v-else-if="room.host"
             icon="next"
             label="換下一位出題"
@@ -388,7 +377,6 @@ onBeforeUnmount(() => {
             @click="game.act('pass')" /></template
         ><template v-if="s.phase === 'answering' && game.participant"
           ><UiButton
-            stitch
             v-if="s.ownAnswer === null"
             icon="lock"
             variant="primary"
@@ -400,38 +388,32 @@ onBeforeUnmount(() => {
               (s.question?.type === 'blank' ? !game.draft.trim() : game.choice === null)
             "
             @click="submitAnswer" /><UiButton
-            stitch
             v-else
             icon="undo"
             label="收回答案"
             :disabled="blocked || game.expired"
             @click="game.act('withdraw')" /><UiButton
-            stitch
             v-if="s.cruel"
             icon="refresh"
             :label="s.cruel.skipRemaining ? '換一題（剩 1 次）' : '換題已用完'"
             :disabled="blocked || game.expired || !s.cruel.canReplace"
             @click="confirmed('replace', '使用本局唯一一次換題？目前尚未有人交卷。')" /><UiButton
-            stitch
             v-if="room.host && !s.cruel"
             label="提前結束作答"
             :disabled="blocked"
             @click="confirmed('close', '提前結束本題？未交卷的朋友本題不計分。')" /></template
         ><template v-if="s.phase === 'review' && room.host"
           ><UiButton
-            stitch
             icon="undo"
             label="還原原始分組"
             :disabled="blocked"
             @click="game.act('resetGroups')" /><UiButton
-            stitch
             icon="check"
             variant="primary"
             label="確認計分"
             :disabled="blocked"
             @click="game.act('score')" /></template
         ><UiButton
-          stitch
           v-if="s.phase === 'reveal' && (room.host || s.presenterId === s.me)"
           icon="next"
           variant="primary"
@@ -440,12 +422,10 @@ onBeforeUnmount(() => {
           @click="game.act('next')" /></div
       ><div v-if="!s.cruel && s.phase !== 'finished'" class="vue-majority-social"
         ><UiButton
-          stitch
           icon="book"
           :label="`預備題目（我 ${s.ownQueue.length}/5）`"
           :disabled="blocked"
           @click="prepare?.open($event.currentTarget as HTMLElement)" /><UiButton
-          stitch
           variant="secondary"
           icon="emoji"
           :label="'表情互動 · 全桌預備 ' + s.queueCount + ' 題'"
@@ -472,7 +452,7 @@ onBeforeUnmount(() => {
           >{{ emoji }}</button
         ></div
       ></UiPopover
-    ><ConfirmDialog stitch ref="confirm" />
+    ><ConfirmDialog ref="confirm" />
   </section>
   <PrepareDialog ref="prepare" />
 </template>

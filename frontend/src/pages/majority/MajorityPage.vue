@@ -166,7 +166,6 @@ function status(player: RoomPlayer) {
                 : game.settingsError || (game.settingsSaved ? '' : '修改後自動儲存。')
             "
             :error="!!game.settingsError" /><UiButton
-            stitch
             v-if="game.settingsError && game.editable"
             icon="refresh"
             label="重試儲存設定"

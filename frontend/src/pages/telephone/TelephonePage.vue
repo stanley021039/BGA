@@ -96,7 +96,7 @@ function status(player: RoomPlayer) {
           ></fieldset
         ><StatusSlot
           :message="telephone.settingsPending ? '正在儲存題庫…' : telephone.settingsError || ''"
-          :error="!!telephone.settingsError" /><UiButton
+          :error="!!telephone.settingsError" /><UiButton legacy
           v-if="telephone.settingsError && telephone.settingsEditable"
           icon="refresh"
           label="重試儲存題庫"

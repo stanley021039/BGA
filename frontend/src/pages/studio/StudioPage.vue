@@ -120,7 +120,6 @@ onBeforeUnmount(() => {
               :disabled="studio.pending" /></label
           ><UiButton
             id="paint-save"
-            stitch
             variant="primary"
             type="submit"
             icon-only
@@ -166,13 +165,11 @@ onBeforeUnmount(() => {
         ><div class="studio-upload-actions"
           ><UiButton
             id="artwork-edit"
-            stitch
             variant="secondary"
             icon="edit"
             label="載入畫布編輯／去背"
             :disabled="!file || !editor || studio.imagePending"
             @click="editFile" /><UiButton
-            stitch
             variant="primary"
             type="submit"
             icon="upload"
@@ -195,7 +192,6 @@ onBeforeUnmount(() => {
         ><h2 id="studio-gallery-heading">我的作品</h2></div
       ><span id="artwork-count">{{ studio.artworks?.length || 0 }} / 100 件作品</span
       ><UiButton
-        stitch
         variant="ghost"
         icon="refresh"
         label="重新載入圖庫"
@@ -223,14 +219,12 @@ onBeforeUnmount(() => {
           ><a class="vue-studio-art-link" :href="'/gifts?artwork=' + encodeURIComponent(artwork.id)"
             >用作禮物</a
           ><UiButton
-            stitch
             variant="secondary"
             icon="edit"
             icon-only
             :label="'載入畫布作圖層：' + artwork.name"
             :disabled="studio.imagePending || !editor"
             @click="editArtwork(artwork)" /><UiButton
-            stitch
             variant="danger"
             icon="remove"
             icon-only
@@ -246,5 +240,5 @@ onBeforeUnmount(() => {
       ><p>畫一張、加入照片，或從上方上傳已有圖片。儲存後就能在這裡用作角色或自訂禮物。</p></div
     >
   </section>
-  <ConfirmDialog ref="confirm" />
+  <ConfirmDialog legacy ref="confirm" />
 </template>

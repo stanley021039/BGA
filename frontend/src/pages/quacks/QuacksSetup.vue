@@ -30,7 +30,7 @@ const game = useQuacksStore();
       :message="game.settingsPending ? '正在儲存設定…' : game.settingsError"
       :error="!!game.settingsError"
     />
-    <UiButton
+    <UiButton legacy
       v-if="game.settingsError && game.editableSettings"
       icon="refresh"
       label="重試儲存設定"

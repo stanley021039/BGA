@@ -41,7 +41,7 @@ async function send() {
         required
         :disabled="mutation.pending.value"
       />
-      <UiButton
+      <UiButton legacy
         class="vue-lobby-inline-send"
         icon="send"
         icon-only

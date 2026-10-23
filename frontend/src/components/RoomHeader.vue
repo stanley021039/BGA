@@ -59,16 +59,14 @@ async function copyCode() {
     >
       <div class="vue-room-topbar-context"
         ><UiButton
-          stitch
           class="vue-room-code-button"
           :label="'複製房間代碼 ' + room.code"
           :caption="'房間 ' + room.code"
-          @click="copyCode" /><RoomInvite stitch
+          @click="copyCode" /><RoomInvite
       /></div>
       <div class="vue-room-topbar-navigation"
         ><a class="vue-room-nav-home" href="/">遊戲大廳</a
         ><UiButton
-          stitch
           variant="ghost"
           icon="book"
           caption="共編題庫"

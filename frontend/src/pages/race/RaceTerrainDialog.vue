@@ -16,7 +16,6 @@ defineExpose({ open });
 <template>
   <UiDialog
     ref="dialog"
-    stitch
     class="vue-race-terrain-dialog"
     :title="item?.name || '地形與危險圖例'"
   >
@@ -30,7 +29,6 @@ defineExpose({ open });
         <UiButton
           v-for="entry in terrainReference"
           :key="entry.key"
-          stitch
           :label="entry.name"
           @click="selected = entry.key"
         >
@@ -40,8 +38,8 @@ defineExpose({ open });
       <p>惡魔賽道為地形／危險試玩；目前沒有 21 張持續效果牌。</p>
     </div>
     <footer class="vue-race-terrain-footer">
-      <UiButton v-if="item" stitch label="全部地形" icon="arrow_back" @click="selected = null" />
-      <UiButton stitch label="關閉" @click="dialog?.close()" />
+      <UiButton v-if="item" label="全部地形" icon="arrow_back" @click="selected = null" />
+      <UiButton label="關閉" @click="dialog?.close()" />
     </footer>
   </UiDialog>
 </template>

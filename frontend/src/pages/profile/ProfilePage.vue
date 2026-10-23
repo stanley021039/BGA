@@ -423,7 +423,7 @@ onBeforeUnmount(() => {
     <span v-if="profile.loading">正在載入角色圖庫…</span>
     <template v-else-if="profile.error">
       <span class="resource-error">{{ profile.error }}</span>
-      <UiButton stitch icon="refresh" label="重新載入角色圖庫" @click="profile.load()" />
+      <UiButton icon="refresh" label="重新載入角色圖庫" @click="profile.load()" />
     </template>
   </div>
   <div class="profile-layout">
@@ -453,7 +453,6 @@ onBeforeUnmount(() => {
           <UiButton
             v-for="expression in expressions"
             :key="expression.id"
-            stitch
             variant="secondary"
             :label="expression.label"
             :aria-pressed="appearance?.expression === expression.id"
@@ -464,7 +463,6 @@ onBeforeUnmount(() => {
       <footer class="profile-preview-actions">
         <UiButton
           id="save"
-          stitch
           variant="primary"
           icon="save"
           label="保存角色"
@@ -493,7 +491,7 @@ onBeforeUnmount(() => {
         "
         ><template #actions
           ><div class="expression-add-row"
-            ><UiButton
+            ><UiButton legacy
               id="open-upload-expression"
               icon="add"
               :label="
@@ -514,14 +512,12 @@ onBeforeUnmount(() => {
                   : '尚未設定音效'
               }}</span
               ><UiButton
-                stitch
                 v-if="sound"
                 id="preview-expression-sound"
                 icon="sound"
                 label="試聽音效"
                 :disabled="soundPending"
                 @click="previewSound" /><UiButton
-                stitch
                 v-if="sound"
                 id="remove-expression-sound"
                 icon="remove"
@@ -546,7 +542,6 @@ onBeforeUnmount(() => {
                 :disabled="soundPending"
                 @change="chooseSound"
               /><UiButton
-                stitch
                 id="save-expression-sound"
                 type="submit"
                 icon="upload"
@@ -573,7 +568,6 @@ onBeforeUnmount(() => {
           ><span id="expression-sound-duration"
             >已設定 {{ (sound.durationMs / 1000).toFixed(2).replace(/0$/, '') }} 秒音效</span
           ><UiButton
-            stitch
             id="preview-expression-sound"
             icon="sound"
             label="試聽音效"
@@ -622,7 +616,6 @@ onBeforeUnmount(() => {
           selected.shared ? '好友可在圖庫選用這位角色與表情。' : '目前只有你可以選用這位角色。'
         }}</span
         ><UiButton
-          stitch
           id="toggle-sharing"
           :icon="selected.shared ? 'lock' : 'users'"
           :label="selected.shared ? '停止分享' : '分享給會員'"
@@ -637,7 +630,6 @@ onBeforeUnmount(() => {
   </div>
   <UiDialog
     ref="createDialog"
-    stitch
     class="profile-upload-dialog"
     title="上傳角色"
     :dismissible="!createPending"
@@ -667,7 +659,6 @@ onBeforeUnmount(() => {
         label="主角色圖片"
         :artworks="ownArtworks"
         :disabled="createPending" /><UiButton
-        stitch
         type="submit"
         variant="primary"
         label="建立主角色"
@@ -678,7 +669,6 @@ onBeforeUnmount(() => {
   ></UiDialog>
   <UiDialog
     ref="expressionDialog"
-    stitch
     class="profile-upload-dialog"
     title="新增表情"
     :dismissible="!expressionPending"
@@ -711,7 +701,6 @@ onBeforeUnmount(() => {
         label="表情圖片"
         :artworks="ownArtworks"
         :disabled="expressionPending" /><UiButton
-        stitch
         type="submit"
         variant="primary"
         label="新增表情"
@@ -720,7 +709,7 @@ onBeforeUnmount(() => {
         :message="expressionMessage"
         :error="expressionFailed" /></form
   ></UiDialog>
-  <UiDialog
+  <UiDialog legacy
     ref="leaveDialog"
     title="角色檔案尚未儲存"
     compact
@@ -729,16 +718,13 @@ onBeforeUnmount(() => {
     ><p>要先儲存變更再離開嗎？</p><StatusSlot :message="leaveMessage" /><div
       class="vue-confirm-actions"
       ><UiButton
-        stitch
         label="儲存後離開"
         icon="save"
         :pending="leavePending"
         @click="saveAndLeave" /><UiButton
-        stitch
         label="不儲存離開"
         :disabled="leavePending"
         @click="leave" /><UiButton
-        stitch
         label="繼續編輯"
         :disabled="leavePending"
         @click="leaveDialog?.close()" /></div

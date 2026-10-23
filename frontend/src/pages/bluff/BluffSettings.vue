@@ -37,7 +37,6 @@ const room = useRoomStore(),
       ><StatusSlot
         :message="bluff.settingsPending ? '正在儲存設定…' : bluff.settingsError || ''"
         :error="!!bluff.settingsError" /><UiButton
-        stitch
         v-if="bluff.settingsError && bluff.editable"
         icon="refresh"
         label="重試儲存設定"

@@ -61,7 +61,7 @@ onBeforeUnmount(() => {
         @error="error = '音檔暫時無法播放，請檢查連線或稍後再試。'"
       /><p>{{ playback.seconds }}秒 · {{ error || '音量只影響自己' }}</p></template
     ><template v-else
-      ><UiButton
+      ><UiButton legacy
         v-if="!accepted"
         icon="play"
         label="載入本題影片（連線YouTube）"

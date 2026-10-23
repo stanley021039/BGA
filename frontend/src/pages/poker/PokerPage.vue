@@ -64,7 +64,7 @@ function status(player: RoomPlayer) {
         ><div><dt>買入</dt><dd>2,000 虛擬籌碼</dd></div
         ><div><dt>盲注</dt><dd>10／20</dd></div
         ><div><dt>行動時間</dt><dd>45 秒</dd></div></dl
-      ><UiButton
+      ><UiButton legacy
         v-if="poker.me?.stack === 0 && poker.setup"
         label="補充 2,000 籌碼"
         icon="add"

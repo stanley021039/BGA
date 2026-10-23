@@ -42,7 +42,6 @@ onBeforeUnmount(() => {
               ></div
               ><UiButton
                 id="studio-palette-trigger"
-                stitch
                 variant="ghost"
                 icon="edit"
                 icon-only
@@ -61,7 +60,6 @@ onBeforeUnmount(() => {
                 <header
                   ><strong>調色盤 Palette</strong
                   ><UiButton
-                    stitch
                     variant="ghost"
                     icon="close"
                     icon-only

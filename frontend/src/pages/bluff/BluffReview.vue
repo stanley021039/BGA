@@ -55,7 +55,6 @@ const result = computed(
       ><div v-if="result.ban" class="vue-bluff-ban"
         ><p>禁題票數 {{ result.ban.votes }}／{{ result.ban.required }}（本輪真人過半數）</p
         ><UiButton
-          stitch
           variant="secondary"
           icon="help"
           :label="

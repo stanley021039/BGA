@@ -16,7 +16,7 @@ import UiButton from './UiButton.vue';
 import PlayerName from './PlayerName.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/room.scss';
-defineProps<{ stitch?: boolean }>();
+defineProps<{ legacy?: boolean }>();
 const room = useRoomStore(),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   confirmation = ref<InstanceType<typeof ConfirmDialog> | null>(null);
@@ -157,16 +157,16 @@ onBeforeUnmount(() => confirmation.value?.cancel());
 </script>
 <template>
   <UiButton
-    :stitch="stitch"
+    :legacy="legacy"
     variant="secondary"
     class="vue-room-manage-trigger"
     icon="users"
-    :icon-only="!stitch"
+    :icon-only="legacy"
     label="房間管理"
     :disabled="!allowed || room.busy"
     @click="open"
   />
-  <UiDialog :stitch="stitch" ref="dialog" title="房間管理" :dismissible="!room.busy"
+  <UiDialog :legacy="legacy" ref="dialog" title="房間管理" :dismissible="!room.busy"
     ><p>{{
       myRoomRole(room.snapshot) === 'host'
         ? '房主可設定房間管理者，並踢出其他玩家。房間角色不影響網站帳戶權限。'
@@ -180,13 +180,13 @@ onBeforeUnmount(() => confirmation.value?.cancel());
             }}{{ player.online ? '' : ' · 暫時離線' }}</small
           ></div
         ><div class="vue-room-management-actions"
-          ><UiButton
+          ><UiButton legacy
             v-if="room.type === 'draw' && maySetPlayerRole(player, room.snapshot)"
             icon="crown"
             icon-only
             :label="'移交房主給' + player.name"
             :disabled="room.busy"
-            @click="transfer(player)" /><UiButton
+            @click="transfer(player)" /><UiButton legacy
             v-if="maySetPlayerRole(player, room.snapshot)"
             icon="users"
             icon-only
@@ -196,7 +196,7 @@ onBeforeUnmount(() => confirmation.value?.cancel());
                 : '設為管理者：') + player.name
             "
             :disabled="room.busy"
-            @click="setRole(player)" /><UiButton
+            @click="setRole(player)" /><UiButton legacy
             v-if="mayKickPlayer(player, room.snapshot)"
             icon="remove"
             icon-only
@@ -205,12 +205,12 @@ onBeforeUnmount(() => confirmation.value?.cancel());
             @click="kick(player)" /></div></article></div
     ><StatusSlot :message="room.busy ? '處理中…' : message" :error="failed" /><footer
       class="vue-room-management-actions"
-      ><slot name="invite" /><UiButton
+      ><slot name="invite" /><UiButton legacy
         v-if="room.type === 'draw' && room.host"
         icon="leave"
         label="解散房間"
         :disabled="room.busy"
         @click="dissolve" /></footer
   ></UiDialog>
-  <ConfirmDialog ref="confirmation" />
+  <ConfirmDialog legacy ref="confirmation" />
 </template>

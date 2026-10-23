@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import UiIcon from './UiIcon.vue';
-// Stitch is opt-in: a variant alone never changes existing game controls.
+// Stitch is the only look for new code. `legacy` keeps an unconverted page's old
+// controls and ignores `variant`; see docs/UI-COMPONENTS.md.
 withDefaults(
   defineProps<{
     label: string;
@@ -10,7 +11,7 @@ withDefaults(
     pending?: boolean;
     disabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
-    stitch?: boolean;
+    legacy?: boolean;
     variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'contrast';
   }>(),
   {
@@ -18,7 +19,7 @@ withDefaults(
     iconOnly: false,
     pending: false,
     disabled: false,
-    stitch: false,
+    legacy: false,
     variant: 'secondary',
   },
 );
@@ -31,9 +32,9 @@ withDefaults(
       'ui-icon-button': iconOnly,
       'has-mobile-caption': iconOnly && !!caption,
       'is-pending': pending,
-      'ui-stitch-button': stitch,
+      'ui-stitch-button': !legacy,
     }"
-    :data-stitch-variant="stitch ? variant : undefined"
+    :data-stitch-variant="legacy ? undefined : variant"
     :aria-label="label"
     :title="iconOnly ? label : undefined"
     :disabled="disabled || pending"

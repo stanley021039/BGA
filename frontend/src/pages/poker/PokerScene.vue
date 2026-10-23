@@ -110,7 +110,7 @@ const turnHint = computed(() =>
           aria-labelledby="pokerResults"
           ><header
             ><h2 id="pokerResults">本手派彩</h2
-            ><UiButton
+            ><UiButton legacy
               v-if="presentation.canReplay.value"
               icon="replay"
               label="重播結算演出"
@@ -182,15 +182,15 @@ const turnHint = computed(() =>
       >
       <footer class="vue-poker-actions"
         ><div class="vue-poker-action-buttons"
-          ><UiButton
+          ><UiButton legacy
             icon="close"
             label="棄牌"
             :disabled="!poker.canAct"
-            @click="poker.act('fold')" /><UiButton
+            @click="poker.act('fold')" /><UiButton legacy
             icon="check"
             :label="callLabel"
             :disabled="!poker.canAct"
-            @click="poker.act(poker.due ? 'call' : 'check')" /><UiButton
+            @click="poker.act(poker.due ? 'call' : 'check')" /><UiButton legacy
             label="ALL IN"
             :disabled="!poker.canAllIn"
             @click="poker.act('allin')" /></div
@@ -206,7 +206,7 @@ const turnHint = computed(() =>
               :max="poker.maximum"
               :disabled="!poker.canRaise"
               aria-describedby="pokerRaiseHint" /></label
-          ><UiButton
+          ><UiButton legacy
             type="submit"
             icon="add"
             label="確認加注"
@@ -227,7 +227,7 @@ const turnHint = computed(() =>
     </template>
     <div v-if="presentation.focus.value" class="vue-poker-spotlight" aria-live="polite"
       ><strong>{{ presentation.focus.value }}</strong
-      ><UiButton label="跳過演出" icon="next" @click="presentation.stopFocus()" /></div
+      ><UiButton legacy label="跳過演出" icon="next" @click="presentation.stopFocus()" /></div
     ><span
       v-for="chip in presentation.chips.value"
       :key="chip.id"

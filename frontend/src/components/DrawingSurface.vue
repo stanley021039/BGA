@@ -282,5 +282,5 @@ defineExpose({
       :error="!!network || noticeFailed"
     />
   </section>
-  <ConfirmDialog stitch ref="confirmation" />
+  <ConfirmDialog ref="confirmation" />
 </template>

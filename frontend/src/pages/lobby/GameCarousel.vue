@@ -216,17 +216,17 @@ onBeforeUnmount(() => {
     </div>
     <div class="carousel-footer"
       ><div class="carousel-controls"
-        ><UiButton icon="previous" icon-only label="上一款遊戲" @click="select(index - 1)" /><span
+        ><UiButton legacy icon="previous" icon-only label="上一款遊戲" @click="select(index - 1)" /><span
           class="vue-carousel-counter"
           role="status"
           aria-live="polite"
           :aria-label="chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'"
           >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
-        ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
+        ><UiButton legacy icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
       ><div class="carousel-actions"
         ><a class="quiet carousel-guide" :href="chosen.guide">{{ chosen.title }}玩法 ↗</a
         ><div class="carousel-create"
-          ><UiButton
+          ><UiButton legacy
             variant="secondary"
             icon="users"
             label="找一桌加入"
@@ -236,7 +236,7 @@ onBeforeUnmount(() => {
             class="button orange"
             href="/market"
             >進入股市冥燈 ↗</a
-          ><UiButton
+          ><UiButton legacy
             v-else
             icon="add"
             :label="'開一桌' + chosen.title"

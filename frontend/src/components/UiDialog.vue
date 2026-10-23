@@ -2,7 +2,7 @@
 import { nextTick, onBeforeUnmount, ref, useId } from 'vue';
 import UiButton from './UiButton.vue';
 const props = withDefaults(
-  defineProps<{ title: string; compact?: boolean; stitch?: boolean; dismissible?: boolean }>(),
+  defineProps<{ title: string; compact?: boolean; legacy?: boolean; dismissible?: boolean }>(),
   { dismissible: true },
 );
 const emit = defineEmits<{ closing: []; closed: [] }>();
@@ -45,7 +45,7 @@ defineExpose({ open, close });
     ref="dialog"
     autofocus
     class="vue-dialog ui-dialog"
-    :class="{ 'vue-dialog-compact': compact, 'vue-stitch-dialog': stitch }"
+    :class="{ 'vue-dialog-compact': compact, 'vue-stitch-dialog': !legacy }"
     :aria-labelledby="headingId"
     @cancel="cancel"
     @close="closed"
@@ -53,7 +53,7 @@ defineExpose({ open, close });
     <header class="vue-dialog-header"
       ><h2 :id="headingId">{{ title }}</h2
       ><UiButton
-        :stitch="stitch"
+        :legacy="legacy"
         icon="close"
         icon-only
         caption="關閉"

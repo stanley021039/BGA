@@ -223,7 +223,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="collection-heading"
     ><h1>收藏庫</h1
-    ><UiButton
+    ><UiButton legacy
       id="collection-refresh"
       class="page-button"
       icon="refresh"
@@ -289,7 +289,7 @@ onBeforeUnmount(() => {
         avatar
         :selected="!!profile.data && avatarKey(item.value) === avatarKey(profile.data.avatar)"
       >
-        <UiButton
+        <UiButton legacy
           label="設為頭像"
           icon="check"
           icon-only
@@ -302,13 +302,13 @@ onBeforeUnmount(() => {
             label="繪圖編輯"
             icon="edit"
             icon-only
-            :href="'/studio?artwork=' + encoded(item.id) + '&from=collection'" /><UiButton
+            :href="'/studio?artwork=' + encoded(item.id) + '&from=collection'" /><UiButton legacy
             :label="item.shared ? '停止分享' : '分享給會員'"
             :icon="item.shared ? 'lock' : 'users'"
             icon-only
             :disabled="pending"
             :pending="activeAction === 'avatar:share:' + item.id"
-            @click="share('avatar', item.id, item.name, item.shared)" /><UiButton
+            @click="share('avatar', item.id, item.name, item.shared)" /><UiButton legacy
             label="刪除"
             icon="remove"
             icon-only
@@ -378,7 +378,7 @@ onBeforeUnmount(() => {
         "
         :selected="profile.data?.appearance.characterId === item.id"
       >
-        <UiButton
+        <UiButton legacy
           label="使用角色"
           icon="check"
           icon-only
@@ -392,13 +392,13 @@ onBeforeUnmount(() => {
           :href="'/profile?character=' + encoded(item.id)"
         />
         <template v-if="item.owned"
-          ><UiButton
+          ><UiButton legacy
             :label="item.shared ? '停止分享' : '分享給會員'"
             :icon="item.shared ? 'lock' : 'users'"
             icon-only
             :disabled="pending"
             :pending="activeAction === 'character:share:' + item.id"
-            @click="share('character', item.id, item.name, item.shared)" /><UiButton
+            @click="share('character', item.id, item.name, item.shared)" /><UiButton legacy
             label="刪除"
             icon="remove"
             icon-only
@@ -448,7 +448,7 @@ onBeforeUnmount(() => {
         :metadata="item.author + ' · ' + duration(item.duration) + ' · 會員共用'"
         ><template #preview
           ><AudioPreview :src="'/assets/music/' + encoded(item.id)" :title="item.title" /></template
-        ><UiButton
+        ><UiButton legacy
           v-if="item.ownerId === music.data?.me || music.data?.admin"
           label="刪除"
           icon="remove"
@@ -497,7 +497,7 @@ onBeforeUnmount(() => {
       }}</span></template
     >
     <p>4 款經典與 20 款全新動態框，全部可直接使用。</p
-    ><FrameChoices
+    ><FrameChoices legacy
       id="frames-grid"
       :query="frameQuery"
       :group="frameGroup"
@@ -521,5 +521,5 @@ onBeforeUnmount(() => {
     >
     <EntranceChoices />
   </ResourcePanel>
-  <ConfirmDialog ref="confirmation" />
+  <ConfirmDialog legacy ref="confirmation" />
 </template>

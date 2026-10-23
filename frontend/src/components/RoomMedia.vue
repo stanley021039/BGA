@@ -591,7 +591,6 @@ onBeforeUnmount(() => {
 <template>
   <span ref="opener" tabindex="-1"
     ><UiButton
-      stitch
       v-if="media.enabled"
       icon="video"
       variant="secondary"
@@ -636,7 +635,6 @@ onBeforeUnmount(() => {
           >
           <div class="vue-media-window-tools">
             <UiButton
-              stitch
               variant="ghost"
               v-show="mode !== 'bar'"
               icon="frame"
@@ -645,7 +643,6 @@ onBeforeUnmount(() => {
               @click="picker?.open($event.currentTarget as HTMLElement)"
             />
             <UiButton
-              stitch
               variant="ghost"
               v-show="mode !== 'bar'"
               icon="minimize"
@@ -654,7 +651,6 @@ onBeforeUnmount(() => {
               @click="minimize('bar')"
             />
             <UiButton
-              stitch
               variant="ghost"
               v-show="mode !== 'compact' && mode !== 'bar'"
               icon="video"
@@ -663,7 +659,6 @@ onBeforeUnmount(() => {
               @click="minimize('compact')"
             />
             <UiButton
-              stitch
               variant="ghost"
               v-show="mode !== 'full'"
               icon="expand"
@@ -672,7 +667,6 @@ onBeforeUnmount(() => {
               @click="minimize('full')"
             />
             <UiButton
-              stitch
               variant="ghost"
               data-media-close
               icon="close"
@@ -706,7 +700,6 @@ onBeforeUnmount(() => {
                 <div v-if="item?.type === 'video' && !videoActive" class="vue-media-consent"
                   ><UiIcon class="ui-icon" name="video" /><p>接受後載入影片。</p
                   ><UiButton
-                    stitch
                     variant="primary"
                     icon="play"
                     :label="videoConsent ? '重新加入觀看' : '接受並觀看影片'"
@@ -751,7 +744,6 @@ onBeforeUnmount(() => {
                 /></div>
                 <div class="vue-media-controls" role="group" aria-label="播放控制與個人音量">
                   <UiButton
-                    stitch
                     :variant="playing ? 'secondary' : 'primary'"
                     :icon="playing ? 'pause' : 'play'"
                     icon-only
@@ -762,7 +754,6 @@ onBeforeUnmount(() => {
                     @click="media.command(playing ? 'pause' : 'play')"
                   />
                   <UiButton
-                    stitch
                     variant="ghost"
                     icon="replay"
                     icon-only
@@ -771,7 +762,6 @@ onBeforeUnmount(() => {
                     @click="media.command('seek', { positionSec: 0 })"
                   />
                   <UiButton
-                    stitch
                     variant="ghost"
                     icon="next"
                     icon-only
@@ -782,7 +772,6 @@ onBeforeUnmount(() => {
                     @click="media.command('skip')"
                   />
                   <UiButton
-                    stitch
                     variant="ghost"
                     icon="stop"
                     icon-only
@@ -791,7 +780,6 @@ onBeforeUnmount(() => {
                     @click="media.command('stop')"
                   />
                   <UiButton
-                    stitch
                     variant="ghost"
                     icon="refresh"
                     icon-only
@@ -800,7 +788,6 @@ onBeforeUnmount(() => {
                     @click="player?.align()"
                   />
                   <UiButton
-                    stitch
                     variant="success"
                     icon="share"
                     icon-only
@@ -814,7 +801,6 @@ onBeforeUnmount(() => {
                   />
                   <UiButton
                     v-if="videoActive"
-                    stitch
                     variant="ghost"
                     icon="close"
                     icon-only
@@ -823,7 +809,6 @@ onBeforeUnmount(() => {
                   />
                   <UiButton
                     v-if="playbackStatus && item"
-                    stitch
                     variant="ghost"
                     icon="play"
                     icon-only
@@ -832,7 +817,6 @@ onBeforeUnmount(() => {
                   />
                   <UiButton
                     v-if="videoActive && view.videoFallback && !view.nativeVideo"
-                    stitch
                     variant="ghost"
                     icon="refresh"
                     icon-only
@@ -841,7 +825,6 @@ onBeforeUnmount(() => {
                   />
                   <UiButton
                     v-if="videoActive && view.videoFallback && !view.nativeVideo"
-                    stitch
                     variant="ghost"
                     icon="video"
                     icon-only
@@ -856,7 +839,6 @@ onBeforeUnmount(() => {
                   }}</p>
                   <div class="vue-media-volume" role="group" aria-label="個人媒體音量"
                     ><UiButton
-                      stitch
                       variant="ghost"
                       :icon="musicEnabled ? 'sound' : 'muted'"
                       icon-only
@@ -901,14 +883,12 @@ onBeforeUnmount(() => {
                       >{{ song.title }} · {{ song.author }}</option
                     ></select
                   ><UiButton
-                    stitch
                     variant="primary"
                     type="submit"
                     icon="add"
                     icon-only
                     label="加入歌曲至播放清單"
                     :disabled="!track || !media.snapshot || media.busy" /><UiButton
-                    stitch
                     variant="ghost"
                     icon="refresh"
                     icon-only
@@ -960,7 +940,6 @@ onBeforeUnmount(() => {
                       <p v-else>尚無最近播放紀錄</p>
                     </section> </div
                   ><UiButton
-                    stitch
                     variant="primary"
                     type="submit"
                     icon="add"
@@ -983,7 +962,6 @@ onBeforeUnmount(() => {
                     :data-media-item="entry.id"
                     :class="{ 'is-drop-target': targetId === entry.id }"
                     ><UiButton
-                      stitch
                       variant="ghost"
                       icon="dragHandle"
                       icon-only
@@ -1007,7 +985,6 @@ onBeforeUnmount(() => {
                             entry.requestedByName
                           " /></span></div
                     ><UiButton
-                      stitch
                       variant="ghost"
                       icon="remove"
                       icon-only
@@ -1049,7 +1026,6 @@ onBeforeUnmount(() => {
         <FramePicker ref="picker" kind="media" />
       </dialog>
       <UiDialog
-        stitch
         ref="consent"
         class="vue-media-consent-dialog"
         title="接受載入房間影片嗎？"
@@ -1067,11 +1043,9 @@ onBeforeUnmount(() => {
           ></p
         ><div class="vue-media-consent-actions"
           ><UiButton
-            stitch
             variant="primary"
             label="同意播放（載入影片）"
             @click="chooseVideo(true)" /><UiButton
-            stitch
             label="略過（本機不載入）"
             @click="chooseVideo(false)" /></div
       ></UiDialog> </div

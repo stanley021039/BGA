@@ -118,7 +118,7 @@ async function select(id: string) {
           autocomplete="nickname"
           required
           :disabled="name.pending.value || session.pending" /></label
-      ><UiButton
+      ><UiButton legacy
         type="submit"
         icon="save"
         icon-only
@@ -149,7 +149,7 @@ async function select(id: string) {
         resource.error.value ||
         (resource.loading.value ? '正在載入角色…' : appearance.message.value)
       "
-      :error="!!resource.error.value || appearance.failed.value" /><UiButton
+      :error="!!resource.error.value || appearance.failed.value" /><UiButton legacy
       v-if="resource.error.value"
       icon="refresh"
       label="重試載入角色"

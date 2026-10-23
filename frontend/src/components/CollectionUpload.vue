@@ -132,7 +132,7 @@ async function submit() {
         :disabled="pending"
       />分享給會員（未勾選則私人）</label
     >
-    <UiButton
+    <UiButton legacy
       type="submit"
       :label="label"
       :icon="kind === 'from-artwork' ? 'add' : 'upload'"

@@ -165,7 +165,7 @@ const usedCommand = computed(() => {
         ><strong>{{ instruction }}</strong></div
       ><div class="vue-race-roadbonus"
         >公路骰 <RaceDie v-if="s.roadDie" :value="s.roadDie" /><b v-else>—</b></div
-      ><UiButton stitch variant="secondary" label="地形圖例" icon="help" @click="legend?.open()"
+      ><UiButton variant="secondary" label="地形圖例" icon="help" @click="legend?.open()"
     /></header>
     <div v-show="!resultVisible" id="boardScroll" class="vue-race-track-shell"
       ><RaceBoard
@@ -185,11 +185,11 @@ const usedCommand = computed(() => {
         class="vue-race-cue"
         role="status"
         ><p v-for="event in presentation.cue.value" :key="event.id">{{ event.text }}</p
-        ><UiButton label="略過事件提示" icon="skip_next" @click="presentation.skipCue()" /></div
+        ><UiButton legacy label="略過事件提示" icon="skip_next" @click="presentation.skipCue()" /></div
       ><div v-if="presentation.focus.value && s.winner" class="vue-race-focus" role="status"
         ><strong>⚑ {{ s.winner.name }}</strong
         ><p>{{ s.winner.reason }}</p
-        ><UiButton label="略過演出" icon="skip_next" @click="presentation.stopFocus()" /></div
+        ><UiButton legacy label="略過演出" icon="skip_next" @click="presentation.stopFocus()" /></div
     ></div>
     <div v-show="!resultVisible" class="vue-race-dashboard"
       ><div class="vue-race-garage"
@@ -307,7 +307,6 @@ const usedCommand = computed(() => {
                 ></select
               ></label
             ><UiButton
-              stitch
               variant="secondary"
               label="完成指令設定"
               icon="check"
@@ -325,13 +324,11 @@ const usedCommand = computed(() => {
         /><div class="vue-race-main-actions"
           ><template v-if="s.pending && !s.diceCheck"
             ><UiButton
-              stitch
               variant="primary"
               label="保留結果"
               icon="check"
               :disabled="!enabled"
               @click="run('slam', { reroll: false })" /><UiButton
-              stitch
               variant="secondary"
               label="重擲骰子"
               icon="refresh"
@@ -339,7 +336,6 @@ const usedCommand = computed(() => {
               @click="run('slam', { reroll: true })" /></template
           ><UiButton
             v-else-if="s.phase === 'assign' && !s.diceCheck"
-            stitch
             variant="primary"
             :label="selected?.moved ? '滑行 1 格' : '確認出發'"
             icon="play_arrow"
@@ -348,13 +344,11 @@ const usedCommand = computed(() => {
             @click="begin"
           /><template v-else-if="s.phase === 'bonus' && !s.diceCheck"
             ><UiButton
-              stitch
               variant="primary"
               :label="'加速 +' + s.roadDie"
               icon="bolt"
               :disabled="!enabled"
               @click="run('bonus', { use: true })" /><UiButton
-              stitch
               variant="secondary"
               label="略過加速"
               icon="skip_next"
@@ -365,7 +359,6 @@ const usedCommand = computed(() => {
               ><UiButton
                 v-for="id in s.targets"
                 :key="id"
-                stitch
                 variant="primary"
                 :label="
                   (s.players.find((p) => p.id === s.cars.find((c) => c.id === id)?.owner)?.name ||
@@ -377,7 +370,6 @@ const usedCommand = computed(() => {
                 :disabled="!enabled"
                 @click="run('shoot', { target: id })" /></div
             ><UiButton
-              stitch
               variant="secondary"
               label="略過射擊"
               icon="skip_next"
@@ -437,7 +429,6 @@ const usedCommand = computed(() => {
       <p>{{ s.winner.reason }}</p>
       <div class="vue-race-result-actions">
         <UiButton
-          stitch
           variant="secondary"
           label="結算回顧"
           icon="history"
@@ -464,14 +455,12 @@ const usedCommand = computed(() => {
       <h2>{{ s.winner.name }}{{ s.winner.id ? ' 獲勝！' : '' }}</h2
       ><p>{{ s.winner.reason }}</p>
       <UiButton
-        stitch
         variant="secondary"
         label="返回結算摘要"
         icon="previous"
         @click="reviewing = false"
       />
       <UiButton
-        stitch
         variant="secondary"
         label="重播結算演出"
         icon="replay"

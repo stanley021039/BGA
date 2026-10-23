@@ -192,7 +192,6 @@ onBeforeUnmount(() => {
     <p id="authIntro" class="card-intro">{{ copy[1] }}</p>
     <div class="auth-tabs" role="tablist" aria-label="帳號操作" :hidden="mode === 'reset'">
       <UiButton
-        stitch
         :variant="mode === 'login' ? 'primary' : 'secondary'"
         label="登入"
         id="tab-login"
@@ -207,7 +206,6 @@ onBeforeUnmount(() => {
         @keydown="tabKey"
       />
       <UiButton
-        stitch
         :variant="mode === 'register' ? 'primary' : 'secondary'"
         label="邀請碼註冊"
         id="tab-register"
@@ -332,7 +330,6 @@ onBeforeUnmount(() => {
       /></label>
     </form>
     <UiButton
-      stitch
       variant="primary"
       type="submit"
       class="frontend-submit"

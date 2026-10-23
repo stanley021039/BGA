@@ -2,7 +2,7 @@
 import { onBeforeUnmount, ref } from 'vue';
 import UiDialog from './UiDialog.vue';
 import UiButton from './UiButton.vue';
-defineProps<{ stitch?: boolean }>();
+defineProps<{ legacy?: boolean }>();
 const dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   message = ref(''),
   label = ref('確認');
@@ -26,11 +26,11 @@ onBeforeUnmount(() => finish(false));
 defineExpose({ ask, cancel: () => finish(false) });
 </script>
 <template>
-  <UiDialog ref="dialog" :stitch="stitch" compact title="確認操作" @closed="finish(false)"
+  <UiDialog ref="dialog" :legacy="legacy" compact title="確認操作" @closed="finish(false)"
     ><p class="vue-confirm-message">{{ message }}</p
     ><div class="vue-confirm-actions"
-      ><UiButton :stitch="stitch" label="取消" @click="finish(false)" /><UiButton
-        :stitch="stitch"
+      ><UiButton :legacy="legacy" label="取消" @click="finish(false)" /><UiButton
+        :legacy="legacy"
         variant="primary"
         :label="label"
         @click="finish(true)" /></div

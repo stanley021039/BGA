@@ -206,7 +206,6 @@ function rank(index: number) {
                 >難度 {{ choice.level }} 級</span
               ><h3>{{ choice.title }}</h3
               ><UiButton
-                stitch
                 variant="primary"
                 label="選擇此題"
                 :aria-label="'選擇題目：' + choice.title"
@@ -261,7 +260,6 @@ function rank(index: number) {
                 aria-label="我的秘密角色"
                 ><UiButton
                   ref="hideButton"
-                  stitch
                   icon-only
                   variant="ghost"
                   icon="lock"
@@ -303,7 +301,6 @@ function rank(index: number) {
                   :urgent="bluff.seconds <= 5" /></div
               ><p>{{ state.readyIds.length }}／{{ state.players.length }} 位已準備</p
               ><UiButton
-                stitch
                 variant="primary"
                 icon="check"
                 :label="
@@ -337,7 +334,6 @@ function rank(index: number) {
                         }}</span></div
                       ><div class="vue-bluff-person-actions"
                         ><UiButton
-                          stitch
                           variant="secondary"
                           icon="help"
                           :label="'質疑 ' + player.name + '：公三小'"
@@ -348,7 +344,6 @@ function rank(index: number) {
                             state.challenges.includes(player.id)
                           "
                           @click="choosePerson('challenge', player.id, player.name)" /><UiButton
-                          stitch
                           variant="primary"
                           icon="check"
                           :label="'選 ' + player.name + ' 為老實人'"
@@ -365,7 +360,6 @@ function rank(index: number) {
                   }}</strong
                   ><div class="vue-bluff-actions"
                     ><UiButton
-                      stitch
                       :variant="talk.listening.value ? 'primary' : 'secondary'"
                       :icon="talk.listening.value ? 'stop' : 'sound'"
                       :caption="talk.listening.value ? '停止講話' : '講話'"
@@ -373,7 +367,6 @@ function rank(index: number) {
                       :aria-pressed="talk.listening.value"
                       :disabled="!talk.supported || (blocked && !talk.listening.value)"
                       @click="talk.toggle" /><UiButton
-                      stitch
                       variant="secondary"
                       label="哦是哦"
                       :disabled="blocked"
@@ -385,7 +378,6 @@ function rank(index: number) {
                           alt="" /></template></UiButton
                     ><UiButton
                       v-if="!isThinker"
-                      stitch
                       variant="primary"
                       icon="check"
                       :label="
@@ -448,7 +440,6 @@ function rank(index: number) {
         ><div v-if="state.phase === 'finished'" id="bluff-start-slot"></div
         ><UiButton
           v-else-if="state.phase === 'reveal' && room.host"
-          stitch
           variant="primary"
           icon="next"
           label="下一輪"
@@ -463,7 +454,6 @@ function rank(index: number) {
         :message="actions.notice"
         :error="!!actions.notice && !actions.pending" /><UiButton
         v-if="actions.canRetry"
-        stitch
         variant="secondary"
         icon="refresh"
         label="重試同一操作"
@@ -480,5 +470,5 @@ function rank(index: number) {
       data-game-focus-overlay
       ><div v-for="event in bluff.liveReactions" :key="event.id">{{ event.name }} 質疑你</div></div
     ></Teleport
-  ><ConfirmDialog ref="confirm" stitch />
+  ><ConfirmDialog ref="confirm" />
 </template>

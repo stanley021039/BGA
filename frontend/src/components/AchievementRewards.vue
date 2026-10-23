@@ -64,7 +64,7 @@ function apply(kind: 'barrage' | 'media', id: string) {
     ><h2>專屬成就外觀獎勵</h2
     ><StatusSlot
       :message="mutation.message.value || resource.error.value || selected"
-      :error="mutation.failed.value || !!resource.error.value" /><UiButton
+      :error="mutation.failed.value || !!resource.error.value" /><UiButton legacy
       v-if="resource.error.value"
       label="重新讀取獎勵"
       @click="resource.load()" /><div class="vue-reward-grid"
@@ -85,14 +85,14 @@ function apply(kind: 'barrage' | 'media', id: string) {
           name="播放器"
           message="歌曲外觀預覽" /><template v-if="reward.claimedAt"
           ><p>已領取 · 彈幕與播放器皆可使用</p
-          ><UiButton
+          ><UiButton legacy
             label="套用彈幕框"
             :aria-pressed="prefs.barrage?.selected === reward.frameId"
-            @click="apply('barrage', reward.frameId)" /><UiButton
+            @click="apply('barrage', reward.frameId)" /><UiButton legacy
             label="套用播放器"
             :aria-pressed="prefs.media === reward.frameId"
             @click="apply('media', reward.frameId)" /></template
-        ><UiButton
+        ><UiButton legacy
           v-else
           :label="reward.earned ? '領取獎勵' : '尚未達成'"
           :disabled="!reward.earned || mutation.pending.value"

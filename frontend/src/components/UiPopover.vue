@@ -118,7 +118,6 @@ defineExpose({ open, close, visible });
           ><slot name="header"
             ><h2>{{ title }}</h2></slot
           ><UiButton
-            stitch
             variant="ghost"
             icon="close"
             icon-only

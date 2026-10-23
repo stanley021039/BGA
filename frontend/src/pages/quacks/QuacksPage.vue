@@ -98,19 +98,16 @@ function status(player: RoomPlayer) {
     @start="prepareOrStart"
     ><template v-if="state && state.phase !== 'waiting'" #toolbar
       ><UiButton
-        stitch
         variant="ghost"
         icon="crown"
         icon-only
         label="環形記分板"
         @click="scene?.open('score')" /><UiButton
-        stitch
         variant="ghost"
         icon="book"
         icon-only
         label="藥材寶典"
         @click="scene?.open('books')" /><UiButton
-        stitch
         variant="ghost"
         icon="cards"
         icon-only
@@ -130,7 +127,6 @@ function status(player: RoomPlayer) {
       ><h1>正在讀取郎中房間…</h1></section
     ><template #waiting-before-start
       ><UiButton
-        stitch
         variant="secondary"
         icon="book"
         label="搭配本局藥材書"
@@ -166,7 +162,7 @@ function status(player: RoomPlayer) {
         ><p>各色書面可在舞台「藥典」選擇；全桌採用最後一次選擇。開始後鎖定。</p
         ><StatusSlot
           :message="game.settingsPending ? '正在儲存設定…' : game.settingsError || ''"
-          :error="!!game.settingsError" /><UiButton
+          :error="!!game.settingsError" /><UiButton legacy
           v-if="game.settingsError && game.editableSettings"
           icon="refresh"
           label="重試儲存設定"

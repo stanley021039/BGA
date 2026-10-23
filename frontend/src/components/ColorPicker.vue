@@ -187,7 +187,6 @@ watch(
         ><span :style="{ background: color }" aria-hidden="true" /></button
     ></div>
     <UiButton
-      stitch
       variant="secondary"
       icon="edit"
       label="自訂畫筆顏色"
@@ -256,7 +255,6 @@ watch(
           :aria-describedby="prefix + '-error'"
           @input="error = ''"
           @change="fromHex(hex)" /><UiButton
-          stitch
           variant="contrast"
           icon="check"
           type="submit"

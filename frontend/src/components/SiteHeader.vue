@@ -215,7 +215,6 @@ onBeforeUnmount(() => {
         <a class="vue-site-navigation-link" href="/community?tab=issues">留言板</a>
         <div ref="moreButton" class="vue-site-more">
           <UiButton
-            stitch
             variant="ghost"
             label="遊戲題庫"
             :aria-expanded="moreOpen"
@@ -239,7 +238,6 @@ onBeforeUnmount(() => {
     <div id="vue-room-header-portal" class="vue-room-header-portal" :hidden="!room.seat" />
     <div class="vue-site-controls">
       <UiButton
-        stitch
         variant="ghost"
         :icon="dark ? 'sun' : 'moon'"
         icon-only
@@ -298,7 +296,6 @@ onBeforeUnmount(() => {
           </header>
           <nav class="vue-site-account-actions" aria-label="帳號功能">
             <UiButton
-              stitch
               variant="secondary"
               icon="settings"
               label="個人遊戲設定"
@@ -309,7 +306,6 @@ onBeforeUnmount(() => {
             <a v-if="session.user.role === 'admin'" id="site-admin" href="/admin">管理</a>
             <UiButton
               id="site-logout"
-              stitch
               variant="danger"
               icon="leave"
               label="登出"
@@ -332,13 +328,12 @@ onBeforeUnmount(() => {
     <div class="vue-site-header-feedback"
       ><StatusSlot :message="message" :error="!!message" /><UiButton
         v-if="message && !session.pending"
-        stitch
         variant="secondary"
         icon="refresh"
         label="重試讀取帳號"
         @click="loadIdentity"
     /></div>
-    <UiDialog ref="preferences" stitch class="vue-site-preferences-dialog" title="遊戲設定" compact
+    <UiDialog ref="preferences" class="vue-site-preferences-dialog" title="遊戲設定" compact
       ><GamePreferences
     /></UiDialog>
   </div>

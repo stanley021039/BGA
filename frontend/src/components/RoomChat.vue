@@ -128,7 +128,6 @@ defineExpose({ compose, focus: focusInput });
         ><h2 v-if="inline">房間彈幕與閒聊</h2
         ><UiButton
           v-else
-          stitch
           variant="ghost"
           icon="chat"
           :label="chat.visible ? '收合房間彈幕與閒聊' : '展開房間彈幕與閒聊'"
@@ -191,7 +190,6 @@ defineExpose({ compose, focus: focusInput });
             compose-emoji
             @compose="compose" /><UiButton
             v-if="chat.status && chat.enabled"
-            stitch
             variant="secondary"
             class="vue-chat-retry"
             icon="refresh"
@@ -218,7 +216,6 @@ defineExpose({ compose, focus: focusInput });
             @keydown.enter="
               ($event.isComposing || composing) && $event.preventDefault()
             " /><UiButton
-            stitch
             variant="contrast"
             type="submit"
             class="vue-chat-send"

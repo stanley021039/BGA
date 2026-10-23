@@ -163,7 +163,6 @@ onBeforeUnmount(() => {
           ><strong>{{ state.fortune.name }}</strong></button
         ><div class="vue-quacks-scene-tools"
           ><UiButton
-            stitch
             variant="ghost"
             icon-only
             label="檢視目前大釜"
@@ -184,13 +183,11 @@ onBeforeUnmount(() => {
                 /></svg></template></UiButton
           ><UiButton
             :disabled="!inspecting"
-            stitch
             variant="ghost"
             icon="previous"
             icon-only
             label="返回目前階段"
             @click="inspecting = false" /><UiButton
-            stitch
             variant="ghost"
             icon="settings"
             icon-only
@@ -294,7 +291,6 @@ onBeforeUnmount(() => {
         <UiButton
           v-if="boardVisible && isOwnPot"
           class="vue-quacks-pot-customize"
-          stitch
           variant="ghost"
           icon="settings"
           icon-only
@@ -335,7 +331,6 @@ onBeforeUnmount(() => {
               @click="open('witches')"
               >免</button
             ><UiButton
-              stitch
               variant="ghost"
               icon="help"
               icon-only
@@ -344,7 +339,6 @@ onBeforeUnmount(() => {
         ></div>
         <QuacksCommands v-if="!inspecting && (isOwnPot || !boardVisible)" /><UiButton
           v-else-if="!inspecting"
-          stitch
           variant="secondary"
           icon="previous"
           label="返回自己的大釜繼續操作"
@@ -359,7 +353,7 @@ onBeforeUnmount(() => {
       </footer>
     </template>
   </section>
-  <UiDialog ref="tools" :title="title"
+  <UiDialog legacy ref="tools" :title="title"
     ><nav v-if="tab !== 'books'" class="vue-quacks-tabs" aria-label="遊戲工具"
       ><button
         v-for="(label, key) in tabs"
@@ -412,7 +406,7 @@ onBeforeUnmount(() => {
           v-model="game.nameDraft"
           maxlength="48"
           :disabled="!game.available" /></label
-      ><UiButton
+      ><UiButton legacy
         icon="save"
         label="儲存大釜名稱"
         :disabled="!game.available"

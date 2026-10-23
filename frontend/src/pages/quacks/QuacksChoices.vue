@@ -42,7 +42,7 @@ const labels = { gold: '金幣', copper: '銅幣', silver: '銀幣' };
       ></template
     ><template v-if="grouped && game.coinFilter"
       ><p>已選擇棄{{ labels[game.coinFilter as keyof typeof labels] }}，再選擇要拿的藥材。</p
-      ><UiButton
+      ><UiButton legacy
         icon="undo"
         label="重選女巫幣"
         :disabled="!game.available"

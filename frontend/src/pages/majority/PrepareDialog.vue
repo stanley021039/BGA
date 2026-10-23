@@ -37,19 +37,17 @@ async function random(intent: 'ask' | 'enqueue') {
 defineExpose({ open });
 </script>
 <template>
-  <UiDialog stitch ref="dialog" title="挑題庫或預備題目" class="vue-majority-prepare-dialog"
+  <UiDialog ref="dialog" title="挑題庫或預備題目" class="vue-majority-prepare-dialog"
     ><div class="vue-majority-prepare"
       ><p
         >每人最多排 5
         題，依提交順序揭題。未揭題前只有你能看到自己的預備內容；殘酷模式使用獨立牌庫。</p
       ><StatusSlot :message="game.message" :error="game.failed" /><div class="vue-majority-tabs"
         ><UiButton
-          stitch
           label="共用題庫"
           :variant="tab === 'bank' ? 'primary' : 'secondary'"
           :aria-pressed="tab === 'bank'"
           @click="tab = 'bank'" /><UiButton
-          stitch
           label="自己出題"
           :variant="tab === 'custom' ? 'primary' : 'secondary'"
           :aria-pressed="tab === 'custom'"
@@ -86,19 +84,16 @@ defineExpose({ open });
           ></div
         ><div class="vue-majority-actions"
           ><UiButton
-            stitch
             variant="primary"
             label="隨機一題加入預備"
             icon="shuffle"
             :disabled="blocked || !game.filtered.length || (game.state?.ownQueue.length || 0) >= 5"
             @click="random('enqueue')" /><UiButton
-            stitch
             v-if="game.canAsk"
             label="隨機一題現在出題"
             icon="play"
             :disabled="blocked || !game.filtered.length"
             @click="random('ask')" /><UiButton
-            stitch
             icon="refresh"
             label="更新題庫"
             :pending="game.libraryLoading"
@@ -117,13 +112,11 @@ defineExpose({ open });
             ><QuestionPreview :question="question" compact
               ><div class="vue-majority-actions"
                 ><UiButton
-                  stitch
                   icon="add"
                   variant="primary"
                   label="加入預備"
                   :disabled="blocked || (game.state?.ownQueue.length || 0) >= 5"
                   @click="send('enqueue', question.id || undefined)" /><UiButton
-                  stitch
                   v-if="game.canAsk"
                   icon="play"
                   variant="primary"
@@ -133,7 +126,6 @@ defineExpose({ open });
                     send('ask', question.id || undefined)
                   " /></div></QuestionPreview></article></div
         ><UiButton
-          stitch
           v-if="game.filtered.length > game.limit"
           label="顯示更多題目"
           @click="game.limit += 20"
@@ -148,13 +140,11 @@ defineExpose({ open });
           show-topic
           :disabled="blocked" /><div class="vue-majority-actions"
           ><UiButton
-            stitch
             type="submit"
             icon="add"
             variant="primary"
             label="加入預備題目"
             :disabled="blocked || (game.state?.ownQueue.length || 0) >= 5" /><UiButton
-            stitch
             v-if="game.canAsk"
             icon="play"
             variant="primary"
@@ -168,7 +158,6 @@ defineExpose({ open });
         ><div v-for="(item, i) in game.state?.ownQueue || []" :key="item.id"
           ><span>{{ i + 1 }}. {{ item.question.prompt }}</span
           ><UiButton
-            stitch
             icon="remove"
             :label="'移除預備題目：' + item.question.prompt"
             :disabled="blocked"

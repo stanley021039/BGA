@@ -300,7 +300,7 @@ onBeforeUnmount(() => {
     ><div v-if="lobby.presenceStatus" class="vue-lobby-presence"
       ><StatusSlot
         :message="lobby.presenceStatus"
-        :error="!lobby.connected && !!lobby.snapshot" /><UiButton
+        :error="!lobby.connected && !!lobby.snapshot" /><UiButton legacy
         icon="refresh"
         icon-only
         label="重新連接大廳"
@@ -309,7 +309,6 @@ onBeforeUnmount(() => {
   ></Teleport>
   <UiDialog
     ref="dialog"
-    stitch
     class="vue-approved-lobby-expressions"
     title="角色對話與表情"
     compact

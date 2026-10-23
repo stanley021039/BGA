@@ -110,11 +110,11 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
           ><QuacksGlyph :chip="c" /><span
             >{{ ingredientNames[c.color] }} {{ c.value }} ·
             {{ c.must ? '本輪必須投入' : '可保留到下輪' }}</span
-          ><UiButton
+          ><UiButton legacy
             icon="play"
             label="投入暫存"
             :disabled="reserveBlocked(c)"
-            @click="game.command('reserve', { chipId: c.id })" /><UiButton
+            @click="game.command('reserve', { chipId: c.id })" /><UiButton legacy
             v-if="!c.must"
             icon="undo"
             label="放回藥袋"
@@ -122,7 +122,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
             @click="game.command('reserve-return', { chipId: c.id })" /></div
         ><div v-if="s.stage === 'reserves'"
           ><template v-for="c in m?.alchemy?.pool || []" :key="c.id"
-            ><UiButton
+            ><UiButton legacy
               v-if="c.color === 'red' && (s.options.books?.red ?? s.options.bookSet) === 2"
               icon="play"
               :label="'投入預抽紅色 ' + c.value"
@@ -194,11 +194,11 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
           extra /><section v-if="s.round < 9" class="vue-quacks-ruby"
           ><h2>使用紅寶石 · 每次 {{ m.discount }} 顆</h2
           ><div class="vue-quacks-tabs"
-            ><UiButton
+            ><UiButton legacy
               icon="refresh"
               label="補滿藥水瓶"
               :disabled="!game.available || m.potion || own.rubies < m.discount"
-              @click="game.command('ruby', { mode: 'refill' })" /><UiButton
+              @click="game.command('ruby', { mode: 'refill' })" /><UiButton legacy
               icon="next"
               label="永久水滴前進一格"
               :disabled="!game.available || own.rubies < m.discount"
@@ -254,7 +254,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
     <section v-else-if="s.phase === 'between'"
       ><h2>本輪環形計分板</h2><QuacksScoreboard /><p>查看後由房主開始下一回合。</p></section
     >
-    <UiButton
+    <UiButton legacy
       v-if="m?.canGoodNeighbor"
       icon="add"
       label="好鄰居：拿白色炸彈3，其他人各得2紅寶石"

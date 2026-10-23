@@ -333,7 +333,6 @@ onMounted(() => {
     ><template v-else-if="profile.error"
       ><span class="resource-error">{{ profile.error }}</span
       ><UiButton
-        stitch
         variant="secondary"
         icon="refresh"
         label="重新載入形象設定"
@@ -366,7 +365,6 @@ onMounted(() => {
               :disabled="namePending || nameLoading || !session.user" /></label
           ><UiButton
             id="nickname-save"
-            stitch
             variant="secondary"
             type="submit"
             icon="save"
@@ -377,7 +375,6 @@ onMounted(() => {
             :message="nameLoadError || nameMessage"
             :error="!!nameLoadError || nameFailed" /><UiButton
             v-if="nameLoadError"
-            stitch
             variant="secondary"
             icon="refresh"
             label="重新載入暱稱"
@@ -398,7 +395,6 @@ onMounted(() => {
             }}</strong></p
           ><UiButton
             id="settings-barrage-frame"
-            stitch
             variant="ghost"
             icon="next"
             label="選擇彈幕框"
@@ -425,7 +421,6 @@ onMounted(() => {
             >目前外觀：<strong>{{ labelForFrame(prefs.media) }}</strong></p
           ><UiButton
             id="settings-media-frame"
-            stitch
             variant="ghost"
             icon="next"
             label="選擇播放器外觀"
@@ -452,7 +447,6 @@ onMounted(() => {
             >目前特效：<strong>{{ entranceLabel }}</strong></p
           ><UiButton
             id="settings-entrance-effect"
-            stitch
             variant="ghost"
             icon="next"
             label="選擇進場特效"
@@ -669,7 +663,6 @@ onMounted(() => {
       ><StatusSlot id="settings-message" :message="message" :error="failed" /></div
     ><UiButton
       id="settings-save"
-      stitch
       variant="primary"
       form="settings-form"
       type="submit"
@@ -679,5 +672,5 @@ onMounted(() => {
       :disabled="!appearance || !avatar || selectedPings.length !== 5"
   /></footer>
   <FramePicker ref="barragePicker" kind="barrage" /><FramePicker ref="mediaPicker" kind="media" />
-  <UiDialog ref="entrancePicker" stitch title="選擇進場特效"><EntranceChoices /></UiDialog>
+  <UiDialog ref="entrancePicker" title="選擇進場特效"><EntranceChoices /></UiDialog>
 </template>

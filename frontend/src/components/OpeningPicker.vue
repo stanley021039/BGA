@@ -53,7 +53,7 @@ async function choose(id: string) {
   <button type="button" class="vue-preference-frame opening-picker-trigger" @click="open"
     ><UiIcon name="play" /><span>網站開場樣式</span><UiIcon name="next"
   /></button>
-  <UiDialog ref="dialog" title="網站開場樣式" stitch>
+  <UiDialog ref="dialog" title="網站開場樣式">
     <div class="opening-options">
       <button
         v-for="theme in themes"
