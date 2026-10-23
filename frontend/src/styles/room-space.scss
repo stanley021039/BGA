@@ -406,7 +406,10 @@
 
 // Let the seated room toolbar fill wide screens while the game keeps its cap.
 @media (min-width: 1921px) {
-  :root body[data-visual-theme].vue-quacks-document:has(.has-room-space[data-room-kind='quacks']) {
+  :root
+    body[data-visual-theme].vue-quacks-document:not(.vue-game-focus):has(
+      .has-room-space[data-room-kind='quacks']
+    ) {
     .vue-game-document {
       max-width: none;
     }
@@ -420,7 +423,7 @@
 }
 @media (min-width: 1921px) and (min-height: 640px) and (pointer: fine) {
   :root
-    body[data-visual-theme].vue-quacks-document:not(.ui-large-text):has(
+    body[data-visual-theme].vue-quacks-document:not(.vue-game-focus):not(.ui-large-text):has(
       .has-room-space[data-room-kind='quacks']
     )
     #quacks-app {
