@@ -28,8 +28,13 @@ function load(file) {
   const mod = new Module(file, module);
   mod.filename = file;
   mod.paths = module.paths;
-  mod.require = (request) =>
-    request.endsWith('.vue') ? load(path.resolve(path.dirname(file), request)) : require(request);
+  mod.require = (request) => {
+    // SSR checks markup and behaviour; component styles are side-effect imports.
+    if (/\.(?:css|scss)$/.test(request)) return {};
+    return request.endsWith('.vue')
+      ? load(path.resolve(path.dirname(file), request))
+      : require(request);
+  };
   mod._compile(code, file);
   cache.set(file, mod.exports);
   return mod.exports;
@@ -109,7 +114,16 @@ test('UiPanel names its region by its title and renders the action slot', async 
   );
   const labelled = html.match(/aria-labelledby="([^"]+)"/)?.[1];
   assert.ok(labelled, 'panel is labelled');
-  assert.match(html, new RegExp(`<h2 id="${labelled}">房間標記</h2>`));
+  const heading = html.match(/<h2\b[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/h2>/);
+  assert.ok(heading, 'panel renders a level-two heading');
+  assert.equal(heading[1], labelled, 'panel references its actual heading');
+  assert.equal(
+    heading[2].replace(/<!--[\s\S]*?-->|<[^>]+>/g, '').trim(),
+    '房間標記',
+    'heading keeps the visible title through nested markup',
+  );
+  assert.match(heading[0], /class="[^"]*\bui-heading\b[^"]*"/);
+  assert.match(heading[0], /data-kind="section"/);
   assert.match(html, /data-tone="raised"/);
   assert.match(html, /data-density="compact"/);
   assert.match(html, /class="ui-panel-description">挑選五個常用標記/);
@@ -125,10 +139,24 @@ test('UiPanel names its region by its title and renders the action slot', async 
 
 test('UiCheckbox and UiFilePick keep a visible label around the native control', async () => {
   const box = await render('UiCheckbox.vue', { label: '常用', modelValue: true, disabled: true });
-  assert.match(box, /<label class="ui-checkbox"><input[^>]*type="checkbox"/);
-  assert.match(box, /checked/);
-  assert.match(box, /disabled/);
-  assert.match(box, /<span class="ui-checkbox-label">常用<\/span>/);
+  const label = box.match(/<label\b([^>]*)>([\s\S]*?)<\/label>/);
+  assert.ok(label, 'checkbox keeps its visible label around the native input');
+  assert.match(label[1], /class="[^"]*\bui-checkbox\b[^"]*"/);
+  const checkbox = label[2].match(/<input\b[^>]*>/)?.[0];
+  assert.ok(checkbox, 'label contains a native control');
+  assert.match(checkbox, /\btype="checkbox"/);
+  assert.match(checkbox, /\schecked(?:\s|\/?>)/, 'native checkbox is checked');
+  assert.match(checkbox, /\sdisabled(?:\s|\/?>)/, 'native checkbox is disabled');
+  assert.match(label[2], /<span class="ui-checkbox-label">常用<\/span>/);
+  const unset = await render('UiCheckbox.vue', {
+    label: '常用',
+    modelValue: null,
+    disabled: false,
+  });
+  const unsetInput = unset.match(/<input\b[^>]*>/)?.[0];
+  assert.ok(unsetInput, 'unset model still renders a native checkbox');
+  assert.doesNotMatch(unsetInput, /\schecked(?:\s|\/?>)/, 'unset model is unchecked');
+  assert.doesNotMatch(unsetInput, /\sdisabled(?:\s|\/?>)/, 'false does not disable the input');
   const file = await render('UiFilePick.vue', {
     label: '上傳頭像',
     accept: 'image/png',
