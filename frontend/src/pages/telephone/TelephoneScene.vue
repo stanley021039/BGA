@@ -30,10 +30,10 @@ const reviewPages = computed(() =>
   selected = computed(() => reviewPages.value[state.value.review?.index ?? -1]),
   visiblePages = computed(() => selected.value?.pages.slice(0, selected.value.index + 1) || []),
   blocked = computed(() => !telephone.editable || telephone.activeStroke);
-const playbackActions = ref<HTMLElement | null>(null);
+const storyViewport = ref<HTMLElement | null>(null);
 function scrollPlayback() {
-  if (state.value.phase === 'finished' && selected.value)
-    playbackActions.value?.scrollIntoView({ block: 'end', behavior: 'auto' });
+  if (state.value.phase === 'finished' && selected.value && storyViewport.value)
+    storyViewport.value.scrollTop = storyViewport.value.scrollHeight;
 }
 watch(
   [
@@ -193,7 +193,13 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         個片段</p
       >
     </header>
-    <div class="vue-telephone-live">
+    <div
+      ref="storyViewport"
+      class="vue-telephone-live"
+      :role="state.phase === 'finished' ? 'region' : undefined"
+      :aria-label="state.phase === 'finished' ? '故事播放內容' : undefined"
+      :tabindex="state.phase === 'finished' ? 0 : undefined"
+    >
       <section
         v-if="playing && state.task"
         class="vue-telephone-task"
@@ -343,7 +349,6 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
     /></div>
     <footer
-      ref="playbackActions"
       v-if="prompting || drawing || !playing || state.task?.submitted"
       class="vue-telephone-actions"
     >

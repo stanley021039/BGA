@@ -12,9 +12,27 @@ for (const key of ['window', 'document', 'Element', 'HTMLElement', 'SVGElement',
   global[key] = key === 'window' ? window : window[key];
 const vue = require('vue');
 const scrolls = [];
-window.HTMLElement.prototype.scrollIntoView = function (options) {
-  scrolls.push({ element: this, options });
+window.HTMLElement.prototype.scrollIntoView = function () {
+  throw Error('story playback must not scroll the outer document');
 };
+Object.defineProperties(window.HTMLElement.prototype, {
+  scrollHeight: {
+    configurable: true,
+    get() {
+      return this.querySelectorAll('.vue-telephone-book-page').length * 200;
+    },
+  },
+  scrollTop: {
+    configurable: true,
+    get() {
+      return this._testScrollTop || 0;
+    },
+    set(top) {
+      this._testScrollTop = top;
+      scrolls.push({ element: this, top });
+    },
+  },
+});
 const pinia = require('pinia');
 const ts = require('typescript');
 const { parse, compileScript } = require('vue/compiler-sfc');
@@ -228,9 +246,10 @@ test('three actual scenes retain each revealed story prefix, reset between owner
         'host and both viewers follow the new bottom',
       );
       for (const scroll of scrolls.slice(-3)) {
-        assert.equal(scroll.element.className, 'vue-telephone-actions');
-        assert.equal(scroll.options.block, 'end');
-        assert.equal(scroll.options.behavior, 'auto');
+        assert.equal(scroll.element.className, 'vue-telephone-live');
+        assert.equal(scroll.top, (pageIndex + 1) * 200);
+        assert.equal(scroll.element.getAttribute('role'), 'region');
+        assert.equal(scroll.element.getAttribute('tabindex'), '0');
       }
       const stableScrolls = scrolls.length;
       clients.forEach((current) => current.refresh());
@@ -249,7 +268,7 @@ test('three actual scenes retain each revealed story prefix, reset between owner
       assert.equal(reconnected.store.state.review.index, pages.length - 1);
       assert.equal(reconnected.host.querySelectorAll('.vue-telephone-book-page').length, 3);
       assert.equal(
-        vue.toRaw(scrolls.at(-1).element) === reconnected.host.querySelector('footer'),
+        vue.toRaw(scrolls.at(-1).element) === reconnected.host.querySelector('.vue-telephone-live'),
         true,
       );
     } finally {
