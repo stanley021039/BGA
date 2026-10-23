@@ -15,7 +15,7 @@
   border: 0;
   color: #f8eedc;
   background: radial-gradient(ellipse at 50% 42%, #253637, #0a1215 72%);
-  animation: entry-intro-curtain 3s ease-in-out both;
+  animation: entry-intro-curtain var(--entry-intro-duration, 3s) ease-in-out both;
 }
 #entry-intro[hidden],
 html.entry-intro-disabled #entry-intro {
@@ -32,7 +32,7 @@ html.entry-intro-active dialog:not(#entry-intro) {
   width: min(84vw, 1080px);
   max-height: 78dvh;
   aspect-ratio: 16 / 9;
-  animation: entry-intro-grow 3s cubic-bezier(0.2, 0.65, 0.3, 1) both;
+  animation: entry-intro-grow var(--entry-intro-duration, 3s) cubic-bezier(0.2, 0.65, 0.3, 1) both;
 }
 .entry-intro-art img {
   display: block;
@@ -58,6 +58,7 @@ html.entry-intro-active dialog:not(#entry-intro) {
   color: #d7c6a3;
 }
 #entry-intro .entry-intro-skip,
+.entry-auth-sound,
 .entry-auth-skip {
   position: absolute;
   right: max(24px, env(safe-area-inset-right));
@@ -82,6 +83,30 @@ html.entry-intro-active dialog:not(#entry-intro) {
 #entry-intro .entry-intro-skip:focus-visible {
   outline: 3px solid #f6c845;
   outline-offset: 4px;
+}
+#entry-intro .entry-intro-sound:not([hidden]) {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 2;
+  min-height: 44px;
+  padding: 8px 18px;
+  transform: translateX(-50%);
+  border: 1px solid #eac87b;
+  border-radius: 999px;
+  background: #19252b;
+  color: #fff4d4;
+  font:
+    600 14px/1.5 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+#entry-intro.entry-intro-audio-pending,
+#entry-intro.entry-intro-audio-pending .entry-intro-art {
+  animation: none;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 @keyframes entry-intro-grow {
   0% {
@@ -154,6 +179,7 @@ html.entry-auth-playing body * {
   visibility: hidden !important;
 }
 html.entry-auth-playing .entry-auth-image,
+html.entry-auth-playing .entry-auth-sound,
 html.entry-auth-playing .entry-auth-skip,
 html.entry-auth-playing .entry-auth-skip * {
   visibility: visible !important;
@@ -172,14 +198,26 @@ html.entry-auth-playing .entry-auth-image {
   outline: none !important;
   pointer-events: none;
 }
-.entry-auth-skip {
+.entry-auth-skip,
+.entry-auth-sound {
   position: fixed;
   z-index: 2147483002;
 }
-.entry-auth-skip[hidden] {
+.entry-auth-sound {
+  left: max(24px, env(safe-area-inset-left));
+  right: auto;
+}
+.entry-auth-skip[hidden],
+.entry-auth-sound[hidden] {
   display: none !important;
 }
-.entry-auth-skip:focus-visible {
+.entry-auth-skip:focus-visible,
+.entry-auth-sound:focus-visible {
   outline: 3px solid #f6c845;
   outline-offset: 4px;
+}
+
+.entry-auth-image.entry-auth-soul-world,
+[data-entry-opening='soul-world'] #entry-intro img {
+  content: url('/assets/auth/soul-world.webp');
 }

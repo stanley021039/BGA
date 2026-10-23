@@ -221,12 +221,22 @@
     .vue-waiting-music-settings {
       display: grid;
       gap: 12px;
+      min-inline-size: 0;
+      container: music-settings / inline-size;
       h1 {
         font-size: 20px;
       }
       > fieldset {
         display: grid;
         gap: 12px;
+      }
+      .stitch-settings-grid,
+      .mq-banks {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .mq-bank {
+        min-block-size: 0;
+        padding: 12px;
       }
     }
     .vue-waiting-ready {

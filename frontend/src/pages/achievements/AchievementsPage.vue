@@ -4,6 +4,7 @@ import { useAchievementsStore } from '../../stores/achievements';
 import UiIcon from '../../components/UiIcon.vue';
 import AchievementCard from './AchievementCard.vue';
 import AchievementRewards from '../../components/AchievementRewards.vue';
+import AchievementRedeem from '../../components/AchievementRedeem.vue';
 const store = useAchievementsStore();
 onMounted(() => void store.load());
 </script>
@@ -106,5 +107,5 @@ onMounted(() => void store.load());
         ><UiIcon name="refresh" />重新載入成就</button
       ></div
     > </section
-  ><AchievementRewards />
+  ><AchievementRedeem @redeemed="store.load()" /><AchievementRewards />
 </template>

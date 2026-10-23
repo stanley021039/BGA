@@ -209,7 +209,7 @@
         if (playing) return;
         playing = true;
         clearTimeout(deadline);
-        deadline = setTimeout(() => stopEffect(clip), Math.min(10000, durationMs));
+        deadline = setTimeout(() => stopEffect(clip), Math.min(20000, durationMs));
       };
       const failed = () => {
         if (stopEffect(clip)) onError?.();
@@ -234,6 +234,23 @@
       'ping-question': ['/assets/game-sounds/ping-question.wav', 1131],
       'ping-help': ['/assets/game-sounds/ping-help.wav', 2802],
       'ping-look': ['/assets/game-sounds/ping-look.wav', 1706],
+      'ping-voice-amazing': ['/assets/game-sounds/ping-voice-amazing.mp3', 3360],
+      'ping-voice-bad': ['/assets/game-sounds/ping-voice-bad.mp3', 4880],
+      'ping-voice-card-check': ['/assets/game-sounds/ping-voice-card-check.mp3', 1180],
+      'ping-voice-sleep': ['/assets/game-sounds/ping-voice-sleep.mp3', 1120],
+      'ping-voice-look': ['/assets/game-sounds/ping-voice-look.mp3', 910],
+      'ping-voice-legacy': ['/assets/game-sounds/ping-voice-legacy.mp3', 4250],
+      'ping-voice-no-bluff': ['/assets/game-sounds/ping-voice-no-bluff.mp3', 2510],
+      'ping-voice-cry': ['/assets/game-sounds/ping-voice-cry.mp3', 700],
+      'ping-voice-coward': ['/assets/game-sounds/ping-voice-coward.mp3', 2420],
+      'ping-voice-goodnight': ['/assets/game-sounds/ping-voice-goodnight.mp3', 3550],
+      'ping-voice-senior': ['/assets/game-sounds/ping-voice-senior.mp3', 8500],
+      'ping-voice-practice': ['/assets/game-sounds/ping-voice-practice.mp3', 1570],
+      'ping-voice-huh': ['/assets/game-sounds/ping-voice-huh.mp3', 910],
+      'ping-voice-what': ['/assets/game-sounds/ping-voice-what.mp3', 2040],
+      'entry-home-family': ['/assets/game-sounds/entry-home-family.mp3', 8500],
+      'entry-intro': ['/assets/game-sounds/entry-intro-user.mp3', 2040],
+      'entrance-soul-world': ['/assets/game-sounds/entrance-soul-world.mp3', 3610],
       'majority-settlement': ['/assets/game-sounds/quacks-settlement-user.wav', 660],
       'quacks-stop': ['/assets/game-sounds/quacks-decline-user.wav', 1811],
       'quacks-settlement': ['/assets/game-sounds/quacks-settlement-user.wav', 660],
@@ -282,9 +299,11 @@
         maxStartDelayMs:
           kind === 'confirm' || kind === 'reveal'
             ? 10000
-            : ['ingredient-draw', 'quacks-draw', 'quacks-stop'].includes(kind)
-              ? 3000
-              : 1000,
+            : kind.startsWith('ping-voice-')
+              ? 5000
+              : ['ingredient-draw', 'quacks-draw', 'quacks-stop'].includes(kind)
+                ? 3000
+                : 1000,
       });
       if (!clip) release?.();
       return clip;

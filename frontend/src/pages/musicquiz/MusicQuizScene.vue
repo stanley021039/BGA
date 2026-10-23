@@ -37,6 +37,34 @@ const settingsSave = useQueuedSave<void>({
   save,
   failure: () => actions.notice || error.value,
 });
+let appliedFrameRoom = '';
+watch(
+  [() => room.code, () => room.connected, () => s.value.me, () => s.value.players],
+  () => {
+    if (!room.connected || !s.value.me || appliedFrameRoom === room.code) return;
+    const own = s.value.players.find((player) => player.id === s.value.me);
+    if (!own) return;
+    appliedFrameRoom = room.code;
+    let saved = 'default';
+    try {
+      saved = localStorage.getItem('musicquiz-card-frame:' + s.value.me) || 'default';
+    } catch {
+      /* Storage is optional. */
+    }
+    if (saved !== 'default' && prefs.canUse(saved) && own.musicCardFrame?.id !== saved)
+      void actions.command('card-frame', { frameId: saved });
+  },
+  { immediate: true },
+);
+function selectCardFrame(event: Event) {
+  const frameId = (event.target as HTMLSelectElement).value;
+  try {
+    if (s.value.me) localStorage.setItem('musicquiz-card-frame:' + s.value.me, frameId);
+  } catch {
+    /* Storage is optional. */
+  }
+  void actions.command('card-frame', { frameId });
+}
 function markSettingsInput(event: Event) {
   // Checkbox v-model commits on change. Rendering on its earlier input event
   // can restore the old checked value before that change handler reads it.
@@ -115,6 +143,13 @@ async function save() {
   }
 }
 const enteredAt = ref(Date.now());
+const songPlaying = ref(false);
+watch(
+  () => s.value.playback?.url + ':' + s.value.playback?.stage,
+  () => {
+    songPlaying.value = false;
+  },
+);
 watch(
   () => s.value.roundId + ':' + s.value.phase,
   () => {
@@ -133,7 +168,7 @@ const phaseGuide = computed(
     ({
       waiting: '',
       finished: '',
-      pick: '接下來：全員聽8秒前奏，從10個歌名選答案。由DJ按開始。',
+      pick: '接下來：全員聽8秒前奏，從6個歌名選答案。由DJ按開始。',
       intro:
         '全員選歌名。接下來由DJ聽精華、排列年代；前奏個人判定即時播放音效；歌名與年份最後公開。',
       timeline: me.value
@@ -267,7 +302,7 @@ const canSlot = (i: number) =>
         ><small class="stitch-content-kicker">TUNE TIMELINE · 第 {{ s.round }} 首</small
         ><h1>{{
           s.phase === 'intro'
-            ? '前奏10選1'
+            ? '前奏6選1'
             : s.phase === 'timeline'
               ? '歌曲精華 · 年代排序'
               : s.phase === 'challenge'
@@ -291,7 +326,10 @@ const canSlot = (i: number) =>
             : '玩法提示'
         }}</strong
         ><p>{{ phaseGuide }}</p></aside
-      ><section v-if="s.playback" class="stitch-vinyl-stage" :class="{ 'is-revealed': !!s.song }"
+      ><section
+        v-if="s.playback"
+        class="stitch-vinyl-stage"
+        :class="{ 'is-revealed': !!s.song, 'is-playing': songPlaying }"
         ><div class="stitch-vinyl-record" aria-hidden="true"><span>♪</span></div
         ><div
           ><small>{{
@@ -321,7 +359,8 @@ const canSlot = (i: number) =>
         v-if="s.playback"
         :key="s.roundId + ':' + s.playback.stage"
         :playback="s.playback"
-        :active="room.connected && !preparing" />
+        :active="room.connected && !preparing"
+        @playing="songPlaying = $event" />
       <template v-if="s.phase === 'pick'"
         ><UiButton
           v-if="me"
@@ -433,15 +472,13 @@ const canSlot = (i: number) =>
       label="重試同一操作"
       @click="actions.retrySame()"
   /></section>
-  <section class="vue-game-panel"
+  <section v-if="s.phase !== 'waiting'" class="vue-game-panel"
     ><h2>大家的音樂卡</h2
     ><label
       >我的音樂卡外觀<select
         :value="s.players.find((p) => p.id === s.me)?.musicCardFrame?.id || 'default'"
         :disabled="blocked"
-        @change="
-          actions.command('card-frame', { frameId: ($event.target as HTMLSelectElement).value })
-        "
+        @change="selectCardFrame"
         ><option
           v-for="frame in prefs.frames"
           :key="frame.id"

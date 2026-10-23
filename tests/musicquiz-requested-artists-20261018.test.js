@@ -51,9 +51,12 @@ test('all requested artists are available in their selected bank in both music m
   for (const [bank, artists] of Object.entries(requested)) {
     const room = new MusicQuizRoom('ARTIST', 'artists'),
       host = room.add('host');
-    room.configure(host.id, { banks: [bank] });
+    room.configure(host.id, { banks: bank === 'jp' ? ['jp', 'anime'] : [bank] });
     const pool = room.pool(),
-      shared = tournament.pool('music', bank);
+      shared =
+        bank === 'jp'
+          ? [...tournament.pool('music', 'jp'), ...tournament.pool('music', 'anime')]
+          : tournament.pool('music', bank);
     for (const artist of artists) {
       const songs = pool.filter((s) => s.artist === artist);
       assert.ok(
@@ -84,7 +87,7 @@ test('all advertised genres can be selected together and include reggae, metal a
   assert.ok(genres.length <= 25, 'advertised genres must fit the configuration limit');
   assert.doesNotThrow(() =>
     room.configure(host.id, {
-      banks: ['zh', 'tw', 'jp', 'kr', 'yue', 'viral', 'classical', 'en', 'foreign'],
+      banks: ['zh', 'tw', 'jp', 'anime', 'kr', 'yue', 'viral', 'classical', 'en', 'foreign'],
       genres,
     }),
   );
@@ -94,7 +97,7 @@ test('all advertised genres can be selected together and include reggae, metal a
   );
   room.configure(host.id, { banks: ['jp'], genres: ['雷鬼'] });
   assert.ok(room.pool().some((s) => s.artist === '湘南乃風'));
-  room.configure(host.id, { genres: ['金屬'] });
+  room.configure(host.id, { banks: ['jp', 'anime'], genres: ['金屬'] });
   assert.ok(room.pool().some((s) => s.artist === 'Ave Mujica'));
   room.configure(host.id, { genres: ['搖滾'] });
   assert.ok(room.pool().some((s) => s.artist === '桑田佳祐' && !s.genres.includes('動漫')));

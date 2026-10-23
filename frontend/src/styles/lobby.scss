@@ -1,4 +1,5 @@
 @use 'tokens';
+@use 'lobby-backgrounds';
 .vue-lobby {
   display: grid;
   gap: tokens.space(6);
@@ -747,13 +748,17 @@ body.lobby-self-hover {
 }
 
 // Lobby messages follow the sender; room barrages retain their own renderer.
+body .lobby-backdrop[data-background='castle'] {
+  background: #090e1a url('../assets/lobby-castle-stitch.svg') center / cover no-repeat;
+}
 :root body .lobby-chat-bubble.game-barrage-framed {
-  position: fixed;
+  position: absolute;
   bottom: auto;
   z-index: 180;
   width: max-content;
   min-width: 160px;
-  max-width: min(320px, calc(100vw - 48px));
+  max-width: min(320px, calc(100cqw - 24px));
+  margin: 0;
   text-align: start;
   white-space: normal;
   pointer-events: auto;
@@ -766,7 +771,7 @@ body.lobby-self-hover {
 
 :root body .lobby-chat-bubble.game-barrage-framed.barrage-frame-ornate {
   width: max-content;
-  min-width: min(300px, calc(100vw - 48px));
+  min-width: min(300px, calc(100cqw - 24px));
   min-height: 148px;
   padding: 48px 50px;
 }
@@ -829,4 +834,8 @@ body.lobby-self-hover {
   .frontend-status:empty {
     display: none;
   }
+}
+
+.lobby-backdrop {
+  container-type: inline-size;
 }

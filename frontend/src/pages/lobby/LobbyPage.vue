@@ -38,7 +38,7 @@ const feedback = computed(() =>
       (params.has('closedRoom') ? '房間已結束或你已離開，請重新開桌或加入房間。' : ''),
 );
 const drawingCreate = computed(() => selected.value === 'draw');
-const pairCreate = computed(() => ['telephone', 'majority'].includes(selected.value));
+const pairCreate = computed(() => ['telephone', 'majority', 'draw'].includes(selected.value));
 const roomCreate = computed(() => ['quacks', 'thunder', 'bluff'].includes(selected.value));
 const resumes = computed(() => lobby.rooms.filter((room) => room.seated));
 function open() {
@@ -75,8 +75,6 @@ async function submit() {
     await lobby.enter({
       type: selected.value as GameType,
       roomName: roomName.value,
-      seconds: Number(seconds.value),
-      rounds: Number(rounds.value),
     });
 }
 async function entranceOnce() {
@@ -275,37 +273,7 @@ onBeforeUnmount(() => {
             maxlength="24"
             placeholder="好友局"
             :disabled="lobby.entryPending" /></label
-        ><div class="vue-lobby-create-options"
-          ><template v-if="selected === 'draw'"
-            ><fieldset class="vue-lobby-create-seconds" :disabled="lobby.entryPending"
-              ><legend>每回合作畫時間</legend
-              ><div
-                ><label v-for="value in [60, 90, 120]" :key="value"
-                  ><input
-                    v-model.number="seconds"
-                    type="radio"
-                    name="lobbyCreateSeconds"
-                    :value="value"
-                    required
-                  /><span>{{ value }} 秒</span></label
-                ></div
-              ></fieldset
-            ><label class="vue-lobby-create-rounds"
-              >預設總題數<span class="vue-lobby-create-round-field"
-                ><span aria-hidden="true">固定總題數</span
-                ><input
-                  v-model.number="rounds"
-                  type="number"
-                  min="1"
-                  max="64"
-                  step="1"
-                  required
-                  aria-label="固定總題數，1 至 64 題"
-                  :disabled="lobby.entryPending"
-                /><span aria-hidden="true">題</span></span
-              ></label
-            ></template
-          ><p v-else>進入房間後，由房主調整本桌設定。</p></div
+        ><div class="vue-lobby-create-options"><p>進入房間後，由房主調整本桌設定。</p></div
         ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /><UiButton
           :stitch="drawingCreate || roomCreate || pairCreate"
           :variant="drawingCreate || roomCreate || pairCreate ? 'primary' : 'secondary'"

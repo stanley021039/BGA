@@ -1,6 +1,9 @@
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useInteractionSource } from '../services/interaction-source';
+import { useSessionStore } from './session';
+import { requestJson } from '../services/http';
+import { readSettings } from '../contracts/profile';
 import { readPingContext, readPingReceipt } from '../contracts/pings';
 import type { PingEvent, PingTarget, PingType } from '../contracts/pings';
 import { record } from '../services/validation';
@@ -8,6 +11,7 @@ import '../../../public/shared/ping-model.js';
 
 export const usePingsStore = defineStore('room-pings', () => {
   const room = useInteractionSource(),
+    session = useSessionStore(),
     model = window.PingModel;
   if (!model) throw Error('標記工具無法載入。');
   const context = computed(() => {
@@ -32,6 +36,7 @@ export const usePingsStore = defineStore('room-pings', () => {
     requests = new Set<AbortController>();
   let source: EventSource | null = null,
     generation = 0,
+    preferenceGeneration = 0,
     offset = 0,
     disposed = false,
     expiry: ReturnType<typeof setTimeout> | null = null,
@@ -188,6 +193,31 @@ export const usePingsStore = defineStore('room-pings', () => {
   function setPreferences(value?: unknown) {
     preferences.value = model!.preferences(value);
   }
+  async function loadPreferences() {
+    const account = session.user?.id,
+      revision = ++preferenceGeneration;
+    setPreferences();
+    if (!account) return;
+    try {
+      const value = readSettings(await requestJson('/api/profile/settings'));
+      if (!disposed && revision === preferenceGeneration && account === session.user?.id)
+        setPreferences(value.pings);
+    } catch {
+      if (!disposed && revision === preferenceGeneration && account === session.user?.id)
+        feedback('個人標記外觀暫時無法載入，已使用預設設定。', true);
+    }
+  }
+  watch(
+    () => session.user?.id,
+    () => {
+      void loadPreferences();
+    },
+    { immediate: true },
+  );
+  const profileUpdated = () => {
+    void loadPreferences();
+  };
+  window.addEventListener('profile-updated', profileUpdated);
   const bridge = {
     setPreferences,
     disconnect,
@@ -224,6 +254,8 @@ export const usePingsStore = defineStore('room-pings', () => {
   document.addEventListener('visibilitychange', visibility);
   onScopeDispose(() => {
     disposed = true;
+    preferenceGeneration++;
+    window.removeEventListener('profile-updated', profileUpdated);
     disconnect();
     if (noticeTimer) clearTimeout(noticeTimer);
     document.removeEventListener('visibilitychange', visibility);

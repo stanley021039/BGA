@@ -3,9 +3,14 @@
   'use strict';
   let playing;
   window.EntryIntro = {
-    playFrom(image, destination) {
+    playFrom(image, destination, opening) {
       if (window.EntryPreferences?.get().enabled === false) return Promise.resolve();
       if (playing) return playing;
+      if (!opening && window.EntryOpening)
+        return window.EntryOpening.resolve().then((theme) =>
+          window.EntryIntro.playFrom(image, destination, theme),
+        );
+      const duration = opening?.duration || 3000;
       if (!image || !image.complete || !image.naturalWidth) return Promise.resolve();
       const rect = image.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return Promise.resolve();
@@ -24,25 +29,48 @@
       skip.className = 'entry-auth-skip';
       skip.textContent = '略過開場 →';
       skip.setAttribute('aria-label', '略過開場動畫');
+      const soundButton = document.createElement('button');
+      soundButton.type = 'button';
+      soundButton.className = 'entry-auth-sound';
+      soundButton.textContent = '播放開場音效 ♪';
+      soundButton.hidden = true;
       const prefetch = document.createElement('link');
       prefetch.rel = 'prefetch';
       prefetch.href = target.href;
       prefetch.as = 'document';
       document.head.append(prefetch);
       document.body.append(skip);
+      document.body.append(soundButton);
       let animation,
+        sound,
         timer,
         recovery,
         finished = false;
+      function stopSound() {
+        if (!sound) return;
+        if (!window.AudioSettings?.stopEffect?.(sound)) sound.pause?.();
+        sound = null;
+      }
+      function playSound() {
+        stopSound();
+        sound = window.AudioSettings?.playEffect?.(opening?.sound || 'entry-intro', {
+          onError: () => {
+            if (!finished) soundButton.hidden = false;
+          },
+        });
+      }
       const cleanup = () => {
         clearTimeout(timer);
         clearTimeout(recovery);
         animation?.cancel();
+        stopSound();
         image.style.removeProperty('opacity');
         root.classList.remove('entry-auth-playing');
         image.classList.remove('entry-auth-image');
+        image.classList.remove('entry-auth-soul-world');
         for (const node of ancestors) node.classList.remove('entry-auth-ancestor');
         skip.remove();
+        soundButton.remove();
         prefetch.remove();
         document.removeEventListener('keydown', escape);
         window.removeEventListener('pagehide', cleanup);
@@ -58,6 +86,7 @@
         if (finished) return;
         finished = true;
         clearTimeout(timer);
+        stopSound();
         const record = JSON.stringify({ at: Date.now(), path: target.pathname + target.search });
         try {
           window.sessionStorage.setItem('bga-entry-intro-completed', record);
@@ -73,6 +102,7 @@
         animation = undefined;
         image.style.opacity = '0';
         skip.hidden = true;
+        soundButton.hidden = true;
         recovery = setTimeout(() => {
           image.style.removeProperty('opacity');
           cleanup();
@@ -85,8 +115,19 @@
       window.addEventListener('pagehide', cleanup);
       document.addEventListener('keydown', escape);
       skip.addEventListener('click', finish);
+      soundButton.addEventListener('click', () => {
+        if (finished) return;
+        soundButton.hidden = true;
+        animation?.cancel();
+        animation = undefined;
+        image.style.opacity = '1';
+        clearTimeout(timer);
+        timer = setTimeout(finish, opening?.id === 'soul-world' ? duration : 2300);
+        playSound();
+      });
       root.classList.add('entry-auth-playing');
       image.classList.add('entry-auth-image');
+      if (opening?.id === 'soul-world') image.classList.add('entry-auth-soul-world');
       for (const node of ancestors) node.classList.add('entry-auth-ancestor');
       let reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
       try {
@@ -111,12 +152,13 @@
             { offset: 0.78, transform: reduced ? 'none' : transform, opacity: 1 },
             { transform: reduced ? 'none' : transform, opacity: 0 },
           ],
-          { duration: 3000, easing: 'cubic-bezier(.2,.65,.3,1)', fill: 'forwards' },
+          { duration, easing: 'cubic-bezier(.2,.65,.3,1)', fill: 'forwards' },
         );
       } catch {
         /* The timeout still completes when Web Animations is unavailable. */
       }
-      timer = setTimeout(finish, 3000);
+      timer = setTimeout(finish, duration);
+      playSound();
       skip.focus({ preventScroll: true });
       return playing;
     },

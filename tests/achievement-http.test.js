@@ -67,6 +67,13 @@ async function fixture(t, purpose = 'production', { uppercaseIds = false } = {})
   return {
     users,
     api,
+    raw(seat, route, data) {
+      return fetch(base + '/api/' + route, {
+        method: 'POST',
+        headers: { Cookie: users[seat].cookie, 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+    },
     async ask(code, data) {
       let views = await Promise.all(users.map((_, i) => api(i, 'state?code=' + code))),
         seat = views.findIndex((v) => v.me === v.presenterId);
@@ -107,6 +114,21 @@ async function fixture(t, purpose = 'production', { uppercaseIds = false } = {})
 }
 const unlocked = (body) =>
   body.achievements.filter((item) => item.unlockedAt).map((item) => item.id);
+test('global achievement reset is unavailable and cannot clear earned data', async (t) => {
+  const f = await fixture(t),
+    code = await f.room('majority');
+  await f.ask(code, { type: 'two', prompt: '保留測試', options: ['一起', '另一種'] });
+  for (let seat = 0; seat < 3; seat++)
+    await f.api(seat, 'action', { code, action: 'answer', answer: 0 });
+  const before = unlocked(await f.api(0, 'achievements'));
+  assert.ok(before.length);
+  assert.equal(
+    (await f.raw(0, 'admin/achievements/reset', { confirmation: 'RESET ALL ACHIEVEMENTS' })).status,
+    404,
+  );
+  assert.deepEqual(unlocked(await f.api(0, 'achievements')), before);
+});
+
 test('app factory rejects an explicit invalid purpose and releases its data locks', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-achievement-purpose-')),
     config = {
@@ -160,7 +182,7 @@ test('HTTP draw awards only a normally completed round and preserves its frozen 
     if (seat !== artist)
       await f.api(seat, 'action', { code, action: 'guess', answer: drawing.question.title });
   const collection = await f.api(artist, 'achievements');
-  assert.equal(collection.achievements.length, 57);
+  assert.equal(collection.achievements.length, 70);
   assert.ok(unlocked(collection).includes('draw-soul-artist'));
   assert.ok(unlocked(collection).includes('draw-first-round'));
   assert.equal(JSON.stringify(collection).includes('user_id'), false);
@@ -333,4 +355,69 @@ test('HTTP mixed human/AI blank answers officially merged into one group award a
   assert.equal(facts.metrics.participantCount, 3);
   assert.equal(facts.metrics.allSame, true);
   assert.equal(facts.participants.length, 3);
+});
+
+test('four reward codes grant independent categories without unlocking gameplay achievements', async (t) => {
+  const f = await fixture(t);
+  for (const code of ['錯誤', null, {}, '作者們好帥', '我愛少華'.repeat(30)])
+    assert.equal((await f.raw(2, 'achievements/redeem', { code })).status, 400);
+  const profile = await f.api(2, 'profile/settings');
+  await f.api(2, 'profile/settings', {
+    ...profile,
+    appearance: {
+      ...profile.appearance,
+      achievementRewardCodeAt: new Date().toISOString(),
+      achievementRewardCodes: { frames: new Date().toISOString() },
+    },
+  });
+  assert.ok((await f.api(2, 'achievements')).rewards.every((r) => !r.claimedAt));
+  const lockedSettings = await f.api(1, 'profile/settings');
+  assert.equal(
+    (
+      await f.raw(1, 'profile/settings', {
+        ...lockedSettings,
+        pings: { attention: { iconType: 'admire', sound: { effect: 'ping-voice-amazing' } } },
+      })
+    ).status,
+    403,
+  );
+  const frames = await f.api(1, 'achievements/redeem', { code: '我愛少華' });
+  assert.equal(frames.redemption.group, 'frames');
+  assert.ok(frames.rewards.every((r) => r.claimedAt));
+  assert.equal(frames.bonusRewards.entrances.length, 0);
+  assert.equal(frames.bonusRewards.sounds.length, 0);
+  assert.deepEqual(frames.bonusRewards.backgrounds, ['default', 'castle']);
+  assert.deepEqual(unlocked(frames), []);
+  const repeat = await f.api(1, 'achievements/redeem', { code: '我愛少華' });
+  assert.equal(repeat.redemption.alreadyRedeemed, true);
+  assert.equal(repeat.redemption.redeemedAt, frames.redemption.redeemedAt);
+  const entrances = await f.api(1, 'achievements/redeem', { code: '我愛其學' });
+  assert.equal(entrances.bonusRewards.entrances.length, 20);
+  assert.deepEqual(entrances.bonusRewards.openings, ['home-family', 'soul-world']);
+  assert.equal(entrances.bonusRewards.sounds.length, 0);
+  const pings = await f.api(2, 'achievements/redeem', { code: '我愛士憲' });
+  assert.equal(pings.bonusRewards.sounds.length, 14);
+  assert.equal(pings.bonusRewards.pingIcons.length, 10);
+  assert.ok(pings.rewards.every((r) => !r.claimedAt));
+  assert.equal(pings.bonusRewards.entrances.length, 0);
+  assert.deepEqual(pings.bonusRewards.backgrounds, ['default', 'castle']);
+  const other = await f.api(0, 'achievements/redeem', { code: '我愛作者' });
+  assert.equal(other.bonusRewards.backgrounds.length, 10);
+  assert.ok(other.rewards.every((r) => !r.claimedAt));
+  assert.equal(other.bonusRewards.entrances.length, 0);
+  assert.equal(other.bonusRewards.sounds.length, 0);
+  const settings = await f.api(1, 'profile/settings');
+  await f.api(1, 'profile/settings', settings);
+  await f.restart();
+  const persisted = await f.api(1, 'achievements');
+  assert.ok(persisted.rewards.every((r) => r.claimedAt));
+  assert.equal(persisted.bonusRewards.entrances.length, 20);
+  assert.deepEqual(unlocked(persisted), []);
+  await f.api(1, 'profile/opening', { theme: 'soul-world' });
+  f.read((db) => assert.equal(db.prepare('SELECT COUNT(*) n FROM user_achievements').get().n, 0));
+  assert.equal(
+    (await f.raw(0, 'admin/achievements/reset', { confirmation: 'RESET ALL ACHIEVEMENTS' })).status,
+    404,
+  );
+  assert.ok((await f.api(1, 'achievements')).rewards.every((r) => r.claimedAt));
 });

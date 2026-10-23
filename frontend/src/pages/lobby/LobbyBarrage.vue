@@ -4,11 +4,9 @@ import { useLobbyStore } from '../../stores/lobby';
 import { usePreferencesStore } from '../../stores/preferences';
 import { useMutation } from '../../composables/mutation';
 import UiButton from '../../components/UiButton.vue';
-import FramePicker from '../../components/FramePicker.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 const lobby = useLobbyStore(),
   prefs = usePreferencesStore(),
-  picker = ref<InstanceType<typeof FramePicker> | null>(null),
   draft = ref(''),
   mutation = useMutation();
 const emit = defineEmits<{ sent: [] }>();
@@ -33,42 +31,53 @@ async function send() {
 }
 </script>
 <template>
-  <form class="vue-lobby-barrage-form" @submit.prevent="send"
-    ><label
-      >訊息內容<input
+  <form class="vue-lobby-barrage-form" @submit.prevent="send">
+    <label for="lobby-chat-message">訊息內容</label>
+    <div class="vue-lobby-chat-input">
+      <input
+        id="lobby-chat-message"
         v-model="draft"
         maxlength="160"
         required
-        :disabled="mutation.pending.value" /></label
-    ><div class="vue-lobby-barrage-actions"
-      ><UiButton label="選擇對話框" @click="picker?.open()" /><UiButton
+        :disabled="mutation.pending.value"
+      />
+      <UiButton
+        class="vue-lobby-inline-send"
         icon="send"
+        icon-only
         type="submit"
         label="送出訊息"
-        :disabled="mutation.pending.value || !lobby.connected" /></div
-    ><StatusSlot :message="mutation.message.value" :error="mutation.failed.value" /></form
-  ><FramePicker ref="picker" kind="barrage" />
+        :pending="mutation.pending.value"
+        :disabled="!lobby.connected || !draft.trim()"
+      />
+    </div>
+    <StatusSlot :message="mutation.message.value" :error="mutation.failed.value" />
+  </form>
 </template>
-<style>
+<style lang="scss">
 .vue-lobby-barrage-form {
   display: grid;
   gap: 12px;
 }
-.vue-lobby-barrage-form > label {
-  display: grid;
-  gap: 4px;
+.vue-lobby-chat-input {
+  position: relative;
+  min-width: 0;
 }
-.vue-lobby-barrage-actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+.vue-lobby-chat-input input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  padding-right: 56px;
 }
-.vue-lobby-barrage-actions > .ui-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
+.vue-lobby-chat-input .vue-lobby-inline-send {
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
   margin: 0;
 }
 </style>

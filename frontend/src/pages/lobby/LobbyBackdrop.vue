@@ -2,10 +2,12 @@
 import { sizedImage } from '../../services/image-size';
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
+import { useLobbyBackgroundStore } from '../../stores/lobby-background';
 import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
+import LobbyBackgroundArt from '../../components/LobbyBackgroundArt.vue';
 import LobbyBarrage from './LobbyBarrage.vue';
 import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // Visitors live behind the page. A click that lands on the page's empty floor
@@ -14,13 +16,14 @@ import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // the site header, painted surfaces (background, border, shadow) and text.
 const INTERACTIVE =
   'a, button, input, select, textarea, label, summary, dialog, [role="button"], [contenteditable], .game-tile, [data-site-header]';
+const activity = ref<'chat' | 'expression'>('chat');
 const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   opened = ref(false),
-  activity = ref<'chat' | 'expression'>('chat'),
   selfHover = ref(false),
   arrivals = ref(new Set<string>());
+const background = useLobbyBackgroundStore();
 const sounds = window.ExpressionSounds?.create();
 let disposed = false,
   controller: BarrageController | null = null,
@@ -92,7 +95,7 @@ watch(
   (value) => {
     if (!value) {
       sounds?.reset();
-      dialog.value?.close();
+      closeDialogs();
       keyboardTarget = null;
     }
   },
@@ -108,15 +111,22 @@ function arrived(id: string) {
   next.delete(id);
   arrivals.value = next;
 }
+function closeDialogs() {
+  dialog.value?.close();
+}
+function teleport() {
+  closeDialogs();
+  void lobby.teleport();
+}
+function chooseActivity(value: 'chat' | 'expression') {
+  activity.value = value;
+  if (value === 'expression') void lobby.loadExpressions();
+}
 async function open(trigger: HTMLElement) {
   if (!lobby.connected) return;
   activity.value = 'chat';
   opened.value = true;
   await dialog.value?.open(trigger);
-}
-function chooseActivity(value: 'chat' | 'expression') {
-  activity.value = value;
-  if (value === 'expression') void lobby.loadExpressions();
 }
 async function use(expression: string) {
   if (await lobby.emote(expression)) {
@@ -179,6 +189,7 @@ function click(event: MouseEvent) {
     rect = visitors?.getBoundingClientRect();
   if (!lobby.connected || !rect?.width || !rect.height) return;
   keyboardTarget = null;
+  stage.value?.focus({ preventScroll: true });
   lobby.move({
     x: ((event.clientX - rect.left) / rect.width) * 100,
     y: ((event.clientY - rect.top) / rect.height) * 100,
@@ -194,17 +205,37 @@ function hover(event: MouseEvent) {
   });
 }
 function key(event: KeyboardEvent) {
-  if (event.target !== stage.value || !lobby.connected) return;
+  if (
+    !lobby.connected ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey ||
+    event.isComposing ||
+    ![stage.value, document.body, selfAvatar()].includes(event.target as HTMLElement)
+  )
+    return;
+  if (event.key.toLowerCase() === 'r') {
+    if (document.hidden || event.repeat) return;
+    event.preventDefault();
+    keyboardTarget = null;
+    teleport();
+    return;
+  }
   const directions: Record<string, [number, number]> = {
       ArrowLeft: [-5, 0],
       ArrowRight: [5, 0],
       ArrowUp: [0, -5],
       ArrowDown: [0, 5],
+      a: [-5, 0],
+      d: [5, 0],
+      w: [0, -5],
+      s: [0, 5],
     },
     own = lobby.snapshot?.visitors.find((visitor) => visitor.id === lobby.snapshot?.selfId);
-  if (!own || !directions[event.key]) return;
+  const direction = directions[event.key.toLowerCase()] || directions[event.key];
+  if (!own || !direction) return;
   event.preventDefault();
-  const [x, y] = directions[event.key],
+  const [x, y] = direction,
     base = keyboardTarget || own;
   keyboardTarget = {
     x: Math.max(6, Math.min(94, base.x + x)),
@@ -215,14 +246,15 @@ function key(event: KeyboardEvent) {
 function visibility() {
   if (document.hidden) {
     sounds?.reset();
-    dialog.value?.close();
+    closeDialogs();
   }
 }
 function profile() {
-  dialog.value?.close();
+  closeDialogs();
 }
 onMounted(() => {
   document.addEventListener('click', click);
+  document.addEventListener('keydown', key);
   document.addEventListener('mousemove', hover, { passive: true });
 });
 document.addEventListener('visibilitychange', visibility);
@@ -234,6 +266,7 @@ onBeforeUnmount(() => {
   if (hoverFrame) cancelAnimationFrame(hoverFrame);
   document.body.classList.remove('lobby-self-hover');
   document.removeEventListener('click', click);
+  document.removeEventListener('keydown', key);
   document.removeEventListener('mousemove', hover);
   document.removeEventListener('visibilitychange', visibility);
   window.removeEventListener('profile-updated', profile);
@@ -244,19 +277,14 @@ onBeforeUnmount(() => {
     ><div
       ref="stage"
       class="lobby-backdrop"
+      :data-background="background.selected"
       :class="{ 'is-self-hover': selfHover }"
       tabindex="0"
-      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色對話或發表情；聚焦此處可用方向鍵移動"
+      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話輸入訊息；聚焦此處可用 WASD 或方向鍵移動，R 鍵隨機換位並播放進場特效"
+      aria-keyshortcuts="R"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
-      @keydown="key"
-      ><div class="lobby-visitors"
-        ><div
-          v-if="lobby.destination"
-          class="lobby-destination"
-          :style="{ left: lobby.destination.x + '%', top: lobby.destination.y + '%' }"
-          aria-hidden="true"
-        ></div
+      ><LobbyBackgroundArt :id="background.selected" /><div class="lobby-visitors"
         ><LobbyVisitor
           v-for="visitor in lobby.snapshot?.visitors || []"
           :key="visitor.id"
@@ -326,7 +354,6 @@ onBeforeUnmount(() => {
         :error="!!lobby.expressionStatus" /></div
   ></UiDialog>
 </template>
-
 <style scoped>
 .vue-lobby-activity-tabs {
   display: flex;

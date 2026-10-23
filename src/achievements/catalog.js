@@ -426,7 +426,7 @@ const rows = [
     'musicquiz-intro-streak',
     'musicquiz',
     '前奏三連星',
-    '正常完局且有效參與至少三首，其中連續三首前奏10選1答對。',
+    '正常完局且有效參與至少三首，其中連續三首前奏6選1答對。',
     'musicquiz-intro-streak.rules-completed',
     'check',
     'fun',
@@ -513,6 +513,63 @@ const rows = [
     'fun',
   ],
 ];
+rows.push(
+  [
+    'draw-fastest-correct',
+    'draw',
+    '搶答先鋒',
+    '在同一輪第一個猜對，並等到正式揭曉。',
+    'draw.first-correct',
+    'sound',
+    'fun',
+  ],
+  [
+    'quacks-double-explosion',
+    'quacks',
+    '再炸一次也不怕',
+    '同一局抽藥爆鍋至少兩次，並完成九輪正式結算。',
+    'quacks.double-explosion',
+    'sound',
+    'fun',
+  ],
+  [
+    'all-three-games',
+    'all',
+    '歡迎來到我的屍魂界',
+    '完成三款不同遊戲的正式遊玩；跑團與股市不列入。',
+    'all.three-games',
+    'sound',
+    'exploration',
+  ],
+);
+const retiredBackgrounds = require('./retired-backgrounds');
+for (const background of [
+  ...require('../../public/shared/lobby-backgrounds.json'),
+  ...retiredBackgrounds,
+]) {
+  if (!background.achievementId) continue;
+  const names = {
+    gift: '送禮',
+    bluff: '工三小',
+    musicquiz: '猜歌挑戰',
+    majority: '同頻俱樂部',
+    draw: '你畫我猜',
+    thunder: '雷霆之路',
+    telephone: '傳話畫',
+    poker: '德州撲克',
+    quacks: '郎中闖江湖',
+    minimal: '極簡畫猜',
+  };
+  rows.push([
+    background.achievementId,
+    background.game,
+    background.label + '通行證',
+    `在${names[background.game]}完成 ${background.target} 次有本人有效操作的正式結算。`,
+    'background.' + background.id,
+    'frame',
+    'exploration',
+  ]);
+}
 const definitions = Object.freeze(
   rows.map(([id, game, title, description, condition_key, icon_key, category]) =>
     Object.freeze({
@@ -525,7 +582,9 @@ const definitions = Object.freeze(
       condition_key,
       icon_key,
       visibility: 'private',
-      status: 'enabled',
+      status: retiredBackgrounds.some((background) => background.achievementId === id)
+        ? 'paused'
+        : 'enabled',
       category,
     }),
   ),

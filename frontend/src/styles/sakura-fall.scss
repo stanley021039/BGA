@@ -1,0 +1,37 @@
+.stitch-sakura-fall {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  > span {
+    position: absolute;
+    top: 8px;
+    left: var(--petal-x);
+    width: var(--petal-size);
+    height: calc(var(--petal-size) * 1.4);
+    border-radius: 80% 10% 75% 15%;
+    background: linear-gradient(145deg, #ffe6f1, #f599bd 75%);
+    opacity: 0;
+    box-shadow: 0 0 3px #fbaac855;
+    animation: sakura-centre-fall var(--petal-duration) linear var(--petal-delay) both;
+  }
+}
+@keyframes sakura-centre-fall {
+  0% {
+    opacity: 0;
+    transform: translate(0, -10px) rotate(-25deg);
+  }
+  15% {
+    opacity: 0.85;
+  }
+  48% {
+    transform: translate(var(--petal-drift), 100px) rotate(140deg);
+  }
+  82% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--petal-drift) * -0.4), 235px) rotate(320deg);
+  }
+}

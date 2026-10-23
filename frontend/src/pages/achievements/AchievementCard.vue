@@ -43,6 +43,9 @@ const date = computed(() => {
     <div class="achievement-body">
       <h4>{{ item.title }}</h4
       ><p>{{ item.description }}</p>
+      <p v-if="item.rewardLabels.length" class="achievement-reward"
+        >獎勵：{{ item.rewardLabels.join('、') }}</p
+      >
       <span class="achievement-status ui-sr-only">{{
         item.unlockedAt ? '已解鎖' : '尚未解鎖'
       }}</span>

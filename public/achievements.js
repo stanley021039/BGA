@@ -120,7 +120,8 @@
       preview = document.createElement('span'),
       note = document.createElement('p'),
       actions = document.createElement('div');
-    panel.className = 'achievement-reward';
+    panel.className = 'achievement-reward achievement-reward-card';
+    panel.classList.toggle('unlocked', !!reward.claimedAt);
     panel.setAttribute('aria-label', reward.label + '成就獎勵');
     title.textContent = '專屬獎勵 · ' + reward.label;
     preview.className = 'barrage-frame-preview';
@@ -338,5 +339,33 @@
   window.BarrageFrames?.subscribe?.(syncApplied);
   window.MediaAppearance?.subscribe?.(syncApplied);
   window.GameUI?.decorateButton?.(retry, 'refresh', { iconOnly: true, label: '重新載入成就' });
+  const redeemForm = document.querySelector('#achievementRedeemForm');
+  redeemForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = document.querySelector('#achievementRewardCode'),
+      status = document.querySelector('#achievementRedeemStatus'),
+      button = redeemForm.querySelector('button');
+    if (button.disabled) return;
+    button.disabled = true;
+    status.textContent = '正在兌換…';
+    try {
+      const response = await fetch('/api/achievements/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: input.value }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw Error(data.error || '兌換失敗');
+      window.BarrageFrames?.acceptRewards?.(data);
+      input.value = '';
+      await load();
+      status.textContent =
+        '兌換成功！' + (data.redemption?.label || '獎勵') + '已加入收藏，可立即套用。';
+    } catch (error) {
+      status.textContent = error.message || '兌換失敗，請稍後再試';
+    } finally {
+      button.disabled = false;
+    }
+  });
   load();
 })();

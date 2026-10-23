@@ -61,7 +61,7 @@ test('additional user video sources retain original release dates and source met
 test('language labels and Taiwanese songs are shared across quiz and tournament', () => {
   assert.deepEqual(
     BANKS.filter((b) => b.id !== 'custom').map((b) => b.label),
-    ['華語', '台語', '日語', '韓語', '粵語', '抖音歌', '古典', '英文', '外文'],
+    ['華語', '台語', '日語', '動漫', '韓語', '粵語', '抖音歌', '古典', '英文', '外文'],
   );
   const r = new MusicQuizRoom('ABCDEF', 'test'),
     p = r.add('host');

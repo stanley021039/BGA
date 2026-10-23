@@ -5,6 +5,8 @@ const { HttpError } = require('./errors');
 // serialization remain in app.js; the lobby retains its own presence/cooldown rules.
 function createLobbyHandlers({
   assertFrame = () => {},
+  entranceAllowed = () => true,
+  backgroundAllowed = () => true,
   lobby,
   withLobbyMedia,
   lobbyCharacter,
@@ -12,10 +14,15 @@ function createLobbyHandlers({
   characterMedia,
 }) {
   function view(user, entrance) {
+    if (!entranceAllowed(user, entrance)) entrance = 'classic';
     return withLobbyMedia(user, lobby.view(user, { entrance }));
   }
   function move(user, data) {
     return withLobbyMedia(user, lobby.move(user, data));
+  }
+  function teleport(user, data) {
+    const entrance = entranceAllowed(user, data?.entrance) ? data?.entrance : 'classic';
+    return withLobbyMedia(user, lobby.teleport(user, entrance));
   }
   function emotes(user) {
     const character = lobbyCharacter(user);
@@ -53,6 +60,13 @@ function createLobbyHandlers({
     assertFrame(user, data.builtinFrameId);
     return withLobbyMedia(user, lobby.barrage(user, data));
   }
-  return { view, move, emotes, emote, barrage };
+  function background(user, data) {
+    if (!require('../../public/shared/lobby-backgrounds.json').some((item) => item.id === data?.id))
+      throw new HttpError(400, 'INVALID_BACKGROUND', '請選擇可用的大廳背景');
+    if (!backgroundAllowed(user, data?.id))
+      throw new HttpError(403, 'BACKGROUND_LOCKED', '請先完成對應成就以解鎖這個背景');
+    return withLobbyMedia(user, lobby.changeBackground(user, data));
+  }
+  return { view, move, emotes, emote, barrage, background, teleport };
 }
 module.exports = { createLobbyHandlers };
