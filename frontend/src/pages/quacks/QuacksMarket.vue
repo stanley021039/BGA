@@ -74,7 +74,7 @@ function choose(book: QuacksBook, value: number) {
           >{{ book.faceName }}：{{ book.effect }}</p
         >
         <div class="vue-quacks-market-offers"
-          ><button
+          ><!-- ui-check-allow raw-control: 購買格是藥材圖塊，價格與選取記號疊在藥材圖上 --><button
             v-for="offer in book.offers"
             :key="offer.value"
             :title="

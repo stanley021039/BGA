@@ -167,7 +167,7 @@ function keydown(event: KeyboardEvent) {
             class="vue-quacks-codex-faces"
             role="group"
             :aria-label="row.name + '選擇要查看的書面'"
-            ><button
+            ><!-- ui-check-allow raw-control: 藥材書面切換是書頁上的頁籤圖樣，沿用書本美術而非 Stitch 按鈕外觀 --><button
               v-for="candidate in row.candidates"
               :key="candidate.set"
               type="button"

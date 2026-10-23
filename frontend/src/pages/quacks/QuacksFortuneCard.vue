@@ -11,7 +11,7 @@ defineEmits<{ draw: [] }>();
 </script>
 <template>
   <section class="vue-quacks-fortune-draw quacks-fortune-stage">
-    <button
+    <!-- ui-check-allow raw-control: 占卜卡本身是可翻面的 3D 卡牌美術，按鈕外框會破壞翻牌 --><button
       type="button"
       class="quacks-fortune-card"
       :class="{ 'is-flipped': flipped, 'can-draw': canDraw }"
@@ -91,7 +91,7 @@ defineEmits<{ draw: [] }>();
   overflow: hidden;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  box-shadow: 0 12px 30px #0006;
+  box-shadow: 0 12px 30px var(--stitch-artwork-swatch-0006);
 }
 .quacks-fortune-face.is-back img {
   width: 100%;
@@ -105,16 +105,24 @@ defineEmits<{ draw: [] }>();
   gap: 12px;
   padding: 24px;
   box-sizing: border-box;
-  border: 3px solid #cdb176;
-  color: #fff4d5;
+  border: 3px solid var(--stitch-artwork-swatch-cdb176);
+  color: var(--stitch-artwork-swatch-fff4d5);
   text-align: center;
-  background: linear-gradient(145deg, #456279, #24394c);
+  background: linear-gradient(
+    145deg,
+    var(--stitch-artwork-swatch-456279),
+    var(--stitch-artwork-swatch-24394c)
+  );
 }
 .quacks-fortune-face.is-front[data-timing='immediate'] {
-  background: linear-gradient(145deg, #654966, #2d263b);
+  background: linear-gradient(
+    145deg,
+    var(--stitch-artwork-swatch-654966),
+    var(--stitch-artwork-swatch-2d263b)
+  );
 }
 .quacks-fortune-face.is-front small {
-  color: #dacb98;
+  color: var(--stitch-artwork-swatch-dacb98);
 }
 .quacks-fortune-face.is-front strong {
   font-size: 1.5rem;

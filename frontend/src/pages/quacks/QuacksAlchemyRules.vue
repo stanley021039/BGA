@@ -80,7 +80,7 @@ defineExpose({ open: () => dialog.value?.open() });
   gap: 6px 20px;
   margin: 4px 0 0;
   padding: 12px;
-  border: 1px solid var(--play-line);
+  border: 1px solid var(--stitch-line);
   border-radius: 10px;
 }
 .quacks-distillery-rules dd {
@@ -89,7 +89,7 @@ defineExpose({ open: () => dialog.value?.open() });
   text-align: end;
 }
 .quacks-distillery-rules .is-total {
-  border-top: 1px solid var(--play-line);
+  border-top: 1px solid var(--stitch-line);
   padding-top: 8px;
   font-weight: 800;
 }

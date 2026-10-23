@@ -1397,7 +1397,7 @@
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto;
     min-height: 500px;
-    background: #10362a;
+    background: var(--stitch-artwork-swatch-10362a);
   }
   .vue-quacks-board-space > .vue-quacks-pot {
     position: relative;
@@ -1420,17 +1420,17 @@
     min-width: 0;
   }
   .vue-quacks-pot-heading > .vue-button {
-    --stitch-button-color: #f4eab7;
-    --stitch-button-bg: #102c25;
+    --stitch-button-color: var(--stitch-artwork-swatch-f4eab7);
+    --stitch-button-bg: var(--stitch-artwork-swatch-102c25);
     flex: none;
   }
   .vue-quacks-board-settings {
-    --stitch-button-color: #f4eab7;
-    --stitch-button-bg: #102c25;
+    --stitch-button-color: var(--stitch-artwork-swatch-f4eab7);
+    --stitch-button-bg: var(--stitch-artwork-swatch-102c25);
     position: absolute;
     z-index: 4;
     inset: 8px 8px auto auto;
-    color: #f4eab7;
+    color: var(--stitch-artwork-swatch-f4eab7);
   }
   .vue-quacks-board-controls {
     z-index: 3;
@@ -1439,16 +1439,16 @@
     align-items: end;
     gap: 16px;
     padding: 12px;
-    color: #f4eab7;
-    background: #0c2a22;
+    color: var(--stitch-artwork-swatch-f4eab7);
+    background: var(--stitch-artwork-swatch-0c2a22);
   }
   .vue-quacks-risk {
     flex-wrap: wrap;
     gap: 4px 8px;
     min-height: 64px;
     padding: 8px;
-    background: #102c25;
-    border-color: #dec87680;
+    background: var(--stitch-artwork-swatch-102c25);
+    border-color: var(--stitch-artwork-swatch-dec87680);
     font-size: 14px;
   }
   .vue-quacks-risk > span:last-of-type {
@@ -1459,7 +1459,7 @@
   }
   .vue-quacks-witch-coins > button {
     min-height: 44px;
-    background: #143e34;
+    background: var(--stitch-artwork-swatch-143e34);
   }
   .vue-quacks-board-controls > .vue-quacks-commands {
     justify-content: flex-end;
@@ -1485,8 +1485,8 @@
   .vue-quacks-board-controls.is-phase-controls {
     grid-column: 1;
     grid-row: 2;
-    background: var(--play-surface);
-    color: var(--play-ink);
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
     .vue-quacks-risk {
       display: none;
     }
@@ -1514,10 +1514,10 @@
     overscroll-behavior: contain;
     align-content: start;
     padding: 12px;
-    border: 1px solid #dec87680;
+    border: 1px solid var(--stitch-artwork-swatch-dec87680);
     border-radius: 10px;
-    background: #102c25f2;
-    color: #f4eab7;
+    background: var(--stitch-artwork-swatch-102c25f2);
+    color: var(--stitch-artwork-swatch-f4eab7);
     box-sizing: border-box;
     h2,
     h3 {
@@ -1558,8 +1558,8 @@
     gap: 32px;
     padding: 24px;
     text-align: center;
-    background: #fff8e6;
-    color: #2a2927;
+    background: var(--stitch-artwork-swatch-fff8e6);
+    color: var(--stitch-artwork-swatch-2a2927);
     border-radius: 12px;
     h1 {
       color: inherit;
@@ -1580,7 +1580,7 @@
     gap: 16px;
     min-width: 0;
     padding: 24px;
-    border: 1px solid var(--play-line);
+    border: 1px solid var(--stitch-line);
     border-radius: 12px;
     h2 {
       margin: 0;
@@ -1719,7 +1719,7 @@
       display: inline-flex;
     }
     &[aria-expanded='true'] {
-      outline: 2px solid #f4cf66;
+      outline: 2px solid var(--stitch-artwork-swatch-f4cf66);
       outline-offset: 2px;
     }
   }
@@ -1899,10 +1899,10 @@
     align-items: center;
     gap: 16px;
     padding: 12px 16px;
-    border: 1px solid var(--play-line);
+    border: 1px solid var(--stitch-line);
     border-radius: 12px;
-    background: var(--play-paper);
-    color: var(--play-ink);
+    background: var(--stitch-surface-subtle);
+    color: var(--stitch-ink);
   }
   strong {
     display: flex;
@@ -1955,7 +1955,7 @@
   .vue-quacks-pot-dock
   > .vue-quacks-chip-actions-button {
   position: relative;
-  background: #f4e6c4;
+  background: var(--stitch-artwork-swatch-f4e6c4);
   > .vue-quacks-action-badge {
     position: absolute;
     inset: -8px -8px auto auto;
@@ -1964,8 +1964,8 @@
     padding: 0 6px;
     box-sizing: border-box;
     border-radius: 12px;
-    background: #d1453b;
-    color: #fff;
+    background: var(--stitch-artwork-swatch-d1453b);
+    color: var(--stitch-artwork-swatch-fff);
     font-size: 14px;
     line-height: 24px;
     text-align: center;
@@ -2054,8 +2054,8 @@
         min-height: 76px;
         padding: 6px;
         border-radius: 10px;
-        background: #d5e8f2;
-        color: #1c352c;
+        background: var(--stitch-artwork-swatch-d5e8f2);
+        color: var(--stitch-artwork-swatch-1c352c);
       }
       > .vue-quacks-commands {
         grid-area: commands;
@@ -2071,10 +2071,10 @@
       overflow-y: auto;
       align-content: flex-start;
       margin: 0;
-      border: 1px solid #dec87680;
+      border: 1px solid var(--stitch-artwork-swatch-dec87680);
       border-radius: 10px;
-      background: #102c25e6;
-      color: #f4eab7;
+      background: var(--stitch-artwork-swatch-102c25e6);
+      color: var(--stitch-artwork-swatch-f4eab7);
     }
   }
 }
@@ -2116,7 +2116,7 @@
     gap: 6px;
     margin: 0;
     padding-inline-start: 12px;
-    border-inline-start: 1px solid #dec87666;
+    border-inline-start: 1px solid var(--stitch-artwork-swatch-dec87666);
   }
   .vue-quacks-witch-coin {
     display: grid;
@@ -2128,7 +2128,7 @@
     border: 2px solid transparent;
     border-radius: 50%;
     background: transparent;
-    color: #f4eab7;
+    color: var(--stitch-artwork-swatch-f4eab7);
     font-weight: 800;
     cursor: help;
     &:disabled {
@@ -2139,12 +2139,12 @@
       opacity: 0.35;
     }
     &.is-ready {
-      border-color: #f4cf66;
-      box-shadow: 0 0 10px #f4cf6680;
+      border-color: var(--stitch-artwork-swatch-f4cf66);
+      box-shadow: 0 0 10px var(--stitch-artwork-swatch-f4cf6680);
       cursor: pointer;
     }
     &.is-visitor {
-      border-color: #dec87680;
+      border-color: var(--stitch-artwork-swatch-dec87680);
     }
   }
 }
@@ -2154,7 +2154,7 @@
     .vue-quacks-draw-action,
     .vue-quacks-stop-action
   ) {
-  // The shared icon-button pill radius is an !important token; meme buttons opt out.
+  // ui-check-allow important: 共用 icon 按鈕以 !important 圓角 token 強制膠囊形，抽／停梗圖按鈕需覆蓋為 10px
   --ui-button-radius: 10px !important;
   border-radius: 10px;
   img {

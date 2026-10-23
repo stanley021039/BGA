@@ -57,7 +57,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
       v-if="m?.canDraw && m.alchemy?.drawablePool.length"
       class="vue-quacks-choice-grid"
       data-private
-      ><button
+      ><!-- ui-check-allow raw-control: 與 QuacksChoices 相同的藥材圖選項格 --><button
         v-for="c in m.alchemy.drawablePool"
         :key="c.id"
         type="button"
@@ -122,7 +122,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
       :title="patient.name + '：' + patient.text"
       >因「{{ patient.name }}」的效果</small
     ><div v-if="m?.alchemy?.returnable.length" class="vue-quacks-choice-grid"
-      ><button
+      ><!-- ui-check-allow raw-control: 與 QuacksChoices 相同的藥材圖選項格 --><button
         v-for="c in m.alchemy.returnable"
         :key="c.id"
         type="button"
@@ -146,7 +146,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border: 1px solid var(--play-line);
+  border: 1px solid var(--stitch-line);
   border-radius: 12px;
 }
 .vue-quacks-reserve-card > .vue-quacks-reserve-chip {
@@ -154,7 +154,7 @@ function reserveBlocked(c: { effectColor?: string; must?: boolean }) {
 }
 .vue-quacks-action-source {
   justify-self: start;
-  color: var(--play-muted, inherit);
+  color: var(--stitch-muted);
   cursor: help;
 }
 .vue-quacks-reserve-text {

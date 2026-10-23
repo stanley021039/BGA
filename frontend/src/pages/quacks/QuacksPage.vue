@@ -6,6 +6,7 @@ import { readQuacksSnapshot } from '../../contracts/quacks';
 import type { RoomPlayer } from '../../contracts/room';
 import GameRoomPage from '../../components/GameRoomPage.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiCheckbox from '../../components/UiCheckbox.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import QuacksScene from './QuacksScene.vue';
 import QuacksRoundProgress from './QuacksRoundProgress.vue';
@@ -128,25 +129,16 @@ function status(player: RoomPlayer) {
           {{ state?.options.hiddenProgress ? '隱藏進度' : '公開進度' }}</summary
         ><fieldset :disabled="!game.editableSettings"
           ><legend>模式選擇</legend
-          ><label
-            ><input
-              v-model="game.draft.witches"
-              type="checkbox"
-              @change="game.queueSettings()"
-            />草藥女巫</label
-          ><label
-            ><input
-              v-model="game.draft.alchemists"
-              type="checkbox"
-              @change="game.queueSettings()"
-            />煉金術士</label
-          ><label
-            ><input
-              v-model="game.draft.hiddenProgress"
-              type="checkbox"
-              @change="game.queueSettings()"
-            />隱藏他人大釜進度</label
-          ></fieldset
+          ><UiCheckbox
+            v-model="game.draft.witches"
+            label="草藥女巫"
+            @change="game.queueSettings()" /><UiCheckbox
+            v-model="game.draft.alchemists"
+            label="煉金術士"
+            @change="game.queueSettings()" /><UiCheckbox
+            v-model="game.draft.hiddenProgress"
+            label="隱藏他人大釜進度"
+            @change="game.queueSettings()" /></fieldset
         ><p>各色書面可在舞台「藥典」選擇；全桌採用最後一次選擇。開始後鎖定。</p
         ><StatusSlot
           :persistent="game.settingsPending || !!game.settingsError"

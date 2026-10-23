@@ -46,9 +46,9 @@ article {
   gap: 20px;
   min-height: 240px;
   padding: 24px;
-  border: 1px solid var(--play-line);
+  border: 1px solid var(--stitch-line);
   border-radius: 16px;
-  background: var(--play-paper);
+  background: var(--stitch-surface-subtle);
 }
 h2 {
   margin: 0;

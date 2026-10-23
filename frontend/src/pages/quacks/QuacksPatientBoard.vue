@@ -74,9 +74,12 @@ const slots = computed(() =>
     tabindex="0"
     aria-label="病患原始板，可左右捲動查看完整軌道"
   >
-    <div class="quacks-distillery" :style="{ '--brew-liquid': tone || '#f5cf70' }">
+    <div
+      class="quacks-distillery"
+      :style="{ '--brew-liquid': tone || 'var(--stitch-artwork-swatch-f5cf70)' }"
+    >
       <div class="quacks-distillery-apparatus">
-        <button
+        <!-- ui-check-allow raw-control: 定位在病患玻璃板右上的板內標籤 --><button
           type="button"
           class="quacks-patient-board-help"
           aria-label="開啟調製規則"
@@ -110,7 +113,7 @@ const slots = computed(() =>
           ><span aria-hidden="true" inert><QuacksGlyph :patient="patient.id" :size="88" /></span
         ></div>
         <div class="quacks-distillery-track" role="group" aria-label="特效藥精華軌道，0至10格">
-          <button
+          <!-- ui-check-allow raw-control: 病患玻璃板軌道上依座標定位的精華節點熱點 --><button
             v-for="slot in slots"
             :key="slot.n"
             type="button"
@@ -158,7 +161,7 @@ const slots = computed(() =>
             />
           </svg>
           <div class="quacks-distillery-rewards" role="group" aria-label="各格獎勵，僅領取所選一格">
-            <button
+            <!-- ui-check-allow raw-control: 病患玻璃板獎勵面板上依座標定位的藥瓶熱點 --><button
               v-for="slot in slots.slice(1)"
               :key="slot.n"
               type="button"
@@ -197,19 +200,26 @@ const slots = computed(() =>
           >
             <path
               d="M25 8h30v12h-7v28l23 37q7 11-5 11H14Q2 96 9 85l23-37V20h-7Z"
-              fill="#d6eee226"
-              stroke="#e1e8c7"
+              style="
+                fill: var(--stitch-artwork-swatch-d6eee226);
+                stroke: var(--stitch-artwork-swatch-e1e8c7);
+              "
               stroke-width="3"
             />
-            <path v-if="current" :d="liquid" fill="var(--brew-liquid)" opacity=".9" />
+            <path v-if="current" :d="liquid" style="fill: var(--brew-liquid)" opacity=".9" />
             <path
               d="M28 31v15L16 70"
               fill="none"
-              stroke="#fff9"
+              style="stroke: var(--stitch-artwork-swatch-fff9)"
               stroke-width="3"
               stroke-linecap="round"
             />
-            <path d="M25 9h30" stroke="#b79862" stroke-width="9" stroke-linecap="round" /></svg
+            <path
+              d="M25 9h30"
+              style="stroke: var(--stitch-artwork-swatch-b79862)"
+              stroke-width="9"
+              stroke-linecap="round"
+            /></svg
           ><span>{{ current > 0 ? '已注入' : '待調製' }}</span></div
         >
       </div>
@@ -239,18 +249,27 @@ const slots = computed(() =>
   min-width: 0;
   max-width: 900px;
   margin-inline: auto;
-  --brew-ink: #fff4d5;
+  --brew-ink: var(--stitch-artwork-swatch-fff4d5);
 }
 .quacks-distillery-apparatus {
   position: relative;
   min-width: 0;
   aspect-ratio: 900 / 500;
   color: var(--brew-ink);
-  border: 1px solid #796443;
+  border: 1px solid var(--stitch-artwork-swatch-796443);
   border-radius: 16px;
   background:
-    repeating-linear-gradient(3deg, #f2d8aa06 0 2px, transparent 2px 12px),
-    linear-gradient(120deg, #4a3524, #2c231b 65%, #4f3926);
+    repeating-linear-gradient(
+      3deg,
+      var(--stitch-artwork-swatch-f2d8aa06) 0 2px,
+      transparent 2px 12px
+    ),
+    linear-gradient(
+      120deg,
+      var(--stitch-artwork-swatch-4a3524),
+      var(--stitch-artwork-swatch-2c231b) 65%,
+      var(--stitch-artwork-swatch-4f3926)
+    );
 }
 .quacks-distillery-pipes {
   position: absolute;
@@ -264,11 +283,11 @@ const slots = computed(() =>
 .quacks-reservoir {
   fill: var(--brew-liquid);
   fill-opacity: 0.2;
-  stroke: #d6e4ce99;
+  stroke: var(--stitch-artwork-swatch-d6e4ce99);
   stroke-width: 4;
 }
 .quacks-glass-outer {
-  stroke: #cde6dd55;
+  stroke: var(--stitch-artwork-swatch-cde6dd55);
   stroke-width: 46;
 }
 .quacks-glass-inner {
@@ -277,7 +296,7 @@ const slots = computed(() =>
   stroke-width: 17;
 }
 .quacks-pipe-outline {
-  stroke: #d9e3d577;
+  stroke: var(--stitch-artwork-swatch-d9e3d577);
   stroke-width: 7;
 }
 .quacks-pipe-liquid {
@@ -308,30 +327,45 @@ const slots = computed(() =>
   width: clamp(44px, 7cqi, 64px);
   height: clamp(44px, 7cqi, 64px);
   padding: 0;
-  border: 2px solid #b0bda38c;
+  border: 2px solid var(--stitch-artwork-swatch-b0bda38c);
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 22%, #efffff66, #73877833 35%, #132b28d9 90%);
+  background: radial-gradient(
+    circle at 30% 22%,
+    var(--stitch-artwork-swatch-efffff66),
+    var(--stitch-artwork-swatch-73877833) 35%,
+    var(--stitch-artwork-swatch-132b28d9) 90%
+  );
   font-size: clamp(20px, 3cqi, 28px);
   font-weight: 800;
-  box-shadow: inset 0 2px 5px #fff4;
+  box-shadow: inset 0 2px 5px var(--stitch-artwork-swatch-fff4);
 }
 .quacks-distillery .quacks-essence-node.is-reached {
-  border-color: #c7ac6d;
-  background: radial-gradient(circle at 30% 22%, #fff5bb99, #a7782566 40%, #333b24dd 90%);
+  border-color: var(--stitch-artwork-swatch-c7ac6d);
+  background: radial-gradient(
+    circle at 30% 22%,
+    var(--stitch-artwork-swatch-fff5bb99),
+    var(--stitch-artwork-swatch-a7782566) 40%,
+    var(--stitch-artwork-swatch-333b24dd) 90%
+  );
 }
 .quacks-distillery .quacks-essence-node.is-current {
-  border: 3px solid #fff3c5;
-  background: radial-gradient(circle at 35% 25%, #fff4ba, #e7b745 60%, #916229);
-  color: #2a2517;
+  border: 3px solid var(--stitch-artwork-swatch-fff3c5);
+  background: radial-gradient(
+    circle at 35% 25%,
+    var(--stitch-artwork-swatch-fff4ba),
+    var(--stitch-artwork-swatch-e7b745) 60%,
+    var(--stitch-artwork-swatch-916229)
+  );
+  color: var(--stitch-artwork-swatch-2a2517);
   box-shadow:
-    0 0 18px #f4cf7080,
-    inset 0 0 8px #fff9;
+    0 0 18px var(--stitch-artwork-swatch-f4cf7080),
+    inset 0 0 8px var(--stitch-artwork-swatch-fff9);
 }
 .quacks-essence-marker {
   position: absolute;
   bottom: -18px;
   font-size: 16px;
-  color: #ffe6a1;
+  color: var(--stitch-artwork-swatch-ffe6a1);
 }
 .quacks-distillery-board {
   position: absolute;
@@ -340,12 +374,16 @@ const slots = computed(() =>
   top: 44%;
   bottom: 4%;
   padding: 0;
-  border: 6px ridge #9b7549;
+  border: 6px ridge var(--stitch-artwork-swatch-9b7549);
   border-radius: 8px;
   box-shadow:
-    0 4px 15px #0008,
-    inset 0 0 24px #0005;
-  background: radial-gradient(ellipse at top, #a37d53, #694b35);
+    0 4px 15px var(--stitch-artwork-swatch-0008),
+    inset 0 0 24px var(--stitch-artwork-swatch-0005);
+  background: radial-gradient(
+    ellipse at top,
+    var(--stitch-artwork-swatch-a37d53),
+    var(--stitch-artwork-swatch-694b35)
+  );
 }
 .quacks-panel-pipes {
   position: absolute;
@@ -353,7 +391,7 @@ const slots = computed(() =>
   width: 100%;
   height: 100%;
   fill: none;
-  stroke: #e3eddd80;
+  stroke: var(--stitch-artwork-swatch-e3eddd80);
   stroke-width: 5;
   pointer-events: none;
 }
@@ -373,9 +411,13 @@ const slots = computed(() =>
   min-width: 0;
   min-height: 72px;
   padding: 18px 3px 4px;
-  border: 1px solid #d4d8b966;
+  border: 1px solid var(--stitch-artwork-swatch-d4d8b966);
   border-radius: 28px 28px 22px 22px;
-  background: radial-gradient(ellipse at 30% 20%, #efffff4d, #29372e80);
+  background: radial-gradient(
+    ellipse at 30% 20%,
+    var(--stitch-artwork-swatch-efffff4d),
+    var(--stitch-artwork-swatch-29372e80)
+  );
 }
 .quacks-reward-vial-neck {
   position: absolute;
@@ -383,8 +425,8 @@ const slots = computed(() =>
   height: 6px;
   top: -7px;
   left: calc(50% - 8px);
-  border: 1px solid #c3c9a8aa;
-  background: #8d7347;
+  border: 1px solid var(--stitch-artwork-swatch-c3c9a8aa);
+  background: var(--stitch-artwork-swatch-8d7347);
   border-radius: 2px;
 }
 .quacks-reward-position {
@@ -393,27 +435,30 @@ const slots = computed(() =>
   inset-inline: 0;
   text-align: center;
   font-size: 0.875rem;
-  color: #fff2d3;
+  color: var(--stitch-artwork-swatch-fff2d3);
 }
 .quacks-distillery .quacks-reward-vial.is-current {
-  border: 2px solid #ffe6a1;
-  background: linear-gradient(#c99a3459, #89692744);
+  border: 2px solid var(--stitch-artwork-swatch-ffe6a1);
+  background: linear-gradient(
+    var(--stitch-artwork-swatch-c99a3459),
+    var(--stitch-artwork-swatch-89692744)
+  );
   box-shadow:
-    inset 0 -8px 12px #edbd4726,
-    0 0 10px #d1ad4d55;
+    inset 0 -8px 12px var(--stitch-artwork-swatch-edbd4726),
+    0 0 10px var(--stitch-artwork-swatch-d1ad4d55);
 }
 .quacks-distillery .quacks-reward-vial.is-inspected {
-  outline: 1px solid #fff0c6;
+  outline: 1px solid var(--stitch-artwork-swatch-fff0c6);
   outline-offset: 2px;
 }
 .quacks-distillery button.is-available {
   cursor: pointer;
 }
 .quacks-distillery button.is-available:hover {
-  box-shadow: 0 0 15px #ffe09d80;
+  box-shadow: 0 0 15px var(--stitch-artwork-swatch-ffe09d80);
 }
 .quacks-distillery button:focus-visible {
-  outline: 3px solid #fff1bd;
+  outline: 3px solid var(--stitch-artwork-swatch-fff1bd);
   outline-offset: 4px;
 }
 .quacks-distillery .quacks-distillery-patient {
@@ -447,7 +492,7 @@ const slots = computed(() =>
   bottom: 2%;
   display: grid;
   justify-items: center;
-  color: #fff4d5;
+  color: var(--stitch-artwork-swatch-fff4d5);
   font-size: 0.875rem;
   filter: saturate(0.4);
 }
@@ -471,10 +516,10 @@ const slots = computed(() =>
   width: 96px;
   min-height: 44px;
   padding: 8px;
-  border: 1px solid #e9ce83;
+  border: 1px solid var(--stitch-artwork-swatch-e9ce83);
   border-radius: 8px;
-  background: #233d33;
-  color: #fff4d5;
+  background: var(--stitch-artwork-swatch-233d33);
+  color: var(--stitch-artwork-swatch-fff4d5);
   font: inherit;
   font-size: 0.875rem;
   cursor: pointer;
@@ -483,11 +528,18 @@ const slots = computed(() =>
   min-width: 720px;
   max-width: 1120px;
 }
-.quacks-distillery :is(.quacks-essence-node, .quacks-reward-vial).is-available {
-  border-color: #ffe28a !important;
-  outline: 3px solid #ffe28a;
+/* The scroll wrapper is always the root, so this outranks the current-slot border. */
+.quacks-patient-board-scroll
+  .quacks-distillery
+  :is(.quacks-essence-node, .quacks-reward-vial).is-available {
+  border-color: var(--stitch-artwork-swatch-ffe28a);
+  outline: 3px solid var(--stitch-artwork-swatch-ffe28a);
   outline-offset: 2px;
-  background: radial-gradient(circle at 30% 22%, #c4b66a, #42634a 80%);
+  background: radial-gradient(
+    circle at 30% 22%,
+    var(--stitch-artwork-swatch-c4b66a),
+    var(--stitch-artwork-swatch-42634a) 80%
+  );
   cursor: pointer;
 }
 .quacks-essence-instruction {

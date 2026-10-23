@@ -40,7 +40,7 @@ import steam from '../../assets/quacks/steam.svg';
   min-inline-size: 0;
   block-size: 170px;
   min-block-size: 170px;
-  background: #143e34;
+  background: var(--stitch-artwork-swatch-143e34);
   overflow: hidden;
 }
 .vue-quacks-rq03-art-layers {
@@ -79,7 +79,7 @@ import steam from '../../assets/quacks/steam.svg';
     font:
       700 5.775px/1.25 system-ui,
       sans-serif;
-    color: #f8ebc0;
+    color: var(--stitch-artwork-swatch-f8ebc0);
     text-align: center;
   }
   .rq03-one {
