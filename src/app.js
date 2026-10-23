@@ -2820,6 +2820,12 @@ function initializeApp(config, dataLock, acquired) {
       for (const name of ['stanley021039', 'x55662306', 'azrael04'])
         for (const width of [64, 88, 176])
           files[`/assets/auth/${name}-${width}.webp`] = `assets/auth/${name}-${width}.webp`;
+      // Old WAV URLs remain compatible, but deliver the checked compressed bytes.
+      for (const sound of require('../public/assets/game-sounds/compressed-manifest.json').sounds) {
+        for (const name of [sound.source, sound.file])
+          files['/assets/' + sound.directory + '/' + name] =
+            'assets/' + sound.directory + '/' + sound.file;
+      }
       files['/shared/opening-theme.js'] = 'shared/opening-theme.js';
       files['/shared/entry-intro.js'] = 'shared/entry-intro.js';
       files['/shared/auth-entry.js'] = 'shared/auth-entry.js';

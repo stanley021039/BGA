@@ -5,7 +5,11 @@ const { test } = require('node:test'),
   path = require('node:path');
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
+  .replace(/^import .*motion-lifetime.js';\n/m, '')
   .replace('export function playAttackArtwork', 'function playAttackArtwork');
+const lifetime = fs
+  .readFileSync(path.join(__dirname, '../src/services/motion-lifetime.js'), 'utf8')
+  .replace(/export /g, '');
 function run(effect, color, frames = 7, random = Math.random) {
   const colors = [],
     arcs = [],
@@ -73,7 +77,7 @@ function run(effect, color, frames = 7, random = Math.random) {
     Date,
   };
   vm.createContext(sandbox);
-  vm.runInContext(source, sandbox);
+  vm.runInContext(lifetime + source, sandbox);
   const stop = sandbox.playAttackArtwork(
     { getContext: () => context },
     { effect, color, width: 800, height: 600, from: { x: 120, y: 240 }, to: { x: 640, y: 380 } },

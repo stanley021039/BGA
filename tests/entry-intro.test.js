@@ -22,7 +22,7 @@ function fixture({
   withAudio = false,
 } = {}) {
   const { document } = dom(
-    '<button id="before">Before</button><dialog id="entry-intro" open><div class="entry-intro-art"><img></div><button>略過開場</button><button class="entry-intro-sound" hidden>播放入場音效</button></dialog>',
+    '<button id="before">Before</button><dialog id="entry-intro" open><div class="entry-intro-art"><img data-entry-src="/assets/auth/login-864.webp"></div><button>略過開場</button><button class="entry-intro-sound" hidden>播放入場音效</button></dialog>',
   );
   document.documentElement = document.createElement('html');
   document.readyState = loading ? 'loading' : 'complete';
@@ -486,4 +486,15 @@ test('opt-out dominates direct/reload/history entries and internal navigation wo
   const noStorage = fixture({ brokenStorage: true, referrer: 'https://bga.example/' });
   assert.equal(noStorage.panel.hidden, true);
   assert.equal(noStorage.timers.size, 0);
+});
+
+test('disabled and skipped openings do not fetch artwork; active default resolves its lazy source', () => {
+  const html = withEntryIntro('<html><head></head><body><main></main></body></html>');
+  assert.doesNotMatch(html, /<link[^>]+rel="preload"/);
+  assert.doesNotMatch(html, /<img[^>]+\ssrc=/);
+  assert.match(html, /data-entry-src=/);
+  const disabled = fixture({ entryStored: JSON.stringify({ version: 1, enabled: false }) });
+  assert.equal(disabled.panel.querySelector('img').src, undefined);
+  const active = fixture();
+  assert.equal(active.panel.querySelector('img').src, '/assets/auth/login-864.webp');
 });

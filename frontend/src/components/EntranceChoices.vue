@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { requestJson } from '../services/http';
+import { sizedImage } from '../services/image-size';
 import requirements from '../../../public/shared/entrance-requirements.json';
 import { apparate } from '../pages/lobby/apparition';
 import {
@@ -77,9 +78,11 @@ onBeforeUnmount(() => {
         class="entrance-stage"
         aria-hidden="true"
         ><span class="entrance-preview-actor"
-          ><img src="/assets/characters/traveler-neutral.png" alt="" draggable="false" /><span
-            >小雨</span
-          ></span
+          ><img
+            :src="sizedImage('/assets/characters/traveler-neutral.png', 128)"
+            alt=""
+            draggable="false"
+          /><span>小雨</span></span
         ></span
       ><strong class="ui-choice-label">{{ effect.label }}</strong
       ><span class="entrance-description">{{ effect.description }}</span

@@ -1,6 +1,8 @@
 /* Adapted from user 攻擊.zip: 15_4 full artwork plus 8 independent obsidian crescent variants.
  * Static reviewed drawing code only: no export UI, global inputs, dummy, shake or endless demo. */
+import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
 export function playAttackArtwork(surface, options) {
+  if (!motionAllowed()) return () => {};
   const ctx = surface.getContext('2d');
   if (!ctx) return () => {};
   const width = options.width,
@@ -550,9 +552,11 @@ export function playAttackArtwork(surface, options) {
   fireVfxNode(ids[options.effect], from.x, from.y, to.x, to.y);
   const start = performance.now();
   let last = start;
+  let releaseMotion = () => {};
   function stop() {
     if (stopped) return;
     stopped = true;
+    releaseMotion();
     cancelAnimationFrame(frame);
     for (const timer of timers) clearTimeout(timer);
     timers.clear();
@@ -1150,6 +1154,7 @@ export function playAttackArtwork(surface, options) {
     }
     frame = requestAnimationFrame(tick);
   }
-  frame = requestAnimationFrame(tick);
+  releaseMotion = watchMotionCancellation(stop);
+  if (!stopped) frame = requestAnimationFrame(tick);
   return stop;
 }

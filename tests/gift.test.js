@@ -588,8 +588,13 @@ test('authenticated players can create, join and reconnect to a gift room withou
     for (const name of ['open_001', 'confirmation_001']) {
       const sound = await fetch(base + '/assets/gift-sounds/' + name + '.wav');
       assert.equal(sound.status, 200);
-      assert.equal(sound.headers.get('content-type'), 'audio/wav');
-      assert.equal(Buffer.from(await sound.arrayBuffer()).toString('ascii', 0, 4), 'RIFF');
+      assert.equal(sound.headers.get('content-type'), 'audio/mpeg');
+      assert.deepEqual(
+        Buffer.from(await sound.arrayBuffer()),
+        require('node:fs').readFileSync(
+          require('node:path').join(__dirname, '../public/assets/gift-sounds', name + '.mp3'),
+        ),
+      );
     }
     for (const gift of [
       GIFTS.find((gift) => gift.image.includes('/kenney/')),

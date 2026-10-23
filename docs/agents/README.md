@@ -1,3 +1,5 @@
+2026-10-23 新增／修改特效與媒體必讀[效能契約](../specs/EFFECTS-PERFORMANCE.md)，包含壓縮、快取、預載、動態取消、容量／並行上限與CI／瀏覽器證據；最新候選實作見PROGRAMMER。
+
 # Agent 長期記憶索引
 
 2026-10-23 R6共用介面候選：字體、提示、選擇卡、標題與清單契約見 [共用UI元件](../UI-COMPONENTS.md)；程式責任與布局注意事項見 [PROGRAMMER](PROGRAMMER.md)。

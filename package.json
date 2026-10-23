@@ -1,6 +1,6 @@
 {
   "name": "afterhours-poker",
-  "version": "2.40.0",
+  "version": "2.40.1",
   "private": true,
   "scripts": {
     "start": "node server.js",
@@ -19,7 +19,8 @@
     "hooks:install": "node tools/install-git-hooks.cjs",
     "prepare": "node tools/install-git-hooks.cjs",
     "ui:check": "node tools/ui-check.cjs --check",
-    "ui:baseline": "node tools/ui-check.cjs --update"
+    "ui:baseline": "node tools/ui-check.cjs --update",
+    "perf:check": "node tools/perf-check.cjs"
   },
   "engines": {
     "node": ">=22.13"

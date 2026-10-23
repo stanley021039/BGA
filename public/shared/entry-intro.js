@@ -219,6 +219,8 @@
         image.alt = opening.label;
         panel.style.setProperty('--entry-intro-duration', opening.duration + 'ms');
       }
+      const image = panel.querySelector('img');
+      if (!opening && image?.dataset?.entrySrc) image.src = image.dataset.entrySrc;
       previous = document.activeElement;
       panel.hidden = false;
       try {
@@ -265,6 +267,9 @@
       finish();
     });
     window.addEventListener('pagehide', finish);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) hide();
+    });
     window.addEventListener('pageshow', (event) => {
       if (event.persisted) hide();
     });
