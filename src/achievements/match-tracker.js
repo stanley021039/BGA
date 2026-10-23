@@ -136,7 +136,7 @@ function attachMatchAchievements(room) {
           ? (action === 'guess' && !!(data.choiceId || data.text?.trim() || data.artist?.trim())) ||
             ['place', 'challenge'].includes(action)
           : this.type === 'bluff'
-            ? ['spoken', 'guess'].includes(action)
+            ? ['spoken', 'answer', 'guess', 'decide'].includes(action)
             : this.type === 'minimal'
               ? (action === 'submit' && data.shapes?.length > 0) || action === 'guess'
               : this.type === 'telephone'

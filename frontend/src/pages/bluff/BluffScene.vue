@@ -11,7 +11,7 @@ import UiButton from '../../components/UiButton.vue';
 import UiIcon from '../../components/UiIcon.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import BluffReview from './BluffReview.vue';
-import BluffSpeechLog from './BluffSpeechLog.vue';
+import PlayerAvatar from '../../components/PlayerAvatar.vue';
 import BluffSettings from './BluffSettings.vue';
 import { useBluffSpeech } from './bluff-speech';
 const room = useRoomStore(),
@@ -29,13 +29,22 @@ let disposed = false,
 const blocked = computed(() => !room.connected || room.busy || actions.pending || !!room.terminal),
   thinker = computed(() => state.value.players.find((p) => p.id === state.value.thinkerId)),
   isThinker = computed(() => state.value.me === state.value.thinkerId),
-  talk = useBluffSpeech(() => state.value);
+  talk = useBluffSpeech(
+    () => state.value,
+    (text) => answer(text),
+  ),
+  writing = ref(false),
+  written = ref(''),
+  shown = ref<string[]>([]);
 const publicReview = computed(() => ['reveal', 'finished'].includes(state.value.phase)),
   rankings = computed(() =>
     [...state.value.players].sort((a, b) => Number(b.score) - Number(a.score)),
   );
 watch([() => room.scope, () => state.value.roundId, () => state.value.phase], () => {
   secretOpen.value = false;
+  writing.value = false;
+  written.value = '';
+  shown.value = [];
   confirm.value?.cancel();
 });
 watch(
@@ -74,34 +83,52 @@ watch(
   },
 );
 
-async function choosePerson(action: 'challenge' | 'guess', id: string, name: string) {
-  if (blocked.value) return;
+// Each explainer answers once, by voice or typed text; answers open to the table.
+async function answer(text: string) {
+  const value = text.trim();
+  if (!value || blocked.value || state.value.phase !== 'discussion') return;
+  await actions.command('answer', { text: value });
+  if (state.value.spokenIds.includes(state.value.me)) {
+    writing.value = false;
+    written.value = '';
+  }
+}
+function toggleShown(id: string) {
+  shown.value = shown.value.includes(id)
+    ? shown.value.filter((v) => v !== id)
+    : [...shown.value, id];
+}
+// The thinker adjusts marks freely; the server shares them live with the table.
+function mark(kind: 'challenge' | 'honest', id: string) {
+  if (blocked.value || !isThinker.value || state.value.phase !== 'discussion') return;
+  const { challenges, honestId } = state.value.draft;
+  if (kind === 'honest')
+    return actions.command('mark', { challenges, honestId: honestId === id ? null : id });
+  if (!challenges.includes(id) && challenges.length >= 2) return;
+  return actions.command('mark', {
+    challenges: challenges.includes(id) ? challenges.filter((v) => v !== id) : [...challenges, id],
+    honestId,
+  });
+}
+const nameOf = (id: string | null) => state.value.players.find((p) => p.id === id)?.name || '';
+async function decide() {
+  if (blocked.value || !state.value.canGuess || !state.value.draft.honestId) return;
   const scope = room.scope,
-    round = state.value.roundId;
-  const allowed = () =>
+    round = state.value.roundId,
+    { challenges, honestId } = state.value.draft;
+  const lines = [
+    '老實人：' + nameOf(honestId),
+    '公三小：' + (challenges.length ? challenges.map(nameOf).join('、') : '不使用'),
+    ...(challenges.length ? ['質疑瞎掰人：對方 -1、你 +1', '質疑老實人：你 -3'] : []),
+  ];
+  if (
+    (await confirm.value?.ask('確定後立即揭曉與計分。', '確定', lines)) &&
     scope === room.scope &&
     round === state.value.roundId &&
-    state.value.phase === 'discussion' &&
-    isThinker.value &&
-    !blocked.value &&
-    state.value.players.some((p) => p.id === id) &&
-    id !== state.value.me &&
-    (action === 'guess'
-      ? state.value.canGuess
-      : state.value.challenges.length < 2 && !state.value.challenges.includes(id));
-  if (!allowed()) return;
-  const message =
-    action === 'challenge'
-      ? `對 ${name} 打出公三小？揭曉時，瞎掰人 -1、你 +1；老實人則你 -3。`
-      : `確定選 ${name} 為老實人？將立即揭曉與計分。`;
-  if (
-    (await confirm.value?.ask(message, action === 'challenge' ? '確認質疑' : '確認選擇')) &&
-    allowed()
+    state.value.canGuess &&
+    !blocked.value
   )
-    await actions.command(action, {
-      targetId: id,
-      ...(action === 'guess' ? { confirmed: true } : {}),
-    });
+    await actions.command('decide', { confirmed: true });
 }
 // The concealed card is itself the reveal control; move focus between the card
 // and its hide button so keyboard users can flip it back and forth in place.
@@ -174,14 +201,10 @@ function rank(index: number) {
   ></RoomWaitingTemplate>
 
   <section v-else class="vue-bluff-screen" :data-phase="state.phase" aria-labelledby="bluffHeading">
-    <header class="vue-bluff-game-info"
-      ><div><h1>瞎掰王</h1><p>3–9 人 · 講話轉字幕、外部語音或面對面口說</p></div
-      ><span class="vue-bluff-state-badge">{{
-        thinker && state.round ? '本輪想想：' + thinker.name : '等待朋友集結'
-      }}</span></header
-    >
     <section class="vue-bluff-stage"
-      ><header class="vue-bluff-stage-heading"
+      ><header
+        class="vue-bluff-stage-heading"
+        :class="{ 'ui-sr-only': state.phase === 'discussion' }"
         ><h2 id="bluffHeading">{{ heading }}</h2></header
       >
       <div
@@ -218,7 +241,7 @@ function rank(index: number) {
           ></template
         >
         <template v-else-if="['preparing', 'discussion'].includes(state.phase)"
-          ><div class="vue-bluff-prompt"
+          ><div v-if="state.phase === 'preparing'" class="vue-bluff-prompt"
             ><h3>{{ state.prompt?.title }}</h3
             ><p
               >難度 {{ state.prompt?.level }} ·
@@ -312,102 +335,163 @@ function rank(index: number) {
                 :disabled="blocked || !bluff.secretVisible || state.readyIds.includes(state.me)"
                 @click="actions.command('ready')" /></div
           ></div>
-          <template v-else
-            ><div class="vue-bluff-discussion-grid"
-              ><div class="vue-bluff-discussion-left"
-                ><template v-if="isThinker"
-                  ><p class="vue-bluff-progress"
-                    >剩餘公三小：{{ 2 - state.challenges.length }} 張 ·
-                    {{ state.spokenIds.length }}／{{ explainers.length }} 位已說明</p
-                  ><p v-if="!state.canGuess" class="vue-bluff-instruction"
-                    >等每位解釋者標記說明完畢後，才能確認選擇。</p
-                  ><div class="vue-bluff-people"
-                    ><article v-for="player in explainers" :key="player.id"
-                      ><div class="vue-bluff-person-copy"
-                        ><strong>{{ player.name }}</strong
-                        ><span>{{
-                          state.challenges.includes(player.id)
-                            ? '已質疑'
-                            : state.spokenIds.includes(player.id)
-                              ? '已說明'
-                              : '尚未說明'
-                        }}</span></div
-                      ><div class="vue-bluff-person-actions"
-                        ><UiButton
-                          variant="secondary"
-                          icon="help"
-                          :label="'質疑 ' + player.name + '：公三小'"
-                          caption="公三小"
-                          :disabled="
-                            blocked ||
-                            state.challenges.length >= 2 ||
-                            state.challenges.includes(player.id)
-                          "
-                          @click="choosePerson('challenge', player.id, player.name)" /><UiButton
-                          variant="primary"
-                          icon="check"
-                          :label="'選 ' + player.name + ' 為老實人'"
-                          caption="選為老實人"
-                          :disabled="blocked || !state.canGuess"
-                          @click="
-                            choosePerson('guess', player.id, player.name)
-                          " /></div></article></div></template
-                ><div class="vue-bluff-speech-slot" :class="{ 'is-thinker': isThinker }"
-                  ><strong v-if="!isThinker">{{
-                    state.spokenIds.includes(state.me)
-                      ? '說明已完成，可繼續接受口頭質問。'
-                      : '輪到你說明時，請向同桌口頭解釋。'
-                  }}</strong
-                  ><div class="vue-bluff-actions"
+          <div v-else class="vue-bluff-table"
+            ><header class="vue-bluff-topic"
+              ><span
+                class="vue-bluff-avatar"
+                tabindex="0"
+                role="img"
+                data-ui-hint
+                :aria-label="'本輪想想：' + (thinker?.name || '')"
+                ><PlayerAvatar
+                  :name="thinker?.name || '想'"
+                  :avatar="thinker?.avatar"
+                  :bot="thinker?.bot" /></span
+              ><h3>{{ state.prompt?.title }}</h3
+              ><small
+                >難度 {{ state.prompt?.level }} ·
+                {{
+                  state.prompt?.hints.length
+                    ? '類別：' + state.prompt.hints.join('／')
+                    : '沒有類別提示'
+                }}</small
+              ></header
+            ><ul class="vue-bluff-seats"
+              ><li
+                v-for="player in explainers"
+                :key="player.id"
+                class="vue-bluff-seat"
+                :class="{ 'is-me': player.id === state.me }"
+                ><div class="vue-bluff-seat-row"
+                  ><span
+                    class="vue-bluff-avatar"
+                    tabindex="0"
+                    role="img"
+                    data-ui-hint
+                    :aria-label="player.name + (player.id === state.me ? '（我）' : '')"
+                    ><PlayerAvatar
+                      :name="player.name"
+                      :avatar="player.avatar"
+                      :bot="player.bot" /></span
+                  ><span class="vue-bluff-seat-state">{{
+                    state.spokenIds.includes(player.id)
+                      ? '已答題'
+                      : player.id === state.me
+                        ? '輪到你答題'
+                        : '答題中'
+                  }}</span
+                  ><div class="vue-bluff-seat-actions"
                     ><UiButton
-                      :variant="talk.listening.value ? 'primary' : 'secondary'"
-                      :icon="talk.listening.value ? 'stop' : 'sound'"
-                      :caption="talk.listening.value ? '停止講話' : '講話'"
-                      :label="talk.listening.value ? '停止講話並結束字幕' : '開始講話並轉成字幕'"
-                      :aria-pressed="talk.listening.value"
-                      :disabled="!talk.supported || (blocked && !talk.listening.value)"
-                      @click="talk.toggle" /><UiButton
+                      v-if="state.spokenIds.includes(player.id)"
                       variant="secondary"
-                      label="哦是哦"
-                      :disabled="blocked"
-                      @click="actions.command('reaction')"
-                      ><template #icon
-                        ><img
-                          class="vue-bluff-reaction-photo"
-                          src="/assets/bluff-reaction-photo.webp"
-                          alt="" /></template></UiButton
+                      icon="chat"
+                      :caption="shown.includes(player.id) ? '收起答案' : '看答案'"
+                      :label="
+                        (shown.includes(player.id) ? '收起 ' : '看 ') + player.name + ' 的答案'
+                      "
+                      :aria-expanded="shown.includes(player.id)"
+                      @click="toggleShown(player.id)" /><template v-else-if="player.id === state.me"
+                      ><UiButton
+                        :variant="talk.listening.value ? 'danger' : 'secondary'"
+                        :icon="talk.listening.value ? 'stop' : 'sound'"
+                        :caption="talk.listening.value ? '結束' : '答題'"
+                        :label="talk.listening.value ? '結束語音答題並送出' : '語音答題'"
+                        :pending="talk.waiting.value"
+                        :disabled="!talk.supported || writing || (blocked && !talk.listening.value)"
+                        @click="talk.listening.value ? talk.finish() : talk.start()" /><UiButton
+                        :variant="writing ? 'primary' : 'secondary'"
+                        icon="edit"
+                        caption="答題"
+                        label="文字答題"
+                        :aria-expanded="writing"
+                        :disabled="blocked || talk.listening.value || talk.waiting.value"
+                        @click="writing = !writing" /></template></div
+                  ><div
+                    class="vue-bluff-marks"
+                    role="group"
+                    :aria-label="'想想對 ' + player.name + ' 的判斷'"
                     ><UiButton
-                      v-if="!isThinker"
+                      :variant="state.draft.challenges.includes(player.id) ? 'danger' : 'ghost'"
+                      icon="help"
+                      caption="公三小"
+                      :label="
+                        isThinker
+                          ? '對 ' + player.name + ' 打公三小'
+                          : '想想' +
+                            (state.draft.challenges.includes(player.id) ? '已' : '未') +
+                            '對 ' +
+                            player.name +
+                            ' 打公三小'
+                      "
+                      :aria-pressed="state.draft.challenges.includes(player.id)"
+                      :data-marked="state.draft.challenges.includes(player.id) || undefined"
+                      :disabled="
+                        !isThinker ||
+                        blocked ||
+                        (!state.draft.challenges.includes(player.id) &&
+                          state.draft.challenges.length >= 2)
+                      "
+                      @click="mark('challenge', player.id)" /><UiButton
+                      :variant="state.draft.honestId === player.id ? 'success' : 'ghost'"
+                      icon="check"
+                      caption="老實人"
+                      :label="
+                        isThinker
+                          ? '標記 ' + player.name + ' 為老實人'
+                          : '想想' +
+                            (state.draft.honestId === player.id ? '已' : '未') +
+                            '標記 ' +
+                            player.name +
+                            ' 為老實人'
+                      "
+                      :aria-pressed="state.draft.honestId === player.id"
+                      :data-marked="state.draft.honestId === player.id || undefined"
+                      :disabled="!isThinker || blocked"
+                      @click="mark('honest', player.id)" /></div></div
+                ><p
+                  v-if="state.spokenIds.includes(player.id) && shown.includes(player.id)"
+                  class="vue-bluff-answer"
+                  >{{ state.answers[player.id] || '（沒有文字答案）' }}</p
+                ><template
+                  v-else-if="player.id === state.me && !state.spokenIds.includes(player.id)"
+                  ><p
+                    v-if="talk.listening.value || talk.waiting.value"
+                    class="vue-bluff-answer is-live"
+                    >{{ talk.preview.value || '請開始說話…' }}</p
+                  ><form v-if="writing" class="vue-bluff-write" @submit.prevent="answer(written)"
+                    ><input
+                      v-model="written"
+                      type="text"
+                      maxlength="240"
+                      aria-label="輸入你的答案"
+                      placeholder="輸入你的解釋…" /><UiButton
+                      type="submit"
                       variant="primary"
                       icon="check"
-                      :label="
-                        state.spokenIds.includes(state.me) ? '已完成說明' : '我已口頭說明完畢'
-                      "
+                      label="確認"
                       :pending="actions.pending"
-                      :disabled="blocked || state.spokenIds.includes(state.me)"
-                      @click="actions.command('spoken')" /></div
+                      :disabled="blocked || !written.trim()" /></form
                   ><p
+                    v-if="talk.status.value"
                     class="vue-bluff-speech-status"
                     :class="{ 'is-error': talk.failed.value }"
                     role="status"
                     >{{ talk.status.value }}</p
-                  ></div
-                ></div
-              ><aside class="vue-bluff-discussion-right"
-                ><BluffSpeechLog :state="state" :interim="talk.interim.value" /><section
-                  v-if="Object.keys(state.botStatements).length"
-                  class="vue-bluff-bots"
-                  ><h3>腳本夥伴說詞</h3
-                  ><p v-for="(statement, id) in state.botStatements" :key="id"
-                    >{{ state.players.find((p) => p.id === id)?.name || 'AI' }} 說：「{{
-                      statement
-                    }}」</p
-                  ></section
-                ></aside
-              ></div
-            ></template
-          ></template
-        >
+                  ></template
+                ></li
+              ></ul
+            ><div class="vue-bluff-reaction-row"
+              ><UiButton
+                variant="secondary"
+                label="哦是哦"
+                :disabled="blocked"
+                @click="actions.command('reaction')"
+                ><template #icon
+                  ><img
+                    class="vue-bluff-reaction-photo"
+                    src="/assets/bluff-reaction-photo.webp"
+                    alt="" /></template></UiButton></div></div
+        ></template>
         <template v-else-if="state.phase === 'finished'"
           ><section class="vue-bluff-match-result"
             ><h3 v-if="state.interrupted">有人離席，本場中止。保留已完成回合，未完成回合不計分。</h3
@@ -430,13 +514,27 @@ function rank(index: number) {
           @ban="(id) => actions.command('ban', { resultId: id })"
         /><BluffSettings v-if="state.phase === 'finished'" /> </div
       ><footer class="vue-bluff-bottom"
-        ><span>{{
+        ><span v-if="state.phase === 'discussion'" class="vue-bluff-decision"
+          >公三小 {{ state.draft.challenges.length }}／2 · 老實人：{{
+            nameOf(state.draft.honestId) || '未選'
+          }}
+          · {{ state.spokenIds.length }}／{{ explainers.length }} 位已答題</span
+        ><span v-else>{{
           state.phase === 'reveal'
             ? '本輪分數已更新'
             : state.phase === 'finished'
               ? '已完成回合可繼續查看'
               : '請使用自己的語音或面對面口說'
         }}</span
+        ><UiButton
+          v-if="state.phase === 'discussion' && isThinker"
+          variant="primary"
+          icon="check"
+          label="確定"
+          :disabled="blocked || !state.canGuess || !state.draft.honestId"
+          :pending="actions.pending"
+          @click="decide"
+        /><span v-else-if="state.phase === 'discussion'">等待 {{ thinker?.name }} 確定</span
         ><div v-if="state.phase === 'finished'" id="bluff-start-slot"></div
         ><UiButton
           v-else-if="state.phase === 'reveal' && room.host"
@@ -470,5 +568,5 @@ function rank(index: number) {
       data-game-focus-overlay
       ><div v-for="event in bluff.liveReactions" :key="event.id">{{ event.name }} 質疑你</div></div
     ></Teleport
-  ><ConfirmDialog ref="confirm" />
+  ><ConfirmDialog ref="confirm" stitch />
 </template>

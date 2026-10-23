@@ -1,6 +1,6 @@
 {
   "name": "afterhours-poker",
-  "version": "2.37.0",
+  "version": "2.39.0",
   "private": true,
   "scripts": {
     "start": "node server.js",
@@ -16,8 +16,6 @@
     "frontend:typecheck": "npm --prefix frontend run typecheck",
     "format": "node tools/format.cjs --write",
     "format:check": "node tools/format.cjs --check",
-    "ui:check": "node tools/ui-check.cjs --check",
-    "ui:baseline": "node tools/ui-check.cjs --update",
     "hooks:install": "node tools/install-git-hooks.cjs",
     "prepare": "node tools/install-git-hooks.cjs"
   },

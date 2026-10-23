@@ -4,6 +4,7 @@ import { useRoomStore } from '../../stores/room';
 import { readMusicQuizSnapshot, type MusicQuizSnapshot } from '../../contracts/musicquiz';
 import type { RoomPlayer } from '../../contracts/room';
 import GameRoomPage from '../../components/GameRoomPage.vue';
+import MusicKingTokens from '../../components/MusicKingTokens.vue';
 import MusicQuizScene from './MusicQuizScene.vue';
 const dirty = ref(false),
   room = useRoomStore(),
@@ -45,7 +46,10 @@ function status(p: RoomPlayer) {
     :setup="setup"
     :can-start="!dirty && !!s && s.availableCount >= s.players.length + 2"
     @start="room.command('start', {})"
-    ><MusicQuizScene v-if="s" :key="room.scope" @dirty="dirty = $event" /><template #settings
+    ><MusicQuizScene v-if="s" :key="room.scope" @dirty="dirty = $event" /><template
+      #player-metric="{ player }"
+      ><MusicKingTokens :count="Number(player.tokens || 0)" /></template
+    ><template #settings
       ><p v-if="s?.phase !== 'waiting'"
         >在中央選擇題庫並儲存設定。大家共用題庫，音量各自調整。</p
       ></template

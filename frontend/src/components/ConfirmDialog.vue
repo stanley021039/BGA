@@ -4,6 +4,7 @@ import UiDialog from './UiDialog.vue';
 import UiButton from './UiButton.vue';
 const dialog = ref<InstanceType<typeof UiDialog> | null>(null),
   message = ref(''),
+  items = ref<string[]>([]),
   label = ref('確認');
 let resolve: ((confirmed: boolean) => void) | undefined;
 function finish(confirmed: boolean) {
@@ -12,9 +13,11 @@ function finish(confirmed: boolean) {
   complete?.(confirmed);
   dialog.value?.close();
 }
-function ask(text: string, confirmLabel = '確認'): Promise<boolean> {
+// Optional `list` lines render as bullets under the message.
+function ask(text: string, confirmLabel = '確認', list: string[] = []): Promise<boolean> {
   if (resolve) return Promise.resolve(false);
   message.value = text;
+  items.value = list;
   label.value = confirmLabel;
   return new Promise((complete) => {
     resolve = complete;
@@ -27,6 +30,8 @@ defineExpose({ ask, cancel: () => finish(false) });
 <template>
   <UiDialog ref="dialog" compact title="確認操作" @closed="finish(false)"
     ><p class="vue-confirm-message">{{ message }}</p
+    ><ul v-if="items.length" class="vue-confirm-list"
+      ><li v-for="item in items" :key="item">{{ item }}</li></ul
     ><div class="vue-confirm-actions"
       ><UiButton label="取消" @click="finish(false)" /><UiButton
         variant="primary"

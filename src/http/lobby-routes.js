@@ -6,6 +6,7 @@ const { HttpError } = require('./errors');
 function createLobbyHandlers({
   assertFrame = () => {},
   entranceAllowed = () => true,
+  attackLoadout = () => ({ q: 'barrage', e: 'beam' }),
   backgroundAllowed = () => true,
   lobby,
   withLobbyMedia,
@@ -19,6 +20,18 @@ function createLobbyHandlers({
   }
   function move(user, data) {
     return withLobbyMedia(user, lobby.move(user, data));
+  }
+  function attack(user, data) {
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      Object.keys(data).some((k) => !['requestId', 'aspectRatio', 'slot'].includes(k))
+    )
+      throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
+    return withLobbyMedia(
+      user,
+      lobby.attack(user, { ...data, effect: attackLoadout(user)[data.slot || 'q'] }),
+    );
   }
   function teleport(user, data) {
     const entrance = entranceAllowed(user, data?.entrance) ? data?.entrance : 'classic';
@@ -67,6 +80,6 @@ function createLobbyHandlers({
       throw new HttpError(403, 'BACKGROUND_LOCKED', '請先完成對應成就以解鎖這個背景');
     return withLobbyMedia(user, lobby.changeBackground(user, data));
   }
-  return { view, move, emotes, emote, barrage, background, teleport };
+  return { view, move, emotes, emote, barrage, background, teleport, attack };
 }
 module.exports = { createLobbyHandlers };

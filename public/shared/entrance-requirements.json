@@ -118,5 +118,29 @@
     "label": "月牙天沖 · 黑月",
     "achievementId": "musicquiz-regular",
     "description": "黑色月牙斬出，紅色雷光撕開夜幕。"
+  },
+  {
+    "id": "stitch-pup-parade",
+    "label": "萌犬相伴",
+    "achievementId": "all-first-table",
+    "description": "萌犬蹦跳相伴，愛心與腳印繞身飛舞。"
+  },
+  {
+    "id": "stitch-gentle-kitty",
+    "label": "靈貓隨行",
+    "achievementId": "draw-first-correct",
+    "description": "靈貓輕步繞行，彩色光點伴你登場。"
+  },
+  {
+    "id": "stitch-chibaku-tensei",
+    "label": "地爆天星",
+    "achievementId": "minimal-three-shapes",
+    "description": "黑色引力核心升起，岩塊聚攏封印。"
+  },
+  {
+    "id": "stitch-bungee-gum",
+    "label": "伸縮自在的愛",
+    "achievementId": "poker-first-hand",
+    "description": "桃紅念氣延展，黑桃二王牌旋轉飛出。"
   }
 ]

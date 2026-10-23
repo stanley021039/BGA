@@ -107,8 +107,8 @@ async function select(id: string) {
 }
 </script>
 <template>
-  <section class="vue-header-profile" aria-label="即時帳號與形象設定"
-    ><h2>帳號與形象</h2
+  <section class="vue-header-profile" aria-label="即時帳號與個人化設定"
+    ><h2>帳號與個人化</h2
     ><form @submit.prevent="saveName"
       ><label
         >玩家暱稱<input

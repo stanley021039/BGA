@@ -18,7 +18,7 @@ export const useReactionsStore = defineStore('reactions', () => {
     const selected =
       options.characters.find((character) => character.id === settings.appearance.characterId) ||
       options.characters[0];
-    if (!selected) throw Error('目前沒有可用角色，請到形象設定選擇角色。');
+    if (!selected) throw Error('目前沒有可用角色，請到個人化設定選擇角色。');
     return {
       name: selected.name,
       choices: Object.entries(selected.expressions).map(([id, url]) => ({

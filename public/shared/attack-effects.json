@@ -1,0 +1,107 @@
+[
+  {
+    "id": "barrage",
+    "label": "連射／散射能量彈",
+    "color": "#00f0ff",
+    "description": "七色能量彈連射，彩色流光拖尾與著彈火花同步綻放。",
+    "achievementId": null
+  },
+  {
+    "id": "beam",
+    "label": "超人力霸王十字光線",
+    "color": "#7df4ff",
+    "description": "蓄力十字手勢幾何電光、高能集束貫通射線、連續震顫衝擊。",
+    "achievementId": null
+  },
+  {
+    "id": "shield",
+    "label": "六角形能量護盾",
+    "color": "#00f0ff",
+    "description": "自己的角色展開蜂巢護盾，光彈碰撞晶格後碎裂反彈。",
+    "achievementId": "gift-first-gift"
+  },
+  {
+    "id": "chains",
+    "label": "能量鎖鏈",
+    "color": "#ffe08b",
+    "description": "等離子彈性鏈節、物理拉扯目標假人、交錯游離電弧與火花。",
+    "achievementId": "majority-first-vote"
+  },
+  {
+    "id": "sphere",
+    "label": "球形能量結界",
+    "color": "#00ff88",
+    "description": "自己的角色展開綠色球形結界，立體經緯光環旋轉擴散。",
+    "achievementId": "minimal-first-match"
+  },
+  {
+    "id": "orbital",
+    "label": "天降光柱",
+    "color": "#ffd556",
+    "description": "天基軌道幾何符文鎖定、超高能天頂垂直降臨光束、地面熔岩焦痕。",
+    "achievementId": "thunder-first-drive"
+  },
+  {
+    "id": "funnel",
+    "label": "浮游砲齊射",
+    "color": "#00f0ff",
+    "description": "浮游機兵戰術編隊盤旋、雷射引導、短延遲交錯多角度全彈齊射。",
+    "achievementId": "poker-first-hand"
+  },
+  {
+    "id": "singularity",
+    "label": "黑洞牽引",
+    "color": "#a855f7",
+    "description": "超重力奇點引力渦旋、吞噬全場星塵碎屑與假人、崩壞超新星爆發。",
+    "achievementId": "bluff-convincing"
+  },
+  {
+    "id": "explosion",
+    "label": "爆裂魔法",
+    "color": "#ff3366",
+    "description": "多重逆轉紅蓮魔法陣吟唱、全屏高熱閃光、核爆級蕈狀烈焰巨響。",
+    "achievementId": "quacks-double-explosion"
+  },
+  {
+    "id": "blade_aura",
+    "label": "藍黑半月劍氣",
+    "color": "#00d0ff",
+    "description": "幽藍鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。",
+    "achievementId": "draw-first-correct"
+  },
+  {
+    "id": "blade_aura_crimson",
+    "label": "紅黑半月劍氣",
+    "color": "#ff0f3f",
+    "description": "暗紅鋒刃包覆黑曜月牙，雙重斬擊與空間切痕獨立釋放。",
+    "achievementId": "draw-fastest-correct"
+  },
+  {
+    "id": "chain_lightning",
+    "label": "連鎖雷霆／天頂落雷",
+    "color": "#00f0ff",
+    "description": "九天折線電弧劈裂、高壓等離子電漿光芒、強烈震屏暴擊。",
+    "achievementId": "musicquiz-rescue"
+  },
+  {
+    "id": "frost_spikes",
+    "label": "寒冰結晶／極地霜刺",
+    "color": "#7df4ff",
+    "description": "九根立體寒冰地刺向上突起，亮面冰晶與地面霜裂擴散。",
+    "achievementId": "telephone-first-match"
+  },
+  {
+    "id": "arrow_volley",
+    "label": "光輝天降箭雨",
+    "color": "#ffe08b",
+    "description": "金色光輝召喚射程結界、暴雨般流星光矢傾瀉、密集彈著爆炸。",
+    "achievementId": "minimal-three-shapes"
+  },
+  {
+    "id": "flame_vortex",
+    "label": "炎獄烈焰龍捲",
+    "color": "#ff3366",
+    "description": "金紅火流從地面螺旋捲升，逐漸形成高聳烈焰龍捲與上升火星。",
+    "achievementId": "quacks-fifty-points"
+  }
+]
