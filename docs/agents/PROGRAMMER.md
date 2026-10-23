@@ -938,3 +938,17 @@ C03 訊息移除頭像欄，改姓名／相對時間在上與細框泡泡在下�
 2026-10-22 #183 候選2.32.1：傳情畫意移除常駐同步／畫布額度列，store一般草稿同步保持notice空白；失敗、本地儲存／恢復及配額訊息仍顯示。固定44px回饋槽避免提交跳位。Vue／store5項通過，原生Chrome1920亮390暗持筆／ACK／放開與注入503皆驗，狀態切換外框等尺寸且像素無白屏；不含真人觸控／完整換輪。詳 docs/specs/TELEPHONE-NOTICES-183.md，CI／審查以PR為準，未部署。
 
 2026-10-23 #184 候選2.34.0：開局 prompting 第零輪先各自出題，90秒／全員送出早開；逾時採已同步非空主題、空白選定題庫備援，下一席作畫並重設期限。歷史替換主題頁、舊出題receipt無副作用重試及畫猜成就排除均有回歸；編譯Vue／Pinia電話七項通過。最終原生三席與整合測試／雙平台CI、失敗紀錄以PR為準，未部署。詳 docs/specs/TELEPHONE-TOPICS-184.md。
+
+## 2026-10-23：大廳對話裁切修正（本機待驗收）
+
+基線 abbdbd8，僅修改 LobbyBarrage 輸入列及本批 CHANGELOG。送出鈕使用共用網格列保持在輸入框右側，44px 操作區；焦點向內顯示的 selector 高於全站主題，避免主題的外擴 outline 被 dialog 捲動槽裁切。原截圖的按鈕掉列未在目前建置直接重現，不能宣稱已確認該部分的唯一成因；焦點框裁切已在實際 Edge 截圖確認並修正。
+
+Windows Edge 自動回歸涵蓋 1920×1080、1280×720、390×844、320×568、640×360 深淺色及 200% 文字、hover、pending 幾何、失敗保草稿、Enter 成功送出／關閉與 Escape 返焦，14 組檢查及零 pageerror。Vue 型別／正式建置、前端57項通過。test:affected --base HEAD 因 Vue 未映射回退289檔全套：2651通過、1檔因本機缺 tar 未載入、1條件略過；於 ignored 測試依賴補齊固定 tar 7.5.22 後，該檔獨立重跑1項通過。前端缺少的 linkedom 0.18.13 亦只放 ignored 測試目錄，未變更版本控管的依賴。
+
+證據：ignored work/playtest/chat-clipping-{regression.cjs,results.json,final.png,affected.log,archive-retest.log,frontend-tests.log,build.log}。隔離試玩 http://127.0.0.1:3030/，外部 Edge 已登入並開啟對話供驗收。未 commit／push／新PR／部署，依 AGENTS 等待使用者驗收。
+
+2026-10-23 網站開場音效接登入手勢：Vue及legacy登入在認證await前呼叫EntryIntro.prepareSound，於原生submit同步resume AudioContext；成功後三款開場以同一context解碼播放，保留關閉／音量／略過與pagehide清理，取消下載及revision阻止晚到播放。無WebAudio或resume失敗沿用HTML音訊及手動恢復入口，不保證直接首次開網址能自動發聲。59項focused、Vue型別與建置通過；Edge全新context + document-user-activation-required + 800ms登入延遲，三款真MP3皆source.start且context running、零額外播放點擊與pageerror。聲卡聽感及Safari實機未驗。證據ignored work/playtest/entry-gesture-{tests.log,browser.cjs,browser-results.json,build.log,affected.log}。本機3031獨立資料，未提交／推送／發布；正式站尚未更新。
+
+2026-10-23 上述入場音效最終驗證補記：test:affected --base HEAD回退全套，2654通過、0失敗、1環境條件略過；前端57通過。外部Edge以真登入操作完成開場後進入3031大廳。所有變更維持未提交。
+
+2026-10-23 PR準備更新：先前213已納入main，改基底c73c093、新分支codex/chat-opening-audio-fix、版號2.40.2。保留main共用按鈕及壓縮音檔；補200%字體時輸入框stretch和按鈕rem尺寸。最新後端2685通過／1條件略過、前端71通過、型別／建置／Edge14項布局及3款登入音訊均通過。QA pending改用aria-busy配合main新元件。局部樣式續修後重跑瀏覽器；後端完整結果不冒稱對後續純樣式另重跑。兩輪本機差異審查核對本次範圍、取消／靜音／登入時序及無憑證，無未解重大問題；Safari實機與首次直接進站自動有聲仍不保證。證據ignored work/playtest/chat-pr-*。尚未提交／推送／建立PR，等待本次具體發布確認。

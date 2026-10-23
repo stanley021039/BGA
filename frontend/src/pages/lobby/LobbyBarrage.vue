@@ -60,24 +60,34 @@ async function send() {
   gap: 12px;
 }
 .vue-lobby-chat-input {
-  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   min-width: 0;
 }
 .vue-lobby-chat-input input {
+  grid-area: 1 / 1 / 2 / -1;
+  align-self: stretch;
   box-sizing: border-box;
   width: 100%;
+  min-width: 0;
   min-height: 48px;
-  padding-right: 56px;
+  padding-right: calc(max(44px, 2.75rem) + 12px);
 }
 .vue-lobby-chat-input .vue-lobby-inline-send {
-  position: absolute;
-  right: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 42px;
-  min-width: 42px;
-  height: 42px;
-  min-height: 42px;
-  margin: 0;
+  // Keep the action in the input row even when shared button states change.
+  grid-area: 1 / 2;
+  position: relative;
+  inset: auto;
+  transform: none;
+  width: max(44px, 2.75rem);
+  min-width: max(44px, 2.75rem);
+  height: max(44px, 2.75rem);
+  min-height: max(44px, 2.75rem);
+  margin: 0 3px;
+}
+.vue-lobby-barrage-form .vue-lobby-chat-input :is(input, .vue-lobby-inline-send):focus-visible {
+  // Beat the shared theme's outward focus ring inside the dialog scroll area.
+  outline-offset: -3px;
 }
 </style>

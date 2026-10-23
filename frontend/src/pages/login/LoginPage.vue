@@ -90,6 +90,7 @@ async function submit(): Promise<void> {
     } else {
       if (mode.value === 'register' && registration.password !== registration.confirmPassword)
         throw new Error('兩次密碼輸入不一致');
+      window.EntryIntro?.prepareSound?.();
       await session.authenticate(
         mode.value,
         mode.value === 'login' ? { ...login } : { ...registration },

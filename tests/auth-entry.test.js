@@ -77,6 +77,7 @@ function fixture({
     window,
     document,
     URL,
+    AbortController,
     localStorage: { getItem: () => null },
     setTimeout(fn, delay) {
       timers.set(++id, { fn, delay });
@@ -215,4 +216,73 @@ test('disabled entry returns immediately without hiding auth UI, creating timers
   assert.equal(f.document.documentElement.classList.contains('entry-auth-playing'), false);
   assert.equal(f.document.querySelector('.entry-auth-skip'), null);
   assert.equal(f.image.style.opacity, undefined);
+});
+
+test('submit unlocks audio before async authentication and the opening reuses that context', async () => {
+  const f = fixture({ withAudio: true });
+  let resumed = 0,
+    started = 0,
+    stopped = 0;
+  const context = {
+    state: 'suspended',
+    destination: {},
+    resume() {
+      resumed++;
+      this.state = 'running';
+      return Promise.resolve();
+    },
+    decodeAudioData: async () => ({}),
+    createBufferSource: () => ({
+      connect: () => ({ connect() {} }),
+      start() {
+        started++;
+      },
+      stop() {
+        stopped++;
+      },
+    }),
+    createGain: () => ({ gain: {} }),
+  };
+  f.window.AudioContext = function () {
+    return context;
+  };
+  f.window.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(1) });
+  f.window.EntryIntro.prepareSound();
+  assert.equal(resumed, 1, 'resume runs in the submit call, before awaiting login');
+  await Promise.resolve();
+  const playing = f.start();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(started, 1);
+  assert.equal(f.sounds.length, 0, 'no second HTML audio playback');
+  f.finish();
+  await playing;
+  assert.equal(stopped, 1);
+});
+
+test('skipping an opening while audio downloads prevents late playback', async () => {
+  const f = fixture({ withAudio: true });
+  let release,
+    started = 0;
+  f.window.AudioContext = function () {
+    return {
+      state: 'running',
+      resume: async () => {},
+      decodeAudioData: async () => ({}),
+      createBufferSource() {
+        started++;
+        throw Error('late playback');
+      },
+    };
+  };
+  f.window.fetch = () =>
+    new Promise((resolve) => {
+      release = resolve;
+    });
+  f.window.EntryIntro.prepareSound();
+  const playing = f.start();
+  f.finish();
+  await playing;
+  release({ ok: true, arrayBuffer: async () => new ArrayBuffer(1) });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(started, 0);
 });
