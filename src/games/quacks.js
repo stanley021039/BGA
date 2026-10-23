@@ -1999,8 +1999,8 @@ class QuacksRoom extends PartyRoom {
             bagCount: p.bag.length,
             shoppingBag:
               (this.phase === 'settlement' && this.stage === 'shopping') || p.pending.length
-                ? // Owned chips (bag + pot + overflow), all deducible from public pots; shown
-                  // while shopping and on choice screens, never as the once-per-round peek.
+                ? // The owner's whole chip set (bag + pot + overflow + pre-drawn), private to
+                  // them; it is what they own, not the bag order, so it is not the limited peek.
                   [...p.bag, ...p.pot, ...p.overflow, ...(p.alchemy?.pool || [])].map((c) => ({
                     color: c.color,
                     value: c.value,
