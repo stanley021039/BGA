@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useTelephoneStore } from '../../stores/telephone';
 import { useRoomStore } from '../../stores/room';
 import { usePartyActionsStore } from '../../stores/party-actions';
@@ -28,7 +28,24 @@ const reviewPages = computed(() =>
     ),
   ),
   selected = computed(() => reviewPages.value[state.value.review?.index ?? -1]),
+  visiblePages = computed(() => selected.value?.pages.slice(0, selected.value.index + 1) || []),
   blocked = computed(() => !telephone.editable || telephone.activeStroke);
+const storyViewport = ref<HTMLElement | null>(null);
+function scrollPlayback() {
+  if (state.value.phase === 'finished' && selected.value && storyViewport.value)
+    storyViewport.value.scrollTop = storyViewport.value.scrollHeight;
+}
+watch(
+  [
+    () => room.scope,
+    () => state.value.stepId,
+    () => state.value.phase,
+    () => state.value.review?.index,
+  ],
+  scrollPlayback,
+  { flush: 'post' },
+);
+onMounted(scrollPlayback);
 const drawing = computed(() => state.value.task?.kind === 'drawing');
 const prompting = computed(() => state.value.phase === 'prompting');
 const playing = computed(() => ['prompting', 'passing'].includes(state.value.phase));
@@ -176,7 +193,13 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         個片段</p
       >
     </header>
-    <div class="vue-telephone-live">
+    <div
+      ref="storyViewport"
+      class="vue-telephone-live"
+      :role="state.phase === 'finished' ? 'region' : undefined"
+      :aria-label="state.phase === 'finished' ? '故事播放內容' : undefined"
+      :tabindex="state.phase === 'finished' ? 0 : undefined"
+    >
       <section
         v-if="playing && state.task"
         class="vue-telephone-task"
@@ -287,33 +310,32 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         >
         <template v-if="selected">
           <h2>{{ selected.ownerName }} 的故事</h2>
-          <article :key="selected.ownerId + ':' + selected.index" class="vue-telephone-book-page">
+          <article
+            v-for="(page, index) in visiblePages"
+            :key="selected.ownerId + ':' + index"
+            class="vue-telephone-book-page"
+          >
             <header
               ><div
-                ><span class="vue-telephone-book-number">{{
-                  String(selected.index).padStart(2, '0')
-                }}</span
+                ><span class="vue-telephone-book-number">{{ String(index).padStart(2, '0') }}</span
                 ><h3
-                  >{{ selected.index ? '第 ' + selected.index + ' 頁' : '起始情境' }} ·
-                  {{ selected.page.authorName }}</h3
+                  >{{ index ? '第 ' + index + ' 頁' : '起始情境' }} · {{ page.authorName }}</h3
                 ></div
-              ><span>{{ selected.page.kind === 'drawing' ? '畫圖' : '猜詞／情境' }}</span></header
+              ><span>{{ page.kind === 'drawing' ? '畫圖' : '猜詞／情境' }}</span></header
             >
-            <p v-if="selected.page.skipped" class="vue-telephone-skipped"
-              >本頁略過{{ selected.page.timedOut ? ' · 時間到時沒有已同步的內容' : '' }}</p
+            <p v-if="page.skipped" class="vue-telephone-skipped"
+              >本頁略過{{ page.timedOut ? ' · 時間到時沒有已同步的內容' : '' }}</p
             >
             <template v-else>
               <TelephoneCanvas
-                v-if="selected.page.kind === 'drawing'"
-                :strokes="selected.page.strokes || []"
-                :epoch="state.stepId + ':' + selected.ownerId + ':' + selected.index"
-                :label="selected.page.authorName + ' 的第 ' + selected.index + ' 頁畫作'"
+                v-if="page.kind === 'drawing'"
+                :strokes="page.strokes || []"
+                :epoch="state.stepId + ':' + selected.ownerId + ':' + index"
+                :label="page.authorName + ' 的第 ' + index + ' 頁畫作'"
               />
-              <p v-else class="vue-telephone-book-text">{{ selected.page.text }}</p
-              ><small v-if="selected.page.timedOut">{{
-                selected.page.topicFallback
-                  ? '時間到，由情境題庫補上主題。'
-                  : '時間到，採用已同步的私人草稿'
+              <p v-else class="vue-telephone-book-text">{{ page.text }}</p
+              ><small v-if="page.timedOut">{{
+                page.topicFallback ? '時間到，由情境題庫補上主題。' : '時間到，採用已同步的私人草稿'
               }}</small>
             </template>
           </article>

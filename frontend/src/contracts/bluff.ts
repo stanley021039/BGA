@@ -73,6 +73,8 @@ export interface BluffSnapshot extends RoomSnapshot {
   spokenIds: string[];
   challenges: string[];
   botStatements: Record<string, string>;
+  answers: Record<string, string>;
+  draft: { challenges: string[]; honestId: string | null };
   captions: BluffCaption[];
   transcript: BluffSpeechLine[];
   reactions: BluffReaction[];
@@ -175,6 +177,22 @@ export function readBluffSnapshot(value: unknown): BluffSnapshot {
     return invalid();
   const statements = record(r.botStatements);
   if (!Object.values(statements).every((v) => typeof v === 'string')) return invalid();
+  // Older servers send neither answers nor the thinker's draft marks.
+  const answers = r.answers === undefined ? {} : record(r.answers),
+    draftRecord = r.draft === undefined ? { challenges: [], honestId: null } : record(r.draft),
+    draft = {
+      challenges: strings(draftRecord.challenges),
+      honestId: draftRecord.honestId === null ? null : text(draftRecord.honestId) || invalid(),
+    };
+  if (
+    !Object.values(answers).every((v) => typeof v === 'string') ||
+    draft.challenges.length > 2 ||
+    new Set(draft.challenges).size !== draft.challenges.length ||
+    [...draft.challenges, draft.honestId]
+      .filter((id) => id !== null)
+      .some((id) => !base.players.some((p) => p.id === id))
+  )
+    return invalid();
   const reactions = array(r.reactions).map((v) => {
     const e = record(v);
     if (!text(e.id) || !text(e.name) || !text(e.text) || !text(e.roundId) || !finite(e.at))
@@ -293,6 +311,8 @@ export function readBluffSnapshot(value: unknown): BluffSnapshot {
     spokenIds,
     challenges,
     botStatements: statements as Record<string, string>,
+    answers: answers as Record<string, string>,
+    draft,
     captions,
     transcript,
     reactions,

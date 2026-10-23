@@ -22,11 +22,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: linux
-            os: ubuntu-latest
-          - platform: windows
-            os: windows-latest
+        # PRs require Linux only; main pushes and manual runs also track Windows.
+        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"platform":"linux","os":"ubuntu-latest"}]' || '[{"platform":"linux","os":"ubuntu-latest"},{"platform":"windows","os":"windows-latest"}]') }}
     steps:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
