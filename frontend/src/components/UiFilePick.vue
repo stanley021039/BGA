@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-// A file input that says what is in use now. Browsers never prefill a file
+// A labelled file picker that says what is in use now (UiField for files). Browsers never prefill a file
 // input, so until a new file is picked it shows `current` instead.
 const props = defineProps<{
   label: string;
@@ -28,7 +28,7 @@ watch(
 defineExpose({ input });
 </script>
 <template>
-  <label class="file-pick-field"
+  <label class="ui-file-pick"
     ><span class="file-pick-label">{{ label }}</span
     ><span class="file-pick-row"
       ><input

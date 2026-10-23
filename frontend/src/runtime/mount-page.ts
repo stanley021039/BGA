@@ -7,6 +7,7 @@ import { resetMediaConsentOnReload } from '../services/media-consent';
 import '../styles/foundations.scss';
 import '../styles/feedback.scss';
 import '../styles/controls.scss';
+import '../styles/ui-components.scss';
 
 // Each HTML document owns its app/stores. BFCache restoration creates a fresh scope.
 export function mountPage(

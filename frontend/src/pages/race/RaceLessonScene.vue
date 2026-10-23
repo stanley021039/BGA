@@ -163,17 +163,11 @@ const usedCommand = computed(() => {
         class="vue-race-cue"
         role="status"
         ><p v-for="event in presentation.cue.value" :key="event.id">{{ event.text }}</p
-        ><UiButton
-          label="略過事件提示"
-          icon="skip_next"
-          @click="presentation.skipCue()" /></div
+        ><UiButton label="略過事件提示" icon="skip_next" @click="presentation.skipCue()" /></div
       ><div v-if="presentation.focus.value && s.winner" class="vue-race-focus" role="status"
         ><strong>⚑ {{ s.winner.name }}</strong
         ><p>{{ s.winner.reason }}</p
-        ><UiButton
-          label="略過演出"
-          icon="skip_next"
-          @click="presentation.stopFocus()" /></div
+        ><UiButton label="略過演出" icon="skip_next" @click="presentation.stopFocus()" /></div
     ></div>
     <div class="vue-race-dashboard"
       ><div class="vue-race-garage"

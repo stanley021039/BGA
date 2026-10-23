@@ -14,11 +14,7 @@ function open(key?: string) {
 defineExpose({ open });
 </script>
 <template>
-  <UiDialog
-    ref="dialog"
-    class="vue-race-terrain-dialog"
-    :title="item?.name || '地形與危險圖例'"
-  >
+  <UiDialog ref="dialog" class="vue-race-terrain-dialog" :title="item?.name || '地形與危險圖例'">
     <div v-if="item" class="vue-race-terrain-detail">
       <img :src="item.art" :alt="item.name + '地形原生格位'" width="160" height="160" />
       <p>{{ item.help }}</p>

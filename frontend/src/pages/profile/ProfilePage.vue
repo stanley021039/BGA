@@ -15,7 +15,7 @@ import ImageChoiceGrid from '../../components/ImageChoiceGrid.vue';
 import ImageSourceField from '../../components/ImageSourceField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import ExpressionEditor from '../../components/ExpressionEditor.vue';
-import FilePickField from '../../components/FilePickField.vue';
+import UiFilePick from '../../components/UiFilePick.vue';
 
 const profile = useProfileStore();
 const appearance = ref<Appearance | null>(null),
@@ -90,7 +90,7 @@ const {
 } = useExpressionSound(soundTarget, profile.load);
 // The sound composable clears the native input after an upload or removal.
 function bindSoundField(field: unknown) {
-  soundInput.value = (field as InstanceType<typeof FilePickField> | null)?.input ?? null;
+  soundInput.value = (field as InstanceType<typeof UiFilePick> | null)?.input ?? null;
 }
 const expressionLabel = (character: Character | undefined, expression: string) =>
   character?.labels[expression] || profile.data?.expressionLabels[expression] || expression;
@@ -529,7 +529,7 @@ onBeforeUnmount(() => {
               class="expression-sound-upload"
               :aria-busy="soundPending"
               @submit.prevent="uploadSound"
-              ><FilePickField
+              ><UiFilePick
                 :ref="bindSoundField"
                 input-id="expression-sound-file"
                 label="選擇音檔"

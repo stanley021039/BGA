@@ -88,11 +88,7 @@ onBeforeUnmount(() => controller?.abort());
     label="離開房間"
     :disabled="!room.seat || room.busy || pending"
     @click="open"
-  /><UiDialog
-    ref="dialog"
-    title="確定離開這個房間？"
-    compact
-    :dismissible="!pending"
+  /><UiDialog ref="dialog" title="確定離開這個房間？" compact :dismissible="!pending"
     ><img
       class="vue-room-leave-image"
       src="/assets/room-leave-thumbnail.jpg"

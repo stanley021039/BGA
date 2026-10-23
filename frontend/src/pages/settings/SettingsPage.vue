@@ -20,6 +20,9 @@ import LobbyBackgroundPicker from '../../components/LobbyBackgroundPicker.vue';
 import FramePreview from '../../components/FramePreview.vue';
 import PingSymbol from '../../components/PingSymbol.vue';
 import UiDialog from '../../components/UiDialog.vue';
+import UiPanel from '../../components/UiPanel.vue';
+import UiField from '../../components/UiField.vue';
+import UiCheckbox from '../../components/UiCheckbox.vue';
 import EntranceChoices from '../../components/EntranceChoices.vue';
 import EntrancePreview from '../../components/EntrancePreview.vue';
 import '../../../../public/shared/ping-model.js';
@@ -340,30 +343,27 @@ onMounted(() => {
   ></div>
   <div class="settings-l05-layout">
     <div class="settings-account-column">
-      <section class="page-panel nickname-panel" aria-labelledby="nickname-heading">
-        <header class="settings-card-heading"
-          ><h2 id="nickname-heading">我的暱稱</h2><span>1–16 字</span></header
-        >
-        <label class="settings-account-id" for="nickname-account"
-          >登入帳號（唯讀）<input
-            id="nickname-account"
-            :value="session.user?.username || '讀取中…'"
-            readonly
-            autocomplete="username"
-        /></label>
+      <UiPanel class="nickname-panel" title="我的暱稱" note="1–16 字" density="compact">
+        <UiField
+          id="nickname-account"
+          class="settings-account-id"
+          label="登入帳號（唯讀）"
+          :model-value="session.user?.username || '讀取中…'"
+          readonly
+          autocomplete="username"
+        />
         <form id="nickname-form" :aria-busy="namePending || nameLoading" @submit.prevent="saveName"
-          ><label for="nickname"
-            >顯示暱稱<input
-              id="nickname"
-              v-model="nickname"
-              name="displayName"
-              type="text"
-              maxlength="32"
-              autocomplete="nickname"
-              required
-              aria-describedby="nickname-message"
-              :disabled="namePending || nameLoading || !session.user" /></label
-          ><UiButton
+          ><UiField
+            id="nickname"
+            v-model="nickname"
+            label="顯示暱稱"
+            name="displayName"
+            type="text"
+            maxlength="32"
+            autocomplete="nickname"
+            required
+            aria-describedby="nickname-message"
+            :disabled="namePending || nameLoading || !session.user" /><UiButton
             id="nickname-save"
             variant="secondary"
             type="submit"
@@ -380,14 +380,16 @@ onMounted(() => {
             label="重新載入暱稱"
             @click="loadName"
         /></form>
-      </section>
-      <section class="page-panel settings-background-panel"
+      </UiPanel>
+      <UiPanel class="settings-background-panel" density="compact"
         ><LobbyBackgroundPicker /><OpeningPicker
-      /></section>
-      <section class="page-panel settings-barrage-panel" aria-labelledby="barrage-settings-heading">
-        <header class="settings-card-heading"
-          ><h2 id="barrage-settings-heading">彈幕外觀</h2><span>設定保存在此瀏覽器</span></header
-        >
+      /></UiPanel>
+      <UiPanel
+        class="settings-barrage-panel"
+        title="彈幕外觀"
+        note="設定保存在此瀏覽器"
+        density="compact"
+      >
         <div class="settings-appearance-choice"
           ><p id="settings-barrage-frame-status" role="status" aria-live="polite"
             >目前彈幕框：<strong>{{
@@ -408,14 +410,12 @@ onMounted(() => {
             :name="nickname || session.user?.displayName || '玩家'"
             message="這一桌好好玩！"
         /></div>
-      </section>
-      <section
-        class="page-panel settings-barrage-panel settings-media-panel"
-        aria-labelledby="media-settings-heading"
+      </UiPanel>
+      <UiPanel
+        class="settings-barrage-panel settings-media-panel"
+        title="播放器外觀"
+        density="compact"
       >
-        <header class="settings-card-heading"
-          ><h2 id="media-settings-heading">播放器外觀</h2></header
-        >
         <div class="settings-appearance-choice"
           ><p id="settings-media-frame-status" role="status" aria-live="polite"
             >目前外觀：<strong>{{ labelForFrame(prefs.media) }}</strong></p
@@ -433,15 +433,13 @@ onMounted(() => {
           aria-label="目前使用的播放器外觀預覽"
           ><FramePreview kind="media" :frame="prefs.media" name="播放器" message="我的風格"
         /></div>
-      </section>
-      <section
-        class="page-panel settings-barrage-panel settings-entrance-panel"
-        aria-labelledby="entrance-settings-heading"
+      </UiPanel>
+      <UiPanel
+        class="settings-barrage-panel settings-entrance-panel"
+        title="進場特效"
+        density="compact"
       >
-        <header class="settings-card-heading"
-          ><h2 id="entrance-settings-heading">進場特效</h2
-          ><a href="/collection?section=entrance">前往收藏庫 ↗</a></header
-        >
+        <template #actions><a href="/collection?section=entrance">前往收藏庫 ↗</a></template>
         <div class="settings-appearance-choice"
           ><p id="settings-entrance-status" role="status" aria-live="polite"
             >目前特效：<strong>{{ entranceLabel }}</strong></p
@@ -459,7 +457,7 @@ onMounted(() => {
             :image="selected?.expressions.neutral || '/assets/characters/traveler-neutral.png'"
             :name="nickname || session.user?.displayName || '玩家'"
         /></div>
-      </section>
+      </UiPanel>
     </div>
     <form
       id="settings-form"
@@ -470,12 +468,8 @@ onMounted(() => {
     >
       <fieldset class="settings-fields" :disabled="pending || !appearance || !avatar">
         <div class="settings-grid">
-          <section
-            class="page-panel settings-avatar-panel"
-            aria-labelledby="avatar-settings-heading"
-            ><header class="settings-card-heading"
-              ><h2 id="avatar-settings-heading">我的頭像</h2
-              ><a href="/collection?section=avatars">前往收藏庫 ↗</a></header
+          <UiPanel class="settings-avatar-panel" title="我的頭像" density="compact"
+            ><template #actions><a href="/collection?section=avatars">前往收藏庫 ↗</a></template
             ><div class="settings-avatar-content"
               ><div class="settings-image-slot"
                 ><img
@@ -486,12 +480,13 @@ onMounted(() => {
                   alt="目前選擇的帳號頭像"
                 /><span v-else>正在載入頭像…</span></div
               ><div class="settings-avatar-options"
-                ><label for="avatar-source">選擇現有角色或圖片</label
-                ><select id="avatar-source" v-model="avatarChoice"
-                  ><option v-for="choice in choices" :key="choice.key" :value="choice.key">{{
-                    choice.label
-                  }}</option></select
-                ><label class="settings-upload" for="avatar-upload"
+                ><UiField
+                  id="avatar-source"
+                  v-model="avatarChoice"
+                  control="select"
+                  label="選擇現有角色或圖片"
+                  :options="choices.map((choice) => ({ value: choice.key, label: choice.label }))"
+                /><label class="settings-upload" for="avatar-upload"
                   >上傳頭像<input
                     id="avatar-upload"
                     type="file"
@@ -501,14 +496,10 @@ onMounted(() => {
                   >PNG、GIF、WebP，每張最多 1 MB。上傳圖片會保存到自己的收藏庫，儲存後套用頭像。</p
                 ></div
               ></div
-            ></section
+            ></UiPanel
           >
-          <section
-            class="page-panel settings-character-panel"
-            aria-labelledby="character-settings-heading"
-            ><header class="settings-card-heading"
-              ><h2 id="character-settings-heading">遊戲角色</h2
-              ><a href="/profile">管理角色與表情 ↗</a></header
+          <UiPanel class="settings-character-panel" title="遊戲角色" density="compact"
+            ><template #actions><a href="/profile">管理角色與表情 ↗</a></template
             ><div class="settings-selected-character"
               ><div class="settings-character-preview-slot"
                 ><img
@@ -564,9 +555,11 @@ onMounted(() => {
                   >✓</span
                 ></button
               ></div
-            ><label for="character-expression"
-              >預設表情（角色：{{ selected?.name || '讀取中' }}）</label
-            ><select id="character-expression" v-model="selectedExpression"
+            ><UiField
+              id="character-expression"
+              v-model="selectedExpression"
+              control="select"
+              :label="`預設表情（角色：${selected?.name || '讀取中'}）`"
               ><option
                 v-for="(_, expression) in selected?.expressions || {}"
                 :key="expression"
@@ -576,19 +569,18 @@ onMounted(() => {
                   profile.data?.expressionLabels[expression] ||
                   expression
                 }}</option
-              ></select
-            ></section
+              ></UiField
+            ></UiPanel
           >
-          <section class="page-panel settings-pings-panel" aria-labelledby="ping-settings-heading"
-            ><header class="settings-card-heading"
-              ><div
-                ><h2 id="ping-settings-heading">房間標記</h2
-                ><p class="settings-intro"
-                  >挑選五個常用標記，依順序放入中央、上、左、下、右；每個標記的圖示、音效可分開選。語音需先取得成就獎勵或兌換。</p
-                ></div
+          <UiPanel
+            class="settings-pings-panel"
+            title="房間標記"
+            description="挑選五個常用標記，依順序放入中央、上、左、下、右；每個標記的圖示、音效可分開選。語音需先取得成就獎勵或兌換。"
+            density="compact"
+            ><template #actions
               ><button type="button" class="settings-pings-reset" @click="resetPings"
                 >全部恢復預設</button
-              ></header
+              ></template
             ><div class="settings-pings-list"
               ><div v-for="type in pingTypes" :key="type" class="settings-ping-row"
                 ><span
@@ -598,48 +590,46 @@ onMounted(() => {
                     :icon="pingIcons[pingChoices[type]?.iconType || type]"
                     :image="pingChoices[type]?.iconType ? undefined : pingChoices[type]?.imageUrl"
                   />{{ pingLabels[type] }}</span
-                ><label class="settings-ping-common"
-                  ><input
-                    type="checkbox"
-                    :checked="selectedPings.includes(type)"
-                    :disabled="selectedPings.length === 5 && !selectedPings.includes(type)"
-                    @change="togglePing(type)"
-                  />常用</label
+                ><UiCheckbox
+                  class="settings-ping-common"
+                  label="常用"
+                  :model-value="selectedPings.includes(type)"
+                  :disabled="selectedPings.length === 5 && !selectedPings.includes(type)"
+                  @update:model-value="togglePing(type)"
+                />
+                <UiField
+                  label="圖示"
+                  control="select"
+                  :aria-label="pingLabels[type] + '標記圖示'"
+                  :model-value="
+                    pingChoices[type]?.iconType || (pingChoices[type]?.imageUrl ? 'custom' : type)
+                  "
+                  @update:model-value="changePingIcon(type, String($event))"
                 >
-                <label
-                  >圖示<select
-                    :aria-label="pingLabels[type] + '標記圖示'"
-                    :value="
-                      pingChoices[type]?.iconType || (pingChoices[type]?.imageUrl ? 'custom' : type)
-                    "
-                    @change="changePingIcon(type, ($event.target as HTMLSelectElement).value)"
+                  <option
+                    v-if="pingChoices[type]?.imageUrl && !pingChoices[type]?.iconType"
+                    value="custom"
+                    disabled
+                    >既有自訂圖片</option
                   >
-                    <option
-                      v-if="pingChoices[type]?.imageUrl && !pingChoices[type]?.iconType"
-                      value="custom"
-                      disabled
-                      >既有自訂圖片</option
-                    >
-                    <option v-for="icon in pingTypes" :key="icon" :value="icon">{{
-                      pingLabels[icon]
-                    }}</option>
-                  </select></label
-                >
-                <label
-                  >音效<select
-                    :aria-label="pingLabels[type] + '標記音效'"
-                    :value="pingSoundValue(type)"
-                    @change="changePingSound(type, ($event.target as HTMLSelectElement).value)"
-                    ><option value="default">原本音效</option
-                    ><option value="silent">靜音</option
-                    ><option
-                      v-for="choice in soundChoices"
-                      :key="choice.key"
-                      :value="choice.key"
-                      :disabled="choice.locked"
-                      >{{ (choice.locked ? '🔒 ' : '') + choice.label }}</option
-                    ></select
-                  ></label
+                  <option v-for="icon in pingTypes" :key="icon" :value="icon">{{
+                    pingLabels[icon]
+                  }}</option>
+                </UiField>
+                <UiField
+                  label="音效"
+                  control="select"
+                  :aria-label="pingLabels[type] + '標記音效'"
+                  :model-value="pingSoundValue(type)"
+                  @update:model-value="changePingSound(type, String($event))"
+                  ><option value="default">原本音效</option><option value="silent">靜音</option
+                  ><option
+                    v-for="choice in soundChoices"
+                    :key="choice.key"
+                    :value="choice.key"
+                    :disabled="choice.locked"
+                    >{{ (choice.locked ? '🔒 ' : '') + choice.label }}</option
+                  ></UiField
                 ><button
                   type="button"
                   class="settings-ping-play"
@@ -651,7 +641,7 @@ onMounted(() => {
               ></div
             ><p class="settings-intro"
               >內建標記音效可直接使用；成就語音須先達成條件或輸入對應兌換碼。</p
-            ></section
+            ></UiPanel
           >
         </div>
       </fieldset>

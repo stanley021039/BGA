@@ -2,14 +2,19 @@
 
 // Approved 00 common header/chat: named values, not scaled screenshot pixels.
 $spacing: (
+  2: 0.125rem,
   4: 0.25rem,
   8: 0.5rem,
   12: 0.75rem,
   16: 1rem,
+  20: 1.25rem,
   24: 1.5rem,
   32: 2rem,
+  40: 2.5rem,
+  48: 3rem,
 );
 $typography: (
+  12: 0.75rem,
   14: 0.875rem,
   16: 1rem,
   18: 1.125rem,
@@ -65,6 +70,62 @@ $typography: (
   --stitch-font-family: var(--ui-font-family, system-ui, sans-serif);
   --stitch-line-height-body: 1.5;
   --stitch-line-height-heading: 1.25;
+
+  // Rule set from Figma 03 「00｜共用元件」 C07 基礎元件 (1919:18254). Use these
+  // names instead of raw values; docs/UI-COMPONENTS.md lists where each applies.
+  // Radius: badge < control (button, input, select) < panel < raised card < pill.
+  --stitch-radius-badge: 0.25rem;
+  --stitch-radius-control: var(--stitch-control-radius);
+  --stitch-radius-panel: var(--stitch-panel-radius);
+  --stitch-radius-card: 1rem;
+  --stitch-radius-pill: 9999px;
+  // Border: hairline for panels/fields, strong for raised cards and frames.
+  --stitch-border-width: 1px;
+  --stitch-border-width-strong: 2px;
+  --stitch-border: var(--stitch-border-width) solid var(--stitch-line);
+  --stitch-border-strong: var(--stitch-border-width-strong) solid var(--stitch-frame);
+  // Shadow: flat by default; raised cards use the hard Stitch offset.
+  --stitch-shadow-raised: 0 0.25rem 0 var(--stitch-frame);
+  --stitch-shadow-raised-sm: 0 0.125rem 0 var(--stitch-frame);
+  --stitch-shadow-overlay: 0 0.25rem 0.75rem rgb(0 0 0 / 12%);
+  // Focus: one ring for every interactive element.
+  --stitch-focus-ring-width: 3px;
+  --stitch-focus-ring: var(--stitch-focus-ring-width) solid var(--stitch-focus);
+  --stitch-focus-offset: 2px;
+  // Gap: label↔control, controls in a row, fields in a form, inside a panel,
+  // between panels, and page gutters.
+  --stitch-gap-label: var(--stitch-space-8);
+  --stitch-gap-inline: var(--stitch-space-8);
+  --stitch-gap-controls: var(--stitch-space-16);
+  --stitch-gap-fields: var(--stitch-space-20);
+  --stitch-gap-panel: var(--stitch-space-20);
+  --stitch-gap-section: var(--stitch-space-24);
+  --stitch-page-gutter: var(--stitch-space-32);
+  --stitch-page-gutter-mobile: var(--stitch-space-16);
+  // Panel padding: regular 24, compact 16 (dense sidebars, settings cards).
+  --stitch-panel-padding: var(--stitch-space-24);
+  --stitch-panel-padding-compact: var(--stitch-space-16);
+  // Controls: buttons, inputs and selects share height, radius and type size.
+  --stitch-control-padding-block: var(--stitch-space-8);
+  --stitch-control-padding-inline: var(--stitch-space-12);
+  --stitch-field-padding-block: var(--stitch-space-12);
+  --stitch-field-padding-inline: var(--stitch-space-16);
+  --stitch-control-font-size: var(--stitch-font-14);
+  --stitch-checkbox-size: 1rem;
+  --stitch-select-chevron-size: var(--stitch-icon-size);
+  // Dropdown menus (UiPopover lists): item rows match control height.
+  --stitch-menu-padding: var(--stitch-space-8);
+  --stitch-menu-item-padding: var(--stitch-space-8) var(--stitch-space-12);
+  --stitch-menu-gap: var(--stitch-space-4);
+  // Type roles: page title, panel title, body/label, hint.
+  --stitch-text-page: var(--stitch-font-24);
+  --stitch-text-section: var(--stitch-font-18);
+  --stitch-text-body: var(--stitch-font-14);
+  --stitch-text-hint: var(--stitch-font-12);
+  --stitch-weight-title: 700;
+  --stitch-weight-button: 600;
+  --stitch-weight-body: 400;
+  --stitch-transition: 0.15s ease;
   @each $name, $value in $spacing {
     --stitch-space-#{$name}: #{$value};
   }

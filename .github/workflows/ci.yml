@@ -44,6 +44,8 @@ jobs:
         run: npm ci
       - name: Check source formatting
         run: npm run format:check
+      - name: Check UI consistency ratchet
+        run: npm run ui:check
       - name: Install locked frontend dependencies
         run: npm --prefix frontend ci
       - name: Run frontend regressions

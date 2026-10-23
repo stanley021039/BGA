@@ -1,0 +1,198 @@
+// Shared Vue components (UiPanel, UiField, UiCheckbox, UiFilePick), drawn from
+// Figma 03 「00｜共用元件」 C07 基礎元件 with --stitch-* tokens only.
+// `:root body` outranks the legacy playful-theme element rules; a page that
+// needs a different size adds its own scoped class, never a new colour.
+
+:root body .ui-panel {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: var(--stitch-gap-panel);
+  min-inline-size: 0;
+  margin: 0;
+  padding: var(--stitch-panel-padding);
+  border: var(--stitch-border);
+  border-radius: var(--stitch-radius-panel);
+  background: var(--stitch-surface);
+  color: var(--stitch-ink);
+  box-shadow: none;
+  &[data-density='compact'] {
+    gap: var(--stitch-space-12);
+    padding: var(--stitch-panel-padding-compact);
+  }
+  &[data-tone='subtle'] {
+    background: var(--stitch-surface-subtle);
+  }
+  &[data-tone='selected'] {
+    --surface-muted: var(--stitch-selected-muted);
+    --surface-link: var(--stitch-selected-link);
+    --surface-focus: var(--stitch-selected-focus);
+    background: var(--stitch-selected-bg);
+    color: var(--stitch-selected-ink);
+  }
+  &[data-tone='raised'] {
+    border: var(--stitch-border-strong);
+    border-radius: var(--stitch-radius-card);
+    box-shadow: var(--stitch-shadow-raised);
+  }
+}
+:root body .ui-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--stitch-space-4) var(--stitch-space-8);
+  min-inline-size: 0;
+}
+:root body .ui-panel-title {
+  display: grid;
+  gap: var(--stitch-space-4);
+  min-inline-size: 0;
+  > :is(h2, h3) {
+    margin: 0;
+    font-size: var(--stitch-text-section);
+    font-weight: var(--stitch-weight-title);
+    line-height: var(--stitch-line-height-heading);
+  }
+}
+:root body :is(.ui-panel-description, .ui-panel-note) {
+  margin: 0;
+  color: var(--surface-muted, var(--stitch-muted));
+  font-size: var(--stitch-text-body);
+  line-height: var(--stitch-line-height-body);
+  overflow-wrap: anywhere;
+}
+
+:root body .ui-field {
+  display: grid;
+  gap: var(--stitch-gap-label);
+  min-inline-size: 0;
+  color: var(--stitch-ink);
+  font-size: var(--stitch-text-body);
+  font-weight: var(--stitch-weight-body);
+  line-height: var(--stitch-line-height-body);
+}
+:root body .ui-field-control {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: var(--stitch-control-height);
+  margin: 0;
+  padding: var(--stitch-field-padding-block) var(--stitch-field-padding-inline);
+  border: var(--stitch-border);
+  border-radius: var(--stitch-radius-control);
+  background: var(--stitch-surface);
+  color: var(--stitch-ink);
+  font: inherit;
+  box-shadow: none;
+  &::placeholder {
+    color: var(--stitch-muted);
+  }
+  &:focus-visible {
+    outline: var(--stitch-focus-ring);
+    outline-offset: var(--stitch-focus-offset);
+  }
+  &:disabled,
+  &[readonly] {
+    background: var(--stitch-surface-subtle);
+    color: var(--stitch-muted);
+  }
+  &[aria-invalid='true'] {
+    border-color: var(--stitch-danger-line);
+    background: var(--stitch-danger-bg);
+  }
+}
+// Dropdown: the native select keeps keyboard and screen-reader behaviour; only
+// the chevron is drawn so every select looks the same.
+:root body select.ui-field-control {
+  appearance: none;
+  padding-inline-end: calc(var(--stitch-field-padding-inline) + var(--stitch-select-chevron-size));
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    right calc(var(--stitch-field-padding-inline) + 0.3rem) center,
+    right var(--stitch-field-padding-inline) center;
+  background-size: 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+}
+:root body textarea.ui-field-control {
+  min-block-size: 6rem;
+  resize: vertical;
+}
+:root body .ui-field-message {
+  color: var(--stitch-muted);
+  font-size: var(--stitch-text-hint);
+}
+:root body .ui-field[data-invalid] .ui-field-message {
+  color: var(--stitch-danger-ink);
+}
+
+:root body .ui-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stitch-gap-label);
+  min-block-size: var(--stitch-control-height);
+  color: var(--stitch-ink);
+  font-size: var(--stitch-text-body);
+  cursor: pointer;
+}
+:root body .ui-checkbox-input {
+  flex: none;
+  inline-size: var(--stitch-checkbox-size);
+  block-size: var(--stitch-checkbox-size);
+  margin: 0;
+  accent-color: var(--stitch-primary);
+  &:focus-visible {
+    outline: var(--stitch-focus-ring);
+    outline-offset: var(--stitch-focus-offset);
+  }
+}
+
+// The native file input is invisible but covers the row, so clicking or
+// focusing it still works; the row shows what is in use.
+:root body .ui-file-pick {
+  display: grid;
+  gap: var(--stitch-gap-label);
+  min-inline-size: 0;
+  font-size: var(--stitch-text-body);
+  .file-pick-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--stitch-space-12);
+    min-block-size: var(--stitch-control-height);
+    padding: var(--stitch-space-4) var(--stitch-space-12) var(--stitch-space-4)
+      var(--stitch-space-4);
+    border: var(--stitch-border);
+    border-radius: var(--stitch-radius-control);
+    background: var(--stitch-surface);
+    &:focus-within {
+      outline: var(--stitch-focus-ring);
+      outline-offset: var(--stitch-focus-offset);
+    }
+  }
+  .file-pick-input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .file-pick-button {
+    flex: none;
+    padding: var(--stitch-space-4) var(--stitch-space-12);
+    border: var(--stitch-border);
+    border-radius: var(--stitch-radius-control);
+    background: var(--stitch-surface-subtle);
+  }
+  .file-pick-name {
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

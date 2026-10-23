@@ -1,11 +1,22 @@
 <script setup lang="ts">
 import UiIcon from './UiIcon.vue';
-defineProps<{ href: string; label: string; icon?: string; iconOnly?: boolean }>();
+// A link drawn as a Stitch button (same variants as UiButton).
+withDefaults(
+  defineProps<{
+    href: string;
+    label: string;
+    icon?: string;
+    iconOnly?: boolean;
+    variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'contrast';
+  }>(),
+  { variant: 'secondary' },
+);
 </script>
 <template>
   <a
     :href="href"
-    class="ui-button vue-button"
+    class="ui-button vue-button ui-stitch-button"
+    :data-stitch-variant="variant"
     :class="{ 'ui-icon-button': iconOnly }"
     :aria-label="label"
     :title="iconOnly ? label : undefined"

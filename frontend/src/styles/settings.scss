@@ -93,29 +93,12 @@
     min-inline-size: 0;
     margin: 0;
   }
-  .page-panel {
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-content: start;
-    gap: 0.75rem;
-    min-inline-size: 0;
-    margin: 0;
-    padding: 1rem;
-    border: 1px solid var(--stitch-line, #d8d9d2);
-    border-radius: 0.75rem;
-    background: var(--stitch-surface, #fff);
-    color: var(--stitch-ink, #20211e);
-    box-shadow: none;
-  }
-  .settings-card-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.25rem 0.5rem;
-    min-inline-size: 0;
+  // UiPanel draws the frame; the settings cards add a title accent bar.
+  .ui-panel-heading {
     min-block-size: 1.5rem;
+  }
+  .ui-panel-title {
+    gap: 0;
     > h2 {
       display: flex;
       align-items: center;
@@ -129,11 +112,6 @@
       block-size: 1rem;
       border-radius: 2px;
       background: var(--stitch-primary, #f6c845);
-    }
-    > span {
-      color: var(--stitch-muted, #686a63);
-      font-size: 0.875rem;
-      line-height: 1.5;
     }
   }
   .settings-pings-list {
@@ -559,7 +537,7 @@
     .settings-page-heading {
       align-items: start;
     }
-    .settings-card-heading {
+    .ui-panel-heading {
       align-items: start;
     }
     .nickname-panel,
@@ -581,7 +559,7 @@
 @media (max-width: 480px) {
   :root body[data-visual-theme] main#settings-app.vue-page.settings-page {
     padding: 0.75rem;
-    .page-panel {
+    .ui-panel {
       padding: 0.75rem;
     }
     .settings-ping-row {
@@ -594,7 +572,7 @@
       grid-column: 2;
       grid-row: 1;
     }
-    .settings-card-heading {
+    .ui-panel-heading {
       align-items: center;
     }
     .settings-avatar-content {

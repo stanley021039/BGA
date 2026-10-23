@@ -288,10 +288,7 @@ onBeforeUnmount(() => {
         ><MajorityResults :focus-id="presentation.focusId.value" /><div
           v-if="s.phase === 'reveal' && !s.cruel"
           class="vue-majority-actions"
-          ><UiButton
-            icon="replay"
-            label="重播答案焦點"
-            @click="presentation.replay()" /><UiButton
+          ><UiButton icon="replay" label="重播答案焦點" @click="presentation.replay()" /><UiButton
             v-if="presentation.focus.value"
             label="略過演出"
             @click="presentation.stop()" /></div

@@ -16,7 +16,7 @@
 
 // Explicit component opt-in. The extra attribute also beats the legacy dark
 // playful-theme button.ui-button scope, including buttons in teleported panels.
-:root body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+:root body :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
   --_stitch-fill: var(--stitch-surface);
   --_stitch-color: var(--stitch-ink);
   --_stitch-border: var(--stitch-frame);
@@ -123,11 +123,13 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  :root body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+  :root body :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
     transition: none;
   }
 }
-:root.motion-reduced body button.ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+:root.motion-reduced
+  body
+  :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
   transition: none;
 }
 
@@ -172,8 +174,8 @@
   gap: tokens.space(2);
 }
 .vue-tabs [aria-selected='true'] {
-  background: var(--ui-selected, #d4e6a4);
-  color: var(--ui-selected-text, #18231a);
+  background: var(--stitch-selected-bg);
+  color: var(--stitch-selected-ink);
 }
 .vue-tabs .collection-count {
   inline-size: 4.5em;

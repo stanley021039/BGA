@@ -5,7 +5,7 @@ import { useMutation } from '../composables/mutation';
 import { fileBase64 } from '../services/files';
 import { sizedImage } from '../services/image-size';
 import UiButton from './UiButton.vue';
-import FilePickField from './FilePickField.vue';
+import UiFilePick from './UiFilePick.vue';
 import UiDialog from './UiDialog.vue';
 import ConfirmDialog from './ConfirmDialog.vue';
 import StatusSlot from './StatusSlot.vue';
@@ -107,7 +107,7 @@ async function remove() {
               v-if="image"
               class="expression-edit-preview"
               :src="sizedImage(image, 256)"
-              alt="目前的表情圖片" /><FilePickField
+              alt="目前的表情圖片" /><UiFilePick
               :key="opened"
               label="替換圖片（未選擇則保留目前圖片）"
               accept="image/png,image/webp,image/gif"

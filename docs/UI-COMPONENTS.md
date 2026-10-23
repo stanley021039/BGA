@@ -1,75 +1,174 @@
-# UI 基礎元件合約
+# 共用 UI 元件與 token
 
-依 [桌機設計規格](DESKTOP-DESIGN-SPEC.md) 實作；不新增 UI framework。遊戲 `body` 設 `data-game-kind="gift|draw|race|majority|poker"`，最後載入 `/shared/ui-foundation.css`，在 game-shell 前載入 `/shared/ui-components.js`。非遊戲頁不套桌機樣式，舊呼叫端使用 `window.GameUI?.method()` 安全 fallback。
+2026-10-23 起全站只有一種外觀：Stitch，依 Figma 第三份「BGA｜03 Stitch 最終設計・共用元件」頁面「00｜共用元件」（C07 基礎元件 node `1919:18254`、C07 共用元件區 `1117:2`、C05 主要按鈕 `1189:659`）。Vue 頁面（`frontend/src/pages/`）只用本頁列出的元件與 `--stitch-*` token；`npm run ui:check` 在 CI 擋下新增的原始色碼、頁面原生控制項與舊 token。
 
-## Tokens
+## 快速對照
 
-| Token | 用途／預設 |
-| --- | --- |
-| `--ui-text-small/body/section/page/stat` | 14／16／20／28／32px 对應 rem；次要／正文操作／區塊／頁題／主要數據 |
-| `--ui-space-1` … `--ui-space-7` | 4／8／12／16／24／32／48px 對應 rem |
-| `--ui-control-height` | 常規控制最低 2.75rem（44px） |
-| `--ui-icon-size` | 1.5rem（24px）；角色／emoji／禮物／車輛屬內容素材 |
-| `--ui-font-family` | system-ui、Noto Sans TC、Microsoft JhengHei、sans-serif |
-| `--ui-text/muted/surface/border/accent/focus/error/success` | 語意色，room-light 為亮主題；音樂／host dialog 各有自身顏色 |
-| `--ui-sidebar-height` | 遊戲按舞台頂點定義可用桌機高度；只名單／低頻區域局部捲動 |
+| 需要 | 用 | 不要 |
+| --- | --- | --- |
+| 按鈕、圖示按鈕 | `UiButton` | `<button>`、`.ui-button` 手寫 class |
+| 看起來像按鈕的連結 | `UiLink` | `<a class="button">` |
+| 彈窗、確認 | `UiDialog`、`ConfirmDialog` | 自製 `<dialog>`、`GameUI.openDialog` |
+| 框線區塊、卡片 | `UiPanel` | `border: 1px solid var(--stitch-line)` 再寫一次 |
+| 文字輸入、下拉選單、多行 | `UiField` | `<label><input>`、`<select>`、`<textarea>` |
+| 勾選 | `UiCheckbox` | `<input type="checkbox">` |
+| 上傳檔案 | `UiFilePick` | `<input type="file">` |
+| 分頁 | `UiTabs` | 自製 `role="tab"` |
+| 按鈕旁的選單、面板 | `UiPopover` | 自製浮動 `<div>` |
+| 圖示 | `UiIcon` | 內嵌 SVG、emoji 當圖示 |
 
-16／14px 是 BGA 專案決策，WCAG 沒有固定最小 px。正常桌機 header min-height56、auto height、可換行 nav。GameUI 偵測 root font >20px 加 `ui-large-text`，解除固定側欄高度並重排单欄，以支援只有文字放大、viewport 尚未變動。
+元件都在 `frontend/src/components/`。缺元件或缺變體時擴充這些元件並更新本頁，不在頁面另做一份。
 
-## GameUI API
+## 元件
 
-```js
-GameUI.icon('save');
-GameUI.decorateButton(button, 'save', { label: '收藏' });
-GameUI.decorateButton(button, 'close', { iconOnly: true, label: '關閉題庫' });
-GameUI.setBusy(button, true);
-GameUI.setBusy(button, false);
-GameUI.setStatus(status, '傳送失敗，請重試', { kind: 'error' });
-GameUI.openDialog(dialog, trigger);
+### UiButton
+
+```vue
+<UiButton variant="primary" icon="check" label="儲存設定" :pending="saving" type="submit" />
+<UiButton icon="close" icon-only label="關閉題庫" />
+<UiButton variant="danger" icon="leave" label="離開房間" @click="leave" />
 ```
 
-`decorateButton` 適用簡單 button／link／summary，會置換子節點，不用在內含表單或複雜事件子節點的容器。保留按鈕本身 listener；SVG aria-hidden，icon-only 有 aria-label／title，短 label 應包含於可及名稱。Registry：emoji、close、send、leave、settings、book、save、check、lock、next、replay、sound、muted、play、pause、help、users、chevron、undo、refresh。全部 24 viewBox／1.8 stroke／round／currentColor；未知名稱回空字串。StrokeCanvas 畫具及演算法維持原樣。
+- `variant`：`primary`（一個區塊最多一個主要操作）、`secondary`（預設）、`ghost`（行內低強調）、`danger`（刪除、離開等破壞性操作）、`success`、`contrast`。選取狀態用 `aria-pressed`／`aria-selected`，自動換成選取色。
+- `label` 是可及名稱；`caption` 可給較短的可見文字；`icon-only` 時 `label` 會成為 tooltip 與 aria-label，手機可用 `caption` 顯示文字。
+- `pending` 會停用按鈕並標 `aria-busy`；不要另外再管理同一顆按鈕的 disabled。
+- 規格：高 `--stitch-control-height`（44px）、圓角 `--stitch-radius-control`（8px）、1px `--stitch-frame` 邊、字 14px／600、內距 8／12px、圖示 20px、icon-only 44×44、停用 48% 透明、焦點 `--stitch-focus-ring`。
 
-`setBusy` 保留 caption 與尺寸、保存並恢復原 disabled；pending 子節點只 opacity0，保留 accessible name。進入 pending 前保存 computed 文字顏色為 `--ui-spinner-color`，spinner 沿用按鈕原可讀文字色，結束時移除此 property；沒有 computed style 時才 fallback 到 ui-accent。亮主題綠底按鈕的白色 spinner 對比約9.271:1。遊戲自行管理 request／防重複，避免兩套管理同一 button disabled。清除成功 draft 由 caller 決定；失敗保留。
+### UiLink
 
-`setStatus` 有固定最少一行、role=status／polite／atomic，相同文字不重寫；kind 为 info／success／error。文字＋標記表達狀態，不只靠顏色。正文验收4.5:1，必要圖示／焦點／選中提示3:1。每秒倒數、彈幕動畫不反覆播報。`openDialog` 補標題名稱、保存 trigger，採原生 showModal 與 close 返焦，不自製 focus trap。若 trigger 位於已收合的 details 中，返焦至可見的祖先 summary；巢狀 details 逐層尋找。題庫 dialog 由 GameUI 單獨負責返焦，未載入 helper 時才使用 shell fallback，避免兩個 close listener 互相覆蓋。
-
-## Action slot 與 InteractionDock
-
-各遊戲提供常駐 `.game-action-slot[data-game-action-slot]` 於右 sidebar 上方，renderer 只更新其內容；button 可以 form 屬性提交原舞台表單。GameShell 不搬 runtime button，不把 dock 掛進玩家 details。共用 ID：`shared-barrage`、`shared-error`、`shared-emote-toggle`、`shared-emoji-picker`、`shared-expressions`。
-
-順序為主操作、常駐紀錄、文字＋emoji、固定 status、角色／離房／管理／音樂 row；重要玩家卡另在全寬舞台下方呈現。utility 控制常規44高、布局內單列，音樂入口44×44，不能固定覆蓋玩家分數；窄螢幕／文字放大可換行捲頁，不能裁切或覆蓋 submit。角色仍 kind:expression，emoji 仍 kind:emoji；focus／loading 改善不修改規則或 API 語意。
-
-## 本批進度與證據（2026-10-04）
-
-- 共用 foundation／helper／slot／PlayerRow／dialog／pending 已實作。語法檢查與 room-components／app／emoji-barrage targeted 共5 tests通過。
-- 隔離背景 headless 已實際檢查 pending、失敗保 draft、成功清除、emoji第一項焦點及選取／Escape返焦、題庫名稱／Escape返焦、6角色選項14px。記錄 `work/desktop-common-check.json`。
-- `work/agent-common-geometry.json`：1280×720 header56、input44/16px、status21/14px、utility44；200%文字 input88/32px、单欄；640×360等效重排可用；三者無橫向溢出。
-- 各遊戲完整流程、正式站實玩與整合測試见 [設計進度](DESKTOP-DESIGN-PROGRESS.md)。此批檢查不代表整站WCAG合格。
-- 題庫返焦回歸：頁首「遊戲題庫」details 開啟 `/gifts` 後，選單因 focusout 收合；Escape 與關閉按鈕皆應回到可見 summary，而不是嘗試聚焦隱藏連結。背景驗證記錄 `work/agent-dialog-focus-check.json`。
-
-背景測試使用隔離開發 cookies／資料庫，無正式帳密，不影響使用者前景。work證據被Git忽略。
-
-## 按鈕旁的偶爾使用選單
-
-全頁在其他 UI scripts 前載入 `/shared/popovers.js`。重要遊玩資訊保持 inline；只有完整色盤、選用指令、角色／emoji 選擇與導覽等按需內容使用此 helper。
-
-```js
-GameUI.bindPopover(details, panel, { align: 'start', width: 360 });
-UIPopover.bindDetails(details, panel, { align: 'end' });
-UIPopover.bind(button, panel, { align: 'end', onClose: closeMenu });
+```vue
+<UiLink href="/collection" icon="book" label="前往收藏庫" />
 ```
 
-`bindDetails` 以 details.open 同步；`bind` 預設以 panel.hidden 同步，caller 的 `onClose` 必須更新原本 open／hidden／aria-expanded。預設 placement=bottom、gap=8、padding=8，空間不足時 flip／shift／限制內部捲動；width 可為 px number 或 `trigger`。`inlineBelow` 可讓窄畫面保留文內 details，需由遊戲 CSS 定義 inline 狀態。可用原生 popover 時保留原 DOM 及 CSS 繼承，進入 top layer；不用把節點搬到 body。觸發元件 resize／隱藏、捲頁及動態 panel resize 會更新位置。
+與 `UiButton` 同外觀與 `variant`，用於換頁。內文中的一般文字連結直接用 `<a>`，顏色 `--stitch-link`。
 
-持續「已連線」不顯示，失敗／重試文字才顯示。頁首／牌桌房號使用系統字體及 lining／tabular 數字；牌面有語意的字體不受此規則覆寫。
+### UiDialog／ConfirmDialog
 
-`UIPopover.bindOverlay(panel, container)` 用於賽車／撲克結束演出，以舞台與 viewport 交集置中；交集過小則置中於 viewport，長內容內捲、確認控制保留。保留 translate 的進場動畫。動態 renderer 移除節點時清理 observers／frames，避免重複 binding。原生 dialog 開啟時共用 Escape handler 不攔截，dialog 的關閉及返焦優先。
+```vue
+<UiDialog ref="dialog" title="邀請朋友" compact @closed="reset">…</UiDialog>
+<ConfirmDialog ref="confirm" />  <!-- await confirm.value.ask('確定刪除？') -->
+```
 
-賽道地形 tooltip 是純閱讀提示，`pointer-events:none`，不能攔截相鄰路格或車輛。pointerdown只收提示，原click正常處理；長內容在提示矩形範圍內支援wheel與PageUp／PageDown，Escape關閉。定位後以viewport剩餘高度限制內容，仍維持8px邊界。
+原生 `showModal()`，Escape 與關閉鈕返焦觸發元素；`dismissible=false` 時不可關閉（例如送出中）。`compact` 為 28rem 寬。外觀：白底、1px 邊、圓角 12px、內距 16px、標題 20px／700。
 
-雷霆擲骰使用 `/shared/race-dice-dialog.js` 的 `RaceDiceDialog.mount({onAction})`，以 `show(state)` 同步公開 `diceCheck`；`reset()`／`destroy()`清理動畫與返焦。dialog常駐顯示判定條件及參與車隊，只有owner能擲骰／確認，碰撞結果依server的rerollAllowed提供一次重擲。CSS與style只載入一次，原生top layer限制視窗內高度；四隊桌機精簡重複說明以完整顯示17顆骰與結果，窄屏局部捲動且操作44px。首次rolling遮蔽至少1000ms、同check輪詢保留焦點與起始時間，減少動態保留等待但不旋轉。此dialog屬必要遊戲步驟，Esc不能跳過；確認後遊戲儀表板接回焦點。詳見 [擲骰流程與驗收](RACE-DICE-INTERACTION.md)。
+### UiPanel
 
-數字骰圖案共用 `RaceDiceDialog.faceMarkup(value)`，僅接受整數1–6，輸出不依賴字型的 SVG 白色骰面與深色點數。父元件負責提供完整點數／已用狀態的輔助名稱；SVG本身 aria-hidden。檢定骰面56px，移動選擇的48px按鈕內留7px邊距、骰面32px；外層卡片與骰面用不同底色，避免邊框黏在一起。角色圖案保持原表情來源，車隊跨兩列顯示64×80或寬螢幕72×90，其他重要資料常駐。
+```vue
+<UiPanel title="我的暱稱" note="1–16 字">…</UiPanel>
+<UiPanel title="房間標記" description="挑選五個常用標記…" density="compact">
+  <template #actions><UiButton label="全部恢復預設" @click="reset" /></template>
+  …
+</UiPanel>
+<UiPanel tone="raised" as="article">…</UiPanel>
+```
 
-混合標題、標籤、數字與按鈕的橫列使用 `align-items:center`，包含共用 `game-toolbar`、雷霆標題與狀態組、畫猜統計／聊天標頭、同頻答案標頭。每個標籤／數值組也置中，保留各字級的正常行高；窄畫面允許換行，按每一行對齊。長提示保持可讀與完整，控制維持44px以上，不以隱藏重要資訊換取同一行排列。
+- `title` 自動成為 `aria-labelledby`；`description` 在標題下、`note` 在標題右側；`#actions` 放標題列右側的按鈕或連結。
+- `tone`：`surface`（預設白底）、`subtle`（次要底色）、`selected`（選取）、`raised`（Stitch 立體卡：2px 深色邊、圓角 16px、硬陰影）。
+- `density`：`regular`（內距 24px、間距 20px）、`compact`（內距 16px、間距 12px，用於密集側欄或設定卡）。
+- 頁面只給 class 排版（grid 區域、最小高度）；框線、底色、圓角、內距不要再寫。
+
+### UiField
+
+```vue
+<UiField v-model="nickname" label="顯示暱稱" maxlength="32" required />
+<UiField v-model="source" control="select" label="來源" :options="[{ value: 'all', label: '全部' }]" />
+<UiField v-model="expression" control="select" label="預設表情"><option …>…</option></UiField>
+<UiField v-model="note" control="textarea" label="說明" hint="最多 200 字" :error="noteError" />
+<UiField v-model.number="count" type="number" label="回合數" />
+```
+
+- `control`：`input`（預設，`type` 照原生）、`select`（下拉選單）、`textarea`。下拉選項可用 `options` 或預設 slot 放 `<option>`／`<optgroup>`。
+- `class`／`style` 給外層 label；其他屬性（`id`、`name`、`disabled`、`aria-*`、`maxlength`…）給控制項。`hint` 與 `error` 會自動接到 `aria-describedby`，`error` 時標 `aria-invalid`。
+- 唯讀顯示用 `:model-value="…" readonly`，不要用 `:value`。
+- 規格：label 與控制項間距 8px、14px／400；控制項高至少 44px、內距 12／16px、1px `--stitch-line` 邊、圓角 8px、白底；停用／唯讀為次要底色與灰字；錯誤為危險底色與邊；焦點 `--stitch-focus-ring`。
+
+**下拉選單（dropdown）**：表單裡的選擇一律用 `UiField control="select"`（原生 select，保留鍵盤與讀屏行為，只統一外觀與箭頭）。需要圖片、搜尋或多欄的選擇器用按鈕開 `UiPopover` 或 `UiDialog`，列表項高 44px、內距 8／12px、間距 4px，選取用 `--stitch-selected-*`。
+
+### UiCheckbox
+
+```vue
+<UiCheckbox v-model="shared" label="分享給會員（未勾選則私人）" />
+<UiCheckbox :model-value="isOn" label="常用" @update:model-value="toggle" />
+```
+
+框 16px、與文字間距 8px、勾選色 `--stitch-primary`、整列至少 44px 高可點。
+
+### UiFilePick
+
+```vue
+<UiFilePick label="上傳頭像" accept="image/png,image/webp" :current="avatarName" @change="upload" />
+```
+
+原生 file input 透明覆蓋整列，顯示目前使用中的檔名；外觀同 `UiField`。
+
+### UiTabs、UiPopover、UiIcon
+
+```vue
+<UiTabs v-model="tab" :items="tabs" label="收藏分類" panel-prefix="collection-panel" />
+<UiPopover :id="id" ref="popover" title="自訂畫筆顏色" @closed="done">…</UiPopover>
+<UiIcon name="save" />
+```
+
+`UiTabs` 有方向鍵／Home／End 與 `aria-controls`；選取分頁用 `--stitch-selected-*`。`UiPopover` 依按鈕位置在上方或下方開啟、限制在視窗內並在關閉時返焦。`UiIcon` 只接受登錄名稱（見 `UiIcon.vue`），24 viewBox、1.8 stroke、`currentColor`；新增圖示加到登錄表。
+
+## Token（`frontend/src/styles/stitch-tokens.scss`）
+
+只用 CSS 變數；不寫 hex、不用 SCSS `tokens.space()`／`space()`／`font()`、`--play-*`、`--ui-*`。深色模式由同名變數切換，元件不需另寫。
+
+| 類別 | Token | 值／用途 |
+| --- | --- | --- |
+| 顏色 | `--stitch-base`、`-surface`、`-surface-subtle`、`-surface-hover` | 頁面底、卡片、次要底、hover |
+| | `--stitch-ink`、`-muted`、`-link`、`-focus` | 主要字、次要字、連結、焦點 |
+| | `--stitch-line`、`-frame` | 細邊線、深色框（按鈕、立體卡） |
+| | `--stitch-primary`、`-primary-hover`、`-primary-active`、`-on-primary` | 主要按鈕與強調 |
+| | `--stitch-selected-bg`、`-selected-ink`、`-selected-muted` | 選取狀態 |
+| | `--stitch-success-*`、`--stitch-danger-*`、`--stitch-contrast*` | 成功、危險、反白（各有 `-bg`／`-ink`／`-line`／`-hover`） |
+| 間距 | `--stitch-space-2/4/8/12/16/20/24/32/40/48` | 0.125–3rem |
+| 語意間距 | `--stitch-gap-label` 8 | label 與欄位、圖示與文字 |
+| | `--stitch-gap-inline` 8 | 同一列緊密的小元素（徽章、標籤） |
+| | `--stitch-gap-controls` 16 | 同一列的按鈕／欄位 |
+| | `--stitch-gap-fields` 20 | 表單欄位之間 |
+| | `--stitch-gap-panel` 20 | 面板內各區塊 |
+| | `--stitch-gap-section` 24 | 面板與面板之間 |
+| | `--stitch-page-gutter` 32／`-mobile` 16 | 頁面左右留白 |
+| 圓角 | `--stitch-radius-badge` 4 | 徽章、小標籤 |
+| | `--stitch-radius-control` 8 | 按鈕、輸入、下拉 |
+| | `--stitch-radius-panel` 12 | 面板、彈窗、選單 |
+| | `--stitch-radius-card` 16 | 立體卡（`UiPanel tone="raised"`） |
+| | `--stitch-radius-pill` | 膠囊、圓形頭像、開關 |
+| 邊框 | `--stitch-border`（1px line）、`--stitch-border-strong`（2px frame） | 一般／立體卡 |
+| 陰影 | 預設無陰影；`--stitch-shadow-raised`（0 4px 0）、`-raised-sm`（0 2px 0）、`-overlay` | 立體卡、彈出層 |
+| 焦點 | `--stitch-focus-ring`（3px）、`--stitch-focus-offset`（2px） | 所有可互動元素 |
+| 控制項 | `--stitch-control-height` 44、`--stitch-control-padding-*` 8／12、`--stitch-field-padding-*` 12／16、`--stitch-checkbox-size` 16 | 按鈕、欄位 |
+| 選單 | `--stitch-menu-padding` 8、`--stitch-menu-item-padding` 8／12、`--stitch-menu-gap` 4 | 下拉、Popover 列表 |
+| 字級 | `--stitch-text-page` 24、`-section` 18、`-body` 14、`-hint` 12；`--stitch-font-12…32` | 頁標題、區塊標題、內文／label、輔助 |
+| 字重 | `--stitch-weight-title` 700、`-button` 600、`-body` 400 | |
+| 行高 | `--stitch-line-height-body` 1.5、`-heading` 1.25 | |
+| 動態 | `--stitch-transition` 0.15s | hover／選取；`prefers-reduced-motion` 時關閉 |
+
+## 版面規則
+
+- 同列面板對齊上下緣；相鄰區塊的邊線、欄寬、列間距與框內留白一致，用 Grid／Flex 與語意間距 token，不逐頁零散位移。
+- 動態區塊預留寬高；狀態文字、倒數、非同步載入、按鈕顯隱或捲軸不應造成反覆縮放與位移。
+- 長內容在既定區域換行或局部捲動；窄螢幕可換列。不得裁切必要資訊或隱藏決策資訊。
+- 混合標題、標籤、數字與按鈕的橫列用 `align-items: center`；控制項維持 44px 以上。
+- 操作按鈕可 icon-only，但保留中文可讀名稱、鍵盤焦點與觸控可理解的說明，不能只有 hover 或原生 title。
+
+## 防倒退檢查（`npm run ui:check`）
+
+`tools/ui-check.cjs` 以 `.ui-baseline.json` 記錄每個檔案現有的舊寫法數量，CI 失敗條件：
+
+| 規則 | 範圍 | 擋下 |
+| --- | --- | --- |
+| `hex` | `frontend/src` 的 `.vue`／`.scss`／`.css`（token 定義檔除外） | 原始 `#rgb`／`#rrggbb` 色碼 |
+| `raw-control` | `frontend/src/pages/**/*.vue` | `<button>`、`<input>`、`<select>`、`<textarea>` |
+| `old-token` | `frontend/src` 的 `.vue`／`.scss` | `tokens.space()` 等 SCSS 函式、`var(--play-*)`、`var(--ui-*)` |
+
+- 數量只能減少。清掉舊寫法後執行 `npm run ui:baseline` 降低基準並一起提交；CI 也會要求這一步，避免基準留著可再加回去的空間。
+- 基準只能由 `npm run ui:baseline` 降低，不得手改調高；PR 審查時 `.ui-baseline.json` 的差異只能是減少。
+- 真的需要例外（例如第三方品牌色、遊戲牌面語意色），在該行或上一行寫 `ui-check-allow <規則>: <理由>`。
+- 合併 main 遇到 `.ui-baseline.json` 衝突：任取一邊，再執行 `npm run ui:baseline`。
+
+## 舊頁（`public/`）與 GameUI
+
+`public/` 的舊頁仍使用 `public/shared/ui-primitives.css`、`ui-foundation.css` 與 `window.GameUI`（`icon`、`decorateButton`、`setBusy`、`setStatus`、`openDialog`、`bindPopover`）。這一層只維護、不擴充：新功能寫在 Vue 頁面。修改舊頁時沿用 [舊頁 GameUI 合約](UI-GAMEUI-LEGACY.md) 與 [共用對齊規格](specs/SHARED-UI-ALIGNMENT.md)。

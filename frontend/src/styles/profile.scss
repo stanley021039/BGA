@@ -473,50 +473,9 @@
         margin: 0;
       }
     }
-    // The native file input is invisible but covers the row, so clicking or
-    // focusing it still works; the row shows what is in use.
-    .file-pick-field {
-      display: grid;
-      gap: 8px;
-      min-inline-size: 0;
+    // UiFilePick owns its look; the profile only sizes it in the row.
+    .ui-file-pick {
       flex: 1 1 240px;
-    }
-    .file-pick-row {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-block-size: 44px;
-      padding: 6px 12px 6px 6px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 8px;
-      background: var(--stitch-surface);
-      &:focus-within {
-        outline: 2px solid var(--surface-focus, var(--stitch-focus));
-        outline-offset: 2px;
-      }
-    }
-    .file-pick-input {
-      position: absolute;
-      inset: 0;
-      inline-size: 100%;
-      block-size: 100%;
-      opacity: 0;
-      cursor: pointer;
-    }
-    .file-pick-button {
-      flex: none;
-      padding: 6px 12px;
-      border: 1px solid var(--stitch-line);
-      border-radius: 6px;
-      font-size: var(--stitch-font-14);
-    }
-    .file-pick-name {
-      min-inline-size: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: var(--stitch-font-14);
     }
   }
 }

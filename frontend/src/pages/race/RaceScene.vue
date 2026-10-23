@@ -428,12 +428,7 @@ const usedCommand = computed(() => {
       }}</h1>
       <p>{{ s.winner.reason }}</p>
       <div class="vue-race-result-actions">
-        <UiButton
-          variant="secondary"
-          label="結算回顧"
-          icon="history"
-          @click="reviewing = true"
-        />
+        <UiButton variant="secondary" label="結算回顧" icon="history" @click="reviewing = true" />
         <a href="/achievements">查看獲得成就</a>
       </div>
       <p v-if="presentation.earned.value.length" class="vue-race-earned"
