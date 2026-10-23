@@ -11,6 +11,10 @@ const { window } = parseHTML('<html><body></body></html>');
 for (const key of ['window', 'document', 'Element', 'HTMLElement', 'SVGElement', 'Event'])
   global[key] = key === 'window' ? window : window[key];
 const vue = require('vue');
+const scrolls = [];
+window.HTMLElement.prototype.scrollIntoView = function (options) {
+  scrolls.push({ element: this, options });
+};
 const pinia = require('pinia');
 const ts = require('typescript');
 const { parse, compileScript } = require('vue/compiler-sfc');
@@ -182,7 +186,7 @@ function client(engine, player) {
     },
   };
 }
-test('three actual scenes follow one server reveal position and render only one page', async () => {
+test('three actual scenes retain each revealed story prefix, reset between owners and scroll only on reveal', async () => {
   const { engine, players } = completedGame();
   const clients = players.map((player) => client(engine, player));
   try {
@@ -194,26 +198,60 @@ test('three actual scenes follow one server reveal position and render only one 
     assert.equal(clients[1].store.canReveal, false);
     assert.equal(await clients[1].store.reveal(), false);
     const pages = engine.books.flatMap((book) => book.pages);
+    let previousCards = [];
     for (let index = 0; index < pages.length; index++) {
+      const beforeScrolls = scrolls.length;
       clients[0].host.querySelector('button').click();
       await vue.nextTick();
       for (const current of clients) current.refresh();
       await vue.nextTick();
+      const pageIndex = index % engine.books[0].pages.length;
       for (const current of clients) {
-        assert.equal(current.host.querySelectorAll('.vue-telephone-book-page').length, 1);
+        const cards = [...current.host.querySelectorAll('.vue-telephone-book-page')];
+        assert.equal(cards.length, pageIndex + 1);
         assert.equal(current.store.state.review.index, index);
-        const text = current.host.querySelector('.vue-telephone-book-text');
-        assert.equal(
-          text?.textContent || '',
-          pages[index].kind === 'text' ? pages[index].text : '',
-        );
+        cards.forEach((card, offset) => {
+          const page = pages[index - pageIndex + offset];
+          assert.equal(
+            card.querySelector('.vue-telephone-book-text')?.textContent || '',
+            page.kind === 'text' ? page.text : '',
+          );
+        });
       }
+      const cards = [...clients[0].host.querySelectorAll('.vue-telephone-book-page')];
+      if (pageIndex) previousCards.forEach((card, i) => assert.equal(cards[i] === card, true));
+      else previousCards.forEach((card) => assert.equal(card.isConnected, false));
+      previousCards = cards;
+      assert.equal(
+        scrolls.length - beforeScrolls,
+        3,
+        'host and both viewers follow the new bottom',
+      );
+      for (const scroll of scrolls.slice(-3)) {
+        assert.equal(scroll.element.className, 'vue-telephone-actions');
+        assert.equal(scroll.options.block, 'end');
+        assert.equal(scroll.options.behavior, 'auto');
+      }
+      const stableScrolls = scrolls.length;
+      clients.forEach((current) => current.refresh());
+      await vue.nextTick();
+      assert.equal(
+        scrolls.length,
+        stableScrolls,
+        'presence polling must not pull the reader back down',
+      );
     }
     assert.equal(clients[0].store.canReveal, false);
     assert.match(clients[0].host.textContent, /所有故事已播放完畢/);
     const reconnected = client(engine, players[1]);
     try {
+      await vue.nextTick();
       assert.equal(reconnected.store.state.review.index, pages.length - 1);
+      assert.equal(reconnected.host.querySelectorAll('.vue-telephone-book-page').length, 3);
+      assert.equal(
+        vue.toRaw(scrolls.at(-1).element) === reconnected.host.querySelector('footer'),
+        true,
+      );
     } finally {
       reconnected.dispose();
     }
