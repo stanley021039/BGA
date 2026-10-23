@@ -269,7 +269,7 @@ body.lobby-self-hover {
   .lobby-avatar.is-self:focus-visible img {
     filter: drop-shadow(0 0 6px #f6a54b) drop-shadow(0 2px 3px #07160eaa);
   }
-  &:focus-visible {
+  &:focus-visible:not([data-pointer-focus]) {
     outline: 3px solid #f6a54b;
     outline-offset: -6px;
   }
