@@ -1,0 +1,92 @@
+[
+  {
+    "id": "barrage",
+    "label": "連射／散射能量彈",
+    "color": "#00f0ff",
+    "description": "高頻彈幕噴射、流體流光拖尾、受擊處多重噴濺與粒子回彈。"
+  },
+  {
+    "id": "beam",
+    "label": "超人力霸王式光線",
+    "color": "#ffb2ba",
+    "description": "蓄力十字手勢幾何電光、高能集束貫通射線、連續震顫衝擊。"
+  },
+  {
+    "id": "shield",
+    "label": "六角形能量護盾",
+    "color": "#00f0ff",
+    "description": "力場蜂巢受擊擴散、微波光暈流轉、碎裂晶格能量碎片飛散。"
+  },
+  {
+    "id": "chains",
+    "label": "能量鎖鏈",
+    "color": "#ffe08b",
+    "description": "等離子彈性鏈節、物理拉扯目標假人、交錯游離電弧與火花。"
+  },
+  {
+    "id": "sphere",
+    "label": "球形能量結界",
+    "color": "#00f0ff",
+    "description": "3D 經緯流光環繞、多重相位防護罩、脈衝力場波動擴散。"
+  },
+  {
+    "id": "orbital",
+    "label": "天降光柱",
+    "color": "#ffd556",
+    "description": "天基軌道幾何符文鎖定、超高能天頂垂直降臨光束、地面熔岩焦痕。"
+  },
+  {
+    "id": "funnel",
+    "label": "浮游砲齊射",
+    "color": "#00f0ff",
+    "description": "浮游機兵戰術編隊盤旋、雷射引導、短延遲交錯多角度全彈齊射。"
+  },
+  {
+    "id": "singularity",
+    "label": "黑洞牽引",
+    "color": "#a855f7",
+    "description": "超重力奇點引力渦旋、吞噬全場星塵碎屑與假人、崩壞超新星爆發。"
+  },
+  {
+    "id": "explosion",
+    "label": "爆裂魔法",
+    "color": "#ff3366",
+    "description": "多重逆轉紅蓮魔法陣吟唱、全屏高熱閃光、核爆級蕈狀烈焰巨響。"
+  },
+  {
+    "id": "damage_text",
+    "label": "傷害數字跳出",
+    "color": "#ffd556",
+    "description": "動漫風爆擊金光、物理重力拋物線飄字、浮誇萬級爽快連跳。"
+  },
+  {
+    "id": "blade_aura",
+    "label": "疾風／月牙劍氣",
+    "color": "#00f0ff",
+    "description": "刀光月牙半月破空、居合極限蓄力巨型斬擊、貫通刀痕殘影。"
+  },
+  {
+    "id": "chain_lightning",
+    "label": "連鎖雷霆／天頂落雷",
+    "color": "#00f0ff",
+    "description": "九天折線電弧劈裂、高壓等離子電漿光芒、強烈震屏暴擊。"
+  },
+  {
+    "id": "frost_spikes",
+    "label": "寒冰結晶／極地霜刺",
+    "color": "#7df4ff",
+    "description": "菱形冰稜破土突刺、冰晶霜華環形蔓延、極致碎冰破甲爆裂。"
+  },
+  {
+    "id": "arrow_volley",
+    "label": "光輝天降箭雨",
+    "color": "#ffe08b",
+    "description": "金色光輝召喚射程結界、暴雨般流星光矢傾瀉、密集彈著爆炸。"
+  },
+  {
+    "id": "flame_vortex",
+    "label": "炎獄烈焰龍捲",
+    "color": "#ff3366",
+    "description": "高溫螺旋烈焰火柱沖天、強烈聚攏氣流、碎屑火雨飛散引導。"
+  }
+]

@@ -1,3 +1,4 @@
+import attackEffects from '../../../public/shared/attack-effects.json';
 import backgrounds from '../../../public/shared/lobby-backgrounds.json';
 import { readBarrages, type BarrageEvent } from './social';
 import { array, record, text } from '../services/validation';
@@ -42,6 +43,8 @@ export interface LobbyVisitor {
   entrance: EntranceEffectId;
 }
 export interface LobbyAttack {
+  effect: string;
+  slot: 'q' | 'e';
   id: string;
   fromId: string;
   toId: string;
@@ -196,6 +199,8 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         )
           throw Error('大廳攻擊資料格式不正確。');
         return {
+          effect: attackEffects.some((e) => e.id === a.effect) ? String(a.effect) : 'barrage',
+          slot: a.slot === 'e' ? 'e' : 'q',
           id: text(a.id),
           fromId: text(a.fromId),
           toId: text(a.toId),

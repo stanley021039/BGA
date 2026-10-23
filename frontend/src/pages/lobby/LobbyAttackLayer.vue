@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyAttack, LobbySnapshot } from '../../contracts/lobby';
-import { usePreferencesStore } from '../../stores/preferences';
+import AttackArtwork from '../../components/AttackArtwork.vue';
 const props = defineProps<{ snapshot: LobbySnapshot | null; connected: boolean }>();
-const prefs = usePreferencesStore(),
-  active = ref<LobbyAttack[]>([]),
+const active = ref<LobbyAttack[]>([]),
   announcement = ref('');
-const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
 const seen = new Set<string>(),
   timers = new Set<ReturnType<typeof setTimeout>>();
 let identity = '',
@@ -43,12 +41,12 @@ watch(
       seen.add(event.id);
       if (baseline || snapshot.serverNow - event.at > 1200 || event.at > snapshot.serverNow + 1000)
         continue;
-      active.value = [...active.value.slice(-11), event];
+      active.value = [...active.value.slice(-2), event];
       announcement.value = event.fromName + ' 向 ' + event.toName + ' 發射特效';
       const timer = setTimeout(() => {
         active.value = active.value.filter((item) => item.id !== event.id);
         timers.delete(timer);
-      }, 1000);
+      }, 4300);
       timers.add(timer);
     }
     if (seen.size > 256) {
@@ -66,12 +64,14 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <div class="lobby-attack-layer" :class="{ 'is-still': still }" aria-hidden="true">
+  <div class="lobby-attack-layer" aria-hidden="true">
     <div
       v-for="event in active"
       :key="event.id"
       class="lobby-attack"
       :data-attack-id="event.id"
+      :data-effect="event.effect"
+      :data-slot="event.slot"
       :data-from-id="event.fromId"
       :data-to-id="event.toId"
       :style="{
@@ -83,7 +83,12 @@ onBeforeUnmount(() => {
         '--dy': event.toY - event.fromY + 'vh',
       }"
     >
-      <span class="lobby-attack-bolt"></span><span class="lobby-attack-hit"></span>
+      <AttackArtwork
+        :effect="event.effect"
+        :play-key="event.id"
+        :from="{ x: event.fromX, y: event.fromY }"
+        :to="{ x: event.toX, y: event.toY }"
+      />
       <span class="lobby-attack-caption">{{ event.fromName }} → {{ event.toName }}</span>
     </div>
   </div>
@@ -96,30 +101,6 @@ onBeforeUnmount(() => {
   pointer-events: none;
   overflow: hidden;
   z-index: 5;
-}
-.lobby-attack-bolt {
-  position: absolute;
-  left: var(--from-x);
-  top: calc(var(--from-y) - 42px);
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff 0 18%, #a5f3fc 30%, #06b6d4 60%, transparent 72%);
-  box-shadow:
-    0 0 14px #22d3ee,
-    0 0 32px #0891b2;
-  animation: lobby-bolt 550ms ease-out both;
-}
-.lobby-attack-hit {
-  position: absolute;
-  left: calc(var(--to-x) - 16px);
-  top: calc(var(--to-y) - 48px);
-  width: 48px;
-  height: 48px;
-  border: 3px solid #fbbf24;
-  border-radius: 50%;
-  box-shadow: 0 0 20px #f59e0b;
-  animation: lobby-hit 450ms 450ms ease-out both;
 }
 .lobby-attack-caption {
   position: absolute;
@@ -135,47 +116,5 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.is-still .lobby-attack-bolt {
-  display: none;
-}
-.is-still .lobby-attack-hit {
-  animation: none;
-  box-shadow: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lobby-attack-bolt {
-    display: none;
-  }
-  .lobby-attack-hit {
-    animation: none;
-    box-shadow: none;
-  }
-}
-@keyframes lobby-bolt {
-  0% {
-    transform: translate(0, 0) scale(0.6);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--dx), var(--dy)) scale(1.3);
-    opacity: 0;
-  }
-}
-@keyframes lobby-hit {
-  0% {
-    transform: scale(0.3);
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
 }
 </style>

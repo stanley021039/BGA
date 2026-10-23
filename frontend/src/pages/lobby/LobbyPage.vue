@@ -131,13 +131,7 @@ onBeforeUnmount(() => {
           label="對話"
           aria-haspopup="dialog"
           :disabled="!lobby.connected"
-          @click="backdrop?.openChat()" /><UiButton
-          icon="send"
-          icon-only
-          label="向最近玩家發射特效（F）"
-          aria-keyshortcuts="F"
-          :disabled="!lobby.connected || lobby.attackPending"
-          @click="lobby.attack()"
+          @click="backdrop?.openChat()"
       /></template>
       <template #lobby-resume
         ><div class="vue-lobby-resume" aria-label="已入座的房間"

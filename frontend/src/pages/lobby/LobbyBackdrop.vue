@@ -226,10 +226,10 @@ function key(event: KeyboardEvent) {
   )
     return;
   const name = event.key.toLowerCase();
-  if (name === 'f' || name === 'r') {
+  if (name === 'q' || name === 'e' || name === 'r') {
     if (event.repeat) return;
     event.preventDefault();
-    if (name === 'f') void lobby.attack();
+    if (name === 'q' || name === 'e') void lobby.attack(name);
     else {
       held.clear();
       teleport();
@@ -301,8 +301,8 @@ defineExpose({ openChat });
       :data-background="background.selected"
       :class="{ 'is-self-hover': selfHover }"
       tabindex="0"
-      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話按鈕輸入訊息；聚焦此處可用 WASD 或方向鍵移動，四邊可穿越，R 鍵隨機換位，F 鍵向最近玩家發射特效"
-      aria-keyshortcuts="R F"
+      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話按鈕輸入訊息；聚焦此處可用 WASD 或方向鍵移動，四邊可穿越，R 鍵隨機換位，Q、E 鍵向最近玩家發射不同特效"
+      aria-keyshortcuts="R Q E"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
       ><LobbyAttackLayer

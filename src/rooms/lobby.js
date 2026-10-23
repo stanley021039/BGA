@@ -21,6 +21,7 @@ const ENTRANCE_EFFECTS = new Set([
 const PRESENCE_MS = 15000,
   EMOTE_MS = 5000,
   MAX_VISITORS = 80;
+const ATTACK_EFFECTS = new Set(require('../../public/shared/attack-effects.json').map((e) => e.id));
 const WALK_X_PER_SECOND = 12,
   WALK_Y_PER_SECOND = 16;
 
@@ -164,28 +165,36 @@ function createLobby(
       !Number.isFinite(input.aspectRatio) ||
       input.aspectRatio < 0.2 ||
       input.aspectRatio > 5 ||
-      Object.keys(input).some((k) => !['requestId', 'aspectRatio'].includes(k))
+      (input.slot !== undefined && !['q', 'e'].includes(input.slot)) ||
+      (input.effect !== undefined && !ATTACK_EFFECTS.has(input.effect)) ||
+      Object.keys(input).some((k) => !['requestId', 'aspectRatio', 'slot', 'effect'].includes(k))
     )
       throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
+    const slot = input.slot || 'q',
+      effect = input.effect || 'barrage',
+      fingerprint = JSON.stringify([input.aspectRatio, slot, effect]);
     const key = 'attack:' + user.id + ':' + input.requestId,
       prior = receipts.get(key);
     if (prior) {
-      if (prior.fingerprint !== input.aspectRatio)
+      if (prior.fingerprint !== fingerprint)
         throw new HttpError(409, 'REQUEST_CONFLICT', '同一操作內容不一致');
       return view(user);
     }
-    if (self.lastAttackAt !== undefined && time - self.lastAttackAt < 2000)
-      throw new HttpError(429, 'ATTACK_COOLDOWN', '攻擊冷卻中，請稍候 2 秒');
+    if (self.lastAttacks?.[slot] !== undefined && time - self.lastAttacks[slot] < 2000)
+      throw new HttpError(429, 'ATTACK_COOLDOWN', slot.toUpperCase() + ' 攻擊冷卻中，請稍候 2 秒');
     for (const visitor of visitors.values()) advance(visitor, time);
     const distance = (v) => Math.hypot((v.x - self.x) * input.aspectRatio, v.y - self.y);
     const target = [...visitors.values()]
       .filter((v) => v.id !== user.id)
       .sort((a, b) => distance(a) - distance(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '目前沒有其他玩家可以互動');
-    self.lastAttackAt = time;
+    self.lastAttacks ||= {};
+    self.lastAttacks[slot] = time;
     attacks.push({
       id: randomBytes(12).toString('hex'),
       fromId: self.id,
+      slot,
+      effect,
       toId: target.id,
       fromName: self.name,
       toName: target.name,
@@ -197,7 +206,7 @@ function createLobby(
       until: time + 1800,
     });
     if (attacks.length > 40) attacks.shift();
-    receipts.set(key, { at: time, fingerprint: input.aspectRatio });
+    receipts.set(key, { at: time, fingerprint });
     if (receipts.size > 4000) receipts.delete(receipts.keys().next().value);
     return view(user);
   }

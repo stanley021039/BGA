@@ -908,6 +908,7 @@ function initializeApp(config, dataLock, acquired) {
     );
   };
   const lobbyHandlers = createLobbyHandlers({
+    attackLoadout: (user) => require('./profiles/settings').getAttackSettings(db, user.id),
     entranceAllowed: (user, id) =>
       ['classic', 'smoke', 'sparks', 'ink', 'runes', 'rift', 'particles'].includes(id) ||
       require('./achievements/bonus-rewards')
@@ -1249,7 +1250,7 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
           return send(lobbyHandlers.move(user, data));
         if (url.pathname === '/api/lobby/attack' && req.method === 'POST') {
-          limitRate(socialRate, 'lobby-attack:' + user.id, 40);
+          limitRate(socialRate, 'lobby-attack:' + user.id, 80);
           return send(lobbyHandlers.attack(user, data));
         }
         if (url.pathname === '/api/lobby/teleport' && req.method === 'POST') {
@@ -1311,6 +1312,12 @@ function initializeApp(config, dataLock, acquired) {
               req.method === 'POST' ? data : undefined,
             ),
           );
+        }
+        if (url.pathname === '/api/profile/attacks' && req.method === 'GET')
+          return send(require('./profiles/settings').getAttackSettings(db, user.id));
+        if (url.pathname === '/api/profile/attacks' && req.method === 'POST') {
+          limitAccount(user);
+          return send(require('./profiles/settings').setAttackSettings(db, user.id, data));
         }
         if (url.pathname === '/api/profile/settings' && req.method === 'GET')
           return send(getProfileSettings(db, user.id));

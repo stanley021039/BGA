@@ -23,11 +23,13 @@ import {
 import type { InteractionSource } from '../services/interaction-source';
 import type { BarrageEvent } from '../contracts/social';
 import { entranceEffect } from '../services/entrance-effects';
+type AttackSlot = 'q' | 'e';
 type Movement = { x: number; y: number } | { dx: number; dy: number };
 import { useLobbyBackgroundStore } from './lobby-background';
 
 export const useLobbyStore = defineStore('lobby', () => {
   const session = useSessionStore();
+  const attackJobs = new Set<AttackSlot>();
   const snapshot = shallowRef<LobbySnapshot | null>(null),
     rooms = shallowRef<PublicRoom[]>([]),
     expressions = shallowRef<LobbyExpression[]>([]);
@@ -242,8 +244,9 @@ export const useLobbyStore = defineStore('lobby', () => {
   function step(dx: number, dy: number) {
     if (connected.value) void sync({ dx, dy });
   }
-  async function attack() {
-    if (!connected.value || attackPending.value || disposed || document.hidden) return;
+  async function attack(slot: AttackSlot = 'q') {
+    if (!connected.value || attackJobs.has(slot) || disposed || document.hidden) return;
+    attackJobs.add(slot);
     attackPending.value = true;
     attackStatus.value = '';
     const epoch = generation,
@@ -251,6 +254,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     try {
       const result = await request('/api/lobby/attack', {
         requestId: crypto.randomUUID(),
+        slot,
         aspectRatio: Math.max(0.2, Math.min(5, innerWidth / innerHeight)),
       });
       if (current(epoch, account)) {
@@ -261,7 +265,10 @@ export const useLobbyStore = defineStore('lobby', () => {
       if (current(epoch, account))
         attackStatus.value = error instanceof Error ? error.message : '暫時無法發射特效';
     } finally {
-      attackPending.value = false;
+      if (current(epoch, account)) {
+        attackJobs.delete(slot);
+        attackPending.value = attackJobs.size > 0;
+      }
     }
   }
   async function warmExpressions() {
@@ -490,6 +497,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       emotePending.value =
         false;
     entryStatus.value = expressionStatus.value = attackStatus.value = '';
+    attackJobs.clear();
     attackPending.value = false;
     presenceStatus.value = '正在進入大廳…';
     roomsStatus.value = '正在載入房間…';
