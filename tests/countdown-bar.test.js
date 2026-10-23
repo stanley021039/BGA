@@ -33,13 +33,17 @@ function fixture() {
   });
   return { bar, node, jobs, advance: (ms) => (time += ms), reduce: (value) => (reduce = value) };
 }
-test('countdown uses one compositor animation with exact server remaining duration, not a per-frame JS loop', () => {
+test('countdown uses one stepped compositor animation with exact server remaining duration, not a per-frame JS loop', () => {
   const f = fixture(),
     state = { key: 'epoch:drawing', deadline: 100000, duration: 120000, offset: 1000 };
   f.bar.sync(state);
   assert.equal(f.jobs.length, 1);
   assert.equal(f.jobs[0].options.duration, 100000);
-  assert.equal(f.jobs[0].options.easing, 'linear');
+  assert.equal(
+    f.jobs[0].options.easing,
+    'steps(400,end)',
+    'four steps a second, so the page is not redrawn at the display rate',
+  );
   assert.equal(f.jobs[0].frames[0].transform, 'scaleX(' + 100000 / 120000 + ')');
   assert.equal(f.jobs[0].frames[1].transform, 'scaleX(0)');
   f.advance(250);

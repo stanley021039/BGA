@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import type { QuacksSnapshot, QuacksRecipe, QuacksInsight } from '../../contracts/quacks';
+import { useSteppedAnimations } from '../../composables/stepped-animations';
 import '../../styles/quacks-pot.scss';
 import QuacksPublicTray from './QuacksPublicTray.vue';
 const props = defineProps<{ state: QuacksSnapshot; recipe: QuacksRecipe }>(),
@@ -9,7 +10,8 @@ const props = defineProps<{ state: QuacksSnapshot; recipe: QuacksRecipe }>(),
   insight = ref<QuacksInsight | null>(null),
   error = ref(''),
   motion = ref(false),
-  tipId = useId();
+  tipId = useId(),
+  stepped = useSteppedAnimations(host, motion);
 const wide = window.matchMedia?.('(min-width: 1181px)');
 let anchor: Element | null = null,
   generation = 0,
@@ -101,6 +103,7 @@ function render() {
       if (!node.contains((event as FocusEvent).relatedTarget as Node | null)) dismiss();
     });
     host.value.replaceChildren(node);
+    stepped.refresh();
     if (focused !== null)
       node
         .querySelector<HTMLElement>(`[data-position="${CSS.escape(focused)}"]`)
@@ -145,6 +148,7 @@ onMounted(() => {
   wide?.addEventListener('change', render);
 });
 watch(signature, render, { flush: 'post' });
+watch(danger, () => stepped.refresh(), { flush: 'post' });
 onBeforeUnmount(() => {
   disposed = true;
   dismiss();

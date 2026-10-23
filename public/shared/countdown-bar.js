@@ -1,6 +1,9 @@
 (function () {
   'use strict';
-  // Prefer the compositor; older browsers retain a continuous frame-based fallback.
+  // Prefer the compositor; older browsers retain a frame-based fallback. Both move
+  // in STEP_MS steps: a smooth bar redraws the page at the display rate (144/s)
+  // for the whole countdown, while four steps a second look the same.
+  const STEP_MS = 250;
   function create(node, { now = () => Date.now(), reducedMotion = () => false } = {}) {
     let animation = null,
       current = null,
@@ -8,7 +11,7 @@
     function reset() {
       animation?.cancel();
       animation = null;
-      if (frame !== null) cancelAnimationFrame(frame);
+      if (frame !== null) clearTimeout(frame);
       frame = null;
       current = null;
     }
@@ -18,7 +21,7 @@
       const remaining = Math.max(0, current.end - now()),
         fraction = Math.max(0, Math.min(1, remaining / current.duration));
       node.style.transform = 'scaleX(' + fraction + ')';
-      if (remaining) frame = requestAnimationFrame(paintFallback);
+      if (remaining) frame = setTimeout(paintFallback, Math.min(STEP_MS, remaining));
     }
     function sync({ key, deadline, duration, offset = 0, visible = true }) {
       const end = deadline + offset,
@@ -53,10 +56,13 @@
         if (typeof node.animate === 'function')
           animation = node.animate(
             [{ transform: 'scaleX(' + fraction + ')' }, { transform: 'scaleX(0)' }],
-            { duration: remaining, easing: 'linear', fill: 'forwards' },
+            {
+              duration: remaining,
+              easing: 'steps(' + Math.max(1, Math.ceil(remaining / STEP_MS)) + ',end)',
+              fill: 'forwards',
+            },
           );
-        else if (typeof requestAnimationFrame === 'function')
-          frame = requestAnimationFrame(paintFallback);
+        else frame = setTimeout(paintFallback, Math.min(STEP_MS, remaining));
       }
     }
     return { sync, reset };

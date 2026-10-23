@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { usePreferencesStore } from '../stores/preferences';
 import '../styles/room-countdown.scss';
 const props = withDefaults(
   defineProps<{
@@ -14,7 +15,8 @@ const props = withDefaults(
   }>(),
   { emptyValue: '—' },
 );
-const fill = ref<HTMLElement | null>(null),
+const prefs = usePreferencesStore(),
+  fill = ref<HTMLElement | null>(null),
   seconds = computed(() =>
     Math.ceil(Math.max(0, (props.deadline || 0) - props.now + props.offset) / 1000),
   );
@@ -55,12 +57,18 @@ function sync() {
     visible: !document.hidden,
   });
 }
-watch(() => [props.deadline, props.duration, props.offset, props.epoch, props.now], sync);
+watch(
+  () => [props.deadline, props.duration, props.offset, props.epoch, props.now, prefs.motion],
+  sync,
+);
 onMounted(() => {
   if (fill.value)
     bar =
       window.CountdownBar?.create(fill.value, {
-        reducedMotion: () => matchMedia('(prefers-reduced-motion: reduce)').matches,
+        reducedMotion: () =>
+          prefs.motion?.enabled === false ||
+          prefs.motion?.reduced === true ||
+          matchMedia('(prefers-reduced-motion: reduce)').matches,
       }) || null;
   document.addEventListener('visibilitychange', sync);
   sync();
