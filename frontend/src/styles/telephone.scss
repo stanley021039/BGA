@@ -142,6 +142,11 @@
     scrollbar-gutter: stable;
     overscroll-behavior: contain;
   }
+  &.is-finished .vue-telephone-live {
+    block-size: clamp(20rem, 55dvh, 40rem);
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
   .vue-telephone-task[data-private] {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -530,6 +535,9 @@
     section.vue-telephone-stage[data-telephone] {
     block-size: 100%;
     min-block-size: 0;
+    &.is-finished .vue-telephone-live {
+      block-size: 100%;
+    }
     .vue-telephone-task[data-private]:has(> .vue-telephone-drawing-console) {
       min-block-size: 320px;
     }
