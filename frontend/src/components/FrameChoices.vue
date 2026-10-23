@@ -47,13 +47,7 @@ function select(id: string) {
           :frame="option.id"
           :name="option.label"
           message="這一桌好好玩！" /></span
-      ><FramePreview
-        v-else
-        :frame="option.id"
-        :name="kind === 'media' ? '播放器' : '小雨'"
-        :message="kind === 'media' ? '我的風格' : '這一桌好好玩！'"
-        aria-hidden="true"
-      /><span class="barrage-frame-selection">{{
+      ><span class="barrage-frame-selection">{{
         !prefs.canUse(option.id) ? '成就尚未解鎖' : selected === option.id ? '✓ 使用中' : '套用外觀'
       }}</span></button
     >
