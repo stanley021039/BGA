@@ -51,6 +51,8 @@ jobs:
         run: npm run ui:check
       - name: Install locked frontend dependencies
         run: npm --prefix frontend ci
+      - name: Build and check performance budgets
+        run: npm run frontend:build && npm run perf:check -- --build
       - name: Run frontend regressions
         run: npm --prefix frontend test
       - name: Run release check and full test suite
