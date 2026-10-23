@@ -11,7 +11,9 @@ let timer: ReturnType<typeof setInterval> | null = null;
 
 function paint(animations: Iterable<Animation>) {
   const time = performance.now();
-  for (const animation of animations) animation.currentTime = time;
+  // A cancelled CSS animation (its class was removed) would come back if given a time.
+  for (const animation of animations)
+    if (animation.playState !== 'idle') animation.currentTime = time;
 }
 function tick() {
   for (const source of sources) paint(source());
