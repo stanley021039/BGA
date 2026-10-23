@@ -195,6 +195,7 @@ defineExpose({ compose, focus: focusInput });
           ><slot name="tools" /><ReactionPicker
             :disabled="blocked"
             :quick-replies="quick"
+            :mode="room.type === 'quacks' ? 'emoji' : 'all'"
             compose-emoji
             @compose="compose" /><UiButton
             v-if="chat.status && chat.enabled"

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import ReactionPicker from './ReactionPicker.vue';
+import UiMoveMarker from './UiMoveMarker.vue';
 import { useRoomStore } from '../stores/room';
 import { record } from '../services/validation';
 import { readLobbySnapshot } from '../contracts/lobby';
@@ -8,7 +10,30 @@ import StatusSlot from './StatusSlot.vue';
 const props = defineProps<{ connected: boolean; focused: boolean }>();
 const room = useRoomStore(),
   stage = ref<HTMLElement | null>(null),
-  error = ref('');
+  error = ref(''),
+  picker = ref<InstanceType<typeof ReactionPicker> | null>(null),
+  destination = ref<{ x: number; y: number } | null>(null),
+  markerKey = ref(0);
+const viewportWidth = ref(document.documentElement.clientWidth);
+let sizeObserver: ResizeObserver | null = null;
+onMounted(() => {
+  sizeObserver = new ResizeObserver(() => {
+    viewportWidth.value = document.documentElement.clientWidth;
+  });
+  sizeObserver.observe(document.documentElement);
+});
+let markerTimer: ReturnType<typeof setTimeout> | undefined;
+function openCharacter(trigger: HTMLElement) {
+  if (props.connected && !props.focused) picker.value?.open(trigger);
+}
+watch(
+  () => [props.focused, props.connected, room.scope],
+  () => {
+    picker.value?.close();
+    destination.value = null;
+    clearTimeout(markerTimer);
+  },
+);
 const projection = computed(() => {
   if (!room.snapshot?.roomSpace) return { snapshot: null, error: '' };
   try {
@@ -70,14 +95,21 @@ async function move(target: { x: number; y: number }) {
   }
 }
 function click(event: MouseEvent) {
-  if (!stage.value || !props.connected) return;
+  if (!stage.value || !props.connected || event.button !== 0 || event.defaultPrevented) return;
   const rect = stage.value.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
   keyboardTarget = null;
-  void move({
+  const target = {
     x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)),
     y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100)),
-  });
+  };
+  destination.value = target;
+  markerKey.value++;
+  clearTimeout(markerTimer);
+  markerTimer = setTimeout(() => {
+    destination.value = null;
+  }, 1100);
+  void move(target);
   void nextTick(() => stage.value?.focus({ preventScroll: true }));
 }
 function key(event: KeyboardEvent) {
@@ -104,6 +136,8 @@ function key(event: KeyboardEvent) {
   void move(keyboardTarget);
 }
 onBeforeUnmount(() => {
+  sizeObserver?.disconnect();
+  clearTimeout(markerTimer);
   disposed = true;
   queued = null;
   controller?.abort();
@@ -114,6 +148,7 @@ onBeforeUnmount(() => {
     v-show="!focused"
     ref="stage"
     class="vue-room-background lobby-backdrop"
+    :style="{ '--room-viewport-width': viewportWidth + 'px' }"
     tabindex="0"
     role="region"
     aria-label="房間角色活動背景，點擊目的地或聚焦後用方向鍵移動"
@@ -121,20 +156,28 @@ onBeforeUnmount(() => {
     @click="click"
     @keydown="key"
   >
+    <UiMoveMarker v-if="destination" :key="markerKey" :point="destination" />
     <div class="lobby-visitors">
       <LobbyVisitor
         v-for="visitor in snapshot?.visitors || []"
         :key="visitor.id"
         :visitor="visitor"
-        :self="false"
+        :self="visitor.id === snapshot?.selfId"
         :reset="room.scope"
-        :open="false"
+        :open="!!picker?.visible"
         :connected="connected"
-        role="img"
+        :role="visitor.id === snapshot?.selfId ? undefined : 'img'"
+        @select="openCharacter"
         :class="{ 'is-self': visitor.id === snapshot?.selfId }"
-        :aria-label="visitor.name + (visitor.id === snapshot?.selfId ? '（你）' : '')"
+        :aria-label="visitor.name + (visitor.id === snapshot?.selfId ? '（你），點一下發表情' : '')"
       />
     </div>
+    <ReactionPicker
+      ref="picker"
+      mode="character"
+      external-trigger
+      :disabled="!connected || focused"
+    />
     <StatusSlot
       v-if="error || projection.error"
       :message="error || projection.error"

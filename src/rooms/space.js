@@ -36,16 +36,20 @@ function createRoomSpace(now = () => Date.now()) {
     });
     return positions;
   }
-  function view(room, playerId, players = room.players) {
+  function view(room, playerId, players = room.players, expressions = []) {
     const time = now(),
-      positions = reconcile(room, time);
+      positions = reconcile(room, time),
+      current = new Map();
+    for (const event of expressions)
+      if (event.at <= time && event.at + 5000 > time) current.set(event.playerId, event);
     return {
       selfId: playerId,
       serverNow: time,
       visitors: players
         .filter((player) => positions.has(player.id) && !player.kicked)
         .map((player) => {
-          const position = positions.get(player.id);
+          const position = positions.get(player.id),
+            expression = current.get(player.id);
           const remainingMs = Math.ceil(
             Math.hypot((position.targetX - position.x) / 12, (position.targetY - position.y) / 16) *
               1000,
@@ -62,7 +66,15 @@ function createRoomSpace(now = () => Date.now()) {
             remainingMs,
             moving: remainingMs > 0,
             facing: position.facing,
-            emote: null,
+            emote: expression
+              ? {
+                  id: expression.id,
+                  image: expression.image,
+                  label: expression.label,
+                  at: expression.at,
+                  until: expression.at + 5000,
+                }
+              : null,
             entrance: 'classic',
           };
         }),

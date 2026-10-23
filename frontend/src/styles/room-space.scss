@@ -1,4 +1,4 @@
-// #215 is opt-in per room; other game compositions retain their existing tracks.
+// Opt-in room panels keep their grid tracks while the framed surfaces slide.
 :root
   body[data-visual-theme]
   .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
@@ -21,6 +21,8 @@
     .vue-game-workspace.has-room-space > .vue-game-grid > .vue-room-side-panel[data-panel-side],
     .vue-room-side-panel[data-panel-side]
   ) {
+    --room-panel-peek: 32px;
+    --room-panel-travel: 280ms;
     box-sizing: border-box;
     min-width: 0;
     min-height: 0;
@@ -29,20 +31,37 @@
     background: transparent;
     overflow: visible;
     pointer-events: none;
+    .vue-room-panel-viewport {
+      position: absolute;
+      inset: 0;
+      overflow: clip;
+      pointer-events: none;
+    }
+    .vue-room-panel-surface {
+      position: absolute;
+      inset: 0;
+      min-width: 0;
+      min-height: 0;
+      grid-template-rows: minmax(0, 1fr);
+      align-content: stretch;
+      pointer-events: auto;
+      overflow: hidden;
+      transition:
+        transform var(--room-panel-travel) cubic-bezier(0.22, 0.68, 0.25, 1),
+        inset-block-start var(--room-panel-travel) cubic-bezier(0.22, 0.68, 0.25, 1),
+        inset-block-end var(--room-panel-travel) cubic-bezier(0.22, 0.68, 0.25, 1);
+    }
     .vue-room-panel-content {
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: var(--stitch-gap-controls);
       width: 100%;
       height: 100%;
       min-height: 0;
-      padding: 12px;
-      border: 1px solid var(--stitch-line);
-      border-radius: var(--stitch-panel-radius);
-      background: var(--stitch-surface);
-      color: var(--stitch-ink);
-      pointer-events: auto;
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 160ms ease;
       > :is(.vue-room-roster, .vue-quacks-roster, .vue-room-chat) {
         flex: 1;
         min-width: 0;
@@ -53,11 +72,49 @@
         min-height: 52px;
       }
     }
-    &[data-panel-side='left'] .vue-room-panel-content > section > header {
-      padding-inline-end: 44px;
+    &[data-panel-side='left'] {
+      .vue-room-panel-content {
+        padding-inline-start: 44px;
+      }
+      .vue-room-panel-handle-slot {
+        inset-inline-start: 0;
+      }
     }
-    &[data-panel-side='right'] .vue-room-panel-content > section > header {
-      padding-inline-start: 44px;
+    &[data-panel-side='right'] {
+      .vue-room-panel-content {
+        padding-inline-end: 44px;
+      }
+      .vue-room-panel-handle-slot {
+        inset-inline-start: calc(100% - 44px);
+      }
+    }
+    &[data-panel-open='false'] {
+      .vue-room-panel-content {
+        opacity: 0;
+        visibility: hidden;
+      }
+      &[data-panel-side='left'] {
+        .vue-room-panel-surface {
+          transform: translateX(calc(-100% + var(--room-panel-peek)));
+        }
+        .vue-room-panel-handle-slot {
+          inset-inline-start: 0;
+        }
+      }
+      &[data-panel-side='right'] {
+        .vue-room-panel-surface {
+          transform: translateX(calc(100% - var(--room-panel-peek)));
+        }
+        .vue-room-panel-handle-slot {
+          inset-inline-start: calc(100% - 44px);
+        }
+      }
+    }
+    &[data-panel-still='true'] {
+      --room-panel-travel: 0ms;
+      .vue-room-panel-content {
+        transition: none;
+      }
     }
     .vue-room-chat {
       box-sizing: border-box;
@@ -75,64 +132,49 @@
       overflow: auto;
       scrollbar-gutter: stable;
     }
-    &[data-panel-open='true'] {
-      pointer-events: auto;
-      .vue-room-panel-handle-slot {
-        inset-block-start: 8px;
-      }
-      &[data-panel-side='left'] .vue-room-panel-handle-slot {
-        inset-inline-start: auto;
-        inset-inline-end: 8px;
-      }
-      &[data-panel-side='right'] .vue-room-panel-handle-slot {
-        inset-inline-end: auto;
-        inset-inline-start: 8px;
-      }
-    }
   }
   .vue-room-panel-handle-slot {
+    margin: 0;
     position: absolute;
-    inset-block-start: 16px;
+    inset-block-start: calc(50% - 22px);
     z-index: 4;
     width: 44px;
     height: 44px;
     pointer-events: auto;
-  }
-  [data-panel-side='left'] .vue-room-panel-handle-slot {
-    inset-inline-start: 0;
-  }
-  [data-panel-side='right'] .vue-room-panel-handle-slot {
-    inset-inline-end: 0;
+    transition: inset-inline-start var(--room-panel-travel) cubic-bezier(0.22, 0.68, 0.25, 1);
   }
   .vue-room-panel-handle {
     box-sizing: border-box;
     width: 44px;
     height: 44px;
-    padding: 0;
-    border: 1px solid var(--stitch-line);
-    border-radius: var(--stitch-panel-radius);
-    background: var(--stitch-surface);
+  }
+  .vue-room-panel-handle {
+    transform: translateX(-6px) scale(0.5);
+    transition: transform var(--room-panel-travel) ease;
+  }
+  [data-panel-side='right'] .vue-room-panel-handle {
+    transform: translateX(6px) scale(0.5);
   }
   .vue-room-panel-tooltip {
     display: none;
     position: absolute;
-    inset-block-start: calc(100% + 8px);
+    inset-block-start: calc(100% + var(--stitch-space-8));
     inset-inline-start: 0;
     width: max-content;
     max-width: min(12rem, 65vw);
-    padding: 6px 10px;
-    border: 1px solid var(--stitch-line);
-    border-radius: 8px;
+    padding: var(--stitch-space-8);
+    border: var(--stitch-border);
+    border-radius: var(--stitch-radius-control);
     background: var(--stitch-surface);
     color: var(--stitch-ink);
-    font-size: 14px;
+    font-size: var(--stitch-text-label);
     pointer-events: none;
   }
   [data-panel-side='right'] .vue-room-panel-tooltip {
     inset-inline-start: auto;
     inset-inline-end: 0;
   }
-  .vue-room-panel-handle-slot:is(:hover, :focus-within) .vue-room-panel-tooltip {
+  .vue-room-panel-handle-slot[data-tooltip-visible='true'] .vue-room-panel-tooltip {
     display: block;
   }
   .vue-room-panel-unread {
@@ -144,10 +186,10 @@
     place-items: center;
     width: 28px;
     height: 22px;
-    border-radius: 12px;
-    background: var(--stitch-error, #b42318);
-    color: #fff;
-    font-size: 12px;
+    border-radius: var(--stitch-radius-pill);
+    background: var(--stitch-danger-ink);
+    color: var(--stitch-danger-bg);
+    font-size: var(--stitch-text-label);
     font-variant-numeric: tabular-nums;
     pointer-events: none;
   }
@@ -157,10 +199,11 @@
     z-index: 0;
     overflow: hidden;
     pointer-events: auto;
-    background: #143029 url('/assets/playful/lobby-room-dark.svg') center / cover;
+    background: var(--stitch-surface-subtle) url('/assets/playful/lobby-room-dark.svg') center /
+      cover;
     outline: none;
     &:focus-visible {
-      outline: 3px solid var(--stitch-focus);
+      outline: var(--stitch-focus-ring);
       outline-offset: -3px;
     }
     .lobby-visitors {
@@ -180,21 +223,34 @@
         width: 81px;
         height: 87px;
         object-fit: contain;
-        filter: drop-shadow(0 2px 3px #07160eaa);
       }
       > span {
         width: max-content;
         max-width: 160px;
-        padding: 2px 8px;
-        border: 1px solid #667d64;
-        border-radius: 16px;
-        background: #13231eeb;
-        color: #fff;
-        font-size: 14px;
+        padding: var(--stitch-space-4) var(--stitch-space-8);
+        border: var(--stitch-border);
+        border-radius: var(--stitch-radius-pill);
+        background: var(--stitch-surface);
+        color: var(--stitch-ink);
+        font-size: var(--stitch-text-label);
         line-height: 1.4;
       }
-      &.is-self > span {
-        border-color: var(--stitch-primary);
+      &.is-self {
+        min-height: 0;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+        pointer-events: auto;
+        cursor: pointer;
+        > span {
+          border-color: var(--stitch-primary);
+        }
+        &:focus-visible {
+          outline: var(--stitch-focus-ring);
+          outline-offset: 4px;
+        }
       }
       &.facing-left img {
         transform: scaleX(-1);
@@ -203,12 +259,24 @@
         animation: room-space-step 0.22s ease-in-out infinite alternate;
       }
     }
+    .lobby-speech {
+      position: absolute;
+      bottom: calc(100% + var(--stitch-space-8));
+      max-width: 12rem;
+      padding: var(--stitch-space-8);
+      border: var(--stitch-border);
+      border-radius: var(--stitch-radius-control);
+      background: var(--stitch-surface);
+      color: var(--stitch-ink);
+      font-size: var(--stitch-text-label);
+      pointer-events: none;
+    }
     .vue-room-movement-error {
       position: absolute;
       bottom: 8px;
       left: 8px;
       right: 8px;
-      padding: 8px;
+      padding: var(--stitch-space-8);
       background: var(--stitch-surface);
       pointer-events: none;
     }
@@ -223,8 +291,14 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .vue-room-background .lobby-avatar.is-moving img {
-    animation: none !important;
+  :root body[data-visual-theme] .vue-room-side-panel[data-panel-side] {
+    --room-panel-travel: 0ms;
+    .vue-room-panel-content {
+      transition: none;
+    }
+  }
+  :root body[data-visual-theme] .vue-room-background .lobby-avatar.is-moving img {
+    animation: none;
   }
 }
 @media (max-width: 1180px) {
@@ -262,9 +336,11 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr);
     }
-    &[data-panel-open='false'] .vue-room-panel-handle-slot {
-      inset-block-start: calc(50dvh - 34px);
-    }
+  }
+  :root
+    body[data-visual-theme]:has(> .vue-room-drawer-backdrop)
+    > .vue-room-side-panel[data-panel-open='false'] {
+    visibility: hidden;
   }
   :root body[data-visual-theme] > .vue-room-drawer-backdrop {
     position: fixed;
@@ -275,7 +351,7 @@
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: #0008;
+    background: color-mix(in srgb, var(--stitch-frame) 50%, transparent);
     cursor: default;
     touch-action: none;
   }
@@ -290,5 +366,64 @@
   }
   > .vue-game-main {
     grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1921px) {
+  :root body[data-visual-theme] .has-room-space .vue-room-background {
+    inset-inline: calc((100% - var(--room-viewport-width)) / 2);
+  }
+}
+
+// Equal side tracks preserve their total width and the game's existing size,
+// while keeping the stage on the viewport's horizontal centre.
+@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
+  :root
+    body[data-visual-theme].vue-quacks-document:not(.vue-game-focus)
+    .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
+    > .vue-game-grid {
+    --room-side-track: calc((clamp(240px, 15vw, 292px) + clamp(280px, 17vw, 320px)) / 2);
+    grid-template-columns: var(--room-side-track) minmax(0, 1fr) var(--room-side-track);
+  }
+  :root
+    body[data-visual-theme].vue-quacks-document:not(.vue-game-focus):not(.ui-large-text)
+    .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
+    > .vue-game-grid:has(.vue-quacks-roster) {
+    --room-side-track: calc((390px + clamp(280px, 17vw, 320px)) / 2);
+  }
+}
+
+// Panels occupy their existing tracks but sit against the viewport edges.
+// Full-height frame strips and handles share the original panel's centre.
+@media (min-width: 1181px) {
+  :root body[data-visual-theme] .has-room-space .vue-room-side-panel[data-panel-side='left'] {
+    inset-inline-start: calc(-1 * var(--room-edge-offset));
+  }
+  :root body[data-visual-theme] .has-room-space .vue-room-side-panel[data-panel-side='right'] {
+    inset-inline-start: var(--room-edge-offset);
+  }
+}
+
+// Let the seated room toolbar fill wide screens while the game keeps its cap.
+@media (min-width: 1921px) {
+  :root body[data-visual-theme].vue-quacks-document:has(.has-room-space[data-room-kind='quacks']) {
+    .vue-game-document {
+      max-width: none;
+    }
+    #quacks-app {
+      width: 100%;
+      max-width: 1856px;
+      min-width: 0;
+      margin-inline: auto;
+    }
+  }
+}
+@media (min-width: 1921px) and (min-height: 640px) and (pointer: fine) {
+  :root
+    body[data-visual-theme].vue-quacks-document:not(.ui-large-text):has(
+      .has-room-space[data-room-kind='quacks']
+    )
+    #quacks-app {
+    max-width: 1896px;
   }
 }

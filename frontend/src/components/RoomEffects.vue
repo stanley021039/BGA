@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoomStore } from '../stores/room';
 import type { BarrageController, ExpressionPlayback } from '../contracts/social';
 import { readBarrages, readExpressions } from '../contracts/social';
@@ -13,7 +13,20 @@ declare global {
 let results: ReturnType<NonNullable<Window['GameResultSounds']>['create']> | undefined;
 const props = withDefaults(defineProps<{ connected?: boolean }>(), { connected: true });
 const room = useRoomStore(),
-  layer = ref<HTMLElement | null>(null);
+  layer = ref<HTMLElement | null>(null),
+  band = ref({ top: 0, height: 0 });
+const viewport = window.visualViewport;
+let headerObserver: ResizeObserver | null = null;
+function positionBand() {
+  const offset = viewport?.offsetTop || 0,
+    height = viewport?.height || window.innerHeight;
+  const headerBottom =
+    document.querySelector('[data-site-header]')?.getBoundingClientRect().bottom || 0;
+  const top = Math.max(offset + height * 0.25, headerBottom + 16);
+  const available = Math.max(0, offset + height * 0.75 - top);
+  if (band.value.top !== top || band.value.height !== available)
+    band.value = { top, height: available };
+}
 let barrages: BarrageController | null = null,
   sounds: ExpressionPlayback | null = null,
   resize: ResizeObserver | null = null,
@@ -80,8 +93,13 @@ function start() {
       if (window.BarrageFrames) {
         if (!window.BarrageFrames.place(host, bubble)) return false;
       } else {
-        bubble.style.top = `${12 + lane * 18}%`;
         host.append(bubble);
+        const top = 12 + lane * (bubble.offsetHeight + 8);
+        if (top + bubble.offsetHeight + 12 > host.clientHeight) {
+          bubble.remove();
+          return false;
+        }
+        bubble.style.top = top + 'px';
       }
       if (moving)
         bubble.style.setProperty(
@@ -106,13 +124,45 @@ function start() {
 watch(context, start, { flush: 'post' });
 watch(() => room.snapshot, update, { flush: 'post' });
 watch(() => [props.connected, room.disconnected], update, { flush: 'post' });
-onMounted(() => {
+onMounted(async () => {
   mounted = true;
-  start();
+  positionBand();
+  headerObserver = new ResizeObserver(positionBand);
+  const header = document.querySelector('[data-site-header]');
+  if (header) headerObserver.observe(header);
+  window.addEventListener('resize', positionBand);
+  window.addEventListener('scroll', positionBand, { passive: true });
+  viewport?.addEventListener('resize', positionBand);
+  viewport?.addEventListener('scroll', positionBand);
+  await nextTick();
+  if (mounted) start();
 });
 onBeforeUnmount(() => {
   mounted = false;
+  headerObserver?.disconnect();
+  window.removeEventListener('resize', positionBand);
+  window.removeEventListener('scroll', positionBand);
+  viewport?.removeEventListener('resize', positionBand);
+  viewport?.removeEventListener('scroll', positionBand);
   stop();
 });
 </script>
-<template><div ref="layer" class="vue-room-barrage-layer" aria-hidden="true" /></template>
+<template>
+  <div
+    class="vue-room-barrage-layer"
+    :style="{ top: band.top + 'px', height: band.height + 'px' }"
+    aria-hidden="true"
+  >
+    <div ref="layer" class="vue-room-barrage-stage" />
+  </div>
+</template>
+<style scoped>
+.vue-room-barrage-layer {
+  position: fixed;
+  bottom: auto;
+}
+.vue-room-barrage-stage {
+  position: absolute;
+  inset: 32px 0;
+}
+</style>

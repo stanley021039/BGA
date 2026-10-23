@@ -65,3 +65,35 @@ test('invalid coordinates and attempts to control another member are rejected', 
     assert.throws(() => space.move(a, 'one', input), { code: 'INVALID_MOVEMENT' });
   assert.throws(() => space.move(a, 'outsider', { x: 50, y: 50 }), { code: 'NOT_SEATED' });
 });
+
+test('room avatar expressions stay with their actor and expire without moving anyone', () => {
+  let now = 1000;
+  const space = createRoomSpace(() => now),
+    a = room();
+  const events = [
+    { id: 'older', playerId: 'one', image: '/sad.gif', label: '難過', at: 800 },
+    {
+      id: 'newer',
+      playerId: 'one',
+      image: '/happy.gif',
+      label: '開心',
+      at: 900,
+      private: 'not-public',
+    },
+    { id: 'outsider', playerId: 'outside', image: '/other.gif', label: '其他', at: 950 },
+  ];
+  const active = space.view(a, 'two', a.players, events);
+  assert.equal(active.visitors.length, 2);
+  assert.deepEqual(active.visitors[0].emote, {
+    id: 'newer',
+    image: '/happy.gif',
+    label: '開心',
+    at: 900,
+    until: 5900,
+  });
+  assert.equal(active.visitors[1].emote, null);
+  assert.deepEqual([active.visitors[0].x, active.visitors[0].y], [12, 38]);
+  assert.equal(a.version, 7);
+  now = 5900;
+  assert.equal(space.view(a, 'two', a.players, events).visitors[0].emote, null);
+});

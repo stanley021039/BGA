@@ -423,7 +423,9 @@ function initializeApp(config, dataLock, acquired) {
     return {
       ...view,
       ...savedDrawResults,
-      ...(room.type === 'quacks' ? { roomSpace: roomSpace.view(room, view.me, view.players) } : {}),
+      ...(room.type === 'quacks'
+        ? { roomSpace: roomSpace.view(room, view.me, view.players, expressions) }
+        : {}),
       pingContext: runtime.pings.context(room),
       serverNow: now,
       botSupport: botSupport(room),
@@ -2304,7 +2306,7 @@ function initializeApp(config, dataLock, acquired) {
             };
           } else throw new HttpError(400, 'INVALID_SOCIAL_KIND', '不支援的互動');
           socialRate.set(rateKey, now);
-          if (event.kind === 'emoji' || event.kind === 'expression') chat.record(room.code, event);
+          if (event.kind === 'emoji') chat.record(room.code, event);
           const events = data.kind === 'expression' ? expressionEvents : barrageEvents;
           const roomEvents = events.get(room.code) || [];
           roomEvents.push(event);
