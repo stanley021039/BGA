@@ -60,6 +60,7 @@
         recovery,
         finished = false;
       let source,
+        gain,
         audioRequest,
         unsubscribe,
         soundRevision = 0;
@@ -71,6 +72,7 @@
           source?.stop();
         } catch {}
         source = null;
+        gain = null;
         if (!sound) return;
         if (!window.AudioSettings?.stopEffect?.(sound)) sound.pause?.();
         sound = null;
@@ -101,7 +103,7 @@
               if (current?.enabled === false || current?.volume === 0) return;
               source = entryAudio.createBufferSource();
               source.buffer = buffer;
-              const gain = entryAudio.createGain();
+              gain = entryAudio.createGain();
               gain.gain.value = current?.volume ?? 0.25;
               source.connect(gain).connect(entryAudio.destination);
               source.start();
@@ -174,6 +176,7 @@
       window.addEventListener('pagehide', cleanup);
       unsubscribe = window.AudioSettings?.subscribe?.((settings) => {
         if (settings.effects.enabled === false || settings.effects.volume === 0) stopSound();
+        else if (gain) gain.gain.value = settings.effects.volume;
       });
       document.addEventListener('keydown', escape);
       skip.addEventListener('click', finish);

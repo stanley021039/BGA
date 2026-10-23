@@ -286,3 +286,45 @@ test('skipping an opening while audio downloads prevents late playback', async (
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(started, 0);
 });
+
+test('unlocked opening audio follows live volume and mute preferences and unsubscribes on exit', async () => {
+  const f = fixture({ withAudio: true });
+  const gain = { gain: {} };
+  let listener,
+    stopped = 0,
+    unsubscribed = 0;
+  f.window.AudioSettings.get = () => ({ effects: { enabled: true, volume: 0.25 } });
+  f.window.AudioSettings.subscribe = (callback) => {
+    listener = callback;
+    return () => unsubscribed++;
+  };
+  f.window.AudioContext = function () {
+    return {
+      state: 'running',
+      destination: {},
+      resume: async () => {},
+      decodeAudioData: async () => ({}),
+      createGain: () => gain,
+      createBufferSource: () => ({
+        connect: () => ({ connect() {} }),
+        start() {},
+        stop() {
+          stopped++;
+        },
+      }),
+    };
+  };
+  f.window.fetch = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(1) });
+  f.window.EntryIntro.prepareSound();
+  const playing = f.start();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(gain.gain.value, 0.25);
+  listener({ effects: { enabled: true, volume: 0.1 } });
+  assert.equal(gain.gain.value, 0.1, 'a running opening must follow nonzero volume changes');
+  listener({ effects: { enabled: false, volume: 0.1 } });
+  assert.equal(stopped, 1);
+  f.finish();
+  await playing;
+  f.events.get('pagehide')();
+  assert.equal(unsubscribed, 1);
+});

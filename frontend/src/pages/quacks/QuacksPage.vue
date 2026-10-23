@@ -6,8 +6,10 @@ import { readQuacksSnapshot } from '../../contracts/quacks';
 import type { RoomPlayer } from '../../contracts/room';
 import GameRoomPage from '../../components/GameRoomPage.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiCheckbox from '../../components/UiCheckbox.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import QuacksScene from './QuacksScene.vue';
+import QuacksRoundProgress from './QuacksRoundProgress.vue';
 const scene = ref<InstanceType<typeof QuacksScene> | null>(null),
   booksReady = ref(false);
 const game = useQuacksStore(),
@@ -83,7 +85,9 @@ function status(player: RoomPlayer) {
     :reader="readQuacksSnapshot"
     :poll-ms="1200"
     :phase="phase"
-    :round="state?.round ? `第 ${state.round}／9 回合` : ''"
+    :round="
+      state?.phase === 'patients' ? '開局準備' : state?.round ? `第 ${state.round}／9 回合` : ''
+    "
     :max-players="8"
     :status="state?.phase === 'waiting' ? () => '' : status"
     :show-metrics="state?.phase !== 'waiting'"
@@ -96,23 +100,8 @@ function status(player: RoomPlayer) {
     "
     :start-label="state?.phase === 'finished' ? '再玩一局' : '開始煮藥'"
     @start="prepareOrStart"
-    ><template v-if="state && state.phase !== 'waiting'" #toolbar
-      ><UiButton
-        variant="ghost"
-        icon="crown"
-        icon-only
-        label="環形記分板"
-        @click="scene?.open('score')" /><UiButton
-        variant="ghost"
-        icon="book"
-        icon-only
-        label="藥材寶典"
-        @click="scene?.open('books')" /><UiButton
-        variant="ghost"
-        icon="cards"
-        icon-only
-        :label="state?.fortune ? '占卜：' + state.fortune.name : '本輪占卜牌'"
-        @click="scene?.open('fortune')"
+    ><template #round-progress
+      ><QuacksRoundProgress v-if="state && state.phase !== 'waiting'" :state="state"
     /></template>
     <template v-if="state && state.phase !== 'waiting' && state.phase !== 'finished'" #roster
       ><QuacksRoster
@@ -139,26 +128,17 @@ function status(player: RoomPlayer) {
           }}{{ state?.options.alchemists ? '＋煉金術士' : '' }} ·
           {{ state?.options.hiddenProgress ? '隱藏進度' : '公開進度' }}</summary
         ><fieldset :disabled="!game.editableSettings"
-          ><legend>開局選項</legend
-          ><label
-            ><input
-              v-model="game.draft.witches"
-              type="checkbox"
-              @change="game.queueSettings()"
-            />草藥女巫</label
-          ><label
-            ><input
-              v-model="game.draft.alchemists"
-              type="checkbox"
-              @change="game.queueSettings()"
-            />煉金術士</label
-          ><label
-            ><input
-              v-model="game.draft.hiddenProgress"
-              type="checkbox"
-              @change="game.queueSettings()"
-            />隱藏他人大釜進度</label
-          ></fieldset
+          ><legend>模式選擇</legend
+          ><UiCheckbox
+            v-model="game.draft.witches"
+            label="草藥女巫"
+            @change="game.queueSettings()" /><UiCheckbox
+            v-model="game.draft.alchemists"
+            label="煉金術士"
+            @change="game.queueSettings()" /><UiCheckbox
+            v-model="game.draft.hiddenProgress"
+            label="隱藏他人大釜進度"
+            @change="game.queueSettings()" /></fieldset
         ><p>各色書面可在舞台「藥典」選擇；全桌採用最後一次選擇。開始後鎖定。</p
         ><StatusSlot
           :persistent="game.settingsPending || !!game.settingsError"

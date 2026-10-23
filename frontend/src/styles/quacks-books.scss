@@ -238,7 +238,7 @@
   }
 }
 :root body dialog.vue-dialog.ui-dialog:has(.vue-quacks-codex) {
-  inline-size: min(1040px, calc(100vw - 24px));
+  inline-size: min(1560px, calc(100vw - 24px));
   max-inline-size: calc(100vw - 24px);
 }
 @media (max-width: 760px) {

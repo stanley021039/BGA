@@ -1997,6 +1997,28 @@ class QuacksRoom extends PartyRoom {
               !p.pending.length &&
               !Object.hasOwn(this.intents, id),
             bagCount: p.bag.length,
+            shoppingBag:
+              (this.phase === 'settlement' && this.stage === 'shopping') || p.pending.length
+                ? // The owner's whole chip set (bag + pot + overflow + pre-drawn), private to
+                  // them; it is what they own, not the bag order, so it is not the limited peek.
+                  [...p.bag, ...p.pot, ...p.overflow, ...(p.alchemy?.pool || [])].map((c) => ({
+                    color: c.color,
+                    value: c.value,
+                  }))
+                : null,
+            rewardPreview:
+              this.phase === 'settlement' && this.stage === 'rewards'
+                ? {
+                    points:
+                      this.field(p).points +
+                      (this.options.witches
+                        ? Math.floor(p.overflow.reduce((n, c) => n + c.effectValue, 0) / 2)
+                        : 0),
+                    coins: this.field(p).coins + (this.fortune?.id === 'rat-rich' ? p.rat * 2 : 0),
+                    both: !p.exploded || !!p.fullBenefits || !!p.goldAll,
+                    choice: p.settlementChoice,
+                  }
+                : null,
             bagPeek: p.bagPeek,
             peekUsed: !!p.bagPeekUsed,
             peekAvailable:

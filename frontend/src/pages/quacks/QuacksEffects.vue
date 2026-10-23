@@ -33,7 +33,8 @@ function update() {
   if (!s) return;
   const live = sounds?.update(s, { connected: room.connected && !document.hidden }) || false;
   liveSounds = live;
-  fx?.update(s, live);
+  // The fortune card flips in place (QuacksFortuneCard); the overlay only rolls dice.
+  fx?.update({ ...s, fortuneRevealId: null }, live);
   audio?.update(s, live);
   const epoch = generation;
   void nextTick(() => {

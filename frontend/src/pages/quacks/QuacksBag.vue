@@ -9,10 +9,7 @@ import type { Ingredient } from '../../contracts/quacks';
 const game = useQuacksStore(),
   room = useRoomStore(),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
-  viewer = ref(''),
-  person = computed(() => game.state?.recipes.find((p) => p.id === viewer.value)),
-  own = computed(() => viewer.value === game.state?.me),
-  peek = computed(() => (own.value ? game.mine?.bagPeek : null)),
+  peek = computed(() => game.mine?.bagPeek),
   commitClose = computed(
     () =>
       !!peek.value &&
@@ -38,7 +35,6 @@ async function close() {
   dialog.value?.close();
 }
 function open() {
-  viewer.value = game.viewed?.id || game.state?.me || '';
   void dialog.value?.open();
 }
 watch(
@@ -55,41 +51,42 @@ watch(
 <template>
   <UiButton
     class="vue-quacks-bag-button"
-    :data-quacks-bag="game.viewed?.id"
-    :caption="String(game.viewed?.bagCount ?? 0)"
-    :label="(game.viewed?.name || '我的') + '的藥袋，剩餘 ' + (game.viewed?.bagCount ?? 0) + ' 片'"
+    :data-quacks-bag="game.own?.id"
+    :caption="String(game.own?.bagCount ?? 0)"
+    :label="'我的藥袋，剩餘 ' + (game.own?.bagCount ?? 0) + ' 片'"
     :disabled="!game.state"
     @click="open"
-    ><template #icon><QuacksGlyph resource="bag" :size="42" /></template></UiButton
-  ><UiDialog
+  >
+    <template #icon><QuacksGlyph resource="bag" :size="42" /></template>
+  </UiButton>
+  <UiDialog
     ref="dialog"
-    :title="(own ? '我的' : person?.name + '的') + '藥袋'"
+    title="我的藥袋"
+    class="vue-quacks-bag-dialog"
     :dismissible="!commitClose"
-    ><p
-      >袋中剩餘 {{ person?.bagCount || 0 }} 片。{{
-        own ? '裝滿藥水瓶：' + (game.mine?.potion ? '是' : '否') : '其他人的藥袋只公開總數。'
-      }}</p
-    ><template v-if="own"
-      ><UiButton
-        icon="eye"
-        :label="game.mine?.peekUsed ? '本回合查看機會已用過' : '查看真正內容（每回合一次）'"
-        :disabled="!game.available || !game.mine?.peekAvailable"
-        @click="game.command('peek-bag')"
-      /><p v-if="peek">第 {{ peek.round }} 回合查看當下的內容；關閉後本輪不能再查看。</p
-      ><div v-if="peek" class="vue-quacks-bag-grid"
-        ><div v-for="c in groups" :key="c.color + ':' + c.value"
-          ><QuacksGlyph :chip="c" :size="48" /><strong>× {{ c.count }}</strong></div
-        ></div
-      ><p v-else>平常只顯示總數，內容快照只有你看得到。</p><h3>暫存藥材</h3
-      ><div class="vue-quacks-tabs"
-        ><span v-for="c in game.mine?.reserve || []" :key="c.id"
-          ><QuacksGlyph :chip="c" />{{ c.must ? '本輪必須投入' : '可保留' }}</span
-        ></div
-      ><p v-if="!game.mine?.reserve.length">目前沒有暫存藥材。</p></template
-    ><UiButton
-      icon="close"
-      label="關閉藥袋查看"
-      :disabled="commitClose && !game.available"
-      @click="close"
-  /></UiDialog>
+    @cancel.prevent="close"
+  >
+    <template #close>
+      <UiButton
+        icon="close"
+        icon-only
+        label="關閉我的藥袋"
+        :disabled="commitClose && !game.available"
+        @click="close"
+      />
+    </template>
+    <UiButton
+      v-if="!peek && !game.mine?.peekUsed"
+      icon="eye"
+      label="查看（本輪只有一次哦！）"
+      :disabled="!game.available || !game.mine?.peekAvailable"
+      @click="game.command('peek-bag')"
+    />
+    <div v-if="peek" class="vue-quacks-bag-grid">
+      <div v-for="c in groups" :key="c.color + ':' + c.value"
+        ><QuacksGlyph :chip="c" :size="48" /><strong>× {{ c.count }}</strong></div
+      >
+    </div>
+    <p v-if="peek || game.mine?.peekUsed" role="status">本輪不能再查看</p>
+  </UiDialog>
 </template>

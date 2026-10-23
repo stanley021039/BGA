@@ -48,13 +48,13 @@ test('all eight server patient tracks retain structured rewards and reject malfo
   }
 });
 test('actual distillery component only confirms reachable slots while available; inspecting is read only', async () => {
+  // The selectable track lives in QuacksPatientBoard; QuacksFlask only forwards `choose`.
   const { catalog } = require('../../src/games/quacks-alchemy');
-  const filename = path.resolve(__dirname, '../src/pages/quacks/QuacksFlask.vue');
+  const filename = path.resolve(__dirname, '../src/pages/quacks/QuacksPatientBoard.vue');
   const source = compileScript(parse(fs.readFileSync(filename, 'utf8')).descriptor, {
     id: 'distillery',
   }).content;
-  const calls = [];
-  const game = vue.reactive({ available: true, command: (...args) => calls.push(args) });
+  const emitted = [];
   const module = { exports: {} };
   vm.runInNewContext(
     ts.transpileModule(source, {
@@ -63,12 +63,7 @@ test('actual distillery component only confirms reachable slots while available;
     {
       module,
       exports: module.exports,
-      require: (id) =>
-        id === 'vue'
-          ? { ...vue, onBeforeUnmount() {} }
-          : id.includes('stores/quacks')
-            ? { useQuacksStore: () => game }
-            : {},
+      require: (id) => (id === 'vue' ? { ...vue, onBeforeUnmount() {} } : {}),
       document: { hidden: true },
       window: {},
     },
@@ -78,32 +73,36 @@ test('actual distillery component only confirms reachable slots while available;
     value: 6,
     max: 6,
     selecting: true,
+    available: true,
     final: false,
   });
   const scope = vue.effectScope();
   let component;
   scope.run(() => {
-    component = module.exports.default.setup(props, { expose() {} });
+    component = module.exports.default.setup(props, {
+      expose() {},
+      emit: (...args) => emitted.push(args),
+    });
   });
+  const event = { currentTarget: {} };
   try {
     assert.equal(component.slots.value.length, 11);
-    component.choose(10);
-    assert.equal(calls.length, 0);
+    await component.choose(10, event);
+    assert.equal(emitted.length, 0, 'unreachable slots only open their description');
+    assert.equal(component.inspected.value, 10);
     assert.match(component.hint(10), /擲骰 4 次/);
-    component.choose(2);
-    assert.deepEqual(JSON.parse(JSON.stringify(calls)), [['essence', { position: 2 }]]);
-    game.available = false;
-    component.choose(1);
+    await component.choose(2, event);
+    assert.deepEqual(JSON.parse(JSON.stringify(emitted)), [['choose', 2]]);
+    props.available = false;
+    await component.choose(1, event);
+    props.available = true;
     props.selecting = false;
-    game.available = true;
-    component.choose(3);
-    assert.equal(calls.length, 1);
+    await component.choose(3, event);
+    assert.equal(emitted.length, 1);
     props.final = true;
     await vue.nextTick();
     assert.match(component.hint(10), /10 分/);
     assert.doesNotMatch(component.hint(10), /擲骰/);
-    assert.equal(component.inspected.value, null);
-    assert.equal(component.shown.value, 6);
   } finally {
     scope.stop();
   }

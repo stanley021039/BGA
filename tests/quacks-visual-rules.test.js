@@ -21,18 +21,24 @@ test('ingredient and effect surfaces retain graphic aliases and the complete hov
   assert.doesNotMatch(read('QuacksBooks.vue'), /<QuacksRuleVisual/);
 });
 test('alchemy uses the approved distillery and retains every reward tooltip and guarded action', () => {
-  const s = read('QuacksFlask.vue');
-  assert.match(s, /quacks-distillery-pipes/);
-  assert.match(s, /props.patient.track\[n\]/);
-  assert.match(s, /aria-label/);
-  assert.match(s, /data-ui-hint/);
-  assert.match(s, /aria-label="開啟調製規則"/);
-  assert.match(s, /\{\{ patient.text \}\}/);
-  assert.match(s, /@focus=/);
-  assert.match(s, /props.selecting/);
-  assert.match(s, /n <= \(props.max/);
-  assert.match(s, /game.available/);
-  assert.match(s, /QuacksEssenceReward/);
+  // 2026-10-23: the user approved the original glass board for both preview and selection.
+  const flask = read('QuacksFlask.vue'),
+    board = read('QuacksPatientBoard.vue');
+  assert.match(flask, /<QuacksPatientBoard/);
+  assert.match(flask, /props.selecting/);
+  assert.match(flask, /n <= \(props.max/);
+  assert.match(flask, /game.available/);
+  assert.match(board, /quacks-distillery-track/);
+  assert.match(board, /quacks-distillery-rewards/);
+  assert.match(board, /props.patient.track\[n\]/);
+  assert.match(board, /aria-label/);
+  assert.match(board, /data-ui-hint/);
+  assert.match(board, /aria-label="開啟調製規則"/);
+  assert.match(board, /<QuacksAlchemyRules/);
+  assert.match(board, /@focus=/);
+  assert.match(board, /QuacksEssenceReward/);
+  assert.match(board, /n <= \(props.max/);
+  assert.match(read('QuacksAlchemyRules.vue'), /\{\{ patient.text \}\}/);
   assert.match(read('QuacksAlchemy.vue'), /<QuacksFlask/);
   assert.doesNotMatch(read('QuacksAlchemy.vue'), /vue-quacks-essence-track/);
 });

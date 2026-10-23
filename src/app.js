@@ -97,6 +97,7 @@ const { endRoomHistory } = require('./rooms/lifecycle');
 const { listRooms } = require('./rooms/listing');
 const { rejoinPlayer } = require('./rooms/membership');
 const { createLobby } = require('./rooms/lobby');
+const { createRoomSpace } = require('./rooms/space');
 const { createRoomInvitations } = require('./rooms/invitations');
 const { createLobbyHandlers } = require('./http/lobby-routes');
 const { HttpError, writeError } = require('./http/errors');
@@ -368,6 +369,7 @@ function initializeApp(config, dataLock, acquired) {
       }
   };
   const lobby = createLobby(undefined, (userId) => portraitUrl(userId));
+  const roomSpace = createRoomSpace();
   const lobbyPingRoom = { code: '__LOBBY__', type: 'lobby', phase: 'lobby', players: [] };
   const expireRooms = () => runtime.expireRooms(history);
   const gameAudio = new GameAudioLibrary(
@@ -421,6 +423,9 @@ function initializeApp(config, dataLock, acquired) {
     return {
       ...view,
       ...savedDrawResults,
+      ...(room.type === 'quacks'
+        ? { roomSpace: roomSpace.view(room, view.me, view.players, expressions) }
+        : {}),
       pingContext: runtime.pings.context(room),
       serverNow: now,
       botSupport: botSupport(room),
@@ -1791,6 +1796,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/pings/events',
             '/api/room-media',
             '/api/room-role',
+            '/api/room-space',
             '/api/room-watch',
             '/api/room-music',
             '/api/room-music/events',
@@ -1843,6 +1849,14 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/join' && req.method === 'POST')
           return send(joinRoom(room, user, req));
         const p = pingLobby ? { id: user.id } : resumeSeat(room, user);
+        if (url.pathname === '/api/room-space') {
+          if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
+          if (room.type !== 'quacks')
+            throw new HttpError(404, 'NOT_FOUND', '此遊戲尚未開放背景走動');
+          limitRate(roomRate, 'room-space:' + user.id, 360);
+          roomSpace.move(room, p.id, data);
+          return send(withSocial(room, room.view(p.id)));
+        }
         if (url.pathname === '/api/pings') {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
           return send(runtime.pings.post(room, p.id, user.display_name, data));
@@ -2292,7 +2306,7 @@ function initializeApp(config, dataLock, acquired) {
             };
           } else throw new HttpError(400, 'INVALID_SOCIAL_KIND', '不支援的互動');
           socialRate.set(rateKey, now);
-          if (event.kind === 'emoji' || event.kind === 'expression') chat.record(room.code, event);
+          if (event.kind === 'emoji') chat.record(room.code, event);
           const events = data.kind === 'expression' ? expressionEvents : barrageEvents;
           const roomEvents = events.get(room.code) || [];
           roomEvents.push(event);
