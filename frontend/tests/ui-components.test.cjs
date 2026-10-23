@@ -76,7 +76,10 @@ test('UiField labels its control and wires hint, error and caller attributes', a
     hint: '1–16 字',
     modelValue: '小雨',
   });
-  assert.match(html, /<label class="ui-field page-slot" for="nickname"/);
+  const fieldLabel = html.match(/^<label\b[^>]*>/)?.[0];
+  assert.ok(fieldLabel, 'field renders its native label');
+  assert.match(fieldLabel, /class="ui-field page-slot"/);
+  assert.match(fieldLabel, /\sfor="nickname"/);
   assert.match(html, /<input[^>]*id="nickname"/);
   assert.match(html, /<input[^>]*maxlength="32"/);
   assert.match(html, /<input[^>]*aria-describedby="outside nickname-message"/);
