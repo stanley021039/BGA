@@ -2062,8 +2062,19 @@
         justify-self: end;
       }
     }
+    // Draw history fills the empty right column under the overflow basin, wrapping.
     .vue-quacks-board-space:not(.is-phase-view) .vue-quacks-pot .vue-quacks-public-tray {
-      inset-block-end: 132px;
+      inset: 55% 8px auto auto;
+      inline-size: min(300px, 28%);
+      max-inline-size: none;
+      max-block-size: 22%;
+      overflow-y: auto;
+      align-content: flex-start;
+      margin: 0;
+      border: 1px solid #dec87680;
+      border-radius: 10px;
+      background: #102c25e6;
+      color: #f4eab7;
     }
   }
 }
@@ -2149,4 +2160,8 @@
   img {
     border-radius: 8px;
   }
+}
+
+:root body[data-visual-theme].vue-quacks-document .vue-quacks-board-space .vue-quacks-risk > span {
+  white-space: nowrap;
 }
