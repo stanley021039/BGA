@@ -240,5 +240,5 @@ onBeforeUnmount(() => {
       ><p>畫一張、加入照片，或從上方上傳已有圖片。儲存後就能在這裡用作角色或自訂禮物。</p></div
     >
   </section>
-  <ConfirmDialog legacy ref="confirm" />
+  <ConfirmDialog ref="confirm" />
 </template>

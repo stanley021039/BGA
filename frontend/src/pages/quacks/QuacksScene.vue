@@ -353,7 +353,7 @@ onBeforeUnmount(() => {
       </footer>
     </template>
   </section>
-  <UiDialog legacy ref="tools" :title="title"
+  <UiDialog ref="tools" :title="title"
     ><nav v-if="tab !== 'books'" class="vue-quacks-tabs" aria-label="遊戲工具"
       ><button
         v-for="(label, key) in tabs"
@@ -406,7 +406,7 @@ onBeforeUnmount(() => {
           v-model="game.nameDraft"
           maxlength="48"
           :disabled="!game.available" /></label
-      ><UiButton legacy
+      ><UiButton
         icon="save"
         label="儲存大釜名稱"
         :disabled="!game.available"

@@ -53,7 +53,7 @@ watch(
 );
 </script>
 <template>
-  <UiButton legacy
+  <UiButton
     class="vue-quacks-bag-button"
     :data-quacks-bag="game.viewed?.id"
     :caption="String(game.viewed?.bagCount ?? 0)"
@@ -61,7 +61,7 @@ watch(
     :disabled="!game.state"
     @click="open"
     ><template #icon><QuacksGlyph resource="bag" :size="42" /></template></UiButton
-  ><UiDialog legacy
+  ><UiDialog
     ref="dialog"
     :title="(own ? '我的' : person?.name + '的') + '藥袋'"
     :dismissible="!commitClose"
@@ -70,7 +70,7 @@ watch(
         own ? '裝滿藥水瓶：' + (game.mine?.potion ? '是' : '否') : '其他人的藥袋只公開總數。'
       }}</p
     ><template v-if="own"
-      ><UiButton legacy
+      ><UiButton
         icon="eye"
         :label="game.mine?.peekUsed ? '本回合查看機會已用過' : '查看真正內容（每回合一次）'"
         :disabled="!game.available || !game.mine?.peekAvailable"
@@ -86,7 +86,7 @@ watch(
           ><QuacksGlyph :chip="c" />{{ c.must ? '本輪必須投入' : '可保留' }}</span
         ></div
       ><p v-if="!game.mine?.reserve.length">目前沒有暫存藥材。</p></template
-    ><UiButton legacy
+    ><UiButton
       icon="close"
       label="關閉藥袋查看"
       :disabled="commitClose && !game.available"

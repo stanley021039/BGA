@@ -343,5 +343,5 @@ onBeforeUnmount(() => {
         @click="actions.retrySame()"
     /></div>
   </section>
-  <ConfirmDialog legacy ref="confirm" />
+  <ConfirmDialog ref="confirm" />
 </template>

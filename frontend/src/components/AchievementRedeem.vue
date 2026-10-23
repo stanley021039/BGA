@@ -37,7 +37,7 @@ async function redeem() {
           :disabled="mutation.pending.value"
           required
       /></label>
-      <UiButton legacy
+      <UiButton
         type="submit"
         icon="gift"
         label="兌換獎勵"

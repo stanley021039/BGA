@@ -279,7 +279,7 @@ const canSlot = (i: number) =>
               ><summary>自己的題庫</summary
               ><p>每行：歌名 | 歌手 | 首發年 | YouTube網址或ID | 前奏起點 | 精華起點</p
               ><textarea v-model="custom" rows="4" aria-label="自選歌曲題庫" /></details></fieldset
-          ><UiButton legacy
+          ><UiButton
             v-if="room.host && settingsSave.error.value"
             icon="refresh"
             label="重試儲存題庫"
@@ -362,13 +362,13 @@ const canSlot = (i: number) =>
         :active="room.connected && !preparing"
         @playing="songPlaying = $event" />
       <template v-if="s.phase === 'pick'"
-        ><UiButton legacy
+        ><UiButton
           v-if="me"
           icon="play"
           label="全員開始聽前奏"
           :disabled="blocked"
           @click="actions.command('listen')" /><p v-else>等待 {{ dj?.name }} 開始播放</p
-        ><UiButton legacy
+        ><UiButton
           v-if="s.mine.tokens >= 3"
           label="買歌 · 3枚"
           :disabled="blocked"
@@ -387,7 +387,7 @@ const canSlot = (i: number) =>
             @click="actions.command('guess', { choiceId: choice.id })"
             >{{ choice.title }}</button
           ></div
-        ><UiButton legacy
+        ><UiButton
           v-if="!s.submitted"
           label="略過前奏"
           :disabled="blocked"
@@ -408,7 +408,7 @@ const canSlot = (i: number) =>
         ><h2>{{ dj?.name }} 的年代時間軸</h2
         ><div class="mq-timeline"
           ><template v-for="i in (dj?.timeline.length || 0) + 1" :key="i"
-            ><UiButton legacy
+            ><UiButton
               :label="
                 s.placement === i - 1
                   ? 'DJ放置點'
@@ -438,7 +438,7 @@ const canSlot = (i: number) =>
                   dj.timeline[i - 1]!.title,
                   dj.timeline[i - 1]!.artist,
                 ]" /></article></template></div
-        ><UiButton legacy
+        ><UiButton
           v-if="
             s.phase === 'challenge' &&
             !me &&
@@ -454,20 +454,20 @@ const canSlot = (i: number) =>
         ><h2>{{ s.results.at(-1)?.receiverName || '本輪無人' }}取得年代卡</h2
         ><p v-for="answer in s.results.at(-1)?.answers || []" :key="answer.id"
           >{{ answer.name }}：前奏 +{{ answer.bonus }}分</p
-        ><UiButton legacy
+        ><UiButton
           v-if="room.host || me"
           icon="next"
           label="下一首"
           :disabled="blocked || resultReading"
           @click="actions.command('next')" /></template
-      ><UiButton legacy
+      ><UiButton
         v-if="me && ['pick', 'intro', 'timeline'].includes(s.phase)"
         label="切歌 · 1枚"
         :disabled="blocked || s.mine.tokens < 1"
         @click="actions.command('skip')" /></template
     ><StatusSlot
       :message="settingsSave.error.value || actions.notice || error"
-      :error="!!settingsSave.error.value || !!actions.notice" /><UiButton legacy
+      :error="!!settingsSave.error.value || !!actions.notice" /><UiButton
       v-if="actions.canRetry"
       label="重試同一操作"
       @click="actions.retrySame()"

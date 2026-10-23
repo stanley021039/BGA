@@ -254,7 +254,7 @@ onBeforeUnmount(() => flow?.cancel());
       >
     </header>
   </div>
-  <UiDialog legacy ref="rules" title="調製規則" compact>
+  <UiDialog ref="rules" title="調製規則" compact>
     <div class="quacks-distillery-rules">
       <section
         ><h3>1 · 計算精華</h3>

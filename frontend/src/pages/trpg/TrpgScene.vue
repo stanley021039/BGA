@@ -188,27 +188,27 @@ function input(event: Event) {
       ><p>{{ readiness }}</p
       ><StatusSlot :message="trpg.notice" :error="trpg.failed" /></div
     ><footer class="vue-trpg-actions"
-      ><UiButton legacy
+      ><UiButton
         v-if="state.phase === 'planning'"
         icon="check"
         :label="state.myPlan ? '更新我的行動' : '準備好了'"
         :pending="trpg.pending"
         :disabled="!trpg.editable || composing || !trpg.dirty"
         @click="trpg.plan()"
-      /><UiButton legacy
+      /><UiButton
         v-if="state.phase === 'planning' && trpg.isLeader"
         icon="play"
         label="擲骰檢定"
         :disabled="!trpg.editable || composing || trpg.dirty || !state.canResolve"
         @click="trpg.resolve()"
-      /><UiButton legacy
+      /><UiButton
         v-if="state.phase === 'reveal' && trpg.isLeader"
         icon="next"
         label="前往下一幕"
         :pending="trpg.pending"
         :disabled="!room.connected || room.busy"
         @click="trpg.next()"
-      /><UiButton legacy
+      /><UiButton
         v-if="trpg.canRetry"
         icon="refresh"
         label="重試同一操作"

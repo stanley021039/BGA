@@ -491,7 +491,7 @@ onBeforeUnmount(() => {
         "
         ><template #actions
           ><div class="expression-add-row"
-            ><UiButton legacy
+            ><UiButton
               id="open-upload-expression"
               icon="add"
               :label="
@@ -709,7 +709,7 @@ onBeforeUnmount(() => {
         :message="expressionMessage"
         :error="expressionFailed" /></form
   ></UiDialog>
-  <UiDialog legacy
+  <UiDialog
     ref="leaveDialog"
     title="角色檔案尚未儲存"
     compact

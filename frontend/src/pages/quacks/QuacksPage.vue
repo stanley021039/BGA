@@ -162,7 +162,7 @@ function status(player: RoomPlayer) {
         ><p>各色書面可在舞台「藥典」選擇；全桌採用最後一次選擇。開始後鎖定。</p
         ><StatusSlot
           :message="game.settingsPending ? '正在儲存設定…' : game.settingsError || ''"
-          :error="!!game.settingsError" /><UiButton legacy
+          :error="!!game.settingsError" /><UiButton
           v-if="game.settingsError && game.editableSettings"
           icon="refresh"
           label="重試儲存設定"

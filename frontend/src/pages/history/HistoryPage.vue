@@ -46,7 +46,7 @@ onMounted(() => void store.load());
               name
             }}</option></select
           ></label
-        ><UiButton legacy
+        ><UiButton
           id="refresh"
           icon="refresh"
           icon-only
@@ -94,7 +94,7 @@ onMounted(() => void store.load());
               ? `${gameNames[store.selected.type] || store.selected.type} · ${historyStatuses[store.selected.status] || store.selected.status} · ${store.replay.frames.length} 個狀態 · 完整資訊回看`
               : '啟用記錄功能後的新對局才有完整存檔。'
           }}</p></div
-        ><UiButton legacy
+        ><UiButton
           id="download"
           icon="download"
           icon-only
@@ -104,7 +104,7 @@ onMounted(() => void store.load());
       /></header>
       <div class="history-transport"
         ><div class="history-controls"
-          ><UiButton legacy
+          ><UiButton
             id="prev"
             icon="previous"
             icon-only
@@ -118,7 +118,7 @@ onMounted(() => void store.load());
             :value="store.step"
             :disabled="!store.replay || store.opening"
             aria-label="歷史步驟"
-            @input="store.move(Number(($event.target as HTMLInputElement).value))" /><UiButton legacy
+            @input="store.move(Number(($event.target as HTMLInputElement).value))" /><UiButton
             id="next"
             icon="next"
             icon-only

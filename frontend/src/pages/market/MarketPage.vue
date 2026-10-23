@@ -71,7 +71,7 @@ onMounted(() => market.start());
       ><small>MARKET JINX / 每日預測</small><h1>股市冥燈</h1
       ><p>下一個交易日的台股，你看哪邊？</p></div
     ><p>免費娛樂 · 無現金、無兌現</p
-    ><UiButton legacy
+    ><UiButton
       icon="expand"
       :label="focus.focused.value ? '退出專注全螢幕' : '專注全螢幕'"
       :aria-pressed="focus.focused.value"
@@ -92,7 +92,7 @@ onMounted(() => market.start());
         @keydown="tabKey"
         >{{ tab.label }}</button
       ></nav
-    ><UiButton legacy
+    ><UiButton
       icon="refresh"
       label="更新行情與預測"
       :pending="market.loading"
@@ -101,7 +101,7 @@ onMounted(() => market.start());
   ><div class="vue-market-feedback"
     ><StatusSlot
       :message="market.message || (market.loading ? '正在載入股市冥燈…' : '')"
-      :error="market.failed" /><UiButton legacy
+      :error="market.failed" /><UiButton
       v-if="market.attempt"
       icon="refresh"
       :label="market.attempt.acknowledged ? '更新已確認的操作結果' : '重試確認同一筆操作'"
@@ -197,7 +197,7 @@ onMounted(() => market.start());
         >圖片只從管理員已核准、符合區間與目標交易日星期的投稿抽選；無符合圖片時保留同尺寸位置。換圖不修改預測或積分。這是免費積分遊戲，不提供即時行情或投資建議。</p
       ></details
     > </template
-  ><UiDialog legacy ref="imageDialog" title="圖片預覽" @closed="image = null"
+  ><UiDialog ref="imageDialog" title="圖片預覽" @closed="image = null"
     ><template v-if="image"
       ><img class="vue-market-full-image" :src="image.url" alt="預測投稿原圖" /><p
         >上傳者：{{ image.authorName }}</p

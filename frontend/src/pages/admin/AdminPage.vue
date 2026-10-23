@@ -78,7 +78,7 @@ onBeforeUnmount(() => {
   >
   <div class="vue-admin-access"
     ><a class="vue-admin-link-button" href="/market#admin">股市冥燈：建立交易日與結算 ↗</a
-    ><UiButton legacy
+    ><UiButton
       icon="refresh"
       label="重新確認管理權限與清單"
       :pending="admin.usersLoading || admin.submissionsLoading"
@@ -113,7 +113,7 @@ onBeforeUnmount(() => {
             max="90"
             required
             :disabled="!admin.canWrite" /></label
-        ><UiButton legacy
+        ><UiButton
           type="submit"
           icon="add"
           label="產生邀請碼"
@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
             spellcheck="false"
             required
             :disabled="!admin.canWrite" /></label
-        ><UiButton legacy
+        ><UiButton
           type="submit"
           icon="remove"
           label="撤銷邀請碼"
@@ -151,7 +151,7 @@ onBeforeUnmount(() => {
       <section class="vue-admin-secret-slot" aria-labelledby="admin-secret-heading"
         ><div class="vue-admin-secret-heading"
           ><h3 id="admin-secret-heading" ref="secretHeading" tabindex="-1">一次性連結</h3
-          ><UiButton legacy
+          ><UiButton
             v-if="admin.secret"
             icon="close"
             label="清除畫面上的連結"
@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
               rel="noopener noreferrer"
               referrerpolicy="no-referrer"
               >開啟{{ admin.secret.kind === 'invite' ? '邀請' : '重設' }}連結 ↗</a
-            ><UiButton legacy
+            ><UiButton
               id="copyInviteLink"
               icon="copy"
               label="複製連結"
@@ -199,7 +199,7 @@ onBeforeUnmount(() => {
       ><header class="panel-heading"
         ><h2 id="admin-sync-heading">待確認提交</h2
         ><p>結果不明時，請先到 GitHub 查核；確認沒有建立後才能重試。</p></header
-      ><UiButton legacy
+      ><UiButton
         id="refreshSubmissions"
         icon="refresh"
         label="更新提交清單"
@@ -223,7 +223,7 @@ onBeforeUnmount(() => {
           ><code>{{ item.id }}</code
           ><p>{{ expires(item.createdAt) }}</p
           ><p v-if="item.error" class="vue-admin-submission-error">{{ item.error }}</p
-          ><UiButton legacy
+          ><UiButton
             v-if="item.state === 'needs_review'"
             icon="refresh"
             label="已查核 GitHub，確認後重試"
@@ -247,7 +247,7 @@ onBeforeUnmount(() => {
       ><div
         ><h2 id="admin-members-heading">會員名單</h2
         ><p>可建立密碼重設連結，或停用與重新啟用會員。管理者帳號不能在此停用。</p></div
-      ><UiButton legacy
+      ><UiButton
         icon="refresh"
         label="更新會員名單"
         :pending="admin.usersLoading"
@@ -284,13 +284,13 @@ onBeforeUnmount(() => {
               }}{{ user.role === 'admin' ? ' · 管理者' : '' }}</td
             ><td
               ><div class="vue-admin-actions"
-                ><UiButton legacy
+                ><UiButton
                   icon="lock"
                   :label="'為 ' + user.username + ' 建立密碼重設連結'"
                   caption="重設密碼"
                   :pending="admin.operation === 'reset:' + user.id"
                   :disabled="!admin.canWrite || admin.usersLoading"
-                  @click="reset(user)" /><UiButton legacy
+                  @click="reset(user)" /><UiButton
                   v-if="user.role !== 'admin'"
                   :icon="user.disabled ? 'check' : 'close'"
                   :label="(user.disabled ? '啟用 ' : '停用 ') + user.username"
@@ -304,5 +304,5 @@ onBeforeUnmount(() => {
         ></table
       ></div
     > </section
-  ><ConfirmDialog legacy ref="confirm" />
+  ><ConfirmDialog ref="confirm" />
 </template>

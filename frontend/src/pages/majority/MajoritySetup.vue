@@ -159,7 +159,7 @@ function selectMode(id: MajorityOptions['mode']) {
       :message="game.settingsPending ? '正在儲存設定…' : game.settingsError || '修改後自動儲存。'"
       :error="!!game.settingsError"
     />
-    <UiButton legacy
+    <UiButton
       v-if="game.settingsError && game.editable"
       icon="refresh"
       label="重試儲存設定"

@@ -55,7 +55,7 @@ async function approve() {
         v-model:weekdays="gallery.weekdays"
         :disabled="uploadLocked" /><p
         >區間與星期須同時符合，同組擇一符合即可。全選七天表示不限星期；送出後不能原地修改規則。</p
-      ><StatusSlot :message="gallery.uploadMessage" :error="gallery.uploadFailed" /><UiButton legacy
+      ><StatusSlot :message="gallery.uploadMessage" :error="gallery.uploadFailed" /><UiButton
         icon="upload"
         :label="gallery.uploadAttempt ? '重試確認同一筆投稿' : '送出投稿'"
         :pending="gallery.uploadBusy || gallery.uploadReading"
@@ -71,7 +71,7 @@ async function approve() {
     <section class="vue-market-panel"
       ><div class="vue-market-panel-heading"
         ><h2>我的投稿</h2
-        ><UiButton legacy
+        ><UiButton
           icon="refresh"
           label="更新我的投稿"
           :pending="gallery.mineBusy"
@@ -104,7 +104,7 @@ async function approve() {
   <section v-else class="vue-market-panel"
     ><div class="vue-market-panel-heading"
       ><h2>待核准圖片</h2
-      ><UiButton legacy
+      ><UiButton
         icon="refresh"
         label="更新待審清單"
         :pending="gallery.reviewBusy"
@@ -117,15 +117,15 @@ async function approve() {
       filters
       :disabled="gallery.approvalBusy"
     /><div class="vue-market-actions"
-      ><UiButton legacy
+      ><UiButton
         icon="check"
         :label="`核准已勾選（${gallery.selected.length}）`"
         :disabled="approvalLocked || !gallery.selected.length"
-        @click="openApproval(false)" /><UiButton legacy
+        @click="openApproval(false)" /><UiButton
         icon="users"
         :label="`核准全部篩選結果（${gallery.review.length}）`"
         :disabled="approvalLocked || !gallery.review.length"
-        @click="openApproval(true)" /><UiButton legacy
+        @click="openApproval(true)" /><UiButton
         v-if="gallery.approval"
         icon="refresh"
         label="確認上一批操作"
@@ -162,7 +162,7 @@ async function approve() {
         >沒有符合篩選的待核准圖片。</p
       ></div
     >
-    <UiDialog legacy
+    <UiDialog
       ref="dialog"
       title="確認核准圖片"
       :dismissible="!gallery.approvalBusy"
@@ -178,10 +178,10 @@ async function approve() {
           ></div
         ><StatusSlot :message="gallery.approval.error" :error="!!gallery.approval.error" /><div
           class="vue-market-actions"
-          ><UiButton legacy
+          ><UiButton
             label="返回清單"
             :disabled="gallery.approvalBusy"
-            @click="dialog?.close()" /><UiButton legacy
+            @click="dialog?.close()" /><UiButton
             icon="check"
             :label="
               gallery.approval.uncertain

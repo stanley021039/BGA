@@ -466,7 +466,7 @@ onBeforeUnmount(() => {
               " /></span
           ><small>{{ pings.types[type].label }}</small></button
         ><div class="room-ping-settings"
-          ><UiButton legacy
+          ><UiButton
             :icon="pings.enabled ? 'check' : 'close'"
             :label="'接收標記：' + (pings.enabled ? '開啟' : '關閉')"
             :aria-pressed="pings.enabled"

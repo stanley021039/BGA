@@ -24,7 +24,7 @@ const game = useQuacksStore();
             ? '現在可以免費使用，不消耗女巫幣。'
             : '等待符合能力使用條件。'
       }}</p
-      ><UiButton legacy
+      ><UiButton
         icon="check"
         label="使用免費來訪女巫"
         :disabled="!game.available || !game.mine?.canVisit"
@@ -35,7 +35,7 @@ const game = useQuacksStore();
           ><QuacksGlyph :resource="String(color)" /><h3
             >{{ witch.name }} · {{ game.mine?.coins[color] ? '幣尚未使用' : '幣已使用' }}</h3
           ></header
-        ><QuacksRuleVisual :text="witch.text" :resource="String(color)" /><UiButton legacy
+        ><QuacksRuleVisual :text="witch.text" :resource="String(color)" /><UiButton
           icon="check"
           :label="'使用' + witch.name"
           :disabled="!game.available || !game.mine?.witchAvailable[color]"

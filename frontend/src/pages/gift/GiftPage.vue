@@ -95,7 +95,7 @@ function status(p: RoomPlayer) {
         ><a href="/gifts" target="_blank" rel="noopener">查看／投稿自訂禮物 ↗</a
         ><StatusSlot
           :message="gift.settingsPending ? '正在儲存設定…' : gift.settingsError || ''"
-          :error="!!gift.settingsError" /><UiButton legacy
+          :error="!!gift.settingsError" /><UiButton
           v-if="gift.settingsError && gift.settingsEditable"
           icon="refresh"
           label="重試儲存設定"

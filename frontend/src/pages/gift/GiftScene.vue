@@ -122,10 +122,10 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           ></section
         >
         <nav class="vue-gift-tabs" aria-label="本輪任務"
-          ><UiButton legacy
+          ><UiButton
             label="送禮給朋友"
             :aria-pressed="gift.panel === 'give'"
-            @click="gift.panel = 'give'" /><UiButton legacy
+            @click="gift.panel = 'give'" /><UiButton
             label="我的心願"
             :aria-pressed="gift.panel === 'wish'"
             @click="gift.panel = 'wish'"
@@ -244,10 +244,10 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
               >{{ name(focus.giverId) }} 送給 {{ name(focus.recipientId) }}「{{
                 card(focus.giftId)?.title
               }}」 · {{ giftRankLabels[focus.rank] }}</p
-            ><UiButton legacy icon="close" label="跳過演出" @click="stop" /></template
+            ><UiButton icon="close" label="跳過演出" @click="stop" /></template
           ><template v-else
             ><p>本輪 {{ state.result.entries.length }} 件禮物已揭曉，完整明細都在下方。</p
-            ><UiButton legacy
+            ><UiButton
               icon="replay"
               label="重播焦點禮物"
               :disabled="!preferences.motion?.enabled || preferences.motion?.reduced"
@@ -321,24 +321,24 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
     /></div>
     <footer class="vue-gift-actions"
       ><template v-if="state.phase === 'choosing'"
-        ><UiButton legacy
+        ><UiButton
           icon="lock"
           :label="state.ownAssignments ? '送禮已鎖定' : '鎖定送禮'"
           :disabled="!gift.canGive"
           :pending="room.busy"
-          @click="lock('give')" /><UiButton legacy
+          @click="lock('give')" /><UiButton
           icon="lock"
           :label="state.ownRanking ? '心願已鎖定' : '鎖定心願'"
           :disabled="!gift.canWish"
           :pending="room.busy"
           @click="lock('wish')" /></template
-      ><UiButton legacy
+      ><UiButton
         v-else-if="state.phase === 'delivering'"
         icon="check"
         :label="current?.id === state.me ? '確認收禮' : '等待 ' + current?.name + ' 確認'"
         :disabled="current?.id !== state.me || room.busy || !room.connected || gift.uncertain"
         :pending="room.busy"
-        @click="gift.action('accept')" /><UiButton legacy
+        @click="gift.action('accept')" /><UiButton
         v-else-if="state.phase === 'reveal'"
         icon="next"
         label="開始下一輪"
@@ -347,7 +347,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         @click="gift.action('next')" /><span v-else>{{
         state.phase === 'finished' ? '由房主按房間設定中的再玩一局。' : '邀請朋友入座，由房主開始。'
       }}</span
-      ><UiButton legacy
+      ><UiButton
         v-if="gift.uncertain"
         icon="refresh"
         label="更新並確認操作結果"
@@ -355,5 +355,5 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         :disabled="room.busy"
         @click="gift.refresh()"
     /></footer> </section
-  ><ConfirmDialog legacy ref="confirm" />
+  ><ConfirmDialog ref="confirm" />
 </template>

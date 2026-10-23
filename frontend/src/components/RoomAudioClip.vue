@@ -66,6 +66,6 @@ onBeforeUnmount(() => {
           ? '可以重聽，不按速度計分。'
           : '按播放收聽六秒旋律。')
     }}</p
-    ><UiButton legacy icon="refresh" :disabled="!active" label="重新載入音訊" @click="retry"
+    ><UiButton icon="refresh" :disabled="!active" label="重新載入音訊" @click="retry"
   /></div>
 </template>

@@ -300,7 +300,7 @@ onBeforeUnmount(() => {
     ><div v-if="lobby.presenceStatus" class="vue-lobby-presence"
       ><StatusSlot
         :message="lobby.presenceStatus"
-        :error="!lobby.connected && !!lobby.snapshot" /><UiButton legacy
+        :error="!lobby.connected && !!lobby.snapshot" /><UiButton
         icon="refresh"
         icon-only
         label="重新連接大廳"

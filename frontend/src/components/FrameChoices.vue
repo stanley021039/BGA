@@ -3,8 +3,8 @@ import { computed } from 'vue';
 import { usePreferencesStore } from '../stores/preferences';
 import FramePreview from './FramePreview.vue';
 const props = withDefaults(
-  defineProps<{ kind?: 'barrage' | 'media'; query?: string; group?: string; legacy?: boolean }>(),
-  { kind: 'barrage', query: '', group: '', legacy: false },
+  defineProps<{ kind?: 'barrage' | 'media'; query?: string; group?: string }>(),
+  { kind: 'barrage', query: '', group: '' },
 );
 const emit = defineEmits<{ select: [id: string] }>();
 const prefs = usePreferencesStore();
@@ -25,8 +25,7 @@ function select(id: string) {
 </script>
 <template>
   <div
-    class="barrage-frame-grid"
-    :class="{ 'vue-stitch-frame-grid': !legacy }"
+    class="barrage-frame-grid vue-stitch-frame-grid"
     role="group"
     :aria-label="kind === 'barrage' ? '可用彈幕框' : '播放器外觀'"
   >
@@ -40,9 +39,9 @@ function select(id: string) {
       :disabled="!prefs.canUse(option.id)"
       @click="select(option.id)"
       ><span class="barrage-frame-label"
-        >{{ !legacy ? prefs.frames.findIndex((frame) => frame.id === option.id) + 1 + '. ' : ''
+        >{{ prefs.frames.findIndex((frame) => frame.id === option.id) + 1 + '. '
         }}{{ option.label }}</span
-      ><span v-if="!legacy" class="vue-frame-preview-slot" aria-hidden="true"
+      ><span class="vue-frame-preview-slot" aria-hidden="true"
         ><FramePreview
           :kind="kind"
           :frame="option.id"

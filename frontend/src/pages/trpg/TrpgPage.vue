@@ -95,7 +95,7 @@ onBeforeUnmount(() => {
               >{{ value.name }} · {{ value.description }}</option
             ></select
           ></label
-        ><UiButton legacy
+        ><UiButton
           label="選擇角色"
           icon="check"
           :disabled="!trpg.roleEditable || trpg.role === trpg.me?.role"
@@ -109,7 +109,7 @@ onBeforeUnmount(() => {
     <template #side-actions
       ><section v-if="offline.length" class="vue-game-panel vue-trpg-offline"
         ><h3>離線席位</h3><p>離線滿 15 秒且尚未準備，房主可確認處理。</p
-        ><UiButton legacy
+        ><UiButton
           v-for="player in offline"
           :key="player.id"
           :label="player.name + (player.id === state?.leaderId ? '：移除並交棒' : '：本幕休息')"
@@ -145,5 +145,5 @@ onBeforeUnmount(() => {
         token。伺服器重啟不恢復冒險進度；已記錄歷史仍可回看。</p
       ></template
     > </GameRoomPage
-  ><ConfirmDialog legacy ref="confirmation" />
+  ><ConfirmDialog ref="confirmation" />
 </template>

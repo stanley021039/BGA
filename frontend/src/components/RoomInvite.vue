@@ -11,7 +11,6 @@ import { useInvitationsStore } from '../stores/invitations';
 import { useSessionStore } from '../stores/session';
 import PlayerAvatar from './PlayerAvatar.vue';
 import UiTabs from './UiTabs.vue';
-defineProps<{ legacy?: boolean }>();
 const room = useRoomStore(),
   requests = useRequests(),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
@@ -81,17 +80,15 @@ onBeforeUnmount(close);
 </script>
 <template>
   <UiButton
-    :legacy="legacy"
     variant="secondary"
     class="vue-room-invite-trigger"
     icon="invite"
-    :icon-only="legacy"
-    :caption="legacy ? '邀請' : '邀請朋友'"
+    caption="邀請朋友"
     label="邀請朋友加入這桌"
     :disabled="!room.seat"
     @click="open($event.currentTarget as HTMLElement)"
   />
-  <UiDialog :legacy="legacy" ref="dialog" title="邀請朋友" compact @closing="close">
+  <UiDialog ref="dialog" title="邀請朋友" compact @closing="close">
     <UiTabs
       v-model="tab"
       :items="[
@@ -119,14 +116,14 @@ onBeforeUnmount(close);
           ><PlayerAvatar :name="person.name" :avatar="person.avatar" /><strong>{{
             person.name
           }}</strong
-          ><UiButton legacy
+          ><UiButton
             icon="invite"
             :label="person.pending ? '已邀請' : '邀請'"
             :disabled="person.pending || !invites.canInvite"
             :pending="invites.sending.has(person.id)"
             @click="invites.send(person)" /></article
       ></div>
-      <UiButton legacy
+      <UiButton
         icon="refresh"
         label="重新取得線上朋友"
         :disabled="invites.candidateLoading"

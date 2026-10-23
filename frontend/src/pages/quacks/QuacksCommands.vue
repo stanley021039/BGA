@@ -16,7 +16,7 @@ const game = useQuacksStore(),
     <span v-else-if="s.interrupted">本場中止，已完成回合保留。</span>
     <span v-else-if="m?.pending">請完成上方必要效果選擇。</span
     ><span v-else-if="m?.waitingEffect">等待其他人完成效果。</span>
-    <UiButton legacy
+    <UiButton
       v-else-if="s.phase === 'fortune' && s.me === s.roundStarterId"
       icon="play"
       label="抽取本輪占卜牌"
@@ -26,7 +26,7 @@ const game = useQuacksStore(),
     <template v-else-if="s.phase === 'brewing' && m"
       ><template v-if="s.stage === 'drawing'"
         ><template v-if="m.canDraw"
-          ><UiButton legacy
+          ><UiButton
             class="vue-quacks-draw-action"
             data-quacks-action="draw"
             icon="draw-bag"
@@ -34,7 +34,7 @@ const game = useQuacksStore(),
             :disabled="!game.available"
             @click="game.command('draw', { step: s.step })"
             ><template #icon><img src="/assets/quacks/draw-777.webp" alt="" /></template></UiButton
-          ><UiButton legacy
+          ><UiButton
             class="vue-quacks-stop-action"
             data-quacks-action="stop"
             icon="close"
@@ -48,7 +48,7 @@ const game = useQuacksStore(),
         ><span v-else>{{
           game.own?.stopped ? '你已停止，等待其他人。' : '已選擇，等待同步揭曉。'
         }}</span></template
-      ><UiButton legacy
+      ><UiButton
         v-else-if="s.stage === 'reserves'"
         icon="check"
         label="暫存決定完成，其餘保留"
@@ -57,13 +57,13 @@ const game = useQuacksStore(),
     /></template>
     <template v-else-if="s.phase === 'settlement' && m"
       ><template v-if="s.stage === 'essence'"
-        ><UiButton legacy
+        ><UiButton
           v-if="m.alchemy?.diceRemaining"
           icon="dice"
           :label="'擲特效藥骰（剩' + m.alchemy.diceRemaining + '次）'"
           :disabled="!game.available"
           @click="game.command('essence-roll')"
-        /><UiButton legacy
+        /><UiButton
           v-else-if="!m.alchemy?.confirmed"
           icon="check"
           :label="'確認特效藥第 ' + m.alchemy?.max + ' 格'"
@@ -71,47 +71,47 @@ const game = useQuacksStore(),
           @click="game.command('essence', { position: m.alchemy?.max })"
         /><span v-else>特效藥已確認，等待其他人及額外效果。</span></template
       ><span v-else-if="m.ready">你已完成，等待其他人。</span
-      ><UiButton legacy
+      ><UiButton
         v-else-if="s.stage === 'witches'"
         icon="check"
         label="準備結算"
         :disabled="!game.available"
         @click="game.command('settle-ready')" /><template v-else-if="s.stage === 'bonus'"
-        ><UiButton legacy
+        ><UiButton
           v-if="m.bonusEligible && !m.bonusRolled"
           icon="dice"
           label="擲獎勵骰"
           :disabled="!game.available"
-          @click="game.command('roll-bonus')" /><UiButton legacy
+          @click="game.command('roll-bonus')" /><UiButton
           v-else
           icon="check"
           label="獎勵骰完成，查看藥材效果"
           :disabled="!game.available"
           @click="game.command('bonus-ready')" /></template
-      ><UiButton legacy
+      ><UiButton
         v-else-if="s.stage === 'effects-confirm'"
         icon="check"
         label="確認藥材效果"
         :disabled="!game.available"
         @click="game.command('confirm-effects')" /><template v-else-if="s.stage === 'rewards'"
-        ><UiButton legacy
+        ><UiButton
           icon="star"
           :label="game.own?.exploded ? '我要勝利分數' : '領取本輪獎勵'"
           :disabled="!game.available"
-          @click="game.command('reward', { mode: 'score' })" /><UiButton legacy
+          @click="game.command('reward', { mode: 'score' })" /><UiButton
           v-if="game.own?.exploded"
           icon="ingredient"
           label="我要買藥材"
           :disabled="!game.available"
           @click="game.command('reward', { mode: 'buy' })" /></template
-      ><UiButton legacy
+      ><UiButton
         v-else-if="s.stage === 'shopping'"
         icon="check"
         label="完成本輪結算"
         :disabled="!game.available || (!!s.market.turnPlayerId && s.market.turnPlayerId !== s.me)"
         @click="game.command('shop-ready')"
     /></template>
-    <UiButton legacy
+    <UiButton
       v-else-if="s.phase === 'between'"
       icon="next"
       label="下一回合"
@@ -124,7 +124,7 @@ const game = useQuacksStore(),
           ? '在上方選擇本場治療的病患。'
           : '等待其他玩家。'
     }}</span>
-    <UiButton legacy
+    <UiButton
       v-if="game.canRetry"
       icon="refresh"
       label="重試同一操作"

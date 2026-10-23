@@ -46,10 +46,10 @@ const labels = window.MarketRules?.CONFIG.options || [];
         />{{ label }}</label
       ></fieldset
     ><div v-if="!filters" class="vue-market-actions"
-      ><UiButton legacy
+      ><UiButton
         label="全選星期"
         :disabled="disabled"
-        @click="emit('update:weekdays', [0, 1, 2, 3, 4, 5, 6])" /><UiButton legacy
+        @click="emit('update:weekdays', [0, 1, 2, 3, 4, 5, 6])" /><UiButton
         label="清除星期"
         :disabled="disabled"
         @click="emit('update:weekdays', [])" /></div

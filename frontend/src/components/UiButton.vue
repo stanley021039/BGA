@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import UiIcon from './UiIcon.vue';
-// Stitch is the only look for new code. `legacy` keeps an unconverted page's old
-// controls and ignores `variant`; see docs/UI-COMPONENTS.md.
+// The only button look (Figma 03 C05/C07). Pick a role with `variant`.
 withDefaults(
   defineProps<{
     label: string;
@@ -11,7 +10,6 @@ withDefaults(
     pending?: boolean;
     disabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
-    legacy?: boolean;
     variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'success' | 'contrast';
   }>(),
   {
@@ -19,7 +17,6 @@ withDefaults(
     iconOnly: false,
     pending: false,
     disabled: false,
-    legacy: false,
     variant: 'secondary',
   },
 );
@@ -27,14 +24,13 @@ withDefaults(
 <template>
   <button
     :type="type"
-    class="ui-button vue-button"
+    class="ui-button vue-button ui-stitch-button"
     :class="{
       'ui-icon-button': iconOnly,
       'has-mobile-caption': iconOnly && !!caption,
       'is-pending': pending,
-      'ui-stitch-button': !legacy,
     }"
-    :data-stitch-variant="legacy ? undefined : variant"
+    :data-stitch-variant="variant"
     :aria-label="label"
     :title="iconOnly ? label : undefined"
     :disabled="disabled || pending"

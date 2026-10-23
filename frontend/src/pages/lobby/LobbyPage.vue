@@ -128,7 +128,7 @@ onBeforeUnmount(() => {
       ><span v-if="!resumes.length">{{
         lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'
       }}</span
-      ><UiButton legacy
+      ><UiButton
         v-for="room in resumes"
         :key="room.code"
         icon="replay"
@@ -137,14 +137,14 @@ onBeforeUnmount(() => {
         :disabled="lobby.entryPending || lobby.roomsLoading"
         @click="lobby.resume(room)" /><StatusSlot :message="feedback" :error="!!lobby.entryStatus"
     /></div>
-    <UiDialog legacy ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
+    <UiDialog ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
       ><div class="vue-lobby-join"
         ><section class="vue-lobby-room-browser" data-ping-anchor="room-list" aria-label="目前房間"
           ><header
             ><p>看看現在有哪些房間，再選擇要加入的遊戲。</p
             ><div class="vue-lobby-room-tools"
               ><span>{{ lobby.rooms.length }} 間房間</span
-              ><UiButton legacy
+              ><UiButton
                 icon="refresh"
                 icon-only
                 label="重新整理房間列表"
@@ -178,7 +178,7 @@ onBeforeUnmount(() => {
                           ? '本局結束'
                           : '遊戲進行中'
                 }}</span
-                ><UiButton legacy
+                ><UiButton
                   :icon="room.seated ? 'replay' : 'add'"
                   :label="
                     (room.seated
@@ -222,14 +222,14 @@ onBeforeUnmount(() => {
                 :disabled="lobby.entryPending"
                 aria-describedby="lobbyCodeHelp" /><p id="lobbyCodeHelp"
                 >英文字母 A–F 與數字 0–9。</p
-              ><UiButton legacy
+              ><UiButton
                 icon="add"
                 type="submit"
                 icon-only
                 caption="加入"
                 label="加入房間"
                 :pending="lobby.entryPending"
-                :disabled="!session.user" /><UiButton legacy
+                :disabled="!session.user" /><UiButton
                 icon="refresh"
                 icon-only
                 caption="重填"
@@ -245,7 +245,6 @@ onBeforeUnmount(() => {
     <p class="version-note"><a href="/credits">素材來源與授權</a> · 德州撲克：純娛樂籌碼</p>
     <UiDialog
       ref="create"
-      :legacy="!(drawingCreate || roomCreate || pairCreate)"
       :compact="drawingCreate || pairCreate"
       :class="{
         'vue-lobby-create-d06': drawingCreate || pairCreate,
@@ -275,7 +274,6 @@ onBeforeUnmount(() => {
             :disabled="lobby.entryPending" /></label
         ><div class="vue-lobby-create-options"><p>進入房間後，由房主調整本桌設定。</p></div
         ><StatusSlot :message="feedback" :error="!!lobby.entryStatus" /><UiButton
-          :legacy="!(drawingCreate || roomCreate || pairCreate)"
           :variant="drawingCreate || roomCreate || pairCreate ? 'primary' : 'secondary'"
           :icon="pairCreate ? undefined : drawingCreate ? 'next' : 'add'"
           type="submit"

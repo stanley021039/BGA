@@ -113,14 +113,13 @@ onMounted(() => {
         ><p v-if="entryCode">房間 {{ entryCode }}</p
         ><div class="vue-game-entry-actions"
           ><UiButton
-            :legacy="!(!!entryArt)"
             :variant="entryArt ? 'primary' : 'secondary'"
             icon="play"
             :label="entryCode ? '加入這一桌' : '開一桌' + title"
             :pending="entryBusy || room.connecting"
             :disabled="['kicked', 'closed'].includes(room.terminal || '')"
             @click="page.enter()"
-          /><UiButton :legacy="!(!!entryArt)" icon="help" label="遊戲說明" @click="help?.open()" /><a
+          /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><a
             href="/"
             >返回大廳</a
           ></div
@@ -206,7 +205,7 @@ onMounted(() => {
           ><template #tools
             ><RoomMedia :connected="room.connected" /></template></RoomChat></aside></div
     ><RoomEffects :connected="connected" /><RoomPings /> </div
-  ><UiDialog legacy ref="help" :title="title + '玩法'"
+  ><UiDialog ref="help" :title="title + '玩法'"
     ><slot name="help" /><a :href="'/?game=' + type">回大廳開一桌</a></UiDialog
   >
 </template>

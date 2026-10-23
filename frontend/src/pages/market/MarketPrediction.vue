@@ -56,7 +56,7 @@ const status = computed(() => {
             ? cutoff(market.current.targetDate)
             : '依官方交易日曆確認，暫無可提交預測；已截止輪次仍繼續查核收盤結果。'
         }}</p></div
-      ><UiButton legacy
+      ><UiButton
         v-if="market.current && market.current.id !== r?.id"
         icon="next"
         label="返回目前預測"
@@ -106,7 +106,7 @@ const status = computed(() => {
                 ? '圖片依 ' + r.targetDate + ' 的星期與各區間抽選；換圖不影響投票。'
                 : '有交易日後才會抽選圖片。')
         "
-        :error="!!gallery.drawError" /><UiButton legacy
+        :error="!!gallery.drawError" /><UiButton
         icon="refresh"
         label="換一組圖片"
         :pending="gallery.drawBusy"
@@ -173,7 +173,7 @@ const status = computed(() => {
     ></template>
     <footer class="vue-market-vote-footer"
       ><p role="status">{{ status }}</p
-      ><UiButton legacy
+      ><UiButton
         icon="send"
         :label="r?.vote ? '儲存修改' : '送出預測'"
         :pending="market.busy"

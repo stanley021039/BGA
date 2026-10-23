@@ -12,7 +12,6 @@ import DrawVote from './DrawVote.vue';
 import PlayerAvatar from './PlayerAvatar.vue';
 import DrawGalleryThumbnail from './DrawGalleryThumbnail.vue';
 import '../styles/draw-gallery.scss';
-defineProps<{ legacy?: boolean }>();
 const results = useDrawResultsStore(),
   room = useRoomStore(),
   prefix = useId();
@@ -130,7 +129,6 @@ defineExpose({ open });
 </script>
 <template>
   <UiButton
-    :legacy="legacy"
     variant="ghost"
     icon="frame"
     icon-only
@@ -319,5 +317,5 @@ defineExpose({ open });
       />
     </footer>
   </UiDialog>
-  <ConfirmDialog legacy ref="confirmation" />
+  <ConfirmDialog ref="confirmation" />
 </template>

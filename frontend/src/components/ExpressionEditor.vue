@@ -79,18 +79,18 @@ async function remove() {
 </script>
 <template>
   <section v-if="character.owned && character.id.startsWith('user:')" class="expression-editor"
-    ><UiButton legacy
+    ><UiButton
       icon="edit"
       label="編輯目前表情"
       :disabled="mutation.pending.value"
-      @click="open" /><UiButton legacy
+      @click="open" /><UiButton
       v-if="expression !== 'neutral'"
       icon="remove"
       label="刪除目前表情"
       :disabled="mutation.pending.value"
       @click="remove" /><slot name="actions" /><StatusSlot
       :message="mutation.message.value"
-      :error="mutation.failed.value" /><UiDialog legacy ref="dialog" title="編輯表情"
+      :error="mutation.failed.value" /><UiDialog ref="dialog" title="編輯表情"
       ><div class="expression-edit-body"
         ><form :id="formId" class="expression-edit-form" @submit.prevent="save"
           ><section class="expression-edit-section"
@@ -115,7 +115,7 @@ async function remove() {
               :disabled="mutation.pending.value"
               @change="file = $event" /></section></form
         ><slot name="sound" /><footer class="expression-edit-footer"
-          ><UiButton legacy
+          ><UiButton
             type="submit"
             :form="formId"
             icon="save"
@@ -123,6 +123,6 @@ async function remove() {
             :disabled="mutation.pending.value" /><StatusSlot
             :message="mutation.message.value"
             :error="mutation.failed.value" /></footer></div></UiDialog
-    ><ConfirmDialog legacy ref="confirm"
+    ><ConfirmDialog ref="confirm"
   /></section>
 </template>

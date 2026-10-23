@@ -382,7 +382,7 @@ onBeforeUnmount(() => {
       ><p>{{ identity ? `以「${identity}」入座` : '將以你的角色名稱入座' }}</p
       ><p v-if="entryCode">房間 {{ entryCode }}</p
       ><p v-else>題目類別、時間與結算條件，可在建房後調整。</p
-      ><UiButton legacy
+      ><UiButton
         icon="play"
         :label="entryCode ? '加入這一桌' : '開一桌你畫我猜'"
         :pending="entryBusy || room.connecting"
@@ -590,7 +590,7 @@ onBeforeUnmount(() => {
         ><small>只有當輪畫者可見題目；請使用畫作表達。</small></template
       ><template v-else
         ><p>可依字數與類別思考，或請畫者再加一筆。</p
-        ><UiButton legacy
+        ><UiButton
           icon="chat"
           label="要求加筆（填入聊天室）"
           @click="askHint" /></template></template
