@@ -179,7 +179,8 @@
   padding: tokens.space(2);
 }
 // Underline tabs (Figma 03 C07 收藏分頁). Pages place the tab list; the tab
-// look stays here.
+// look stays here. ui-primitives borders every button with !important through
+// its vars, so those are zeroed and the underline is an inset shadow.
 :root body .vue-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -193,10 +194,11 @@
   gap: var(--stitch-space-8);
   min-inline-size: 0;
   min-block-size: var(--stitch-control-height);
-  margin: 0 0 calc(-1 * var(--stitch-border-width));
+  --ui-button-border-width: 0px !important;
+  --ui-button-radius: 0px !important;
+  margin: 0;
   padding: var(--stitch-space-8) 0;
   border: 0;
-  border-block-end: var(--stitch-border-width-strong) solid transparent;
   border-radius: 0;
   background: transparent;
   color: var(--stitch-ink);
@@ -206,7 +208,7 @@
   font-weight: var(--stitch-weight-body);
   cursor: pointer;
   &[aria-selected='true'] {
-    border-block-end-color: var(--stitch-primary);
+    box-shadow: inset 0 calc(-1 * var(--stitch-border-width-strong)) 0 var(--stitch-primary);
     font-weight: var(--stitch-weight-title);
   }
   &:focus-visible {
