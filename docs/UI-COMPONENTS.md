@@ -51,7 +51,7 @@
 <ConfirmDialog ref="confirm" />  <!-- await confirm.value.ask('確定刪除？') -->
 ```
 
-原生 `showModal()`，Escape 與關閉鈕返焦觸發元素；`dismissible=false` 時不可關閉（例如送出中）。`compact` 為 28rem 寬。外觀：白底、1px 邊、圓角 12px、內距 16px、標題 20px／700。
+原生 `showModal()`，Escape 與關閉鈕返焦觸發元素；`dismissible=false` 時不可關閉（例如送出中）。`compact` 為 28rem 寬。外觀（2026-10-23 選定，同 C07-R2 加入房間）：白底、2px 深色邊、圓角 16px、硬陰影 `--stitch-shadow-raised`、內距 16px、標題 20px／700；底部按鈕列間距 `--stitch-gap-controls`。`UiPopover` 浮動選單同一套立體外觀。
 
 ### UiPanel
 
@@ -66,7 +66,7 @@
 
 - `title` 自動成為 `aria-labelledby`；`description` 在標題下、`note` 在標題右側；`#actions` 放標題列右側的按鈕或連結。
 - `tone`：`surface`（預設白底）、`subtle`（次要底色）、`selected`（選取）、`raised`（Stitch 立體卡：2px 深色邊、圓角 16px、硬陰影）。
-- `density`：`regular`（內距 24px、間距 20px）、`compact`（內距 16px、間距 12px，用於密集側欄或設定卡）。
+- `density`：`regular`（預設，內距 24px、內部間距 20px）用於頁面主要內容；`compact`（內距 16px、間距 12px）只用於側欄、遊戲中資訊欄等密集區。面板之間 `--stitch-gap-section`（24px）。
 - 頁面只給 class 排版（grid 區域、最小高度）；框線、底色、圓角、內距不要再寫。
 
 ### UiField
@@ -111,7 +111,7 @@
 <UiIcon name="save" />
 ```
 
-`UiTabs` 有方向鍵／Home／End 與 `aria-controls`；選取分頁用 `--stitch-selected-*`。`UiPopover` 依按鈕位置在上方或下方開啟、限制在視窗內並在關閉時返焦。`UiIcon` 只接受登錄名稱（見 `UiIcon.vue`），24 viewBox、1.8 stroke、`currentColor`；新增圖示加到登錄表。
+`UiTabs` 有方向鍵／Home／End 與 `aria-controls`；外觀為底線式（Figma C07 收藏分頁）：列底 1px 線、分頁間距 24px、文字 14px，選取分頁 700 字重加 2px `--stitch-primary` 底線，高 44px。頁面只排分頁列的位置與欄數。`UiPopover` 依按鈕位置在上方或下方開啟、限制在視窗內並在關閉時返焦。`UiIcon` 只接受登錄名稱（見 `UiIcon.vue`），24 viewBox、1.8 stroke、`currentColor`；新增圖示加到登錄表。
 
 ## Token（`frontend/src/styles/stitch-tokens.scss`）
 

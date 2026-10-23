@@ -80,7 +80,7 @@
   .settings-l05-layout {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.5rem;
+    gap: var(--stitch-gap-section);
     align-items: start;
     min-inline-size: 0;
   }
@@ -89,7 +89,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     align-content: start;
-    gap: 1rem;
+    gap: var(--stitch-gap-section);
     min-inline-size: 0;
     margin: 0;
   }

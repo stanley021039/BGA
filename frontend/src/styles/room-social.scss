@@ -290,11 +290,11 @@ body > .vue-social-popover {
   max-inline-size: calc(100vw - 1rem);
   max-block-size: calc(100dvh - 1rem);
   padding: tokens.space(3);
-  border: 1px solid var(--stitch-line, var(--play-line, #aaa));
-  border-radius: tokens.space(3);
-  color: var(--stitch-ink, var(--play-ink, #212121));
-  background: var(--stitch-surface, var(--play-surface, #fff));
-  box-shadow: 0 0.5rem 2rem #0003;
+  border: var(--stitch-border-strong);
+  border-radius: var(--stitch-radius-card);
+  color: var(--stitch-ink);
+  background: var(--stitch-surface);
+  box-shadow: var(--stitch-shadow-raised);
   overflow: hidden;
   &:popover-open {
     display: grid;
@@ -325,24 +325,8 @@ body > .vue-social-popover {
     min-inline-size: 0;
   }
   .vue-tabs > button {
-    @include tokens.type(p3);
-    --ui-button-radius: 0.5rem;
     box-sizing: border-box;
-    min-inline-size: 0;
-    min-block-size: 2.75rem;
-    padding: tokens.space(1);
-    margin: 0;
-    border: 1px solid transparent;
-    border-radius: 0.5rem;
-    background: transparent;
-    color: inherit;
     white-space: normal;
-  }
-  .vue-tabs > button[aria-selected='true'] {
-    background: var(--stitch-primary, #f6cf35);
-    color: #212121;
-    border-color: color-mix(in srgb, #212121 15%, transparent);
-    font-weight: 800;
   }
   .vue-social-popover-body {
     display: grid;

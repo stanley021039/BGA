@@ -152,9 +152,10 @@
   --play-surface: var(--stitch-surface);
   padding: var(--stitch-space-16);
   gap: var(--stitch-space-16);
-  border: 1px solid var(--stitch-line);
-  border-radius: var(--stitch-panel-radius);
+  border: var(--stitch-border-strong);
+  border-radius: var(--stitch-radius-card);
   background: var(--stitch-surface);
+  box-shadow: var(--stitch-shadow-raised);
   color: var(--stitch-ink);
   font-family: var(--stitch-font-family);
   font-size: var(--stitch-font-16);
@@ -177,18 +178,45 @@
 .vue-button.ui-icon-button {
   padding: tokens.space(2);
 }
-.vue-tabs {
+// Underline tabs (Figma 03 C07 收藏分頁). Pages place the tab list; the tab
+// look stays here.
+:root body .vue-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: tokens.space(2);
+  gap: var(--stitch-space-24);
+  border-block-end: var(--stitch-border);
 }
-.vue-tabs [role='tab'] {
+:root body .vue-tabs > [role='tab'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stitch-space-8);
   min-inline-size: 0;
-  gap: tokens.space(2);
-}
-.vue-tabs [aria-selected='true'] {
-  background: var(--stitch-selected-bg);
-  color: var(--stitch-selected-ink);
+  min-block-size: var(--stitch-control-height);
+  margin: 0 0 calc(-1 * var(--stitch-border-width));
+  padding: var(--stitch-space-8) 0;
+  border: 0;
+  border-block-end: var(--stitch-border-width-strong) solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--stitch-ink);
+  box-shadow: none;
+  font: inherit;
+  font-size: var(--stitch-text-body);
+  font-weight: var(--stitch-weight-body);
+  cursor: pointer;
+  &[aria-selected='true'] {
+    border-block-end-color: var(--stitch-primary);
+    font-weight: var(--stitch-weight-title);
+  }
+  &:focus-visible {
+    outline: var(--stitch-focus-ring);
+    outline-offset: var(--stitch-focus-offset);
+  }
+  &:disabled {
+    color: var(--stitch-disabled-ink);
+    cursor: not-allowed;
+  }
 }
 .vue-tabs .collection-count {
   inline-size: 4.5em;
@@ -222,7 +250,7 @@
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: tokens.space(3);
+  gap: var(--stitch-gap-controls);
 }
 .vue-dialog::backdrop {
   background: #0008;

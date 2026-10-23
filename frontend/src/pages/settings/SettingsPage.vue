@@ -343,7 +343,7 @@ onMounted(() => {
   ></div>
   <div class="settings-l05-layout">
     <div class="settings-account-column">
-      <UiPanel class="nickname-panel" title="我的暱稱" note="1–16 字" density="compact">
+      <UiPanel class="nickname-panel" title="我的暱稱" note="1–16 字">
         <UiField
           id="nickname-account"
           class="settings-account-id"
@@ -381,15 +381,10 @@ onMounted(() => {
             @click="loadName"
         /></form>
       </UiPanel>
-      <UiPanel class="settings-background-panel" density="compact"
+      <UiPanel class="settings-background-panel"
         ><LobbyBackgroundPicker /><OpeningPicker
       /></UiPanel>
-      <UiPanel
-        class="settings-barrage-panel"
-        title="彈幕外觀"
-        note="設定保存在此瀏覽器"
-        density="compact"
-      >
+      <UiPanel class="settings-barrage-panel" title="彈幕外觀" note="設定保存在此瀏覽器">
         <div class="settings-appearance-choice"
           ><p id="settings-barrage-frame-status" role="status" aria-live="polite"
             >目前彈幕框：<strong>{{
@@ -411,11 +406,7 @@ onMounted(() => {
             message="這一桌好好玩！"
         /></div>
       </UiPanel>
-      <UiPanel
-        class="settings-barrage-panel settings-media-panel"
-        title="播放器外觀"
-        density="compact"
-      >
+      <UiPanel class="settings-barrage-panel settings-media-panel" title="播放器外觀">
         <div class="settings-appearance-choice"
           ><p id="settings-media-frame-status" role="status" aria-live="polite"
             >目前外觀：<strong>{{ labelForFrame(prefs.media) }}</strong></p
@@ -434,11 +425,7 @@ onMounted(() => {
           ><FramePreview kind="media" :frame="prefs.media" name="播放器" message="我的風格"
         /></div>
       </UiPanel>
-      <UiPanel
-        class="settings-barrage-panel settings-entrance-panel"
-        title="進場特效"
-        density="compact"
-      >
+      <UiPanel class="settings-barrage-panel settings-entrance-panel" title="進場特效">
         <template #actions><a href="/collection?section=entrance">前往收藏庫 ↗</a></template>
         <div class="settings-appearance-choice"
           ><p id="settings-entrance-status" role="status" aria-live="polite"
@@ -468,7 +455,7 @@ onMounted(() => {
     >
       <fieldset class="settings-fields" :disabled="pending || !appearance || !avatar">
         <div class="settings-grid">
-          <UiPanel class="settings-avatar-panel" title="我的頭像" density="compact"
+          <UiPanel class="settings-avatar-panel" title="我的頭像"
             ><template #actions><a href="/collection?section=avatars">前往收藏庫 ↗</a></template
             ><div class="settings-avatar-content"
               ><div class="settings-image-slot"
@@ -498,7 +485,7 @@ onMounted(() => {
               ></div
             ></UiPanel
           >
-          <UiPanel class="settings-character-panel" title="遊戲角色" density="compact"
+          <UiPanel class="settings-character-panel" title="遊戲角色"
             ><template #actions><a href="/profile">管理角色與表情 ↗</a></template
             ><div class="settings-selected-character"
               ><div class="settings-character-preview-slot"
@@ -576,7 +563,6 @@ onMounted(() => {
             class="settings-pings-panel"
             title="房間標記"
             description="挑選五個常用標記，依順序放入中央、上、左、下、右；每個標記的圖示、音效可分開選。語音需先取得成就獎勵或兌換。"
-            density="compact"
             ><template #actions
               ><button type="button" class="settings-pings-reset" @click="resetPings"
                 >全部恢復預設</button
