@@ -1971,3 +1971,57 @@
     text-align: center;
   }
 }
+// 2.40 makes every UiButton a Stitch button with stronger base rules; restate the
+// Quacks-specific placement and sizes at a specificity that outranks them.
+:root
+  body[data-visual-theme].vue-quacks-document
+  :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+  &.vue-quacks-board-settings {
+    position: absolute;
+    inset: 8px 8px auto auto;
+  }
+  &.vue-quacks-pot-peek {
+    position: absolute;
+    inset: 8px 60px auto auto;
+  }
+  &:is(.vue-quacks-draw-action, .vue-quacks-stop-action) {
+    inline-size: 112px;
+    width: 112px;
+    height: 72px;
+    min-height: 72px;
+    padding: 4px;
+    overflow: hidden;
+    border-radius: 8px;
+    .ui-button-icon-slot {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    img {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+    }
+  }
+  &.vue-quacks-shopping-bag-button {
+    inline-size: 64px;
+    width: 64px;
+    height: 64px;
+    padding: 4px;
+  }
+}
+:root
+  body[data-visual-theme].vue-quacks-document
+  .vue-quacks-witches.is-compact
+  > :is(button, a).ui-button.vue-button.ui-stitch-button[data-stitch-variant] {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  height: auto;
+  min-height: 180px;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 1.125rem;
+}
