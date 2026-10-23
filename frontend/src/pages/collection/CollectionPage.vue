@@ -15,6 +15,8 @@ import UiLink from '../../components/UiLink.vue';
 import UiTabs from '../../components/UiTabs.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FrameChoices from '../../components/FrameChoices.vue';
+import AttackChoices from '../../components/AttackChoices.vue';
+import { attackEffects } from '../../stores/attack-loadout';
 import EntranceChoices from '../../components/EntranceChoices.vue';
 import { entranceEffects } from '../../services/entrance-effects';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
@@ -24,7 +26,7 @@ const profile = useProfileStore(),
   prefs = usePreferencesStore();
 const { pending, message, failed, run } = useMutation();
 const activeAction = ref('');
-const names = ['avatars', 'characters', 'music', 'frames', 'entrance'] as const;
+const names = ['avatars', 'characters', 'music', 'frames', 'entrance', 'attack'] as const;
 type Section = (typeof names)[number];
 function sectionFromUrl(): Section {
   const value = new URLSearchParams(location.search).get('section');
@@ -93,6 +95,7 @@ const tabs = computed(() => [
   { id: 'music', label: '音樂', count: music.data ? music.data.tracks.length + ' 首' : '讀取中…' },
   { id: 'frames', label: '彈幕框', count: prefs.frames.length + ' 款' },
   { id: 'entrance', label: '進場特效', count: entranceEffects.length + ' 款' },
+  { id: 'attack', label: '攻擊特效', count: attackEffects.length + ' 款' },
 ]);
 const duration = (seconds: number) =>
   Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2, '0');
@@ -521,5 +524,14 @@ onBeforeUnmount(() => {
     >
     <EntranceChoices />
   </ResourcePanel>
+  <ResourcePanel
+    v-if="section === 'attack'"
+    id="section-attack"
+    class="collection-section"
+    role="tabpanel"
+    aria-labelledby="collection-tab-attack"
+    ><template #heading><h2>攻擊特效</h2></template
+    ><AttackChoices
+  /></ResourcePanel>
   <ConfirmDialog ref="confirmation" />
 </template>

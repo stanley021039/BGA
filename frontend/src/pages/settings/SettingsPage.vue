@@ -20,6 +20,7 @@ import LobbyBackgroundPicker from '../../components/LobbyBackgroundPicker.vue';
 import FramePreview from '../../components/FramePreview.vue';
 import PingSymbol from '../../components/PingSymbol.vue';
 import UiDialog from '../../components/UiDialog.vue';
+import AttackChoices from '../../components/AttackChoices.vue';
 import EntranceChoices from '../../components/EntranceChoices.vue';
 import EntrancePreview from '../../components/EntrancePreview.vue';
 import '../../../../public/shared/ping-model.js';
@@ -51,6 +52,7 @@ function revealActiveTab() {
   nav.scrollLeft += box.left - navBox.left - (navBox.width - box.width) / 2;
 }
 watch(activePanel, () => void nextTick(revealActiveTab));
+const attackPicker = ref<InstanceType<typeof UiDialog> | null>(null);
 const pingColor = (type: PingType) => window.PingModel?.colors[type];
 const profile = useProfileStore(),
   session = useSessionStore(),
@@ -648,6 +650,12 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
             ><h2 id="background-settings-heading">大廳與開場</h2><span>選擇後立即套用</span></header
           ><LobbyBackgroundPicker /><OpeningPicker
         /></section>
+        <section class="page-panel settings-attack-panel" aria-labelledby="attack-settings-heading"
+          ><header class="settings-card-heading"
+            ><h2 id="attack-settings-heading">Q／E 攻擊特效</h2
+            ><a href="/collection?section=attack">前往收藏庫 ↗</a></header
+          ><UiButton label="選擇Q／E攻擊特效" @click="attackPicker?.open()"
+        /></section>
       </section>
       <section
         v-show="activePanel === 'barrage'"
@@ -772,5 +780,6 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
       :disabled="!appearance || !avatar || selectedPings.length !== 5"
   /></footer>
   <FramePicker ref="barragePicker" kind="barrage" /><FramePicker ref="mediaPicker" kind="media" />
+  <UiDialog ref="attackPicker" stitch title="選擇攻擊特效"><AttackChoices /></UiDialog>
   <UiDialog ref="entrancePicker" stitch title="選擇進場特效"><EntranceChoices /></UiDialog>
 </template>

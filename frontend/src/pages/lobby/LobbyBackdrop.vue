@@ -8,6 +8,7 @@ import UiDialog from '../../components/UiDialog.vue';
 import UiButton from '../../components/UiButton.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import LobbyVisitor from './LobbyVisitor.vue';
+import LobbyAttackLayer from './LobbyAttackLayer.vue';
 import LobbyBackgroundArt from '../../components/LobbyBackgroundArt.vue';
 import LobbyBarrage from './LobbyBarrage.vue';
 import type { BarrageController, BarrageEvent } from '../../contracts/social';
@@ -17,10 +18,10 @@ import type { BarrageController, BarrageEvent } from '../../contracts/social';
 // the site header, painted surfaces (background, border, shadow) and text.
 const INTERACTIVE =
   'a, button, input, select, textarea, label, summary, dialog, [role="button"], [contenteditable], .game-tile, [data-site-header]';
-const activity = ref<'chat' | 'expression'>('chat');
 const lobby = useLobbyStore(),
   stage = ref<HTMLElement | null>(null),
   dialog = ref<InstanceType<typeof UiDialog> | null>(null),
+  chat = ref<InstanceType<typeof UiDialog> | null>(null),
   opened = ref(false),
   selfHover = ref(false),
   arrivals = ref(new Set<string>());
@@ -29,8 +30,7 @@ const sounds = window.ExpressionSounds?.create();
 let disposed = false,
   controller: BarrageController | null = null,
   known: Set<string> | null = null,
-  hoverFrame = 0,
-  keyboardTarget: { x: number; y: number } | null = null;
+  hoverFrame = 0;
 watch(
   () => lobby.snapshot,
   (value) => {
@@ -97,14 +97,7 @@ watch(
     if (!value) {
       sounds?.reset();
       closeDialogs();
-      keyboardTarget = null;
     }
-  },
-);
-watch(
-  () => lobby.destination,
-  (value) => {
-    if (!value) keyboardTarget = null;
   },
 );
 function arrived(id: string) {
@@ -114,18 +107,15 @@ function arrived(id: string) {
 }
 function closeDialogs() {
   dialog.value?.close();
+  chat.value?.close();
 }
 function teleport() {
   closeDialogs();
   void lobby.teleport();
 }
-function chooseActivity(value: 'chat' | 'expression') {
-  activity.value = value;
-  if (value === 'expression') void lobby.loadExpressions();
-}
 async function open(trigger: HTMLElement) {
   if (!lobby.connected) return;
-  activity.value = 'chat';
+  void lobby.loadExpressions();
   opened.value = true;
   await dialog.value?.open(trigger);
 }
@@ -189,7 +179,6 @@ function click(event: MouseEvent) {
   const visitors = stage.value?.querySelector<HTMLElement>('.lobby-visitors'),
     rect = visitors?.getBoundingClientRect();
   if (!lobby.connected || !rect?.width || !rect.height) return;
-  keyboardTarget = null;
   focusFromPointer(stage.value);
   lobby.move({
     x: ((event.clientX - rect.left) / rect.width) * 100,
@@ -205,6 +194,23 @@ function hover(event: MouseEvent) {
     document.body.classList.toggle('lobby-self-hover', selfHover.value);
   });
 }
+const held = new Set<string>();
+const directions: Record<string, [number, number]> = {
+  arrowleft: [-1, 0],
+  arrowright: [1, 0],
+  arrowup: [0, -1],
+  arrowdown: [0, 1],
+  a: [-1, 0],
+  d: [1, 0],
+  w: [0, -1],
+  s: [0, 1],
+};
+function release(event: KeyboardEvent) {
+  held.delete(event.key.toLowerCase());
+}
+function clearKeys() {
+  held.clear();
+}
 function key(event: KeyboardEvent) {
   if (
     !lobby.connected ||
@@ -212,41 +218,48 @@ function key(event: KeyboardEvent) {
     event.metaKey ||
     event.altKey ||
     event.isComposing ||
-    ![stage.value, document.body, selfAvatar()].includes(event.target as HTMLElement)
+    document.hidden ||
+    (event.target instanceof Element &&
+      event.target.closest(
+        'input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]',
+      )) ||
+    document.querySelector('dialog[open]')
   )
     return;
-  if (event.key.toLowerCase() === 'r') {
-    if (document.hidden || event.repeat) return;
+  const name = event.key.toLowerCase();
+  if (name === 'q' || name === 'e' || name === 'r') {
+    if (event.repeat) return;
     event.preventDefault();
-    keyboardTarget = null;
-    teleport();
+    if (name === 'q' || name === 'e') void lobby.attack(name);
+    else {
+      held.clear();
+      teleport();
+    }
     return;
   }
-  const directions: Record<string, [number, number]> = {
-      ArrowLeft: [-5, 0],
-      ArrowRight: [5, 0],
-      ArrowUp: [0, -5],
-      ArrowDown: [0, 5],
-      a: [-5, 0],
-      d: [5, 0],
-      w: [0, -5],
-      s: [0, 5],
-    },
-    own = lobby.snapshot?.visitors.find((visitor) => visitor.id === lobby.snapshot?.selfId);
-  const direction = directions[event.key.toLowerCase()] || directions[event.key];
-  if (!own || !direction) return;
+  if (
+    ![stage.value, document.body, selfAvatar()].includes(event.target as HTMLElement) ||
+    !directions[name]
+  )
+    return;
   event.preventDefault();
-  const [x, y] = direction,
-    base = keyboardTarget || own;
-  keyboardTarget = {
-    x: Math.max(6, Math.min(94, base.x + x)),
-    y: Math.max(12, Math.min(97, base.y + y)),
-  };
-  lobby.move(keyboardTarget);
+  held.add(name);
+  let dx = 0,
+    dy = 0;
+  for (const key of held) {
+    const d = directions[key];
+    if (d) {
+      dx += d[0];
+      dy += d[1];
+    }
+  }
+  if (dx || dy) lobby.step(Math.sign(dx), Math.sign(dy));
 }
+
 function visibility() {
   if (document.hidden) {
     sounds?.reset();
+    held.clear();
     closeDialogs();
   }
 }
@@ -256,6 +269,8 @@ function profile() {
 onMounted(() => {
   document.addEventListener('click', click);
   document.addEventListener('keydown', key);
+  document.addEventListener('keyup', release);
+  window.addEventListener('blur', clearKeys);
   document.addEventListener('mousemove', hover, { passive: true });
 });
 document.addEventListener('visibilitychange', visibility);
@@ -268,10 +283,16 @@ onBeforeUnmount(() => {
   document.body.classList.remove('lobby-self-hover');
   document.removeEventListener('click', click);
   document.removeEventListener('keydown', key);
+  document.removeEventListener('keyup', release);
+  window.removeEventListener('blur', clearKeys);
   document.removeEventListener('mousemove', hover);
   document.removeEventListener('visibilitychange', visibility);
   window.removeEventListener('profile-updated', profile);
 });
+async function openChat() {
+  if (lobby.connected) await chat.value?.open();
+}
+defineExpose({ openChat });
 </script>
 <template>
   <Teleport to="body"
@@ -281,11 +302,14 @@ onBeforeUnmount(() => {
       :data-background="background.selected"
       :class="{ 'is-self-hover': selfHover }"
       tabindex="0"
-      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話輸入訊息；聚焦此處可用 WASD 或方向鍵移動，R 鍵隨機換位並播放進場特效"
-      aria-keyshortcuts="R"
+      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話按鈕輸入訊息；聚焦此處可用 WASD 或方向鍵移動，四邊可穿越，R 鍵隨機換位，Q、E 鍵向最近玩家發射不同特效"
+      aria-keyshortcuts="R Q E"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
-      ><LobbyBackgroundArt :id="background.selected" /><div class="lobby-visitors"
+      ><LobbyAttackLayer
+        :snapshot="lobby.snapshot"
+        :connected="lobby.connected" /><LobbyBackgroundArt :id="background.selected" /><div
+        class="lobby-visitors"
         ><LobbyVisitor
           v-for="visitor in lobby.snapshot?.visitors || []"
           :key="visitor.id"
@@ -312,27 +336,11 @@ onBeforeUnmount(() => {
     ref="dialog"
     stitch
     class="vue-approved-lobby-expressions"
-    title="角色對話與表情"
+    title="角色表情"
     compact
     @closing="opened = false"
     @closed="opened = false"
-    ><div class="vue-lobby-activity-tabs" role="tablist" aria-label="角色互動"
-      ><button
-        type="button"
-        role="tab"
-        :aria-selected="activity === 'chat'"
-        @click="chooseActivity('chat')"
-        >對話</button
-      ><button
-        type="button"
-        role="tab"
-        :aria-selected="activity === 'expression'"
-        @click="chooseActivity('expression')"
-        >表情</button
-      ></div
-    ><div v-if="activity === 'chat'" class="vue-lobby-activity-chat"
-      ><LobbyBarrage @sent="dialog?.close()" /></div
-    ><div v-else class="vue-lobby-expression-body"
+    ><div class="vue-lobby-expression-body"
       ><p class="vue-lobby-expression-intro">使用目前角色的表情；聲音依照你的音效設定播放。</p
       ><div class="vue-lobby-expressions" :aria-busy="lobby.expressionsLoading"
         ><p v-if="lobby.expressionsLoading">正在載入表情…</p
@@ -354,25 +362,5 @@ onBeforeUnmount(() => {
         :message="lobby.emotePending ? '正在送出表情…' : lobby.expressionStatus"
         :error="!!lobby.expressionStatus" /></div
   ></UiDialog>
+  <UiDialog ref="chat" stitch title="對話" compact><LobbyBarrage @sent="chat?.close()" /></UiDialog>
 </template>
-<style scoped>
-.vue-lobby-activity-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.vue-lobby-activity-tabs button {
-  flex: 1;
-  min-height: 44px;
-  border: 1px solid var(--play-border, #8c805e);
-  border-radius: 10px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-.vue-lobby-activity-tabs button[aria-selected='true'] {
-  background: var(--play-accent, #e8b441);
-  color: #1a1a18;
-  font-weight: 700;
-}
-</style>

@@ -17,6 +17,7 @@ const params = new URLSearchParams(location.search),
   requested = params.get('game') || 'thunder';
 const selected = ref(gameCards.some((card) => card.id === requested) ? requested : 'thunder'),
   chosen = computed(() => gameCards.find((card) => card.id === selected.value)!);
+const backdrop = ref<InstanceType<typeof LobbyBackdrop> | null>(null);
 const create = ref<InstanceType<typeof UiDialog> | null>(null),
   join = ref<InstanceType<typeof UiDialog> | null>(null),
   codeInput = ref<HTMLInputElement | null>(null),
@@ -122,21 +123,34 @@ onBeforeUnmount(() => {
         ><span>款遊戲<br />隨時開桌</span></div
       ></div
     >
-    <GameCarousel v-model="selected" @create="open" @join="openJoin()" />
-    <LobbyBackdrop />
-    <div class="vue-lobby-resume" aria-label="已入座的房間"
-      ><span v-if="!resumes.length">{{
-        lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'
-      }}</span
-      ><UiButton
-        v-for="room in resumes"
-        :key="room.code"
-        icon="replay"
-        :label="'返回' + gameTitle(room.type) + ' ' + room.code"
-        :caption="'返回' + gameTitle(room.type)"
-        :disabled="lobby.entryPending || lobby.roomsLoading"
-        @click="lobby.resume(room)" /><StatusSlot :message="feedback" :error="!!lobby.entryStatus"
-    /></div>
+    <GameCarousel v-model="selected" @create="open" @join="openJoin()"
+      ><template #lobby-action
+        ><UiButton
+          icon="chat"
+          caption="對話"
+          label="對話"
+          aria-haspopup="dialog"
+          :disabled="!lobby.connected"
+          @click="backdrop?.openChat()"
+      /></template>
+      <template #lobby-resume
+        ><div class="vue-lobby-resume" aria-label="已入座的房間"
+          ><span v-if="!resumes.length">{{
+            lobby.roomsStatus ? '正在確認先前的房間。' : '挑選遊戲，開啟今晚第一桌。'
+          }}</span
+          ><UiButton
+            v-for="room in resumes"
+            :key="room.code"
+            icon="replay"
+            :label="'返回' + gameTitle(room.type) + ' ' + room.code"
+            :caption="'返回' + gameTitle(room.type)"
+            :disabled="lobby.entryPending || lobby.roomsLoading"
+            @click="lobby.resume(room)" /><StatusSlot
+            :message="feedback"
+            :error="!!lobby.entryStatus" /></div
+      ></template>
+    </GameCarousel>
+    <LobbyBackdrop ref="backdrop" /><StatusSlot :message="lobby.attackStatus" />
     <UiDialog ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
       ><div class="vue-lobby-join"
         ><section class="vue-lobby-room-browser" data-ping-anchor="room-list" aria-label="目前房間"

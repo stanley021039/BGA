@@ -343,3 +343,39 @@ test('lobby speech follows author identity and expiring an older message keeps t
     pinia.disposePinia(instance);
   }
 });
+
+test('wrap destinations and cosmetic attacks survive the actual lobby contract without accepting corrupt coordinates', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  let now = 1000;
+  const lobby = createLobby(() => now),
+    a = { id: 'a', display_name: 'A' },
+    b = { id: 'b', display_name: 'B' };
+  lobby.move(a, { x: 94, y: 50 });
+  now += 10000;
+  lobby.view(a);
+  lobby.view(b);
+  lobby.move(a, { dx: 1, dy: 0 });
+  now += 500;
+  lobby.view(a);
+  const raw = { ...lobby.move(a, { dx: 1, dy: 0 }), serverNow: now };
+  assert.ok(raw.visitors.find((v) => v.id === 'a').targetX > 100);
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  assert.ok(read(raw).visitors.find((v) => v.id === 'a').targetX > 100);
+  const attacked = {
+    ...lobby.attack(a, { requestId: 'request-contract', aspectRatio: 1 }),
+    serverNow: now,
+  };
+  assert.equal(read(attacked).attacks[0].toId, 'b');
+  for (const key of ['fromX', 'fromY', 'toX', 'toY']) {
+    const broken = structuredClone(attacked);
+    broken.attacks[0][key] = 101;
+    assert.throws(() => read(broken));
+  }
+  const broken = structuredClone(raw);
+  broken.visitors[0].targetX = 106;
+  assert.throws(() => read(broken));
+  delete attacked.attacks;
+  delete attacked.visitors[0].wrapId;
+  assert.equal(read(attacked).attacks.length, 0);
+  assert.equal(read(attacked).visitors[0].wrapId, 0);
+});

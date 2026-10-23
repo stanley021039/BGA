@@ -23,10 +23,13 @@ import {
 import type { InteractionSource } from '../services/interaction-source';
 import type { BarrageEvent } from '../contracts/social';
 import { entranceEffect } from '../services/entrance-effects';
+type AttackSlot = 'q' | 'e';
+type Movement = { x: number; y: number } | { dx: number; dy: number };
 import { useLobbyBackgroundStore } from './lobby-background';
 
 export const useLobbyStore = defineStore('lobby', () => {
   const session = useSessionStore();
+  const attackJobs = new Set<AttackSlot>();
   const snapshot = shallowRef<LobbySnapshot | null>(null),
     rooms = shallowRef<PublicRoom[]>([]),
     expressions = shallowRef<LobbyExpression[]>([]);
@@ -35,7 +38,9 @@ export const useLobbyStore = defineStore('lobby', () => {
     presenceStatus = ref('正在進入大廳…'),
     roomsStatus = ref('正在載入房間…'),
     expressionStatus = ref(''),
-    entryStatus = ref('');
+    entryStatus = ref(''),
+    attackStatus = ref(''),
+    attackPending = ref(false);
   const roomsLoading = ref(false),
     expressionsLoading = ref(false),
     expressionsReady = ref(false),
@@ -53,7 +58,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     expressionsJob: Promise<void> | null = null;
   let presenceTimer: ReturnType<typeof setTimeout> | null = null,
     roomsTimer: ReturnType<typeof setTimeout> | null = null,
-    queued: { x: number; y: number } | null = null,
+    queued: Movement | null = null,
     backoff = 500;
   const controllers = new Set<AbortController>();
   const identity = computed(() => session.user?.id || '');
@@ -184,11 +189,11 @@ export const useLobbyStore = defineStore('lobby', () => {
         void sync();
       }, delay);
   }
-  async function sync(target?: { x: number; y: number }) {
+  async function sync(target?: Movement) {
     if (disposed || !identity.value || document.hidden) return;
     if (target) {
       queued = target;
-      destination.value = target;
+      destination.value = 'x' in target ? target : null;
     }
     if (presenceJob || emotePending.value || teleportPending.value) return presenceJob;
     if (presenceTimer) clearTimeout(presenceTimer);
@@ -235,6 +240,36 @@ export const useLobbyStore = defineStore('lobby', () => {
         x: Math.max(6, Math.min(94, target.x)),
         y: Math.max(12, Math.min(97, target.y)),
       });
+  }
+  function step(dx: number, dy: number) {
+    if (connected.value) void sync({ dx, dy });
+  }
+  async function attack(slot: AttackSlot = 'q') {
+    if (!connected.value || attackJobs.has(slot) || disposed || document.hidden) return;
+    attackJobs.add(slot);
+    attackPending.value = true;
+    attackStatus.value = '';
+    const epoch = generation,
+      account = identity.value;
+    try {
+      const result = await request('/api/lobby/attack', {
+        requestId: crypto.randomUUID(),
+        slot,
+        aspectRatio: Math.max(0.2, Math.min(5, innerWidth / innerHeight)),
+      });
+      if (current(epoch, account)) {
+        consume(result);
+        attackStatus.value = '已向最近玩家發射特效';
+      }
+    } catch (error) {
+      if (current(epoch, account))
+        attackStatus.value = error instanceof Error ? error.message : '暫時無法發射特效';
+    } finally {
+      if (current(epoch, account)) {
+        attackJobs.delete(slot);
+        attackPending.value = attackJobs.size > 0;
+      }
+    }
   }
   async function warmExpressions() {
     if (!preloadAllowed()) return;
@@ -461,7 +496,9 @@ export const useLobbyStore = defineStore('lobby', () => {
       entryPending.value =
       emotePending.value =
         false;
-    entryStatus.value = expressionStatus.value = '';
+    entryStatus.value = expressionStatus.value = attackStatus.value = '';
+    attackJobs.clear();
+    attackPending.value = false;
     presenceStatus.value = '正在進入大廳…';
     roomsStatus.value = '正在載入房間…';
     positionReset.value++;
@@ -553,6 +590,10 @@ export const useLobbyStore = defineStore('lobby', () => {
     destination,
     interaction: markRaw(interaction),
     move,
+    step,
+    attack,
+    attackPending,
+    attackStatus,
     teleport,
     sync,
     refreshRooms,
