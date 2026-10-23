@@ -11,7 +11,12 @@ const root = path.resolve(__dirname, '..');
 test('all twenty-four final imported entrance artworks have complete local animation definitions and safe static markup', () => {
   assert.equal(effects.length, 24);
   assert.equal(new Set(effects.map((e) => e.id)).size, 24);
-  const css = ['entrance-stitch.css', 'entrance-stitch-repairs.css', 'entrance-stitch-update.css']
+  const css = [
+    'entrance-stitch.css',
+    'entrance-stitch-repairs.css',
+    'entrance-stitch-update.css',
+    'entrance-purple-v2.css',
+  ]
     .map((file) => fs.readFileSync(path.join(root, 'frontend/src/assets', file), 'utf8'))
     .join('\n');
   const frames = new Set([...css.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1]));
@@ -63,6 +68,24 @@ test('all twenty-four final imported entrance artworks have complete local anima
     assert.ok(definition);
     assert.ok(!['trpg', 'market'].includes(definition.game));
   }
+});
+
+test('Hollow Purple uses the approved outlined 茈 and MURASAKI artwork with isolated styles', () => {
+  const purple = effects.find((effect) => effect.id === 'stitch-purple');
+  assert.match(purple.html, />茈<\/text>/);
+  assert.match(purple.html, /MURASAKI/);
+  assert.match(purple.html, /stroke="#ffffff"/);
+  assert.match(purple.html, /purple-v2-hollow-red-spiral/);
+  assert.match(purple.html, /purple-v2-hollow-blue-spiral/);
+  assert.doesNotMatch(purple.html, /exodia/i);
+  for (const effect of effects.filter((effect) => effect !== purple)) {
+    assert.doesNotMatch(effect.html, /purple-v2-/);
+  }
+  const player = fs.readFileSync(
+    path.join(root, 'frontend/src/services/stitch-entrances.ts'),
+    'utf8',
+  );
+  assert.match(player, /id === 'stitch-purple'\) node.classList.add\('stitch-purple-v2'\)/);
 });
 test('nine Stitch backgrounds include eight personal achievement unlocks and exclude the unwanted black theme', () => {
   assert.equal(backgrounds.length, 10);
