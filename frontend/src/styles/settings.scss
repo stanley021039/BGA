@@ -84,6 +84,11 @@
     align-items: start;
     min-inline-size: 0;
   }
+  #settings-form {
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+  }
   .settings-account-column,
   .settings-grid {
     display: grid;

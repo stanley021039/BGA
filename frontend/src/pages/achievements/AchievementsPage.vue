@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useAchievementsStore } from '../../stores/achievements';
 import UiIcon from '../../components/UiIcon.vue';
 import AchievementCard from './AchievementCard.vue';
+import AttackChoices from '../../components/AttackChoices.vue';
+import UiDialog from '../../components/UiDialog.vue';
+import UiButton from '../../components/UiButton.vue';
 import AchievementRewards from '../../components/AchievementRewards.vue';
 import AchievementRedeem from '../../components/AchievementRedeem.vue';
 const store = useAchievementsStore();
+const attackPicker = ref<InstanceType<typeof UiDialog> | null>(null);
 onMounted(() => void store.load());
 </script>
 
@@ -14,6 +18,10 @@ onMounted(() => void store.load());
     ><div class="kicker">YOUR TABLE MOMENTS</div><h1>成就收藏冊<span>✦</span></h1
     ><p>記下玩過的桌遊時刻。</p></div
   >
+  <section class="page-panel"
+    ><h2>攻擊特效</h2><UiButton label="選擇Q／E攻擊特效" @click="attackPicker?.open()"
+  /></section>
+  <UiDialog ref="attackPicker" stitch title="選擇攻擊特效"><AttackChoices /></UiDialog>
   <section
     class="page-panel vue-stitch-panel achievements-panel"
     aria-labelledby="achievementHeading"

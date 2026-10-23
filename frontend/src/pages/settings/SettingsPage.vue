@@ -20,6 +20,7 @@ import LobbyBackgroundPicker from '../../components/LobbyBackgroundPicker.vue';
 import FramePreview from '../../components/FramePreview.vue';
 import PingSymbol from '../../components/PingSymbol.vue';
 import UiDialog from '../../components/UiDialog.vue';
+import AttackChoices from '../../components/AttackChoices.vue';
 import EntranceChoices from '../../components/EntranceChoices.vue';
 import EntrancePreview from '../../components/EntrancePreview.vue';
 import '../../../../public/shared/ping-model.js';
@@ -27,6 +28,7 @@ import { record, array, text } from '../../services/validation';
 import { requestJson } from '../../services/http';
 import { entranceEffect, entranceEffects } from '../../services/entrance-effects';
 
+const attackPicker = ref<InstanceType<typeof UiDialog> | null>(null);
 const pingColor = (type: PingType) => window.PingModel?.colors[type];
 const profile = useProfileStore(),
   session = useSessionStore(),
@@ -474,6 +476,12 @@ onMounted(() => {
       :aria-busy="pending || profile.loading"
       @submit.prevent="save"
     >
+      <section class="page-panel settings-attack-panel" aria-labelledby="attack-settings-heading"
+        ><header class="settings-card-heading"
+          ><h2 id="attack-settings-heading">Q／E 攻擊特效</h2
+          ><a href="/collection?section=attack">前往收藏庫 ↗</a></header
+        ><UiButton label="選擇Q／E攻擊特效" @click="attackPicker?.open()"
+      /></section>
       <fieldset class="settings-fields" :disabled="pending || !appearance || !avatar">
         <div class="settings-grid">
           <section
@@ -679,5 +687,6 @@ onMounted(() => {
       :disabled="!appearance || !avatar || selectedPings.length !== 5"
   /></footer>
   <FramePicker ref="barragePicker" kind="barrage" /><FramePicker ref="mediaPicker" kind="media" />
+  <UiDialog ref="attackPicker" stitch title="選擇攻擊特效"><AttackChoices /></UiDialog>
   <UiDialog ref="entrancePicker" stitch title="選擇進場特效"><EntranceChoices /></UiDialog>
 </template>

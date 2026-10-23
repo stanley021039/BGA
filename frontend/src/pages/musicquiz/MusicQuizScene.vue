@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
+import MusicKingTokens from '../../components/MusicKingTokens.vue';
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { usePartyActionsStore } from '../../stores/party-actions';
@@ -315,7 +316,8 @@ const canSlot = (i: number) =>
           s.song
             ? s.song.title + ' · ' + s.song.artist + ' · ' + s.song.year
             : '先聽音樂，答案揭曉前隱藏歌名與年份'
-        }}</p></header
+        }}</p
+        ><MusicKingTokens v-if="s.me" :count="s.mine.tokens" /></header
       ><div class="mq-current-dj" :class="{ 'is-me': me }"
         ><span>{{ me ? '你是本輪 DJ' : '本輪 DJ' }}</span
         ><strong>{{ dj?.name || '等待 DJ' }}</strong></div
@@ -489,9 +491,8 @@ const canSlot = (i: number) =>
       ></label
     ><details v-for="player in s.players" :key="player.id" :open="player.id === s.me"
       ><summary
-        >{{ player.name }} · {{ player.timeline.length }}張 · 前奏{{ player.bonus }}分 · 標記{{
-          player.tokens
-        }}</summary
+        >{{ player.name }} · {{ player.timeline.length }}張 · 前奏{{ player.bonus }}分
+        <MusicKingTokens :count="player.tokens" /></summary
       ><div class="mq-collection-grid"
         ><div
           v-for="card in player.timeline"
