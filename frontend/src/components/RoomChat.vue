@@ -8,7 +8,12 @@ import UiButton from './UiButton.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/room-social.scss';
 const props = withDefaults(
-  defineProps<{ inline?: boolean; notice?: string; quickReplies?: string[] }>(),
+  defineProps<{
+    inline?: boolean;
+    panelVisible?: boolean;
+    notice?: string;
+    quickReplies?: string[];
+  }>(),
   { inline: true, notice: '' },
 );
 const chat = useChatStore(),
@@ -89,7 +94,7 @@ async function toggle() {
   }
 }
 watch(
-  () => props.inline,
+  () => props.panelVisible ?? props.inline,
   (value) => {
     chat.show(value);
   },
@@ -190,6 +195,7 @@ defineExpose({ compose, focus: focusInput });
           ><slot name="tools" /><ReactionPicker
             :disabled="blocked"
             :quick-replies="quick"
+            :mode="room.type === 'quacks' ? 'emoji' : 'all'"
             compose-emoji
             @compose="compose" /><UiButton
             v-if="chat.status && chat.enabled"

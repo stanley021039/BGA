@@ -1,15 +1,12 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
-import { useRoomStore } from '../../stores/room';
 import { playerRoomRole } from '../../contracts/room';
 import type { WitchColor } from '../../contracts/quacks';
 import RoomPlayerCard from '../../components/RoomPlayerCard.vue';
-import UiButton from '../../components/UiButton.vue';
 import QuacksGlyph from './QuacksGlyph.vue';
 import '../../styles/quacks-roster.scss';
 const game = useQuacksStore(),
-  room = useRoomStore(),
   heading = useId();
 const coins: WitchColor[] = ['gold', 'copper', 'silver'];
 const coinNames = { gold: '金女巫幣', copper: '銅女巫幣', silver: '銀女巫幣' };
@@ -49,10 +46,6 @@ function coinLabel(color: WitchColor, value: boolean | undefined) {
     (witch ? '；' + witch.name + '：' + witch.text : '')
   );
 }
-function view(id: string) {
-  const recipe = game.state?.recipes.find((item) => item.id === id);
-  if (recipe && !recipe.hidden && !room.terminal) game.selectedPot = id;
-}
 </script>
 <template>
   <section class="vue-quacks-roster" data-ping-anchor="players" :aria-labelledby="heading">
@@ -82,20 +75,6 @@ function view(id: string) {
           ><span :data-quacks-score="row.recipe.id">{{ row.recipe.score }}</span
           ><span>分</span></template
         >
-        <template #action
-          ><UiButton
-            variant="ghost"
-            icon="next"
-            icon-only
-            :label="
-              row.recipe.hidden
-                ? row.recipe.name + '的大釜尚未公開'
-                : '查看' + row.recipe.name + '的大釜'
-            "
-            :aria-pressed="row.viewed"
-            :disabled="row.recipe.hidden || !!room.terminal"
-            @click="view(row.recipe.id)"
-        /></template>
         <template #details>
           <div class="vue-quacks-player-resources" aria-label="公開資源">
             <span
