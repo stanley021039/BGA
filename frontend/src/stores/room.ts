@@ -281,6 +281,16 @@ export const useRoomStore = defineStore('room', () => {
       if (epoch === scope.value && !disposed) busy.value = false;
     }
   }
+  // An "unchanged" poll reply carries no snapshot but still proves the link.
+  function confirm(serverNow: unknown) {
+    if (disposed || terminal.value || !seat.value) return false;
+    if (typeof serverNow !== 'number' || !Number.isFinite(serverNow)) return false;
+    clockOffset.value = Date.now() - serverNow;
+    lastReceivedAt.value = Date.now();
+    disconnected.value = false;
+    error.value = '';
+    return true;
+  }
   function lostConnection(cause?: unknown) {
     disconnected.value = true;
     if (cause instanceof Error) error.value = cause.message;
@@ -324,6 +334,7 @@ export const useRoomStore = defineStore('room', () => {
     reconnect,
     request,
     accept,
+    confirm,
     command,
     lostConnection,
     invalidateIdentity,

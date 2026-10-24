@@ -91,6 +91,7 @@ const { createRoomRuntime } = require('./rooms/runtime');
 const { createFrontend } = require('./http/frontend');
 const { withEntryIntro } = require('./http/entry-intro');
 const { createRoomTransitions } = require('./rooms/transitions');
+const { createStateStream, stateTag } = require('./rooms/state-stream');
 const { botSupport, addTestBot } = require('./ai');
 const { reconnectPlayer } = require('./rooms/reconnect');
 const { endRoomHistory } = require('./rooms/lifecycle');
@@ -873,10 +874,25 @@ function initializeApp(config, dataLock, acquired) {
       }
     }
   };
+  // Pushes room views to seated players as soon as they change (#232).
+  const stateStream = createStateStream({
+    project: (room, playerId) => withSocial(room, room.view(playerId)),
+    valid: (entry) =>
+      !!auth.sessionFrom(entry.req) &&
+      rooms.get(entry.room.code) === entry.room &&
+      !kickedUsers.get(entry.room.code)?.has(entry.userId) &&
+      seats.get(entry.room.code)?.get(entry.userId) === entry.playerId,
+    onFlush: awardRoomAchievements,
+    onAlive: (entry) => resumeSeat(entry.room, entry.user),
+    onHeartbeat: (entry) => roomInvitations.touch(entry.user),
+  });
   const transitions = createRoomTransitions({
     history,
     runtime,
-    onTransition: awardRoomAchievements,
+    onTransition: (room) => {
+      awardRoomAchievements(room);
+      stateStream.notify(room);
+    },
     onMembershipChanged: (room) => {
       reconcileWatch(room);
       pruneRoomRoles(room, activeRoomIds(room));
@@ -1119,7 +1135,9 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/room-invitations' && req.method === 'POST') {
           expireRooms();
           limitRate(roomRate, 'invite:' + user.id, 10);
-          return send(roomInvitations.send(user, data));
+          const invitation = roomInvitations.send(user, data);
+          stateStream.hintUser(data.targetId, 'invitations');
+          return send(invitation);
         }
         if (url.pathname === '/api/room-invitations/respond' && req.method === 'POST') {
           expireRooms();
@@ -1149,7 +1167,7 @@ function initializeApp(config, dataLock, acquired) {
           limitRate(roomRate, 'chat-read:' + user.id, 120);
           const room = rooms.get(code),
             playerId = seats.get(code)?.get(user.id);
-          if (req.method === 'POST')
+          if (req.method === 'POST') {
             sendRoomMessage({
               assertFrame: (user, id) => achievementStore.assertFrame(user.id, id),
               chat,
@@ -1159,6 +1177,9 @@ function initializeApp(config, dataLock, acquired) {
               playerId,
               data,
             });
+            stateStream.hint(code, 'chat');
+            stateStream.notify(room);
+          }
           return send({
             channel,
             code,
@@ -1804,6 +1825,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/join',
             '/api/reconnect',
             '/api/state',
+            '/api/room-events',
             '/api/telephone/draft',
             '/api/bluff/caption',
             '/api/game-song-audio',
@@ -1842,6 +1864,8 @@ function initializeApp(config, dataLock, acquired) {
           throw new HttpError(403, 'KICKED', '你已被房主踢出房間');
         // Revoke an expired controller before this request refreshes their seat lease.
         reconcileWatch(room);
+        // Any room write may change what the table sees.
+        if (req.method === 'POST' && !pingLobby) res.once('finish', () => stateStream.notify(room));
         if (url.pathname === '/api/reconnect' && req.method === 'POST') {
           resumeSeat(room, user);
           return send({ code: room.code, type: room.type || 'poker', reconnected: true });
@@ -1849,6 +1873,13 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/join' && req.method === 'POST')
           return send(joinRoom(room, user, req));
         const p = pingLobby ? { id: user.id } : resumeSeat(room, user);
+        if (url.pathname === '/api/room-events' && req.method === 'GET') {
+          if (pingLobby) throw new HttpError(404, 'NOT_FOUND', '找不到請求路徑');
+          limitRate(roomRate, 'room-events:' + user.id, 30);
+          if (!stateStream.subscribe(room, { req, res, user, playerId: p.id }))
+            throw new HttpError(429, 'STREAM_LIMIT', '房間連線太多，請關閉舊分頁');
+          return;
+        }
         if (url.pathname === '/api/room-space') {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
           if (room.type !== 'quacks')
@@ -2245,8 +2276,20 @@ function initializeApp(config, dataLock, acquired) {
           return send(withSocial(room, room.view(p.id)));
         }
         if (url.pathname === '/api/state') {
-          awardRoomAchievements(room);
-          return send(withSocial(room, room.view(p.id)));
+          // Streamed rooms award achievements when they change, not on every read.
+          if (!stateStream.watched(room.code)) awardRoomAchievements(room);
+          const view = withSocial(room, room.view(p.id)),
+            tag = stateTag(view);
+          // A polling page that already has this content gets a small reply.
+          if (url.searchParams.get('since') === tag)
+            return send({
+              code: room.code,
+              type: room.type || 'poker',
+              unchanged: true,
+              serverNow: view.serverNow,
+              stateTag: tag,
+            });
+          return send({ ...view, stateTag: tag });
         }
         if (req.method !== 'POST') throw Error('不支援的請求');
         if (url.pathname === '/api/social') {
@@ -2260,6 +2303,7 @@ function initializeApp(config, dataLock, acquired) {
               playerId: p.id,
               data,
             });
+            stateStream.hint(room.code, 'chat');
             return send(withSocial(room, room.view(p.id)));
           }
           const now = Date.now(),
@@ -3019,6 +3063,7 @@ function initializeApp(config, dataLock, acquired) {
       await attempt(() => marketImageStore.stopThumbnails());
       await attempt(() => mediaThumbnails.stop());
       await attempt(() => mediaAudio.stop());
+      await attempt(() => stateStream.close());
       await attempt(() => runtime.drainStreams());
       await serverClosed;
       for (const room of rooms.values()) await attempt(() => awardRoomAchievements(room));
