@@ -35,8 +35,7 @@ const RULES = [
   },
   {
     matches: (file) =>
-      ['public/login.html', 'public/login.js'].includes(file) ||
-      file.startsWith('public/assets/auth/'),
+      file.startsWith('frontend/src/pages/login/') || file.startsWith('public/assets/auth/'),
     reason: '登入／註冊及跨頁資源契約',
     tests: AUTH_TESTS,
   },

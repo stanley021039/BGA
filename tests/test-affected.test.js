@@ -70,7 +70,14 @@ function fixture(t) {
 }
 
 test('explicit mapping unions tests, direct tests select themselves, and docs select none', () => {
-  const plan = planChanges(['public/login.js', 'public/login.html', 'tests/auth.test.js'], all);
+  const plan = planChanges(
+    [
+      'frontend/src/pages/login/main.ts',
+      'frontend/src/pages/login/LoginPage.vue',
+      'tests/auth.test.js',
+    ],
+    all,
+  );
   assert.equal(plan.mode, 'affected');
   assert.ok(plan.tests.includes('tests/auth.test.js'));
   assert.ok(plan.tests.includes('tests/merged-app-resources.test.js'));
@@ -88,6 +95,8 @@ test('unknown, shared, core, dependency, fixture and deleted-test paths fall bac
     'src/db/index.js',
     'public/shared/ui-components.js',
     'public/club-pages.css',
+    'public/login.html',
+    'public/login.js',
     'new-feature.js',
     'tests/helpers/new.cjs',
     'tests/deleted.test.js',
@@ -100,7 +109,7 @@ test('unknown, shared, core, dependency, fixture and deleted-test paths fall bac
     assert.ok(plan.fullReasons.length);
   }
   assert.equal(
-    planChanges(['public/login.html'], ['tests/only.test.js']).mode,
+    planChanges(['frontend/src/pages/login/LoginPage.vue'], ['tests/only.test.js']).mode,
     'full',
     'missing mapped tests cannot silently disappear',
   );

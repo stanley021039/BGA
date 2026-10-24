@@ -40,6 +40,18 @@ test('independent app instances can start, serve, and release their history lock
         asset.endsWith('.css') ? /text\/css/ : /text\/javascript/,
       );
     }
+    // Retired aliases must be absent as well as their /shared/ counterparts;
+    // otherwise the static map tries to read deleted files and answers 500.
+    for (const asset of [
+      'room-reconnect.js',
+      'room-host.js',
+      'room-host.css',
+      'game-shell.js',
+      'game-shell.css',
+    ]) {
+      assert.equal((await fetch(`http://127.0.0.1:${port}/${asset}`)).status, 404, asset);
+      assert.equal((await fetch(`http://127.0.0.1:${port}/shared/${asset}`)).status, 404, asset);
+    }
     assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.js`)).status, 200);
     assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.css`)).status, 200);
     await app.close();
