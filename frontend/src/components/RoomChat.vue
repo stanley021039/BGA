@@ -14,7 +14,7 @@ const props = withDefaults(
     notice?: string;
     quickReplies?: string[];
   }>(),
-  { inline: true, notice: '' },
+  { inline: true, panelVisible: undefined, notice: '' },
 );
 const chat = useChatStore(),
   reactions = useReactionsStore(),

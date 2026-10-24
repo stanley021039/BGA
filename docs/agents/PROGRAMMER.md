@@ -1,3 +1,11 @@
+## 2026-10-24 #239：聊天室與媒體視窗修正
+
+已整合 main c8a19c6（含房間重啟持久化），候選 2.42.7。RoomChat 明確保留未傳入 panelVisible 的 undefined，恢復 inline 訊息/輸入；受控開關不變。媒體框飾移除彈幕 gutter，使邊線對齊視窗；按實際表面/漸層對比選文字色，並隔離 legacy 對原生欄位的覆蓋。
+
+使用者最終確認為 height:auto、自然內容高度、固定 8px 區塊 gap、不顯示捲軸及空白狀態槽；取代本輪中間的固定高度及整組上下置中方案。短視窗保留輪/觸控可達，寬度仍可調整；bar 保留 56px。ResizeObserver 重新量測自然高度並在卸載時釋放。
+
+前置 Chrome 1920×1080、390×844、390×480：點播 575px、播放 362px、compact 162px；淺色草莓/紙張黑字、深色像素白字，表單/說明/連結與欄位均已檢查。畫猜等待與選題/作畫階段真送訊息可見。整合後 Chrome 再確認等待室實際送訊息及點播 575px/height:auto/無捲軸。相關 19 項回歸涵蓋實際 RoomChat 掛載、幾何/viewport/observer 清理、深淺表面、半透明漸層合成與媒體生命週期。沒有改畫布 renderer、同步協定、遊戲規則或資料庫；真實 YouTube/喇叭、實機觸控與完整畫布時序未新增驗收。PR 的最終 head 審查、CI 與部署結果以 #239 關聯 PR 為準。
+
 ## 2026-10-23 個人化設定完整清單與目前預覽候選（取代本輪固定高度清單）
 
 使用者最新要求：攻擊特效、彈幕、播放器、進場特效直接列出所有選項；上方顯示目前套用預覽；選項高度改為 auto 並盡量向下展開，取代本輪先前固定高度局部捲動。SettingsPage 只掛載目前分類，沿用 FrameChoices 各 48 款與 EntranceChoices 31 款；AttackChoices 在設定頁顯示目前 Q／E 的兩個獨立預覽與重播按鈕，既有 15 款試播與 Q／E 分別設定保留。分類切換時若內容頂端已離開畫面，捲回新分類頂端。沿用 preferences.canUse 獎勵更新修正，相關回歸與攻擊設定共 4 項通過。使用者已要求 PR 與正式發布；本批整合 main 80cc7d94d35f 後候選 2.42.2，發布結論以本批 PR 與部署證據為準。Chrome 1920×1080 與 390×844、深淺色已觀察；目前框飾／進場選擇即時預覽、進場重新整理保留、Q／E 預覽重播、31 款進場直接顯示、長清單末端切分類後預覽回到畫面內已驗。frontend:build（含 vue-tsc）、ui:check、perf:check --build、release:check 與 diff check 通過；整合後前端回歸 90/90、本機 test:affected 因共用／未知路徑回退 292 個檔案，完整 2692/2692 通過，無略過／失敗；未驗實機觸控、所有效果生命週期或 GPU FPS。獨立預覽 127.0.0.5:3168，截圖位於本機 work/settings-auto-entrance-desktop.png、settings-auto-media-desktop.png、settings-auto-attack-desktop.png 與 settings-auto-mobile.png。
