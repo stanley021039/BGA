@@ -946,18 +946,23 @@ function initializeApp(config, dataLock, acquired) {
     for (const room of rooms.values()) {
       if (!room.players?.some((p) => !p.bot && !p.kicked)) continue;
       try {
-        saved.push(
-          roomPersistence.captureRoom(room, {
-            match: room.matchAchievements?.snapshot?.() || null,
-            history: history.state(room),
-            seats: seats.get(room.code) || null,
-            departed: departedSeats.get(room.code) || null,
-            kicked: kickedUsers.get(room.code) || null,
-            social: socialEvents.get(room.code) || null,
-            media: roomSideData(mediaRooms.get(room)),
-            watch: roomSideData(watchRooms.get(room)),
-          }),
-        );
+        const captured = roomPersistence.captureRoom(room, {
+          match: room.matchAchievements?.snapshot?.() || null,
+          history: history.state(room),
+          seats: seats.get(room.code) || null,
+          departed: departedSeats.get(room.code) || null,
+          kicked: kickedUsers.get(room.code) || null,
+          social: socialEvents.get(room.code) || null,
+          media: roomSideData(mediaRooms.get(room)),
+          watch: roomSideData(watchRooms.get(room)),
+        });
+        // A room waiting on a callback (e.g. an open dice roll) cannot resume after
+        // a restart; it ends as it did before rooms were kept.
+        if (captured.callbacks.length)
+          console.warn(
+            'Room ' + room.code + ' not saved; pending callbacks: ' + captured.callbacks.join(', '),
+          );
+        else saved.push(captured);
       } catch (error) {
         console.error('Room ' + room.code + ' could not be saved:', error);
       }
@@ -986,6 +991,14 @@ function initializeApp(config, dataLock, acquired) {
     for (const saved of snapshot.rooms || []) {
       const Type = roomClasses[saved.type];
       if (!Type || rooms.has(saved.code)) continue;
+      // Snapshots written before callbacks were checked (2.42.6–2.44.1) may hold a
+      // thunder room whose open dice roll lost its callbacks; it cannot resume.
+      if (!Array.isArray(saved.callbacks) && saved.data?.get('_diceRoll')?.value) {
+        console.warn(
+          'Room ' + saved.code + ' not restored; its dice roll was saved without callbacks',
+        );
+        continue;
+      }
       let room = null;
       try {
         const result = roomPersistence.restoreRoom(saved, () => {
