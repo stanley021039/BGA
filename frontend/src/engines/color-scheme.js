@@ -1,7 +1,6 @@
 let ColorScheme;
-/* Load in <head> so a saved appearance is applied before the first paint. */
-/* Also the earliest script on every page: a reload anywhere asks for room video consent again
-   (see frontend/src/services/media-consent.ts and shared/table-media.js). */
+/* The HTTP prepaint snapshot applies appearance before CSS; this module owns updates. */
+/* Each document reload asks for room video consent again; see services/media-consent.ts. */
 (() => {
   try {
     const navigation = performance.getEntriesByType?.('navigation')[0];

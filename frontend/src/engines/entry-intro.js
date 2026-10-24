@@ -5,7 +5,7 @@ let EntryPreferences;
 (() => {
   'use strict';
   // One browser-wide preference owner, shared by Vue, legacy and auth entry.
-  // This script is blocking in <head>, before the overlay can be painted.
+  // The HTTP prepaint snapshot hides an opted-out overlay before the first paint.
   const preferenceKey = 'bga-entry-intro-settings';
   const listeners = new Set();
   function readPreference() {

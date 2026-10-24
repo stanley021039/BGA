@@ -124,7 +124,7 @@ let PingModel;
   }
   const api = { types, colors, pick, wheel, point, place, preferences };
 
-  // Also expose the browser leaf when a bundler wraps this UMD module as CommonJS.
+  // One canonical registry is imported by browser and server callers.
   PingModel = api;
 })(typeof window === 'object' ? window : globalThis);
 
