@@ -991,6 +991,14 @@ function initializeApp(config, dataLock, acquired) {
     for (const saved of snapshot.rooms || []) {
       const Type = roomClasses[saved.type];
       if (!Type || rooms.has(saved.code)) continue;
+      // Snapshots written before callbacks were checked (2.42.6–2.44.1) may hold a
+      // thunder room whose open dice roll lost its callbacks; it cannot resume.
+      if (!Array.isArray(saved.callbacks) && saved.data?.get('_diceRoll')?.value) {
+        console.warn(
+          'Room ' + saved.code + ' not restored; its dice roll was saved without callbacks',
+        );
+        continue;
+      }
       let room = null;
       try {
         const result = roomPersistence.restoreRoom(saved, () => {

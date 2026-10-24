@@ -70,6 +70,52 @@ test('callbacks inside game state are reported; room methods and hidden wiring a
   assert.deepEqual(captureRoom(room).callbacks, []);
 });
 
+test('a snapshot from before callbacks were checked skips a thunder room with an open dice roll', async (t) => {
+  const v8 = require('node:v8');
+  const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'bga-room-legacy-'));
+  const config = {
+    dbFile: path.join(root, 'app.sqlite'),
+    historyDir: path.join(root, 'history'),
+    communityDir: path.join(root, 'community'),
+    musicDir: path.join(root, 'music'),
+    host: '127.0.0.1',
+    port: 0,
+    externalSideEffectsEnabled: false,
+    githubClient: { configured: false },
+  };
+  const room = (code, diceRoll) => ({
+    type: 'thunder',
+    code,
+    name: code,
+    data: new Map([
+      ['players', { value: [], enumerable: true }],
+      ['_diceRoll', { value: diceRoll, enumerable: true }],
+    ]),
+    extra: { seats: new Map() },
+  });
+  fs.writeFileSync(
+    config.dbFile + '.rooms',
+    v8.serialize({
+      schema: 1,
+      savedAt: Date.now(),
+      rooms: [room('AAAAAA', { faces: [[1]], rerolls: 0 }), room('BBBBBB', null)],
+      grace: [],
+    }),
+  );
+  const warnings = [];
+  t.mock.method(console, 'warn', (message) => warnings.push(String(message)));
+  const app = createApp(config);
+  t.after(async () => {
+    await app.close();
+    fs.rmSync(root, { recursive: true, force: true, maxRetries: 5 });
+  });
+  await app.listen();
+  assert.ok(
+    warnings.some((message) => message.includes('AAAAAA') && message.includes('dice roll')),
+  );
+  assert.ok(!warnings.some((message) => message.includes('BBBBBB')));
+});
+
 // Every game, with bots, survives a full app restart on the same data.
 const GAMES = [
   'poker',
