@@ -935,18 +935,23 @@ function initializeApp(config, dataLock, acquired) {
     for (const room of rooms.values()) {
       if (!room.players?.some((p) => !p.bot && !p.kicked)) continue;
       try {
-        saved.push(
-          roomPersistence.captureRoom(room, {
-            match: room.matchAchievements?.snapshot?.() || null,
-            history: history.state(room),
-            seats: seats.get(room.code) || null,
-            departed: departedSeats.get(room.code) || null,
-            kicked: kickedUsers.get(room.code) || null,
-            social: socialEvents.get(room.code) || null,
-            media: roomSideData(mediaRooms.get(room)),
-            watch: roomSideData(watchRooms.get(room)),
-          }),
-        );
+        const captured = roomPersistence.captureRoom(room, {
+          match: room.matchAchievements?.snapshot?.() || null,
+          history: history.state(room),
+          seats: seats.get(room.code) || null,
+          departed: departedSeats.get(room.code) || null,
+          kicked: kickedUsers.get(room.code) || null,
+          social: socialEvents.get(room.code) || null,
+          media: roomSideData(mediaRooms.get(room)),
+          watch: roomSideData(watchRooms.get(room)),
+        });
+        // A room waiting on a callback (e.g. an open dice roll) cannot resume after
+        // a restart; it ends as it did before rooms were kept.
+        if (captured.callbacks.length)
+          console.warn(
+            'Room ' + room.code + ' not saved; pending callbacks: ' + captured.callbacks.join(', '),
+          );
+        else saved.push(captured);
       } catch (error) {
         console.error('Room ' + room.code + ' could not be saved:', error);
       }

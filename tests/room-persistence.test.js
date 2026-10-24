@@ -60,6 +60,16 @@ test('a captured room restores its data onto a freshly built room', () => {
   assert.equal(extra.seats.get('u1'), 'p1');
 });
 
+test('callbacks inside game state are reported; room methods and hidden wiring are not', () => {
+  const room = build({ code: 'ABC123', name: 'table' });
+  room.pending = { kind: 'dice', resolve: () => 1, steps: [{ apply() {} }] };
+  Object.defineProperty(room, 'tracker2', { value: { finish() {} }, enumerable: false });
+  const saved = captureRoom(room);
+  assert.deepEqual([...saved.callbacks].sort(), ['pending.resolve', 'pending.steps[0].apply']);
+  delete room.pending;
+  assert.deepEqual(captureRoom(room).callbacks, []);
+});
+
 // Every game, with bots, survives a full app restart on the same data.
 const GAMES = [
   'poker',
@@ -142,6 +152,12 @@ test('open rooms of every game survive an app restart and keep playing', async (
   assert.equal(fs.existsSync(config.dbFile + '.rooms'), false, 'the saved file is consumed');
   for (const [type, { code, state }] of before) {
     const after = await server.call('state?code=' + code);
+    if (state.diceCheck) {
+      // An open dice roll waits on a callback that cannot be saved, so that
+      // room is not kept; it ends as it did before rooms were kept.
+      assert.equal(after.status, 404, type + ' with an open dice roll is not restored');
+      continue;
+    }
     assert.equal(after.status, 200, type + ' is still open after restart');
     for (const key of ['code', 'type', 'me', 'phase', 'round', 'name'])
       assert.deepEqual(after.body[key], state[key], type + ' keeps ' + key);
@@ -166,6 +182,7 @@ test('open rooms of every game survive an app restart and keep playing', async (
   await new Promise((resolve) => setTimeout(resolve, 2500));
   let advanced = 0;
   for (const [type, { code, state }] of before) {
+    if (state.diceCheck) continue;
     const after = await server.call('state?code=' + code);
     assert.equal(after.status, 200, type + ' still readable');
     if (after.body.stateTag !== state.stateTag) advanced++;
