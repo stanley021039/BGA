@@ -290,35 +290,67 @@ const eventText = (e: (typeof game.value.events)[number]) =>
               >
                 <div class="athlete-track-pieces">
                   <UiHoverInfo
-                    v-for="r in cell.racers.slice(0, 2)"
-                    :key="r.id"
-                    class="athlete-piece"
-                    :title="`${cardName(r.racerId)} · ${name(r.playerId)}${r.tripped ? ' · 絆倒' : ''}`"
+                    v-if="cell.racers.length > 2"
+                    class="athlete-stack-trigger"
+                    :title="`同格角色（${cell.racers.length} 位）`"
                     :show-help="false"
-                    tabindex="0"
-                  >
-                    <div>
-                      <AthleteArt
-                        :class="{ 'athlete-tripped': r.tripped }"
-                        :src="athleteArt(r.transformed ? 'weremouth' : r.racerId)"
-                        :alt="cardName(r.racerId)"
-                        :width="96"
-                        :height="70"
-                        eager
-                      />
-                    </div>
+                    interactive
+                    ><UiButton :label="`查看同格 ${cell.racers.length} 位角色`" caption="X" />
                     <template #info
-                      ><p>{{ cards[r.racerId]?.summary }}</p
-                      ><p>{{ cards[r.racerId]?.notes }}</p
-                      ><div
-                        v-for="other in cell.racers.filter((entry) => entry.id !== r.id)"
-                        :key="other.id"
-                        ><strong
-                          >同格：{{ cardName(other.racerId) }} · {{ name(other.playerId) }}</strong
-                        ><p>{{ cards[other.racerId]?.summary }}</p></div
-                      ></template
+                      ><div class="athlete-stack-grid">
+                        <UiHoverInfo
+                          v-for="r in cell.racers"
+                          :key="r.id"
+                          :title="`${cardName(r.racerId)} · ${name(r.playerId)}${r.tripped ? ' · 絆倒' : ''}`"
+                          :show-help="false"
+                        >
+                          <UiChoiceCard
+                            :label="`查看 ${cardName(r.racerId)} · ${name(r.playerId)}`"
+                            image-only
+                            action
+                          >
+                            <AthleteArt
+                              :class="{ 'athlete-tripped': r.tripped }"
+                              :src="athleteArt(r.transformed ? 'weremouth' : r.racerId)"
+                              :alt="cardName(r.racerId)"
+                              :width="96"
+                              :height="70"
+                              eager
+                            />
+                          </UiChoiceCard>
+                          <template #info
+                            ><p>{{ cards[r.racerId]?.summary }}</p
+                            ><p>{{ cards[r.racerId]?.notes }}</p></template
+                          >
+                        </UiHoverInfo>
+                      </div></template
                     >
                   </UiHoverInfo>
+                  <template v-else>
+                    <UiHoverInfo
+                      v-for="r in cell.racers"
+                      :key="r.id"
+                      class="athlete-piece"
+                      :title="`${cardName(r.racerId)} · ${name(r.playerId)}${r.tripped ? ' · 絆倒' : ''}`"
+                      :show-help="false"
+                      tabindex="0"
+                    >
+                      <div>
+                        <AthleteArt
+                          :class="{ 'athlete-tripped': r.tripped }"
+                          :src="athleteArt(r.transformed ? 'weremouth' : r.racerId)"
+                          :alt="cardName(r.racerId)"
+                          :width="96"
+                          :height="70"
+                          eager
+                        />
+                      </div>
+                      <template #info
+                        ><p>{{ cards[r.racerId]?.summary }}</p
+                        ><p>{{ cards[r.racerId]?.notes }}</p></template
+                      >
+                    </UiHoverInfo>
+                  </template>
                 </div>
                 <UiBadge v-if="game.coins?.includes(cell.position)" label="金幣" tone="primary" />
               </div>
@@ -519,6 +551,14 @@ const eventText = (e: (typeof game.value.events)[number]) =>
   width: 2rem;
   display: grid;
   justify-items: center;
+}
+.athlete-stack-trigger {
+  width: var(--stitch-control-height);
+}
+.athlete-stack-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4rem, 1fr));
+  gap: var(--stitch-gap-label);
 }
 .athlete-tripped {
   transform: rotate(-25deg);

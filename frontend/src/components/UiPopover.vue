@@ -13,6 +13,7 @@ const props = withDefaults(
     contentSized?: boolean;
     showClose?: boolean;
     avoidAnchor?: boolean;
+    manual?: boolean;
   }>(),
   { placement: 'bottom', compact: false, autofocus: true, contentSized: false, showClose: true },
 );
@@ -150,7 +151,7 @@ defineExpose({ open, close, visible });
       :id="id"
       v-bind="$attrs"
       ref="panel"
-      popover="auto"
+      :popover="manual ? 'manual' : 'auto'"
       role="dialog"
       :aria-label="title"
       class="vue-social-popover"

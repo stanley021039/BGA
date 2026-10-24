@@ -15,7 +15,7 @@ class Pointer extends window.Event {
     this.pointerType = pointerType;
   }
 }
-function fixture(showHelp = true) {
+function fixture(showHelp = true, interactive = false) {
   const calls = [];
   const Popover = vue.defineComponent({
     props: ['autofocus'],
@@ -71,7 +71,7 @@ function fixture(showHelp = true) {
     render: () =>
       vue.h(
         m.exports.default,
-        { title: '中文能力', disabled: true, showHelp },
+        { title: '中文能力', disabled: true, showHelp, interactive },
         { default: () => vue.h('span', '卡面'), info: () => vue.h('p', '完整中文能力') },
       ),
   });
@@ -156,6 +156,59 @@ test('a quick pass across a card cannot open a stale preview after leaving', asy
     await vue.nextTick();
     await new Promise((r) => setTimeout(r, 0));
     assert.equal(f.calls.length, 0);
+    assert.doesNotMatch(f.host.textContent, /完整中文能力/);
+  } finally {
+    f.dispose();
+  }
+});
+test('leaving and immediately reentering the same card reopens without a cooldown', async () => {
+  const f = fixture(false);
+  try {
+    const root = f.host.firstElementChild;
+    root.dispatchEvent(new Pointer('pointerenter', 'mouse'));
+    await vue.nextTick();
+    await new Promise((r) => setTimeout(r, 0));
+    root.dispatchEvent(new Pointer('pointerleave', 'mouse'));
+    root.dispatchEvent(new Pointer('pointerenter', 'mouse'));
+    await vue.nextTick();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(f.calls.length, 2);
+    assert.match(f.host.textContent, /完整中文能力/);
+  } finally {
+    f.dispose();
+  }
+});
+test('interactive preview bridges its gap, permits entering the panel, then closes outside', async () => {
+  const f = fixture(false, true);
+  try {
+    const root = f.host.firstElementChild;
+    root.dispatchEvent(new Pointer('pointerenter', 'mouse'));
+    await vue.nextTick();
+    await new Promise((r) => setTimeout(r, 0));
+    root.dispatchEvent(new Pointer('pointerleave', 'mouse'));
+    f.host.querySelector('aside').dispatchEvent(new Pointer('pointerenter', 'mouse'));
+    await new Promise((r) => setTimeout(r, 230));
+    assert.match(f.host.textContent, /完整中文能力/);
+    f.host.querySelector('aside').dispatchEvent(new Pointer('pointerleave', 'mouse'));
+    await new Promise((r) => setTimeout(r, 230));
+    await vue.nextTick();
+    assert.doesNotMatch(f.host.textContent, /完整中文能力/);
+  } finally {
+    f.dispose();
+  }
+});
+test('outside pointer dismissal does not reopen through restored source focus', async () => {
+  const f = fixture(false, true);
+  try {
+    const root = f.host.firstElementChild;
+    root.dispatchEvent(new Pointer('pointerenter', 'mouse'));
+    await vue.nextTick();
+    await new Promise((r) => setTimeout(r, 0));
+    document.body.dispatchEvent(new window.Event('pointerdown', { bubbles: true }));
+    root.dispatchEvent(new window.Event('focusin'));
+    await vue.nextTick();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(f.calls.length, 1);
     assert.doesNotMatch(f.host.textContent, /完整中文能力/);
   } finally {
     f.dispose();
