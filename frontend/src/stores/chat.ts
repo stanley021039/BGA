@@ -149,7 +149,7 @@ export const useChatStore = defineStore('chat', () => {
     }
     const ok = await poll();
     if (token !== pollEpoch || !enabled.value || disposed || document.hidden) return;
-    backoff = ok ? 3000 : Math.min(30000, backoff * 2);
+    backoff = ok ? (streamLive() ? 15000 : 3000) : Math.min(30000, backoff * 2);
     schedule(backoff);
   }
   async function send(value = draft.value): Promise<boolean> {
@@ -224,6 +224,12 @@ export const useChatStore = defineStore('chat', () => {
     draft.value = [...(draft.value + value)].slice(0, 160).join('');
     return true;
   }
+  // While the room event stream is open it announces new messages (#232), so
+  // the fallback poll can be slow.
+  const streamLive = () => document.documentElement.dataset.roomStream === 'live';
+  function streamed(event: Event) {
+    if ((event as CustomEvent<{ kind?: string }>).detail?.kind === 'chat') void tick();
+  }
   function visibility() {
     if (document.hidden) {
       pollEpoch++;
@@ -254,12 +260,14 @@ export const useChatStore = defineStore('chat', () => {
   document.addEventListener('visibilitychange', visibility);
   window.addEventListener('online', online);
   window.addEventListener('storage', logout);
+  window.addEventListener('bga:room-event', streamed);
   onScopeDispose(() => {
     disposed = true;
     reset();
     document.removeEventListener('visibilitychange', visibility);
     window.removeEventListener('online', online);
     window.removeEventListener('storage', logout);
+    window.removeEventListener('bga:room-event', streamed);
   });
   return {
     messages,

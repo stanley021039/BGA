@@ -190,7 +190,7 @@ test('history cleanup failure still closes the database and releases data locks'
   const next = f.create();
   await next.listen();
 });
-test('real draw and music SSE connections drain on close with no remaining app intervals', async (t) => {
+test('real draw, music and room-state SSE connections drain on close with no remaining app intervals', async (t) => {
   const { appFixture } = require('./helpers/app-fixture.cjs'),
     { createAuth } = require('../src/auth');
   const live = new Set(),
@@ -229,7 +229,7 @@ test('real draw and music SSE connections drain on close with no remaining app i
   assert.equal(created.status, 200);
   const { code } = await created.json();
   const readers = [];
-  for (const route of ['/api/draw/events', '/api/room-music/events']) {
+  for (const route of ['/api/draw/events', '/api/room-music/events', '/api/room-events']) {
     const response = await fetch(f.base + route + '?code=' + code, { headers });
     assert.equal(response.status, 200);
     const reader = response.body.getReader();
@@ -238,8 +238,8 @@ test('real draw and music SSE connections drain on close with no remaining app i
   }
   assert.equal(
     live.size,
-    4,
-    'two scheduler intervals and two SSE intervals; external automation is disabled',
+    6,
+    'two scheduler intervals, one interval per draw and music stream, and the room-state sweep and heartbeat; external automation is disabled',
   );
   await f.app.close();
   assert.equal(live.size, 0);

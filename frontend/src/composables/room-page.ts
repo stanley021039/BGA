@@ -6,6 +6,10 @@ import { gamePath, readSeat, type GameType, type RoomSnapshot } from '../contrac
 import { requestJson } from '../services/http';
 
 // Each game retains its read cadence while sharing one non-overlapping controller.
+// Seated pages also receive their view over one event stream (#232); while it
+// is open, polling slows to a safety net that only asks whether anything changed.
+const STREAM_POLL_MS = 10000,
+  STREAM_RETRY_MS = 5000;
 export function useRoomPage(
   type: GameType,
   reader: (value: unknown) => RoomSnapshot,
@@ -26,6 +30,63 @@ export function useRoomPage(
   let disposed = false,
     timer: ReturnType<typeof setTimeout> | null = null,
     job: { controller: AbortController; promise: Promise<boolean> | null } | null = null;
+  let stream: EventSource | null = null,
+    streamLive = false,
+    streamTried = 0,
+    stateTag = '';
+  function announce(live: boolean) {
+    if (streamLive === live) return;
+    streamLive = live;
+    // Widgets that mount later read the flag; those already listening get the event.
+    if (live) document.documentElement.dataset.roomStream = 'live';
+    else delete document.documentElement.dataset.roomStream;
+    window.dispatchEvent(new CustomEvent('bga:room-stream', { detail: { live } }));
+  }
+  function closeStream() {
+    stream?.close();
+    stream = null;
+    announce(false);
+  }
+  function accept(value: unknown) {
+    const row = value as { unchanged?: unknown; serverNow?: unknown; stateTag?: unknown } | null;
+    if (row?.unchanged === true) return room.confirm(row.serverNow);
+    const accepted = room.accept(value);
+    if (accepted) stateTag = typeof row?.stateTag === 'string' ? row.stateTag : '';
+    return accepted;
+  }
+  function openStream() {
+    if (stream || disposed || !room.seat || room.terminal || document.hidden) return;
+    if (typeof EventSource !== 'function' || Date.now() - streamTried < STREAM_RETRY_MS) return;
+    streamTried = Date.now();
+    const scope = room.scope,
+      source = new EventSource('/api/room-events?code=' + encodeURIComponent(room.seat.code));
+    stream = source;
+    source.addEventListener('open', () => {
+      if (stream !== source) return;
+      announce(true);
+      schedule();
+    });
+    source.addEventListener('error', () => {
+      if (stream !== source) return;
+      announce(false);
+      // A refused stream (room closed, kicked, signed out) does not retry;
+      // a normal read then reports why, and polling resumes its own pace.
+      if (source.readyState === EventSource.CLOSED) stream = null;
+      void refresh();
+    });
+    source.addEventListener('state', (event) => {
+      if (stream !== source || scope !== room.scope || disposed) return;
+      try {
+        accept(JSON.parse((event as MessageEvent<string>).data));
+      } catch (cause) {
+        room.lostConnection(cause);
+      }
+    });
+    for (const kind of ['chat', 'invitations'])
+      source.addEventListener(kind, () =>
+        window.dispatchEvent(new CustomEvent('bga:room-event', { detail: { kind } })),
+      );
+  }
   function stop() {
     if (timer) clearTimeout(timer);
     timer = null;
@@ -33,7 +94,7 @@ export function useRoomPage(
     job = null;
     reading.value = false;
   }
-  function schedule(delay = pollMs) {
+  function schedule(delay = streamLive ? Math.max(pollMs, STREAM_POLL_MS) : pollMs) {
     if (timer) clearTimeout(timer);
     timer = null;
     if (!disposed && room.seat && !room.terminal && !document.hidden)
@@ -56,10 +117,15 @@ export function useRoomPage(
     );
     next.promise = (async () => {
       try {
-        const value = await room.request('state', undefined, { signal: next.controller.signal });
-        return !disposed && scope === room.scope && job === next && !next.controller.signal.aborted
-          ? room.accept(value)
-          : false;
+        const value = await room.request('state', undefined, {
+          signal: next.controller.signal,
+          ...(stateTag ? { query: { since: stateTag } } : {}),
+        });
+        if (disposed || scope !== room.scope || job !== next || next.controller.signal.aborted)
+          return false;
+        const accepted = accept(value);
+        openStream();
+        return accepted;
       } catch (cause) {
         if (
           !disposed &&
@@ -122,20 +188,35 @@ export function useRoomPage(
   }
   function visibility() {
     foreground.value = !document.hidden;
-    if (document.hidden) stop();
-    else if (room.seat) void refresh();
+    if (document.hidden) {
+      stop();
+      closeStream();
+    } else if (room.seat) {
+      void refresh();
+      streamTried = 0;
+      openStream();
+    }
   }
   watch(
     () => [room.scope, room.seat?.code],
     () => {
       stop();
-      if (room.seat) void refresh();
+      closeStream();
+      stateTag = '';
+      streamTried = 0;
+      if (room.seat) {
+        void refresh();
+        openStream();
+      }
     },
   );
   watch(
     () => room.terminal,
     (value) => {
-      if (value) stop();
+      if (value) {
+        stop();
+        closeStream();
+      }
     },
   );
   watch(
@@ -155,6 +236,7 @@ export function useRoomPage(
   onBeforeUnmount(() => {
     disposed = true;
     stop();
+    closeStream();
     document.removeEventListener('visibilitychange', visibility);
     window.removeEventListener('online', visibility);
   });
