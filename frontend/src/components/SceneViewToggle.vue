@@ -43,9 +43,9 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <UiButton
-    icon="expand"
+    icon="landscape"
     icon-only
-    label="暫時隱藏介面，觀看背景"
+    label="背景：只顯示背景與角色"
     :aria-pressed="hidden"
     @click="set(true)"
   />

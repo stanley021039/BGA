@@ -105,6 +105,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     undo: '<path d="M3 4v6h6M3 10a8 8 0 0 1 16 4v5"/>',
     edit: '<path d="m15 4 5 5M4 20l4-1L21 6a2.8 2.8 0 0 0-4-4L4 15Z M4 15l4 4"/>',
     resize: '<path d="M8 20H4v-4M4 20l7-7M16 4h4v4M20 4l-7 7"/>',
+    landscape:
+      '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/>',
+    contract: '<path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/>',
     expand: '<path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/>',
     refresh: '<path d="M20 7v5h-5M4 17v-5h5M20 12a8 8 0 0 0-14-5M4 12a8 8 0 0 0 14 5"/>',
     stop: '<rect x="5" y="5" width="14" height="14" rx="1"/>',

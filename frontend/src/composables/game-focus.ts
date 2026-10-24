@@ -1,4 +1,4 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
 export function useGameFocus(className = 'vue-game-focus') {
   const focused = ref(false);
@@ -7,6 +7,7 @@ export function useGameFocus(className = 'vue-game-focus') {
     previous: HTMLElement | null = null,
     scroll = { x: 0, y: 0 };
   async function exit() {
+    if (!focused.value && !owned) return;
     const native = owned && document.fullscreenElement === document.documentElement;
     focused.value = false;
     owned = false;
@@ -17,6 +18,8 @@ export function useGameFocus(className = 'vue-game-focus') {
       } catch {
         /* Local focus still exits. */
       }
+    // RoomHeader moves its controls back to the site header after focus changes.
+    await nextTick();
     if (!disposed) {
       window.scrollTo(scroll.x, scroll.y);
       if (previous?.isConnected) previous.focus({ preventScroll: true });

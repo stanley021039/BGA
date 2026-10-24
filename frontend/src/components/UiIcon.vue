@@ -26,6 +26,8 @@ const allowed = new Set([
   'remove',
   'share',
   'expand',
+  'contract',
+  'landscape',
   'add',
   'previous',
   'next',

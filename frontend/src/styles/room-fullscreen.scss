@@ -1,0 +1,55 @@
+// Shared game-only viewport. Keep the stage mounted so drawings and inputs survive.
+:root body[data-visual-theme]:is(.vue-game-focus, .vue-draw-focus):has(.vue-room-shell) {
+  overflow: hidden;
+  background: var(--stitch-base);
+  .vue-game-workspace.vue-room-shell > :not(.vue-game-grid) {
+    display: none;
+  }
+  .vue-game-workspace.vue-room-shell > .vue-game-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    padding: var(--stitch-space-16);
+    padding-block-start: calc(44px + var(--stitch-space-16) * 2);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+    > :is(.vue-room-side-panel, .vue-room-background) {
+      display: none;
+    }
+    // Span every track: game sheets such as Quacks keep their own column template.
+    > .vue-game-main {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      box-sizing: border-box;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      overflow: auto;
+    }
+    > .vue-draw-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: var(--stitch-space-16);
+      > :is(.vue-draw-board-panel, .vue-draw-guess-panel) {
+        grid-column: 1;
+        grid-row: auto;
+        min-height: 0;
+      }
+    }
+  }
+}
+.vue-room-fullscreen-restore {
+  position: fixed;
+  inset-block-start: max(var(--stitch-space-16), env(safe-area-inset-top));
+  inset-inline-end: max(var(--stitch-space-16), env(safe-area-inset-right));
+  z-index: 3000;
+}
