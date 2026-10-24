@@ -4,6 +4,8 @@
 
 ## 快速對照
 
+`UiPopover contentSized` 的本文取消社交面板專用的固定第二列，依內容自然排高、段落不另加外距；只有超過可用視窗時才在內文捲動。480px 以下本文使用 `--stitch-text-hint`，桌機維持原字級。共用社交面板預設不變。
+
 被動 `UiHoverInfo :showHelp="false"` 沒有關閉鈕，離開來源立即消失，說明浮層不延長 hover。`UiPopover showClose` 預設 true；`avoidAnchor` 可在左右空間不足時改放來源上下方，避免浮層蓋住來源而觸發離開。既有互動式選單維持預設。
 
 `UiChoiceCard imageOnly` 僅呈現預設 slot 的圖片，省略卡外 label／選取文字及內距；保留 aria-label、aria-pressed 與選取圈。`UiHoverInfo :showHelp="false"` 隱藏獨立問號按鈕，仍可 hover／鍵盤聚焦閱讀。

@@ -182,8 +182,19 @@ defineExpose({ open, close, visible });
   grid-template-rows: auto minmax(0, 1fr);
 }
 .vue-social-popover.is-content-sized > .vue-social-popover-body {
+  grid-template-rows: none;
   grid-auto-rows: max-content;
   align-content: start;
+  gap: var(--stitch-gap-label);
+  overflow-y: auto;
+}
+.vue-social-popover.is-content-sized > .vue-social-popover-body :deep(p) {
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .vue-social-popover.is-content-sized > .vue-social-popover-body {
+    font-size: var(--stitch-text-hint);
+  }
 }
 .vue-social-popover.is-compact {
   inline-size: max-content;

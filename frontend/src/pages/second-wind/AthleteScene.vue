@@ -177,7 +177,7 @@ const eventText = (e: (typeof game.value.events)[number]) =>
         ><UiHoverInfo
           v-for="id in offered"
           :key="id"
-          :title="cardName(id) + (ownerName(id) ? ' · ' + ownerName(id) : '') + ' 中文能力說明'"
+          :title="cardName(id) + (ownerName(id) ? ' · ' + ownerName(id) : '')"
           :disabled="!canPick"
           :show-help="false"
           ><UiChoiceCard

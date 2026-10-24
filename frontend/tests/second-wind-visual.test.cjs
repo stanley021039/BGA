@@ -102,6 +102,7 @@ test('illustrated draft retains its guarded action and own secret choice stays l
   try {
     const card = f.host.querySelector('button[aria-label="Understudy"]');
     assert.ok(card.querySelector('img').src.endsWith('/understudy-card.webp'));
+    assert.equal(card.parentElement.getAttribute('aria-label'), 'Understudy');
     assert.equal(card.textContent.trim(), '');
     assert.equal(card.getAttribute('data-image-only'), 'true');
     assert.equal(f.host.querySelector('.ui-hover-info-help'), null);
