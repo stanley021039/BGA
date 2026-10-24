@@ -978,3 +978,8 @@ Windows Edge 自動回歸涵蓋 1920×1080、1280×720、390×844、320×568、6
 新 Edge 工作階段、嚴格 document-user-activation-required 政策、800ms認證延遲：三款真MP3各自同context running播放，不需恢復點擊，播放中音量0.1立即生效。1920×1080／390×844／320×844、深淺色及200%字體共12組對話操作（pending幾何、503保草稿、Escape關閉、Enter真HTTP送出）通過；加三款音訊共15組、零pageerror。驗收腳本首輪因連續發送觸發既有1500ms防刷而失敗，改為等待3200ms後通過，未改正式防刷規則。隔離帳號只兌換獎勵、不造已達成成就。證據ignored work/qa-pr219/{browser.cjs,results.json,chat-mobile-dark.png,transfer-retest.log}及根目錄各測試log；Safari、實機觸控與聲卡聽感未新增驗證。此筆取代上節未提交／尚待發布的狀態描述；遠端合併／CI以PR最終紀錄為準，未部署或操作正式資料。
 
 本輪本機全套結果補記：292檔、2691項，2689通過／2失敗／0略過；兩項均為未修改的data-transfer schema4／5 HTTP驗證，Node26 fetch回報bad port（系統隨機埠被Fetch禁用），非資料斷言失敗。同環境單獨重跑兩項全通過。最終新增音量回歸另跑auth-entry 11／11通過；不得把原全套寫成零失敗或宣稱包含新增測試。Linux Node22最終同SHA完整CI仍是合併必要門檻。
+
+
+2026-10-24 #227：使用者明確開始 Second Wind 原版；分支 codex/second-wind-227 基於 cfcc116，36角色／13Twist資料、兩輪蛇形選秀、私人鎖角與競速事實／能力失效投影已實作首批，尚非完整遊戲。原版後三場積分及 Twist 精確格位仍待核對，Figma依指示暫停。證據與未完成範圍見 docs/specs/SECOND-WIND-227.md；不混入 CEO、不開 PR／CI／合併／部署。
+
+#227本批驗證補記：Windows Node26完整affected293檔2707/2707，fail/cancel/skip/todo 0；focused15含240組招募種子。格式／UI ratchet／無新媒體perf／minor版本檢查通過，未前端build或實玩。詳細界線見SECOND-WIND-227.md；第3階段未完成整個遊戲。
