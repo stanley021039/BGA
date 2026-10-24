@@ -157,6 +157,10 @@ test('drawing scene omits routine sync text and quotas but retains actionable no
     h.telephone.notice = '私人草稿同步失敗，可手動重試。';
     await vue.nextTick();
     assert.match(h.host.textContent, /私人草稿同步失敗/);
+    assert.ok(
+      h.host.querySelector('.vue-telephone-actions .vue-telephone-status'),
+      'actionable drawing notices belong beside submit, not in a separate canvas row',
+    );
   } finally {
     h.dispose();
   }
