@@ -187,10 +187,18 @@ test('host promotion and demotion update permissions, game/media revisions and m
   assert.equal(denied.body.code, 'MEDIA_MANAGER_ONLY');
   assert.equal((await f.media(code, 'manager')).body.canControl, false);
   await f.act(code, 'host', 'stop');
+  const first = await f.act(code, 'member', 'enqueue', { type: 'music', trackId: f.track.id });
+  assert.equal(first.status, 200);
+  assert.equal(first.body.current.trackId, f.track.id);
+  assert.equal(first.body.playback.state, 'playing');
+  assert.equal(first.body.queue.length, 0);
+  assert.equal((await f.act(code, 'member', 'pause')).status, 403);
+  await f.act(code, 'member', 'enqueue', { type: 'music', trackId: f.track.id });
+  await f.act(code, 'host', 'stop');
   const queued = await f.act(code, 'member', 'enqueue', { type: 'music', trackId: f.track.id });
   assert.equal(queued.body.current, null);
   assert.equal(queued.body.playback.state, 'paused');
-  assert.equal(queued.body.queue.length, 1);
+  assert.equal(queued.body.queue.length, 2);
   assert.equal((await f.act(code, 'host', 'play')).body.current.type, 'music');
 });
 test('manager kicks only members; kick/leave prune roles and queued requests, while reconnect preserves roles', async (t) => {
