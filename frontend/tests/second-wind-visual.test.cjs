@@ -172,12 +172,24 @@ test('crowded track bounds portraits while the complete racer list remains reada
     assert.equal(f.host.querySelectorAll('.athlete-stack-trigger').length, 1);
     assert.equal(
       f.host.querySelector('button[aria-label="查看同格 4 位角色"]').textContent.trim(),
-      'X',
+      '4',
     );
     assert.equal(f.host.querySelector('.athlete-track-cell .ui-hover-info-help'), null);
     assert.equal(f.host.querySelector('.athlete-track-number'), null);
     assert.equal(f.host.querySelector('.athlete-piece .ui-badge'), null);
     assert.equal(f.host.querySelectorAll('.athlete-racer-row').length, 4);
+    assert.equal(
+      f.host.querySelector('.athlete-stack-trigger').getAttribute('aria-label'),
+      '第0格（4位）',
+    );
+    f.game.racers.forEach((r) => {
+      r.position = 5;
+    });
+    await vue.nextTick();
+    assert.equal(
+      f.host.querySelector('.athlete-stack-trigger').getAttribute('aria-label'),
+      '第5格（4位）',
+    );
     assert.equal(f.host.querySelector('.athlete-track-scroll').getAttribute('tabindex'), '0');
   } finally {
     f.dispose();

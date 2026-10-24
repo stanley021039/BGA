@@ -292,10 +292,13 @@ const eventText = (e: (typeof game.value.events)[number]) =>
                   <UiHoverInfo
                     v-if="cell.racers.length > 2"
                     class="athlete-stack-trigger"
-                    :title="`同格角色（${cell.racers.length} 位）`"
+                    :title="`第${cell.position}格（${cell.racers.length}位）`"
                     :show-help="false"
                     interactive
-                    ><UiButton :label="`查看同格 ${cell.racers.length} 位角色`" caption="X" />
+                    ><UiButton
+                      :label="`查看同格 ${cell.racers.length} 位角色`"
+                      :caption="String(cell.racers.length)"
+                    />
                     <template #info
                       ><div class="athlete-stack-grid">
                         <UiHoverInfo
@@ -553,7 +556,8 @@ const eventText = (e: (typeof game.value.events)[number]) =>
   justify-items: center;
 }
 .athlete-stack-trigger {
-  width: var(--stitch-control-height);
+  min-width: var(--stitch-control-height);
+  width: max-content;
 }
 .athlete-stack-grid {
   display: grid;
