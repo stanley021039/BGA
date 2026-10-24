@@ -11,8 +11,10 @@ const props = withDefaults(
     compact?: boolean;
     autofocus?: boolean;
     contentSized?: boolean;
+    showClose?: boolean;
+    avoidAnchor?: boolean;
   }>(),
-  { placement: 'bottom', compact: false, autofocus: true, contentSized: false },
+  { placement: 'bottom', compact: false, autofocus: true, contentSized: false, showClose: true },
 );
 const emit = defineEmits<{ closed: [] }>();
 const panel = ref<HTMLElement | null>(null),
@@ -38,6 +40,23 @@ function position() {
     element.style.maxBlockSize = Math.max(0, window.innerHeight - gap * 2) + 'px';
     const bounds = element.getBoundingClientRect();
     const right = anchor.right + gap;
+    if (
+      props.avoidAnchor &&
+      right + bounds.width > window.innerWidth - gap &&
+      anchor.left - bounds.width - gap < gap
+    ) {
+      const below = window.innerHeight - anchor.bottom - gap * 2,
+        above = anchor.top - gap * 2;
+      const useBelow = below >= bounds.height || below >= above;
+      element.style.maxBlockSize = Math.max(0, useBelow ? below : above) + 'px';
+      element.style.left =
+        Math.max(gap, Math.min(anchor.left, window.innerWidth - bounds.width - gap)) + 'px';
+      element.style.top =
+        (useBelow
+          ? anchor.bottom + gap
+          : Math.max(gap, anchor.top - element.getBoundingClientRect().height - gap)) + 'px';
+      return;
+    }
     const preferredLeft =
       right + bounds.width <= window.innerWidth - gap ? right : anchor.left - bounds.width - gap;
     element.style.left =
@@ -144,6 +163,7 @@ defineExpose({ open, close, visible });
           ><slot name="header"
             ><h2>{{ title }}</h2></slot
           ><UiButton
+            v-if="showClose"
             variant="ghost"
             icon="close"
             icon-only

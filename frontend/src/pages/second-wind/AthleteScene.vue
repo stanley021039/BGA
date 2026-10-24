@@ -120,7 +120,6 @@ const eventText = (e: (typeof game.value.events)[number]) =>
                 />
                 <span>{{ cardName(racerId) }}</span> </div
               ><template #info
-                ><p>所屬玩家：{{ name(id) }}</p
                 ><p>{{ cards[racerId]?.summary }}</p
                 ><p>{{ cards[racerId]?.notes }}</p></template
               ></UiHoverInfo
@@ -165,13 +164,15 @@ const eventText = (e: (typeof game.value.events)[number]) =>
             : '秘密選角'
       "
     >
-      <p>{{
-        picking
-          ? `輪到 ${name(game.turnId || '')} 招募`
-          : game.selectedIds.includes(me)
-            ? `已鎖定 ${cardName(game.ownSelection || '')}，等待其他玩家`
-            : '選擇本場出賽角色；全員鎖定後一起揭示'
-      }}</p>
+      <template #actions
+        ><span>{{
+          picking
+            ? `輪到 ${name(game.turnId || '')} 招募`
+            : game.selectedIds.includes(me)
+              ? `已鎖定 ${cardName(game.ownSelection || '')}，等待其他玩家`
+              : '選擇本場出賽角色；全員鎖定後一起揭示'
+        }}</span></template
+      >
       <div class="athlete-card-grid"
         ><UiHoverInfo
           v-for="id in offered"
@@ -188,8 +189,9 @@ const eventText = (e: (typeof game.value.events)[number]) =>
             @click="pick(id)"
             ><AthleteArt
               class="athlete-draft-art"
+              trim-card
               :src="athleteArt(id, 'card')"
-              :alt="cardName(id) + ' 中文翻譯角色卡'"
+              :alt="cardName(id) + ' 英文原版角色卡'"
               :width="272"
               :height="380" /></UiChoiceCard
           ><template #info
@@ -306,7 +308,6 @@ const eventText = (e: (typeof game.value.events)[number]) =>
                       />
                     </div>
                     <template #info
-                      ><p>所屬玩家：{{ name(r.playerId) }}</p
                       ><p>{{ cards[r.racerId]?.summary }}</p
                       ><p>{{ cards[r.racerId]?.notes }}</p
                       ><div
@@ -460,6 +461,10 @@ const eventText = (e: (typeof game.value.events)[number]) =>
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   gap: var(--stitch-gap-controls);
+}
+.athlete-card-grid > .ui-hover-info {
+  width: min(100%, 12rem);
+  justify-self: center;
 }
 .athlete-actions {
   display: flex;

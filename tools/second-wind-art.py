@@ -44,8 +44,7 @@ for page, ids in pages.items():
     for i, racer in enumerate(ids):
         x, y = [725.7, 951, 1176.3][i % 3], [117.8, 251.2, 383.9][i // 3]
         card = rendered.crop(tuple(round(v * 4) for v in (x, y, x + 68, y + 95)))
-        chinese = rendered.crop(tuple(round(v * 4) for v in (x - 705.6, y, x - 705.6 + 68, y + 95)))
-        save(chinese, racer + '-card', 272, f'規則.pdf physical page {page}, Chinese translation card {i + 1}; unofficial status unverified')
+        save(card, racer + '-card', 272, f'規則.pdf physical page {page}, English card {i + 1}')
         portrait = card.crop((20, 58, 252, 228))
         save(portrait, racer + '-portrait', 96, f'規則.pdf physical page {page}, English card {i + 1}, illustration crop')
 

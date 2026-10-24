@@ -10,8 +10,9 @@ const props = withDefaults(
     eager?: boolean;
     srcset?: string;
     sizes?: string;
+    trimCard?: boolean;
   }>(),
-  { eager: false, srcset: '', sizes: '' },
+  { eager: false, srcset: '', sizes: '', trimCard: false },
 );
 const failed = ref(false);
 watch(
@@ -22,7 +23,11 @@ watch(
 );
 </script>
 <template>
-  <span class="athlete-art" :style="{ aspectRatio: `${width}/${height}` }">
+  <span
+    class="athlete-art"
+    :data-trim-card="trimCard || undefined"
+    :style="{ aspectRatio: trimCard ? `${width - 6}/${height - 12}` : `${width}/${height}` }"
+  >
     <img
       v-if="!failed && src"
       :src="src"
@@ -51,6 +56,16 @@ watch(
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+.athlete-art[data-trim-card] {
+  overflow: hidden;
+  border-radius: var(--stitch-radius-panel);
+}
+.athlete-art[data-trim-card] img {
+  width: calc(100% * 272 / 266);
+  height: calc(100% * 380 / 368);
+  max-width: none;
+  object-fit: fill;
 }
 .athlete-art-fallback {
   display: flex;

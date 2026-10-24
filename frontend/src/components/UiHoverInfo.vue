@@ -12,16 +12,11 @@ const id = useId(),
 const shown = ref(false),
   pinned = ref(false),
   autofocus = ref(false);
-let timer: ReturnType<typeof setTimeout> | undefined;
 let ignorePointerUntil = 0;
-function cancel() {
-  clearTimeout(timer);
-}
 function closed() {
   // A disappearing top-layer panel can expose the card under the cursor and
   // synthesize pointerenter. Do not immediately reopen an explicitly closed tip.
   ignorePointerUntil = Date.now() + 250;
-  cancel();
   shown.value = pinned.value = false;
   document.removeEventListener('keydown', key);
 }
@@ -30,8 +25,7 @@ function close() {
   closed();
 }
 function leave() {
-  cancel();
-  if (!pinned.value) timer = setTimeout(close, 180);
+  if (!pinned.value) close();
 }
 async function show(event?: Event, explicit = false) {
   if (
@@ -52,7 +46,6 @@ async function show(event?: Event, explicit = false) {
     return;
   if (!explicit && event?.type === 'pointerenter' && Date.now() < ignorePointerUntil) return;
   if (event instanceof PointerEvent && event.pointerType === 'touch' && !explicit) return;
-  cancel();
   if (explicit) {
     panel.value?.close(false);
     pinned.value = true;
@@ -64,6 +57,7 @@ async function show(event?: Event, explicit = false) {
   const target =
     explicit && event?.currentTarget instanceof HTMLElement ? event.currentTarget : root.value;
   await nextTick();
+  if (!shown.value) return;
   await panel.value?.open(target || undefined);
 }
 function key(event: KeyboardEvent) {
@@ -106,10 +100,11 @@ onBeforeUnmount(close);
       :title="title"
       placement="right"
       content-sized
+      avoid-anchor
+      :show-close="showHelp"
       :autofocus="autofocus"
-      @pointerenter="cancel"
+      @pointerenter="leave"
       @pointerleave="leave"
-      @focusin="cancel"
       @focusout="leave"
       @closed="closed"
       ><slot name="info"

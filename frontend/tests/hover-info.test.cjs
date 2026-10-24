@@ -15,7 +15,7 @@ class Pointer extends window.Event {
     this.pointerType = pointerType;
   }
 }
-function fixture() {
+function fixture(showHelp = true) {
   const calls = [];
   const Popover = vue.defineComponent({
     props: ['autofocus'],
@@ -71,7 +71,7 @@ function fixture() {
     render: () =>
       vue.h(
         m.exports.default,
-        { title: '中文能力', disabled: true },
+        { title: '中文能力', disabled: true, showHelp },
         { default: () => vue.h('span', '卡面'), info: () => vue.h('p', '完整中文能力') },
       ),
   });
@@ -127,6 +127,36 @@ test('touch enter does not preview or select, while the separate help action ope
     f.host.firstElementChild.dispatchEvent(new Pointer('pointerleave', 'touch'));
     await new Promise((r) => setTimeout(r, 220));
     assert.match(f.host.textContent, /完整中文能力/);
+  } finally {
+    f.dispose();
+  }
+});
+test('card-only preview has no controls and closes immediately when the pointer leaves the card', async () => {
+  const f = fixture(false);
+  try {
+    const root = f.host.firstElementChild;
+    root.dispatchEvent(new Pointer('pointerenter', 'mouse'));
+    await vue.nextTick();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.match(f.host.textContent, /完整中文能力/);
+    assert.equal(f.host.querySelector('button'), null);
+    root.dispatchEvent(new Pointer('pointerleave', 'mouse'));
+    await vue.nextTick();
+    assert.doesNotMatch(f.host.textContent, /完整中文能力/);
+  } finally {
+    f.dispose();
+  }
+});
+test('a quick pass across a card cannot open a stale preview after leaving', async () => {
+  const f = fixture(false);
+  try {
+    const root = f.host.firstElementChild;
+    root.dispatchEvent(new Pointer('pointerenter', 'mouse'));
+    root.dispatchEvent(new Pointer('pointerleave', 'mouse'));
+    await vue.nextTick();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(f.calls.length, 0);
+    assert.doesNotMatch(f.host.textContent, /完整中文能力/);
   } finally {
     f.dispose();
   }
