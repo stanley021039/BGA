@@ -11,11 +11,17 @@ defineProps<{
   artAlt?: string;
   facts: readonly { label: string; value: string }[];
   notice?: string;
+  flow?: boolean;
 }>();
 const heading = useId();
 </script>
 <template>
-  <section class="vue-room-waiting-template" :data-waiting-game="type" :aria-labelledby="heading">
+  <section
+    class="vue-room-waiting-template"
+    :class="{ 'is-flow': flow }"
+    :data-waiting-game="type"
+    :aria-labelledby="heading"
+  >
     <header class="vue-waiting-hero">
       <div
         class="vue-waiting-art"

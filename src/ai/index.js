@@ -32,7 +32,9 @@ function botSupport(room) {
     supported: true,
     canAdd:
       count < (type === 'quacks' ? room.max : adapter.maxPlayers) &&
-      (!['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks'].includes(type) ||
+      (!['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks', 'ceo'].includes(
+        type,
+      ) ||
         ['waiting', 'finished'].includes(room.phase)),
     maxPlayers: type === 'quacks' ? room.max : adapter.maxPlayers,
     label: '本機測試 AI',
@@ -43,7 +45,7 @@ function addTestBot(room) {
   if (!support.supported) throw Error('此遊戲尚未提供測試 AI');
   if (!support.canAdd)
     throw Error(
-      ['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks'].includes(
+      ['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks', 'ceo'].includes(
         room.type,
       ) && !['waiting', 'finished'].includes(room.phase)
         ? '本局已開始，請等待下一局再加入 AI'
@@ -71,6 +73,24 @@ const blankAnswer = (prompt, rng) => {
           : ['朋友', '音樂', '遊戲', '休息'];
   return options[rng(options.length)];
 };
+registerTestAI('ceo', {
+  maxPlayers: 6,
+  plan(room, player) {
+    const view = room.view(player.id),
+      state = view.game;
+    if (!state || state.turnId !== player.id) return null;
+    const me = state.players.find((entry) => entry.id === player.id);
+    const choice = state.market.find((entry) => entry.card.assets + entry.extraCost <= me.cash);
+    const input = {
+      roundId: view.roundId,
+      requestId: randomUUID(),
+      expectedRevision: state.revision,
+    };
+    return choice
+      ? action(player.id, 'acquire', { ...input, companyId: choice.card.id })
+      : action(player.id, 'dividend', input);
+  },
+});
 registerTestAI('quacks', {
   maxPlayers: 5,
   plan(room, p) {

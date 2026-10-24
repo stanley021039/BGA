@@ -25,6 +25,7 @@ const documents: Plugin = {
             'poker',
             'quacks',
             'race',
+            'ceo',
           ].includes(page.id) &&
             new RegExp('^' + page.route + '/[a-f0-9]{6}/?$', 'i').test(url.pathname))
         ) {

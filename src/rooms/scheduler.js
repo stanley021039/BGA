@@ -82,6 +82,7 @@ function startRoomScheduler({
             'minimal',
             'bluff',
             'quacks',
+            'ceo',
           ].includes(r.type)
         )
           continue;
