@@ -7,6 +7,7 @@ const source = fs
   .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
   .replace(/^import .*motion-lifetime.js';\n/m, '')
   .replace(/^import combatRules .*scene-rules.json';\n/m, '')
+  .replace(/^import .*attack-stitch.js';\n/m, '')
   .replace('export function playAttackArtwork', 'function playAttackArtwork');
 const lifetime = fs
   .readFileSync(path.join(__dirname, '../src/services/motion-lifetime.js'), 'utf8')
@@ -35,6 +36,9 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
         positions.push({ x, y });
         texts.push(text);
       },
+      measureText() {
+        return { width: 250 };
+      },
       createRadialGradient() {
         return gradient;
       },
@@ -45,6 +49,9 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
         arcs.push({ x, y, r });
       },
       lineTo(x, y) {
+        lines.push({ x, y });
+      },
+      moveTo(x, y) {
         lines.push({ x, y });
       },
     },
@@ -79,7 +86,14 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
     Date,
   };
   vm.createContext(sandbox);
-  vm.runInContext(lifetime + source, sandbox);
+  vm.runInContext(
+    lifetime +
+      fs
+        .readFileSync(path.join(__dirname, '../src/services/attack-stitch.js'), 'utf8')
+        .replace('export function createStitchAttack', 'function createStitchAttack') +
+      source,
+    sandbox,
+  );
   const stop = sandbox.playAttackArtwork(
     { getContext: () => context },
     {
@@ -127,6 +141,20 @@ test('offensive effects show damage automatically, defensive effects do not', ()
   assert.equal(run('shield', '#00f0ff').texts.length, 0);
   assert.equal(run('sphere', '#10b981').texts.length, 0);
 });
+
+test('narrow shield previews keep all honeycomb vertices inside the canvas', () => {
+  const result = run('shield', '#00f0ff', 80, () => 0.5, {
+    width: 340,
+    height: 180,
+    from: { x: 60, y: 90 },
+    to: { x: 265, y: 90 },
+  });
+  assert.ok(result.lines.length > 0);
+  for (const point of result.lines) {
+    assert.ok(point.x + 60 >= 0 && point.x + 60 <= 340);
+    assert.ok(point.y + 90 >= 0 && point.y + 90 <= 180);
+  }
+});
 test('ice spikes grow upwards and the fire vortex rises into a column', () => {
   assert.ok(run('frost_spikes', '#7df4ff', 18).lines.some((p) => p.y < -100));
   assert.ok(run('flame_vortex', '#ff3366', 24).lines.some((p) => p.y < -150));
@@ -140,6 +168,20 @@ test('damage values and popup locations vary within a bounded range', () => {
   assert.ok(value(high) <= 330000);
   assert.notEqual(value(low), value(high));
   assert.notDeepEqual(low.positions[0], high.positions[0]);
+});
+
+test('six-figure critical text stays inside a narrow preview at the right edge', () => {
+  const result = run('beam', '#7df4ff', 40, () => 0.999, {
+    width: 340,
+    height: 180,
+    from: { x: 60, y: 90 },
+    to: { x: 330, y: 90 },
+  });
+  assert.ok(result.positions.length > 0);
+  for (const p of result.positions) {
+    assert.ok(p.x >= 10 && p.x + 250 <= 330);
+    assert.ok(p.y >= 28 && p.y <= 168);
+  }
 });
 
 test('live combat uses authoritative damage and critical status instead of preview random numbers', () => {
