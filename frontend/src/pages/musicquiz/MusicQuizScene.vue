@@ -22,6 +22,10 @@ const room = useRoomStore(),
   s = computed(() => room.snapshot as MusicQuizSnapshot),
   setup = computed(() => ['waiting', 'finished'].includes(s.value.phase)),
   blocked = computed(() => !room.connected || room.busy || actions.pending),
+  canBuy = computed(() => s.value.mine.tokens >= 3),
+  buyCaption = computed(() =>
+    canBuy.value ? '買歌 · 3枚' : '還差 ' + (3 - s.value.mine.tokens) + ' 枚歌王標記',
+  ),
   dj = computed(() => s.value.players.find((p) => p.id === s.value.djId)),
   me = computed(() => s.value.me === s.value.djId),
   banks = ref<string[]>([]),
@@ -30,6 +34,8 @@ const room = useRoomStore(),
   obscure = ref(false),
   custom = ref(''),
   error = ref(''),
+  buyFeedback = ref(''),
+  buyNoticeKey = ref(0),
   dirty = ref(false);
 watch(dirty, (value) => emit('dirty', value));
 const settingsSave = useQueuedSave<void>({
@@ -80,6 +86,12 @@ function queueSettings() {
 async function saveNow() {
   if (!settingsSave.pending.value) settingsSave.enqueue(undefined);
   await settingsSave.flush();
+}
+async function buySong() {
+  if (await actions.command('buy')) {
+    buyFeedback.value = '買歌成功，年代卡已加入你的音樂卡。';
+    buyNoticeKey.value++;
+  }
 }
 watch(
   () => s.value.settings,
@@ -202,6 +214,12 @@ const canSlot = (i: number) =>
       !Object.values(s.value.challenges).includes(i) &&
       !Object.hasOwn(s.value.challenges, s.value.me) &&
       !s.value.passed.includes(s.value.me));
+const challengerAt = (slot: number) => {
+  const playerId = Object.entries(s.value.challenges).find(
+    ([, selected]) => selected === slot,
+  )?.[0];
+  return playerId ? s.value.players.find((player) => player.id === playerId)?.name : undefined;
+};
 </script>
 <template>
   <RoomWaitingTemplate
@@ -371,10 +389,10 @@ const canSlot = (i: number) =>
           :disabled="blocked"
           @click="actions.command('listen')" /><p v-else>等待 {{ dj?.name }} 開始播放</p
         ><UiButton
-          v-if="s.mine.tokens >= 3"
           label="買歌 · 3枚"
-          :disabled="blocked"
-          @click="actions.command('buy')"
+          :caption="buyCaption"
+          :disabled="blocked || !canBuy"
+          @click="buySong"
       /></template>
       <template v-if="s.phase === 'intro'"
         ><p>聽8秒，30秒內選擇；答對 +1前奏分與1枚標記。</p
@@ -416,7 +434,9 @@ const canSlot = (i: number) =>
                   ? 'DJ放置點'
                   : s.phase === 'timeline'
                     ? '插槽 ' + i + ' · 放在這裡'
-                    : '插槽 ' + i + ' · 插歌這裡'
+                    : challengerAt(i - 1)
+                      ? '插槽 ' + i + ' · ' + challengerAt(i - 1) + '已插歌'
+                      : '插槽 ' + i + ' · 插歌這裡'
               "
               :disabled="!canSlot(i - 1)"
               :aria-pressed="s.placement === i - 1 || s.challenges[s.me] === i - 1"
@@ -475,8 +495,10 @@ const canSlot = (i: number) =>
         !!settingsSave.error.value ||
         !!error
       "
-      :message="settingsSave.error.value || actions.notice || error"
-      :error="!!settingsSave.error.value || !!actions.notice" /><UiButton
+      :message="settingsSave.error.value || actions.notice || buyFeedback || error"
+      :error="!!settingsSave.error.value || !!actions.notice"
+      :tone="buyFeedback ? 'success' : 'info'"
+      :notice-key="buyNoticeKey" /><UiButton
       v-if="actions.canRetry"
       label="重試同一操作"
       @click="actions.retrySame()"

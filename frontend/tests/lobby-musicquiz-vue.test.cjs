@@ -120,6 +120,15 @@ test('new waiting rooms save through the real party action store with a null rou
     assert.equal(requests.length, 1);
     engine.start();
     assert.equal(engine.current.bank, 'jp');
+    room.snapshot = readSnapshot({ ...engine.view(host.id), serverNow: 1000 });
+    host.tokens = 3;
+    const beforeBuy = host.timeline.length;
+    assert.equal(await actions.command('buy'), true);
+    assert.equal(requests.at(-1).action, 'buy');
+    assert.equal(engine.phase, 'pick');
+    assert.equal(host.tokens, 0);
+    assert.equal(host.timeline.length, beforeBuy + 1);
+    assert.equal(room.snapshot.mine.tokens, 0);
   } finally {
     pinia.disposePinia(instance);
   }
@@ -240,6 +249,25 @@ test('changing music banks saves the latest selection and re-enables starting; f
     succeed = true;
     await state.saveNow();
     assert.equal(state.dirty.value, false);
+    room.snapshot = {
+      ...room.snapshot,
+      phase: 'pick',
+      mine: { tokens: 2 },
+      challenges: {},
+      players: [],
+    };
+    assert.equal(state.canBuy.value, false);
+    assert.equal(state.buyCaption.value, '還差 1 枚歌王標記');
+    room.snapshot.mine.tokens = 3;
+    assert.equal(state.canBuy.value, true);
+    room.snapshot.phase = 'challenge';
+    room.snapshot.players = [{ id: 'challenger', name: '小明' }];
+    room.snapshot.challenges = { challenger: 1 };
+    assert.equal(state.challengerAt(1), '小明');
+    await state.buySong();
+    assert.equal(calls.at(-1).action, 'buy');
+    assert.equal(state.buyFeedback.value, '買歌成功，年代卡已加入你的音樂卡。');
+    assert.equal(state.buyNoticeKey.value, 1);
   } finally {
     scope.stop();
   }

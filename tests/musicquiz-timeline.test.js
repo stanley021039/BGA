@@ -104,6 +104,9 @@ test('challenge uses one token, first correct challenger wins only when DJ is wr
   r.act(p[1].id, 'challenge', data);
   r.act(p[1].id, 'challenge', data);
   assert.equal(p[1].tokens, 1);
+  const publicView = r.view(p[0].id);
+  assert.equal(publicView.challenges[p[1].id], 0);
+  assert.equal(publicView.players.find((player) => player.id === p[1].id).name, p[1].name);
   assert.throws(
     () => act(r, p[2], 'challenge', { slot: 0 }),
     (e) => e.code === 'INVALID_SLOT',
@@ -138,9 +141,13 @@ test('cut/buy token costs and before-listening gate cannot be bypassed; ten-card
   assert.equal(p[0].tokens, 1);
   assert.notEqual(r.roundId, old);
   p[1].tokens = 3;
+  const cursorBeforePurchase = r.cursor,
+    purchasedSong = r.sequence[cursorBeforePurchase];
   act(r, p[1], 'buy');
   assert.equal(p[1].tokens, 0);
   assert.equal(p[1].timeline.length, 2);
+  assert.ok(p[1].timeline.some((song) => song.id === purchasedSong.id));
+  assert.equal(r.cursor, cursorBeforePurchase + 1);
   act(r, p[0], 'listen');
   p[1].tokens = 3;
   assert.throws(
