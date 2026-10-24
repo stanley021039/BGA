@@ -23,6 +23,21 @@ function fixture() {
   }
   return { lobby, a, b, c, own, tick, place };
 }
+
+test('lobby reach includes half the longer screen edge in landscape and portrait', () => {
+  for (const aspectRatio of [16 / 9, 9 / 16]) {
+    const f = fixture();
+    const landscape = aspectRatio > 1;
+    f.place(f.a, landscape ? 25 : 50, landscape ? 50 : 20);
+    f.place(f.b, landscape ? 75 : 50, landscape ? 50 : 70);
+    const input = { slot: 'q', effect: 'beam', aspectRatio, requestId: 'half-screen-lobby-001' };
+    assert.equal(f.lobby.attack(f.a, input).attacks.at(-1).toId, f.b.id);
+    f.place(f.b, landscape ? 76 : 50, landscape ? 50 : 71);
+    assert.throws(() => f.lobby.attack(f.a, { ...input, requestId: 'half-screen-lobby-002' }), {
+      code: 'NO_ATTACK_TARGET',
+    });
+  }
+});
 test('directional walking wraps all four edges, keeps the other coordinate and publishes the same position', () => {
   for (const [x, y, dx, dy, expectedX, expectedY] of [
     [94, 50, 1, 0, 4, 50],

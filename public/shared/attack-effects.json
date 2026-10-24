@@ -17,21 +17,21 @@
     "id": "shield",
     "label": "六角形能量護盾",
     "color": "#00f0ff",
-    "description": "自己的角色展開蜂巢護盾，光彈碰撞晶格後碎裂反彈。",
+    "description": "自身展開2秒蜂巢護盾，每次受擊擋30～40%傷害；作者兌換加成為40～50%。",
     "achievementId": "gift-first-gift"
   },
   {
     "id": "chains",
-    "label": "能量鎖鏈",
-    "color": "#ffe08b",
-    "description": "等離子彈性鏈節、物理拉扯目標假人、交錯游離電弧與火花。",
+    "label": "八方實體鎖鏈",
+    "color": "#dce6f1",
+    "description": "銀鋼鏈環從八方錯落收束，將目標鎖緊並迸出金屬火花。",
     "achievementId": "majority-first-vote"
   },
   {
     "id": "sphere",
-    "label": "球形能量結界",
-    "color": "#00ff88",
-    "description": "自己的角色展開綠色球形結界，立體經緯光環旋轉擴散。",
+    "label": "熾天覆七重圓環",
+    "color": "#f472b6",
+    "description": "七層粉紫花瓣圓盾維持2秒，每次受擊擋30～40%傷害；作者兌換加成為40～50%。",
     "achievementId": "minimal-first-match"
   },
   {
@@ -43,9 +43,9 @@
   },
   {
     "id": "funnel",
-    "label": "浮游砲齊射",
+    "label": "龍騎兵浮游砲",
     "color": "#00f0ff",
-    "description": "浮游機兵戰術編隊盤旋、雷射引導、短延遲交錯多角度全彈齊射。",
+    "description": "六具裝甲浮游砲分離包圍目標，聚能交錯射擊後折返。",
     "achievementId": "poker-first-hand"
   },
   {
@@ -87,7 +87,7 @@
     "id": "frost_spikes",
     "label": "寒冰結晶／極地霜刺",
     "color": "#7df4ff",
-    "description": "九根立體寒冰地刺向上突起，亮面冰晶與地面霜裂擴散。",
+    "description": "五根大小不同的三稜冰川錯落破土，深藍暗面襯出白亮冰鋒。",
     "achievementId": "telephone-first-match"
   },
   {
@@ -103,5 +103,12 @@
     "color": "#ff3366",
     "description": "金紅火流從地面螺旋捲升，逐漸形成高聳烈焰龍捲與上升火星。",
     "achievementId": "quacks-fifty-points"
+  },
+  {
+    "id": "flame_kick",
+    "label": "烈焰疾風飛踢",
+    "color": "#ff8800",
+    "description": "烈焰凌空俯衝，命中爆開十字火光，熾熱戰靴印穿過目標。",
+    "achievementId": "thunder-first-drive"
   }
 ]
