@@ -1,3 +1,4 @@
+import sceneTombstone from '../assets/scene-tombstone.svg?no-inline';
 import type { GameType } from '../contracts/room';
 import { requestJson } from './http';
 import { record, strings } from './validation';
@@ -37,7 +38,7 @@ const inGame: Partial<Record<GameType, readonly string[]>> = {
 };
 
 export function warmGame(type: GameType): void {
-  warm(inGame[type] || []);
+  warm([sceneTombstone, ...(inGame[type] || [])]);
 }
 
 // The room page of each game, so choosing a game card starts loading it.

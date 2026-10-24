@@ -93,6 +93,10 @@ test('attack requires presence, finds nearest other visitor, has cooldown and id
   );
   f.own(f.b);
   f.own(f.c);
+  f.lobby.move(f.a, { x: 50, y: 50 });
+  f.lobby.move(f.c, { x: 55, y: 50 });
+  f.tick(10000);
+  f.own(f.c);
   const before = f.own(),
     first = f.lobby.attack(f.a, input),
     event = first.attacks[0];

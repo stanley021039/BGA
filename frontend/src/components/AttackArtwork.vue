@@ -5,6 +5,8 @@ import { attackEffects } from '../stores/attack-loadout';
 import { playAttackArtwork } from '../services/attack-artwork';
 const props = defineProps<{
   effect: string;
+  damage?: number;
+  critical?: boolean;
   playKey: string | number;
   from: { x: number; y: number };
   to: { x: number; y: number };
@@ -40,6 +42,8 @@ async function play() {
   if (!width || !height) return;
   cleanup = playAttackArtwork(surface.value, {
     effect: props.effect,
+    damage: props.damage,
+    critical: props.critical,
     color: color.value,
     width,
     height,

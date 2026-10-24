@@ -1,4 +1,5 @@
 const { HttpError } = require('../http/errors');
+const { createSceneCombat, sceneDistance } = require('./scene-combat');
 const { randomBytes } = require('node:crypto');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
@@ -30,6 +31,7 @@ function createLobby(
   portrait = (userId) => `/characters/${userId}`,
   random = Math.random,
 ) {
+  const combat = createSceneCombat(random);
   let background = { id: 'default', changedAt: now(), nextChangeAt: 0 };
   const visitors = new Map(),
     barrages = [],
@@ -43,6 +45,8 @@ function createLobby(
     for (const [key, value] of receipts) if (time - value.at > 60000) receipts.delete(key);
   }
   function advance(visitor, time) {
+    combat.advance(visitor, time);
+    if (!visitor.health) return;
     const elapsed = Math.max(0, (time - visitor.updatedAt) / 1000);
     const dx = visitor.targetX - visitor.x,
       dy = visitor.targetY - visitor.y;
@@ -98,6 +102,7 @@ function createLobby(
       background: { ...background },
       barrages: barrages.filter((event) => time - event.at < 8000),
       visitors: [...visitors.values()].map((visitor) => ({
+        ...combat.view(visitor),
         id: visitor.id,
         name: visitor.name,
         x: visitor.x,
@@ -145,6 +150,7 @@ function createLobby(
     const visitor = enter(user),
       time = now();
     advance(visitor, time);
+    combat.alive(visitor);
     visitor.targetX = step ? visitor.x + input.dx * 5 : Math.max(MIN_X, Math.min(MAX_X, input.x));
     visitor.targetY = step ? visitor.y + input.dy * 5 : Math.max(MIN_Y, Math.min(MAX_Y, input.y));
     visitor.moveId += 1;
@@ -183,18 +189,26 @@ function createLobby(
     if (self.lastAttacks?.[slot] !== undefined && time - self.lastAttacks[slot] < 2000)
       throw new HttpError(429, 'ATTACK_COOLDOWN', slot.toUpperCase() + ' 攻擊冷卻中，請稍候 2 秒');
     for (const visitor of visitors.values()) advance(visitor, time);
-    const distance = (v) => Math.hypot((v.x - self.x) * input.aspectRatio, v.y - self.y);
+    const distance = (v) => sceneDistance(self, v, input.aspectRatio);
     const target = ['shield', 'sphere'].includes(effect)
       ? self
       : [...visitors.values()]
-          .filter((v) => v.id !== user.id)
+          .filter(
+            (v) =>
+              v.id !== user.id &&
+              v.health > 0 &&
+              distance(v) <= require('../../public/shared/scene-rules.json').attackRange,
+          )
           .sort((a, b) => distance(a) - distance(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '目前沒有其他玩家可以互動');
+    combat.alive(self);
+    const hit = target === self ? { damage: 0, critical: false } : combat.hit(self, target, time);
     self.lastAttacks ||= {};
     self.lastAttacks[slot] = time;
     attacks.push({
       id: randomBytes(12).toString('hex'),
       fromId: self.id,
+      ...hit,
       slot,
       effect,
       toId: target.id,
@@ -284,6 +298,8 @@ function createLobby(
   }
   function teleport(user, entrance) {
     const visitor = enter(user, entrance);
+    combat.advance(visitor, now());
+    combat.alive(visitor);
     // Open gutters and the lower floor keep arrivals clear of the game carousel.
     const zones = [
       [6, 18, 45, 76],

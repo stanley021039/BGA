@@ -5,6 +5,7 @@ import { usePreferencesStore } from '../stores/preferences';
 import { useRoomStore } from '../stores/room';
 import { gameTypes, sessionKey } from '../contracts/room';
 import UiButton from './UiButton.vue';
+import SceneViewToggle from './SceneViewToggle.vue';
 import UiDialog from './UiDialog.vue';
 import StatusSlot from './StatusSlot.vue';
 import GamePreferences from './GamePreferences.vue';
@@ -12,6 +13,7 @@ import HeaderProfile from './HeaderProfile.vue';
 import InvitationInbox from './InvitationInbox.vue';
 import '../styles/site-header.scss';
 import { useFloatingPanel } from '../composables/floating-panel';
+const sceneAvailable = computed(() => location.pathname === '/' || !!room.snapshot?.roomSpace);
 const session = useSessionStore(),
   prefs = usePreferencesStore(),
   root = ref<HTMLElement | null>(null),
@@ -240,6 +242,7 @@ onBeforeUnmount(() => {
     </nav>
     <div id="vue-room-header-portal" class="vue-room-header-portal" :hidden="!room.seat" />
     <div class="vue-site-controls">
+      <SceneViewToggle v-if="session.user && sceneAvailable" />
       <UiButton
         variant="ghost"
         :icon="dark ? 'sun' : 'moon'"

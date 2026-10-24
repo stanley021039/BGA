@@ -6,11 +6,12 @@ const { test } = require('node:test'),
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/attack-artwork.js'), 'utf8')
   .replace(/^import .*motion-lifetime.js';\n/m, '')
+  .replace(/^import combatRules .*scene-rules.json';\n/m, '')
   .replace('export function playAttackArtwork', 'function playAttackArtwork');
 const lifetime = fs
   .readFileSync(path.join(__dirname, '../src/services/motion-lifetime.js'), 'utf8')
   .replace(/export /g, '');
-function run(effect, color, frames = 7, random = Math.random) {
+function run(effect, color, frames = 7, random = Math.random, options = {}) {
   const colors = [],
     arcs = [],
     lines = [],
@@ -60,6 +61,7 @@ function run(effect, color, frames = 7, random = Math.random) {
     },
   );
   const sandbox = {
+    combatRules: require('../../public/shared/scene-rules.json'),
     document: { hidden: false },
     performance: { now: () => 0 },
     requestAnimationFrame(fn) {
@@ -80,7 +82,15 @@ function run(effect, color, frames = 7, random = Math.random) {
   vm.runInContext(lifetime + source, sandbox);
   const stop = sandbox.playAttackArtwork(
     { getContext: () => context },
-    { effect, color, width: 800, height: 600, from: { x: 120, y: 240 }, to: { x: 640, y: 380 } },
+    {
+      effect,
+      color,
+      width: 800,
+      height: 600,
+      from: { x: 120, y: 240 },
+      to: { x: 640, y: 380 },
+      ...options,
+    },
   );
   for (let i = 1; i <= frames; i++) callback?.(i * 17);
   stop();
@@ -126,8 +136,15 @@ test('damage values and popup locations vary within a bounded range', () => {
   const low = run('beam', '#7df4ff', 7, () => 0),
     high = run('beam', '#7df4ff', 7, () => 0.999);
   const value = (r) => Number(r.texts[0].replace(/[^0-9]/g, ''));
-  assert.ok(value(low) >= 158000 * 0.65);
-  assert.ok(value(high) <= 158000 * 1.35);
+  assert.ok(value(low) >= 270000);
+  assert.ok(value(high) <= 330000);
   assert.notEqual(value(low), value(high));
   assert.notDeepEqual(low.positions[0], high.positions[0]);
+});
+
+test('live combat uses authoritative damage and critical status instead of preview random numbers', () => {
+  const normal = run('beam', '#7df4ff', 7, () => 0, { damage: 2000, critical: false });
+  assert.deepEqual([...new Set(normal.texts)], ['2,000']);
+  const critical = run('beam', '#7df4ff', 7, () => 0.9, { damage: 3000, critical: true });
+  assert.deepEqual([...new Set(critical.texts)], ['CRITICAL 3,000!']);
 });

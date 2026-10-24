@@ -425,9 +425,7 @@ function initializeApp(config, dataLock, acquired) {
     return {
       ...view,
       ...savedDrawResults,
-      ...(room.type === 'quacks'
-        ? { roomSpace: roomSpace.view(room, view.me, view.players, expressions) }
-        : {}),
+      roomSpace: roomSpace.view(room, view.me, view.players, expressions),
       pingContext: runtime.pings.context(room),
       serverNow: now,
       botSupport: botSupport(room),
@@ -1999,10 +1997,23 @@ function initializeApp(config, dataLock, acquired) {
         }
         if (url.pathname === '/api/room-space') {
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
-          if (room.type !== 'quacks')
-            throw new HttpError(404, 'NOT_FOUND', '此遊戲尚未開放背景走動');
           limitRate(roomRate, 'room-space:' + user.id, 360);
-          roomSpace.move(room, p.id, data);
+          const entrance =
+            ['classic', 'smoke', 'sparks', 'ink', 'runes', 'rift', 'particles'].includes(
+              data.entrance,
+            ) ||
+            require('./achievements/bonus-rewards')
+              .owned(achievementStore, user.id)
+              .entrances.includes(data.entrance)
+              ? data.entrance
+              : 'classic';
+          roomSpace.move(
+            room,
+            p.id,
+            data,
+            require('./profiles/settings').getAttackSettings(db, user.id)[data.slot || 'q'],
+            entrance,
+          );
           return send(withSocial(room, room.view(p.id)));
         }
         if (url.pathname === '/api/pings') {

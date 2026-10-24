@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SceneHealth from '../../components/SceneHealth.vue';
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
@@ -253,7 +254,9 @@ window.addEventListener('resize', positionBubble);
       class="lobby-speech"
       :style="{ left: bubbleLeft, transform: 'translateX(-50%)' }"
       >{{ visitor.emote.label }}</div
-    ><img
+    ><SceneHealth v-if="visitor.maxHealth" :visitor="visitor" />
+    <img
+      v-show="visitor.health !== 0"
       :src="sizedImage(visitor.emote?.image || visitor.image, 256)"
       alt=""
       draggable="false"
