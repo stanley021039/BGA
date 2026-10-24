@@ -13,6 +13,7 @@ const props = withDefaults(
     size?: number;
     filled?: boolean;
   }>(),
+  // ui-check-allow hex: 此預設色是既有畫作資料的畫筆顏色，保持重播相容
   { editable: false, tool: 'brush', color: '#273942', size: 6, filled: false },
 );
 const emit = defineEmits<{
@@ -135,7 +136,6 @@ function key(event: KeyboardEvent) {
       Math.max(0, Math.min(511, cursor.value[0] + delta[0])),
       Math.max(0, Math.min(255, cursor.value[1] + delta[1])),
     ];
-    emit('notice', `畫布位置 ${cursor.value[0] + 1}，${cursor.value[1] + 1}；按空白鍵落筆。`);
     return;
   }
   if (event.key === 'Escape') {
@@ -150,7 +150,6 @@ function key(event: KeyboardEvent) {
   if (shaped && !keyboardAnchor.value) {
     keyboardAnchor.value = [...cursor.value];
     emit('active', true);
-    emit('notice', '已設定起點，方向鍵移動後再按空白鍵完成；Esc 取消。');
     return;
   }
   const locations: Point[] = shaped
