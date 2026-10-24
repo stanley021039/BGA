@@ -370,8 +370,19 @@ function initializeApp(config, dataLock, acquired) {
         entry.res.end();
       }
   };
-  const lobby = createLobby(undefined, (userId) => portraitUrl(userId));
-  const roomSpace = createRoomSpace();
+  const authorCombatBonus = (userId) =>
+    !!userId && !!require('./achievements/redemption').redeemedAt(db, userId, 'other');
+  const lobby = createLobby(
+    undefined,
+    (userId) => portraitUrl(userId),
+    undefined,
+    authorCombatBonus,
+  );
+  const roomSpace = createRoomSpace(undefined, undefined, (playerId, room) => {
+    // Room seats use game-local IDs, never trust client-supplied account IDs.
+    const account = [...(seats.get(room.code) || [])].find(([, seatId]) => seatId === playerId);
+    return authorCombatBonus(account?.[0]);
+  });
   const lobbyPingRoom = { code: '__LOBBY__', type: 'lobby', phase: 'lobby', players: [] };
   const expireRooms = () => runtime.expireRooms(history);
   const gameAudio = new GameAudioLibrary(
