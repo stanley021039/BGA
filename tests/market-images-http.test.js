@@ -1,6 +1,6 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   { randomUUID } = require('node:crypto');
 const { PNG } = require('pngjs'),
@@ -340,7 +340,7 @@ test('large frozen HTTP approval batches fit the bounded envelope and exclude ne
 });
 
 const { createClient } = require('./helpers/market-client.cjs'),
-  R = require('../public/market-rules');
+  R = require('../frontend/src/engines/market-rules.js').default;
 const clientSource = () => fs.readFileSync(path.join(__dirname, '../public/market.js'), 'utf8');
 async function eventually(predicate) {
   const until = performance.now() + 5000;

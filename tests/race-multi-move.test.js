@@ -1,9 +1,9 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('node:vm');
 const { ThunderRoom, MAPS, DEVIL_MAPS } = require('../src/games/thunder'),
-  RacePaths = require('../public/shared/race-paths');
+  RacePaths = require('../frontend/src/engines/race-paths.js').default;
 const { settleDice, revealDice } = require('./helpers/race-dice');
 function fixture({ points = 5, x = 2, y = 1, terrain = 'O' } = {}) {
   let seed = 913;
@@ -401,7 +401,7 @@ test('staging, nitro, road bonus and one-cell moves retain their original moveme
 test('planner work is bounded and frontend/server share the exact deterministic planner', () => {
   const f = fixture({ points: 16 }),
     state = f.r.view(f.p.id),
-    source = fs.readFileSync(require.resolve('../public/shared/race-paths'), 'utf8'),
+    source = fs.readFileSync(require.resolve('../frontend/src/engines/race-paths.js'), 'utf8'),
     window = {};
   vm.runInNewContext(source, { window });
   const a = [...RacePaths.routes(state)],

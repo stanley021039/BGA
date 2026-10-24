@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   os = require('node:os'),
   path = require('node:path');
 const { appFixture } = require('./helpers/app-fixture.cjs'),
@@ -30,24 +30,26 @@ test('hashed build assets are immutable, public files revalidate by ETag and doc
   assert.equal(built.status, 200);
   assert.equal(built.headers.get('cache-control'), IMMUTABLE);
 
-  const shared = await fetch(base + '/shared/ui-widgets.js'),
+  const shared = await fetch(base + '/shared/ui-widgets.css'),
     etag = shared.headers.get('etag');
   assert.equal(shared.status, 200);
   assert.equal(shared.headers.get('cache-control'), 'private, no-cache');
   assert.match(etag, /^"[\w-]{27}"$/);
   assert.equal(
     await shared.text(),
-    fs.readFileSync(path.join(__dirname, '../public/shared/ui-widgets.js'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, '../public/shared/ui-widgets.css'), 'utf8'),
   );
-  const again = await fetch(base + '/shared/ui-widgets.js', { headers: { 'If-None-Match': etag } });
+  const again = await fetch(base + '/shared/ui-widgets.css', {
+    headers: { 'If-None-Match': etag },
+  });
   assert.equal(again.status, 304);
   assert.equal(again.headers.get('etag'), etag);
   assert.equal(await again.text(), '');
-  const weak = await fetch(base + '/shared/ui-widgets.js', {
+  const weak = await fetch(base + '/shared/ui-widgets.css', {
     headers: { 'If-None-Match': '"other", W/' + etag },
   });
   assert.equal(weak.status, 304);
-  const changed = await fetch(base + '/shared/ui-widgets.js', {
+  const changed = await fetch(base + '/shared/ui-widgets.css', {
     headers: { 'If-None-Match': '"other"' },
   });
   assert.equal(changed.status, 200);

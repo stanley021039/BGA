@@ -1,9 +1,9 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   { CATALOG, BANKS } = require('../src/games/musicquiz-library'),
-  { titles } = require('../public/shared/song-title-zh');
+  { titles } = require('../frontend/src/engines/song-title-zh.js').default;
 test('current Japanese kana and Thai titles have a local Chinese reference gloss, not a network translation request', () => {
   for (const s of CATALOG.filter(
     (s) =>

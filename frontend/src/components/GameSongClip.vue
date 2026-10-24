@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AudioSettings from '../engines/audio-settings.js';
+
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { MusicQuizSnapshot } from '../contracts/musicquiz';
 import UiButton from './UiButton.vue';
@@ -33,7 +35,7 @@ function visibility() {
   if (document.hidden) stop();
 }
 onMounted(() => {
-  if (audio.value) unbind = window.AudioSettings?.bindPreview(audio.value);
+  if (audio.value) unbind = AudioSettings?.bindPreview(audio.value);
   document.addEventListener('visibilitychange', visibility);
 });
 onBeforeUnmount(() => {

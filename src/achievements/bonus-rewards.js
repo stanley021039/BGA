@@ -54,7 +54,9 @@ function owned(store, userId) {
       'home-family',
       ...(grants.entrances || ids.has('all-three-games') ? ['soul-world'] : []),
     ],
-    pingIcons: grants.pings ? Object.keys(require('../../public/shared/ping-model').types) : [],
+    pingIcons: grants.pings
+      ? Object.keys(require('../../frontend/src/engines/ping-model.js').default.types)
+      : [],
   };
 }
 function ownedSounds(db, userId) {

@@ -1,13 +1,10 @@
+import RacePaths from '../../engines/race-paths.js';
 // Original local teaching engine extracted from public/race.html; no network or DOM ownership.
 export const TutorialEngine = (() => {
   const module = { exports: {} };
   let id = 0;
-  const require = (name) =>
-    name === '../../public/shared/race-paths'
-      ? window.RacePaths
-      : { randomInt: (n) => Math.floor(Math.random() * n), randomUUID: () => 'lesson-' + ++id }; // Thunder Road: Vendetta core rules. See docs/RULES-SOURCES.md for reference and variant details.
-  const { randomInt, randomUUID } = require('node:crypto');
-  const RacePaths = require('../../public/shared/race-paths');
+  const randomInt = (n) => Math.floor(Math.random() * n),
+    randomUUID = () => 'lesson-' + ++id;
   const COLORS = ['#ec9b35', '#43c6cd', '#c4d3c0', '#c260b6'];
   const DIRS = ['前左', '前方', '前右', '後左', '後方', '後右'];
   const SIZES = ['輕型', '中型', '重型'];

@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const { mediaHarness, mediaSnapshot } = require('./helpers/media-browser.cjs');

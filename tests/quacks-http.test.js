@@ -206,7 +206,7 @@ for (const purpose of ['test', 'production', 'retry'])
           '/quacks.css',
           '/assets/playful/game-quacks.svg',
         ])
-          assert.equal((await fetch(base + path)).status, 200);
+          assert.equal((await fetch(base + path)).status, path.endsWith('.js') ? 404 : 200);
       }
       if (purpose === 'retry') {
         await post('leave', owner, { code });

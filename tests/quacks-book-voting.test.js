@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('node:vm');
 const { dom } = require('./helpers/widget-dom.cjs'),
   { QuacksRoom } = require('../src/games/quacks');

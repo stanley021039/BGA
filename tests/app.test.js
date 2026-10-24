@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
+const fs = require('./helpers/browser-modules.cjs');
 const os = require('node:os');
 const path = require('node:path');
 const { createApp } = require('../src/app');
@@ -34,7 +34,8 @@ test('independent app instances can start, serve, and release their history lock
       'barrage-frames.css',
     ]) {
       const response = await fetch(`http://127.0.0.1:${port}/shared/${asset}`);
-      assert.equal(response.status, 200, asset);
+      assert.equal(response.status, asset.endsWith('.js') ? 404 : 200, asset);
+      if (asset.endsWith('.js')) continue;
       assert.match(
         response.headers.get('content-type'),
         asset.endsWith('.css') ? /text\/css/ : /text\/javascript/,
@@ -52,7 +53,7 @@ test('independent app instances can start, serve, and release their history lock
       assert.equal((await fetch(`http://127.0.0.1:${port}/${asset}`)).status, 404, asset);
       assert.equal((await fetch(`http://127.0.0.1:${port}/shared/${asset}`)).status, 404, asset);
     }
-    assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.js`)).status, 200);
+    assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.js`)).status, 404);
     assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.css`)).status, 200);
     await app.close();
     await app.close();

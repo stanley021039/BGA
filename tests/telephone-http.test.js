@@ -107,7 +107,7 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book history and i
     assert.equal(page.status, 503);
   }
   for (const path of ['/shared/stroke-canvas.js', '/shared/countdown-bar.js'])
-    assert.equal((await fetch(base + path)).status, 200);
+    assert.equal((await fetch(base + path)).status, 404);
   await post('leave', { code });
 });
 test('maximum eight-seat books stay within default history result bounds and reconstruct every page', async (t) => {

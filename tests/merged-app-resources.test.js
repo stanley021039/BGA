@@ -18,11 +18,15 @@ async function fixture(t) {
   for (const page of require('../frontend/pages.json')) {
     fs.mkdirSync(path.join(vueRoot, 'pages', page.id), { recursive: true });
     fs.copyFileSync(
-      path.resolve(__dirname, '../frontend/pages', page.id, 'index.html'),
+      path.resolve(__dirname, '../frontend/dist/pages', page.id, 'index.html'),
       path.join(vueRoot, 'pages', page.id, 'index.html'),
     );
   }
-  fs.mkdirSync(path.join(vueRoot, 'frontend-assets'));
+  fs.cpSync(
+    path.resolve(__dirname, '../frontend/dist/frontend-assets'),
+    path.join(vueRoot, 'frontend-assets'),
+    { recursive: true },
+  );
   const config = {
     host: '127.0.0.1',
     port: 0,
@@ -103,11 +107,8 @@ test('merged app serves every HTML script and stylesheet, market entry and game 
       .replace(/>\s+</g, '><');
     if (file === 'login.html') assert.doesNotMatch(html, /id="entry-intro"/, route);
     else assert.match(html, /id="entry-intro"/, route);
-    assert.match(
-      html,
-      file === 'login.html' ? /\/shared\/auth-entry\.js/ : /\/shared\/entry-intro\.js/,
-      route,
-    );
+    assert.match(html, /data-prepaint/, route);
+    assert.doesNotMatch(html, /src="\/shared\/[^"]+\.js/, route);
     for (const match of html.matchAll(
       /<script\b[^>]*\bsrc="([^"]+)"|<link\b[^>]*\bhref="([^"]+)"/g,
     )) {

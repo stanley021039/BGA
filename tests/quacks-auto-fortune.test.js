@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('vm');
 function fixture() {
   let time = 0,

@@ -1,7 +1,8 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('../../tests/helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const ts = require('../node_modules/typescript'),
@@ -28,7 +29,7 @@ function loader(mocks = {}) {
       }).outputText;
     vm.runInNewContext(
       code,
-      {
+      withEngineImports({
         module,
         exports: module.exports,
         require: requireLocal,
@@ -41,7 +42,7 @@ function loader(mocks = {}) {
         crypto: require('node:crypto').webcrypto,
         document: { hidden: false, addEventListener() {}, removeEventListener() {} },
         window: { addEventListener() {}, removeEventListener() {} },
-      },
+      }),
       { filename: file },
     );
     return module.exports;
@@ -172,14 +173,14 @@ test('changing music banks saves the latest selection and re-enables starting; f
     ts.transpileModule(script, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    {
+    withEngineImports({
       module,
       exports: module.exports,
       require: (id) => mocks[id] || {},
       setInterval: () => 1,
       clearInterval() {},
       console,
-    },
+    }),
   );
   const scope = vue.effectScope();
   let state;
@@ -244,20 +245,12 @@ test('changing music banks saves the latest selection and re-enables starting; f
     scope.stop();
   }
 });
-test('song translations remain registered when the browser bundle also exposes CommonJS', () => {
-  const window = {},
-    module = { exports: {} };
-  vm.runInNewContext(
-    fs.readFileSync(path.join(__dirname, '../../public/shared/song-title-zh.js'), 'utf8'),
-    { window, module },
-  );
-  assert.equal(window.SongTitleZh, module.exports);
-  assert.equal(window.SongTitleZh.titles['ブルーバード'], '青鳥');
+test('song translations export the canonical API for browser and Node consumers', () => {
+  const titlesApi = require('../src/engines/song-title-zh.js').default;
+  assert.equal(titlesApi.titles['ブルーバード'], '青鳥');
   const { CATALOG } = require('../../src/games/musicquiz-library');
   assert.deepEqual(
-    CATALOG.filter((s) => s.bank === 'foreign' && !window.SongTitleZh.titles[s.title]).map(
-      (s) => s.title,
-    ),
+    CATALOG.filter((s) => s.bank === 'foreign' && !titlesApi.titles[s.title]).map((s) => s.title),
     [],
   );
 });
@@ -281,7 +274,7 @@ test('each builtin bank can be selected alone and start with six song choices', 
 });
 
 test('song hints omit Chinese and English songs while retaining distinct foreign translations', () => {
-  const { hint } = require('../../public/shared/song-title-zh.js');
+  const { hint } = require('../src/engines/song-title-zh.js').default;
   assert.equal(hint('天黑黑', 'zh'), undefined);
   assert.equal(hint('Shape of You', 'en'), undefined);
   assert.equal(hint('群青', 'jp'), undefined);

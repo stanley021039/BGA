@@ -1,3 +1,4 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -27,7 +28,7 @@ function fixture(effect, dimensions = {}) {
     },
   );
   const sandbox = {};
-  vm.createContext(sandbox);
+  vm.createContext(withEngineImports(sandbox));
   vm.runInContext(source, sandbox);
   const draw = sandbox.createStitchAttack(
     ctx,

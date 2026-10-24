@@ -1,6 +1,6 @@
 const test = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   os = require('node:os'),
   path = require('node:path');
 const { createApp } = require('../src/app');
@@ -20,7 +20,8 @@ test('new shared component assets are fixed routes with correct content types an
     const { port } = await app.listen();
     for (const asset of assets) {
       const response = await fetch('http://127.0.0.1:' + port + '/shared/' + asset);
-      assert.equal(response.status, 200, asset);
+      assert.equal(response.status, asset.endsWith('.js') ? 404 : 200, asset);
+      if (asset.endsWith('.js')) continue;
       assert.match(
         response.headers.get('content-type'),
         asset.endsWith('.css') ? /^text\/css/ : /^text\/javascript/,
@@ -47,10 +48,8 @@ test('game feedback pages load common helpers before game controllers and retain
       path.join(__dirname, '../frontend/pages', name, 'index.html'),
       'utf8',
     );
-    for (const asset of assets) assert.ok(html.includes('/shared/' + asset), name + ' ' + asset);
-    assert.ok(
-      html.indexOf('src="/shared/ui-components.js"') < html.indexOf('src="/shared/ui-widgets.js"'),
-      name,
-    );
+    assert.ok(html.includes('/shared/ui-widgets.css'), name);
+    assert.doesNotMatch(html, /src="\/shared\/[^"]+\.js/);
+    assert.match(html, /type="module"/);
   }
 });

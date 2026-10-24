@@ -1,6 +1,7 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
+const fs = require('../../tests/helpers/browser-modules.cjs');
 const path = require('node:path');
 const vm = require('node:vm');
 const vue = require('vue');
@@ -40,7 +41,7 @@ function harness({ deadline = null, me = 'a', submitted = false } = {}) {
   };
   vm.runInNewContext(
     fs.readFileSync(path.resolve(__dirname, '../../public/shared/game-sounds.js'), 'utf8'),
-    { window, Date: { now: () => clock } },
+    withEngineImports({ window, Date: { now: () => clock } }),
   );
   const module = { exports: {} };
   const compiled = ts.transpileModule(
@@ -52,14 +53,17 @@ function harness({ deadline = null, me = 'a', submitted = false } = {}) {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     },
   ).outputText;
-  vm.runInNewContext(compiled, {
-    module,
-    exports: module.exports,
-    Date: { now: () => clock },
-    window,
-    document,
-    require: () => vue,
-  });
+  vm.runInNewContext(
+    compiled,
+    withEngineImports({
+      module,
+      exports: module.exports,
+      Date: { now: () => clock },
+      window,
+      document,
+      require: () => vue,
+    }),
+  );
   const room = vue.reactive({ connected: true, scope: 1, lastReceivedAt: clock, clockOffset: 0 });
   const state = vue.shallowRef({
     code: 'ABCDEF',

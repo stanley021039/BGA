@@ -1,6 +1,6 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict');
-const fs = require('node:fs'),
+const fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 function fixture({ pending = false, blocked = false } = {}) {
@@ -321,7 +321,7 @@ test('Quacks explosion reaction is a fixed live cue with a resampled blast befor
   c.update(f.state());
   c.play('quacks-explosion', 'fish');
   assert.equal(f.clips.at(-1).src, '/assets/game-sounds/quacks-explosion-fish.wav');
-  const fs = require('node:fs'),
+  const fs = require('./helpers/browser-modules.cjs'),
     crypto = require('node:crypto'),
     m = JSON.parse(
       fs.readFileSync('public/assets/game-sounds/quacks-manifest.json'),

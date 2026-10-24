@@ -3,7 +3,7 @@ const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   { randomUUID } = require('node:crypto');
 const { RoomPings, scene, target } = require('../src/rooms/pings'),
-  M = require('../public/shared/ping-model');
+  M = require('../frontend/src/engines/ping-model.js').default;
 const room = (code = 'ABCDEF') => ({
   code,
   type: 'draw',
@@ -41,7 +41,7 @@ test('four directional slices and center dead zone are deterministic', () => {
   assert.equal(M.pick(0, 30), 'help');
 });
 test('wheel geometry keeps square tracks and the backdrop rings centered on the selected cell', () => {
-  const css = require('node:fs').readFileSync(
+  const css = require('./helpers/browser-modules.cjs').readFileSync(
     require('node:path').join(__dirname, '../public/shared/room-pings.css'),
     'utf8',
   );
@@ -234,7 +234,7 @@ test('lobby supports all 80 visitors with three tabs while game rooms retain the
 });
 
 test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly drained on shutdown', async () => {
-  const fs = require('node:fs'),
+  const fs = require('./helpers/browser-modules.cjs'),
     os = require('node:os'),
     path = require('node:path'),
     { openDatabase } = require('../src/db'),
@@ -389,7 +389,10 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
       403,
     );
     for (const asset of ['ping-model.js', 'room-pings.css'])
-      assert.equal((await fetch(base + '/shared/' + asset)).status, 200);
+      assert.equal(
+        (await fetch(base + '/shared/' + asset)).status,
+        asset.endsWith('.js') ? 404 : 200,
+      );
     for (const type of ['ping', 'attention', 'question', 'help', 'look']) {
       const asset = 'ping-' + type + '.wav',
         res = await fetch(base + '/assets/game-sounds/' + asset);
@@ -506,7 +509,7 @@ test('native ping icons are independent of voice cues and reject unknown icon id
 });
 
 test('all ten native ping symbols have distinct colors independent of their wheel slot', () => {
-  const model = require('../public/shared/ping-model');
+  const model = require('../frontend/src/engines/ping-model.js').default;
   assert.equal(Object.keys(model.colors).length, 10);
   assert.equal(new Set(Object.values(model.colors)).size, 10);
   for (const type of Object.keys(model.types)) assert.match(model.colors[type], /^#[a-f0-9]{6}$/i);

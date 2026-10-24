@@ -133,5 +133,15 @@
     "id": "race",
     "document": "race.html",
     "route": "/race"
+  },
+  {
+    "id": "sound-library",
+    "document": "sound-library.html",
+    "route": "/sound-library"
+  },
+  {
+    "id": "game-audio-admin",
+    "document": "game-audio-admin.html",
+    "route": "/admin/game-audio"
   }
 ]

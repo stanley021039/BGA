@@ -6,7 +6,7 @@ const { QuacksRoom } = require('../src/games/quacks'),
   { WITCHES, FORTUNES } = require('../src/games/quacks-catalog');
 const { openDatabase } = require('../src/db'),
   { AchievementStore } = require('../src/achievements/store');
-const art = require('../public/quacks-art');
+const art = require('../frontend/src/engines/quacks-art.js').default;
 const act = (r, p, action, data = {}) =>
   r.act(p.id, action, { roundId: r.roundId, requestId: randomUUID(), ...data });
 function fixture(t, { bot = false, witches = false } = {}) {

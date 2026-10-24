@@ -1,6 +1,6 @@
 const test = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const script = fs.readFileSync(
@@ -390,7 +390,7 @@ test('oil and shot-induced skid spin only when their motion starts, preserving p
 });
 
 test('every forced movement has its own readable motion label and duration without an unrelated spin', () => {
-  const { describe } = require('../public/shared/race-vehicle-effects');
+  const { describe } = require('../frontend/src/engines/race-vehicle-effects.js').default;
   const names = {
     glass: '玻璃滑移',
     slam: '碰撞推移',

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import QuacksArt from '../../engines/quacks-art.js';
+
 import { computed, onMounted, ref, watch } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
 import { ingredientNames } from '../../contracts/quacks';
@@ -39,7 +41,7 @@ const description = computed(() => {
 });
 function render() {
   if (!host.value) return;
-  const art = window.QuacksArt,
+  const art = QuacksArt,
     node = props.chip
       ? art?.token(props.chip, { size: props.size, decorative: true, showValue: props.showValue })
       : props.patient

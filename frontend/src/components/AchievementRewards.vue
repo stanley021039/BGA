@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BarrageFrames from '../engines/barrage-frames.js';
+
 import { onMounted, onBeforeUnmount, ref } from 'vue';
 import { useResource } from '../composables/resource';
 import { useMutation } from '../composables/mutation';
@@ -47,7 +49,7 @@ onBeforeUnmount(() => window.removeEventListener('achievement-rewards-updated', 
 async function claim(frameId: string) {
   await mutation.run(async (request) => {
     const data = await request('/api/achievements/claim', { frameId });
-    const frames = window.BarrageFrames as typeof window.BarrageFrames & {
+    const frames = BarrageFrames as typeof BarrageFrames & {
       acceptRewards?(data: unknown): void;
     };
     frames?.acceptRewards?.(data);

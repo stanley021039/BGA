@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('node:vm'),
   crypto = require('node:crypto');
 const { QuacksRoom } = require('../src/games/quacks');
@@ -75,6 +75,9 @@ function audioFixture({ controlledClip = false, capacity = true, enabled = true 
     removeEventListener: (_, f) => handlers.delete(f),
   };
   const window = {
+    GameUI: undefined,
+    MotionPolicy: undefined,
+    QuacksArt: undefined,
     document,
     AudioSettings: { get: () => ({ effects: { enabled, volume: 0.25 } }) },
   };
