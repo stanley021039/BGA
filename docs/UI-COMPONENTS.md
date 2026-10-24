@@ -4,6 +4,8 @@
 
 ## 快速對照
 
+`UiChoiceCard imageOnly` 僅呈現預設 slot 的圖片，省略卡外 label／選取文字及內距；保留 aria-label、aria-pressed 與選取圈。`UiHoverInfo :showHelp="false"` 隱藏獨立問號按鈕，仍可 hover／鍵盤聚焦閱讀。
+
 `UiPopover contentSized` 讓含標題／關閉鈕的短說明依內容高度顯示，保留視窗最大高度及內部捲動；`UiHoverInfo` 使用此模式。觸控裝置不因合成滑鼠進入事件開啟被動預覽，說明按鈕聚焦不搶先遮住尚未完成的點擊。
 
 | 需要 | 用 | 不要 |

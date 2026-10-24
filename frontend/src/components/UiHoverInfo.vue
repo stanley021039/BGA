@@ -2,7 +2,10 @@
 import { nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
 import UiPopover from './UiPopover.vue';
 import UiButton from './UiButton.vue';
-const props = defineProps<{ title: string; disabled?: boolean }>();
+const props = withDefaults(
+  defineProps<{ title: string; disabled?: boolean; showHelp?: boolean }>(),
+  { showHelp: true },
+);
 const id = useId(),
   root = ref<HTMLElement | null>(null),
   panel = ref<InstanceType<typeof UiPopover> | null>(null);
@@ -89,7 +92,7 @@ onBeforeUnmount(close);
     @keydown="key"
   >
     <slot />
-    <span class="ui-hover-info-help-slot"
+    <span v-if="showHelp" class="ui-hover-info-help-slot"
       ><UiButton
         class="ui-hover-info-help"
         icon="help"

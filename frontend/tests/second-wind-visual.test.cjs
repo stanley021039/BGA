@@ -102,6 +102,9 @@ test('illustrated draft retains its guarded action and own secret choice stays l
   try {
     const card = f.host.querySelector('button[aria-label="Understudy"]');
     assert.ok(card.querySelector('img').src.endsWith('/understudy-card.webp'));
+    assert.equal(card.textContent.trim(), '');
+    assert.equal(card.getAttribute('data-image-only'), 'true');
+    assert.equal(f.host.querySelector('.ui-hover-info-help'), null);
     card.click();
     assert.equal(f.calls[0][0], 'draft');
     assert.equal(f.calls[0][1].racerId, 'understudy');
@@ -126,7 +129,7 @@ test('illustrated draft retains its guarded action and own secret choice stays l
   }
 });
 
-test('scoreboard collapses portraits while keeping player scores and log identity visible', async () => {
+test('scoreboard collapses all player content while keeping the heading and log identity', async () => {
   const f = fixture();
   try {
     f.game.events = [{ id: 1, type: 'die', text: 'Stunner 擲出 6', playerId: 'b' }];
@@ -136,7 +139,7 @@ test('scoreboard collapses portraits while keeping player scores and log identit
     toggle.click();
     await vue.nextTick();
     assert.equal(f.host.querySelector('.athlete-team').style.display, 'none');
-    assert.match(f.host.querySelector('.athlete-scores').textContent, /0 分/);
+    assert.equal(f.host.querySelector('.athlete-scores').style.display, 'none');
     assert.equal(
       f.host.querySelector('button[aria-label="展開積分與隊伍"]').getAttribute('aria-expanded'),
       'false',
@@ -165,7 +168,11 @@ test('crowded track bounds portraits while the complete racer list remains reada
     }));
     await vue.nextTick();
     assert.equal(f.host.querySelectorAll('.athlete-track-pieces img').length, 2);
-    assert.match(f.host.querySelector('.athlete-track').textContent, /×4/);
+    assert.equal(f.host.querySelectorAll('.athlete-piece.ui-hover-info').length, 2);
+    assert.equal(f.host.querySelector('.athlete-piece').getAttribute('tabindex'), '0');
+    assert.equal(f.host.querySelector('.athlete-track-cell .ui-hover-info-help'), null);
+    assert.equal(f.host.querySelector('.athlete-track-number'), null);
+    assert.equal(f.host.querySelector('.athlete-piece .ui-badge'), null);
     assert.equal(f.host.querySelectorAll('.athlete-racer-row').length, 4);
     assert.ok(f.host.querySelector('.athlete-tripped'));
     assert.equal(f.host.querySelector('.athlete-track-scroll').getAttribute('tabindex'), '0');
