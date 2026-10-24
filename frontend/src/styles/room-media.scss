@@ -70,6 +70,13 @@
     }
     .frontend-status {
       margin: 0;
+      min-block-size: 0;
+      &:not([data-visible]) {
+        display: none;
+      }
+    }
+    .vue-media-inline-status:not(:has(.frontend-status[data-visible])) {
+      display: none;
     }
   }
   .vue-room-media-themed {
@@ -78,6 +85,23 @@
     --stitch-button-border-color: var(--vue-media-line);
     --stitch-button-hover-bg: var(--vue-media-background);
     --stitch-button-active-bg: var(--vue-media-background);
+    // Legacy dialog text rules must inherit this personal frame's ink too.
+    :where(h1, h2, h3, label, p, li, strong, small, output) {
+      color: var(--vue-media-text);
+    }
+    :is(input:not([type='range']), select, option, textarea) {
+      color: var(--vue-media-text);
+      background: var(--vue-media-background);
+      border-color: var(--vue-media-line);
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: var(--vue-media-text);
+      opacity: 0.65;
+    }
+    .vue-media-library-link {
+      color: var(--vue-media-text);
+    }
   }
   .vue-media-frame-art {
     position: absolute;
@@ -89,6 +113,16 @@
     pointer-events: none;
     overflow: visible;
     border-radius: inherit;
+    // A player window owns its dimensions; barrage bubble gutters must not
+    // inset a second frame over the header, tabs, or playback controls.
+    padding: 0;
+    border: 0;
+    min-inline-size: 0;
+    > .barrage-frame-decoration,
+    > .barrage-frame-backdrop {
+      inset: 0;
+      border-radius: inherit;
+    }
   }
   .vue-media-header {
     display: flex;
@@ -132,15 +166,16 @@
   }
   .vue-media-content {
     display: grid;
-    grid-template-rows: 44px minmax(0, 1fr);
+    grid-template-rows: 44px auto;
     gap: 8px;
-    flex: 1;
+    flex: 0 1 auto;
     min-inline-size: 0;
     min-block-size: 0;
     padding: 12px;
     position: relative;
     z-index: 1;
-    overflow: hidden;
+    overflow: auto;
+    scrollbar-width: none;
     box-sizing: border-box;
   }
   .vue-media-screen {
@@ -251,20 +286,19 @@
     display: block;
     min-inline-size: 0;
     min-block-size: 0;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
   }
   .vue-media-primary,
   .vue-media-request {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    justify-content: flex-start;
+    gap: var(--stitch-space-8);
     min-inline-size: 0;
-    block-size: 100%;
+    block-size: auto;
     min-block-size: 0;
-    overflow: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
+    overflow: visible;
     box-sizing: border-box;
   }
   .vue-media-current {
@@ -293,8 +327,8 @@
     p {
       min-inline-size: 0;
       margin: 4px 0 0;
-      max-block-size: 3em;
-      overflow: auto;
+      max-block-size: none;
+      overflow: visible;
       overflow-wrap: anywhere;
       font-size: var(--stitch-font-14);
       line-height: 1.5;
@@ -460,9 +494,6 @@
       padding: 8px 4px;
       box-sizing: border-box;
     }
-    .vue-media-queue {
-      max-block-size: 280px;
-    }
     overscroll-behavior: contain;
   }
   .vue-media-panel-heading {
@@ -518,9 +549,7 @@
     min-block-size: 88px;
     margin: 0;
     padding: 0;
-    overflow: auto;
-    overscroll-behavior: contain;
-    scrollbar-gutter: stable;
+    overflow: visible;
     list-style: none;
     > li {
       display: grid;
@@ -906,7 +935,4 @@
 .vue-media-window,
 .vue-media-frame-art {
   overflow: visible;
-}
-.vue-media-content {
-  overflow: hidden;
 }

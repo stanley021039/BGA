@@ -30,6 +30,13 @@ export const useInvitationsStore = defineStore('invitations', () => {
     pollJob: Promise<boolean> | null = null,
     candidateController: AbortController | null = null;
   const controllers = new Set<AbortController>();
+  // Inside a room the event stream announces new invitations (#232), so the
+  // fallback poll can be slow there; the lobby keeps the normal pace.
+  const streamLive = () => document.documentElement.dataset.roomStream === 'live';
+  const onRoomEvent = (event: Event) => {
+    if ((event as CustomEvent<{ kind?: string }>).detail?.kind === 'invitations') void poll();
+  };
+  window.addEventListener('bga:room-event', onRoomEvent);
   const current = (epoch: number) => !disposed && epoch === generation && !!session.user;
   async function request(path = '', data?: Record<string, unknown>, signal?: AbortSignal) {
     const controller = new AbortController();
@@ -70,7 +77,7 @@ export const useInvitationsStore = defineStore('invitations', () => {
           timer = null;
           void poll();
         },
-        document.hidden ? 30000 : 5000,
+        document.hidden ? 30000 : streamLive() ? 20000 : 5000,
       );
   }
   async function poll(force = false): Promise<boolean> {
@@ -283,6 +290,7 @@ export const useInvitationsStore = defineStore('invitations', () => {
     disposed = true;
     reset();
     document.removeEventListener('visibilitychange', visibility);
+    window.removeEventListener('bga:room-event', onRoomEvent);
   });
   return {
     items,

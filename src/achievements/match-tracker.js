@@ -12,6 +12,11 @@ function attachMatchAchievements(room) {
       get completed() {
         return current?.completed || null;
       },
+      // The match's progress lives in this closure; restarts save and restore it (#235).
+      snapshot: () => current,
+      restore(value) {
+        current = value || null;
+      },
       finish() {
         if (
           !current ||
