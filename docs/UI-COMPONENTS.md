@@ -4,6 +4,8 @@
 
 ## 快速對照
 
+`UiPopover contentSized` 讓含標題／關閉鈕的短說明依內容高度顯示，保留視窗最大高度及內部捲動；`UiHoverInfo` 使用此模式。觸控裝置不因合成滑鼠進入事件開啟被動預覽，說明按鈕聚焦不搶先遮住尚未完成的點擊。
+
 | 需要 | 用 | 不要 |
 | --- | --- | --- |
 | 按鈕、圖示按鈕 | `UiButton` | `<button>`、`.ui-button` 手寫 class |
@@ -169,6 +171,7 @@
 - `UiNotice`：`message`、`tone`、`error`、`active`、`noticeKey`、`duration`（預設 4000ms）、`persistent`。狀態解除立刻隱藏；短暫訊息到時隱藏；保留外層寬高，內文過長可局部捲動。相同訊息再次發生時增加 `noticeKey`，重新開始計時。卸載會清除計時器。`StatusSlot` 轉交同一 API，使用 44px／14px 緊湊樣式；既有遊戲有明確較矮槽位時沿用該固定布局並允許內文捲動。
 - 未確認的操作結果、必須重試的狀態、必要遊戲決策／指令及真正空狀態不能定時清除；依來源條件設定 `persistent`，並在狀態解除時清空 `message` 或關閉 `active`。不要將所有 error 一律永久顯示。
 - `UiChoiceCard`：`label`、`selected`、`disabled`；淡色中性底、預設無邊，選取時同一底色、3px 深色外圈加 2px offset，以及可見的勾選文字。標記保留槽位，不改外框尺寸。`action` 表示立即操作，不附加持續選取語意；`unavailable` 表示只能預覽的鎖定內容。`readable-disabled` 保留停用卡片正文的正常文字對比，供輪到別人時仍必須閱讀的遊戲能力；原生停用與不可用標記不變，預設關閉。`#label`／`#selection` 可保留既有可讀內容，但不能隱藏必要資訊。`ImageChoiceGrid`、`FrameChoices`、`EntranceChoices`、`ArtworkPicker` 都沿用這個外觀。
+- `UiHoverInfo`：包住卡片，`title`、`disabled` 與 `#info` 提供滑過／鍵盤聚焦說明；停用卡片仍可聚焦外層。觸控使用獨立「查看說明」圖示，與卡片選取按鈕互為相鄰元素，不巢狀按鈕、不攔截選取。內容沿用 UiPopover，可移入閱讀、Esc／關閉與點外面收起；hover 不搶焦點，明確點查看才移焦，離開後180ms關閉，卸載／換卡／切背景清理。`UiPopover autofocus=false` 用於這類被動預覽，預設 true 不變；額外原生事件／屬性轉交實際 popover 元素。
 - `UiHeading`：`level=1|2|3`，`kind=page|section`。page 為 28px 與細分隔線；section 為 20px 與黃色直條；允許自然換行，不能縮小字或截掉字。
 - `UiList as=div|ul|ol`、`UiListRow as=div|li`：單一細邊面板、交錯底色；列內最小操作槽 44px，標題、內容和 `#actions` 對齊。長內容換行，不能為等高刪減資訊。
 

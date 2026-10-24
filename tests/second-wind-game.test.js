@@ -37,6 +37,42 @@ function advance(game, players, choose = 0) {
   game.act(id, action, v.revision);
   return true;
 }
+test('first secret selection exposes race one before any player locks a racer', () => {
+  const players = ['p0', 'p1', 'p2'],
+    game = new SecondWindGame({ playerIds: players, seed: 23 });
+  for (let i = 0; game.view(players[0]).phase !== 'choosing' && i < 100; i++)
+    advance(game, players, i);
+  const first = game.view(players[0]);
+  assert.equal(first.phase, 'choosing');
+  assert.equal(first.race, 1);
+  advance(game, players);
+  for (const id of players) {
+    const view = game.view(id);
+    assert.equal(view.race, 1);
+    assert.equal(view.ownSelection, id === players[0] ? first.teams[id][0] : null);
+  }
+});
+
+test('racer events preserve the player identity that owned the racer at event time', () => {
+  const game = new SecondWindGame({ playerIds: ['p0', 'p1', 'p2'], seed: 2 });
+  game.state = {
+    eventId: 0,
+    events: [],
+    racers: [{ id: 'r1', racerId: 'stunner', playerId: 'p0' }],
+  };
+  game.emit('die', 'Stunner 擲出 6', { racer: 'r1', value: 6 });
+  game.state.racers[0].playerId = 'p1';
+  game.emit('eliminate', 'Stunner 淘汰', { racer: 'r1' });
+  assert.deepEqual(
+    game.state.events.map((e) => e.playerId),
+    ['p0', 'p1'],
+  );
+  assert.deepEqual(
+    game.state.events.map((e) => e.racerId),
+    ['stunner', 'stunner'],
+  );
+});
+
 test('complete four races across seeded rosters, private choices and preserved racer counts', () => {
   for (let seed = 0; seed < 60; seed++) {
     const players = Array.from({ length: 3 + (seed % 4) }, (_, i) => 'p' + i),
@@ -60,6 +96,12 @@ test('complete four races across seeded rosters, private choices and preserved r
     assert.ok(v.winners.length);
     assert.ok(Object.values(v.scores).every(Number.isSafeInteger));
     assert.ok(Object.values(v.teams).every((cards) => !cards.length));
+    for (const event of v.events.filter((e) =>
+      ['turn', 'die', 'move', 'warp', 'trip', 'recover', 'eliminate', 'finish'].includes(e.type),
+    )) {
+      assert.ok(players.includes(event.playerId), JSON.stringify(event));
+      assert.ok(event.racerId, 'public racer event retains its identity');
+    }
     assert.equal(JSON.stringify(v).includes('randomKey'), false);
     assert.equal(JSON.stringify(v).includes('secretNumber'), false);
   }

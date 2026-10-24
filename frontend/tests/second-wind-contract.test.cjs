@@ -52,4 +52,12 @@ test('shipped athlete parser accepts actual recruiting views and rejects malform
     },
   ];
   assert.throws(() => readAthleteSnapshot(racer));
+  const missingRace = structuredClone(v);
+  missingRace.game.phase = 'choosing';
+  delete missingRace.game.race;
+  assert.throws(() => readAthleteSnapshot(missingRace));
+  missingRace.game.race = 1;
+  readAthleteSnapshot(missingRace);
+  missingRace.game.race = 5;
+  assert.throws(() => readAthleteSnapshot(missingRace));
 });

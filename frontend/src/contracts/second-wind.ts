@@ -98,6 +98,12 @@ export function readAthleteSnapshot(value: unknown): AthleteSnapshot {
     const g = record(base.game);
     integer(g.revision);
     if (!phases.includes(text(g.phase))) invalid();
+    if (g.race !== undefined && integer(g.race, 1) > 4) invalid();
+    if (
+      ['choosing', 'racing', 'race-result', 'finished'].includes(text(g.phase)) &&
+      g.race === undefined
+    )
+      invalid();
     const players = strings(g.players);
     if (players.length < 3 || players.length > 6 || new Set(players).size !== players.length)
       invalid();
@@ -144,6 +150,7 @@ export function readAthleteSnapshot(value: unknown): AthleteSnapshot {
       const e = record(v);
       integer(e.id, 1);
       if (!text(e.type)) invalid();
+      if (e.playerId !== undefined && !players.includes(text(e.playerId))) invalid();
     }
     for (const v of array(g.awards)) {
       if (!Array.isArray(v) || v.length !== 2) invalid();

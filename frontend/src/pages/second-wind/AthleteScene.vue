@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import UiHoverInfo from '../../components/UiHoverInfo.vue';
 import { useAthleteStore } from '../../stores/second-wind';
 import { usePartyActionsStore } from '../../stores/party-actions';
 import { useRoomStore } from '../../stores/room';
@@ -21,6 +22,13 @@ const me = computed(() => athlete.state?.me || '');
 const cards = computed(() => Object.fromEntries(game.value.catalog.map((c) => [c.id, c])));
 const name = (id: string) => athlete.state?.players.find((p) => p.id === id)?.name || id;
 const cardName = (id: string) => cards.value[id]?.name || id;
+const teamsOpen = ref(true);
+watch(
+  () => athlete.state?.code,
+  () => {
+    teamsOpen.value = true;
+  },
+);
 const seat = (id: string) => game.value.players.indexOf(id) + 1;
 const track = computed(() => game.value.trackId || 'twisty-twirl');
 const picking = computed(() => game.value.phase === 'drafting');
@@ -56,7 +64,7 @@ function portal(position: number) {
 function pick(racerId: string) {
   athlete.act(picking.value ? 'draft' : 'select', { racerId });
 }
-const eventText = (e: (typeof game.value.events)[number]) =>
+const eventBody = (e: (typeof game.value.events)[number]) =>
   e.text ||
   (e.type === 'rolloff-die'
     ? name(e.playerId || '') + ' 擲出 ' + e.value
@@ -65,18 +73,29 @@ const eventText = (e: (typeof game.value.events)[number]) =>
       : e.type === 'selection-locked'
         ? name(e.playerId || '') + ' 已鎖定角色'
         : e.type);
+const eventText = (e: (typeof game.value.events)[number]) =>
+  (e.playerId ? `${name(e.playerId)}（ID：${e.playerId}）｜` : '') + eventBody(e);
 </script>
 <template>
   <div class="athlete-scene">
-    <UiNotice :message="actions.notice" :persistent="actions.canRetry"
-      ><UiButton v-if="actions.canRetry" label="重試同一操作" @click="actions.retrySame()"
-    /></UiNotice>
     <UiPanel title="積分與隊伍" density="compact">
+      <template #actions
+        ><UiButton
+          :label="teamsOpen ? '收合積分與隊伍' : '展開積分與隊伍'"
+          :aria-expanded="teamsOpen"
+          :aria-controls="
+            game.players
+              .map((id) => 'athlete-team-' + id)
+              .concat('athlete-team-details')
+              .join(' ')
+          "
+          @click="teamsOpen = !teamsOpen"
+      /></template>
       <div class="athlete-scores"
         ><div v-for="id in game.players" :key="id"
           ><strong>{{ seat(id) }} · {{ name(id) }}</strong
           ><UiBadge :label="`${game.scores?.[id] || 0} 分`" />
-          <div class="athlete-team"
+          <div :id="'athlete-team-' + id" v-show="teamsOpen" class="athlete-team"
             ><div
               v-for="racerId in game.teams[id] || []"
               :key="racerId"
@@ -97,7 +116,12 @@ const eventText = (e: (typeof game.value.events)[number]) =>
           }}</span></div
         ></div
       >
-      <p>四場測試獎分：3／1、4／2、5／3、7／4（後三場待核對）。</p>
+      <div id="athlete-team-details" v-show="teamsOpen"
+        ><p>四場測試獎分：3／1、4／2、5／3、7／4（後三場待核對）。</p></div
+      >
+      <UiNotice :message="actions.notice" :persistent="actions.canRetry" density="compact"
+        ><UiButton v-if="actions.canRetry" label="重試同一操作" @click="actions.retrySame()"
+      /></UiNotice>
     </UiPanel>
     <UiPanel v-if="rolloff" title="擲骰決定先手">
       <p>最高不重複點數先行；沒有單獨點數時全員重擲。</p>
@@ -113,7 +137,13 @@ const eventText = (e: (typeof game.value.events)[number]) =>
     </UiPanel>
     <UiPanel
       v-if="picking || choosing"
-      :title="picking ? `第 ${game.draftRound} 輪蛇形選秀` : `第 ${game.race} 場：秘密選角`"
+      :title="
+        picking
+          ? `第 ${game.draftRound} 輪蛇形選秀`
+          : game.race
+            ? `第 ${game.race} 場：秘密選角`
+            : '秘密選角'
+      "
     >
       <p>{{
         picking
@@ -123,27 +153,32 @@ const eventText = (e: (typeof game.value.events)[number]) =>
             : '選擇本場出賽角色；全員鎖定後一起揭示'
       }}</p>
       <div class="athlete-card-grid"
-        ><UiChoiceCard
+        ><UiHoverInfo
           v-for="id in offered"
           :key="id"
-          :label="cardName(id)"
+          :title="cardName(id) + ' 中文能力說明'"
           :disabled="!canPick"
-          readable-disabled
-          :selected="game.ownSelection === id"
-          @click="pick(id)"
-          ><AthleteArt
-            class="athlete-draft-art"
-            :src="athleteArt(id, 'card')"
-            :alt="cardName(id) + ' 原版角色卡'"
-            :width="272"
-            :height="380"
-          />
-          <strong>{{ cardName(id) }}</strong
-          ><p>{{ cards[id]?.summary }}</p
-          ><small>{{ cards[id]?.notes }}</small>
-          <template #label
-            ><span>{{ picking ? '招募這名選手' : '派出這名選手' }}</span></template
-          ></UiChoiceCard
+          ><UiChoiceCard
+            :label="cardName(id)"
+            :disabled="!canPick"
+            readable-disabled
+            :selected="game.ownSelection === id"
+            @click="pick(id)"
+            ><AthleteArt
+              class="athlete-draft-art"
+              :src="athleteArt(id, 'card')"
+              :alt="cardName(id) + ' 中文翻譯角色卡'"
+              :width="272"
+              :height="380"
+            />
+            <strong>{{ cardName(id) }}</strong>
+            <template #label
+              ><span>{{ picking ? '招募這名選手' : '派出這名選手' }}</span></template
+            ></UiChoiceCard
+          ><template #info
+            ><p>{{ cards[id]?.summary }}</p
+            ><p>{{ cards[id]?.notes }}</p></template
+          ></UiHoverInfo
         ></div
       >
     </UiPanel>
@@ -470,6 +505,7 @@ const eventText = (e: (typeof game.value.events)[number]) =>
   max-width: 27rem;
 }
 .athlete-events {
+  overflow-wrap: anywhere;
   max-height: 20rem;
   overflow: auto;
 }

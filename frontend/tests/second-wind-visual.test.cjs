@@ -119,7 +119,28 @@ test('illustrated draft retains its guarded action and own secret choice stays l
       'true',
     );
     assert.equal(f.host.querySelector('button[aria-label="Understudy"]'), null);
+    assert.doesNotMatch(f.host.textContent, /undefined/);
     assert.doesNotMatch(f.host.textContent, /\n\s*>\s*\n/);
+  } finally {
+    f.dispose();
+  }
+});
+
+test('scoreboard collapses portraits while keeping player scores and log identity visible', async () => {
+  const f = fixture();
+  try {
+    f.game.events = [{ id: 1, type: 'die', text: 'Stunner 擲出 6', playerId: 'b' }];
+    await vue.nextTick();
+    assert.match(f.host.textContent, /b（ID：b）｜Stunner 擲出 6/);
+    const toggle = f.host.querySelector('button[aria-label="收合積分與隊伍"]');
+    toggle.click();
+    await vue.nextTick();
+    assert.equal(f.host.querySelector('.athlete-team').style.display, 'none');
+    assert.match(f.host.querySelector('.athlete-scores').textContent, /0 分/);
+    assert.equal(
+      f.host.querySelector('button[aria-label="展開積分與隊伍"]').getAttribute('aria-expanded'),
+      'false',
+    );
   } finally {
     f.dispose();
   }

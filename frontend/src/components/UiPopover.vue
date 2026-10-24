@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref } from 'vue';
 import UiButton from './UiButton.vue';
+defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(
-  defineProps<{ id: string; title: string; placement?: 'bottom' | 'right'; compact?: boolean }>(),
-  { placement: 'bottom', compact: false },
+  defineProps<{
+    id: string;
+    title: string;
+    placement?: 'bottom' | 'right';
+    compact?: boolean;
+    autofocus?: boolean;
+    contentSized?: boolean;
+  }>(),
+  { placement: 'bottom', compact: false, autofocus: true, contentSized: false },
 );
 const emit = defineEmits<{ closed: [] }>();
 const panel = ref<HTMLElement | null>(null),
@@ -93,9 +101,10 @@ async function open(source?: HTMLElement) {
   window.addEventListener('resize', position);
   window.addEventListener('scroll', scroll, true);
   document.addEventListener('visibilitychange', visibility);
-  panel.value
-    ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"], button:not(:disabled)')
-    ?.focus({ preventScroll: true });
+  if (props.autofocus)
+    panel.value
+      ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"], button:not(:disabled)')
+      ?.focus({ preventScroll: true });
 }
 function close(restore = true) {
   if (!visible.value) return;
@@ -120,12 +129,13 @@ defineExpose({ open, close, visible });
   <Teleport to="body">
     <div
       :id="id"
+      v-bind="$attrs"
       ref="panel"
       popover="auto"
       role="dialog"
       :aria-label="title"
       class="vue-social-popover"
-      :class="{ 'is-compact': compact }"
+      :class="{ 'is-compact': compact, 'is-content-sized': contentSized }"
       @toggle="toggled"
       @keydown.esc.stop.prevent="close()"
     >
@@ -147,6 +157,14 @@ defineExpose({ open, close, visible });
 </template>
 
 <style scoped>
+.vue-social-popover.is-content-sized {
+  block-size: auto;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.vue-social-popover.is-content-sized > .vue-social-popover-body {
+  grid-auto-rows: max-content;
+  align-content: start;
+}
 .vue-social-popover.is-compact {
   inline-size: max-content;
   block-size: auto;

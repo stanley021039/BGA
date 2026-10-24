@@ -106,7 +106,14 @@ class SecondWindGame {
   }
   emit(type, text, data = {}) {
     const s = this.state;
-    s.events.push({ id: ++s.eventId, type, text, ...data });
+    const racer = data.racer ? this.racer(data.racer) : null;
+    s.events.push({
+      id: ++s.eventId,
+      type,
+      text,
+      ...data,
+      ...(racer ? { playerId: racer.playerId, racerId: racer.racerId } : {}),
+    });
     s.events = s.events.slice(-100);
   }
   enqueue(...ops) {
@@ -341,7 +348,7 @@ class SecondWindGame {
       case 'trip':
         if (r && alive(r)) {
           r.tripped = true;
-          this.emit('trip', byId[r.racerId].name + ' 絆倒');
+          this.emit('trip', byId[r.racerId].name + ' 絆倒', { racer: r.id });
         }
         break;
       case 'finish':
@@ -399,7 +406,7 @@ class SecondWindGame {
       recover: false,
     };
     s.seen = [];
-    this.emit('turn', byId[r.racerId].name + ' 的回合');
+    this.emit('turn', byId[r.racerId].name + ' 的回合', { racer: r.id });
     this.enqueue(
       ...this.powers(r).map((power) => ({ kind: 'start-power', racer: id, power })),
       { kind: 'main', racer: id },
@@ -465,7 +472,7 @@ class SecondWindGame {
     c.recover = r.tripped;
     if (r.tripped && !this.has(r, 'penguin')) {
       r.tripped = false;
-      this.emit('recover', byId[r.racerId].name + ' 恢復直立，略過主移動');
+      this.emit('recover', byId[r.racerId].name + ' 恢復直立，略過主移動', { racer: r.id });
       return;
     }
     const alternatives = [{ value: 'roll', label: '擲骰主移動' }];
@@ -529,12 +536,15 @@ class SecondWindGame {
       };
     }
     if (step.reroll) {
-      this.emit('reroll', byId[r.racerId].name + ' 的 6 作廢，Party Pooper 前進後重擲');
+      this.emit('reroll', byId[r.racerId].name + ' 的 6 作廢，Party Pooper 前進後重擲', {
+        racer: r.id,
+      });
       // Fixed six + Party Pooper cannot resolve: do not generate an endless queue.
       if (s.fixed[r.playerId] === 6) {
         this.emit(
           'loop',
           '固定六與強制重擲形成循環：Party Pooper 反應完成一次，本次擲骰沒有可用結果',
+          { racer: r.id },
         );
         this.enqueue(
           ...step.reactions.map((o) => ({ kind: 'move', racer: o.racerId, distance: o.distance })),
@@ -684,7 +694,7 @@ class SecondWindGame {
         if (value >= 1 && value <= 2 && s.reserve.length) {
           const power = s.reserve.shift();
           r.copiedPowers.push(power);
-          this.emit('power', 'Mush 獲得 ' + byId[power].name);
+          this.emit('power', 'Mush 獲得 ' + byId[power].name, { racer: r.id });
         }
     if (this.has(r, 'icarus') && c.dice.includes(6)) {
       this.eliminate(r);
@@ -693,10 +703,10 @@ class SecondWindGame {
     }
     if (this.has(r, 'bite-mark') && c.dice.some((n) => n >= 1 && n <= 2)) {
       r.transformed = true;
-      this.emit('power', 'Bite Mark 變身');
+      this.emit('power', 'Bite Mark 變身', { racer: r.id });
     }
     if (c.bust) {
-      this.emit('power', '本次擲骰沒有有效移動結果');
+      this.emit('power', '本次擲骰沒有有效移動結果', { racer: r.id });
       this.afterMain();
       return;
     }
@@ -841,7 +851,9 @@ class SecondWindGame {
       if (!r || !alive(r) || r.position === position) continue;
       const from = r.position;
       r.position = Math.max(0, Math.min(30, position));
-      this.emit('warp', byId[r.racerId].name + ' 傳送：' + from + ' → ' + r.position);
+      this.emit('warp', byId[r.racerId].name + ' 傳送：' + from + ' → ' + r.position, {
+        racer: r.id,
+      });
       moved.push({ kind: r.position === 30 ? 'finish' : 'arrive', racer: id, simultaneous });
     }
     this.enqueue(...moved);
@@ -879,7 +891,7 @@ class SecondWindGame {
         if (s.scores[r.playerId] > 0) {
           this.score(r, -1);
           this.score(other, 1);
-          this.emit('power', byId[r.racerId].name + ' 支付 Hotel 一分');
+          this.emit('power', byId[r.racerId].name + ' 支付 Hotel 一分', { racer: r.id });
         } else this.enqueue({ kind: 'trip', racer: r.id });
       }
     }
@@ -888,7 +900,7 @@ class SecondWindGame {
     if (!alive(r)) return;
     r.eliminated = true;
     this.state.eliminated.push(r.id);
-    this.emit('eliminate', byId[r.racerId].name + ' 淘汰');
+    this.emit('eliminate', byId[r.racerId].name + ' 淘汰', { racer: r.id });
     this.checkRace();
   }
   finishRacer(r) {
@@ -908,7 +920,9 @@ class SecondWindGame {
         if (this.has(o, 'stepdad') && this.stepchild(o)?.id === r.id) this.score(o, 3);
     r.finished = true;
     s.finished.push(r.id);
-    this.emit('finish', byId[r.racerId].name + ' 獲得第 ' + s.finished.length + ' 名');
+    this.emit('finish', byId[r.racerId].name + ' 獲得第 ' + s.finished.length + ' 名', {
+      racer: r.id,
+    });
     if (s.finished.length >= 2) this.endRace('前兩名已抵達');
     else this.checkRace();
   }
@@ -1042,7 +1056,10 @@ class SecondWindGame {
     const s = this.state,
       r = this.racer(actor);
     s.twistHistory.push(card);
-    this.emit('twist', twists.find((t) => t.id === card).summary, { card });
+    this.emit('twist', twists.find((t) => t.id === card).summary, {
+      card,
+      ...(r ? { racer: r.id } : {}),
+    });
     if (['bonkbug', 'curse-wands', 'conveyor', 'scrying-pool', 'season-finale'].includes(card))
       s.twistEffects.push(card);
     if (card === 'fans-demand-chaos')
@@ -1233,7 +1250,7 @@ class SecondWindGame {
     }
     if (p.kind === 'cheatah-guess') {
       const amount = Number(value) === s.secretNumber ? 0 : s.secretNumber;
-      this.emit('power', 'Cheatah 設定 ' + s.secretNumber + '，對手猜 ' + value);
+      this.emit('power', 'Cheatah 設定 ' + s.secretNumber + '，對手猜 ' + value, { racer: r.id });
       delete s.secretNumber;
       c.total = amount;
       if (amount) this.performMain(r, amount);
@@ -1261,14 +1278,17 @@ class SecondWindGame {
     }
   }
   view(id) {
-    if (!this.state)
+    if (!this.state) {
+      const draft = this.draft.view(id);
       return {
-        ...this.draft.view(id),
+        ...draft,
+        ...(['choosing', 'race-ready'].includes(draft.phase) ? { race: 1 } : {}),
         stage: 'recruiting',
         catalog,
         awards,
         awardStatus: 'user-approved-provisional',
       };
+    }
     const s = this.state;
     if (!s.players.includes(id)) fail('NOT_SEATED', '尚未入座', 403);
     return copy({
