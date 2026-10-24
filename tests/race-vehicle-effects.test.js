@@ -7,7 +7,10 @@ const script = fs.readFileSync(
     path.join(__dirname, '../public/shared/race-vehicle-effects.js'),
     'utf8',
   ),
-  css = fs.readFileSync(path.join(__dirname, '../public/race.css'), 'utf8');
+  css = require('../frontend/node_modules/sass').compile(
+    path.join(__dirname, '../frontend/src/styles/race.scss'),
+    { style: 'compressed' },
+  ).css; // The Vue race page ships these rules (#233).
 class Node {
   constructor(tag) {
     this.tagName = tag;
@@ -470,7 +473,10 @@ test('the short label keeps at least 14 visible pixels at the 720p map height an
   assert.ok((font * 220) / 398 >= 14);
   assert.equal(rect.getAttribute('width'), String(text.textContent.length * font + 20));
   assert.equal(rect.getAttribute('height'), String(font + 10));
-  assert.match(css, /\.race-vehicle-effect,\.race-vehicle-effect \*\{pointer-events:none\}/);
+  assert.match(
+    css,
+    /\.race-vehicle-effect,(?:\.vue-race-scene )?\.race-vehicle-effect \*\{pointer-events:none\}/,
+  );
 });
 test('inverse-scaled labels at the first lane stay within the SVG top and left edges', () => {
   const ui = fixture();
@@ -542,7 +548,7 @@ test('airstrike uses helicopter endpoints and reduced motion retains text and a 
   );
   assert.match(
     css,
-    /\.race-vehicle-projectile\[data-reduced="true"\] \.race-vehicle-shot-hit\{animation:none/,
+    /\.race-vehicle-projectile\[data-reduced="?true"?\] \.race-vehicle-shot-hit\{animation:none/,
   );
   assert.equal(
     ui.nodes('race-vehicle-label').find((node) => node.children[1].textContent === '失控打滑')

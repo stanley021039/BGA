@@ -54,6 +54,8 @@ test(
       env: {
         ...process.env,
         MARKET_AUTOMATION_ENABLED: 'false',
+        // API-only: this test covers the community and majority APIs, not the Vue build.
+        FRONTEND_ENABLED: 'false',
         PORT: String(port),
         PUBLIC_URL: 'http://example.test:' + port,
         HISTORY_DIR: path.join(dir, 'history'),
@@ -94,8 +96,13 @@ test(
       });
       assert.equal(login.status, 200);
       cookie = login.headers.get('set-cookie').split(';')[0];
-      for (const route of ['/', '/community', '/majority', '/majority-social.js'])
-        assert.equal((await fetch(base + route, { headers: { Cookie: cookie } })).status, 200);
+      // API-only app: pages come from the Vue build (#233).
+      for (const route of ['/', '/community', '/majority'])
+        assert.equal(
+          (await fetch(base + route, { headers: { Cookie: cookie } })).status,
+          503,
+          route,
+        );
       const info = await api('info');
       assert.equal(info.preferred, 'http://example.test:' + port);
       assert.equal(info.addresses[0], info.preferred);

@@ -108,26 +108,17 @@ test('DOM placement failure removes a bubble and receiver opt-out preserves live
   assert.equal(first.offsetHeight, 90);
 });
 test('all header entry points load the same frame preference module and shared frame art', () => {
+  // Page shells are the Vue entry documents (#233); the header itself mounts from the bundle.
   const pages = fs
-    .readdirSync(path.join(__dirname, '../public'))
-    .filter((name) => name.endsWith('.html'))
-    .map((name) => ({
-      name,
-      html: fs.readFileSync(path.join(__dirname, '../public', name), 'utf8'),
+    .readdirSync(path.join(__dirname, '../frontend/pages'))
+    .map((id) => ({
+      name: id,
+      html: fs.readFileSync(path.join(__dirname, '../frontend/pages', id, 'index.html'), 'utf8'),
     }))
-    .filter((page) => page.html.includes('/shared/site-header.js'));
+    .filter((page) => page.html.includes('data-site-header'));
   assert.equal(pages.length, 26);
   for (const { name, html } of pages) {
     assert.equal((html.match(/src="\/shared\/barrage-frames.js"/g) || []).length, 1, name);
     assert.equal((html.match(/href="\/shared\/barrage-frames.css"/g) || []).length, 1, name);
-    assert.ok(
-      html.indexOf('/shared/barrage-frames.js') < html.indexOf('/shared/site-header.js'),
-      name,
-    );
-    if (html.includes('/shared/game-shell.js'))
-      assert.ok(
-        html.indexOf('/shared/barrage-frames.js') < html.indexOf('/shared/game-shell.js'),
-        name,
-      );
   }
 });

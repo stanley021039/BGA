@@ -117,19 +117,13 @@ test('TRPG pages preserve login return, serve dependencies and expose safe text 
   });
   await login.text();
   const cookie = login.headers.get('set-cookie').split(';')[0];
-  const page = await fetch(base + '/trpg/ABCDEF', { headers: { Cookie: cookie } }),
-    html = await page.text();
-  assert.equal(page.status, 200);
-  assert.match(html, /不連接 AI/);
-  assert.ok(html.indexOf('/shared/api.js') < html.indexOf('/trpg.js'));
-  assert.match(html, /site-account-menu/);
-  for (const file of ['trpg.js', 'trpg.css']) {
-    const r = await fetch(base + '/' + file);
-    assert.equal(r.status, 200);
-    assert.equal(await r.text(), fs.readFileSync(path.join(__dirname, '../public', file), 'utf8'));
+  assert.equal((await fetch(base + '/trpg/ABCDEF', { headers: { Cookie: cookie } })).status, 503); // API-only app: pages come from the Vue build (#233).
+  // The Vue TRPG page renders story text as text, never as markup (#233).
+  for (const name of fs.readdirSync(path.join(__dirname, '../frontend/src/pages/trpg'))) {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../frontend/src/pages/trpg', name),
+      'utf8',
+    );
+    assert.ok(!/v-html|innerHTML/.test(source), name);
   }
-  const source = fs.readFileSync(path.join(__dirname, '../public/trpg.js'), 'utf8');
-  assert.ok(!source.includes('.innerHTML'));
-  assert.match(source, /textContent/);
-  assert.match(source, /pagehide/);
 });

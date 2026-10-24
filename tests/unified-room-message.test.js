@@ -63,17 +63,3 @@ test('only emoji records enter chat; character expressions never add messages', 
   );
   assert.deepEqual(chat.read('OTHER'), []);
 });
-test('room chat never polls or sends from the lobby', async () => {
-  const { ChatClient } = require('../public/shared/chat');
-  let calls = 0;
-  const client = new ChatClient({
-    fetcher: async () => {
-      calls++;
-      throw Error('should not send');
-    },
-  });
-  assert.equal(await client.poll(), false);
-  assert.equal(await client.send('hi'), false);
-  assert.equal(await client.request('lobby'), false);
-  assert.equal(calls, 0);
-});

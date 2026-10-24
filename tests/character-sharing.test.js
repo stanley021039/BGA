@@ -43,7 +43,7 @@ test('friends can choose shared characters, while private art and editing stay w
       password: 'test-password-123',
     });
     assert.equal((await fetch(base + '/studio', { redirect: 'manual' })).status, 302);
-    assert.equal((await get('/studio', artist.cookie)).status, 200);
+    assert.equal((await get('/studio', artist.cookie)).status, 503); // API-only app: pages come from the Vue build (#233).
     const invite = await post('admin/invites', artist.cookie, { days: 1 });
     const friend = await post('auth/register', null, {
       username: 'friend',

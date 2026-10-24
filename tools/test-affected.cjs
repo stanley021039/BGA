@@ -11,13 +11,10 @@ const AUTH_TESTS = [
   'app',
   'merged-app-resources',
   'site-header-primitives',
-  'game-focus',
   'theme-contrast',
   'playful-assets',
   'ui-component-assets',
   'ui-widgets',
-  'ui-widget-pages',
-  'compact-ui-regression',
   'freehand-assets',
 ].map((name) => `tests/${name}.test.js`);
 const RULES = [

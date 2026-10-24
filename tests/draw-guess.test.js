@@ -518,15 +518,10 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
       abort.abort();
     }
     assert.equal((await fetch(base + '/api/draw/canvas?code=' + code)).status, 401);
-    for (const asset of [
-      'draw',
-      'draw.js',
-      'draw.css',
-      'draw-words',
-      'shared/stroke-canvas.js',
-      'shared/draw-controller.js',
-    ])
+    for (const asset of ['draw.css', 'shared/stroke-canvas.js', 'shared/draw-controller.js'])
       assert.equal((await fetch(base + '/' + asset, { headers: guest })).status, 200, asset);
+    for (const page of ['draw', 'draw-words'])
+      assert.equal((await fetch(base + '/' + page, { headers: guest })).status, 503, page); // API-only app (#233)
   } finally {
     await app.close();
     try {

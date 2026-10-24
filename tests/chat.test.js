@@ -1,7 +1,6 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict');
 const { createChat } = require('../src/social/chat');
-const { ChatClient } = require('../public/shared/chat');
 const fs = require('node:fs'),
   os = require('node:os'),
   path = require('node:path');
@@ -58,95 +57,6 @@ test('history is capped, plain text preserved, channels isolated, retry idempote
   chat.delete('AAAAAA');
   assert.deepEqual(chat.read('AAAAAA'), []);
   assert.deepEqual(createChat().read('lobby'), []);
-});
-test('changing rooms cancels stale reads and sends, with no previous room messages', async () => {
-  const old = deferred();
-  let pending = false;
-  const client = new ChatClient({
-    fetcher: async (url) =>
-      pending
-        ? old.promise
-        : json(snapshot(url.includes('table') ? 'table' : 'lobby', 'AAAAAA', [event('a')])),
-  });
-  client.room({ code: 'AAAAAA', me: 'a' });
-  client.messages.table = [event('old')];
-  pending = true;
-  const poll = client.request('table');
-  client.room({ code: 'BBBBBB', me: 'b' });
-  assert.deepEqual(client.messages.table, []);
-  assert.equal(client.channel, 'table');
-  old.resolve(json(snapshot('table', 'AAAAAA', [event('secret')])));
-  assert.equal(await poll, false);
-  assert.deepEqual(client.messages.table, []);
-  const send = deferred();
-  client.fetcher = () => send.promise;
-  const sending = client.send('hi');
-  client.room(null);
-  send.resolve(json(snapshot('table', 'BBBBBB', [event('late')])));
-  assert.equal(await sending, false);
-  assert.equal(client.channel, 'table');
-  assert.deepEqual(client.messages.table, []);
-  assert.equal(client.pending, false);
-});
-test('unread, duplicate clicks, failed-send retry, logout and permission revocation', async () => {
-  const requests = [];
-  let result = json(snapshot('table', 'AAAAAA', [event('1')]));
-  const client = new ChatClient({
-    fetcher: async (url, options) => {
-      requests.push(options);
-      return result;
-    },
-  });
-  client.room({ code: 'AAAAAA', me: 'a' });
-  await client.poll();
-  assert.equal(client.unread.table, 0);
-  result = json(snapshot('table', 'AAAAAA', [event('1'), event('2')]));
-  await client.poll();
-  assert.equal(client.unread.table, 1);
-  await client.poll();
-  assert.equal(client.unread.table, 1);
-  client.show(true);
-  assert.equal(client.unread.table, 0);
-  const failed = deferred();
-  client.fetcher = async (url, options) => {
-    requests.push(options);
-    return failed.promise;
-  };
-  const sending = client.send('hello');
-  assert.equal(await client.send('hello'), false);
-  failed.resolve(json({ error: 'offline' }, 503));
-  assert.equal(await sending, false);
-  const id = JSON.parse(requests.at(-1).body).requestId;
-  client.fetcher = async (url, options) => {
-    assert.equal(JSON.parse(options.body).requestId, id);
-    return json(snapshot('table', 'AAAAAA', [event('3')]));
-  };
-  assert.equal(await client.send('hello'), true);
-  client.room({ code: 'AAAAAA', me: 'a' });
-  client.messages.table = [event('private')];
-  client.fetcher = async () => json({ error: 'kicked' }, 403);
-  await client.request('table');
-  assert.equal(client.code, null);
-  assert.deepEqual(client.messages.table, []);
-  client.room({ code: 'BBBBBB', me: 'a' });
-  client.fetcher = async () => json({}, 401);
-  await client.poll();
-  assert.equal(client.enabled, false);
-  assert.deepEqual(client.messages.lobby, []);
-  assert.equal(await client.send('x'), false);
-});
-test('identity changes clear both histories and invalidate other pending replies', async () => {
-  const client = new ChatClient({
-    fetcher: async () => json(snapshot('table', 'AAAAAA', [event('a')], 'alice')),
-  });
-  client.room({ code: 'AAAAAA', me: 'a' });
-  await client.poll();
-  client.messages.table = [event('secret')];
-  client.fetcher = async () => json(snapshot('table', 'AAAAAA', [event('b')], 'bob'));
-  await client.poll();
-  assert.deepEqual(client.messages, { lobby: [], table: [] });
-  assert.equal(client.code, null);
-  assert.equal(client.viewer, 'bob');
 });
 test('HTTP chat auth, cross-room isolation, leave/kick, compatibility and no gameplay mutation', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-chat-'));
@@ -257,42 +167,9 @@ test('HTTP chat auth, cross-room isolation, leave/kick, compatibility and no gam
     assert.equal((await post('chat', host, { channel: 'other', message: 'bad' })).status, 400);
     await post('auth/logout', guest, {});
     assert.equal((await get('chat?channel=lobby', guest)).status, 401);
-    for (const asset of ['chat.js', 'chat.css', 'room-controls.js', 'room-controls.css'])
-      assert.equal((await fetch(base + '/shared/' + asset)).status, 200);
   } finally {
     await app.close();
     fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
-  }
-});
-
-test('a send interrupts polling without accepting a late pre-send snapshot', async () => {
-  const read = deferred(),
-    posted = deferred();
-  const client = new ChatClient({
-    fetcher: async (url, options) => (options.method === 'POST' ? posted.promise : read.promise),
-  });
-  client.room({ code: 'AAAAAA', me: 'a' });
-  const polling = client.poll();
-  const sending = client.send('new message');
-  posted.resolve(json(snapshot('table', 'AAAAAA', [event('new')])));
-  assert.equal(await sending, true);
-  read.resolve(json(snapshot('table', 'AAAAAA', [event('old')])));
-  await polling;
-  assert.equal(client.messages.table[0].id, 'new');
-  assert.equal(client.pending, false);
-});
-test('browser default fetch retains the window receiver', async () => {
-  const original = globalThis.fetch;
-  globalThis.fetch = function () {
-    assert.equal(this, globalThis);
-    return Promise.resolve(json(snapshot('table', 'AAAAAA')));
-  };
-  try {
-    const client = new ChatClient();
-    client.room({ code: 'AAAAAA', me: 'a' });
-    assert.equal(await client.poll(), true);
-  } finally {
-    globalThis.fetch = original;
   }
 });
 
@@ -417,61 +294,4 @@ test('all ten games share table chat membership without changing gameplay snapsh
     await app.close();
     fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
-});
-
-test('moving chat between waiting and play keeps one panel and restores the previous expansion state', () => {
-  const vm = require('node:vm'),
-    source = fs.readFileSync(path.join(__dirname, '../public/shared/chat.js'), 'utf8');
-  const start = source.indexOf('  function mountIn('),
-    end = source.indexOf('  function mountTools(', start),
-    heading = { hidden: true },
-    toggle = { hidden: false };
-  let parent = null,
-    moves = 0;
-  const classes = new Set(),
-    panel = {
-      classList: { toggle: (name, on) => (on ? classes.add(name) : classes.delete(name)) },
-      get parentElement() {
-        return parent;
-      },
-    };
-  const host = (id) => ({
-      id,
-      append: (el) => {
-        assert.equal(el, panel);
-        parent = hosts[id];
-        moves++;
-      },
-    }),
-    hosts = { waiting: host('waiting'), play: host('play') };
-  const client = new ChatClient();
-  client.room({ code: 'AAAAAA', me: 'a' });
-  client.messages.table = [event('kept')];
-  client.retry = { key: 'draft', id: 'same' };
-  const ctx = { panel, client, q: (s) => (s === '.chat-heading' ? heading : toggle) };
-  vm.runInNewContext(
-    'let inline=false,previousOpen=false;' +
-      source.slice(start, end) +
-      'globalThis.moveChat=mountIn;',
-    ctx,
-  );
-  ctx.moveChat(hosts.waiting, { inline: true });
-  assert.equal(client.open, true);
-  assert.equal(heading.hidden, false);
-  assert.equal(toggle.hidden, true);
-  assert.ok(classes.has('chat-inline'));
-  ctx.moveChat(hosts.waiting, { inline: true });
-  assert.equal(moves, 1);
-  assert.equal(client.messages.table[0].id, 'kept');
-  assert.equal(client.retry.id, 'same');
-  ctx.moveChat(hosts.play, { inline: false });
-  assert.equal(moves, 2);
-  assert.equal(client.open, false);
-  assert.equal(toggle.hidden, false);
-  assert.equal(heading.hidden, true);
-  client.show(true);
-  ctx.moveChat(hosts.waiting, { inline: true });
-  ctx.moveChat(hosts.play, { inline: false });
-  assert.equal(client.open, true);
-  assert.equal(client.messages.table[0].id, 'kept');
 });

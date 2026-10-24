@@ -209,10 +209,6 @@ test('HTTP edit/delete enforce ownership, accept the 4 MB image budget and inval
       (await post('profile/characters/' + id + '/expressions/neutral/delete', cookie)).data.code,
       'MAIN_IMAGE_REQUIRED',
     );
-    assert.equal(
-      (await fetch(base + '/profile-expression-editor.js', { headers: { Cookie: cookie } })).status,
-      200,
-    );
   } finally {
     await app.close();
     fs.rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });

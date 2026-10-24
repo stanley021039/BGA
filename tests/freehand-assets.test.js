@@ -79,15 +79,6 @@ test('only reviewed local vectors are served as SVG, with restrictive CSP and ex
       '/assets/ui/gift.svg-extra',
     ])
       assert.equal((await fetch(base + name, { redirect: 'manual' })).status, 404, name);
-    const css = await fetch(base + '/shared/freehand-ui.css');
-    assert.equal(css.status, 200);
-    assert.match(css.headers.get('content-type'), /^text\/css/);
-    assert.equal(css.headers.get('cache-control'), 'private, no-cache');
-    assert.equal(
-      await css.text(),
-      fs.readFileSync(path.join(root, 'shared/freehand-ui.css'), 'utf8'),
-    );
-    assert.equal((await fetch(base + '/shared/freehand-ui.css-extra')).status, 404);
     const credits = await fetch(base + '/credits', { redirect: 'manual' });
     assert.equal(credits.status, 302);
     assert.equal(credits.headers.get('location'), '/login');

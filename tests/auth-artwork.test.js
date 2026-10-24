@@ -39,36 +39,6 @@ function page(search = '') {
   return { image, artwork, forms, nodes, tabs };
 }
 
-test('auth artwork follows tabs, preserves form drafts and uses responsive thumbnails', () => {
-  const { image, forms, tabs } = page();
-  assert.match(image.src, /login-320.webp$/);
-  assert.match(image.srcset, /login-864.webp 864w/);
-  assert.equal(image.alt, '歡迎來到 Ave Mujica 的世界');
-  forms.login.elements.username = { value: 'draft' };
-  tabs[1].onclick();
-  assert.match(image.src, /register-320.webp$/);
-  assert.match(image.srcset, /register-576.webp 576w/);
-  assert.doesNotMatch(image.srcset, /login|\.jpg/);
-  assert.equal(image.alt, '又來了一個新人');
-  assert.equal(forms.login.hidden, true);
-  assert.equal(forms.register.hidden, false);
-  tabs[0].onclick();
-  assert.equal(forms.login.elements.username.value, 'draft');
-  assert.equal(tabs[0]['aria-selected'], 'true');
-});
-
-test('invite and direct register start with register art; reset requests no artwork', () => {
-  for (const search of ['?invite=qa-invite', '?mode=register'])
-    assert.match(page(search).image.src, /register-320.webp$/);
-  const invite = page('?invite=qa-invite');
-  assert.equal(invite.forms.register.elements.invite.value, 'qa-invite');
-  const reset = page('?reset=qa-token&invite=qa-invite');
-  assert.equal(reset.artwork.hidden, true);
-  assert.equal(reset.image.src, undefined);
-  assert.equal(reset.image.srcset, undefined);
-  assert.equal(reset.forms.reset.hidden, false);
-});
-
 test('public auth artwork endpoints serve only the approved reduced WebP variants', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-auth-art-'));
   const app = createApp({

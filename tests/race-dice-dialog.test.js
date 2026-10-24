@@ -1052,14 +1052,14 @@ test('missing WebGL, reduced motion and non-live hydration retain the original s
 });
 
 test('the optional dice renderer has one exact public asset route and loads before the dialog controller', async () => {
-  const html = fs.readFileSync(path.join(__dirname, '../public/race.html'), 'utf8'),
+  // The race page shell is the Vue entry document (#233).
+  const html = fs.readFileSync(path.join(__dirname, '../frontend/pages/race/index.html'), 'utf8'),
     script = '/shared/race-dice-webgl.js';
   assert.equal(html.split('src="' + script + '"').length - 1, 1);
   assert.ok(html.indexOf('src="/shared/game-fx-layer.js"') < html.indexOf('src="' + script + '"'));
   assert.ok(
     html.indexOf('src="' + script + '"') < html.indexOf('src="/shared/race-dice-dialog.js"'),
   );
-  assert.ok(html.indexOf('src="/shared/race-dice-dialog.js"') < html.indexOf('src="/race.js"'));
   const os = require('node:os'),
     { createApp } = require('../src/app'),
     directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-dice-webgl-route-')),

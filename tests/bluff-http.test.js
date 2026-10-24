@@ -130,10 +130,8 @@ test('bluff HTTP auth, private roles, all rounds, history, rejoin and static rou
   assert.equal(history.filter((r) => r.kind === 'result').at(-1).after.results.length, 3);
   for (const path of ['/bluff', '/bluff/' + code]) {
     assert.equal((await fetch(base + path, { redirect: 'manual' })).status, 302);
-    assert.equal((await fetch(base + path, { headers: { Cookie: owner } })).status, 200);
-  }
-  for (const path of ['/bluff.js', '/bluff.css'])
-    assert.equal((await fetch(base + path)).status, 200);
+    assert.equal((await fetch(base + path, { headers: { Cookie: owner } })).status, 503);
+  } // API-only app: pages come from the Vue build (#233).
   const rooms = await (await fetch(base + '/api/rooms', { headers: { Cookie: owner } })).json();
   assert.equal(rooms.rooms.find((r) => r.code === code).maxPlayers, 9);
 });

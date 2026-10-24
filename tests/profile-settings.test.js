@@ -176,9 +176,10 @@ test('independent avatar and character settings validate ownership, persist, and
       '/gift',
       '/draw',
     ]) {
+      // API-only app: pages come from the Vue build (#233); shells are checked in
+      // site-header-primitives.test.js.
       const r = await fetch(base + route, { headers: { Cookie: host } });
-      assert.equal(r.status, 200);
-      assert.match(await r.text(), /data-site-header/);
+      assert.equal(r.status, 503, route);
     }
   } finally {
     await app.close();

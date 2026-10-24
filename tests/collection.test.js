@@ -110,9 +110,7 @@ test('collection permissions, avatar sharing/revocation and character deletion s
     const fallback = (await get('profile/settings', friend)).data;
     assert.equal(fallback.appearance.characterId, 'builtin:traveler');
     assert.equal(fallback.avatar.characterId, 'builtin:mage');
-    const page = await fetch(base + '/collection', { headers: { Cookie: host } });
-    assert.equal(page.status, 200);
-    assert.match(await page.text(), /section-music/);
+    assert.equal((await fetch(base + '/collection', { headers: { Cookie: host } })).status, 503); // API-only app: pages come from the Vue build (#233).
   } finally {
     await app.close();
     fs.rmSync(root, { recursive: true, force: true, maxRetries: 5 });

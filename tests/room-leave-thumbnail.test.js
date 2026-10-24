@@ -14,15 +14,6 @@ test('leave thumbnail is a bounded JPEG preserving the supplied landscape ratio'
   assert.ok(fs.statSync(asset).size < 40000);
   assert.ok(!image.exif);
 });
-test('both leave dialog paths expose the same image with readable alternative text and intrinsic dimensions', () => {
-  for (const file of ['room-controls.js', 'game-shell.js']) {
-    const source = fs.readFileSync(path.join(__dirname, '../public/shared', file), 'utf8');
-    assert.match(
-      source,
-      /<img class="ui-room-leave-thumbnail" src="\/assets\/room-leave-thumbnail.jpg" width="640" height="361" alt="離別場景，字幕：多麼虎頭蛇尾的結局">/,
-    );
-  }
-});
 test('thumbnail static route serves exact JPEG bytes without authentication; unknown assets stay blocked', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-leave-thumbnail-')),
     app = createApp({

@@ -48,10 +48,4 @@ test('draw ending is validated at creation, persists in snapshots and survives o
     await post('settings', { code, seconds: 60, ending: { mode: 'rounds', value: 1 } }, 400);
     await post('leave', { code });
   }
-  const page = await fetch(base + '/?game=draw', { headers: { Cookie: cookie } });
-  const html = await page.text();
-  assert.doesNotMatch(html, /drawEndMode|drawEnding|bluffCreateOptions|bluffRoleSeconds/);
-  const drawClient = await (await fetch(base + '/draw.js')).text();
-  assert.match(drawClient, /drawEndMode/);
-  assert.match(drawClient, /固定輪數（總題數）/);
 });

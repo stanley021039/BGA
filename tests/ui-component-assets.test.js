@@ -4,15 +4,7 @@ const test = require('node:test'),
   os = require('node:os'),
   path = require('node:path');
 const { createApp } = require('../src/app');
-const assets = [
-  'color-scheme.js',
-  'ui-widgets.js',
-  'ui-widgets.css',
-  'ui-notifications.js',
-  'ui-notifications.css',
-  'ui-celebrations.js',
-  'ui-celebrations.css',
-];
+const assets = ['color-scheme.js', 'ui-widgets.js', 'ui-widgets.css'];
 test('new shared component assets are fixed routes with correct content types and immutable source bytes', async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-ui-pattern-assets-'));
   const app = createApp({
@@ -49,16 +41,16 @@ test('new shared component assets are fixed routes with correct content types an
   }
 });
 test('game feedback pages load common helpers before game controllers and retain native media', () => {
-  for (const name of ['index', 'poker', 'draw', 'gift', 'majority', 'race']) {
-    const html = fs.readFileSync(path.join(__dirname, '../public', name + '.html'), 'utf8');
+  // Page shells are the Vue entry documents (#233).
+  for (const name of ['lobby', 'poker', 'draw', 'gift', 'majority', 'race']) {
+    const html = fs.readFileSync(
+      path.join(__dirname, '../frontend/pages', name, 'index.html'),
+      'utf8',
+    );
     for (const asset of assets) assert.ok(html.includes('/shared/' + asset), name + ' ' + asset);
     assert.ok(
       html.indexOf('src="/shared/ui-components.js"') < html.indexOf('src="/shared/ui-widgets.js"'),
+      name,
     );
-    assert.ok(
-      html.indexOf('src="/shared/motion-policy.js"') <
-        html.indexOf('src="/shared/ui-notifications.js"'),
-    );
-    if (name !== 'index') assert.ok(html.includes('/shared/table-media.js'));
   }
 });

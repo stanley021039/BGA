@@ -303,12 +303,6 @@ test('authenticated streaming ranges, shared library, host controls, isolation, 
       (await fetch(base + '/api/room-music?code=' + a, { headers: { Cookie: friend } })).status,
       403,
     );
-    for (const game of ['poker', 'race', 'majority', 'gift', 'draw']) {
-      const html = await (await fetch(base + '/' + game, { headers: { Cookie: host } })).text();
-      assert.match(html, /shared\/table-media.js/);
-      assert.match(html, /shared\/table-media.css/);
-      assert.doesNotMatch(html, /shared\/table-(?:music|watch)\.js/);
-    }
   } finally {
     await reader?.cancel();
     await app.close();

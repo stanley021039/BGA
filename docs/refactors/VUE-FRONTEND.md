@@ -113,7 +113,7 @@ FRONTEND_ENABLED=true npm start
 
 `frontend:build` 先以 `vue-tsc --noEmit` 檢查型別，再執行 Vite。套件固定於 `frontend/package-lock.json`，與後端依賴分開。建置輸出在 `frontend/dist/`，不納入 Git。
 
-`FRONTEND_ENABLED` 預設為 `false`，此時保留全部原頁面。啟用時只替換已列入 registry 的頁面，其他頁面仍由原後端提供。啟用前必須建置；缺少輸出時啟動會失敗，避免靜默混用頁面。後端在啟動時讀取文件與資產索引，重建後需重新啟動服務。
+`FRONTEND_ENABLED` 預設為 `false`，此時只提供 API：舊版頁面已移除（#233），頁面路由回 503 `FRONTEND_NOT_BUILT`；正式環境必須設為 `true`。啟用時由 Vue 建置提供已列入 registry 的頁面；尚未改版的 `sound-library` 與 `game-audio-admin` 仍由原後端提供。啟用前必須建置；缺少輸出時啟動會失敗，避免靜默混用頁面。後端在啟動時讀取文件與資產索引，重建後需重新啟動服務。
 
 Vite 產生的 `/frontend-assets/` 僅提供明確檔名與允許類型，支援 GET／HEAD；未知資產回 404，不回傳 HTML。API、角色、音樂、收藏與市場圖片的權限路由維持原責任。舊 `public/` 不清空，因後端仍引用其中的賽道路徑及股市純計算模組。
 

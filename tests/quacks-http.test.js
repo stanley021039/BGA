@@ -195,12 +195,11 @@ for (const purpose of ['test', 'production', 'retry'])
       if (purpose === 'production') {
         for (const path of ['/quacks', '/quacks/' + code]) {
           assert.equal((await fetch(base + path, { redirect: 'manual' })).status, 302);
+          // API-only app: pages come from the Vue build (#233).
           const r = await fetch(base + path, { headers: { Cookie: owner } });
-          assert.equal(r.status, 200);
-          assert.match(await r.text(), /data-game-focus/);
+          assert.equal(r.status, 503);
         }
         for (const path of [
-          '/quacks.js',
           '/quacks-art.js',
           '/quacks-fx.js',
           '/assets/game-sounds/quacks-explosion.wav',
