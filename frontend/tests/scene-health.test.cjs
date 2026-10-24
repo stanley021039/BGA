@@ -1,3 +1,4 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -22,7 +23,7 @@ test('living characters have no health display; death and respawn still update t
     ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    {
+    withEngineImports({
       module: mod,
       exports: mod.exports,
       require: (id) => (id === 'vue' ? vue : { default: '/tombstone.svg' }),
@@ -32,7 +33,7 @@ test('living characters have no health display; death and respawn still update t
         return 1;
       },
       clearInterval: (id) => timers.delete(id),
-    },
+    }),
   );
   const visitor = vue.reactive({
     name: '測試玩家',

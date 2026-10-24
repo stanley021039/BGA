@@ -1,3 +1,4 @@
+import GameSounds from '../engines/game-sounds.js';
 import { onScopeDispose, watch, type ComputedRef, type Ref } from 'vue';
 import type { MinimalSnapshot } from '../contracts/minimal';
 import type { GameSoundOwner } from '../contracts/sounds';
@@ -9,7 +10,7 @@ export function useMinimalCountdownSounds(
   state: ComputedRef<MinimalSnapshot | null>,
   now: Ref<number>,
 ) {
-  const sounds: GameSoundOwner | undefined = window.GameSounds?.create();
+  const sounds: GameSoundOwner | undefined = GameSounds?.create();
   let previous: { context: string; deadline: number | null; seconds: number; at: number } | null =
     null;
   let snapshot: MinimalSnapshot | null = null;

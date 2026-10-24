@@ -1,6 +1,6 @@
 const test = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../public/shared/color-scheme.js'), 'utf8');
@@ -47,16 +47,20 @@ test('appearance follows system by default, reacts live and boots before styles 
   assert.equal(f.document.documentElement.dataset.colorScheme, 'dark');
   f.system(false);
   assert.equal(f.api.get().scheme, 'light');
-  const directory = path.join(__dirname, '../public'),
+  // Every page is a Vue shell in frontend/pages/<id>/index.html (#233).
+  const directory = path.join(__dirname, '../frontend/pages'),
     pages = fs
       .readdirSync(directory)
-      .filter((name) => name.endsWith('.html'))
-      .map((name) => ({ name, html: fs.readFileSync(path.join(directory, name), 'utf8') }))
+      .map((id) => ({
+        name: id,
+        html: fs.readFileSync(path.join(directory, id, 'index.html'), 'utf8'),
+      }))
       .filter((page) => page.html.includes('data-visual-theme="playful"'));
   assert.equal(pages.length, 28);
   for (const { name, html } of pages) {
-    assert.equal((html.match(/src="\/shared\/color-scheme.js"/g) || []).length, 1, name);
-    assert.ok(html.indexOf('/shared/color-scheme.js') < html.indexOf('rel="stylesheet"'), name);
+    const decorated = require('../src/http/entry-intro').withEntryIntro(html);
+    assert.ok(decorated.indexOf('data-prepaint') < decorated.indexOf('rel="stylesheet"'), name);
+    assert.doesNotMatch(html, /src="\/shared\/color-scheme.js"/);
   }
 });
 test('manual toggle overrides system, survives reload and can restore following the system', () => {

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import AudioSettings from '../engines/audio-settings.js';
+import RoomMediaPlayer from '../engines/media-player.js';
+import BarrageFrames from '../engines/barrage-frames.js';
+
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import { useMediaStore } from '../stores/media';
 import { usePreferencesStore } from '../stores/preferences';
@@ -18,7 +22,6 @@ import OverflowText from './OverflowText.vue';
 import UiTabs from './UiTabs.vue';
 import UiIcon from './UiIcon.vue';
 import '../styles/room-media.scss';
-import '../../../public/shared/media-player.js';
 const props = withDefaults(defineProps<{ connected?: boolean }>(), { connected: true });
 const media = useMediaStore(),
   prefs = usePreferencesStore(),
@@ -324,10 +327,10 @@ function exitVideo() {
   player?.exitVideo();
 }
 function sound() {
-  window.AudioSettings?.set('music', { enabled: !musicEnabled.value }, { gesture: true });
+  AudioSettings?.set('music', { enabled: !musicEnabled.value }, { gesture: true });
 }
 function setVolume(event: Event) {
-  window.AudioSettings?.set(
+  AudioSettings?.set(
     'music',
     { volume: Number((event.target as HTMLInputElement).value) / 100 },
     { gesture: true },
@@ -449,7 +452,7 @@ function syncFrame() {
   const selected = prefs.media;
   frameSurface.value = {};
   if (selected === 'default') return;
-  window.BarrageFrames?.decorate(host, { kind: 'builtin', version: 1, id: selected }, '', '');
+  BarrageFrames?.decorate(host, { kind: 'builtin', version: 1, id: selected }, '', '');
   host.querySelector('.barrage-frame-content')?.remove();
   void nextTick().then(() => {
     if (disposed || !opened.value || prefs.media !== selected) return;
@@ -548,8 +551,8 @@ watch(
 );
 onMounted(() => {
   mounted = true;
-  if (audioHost.value && videoHost.value && window.RoomMediaPlayer)
-    player = window.RoomMediaPlayer.create({
+  if (audioHost.value && videoHost.value && RoomMediaPlayer)
+    player = RoomMediaPlayer.create({
       audioHost: audioHost.value,
       videoHost: videoHost.value,
       onStatus: (value) => {

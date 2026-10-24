@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MarketRules from '../../engines/market-rules.js';
+
 import { marketBuckets, marketWeekdays } from '../../contracts/market';
 import UiButton from '../../components/UiButton.vue';
 const props = defineProps<{
@@ -23,7 +25,7 @@ function day(id: number, checked: boolean) {
     checked ? [...props.weekdays, id] : props.weekdays.filter((value) => value !== id),
   );
 }
-const labels = window.MarketRules?.CONFIG.options || [];
+const labels = MarketRules?.CONFIG.options || [];
 </script>
 <template>
   <div class="vue-market-rule-picks"

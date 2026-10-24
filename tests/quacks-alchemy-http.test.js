@@ -189,10 +189,10 @@ for (const witches of [false, true])
         8,
         'all eight host-confirmed round transitions are persisted',
       );
-      const html = await (
-        await fetch(base + '/quacks/' + code, { headers: { Cookie: owner } })
-      ).text();
-      assert.match(html, /id="alchemy"/);
-      assert.match(html, /data-game-focus/);
+      // API-only app: pages come from the Vue build (#233).
+      assert.equal(
+        (await fetch(base + '/quacks/' + code, { headers: { Cookie: owner } })).status,
+        503,
+      );
     },
   );

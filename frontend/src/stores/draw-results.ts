@@ -1,3 +1,7 @@
+import StrokeCanvas from '../engines/stroke-canvas.js';
+import DrawResults from '../engines/draw-results.js';
+import DrawCanvasSession from '../engines/draw-canvas-session.js';
+import ArtworkExport from '../engines/artwork-export.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useRoomStore } from './room';
@@ -70,10 +74,10 @@ export const useDrawResultsStore = defineStore('draw-results', () => {
   }
   function initialize(): ResultsEngine {
     if (engine) return engine;
-    if (!window.DrawResults || !window.DrawCanvasSession || !window.StrokeCanvas)
+    if (!DrawResults || !DrawCanvasSession || !StrokeCanvas)
       throw Error('畫作工具無法載入，請重新整理。');
-    const validateCanvas = window.DrawCanvasSession.validSnapshot;
-    engine = window.DrawResults.createStore({
+    const validateCanvas = DrawCanvasSession.validSnapshot;
+    engine = DrawResults.createStore({
       validateCanvas,
       loadResult: async (id, code) => {
         if (!enabled.value || code !== room.code) throw aborted();
@@ -90,12 +94,12 @@ export const useDrawResultsStore = defineStore('draw-results', () => {
         const canvas = document.createElement('canvas');
         canvas.width = 512;
         canvas.height = 256;
-        const renderer = window.StrokeCanvas!.createDrawingRenderer(canvas, { maxCheckpoints: 2 });
+        const renderer = StrokeCanvas!.createDrawingRenderer(canvas, { maxCheckpoints: 2 });
         encoders.add(renderer);
         try {
           await renderer.renderCooperatively(snapshot.canvas.strokes);
           if (!current(scope) || !isCurrent()) throw aborted();
-          const base64 = window.StrokeCanvas!.drawingDataURL(canvas, 1024 * 1024).split(',')[1];
+          const base64 = StrokeCanvas!.drawingDataURL(canvas, 1024 * 1024).split(',')[1];
           return readResultSave(
             await request('draw/result/save', {
               resultId: snapshot.result.resultId,
@@ -242,7 +246,7 @@ export const useDrawResultsStore = defineStore('draw-results', () => {
     }
   }
   function votePresentation(id = view.value?.selectedId): VotePresentation {
-    if (!engine || !window.DrawResults)
+    if (!engine || !DrawResults)
       return {
         label: '禁止題目',
         disabled: true,
@@ -252,7 +256,7 @@ export const useDrawResultsStore = defineStore('draw-results', () => {
       };
     // Reading the reactive view makes the pure engine's current vote visible to Vue.
     void view.value;
-    return window.DrawResults.votePresentation(engine.voteView(id));
+    return DrawResults.votePresentation(engine.voteView(id));
   }
   async function unsave(id: string) {
     if (!enabled.value || busy.value || view.value?.savingId) return false;
@@ -305,8 +309,8 @@ export const useDrawResultsStore = defineStore('draw-results', () => {
     }
   }
   function exporter() {
-    if (!window.ArtworkExport) throw Error('匯出工具無法載入，請重新整理。');
-    return window.ArtworkExport;
+    if (!ArtworkExport) throw Error('匯出工具無法載入，請重新整理。');
+    return ArtworkExport;
   }
   const download = (id = view.value?.selectedId) =>
     exportWork(async (scope) => {

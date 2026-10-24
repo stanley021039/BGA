@@ -1,6 +1,6 @@
 const test = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const source = fs.readFileSync(
@@ -146,7 +146,7 @@ function harness({
   trigger.focus();
   const prefs = new Set(),
     window = {
-      RaceDirections: require('../public/shared/race-directions'),
+      RaceDirections: require('../frontend/src/engines/race-directions.js').default,
       MotionPolicy: {
         get: () => ({ enabled }),
         allowsMotion: () => enabled && !reduced,
@@ -1048,45 +1048,6 @@ test('missing WebGL, reduced motion and non-live hydration retain the original s
     assert.match(h.text(), /靜態結果/);
     assert.equal(h.fx.calls.length, 0);
     assert.equal(h.button('acceptDice').disabled, false);
-  }
-});
-
-test('the optional dice renderer has one exact public asset route and loads before the dialog controller', async () => {
-  const html = fs.readFileSync(path.join(__dirname, '../public/race.html'), 'utf8'),
-    script = '/shared/race-dice-webgl.js';
-  assert.equal(html.split('src="' + script + '"').length - 1, 1);
-  assert.ok(html.indexOf('src="/shared/game-fx-layer.js"') < html.indexOf('src="' + script + '"'));
-  assert.ok(
-    html.indexOf('src="' + script + '"') < html.indexOf('src="/shared/race-dice-dialog.js"'),
-  );
-  assert.ok(html.indexOf('src="/shared/race-dice-dialog.js"') < html.indexOf('src="/race.js"'));
-  const os = require('node:os'),
-    { createApp } = require('../src/app'),
-    directory = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-dice-webgl-route-')),
-    app = createApp({
-      port: 0,
-      host: '127.0.0.1',
-      dbFile: path.join(directory, 'app.sqlite'),
-      historyDir: path.join(directory, 'history'),
-      communityDir: path.join(directory, 'community'),
-      musicDir: path.join(directory, 'music'),
-      externalSideEffectsEnabled: false,
-    });
-  try {
-    const { port } = await app.listen(),
-      base = 'http://127.0.0.1:' + port,
-      response = await fetch(base + script);
-    assert.equal(response.status, 200);
-    assert.match(response.headers.get('content-type'), /^text\/javascript/);
-    assert.equal(response.headers.get('cache-control'), 'private, no-cache');
-    assert.equal(
-      await response.text(),
-      fs.readFileSync(path.join(__dirname, '../public/shared/race-dice-webgl.js'), 'utf8'),
-    );
-    assert.equal((await fetch(base + script + '-extra')).status, 404);
-  } finally {
-    await app.close();
-    fs.rmSync(directory, { recursive: true, force: true });
   }
 });
 

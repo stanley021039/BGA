@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import StrokeCanvas from '../engines/stroke-canvas.js';
+
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { PublicDrawSnapshot } from '../contracts/draw-results';
 import StatusSlot from './StatusSlot.vue';
@@ -18,8 +20,8 @@ async function paint() {
   renderer?.reset();
   if (!mounted || !canvas.value || !props.snapshot) return;
   try {
-    if (!window.StrokeCanvas) throw Error('畫作工具無法載入，請重新整理。');
-    renderer ||= window.StrokeCanvas.createDrawingRenderer(canvas.value, { maxCheckpoints: 2 });
+    if (!StrokeCanvas) throw Error('畫作工具無法載入，請重新整理。');
+    renderer ||= StrokeCanvas.createDrawingRenderer(canvas.value, { maxCheckpoints: 2 });
     await renderer.renderCooperatively(props.snapshot.canvas.strokes);
     if (generation === token && mounted) ready.value = true;
   } catch (cause) {

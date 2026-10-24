@@ -1,3 +1,9 @@
+import AudioSettings from '../engines/audio-settings.js';
+import ColorScheme from '../engines/color-scheme.js';
+import MotionPolicy from '../engines/motion-policy.js';
+import MediaAppearance from '../engines/media-appearance.js';
+import BarrageFrames from '../engines/barrage-frames.js';
+import EntryPreferences from '../engines/entry-intro.js';
 import { onScopeDispose, shallowRef } from 'vue';
 import { defineStore } from 'pinia';
 import type { BarrageController, BarrageRenderer, ExpressionPlayback } from '../contracts/social';
@@ -124,41 +130,41 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const audio = shallowRef<AudioState | null>(null);
   const barrage = shallowRef<FrameState | null>(null),
     media = shallowRef('default');
-  const frames = window.BarrageFrames?.options || [];
+  const frames = BarrageFrames?.options || [];
   const unsubscribers: (() => void)[] = [];
-  if (window.EntryPreferences)
+  if (EntryPreferences)
     unsubscribers.push(
-      window.EntryPreferences.subscribe((value) => {
+      EntryPreferences.subscribe((value) => {
         entry.value = value;
       }),
     );
-  if (window.ColorScheme)
+  if (ColorScheme)
     unsubscribers.push(
-      window.ColorScheme.subscribe((value) => {
+      ColorScheme.subscribe((value) => {
         color.value = value;
       }),
     );
-  if (window.MotionPolicy)
+  if (MotionPolicy)
     unsubscribers.push(
-      window.MotionPolicy.subscribe((value) => {
+      MotionPolicy.subscribe((value) => {
         motion.value = value;
       }),
     );
-  if (window.AudioSettings)
+  if (AudioSettings)
     unsubscribers.push(
-      window.AudioSettings.subscribe((value) => {
+      AudioSettings.subscribe((value) => {
         audio.value = value;
       }),
     );
-  if (window.BarrageFrames)
+  if (BarrageFrames)
     unsubscribers.push(
-      window.BarrageFrames.subscribe((value) => {
+      BarrageFrames.subscribe((value) => {
         barrage.value = value;
       }),
     );
-  if (window.MediaAppearance)
+  if (MediaAppearance)
     unsubscribers.push(
-      window.MediaAppearance.subscribe((value) => {
+      MediaAppearance.subscribe((value) => {
         media.value = value;
       }),
     );
@@ -166,14 +172,14 @@ export const usePreferencesStore = defineStore('preferences', () => {
     for (const unsubscribe of unsubscribers) unsubscribe();
   });
   function setFrame(kind: 'barrage' | 'media', id: string) {
-    if (kind === 'barrage') window.BarrageFrames?.set({ selected: id });
-    else window.MediaAppearance?.set(id);
+    if (kind === 'barrage') BarrageFrames?.set({ selected: id });
+    else MediaAppearance?.set(id);
   }
   return {
     canUse: (id: string) => {
       // Reward notifications share the barrage subscription, even for player-only views.
       void barrage.value;
-      return window.BarrageFrames?.canUse?.(id) !== false;
+      return BarrageFrames?.canUse?.(id) !== false;
     },
     color,
     motion,
@@ -183,8 +189,8 @@ export const usePreferencesStore = defineStore('preferences', () => {
     media,
     frames,
     setFrame,
-    setMotion: (enabled: boolean) => window.MotionPolicy?.set({ enabled }),
-    setEntryIntro: (enabled: boolean) => window.EntryPreferences?.set(enabled),
-    setTheme: (theme: Theme) => window.ColorScheme?.set(theme),
+    setMotion: (enabled: boolean) => MotionPolicy?.set({ enabled }),
+    setEntryIntro: (enabled: boolean) => EntryPreferences?.set(enabled),
+    setTheme: (theme: Theme) => ColorScheme?.set(theme),
   };
 });

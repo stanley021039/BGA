@@ -30,8 +30,8 @@ test('defensive artwork targets its caster even in an otherwise empty lobby', ()
 
 test('both crescent variants are separate selectable persistent artwork IDs', () => {
   const effects = require('../public/shared/attack-effects.json');
-  assert.equal(effects.length, 15);
-  assert.equal(new Set(effects.map((e) => e.id)).size, 15);
+  assert.equal(effects.length, 16);
+  assert.equal(new Set(effects.map((e) => e.id)).size, 16);
   assert.equal(effects.find((e) => e.id === 'blade_aura').label, '藍黑半月劍氣');
   assert.equal(effects.find((e) => e.id === 'blade_aura_crimson').label, '紅黑半月劍氣');
 });
@@ -114,7 +114,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.deepEqual(initial.body.bonusRewards.attacks, ['barrage', 'beam']);
   const redeemed = await post('/api/achievements/redeem', { code: '我愛作者' });
   assert.equal(redeemed.status, 200);
-  assert.equal(redeemed.body.bonusRewards.attacks.length, 15);
+  assert.equal(redeemed.body.bonusRewards.attacks.length, 16);
   assert.deepEqual(
     redeemed.body.achievements.map((a) => a.unlockedAt),
     initial.body.achievements.map((a) => a.unlockedAt),

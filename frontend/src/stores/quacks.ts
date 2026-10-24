@@ -1,3 +1,4 @@
+import AudioSettings from '../engines/audio-settings.js';
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useRoomStore } from './room';
@@ -128,7 +129,7 @@ export const useQuacksStore = defineStore('quacks', () => {
       room.accept(value);
       notice.value = '';
       if (!room.terminal && attempt.payload.action === 'next' && !document.hidden)
-        window.AudioSettings?.playEffect?.('turn');
+        AudioSettings?.playEffect?.('turn');
       return !room.terminal;
     } catch (cause) {
       if (

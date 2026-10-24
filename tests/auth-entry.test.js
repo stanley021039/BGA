@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
+const fs = require('./helpers/browser-modules.cjs');
 const vm = require('node:vm');
 const { dom } = require('./helpers/widget-dom.cjs');
 
@@ -44,6 +44,7 @@ function fixture({
     events = new Map(),
     sounds = [];
   const window = {
+    EntryOpening: undefined,
     AudioSettings: withAudio
       ? {
           playEffect(kind, options) {
@@ -104,7 +105,8 @@ function fixture({
     get cancelled() {
       return cancelled;
     },
-    start: () => window.EntryIntro.playFrom(image, '/quacks/ABC123'),
+    start: () =>
+      window.EntryIntro.playFrom(image, '/quacks/ABC123', { id: 'default', duration: 3000 }),
     finish: () => [...timers.values()].find((t) => t.delay === 3000).fn(),
   };
 }

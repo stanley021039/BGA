@@ -1,3 +1,5 @@
+import MotionPolicy from '../engines/motion-policy.js';
+import GameFxLayer from '../engines/game-fx-layer.js';
 // One cancellation contract for procedural and imported cosmetic effects.
 // HTTP caching does not bound animation work: every owner must release its job.
 export function motionAllowed() {
@@ -5,7 +7,7 @@ export function motionAllowed() {
   return (
     !root.document?.hidden &&
     !root.matchMedia?.('(prefers-reduced-motion: reduce)').matches &&
-    root.MotionPolicy?.allowsMotion?.() !== false
+    MotionPolicy?.allowsMotion?.() !== false
   );
 }
 
@@ -34,7 +36,7 @@ export function watchMotionCancellation(cancel) {
   doc?.addEventListener?.('visibilitychange', check);
   root.addEventListener?.('pagehide', blocked);
   media?.addEventListener?.('change', check);
-  unsubscribe = root.MotionPolicy?.subscribe?.(check) || (() => {});
+  unsubscribe = MotionPolicy?.subscribe?.(check) || (() => {});
   // subscribe calls back synchronously, including an already blocked policy.
   if (!live) unsubscribe();
   check();
@@ -45,7 +47,7 @@ const contexts = new Set();
 export function acquireEffectContext(canvas) {
   if (contexts.size >= 2) return null;
   const root = typeof window === 'undefined' ? globalThis : window;
-  const shared = root.GameFxLayer;
+  const shared = GameFxLayer;
   if (shared && !shared.acquireContext(canvas)) return null;
   contexts.add(canvas);
   let released = false;

@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import AudioSettings from '../engines/audio-settings.js';
+
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 defineProps<{ src: string; title: string }>();
 const audio = ref<HTMLAudioElement | null>(null);
 let unbind: (() => void) | undefined;
 onMounted(() => {
-  if (audio.value) unbind = window.AudioSettings?.bindPreview?.(audio.value);
+  if (audio.value) unbind = AudioSettings?.bindPreview?.(audio.value);
 });
 onBeforeUnmount(() => {
   audio.value?.pause();

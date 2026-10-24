@@ -1,6 +1,7 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
+const fs = require('../../tests/helpers/browser-modules.cjs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { parseHTML } = require('linkedom');
@@ -24,7 +25,15 @@ function evaluate(source, resolve) {
     ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    { module, exports: module.exports, require: resolve, Map, Set, window, document },
+    withEngineImports({
+      module,
+      exports: module.exports,
+      require: resolve,
+      Map,
+      Set,
+      window,
+      document,
+    }),
   );
   return module.exports;
 }
@@ -98,7 +107,7 @@ function harness({ scene } = {}) {
     offset: 0,
   });
   if (scene) {
-    window.RacePaths = require('../../public/shared/race-paths');
+    window.RacePaths = require('../src/engines/race-paths.js').default;
     const selection = evaluate(
       fs.readFileSync(path.join(__dirname, '../src/pages/race/useRaceSelection.ts'), 'utf8'),
       (id) => (id === 'vue' ? vue : meta),
@@ -218,7 +227,7 @@ test('route guidance has no native hover title while preserving terrain help, fo
   }
 });
 test('every direction face follows actual rendered hex positions for both lane parities', () => {
-  const directions = require('../../public/shared/race-directions');
+  const directions = require('../src/engines/race-directions.js').default;
   const { neighbor } = require('../../src/games/thunder');
   const h = harness();
   try {

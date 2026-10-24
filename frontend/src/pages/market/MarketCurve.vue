@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MarketCurve from '../../engines/market-curve.js';
+
 import { computed, ref, watch } from 'vue';
 import { useMarketStore } from '../../stores/market';
 import { marketPoints, marketSigned, marketTime, officialMarketUrl } from '../../contracts/market';
@@ -9,10 +11,10 @@ const market = useMarketStore(),
   error = ref('');
 const scores = computed(() => {
   error.value = '';
-  if (!rules.value || !Number.isFinite(actual.value) || !window.MarketCurve) return [];
+  if (!rules.value || !Number.isFinite(actual.value) || !MarketCurve) return [];
   try {
     return Array.from({ length: 201 }, (_, i) =>
-      window.MarketCurve!.scorePrediction(i - 100, actual.value, rules.value!),
+      MarketCurve!.scorePrediction(i - 100, actual.value, rules.value!),
     );
   } catch {
     error.value = '計分曲線暫時無法驗證，請更新後再提交。';
@@ -26,7 +28,7 @@ const points = computed(() =>
   ),
   selectedScore = computed(() => scores.value[market.draft.forecastTick + 100]),
   examples = computed(() => {
-    if (!rules.value || !window.MarketCurve) return '';
+    if (!rules.value || !MarketCurve) return '';
     return [-4, 0, 4]
       .map(
         (value) =>
@@ -34,7 +36,7 @@ const points = computed(() =>
           marketSigned(value) +
           '%，得 ' +
           marketPoints(
-            window.MarketCurve!.scorePrediction(market.draft.forecastTick, value, rules.value!),
+            MarketCurve!.scorePrediction(market.draft.forecastTick, value, rules.value!),
           ) +
           ' 分',
       )

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import AudioSettings from '../../engines/audio-settings.js';
+import PingModel from '../../engines/ping-model.js';
+
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useProfileStore } from '../../stores/profile';
@@ -31,7 +34,6 @@ import UiList from '../../components/UiList.vue';
 import UiListRow from '../../components/UiListRow.vue';
 import ImageChoiceGrid from '../../components/ImageChoiceGrid.vue';
 import EntranceChoices from '../../components/EntranceChoices.vue';
-import '../../../../public/shared/ping-model.js';
 import { record, array, text } from '../../services/validation';
 import { requestJson } from '../../services/http';
 import { entranceEffect, entranceEffects } from '../../services/entrance-effects';
@@ -74,7 +76,7 @@ watch(
       }
     }),
 );
-const pingColor = (type: PingType) => window.PingModel?.colors[type];
+const pingColor = (type: PingType) => PingModel?.colors[type];
 const profile = useProfileStore(),
   session = useSessionStore(),
   prefs = usePreferencesStore();
@@ -208,9 +210,9 @@ function changePingSound(type: PingType, key: string) {
 function previewPing(type: PingType) {
   const selected = pingChoices.value[type]?.sound;
   if (selected === null) return;
-  if (selected && 'url' in selected) window.AudioSettings?.playExpression(selected);
+  if (selected && 'url' in selected) AudioSettings?.playExpression(selected);
   else
-    window.AudioSettings?.playEffect?.(
+    AudioSettings?.playEffect?.(
       selected?.effect || 'ping-' + (pingTypes.slice(0, 5).includes(type) ? type : 'ping'),
     );
 }

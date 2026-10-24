@@ -288,28 +288,6 @@ body > .vue-social-popover:has(.vue-color-picker-content) {
   }
 }
 
-// The shared console replaces only the drawing task's old split tool columns.
-body.vue-telephone-document
-  .vue-telephone-task[data-private]:has(> .vue-telephone-drawing-console) {
-  grid-template-columns: minmax(0, 1fr);
-  > .vue-telephone-drawing-console {
-    grid-column: 1/-1;
-    grid-row: auto;
-    min-inline-size: 0;
-  }
-  > .vue-telephone-quota {
-    grid-column: 1/-1;
-    grid-row: auto;
-  }
-  .vue-drawing-console-stage > .vue-telephone-canvas {
-    inline-size: 100%;
-    width: 100%;
-    max-inline-size: 100%;
-    aspect-ratio: 2;
-    box-sizing: border-box;
-  }
-}
-
 // Legacy theme form selectors contain five :not([type=...]) clauses. This
 // explicit C04 popover/input scope takes priority without global !important.
 :root
@@ -377,77 +355,8 @@ body.vue-telephone-document
   outline-offset: -2px;
 }
 
-// Desktop Telephone has a definite live grid area. Allocate it to previous /
-// console / quota, then fit the 2:1 canvas to both stage dimensions. The
-// 600px floor scrolls inside the existing live area on short desktop screens;
-// status and submit remain in their original outer slots.
-@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
-  :root
-    body.vue-telephone-document:not(.ui-large-text)
-    .vue-telephone-task[data-private]:has(> .vue-telephone-drawing-console) {
-    block-size: 100%;
-    min-block-size: 600px;
-    max-block-size: none;
-    align-content: stretch;
-    grid-template-rows: 64px minmax(0, 1fr) 24px;
-    gap: t.space(2);
-    > .vue-telephone-previous {
-      grid-column: 1;
-      grid-row: 1;
-      block-size: 64px;
-      height: 64px;
-      min-block-size: 0;
-      max-block-size: 64px;
-      overflow: auto;
-    }
-    > .vue-telephone-drawing-console {
-      grid-column: 1;
-      grid-row: 2;
-      block-size: 100%;
-      min-block-size: 0;
-      container-type: size;
-    }
-    > .vue-telephone-quota {
-      grid-column: 1;
-      grid-row: 3;
-      min-block-size: 0;
-      block-size: 24px;
-      margin: 0;
-      overflow: auto;
-    }
-    .vue-drawing-console-layout {
-      block-size: 100%;
-      min-block-size: 0;
-    }
-    .vue-drawing-console-stage {
-      min-block-size: 0;
-      container-type: size;
-    }
-    .vue-drawing-console-stage > .vue-telephone-canvas {
-      width: min(100cqw, 200cqh);
-      inline-size: min(100cqw, 200cqh);
-      height: auto;
-      block-size: auto;
-      max-inline-size: 100%;
-      max-block-size: 100%;
-      aspect-ratio: 2;
-      align-self: center;
-      justify-self: center;
-    }
-  }
-}
 // A short actual console can occur even on a tall screen. Reserve room for the
 // top color/size row before allowing the 472px vertical tool/history rail.
 @container drawing-console (max-height:37rem) {
   @include horizontal-tools;
-}
-
-@media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
-  :root
-    body.vue-telephone-document:not(.ui-large-text)
-    .vue-telephone-live:has(> .vue-telephone-task[data-private] > .vue-telephone-drawing-console) {
-    grid-template-rows: minmax(0, 1fr);
-    align-content: stretch;
-    min-block-size: 0;
-  }
 }

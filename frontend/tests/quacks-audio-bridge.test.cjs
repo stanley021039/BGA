@@ -1,7 +1,8 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('../../tests/helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const vue = require('../node_modules/vue'),
@@ -16,6 +17,9 @@ test('Vue quacks audio owner forwards fresh draw and stop events without replayi
   let timerId = 0;
   const document = { hidden: false, addEventListener() {}, removeEventListener() {} };
   const window = {
+    MotionPolicy: undefined,
+    GameUI: undefined,
+    QuacksArt: undefined,
     document,
     addEventListener() {},
     removeEventListener() {},
@@ -39,7 +43,10 @@ test('Vue quacks audio owner forwards fresh draw and stop events without replayi
     },
   };
   for (const file of ['public/shared/game-sounds.js', 'public/quacks-fx.js'])
-    vm.runInNewContext(fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8'), sandbox);
+    vm.runInNewContext(
+      fs.readFileSync(path.resolve(__dirname, '../..', file), 'utf8'),
+      withEngineImports(sandbox),
+    );
   const leaf = () => ({ update() {}, clear() {}, destroy() {}, show() {} });
   window.QuacksFx.create = leaf;
   window.QuacksFx.createExplosion = leaf;
@@ -64,7 +71,7 @@ test('Vue quacks audio owner forwards fresh draw and stop events without replayi
     ts.transpileModule(script, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    {
+    withEngineImports({
       module,
       exports: module.exports,
       window,
@@ -83,7 +90,7 @@ test('Vue quacks audio owner forwards fresh draw and stop events without replayi
               : id === './quacks-motion'
                 ? { createQuacksMotion: () => ({ ...leaf(), cancelVisuals() {}, burst() {} }) }
                 : {},
-    },
+    }),
   );
   const scope = vue.effectScope();
   let component;

@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  { outcomes, create } = require('../public/shared/game-result-sounds');
+  { outcomes, create } = require('../frontend/src/engines/game-result-sounds.js').default;
 const previous = {
   code: 'ABC',
   me: 'me',
@@ -87,13 +87,13 @@ test('live controller avoids first-load, duplicate, background and stale catch-u
   Date.now = () => now;
   const one = next({ ...result, djId: 'other', challenges: { me: 1 }, receiverId: 'me' });
   try {
-    const c = create();
+    const c = create({ audio: global.AudioSettings });
     c.update(previous);
     c.update(one);
     c.update(one);
     assert.deepEqual(calls, ['correct']);
     c.dispose();
-    const d = create();
+    const d = create({ audio: global.AudioSettings });
     d.update(one);
     assert.equal(calls.length, 1);
     d.update(previous);
@@ -116,7 +116,7 @@ test('live controller avoids first-load, duplicate, background and stale catch-u
 });
 
 test('result helper and failure sample are served through real HTTP static routes', async () => {
-  const fs = require('node:fs'),
+  const fs = require('./helpers/browser-modules.cjs'),
     os = require('node:os'),
     path = require('node:path'),
     { createApp } = require('../src/app');
@@ -141,7 +141,8 @@ test('result helper and failure sample are served through real HTTP static route
       'assets/game-sounds/correct-user.mp3',
     ]) {
       const r = await fetch('http://127.0.0.1:' + port + '/' + resource);
-      assert.equal(r.status, 200, resource);
+      assert.equal(r.status, resource.endsWith('.js') ? 404 : 200, resource);
+      if (resource.endsWith('.js')) continue;
       const b = Buffer.from(await r.arrayBuffer());
       if (resource.endsWith('.mp3')) {
         assert.ok(b.length > 1000);
@@ -155,7 +156,7 @@ test('result helper and failure sample are served through real HTTP static route
 });
 
 test('full default music catalog can start and resolve within normal archive row limits', (t) => {
-  const fs = require('node:fs'),
+  const fs = require('./helpers/browser-modules.cjs'),
     os = require('node:os'),
     path = require('node:path'),
     { randomUUID } = require('node:crypto'),
@@ -201,7 +202,7 @@ test('muted personal outcomes are consumed without suspending a playing song', (
     },
   };
   try {
-    const c = create();
+    const c = create({ audio: global.AudioSettings });
     c.update(previous);
     c.update(next());
     c.dispose();
@@ -209,19 +210,6 @@ test('muted personal outcomes are consumed without suspending a playing song', (
     global.document = oldDocument;
     global.AudioSettings = oldAudio;
   }
-});
-
-test('bundled CommonJS interop also registers the browser result sound API', () => {
-  const vm = require('node:vm'),
-    fs = require('node:fs');
-  const window = {},
-    module = { exports: {} };
-  vm.runInNewContext(
-    fs.readFileSync(require.resolve('../public/shared/game-result-sounds'), 'utf8'),
-    { window, module },
-  );
-  assert.equal(typeof window.GameResultSounds?.create, 'function');
-  assert.equal(window.GameResultSounds, module.exports);
 });
 
 test('intro answer sounds once immediately, then insertion sounds independently at reveal', () => {

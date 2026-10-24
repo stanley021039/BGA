@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import QuacksArt from '../../engines/quacks-art.js';
+import MotionPolicy from '../../engines/motion-policy.js';
+
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
 import type { QuacksSnapshot, QuacksRecipe, QuacksInsight } from '../../contracts/quacks';
 import { useSteppedAnimations } from '../../composables/stepped-animations';
@@ -84,13 +87,13 @@ function render() {
     error.value = '';
     return;
   }
-  if (!window.QuacksArt) {
+  if (!QuacksArt) {
     host.value.replaceChildren();
     error.value = '大釜圖像未載入，請更新頁面。';
     return;
   }
   try {
-    const node = window.QuacksArt.cauldron(props.state, props.recipe, inspect, dismiss);
+    const node = QuacksArt.cauldron(props.state, props.recipe, inspect, dismiss);
     // Wide tables give the pot full height; the overflow basin sits in a right column.
     if (wide?.matches) {
       node.setAttribute('viewBox', '0 0 1040 680');
@@ -130,7 +133,7 @@ function escape(event: KeyboardEvent) {
   dismiss();
 }
 function visibility() {
-  motion.value = !!window.MotionPolicy?.allowsMotion();
+  motion.value = !!MotionPolicy?.allowsMotion();
   if (document.hidden) dismiss();
 }
 function viewportChanged() {
@@ -139,7 +142,7 @@ function viewportChanged() {
 onMounted(() => {
   render();
   visibility();
-  unsubscribe = window.MotionPolicy?.subscribe(visibility);
+  unsubscribe = MotionPolicy?.subscribe(visibility);
   document.addEventListener('pointerdown', outside);
   document.addEventListener('keydown', escape, true);
   document.addEventListener('visibilitychange', visibility);

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { drawingColors as colors } from '../services/drawing-palette';
 import { computed, ref, useId, watch } from 'vue';
 import UiButton from './UiButton.vue';
 import UiPopover from './UiPopover.vue';
@@ -9,24 +10,11 @@ const props = defineProps<{ modelValue: string; disabled?: boolean; epoch?: stri
 const emit = defineEmits<{ 'update:modelValue': [color: string] }>();
 const prefix = useId(),
   popover = ref<InstanceType<typeof UiPopover> | null>(null);
-const colors = [
-  ['#1b1c1c', '黑色'],
-  ['#ffffff', '白色'],
-  ['#6b7280', '灰色'],
-  ['#ba1a1a', '紅色'],
-  ['#f97316', '橘色'],
-  ['#f8c838', '黃色'],
-  ['#16a34a', '綠色'],
-  ['#0284c7', '藍色'],
-  ['#4338ca', '靛色'],
-  ['#7e22ce', '紫色'],
-  ['#735947', '棕色'],
-  ['#fedbc4', '膚色'],
-];
+
 const hue = ref(0),
   saturation = ref(0),
   value = ref(0),
-  hex = ref('#1B1C1C'),
+  hex = ref<string>(colors[0][0].toUpperCase()),
   error = ref('');
 const hueColor = computed(() => `hsl(${hue.value} 100% 50%)`);
 function normalize(text: string): string | null {
@@ -146,7 +134,7 @@ function apply() {
   if (props.disabled) return;
   const selected = normalize(hex.value);
   if (!selected) {
-    error.value = '請輸入 3 或 6 位 HEX 色碼，例如 #F8C838。';
+    error.value = `請輸入 3 或 6 位 HEX 色碼，例如 ${colors[5][0].toUpperCase()}。`;
     return;
   }
   emit('update:modelValue', selected);

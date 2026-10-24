@@ -1,4 +1,5 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { completeTelephoneTopics } = require('../../tests/helpers/telephone.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -48,7 +49,7 @@ function loader(mocks = {}) {
       ts.transpileModule(fs.readFileSync(file, 'utf8'), {
         compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
       }).outputText,
-      {
+      withEngineImports({
         module: loaded,
         exports: loaded.exports,
         document,
@@ -65,7 +66,7 @@ function loader(mocks = {}) {
         require: (id) =>
           mocks[id] ||
           (id.startsWith('.') ? load(path.resolve(path.dirname(file), id + '.ts')) : require(id)),
-      },
+      }),
     );
     return loaded.exports;
   };
@@ -170,7 +171,7 @@ function client(engine, player) {
     ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    {
+    withEngineImports({
       module: loaded,
       exports: loaded.exports,
       document,
@@ -184,7 +185,7 @@ function client(engine, player) {
               : id.includes('stores/party-actions')
                 ? { usePartyActionsStore: () => actions }
                 : { default: id.endsWith('UiButton.vue') ? button : stub },
-    },
+    }),
   );
   const host = document.createElement('div');
   document.body.append(host);

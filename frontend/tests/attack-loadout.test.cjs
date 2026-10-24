@@ -1,6 +1,7 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('../../tests/helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const vue = require('../node_modules/vue'),
@@ -16,7 +17,7 @@ function fixture(request) {
       fs.readFileSync(path.join(__dirname, '../src/stores/attack-loadout.ts'), 'utf8'),
       { compilerOptions: { module: ts.ModuleKind.CommonJS } },
     ).outputText,
-    {
+    withEngineImports({
       module,
       exports: module.exports,
       require: (id) =>
@@ -31,7 +32,7 @@ function fixture(request) {
                 : { requestJson: request },
       AbortController,
       Error,
-    },
+    }),
   );
   return {
     store: module.exports.useAttackLoadoutStore(),

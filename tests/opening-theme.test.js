@@ -1,14 +1,14 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('node:vm');
 function fixture(fetch, saved = 'default') {
   const values = new Map([['bga-website-opening', saved]]),
     window = {},
     document = { documentElement: { dataset: {} } };
   vm.runInNewContext(
-    fs.readFileSync(require.resolve('../public/shared/opening-theme.js'), 'utf8'),
+    fs.readFileSync(require.resolve('../frontend/src/engines/opening-theme.js'), 'utf8'),
     {
       window,
       document,

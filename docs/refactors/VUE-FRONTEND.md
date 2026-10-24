@@ -113,7 +113,7 @@ FRONTEND_ENABLED=true npm start
 
 `frontend:build` 先以 `vue-tsc --noEmit` 檢查型別，再執行 Vite。套件固定於 `frontend/package-lock.json`，與後端依賴分開。建置輸出在 `frontend/dist/`，不納入 Git。
 
-`FRONTEND_ENABLED` 預設為 `false`，此時保留全部原頁面。啟用時只替換已列入 registry 的頁面，其他頁面仍由原後端提供。啟用前必須建置；缺少輸出時啟動會失敗，避免靜默混用頁面。後端在啟動時讀取文件與資產索引，重建後需重新啟動服務。
+`FRONTEND_ENABLED` 預設為 `false`，此時只提供 API：舊版頁面已移除（#233），頁面路由回 503 `FRONTEND_NOT_BUILT`；正式環境必須設為 `true`。啟用時由 Vue 建置提供已列入 registry 的頁面；尚未改版的 `sound-library` 與 `game-audio-admin` 仍由原後端提供。啟用前必須建置；缺少輸出時啟動會失敗，避免靜默混用頁面。後端在啟動時讀取文件與資產索引，重建後需重新啟動服務。
 
 Vite 產生的 `/frontend-assets/` 僅提供明確檔名與允許類型，支援 GET／HEAD；未知資產回 404，不回傳 HTML。API、角色、音樂、收藏與市場圖片的權限路由維持原責任。舊 `public/` 不清空，因後端仍引用其中的賽道路徑及股市純計算模組。
 
@@ -477,3 +477,35 @@ app 掛載前為根節點加入 `data-ui-owner="vue"`。舊 GameUI 的自動 fra
 - 桌機專注開啟後 body focus class 生效、頁首隱藏、頁面無溢出，Esc 復原。當次 native fullscreenElement 為空，驗證的是 CSS 專注 fallback，沒有冒稱瀏覽器原生全螢幕已通過。
 - 結果移入舞台後，再用本人＋兩個腳本夥伴跑完整三輪，排名為7／6／3；每輪明細、本人三選一與選人、回顧切回第一輪均正常。這一場與上方先前6／6／5並列的場次分開記錄。手機／專注及兩次已完成場次均正常離席清理。
 - 最後版本另驗第一輪揭曉：明細在固定舞台內，內容捲動172px前後，下一輪槽皆為x345／y932／858×44，1603×1001頁面無溢出；320px結果與44px下一輪按鈕可操作、頁寬305px，臨時尺寸已reset。原1.5秒排程的實際Network紀錄21次讀取，間隔1507–1527ms，包含請求完成時間；其他共用遊戲預設仍為兩秒，沒有新增重疊讀取控制器。
+
+## #233：移除舊頁面後的保留邊界（已由下方模組化取代）
+
+已改版的頁面只由 `frontend/pages.json` 對應的 Vue 建置提供；未開啟建置時回 `503 FRONTEND_NOT_BUILT`，不再回退到已刪除的 public HTML。`public/sound-library.html` 與 `public/game-audio-admin.html` 仍在使用，保留其路由及權限。
+
+`frontend/pages/*/index.html` 仍明確載入部分 public 共用模組，不能因舊頁面移除就整批刪除：
+
+| 保留範圍 | 代表模組與責任 |
+| --- | --- |
+| 外觀、動態政策與媒體 | color-scheme、motion-policy、audio-settings、ui-components、ui-widgets、popovers、barrage-frames、media-appearance、expression-sounds、game-sounds |
+| 作畫與回看 | stroke-canvas、draw-results、draw-transport、draw-playback、draw-canvas-session、draw-controller、artwork-export、countdown-bar |
+| 雷霆與郎中 | race-paths／movement／directions、dice 與 vehicle effects、game-fx-layer、quacks-art、quacks-fx |
+| 共用純計算 | party-shapes、market-curve、market-rules；部分同時由伺服器使用 |
+
+後續模組化須逐個確認前端載入順序、全域名稱、伺服器 require 與現役測試；搬移時保留 renderer、傳送確認、逐點回放及倒數的契約，不能以刪除舊 HTML 測試取代現役模組回歸。退役檔案的短網址別名也須同步移除，避免靜態表仍指向不存在的檔案。登入頁的受影響測試選取以 `frontend/src/pages/login/` 為入口，已刪 public 登入路徑維持未知路徑的保守全套回退。
+
+
+## #233 共用腳本模組化（2026-10-24，候選）
+
+38 支共用腳本移至 `frontend/src/engines/`，由具名依賴與 default export 組成單一模組圖；Vue 呼叫端直接 import，不再以 HTML 載入順序或 `window` 取得這些 API。UI widgets 沿用原基礎 UI 物件，在單一模組中補上表單／頁籤／對話框方法。畫布的 transport、playback、session 與 controller 仍各自擁有原本的排送、取消與 renderer 生命週期。
+
+`sound-library` 和 `game-audio-admin` 的現有 DOM 與互動不改，加入 `frontend/pages.json`／Vite，合計 29 份建置文件。`public/` 僅保留素材與樣式；退役腳本 URL 回 404，API-only 模式的所有文件回 503。未使用的舊大廳及 TableMedia DOM controller 移除，現役 owner 為 Vue lobby／media stores 與 `media-player` 引擎。
+
+主題與關閉開場的首次繪製快照由 HTTP adapter 在樣式前執行可信任的 `prepaint` 函式；這只是讀取既有偏好的短暫快照，持久化與訂閱仍只有 ESM preference owner。開場／登入動畫與音效仍由各自模組負責，不能用常駐全域 API 或第二套儲存格式取代。
+
+Node 22.13 以上伺服器同步讀取相同的純計算 ESM default export（市場規則／曲線、賽道 planner、ping registry），不複製規則。發布包必須包含 `frontend/package.json` 及 `frontend/src/engines/`，也須保留 HTTP 首次繪製所需的模組來源；只複製 dist 不是完整伺服器發布包。
+
+`frontend:build` 先執行 `tools/check-frontend-modules.cjs`：拒絕 public 可執行腳本、classic page entry 與共用 API 的隱式全域讀取。效能預算維持原門檻；特效的 motion policy 與共用 WebGL context 預算也改為明確 import。畫筆預設色與色盤共用 drawing data，與介面亮暗主題分開。
+
+測試先安裝前端鎖定依賴並建置（`npm run frontend:install`、`npm run frontend:build`）。瀏覽器／時鐘 fixture 以 TypeScript 標準轉換執行真正的 ESM 相依圖，沿用明確提供的 DOM／音效 mock，不保留第二份舊腳本。移除已無執行入口的 TableMedia DOM 測試及單純 UMD／載入順序斷言；現役 Vue media window、media-player、HTTP 權限及音效／畫布行為測試保留，建置文件資源整合測試改驗真正 dist。模組邊界另用故意新增 classic script／全域讀取的案例確認會拒絕。
+
+本節記錄候選架構，實際通過項目、固定提交、PR／CI／正式版本以本次交付記錄為準。#234 路由拆分依使用者指示等待 #226、#227 合入，不屬於本批。

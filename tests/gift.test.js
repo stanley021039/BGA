@@ -581,10 +581,10 @@ test('authenticated players can create, join and reconnect to a gift room withou
     const unauthorized = await fetch(base + '/gift/' + code, { redirect: 'manual' });
     assert.equal(unauthorized.status, 302);
     assert.equal((await fetch(base + '/api/achievements')).status, 401);
-    assert.equal((await fetch(base + '/gift/' + code, { headers: { Cookie: host } })).status, 200);
-    assert.equal((await fetch(base + '/gift.js', { headers: { Cookie: host } })).status, 200);
+    // API-only app: pages come from the Vue build (#233).
+    assert.equal((await fetch(base + '/gift/' + code, { headers: { Cookie: host } })).status, 503);
     assert.equal((await fetch(base + '/achievements', { redirect: 'manual' })).status, 302);
-    assert.equal((await fetch(base + '/achievements', { headers: { Cookie: host } })).status, 200);
+    assert.equal((await fetch(base + '/achievements', { headers: { Cookie: host } })).status, 503);
     for (const name of ['open_001', 'confirmation_001']) {
       const sound = await fetch(base + '/assets/gift-sounds/' + name + '.wav');
       assert.equal(sound.status, 200);
@@ -813,12 +813,10 @@ test('gift frontend contract and rules no longer cap scores at the target (#172)
     scene = fs.readFileSync(
       path.join(__dirname, '../frontend/src/pages/gift/GiftScene.vue'),
       'utf8',
-    ),
-    legacy = fs.readFileSync(path.join(__dirname, '../public/gift.html'), 'utf8');
+    );
   for (const [name, source] of [
     ['GiftPage', page],
     ['GiftScene', scene],
-    ['gift.html', legacy],
   ]) {
     assert.doesNotMatch(
       source,

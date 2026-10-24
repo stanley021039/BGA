@@ -4,8 +4,9 @@ const { createSceneCombat, sceneDistance } = require('./scene-combat');
 
 // Ephemeral room-local movement. Weak keys prevent positions leaking across a
 // deleted/recreated room code; this never mutates gameplay or history versions.
-function createRoomSpace(now = () => Date.now(), random = Math.random) {
-  const combat = createSceneCombat(random),
+function createRoomSpace(now = () => Date.now(), random = Math.random, authorBonus = () => false) {
+  const eligibility = new WeakMap(),
+    combat = createSceneCombat(random, (_id, actor) => eligibility.get(actor) === true),
     attacks = new WeakMap();
   const spaces = new WeakMap();
   function advance(position, time) {
@@ -38,6 +39,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random) {
         const x = index % 2 ? 88 : 12,
           y = 38 + Math.floor(index / 2) * 14;
         positions.set(player.id, {
+          id: player.id,
           x,
           y,
           targetX: x,
@@ -47,7 +49,9 @@ function createRoomSpace(now = () => Date.now(), random = Math.random) {
           facing: 'right',
         });
       }
-      advance(positions.get(player.id), time);
+      const position = positions.get(player.id);
+      eligibility.set(position, !!authorBonus(player.id, room));
+      advance(position, time);
     });
     return positions;
   }
@@ -191,7 +195,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random) {
           .sort((a, b) => distance(a[1]) - distance(b[1]) || a[0].localeCompare(b[0]))[0]?.[1];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '攻擊範圍內沒有其他玩家');
     const toId = [...positions].find(([, v]) => v === target)[0],
-      hit = target === self ? { damage: 0, critical: false } : combat.hit(self, target, time);
+      hit = target === self ? combat.protect(self, time) : combat.hit(self, target, time);
     const events = (attacks.get(room) || []).filter((e) => e.until > time);
     events.push({
       id: randomBytes(12).toString('hex'),

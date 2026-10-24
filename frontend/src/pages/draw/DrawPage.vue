@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GameSounds from '../../engines/game-sounds.js';
+
 import { Teleport, computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useDrawResultsStore } from '../../stores/draw-results';
@@ -120,8 +122,7 @@ let disposed = false,
   ownFullscreen = false,
   previousFocus: HTMLElement | null = null,
   previousScroll = { x: 0, y: 0 };
-const sounds: import('../../contracts/sounds').GameSoundOwner | undefined =
-  window.GameSounds?.create();
+const sounds: import('../../contracts/sounds').GameSoundOwner | undefined = GameSounds?.create();
 let lastSeconds: number | null = null,
   timerEpoch = '',
   soundBaseline = true;

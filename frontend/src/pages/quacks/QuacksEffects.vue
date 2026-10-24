@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import QuacksFx from '../../engines/quacks-fx.js';
+import GameSounds from '../../engines/game-sounds.js';
+
 import { nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useQuacksStore } from '../../stores/quacks';
@@ -13,7 +16,7 @@ const room = useRoomStore(),
 let fx: QuacksLeafOwner | undefined,
   burst: (QuacksLeafOwner & { show(events: { id: string; name: string }[]): void }) | undefined,
   audio: QuacksLeafOwner | undefined,
-  sounds = window.GameSounds?.create();
+  sounds = GameSounds?.create();
 let motion: ReturnType<typeof createQuacksMotion> | undefined,
   generation = 0,
   disposed = false,
@@ -53,9 +56,9 @@ onMounted(() => {
     (cue, key) => sounds?.play(cue, key, { live: liveSounds }),
   );
   if (fxHost.value && burstHost.value) {
-    fx = window.QuacksFx?.create(fxHost.value);
-    burst = window.QuacksFx?.createExplosion(burstHost.value);
-    audio = window.QuacksFx?.createAudio(sounds, {
+    fx = QuacksFx?.create(fxHost.value);
+    burst = QuacksFx?.createExplosion(burstHost.value);
+    audio = QuacksFx?.createAudio(sounds, {
       onClear: () => burst?.clear(),
       onExplosion: (events) => {
         fx?.clear();

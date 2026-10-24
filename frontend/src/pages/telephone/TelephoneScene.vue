@@ -342,23 +342,20 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         <p v-else>等待房主開始播放故事。</p>
       </section>
     </div>
-    <div class="vue-telephone-status"
-      ><StatusSlot
-        :persistent="
-          actions.pending ||
-          actions.canRetry ||
-          telephone.saving ||
-          telephone.finishing ||
-          telephone.dirty ||
-          !!telephone.storageNotice
-        "
-        :message="displayedNotice"
-        :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
-    /></div>
-    <footer
-      v-if="prompting || drawing || !playing || state.task?.submitted"
-      class="vue-telephone-actions"
-    >
+    <footer class="vue-telephone-actions">
+      <div class="vue-telephone-status"
+        ><StatusSlot
+          :persistent="
+            actions.pending ||
+            actions.canRetry ||
+            telephone.saving ||
+            telephone.finishing ||
+            telephone.dirty ||
+            !!telephone.storageNotice
+          "
+          :message="displayedNotice"
+          :error="(!actions.pending && !!actions.notice) || !!telephone.storageNotice"
+      /></div>
       <template v-if="drawing && playing && !state.task?.submitted">
         <UiButton
           variant="primary"
@@ -391,7 +388,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           @click="telephone.reveal()"
         />
       </template>
-      <span v-else class="vue-telephone-action-note">{{
+      <span v-else-if="!playing || state.task?.submitted" class="vue-telephone-action-note">{{
         playing
           ? prompting
             ? '已出題，等待其他玩家完成或倒數結束。'

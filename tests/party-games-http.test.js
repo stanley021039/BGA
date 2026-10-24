@@ -167,15 +167,10 @@ test('new games integrate auth, media isolation, private roles, history and stat
     for (const path of ['/' + type + '/' + code, '/' + type + '?learn=1']) {
       const noauth = await fetch(base + path, { redirect: 'manual' });
       assert.equal(noauth.status, 302);
-      assert.equal((await fetch(base + path, { headers: { Cookie: owner } })).status, 200);
+      // API-only app: pages come from the Vue build (#233).
+      assert.equal((await fetch(base + path, { headers: { Cookie: owner } })).status, 503);
     }
     for (const cookie of cookies) await post('leave', cookie, { code });
   }
-  for (const route of [
-    '/musicquiz.js',
-    '/musicquiz.css',
-    '/party-games.js',
-    '/shared/party-shapes.js',
-  ])
-    assert.equal((await fetch(base + route)).status, 200);
+  assert.equal((await fetch(base + '/shared/party-shapes.js')).status, 404);
 });

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import StrokeCanvas from '../../engines/stroke-canvas.js';
+import PartyShapes from '../../engines/party-shapes.js';
+
 import { onMounted, ref, watch } from 'vue';
 import type {} from '../../contracts/drawing';
 const props = defineProps<{ values: unknown[]; shapes: boolean; label: string }>();
@@ -8,11 +11,11 @@ function render() {
   if (!canvas.value) return;
   error.value = '';
   try {
-    if (!window.StrokeCanvas || (props.shapes && !window.PartyShapes))
+    if (!StrokeCanvas || (props.shapes && !PartyShapes))
       throw Error('畫作工具暫時無法載入，請重新整理');
-    window.StrokeCanvas.redraw(
+    StrokeCanvas.redraw(
       canvas.value,
-      props.shapes ? window.PartyShapes!.toStrokes(props.values) : props.values,
+      props.shapes ? PartyShapes!.toStrokes(props.values) : props.values,
     );
   } catch (cause) {
     canvas.value.getContext('2d')?.clearRect(0, 0, 512, 256);

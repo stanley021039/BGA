@@ -7,7 +7,7 @@
   "damage": {
     "min": 18,
     "max": 22,
-    "criticalChance": 0.15,
+    "criticalChance": 0.25,
     "criticalMultiplier": 1.5
   },
   "regeneration": {
@@ -16,5 +16,17 @@
   },
   "respawnMs": 3000,
   "attackRange": 50,
-  "unitScale": 10000
+  "unitScale": 10000,
+  "shield": {
+    "durationMs": 2000,
+    "minimumPercent": 30,
+    "maximumPercent": 40,
+    "authorMinimumPercent": 40,
+    "authorMaximumPercent": 50
+  },
+  "authorBonus": {
+    "healthMultiplier": 1.5,
+    "damageMultiplier": 1.15,
+    "regenerationMultiplier": 1.5
+  }
 }

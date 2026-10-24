@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import StrokeCanvas from '../engines/stroke-canvas.js';
+import PartyShapes from '../engines/party-shapes.js';
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type {} from '../contracts/drawing';
 import { readMinimalShapes, type MinimalShape } from '../contracts/minimal';
@@ -29,15 +32,15 @@ const keyboardHelp = computed(() =>
 function paint(extra?: MinimalShape) {
   if (!mounted || !canvas.value) return;
   try {
-    if (!window.StrokeCanvas || !window.PartyShapes) throw Error('幾何畫布工具無法載入。');
-    renderer ||= window.StrokeCanvas.createRenderer(canvas.value, {
+    if (!StrokeCanvas || !PartyShapes) throw Error('幾何畫布工具無法載入。');
+    renderer ||= StrokeCanvas.createRenderer(canvas.value, {
       atomicPresentation: true,
       maxStrokes: 40,
       maxPoints: 80,
       maxCheckpoints: 2,
     });
     renderer.render(
-      window.PartyShapes.toStrokes(
+      PartyShapes.toStrokes(
         extra && props.shapes.length < 40 ? [...props.shapes, extra] : props.shapes,
       ),
     );
@@ -47,7 +50,7 @@ function paint(extra?: MinimalShape) {
   }
 }
 function point(event: PointerEvent) {
-  const [x, y] = window.StrokeCanvas!.pointFrom(event, canvas.value!, 512, 256);
+  const [x, y] = StrokeCanvas!.pointFrom(event, canvas.value!, 512, 256);
   return { x, y };
 }
 function shape(point: { x: number; y: number }): MinimalShape | null {
@@ -96,7 +99,7 @@ function down(event: PointerEvent) {
     !props.editable ||
     active ||
     !renderer ||
-    !window.StrokeCanvas
+    !StrokeCanvas
   )
     return;
   event.preventDefault();

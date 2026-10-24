@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import EntryOpening from '../engines/opening-theme.js';
+
 import { ref } from 'vue';
 import UiDialog from './UiDialog.vue';
 import UiIcon from './UiIcon.vue';
@@ -24,7 +26,7 @@ async function open() {
     };
     selected.value = data.theme;
     unlocked.value = data.unlocked;
-    window.EntryOpening?.remember(data.theme);
+    EntryOpening?.remember(data.theme);
   } catch (error) {
     message.value = error instanceof Error ? error.message : '無法載入開場樣式';
   } finally {
@@ -40,7 +42,7 @@ async function choose(id: string) {
       body: { theme: id },
     })) as { theme: string };
     selected.value = data.theme;
-    window.EntryOpening?.remember(data.theme);
+    EntryOpening?.remember(data.theme);
     message.value = '已套用；下次進入網站時播放。';
   } catch (error) {
     message.value = error instanceof Error ? error.message : '套用失敗';

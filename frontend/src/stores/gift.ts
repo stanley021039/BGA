@@ -1,3 +1,4 @@
+import GameSounds from '../engines/game-sounds.js';
 import { computed, onScopeDispose, reactive, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useRoomStore } from './room';
@@ -211,7 +212,7 @@ export const useGiftStore = defineStore('gift', () => {
       if (scope === room.scope) refreshing.value = false;
     }
   }
-  const sounds: GameSoundOwner | undefined = window.GameSounds?.create();
+  const sounds: GameSoundOwner | undefined = GameSounds?.create();
   let previous: GiftSnapshot | null = null;
   watch(state, (s) => {
     if (!s) return;

@@ -1,4 +1,5 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -13,12 +14,12 @@ function load(file) {
     ts.transpileModule(fs.readFileSync(file, 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    {
+    withEngineImports({
       module,
       exports: module.exports,
       require: (id) =>
         id.startsWith('.') ? load(path.resolve(path.dirname(file), id + '.ts')) : require(id),
-    },
+    }),
   );
   return module.exports;
 }
@@ -60,13 +61,13 @@ test('actual distillery component only confirms reachable slots while available;
     ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    {
+    withEngineImports({
       module,
       exports: module.exports,
       require: (id) => (id === 'vue' ? { ...vue, onBeforeUnmount() {} } : {}),
       document: { hidden: true },
       window: {},
-    },
+    }),
   );
   const props = vue.reactive({
     patient: catalog().find((p) => p.id === 'eyes'),

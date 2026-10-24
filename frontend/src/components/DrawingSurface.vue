@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import { drawingColors } from '../services/drawing-palette';
+import StrokeCanvas from '../engines/stroke-canvas.js';
+import DrawCanvasSession from '../engines/draw-canvas-session.js';
+import DrawController from '../engines/draw-controller.js';
+
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import type {
   DrawingController,
@@ -39,7 +44,7 @@ const notice = ref(''),
   ready = ref(false);
 const tool = ref<DrawingTool>('brush'),
   filled = ref(false),
-  color = ref('#1b1c1c'),
+  color = ref<string>(drawingColors[0][0]),
   size = ref(6);
 const confirmation = ref<InstanceType<typeof ConfirmDialog> | null>(null);
 const artist = computed(
@@ -78,14 +83,14 @@ function stop() {
 function start() {
   stop();
   if (!mounted || !canvas.value || !props.seat) return;
-  if (!window.DrawCanvasSession || !window.DrawController || !window.StrokeCanvas) {
+  if (!DrawCanvasSession || !DrawController || !StrokeCanvas) {
     feedback('畫布工具無法載入，請重新整理。', 'error');
     return;
   }
   const captured = props.scope;
   const current = () => mounted && captured === props.scope && !!props.seat;
   const request: DrawingRequest = (route, data, options) => props.request(route, data, options);
-  session = window.DrawCanvasSession.create({
+  session = DrawCanvasSession.create({
     canvas: canvas.value,
     request,
     syncCanvas: () => controller?.syncCanvas() || Promise.resolve(),
@@ -106,10 +111,10 @@ function start() {
     session,
     style: () => ({ tool: tool.value, filled: filled.value, color: color.value, size: size.value }),
     epoch: () => props.snapshot?.canvasEpoch,
-    strokeId: () => window.StrokeCanvas!.strokeId(),
+    strokeId: () => StrokeCanvas!.strokeId(),
     feedback: (message) => feedback(message),
   });
-  controller = window.DrawController.create({
+  controller = DrawController.create({
     // The controller compares room identity; use the page scope as well as its code.
     // The stream URL below always uses the real six-character room code.
     context: () => ({

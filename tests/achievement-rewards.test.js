@@ -380,9 +380,12 @@ test('market milestones count settled days once, including corrections, and igno
 });
 
 test('new reward descriptors and client art preserve every old ID while enforcing independent prerequisites', () => {
-  const fs = require('node:fs'),
+  const fs = require('./helpers/browser-modules.cjs'),
     vm = require('node:vm');
-  const source = fs.readFileSync(require.resolve('../public/shared/barrage-frames.js'), 'utf8');
+  const source = fs.readFileSync(
+    require.resolve('../frontend/src/engines/barrage-frames.js'),
+    'utf8',
+  );
   const optionsMatch = source.match(
     /const\s+options\s*=\s*Object\.freeze\(\s*(\[[\s\S]*?\])\s*\.map\(Object\.freeze\)/,
   );

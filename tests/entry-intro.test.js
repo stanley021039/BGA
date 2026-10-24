@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
+const fs = require('./helpers/browser-modules.cjs');
 const { createHash } = require('node:crypto');
 const vm = require('node:vm');
 const { withEntryIntro } = require('../src/http/entry-intro');
@@ -57,6 +57,8 @@ function fixture({
     }
   }
   const window = {
+    EntryOpening: undefined,
+    AudioSettings: undefined,
     location: { origin: 'https://bga.example', pathname: '/', search: '' },
     performance: navigationAvailable
       ? {
@@ -152,7 +154,8 @@ test('entry decoration preserves Vue/legacy markup and adds one external bootstr
     const result = withEntryIntro(Buffer.from(html));
     assert.equal((result.match(/id="entry-intro"/g) || []).length, 1);
     assert.match(result, /entry-intro\.css/);
-    assert.match(result, /src="\/shared\/entry-intro.js"/);
+    assert.match(result, /data-prepaint/);
+    assert.doesNotMatch(result, /src="\/shared\/.*\.js"/);
     assert.ok(
       result.includes(
         html.includes('form') ? '<form action="/api/auth/login">' : '<main id="app">',
@@ -188,7 +191,7 @@ test('auth page stays visible; destination consumes completion once without repl
     authPage: true,
   });
   assert.doesNotMatch(html, /id="entry-intro"/);
-  assert.match(html, /auth-entry.js/);
+  assert.match(html, /data-prepaint/);
   const completed = { at: Date.now(), path: '/' };
   const next = fixture({ completed });
   assert.equal(next.panel.hidden, true);
@@ -403,11 +406,12 @@ test('auth documents load the same blocking preference owner before the deferred
   const html = withEntryIntro('<html><head></head><body><main></main></body></html>', {
     authPage: true,
   });
-  assert.ok(html.indexOf('src="/shared/entry-intro.js"') < html.indexOf('<body>'));
-  assert.ok(
-    html.indexOf('src="/shared/entry-intro.js"') < html.indexOf('src="/shared/auth-entry.js"'),
+  assert.ok(html.indexOf('data-prepaint') < html.indexOf('<body>'));
+  assert.doesNotMatch(html, /src="\/shared\/.*\.js"/);
+  assert.match(
+    fs.readFileSync('frontend/src/pages/login/LoginPage.vue', 'utf8'),
+    /engines\/auth-entry.js/,
   );
-  assert.match(html, /<script defer src="\/shared\/auth-entry.js"/);
   assert.doesNotMatch(html, /id="entry-intro"/);
 });
 
