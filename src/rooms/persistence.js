@@ -17,16 +17,20 @@ const isFunction = (value) => typeof value === 'function' || typeof value === 's
 const special = (value) =>
   value instanceof Date || value instanceof RegExp || ArrayBuffer.isView(value);
 
-function capture(value, room, seen = new Map()) {
+// `lost` collects the paths of callbacks dropped from the value, when given.
+function capture(value, room, seen = new Map(), lost = null, at = '') {
   if (value === room) return { [ROOM_REF]: true };
-  if (isFunction(value)) return undefined;
+  if (isFunction(value)) {
+    lost?.push(at);
+    return undefined;
+  }
   if (value === null || typeof value !== 'object' || special(value)) return value;
   if (seen.has(value)) return seen.get(value);
   if (value instanceof Map) {
     const out = new Map();
     seen.set(value, out);
     for (const [key, item] of value) {
-      const saved = capture(item, room, seen);
+      const saved = capture(item, room, seen, lost, at + '.' + String(key));
       if (saved !== undefined) out.set(capture(key, room, seen), saved);
     }
     return out;
@@ -35,7 +39,7 @@ function capture(value, room, seen = new Map()) {
     const out = new Set();
     seen.set(value, out);
     for (const item of value) {
-      const saved = capture(item, room, seen);
+      const saved = capture(item, room, seen, lost, at + '[]');
       if (saved !== undefined) out.add(saved);
     }
     return out;
@@ -43,7 +47,9 @@ function capture(value, room, seen = new Map()) {
   if (Array.isArray(value)) {
     const out = [];
     seen.set(value, out);
-    for (const item of value) out.push(capture(item, room, seen));
+    value.forEach((item, index) =>
+      out.push(capture(item, room, seen, lost, at + '[' + index + ']')),
+    );
     return out;
   }
   const out = {};
@@ -51,7 +57,7 @@ function capture(value, room, seen = new Map()) {
   for (const key of Object.getOwnPropertyNames(value)) {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     if (!('value' in descriptor)) continue;
-    const saved = capture(descriptor.value, room, seen);
+    const saved = capture(descriptor.value, room, seen, lost, at + '.' + key);
     if (saved !== undefined) out[key] = saved;
   }
   return out;
@@ -142,19 +148,26 @@ function apply(room, data) {
   }
 }
 
-// Everything worth keeping about one room, without functions.
+// Everything worth keeping about one room, without functions. A callback inside
+// the game state (an enumerable field, e.g. a pending dice effect) cannot be
+// restored, so it is listed in `callbacks` and the caller must not save the room.
+// Methods on the room and its non-enumerable wiring (providers, trackers,
+// recorders) are rebuilt on restore and are not reported.
 function captureRoom(room, extra = {}) {
-  const data = new Map();
+  const data = new Map(),
+    callbacks = [];
   for (const key of Object.getOwnPropertyNames(room)) {
     const descriptor = Object.getOwnPropertyDescriptor(room, key);
     if (!('value' in descriptor)) continue;
-    const value = capture(descriptor.value, room);
+    const lost = descriptor.enumerable && !isFunction(descriptor.value) ? callbacks : null;
+    const value = capture(descriptor.value, room, new Map(), lost, key);
     if (value !== undefined) data.set(key, { value, enumerable: descriptor.enumerable });
   }
   return {
     type: room.type || 'poker',
     code: room.code,
     name: room.name,
+    callbacks,
     data,
     extra: capture(extra, room),
   };
