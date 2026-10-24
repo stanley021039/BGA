@@ -563,7 +563,7 @@ test('HTTP authenticates valid seats, rejects spoofed authority and stale tuples
   );
 });
 
-test('HTTP leaves and kicks immediately pause and revoke authorized manager controllers; last-player deletion and restart discard watch state', async (t) => {
+test('HTTP leaves and kicks immediately pause and revoke authorized manager controllers; last-player deletion discards watch state and a restart keeps the watch state of open rooms', async (t) => {
   const f = await httpFixture(t),
     code = await f.create();
   await f.promote(code, 'guest');
@@ -608,7 +608,11 @@ test('HTTP leaves and kicks immediately pause and revoke authorized manager cont
   assert.equal(fresh.revision, 0);
   assert.notEqual(fresh.roomInstanceId, host.roomInstanceId);
   await f.restart();
-  assert.equal((await f.watch(newCode)).body.code, 'ROOM_NOT_FOUND');
+  assert.equal(
+    (await f.watch(newCode)).body.roomInstanceId,
+    fresh.roomInstanceId,
+    'open rooms and their watch state survive a restart (#235)',
+  );
   const afterRestart = await f.create(),
     empty = (await f.watch(afterRestart)).body;
   assert.equal(empty.video, null);
