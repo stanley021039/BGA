@@ -26,6 +26,7 @@ import RoomPings from '../../components/RoomPings.vue';
 import RoomManager from '../../components/RoomManager.vue';
 import RoomLeaveButton from '../../components/RoomLeaveButton.vue';
 import RoomHeader from '../../components/RoomHeader.vue';
+import RoomFullscreenToggle from '../../components/RoomFullscreenToggle.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiDialog from '../../components/UiDialog.vue';
@@ -118,10 +119,7 @@ const botAllowed = computed(() => {
   const value = state.value?.botSupport;
   return !value || typeof value !== 'object' || (value as Record<string, unknown>).canAdd !== false;
 });
-let disposed = false,
-  ownFullscreen = false,
-  previousFocus: HTMLElement | null = null,
-  previousScroll = { x: 0, y: 0 };
+let disposed = false;
 const sounds: import('../../contracts/sounds').GameSoundOwner | undefined = GameSounds?.create();
 let lastSeconds: number | null = null,
   timerEpoch = '',
@@ -299,59 +297,12 @@ function hintClosed() {
   )
     chat.value?.compose('🤔 求提示，請再加一筆！');
 }
-async function exitFocus() {
-  const exit = ownFullscreen && document.fullscreenElement === document.documentElement;
-  focus.value = false;
-  ownFullscreen = false;
-  document.body.classList.remove('vue-draw-focus');
-  if (exit)
-    try {
-      await document.exitFullscreen();
-    } catch {
-      /* Local focus mode still exits. */
-    }
-  if (!disposed) {
-    window.scrollTo(previousScroll.x, previousScroll.y);
-    if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
-  }
-}
-async function toggleFocus() {
-  if (focus.value) return exitFocus();
-  previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  previousScroll = { x: scrollX, y: scrollY };
-  focus.value = true;
-  document.body.classList.add('vue-draw-focus');
-  if (!document.fullscreenElement)
-    try {
-      await document.documentElement.requestFullscreen();
-      if (focus.value) ownFullscreen = true;
-      else await document.exitFullscreen();
-    } catch {
-      /* CSS focus mode remains available. */
-    }
-}
-function fullscreen() {
-  if (focus.value && ownFullscreen && !document.fullscreenElement) void exitFocus();
-}
-function escape(event: KeyboardEvent) {
-  if (
-    !event.defaultPrevented &&
-    event.key === 'Escape' &&
-    focus.value &&
-    !document.querySelector('dialog:modal')
-  ) {
-    event.preventDefault();
-    void exitFocus();
-  }
-}
 function visibility() {
   soundBaseline = true;
   tick();
 }
 onMounted(() => {
   document.addEventListener('visibilitychange', visibility);
-  document.addEventListener('fullscreenchange', fullscreen);
-  document.addEventListener('keydown', escape);
   if (routeCode)
     void room.open(routeCode, 'draw', readDrawSnapshot).catch((cause) => {
       entryError.value = cause instanceof Error ? cause.message : '無法恢復座位。';
@@ -368,9 +319,6 @@ onBeforeUnmount(() => {
   disposed = true;
   sounds?.destroy();
   document.removeEventListener('visibilitychange', visibility);
-  document.removeEventListener('fullscreenchange', fullscreen);
-  document.removeEventListener('keydown', escape);
-  void exitFocus();
   delete document.body.dataset.drawPhase;
   delete document.body.dataset.drawRole;
   delete document.body.dataset.drawHost;
@@ -409,13 +357,9 @@ onBeforeUnmount(() => {
         icon="help"
         icon-only
         label="遊戲說明"
-        @click="help?.open()" /><UiButton
-        variant="ghost"
-        icon="expand"
-        icon-only
-        :label="focus ? '退出專注全螢幕' : '專注全螢幕'"
-        :aria-pressed="focus"
-        @click="toggleFocus" /><RoomManager /><RoomLeaveButton
+        @click="help?.open()" /><RoomFullscreenToggle
+        focus-class="vue-draw-focus"
+        @update:focused="focus = $event" /><RoomManager /><RoomLeaveButton
     /></RoomHeader>
     <div class="vue-draw-room-feedback vue-room-status-row"
       ><div class="vue-room-phase-slot"
