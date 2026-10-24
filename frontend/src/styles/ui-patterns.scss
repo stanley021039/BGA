@@ -152,6 +152,9 @@
     color: var(--stitch-disabled-ink);
     cursor: not-allowed;
   }
+  &[data-readable-disabled='true'] {
+    color: var(--stitch-ink);
+  }
   .ui-choice-label {
     display: block;
     min-inline-size: 0;

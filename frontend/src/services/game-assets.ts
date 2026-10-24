@@ -2,11 +2,13 @@ import type { GameType } from '../contracts/room';
 import { requestJson } from './http';
 import { record, strings } from './validation';
 import { preloadAllowed, warm } from './preload';
+import athleteTrackPreview from '../assets/second-wind/twisty-twirl-1600.webp';
 
 // Art and sounds a game uses only once play starts, warmed while seats fill up.
 // Sound files follow the registry in public/shared/audio-settings.js.
 const sound = (name: string) => '/assets/game-sounds/' + name;
 const inGame: Partial<Record<GameType, readonly string[]>> = {
+  'second-wind': [athleteTrackPreview],
   quacks: [
     '/assets/quacks/draw-777.webp',
     '/assets/quacks/stop-portrait-v1.webp',

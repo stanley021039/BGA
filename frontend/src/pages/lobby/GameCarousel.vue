@@ -6,6 +6,7 @@ import { usePreferencesStore } from '../../stores/preferences';
 import UiButton from '../../components/UiButton.vue';
 import quacksArt from '../../assets/quacks/game-quacks.svg';
 import minimalArt from '../minimal/minimal-waiting.svg';
+import athleteHero from '../../assets/second-wind/hero.webp';
 const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
@@ -192,16 +193,17 @@ onBeforeUnmount(() => {
         @focus="warmGamePage(card.id)"
       >
         <div class="tile-image"
-          ><strong v-if="card.id === 'second-wind'">Second Wind · 能力競速</strong
-          ><strong v-else-if="card.id === 'ceo'">1st CEO · 集團經營</strong
+          ><strong v-if="card.id === 'ceo'">1st CEO · 集團經營</strong
           ><img
             v-else
             :src="
-              card.id === 'quacks'
-                ? quacksArt
-                : card.id === 'minimal'
-                  ? minimalArt
-                  : '/assets/playful/game-' + card.art + '.svg'
+              card.id === 'second-wind'
+                ? athleteHero
+                : card.id === 'quacks'
+                  ? quacksArt
+                  : card.id === 'minimal'
+                    ? minimalArt
+                    : '/assets/playful/game-' + card.art + '.svg'
             "
             alt=""
             draggable="false" /></div

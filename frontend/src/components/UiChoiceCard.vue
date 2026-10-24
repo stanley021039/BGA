@@ -7,8 +7,9 @@ withDefaults(
     disabled?: boolean;
     action?: boolean;
     unavailable?: boolean;
+    readableDisabled?: boolean;
   }>(),
-  { selected: false, disabled: false, action: false, unavailable: false },
+  { selected: false, disabled: false, action: false, unavailable: false, readableDisabled: false },
 );
 </script>
 <template>
@@ -16,6 +17,7 @@ withDefaults(
     type="button"
     class="ui-choice-card"
     :data-choice-state="disabled || unavailable ? 'disabled' : selected ? 'selected' : 'default'"
+    :data-readable-disabled="(readableDisabled && (disabled || unavailable)) || undefined"
     :aria-label="label"
     :aria-pressed="action ? undefined : selected"
     :aria-disabled="unavailable || undefined"

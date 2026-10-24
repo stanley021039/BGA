@@ -11,6 +11,8 @@ import UiNotice from '../../components/UiNotice.vue';
 import UiHeading from '../../components/UiHeading.vue';
 import UiList from '../../components/UiList.vue';
 import UiListRow from '../../components/UiListRow.vue';
+import AthleteArt from './AthleteArt.vue';
+import { athleteArt, trackArt, trackPoint } from './art';
 const athlete = useAthleteStore(),
   actions = usePartyActionsStore(),
   room = useRoomStore();
@@ -19,6 +21,8 @@ const me = computed(() => athlete.state?.me || '');
 const cards = computed(() => Object.fromEntries(game.value.catalog.map((c) => [c.id, c])));
 const name = (id: string) => athlete.state?.players.find((p) => p.id === id)?.name || id;
 const cardName = (id: string) => cards.value[id]?.name || id;
+const seat = (id: string) => game.value.players.indexOf(id) + 1;
+const track = computed(() => game.value.trackId || 'twisty-twirl');
 const picking = computed(() => game.value.phase === 'drafting');
 const choosing = computed(() => game.value.phase === 'choosing');
 const canPick = computed(
@@ -70,11 +74,25 @@ const eventText = (e: (typeof game.value.events)[number]) =>
     <UiPanel title="積分與隊伍" density="compact">
       <div class="athlete-scores"
         ><div v-for="id in game.players" :key="id"
-          ><strong>{{ name(id) }}</strong
-          ><UiBadge :label="`${game.scores?.[id] || 0} 分`" /><p>{{
-            (game.teams[id] || []).map(cardName).join('、') || '全部角色已出賽'
-          }}</p
-          ><span v-if="choosing">{{
+          ><strong>{{ seat(id) }} · {{ name(id) }}</strong
+          ><UiBadge :label="`${game.scores?.[id] || 0} 分`" />
+          <div class="athlete-team"
+            ><div
+              v-for="racerId in game.teams[id] || []"
+              :key="racerId"
+              class="athlete-team-member"
+            >
+              <AthleteArt
+                :src="athleteArt(racerId)"
+                :alt="cardName(racerId)"
+                :width="96"
+                :height="70"
+              />
+              <span>{{ cardName(racerId) }}</span>
+            </div></div
+          >
+          <p v-if="!game.teams[id]?.length">{{ picking ? '等待招募角色' : '全部角色已出賽' }}</p>
+          <span v-if="choosing">{{
             game.selectedIds.includes(id) ? '已鎖定' : '選角中'
           }}</span></div
         ></div
@@ -110,10 +128,22 @@ const eventText = (e: (typeof game.value.events)[number]) =>
           :key="id"
           :label="cardName(id)"
           :disabled="!canPick"
+          readable-disabled
           :selected="game.ownSelection === id"
           @click="pick(id)"
+          ><AthleteArt
+            class="athlete-draft-art"
+            :src="athleteArt(id, 'card')"
+            :alt="cardName(id) + ' 原版角色卡'"
+            :width="272"
+            :height="380"
+          />
+          <strong>{{ cardName(id) }}</strong
           ><p>{{ cards[id]?.summary }}</p
-          ><small>{{ cards[id]?.notes }}</small></UiChoiceCard
+          ><small>{{ cards[id]?.notes }}</small>
+          <template #label
+            ><span>{{ picking ? '招募這名選手' : '派出這名選手' }}</span></template
+          ></UiChoiceCard
         ></div
       >
     </UiPanel>
@@ -147,56 +177,143 @@ const eventText = (e: (typeof game.value.events)[number]) =>
                   athlete.act('choice', { choiceId: game.pending.id, value: option.value })
                 " /></div></template
         ></div>
-        <div class="athlete-board" aria-label="賽道格位與角色位置"
-          ><UiPanel
-            v-for="cell in board"
-            :key="cell.position"
-            density="compact"
-            :tone="cell.racers.length ? 'selected' : 'subtle'"
-          >
-            <strong>{{
-              cell.position === 0 ? '起點' : cell.position === 30 ? '終點' : cell.position
-            }}</strong>
-            <small v-if="game.trackId === 'twisty-twirl' && cell.position === 14">Twist 界線</small>
-            <small v-if="game.trackId === 'whirly-world' && portal(cell.position) !== undefined"
-              >漩渦 → {{ portal(cell.position) }}</small
+        <p
+          >棋子上的數字對應玩家席位；同格超過兩位時顯示總數，下方名單列出全部角色。手機可左右捲動賽道。</p
+        >
+        <div class="athlete-track-scroll" tabindex="0" aria-label="原版賽道，可左右捲動">
+          <div class="athlete-track">
+            <AthleteArt
+              :src="trackArt(track)"
+              :srcset="`${trackArt(track, 800)} 800w, ${trackArt(track)} 1600w`"
+              sizes="(max-width: 1000px) 960px, 1300px"
+              :alt="
+                track === 'twisty-twirl'
+                  ? 'Twisty Twirl 原版賽道，順時針由左上起跑'
+                  : 'Whirly World 原版漩渦賽道，順時針由左上起跑'
+              "
+              :width="2688"
+              :height="830"
+              eager
+            />
+            <template v-for="cell in board" :key="cell.position">
+              <span class="athlete-track-number" :style="trackPoint(cell.position, game.direction)"
+                ><UiBadge
+                  :label="
+                    cell.position === 0
+                      ? '起點'
+                      : cell.position === 30
+                        ? '終點'
+                        : String(cell.position)
+                  "
+              /></span>
+              <div
+                v-if="cell.racers.length || game.coins?.includes(cell.position)"
+                class="athlete-track-cell"
+                :style="trackPoint(cell.position, game.direction)"
+                :aria-label="`${cell.position} 格：${cell.racers.map((r) => cardName(r.racerId) + ' · ' + name(r.playerId)).join('、')}`"
+              >
+                <div class="athlete-track-pieces">
+                  <div
+                    v-for="r in cell.racers.slice(0, 2)"
+                    :key="r.id"
+                    class="athlete-piece"
+                    :title="`${cardName(r.racerId)} · ${name(r.playerId)}${r.tripped ? ' · 絆倒' : ''}`"
+                  >
+                    <AthleteArt
+                      :class="{ 'athlete-tripped': r.tripped }"
+                      :src="athleteArt(r.transformed ? 'weremouth' : r.racerId)"
+                      :alt="cardName(r.racerId)"
+                      :width="96"
+                      :height="70"
+                      eager
+                    />
+                    <UiBadge
+                      :label="String(seat(r.playerId))"
+                      :tone="r.playerId === me ? 'primary' : 'neutral'"
+                    />
+                  </div>
+                </div>
+                <UiBadge
+                  v-if="cell.racers.length > 2"
+                  :label="`×${cell.racers.length}`"
+                  :aria-label="`${cell.racers.length} 位同格`"
+                />
+                <UiBadge v-if="game.coins?.includes(cell.position)" label="＋1 分" tone="primary" />
+              </div>
+            </template>
+            <div
+              v-if="game.monster !== null && game.monster !== undefined"
+              class="athlete-track-cell"
+              :style="trackPoint(game.monster, game.direction)"
             >
-            <small v-if="cell.position === 12">第一彎角</small
-            ><small v-if="cell.position === 15">第二彎角</small>
-            <span v-for="r in cell.racers" :key="r.id"
-              >{{ cardName(r.racerId) }} · {{ name(r.playerId) }}{{ r.tripped ? '（絆倒）' : ''
-              }}{{ r.finished ? '（完賽）' : '' }}</span
-            >
-            <UiBadge v-if="game.coins?.includes(cell.position)" label="1 分" /> </UiPanel
-        ></div>
+              <AthleteArt
+                :src="athleteArt('weremouth')"
+                alt="追擊中的 W.E.R.E.M.O.U.T.H."
+                :width="96"
+                :height="93"
+                eager
+              />
+              <UiBadge label="追擊者" tone="danger" />
+            </div>
+          </div>
+        </div>
+        <div class="athlete-track-key"
+          ><UiBadge :label="game.direction === -1 ? '逆向競速 ←' : '順向競速 →'" tone="info" />
+          <span v-if="track === 'twisty-twirl'">Twist 觸發進度：14 格（待核對）</span>
+        </div>
+        <div v-if="track === 'whirly-world'" class="athlete-track-key" aria-label="目前漩渦出口">
+          <UiBadge
+            v-for="position in [4, 8, 11, 17, 20, 24].map((n) =>
+              game.direction === -1 ? 30 - n : n,
+            )"
+            :key="position"
+            :label="`${position} ↔ ${portal(position)}`"
+            tone="info"
+          />
+        </div>
         <p v-if="game.monster !== null && game.monster !== undefined"
           >W.E.R.E.M.O.U.T.H.：{{ game.monster }} 格</p
         >
       </UiPanel>
       <UiPanel v-if="game.twistCards?.length" title="本場 Twist"
-        ><UiList
-          ><UiListRow v-for="card in game.twistCards" :key="card.id">{{
-            card.summary
-          }}</UiListRow></UiList
+        ><div class="athlete-twists"
+          ><div v-for="card in game.twistCards" :key="card.id">
+            <AthleteArt
+              :src="athleteArt(card.id, 'twist')"
+              alt="本場生效的原版 Twist 卡"
+              :width="428"
+              :height="236"
+            />
+            <p>{{ card.summary }}</p>
+          </div></div
         ></UiPanel
       >
       <UiPanel title="本場角色與能力"
         ><UiList
           ><UiListRow v-for="r in game.racers" :key="r.id"
-            ><div
-              ><strong>{{ cardName(r.racerId) }} · {{ name(r.playerId) }}</strong
-              ><UiBadge
-                :label="
-                  r.eliminated
-                    ? '淘汰'
-                    : r.finished
-                      ? '完賽'
-                      : `${r.position} 格${r.tripped ? ' · 絆倒' : ''}`
-                "
-              /><p>{{ cards[r.racerId]?.summary }}</p
-              ><p v-if="r.copiedPowers.length"
-                >額外能力：{{ r.copiedPowers.map(cardName).join('、') }}</p
-              ><p v-if="r.transformed">已變身 W.E.R.E.M.O.U.T.H.</p></div
+            ><div class="athlete-racer-row"
+              ><AthleteArt
+                class="athlete-racer-art"
+                :src="athleteArt(r.transformed ? 'weremouth' : r.racerId)"
+                :alt="cardName(r.racerId)"
+                :width="96"
+                :height="70"
+              /><div
+                ><strong>{{ cardName(r.racerId) }} · {{ name(r.playerId) }}</strong
+                ><UiBadge
+                  :label="
+                    r.eliminated
+                      ? '淘汰'
+                      : r.finished
+                        ? '完賽'
+                        : `${r.position} 格${r.tripped ? ' · 絆倒' : ''}`
+                  "
+                /><p>{{ cards[r.racerId]?.summary }}</p
+                ><p v-if="r.copiedPowers.length"
+                  >額外能力：{{ r.copiedPowers.map(cardName).join('、') }}</p
+                ><p v-if="r.transformed">已變身 W.E.R.E.M.O.U.T.H.</p
+                ><p>{{ cards[r.racerId]?.notes }}</p></div
+              ></div
             ></UiListRow
           ></UiList
         ></UiPanel
@@ -209,10 +326,22 @@ const eventText = (e: (typeof game.value.events)[number]) =>
       <p v-if="game.phase === 'finished'">獲勝：{{ game.winners?.map(name).join('、') }}</p>
       <div v-for="result in game.results" :key="result.race"
         ><UiHeading>第 {{ result.race }} 場</UiHeading><p>{{ result.reason }}</p
-        ><p v-for="rank in result.ranking" :key="rank.rank"
-          >第 {{ rank.rank }} 名 · {{ name(rank.playerId) }} · {{ cardName(rank.racerId) }} · 名次分
-          +{{ rank.points }}</p
-        ></div
+        ><div v-for="rank in result.ranking" :key="rank.rank" class="athlete-racer-row">
+          <AthleteArt
+            class="athlete-racer-art"
+            :src="athleteArt(rank.racerId)"
+            :alt="cardName(rank.racerId)"
+            :width="96"
+            :height="70"
+          />
+          <p
+            ><UiBadge
+              :label="`第 ${rank.rank} 名`"
+              :tone="rank.rank === 1 ? 'primary' : 'neutral'"
+            />
+            {{ name(rank.playerId) }} · {{ cardName(rank.racerId) }} · 名次分 +{{ rank.points }}</p
+          >
+        </div></div
       >
       <template v-if="game.phase === 'race-result'"
         ><p>下一場由 {{ name(game.first || '') }} 先行。</p
@@ -248,7 +377,7 @@ const eventText = (e: (typeof game.value.events)[number]) =>
 }
 .athlete-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   gap: var(--stitch-gap-controls);
 }
 .athlete-actions {
@@ -259,29 +388,92 @@ const eventText = (e: (typeof game.value.events)[number]) =>
 .athlete-action-slot {
   min-height: 8rem;
 }
-.athlete-board {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+.athlete-draft-art {
+  max-width: 12rem;
+  align-self: center;
+}
+.athlete-team {
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--stitch-gap-label);
 }
-.athlete-board span,
-.athlete-board small {
-  display: block;
+.athlete-team-member {
+  display: grid;
+  align-content: start;
+  width: 5rem;
+  overflow-wrap: anywhere;
+  font-size: var(--stitch-text-small);
+}
+.athlete-track-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.athlete-track-scroll:focus-visible {
+  outline: var(--stitch-focus-ring);
+  outline-offset: var(--stitch-focus-offset);
+}
+.athlete-track {
+  position: relative;
+  min-width: 960px;
+  aspect-ratio: 2688 / 830;
+}
+.athlete-track-number {
+  position: absolute;
+  transform: translate(-50%, -175%);
+}
+.athlete-track-cell {
+  position: absolute;
+  width: 5.5%;
+  transform: translate(-50%, -25%);
+  display: grid;
+  justify-items: center;
+}
+.athlete-track-pieces {
+  display: flex;
+  align-items: start;
+  justify-content: center;
+}
+.athlete-piece {
+  width: 2rem;
+  display: grid;
+  justify-items: center;
+}
+.athlete-tripped {
+  transform: rotate(-25deg);
+}
+.athlete-track-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stitch-gap-label);
+}
+.athlete-racer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--stitch-gap-controls);
+  min-width: 0;
+}
+.athlete-racer-row > div {
+  min-width: 0;
   overflow-wrap: anywhere;
 }
-.athlete-board > * {
-  min-height: 7rem;
-  height: 7rem;
-  overflow: auto;
+.athlete-racer-art {
+  width: 5rem;
+  flex: 0 0 5rem;
+}
+.athlete-twists {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--stitch-gap-controls);
+}
+.athlete-twists > div {
+  max-width: 27rem;
 }
 .athlete-events {
   max-height: 20rem;
   overflow: auto;
 }
 @media (max-width: 700px) {
-  .athlete-board {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
   .athlete-card-grid {
     grid-template-columns: 1fr;
   }

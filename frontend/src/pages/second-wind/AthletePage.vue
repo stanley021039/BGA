@@ -5,6 +5,8 @@ import { readAthleteSnapshot } from '../../contracts/second-wind';
 import GameRoomPage from '../../components/GameRoomPage.vue';
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import AthleteScene from './AthleteScene.vue';
+import { athleteHero } from './art';
+import AthleteArt from './AthleteArt.vue';
 const athlete = useAthleteStore();
 const labels: Record<string, string> = {
   'draft-rolloff': '選秀先手擲骰',
@@ -58,8 +60,14 @@ const phase = computed(() =>
         { label: '獎分', value: '3／1、4／2、5／3、7／4' },
       ]"
       notice="名次獎分為使用者核准的測試值，後三場仍待原版數值核對。可加入測試 AI。"
-      ><template #art><strong>SECOND WIND</strong></template></RoomWaitingTemplate
-    >
+      ><template #art
+        ><AthleteArt
+          :src="athleteHero"
+          alt="Second Wind 原版選手衝線慶祝插畫"
+          :width="560"
+          :height="394"
+          eager /></template
+    ></RoomWaitingTemplate>
     <AthleteScene v-else-if="athlete.game" />
     <p v-else-if="athlete.state?.interrupted">有人離席，本局已中止；房主可重新開局。</p>
     <template #settings
