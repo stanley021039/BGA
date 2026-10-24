@@ -38,7 +38,7 @@
    ```
 
    `check`驗證版號、日期、最新CHANGELOG摘要與排序／唯一性及lock同步；帶base才會核對升版幅度。新增功能的驗收必須指定`--type minor`，不相容則major；未升版或幅度不足回非零。本機檢查選取原因，補適當回歸與必要驗收；回退全套時不得自行略過。完整 `npm test` 可由目前 head 同一個 commit 的 Linux 必要 CI 滿足（Windows 合併後追蹤，依 TESTING.md），不必在本機重跑；`npm test`前仍自動執行基本版號檢查，無Git目錄的發布包也可測試。詳 [測試分工](TESTING.md)。
-4. 本機受影響測試通過後，提交本批程式、版號及紀錄並開／更新 Draft PR；完成目前 head 同一 SHA 的完整 CI、兩輪審查與必要檢查後，才在該乾淨提交建立annotated tag：`git tag -a v1.1.0 -m "Release v1.1.0"`。CI須核對真正checkout SHA及所有必要平台成功，pending／舊head不算通過；base前進須整合、複驗及重跑新head的CI。tag指向受完整測試的程式提交；後续純驗收文件可另提交，不移動tag。沒有升產品版號的文件／測試工具整理不另打產品tag。工具不自動commit、tag、push、合併或部署。
+4. 本機受影響測試通過後，沿用需求確認時建立的 Issue；實作前若已有 `in progress`，須先提醒使用者確認是否重複開發，取得接續或分工確認；尚未標示時先加上標籤再實作。依 [AGENTS 六階段流程](../AGENTS.md)提交本批程式、版號及紀錄；第 4 階段可先 push 但不觸發 CI，交使用者驗收，第 5 階段完成兩輪審查與修正，第 6 階段才建立／更新原 PR 並啟動最終 head 的完整 CI。已有 PR 保持 Draft，延後 CI 的方式與人工驗收例外依 AGENTS。完成同一 SHA 的完整 CI及必要檢查後，才在該乾淨提交建立annotated tag：`git tag -a v1.1.0 -m "Release v1.1.0"`。CI須核對真正checkout SHA及所有必要平台成功，pending／舊head不算通過；base前進須整合、複驗及更新兩輪審查，再跑新head的CI。tag指向受完整測試的程式提交；後续純驗收文件可另提交，不移動tag。沒有升產品版號的文件／測試工具整理不另打產品tag。工具不自動commit、tag、push、合併或部署。
 5. 依現有授權發PR／發布；部署封存tag或其固定commit，排除本機私人文件。使用隔離候選測試、資料備份／必要的migration預演及健康檢查；有DB變更時不能只回退程式tag。
 6. 正式切換後驗`/api/version`、設定版號、受影響資源及既有帳戶，部署文件記錄版號、固定commit、測試數、備份、資料檢查與限制。未完成公開驗收只能標候選或待驗。
 

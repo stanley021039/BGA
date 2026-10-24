@@ -25,7 +25,7 @@ async function redeem() {
 </script>
 <template>
   <section class="page-panel achievement-redemption" aria-labelledby="rewardCodeHeading">
-    <h2 id="rewardCodeHeading">獎勵兌換</h2>
+    <h2 id="rewardCodeHeading">成就兌換碼</h2>
     <p>兌換只開放對應獎勵，成就仍需實際遊玩達成。</p>
     <form @submit.prevent="redeem" :aria-busy="mutation.pending.value">
       <label for="achievementRewardCode"

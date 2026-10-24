@@ -37,11 +37,11 @@ npm run test:affected -- --base origin/main
 
 ## CI 與提交身分
 
-1. 本機執行受影響測試，記錄指令、選取範圍、head／工作區與結果；未提交狀態的測試不是另一個 commit 的 CI 證據。
-2. 提交後開／更新 Draft PR；`.github/workflows/ci.yml` 對 PR 明確 checkout `pull_request.head.sha`，push／手動執行使用該事件 SHA。CI 會印出並核對真正受測 SHA，PR 在 Linux Node22 跑完整 `npm test`；push 到 main 與手動執行另跑 Windows Node22 完整測試，不改成受影響選取。
-3. 核對目前 PR head SHA、workflow／job 及實際 checkout SHA；Linux 必要檢查 `test-linux-node22` 的完整測試必須成功；Windows 不擋 PR 合併。舊 head 的通過、pending、取消、跳過、未設定或無法查看均不算通過。本機不必再重跑相同完整套件。
-4. 兩輪審查分別完成並留下 base／head 與證據。修正後複驗受影響部分；head 改變後等待新 head 的完整 CI，更新受影響的審查結論。
-5. 合併前 fetch main。若 base 前進，整合新 main、複驗受影響部分、跑新 head 的 CI 並更新兩輪審查，避免只驗舊分支而漏掉整合問題。所有必要檢查通過且無未解重大問題後才轉 Ready／合併。
+1. 需求確認後建立或沿用 Issue，實作開始前檢查 `in progress`：若已存在，先提醒使用者確認是否重複開發，確認可接續或分工後才開始；尚未標示時先加上標籤。本機執行受影響測試，記錄指令、選取範圍、head／工作區與結果；未提交狀態的測試不是另一個 commit 的 CI 證據。
+2. 第 4 階段可先 commit、push 到功能分支，交使用者驗收，但不觸發 CI；已有 PR 保持 Draft。已有 PR 的更新提交使用 `[skip ci]`，實際方式與例外依 [AGENTS.md](../AGENTS.md)。只有使用者明確要求「直接提 PR」或「合併」才略過前置人工驗收。
+3. 第 5 階段完成規格及程式品質兩輪審查，分別留下同一組 base／head 與證據；修正後複驗受影響部分並更新審查。影響已驗收行為時先重做人工驗收，此階段仍不觸發 CI。
+4. 第 6 階段才以不含跳過標記的最終提交建立或更新原 PR，啟動完整 CI；只有階段切換時可用空提交，記錄程式樹相同並將審查更新至最終 head。`.github/workflows/ci.yml` 對 PR 明確 checkout `pull_request.head.sha`，push／手動執行使用該事件 SHA。核對目前 PR head、workflow／job 與真正 checkout SHA；Linux 必要檢查 `test-linux-node22` 必須完整成功。Windows 在 main push／手動執行另跑，不擋 PR 合併。舊 head、pending、取消、跳過、缺少或無法查看均不算通過，本機不必重跑相同完整套件。CI 失敗後先修正、複驗及更新審查，再跑新 head 的 CI。
+5. 合併前 fetch main。若 base 前進，整合新 main、複驗受影響部分並更新兩輪審查，再跑新 head 的 CI；影響已驗收行為時先重新驗收。所有必要檢查通過且無未解重大問題後才轉 Ready／合併。
 
 無可用 CI 時不能把受影響測試當作全套驗證。可先完成本機工作並保持 Draft；若需改用本機全套作為例外，必須記錄原因、環境、固定 SHA、缺少的平台與風險並由使用者明確決定，不能自行宣稱符合 Linux 必要 CI 門檻。
 
@@ -57,7 +57,7 @@ main 的 Windows job 失敗時，維護者先查看該 run 的 SHA、日誌與 L
 
 ## 版號與 tag
 
-產品升版依 [打版規範](RELEASE-POLICY.md)；工具不自動判斷產品相容性。先在本機完成受影響測試與版號檢查，再提交開 Draft PR；完成同一 head 的完整 CI、兩輪審查及必要驗收後，才在該受測、乾淨提交建立不可覆寫 tag。已改 head 或只測過未提交程式時不能提前打 tag。部署與正式資料操作仍須另有明確授權。
+產品升版依 [打版規範](RELEASE-POLICY.md)；工具不自動判斷產品相容性。先在本機完成受影響測試與版號檢查，依六階段流程提交／推送、人工驗收、兩輪審查，最後才啟動同一 head 的完整 CI；全部完成後，才在該受測、乾淨提交建立不可覆寫 tag。已改 head 或只測過未提交程式時不能提前打 tag。部署與正式資料操作仍須另有明確授權。
 
 ## 備份圖片配額與輕量 fixture
 

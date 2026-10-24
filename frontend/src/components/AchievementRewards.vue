@@ -67,7 +67,12 @@ function apply(kind: 'barrage' | 'media', id: string) {
       :error="mutation.failed.value || !!resource.error.value" /><UiButton
       v-if="resource.error.value"
       label="重新讀取獎勵"
-      @click="resource.load()" /><div class="vue-reward-grid"
+      @click="resource.load()" /><div
+      class="vue-reward-grid"
+      role="region"
+      aria-label="專屬成就外觀獎勵清單"
+      :aria-busy="resource.loading.value"
+      tabindex="0"
       ><article
         v-for="reward in resource.data.value || []"
         :key="reward.frameId"

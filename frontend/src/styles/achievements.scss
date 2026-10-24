@@ -213,8 +213,9 @@
   }
 }
 
-// Stable content and retry slots preserve filter/control positions across states.
-.achievements-page .achievement-groups {
+// Both collections scroll within the same bounded content area.
+.achievements-page .achievement-groups,
+.achievements-page .vue-reward-grid {
   block-size: clamp(20rem, 55dvh, 42rem);
   overflow-y: auto;
   scrollbar-gutter: stable;

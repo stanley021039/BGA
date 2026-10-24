@@ -150,7 +150,7 @@ function play(id: string) {
           label="重新讀取攻擊設定"
           :pending="loadPending"
           @click="loadLoadout" /></div></div
-    ><div class="attack-preview" aria-label="攻擊特效預覽"
+    ><div class="attack-preview attack-preview-main" aria-label="攻擊特效預覽"
       ><AttackArtwork
         :effect="preview"
         :play-key="revision"
@@ -159,7 +159,7 @@ function play(id: string) {
       /><span class="attack-preview-label">{{
         attackEffects.find((e) => e.id === preview)?.label
       }}</span></div
-    ><div class="attack-effect-grid" role="group" aria-label="攻擊特效預覽選擇"
+    ><div class="attack-effect-grid" role="group" aria-label="攻擊特效預覽選擇" tabindex="0"
       ><UiChoiceCard
         v-for="effect in attackEffects"
         :key="effect.id"
@@ -227,6 +227,12 @@ function play(id: string) {
   border-radius: var(--stitch-radius-panel);
   background: var(--stitch-artwork-preview-bg);
 }
+.attack-preview-main {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  block-size: clamp(140px, 28dvh, 240px);
+}
 .attack-preview-label {
   position: absolute;
   inset-inline-start: var(--stitch-space-12);
@@ -237,8 +243,14 @@ function play(id: string) {
 .attack-effect-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
   gap: var(--stitch-gap-controls);
   padding: var(--stitch-space-8);
+  max-block-size: min(42dvh, 440px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 .attack-effect-heading {
   display: flex;
