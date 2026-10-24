@@ -11,6 +11,7 @@ const limits = {
   bluff: 9,
   quacks: 8,
   ceo: 6,
+  'second-wind': 6,
 };
 
 function listRooms(rooms, seats, kickedUsers, userId) {
@@ -28,6 +29,7 @@ function listRooms(rooms, seats, kickedUsers, userId) {
         'bluff',
         'quacks',
         'ceo',
+        'second-wind',
       ].includes(type)
         ? room.activePlayers().length
         : room.players.length;
@@ -52,6 +54,7 @@ function listRooms(rooms, seats, kickedUsers, userId) {
                 'bluff',
                 'quacks',
                 'ceo',
+                'second-wind',
               ].includes(type) &&
                 room.phase === 'finished'))));
       return {

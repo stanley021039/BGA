@@ -41,14 +41,14 @@ function recruit(game, playerIds = ids) {
   rolloff(game, playerIds);
 }
 
-test('Second Wind catalog records 36 original racers and 13 Twist effects without claiming implementation', () => {
+test('Second Wind catalog records 36 original racers and 13 Twist effects with candidate implementation status and original-source awards', () => {
   assert.equal(racers.length, 36);
   assert.equal(twists.length, 13);
   assert.equal(new Set(racers.map((racer) => racer.id)).size, 36);
   assert.equal(new Set(twists.map((twist) => twist.id)).size, 13);
   for (const entry of [...racers, ...twists]) {
     assert.match(entry.source, /^user-rulebook:pdf-page-2[4-9]$/);
-    assert.equal(entry.implementation, 'pending');
+    assert.equal(entry.implementation, 'candidate');
     assert.ok(entry.summary.length > 10);
   }
   assert.deepEqual(

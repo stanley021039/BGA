@@ -138,5 +138,10 @@
     "id": "ceo",
     "document": "ceo.html",
     "route": "/ceo"
+  },
+  {
+    "id": "second-wind",
+    "document": "second-wind.html",
+    "route": "/second-wind"
   }
 ]

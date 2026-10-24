@@ -74,9 +74,17 @@ function createRoomInvitations({
       (room.type || 'poker') === 'poker' ||
       room.type === 'draw' ||
       room.phase === 'waiting' ||
-      (['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks', 'ceo'].includes(
-        room.type,
-      ) &&
+      ([
+        'gift',
+        'trpg',
+        'telephone',
+        'musicquiz',
+        'minimal',
+        'bluff',
+        'quacks',
+        'ceo',
+        'second-wind',
+      ].includes(room.type) &&
         room.phase === 'finished');
     const canInvite = roomHasSpace && joinPhase,
       reason = !roomHasSpace

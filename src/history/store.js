@@ -24,6 +24,7 @@ const finished = (r) =>
     'bluff',
     'quacks',
     'ceo',
+    'second-wind',
   ].includes(r.type)
     ? r.phase === 'finished'
     : r.phase === 'showdown';
@@ -92,6 +93,7 @@ function importedSessionHeader(file) {
         'bluff',
         'quacks',
         'ceo',
+        'second-wind',
       ].includes(header.type) &&
       typeof header.room === 'string' &&
       /^[a-f0-9]{6}$/i.test(header.room) &&
@@ -396,29 +398,31 @@ class HistoryStore {
             __dirname,
             '..',
             'games',
-            type === 'ceo'
-              ? 'ceo-room.js'
-              : type === 'quacks'
-                ? 'quacks.js'
-                : type === 'bluff'
-                  ? 'bluff.js'
-                  : type === 'musicquiz'
-                    ? 'musicquiz.js'
-                    : type === 'minimal'
-                      ? 'minimal.js'
-                      : type === 'telephone'
-                        ? 'telephone.js'
-                        : type === 'trpg'
-                          ? 'trpg.js'
-                          : type === 'majority'
-                            ? 'majority.js'
-                            : type === 'thunder'
-                              ? 'thunder.js'
-                              : type === 'gift'
-                                ? 'gift.js'
-                                : type === 'draw'
-                                  ? 'draw-guess.js'
-                                  : 'poker.js',
+            type === 'second-wind'
+              ? 'second-wind/room.js'
+              : type === 'ceo'
+                ? 'ceo-room.js'
+                : type === 'quacks'
+                  ? 'quacks.js'
+                  : type === 'bluff'
+                    ? 'bluff.js'
+                    : type === 'musicquiz'
+                      ? 'musicquiz.js'
+                      : type === 'minimal'
+                        ? 'minimal.js'
+                        : type === 'telephone'
+                          ? 'telephone.js'
+                          : type === 'trpg'
+                            ? 'trpg.js'
+                            : type === 'majority'
+                              ? 'majority.js'
+                              : type === 'thunder'
+                                ? 'thunder.js'
+                                : type === 'gift'
+                                  ? 'gift.js'
+                                  : type === 'draw'
+                                    ? 'draw-guess.js'
+                                    : 'poker.js',
           ),
           'utf8',
         );
@@ -635,8 +639,9 @@ class HistoryStore {
           ctx.current = null;
         } else if (finished(room)) {
           m.status =
-            ['telephone', 'musicquiz', 'minimal', 'bluff', 'quacks', 'ceo'].includes(room.type) &&
-            room.interrupted
+            ['telephone', 'musicquiz', 'minimal', 'bluff', 'quacks', 'ceo', 'second-wind'].includes(
+              room.type,
+            ) && room.interrupted
               ? 'interrupted'
               : 'finished';
           m.endedAt = row.at;

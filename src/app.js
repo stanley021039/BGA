@@ -63,6 +63,7 @@ const { Room } = require('./games/poker'),
   { GiftRoom } = require('./games/gift');
 const { TrpgRoom } = require('./games/trpg');
 const { QuacksRoom } = require('./games/quacks');
+const { SecondWindRoom } = require('./games/second-wind/room');
 const { CeoRoom } = require('./games/ceo-room');
 const { BluffRoom } = require('./games/bluff');
 const { TelephoneRoom } = require('./games/telephone');
@@ -1358,7 +1359,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind)$/.test(
               page || '',
             )
           )
@@ -1634,6 +1635,11 @@ function initializeApp(config, dataLock, acquired) {
         }
         if (url.pathname === '/api/create' && req.method === 'POST') {
           // CEO has a Vue-only page; legacy hosts do not expose it by default.
+          if (
+            data.type === 'second-wind' &&
+            !(config.secondWindEnabled ?? config.frontendEnabled === true)
+          )
+            throw new HttpError(400, 'GAME_NOT_ENABLED', '運動員尚未啟用');
           if (data.type === 'ceo' && !(config.ceoEnabled ?? config.frontendEnabled === true))
             throw new HttpError(400, 'GAME_NOT_ENABLED', 'CEO 仍在開發，尚未開放建立房間');
           if (pendingAchievementUnits.size >= 4096)
@@ -1659,6 +1665,7 @@ function initializeApp(config, dataLock, acquired) {
               'bluff',
               'quacks',
               'ceo',
+              'second-wind',
             ].includes(data.type)
           )
             throw new HttpError(400, 'INVALID_GAME', '不支援的遊戲');
@@ -1671,7 +1678,8 @@ function initializeApp(config, dataLock, acquired) {
           do {
             code = randomBytes(3).toString('hex').toUpperCase();
           } while (rooms.has(code));
-          const ceo = data.type === 'ceo',
+          const secondWind = data.type === 'second-wind',
+            ceo = data.type === 'ceo',
             quacks = data.type === 'quacks',
             bluff = data.type === 'bluff',
             musicquiz = data.type === 'musicquiz',
@@ -1682,56 +1690,60 @@ function initializeApp(config, dataLock, acquired) {
             majority = data.type === 'majority',
             gift = data.type === 'gift';
           const room = new (
-            ceo
-              ? CeoRoom
-              : quacks
-                ? QuacksRoom
-                : bluff
-                  ? BluffRoom
-                  : musicquiz
-                    ? MusicQuizRoom
-                    : minimal
-                      ? MinimalRoom
-                      : telephone
-                        ? TelephoneRoom
-                        : trpg
-                          ? TrpgRoom
-                          : draw
-                            ? DrawGuessRoom
-                            : gift
-                              ? GiftRoom
-                              : majority
-                                ? MajorityRoom
-                                : thunder
-                                  ? ThunderRoom
-                                  : Room
+            secondWind
+              ? SecondWindRoom
+              : ceo
+                ? CeoRoom
+                : quacks
+                  ? QuacksRoom
+                  : bluff
+                    ? BluffRoom
+                    : musicquiz
+                      ? MusicQuizRoom
+                      : minimal
+                        ? MinimalRoom
+                        : telephone
+                          ? TelephoneRoom
+                          : trpg
+                            ? TrpgRoom
+                            : draw
+                              ? DrawGuessRoom
+                              : gift
+                                ? GiftRoom
+                                : majority
+                                  ? MajorityRoom
+                                  : thunder
+                                    ? ThunderRoom
+                                    : Room
           )(
             code,
             String(
               data.roomName ||
-                (ceo
-                  ? '王牌執行長好友局'
-                  : quacks
-                    ? '郎中闖江湖好友局'
-                    : bluff
-                      ? '瞎掰王好友局'
-                      : musicquiz
-                        ? '猜歌挑戰好友局'
-                        : minimal
-                          ? '極簡畫家好友局'
-                          : telephone
-                            ? '傳情畫意好友局'
-                            : trpg
-                              ? '霧港鐘聲冒險隊'
-                              : draw
-                                ? '你畫我猜好友局'
-                                : gift
-                                  ? '送禮達人好友局'
-                                  : majority
-                                    ? '同頻俱樂部'
-                                    : thunder
-                                      ? '末路狂飆好友局'
-                                      : '深夜好友局'),
+                (secondWind
+                  ? '運動員 Second Wind'
+                  : ceo
+                    ? '王牌執行長好友局'
+                    : quacks
+                      ? '郎中闖江湖好友局'
+                      : bluff
+                        ? '瞎掰王好友局'
+                        : musicquiz
+                          ? '猜歌挑戰好友局'
+                          : minimal
+                            ? '極簡畫家好友局'
+                            : telephone
+                              ? '傳情畫意好友局'
+                              : trpg
+                                ? '霧港鐘聲冒險隊'
+                                : draw
+                                  ? '你畫我猜好友局'
+                                  : gift
+                                    ? '送禮達人好友局'
+                                    : majority
+                                      ? '同頻俱樂部'
+                                      : thunder
+                                        ? '末路狂飆好友局'
+                                        : '深夜好友局'),
             ).slice(0, 24),
           );
           if (quacks) room.configure(room.host, data);
@@ -2382,6 +2394,7 @@ function initializeApp(config, dataLock, acquired) {
                   'bluff',
                   'quacks',
                   'ceo',
+                  'second-wind',
                 ].includes(room.type) ||
                 !['waiting', 'showdown'].includes(room.phase) ||
                 p.stack > 0
@@ -2675,6 +2688,7 @@ function initializeApp(config, dataLock, acquired) {
         '/poker': 'poker.html',
         '/race': 'race.html',
         '/ceo': 'ceo.html',
+        '/second-wind': 'second-wind.html',
         '/rules': 'rules.html',
         '/history': 'history.html',
         '/history.js': 'history.js',
@@ -2742,7 +2756,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -2863,6 +2877,13 @@ function initializeApp(config, dataLock, acquired) {
         res.writeHead(404);
         return res.end();
       }
+      if (
+        (url.pathname === '/second-wind' || roomPath?.[1] === 'second-wind') &&
+        (!frontend || config.secondWindEnabled === false)
+      ) {
+        res.writeHead(404);
+        return res.end();
+      }
       const file = roomPath ? roomPath[1] + '.html' : files[url.pathname];
       if (!file) {
         res.writeHead(404);
@@ -2891,7 +2912,8 @@ function initializeApp(config, dataLock, acquired) {
               file === 'minimal.html' ||
               file === 'bluff.html' ||
               file === 'quacks.html' ||
-              file === 'ceo.html'
+              file === 'ceo.html' ||
+              file === 'second-wind.html'
                 ? '/login?next=' + encodeURIComponent(url.pathname)
                 : '/login',
           });

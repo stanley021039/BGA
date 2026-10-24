@@ -339,7 +339,7 @@ const racers = Object.freeze(
       summary,
       notes,
       source: `user-rulebook:pdf-page-${page}`,
-      implementation: 'pending',
+      implementation: 'candidate',
     }),
   ),
 );
@@ -365,7 +365,7 @@ const twists = Object.freeze(
       id,
       summary,
       source: `user-rulebook:pdf-page-${page}`,
-      implementation: 'pending',
+      implementation: 'candidate',
     }),
   ),
 );

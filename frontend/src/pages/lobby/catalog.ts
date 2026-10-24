@@ -11,6 +11,16 @@ export interface GameCard {
 }
 export const gameCards: GameCard[] = [
   {
+    id: 'second-wind',
+    title: '運動員 Second Wind',
+    english: 'SECOND WIND',
+    seats: '3–6 人',
+    category: '競速・能力',
+    description: '招募四名選手，連賽四場，讓能力改寫賽局。',
+    art: 'ceo',
+    guide: '/second-wind?learn=1',
+  },
+  {
     id: 'ceo',
     title: '王牌執行長',
     english: '1ST CEO',

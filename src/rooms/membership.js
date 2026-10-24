@@ -15,9 +15,17 @@ function rejoinPlayer(room, playerId, name) {
   const player = room.players.find((p) => p.id === playerId && p.kicked);
   if (!player) return null;
   if (
-    ['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks', 'ceo'].includes(
-      room.type,
-    ) &&
+    [
+      'gift',
+      'trpg',
+      'telephone',
+      'musicquiz',
+      'minimal',
+      'bluff',
+      'quacks',
+      'ceo',
+      'second-wind',
+    ].includes(room.type) &&
     !['waiting', 'finished'].includes(room.phase)
   )
     throw Error('本局已開始，請等待下一局');
@@ -36,6 +44,7 @@ function rejoinPlayer(room, playerId, name) {
     bluff: 9,
     quacks: 8,
     ceo: 6,
+    'second-wind': 6,
   };
   if (
     room.players.filter((p) => !p.kicked).length >=

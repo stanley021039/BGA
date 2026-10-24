@@ -83,6 +83,7 @@ function startRoomScheduler({
             'bluff',
             'quacks',
             'ceo',
+            'second-wind',
           ].includes(r.type)
         )
           continue;
