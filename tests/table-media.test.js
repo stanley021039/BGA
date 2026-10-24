@@ -2413,23 +2413,6 @@ test('resize and queue handles reject nonprimary starts while primary gestures r
   assert.equal(handle.hasPointerCapture(3), false);
 });
 
-test('queue handle column follows the shared scalable control size instead of a fixed 44px track', () => {
-  const css = require('node:fs')
-      .readFileSync(
-        require('node:path').join(__dirname, '../public/shared/table-media.css'),
-        'utf8',
-      )
-      .replace(/\s+/g, ' ')
-      .replace(/\s*([{}:;,>])\s*/g, '$1'),
-    rule = css.match(/\.table-media-queue-item\{([^}]+)\}/)?.[1];
-  assert.ok(rule);
-  assert.match(
-    rule,
-    /grid-template-columns:\s*var\(--ui-control-height,\s*44px\)\s+minmax\(0,1fr\)\s+auto/,
-  );
-  assert.doesNotMatch(rule, /grid-template-columns:\s*44px\s/);
-});
-
 test('one player contains enqueue forms and compact single-line queue rows without a second window or entry', async () => {
   const state = mediaSnapshot({ queue: [queued('a'), queued('b', 'video')] }),
     { f } = mutable(state);
@@ -2713,62 +2696,6 @@ test('personal video sizing survives viewport growth and later opens while reset
   assert.equal(posts(peer).length, 0);
 });
 
-test('the video budget counts visible gaps and changes with the actual control and status heights', async () => {
-  const f = mediaHarness();
-  f.window.innerHeight = 1109;
-  await f.update(roomState());
-  const heights = {
-    mediaWindowBar: 64,
-    mediaStatus: 0,
-    mediaCurrentInfo: 46,
-    mediaTimeline: 53,
-    mediaControlRow: 44,
-    mediaPlaybackStatus: 21,
-  };
-  for (const [id, height] of Object.entries(heights)) f.node(id).rect.height = height;
-  f.window.getComputedStyle = (node) => ({
-    display:
-      node.hidden || (['mediaStatus', 'mediaPlaybackStatus'].includes(node.id) && !node.textContent)
-        ? 'none'
-        : 'block',
-    paddingTop: '12px',
-    paddingBottom: '12px',
-    rowGap: '8px',
-    overflow: 'visible',
-  });
-  await f.click('mediaConsentAccept');
-  f.players[0].ready();
-  f.players[0].state(1);
-  await f.flushFrames();
-  const dialog = f.node('tableMedia');
-  assert.equal(
-    parseFloat(dialog.style.getPropertyValue('--media-player-height')),
-    1093 - (64 + 24 + 2) - (46 + 53 + 44 + 24),
-  );
-  f.players[0].blocked();
-  await f.flushFrames();
-  assert.equal(
-    parseFloat(dialog.style.getPropertyValue('--media-player-height')),
-    1093 - (64 + 24 + 2) - (46 + 53 + 44 + 21 + 32),
-  );
-  f.node('mediaControlRow').rect.height = 96;
-  f.window.dispatch('resize');
-  await f.flushFrames();
-  assert.equal(
-    parseFloat(dialog.style.getPropertyValue('--media-player-height')),
-    1093 - (64 + 24 + 2) - (46 + 53 + 96 + 21 + 32),
-  );
-  assert.equal(posts(f).length, 0);
-  const css = require('node:fs')
-    .readFileSync(require('node:path').join(__dirname, '../public/shared/table-media.css'), 'utf8')
-    .replace(/\s+/g, ' ')
-    .replace(/\s*([{}:;,>])\s*/g, '$1');
-  assert.match(css, /\.media-video-active \.table-media-body\{[^}]*display:flex[^}]*flex:1/);
-  assert.match(css, /\.media-video-active \.table-media-primary\{[^}]*flex:1[^}]*min-height:0/);
-  assert.match(css, /\.media-video-active \.table-media-screen\{[^}]*flex:1 0 210px/);
-  assert.match(css, /\.media-video-active \.table-media-screen>#mediaPlayer\{height:100%/);
-});
-
 test('narrow tall video fills its viewport while a short viewport keeps controls and rejects undersized playback', async () => {
   const f = mediaHarness();
   f.window.innerWidth = 390;
@@ -3026,48 +2953,6 @@ test('late native time reads cannot seek a new session, room, demoted role, clos
     await f.flush();
     assert.equal(posts(f).filter((request) => request.body.action === 'seek').length, 0, change);
   }
-});
-
-test('a timed out read releases its own job and a late value cannot clear or send the newer pending read', async () => {
-  const { f } = mutable(mediaSnapshot());
-  await f.update(roomState());
-  await f.click('mediaConsentAccept');
-  const old = deferred(),
-    fresh = deferred(),
-    player = f.players[0];
-  player.getCurrentTime = () => old.promise;
-  player.ready();
-  const first = f.node('mediaPublishPosition').onclick();
-  await f.advance(2001);
-  await first;
-  assert.equal(f.node('mediaPublishPosition').disabled, false);
-  assert.match(f.node('mediaPlaybackStatus').textContent, /讀取.*重試/);
-  player.getCurrentTime = () => fresh.promise;
-  const second = f.node('mediaPublishPosition').onclick();
-  await f.flush();
-  old.resolve(33);
-  await f.flush();
-  assert.equal(f.node('mediaPublishPosition').disabled, true);
-  assert.equal(posts(f).length, 0);
-  fresh.resolve(44);
-  await second;
-  assert.equal(posts(f).length, 1);
-  assert.equal(posts(f)[0].body.positionSec, 44);
-  assert.equal(f.node('mediaPublishPosition').disabled, false);
-  const css = require('node:fs')
-    .readFileSync(require('node:path').join(__dirname, '../public/shared/table-media.css'), 'utf8')
-    .replace(/\s+/g, ' ')
-    .replace(/\s*([{}:;,>])\s*/g, '$1');
-  assert.match(css, /@media\s*\(min-width:621px\)\s*and\s*\(pointer:fine\)/);
-  assert.match(
-    css,
-    /\.media-video-active #mediaControlRow[^}]*--media-control-size:calc\(var\(--ui-control-height,44px\)\s*\*\s*0?\.81818\)/,
-  );
-  assert.match(
-    css,
-    /#mediaControlRow \.ui-icon-button\{[^}]*min-width:var\(--media-control-size\)[^}]*min-height:var\(--media-control-size\)/,
-  );
-  assert.match(css, /#mediaControlRow \.ui-icon\{[^}]*width:var\(--media-icon-size\)/);
 });
 
 test('queue replacement and integrated player resizing preserve the inline scroll position', async () => {

@@ -131,30 +131,6 @@ test('leaving during topic entry interrupts without inventing topics or duplicat
   assert.equal(room.books[0].pages[0].text, '已送出的主題');
   assert.equal(room.books[2].pages[0].skipped, true);
 });
-test('existing history hydration replaces page zero with custom and timeout topics', () => {
-  const { room, players, command, setNow } = fixture();
-  const frames = [{ state: JSON.parse(JSON.stringify(room.historyState())) }];
-  command(players[0], '玩家原創主題');
-  frames.push({ state: JSON.parse(JSON.stringify(room.historyState())) });
-  room.saveDraft(players[1].id, {
-    stepId: room.stepId,
-    requestId: randomUUID(),
-    text: '逾時草稿主題',
-  });
-  setNow(room.deadline);
-  room.auto();
-  frames.push({ state: JSON.parse(JSON.stringify(room.historyState())) });
-  const source = fs.readFileSync(require.resolve('../public/history.js'), 'utf8');
-  const hydrate = source.slice(
-    source.indexOf('function hydrateTelephoneFrames('),
-    source.indexOf('function telephone(s)'),
-  );
-  vm.runInNewContext(hydrate + '\nhydrateTelephoneFrames(frames);', { frames });
-  assert.equal(frames.at(-1).state.books[0].pages[0].text, '玩家原創主題');
-  assert.equal(frames.at(-1).state.books[1].pages[0].text, '逾時草稿主題');
-  assert.equal(frames.at(-1).state.books[2].pages[0].topicFallback, true);
-});
-
 test('blank opening topics use only the configured fallback source', () => {
   let now = 1000;
   const room = new TelephoneRoom(

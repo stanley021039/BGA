@@ -102,17 +102,11 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book history and i
   for (const path of ['/telephone/' + code, '/telephone?learn=1']) {
     const unauth = await fetch(base + path, { redirect: 'manual' });
     assert.equal(unauth.status, 302);
+    // API-only app: pages come from the Vue build (#233).
     const page = await fetch(base + path, { headers: { Cookie: cookie } });
-    assert.equal(page.status, 200);
-    assert.match(await page.text(), /只看上一頁/);
+    assert.equal(page.status, 503);
   }
-  for (const path of [
-    '/telephone.js',
-    '/telephone.css',
-    '/shared/stroke-canvas.js',
-    '/shared/drawing-board.css',
-    '/shared/countdown-bar.js',
-  ])
+  for (const path of ['/shared/stroke-canvas.js', '/shared/countdown-bar.js'])
     assert.equal((await fetch(base + path)).status, 200);
   await post('leave', { code });
 });

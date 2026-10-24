@@ -1,5 +1,0 @@
-/* Quacks presentation adapter. Shared waiting is composed by Stitch;
- * active-game paint and geometry have separate owners. Keep theme before layout.
- */
-@import url('./quacks-theme.css');
-@import url('./quacks-layout.css');

@@ -47,13 +47,16 @@ test('appearance follows system by default, reacts live and boots before styles 
   assert.equal(f.document.documentElement.dataset.colorScheme, 'dark');
   f.system(false);
   assert.equal(f.api.get().scheme, 'light');
-  const directory = path.join(__dirname, '../public'),
+  // Every page is a Vue shell in frontend/pages/<id>/index.html (#233).
+  const directory = path.join(__dirname, '../frontend/pages'),
     pages = fs
       .readdirSync(directory)
-      .filter((name) => name.endsWith('.html'))
-      .map((name) => ({ name, html: fs.readFileSync(path.join(directory, name), 'utf8') }))
+      .map((id) => ({
+        name: id,
+        html: fs.readFileSync(path.join(directory, id, 'index.html'), 'utf8'),
+      }))
       .filter((page) => page.html.includes('data-visual-theme="playful"'));
-  assert.equal(pages.length, 28);
+  assert.equal(pages.length, 27);
   for (const { name, html } of pages) {
     assert.equal((html.match(/src="\/shared\/color-scheme.js"/g) || []).length, 1, name);
     assert.ok(html.indexOf('/shared/color-scheme.js') < html.indexOf('rel="stylesheet"'), name);

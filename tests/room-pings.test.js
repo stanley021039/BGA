@@ -388,7 +388,7 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
       ).status,
       403,
     );
-    for (const asset of ['room-pings.js', 'ping-model.js', 'room-pings.css'])
+    for (const asset of ['ping-model.js', 'room-pings.css'])
       assert.equal((await fetch(base + '/shared/' + asset)).status, 200);
     for (const type of ['ping', 'attention', 'question', 'help', 'look']) {
       const asset = 'ping-' + type + '.wav',
