@@ -1,4 +1,4 @@
-import { computed, onScopeDispose, ref, type Ref } from 'vue';
+import { computed, onScopeDispose, ref, watch, type Ref } from 'vue';
 
 interface Point {
   left: number;
@@ -34,7 +34,8 @@ export function useMediaWindow(
     left: box.value.left + 'px',
     top: box.value.top + 'px',
     width: box.value.width + 'px',
-    height: box.value.height + 'px',
+    height: mode.value === 'bar' ? '56px' : 'auto',
+    maxHeight: Math.max(0, innerHeight - box.value.top - 8) + 'px',
   }));
   let pointer: {
     id: number;
@@ -47,23 +48,22 @@ export function useMediaWindow(
     size: Size | null;
   } | null = null;
   const edges = [
-    ['n', '上邊'],
-    ['s', '下邊'],
     ['w', '左邊'],
     ['e', '右邊'],
-    ['nw', '左上角'],
-    ['ne', '右上角'],
-    ['sw', '左下角'],
-    ['se', '右下角'],
   ];
+  function contentHeight() {
+    if (mode.value === 'bar') return 56;
+    const element = node.value;
+    if (!element?.open) return 0;
+    const content = element.querySelector<HTMLElement>('.vue-media-content');
+    return (
+      element.getBoundingClientRect().height +
+      (content ? Math.max(0, content.scrollHeight - content.clientHeight) : 0)
+    );
+  }
   function viewport() {
     const header = document.querySelector('[data-site-header]')?.getBoundingClientRect();
-    const preferred =
-      mode.value === 'bar'
-        ? 56
-        : mode.value === 'compact'
-          ? 280
-          : Math.max(520, size?.height || 720);
+    const preferred = contentHeight() || (mode.value === 'compact' ? 280 : 520);
     const reserved = Math.min(preferred, Math.max(0, innerHeight - 16));
     // A tall mobile room header must not consume the floating player's area.
     // Prefer below-header placement only when the complete window still fits.
@@ -85,14 +85,7 @@ export function useMediaWindow(
           ? 360
           : Math.max(Math.min(340, view.width), size?.width || Math.min(430, view.width)),
     );
-    const height = Math.min(
-      view.height,
-      bar
-        ? 56
-        : compact
-          ? 280
-          : Math.max(Math.min(520, view.height), size?.height || Math.min(720, view.height)),
-    );
+    const height = Math.min(view.height, contentHeight() || (bar ? 56 : compact ? 280 : 520));
     box.value = {
       width,
       height,
@@ -236,9 +229,24 @@ export function useMediaWindow(
     cancel();
     layout();
   };
+  const contentObserver =
+    typeof ResizeObserver === 'function'
+      ? new ResizeObserver(() => {
+          if (opened.value && !pointer && node.value?.open) layout();
+        })
+      : null;
+  watch(
+    node,
+    (element) => {
+      contentObserver?.disconnect();
+      if (element) contentObserver?.observe(element);
+    },
+    { immediate: true, flush: 'post' },
+  );
   window.addEventListener('resize', resized);
   onScopeDispose(() => {
     release();
+    contentObserver?.disconnect();
     window.removeEventListener('resize', resized);
   });
   return { box, style, edges, layout, reset, cancel, start, move, end, cancelled, keyboard };

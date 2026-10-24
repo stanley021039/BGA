@@ -13,6 +13,7 @@ import UiButton from './UiButton.vue';
 import UiDialog from './UiDialog.vue';
 import StatusSlot from './StatusSlot.vue';
 import FramePicker from './FramePicker.vue';
+import { mediaFrameBackground, mediaFrameText } from '../services/media-frame';
 import OverflowText from './OverflowText.vue';
 import UiTabs from './UiTabs.vue';
 import UiIcon from './UiIcon.vue';
@@ -487,16 +488,10 @@ function syncFrame() {
         image = style.backgroundImage;
         line = opaque(style.borderTopColor) || line;
       }
-    const channels = /^#[a-f0-9]{6}$/i.test(ink)
-        ? [1, 3, 5].map((index) => parseInt(ink.slice(index, index + 2), 16))
-        : (ink.match(/[\d.]+/g) || []).slice(0, 3).map(Number),
-      light =
-        channels.length === 3 &&
-        channels.reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0) >
-          140;
+    background ||= mediaFrameBackground(ink);
     frameSurface.value = {
-      '--vue-media-background': background || (light ? '#14202b' : '#fffdf3'),
-      '--vue-media-text': ink,
+      '--vue-media-background': background,
+      '--vue-media-text': mediaFrameText(background, image),
       '--vue-media-line': line || ink,
       '--vue-media-image': image,
     };
