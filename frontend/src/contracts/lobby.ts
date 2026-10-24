@@ -26,6 +26,10 @@ export interface LobbyEmote {
   sound?: { url: string; durationMs: number };
 }
 export interface LobbyVisitor {
+  health?: number;
+  maxHealth?: number;
+  respawnAt?: number;
+  respawnRemainingMs?: number;
   id: string;
   name: string;
   image: string;
@@ -43,6 +47,8 @@ export interface LobbyVisitor {
   entrance: EntranceEffectId;
 }
 export interface LobbyAttack {
+  damage?: number;
+  critical?: boolean;
   effect: string;
   slot: 'q' | 'e';
   id: string;
@@ -152,6 +158,12 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
       };
     }
     return {
+      respawnRemainingMs: finite(item.respawnAt)
+        ? Math.max(0, item.respawnAt - Number(row.serverNow))
+        : 0,
+      health: finite(item.health) ? item.health : undefined,
+      maxHealth: finite(item.maxHealth) ? item.maxHealth : undefined,
+      respawnAt: finite(item.respawnAt) ? item.respawnAt : undefined,
       id: text(item.id),
       name: text(item.name),
       image: text(item.image),
@@ -199,6 +211,8 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
         )
           throw Error('大廳攻擊資料格式不正確。');
         return {
+          damage: finite(a.damage) ? Math.max(0, a.damage) : undefined,
+          critical: a.critical === true,
           effect: attackEffects.some((e) => e.id === a.effect) ? String(a.effect) : 'barrage',
           slot: a.slot === 'e' ? 'e' : 'q',
           id: text(a.id),

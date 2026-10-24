@@ -691,6 +691,24 @@ class HistoryStore {
       };
     return null;
   }
+  // Where a room's open match record stands, for restart persistence (#235).
+  state(room) {
+    const ctx = this.records.get(room);
+    return ctx?.current ? { matchId: ctx.current.id, seq: ctx.seq } : null;
+  }
+  // Reopens a match that startup marked interrupted only because the server
+  // stopped mid-game, so a restored room keeps writing to the same archive.
+  resume(room, saved) {
+    const ctx = this.records.get(room),
+      m = saved && this.metas.get(saved.matchId);
+    if (!ctx || !m || m.status !== 'interrupted' || m.endedAt || m.reason) return false;
+    m.status = 'playing';
+    ctx.current = m;
+    ctx.seq = Number.isSafeInteger(saved.seq) ? saved.seq : ctx.seq;
+    this.append(m.id, { kind: 'resumed', at: new Date().toISOString(), state: snapshot(room) });
+    this.saveMeta(m);
+    return true;
+  }
   interrupt(room, reason) {
     const ctx = this.records.get(room),
       m = ctx?.current;

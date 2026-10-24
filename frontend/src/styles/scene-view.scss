@@ -1,0 +1,38 @@
+body.scene-ui-hidden {
+  [data-site-header],
+  .vue-lobby,
+  .vue-game-workspace > :not(.vue-game-grid),
+  .vue-game-grid > :not(.vue-room-background),
+  .vue-room-side-panel,
+  .vue-lobby-presence {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .vue-room-background,
+  .lobby-backdrop {
+    visibility: visible;
+  }
+}
+.scene-view-restore {
+  position: fixed;
+  inset-block-start: var(--stitch-space-16);
+  inset-inline-end: var(--stitch-space-16);
+  z-index: 3000;
+}
+:root body[data-visual-theme]:has(.lobby-backdrop) #site-header-app[data-site-header] {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+:root body[data-visual-theme]:has(.vue-room-background) {
+  background: var(--stitch-surface-subtle) url('/assets/playful/lobby-room-dark.svg') center / cover
+    fixed;
+}
+:root[data-color-scheme='light'] body[data-visual-theme]:has(.vue-room-background) {
+  background-image: url('/assets/playful/lobby-room-light.svg');
+}
+:root body[data-visual-theme] .has-room-space .vue-room-background {
+  background: transparent;
+}

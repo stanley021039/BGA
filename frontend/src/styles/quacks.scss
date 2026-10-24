@@ -66,7 +66,7 @@
   &.is-critical {
     outline: 2px solid #d2a33b;
     box-shadow: 0 0 16px #dbad3855;
-    animation: vue-quacks-warning 1.8s ease-in-out infinite alternate;
+    animation: vue-quacks-warning 1.8s steps(22) infinite alternate;
   }
 }
 .vue-quacks-fortune-summary {

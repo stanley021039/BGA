@@ -153,7 +153,7 @@ body[data-visual-theme='playful']
 body[data-visual-theme='playful']
   :is(input, select, textarea):not([type='range']):not([type='checkbox']):not([type='radio']):not(
     [type='color']
-  ):not([type='file']):not(.ui-field-control) {
+  ):not([type='file']):not(.ui-field-control):not(.vue-room-media-themed *) {
   border: var(--play-border);
   border-radius: 10px;
   background: var(--play-paper);
@@ -177,8 +177,10 @@ body[data-visual-theme='playful'] :is(.market-shell, .collection-page) {
   background: var(--play-surface);
   color: var(--play-ink);
 }
-body[data-visual-theme='playful'] input:not(.ui-field-control)::placeholder,
-body[data-visual-theme='playful'] textarea:not(.ui-field-control)::placeholder {
+body[data-visual-theme='playful']
+  input:not(.ui-field-control):not(.vue-room-media-themed *)::placeholder,
+body[data-visual-theme='playful']
+  textarea:not(.ui-field-control):not(.vue-room-media-themed *)::placeholder {
   color: var(--play-muted);
   opacity: 1;
 }
