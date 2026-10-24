@@ -1,4 +1,5 @@
-// C00 owns the room frame. C02 cards and C03 chat keep their own inner borders;
+// C00 owns classic room frames; RoomSceneLayout owns sliding scene panels.
+// C02 cards and C03 chat keep their own inner borders;
 // game boards, choice cards, drawing surfaces and top-layer overlays are content.
 :root body[data-visual-theme]:has(.vue-room-shell) {
   margin: 0;
@@ -13,7 +14,7 @@
     .vue-draw-board-panel,
     .vue-draw-settings-panel,
     .vue-draw-guess-panel
-  ) {
+  ):not(.vue-room-side-panel) {
     box-sizing: border-box;
     border: 1px solid var(--stitch-line);
     border-radius: var(--stitch-panel-radius);
@@ -30,7 +31,7 @@
 // The roster is a direct room track on every page, including Draw's adapter.
 :root
   body[data-visual-theme]
-  :is(.vue-game-workspace, .vue-draw-workspace).vue-room-shell
+  :is(.vue-game-workspace, .vue-draw-workspace).vue-room-shell:not(.has-room-space)
   > :is(.vue-game-grid, .vue-draw-grid)
   > :is(.vue-game-roster-panel, .vue-draw-roster-panel) {
   border: 1px solid var(--stitch-line);
@@ -45,7 +46,7 @@
 
   :root
     body[data-visual-theme]:not(.ui-large-text)
-    :is(.vue-game-workspace, .vue-draw-workspace).vue-room-shell
+    :is(.vue-game-workspace, .vue-draw-workspace).vue-room-shell:not(.has-room-space)
     > :is(.vue-game-grid, .vue-draw-grid) {
     box-sizing: border-box;
     column-gap: 0;

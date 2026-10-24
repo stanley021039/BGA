@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import LobbyAttackLayer from '../pages/lobby/LobbyAttackLayer.vue';
+import { entranceEffect } from '../services/entrance-effects';
 import ReactionPicker from './ReactionPicker.vue';
 import UiMoveMarker from './UiMoveMarker.vue';
 import { useRoomStore } from '../stores/room';
@@ -41,7 +43,7 @@ const projection = computed(() => {
       snapshot: readLobbySnapshot({
         ...record(room.snapshot.roomSpace),
         barrages: [],
-        attacks: [],
+        attacks: record(room.snapshot.roomSpace).attacks || [],
       }),
       error: '',
     };
@@ -51,6 +53,7 @@ const projection = computed(() => {
 });
 const snapshot = computed(() => projection.value.snapshot);
 let lastSent = 0;
+let lastStep = -Infinity;
 let disposed = false,
   posting = false,
   queued: { x: number; y: number } | null = null;
@@ -113,7 +116,42 @@ function click(event: MouseEvent) {
   void nextTick(() => stage.value?.focus({ preventScroll: true }));
 }
 function key(event: KeyboardEvent) {
-  if (event.target !== stage.value || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (
+    event.defaultPrevented ||
+    !props.connected ||
+    props.focused ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.altKey ||
+    event.isComposing ||
+    document.hidden ||
+    (event.target instanceof Element &&
+      event.target.closest('[inert], canvas, [data-drawing-surface]')) ||
+    document.querySelector('dialog[open]') ||
+    (event.target instanceof Element &&
+      event.target.closest(
+        'input,textarea,select,[contenteditable]:not([contenteditable="false"])',
+      ))
+  )
+    return;
+  const action = event.key.toLowerCase();
+  if (['q', 'e', 'r'].includes(action)) {
+    if (event.repeat) return;
+    event.preventDefault();
+    const rect = stage.value?.getBoundingClientRect();
+    void sceneAction(
+      action === 'r'
+        ? { action: 'teleport', entrance: entranceEffect.value }
+        : {
+            action: 'attack',
+            slot: action,
+            requestId: crypto.randomUUID(),
+            aspectRatio: Math.max(0.2, Math.min(5, (rect?.width || 1) / (rect?.height || 1))),
+          },
+    );
+    return;
+  }
+  if (![stage.value, document.body].includes(event.target as HTMLElement)) return;
   const directions: Record<string, [number, number]> = {
     ArrowLeft: [-5, 0],
     ArrowRight: [5, 0],
@@ -127,15 +165,40 @@ function key(event: KeyboardEvent) {
   const delta = directions[event.key],
     own = snapshot.value?.visitors.find((v) => v.id === snapshot.value?.selfId);
   if (!delta || !own) return;
+  if (performance.now() - lastStep < 200) {
+    event.preventDefault();
+    return;
+  }
+  lastStep = performance.now();
   event.preventDefault();
   const base = keyboardTarget || own;
   keyboardTarget = {
-    x: Math.max(0, Math.min(100, base.x + delta[0])),
-    y: Math.max(0, Math.min(100, base.y + delta[1])),
+    x: (((base.x + delta[0]) % 100) + 100) % 100,
+    y: (((base.y + delta[1]) % 100) + 100) % 100,
   };
-  void move(keyboardTarget);
+  void sceneAction({ action: 'step', dx: delta[0] / 5, dy: delta[1] / 5 });
 }
+async function sceneAction(input: Record<string, unknown>) {
+  const scope = room.scope,
+    code = room.code;
+  try {
+    const result = await room.request(
+      'room-space',
+      { ...input, entrance: entranceEffect.value },
+      { affectsConnection: false },
+    );
+    if (!disposed && scope === room.scope && code === room.code) {
+      room.accept(result);
+      error.value = '';
+    }
+  } catch (cause) {
+    if (!disposed && scope === room.scope)
+      error.value = cause instanceof Error ? cause.message : '操作失敗';
+  }
+}
+onMounted(() => document.addEventListener('keydown', key));
 onBeforeUnmount(() => {
+  document.removeEventListener('keydown', key);
   sizeObserver?.disconnect();
   clearTimeout(markerTimer);
   disposed = true;
@@ -154,8 +217,8 @@ onBeforeUnmount(() => {
     aria-label="房間角色活動背景，點擊目的地或聚焦後用方向鍵移動"
     :aria-busy="!connected"
     @click="click"
-    @keydown="key"
   >
+    <LobbyAttackLayer :snapshot="snapshot" :connected="connected" />
     <UiMoveMarker v-if="destination" :key="markerKey" :point="destination" />
     <div class="lobby-visitors">
       <LobbyVisitor

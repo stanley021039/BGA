@@ -1,0 +1,69 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const { window } = require('linkedom').parseHTML('<html><body></body></html>');
+for (const key of ['window', 'document', 'Element', 'HTMLElement', 'SVGElement', 'Event'])
+  global[key] = key === 'window' ? window : window[key];
+const vue = require('vue'),
+  ts = require('typescript'),
+  { parse, compileScript } = require('vue/compiler-sfc');
+test('living characters have no health display; death and respawn still update the tombstone', async () => {
+  const file = path.resolve(__dirname, '../src/components/SceneHealth.vue');
+  const source = compileScript(
+    parse(fs.readFileSync(file, 'utf8'), { filename: file }).descriptor,
+    { id: 'scene-health', inlineTemplate: true },
+  ).content;
+  const mod = { exports: {} },
+    timers = new Map();
+  let clock = 0;
+  vm.runInNewContext(
+    ts.transpileModule(source, {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    }).outputText,
+    {
+      module: mod,
+      exports: mod.exports,
+      require: (id) => (id === 'vue' ? vue : { default: '/tombstone.svg' }),
+      performance: { now: () => clock },
+      setInterval: (fn) => {
+        timers.set(1, fn);
+        return 1;
+      },
+      clearInterval: (id) => timers.delete(id),
+    },
+  );
+  const visitor = vue.reactive({
+    name: '測試玩家',
+    health: 12000,
+    maxHealth: 12000,
+    respawnAt: 0,
+    respawnRemainingMs: 0,
+  });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = vue.createApp({ render: () => vue.h(mod.exports.default, { visitor }) });
+  app.mount(host);
+  try {
+    assert.equal(host.querySelector('meter'), null);
+    assert.equal(host.textContent, '');
+    assert.equal(timers.size, 0);
+    Object.assign(visitor, { health: 0, respawnAt: 3000, respawnRemainingMs: 3000 });
+    await vue.nextTick();
+    assert.match(host.textContent, /測試玩家/);
+    assert.match(host.textContent, /3 秒後重生/);
+    clock = 2000;
+    timers.get(1)();
+    await vue.nextTick();
+    assert.match(host.textContent, /1 秒後重生/);
+    Object.assign(visitor, { health: 11000, maxHealth: 11000, respawnAt: 0 });
+    await vue.nextTick();
+    assert.equal(host.textContent, '');
+    assert.equal(timers.size, 0);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+  assert.equal(timers.size, 0);
+});

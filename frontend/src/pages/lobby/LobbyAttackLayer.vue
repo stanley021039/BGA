@@ -83,6 +83,8 @@ onBeforeUnmount(() => {
     >
       <AttackArtwork
         :effect="event.effect"
+        :damage="event.damage"
+        :critical="event.critical"
         :play-key="event.id"
         :from="{ x: event.fromX, y: event.fromY }"
         :to="{ x: event.toX, y: event.toY }"

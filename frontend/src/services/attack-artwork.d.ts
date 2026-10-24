@@ -2,6 +2,8 @@ export function playAttackArtwork(
   canvas: HTMLCanvasElement,
   options: {
     effect: string;
+    damage?: number;
+    critical?: boolean;
     color: string;
     width: number;
     height: number;

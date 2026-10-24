@@ -1,8 +1,5 @@
 // Opt-in room panels keep their grid tracks while the framed surfaces slide.
-:root
-  body[data-visual-theme]
-  .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
-  > .vue-game-grid {
+:root body[data-visual-theme] .vue-game-workspace.vue-room-shell.has-room-space > .vue-game-grid {
   position: relative;
   isolation: isolate;
   background: transparent;
@@ -12,6 +9,12 @@
     z-index: 3;
   }
   > .vue-game-main {
+    position: relative;
+    z-index: 1;
+  }
+  // Drawing places its cards directly on the grid via display: contents.
+  // Those cards need their own layer above the interactive background.
+  > .vue-game-main.vue-draw-main > :is(.vue-draw-board-panel, .vue-draw-guess-panel) {
     position: relative;
     z-index: 1;
   }
@@ -302,10 +305,7 @@
   }
 }
 @media (max-width: 1180px) {
-  :root
-    body[data-visual-theme]
-    .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
-    > .vue-game-grid {
+  :root body[data-visual-theme] .vue-game-workspace.vue-room-shell.has-room-space > .vue-game-grid {
     grid-template-columns: minmax(0, 1fr);
     min-height: 65dvh;
     > .vue-game-main {
@@ -358,7 +358,7 @@
 }
 :root
   body.vue-game-focus[data-visual-theme]
-  .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
+  .vue-game-workspace.vue-room-shell.has-room-space
   > .vue-game-grid {
   grid-template-columns: minmax(0, 1fr);
   > .vue-room-side-panel[data-panel-side] {
@@ -380,14 +380,14 @@
 @media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
   :root
     body[data-visual-theme].vue-quacks-document:not(.vue-game-focus)
-    .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
+    .vue-game-workspace.vue-room-shell.has-room-space
     > .vue-game-grid {
     --room-side-track: calc((clamp(240px, 15vw, 292px) + clamp(280px, 17vw, 320px)) / 2);
     grid-template-columns: var(--room-side-track) minmax(0, 1fr) var(--room-side-track);
   }
   :root
     body[data-visual-theme].vue-quacks-document:not(.vue-game-focus):not(.ui-large-text)
-    .vue-game-workspace.vue-room-shell.has-room-space[data-room-kind='quacks']
+    .vue-game-workspace.vue-room-shell.has-room-space
     > .vue-game-grid:has(.vue-quacks-roster) {
     --room-side-track: calc((390px + clamp(280px, 17vw, 320px)) / 2);
   }
@@ -406,10 +406,7 @@
 
 // Let the seated room toolbar fill wide screens while the game keeps its cap.
 @media (min-width: 1921px) {
-  :root
-    body[data-visual-theme].vue-quacks-document:not(.vue-game-focus):has(
-      .has-room-space[data-room-kind='quacks']
-    ) {
+  :root body[data-visual-theme].vue-quacks-document:not(.vue-game-focus):has(.has-room-space) {
     .vue-game-document {
       max-width: none;
     }
@@ -424,7 +421,7 @@
 @media (min-width: 1921px) and (min-height: 640px) and (pointer: fine) {
   :root
     body[data-visual-theme].vue-quacks-document:not(.vue-game-focus):not(.ui-large-text):has(
-      .has-room-space[data-room-kind='quacks']
+      .has-room-space
     )
     #quacks-app {
     max-width: 1896px;

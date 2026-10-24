@@ -66,6 +66,20 @@ test('attack route accepts a present caller, broadcasts a server chosen target a
   });
   assert.equal(peer.status, 200);
   await f.request('/api/lobby', { cookie: peer.cookie });
+  // Scene combat now enforces a real hit range. Bring both actors together
+  // instead of relying on the random spawn locations being close enough.
+  await f.post('/api/lobby/move', { x: 50, y: 50 });
+  await f.request('/api/lobby/move', {
+    method: 'POST',
+    cookie: peer.cookie,
+    body: { x: 50, y: 50 },
+  });
+  for (let attempt = 0; attempt < 120; attempt++) {
+    const scene = (await f.get('/api/lobby')).body;
+    if (scene.visitors.every((v) => Math.hypot(v.x - 50, v.y - 50) < 1)) break;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    assert.notEqual(attempt, 119, 'actors reach the same attack position');
+  }
   const before = (await f.get('/api/rooms')).body;
   const attacked = await f.post('/api/lobby/attack', input);
   assert.equal(attacked.status, 200);

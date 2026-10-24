@@ -7,7 +7,11 @@ const { createLobby } = require('../src/rooms/lobby');
 
 test('defensive artwork targets its caster even in an otherwise empty lobby', () => {
   let time = 1000;
-  const lobby = createLobby(() => time),
+  const lobby = createLobby(
+      () => time,
+      undefined,
+      () => 0.9,
+    ),
     user = { id: 'shield-user', display_name: 'Caster' };
   lobby.view(user);
   for (const effect of ['shield', 'sphere']) {
@@ -37,6 +41,11 @@ test('Q and E have independent cooldowns, stable event artwork and deduplicated 
   const lobby = createLobby(() => time),
     a = { id: 'a', display_name: 'A' },
     b = { id: 'b', display_name: 'B' };
+  lobby.view(a);
+  lobby.view(b);
+  lobby.move(a, { x: 50, y: 50 });
+  lobby.move(b, { x: 55, y: 50 });
+  time += 6000;
   lobby.view(a);
   lobby.view(b);
   const q = { slot: 'q', effect: 'blade_aura', aspectRatio: 1.5, requestId: 'request-qe-q' },
@@ -153,6 +162,9 @@ test('account attack choices persist, preserve appearance changes, and determine
   });
   await get('/api/lobby');
   await request('/api/lobby', { cookie: peer.cookie });
+  await post('/api/lobby/move', { x: 50, y: 50 });
+  await request('/api/lobby/move', { method: 'POST', cookie: peer.cookie, body: { x: 52, y: 50 } });
+  await new Promise((resolve) => setTimeout(resolve, 5500));
   const q = await post('/api/lobby/attack', {
     slot: 'q',
     requestId: 'request-http-q',

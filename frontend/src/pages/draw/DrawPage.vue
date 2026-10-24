@@ -15,6 +15,7 @@ import DrawGallery from '../../components/DrawGallery.vue';
 import DrawScene from './DrawScene.vue';
 import DrawSettings from './DrawSettings.vue';
 import DrawGuessPanel from './DrawGuessPanel.vue';
+import RoomSceneLayout from '../../components/RoomSceneLayout.vue';
 import RoomRoster from '../../components/RoomRoster.vue';
 import RoomChat from '../../components/RoomChat.vue';
 import RoomEffects from '../../components/RoomEffects.vue';
@@ -396,7 +397,8 @@ onBeforeUnmount(() => {
   <div
     v-else
     ref="motionRoot"
-    class="vue-draw-workspace vue-room-shell vue-draw-approved"
+    class="vue-draw-workspace vue-game-workspace vue-room-shell vue-draw-approved has-room-space"
+    data-room-kind="draw"
     :class="{ 'is-header-integrated': headerIntegrated }"
   >
     <RoomHeader title="你畫我猜" :focused="focus" @integrated="headerIntegrated = $event"
@@ -437,12 +439,17 @@ onBeforeUnmount(() => {
         :pending="room.connecting"
         @click="room.reconnect()"
     /></div>
-    <div
+    <RoomSceneLayout
+      :connected="connected"
+      :focused="focus"
+      roster-class="vue-draw-roster-panel"
+      main-class="vue-draw-main"
+      side-class="vue-draw-side"
       class="vue-draw-grid"
       :data-phase="state?.phase"
       :data-role="artist ? 'artist' : 'guesser'"
     >
-      <aside class="vue-draw-roster-panel"
+      <template #roster
         ><RoomRoster
           :show-metric="state?.phase !== 'waiting'"
           :snapshot="state"
@@ -468,8 +475,8 @@ onBeforeUnmount(() => {
               label="加入電腦玩家"
               :disabled="room.busy || !setup || !botAllowed || (state?.players.length || 0) >= 8"
               @click="room.command('bot', {})" /></template></RoomRoster
-      ></aside>
-      <main class="vue-draw-main"
+      ></template>
+      <template #default
         ><section class="vue-draw-board-panel"
           ><header
             v-if="state && ['choosing', 'drawing'].includes(state.phase)"
@@ -547,8 +554,8 @@ onBeforeUnmount(() => {
         ><DrawGuessPanel
           v-if="state && ['drawing', 'reveal'].includes(state.phase)"
           :snapshot="state"
-      /></main>
-      <aside class="vue-draw-side"
+      /></template>
+      <template #side="{ chatVisible }"
         ><Teleport
           :to="state?.phase === 'waiting' ? '#room-waiting-settings-draw' : 'body'"
           :disabled="state?.phase !== 'waiting'"
@@ -567,9 +574,9 @@ onBeforeUnmount(() => {
               :pending="preparing || room.busy"
               :disabled="state.players.length < 2"
               @click="start" /></section></Teleport
-        ><RoomChat ref="chat"
+        ><RoomChat ref="chat" :panel-visible="chatVisible"
           ><template #tools><RoomMedia :connected="connected" /></template></RoomChat
-      ></aside> </div
+      ></template> </RoomSceneLayout
     ><RoomEffects :connected="connected" /><RoomPings />
   </div>
   <UiDialog ref="help" title="你畫，我們猜。"
