@@ -39,7 +39,7 @@ test('direction presentation asset is served exactly and loaded before both dice
     await response.text(),
     fs.readFileSync(path.join(__dirname, '../public/shared/race-directions.js'), 'utf8'),
   );
-  for (const file of ['../public/race.html', '../frontend/pages/race/index.html']) {
+  for (const file of ['../frontend/pages/race/index.html']) {
     const source = fs.readFileSync(path.join(__dirname, file), 'utf8');
     const position = source.indexOf('/shared/race-directions.js');
     assert.ok(position >= 0);

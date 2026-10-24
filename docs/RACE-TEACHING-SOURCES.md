@@ -1,5 +1,7 @@
 # race 教學來源一致性
 
+> **已停用（#233）**：舊版 `public/race.html` 已移除，Vue 教學改用 `frontend/src/pages/race/lesson-engine.js`（自 race.html 抽出）。`tools/check-race-teaching.cjs` 與 `tests/race-teaching-source.test.js` 隨之移除，以下為歷史紀錄。
+
 ## 權威來源與衍生範圍
 
 `public/race.html` 的 `<script data-teaching-table>` 目前仍是內嵌程式。

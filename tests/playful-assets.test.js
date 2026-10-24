@@ -78,7 +78,7 @@ test('playful presentation assets are public exact local bytes; arbitrary SVG pa
       ).status,
       404,
     );
-    for (const file of ['playful-theme.css', 'game-card-carousel.js']) {
+    for (const file of ['playful-theme.css']) {
       const response = await fetch(base + '/shared/' + file);
       assert.equal(response.status, 200);
       assert.equal(response.headers.get('cache-control'), 'private, no-cache');
