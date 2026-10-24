@@ -6,7 +6,8 @@ import { usePreferencesStore } from '../../stores/preferences';
 import UiButton from '../../components/UiButton.vue';
 import quacksArt from '../../assets/quacks/game-quacks.svg';
 import minimalArt from '../minimal/minimal-waiting.svg';
-import athleteHero from '../../assets/second-wind/hero.webp';
+import constructionArt from '../../assets/lobby/construction-800.webp?no-inline';
+import constructionThumb from '../../assets/lobby/construction-400.webp?no-inline';
 const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
@@ -193,19 +194,25 @@ onBeforeUnmount(() => {
         @focus="warmGamePage(card.id)"
       >
         <div class="tile-image"
-          ><strong v-if="card.id === 'ceo'">1st CEO · 集團經營</strong
           ><img
-            v-else
             :src="
-              card.id === 'second-wind'
-                ? athleteHero
+              card.art === 'construction'
+                ? constructionArt
                 : card.id === 'quacks'
                   ? quacksArt
                   : card.id === 'minimal'
                     ? minimalArt
                     : '/assets/playful/game-' + card.art + '.svg'
             "
-            alt=""
+            :srcset="
+              card.art === 'construction'
+                ? `${constructionThumb} 400w, ${constructionArt} 800w`
+                : undefined
+            "
+            :sizes="card.art === 'construction' ? '(max-width: 480px) 300px, 340px' : undefined"
+            :alt="card.art === 'construction' ? '施工中' : ''"
+            loading="lazy"
+            decoding="async"
             draggable="false" /></div
         ><div class="tile-body"
           ><div class="kicker">{{ card.english }}</div

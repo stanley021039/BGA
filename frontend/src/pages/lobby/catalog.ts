@@ -17,7 +17,7 @@ export const gameCards: GameCard[] = [
     seats: '3–6 人',
     category: '競速・能力',
     description: '招募四名選手，連賽四場，讓能力改寫賽局。',
-    art: 'ceo',
+    art: 'construction',
     guide: '/second-wind?learn=1',
   },
   {
@@ -27,7 +27,7 @@ export const gameCards: GameCard[] = [
     description: '收購公司、買進股票與分配股利；本站替代牌庫試玩版。',
     seats: '3–6 人',
     category: '策略・經營',
-    art: 'ceo',
+    art: 'construction',
     guide: '/ceo?learn=1',
   },
   {
