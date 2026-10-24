@@ -1,6 +1,6 @@
 // Thunder Road: Vendetta core rules. See docs/RULES-SOURCES.md for reference and variant details.
 const {randomInt,randomUUID}=require('node:crypto');
-const RacePaths=require('../../public/shared/race-paths');
+const RacePaths=require('../../frontend/src/engines/race-paths.js').default;
 const COLORS=['#ec9b35','#43c6cd','#c4d3c0','#c260b6'];
 const DIRS=['前左','前方','前右','後左','後方','後右'];
 const SIZES=['輕型','中型','重型'];

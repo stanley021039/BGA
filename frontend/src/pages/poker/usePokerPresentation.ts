@@ -1,3 +1,5 @@
+import AudioSettings from '../../engines/audio-settings.js';
+import MotionPolicy from '../../engines/motion-policy.js';
 import { computed, nextTick, onScopeDispose, ref, shallowRef, watch, type Ref } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { usePokerStore } from '../../stores/poker';
@@ -10,7 +12,7 @@ export function usePokerPresentation(root: Ref<HTMLElement | null>) {
     newCards = ref<number[]>([]),
     focusIndex = ref(-1),
     earned = ref<string[]>([]),
-    motion = ref(!!window.MotionPolicy?.allowsMotion()),
+    motion = ref(!!MotionPolicy?.allowsMotion()),
     chips = shallowRef<{ id: string; left: number; top: number; x: number; y: number }[]>([]);
   const focusItems = computed(
       () =>
@@ -55,12 +57,12 @@ export function usePokerPresentation(root: Ref<HTMLElement | null>) {
     cardTimer = chipTimer = null;
     newCards.value = [];
     chips.value = [];
-    for (const clip of clips) window.AudioSettings?.stopEffect(clip);
+    for (const clip of clips) AudioSettings?.stopEffect(clip);
     clips.clear();
   }
   function sound(cue: string) {
     if (document.hidden || !room.connected) return;
-    const clip = window.AudioSettings?.playEffect?.(cue);
+    const clip = AudioSettings?.playEffect?.(cue);
     if (clip) {
       clips.add(clip);
       const forget = () => clips.delete(clip);
@@ -68,7 +70,7 @@ export function usePokerPresentation(root: Ref<HTMLElement | null>) {
       clip.addEventListener('error', forget, { once: true });
       if (clips.size > 4) {
         const old = clips.values().next().value;
-        window.AudioSettings?.stopEffect(old);
+        AudioSettings?.stopEffect(old);
         if (old) clips.delete(old);
       }
     }
@@ -194,8 +196,8 @@ export function usePokerPresentation(root: Ref<HTMLElement | null>) {
   }
   document.addEventListener('visibilitychange', visibility);
   document.addEventListener('keydown', escape);
-  const unbind = window.MotionPolicy?.subscribe(() => {
-    motion.value = !!window.MotionPolicy?.allowsMotion();
+  const unbind = MotionPolicy?.subscribe(() => {
+    motion.value = !!MotionPolicy?.allowsMotion();
     if (!motion.value) stopEffects();
   });
   void checkAchievements(true);

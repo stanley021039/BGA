@@ -1,3 +1,4 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
@@ -6,7 +7,7 @@ const { test } = require('node:test'),
   ts = require('typescript');
 const lifetime = fs
   .readFileSync(path.join(__dirname, '../src/services/motion-lifetime.js'), 'utf8')
-  .replace(/export /g, '');
+  .toString();
 const code = ts.transpileModule(
   fs.readFileSync(path.join(__dirname, '../src/pages/lobby/apparition.ts'), 'utf8'),
   { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
@@ -39,8 +40,11 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
     },
     clearTimeout: (id) => timers.delete(id),
   };
-  vm.createContext(sandbox);
-  vm.runInContext(lifetime, sandbox);
+  vm.createContext(withEngineImports(sandbox));
+  vm.runInContext(
+    require('../../tests/helpers/browser-modules.cjs').fixtureSource(lifetime),
+    sandbox,
+  );
   sandbox.require = (name) =>
     name.includes('motion-lifetime')
       ? {

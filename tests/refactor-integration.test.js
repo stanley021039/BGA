@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
+const fs = require('./helpers/browser-modules.cjs');
 const path = require('node:path');
 const { appFixture } = require('./helpers/app-fixture.cjs');
 const { createAuth } = require('../src/auth');
@@ -20,15 +20,10 @@ test('integrated app serves the draw controller boundary its page shell loads', 
   const cookie = login.headers.get('set-cookie').split(';')[0];
   const route = '/shared/draw-controller.js',
     response = await fetch(base + route);
-  assert.equal(response.status, 200, route);
-  assert.match(response.headers.get('content-type'), /^text\/javascript/);
-  assert.equal(
-    await response.text(),
-    fs.readFileSync(path.join(__dirname, '../public', route), 'utf8'),
-  );
-  // The draw page shell loads its controller; pages come from the Vue build (#233).
+  assert.equal(response.status, 404, route);
   const shell = fs.readFileSync(path.join(__dirname, '../frontend/pages/draw/index.html'), 'utf8');
-  assert.ok(shell.includes('src="' + route + '"'), 'draw loads its controller');
+  assert.doesNotMatch(shell, /src="\/shared\/draw-controller.js"/);
+  assert.match(shell, /type="module"/);
   assert.equal((await fetch(base + '/draw/ABCDEF', { headers: { Cookie: cookie } })).status, 503);
   const version = await fetch(base + '/api/version');
   assert.equal(version.status, 200);

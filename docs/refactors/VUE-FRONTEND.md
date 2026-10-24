@@ -492,3 +492,20 @@ app 掛載前為根節點加入 `data-ui-owner="vue"`。舊 GameUI 的自動 fra
 | 共用純計算 | party-shapes、market-curve、market-rules；部分同時由伺服器使用 |
 
 後續模組化須逐個確認前端載入順序、全域名稱、伺服器 require 與現役測試；搬移時保留 renderer、傳送確認、逐點回放及倒數的契約，不能以刪除舊 HTML 測試取代現役模組回歸。退役檔案的短網址別名也須同步移除，避免靜態表仍指向不存在的檔案。登入頁的受影響測試選取以 `frontend/src/pages/login/` 為入口，已刪 public 登入路徑維持未知路徑的保守全套回退。
+
+
+## #233 共用腳本模組化（2026-10-24，候選）
+
+38 支共用腳本移至 `frontend/src/engines/`，由具名依賴與 default export 組成單一模組圖；Vue 呼叫端直接 import，不再以 HTML 載入順序或 `window` 取得這些 API。UI widgets 沿用原基礎 UI 物件，在單一模組中補上表單／頁籤／對話框方法。畫布的 transport、playback、session 與 controller 仍各自擁有原本的排送、取消與 renderer 生命週期。
+
+`sound-library` 和 `game-audio-admin` 的現有 DOM 與互動不改，加入 `frontend/pages.json`／Vite，合計 29 份建置文件。`public/` 僅保留素材與樣式；退役腳本 URL 回 404，API-only 模式的所有文件回 503。未使用的舊大廳及 TableMedia DOM controller 移除，現役 owner 為 Vue lobby／media stores 與 `media-player` 引擎。
+
+主題與關閉開場的首次繪製快照由 HTTP adapter 在樣式前執行可信任的 `prepaint` 函式；這只是讀取既有偏好的短暫快照，持久化與訂閱仍只有 ESM preference owner。開場／登入動畫與音效仍由各自模組負責，不能用常駐全域 API 或第二套儲存格式取代。
+
+Node 22.13 以上伺服器同步讀取相同的純計算 ESM default export（市場規則／曲線、賽道 planner、ping registry），不複製規則。發布包必須包含 `frontend/package.json` 及 `frontend/src/engines/`，也須保留 HTTP 首次繪製所需的模組來源；只複製 dist 不是完整伺服器發布包。
+
+`frontend:build` 先執行 `tools/check-frontend-modules.cjs`：拒絕 public 可執行腳本、classic page entry 與共用 API 的隱式全域讀取。效能預算維持原門檻；特效的 motion policy 與共用 WebGL context 預算也改為明確 import。畫筆預設色與色盤共用 drawing data，與介面亮暗主題分開。
+
+測試先安裝前端鎖定依賴並建置（`npm run frontend:install`、`npm run frontend:build`）。瀏覽器／時鐘 fixture 以 TypeScript 標準轉換執行真正的 ESM 相依圖，沿用明確提供的 DOM／音效 mock，不保留第二份舊腳本。移除已無執行入口的 TableMedia DOM 測試及單純 UMD／載入順序斷言；現役 Vue media window、media-player、HTTP 權限及音效／畫布行為測試保留，建置文件資源整合測試改驗真正 dist。模組邊界另用故意新增 classic script／全域讀取的案例確認會拒絕。
+
+本節記錄候選架構，實際通過項目、固定提交、PR／CI／正式版本以本次交付記錄為準。#234 路由拆分依使用者指示等待 #226、#227 合入，不屬於本批。

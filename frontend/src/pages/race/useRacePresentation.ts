@@ -1,3 +1,10 @@
+import AudioSettings from '../../engines/audio-settings.js';
+import RacePaths from '../../engines/race-paths.js';
+import MotionPolicy from '../../engines/motion-policy.js';
+import RaceDiceDialog from '../../engines/race-dice-dialog.js';
+import RaceVehicleEffects from '../../engines/race-vehicle-effects.js';
+import RaceGameSounds from '../../engines/race-game-sounds.js';
+import RaceMovement from '../../engines/race-movement.js';
 import { nextTick, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import type {
   RaceDomain,
@@ -30,19 +37,19 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
     } | null = null,
     focusTimer: ReturnType<typeof setTimeout> | null = null,
     known: Set<string> | null = null;
-  let gate = window.MotionPolicy?.createGate();
-  const sounds = window.RaceGameSounds?.create(),
-    effects = window.RaceVehicleEffects?.mount();
+  let gate = MotionPolicy?.createGate();
+  const sounds = RaceGameSounds?.create(),
+    effects = RaceVehicleEffects?.mount();
   const clips = new Set<HTMLAudioElement>();
   function sound(name: string) {
     if (document.hidden || !model.connected) return;
-    const clip = window.AudioSettings?.playEffect?.(name);
+    const clip = AudioSettings?.playEffect?.(name);
     if (clip) {
       clips.add(clip);
       clip.addEventListener('ended', () => clips.delete(clip), { once: true });
       if (clips.size > 4) {
         const old = clips.values().next().value;
-        window.AudioSettings?.stopEffect(old);
+        AudioSettings?.stopEffect(old);
         if (old) clips.delete(old);
       }
     }
@@ -54,7 +61,7 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
   }
   function replay() {
     stopFocus();
-    if (!latest?.winner || document.hidden || !window.MotionPolicy?.allowsMotion()) return;
+    if (!latest?.winner || document.hidden || !MotionPolicy?.allowsMotion()) return;
     focus.value = true;
     focusTimer = setTimeout(stopFocus, 2200);
   }
@@ -67,14 +74,14 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
       earned.value = items.filter((i) => !known!.has(i.id)).map((i) => i.title);
     known = new Set([...(known || []), ...items.map((i) => i.id)]);
   }
-  const dice = window.RaceDiceDialog?.mount({
+  const dice = RaceDiceDialog?.mount({
     onRolling: (cycle) => sounds?.rolling(cycle),
     onAction: async (action, data) => {
       if (!(await run(action, data)))
         throw Error(model.notice || '目前無法操作，請依最新狀態再選擇。');
     },
   });
-  const movement = window.RaceMovement?.mount({
+  const movement = RaceMovement?.mount({
     onCue: ({ events, duration }) => {
       if (!latest || document.hidden) return;
       cue.value = duration > 0 ? events : [];
@@ -161,10 +168,10 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
     effects?.reset();
     sounds?.reset();
     gate?.dispose();
-    gate = window.MotionPolicy?.createGate();
+    gate = MotionPolicy?.createGate();
     locked.value = false;
     model.setLessonMoving?.(false);
-    for (const clip of clips) window.AudioSettings?.stopEffect(clip);
+    for (const clip of clips) AudioSettings?.stopEffect(clip);
     clips.clear();
     if (model.state) {
       latest = model.state;
@@ -299,8 +306,8 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
       if (connected) present();
     },
   );
-  const unsubscribe = window.MotionPolicy?.subscribe(() => {
-    if (!window.MotionPolicy?.allowsMotion()) reset();
+  const unsubscribe = MotionPolicy?.subscribe(() => {
+    if (!MotionPolicy?.allowsMotion()) reset();
   });
   function escape(event: KeyboardEvent) {
     if (event.key === 'Escape' && !document.querySelector('dialog[open]')) {
@@ -320,7 +327,7 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
     sounds?.destroy();
     gate?.dispose();
     unsubscribe?.();
-    for (const clip of clips) window.AudioSettings?.stopEffect(clip);
+    for (const clip of clips) AudioSettings?.stopEffect(clip);
     document.removeEventListener('visibilitychange', visibility);
     document.removeEventListener('keydown', escape);
   });
@@ -334,6 +341,6 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
     stopFocus,
     run,
     skipCue: () => movement?.skipCue(),
-    ready: !!movement && !!dice && !!window.RacePaths,
+    ready: !!movement && !!dice && !!RacePaths,
   };
 }

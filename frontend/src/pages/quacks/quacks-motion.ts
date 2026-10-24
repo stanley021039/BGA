@@ -1,3 +1,5 @@
+import QuacksArt from '../../engines/quacks-art.js';
+import MotionPolicy from '../../engines/motion-policy.js';
 import type { QuacksSnapshot } from '../../contracts/quacks';
 
 type Point = { x: number; y: number };
@@ -15,7 +17,7 @@ export function createQuacksMotion(
   let generation = 0,
     disposed = false,
     latestLive = false;
-  const allowed = () => !disposed && !document.hidden && !!window.MotionPolicy?.allowsMotion();
+  const allowed = () => !disposed && !document.hidden && !!MotionPolicy?.allowsMotion();
   function visible(node: Element | null) {
     if (!node?.isConnected) return null;
     const box = node.getBoundingClientRect();
@@ -77,7 +79,7 @@ export function createQuacksMotion(
       }
       return null;
     }
-    const animation = window.MotionPolicy?.animate(node, frames, options);
+    const animation = MotionPolicy?.animate(node, frames, options);
     if (!animation) {
       if (remove && node instanceof HTMLElement) {
         nodes.delete(node);
@@ -171,7 +173,7 @@ export function createQuacksMotion(
     const own = state.recipes.find((p) => p.id === state.me),
       old = before.recipes.find((p) => p.id === state.me);
     if (!own || !old || own.hidden || old.hidden) return;
-    const art = window.QuacksArt,
+    const art = QuacksArt,
       key = `${state.code}:${state.roundId}:${state.version}`;
     const soundOnce = (cue: string) => sound(cue, `${cue}:${key}`);
     if (
@@ -297,7 +299,7 @@ export function createQuacksMotion(
   }
   window.addEventListener('resize', clearVisuals);
   window.addEventListener('scroll', clearVisuals, true);
-  const unsubscribe = window.MotionPolicy?.subscribe(() => {
+  const unsubscribe = MotionPolicy?.subscribe(() => {
     if (!allowed()) clearVisuals();
   });
   return {

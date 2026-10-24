@@ -1,3 +1,4 @@
+import AudioSettings from '../engines/audio-settings.js';
 import { computed, onScopeDispose, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useRoomStore } from './room';
@@ -164,7 +165,7 @@ export const usePokerStore = defineStore('poker', () => {
         previous.board.length === state.value.board.length &&
         !document.hidden
       ) {
-        const clip = window.AudioSettings?.playEffect?.('confirm');
+        const clip = AudioSettings?.playEffect?.('confirm');
         if (clip) {
           ownClips.add(clip);
           const forget = () => ownClips.delete(clip);
@@ -172,7 +173,7 @@ export const usePokerStore = defineStore('poker', () => {
           clip.addEventListener('error', forget, { once: true });
           if (ownClips.size > 4) {
             const old = ownClips.values().next().value;
-            window.AudioSettings?.stopEffect(old);
+            AudioSettings?.stopEffect(old);
             if (old) ownClips.delete(old);
           }
         }
@@ -248,7 +249,7 @@ export const usePokerStore = defineStore('poker', () => {
   );
   const ownClips = new Set<HTMLAudioElement>();
   function stopSounds() {
-    for (const clip of ownClips) window.AudioSettings?.stopEffect(clip);
+    for (const clip of ownClips) AudioSettings?.stopEffect(clip);
     ownClips.clear();
   }
   function visibility() {

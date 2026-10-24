@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import StrokeCanvas from '../engines/stroke-canvas.js';
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { DrawingTool, Point } from '../contracts/drawing';
 import type { TelephoneStroke } from '../contracts/telephone';
@@ -53,7 +55,7 @@ function allowed() {
   return props.editable && !document.hidden && !disposed && !!renderer;
 }
 function point(event: PointerEvent): Point {
-  return window.StrokeCanvas!.pointFrom(event, canvas.value!, 512, 256);
+  return StrokeCanvas!.pointFrom(event, canvas.value!, 512, 256);
 }
 function publish() {
   if (active)
@@ -196,7 +198,7 @@ function visibility() {
 onMounted(() => {
   if (canvas.value) {
     renderer =
-      window.StrokeCanvas?.createRenderer(canvas.value, {
+      StrokeCanvas?.createRenderer(canvas.value, {
         atomicPresentation: true,
         maxPoints: 3000,
         maxStrokes: 100,

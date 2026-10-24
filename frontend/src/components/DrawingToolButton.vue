@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import StrokeCanvas from '../engines/stroke-canvas.js';
+
 import { computed, useId } from 'vue';
 import type {} from '../contracts/drawing';
 import '../styles/drawing-tool-button.scss';
@@ -25,7 +27,7 @@ const allowed = new Set([
   'clear',
 ]);
 const icon = computed(() =>
-  allowed.has(props.tool) ? window.StrokeCanvas?.iconMarkup(props.tool) || '' : '',
+  allowed.has(props.tool) ? StrokeCanvas?.iconMarkup(props.tool) || '' : '',
 );
 </script>
 <template>

@@ -1,3 +1,5 @@
+import MarketCurve from '../engines/market-curve.js';
+import MarketRules from '../engines/market-rules.js';
 import { array, record, text, strings } from '../services/validation';
 export interface MarketOption {
   id: string;
@@ -242,8 +244,8 @@ export function officialMarketUrl(value: string) {
   }
 }
 export function readMarketRules(value: unknown): MarketRules {
-  if (!window.MarketRules || !window.MarketCurve) throw Error('計分規則尚未載入，請重新整理');
-  window.MarketRules.validate(value);
+  if (!MarketRules || !MarketCurve) throw Error('計分規則尚未載入，請重新整理');
+  MarketRules.validate(value);
   const rules = record(value);
   if (rules.version !== 3) {
     array(rules.options).forEach((value) => {
@@ -514,7 +516,7 @@ export const marketVoteLabel = (r: MarketRound) =>
       : r.rules.options.find((o) => o.id === r.vote?.optionId)?.name || '—';
 export const marketImageRules = (i: MarketImage) =>
   i.buckets
-    .map((id) => window.MarketRules?.CONFIG.options.find((o) => o.id === id)?.name || id)
+    .map((id) => MarketRules?.CONFIG.options.find((o) => o.id === id)?.name || id)
     .join('、') +
   ' · ' +
   (i.weekdays.length === 7 ? '不限星期' : i.weekdays.map((day) => marketWeekdays[day]).join('、'));

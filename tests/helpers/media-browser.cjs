@@ -1,8 +1,7 @@
-const fs = require('node:fs'),
+const fs = require('./browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm'),
   { randomUUID, webcrypto } = require('node:crypto');
-const source = fs.readFileSync(path.join(__dirname, '../../public/shared/table-media.js'), 'utf8');
 const flush = async () => {
   for (let index = 0; index < 12; index++) await Promise.resolve();
 };
@@ -614,7 +613,6 @@ function mediaHarness({
     context,
     { filename: 'public/shared/media-appearance.js' },
   );
-  vm.runInContext(source, context, { filename: 'public/shared/table-media.js' });
   const node = (id) => {
     const result = ids.get(id.replace(/^#/, ''));
     if (!result) throw Error('unknown node ' + id);

@@ -1,3 +1,4 @@
+import MotionPolicy from '../../engines/motion-policy.js';
 import { nextTick, onScopeDispose, ref, shallowRef, watch, type Ref } from 'vue';
 import type { DrawSnapshot } from '../../contracts/drawing';
 import { useRoomStore } from '../../stores/room';
@@ -6,7 +7,7 @@ export function useDrawMotion(root: Ref<HTMLElement | null>, connected: Ref<bool
   const room = useRoomStore(),
     badges = shallowRef<Record<string, { key: string; points: number }>>({}),
     locked = ref('');
-  let gate = window.MotionPolicy?.createGate(),
+  let gate = MotionPolicy?.createGate(),
     baseline = true,
     generation = 0,
     disposed = false,
@@ -15,7 +16,7 @@ export function useDrawMotion(root: Ref<HTMLElement | null>, connected: Ref<bool
     timerEpoch = '';
   const timers = new Map<string, ReturnType<typeof setTimeout>>(),
     animations = new Set<Animation>();
-  const allowed = () => !!window.MotionPolicy?.allowsMotion();
+  const allowed = () => !!MotionPolicy?.allowsMotion();
   function clear() {
     generation++;
     baseline = true;
@@ -31,7 +32,7 @@ export function useDrawMotion(root: Ref<HTMLElement | null>, connected: Ref<bool
     animations.clear();
   }
   function animate(node: Element | null, frames: Keyframe[], options: KeyframeAnimationOptions) {
-    const animation = window.MotionPolicy?.animate(node, frames, options);
+    const animation = MotionPolicy?.animate(node, frames, options);
     if (!animation) return;
     animations.add(animation);
     void animation.finished.catch(() => {}).then(() => animations.delete(animation));
@@ -194,7 +195,7 @@ export function useDrawMotion(root: Ref<HTMLElement | null>, connected: Ref<bool
     () => {
       clear();
       gate?.dispose();
-      gate = window.MotionPolicy?.createGate();
+      gate = MotionPolicy?.createGate();
     },
   );
   watch(connected, (value) => {
@@ -202,7 +203,7 @@ export function useDrawMotion(root: Ref<HTMLElement | null>, connected: Ref<bool
   });
   const visibility = () => clear();
   document.addEventListener('visibilitychange', visibility);
-  const unbind = window.MotionPolicy?.subscribe(() => {
+  const unbind = MotionPolicy?.subscribe(() => {
     if (!allowed()) clear();
   });
   onScopeDispose(() => {

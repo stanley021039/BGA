@@ -1,6 +1,7 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('../../tests/helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const vue = require('../node_modules/vue'),
@@ -15,7 +16,7 @@ function fixture(request) {
       fs.readFileSync(path.join(__dirname, '../src/stores/lobby-background.ts'), 'utf8'),
       { compilerOptions: { module: ts.ModuleKind.CommonJS } },
     ).outputText,
-    {
+    withEngineImports({
       Error,
       module,
       exports: module.exports,
@@ -29,7 +30,7 @@ function fixture(request) {
               : id.includes('/http')
                 ? { requestJson: request }
                 : { readLobbySnapshot: (value) => value },
-    },
+    }),
   );
   return {
     store: module.exports.useLobbyBackgroundStore(),

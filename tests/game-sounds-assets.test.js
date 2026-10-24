@@ -1,6 +1,6 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   os = require('node:os'),
   crypto = require('node:crypto');
@@ -73,7 +73,8 @@ test('game cue controllers and WAV routes are served exactly, unrelated files re
       ),
     ]) {
       const response = await fetch(base + '/' + file);
-      assert.equal(response.status, 200, file);
+      assert.equal(response.status, file.endsWith('.js') ? 404 : 200, file);
+      if (file.endsWith('.js')) continue;
       assert.match(
         response.headers.get('content-type'),
         file.endsWith('.wav') ? /audio\/mpeg/ : /javascript/,

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import AudioSettings from '../engines/audio-settings.js';
+import MotionPolicy from '../engines/motion-policy.js';
+import BarrageFrames from '../engines/barrage-frames.js';
+
 import { onBeforeUnmount, ref } from 'vue';
 import { usePreferencesStore } from '../stores/preferences';
 import { useResource } from '../composables/resource';
@@ -31,7 +35,7 @@ function theme(event: Event) {
 }
 function audio(kind: 'music' | 'effects', event: Event, volume = false) {
   const input = event.target as HTMLInputElement;
-  const settings = window.AudioSettings;
+  const settings = AudioSettings;
   const previousVolume = settings?.get()[kind].volume;
   settings?.set(kind, volume ? { volume: Number(input.value) / 100 } : { enabled: input.checked }, {
     gesture: event.isTrusted,
@@ -47,13 +51,13 @@ function audio(kind: 'music' | 'effects', event: Event, volume = false) {
   }
 }
 function barrages(event: Event) {
-  window.MotionPolicy?.set({ barrages: (event.target as HTMLInputElement).checked });
+  MotionPolicy?.set({ barrages: (event.target as HTMLInputElement).checked });
 }
 function frames(event: Event) {
-  window.BarrageFrames?.set({ enabled: (event.target as HTMLInputElement).checked });
+  BarrageFrames?.set({ enabled: (event.target as HTMLInputElement).checked });
 }
 function previewVolume() {
-  const settings = window.AudioSettings;
+  const settings = AudioSettings;
   const effects = settings?.get().effects;
   if (!effects?.enabled || !effects.volume || document.hidden) return;
   const now = performance.now();
@@ -69,7 +73,7 @@ function previewVolume() {
   });
 }
 onBeforeUnmount(() => {
-  if (clip) window.AudioSettings?.stopEffect(clip);
+  if (clip) AudioSettings?.stopEffect(clip);
 });
 </script>
 <template>

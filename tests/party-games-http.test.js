@@ -172,5 +172,5 @@ test('new games integrate auth, media isolation, private roles, history and stat
     }
     for (const cookie of cookies) await post('leave', cookie, { code });
   }
-  assert.equal((await fetch(base + '/shared/party-shapes.js')).status, 200);
+  assert.equal((await fetch(base + '/shared/party-shapes.js')).status, 404);
 });

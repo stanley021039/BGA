@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs'),
+const fs = require('./helpers/browser-modules.cjs'),
   os = require('node:os'),
   path = require('node:path');
 const { execFileSync, spawnSync } = require('node:child_process');

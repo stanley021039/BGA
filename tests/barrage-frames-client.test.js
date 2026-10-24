@@ -1,6 +1,6 @@
 const test = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const { mediaHarness } = require('./helpers/media-browser.cjs');
@@ -118,7 +118,11 @@ test('all header entry points load the same frame preference module and shared f
     .filter((page) => page.html.includes('data-site-header'));
   assert.equal(pages.length, 26);
   for (const { name, html } of pages) {
-    assert.equal((html.match(/src="\/shared\/barrage-frames.js"/g) || []).length, 1, name);
+    assert.doesNotMatch(html, /src="\/shared\/[^"]+\.js/);
+    assert.match(
+      fs.readFileSync(path.join(__dirname, '../frontend/src/stores/preferences.ts'), 'utf8'),
+      /engines\/barrage-frames\.js/,
+    );
     assert.equal((html.match(/href="\/shared\/barrage-frames.css"/g) || []).length, 1, name);
   }
 });

@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs'),
+const fs = require('./helpers/browser-modules.cjs'),
   os = require('node:os'),
   path = require('node:path');
 const { randomUUID } = require('node:crypto');
@@ -519,7 +519,11 @@ test('authenticated HTTP draw room hides answers and restricts the stroke channe
     }
     assert.equal((await fetch(base + '/api/draw/canvas?code=' + code)).status, 401);
     for (const asset of ['draw.css', 'shared/stroke-canvas.js', 'shared/draw-controller.js'])
-      assert.equal((await fetch(base + '/' + asset, { headers: guest })).status, 200, asset);
+      assert.equal(
+        (await fetch(base + '/' + asset, { headers: guest })).status,
+        asset.endsWith('.js') ? 404 : 200,
+        asset,
+      );
     for (const page of ['draw', 'draw-words'])
       assert.equal((await fetch(base + '/' + page, { headers: guest })).status, 503, page); // API-only app (#233)
   } finally {

@@ -1,6 +1,7 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('../../tests/helpers/browser-modules.cjs'),
   vm = require('node:vm'),
   path = require('node:path');
 const source = fs
@@ -11,7 +12,7 @@ const source = fs
   .replace('export function playAttackArtwork', 'function playAttackArtwork');
 const lifetime = fs
   .readFileSync(path.join(__dirname, '../src/services/motion-lifetime.js'), 'utf8')
-  .replace(/export /g, '');
+  .toString();
 function run(effect, color, frames = 7, random = Math.random, options = {}) {
   const colors = [],
     arcs = [],
@@ -85,9 +86,9 @@ function run(effect, color, frames = 7, random = Math.random, options = {}) {
     Math: Object.assign(Object.create(Math), { random }),
     Date,
   };
-  vm.createContext(sandbox);
+  vm.createContext(withEngineImports(sandbox));
   vm.runInContext(
-    lifetime +
+    fs.fixtureSource(lifetime) +
       fs
         .readFileSync(path.join(__dirname, '../src/services/attack-stitch.js'), 'utf8')
         .replace('export function createStitchAttack', 'function createStitchAttack') +

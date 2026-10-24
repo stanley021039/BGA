@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('node:vm'),
   { randomUUID } = require('node:crypto'),
   { QuacksRoom } = require('../src/games/quacks'),

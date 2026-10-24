@@ -81,7 +81,7 @@ const {
 const { AchievementStore } = require('./achievements/store');
 const { MarketStore } = require('./market/store');
 const { MarketAutomationStore, dateAt, closeAfter } = require('./market/automation-store');
-const { validDate: validMarketDate } = require('../public/market-rules');
+const { validDate: validMarketDate } = require('../frontend/src/engines/market-rules.js').default;
 const { MarketAutomation } = require('./market/automation');
 const { createOfficialProvider } = require('./market/official-provider');
 const { MarketImageStore } = require('./market/images');
@@ -2565,7 +2565,7 @@ function initializeApp(config, dataLock, acquired) {
         );
         return send(withSocial(room, room.view(p.id)));
       }
-      if (url.pathname === '/lobby.js' || url.pathname === '/lobby.css') {
+      if (url.pathname === '/lobby.css') {
         const file = url.pathname.slice(1);
         res.setHeader(
           'Content-Type',
@@ -2591,22 +2591,10 @@ function initializeApp(config, dataLock, acquired) {
         );
       }
       if (
-        url.pathname === '/shared/ping-model.js' ||
         url.pathname === '/shared/room-pings.css' ||
-        url.pathname === '/shared/media-appearance.js' ||
-        url.pathname === '/shared/barrage-frames.js' ||
         url.pathname === '/shared/barrage-frames.css' ||
-        url.pathname === '/shared/ui-widgets.js' ||
         url.pathname === '/shared/ui-widgets.css' ||
-        url.pathname === '/shared/table-media.js' ||
-        url.pathname === '/shared/draw-canvas-session.js' ||
-        url.pathname === '/shared/draw-controller.js' ||
-        url.pathname === '/shared/draw-transport.js' ||
-        url.pathname === '/shared/draw-playback.js' ||
-        url.pathname === '/shared/countdown-bar.js' ||
-        url.pathname === '/shared/game-fx-layer.js' ||
-        url.pathname === '/shared/game-fx-layer.css' ||
-        url.pathname === '/shared/race-dice-webgl.js'
+        url.pathname === '/shared/game-fx-layer.css'
       ) {
         const file = url.pathname.slice(1);
         res.setHeader(
@@ -2687,7 +2675,6 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/stitch/room-brand.svg': 'assets/stitch/room-brand.svg',
         '/assets/stitch/draw-waiting.jpg': 'assets/stitch/draw-waiting.jpg',
         '/assets/stitch/telephone-waiting.svg': 'assets/stitch/telephone-waiting.svg',
-        '/shared/draw-canvas-session.js': 'shared/draw-canvas-session.js',
         '/assets/quacks/draw-777.webp': 'assets/quacks/draw-777.webp',
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/quacks/draw-777.png': 'assets/quacks/draw-777.webp',
@@ -2707,7 +2694,6 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/stitch/waiting-host.jpg': 'assets/stitch/waiting-host.jpg',
         '/assets/stitch/waiting-guest.jpg': 'assets/stitch/waiting-guest.jpg',
         '/assets/stitch/secret-cards.jpg': 'assets/stitch/secret-cards.jpg',
-        '/shared/artwork-export.js': 'shared/artwork-export.js',
         '/assets/fonts/plus-jakarta-500.woff2': 'assets/fonts/plus-jakarta-500.woff2',
         '/assets/fonts/plus-jakarta-600.woff2': 'assets/fonts/plus-jakarta-600.woff2',
         '/assets/fonts/plus-jakarta-700.woff2': 'assets/fonts/plus-jakarta-700.woff2',
@@ -2715,33 +2701,19 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/fonts/Plus-Jakarta-Sans-OFL.txt': 'assets/fonts/Plus-Jakarta-Sans-OFL.txt',
         '/shared/template-tokens.css': 'shared/template-tokens.css',
         '/shared/template-components.css': 'shared/template-components.css',
-        '/quacks-fx.js': 'quacks-fx.js',
         '/assets/game-sounds/quacks-explosion.wav': 'assets/game-sounds/quacks-explosion.wav',
-        '/quacks-art.js': 'quacks-art.js',
         '/quacks': 'quacks.html',
         '/quacks.css': 'quacks.css',
         '/assets/game-sounds/bluff-reaction.mp3': 'assets/game-sounds/bluff-reaction.mp3',
         '/bluff': 'bluff.html',
         '/musicquiz': 'musicquiz.html',
         '/minimal': 'minimal.html',
-        '/shared/party-shapes.js': 'shared/party-shapes.js',
         '/telephone': 'telephone.html',
         '/trpg': 'trpg.html',
-        '/market-curve.js': 'market-curve.js',
-        '/shared/color-scheme.js': 'shared/color-scheme.js',
         '/shared/playful-theme.css': 'shared/playful-theme.css',
         '/credits': 'credits.html',
         '/credits.css': 'credits.css',
         '/market': 'market.html',
-        '/market-rules.js': 'market-rules.js',
-        '/shared/race-movement.js': 'shared/race-movement.js',
-        '/shared/race-paths.js': 'shared/race-paths.js',
-        '/shared/draw-results.js': 'shared/draw-results.js',
-        '/shared/motion-policy.js': 'shared/motion-policy.js',
-        '/shared/audio-settings.js': 'shared/audio-settings.js',
-        '/shared/expression-sounds.js': 'shared/expression-sounds.js',
-        '/shared/game-sounds.js': 'shared/game-sounds.js',
-        '/shared/race-game-sounds.js': 'shared/race-game-sounds.js',
         '/assets/game-sounds/entrance-soul-world.mp3': 'assets/game-sounds/entrance-soul-world.mp3',
         '/assets/game-sounds/turn.wav': 'assets/game-sounds/turn.wav',
         '/assets/game-sounds/dice-roll.wav': 'assets/game-sounds/dice-roll.wav',
@@ -2749,10 +2721,8 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/slam.wav': 'assets/game-sounds/slam.wav',
         '/assets/game-sounds/nitro.wav': 'assets/game-sounds/nitro.wav',
         '/assets/game-sounds/skid.wav': 'assets/game-sounds/skid.wav',
-        '/shared/popovers.js': 'shared/popovers.js',
         '/shared/ui-foundation.css': 'shared/ui-foundation.css',
         '/shared/ui-primitives.css': 'shared/ui-primitives.css',
-        '/shared/ui-components.js': 'shared/ui-components.js',
         '/collection': 'collection.html',
         '/collection.css': 'collection.css',
         '/settings': 'settings.html',
@@ -2773,7 +2743,6 @@ function initializeApp(config, dataLock, acquired) {
         '/draw': 'draw.html',
         '/draw.css': 'draw.css',
         '/draw-words': 'draw-words.html',
-        '/shared/stroke-canvas.js': 'shared/stroke-canvas.js',
         '/gifts': 'gifts.html',
         '/gifts.css': 'gifts.css',
         '/': 'index.html',
@@ -2791,9 +2760,6 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/thunder-box.png': 'assets/thunder-box.webp',
         '/assets/gift-sounds/open_001.wav': 'assets/gift-sounds/open_001.wav',
         '/assets/gift-sounds/confirmation_001.wav': 'assets/gift-sounds/confirmation_001.wav',
-        '/shared/race-vehicle-effects.js': 'shared/race-vehicle-effects.js',
-        '/shared/race-directions.js': 'shared/race-directions.js',
-        '/shared/race-dice-dialog.js': 'shared/race-dice-dialog.js',
         '/assets/game-sounds/quacks-settlement.wav': 'assets/game-sounds/quacks-settlement.wav',
         '/assets/game-sounds/quacks-card.wav': 'assets/game-sounds/quacks-card.wav',
         '/assets/quacks/draw-portrait-v1.webp': 'assets/quacks/draw-portrait-v1.webp',
@@ -2807,13 +2773,9 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/quacks/explosion-reference-v1.png': 'assets/quacks/explosion-reference-v1.webp',
         '/assets/room-leave-thumbnail.jpg': 'assets/room-leave-thumbnail.jpg',
         '/sound-library': 'sound-library.html',
-        '/sound-library.js': 'sound-library.js',
-        '/shared/song-title-zh.js': 'shared/song-title-zh.js',
         '/assets/game-sounds/correct-user.mp3': 'assets/game-sounds/correct-user.mp3',
         '/assets/game-sounds/incorrect-user.mp3': 'assets/game-sounds/incorrect-user.mp3',
-        '/shared/game-result-sounds.js': 'shared/game-result-sounds.js',
         '/admin/game-audio': 'game-audio-admin.html',
-        '/game-audio-admin.js': 'game-audio-admin.js',
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
@@ -2927,9 +2889,6 @@ function initializeApp(config, dataLock, acquired) {
           files['/assets/' + sound.directory + '/' + name] =
             'assets/' + sound.directory + '/' + sound.file;
       }
-      files['/shared/opening-theme.js'] = 'shared/opening-theme.js';
-      files['/shared/entry-intro.js'] = 'shared/entry-intro.js';
-      files['/shared/auth-entry.js'] = 'shared/auth-entry.js';
       files['/shared/entry-intro.css'] = 'shared/entry-intro.css';
       const file = roomPath ? roomPath[1] + '.html' : files[url.pathname];
       if (!file) {
@@ -3022,12 +2981,9 @@ function initializeApp(config, dataLock, acquired) {
       // microphone; every other page keeps it blocked.
       if (file === 'bluff.html')
         res.setHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
-      // Pages come from the Vue build; only pages without a Vue version remain in public/.
-      // An API-only server (no build) answers 503 instead of failing on a missing file.
-      const legacyPage = path.join(__dirname, '..', 'public', file);
-      const document =
-        frontend?.readPage(file) ||
-        (fs.existsSync(legacyPage) ? fs.readFileSync(legacyPage) : null);
+      // Every executable page is built by Vite, including the audio tools.
+      // API-only instances explicitly decline documents.
+      const document = frontend?.readPage(file);
       if (!document) throw new HttpError(503, 'FRONTEND_NOT_BUILT', '網站前端尚未建置，請稍後再試');
       res.end(withEntryIntro(document, { authPage: file === 'login.html' }));
     } catch (e) {

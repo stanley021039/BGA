@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs'),
+const fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   { createHash } = require('node:crypto'),
   vm = require('node:vm');
@@ -315,36 +315,6 @@ test('music library previews share preferences and release their listeners when 
   ui.api.set('music', { volume: 0.8 });
   assert.equal(audio.volume, 0.4);
   assert.equal(handlers.size, 0);
-});
-test('the HTTP server serves the shared controller as executable JavaScript', async () => {
-  const os = require('node:os'),
-    { createApp } = require('../src/app');
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-audio-http-'));
-  const app = createApp({
-    port: 0,
-    host: '127.0.0.1',
-    historyDir: path.join(dir, 'history'),
-    communityDir: path.join(dir, 'community'),
-    dbFile: path.join(dir, 'app.sqlite'),
-  });
-  try {
-    const { port } = await app.listen();
-    const response = await fetch(`http://127.0.0.1:${port}/shared/audio-settings.js`);
-    assert.equal(response.status, 200);
-    assert.match(response.headers.get('content-type'), /javascript/);
-    const served = await response.text();
-    const ui = harness();
-    vm.runInNewContext(served, {
-      window: ui.window,
-      document: ui.document,
-      localStorage: { getItem: () => null, setItem() {} },
-      Audio: class {},
-    });
-    assert.equal(ui.window.AudioSettings.get().music.volume, 0.3);
-  } finally {
-    await app.close();
-    fs.rmSync(dir, { recursive: true, force: true, maxRetries: 5 });
-  }
 });
 
 test('effects default on, migrate legacy off once, and retain a subsequent explicit mute across navigation', () => {

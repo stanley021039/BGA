@@ -1,3 +1,4 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
@@ -5,7 +6,7 @@ const { test } = require('node:test'),
   path = require('node:path');
 const source = fs
   .readFileSync(path.join(__dirname, '../src/services/motion-lifetime.js'), 'utf8')
-  .replace(/export /g, '');
+  .toString();
 function harness(blocked = false) {
   const listeners = new Map(),
     subscriptions = new Set(),
@@ -35,8 +36,8 @@ function harness(blocked = false) {
   };
   Object.assign(media, eventTarget('media'));
   const box = { window, Set };
-  vm.createContext(box);
-  vm.runInContext(source, box);
+  vm.createContext(withEngineImports(box));
+  vm.runInContext(require('../../tests/helpers/browser-modules.cjs').fixtureSource(source), box);
   const fire = (key) => [...(listeners.get(key) || [])].forEach((fn) => fn());
   return {
     box,

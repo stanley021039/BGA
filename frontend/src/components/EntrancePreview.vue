@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MotionPolicy from '../engines/motion-policy.js';
+
 import { sizedImage } from '../services/image-size';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { apparate } from '../pages/lobby/apparition';
@@ -18,7 +20,7 @@ function play() {
     !actor ||
     prefs.motion?.enabled === false ||
     prefs.motion?.reduced === true ||
-    !window.MotionPolicy?.allowsMotion()
+    !MotionPolicy?.allowsMotion()
   )
     return;
   stop = apparate(actor, stage.value, props.effect);

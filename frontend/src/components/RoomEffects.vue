@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import GameResultSounds from '../engines/game-result-sounds.js';
+import ExpressionSounds from '../engines/expression-sounds.js';
+import MotionPolicy from '../engines/motion-policy.js';
+import BarrageFrames from '../engines/barrage-frames.js';
+
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoomStore } from '../stores/room';
 import type { BarrageController, ExpressionPlayback } from '../contracts/social';
 import { readBarrages, readExpressions } from '../contracts/social';
 import '../styles/room-social.scss';
-import '../../../public/shared/game-result-sounds.js';
 declare global {
   interface Window {
     GameResultSounds?: { create(): { update(snapshot: unknown): void; dispose(): void } };
@@ -46,7 +50,7 @@ function update() {
     results = undefined;
     return;
   }
-  results ??= window.GameResultSounds?.create();
+  results ??= GameResultSounds?.create();
   results?.update(state);
   barrages?.update({ ...state, barrages: readBarrages(state.barrages) });
   sounds?.update({
@@ -70,7 +74,7 @@ function start() {
   if (!mounted || !layer.value || !context.value) return;
   const host = layer.value;
   barrages =
-    window.MotionPolicy?.createBarrageController((item, lane, { moving, finish }) => {
+    MotionPolicy?.createBarrageController((item, lane, { moving, finish }) => {
       const bubble = document.createElement('div');
       bubble.className = 'game-barrage vue-room-barrage';
       if (item.kind === 'emoji') {
@@ -81,17 +85,17 @@ function start() {
         emoji.className = 'vue-room-emoji-glyph';
         emoji.textContent = item.emoji;
         bubble.append(name, emoji);
-      } else if (window.BarrageFrames) {
+      } else if (BarrageFrames) {
         bubble.classList.add('game-barrage-framed');
-        window.BarrageFrames.decorate(bubble, item.frame, item.name, item.message);
+        BarrageFrames.decorate(bubble, item.frame, item.name, item.message);
       } else {
         const name = document.createElement('strong');
         name.textContent = item.name + '：';
         bubble.append(name, document.createTextNode(item.message));
       }
       if (!moving) bubble.classList.add('game-barrage-static', 'vue-room-barrage-static');
-      if (window.BarrageFrames) {
-        if (!window.BarrageFrames.place(host, bubble)) return false;
+      if (BarrageFrames) {
+        if (!BarrageFrames.place(host, bubble)) return false;
       } else {
         host.append(bubble);
         const top = 12 + lane * (bubble.offsetHeight + 8);
@@ -109,7 +113,7 @@ function start() {
       bubble.addEventListener('animationend', finish, { once: true });
       return () => bubble.remove();
     }) || null;
-  sounds = window.ExpressionSounds?.create() || null;
+  sounds = ExpressionSounds?.create() || null;
   if (typeof ResizeObserver === 'function') {
     let size: string | null = null;
     resize = new ResizeObserver(() => {

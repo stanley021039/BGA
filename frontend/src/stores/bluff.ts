@@ -1,3 +1,5 @@
+import AudioSettings from '../engines/audio-settings.js';
+import GameSounds from '../engines/game-sounds.js';
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useRoomStore } from './room';
@@ -71,7 +73,7 @@ export const useBluffStore = defineStore('bluff', () => {
       !!state.value.myRole,
   );
   const liveReactions = shallowRef<(BluffReaction & { until: number })[]>([]),
-    sounds: GameSoundOwner | undefined = window.GameSounds?.create();
+    sounds: GameSoundOwner | undefined = GameSounds?.create();
   let timer: ReturnType<typeof setInterval> | null = null,
     expiry: ReturnType<typeof setTimeout> | null = null,
     anchor = Date.now(),
@@ -90,7 +92,7 @@ export const useBluffStore = defineStore('bluff', () => {
     if (expiry) clearTimeout(expiry);
     expiry = null;
     liveReactions.value = [];
-    window.AudioSettings?.stopEffect(clip);
+    AudioSettings?.stopEffect(clip);
     clip = undefined;
   }
   function expire() {
@@ -173,8 +175,8 @@ export const useBluffStore = defineStore('bluff', () => {
         expire();
         if (performance.now() - lastPlayed >= 5000) {
           lastPlayed = performance.now();
-          window.AudioSettings?.stopEffect(clip);
-          clip = window.AudioSettings?.playEffect?.('bluff-reaction');
+          AudioSettings?.stopEffect(clip);
+          clip = AudioSettings?.playEffect?.('bluff-reaction');
         }
       }
       while (seen.size > 100) seen.delete(seen.values().next().value!);

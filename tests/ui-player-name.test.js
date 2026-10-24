@@ -1,6 +1,6 @@
 const test = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const uiSource = fs.readFileSync(path.join(__dirname, '../public/shared/ui-components.js'), 'utf8'),
@@ -196,6 +196,8 @@ function harness({ reduced = false, enabled = true } = {}) {
   root.children.push(body);
   const media = events({ matches: reduced }),
     window = events({
+      UIPopover: undefined,
+      UIPopover: undefined,
       document,
       innerWidth: 640,
       innerHeight: 480,

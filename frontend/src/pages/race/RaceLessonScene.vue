@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import RacePaths from '../../engines/race-paths.js';
+
 import { computed, ref, watch } from 'vue';
 import type { RaceDomain, RacePoint, RaceRoute } from '../../contracts/race';
 import UiButton from '../../components/UiButton.vue';
@@ -27,7 +29,7 @@ const enabled = computed(() => model.canAct && !presentation.locked.value && pre
   ),
   routes = computed(() =>
     enabled.value && s.value.phase === 'move' && !s.value.pending && !s.value.diceCheck
-      ? window.RacePaths?.routes(s.value) || new Map<string, RaceRoute>()
+      ? RacePaths?.routes(s.value) || new Map<string, RaceRoute>()
       : new Map<string, RaceRoute>(),
   ),
   preview = computed(() =>

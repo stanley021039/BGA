@@ -2,11 +2,11 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   { randomUUID } = require('node:crypto'),
-  fs = require('fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('vm');
 const { QuacksRoom } = require('../src/games/quacks'),
   { POT_COLORS, FORTUNES, NAMES } = require('../src/games/quacks-catalog'),
-  art = require('../public/quacks-art');
+  art = require('../frontend/src/engines/quacks-art.js').default;
 const act = (r, p, action, data = {}) =>
   r.act(p.id, action, { roundId: r.roundId, requestId: randomUUID(), ...data });
 function setup() {

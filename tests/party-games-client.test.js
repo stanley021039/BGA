@@ -1,12 +1,12 @@
 'use strict';
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('node:vm');
 test('geometry conversion produces genuine circles and simple lines without colour or freehand extensions', () => {
   const context = { window: {} };
   vm.runInNewContext(
-    fs.readFileSync(require.resolve('../public/shared/party-shapes.js'), 'utf8'),
+    fs.readFileSync(require.resolve('../frontend/src/engines/party-shapes.js'), 'utf8'),
     context,
   );
   const result = context.window.PartyShapes.toStrokes([
