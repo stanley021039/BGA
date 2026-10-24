@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import RoomSidePanel from './RoomSidePanel.vue';
-import RoomBackground from './RoomBackground.vue';
-import { useChatStore } from '../stores/chat';
+import { computed, onMounted, ref, watch } from 'vue';
+import RoomSceneLayout from './RoomSceneLayout.vue';
 import { warmGame } from '../services/game-assets';
 import type { GameType, RoomPlayer, RoomSnapshot } from '../contracts/room';
 import { useRoomPage } from '../composables/room-page';
@@ -48,44 +46,6 @@ const emit = defineEmits<{ start: [] }>(),
   page = useRoomPage(props.type, props.reader, props.pollMs),
   { room, session, entryCode, entryBusy, entryError, connected } = page,
   { focused, toggle } = useGameFocus();
-const panelsEnabled = computed(() => props.type === 'quacks'),
-  rosterOpen = ref(false),
-  chatOpen = ref(false),
-  chat = useChatStore(),
-  narrow = window.matchMedia('(max-width: 1180px)'),
-  mobile = ref(narrow.matches),
-  drawerOpen = computed(
-    () =>
-      panelsEnabled.value && mobile.value && !focused.value && (rosterOpen.value || chatOpen.value),
-  );
-let previousTrigger: HTMLElement | null = null;
-function togglePanel(side: 'left' | 'right') {
-  previousTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-  if (side === 'left') {
-    rosterOpen.value = !rosterOpen.value;
-    if (mobile.value && rosterOpen.value) chatOpen.value = false;
-  } else {
-    chatOpen.value = !chatOpen.value;
-    if (mobile.value && chatOpen.value) rosterOpen.value = false;
-  }
-}
-async function closePanels() {
-  rosterOpen.value = chatOpen.value = false;
-  await nextTick();
-  if (previousTrigger?.isConnected) previousTrigger.focus({ preventScroll: true });
-}
-function breakpoint() {
-  mobile.value = narrow.matches;
-  if (mobile.value && rosterOpen.value && chatOpen.value) rosterOpen.value = false;
-}
-narrow.addEventListener('change', breakpoint);
-onBeforeUnmount(() => narrow.removeEventListener('change', breakpoint));
-watch(
-  () => room.scope + ':' + room.code,
-  () => {
-    rosterOpen.value = chatOpen.value = false;
-  },
-);
 const waiting = computed(() => room.snapshot?.phase === 'waiting'),
   settingsTarget = computed(() =>
     waiting.value ? '#room-waiting-settings-' + props.type : props.setupTarget,
@@ -171,10 +131,10 @@ onMounted(() => {
   ></section>
   <div
     v-else
-    class="vue-game-workspace vue-room-shell"
+    class="vue-game-workspace vue-room-shell has-room-space"
     :data-room-kind="type"
     :data-room-phase="room.snapshot?.phase"
-    :class="{ 'is-header-integrated': headerIntegrated, 'has-room-space': panelsEnabled }"
+    :class="{ 'is-header-integrated': headerIntegrated }"
     ><RoomHeader :title="title" :focused="focused" @integrated="headerIntegrated = $event"
       ><template v-if="$slots.toolbar" #game-actions><slot name="toolbar" /></template
       ><UiButton
@@ -198,31 +158,8 @@ onMounted(() => {
         :message="connection || room.message"
         :error="!!room.terminal || room.disconnected || room.failed"
     /></div>
-    <div class="vue-game-grid">
-      <RoomBackground
-        v-if="panelsEnabled"
-        :connected="connected"
-        :focused="focused"
-        :inert="drawerOpen" />
-      <Teleport to="body"
-        ><div
-          v-if="drawerOpen"
-          role="presentation"
-          aria-hidden="true"
-          class="vue-room-drawer-backdrop"
-          tabindex="-1"
-          @click.stop="closePanels"
-      /></Teleport>
-      <RoomSidePanel
-        class="vue-game-roster-panel"
-        :enabled="panelsEnabled"
-        side="left"
-        title="玩家列表"
-        :open="rosterOpen"
-        :mobile="mobile"
-        :focused="focused"
-        @toggle="togglePanel('left')"
-        @close="closePanels"
+    <RoomSceneLayout :connected="connected" :focused="focused">
+      <template #roster
         ><slot name="roster" :bot-allowed="botAllowed"
           ><RoomRoster
             :snapshot="room.snapshot"
@@ -241,19 +178,10 @@ onMounted(() => {
                 icon="add"
                 label="加入電腦玩家"
                 :disabled="room.busy || !botAllowed"
-                @click="room.command('bot', {})" /></template></RoomRoster></slot></RoomSidePanel
-      ><main class="vue-game-main" :inert="drawerOpen"><slot /></main
-      ><RoomSidePanel
-        class="vue-game-side"
-        :enabled="panelsEnabled"
-        side="right"
-        title="聊天室"
-        :open="chatOpen"
-        :unread="chat.unread"
-        :mobile="mobile"
-        :focused="focused"
-        @toggle="togglePanel('right')"
-        @close="closePanels"
+                @click="room.command('bot', {})" /></template></RoomRoster></slot
+      ></template>
+      <slot />
+      <template #side="{ chatVisible }"
         ><Teleport v-if="setup" :to="settingsTarget || 'body'" :disabled="!settingsTarget" defer>
           <GameSettingsPanel
             :heading="waiting ? '' : '房間設定'"
@@ -277,10 +205,9 @@ onMounted(() => {
             >
           </GameSettingsPanel>
         </Teleport>
-        <slot name="side-actions" /><RoomChat
-          :panel-visible="panelsEnabled ? chatOpen && !focused : undefined"
-          ><template #tools
-            ><RoomMedia :connected="room.connected" /></template></RoomChat></RoomSidePanel></div
+        <slot name="side-actions" /><RoomChat :panel-visible="chatVisible"
+          ><template #tools><RoomMedia :connected="room.connected" /></template></RoomChat
+      ></template> </RoomSceneLayout
     ><RoomEffects :connected="connected" /><RoomPings /> </div
   ><UiDialog ref="help" :title="title + '玩法'"
     ><slot name="help" /><a :href="'/?game=' + type">回大廳開一桌</a></UiDialog

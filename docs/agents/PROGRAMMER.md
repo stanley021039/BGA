@@ -986,3 +986,7 @@ Windows Edge 自動回歸涵蓋 1920×1080、1280×720、390×844、320×568、6
 新 Edge 工作階段、嚴格 document-user-activation-required 政策、800ms認證延遲：三款真MP3各自同context running播放，不需恢復點擊，播放中音量0.1立即生效。1920×1080／390×844／320×844、深淺色及200%字體共12組對話操作（pending幾何、503保草稿、Escape關閉、Enter真HTTP送出）通過；加三款音訊共15組、零pageerror。驗收腳本首輪因連續發送觸發既有1500ms防刷而失敗，改為等待3200ms後通過，未改正式防刷規則。隔離帳號只兌換獎勵、不造已達成成就。證據ignored work/qa-pr219/{browser.cjs,results.json,chat-mobile-dark.png,transfer-retest.log}及根目錄各測試log；Safari、實機觸控與聲卡聽感未新增驗證。此筆取代上節未提交／尚待發布的狀態描述；遠端合併／CI以PR最終紀錄為準，未部署或操作正式資料。
 
 本輪本機全套結果補記：292檔、2691項，2689通過／2失敗／0略過；兩項均為未修改的data-transfer schema4／5 HTTP驗證，Node26 fetch回報bad port（系統隨機埠被Fetch禁用），非資料斷言失敗。同環境單獨重跑兩項全通過。最終新增音量回歸另跑auth-entry 11／11通過；不得把原全套寫成零失敗或宣稱包含新增測試。Linux Node22最終同SHA完整CI仍是合併必要門檻。
+
+2026-10-24 #230 Draft PR #242 整合候選：RoomSceneLayout接十一款（股市除外），保留main 0f47f58的郎中流程列、人物卡切鍋與設定預覽；C00整桌／側欄表面排除has-room-space。最新main整合後後端2710過／0敗／1環境略、297檔，前端107/107；型別、正式建置、UI ratchet、效能、版號與格式檢查通過。Edge畫面88組無pageerror；撲克手機首次縮放有單次寬度瞬間讀值，單獨重測寬度390px正常；十一款桌機與手機側欄操作通過。所有階段測試依使用者要求暫停；三人兩輪未重現，不宣稱修復。PR仍為Draft，未合併、部署或跑CI。詳docs/specs/ALL-GAME-SCENES-230.md。
+
+2026-10-24 #242 衝突整合：main 合入 #243（97b3c36，舊前端清理），保留 PR 2.43.0 及 2.42.8 歷史，統一 package／lock 版號。未重跑完整遊戲階段；只驗衝突標記、diff 與版號。PR 狀態由 GitHub 顯示 Ready for review，內文 Draft 狀態描述待同步。

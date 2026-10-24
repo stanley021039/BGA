@@ -1,0 +1,20 @@
+{
+  "health": {
+    "base": 120,
+    "min": 110,
+    "max": 130
+  },
+  "damage": {
+    "min": 18,
+    "max": 22,
+    "criticalChance": 0.15,
+    "criticalMultiplier": 1.5
+  },
+  "regeneration": {
+    "delayMs": 4000,
+    "perSecond": 4
+  },
+  "respawnMs": 3000,
+  "attackRange": 50,
+  "unitScale": 10000
+}

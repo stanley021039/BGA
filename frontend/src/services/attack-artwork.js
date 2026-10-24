@@ -1,6 +1,7 @@
 /* Adapted from user 攻擊.zip: 15_4 full artwork plus 8 independent obsidian crescent variants.
  * Static reviewed drawing code only: no export UI, global inputs, dummy, shake or endless demo. */
 import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
+import combatRules from '../../../public/shared/scene-rules.json';
 export function playAttackArtwork(surface, options) {
   if (!motionAllowed()) return () => {};
   const ctx = surface.getContext('2d');
@@ -20,6 +21,7 @@ export function playAttackArtwork(surface, options) {
     bloom: 24,
     density: 1,
     damageMult: 1,
+    damageShown: false,
     screenShake: false,
     showDmgPopups: !defensive,
     autoSparks: true,
@@ -98,10 +100,22 @@ export function playAttackArtwork(surface, options) {
   }
   function spawnDamageText(x, y, dmg, isCrit = true, customLabel = null) {
     if (!state.showDmgPopups) return;
-    const amount = Math.max(
-      dmg > 0 ? 1 : 0,
-      Math.floor(dmg * state.damageMult * (0.65 + Math.random() * 0.7)),
-    );
+    if (Number.isFinite(options.damage)) {
+      if (state.damageShown || options.damage <= 0) return;
+      state.damageShown = true;
+      isCrit = options.critical === true;
+      customLabel = null;
+    }
+    const minimum = combatRules.damage.min * combatRules.unitScale;
+    const previewBase =
+      minimum +
+      Math.floor(
+        Math.random() *
+          ((combatRules.damage.max - combatRules.damage.min) * combatRules.unitScale + 1),
+      );
+    const amount = Number.isFinite(options.damage)
+      ? options.damage
+      : Math.round(previewBase * (isCrit ? combatRules.damage.criticalMultiplier : 1));
     const number = amount.toLocaleString();
     const textStr = customLabel
       ? customLabel.replace(/\d[\d,]*/g, number)

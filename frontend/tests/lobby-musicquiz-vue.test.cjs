@@ -351,6 +351,7 @@ test('wrap destinations and cosmetic attacks survive the actual lobby contract w
     a = { id: 'a', display_name: 'A' },
     b = { id: 'b', display_name: 'B' };
   lobby.move(a, { x: 94, y: 50 });
+  lobby.move(b, { x: 94, y: 50 });
   now += 10000;
   lobby.view(a);
   lobby.view(b);
