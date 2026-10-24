@@ -9,7 +9,7 @@ Afterhours 需要 Node.js **22.13 或更新版**，Windows 與 Linux 使用同�
 | 直接連線（原本方式） | `http://<可連到主機的 IP>:3000` | `0.0.0.0` | 留空自動偵測 VPN，或填入該 HTTP 網址 | 同一個可信任的 VPN／區域網路 |
 | Cloudflare 網域 | `https://shhuang.cc` | `127.0.0.1` | `https://shhuang.cc` | 透過 Tunnel 公開 HTTPS 網址 |
 
-`PORT` 預設為 `3000`。`PUBLIC_URL` 只決定邀請連結與 HTTPS cookie 設定，不會自己建立 HTTPS 或開放防火牆。**兩種設定不能直接混用**：網域模式會使用 Secure cookie，透過區網的純 HTTP 網址無法正常維持登入。切換模式後要重啟 BGA、重新登入；重啟會清空記憶體中的房間。若換到另一台主機，帳號與留言不會自動搬移，需先安排 SQLite 與 `data/` 的一致性備份及遷移。
+`PORT` 預設為 `3000`。`PUBLIC_URL` 只決定邀請連結與 HTTPS cookie 設定，不會自己建立 HTTPS 或開放防火牆。**兩種設定不能直接混用**：網域模式會使用 Secure cookie，透過區網的純 HTTP 網址無法正常維持登入。切換模式後要重啟 BGA、重新登入。正常關閉（SIGTERM）時，進行中的房間會存到資料庫旁的 `<DB_FILE>.rooms`，下次啟動時還原並刪除該檔；強制結束（SIGKILL、斷電）時房間仍會遺失。若換到另一台主機，帳號與留言不會自動搬移，需先安排 SQLite 與 `data/` 的一致性備份及遷移。
 
 首次在全新資料庫啟動前，複製 `.env.example` 為 `.env`，設定 `PORT`、`HOST`、`PUBLIC_URL` 及持久資料路徑，執行 `npm test`，再用 `node admin.js init <管理者帳號>` 建立唯一的初始管理者。此命令只可在沒有使用者的資料庫執行一次，並會顯示一次性初始密碼；登入後立即重設。`.env` 與資料目錄不可提交到 Git。GitHub Issue 同步另需 `GITHUB_TOKEN`，權限與待驗事項見 [Linux 實際部署紀錄](LINUX-DEPLOYMENT.md)。
 
