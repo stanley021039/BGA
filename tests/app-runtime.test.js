@@ -238,7 +238,31 @@ test('real draw, music and room-state SSE connections drain on close with no rem
   await f.app.close();
   assert.equal(live.size, 0);
   assert.equal(f.app.server.listening, false);
-  for (const reader of readers) assert.equal((await reader.read()).done, true);
+  // Closing a stream preserves chunks that Fetch already buffered. They may
+  // contain a sweep/heartbeat sent while the other streams were being opened.
+  // Require bounded EOF rather than assuming the very next chunk is EOF.
+  let deadline;
+  try {
+    await Promise.race([
+      Promise.all(
+        readers.map(async (reader) => {
+          let bytes = 0;
+          for (let i = 0; i < 100; i++) {
+            const chunk = await reader.read();
+            if (chunk.done) return;
+            bytes += chunk.value.byteLength;
+            assert.ok(bytes <= 1024 * 1024, 'closed SSE must have bounded buffered data');
+          }
+          assert.fail('closed SSE did not reach EOF within 100 chunks');
+        }),
+      ),
+      new Promise((_, reject) => {
+        deadline = setTimeout(() => reject(Error('closed SSE did not reach EOF')), 3000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(deadline);
+  }
 });
 test('close waits for an in-flight request before clearing its room state and database', async (t) => {
   const { appFixture } = require('./helpers/app-fixture.cjs'),

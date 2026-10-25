@@ -5,6 +5,25 @@ const sass = require('sass');
 const { parseHTML } = require('linkedom');
 
 const css = sass.compile(path.resolve(__dirname, '../src/styles/room-surfaces.scss')).css;
+
+test('shared Vue accessibility descriptions remain available without legacy primitive CSS', () => {
+  const shared = sass.compile(path.resolve(__dirname, '../src/styles/ui-components.scss')).css;
+  const { document } = parseHTML(
+    `<html><body><dialog class="vue-room-media"><span class="ui-sr-only" id="move">拖曳頂端移動</span></dialog><style>${shared}</style></body></html>`,
+  );
+  const hint = document.getElementById('move');
+  const rules = [...document.querySelector('style').sheet.cssRules];
+  const rule = rules.find((item) => item.selectorText === '.ui-sr-only');
+  assert.ok(rule && hint.matches(rule.selectorText));
+  assert.equal(rule.style.getPropertyValue('position'), 'absolute');
+  assert.equal(rule.style.getPropertyValue('inline-size'), '1px');
+  assert.equal(rule.style.getPropertyValue('block-size'), '1px');
+  assert.equal(rule.style.getPropertyValue('overflow'), 'hidden');
+  assert.match(rule.style.getPropertyValue('clip'), /rect\(0, 0, 0, 0\)/);
+  assert.notEqual(rule.style.getPropertyValue('display'), 'none');
+  assert.equal(hint.getAttribute('aria-hidden'), null);
+  assert.equal(hint.textContent, '拖曳頂端移動');
+});
 function fixture(draw, scene) {
   const prefix = draw ? 'draw' : 'game';
   const { document } = parseHTML(`<html><body data-visual-theme>

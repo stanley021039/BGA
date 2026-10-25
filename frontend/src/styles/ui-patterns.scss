@@ -126,6 +126,10 @@
   max-inline-size: 100%;
   margin: 0;
   padding: var(--stitch-space-16);
+  &[data-image-only='true'] {
+    padding: 0;
+    gap: 0;
+  }
   border: 0;
   border-radius: var(--stitch-radius-panel);
   background: var(--stitch-choice-bg);
@@ -151,6 +155,9 @@
   &[aria-disabled='true'] {
     color: var(--stitch-disabled-ink);
     cursor: not-allowed;
+  }
+  &[data-readable-disabled='true'] {
+    color: var(--stitch-ink);
   }
   .ui-choice-label {
     display: block;

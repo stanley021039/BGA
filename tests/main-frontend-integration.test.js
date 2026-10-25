@@ -42,6 +42,9 @@ test('Vue documents survive native-audio integration, keep authenticated routes 
   const anonymous = await fetch(base + '/musicquiz/ABCDEF', { redirect: 'manual' });
   assert.equal(anonymous.status, 302);
   assert.match(anonymous.headers.get('location'), /^\/login\?next=/);
+  const ceoAnonymous = await fetch(base + '/ceo/ABCDEF', { redirect: 'manual' });
+  assert.equal(ceoAnonymous.status, 302);
+  assert.equal(ceoAnonymous.headers.get('location'), '/login?next=%2Fceo%2FABCDEF');
   assert.match(await (await fetch(base + '/login')).text(), /compiled-vue-login/);
   const login = async (username) => {
     const r = await fetch(base + '/api/auth/login', {
@@ -58,6 +61,8 @@ test('Vue documents survive native-audio integration, keep authenticated routes 
     '/musicquiz/ABCDEF',
     '/majority/ABCDEF',
     '/quacks/ABCDEF',
+    '/ceo/ABCDEF',
+    '/ceo',
     '/profile',
     '/achievements',
   ]) {
@@ -65,6 +70,13 @@ test('Vue documents survive native-audio integration, keep authenticated routes 
     assert.equal(r.status, 200);
     assert.match(await r.text(), /compiled-vue-/);
   }
+  const ceoCreate = await fetch(base + '/api/create', {
+    method: 'POST',
+    headers: { Cookie: peer, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'ceo' }),
+  });
+  assert.equal(ceoCreate.status, 200);
+  assert.equal((await ceoCreate.json()).type, 'ceo');
   assert.equal(
     (await fetch(base + '/admin/game-audio', { headers: { Cookie: peer } })).status,
     403,

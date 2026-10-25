@@ -63,6 +63,8 @@ const { Room } = require('./games/poker'),
   { GiftRoom } = require('./games/gift');
 const { TrpgRoom } = require('./games/trpg');
 const { QuacksRoom } = require('./games/quacks');
+const { SecondWindRoom } = require('./games/second-wind/room');
+const { CeoRoom } = require('./games/ceo-room');
 const { BluffRoom } = require('./games/bluff');
 const { TelephoneRoom } = require('./games/telephone');
 const { MusicQuizRoom } = require('./games/musicquiz'),
@@ -995,7 +997,12 @@ function initializeApp(config, dataLock, acquired) {
     let restored = 0;
     for (const saved of snapshot.rooms || []) {
       const Type = roomClasses[saved.type];
-      if (!Type || rooms.has(saved.code)) continue;
+      if (rooms.has(saved.code)) continue;
+      // CEO and Second Wind cannot resume yet (#289); say so instead of dropping silently.
+      if (!Type) {
+        console.warn('Room ' + saved.code + ' not restored; ' + saved.type + ' cannot resume');
+        continue;
+      }
       // Snapshots written before callbacks were checked (2.42.6–2.44.1) may hold a
       // thunder room whose open dice roll lost its callbacks; it cannot resume.
       if (!Array.isArray(saved.callbacks) && saved.data?.get('_diceRoll')?.value) {
@@ -1551,7 +1558,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|lounge)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)$/.test(
               page || '',
             )
           )
@@ -1823,6 +1830,14 @@ function initializeApp(config, dataLock, acquired) {
           return send({ rooms: listRooms(rooms, seats, kickedUsers, user.id) });
         }
         if (url.pathname === '/api/create' && req.method === 'POST') {
+          // CEO has a Vue-only page; legacy hosts do not expose it by default.
+          if (
+            data.type === 'second-wind' &&
+            !(config.secondWindEnabled ?? config.frontendEnabled === true)
+          )
+            throw new HttpError(400, 'GAME_NOT_ENABLED', '運動員尚未啟用');
+          if (data.type === 'ceo' && !(config.ceoEnabled ?? config.frontendEnabled === true))
+            throw new HttpError(400, 'GAME_NOT_ENABLED', 'CEO 仍在開發，尚未開放建立房間');
           if (pendingAchievementUnits.size >= 4096)
             throw new HttpError(
               503,
@@ -1845,6 +1860,8 @@ function initializeApp(config, dataLock, acquired) {
               'minimal',
               'bluff',
               'quacks',
+              'ceo',
+              'second-wind',
               'lounge',
             ].includes(data.type)
           )
@@ -1858,7 +1875,9 @@ function initializeApp(config, dataLock, acquired) {
           do {
             code = randomBytes(3).toString('hex').toUpperCase();
           } while (rooms.has(code));
-          const quacks = data.type === 'quacks',
+          const secondWind = data.type === 'second-wind',
+            ceo = data.type === 'ceo',
+            quacks = data.type === 'quacks',
             bluff = data.type === 'bluff',
             musicquiz = data.type === 'musicquiz',
             minimal = data.type === 'minimal',
@@ -1871,54 +1890,62 @@ function initializeApp(config, dataLock, acquired) {
           const room = new (
             lounge
               ? LoungeRoom
-              : quacks
-                ? QuacksRoom
-                : bluff
-                  ? BluffRoom
-                  : musicquiz
-                    ? MusicQuizRoom
-                    : minimal
-                      ? MinimalRoom
-                      : telephone
-                        ? TelephoneRoom
-                        : trpg
-                          ? TrpgRoom
-                          : draw
-                            ? DrawGuessRoom
-                            : gift
-                              ? GiftRoom
-                              : majority
-                                ? MajorityRoom
-                                : thunder
-                                  ? ThunderRoom
-                                  : Room
+              : secondWind
+                ? SecondWindRoom
+                : ceo
+                  ? CeoRoom
+                  : quacks
+                    ? QuacksRoom
+                    : bluff
+                      ? BluffRoom
+                      : musicquiz
+                        ? MusicQuizRoom
+                        : minimal
+                          ? MinimalRoom
+                          : telephone
+                            ? TelephoneRoom
+                            : trpg
+                              ? TrpgRoom
+                              : draw
+                                ? DrawGuessRoom
+                                : gift
+                                  ? GiftRoom
+                                  : majority
+                                    ? MajorityRoom
+                                    : thunder
+                                      ? ThunderRoom
+                                      : Room
           )(
             code,
             String(
               data.roomName ||
                 (lounge
                   ? '場外休憩區'
-                  : quacks
-                    ? '郎中闖江湖好友局'
-                    : bluff
-                      ? '瞎掰王好友局'
-                      : musicquiz
-                        ? '猜歌挑戰好友局'
-                        : minimal
-                          ? '極簡畫家好友局'
-                          : telephone
-                            ? '傳情畫意好友局'
-                            : trpg
-                              ? '霧港鐘聲冒險隊'
-                              : draw
-                                ? '你畫我猜好友局'
-                                : gift
-                                  ? '送禮達人好友局'
-                                  : majority
-                                    ? '同頻俱樂部'
-                                    : thunder
-                                      ? '末路狂飆好友局'
-                                      : '深夜好友局'),
+                  : secondWind
+                    ? '運動員 Second Wind'
+                    : ceo
+                      ? '王牌執行長好友局'
+                      : quacks
+                        ? '郎中闖江湖好友局'
+                        : bluff
+                          ? '瞎掰王好友局'
+                          : musicquiz
+                            ? '猜歌挑戰好友局'
+                            : minimal
+                              ? '極簡畫家好友局'
+                              : telephone
+                                ? '傳情畫意好友局'
+                                : trpg
+                                  ? '霧港鐘聲冒險隊'
+                                  : draw
+                                    ? '你畫我猜好友局'
+                                    : gift
+                                      ? '送禮達人好友局'
+                                      : majority
+                                        ? '同頻俱樂部'
+                                        : thunder
+                                          ? '末路狂飆好友局'
+                                          : '深夜好友局'),
             ).slice(0, 24),
           );
           equipRoomProviders(room);
@@ -1953,7 +1980,7 @@ function initializeApp(config, dataLock, acquired) {
             () => {
               const player = room.add(user.display_name);
               player.name = user.display_name;
-              if (quacks) room.configure(player.id, data);
+              if (quacks || secondWind) room.configure(player.id, data);
               return player;
             },
           );
@@ -2592,9 +2619,16 @@ function initializeApp(config, dataLock, acquired) {
               else room.act(p.id, data.action, data);
             } else if (url.pathname === '/api/settings') {
               if (
-                !['thunder', 'majority', 'gift', 'draw', 'telephone', 'bluff', 'quacks'].includes(
-                  room.type,
-                )
+                ![
+                  'thunder',
+                  'majority',
+                  'gift',
+                  'draw',
+                  'telephone',
+                  'bluff',
+                  'quacks',
+                  'second-wind',
+                ].includes(room.type)
               )
                 throw Error('此遊戲沒有此設定');
               room.configure(p.id, data);
@@ -2625,6 +2659,8 @@ function initializeApp(config, dataLock, acquired) {
                   'minimal',
                   'bluff',
                   'quacks',
+                  'ceo',
+                  'second-wind',
                   'lounge',
                 ].includes(room.type) ||
                 !['waiting', 'showdown'].includes(room.phase) ||
@@ -2821,6 +2857,8 @@ function initializeApp(config, dataLock, acquired) {
         '/': 'index.html',
         '/poker': 'poker.html',
         '/race': 'race.html',
+        '/ceo': 'ceo.html',
+        '/second-wind': 'second-wind.html',
         '/rules': 'rules.html',
         '/achievements': 'achievements.html',
         '/shared/achievement-glow.css': 'shared/achievement-glow.css',
@@ -2851,7 +2889,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|lounge)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -2962,6 +3000,20 @@ function initializeApp(config, dataLock, acquired) {
             'assets/' + sound.directory + '/' + sound.file;
       }
       files['/shared/entry-intro.css'] = 'shared/entry-intro.css';
+      if (
+        (url.pathname === '/ceo' || roomPath?.[1] === 'ceo') &&
+        (!frontend || config.ceoEnabled === false)
+      ) {
+        res.writeHead(404);
+        return res.end();
+      }
+      if (
+        (url.pathname === '/second-wind' || roomPath?.[1] === 'second-wind') &&
+        (!frontend || config.secondWindEnabled === false)
+      ) {
+        res.writeHead(404);
+        return res.end();
+      }
       const file = roomPath ? roomPath[1] + '.html' : files[url.pathname];
       if (!file) {
         res.writeHead(404);
@@ -2990,7 +3042,9 @@ function initializeApp(config, dataLock, acquired) {
               file === 'minimal.html' ||
               file === 'lounge.html' ||
               file === 'bluff.html' ||
-              file === 'quacks.html'
+              file === 'quacks.html' ||
+              file === 'ceo.html' ||
+              file === 'second-wind.html'
                 ? '/login?next=' + encodeURIComponent(url.pathname)
                 : '/login',
           });

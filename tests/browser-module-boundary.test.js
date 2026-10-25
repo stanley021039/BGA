@@ -8,6 +8,24 @@ const { appFixture } = require('./helpers/app-fixture.cjs');
 const { check } = require('../tools/check-frontend-modules.cjs');
 const catalog = require('../tools/browser-modules.json');
 
+test('new game documents retain their mount and module entry after classic script removal', () => {
+  const pages = require('../frontend/pages.json');
+  for (const game of ['ceo', 'second-wind']) {
+    assert.ok(pages.some((page) => page.id === game && page.route === '/' + game));
+    const html = fs.readFileSync(
+      path.join(__dirname, '../frontend/pages', game, 'index.html'),
+      'utf8',
+    );
+    assert.match(html, new RegExp(`id="${game}-app"`));
+    assert.match(html, /id="site-header-app"/);
+    assert.match(html, /<title>[^<]+<\/title\s*>/);
+    const scripts = [...html.matchAll(/<script\b([^>]*)>/gi)];
+    assert.equal(scripts.length, 1);
+    assert.match(scripts[0][1], /type="module"/);
+    assert.ok(scripts[0][1].includes(`/src/pages/${game}/main.ts`));
+  }
+});
+
 test('all retired script URLs fail closed, while documents require their registered Vite build', async (t) => {
   const { base } = await appFixture(t);
   for (const [old] of Object.values(catalog)) {

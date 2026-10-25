@@ -12,6 +12,8 @@ export const gameTypes = [
   'minimal',
   'bluff',
   'quacks',
+  'ceo',
+  'second-wind',
   'lounge',
 ] as const;
 export type GameType = (typeof gameTypes)[number];

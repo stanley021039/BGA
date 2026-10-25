@@ -32,7 +32,17 @@ function botSupport(room) {
     supported: true,
     canAdd:
       count < (type === 'quacks' ? room.max : adapter.maxPlayers) &&
-      (!['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks'].includes(type) ||
+      (![
+        'gift',
+        'trpg',
+        'telephone',
+        'musicquiz',
+        'minimal',
+        'bluff',
+        'quacks',
+        'ceo',
+        'second-wind',
+      ].includes(type) ||
         ['waiting', 'finished'].includes(room.phase)),
     maxPlayers: type === 'quacks' ? room.max : adapter.maxPlayers,
     label: '本機測試 AI',
@@ -43,9 +53,17 @@ function addTestBot(room) {
   if (!support.supported) throw Error('此遊戲尚未提供測試 AI');
   if (!support.canAdd)
     throw Error(
-      ['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks'].includes(
-        room.type,
-      ) && !['waiting', 'finished'].includes(room.phase)
+      [
+        'gift',
+        'trpg',
+        'telephone',
+        'musicquiz',
+        'minimal',
+        'bluff',
+        'quacks',
+        'ceo',
+        'second-wind',
+      ].includes(room.type) && !['waiting', 'finished'].includes(room.phase)
         ? '本局已開始，請等待下一局再加入 AI'
         : '房間已滿',
     );
@@ -71,6 +89,58 @@ const blankAnswer = (prompt, rng) => {
           : ['朋友', '音樂', '遊戲', '休息'];
   return options[rng(options.length)];
 };
+registerTestAI('second-wind', {
+  maxPlayers: 6,
+  plan(room, player) {
+    const v = room.view(player.id),
+      g = v.game;
+    if (!g) return null;
+    const input = { roundId: v.roundId, requestId: randomUUID(), expectedRevision: g.revision };
+    if (g.pending) {
+      if (g.pending.playerId !== player.id) return null;
+      const opts = g.pending.options,
+        o =
+          opts.find((o) => o.value === 'skip') ||
+          opts.find((o) => o.value === 'roll') ||
+          opts.find((o) => o.value === 'stop') ||
+          // A repeated or runaway chain is ruled ended rather than retried forever.
+          opts.find((o) => o.value === 'end') ||
+          opts[room.rng(opts.length)];
+      return action(player.id, 'choice', { ...input, choiceId: g.pending.id, value: o.value });
+    }
+    if (['draft-rolloff', 'race-rolloff'].includes(g.phase) && !Object.hasOwn(g.rolls, player.id))
+      return action(player.id, 'roll', input);
+    if (g.phase === 'drafting' && g.turnId === player.id)
+      return action(player.id, 'draft', { ...input, racerId: g.market[room.rng(g.market.length)] });
+    if (g.phase === 'choosing' && !g.selectedIds.includes(player.id))
+      return action(player.id, 'select', {
+        ...input,
+        racerId: g.teams[player.id][room.rng(g.teams[player.id].length)],
+      });
+    if (g.phase === 'racing' && g.turnId === player.id) return action(player.id, 'roll', input);
+    if (g.phase === 'race-result' && g.first === player.id)
+      return action(player.id, 'next-race', input);
+    return null;
+  },
+});
+registerTestAI('ceo', {
+  maxPlayers: 6,
+  plan(room, player) {
+    const view = room.view(player.id),
+      state = view.game;
+    if (!state || state.turnId !== player.id) return null;
+    const me = state.players.find((entry) => entry.id === player.id);
+    const choice = state.market.find((entry) => entry.card.assets + entry.extraCost <= me.cash);
+    const input = {
+      roundId: view.roundId,
+      requestId: randomUUID(),
+      expectedRevision: state.revision,
+    };
+    return choice
+      ? action(player.id, 'acquire', { ...input, companyId: choice.card.id })
+      : action(player.id, 'dividend', input);
+  },
+});
 registerTestAI('quacks', {
   maxPlayers: 5,
   plan(room, p) {

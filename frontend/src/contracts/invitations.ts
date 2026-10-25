@@ -67,5 +67,7 @@ export const gameTitles: Record<GameType, string> = {
   minimal: '極簡猜圖',
   bluff: '瞎掰王',
   quacks: '郎中闖江湖',
+  ceo: '王牌執行長',
+  'second-wind': '運動員 Second Wind',
   lounge: '場外休憩區',
 };
