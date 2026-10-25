@@ -22,7 +22,7 @@ export const useTelephoneStore = defineStore('telephone', () => {
       room.snapshot?.type === 'telephone' ? (room.snapshot as TelephoneSnapshot) : null,
     ),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
-    settingsEditable = computed(() => room.host && setup.value && !room.terminal);
+    settingsEditable = computed(() => room.settingsManager && setup.value && !room.terminal);
   const sources = ref<string[]>([]),
     canonical = ref(''),
     settingsDirty = computed(() => JSON.stringify([...sources.value].sort()) !== canonical.value);

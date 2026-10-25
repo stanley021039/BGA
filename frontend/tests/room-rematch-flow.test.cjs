@@ -19,6 +19,7 @@ test('finished replay bypasses start validation and remounts the normal start co
     snapshot,
     seat: {},
     host: true,
+    gameManager: true,
     busy: false,
     connected: true,
     command(route) {

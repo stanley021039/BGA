@@ -13,8 +13,11 @@ const props = withDefaults(
     rosterClass?: string;
     mainClass?: string;
     sideClass?: string;
+    // Wide screens start with both panels open; drawers on narrow screens stay closed (#277).
+    panelsOpen?: boolean;
   }>(),
   {
+    panelsOpen: false,
     rosterClass: 'vue-game-roster-panel',
     mainClass: 'vue-game-main',
     sideClass: 'vue-game-side',
@@ -22,10 +25,11 @@ const props = withDefaults(
 );
 const room = useRoomStore(),
   chat = useChatStore(),
-  rosterOpen = ref(false),
-  chatOpen = ref(false),
   narrow = window.matchMedia('(max-width: 1180px)'),
   mobile = ref(narrow.matches),
+  initiallyOpen = () => props.panelsOpen && !mobile.value,
+  rosterOpen = ref(initiallyOpen()),
+  chatOpen = ref(initiallyOpen()),
   drawerOpen = computed(
     () => mobile.value && !props.focused && (rosterOpen.value || chatOpen.value),
   );
@@ -54,7 +58,7 @@ onBeforeUnmount(() => narrow.removeEventListener('change', breakpoint));
 watch(
   () => room.scope + ':' + room.code,
   () => {
-    rosterOpen.value = chatOpen.value = false;
+    rosterOpen.value = chatOpen.value = initiallyOpen();
   },
 );
 </script>

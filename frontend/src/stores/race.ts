@@ -10,7 +10,7 @@ export const useRaceStore = defineStore('race', () => {
       room.snapshot?.type === 'thunder' ? (room.snapshot as RaceSnapshot) : null,
     ),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
-    settingsEditable = computed(() => setup.value && room.host && !room.terminal),
+    settingsEditable = computed(() => setup.value && room.settingsManager && !room.terminal),
     devilsRun = ref(false),
     canonical = ref(false),
     settingsDirty = computed(() => devilsRun.value !== canonical.value);

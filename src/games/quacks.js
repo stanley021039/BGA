@@ -1,4 +1,5 @@
 'use strict';
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { starterIndex } = require('./random-starter');
 const { randomUUID } = require('node:crypto');
 const { PartyRoom, fail, clone, text } = require('./party-base');
@@ -128,7 +129,7 @@ class QuacksRoom extends PartyRoom {
     });
   }
   configure(id, data) {
-    if (id !== this.host) fail('HOST_ONLY', '只有房主可以設定', 403);
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '開始後不能改設定');
     const options = {
       ...this.options,

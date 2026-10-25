@@ -79,7 +79,7 @@ const instruction = computed(() =>
                   airplace: '部署直升機',
                   airshoot: '直升機射擊',
                   shoot: '選擇射擊目標',
-                  waiting: '等待房主開始',
+                  waiting: '等待房主或管理者開始',
                   effects: '處理事件中',
                 } as Record<string, string>
               )[s.value.phase] || '等待同步',
@@ -387,7 +387,7 @@ const usedCommand = computed(() => {
                   : s.phase === 'airplace'
                     ? '點擊亮框空格部署'
                     : s.phase === 'finished'
-                      ? '等待房主開始下一場'
+                      ? '等待房主或管理者開始下一場'
                       : '等候目前車隊'
           }}</span></div
         ></div

@@ -12,6 +12,7 @@ export const gameTypes = [
   'minimal',
   'bluff',
   'quacks',
+  'lounge',
 ] as const;
 export type GameType = (typeof gameTypes)[number];
 export const isGameType = (value: unknown): value is GameType =>
@@ -146,6 +147,24 @@ export function myRoomRole(snapshot: RoomSnapshot | null): RoomRole {
     return role === 'host' || role === 'manager' || role === 'member' ? role : null;
   }
   return isRoomHost(snapshot) ? 'host' : 'member';
+}
+export function canManageSettings(snapshot: RoomSnapshot | null): boolean {
+  return (
+    !!snapshot &&
+    (snapshot.permissions
+      ? ['host', 'manager'].includes(myRoomRole(snapshot) || '') &&
+        permission(snapshot, 'canManageSettings')
+      : isRoomHost(snapshot))
+  );
+}
+export function canStartGame(snapshot: RoomSnapshot | null): boolean {
+  return (
+    !!snapshot &&
+    (snapshot.permissions
+      ? ['host', 'manager'].includes(myRoomRole(snapshot) || '') &&
+        permission(snapshot, 'canStartGame')
+      : isRoomHost(snapshot))
+  );
 }
 function permission(snapshot: RoomSnapshot, name: string): boolean {
   return (

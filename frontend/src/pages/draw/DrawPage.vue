@@ -241,7 +241,7 @@ async function fetchSeat(signal: AbortSignal) {
   }
 }
 async function start() {
-  if (!room.host || !setup.value || preparing.value || room.busy) return;
+  if (!room.gameManager || !setup.value || preparing.value || room.busy) return;
   if (state.value?.phase === 'finished') {
     await room.command('rematch', {});
     return;
@@ -254,7 +254,7 @@ async function start() {
       startNotice.value = settings.value?.error() || '請先完成房間設定儲存。';
       return;
     }
-    if (scope === room.scope && room.host && setup.value) await room.command('start', {});
+    if (scope === room.scope && room.gameManager && setup.value) await room.command('start', {});
   } finally {
     if (scope === room.scope) preparing.value = false;
   }
@@ -517,7 +517,7 @@ onBeforeUnmount(() => {
             class="vue-draw-settings-panel"
             ><DrawSettings ref="settings" :snapshot="state" /><UiButton
               variant="primary"
-              v-if="room.host"
+              v-if="room.gameManager"
               :icon="state.phase === 'finished' ? 'replay' : 'play'"
               :label="state.phase === 'finished' ? '再玩一局' : '開始遊戲'"
               :pending="preparing || room.busy"

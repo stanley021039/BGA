@@ -1,3 +1,26 @@
+2026-10-25 #277／#278使用者已驗收並授權合併；整合main4d9bc79管理者權限，改候選3.3.0。Windows Node24.22.1完整1863全通過（含先前Node26的SSE close），前端151全通過，新增休憩區還原與舞台影片同意／控制窗關閉回歸。最終兩輪審查與同SHA Linux CI／合併結果以本次PR為準，未部署；詳[整合證據](../specs/LOUNGE-278.md)。
+
+2026-10-25 #277 房內驗收修正：浮動階段通知不再占48px grid列，休憩區grid統一決定側欄／人物活動區高度；舞台border-box去除專注溢出，空UiNotice不再攔左側按鈕。1920與375原生操作、人物點地／方向鍵及前端144通過；完整1848/1849仍有既有SSE失敗。大廳提示12px留白、授權對齊右側提示；最新隔離127.0.0.8:3978。詳[驗收修正](../specs/LOUNGE-278.md)，未發布／部署。
+
+2026-10-25 #277／#278 最新：Stitch 原創場外喇叭圖已保存第三份 Figma 並接壓縮 WebP；使用者改為輪播第13張、翻頁與提示靠近中央卡片、授權回左下，取代本票獨立場外卡片及授權置中的舊方案。來源、驗證與限制見 [本輪證據](../specs/LOUNGE-278.md)。本機驗收候選，未發布／部署。
+
+## 2026-10-25 #277：大廳驗收修訂
+
+接續 codex/lounge-277 的既有 3.2.0 實作，使用者指定場外卡片移左下、翻頁置於卡片下方，中央依序為翻頁／拖曳說明／素材授權，加入與開桌操作移回右下。此決策取代本票早期右下場外卡片方案；卡片圖仍由 #278 處理。中央內容共用左右預留區，1500px 以下桌機場外卡片幾何縮為 65%，文字字級保留；連線提示移右下避免遮住場外卡片。本輪未修改房間規則或媒體播放。
+
+Windows Node 26.2.0：test:affected 因共用／未知路徑回退全部226檔，1849項中1848通過，唯一失敗為 app-runtime「real draw, music and room-state SSE connections drain on close」結尾 reader.done 斷言，與接手紀錄同一案例；本輪未獨立重驗main，不宣稱本輪全套通過。另前端139項全通過。format／format:check、整分支ui:check（base 238f0a4）、frontend:build（含vue-tsc）、perf:check、release:check通過。瀏覽器隔離站1920×1080、1366×768及375px深淺色、無／有返回按鈕、場外彈窗空清單／開房／返回、背景隱藏／恢復已觀察；1366彈窗開關前後主卡rect一致，375px scrollWidth等於clientWidth。手機房內側欄初始收合已確認；真YouTube、多人同步、實機觸控與全房間功能未新增驗收。
+
+本機證據在 work/lounge-1920-light.png、work/lounge-1920-dark.png、work/lounge-1366-light.png、work/lounge-375-dark.png 及 work/lounge-tests.log。預覽127.0.0.1:3972，使用work內獨立資料與合成帳號；獎勵開放由playtest-rewards工具處理，不預填成就。待使用者驗收，未PR／CI／合併／部署；交接檔按使用者指示刪除。
+
+## 2026-10-25 #265 整合 main 3.1.0
+
+交付前整合 main 238f0a46（#256／#261、#267、#252、#266），本功能改候選3.2.0，取代下方本批候選2.46.0。保留移除除錯歷史、背景表情與媒體子母畫面；郎中仍先入座再configure。整合後Windows Node24全套1,861項中1,860通過、0失敗、1項缺ffmpeg略過，前端144、權限／SSE24及3.2.0站48筆瀏覽器驗收通過，格式／型別與build／UI及媒體預算／minor release check通過。證據與未驗範圍見[本輪紀錄](../specs/ROOM-MANAGER-265.md#整合-main-310)。仍待使用者驗收、具體PR確認、兩輪審查及Linux CI，未發PR或部署。
+
+## 2026-10-25 #265／#220：管理者設定與開局候選
+
+隔離 main 3ddf7c0d，候選 2.46.0、codex/issues-220-265：共用 canManageSettings／canStartGame 連接八款既有設定及十一款開始／再玩一局；保留 host 身分、房主角色管理及局中專屬操作。郎中建房先加入房主再 configure，純 AI 引擎真實 bot 房主仍可初始化，公開角色不授權 bot。猜歌表單接共用 checkbox 陣列／label slot；畫猜 footer 依內容保留高度，修正失敗重試被開始鈕蓋住。44 組等待室與後續流程合計 48 筆 Edge 桌機／390px、深淺色及權限／保存／失敗重試／實際開局再玩驗收通過；前端129及針對性權限／SSE24通過。Windows Node24 最終全套1,894項中1,893通過、0失敗、1項缺ffmpeg略過，退出0；建置、格式、UI與build效能預算及minor release check通過。完整證據與交付狀態見[本輪證據](../specs/ROOM-MANAGER-265.md)。#220 既有背景入口已由 #254 合入並複驗，票已標完成。尚未發 PR、合併或部署；人工驗收及後續兩輪審查／CI 待完成。
+
+
 2026-10-25 #266：候選3.1.0（原2.47.0）以Document PiP把同一組媒體節點搬進獨立小視窗，不支援時隱藏按鈕。PiP文件是about:blank、iframe不帶Referer會讓YouTube錯誤153，改先載入無腳本的同源`/media-pip-frame`（僅此路徑frame-ancestors 'self'）再搬入；內外兩層pagehide都還原，避免frame先拆掉後節點失去事件監聽。Playwright對PiP視窗的請求攔截會卡住（含CSS），驗收不可用ctx.route。真Edge 8組通過，特效僅沿用框飾；停在第4階段待驗收，未開PR、未部署。證據見[本輪紀錄](../specs/MEDIA-PIP-266.md)。
 2026-10-25 #256／#261：候選2.46.0在同房空清單開始播放時自動開啟既有compact播放器，初載／重連不重播、手動關閉後加歌／切歌不重開；hidden、modal、手機抽屜與背景／全螢幕延後，過期事件失效。只在current／queue皆空的新點播可重啟stop後播放，有待播內容的stop仍保持停止。試玩追加已同意影片直接加入：開窗／返回可見時補joinVideo，不只依賴current改變；保留拒絕與自動播放受阻退路。真Edge雙玩家桌機1920／手機390深淺色、影音拒絕無iframe與焦點驗證通過；追加12組provider fixture驗直接播放接線，非真YouTube聽感。使用者已驗收並授權合併，進入兩輪審查與最終Linux CI，最終結果以本批PR為準，未部署。測試失敗／重跑與完整結果依[本輪證據](../specs/MEDIA-AUTO-OPEN-256-261.md)。取代共用媒體舊規格對「即使全空後新點播也不再開窗／播放」的描述，其餘權限及個人同意不變；#266尚未實作。
 

@@ -75,6 +75,11 @@
     "route": "/minimal"
   },
   {
+    "id": "lounge",
+    "document": "lounge.html",
+    "route": "/lounge"
+  },
+  {
     "id": "bluff",
     "document": "bluff.html",
     "route": "/bluff"

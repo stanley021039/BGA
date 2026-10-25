@@ -61,7 +61,8 @@ test('three authenticated seats see rematch waiting after reconnect/restart with
   }
   assert.equal((await state(0)).phase, 'finished');
   await call(0, 'history', undefined, 404);
-  const waiting = await call(0, 'rematch', { code });
+  await call(0, 'room-role', { code, playerId: ids[1], role: 'manager' });
+  const waiting = await call(1, 'rematch', { code });
   assert.equal(waiting.phase, 'waiting');
   assert.ok(waiting.version > initial.version);
   assert.equal(waiting.roomInstanceId, initial.roomInstanceId);

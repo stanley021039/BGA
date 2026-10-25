@@ -14,7 +14,7 @@ const room = useRoomStore(),
       >難度 {{ state?.options.levels.join('／') }} 級 · 看身分
       {{ state?.options.roleSeconds }} 秒</summary
     ><div class="vue-bluff-settings"
-      ><p>設定僅供房主在開局前調整，修改後自動儲存。</p
+      ><p>設定供房主或管理者在開局前調整，修改後自動儲存。</p
       ><fieldset :disabled="!bluff.editable || room.busy"
         ><legend>題目難度（至少一種）</legend
         ><label v-for="level in [1, 2, 3]" :key="level"

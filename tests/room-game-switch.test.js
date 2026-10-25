@@ -86,6 +86,21 @@ test('poker can return from showdown without losing chip balances', () => {
   assert.equal(room.players[0].stack, 1250);
   assert.equal(room.gameRevision, 4);
 });
+
+test('current managers may return to waiting; demoted players cannot, and switching stays host-only', () => {
+  const room = new classes.majority('ABCDEF', 'friends');
+  for (let i = 0; i < 3; i++) room.add('P' + i);
+  const manager = room.players[1].id;
+  Object.defineProperty(room, 'managerIds', { value: new Set([manager]) });
+  room.phase = 'finished';
+  returnToWaiting(room, manager);
+  assert.equal(room.phase, 'waiting');
+  assert.throws(() => switchGame(room, manager, 'gift', classes), { code: 'HOST_ONLY' });
+  room.phase = 'finished';
+  room.managerIds.clear();
+  assert.throws(() => returnToWaiting(room, manager), { code: 'HOST_ONLY' });
+  assert.equal(room.phase, 'finished');
+});
 test('explicit registry rebinding keeps playback, queue and request ledger; code reuse still isolates', () => {
   for (const Registry of [RoomMediaRegistry, RoomWatchRegistry]) {
     const registry = new Registry(),

@@ -1,4 +1,5 @@
 const { starterOrder } = require('./random-starter');
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { assertRecordCapacity } = require('../rooms/membership');
 const { randomInt, randomUUID } = require('node:crypto');
 const { WORDS, TOPICS, topicLabels } = require('./draw-guess-words');
@@ -301,7 +302,7 @@ class DrawGuessRoom {
     if (this.phase === 'drawing' && this.allGuessed()) this.reveal('所有猜題者已完成');
   }
   configure(id, data = {}) {
-    if (id !== this.host) throw Error('只有房主可以更改設定');
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) throw Error('遊戲中不能更改設定');
     if (!Number.isInteger(data.seconds) || ![60, 90, 120].includes(data.seconds))
       throw Error('作畫時間請選 60、90 或 120 秒');
@@ -326,7 +327,7 @@ class DrawGuessRoom {
     }
     options.ending = readEnding(data.ending, this.options.ending);
     this.options = options;
-    this.event('settings', '房主已更新作畫時間與題目類別');
+    this.event('settings', '已更新作畫時間與題目類別');
   }
   wordPools() {
     const allowed = (word) => !this.wordExclusionProvider?.(word),

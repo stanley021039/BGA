@@ -1,11 +1,13 @@
 'use strict';
 const { HttpError } = require('../http/errors');
 const { fill } = require('./persistence');
+const { isRoomManager } = require('./permissions');
 
 // Keep the room object: seats, streams, media and achievement hooks
 // are attached to its identity. Rebuild only game state from its own defaults.
 function returnToWaiting(room, actor) {
-  if (room.host !== actor) throw new HttpError(403, 'HOST_ONLY', '只有房主可以返回等待室');
+  if (room.host !== actor && !isRoomManager(room, actor))
+    throw new HttpError(403, 'HOST_ONLY', '只有房主或房間管理者可以返回等待室');
   if (room.phase === 'waiting') return;
   if (room.phase !== 'finished' && !(!room.type && room.phase === 'showdown'))
     throw new HttpError(409, 'MATCH_NOT_FINISHED', '本局結束後才能返回等待室');
