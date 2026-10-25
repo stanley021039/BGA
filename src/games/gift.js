@@ -1,3 +1,4 @@
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { starterIndex } = require('./random-starter');
 const { assertRecordCapacity } = require('../rooms/membership');
 const { randomInt, randomUUID } = require('node:crypto');
@@ -235,7 +236,7 @@ class GiftRoom {
     }
   }
   configure(id, data = {}) {
-    if (id !== this.host) throw Error('只有房主可以更改設定');
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) throw Error('遊戲中不能更改設定');
     if (!Number.isInteger(data.target) || data.target < 8 || data.target > 30)
       throw Error('目標分數必須是 8 至 30 的整數');

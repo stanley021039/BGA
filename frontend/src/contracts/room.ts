@@ -144,6 +144,24 @@ export function myRoomRole(snapshot: RoomSnapshot | null): RoomRole {
   }
   return isRoomHost(snapshot) ? 'host' : 'member';
 }
+export function canManageSettings(snapshot: RoomSnapshot | null): boolean {
+  return (
+    !!snapshot &&
+    (snapshot.permissions
+      ? ['host', 'manager'].includes(myRoomRole(snapshot) || '') &&
+        permission(snapshot, 'canManageSettings')
+      : isRoomHost(snapshot))
+  );
+}
+export function canStartGame(snapshot: RoomSnapshot | null): boolean {
+  return (
+    !!snapshot &&
+    (snapshot.permissions
+      ? ['host', 'manager'].includes(myRoomRole(snapshot) || '') &&
+        permission(snapshot, 'canStartGame')
+      : isRoomHost(snapshot))
+  );
+}
 function permission(snapshot: RoomSnapshot, name: string): boolean {
   return (
     !snapshot.permissions ||

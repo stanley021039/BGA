@@ -5,6 +5,8 @@ import {
   gamePath,
   gameTypes,
   isRoomHost,
+  canManageSettings,
+  canStartGame,
   readRoomSnapshot,
   readSeat,
   sameRoom,
@@ -41,6 +43,12 @@ export const useRoomStore = defineStore('room', () => {
   let readSnapshot: (value: unknown) => RoomSnapshot = readRoomSnapshot;
   let retry: { timer: ReturnType<typeof setTimeout>; resolve: () => void } | null = null;
   const host = computed(() => isRoomHost(snapshot.value));
+  const settingsManager = computed(
+    () => !!seat.value && !terminal.value && canManageSettings(snapshot.value),
+  );
+  const gameManager = computed(
+    () => !!seat.value && !terminal.value && canStartGame(snapshot.value),
+  );
   const connected = computed(() => !!seat.value && !disconnected.value && !terminal.value);
   function forget() {
     for (const game of gameTypes) {
@@ -240,6 +248,8 @@ export const useRoomStore = defineStore('room', () => {
   }
   async function command(route: string, data: Record<string, unknown> = {}): Promise<boolean> {
     if (busy.value || !seat.value || terminal.value) return false;
+    if (route === 'start' && !gameManager.value) return false;
+    if (route === 'settings' && !settingsManager.value) return false;
     const epoch = scope.value;
     const timeout = new AbortController();
     const timer = setTimeout(
@@ -325,6 +335,8 @@ export const useRoomStore = defineStore('room', () => {
     busy,
     scope,
     host,
+    settingsManager,
+    gameManager,
     message,
     failed,
     clockOffset,

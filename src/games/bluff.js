@@ -1,4 +1,5 @@
 'use strict';
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { randomUUID } = require('node:crypto');
 const { PartyRoom, fail, clone, text } = require('./party-base'),
   { QUESTIONS } = require('./bluff-catalog');
@@ -37,7 +38,7 @@ class BluffRoom extends PartyRoom {
     return !this.questionExclusionProvider?.(q.id);
   }
   configure(id, data) {
-    if (id !== this.host) fail('HOST_ONLY', '只有房主可以設定', 403);
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '開始後不能改難度');
     const levels = data.levels === undefined ? this.options.levels : data.levels,
       roleSeconds = data.roleSeconds === undefined ? this.options.roleSeconds : data.roleSeconds;

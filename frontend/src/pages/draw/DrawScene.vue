@@ -132,7 +132,7 @@ function rank(index: number) {
     v-if="snapshot.phase === 'waiting'"
     type="draw"
     title="你畫我猜"
-    hero-title="朋友集結中，畫筆已備，等房主開畫。"
+    hero-title="朋友集結中，畫筆已備，準備開畫。"
     description="輪流挑選題目作畫，其他朋友一起猜答案。"
     :art="waitingIllustration"
     art-alt="你畫我猜的畫室插畫"
@@ -140,12 +140,12 @@ function rank(index: number) {
     ><template #summary-extra>
       <div class="vue-waiting-ready"
         ><p>{{
-          room.host
-            ? '你是房主，邀請朋友、調整規則，兩人到齊就能開始。'
-            : '入座後可先點就緒，等待房主開始。'
+          room.gameManager
+            ? '你可調整規則，邀請朋友，兩人到齊就能開始。'
+            : '入座後可先點就緒，等待房主或管理者開始。'
         }}</p
         ><UiButton
-          v-if="!room.host"
+          v-if="!room.gameManager"
           variant="secondary"
           icon="check"
           :label="me?.ready ? '已就緒（點擊切換）' : '準備好了！點擊就緒'"
@@ -334,13 +334,13 @@ function rank(index: number) {
         label="下一局設定"
         @click="emit('settings')"
       /><UiButton
-        v-if="room.host"
+        v-if="room.gameManager"
         variant="primary"
         icon="replay"
         label="再來一局（同桌再戰）"
         :disabled="snapshot.players.length < 2 || room.busy"
         @click="emit('start')"
-      /><span v-else>等待房主再開一局</span></footer
+      /><span v-else>等待房主或管理者再開一局</span></footer
     >
   </section>
 </template>

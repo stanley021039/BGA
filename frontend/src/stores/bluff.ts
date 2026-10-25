@@ -10,7 +10,7 @@ export const useBluffStore = defineStore('bluff', () => {
   const room = useRoomStore(),
     state = computed(() => room.snapshot as BluffSnapshot | null),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
-    editable = computed(() => room.host && setup.value && !room.terminal);
+    editable = computed(() => room.settingsManager && setup.value && !room.terminal);
   const draft = reactive({ levels: [1, 2, 3], roleSeconds: 30 }),
     canonical = ref(''),
     key = () =>

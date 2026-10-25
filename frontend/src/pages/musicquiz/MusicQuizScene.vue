@@ -9,6 +9,8 @@ import { usePreferencesStore } from '../../stores/preferences';
 import { useQueuedSave } from '../../composables/queued-save';
 import type { MusicQuizSnapshot } from '../../contracts/musicquiz';
 import UiButton from '../../components/UiButton.vue';
+import UiCheckbox from '../../components/UiCheckbox.vue';
+import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import FramePreview from '../../components/FramePreview.vue';
 import GameSongClip from '../../components/GameSongClip.vue';
@@ -33,7 +35,7 @@ const room = useRoomStore(),
   dirty = ref(false);
 watch(dirty, (value) => emit('dirty', value));
 const settingsSave = useQueuedSave<void>({
-  allowed: () => setup.value && room.host && !room.terminal,
+  allowed: () => setup.value && room.settingsManager && !room.terminal,
   blocked: () => blocked.value,
   save,
   failure: () => actions.notice || error.value,
@@ -82,8 +84,12 @@ async function saveNow() {
   await settingsSave.flush();
 }
 watch(
-  () => s.value.settings,
-  (v) => {
+  [() => s.value.settings, () => room.settingsManager],
+  ([v]) => {
+    if (!room.settingsManager) {
+      settingsSave.reset();
+      dirty.value = false;
+    }
     if (dirty.value || settingsSave.pending.value) return;
     banks.value = [...v.banks];
     genres.value = [...v.genres];
@@ -229,18 +235,24 @@ const canSlot = (i: number) =>
               ><h1>{{ s.phase === 'finished' ? '本場結果' : '題庫挑選與競賽規則' }}</h1
               ><p>選取本局的音樂年代題庫，從8秒前奏開始挑戰，再將歌曲排入個人時間軸。</p></div
             ><span class="stitch-host-badge">{{
-              room.host ? '房主自訂中' : '全桌共用題庫'
+              room.settingsManager ? '可調整共用題庫' : '全桌共用題庫'
             }}</span></header
           ><p v-if="s.winner">年代冠軍：{{ s.winner.names.join('、') }} · {{ s.winner.score }}張</p
           ><fieldset
-            :disabled="!room.host || blocked"
+            :disabled="!room.settingsManager || blocked"
             @input="markSettingsInput"
             @change="queueSettings"
             class="stitch-setup-sheet"
             ><legend><UiIcon name="cards" />語言與分類</legend
             ><div class="mq-banks"
-              ><label v-for="bank in s.banks" :key="bank.id" class="mq-bank"
-                ><input v-model="banks" type="checkbox" :value="bank.id" /><UiIcon
+              ><UiCheckbox
+                v-for="bank in s.banks"
+                :key="bank.id"
+                class="mq-bank"
+                v-model="banks"
+                :value="bank.id"
+                :label="bank.label"
+                ><UiIcon
                   :name="bank.id === 'viral' ? 'star' : bank.id === 'custom' ? 'edit' : 'music'"
                   class="mq-bank-icon"
                 /><span class="mq-bank-check" aria-hidden="true">{{
@@ -254,29 +266,38 @@ const canSlot = (i: number) =>
                       ? '英文以外的其他外文'
                       : '熱門代表作與經典歌曲'
                 }}</span
-                ><span class="mq-bank-count">{{ bank.count }} 首</span></label
+                ><span class="mq-bank-count">{{ bank.count }} 首</span></UiCheckbox
               ></div
             ><details
               ><summary>曲風篩選</summary
-              ><label v-for="genre in s.genres" :key="genre"
-                ><input v-model="genres" type="checkbox" :value="genre" />{{ genre }}</label
-              ></details
+              ><UiCheckbox
+                v-for="genre in s.genres"
+                :key="genre"
+                v-model="genres"
+                :value="genre"
+                :label="genre" /></details
             ><div class="stitch-settings-grid"
-              ><label
-                >獲勝目標<strong>率先集齊年代卡</strong
-                ><input v-model.number="target" type="number" min="3" max="10" /></label
-              ><div
+              ><UiField
+                v-model.number="target"
+                type="number"
+                min="3"
+                max="10"
+                label="獲勝目標：率先集齊年代卡"
+              /><div
                 ><small>前奏猜答限制</small
                 ><strong>{{ s.settings.introSeconds }} 秒試聽前奏</strong></div
               ><div><small>年代排序規則</small><strong>依年代排列，同年可相鄰</strong></div
               ><div><small>歌王插歌起始標記</small><strong>每人起始 2 枚標記</strong></div></div
-            ><label><input v-model="obscure" type="checkbox" />混入冷門挑戰（最多約10%）</label
-            ><details
+            ><UiCheckbox v-model="obscure" label="混入冷門挑戰（最多約10%）" /><details
               ><summary>自己的題庫</summary
               ><p>每行：歌名 | 歌手 | 首發年 | YouTube網址或ID | 前奏起點 | 精華起點</p
-              ><textarea v-model="custom" rows="4" aria-label="自選歌曲題庫" /></details></fieldset
+              ><UiField
+                v-model="custom"
+                control="textarea"
+                rows="4"
+                label="自選歌曲題庫" /></details></fieldset
           ><UiButton
-            v-if="room.host && settingsSave.error.value"
+            v-if="room.settingsManager && settingsSave.error.value"
             icon="refresh"
             label="重試儲存題庫"
             :disabled="blocked"

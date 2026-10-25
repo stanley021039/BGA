@@ -348,7 +348,9 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
         :disabled="!room.host || room.busy || !room.connected || gift.uncertain"
         :pending="room.busy"
         @click="gift.action('next')" /><span v-else>{{
-        state.phase === 'finished' ? '由房主按房間設定中的再玩一局。' : '邀請朋友入座，由房主開始。'
+        state.phase === 'finished'
+          ? '由房主或管理者按房間設定中的再玩一局。'
+          : '邀請朋友入座，由房主或管理者開始。'
       }}</span
       ><UiButton
         v-if="gift.uncertain"

@@ -18,7 +18,7 @@ export const useQuacksStore = defineStore('quacks', () => {
     mine = computed(() => state.value?.mine || null),
     own = computed(() => state.value?.recipes.find((p) => p.id === state.value?.me) || null),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
-    editableSettings = computed(() => setup.value && room.host && !room.terminal);
+    editableSettings = computed(() => setup.value && room.settingsManager && !room.terminal);
   const draft = reactive({ witches: false, alchemists: false, hiddenProgress: false, bookSet: 1 }),
     canonical = ref(''),
     dirty = computed(() => !!canonical.value && JSON.stringify(draft) !== canonical.value);
