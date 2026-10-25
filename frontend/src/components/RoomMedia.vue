@@ -24,7 +24,12 @@ import UiTabs from './UiTabs.vue';
 import UiIcon from './UiIcon.vue';
 import '../styles/room-media.scss';
 import '../styles/media-pip.scss';
-const props = withDefaults(defineProps<{ connected?: boolean }>(), { connected: true });
+// `stage` (#277) mounts the video screen into a page element instead of the
+// window; the window then keeps only requests and playback controls.
+const props = withDefaults(defineProps<{ connected?: boolean; stage?: string }>(), {
+  connected: true,
+  stage: '',
+});
 const media = useMediaStore(),
   prefs = usePreferencesStore(),
   id = useId();
@@ -226,7 +231,7 @@ function observePlayback() {
   const first = previousMedia?.empty && state.current && state.playback.state === 'playing';
   previousMedia = { revision: state.revision, empty };
   if (pendingOpen !== mediaCurrentKey(state)) pendingOpen = '';
-  if (first && !opened.value) pendingOpen = mediaCurrentKey(state);
+  if (first && !opened.value && !props.stage) pendingOpen = mediaCurrentKey(state);
   void maybeAutoOpen();
 }
 async function maybeAutoOpen() {
@@ -348,7 +353,8 @@ async function minimize(value: 'compact' | 'bar' | 'full') {
   updatePresentation();
 }
 function updatePresentation() {
-  player?.setWindow(opened.value, mode.value === 'bar' || activeTab.value !== 'player', true);
+  if (props.stage) player?.setWindow(true, false, true);
+  else player?.setWindow(opened.value, mode.value === 'bar' || activeTab.value !== 'player', true);
 }
 function setTab(value: string) {
   if (!['player', 'request'].includes(value)) return;
@@ -364,7 +370,7 @@ async function maybeJoinVideo() {
     mounted &&
     props.connected &&
     media.connected &&
-    opened.value &&
+    (opened.value || !!props.stage) &&
     (!document.hidden || pip.active.value) &&
     key === mediaCurrentKey(media.snapshot) &&
     media.snapshot?.current?.type === 'video' &&
@@ -416,7 +422,8 @@ async function chooseVideo(accept: boolean) {
   consent.value?.close();
   wantsVideo = accept;
   if (accept && item.value?.type === 'video') {
-    await show();
+    if (props.stage) await maybeJoinVideo();
+    else await show();
   } else if (!accept) player?.exitVideo('');
 }
 function consentClosed() {
@@ -777,7 +784,7 @@ onBeforeUnmount(() => {
           <div class="vue-media-window-tools">
             <UiButton
               variant="ghost"
-              v-if="pip.available"
+              v-if="pip.available && !stage"
               v-show="mode !== 'bar'"
               :icon="pip.active.value ? 'contract' : 'pictureInPicture'"
               icon-only
@@ -849,17 +856,23 @@ onBeforeUnmount(() => {
               role="tabpanel"
               :aria-labelledby="id + '-tab-player'"
             >
-              <div v-show="item?.type === 'video'" class="vue-media-screen">
-                <div v-show="videoActive" ref="videoHost" class="vue-media-video" />
-                <div v-if="item?.type === 'video' && !videoActive" class="vue-media-consent"
-                  ><UiIcon class="ui-icon" name="video" /><p>接受後載入影片。</p
-                  ><UiButton
-                    variant="primary"
-                    icon="play"
-                    :label="videoConsent ? '重新加入觀看' : '接受並觀看影片'"
-                    @click="chooseVideo(true)"
-                /></div>
-              </div>
+              <Teleport :to="stage || 'body'" :disabled="!stage" defer>
+                <div
+                  v-show="item?.type === 'video'"
+                  class="vue-media-screen"
+                  :class="{ 'vue-media-stage-screen': stage }"
+                >
+                  <div v-show="videoActive" ref="videoHost" class="vue-media-video" />
+                  <div v-if="item?.type === 'video' && !videoActive" class="vue-media-consent"
+                    ><UiIcon class="ui-icon" name="video" /><p>接受後載入影片。</p
+                    ><UiButton
+                      variant="primary"
+                      icon="play"
+                      :label="videoConsent ? '重新加入觀看' : '接受並觀看影片'"
+                      @click="chooseVideo(true)"
+                  /></div>
+                </div>
+              </Teleport>
               <div class="vue-media-current" :class="{ 'is-music': item?.type === 'music' }"
                 ><span v-if="item?.type !== 'video'" class="vue-media-track-icon" aria-hidden="true"
                   ><UiIcon class="ui-icon" name="sound" /></span

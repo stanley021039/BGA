@@ -131,5 +131,13 @@ export const gameCards: GameCard[] = [
     guide: '/market',
   },
 ];
+// The lounge (#277) is a fixed lobby card, not part of the game carousel.
+export const loungeCard = {
+  title: '場外休憩區',
+  english: 'OFF-TABLE LOUNGE',
+  description: '不開局，大家一起看影片、聽歌、聊天。',
+  seats: '1–10 人',
+  category: '共看・聊天',
+};
 export const gameTitle = (type: GameType) =>
-  gameCards.find((card) => card.id === type)?.title || type;
+  type === 'lounge' ? loungeCard.title : gameCards.find((card) => card.id === type)?.title || type;

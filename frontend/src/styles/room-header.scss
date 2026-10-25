@@ -135,6 +135,22 @@ body .vue-room-navigation-menu {
     }
   }
 }
+:root body .vue-room-shell:has(> .vue-room-status-row.is-overlay) {
+  position: relative;
+}
+// Rooms without a match keep notices without a reserved row (#277).
+:root body .vue-room-shell > .vue-room-status-row.is-overlay {
+  position: absolute;
+  inset-block-start: var(--stitch-space-8);
+  inset-inline: 0;
+  z-index: 5;
+  justify-items: center;
+  min-height: 0;
+  pointer-events: none;
+  > * {
+    pointer-events: auto;
+  }
+}
 :root body .vue-room-shell > .vue-room-status-row {
   display: grid;
   grid-template-columns: minmax(220px, auto) minmax(0, 1fr) 44px;

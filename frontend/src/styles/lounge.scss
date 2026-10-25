@@ -1,0 +1,62 @@
+// 場外休憩區 (#277): the shared video takes the whole main area.
+.vue-lounge {
+  display: grid;
+  min-inline-size: 0;
+  min-block-size: 0;
+  block-size: 100%;
+}
+.vue-lounge-stage {
+  position: relative;
+  display: grid;
+  min-inline-size: 0;
+  // Fill the viewport below the site header and room status row.
+  min-block-size: max(280px, calc(100dvh - 150px));
+  block-size: 100%;
+  overflow: hidden;
+  border: var(--stitch-border);
+  border-radius: var(--stitch-radius-panel);
+  background: var(--stitch-artwork-preview-bg);
+  color: var(--stitch-artwork-preview-ink);
+}
+.vue-lounge-idle {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--stitch-gap-label);
+  padding: var(--stitch-panel-padding);
+  text-align: center;
+  font-size: var(--stitch-text-body);
+  p {
+    margin: 0;
+    max-inline-size: 28rem;
+  }
+}
+// The video screen mounted from the media window fills the stage.
+.vue-lounge-stage .vue-media-stage-screen {
+  position: absolute;
+  inset: 0;
+  .vue-media-video,
+  .vue-media-video iframe,
+  .vue-media-video video {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    border: 0;
+  }
+  .vue-media-consent {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--stitch-gap-label);
+    padding: var(--stitch-panel-padding);
+    text-align: center;
+    background: var(--stitch-artwork-preview-bg);
+    color: var(--stitch-artwork-preview-ink);
+    p {
+      margin: 0;
+    }
+  }
+}

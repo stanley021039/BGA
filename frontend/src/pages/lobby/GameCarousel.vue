@@ -153,10 +153,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
   <section class="game-carousel-section" aria-label="挑選桌遊" data-ping-anchor="game-list">
-    <div class="carousel-heading"
-      ><span class="carousel-stamp">今晚的遊戲提案</span
-      ><small>拖曳卡片，或用左右方向鍵挑選</small></div
-    >
+    <div class="carousel-heading"><span class="carousel-stamp">今晚的遊戲提案</span></div>
     <div
       ref="root"
       class="game-library"
@@ -214,6 +211,7 @@ onBeforeUnmount(() => {
         >
       </button>
     </div>
+    <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
     <div class="carousel-footer"
       ><div class="carousel-controls"
         ><UiButton icon="previous" icon-only label="上一款遊戲" @click="select(index - 1)" /><span
@@ -240,7 +238,8 @@ onBeforeUnmount(() => {
             v-else
             icon="add"
             :label="'開一桌' + chosen.title"
-            @click="emit('create')" /><slot name="lobby-resume" /></div></div
+            @click="emit('create')" /><slot name="lobby-resume" /></div
+        ><slot name="lobby-lounge" /></div
     ></div>
   </section>
 </template>

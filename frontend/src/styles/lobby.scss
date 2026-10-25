@@ -12,13 +12,6 @@
       @include tokens.type(display);
     }
   }
-  .library-count {
-    flex: none;
-    gap: tokens.space(4);
-    strong {
-      @include tokens.type(display);
-    }
-  }
   .carousel-heading,
   .carousel-footer,
   .carousel-actions,
@@ -352,9 +345,6 @@ body.lobby-self-hover {
     :is(.vue-lobby-room-browser, .vue-lobby-code) {
       padding: tokens.space(4);
     }
-    .library-count {
-      display: none;
-    }
     .vue-lobby-room-browser > header {
       flex-wrap: wrap;
       gap: tokens.space(3);
@@ -473,9 +463,6 @@ body.lobby-self-hover {
       > div > p {
         display: none;
       }
-      .library-count strong {
-        @include tokens.type(h1);
-      }
     }
     // Characters use the carousel's side gutters instead of a separate band.
     .vue-lobby .vue-lobby-floor {
@@ -538,6 +525,13 @@ body.lobby-self-hover {
       .select-label {
         display: none;
       }
+    }
+    .vue-lobby .carousel-hint {
+      flex: none;
+      align-self: center;
+      width: calc(100% - 220px);
+      max-width: 720px;
+      margin-inline: 0 220px;
     }
     .vue-lobby .carousel-footer {
       position: relative;
@@ -853,4 +847,52 @@ body .lobby-backdrop[data-background='castle'] {
   min-height: 0;
   max-height: none;
   overflow: visible;
+}
+
+// #277: the drag hint sits directly under the cards.
+.vue-lobby .carousel-hint {
+  margin: 0;
+  text-align: center;
+  font-size: var(--stitch-text-hint);
+  color: var(--stitch-muted);
+}
+// #277: 場外休憩區 is a fixed card at the bottom of the action column, below
+// 開一桌, never part of the carousel. Its art waits for #278.
+.vue-lobby .vue-lobby-lounge-card {
+  align-self: stretch;
+  text-align: start;
+}
+.vue-lobby .vue-lobby-lounge-art {
+  display: grid;
+  place-items: center;
+  block-size: 72px;
+  border-radius: var(--stitch-radius-control);
+  background: var(--stitch-info-bg);
+  color: var(--stitch-info-ink);
+}
+.vue-lobby .vue-lobby-lounge-body {
+  display: grid;
+  gap: var(--stitch-gap-label);
+  font-size: var(--stitch-text-hint);
+  color: var(--stitch-muted);
+  strong {
+    font-size: var(--stitch-text-body);
+    color: var(--stitch-ink);
+  }
+}
+.vue-lobby-lounge {
+  display: grid;
+  gap: var(--stitch-gap-section);
+  > p {
+    margin: 0;
+  }
+  .vue-lobby-room-browser > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--stitch-gap-inline);
+  }
+  h3 {
+    margin: 0;
+  }
 }
