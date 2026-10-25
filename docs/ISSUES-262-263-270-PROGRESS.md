@@ -1,6 +1,6 @@
 # #262／#263／#270 本機候選紀錄
 
-2026-10-25；候選 2.46.0，基於 main `3ddf7c0d9b45182349597caaede52fa48dacf599`。開發及交付前 fetch origin 後，main 仍在同一提交。未提交、推送、建立 PR 或部署。
+2026-10-25；目前候選 3.2.0，已整合 main `238f0a4`（3.1.0）。初版基於 `3ddf7c0`，完整驗證後再次 fetch 發現 main 前進 16 個提交，因此先以本機 `840781e` 保存改動，再由 `b19f4cc` 整合最新 main。保留 main 的歷史模組移除、媒體自動開窗、Document PiP 及背景表情修正；本批未推送、建立 PR 或部署。
 
 ## 已確認與實作
 
@@ -8,7 +8,16 @@
 - #263 使用者選擇作畫與猜題時間分開設定。房主可各選 60／90／120 秒，預設 90 秒；開局出題使用文字時間，換頁繼續依共同期限執行。舊房間存檔缺少新欄位時回退 90 秒。
 - #270 導覽列與大廳背景融合已在 main 的 `scene-view.scss` 實作，來源為 PR #230。此次沒有重複修改 CSS。隔離 Edge 大廳深淺色實測頁首背景／邊框為透明、陰影 none，背景可連續顯示。未操作正式站或關閉 issue。
 
-## 驗證
+## 整合後驗證
+
+- 以 main `238f0a4` 為基準，最終 `test:affected` 選取全部 225 檔，共 1850 項：1849 通過、0 失敗、1 項因本機缺 ffmpeg 而略過，耗時 280.17 秒。
+- 相關引擎／HTTP／持久化／串流 55 項及前端全部 140 項通過；Vue 型別、正式建置、模組邊界、907 檔格式檢查、對照 origin/main 的 UI 檢查及 minor release 檢查通過。
+- Edge 重新走完觀戰五階段的 1920 × 1080／390 × 844，房主手機設定及各階段亦補拍；觀戰重新整理不占席、題目保密、連續倒數、離開停止輪詢與受控 hidden／visible 暫停／恢復通過，pageerror 為零。#270 深淺色頁首背景仍為透明。
+- 整合後證據：ignored `work/telephone-qa-1792913476144/`、`work/telephone-integrated-qa.log`、`work/telephone-integrated-affected.log`、`work/telephone-integrated-focused.log`、`work/telephone-integrated-frontend.log` 及 `work/telephone-integrated-build.log`。隔離 fixture 加速截止、實機觸控及正式站／最終 Linux CI 尚未驗證等限制保留。
+
+下列 1882／125 結果保留為整合前基線紀錄。
+
+## 整合前驗證
 
 - 傳情畫意及房間持久化／狀態串流回歸 55 項通過，含成功觀戰、未登入／已入座／錯誤 method 拒絕、私有資訊隔離、各階段期限與舊存檔回復。
 - 前端測試 125 項通過，含觀戰快照及三席實際 Vue 場景回歸。
