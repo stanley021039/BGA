@@ -27,7 +27,7 @@ inspect／export／verify／restore 沿用同一來源驗證：音效仍逐筆�
 
 v1.5.0 增加已知舊版community附件相容性：`community.json.avatars` 的有效UUID、`/uploads/avatars/<UUID>.png` 引用與 `community/avatars/` PNG必須一一對應；圖片驗大小／signature／IHDR，未知檔案、巢狀目錄及連結拒絕。`github-backfill.json` 只接受對應現有issue UUID、有效本站GitHub issue number／URL、空comments及有效時間，原bytes隨加密包保存，不擅自回填DB或出站。CLI與管理UI共用logical白名單，沒有這些附件的舊bundle摘要不變。
 
-v3.0.0（#267）移除除錯用對局記錄：新匯出不含 `history/`，source 不再需要 historyDir，也沒有 `HISTORY_*`、`acknowledgeInterruptedMatches` 或 `UNFINISHED_MATCHES`。舊 v1 bundle 內的 `history/<UUID>.jsonl`／`.meta.json` 仍隨 manifest 驗證，但還原時略過不寫入，摘要中的歷史筆數不再比對；新資料代沒有 history 目錄。
+v3.0.0（#267）移除除錯用對局記錄：新匯出不含 `history/`，source 不再需要 historyDir，也沒有 `HISTORY_*`、`acknowledgeInterruptedMatches` 或 `UNFINISHED_MATCHES`。舊 v1 bundle 內的 `history/<UUID>.jsonl`／`.meta.json` 只驗證 manifest 條目（HMAC、檔案存在、數量與容量），payload 不解密也不寫入；摘要中的歷史筆數不再比對，也不出現在 verify／restore 結果；新資料代沒有 history 目錄。
 
 | 資料 | 第一版行為 |
 | --- | --- |

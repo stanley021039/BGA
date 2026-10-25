@@ -182,18 +182,18 @@ test('script bots submit topics before drawings and deadline still controls pass
   r.add('bot1', true);
   r.add('bot2', true);
   r.start();
-  const history = { transact: (room, op, run) => run() };
-  for (let i = 0; i < 5; i++) runTestAIStep(r, { history, now: i * 1500 });
+  const transitions = { transact: (room, op, run) => run() };
+  for (let i = 0; i < 5; i++) runTestAIStep(r, { transitions, now: i * 1500 });
   assert.equal(r.phase, 'prompting');
   assert.equal(Object.keys(r.submissions).length, 2);
   cmd(r, host, 'submit', { text: '房主的主題' });
   assert.equal(r.round, 1);
-  for (let i = 5; i < 10; i++) runTestAIStep(r, { history, now: i * 1500 });
+  for (let i = 5; i < 10; i++) runTestAIStep(r, { transitions, now: i * 1500 });
   assert.equal(Object.keys(r.submissions).length, 2);
   assert.equal(r.auto(), false);
   cmd(r, host, 'skip');
   expire(r);
-  for (let i = 10; i < 15; i++) runTestAIStep(r, { history, now: i * 1500 });
+  for (let i = 10; i < 15; i++) runTestAIStep(r, { transitions, now: i * 1500 });
   assert.equal(Object.keys(r.submissions).length, 2);
 });
 test('telephone accepts shared drawing tools, filled shapes and 1–40px brushes without leaking drafts', () => {

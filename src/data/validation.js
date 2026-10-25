@@ -17,8 +17,9 @@ const { imageOf, MAX_BYTES: MAX_IMAGE_BYTES } = require('../profiles/uploads');
 const { ACHIEVEMENT_TABLES } = require('../achievements/schema');
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-// Bundles exported before #267 also carry debug match logs. They are still
-// authenticated so older backups restore, but their payloads are discarded.
+// Bundles exported before #267 also carry debug match logs. Their manifest
+// entries stay HMAC-covered so older backups restore; the payloads are never
+// decrypted or written.
 const legacyHistoryLogical = (logical) =>
   typeof logical === 'string' && /^history\/[0-9a-f-]{36}\.(jsonl|meta\.json)$/i.test(logical);
 function validBundleLogical(logical) {

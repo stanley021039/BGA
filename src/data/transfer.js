@@ -433,6 +433,8 @@ async function unpack(request, parent) {
   }
 }
 function publicManifest(m) {
+  // Pre-#267 bundles still list history counts that a restore no longer brings back.
+  const { historyLogs, historyMatches, unfinishedMatches, ...summary } = m.summary;
   return {
     bundleId: m.bundleId,
     snapshotAt: m.snapshotAt,
@@ -440,7 +442,7 @@ function publicManifest(m) {
     code: m.code,
     totalBytes: m.totalBytes,
     files: m.files.length,
-    summary: m.summary,
+    summary,
     policy: m.policy,
   };
 }

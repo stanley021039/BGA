@@ -962,6 +962,9 @@ test('bundles exported before history removal still verify and restore without l
   const restored = await run({ ...restoreRequest(f), apply: true });
   assert.equal(restored.bundleId, manifest.bundleId);
   assert.equal(restored.restoredSummary.historyLogs, undefined);
+  for (const result of [verified, restored])
+    for (const key of ['historyLogs', 'historyMatches', 'unfinishedMatches'])
+      assert.equal(Object.hasOwn(result.summary, key), false);
   assert.deepEqual(Object.keys(restored.config).sort(), [
     'COMMUNITY_DIR',
     'DB_FILE',
