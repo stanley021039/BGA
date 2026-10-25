@@ -37,6 +37,16 @@ test('public crawler rules, response headers, and Cloudflare login limits', asyn
       assert.equal(embedded.headers.get('x-frame-options'), 'SAMEORIGIN');
       assert.match(embedded.headers.get('content-security-policy'), /frame-ancestors 'self'/);
     }
+    const pipFrame = await fetch(base + '/media-pip-frame');
+    assert.equal(pipFrame.status, 200);
+    assert.equal(pipFrame.headers.get('x-frame-options'), 'SAMEORIGIN');
+    assert.match(pipFrame.headers.get('content-security-policy'), /frame-ancestors 'self'/);
+    assert.match(pipFrame.headers.get('content-type'), /^text\/html/);
+    assert.doesNotMatch(
+      await pipFrame.text(),
+      /<script/i,
+      'the frame host carries no script of its own',
+    );
     const protectedPage = await fetch(base + '/login?embed=1');
     assert.equal(protectedPage.headers.get('x-frame-options'), 'DENY');
     assert.match(protectedPage.headers.get('content-security-policy'), /frame-ancestors 'none'/);

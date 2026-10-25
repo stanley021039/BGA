@@ -9,12 +9,21 @@ let RoomMediaPlayer;
     const { audioHost, videoHost } = options,
       maxPosition = 14400,
       clock = () => performance.now();
+    let document = videoHost.ownerDocument || globalThis.document,
+      window = document.defaultView || globalThis.window;
     const retiredPlayers = new WeakSet(),
       audioTransitions = new WeakMap();
     let audioPreviewGesture = null,
       videoReadyJob = null,
       initialVideoPause = null,
-      videoHasStarted = false;
+      videoHasStarted = false,
+      // A moved iframe reloads in a window without user activation; keep the
+      // picture in sync muted until the first gesture there restores sound.
+      relocatedMount = false,
+      autoplayMuted = false,
+      mutedMessage =
+        '瀏覽器擋下有聲自動播放，影片先靜音跟著全桌播放；點一下這個視窗任一處即可恢復聲音。',
+      unmuteGesture = null;
     let snapshot = null,
       marker = null,
       room = null,
@@ -144,7 +153,36 @@ let RoomMediaPlayer;
         old.destroy();
       } catch {}
     }
+    function disarmUnmute() {
+      if (unmuteGesture) {
+        unmuteGesture.target.removeEventListener('pointerdown', unmuteGesture.handler, true);
+        unmuteGesture.target.removeEventListener('keydown', unmuteGesture.handler, true);
+      }
+      unmuteGesture = null;
+      autoplayMuted = false;
+    }
+    function armUnmute(target) {
+      disarmUnmute();
+      autoplayMuted = true;
+      const gesture = {
+        target: videoHost.ownerDocument || document,
+        handler: () => {
+          if (unmuteGesture !== gesture) return;
+          disarmUnmute();
+          if (player !== target || !ready) return;
+          settings();
+          try {
+            if (snapshot?.playback?.state === 'playing') target.playVideo();
+          } catch {}
+          status('', true);
+        },
+      };
+      unmuteGesture = gesture;
+      gesture.target.addEventListener('pointerdown', gesture.handler, true);
+      gesture.target.addEventListener('keydown', gesture.handler, true);
+    }
     function destroyVideo() {
+      disarmUnmute();
       cancelVideoReady();
       initialVideoPause = null;
       videoHasStarted = false;
@@ -188,9 +226,9 @@ let RoomMediaPlayer;
       const box = videoHost.getBoundingClientRect();
       if (box.width < 200 || box.height < 200) return false;
       let left = Math.max(0, box.left),
-        right = Math.min(innerWidth, box.right),
+        right = Math.min(window.innerWidth || innerWidth, box.right),
         top = Math.max(0, box.top),
-        bottom = Math.min(innerHeight, box.bottom);
+        bottom = Math.min(window.innerHeight || innerHeight, box.bottom);
       for (let parent = videoHost.parentElement; parent; parent = parent.parentElement) {
         const style = getComputedStyle(parent),
           rect = parent.getBoundingClientRect();
@@ -244,7 +282,7 @@ let RoomMediaPlayer;
       if (player && ready)
         try {
           player.setVolume(music.volume * 100);
-          music.enabled && !initialVideoPause ? player.unMute() : player.mute();
+          music.enabled && !initialVideoPause && !autoplayMuted ? player.unMute() : player.mute();
         } catch {}
     }
     function expectAudioTransition(clip, type, front = false) {
@@ -733,16 +771,19 @@ let RoomMediaPlayer;
       alignAudio(true);
     }
     function youtubeApi() {
-      if (window.YT?.Player) return Promise.resolve(window.YT);
+      const apiWindow = window,
+        apiDocument = document;
+      if (apiWindow.YT?.Player) return Promise.resolve(apiWindow.YT);
       if (apiPromise) return apiPromise;
       apiPromise = new Promise((resolve, reject) => {
-        const previous = window.onYouTubeIframeAPIReady;
+        const previous = apiWindow.onYouTubeIframeAPIReady;
         let complete = false;
         const finish = () => {
           if (apiTimer !== null) clearTimeout(apiTimer);
           apiTimer = null;
           apiCancel = null;
-          if (window.onYouTubeIframeAPIReady === done) window.onYouTubeIframeAPIReady = previous;
+          if (apiWindow.onYouTubeIframeAPIReady === done)
+            apiWindow.onYouTubeIframeAPIReady = previous;
         };
         const fail = () => {
           if (complete) return;
@@ -755,7 +796,7 @@ let RoomMediaPlayer;
         };
         const done = () => {
           if (complete) return;
-          if (!window.YT?.Player) {
+          if (!apiWindow.YT?.Player) {
             fail();
             return;
           }
@@ -764,16 +805,16 @@ let RoomMediaPlayer;
           try {
             previous?.();
           } catch {}
-          resolve(window.YT);
+          resolve(apiWindow.YT);
         };
         apiCancel = fail;
-        window.onYouTubeIframeAPIReady = done;
-        apiScript = document.createElement('script');
+        apiWindow.onYouTubeIframeAPIReady = done;
+        apiScript = apiDocument.createElement('script');
         apiScript.src = 'https://www.youtube.com/iframe_api';
         apiScript.referrerPolicy = 'strict-origin-when-cross-origin';
         apiScript.onerror = fail;
         apiTimer = setTimeout(fail, 20000);
-        document.head.append(apiScript);
+        apiDocument.head.append(apiScript);
       });
       return apiPromise;
     }
@@ -833,7 +874,9 @@ let RoomMediaPlayer;
       if (!activeVideo()) return;
       const token = playerEpoch,
         key = currentKey(),
-        videoId = snapshot.current.videoId;
+        videoId = snapshot.current.videoId,
+        relocated = relocatedMount;
+      relocatedMount = false;
       mountingVideo = token;
       status('載入自己的YouTube播放器…', true);
       notify();
@@ -893,7 +936,7 @@ let RoomMediaPlayer;
                   } catch {}
                 }
                 if (pending) settings();
-                status('', true);
+                status(autoplayMuted ? mutedMessage : '', true);
                 const length = Number(instance.getDuration?.());
                 if (Number.isFinite(length) && length > 0 && length <= maxPosition && !duration())
                   report('duration', { itemId: snapshot.current.id, durationSec: length });
@@ -903,6 +946,16 @@ let RoomMediaPlayer;
             onAutoplayBlocked: (event) => {
               if (stale(event?.target || instance)) return;
               initialVideoPause = null;
+              if (relocated && !autoplayMuted && snapshot.playback.state === 'playing') {
+                armUnmute(instance);
+                try {
+                  instance.mute();
+                  instance.seekTo(position(), true);
+                  instance.playVideo();
+                } catch {}
+                status(mutedMessage, true);
+                return;
+              }
               settings();
               status('瀏覽器需要你允許播放，請按「在自己的裝置播放」或YouTube原生播放按鈕。', true);
             },
@@ -1137,6 +1190,34 @@ let RoomMediaPlayer;
       apiScript = null;
     }
     return {
+      relocate() {
+        const target = videoHost.ownerDocument || globalThis.document;
+        if (disposed || target === document) return;
+        document.removeEventListener('visibilitychange', visibility);
+        apiCancel?.();
+        apiScript?.remove();
+        apiScript = apiPromise = null;
+        document = target;
+        window = target.defaultView || globalThis.window;
+        document.addEventListener('visibilitychange', visibility);
+        // HTML audio survives adoption; keep its native intent and position.
+        // Cross-document iframes reset, so rebind YouTube in the new realm at
+        // the authoritative shared position, never with a second audio stream.
+        if (snapshot?.current?.type === 'video' && videoWanted) {
+          const wasNative = nativeVideo;
+          stopPlayers();
+          if (wasNative) {
+            nativeVideo = true;
+            const iframe = videoFrame(snapshot.current.videoId, false);
+            videoHost.replaceChildren(iframe);
+            observeFrame(iframe, playerEpoch, currentKey());
+          } else if (!document.hidden) {
+            relocatedMount = true;
+            void mountVideo();
+          }
+        } else if (audio) alignAudio(false);
+        notify();
+      },
       update(next, nextMarker, now) {
         if (disposed) return;
         const old = currentKey(),
