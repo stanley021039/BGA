@@ -16,6 +16,13 @@ Object.defineProperty(window.HTMLElement.prototype, 'disabled', {
     this.toggleAttribute('disabled', !!value);
   },
 });
+const nativeQuery = document.querySelector.bind(document);
+document.querySelector = (selector) =>
+  nativeQuery(
+    selector
+      .replaceAll('dialog:modal', 'dialog[open]')
+      .replaceAll(':popover-open', '[data-popover-open]'),
+  );
 const vue = require('vue'),
   pinia = require('pinia'),
   ts = require('typescript');

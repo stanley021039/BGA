@@ -166,28 +166,6 @@ for (const purpose of ['test', 'production', 'retry'])
             false,
           );
       }
-
-      const historyList = await (
-          await fetch(base + '/api/history', { headers: { Cookie: owner } })
-        ).json(),
-        match = historyList.find((m) => m.type === 'quacks');
-      assert.equal(match.status, 'finished');
-      const history = await (
-        await fetch(base + '/api/history/' + match.id, { headers: { Cookie: owner } })
-      ).json();
-      assert.match(history[0].engine.source, /class QuacksRoom/);
-      assert.match(history[0].engine.catalog, /Crow|烏鴉/);
-      assert.equal(history.filter((r) => r.kind === 'result').at(-1).after.results.length, 9);
-      assert.equal(
-        history.filter(
-          (r) =>
-            r.kind === 'result' &&
-            r.operation.input?.action === 'next' &&
-            r.after.phase === 'fortune',
-        ).length,
-        8,
-        'all eight host-confirmed round transitions are persisted',
-      );
       await post('reconnect', owner, { code });
       const rooms = await (await fetch(base + '/api/rooms', { headers: { Cookie: owner } })).json();
       assert.equal(rooms.rooms.find((r) => r.code === code).maxPlayers, 8);

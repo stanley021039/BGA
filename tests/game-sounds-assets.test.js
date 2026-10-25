@@ -55,7 +55,6 @@ test('game cue controllers and WAV routes are served exactly, unrelated files re
     port: 0,
     host: '127.0.0.1',
     dbFile: path.join(temp, 'db.sqlite'),
-    historyDir: path.join(temp, 'history'),
     communityDir: path.join(temp, 'community'),
     musicDir: path.join(temp, 'music'),
     externalSideEffectsEnabled: false,

@@ -33,7 +33,6 @@ async function fixture(t) {
     frontendEnabled: true,
     frontendRoot: vueRoot,
     dbFile: path.join(root, 'db.sqlite'),
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     musicDir: path.join(root, 'music'),
     externalSideEffectsEnabled: false,

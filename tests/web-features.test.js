@@ -10,7 +10,7 @@ const { test } = require('node:test'),
   { openDatabase } = require('../src/db/index'),
   { createAuth } = require('../src/auth/index');
 test(
-  'HTTP community and majority integration: character display, issues, library, queue privacy, withdrawals and scoring archive',
+  'HTTP community and majority integration: character display, issues, library, queue privacy, withdrawals and scoring',
   async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-web-'));
     const testDb = openDatabase(path.join(dir, 'app.sqlite'));
@@ -58,7 +58,6 @@ test(
         FRONTEND_ENABLED: 'false',
         PORT: String(port),
         PUBLIC_URL: 'http://example.test:' + port,
-        HISTORY_DIR: path.join(dir, 'history'),
         COMMUNITY_DIR: path.join(dir, 'community'),
         DB_FILE: path.join(dir, 'app.sqlite'),
         GITHUB_TOKEN: 'test-token',
@@ -225,15 +224,9 @@ test(
         view.players.map((p) => p.score),
         [4, 4, 0],
       );
-      const history = await api('history');
-      assert.equal(history[0].status, 'finished');
-      const archive = await api('history/' + history[0].id);
-      const raw = JSON.stringify(archive);
+      const raw = JSON.stringify(view);
       for (const p of players) assert.equal(p.token, undefined);
       assert.ok(!raw.includes(cookie.split('=')[1]));
-      assert.ok(raw.includes('withdraw'));
-      assert.ok(raw.includes('enqueue'));
-      assert.ok(raw.includes('presenterPenalty'));
       const kickRoom = await api('create', { type: 'majority', name: 'KickHost' });
       await api('join', { code: kickRoom.code, name: 'Victim' }, { cookie: otherCookie });
       await api('join', { code: kickRoom.code, name: 'Peer' }, { cookie: thirdCookie });

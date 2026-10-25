@@ -2,7 +2,6 @@ const { REWARD_TABLES } = require('../achievements/reward-schema');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { StringDecoder } = require('node:string_decoder');
 const { DatabaseSync } = require('node:sqlite');
 const {
   SCHEMA_VERSION,
@@ -18,6 +17,11 @@ const { imageOf, MAX_BYTES: MAX_IMAGE_BYTES } = require('../profiles/uploads');
 const { ACHIEVEMENT_TABLES } = require('../achievements/schema');
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Bundles exported before #267 also carry debug match logs. Their manifest
+// entries stay HMAC-covered so older backups restore; the payloads are never
+// decrypted or written.
+const legacyHistoryLogical = (logical) =>
+  typeof logical === 'string' && /^history\/[0-9a-f-]{36}\.(jsonl|meta\.json)$/i.test(logical);
 function validBundleLogical(logical) {
   if (typeof logical !== 'string') return false;
   const avatar =
@@ -30,7 +34,7 @@ function validBundleLogical(logical) {
     logical === 'community/community.json' ||
     logical === 'community/github-backfill.json' ||
     avatar ||
-    /^history\/[0-9a-f-]{36}\.(jsonl|meta\.json)$/i.test(logical)
+    legacyHistoryLogical(logical)
   );
 }
 const sha = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -73,35 +77,6 @@ function readJson(file, max = 32 * 1024 * 1024) {
 }
 function quote(name) {
   return '"' + name.replaceAll('"', '""') + '"';
-}
-function* jsonlRows(file) {
-  const fd = fs.openSync(file, 'r'),
-    buffer = Buffer.alloc(64 * 1024),
-    decoder = new StringDecoder('utf8');
-  let tail = '';
-  try {
-    for (;;) {
-      const n = fs.readSync(fd, buffer, 0, buffer.length, null);
-      tail += n ? decoder.write(buffer.subarray(0, n)) : decoder.end();
-      let end;
-      while ((end = tail.indexOf('\n')) !== -1) {
-        if (end > 16 * 1024 * 1024) fail('INVALID_HISTORY', 'A history row exceeds 16 MiB');
-        let row;
-        try {
-          row = JSON.parse(tail.slice(0, end));
-        } catch {
-          fail('INVALID_HISTORY', 'History JSONL is invalid');
-        }
-        tail = tail.slice(end + 1);
-        yield row;
-      }
-      if (tail.length > 16 * 1024 * 1024) fail('INVALID_HISTORY', 'A history row exceeds 16 MiB');
-      if (!n) break;
-    }
-    if (tail) fail('INVALID_HISTORY', 'History log has an incomplete final row');
-  } finally {
-    fs.closeSync(fd);
-  }
 }
 function validateDatabase(file) {
   noLinks(file);
@@ -508,7 +483,7 @@ function legacyCommunity(dir, names, data, files) {
     ? { avatarFiles: avatars.length, githubBackfillEntries: backfillEntries }
     : undefined;
 }
-function validateData(p, { acknowledgeInterruptedMatches = false } = {}) {
+function validateData(p) {
   const database = validateDatabase(p.dbFile),
     files = [{ logical: 'db/afterhours.sqlite', source: p.dbFile }];
   const musicNames = listFlat(p.musicDir, (n) => /^[0-9a-f-]{36}\.(mp3|ogg|m4a)$/i.test(n), [
@@ -583,84 +558,6 @@ function validateData(p, { acknowledgeInterruptedMatches = false } = {}) {
   if (!communityData && communityNames.length)
     fail('BROKEN_REFERENCE', 'Legacy community files require community.json metadata');
   const legacy = legacyCommunity(p.communityDir, communityNames, communityData, files);
-  const historyNames = listFlat(
-    p.historyDir,
-    (n) => /^[0-9a-f-]{36}\.(jsonl|meta\.json)$/i.test(n),
-    ['.lock', '.afterhours-data-lock'],
-  );
-  const metas = new Map(),
-    logs = new Set(),
-    playing = [],
-    interruptedStates = new Map();
-  for (const name of historyNames.filter((n) => n.endsWith('.meta.json'))) {
-    const id = name.slice(0, -10),
-      m = readJson(path.join(p.historyDir, name));
-    if (
-      !uuid.test(id) ||
-      m.id !== id ||
-      !['playing', 'finished', 'interrupted'].includes(m.status) ||
-      !Number.isSafeInteger(m.count) ||
-      m.count < 0
-    )
-      fail('INVALID_HISTORY', 'History metadata is invalid');
-    metas.set(id, m);
-    if (m.status === 'playing') playing.push(id);
-  }
-  for (const name of historyNames.filter((n) => n.endsWith('.jsonl'))) {
-    const id = name.slice(0, -6),
-      file = path.join(p.historyDir, name);
-    if (!uuid.test(id)) fail('INVALID_HISTORY', 'Invalid history filename');
-    const rows = jsonlRows(file);
-    try {
-      const first = rows.next().value;
-      if (!first || first.schema !== 1 || !['session', 'header'].includes(first.kind))
-        fail('INVALID_HISTORY', 'History header is invalid');
-      if (first.kind === 'header') {
-        if (
-          !metas.has(id) ||
-          first.id !== id ||
-          typeof first.engine?.source !== 'string' ||
-          first.engine.sha256 !== sha(first.engine.source)
-        )
-          fail('INVALID_HISTORY', 'History engine hash or metadata is invalid');
-      } else if (metas.has(id))
-        fail('INVALID_HISTORY', 'Session log unexpectedly has match metadata');
-      // An intent without a durable result is a partially committed operation, not a valid backup.
-      const pending = new Set();
-      let resultCount = 0,
-        lastSeq = 0,
-        lastState = first.initial;
-      for (const row of rows) {
-        if (row.kind === 'intent') {
-          if (!Number.isSafeInteger(row.seq) || row.seq <= lastSeq || pending.size)
-            fail('INVALID_HISTORY', 'Invalid history operation sequence');
-          pending.add(row.seq);
-          lastSeq = row.seq;
-        } else if (row.kind === 'result') {
-          if (!pending.delete(row.seq))
-            fail('INVALID_HISTORY', 'History result is missing its intent');
-          resultCount++;
-          lastState = row.after;
-        } else if (row.kind !== 'interrupted') fail('INVALID_HISTORY', 'Unknown history row type');
-      }
-      if (pending.size) fail('INVALID_HISTORY', 'History contains an unfinished disk operation');
-      if (first.kind === 'header' && resultCount !== metas.get(id).count)
-        fail('INVALID_HISTORY', 'History result count does not match metadata');
-      if (metas.get(id)?.status === 'playing') interruptedStates.set(id, lastState);
-      logs.add(id);
-    } finally {
-      rows.return();
-    }
-  }
-  for (const id of metas.keys())
-    if (!logs.has(id)) fail('INVALID_HISTORY', 'History log is missing');
-  if (playing.length && !acknowledgeInterruptedMatches)
-    fail(
-      'UNFINISHED_MATCHES',
-      'Finish matches first or acknowledge that restore will mark them interrupted',
-    );
-  for (const name of historyNames)
-    files.push({ logical: 'history/' + name, source: path.join(p.historyDir, name) });
   const summary = {
     database: {
       schemaVersion: database.schemaVersion,
@@ -676,12 +573,9 @@ function validateData(p, { acknowledgeInterruptedMatches = false } = {}) {
     musicFiles: musicNames.length,
     orphanMusicFiles: musicNames.filter((n) => !expectedMusic.has(n)).length,
     communityQuestions: questionCount,
-    historyLogs: logs.size,
-    historyMatches: metas.size,
-    unfinishedMatches: playing.length,
   };
   if (legacy) summary.legacyCommunity = legacy;
-  return { files, summary, metas, interruptedStates, playing };
+  return { files, summary };
 }
 module.exports = {
   fail,
@@ -693,4 +587,5 @@ module.exports = {
   validateDatabase,
   validateData,
   validBundleLogical,
+  legacyHistoryLogical,
 };

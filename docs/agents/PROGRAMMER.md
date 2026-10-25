@@ -1,6 +1,13 @@
+## 2026-10-25 #265 整合 main 3.1.0
+
+交付前整合 main 238f0a46（#256／#261、#267、#252、#266），本功能改候選3.2.0，取代下方本批候選2.46.0。保留移除除錯歷史、背景表情與媒體子母畫面；郎中仍先入座再configure。整合後Windows Node24全套1,861項中1,860通過、0失敗、1項缺ffmpeg略過，前端144、權限／SSE24及3.2.0站48筆瀏覽器驗收通過，格式／型別與build／UI及媒體預算／minor release check通過。證據與未驗範圍見[本輪紀錄](../specs/ROOM-MANAGER-265.md#整合-main-310)。仍待使用者驗收、具體PR確認、兩輪審查及Linux CI，未發PR或部署。
+
 ## 2026-10-25 #265／#220：管理者設定與開局候選
 
 隔離 main 3ddf7c0d，候選 2.46.0、codex/issues-220-265：共用 canManageSettings／canStartGame 連接八款既有設定及十一款開始／再玩一局；保留 host 身分、房主角色管理及局中專屬操作。郎中建房先加入房主再 configure，純 AI 引擎真實 bot 房主仍可初始化，公開角色不授權 bot。猜歌表單接共用 checkbox 陣列／label slot；畫猜 footer 依內容保留高度，修正失敗重試被開始鈕蓋住。44 組等待室與後續流程合計 48 筆 Edge 桌機／390px、深淺色及權限／保存／失敗重試／實際開局再玩驗收通過；前端129及針對性權限／SSE24通過。Windows Node24 最終全套1,894項中1,893通過、0失敗、1項缺ffmpeg略過，退出0；建置、格式、UI與build效能預算及minor release check通過。完整證據與交付狀態見[本輪證據](../specs/ROOM-MANAGER-265.md)。#220 既有背景入口已由 #254 合入並複驗，票已標完成。尚未發 PR、合併或部署；人工驗收及後續兩輪審查／CI 待完成。
+
+2026-10-25 #266：候選3.1.0（原2.47.0）以Document PiP把同一組媒體節點搬進獨立小視窗，不支援時隱藏按鈕。PiP文件是about:blank、iframe不帶Referer會讓YouTube錯誤153，改先載入無腳本的同源`/media-pip-frame`（僅此路徑frame-ancestors 'self'）再搬入；內外兩層pagehide都還原，避免frame先拆掉後節點失去事件監聽。Playwright對PiP視窗的請求攔截會卡住（含CSS），驗收不可用ctx.route。真Edge 8組通過，特效僅沿用框飾；停在第4階段待驗收，未開PR、未部署。證據見[本輪紀錄](../specs/MEDIA-PIP-266.md)。
+2026-10-25 #256／#261：候選2.46.0在同房空清單開始播放時自動開啟既有compact播放器，初載／重連不重播、手動關閉後加歌／切歌不重開；hidden、modal、手機抽屜與背景／全螢幕延後，過期事件失效。只在current／queue皆空的新點播可重啟stop後播放，有待播內容的stop仍保持停止。試玩追加已同意影片直接加入：開窗／返回可見時補joinVideo，不只依賴current改變；保留拒絕與自動播放受阻退路。真Edge雙玩家桌機1920／手機390深淺色、影音拒絕無iframe與焦點驗證通過；追加12組provider fixture驗直接播放接線，非真YouTube聽感。使用者已驗收並授權合併，進入兩輪審查與最終Linux CI，最終結果以本批PR為準，未部署。測試失敗／重跑與完整結果依[本輪證據](../specs/MEDIA-AUTO-OPEN-256-261.md)。取代共用媒體舊規格對「即使全空後新點播也不再開窗／播放」的描述，其餘權限及個人同意不變；#266尚未實作。
 
 2026-10-24 #233 第二批接續：沿用舊前端移除與 main 整合成果，補刪退役 room-host／room-reconnect／game-shell 的五個短網址別名；登入頁的 affected mapping 改對應現役 Vue 入口，新增／更新對應回歸斷言。Vue 與 public 共用模組的保留責任見 [遷移邊界](../refactors/VUE-FRONTEND.md#233移除舊頁面後的保留邊界)。本輪以隔離站實際操作與 HTTP 資源核對驗收，未重跑測試套件、未推送或正式發布；既有測試結果不可當作本輪新內容全套通過。#234 路由拆分仍依票內條件等待 #226／#227 的 app.js 接線合入。
 
@@ -356,7 +363,7 @@ DrawWordStore 以題目 ID 或 normalized title 排除，內建列表、共編�
 - `src/app.js`建立rooms、seats與music/social maps。users UUID、room seat UUID、6位room code是三種身份；永久結果用match UUID／result unit，不能從名字回推canonical user。
 - `src/db/index.js`Node DatabaseSync、WAL、同步BEGIN IMMEDIATE migration／transaction，本輪候選schema上限15，正式v1.3.0仍為音效版14；相容布局見SERVER-DATA檔首與移轉指南。async repository升級要重設transaction契約。
 - 遊戲state由server裁決；client report是非權威。重送API靠requestId／revision／epoch與永久結果ledger，不只client busy或WeakSet。
-- `src/history/store.js`記before/trace/after與enginehash、rng；進行中archive拒讀。不要把秘密歷史預設公開，新增state transition納入transact。
+- ~~`src/history/store.js`記before/trace/after…~~ 2026-10-25 #267（v3.0.0）整個移除；`transitions.transact` 只執行操作並通知，不再寫記錄，記錄容量不得再擋遊戲。
 - 成就以玩家spec的server證據判定，不從UI文字／瞬時events判定：poker每個sidepot需winnerIds/refund/tie；race維修僅己方。骰運候選採本人4顆原始移動骰全1的accepted round metric，加上有效manual turn與正常完賽；相同結果重擲候選已否決，不能誘導為成就額外重擲。首次權威finalize凍結winner/participants，rules_completed與timeout等quality_flags分離。
 - `public/race.html`內嵌thunder＋tutorial engine副本，修改引擎必須同步並驗embedded source一致。教學不開正式輪詢，非同步規則需bridge timer與換章cleanup。
 - `RaceVehicleEffects.mount().show(events,state,{min})`只增SVG effects，不覆蓋外層位置或.race-car-moving；相同事件去重、重繪負delay、hidden cleanup、減少動態。它是已存在模組，新共看不能把這些effects覆蓋iframe。

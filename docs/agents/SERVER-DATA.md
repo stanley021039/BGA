@@ -104,7 +104,7 @@ PR #31 修正 `0682e43` 取代先前自動回收 dead-PID 鎖的行為。server�
 | users/media | 帳號、角色表情圖片／音效／gift／artwork bytes在DB BLOB；users.appearance有JSON引用 |
 | music | metadata在music_tracks，實音檔在`MUSIC_DIR || dirname(DB_FILE)/music`；settings 已映射 MUSIC_DIR |
 | community | `COMMUNITY_DIR/community.json`存majority題庫與舊issue；BoardStore啟動legacy import |
-| history | `HISTORY_DIR`每session/match JSONL＋meta＋enginehash；`.lock`是當地PID，不隨restore複製 |
+| history | 2026-10-25 #267（v3.0.0）已移除：不再有 `HISTORY_DIR`，新 bundle 不含 history；舊 bundle 的 history 項目只驗證、還原時略過。原 JSONL＋meta＋enginehash 描述已被取代 |
 | transient | room/seats/maps/draw canvas/current music/dice continuations在記憶體，重啟不恢复 |
 | deploy | 既有Linux `shared`與current release symlink/systemd，詳[部署指南](../DEPLOYMENT.md)／[歷史紀錄](../LINUX-DEPLOYMENT.md)，執行前重查實況 |
 

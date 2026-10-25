@@ -387,10 +387,6 @@ class TelephoneRoom {
     }
     this.submissions = {};
   }
-  // History stores bounded page deltas; completed books are reconstructed from rows.
-  historyState() {
-    return { ...this, bookHeaders: this.books.map((b) => ({ ...b, pages: b.pages.slice(0, 1) })) };
-  }
   view(id) {
     if (!this.player(id)) fail('NOT_SEATED', '尚未入座', 403);
     const passing = ['prompting', 'passing'].includes(this.phase),

@@ -46,7 +46,7 @@ scheduler 的遊戲自動動作經 history transaction，先檢查 recorder paus
 
 ## history 與成就故障契約（目前實作）
 
-- HistoryStore 先寫 intent，再跑 engine，最後寫 result/meta。它不是可回滾的遊戲 transaction：result fsync 失敗時，遊戲動作可能已套用，recorder 會 pause，不能宣稱動作沒發生。header/intent 前失敗可維持 engine 未變；quota 是限時 block。被拒 start 需 interrupted、可淘汰，不能佔用 active match 或沿用舊 winner。[HISTORY] [FAILED-START]
+- HistoryStore 先寫 intent，再跑 engine，最後寫 result/meta。它不是可回滾的遊戲 transaction：result fsync 失敗時，遊戲動作可能已套用，recorder 會 pause，不能宣稱動作沒發生。header/intent 前失敗可維持 engine 未變；quota 是限時 block。被拒 start 需 interrupted、可淘汰，不能佔用 active match 或沿用舊 winner。[HISTORY] [FAILED-START] （2026-10-25 #267 已移除，v3.0.0 起取代）
 - history snapshot 排除 secret/lastSeen/function，但完整遊戲狀態與 engine source 存於 archive；讀取 playing archive 被拒。不能拿未遮罩 snapshot 當公開 `view`。獨立 draw stroke/command 沒有經這段通用 history transaction，不因 method 名同為 mutation 就聲稱完整一致。[HISTORY] [APP]
 - recorder 不可寫時仍允許離席，避免困住玩家；標記 unrecorded、回 `historyPersisted:false`/warning，剩餘房間保持暫停，不重跑已套用的 leave。[APP] [LIFECYCLE] [HISTORY]
 - poker 是 hand、thunder 是 race；majority/gift/draw 是正常完成 round，不能以每次 HTTP action、整局 finished 或所有參與者一律授獎替代。收據、progress、badge 在 SQLite transaction 一起寫；同 event ID/fingerprint 是 duplicate，不同 facts 或重複單位 identity 是 conflict。[ACH-STORE] [ACH-UNITS] [ACH-ENGINES]
@@ -67,7 +67,7 @@ scheduler 的遊戲自動動作經 history transaction，先檢查 recorder paus
 | 舊 achievement digest | 只有 authenticated pre17 producer+DB 或歷史 market17/18 且無 unit tables 的限定條件可省略；當前 producer 即使打包舊 DB 也需 digest | [TRANSFER] [FORKS] [ACH-MIGRATION] |
 | origin / bundle identity | 保留 origin envId/dataInstanceId；restore 新代寫 receipt 與 data-instance；可選 expectedBundleId 防同路徑換包（UI 帶入，CLI 仍非強制） | [TRANSFER] [TRANSFER-TEST] [TRANSFER-DOC] |
 | restore 政策 | sessions/invites/password_resets 清除；pending/sending submissions→needs_review；回傳 boot config 關閉 external effects；credentials/account UUID 保留，不含部署 secrets | [TRANSFER] [TRANSFER-TEST] |
-| 冷匯出／writer locks | sourceStopped=true 之外仍取得 DB/history/community/music 及 legacy history lock；已有鎖不自動搶回，即使 PID 已死 | [LOCKS] [TRANSFER] [LOCK-TEST] [TRANSFER-TEST] |
+| 冷匯出／writer locks | sourceStopped=true 之外仍取得 DB/community/music ；已有鎖不自動搶回，即使 PID 已死 | [LOCKS] [TRANSFER] [LOCK-TEST] [TRANSFER-TEST] |
 | 新代發布／失敗／暫存 | staging 解密/驗證/遷移/政策/再驗證；dry-run 不發布。apply 只允許不存在的 destination，publish lock+marker 擋啟動，完成才移除；失敗後可能留下半成品目錄但不能成為可啟動代，不是「任何失敗都無目錄」 | [TRANSFER] [LOCKS] [TRANSFER-TEST] |
 | unfinished history / live room | 需明確 acknowledge 才記 interrupted；保留 archive 不等於續玩。記憶體 rooms、部署設定不在完整資料包；啟動後歷史保留策略仍會淘汰 | [TRANSFER] [VALIDATION] [TRANSFER-DOC] [HISTORY] |
 

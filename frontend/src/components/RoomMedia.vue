@@ -11,6 +11,7 @@ import { createMediaHistory, recentVideoUrl } from '../services/media-history';
 import { mediaConsent } from '../services/media-consent';
 import type { RecentVideo } from '../services/media-history';
 import { useMediaWindow } from '../composables/media-window';
+import { useDocumentPip } from '../composables/document-pip';
 import { formatMediaTime, mediaCurrentKey, mediaPlaybackKey } from '../contracts/media';
 import type { MediaOrderIntent, MediaPlayer, MediaPlayerView } from '../contracts/media';
 import UiButton from './UiButton.vue';
@@ -22,11 +23,13 @@ import OverflowText from './OverflowText.vue';
 import UiTabs from './UiTabs.vue';
 import UiIcon from './UiIcon.vue';
 import '../styles/room-media.scss';
+import '../styles/media-pip.scss';
 const props = withDefaults(defineProps<{ connected?: boolean }>(), { connected: true });
 const media = useMediaStore(),
   prefs = usePreferencesStore(),
   id = useId();
 const opener = ref<HTMLElement | null>(null),
+  surface = ref<HTMLElement | null>(null),
   dialog = ref<HTMLDialogElement | null>(null),
   audioHost = ref<HTMLElement | null>(null),
   videoHost = ref<HTMLElement | null>(null),
@@ -72,7 +75,9 @@ function recentKey(event: KeyboardEvent) {
           []),
       ];
       if (!buttons.length) return;
-      const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      // The surface may live in the PiP document, whose focus is separate.
+      const owner = recentArea.value?.ownerDocument || document,
+        index = buttons.indexOf(owner.activeElement as HTMLButtonElement);
       const down = event.key === 'ArrowDown';
       const target =
         index < 0
@@ -134,7 +139,31 @@ watch(
 );
 const geometry = useMediaWindow(dialog, opened, mode),
   frameSurface = ref<Record<string, string>>({});
-const style = computed(() => ({ ...geometry.style.value, ...frameSurface.value }));
+const pip = useDocumentPip(
+  surface,
+  () => {
+    geometry.cancel();
+    cancelQueue();
+    mode.value = 'full';
+    activeTab.value = 'player';
+    player?.relocate?.();
+    updatePresentation();
+    syncFrame();
+  },
+  () => {
+    mode.value = 'full';
+    player?.relocate?.();
+    if (!disposed) {
+      void show(false);
+      void maybeJoinVideo();
+    }
+  },
+  escape,
+);
+const style = computed(() => ({
+  ...(pip.active.value ? {} : geometry.style.value),
+  ...frameSurface.value,
+}));
 const item = computed(() => media.snapshot?.current),
   videoActive = computed(
     () => !!item.value && item.value.type === 'video' && view.value.videoWanted,
@@ -183,7 +212,60 @@ let player: MediaPlayer | null = null,
   lastConsent = '',
   lastItem = '',
   timer: ReturnType<typeof setInterval> | null = null,
-  observer: MutationObserver | null = null;
+  observer: MutationObserver | null = null,
+  modeObserver: MutationObserver | null = null;
+// Only consecutive, connected snapshots can start a new automatic opening.
+// Initial load and reconnect establish a baseline, rather than replaying old music.
+let previousMedia: { revision: number; empty: boolean } | null = null,
+  pendingOpen = '';
+function observePlayback() {
+  const state = media.snapshot;
+  if (!state) return;
+  const empty = !state.current && !state.queue?.length;
+  if (previousMedia?.revision === state.revision) return;
+  const first = previousMedia?.empty && state.current && state.playback.state === 'playing';
+  previousMedia = { revision: state.revision, empty };
+  if (pendingOpen !== mediaCurrentKey(state)) pendingOpen = '';
+  if (first && !opened.value) pendingOpen = mediaCurrentKey(state);
+  void maybeAutoOpen();
+}
+async function maybeAutoOpen() {
+  if (
+    !pendingOpen ||
+    disposed ||
+    !mounted ||
+    !props.connected ||
+    !media.connected ||
+    document.hidden ||
+    document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]') ||
+    document.body.classList.contains('scene-ui-hidden') ||
+    document.body.classList.contains('vue-game-focus') ||
+    document.body.classList.contains('vue-draw-focus')
+  )
+    return;
+  if (pendingOpen !== mediaCurrentKey(media.snapshot) || !playing.value) {
+    pendingOpen = '';
+    return;
+  }
+  pendingOpen = '';
+  if (opened.value) return;
+  const focused = document.activeElement as HTMLElement | null;
+  mode.value = 'compact';
+  activeTab.value = 'player';
+  wantsVideo = videoConsent.value === true;
+  await show(false);
+  // show() is non-modal but native dialog focus must not interrupt typing/drawing.
+  if (
+    focused?.isConnected &&
+    !document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]')
+  ) {
+    const bodyFocus = focused === document.body && !focused.hasAttribute('tabindex');
+    if (bodyFocus) focused.setAttribute('tabindex', '-1');
+    focused.focus({ preventScroll: true });
+    if (bodyFocus) focused.removeAttribute('tabindex');
+  }
+  if (opened.value && !disposed && props.connected && media.connected) player?.align();
+}
 let queuePointer: {
   id: number;
   node: HTMLElement;
@@ -207,6 +289,7 @@ function cancelQueue() {
 function closed() {
   if (dialog.value?.open || !opened.value) return;
   opened.value = false;
+  pendingOpen = '';
   recentOpen.value = false;
   geometry.cancel();
   cancelQueue();
@@ -217,6 +300,10 @@ function closed() {
   opener.value?.querySelector<HTMLButtonElement>('button')?.focus();
 }
 function close() {
+  if (pip.active.value) {
+    pip.close();
+    return;
+  }
   if (dialog.value?.open) dialog.value.close();
   closed();
 }
@@ -235,10 +322,16 @@ async function show(load = true) {
       sharedClock.value = media.position();
     }, 500);
   sharedClock.value = media.position();
+  void maybeJoinVideo();
   if (fresh && load) void media.library();
 }
 async function open() {
+  if (pip.active.value) {
+    pip.native.value?.focus();
+    return;
+  }
   mode.value = 'full';
+  wantsVideo = videoConsent.value === true;
   await show();
   const context = media.context;
   await media.load(true);
@@ -263,9 +356,28 @@ function setTab(value: string) {
   activeTab.value = value;
   updatePresentation();
 }
+async function maybeJoinVideo() {
+  const key = mediaCurrentKey(media.snapshot);
+  await nextTick();
+  if (
+    !disposed &&
+    mounted &&
+    props.connected &&
+    media.connected &&
+    opened.value &&
+    (!document.hidden || pip.active.value) &&
+    key === mediaCurrentKey(media.snapshot) &&
+    media.snapshot?.current?.type === 'video' &&
+    wantsVideo &&
+    videoConsent.value === true &&
+    !view.value.videoWanted
+  )
+    player?.joinVideo();
+}
 function syncPlayback() {
   const state = media.snapshot;
   if (!mounted || !state || !player || !props.connected || !media.connected) return;
+  observePlayback();
   if (lastConsent !== consentKey.value) {
     lastConsent = consentKey.value;
     wantsVideo = videoConsent.value === true;
@@ -277,16 +389,7 @@ function syncPlayback() {
   player.setMarker(media.marker);
   player.update(state, media.marker, media.serverNow());
   sharedClock.value = media.position();
-  if (changed && state.current?.type === 'video' && wantsVideo && videoConsent.value === true)
-    void nextTick().then(() => {
-      if (
-        key === mediaCurrentKey(media.snapshot) &&
-        wantsVideo &&
-        !document.hidden &&
-        !view.value.videoWanted
-      )
-        player?.joinVideo();
-    });
+  if (changed) void maybeJoinVideo();
   void maybeConsent();
 }
 async function maybeConsent() {
@@ -314,8 +417,6 @@ async function chooseVideo(accept: boolean) {
   wantsVideo = accept;
   if (accept && item.value?.type === 'video') {
     await show();
-    await nextTick();
-    if (key === consentKey.value && wantsVideo && opened.value) player?.joinVideo();
   } else if (!accept) player?.exitVideo('');
 }
 function consentClosed() {
@@ -365,7 +466,7 @@ async function publish() {
       playback === mediaPlaybackKey(media.snapshot) &&
       media.canControl &&
       opened.value &&
-      !document.hidden
+      !(dialog.value?.ownerDocument || document).hidden
     )
       await media.command('seek', { positionSec });
   } finally {
@@ -456,7 +557,10 @@ function syncFrame() {
   host.querySelector('.barrage-frame-content')?.remove();
   void nextTick().then(() => {
     if (disposed || !opened.value || prefs.media !== selected) return;
-    const view = getComputedStyle(host),
+    const computedStyle = (host.ownerDocument?.defaultView || window).getComputedStyle.bind(
+      host.ownerDocument?.defaultView || window,
+    );
+    const view = computedStyle(host),
       opaque = (value: string) => {
         if (!value || value === 'transparent') return '';
         const rgb = value.match(/^rgba?\(([^)]+)\)$/);
@@ -476,7 +580,7 @@ function syncFrame() {
       area = 0;
     if (host.classList.contains('barrage-frame-ornate'))
       for (const node of host.querySelectorAll<HTMLElement>('.barrage-frame-art div')) {
-        const style = getComputedStyle(node),
+        const style = computedStyle(node),
           box = node.getBoundingClientRect(),
           size = box.width * box.height,
           fill = opaque(style.backgroundColor);
@@ -504,14 +608,32 @@ function visibility() {
   if (document.hidden) {
     geometry.cancel();
     cancelQueue();
-  } else void maybeConsent();
+  } else {
+    void maybeAutoOpen();
+    void maybeJoinVideo();
+    void maybeConsent();
+  }
 }
 function escape(event: KeyboardEvent) {
-  if (event.key !== 'Escape' || !opened.value || document.querySelector('dialog:modal')) return;
+  // With PiP open, Escape in the game page (e.g. leaving focus mode) is not ours.
+  const owner = dialog.value?.ownerDocument || document,
+    target = event.target as Node | null,
+    origin = target ? target.ownerDocument || target : owner;
+  if (
+    event.key !== 'Escape' ||
+    !opened.value ||
+    origin !== owner ||
+    owner.querySelector('dialog:modal')
+  )
+    return;
   event.preventDefault();
   close();
 }
-watch(() => media.receipt, syncPlayback);
+watch(() => media.receipt, syncPlayback, { flush: 'sync' });
+// Automatic and PiP openings skip the library fetch; fill it on first request view.
+watch(activeTab, (tab) => {
+  if (tab === 'request' && !media.tracks.length && !media.libraryLoading) void media.library();
+});
 watch(
   () => media.marker,
   (value) => player?.setMarker(value),
@@ -519,6 +641,9 @@ watch(
 watch(
   () => media.context,
   () => {
+    pip.close();
+    previousMedia = null;
+    pendingOpen = '';
     prompt = '';
     consent.value?.close();
     close();
@@ -543,6 +668,9 @@ watch(
   () => [props.connected, media.connected],
   () => {
     if (!props.connected || !media.connected) {
+      pip.close();
+      previousMedia = null;
+      pendingOpen = '';
       close();
       player?.disconnect();
       lastItem = '';
@@ -569,13 +697,24 @@ onMounted(() => {
   document.addEventListener('keydown', escape);
   // Another modal (invite, confirm, help) only covers the player. Closing the
   // player here destroyed a playing YouTube video (issue #165).
-  observer = new MutationObserver(() => void maybeConsent());
-  observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
+  observer = new MutationObserver(() => {
+    void maybeAutoOpen();
+    void maybeConsent();
+  });
+  observer.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['open', 'aria-modal'],
+  });
+  modeObserver = new MutationObserver(() => void maybeAutoOpen());
+  modeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 });
 onBeforeUnmount(() => {
   disposed = true;
   mounted = false;
+  pip.dispose();
   observer?.disconnect();
+  modeObserver?.disconnect();
   geometry.cancel();
   cancelQueue();
   if (timer) clearInterval(timer);
@@ -601,7 +740,12 @@ onBeforeUnmount(() => {
       @click="open"
   /></span>
   <Teleport to="body"
-    ><div class="vue-room-media-scope vue-page vue-stitch-scope" data-ui-owner="vue">
+    ><div
+      ref="surface"
+      class="vue-room-media-scope vue-page vue-stitch-scope"
+      :class="{ 'vue-media-pip': pip.active.value }"
+      data-ui-owner="vue"
+    >
       <dialog
         :id="id"
         ref="dialog"
@@ -618,20 +762,30 @@ onBeforeUnmount(() => {
           tabindex="0"
           :aria-describedby="id + '-move'"
           aria-label="移動媒體視窗"
-          @pointerdown="geometry.start($event)"
+          @pointerdown="!pip.active.value && geometry.start($event)"
           @pointermove="geometry.move"
           @pointerup="geometry.end"
           @pointercancel="geometry.cancelled"
           @lostpointercapture="geometry.cancelled"
-          @keydown="geometry.keyboard($event)"
+          @keydown="!pip.active.value && geometry.keyboard($event)"
         >
           <h2 :id="id + '-title'" class="vue-media-window-title"
-            ><UiIcon
-              class="ui-icon"
-              :name="item?.type === 'video' ? 'video' : 'sound'"
-            />點播視窗</h2
+            ><UiIcon class="ui-icon" :name="item?.type === 'video' ? 'video' : 'sound'" />{{
+              pip.active.value ? '子母畫面' : '點播視窗'
+            }}</h2
           >
           <div class="vue-media-window-tools">
+            <UiButton
+              variant="ghost"
+              v-if="pip.available"
+              v-show="mode !== 'bar'"
+              :icon="pip.active.value ? 'contract' : 'pictureInPicture'"
+              icon-only
+              :label="pip.active.value ? '返回頁內播放器' : '子母畫面：開啟獨立小視窗'"
+              :pending="pip.busy.value"
+              :disabled="!item || pip.busy.value || !media.connected"
+              @click="pip.active.value ? pip.close() : pip.open()"
+            />
             <UiButton
               variant="ghost"
               v-show="mode !== 'bar'"
@@ -642,7 +796,7 @@ onBeforeUnmount(() => {
             />
             <UiButton
               variant="ghost"
-              v-show="mode !== 'bar'"
+              v-show="mode !== 'bar' && !pip.active.value"
               icon="minimize"
               icon-only
               label="最小化為橫條，繼續播放聲音"
@@ -650,7 +804,7 @@ onBeforeUnmount(() => {
             />
             <UiButton
               variant="ghost"
-              v-show="mode !== 'compact' && mode !== 'bar'"
+              v-show="mode !== 'compact' && mode !== 'bar' && !pip.active.value"
               icon="video"
               icon-only
               label="縮小視窗，保留播放器畫面"
@@ -658,7 +812,7 @@ onBeforeUnmount(() => {
             />
             <UiButton
               variant="ghost"
-              v-show="mode !== 'full'"
+              v-show="mode !== 'full' && !pip.active.value"
               icon="expand"
               icon-only
               label="展開媒體視窗"
@@ -669,7 +823,9 @@ onBeforeUnmount(() => {
               data-media-close
               icon="close"
               icon-only
-              label="關閉媒體視窗，繼續播放"
+              :label="
+                pip.active.value ? '關閉子母畫面，回到頁內繼續播放' : '關閉媒體視窗，繼續播放'
+              "
               @click="close"
             />
           </div>
@@ -729,7 +885,8 @@ onBeforeUnmount(() => {
                   :message="feedback"
                   :error="media.failed"
                 />
-                <StatusSlot :message="playbackStatus" />
+                <StatusSlot :message="playbackStatus" :persistent="!!playbackStatus" />
+                <StatusSlot :message="pip.message.value" :persistent="!!pip.message.value" />
               </div>
               <div v-show="item?.type === 'music'" ref="audioHost" class="vue-media-audio" />
               <div class="vue-media-controls-body">
@@ -1011,7 +1168,7 @@ onBeforeUnmount(() => {
         </div>
         <div
           v-for="[edge, label] in geometry.edges"
-          v-show="mode === 'full'"
+          v-show="mode === 'full' && !pip.active.value"
           :key="edge"
           :class="['vue-media-edge', 'vue-media-edge-' + edge]"
           tabindex="0"
