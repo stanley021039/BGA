@@ -37,3 +37,7 @@
 - 只驗了 Edge。Chrome 應相同（同為 Chromium），未實測；Firefox／Safari 沒有 Document PiP，按鈕不會出現。
 - 有框飾（`prefs.media` 非預設）的子母畫面外觀、喇叭實際聽感、雙玩家同時開子母畫面的同步，都還沒驗。
 - 開發伺服器（Vite）會把 `/media-pip-frame` 轉給後端，沒有另外驗證。
+
+## 2026-10-25 使用者驗收、整合 main 與兩輪審查
+
+使用者驗收並授權合併。整合 main 3.0.1（#267 移除對局歷史、#252 背景表情）：解 `tests/security.test.js` 與格式基準的 history 衝突，版號改為 3.1.0。第二回合審查發現 R2-1（中）：子母畫面開著時，在主頁面按 Esc（例如離開專注全螢幕）會把子母畫面收回。已改為只處理媒體區所在文件的 Esc，並補元件回歸與 Edge 實測（主頁面 Esc 後子母畫面仍開著）。審查階段前端 139/139、affected 全套 1846/1847（唯一失敗仍是基底同樣失敗的 SSE 測試；整合後另一次 `draw-point-times` 的 fetch failed 屬偶發，單獨重跑 3/3 通過）、型別／build／format／ui 通過；Edge 8 組加不放寬自動播放的 1 組通過。兩輪審查全文與最終 CI 結果記在 PR。

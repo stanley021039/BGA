@@ -615,10 +615,15 @@ function visibility() {
   }
 }
 function escape(event: KeyboardEvent) {
+  // With PiP open, Escape in the game page (e.g. leaving focus mode) is not ours.
+  const owner = dialog.value?.ownerDocument || document,
+    target = event.target as Node | null,
+    origin = target ? target.ownerDocument || target : owner;
   if (
     event.key !== 'Escape' ||
     !opened.value ||
-    (dialog.value?.ownerDocument || document).querySelector('dialog:modal')
+    origin !== owner ||
+    owner.querySelector('dialog:modal')
   )
     return;
   event.preventDefault();

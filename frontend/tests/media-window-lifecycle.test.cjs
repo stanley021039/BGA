@@ -271,9 +271,22 @@ test('PiP moves the player full size, closes back to the page window and ends on
       'a joined video is rebound by the player, not joined again',
     );
     h.pip.open();
+    // Real dialogs are DOM nodes Vue never proxies; keep the mock document raw too.
+    const pipDocument = vue.markRaw({ querySelector: () => null });
+    h.component.dialog.value.ownerDocument = pipDocument;
+    h.component.escape({ key: 'Escape', target: { ownerDocument: {} }, preventDefault() {} });
+    assert.equal(count('pipClose'), 1, 'Escape in the game page leaves PiP open');
+    h.component.escape({
+      key: 'Escape',
+      target: { ownerDocument: pipDocument },
+      preventDefault() {},
+    });
+    assert.equal(count('pipClose'), 2, 'Escape inside PiP returns to the page');
+    delete h.component.dialog.value.ownerDocument;
+    h.pip.open();
     h.media.context++;
     await settled();
-    assert.equal(count('pipClose'), 2);
+    assert.equal(count('pipClose'), 3);
   } finally {
     h.dispose();
   }
