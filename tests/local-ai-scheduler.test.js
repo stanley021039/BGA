@@ -43,7 +43,7 @@ function schedulerHarness(t, RoomClass = DrawGuessRoom, title = '手機') {
     room.reveal();
     room.next(human.id);
   }
-  const history = {
+  const transitions = {
     transact(r, operation, run) {
       records.push(operation);
       return run();
@@ -51,7 +51,7 @@ function schedulerHarness(t, RoomClass = DrawGuessRoom, title = '手機') {
   };
   const stop = startRoomScheduler({
     rooms: new Map([[room.code, room]]),
-    history,
+    transitions,
     onDrawStroke: (...args) => strokes.push(args),
   });
   t.after(stop);

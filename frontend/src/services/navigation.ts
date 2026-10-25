@@ -21,7 +21,6 @@ const documents = new Set([
   '/studio',
   '/music',
   '/achievements',
-  '/history',
   '/community',
   '/draw-words',
   '/gifts',

@@ -22,8 +22,6 @@ const { createApp } = require('../src/app');
 const { settings } = require('../src/config');
 const { CommunityStore } = require('../src/community/store');
 const { MusicStore } = require('../src/music/store');
-const { HistoryStore } = require('../src/history/store');
-const { Room } = require('../src/games/poker');
 const { SubmissionService } = require('../src/integrations/github/submissions');
 const { BoardStore } = require('../src/community/board');
 const { MarketStore, validateMarketDatabase } = require('../src/market/store');
@@ -91,7 +89,7 @@ function seedLegacyMarket(db, f) {
       confirmed: true,
     });
 }
-async function fixture(t, { playing = false, minimal = false, sounds = false } = {}) {
+async function fixture(t, { minimal = false, sounds = false } = {}) {
   const parent = fs.realpathSync(os.tmpdir()),
     root = fs.mkdtempSync(path.join(parent, 'afterhours-data-test-'));
   t.after(() => {
@@ -105,12 +103,10 @@ async function fixture(t, { playing = false, minimal = false, sounds = false } =
     source = {
       envId: 'test',
       dbFile: path.join(old, 'app.sqlite'),
-      historyDir: path.join(old, 'history'),
       communityDir: path.join(old, 'community'),
       musicDir: path.join(old, 'music'),
     };
-  for (const dir of [source.historyDir, source.communityDir, source.musicDir])
-    fs.mkdirSync(dir, { recursive: true });
+  for (const dir of [source.communityDir, source.musicDir]) fs.mkdirSync(dir, { recursive: true });
   const db = openDatabase(source.dbFile),
     auth = createAuth(db),
     adminId = await auth.bootstrap('transfer_admin', password),
@@ -135,7 +131,7 @@ async function fixture(t, { playing = false, minimal = false, sounds = false } =
   const oldCookie = response.cookie,
     newInvitation = auth.createInvite(admin).code,
     reset = auth.createReset(admin, member.id).token;
-  let track, characterId, artworkId, historyId, soundExpression;
+  let track, characterId, artworkId, soundExpression;
   if (!minimal) {
     const at = new Date().toISOString();
     characterId = crypto.randomUUID();
@@ -223,16 +219,6 @@ async function fixture(t, { playing = false, minimal = false, sounds = false } =
       prompt: '是否搬家？',
       options: ['是', '否'],
     });
-    const h = new HistoryStore(source.historyDir),
-      room = new Room('ABC123', '移轉對局');
-    h.attach(room);
-    h.transact(room, { action: 'create' }, () => room.add('A'));
-    h.transact(room, { action: 'join' }, () => room.add('B'));
-    h.transact(room, { action: 'start' }, () => room.start());
-    if (!playing)
-      h.transact(room, { action: 'fold' }, () => room.act(room.players[room.turn].id, 'fold'));
-    historyId = h.list()[0].id;
-    h.close();
     const blockedId = crypto.randomUUID();
     db.prepare(
       'INSERT INTO users(id,username,display_name,password_hash,role,disabled,created_at) VALUES(?,?,?,?,?,?,?)',
@@ -267,7 +253,6 @@ async function fixture(t, { playing = false, minimal = false, sounds = false } =
     track,
     characterId,
     artworkId,
-    historyId,
     soundExpression,
   };
 }
@@ -651,11 +636,6 @@ test('encrypted full backup preserves accounts and assets; dry-run and real rest
       ).headers.get('content-length'),
       String(mp3.length),
     );
-    const history = await (
-      await fetch(base + '/api/history/' + f.historyId, { headers: { Cookie: cookie } })
-    ).json();
-    assert.equal(history[0].kind, 'header');
-    assert.equal(history.at(-1).after.phase, 'showdown');
     const retryDb = new DatabaseSync(target.dbFile, { readOnly: true });
     let pending;
     try {
@@ -687,7 +667,7 @@ test('encrypted full backup preserves accounts and assets; dry-run and real rest
   }
 });
 
-test('cold export rejects a running application and locks every writer location, including the legacy history lock', async (t) => {
+test('cold export rejects a running application and locks every writer location', async (t) => {
   const f = await fixture(t, { minimal: true });
   await assert.rejects(
     run({ ...f.exportRequest, sourceStopped: false }),
@@ -700,9 +680,6 @@ test('cold export rejects a running application and locks every writer location,
   } finally {
     await app.close();
   }
-  fs.writeFileSync(path.join(f.source.historyDir, '.lock'), String(process.pid));
-  await assert.rejects(run(f.exportRequest), errorCode('DATA_IN_USE'));
-  fs.unlinkSync(path.join(f.source.historyDir, '.lock'));
   const guard = acquireDataLocks(f.source, 'test');
   try {
     assert.throws(() => createApp({ ...f.source }), errorCode('DATA_IN_USE'));
@@ -898,7 +875,7 @@ test('missing or unlisted files and symlinks cannot be used as a transfer source
   await assert.rejects(run(restoreRequest(f)), errorCode('CORRUPT_BUNDLE'));
 });
 
-test('newer schemas, missing FK owners, broken profile references and invalid engine logs prevent export', async (t) => {
+test('newer schemas, missing FK owners, and broken profile references prevent export', async (t) => {
   const f = await fixture(t),
     db = new DatabaseSync(f.source.dbFile);
   try {
@@ -933,43 +910,71 @@ test('newer schemas, missing FK owners, broken profile references and invalid en
   } finally {
     fix3.close();
   }
-  const file = path.join(f.source.historyDir, f.historyId + '.jsonl'),
-    original = fs.readFileSync(file, 'utf8'),
-    rows = original.trim().split('\n').map(JSON.parse);
-  rows[0].engine.source += 'tampered';
-  fs.writeFileSync(file, rows.map(JSON.stringify).join('\n') + '\n');
-  await assert.rejects(run(f.exportRequest), errorCode('INVALID_HISTORY'));
-  fs.writeFileSync(file, original.slice(0, -2));
-  await assert.rejects(run(f.exportRequest), errorCode('INVALID_HISTORY'));
+  await run(f.exportRequest);
 });
 
-test('unfinished matches require explicit acknowledgement and restore appends an interruption rather than fabricated scores', async (t) => {
-  const f = await fixture(t, { playing: true });
-  await assert.rejects(run(f.exportRequest), errorCode('UNFINISHED_MATCHES'));
-  await run({ ...f.exportRequest, acknowledgeInterruptedMatches: true });
-  await assert.rejects(run(restoreRequest(f)), errorCode('UNFINISHED_MATCHES'));
-  const result = await run({
-    ...restoreRequest(f),
-    apply: true,
-    acknowledgeInterruptedMatches: true,
+test('bundles exported before history removal still verify and restore without legacy match logs', async (t) => {
+  const f = await fixture(t, { minimal: true });
+  await run(f.exportRequest);
+  const manifest = JSON.parse(fs.readFileSync(path.join(f.bundleDir, 'manifest.json'))),
+    id = crypto.randomUUID(),
+    legacy = [];
+  const secret = Buffer.from(
+    crypto.hkdfSync(
+      'sha256',
+      fs.readFileSync(f.keyFile),
+      manifest.bundleId,
+      'afterhours-data-encryption-v1',
+      32,
+    ),
+  );
+  // Older exports encrypted history logs exactly like every other payload.
+  for (const [suffix, text] of [
+    ['.jsonl', JSON.stringify({ kind: 'session', schema: 1, room: 'ABC123' }) + '\n'],
+    ['.meta.json', JSON.stringify({ id, status: 'playing', count: 0 })],
+  ]) {
+    const logical = 'history/' + id + suffix,
+      bytes = Buffer.from(text),
+      iv = crypto.randomBytes(12),
+      cipher = crypto.createCipheriv('aes-256-gcm', secret, iv);
+    cipher.setAAD(Buffer.from(manifest.bundleId + '\0' + logical));
+    const encrypted = Buffer.concat([cipher.update(bytes), cipher.final()]),
+      payload =
+        'payload/' + String(manifest.files.length + legacy.length + 1).padStart(6, '0') + '.bin';
+    fs.writeFileSync(path.join(f.bundleDir, payload), encrypted);
+    legacy.push({
+      logical,
+      payload,
+      bytes: bytes.length,
+      sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+      cipherSha256: crypto.createHash('sha256').update(encrypted).digest('hex'),
+      iv: iv.toString('hex'),
+      tag: cipher.getAuthTag().toString('hex'),
+    });
+  }
+  editManifest(f, (m) => {
+    m.files.push(...legacy);
+    m.totalBytes = m.files.reduce((total, item) => total + item.bytes, 0);
+    Object.assign(m.summary, { historyLogs: 1, historyMatches: 1, unfinishedMatches: 1 });
   });
-  assert.equal(result.changes.interruptedMatches, 1);
-  const meta = JSON.parse(
-    fs.readFileSync(path.join(f.destinationDir, 'history', f.historyId + '.meta.json')),
-  );
-  assert.equal(meta.status, 'interrupted');
-  assert.equal(meta.result, undefined);
-  const rows = fs
-    .readFileSync(path.join(f.destinationDir, 'history', f.historyId + '.jsonl'), 'utf8')
-    .trim()
-    .split('\n')
-    .map(JSON.parse);
-  assert.equal(rows.at(-1).kind, 'interrupted');
-  assert.equal(rows.at(-1).reason, 'server-data-restore');
-  assert.equal(
-    JSON.parse(fs.readFileSync(path.join(f.source.historyDir, f.historyId + '.meta.json'))).status,
-    'playing',
-  );
+  const verified = await run({ action: 'verify', bundleDir: f.bundleDir, keyFile: f.keyFile });
+  assert.equal(verified.files, manifest.files.length + 2);
+  const restored = await run({ ...restoreRequest(f), apply: true });
+  assert.equal(restored.bundleId, manifest.bundleId);
+  assert.equal(restored.restoredSummary.historyLogs, undefined);
+  assert.deepEqual(Object.keys(restored.config).sort(), [
+    'COMMUNITY_DIR',
+    'DB_FILE',
+    'EXTERNAL_SIDE_EFFECTS_ENABLED',
+    'MUSIC_DIR',
+  ]);
+  assert.deepEqual(fs.readdirSync(f.destinationDir).sort(), [
+    'community',
+    'db',
+    'music',
+    'restore-receipt.json',
+  ]);
+  assert.equal(fs.existsSync(path.join(f.destinationDir, 'history')), false);
 });
 
 test('full backup preserves builtin and custom word bans with their majority audit after restore', async (t) => {
@@ -1728,7 +1733,7 @@ test('partial publication keeps a blocking marker; disk-space failure cleans sta
   await run(f.exportRequest);
   const rename = fs.renameSync;
   fs.renameSync = (a, b) => {
-    if (b === path.join(f.destinationDir, 'history')) {
+    if (b === path.join(f.destinationDir, 'music')) {
       const e = Error('injected write failure');
       e.code = 'ENOSPC';
       throw e;
@@ -1746,7 +1751,6 @@ test('partial publication keeps a blocking marker; disk-space failure cleans sta
       createApp({
         ...settings({
           DB_FILE: path.join(f.destinationDir, 'db', 'afterhours.sqlite'),
-          HISTORY_DIR: path.join(f.destinationDir, 'history'),
           COMMUNITY_DIR: path.join(f.destinationDir, 'community'),
         }),
         port: 0,
@@ -1778,7 +1782,6 @@ test('partial publication keeps a blocking marker; disk-space failure cleans sta
       createApp({
         ...settings({
           DB_FILE: path.join(beforeMarker, 'db', 'afterhours.sqlite'),
-          HISTORY_DIR: path.join(beforeMarker, 'history'),
           COMMUNITY_DIR: path.join(beforeMarker, 'community'),
         }),
         port: 0,
@@ -1802,7 +1805,7 @@ test('partial publication keeps a blocking marker; disk-space failure cleans sta
   );
 });
 
-test('receipt write failure after all four moves preserves the failed generation fences and source', async (t) => {
+test('receipt write failure after all three moves preserves the failed generation fences and source', async (t) => {
   const f = await fixture(t, { sounds: true });
   await run(f.exportRequest);
   const sourceDigests = () => {
@@ -1847,7 +1850,7 @@ test('receipt write failure after all four moves preserves the failed generation
     fs.writeFileSync = write;
   }
   assert.equal(injected, true);
-  assert.deepEqual(moved, ['db', 'history', 'community', 'music']);
+  assert.deepEqual(moved, ['db', 'community', 'music']);
   for (const name of moved) assert.ok(fs.statSync(path.join(f.destinationDir, name)).isDirectory());
   assert.equal(fs.existsSync(receipt), false);
   assert.equal(fs.existsSync(marker), true);
@@ -1857,7 +1860,6 @@ test('receipt write failure after all four moves preserves the failed generation
   const failedConfig = {
     ...settings({
       DB_FILE: path.join(f.destinationDir, 'db', 'afterhours.sqlite'),
-      HISTORY_DIR: path.join(f.destinationDir, 'history'),
       COMMUNITY_DIR: path.join(f.destinationDir, 'community'),
       MUSIC_DIR: path.join(f.destinationDir, 'music'),
       EXTERNAL_SIDE_EFFECTS_ENABLED: 'false',
@@ -1908,7 +1910,6 @@ test('a new server cannot start during the gap before the restore marker is inst
           createApp({
             ...settings({
               DB_FILE: path.join(f.destinationDir, 'db', 'afterhours.sqlite'),
-              HISTORY_DIR: path.join(f.destinationDir, 'history'),
               COMMUNITY_DIR: path.join(f.destinationDir, 'community'),
             }),
             port: 0,
@@ -1926,52 +1927,6 @@ test('a new server cannot start during the gap before the restore marker is inst
   }
   assert.equal(blocked, true);
   assert.equal(fs.existsSync(path.join(f.root, '.restored.afterhours-publish-lock')), false);
-});
-
-test('history validation handles Unicode across read boundaries and does not accumulate all event rows', async (t) => {
-  const f = await fixture(t, { minimal: true }),
-    id = crypto.randomUUID(),
-    file = path.join(f.source.historyDir, id + '.jsonl');
-  const fd = fs.openSync(file, 'w');
-  try {
-    fs.writeSync(
-      fd,
-      JSON.stringify({
-        kind: 'session',
-        schema: 1,
-        at: new Date().toISOString(),
-        type: 'poker',
-        room: 'ABC123',
-      }) + '\n',
-    );
-    for (let seq = 1; seq <= 400; seq++) {
-      fs.writeSync(
-        fd,
-        JSON.stringify({
-          kind: 'intent',
-          seq,
-          operation: { name: '中文界線'.repeat(100) },
-          before: {},
-        }) + '\n',
-      );
-      fs.writeSync(
-        fd,
-        JSON.stringify({ kind: 'result', seq, ok: true, after: { name: '搬家玩家' }, trace: [] }) +
-          '\n',
-      );
-    }
-  } finally {
-    fs.closeSync(fd);
-  }
-  const result = validateData(f.source);
-  assert.equal(result.summary.historyLogs, 1);
-  assert.equal(result.interruptedStates.size, 0);
-  await run(f.exportRequest);
-  await run({ ...restoreRequest(f), apply: true });
-  assert.deepEqual(
-    fs.readFileSync(path.join(f.destinationDir, 'history', id + '.jsonl')),
-    fs.readFileSync(file),
-  );
 });
 
 test('AI CLI accepts stdin/file JSON, emits one redacted response and exits nonzero on errors', async (t) => {
@@ -2081,7 +2036,6 @@ test('legacy community issues and comments are imported on the restored copy; ad
         env: {
           ...process.env,
           DB_FILE: f.source.dbFile,
-          HISTORY_DIR: f.source.historyDir,
           COMMUNITY_DIR: f.source.communityDir,
           MUSIC_DIR: f.source.musicDir,
         },

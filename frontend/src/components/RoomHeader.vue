@@ -89,7 +89,7 @@ async function copyCode() {
     ><nav class="vue-room-navigation-menu" aria-label="房間導覽"
       ><a href="/">遊戲大廳</a><a href="/draw-words">你畫我猜題庫</a
       ><a href="/community?tab=questions">同頻俱樂部題庫</a><a href="/gifts">送禮達人題庫</a
-      ><a href="/history">對局歷史</a><a href="/community?tab=issues">留言板</a></nav
+      ><a href="/community?tab=issues">留言板</a></nav
     ></UiPopover
   >
 </template>

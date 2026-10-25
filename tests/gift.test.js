@@ -489,7 +489,6 @@ test('authenticated players can create, join and reconnect to a gift room withou
   const config = {
     port: 0,
     host: '127.0.0.1',
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     dbFile: path.join(root, 'app.sqlite'),
   };
@@ -715,11 +714,6 @@ test('authenticated players can create, join and reconnect to a gift room withou
     assert.equal((await getAchievements(friend))[0].unlockedAt, unlockedAt);
     assert.equal((await getAchievements(other))[0].unlockedAt, unlockedAt);
     assert.equal((await getAchievements(outsider))[0].unlockedAt, null);
-    const history = await (
-      await fetch(base + '/api/history', { headers: { Cookie: host } })
-    ).json();
-    assert.equal(history[0].type, 'gift');
-    assert.equal(history[0].status, 'playing');
     assert.equal((await post('action', friend, { code, action: 'next' })).status, 400);
     assert.equal((await post('action', host, { code, action: 'next' })).status, 200);
     state = await getState();
@@ -784,10 +778,6 @@ test('authenticated players can create, join and reconnect to a gift room withou
       'view keeps scores above the target',
     );
     assert.equal((await getAchievements(host))[0].unlockedAt, unlockedAt);
-    const finishedHistory = await (
-      await fetch(base + '/api/history', { headers: { Cookie: host } })
-    ).json();
-    assert.equal(finishedHistory[0].status, 'finished');
   } finally {
     await app.close();
     fs.rmSync(root, { recursive: true, force: true });

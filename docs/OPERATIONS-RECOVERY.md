@@ -36,12 +36,12 @@ GitHub 路由依 [client](../src/integrations/github/client.js)。`GITHUB_TOKEN`
 
 依 [config](../src/config.js) 與 [app](../src/app.js)：
 
-- 作業系統環境優先於 `.env`；`DB_FILE`、`HISTORY_DIR`、`COMMUNITY_DIR`、`MUSIC_DIR` 必須指向本次隔離資料，不能沿用預設 production 路徑
+- 作業系統環境優先於 `.env`；`DB_FILE`、`COMMUNITY_DIR`、`MUSIC_DIR` 必須指向本次隔離資料，不能沿用預設 production 路徑
 - `EXTERNAL_SIDE_EFFECTS_ENABLED=false` 阻止 GitHub submit／retry／reconcile／recover，也在 app 組裝時停用市場自動抓取及 YouTube title resolver。不是 OS 網路防火牆，也不停止本機遊戲資料寫入或瀏覽器第三方播放器
 - `MARKET_AUTOMATION_ENABLED=false` 可另行明確關閉市場自動化；預設為 true，但市場啟用同時要求 `externalSideEffectsEnabled===true`。兩個設定都必須核對，不從名稱猜測範圍
 - `HOST=127.0.0.1`、未使用的獨立 `PORT`，不接公開入口；測試用非正式 `PUBLIC_URL`／無真 token。`PUBLIC_URL` 只管邀請 origin 與 Secure cookie，不建立 HTTPS 或防火牆
 - `ACHIEVEMENT_PURPOSE=test` 或 `tutorial` 是已支援的資料用途標籤，不是隔離資料或禁止外連的替代品
-- `HISTORY_*` 配額／保留天數與 `HISTORY_PRESERVE_IMPORTED_SESSIONS` 要在第一次啟動前核對；服務可能淘汰過期／超額歷史，驗包成功不表示永不淘汰
+- v3.0.0（#267）起不再有 `HISTORY_*` 設定與對局記錄目錄；舊環境殘留的這些變數會被忽略
 
 ## 3. 秘密與可公開證據
 

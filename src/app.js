@@ -85,8 +85,7 @@ const { validDate: validMarketDate } = require('../frontend/src/engines/market-r
 const { MarketAutomation } = require('./market/automation');
 const { createOfficialProvider } = require('./market/official-provider');
 const { MarketImageStore } = require('./market/images');
-const { HistoryStore } = require('./history/store'),
-  { CommunityStore } = require('./community/store');
+const { CommunityStore } = require('./community/store');
 const { createRoomRuntime } = require('./rooms/runtime');
 const { createFrontend } = require('./http/frontend');
 const { withEntryIntro } = require('./http/entry-intro');
@@ -95,7 +94,6 @@ const { createStateStream, stateTag } = require('./rooms/state-stream');
 const roomPersistence = require('./rooms/persistence');
 const { botSupport, addTestBot } = require('./ai');
 const { reconnectPlayer } = require('./rooms/reconnect');
-const { endRoomHistory } = require('./rooms/lifecycle');
 const { listRooms } = require('./rooms/listing');
 const { rejoinPlayer } = require('./rooms/membership');
 const { createLobby } = require('./rooms/lobby');
@@ -384,7 +382,7 @@ function initializeApp(config, dataLock, acquired) {
     return authorCombatBonus(account?.[0]);
   });
   const lobbyPingRoom = { code: '__LOBBY__', type: 'lobby', phase: 'lobby', players: [] };
-  const expireRooms = () => runtime.expireRooms(history);
+  const expireRooms = () => runtime.expireRooms();
   const gameAudio = new GameAudioLibrary(
     config.gameAudioDir || path.join(path.dirname(config.dbFile), 'game-audio'),
   );
@@ -440,7 +438,6 @@ function initializeApp(config, dataLock, acquired) {
       pingContext: runtime.pings.context(room),
       serverNow: now,
       botSupport: botSupport(room),
-      ...(history.warning(room) ? { historyWarning: history.warning(room) } : {}),
       permissions: permissionsView(room, view.me),
       players: view.players.map((player) => ({
         ...player,
@@ -464,10 +461,6 @@ function initializeApp(config, dataLock, acquired) {
     };
   };
   const resumeSeat = (room, user) => reconnectPlayer(room, user.id, seats, reconnectGrace);
-  const history = new HistoryStore(config.historyDir, config.historyLimits, {
-    preserveImportedSessions: config.historyPreserveImportedSessions,
-  });
-  acquired.push(() => history.close());
   let community,
     db,
     auth,
@@ -905,7 +898,7 @@ function initializeApp(config, dataLock, acquired) {
   }
   // Open rooms survive restarts and deploys (#235): saved on close, restored
   // before the scheduler starts. A room that cannot be restored is ended in
-  // its history instead of blocking startup.
+  // isolation instead of blocking startup.
   const roomClasses = {
     poker: Room,
     thunder: ThunderRoom,
@@ -948,7 +941,6 @@ function initializeApp(config, dataLock, acquired) {
       try {
         const captured = roomPersistence.captureRoom(room, {
           match: room.matchAchievements?.snapshot?.() || null,
-          history: history.state(room),
           seats: seats.get(room.code) || null,
           departed: departedSeats.get(room.code) || null,
           kicked: kickedUsers.get(room.code) || null,
@@ -1004,7 +996,6 @@ function initializeApp(config, dataLock, acquired) {
         const result = roomPersistence.restoreRoom(saved, () => {
           room = new Type(saved.code, saved.name);
           equipRoomProviders(room);
-          history.attach(room);
           attachAchievementHooks(room);
           return room;
         });
@@ -1014,7 +1005,6 @@ function initializeApp(config, dataLock, acquired) {
         room.matchAchievements?.restore?.(extra.match);
         if (!(extra.seats instanceof Map)) throw Error('座位資料遺失');
         for (const [, playerId] of extra.seats) room.view(playerId);
-        history.resume(room, extra.history);
         seats.set(room.code, extra.seats);
         if (extra.departed) departedSeats.set(room.code, extra.departed);
         if (extra.kicked) kickedUsers.set(room.code, extra.kicked);
@@ -1025,7 +1015,6 @@ function initializeApp(config, dataLock, acquired) {
         restored++;
       } catch (error) {
         console.error('Room ' + saved.code + ' could not be restored:', error);
-        if (room) endRoomHistory(history, room, '伺服器重啟後無法還原房間');
       }
     }
     for (const [key, value] of snapshot.grace || [])
@@ -1045,7 +1034,6 @@ function initializeApp(config, dataLock, acquired) {
     onHeartbeat: (entry) => roomInvitations.touch(entry.user),
   });
   const transitions = createRoomTransitions({
-    history,
     runtime,
     onTransition: (room) => {
       awardRoomAchievements(room);
@@ -1790,9 +1778,6 @@ function initializeApp(config, dataLock, acquired) {
         }
         if (url.pathname === '/api/achievements' && req.method === 'GET')
           return send(achievementStore.list(user.id));
-        if (url.pathname === '/api/history') return send(history.list());
-        if (url.pathname.startsWith('/api/history/'))
-          return send(history.read(url.pathname.split('/')[3]));
         if (url.pathname === '/api/info') {
           const addresses = Object.values(os.networkInterfaces())
             .flat()
@@ -1928,23 +1913,16 @@ function initializeApp(config, dataLock, acquired) {
           }
           if (!thunder && !botSupport(room).supported)
             throw new HttpError(400, 'TEST_AI_REQUIRED', '新遊戲必須先提供測試 AI');
-          history.attach(room);
           attachAchievementHooks(room);
-          let p;
-          try {
-            p = transitions.transact(
-              room,
-              { action: 'create', source: 'player', name: user.display_name },
-              () => {
-                const player = room.add(user.display_name);
-                player.name = user.display_name;
-                return player;
-              },
-            );
-          } catch (error) {
-            endRoomHistory(history, room, '建立房間未完成');
-            throw error;
-          }
+          const p = transitions.transact(
+            room,
+            { action: 'create', source: 'player', name: user.display_name },
+            () => {
+              const player = room.add(user.display_name);
+              player.name = user.display_name;
+              return player;
+            },
+          );
           p.avatar = portraitUrl(user.id);
           rooms.set(code, room);
           seats.set(code, new Map([[user.id, p.id]]));
@@ -2328,10 +2306,9 @@ function initializeApp(config, dataLock, acquired) {
             transitions.transact(room, { action: 'dissolve', source: 'player', actor: p.id }, () =>
               room.finish('房主已解散房間'),
             );
-            const historyPersisted = endRoomHistory(history, room, '房主已解散房間');
             rooms.delete(room.code);
             cleanupRoom(room.code);
-            return send({ closed: true, code: room.code, historyPersisted });
+            return send({ closed: true, code: room.code });
           }
           if (url.pathname === '/api/draw/result/unsave') {
             if (data.confirmed !== true)
@@ -2422,7 +2399,7 @@ function initializeApp(config, dataLock, acquired) {
           if (room.type !== 'bluff') throw new HttpError(400, 'WRONG_GAME', '這不是瞎掰王房間');
           if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
           // Interim subtitles are frequent and in-memory only, so they skip the
-          // action history and its mutation budget.
+          // general mutation budget.
           limitRate(roomRate, 'bluff-caption:' + user.id, 150);
           room.caption(p.id, data);
           return send(withSocial(room, room.view(p.id)));
@@ -2762,7 +2739,6 @@ function initializeApp(config, dataLock, acquired) {
         '/poker': 'poker.html',
         '/race': 'race.html',
         '/rules': 'rules.html',
-        '/history': 'history.html',
         '/achievements': 'achievements.html',
         '/shared/achievement-glow.css': 'shared/achievement-glow.css',
         '/club.css': 'club.css',
@@ -3043,7 +3019,6 @@ function initializeApp(config, dataLock, acquired) {
       if (closed) throw Error('Application has been closed');
       restoreRooms();
       runtime.start({
-        history,
         transitions,
         onSweep: retryAchievementUnits,
         onDrawStroke: publishDraw,
@@ -3101,7 +3076,6 @@ function initializeApp(config, dataLock, acquired) {
       if (ownsSavedRooms) await attempt(() => saveRooms());
       await attempt(() => runtime.close());
       await attempt(() => youtubeTitles.clear?.());
-      await attempt(() => history.close());
       await attempt(() => Promise.allSettled([...submissions.inFlight.values()]));
       await attempt(() => roomInvitations.close());
       await attempt(() => db.close());

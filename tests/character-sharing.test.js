@@ -12,7 +12,6 @@ test('friends can choose shared characters, while private art and editing stay w
   const config = {
     port: 0,
     host: '127.0.0.1',
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     dbFile: path.join(root, 'app.sqlite'),
   };

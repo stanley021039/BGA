@@ -15,7 +15,6 @@ test('all five games broadcast emoji without changing character expressions or a
     host: '127.0.0.1',
     port: 0,
     dbFile: path.join(root, 'app.sqlite'),
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
   };
   const db = openDatabase(config.dbFile);

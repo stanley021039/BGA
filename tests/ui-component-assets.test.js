@@ -11,7 +11,6 @@ test('new shared component assets are fixed routes with correct content types an
     port: 0,
     host: '127.0.0.1',
     dbFile: path.join(directory, 'app.sqlite'),
-    historyDir: path.join(directory, 'history'),
     communityDir: path.join(directory, 'community'),
     musicDir: path.join(directory, 'music'),
     externalSideEffectsEnabled: false,

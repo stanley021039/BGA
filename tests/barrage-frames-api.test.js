@@ -15,7 +15,6 @@ async function fixture(t) {
     host: '127.0.0.1',
     port: 0,
     dbFile: path.join(root, 'app.sqlite'),
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     externalSideEffectsEnabled: false,
   };

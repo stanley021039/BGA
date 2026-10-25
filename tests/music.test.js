@@ -132,7 +132,6 @@ test('authenticated streaming ranges, shared library, host controls, isolation, 
     port: 0,
     host: '127.0.0.1',
     externalSideEffectsEnabled: false,
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     dbFile: path.join(root, 'app.sqlite'),
   };
@@ -318,7 +317,6 @@ async function sharedMusicFixture(t) {
       host: '127.0.0.1',
       externalSideEffectsEnabled: false,
       dbFile: path.join(root, 'app.sqlite'),
-      historyDir: path.join(root, 'history'),
       communityDir: path.join(root, 'community'),
       musicDir: path.join(root, 'music'),
     };

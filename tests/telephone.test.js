@@ -254,7 +254,6 @@ test('deadline is authoritative for all-ready, partial, empty and final pages', 
   cmd(r, p[1], 'submit', { strokes: [stroke] });
   assert.equal(r.view(p[0].id).task.draft.strokes.length, 1);
   assert.equal(r.view(p[1].id).task.draft, null);
-  assert.equal(JSON.stringify(r.historyState()).includes('drafts'), false);
   now = deadline - 1;
   assert.equal(r.auto(), false);
   assert.equal(r.round, 1);
