@@ -24,26 +24,52 @@ function loadService(name) {
 const historyModule = loadService('media-history'),
   consentModule = loadService('media-consent');
 
-function harness() {
+function harness({ accepted } = {}) {
+  const environment = { hidden: false, modal: false, classes: new Set() };
+  const pip = {
+    available: true,
+    active: vue.ref(false),
+    native: vue.ref(null),
+    busy: vue.ref(false),
+    message: vue.ref(''),
+  };
   const calls = [],
     lifecycle = {};
   const provider = Object.fromEntries(
-    ['setWindow', 'setMarker', 'update', 'disconnect', 'dispose', 'joinVideo', 'exitVideo'].map(
-      (key) => [key, (...args) => calls.push([key, ...args])],
-    ),
+    [
+      'setWindow',
+      'setMarker',
+      'update',
+      'disconnect',
+      'dispose',
+      'joinVideo',
+      'exitVideo',
+      'align',
+      'relocate',
+    ].map((key) => [key, (...args) => calls.push([key, ...args])]),
   );
   const session = vue.reactive({ user: { id: 'account-a' } }),
     consent = consentModule.exports.createMediaConsent(null, null);
+  if (accepted !== undefined) consent.set(accepted);
   const media = vue.reactive({
     context: 1,
     enabled: true,
     connected: true,
     receipt: 0,
     marker: {},
-    snapshot: { roomInstanceId: 'room-a', myPlayerId: 'host', current: null },
+    snapshot: {
+      roomInstanceId: 'room-a',
+      myPlayerId: 'host',
+      revision: 0,
+      current: null,
+      queue: [],
+      playback: { state: 'paused' },
+    },
     position: () => 0,
     serverNow: () => 1000,
-    library() {},
+    tracks: [],
+    libraryLoading: false,
+    library: () => calls.push(['library']),
     async load() {},
     cancelSnapshot: () => calls.push(['cancelSnapshot']),
     report() {},
@@ -91,11 +117,36 @@ function harness() {
                           audio: { music: { enabled: true, volume: 0.3 } },
                         }),
                       }
-                    : id.includes('composables/media-window')
-                      ? { useMediaWindow: () => geometry }
-                      : id.includes('contracts/media')
-                        ? { mediaCurrentKey: () => '', mediaPlaybackKey: () => '' }
-                        : {},
+                    : id.includes('composables/document-pip')
+                      ? {
+                          useDocumentPip: (surface, moved, restored) =>
+                            Object.assign(pip, {
+                              moved,
+                              restored,
+                              open() {
+                                pip.active.value = true;
+                                moved();
+                              },
+                              close() {
+                                if (!pip.active.value) return;
+                                pip.active.value = false;
+                                calls.push(['pipClose']);
+                                restored();
+                              },
+                              dispose() {},
+                            }),
+                        }
+                      : id.includes('composables/media-window')
+                        ? { useMediaWindow: () => geometry }
+                        : id.includes('contracts/media')
+                          ? {
+                              mediaCurrentKey: (s) =>
+                                s?.current
+                                  ? `${s.roomInstanceId}:${s.playbackSessionId}:${s.current.id}`
+                                  : '',
+                              mediaPlaybackKey: () => '',
+                            }
+                          : {},
       localStorage: { getItem: () => null },
       window: {
         RoomMediaPlayer: {
@@ -106,8 +157,15 @@ function harness() {
         },
       },
       document: {
-        hidden: false,
-        querySelector: () => null,
+        get hidden() {
+          return environment.hidden;
+        },
+        body: { classList: { contains: (name) => environment.classes.has(name) } },
+        querySelector: (selector) =>
+          environment.modal || (environment.drawer && selector.includes('[aria-modal="true"]'))
+            ? {}
+            : null,
+        activeElement: { isConnected: true, focus: () => calls.push(['restoreFocus']) },
         addEventListener() {},
         removeEventListener() {},
       },
@@ -123,6 +181,10 @@ function harness() {
   const scope = vue.effectScope();
   let component;
   scope.run(() => (component = module.exports.default.setup({ connected: true }, { expose() {} })));
+  provider.joinVideo = () => {
+    calls.push(['joinVideo']);
+    component.view.value = { ...component.view.value, videoWanted: true };
+  };
   component.audioHost.value = {};
   component.videoHost.value = {};
   component.frameArt.value = { replaceChildren() {} };
@@ -138,8 +200,10 @@ function harness() {
   };
   lifecycle.mount();
   return {
+    environment,
     component,
     calls,
+    pip,
     media,
     session,
     consent,
@@ -149,6 +213,225 @@ function harness() {
     },
   };
 }
+
+async function receive(h, { current = null, queue = [], state = 'playing' } = {}) {
+  h.media.snapshot = {
+    ...h.media.snapshot,
+    revision: h.media.snapshot.revision + 1,
+    playbackSessionId: 'session-a',
+    current,
+    queue,
+    playback: { state },
+  };
+  h.media.receipt++;
+  await vue.nextTick();
+  await vue.nextTick();
+  await new Promise((resolve) => setImmediate(resolve));
+}
+const autoSong = {
+  id: 'song-a',
+  type: 'music',
+  title: 'Song',
+  requestedById: 'peer',
+  requestedByName: 'Peer',
+};
+const autoVideo = { ...autoSong, id: 'video-a', type: 'video', videoId: 'M7lc1UVf-VE' };
+async function settled() {
+  await vue.nextTick();
+  await new Promise((resolve) => setImmediate(resolve));
+}
+test('PiP moves the player full size, closes back to the page window and ends on room change', async () => {
+  const h = harness({ accepted: true });
+  const count = (name) => h.calls.filter((c) => c[0] === name).length;
+  try {
+    await receive(h, { current: autoVideo });
+    assert.equal(h.component.mode.value, 'compact');
+    assert.equal(count('joinVideo'), 1);
+    h.component.activeTab.value = 'request';
+    await settled();
+    assert.equal(count('library'), 1, 'the first request view loads an empty library');
+    h.pip.open();
+    assert.equal(h.component.mode.value, 'full');
+    assert.equal(h.component.activeTab.value, 'player');
+    assert.equal(count('relocate'), 1);
+    await h.component.open();
+    assert.equal(
+      count('relocate'),
+      1,
+      'reopening focuses the existing PiP instead of moving again',
+    );
+    h.component.close();
+    await settled();
+    assert.equal(count('pipClose'), 1);
+    assert.equal(h.component.opened.value, true, 'closing PiP returns to the page player');
+    assert.equal(count('relocate'), 2);
+    assert.equal(
+      count('joinVideo'),
+      1,
+      'a joined video is rebound by the player, not joined again',
+    );
+    h.pip.open();
+    // Real dialogs are DOM nodes Vue never proxies; keep the mock document raw too.
+    const pipDocument = vue.markRaw({ querySelector: () => null });
+    h.component.dialog.value.ownerDocument = pipDocument;
+    h.component.escape({ key: 'Escape', target: { ownerDocument: {} }, preventDefault() {} });
+    assert.equal(count('pipClose'), 1, 'Escape in the game page leaves PiP open');
+    h.component.escape({
+      key: 'Escape',
+      target: { ownerDocument: pipDocument },
+      preventDefault() {},
+    });
+    assert.equal(count('pipClose'), 2, 'Escape inside PiP returns to the page');
+    delete h.component.dialog.value.ownerDocument;
+    h.pip.open();
+    h.media.context++;
+    await settled();
+    assert.equal(count('pipClose'), 3);
+  } finally {
+    h.dispose();
+  }
+});
+test('accepted video joins automatically after a hidden first request opens on return', async () => {
+  const h = harness({ accepted: true });
+  try {
+    h.environment.hidden = true;
+    await receive(h, { current: autoVideo });
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 0);
+    h.environment.hidden = false;
+    h.component.visibility();
+    await settled();
+    assert.equal(h.component.opened.value, true);
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 1);
+    h.component.visibility();
+    await settled();
+    assert.equal(
+      h.calls.filter((c) => c[0] === 'joinVideo').length,
+      1,
+      'do not remount a loading/playing video',
+    );
+  } finally {
+    h.dispose();
+  }
+});
+test('explicitly reopening an accepted same video rejoins without another confirmation', async () => {
+  const h = harness({ accepted: true });
+  try {
+    await receive(h, { current: autoVideo });
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 1);
+    h.component.exitVideo();
+    h.component.view.value = { ...h.component.view.value, videoWanted: false };
+    h.component.close();
+    await h.component.open();
+    await settled();
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 2);
+  } finally {
+    h.dispose();
+  }
+});
+test('unanswered or declined consent never automatically joins a video', async () => {
+  for (const accepted of [undefined, false]) {
+    const h = harness({ accepted });
+    try {
+      await receive(h, { current: autoVideo });
+      assert.equal(h.component.opened.value, true);
+      await h.component.open();
+      await settled();
+      assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 0);
+      await h.component.chooseVideo(true);
+      await settled();
+      assert.equal(
+        h.calls.filter((c) => c[0] === 'joinVideo').length,
+        1,
+        'one explicit acceptance starts one player',
+      );
+    } finally {
+      h.dispose();
+    }
+  }
+});
+test('empty to first playing opens once without stealing focus or changing the shared state', async () => {
+  const h = harness();
+  try {
+    await receive(h, { current: autoSong });
+    assert.equal(h.component.opened.value, true);
+    assert.equal(h.component.mode.value, 'compact');
+    assert.equal(h.component.activeTab.value, 'player');
+    assert.equal(h.calls.filter((c) => c[0] === 'align').length, 1);
+    assert.equal(h.calls.filter((c) => c[0] === 'restoreFocus').length, 1);
+    h.component.close();
+    await receive(h, { current: autoSong, queue: [{ ...autoSong, id: 'song-b' }] });
+    await receive(h, { current: { ...autoSong, id: 'song-b' } });
+    assert.equal(h.component.opened.value, false, 'enqueue/skip do not reopen a dismissed player');
+    await receive(h, { state: 'paused' });
+    await receive(h, { current: { ...autoSong, id: 'song-c' } });
+    assert.equal(h.component.opened.value, true, 'a later genuinely empty session opens again');
+  } finally {
+    h.dispose();
+  }
+});
+test('initial playback, reconnect and changing rooms do not replay an opening', async () => {
+  const h = harness();
+  try {
+    h.media.connected = false;
+    await vue.nextTick();
+    await receive(h, { current: autoSong });
+    h.media.connected = true;
+    await vue.nextTick();
+    assert.equal(h.component.opened.value, false);
+    h.media.context++;
+    await vue.nextTick();
+    await receive(h, { current: autoSong });
+    assert.equal(h.component.opened.value, false);
+  } finally {
+    h.dispose();
+  }
+});
+test('automatic opening waits for hidden/modal/focus modes and expires on track replacement', async () => {
+  for (const barrier of [
+    'hidden',
+    'modal',
+    'drawer',
+    'scene-ui-hidden',
+    'vue-game-focus',
+    'vue-draw-focus',
+  ]) {
+    const h = harness();
+    try {
+      if (['hidden', 'modal', 'drawer'].includes(barrier)) h.environment[barrier] = true;
+      else h.environment.classes.add(barrier);
+      await receive(h, { current: autoSong });
+      assert.equal(h.component.opened.value, false, barrier);
+      h.environment.hidden = h.environment.modal = h.environment.drawer = false;
+      h.environment.classes.clear();
+      await h.component.maybeAutoOpen();
+      assert.equal(h.component.opened.value, true, barrier);
+      h.component.close();
+      await receive(h);
+      h.environment.hidden = true;
+      await receive(h, { current: autoSong });
+      await receive(h, { current: { ...autoSong, id: 'replacement' } });
+      h.environment.hidden = false;
+      await h.component.maybeAutoOpen();
+      assert.equal(h.component.opened.value, false, 'stale deferred event expires');
+    } finally {
+      h.dispose();
+    }
+  }
+});
+test('an already open request tab or minimized bar keeps its presentation', async () => {
+  const h = harness();
+  try {
+    await h.component.show();
+    h.component.setTab('request');
+    await h.component.minimize('bar');
+    await receive(h, { current: autoSong });
+    assert.equal(h.component.mode.value, 'bar');
+    assert.equal(h.component.activeTab.value, 'request');
+    assert.equal(h.calls.filter((c) => c[0] === 'align').length, 0);
+  } finally {
+    h.dispose();
+  }
+});
 
 test('actual Vue window opts into hidden video playback across request, close, Escape and reopen', async () => {
   const h = harness();

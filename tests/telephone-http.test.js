@@ -15,7 +15,7 @@ const { test } = require('node:test'),
   { randomUUID } = require('node:crypto');
 const { createAuth } = require('../src/auth'),
   { appFixture } = require('./helpers/app-fixture.cjs');
-test('telephone HTTP auth, privacy, sources, reconnect, whole-book history and interrupted status', async (t) => {
+test('telephone HTTP auth, privacy, sources, reconnect, whole-book results and interrupted status', async (t) => {
   const { TelephoneRoom } = require('../src/games/telephone'),
     start = TelephoneRoom.prototype.start;
   t.mock.method(TelephoneRoom.prototype, 'start', function () {
@@ -134,19 +134,13 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book history and i
   assert.equal(s.phase, 'finished');
   assert.equal(s.books.length, 3);
   assert.equal(s.books[0].pages.length, 3);
-  let matches = await (await fetch(base + '/api/history', { headers: { Cookie: cookie } })).json();
-  const match = matches.find((m) => m.type === 'telephone');
-  assert.equal(match.status, 'finished');
-  const rows = await (
-    await fetch(base + '/api/history/' + match.id, { headers: { Cookie: cookie } })
-  ).json();
-  assert.match(rows[0].engine.telephonePrompts, /telephone-/);
-  assert.equal(rows.filter((r) => r.kind === 'result').at(-1).after.pageCommits.length, 3);
-  assert.equal(rows.filter((r) => r.kind === 'result').at(-1).after.books, undefined);
+  assert.ok(s.books.every((book) => book.pages.length === 3));
+  assert.equal(s.interrupted, false);
   s = (await post('start', { code })).s;
   await post('kick', { code, playerId: s.players.find((p) => p.bot).id, confirmed: true });
-  matches = await (await fetch(base + '/api/history', { headers: { Cookie: cookie } })).json();
-  assert.ok(matches.some((m) => m.type === 'telephone' && m.status === 'interrupted'));
+  s = await (await fetch(base + '/api/state?code=' + code, { headers: { Cookie: cookie } })).json();
+  assert.equal(s.phase, 'finished');
+  assert.equal(s.interrupted, true);
   for (const path of ['/telephone/' + code, '/telephone?learn=1']) {
     const unauth = await fetch(base + path, { redirect: 'manual' });
     assert.equal(unauth.status, 302);
@@ -158,24 +152,19 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book history and i
     assert.equal((await fetch(base + path)).status, 404);
   await post('leave', { code });
 });
-test('maximum eight-seat books stay within default history result bounds and reconstruct every page', async (t) => {
-  const fs = require('node:fs'),
-    os = require('node:os'),
-    path = require('node:path'),
-    { HistoryStore } = require('../src/history/store'),
-    { TelephoneRoom } = require('../src/games/telephone');
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'telephone-history-'));
-  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
-  const store = new HistoryStore(dir),
-    room = new TelephoneRoom('ABCDEF', 'max', () => 0),
-    players = Array.from({ length: 8 }, (_, i) => room.add('p' + i));
-  store.attach(room);
-  store.transact(room, { action: 'start' }, () => room.start());
-  completeTelephoneTopics(room, (p, data) =>
-    store.transact(room, { action: 'submit', actor: p.id, input: data }, () =>
-      room.act(p.id, 'submit', data),
-    ),
-  );
+test('maximum eight-seat books commit and reconstruct every page', () => {
+  const { TelephoneRoom } = require('../src/games/telephone');
+  const room = new TelephoneRoom('ABCDEF', 'max', () => 0),
+    players = Array.from({ length: 8 }, (_, i) => room.add('p' + i)),
+    committed = new Map(),
+    record = () => {
+      for (const c of room.pageCommits) committed.set(c.bookIndex + ':' + c.round, c.page);
+    };
+  room.start();
+  completeTelephoneTopics(room, (p, data) => {
+    room.act(p.id, 'submit', data);
+    record();
+  });
   const strokes = Array.from({ length: 100 }, () => ({
     tool: 'brush',
     color: '#123456',
@@ -189,21 +178,20 @@ test('maximum eight-seat books stay within default history result bounds and rec
         requestId: randomUUID(),
         ...(round % 2 ? { strokes } : { text: '傳遞故事' }),
       };
-      store.transact(room, { action: 'submit', input: data }, () => room.act(p.id, 'submit', data));
+      room.act(p.id, 'submit', data);
+      record();
     }
     room.deadline = room.now();
-    store.transact(room, { action: 'auto', source: 'timeout' }, () => room.auto());
+    room.auto();
+    record();
   }
   assert.equal(room.phase, 'finished');
-  assert.equal(room.books[0].pages.length, 9);
-  assert.equal(store.list()[0].status, 'finished');
-  const rows = store.read(store.list()[0].id);
-  for (const row of rows.filter((r) => r.kind === 'result'))
-    assert.ok(Buffer.byteLength(JSON.stringify(row)) < 512 * 1024);
-  const committed = new Map();
-  for (const row of rows.filter((r) => r.kind === 'result'))
-    for (const c of row.after.pageCommits) committed.set(c.bookIndex + ':' + c.round, c.page);
+  assert.ok(room.books.every((b) => b.pages.length === 9));
   assert.equal(committed.size, 72);
+  for (const [key, page] of committed) {
+    const [bookIndex, round] = key.split(':').map(Number);
+    assert.deepEqual(room.books[bookIndex].pages[round], page);
+  }
 });
 
 test('telephone HTTP accepts a bounded private page above 8KiB while rejecting bodies above 128KiB', async (t) => {
@@ -286,27 +274,19 @@ test('telephone HTTP accepts a bounded private page above 8KiB while rejecting b
   assert.deepEqual(result.books, []);
 });
 
-test('eight maximum private drafts auto-pass every page without overflowing the history result budget', async (t) => {
-  const fs = require('node:fs'),
-    os = require('node:os'),
-    path = require('node:path'),
-    { HistoryStore } = require('../src/history/store'),
-    { TelephoneRoom } = require('../src/games/telephone');
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'telephone-timed-history-'));
-  const store = new HistoryStore(dir);
-  t.after(() => {
-    store.close();
-    fs.rmSync(dir, { recursive: true, force: true });
-  });
+test('eight maximum private drafts auto-pass every page', () => {
+  const { TelephoneRoom } = require('../src/games/telephone');
   const room = new TelephoneRoom('ABCDEF', 'max drafts', () => 0),
-    players = Array.from({ length: 8 }, (_, i) => room.add('p' + i));
-  store.attach(room);
-  store.transact(room, { action: 'start' }, () => room.start());
-  completeTelephoneTopics(room, (p, data) =>
-    store.transact(room, { action: 'submit', actor: p.id, input: data }, () =>
-      room.act(p.id, 'submit', data),
-    ),
-  );
+    players = Array.from({ length: 8 }, (_, i) => room.add('p' + i)),
+    committed = new Map(),
+    record = () => {
+      for (const c of room.pageCommits) committed.set(c.bookIndex + ':' + c.round, c.page);
+    };
+  room.start();
+  completeTelephoneTopics(room, (p, data) => {
+    room.act(p.id, 'submit', data);
+    record();
+  });
   const strokes = Array.from({ length: 100 }, () => ({
     tool: 'brush',
     color: '#123456',
@@ -321,18 +301,12 @@ test('eight maximum private drafts auto-pass every page without overflowing the 
         ...(round % 2 ? { strokes } : { text: '傳遞草稿' }),
       });
     room.deadline = room.now();
-    store.transact(room, { action: 'auto', source: 'timeout' }, () => room.auto());
+    room.auto();
     assert.equal(room.pageCommits.length, 8);
+    record();
   }
   assert.equal(room.phase, 'finished');
-  assert.equal(store.list()[0].status, 'finished');
   assert.ok(room.books.every((b) => b.pages.length === 9));
-  const rows = store.read(store.list()[0].id),
-    committed = new Map();
-  for (const row of rows.filter((r) => r.kind === 'result')) {
-    assert.ok(Buffer.byteLength(JSON.stringify(row)) < store.limits.maxResultBytes);
-    for (const c of row.after.pageCommits) committed.set(c.bookIndex + ':' + c.round, c.page);
-  }
   assert.equal(committed.size, 72);
   assert.ok(
     [...committed.entries()].filter(([key]) => !key.endsWith(':0')).every(([, p]) => p.timedOut),

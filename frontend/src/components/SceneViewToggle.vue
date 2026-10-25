@@ -30,7 +30,13 @@ function set(value: boolean) {
   else if (previous?.isConnected) previous.focus({ preventScroll: true });
 }
 function key(event: KeyboardEvent) {
-  if (event.key === 'Escape' && hidden.value) {
+  // An open dialog or popover takes Escape first; the next press restores the UI.
+  if (
+    !event.defaultPrevented &&
+    event.key === 'Escape' &&
+    hidden.value &&
+    !document.querySelector('dialog:modal, :popover-open')
+  ) {
     event.preventDefault();
     set(false);
   }

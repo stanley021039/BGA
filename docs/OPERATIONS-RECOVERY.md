@@ -36,12 +36,12 @@ GitHub 路由依 [client](../src/integrations/github/client.js)。`GITHUB_TOKEN`
 
 依 [config](../src/config.js) 與 [app](../src/app.js)：
 
-- 作業系統環境優先於 `.env`；`DB_FILE`、`HISTORY_DIR`、`COMMUNITY_DIR`、`MUSIC_DIR` 必須指向本次隔離資料，不能沿用預設 production 路徑
+- 作業系統環境優先於 `.env`；`DB_FILE`、`COMMUNITY_DIR`、`MUSIC_DIR` 必須指向本次隔離資料，不能沿用預設 production 路徑
 - `EXTERNAL_SIDE_EFFECTS_ENABLED=false` 阻止 GitHub submit／retry／reconcile／recover，也在 app 組裝時停用市場自動抓取及 YouTube title resolver。不是 OS 網路防火牆，也不停止本機遊戲資料寫入或瀏覽器第三方播放器
 - `MARKET_AUTOMATION_ENABLED=false` 可另行明確關閉市場自動化；預設為 true，但市場啟用同時要求 `externalSideEffectsEnabled===true`。兩個設定都必須核對，不從名稱猜測範圍
 - `HOST=127.0.0.1`、未使用的獨立 `PORT`，不接公開入口；測試用非正式 `PUBLIC_URL`／無真 token。`PUBLIC_URL` 只管邀請 origin 與 Secure cookie，不建立 HTTPS 或防火牆
 - `ACHIEVEMENT_PURPOSE=test` 或 `tutorial` 是已支援的資料用途標籤，不是隔離資料或禁止外連的替代品
-- `HISTORY_*` 配額／保留天數與 `HISTORY_PRESERVE_IMPORTED_SESSIONS` 要在第一次啟動前核對；服務可能淘汰過期／超額歷史，驗包成功不表示永不淘汰
+- v3.0.0（#267）起不再有 `HISTORY_*` 設定與對局記錄目錄；舊環境殘留的這些變數會被忽略
 
 ## 3. 秘密與可公開證據
 
@@ -103,7 +103,7 @@ CLI 只有 `--help` 與 `--request <file|->`；沒有 `--dry-run`、`--force`、
 1. 先用 `action:"verify"`、`bundleDir`、`keyFile` 驗包；可指定 `tempDir`。驗簽、hash、格式、內容及素材 fingerprint 不符即停。
 2. 用 verify 的 `bundleId` 填 `expectedBundleId`，對不存在的 destination 預演。`apply:false`（或未填）會真解密、遷移副本、套 restore policy 並驗證，最後清暫存；不發布 destination，也不是零磁碟寫入。
 3. 核對來源／還原 summary、帳戶／成就／BLOB digests、檔案／音樂／歷史、schema 及預期 policy 變化。舊布局只按明確 migration 升級副本；schema 數字相同也不保證布局或 metadata 相容。
-4. `sessions`、`invites`、`password_resets` 清除；`pending`／`sending` 投稿改 `needs_review`。帳戶 UUID／credential hash 保留；故原密碼仍可登入，但舊 session／邀請／reset link 不可沿用。未完對局若需中斷，export／restore 各需明確 `acknowledgeInterruptedMatches:true`；不產生虛構成績。
+4. `sessions`、`invites`、`password_resets` 清除；`pending`／`sending` 投稿改 `needs_review`。帳戶 UUID／credential hash 保留；故原密碼仍可登入，但舊 session／邀請／reset link 不可沿用。v3.0.0（#267）起備份不含對局記錄，沒有未完對局的中斷選項。
 5. 經授權才以相同內容、相同 bundle ID、全新 destination 將 `apply` 改 literal `true`。既有目錄即使為空也拒絕；不合併、不覆寫。核對 `restore-receipt.json`、回傳新四路徑與 publication 完成。
 6. 應用回傳 `config`，另核對第 2 節隔離設定。CLI 回傳 `EXTERNAL_SIDE_EFFECTS_ENABLED:false`，但不替你寫進程序環境。先隔離啟動驗登入、角色／私人素材授權、音樂 HEAD／Range、歷史、題庫、成就／市場相關資料及投稿保持停用。對 synthetic fixtures 可跑真流程；不得把正式備份當一般測試素材。
 7. 首啟可能有 migration／history retention／cache 寫入，驗前後差異需區分預期變動與資料遺失。正式入口切換前停掉舊 writer，保留舊程式＋資料代；不得兩服務同寫一份 SQLite。

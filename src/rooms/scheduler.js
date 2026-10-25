@@ -1,7 +1,7 @@
 const { createRoomTransitions } = require('./transitions');
-const { expireEmptyRooms, endRoomHistory } = require('./lifecycle');
+const { expireEmptyRooms } = require('./lifecycle');
 const { runTestAIStep } = require('../ai');
-function advanceTimedPhase(room, history) {
+function advanceTimedPhase(room, transitions) {
   const now = Date.now();
   let due = false;
   if (room.type === 'musicquiz')
@@ -33,7 +33,7 @@ function advanceTimedPhase(room, history) {
   }
   if (!due) return false;
   try {
-    history.transact(room, { action: 'auto', source: 'timeout' }, () => room.auto());
+    transitions.transact(room, { action: 'auto', source: 'timeout' }, () => room.auto());
   } catch (e) {
     console.error(e);
   }
@@ -41,31 +41,27 @@ function advanceTimedPhase(room, history) {
 }
 function startRoomScheduler({
   rooms,
-  history,
   onDelete = () => {},
   onDrawStroke = () => {},
   onTransition = () => {},
   onSweep = () => {},
-  transitions = createRoomTransitions({ history, onTransition }),
+  transitions = createRoomTransitions({ onTransition }),
 }) {
   let emptyTimer, timer;
   try {
-    emptyTimer = setInterval(() => expireEmptyRooms({ rooms, history, onDelete }), 400);
+    emptyTimer = setInterval(() => expireEmptyRooms({ rooms, onDelete }), 400);
     emptyTimer.unref();
     timer = setInterval(() => {
       for (const [code, r] of rooms) {
         if (Date.now() - Math.max(...r.players.map((p) => p.lastSeen)) > 86400000) {
-          endRoomHistory(history, r, '房間閒置逾 24 小時');
           rooms.delete(code);
           onDelete(code);
           continue;
         }
-        if (history.isPaused?.(r)) continue;
         // Expired phases must advance before an AI attempts a now-illegal action.
         if (advanceTimedPhase(r, transitions)) continue;
         try {
-          if (r.type !== 'thunder' && runTestAIStep(r, { history, transitions, onDrawStroke }))
-            continue;
+          if (r.type !== 'thunder' && runTestAIStep(r, { transitions, onDrawStroke })) continue;
         } catch (e) {
           console.error('Test AI action failed:', e);
         }
