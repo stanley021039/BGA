@@ -997,7 +997,12 @@ function initializeApp(config, dataLock, acquired) {
     let restored = 0;
     for (const saved of snapshot.rooms || []) {
       const Type = roomClasses[saved.type];
-      if (!Type || rooms.has(saved.code)) continue;
+      if (rooms.has(saved.code)) continue;
+      // CEO and Second Wind cannot resume yet (#289); say so instead of dropping silently.
+      if (!Type) {
+        console.warn('Room ' + saved.code + ' not restored; ' + saved.type + ' cannot resume');
+        continue;
+      }
       // Snapshots written before callbacks were checked (2.42.6–2.44.1) may hold a
       // thunder room whose open dice roll lost its callbacks; it cannot resume.
       if (!Array.isArray(saved.callbacks) && saved.data?.get('_diceRoll')?.value) {
