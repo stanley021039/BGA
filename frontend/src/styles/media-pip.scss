@@ -15,8 +15,6 @@ body.vue-media-pip-document {
     max-block-size: none;
     margin: 0;
   }
-  .vue-media-tabs,
-  .vue-media-request,
   .vue-media-progress,
   .vue-media-sync {
     display: none;
@@ -27,9 +25,7 @@ body.vue-media-pip-document {
   .vue-media-header {
     cursor: default;
   }
-  // Tabs are hidden here, so the player must not inherit the tab row's 44px track.
   .vue-media-content {
-    grid-template-rows: auto;
     flex: 1 1 auto;
     padding: var(--stitch-space-8);
   }

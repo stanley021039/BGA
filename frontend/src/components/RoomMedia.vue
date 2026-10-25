@@ -75,7 +75,9 @@ function recentKey(event: KeyboardEvent) {
           []),
       ];
       if (!buttons.length) return;
-      const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      // The surface may live in the PiP document, whose focus is separate.
+      const owner = recentArea.value?.ownerDocument || document,
+        index = buttons.indexOf(owner.activeElement as HTMLButtonElement);
       const down = event.key === 'ArrowDown';
       const target =
         index < 0
@@ -623,6 +625,10 @@ function escape(event: KeyboardEvent) {
   close();
 }
 watch(() => media.receipt, syncPlayback, { flush: 'sync' });
+// Automatic and PiP openings skip the library fetch; fill it on first request view.
+watch(activeTab, (tab) => {
+  if (tab === 'request' && !media.tracks.length && !media.libraryLoading) void media.library();
+});
 watch(
   () => media.marker,
   (value) => player?.setMarker(value),

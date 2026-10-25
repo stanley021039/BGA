@@ -67,7 +67,9 @@ function harness({ accepted } = {}) {
     },
     position: () => 0,
     serverNow: () => 1000,
-    library() {},
+    tracks: [],
+    libraryLoading: false,
+    library: () => calls.push(['library']),
     async load() {},
     cancelSnapshot: () => calls.push(['cancelSnapshot']),
     report() {},
@@ -246,6 +248,8 @@ test('PiP moves the player full size, closes back to the page window and ends on
     assert.equal(h.component.mode.value, 'compact');
     assert.equal(count('joinVideo'), 1);
     h.component.activeTab.value = 'request';
+    await settled();
+    assert.equal(count('library'), 1, 'the first request view loads an empty library');
     h.pip.open();
     assert.equal(h.component.mode.value, 'full');
     assert.equal(h.component.activeTab.value, 'player');

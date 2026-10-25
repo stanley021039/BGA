@@ -57,6 +57,79 @@ test('moving an accepted video rebinds the provider in its destination window at
   p.dispose();
 });
 
+test('a moved video blocked from sound autoplay keeps playing muted until a gesture in its window', async () => {
+  const h = mediaHarness({ enabled: true }),
+    pip = mediaHarness({ enabled: true }),
+    statuses = [];
+  h.document.defaultView = h.window;
+  pip.document.defaultView = pip.window;
+  const audioHost = h.document.createElement('div'),
+    videoHost = h.document.createElement('div');
+  videoHost.ownerDocument = h.document;
+  vm.runInContext(
+    fs.readFileSync(path.join(__dirname, '../public/shared/media-player.js'), 'utf8'),
+    h.context,
+  );
+  const p = h.window.RoomMediaPlayer.create({
+    audioHost,
+    videoHost,
+    onStatus(message) {
+      statuses.push(message);
+    },
+    onChange() {},
+    onReport() {},
+  });
+  const snapshot = mediaSnapshot({
+    playback: { state: 'playing', anchorPositionSec: 12, anchorServerMs: 100000, rate: 1 },
+  });
+  p.update(snapshot, snapshot, 100000);
+  p.setWindow(true, false, true);
+  p.joinVideo();
+  await h.flush();
+  h.players[0].ready();
+  h.players[0].blocked();
+  assert.equal(
+    h.players[0].calls.filter((c) => c[0] === 'mute').length,
+    0,
+    'the page player keeps its accepted prompt-only behavior',
+  );
+  videoHost.ownerDocument = pip.document;
+  p.relocate();
+  await h.flush();
+  const moved = pip.players[0];
+  moved.ready();
+  moved.calls.length = 0;
+  moved.blocked();
+  assert.deepEqual(
+    moved.calls.map((c) => c[0]),
+    ['mute', 'seek', 'play'],
+  );
+  assert.match(statuses.at(-1), /靜音/);
+  h.window.AudioSettings?.set?.({ music: { enabled: true, volume: 0.5 } });
+  moved.state(1);
+  assert.match(statuses.at(-1), /靜音/, 'starting muted playback keeps the restore-sound prompt');
+  assert.equal(
+    moved.calls.filter((c) => c[0] === 'unmute').length,
+    0,
+    'stay muted without a gesture',
+  );
+  h.document.dispatch('pointerdown');
+  assert.equal(
+    moved.calls.filter((c) => c[0] === 'unmute').length,
+    0,
+    'only the PiP window gesture counts',
+  );
+  pip.document.dispatch('pointerdown');
+  assert.equal(moved.calls.filter((c) => c[0] === 'unmute').length, 1);
+  assert.equal(moved.calls.at(-1)[0], 'play');
+  pip.document.dispatch('keydown');
+  assert.equal(
+    moved.calls.filter((c) => c[0] === 'unmute').length,
+    1,
+    'the gesture listener is one-shot',
+  );
+  p.dispose();
+});
 test('moving music keeps the same audio element and observes the PiP document visibility', async () => {
   const h = mediaHarness({ enabled: true }),
     pip = mediaHarness({ enabled: true });

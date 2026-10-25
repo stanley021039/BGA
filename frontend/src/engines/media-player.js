@@ -16,7 +16,14 @@ let RoomMediaPlayer;
     let audioPreviewGesture = null,
       videoReadyJob = null,
       initialVideoPause = null,
-      videoHasStarted = false;
+      videoHasStarted = false,
+      // A moved iframe reloads in a window without user activation; keep the
+      // picture in sync muted until the first gesture there restores sound.
+      relocatedMount = false,
+      autoplayMuted = false,
+      mutedMessage =
+        '瀏覽器擋下有聲自動播放，影片先靜音跟著全桌播放；點一下這個視窗任一處即可恢復聲音。',
+      unmuteGesture = null;
     let snapshot = null,
       marker = null,
       room = null,
@@ -146,7 +153,36 @@ let RoomMediaPlayer;
         old.destroy();
       } catch {}
     }
+    function disarmUnmute() {
+      if (unmuteGesture) {
+        unmuteGesture.target.removeEventListener('pointerdown', unmuteGesture.handler, true);
+        unmuteGesture.target.removeEventListener('keydown', unmuteGesture.handler, true);
+      }
+      unmuteGesture = null;
+      autoplayMuted = false;
+    }
+    function armUnmute(target) {
+      disarmUnmute();
+      autoplayMuted = true;
+      const gesture = {
+        target: videoHost.ownerDocument || document,
+        handler: () => {
+          if (unmuteGesture !== gesture) return;
+          disarmUnmute();
+          if (player !== target || !ready) return;
+          settings();
+          try {
+            if (snapshot?.playback?.state === 'playing') target.playVideo();
+          } catch {}
+          status('', true);
+        },
+      };
+      unmuteGesture = gesture;
+      gesture.target.addEventListener('pointerdown', gesture.handler, true);
+      gesture.target.addEventListener('keydown', gesture.handler, true);
+    }
     function destroyVideo() {
+      disarmUnmute();
       cancelVideoReady();
       initialVideoPause = null;
       videoHasStarted = false;
@@ -246,7 +282,7 @@ let RoomMediaPlayer;
       if (player && ready)
         try {
           player.setVolume(music.volume * 100);
-          music.enabled && !initialVideoPause ? player.unMute() : player.mute();
+          music.enabled && !initialVideoPause && !autoplayMuted ? player.unMute() : player.mute();
         } catch {}
     }
     function expectAudioTransition(clip, type, front = false) {
@@ -838,7 +874,9 @@ let RoomMediaPlayer;
       if (!activeVideo()) return;
       const token = playerEpoch,
         key = currentKey(),
-        videoId = snapshot.current.videoId;
+        videoId = snapshot.current.videoId,
+        relocated = relocatedMount;
+      relocatedMount = false;
       mountingVideo = token;
       status('載入自己的YouTube播放器…', true);
       notify();
@@ -898,7 +936,7 @@ let RoomMediaPlayer;
                   } catch {}
                 }
                 if (pending) settings();
-                status('', true);
+                status(autoplayMuted ? mutedMessage : '', true);
                 const length = Number(instance.getDuration?.());
                 if (Number.isFinite(length) && length > 0 && length <= maxPosition && !duration())
                   report('duration', { itemId: snapshot.current.id, durationSec: length });
@@ -908,6 +946,16 @@ let RoomMediaPlayer;
             onAutoplayBlocked: (event) => {
               if (stale(event?.target || instance)) return;
               initialVideoPause = null;
+              if (relocated && !autoplayMuted && snapshot.playback.state === 'playing') {
+                armUnmute(instance);
+                try {
+                  instance.mute();
+                  instance.seekTo(position(), true);
+                  instance.playVideo();
+                } catch {}
+                status(mutedMessage, true);
+                return;
+              }
               settings();
               status('瀏覽器需要你允許播放，請按「在自己的裝置播放」或YouTube原生播放按鈕。', true);
             },
@@ -1163,7 +1211,10 @@ let RoomMediaPlayer;
             const iframe = videoFrame(snapshot.current.videoId, false);
             videoHost.replaceChildren(iframe);
             observeFrame(iframe, playerEpoch, currentKey());
-          } else if (!document.hidden) void mountVideo();
+          } else if (!document.hidden) {
+            relocatedMount = true;
+            void mountVideo();
+          }
         } else if (audio) alignAudio(false);
         notify();
       },
