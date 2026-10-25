@@ -26,3 +26,17 @@
 - 整分支 ui:check（base 238f0a4）、format／format:check、前端型別與建置、perf:check --build、minor release:check 及 diff check 通過。輪播改包裝後，既有原生卡片按鈕附具體 raw-control 例外，保留同一拖曳／選取控制，不增加基準額度。
 
 本機圖片證據：`work/figma-278-delivery.png`、`work/lounge-278-1920-dark.png`、`work/lounge-278-1366-light.png`、`work/lounge-278-375-light.png`。未新增真 YouTube、多人共看同步、實機觸控、GPU 或瀏覽器快取命中率量測。待使用者驗收，未 PR／CI／合併／部署。
+
+## 2026-10-25 後續驗收修正：大廳間距與休憩區房內
+
+使用者追加：拖曳說明與箭頭留白加大；素材授權往上對齊右側第一桌提示。說明 margin 增為12px，授權沿用房間操作所在列、避開44px回饋槽與8px gap，桌機不移動右側操作位置。
+
+房內根因：phaseRow=false 的浮動狀態列不占排版位置，但整合頂欄仍配置 `48px minmax(0,1fr)`，令唯一房間 grid 被塞進48px。影片舞台以 viewport 下限溢出這個小 grid，左右面板及 RoomBackground 則只有48px。修正共用 RoomHeader 的浮動狀態列列數；一般遊戲原本的48px階段列保留。休憩區 grid 統一負責最小高度，舞台使用border-box與min-block-size:0，專注時依共用可用高度填滿並不建立外部捲動。另將空的浮動 UiNotice 設為不顯示／不接收pointer，活躍提示仍保留互動並置中，修復空槽遮住左側收合按鈕。
+
+實際隔離站1920×1080：左右面板、背景及影片舞台均930px；空聊天室不縮，兩側收合／展開狀態與高度已驗。背景模式點中央，人物由(12,38)走到(50,50)，方向鍵再至x=55；沿用原HTTP移動與伺服器規則，未另改互動協定。全螢幕grid client/scroll=1080/1080、main=988/988、stage=986/986；375×812專注main=720/720、stage=718/718，沒有內容溢出。手機一般模式可收合抽屜且無水平溢出。native全螢幕的IAB截圖有畫幅裁切限制，完整範圍另以DOM幾何核對，未把裁切圖當作整個退出入口的視覺驗收。
+
+新增4項SCSS／DOM契約回歸，涵蓋整合／未整合頂欄、一般階段列不退化、grid高度責任、邊框溢出與空通知不擋點擊；前端144/144通過。空通知回歸首次因fixture未建立通知節點失敗，補正fixture後全通過。此批 test:affected 再次回退226檔、1849項中1848通過，仍僅既有SSE close最後reader.done失敗；未宣稱全套通過。型別／建置、整分支UI與效能檢查通過；無真YouTube、實機觸控或全遊戲原生畫面新增驗收。
+
+最新試玩為127.0.0.8:3978，獨立資料／合成帳號與獎勵工具，避免與舊本機站共用cookie；舊3972／3974程式保留。房內驗收站重啟時僅清理已確認結束之自有process鎖檔、資料庫保留；此隔離設定未驗跨重啟房間保留，不據此宣稱正式持久化通過。新增本機證據 `work/lounge-room-panels-1920.png`、`work/lounge-room-fullscreen-1920.png`、`work/lounge-room-frontend-final.log`、`work/lounge-room-tests.log`。仍待使用者驗收，未PR／CI／合併／部署。
+
+最後大廳量測：1920×1080，拖曳提示與翻頁列相隔12px；素材授權與「挑選遊戲，開啟今晚第一桌。」的下緣皆y=960。底部44px回饋槽按共用control-height配置，document.scrollHeight=innerHeight=1080，避免原24px列裝入44px通知槽造成12px額外溢出。證據`work/lounge-spacing-final.png`。

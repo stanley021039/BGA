@@ -448,7 +448,7 @@ body.lobby-self-hover {
       min-height: 0;
       padding: tokens.space(2) 0;
       grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-rows: 44px minmax(0, 1fr) 24px;
+      grid-template-rows: 44px minmax(0, 1fr) var(--stitch-control-height);
       gap: tokens.space(4);
     }
     .vue-lobby .library-heading {
@@ -582,7 +582,11 @@ body.lobby-self-hover {
     }
     .vue-lobby .version-note {
       grid-column: 1 / -1;
-      grid-row: 3;
+      grid-row: 2;
+      align-self: end;
+      justify-self: start;
+      // Align with the right-hand resume text above its reserved feedback slot.
+      margin-block-end: calc(var(--stitch-control-height) + var(--stitch-gap-inline));
       text-align: start;
       @include tokens.type(p3);
     }
@@ -861,7 +865,7 @@ body .lobby-backdrop[data-background='castle'] {
 
 // #277: centered navigation, drag hint and credits follow the cards.
 .vue-lobby .carousel-hint {
-  margin: 0;
+  margin: var(--stitch-space-12) 0 0;
   text-align: center;
   font-size: var(--stitch-text-hint);
   color: var(--stitch-muted);
