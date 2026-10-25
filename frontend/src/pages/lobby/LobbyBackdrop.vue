@@ -343,33 +343,36 @@ defineExpose({ openChat });
         :disabled="lobby.connected"
         @click="lobby.sync()" /></div
   ></Teleport>
-  <UiDialog
-    ref="dialog"
-    class="vue-approved-lobby-expressions"
-    title="角色表情"
-    compact
-    @closing="opened = false"
-    @closed="opened = false"
-    ><div class="vue-lobby-expression-body"
-      ><p class="vue-lobby-expression-intro">使用目前角色的表情；聲音依照你的音效設定播放。</p
-      ><div class="vue-lobby-expressions" :aria-busy="lobby.expressionsLoading"
-        ><p v-if="lobby.expressionsLoading">正在載入表情…</p
-        ><p v-else-if="!lobby.expressions.length">{{
-          lobby.expressionStatus || '這個角色尚無表情，可到「我的角色」新增。'
-        }}</p
-        ><UiChoiceCard
-          v-for="expression in lobby.expressions"
-          :key="expression.expression"
-          :label="expression.label"
-          action
-          :disabled="lobby.emotePending || !lobby.connected"
-          @click="use(expression.expression)"
-          ><img :src="sizedImage(expression.image, 128)" alt="" /></UiChoiceCard></div
-      ><StatusSlot
-        :message="lobby.emotePending ? '正在送出表情…' : lobby.expressionStatus"
-        :notice-key="expressionNoticeKey"
-        :persistent="lobby.emotePending"
-        :error="!!lobby.expressionStatus" /></div
-  ></UiDialog>
-  <UiDialog ref="chat" title="對話" compact><LobbyBarrage @sent="chat?.close()" /></UiDialog>
+  <!-- Background mode hides and inerts the lobby page, so the dialogs live on body. -->
+  <Teleport to="body"
+    ><UiDialog
+      ref="dialog"
+      class="vue-approved-lobby-expressions"
+      title="角色表情"
+      compact
+      @closing="opened = false"
+      @closed="opened = false"
+      ><div class="vue-lobby-expression-body"
+        ><p class="vue-lobby-expression-intro">使用目前角色的表情；聲音依照你的音效設定播放。</p
+        ><div class="vue-lobby-expressions" :aria-busy="lobby.expressionsLoading"
+          ><p v-if="lobby.expressionsLoading">正在載入表情…</p
+          ><p v-else-if="!lobby.expressions.length">{{
+            lobby.expressionStatus || '這個角色尚無表情，可到「我的角色」新增。'
+          }}</p
+          ><UiChoiceCard
+            v-for="expression in lobby.expressions"
+            :key="expression.expression"
+            :label="expression.label"
+            action
+            :disabled="lobby.emotePending || !lobby.connected"
+            @click="use(expression.expression)"
+            ><img :src="sizedImage(expression.image, 128)" alt="" /></UiChoiceCard></div
+        ><StatusSlot
+          :message="lobby.emotePending ? '正在送出表情…' : lobby.expressionStatus"
+          :notice-key="expressionNoticeKey"
+          :persistent="lobby.emotePending"
+          :error="!!lobby.expressionStatus" /></div
+    ></UiDialog>
+    <UiDialog ref="chat" title="對話" compact><LobbyBarrage @sent="chat?.close()" /></UiDialog
+  ></Teleport>
 </template>
