@@ -24,7 +24,7 @@ function loadService(name) {
 const historyModule = loadService('media-history'),
   consentModule = loadService('media-consent');
 
-function harness() {
+function harness({ accepted } = {}) {
   const environment = { hidden: false, modal: false, classes: new Set() };
   const calls = [],
     lifecycle = {};
@@ -42,6 +42,7 @@ function harness() {
   );
   const session = vue.reactive({ user: { id: 'account-a' } }),
     consent = consentModule.exports.createMediaConsent(null, null);
+  if (accepted !== undefined) consent.set(accepted);
   const media = vue.reactive({
     context: 1,
     enabled: true,
@@ -151,6 +152,10 @@ function harness() {
   const scope = vue.effectScope();
   let component;
   scope.run(() => (component = module.exports.default.setup({ connected: true }, { expose() {} })));
+  provider.joinVideo = () => {
+    calls.push(['joinVideo']);
+    component.view.value = { ...component.view.value, videoWanted: true };
+  };
   component.audioHost.value = {};
   component.videoHost.value = {};
   component.frameArt.value = { replaceChildren() {} };
@@ -200,6 +205,69 @@ const autoSong = {
   requestedById: 'peer',
   requestedByName: 'Peer',
 };
+const autoVideo = { ...autoSong, id: 'video-a', type: 'video', videoId: 'M7lc1UVf-VE' };
+async function settled() {
+  await vue.nextTick();
+  await new Promise((resolve) => setImmediate(resolve));
+}
+test('accepted video joins automatically after a hidden first request opens on return', async () => {
+  const h = harness({ accepted: true });
+  try {
+    h.environment.hidden = true;
+    await receive(h, { current: autoVideo });
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 0);
+    h.environment.hidden = false;
+    h.component.visibility();
+    await settled();
+    assert.equal(h.component.opened.value, true);
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 1);
+    h.component.visibility();
+    await settled();
+    assert.equal(
+      h.calls.filter((c) => c[0] === 'joinVideo').length,
+      1,
+      'do not remount a loading/playing video',
+    );
+  } finally {
+    h.dispose();
+  }
+});
+test('explicitly reopening an accepted same video rejoins without another confirmation', async () => {
+  const h = harness({ accepted: true });
+  try {
+    await receive(h, { current: autoVideo });
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 1);
+    h.component.exitVideo();
+    h.component.view.value = { ...h.component.view.value, videoWanted: false };
+    h.component.close();
+    await h.component.open();
+    await settled();
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 2);
+  } finally {
+    h.dispose();
+  }
+});
+test('unanswered or declined consent never automatically joins a video', async () => {
+  for (const accepted of [undefined, false]) {
+    const h = harness({ accepted });
+    try {
+      await receive(h, { current: autoVideo });
+      assert.equal(h.component.opened.value, true);
+      await h.component.open();
+      await settled();
+      assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 0);
+      await h.component.chooseVideo(true);
+      await settled();
+      assert.equal(
+        h.calls.filter((c) => c[0] === 'joinVideo').length,
+        1,
+        'one explicit acceptance starts one player',
+      );
+    } finally {
+      h.dispose();
+    }
+  }
+});
 test('empty to first playing opens once without stealing focus or changing the shared state', async () => {
   const h = harness();
   try {

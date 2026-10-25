@@ -30,3 +30,13 @@
 - 真 Edge 雙登入玩家、真 HTTP 點播與 SSE、1920×1080／390×844 × light／dark 共四組通過：首次兩人皆開 compact、焦點保持、加歌／切歌不重開、modal 關閉才開、重整不重開。手機另驗聊天室 aria-modal 抽屜關閉才開窗；影片拒絕後沒有 iframe 並有「接受並觀看影片」入口。圖片與結果在本機 ignored work/media-auto-open。使用內建測試 MP3 的延長測試副本，並非私有歌曲或喇叭聽感驗收。
 
 本批停在第 4 階段人工驗收；尚未開 PR、啟動 CI、合併、打 tag 或部署。實機觸控、Safari、真實跨裝置 YouTube／喇叭聽感未驗，亦未逐一重跑各遊戲完整對局。
+
+## 2026-10-25 試玩回饋：已同意影片直接加入
+
+使用者截圖顯示已同意後仍先出現「重新加入觀看」，要求直接播放。原本僅在 current key 改變的 nextTick 嘗試加入；若當時 document.hidden，後續開窗／返回可見分頁時沒有補上 joinVideo，align 本身也不會設定 videoWanted，因此留下這個畫面。手動重新開啟同一影片時 key 不變，也會漏掉重新加入。
+
+- 抽出 maybeJoinVideo，在開窗、歌曲改變及回到可見分頁時檢查：有效房間／連線、同 current、已同意、wantsVideo、已開窗、非hidden、尚未加入。只補上播放嘗試；載入中／已加入不重建iframe，隱藏期間不先載入。
+- 明確開啟視窗與新的首次自動開窗會沿用本分頁已同意選擇。退出自己的影片仍保持退出，直到使用者明確重新開窗或開始新一段空清單播放；未同意／已拒絕不自動接受。chooseVideo沿用單一加入路徑，避免重複建立播放器。
+- 同批尚未發行的2.46.0，不再升版。原有第三方自動播放受阻提示／原生按鈕保留，不能保證瀏覽器一定允許有聲自動播放。
+- 前端131/131、型別／正式build、UI、build效能與release檢查通過；新增三項實際Vue回歸驗已同意hidden→回來、同影片重開、未同意／拒絕，以及單一iframe不重建。本輪Windows Node24.22.1 affected回退228檔，1880/1881通過，唯一失敗market-recheck-http的隨機本機埠遭Undici拒絕（bad port）；該檔重跑6/6通過，未改測試／OS埠或放寬斷言，不把本輪全套記為全綠，最終Linux CI仍待人工驗收後執行。
+- Edge1920×1080／390×844×深淺×已同意／受控hidden／已拒絕，共12組通過。使用真伺服器點播／SSE與真Vue及播放器引擎，但YT API採可控provider／embed fixture，證據是收到playVideo呼叫及iframe建立，並非真YouTube播放／喇叭聽感。已同意不再顯示重新加入按鈕、拒絕無iframe、返回可見不重建；本機證據video-qa-results.json與video-*.png不提交。

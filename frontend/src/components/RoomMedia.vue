@@ -223,6 +223,7 @@ async function maybeAutoOpen() {
   const focused = document.activeElement as HTMLElement | null;
   mode.value = 'compact';
   activeTab.value = 'player';
+  wantsVideo = videoConsent.value === true;
   await show(false);
   // show() is non-modal but native dialog focus must not interrupt typing/drawing.
   if (
@@ -288,10 +289,12 @@ async function show(load = true) {
       sharedClock.value = media.position();
     }, 500);
   sharedClock.value = media.position();
+  void maybeJoinVideo();
   if (fresh && load) void media.library();
 }
 async function open() {
   mode.value = 'full';
+  wantsVideo = videoConsent.value === true;
   await show();
   const context = media.context;
   await media.load(true);
@@ -316,6 +319,24 @@ function setTab(value: string) {
   activeTab.value = value;
   updatePresentation();
 }
+async function maybeJoinVideo() {
+  const key = mediaCurrentKey(media.snapshot);
+  await nextTick();
+  if (
+    !disposed &&
+    mounted &&
+    props.connected &&
+    media.connected &&
+    opened.value &&
+    !document.hidden &&
+    key === mediaCurrentKey(media.snapshot) &&
+    media.snapshot?.current?.type === 'video' &&
+    wantsVideo &&
+    videoConsent.value === true &&
+    !view.value.videoWanted
+  )
+    player?.joinVideo();
+}
 function syncPlayback() {
   const state = media.snapshot;
   if (!mounted || !state || !player || !props.connected || !media.connected) return;
@@ -331,16 +352,7 @@ function syncPlayback() {
   player.setMarker(media.marker);
   player.update(state, media.marker, media.serverNow());
   sharedClock.value = media.position();
-  if (changed && state.current?.type === 'video' && wantsVideo && videoConsent.value === true)
-    void nextTick().then(() => {
-      if (
-        key === mediaCurrentKey(media.snapshot) &&
-        wantsVideo &&
-        !document.hidden &&
-        !view.value.videoWanted
-      )
-        player?.joinVideo();
-    });
+  if (changed) void maybeJoinVideo();
   void maybeConsent();
 }
 async function maybeConsent() {
@@ -368,8 +380,6 @@ async function chooseVideo(accept: boolean) {
   wantsVideo = accept;
   if (accept && item.value?.type === 'video') {
     await show();
-    await nextTick();
-    if (key === consentKey.value && wantsVideo && opened.value) player?.joinVideo();
   } else if (!accept) player?.exitVideo('');
 }
 function consentClosed() {
@@ -560,6 +570,7 @@ function visibility() {
     cancelQueue();
   } else {
     void maybeAutoOpen();
+    void maybeJoinVideo();
     void maybeConsent();
   }
 }
