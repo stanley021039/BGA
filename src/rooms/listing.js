@@ -12,6 +12,7 @@ const limits = {
   quacks: 8,
   ceo: 6,
   'second-wind': 6,
+  lounge: 10,
 };
 
 function listRooms(rooms, seats, kickedUsers, userId) {
@@ -30,6 +31,7 @@ function listRooms(rooms, seats, kickedUsers, userId) {
         'quacks',
         'ceo',
         'second-wind',
+        'lounge',
       ].includes(type)
         ? room.activePlayers().length
         : room.players.length;

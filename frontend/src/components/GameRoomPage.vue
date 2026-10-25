@@ -39,14 +39,19 @@ const props = withDefaults(
     pollMs?: number;
     showMetrics?: boolean;
     scoreLabel?: string;
+    panelsOpen?: boolean;
+    mediaStage?: string;
+    // Without a match, the phase row is dropped and notices float over the main area (#277).
+    phaseRow?: boolean;
   }>(),
-  { showMetrics: true, scoreLabel: '分' },
+  { showMetrics: true, scoreLabel: '分', phaseRow: true },
 );
 const emit = defineEmits<{ start: [] }>(),
   page = useRoomPage(props.type, props.reader, props.pollMs),
   { room, session, entryCode, entryBusy, entryError, connected } = page,
   focused = ref(false);
 const waiting = computed(() => room.snapshot?.phase === 'waiting'),
+  finished = computed(() => room.snapshot?.phase === 'finished'),
   settingsTarget = computed(() =>
     waiting.value ? '#room-waiting-settings-' + props.type : props.setupTarget,
   );
@@ -144,8 +149,8 @@ onMounted(() => {
         label="遊戲說明"
         @click="help?.open()" /><RoomFullscreenToggle
         @update:focused="focused = $event" /><RoomManager /><RoomLeaveButton /></RoomHeader
-    ><div class="vue-game-room-feedback vue-room-status-row"
-      ><div class="vue-room-phase-slot"
+    ><div class="vue-game-room-feedback vue-room-status-row" :class="{ 'is-overlay': !phaseRow }"
+      ><div v-if="phaseRow" class="vue-room-phase-slot"
         ><slot name="round-progress" /><span class="vue-room-phase">{{ phase }}</span
         ><span class="vue-room-round">{{ round || '等待開桌' }}</span></div
       ><StatusSlot
@@ -153,7 +158,7 @@ onMounted(() => {
         :message="connection || room.message"
         :error="!!room.terminal || room.disconnected || room.failed"
     /></div>
-    <RoomSceneLayout :connected="connected" :focused="focused">
+    <RoomSceneLayout :connected="connected" :focused="focused" :panels-open="panelsOpen">
       <template #roster
         ><slot name="roster" :bot-allowed="botAllowed"
           ><RoomRoster
@@ -177,7 +182,13 @@ onMounted(() => {
       ></template>
       <slot />
       <template #side="{ chatVisible }"
-        ><Teleport v-if="setup" :to="settingsTarget || 'body'" :disabled="!settingsTarget" defer>
+        ><Teleport
+          v-if="setup"
+          :key="settingsTarget"
+          :to="settingsTarget || 'body'"
+          :disabled="!settingsTarget"
+          defer
+        >
           <GameSettingsPanel
             :heading="waiting ? '' : '房間設定'"
             :in-stage="!!settingsTarget"
@@ -191,17 +202,18 @@ onMounted(() => {
               ><UiButton
                 v-if="room.gameManager"
                 variant="primary"
-                :icon="startIcon || (startLabel ? 'replay' : 'play')"
-                :label="startLabel || '開始遊戲'"
+                :icon="finished ? 'replay' : startIcon || (startLabel ? 'replay' : 'play')"
+                :label="finished ? '再玩一局' : startLabel || '開始遊戲'"
                 :pending="room.busy"
-                :disabled="!setup || !canStart"
-                @click="emit('start')"
+                :disabled="!setup || (!finished && !canStart)"
+                @click="finished ? room.command('rematch', {}) : emit('start')"
               /><span v-else>由房主或管理者開始遊戲</span></template
             >
           </GameSettingsPanel>
         </Teleport>
         <slot name="side-actions" /><RoomChat :panel-visible="chatVisible"
-          ><template #tools><RoomMedia :connected="room.connected" /></template></RoomChat
+          ><template #tools
+            ><RoomMedia :connected="room.connected" :stage="mediaStage" /></template></RoomChat
       ></template> </RoomSceneLayout
     ><RoomEffects :connected="connected" /><RoomPings /> </div
   ><UiDialog ref="help" :title="title + '玩法'"

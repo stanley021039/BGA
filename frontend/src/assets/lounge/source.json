@@ -1,0 +1,26 @@
+{
+  "issue": 278,
+  "revision": "S-20261025 R2",
+  "stitch": "https://stitch.withgoogle.com/projects/995005127424505482",
+  "figmaSource": "https://www.figma.com/design/swrZgTpIsRS4JSGBa4mQhq?node-id=2229-7927",
+  "figmaDelivery": "https://www.figma.com/design/swrZgTpIsRS4JSGBa4mQhq?node-id=2230-6267",
+  "notes": "Original Stitch megaphone composition. Badge 3 is decorative, not a live notification count. SVG source is reference-only; the site imports only size-matched WebP. Rasterized locally from the unchanged source SVG; no remote font or media request.",
+  "conversion": "sharp 0.35.5, WebP quality 86 effort 6, 720x500 and 360x250",
+  "files": [
+    {
+      "file": "sources/stitch-278-r2.svg",
+      "bytes": 6113,
+      "sha256": "7cf48b2509724e4dbf9a0c6f77c1cf852f815848b744cf99abdef505544983aa"
+    },
+    {
+      "file": "lounge-360.webp",
+      "bytes": 5042,
+      "sha256": "b383baf0d83f33fc0a13e111959dcf9067a4d27ad0bf2227422705abf436eaaa"
+    },
+    {
+      "file": "lounge-720.webp",
+      "bytes": 11572,
+      "sha256": "decd6fee275dc0bcf3e3b056b04ea30bbd2bf07ab224bf4aeb92a0a045dabfc0"
+    }
+  ]
+}

@@ -14,6 +14,7 @@ export const gameTypes = [
   'quacks',
   'ceo',
   'second-wind',
+  'lounge',
 ] as const;
 export type GameType = (typeof gameTypes)[number];
 export const isGameType = (value: unknown): value is GameType =>
@@ -41,6 +42,7 @@ export interface RoomSnapshot extends Record<string, unknown> {
   phase: string;
   serverNow: number;
   version?: number;
+  gameRevision?: number;
   host: boolean | string;
   hostId?: string;
   players: RoomPlayer[];
@@ -88,6 +90,11 @@ export function readRoomSnapshot(value: unknown): RoomSnapshot {
       roomRole: typeof player.roomRole === 'string' ? player.roomRole : null,
     } satisfies RoomPlayer;
   });
+  if (
+    row.gameRevision !== undefined &&
+    (!Number.isSafeInteger(row.gameRevision) || (row.gameRevision as number) < 0)
+  )
+    throw Error('遊戲版本資料格式不正確');
   return {
     ...row,
     code: row.code.toUpperCase(),
@@ -107,19 +114,16 @@ function instance(snapshot: RoomSnapshot, path: 'media' | 'watch') {
     ? (value as Record<string, unknown>).roomInstanceId
     : undefined;
 }
-export function sameRoom(next: RoomSnapshot, current: RoomSnapshot | null): boolean {
-  if (
-    !current ||
-    next.code !== current.code ||
-    next.me !== current.me ||
-    next.type !== current.type
-  )
-    return false;
+export function sameRoomIdentity(next: RoomSnapshot, current: RoomSnapshot | null): boolean {
+  if (!current || next.code !== current.code || next.me !== current.me) return false;
   return [
     [next.roomInstanceId, current.roomInstanceId],
     [instance(next, 'media'), instance(current, 'media')],
     [instance(next, 'watch'), instance(current, 'watch')],
   ].every(([a, b]) => !a || !b || a === b);
+}
+export function sameRoom(next: RoomSnapshot, current: RoomSnapshot | null): boolean {
+  return sameRoomIdentity(next, current) && next.type === current?.type;
 }
 export function staleSnapshot(next: RoomSnapshot, current: RoomSnapshot | null): boolean {
   if (!sameRoom(next, current) || !current) return false;

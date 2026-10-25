@@ -115,7 +115,7 @@ test('a snapshot from before callbacks were checked skips a thunder room with an
   assert.ok(!warnings.some((message) => message.includes('BBBBBB')));
 });
 
-// Every game, with bots, survives a full app restart on the same data.
+// Every game, with bots, and the non-game lounge survive a restart on the same data.
 const GAMES = [
   'poker',
   'thunder',
@@ -128,6 +128,7 @@ const GAMES = [
   'musicquiz',
   'minimal',
   'draw',
+  'lounge',
 ];
 test('open rooms of every game survive an app restart and keep playing', async (t) => {
   const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'bga-room-persist-'));
@@ -183,8 +184,10 @@ test('open rooms of every game survive an app restart and keep playing', async (
     const created = await server.call('create', { type, roomName: 'persist ' + type });
     assert.equal(created.status, 200, type + ' create');
     const { code } = created.body;
-    for (let i = 0; i < 3; i++) await server.call('bot', { code });
-    await server.call('start', { code });
+    if (type !== 'lounge') {
+      for (let i = 0; i < 3; i++) await server.call('bot', { code });
+      await server.call('start', { code });
+    }
     const state = await server.call('state?code=' + code);
     assert.equal(state.status, 200, type + ' state');
     before.set(type, { code, state: state.body });

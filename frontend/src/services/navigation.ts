@@ -10,6 +10,7 @@ const gameRoutes = [
   'minimal',
   'bluff',
   'quacks',
+  'lounge',
 ];
 const room = new RegExp(`^/(?:${gameRoutes.join('|')})/[A-Fa-f0-9]{6}/?$`);
 const documents = new Set([

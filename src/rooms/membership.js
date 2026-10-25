@@ -45,6 +45,7 @@ function rejoinPlayer(room, playerId, name) {
     quacks: 8,
     ceo: 6,
     'second-wind': 6,
+    lounge: 10,
   };
   if (
     room.players.filter((p) => !p.kicked).length >=

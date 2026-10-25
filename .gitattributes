@@ -19,3 +19,6 @@ public/assets/ui/*.svg text eol=lf
 *.json text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+
+# Preserve Stitch source bytes used by the lounge artwork provenance manifest.
+frontend/src/assets/lounge/sources/*.svg text eol=lf

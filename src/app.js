@@ -68,7 +68,8 @@ const { CeoRoom } = require('./games/ceo-room');
 const { BluffRoom } = require('./games/bluff');
 const { TelephoneRoom } = require('./games/telephone');
 const { MusicQuizRoom } = require('./games/musicquiz'),
-  { MinimalRoom } = require('./games/minimal');
+  { MinimalRoom } = require('./games/minimal'),
+  { LoungeRoom } = require('./games/lounge');
 const { GiftStore } = require('./games/gift-store'),
   { GIFTS, CATEGORIES } = require('./games/gift-catalog');
 const {
@@ -92,6 +93,8 @@ const { createRoomRuntime } = require('./rooms/runtime');
 const { createFrontend } = require('./http/frontend');
 const { withEntryIntro } = require('./http/entry-intro');
 const { createRoomTransitions } = require('./rooms/transitions');
+const { returnToWaiting } = require('./rooms/rematch');
+const { roomGames, switchGame, assertGameContext } = require('./rooms/game-switch');
 const { createStateStream, stateTag } = require('./rooms/state-stream');
 const roomPersistence = require('./rooms/persistence');
 const { botSupport, addTestBot } = require('./ai');
@@ -441,6 +444,9 @@ function initializeApp(config, dataLock, acquired) {
     media.reconcile(mediaContext(room));
     return {
       ...view,
+      type: room.type || 'poker',
+      gameRevision: room.gameRevision || 0,
+      roomGames,
       ...savedDrawResults,
       roomSpace: roomSpace.view(room, view.me, view.players, expressions),
       pingContext: runtime.pings.context(room),
@@ -919,6 +925,7 @@ function initializeApp(config, dataLock, acquired) {
     musicquiz: MusicQuizRoom,
     minimal: MinimalRoom,
     draw: DrawGuessRoom,
+    lounge: LoungeRoom,
   };
   const roomsFile = config.roomsFile || config.dbFile + '.rooms';
   const TIMER_KEY = /^(deadline|.+At|.+Until)$/;
@@ -1546,7 +1553,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)$/.test(
               page || '',
             )
           )
@@ -1850,6 +1857,7 @@ function initializeApp(config, dataLock, acquired) {
               'quacks',
               'ceo',
               'second-wind',
+              'lounge',
             ].includes(data.type)
           )
             throw new HttpError(400, 'INVALID_GAME', '不支援的遊戲');
@@ -1872,62 +1880,67 @@ function initializeApp(config, dataLock, acquired) {
             trpg = data.type === 'trpg',
             thunder = data.type === 'thunder',
             majority = data.type === 'majority',
-            gift = data.type === 'gift';
+            gift = data.type === 'gift',
+            lounge = data.type === 'lounge';
           const room = new (
-            secondWind
-              ? SecondWindRoom
-              : ceo
-                ? CeoRoom
-                : quacks
-                  ? QuacksRoom
-                  : bluff
-                    ? BluffRoom
-                    : musicquiz
-                      ? MusicQuizRoom
-                      : minimal
-                        ? MinimalRoom
-                        : telephone
-                          ? TelephoneRoom
-                          : trpg
-                            ? TrpgRoom
-                            : draw
-                              ? DrawGuessRoom
-                              : gift
-                                ? GiftRoom
-                                : majority
-                                  ? MajorityRoom
-                                  : thunder
-                                    ? ThunderRoom
-                                    : Room
+            lounge
+              ? LoungeRoom
+              : secondWind
+                ? SecondWindRoom
+                : ceo
+                  ? CeoRoom
+                  : quacks
+                    ? QuacksRoom
+                    : bluff
+                      ? BluffRoom
+                      : musicquiz
+                        ? MusicQuizRoom
+                        : minimal
+                          ? MinimalRoom
+                          : telephone
+                            ? TelephoneRoom
+                            : trpg
+                              ? TrpgRoom
+                              : draw
+                                ? DrawGuessRoom
+                                : gift
+                                  ? GiftRoom
+                                  : majority
+                                    ? MajorityRoom
+                                    : thunder
+                                      ? ThunderRoom
+                                      : Room
           )(
             code,
             String(
               data.roomName ||
-                (secondWind
-                  ? '運動員 Second Wind'
-                  : ceo
-                    ? '王牌執行長好友局'
-                    : quacks
-                      ? '郎中闖江湖好友局'
-                      : bluff
-                        ? '瞎掰王好友局'
-                        : musicquiz
-                          ? '猜歌挑戰好友局'
-                          : minimal
-                            ? '極簡畫家好友局'
-                            : telephone
-                              ? '傳情畫意好友局'
-                              : trpg
-                                ? '霧港鐘聲冒險隊'
-                                : draw
-                                  ? '你畫我猜好友局'
-                                  : gift
-                                    ? '送禮達人好友局'
-                                    : majority
-                                      ? '同頻俱樂部'
-                                      : thunder
-                                        ? '末路狂飆好友局'
-                                        : '深夜好友局'),
+                (lounge
+                  ? '場外休憩區'
+                  : secondWind
+                    ? '運動員 Second Wind'
+                    : ceo
+                      ? '王牌執行長好友局'
+                      : quacks
+                        ? '郎中闖江湖好友局'
+                        : bluff
+                          ? '瞎掰王好友局'
+                          : musicquiz
+                            ? '猜歌挑戰好友局'
+                            : minimal
+                              ? '極簡畫家好友局'
+                              : telephone
+                                ? '傳情畫意好友局'
+                                : trpg
+                                  ? '霧港鐘聲冒險隊'
+                                  : draw
+                                    ? '你畫我猜好友局'
+                                    : gift
+                                      ? '送禮達人好友局'
+                                      : majority
+                                        ? '同頻俱樂部'
+                                        : thunder
+                                          ? '末路狂飆好友局'
+                                          : '深夜好友局'),
             ).slice(0, 24),
           );
           equipRoomProviders(room);
@@ -1952,7 +1965,8 @@ function initializeApp(config, dataLock, acquired) {
               delete room.options.topics;
             }
           }
-          if (!thunder && !botSupport(room).supported)
+          // The lounge has no match for a test AI to play (#277).
+          if (!thunder && !lounge && !botSupport(room).supported)
             throw new HttpError(400, 'TEST_AI_REQUIRED', '新遊戲必須先提供測試 AI');
           attachAchievementHooks(room);
           const p = transitions.transact(
@@ -1993,6 +2007,8 @@ function initializeApp(config, dataLock, acquired) {
             '/api/kick',
             '/api/settings',
             '/api/start',
+            '/api/rematch',
+            '/api/change-game',
             '/api/bot',
             '/api/rebuy',
             '/api/social',
@@ -2015,7 +2031,7 @@ function initializeApp(config, dataLock, acquired) {
         if (pingLobby && !lobby.mediaAudience(user.id))
           throw new HttpError(403, 'LOBBY_PRESENCE_REQUIRED', '請先進入大廳');
         if (pingLobby) lobbyPingRoom.players = lobby.view(user).visitors;
-        const room = pingLobby
+        let room = pingLobby
           ? lobbyPingRoom
           : rooms.get(String(data.code || url.searchParams.get('code') || '').toUpperCase());
         if (!room) throw new HttpError(404, 'ROOM_NOT_FOUND', '找不到房間，請確認房間代碼');
@@ -2032,6 +2048,51 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/join' && req.method === 'POST')
           return send(joinRoom(room, user, req));
         const p = pingLobby ? { id: user.id } : resumeSeat(room, user);
+        if (
+          req.method === 'POST' &&
+          ([
+            '/api/action',
+            '/api/settings',
+            '/api/start',
+            '/api/rematch',
+            '/api/bot',
+            '/api/rebuy',
+            '/api/change-game',
+            '/api/telephone/draft',
+            '/api/bluff/caption',
+          ].includes(url.pathname) ||
+            url.pathname.startsWith('/api/draw/'))
+        )
+          assertGameContext(
+            room,
+            data,
+            url.pathname === '/api/change-game' || (room.gameRevision || 0) > 0,
+          );
+        if (url.pathname === '/api/change-game') {
+          if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
+          limitRate(roomRate, 'mutation:' + user.id, 120);
+          const next = switchGame(room, p.id, data.targetType, roomClasses);
+          if (next !== room) {
+            equipRoomProviders(next);
+            attachAchievementHooks(next);
+            // Finished awards retain their original game and player facts.
+            awardRoomAchievements(room);
+            if ([...pendingAchievementUnits.values()].some((entry) => entry.room === room))
+              throw new HttpError(
+                503,
+                'ACHIEVEMENT_STORAGE_UNAVAILABLE',
+                '回合紀錄暫時無法儲存，請稍後再更換遊戲',
+              );
+            runtime.closeStreams(room.code);
+            mediaRooms.rebind(room, next);
+            watchRooms.rebind(room, next);
+            roomSpace.rebind(room, next);
+            rooms.set(room.code, next);
+            stateStream.rebind(room, next);
+            room = next;
+          }
+          return send(withSocial(room, room.view(p.id)));
+        }
         if (url.pathname === '/api/room-events' && req.method === 'GET') {
           if (pingLobby) throw new HttpError(404, 'NOT_FOUND', '找不到請求路徑');
           limitRate(roomRate, 'room-events:' + user.id, 30);
@@ -2568,6 +2629,8 @@ function initializeApp(config, dataLock, acquired) {
               room.configure(p.id, data);
             } else if (url.pathname === '/api/start') {
               room.start();
+            } else if (url.pathname === '/api/rematch') {
+              returnToWaiting(room, p.id);
             } else if (url.pathname === '/api/bot') {
               if (room.host !== p.id) throw Error('只有房主可以加入電腦');
               if (room.type === 'thunder')
@@ -2593,6 +2656,7 @@ function initializeApp(config, dataLock, acquired) {
                   'quacks',
                   'ceo',
                   'second-wind',
+                  'lounge',
                 ].includes(room.type) ||
                 !['waiting', 'showdown'].includes(room.phase) ||
                 p.stack > 0
@@ -2747,6 +2811,7 @@ function initializeApp(config, dataLock, acquired) {
         '/bluff': 'bluff.html',
         '/musicquiz': 'musicquiz.html',
         '/minimal': 'minimal.html',
+        '/lounge': 'lounge.html',
         '/telephone': 'telephone.html',
         '/trpg': 'trpg.html',
         '/shared/playful-theme.css': 'shared/playful-theme.css',
@@ -2819,7 +2884,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -2970,6 +3035,7 @@ function initializeApp(config, dataLock, acquired) {
               file === 'telephone.html' ||
               file === 'musicquiz.html' ||
               file === 'minimal.html' ||
+              file === 'lounge.html' ||
               file === 'bluff.html' ||
               file === 'quacks.html' ||
               file === 'ceo.html' ||

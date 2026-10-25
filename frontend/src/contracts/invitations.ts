@@ -69,4 +69,5 @@ export const gameTitles: Record<GameType, string> = {
   quacks: '郎中闖江湖',
   ceo: '王牌執行長',
   'second-wind': '運動員 Second Wind',
+  lounge: '場外休憩區',
 };

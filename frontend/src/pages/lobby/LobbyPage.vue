@@ -5,7 +5,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useLobbyStore } from '../../stores/lobby';
 import { useSessionStore } from '../../stores/session';
 import { isGameType, type GameType } from '../../contracts/room';
-import { gameCards, gameTitle } from './catalog';
+import { gameCards, gameTitle, loungeCard } from './catalog';
 import GameCarousel from './GameCarousel.vue';
 import LobbyBackdrop from './LobbyBackdrop.vue';
 import RoomPings from '../../components/RoomPings.vue';
@@ -31,6 +31,7 @@ const selected = ref(gameCards.some((card) => card.id === requested) ? requested
 const backdrop = ref<InstanceType<typeof LobbyBackdrop> | null>(null);
 const create = ref<InstanceType<typeof UiDialog> | null>(null),
   join = ref<InstanceType<typeof UiDialog> | null>(null),
+  lounge = ref<InstanceType<typeof UiDialog> | null>(null),
   codeInput = ref<HTMLInputElement | null>(null),
   roomName = ref(''),
   code = ref(params.get('room') || ''),
@@ -52,9 +53,11 @@ const feedback = computed(() =>
 const drawingCreate = computed(() => selected.value === 'draw');
 const pairCreate = computed(() => ['telephone', 'majority', 'draw'].includes(selected.value));
 const roomCreate = computed(() => ['quacks', 'thunder', 'bluff'].includes(selected.value));
-const resumes = computed(() => lobby.rooms.filter((room) => room.seated));
+const resumes = computed(() => lobby.rooms.filter((room) => room.seated)),
+  lounges = computed(() => lobby.rooms.filter((room) => room.type === 'lounge'));
 function open() {
   if (selected.value === 'market') return;
+  if (selected.value === 'lounge') return openLounge();
   lobby.entryStatus = '';
   opened.value = true;
   void create.value?.open();
@@ -64,6 +67,12 @@ async function openJoin(focusCode = false) {
   void lobby.refreshRooms();
   await join.value?.open();
   if (focusCode) focusCodeAfterIntro();
+}
+// 場外休憩區 (#277): open a new lounge or pick one already running.
+function openLounge() {
+  lobby.entryStatus = '';
+  void lobby.refreshRooms();
+  void lounge.value?.open();
 }
 // The entrance intro may start just after the dialog opens and restores its own
 // saved focus when it ends, so focus the code now and again once it finishes.
@@ -129,9 +138,6 @@ onBeforeUnmount(() => {
       ><div
         ><div class="kicker">YOUR TABLE. YOUR PEOPLE.</div><h1>今晚，玩哪一桌？</h1
         ><p>選個遊戲，開好房間，等朋友入座。</p></div
-      ><div class="library-count"
-        ><strong>{{ gameCards.length }}</strong
-        ><span>款遊戲<br />隨時開桌</span></div
       ></div
     >
     <GameCarousel v-model="selected" @create="open" @join="openJoin()"
@@ -161,6 +167,7 @@ onBeforeUnmount(() => {
             :error="!!lobby.entryStatus" /></div
       ></template>
     </GameCarousel>
+    <p class="version-note"><a href="/credits">素材來源與授權</a></p>
     <LobbyBackdrop ref="backdrop" /><StatusSlot :message="lobby.attackStatus" />
     <UiDialog ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
       ><div class="vue-lobby-join"
@@ -271,7 +278,69 @@ onBeforeUnmount(() => {
             :notice-key="entryNoticeKey"
             :persistent="lobby.entryPending" /></section></div
     ></UiDialog>
-    <p class="version-note"><a href="/credits">素材來源與授權</a> · 德州撲克：純娛樂籌碼</p>
+    <UiDialog ref="lounge" class="vue-lobby-lounge-dialog" :title="loungeCard.title"
+      ><div class="vue-lobby-lounge"
+        ><p>{{ loungeCard.description }}</p
+        ><UiButton
+          variant="primary"
+          icon="add"
+          label="開新房間"
+          :pending="lobby.entryPending"
+          :disabled="!session.user"
+          @click="lobby.enter({ type: 'lounge', roomName: '' })" /><StatusSlot
+          :message="feedback"
+          :error="!!lobby.entryStatus"
+          :notice-key="entryNoticeKey"
+          :persistent="lobby.entryPending" /><section
+          class="vue-lobby-room-browser"
+          aria-label="目前的場外房間"
+          ><header
+            ><h3>目前的場外房間</h3
+            ><div class="vue-lobby-room-tools"
+              ><span>{{ lounges.length }} 間房間</span
+              ><UiButton
+                icon="refresh"
+                icon-only
+                label="重新整理場外房間"
+                :pending="lobby.roomsLoading"
+                @click="lobby.refreshRooms()" /></div></header
+          ><div
+            class="vue-lobby-room-list"
+            :aria-busy="lobby.roomsLoading"
+            tabindex="0"
+            aria-label="目前的場外房間"
+            ><p v-if="!lounges.length">{{
+              lobby.roomsStatus || '目前沒有場外房間，開一間邀朋友一起看吧！'
+            }}</p
+            ><article v-for="room in lounges" :key="room.code" class="vue-lobby-room"
+              ><div
+                ><h3>{{ room.name }}</h3
+                ><p>房號 {{ room.code }} · {{ room.playerCount }}／{{ room.maxPlayers }} 人</p></div
+              ><div class="vue-lobby-room-actions"
+                ><span>{{ room.seated ? '已入座' : room.kicked ? '無法加入' : '開放中' }}</span
+                ><UiButton
+                  :icon="room.seated ? 'replay' : 'add'"
+                  :label="
+                    (room.seated
+                      ? '返回房間 '
+                      : room.joinable
+                        ? '加入房間 '
+                        : room.kicked
+                          ? '無法加入 '
+                          : '人數已滿 ') + room.code
+                  "
+                  :caption="
+                    room.seated
+                      ? '返回房間'
+                      : room.joinable
+                        ? '加入房間'
+                        : room.kicked
+                          ? '無法加入'
+                          : '人數已滿'
+                  "
+                  :disabled="!room.joinable || lobby.entryPending"
+                  @click="lobby.enter({ code: room.code })" /></div></article></div></section></div
+    ></UiDialog>
     <UiDialog
       ref="create"
       :compact="drawingCreate || pairCreate"
@@ -292,7 +361,7 @@ onBeforeUnmount(() => {
           v-model="selected"
           :disabled="lobby.entryPending"
           ><option
-            v-for="card in gameCards.filter((card) => card.id !== 'market')"
+            v-for="card in gameCards.filter((card) => !['market', 'lounge'].includes(card.id))"
             :key="card.id"
             :value="card.id"
             >{{ card.title }}</option

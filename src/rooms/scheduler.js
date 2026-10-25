@@ -80,6 +80,7 @@ function startRoomScheduler({
             'quacks',
             'ceo',
             'second-wind',
+            'lounge',
           ].includes(r.type)
         )
           continue;
