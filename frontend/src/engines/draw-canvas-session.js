@@ -4,6 +4,7 @@ import StrokeCanvas from './stroke-canvas.js';
 let DrawCanvasSession;
 (function () {
   'use strict';
+  const { MAX_BATCH_POINTS } = DrawTransport;
   function validCanvasSnapshot(snapshot) {
     if (
       !Number.isSafeInteger(snapshot?.round) ||
@@ -38,7 +39,7 @@ let DrawCanvasSession;
       stroke.size > 40 ||
       !Array.isArray(stroke.points) ||
       stroke.points.length < 1 ||
-      stroke.points.length > 64
+      stroke.points.length > MAX_BATCH_POINTS
     )
       return false;
     if (
@@ -518,6 +519,12 @@ let DrawCanvasSession;
       else draft.points.push(point);
       draft.revision++;
     }
+    function replaceDraftTip(id, point) {
+      const draft = localStrokes.get(id);
+      if (!draft || draft.points.length < 2) return;
+      draft.points[draft.points.length - 1] = point;
+      draft.revision++;
+    }
     function finishDraft(id, failed = false) {
       const draft = localStrokes.get(id);
       if (draft) {
@@ -599,6 +606,7 @@ let DrawCanvasSession;
       applySnapshot: applyCanvasSnapshot,
       beginDraft,
       appendDraft,
+      replaceDraftTip,
       finishDraft,
       enqueue: queueStroke,
       hasCapacity: localCanvasCapacity,

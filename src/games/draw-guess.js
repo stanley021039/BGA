@@ -21,6 +21,9 @@ const MAX_BATCHES = 1000,
   MAX_POINTS = 30000,
   MAX_FILLS = 48;
 const MAX_POINT_TIME_MS = 120000;
+// Per request only (#264): at most ~5 KB with point times, inside the 8 KB body limit.
+// Round totals above still bound the canvas, so a larger batch cannot add work.
+const MAX_BATCH_POINTS = 256;
 const MAX_PUBLIC_RESULTS = 8,
   MAX_RESULT_SAVES = 256;
 const MAX_PENDING_ACHIEVEMENT_UNITS = 256;
@@ -828,7 +831,7 @@ class DrawGuessRoom {
       data.size > 40 ||
       !Array.isArray(points) ||
       points.length < 1 ||
-      points.length > 64 ||
+      points.length > MAX_BATCH_POINTS ||
       points.some(
         (point) =>
           !Array.isArray(point) ||
@@ -1034,4 +1037,5 @@ module.exports = {
   MAX_PUBLIC_RESULTS,
   MAX_RESULT_SAVES,
   MAX_POINT_TIME_MS,
+  MAX_BATCH_POINTS,
 };

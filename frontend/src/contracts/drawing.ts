@@ -175,6 +175,7 @@ export interface DrawingSession {
   hasCapacity(extra?: number): boolean;
   beginDraft(draft: DrawingDraft): boolean;
   appendDraft(id: string, point: Point, shape?: boolean): void;
+  replaceDraftTip(id: string, point: Point): void;
   finishDraft(id: string, failed?: boolean): void;
   enqueue(points: Point[], id: string, style: DrawingStyle, times?: number[]): Promise<unknown>;
   schedulePreview(): void;
