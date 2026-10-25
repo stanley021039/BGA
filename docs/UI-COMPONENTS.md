@@ -4,6 +4,8 @@
 
 ## 快速對照
 
+共用Vue樣式提供`.ui-sr-only`無障礙輔助文字裁切，RoomMedia等Teleport元件不必載入舊ui-primitives.css。文字仍保留於DOM與可讀關聯，不能用display:none取代。UiButton自身scoped規則及手機可見caption變體保留。
+
 `UiHoverInfo interactive` 提供可移入的第一層浮層，200ms僅用於跨越來源與面板的間隙，不延遲顯示；子層沿用 manual top layer，避免原生 auto popover 關閉第一層。Esc／點外部／卸載皆清理。一般被動說明仍移出即關；快速重入不使用時間冷卻，Esc 的重開抑制由實際指標移動或移出解除。`UiPopover manual` 預設關閉，不改既有社交選單。
 
 `UiPopover contentSized` 的本文取消社交面板專用的固定第二列，依內容自然排高、段落不另加外距；只有超過可用視窗時才在內文捲動。480px 以下本文使用 `--stitch-text-hint`，桌機維持原字級。共用社交面板預設不變。

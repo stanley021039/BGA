@@ -3,6 +3,19 @@
 // `:root body` outranks the legacy playful-theme element rules; a page that
 // needs a different size adds its own scoped class, never a new colour.
 
+// Shared components also render outside their page (for example room media).
+// Keep accessible descriptions available without depending on legacy CSS.
+.ui-sr-only {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 :root body .ui-panel {
   box-sizing: border-box;
   display: grid;

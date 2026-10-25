@@ -4,6 +4,8 @@
 
 本輪最終Node24.22.1 test:affected保守回退235檔，全套1970/1970（251664.4263ms，無失敗／取消／略過）；前端149/149，902檔format／format:check、build、模組邊界、相對4982cf8的UI與minor版號、perf預算通過。真Edge再驗運動員四場38項、CEO24項、同格hover25項（行動請求0）、大廳施工圖12組、等待／開局全螢幕及背景24組，皆通過。另兩款390px真HTTP／Vue首次點播自動開compact窗、拒絕不建YouTube iframe、關窗後非空清單再加入不重開，2組通過；沒有宣稱真YouTube或喇叭播放。媒體QA第一次因關閉鈕名稱少了「繼續播放」逾時，改正選取器後通過，未改產品。此輪證據在ignored main-media-*、latest-*與media-latest-*，取代前一快照的結果作為最新本機交付證據。
 
+截圖覆核再抓到RoomMedia的`.ui-sr-only`說明在新頁直接露出；UiButton自己的scoped裁切只涵蓋按鈕，無法取代其他共用元件的無障礙工具類。改由Vue全站共用ui-components.scss提供同等裁切，保留DOM、文字與aria-describedby，不載入舊CSS。補共用樣式回歸，前端150/150；重新build／UI／perf與902檔format／format:check通過。真Edge兩款媒體視窗說明保留可讀文字、非display:none且尺寸不超過1×1px，2組通過；24組模式複驗也通過。Node24.22.1完整235檔再跑1970/1970（335676.7966ms，無失敗／取消／略過），證據在main-media-a11y-*、media-a11y-*。此筆取代上一段149項前端與上一輪全套作為最終本機結果。這是本次新遊戲整合所需的共用相容修正，不改main媒體的自動開窗或影片同意條件。
+
 使用者要求先完成施工圖階段，再抓最新main檢查衝突。施工圖及同格人數先推送至b1538c9；接續整合origin/main `3ddf7c0d9b45182349597caaede52fa48dacf599`（正式歷史2.45.0）。沿用#226／#227與codex/second-wind-227；本次未開PR、CI、合併到main或部署。
 
 ## 衝突及相容處理
