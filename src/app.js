@@ -1129,6 +1129,20 @@ function initializeApp(config, dataLock, acquired) {
           "frame-ancestors 'self'; base-uri 'none'; object-src 'none'",
         );
       }
+      if (url.pathname === '/media-pip-frame' && req.method === 'GET') {
+        // Empty same-origin host for the Document PiP media window. Its http URL
+        // gives YouTube embeds a Referer, which about:blank PiP documents lack.
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+        res.setHeader(
+          'Content-Security-Policy',
+          "frame-ancestors 'self'; base-uri 'none'; object-src 'none'",
+        );
+        res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.end(
+          '<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>媒體子母畫面</title><body></body></html>',
+        );
+      }
       if (url.pathname === '/robots.txt' && req.method === 'GET') {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         return res.end(robots);

@@ -284,7 +284,6 @@
     "tests/room-settings-placement.test.js": "c05f7f62d1ed0ec22914a5bb44087346a72aa7f16dab82143c8867dd4e83e913",
     "tests/room-waiting.test.js": "f518f62ab28fc32b5fd6e0a7e66deb06f6e483404a253d4c0692675a54b0fcfa",
     "tests/rooms.test.js": "67591ad89ec8d31fbb1ebb086dc4e7c885378d9bab292d405db65378ac5540f8",
-    "tests/security.test.js": "5e1c8c7de892627dfb9b5abd843510812813b8094b68a25c803dff8b05e47317",
     "tests/shared-api.test.js": "28675b362230b95f7f9f727916e091613b5cd3446c2d82fccaf3ca39211196f6",
     "tests/status-badges.test.js": "af4cde6319b39bed5d52e2190b5e3b56c2e0df5f91e4f4746112bf27a12a3579",
     "tests/studio-editor.test.js": "ea8b4169c7f4346b0140c331b52f69b3cb4074ef06113fee4a1ae8b8558c13a2",

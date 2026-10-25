@@ -1,0 +1,39 @@
+body.vue-media-pip-document {
+  margin: 0;
+  background: var(--stitch-surface);
+  color: var(--stitch-ink);
+  overflow: auto;
+}
+:root body .vue-room-media-scope.vue-media-pip {
+  inline-size: 100%;
+  min-block-size: 100vh;
+  .vue-room-media {
+    position: relative;
+    inset: auto;
+    inline-size: 100%;
+    min-block-size: 100vh;
+    max-block-size: none;
+    margin: 0;
+  }
+  .vue-media-tabs,
+  .vue-media-request,
+  .vue-media-progress,
+  .vue-media-sync {
+    display: none;
+  }
+  .vue-media-screen {
+    min-block-size: 200px;
+  }
+  .vue-media-header {
+    cursor: default;
+  }
+  // Tabs are hidden here, so the player must not inherit the tab row's 44px track.
+  .vue-media-content {
+    grid-template-rows: auto;
+    flex: 1 1 auto;
+    padding: var(--stitch-space-8);
+  }
+  .vue-media-controls {
+    flex-wrap: wrap;
+  }
+}
