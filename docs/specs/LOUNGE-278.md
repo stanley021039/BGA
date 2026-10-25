@@ -1,5 +1,12 @@
 # #278 場外休憩區卡片圖與 #277 輪播修訂
 
+## 2026-10-25 使用者驗收通過後整合 main：候選3.3.0
+
+使用者已確認介面並授權查新main、解衝突及合併。整合main 4d9bc79720087ac1531c382f534b165fa2c71e73（#280／#265管理者權限），合併提交b0e1d3e；保留新管理者權限及本票休憩區接線。衝突只在格式基準、CHANGELOG與PROGRAMMER記憶：格式基準取兩邊共同保留的legacy檔案，已完成格式化的listing／membership／permissions均不恢復豁免；紀錄兩邊保留。main版號已為3.2.0，因此以release:bump minor改候選3.3.0，3.2.0只保留main原發行內容。此筆取代本票之前未發行3.2.0版號／待驗收狀態；不代表已合併或部署。
+
+整合複驗：Windows Node24.22.1的test:affected因共用／未知路徑回退全部227檔，1863/1863通過，fail／skip／cancel皆0，含原先Node26出現的SSE close案例。擴充原有完整重啟測試，休憩區不開局／加bot也要通過相同房間／玩家／media與watch instance ID還原斷言。前端151/151通過，另補2項真實RoomMedia setup/provider回歸：舞台接受影片可在控制視窗未開時join，控制分頁／關窗不卸載stage，不重複join，未同意不能載入，接受後不再開重複控制窗。沿用原媒體權限和斷線／卸載清理。型別／建置、UI以最新main為base、perf --build與minor release check通過。整合後另開隔離試玩3982複驗：輪播13/13能開房；1920×1080玩家列表／主舞台／聊天室均930px，頁面無溢出；桌機全螢幕主區988px，375×812全螢幕主區720px且scrollHeight等於clientHeight、頁面無橫向或縱向溢出。圖片證據work/lounge-main-integration-1920.png；不代表真YouTube或實機觸控已驗。這些是提交前工作區測試；最終提交的Linux Node22 CI與兩輪固定SHA審查另記於PR，不沿用本機當作CI綠燈。
+
+
 日期：2026-10-25。候選版本沿用同一批未發行的 3.2.0 minor，不額外疊升版號。
 
 ## 最新確認範圍
