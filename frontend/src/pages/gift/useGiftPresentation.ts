@@ -1,3 +1,4 @@
+import MotionPolicy from '../../engines/motion-policy.js';
 import { computed, nextTick, onMounted, onScopeDispose, ref, watch, type Ref } from 'vue';
 import { useGiftStore } from '../../stores/gift';
 import { useRoomStore } from '../../stores/room';
@@ -9,7 +10,7 @@ export function useGiftPresentation(root: Ref<HTMLElement | null>) {
     focusIndex = ref(-1),
     achievementNotice = ref(''),
     focus = computed(() => gift.state?.result?.entries[focusIndex.value]);
-  let gate = window.MotionPolicy?.createGate(),
+  let gate = MotionPolicy?.createGate(),
     disposed = false,
     baseline = true,
     generation = 0,
@@ -32,7 +33,7 @@ export function useGiftPresentation(root: Ref<HTMLElement | null>) {
       !['reveal', 'finished'].includes(s.phase) ||
       !room.connected ||
       document.hidden ||
-      !window.MotionPolicy?.allowsMotion()
+      !MotionPolicy?.allowsMotion()
     )
       return;
     const count = s.result.entries.length,
@@ -88,13 +89,13 @@ export function useGiftPresentation(root: Ref<HTMLElement | null>) {
         replay();
         void checkAchievements();
       }
-      if (!window.MotionPolicy?.allowsMotion()) return;
+      if (!MotionPolicy?.allowsMotion()) return;
       for (const [i, node] of [
         ...(root.value?.querySelectorAll<HTMLElement>(
           '.vue-gift-delivery-grid article,.vue-gift-score-grid article',
         ) || []),
       ].entries()) {
-        const a = window.MotionPolicy.animate(
+        const a = MotionPolicy.animate(
           node,
           [
             { opacity: 0.3, transform: 'translateY(-16px)' },
@@ -125,15 +126,15 @@ export function useGiftPresentation(root: Ref<HTMLElement | null>) {
       baseline = true;
       stop();
       gate?.dispose();
-      gate = window.MotionPolicy?.createGate();
+      gate = MotionPolicy?.createGate();
     },
   );
   function visibility() {
     baseline = true;
     stop();
   }
-  const unsubscribe = window.MotionPolicy?.subscribe(() => {
-    if (!window.MotionPolicy?.allowsMotion()) stop();
+  const unsubscribe = MotionPolicy?.subscribe(() => {
+    if (!MotionPolicy?.allowsMotion()) stop();
   });
   document.addEventListener('visibilitychange', visibility);
   onScopeDispose(() => {

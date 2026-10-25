@@ -267,7 +267,8 @@ test('new frame assets use exact public routes, canonical bytes, correct MIME an
   for (const extension of ['js', 'css']) {
     const asset = '/shared/barrage-frames.' + extension,
       response = await fetch(f.base + asset);
-    assert.equal(response.status, 200);
+    assert.equal(response.status, extension === 'js' ? 404 : 200);
+    if (extension === 'js') continue;
     assert.match(
       response.headers.get('content-type'),
       extension === 'js' ? /^text\/javascript; charset=utf-8$/ : /^text\/css$/,

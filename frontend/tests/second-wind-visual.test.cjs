@@ -54,25 +54,28 @@ function fixture(component = 'AthleteScene.vue') {
         window,
         document,
         require: (id) =>
-          id === 'vue'
-            ? vue
-            : id.includes('stores/second-wind')
-              ? { useAthleteStore: () => athlete }
-              : id.includes('stores/party-actions')
-                ? { usePartyActionsStore: () => ({ notice: '', canRetry: false }) }
-                : id.includes('stores/room')
-                  ? { useRoomStore: () => ({ host: false }) }
-                  : id === './art'
-                    ? {
-                        athleteArt: (id, kind = 'portrait') => `/art/${id}-${kind}.webp`,
-                        trackArt: () => '/track.webp',
-                        trackPoint: (p) => ({ left: `${p}%`, top: '17%' }),
-                      }
-                    : id.endsWith('.scss')
-                      ? {}
-                      : load(
-                          path.resolve(path.dirname(file), id + (path.extname(id) ? '' : '.ts')),
-                        ),
+          // Keep scene actions real without starting the unrelated icon observer.
+          id.endsWith('/engines/ui-widgets.js')
+            ? { default: { icon: () => '' } }
+            : id === 'vue'
+              ? vue
+              : id.includes('stores/second-wind')
+                ? { useAthleteStore: () => athlete }
+                : id.includes('stores/party-actions')
+                  ? { usePartyActionsStore: () => ({ notice: '', canRetry: false }) }
+                  : id.includes('stores/room')
+                    ? { useRoomStore: () => ({ host: false }) }
+                    : id === './art'
+                      ? {
+                          athleteArt: (id, kind = 'portrait') => `/art/${id}-${kind}.webp`,
+                          trackArt: () => '/track.webp',
+                          trackPoint: (p) => ({ left: `${p}%`, top: '17%' }),
+                        }
+                      : id.endsWith('.scss')
+                        ? {}
+                        : load(
+                            path.resolve(path.dirname(file), id + (path.extname(id) ? '' : '.ts')),
+                          ),
       },
     );
     return m.exports;

@@ -13,9 +13,25 @@ const publicDir = path.resolve(__dirname, '../public');
 async function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-merged-app-')),
     password = 'test-' + randomUUID();
+  // Pages come from the Vue build (#233): the real page shells stand in for it.
+  const vueRoot = path.join(root, 'vue');
+  for (const page of require('../frontend/pages.json')) {
+    fs.mkdirSync(path.join(vueRoot, 'pages', page.id), { recursive: true });
+    fs.copyFileSync(
+      path.resolve(__dirname, '../frontend/dist/pages', page.id, 'index.html'),
+      path.join(vueRoot, 'pages', page.id, 'index.html'),
+    );
+  }
+  fs.cpSync(
+    path.resolve(__dirname, '../frontend/dist/frontend-assets'),
+    path.join(vueRoot, 'frontend-assets'),
+    { recursive: true },
+  );
   const config = {
     host: '127.0.0.1',
     port: 0,
+    frontendEnabled: true,
+    frontendRoot: vueRoot,
     dbFile: path.join(root, 'db.sqlite'),
     historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
@@ -72,15 +88,17 @@ test('entry intro repeats on refresh while authentication and deep-link redirect
 test('merged app serves every HTML script and stylesheet, market entry and game sound assets together', async (t) => {
   const f = await fixture(t),
     resources = new Set(),
-    pages = fs.readdirSync(publicDir).filter((file) => file.endsWith('.html'));
-  for (const file of pages) {
-    const route =
-        file === 'index.html'
-          ? '/'
-          : file === 'game-audio-admin.html'
-            ? '/admin/game-audio'
-            : '/' + file.slice(0, -5),
-      response = await f.get(route);
+    // Every Vue page plus the two pages that are still served from public/.
+    pages = [
+      ...require('../frontend/pages.json').map((page) => ({
+        file: page.document,
+        route: page.route,
+      })),
+      { file: 'sound-library.html', route: '/sound-library' },
+      { file: 'game-audio-admin.html', route: '/admin/game-audio' },
+    ];
+  for (const { file, route } of pages) {
+    const response = await f.get(route);
     assert.equal(response.status, 200, route);
     assert.match(response.headers.get('content-type'), /^text\/html/, route);
     const html = (await response.text())
@@ -89,24 +107,13 @@ test('merged app serves every HTML script and stylesheet, market entry and game 
       .replace(/>\s+</g, '><');
     if (file === 'login.html') assert.doesNotMatch(html, /id="entry-intro"/, route);
     else assert.match(html, /id="entry-intro"/, route);
-    assert.match(
-      html,
-      file === 'login.html' ? /\/shared\/auth-entry\.js/ : /\/shared\/entry-intro\.js/,
-      route,
-    );
+    assert.match(html, /data-prepaint/, route);
+    assert.doesNotMatch(html, /src="\/shared\/[^"]+\.js/, route);
     for (const match of html.matchAll(
       /<script\b[^>]*\bsrc="([^"]+)"|<link\b[^>]*\bhref="([^"]+)"/g,
     )) {
       const url = match[1] || match[2];
       if (url.startsWith('/') && /\.(?:js|css)(?:\?|$)/.test(url)) resources.add(url);
-    }
-    if (file === 'index.html') {
-      assert.match(
-        html,
-        /<button type="button" class="game-tile market-tile" data-market aria-pressed="false">/,
-      );
-      assert.match(html, /<div class="library-count"><strong>12<\/strong>/);
-      assert.match(html, /<script src="\/shared\/expression-sounds\.js"><\/script>/);
     }
   }
   for (const route of resources) {

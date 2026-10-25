@@ -1,4 +1,5 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   path = require('node:path'),
@@ -24,7 +25,7 @@ test('reward cards show the actual catalog unlock condition for all 24 frames', 
     ts.transpileModule(script, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    {
+    withEngineImports({
       module,
       exports: module.exports,
       require: (id) =>
@@ -44,7 +45,7 @@ test('reward cards show the actual catalog unlock condition for all 24 frames', 
                 : id.includes('validation')
                   ? validation
                   : {},
-    },
+    }),
   );
   module.exports.default.setup({}, { expose() {} });
   const result = await resourceLoader(async () => ({ achievements: definitions, rewards }));

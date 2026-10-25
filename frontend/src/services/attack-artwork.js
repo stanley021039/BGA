@@ -1,6 +1,7 @@
 /* Adapted from user 攻擊.zip: 15_4 full artwork plus 8 independent obsidian crescent variants.
  * Static reviewed drawing code only: no export UI, global inputs, dummy, shake or endless demo. */
 import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
+import { createStitchAttack } from './attack-stitch.js';
 import combatRules from '../../../public/shared/scene-rules.json';
 export function playAttackArtwork(surface, options) {
   if (!motionAllowed()) return () => {};
@@ -38,7 +39,6 @@ export function playAttackArtwork(surface, options) {
     floatingTexts = [],
     shockwaves = [],
     lightningBolts = [],
-    funnelDrones = [],
     hexDeflectSparks = [],
     iceShardBursts = [],
     spaceCuts = [];
@@ -62,14 +62,6 @@ export function playAttackArtwork(surface, options) {
     }, ms);
     timers.add(timer);
   }
-  if (options.effect === 'funnel')
-    for (let i = 0; i < 6; i++)
-      funnelDrones.push({
-        x: from.x + (i % 2 ? 28 : -28),
-        y: from.y - 25 + (i - 3) * 16,
-        baseX: from.x + (i % 2 ? 28 : -28),
-        baseY: from.y - 25 + (i - 3) * 16,
-      });
   function getActiveColor(alpha = 1) {
     if (state.energyColor === 'rainbow') {
       const hue = (Date.now() / 15) % 360;
@@ -215,9 +207,9 @@ export function playAttackArtwork(surface, options) {
           x: targetX,
           y: targetY,
           radius: 18,
-          maxRadius: 125,
+          maxRadius: Math.min(125, height * 0.35, width * 0.13),
           alpha: 1,
-          decay: 0.018,
+          decay: 1 / 120,
           color: col,
           hitCount: 0,
         });
@@ -240,39 +232,6 @@ export function playAttackArtwork(surface, options) {
         }
         break;
 
-      case 4: // 04 // 等離子能量鎖鏈 (Plasma Chains)
-        for (let c = 0; c < 3; c++) {
-          projectiles.push({
-            type: 'plasma_chain',
-            x1: originX,
-            y1: originY + (c - 1) * 35,
-            x2: targetX,
-            y2: targetY + (c - 1) * 25,
-            life: 30,
-            maxLife: 30,
-            color: col,
-            jitter: c * 2,
-          });
-        }
-        spawnImpactSparks(targetX, targetY, 25, col);
-        spawnDamageText(targetX, targetY, 45000, false);
-        break;
-
-      case 5: // 05 // 球形能量結界 (Sphere 3D Barrier)
-        shockwaves.push({
-          type: 'sphere_barrier',
-          x: targetX,
-          y: targetY,
-          radius: 25,
-          maxRadius: 140,
-          alpha: 1,
-          decay: 0.016,
-          color: '#00ff88',
-          rotation: 0,
-        });
-        triggerShockwave(targetX, targetY, 130, '#00ff88', 3);
-        break;
-
       case 6: // 06 // 天降神聖光柱 (Orbital Judgment Pillar)
         projectiles.push({
           type: 'orbital_pillar',
@@ -289,26 +248,6 @@ export function playAttackArtwork(surface, options) {
         state.shakeAmount = 18;
         break;
 
-      case 7: // 07 // 浮游砲陣列齊射 (Funnel Drone Coordinated Barrage)
-        funnelDrones.forEach((drone, idx) => {
-          later(() => {
-            projectiles.push({
-              type: 'funnel_laser',
-              x1: drone.x,
-              y1: drone.y,
-              x2: targetX,
-              y2: targetY,
-              life: 18,
-              maxLife: 18,
-              color: col,
-            });
-            triggerShockwave(drone.x, drone.y, 40, col, 2);
-            spawnImpactSparks(targetX, targetY, 12, col);
-            spawnDamageText(targetX, targetY, 52000, true);
-          }, idx * 65);
-        });
-        break;
-
       case 8: // 08 // 黑洞引力坍縮 (Singularity Black Hole)
         projectiles.push({
           type: 'singularity_hole',
@@ -322,24 +261,6 @@ export function playAttackArtwork(surface, options) {
         triggerShockwave(targetX, targetY, 220, '#000000', 14);
         spawnDamageText(targetX, targetY, 588888, true);
         state.shakeAmount = 22;
-        break;
-
-      case 9: // 09 // 真紅爆裂魔法 (Explosion Magic)
-        projectiles.push({
-          type: 'magic_circle_explosion',
-          x: targetX,
-          y: targetY,
-          life: 70,
-          maxLife: 70,
-          color: '#ff3366',
-          secondaryColor: '#ffd556',
-        });
-        later(() => {
-          triggerShockwave(targetX, targetY, 280, '#ff3366', 18);
-          spawnImpactSparks(targetX, targetY, 65, '#ffd556');
-          spawnDamageText(targetX, targetY, 999999, true, '💥 EXPLOSION 999,999!');
-          state.shakeAmount = 30;
-        }, 300);
         break;
 
       case 11:
@@ -367,24 +288,6 @@ export function playAttackArtwork(surface, options) {
             state.shakeAmount = 16;
           }, b * 110);
         }
-        break;
-
-      case 13: // 13 // 極地寒冰結晶破甲 (Glacial Spikes)
-        projectiles.push({
-          type: 'ice_spikes',
-          x: targetX,
-          y: targetY,
-          spikes: Array.from({ length: 12 }, (_, i) => ({
-            angle: (i / 12) * Math.PI * 2 + (Math.random() - 0.5) * 0.3,
-            len: Math.random() * 70 + 60,
-            progress: 0,
-          })),
-          life: 55,
-          maxLife: 55,
-          color: '#7df4ff',
-        });
-        spawnImpactSparks(targetX, targetY, 28, '#7df4ff');
-        spawnDamageText(targetX, targetY, 89000, false);
         break;
 
       case 14: // 14 // 光輝天降神聖箭雨 (Celestial Rain of Arrows)
@@ -520,7 +423,7 @@ export function playAttackArtwork(surface, options) {
     grad.addColorStop(0.78, config.glowColor);
     grad.addColorStop(1, '#ffffff');
 
-    ctx.fillStyle = grad;
+    ctx.fillStyle = state.bladeMode === 'azure' ? config.darkCore : grad;
     ctx.fill();
 
     // White-Hot Incandescent Cutting Blade Edge
@@ -563,7 +466,17 @@ export function playAttackArtwork(surface, options) {
     arrow_volley: 14,
     flame_vortex: 15,
   };
-  fireVfxNode(ids[options.effect], from.x, from.y, to.x, to.y);
+  const advanced = createStitchAttack(ctx, options, () => {
+    triggerShockwave(to.x, to.y, 105, options.color, 4);
+    spawnImpactSparks(to.x, to.y, 22, options.color);
+    spawnDamageText(
+      to.x,
+      to.y,
+      1,
+      options.effect !== 'chains' && options.effect !== 'frost_spikes',
+    );
+  });
+  if (!advanced) fireVfxNode(ids[options.effect], from.x, from.y, to.x, to.y);
   const start = performance.now();
   let last = start;
   let releaseMotion = () => {};
@@ -595,35 +508,9 @@ export function playAttackArtwork(surface, options) {
         if (pool.length > 220) pool.splice(0, pool.length - 220);
       ctx.save();
       ctx.clearRect(0, 0, width, height);
+      advanced?.(now - start);
 
       // Apply Screen Shake
-
-      // Draw Funnel Drones (hovering & idling with dynamic floating)
-      if (options.effect === 'funnel')
-        funnelDrones.forEach((drone, idx) => {
-          drone.x = drone.baseX + Math.sin(now * 0.002 + idx) * 16;
-          drone.y = drone.baseY + Math.cos(now * 0.002 + idx) * 12;
-          ctx.save();
-          ctx.translate(drone.x, drone.y);
-          ctx.rotate(Math.sin(now * 0.003 + idx) * 0.25);
-          ctx.fillStyle = '#1d1f28';
-          ctx.strokeStyle = '#00f0ff';
-          ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(14, 0);
-          ctx.lineTo(-8, -7);
-          ctx.lineTo(-4, 0);
-          ctx.lineTo(-8, 7);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-          // Drone engine glow
-          ctx.fillStyle = '#00f0ff';
-          ctx.shadowColor = '#00f0ff';
-          ctx.shadowBlur = 10;
-          ctx.fillRect(-10, -2, 4, 4);
-          ctx.restore();
-        });
 
       // 1. Render Target Dummy
 
@@ -782,22 +669,6 @@ export function playAttackArtwork(surface, options) {
           ctx.stroke();
 
           if (p.life <= 0) projectiles.splice(i, 1);
-        } else if (p.type === 'plasma_chain') {
-          const alpha = p.life / p.maxLife;
-          ctx.strokeStyle = getActiveColor(alpha);
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(p.x1, p.y1);
-          const chainSteps = 12;
-          for (let s = 1; s < chainSteps; s++) {
-            const t = s / chainSteps;
-            const cx = p.x1 + (p.x2 - p.x1) * t + (Math.random() - 0.5) * 20;
-            const cy = p.y1 + (p.y2 - p.y1) * t + (Math.random() - 0.5) * 20;
-            ctx.lineTo(cx, cy);
-          }
-          ctx.lineTo(p.x2, p.y2);
-          ctx.stroke();
-          if (p.life <= 0) projectiles.splice(i, 1);
         } else if (p.type === 'orbital_pillar') {
           const progress = Math.sin((1 - p.life / p.maxLife) * Math.PI);
           ctx.fillStyle = p.color;
@@ -805,17 +676,6 @@ export function playAttackArtwork(surface, options) {
           ctx.fillRect(p.x - (p.width * progress) / 2, 0, p.width * progress, p.targetY);
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(p.x - 12, 0, 24, p.targetY);
-          if (p.life <= 0) projectiles.splice(i, 1);
-        } else if (p.type === 'funnel_laser') {
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 4;
-          ctx.beginPath();
-          ctx.moveTo(p.x1, p.y1);
-          ctx.lineTo(p.x2, p.y2);
-          ctx.stroke();
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
           if (p.life <= 0) projectiles.splice(i, 1);
         } else if (p.type === 'singularity_hole') {
           p.rotation += 0.09;
@@ -847,34 +707,6 @@ export function playAttackArtwork(surface, options) {
 
           ctx.restore();
           if (p.life <= 0) projectiles.splice(i, 1);
-        } else if (p.type === 'magic_circle_explosion') {
-          const progress = 1 - p.life / p.maxLife;
-          ctx.save();
-          ctx.translate(p.x, p.y);
-
-          ctx.rotate(progress * 4);
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(0, 0, 95 * progress, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.rotate(-progress * 8);
-          ctx.strokeStyle = p.secondaryColor;
-          ctx.beginPath();
-          for (let k = 0; k < 6; k++) {
-            const a = (k / 6) * Math.PI * 2;
-            const r = 85 * progress;
-            const px = Math.cos(a) * r;
-            const py = Math.sin(a) * r;
-            if (k === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          }
-          ctx.closePath();
-          ctx.stroke();
-
-          ctx.restore();
-          if (p.life <= 0) projectiles.splice(i, 1);
         } else if (p.type === 'crescent_slash') {
           p.x += p.vx;
           p.y += p.vy;
@@ -898,66 +730,6 @@ export function playAttackArtwork(surface, options) {
             spawnDamageText(p.x, p.y, 115000, true);
             projectiles.splice(i, 1);
           }
-        } else if (p.type === 'ice_spikes') {
-          const elapsed = 1 - p.life / p.maxLife,
-            grow = Math.min(1, elapsed * 5),
-            fade = Math.min(1, p.life / 12);
-          const baseY = p.y + 42,
-            rise = Math.min(170, height * 0.54, Math.max(35, p.y + 42 - 28)),
-            spread = Math.min(145, width * 0.24);
-          ctx.save();
-          ctx.translate(p.x, baseY);
-          ctx.globalAlpha = fade;
-          ctx.shadowBlur = 18;
-          ctx.shadowColor = '#67e8f9';
-          ctx.beginPath();
-          ctx.ellipse(0, 0, spread, 20, 0, 0, Math.PI * 2);
-          ctx.fillStyle = 'rgba(34,211,238,0.18)';
-          ctx.fill();
-          ctx.strokeStyle = '#a5f3fc';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          for (let j = 0; j < 9; j++) {
-            const x = ((j - 4) * spread) / 4.5,
-              delay = Math.abs(j - 4) * 0.035;
-            const g = Math.max(0, Math.min(1, (elapsed - delay) * 6));
-            const h = rise * (0.64 + 0.36 * Math.cos((j - 4) * 0.5)) * g,
-              half = 12 + (j % 3) * 3,
-              tip = x + (j - 4) * 5;
-            const ice = ctx.createLinearGradient(x, 0, tip, -h);
-            ice.addColorStop(0, '#0369a1');
-            ice.addColorStop(0.5, '#22d3ee');
-            ice.addColorStop(1, '#ecfeff');
-            ctx.fillStyle = ice;
-            ctx.strokeStyle = '#cffafe';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(x - half, 0);
-            ctx.lineTo(tip, -h);
-            ctx.lineTo(x + half, 0);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = 'rgba(255,255,255,0.72)';
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(tip, -h);
-            ctx.lineTo(x + half * 0.7, -h * 0.15);
-            ctx.closePath();
-            ctx.fill();
-          }
-          for (let j = 0; j < 12; j++) {
-            const angle = (j * Math.PI) / 6;
-            const r = spread * grow;
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * 18 * grow);
-            ctx.strokeStyle = 'rgba(165,243,252,0.65)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-          }
-          ctx.restore();
-          if (p.life <= 0) projectiles.splice(i, 1);
         } else if (p.type === 'sacred_arrow') {
           const angle = Math.atan2(p.ty - p.y, p.tx - p.x);
           p.x += Math.cos(angle) * p.speed;
@@ -1066,24 +838,6 @@ export function playAttackArtwork(surface, options) {
             ctx.stroke();
           }
           ctx.restore();
-        } else if (sw.type === 'sphere_barrier') {
-          sw.rotation = (sw.rotation || 0) + 0.025;
-          ctx.strokeStyle = sw.color;
-          ctx.lineWidth = 3;
-          ctx.globalAlpha = Math.max(0, sw.alpha);
-          ctx.save();
-          ctx.translate(sw.x, sw.y);
-          ctx.rotate(sw.rotation);
-          ctx.beginPath();
-          ctx.arc(0, 0, sw.radius, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.ellipse(0, 0, sw.radius, sw.radius * 0.45, 0, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.ellipse(0, 0, sw.radius * 0.45, sw.radius, 0, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
         } else {
           ctx.beginPath();
           ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
@@ -1156,7 +910,12 @@ export function playAttackArtwork(surface, options) {
         ctx.shadowColor = ft.color;
         ctx.shadowBlur = 12;
         ctx.globalAlpha = Math.max(0, ft.alpha);
-        ctx.fillText(ft.text, ft.x, ft.y);
+        const textWidth = ctx.measureText(ft.text)?.width || 0;
+        ctx.fillText(
+          ft.text,
+          Math.max(10, Math.min(width - textWidth - 10, ft.x)),
+          Math.max(28, Math.min(height - 12, ft.y)),
+        );
         ctx.restore();
 
         if (ft.alpha <= 0) floatingTexts.splice(i, 1);

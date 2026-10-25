@@ -1,4 +1,5 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
@@ -25,7 +26,7 @@ test('mode cards share the actual queued settings and preserve host/busy guards'
     ts.transpileModule(script, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
     }).outputText,
-    {
+    withEngineImports({
       module,
       exports: module.exports,
       require: (id) =>
@@ -36,7 +37,7 @@ test('mode cards share the actual queued settings and preserve host/busy guards'
             : id.includes('stores/majority')
               ? { useMajorityStore: () => game }
               : {},
-    },
+    }),
   );
   const component = module.exports.default.setup({}, { expose() {} });
   component.selectMode('music');

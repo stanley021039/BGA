@@ -31,6 +31,7 @@ function load(file) {
   mod.require = (request) => {
     // SSR checks markup and behaviour; component styles are side-effect imports.
     if (/\.(?:css|scss)$/.test(request)) return {};
+    if (request.includes('/engines/')) return { default: undefined };
     return request.endsWith('.vue')
       ? load(path.resolve(path.dirname(file), request))
       : require(request);

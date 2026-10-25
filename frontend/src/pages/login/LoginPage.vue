@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import EntryIntro from '../../engines/auth-entry.js';
+
 import { computed, nextTick, onBeforeUnmount, reactive, ref } from 'vue';
 import type { AuthMode } from '../../contracts/auth';
 import { useSessionStore } from '../../stores/session';
@@ -90,14 +92,14 @@ async function submit(): Promise<void> {
     } else {
       if (mode.value === 'register' && registration.password !== registration.confirmPassword)
         throw new Error('兩次密碼輸入不一致');
-      window.EntryIntro?.prepareSound?.();
+      EntryIntro?.prepareSound?.();
       await session.authenticate(
         mode.value,
         mode.value === 'login' ? { ...login } : { ...registration },
       );
       if (disposed) return;
       login.password = registration.password = registration.confirmPassword = '';
-      await window.EntryIntro?.playFrom(
+      await EntryIntro?.playFrom(
         document.querySelector<HTMLImageElement>('#authArtwork img'),
         destination,
       );

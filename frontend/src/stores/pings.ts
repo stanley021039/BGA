@@ -1,3 +1,5 @@
+import AudioSettings from '../engines/audio-settings.js';
+import PingModel from '../engines/ping-model.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useInteractionSource } from '../services/interaction-source';
@@ -7,12 +9,11 @@ import { readSettings } from '../contracts/profile';
 import { readPingContext, readPingReceipt } from '../contracts/pings';
 import type { PingEvent, PingTarget, PingType } from '../contracts/pings';
 import { record } from '../services/validation';
-import '../../../public/shared/ping-model.js';
 
 export const usePingsStore = defineStore('room-pings', () => {
   const room = useInteractionSource(),
     session = useSessionStore(),
-    model = window.PingModel;
+    model = PingModel;
   if (!model) throw Error('標記工具無法載入。');
   const context = computed(() => {
     try {
@@ -92,8 +93,8 @@ export const usePingsStore = defineStore('room-pings', () => {
     expire();
     feedback(event.name + '：' + model!.types[event.type].label);
     const sound = preferences.value[event.type].sound;
-    if (sound && 'effect' in sound) window.AudioSettings?.playEffect?.(sound.effect);
-    else if (sound) window.AudioSettings?.playExpression(sound);
+    if (sound && 'effect' in sound) AudioSettings?.playEffect?.(sound.effect);
+    else if (sound) AudioSettings?.playExpression(sound);
   }
   function disconnect() {
     generation++;

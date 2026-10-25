@@ -1,4 +1,5 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
@@ -18,7 +19,7 @@ function load(connection) {
         compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
       },
     ).outputText,
-    {
+    withEngineImports({
       module,
       exports: module.exports,
       window,
@@ -27,7 +28,7 @@ function load(connection) {
         createElement: () => ({}),
         head: { append: (link) => links.push(link) },
       },
-    },
+    }),
   );
   return { ...module.exports, links, idle };
 }

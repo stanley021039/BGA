@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MotionPolicy from '../engines/motion-policy.js';
+
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { requestJson } from '../services/http';
 import { sizedImage } from '../services/image-size';
@@ -39,7 +41,7 @@ const stages = new Map<EntranceEffectId, HTMLElement>(),
 const still = () =>
   prefs.motion?.enabled === false ||
   prefs.motion?.reduced === true ||
-  !window.MotionPolicy?.allowsMotion();
+  !MotionPolicy?.allowsMotion();
 function play(id: EntranceEffectId) {
   const stage = stages.get(id),
     actor = stage?.querySelector<HTMLElement>('.entrance-preview-actor');

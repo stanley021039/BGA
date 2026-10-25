@@ -166,3 +166,8 @@ GitHub 的跳過標記適用於 `push`／`pull_request`，其他事件需另核�
 - 過時內容標記被哪一筆取代，避免沿用已刪房號或已變更的部署狀態
 - 敏感資料（帳密、session cookie、正式環境設定與私人交接）僅存核准私有位置，不因 gitignore 視為安全；角色記憶與公開研究文件不得包含秘密
 - `docs/specs/` 是設計提案；沒有明確實作與驗收證據，不得宣稱已上線
+
+
+## 前端模組邊界（#233）
+
+共用 JavaScript 放入前端模組圖，以 import／export 明確連接；`public/` 只交付素材與樣式，不新增可執行腳本或 classic HTML script entry。建置前的 `check-frontend-modules` 不得略過。首次繪製僅由既有 HTTP prepaint 讀取偏好，持久化及事件訂閱仍由模組 owner 負責；不要重新加入 `window` 共用 API。伺服器共用純計算模組及完整發布包邊界見 [Vue 前端遷移](docs/refactors/VUE-FRONTEND.md)。

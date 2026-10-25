@@ -83,7 +83,7 @@ const {
 const { AchievementStore } = require('./achievements/store');
 const { MarketStore } = require('./market/store');
 const { MarketAutomationStore, dateAt, closeAfter } = require('./market/automation-store');
-const { validDate: validMarketDate } = require('../public/market-rules');
+const { validDate: validMarketDate } = require('../frontend/src/engines/market-rules.js').default;
 const { MarketAutomation } = require('./market/automation');
 const { createOfficialProvider } = require('./market/official-provider');
 const { MarketImageStore } = require('./market/images');
@@ -372,8 +372,19 @@ function initializeApp(config, dataLock, acquired) {
         entry.res.end();
       }
   };
-  const lobby = createLobby(undefined, (userId) => portraitUrl(userId));
-  const roomSpace = createRoomSpace();
+  const authorCombatBonus = (userId) =>
+    !!userId && !!require('./achievements/redemption').redeemedAt(db, userId, 'other');
+  const lobby = createLobby(
+    undefined,
+    (userId) => portraitUrl(userId),
+    undefined,
+    authorCombatBonus,
+  );
+  const roomSpace = createRoomSpace(undefined, undefined, (playerId, room) => {
+    // Room seats use game-local IDs, never trust client-supplied account IDs.
+    const account = [...(seats.get(room.code) || [])].find(([, seatId]) => seatId === playerId);
+    return authorCombatBonus(account?.[0]);
+  });
   const lobbyPingRoom = { code: '__LOBBY__', type: 'lobby', phase: 'lobby', players: [] };
   const expireRooms = () => runtime.expireRooms(history);
   const gameAudio = new GameAudioLibrary(
@@ -937,18 +948,23 @@ function initializeApp(config, dataLock, acquired) {
     for (const room of rooms.values()) {
       if (!room.players?.some((p) => !p.bot && !p.kicked)) continue;
       try {
-        saved.push(
-          roomPersistence.captureRoom(room, {
-            match: room.matchAchievements?.snapshot?.() || null,
-            history: history.state(room),
-            seats: seats.get(room.code) || null,
-            departed: departedSeats.get(room.code) || null,
-            kicked: kickedUsers.get(room.code) || null,
-            social: socialEvents.get(room.code) || null,
-            media: roomSideData(mediaRooms.get(room)),
-            watch: roomSideData(watchRooms.get(room)),
-          }),
-        );
+        const captured = roomPersistence.captureRoom(room, {
+          match: room.matchAchievements?.snapshot?.() || null,
+          history: history.state(room),
+          seats: seats.get(room.code) || null,
+          departed: departedSeats.get(room.code) || null,
+          kicked: kickedUsers.get(room.code) || null,
+          social: socialEvents.get(room.code) || null,
+          media: roomSideData(mediaRooms.get(room)),
+          watch: roomSideData(watchRooms.get(room)),
+        });
+        // A room waiting on a callback (e.g. an open dice roll) cannot resume after
+        // a restart; it ends as it did before rooms were kept.
+        if (captured.callbacks.length)
+          console.warn(
+            'Room ' + room.code + ' not saved; pending callbacks: ' + captured.callbacks.join(', '),
+          );
+        else saved.push(captured);
       } catch (error) {
         console.error('Room ' + room.code + ' could not be saved:', error);
       }
@@ -977,6 +993,14 @@ function initializeApp(config, dataLock, acquired) {
     for (const saved of snapshot.rooms || []) {
       const Type = roomClasses[saved.type];
       if (!Type || rooms.has(saved.code)) continue;
+      // Snapshots written before callbacks were checked (2.42.6–2.44.1) may hold a
+      // thunder room whose open dice roll lost its callbacks; it cannot resume.
+      if (!Array.isArray(saved.callbacks) && saved.data?.get('_diceRoll')?.value) {
+        console.warn(
+          'Room ' + saved.code + ' not restored; its dice roll was saved without callbacks',
+        );
+        continue;
+      }
       let room = null;
       try {
         const result = roomPersistence.restoreRoom(saved, () => {
@@ -2578,7 +2602,7 @@ function initializeApp(config, dataLock, acquired) {
         );
         return send(withSocial(room, room.view(p.id)));
       }
-      if (url.pathname === '/lobby.js' || url.pathname === '/lobby.css') {
+      if (url.pathname === '/lobby.css') {
         const file = url.pathname.slice(1);
         res.setHeader(
           'Content-Type',
@@ -2604,29 +2628,10 @@ function initializeApp(config, dataLock, acquired) {
         );
       }
       if (
-        url.pathname === '/shared/room-pings.js' ||
-        url.pathname === '/shared/ping-model.js' ||
         url.pathname === '/shared/room-pings.css' ||
-        url.pathname === '/shared/media-appearance.js' ||
-        url.pathname === '/shared/barrage-frames.js' ||
         url.pathname === '/shared/barrage-frames.css' ||
-        url.pathname === '/shared/freehand-ui.css' ||
-        url.pathname === '/shared/ui-widgets.js' ||
         url.pathname === '/shared/ui-widgets.css' ||
-        url.pathname === '/shared/ui-notifications.js' ||
-        url.pathname === '/shared/ui-notifications.css' ||
-        url.pathname === '/shared/ui-celebrations.js' ||
-        url.pathname === '/shared/ui-celebrations.css' ||
-        url.pathname === '/shared/table-media.js' ||
-        url.pathname === '/shared/table-media.css' ||
-        url.pathname === '/shared/draw-canvas-session.js' ||
-        url.pathname === '/shared/draw-controller.js' ||
-        url.pathname === '/shared/draw-transport.js' ||
-        url.pathname === '/shared/draw-playback.js' ||
-        url.pathname === '/shared/countdown-bar.js' ||
-        url.pathname === '/shared/game-fx-layer.js' ||
-        url.pathname === '/shared/game-fx-layer.css' ||
-        url.pathname === '/shared/race-dice-webgl.js'
+        url.pathname === '/shared/game-fx-layer.css'
       ) {
         const file = url.pathname.slice(1);
         res.setHeader(
@@ -2707,16 +2712,6 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/stitch/room-brand.svg': 'assets/stitch/room-brand.svg',
         '/assets/stitch/draw-waiting.jpg': 'assets/stitch/draw-waiting.jpg',
         '/assets/stitch/telephone-waiting.svg': 'assets/stitch/telephone-waiting.svg',
-        '/shared/room-chrome.js': 'shared/room-chrome.js',
-        '/quacks-layout.css': 'quacks-layout.css',
-        '/quacks-theme.css': 'quacks-theme.css',
-        '/shared/stitch-composition.css': 'shared/stitch-composition.css',
-        '/shared/stitch-skin.css': 'shared/stitch-skin.css',
-        '/shared/stitch-tokens.css': 'shared/stitch-tokens.css',
-        '/shared/room-layout.js': 'shared/room-layout.js',
-        '/shared/drawing-layout.js': 'shared/drawing-layout.js',
-        '/shared/draw-canvas-session.js': 'shared/draw-canvas-session.js',
-        '/shared/room-ui.js': 'shared/room-ui.js',
         '/assets/quacks/draw-777.webp': 'assets/quacks/draw-777.webp',
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/quacks/draw-777.png': 'assets/quacks/draw-777.webp',
@@ -2725,14 +2720,10 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/bluff-reaction-photo.webp': 'assets/bluff-reaction-photo.webp',
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/bluff-reaction-photo.png': 'assets/bluff-reaction-photo.webp',
-        '/quacks-auto-fortune.js': 'quacks-auto-fortune.js',
         '/assets/game-sounds/quacks-settlement-user.wav':
           'assets/game-sounds/quacks-settlement-user.wav',
         '/assets/game-sounds/quacks-explosion-fish.wav':
           'assets/game-sounds/quacks-explosion-fish.wav',
-        '/majority-cruel.js': 'majority-cruel.js',
-        '/quacks-stitch.js': 'quacks-stitch.js',
-        '/quacks-stitch.css': 'quacks-stitch.css',
         '/assets/game-sounds/quacks-danger.wav': 'assets/game-sounds/quacks-danger.wav',
         '/assets/game-sounds/quacks-buy.wav': 'assets/game-sounds/quacks-buy.wav',
         '/assets/game-sounds/quacks-ruby.wav': 'assets/game-sounds/quacks-ruby.wav',
@@ -2740,9 +2731,6 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/stitch/waiting-host.jpg': 'assets/stitch/waiting-host.jpg',
         '/assets/stitch/waiting-guest.jpg': 'assets/stitch/waiting-guest.jpg',
         '/assets/stitch/secret-cards.jpg': 'assets/stitch/secret-cards.jpg',
-        '/shared/artwork-export.js': 'shared/artwork-export.js',
-        '/shared/stitch-game-ui.js': 'shared/stitch-game-ui.js',
-        '/shared/stitch-fidelity.css': 'shared/stitch-fidelity.css',
         '/assets/fonts/plus-jakarta-500.woff2': 'assets/fonts/plus-jakarta-500.woff2',
         '/assets/fonts/plus-jakarta-600.woff2': 'assets/fonts/plus-jakarta-600.woff2',
         '/assets/fonts/plus-jakarta-700.woff2': 'assets/fonts/plus-jakarta-700.woff2',
@@ -2750,57 +2738,19 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/fonts/Plus-Jakarta-Sans-OFL.txt': 'assets/fonts/Plus-Jakarta-Sans-OFL.txt',
         '/shared/template-tokens.css': 'shared/template-tokens.css',
         '/shared/template-components.css': 'shared/template-components.css',
-        '/shared/template-layout.css': 'shared/template-layout.css',
-        '/shared/game-template.js': 'shared/game-template.js',
-        '/shared/room-controls.js': 'shared/room-controls.js',
-        '/shared/room-controls.css': 'shared/room-controls.css',
-        '/shared/drawing-board.css': 'shared/drawing-board.css',
-        '/shared/room-waiting.js': 'shared/room-waiting.js',
-        '/shared/room-waiting.css': 'shared/room-waiting.css',
-        '/quacks-fx.js': 'quacks-fx.js',
         '/assets/game-sounds/quacks-explosion.wav': 'assets/game-sounds/quacks-explosion.wav',
-        '/quacks-art.js': 'quacks-art.js',
         '/quacks': 'quacks.html',
-        '/quacks.js': 'quacks.js',
         '/quacks.css': 'quacks.css',
-        '/shared/game-focus.js': 'shared/game-focus.js',
-        '/shared/game-focus.css': 'shared/game-focus.css',
-        '/bluff-reactions.js': 'bluff-reactions.js',
         '/assets/game-sounds/bluff-reaction.mp3': 'assets/game-sounds/bluff-reaction.mp3',
         '/bluff': 'bluff.html',
-        '/bluff.js': 'bluff.js',
-        '/bluff.css': 'bluff.css',
         '/musicquiz': 'musicquiz.html',
         '/minimal': 'minimal.html',
-        '/party-games.js': 'party-games.js',
-        '/shared/party-shapes.js': 'shared/party-shapes.js',
         '/telephone': 'telephone.html',
-        '/telephone.js': 'telephone.js',
-        '/telephone.css': 'telephone.css',
         '/trpg': 'trpg.html',
-        '/trpg.js': 'trpg.js',
-        '/trpg.css': 'trpg.css',
-        '/shared/chat.js': 'shared/chat.js',
-        '/shared/chat.css': 'shared/chat.css',
-        '/market-curve.js': 'market-curve.js',
-        '/shared/color-scheme.js': 'shared/color-scheme.js',
         '/shared/playful-theme.css': 'shared/playful-theme.css',
-        '/shared/game-card-carousel.js': 'shared/game-card-carousel.js',
         '/credits': 'credits.html',
         '/credits.css': 'credits.css',
         '/market': 'market.html',
-        '/market.js': 'market.js',
-        '/market.css': 'market.css',
-        '/market-rules.js': 'market-rules.js',
-        '/shared/race-controller.js': 'shared/race-controller.js',
-        '/shared/race-movement.js': 'shared/race-movement.js',
-        '/shared/race-paths.js': 'shared/race-paths.js',
-        '/shared/draw-results.js': 'shared/draw-results.js',
-        '/shared/motion-policy.js': 'shared/motion-policy.js',
-        '/shared/audio-settings.js': 'shared/audio-settings.js',
-        '/shared/expression-sounds.js': 'shared/expression-sounds.js',
-        '/shared/game-sounds.js': 'shared/game-sounds.js',
-        '/shared/race-game-sounds.js': 'shared/race-game-sounds.js',
         '/assets/game-sounds/entrance-soul-world.mp3': 'assets/game-sounds/entrance-soul-world.mp3',
         '/assets/game-sounds/turn.wav': 'assets/game-sounds/turn.wav',
         '/assets/game-sounds/dice-roll.wav': 'assets/game-sounds/dice-roll.wav',
@@ -2808,49 +2758,29 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/slam.wav': 'assets/game-sounds/slam.wav',
         '/assets/game-sounds/nitro.wav': 'assets/game-sounds/nitro.wav',
         '/assets/game-sounds/skid.wav': 'assets/game-sounds/skid.wav',
-        '/shared/popovers.js': 'shared/popovers.js',
         '/shared/ui-foundation.css': 'shared/ui-foundation.css',
         '/shared/ui-primitives.css': 'shared/ui-primitives.css',
-        '/shared/ui-components.js': 'shared/ui-components.js',
         '/collection': 'collection.html',
-        '/collection.js': 'collection.js',
         '/collection.css': 'collection.css',
         '/settings': 'settings.html',
-        '/settings.js': 'settings.js',
         '/settings.css': 'settings.css',
-        '/shared/site-header.js': 'shared/site-header.js',
         '/shared/site-header.css': 'shared/site-header.css',
         '/music': 'music.html',
-        '/music.js': 'music.js',
-        '/shared/table-music.js': 'shared/table-music.js',
         '/shared/table-music.css': 'shared/table-music.css',
         '/profile': 'profile.html',
-        '/profile.js': 'profile.js',
         '/studio': 'studio.html',
-        '/studio.js': 'studio.js',
-        '/studio-editor.js': 'studio-editor.js',
         '/admin': 'admin.html',
-        '/admin.js': 'admin.js',
         '/login': 'login.html',
-        '/login.js': 'login.js',
-        '/majority-social.js': 'majority-social.js',
         '/community': 'community.html',
-        '/community.js': 'community.js',
         '/community.css': 'community.css',
         '/majority': 'majority.html',
-        '/majority.js': 'majority.js',
         '/majority.css': 'majority.css',
         '/gift': 'gift.html',
-        '/gift.js': 'gift.js',
         '/gift.css': 'gift.css',
         '/draw': 'draw.html',
-        '/draw.js': 'draw.js',
         '/draw.css': 'draw.css',
         '/draw-words': 'draw-words.html',
-        '/draw-words.js': 'draw-words.js',
-        '/shared/stroke-canvas.js': 'shared/stroke-canvas.js',
         '/gifts': 'gifts.html',
-        '/gifts.js': 'gifts.js',
         '/gifts.css': 'gifts.css',
         '/': 'index.html',
         '/poker': 'poker.html',
@@ -2859,43 +2789,16 @@ function initializeApp(config, dataLock, acquired) {
         '/second-wind': 'second-wind.html',
         '/rules': 'rules.html',
         '/history': 'history.html',
-        '/history.js': 'history.js',
-        '/history.css': 'history.css',
         '/achievements': 'achievements.html',
-        '/achievements.js': 'achievements.js',
-        '/achievements.css': 'achievements.css',
         '/shared/achievement-glow.css': 'shared/achievement-glow.css',
-        '/app.js': 'app.js',
-        '/style.css': 'style.css',
-        '/hub.js': 'hub.js',
         '/club.css': 'club.css',
-        '/rooms.css': 'rooms.css',
         '/club-pages.css': 'club-pages.css',
-        '/race.js': 'race.js',
-        '/race.css': 'race.css',
         '/assets/thunder-components.png': 'assets/thunder-components.png',
         '/assets/thunder-box.webp': 'assets/thunder-box.webp',
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/thunder-box.png': 'assets/thunder-box.webp',
         '/assets/gift-sounds/open_001.wav': 'assets/gift-sounds/open_001.wav',
         '/assets/gift-sounds/confirmation_001.wav': 'assets/gift-sounds/confirmation_001.wav',
-        '/room-reconnect.js': 'shared/room-reconnect.js',
-        '/shared/room-reconnect.js': 'shared/room-reconnect.js',
-        '/room-host.js': 'shared/room-host.js',
-        '/shared/room-host.js': 'shared/room-host.js',
-        '/room-host.css': 'shared/room-host.css',
-        '/shared/room-host.css': 'shared/room-host.css',
-        '/game-shell.js': 'shared/game-shell.js',
-        '/shared/game-shell.js': 'shared/game-shell.js',
-        '/game-shell.css': 'shared/game-shell.css',
-        '/shared/game-shell.css': 'shared/game-shell.css',
-        '/shared/immersion.js': 'shared/immersion.js',
-        '/shared/race-event-cues.js': 'shared/race-event-cues.js',
-        '/shared/race-vehicle-effects.js': 'shared/race-vehicle-effects.js',
-        '/shared/race-directions.js': 'shared/race-directions.js',
-        '/shared/race-dice-dialog.js': 'shared/race-dice-dialog.js',
-        '/shared/race-terrain-help.js': 'shared/race-terrain-help.js',
-        '/shared/api.js': 'shared/api.js',
         '/assets/game-sounds/quacks-settlement.wav': 'assets/game-sounds/quacks-settlement.wav',
         '/assets/game-sounds/quacks-card.wav': 'assets/game-sounds/quacks-card.wav',
         '/assets/quacks/draw-portrait-v1.webp': 'assets/quacks/draw-portrait-v1.webp',
@@ -2909,18 +2812,9 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/quacks/explosion-reference-v1.png': 'assets/quacks/explosion-reference-v1.webp',
         '/assets/room-leave-thumbnail.jpg': 'assets/room-leave-thumbnail.jpg',
         '/sound-library': 'sound-library.html',
-        '/sound-library.js': 'sound-library.js',
-        '/shared/song-title-zh.js': 'shared/song-title-zh.js',
         '/assets/game-sounds/correct-user.mp3': 'assets/game-sounds/correct-user.mp3',
         '/assets/game-sounds/incorrect-user.mp3': 'assets/game-sounds/incorrect-user.mp3',
-        '/shared/game-result-sounds.js': 'shared/game-result-sounds.js',
         '/admin/game-audio': 'game-audio-admin.html',
-        '/game-audio-admin.js': 'game-audio-admin.js',
-        '/musicquiz.js': 'musicquiz.js',
-        '/musicquiz.css': 'musicquiz.css',
-        '/profile-expression-editor.js': 'profile-expression-editor.js',
-        '/majority-tournament.js': 'majority-tournament.js',
-        '/majority-tournament.css': 'majority-tournament.css',
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
@@ -3034,9 +2928,6 @@ function initializeApp(config, dataLock, acquired) {
           files['/assets/' + sound.directory + '/' + name] =
             'assets/' + sound.directory + '/' + sound.file;
       }
-      files['/shared/opening-theme.js'] = 'shared/opening-theme.js';
-      files['/shared/entry-intro.js'] = 'shared/entry-intro.js';
-      files['/shared/auth-entry.js'] = 'shared/auth-entry.js';
       files['/shared/entry-intro.css'] = 'shared/entry-intro.css';
       if (
         (url.pathname === '/ceo' || roomPath?.[1] === 'ceo') &&
@@ -3145,8 +3036,10 @@ function initializeApp(config, dataLock, acquired) {
       // microphone; every other page keeps it blocked.
       if (file === 'bluff.html')
         res.setHeader('Permissions-Policy', 'camera=(), microphone=(self), geolocation=()');
-      const document =
-        frontend?.readPage(file) || fs.readFileSync(path.join(__dirname, '..', 'public', file));
+      // Every executable page is built by Vite, including the audio tools.
+      // API-only instances explicitly decline documents.
+      const document = frontend?.readPage(file);
+      if (!document) throw new HttpError(503, 'FRONTEND_NOT_BUILT', '網站前端尚未建置，請稍後再試');
       res.end(withEntryIntro(document, { authPage: file === 'login.html' }));
     } catch (e) {
       writeError(res, e);

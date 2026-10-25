@@ -4,7 +4,7 @@ const test = require('node:test'),
   { randomUUID } = require('node:crypto');
 const { QuacksRoom } = require('../src/games/quacks'),
   { BOARD, WITCHES } = require('../src/games/quacks-catalog');
-const art = require('../public/quacks-art');
+const art = require('../frontend/src/engines/quacks-art.js').default;
 const act = (r, p, action, data = {}) =>
   r.act(p.id, action, { roundId: r.roundId, requestId: randomUUID(), ...data });
 function fixture(n = 2) {

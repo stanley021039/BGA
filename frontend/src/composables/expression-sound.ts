@@ -1,3 +1,5 @@
+import AudioSettings from '../engines/audio-settings.js';
+import ExpressionSounds from '../engines/expression-sounds.js';
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import type { ComputedRef } from 'vue';
 import type { Character } from '../contracts/profile';
@@ -26,7 +28,7 @@ export function useExpressionSound(
     previewRequest = 0,
     clip: HTMLAudioElement | undefined;
   function stop() {
-    window.AudioSettings?.stopEffect(clip);
+    AudioSettings?.stopEffect(clip);
     clip = undefined;
   }
   function reset() {
@@ -59,8 +61,8 @@ export function useExpressionSound(
     try {
       let body: { base64?: string } = {};
       if (!remove) {
-        if (!window.ExpressionSounds) throw Error('此瀏覽器暫時無法匯入音效');
-        const encoded = await window.ExpressionSounds.encodeFile(file.value);
+        if (!ExpressionSounds) throw Error('此瀏覽器暫時無法匯入音效');
+        const encoded = await ExpressionSounds.encodeFile(file.value);
         if (!current()) return false;
         body = { base64: encoded.base64 };
         message.value = '正在上傳音效…';
@@ -99,11 +101,11 @@ export function useExpressionSound(
       key.value === targetKey &&
       request === previewRequest;
     stop();
-    window.AudioSettings?.set('effects', { enabled: true }, { gesture: true });
+    AudioSettings?.set('effects', { enabled: true }, { gesture: true });
     let errored = false;
     failed.value = false;
     message.value = '正在試聽音效。';
-    clip = window.AudioSettings?.playExpression(sound.value, {
+    clip = AudioSettings?.playExpression(sound.value, {
       onStop: (value) => {
         if (current() && value === clip) {
           clip = undefined;

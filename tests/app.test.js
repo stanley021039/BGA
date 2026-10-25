@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
+const fs = require('./helpers/browser-modules.cjs');
 const os = require('node:os');
 const path = require('node:path');
 const { createApp } = require('../src/app');
@@ -20,31 +20,47 @@ test('independent app instances can start, serve, and release their history lock
   let app = createApp(config);
   try {
     const { port } = await app.listen();
-    assert.equal((await fetch(`http://127.0.0.1:${port}/`)).status, 200);
+    // Pages come from the Vue build (#233); this API-only app still redirects
+    // visitors and serves the shared scripts and styles those pages load.
+    const home = await fetch(`http://127.0.0.1:${port}/`, { redirect: 'manual' });
+    assert.equal(home.status, 302);
+    assert.equal(home.headers.get('location'), '/login');
     for (const asset of [
-      'api.js',
+      'color-scheme.js',
+      'motion-policy.js',
+      'ui-components.js',
+      'ui-widgets.js',
+      'ui-foundation.css',
+      'barrage-frames.css',
+    ]) {
+      const response = await fetch(`http://127.0.0.1:${port}/shared/${asset}`);
+      assert.equal(response.status, asset.endsWith('.js') ? 404 : 200, asset);
+      if (asset.endsWith('.js')) continue;
+      assert.match(
+        response.headers.get('content-type'),
+        asset.endsWith('.css') ? /text\/css/ : /text\/javascript/,
+      );
+    }
+    // Retired aliases must be absent as well as their /shared/ counterparts;
+    // otherwise the static map tries to read deleted files and answers 500.
+    for (const asset of [
       'room-reconnect.js',
       'room-host.js',
       'room-host.css',
       'game-shell.js',
       'game-shell.css',
     ]) {
-      const response = await fetch(`http://127.0.0.1:${port}/shared/${asset}`);
-      assert.equal(response.status, 200, asset);
-      assert.match(
-        response.headers.get('content-type'),
-        asset.endsWith('.css') ? /text\/css/ : /text\/javascript/,
-      );
+      assert.equal((await fetch(`http://127.0.0.1:${port}/${asset}`)).status, 404, asset);
+      assert.equal((await fetch(`http://127.0.0.1:${port}/shared/${asset}`)).status, 404, asset);
     }
-    assert.equal((await fetch(`http://127.0.0.1:${port}/room-reconnect.js`)).status, 200);
-    assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.js`)).status, 200);
+    assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.js`)).status, 404);
     assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.css`)).status, 200);
     await app.close();
     await app.close();
     assert.equal(fs.existsSync(path.join(root, 'history', '.lock')), false);
     app = createApp(config);
     const next = await app.listen();
-    assert.equal((await fetch(`http://127.0.0.1:${next.port}/community`)).status, 200);
+    assert.equal((await fetch(`http://127.0.0.1:${next.port}/lobby.css`)).status, 200);
   } finally {
     await app.close();
     fs.rmSync(root, { recursive: true, force: true });
@@ -135,10 +151,12 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
     });
     assert.equal(created.status, 200);
     const { code } = await created.json();
+    // Room pages are routed for signed-in players; without the Vue build an
+    // API-only app answers them with an explicit 503 (#233).
     for (const route of ['/poker/ABC123', '/race/ABC123', '/majority/ABC123']) {
-      const html = await (await fetch(base + route, { headers })).text();
-      assert.match(html, /\/game-shell\.js/);
-      assert.match(html, /\/game-shell\.css/);
+      const page = await fetch(base + route, { headers });
+      assert.equal(page.status, 503, route);
+      assert.equal((await page.json()).code, 'FRONTEND_NOT_BUILT', route);
     }
     const state = await fetch(base + '/api/state?code=' + code, { headers });
     assert.equal(state.status, 200);

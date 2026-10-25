@@ -45,15 +45,18 @@ function fixture() {
         clearTimeout,
         Intl,
         require: (id) =>
-          id === 'vue'
-            ? vue
-            : id.includes('stores/ceo')
-              ? { useCeoStore: () => ceo }
-              : id.includes('stores/party-actions')
-                ? { usePartyActionsStore: () => actions }
-                : id.endsWith('.scss')
-                  ? {}
-                  : load(path.resolve(path.dirname(file), id + (path.extname(id) ? '' : '.ts'))),
+          // Icon registry lifecycle is covered by shared-component tests.
+          id.endsWith('/engines/ui-widgets.js')
+            ? { default: { icon: () => '' } }
+            : id === 'vue'
+              ? vue
+              : id.includes('stores/ceo')
+                ? { useCeoStore: () => ceo }
+                : id.includes('stores/party-actions')
+                  ? { usePartyActionsStore: () => actions }
+                  : id.endsWith('.scss')
+                    ? {}
+                    : load(path.resolve(path.dirname(file), id + (path.extname(id) ? '' : '.ts'))),
       },
     );
     return m.exports;

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BarrageFrames from '../engines/barrage-frames.js';
+
 import { ref } from 'vue';
 import { useMutation } from '../composables/mutation';
 import UiButton from './UiButton.vue';
@@ -14,7 +16,7 @@ async function redeem() {
     const data = await request('/api/achievements/redeem', { code: code.value });
     label = text(record(record(data).redemption).label) || label;
     (
-      window.BarrageFrames as typeof window.BarrageFrames & { acceptRewards?(data: unknown): void }
+      BarrageFrames as typeof BarrageFrames & { acceptRewards?(data: unknown): void }
     )?.acceptRewards?.(data);
     code.value = '';
     window.dispatchEvent(new Event('achievement-rewards-updated'));

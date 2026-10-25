@@ -13,7 +13,8 @@ import HeaderProfile from './HeaderProfile.vue';
 import InvitationInbox from './InvitationInbox.vue';
 import '../styles/site-header.scss';
 import { useFloatingPanel } from '../composables/floating-panel';
-const sceneAvailable = computed(() => location.pathname === '/' || !!room.snapshot?.roomSpace);
+// Rooms place the background toggle beside fullscreen in RoomFullscreenToggle.
+const sceneAvailable = computed(() => location.pathname === '/');
 const session = useSessionStore(),
   prefs = usePreferencesStore(),
   root = ref<HTMLElement | null>(null),

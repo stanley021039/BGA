@@ -30,8 +30,9 @@ function createLobby(
   now = () => Date.now(),
   portrait = (userId) => `/characters/${userId}`,
   random = Math.random,
+  authorBonus = () => false,
 ) {
-  const combat = createSceneCombat(random);
+  const combat = createSceneCombat(random, authorBonus);
   let background = { id: 'default', changedAt: now(), nextChangeAt: 0 };
   const visitors = new Map(),
     barrages = [],
@@ -202,7 +203,7 @@ function createLobby(
           .sort((a, b) => distance(a) - distance(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '目前沒有其他玩家可以互動');
     combat.alive(self);
-    const hit = target === self ? { damage: 0, critical: false } : combat.hit(self, target, time);
+    const hit = target === self ? combat.protect(self, time) : combat.hit(self, target, time);
     self.lastAttacks ||= {};
     self.lastAttacks[slot] = time;
     attacks.push({

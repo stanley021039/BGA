@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MotionPolicy from '../../engines/motion-policy.js';
+
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { useSessionStore } from '../../stores/session';
@@ -91,14 +93,14 @@ async function entranceOnce() {
   if (entrancePlayed || !lobby.snapshot || !scene.value) return;
   entrancePlayed = true;
   await nextTick();
-  if (disposed || !window.MotionPolicy?.allowsMotion()) return;
+  if (disposed || !MotionPolicy?.allowsMotion()) return;
   [...scene.value.querySelectorAll('.library-heading,.game-tile.selected .tile-image')]
     .filter((node) => {
       const box = node.getBoundingClientRect();
       return box.bottom > 0 && box.top < innerHeight;
     })
     .forEach((node, i) => {
-      const animation = window.MotionPolicy?.animate(
+      const animation = MotionPolicy?.animate(
         node,
         [
           { opacity: 0.72, transform: 'translateY(10px)' },

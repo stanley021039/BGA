@@ -1,6 +1,6 @@
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   vm = require('node:vm');
 const source = fs.readFileSync(
   require('node:path').join(__dirname, '../public/shared/countdown-bar.js'),

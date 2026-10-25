@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import GameUI from '../engines/ui-widgets.js';
+
 import { computed } from 'vue';
 const props = defineProps<{ name: string }>();
 const allowed = new Set([
@@ -24,6 +26,8 @@ const allowed = new Set([
   'remove',
   'share',
   'expand',
+  'contract',
+  'landscape',
   'add',
   'previous',
   'next',
@@ -63,9 +67,7 @@ declare global {
   }
 }
 // The HTML is exclusively from the existing internal icon registry.
-const markup = computed(() =>
-  allowed.has(props.name) ? window.GameUI?.icon(props.name) || '' : '',
-);
+const markup = computed(() => (allowed.has(props.name) ? GameUI?.icon(props.name) || '' : ''));
 </script>
 
 <template><span v-if="markup" aria-hidden="true" v-html="markup"></span></template>

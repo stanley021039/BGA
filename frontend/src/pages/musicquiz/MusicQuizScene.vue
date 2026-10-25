@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SongTitleZh from '../../engines/song-title-zh.js';
 import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import MusicKingTokens from '../../components/MusicKingTokens.vue';
 import { computed, ref, watch, onBeforeUnmount } from 'vue';
@@ -13,7 +14,6 @@ import FramePreview from '../../components/FramePreview.vue';
 import GameSongClip from '../../components/GameSongClip.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiIcon from '../../components/UiIcon.vue';
-import '../../../../public/shared/song-title-zh.js';
 import '../../styles/stitch-party-content.scss';
 const emit = defineEmits<{ dirty: [value: boolean] }>();
 const room = useRoomStore(),
@@ -181,12 +181,7 @@ const phaseGuide = computed(
       reveal: '先看本輪結果。接下來換下一位DJ；房主或本輪DJ按「下一首」才會繼續。',
     })[s.value.phase] || '',
 );
-const translated = (title: string, language?: string) =>
-  (
-    window as unknown as {
-      SongTitleZh?: { hint: (title: string, language?: string) => string | undefined };
-    }
-  ).SongTitleZh?.hint(title, language);
+const translated = (title: string, language?: string) => SongTitleZh?.hint(title, language);
 const songLabel = (title: string, language?: string) => {
   const hint = translated(title, language);
   return hint ? title + '；' + hint : title;

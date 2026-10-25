@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import ExpressionSounds from '../../engines/expression-sounds.js';
+import MotionPolicy from '../../engines/motion-policy.js';
+
 import { sizedImage } from '../../services/image-size';
 import { focusFromPointer } from '../../services/pointer-focus';
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
@@ -28,7 +31,7 @@ const lobby = useLobbyStore(),
   selfHover = ref(false),
   arrivals = ref(new Set<string>());
 const background = useLobbyBackgroundStore();
-const sounds = window.ExpressionSounds?.create();
+const sounds = ExpressionSounds?.create();
 let disposed = false,
   controller: BarrageController | null = null,
   known: Set<string> | null = null,
@@ -74,9 +77,7 @@ watch(
   ([value]) => {
     if (!value) return;
     controller ??=
-      window.MotionPolicy?.createBarrageController((item: BarrageEvent) =>
-        lobby.showSpeech(item),
-      ) || null;
+      MotionPolicy?.createBarrageController((item: BarrageEvent) => lobby.showSpeech(item)) || null;
     if (!lobby.connected) {
       controller?.disconnect();
       return;

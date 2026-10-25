@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import QuacksFx from '../../engines/quacks-fx.js';
+
 import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useQuacksStore } from '../../stores/quacks';
 import { useRoomStore } from '../../stores/room';
@@ -15,8 +17,7 @@ function update() {
   }
 }
 onMounted(() => {
-  if (host.value && legend.value)
-    owner = window.QuacksFx?.createScoreboard(host.value, legend.value);
+  if (host.value && legend.value) owner = QuacksFx?.createScoreboard(host.value, legend.value);
   update();
 });
 watch(() => game.state, update);

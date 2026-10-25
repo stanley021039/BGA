@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BarrageFrames from '../engines/barrage-frames.js';
+
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import UiIcon from './UiIcon.vue';
 import '../styles/frame-picker.scss';
@@ -56,7 +58,7 @@ async function draw() {
   host.replaceChildren();
   surface.value = {};
   // Preserve the original allowlisted CSS/SVG artwork renderer in an isolated leaf.
-  window.BarrageFrames?.decorate(
+  BarrageFrames?.decorate(
     host,
     { kind: 'builtin', id: props.frame, version: 1 },
     props.name,

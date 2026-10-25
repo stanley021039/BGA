@@ -76,19 +76,19 @@
       }
     }
     &[data-panel-side='left'] {
-      .vue-room-panel-content {
-        padding-inline-start: 44px;
+      .vue-room-panel-content > section > header {
+        padding-inline-start: calc(44px + var(--stitch-space-8));
       }
       .vue-room-panel-handle-slot {
-        inset-inline-start: 0;
+        inset-inline-start: var(--stitch-space-16);
       }
     }
     &[data-panel-side='right'] {
-      .vue-room-panel-content {
-        padding-inline-end: 44px;
+      .vue-room-panel-content > section > header {
+        padding-inline-end: calc(44px + var(--stitch-space-8));
       }
       .vue-room-panel-handle-slot {
-        inset-inline-start: calc(100% - 44px);
+        inset-inline-start: calc(100% - 44px - var(--stitch-space-16));
       }
     }
     &[data-panel-open='false'] {
@@ -139,7 +139,7 @@
   .vue-room-panel-handle-slot {
     margin: 0;
     position: absolute;
-    inset-block-start: calc(50% - 22px);
+    inset-block-start: calc(var(--stitch-space-16) + var(--stitch-space-4));
     z-index: 4;
     width: 44px;
     height: 44px;
@@ -150,13 +150,6 @@
     box-sizing: border-box;
     width: 44px;
     height: 44px;
-  }
-  .vue-room-panel-handle {
-    transform: translateX(-6px) scale(0.5);
-    transition: transform var(--room-panel-travel) ease;
-  }
-  [data-panel-side='right'] .vue-room-panel-handle {
-    transform: translateX(6px) scale(0.5);
   }
   .vue-room-panel-tooltip {
     display: none;
@@ -327,6 +320,10 @@
     }
     &[data-panel-side='right'] {
       inset-inline-end: 0;
+    }
+    // Closed drawers are viewport-tall; a top handle would cover the site header.
+    &[data-panel-open='false'] .vue-room-panel-handle-slot {
+      inset-block-start: calc(50% - 22px);
     }
     .vue-room-panel-content {
       overflow: auto;

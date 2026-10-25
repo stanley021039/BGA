@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MarketRules from '../../engines/market-rules.js';
+
 import { computed, ref, watch } from 'vue';
 import { useMarketStore, useMarketGalleryStore } from '../../stores/market';
 import {
@@ -20,7 +22,7 @@ const market = useMarketStore(),
   r = computed(() => market.selected),
   curve = computed(() => r.value?.rules.version === 3),
   labels = computed(() =>
-    r.value?.rules.version !== 3 && r.value ? window.MarketRules?.labels(r.value.rules) || [] : [],
+    r.value?.rules.version !== 3 && r.value ? MarketRules?.labels(r.value.rules) || [] : [],
   );
 watch(
   () => r.value?.id,

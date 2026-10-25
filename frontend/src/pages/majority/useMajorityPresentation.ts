@@ -1,3 +1,5 @@
+import AudioSettings from '../../engines/audio-settings.js';
+import MotionPolicy from '../../engines/motion-policy.js';
 import { computed, nextTick, onMounted, onScopeDispose, ref, watch, type Ref } from 'vue';
 import { useRoomStore } from '../../stores/room';
 import { useMajorityStore } from '../../stores/majority';
@@ -9,7 +11,7 @@ export function useMajorityPresentation(root: Ref<HTMLElement | null>) {
     focusId = ref(''),
     achievementNotice = ref(''),
     animations = new Set<Animation>();
-  let gate = window.MotionPolicy?.createGate(),
+  let gate = MotionPolicy?.createGate(),
     focusTimer: ReturnType<typeof setTimeout> | undefined,
     disposed = false,
     generation = 0,
@@ -24,13 +26,13 @@ export function useMajorityPresentation(root: Ref<HTMLElement | null>) {
     focusId.value = '';
     for (const animation of animations) animation.cancel();
     animations.clear();
-    window.AudioSettings?.stopEffect(clip);
+    AudioSettings?.stopEffect(clip);
     clip = undefined;
   }
   function replay() {
     stop();
     if (
-      !window.MotionPolicy?.allowsMotion() ||
+      !MotionPolicy?.allowsMotion() ||
       document.hidden ||
       !room.connected ||
       game.state?.cruel ||
@@ -86,11 +88,11 @@ export function useMajorityPresentation(root: Ref<HTMLElement | null>) {
         return;
       if (s.phase === 'reveal') {
         if (!s.cruel) replay();
-        window.AudioSettings?.stopEffect(clip);
-        clip = window.AudioSettings?.playEffect?.('majority-settlement');
+        AudioSettings?.stopEffect(clip);
+        clip = AudioSettings?.playEffect?.('majority-settlement');
         void checkAchievements();
       }
-      if (!window.MotionPolicy?.allowsMotion()) return;
+      if (!MotionPolicy?.allowsMotion()) return;
       const stage = root.value;
       if (!stage) return;
       const rect = stage.getBoundingClientRect();
@@ -102,7 +104,7 @@ export function useMajorityPresentation(root: Ref<HTMLElement | null>) {
           from = seat?.getBoundingClientRect();
         const x = from ? from.left + from.width / 2 : rect.left + rect.width / 2,
           y = from ? from.top + from.height / 2 : rect.top;
-        const animation = window.MotionPolicy?.animate(
+        const animation = MotionPolicy?.animate(
           chip,
           [
             {
@@ -141,15 +143,15 @@ export function useMajorityPresentation(root: Ref<HTMLElement | null>) {
       baseline = true;
       stop();
       gate?.dispose();
-      gate = window.MotionPolicy?.createGate();
+      gate = MotionPolicy?.createGate();
     },
   );
   const visibility = () => {
       baseline = true;
       stop();
     },
-    unsubscribe = window.MotionPolicy?.subscribe(() => {
-      if (!window.MotionPolicy?.allowsMotion()) stop();
+    unsubscribe = MotionPolicy?.subscribe(() => {
+      if (!MotionPolicy?.allowsMotion()) stop();
     });
   document.addEventListener('visibilitychange', visibility);
   onScopeDispose(() => {

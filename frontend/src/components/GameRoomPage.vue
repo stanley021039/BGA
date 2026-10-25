@@ -4,7 +4,7 @@ import RoomSceneLayout from './RoomSceneLayout.vue';
 import { warmGame } from '../services/game-assets';
 import type { GameType, RoomPlayer, RoomSnapshot } from '../contracts/room';
 import { useRoomPage } from '../composables/room-page';
-import { useGameFocus } from '../composables/game-focus';
+import RoomFullscreenToggle from './RoomFullscreenToggle.vue';
 import RoomRoster from './RoomRoster.vue';
 import GameSettingsPanel from './GameSettingsPanel.vue';
 import RoomChat from './RoomChat.vue';
@@ -45,7 +45,7 @@ const props = withDefaults(
 const emit = defineEmits<{ start: [] }>(),
   page = useRoomPage(props.type, props.reader, props.pollMs),
   { room, session, entryCode, entryBusy, entryError, connected } = page,
-  { focused, toggle } = useGameFocus();
+  focused = ref(false);
 const waiting = computed(() => room.snapshot?.phase === 'waiting'),
   settingsTarget = computed(() =>
     waiting.value ? '#room-waiting-settings-' + props.type : props.setupTarget,
@@ -142,13 +142,8 @@ onMounted(() => {
         icon="help"
         icon-only
         label="遊戲說明"
-        @click="help?.open()" /><UiButton
-        variant="ghost"
-        icon="expand"
-        icon-only
-        :label="focused ? '退出專注全螢幕' : '專注全螢幕'"
-        :aria-pressed="focused"
-        @click="toggle" /><RoomManager /><RoomLeaveButton /></RoomHeader
+        @click="help?.open()" /><RoomFullscreenToggle
+        @update:focused="focused = $event" /><RoomManager /><RoomLeaveButton /></RoomHeader
     ><div class="vue-game-room-feedback vue-room-status-row"
       ><div class="vue-room-phase-slot"
         ><slot name="round-progress" /><span class="vue-room-phase">{{ phase }}</span

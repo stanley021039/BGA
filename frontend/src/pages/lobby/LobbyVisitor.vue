@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import MotionPolicy from '../../engines/motion-policy.js';
+import BarrageFrames from '../../engines/barrage-frames.js';
+
 import SceneHealth from '../../components/SceneHealth.vue';
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
@@ -55,7 +58,7 @@ watch(
       !layer ||
       still.value ||
       document.hidden ||
-      !window.MotionPolicy?.allowsMotion()
+      !MotionPolicy?.allowsMotion()
     ) {
       emit('arrived');
       return;
@@ -102,8 +105,8 @@ watch(
     await nextTick();
     if (disposed || !props.message || !speech.value) return;
     speech.value.replaceChildren();
-    if (window.BarrageFrames)
-      window.BarrageFrames.decorate(
+    if (BarrageFrames)
+      BarrageFrames.decorate(
         speech.value,
         props.message.frame,
         props.message.name,

@@ -1,3 +1,4 @@
+import UIPopover from '../engines/popovers.js';
 import { nextTick, onMounted, onScopeDispose, shallowRef, watch, type Ref } from 'vue';
 interface Placement {
   left: number;
@@ -32,11 +33,11 @@ export function useFloatingPanel(
     disposed = false;
   function position() {
     frame = 0;
-    if (disposed || !opened.value || !trigger.value || !panel.value || !window.UIPopover) return;
+    if (disposed || !opened.value || !trigger.value || !panel.value || !UIPopover) return;
     const anchor = trigger.value.getBoundingClientRect(),
       box = panel.value.getBoundingClientRect(),
       viewport = window.visualViewport;
-    const result = window.UIPopover.placement(
+    const result = UIPopover.placement(
       { left: anchor.left, right: anchor.right, top: anchor.top, bottom: anchor.bottom },
       {
         width,

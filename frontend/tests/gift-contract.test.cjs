@@ -1,4 +1,5 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   path = require('node:path'),
@@ -15,11 +16,14 @@ function load(file, cache = new Map()) {
   const source = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
   }).outputText;
-  vm.runInNewContext(source, {
-    module,
-    exports: module.exports,
-    require: (id) => load(path.resolve(path.dirname(file), id + '.ts'), cache),
-  });
+  vm.runInNewContext(
+    source,
+    withEngineImports({
+      module,
+      exports: module.exports,
+      require: (id) => load(path.resolve(path.dirname(file), id + '.ts'), cache),
+    }),
+  );
   return module.exports;
 }
 const { readGiftSnapshot } = load(path.resolve(__dirname, '../src/contracts/gift.ts'));

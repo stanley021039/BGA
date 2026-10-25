@@ -1,3 +1,4 @@
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('node:fs'),
@@ -12,7 +13,7 @@ function load() {
       fs.readFileSync(path.join(__dirname, '../src/services/pointer-focus.ts'), 'utf8'),
       { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
     ).outputText,
-    { module, exports: module.exports },
+    withEngineImports({ module, exports: module.exports }),
   );
   return module.exports.focusFromPointer;
 }

@@ -1,3 +1,4 @@
+import AudioSettings from '../engines/audio-settings.js';
 import { defineStore } from 'pinia';
 import { computed, onScopeDispose, reactive, ref, shallowRef, watch } from 'vue';
 import { useRoomStore } from './room';
@@ -253,8 +254,8 @@ export const useMajorityStore = defineStore('majority', () => {
           } as Record<string, string>
         )[action] || '操作已完成。';
       if (action === 'answer' && room.connected && !document.hidden) {
-        window.AudioSettings?.stopEffect(sound);
-        sound = window.AudioSettings?.playEffect?.('confirm');
+        AudioSettings?.stopEffect(sound);
+        sound = AudioSettings?.playEffect?.('confirm');
       }
       return true;
     } catch (error) {
@@ -364,7 +365,7 @@ export const useMajorityStore = defineStore('majority', () => {
     clearTimeout(reactionTimer);
     reactionTimer = undefined;
     reactions.value = [];
-    window.AudioSettings?.stopEffect(sound);
+    AudioSettings?.stopEffect(sound);
     sound = undefined;
   }
   function expire() {

@@ -1,4 +1,5 @@
-'use strict';
+const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
+('use strict');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs'),
@@ -48,7 +49,7 @@ function harness() {
       fs.readFileSync(path.join(__dirname, '../src/composables/media-window.ts'), 'utf8'),
       { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } },
     ).outputText,
-    context,
+    withEngineImports(context),
   );
   const scope = vue.effectScope(),
     mode = vue.ref('full'),

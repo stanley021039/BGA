@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CountdownBar from '../engines/countdown-bar.js';
+
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { usePreferencesStore } from '../stores/preferences';
 import '../styles/room-countdown.scss';
@@ -64,7 +66,7 @@ watch(
 onMounted(() => {
   if (fill.value)
     bar =
-      window.CountdownBar?.create(fill.value, {
+      CountdownBar?.create(fill.value, {
         reducedMotion: () =>
           prefs.motion?.enabled === false ||
           prefs.motion?.reduced === true ||

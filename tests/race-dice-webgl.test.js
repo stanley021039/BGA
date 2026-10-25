@@ -1,6 +1,6 @@
 const test = require('node:test'),
   assert = require('node:assert/strict'),
-  fs = require('node:fs'),
+  fs = require('./helpers/browser-modules.cjs'),
   path = require('node:path'),
   vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../public/shared/race-dice-webgl.js'), 'utf8');
@@ -199,7 +199,7 @@ function fixture({
       },
     };
   const root = target({
-    RaceDirections: require('../public/shared/race-directions'),
+    RaceDirections: require('../frontend/src/engines/race-directions.js').default,
     document: doc,
     MotionPolicy: policy,
     devicePixelRatio: 3,
