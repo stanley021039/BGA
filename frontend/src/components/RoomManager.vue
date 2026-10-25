@@ -167,7 +167,7 @@ onBeforeUnmount(() => confirmation.value?.cancel());
     ><p>{{
       myRoomRole(room.snapshot) === 'host'
         ? '房主可設定房間管理者，並踢出其他玩家。房間角色不影響網站帳戶權限。'
-        : '管理者可踢出一般玩家；房主與其他管理者的角色由房主設定。'
+        : '管理者可修改遊戲設定、開始遊戲、再玩一局及踢出一般玩家；房主與其他管理者的角色由房主設定。'
     }}</p
     ><div class="vue-room-management-list"
       ><article v-for="player in players" :key="player.id" class="vue-room-management-row"

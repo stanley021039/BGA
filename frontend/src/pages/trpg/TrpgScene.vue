@@ -177,9 +177,9 @@ function input(event: Event) {
           ><p
             >線索 {{ state.clues }}／5，危機 {{ state.danger }}（目標不超過
             7）。沒有玩家因受挫被淘汰。</p
-          ><p>可在房間設定重新選角色，再由房主開始下一場。</p></template
+          ><p>可在房間設定重新選角色，再由房主或管理者開始下一場。</p></template
         ><template v-else
-          ><p>先在房間設定選擇你的角色，再由房主開始冒險。</p
+          ><p>先在房間設定選擇你的角色，再由房主或管理者開始冒險。</p
           ><p>1–6 人皆可玩；腳本夥伴用來試玩流程。</p></template
         >
       </section></div

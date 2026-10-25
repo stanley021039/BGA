@@ -183,20 +183,20 @@ onMounted(() => {
             :in-stage="!!settingsTarget"
             :waiting="waiting"
           >
-            <slot name="settings" /><p v-if="!room.host">等待房主開始。</p>
+            <slot name="settings" /><p v-if="!room.gameManager">等待房主或管理者開始。</p>
             <template v-if="waiting && $slots['waiting-before-start']" #before-start
               ><slot name="waiting-before-start"
             /></template>
             <template #start
               ><UiButton
-                v-if="room.host"
+                v-if="room.gameManager"
                 variant="primary"
                 :icon="startIcon || (startLabel ? 'replay' : 'play')"
                 :label="startLabel || '開始遊戲'"
                 :pending="room.busy"
                 :disabled="!setup || !canStart"
                 @click="emit('start')"
-              /><span v-else>由房主開始遊戲</span></template
+              /><span v-else>由房主或管理者開始遊戲</span></template
             >
           </GameSettingsPanel>
         </Teleport>

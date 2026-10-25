@@ -151,7 +151,13 @@ const { RoomMusic } = require('./music/room');
 const { GameAudioLibrary } = require('./music/game-audio');
 const { fallbackTitle } = require('./media/room');
 const { createYoutubeTitleResolver } = require('./media/youtube-title');
-const { roomRole, setRoomRole, pruneRoomRoles, permissionsView } = require('./rooms/permissions');
+const {
+  roomRole,
+  setRoomRole,
+  pruneRoomRoles,
+  permissionsView,
+  assertCanStartGame,
+} = require('./rooms/permissions');
 const {
   getProfileSettings,
   setProfileSettings,
@@ -1903,7 +1909,6 @@ function initializeApp(config, dataLock, acquired) {
                                     : '深夜好友局'),
             ).slice(0, 24),
           );
-          if (quacks) room.configure(room.host, data);
           equipRoomProviders(room);
           if (bluff && data.roleSeconds !== undefined) {
             if (![10, 30, 60].includes(data.roleSeconds))
@@ -1938,6 +1943,7 @@ function initializeApp(config, dataLock, acquired) {
               () => {
                 const player = room.add(user.display_name);
                 player.name = user.display_name;
+                if (quacks) room.configure(player.id, data);
                 return player;
               },
             );
@@ -2510,8 +2516,7 @@ function initializeApp(config, dataLock, acquired) {
           events.set(room.code, roomEvents);
           return send(withSocial(room, room.view(p.id)));
         }
-        if (url.pathname === '/api/start' && room.host !== p.id)
-          throw new HttpError(403, 'HOST_ONLY', '只有房主可以開始');
+        if (url.pathname === '/api/start') assertCanStartGame(room, p.id);
         if (url.pathname === '/api/start' && pendingAchievementUnits.size >= 4096)
           throw new HttpError(
             503,
@@ -2542,7 +2547,6 @@ function initializeApp(config, dataLock, acquired) {
                 throw Error('此遊戲沒有此設定');
               room.configure(p.id, data);
             } else if (url.pathname === '/api/start') {
-              if (room.host !== p.id) throw Error('只有房主可以發牌');
               room.start();
             } else if (url.pathname === '/api/bot') {
               if (room.host !== p.id) throw Error('只有房主可以加入電腦');

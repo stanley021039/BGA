@@ -51,7 +51,7 @@ function selectMode(id: MajorityOptions['mode']) {
         ><small>FREQUENCY CLUB</small><h1>選擇今晚的玩法</h1
         ><p>四種對決，找到這一桌的共同頻率。</p></div
       ><span class="stitch-host-badge">{{
-        game.editable ? '房主自訂中' : '本局設定'
+        game.editable ? '可調整房間設定' : '本局設定'
       }}</span></header
     >
     <fieldset :disabled="!game.editable || room.busy || game.uncertain">

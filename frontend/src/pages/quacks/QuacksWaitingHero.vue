@@ -23,7 +23,7 @@ import steam from '../../assets/quacks/steam.svg';
     </div>
     <div v-if="!artOnly" class="vue-quacks-rq03-copy">
       <small>CLASSIC MODE · 2–8 人一起煮藥</small>
-      <h1 id="quacksWaitingTitle">藥袋已備，等房主開釜。</h1>
+      <h1 id="quacksWaitingTitle">藥袋已備，準備開釜。</h1>
       <p>九回合同步抽藥，逐色共選本局藥材效果。<br />可加入草藥女巫與煉金術士。</p>
     </div>
   </section>

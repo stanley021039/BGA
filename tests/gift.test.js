@@ -619,10 +619,10 @@ test('authenticated players can create, join and reconnect to a gift room withou
       state.players.map((player) => player.name),
       ['giftadmin', 'giftfriend', 'giftother'],
     );
-    assert.equal((await post('settings', friend, { code, target: 8 })).status, 400);
+    assert.equal((await post('settings', friend, { code, target: 8 })).status, 403);
     assert.equal(
       (await post('settings', friend, { code, target: 8, includeAdult: true })).status,
-      400,
+      403,
     );
     assert.equal(
       (await post('settings', host, { code, target: 8, includeAdult: 'true' })).status,

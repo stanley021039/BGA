@@ -11,7 +11,7 @@ export const useMajorityStore = defineStore('majority', () => {
   const room = useRoomStore(),
     state = computed(() => room.snapshot as MajoritySnapshot | null),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
-    editable = computed(() => room.host && setup.value && !room.terminal);
+    editable = computed(() => room.settingsManager && setup.value && !room.terminal);
   const settings = reactive<MajorityOptions>({
       mode: 'majority',
       rounds: 10,

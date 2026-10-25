@@ -274,7 +274,7 @@ export const useTrpgStore = defineStore('trpg', () => {
     return room.command('action', { action: 'role', role: role.value });
   }
   async function start() {
-    if (!room.host || !setup.value || !room.connected || room.busy) return false;
+    if (!room.gameManager || !setup.value || !room.connected || room.busy) return false;
     if (role.value !== me.value?.role && !(await chooseRole())) return false;
     return room.command('start', {});
   }
