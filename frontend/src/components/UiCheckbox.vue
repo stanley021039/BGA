@@ -4,7 +4,7 @@ import { useAttrs, type StyleValue } from 'vue';
 // class/style belong to the label; the remaining attributes belong to the input.
 defineOptions({ inheritAttrs: false });
 defineProps<{ label: string }>();
-const model = defineModel<boolean>();
+const model = defineModel<boolean | string[]>();
 const attrs = useAttrs();
 </script>
 <template>
@@ -18,7 +18,9 @@ const attrs = useAttrs();
       type="checkbox"
       class="ui-checkbox-input"
       v-bind="{ ...attrs, class: undefined, style: undefined }"
-    /><span class="ui-checkbox-label">{{ label }}</span></label
+    /><slot
+      ><span class="ui-checkbox-label">{{ label }}</span></slot
+    ></label
   >
 </template>
 

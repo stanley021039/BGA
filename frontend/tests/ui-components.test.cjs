@@ -170,3 +170,22 @@ test('UiCheckbox and UiFilePick keep a visible label around the native control',
   assert.match(file, /type="file"/);
   assert.match(file, /a\.png/);
 });
+
+test('UiCheckbox supports array selection and rich labels without changing the label hierarchy', async () => {
+  const html = await render(
+    'UiCheckbox.vue',
+    { label: '華語', value: 'zh', modelValue: ['zh'] },
+    {
+      default: () => [h('strong', '華語'), h('span', '20 首')],
+    },
+  );
+  assert.match(html, /<input[^>]*value="zh"[^>]*checked|<input[^>]*checked[^>]*value="zh"/);
+  assert.match(html, /<strong>華語<\/strong>/);
+  assert.doesNotMatch(html, /ui-checkbox-label/);
+  const unchecked = await render('UiCheckbox.vue', {
+    label: '日語',
+    value: 'jp',
+    modelValue: ['zh'],
+  });
+  assert.doesNotMatch(unchecked.match(/<input\b[^>]*>/)[0], /\schecked(?:\s|\/?>)/);
+});

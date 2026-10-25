@@ -35,7 +35,9 @@ const compactEffects = computed(() =>
 </script>
 <template>
   <section class="vue-quacks-play">
-    <p v-if="s.interrupted">有人離席，本場已中止；保留已完成回合。由房主重新開始或返回大廳。</p>
+    <p v-if="s.interrupted"
+      >有人離席，本場已中止；保留已完成回合。由房主或管理者重新開始，或返回大廳。</p
+    >
     <QuacksBooks v-else-if="s.phase === 'waiting'" />
     <section v-else-if="s.phase === 'round-intro'" class="vue-quacks-round-intro"
       ><h2>第 {{ s.round + 1 }} 回合</h2><p>本輪結果已保存，伺服器正在準備下一回合。</p

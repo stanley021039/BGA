@@ -87,6 +87,7 @@ test('new waiting rooms save through the real party action store with a null rou
   const requests = [],
     room = vue.reactive({
       type: 'musicquiz',
+      settingsManager: true,
       scope: 1,
       seat: {},
       terminal: null,
@@ -128,6 +129,7 @@ test('new waiting rooms save through the real party action store with a null rou
 test('changing music banks saves the latest selection and re-enables starting; failed saves remain dirty', async () => {
   const room = vue.reactive({
       host: true,
+      settingsManager: true,
       terminal: false,
       connected: true,
       busy: false,

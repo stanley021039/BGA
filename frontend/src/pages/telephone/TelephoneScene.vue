@@ -401,7 +401,7 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
           ? prompting
             ? '已出題，等待其他玩家完成或倒數結束。'
             : '已提交，等待共同倒數結束後傳頁。'
-          : '想再玩一次？由房主從房間設定開始新一場。'
+          : '想再玩一次？由房主或管理者從房間設定開始新一場。'
       }}</span>
     </footer>
   </section>

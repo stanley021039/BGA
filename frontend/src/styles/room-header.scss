@@ -135,6 +135,28 @@ body .vue-room-navigation-menu {
     }
   }
 }
+:root body .vue-room-shell:has(> .vue-room-status-row.is-overlay) {
+  position: relative;
+}
+// Rooms without a match keep notices without a reserved row (#277).
+:root body .vue-room-shell > .vue-room-status-row.is-overlay {
+  position: absolute;
+  inset-block-start: var(--stitch-space-8);
+  inset-inline: 0;
+  z-index: 5;
+  justify-items: center;
+  min-height: 0;
+  pointer-events: none;
+  grid-template-columns: minmax(0, 1fr);
+  > * {
+    pointer-events: auto;
+    max-inline-size: min(480px, 100%);
+  }
+  > .ui-notice-slot:not([data-visible]) {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
 :root body .vue-room-shell > .vue-room-status-row {
   display: grid;
   grid-template-columns: minmax(220px, auto) minmax(0, 1fr) 44px;
@@ -258,9 +280,15 @@ body .vue-room-navigation-menu {
     :is(.vue-game-workspace, .vue-draw-workspace).vue-room-shell {
     &.is-header-integrated {
       grid-template-rows: 48px minmax(0, 1fr);
+      &:has(> .vue-room-status-row.is-overlay) {
+        grid-template-rows: minmax(0, 1fr);
+      }
     }
     &:not(.is-header-integrated) {
       grid-template-rows: auto 48px minmax(0, 1fr);
+      &:has(> .vue-room-status-row.is-overlay) {
+        grid-template-rows: auto minmax(0, 1fr);
+      }
     }
     > .vue-room-status-row {
       height: 48px;

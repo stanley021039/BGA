@@ -1,3 +1,4 @@
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { starterIndex } = require('./random-starter');
 const { assertRecordCapacity } = require('../rooms/membership');
 const { randomInt, randomUUID } = require('node:crypto');
@@ -285,7 +286,7 @@ class MajorityRoom {
     return p;
   }
   configure(id, data = {}) {
-    if (id !== this.host) throw Error('只有房主可以更改設定');
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) throw Error('遊戲中不能更改設定');
     const mode = data.mode ?? this.options.mode ?? 'majority';
     if (!['majority', 'cruel', 'music', 'scenario'].includes(mode)) throw Error('玩法不正確');

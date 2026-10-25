@@ -1,4 +1,5 @@
 'use strict';
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { randomInt, randomUUID, createHash } = require('node:crypto');
 const { HttpError } = require('../http/errors');
 const { assertRecordCapacity } = require('../rooms/membership');
@@ -136,7 +137,7 @@ class TelephoneRoom {
     return p;
   }
   configure(id, data) {
-    if (id !== this.host) fail('HOST_ONLY', '只有房主可以設定', 403);
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '傳遞中不能改題庫');
     if (
       data.sources !== undefined &&
@@ -153,7 +154,7 @@ class TelephoneRoom {
     if (data.sources !== undefined) this.options.sources = data.sources.slice();
     if (data.drawingSeconds !== undefined) this.options.drawingSeconds = data.drawingSeconds;
     if (data.textSeconds !== undefined) this.options.textSeconds = data.textSeconds;
-    this.event('settings', '房主更新傳遞題庫與階段時間');
+    this.event('settings', '已更新傳遞題庫與階段時間');
   }
   timing() {
     // Room persistence may restore options captured before split phase timers existed.

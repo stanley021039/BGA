@@ -17,6 +17,7 @@ const documents: Plugin = {
             'draw',
             'musicquiz',
             'minimal',
+            'lounge',
             'bluff',
             'telephone',
             'majority',

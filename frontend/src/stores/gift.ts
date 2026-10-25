@@ -11,7 +11,7 @@ export const useGiftStore = defineStore('gift', () => {
       room.snapshot?.type === 'gift' ? (room.snapshot as GiftSnapshot) : null,
     ),
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
-    settingsEditable = computed(() => room.host && setup.value && !room.terminal);
+    settingsEditable = computed(() => room.settingsManager && setup.value && !room.terminal);
   const settingsDraft = reactive({ target: 15, customPercent: null as number | null }),
     canonical = ref(''),
     settingsKey = () => JSON.stringify(settingsDraft),

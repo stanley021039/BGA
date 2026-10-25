@@ -24,7 +24,7 @@ function loadService(name) {
 const historyModule = loadService('media-history'),
   consentModule = loadService('media-consent');
 
-function harness({ accepted } = {}) {
+function harness({ accepted, stage = '' } = {}) {
   const environment = { hidden: false, modal: false, classes: new Set() };
   const pip = {
     available: true,
@@ -180,7 +180,9 @@ function harness({ accepted } = {}) {
   );
   const scope = vue.effectScope();
   let component;
-  scope.run(() => (component = module.exports.default.setup({ connected: true }, { expose() {} })));
+  scope.run(
+    () => (component = module.exports.default.setup({ connected: true, stage }, { expose() {} })),
+  );
   provider.joinVideo = () => {
     calls.push(['joinVideo']);
     component.view.value = { ...component.view.value, videoWanted: true };
@@ -647,6 +649,50 @@ test('actual Vue window asks once and reuses the tab decision for a new room', a
     h.media.snapshot = { ...h.media.snapshot, roomInstanceId: 'room-b' };
     await vue.nextTick();
     assert.equal(h.component.videoConsent.value, false, 'a new room keeps the tab decision');
+  } finally {
+    h.dispose();
+  }
+});
+
+test('a lounge stage joins accepted video without opening the control window and keeps it mounted when controls close', async () => {
+  const h = harness({ accepted: true, stage: '#lounge-stage' });
+  try {
+    await receive(h, { current: autoVideo });
+    assert.equal(h.component.opened.value, false);
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 1);
+    assert.deepEqual(h.calls.filter((c) => c[0] === 'setWindow').at(-1), [
+      'setWindow',
+      true,
+      false,
+      true,
+    ]);
+    await h.component.show(false);
+    h.component.setTab('request');
+    h.component.close();
+    assert.equal(h.component.opened.value, false);
+    assert.deepEqual(h.calls.filter((c) => c[0] === 'setWindow').at(-1), [
+      'setWindow',
+      true,
+      false,
+      true,
+    ]);
+    await receive(h, { current: autoVideo });
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 1);
+  } finally {
+    h.dispose();
+  }
+});
+test('a lounge stage still requires personal video consent and accepting does not open duplicate controls', async () => {
+  const h = harness({ accepted: false, stage: '#lounge-stage' });
+  try {
+    await receive(h, { current: autoVideo });
+    assert.equal(
+      h.calls.some((c) => c[0] === 'joinVideo'),
+      false,
+    );
+    await h.component.chooseVideo(true);
+    assert.equal(h.calls.filter((c) => c[0] === 'joinVideo').length, 1);
+    assert.equal(h.component.opened.value, false);
   } finally {
     h.dispose();
   }
