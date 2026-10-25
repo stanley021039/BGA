@@ -12,8 +12,6 @@ import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import UiField from '../../components/UiField.vue';
-import UiChoiceCard from '../../components/UiChoiceCard.vue';
-import UiIcon from '../../components/UiIcon.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import '../../styles/lobby-create.scss';
 const lobby = useLobbyStore(),
@@ -168,20 +166,25 @@ onBeforeUnmount(() => {
             :error="!!lobby.entryStatus" /></div
       ></template>
       <template #lobby-lounge
-        ><UiChoiceCard
-          action
-          class="vue-lobby-lounge-card"
-          :label="loungeCard.title"
-          aria-haspopup="dialog"
-          @click="openLounge"
-          ><span class="vue-lobby-lounge-art" aria-hidden="true"><UiIcon name="sound" /></span
-          ><template #label
-            ><span class="vue-lobby-lounge-body"
-              ><span class="vue-lobby-lounge-kicker">{{ loungeCard.english }}</span
-              ><strong>{{ loungeCard.title }}</strong
-              ><span>{{ loungeCard.seats }} · {{ loungeCard.category }}</span></span
-            ></template
-          ></UiChoiceCard
+        ><div class="game-library vue-lobby-lounge-library" data-card-carousel
+          ><!-- ui-check-allow raw-control: 場外休憩區卡片須沿用輪播 game-tile 的同一外觀（#277），UiChoiceCard 的面板外觀無法與遊戲卡片一致 -->
+          <button
+            type="button"
+            class="game-tile vue-lobby-lounge-tile"
+            aria-haspopup="dialog"
+            :aria-label="loungeCard.title + '：開新房間或加入'"
+            @click="openLounge"
+            ><div class="tile-image" aria-hidden="true"></div
+            ><div class="tile-body"
+              ><div class="kicker">{{ loungeCard.english }}</div
+              ><h2>{{ loungeCard.title }}</h2
+              ><p>{{ loungeCard.description }}</p
+              ><div class="tile-bottom"
+                ><span>{{ loungeCard.seats }}</span
+                ><span>{{ loungeCard.category }}</span></div
+              ></div
+            ></button
+          ></div
         ></template
       >
     </GameCarousel>

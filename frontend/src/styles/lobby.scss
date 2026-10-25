@@ -856,28 +856,49 @@ body .lobby-backdrop[data-background='castle'] {
   font-size: var(--stitch-text-hint);
   color: var(--stitch-muted);
 }
-// #277: 場外休憩區 is a fixed card at the bottom of the action column, below
-// 開一桌, never part of the carousel. Its art waits for #278.
-.vue-lobby .vue-lobby-lounge-card {
-  align-self: stretch;
-  text-align: start;
+// #277: 場外休憩區 is a fixed tile at the bottom of the action column, below
+// 開一桌, never part of the carousel. It reuses the carousel tile look; only
+// its placement and size are set here. Its art waits for #278.
+:root
+  body[data-visual-theme]
+  .vue-lobby
+  .game-library.vue-lobby-lounge-library[data-card-carousel] {
+  position: static;
+  inline-size: auto;
+  max-inline-size: none;
+  block-size: auto;
+  margin: 0;
+  pointer-events: auto;
+  container-type: normal;
+  .game-tile {
+    position: relative;
+    inset: auto;
+    inline-size: var(--lounge-tile-width, 274px);
+    block-size: var(--lounge-tile-height, 418px);
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    text-align: start;
+  }
+  .tile-image {
+    flex: none;
+    block-size: var(--lounge-tile-image, 190px);
+  }
+  .tile-body {
+    flex: 1;
+    min-block-size: 0;
+    block-size: auto;
+  }
 }
-.vue-lobby .vue-lobby-lounge-art {
-  display: grid;
-  place-items: center;
-  block-size: 72px;
-  border-radius: var(--stitch-radius-control);
-  background: var(--stitch-info-bg);
-  color: var(--stitch-info-ink);
-}
-.vue-lobby .vue-lobby-lounge-body {
-  display: grid;
-  gap: var(--stitch-gap-label);
-  font-size: var(--stitch-text-hint);
-  color: var(--stitch-muted);
-  strong {
-    font-size: var(--stitch-text-body);
-    color: var(--stitch-ink);
+// The desktop action column is pinned to the bottom; on short screens the tile
+// gives up height rather than pushing the column under the site header.
+@media (min-width: 960px) and (min-height: 560px) and (pointer: fine) {
+  :root
+    body[data-visual-theme]
+    .vue-lobby
+    .vue-lobby-lounge-library[data-card-carousel]
+    .game-tile {
+    max-block-size: max(220px, calc(100dvh - 460px));
   }
 }
 .vue-lobby-lounge {

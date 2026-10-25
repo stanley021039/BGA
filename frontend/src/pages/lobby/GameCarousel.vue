@@ -11,6 +11,8 @@ const props = defineProps<{ modelValue: string }>(),
 const root = ref<HTMLElement | null>(null),
   width = ref(1000),
   cardWidth = ref(300),
+  // The fixed 場外休憩區 tile copies the live tile size (#277).
+  tileSize = ref<Record<string, string>>({}),
   drag = ref(0),
   dragging = ref(false),
   prefs = usePreferencesStore();
@@ -137,7 +139,16 @@ onMounted(() => {
   observer = new ResizeObserver(() => {
     if (root.value) {
       width.value = root.value.clientWidth;
-      cardWidth.value = root.value.querySelector<HTMLElement>('.game-tile')?.offsetWidth || 300;
+      const tile = root.value.querySelector<HTMLElement>('.game-tile');
+      cardWidth.value = tile?.offsetWidth || 300;
+      tileSize.value = tile
+        ? {
+            '--lounge-tile-width': tile.offsetWidth + 'px',
+            '--lounge-tile-height': tile.offsetHeight + 'px',
+            '--lounge-tile-image':
+              (tile.querySelector<HTMLElement>('.tile-image')?.offsetHeight || 190) + 'px',
+          }
+        : {};
     }
   });
   if (root.value) observer.observe(root.value);
@@ -239,7 +250,7 @@ onBeforeUnmount(() => {
             icon="add"
             :label="'開一桌' + chosen.title"
             @click="emit('create')" /><slot name="lobby-resume" /></div
-        ><slot name="lobby-lounge" /></div
+        ><div class="carousel-lounge" :style="tileSize"><slot name="lobby-lounge" /></div></div
     ></div>
   </section>
 </template>
