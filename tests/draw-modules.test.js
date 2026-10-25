@@ -198,9 +198,9 @@ test('different strokes, tools and styles stay separate requests in their origin
   );
 });
 
-test('long strokes are sent in 64-point chunks that overlap by one point', async (t) => {
+test('long strokes are sent in 256-point chunks that overlap by one point', async (t) => {
   const h = transport(t),
-    points = Array.from({ length: 150 }, (_, i) => [i % 512, 1]);
+    points = Array.from({ length: 600 }, (_, i) => [i % 512, 1]);
   h.api.enqueue(stroke(points), {});
   const lengths = [];
   for (let i = 0; i < 3; i++) {
@@ -210,9 +210,9 @@ test('long strokes are sent in 64-point chunks that overlap by one point', async
     reply.resolve({});
   }
   assert.deepEqual(lengths, [
-    [64, 0],
-    [64, 63],
-    [24, 126],
+    [256, 0],
+    [256, 255],
+    [90, 510],
   ]);
   await h.advance(115);
   assert.equal(h.sent.length, 3);
@@ -598,6 +598,28 @@ test('canvas session applies each stroke event once and resyncs on a gap or fore
   assert.equal(s.syncs(), before + 1, 'a gap asks for a fresh snapshot');
   s.api.receiveStroke(event(accepted(2, 'aaaaaaaa-0002'), { canvasEpoch: 'other' }));
   assert.equal(s.api.view().strokeCount, 1);
+  await s.advance(0);
+});
+
+test('snapshots accept 256-point batches and refuse longer ones (#264)', async (t) => {
+  const s = canvasSession(t),
+    batch = (length) => ({
+      version: 1,
+      strokeId: 'dddddddd-0001',
+      tool: 'brush',
+      color: '#000000',
+      size: 4,
+      points: Array.from({ length }, (_, i) => [i % 512, 1]),
+    });
+  assert.equal(
+    s.api.applySnapshot({ canvasEpoch: EPOCH, round: 1, version: 1, strokes: [batch(256)] }),
+    true,
+  );
+  assert.throws(
+    () => s.api.applySnapshot({ canvasEpoch: EPOCH, round: 1, version: 2, strokes: [batch(257)] }),
+    /上限/,
+  );
+  assert.equal(s.api.view().pointCount, 256);
   await s.advance(0);
 });
 

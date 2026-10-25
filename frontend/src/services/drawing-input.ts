@@ -1,4 +1,5 @@
 import type { DrawingDraft, DrawingSession, DrawingStyle, Point } from '../contracts/drawing';
+import { createStrokeSimplifier } from './stroke-simplify';
 
 interface ActiveStroke extends DrawingDraft {
   pointerId: number;
@@ -6,6 +7,7 @@ interface ActiveStroke extends DrawingDraft {
   startStamp: number | null;
   startNow: number;
   sent: boolean;
+  simplifier: ReturnType<typeof createStrokeSimplifier>;
 }
 interface InputOptions {
   canvas: HTMLCanvasElement;
@@ -17,6 +19,8 @@ interface InputOptions {
   now?: () => number;
 }
 // Same 512×256 input, point-time clock, 16-point/80ms flush and carry anchor as draw.js.
+// Freehand samples are thinned within a fixed error bound before they use quota (#264);
+// the unsent tip may be replaced, while anything already flushed stays immutable.
 // The existing DrawTransport retains wire chunking, pacing, immutable retries and quotas.
 export function createDrawingInput({
   canvas,
@@ -52,6 +56,7 @@ export function createDrawingInput({
         send(points, draft.strokeId, draft, times);
         if (active !== draft) return;
         draft.sent = true;
+        draft.simplifier.commit();
         pending = final ? [] : [points[points.length - 1]!];
         pendingTimes = final ? [] : [times[times.length - 1]!];
       }
@@ -109,11 +114,25 @@ export function createDrawingInput({
         Math.max(active.pointTimes[active.pointTimes.length - 1]!, Math.round(elapsed)),
       );
       if (point[0] === last[0] && point[1] === last[1]) continue;
-      if (active.points.length >= 30000 || !session.hasCapacity(1)) {
-        feedback('這一筆已達畫布上限，請放開後再操作。');
+      // Replacing the unsent tip keeps the point count, so only new points need capacity.
+      const replace = isBrush && pending.length > 1 && active.simplifier.fits(point);
+      if (!replace && (active.points.length >= 30000 || !session.hasCapacity(1))) {
+        feedback('本輪畫布點數已達上限，請放開後再操作。');
         break;
       }
+      if (replace) {
+        active.simplifier.push(point, true);
+        active.points[active.points.length - 1] = point;
+        active.pointTimes[active.pointTimes.length - 1] = time;
+        pending[pending.length - 1] = point;
+        pendingTimes[pendingTimes.length - 1] = time;
+        session.replaceDraftTip(active.strokeId, point);
+        cursor = point;
+        changed = true;
+        continue;
+      }
       if (isBrush) {
+        active.simplifier.push(point, false);
         active.points.push(point);
         active.pointTimes.push(time);
         pending.push(point);
@@ -162,6 +181,7 @@ export function createDrawingInput({
       startStamp: sample.stamp,
       startNow: now(),
       sent: false,
+      simplifier: createStrokeSimplifier(cursor),
     };
     if (!session.beginDraft(draft)) {
       feedback('畫布同步中的筆畫已達上限，請稍候。');
