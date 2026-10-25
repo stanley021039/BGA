@@ -4,6 +4,10 @@
 
 ## 快速對照
 
+`UiPanel` 的 `title-before`／`title-after` slot 將規則入口、補充資訊或單行順序置於標題同列，沿用共用 header 對齊；`actions` 仍保留在列尾。title-after 自適應剩餘寬度，內容可自行設單行省略，不以頁面覆寫標題位置。
+
+`UiHoverInfo helpOnly` 只呈現正常佔位的44px問號來源，沿用hover／鍵盤／點擊查看、Esc與點外部關閉，沒有額外關閉鈕；長內容可搭配 `interactive` 供移入捲動。預設卡面與社交說明行為不變。
+
 共用Vue樣式提供`.ui-sr-only`無障礙輔助文字裁切，RoomMedia等Teleport元件不必載入舊ui-primitives.css。文字仍保留於DOM與可讀關聯，不能用display:none取代。UiButton自身scoped規則及手機可見caption變體保留。
 
 `UiHoverInfo interactive` 提供可移入的第一層浮層，200ms僅用於跨越來源與面板的間隙，不延遲顯示；子層沿用 manual top layer，避免原生 auto popover 關閉第一層。Esc／點外部／卸載皆清理。一般被動說明仍移出即關；快速重入不使用時間冷卻，Esc 的重開抑制由實際指標移動或移出解除。`UiPopover manual` 預設關閉，不改既有社交選單。

@@ -76,6 +76,22 @@
   line-height: var(--stitch-line-height-body);
   overflow-wrap: anywhere;
 }
+:root body .ui-panel-title-with-slots {
+  flex: 1;
+}
+:root body .ui-panel-title-content {
+  display: flex;
+  align-items: center;
+  gap: var(--stitch-space-8);
+  min-inline-size: 0;
+  > .ui-heading {
+    flex: none;
+  }
+}
+:root body .ui-panel-title-extra {
+  flex: 1;
+  min-inline-size: 0;
+}
 
 :root body .ui-field {
   display: grid;

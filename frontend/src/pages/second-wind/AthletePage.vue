@@ -66,7 +66,7 @@ const phase = computed(() =>
         { label: '賽程', value: 'Twisty／Whirly 各兩場' },
         { label: '獎分', value: '3／1、4／2、5／3、7／4' },
       ]"
-      notice="名次獎分為使用者核准的測試值，後三場仍待原版數值核對。可加入測試 AI。"
+      notice="四場能力競速，可加入測試 AI。"
       ><template #art
         ><AthleteArt
           :src="athleteHero"
@@ -90,10 +90,7 @@ const phase = computed(() =>
         <li
           >輪到你時擲骰做主移動；可選能力會停下等待指定玩家作決定，強制能力自動結算。絆倒會略過下次主移動。</li
         >
-        <li
-          >Twisty 第一位通過 14 格觸發 Twist；Whirly 停在漩渦格會傳送到另一端。14
-          格界線為目前圖像轉錄，待核對。</li
-        >
+        <li>曲折賽道第一位通過 14 格觸發 Twist；漩渦賽道停在漩渦格會傳送到另一端。</li>
         <li
           >兩名選手完賽即結束該場。下一場由最先淘汰或最落後角色的玩家先行。只剩一人在場時直接取得剩餘名次。</li
         >
@@ -101,10 +98,7 @@ const phase = computed(() =>
           >角色、Twist、分數與事件紀錄都可查看；四場總分最高者獲勝，同分共同獲勝。Re-Runner
           等效果會增加在場角色。</li
         >
-        <li
-          >本機試玩版；伺服器重啟不續局，有人離席則中止，暫時斷線可重連。獎分後三場與 Twist
-          界線尚待原版核對。</li
-        >
+        <li>本機試玩版；伺服器重啟不續局，有人離席則中止，暫時斷線可重連。</li>
       </ol></template
     >
   </GameRoomPage>

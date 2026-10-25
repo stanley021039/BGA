@@ -37,6 +37,7 @@ export interface AthleteGame {
   catalog: AthleteCard[];
   market?: string[];
   draftRound?: number;
+  draftOrder?: string[];
   rolls?: Record<string, number>;
   ownSelection: string | null;
   selectedIds: string[];
@@ -110,6 +111,8 @@ export function readAthleteSnapshot(value: unknown): AthleteSnapshot {
       invalid();
     const players = strings(g.players);
     if (players.length < 3 || players.length > 6 || new Set(players).size !== players.length)
+      invalid();
+    if (g.draftOrder !== undefined && strings(g.draftOrder).some((id) => !players.includes(id)))
       invalid();
     for (const [id, cards] of Object.entries(record(g.teams))) {
       if (!players.includes(id)) invalid();

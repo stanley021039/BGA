@@ -13,8 +13,14 @@ import {
 import UiPopover from './UiPopover.vue';
 import UiButton from './UiButton.vue';
 const props = withDefaults(
-  defineProps<{ title: string; disabled?: boolean; showHelp?: boolean; interactive?: boolean }>(),
-  { showHelp: true, interactive: false },
+  defineProps<{
+    title: string;
+    disabled?: boolean;
+    showHelp?: boolean;
+    interactive?: boolean;
+    helpOnly?: boolean;
+  }>(),
+  { showHelp: true, interactive: false, helpOnly: false },
 );
 const ancestorManual = inject<Ref<boolean>>('ui-hover-manual', ref(false));
 const manualTree = computed(() => props.interactive || ancestorManual.value);
@@ -127,6 +133,7 @@ onBeforeUnmount(close);
   <div
     ref="root"
     class="ui-hover-info"
+    :data-help-only="helpOnly || undefined"
     :data-preview-disabled="disabled || undefined"
     role="group"
     :tabindex="disabled ? 0 : undefined"
@@ -157,7 +164,7 @@ onBeforeUnmount(close);
       content-sized
       avoid-anchor
       :manual="manualTree"
-      :show-close="showHelp"
+      :show-close="showHelp && !helpOnly"
       :autofocus="autofocus"
       @pointerenter="enterPanel($event)"
       @pointerleave="leave($event)"
@@ -189,5 +196,14 @@ onBeforeUnmount(close);
   right: var(--stitch-space-8);
   top: var(--stitch-space-8);
   z-index: 1;
+}
+.ui-hover-info[data-help-only] {
+  flex: none;
+  width: var(--stitch-control-height);
+  height: var(--stitch-control-height);
+}
+.ui-hover-info[data-help-only] > .ui-hover-info-help-slot {
+  position: static;
+  display: block;
 }
 </style>

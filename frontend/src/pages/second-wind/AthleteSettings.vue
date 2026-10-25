@@ -41,8 +41,8 @@ async function save() {
     label="角色牌庫"
     :disabled="!editable"
     :options="[
-      { value: 'second-wind', label: 'Second Wind：36 名角色' },
       { value: 'base', label: '初代本體：36 名角色' },
+      { value: 'second-wind', label: 'Second Wind：36 名角色' },
       { value: 'mixed', label: '本體＋Second Wind：72 名角色' },
     ]"
     hint="賽道維持 Second Wind；修改並儲存後於下一局使用。"

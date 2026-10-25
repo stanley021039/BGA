@@ -52,6 +52,9 @@ test('shipped athlete parser accepts actual recruiting views and rejects malform
   const bad = structuredClone(v);
   bad.game.revision = -1;
   assert.throws(() => readAthleteSnapshot(bad));
+  const wrongOrder = structuredClone(v);
+  wrongOrder.game.draftOrder = ['outsider'];
+  assert.throws(() => readAthleteSnapshot(wrongOrder));
   const wrong = structuredClone(v);
   wrong.game.pending = { id: 'x', playerId: 'outsider', title: 'bad', options: [] };
   assert.throws(() => readAthleteSnapshot(wrong));

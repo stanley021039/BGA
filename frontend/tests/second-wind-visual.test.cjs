@@ -108,7 +108,7 @@ test('illustrated draft retains its guarded action and own secret choice stays l
     assert.equal(card.parentElement.getAttribute('aria-label'), 'Understudy');
     assert.equal(card.textContent.trim(), '');
     assert.equal(card.getAttribute('data-image-only'), 'true');
-    assert.equal(f.host.querySelector('.ui-hover-info-help'), null);
+    assert.equal(card.parentElement.querySelector('.ui-hover-info-help'), null);
     card.click();
     assert.equal(f.calls[0][0], 'draft');
     assert.equal(f.calls[0][1].racerId, 'understudy');
@@ -133,12 +133,13 @@ test('illustrated draft retains its guarded action and own secret choice stays l
   }
 });
 
-test('scoreboard collapses all player content while keeping the heading and log identity', async () => {
+test('scoreboard collapses all player content and event text has no repeated identity prefix', async () => {
   const f = fixture();
   try {
     f.game.events = [{ id: 1, type: 'die', text: 'Stunner 擲出 6', playerId: 'b' }];
     await vue.nextTick();
-    assert.match(f.host.textContent, /b（ID：b）｜Stunner 擲出 6/);
+    assert.equal(f.host.querySelector('.athlete-events').textContent.trim(), 'Stunner 擲出 6');
+    assert.doesNotMatch(f.host.querySelector('.athlete-events').textContent, /ID：|｜/);
     const toggle = f.host.querySelector('button[aria-label="收合積分與隊伍"]');
     toggle.click();
     await vue.nextTick();
@@ -212,6 +213,79 @@ test('image failure retains its size and readable fallback, then recovers on a n
     await vue.nextTick();
     await vue.nextTick();
     assert.ok(f.host.querySelector('img').src.endsWith('/second.webp'));
+  } finally {
+    f.dispose();
+  }
+});
+
+test('score groups bind avatars, points and image-only remaining racers; roll buttons belong only to the local seat', async () => {
+  const f = fixture();
+  try {
+    const groups = [...f.host.querySelectorAll('.athlete-player-group')];
+    assert.equal(groups.length, 3);
+    assert.ok(
+      groups.every(
+        (g) => g.querySelector('.athlete-player-avatar') && g.querySelector('.ui-stitch-badge'),
+      ),
+    );
+    assert.equal(groups[0].querySelector('.athlete-team').textContent.trim(), '');
+    assert.equal(groups[0].querySelector('.athlete-player-avatar').getAttribute('aria-label'), 'a');
+    assert.doesNotMatch(groups[0].textContent, /1 ·|Penguin/);
+    f.game.phase = 'draft-rolloff';
+    f.game.rolls = { b: 3 };
+    await vue.nextTick();
+    const rollers = [...f.host.querySelectorAll('.athlete-roll-player')];
+    assert.equal(rollers.length, 3);
+    assert.equal(rollers[0].querySelector('button').getAttribute('aria-label'), '擲骰');
+    assert.equal(rollers[1].querySelectorAll('button').length, 0);
+    assert.equal(rollers[2].querySelectorAll('button').length, 0);
+    rollers[0].querySelector('button').click();
+    assert.equal(f.calls.at(-1)[0], 'roll');
+    f.game.rolls.a = 4;
+    await vue.nextTick();
+    assert.equal(rollers[0].querySelector('button').disabled, true);
+  } finally {
+    f.dispose();
+  }
+});
+
+test('header order follows the real draft and action seat, and racer details precede the board collapsed', async () => {
+  const f = fixture();
+  try {
+    f.game.draftOrder = ['c', 'b', 'a', 'a', 'b', 'c'];
+    f.game.turnId = 'b';
+    await vue.nextTick();
+    assert.equal(f.host.querySelector('.athlete-turn-order').textContent.trim(), 'c ↔ b ↔ a');
+    assert.equal(f.host.querySelector('[aria-current="step"]').textContent, 'b');
+    assert.doesNotMatch(f.host.textContent, /輪到.*招募/);
+    f.game.phase = 'racing';
+    f.game.first = 'c';
+    f.game.trackId = 'twisty-twirl';
+    f.game.racers = [
+      {
+        id: 'r',
+        racerId: 'penguin',
+        playerId: 'a',
+        position: 2,
+        copiedPowers: [],
+        tripped: false,
+        transformed: false,
+        eliminated: false,
+        finished: false,
+      },
+    ];
+    await vue.nextTick();
+    assert.equal(f.host.querySelector('.athlete-turn-order').textContent.trim(), 'c → a → b');
+    assert.equal(f.host.querySelector('#athlete-racer-details').style.display, 'none');
+    const headings = [...f.host.querySelectorAll('h2')].map((h) => h.textContent.trim());
+    assert.deepEqual(headings.slice(0, 3), ['積分與隊伍', '本場角色與能力', '曲折賽道']);
+    f.host.querySelector('button[aria-label="展開本場角色與能力"]').click();
+    await vue.nextTick();
+    assert.notEqual(f.host.querySelector('#athlete-racer-details').style.display, 'none');
+    assert.doesNotMatch(f.host.textContent, /輪到.*行動|Twisty Twirl｜|待核對/);
+    f.game.pending = { id: 'q', playerId: 'a', title: '選擇能力', options: [] };
+    await vue.nextTick();
+    assert.equal(f.host.querySelector('[aria-current="step"]').textContent, 'a');
   } finally {
     f.dispose();
   }
