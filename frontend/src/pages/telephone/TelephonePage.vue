@@ -48,13 +48,6 @@ function setTextSeconds(value: string | number | null | undefined) {
     telephone.queueSources();
   }
 }
-function toggleSource(id: string, checked: boolean | undefined) {
-  telephone.sources =
-    checked === true
-      ? [...new Set([...telephone.sources, id])]
-      : telephone.sources.filter((source) => source !== id);
-  telephone.queueSources();
-}
 const pageCount = computed(
   () =>
     state.value?.roundLimit ||
@@ -144,9 +137,10 @@ function status(player: RoomPlayer) {
           ><UiCheckbox
             v-for="source in state?.sources"
             :key="source.id"
-            :model-value="telephone.sources.includes(source.id)"
+            v-model="telephone.sources"
+            :value="source.id"
             :label="source.label"
-            @update:model-value="toggleSource(source.id, $event)" /></fieldset
+            @update:model-value="telephone.queueSources()" /></fieldset
         ><StatusSlot
           :message="telephone.settingsPending ? '正在儲存遊戲設定…' : telephone.settingsError || ''"
           :error="!!telephone.settingsError" /><UiButton

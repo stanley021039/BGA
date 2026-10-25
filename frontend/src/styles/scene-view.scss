@@ -21,9 +21,91 @@ body.scene-ui-hidden {
   z-index: 3000;
 }
 :root body[data-visual-theme]:has(.lobby-backdrop) #site-header-app[data-site-header] {
+  --stitch-header-ink: var(--stitch-ink);
+  --stitch-header-hover: var(--stitch-surface-hover);
+  --stitch-header-outline: transparent;
+  --stitch-header-stroke-width: 0px;
+  --stitch-header-icon-filter: none;
+  --stitch-header-focus-shadow: none;
+  color: var(--stitch-header-ink);
   background: transparent;
   border-color: transparent;
   box-shadow: none;
+  // Only transparent triggers inherit the scene foreground. Popups and dialogs
+  // keep their normal theme tokens and opaque surfaces.
+  .vue-site-more > .vue-button,
+  .vue-site-controls > .vue-button,
+  .vue-site-controls > .vue-invitation-button > .vue-button {
+    --stitch-ghost-ink: var(--stitch-header-ink);
+    --stitch-ghost-hover-ink: var(--stitch-header-ink);
+    --stitch-ghost-hover-bg: var(--stitch-header-hover);
+    --stitch-ghost-focus: var(--stitch-header-ink);
+    --stitch-ghost-text-stroke-width: var(--stitch-header-stroke-width);
+    --stitch-ghost-text-stroke-color: var(--stitch-header-outline);
+    --stitch-ghost-icon-filter: var(--stitch-header-icon-filter);
+    --stitch-ghost-focus-shadow: var(--stitch-header-focus-shadow);
+  }
+  :is(.vue-site-brand, .vue-site-navigation-link) {
+    -webkit-text-stroke-width: var(--stitch-header-stroke-width);
+    -webkit-text-stroke-color: var(--stitch-header-outline);
+    paint-order: stroke fill;
+  }
+  .vue-site-navigation-link:hover {
+    background: var(--stitch-header-hover);
+  }
+  :is(.vue-site-brand, .vue-site-navigation-link):focus-visible {
+    outline-color: var(--stitch-header-ink);
+    box-shadow: var(--stitch-header-focus-shadow);
+  }
+}
+
+:root
+  body[data-visual-theme]:has(
+    .lobby-backdrop:is(
+      [data-background='castle'],
+      [data-background='garden'],
+      [data-background='cosmic'],
+      [data-background='ballroom'],
+      [data-background='classroom'],
+      [data-background='prison'],
+      [data-background='lab'],
+      [data-background='aurora']
+    )
+  )
+  #site-header-app[data-site-header] {
+  --stitch-header-ink: var(--stitch-scene-dark-ink);
+  --stitch-header-hover: var(--stitch-scene-dark-hover);
+  --stitch-header-focus-shadow: var(--stitch-scene-dark-focus-shadow);
+}
+:root
+  body[data-visual-theme]:has(.lobby-backdrop[data-background='courtroom'])
+  #site-header-app[data-site-header] {
+  --stitch-header-ink: var(--stitch-scene-light-ink);
+  --stitch-header-hover: var(--stitch-scene-light-hover);
+  --stitch-header-focus-shadow: var(--stitch-scene-light-focus-shadow);
+}
+:root[data-color-scheme='dark']
+  body[data-visual-theme]:has(.lobby-backdrop[data-background='courtroom'])
+  #site-header-app[data-site-header] {
+  --stitch-header-ink: var(--stitch-scene-dark-ink);
+  --stitch-header-hover: var(--stitch-scene-dark-hover);
+  --stitch-header-focus-shadow: var(--stitch-scene-dark-focus-shadow);
+}
+
+// Bright spotlights cross both light and dark regions. A fine glyph outline
+// keeps their edges readable without painting a separate header/background bar.
+:root
+  body[data-visual-theme]:has(
+    .lobby-backdrop:is([data-background='ballroom'], [data-background='classroom'])
+  )
+  #site-header-app[data-site-header],
+:root[data-color-scheme='dark']
+  body[data-visual-theme]:has(.lobby-backdrop[data-background='courtroom'])
+  #site-header-app[data-site-header] {
+  --stitch-header-outline: var(--stitch-scene-dark-outline);
+  --stitch-header-stroke-width: var(--stitch-scene-outline-width);
+  --stitch-header-icon-filter: var(--stitch-scene-dark-icon-outline);
+  --stitch-header-focus-shadow: var(--stitch-scene-dark-focus-shadow);
 }
 
 :root body[data-visual-theme]:has(.vue-room-background) {

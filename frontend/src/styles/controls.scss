@@ -67,8 +67,34 @@
   }
   &[data-stitch-variant='ghost'] {
     --_stitch-fill: transparent;
+    --_stitch-color: var(--stitch-ghost-ink, var(--stitch-ink));
+    --_stitch-hover: var(--stitch-ghost-hover-bg, var(--stitch-surface-hover));
+    --_stitch-active: var(--stitch-ghost-hover-bg, var(--stitch-surface-hover));
     --_stitch-border: transparent;
     --_stitch-shadow: none;
+    .vue-button-caption {
+      -webkit-text-stroke-width: var(--stitch-ghost-text-stroke-width, 0px);
+      -webkit-text-stroke-color: var(--stitch-ghost-text-stroke-color, transparent);
+      paint-order: stroke fill;
+    }
+    .ui-button-icon {
+      filter: var(--stitch-ghost-icon-filter, none);
+    }
+    &:is([aria-pressed='true'], [aria-selected='true']) .ui-button-icon {
+      filter: none;
+    }
+    &:active:not(:disabled) {
+      color: var(--stitch-ghost-hover-ink, var(--stitch-button-color, var(--_stitch-color)));
+    }
+    @media (hover: hover) {
+      &:hover:not(:disabled) {
+        color: var(--stitch-ghost-hover-ink, var(--stitch-button-color, var(--_stitch-color)));
+      }
+    }
+    &:focus-visible {
+      outline-color: var(--stitch-ghost-focus, var(--stitch-focus));
+      box-shadow: var(--stitch-ghost-focus-shadow, var(--_stitch-shadow));
+    }
   }
   &[data-stitch-variant='danger'] {
     --_stitch-fill: var(--stitch-danger-bg);

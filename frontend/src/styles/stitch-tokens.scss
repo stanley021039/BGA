@@ -31,6 +31,17 @@ $typography: (
 }
 
 :root {
+  // Scene foregrounds are fixed pairs: artwork brightness is independent of the UI theme.
+  --stitch-scene-light-ink: #1b1c1c;
+  --stitch-scene-light-hover: #eeebe6;
+  --stitch-scene-dark-ink: #ffffff;
+  --stitch-scene-dark-hover: #363534;
+  --stitch-scene-dark-outline: #000000;
+  --stitch-scene-outline-width: 1.5px;
+  --stitch-scene-dark-icon-outline: drop-shadow(1px 0 0 #000000) drop-shadow(-1px 0 0 #000000)
+    drop-shadow(0 1px 0 #000000) drop-shadow(0 -1px 0 #000000);
+  --stitch-scene-dark-focus-shadow: 0 0 0 3px #000000;
+  --stitch-scene-light-focus-shadow: 0 0 0 3px #ffffff;
   // Fixed artwork stage colours preserve attack previews across light/dark themes.
   --stitch-artwork-preview-bg: #10182b;
   --stitch-artwork-preview-ink: #fff;

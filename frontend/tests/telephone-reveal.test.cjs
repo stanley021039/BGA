@@ -105,6 +105,8 @@ function client(engine, player) {
     seat: {},
     connected: true,
     host: player.id === engine.host,
+    settingsManager: player.id === engine.host,
+    gameManager: player.id === engine.host,
     snapshot: null,
   });
   const actions = vue.reactive({
@@ -139,6 +141,8 @@ function client(engine, player) {
   function refresh() {
     room.snapshot = reader(engine.view(player.id));
     room.host = player.id === engine.host;
+    room.settingsManager = room.host;
+    room.gameManager = room.host;
   }
   refresh();
   const store = load(path.join(__dirname, '../src/stores/telephone.ts')).useTelephoneStore();

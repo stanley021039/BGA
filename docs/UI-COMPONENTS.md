@@ -35,6 +35,8 @@
 
 ### UiButton
 
+透明場景頁首的共用 ghost 語意角色（#270）：`--stitch-ghost-ink`、`--stitch-ghost-hover-ink`／`-hover-bg`、`--stitch-ghost-focus`／`-focus-shadow`、`--stitch-ghost-text-stroke-width`／`-text-stroke-color`、`--stitch-ghost-icon-filter` 由共用 `scene-view.scss` 配置給頂層觸發鈕；一般頁面不自行覆寫。缺省仍回到既有主題，實底選取圖示移除輪廓，不改元件形狀。背景分組、輪廓取捨與四十組驗證見[場景對比規格](specs/HEADER-SCENE-CONTRAST-270.md)。
+
 ```vue
 <UiButton variant="primary" icon="check" label="儲存設定" :pending="saving" type="submit" />
 <UiButton icon="close" icon-only label="關閉題庫" />
