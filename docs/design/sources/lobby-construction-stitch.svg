@@ -1,0 +1,298 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <!-- Paper Texture Filter (100% vector / procedural, no external assets or photos) -->
+    <filter id="paper-texture" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise" />
+      <feColorMatrix type="matrix" values="0 0 0 0 0.96   0 0 0 0 0.94   0 0 0 0 0.89  0 0 0 0.07 0" in="noise" result="coloredNoise" />
+      <feBlend mode="multiply" in="SourceGraphic" in2="coloredNoise" />
+    </filter>
+
+    <filter id="soft-shadow" x="-8%" y="-8%" width="120%" height="120%">
+      <feDropShadow dx="3" dy="5" stdDeviation="0" flood-color="#231F20" flood-opacity="0.14" />
+    </filter>
+
+    <filter id="crisp-ground-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="0" flood-color="#231F20" flood-opacity="0.08" />
+    </filter>
+
+    <!-- Clip paths for barricade stripes -->
+    <clipPath id="barricade-clip">
+      <rect x="220" y="278" width="360" height="42" rx="7" />
+    </clipPath>
+    <clipPath id="cone-clip">
+      <polygon points="562,374 532,238 502,374" />
+    </clipPath>
+    <clipPath id="cone-small-clip">
+      <polygon points="228,382 208,280 188,382" />
+    </clipPath>
+  </defs>
+
+  <!-- Base Canvas: Warm Cream Editorial Background -->
+  <rect width="800" height="500" fill="#FBF7EE" />
+  
+  <!-- Subtle decorative paper / drafting grid dots in background -->
+  <g opacity="0.22" fill="#D5CBB8">
+    <circle cx="80" cy="70" r="1.8" /><circle cx="160" cy="70" r="1.8" /><circle cx="240" cy="70" r="1.8" /><circle cx="320" cy="70" r="1.8" /><circle cx="400" cy="70" r="1.8" /><circle cx="480" cy="70" r="1.8" /><circle cx="560" cy="70" r="1.8" /><circle cx="640" cy="70" r="1.8" /><circle cx="720" cy="70" r="1.8" />
+    <circle cx="80" cy="140" r="1.8" /><circle cx="160" cy="140" r="1.8" /><circle cx="640" cy="140" r="1.8" /><circle cx="720" cy="140" r="1.8" />
+    <circle cx="80" cy="210" r="1.8" /><circle cx="720" cy="210" r="1.8" />
+    <circle cx="80" cy="280" r="1.8" /><circle cx="720" cy="280" r="1.8" />
+    <circle cx="80" cy="350" r="1.8" /><circle cx="720" cy="350" r="1.8" />
+    <circle cx="80" cy="420" r="1.8" /><circle cx="160" cy="420" r="1.8" /><circle cx="240" cy="420" r="1.8" /><circle cx="320" cy="420" r="1.8" /><circle cx="400" cy="420" r="1.8" /><circle cx="480" cy="420" r="1.8" /><circle cx="560" cy="420" r="1.8" /><circle cx="640" cy="420" r="1.8" /><circle cx="720" cy="420" r="1.8" />
+  </g>
+
+  <!-- Editorial corner frame accents -->
+  <g stroke="#262220" stroke-width="2.5" fill="none" opacity="0.35">
+    <path d="M 45 65 L 45 45 L 65 45" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 755 65 L 755 45 L 735 45" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 45 435 L 45 455 L 65 455" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 755 435 L 755 455 L 735 455" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- Subtle playful floating sparkles & drafting crosses -->
+  <g stroke="#262220" stroke-width="2" stroke-linecap="round" opacity="0.35">
+    <!-- Top-left sparkle -->
+    <line x1="175" y1="110" x2="175" y2="124" />
+    <line x1="168" y1="117" x2="182" y2="117" />
+    <circle cx="198" cy="100" r="3" fill="#F4B728" stroke="#262220" stroke-width="1.8" />
+    <!-- Top-right sparkle -->
+    <line x1="620" y1="108" x2="620" y2="122" />
+    <line x1="613" y1="115" x2="627" y2="115" />
+    <circle cx="600" cy="98" r="3.5" fill="#E85D35" stroke="#262220" stroke-width="1.8" />
+  </g>
+
+  <!-- ================= HEADER TYPOGRAPHY ================= -->
+  <!-- Pill badge with small English text -->
+  <g transform="translate(400, 68)">
+    <rect x="-105" y="-14" width="210" height="28" rx="14" fill="#262220" />
+    <circle cx="-85" cy="0" r="3.5" fill="#F4B728" />
+    <circle cx="85" cy="0" r="3.5" fill="#F4B728" />
+    <text x="0" y="4.5" text-anchor="middle" font-family="'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', 'Inter', -apple-system, sans-serif" font-size="11" font-weight="800" fill="#FBF7EE" letter-spacing="3.2">UNDER CONSTRUCTION</text>
+  </g>
+
+  <!-- Large Traditional Chinese Title: 施工中 -->
+  <g id="title-chinese" transform="translate(400, 142)">
+    <!-- Shadow duplicate for playful hand-drawn print feel -->
+    <text x="3" y="3" text-anchor="middle" font-family="'Noto Serif TC', 'Songti TC', 'Source Han Serif TC', serif" font-size="62" font-weight="900" fill="#E7DFD0" letter-spacing="14">施工中</text>
+    <text x="0" y="0" text-anchor="middle" font-family="'Noto Serif TC', 'Songti TC', 'Source Han Serif TC', serif" font-size="62" font-weight="900" fill="#262220" letter-spacing="14">施工中</text>
+    <!-- Accent underline dashes with cute playful dots -->
+    <g stroke="#262220" stroke-width="3" stroke-linecap="round">
+      <line x1="-125" y1="18" x2="-25" y2="18" stroke="#E85D35" />
+      <circle cx="0" cy="18" r="3.5" fill="#F4B728" stroke="#262220" stroke-width="2" />
+      <line x1="25" y1="18" x2="125" y2="18" stroke="#E85D35" />
+    </g>
+  </g>
+
+  <!-- ================= GROUND WORK AREA & SHADOWS ================= -->
+  <g id="ground-shadows">
+    <!-- Big soft puddle ground line -->
+    <ellipse cx="400" cy="404" rx="285" ry="16" fill="#EDE4D2" />
+    <ellipse cx="400" cy="405" rx="245" ry="9" fill="#E2D7C2" />
+    <!-- Individual element contact shadows -->
+    <ellipse cx="208" cy="384" rx="28" ry="6" fill="#262220" opacity="0.16" />
+    <ellipse cx="532" cy="376" rx="36" ry="7" fill="#262220" opacity="0.16" />
+    <ellipse cx="258" cy="392" rx="14" ry="4" fill="#262220" opacity="0.18" />
+    <ellipse cx="542" cy="392" rx="14" ry="4" fill="#262220" opacity="0.18" />
+    <ellipse cx="400" cy="396" rx="60" ry="10" fill="#262220" opacity="0.18" />
+    <ellipse cx="320" cy="378" rx="24" ry="6" fill="#262220" opacity="0.18" />
+    <ellipse cx="478" cy="382" rx="22" ry="5" fill="#262220" opacity="0.18" />
+  </g>
+
+  <!-- ================= MAIN ILLUSTRATION LAYER ================= -->
+
+  <!-- 1. BACKGROUND ELEMENT: Striped Construction Barricade -->
+  <g id="construction-barricade" filter="url(#soft-shadow)">
+    <!-- Left Wooden Leg / Stand -->
+    <g stroke="#262220" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+      <!-- Back A-frame leg left -->
+      <line x1="262" y1="272" x2="238" y2="390" stroke="#7A6855" stroke-width="9" />
+      <line x1="262" y1="272" x2="238" y2="390" />
+      <line x1="256" y1="272" x2="276" y2="390" stroke="#9E8973" stroke-width="9" />
+      <line x1="256" y1="272" x2="276" y2="390" />
+      <!-- Cross brace -->
+      <line x1="244" y1="352" x2="272" y2="352" stroke="#262220" stroke-width="4" />
+      <!-- Bolt dot -->
+      <circle cx="257" cy="298" r="3" fill="#FBF7EE" stroke="#262220" stroke-width="2.5" />
+    </g>
+
+    <!-- Right Wooden Leg / Stand -->
+    <g stroke="#262220" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+      <line x1="538" y1="272" x2="518" y2="390" stroke="#7A6855" stroke-width="9" />
+      <line x1="538" y1="272" x2="518" y2="390" />
+      <line x1="544" y1="272" x2="564" y2="390" stroke="#9E8973" stroke-width="9" />
+      <line x1="544" y1="272" x2="564" y2="390" />
+      <!-- Cross brace -->
+      <line x1="524" y1="352" x2="558" y2="352" stroke="#262220" stroke-width="4" />
+      <!-- Bolt dot -->
+      <circle cx="543" cy="298" r="3" fill="#FBF7EE" stroke="#262220" stroke-width="2.5" />
+    </g>
+
+    <!-- Main Barricade Plank -->
+    <g>
+      <!-- Base White/Cream board -->
+      <rect x="220" y="278" width="360" height="42" rx="7" fill="#F8F3E6" stroke="#262220" stroke-width="5" stroke-linejoin="round" />
+      <!-- Diagonal Warning Stripes clipped to plank -->
+      <g clip-path="url(#barricade-clip)">
+        <polygon points="210,325 242,325 274,272 242,272" fill="#E85D35" />
+        <polygon points="266,325 298,325 330,272 298,272" fill="#E85D35" />
+        <polygon points="322,325 354,325 386,272 354,272" fill="#E85D35" />
+        <polygon points="378,325 410,325 442,272 410,272" fill="#E85D35" />
+        <polygon points="434,325 466,325 498,272 466,272" fill="#E85D35" />
+        <polygon points="490,325 522,325 554,272 522,272" fill="#E85D35" />
+        <polygon points="546,325 578,325 610,272 578,272" fill="#E85D35" />
+      </g>
+      <!-- Re-stroke board border for sharp ink edge -->
+      <rect x="220" y="278" width="360" height="42" rx="7" fill="none" stroke="#262220" stroke-width="5" stroke-linejoin="round" />
+      <!-- Screws on plank ends -->
+      <circle cx="232" cy="299" r="2.8" fill="#262220" />
+      <circle cx="568" cy="299" r="2.8" fill="#262220" />
+    </g>
+  </g>
+
+  <!-- 2. BLANK PLAYING CARDS (Tilted fanned deck on left, playful board-game element) -->
+  <g id="playing-cards" filter="url(#soft-shadow)">
+    <!-- Back card 1 (Tilted further left) -->
+    <g transform="rotate(-18, 305, 345)">
+      <rect x="268" y="275" width="56" height="84" rx="6" fill="#F4EFE2" stroke="#262220" stroke-width="4" stroke-linejoin="round" />
+      <!-- Blank card inner frame border -->
+      <rect x="274" y="281" width="44" height="72" rx="3" fill="none" stroke="#D3C7B2" stroke-width="2" stroke-dasharray="3 3" />
+      <!-- Corner abstract card suit pip (playful geometric diamond) -->
+      <polygon points="280,287 283,292 280,297 277,292" fill="#E85D35" />
+      <polygon points="312,347 315,352 312,357 309,352" fill="#E85D35" />
+    </g>
+
+    <!-- Front card 2 (Tilted slightly right, overlapping) -->
+    <g transform="rotate(-4, 328, 350)">
+      <rect x="302" y="274" width="56" height="84" rx="6" fill="#FFFFFF" stroke="#262220" stroke-width="4.5" stroke-linejoin="round" />
+      <!-- Blank card inner frame border -->
+      <rect x="309" y="281" width="42" height="70" rx="3" fill="#FFFDF8" stroke="#E5DAC5" stroke-width="2" />
+      <!-- Center card motif: subtle empty shield / crown icon for board game flavor -->
+      <circle cx="330" cy="316" r="11" fill="none" stroke="#DCD0B9" stroke-width="2.5" />
+      <polygon points="330,310 336,321 324,321" fill="#F4B728" stroke="#262220" stroke-width="1.8" />
+      <!-- Corner pips -->
+      <circle cx="315" cy="291" r="3" fill="#262220" />
+      <circle cx="345" cy="341" r="3" fill="#262220" />
+    </g>
+  </g>
+
+  <!-- 3. SECONDARY LEFT TRAFFIC CONE (Small playful cone) -->
+  <g id="small-traffic-cone" filter="url(#soft-shadow)">
+    <!-- Base Plate -->
+    <path d="M 174 380 L 242 380 L 236 388 L 180 388 Z" fill="#E85D35" stroke="#262220" stroke-width="4.5" stroke-linejoin="round" />
+    <!-- Cone Body -->
+    <polygon points="228,380 208,280 188,380" fill="#F26A36" stroke="#262220" stroke-width="4.5" stroke-linejoin="round" />
+    <!-- White Stripe clipped to cone -->
+    <g clip-path="url(#cone-small-clip)">
+      <polygon points="175,342 240,342 240,320 175,320" fill="#F8F3E6" stroke="#262220" stroke-width="3.5" />
+    </g>
+    <!-- Top rounded tip -->
+    <circle cx="208" cy="281" r="4.5" fill="#E85D35" stroke="#262220" stroke-width="3" />
+  </g>
+
+  <!-- 4. CENTERPIECE: Friendly Chunky Yellow Safety Helmet -->
+  <g id="safety-helmet" filter="url(#soft-shadow)">
+    <!-- Helmet Main Dome Outer Shadow / Fill -->
+    <path d="M 330 292 C 328 232, 362 204, 400 204 C 438 204, 472 232, 470 292 Z" fill="#F9BF15" stroke="#262220" stroke-width="5" stroke-linejoin="round" />
+    
+    <!-- Helmet Top Center Ridge Crest (characteristic chunky hardhat look) -->
+    <path d="M 390 205 C 390 205, 394 201, 400 201 C 406 201, 410 205, 410 205 L 411 285 C 411 288, 406 290, 400 290 C 394 290, 389 288, 389 285 Z" fill="#F3A805" stroke="#262220" stroke-width="4" stroke-linejoin="round" />
+
+    <!-- Helmet Left highlight (editorial flat graphic reflection) -->
+    <path d="M 346 270 C 344 240, 364 218, 382 212 C 372 222, 358 244, 358 270 Z" fill="#FFE875" />
+
+    <!-- Helmet Rim / Visor Brim (Chunky curved shelf) -->
+    <path d="M 314 290 C 314 286, 330 286, 400 286 C 470 286, 486 286, 486 290 C 486 304, 462 308, 400 308 C 338 308, 314 304, 314 290 Z" fill="#F9BF15" stroke="#262220" stroke-width="5" stroke-linejoin="round" />
+    <!-- Visor underside shadow -->
+    <path d="M 324 296 C 354 304, 446 304, 476 296 C 466 304, 436 308, 400 308 C 364 308, 334 304, 324 296 Z" fill="#DF9800" />
+
+    <!-- Cute Board Game Emblem on Helmet front (Playful Meeple / Gear badge) -->
+    <g transform="translate(400, 252)">
+      <!-- Badge backing circle -->
+      <circle cx="0" cy="0" r="14" fill="#FFFFFF" stroke="#262220" stroke-width="3.5" />
+      <!-- Little builder meeple badge inside -->
+      <path d="M 0 -7 C 2 -7, 3.5 -5.5, 3.5 -3.5 C 3.5 -1.5, 2 0, 0 0 C -2 0, -3.5 -1.5, -3.5 -3.5 C -3.5 -5.5, -2 -7, 0 -7 Z 
+               M -5 7 C -5 2, -2.5 1, 0 1 C 2.5 1, 5 2, 5 7 Z" fill="#262220" />
+    </g>
+
+    <!-- Cute little chin strap loops tucked on the rim sides -->
+    <path d="M 334 298 Q 338 314 346 320" fill="none" stroke="#262220" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- 5. PAIR OF CHUNKY DICE (Playful board game dice in foreground right) -->
+  <g id="pair-of-dice" filter="url(#soft-shadow)">
+    <!-- Die 1: Front Tilted Die showing 3 faces (Isometric-ish chunky cube) -->
+    <g transform="translate(450, 325)">
+      <!-- Top Face (Yellow accent die for warm harmony) -->
+      <polygon points="28,0 52,12 24,24 0,12" fill="#FFFDF8" stroke="#262220" stroke-width="4.5" stroke-linejoin="round" />
+      <!-- Left Face -->
+      <polygon points="0,12 24,24 24,54 0,42" fill="#EAE1CF" stroke="#262220" stroke-width="4.5" stroke-linejoin="round" />
+      <!-- Right Face -->
+      <polygon points="24,24 52,12 52,42 24,54" fill="#D8CCA8" stroke="#262220" stroke-width="4.5" stroke-linejoin="round" />
+      
+      <!-- Pips on Top Face (Value: 1 center pip in red/orange like traditional Asian/boardgame dice) -->
+      <circle cx="26" cy="12" r="4" fill="#E85D35" stroke="#262220" stroke-width="1.8" />
+
+      <!-- Pips on Left Face (Value: 2) -->
+      <circle cx="9" cy="24" r="2.8" fill="#262220" />
+      <circle cx="16" cy="41" r="2.8" fill="#262220" />
+
+      <!-- Pips on Right Face (Value: 3) -->
+      <circle cx="32" cy="42" r="2.8" fill="#262220" />
+      <circle cx="38" cy="33" r="2.8" fill="#262220" />
+      <circle cx="44" cy="24" r="2.8" fill="#262220" />
+    </g>
+
+    <!-- Die 2: Second Die (Resting flat & tilted nearby, showing 5 pips) -->
+    <g transform="translate(488, 348) rotate(14)">
+      <rect x="0" y="0" width="34" height="34" rx="6" fill="#F8F3E6" stroke="#262220" stroke-width="4.5" stroke-linejoin="round" />
+      <!-- Pip dots for 5 -->
+      <circle cx="8" cy="8" r="2.8" fill="#262220" />
+      <circle cx="26" cy="8" r="2.8" fill="#262220" />
+      <circle cx="17" cy="17" r="3.2" fill="#E85D35" />
+      <circle cx="8" cy="26" r="2.8" fill="#262220" />
+      <circle cx="26" cy="26" r="2.8" fill="#262220" />
+    </g>
+  </g>
+
+  <!-- 6. FOREGROUND RIGHT: Large Chunky Orange Traffic Cone -->
+  <g id="large-traffic-cone" filter="url(#soft-shadow)">
+    <!-- Base Plate -->
+    <path d="M 488 370 L 576 370 L 568 382 L 496 382 Z" fill="#E85D35" stroke="#262220" stroke-width="5" stroke-linejoin="round" />
+    <line x1="492" y1="375" x2="572" y2="375" stroke="#D34B24" stroke-width="2.5" />
+    
+    <!-- Cone Body -->
+    <polygon points="562,370 532,238 502,370" fill="#F26A36" stroke="#262220" stroke-width="5" stroke-linejoin="round" />
+    
+    <!-- White reflective bands clipped to cone body -->
+    <g clip-path="url(#cone-clip)">
+      <!-- Lower White Band -->
+      <polygon points="480,340 584,340 584,312 480,312" fill="#F8F3E6" stroke="#262220" stroke-width="4.5" />
+      <!-- Upper White Band -->
+      <polygon points="490,296 574,296 574,272 490,272" fill="#F8F3E6" stroke="#262220" stroke-width="4" />
+      <!-- Cone subtle shade side -->
+      <polygon points="532,238 564,370 550,370 532,238" fill="#D34B24" opacity="0.35" />
+    </g>
+    <!-- Rounded Rubber Top Hole -->
+    <ellipse cx="532" cy="238" rx="6.5" ry="3.5" fill="#262220" />
+    <ellipse cx="532" cy="238" rx="3.5" ry="1.8" fill="#E85D35" />
+  </g>
+
+  <!-- ================= PLAYFUL ACCENTS & LITTLE DETAILS ================= -->
+  <!-- Tiny wooden building block / game token near dice -->
+  <g transform="translate(426, 372)" stroke="#262220" stroke-width="3" stroke-linejoin="round">
+    <rect x="0" y="0" width="14" height="14" rx="2" fill="#5A9490" />
+    <circle cx="7" cy="7" r="2.5" fill="#FBF7EE" />
+  </g>
+
+  <!-- Small construction pebble / token dots -->
+  <circle cx="292" cy="382" r="3.5" fill="#262220" opacity="0.25" />
+  <circle cx="304" cy="386" r="2.5" fill="#262220" opacity="0.2" />
+  <circle cx="584" cy="384" r="3" fill="#262220" opacity="0.25" />
+
+  <!-- Playful energy marks around the hardhat (expressing active making/craft) -->
+  <g stroke="#262220" stroke-width="3" stroke-linecap="round">
+    <line x1="334" y1="216" x2="324" y2="208" />
+    <line x1="328" y1="230" x2="315" y2="228" />
+    <line x1="466" y1="216" x2="476" y2="208" />
+    <line x1="472" y1="230" x2="485" y2="228" />
+  </g>
+</svg>

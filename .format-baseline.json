@@ -151,7 +151,6 @@
     "src/profiles/media.js": "3455a297826e28b4ee39edefcad97dc2483e5e6f872d178aedc09d05b13646d1",
     "src/profiles/name.js": "49b2ff519fcbd924be20e9f5526ad1ff7be9b2911e5a038d0e71a55963812b70",
     "src/profiles/sounds.js": "303ede8a438cb0e98d53a64d2a0399fde36a22dae08a37f62bb079ada9aaaff1",
-    "src/rooms/invitations.js": "9c3ac1c2ef0974ecf49f2cadcdf79d0531c2ca45a75e18e2600c6ea7de6792a6",
     "src/rooms/reconnect.js": "3212cf5d56cfda157f417686f05ecc17844d1eb041a1fae42990865d2c11d151",
     "src/server.js": "400268559e77e0a9bce4445768c4800177f3b796becd9ce8abbc52b43c71278a",
     "src/social/emojis.js": "d8db0b0f22d0eb3ea522dd735d21265e365080566319aeba7dc654cab06ae67b",

@@ -10,6 +10,8 @@ const limits = {
   minimal: 6,
   bluff: 9,
   quacks: 8,
+  ceo: 6,
+  'second-wind': 6,
   lounge: 10,
 };
 
@@ -27,6 +29,8 @@ function listRooms(rooms, seats, kickedUsers, userId) {
         'minimal',
         'bluff',
         'quacks',
+        'ceo',
+        'second-wind',
         'lounge',
       ].includes(type)
         ? room.activePlayers().length
@@ -43,9 +47,17 @@ function listRooms(rooms, seats, kickedUsers, userId) {
             (type === 'poker' ||
               type === 'draw' ||
               room.phase === 'waiting' ||
-              (['gift', 'trpg', 'telephone', 'musicquiz', 'minimal', 'bluff', 'quacks'].includes(
-                type,
-              ) &&
+              ([
+                'gift',
+                'trpg',
+                'telephone',
+                'musicquiz',
+                'minimal',
+                'bluff',
+                'quacks',
+                'ceo',
+                'second-wind',
+              ].includes(type) &&
                 room.phase === 'finished'))));
       return {
         code: room.code,

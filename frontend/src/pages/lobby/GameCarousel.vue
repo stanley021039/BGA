@@ -8,6 +8,8 @@ import loungeSmall from '../../assets/lounge/lounge-360.webp';
 import loungeLarge from '../../assets/lounge/lounge-720.webp';
 import quacksArt from '../../assets/quacks/game-quacks.svg';
 import minimalArt from '../minimal/minimal-waiting.svg';
+import constructionArt from '../../assets/lobby/construction-800.webp?no-inline';
+import constructionThumb from '../../assets/lobby/construction-400.webp?no-inline';
 const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
@@ -196,20 +198,26 @@ onBeforeUnmount(() => {
           <div class="tile-image"
             ><img
               :src="
-                card.id === 'lounge'
-                  ? loungeSmall
-                  : card.id === 'quacks'
-                    ? quacksArt
-                    : card.id === 'minimal'
-                      ? minimalArt
-                      : '/assets/playful/game-' + card.art + '.svg'
+                card.art === 'construction'
+                  ? constructionArt
+                  : card.id === 'lounge'
+                    ? loungeSmall
+                    : card.id === 'quacks'
+                      ? quacksArt
+                      : card.id === 'minimal'
+                        ? minimalArt
+                        : '/assets/playful/game-' + card.art + '.svg'
               "
               :srcset="
-                card.id === 'lounge' ? loungeSmall + ' 360w, ' + loungeLarge + ' 720w' : undefined
+                card.art === 'construction'
+                  ? constructionThumb + ' 400w, ' + constructionArt + ' 800w'
+                  : card.id === 'lounge'
+                    ? loungeSmall + ' 360w, ' + loungeLarge + ' 720w'
+                    : undefined
               "
               sizes="(max-width: 650px) calc(100vw - 32px), 300px"
               decoding="async"
-              alt=""
+              :alt="card.art === 'construction' ? '施工中' : ''"
               draggable="false" /></div
           ><div class="tile-body"
             ><div class="kicker">{{ card.english }}</div

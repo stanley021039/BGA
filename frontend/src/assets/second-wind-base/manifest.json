@@ -1,0 +1,583 @@
+{
+  "source": "CMYK 2025 base rulebook, updated English edition",
+  "sourceUrl": "https://johnnlds.github.io/Magical-Athlete-Racers/officialrules.pdf",
+  "sourceSha256": "97afcd9db3dd45d6fe589d9d1abc8a409217ec6dfe72660dfa546206b3282c47",
+  "assets": [
+    {
+      "file": "alchemist-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 16258,
+      "sha256": "6442e5af7a6c6d02a3d25534533faac97bfd6c3836d91c6581f11d3420d25f11",
+      "origin": "CMYK base rulebook physical page 24, card 1, card"
+    },
+    {
+      "file": "alchemist-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2622,
+      "sha256": "8c9618981d35c213951c76d61c3fa4ffeff342bc8ab36fa612d31d37b270047c",
+      "origin": "CMYK base rulebook physical page 24, card 1, portrait"
+    },
+    {
+      "file": "blimp-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14808,
+      "sha256": "b005f7ed7024fdc70258cd8a6015078a5cbe7fd7ebbd811c2758148524630ed0",
+      "origin": "CMYK base rulebook physical page 24, card 2, card"
+    },
+    {
+      "file": "blimp-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1836,
+      "sha256": "ad16a38a75c642bdbada6e4bf8e598a6d37ad89633521cca2a98bed54607e3ae",
+      "origin": "CMYK base rulebook physical page 24, card 2, portrait"
+    },
+    {
+      "file": "coach-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12752,
+      "sha256": "5ca2a88b3a9378791b2f7db4f233560328ecb5d4ad4f9871b643c1c57c1ed5cb",
+      "origin": "CMYK base rulebook physical page 24, card 3, card"
+    },
+    {
+      "file": "coach-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2054,
+      "sha256": "a9223236f7261b70dc1b615784a92de0cafd0ed5eed4d1b5f28443141d9b2b5e",
+      "origin": "CMYK base rulebook physical page 24, card 3, portrait"
+    },
+    {
+      "file": "baba-yaga-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15232,
+      "sha256": "45e1217f186450b6f3b165ad22f6da986bb79fba93e2e73486bf9821bcc205a4",
+      "origin": "CMYK base rulebook physical page 24, card 4, card"
+    },
+    {
+      "file": "baba-yaga-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2234,
+      "sha256": "5433efe8862402f56c5c10e8324bffcbef7e08112342d336765979d216d530a1",
+      "origin": "CMYK base rulebook physical page 24, card 4, portrait"
+    },
+    {
+      "file": "centaur-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13114,
+      "sha256": "59364864a902423024c22ac88be12b0af66bc35fc5ccf0d56345f606514fd5ce",
+      "origin": "CMYK base rulebook physical page 24, card 5, card"
+    },
+    {
+      "file": "centaur-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1790,
+      "sha256": "ef5bb3d11af2ec29499f598906dea69aa531a9532d6785caecb66f036a83cb61",
+      "origin": "CMYK base rulebook physical page 24, card 5, portrait"
+    },
+    {
+      "file": "copy-cat-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14526,
+      "sha256": "c6d7038946d57bfd7ea34cb8a07c7b84faaa62b7813f9b38ca89764978fc1261",
+      "origin": "CMYK base rulebook physical page 24, card 6, card"
+    },
+    {
+      "file": "copy-cat-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2046,
+      "sha256": "dd992efdc6b52b4371a3df2eab921cfb892507760503b0762ee7ce22a0428dc4",
+      "origin": "CMYK base rulebook physical page 24, card 6, portrait"
+    },
+    {
+      "file": "banana-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 10886,
+      "sha256": "c05a1be512cd04d6f2062988fe03f19f7ff3c2790794dd9661884dac07558c7c",
+      "origin": "CMYK base rulebook physical page 24, card 7, card"
+    },
+    {
+      "file": "banana-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1534,
+      "sha256": "c45963fbb8736996d017e7c287269a46df32ef079eb5664bda15604f8e58765a",
+      "origin": "CMYK base rulebook physical page 24, card 7, portrait"
+    },
+    {
+      "file": "cheerleader-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 16398,
+      "sha256": "1e64c80148dfde6e2f4e3482cecfd9ab7ac84e5c893720d548e3bd05561237f0",
+      "origin": "CMYK base rulebook physical page 24, card 8, card"
+    },
+    {
+      "file": "cheerleader-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2164,
+      "sha256": "92b859e52f0a3b5fc17d557a14894ec7c728399bfbf5709ce41cfc03ba9a4d19",
+      "origin": "CMYK base rulebook physical page 24, card 8, portrait"
+    },
+    {
+      "file": "dicemonger-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15928,
+      "sha256": "0dff07169af7dfc5f68f149b1aa65f696defc9023fa614197b4cfa03b880cfe3",
+      "origin": "CMYK base rulebook physical page 24, card 9, card"
+    },
+    {
+      "file": "dicemonger-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2088,
+      "sha256": "fbcef2e70441ceb9347b666e2e1dae0ae0ea24bdddef0a00659b613156ba4bc6",
+      "origin": "CMYK base rulebook physical page 24, card 9, portrait"
+    },
+    {
+      "file": "duelist-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15894,
+      "sha256": "f761a089ad20ab4e52f52e001497683f6874a5346433a293b0f5346b1b41e5b6",
+      "origin": "CMYK base rulebook physical page 25, card 1, card"
+    },
+    {
+      "file": "duelist-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2096,
+      "sha256": "e73385cff73e0bf06778a415fc5b44daa84e391f70f736d0393a35a61b389583",
+      "origin": "CMYK base rulebook physical page 25, card 1, portrait"
+    },
+    {
+      "file": "genius-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15832,
+      "sha256": "fb828e06d40261ad6371b788235c39a267b10095b1060850b35352e3f0bc5b9f",
+      "origin": "CMYK base rulebook physical page 25, card 2, card"
+    },
+    {
+      "file": "genius-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2250,
+      "sha256": "f9c99a7ee15f42918babad64306e27f3b6a65b226e2331b38a442d7f3769179c",
+      "origin": "CMYK base rulebook physical page 25, card 2, portrait"
+    },
+    {
+      "file": "heckler-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13702,
+      "sha256": "c3a12ed01862c1abd9874045a69c8b549e4a6228fc18e6813479c7102bdd9d72",
+      "origin": "CMYK base rulebook physical page 25, card 3, card"
+    },
+    {
+      "file": "heckler-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2056,
+      "sha256": "3695bee8c4fea5efe7b76404ba084718f12f439fc3f1de32a845b11f5b9116cf",
+      "origin": "CMYK base rulebook physical page 25, card 3, portrait"
+    },
+    {
+      "file": "egg-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13616,
+      "sha256": "ebf0fe2874f1188d3e84d6c278aee4c203e491d1cac68254e3a580e64c51df7c",
+      "origin": "CMYK base rulebook physical page 25, card 4, card"
+    },
+    {
+      "file": "egg-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1672,
+      "sha256": "262db75f662018dc16cbbc29dea9a78eebebb9d3868e002ccf9906d005be794c",
+      "origin": "CMYK base rulebook physical page 25, card 4, portrait"
+    },
+    {
+      "file": "gunk-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12992,
+      "sha256": "e64e89a4df3f4f6770529250a9fa20fc5b05d8ff468e346dcd0366544b27329f",
+      "origin": "CMYK base rulebook physical page 25, card 5, card"
+    },
+    {
+      "file": "gunk-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1818,
+      "sha256": "7707e8a5048585a1b1beb7ba734b67383edbf77723370f43c271157269c7d83c",
+      "origin": "CMYK base rulebook physical page 25, card 5, portrait"
+    },
+    {
+      "file": "huge-baby-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14190,
+      "sha256": "a6736a91d4eee4691e36671f2ba52a8d9fbd09937bce5f95799f7ef08bdf7be6",
+      "origin": "CMYK base rulebook physical page 25, card 6, card"
+    },
+    {
+      "file": "huge-baby-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1436,
+      "sha256": "d2501fe2c59b89226d65684c470a3bca600e55845f026686d8f02d9099e43f3f",
+      "origin": "CMYK base rulebook physical page 25, card 6, portrait"
+    },
+    {
+      "file": "flip-flop-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12876,
+      "sha256": "b74e5989913c0872d6124256599113df37bfd2291ac32de01cb4de901b142b4d",
+      "origin": "CMYK base rulebook physical page 25, card 7, card"
+    },
+    {
+      "file": "flip-flop-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1682,
+      "sha256": "eb4eec16eb8a5dad3bd8426b4005be5c02c9cbd7aaa40d556eedffa80a2da4d1",
+      "origin": "CMYK base rulebook physical page 25, card 7, portrait"
+    },
+    {
+      "file": "hare-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14298,
+      "sha256": "e85d0972c2294de917a4166c84043f415dcde7128da61e1fe7f0a20bd2adf3db",
+      "origin": "CMYK base rulebook physical page 25, card 8, card"
+    },
+    {
+      "file": "hare-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1850,
+      "sha256": "15d56051e7e7a78c0c4f2e031b9350d6fb74dc4a60c15690572e48a6776c50ea",
+      "origin": "CMYK base rulebook physical page 25, card 8, portrait"
+    },
+    {
+      "file": "hypnotist-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13732,
+      "sha256": "db9764d99b1a639ff0ae080931a0d3e5c9e2565aacade48095dde7e438d407d4",
+      "origin": "CMYK base rulebook physical page 25, card 9, card"
+    },
+    {
+      "file": "hypnotist-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1996,
+      "sha256": "5c8e77586e003b2fa5d837674fd1656fd67a973b10cb2199ac970a2eeaa1ab8f",
+      "origin": "CMYK base rulebook physical page 25, card 9, portrait"
+    },
+    {
+      "file": "inchworm-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13670,
+      "sha256": "d156f6eb866df802c7b8438e14b15dc39da72a2ef448e1192205d6294861ce5d",
+      "origin": "CMYK base rulebook physical page 26, card 1, card"
+    },
+    {
+      "file": "inchworm-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1974,
+      "sha256": "2c3fbaac89be4ae825371747218dd09f48592e23d40ccf167077025ccd4c5f0b",
+      "origin": "CMYK base rulebook physical page 26, card 1, portrait"
+    },
+    {
+      "file": "legs-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12062,
+      "sha256": "70128db58d63aa34600946ae7f485d8921d2729e5743157040a1917a8c86d4d3",
+      "origin": "CMYK base rulebook physical page 26, card 2, card"
+    },
+    {
+      "file": "legs-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1778,
+      "sha256": "cd1f81120defa89f96eb310aabe46b80bf087d2ccf9e812adbf200927e3e0229",
+      "origin": "CMYK base rulebook physical page 26, card 2, portrait"
+    },
+    {
+      "file": "mastermind-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 16268,
+      "sha256": "6bb16b266eca7a056a2b611ab14b55245e7c0476d47518c8dfe20c1c7fd396bf",
+      "origin": "CMYK base rulebook physical page 26, card 3, card"
+    },
+    {
+      "file": "mastermind-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1942,
+      "sha256": "4dca80d43e66be1400d008d3ce152f6b4f8dd2dc379e9e58eaf3741b464ff823",
+      "origin": "CMYK base rulebook physical page 26, card 3, portrait"
+    },
+    {
+      "file": "lackey-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13112,
+      "sha256": "cd1e6aa8a190ea1c841063f59c55fb34773dbde3801d73a8756f16d6bdee60d4",
+      "origin": "CMYK base rulebook physical page 26, card 4, card"
+    },
+    {
+      "file": "lackey-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1764,
+      "sha256": "3ee0f3540ac0dc5cf0f6baf4b5b3a7f813294d115956d26951c095910d272454",
+      "origin": "CMYK base rulebook physical page 26, card 4, portrait"
+    },
+    {
+      "file": "loveable-loser-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13614,
+      "sha256": "8da15514036d58bbd1edbccd3d73bd2cc577b8d3de7271f2dac3cde9a864bb0c",
+      "origin": "CMYK base rulebook physical page 26, card 5, card"
+    },
+    {
+      "file": "loveable-loser-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1596,
+      "sha256": "56ac4b3a74bab88f140c73f17c306e92d35528add2c085d7aa77e400bbd94eed",
+      "origin": "CMYK base rulebook physical page 26, card 5, portrait"
+    },
+    {
+      "file": "mouth-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14826,
+      "sha256": "4a098f6851b9eafeceb695e1ba5093a7bd1bce853cb49ce12f6747082b214ad6",
+      "origin": "CMYK base rulebook physical page 26, card 6, card"
+    },
+    {
+      "file": "mouth-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2136,
+      "sha256": "1c91e3cadf2226e76c6bdbcd74c935ebf7ec73201bf6d396c0a33b22fde36e5f",
+      "origin": "CMYK base rulebook physical page 26, card 6, portrait"
+    },
+    {
+      "file": "leaptoad-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13658,
+      "sha256": "1a2651fb4eea0a8b5cb5a0407a5c5d506eb0dee00d1099f26a5664f8c18e5112",
+      "origin": "CMYK base rulebook physical page 26, card 7, card"
+    },
+    {
+      "file": "leaptoad-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2340,
+      "sha256": "22f06e8f8374053e764b0d17672dd8e85afac8c12ead8e7a228c5fb2c5c6d75b",
+      "origin": "CMYK base rulebook physical page 26, card 7, portrait"
+    },
+    {
+      "file": "magician-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12018,
+      "sha256": "dab0c050bd2d4e686f7a4ccaf124e5ec672e8c1a980fa139d70d0cb8c2efbc5c",
+      "origin": "CMYK base rulebook physical page 26, card 8, card"
+    },
+    {
+      "file": "magician-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1876,
+      "sha256": "ba33d0acf3a422eb595b5a20e1c515274d6293981822d7935f8fe2b0320027fa",
+      "origin": "CMYK base rulebook physical page 26, card 8, portrait"
+    },
+    {
+      "file": "party-animal-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 17456,
+      "sha256": "fa7b0056661e3de1191dbaee7fb77fb74a384fe8522679e8598fbf3876c09f73",
+      "origin": "CMYK base rulebook physical page 26, card 9, card"
+    },
+    {
+      "file": "party-animal-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2504,
+      "sha256": "1f4232e8f693215643c51752a11e86cd4b86d800895b65c6985ee0117e3d853a",
+      "origin": "CMYK base rulebook physical page 26, card 9, portrait"
+    },
+    {
+      "file": "rocket-scientist-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14078,
+      "sha256": "19e33727efaa027c8de3c9f0fa94f83ebfb2a122e1a7020cf90e101ac82372b9",
+      "origin": "CMYK base rulebook physical page 27, card 1, card"
+    },
+    {
+      "file": "rocket-scientist-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2368,
+      "sha256": "51ec14d4c38124c9707d66620edd94995152c2672857aa54f53b96adcd33fadd",
+      "origin": "CMYK base rulebook physical page 27, card 1, portrait"
+    },
+    {
+      "file": "sisyphus-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15988,
+      "sha256": "d3463baaab05a05a249e1cb1d83ad4afdc166e401347ce09cd709b346b29d8a9",
+      "origin": "CMYK base rulebook physical page 27, card 2, card"
+    },
+    {
+      "file": "sisyphus-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1794,
+      "sha256": "9435b045a18314be16a9065dd9329bc5b3ccf06ae77d2c111c1b220dd2b2da2f",
+      "origin": "CMYK base rulebook physical page 27, card 2, portrait"
+    },
+    {
+      "file": "suckerfish-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12476,
+      "sha256": "9e644fa04e2c99ace5e049f97810ee41990878c52312e4b3759df54ad6cb9200",
+      "origin": "CMYK base rulebook physical page 27, card 3, card"
+    },
+    {
+      "file": "suckerfish-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1670,
+      "sha256": "3f435507100e6746136b92feacaed645d2ed9718dcf01b0e6ef45ef5d0b4c3f0",
+      "origin": "CMYK base rulebook physical page 27, card 3, portrait"
+    },
+    {
+      "file": "romantic-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14282,
+      "sha256": "afbd6bf3a7fe0ac3b6109211d5ece5b53d180eb8802cd33957915cf64729d986",
+      "origin": "CMYK base rulebook physical page 27, card 4, card"
+    },
+    {
+      "file": "romantic-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2072,
+      "sha256": "95eb22b24b0163ef9f21534eefa4db9da5e61a2325ecde9f055aba133adf8f89",
+      "origin": "CMYK base rulebook physical page 27, card 4, portrait"
+    },
+    {
+      "file": "skipper-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13378,
+      "sha256": "654287c2425c2f5ef8f57d020da0e82a4500adca16e26d811e4de115aa695f40",
+      "origin": "CMYK base rulebook physical page 27, card 5, card"
+    },
+    {
+      "file": "skipper-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1704,
+      "sha256": "6c5eadf7038667768f1672aed9772c4a63c205c23ba8ad5a08f61b5c21ba7ace",
+      "origin": "CMYK base rulebook physical page 27, card 5, portrait"
+    },
+    {
+      "file": "third-wheel-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15752,
+      "sha256": "fe63fda50b3be6b4cb0ff35cc2c46b66aaa2f0463b9d4e6284f7b2a953fea5e3",
+      "origin": "CMYK base rulebook physical page 27, card 6, card"
+    },
+    {
+      "file": "third-wheel-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2524,
+      "sha256": "8b48fd79411af1ac34592db38e04e2282fb2e7d75a1777893350e69261166281",
+      "origin": "CMYK base rulebook physical page 27, card 6, portrait"
+    },
+    {
+      "file": "scoocher-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 11818,
+      "sha256": "1bd06a57c29963b534c3af0e9e33a80f24db52464bed64251ef8642efdb59df9",
+      "origin": "CMYK base rulebook physical page 27, card 7, card"
+    },
+    {
+      "file": "scoocher-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1554,
+      "sha256": "ff3e919f80954b6d1ce53f4f62ceef50fb25fee81b6d0a9e9c301ac665645709",
+      "origin": "CMYK base rulebook physical page 27, card 7, portrait"
+    },
+    {
+      "file": "stickler-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14590,
+      "sha256": "a057caf1bbbdb062d91fcaeffec59504750d180173859354983beef9481ccbb0",
+      "origin": "CMYK base rulebook physical page 27, card 8, card"
+    },
+    {
+      "file": "stickler-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1544,
+      "sha256": "266f178ebe3630aae2eb47c3b0d9e1f0b2d06029d5e36344d8d4edf41cd71a99",
+      "origin": "CMYK base rulebook physical page 27, card 8, portrait"
+    },
+    {
+      "file": "twin-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14336,
+      "sha256": "4513534890d41b06d2e069986b625c2a323db214b42f60b0080334005a092ebf",
+      "origin": "CMYK base rulebook physical page 27, card 9, card"
+    },
+    {
+      "file": "twin-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2290,
+      "sha256": "ae6c95cb3d8f58d245ccc5ddd7b071c6d7dbda03c16be7eeb3a2c998ed8fba03",
+      "origin": "CMYK base rulebook physical page 27, card 9, portrait"
+    }
+  ]
+}

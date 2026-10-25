@@ -72,3 +72,19 @@ const markup = computed(() => (allowed.has(props.name) ? GameUI?.icon(props.name
 </script>
 
 <template><span v-if="markup" aria-hidden="true" v-html="markup"></span></template>
+<style scoped>
+span {
+  display: inline-flex;
+  flex: none;
+}
+:deep(svg) {
+  display: block;
+  inline-size: var(--stitch-icon-size);
+  block-size: var(--stitch-icon-size);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+</style>
