@@ -474,15 +474,14 @@ registerTestAI('draw', {
 });
 function runTestAIStep(
   room,
-  { history, transitions = history, now = Date.now(), onDrawStroke = () => {} },
+  {
+    transitions = { transact: (_room, _operation, run) => run() },
+    now = Date.now(),
+    onDrawStroke = () => {},
+  },
 ) {
   const adapter = adapters.get(room.type || 'poker');
-  if (
-    !adapter ||
-    ['waiting', 'finished', 'showdown'].includes(room.phase) ||
-    history.isPaused?.(room)
-  )
-    return false;
+  if (!adapter || ['waiting', 'finished', 'showdown'].includes(room.phase)) return false;
   let state = runtime.get(room);
   const key = [room.round, room.phase, room.presenterId, room.canvas?.epoch].join(':');
   if (!state || state.key !== key) {

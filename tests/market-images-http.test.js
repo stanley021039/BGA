@@ -22,7 +22,6 @@ async function fixture(t, { freshConnections = false } = {}) {
     config: (paths) =>
       settings({
         DB_FILE: paths.dbFile,
-        HISTORY_DIR: paths.historyDir,
         COMMUNITY_DIR: paths.communityDir,
         MUSIC_DIR: paths.musicDir,
         EXTERNAL_SIDE_EFFECTS_ENABLED: 'false',

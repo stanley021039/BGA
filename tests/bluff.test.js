@@ -200,7 +200,7 @@ test('script AI supports all roles using their own view and can finish an all-bo
     else
       runTestAIStep(r, {
         now: Date.now() + i * 10000,
-        history: {
+        transitions: {
           transact(room, op, fn) {
             fn();
           },
@@ -320,7 +320,7 @@ test('AI remembers only its own preparation answer when timeout skips its ready 
   for (let i = 0; i < 10 && !r.spokenIds.includes(honest.id); i++)
     runTestAIStep(r, {
       now: now + i * 2000,
-      history: {
+      transitions: {
         transact(room, op, fn) {
           return fn();
         },
@@ -329,7 +329,7 @@ test('AI remembers only its own preparation answer when timeout skips its ready 
   assert.equal(r.botStatements[honest.id], answer);
   assert.equal(r.view(r.host).botMemories, undefined);
 });
-test('scheduler advances bluff timeout through history before bot action', (t) => {
+test('scheduler advances bluff timeout through a transition before bot action', (t) => {
   let now = 1000;
   const callbacks = [],
     operations = [];
@@ -351,7 +351,7 @@ test('scheduler advances bluff timeout through history before bot action', (t) =
   choose(r);
   const stop = require('../src/rooms/scheduler').startRoomScheduler({
     rooms: new Map([[r.code, r]]),
-    history: {
+    transitions: {
       transact(room, op, fn) {
         operations.push(op);
         return fn();

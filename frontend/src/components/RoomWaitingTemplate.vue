@@ -46,7 +46,7 @@ const heading = useId();
           ></dl
         >
         <slot name="summary-extra" /><p class="vue-waiting-notice">{{
-          notice || '等待房主開始'
+          notice || '等待房主或管理者開始'
         }}</p>
       </section>
       <section class="vue-waiting-settings" aria-label="遊戲設定"

@@ -2,7 +2,8 @@
 
 const { randomInt, randomUUID } = require('node:crypto');
 const { SecondWindDraft } = require('./draft');
-const { racers: catalog, twists, tracks } = require('./catalog');
+const { allRacers: catalog, racerSet, twists, tracks } = require('./catalog');
+const base = require('./base-powers');
 const { effectivePowers, mandatoryDieStep } = require('./powers');
 const { fail } = require('../party-base');
 const copy = (x) => structuredClone(x);
@@ -25,8 +26,10 @@ function shuffle(values) {
 
 /** Server-owned resumable effect queue. Choices never run a second main move. */
 class SecondWindGame {
-  constructor({ playerIds, seed = null }) {
-    this.draft = new SecondWindDraft({ playerIds, seed });
+  constructor({ playerIds, seed = null, racerSet: set = 'second-wind' }) {
+    this.catalog = racerSet(set);
+    this.racerSet = set;
+    this.draft = new SecondWindDraft({ playerIds, seed, racerSet: set });
     this.state = null;
   }
   act(id, action, revision) {
@@ -43,7 +46,7 @@ class SecondWindGame {
           race: 1,
           first: view.raceFirst,
           selections: Object.fromEntries(view.lineup.map((r) => [r.playerId, r.racerId])),
-          reserve: shuffle(catalog.map((r) => r.id).filter((r) => !owned.has(r))),
+          reserve: shuffle(this.catalog.map((r) => r.id).filter((r) => !owned.has(r))),
           twistDeck: shuffle(twists.map((t) => t.id)),
           persistent: [],
           racers: [],
@@ -117,7 +120,13 @@ class SecondWindGame {
     s.events = s.events.slice(-100);
   }
   enqueue(...ops) {
-    this.state.queue.unshift(...ops.filter(Boolean));
+    this.state.queue.unshift(
+      ...ops
+        .filter(Boolean)
+        .map((op) =>
+          this.baseCause?.length ? { ...op, baseCause: op.baseCause || [...this.baseCause] } : op,
+        ),
+    );
   }
   racer(id) {
     return this.state.racers.find((r) => r.id === id);
@@ -126,7 +135,7 @@ class SecondWindGame {
     return this.state.racers.filter(alive);
   }
   powers(r) {
-    return effectivePowers(this.state.racers, r.id);
+    return effectivePowers(this.state.racers, r.id, { beforeRace: !!this.settingUp });
   }
   has(r, p) {
     return this.powers(r).includes(p);
@@ -155,7 +164,15 @@ class SecondWindGame {
   ask(r, kind, title, options, data = {}, optional = false) {
     if (optional) options = [...options, { value: 'skip', label: '略過' }];
     if (!options.length) return;
-    this.state.pending = { id: randomUUID(), playerId: r.playerId, kind, title, options, ...data };
+    this.state.pending = {
+      id: randomUUID(),
+      playerId: r.playerId,
+      kind,
+      title,
+      options,
+      baseCause: this.baseCause || [],
+      ...data,
+    };
   }
   beginRace() {
     const s = this.state;
@@ -163,6 +180,7 @@ class SecondWindGame {
     s.trackId = s.race % 2 ? 'twisty-twirl' : 'whirly-world';
     s.turnId = s.first;
     s.turnCount = 0;
+    s.skipperNext = null;
     s.finished = [];
     s.eliminated = [];
     s.doppelDone = false;
@@ -214,6 +232,7 @@ class SecondWindGame {
     this.enqueue(...this.order().map((r) => ({ kind: 'setup', racer: r.id })));
   }
   setup(r) {
+    if (base.setup(this, r)) return;
     if (this.has(r, 'understudy') && !r.understudied) {
       this.ask(
         r,
@@ -237,16 +256,22 @@ class SecondWindGame {
   }
   beginPlayerTurn(checkLoop = true) {
     const s = this.state;
-    const forced = this.active().every(
-      (r) =>
-        s.fixed[r.playerId] ||
-        this.active().some(
-          (o) => o.id !== r.id && this.has(o, 'stunner') && Math.abs(o.position - r.position) <= 1,
-        ),
-    );
+    // A forced Skipper can repeatedly take the next turn while other seats
+    // never roll. Detect repetition of the forced seat, not only all seats.
+    const forced = this.active()
+      .filter((r) => r.playerId === s.turnId)
+      .every(
+        (r) =>
+          s.fixed[r.playerId] ||
+          this.active().some(
+            (o) =>
+              o.id !== r.id && this.has(o, 'stunner') && Math.abs(o.position - r.position) <= 1,
+          ),
+      );
     if (checkLoop && forced) {
       const signature = JSON.stringify([
         s.turnId,
+        s.nextRacerId,
         s.racers,
         s.scores,
         s.twistEffects,
@@ -293,11 +318,20 @@ class SecondWindGame {
     }
   }
   run(op) {
+    this.baseCause = op.baseCause || [];
+    if (base.prepare(this, op) || base.run(this, op)) return;
     const s = this.state,
       r = op.racer ? this.racer(op.racer) : null;
     switch (op.kind) {
       case 'setup':
-        if (r && alive(r)) this.setup(r);
+        if (r && alive(r)) {
+          this.settingUp = true;
+          try {
+            this.setup(r);
+          } finally {
+            this.settingUp = false;
+          }
+        }
         break;
       case 'player-order': {
         s.playerTurn = s.playerTurn.filter((id) => alive(this.racer(id)));
@@ -316,7 +350,8 @@ class SecondWindGame {
         break;
       }
       case 'start-power':
-        if (r && alive(r) && this.has(r, op.power)) this.startPower(r, op.power);
+        if (r && alive(r) && this.has(r, op.power))
+          base.observe(this, r, op.power, () => this.startPower(r, op.power));
         break;
       case 'main':
         if (r && alive(r)) this.main(r);
@@ -358,10 +393,11 @@ class SecondWindGame {
         if (r) this.endRacer(r);
         break;
       case 'end-power':
-        if (r && alive(r) && this.has(r, op.power)) this.endPower(r, op.power);
+        if (r && alive(r) && this.has(r, op.power))
+          base.observe(this, r, op.power, () => this.endPower(r, op.power));
         break;
       case 'extra-or-next':
-        if (r && alive(r) && s.context.extra) this.startRacer(r.id);
+        if (r && alive(r) && s.context.extra && !s.skipperNext) this.startRacer(r.id);
         else if (s.twistEffects.includes('curse-wands')) this.enqueue({ kind: 'player-end' });
         else this.enqueue({ kind: 'player-order' });
         break;
@@ -398,6 +434,7 @@ class SecondWindGame {
       r = this.racer(id);
     s.context = {
       actor: id,
+      startPosition: r.position,
       dice: [],
       total: 0,
       extra: false,
@@ -414,6 +451,7 @@ class SecondWindGame {
     );
   }
   startPower(r, p) {
+    base.startPower(this, r, p);
     const s = this.state,
       others = this.active().filter((o) => o.id !== r.id);
     if (p === 'speed-demon' && others.length && others.every((o) => r.position - o.position >= 4))
@@ -475,7 +513,15 @@ class SecondWindGame {
       this.emit('recover', byId[r.racerId].name + ' 恢復直立，略過主移動', { racer: r.id });
       return;
     }
+    if (c.hareSkipped && this.has(r, 'hare')) {
+      base.effect(this, r, 'hare');
+      this.emit('power', 'Hare 獨自領先，略過主移動', { racer: r.id });
+      return;
+    }
     const alternatives = [{ value: 'roll', label: '擲骰主移動' }];
+    if (this.has(r, 'legs')) alternatives.push({ value: 'legs', label: 'Legs：主移動五格' });
+    if (this.has(r, 'flip-flop') && this.active().some((o) => o.id !== r.id))
+      alternatives.push({ value: 'flip-flop', label: 'Flip Flop：交換位置代替主移動' });
     if (this.has(r, 'cheatah'))
       alternatives.push({ value: 'cheatah', label: 'Cheatah：秘密設定數字' });
     if (
@@ -505,6 +551,10 @@ class SecondWindGame {
       c.rollStyle = styles[0] || 'normal';
     }
     c.dice = [];
+    c.magicianDeclined = c.dealerDeclined = false;
+    c.baseProcessed = false;
+    c.styleNotified = false;
+    delete c.baseTotal;
     c.critics = [];
     c.bust = false;
     c.showingExtra = false;
@@ -569,6 +619,7 @@ class SecondWindGame {
     const s = this.state,
       r = this.racer(op.racer),
       c = s.context;
+    if (base.dieResult(this, op)) return;
     if (op.purpose === 'main') {
       c.dice.push(op.value);
       if (!op.value) c.bust = true;
@@ -645,6 +696,7 @@ class SecondWindGame {
       );
       return;
     }
+    if (base.reviewRoll(this)) return;
     if (c.showingExtra) {
       c.showingExtra = false;
       if (c.dice.at(-1) <= c.dice.at(-2)) {
@@ -689,6 +741,15 @@ class SecondWindGame {
       c = s.context,
       r = this.racer(c.actor);
     if (!alive(r)) return;
+    if (base.mainResult(this)) return;
+    if (c.rollStyle && c.rollStyle !== 'normal' && !c.styleNotified) {
+      c.styleNotified = true;
+      this.enqueue(
+        { kind: 'base-effect', racer: r.id, power: c.rollStyle, ops: [] },
+        { kind: 'main-result' },
+      );
+      return;
+    }
     if (this.has(r, 'mush'))
       for (const value of c.dice)
         if (value >= 1 && value <= 2 && s.reserve.length) {
@@ -755,12 +816,15 @@ class SecondWindGame {
   performMain(r, amount) {
     const s = this.state,
       c = s.context;
-    let distance = amount,
+    const beforeBaseModifiers = s.queue.length;
+    let distance = c.baseTotal ?? amount,
       reverse = false;
     // Main-move modifiers apply in racer turn order, including multiplication/reversal.
     for (const source of [r, ...this.order().filter((o) => o.id !== r.id)]) {
       if (source.id === r.id) {
         for (const p of this.powers(r)) {
+          const priorDistance = distance,
+            priorReverse = reverse;
           if (p === 'blunderdog') {
             if (this.extreme(true).includes(r)) distance *= 3;
             else reverse = !reverse;
@@ -771,19 +835,37 @@ class SecondWindGame {
             distance += this.active().filter((o) => o.position > r.position).length;
           if (p === 'speed-demon') distance += s.scores[r.playerId];
           if (p === 'penguin' && c.recover) distance *= 2;
+          if (distance !== priorDistance || reverse !== priorReverse) base.notify(this, r, p);
         }
         distance += (r.hogs || 0) * 2;
       } else {
-        if (this.has(source, 'le-saboteur') && c.dice.includes(3)) reverse = !reverse;
-        if (this.has(source, 'null') && source.position < r.position) distance--;
-        if (this.has(source, 'stepdad') && this.stepchild(source)?.id === r.id) distance += 2;
+        if (this.has(source, 'le-saboteur') && c.dice.includes(3)) {
+          reverse = !reverse;
+          base.notify(this, source, 'le-saboteur');
+        }
+        if (this.has(source, 'null') && source.position < r.position) {
+          distance--;
+          base.notify(this, source, 'null');
+        }
+        if (this.has(source, 'stepdad') && this.stepchild(source)?.id === r.id) {
+          distance += 2;
+          base.notify(this, source, 'stepdad');
+        }
       }
     }
+    distance = base.modifier(this, r, distance);
+    const modifierEffects = s.queue.splice(0, s.queue.length - beforeBaseModifiers);
     if (s.twistEffects.includes('conveyor')) distance += 3;
     if (reverse) distance *= -1;
     if (s.twistEffects.includes('scrying-pool') && distance >= 6) this.eliminate(r);
     else
-      this.enqueue({ kind: 'move', racer: r.id, distance, main: true, tripPassed: c.tripPassed });
+      this.enqueue(...modifierEffects, {
+        kind: 'move',
+        racer: r.id,
+        distance,
+        main: true,
+        tripPassed: c.tripPassed,
+      });
     this.afterMain();
   }
   afterMain() {
@@ -803,6 +885,10 @@ class SecondWindGame {
     return null;
   }
   move(r, distance, meta = {}) {
+    if (base.beforeMove(this, r, distance, meta)) return;
+    const planned = base.plan(this, r, distance, meta);
+    if (planned.blocked) return;
+    distance = planned.to - r.position;
     const s = this.state,
       from = r.position,
       to = Math.max(0, Math.min(30, from + distance));
@@ -831,7 +917,8 @@ class SecondWindGame {
       // Passing powers inspect the crossing, rather than retroactively suppressing
       // earlier passes because the mover eventually ended beyond NULL.
       r.position = other.position + Math.sign(to - from);
-      if (this.has(other, 'penguin')) effects.push({ kind: 'trip', racer: other.id });
+      if (this.has(other, 'penguin'))
+        effects.push({ kind: 'trip', racer: other.id }, ...base.reactions(this, other, 'penguin'));
       if (r.transformed && this.has(r, 'bite-mark')) this.eliminate(other);
       if (meta.tripPassed) effects.push({ kind: 'trip', racer: other.id });
       if (!streakScored && this.has(r, 'streaker')) {
@@ -840,7 +927,17 @@ class SecondWindGame {
       }
     }
     r.position = to;
-    effects.push(to === 30 ? { kind: 'finish', racer: r.id } : { kind: 'arrive', racer: r.id });
+    base.afterMove(this, r, passed, meta, from, to, effects, 'passes');
+    effects.push(
+      to === 30
+        ? { kind: 'finish', racer: r.id }
+        : {
+            kind: 'arrive',
+            racer: r.id,
+            simultaneous: meta.simultaneous || !!meta.followers?.length,
+          },
+    );
+    base.afterMove(this, r, passed, meta, from, to, effects, 'followers');
     this.enqueue(...effects);
   }
   warp(targets) {
@@ -863,6 +960,7 @@ class SecondWindGame {
       key = r.id + ':' + r.position;
     if (s.seen.includes(key)) return;
     s.seen.push(key);
+    if (base.arrive(this, r, op)) return;
     const pair = tracks[s.trackId].portals
       .map((p) => (s.direction === -1 ? p.map((n) => 30 - n) : p))
       .find((p) => p.includes(r.position));
@@ -918,9 +1016,12 @@ class SecondWindGame {
     if (!s.finished.length)
       for (const o of this.order())
         if (this.has(o, 'stepdad') && this.stepchild(o)?.id === r.id) this.score(o, 3);
+    const masterminds = this.order().filter((o) => this.has(o, 'mastermind'));
     r.finished = true;
     s.finished.push(r.id);
-    this.emit('finish', byId[r.racerId].name + ' 獲得第 ' + s.finished.length + ' 名', {
+    const rank = s.finished.length;
+    base.finish(this, r, masterminds);
+    this.emit('finish', byId[r.racerId].name + ' 獲得第 ' + rank + ' 名', {
       racer: r.id,
     });
     if (s.finished.length >= 2) this.endRace('前兩名已抵達');
@@ -988,10 +1089,17 @@ class SecondWindGame {
   endRacer(r) {
     const s = this.state;
     if (s.context.recover) r.tripped = false;
-    this.enqueue(...this.powers(r).map((power) => ({ kind: 'end-power', racer: r.id, power })), {
-      kind: 'extra-or-next',
-      racer: r.id,
-    });
+    this.enqueue(
+      ...this.powers(r).map((power) => ({ kind: 'end-power', racer: r.id, power })),
+      {
+        kind: 'base-end',
+        racer: r.id,
+      },
+      {
+        kind: 'extra-or-next',
+        racer: r.id,
+      },
+    );
   }
   endPower(r, p) {
     const s = this.state;
@@ -1028,6 +1136,15 @@ class SecondWindGame {
   }
   nextPlayer(skip) {
     const s = this.state;
+    if (s.skipperNext) {
+      const next = this.racer(s.skipperNext);
+      s.skipperNext = null;
+      if (next && alive(next)) {
+        s.turnId = next.playerId;
+        s.nextRacerId = next.id;
+        return;
+      }
+    }
     if (s.twistEffects.includes('curse-wands')) {
       const slots = s.players.flatMap((id) => s.racers.filter((r) => r.playerId === id));
       const at = slots.findIndex((r) => r.id === s.context.actor);
@@ -1144,6 +1261,18 @@ class SecondWindGame {
     if (s.monster === 30) s.monster = null;
   }
   choose(p, value) {
+    this.baseCause = p.baseCause || [];
+    if (base.choose(this, p, value)) return;
+    if (p.powerOrigin && !p.powerObserved) {
+      base.observe(
+        this,
+        this.racer(p.powerOrigin.racer),
+        p.powerOrigin.power,
+        () => this.choose({ ...p, powerObserved: true }, value),
+        true,
+      );
+      return;
+    }
     const s = this.state,
       r = p.racer ? this.racer(p.racer) : null,
       c = s.context;
@@ -1218,6 +1347,17 @@ class SecondWindGame {
       o.playerId = owner;
     }
     if (p.kind === 'main-mode') {
+      if (value === 'legs')
+        base.effect(this, r, 'legs', [{ kind: 'base-fixed-main', racer: r.id, amount: 5 }]);
+      if (value === 'flip-flop')
+        this.ask(
+          r,
+          'base-flip',
+          'Flip Flop：選擇交換位置的對手',
+          this.options(this.active().filter((o) => o.id !== r.id)),
+          { racer: r.id },
+          true,
+        );
       if (value === 'roll') this.beginRoll(r);
       if (value === 'mole') {
         c.total = 6;
@@ -1284,7 +1424,8 @@ class SecondWindGame {
         ...draft,
         ...(['choosing', 'race-ready'].includes(draft.phase) ? { race: 1 } : {}),
         stage: 'recruiting',
-        catalog,
+        catalog: this.catalog,
+        racerSet: this.racerSet,
         awards,
         awardStatus: 'user-approved-provisional',
       };
@@ -1304,7 +1445,8 @@ class SecondWindGame {
       ownSelection: s.selections[id] || null,
       scores: s.scores,
       racers: s.racers,
-      catalog,
+      catalog: this.catalog,
+      racerSet: this.racerSet,
       awards,
       awardStatus: 'user-approved-provisional',
       trackId: s.trackId,

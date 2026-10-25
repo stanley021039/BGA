@@ -25,6 +25,7 @@ export interface AthleteResult {
   ranking: { playerId: string; racerId: string; rank: number; points: number }[];
 }
 export interface AthleteGame {
+  racerSet?: 'base' | 'second-wind' | 'mixed';
   revision: number;
   phase: string;
   race?: number;
@@ -69,6 +70,7 @@ export interface AthleteSnapshot extends RoomSnapshot {
   game: AthleteGame | null;
   roundId: string | null;
   interrupted?: boolean;
+  options?: { racerSet: 'base' | 'second-wind' | 'mixed' };
 }
 const phases = [
   'draft-rolloff',
@@ -94,6 +96,8 @@ export function readAthleteSnapshot(value: unknown): AthleteSnapshot {
   const base = readRoomSnapshot(value);
   if (base.type !== 'second-wind' || !['waiting', 'playing', 'finished'].includes(base.phase))
     invalid();
+  const sets = ['base', 'second-wind', 'mixed'];
+  if (base.options !== undefined && !sets.includes(text(record(base.options).racerSet))) invalid();
   if (base.game !== null) {
     const g = record(base.game);
     integer(g.revision);
@@ -115,7 +119,10 @@ export function readAthleteSnapshot(value: unknown): AthleteSnapshot {
       const c = record(v);
       if (![c.id, c.name, c.summary, c.notes].every((s) => typeof s === 'string')) invalid();
     }
-    if (array(g.catalog).length !== 36) invalid();
+    if (g.racerSet !== undefined && !sets.includes(text(g.racerSet))) invalid();
+    const cards = array(g.catalog);
+    if (cards.length !== (g.racerSet === 'mixed' ? 72 : 36)) invalid();
+    if (new Set(cards.map((c) => text(record(c).id))).size !== cards.length) invalid();
     strings(g.selectedIds);
     if (g.ownSelection !== null && !text(g.ownSelection)) invalid();
     if (g.turnId !== null && !players.includes(text(g.turnId))) invalid();

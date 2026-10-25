@@ -4,8 +4,8 @@ const v8 = require('node:v8');
 
 // Keeps open rooms across a restart or deploy (#235).
 //
-// A room is a class instance whose methods are wrapped per instance (history,
-// achievements) and whose providers close over app stores, so it cannot be
+// A room is a class instance whose methods are wrapped per instance
+// (achievements) and whose providers close over app stores, so it cannot be
 // serialized as is. Instead its own data is captured without functions, and a
 // restore builds a fresh room through the same setup as a new one and lays the
 // saved data back over it. References to the room itself inside its data are

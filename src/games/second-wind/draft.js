@@ -1,7 +1,7 @@
 'use strict';
 
 const { randomBytes, createHash, createHmac } = require('node:crypto');
-const { racers } = require('./catalog');
+const { racerSet } = require('./catalog');
 const { fail } = require('../party-base');
 const clone = (value) => structuredClone(value);
 
@@ -58,7 +58,8 @@ function beginDraft(state) {
 class SecondWindDraft {
   #state;
 
-  constructor({ playerIds, seed = null }) {
+  constructor({ playerIds, seed = null, racerSet: set = 'second-wind' }) {
+    this.catalog = racerSet(set);
     if (
       !Array.isArray(playerIds) ||
       playerIds.length < 3 ||
@@ -96,7 +97,7 @@ class SecondWindDraft {
     };
     state.deck = shuffled(
       state,
-      racers.map((racer) => racer.id),
+      this.catalog.map((racer) => racer.id),
     );
     this.#state = state;
   }

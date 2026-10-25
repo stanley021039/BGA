@@ -23,6 +23,24 @@ function load(file, cache = new Map()) {
   return module.exports;
 }
 const { readAthleteSnapshot } = load(path.resolve(__dirname, '../src/contracts/second-wind.ts'));
+
+test('all packs survive the real room projection; mixed duplicates and invalid pack names are rejected', () => {
+  for (const pack of ['second-wind', 'base', 'mixed']) {
+    const room = new SecondWindRoom('ABCDEF', '契約');
+    const players = ['甲', '乙', '丙'].map((n) => room.add(n));
+    room.configure(players[0].id, { racerSet: pack });
+    room.start();
+    const view = { ...room.view(players[0].id), serverNow: Date.now() };
+    readAthleteSnapshot(view);
+    assert.equal(view.game.catalog.length, pack === 'mixed' ? 72 : 36);
+    const duplicate = structuredClone(view);
+    duplicate.game.catalog[1] = duplicate.game.catalog[0];
+    assert.throws(() => readAthleteSnapshot(duplicate));
+    const invalid = structuredClone(view);
+    invalid.options.racerSet = 'unknown';
+    assert.throws(() => readAthleteSnapshot(invalid));
+  }
+});
 test('shipped athlete parser accepts actual recruiting views and rejects malformed revision, racer and choices', () => {
   const room = new SecondWindRoom('ABCDEF', '契約');
   const ps = ['甲', '乙', '丙'].map((n) => room.add(n));

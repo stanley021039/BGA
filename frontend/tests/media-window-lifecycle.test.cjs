@@ -26,6 +26,13 @@ const historyModule = loadService('media-history'),
 
 function harness({ accepted } = {}) {
   const environment = { hidden: false, modal: false, classes: new Set() };
+  const pip = {
+    available: true,
+    active: vue.ref(false),
+    native: vue.ref(null),
+    busy: vue.ref(false),
+    message: vue.ref(''),
+  };
   const calls = [],
     lifecycle = {};
   const provider = Object.fromEntries(
@@ -38,6 +45,7 @@ function harness({ accepted } = {}) {
       'joinVideo',
       'exitVideo',
       'align',
+      'relocate',
     ].map((key) => [key, (...args) => calls.push([key, ...args])]),
   );
   const session = vue.reactive({ user: { id: 'account-a' } }),
@@ -59,7 +67,9 @@ function harness({ accepted } = {}) {
     },
     position: () => 0,
     serverNow: () => 1000,
-    library() {},
+    tracks: [],
+    libraryLoading: false,
+    library: () => calls.push(['library']),
     async load() {},
     cancelSnapshot: () => calls.push(['cancelSnapshot']),
     report() {},
@@ -107,17 +117,36 @@ function harness({ accepted } = {}) {
                           audio: { music: { enabled: true, volume: 0.3 } },
                         }),
                       }
-                    : id.includes('composables/media-window')
-                      ? { useMediaWindow: () => geometry }
-                      : id.includes('contracts/media')
-                        ? {
-                            mediaCurrentKey: (s) =>
-                              s?.current
-                                ? `${s.roomInstanceId}:${s.playbackSessionId}:${s.current.id}`
-                                : '',
-                            mediaPlaybackKey: () => '',
-                          }
-                        : {},
+                    : id.includes('composables/document-pip')
+                      ? {
+                          useDocumentPip: (surface, moved, restored) =>
+                            Object.assign(pip, {
+                              moved,
+                              restored,
+                              open() {
+                                pip.active.value = true;
+                                moved();
+                              },
+                              close() {
+                                if (!pip.active.value) return;
+                                pip.active.value = false;
+                                calls.push(['pipClose']);
+                                restored();
+                              },
+                              dispose() {},
+                            }),
+                        }
+                      : id.includes('composables/media-window')
+                        ? { useMediaWindow: () => geometry }
+                        : id.includes('contracts/media')
+                          ? {
+                              mediaCurrentKey: (s) =>
+                                s?.current
+                                  ? `${s.roomInstanceId}:${s.playbackSessionId}:${s.current.id}`
+                                  : '',
+                              mediaPlaybackKey: () => '',
+                            }
+                          : {},
       localStorage: { getItem: () => null },
       window: {
         RoomMediaPlayer: {
@@ -174,6 +203,7 @@ function harness({ accepted } = {}) {
     environment,
     component,
     calls,
+    pip,
     media,
     session,
     consent,
@@ -210,6 +240,57 @@ async function settled() {
   await vue.nextTick();
   await new Promise((resolve) => setImmediate(resolve));
 }
+test('PiP moves the player full size, closes back to the page window and ends on room change', async () => {
+  const h = harness({ accepted: true });
+  const count = (name) => h.calls.filter((c) => c[0] === name).length;
+  try {
+    await receive(h, { current: autoVideo });
+    assert.equal(h.component.mode.value, 'compact');
+    assert.equal(count('joinVideo'), 1);
+    h.component.activeTab.value = 'request';
+    await settled();
+    assert.equal(count('library'), 1, 'the first request view loads an empty library');
+    h.pip.open();
+    assert.equal(h.component.mode.value, 'full');
+    assert.equal(h.component.activeTab.value, 'player');
+    assert.equal(count('relocate'), 1);
+    await h.component.open();
+    assert.equal(
+      count('relocate'),
+      1,
+      'reopening focuses the existing PiP instead of moving again',
+    );
+    h.component.close();
+    await settled();
+    assert.equal(count('pipClose'), 1);
+    assert.equal(h.component.opened.value, true, 'closing PiP returns to the page player');
+    assert.equal(count('relocate'), 2);
+    assert.equal(
+      count('joinVideo'),
+      1,
+      'a joined video is rebound by the player, not joined again',
+    );
+    h.pip.open();
+    // Real dialogs are DOM nodes Vue never proxies; keep the mock document raw too.
+    const pipDocument = vue.markRaw({ querySelector: () => null });
+    h.component.dialog.value.ownerDocument = pipDocument;
+    h.component.escape({ key: 'Escape', target: { ownerDocument: {} }, preventDefault() {} });
+    assert.equal(count('pipClose'), 1, 'Escape in the game page leaves PiP open');
+    h.component.escape({
+      key: 'Escape',
+      target: { ownerDocument: pipDocument },
+      preventDefault() {},
+    });
+    assert.equal(count('pipClose'), 2, 'Escape inside PiP returns to the page');
+    delete h.component.dialog.value.ownerDocument;
+    h.pip.open();
+    h.media.context++;
+    await settled();
+    assert.equal(count('pipClose'), 3);
+  } finally {
+    h.dispose();
+  }
+});
 test('accepted video joins automatically after a hidden first request opens on return', async () => {
   const h = harness({ accepted: true });
   try {

@@ -20,6 +20,30 @@ vm.runInNewContext(
 );
 const { trackPoint } = moduleValue.exports;
 
+test('all 36 base cards and bounded portraits match their source manifest and delivery budget', () => {
+  const { baseRacers } = require('../../src/games/second-wind/catalog');
+  const folder = path.resolve(__dirname, '../src/assets/second-wind-base');
+  const data = JSON.parse(fs.readFileSync(path.join(folder, 'manifest.json')));
+  const required = baseRacers.flatMap((r) => [r.id + '-card.webp', r.id + '-portrait.webp']).sort();
+  assert.deepEqual(data.assets.map((a) => a.file).sort(), required);
+  assert.deepEqual(
+    fs
+      .readdirSync(folder)
+      .filter((f) => f.endsWith('.webp'))
+      .sort(),
+    required,
+  );
+  for (const asset of data.assets) {
+    const bytes = fs.readFileSync(path.join(folder, asset.file));
+    assert.equal(bytes.length, asset.bytes);
+    assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), asset.sha256);
+    assert.equal(bytes.subarray(8, 12).toString(), 'WEBP');
+    assert.ok(bytes.length <= 256 * 1024);
+    if (asset.file.includes('-portrait')) assert.ok(asset.width <= 96 && asset.height <= 72);
+  }
+  assert.ok(data.assets.reduce((sum, asset) => sum + asset.bytes, 0) < 600 * 1024);
+});
+
 test('original roster and every Twist have verified compressed art with no missing or oversized files', () => {
   const required = racers
     .flatMap((r) => [r.id + '-card.webp', r.id + '-portrait.webp'])

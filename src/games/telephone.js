@@ -1,4 +1,5 @@
 'use strict';
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { randomInt, randomUUID, createHash } = require('node:crypto');
 const { HttpError } = require('../http/errors');
 const { assertRecordCapacity } = require('../rooms/membership');
@@ -136,7 +137,7 @@ class TelephoneRoom {
     return p;
   }
   configure(id, data) {
-    if (id !== this.host) fail('HOST_ONLY', '只有房主可以設定', 403);
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '傳遞中不能改題庫');
     if (
       !Array.isArray(data.sources) ||
@@ -147,7 +148,7 @@ class TelephoneRoom {
     )
       fail('INVALID_SOURCES', '請選擇有效題庫', 400);
     this.options.sources = data.sources.slice();
-    this.event('settings', '房主更新獨立情境題庫');
+    this.event('settings', '已更新獨立情境題庫');
   }
   start() {
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '已經開始傳遞');
@@ -385,10 +386,6 @@ class TelephoneRoom {
       this.pageCommits.push({ bookIndex: this.books.indexOf(book), round: this.round, page });
     }
     this.submissions = {};
-  }
-  // History stores bounded page deltas; completed books are reconstructed from rows.
-  historyState() {
-    return { ...this, bookHeaders: this.books.map((b) => ({ ...b, pages: b.pages.slice(0, 1) })) };
   }
   view(id) {
     if (!this.player(id)) fail('NOT_SEATED', '尚未入座', 403);

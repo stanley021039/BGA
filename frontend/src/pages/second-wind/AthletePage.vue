@@ -7,7 +7,14 @@ import RoomWaitingTemplate from '../../components/RoomWaitingTemplate.vue';
 import AthleteScene from './AthleteScene.vue';
 import { athleteHero } from './art';
 import AthleteArt from './AthleteArt.vue';
+import AthleteSettings from './AthleteSettings.vue';
 const athlete = useAthleteStore();
+const roster = computed(
+  () =>
+    ({ base: '36 名初代角色', mixed: '72 名混合角色', 'second-wind': '36 名 Second Wind 角色' })[
+      athlete.state?.options?.racerSet || 'second-wind'
+    ],
+);
 const labels: Record<string, string> = {
   'draft-rolloff': '選秀先手擲骰',
   drafting: '蛇形選秀',
@@ -25,7 +32,7 @@ const phase = computed(() =>
   <GameRoomPage
     type="second-wind"
     title="運動員 Second Wind"
-    description="3–6 人 · 36 名原版角色 · 四場能力競速"
+    :description="`3–6 人 · ${roster} · 四場能力競速`"
     :reader="readAthleteSnapshot"
     :phase="phase"
     :round="athlete.game?.race ? `第 ${athlete.game.race}／4 場` : ''"
@@ -55,7 +62,7 @@ const phase = computed(() =>
       description="招募四名選手，秘密安排出賽順序，利用能力搶下四場比賽的積分。"
       :facts="[
         { label: '人數', value: '3–6 人' },
-        { label: '角色', value: '36 名原版角色' },
+        { label: '角色', value: roster },
         { label: '賽程', value: 'Twisty／Whirly 各兩場' },
         { label: '獎分', value: '3／1、4／2、5／3、7／4' },
       ]"
@@ -71,7 +78,9 @@ const phase = computed(() =>
     <AthleteScene v-else-if="athlete.game" />
     <p v-else-if="athlete.state?.interrupted">有人離席，本局已中止；房主可重新開局。</p>
     <template #settings
-      ><p>3–6 人，原版 36 名角色與 13 張 Twist。四場測試獎分：3／1、4／2、5／3、7／4。</p></template
+      ><AthleteSettings /><p
+        >3–6 人，13 張 Twist。四場測試獎分：3／1、4／2、5／3、7／4。</p
+      ></template
     >
     <template #help
       ><ol>

@@ -27,7 +27,7 @@ inspect／export／verify／restore 沿用同一來源驗證：音效仍逐筆�
 
 v1.5.0 增加已知舊版community附件相容性：`community.json.avatars` 的有效UUID、`/uploads/avatars/<UUID>.png` 引用與 `community/avatars/` PNG必須一一對應；圖片驗大小／signature／IHDR，未知檔案、巢狀目錄及連結拒絕。`github-backfill.json` 只接受對應現有issue UUID、有效本站GitHub issue number／URL、空comments及有效時間，原bytes隨加密包保存，不擅自回填DB或出站。CLI與管理UI共用logical白名單，沒有這些附件的舊bundle摘要不變。
 
-要讓匯入的無對局索引session日誌在啟動後保留，可明確設定 `HISTORY_PRESERVE_IMPORTED_SESSIONS=true`，預設false。只保留啟動時已存在、UUID檔名、首列≤16KiB且schema1／kind=session的有效日誌；不執行歷史引擎。不符合者仍按原政策處理，session仍計入byte／file配額，完成對局仍依30天等保留設定淘汰。啟動預演必須比對來源全部歷史檔digest，不可只查對局meta筆數。
+v3.0.0（#267）移除除錯用對局記錄：新匯出不含 `history/`，source 不再需要 historyDir，也沒有 `HISTORY_*`、`acknowledgeInterruptedMatches` 或 `UNFINISHED_MATCHES`。舊 v1 bundle 內的 `history/<UUID>.jsonl`／`.meta.json` 只驗證 manifest 條目（HMAC、檔案存在、數量與容量），payload 不解密也不寫入；摘要中的歷史筆數不再比對，也不出現在 verify／restore 結果；新資料代沒有 history 目錄。
 
 | 資料 | 第一版行為 |
 | --- | --- |
@@ -38,11 +38,11 @@ v1.5.0 增加已知舊版community附件相容性：`community.json.avatars` 的
 | 題庫、留言、成就 | 保存 SQLite 資料、共編 `community.json`，包含 schema 13 已通過的畫猜禁題及投票稽核；舊 JSON 留言及回覆在還原副本依現有 BoardStore 規則匯入。未過半的房間記憶體投票不搬移，未新增勝場統計。 |
 | 股市冥燈（市場五表） | 日期規則快照、唯一帳號投票、逐版結算、得分／撤銷 ledger 與冪等收據原樣保存；完整驗證市場歷史。新契約相容布局及本輪未驗限制見上方 schema 15 段落。 |
 | 音樂 | SQLite metadata 與外部原始音檔一起保存；驗證 metadata、大小、音訊格式。符合檔名規則的孤立音檔也保留並報告數量。 |
-| 歷史 | 保存 session／match JSONL、meta、引擎原碼及 hash；嚴格拒絕缺檔、截斷、未配對操作或 hash 不符。 |
+| 歷史 | 不再保存（#267）。舊 bundle 的歷史項目只驗證不還原。 |
 | 外部投稿 | 保留 payload、remote identity 及完成狀態；pending／sending 改為 needs_review，需管理者查核 GitHub 後決定重試。 |
 | 來源身份 | `source.envId` 與永久 `dataInstanceId` 放入 manifest。首次 export 在 DB 旁建立 `.<DB檔名>.data-instance.json`，後續沿用。 |
 
-`.env`、GitHub／Tunnel token、SSH key、部署程式與當前記憶體房間不放進包。內建 `public/assets` 跟程式部署，bundle 記錄其 fingerprint 並在還原前比對；不會自動下載或切換程式。帳戶 hash、素材及完整歷史仍是敏感資料，`accountCredentialsIncluded` 明確為 true；這不是匿名化開發副本。
+`.env`、GitHub／Tunnel token、SSH key、部署程式與當前記憶體房間不放進包。內建 `public/assets` 跟程式部署，bundle 記錄其 fingerprint 並在還原前比對；不會自動下載或切換程式。帳戶 hash 與素材仍是敏感資料，`accountCredentialsIncluded` 明確為 true；這不是匿名化開發副本。
 
 2026-10-05 後續程式 `2cf8a44` 支援 schema 13 禁題表；schema 12 備份還原時只升級目標副本，新增空禁題表，來源不變。已通過的禁題會在還原後繼續從題庫與抽題排除，詳 [相容性驗收](DRAW-WORD-BAN-PROGRESS.md)。
 
@@ -79,14 +79,14 @@ Node 的 SQLite experimental warning 可能出現在 stderr；AI 應解析 stdou
 | action | 必要欄位 | 結果與作用 |
 | --- | --- | --- |
 | keygen | keyFile | 建立全新的 32-byte 二進位 key；只回傳路徑及 fingerprint，不回傳 key 內容。 |
-| inspect | sourceStopped:true、source | 冷資料盤點，回傳表筆數、帳戶／BLOB digest、音樂及歷史數量；不遷移來源 schema。 |
+| inspect | sourceStopped:true、source | 冷資料盤點，回傳表筆數、帳戶／BLOB digest、音樂數量；不遷移來源 schema。 |
 | export | sourceStopped:true、source.envId、source 路徑、keyFile、outputDir | 一致 SQLite snapshot，加密全部持久資料，驗完才發布新 bundle 目錄。 |
 | verify | bundleDir、keyFile | 認證、解密至暫存位置並驗完整性；不產生可啟用的資料代。 |
 | restore | bundleDir、keyFile、destinationDir | 預設完整 dry run：解密、遷移副本、套用還原政策、驗證後清理暫存。只有 `apply:true` 才發布新資料代。 |
 
-`source` 必須有 dbFile、historyDir、communityDir；musicDir 可省略，預設 DB 旁的 music/。三個外部目錄須存在且彼此獨立，不能包住 DB。空目錄可先由管理者建立。sourceStopped 不是停止服務的指令；呼叫者必須先實際停止所有 writer。
+`source` 必須有 dbFile、communityDir；musicDir 可省略，預設 DB 旁的 music/。外部目錄須存在且彼此獨立，不能包住 DB。空目錄可先由管理者建立。sourceStopped 不是停止服務的指令；呼叫者必須先實際停止所有 writer。
 
-可選參數：maxBytes 預設 10 GiB，最大 1 TiB；verify 的 tempDir 可指定絕對暫存目錄；forceVacuum:true 可強制 SQLite `VACUUM INTO` 備份分支。restore 可傳 `expectedBundleId`，使用 verify 或預演回傳的 UUID，阻止同一路徑被換成另一份備份後套用未預演的資料；UI 會自動帶入，AI 呼叫也建議帶入。最多 20,000 個檔案。history 單列上限 16 MiB，JSON 文件及 manifest 也有讀取限制。容量檢查留足 staging／驗證空間；磁碟滿仍可能在寫入時失敗。
+可選參數：maxBytes 預設 10 GiB，最大 1 TiB；verify 的 tempDir 可指定絕對暫存目錄；forceVacuum:true 可強制 SQLite `VACUUM INTO` 備份分支。restore 可傳 `expectedBundleId`，使用 verify 或預演回傳的 UUID，阻止同一路徑被換成另一份備份後套用未預演的資料；UI 會自動帶入，AI 呼叫也建議帶入。最多 20,000 個檔案。JSON 文件及 manifest 也有讀取限制。容量檢查留足 staging／驗證空間；磁碟滿仍可能在寫入時失敗。
 
 ## 管理員本機介面
 
@@ -115,7 +115,7 @@ JSON 預覽與完整結果預設收合，複製按鈕常駐；成功狀態、統
 | 盘點／匯出 | 先自行停止來源服務及所有 writer，再勾「來源已停寫」。後端仍執行既有資料鎖及完整驗證，勾選不能繞過運作中的 server。 |
 | 還原預演 | 預設「先預演」，只回報檢查及預計變動，不發布 destination。 |
 | 建立新資料代 | 先成功預演相同設定，再選「建立新資料目錄」，勾目標 writer 已停止、全新路徑與保留舊代；既有目錄仍拒絕覆寫。工具不停止或切換服務。 |
-| 結果 | 顯示帳戶／歷史／音樂／題目數量、撤銷認證與待查核投稿數，以及可複製的去敏 JSON。原密碼／token／key 内容不顯示。 |
+| 結果 | 顯示帳戶／音樂／題目數量、撤銷認證與待查核投稿數，以及可複製的去敏 JSON。原密碼／token／key 内容不顯示。 |
 
 UI 不是遊戲內的 `/admin` 頁面，遊戲服務停止時也能獨立運作；本機 OS 使用者的權限即操作權限，沒有沿用遊戲管理員登入 session。服務驗 Host、同源 Origin、每次啟動隨機 token，拒絕跨站操作；勿把這個管理埠交給公開 Tunnel／反向代理。這些保護不隔離同一台主機上已能讀管理頁的其他本機程序。
 
@@ -125,11 +125,9 @@ UI 不是遊戲內的 `/admin` 頁面，遊戲服務停止時也能獨立運作�
 
 關閉 terminal 前等待工作結束；Ctrl+C 正常等待目前工作收尾。強制終止可能留下 OS 暫存上傳、staging 或 publication lock／marker；重新啟動不會自動接管舊程序的上傳批次，確認沒有舊程序使用後，再清理該程序的暫存資料。涉及新資料代的 lock／marker，依下方失敗章節處理。金鑰仍須與備份分開備援，來源／目標停寫不是 UI 自動完成的步驟。
 
-隔離啟動前也要檢查程式版本的 `HISTORY_*` 保留政策。加入 PR #30 修正的版本預設保留 30 天、歷史總量 512 MiB／1,000 份 archive，運作中的 HistoryStore 會淘汰過期或超額的已完成／中斷歷史。備份包保留原始完整歷史；若希望新服務繼續保留較久，先依容量調整保留期與配額，再啟動新代。不能把驗包成功等同於日後服務永遠不淘汰歷史。
-
 ## 一次完整操作
 
-以下為 Linux 示範路径，不能直接當目前正式主機設定。先查實際 DB_FILE／HISTORY_DIR／COMMUNITY_DIR／MUSIC_DIR，完成或明确中斷進行中的對局，再正常停止服務、scheduler、投稿、upload 及其他會直接寫資料的程式。新版服務與 admin CLI 使用共用資料鎖；export 也取得舊版 history PID 鎖。鎖不是阻止任意外部 SQL 程式寫入的 OS sandbox，也不支援跨主機共開 SQLite。
+以下為 Linux 示範路径，不能直接當目前正式主機設定。先查實際 DB_FILE／COMMUNITY_DIR／MUSIC_DIR，再正常停止服務、scheduler、投稿、upload 及其他會直接寫資料的程式。新版服務與 admin CLI 使用共用資料鎖；鎖不是阻止任意外部 SQL 程式寫入的 OS sandbox，也不支援跨主機共開 SQLite。
 
 1. 建立並保管 key，request 例：
 
@@ -148,7 +146,6 @@ key 不是文字密碼，不要在 CLI 參數或聊天貼出 bytes；分開保�
   "source":{
     "envId":"production",
     "dbFile":"/old-data/afterhours.sqlite",
-    "historyDir":"/old-data/history",
     "communityDir":"/old-data/community",
     "musicDir":"/old-data/music"
   },
@@ -157,7 +154,7 @@ key 不是文字密碼，不要在 CLI 參數或聊天貼出 bytes；分開保�
 }
 ```
 
-inspect 使用同一 source，action 改 inspect 並移除 keyFile／outputDir。一般情況拒絕 playing 歷史。若已確認服務停妥、接受房間無法續局，可在 export **及 restore** 分別提供 acknowledgeInterruptedMatches:true；restore 才會在副本追加 interruption 紀錄，保留最後已落盤 state，不產生虛構分數。
+inspect 使用同一 source，action 改 inspect 並移除 keyFile／outputDir。
 
 3. 傳輸整個 bundle 目錄，在目標用相容程式及同一套內建素材 verify：
 
@@ -186,7 +183,6 @@ bundle 是目錄格式，不是 tar 檔：只有 manifest.json 與 payload/00000
 ```json
 {
   "DB_FILE":"/data-generations/generation-2026-10-05/db/afterhours.sqlite",
-  "HISTORY_DIR":"/data-generations/generation-2026-10-05/history",
   "COMMUNITY_DIR":"/data-generations/generation-2026-10-05/community",
   "MUSIC_DIR":"/data-generations/generation-2026-10-05/music",
   "EXTERNAL_SIDE_EFFECTS_ENABLED":"false"
@@ -197,16 +193,16 @@ bundle 是目錄格式，不是 tar 檔：只有 manifest.json 與 payload/00000
 
 EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核及 recover，即使已設定 GitHub token；遊戲資料操作仍可進行。這個旗標目前涵蓋 SubmissionService 的 GitHub 整合，不是所有未來外部服務的通用網路防火牆。查核 needs_review remote identity 後才可以在正式切換時明確啟用。
 
-6. 驗收原密碼登入、admin／member 權限、停用帳號拒登、私人角色／圖庫授權、profile 引用、音樂 HEAD／Range、題庫、歷史及 pending 投稿。保留舊 code＋資料代，確認舊 writer 與路由已停止，再由部署流程切換權威。新服務沒有原記憶體房間，玩家需重新登入及開房。
+6. 驗收原密碼登入、admin／member 權限、停用帳號拒登、私人角色／圖庫授權、profile 引用、音樂 HEAD／Range、題庫及 pending 投稿。保留舊 code＋資料代，確認舊 writer 與路由已停止，再由部署流程切換權威。新服務沒有原記憶體房間，玩家需重新登入及開房。
 
 ## 失敗與回退
 
 ### 殘留鎖的人工檢查
 
-伺服器、admin、移轉及歷史記錄器只用排他建立取得鎖；既有鎖一律拒絕，不會依 PID 已結束而自動刪除。異常終止後可能需要人工清理；正常關閉只移除本次取得的鎖，重複關閉不會刪除後來取得的新鎖。
+伺服器、admin 及移轉只用排他建立取得鎖；既有鎖一律拒絕，不會依 PID 已結束而自動刪除。異常終止後可能需要人工清理；正常關閉只移除本次取得的鎖，重複關閉不會刪除後來取得的新鎖。
 
 1. 停止使用同一組資料的全部 server、admin、inspect／export／restore 程序，暫停服務自動重啟，確認沒有其他 writer。不能只憑 PID 不存在判定可以刪除；PID 可能重用，另一主機也可能仍在使用資料。
-2. 依實際設定核對鎖的位置，保存原內容及終止原因後再判斷：DB 旁的 `.<DB 檔名>.afterhours-lock`、history／community／music 目錄的 `.afterhours-data-lock`，以及 history 的純 PID `.lock`。JSON 鎖的 hostname／pid／purpose 只供調查，不代表可自動回收。
+2. 依實際設定核對鎖的位置，保存原內容及終止原因後再判斷：DB 旁的 `.<DB 檔名>.afterhours-lock`、community／music 目錄的 `.afterhours-data-lock`。JSON 鎖的 hostname／pid／purpose 只供調查，不代表可自動回收。
 3. 確認所有 writer 停止後，人工移除已核實的上述資料鎖，再啟動單一 writer 或重試冷備份。無法辨認的內容、不同主機或 symlink／junction 先調查，不要使用批次萬用字元清理。
 
 還原發布鎖位於 destination 旁的 `.<destination 目錄名>.afterhours-publish-lock`。殘留發布鎖或 `.afterhours-restore-in-progress` 可能代表半份還原；依下方 `PARTIAL_RESTORE` 流程保留現場、另選全新目錄重試，不能套用一般資料鎖清理流程後直接啟動新代。舊版程式仍可能自動回收鎖，停寫及清理期間也不能混跑舊版 writer。
@@ -220,8 +216,7 @@ EXTERNAL_SIDE_EFFECTS_ENABLED=false 會封鎖新投稿、重試、遠端查核�
 | BUNDLE_CHANGED | 同一路徑的備份身分與驗證／預演時不同；重新核對來源、驗包與預演，不要移除 ID 比對繼續套用。 |
 | AUTHENTICATION_FAILED／CORRUPT_BUNDLE | 查 key 與傳輸是否完整；不啟用不完整資料。 |
 | UNSUPPORTED_SCHEMA／UNSUPPORTED_BUNDLE／ASSET_VERSION_MISMATCH | 使用相容程式及素材。較新 schema 在任何 migration 前拒絕；舊 schema 只遷移副本。 |
-| FOREIGN_KEY_FAILED／BROKEN_REFERENCE／VALIDATION_FAILED／INVALID_HISTORY／MISSING_MUSIC | 修復或重新取得完整冷備份，不能忽略錯誤強制匯入；包含表情音效引用、WAV 格式或長度與 metadata 不一致。 |
-| UNFINISHED_MATCHES | 完成對局，或明確接受還原時中斷的政策。 |
+| FOREIGN_KEY_FAILED／BROKEN_REFERENCE／VALIDATION_FAILED／MISSING_MUSIC | 修復或重新取得完整冷備份，不能忽略錯誤強制匯入；包含表情音效引用、WAV 格式或長度與 metadata 不一致。 |
 | INSUFFICIENT_SPACE／ENOSPC | 釋放／更換 staging 磁碟空間，使用新 destination 重試。 |
 | PARTIAL_RESTORE／RESTORE_IN_PROGRESS | 新資料代禁止啟動；继续使用舊資料代，調查失敗並另選全新目錄重試。 |
 

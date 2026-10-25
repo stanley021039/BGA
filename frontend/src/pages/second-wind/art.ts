@@ -4,8 +4,17 @@ const files = import.meta.glob<string>('../../assets/second-wind/*.webp', {
   query: '?url&no-inline',
   import: 'default',
 });
+const baseFiles = import.meta.glob<string>('../../assets/second-wind-base/*.webp', {
+  eager: true,
+  query: '?url&no-inline',
+  import: 'default',
+});
 export function athleteArt(id: string, kind: 'card' | 'portrait' | 'twist' = 'portrait'): string {
-  return files[`../../assets/second-wind/${id}-${kind}.webp`] || '';
+  return (
+    files[`../../assets/second-wind/${id}-${kind}.webp`] ||
+    baseFiles[`../../assets/second-wind-base/${id}-${kind}.webp`] ||
+    ''
+  );
 }
 export const athleteHero = files['../../assets/second-wind/hero.webp'];
 export function trackArt(id: string, width = 1600): string {

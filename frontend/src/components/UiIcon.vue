@@ -26,6 +26,7 @@ const allowed = new Set([
   'remove',
   'share',
   'expand',
+  'pictureInPicture',
   'contract',
   'landscape',
   'add',

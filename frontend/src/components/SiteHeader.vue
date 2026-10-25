@@ -238,7 +238,6 @@ onBeforeUnmount(() => {
             ><a href="/draw-words">你畫我猜</a>
           </div>
         </div>
-        <a class="vue-site-navigation-link" href="/history">對局歷史</a>
       </template>
     </nav>
     <div id="vue-room-header-portal" class="vue-room-header-portal" :hidden="!room.seat" />

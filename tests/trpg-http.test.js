@@ -86,14 +86,7 @@ test('TRPG authenticated create/join/action/reconnect/leave and finished history
     }
   }
   assert.equal(s.phase, 'finished');
-  const h = await fetch(base + '/api/history', { headers: { Cookie: owner } }),
-    matches = await h.json(),
-    match = matches.find((m) => m.type === 'trpg');
-  assert.equal(match.status, 'finished');
-  const archive = await fetch(base + '/api/history/' + match.id, { headers: { Cookie: owner } }),
-    rows = await archive.json();
-  assert.match(rows.find((r) => r.kind === 'header').engine.source, /class TrpgRoom/);
-  assert.equal(rows.filter((r) => r.kind === 'result').at(-1).after.results.length, 6);
+  assert.equal(s.results.length, 6);
   const list = await fetch(base + '/api/rooms', { headers: { Cookie: owner } });
   assert.equal((await list.json()).rooms.find((r) => r.code === code).maxPlayers, 6);
   await post('leave', peer, { code });

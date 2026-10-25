@@ -115,9 +115,12 @@
 ```vue
 <UiCheckbox v-model="shared" label="分享給會員（未勾選則私人）" />
 <UiCheckbox :model-value="isOn" label="常用" @update:model-value="toggle" />
+<UiCheckbox v-model="selectedIds" value="zh" label="華語" />
 ```
 
 框 16px、與文字間距 8px、勾選色 `--stitch-frame`（深色框）、label 14px／400、整列至少 44px 高可點。
+
+`v-model` 支援布林值或字串陣列；陣列搭配 `value` 加入／移除該值。預設 slot 可放既有選項卡的圖示、名稱與數量，保留原生 checkbox 與標籤關聯；自訂內容仍須顯示可讀名稱。
 
 ### UiFilePick
 

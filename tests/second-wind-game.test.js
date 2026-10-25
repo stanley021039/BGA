@@ -73,10 +73,14 @@ test('racer events preserve the player identity that owned the racer at event ti
   );
 });
 
-test('complete four races across seeded rosters, private choices and preserved racer counts', () => {
-  for (let seed = 0; seed < 60; seed++) {
+test('complete four races across all three packs, seeded rosters, private choices and preserved racer counts', () => {
+  for (let seed = 0; seed < 120; seed++) {
     const players = Array.from({ length: 3 + (seed % 4) }, (_, i) => 'p' + i),
-      game = new SecondWindGame({ playerIds: players, seed });
+      game = new SecondWindGame({
+        playerIds: players,
+        seed,
+        racerSet: ['second-wind', 'base', 'mixed'][seed % 3],
+      });
     let steps = 0;
     while (game.view(players[0]).phase !== 'finished' && steps++ < 1800)
       advance(game, players, steps);
@@ -133,8 +137,7 @@ test('room receipts are idempotent and leaving interrupts without private histor
   const after = room.view(a.id);
   room.act(a.id, 'roll', data);
   assert.deepEqual(room.view(a.id), after);
-  assert.equal('game' in room.historyState(), false);
-  assert.equal(JSON.stringify(room.historyState()).includes('secret'), false);
+  assert.equal(typeof room.historyState, 'undefined');
   room.kick(a.id, b.id);
   assert.equal(room.view(a.id).game, null);
   assert.equal(room.interrupted, true);

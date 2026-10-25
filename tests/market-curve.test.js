@@ -323,12 +323,10 @@ test('schema18 backup restore retains exact numeric snapshot, forecast and corre
   const source = {
     envId: 'curve-fixture',
     dbFile: f.file,
-    historyDir: path.join(f.root, 'source', 'history'),
     communityDir: path.join(f.root, 'source', 'community'),
     musicDir: path.join(f.root, 'source', 'music'),
   };
-  for (const dir of [source.historyDir, source.communityDir, source.musicDir])
-    fs.mkdirSync(dir, { recursive: true });
+  for (const dir of [source.communityDir, source.musicDir]) fs.mkdirSync(dir, { recursive: true });
   const keyFile = path.join(f.root, 'key'),
     bundleDir = path.join(f.root, 'bundle');
   await run({ action: 'keygen', keyFile });
@@ -440,7 +438,6 @@ test('HTTP numeric contract serves shared math, rejects unauthed writes and pass
   const app = createApp({
     ...settings({
       DB_FILE: f.file,
-      HISTORY_DIR: path.join(f.root, 'history'),
       COMMUNITY_DIR: path.join(f.root, 'community'),
       MUSIC_DIR: path.join(f.root, 'music'),
       EXTERNAL_SIDE_EFFECTS_ENABLED: 'false',

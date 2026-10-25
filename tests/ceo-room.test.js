@@ -151,7 +151,7 @@ test('CEO provisional market: exhaustion below 100 assets starts two final round
   assert.equal(g.view('a').phase, 'finished');
 });
 
-test('CEO room: histories contain provenance but no hidden draws or future deck', () => {
+test('CEO room: retired history hook stays absent and public state hides future draws', () => {
   const r = room();
   r.start();
   const s = r.view(r.host);
@@ -160,11 +160,12 @@ test('CEO room: histories contain provenance but no hidden draws or future deck'
   );
   assert.ok(cheap);
   step(r, 'acquire', { companyId: cheap.card.id });
-  const json = JSON.stringify(r.historyState());
+  const json = JSON.stringify(r.view(r.players[1].id));
   assert.ok(!json.includes('"changes"'));
   assert.ok(!json.includes('"deck"'));
   assert.ok(!json.includes('"secret"'));
-  assert.equal(r.historyState().catalog.companies.length, 48);
+  assert.equal(typeof r.historyState, 'undefined');
+  assert.equal(r.view(r.host).catalogStatus, 'provisional');
   assert.ok(Buffer.byteLength(json) < 128 * 1024);
 });
 

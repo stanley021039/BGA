@@ -133,6 +133,5 @@ function answerText(id: string) {
         ></article
       ><p v-else>本局尚無已完成的題目。</p></section
     >
-    <a v-if="s.phase === 'finished'" href="/history">查看對局歷史</a>
   </div>
 </template>

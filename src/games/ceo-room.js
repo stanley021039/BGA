@@ -71,33 +71,6 @@ class CeoRoom extends PartyRoom {
         this.#game && this.#participants.has(id) && !this.interrupted ? this.#game.view(id) : null,
     };
   }
-
-  historyState() {
-    // Running traces deliberately omit private changes and future draw order.
-    return {
-      type: this.type,
-      code: this.code,
-      name: this.name,
-      phase: this.phase,
-      round: this.round,
-      roundId: this.roundId,
-      version: this.version,
-      host: this.host,
-      interrupted: this.interrupted,
-      players: this.players.map(({ id, name, bot, kicked, score }) => ({
-        id,
-        name,
-        bot,
-        kicked,
-        score,
-      })),
-      results: this.results,
-      winner: this.winner,
-      log: this.log,
-      catalogStatus: 'provisional',
-      catalog: provisionalCatalog(),
-    };
-  }
 }
 
 module.exports = { CeoRoom };

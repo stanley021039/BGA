@@ -26,7 +26,7 @@ test('CEO HTTP: disabled by default until reviewed UI is available', async (t) =
   assert.equal((await fetch(base + '/ceo/ABCDEF')).status, 404);
 });
 
-test('CEO HTTP: authenticated game, secrecy, receipt retry, listing, history, leave and restart', async (t) => {
+test('CEO HTTP: authenticated game, secrecy, receipt retry, listing, retired history routes, leave and restart', async (t) => {
   const { base } = await appFixture(t, {
     config: { ceoEnabled: true, achievementPurpose: 'test', marketAutomationEnabled: false },
     seed: (db) => createAuth(db).bootstrap('ceo_owner', 'synthetic-ceo-password'),
@@ -106,9 +106,7 @@ test('CEO HTTP: authenticated game, secrecy, receipt retry, listing, history, le
     false,
   );
   await post('join', cookies[3], { code }, 409);
-  const active = (await get('history', owner)).find((match) => match.room === code);
-  assert.equal(active.status, 'playing');
-  await get('history/' + active.id, owner, 400);
+  await get('history', owner, 404);
   s = repeated;
   let didSecretCheck = false;
   for (let step = 0; step < 300 && s.phase !== 'finished'; step++) {
@@ -147,12 +145,7 @@ test('CEO HTTP: authenticated game, secrecy, receipt retry, listing, history, le
   assert.equal(s.interrupted, false);
   assert.ok(didSecretCheck);
   assert.equal(s.game.results.players.length, 3);
-  const completed = (await get('history', owner)).find((match) => match.id === active.id);
-  assert.equal(completed.status, 'finished');
-  const archive = await get('history/' + completed.id, owner);
-  assert.ok(JSON.stringify(archive).includes('provisionalCatalog'));
-  assert.ok(JSON.stringify(archive).includes('rulesCore'));
-  assert.ok(!JSON.stringify(archive).includes('"secret"'));
+  await get('history', owner, 404);
   assert.equal(
     (await get('rooms', cookies[3])).rooms.find((room) => room.code === code).joinable,
     true,
@@ -168,8 +161,5 @@ test('CEO HTTP: authenticated game, secrecy, receipt retry, listing, history, le
   s = await get('state?code=' + code, owner);
   assert.equal(s.interrupted, true);
   assert.equal(s.game, null);
-  const interrupted = (await get('history', owner)).filter(
-    (match) => match.room === code && match.id !== completed.id,
-  );
-  assert.equal(interrupted[0].status, 'interrupted');
+  await get('history', owner, 404);
 });

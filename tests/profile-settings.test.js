@@ -14,7 +14,6 @@ test('independent avatar and character settings validate ownership, persist, and
       host: '127.0.0.1',
       dbFile: path.join(root, 'app.sqlite'),
       communityDir: path.join(root, 'community'),
-      historyDir: path.join(root, 'history'),
     };
   const db = openDatabase(config.dbFile);
   await createAuth(db).bootstrap('settingsadmin', 'test-password-123');
@@ -169,7 +168,6 @@ test('independent avatar and character settings validate ownership, persist, and
       '/settings',
       '/profile',
       '/studio',
-      '/history',
       '/poker',
       '/race',
       '/majority',

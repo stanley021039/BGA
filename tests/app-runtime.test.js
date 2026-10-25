@@ -7,14 +7,12 @@ const fs = require('node:fs'),
 const { createApp } = require('../src/app');
 const { MarketAutomation } = require('../src/market/automation');
 const { MarketImageStore } = require('../src/market/images');
-const { HistoryStore } = require('../src/history/store');
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-runtime-'));
   const config = {
     host: '127.0.0.1',
     port: 0,
     dbFile: path.join(root, 'db.sqlite'),
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     musicDir: path.join(root, 'music'),
     externalSideEffectsEnabled: false,
@@ -85,7 +83,7 @@ test('close racing listen does not start workers after shutdown and permits reop
   const next = f.create();
   await next.listen();
 });
-test('a worker startup failure closes the listener, history and data locks', async (t) => {
+test('a worker startup failure closes the listener and data locks', async (t) => {
   const f = fixture(t),
     app = f.create();
   const mock = t.mock.method(MarketImageStore.prototype, 'startThumbnails', () => {
@@ -94,7 +92,6 @@ test('a worker startup failure closes the listener, history and data locks', asy
   await assert.rejects(app.listen(), /injected thumbnail startup failure/);
   try {
     assert.equal(app.server.listening, false);
-    assert.equal(fs.existsSync(path.join(f.config.historyDir, '.lock')), false);
   } finally {
     await app.close();
     mock.mock.restore();
@@ -118,7 +115,6 @@ test('a failed stop still releases subsequent resources and all close callers se
   if (app.server.listening) await new Promise((resolve) => app.server.close(resolve));
   assert.ok(results.every((result) => result.status === 'rejected'));
   assert.strictEqual(a, b);
-  assert.equal(fs.existsSync(path.join(f.config.historyDir, '.lock')), false);
   mock.mock.restore();
   const next = f.create();
   await next.listen();
@@ -141,7 +137,7 @@ test('concurrent listen calls bind once and return the same startup promise', as
   await app.close();
   await assert.rejects(app.listen(), /closed/);
 });
-test('listen bind failure releases data and history locks without explicit close', async (t) => {
+test('listen bind failure releases data locks without explicit close', async (t) => {
   const f = fixture(t),
     blocker = fixture(t).create(),
     address = await blocker.listen();
@@ -149,12 +145,11 @@ test('listen bind failure releases data and history locks without explicit close
   const app = f.create();
   await assert.rejects(app.listen(), { code: 'EADDRINUSE' });
   assert.equal(app.server.listening, false);
-  assert.equal(fs.existsSync(path.join(f.config.historyDir, '.lock')), false);
   f.config.port = 0;
   const next = f.create();
   await next.listen();
 });
-test('late initialization failure releases acquired database, history and data locks', async (t) => {
+test('late initialization failure releases acquired database and data locks', async (t) => {
   const f = fixture(t),
     http = require('node:http'),
     original = http.createServer;
@@ -171,21 +166,20 @@ test('late initialization failure releases acquired database, history and data l
   };
   assert.throws(() => f.create(), /late initialization failure/);
   assert.equal(cleared, 1);
-  assert.equal(fs.existsSync(path.join(f.config.historyDir, '.lock')), false);
   fail = false;
   const next = f.create();
   await next.listen();
 });
-test('history cleanup failure still closes the database and releases data locks', async (t) => {
+test('thumbnail cleanup failure still closes the database and releases data locks', async (t) => {
   const f = fixture(t),
     app = f.create();
   await app.listen();
-  const original = HistoryStore.prototype.close;
-  const mock = t.mock.method(HistoryStore.prototype, 'close', function () {
+  const original = MarketImageStore.prototype.stopThumbnails;
+  const mock = t.mock.method(MarketImageStore.prototype, 'stopThumbnails', function () {
     original.call(this);
-    throw Error('injected history close failure');
+    throw Error('injected thumbnail stop failure');
   });
-  await assert.rejects(app.close(), /injected history close failure/);
+  await assert.rejects(app.close(), /injected thumbnail stop failure/);
   mock.mock.restore();
   const next = f.create();
   await next.listen();

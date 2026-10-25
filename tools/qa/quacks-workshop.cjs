@@ -25,7 +25,6 @@ fs.mkdirSync(output, { recursive: true });
     host: '127.0.0.1',
     port: 0,
     dbFile,
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     musicDir: path.join(root, 'music'),
     achievementPurpose: 'test',

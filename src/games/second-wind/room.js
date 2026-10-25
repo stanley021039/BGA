@@ -2,16 +2,31 @@
 const { randomUUID } = require('node:crypto');
 const { PartyRoom, fail } = require('../party-base');
 const { SecondWindGame } = require('./game');
+const { racerSet } = require('./catalog');
+const { assertCanManageSettings } = require('../../rooms/permissions');
 
 class SecondWindRoom extends PartyRoom {
   #game = null;
   #participants = new Set();
   constructor(code, name, rng, now) {
     super('second-wind', code, name, 6, 3, rng, now);
+    this.options = { racerSet: 'second-wind' };
+  }
+  configure(id, data = {}) {
+    assertCanManageSettings(this, id);
+    if (!['waiting', 'finished'].includes(this.phase))
+      fail('MATCH_STARTED', '遊戲進行中不能更改牌庫');
+    const selected = data.racerSet ?? this.options.racerSet;
+    racerSet(selected);
+    this.options = { racerSet: selected };
+    this.event('settings', '已更新角色牌庫');
   }
   start() {
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '遊戲已開始');
-    const next = new SecondWindGame({ playerIds: this.activePlayers().map((p) => p.id) });
+    const next = new SecondWindGame({
+      playerIds: this.activePlayers().map((p) => p.id),
+      racerSet: this.options.racerSet,
+    });
     this.prepare();
     this.#game = next;
     this.#participants = new Set(this.players.map((p) => p.id));
@@ -41,31 +56,9 @@ class SecondWindRoom extends PartyRoom {
   view(id) {
     return {
       ...this.baseView(id),
+      options: { ...this.options },
       game:
         this.#game && this.#participants.has(id) && !this.interrupted ? this.#game.view(id) : null,
-    };
-  }
-  historyState() {
-    return {
-      type: this.type,
-      code: this.code,
-      name: this.name,
-      phase: this.phase,
-      round: this.round,
-      roundId: this.roundId,
-      version: this.version,
-      host: this.host,
-      interrupted: this.interrupted,
-      players: this.players.map(({ id, name, bot, kicked, score }) => ({
-        id,
-        name,
-        bot,
-        kicked,
-        score,
-      })),
-      results: this.results,
-      winner: this.winner,
-      log: this.log,
     };
   }
 }

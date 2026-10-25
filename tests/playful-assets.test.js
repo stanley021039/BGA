@@ -10,7 +10,6 @@ test('playful presentation assets are public exact local bytes; arbitrary SVG pa
     port: 0,
     host: '127.0.0.1',
     dbFile: path.join(temporary, 'app.sqlite'),
-    historyDir: path.join(temporary, 'history'),
     communityDir: path.join(temporary, 'community'),
     musicDir: path.join(temporary, 'music'),
     externalSideEffectsEnabled: false,

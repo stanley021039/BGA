@@ -4,7 +4,7 @@ const test = require('node:test'),
 const { randomUUID } = require('node:crypto');
 const { appFixture } = require('./helpers/app-fixture.cjs');
 const { createAuth } = require('../src/auth');
-test('Second Wind HTTP: isolated feature gate, seats, private projection, retries, listing and history', async (t) => {
+test('Second Wind HTTP: isolated feature gate, seats, private projection, retries, listing and retired history routes', async (t) => {
   const { base } = await appFixture(t, {
     config: { secondWindEnabled: true, marketAutomationEnabled: false },
     seed: (db) => createAuth(db).bootstrap('athlete_owner', 'synthetic-athlete-password'),
@@ -43,7 +43,26 @@ test('Second Wind HTTP: isolated feature gate, seats, private projection, retrie
   const { code } = (await post('create', owner, { type: 'second-wind' })).body;
   for (const cookie of cookies.slice(1)) await post('join', cookie, { code });
   await post('start', cookies[1], { code }, 403);
-  let v = (await post('start', owner, { code })).body;
+  await post('settings', cookies[1], { code, racerSet: 'base' }, 403);
+  const peer = await (
+    await fetch(base + '/api/state?code=' + code, { headers: { Cookie: cookies[1] } })
+  ).json();
+  await post('room-role', owner, { code, playerId: peer.me, role: 'manager' });
+  assert.equal(
+    (await post('settings', cookies[1], { code, racerSet: 'mixed' })).body.options.racerSet,
+    'mixed',
+  );
+  await post('settings', owner, { code, racerSet: 'made-up' }, 400);
+  const unchanged = await (
+    await fetch(base + '/api/state?code=' + code, { headers: { Cookie: owner } })
+  ).json();
+  assert.equal(unchanged.options.racerSet, 'mixed');
+  await post('settings', cookies[1], { code, racerSet: 'base' });
+  let v = (await post('start', cookies[1], { code })).body;
+  assert.equal(v.game.racerSet, 'base');
+  assert.equal(v.game.catalog.length, 36);
+  assert.ok(v.game.catalog.every((r) => r.set === 'base'));
+  await post('settings', owner, { code, racerSet: 'mixed' }, 409);
   const seats = new Map();
   for (const cookie of cookies) {
     const res = await fetch(base + '/api/state?code=' + code, { headers: { Cookie: cookie } });
@@ -103,8 +122,7 @@ test('Second Wind HTTP: isolated feature gate, seats, private projection, retrie
   assert.equal(v.game.phase, 'racing');
   const listed = await (await fetch(base + '/api/rooms', { headers: { Cookie: owner } })).json();
   assert.equal(listed.rooms.find((r) => r.code === code).playerCount, 3);
-  const history = await (await fetch(base + '/api/history', { headers: { Cookie: owner } })).json();
-  assert.ok(history.some((r) => r.room === code));
+  assert.equal((await fetch(base + '/api/history', { headers: { Cookie: owner } })).status, 404);
   await post('leave', cookies[1], { code });
   const ended = await (
     await fetch(base + '/api/state?code=' + code, { headers: { Cookie: owner } })

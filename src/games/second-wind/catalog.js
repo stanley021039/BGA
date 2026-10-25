@@ -407,4 +407,12 @@ const raceAwards = Object.freeze([
   null,
   null,
 ]);
-module.exports = { racers, twists, tracks, raceAwards };
+const { baseRacers } = require('./base-catalog');
+const allRacers = Object.freeze([...racers, ...baseRacers]);
+function racerSet(name = 'second-wind') {
+  if (name === 'second-wind') return racers;
+  if (name === 'base') return baseRacers;
+  if (name === 'mixed') return allRacers;
+  require('../party-base').fail('INVALID_RACER_SET', '角色牌庫不正確', 400);
+}
+module.exports = { racers, baseRacers, allRacers, racerSet, twists, tracks, raceAwards };

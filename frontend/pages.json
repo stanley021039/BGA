@@ -60,11 +60,6 @@
     "route": "/profile"
   },
   {
-    "id": "history",
-    "document": "history.html",
-    "route": "/history"
-  },
-  {
     "id": "draw",
     "document": "draw.html",
     "route": "/draw"

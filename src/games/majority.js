@@ -1,3 +1,4 @@
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { starterIndex } = require('./random-starter');
 const { assertRecordCapacity } = require('../rooms/membership');
 const { randomInt, randomUUID } = require('node:crypto');
@@ -285,7 +286,7 @@ class MajorityRoom {
     return p;
   }
   configure(id, data = {}) {
-    if (id !== this.host) throw Error('只有房主可以更改設定');
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) throw Error('遊戲中不能更改設定');
     const mode = data.mode ?? this.options.mode ?? 'majority';
     if (!['majority', 'cruel', 'music', 'scenario'].includes(mode)) throw Error('玩法不正確');
@@ -330,44 +331,6 @@ class MajorityRoom {
       'settings',
       `設定為 ${rounds} 回合；自訂題目${customPercent === null ? '依題庫比例' : customPercent + '%'}`,
     );
-  }
-  historyState() {
-    if (!this.isTournament()) return { ...this };
-    const t = this.tournamentState;
-    return {
-      type: this.type,
-      code: this.code,
-      name: this.name,
-      phase: this.phase,
-      round: this.round,
-      roundLimit: this.roundLimit,
-      options: this.options,
-      players: this.players.map(({ id, name, score, bot, waitingForNextRound, kicked }) => ({
-        id,
-        name,
-        score,
-        bot,
-        waitingForNextRound,
-        kicked,
-      })),
-      presenterId: this.presenterId,
-      participantIds: this.participantIds,
-      answers: this.answers,
-      groups: this.groups,
-      result: this.result,
-      question: this.question,
-      winner: this.winner,
-      completedRounds: this.results?.length || 0,
-      tournamentState: t
-        ? {
-            size: t.size,
-            stage: t.stage,
-            pair: t.pair,
-            champion: t.champion,
-            eliminatedCount: t.eliminated.length,
-          }
-        : null,
-    };
   }
   start() {
     if (!['waiting', 'finished'].includes(this.phase)) throw Error('遊戲尚未結束');

@@ -1,7 +1,7 @@
 'use strict';
 
 const { fail } = require('../party-base');
-const { racers: catalog } = require('./catalog');
+const { allRacers: catalog } = require('./catalog');
 const known = new Set(catalog.map((racer) => racer.id));
 const present = (racer) => !racer.finished && !racer.eliminated;
 function listed(racer) {
@@ -9,6 +9,19 @@ function listed(racer) {
   const powers = [racer.racerId, ...(racer.copiedPowers || [])];
   if (!powers.every((id) => known.has(id))) fail('UNKNOWN_POWER', '角色能力資料不正確', 400);
   return [...new Set(powers)];
+}
+function expanded(racer, racers, beforeRace = false, seen = new Set()) {
+  const powers = listed(racer);
+  if (beforeRace || !powers.includes('copy-cat') || seen.has(racer.id)) return powers;
+  const nextSeen = new Set([...seen, racer.id]);
+  const active = racers.filter(present),
+    lead = Math.max(...active.map((r) => r.position));
+  const leaders = active.filter((r) => r.position === lead);
+  const target =
+    leaders.find((r) => r.id === racer.copyTarget) || (leaders.length === 1 ? leaders[0] : null);
+  return target && target.id !== racer.id
+    ? [...new Set([...powers, ...expanded(target, racers, false, nextSeen)])]
+    : powers;
 }
 function validate(racers) {
   if (
@@ -28,7 +41,7 @@ function validate(racers) {
     fail('INVALID_POWER_STATE', '能力投影狀態不正確', 400);
   racers.forEach(listed);
 }
-function effectivePowers(racers, racerId, { outsideRace = false } = {}) {
+function effectivePowers(racers, racerId, { outsideRace = false, beforeRace = false } = {}) {
   validate(racers);
   const racer = racers.find((racer) => racer.id === racerId);
   if (!racer) fail('RACER_NOT_FOUND', '找不到角色', 400);
@@ -37,9 +50,12 @@ function effectivePowers(racers, racerId, { outsideRace = false } = {}) {
   if (outsideRace) return racer.racerId === 're-runner' ? ['re-runner'] : [];
   if (!present(racer)) return [];
   const disabled = racers.some(
-    (other) => present(other) && other.position < racer.position && listed(other).includes('null'),
+    (other) =>
+      present(other) &&
+      other.position < racer.position &&
+      expanded(other, racers, beforeRace).includes('null'),
   );
-  return disabled ? [] : listed(racer);
+  return disabled ? [] : expanded(racer, racers, beforeRace);
 }
 function rollConstraints(racers, racerId) {
   validate(racers);

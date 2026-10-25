@@ -21,6 +21,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 */
 (() => {
   const paths = {
+    pictureInPicture:
+      '<rect x="3" y="4" width="18" height="16" rx="2"/><rect x="12" y="12" width="7" height="6" rx="1"/>',
     chat: '<path d="M4 4h16v12H9l-5 4V4Z M8 8h8M8 12h5"/>',
     flag: '<path d="M5 22V3m0 1h8l2 3h5v10h-7l-2-3H5"/>',
     crown: '<path d="m3 6 4 5 5-8 5 8 4-5-2 14H5L3 6Z"/>',
