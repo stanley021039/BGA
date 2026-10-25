@@ -221,12 +221,10 @@ test('clock rollback keeps vote timestamps monotonic and the complete database e
   const source = {
     envId: 'rollback-test',
     dbFile: f.file,
-    historyDir: path.join(f.root, 'source', 'history'),
     communityDir: path.join(f.root, 'source', 'community'),
     musicDir: path.join(f.root, 'source', 'music'),
   };
-  for (const dir of [source.historyDir, source.communityDir, source.musicDir])
-    fs.mkdirSync(dir, { recursive: true });
+  for (const dir of [source.communityDir, source.musicDir]) fs.mkdirSync(dir, { recursive: true });
   const keyFile = path.join(f.root, 'test-key'),
     outputDir = path.join(f.root, 'bundle');
   await run({ action: 'keygen', keyFile });
@@ -319,7 +317,6 @@ test('authenticated HTTP integration persists and handles simultaneous stale vot
     config = {
       ...settings({
         DB_FILE: f.file,
-        HISTORY_DIR: path.join(f.root, 'history'),
         COMMUNITY_DIR: path.join(f.root, 'community'),
         MUSIC_DIR: path.join(f.root, 'music'),
         EXTERNAL_SIDE_EFFECTS_ENABLED: 'false',
@@ -460,12 +457,10 @@ test('full encrypted export/verify/dry-run/restore preserves votes, corrected sc
   const source = {
     envId: 'market-test',
     dbFile: f.file,
-    historyDir: path.join(f.root, 'source', 'history'),
     communityDir: path.join(f.root, 'source', 'community'),
     musicDir: path.join(f.root, 'source', 'music'),
   };
-  for (const dir of [source.historyDir, source.communityDir, source.musicDir])
-    fs.mkdirSync(dir, { recursive: true });
+  for (const dir of [source.communityDir, source.musicDir]) fs.mkdirSync(dir, { recursive: true });
   const bundle = path.join(f.root, 'bundle'),
     key = path.join(f.root, 'test-key'),
     destination = path.join(f.root, 'restored');
@@ -544,11 +539,10 @@ for (const layout of ['main-ban-only', 'market-only'])
     const source = {
       envId: 'legacy-13-test',
       dbFile: f.file,
-      historyDir: path.join(f.root, 'source', 'history'),
       communityDir: path.join(f.root, 'source', 'community'),
       musicDir: path.join(f.root, 'source', 'music'),
     };
-    for (const dir of [source.historyDir, source.communityDir, source.musicDir])
+    for (const dir of [source.communityDir, source.musicDir])
       fs.mkdirSync(dir, { recursive: true });
     const keyFile = path.join(f.root, 'test-key'),
       outputDir = path.join(f.root, 'bundle'),

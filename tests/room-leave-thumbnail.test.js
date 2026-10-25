@@ -20,7 +20,6 @@ test('thumbnail static route serves exact JPEG bytes without authentication; unk
       port: 0,
       host: '127.0.0.1',
       publicUrl: null,
-      historyDir: path.join(root, 'history'),
       communityDir: path.join(root, 'community'),
       dbFile: path.join(root, 'app.sqlite'),
     });

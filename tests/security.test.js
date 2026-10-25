@@ -15,7 +15,6 @@ test('public crawler rules, response headers, and Cloudflare login limits', asyn
     port: 0,
     host: '127.0.0.1',
     publicUrl: 'https://shhuang.cc',
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     dbFile: path.join(root, 'app.sqlite'),
   };

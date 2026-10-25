@@ -7,13 +7,12 @@ const { createApp } = require('../src/app');
 const { openDatabase } = require('../src/db/index');
 const { createAuth } = require('../src/auth/index');
 
-test('independent app instances can start, serve, and release their history locks', async () => {
+test('independent app instances can start, serve, and release their data locks', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-app-'));
   const config = {
     port: 0,
     host: '127.0.0.1',
     publicUrl: null,
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     dbFile: path.join(root, 'app.sqlite'),
   };
@@ -57,7 +56,6 @@ test('independent app instances can start, serve, and release their history lock
     assert.equal((await fetch(`http://127.0.0.1:${port}/lobby.css`)).status, 200);
     await app.close();
     await app.close();
-    assert.equal(fs.existsSync(path.join(root, 'history', '.lock')), false);
     app = createApp(config);
     const next = await app.listen();
     assert.equal((await fetch(`http://127.0.0.1:${next.port}/lobby.css`)).status, 200);
@@ -73,7 +71,6 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
     port: 0,
     host: '127.0.0.1',
     publicUrl: null,
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     dbFile: path.join(root, 'app.sqlite'),
   };

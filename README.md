@@ -48,7 +48,7 @@
 
 本機可執行 `npm start` 或 Windows 的 `start.bat`。直接連線模式讓朋友透過同一個 VPN／區網連到主機的 3000 埠；Cloudflare 模式則使用 HTTPS 網域。兩種模式的 `HOST`、`PUBLIC_URL` 與驗證方式見[部署指南](docs/DEPLOYMENT.md)。這是需要 Node.js 伺服器的專案，不能只用 GitHub Pages 執行多人遊戲。
 
-Git 僅保存程式與執行所需資源；`data/`（玩家對局歷史）、`work/`（本機工具與暫存）、`reference-assets/`（整理用素材）、日誌與環境設定不會上傳。下方為各階段功能記錄；參考素材索引需搭配本機素材使用。
+Git 僅保存程式與執行所需資源；`data/`（本機資料庫與素材資料）、`work/`（本機工具與暫存）、`reference-assets/`（整理用素材）、日誌與環境設定不會上傳。下方為各階段功能記錄；參考素材索引需搭配本機素材使用。
 
 
 ## 遊戲大廳
@@ -84,13 +84,9 @@ Git 僅保存程式與執行所需資源；`data/`（玩家對局歷史）、`wo
 
 `npm start` 啟動；本機預設 `npm run test:affected`，依 Git 差異列出原因並執行受影響測試，`-- --list` 可先看計畫。完整 `npm test`（遊戲規則、帳號、HTTP 與 GitHub 模擬 API）由目前 PR head 同一 commit 的 Linux／Windows CI 執行；兩輪審查與必要 UI 驗收仍必須完成，未知／核心變更會保守回退全套。詳 [測試分工與選取範圍](docs/TESTING.md)。遊戲資源全部本機提供；GitHub Issue 同步需要網際網路。
 
-## 對局歷史與房間網址
+## 房間網址
 
-大廳與遊戲頁的「對局歷史」可開啟 `/history`。雷霆之路每場比賽、德州撲克每手牌各自一份記錄，保存在 `data/history/`，不因開新局、房間過期或伺服器重啟刪除。整站備份須停止 writer 後保存 DB、音樂、community 與歷史，請使用 [完整資料工具](docs/SERVER-DATA-TRANSFER.md)。舊版未記錄的對局無法追溯補回。
-
-格式為版本 1 JSONL，包含開局前完整狀態、設定與入房記錄、遊戲引擎版本雜湊及原始碼、每次操作的來源／玩家／輸入／成功或失敗、操作前後狀態、內部結算順序、隨機抽樣與部分中間棋局。伺服器在執行操作前後同步寫入；底牌、完整牌堆、隱藏危險及損傷標記保存在本機記錄中，不保存登入 token。寫入失敗會暫停該房間後續操作。這些檔案是回看資料，不是恢復房間登入用的存檔。
-
-回看頁提供棋局、逐步選取、原始記錄與完整 JSON 下載；進行中的對局不開放完整資料。結束後會顯示完整資訊，包括底牌與隱藏地形。意外中斷的對局於服務重新啟動後標為中斷存檔，保留已落盤資料。
+v3.0.0 起移除只供除錯的伺服器對局記錄（原 `/history`、`data/history/`）：房間操作不再寫入逐步記錄，也不會因記錄容量上限擋住遊戲（#267）。各遊戲內的回放、筆畫、聊天與最近播放等遊戲內歷史不受影響。既有 `data/history/` 檔案不再被讀取；是否保留、封存或刪除由管理者另行決定。整站備份須停止 writer 後保存 DB、音樂與 community，請使用 [完整資料工具](docs/SERVER-DATA-TRANSFER.md)。
 
 HTTP 連線位址由主機自動偵測，或在 `.env` 設定 `PUBLIC_URL`。各房間使用 `/race/ABC123`、`/poker/ABC123`、`/majority/ABC123`、`/gift/ABC123` 或 `/draw/ABC123`。已入房的會員可以直接返回座位；新朋友登入後再加入。教學仍使用 `/race?learn=1`，送禮達人玩法可在 `/gift?learn=1`、你畫我猜玩法可在 `/draw?learn=1` 查看。
 
@@ -116,7 +112,7 @@ HTTP 連線位址由主機自動偵測，或在 `.env` 設定 `PUBLIC_URL`。各
 
 ## 本機設定
 
-網站共用導覽以「302捉猶團」為中心，左側可進入留言板、兩款遊戲題庫及對局歷史；右側頭像選單提供形象設定、收藏庫、成就收藏冊與登出。頭像滑鼠提示顯示登入帳號名稱，亦可用鍵盤開啟選單與 Escape 關閉。
+網站共用導覽以「302捉猶團」為中心，左側可進入留言板及兩款遊戲題庫；右側頭像選單提供形象設定、收藏庫、成就收藏冊與登出。頭像滑鼠提示顯示登入帳號名稱，亦可用鍵盤開啟選單與 Escape 關閉。
 
 `/settings` 可分別選擇帳號頭像與遊戲角色／預設表情。頭像可從角色圖片、自己的繪畫收藏或朋友分享的圖片選取。刪除收藏圖片或取消分享後，失效的頭像會回到目前角色圖片。
 
@@ -124,7 +120,7 @@ HTTP 連線位址由主機自動偵測，或在 `.env` 設定 `PUBLIC_URL`。各
 
 收藏圖片的分享欄位使用資料庫版本 12；整合分支同時包含版本 11 的音樂資料表。啟動時會自動升級，既有圖片預設私人。`test/collection-suite` 整合 PR #21、#24、#26 與音樂面板、管理入口、邀請連結修正；這些功能均納入 `main`。
 
-可將 `.env.example` 複製為 `.env`，設定 `PORT`、`HOST`、`PUBLIC_URL`、`HISTORY_DIR`、`COMMUNITY_DIR`、`DB_FILE`、`MUSIC_DIR`、`EXTERNAL_SIDE_EFFECTS_ENABLED` 與 `GITHUB_TOKEN`。隔離 restore 驗收須明確設定 `EXTERNAL_SIDE_EFFECTS_ENABLED=false`，封鎖 GitHub recover／新投稿／重試。`.env` 及資料目錄不納入 Git；系統環境變數優先於 `.env`。未設定 `PUBLIC_URL` 時自動偵測 VPN 位址，邀請按鈕使用偵測結果。Windows 防火牆工具同樣自動偵測網卡位址，不需將私人 IP 寫進程式。
+可將 `.env.example` 複製為 `.env`，設定 `PORT`、`HOST`、`PUBLIC_URL`、`COMMUNITY_DIR`、`DB_FILE`、`MUSIC_DIR`、`EXTERNAL_SIDE_EFFECTS_ENABLED` 與 `GITHUB_TOKEN`。隔離 restore 驗收須明確設定 `EXTERNAL_SIDE_EFFECTS_ENABLED=false`，封鎖 GitHub recover／新投稿／重試。`.env` 及資料目錄不納入 Git；系統環境變數優先於 `.env`。未設定 `PUBLIC_URL` 時自動偵測 VPN 位址，邀請按鈕使用偵測結果。Windows 防火牆工具同樣自動偵測網卡位址，不需將私人 IP 寫進程式。
 
 `PUBLIC_URL` 僅設定邀請連結來源，不會自行啟用 HTTPS。更改 `.env` 後重啟服務才會生效；重啟會清空記憶體中的房間，已保存的歷史、留言與題庫會保留。
 

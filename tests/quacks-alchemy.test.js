@@ -683,12 +683,12 @@ test('real AI planner picks patients and completes essence plus nine rounds with
   r.start();
   let now = 0,
     tries = 0;
-  const history = { transact: (room, entry, run) => run() };
+  const transitions = { transact: (room, entry, run) => run() };
   while (r.phase !== 'finished') {
     assert.ok(++tries < 2500, 'AI progresses ' + r.phase + ' ' + r.stage);
     if (r.phase === 'round-intro') r.auto((now = Math.max(now, r.nextRoundAt)));
     else if (r.phase === 'between') act(r, r.player(r.host), 'next');
-    else runTestAIStep(r, { history, now: (now += 1500) });
+    else runTestAIStep(r, { transitions, now: (now += 1500) });
   }
   assert.equal(r.results.length, 9);
   assert.ok(r.results.every((x) => x.players.every((p) => p.alchemy)));

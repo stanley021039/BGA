@@ -13,7 +13,6 @@ async function fixture(t, purpose = 'production', { uppercaseIds = false } = {})
   const config = {
     port: 0,
     host: '127.0.0.1',
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     dbFile: path.join(root, 'app.sqlite'),
     externalSideEffectsEnabled: false,
@@ -134,7 +133,6 @@ test('app factory rejects an explicit invalid purpose and releases its data lock
     config = {
       port: 0,
       host: '127.0.0.1',
-      historyDir: path.join(root, 'history'),
       communityDir: path.join(root, 'community'),
       dbFile: path.join(root, 'app.sqlite'),
       externalSideEffectsEnabled: false,

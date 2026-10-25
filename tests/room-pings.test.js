@@ -245,7 +245,6 @@ test('authenticated HTTP and live SSE are isolated, ephemeral and cleanly draine
       host: '127.0.0.1',
       port: 0,
       dbFile: path.join(root, 'app.sqlite'),
-      historyDir: path.join(root, 'history'),
       communityDir: path.join(root, 'community'),
       musicDir: path.join(root, 'music'),
       externalSideEffectsEnabled: false,

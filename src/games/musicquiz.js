@@ -136,14 +136,6 @@ class MusicQuizRoom extends PartyRoom {
         (!this.settings.genres.length || s.genres.some((g) => this.settings.genres.includes(g))),
     );
   }
-  historyState() {
-    const { sequence, ...state } = this;
-    return {
-      ...state,
-      sequence: sequence.map((song) => song.id),
-      completedRounds: this.results.length,
-    };
-  }
   start() {
     const pool = this.pool();
     if (pool.length < this.activePlayers().length + 2)

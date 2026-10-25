@@ -12,7 +12,6 @@ test('collection permissions, avatar sharing/revocation and character deletion s
       port: 0,
       host: '127.0.0.1',
       dbFile: path.join(root, 'app.sqlite'),
-      historyDir: path.join(root, 'history'),
       communityDir: path.join(root, 'community'),
     };
   const db = openDatabase(config.dbFile);

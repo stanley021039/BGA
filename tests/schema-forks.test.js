@@ -184,11 +184,10 @@ for (const kind of ['market17', 'market18'])
         source = {
           envId: 'forks',
           dbFile: f.file,
-          historyDir: path.join(f.root, 'source/history'),
           communityDir: path.join(f.root, 'source/community'),
           musicDir: path.join(f.root, 'source/music'),
         };
-      for (const name of ['historyDir', 'communityDir', 'musicDir'])
+      for (const name of ['communityDir', 'musicDir'])
         fs.mkdirSync(source[name], { recursive: true });
       const keyFile = path.join(f.root, 'key'),
         bundleDir = path.join(f.root, 'bundle'),

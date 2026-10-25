@@ -1,6 +1,5 @@
 const fs = require('node:fs'),
   path = require('node:path');
-const { historyLimits } = require('./history/limits');
 function loadEnv(file = path.join(__dirname, '..', '.env'), env = process.env) {
   if (!fs.existsSync(file)) return env;
   for (const [i, raw] of fs
@@ -55,14 +54,9 @@ function settings(env = process.env) {
   const marketAutomation = env.MARKET_AUTOMATION_ENABLED ?? 'true';
   if (!['true', 'false'].includes(marketAutomation))
     throw Error('MARKET_AUTOMATION_ENABLED must be true or false');
-  const preserveSessions = env.HISTORY_PRESERVE_IMPORTED_SESSIONS ?? 'false';
-  if (!['true', 'false'].includes(preserveSessions))
-    throw Error('HISTORY_PRESERVE_IMPORTED_SESSIONS must be true or false');
   return {
     frontendEnabled: frontendEnabled === 'true',
-    ...(Object.keys(historyLimits(env)).length ? { historyLimits: historyLimits(env) } : {}),
     achievementPurpose,
-    historyPreserveImportedSessions: preserveSessions === 'true',
     port,
     host: env.HOST || '0.0.0.0',
     publicUrl,
@@ -72,7 +66,6 @@ function settings(env = process.env) {
       '..',
       env.GAME_AUDIO_DIR || 'local-audio/audible-eight-second',
     ),
-    historyDir: path.resolve(__dirname, '..', env.HISTORY_DIR || 'data/history'),
     communityDir: path.resolve(__dirname, '..', env.COMMUNITY_DIR || 'data/community'),
     dbFile,
     musicDir: env.MUSIC_DIR
