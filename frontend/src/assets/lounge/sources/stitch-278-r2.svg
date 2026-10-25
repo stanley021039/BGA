@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 500" width="720" height="500">
+    <defs>
+      <style>
+        .bg { fill: #88C5BE; }
+        .paper-shadow { fill: #65A39B; }
+        .stroke-main { stroke: #26292B; stroke-width: 6px; stroke-linecap: round; stroke-linejoin: round; }
+        .stroke-inner { stroke: #26292B; stroke-width: 5px; stroke-linecap: round; stroke-linejoin: round; }
+        .stroke-accent { stroke: #26292B; stroke-width: 5px; stroke-linecap: round; }
+        .ivory { fill: #FFF8EE; }
+        .ivory-shade { fill: #EFE3D0; }
+        .gold { fill: #E6B742; }
+        .gold-shade { fill: #CE9F2D; }
+        .badge-bg { fill: #EB483F; }
+        .badge-shadow { fill: #BD342C; }
+        .badge-num { font-family: 'Fredoka', 'Quicksand', 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 800; font-size: 38px; fill: #FFFFFF; text-anchor: middle; dominant-baseline: central; }
+        .coral-accent { fill: #F47C68; }
+        .charcoal { fill: #26292B; }
+      </style>
+    </defs>
+
+    <!-- Canvas background: Solid pale teal/turquoise -->
+    <rect width="720" height="500" class="bg" />
+
+    <!-- FLAT PAPER OFFSET SHADOWS (Offset by +10px X, +10px Y for paper cutout feel) -->
+    <g class="paper-shadow" transform="translate(10, 10)">
+      <!-- Megaphone handle shadow -->
+      <path d="M 285 315 L 255 385 C 250 398 262 410 276 405 L 305 393 C 316 388 322 377 325 365 L 340 305 Z" />
+      
+      <!-- Megaphone body shadow -->
+      <path d="M 220 225 L 375 190 L 375 320 L 220 280 C 205 275 195 260 195 252 C 195 244 205 230 220 225 Z" />
+      
+      <!-- Megaphone front cone shadow -->
+      <path d="M 375 190 L 465 145 C 475 140 488 143 495 152 L 495 358 C 488 367 475 370 465 365 L 375 320 Z" />
+      
+      <!-- Mouth / Bell ellipse shadow -->
+      <ellipse cx="495" cy="255" rx="26" ry="108" />
+
+      <!-- Badge shadow offset -->
+      <circle cx="515" cy="145" r="38" />
+    </g>
+
+    <!-- MAIN ILLUSTRATION LAYER -->
+    <g id="megaphome-group">
+      
+      <!-- Megaphone Handle (behind body) -->
+      <path d="M 282 312 L 254 380 C 249 393 260 405 274 400 L 302 389 C 313 384 319 374 322 362 L 336 305 Z" 
+            class="ivory stroke-main" />
+      <!-- Handle grip paper layer detail -->
+      <path d="M 266 350 L 295 339 M 260 366 L 289 355" class="stroke-inner" />
+
+      <!-- Megaphone Rear Cylinder / Body -->
+      <path d="M 220 222 L 375 186 L 375 318 L 220 282 C 206 278 196 265 196 252 C 196 239 206 226 220 222 Z" 
+            class="ivory stroke-main" />
+
+      <!-- Megaphone Body Color Accent / Subtle paper segment (lower half shade) -->
+      <path d="M 200 258 C 208 274 220 282 220 282 L 375 318 L 375 256 L 200 258 Z" 
+            class="ivory-shade" />
+      <path d="M 220 222 L 375 186 L 375 318 L 220 282 C 206 278 196 265 196 252 C 196 239 206 226 220 222 Z" 
+            fill="none" class="stroke-main" />
+
+      <!-- Back cap piece -->
+      <ellipse cx="206" cy="252" rx="10" ry="24" class="gold-shade stroke-inner" />
+      <!-- Small talk button / switch on back of megaphone -->
+      <rect x="235" y="215" width="28" height="12" rx="6" class="coral-accent stroke-inner" transform="rotate(-13 235 215)" />
+
+      <!-- Megaphone Front Flaring Cone -->
+      <path d="M 375 186 L 472 138 L 472 366 L 375 318 Z" 
+            class="ivory stroke-main" />
+      <!-- Cone lower paper shade -->
+      <path d="M 375 256 L 472 258 L 472 366 L 375 318 Z" 
+            class="ivory-shade" />
+      <path d="M 375 186 L 472 138 L 472 366 L 375 318 Z" 
+            fill="none" class="stroke-main" />
+
+      <!-- Seam line ring between back and cone -->
+      <line x1="375" y1="186" x2="375" y2="318" class="stroke-inner" />
+
+      <!-- Golden-Yellow Bell Mouth / Rim -->
+      <!-- Outer Bell Collar -->
+      <path d="M 472 138 C 478 135 486 135 492 140 L 498 144 C 504 150 508 160 508 172 L 508 332 C 508 344 504 354 498 360 L 492 364 C 486 369 478 369 472 366 Z" 
+            class="gold stroke-main" />
+      <!-- Bell Mouth Inner Face (Ellipse) -->
+      <ellipse cx="496" cy="252" rx="22" ry="106" class="gold stroke-main" />
+      <!-- Bell Mouth Depth Interior -->
+      <ellipse cx="493" cy="252" rx="13" ry="86" class="charcoal" />
+      <!-- Acoustic center paper dot -->
+      <ellipse cx="488" cy="252" rx="5" ry="32" class="gold" />
+
+      <!-- SOUND-WAVE CURVES (Two short, expressive hand-drawn curves) -->
+      <!-- First sound-wave curve -->
+      <path d="M 545 208 C 564 222 568 242 568 252 C 568 264 563 282 546 298" 
+            fill="none" class="stroke-accent" stroke-width="7" />
+      <!-- Second sound-wave curve -->
+      <path d="M 578 184 C 606 208 612 236 612 252 C 612 270 605 298 580 322" 
+            fill="none" class="stroke-accent" stroke-width="7" />
+
+      <!-- 2 TINY FOUR-POINT SPARKLES (Sparse playful decoration) -->
+      <!-- Sparkle 1: Top, above soundwaves -->
+      <g transform="translate(560, 142)">
+        <path d="M 0 -14 Q 0 0 14 0 Q 0 0 0 14 Q 0 0 -14 0 Q 0 0 0 -14 Z" 
+              class="ivory stroke-inner" stroke-width="3.5" />
+        <circle cx="0" cy="0" r="2.5" class="gold" />
+      </g>
+
+      <!-- Sparkle 2: Lower-left near handle/tail -->
+      <g transform="translate(168, 320)">
+        <path d="M 0 -11 Q 0 0 11 0 Q 0 0 0 11 Q 0 0 -11 0 Q 0 0 0 -11 Z" 
+              class="gold stroke-inner" stroke-width="3" />
+      </g>
+
+      <!-- NOTIFICATION BADGE (Upper right of megaphone, bold rounded red badge with white number 3) -->
+      <g id="notification-badge" transform="translate(506, 138)">
+        <!-- Badge flat shadow offset -->
+        <circle cx="3" cy="5" r="36" class="badge-shadow" />
+        <!-- Main Badge Circle -->
+        <circle cx="0" cy="0" r="36" class="badge-bg stroke-main" stroke-width="6" />
+        <!-- Paper highlight crescent on badge -->
+        <path d="M -22 -14 C -16 -26 0 -30 16 -24" fill="none" stroke="#FFA39E" stroke-width="4" stroke-linecap="round" />
+        <!-- Verbatim white number 3 -->
+        <text x="0" y="2" class="badge-num">3</text>
+      </g>
+
+    </g>
+  </svg>

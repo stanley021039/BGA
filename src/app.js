@@ -66,7 +66,8 @@ const { QuacksRoom } = require('./games/quacks');
 const { BluffRoom } = require('./games/bluff');
 const { TelephoneRoom } = require('./games/telephone');
 const { MusicQuizRoom } = require('./games/musicquiz'),
-  { MinimalRoom } = require('./games/minimal');
+  { MinimalRoom } = require('./games/minimal'),
+  { LoungeRoom } = require('./games/lounge');
 const { GiftStore } = require('./games/gift-store'),
   { GIFTS, CATEGORIES } = require('./games/gift-catalog');
 const {
@@ -917,6 +918,7 @@ function initializeApp(config, dataLock, acquired) {
     musicquiz: MusicQuizRoom,
     minimal: MinimalRoom,
     draw: DrawGuessRoom,
+    lounge: LoungeRoom,
   };
   const roomsFile = config.roomsFile || config.dbFile + '.rooms';
   const TIMER_KEY = /^(deadline|.+At|.+Until)$/;
@@ -1544,7 +1546,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|lounge)$/.test(
               page || '',
             )
           )
@@ -1838,6 +1840,7 @@ function initializeApp(config, dataLock, acquired) {
               'minimal',
               'bluff',
               'quacks',
+              'lounge',
             ].includes(data.type)
           )
             throw new HttpError(400, 'INVALID_GAME', '不支援的遊戲');
@@ -1858,54 +1861,59 @@ function initializeApp(config, dataLock, acquired) {
             trpg = data.type === 'trpg',
             thunder = data.type === 'thunder',
             majority = data.type === 'majority',
-            gift = data.type === 'gift';
+            gift = data.type === 'gift',
+            lounge = data.type === 'lounge';
           const room = new (
-            quacks
-              ? QuacksRoom
-              : bluff
-                ? BluffRoom
-                : musicquiz
-                  ? MusicQuizRoom
-                  : minimal
-                    ? MinimalRoom
-                    : telephone
-                      ? TelephoneRoom
-                      : trpg
-                        ? TrpgRoom
-                        : draw
-                          ? DrawGuessRoom
-                          : gift
-                            ? GiftRoom
-                            : majority
-                              ? MajorityRoom
-                              : thunder
-                                ? ThunderRoom
-                                : Room
+            lounge
+              ? LoungeRoom
+              : quacks
+                ? QuacksRoom
+                : bluff
+                  ? BluffRoom
+                  : musicquiz
+                    ? MusicQuizRoom
+                    : minimal
+                      ? MinimalRoom
+                      : telephone
+                        ? TelephoneRoom
+                        : trpg
+                          ? TrpgRoom
+                          : draw
+                            ? DrawGuessRoom
+                            : gift
+                              ? GiftRoom
+                              : majority
+                                ? MajorityRoom
+                                : thunder
+                                  ? ThunderRoom
+                                  : Room
           )(
             code,
             String(
               data.roomName ||
-                (quacks
-                  ? '郎中闖江湖好友局'
-                  : bluff
-                    ? '瞎掰王好友局'
-                    : musicquiz
-                      ? '猜歌挑戰好友局'
-                      : minimal
-                        ? '極簡畫家好友局'
-                        : telephone
-                          ? '傳情畫意好友局'
-                          : trpg
-                            ? '霧港鐘聲冒險隊'
-                            : draw
-                              ? '你畫我猜好友局'
-                              : gift
-                                ? '送禮達人好友局'
-                                : majority
-                                  ? '同頻俱樂部'
-                                  : thunder
-                                    ? '末路狂飆好友局'
-                                    : '深夜好友局'),
+                (lounge
+                  ? '場外休憩區'
+                  : quacks
+                    ? '郎中闖江湖好友局'
+                    : bluff
+                      ? '瞎掰王好友局'
+                      : musicquiz
+                        ? '猜歌挑戰好友局'
+                        : minimal
+                          ? '極簡畫家好友局'
+                          : telephone
+                            ? '傳情畫意好友局'
+                            : trpg
+                              ? '霧港鐘聲冒險隊'
+                              : draw
+                                ? '你畫我猜好友局'
+                                : gift
+                                  ? '送禮達人好友局'
+                                  : majority
+                                    ? '同頻俱樂部'
+                                    : thunder
+                                      ? '末路狂飆好友局'
+                                      : '深夜好友局'),
             ).slice(0, 24),
           );
           equipRoomProviders(room);
@@ -1930,7 +1938,8 @@ function initializeApp(config, dataLock, acquired) {
               delete room.options.topics;
             }
           }
-          if (!thunder && !botSupport(room).supported)
+          // The lounge has no match for a test AI to play (#277).
+          if (!thunder && !lounge && !botSupport(room).supported)
             throw new HttpError(400, 'TEST_AI_REQUIRED', '新遊戲必須先提供測試 AI');
           attachAchievementHooks(room);
           const p = transitions.transact(
@@ -2562,6 +2571,7 @@ function initializeApp(config, dataLock, acquired) {
                   'minimal',
                   'bluff',
                   'quacks',
+                  'lounge',
                 ].includes(room.type) ||
                 !['waiting', 'showdown'].includes(room.phase) ||
                 p.stack > 0
@@ -2716,6 +2726,7 @@ function initializeApp(config, dataLock, acquired) {
         '/bluff': 'bluff.html',
         '/musicquiz': 'musicquiz.html',
         '/minimal': 'minimal.html',
+        '/lounge': 'lounge.html',
         '/telephone': 'telephone.html',
         '/trpg': 'trpg.html',
         '/shared/playful-theme.css': 'shared/playful-theme.css',
@@ -2786,7 +2797,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|lounge)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -2923,6 +2934,7 @@ function initializeApp(config, dataLock, acquired) {
               file === 'telephone.html' ||
               file === 'musicquiz.html' ||
               file === 'minimal.html' ||
+              file === 'lounge.html' ||
               file === 'bluff.html' ||
               file === 'quacks.html'
                 ? '/login?next=' + encodeURIComponent(url.pathname)
