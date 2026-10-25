@@ -193,6 +193,7 @@ class SecondWindGame {
     s.fixed = {};
     s.finale = false;
     s.queue = [];
+    s.chainSteps = 0;
     s.pending = null;
     s.context = null;
     s.seen = [];
@@ -269,11 +270,12 @@ class SecondWindGame {
           ),
       );
     if (checkLoop && forced) {
+      // Scores stay out: points earned inside a loop (e.g. Loveable Loser
+      // scoring each lap in last place) must not hide a repeating board.
       const signature = JSON.stringify([
         s.turnId,
         s.nextRacerId,
         s.racers,
-        s.scores,
         s.twistEffects,
         s.coins,
         s.monster,
@@ -301,13 +303,16 @@ class SecondWindGame {
       : candidates.map((r) => r.id);
     s.nextRacerId = null;
     s.turnCount++;
+    s.chainSteps = 0;
     this.enqueue({ kind: 'player-order' });
   }
   drain() {
     const s = this.state;
-    let budget = 0;
     while (s.queue.length && !s.pending && s.phase === 'racing') {
-      if (++budget > 256) {
+      // The budget spans the whole player turn: answering a choice (e.g. Critic
+      // each time a forced Hopfrog extra turn rolls 1) must not restart it.
+      s.chainSteps = (s.chainSteps || 0) + 1;
+      if (s.chainSteps > 256) {
         this.emit('ruling', '單次連鎖超過安全上限，需裁定是否結束本場。');
         this.ask({ playerId: s.first }, 'ruling', '連鎖需要裁定', [
           { value: 'end', label: '結束本場，未取得名次分不發放' },

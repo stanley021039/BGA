@@ -103,6 +103,8 @@ registerTestAI('second-wind', {
           opts.find((o) => o.value === 'skip') ||
           opts.find((o) => o.value === 'roll') ||
           opts.find((o) => o.value === 'stop') ||
+          // A repeated or runaway chain is ruled ended rather than retried forever.
+          opts.find((o) => o.value === 'end') ||
           opts[room.rng(opts.length)];
       return action(player.id, 'choice', { ...input, choiceId: g.pending.id, value: o.value });
     }

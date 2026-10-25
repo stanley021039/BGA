@@ -25,6 +25,8 @@ function advance(game, players, choose = 0) {
       choiceId: q.id,
       value:
         q.options.find((o) => o.value === 'skip')?.value ||
+        // Choosing by step parity could answer "continue" to every loop ruling forever.
+        q.options.find((o) => o.value === 'end')?.value ||
         q.options[choose % q.options.length].value,
     };
   } else if (v.phase === 'racing') {

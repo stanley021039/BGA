@@ -359,6 +359,34 @@ test('fixed-die repeated states ask for a ruling rather than silently inventing 
   g.choose(g.state.pending, 'end');
   assert.equal(g.state.phase, 'race-result');
   assert.equal(g.state.results[0].ranking.length, 0);
+  // Points earned inside the loop (e.g. Loveable Loser each lap) must not mask it.
+  const h = fixture();
+  h.state.fixed = { a: 1, b: 2, c: 3 };
+  h.state.loopStates = [];
+  for (let i = 0; i < 3; i++) {
+    h.state.queue = [];
+    h.state.scores.c = (h.state.scores.c || 0) + 2;
+    h.beginPlayerTurn();
+  }
+  assert.equal(h.state.pending.kind, 'deadlock');
+});
+test('the chain budget spans a whole player turn, so answered choices cannot restart it', () => {
+  // A forced Hopfrog extra turn that rolls 1 asks Critic every lap; each answer
+  // resumes the chain in a new drain, which used to reset a per-call budget.
+  const g = fixture();
+  const noop = { kind: 'end-power', racer: 'missing', power: 'none' };
+  g.state.chainSteps = 0;
+  g.state.queue = [noop];
+  g.drain();
+  assert.equal(g.state.chainSteps, 1);
+  g.state.chainSteps = 256;
+  g.state.queue = [noop];
+  g.drain();
+  assert.equal(g.state.pending.kind, 'ruling');
+  g.state.pending = null;
+  g.state.queue = [];
+  g.beginPlayerTurn(false);
+  assert.equal(g.state.chainSteps, 0);
 });
 test('Curse Wands counts extra and eliminated racers, and eliminated racers still roll', () => {
   const g = fixture();
