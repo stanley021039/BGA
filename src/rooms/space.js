@@ -217,6 +217,13 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     self.lastAttacks[input.slot] = time;
     self.receipts.set(input.requestId, time);
   }
-  return { view, move };
+  function rebind(previous, next) {
+    if (previous.code !== next.code) throw Error('Cannot rebind another room');
+    for (const registry of [spaces, attacks]) {
+      if (registry.has(previous)) registry.set(next, registry.get(previous));
+      registry.delete(previous);
+    }
+  }
+  return { view, move, rebind };
 }
 module.exports = { createRoomSpace };

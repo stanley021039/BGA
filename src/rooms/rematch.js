@@ -7,7 +7,7 @@ const { fill } = require('./persistence');
 function returnToWaiting(room, actor) {
   if (room.host !== actor) throw new HttpError(403, 'HOST_ONLY', '只有房主可以返回等待室');
   if (room.phase === 'waiting') return;
-  if (room.phase !== 'finished')
+  if (room.phase !== 'finished' && !(!room.type && room.phase === 'showdown'))
     throw new HttpError(409, 'MATCH_NOT_FINISHED', '本局結束後才能返回等待室');
 
   const fresh = new room.constructor(room.code, room.name, room.rng, room.now);
@@ -21,6 +21,7 @@ function returnToWaiting(room, actor) {
     'settings',
     'customSongs',
     'reactionSeq',
+    'gameRevision',
   ]);
   if (room.type === 'gift')
     for (const key of ['target', 'customPercent', 'includeAdult']) keep.add(key);
@@ -44,6 +45,7 @@ function returnToWaiting(room, actor) {
         'musicCardFrame',
       ])
         if (Object.hasOwn(player, key)) next[key] = player[key];
+      if (!room.type) next.stack = player.stack;
       return next;
     });
   for (const key of Object.keys(room)) {
@@ -83,7 +85,11 @@ function returnToWaiting(room, actor) {
   if (Object.hasOwn(room, 'roundFastest')) room.roundFastest = null;
   if (room.achievementUnits) room.achievementUnits.current = null;
   room.matchAchievements?.restore(null);
-  room.event('waiting', '已返回原房等待室，準備好後由房主開始下一局。');
+  if (room.event) room.event('waiting', '已返回原房等待室，準備好後由房主開始下一局。');
+  else {
+    room.note('已返回等待室');
+    room.version++;
+  }
 }
 
 module.exports = { returnToWaiting };

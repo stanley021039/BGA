@@ -91,6 +91,7 @@ const { createFrontend } = require('./http/frontend');
 const { withEntryIntro } = require('./http/entry-intro');
 const { createRoomTransitions } = require('./rooms/transitions');
 const { returnToWaiting } = require('./rooms/rematch');
+const { roomGames, switchGame, assertGameContext } = require('./rooms/game-switch');
 const { createStateStream, stateTag } = require('./rooms/state-stream');
 const roomPersistence = require('./rooms/persistence');
 const { botSupport, addTestBot } = require('./ai');
@@ -434,6 +435,9 @@ function initializeApp(config, dataLock, acquired) {
     media.reconcile(mediaContext(room));
     return {
       ...view,
+      type: room.type || 'poker',
+      gameRevision: room.gameRevision || 0,
+      roomGames,
       ...savedDrawResults,
       roomSpace: roomSpace.view(room, view.me, view.players, expressions),
       pingContext: runtime.pings.context(room),
@@ -1967,6 +1971,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/settings',
             '/api/start',
             '/api/rematch',
+            '/api/change-game',
             '/api/bot',
             '/api/rebuy',
             '/api/social',
@@ -1989,7 +1994,7 @@ function initializeApp(config, dataLock, acquired) {
         if (pingLobby && !lobby.mediaAudience(user.id))
           throw new HttpError(403, 'LOBBY_PRESENCE_REQUIRED', '請先進入大廳');
         if (pingLobby) lobbyPingRoom.players = lobby.view(user).visitors;
-        const room = pingLobby
+        let room = pingLobby
           ? lobbyPingRoom
           : rooms.get(String(data.code || url.searchParams.get('code') || '').toUpperCase());
         if (!room) throw new HttpError(404, 'ROOM_NOT_FOUND', '找不到房間，請確認房間代碼');
@@ -2006,6 +2011,51 @@ function initializeApp(config, dataLock, acquired) {
         if (url.pathname === '/api/join' && req.method === 'POST')
           return send(joinRoom(room, user, req));
         const p = pingLobby ? { id: user.id } : resumeSeat(room, user);
+        if (
+          req.method === 'POST' &&
+          ([
+            '/api/action',
+            '/api/settings',
+            '/api/start',
+            '/api/rematch',
+            '/api/bot',
+            '/api/rebuy',
+            '/api/change-game',
+            '/api/telephone/draft',
+            '/api/bluff/caption',
+          ].includes(url.pathname) ||
+            url.pathname.startsWith('/api/draw/'))
+        )
+          assertGameContext(
+            room,
+            data,
+            url.pathname === '/api/change-game' || (room.gameRevision || 0) > 0,
+          );
+        if (url.pathname === '/api/change-game') {
+          if (req.method !== 'POST') throw new HttpError(405, 'METHOD_NOT_ALLOWED', '不支援的請求');
+          limitRate(roomRate, 'mutation:' + user.id, 120);
+          const next = switchGame(room, p.id, data.targetType, roomClasses);
+          if (next !== room) {
+            equipRoomProviders(next);
+            attachAchievementHooks(next);
+            // Finished awards retain their original game and player facts.
+            awardRoomAchievements(room);
+            if ([...pendingAchievementUnits.values()].some((entry) => entry.room === room))
+              throw new HttpError(
+                503,
+                'ACHIEVEMENT_STORAGE_UNAVAILABLE',
+                '回合紀錄暫時無法儲存，請稍後再更換遊戲',
+              );
+            runtime.closeStreams(room.code);
+            mediaRooms.rebind(room, next);
+            watchRooms.rebind(room, next);
+            roomSpace.rebind(room, next);
+            rooms.set(room.code, next);
+            stateStream.rebind(room, next);
+            room = next;
+          }
+          return send(withSocial(room, room.view(p.id)));
+        }
         if (url.pathname === '/api/room-events' && req.method === 'GET') {
           if (pingLobby) throw new HttpError(404, 'NOT_FOUND', '找不到請求路徑');
           limitRate(roomRate, 'room-events:' + user.id, 30);

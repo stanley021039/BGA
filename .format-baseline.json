@@ -158,7 +158,6 @@
     "src/rooms/reconnect.js": "3212cf5d56cfda157f417686f05ecc17844d1eb041a1fae42990865d2c11d151",
     "src/server.js": "400268559e77e0a9bce4445768c4800177f3b796becd9ce8abbc52b43c71278a",
     "src/social/emojis.js": "d8db0b0f22d0eb3ea522dd735d21265e365080566319aeba7dc654cab06ae67b",
-    "src/watch/room.js": "ebfd48c3b7a71bbd9fc8956a6b31401761e47cc50159aa276f49157ef1068ccd",
     "tests/appearance.test.js": "64f5dd9e7cfc4d18ccfffc6a18cc2ab74913cb1d7c32081322768bf9bd1d147c",
     "tests/auth.test.js": "618784ffeb7fe9d74bb6330b899f54fcf42db696d95ee8696c0ee5919490dc91",
     "tests/bluff-catalog-import.test.js": "7fbccf132f3bd05c5a41e380615a92cde468deadd7eca77d501dcb30d0c991e6",

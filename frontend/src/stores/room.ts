@@ -8,6 +8,7 @@ import {
   readRoomSnapshot,
   readSeat,
   sameRoom,
+  sameRoomIdentity,
   sessionKey,
   staleSnapshot,
 } from '../contracts/room';
@@ -36,7 +37,8 @@ export const useRoomStore = defineStore('room', () => {
     clockOffset = ref(0),
     lastReceivedAt = ref(0);
   const requests = new Set<AbortController>();
-  let disposed = false,
+  let switchingGame = false,
+    disposed = false,
     recovery: Promise<boolean> | null = null;
   let readSnapshot: (value: unknown) => RoomSnapshot = readRoomSnapshot;
   let retry: { timer: ReturnType<typeof setTimeout>; resolve: () => void } | null = null;
@@ -121,7 +123,16 @@ export const useRoomStore = defineStore('room', () => {
         '/api/' + route + (query.size ? '?' + query.toString() : ''),
         {
           method: post ? 'POST' : 'GET',
-          ...(post ? { body: { ...data, code: roomCode } } : {}),
+          ...(post
+            ? {
+                body: {
+                  ...data,
+                  code: roomCode,
+                  gameType: type.value,
+                  gameRevision: snapshot.value?.gameRevision || 0,
+                },
+              }
+            : {}),
           signal: controller.signal,
         },
       );
@@ -149,9 +160,27 @@ export const useRoomStore = defineStore('room', () => {
     }
   }
   function accept(value: unknown): boolean {
-    if (disposed || terminal.value || !seat.value) return false;
-    const next = readSnapshot(value),
+    if (disposed || switchingGame || terminal.value || !seat.value) return false;
+    const generic = readRoomSnapshot(value),
       previous = snapshot.value;
+    if (generic.code !== code.value) throw Error('收到其他房間的狀態');
+    if (
+      generic.type !== type.value ||
+      (previous && (generic.gameRevision || 0) > (previous.gameRevision || 0))
+    ) {
+      if (previous && !sameRoomIdentity(generic, previous)) {
+        invalidateIdentity('房間或座位已更新，請重新連線。');
+        return false;
+      }
+      if ((generic.gameRevision || 0) <= (previous?.gameRevision || 0)) return false;
+      switchingGame = true;
+      persist({ code: code.value, type: generic.type });
+      cancelReads();
+      location.replace('/' + gamePath(generic.type) + '/' + code.value);
+      return true;
+    }
+    if (previous && (generic.gameRevision || 0) < (previous.gameRevision || 0)) return false;
+    const next = readSnapshot(value);
     if (next.code !== code.value || next.type !== type.value) throw Error('收到其他房間的狀態');
     if (previous && !sameRoom(next, previous)) {
       // A replaced room/seat cannot silently consume the old page's drafts.
@@ -232,6 +261,7 @@ export const useRoomStore = defineStore('room', () => {
     type.value = game;
     seat.value = null;
     snapshot.value = null;
+    switchingGame = false;
     terminal.value = null;
     message.value = error.value = '';
     failed.value = busy.value = false;

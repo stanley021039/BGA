@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoomStore } from '../stores/room';
 import RoomInvite from './RoomInvite.vue';
+import RoomGameSwitcher from './RoomGameSwitcher.vue';
 import UiButton from './UiButton.vue';
 import UiPopover from './UiPopover.vue';
 import StatusSlot from './StatusSlot.vue';
@@ -78,7 +79,7 @@ async function copyCode() {
           @click="navigation?.open($event.currentTarget as HTMLElement)" /><slot name="navigation"
       /></div>
       <div class="vue-room-topbar-actions"
-        ><div v-if="$slots['game-actions']" class="vue-room-game-actions"
+        ><RoomGameSwitcher /><div v-if="$slots['game-actions']" class="vue-room-game-actions"
           ><slot name="game-actions" /></div
         ><slot
       /></div>

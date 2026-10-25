@@ -75,7 +75,12 @@ function createStateStream({
     }
   }
   function notify(room) {
-    if (closed || !room?.code || !rooms.has(room.code)) return;
+    if (
+      closed ||
+      !room?.code ||
+      ![...(rooms.get(room.code) || [])].some((entry) => entry.room === room)
+    )
+      return;
     pending.set(room.code, room);
     if (!scheduled) {
       scheduled = true;
@@ -184,7 +189,17 @@ function createStateStream({
     for (const code of [...rooms.keys()]) closeRoom(code);
     stopTimers();
   }
-  return { subscribe, notify, hint, hintUser, watched, closeRoom, close };
+  function rebind(previous, next) {
+    if (previous.code !== next.code) throw Error('Cannot rebind another room');
+    pending.delete(previous.code);
+    for (const entry of rooms.get(previous.code) || [])
+      if (entry.room === previous) {
+        entry.room = next;
+        entry.tag = null;
+      }
+    notify(next);
+  }
+  return { subscribe, notify, hint, hintUser, watched, closeRoom, close, rebind };
 }
 
 module.exports = { createStateStream, stateTag };
