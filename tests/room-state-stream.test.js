@@ -101,6 +101,9 @@ test('the sweep keeps open seats present and re-checks views; hints reach the ri
   stream.subscribe(room, { ...b, user: { id: 'u2' }, playerId: 'p2' });
   room.phase = 'expired';
   await new Promise((resolve) => setTimeout(resolve, 60));
+  // The sweep queues its projection with setImmediate. Under load, the timer
+  // and this wait can finish in the same timers phase; let the queued flush run.
+  await tick();
   assert.ok(alive.includes('u1') && alive.includes('u2'));
   assert.equal(a.events('state').at(-1).phase, 'expired', 'unannounced changes still arrive');
   stream.hint(room.code, 'chat');

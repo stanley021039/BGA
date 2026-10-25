@@ -1,4 +1,5 @@
 // Thunder Road: Vendetta core rules. See docs/RULES-SOURCES.md for reference and variant details.
+const { assertCanManageSettings } = require('../rooms/permissions');
 const {randomInt,randomUUID}=require('node:crypto');
 const RacePaths=require('../../frontend/src/engines/race-paths.js').default;
 const COLORS=['#ec9b35','#43c6cd','#c4d3c0','#c260b6'];
@@ -30,7 +31,7 @@ const ALL_MAPS=[...MAPS,...DEVIL_MAPS];
 function neighbor(x,y,d){const front=x%2?1:0,back=front-1;return d===0?{x:x-1,y:y+front}:d===1?{x,y:y+1}:d===2?{x:x+1,y:y+front}:d===3?{x:x-1,y:y+back}:d===4?{x,y:y-1}:{x:x+1,y:y+back};}
 class ThunderRoom{
  constructor(code,name,rng=randomInt){this.options={devilsRun:false};this.type='thunder';this.code=code;this.name=name;this.rng=rng;this.players=[];this.cars=[];this.tiles=[];this.log=[];this.events=[];this.motions=[];this.motionSerial=0;this.phase='waiting';this.turn=-1;this.version=0;this.round=0;this.queue=[];this.updated=Date.now();}
- configure(id,options){if(id!==this.host)throw Error('只有房主可以更改玩法');if(!['waiting','finished'].includes(this.phase))throw Error('比賽中不能更改玩法');if(typeof options.devilsRun!=='boolean')throw Error('擴充設定不正確');this.options.devilsRun=options.devilsRun;this.event('settings',options.devilsRun?'已開啟惡魔賽道：地形／危險試玩（暫定骰面、不含持續效果卡）':'已選擇主遊戲');}
+ configure(id,options){assertCanManageSettings(this, id);if(!['waiting','finished'].includes(this.phase))throw Error('比賽中不能更改玩法');if(typeof options.devilsRun!=='boolean')throw Error('擴充設定不正確');this.options.devilsRun=options.devilsRun;this.event('settings',options.devilsRun?'已開啟惡魔賽道：地形／危險試玩（暫定骰面、不含持續效果卡）':'已選擇主遊戲');}
  roll(faces){return faces[this.rng(faces.length)];}
  // Public checks contain only rules until the server's one-second reveal deadline.
  offerDice(spec,faces,resolve){if(this.diceCheck)throw Error('請先完成目前的擲骰');const owner=spec.owner&&this.player(spec.owner)&&!this.player(spec.owner).out?spec.owner:(!this.players[this.turn]?.out?this.players[this.turn]?.id:null)||this.players.find(p=>!p.out)?.id;this.diceCheck={id:++this.version,kind:spec.kind,title:spec.title,condition:spec.condition,owner,status:'awaiting',participants:spec.participants||[],dice:faces.map((f,i)=>({label:spec.labels?.[i]||'骰子',faces:f,participant:spec.diceOwners?.[i]}))};this._diceRoll={faces,resolve,rerolls:0};this.touch();}

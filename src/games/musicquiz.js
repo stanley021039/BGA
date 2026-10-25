@@ -1,4 +1,5 @@
 'use strict';
+const { assertCanManageSettings } = require('../rooms/permissions');
 const { randomUUID, createHash } = require('node:crypto');
 const { PartyRoom, fail, clone, text, normalize } = require('./party-base');
 const { CATALOG, BANKS, BANK_ALIASES } = require('./musicquiz-library');
@@ -45,7 +46,7 @@ class MusicQuizRoom extends PartyRoom {
     return x;
   }
   configure(id, data) {
-    if (id !== this.host) fail('HOST_ONLY', '只有房主可以設定', 403);
+    assertCanManageSettings(this, id);
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '本局已開始');
     const next = { ...this.settings };
     let custom = this.customSongs;

@@ -90,6 +90,8 @@ export const usePartyActionsStore = defineStore('party-actions', () => {
     }
   }
   function command(action: string, data: Record<string, unknown> = {}) {
+    if (room.type === 'musicquiz' && action === 'configure' && !room.settingsManager)
+      return Promise.resolve(false);
     const setupCommand =
       room.type === 'musicquiz' &&
       action === 'configure' &&

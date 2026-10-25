@@ -20,7 +20,7 @@ const room = useRoomStore(),
   canonical = ref<string | null>(null);
 const editable = computed(
   () =>
-    room.host &&
+    room.settingsManager &&
     !!room.seat &&
     !room.terminal &&
     ['waiting', 'finished'].includes(props.snapshot.phase),
@@ -91,7 +91,9 @@ defineExpose({
     <header
       ><h2>房間設定</h2
       ><p>{{
-        editable ? '更改後自動儲存；開局前會確認最新設定。' : '只有房主能修改；以下為目前房間設定。'
+        editable
+          ? '更改後自動儲存；開局前會確認最新設定。'
+          : '只有房主或管理者能修改；以下為目前房間設定。'
       }}</p></header
     >
     <div class="vue-draw-settings-content">

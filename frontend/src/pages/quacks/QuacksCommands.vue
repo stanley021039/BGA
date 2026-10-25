@@ -10,7 +10,9 @@ const game = useQuacksStore(),
   <div class="vue-quacks-commands">
     <template v-if="game.setup"
       ><span>{{
-        s.phase === 'waiting' ? '準備好後，由房主開始遊戲。' : '由房主按房間設定中的再玩一局。'
+        s.phase === 'waiting'
+          ? '準備好後，由房主或管理者開始遊戲。'
+          : '由房主或管理者按房間設定中的再玩一局。'
       }}</span></template
     >
     <span v-else-if="s.interrupted">本場中止，已完成回合保留。</span>
