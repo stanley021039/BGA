@@ -15,7 +15,6 @@ test('a completed poker unit survives failed SQLite writes and room deletion, th
     host: '127.0.0.1',
     port: 0,
     dbFile: path.join(root, 'app.sqlite'),
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     externalSideEffectsEnabled: false,
     achievementPurpose: 'production',

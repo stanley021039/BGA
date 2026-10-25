@@ -32,7 +32,7 @@ SQLite WAL要求同一host共享記憶體，不能把`.sqlite`放SMB/NFS让跨�
 | 成就 | user_achievements(user_id,achievement_id,source_key,unlocked_at) | DB唯一解鎖；目前處理結果WeakSet不跨restart，未有持久勝場aggregate |
 | 音樂 | music_tracks metadata＋`MUSIC_DIR` 或 `dirname(DB_FILE)/music/{id}.{ext}` | 音訊不在SQLite；第一版工具連同實檔驗證／加密，settings 已映射 MUSIC_DIR |
 | 共編題库／舊留言 | `COMMUNITY_DIR`預設`data/community/community.json` | majority題庫仍JSON；BoardStore啟動時會import legacy issues，不能丟掉或重複誤判 |
-| 歷史 | `HISTORY_DIR`預設`data/history/*.jsonl`、`*.meta.json` | session與match UUID、engine source/hash、隨機trace、before/after；秘題／喜好完整內容屬敏感資料，非預設公開資產 |
+| 歷史 | `HISTORY_DIR`預設`data/history/*.jsonl`、`*.meta.json` | session與match UUID、engine source/hash、隨機trace、before/after；秘題／喜好完整內容屬敏感資料，非預設公開資產 （2026-10-25 #267 已移除，v3.0.0 起取代） |
 | 內建素材／目錄 | `public/assets`、內建character/gift目錄及game catalogs | 跟對應code release一起部署；manifest保存release hash，不把public圖片當user BLOB |
 | 進行中狀態 | rooms/seats/musicRooms/social/reconnectGrace、draw canvas、diceCheck continuation | 只在記憶體；目前restart即丟失，不承諾restore會讓玩家無縫續局 |
 | 環境祕密 | `.env`、GITHUB_TOKEN、Tunnel token、SSH key、DB credentials | 專属機器祕密，另走祕密管理，不進Git／通用bundle／日志。設定範本只列變數名 |

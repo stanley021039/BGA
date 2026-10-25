@@ -125,7 +125,6 @@ test('result helper and failure sample are served through real HTTP static route
     host: '127.0.0.1',
     port: 0,
     dbFile: path.join(dir, 'test.sqlite'),
-    historyDir: path.join(dir, 'history'),
     communityDir: path.join(dir, 'community'),
     musicDir: path.join(dir, 'music'),
     gameAudioDir: path.join(dir, 'audio'),
@@ -155,37 +154,20 @@ test('result helper and failure sample are served through real HTTP static route
   }
 });
 
-test('full default music catalog can start and resolve within normal archive row limits', (t) => {
-  const fs = require('./helpers/browser-modules.cjs'),
-    os = require('node:os'),
-    path = require('node:path'),
-    { randomUUID } = require('node:crypto'),
-    { HistoryStore } = require('../src/history/store'),
+test('full default music catalog can start and resolve a round', () => {
+  const { randomUUID } = require('node:crypto'),
     { MusicQuizRoom } = require('../src/games/musicquiz');
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'music-history-')),
-    h = new HistoryStore(dir);
-  t.after(() => {
-    h.close();
-    fs.rmSync(dir, { recursive: true, force: true });
-  });
   const r = new MusicQuizRoom('ABCDEF', 'full catalog', () => 0);
-  h.attach(r);
-  const p = h.transact(r, { action: 'join' }, () => r.add('player'));
-  h.transact(r, { action: 'start' }, () => r.start());
+  const p = r.add('player');
+  r.start();
   assert.ok(r.sequence.length > 1000);
   const act = (action, data = {}) =>
-    h.transact(r, { action }, () =>
-      r.act(p.id, action, { roundId: r.roundId, requestId: randomUUID(), ...data }),
-    );
+    r.act(p.id, action, { roundId: r.roundId, requestId: randomUUID(), ...data });
   act('listen');
   act('guess', { choiceId: r.correctChoiceId });
   act('place', { slot: 0 });
   assert.equal(r.results.length, 1);
-  assert.equal(r.historyState().completedRounds, 1);
-  assert.ok(r.historyState().sequence.every((id) => typeof id === 'string'));
-  const archive = h.list()[0],
-    rows = h.readRows(archive.id);
-  assert.ok(rows.some((row) => row.kind === 'result' && row.after.phase === 'reveal'));
+  assert.equal(r.phase, 'reveal');
 });
 
 test('muted personal outcomes are consumed without suspending a playing song', () => {

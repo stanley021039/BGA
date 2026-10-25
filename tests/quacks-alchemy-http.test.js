@@ -170,25 +170,6 @@ for (const witches of [false, true])
       }
       assert.equal(s.results.length, 9);
       assert.ok(s.results.every((x) => x.players.every((p) => p.alchemy)));
-      const list = await (
-          await fetch(base + '/api/history', { headers: { Cookie: owner } })
-        ).json(),
-        match = list.find((x) => x.type === 'quacks');
-      const history = await (
-        await fetch(base + '/api/history/' + match.id, { headers: { Cookie: owner } })
-      ).json();
-      assert.match(history[0].engine.quacksAlchemy, /PATIENTS/);
-      assert.match(history[0].engine.quacksExpansionFortunes, /witch-visit/);
-      assert.equal(
-        history.filter(
-          (r) =>
-            r.kind === 'result' &&
-            r.operation.input?.action === 'next' &&
-            r.after.phase === 'fortune',
-        ).length,
-        8,
-        'all eight host-confirmed round transitions are persisted',
-      );
       // API-only app: pages come from the Vue build (#233).
       assert.equal(
         (await fetch(base + '/quacks/' + code, { headers: { Cookie: owner } })).status,
