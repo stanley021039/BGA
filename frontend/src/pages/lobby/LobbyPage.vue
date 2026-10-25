@@ -165,6 +165,9 @@ onBeforeUnmount(() => {
             :message="feedback"
             :error="!!lobby.entryStatus" /></div
       ></template>
+      <template #lobby-credits
+        ><p class="version-note"><a href="/credits">素材來源與授權</a></p></template
+      >
       <template #lobby-lounge
         ><div class="game-library vue-lobby-lounge-library" data-card-carousel
           ><!-- ui-check-allow raw-control: 場外休憩區卡片須沿用輪播 game-tile 的同一外觀（#277），UiChoiceCard 的面板外觀無法與遊戲卡片一致 -->
@@ -361,7 +364,6 @@ onBeforeUnmount(() => {
                   :disabled="!room.joinable || lobby.entryPending"
                   @click="lobby.enter({ code: room.code })" /></div></article></div></section></div
     ></UiDialog>
-    <p class="version-note"><a href="/credits">素材來源與授權</a> · 德州撲克：純娛樂籌碼</p>
     <UiDialog
       ref="create"
       :compact="drawingCreate || pairCreate"

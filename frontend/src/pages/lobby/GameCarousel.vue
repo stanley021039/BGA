@@ -222,7 +222,6 @@ onBeforeUnmount(() => {
         >
       </button>
     </div>
-    <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
     <div class="carousel-footer"
       ><div class="carousel-controls"
         ><UiButton icon="previous" icon-only label="上一款遊戲" @click="select(index - 1)" /><span
@@ -232,25 +231,28 @@ onBeforeUnmount(() => {
           :aria-label="chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'"
           >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
         ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
-      ><div class="carousel-actions"
-        ><a class="quiet carousel-guide" :href="chosen.guide">{{ chosen.title }}玩法 ↗</a
-        ><div class="carousel-create"
-          ><UiButton
-            variant="secondary"
-            icon="users"
-            label="找一桌加入"
-            aria-haspopup="dialog"
-            @click="emit('join')" /><slot name="lobby-action" /><a
-            v-if="chosen.id === 'market'"
-            class="button orange"
-            href="/market"
-            >進入股市冥燈 ↗</a
-          ><UiButton
-            v-else
-            icon="add"
-            :label="'開一桌' + chosen.title"
-            @click="emit('create')" /><slot name="lobby-resume" /></div
-        ><div class="carousel-lounge" :style="tileSize"><slot name="lobby-lounge" /></div></div
+    ></div>
+    <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
+    <slot name="lobby-credits" />
+    <div class="carousel-lounge" :style="tileSize"><slot name="lobby-lounge" /></div>
+    <div class="carousel-actions"
+      ><a class="quiet carousel-guide" :href="chosen.guide">{{ chosen.title }}玩法 ↗</a
+      ><div class="carousel-create"
+        ><UiButton
+          variant="secondary"
+          icon="users"
+          label="找一桌加入"
+          aria-haspopup="dialog"
+          @click="emit('join')" /><slot name="lobby-action" /><a
+          v-if="chosen.id === 'market'"
+          class="button orange"
+          href="/market"
+          >進入股市冥燈 ↗</a
+        ><UiButton
+          v-else
+          icon="add"
+          :label="'開一桌' + chosen.title"
+          @click="emit('create')" /><slot name="lobby-resume" /></div
     ></div>
   </section>
 </template>

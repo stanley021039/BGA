@@ -448,7 +448,7 @@ body.lobby-self-hover {
       min-height: 0;
       padding: tokens.space(2) 0;
       grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-rows: 44px minmax(0, 1fr) 44px;
+      grid-template-rows: 44px minmax(0, 1fr);
       gap: tokens.space(4);
     }
     .vue-lobby .library-heading {
@@ -469,6 +469,7 @@ body.lobby-self-hover {
       display: none;
     }
     .vue-lobby .game-carousel-section {
+      position: relative;
       grid-column: 1 / -1;
       grid-row: 2;
       display: flex;
@@ -485,11 +486,11 @@ body.lobby-self-hover {
       height: auto;
       width: 100%;
       max-width: 720px;
-      width: calc(100% - 220px);
+      width: calc(100% - 520px);
       align-self: center;
       isolation: isolate;
       overflow: visible;
-      margin-inline: 0 220px;
+      margin-inline: 300px 220px;
       container-type: size;
       .game-tile {
         top: 50%;
@@ -526,21 +527,24 @@ body.lobby-self-hover {
         display: none;
       }
     }
-    .vue-lobby .carousel-hint {
+    .vue-lobby .carousel-hint,
+    .vue-lobby .carousel-footer,
+    .vue-lobby .version-note {
       flex: none;
       align-self: center;
-      width: calc(100% - 220px);
+      width: calc(100% - 520px);
       max-width: 720px;
-      margin-inline: 0 220px;
+      margin-inline: 300px 220px;
     }
     .vue-lobby .carousel-footer {
       position: relative;
       flex: none;
       min-height: 44px;
-      margin: 0;
+      margin-block: 0;
       padding: 0;
       flex-wrap: nowrap;
-      gap: tokens.space(3);
+      justify-content: center;
+      gap: var(--stitch-gap-inline);
     }
     .vue-lobby .carousel-controls,
     .vue-lobby .carousel-actions,
@@ -570,10 +574,7 @@ body.lobby-self-hover {
       gap: tokens.space(2);
     }
     .vue-lobby .version-note {
-      grid-column: 1;
-      grid-row: 3;
-      align-self: center;
-      margin: 0;
+      text-align: center;
       @include tokens.type(p3);
     }
   }
@@ -849,16 +850,28 @@ body .lobby-backdrop[data-background='castle'] {
   overflow: visible;
 }
 
-// #277: the drag hint sits directly under the cards.
+// #277: centered navigation, drag hint and credits follow the cards.
 .vue-lobby .carousel-hint {
   margin: 0;
   text-align: center;
   font-size: var(--stitch-text-hint);
   color: var(--stitch-muted);
 }
-// #277: 場外休憩區 is a fixed tile at the bottom of the action column, below
-// 開一桌, never part of the carousel. It reuses the carousel tile look; only
-// its placement and size are set here. Its art waits for #278.
+// #277: the fixed bottom-left lounge reuses the carousel tile. Art waits for #278.
+.vue-lobby .carousel-lounge {
+  display: flex;
+  justify-content: flex-start;
+}
+.vue-lobby .carousel-footer {
+  justify-content: center;
+}
+.vue-lobby .version-note {
+  text-align: center;
+}
+.vue-lobby-presence {
+  left: auto;
+  right: var(--stitch-space-16);
+}
 :root
   body[data-visual-theme]
   .vue-lobby
@@ -873,8 +886,8 @@ body .lobby-backdrop[data-background='castle'] {
   .game-tile {
     position: relative;
     inset: auto;
-    inline-size: var(--lounge-tile-width, 274px);
-    block-size: var(--lounge-tile-height, 418px);
+    inline-size: calc(var(--lounge-tile-width, 274px) * var(--lounge-tile-scale, 1));
+    block-size: calc(var(--lounge-tile-height, 418px) * var(--lounge-tile-scale, 1));
     transform: none;
     display: flex;
     flex-direction: column;
@@ -882,7 +895,7 @@ body .lobby-backdrop[data-background='castle'] {
   }
   .tile-image {
     flex: none;
-    block-size: var(--lounge-tile-image, 190px);
+    block-size: calc(var(--lounge-tile-image, 190px) * var(--lounge-tile-scale, 1));
   }
   .tile-body {
     flex: 1;
@@ -890,15 +903,18 @@ body .lobby-backdrop[data-background='castle'] {
     block-size: auto;
   }
 }
-// The desktop action column is pinned to the bottom; on short screens the tile
-// gives up height rather than pushing the column under the site header.
+// Keep the fixed lounge outside the fanned carousel and its navigation.
 @media (min-width: 960px) and (min-height: 560px) and (pointer: fine) {
-  :root
-    body[data-visual-theme]
-    .vue-lobby
-    .vue-lobby-lounge-library[data-card-carousel]
-    .game-tile {
-    max-block-size: max(220px, calc(100dvh - 460px));
+  body.vue-lobby-document:not(.ui-large-text) .vue-lobby .carousel-lounge {
+    position: absolute;
+    z-index: 4;
+    left: 0;
+    bottom: 0;
+  }
+}
+@media (min-width: 960px) and (max-width: 1500px) and (min-height: 560px) and (pointer: fine) {
+  .vue-lobby .carousel-lounge {
+    --lounge-tile-scale: 0.65;
   }
 }
 .vue-lobby-lounge {
