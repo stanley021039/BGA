@@ -390,6 +390,11 @@ class RoomMedia {
   }
 }
 class RoomMediaRegistry {
+  rebind(previous, next) {
+    if (previous.code !== next.code) throw Error('Cannot rebind another room');
+    const entry = this.rooms.get(previous.code);
+    if (entry?.room === previous) entry.room = next;
+  }
   constructor(now = Date.now, store = null) {
     this.now = now;
     this.store = store;

@@ -83,6 +83,14 @@
     line-height: 22px;
     font-variant-numeric: tabular-nums;
   }
+  .vue-player-card-progress {
+    display: block;
+    block-size: var(--stitch-control-height);
+    font-size: var(--stitch-text-hint);
+    line-height: var(--stitch-line-height-body);
+    overflow-wrap: anywhere;
+    overflow: auto;
+  }
   .vue-player-card-roles {
     display: flex;
     align-items: center;

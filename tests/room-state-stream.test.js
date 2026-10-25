@@ -140,3 +140,28 @@ test('a closed browser connection leaves the room unwatched', () => {
   assert.equal(stream.watched(room.code), false);
   stream.close();
 });
+
+test('game changes rebind existing seats and a late old-room notification cannot hide the new state', async () => {
+  let current;
+  const { room, stream } = setup({
+    project: (r, playerId) => ({ type: r.type, me: playerId }),
+    valid: (entry) => entry.room === current,
+  });
+  current = room;
+  const a = connection(),
+    b = connection();
+  stream.subscribe(room, { ...a, user: { id: 'u1' }, playerId: 'p1' });
+  stream.subscribe(room, { ...b, user: { id: 'u2' }, playerId: 'p2' });
+  current = { code: room.code, type: 'draw' };
+  stream.notify(room);
+  stream.rebind(room, current);
+  stream.notify(room);
+  await tick();
+  for (const c of [a, b]) {
+    assert.equal(c.events('state').at(-1).type, 'draw');
+    assert.equal(c.res.ended, false);
+  }
+  assert.equal(a.events('state').at(-1).me, 'p1');
+  assert.equal(b.events('state').at(-1).me, 'p2');
+  stream.close();
+});
