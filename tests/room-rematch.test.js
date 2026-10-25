@@ -127,6 +127,22 @@ test('returning preserves pending achievement facts and room managers/providers'
   assert.equal(r.reactionSeq, 17, 'new reactions must not reuse IDs cached by connected clients');
 });
 
+test('cruel team rematch preserves the host-selected partners in waiting and the next match', () => {
+  const { MajorityRoom } = require('../src/games/majority');
+  const r = new MajorityRoom('ABCDEF', 'teams', () => 0);
+  const players = Array.from({ length: 4 }, (_, i) => r.add('P' + i));
+  r.configure(r.host, { mode: 'cruel', cruelRules: 'teams' });
+  r.act(r.host, 'pair', { playerId: players[0].id, partnerId: players[2].id });
+  const members = () => r.view(r.host).cruel.teams.map((team) => team.members);
+  const expected = members();
+  r.start();
+  r.phase = 'finished';
+  returnToWaiting(r, r.host);
+  assert.deepEqual(members(), expected);
+  r.start();
+  assert.deepEqual(members(), expected);
+});
+
 test('majority normal presenter cycles from random first seat; reads and restore do not redraw', () => {
   const { MajorityRoom } = require('../src/games/majority');
   let draws = 0;

@@ -25,6 +25,7 @@ function returnToWaiting(room, actor) {
   if (room.type === 'gift')
     for (const key of ['target', 'customPercent', 'includeAdult']) keep.add(key);
   if (room.type === 'quacks') keep.add('bookChoices');
+  if (room.type === 'majority') keep.add('pairOrder');
   const version = room.version || 0;
   const players = room.players
     .filter((player) => !player.kicked)
