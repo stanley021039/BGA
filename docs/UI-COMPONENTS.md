@@ -170,6 +170,8 @@
 
 ## R6 五類共用模式
 
+玩家卡 `RoomPlayerCard.progressLabel` 用於常駐的提交／等待文字，與僅供細節說明的 `status` tooltip 分開；`RoomRoster` 依本階段公開的完成 ID／布林值產生文字和完成框線，不讀取尚未揭曉的答案。離線與提交狀態並列，換階段後不沿用前階段的完成標記。
+
 - `UiBadge`：`tone=primary|success|info|warning|danger|neutral|disabled`，深邊 2px、膠囊、14px／700；`counter` 保留 28px 計數槽。只表達狀態，不額外偽造可點語意。
 - `UiNotice`：`message`、`tone`、`error`、`active`、`noticeKey`、`duration`（預設 4000ms）、`persistent`。狀態解除立刻隱藏；短暫訊息到時隱藏；保留外層寬高，內文過長可局部捲動。相同訊息再次發生時增加 `noticeKey`，重新開始計時。卸載會清除計時器。`StatusSlot` 轉交同一 API，使用 44px／14px 緊湊樣式；既有遊戲有明確較矮槽位時沿用該固定布局並允許內文捲動。
 - 未確認的操作結果、必須重試的狀態、必要遊戲決策／指令及真正空狀態不能定時清除；依來源條件設定 `persistent`，並在狀態解除時清空 `message` 或關閉 `active`。不要將所有 error 一律永久顯示。
@@ -245,6 +247,8 @@ RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱
 ## 十一款房間共用場景（2026-10-24）
 
 `RoomSceneLayout` 統一背景、玩家側欄、聊天室、手機抽屜與 inert／焦點返回。一般遊戲經 `GameRoomPage` 使用；畫猜保留中央畫板版型，直接接同一元件。新遊戲依此契約繼承場景功能，不另複製快捷鍵或面板邏輯。股市頁本批不加入。
+
+`RoomHeader` 的 `RoomGameSwitcher` 在等待室提供房主「更換遊戲」入口，沿用 `UiDialog`／`UiField`／`UiButton`。選擇與確認分開，人數上下限說明保留欄位槽，超限停用確認；一般狀態推播不關閉視窗，房主／階段變更才關閉。撲克攤牌後另提供返回等待室入口，再發一手仍保留原流程。房間 store 先辨識遊戲代次，再交給個別遊戲 contract；切換時自動導向同房號的新遊戲，避免舊草稿與延遲操作套用到新局。
 
 `has-room-space` 不套用舊 C00 整桌及側欄底板；收合時只留 32px 框邊，內容卡保留表面。畫猜的 display:contents 中央卡片必須各自高於互動背景，避免攔截作畫。
 

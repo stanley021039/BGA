@@ -242,6 +242,10 @@ async function fetchSeat(signal: AbortSignal) {
 }
 async function start() {
   if (!room.gameManager || !setup.value || preparing.value || room.busy) return;
+  if (state.value?.phase === 'finished') {
+    await room.command('rematch', {});
+    return;
+  }
   const scope = room.scope;
   preparing.value = true;
   startNotice.value = '';
@@ -517,7 +521,7 @@ onBeforeUnmount(() => {
               :icon="state.phase === 'finished' ? 'replay' : 'play'"
               :label="state.phase === 'finished' ? '再玩一局' : '開始遊戲'"
               :pending="preparing || room.busy"
-              :disabled="state.players.length < 2"
+              :disabled="state.phase !== 'finished' && state.players.length < 2"
               @click="start" /></section></Teleport
         ><RoomChat ref="chat" :panel-visible="chatVisible"
           ><template #tools><RoomMedia :connected="connected" /></template></RoomChat

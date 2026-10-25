@@ -22,13 +22,17 @@ const rows = computed(
           ? '暫時離線'
           : game.state?.phase === 'finished'
             ? '本局結束'
-            : recipe.exploded
-              ? '已爆炸'
-              : recipe.stopped
-                ? '已停止'
-                : recipe.chosen
-                  ? '已選擇'
-                  : '準備抽藥';
+            : game.state?.phase === 'settlement'
+              ? recipe.ready
+                ? '本階段完成 ✓'
+                : '等待本階段操作'
+              : recipe.exploded
+                ? '已爆炸'
+                : recipe.stopped
+                  ? '已停止'
+                  : recipe.chosen
+                    ? '已選擇'
+                    : '準備抽藥';
       return [
         {
           recipe,
@@ -77,9 +81,16 @@ function coinLabel(color: WitchColor, value: boolean | undefined) {
         :self="row.recipe.id === game.state?.me"
         :score="row.recipe.score"
         :status="row.recipe.potName + '，' + row.status"
+        :progress-label="row.status"
         high-info
         :progress="
-          row.recipe.stopped || row.recipe.chosen || row.recipe.exploded ? 'complete' : 'pending'
+          (
+            game.state?.phase === 'settlement'
+              ? row.recipe.ready
+              : row.recipe.stopped || row.recipe.chosen || row.recipe.exploded
+          )
+            ? 'complete'
+            : 'pending'
         "
         :data-quacks-player="row.recipe.id"
         :data-viewed="row.viewed"

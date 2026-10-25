@@ -14,6 +14,7 @@ withDefaults(
     actorLabel?: string;
     status?: string;
     progress?: 'complete' | 'pending';
+    progressLabel?: string;
     score?: number | string;
     scoreLabel?: string;
     highInfo?: boolean;
@@ -42,6 +43,9 @@ const hint = useId();
       ></div>
       <div class="vue-player-card-copy">
         <PlayerName :name="player.name" />
+        <span v-if="progressLabel" class="vue-player-card-progress" role="status">{{
+          progressLabel
+        }}</span>
         <div v-if="score !== undefined || $slots.score" class="vue-player-card-score"
           ><slot name="score"
             >{{ score }} <span>{{ scoreLabel }}</span></slot

@@ -136,6 +136,7 @@ function createRoomRuntime() {
     watchRooms,
     mediaRooms,
     cleanupRoom,
+    closeStreams,
     drainStreams,
     ownStream,
     start,
