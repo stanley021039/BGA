@@ -47,6 +47,7 @@ const emit = defineEmits<{ start: [] }>(),
   { room, session, entryCode, entryBusy, entryError, connected } = page,
   focused = ref(false);
 const waiting = computed(() => room.snapshot?.phase === 'waiting'),
+  finished = computed(() => room.snapshot?.phase === 'finished'),
   settingsTarget = computed(() =>
     waiting.value ? '#room-waiting-settings-' + props.type : props.setupTarget,
   );
@@ -177,7 +178,13 @@ onMounted(() => {
       ></template>
       <slot />
       <template #side="{ chatVisible }"
-        ><Teleport v-if="setup" :to="settingsTarget || 'body'" :disabled="!settingsTarget" defer>
+        ><Teleport
+          v-if="setup"
+          :key="settingsTarget"
+          :to="settingsTarget || 'body'"
+          :disabled="!settingsTarget"
+          defer
+        >
           <GameSettingsPanel
             :heading="waiting ? '' : '房間設定'"
             :in-stage="!!settingsTarget"
@@ -191,11 +198,11 @@ onMounted(() => {
               ><UiButton
                 v-if="room.host"
                 variant="primary"
-                :icon="startIcon || (startLabel ? 'replay' : 'play')"
-                :label="startLabel || '開始遊戲'"
+                :icon="finished ? 'replay' : startIcon || (startLabel ? 'replay' : 'play')"
+                :label="finished ? '再玩一局' : startLabel || '開始遊戲'"
                 :pending="room.busy"
-                :disabled="!setup || !canStart"
-                @click="emit('start')"
+                :disabled="!setup || (!finished && !canStart)"
+                @click="finished ? room.command('rematch', {}) : emit('start')"
               /><span v-else>由房主開始遊戲</span></template
             >
           </GameSettingsPanel>

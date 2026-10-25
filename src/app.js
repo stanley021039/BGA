@@ -91,6 +91,7 @@ const { createRoomRuntime } = require('./rooms/runtime');
 const { createFrontend } = require('./http/frontend');
 const { withEntryIntro } = require('./http/entry-intro');
 const { createRoomTransitions } = require('./rooms/transitions');
+const { returnToWaiting } = require('./rooms/rematch');
 const { createStateStream, stateTag } = require('./rooms/state-stream');
 const roomPersistence = require('./rooms/persistence');
 const { botSupport, addTestBot } = require('./ai');
@@ -1973,6 +1974,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/kick',
             '/api/settings',
             '/api/start',
+            '/api/rematch',
             '/api/bot',
             '/api/rebuy',
             '/api/social',
@@ -2544,6 +2546,8 @@ function initializeApp(config, dataLock, acquired) {
             } else if (url.pathname === '/api/start') {
               if (room.host !== p.id) throw Error('只有房主可以發牌');
               room.start();
+            } else if (url.pathname === '/api/rematch') {
+              returnToWaiting(room, p.id);
             } else if (url.pathname === '/api/bot') {
               if (room.host !== p.id) throw Error('只有房主可以加入電腦');
               if (room.type === 'thunder')
