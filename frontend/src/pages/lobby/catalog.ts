@@ -9,6 +9,17 @@ export interface GameCard {
   art: string;
   guide: string;
 }
+// The lounge is selectable alongside the games (#277, revised 2026-10-25).
+export const loungeCard: GameCard = {
+  id: 'lounge',
+  art: 'lounge',
+  guide: '',
+  title: '場外休憩區',
+  english: 'OFF-TABLE LOUNGE',
+  description: '不開局，大家一起看影片、聽歌、聊天。',
+  seats: '1–10 人',
+  category: '共看・聊天',
+};
 export const gameCards: GameCard[] = [
   {
     id: 'musicquiz',
@@ -130,14 +141,7 @@ export const gameCards: GameCard[] = [
     art: 'market',
     guide: '/market',
   },
+  loungeCard,
 ];
-// The lounge (#277) is a fixed lobby card, not part of the game carousel.
-export const loungeCard = {
-  title: '場外休憩區',
-  english: 'OFF-TABLE LOUNGE',
-  description: '不開局，大家一起看影片、聽歌、聊天。',
-  seats: '1–10 人',
-  category: '共看・聊天',
-};
 export const gameTitle = (type: GameType) =>
   type === 'lounge' ? loungeCard.title : gameCards.find((card) => card.id === type)?.title || type;

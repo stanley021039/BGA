@@ -57,6 +57,7 @@ const resumes = computed(() => lobby.rooms.filter((room) => room.seated)),
   lounges = computed(() => lobby.rooms.filter((room) => room.type === 'lounge'));
 function open() {
   if (selected.value === 'market') return;
+  if (selected.value === 'lounge') return openLounge();
   lobby.entryStatus = '';
   opened.value = true;
   void create.value?.open();
@@ -165,32 +166,8 @@ onBeforeUnmount(() => {
             :message="feedback"
             :error="!!lobby.entryStatus" /></div
       ></template>
-      <template #lobby-credits
-        ><p class="version-note"><a href="/credits">素材來源與授權</a></p></template
-      >
-      <template #lobby-lounge
-        ><div class="game-library vue-lobby-lounge-library" data-card-carousel
-          ><!-- ui-check-allow raw-control: 場外休憩區卡片須沿用輪播 game-tile 的同一外觀（#277），UiChoiceCard 的面板外觀無法與遊戲卡片一致 -->
-          <button
-            type="button"
-            class="game-tile vue-lobby-lounge-tile"
-            aria-haspopup="dialog"
-            :aria-label="loungeCard.title + '：開新房間或加入'"
-            @click="openLounge"
-            ><div class="tile-image" aria-hidden="true"></div
-            ><div class="tile-body"
-              ><div class="kicker">{{ loungeCard.english }}</div
-              ><h2>{{ loungeCard.title }}</h2
-              ><p>{{ loungeCard.description }}</p
-              ><div class="tile-bottom"
-                ><span>{{ loungeCard.seats }}</span
-                ><span>{{ loungeCard.category }}</span></div
-              ></div
-            ></button
-          ></div
-        ></template
-      >
     </GameCarousel>
+    <p class="version-note"><a href="/credits">素材來源與授權</a></p>
     <LobbyBackdrop ref="backdrop" /><StatusSlot :message="lobby.attackStatus" />
     <UiDialog ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
       ><div class="vue-lobby-join"
@@ -384,7 +361,7 @@ onBeforeUnmount(() => {
           v-model="selected"
           :disabled="lobby.entryPending"
           ><option
-            v-for="card in gameCards.filter((card) => card.id !== 'market')"
+            v-for="card in gameCards.filter((card) => !['market', 'lounge'].includes(card.id))"
             :key="card.id"
             :value="card.id"
             >{{ card.title }}</option

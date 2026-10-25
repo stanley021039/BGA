@@ -448,7 +448,7 @@ body.lobby-self-hover {
       min-height: 0;
       padding: tokens.space(2) 0;
       grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-rows: 44px minmax(0, 1fr);
+      grid-template-rows: 44px minmax(0, 1fr) 24px;
       gap: tokens.space(4);
     }
     .vue-lobby .library-heading {
@@ -480,22 +480,30 @@ body.lobby-self-hover {
       flex: none;
       min-height: 32px;
     }
-    .vue-lobby .game-library[data-card-carousel] {
+    .vue-lobby .carousel-center {
       flex: 1;
       min-height: 0;
-      height: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .vue-lobby .game-library[data-card-carousel] {
+      flex: 0 1 466px;
+      min-height: 0;
+      height: 466px;
+      max-height: 466px;
       width: 100%;
       max-width: 720px;
-      width: calc(100% - 520px);
+      width: calc(100% - 440px);
       align-self: center;
       isolation: isolate;
       overflow: visible;
-      margin-inline: 300px 220px;
+      margin-inline: 220px;
       container-type: size;
       .game-tile {
         top: 50%;
         width: clamp(200px, 38cqw, 300px);
-        height: clamp(124px, calc(100cqh - 94px), 418px);
+        height: clamp(124px, calc(100cqh - 48px), 418px);
         display: flex;
         flex-direction: column;
       }
@@ -528,13 +536,12 @@ body.lobby-self-hover {
       }
     }
     .vue-lobby .carousel-hint,
-    .vue-lobby .carousel-footer,
-    .vue-lobby .version-note {
+    .vue-lobby .carousel-footer {
       flex: none;
       align-self: center;
-      width: calc(100% - 520px);
+      width: calc(100% - 440px);
       max-width: 720px;
-      margin-inline: 300px 220px;
+      margin-inline: 220px;
     }
     .vue-lobby .carousel-footer {
       position: relative;
@@ -574,7 +581,9 @@ body.lobby-self-hover {
       gap: tokens.space(2);
     }
     .vue-lobby .version-note {
-      text-align: center;
+      grid-column: 1 / -1;
+      grid-row: 3;
+      text-align: start;
       @include tokens.type(p3);
     }
   }
@@ -857,65 +866,13 @@ body .lobby-backdrop[data-background='castle'] {
   font-size: var(--stitch-text-hint);
   color: var(--stitch-muted);
 }
-// #277: the fixed bottom-left lounge reuses the carousel tile. Art waits for #278.
-.vue-lobby .carousel-lounge {
-  display: flex;
-  justify-content: flex-start;
-}
+// The credits stay on the bottom-left; lounge artwork is now part of the carousel.
 .vue-lobby .carousel-footer {
   justify-content: center;
-}
-.vue-lobby .version-note {
-  text-align: center;
 }
 .vue-lobby-presence {
   left: auto;
   right: var(--stitch-space-16);
-}
-:root
-  body[data-visual-theme]
-  .vue-lobby
-  .game-library.vue-lobby-lounge-library[data-card-carousel] {
-  position: static;
-  inline-size: auto;
-  max-inline-size: none;
-  block-size: auto;
-  margin: 0;
-  pointer-events: auto;
-  container-type: normal;
-  .game-tile {
-    position: relative;
-    inset: auto;
-    inline-size: calc(var(--lounge-tile-width, 274px) * var(--lounge-tile-scale, 1));
-    block-size: calc(var(--lounge-tile-height, 418px) * var(--lounge-tile-scale, 1));
-    transform: none;
-    display: flex;
-    flex-direction: column;
-    text-align: start;
-  }
-  .tile-image {
-    flex: none;
-    block-size: calc(var(--lounge-tile-image, 190px) * var(--lounge-tile-scale, 1));
-  }
-  .tile-body {
-    flex: 1;
-    min-block-size: 0;
-    block-size: auto;
-  }
-}
-// Keep the fixed lounge outside the fanned carousel and its navigation.
-@media (min-width: 960px) and (min-height: 560px) and (pointer: fine) {
-  body.vue-lobby-document:not(.ui-large-text) .vue-lobby .carousel-lounge {
-    position: absolute;
-    z-index: 4;
-    left: 0;
-    bottom: 0;
-  }
-}
-@media (min-width: 960px) and (max-width: 1500px) and (min-height: 560px) and (pointer: fine) {
-  .vue-lobby .carousel-lounge {
-    --lounge-tile-scale: 0.65;
-  }
 }
 .vue-lobby-lounge {
   display: grid;

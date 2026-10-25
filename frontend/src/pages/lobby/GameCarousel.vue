@@ -4,6 +4,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { gameCards } from './catalog';
 import { usePreferencesStore } from '../../stores/preferences';
 import UiButton from '../../components/UiButton.vue';
+import loungeSmall from '../../assets/lounge/lounge-360.webp';
+import loungeLarge from '../../assets/lounge/lounge-720.webp';
 import quacksArt from '../../assets/quacks/game-quacks.svg';
 import minimalArt from '../minimal/minimal-waiting.svg';
 const props = defineProps<{ modelValue: string }>(),
@@ -11,8 +13,6 @@ const props = defineProps<{ modelValue: string }>(),
 const root = ref<HTMLElement | null>(null),
   width = ref(1000),
   cardWidth = ref(300),
-  // The fixed 場外休憩區 tile copies the live tile size (#277).
-  tileSize = ref<Record<string, string>>({}),
   drag = ref(0),
   dragging = ref(false),
   prefs = usePreferencesStore();
@@ -141,14 +141,6 @@ onMounted(() => {
       width.value = root.value.clientWidth;
       const tile = root.value.querySelector<HTMLElement>('.game-tile');
       cardWidth.value = tile?.offsetWidth || 300;
-      tileSize.value = tile
-        ? {
-            '--lounge-tile-width': tile.offsetWidth + 'px',
-            '--lounge-tile-height': tile.offsetHeight + 'px',
-            '--lounge-tile-image':
-              (tile.querySelector<HTMLElement>('.tile-image')?.offsetHeight || 190) + 'px',
-          }
-        : {};
     }
   });
   if (root.value) observer.observe(root.value);
@@ -165,78 +157,89 @@ onBeforeUnmount(() => {
 <template>
   <section class="game-carousel-section" aria-label="挑選桌遊" data-ping-anchor="game-list">
     <div class="carousel-heading"><span class="carousel-stamp">今晚的遊戲提案</span></div>
-    <div
-      ref="root"
-      class="game-library"
-      :class="{ dragging, 'carousel-reduced': still }"
-      data-card-carousel
-      role="region"
-      aria-roledescription="遊戲輪播"
-      :aria-label="gameCards.length + ' 款遊戲，使用左右方向鍵切換'"
-      tabindex="0"
-      :style="{ '--card-step': step + 'px', '--drag': drag + 'px' }"
-      @keydown="key"
-      @pointerdown="down"
-      @pointermove="move"
-      @pointerup="up($event)"
-      @pointercancel="up($event, true)"
-      @lostpointercapture="reset"
-      @dragstart.prevent
-    >
-      <button
-        v-for="(card, i) in gameCards"
-        :key="card.id"
-        type="button"
-        class="game-tile"
-        :class="[card.id + '-tile', { selected: i === index }]"
-        :data-game="card.id"
-        :style="cardStyle(i)"
-        :tabindex="i === index ? 0 : -1"
-        :aria-pressed="i === index"
-        :aria-hidden="!visible(i)"
-        @click="click($event, i)"
-        @pointerenter="warmGamePage(card.id)"
-        @pointerdown="warmGamePage(card.id)"
-        @focus="warmGamePage(card.id)"
+    <div class="carousel-center">
+      <div
+        ref="root"
+        class="game-library"
+        :class="{ dragging, 'carousel-reduced': still }"
+        data-card-carousel
+        role="region"
+        aria-roledescription="遊戲輪播"
+        :aria-label="gameCards.length + ' 張卡片，使用左右方向鍵切換'"
+        tabindex="0"
+        :style="{ '--card-step': step + 'px', '--drag': drag + 'px' }"
+        @keydown="key"
+        @pointerdown="down"
+        @pointermove="move"
+        @pointerup="up($event)"
+        @pointercancel="up($event, true)"
+        @lostpointercapture="reset"
+        @dragstart.prevent
       >
-        <div class="tile-image"
-          ><img
-            :src="
-              card.id === 'quacks'
-                ? quacksArt
-                : card.id === 'minimal'
-                  ? minimalArt
-                  : '/assets/playful/game-' + card.art + '.svg'
-            "
-            alt=""
-            draggable="false" /></div
-        ><div class="tile-body"
-          ><div class="kicker">{{ card.english }}</div
-          ><h2>{{ card.title }}</h2
-          ><p>{{ card.description }}</p
-          ><div class="tile-bottom"
-            ><span>{{ card.seats }}</span
-            ><span>{{ card.category }}</span
-            ><span class="select-label">{{ i === index ? '已選擇 ✓' : '選擇遊戲 ↗' }}</span></div
-          ></div
+        <!-- ui-check-allow raw-control: 扇形輪播卡片以同一個按鈕承載選取、拖曳與鍵盤焦點，沿用既有 game-tile 外觀，UiButton 不支援圖文卡片結構 -->
+        <button
+          v-for="(card, i) in gameCards"
+          :key="card.id"
+          type="button"
+          class="game-tile"
+          :class="[card.id + '-tile', { selected: i === index }]"
+          :data-game="card.id"
+          :style="cardStyle(i)"
+          :tabindex="i === index ? 0 : -1"
+          :aria-pressed="i === index"
+          :aria-hidden="!visible(i)"
+          @click="click($event, i)"
+          @pointerenter="warmGamePage(card.id)"
+          @pointerdown="warmGamePage(card.id)"
+          @focus="warmGamePage(card.id)"
         >
-      </button>
+          <div class="tile-image"
+            ><img
+              :src="
+                card.id === 'lounge'
+                  ? loungeSmall
+                  : card.id === 'quacks'
+                    ? quacksArt
+                    : card.id === 'minimal'
+                      ? minimalArt
+                      : '/assets/playful/game-' + card.art + '.svg'
+              "
+              :srcset="
+                card.id === 'lounge' ? loungeSmall + ' 360w, ' + loungeLarge + ' 720w' : undefined
+              "
+              sizes="(max-width: 650px) calc(100vw - 32px), 300px"
+              decoding="async"
+              alt=""
+              draggable="false" /></div
+          ><div class="tile-body"
+            ><div class="kicker">{{ card.english }}</div
+            ><h2>{{ card.title }}</h2
+            ><p>{{ card.description }}</p
+            ><div class="tile-bottom"
+              ><span>{{ card.seats }}</span
+              ><span>{{ card.category }}</span
+              ><span class="select-label">{{ i === index ? '已選擇 ✓' : '選擇遊戲 ↗' }}</span></div
+            ></div
+          >
+        </button>
+      </div>
+      <div class="carousel-footer"
+        ><div class="carousel-controls"
+          ><UiButton icon="previous" icon-only label="上一款遊戲" @click="select(index - 1)" /><span
+            class="vue-carousel-counter"
+            role="status"
+            aria-live="polite"
+            :aria-label="
+              chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'
+            "
+            >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
+          ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
+      ></div>
+      <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
     </div>
-    <div class="carousel-footer"
-      ><div class="carousel-controls"
-        ><UiButton icon="previous" icon-only label="上一款遊戲" @click="select(index - 1)" /><span
-          class="vue-carousel-counter"
-          role="status"
-          aria-live="polite"
-          :aria-label="chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'"
-          >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
-        ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
-    ></div>
-    <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
-    <slot name="lobby-credits" />
-    <div class="carousel-lounge" :style="tileSize"><slot name="lobby-lounge" /></div>
     <div class="carousel-actions"
-      ><a class="quiet carousel-guide" :href="chosen.guide">{{ chosen.title }}玩法 ↗</a
+      ><a v-if="chosen.guide" class="quiet carousel-guide" :href="chosen.guide"
+        >{{ chosen.title }}玩法 ↗</a
       ><div class="carousel-create"
         ><UiButton
           variant="secondary"
@@ -251,7 +254,7 @@ onBeforeUnmount(() => {
         ><UiButton
           v-else
           icon="add"
-          :label="'開一桌' + chosen.title"
+          :label="chosen.id === 'lounge' ? '開啟場外休憩區' : '開一桌' + chosen.title"
           @click="emit('create')" /><slot name="lobby-resume" /></div
     ></div>
   </section>
