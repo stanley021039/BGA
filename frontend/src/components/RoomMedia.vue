@@ -183,7 +183,60 @@ let player: MediaPlayer | null = null,
   lastConsent = '',
   lastItem = '',
   timer: ReturnType<typeof setInterval> | null = null,
-  observer: MutationObserver | null = null;
+  observer: MutationObserver | null = null,
+  modeObserver: MutationObserver | null = null;
+// Only consecutive, connected snapshots can start a new automatic opening.
+// Initial load and reconnect establish a baseline, rather than replaying old music.
+let previousMedia: { revision: number; empty: boolean } | null = null,
+  pendingOpen = '';
+function observePlayback() {
+  const state = media.snapshot;
+  if (!state) return;
+  const empty = !state.current && !state.queue?.length;
+  if (previousMedia?.revision === state.revision) return;
+  const first = previousMedia?.empty && state.current && state.playback.state === 'playing';
+  previousMedia = { revision: state.revision, empty };
+  if (pendingOpen !== mediaCurrentKey(state)) pendingOpen = '';
+  if (first && !opened.value) pendingOpen = mediaCurrentKey(state);
+  void maybeAutoOpen();
+}
+async function maybeAutoOpen() {
+  if (
+    !pendingOpen ||
+    disposed ||
+    !mounted ||
+    !props.connected ||
+    !media.connected ||
+    document.hidden ||
+    document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]') ||
+    document.body.classList.contains('scene-ui-hidden') ||
+    document.body.classList.contains('vue-game-focus') ||
+    document.body.classList.contains('vue-draw-focus')
+  )
+    return;
+  if (pendingOpen !== mediaCurrentKey(media.snapshot) || !playing.value) {
+    pendingOpen = '';
+    return;
+  }
+  pendingOpen = '';
+  if (opened.value) return;
+  const focused = document.activeElement as HTMLElement | null;
+  mode.value = 'compact';
+  activeTab.value = 'player';
+  wantsVideo = videoConsent.value === true;
+  await show(false);
+  // show() is non-modal but native dialog focus must not interrupt typing/drawing.
+  if (
+    focused?.isConnected &&
+    !document.querySelector('dialog:modal, [role="dialog"][aria-modal="true"]')
+  ) {
+    const bodyFocus = focused === document.body && !focused.hasAttribute('tabindex');
+    if (bodyFocus) focused.setAttribute('tabindex', '-1');
+    focused.focus({ preventScroll: true });
+    if (bodyFocus) focused.removeAttribute('tabindex');
+  }
+  if (opened.value && !disposed && props.connected && media.connected) player?.align();
+}
 let queuePointer: {
   id: number;
   node: HTMLElement;
@@ -207,6 +260,7 @@ function cancelQueue() {
 function closed() {
   if (dialog.value?.open || !opened.value) return;
   opened.value = false;
+  pendingOpen = '';
   recentOpen.value = false;
   geometry.cancel();
   cancelQueue();
@@ -235,10 +289,12 @@ async function show(load = true) {
       sharedClock.value = media.position();
     }, 500);
   sharedClock.value = media.position();
+  void maybeJoinVideo();
   if (fresh && load) void media.library();
 }
 async function open() {
   mode.value = 'full';
+  wantsVideo = videoConsent.value === true;
   await show();
   const context = media.context;
   await media.load(true);
@@ -263,9 +319,28 @@ function setTab(value: string) {
   activeTab.value = value;
   updatePresentation();
 }
+async function maybeJoinVideo() {
+  const key = mediaCurrentKey(media.snapshot);
+  await nextTick();
+  if (
+    !disposed &&
+    mounted &&
+    props.connected &&
+    media.connected &&
+    opened.value &&
+    !document.hidden &&
+    key === mediaCurrentKey(media.snapshot) &&
+    media.snapshot?.current?.type === 'video' &&
+    wantsVideo &&
+    videoConsent.value === true &&
+    !view.value.videoWanted
+  )
+    player?.joinVideo();
+}
 function syncPlayback() {
   const state = media.snapshot;
   if (!mounted || !state || !player || !props.connected || !media.connected) return;
+  observePlayback();
   if (lastConsent !== consentKey.value) {
     lastConsent = consentKey.value;
     wantsVideo = videoConsent.value === true;
@@ -277,16 +352,7 @@ function syncPlayback() {
   player.setMarker(media.marker);
   player.update(state, media.marker, media.serverNow());
   sharedClock.value = media.position();
-  if (changed && state.current?.type === 'video' && wantsVideo && videoConsent.value === true)
-    void nextTick().then(() => {
-      if (
-        key === mediaCurrentKey(media.snapshot) &&
-        wantsVideo &&
-        !document.hidden &&
-        !view.value.videoWanted
-      )
-        player?.joinVideo();
-    });
+  if (changed) void maybeJoinVideo();
   void maybeConsent();
 }
 async function maybeConsent() {
@@ -314,8 +380,6 @@ async function chooseVideo(accept: boolean) {
   wantsVideo = accept;
   if (accept && item.value?.type === 'video') {
     await show();
-    await nextTick();
-    if (key === consentKey.value && wantsVideo && opened.value) player?.joinVideo();
   } else if (!accept) player?.exitVideo('');
 }
 function consentClosed() {
@@ -504,14 +568,18 @@ function visibility() {
   if (document.hidden) {
     geometry.cancel();
     cancelQueue();
-  } else void maybeConsent();
+  } else {
+    void maybeAutoOpen();
+    void maybeJoinVideo();
+    void maybeConsent();
+  }
 }
 function escape(event: KeyboardEvent) {
   if (event.key !== 'Escape' || !opened.value || document.querySelector('dialog:modal')) return;
   event.preventDefault();
   close();
 }
-watch(() => media.receipt, syncPlayback);
+watch(() => media.receipt, syncPlayback, { flush: 'sync' });
 watch(
   () => media.marker,
   (value) => player?.setMarker(value),
@@ -519,6 +587,8 @@ watch(
 watch(
   () => media.context,
   () => {
+    previousMedia = null;
+    pendingOpen = '';
     prompt = '';
     consent.value?.close();
     close();
@@ -543,6 +613,8 @@ watch(
   () => [props.connected, media.connected],
   () => {
     if (!props.connected || !media.connected) {
+      previousMedia = null;
+      pendingOpen = '';
       close();
       player?.disconnect();
       lastItem = '';
@@ -569,13 +641,23 @@ onMounted(() => {
   document.addEventListener('keydown', escape);
   // Another modal (invite, confirm, help) only covers the player. Closing the
   // player here destroyed a playing YouTube video (issue #165).
-  observer = new MutationObserver(() => void maybeConsent());
-  observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
+  observer = new MutationObserver(() => {
+    void maybeAutoOpen();
+    void maybeConsent();
+  });
+  observer.observe(document.body, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['open', 'aria-modal'],
+  });
+  modeObserver = new MutationObserver(() => void maybeAutoOpen());
+  modeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 });
 onBeforeUnmount(() => {
   disposed = true;
   mounted = false;
   observer?.disconnect();
+  modeObserver?.disconnect();
   geometry.cancel();
   cancelQueue();
   if (timer) clearInterval(timer);
@@ -729,7 +811,7 @@ onBeforeUnmount(() => {
                   :message="feedback"
                   :error="media.failed"
                 />
-                <StatusSlot :message="playbackStatus" />
+                <StatusSlot :message="playbackStatus" :persistent="!!playbackStatus" />
               </div>
               <div v-show="item?.type === 'music'" ref="audioHost" class="vue-media-audio" />
               <div class="vue-media-controls-body">
