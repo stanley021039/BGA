@@ -17,7 +17,7 @@ function fixture(component = 'AthleteScene.vue', initialGame = {}) {
   // verified in Edge rather than emulated by linkedom.
   const dialogState = { opens: 0, close: () => {} };
   const DialogStub = vue.defineComponent({
-    setup(_props, { slots, expose }) {
+    setup(_props, { slots, expose, attrs }) {
       const visible = vue.ref(false);
       const close = () => {
         visible.value = false;
@@ -31,7 +31,11 @@ function fixture(component = 'AthleteScene.vue', initialGame = {}) {
         close,
       });
       return () =>
-        vue.h('div', { 'data-twist-dialog': '' }, visible.value ? slots.default?.() : []);
+        vue.h(
+          'div',
+          { 'data-twist-dialog': '', 'data-title': attrs.title },
+          visible.value ? slots.default?.() : [],
+        );
     },
   });
   const game = vue.reactive({
@@ -237,6 +241,42 @@ test('Twist opens on the first observed trigger only, lists all cards and can be
     f.game.twistCards = [{ id: 'conveyor', summary: '主移動加三' }];
     await vue.nextTick();
     assert.equal(opens(), 5);
+    assert.equal(f.calls.length, 0);
+  } finally {
+    f.dispose();
+  }
+});
+test('Whirly World never triggers a Twist, so its button and dialog explain only the vortexes', async () => {
+  const f = fixture('AthleteScene.vue', {
+    phase: 'racing',
+    race: 2,
+    trackId: 'whirly-world',
+    twistCards: [],
+    racers: [
+      {
+        id: 'r',
+        racerId: 'penguin',
+        playerId: 'a',
+        position: 1,
+        copiedPowers: [],
+        tripped: false,
+        transformed: false,
+        finished: false,
+        eliminated: false,
+      },
+    ],
+  });
+  try {
+    const { dialog, opens } = dialogHarness(f);
+    const button = f.host.querySelector('button[aria-label="查看漩渦規則"]');
+    assert.ok(button, 'vortex rules button');
+    assert.equal(f.host.querySelector('button[aria-label*="twist"]'), null);
+    button.click();
+    await vue.nextTick();
+    assert.equal(opens(), 1);
+    assert.equal(dialog.getAttribute('data-title'), '漩渦規則');
+    assert.match(dialog.textContent, /漩渦配對/);
+    assert.doesNotMatch(dialog.textContent, /Twist/);
     assert.equal(f.calls.length, 0);
   } finally {
     f.dispose();

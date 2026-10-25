@@ -311,7 +311,13 @@ const eventText = eventBody;
         /></template>
         <template #actions
           ><UiButton
-            :label="twistCount ? '查看已觸發twist' : '尚未觸發twist'"
+            :label="
+              track === 'whirly-world'
+                ? '查看漩渦規則'
+                : twistCount
+                  ? '查看已觸發twist'
+                  : '尚未觸發twist'
+            "
             @click="twistDialog?.open()"
         /></template>
         <div class="athlete-action-slot"
@@ -494,7 +500,8 @@ const eventText = eventBody;
         ><UiButton v-if="room.host" label="再玩一局" @click="athlete.start()"
       /></div>
     </UiPanel>
-    <UiDialog ref="twistDialog" title="本場 Twist">
+    <!-- Whirly World never triggers a Twist, so its dialog only explains the vortexes. -->
+    <UiDialog ref="twistDialog" :title="track === 'whirly-world' ? '漩渦規則' : '本場 Twist'">
       <template v-if="track === 'twisty-twirl'"
         ><p>本場第一次跨越中央 Twist 圖示時觸發一張 Twist 卡；後續經過不再觸發。</p
         ><p>觸發進度：14 格。</p></template
@@ -515,16 +522,18 @@ const eventText = eventBody;
           game.direction === -1 ? '目前為 Mirror World 逆向競速。' : '目前為順向競速。'
         }}手機可左右捲動查看完整賽道。</p
       >
-      <UiHeading :level="3">已觸發的 Twist</UiHeading>
-      <div v-if="game.twistCards?.length" class="athlete-twists"
-        ><div v-for="card in game.twistCards" :key="card.id"
-          ><p>{{ card.summary }}</p
-          ><AthleteArt
-            :src="athleteArt(card.id, 'twist')"
-            alt="本場已觸發的原版 Twist 卡"
-            :width="428"
-            :height="236" /></div></div
-      ><p v-else>尚未觸發 Twist。</p>
+      <template v-if="track !== 'whirly-world'"
+        ><UiHeading :level="3">已觸發的 Twist</UiHeading>
+        <div v-if="game.twistCards?.length" class="athlete-twists"
+          ><div v-for="card in game.twistCards" :key="card.id"
+            ><p>{{ card.summary }}</p
+            ><AthleteArt
+              :src="athleteArt(card.id, 'twist')"
+              alt="本場已觸發的原版 Twist 卡"
+              :width="428"
+              :height="236" /></div></div
+        ><p v-else>尚未觸發 Twist。</p></template
+      >
     </UiDialog>
     <UiPanel title="賽況紀錄"
       ><UiList class="athlete-events"
