@@ -92,17 +92,28 @@ test('a seat that is no longer valid is closed instead of receiving the view', a
   stream.close();
 });
 
-test('the sweep keeps open seats present and re-checks views; hints reach the right people', async () => {
+test('the sweep keeps open seats present and re-checks views; hints reach the right people', async (t) => {
+  t.mock.timers.enable({ apis: ['setInterval'] });
   const alive = [],
     { room, stream } = setup({ sweepMs: 20, onAlive: (entry) => alive.push(entry.userId) }),
     a = connection(),
     b = connection();
+  t.after(() => stream.close());
   stream.subscribe(room, { ...a, user: { id: 'u1' }, playerId: 'p1' });
   stream.subscribe(room, { ...b, user: { id: 'u2' }, playerId: 'p2' });
   room.phase = 'expired';
-  await new Promise((resolve) => setTimeout(resolve, 60));
+  t.mock.timers.tick(19);
+  assert.equal(alive.length, 0, 'the sweep does not run before its interval');
+  t.mock.timers.tick(1);
+  // Sweeps queue delivery in the check phase; a wall-clock sleep can resolve
+  // in the timers phase before that delivery when the test process is busy.
+  await tick();
   assert.ok(alive.includes('u1') && alive.includes('u2'));
-  assert.equal(a.events('state').at(-1).phase, 'expired', 'unannounced changes still arrive');
+  assert.deepEqual(
+    [a, b].map((client) => client.events('state').at(-1).phase),
+    ['expired', 'expired'],
+    'unannounced changes still arrive for both seats',
+  );
   stream.hint(room.code, 'chat');
   stream.hintUser('u2', 'invitations');
   assert.equal(a.events('chat').length, 1);

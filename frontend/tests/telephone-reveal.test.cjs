@@ -283,6 +283,43 @@ test('three actual scenes retain each revealed story prefix, reset between owner
   }
 });
 
+test('telephone spectator snapshots validate read-only live state without private tasks', () => {
+  const engine = new TelephoneRoom('ABCDEF', '觀戰', () => 0),
+    players = Array.from({ length: 3 }, (_, i) => engine.add('玩家' + i)),
+    reader = loader()(path.join(__dirname, '../src/contracts/telephone.ts')).readTelephoneSnapshot;
+  engine.start();
+  const active = reader(engine.observerView());
+  assert.equal(active.spectator, true);
+  assert.equal(active.task, null);
+  assert.ok(active.players.every((player) => player.id.startsWith('observer-')));
+  assert.throws(() =>
+    reader({ ...engine.observerView(), task: { kind: 'text', previous: {}, submitted: false } }),
+  );
+  players.forEach((player) =>
+    engine.act(player.id, 'skip', { stepId: engine.stepId, requestId: randomUUID() }),
+  );
+  while (engine.phase === 'passing') {
+    const round = engine.round;
+    for (const player of players) {
+      const data = {
+        stepId: engine.stepId,
+        requestId: randomUUID(),
+        ...(round % 2
+          ? { strokes: [{ tool: 'brush', color: '#123456', size: 2, points: [[1, 1]] }] }
+          : { text: '揭曉內容' }),
+      };
+      engine.act(player.id, 'submit', data);
+    }
+    engine.deadline = engine.now();
+    engine.auto();
+  }
+  const finished = reader(engine.observerView());
+  assert.equal(finished.phase, 'finished');
+  assert.equal(finished.books.length, 3);
+  assert.equal(finished.task, null);
+  assert.ok(finished.books.every((book) => book.pages.length === 3));
+});
+
 test('routine draft changes and success stay quiet while sync failure remains visible', async () => {
   const engine = new TelephoneRoom('ABCDEF', '草稿訊息', () => 0);
   const players = Array.from({ length: 3 }, (_, i) => engine.add('玩家' + i));

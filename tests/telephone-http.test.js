@@ -21,6 +21,8 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book history and i
   t.mock.method(TelephoneRoom.prototype, 'start', function () {
     start.call(this);
     this.options.seconds = 3;
+    this.options.textSeconds = 3;
+    this.options.drawingSeconds = 3;
     this.deadline = Date.now() + 3000;
   });
   const { base } = await appFixture(t, {
@@ -46,10 +48,56 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book history and i
     })
   ).cookie;
   const { code } = (await post('create', { type: 'telephone' })).s;
+  const unauthWatch = await fetch(base + '/api/telephone/watch?code=' + code);
+  assert.equal(unauthWatch.status, 401);
+  const seatedWatch = await fetch(base + '/api/telephone/watch?code=' + code, {
+    headers: { Cookie: cookie },
+  });
+  assert.equal(seatedWatch.status, 409);
+  const invite = await post('admin/invites', { days: 1 });
+  const observer = await fetch(base + '/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: 'telephone_observer',
+      displayName: '觀戰朋友',
+      password: 'telephone-observer-password',
+      confirmPassword: 'telephone-observer-password',
+      invite: invite.s.code,
+    }),
+  });
+  assert.equal(observer.status, 200);
+  const observerCookie = observer.headers.get('set-cookie').split(';')[0];
+  const watch = await fetch(base + '/api/telephone/watch?code=' + code, {
+    headers: { Cookie: observerCookie },
+  });
+  assert.equal(watch.status, 200);
+  const watchedState = await watch.json();
+  assert.equal(watchedState.spectator, true);
+  assert.equal(watchedState.me, 'spectator');
+  assert.equal(watchedState.host, false);
+  assert.equal(watchedState.task, null);
+  assert.deepEqual(watchedState.books, []);
+  assert.ok(watchedState.players.every((player) => player.id.startsWith('observer-')));
+  assert.ok(watchedState.players.every((player) => !player.id.startsWith('user-')));
+  const methodWatch = await fetch(base + '/api/telephone/watch?code=' + code, {
+    method: 'POST',
+    headers: { Cookie: cookie, 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  assert.equal(methodWatch.status, 405);
   await post('start', { code }, 400);
   await post('bot', { code });
   await post('bot', { code });
-  await post('settings', { code, sources: ['silly'] });
+  let configured = await post('settings', {
+    code,
+    sources: ['silly'],
+    drawingSeconds: 60,
+    textSeconds: 120,
+  });
+  assert.equal(configured.s.options.drawingSeconds, 60);
+  assert.equal(configured.s.options.textSeconds, 120);
+  await post('settings', { code, drawingSeconds: 90, textSeconds: 90 });
   let s = (await post('start', { code })).s;
   s = await enterDrawing(
     s,

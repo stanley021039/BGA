@@ -88,7 +88,7 @@ class TelephoneRoom {
       books: [],
       roster: [],
       submissions: {},
-      options: { sources: ['everyday', 'silly'], seconds: 90 },
+      options: { sources: ['everyday', 'silly'], seconds: 90, drawingSeconds: 90, textSeconds: 90 },
       deadline: null,
       events: [],
       log: [],
@@ -139,15 +139,28 @@ class TelephoneRoom {
     if (id !== this.host) fail('HOST_ONLY', '只有房主可以設定', 403);
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '傳遞中不能改題庫');
     if (
-      !Array.isArray(data.sources) ||
-      !data.sources.length ||
-      data.sources.length > 2 ||
-      new Set(data.sources).size !== data.sources.length ||
-      data.sources.some((x) => !SOURCES.some((s) => s.id === x))
+      data.sources !== undefined &&
+      (!Array.isArray(data.sources) ||
+        !data.sources.length ||
+        data.sources.length > 2 ||
+        new Set(data.sources).size !== data.sources.length ||
+        data.sources.some((x) => !SOURCES.some((s) => s.id === x)))
     )
       fail('INVALID_SOURCES', '請選擇有效題庫', 400);
-    this.options.sources = data.sources.slice();
-    this.event('settings', '房主更新獨立情境題庫');
+    for (const value of [data.drawingSeconds, data.textSeconds])
+      if (value !== undefined && ![60, 90, 120].includes(value))
+        fail('INVALID_SECONDS', '作畫與文字時間只能選 60、90 或 120 秒', 400);
+    if (data.sources !== undefined) this.options.sources = data.sources.slice();
+    if (data.drawingSeconds !== undefined) this.options.drawingSeconds = data.drawingSeconds;
+    if (data.textSeconds !== undefined) this.options.textSeconds = data.textSeconds;
+    this.event('settings', '房主更新傳遞題庫與階段時間');
+  }
+  timing() {
+    // Room persistence may restore options captured before split phase timers existed.
+    return {
+      drawingSeconds: this.options.drawingSeconds ?? 90,
+      textSeconds: this.options.textSeconds ?? 90,
+    };
   }
   start() {
     if (!['waiting', 'finished'].includes(this.phase)) fail('MATCH_STARTED', '已經開始傳遞');
@@ -178,7 +191,7 @@ class TelephoneRoom {
     this.round = 0;
     this.roundLimit = active.length % 2 ? active.length - 1 : active.length;
     this.phase = 'prompting';
-    this.deadline = this.now() + this.options.seconds * 1000;
+    this.deadline = this.now() + this.timing().textSeconds * 1000;
     this.stepId = randomUUID();
     this.submissions = {};
     this.drafts = {};
@@ -187,7 +200,10 @@ class TelephoneRoom {
     this.receipts.clear();
     this.topicReceipts.clear();
     this.revealIndex = -1;
-    this.event('start', '先各自想一個主題；90 秒內全員送出即可提早開始作畫。');
+    this.event(
+      'start',
+      `先各自想一個主題；${this.timing().textSeconds} 秒內全員送出即可提早開始作畫。`,
+    );
   }
   bookFor(id) {
     const seat = this.roster.indexOf(id);
@@ -207,7 +223,7 @@ class TelephoneRoom {
   beginDrawing(now) {
     this.phase = 'passing';
     this.round = 1;
-    this.deadline = now + this.options.seconds * 1000;
+    this.deadline = now + this.timing().drawingSeconds * 1000;
     this.stepId = randomUUID();
     this.submissions = {};
     this.drafts = {};
@@ -351,7 +367,8 @@ class TelephoneRoom {
       this.event('finish', '時間到，全部故事揭曉！沒有排名，一起看看故事如何變形。');
     } else {
       this.round++;
-      this.deadline = now + this.options.seconds * 1000;
+      const timing = this.timing();
+      this.deadline = now + (this.round % 2 ? timing.drawingSeconds : timing.textSeconds) * 1000;
       this.stepId = randomUUID();
       this.event('pass', '時間到，第 ' + this.round + ' 頁：' + (this.round % 2 ? '畫圖' : '猜詞'));
     }
@@ -408,7 +425,7 @@ class TelephoneRoom {
       deadline: this.deadline,
       serverNow: this.now(),
       interrupted: this.interrupted,
-      options: this.options,
+      options: { ...this.options, ...this.timing() },
       sources: SOURCES,
       players: this.activePlayers().map((p) => ({
         id: p.id,
@@ -430,6 +447,58 @@ class TelephoneRoom {
           }
         : null,
       books: this.phase === 'finished' ? this.books : [],
+      review:
+        this.phase === 'finished'
+          ? {
+              index: this.revealIndex,
+              total: this.books.reduce((sum, book) => sum + book.pages.length, 0),
+            }
+          : null,
+      events: this.events,
+      log: this.log,
+    });
+  }
+  observerView() {
+    const publicIds = new Map(
+      this.players.map((player, index) => [player.id, `observer-${index + 1}`]),
+    );
+    return clone({
+      type: this.type,
+      code: this.code,
+      name: this.name,
+      me: 'spectator',
+      host: false,
+      version: this.version,
+      phase: this.phase,
+      round: this.round,
+      roundLimit: this.roundLimit,
+      stepId: this.stepId,
+      deadline: this.deadline,
+      serverNow: this.now(),
+      interrupted: this.interrupted,
+      spectator: true,
+      options: { ...this.options, ...this.timing() },
+      sources: SOURCES,
+      players: this.activePlayers().map((p) => ({
+        id: publicIds.get(p.id),
+        name: p.name,
+        bot: p.bot,
+        avatar: p.avatar,
+        ready: !!this.submissions[p.id],
+        offline: !p.bot && this.now() - p.lastSeen >= 15000,
+      })),
+      task: null,
+      books:
+        this.phase === 'finished'
+          ? this.books.map((book) => ({
+              ...book,
+              ownerId: publicIds.get(book.ownerId) || '離席玩家',
+              pages: book.pages.map((page) => ({
+                ...page,
+                ...(page.authorId ? { authorId: publicIds.get(page.authorId) || '離席玩家' } : {}),
+              })),
+            }))
+          : [],
       review:
         this.phase === 'finished'
           ? {

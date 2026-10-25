@@ -1965,6 +1965,7 @@ function initializeApp(config, dataLock, acquired) {
             '/api/reconnect',
             '/api/state',
             '/api/room-events',
+            '/api/telephone/watch',
             '/api/telephone/draft',
             '/api/bluff/caption',
             '/api/game-song-audio',
@@ -2001,6 +2002,16 @@ function initializeApp(config, dataLock, acquired) {
         if (!room) throw new HttpError(404, 'ROOM_NOT_FOUND', '找不到房間，請確認房間代碼');
         if (kickedUsers.get(room.code)?.has(user.id))
           throw new HttpError(403, 'KICKED', '你已被房主踢出房間');
+        if (url.pathname === '/api/telephone/watch') {
+          if (req.method !== 'GET')
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '觀戰只支援讀取');
+          if (room.type !== 'telephone')
+            throw new HttpError(404, 'WATCH_UNAVAILABLE', '目前只有傳情畫意支援觀戰');
+          limitRate(roomRate, 'telephone-watch:' + user.id, 30);
+          if (seats.get(room.code)?.has(user.id))
+            throw new HttpError(409, 'ALREADY_SEATED', '已入座玩家請使用玩家畫面');
+          return send(room.observerView());
+        }
         // Revoke an expired controller before this request refreshes their seat lease.
         reconcileWatch(room);
         // Any room write may change what the table sees.

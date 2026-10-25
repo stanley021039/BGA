@@ -121,9 +121,9 @@ onMounted(() => {
             :pending="entryBusy || room.connecting"
             :disabled="['kicked', 'closed'].includes(room.terminal || '')"
             @click="page.enter()"
-          /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><a href="/"
-            >返回大廳</a
-          ></div
+          /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><slot
+            name="entry-actions"
+          /><a href="/">返回大廳</a></div
         ><StatusSlot
           persistent
           :message="entryError || room.error"

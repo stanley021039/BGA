@@ -19,6 +19,7 @@ const telephone = useTelephoneStore(),
   confirm = ref<InstanceType<typeof ConfirmDialog> | null>(null),
   tool = ref<DrawingTool>('brush'),
   filled = ref(false),
+  // ui-check-allow hex: 保留既有畫筆預設色，確保畫作工具與舊畫布相容。
   color = ref('#273942'),
   size = ref(6),
   composing = ref(false);
@@ -70,8 +71,13 @@ const waitingFacts = computed(() => [
         : '3–8 人入座',
   },
   {
-    label: '出題／每頁畫猜',
-    value: `${state.value.options.seconds} 秒`,
+    label: '作畫時間',
+    value: `${state.value.options.drawingSeconds} 秒`,
+    note: '每頁到時自動傳頁',
+  },
+  {
+    label: '文字／猜題時間',
+    value: `${state.value.options.textSeconds} 秒`,
     note: '出題全員送出可提前開始',
   },
   { label: '空白主題備援', value: selectedSources.value, note: '先各自出題，再畫圖與猜詞交替' },
@@ -158,7 +164,9 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
               : `來自 ${state.task.previous.authorName} 的畫作`
         }}</span>
         <span v-if="prompting" class="vue-telephone-page-number">{{
-          state.task.submitted ? '主題已送出，等待其他玩家' : '90 秒內出題；全員送出即可開始'
+          state.task.submitted
+            ? '主題已送出，等待其他玩家'
+            : `${state.options.textSeconds} 秒內出題；全員送出即可開始`
         }}</span>
         <span v-else class="vue-telephone-page-number"
           >第 {{ String(state.round).padStart(2, '0') }}／{{
@@ -170,12 +178,12 @@ onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibilit
       </div>
       <RoomCountdown
         :deadline="state.deadline"
-        :duration="90000"
+        :duration="(drawing ? state.options.drawingSeconds : state.options.textSeconds) * 1000"
         :offset="telephone.offset"
         :epoch="state.stepId || 'waiting'"
         :now="telephone.now"
         :caption="prompting ? '出題剩餘' : '本頁剩餘'"
-        empty-value="每頁 90 秒"
+        :empty-value="`每頁 ${drawing ? state.options.drawingSeconds : state.options.textSeconds} 秒`"
         urgent
       />
     </header>

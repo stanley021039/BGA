@@ -40,7 +40,13 @@ export interface TelephoneSnapshot extends RoomSnapshot {
   stepId: string | null;
   deadline: number | null;
   interrupted: boolean;
-  options: { sources: string[]; seconds: 90 };
+  spectator?: boolean;
+  options: {
+    sources: string[];
+    seconds: 90;
+    drawingSeconds: 60 | 90 | 120;
+    textSeconds: 60 | 90 | 120;
+  };
   sources: { id: string; label: string }[];
   task: TelephoneTask | null;
   books: TelephoneBook[];
@@ -129,7 +135,10 @@ export function readTelephoneSnapshot(value: unknown): TelephoneSnapshot {
       if (!text(s.id) || !text(s.label)) return invalid();
       return { id: text(s.id), label: text(s.label) };
     });
-  const selected = array(options.sources);
+  const selected = array(options.sources),
+    drawingSeconds = options.drawingSeconds ?? 90,
+    textSeconds = options.textSeconds ?? 90;
+  const spectator = r.spectator === true;
   if (
     base.type !== 'telephone' ||
     !['waiting', 'prompting', 'passing', 'finished'].includes(base.phase) ||
@@ -140,7 +149,10 @@ export function readTelephoneSnapshot(value: unknown): TelephoneSnapshot {
     r.roundLimit > 8 ||
     r.round > r.roundLimit ||
     typeof r.interrupted !== 'boolean' ||
+    (r.spectator !== undefined && typeof r.spectator !== 'boolean') ||
     options.seconds !== 90 ||
+    ![60, 90, 120].includes(drawingSeconds as number) ||
+    ![60, 90, 120].includes(textSeconds as number) ||
     !selected.length ||
     selected.length > 2 ||
     !selected.every((id) => typeof id === 'string' && sources.some((s) => s.id === id)) ||
@@ -166,31 +178,35 @@ export function readTelephoneSnapshot(value: unknown): TelephoneSnapshot {
     return invalid();
   let task: TelephoneTask | null = null;
   if (['prompting', 'passing'].includes(base.phase)) {
-    const t = record(r.task),
-      kind = r.round % 2 ? 'drawing' : 'text',
-      previous = page(t.previous);
-    if (
-      t.kind !== kind ||
-      (base.phase === 'prompting' ? previous.kind !== 'text' : previous.kind === kind) ||
-      typeof t.submitted !== 'boolean' ||
-      (t.submitted && t.draft !== null)
-    )
-      return invalid();
-    let draft: TelephoneDraft | null = null;
-    if (t.draft !== null) {
-      const d = record(t.draft);
-      if (kind === 'drawing') draft = { strokes: readTelephoneStrokes(d.strokes) };
-      else {
-        if (
-          typeof d.text !== 'string' ||
-          [...d.text].length > 80 ||
-          /[\u0000-\u001f\u007f]/.test(d.text)
-        )
-          return invalid();
-        draft = { text: d.text };
+    if (spectator) {
+      if (r.task !== null) return invalid();
+    } else {
+      const t = record(r.task),
+        kind = r.round % 2 ? 'drawing' : 'text',
+        previous = page(t.previous);
+      if (
+        t.kind !== kind ||
+        (base.phase === 'prompting' ? previous.kind !== 'text' : previous.kind === kind) ||
+        typeof t.submitted !== 'boolean' ||
+        (t.submitted && t.draft !== null)
+      )
+        return invalid();
+      let draft: TelephoneDraft | null = null;
+      if (t.draft !== null) {
+        const d = record(t.draft);
+        if (kind === 'drawing') draft = { strokes: readTelephoneStrokes(d.strokes) };
+        else {
+          if (
+            typeof d.text !== 'string' ||
+            [...d.text].length > 80 ||
+            /[\u0000-\u001f\u007f]/.test(d.text)
+          )
+            return invalid();
+          draft = { text: d.text };
+        }
       }
+      task = { kind, previous, submitted: t.submitted, draft };
     }
-    task = { kind, previous, submitted: t.submitted, draft };
   } else if (r.task !== null) return invalid();
   const books = array(r.books).map((value) => {
     const b = record(value),
@@ -236,7 +252,13 @@ export function readTelephoneSnapshot(value: unknown): TelephoneSnapshot {
     stepId: typeof r.stepId === 'string' ? r.stepId : null,
     deadline: typeof r.deadline === 'number' ? r.deadline : null,
     interrupted: r.interrupted,
-    options: { sources: selected as string[], seconds: 90 },
+    ...(spectator ? { spectator: true } : {}),
+    options: {
+      sources: selected as string[],
+      seconds: 90,
+      drawingSeconds: drawingSeconds as 60 | 90 | 120,
+      textSeconds: textSeconds as 60 | 90 | 120,
+    },
     sources,
     task,
     books,
