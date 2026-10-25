@@ -1,12 +1,190 @@
 'use strict';
-const fs=require('fs'),path=require('path'),assert=require('assert/strict'),{randomUUID}=require('crypto'),{chromium}=require('playwright'),{openDatabase}=require('../../src/db'),{createAuth}=require('../../src/auth'),{createApp}=require('../../src/app'),{QuacksRoom}=require('../../src/games/quacks');
-const out=path.resolve(__dirname,'../../work/qa/quacks-click-fortune');fs.mkdirSync(out,{recursive:true});
-(async()=>{const dir=fs.mkdtempSync(path.join(out,'data-')),dbFile=path.join(dir,'qa.sqlite'),db=openDatabase(dbFile);await createAuth(db).bootstrap('fortune_qa','synthetic-browser-password');db.close();const app=createApp({host:'127.0.0.1',port:0,dbFile,historyDir:path.join(dir,'history'),communityDir:path.join(dir,'community'),musicDir:path.join(dir,'music'),achievementPurpose:'test',externalSideEffectsEnabled:false,marketAutomationEnabled:false,githubClient:{configured:false}});let browser;const evidence=[];
-try{const {port}=await app.listen(),base='http://127.0.0.1:'+port;browser=await chromium.launch({channel:'msedge',headless:true});for(const width of [1440,390]){const ctx=await browser.newContext({viewport:{width,height:900}});await ctx.request.post(base+'/api/auth/login',{data:{username:'fortune_qa',password:'synthetic-browser-password'}});
-const r=new QuacksRoom('ABCDEF','自動占卜',()=>0),b=r.add('乙'),a=r.add('甲');r.configure(b.id,{witches:true});r.rng=n=>n===2?1:0;r.start();assert.notEqual(r.roundStarterId,r.host);let snapshot=r.view(a.id),release;const held=new Promise(resolve=>release=resolve),requests=[],page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.addLocatorHandler(page.locator('#tableMediaConsent[open]'),()=>page.locator('#mediaConsentDecline').click());await page.route('**/api/reconnect',route=>route.fulfill({json:{type:'quacks',code:'ABCDEF'}}));await page.route('**/api/state?*',route=>route.fulfill({json:snapshot}));await page.route('**/api/action',async route=>{const data=route.request().postDataJSON();requests.push(data);if(data.action==='draw-fortune')await held;try{r.act(a.id,data.action,data);snapshot=r.view(a.id);await route.fulfill({json:snapshot});}catch(e){await route.fulfill({status:400,json:{error:e.message,code:e.code}});}});
-await page.goto(base+'/quacks/ABCDEF');await page.locator('#quacksAutoFortune').waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('.auto-fortune-back')?.naturalWidth>0);assert.equal(await page.getByRole('button',{name:'抽一張占卜牌',exact:true}).count(),1);await page.waitForTimeout(1000);assert.equal(requests.length,0);await page.screenshot({path:path.join(out,'auto-back-'+width+'.png')});
-const peer=await ctx.newPage();await peer.addLocatorHandler(peer.locator('#tableMediaConsent[open]'),()=>peer.locator('#mediaConsentDecline').click());await peer.route('**/api/reconnect',route=>route.fulfill({json:{type:'quacks',code:'ABCDEF'}}));await peer.route('**/api/state?*',route=>route.fulfill({json:r.view(b.id)}));await peer.goto(base+'/quacks/ABCDEF');await peer.locator('#fortune.face-down').waitFor({state:'attached'});assert.equal(await peer.locator('#quacksAutoFortune').isVisible(),false);await page.bringToFront();await page.waitForTimeout(1500);assert.equal(requests.length,0);await page.getByRole('button',{name:'抽一張占卜牌',exact:true}).click();for(let i=0;i<40&&!requests.length;i++)await page.waitForTimeout(100);assert.equal(requests.length,1);await page.waitForTimeout(1500);const deck=r.deck.length;release();await page.locator('.draw-action').waitFor();await page.locator('.quacks-fx-scene.card').waitFor();await page.waitForTimeout(1650);await page.screenshot({path:path.join(out,'auto-reveal-'+width+'.png')});await peer.locator('.draw-action').waitFor();await peer.locator('.quacks-fx-scene.card').waitFor();assert.equal(await peer.locator('.quacks-fx-scene.card').count(),1);assert.equal(r.deck.length,deck-1);assert.equal(requests[0].requestId,'fortune-'+r.roundId);
-a.position=8;a.potName='機車幫';r.version++;snapshot=r.view(a.id);await page.waitForFunction(()=>document.querySelector('.pot-name')?.textContent==='機車幫');assert.equal(await page.locator('.settlement-target').getAttribute('data-position'),'9');assert.equal(await page.locator('.settlement-frame').first().evaluate(n=>getComputedStyle(n).stroke),'rgb(101, 232, 255)');await page.waitForTimeout(1200);const short=await page.locator('.pot-nameplate').getAttribute('width');const centered=await page.evaluate(()=>{const t=document.querySelector('.pot-name').getBoundingClientRect(),b=document.querySelector('.pot-nameplate').getBoundingClientRect();return Math.abs((t.x+t.width/2)-(b.x+b.width/2));});assert.ok(centered<2);await page.locator('#qPotName').waitFor();assert.equal(await page.locator('#qPotName').textContent(),'機車幫');const badge=await page.locator('#qPotName').boundingBox(),stage=await page.locator('#qPotStage').boundingBox();assert.ok(badge.x>=stage.x&&badge.x<=stage.x+20);assert.ok(badge.y>=stage.y+35);await page.screenshot({path:path.join(out,'settlement-next-'+width+'.png'),fullPage:true});
-a.potName='一個超級長長長長的好運鍋';a.position=52;r.version++;snapshot=r.view(a.id);await page.waitForFunction(()=>!!document.querySelector('.pot-settlement-terminal'));const long=await page.locator('.pot-nameplate').getAttribute('width');assert.ok(Number(long)>Number(short));assert.equal(await page.locator('.pot-settlement-terminal').getAttribute('data-position'),'53');assert.equal(requests.filter(x=>x.action==='draw-fortune').length,1);
-await page.reload();await page.locator('.draw-action').waitFor();assert.equal(await page.locator('#quacksAutoFortune').isVisible(),false);assert.equal(await page.locator('.quacks-fx-scene.card').count(),0);assert.deepEqual(errors,[]);evidence.push({width,clickRequired:true,nonHostStarter:true,drawRequests:1,stableRequest:true,peerSeesReveal:true,reloadNoReplay:true,settlementSpace:9,terminalSpace:53,nameWidths:[Number(short),Number(long)],centerDelta:centered,errors});await ctx.close();}
-fs.writeFileSync(path.join(out,'evidence.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence));}finally{await browser?.close();await app.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
+const fs = require('fs'),
+  path = require('path'),
+  assert = require('assert/strict'),
+  { randomUUID } = require('crypto'),
+  { chromium } = require('playwright'),
+  { openDatabase } = require('../../src/db'),
+  { createAuth } = require('../../src/auth'),
+  { createApp } = require('../../src/app'),
+  { QuacksRoom } = require('../../src/games/quacks');
+const out = path.resolve(__dirname, '../../work/qa/quacks-click-fortune');
+fs.mkdirSync(out, { recursive: true });
+(async () => {
+  const dir = fs.mkdtempSync(path.join(out, 'data-')),
+    dbFile = path.join(dir, 'qa.sqlite'),
+    db = openDatabase(dbFile);
+  await createAuth(db).bootstrap('fortune_qa', 'synthetic-browser-password');
+  db.close();
+  const app = createApp({
+    host: '127.0.0.1',
+    port: 0,
+    dbFile,
+    communityDir: path.join(dir, 'community'),
+    musicDir: path.join(dir, 'music'),
+    achievementPurpose: 'test',
+    externalSideEffectsEnabled: false,
+    marketAutomationEnabled: false,
+    githubClient: { configured: false },
+  });
+  let browser;
+  const evidence = [];
+  try {
+    const { port } = await app.listen(),
+      base = 'http://127.0.0.1:' + port;
+    browser = await chromium.launch({ channel: 'msedge', headless: true });
+    for (const width of [1440, 390]) {
+      const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+      await ctx.request.post(base + '/api/auth/login', {
+        data: { username: 'fortune_qa', password: 'synthetic-browser-password' },
+      });
+      const r = new QuacksRoom('ABCDEF', '自動占卜', () => 0),
+        b = r.add('乙'),
+        a = r.add('甲');
+      r.configure(b.id, { witches: true });
+      r.rng = (n) => (n === 2 ? 1 : 0);
+      r.start();
+      assert.notEqual(r.roundStarterId, r.host);
+      let snapshot = r.view(a.id),
+        release;
+      const held = new Promise((resolve) => (release = resolve)),
+        requests = [],
+        page = await ctx.newPage(),
+        errors = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+      await page.addLocatorHandler(page.locator('#tableMediaConsent[open]'), () =>
+        page.locator('#mediaConsentDecline').click(),
+      );
+      await page.route('**/api/reconnect', (route) =>
+        route.fulfill({ json: { type: 'quacks', code: 'ABCDEF' } }),
+      );
+      await page.route('**/api/state?*', (route) => route.fulfill({ json: snapshot }));
+      await page.route('**/api/action', async (route) => {
+        const data = route.request().postDataJSON();
+        requests.push(data);
+        if (data.action === 'draw-fortune') await held;
+        try {
+          r.act(a.id, data.action, data);
+          snapshot = r.view(a.id);
+          await route.fulfill({ json: snapshot });
+        } catch (e) {
+          await route.fulfill({ status: 400, json: { error: e.message, code: e.code } });
+        }
+      });
+      await page.goto(base + '/quacks/ABCDEF');
+      await page.locator('#quacksAutoFortune').waitFor({ state: 'visible' });
+      await page.waitForFunction(
+        () => document.querySelector('.auto-fortune-back')?.naturalWidth > 0,
+      );
+      assert.equal(
+        await page.getByRole('button', { name: '抽一張占卜牌', exact: true }).count(),
+        1,
+      );
+      await page.waitForTimeout(1000);
+      assert.equal(requests.length, 0);
+      await page.screenshot({ path: path.join(out, 'auto-back-' + width + '.png') });
+      const peer = await ctx.newPage();
+      await peer.addLocatorHandler(peer.locator('#tableMediaConsent[open]'), () =>
+        peer.locator('#mediaConsentDecline').click(),
+      );
+      await peer.route('**/api/reconnect', (route) =>
+        route.fulfill({ json: { type: 'quacks', code: 'ABCDEF' } }),
+      );
+      await peer.route('**/api/state?*', (route) => route.fulfill({ json: r.view(b.id) }));
+      await peer.goto(base + '/quacks/ABCDEF');
+      await peer.locator('#fortune.face-down').waitFor({ state: 'attached' });
+      assert.equal(await peer.locator('#quacksAutoFortune').isVisible(), false);
+      await page.bringToFront();
+      await page.waitForTimeout(1500);
+      assert.equal(requests.length, 0);
+      await page.getByRole('button', { name: '抽一張占卜牌', exact: true }).click();
+      for (let i = 0; i < 40 && !requests.length; i++) await page.waitForTimeout(100);
+      assert.equal(requests.length, 1);
+      await page.waitForTimeout(1500);
+      const deck = r.deck.length;
+      release();
+      await page.locator('.draw-action').waitFor();
+      await page.locator('.quacks-fx-scene.card').waitFor();
+      await page.waitForTimeout(1650);
+      await page.screenshot({ path: path.join(out, 'auto-reveal-' + width + '.png') });
+      await peer.locator('.draw-action').waitFor();
+      await peer.locator('.quacks-fx-scene.card').waitFor();
+      assert.equal(await peer.locator('.quacks-fx-scene.card').count(), 1);
+      assert.equal(r.deck.length, deck - 1);
+      assert.equal(requests[0].requestId, 'fortune-' + r.roundId);
+      a.position = 8;
+      a.potName = '機車幫';
+      r.version++;
+      snapshot = r.view(a.id);
+      await page.waitForFunction(
+        () => document.querySelector('.pot-name')?.textContent === '機車幫',
+      );
+      assert.equal(await page.locator('.settlement-target').getAttribute('data-position'), '9');
+      assert.equal(
+        await page
+          .locator('.settlement-frame')
+          .first()
+          .evaluate((n) => getComputedStyle(n).stroke),
+        'rgb(101, 232, 255)',
+      );
+      await page.waitForTimeout(1200);
+      const short = await page.locator('.pot-nameplate').getAttribute('width');
+      const centered = await page.evaluate(() => {
+        const t = document.querySelector('.pot-name').getBoundingClientRect(),
+          b = document.querySelector('.pot-nameplate').getBoundingClientRect();
+        return Math.abs(t.x + t.width / 2 - (b.x + b.width / 2));
+      });
+      assert.ok(centered < 2);
+      await page.locator('#qPotName').waitFor();
+      assert.equal(await page.locator('#qPotName').textContent(), '機車幫');
+      const badge = await page.locator('#qPotName').boundingBox(),
+        stage = await page.locator('#qPotStage').boundingBox();
+      assert.ok(badge.x >= stage.x && badge.x <= stage.x + 20);
+      assert.ok(badge.y >= stage.y + 35);
+      await page.screenshot({
+        path: path.join(out, 'settlement-next-' + width + '.png'),
+        fullPage: true,
+      });
+      a.potName = '一個超級長長長長的好運鍋';
+      a.position = 52;
+      r.version++;
+      snapshot = r.view(a.id);
+      await page.waitForFunction(() => !!document.querySelector('.pot-settlement-terminal'));
+      const long = await page.locator('.pot-nameplate').getAttribute('width');
+      assert.ok(Number(long) > Number(short));
+      assert.equal(
+        await page.locator('.pot-settlement-terminal').getAttribute('data-position'),
+        '53',
+      );
+      assert.equal(requests.filter((x) => x.action === 'draw-fortune').length, 1);
+      await page.reload();
+      await page.locator('.draw-action').waitFor();
+      assert.equal(await page.locator('#quacksAutoFortune').isVisible(), false);
+      assert.equal(await page.locator('.quacks-fx-scene.card').count(), 0);
+      assert.deepEqual(errors, []);
+      evidence.push({
+        width,
+        clickRequired: true,
+        nonHostStarter: true,
+        drawRequests: 1,
+        stableRequest: true,
+        peerSeesReveal: true,
+        reloadNoReplay: true,
+        settlementSpace: 9,
+        terminalSpace: 53,
+        nameWidths: [Number(short), Number(long)],
+        centerDelta: centered,
+        errors,
+      });
+      await ctx.close();
+    }
+    fs.writeFileSync(path.join(out, 'evidence.json'), JSON.stringify(evidence, null, 2));
+    console.log(JSON.stringify(evidence));
+  } finally {
+    await browser?.close();
+    await app.close();
+  }
+})().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

@@ -75,7 +75,6 @@ test('a snapshot from before callbacks were checked skips a thunder room with an
   const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'bga-room-legacy-'));
   const config = {
     dbFile: path.join(root, 'app.sqlite'),
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     musicDir: path.join(root, 'music'),
     host: '127.0.0.1',
@@ -140,7 +139,6 @@ test('open rooms of every game survive an app restart and keep playing', async (
   });
   const config = {
     dbFile: path.join(root, 'app.sqlite'),
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     musicDir: path.join(root, 'music'),
     host: '127.0.0.1',
@@ -224,7 +222,7 @@ test('open rooms of every game survive an app restart and keep playing', async (
       type + ' keeps its instance ids',
     );
   }
-  // Bots keep playing after the restart, through the restored scheduler and history.
+  // Bots keep playing after the restart, through the restored scheduler.
   await new Promise((resolve) => setTimeout(resolve, 2500));
   let advanced = 0;
   for (const [type, { code, state }] of before) {
@@ -234,12 +232,6 @@ test('open rooms of every game survive an app restart and keep playing', async (
     if (after.body.stateTag !== state.stateTag) advanced++;
   }
   assert.ok(advanced > 0, 'restored games continue changing');
-  const resumed = fs
-    .readdirSync(config.historyDir)
-    .filter((name) => name.endsWith('.meta.json'))
-    .map((name) => JSON.parse(fs.readFileSync(path.join(config.historyDir, name), 'utf8')))
-    .filter((meta) => meta.status === 'playing' || meta.status === 'finished');
-  assert.ok(resumed.length > 0, 'started matches keep recording in their history archive');
 });
 
 test('a closing server turns away new requests, so reconnecting streams cannot hold it open', async (t) => {
@@ -288,7 +280,6 @@ test('a server that fails to start leaves the saved rooms for the next attempt',
   });
   const config = {
     dbFile: path.join(root, 'app.sqlite'),
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     musicDir: path.join(root, 'music'),
     host: '127.0.0.1',

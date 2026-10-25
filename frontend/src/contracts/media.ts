@@ -192,6 +192,7 @@ export interface MediaPlayerView {
   publishReason: string;
 }
 export interface MediaPlayer {
+  relocate?(): void;
   update(value: MediaSnapshot, marker: MediaMarker | null, serverNow: number): void;
   setWindow(open: boolean, collapsed?: boolean, keepVideo?: boolean): void;
   setMarker(value: MediaMarker | null): void;

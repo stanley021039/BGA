@@ -37,7 +37,6 @@ test('custom named image expressions appear in profile, avatar, and room interac
   const config = {
     port: 0,
     host: '127.0.0.1',
-    historyDir: path.join(root, 'history'),
     communityDir: path.join(root, 'community'),
     dbFile: path.join(root, 'app.sqlite'),
   };

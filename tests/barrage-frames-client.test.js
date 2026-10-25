@@ -116,7 +116,7 @@ test('all header entry points load the same frame preference module and shared f
       html: fs.readFileSync(path.join(__dirname, '../frontend/pages', id, 'index.html'), 'utf8'),
     }))
     .filter((page) => page.html.includes('data-site-header'));
-  assert.equal(pages.length, 26);
+  assert.equal(pages.length, 25);
   for (const { name, html } of pages) {
     assert.doesNotMatch(html, /src="\/shared\/[^"]+\.js/);
     assert.match(

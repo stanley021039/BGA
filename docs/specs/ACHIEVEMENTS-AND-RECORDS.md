@@ -27,7 +27,7 @@ schema **17** 新增兩張表；舊 schema 16 遷移只加空表，不改舊徽�
 | `src/achievements/store.js` | 五枚定義：gift-first-gift、majority-first-vote、poker-first-hand、thunder-first-drive、all-first-table；`user_achievements`主鍵 `(user_id,achievement_id)`，重複授予 INSERT OR IGNORE | 沒有 draw hook、事件型趣味條件、統一成就進度或勝利ledger；`processed`為WeakSet，不是跨重啟處理紀錄 |
 | `src/app.js` | 在狀態流程呼叫gift／majority／poker／thunder發放；GET `/api/achievements`可讀帳號成就 | 沒有畫猜發放入口；必須以結算事件取代依當下room反覆推測 |
 | `public/achievements.html/js` | 可查看已解鎖日期與説明 | 頁首仍說送禮一枚、其他規劃，與五枚store不一致；應由metadata渲染實際遊戲範圍 |
-| `src/history/store.js` | session／match UUID、JSONL意圖與結果、engine hash、finished/interrupted metadata | 玩家只存座位／名字，沒有不可變帳號映射；不能靠暱稱從歷史補勝。整份history不直接當公開戰績資料 |
+| `src/history/store.js` | session／match UUID、JSONL意圖與結果、engine hash、finished/interrupted metadata | 玩家只存座位／名字，沒有不可變帳號映射；不能靠暱稱從歷史補勝。整份history不直接當公開戰績資料 （2026-10-25 #267 已移除，v3.0.0 起取代） |
 | 遊戲 engine | draw／majority有winner.ids，gift有雙軌達標winner.ids，race有winner.id，poker results按人聚合 | 各遊戲結算單位與平手不同；部分玩家不足也phase finished，不能當正常競技勝利 |
 
 原五枚已取得者保留 ID 與取得日期，不撤銷、不重新刷一遍。五枚條件沒有因本文件而更改。既有資料與新ledger的遷移見 [多環境資料 spec](MULTI-ENV-DATA-MIGRATION.md)。

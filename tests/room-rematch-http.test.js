@@ -5,7 +5,7 @@ const { appFixture } = require('./helpers/app-fixture.cjs');
 const { createAuth } = require('../src/auth');
 const { createApp } = require('../src/app');
 
-test('three authenticated seats see rematch waiting after reconnect/restart; completed history remains separate', async (t) => {
+test('three authenticated seats see rematch waiting after reconnect/restart without a debug history recorder', async (t) => {
   let restarted;
   t.after(() => restarted?.close());
   const f = await appFixture(t, {
@@ -60,7 +60,7 @@ test('three authenticated seats see rematch waiting after reconnect/restart; com
     await call(0, 'action', { code, action: 'next' });
   }
   assert.equal((await state(0)).phase, 'finished');
-  const history = await call(0, 'history');
+  await call(0, 'history', undefined, 404);
   const waiting = await call(0, 'rematch', { code });
   assert.equal(waiting.phase, 'waiting');
   assert.ok(waiting.version > initial.version);
@@ -78,7 +78,7 @@ test('three authenticated seats see rematch waiting after reconnect/restart; com
     assert.equal(s.question, null);
     assert.equal(s.options.rounds, 3);
   }
-  assert.deepEqual(await call(0, 'history'), history, 'returning does not erase completed history');
+  await call(0, 'history', undefined, 404);
   await f.app.close();
   restarted = createApp(f.config);
   base = 'http://127.0.0.1:' + (await restarted.listen()).port;
