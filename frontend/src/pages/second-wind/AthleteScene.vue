@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import UiDialog from '../../components/UiDialog.vue';
 import UiHoverInfo from '../../components/UiHoverInfo.vue';
 import { useAthleteStore } from '../../stores/second-wind';
 import { usePartyActionsStore } from '../../stores/party-actions';
@@ -30,6 +31,36 @@ const ownerName = (id: string) =>
     .map(name)
     .join('、');
 const racersOpen = ref(false);
+const twistDialog = ref<InstanceType<typeof UiDialog> | null>(null);
+// The server retains the preceding race's cards during secret selection.
+// Those cards must not mark the new race as already shown.
+const twistCount = computed(() =>
+  ['racing', 'race-result', 'finished'].includes(game.value.phase)
+    ? game.value.twistCards?.length || 0
+    : 0,
+);
+const twistScope = computed(
+  () => `${athlete.state?.code}:${athlete.state?.roundId}:${game.value.race}`,
+);
+let twistAutoShown = twistCount.value > 0;
+watch(
+  () => [twistScope.value, twistCount.value] as const,
+  ([scope, count], [previousScope]) => {
+    if (scope !== previousScope) {
+      twistAutoShown = count > 0;
+      twistDialog.value?.close();
+      // Fast consecutive remote actions may skip the empty new-race snapshot.
+      // A live new race in this game still announces its first observed Twist.
+      const session = scope.slice(0, scope.lastIndexOf(':'));
+      const previousSession = previousScope.slice(0, previousScope.lastIndexOf(':'));
+      if (count > 0 && session === previousSession) void twistDialog.value?.open();
+    } else if (count > 0 && !twistAutoShown) {
+      twistAutoShown = true;
+      void twistDialog.value?.open();
+    }
+  },
+  { flush: 'post' },
+);
 const turnPlayers = computed(() => {
   const ids = picking.value
     ? [...new Set(game.value.draftOrder || game.value.players)]
@@ -273,46 +304,15 @@ const eventText = eventBody;
     </UiPanel>
     <template v-if="game.racers?.length">
       <UiPanel :title="game.trackId === 'twisty-twirl' ? '曲折賽道' : '漩渦賽道'">
-        <template #title-before
-          ><UiHoverInfo title="賽道專屬規則" help-only interactive
-            ><template #info>
-              <template v-if="track === 'twisty-twirl'"
-                ><p>本場第一次跨越中央 Twist 圖示時觸發一張 Twist 卡；後續經過不再觸發。</p
-                ><p>觸發進度：14 格。</p></template
-              >
-              <template v-else
-                ><p>停在漩渦入口時，依賽道配對傳送至另一端；不是僅經過就觸發。</p
-                ><p
-                  >目前漩渦配對：{{
-                    [4, 8, 11, 17, 20, 24]
-                      .map((n) => (game.direction === -1 ? 30 - n : n))
-                      .map((n) => `${n} ↔ ${portal(n)}`)
-                      .join('、')
-                  }}。</p
-                ></template
-              >
-              <p
-                >{{
-                  game.direction === -1 ? '目前為 Mirror World 逆向競速。' : '目前為順向競速。'
-                }}手機可左右捲動查看完整賽道。</p
-              >
-              <UiHeading :level="3">本場 Twist</UiHeading>
-              <div v-if="game.twistCards?.length" class="athlete-twists"
-                ><div v-for="card in game.twistCards" :key="card.id"
-                  ><p>{{ card.summary }}</p
-                  ><AthleteArt
-                    :src="athleteArt(card.id, 'twist')"
-                    alt="本場生效的原版 Twist 卡"
-                    :width="428"
-                    :height="236" /></div></div
-              ><p v-else>尚未觸發 Twist。</p>
-            </template></UiHoverInfo
-          ></template
-        >
         <template #title-after
           ><AthleteTurnOrder
             :players="turnPlayers"
             :active="game.phase === 'racing' ? game.pending?.playerId || game.turnId : null"
+        /></template>
+        <template #actions
+          ><UiButton
+            :label="twistCount ? '查看已觸發twist' : '尚未觸發twist'"
+            @click="twistDialog?.open()"
         /></template>
         <div class="athlete-action-slot"
           ><UiButton
@@ -494,6 +494,38 @@ const eventText = eventBody;
         ><UiButton v-if="room.host" label="再玩一局" @click="athlete.start()"
       /></div>
     </UiPanel>
+    <UiDialog ref="twistDialog" title="本場 Twist">
+      <template v-if="track === 'twisty-twirl'"
+        ><p>本場第一次跨越中央 Twist 圖示時觸發一張 Twist 卡；後續經過不再觸發。</p
+        ><p>觸發進度：14 格。</p></template
+      >
+      <template v-else
+        ><p>停在漩渦入口時，依賽道配對傳送至另一端；不是僅經過就觸發。</p
+        ><p
+          >目前漩渦配對：{{
+            [4, 8, 11, 17, 20, 24]
+              .map((n) => (game.direction === -1 ? 30 - n : n))
+              .map((n) => `${n} ↔ ${portal(n)}`)
+              .join('、')
+          }}。</p
+        ></template
+      >
+      <p
+        >{{
+          game.direction === -1 ? '目前為 Mirror World 逆向競速。' : '目前為順向競速。'
+        }}手機可左右捲動查看完整賽道。</p
+      >
+      <UiHeading :level="3">已觸發的 Twist</UiHeading>
+      <div v-if="game.twistCards?.length" class="athlete-twists"
+        ><div v-for="card in game.twistCards" :key="card.id"
+          ><p>{{ card.summary }}</p
+          ><AthleteArt
+            :src="athleteArt(card.id, 'twist')"
+            alt="本場已觸發的原版 Twist 卡"
+            :width="428"
+            :height="236" /></div></div
+      ><p v-else>尚未觸發 Twist。</p>
+    </UiDialog>
     <UiPanel title="賽況紀錄"
       ><UiList class="athlete-events"
         ><UiListRow v-for="event in [...game.events].reverse()" :key="event.id">{{
