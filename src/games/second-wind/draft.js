@@ -177,6 +177,13 @@ class SecondWindDraft {
   view(playerId) {
     const state = this.#state;
     if (!state.players.includes(playerId)) fail('NOT_SEATED', '尚未入座', 403);
+    return this.#project(playerId);
+  }
+  observerView() {
+    return this.#project(null);
+  }
+  #project(playerId) {
+    const state = this.#state;
     return clone({
       type: 'second-wind',
       stage: 'recruiting-core',
@@ -193,7 +200,7 @@ class SecondWindDraft {
       rolloffAttempt: state.rolloffAttempt,
       raceFirst: state.raceFirst,
       selectedIds: Object.keys(state.selections),
-      ownSelection: state.selections[playerId] || null,
+      ownSelection: playerId !== null ? state.selections[playerId] || null : null,
       lineup: state.lineup,
       remainingRacers: state.deck.length,
       events: state.events,

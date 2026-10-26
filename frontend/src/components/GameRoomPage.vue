@@ -15,6 +15,7 @@ import RoomManager from './RoomManager.vue';
 import RoomHeader from './RoomHeader.vue';
 import RoomLeaveButton from './RoomLeaveButton.vue';
 import UiButton from './UiButton.vue';
+import UiLink from './UiLink.vue';
 import UiDialog from './UiDialog.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/game-room.scss';
@@ -126,6 +127,11 @@ onMounted(() => {
             :pending="entryBusy || room.connecting"
             :disabled="['kicked', 'closed'].includes(room.terminal || '')"
             @click="page.enter()"
+          /><UiLink
+            v-if="entryCode"
+            href="?watch=1"
+            icon="play"
+            label="以觀戰身分觀看這一桌"
           /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><slot
             name="entry-actions"
           /><a href="/">返回大廳</a></div

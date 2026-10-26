@@ -4,12 +4,13 @@ import MotionPolicy from '../../engines/motion-policy.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useLobbyStore } from '../../stores/lobby';
 import { useSessionStore } from '../../stores/session';
-import { isGameType, type GameType } from '../../contracts/room';
+import { gamePath, isGameType, type GameType } from '../../contracts/room';
 import { gameCards, gameTitle, loungeCard } from './catalog';
 import GameCarousel from './GameCarousel.vue';
 import LobbyBackdrop from './LobbyBackdrop.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiLink from '../../components/UiLink.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
@@ -235,7 +236,11 @@ onBeforeUnmount(() => {
                             : '已開始'
                   "
                   :disabled="!room.joinable || lobby.entryPending"
-                  @click="lobby.enter({ code: room.code })" /></div></article></div></section
+                  @click="lobby.enter({ code: room.code })" /><UiLink
+                  v-if="!room.seated && !room.kicked"
+                  :href="'/' + gamePath(room.type) + '/' + room.code + '?watch=1'"
+                  label="觀戰"
+                  icon="play" /></div></article></div></section
         ><section class="vue-lobby-code"
           ><h2>朋友已經開桌？</h2
           ><form @submit.prevent="lobby.enter({ code })"
@@ -339,7 +344,11 @@ onBeforeUnmount(() => {
                           : '人數已滿'
                   "
                   :disabled="!room.joinable || lobby.entryPending"
-                  @click="lobby.enter({ code: room.code })" /></div></article></div></section></div
+                  @click="lobby.enter({ code: room.code })" /><UiLink
+                  v-if="!room.seated && !room.kicked"
+                  :href="'/' + gamePath(room.type) + '/' + room.code + '?watch=1'"
+                  label="觀戰"
+                  icon="play" /></div></article></div></section></div
     ></UiDialog>
     <UiDialog
       ref="create"

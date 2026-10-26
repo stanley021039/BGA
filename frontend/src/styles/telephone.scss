@@ -514,57 +514,6 @@
   }
 }
 
-.vue-telephone-spectator {
-  box-sizing: border-box;
-  display: grid;
-  gap: var(--stitch-gap-section);
-  width: min(100%, 72rem);
-  margin-inline: auto;
-  padding: var(--stitch-page-gutter);
-}
-.vue-telephone-spectator-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--stitch-gap-controls);
-  > div {
-    min-width: 0;
-  }
-  p,
-  h1 {
-    margin: 0;
-  }
-}
-.vue-telephone-spectator-roster ul,
-.vue-telephone-spectator-books ol {
-  display: grid;
-  gap: var(--stitch-gap-inline);
-  margin: 0;
-  padding-inline-start: var(--stitch-space-24);
-}
-.vue-telephone-spectator-roster li {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--stitch-gap-inline);
-  min-width: 0;
-}
-.vue-telephone-spectator-progress > p {
-  margin: 0;
-}
-.vue-telephone-spectator-books {
-  display: grid;
-  gap: var(--stitch-gap-section);
-}
-.vue-telephone-spectator-books li {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.vue-telephone-spectator-books .vue-telephone-canvas {
-  max-width: min(100%, 32rem);
-}
-
 @media (min-width: 1181px) and (min-height: 640px) and (pointer: fine) {
   body.vue-telephone-document:not(.ui-large-text) {
     margin: 0;

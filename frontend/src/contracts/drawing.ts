@@ -247,8 +247,13 @@ declare global {
       ): [number, number];
       createDrawingRenderer(
         canvas: HTMLCanvasElement,
-        options?: { maxCheckpoints?: number },
+        options?: {
+          maxCheckpoints?: number;
+          separateMutable?: boolean;
+          atomicPresentation?: boolean;
+        },
       ): {
+        render(strokes: unknown[]): unknown;
         renderCooperatively(strokes: DrawingStroke[]): Promise<boolean>;
         reset(): void;
         whenIdle(): Promise<void>;
