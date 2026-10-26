@@ -1005,4 +1005,18 @@ body.vue-poker-document .vue-room-player-status {
       }
     }
   }
+  @media (max-width: 380px) {
+    // A single column keeps names and chip totals readable on narrow phones.
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .vue-poker-table-center {
+      inline-size: 100%;
+      min-block-size: 110px;
+    }
+    .vue-poker-seat[data-seat-slot] {
+      flex: none;
+      inline-size: min(100%, 220px);
+    }
+  }
 }
