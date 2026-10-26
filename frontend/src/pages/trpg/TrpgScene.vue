@@ -43,7 +43,7 @@ function input(event: Event) {
     type="trpg"
     title="霧港跑團"
     hero-title="冒險就此出發"
-    description="1–6 人合作冒險 · 六幕原創故事"
+    description="1–8 人合作冒險 · 六幕原創故事"
     art="/assets/playful/game-trpg.svg"
     :facts="[
       { label: '冒險', value: state.adventure },
@@ -180,7 +180,7 @@ function input(event: Event) {
           ><p>可在房間設定重新選角色，再由房主或管理者開始下一場。</p></template
         ><template v-else
           ><p>先在房間設定選擇你的角色，再由房主或管理者開始冒險。</p
-          ><p>1–6 人皆可玩；腳本夥伴用來試玩流程。</p></template
+          ><p>1–8 人皆可玩；腳本夥伴用來試玩流程。</p></template
         >
       </section></div
     >
