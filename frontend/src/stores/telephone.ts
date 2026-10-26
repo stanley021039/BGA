@@ -24,16 +24,29 @@ export const useTelephoneStore = defineStore('telephone', () => {
     setup = computed(() => !!state.value && ['waiting', 'finished'].includes(state.value.phase)),
     settingsEditable = computed(() => room.settingsManager && setup.value && !room.terminal);
   const sources = ref<string[]>([]),
+    drawingSeconds = ref<60 | 90 | 120>(90),
+    textSeconds = ref<60 | 90 | 120>(90),
     canonical = ref(''),
-    settingsDirty = computed(() => JSON.stringify([...sources.value].sort()) !== canonical.value);
-  const settings = useQueuedSave<{ sources: string[] }>({
+    settingsDirty = computed(
+      () =>
+        JSON.stringify({
+          sources: [...sources.value].sort(),
+          drawingSeconds: drawingSeconds.value,
+          textSeconds: textSeconds.value,
+        }) !== canonical.value,
+    );
+  const settings = useQueuedSave<{
+    sources: string[];
+    drawingSeconds: 60 | 90 | 120;
+    textSeconds: 60 | 90 | 120;
+  }>({
     allowed: () => settingsEditable.value,
     blocked: () => room.busy,
     save: (value) => room.command('settings', value),
     failure: () => room.message,
   });
   watch(
-    [() => JSON.stringify(state.value?.options.sources), settingsEditable, () => room.scope],
+    [() => JSON.stringify(state.value?.options), settingsEditable, () => room.scope],
     () => {
       const current = state.value;
       if (!current) return;
@@ -41,8 +54,16 @@ export const useTelephoneStore = defineStore('telephone', () => {
         !canonical.value ||
         !settingsEditable.value ||
         (!settings.pending.value && !settingsDirty.value);
-      canonical.value = JSON.stringify([...current.options.sources].sort());
-      if (adopt) sources.value = [...current.options.sources];
+      canonical.value = JSON.stringify({
+        sources: [...current.options.sources].sort(),
+        drawingSeconds: current.options.drawingSeconds,
+        textSeconds: current.options.textSeconds,
+      });
+      if (adopt) {
+        sources.value = [...current.options.sources];
+        drawingSeconds.value = current.options.drawingSeconds;
+        textSeconds.value = current.options.textSeconds;
+      }
       if (!settingsEditable.value) settings.reset();
     },
     { immediate: true },
@@ -54,7 +75,11 @@ export const useTelephoneStore = defineStore('telephone', () => {
       settings.invalidate('至少選擇一種情境題庫。');
       return;
     }
-    settings.enqueue({ sources: [...sources.value] });
+    settings.enqueue({
+      sources: [...sources.value],
+      drawingSeconds: drawingSeconds.value,
+      textSeconds: textSeconds.value,
+    });
   }
   async function start() {
     if (!settingsEditable.value || (state.value?.players.length || 0) < 3) return;
@@ -447,6 +472,8 @@ export const useTelephoneStore = defineStore('telephone', () => {
     setup,
     settingsEditable,
     sources,
+    drawingSeconds,
+    textSeconds,
     queueSources,
     start,
     settingsPending: settings.pending,
