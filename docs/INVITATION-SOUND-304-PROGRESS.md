@@ -1,6 +1,6 @@
 # #304 邀請通知音效：本機交付
 
-2026-10-27，Issue #304 起始無in-progress標籤，已加上再開始實作。分支 `codex/invitation-sound-304`，規格見 [通知契約](specs/INVITATION-SOUND-304.md)。候選3.10.0；使用者尚未驗收、未發新PR、未執行必要Linux CI、合併或部署。
+2026-10-27，Issue #304 起始無in-progress標籤，已加上再開始實作。分支 `codex/invitation-sound-304`，規格見 [通知契約](specs/INVITATION-SOUND-304.md)。候選3.10.0；使用者「可以pr了」接受本機交付並要求發布準備，不代表逐項人工實測。兩輪審查完成；新PR仍待本次具體確認，未執行必要Linux CI、合併或部署。
 
 ## 實作
 
@@ -29,4 +29,4 @@ Edge使用獨立SQLite、兩個合成帳號及真邀請API，證據位於忽略�
 
 同站補充生命週期驗收三項通過（`lifetime-checks.json`）：真Audio建立數確認靜音收件為0；播放中pagehide後paused且src清除，受控pageshow恢復不重播；播放中關音效停止，重開不補播。兩次新提示均有原生playing，沒有pageerror。受控DOM事件不等於OS背景排程或全面BFCache實機驗收。
 
-所有帳密、SQLite與截圖只保存在本機隔離測試目錄，不附GitHub。待使用者試音與驗收後再進入正式兩輪審查；建立新PR及轉Ready須另有本次具體確認。
+所有帳密、SQLite與截圖只保存在本機隔離測試目錄，不附GitHub。兩個分開回合見 [規格審查](reviews/INVITATION-SOUND-304-SPEC.md) 及 [品質審查](reviews/INVITATION-SOUND-304-QUALITY.md)：base a522206／head 88045bb，已檢查範圍未發現問題。最終發布準備只補文件，需核對產品／測試內容不變；建立新PR及轉Ready須另有本次具體確認。
