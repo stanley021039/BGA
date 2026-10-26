@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useTelephoneStore } from '../../stores/telephone';
 import { useRoomStore } from '../../stores/room';
 import { readTelephoneSnapshot } from '../../contracts/telephone';
@@ -10,21 +10,9 @@ import UiCheckbox from '../../components/UiCheckbox.vue';
 import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import TelephoneScene from './TelephoneScene.vue';
-import TelephoneSpectator from './TelephoneSpectator.vue';
 const telephone = useTelephoneStore(),
   room = useRoomStore(),
-  state = computed(() => telephone.state),
-  entryCode = /^\/telephone\/([a-f0-9]{6})\/?$/i.exec(location.pathname)?.[1]?.toUpperCase() || '',
-  watching = ref(new URLSearchParams(location.search).get('watch') === '1' && !!entryCode);
-function startWatching() {
-  if (!entryCode) return;
-  history.replaceState(null, '', location.pathname + '?watch=1');
-  watching.value = true;
-}
-function stopWatching() {
-  history.replaceState(null, '', location.pathname);
-  watching.value = false;
-}
+  state = computed(() => telephone.state);
 const players = computed(() => state.value?.players.filter((player) => !player.kicked).length || 0),
   timeOptions = [60, 90, 120].map((seconds) => ({ value: seconds, label: `${seconds} 秒` })),
   sourceLabel = computed(
@@ -83,9 +71,7 @@ function status(player: RoomPlayer) {
 }
 </script>
 <template>
-  <TelephoneSpectator v-if="watching" :code="entryCode" @leave="stopWatching" />
   <GameRoomPage
-    v-else
     type="telephone"
     title="傳情畫意"
     description="3–8 人 · 先各自出題，再畫圖與猜詞交替 · 不計個人分數"
@@ -108,9 +94,6 @@ function status(player: RoomPlayer) {
     :start-label="state?.phase === 'finished' ? '再傳一場' : '開始傳遞'"
     @start="telephone.start()"
   >
-    <template #entry-actions
-      ><UiButton v-if="entryCode" icon="play" label="以觀戰身分觀看這一桌" @click="startWatching"
-    /></template>
     <TelephoneScene v-if="state" :key="room.scope" /><section v-else class="vue-game-panel"
       ><h1>正在讀取傳情畫意房間…</h1></section
     >

@@ -338,6 +338,13 @@ class CeoGame {
     const state = this.#state;
     if (!state.players.some((player) => player.id === playerId))
       fail('NOT_SEATED', '尚未入座', 403);
+    return this.#project(playerId);
+  }
+  observerView() {
+    return this.#project(null);
+  }
+  #project(playerId) {
+    const state = this.#state;
     const finished = state.phase === 'finished';
     return clone({
       type: 'ceo',
@@ -365,7 +372,8 @@ class CeoGame {
         publicAssets: group.publicAssets,
         companies: group.companies,
         adjustmentCount: group.changes.length,
-        adjustments: finished || group.playerId === playerId ? group.changes : null,
+        adjustments:
+          finished || (playerId !== null && group.playerId === playerId) ? group.changes : null,
         income: [group.card, ...group.companies].reduce((sum, card) => sum + card.income, 0),
         nextStockPrice: group.playerId !== null && group.sold < 7 ? STOCK_PRICES[group.sold] : null,
       })),

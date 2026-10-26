@@ -343,7 +343,11 @@ onBeforeUnmount(() => {
         :label="entryCode ? '加入這一桌' : '開一桌你畫我猜'"
         :pending="entryBusy || room.connecting"
         :disabled="['kicked', 'closed'].includes(room.terminal || '')"
-        @click="enter" /><a href="/">返回大廳</a
+        @click="enter" /><UiLink
+        v-if="entryCode"
+        href="?watch=1"
+        icon="play"
+        label="以觀戰身分觀看這一桌" /><a href="/">返回大廳</a
       ><StatusSlot
         persistent
         :message="entryError || room.error"

@@ -129,11 +129,18 @@ onMounted(() => {
             :pending="entryBusy || room.connecting"
             :disabled="['kicked', 'closed'].includes(room.terminal || '')"
             @click="page.enter()"
-          /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><UiLink
+          /><UiLink
+            v-if="entryCode"
+            href="?watch=1"
+            icon="play"
+            label="以觀戰身分觀看這一桌"
+          /><UiLink
             :href="'/' + gamePath(type) + '?learn=1'"
             label="試玩教學"
             icon="play"
-          /><slot name="entry-actions" /><a href="/">返回大廳</a></div
+          /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><slot
+            name="entry-actions"
+          /><a href="/">返回大廳</a></div
         ><StatusSlot
           persistent
           :message="entryError || room.error"

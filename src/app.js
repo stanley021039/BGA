@@ -95,6 +95,7 @@ const { withEntryIntro } = require('./http/entry-intro');
 const { createRoomTransitions } = require('./rooms/transitions');
 const { returnToWaiting } = require('./rooms/rematch');
 const { roomGames, switchGame, assertGameContext } = require('./rooms/game-switch');
+const { spectatorView, observerAudioContext } = require('./rooms/spectator');
 const { createStateStream, stateTag } = require('./rooms/state-stream');
 const roomPersistence = require('./rooms/persistence');
 const { botSupport, addTestBot } = require('./ai');
@@ -2044,6 +2045,8 @@ function initializeApp(config, dataLock, acquired) {
             '/api/state',
             '/api/room-events',
             '/api/telephone/watch',
+            '/api/watch',
+            '/api/watch-audio',
             '/api/telephone/draft',
             '/api/bluff/caption',
             '/api/game-song-audio',
@@ -2082,6 +2085,17 @@ function initializeApp(config, dataLock, acquired) {
         if (!room) throw new HttpError(404, 'ROOM_NOT_FOUND', '找不到房間，請確認房間代碼');
         if (kickedUsers.get(room.code)?.has(user.id))
           throw new HttpError(403, 'KICKED', '你已被房主踢出房間');
+        if (['/api/watch', '/api/watch-audio'].includes(url.pathname)) {
+          const audio = url.pathname === '/api/watch-audio';
+          if (req.method !== 'GET' && !(audio && req.method === 'HEAD'))
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '觀戰只支援讀取');
+          limitRate(roomRate, (audio ? 'watch-audio:' : 'watch:') + user.id, audio ? 120 : 90);
+          if (seats.get(room.code)?.has(user.id))
+            throw new HttpError(409, 'ALREADY_SEATED', '已入座玩家請使用玩家畫面');
+          if (audio)
+            return gameAudio.serve(req, res, room, observerAudioContext(room), url.searchParams);
+          return send(spectatorView(room, gameAudio));
+        }
         if (url.pathname === '/api/telephone/watch') {
           if (req.method !== 'GET')
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '觀戰只支援讀取');
