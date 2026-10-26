@@ -1,6 +1,6 @@
 # #297 互動回饋／#299 全遊戲試玩教學
 
-2026-10-26，基於 main 74a01938。兩張既有票均未標進行中，開始時已加標籤；使用者授權開發，尚未授權本批 PR。
+2026-10-26，基於 main 74a01938。兩張既有票均未標進行中，開始時已加標籤；使用者授權開發；本機開啟隔離試玩版後，於同日回覆「ok 幫我pr」，已取得本批 PR 的明確授權。
 
 ## #299 範圍與驗收
 
@@ -16,7 +16,7 @@
 
 ## 狀態
 
-候選版本3.8.0，分支 `codex/interactions-tutorials-297-299`。已完成本機實作與代理驗收；尚未人工驗收、開 PR、CI、合併或部署。開 PR 前須再次取得本次明確同意。
+候選版本3.8.0，分支 `codex/interactions-tutorials-297-299`。已完成本機實作與代理驗收，使用者已開啟指定分支的本機隔離測試版（82f3210，127.0.0.1:3064），並回覆「ok 幫我pr」。這代表本次 PR 授權，不額外宣稱每款遊戲均由真人逐一完成。PR、兩輪審查與最終 head CI 結果以 GitHub 紀錄為準；未部署。
 
 ## 本機證據（2026-10-26）
 
@@ -34,4 +34,4 @@
 
 最終前端全套210通過、0失敗／取消／略過；包含3項畫猜教學持筆／ACK／重試／舊輪次回覆測試。曾有3項測試因 VM 未提供 document 失敗，補齊測試環境後重跑全套通過，未略過失敗項目。
 
-最終 `frontend:build`（含 vue-tsc）、`ui:check`、`release:check -- --base origin/main --type minor`、`perf:check` 及 `git diff --check` 通過。格式經 `npm run format`／`format:check` 處理。交付前重新 fetch，main 仍為74a01938；本批沒有執行 GitHub CI。
+最終 `frontend:build`（含 vue-tsc）、`ui:check`、`release:check -- --base origin/main --type minor`、`perf:check` 及 `git diff --check` 通過。格式經 `npm run format`／`format:check` 處理。交付前重新 fetch，main 仍為74a01938；上述為開 PR 前的本機證據；建立 PR 後以最終 head 的 GitHub CI 驗證完整檢查，不沿用其他提交綠燈。
