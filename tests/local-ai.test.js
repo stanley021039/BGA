@@ -4,6 +4,8 @@ const { MajorityRoom } = require('../src/games/majority');
 const { GiftRoom } = require('../src/games/gift');
 const { DrawGuessRoom } = require('../src/games/draw-guess');
 const { Room } = require('../src/games/poker');
+const { MinimalRoom } = require('../src/games/minimal');
+const { TrpgRoom } = require('../src/games/trpg');
 const { addTestBot, botSupport, runTestAIStep, registerTestAI } = require('../src/ai');
 const { leavePlayer, expireEmptyRooms } = require('../src/rooms/lifecycle');
 function harness(t, RoomClass) {
@@ -45,7 +47,9 @@ function harness(t, RoomClass) {
 }
 test('each supported game accepts AI up to capacity with unique visible names', () => {
   for (const [RoomClass, max] of [
-    [Room, 6],
+    [Room, 8],
+    [MinimalRoom, 8],
+    [TrpgRoom, 8],
     [MajorityRoom, 12],
     [GiftRoom, 8],
     [DrawGuessRoom, 8],

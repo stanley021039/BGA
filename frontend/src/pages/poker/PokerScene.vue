@@ -44,10 +44,10 @@ const turnHint = computed(() =>
       type="poker"
       title="德州撲克"
       hero-title="好牌已備，等你入座。"
-      description="2–6 人一起玩。跟注、加注，或把這一手全部押上。"
+      description="2–8 人一起玩。跟注、加注，或把這一手全部押上。"
       art="/assets/playful/game-poker.svg"
       :facts="[
-        { label: '入座人數', value: state.players.length + '／6 位' },
+        { label: '入座人數', value: state.players.length + '／8 位' },
         { label: '起始籌碼', value: '2,000' },
         { label: '盲注', value: '10／20' },
       ]"

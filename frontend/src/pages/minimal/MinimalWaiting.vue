@@ -8,7 +8,7 @@ const art = new URL('./minimal-waiting.svg', import.meta.url).href;
     type="minimal"
     title="極簡畫家"
     hero-title="線條已備，等你作畫。"
-    description="3–6 人 · 只畫直線與封閉圓"
+    description="3–8 人 · 只畫直線與封閉圓"
     :art="art"
     :facts="[
       { label: '圖形工具', value: '直線、封閉圓' },

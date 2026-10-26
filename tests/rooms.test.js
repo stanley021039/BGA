@@ -118,10 +118,10 @@ test('room directory shows current join choices and respects game, capacity, and
     assert.equal(kicked.joinable, false);
     assert.equal((await post('join', guest, { code: race.code })).status, 403);
     assert.equal((await post('reconnect', guest, { code: race.code })).body.code, 'KICKED');
-    for (let i = 0; i < 5; i++)
-      assert.equal((await post('bot', admin, { code: poker.code })).status, i < 3 ? 200 : 400);
+    for (let i = 0; i < 7; i++)
+      assert.equal((await post('bot', admin, { code: poker.code })).status, i < 5 ? 200 : 400);
     const full = (await list(observer)).body.rooms.find((room) => room.code === poker.code);
-    assert.equal(full.playerCount, 6);
+    assert.equal(full.playerCount, 8);
     assert.equal(full.joinable, false);
     assert.equal(
       (await list(guest)).body.rooms.find((room) => room.code === poker.code).joinable,
