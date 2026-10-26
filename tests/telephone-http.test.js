@@ -136,6 +136,21 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book results and i
   assert.equal(s.books[0].pages.length, 3);
   assert.ok(s.books.every((book) => book.pages.length === 3));
   assert.equal(s.interrupted, false);
+  const readObserver = async () => {
+    const response = await fetch(base + '/api/telephone/watch?code=' + code, {
+      headers: { Cookie: observerCookie },
+    });
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  assert.equal((await readObserver()).books.length, 3);
+  s = (await post('rematch', { code })).s;
+  assert.equal(s.phase, 'waiting');
+  const waitingObserver = await readObserver();
+  assert.equal(waitingObserver.phase, 'waiting');
+  assert.equal(waitingObserver.task, null);
+  assert.deepEqual(waitingObserver.books, []);
+  assert.equal(waitingObserver.players.length, 3);
   s = (await post('start', { code })).s;
   await post('kick', { code, playerId: s.players.find((p) => p.bot).id, confirmed: true });
   s = await (await fetch(base + '/api/state?code=' + code, { headers: { Cookie: cookie } })).json();
@@ -150,6 +165,30 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book results and i
   }
   for (const path of ['/shared/stroke-canvas.js', '/shared/countdown-bar.js'])
     assert.equal((await fetch(base + path)).status, 404);
+  await post('rematch', { code });
+  const switched = (
+    await post('change-game', {
+      code,
+      gameType: 'telephone',
+      gameRevision: 0,
+      targetType: 'draw',
+    })
+  ).s;
+  const unavailable = await fetch(base + '/api/telephone/watch?code=' + code, {
+    headers: { Cookie: observerCookie },
+  });
+  assert.equal(unavailable.status, 404);
+  assert.equal((await unavailable.json()).code, 'WATCH_UNAVAILABLE');
+  await post('change-game', {
+    code,
+    gameType: 'draw',
+    gameRevision: switched.gameRevision,
+    targetType: 'telephone',
+  });
+  const restoredObserver = await readObserver();
+  assert.equal(restoredObserver.phase, 'waiting');
+  assert.equal(restoredObserver.task, null);
+  assert.deepEqual(restoredObserver.books, []);
   await post('leave', { code });
 });
 test('maximum eight-seat books commit and reconstruct every page', () => {
