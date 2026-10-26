@@ -63,7 +63,7 @@
 - `label` 是可及名稱；`caption` 可給較短的可見文字；`icon-only` 時 `label` 會成為 tooltip 與 aria-label，手機可用 `caption` 顯示文字。
 - `pending` 會停用按鈕並標 `aria-busy`；不要另外再管理同一顆按鈕的 disabled。
 - 規格（立體按鈕，Figma 03 C05／C07-R2，2026-10-23 使用者選定）：高 `--stitch-control-height`（44px）、2px `--stitch-frame` 深色邊、圓角 `--stitch-radius-button`（12px）、字 14px／700、內距 8／12px、圖示 `--stitch-icon-size`（20px）。次要按鈕底色 `--stitch-surface` 加 2px 硬陰影；主要按鈕 `--stitch-primary` 加 3px 硬陰影 `--stitch-shadow-button-primary`（按下時陰影消失）；危險按鈕淡紅底、紅字、深色框及 2px 硬影；ghost 無底無邊。icon-only 為 44×44 圓形（`--stitch-radius-pill`）。停用為 `--stitch-disabled-*` 灰底灰邊、無陰影；送出中維持原色並半透明。焦點 `--stitch-focus-ring`。
-- 頁面只能決定按鈕尺寸與位置；圓角、邊框寬度與顏色在 `controls.scss` 鎖定，頁面的 `--ui-button-radius` 等覆寫對共用按鈕無效。唯一的換色入口是 `--stitch-button-bg`／`-color`／`-border-color`，只給使用者可選的播放器外觀主題使用。
+- 頁面只能決定按鈕尺寸與位置；圓角、邊框寬度與顏色在 `controls.scss` 鎖定，頁面的 `--ui-button-radius` 等覆寫對共用按鈕無效。播放器外觀主題使用 `--stitch-button-bg`／`-color`／`-border-color`；透明場景頁首只由共用層配置本節的 ghost 語意角色。一般頁面不得使用這些入口自行換色。
 - 面板、輸入欄維持細邊（1px `--stitch-line`），立體只用在按鈕與 `UiPanel tone="raised"` 的重點卡片。
 
 ### UiLink
