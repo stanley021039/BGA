@@ -1,0 +1,117 @@
+:root body.vue-spectator-document[data-visual-theme] {
+  block-size: auto;
+  min-block-size: 100dvh;
+  overflow: auto;
+}
+.vue-room-spectator {
+  box-sizing: border-box;
+  display: grid;
+  gap: var(--stitch-gap-section);
+  width: min(100%, 88rem);
+  margin-inline: auto;
+  padding: var(--stitch-page-gutter);
+  overflow-wrap: anywhere;
+  .vue-stitch-panel {
+    min-inline-size: 0;
+  }
+}
+.vue-spectator-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stitch-gap-controls);
+  h1,
+  p {
+    margin: 0;
+  }
+}
+.vue-spectator-roster,
+.vue-spectator-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--stitch-gap-controls);
+  p {
+    margin: var(--stitch-space-8) 0;
+  }
+}
+.vue-spectator-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stitch-gap-controls);
+  font-size: var(--stitch-text-heading);
+}
+.vue-spectator-canvas,
+.vue-spectator-shapes {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 64rem;
+  block-size: auto;
+  aspect-ratio: 2;
+}
+.vue-spectator-shapes {
+  color: var(--stitch-ink);
+  line,
+  circle {
+    stroke: currentColor;
+    stroke-width: 3;
+    fill: none;
+  }
+}
+.vue-spectator-track {
+  display: grid;
+  gap: var(--stitch-space-8);
+  overflow: auto;
+  max-inline-size: 100%;
+  padding-block: var(--stitch-space-8);
+}
+.vue-spectator-cell {
+  min-block-size: 5rem;
+  padding: var(--stitch-space-8);
+  background: var(--stitch-surface-subtle);
+  border-radius: var(--stitch-radius-input);
+  p {
+    margin: var(--stitch-space-8) 0 0;
+  }
+}
+.vue-spectator-items {
+  display: grid;
+  gap: var(--stitch-gap-fields);
+  margin: 0;
+  dt {
+    font-weight: var(--stitch-weight-button);
+  }
+  dd {
+    margin: var(--stitch-space-8) 0 0;
+  }
+}
+.vue-spectator-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stitch-gap-inline);
+  padding-inline-start: var(--stitch-space-24);
+}
+.vue-spectator-pages {
+  display: grid;
+  gap: var(--stitch-gap-section);
+  padding-inline-start: var(--stitch-space-24);
+}
+.vue-spectator-question-image {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  object-fit: contain;
+}
+.vue-spectator-actions {
+  display: flex;
+  gap: var(--stitch-gap-controls);
+  align-items: center;
+}
+body.vue-spectator-focus {
+  .vue-site-header {
+    display: none;
+  }
+  .vue-room-spectator {
+    padding-block-start: calc(44px + var(--stitch-space-16) * 2);
+  }
+}
