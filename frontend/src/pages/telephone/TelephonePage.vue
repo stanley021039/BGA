@@ -1,17 +1,32 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useTelephoneStore } from '../../stores/telephone';
 import { useRoomStore } from '../../stores/room';
 import { readTelephoneSnapshot } from '../../contracts/telephone';
 import type { RoomPlayer } from '../../contracts/room';
 import GameRoomPage from '../../components/GameRoomPage.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiCheckbox from '../../components/UiCheckbox.vue';
+import UiField from '../../components/UiField.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import TelephoneScene from './TelephoneScene.vue';
+import TelephoneSpectator from './TelephoneSpectator.vue';
 const telephone = useTelephoneStore(),
   room = useRoomStore(),
-  state = computed(() => telephone.state);
+  state = computed(() => telephone.state),
+  entryCode = /^\/telephone\/([a-f0-9]{6})\/?$/i.exec(location.pathname)?.[1]?.toUpperCase() || '',
+  watching = ref(new URLSearchParams(location.search).get('watch') === '1' && !!entryCode);
+function startWatching() {
+  if (!entryCode) return;
+  history.replaceState(null, '', location.pathname + '?watch=1');
+  watching.value = true;
+}
+function stopWatching() {
+  history.replaceState(null, '', location.pathname);
+  watching.value = false;
+}
 const players = computed(() => state.value?.players.filter((player) => !player.kicked).length || 0),
+  timeOptions = [60, 90, 120].map((seconds) => ({ value: seconds, label: `${seconds} 秒` })),
   sourceLabel = computed(
     () =>
       state.value?.sources
@@ -19,6 +34,20 @@ const players = computed(() => state.value?.players.filter((player) => !player.k
         .map((source) => source.label)
         .join('＋') || '正在讀取題庫',
   );
+function setDrawingSeconds(value: string | number | null | undefined) {
+  const seconds = Number(value);
+  if ([60, 90, 120].includes(seconds)) {
+    telephone.drawingSeconds = seconds as 60 | 90 | 120;
+    telephone.queueSources();
+  }
+}
+function setTextSeconds(value: string | number | null | undefined) {
+  const seconds = Number(value);
+  if ([60, 90, 120].includes(seconds)) {
+    telephone.textSeconds = seconds as 60 | 90 | 120;
+    telephone.queueSources();
+  }
+}
 const pageCount = computed(
   () =>
     state.value?.roundLimit ||
@@ -54,7 +83,9 @@ function status(player: RoomPlayer) {
 }
 </script>
 <template>
+  <TelephoneSpectator v-if="watching" :code="entryCode" @leave="stopWatching" />
   <GameRoomPage
+    v-else
     type="telephone"
     title="傳情畫意"
     description="3–8 人 · 先各自出題，再畫圖與猜詞交替 · 不計個人分數"
@@ -77,49 +108,66 @@ function status(player: RoomPlayer) {
     :start-label="state?.phase === 'finished' ? '再傳一場' : '開始傳遞'"
     @start="telephone.start()"
   >
+    <template #entry-actions
+      ><UiButton v-if="entryCode" icon="play" label="以觀戰身分觀看這一桌" @click="startWatching"
+    /></template>
     <TelephoneScene v-if="state" :key="room.scope" /><section v-else class="vue-game-panel"
       ><h1>正在讀取傳情畫意房間…</h1></section
     >
     <template #settings
       ><details :open="state?.phase === 'waiting'" class="vue-telephone-settings"
         ><summary
-          ><span>逾時備援題庫</span><strong>{{ sourceLabel }}</strong></summary
+          ><span>遊戲時間與備援題庫</span><strong>{{ sourceLabel }}</strong></summary
+        ><div class="vue-telephone-timing-settings"
+          ><UiField
+            control="select"
+            label="作畫時間"
+            :model-value="telephone.drawingSeconds"
+            :options="timeOptions"
+            :disabled="!telephone.settingsEditable || room.busy"
+            @update:model-value="setDrawingSeconds" /><UiField
+            control="select"
+            label="文字／猜題時間"
+            :model-value="telephone.textSeconds"
+            :options="timeOptions"
+            :disabled="!telephone.settingsEditable || room.busy"
+            @update:model-value="setTextSeconds" /></div
         ><fieldset :disabled="!telephone.settingsEditable || room.busy"
           ><legend>空白主題的備援題庫（至少一種）</legend
-          ><label v-for="source in state?.sources" :key="source.id"
-            ><input
-              v-model="telephone.sources"
-              type="checkbox"
-              :value="source.id"
-              @change="telephone.queueSources()"
-            />{{ source.label }}</label
-          ></fieldset
+          ><UiCheckbox
+            v-for="source in state?.sources"
+            :key="source.id"
+            v-model="telephone.sources"
+            :value="source.id"
+            :label="source.label"
+            @update:model-value="telephone.queueSources()" /></fieldset
         ><StatusSlot
-          :message="telephone.settingsPending ? '正在儲存題庫…' : telephone.settingsError || ''"
+          :message="telephone.settingsPending ? '正在儲存遊戲設定…' : telephone.settingsError || ''"
           :error="!!telephone.settingsError" /><UiButton
           v-if="telephone.settingsError && telephone.settingsEditable"
           icon="refresh"
-          label="重試儲存題庫"
+          label="重試儲存遊戲設定"
           :disabled="room.busy"
           @click="telephone.queueSources()" /></details
       ><dl class="vue-telephone-room-facts"
         ><div
           ><dt>傳遞頁數</dt
           ><dd>{{ pageCount ? pageCount + ' 頁（依本局入座人數）' : '3–8 人入座後確定' }}</dd></div
-        ><div><dt>出題階段</dt><dd>限時 90 秒，全員送出可提早開始；逾時空白用題庫補上</dd></div>
-        <div><dt>換頁機制</dt><dd>每頁 90 秒，到時自動傳頁</dd></div
+        ><div><dt>出題階段</dt><dd>依文字／猜題時間，全員送出可提早開始</dd></div>
+        <div><dt>換頁機制</dt><dd>依作畫／文字時間倒數，到時自動傳頁</dd></div
         ><div><dt>揭曉方式</dt><dd>無計分，由房主逐頁播放故事</dd></div></dl
       ></template
     >
     <template #help
       ><ol
         ><li
-          >3–8 人先各自輸入 1–80 字主題，限時 90
-          秒，全員送出可提早開始。逾時保留已同步主題；空白由所選題庫補上。</li
+          >3–8 人先各自輸入 1–80
+          字主題，依文字／猜題時間倒數，全員送出可提早開始。逾時保留已同步主題；空白由所選題庫補上。</li
         >
         <li>主題依固定入座順序交給下一位作畫。奇數人傳 n−1 頁、偶數人傳 n 頁，最後一頁是猜詞。</li
         ><li>畫圖時只看上一頁文字；猜詞時只看上一張圖。傳遞中看不到其他頁面或別人的私人草稿。</li
-        ><li>作畫／猜詞每頁固定 90 秒，全員提早送出也等時間到才換頁。送出或略過後不能修改。</li
+        ><li
+          >作畫與文字／猜題時間由房主或管理者在等待室分開設定。全員提早送出仍等時間到才換頁；送出或略過後不能修改。</li
         ><li
           >未送出時，時間到採用伺服器已接受的私人草稿；沒有內容標記略過。最後一刻尚未同步的內容不保證納入。</li
         ><li

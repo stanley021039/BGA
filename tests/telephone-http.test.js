@@ -21,6 +21,8 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book results and i
   t.mock.method(TelephoneRoom.prototype, 'start', function () {
     start.call(this);
     this.options.seconds = 3;
+    this.options.textSeconds = 3;
+    this.options.drawingSeconds = 3;
     this.deadline = Date.now() + 3000;
   });
   const { base } = await appFixture(t, {
@@ -46,10 +48,56 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book results and i
     })
   ).cookie;
   const { code } = (await post('create', { type: 'telephone' })).s;
+  const unauthWatch = await fetch(base + '/api/telephone/watch?code=' + code);
+  assert.equal(unauthWatch.status, 401);
+  const seatedWatch = await fetch(base + '/api/telephone/watch?code=' + code, {
+    headers: { Cookie: cookie },
+  });
+  assert.equal(seatedWatch.status, 409);
+  const invite = await post('admin/invites', { days: 1 });
+  const observer = await fetch(base + '/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: 'telephone_observer',
+      displayName: '觀戰朋友',
+      password: 'telephone-observer-password',
+      confirmPassword: 'telephone-observer-password',
+      invite: invite.s.code,
+    }),
+  });
+  assert.equal(observer.status, 200);
+  const observerCookie = observer.headers.get('set-cookie').split(';')[0];
+  const watch = await fetch(base + '/api/telephone/watch?code=' + code, {
+    headers: { Cookie: observerCookie },
+  });
+  assert.equal(watch.status, 200);
+  const watchedState = await watch.json();
+  assert.equal(watchedState.spectator, true);
+  assert.equal(watchedState.me, 'spectator');
+  assert.equal(watchedState.host, false);
+  assert.equal(watchedState.task, null);
+  assert.deepEqual(watchedState.books, []);
+  assert.ok(watchedState.players.every((player) => player.id.startsWith('observer-')));
+  assert.ok(watchedState.players.every((player) => !player.id.startsWith('user-')));
+  const methodWatch = await fetch(base + '/api/telephone/watch?code=' + code, {
+    method: 'POST',
+    headers: { Cookie: cookie, 'Content-Type': 'application/json' },
+    body: '{}',
+  });
+  assert.equal(methodWatch.status, 405);
   await post('start', { code }, 400);
   await post('bot', { code });
   await post('bot', { code });
-  await post('settings', { code, sources: ['silly'] });
+  let configured = await post('settings', {
+    code,
+    sources: ['silly'],
+    drawingSeconds: 60,
+    textSeconds: 120,
+  });
+  assert.equal(configured.s.options.drawingSeconds, 60);
+  assert.equal(configured.s.options.textSeconds, 120);
+  await post('settings', { code, drawingSeconds: 90, textSeconds: 90 });
   let s = (await post('start', { code })).s;
   s = await enterDrawing(
     s,
@@ -88,6 +136,21 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book results and i
   assert.equal(s.books[0].pages.length, 3);
   assert.ok(s.books.every((book) => book.pages.length === 3));
   assert.equal(s.interrupted, false);
+  const readObserver = async () => {
+    const response = await fetch(base + '/api/telephone/watch?code=' + code, {
+      headers: { Cookie: observerCookie },
+    });
+    assert.equal(response.status, 200);
+    return response.json();
+  };
+  assert.equal((await readObserver()).books.length, 3);
+  s = (await post('rematch', { code })).s;
+  assert.equal(s.phase, 'waiting');
+  const waitingObserver = await readObserver();
+  assert.equal(waitingObserver.phase, 'waiting');
+  assert.equal(waitingObserver.task, null);
+  assert.deepEqual(waitingObserver.books, []);
+  assert.equal(waitingObserver.players.length, 3);
   s = (await post('start', { code })).s;
   await post('kick', { code, playerId: s.players.find((p) => p.bot).id, confirmed: true });
   s = await (await fetch(base + '/api/state?code=' + code, { headers: { Cookie: cookie } })).json();
@@ -102,6 +165,30 @@ test('telephone HTTP auth, privacy, sources, reconnect, whole-book results and i
   }
   for (const path of ['/shared/stroke-canvas.js', '/shared/countdown-bar.js'])
     assert.equal((await fetch(base + path)).status, 404);
+  await post('rematch', { code });
+  const switched = (
+    await post('change-game', {
+      code,
+      gameType: 'telephone',
+      gameRevision: 0,
+      targetType: 'draw',
+    })
+  ).s;
+  const unavailable = await fetch(base + '/api/telephone/watch?code=' + code, {
+    headers: { Cookie: observerCookie },
+  });
+  assert.equal(unavailable.status, 404);
+  assert.equal((await unavailable.json()).code, 'WATCH_UNAVAILABLE');
+  await post('change-game', {
+    code,
+    gameType: 'draw',
+    gameRevision: switched.gameRevision,
+    targetType: 'telephone',
+  });
+  const restoredObserver = await readObserver();
+  assert.equal(restoredObserver.phase, 'waiting');
+  assert.equal(restoredObserver.task, null);
+  assert.deepEqual(restoredObserver.books, []);
   await post('leave', { code });
 });
 test('maximum eight-seat books commit and reconstruct every page', () => {

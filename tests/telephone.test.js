@@ -237,6 +237,117 @@ test('telephone pages expose a server deadline and reset it only on advancing to
   assert.equal(r.deadline, null);
 });
 
+test('telephone independently configures drawing and text deadlines before each matching phase', () => {
+  let now = 100000;
+  const r = new TelephoneRoom(
+      'ABCDEF',
+      'split timers',
+      () => 0,
+      () => now,
+    ),
+    players = Array.from({ length: 3 }, (_, i) => r.add('p' + i));
+  r.configure(players[0].id, { sources: ['everyday'], drawingSeconds: 120, textSeconds: 60 });
+  assert.deepEqual([r.options.drawingSeconds, r.options.textSeconds], [120, 60]);
+  assert.throws(
+    () => r.configure(players[0].id, { drawingSeconds: 30 }),
+    (error) => error.code === 'INVALID_SECONDS',
+  );
+  assert.throws(
+    () => r.configure(players[1].id, { drawingSeconds: 60 }),
+    (error) => error.code === 'HOST_ONLY',
+  );
+  r.start();
+  assert.equal(r.deadline, now + 60_000);
+  assert.equal(r.view(players[1].id).options.textSeconds, 60);
+  now = r.deadline;
+  r.auto();
+  assert.equal(r.phase, 'passing');
+  assert.equal(r.round, 1);
+  assert.equal(r.deadline, now + 120_000);
+  now = r.deadline;
+  r.auto();
+  assert.equal(r.round, 2);
+  assert.equal(r.deadline, now + 60_000);
+});
+
+test('spectator projection hides all private pages and drafts until the match finishes', () => {
+  const r = new TelephoneRoom('ABCDEF', 'spectator', () => 0),
+    players = Array.from({ length: 3 }, (_, i) => r.add('玩家' + i));
+  r.start();
+  const secret = '不可提前看到的主題';
+  cmd(r, players[0], 'submit', { text: secret });
+  let view = r.observerView();
+  assert.equal(view.spectator, true);
+  assert.equal(view.me, 'spectator');
+  assert.equal(view.task, null);
+  assert.deepEqual(view.books, []);
+  assert.equal(JSON.stringify(view).includes(secret), false);
+  assert.equal(JSON.stringify(view).includes(players[0].id), false);
+  assert.throws(
+    () => r.act('spectator', 'submit', { stepId: r.stepId, requestId: 'spectator-request-01' }),
+    (error) => error.code === 'NOT_SEATED',
+  );
+  cmd(r, players[1], 'skip');
+  cmd(r, players[2], 'skip');
+  assert.equal(r.phase, 'passing');
+  r.deadline = r.now();
+  r.auto();
+  r.saveDraft(players[1].id, {
+    stepId: r.stepId,
+    requestId: 'spectator-draft-01',
+    text: '私人同步草稿',
+  });
+  view = r.observerView();
+  assert.deepEqual(view.books, []);
+  assert.equal(JSON.stringify(view).includes(secret), false);
+  assert.equal(JSON.stringify(view).includes('私人同步草稿'), false);
+  r.deadline = r.now();
+  r.auto();
+  r.deadline = r.now();
+  r.auto();
+  assert.equal(r.phase, 'finished');
+  view = r.observerView();
+  assert.equal(view.books.length, 3);
+  assert.equal(JSON.stringify(view).includes('observer-1'), true);
+  assert.equal(JSON.stringify(view).includes(players[0].id), false);
+  assert.equal(JSON.stringify(view).includes(secret), true);
+});
+
+test('persisted rooms from before split timers keep finite 90-second deadlines after restart', () => {
+  const { captureRoom, restoreRoom } = require('../src/rooms/persistence');
+  let now = 100000;
+  const old = new TelephoneRoom(
+      'ABCDEF',
+      'legacy timer',
+      () => 0,
+      () => now,
+    ),
+    players = Array.from({ length: 3 }, (_, i) => old.add('玩家' + i));
+  old.options = { sources: ['everyday'], seconds: 90 };
+  const restored = restoreRoom(
+    captureRoom(old),
+    () =>
+      new TelephoneRoom(
+        'ABCDEF',
+        'legacy timer',
+        () => 0,
+        () => now,
+      ),
+  ).room;
+  assert.equal(restored.view(players[0].id).options.drawingSeconds, 90);
+  assert.equal(restored.observerView().options.textSeconds, 90);
+  restored.start();
+  assert.equal(restored.deadline, now + 90000);
+  now = restored.deadline;
+  restored.auto();
+  assert.equal(restored.round, 1);
+  assert.equal(restored.deadline, now + 90000);
+  now = restored.deadline;
+  restored.auto();
+  assert.equal(restored.round, 2);
+  assert.equal(restored.deadline, now + 90000);
+});
+
 test('deadline is authoritative for all-ready, partial, empty and final pages', () => {
   let now = 100000;
   const r = new TelephoneRoom(

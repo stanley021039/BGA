@@ -65,7 +65,7 @@ const settings = {
   majority: { rounds: 5, customPercent: 0 },
   gift: { target: 15, customPercent: 0 },
   draw: { seconds: 90, topics: ['food'] },
-  telephone: { sources: ['silly'] },
+  telephone: { sources: ['silly'], drawingSeconds: 120, textSeconds: 60 },
   bluff: { levels: [1], roleSeconds: 10 },
   quacks: { bookSet: 2, witches: true },
   musicquiz: { target: 8 },
@@ -157,6 +157,10 @@ test('all eleven games grant settings/start only to current host or managers; pr
         const host = await f.state(code, 'host');
         const peer = await f.state(code, 'member');
         assert.deepEqual(peer.options || peer.settings, host.options || host.settings);
+        if (type === 'telephone') {
+          assert.equal(peer.options.drawingSeconds, 120);
+          assert.equal(peer.options.textSeconds, 60);
+        }
       }
       await f.role(code, 'member');
       assert.equal((await f.state(code)).permissions.canStartGame, false);
