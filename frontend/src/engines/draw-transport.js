@@ -1,6 +1,9 @@
 let DrawTransport;
 (function () {
   'use strict';
+  // Server-validated points per request (#264). A backlog drains up to 256 points per round
+  // trip, so a slow connection keeps up with drawing; per-round quotas are unchanged.
+  const MAX_BATCH_POINTS = 256;
   // Only unsent adjacent work may merge. A prepared request keeps its ID and body through retries.
   function create({
     send,
@@ -168,8 +171,8 @@ let DrawTransport;
         schedule(delay);
         return;
       }
-      const points = head.points.splice(0, 64),
-        pointTimes = head.pointTimes?.splice(0, 64);
+      const points = head.points.splice(0, MAX_BATCH_POINTS),
+        pointTimes = head.pointTimes?.splice(0, MAX_BATCH_POINTS);
       if (head.points.length) {
         head.points.unshift([...points.at(-1)]);
         if (pointTimes) head.pointTimes.unshift(pointTimes.at(-1));
@@ -284,7 +287,7 @@ let DrawTransport;
     }
     return { enqueue, whenIdle, cancel, metrics };
   }
-  DrawTransport = { create };
+  DrawTransport = { create, MAX_BATCH_POINTS };
 })();
 
 export default DrawTransport;

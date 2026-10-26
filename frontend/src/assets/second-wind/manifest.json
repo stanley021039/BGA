@@ -1,0 +1,739 @@
+{
+  "source": "User-supplied 運動員/規則.pdf, 3.png, 4.png",
+  "usage": "Original Second Wind miniature card art; local playtest candidate. Publication rights pending confirmation in #227.",
+  "sources": {
+    "規則.pdf": "4353b097471e3e75a6375d327a110e77a4dbf4eb9442cafe8763bc4310a59743",
+    "3.png": "d3adf40532d4c742344e3f23394923358ac266dc20afcc8218fbe7bf9eca77f3",
+    "4.png": "4ab5bb8bd261349461692377d43f657dbb38421781c664ad1ec9736c39cc9bba"
+  },
+  "assets": [
+    {
+      "file": "bite-mark-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14812,
+      "sha256": "c8d369a0c0dfd8f8b0c8f9d1ad35119f2584848674b14c906c4402af8f86b1b8",
+      "origin": "規則.pdf physical page 24, English card 1"
+    },
+    {
+      "file": "bite-mark-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2096,
+      "sha256": "9816557867526e06af454c270b4ce7f9c15082acbd78301db7b1abcdb813805d",
+      "origin": "規則.pdf physical page 24, English card 1, illustration crop"
+    },
+    {
+      "file": "critic-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12504,
+      "sha256": "65e9fa9e4efb1da4ae4084563f86dcc0e85a2323d4cd01a960c765abaf75440b",
+      "origin": "規則.pdf physical page 24, English card 2"
+    },
+    {
+      "file": "critic-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2002,
+      "sha256": "95713214986b2ed57b0b08bb8a79b1b38094b340db2d32966c9ef1a8d1634b39",
+      "origin": "規則.pdf physical page 24, English card 2, illustration crop"
+    },
+    {
+      "file": "gloth-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13246,
+      "sha256": "4ae6555117fdde5224436e06ee0576744798b3f9ea90ec53f9c79e0eb555d148",
+      "origin": "規則.pdf physical page 24, English card 3"
+    },
+    {
+      "file": "gloth-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1860,
+      "sha256": "1991bbcc599a862ab31e608c6252517e347010399c621f0b972cac80a96f8b14",
+      "origin": "規則.pdf physical page 24, English card 3, illustration crop"
+    },
+    {
+      "file": "blunderdog-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 18442,
+      "sha256": "31e77453b6c48d20ac1add278ec7dfe1b9830074ae0e283e906827274a0aee01",
+      "origin": "規則.pdf physical page 24, English card 4"
+    },
+    {
+      "file": "blunderdog-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 3052,
+      "sha256": "238b76237335cd30aa3504d7b849529231c6a01612a7e7bb235e7b3838b5d32b",
+      "origin": "規則.pdf physical page 24, English card 4, illustration crop"
+    },
+    {
+      "file": "diva-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 16410,
+      "sha256": "f06afae59b11eb47d80ab8e92266bcb0132429e8c4d69b4e90654ccc3ea3d566",
+      "origin": "規則.pdf physical page 24, English card 5"
+    },
+    {
+      "file": "diva-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2454,
+      "sha256": "a3fc26f08eca584c4b1e45a9429181ad124999ff54394f74cc982f9452157243",
+      "origin": "規則.pdf physical page 24, English card 5, illustration crop"
+    },
+    {
+      "file": "hog-knight-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 16254,
+      "sha256": "4228f9a1557fa52a5d0283ecd2318461aec36c1604a11cfddfad3ab806ba9cc5",
+      "origin": "規則.pdf physical page 24, English card 6"
+    },
+    {
+      "file": "hog-knight-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2296,
+      "sha256": "87588123f36f9f92d5054733da20da9d009b0a30ff87590271972019d9d1c6a1",
+      "origin": "規則.pdf physical page 24, English card 6, illustration crop"
+    },
+    {
+      "file": "cheatah-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 17088,
+      "sha256": "fd05433b39d1c20e330db52cd823454579ae6ab9c1658671f1961d4227adf76c",
+      "origin": "規則.pdf physical page 24, English card 7"
+    },
+    {
+      "file": "cheatah-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2634,
+      "sha256": "572b5b1e38cb93d3ff250e81585ddbe1240ee85c0d6379022db6a091a7db718f",
+      "origin": "規則.pdf physical page 24, English card 7, illustration crop"
+    },
+    {
+      "file": "doppelgangster-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14388,
+      "sha256": "ecba0cc7369e03663b4311cc9cad9aa3b35244563effc542bec90d1548d09ba0",
+      "origin": "規則.pdf physical page 24, English card 8"
+    },
+    {
+      "file": "doppelgangster-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2350,
+      "sha256": "b9946d77c6e817c3d6d6f6334e97cd51646e0f04e5e9e3598d0d5c6fed85bc14",
+      "origin": "規則.pdf physical page 24, English card 8, illustration crop"
+    },
+    {
+      "file": "hopfrog-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12900,
+      "sha256": "6afbecd12519cb5606a268c86105e5e625aa3554004e30d30a2d2f6befc5abb6",
+      "origin": "規則.pdf physical page 24, English card 9"
+    },
+    {
+      "file": "hopfrog-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2180,
+      "sha256": "fa2b0373f4ef857e9e2a2bfd60089afca12f71a91a969f559fe45f1322bd29e7",
+      "origin": "規則.pdf physical page 24, English card 9, illustration crop"
+    },
+    {
+      "file": "hotel-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13878,
+      "sha256": "016d9f3f3146ce4fc664ad80b436e2ca3890ed71ee1e2b81506bee2b80068f5a",
+      "origin": "規則.pdf physical page 25, English card 1"
+    },
+    {
+      "file": "hotel-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2226,
+      "sha256": "c314504b9232c9915cbab0209971ddbacfed0437ab0d592b632cc44ee6a78f06",
+      "origin": "規則.pdf physical page 25, English card 1, illustration crop"
+    },
+    {
+      "file": "kraken-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15934,
+      "sha256": "70290cd0d657cc25fd374fe9aac73fc9b8be10aef1a8813d4873483b0af6f8c0",
+      "origin": "規則.pdf physical page 25, English card 2"
+    },
+    {
+      "file": "kraken-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2670,
+      "sha256": "23eb00e2adeaa378bc463d16225f2c9bd39a859e197f48eed1f707103d06927e",
+      "origin": "規則.pdf physical page 25, English card 2, illustration crop"
+    },
+    {
+      "file": "mole-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14698,
+      "sha256": "311621a51d3086fc87fcbaf48dcce1e66e32a27d1c24b37b9bef5466758f756b",
+      "origin": "規則.pdf physical page 25, English card 3"
+    },
+    {
+      "file": "mole-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2226,
+      "sha256": "332279abf07f55c19b5d75d5942b27762f56e0d178ed8b8b2c222aaa3164786e",
+      "origin": "規則.pdf physical page 25, English card 3, illustration crop"
+    },
+    {
+      "file": "icarus-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15298,
+      "sha256": "da9f847a07ca3031eb22d84688870ac3c6c3fa9e38ba17b5550f65afd92fe316",
+      "origin": "規則.pdf physical page 25, English card 4"
+    },
+    {
+      "file": "icarus-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2768,
+      "sha256": "c9e9dc95dfea1c1b641392f3fb3eb68b793acce4b70a6250109b7e9be788f1b1",
+      "origin": "規則.pdf physical page 25, English card 4, illustration crop"
+    },
+    {
+      "file": "le-saboteur-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14482,
+      "sha256": "e24ad48282f3f4c615176d40f632c036fa441dee1cc5786783f172ab7299e13f",
+      "origin": "規則.pdf physical page 25, English card 5"
+    },
+    {
+      "file": "le-saboteur-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2542,
+      "sha256": "40f0750be82824c945a191826cc20cb873f08d78f309e5195bc149bb26fe1311",
+      "origin": "規則.pdf physical page 25, English card 5, illustration crop"
+    },
+    {
+      "file": "mr-dice-guy-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 17192,
+      "sha256": "3e88df1107a8d307ba2f066b067258ca5bbc275422d03c4436d7155424d76b24",
+      "origin": "規則.pdf physical page 25, English card 6"
+    },
+    {
+      "file": "mr-dice-guy-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2804,
+      "sha256": "3ae18af31d1fc4ab996014f20b28ad7fcb0c9936b05a42553e70c3e5b3ff4069",
+      "origin": "規則.pdf physical page 25, English card 6, illustration crop"
+    },
+    {
+      "file": "kingtripper-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13646,
+      "sha256": "0ab8c3529d2027c15489ec791cede0b3faab9a859cf9b5c098df8618d0eefbc8",
+      "origin": "規則.pdf physical page 25, English card 7"
+    },
+    {
+      "file": "kingtripper-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2496,
+      "sha256": "b65f65e49af4b568c8cdbf223937825c938795373acf233c918917f934f9ca28",
+      "origin": "規則.pdf physical page 25, English card 7, illustration crop"
+    },
+    {
+      "file": "magical-athlete-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 17916,
+      "sha256": "63318df18521a9b2f6c69a089d8bbe2d7a32eda4e37575b9ff1a689b11e11a04",
+      "origin": "規則.pdf physical page 25, English card 8"
+    },
+    {
+      "file": "magical-athlete-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2700,
+      "sha256": "77e8fd836a2756bc78768932b8db6a2479e3c9757fb20716ca15b241068d6273",
+      "origin": "規則.pdf physical page 25, English card 8, illustration crop"
+    },
+    {
+      "file": "mush-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15408,
+      "sha256": "86dbb0ecb4f5695b94b71daf7b273351cee013b38229b481792eaa3bc2db1183",
+      "origin": "規則.pdf physical page 25, English card 9"
+    },
+    {
+      "file": "mush-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2312,
+      "sha256": "3047daa19ff0e99c6533b5398b8012e1c8d4e518445f45bb715d13e05a7cdbbb",
+      "origin": "規則.pdf physical page 25, English card 9, illustration crop"
+    },
+    {
+      "file": "nemesis-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15866,
+      "sha256": "552a01827f63d5516c296cf0d7776712762172725ad401e3690e0defe47029d4",
+      "origin": "規則.pdf physical page 26, English card 1"
+    },
+    {
+      "file": "nemesis-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2572,
+      "sha256": "e25b8913c2eac935ecfec25af141ca62ce990b41090b5e9ad8d10d3476538b48",
+      "origin": "規則.pdf physical page 26, English card 1, illustration crop"
+    },
+    {
+      "file": "overtaker-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15162,
+      "sha256": "dae5eb0c2a44e66100d434498f9526088780a3b2b80eefcdfbe6d6aba8b4dc51",
+      "origin": "規則.pdf physical page 26, English card 2"
+    },
+    {
+      "file": "overtaker-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2806,
+      "sha256": "e1779d5b1a3686a8a8952a79e1dca4266fb91f945b0f9e9da337811df0a6df5e",
+      "origin": "規則.pdf physical page 26, English card 2, illustration crop"
+    },
+    {
+      "file": "re-runner-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15590,
+      "sha256": "a2a27b2dd8da7e0de8beb6833db58567b629ef78c6692ab2e88aaa30e2cd1906",
+      "origin": "規則.pdf physical page 26, English card 3"
+    },
+    {
+      "file": "re-runner-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2556,
+      "sha256": "dcd78c477d865bb74b6f6360a70e539b16140e8db652fc7f2cb88eb260785082",
+      "origin": "規則.pdf physical page 26, English card 3, illustration crop"
+    },
+    {
+      "file": "nepo-baby-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13018,
+      "sha256": "00ef94b8d1fa92f8607fe40bb19f156b627e67b7c85f6f4ce76bcddc040ce7db",
+      "origin": "規則.pdf physical page 26, English card 4"
+    },
+    {
+      "file": "nepo-baby-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2292,
+      "sha256": "9731a88b778f601eade5507bc8af86d24680aad086abef6bfe47591609585bac",
+      "origin": "規則.pdf physical page 26, English card 4, illustration crop"
+    },
+    {
+      "file": "party-pooper-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13490,
+      "sha256": "d1678bb6f6935827e77e3b066e5c061d64a12075cfece604aa69eb5ca3671e92",
+      "origin": "規則.pdf physical page 26, English card 5"
+    },
+    {
+      "file": "party-pooper-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2458,
+      "sha256": "47e7575baf08d5c60f2883bb7681a5351cbf3c9aee1c545fb53276079fd1d3bf",
+      "origin": "規則.pdf physical page 26, English card 5, illustration crop"
+    },
+    {
+      "file": "show-off-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 17778,
+      "sha256": "14bf8804da2bbe47a41b6777279e6235f892e9e67a3ebbfc9291cbd95c4488f6",
+      "origin": "規則.pdf physical page 26, English card 6"
+    },
+    {
+      "file": "show-off-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2590,
+      "sha256": "1cff175f70d6e0e9c821cabc604a4726830cd8c2ee1e08a657313136660207ee",
+      "origin": "規則.pdf physical page 26, English card 6, illustration crop"
+    },
+    {
+      "file": "null-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13178,
+      "sha256": "597e3089efec1b2a2ede432deb46c15c47bfaec4f7295da9638401b762488e8e",
+      "origin": "規則.pdf physical page 26, English card 7"
+    },
+    {
+      "file": "null-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1616,
+      "sha256": "85189309be569f0455f8507ecefeb021118bbc5e176da3c5bbc6d830e72c3ae7",
+      "origin": "規則.pdf physical page 26, English card 7, illustration crop"
+    },
+    {
+      "file": "penguin-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15310,
+      "sha256": "73087f9cdedc80702f503a475827c3ae7780216dbb66d5da149081361bba0f63",
+      "origin": "規則.pdf physical page 26, English card 8"
+    },
+    {
+      "file": "penguin-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2164,
+      "sha256": "9e027d91be6ac61bfd2070d55df7b9662f5d9b471dde8c28ac723dcdd2ce6f41",
+      "origin": "規則.pdf physical page 26, English card 8, illustration crop"
+    },
+    {
+      "file": "soulmate-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15640,
+      "sha256": "21c721e45349850cdaf219e745165537f8ae8c1adb2866fef03b0462eb9e02fb",
+      "origin": "規則.pdf physical page 26, English card 9"
+    },
+    {
+      "file": "soulmate-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2394,
+      "sha256": "4750132603b5e96ba7f7626ba246a88deedfa040bb2d32198aef4051d224b7c7",
+      "origin": "規則.pdf physical page 26, English card 9, illustration crop"
+    },
+    {
+      "file": "speed-demon-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 17550,
+      "sha256": "d3271cb2829e87dc05dddfacbb32547799ff26081ce5de04c48cc95619a9740d",
+      "origin": "規則.pdf physical page 27, English card 1"
+    },
+    {
+      "file": "speed-demon-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2538,
+      "sha256": "3a4f319708ca86fc862fed21dfaee9ef828dc3cc935a401eb40a8dae0218f506",
+      "origin": "規則.pdf physical page 27, English card 1, illustration crop"
+    },
+    {
+      "file": "streaker-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 13338,
+      "sha256": "f506297f3e25fa507992a4e06454d5fd1ebca9fe0cdd09a14078424796ad2901",
+      "origin": "規則.pdf physical page 27, English card 2"
+    },
+    {
+      "file": "streaker-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2218,
+      "sha256": "8320f4e3425af288858efa37eeb7a903816aeccbdfd86fc365d9307877f06a69",
+      "origin": "規則.pdf physical page 27, English card 2, illustration crop"
+    },
+    {
+      "file": "tail-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 10918,
+      "sha256": "595dc7d8143733dc1e033c4919a82c81acb0ee54ecca42ee58fbd9aad379b5f2",
+      "origin": "規則.pdf physical page 27, English card 3"
+    },
+    {
+      "file": "tail-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 1270,
+      "sha256": "72b7eeb5274dd7b25aa41b569ecde9158d2f6ea390ab1c6d3e14ad19407e214c",
+      "origin": "規則.pdf physical page 27, English card 3, illustration crop"
+    },
+    {
+      "file": "spoilsport-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15064,
+      "sha256": "888cca0117de22da21e36dc3d4e0df0e6548268b472b9abbff6ac690f462b872",
+      "origin": "規則.pdf physical page 27, English card 4"
+    },
+    {
+      "file": "spoilsport-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2242,
+      "sha256": "c08c639156be4d530f8c8893c1dc03417270cfe57feaa78706bf0d82d5b0d9d4",
+      "origin": "規則.pdf physical page 27, English card 4, illustration crop"
+    },
+    {
+      "file": "stunner-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 12004,
+      "sha256": "b9df5ff695184e2ffb35736881cd903bfb8a305e28e84efabbd88e78b038c33f",
+      "origin": "規則.pdf physical page 27, English card 5"
+    },
+    {
+      "file": "stunner-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2122,
+      "sha256": "91593e7bfd49d4e476fbfb11dfe60fae1a36f4cf70e3b4b7a63a9d506b791a42",
+      "origin": "規則.pdf physical page 27, English card 5, illustration crop"
+    },
+    {
+      "file": "the-hose-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14070,
+      "sha256": "2e78f3e2bbfcd0795a96181cd6bae18374a0cfa82a3b753fbc0cecbc3dc98f4a",
+      "origin": "規則.pdf physical page 27, English card 6"
+    },
+    {
+      "file": "the-hose-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2162,
+      "sha256": "ed3cef0f78fe50e187daf8fd7ec5f31ed4a7d6cb16c7cf6d5cf4dc0ac8fa4aa5",
+      "origin": "規則.pdf physical page 27, English card 6, illustration crop"
+    },
+    {
+      "file": "stepdad-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 14370,
+      "sha256": "ffa80cc033c01e959e77e832c0a0d89691bd46c54f4f9d2ba62a967a54ddd25b",
+      "origin": "規則.pdf physical page 27, English card 7"
+    },
+    {
+      "file": "stepdad-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2488,
+      "sha256": "8af29759ea4ef41515b684f9b4411671c5da7ad25e9dd0847b263960f348d1e9",
+      "origin": "規則.pdf physical page 27, English card 7, illustration crop"
+    },
+    {
+      "file": "switcharoo-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 17780,
+      "sha256": "4bd07df333b44b6564eb0f4970afc61b86cfabd2b0446078e5759c643dc4003e",
+      "origin": "規則.pdf physical page 27, English card 8"
+    },
+    {
+      "file": "switcharoo-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2632,
+      "sha256": "3296f24e2ef3ee9c32324e25cc44a9da17a0f1d54232f9ee87768a3bdd6d863d",
+      "origin": "規則.pdf physical page 27, English card 8, illustration crop"
+    },
+    {
+      "file": "understudy-card.webp",
+      "width": 272,
+      "height": 380,
+      "bytes": 15180,
+      "sha256": "df83a4ff24d858db1d2e546e156542c14fe8b7cd06101617948e16e19b50b361",
+      "origin": "規則.pdf physical page 27, English card 9"
+    },
+    {
+      "file": "understudy-portrait.webp",
+      "width": 96,
+      "height": 70,
+      "bytes": 2782,
+      "sha256": "f9f15d3bb6f51e3b086e24c8cb56bd2a3e9e854de361089ee590c5b655fe093d",
+      "origin": "規則.pdf physical page 27, English card 9, illustration crop"
+    },
+    {
+      "file": "alchemy-lab-twist.webp",
+      "width": 428,
+      "height": 236,
+      "bytes": 12280,
+      "sha256": "77f8b1e04545260019c56fbfa382a2dd8bddfb97d7cd40dc0f7d3e86bab863fd",
+      "origin": "規則.pdf physical page 28, English Twist 1"
+    },
+    {
+      "file": "fans-demand-chaos-twist.webp",
+      "width": 427,
+      "height": 236,
+      "bytes": 8824,
+      "sha256": "673855794ccda5571050291da735aa0c2576d9981d96cfbc4b22c607b5702ce8",
+      "origin": "規則.pdf physical page 28, English Twist 2"
+    },
+    {
+      "file": "bonkbug-twist.webp",
+      "width": 428,
+      "height": 236,
+      "bytes": 11572,
+      "sha256": "64c66e4866376e7788839d93f5b3dfee2a86ae941b46d61a243f29fb3b8a6871",
+      "origin": "規則.pdf physical page 28, English Twist 3"
+    },
+    {
+      "file": "mirror-world-twist.webp",
+      "width": 427,
+      "height": 236,
+      "bytes": 8138,
+      "sha256": "734feb547eb554da809d143a4cb3bef1bba6dc09468e269dac0c33865ec0460a",
+      "origin": "規則.pdf physical page 28, English Twist 4"
+    },
+    {
+      "file": "conveyor-twist.webp",
+      "width": 428,
+      "height": 236,
+      "bytes": 11518,
+      "sha256": "3adc5fd0857c34acc451842f9f1342398d2193b70a4cff7af02b958dd2cc6030",
+      "origin": "規則.pdf physical page 28, English Twist 5"
+    },
+    {
+      "file": "scrying-pool-twist.webp",
+      "width": 427,
+      "height": 236,
+      "bytes": 11306,
+      "sha256": "88251d9df77c1fdfa56dcb8430705479dadf9c0015d9ea55f32a641ad2b888c6",
+      "origin": "規則.pdf physical page 28, English Twist 6"
+    },
+    {
+      "file": "curse-wands-twist.webp",
+      "width": 428,
+      "height": 235,
+      "bytes": 11304,
+      "sha256": "e355a2f2912da5ee70d1a8ec8198775e3b45709255ecffd622078c2fa8d6e499",
+      "origin": "規則.pdf physical page 28, English Twist 7"
+    },
+    {
+      "file": "pinata-twist.webp",
+      "width": 427,
+      "height": 235,
+      "bytes": 12914,
+      "sha256": "887335cabb24e42707e0dc739dcf11ed65b6c41ef6b35682116d4f6a35a535ee",
+      "origin": "規則.pdf physical page 28, English Twist 8"
+    },
+    {
+      "file": "randomness-ceased-twist.webp",
+      "width": 428,
+      "height": 236,
+      "bytes": 10954,
+      "sha256": "188a7c6ca618a7a852c7227e6ce6cd31b6c2b9ba50d62b65f2a553c7302535ff",
+      "origin": "規則.pdf physical page 29, English Twist 1"
+    },
+    {
+      "file": "time-imp-twist.webp",
+      "width": 427,
+      "height": 236,
+      "bytes": 12968,
+      "sha256": "e24103ccd42e598b74999b4e5efe762a66b2da9dffd6a71a14e11a81bcfc6380",
+      "origin": "規則.pdf physical page 29, English Twist 2"
+    },
+    {
+      "file": "roast-chicken-twist.webp",
+      "width": 428,
+      "height": 236,
+      "bytes": 8150,
+      "sha256": "057cc6ed0b4bfd211d2fd9721c9a39d9a39a40d0aaeaf1f1a96e48f3befbdcdc",
+      "origin": "規則.pdf physical page 29, English Twist 3"
+    },
+    {
+      "file": "season-finale-twist.webp",
+      "width": 428,
+      "height": 236,
+      "bytes": 12080,
+      "sha256": "9355eebac8a2b0ceaab9f09a686fcfdbf7339b731af1e79b203473456bf7c161",
+      "origin": "規則.pdf physical page 29, English Twist 5"
+    },
+    {
+      "file": "swap-meet-twist.webp",
+      "width": 428,
+      "height": 235,
+      "bytes": 10802,
+      "sha256": "5332921429568d413d765225e83bec38d135b9af3f5f5f44aab85aa7542caad8",
+      "origin": "規則.pdf physical page 29, English Twist 7"
+    },
+    {
+      "file": "weremouth-portrait.webp",
+      "width": 96,
+      "height": 93,
+      "bytes": 3052,
+      "sha256": "eb6d77f83d2ae676f96899d4fcaa4c34094aa4ef9fc1e73481240242ac462819",
+      "origin": "規則.pdf physical page 29, W.E.R.E.M.O.U.T.H. illustration"
+    },
+    {
+      "file": "hero.webp",
+      "width": 560,
+      "height": 394,
+      "bytes": 34552,
+      "sha256": "91f8f5f9f438b221a89ebf1f5ebefbea66f5ee6c08765d860af0f1d9c20c9584",
+      "origin": "規則.pdf physical page 9, original celebration illustration"
+    },
+    {
+      "file": "twisty-twirl-800.webp",
+      "width": 800,
+      "height": 247,
+      "bytes": 27320,
+      "sha256": "33fc48d262df983862fcdd18ae605b7558beafa1b0e45bd522556ea5e89f3372",
+      "origin": "3.png"
+    },
+    {
+      "file": "twisty-twirl-1600.webp",
+      "width": 1600,
+      "height": 494,
+      "bytes": 68902,
+      "sha256": "6086b2d6fbe62759e2531b51307f0a9a8ee3c6380e70e4cd802f52e608efb59c",
+      "origin": "3.png"
+    },
+    {
+      "file": "whirly-world-800.webp",
+      "width": 800,
+      "height": 247,
+      "bytes": 40684,
+      "sha256": "7900325e50751e5695506c9875d9419c5e6e09d40c70d7645494417b6fa95b61",
+      "origin": "4.png"
+    },
+    {
+      "file": "whirly-world-1600.webp",
+      "width": 1600,
+      "height": 494,
+      "bytes": 110868,
+      "sha256": "a28dc4a8e7ddccbed9411e9b34ee2b30d22eaef92120fc9c78eec6d01d830fb0",
+      "origin": "4.png"
+    }
+  ]
+}

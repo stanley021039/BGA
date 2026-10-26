@@ -141,6 +141,26 @@ test('UiPanel names its region by its title and renders the action slot', async 
   assert.doesNotMatch(plain, /aria-labelledby|<header/);
 });
 
+test('UiPanel supports ordered title additions without changing its accessible heading', async () => {
+  const html = await render(
+    'UiPanel.vue',
+    { title: '曲折賽道' },
+    {
+      'title-before': () => h('span', '規則入口'),
+      'title-after': () => h('span', '甲 → 乙'),
+      actions: () => h('span', '操作'),
+      default: () => h('p', '棋盤'),
+    },
+  );
+  const labelled = html.match(/aria-labelledby="([^"]+)"/)?.[1];
+  assert.ok(labelled);
+  assert.match(html, new RegExp('<h2[^>]*id="' + labelled + '"'));
+  assert.ok(html.indexOf('規則入口') < html.indexOf('曲折賽道'));
+  assert.ok(html.indexOf('曲折賽道') < html.indexOf('甲 → 乙'));
+  assert.ok(html.indexOf('甲 → 乙') < html.indexOf('操作'));
+  assert.ok(html.indexOf('操作') < html.indexOf('棋盤'));
+});
+
 test('UiCheckbox and UiFilePick keep a visible label around the native control', async () => {
   const box = await render('UiCheckbox.vue', { label: '常用', modelValue: true, disabled: true });
   const label = box.match(/<label\b([^>]*)>([\s\S]*?)<\/label>/);

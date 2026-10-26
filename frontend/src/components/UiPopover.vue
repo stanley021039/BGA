@@ -1,10 +1,21 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref } from 'vue';
 import UiButton from './UiButton.vue';
+defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(
-  defineProps<{ id: string; title: string; placement?: 'bottom' | 'right'; compact?: boolean }>(),
-  { placement: 'bottom', compact: false },
+  defineProps<{
+    id: string;
+    title: string;
+    placement?: 'bottom' | 'right';
+    compact?: boolean;
+    autofocus?: boolean;
+    contentSized?: boolean;
+    showClose?: boolean;
+    avoidAnchor?: boolean;
+    manual?: boolean;
+  }>(),
+  { placement: 'bottom', compact: false, autofocus: true, contentSized: false, showClose: true },
 );
 const emit = defineEmits<{ closed: [] }>();
 const panel = ref<HTMLElement | null>(null),
@@ -30,6 +41,23 @@ function position() {
     element.style.maxBlockSize = Math.max(0, window.innerHeight - gap * 2) + 'px';
     const bounds = element.getBoundingClientRect();
     const right = anchor.right + gap;
+    if (
+      props.avoidAnchor &&
+      right + bounds.width > window.innerWidth - gap &&
+      anchor.left - bounds.width - gap < gap
+    ) {
+      const below = window.innerHeight - anchor.bottom - gap * 2,
+        above = anchor.top - gap * 2;
+      const useBelow = below >= bounds.height || below >= above;
+      element.style.maxBlockSize = Math.max(0, useBelow ? below : above) + 'px';
+      element.style.left =
+        Math.max(gap, Math.min(anchor.left, window.innerWidth - bounds.width - gap)) + 'px';
+      element.style.top =
+        (useBelow
+          ? anchor.bottom + gap
+          : Math.max(gap, anchor.top - element.getBoundingClientRect().height - gap)) + 'px';
+      return;
+    }
     const preferredLeft =
       right + bounds.width <= window.innerWidth - gap ? right : anchor.left - bounds.width - gap;
     element.style.left =
@@ -93,9 +121,10 @@ async function open(source?: HTMLElement) {
   window.addEventListener('resize', position);
   window.addEventListener('scroll', scroll, true);
   document.addEventListener('visibilitychange', visibility);
-  panel.value
-    ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"], button:not(:disabled)')
-    ?.focus({ preventScroll: true });
+  if (props.autofocus)
+    panel.value
+      ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"], button:not(:disabled)')
+      ?.focus({ preventScroll: true });
 }
 function close(restore = true) {
   if (!visible.value) return;
@@ -120,12 +149,13 @@ defineExpose({ open, close, visible });
   <Teleport to="body">
     <div
       :id="id"
+      v-bind="$attrs"
       ref="panel"
-      popover="auto"
+      :popover="manual ? 'manual' : 'auto'"
       role="dialog"
       :aria-label="title"
       class="vue-social-popover"
-      :class="{ 'is-compact': compact }"
+      :class="{ 'is-compact': compact, 'is-content-sized': contentSized }"
       @toggle="toggled"
       @keydown.esc.stop.prevent="close()"
     >
@@ -134,6 +164,7 @@ defineExpose({ open, close, visible });
           ><slot name="header"
             ><h2>{{ title }}</h2></slot
           ><UiButton
+            v-if="showClose"
             variant="ghost"
             icon="close"
             icon-only
@@ -147,6 +178,25 @@ defineExpose({ open, close, visible });
 </template>
 
 <style scoped>
+.vue-social-popover.is-content-sized {
+  block-size: auto;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.vue-social-popover.is-content-sized > .vue-social-popover-body {
+  grid-template-rows: none;
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: var(--stitch-gap-label);
+  overflow-y: auto;
+}
+.vue-social-popover.is-content-sized > .vue-social-popover-body :deep(p) {
+  margin: 0;
+}
+@media (max-width: 480px) {
+  .vue-social-popover.is-content-sized > .vue-social-popover-body {
+    font-size: var(--stitch-text-hint);
+  }
+}
 .vue-social-popover.is-compact {
   inline-size: max-content;
   block-size: auto;

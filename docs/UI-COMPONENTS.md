@@ -4,6 +4,22 @@
 
 ## 快速對照
 
+`UiPanel` 的 `title-before`／`title-after` slot 將規則入口、補充資訊或單行順序置於標題同列，沿用共用 header 對齊；`actions` 仍保留在列尾。title-after 自適應剩餘寬度，內容可自行設單行省略，不以頁面覆寫標題位置。
+
+`UiHoverInfo helpOnly` 只呈現正常佔位的44px問號來源，沿用hover／鍵盤／點擊查看、Esc與點外部關閉，沒有額外關閉鈕；長內容可搭配 `interactive` 供移入捲動。預設卡面與社交說明行為不變。
+
+共用Vue樣式提供`.ui-sr-only`無障礙輔助文字裁切，RoomMedia等Teleport元件不必載入舊ui-primitives.css。文字仍保留於DOM與可讀關聯，不能用display:none取代。UiButton自身scoped規則及手機可見caption變體保留。
+
+`UiHoverInfo interactive` 提供可移入的第一層浮層，200ms僅用於跨越來源與面板的間隙，不延遲顯示；子層沿用 manual top layer，避免原生 auto popover 關閉第一層。Esc／點外部／卸載皆清理。一般被動說明仍移出即關；快速重入不使用時間冷卻，Esc 的重開抑制由實際指標移動或移出解除。`UiPopover manual` 預設關閉，不改既有社交選單。
+
+`UiPopover contentSized` 的本文取消社交面板專用的固定第二列，依內容自然排高、段落不另加外距；只有超過可用視窗時才在內文捲動。480px 以下本文使用 `--stitch-text-hint`，桌機維持原字級。共用社交面板預設不變。
+
+被動 `UiHoverInfo :showHelp="false"` 沒有關閉鈕，離開來源立即消失，說明浮層不延長 hover。`UiPopover showClose` 預設 true；`avoidAnchor` 可在左右空間不足時改放來源上下方，避免浮層蓋住來源而觸發離開。既有互動式選單維持預設。
+
+`UiChoiceCard imageOnly` 僅呈現預設 slot 的圖片，省略卡外 label／選取文字及內距；保留 aria-label、aria-pressed 與選取圈。`UiHoverInfo :showHelp="false"` 隱藏獨立問號按鈕，仍可 hover／鍵盤聚焦閱讀。
+
+`UiPopover contentSized` 讓含標題／關閉鈕的短說明依內容高度顯示，保留視窗最大高度及內部捲動；`UiHoverInfo` 使用此模式。觸控裝置不因合成滑鼠進入事件開啟被動預覽，說明按鈕聚焦不搶先遮住尚未完成的點擊。
+
 | 需要 | 用 | 不要 |
 | --- | --- | --- |
 | 按鈕、圖示按鈕 | `UiButton` | `<button>`、`.ui-button` 手寫 class |
@@ -175,7 +191,8 @@
 - `UiBadge`：`tone=primary|success|info|warning|danger|neutral|disabled`，深邊 2px、膠囊、14px／700；`counter` 保留 28px 計數槽。只表達狀態，不額外偽造可點語意。
 - `UiNotice`：`message`、`tone`、`error`、`active`、`noticeKey`、`duration`（預設 4000ms）、`persistent`。狀態解除立刻隱藏；短暫訊息到時隱藏；保留外層寬高，內文過長可局部捲動。相同訊息再次發生時增加 `noticeKey`，重新開始計時。卸載會清除計時器。`StatusSlot` 轉交同一 API，使用 44px／14px 緊湊樣式；既有遊戲有明確較矮槽位時沿用該固定布局並允許內文捲動。
 - 未確認的操作結果、必須重試的狀態、必要遊戲決策／指令及真正空狀態不能定時清除；依來源條件設定 `persistent`，並在狀態解除時清空 `message` 或關閉 `active`。不要將所有 error 一律永久顯示。
-- `UiChoiceCard`：`label`、`selected`、`disabled`；淡色中性底、預設無邊，選取時同一底色、3px 深色外圈加 2px offset，以及可見的勾選文字。標記保留槽位，不改外框尺寸。`action` 表示立即操作，不附加持續選取語意；`unavailable` 表示只能預覽的鎖定內容。`#label`／`#selection` 可保留既有可讀內容，但不能隱藏必要資訊。`ImageChoiceGrid`、`FrameChoices`、`EntranceChoices`、`ArtworkPicker` 都沿用這個外觀。
+- `UiChoiceCard`：`label`、`selected`、`disabled`；淡色中性底、預設無邊，選取時同一底色、3px 深色外圈加 2px offset，以及可見的勾選文字。標記保留槽位，不改外框尺寸。`action` 表示立即操作，不附加持續選取語意；`unavailable` 表示只能預覽的鎖定內容。`readable-disabled` 保留停用卡片正文的正常文字對比，供輪到別人時仍必須閱讀的遊戲能力；原生停用與不可用標記不變，預設關閉。`#label`／`#selection` 可保留既有可讀內容，但不能隱藏必要資訊。`ImageChoiceGrid`、`FrameChoices`、`EntranceChoices`、`ArtworkPicker` 都沿用這個外觀。
+- `UiHoverInfo`：包住卡片，`title`、`disabled` 與 `#info` 提供滑過／鍵盤聚焦說明；停用卡片仍可聚焦外層。觸控使用獨立「查看說明」圖示，與卡片選取按鈕互為相鄰元素，不巢狀按鈕、不攔截選取。內容沿用 UiPopover，可移入閱讀、Esc／關閉與點外面收起；hover 不搶焦點，明確點查看才移焦，離開後180ms關閉，卸載／換卡／切背景清理。`UiPopover autofocus=false` 用於這類被動預覽，預設 true 不變；額外原生事件／屬性轉交實際 popover 元素。
 - `UiHeading`：`level=1|2|3`，`kind=page|section`。page 為 28px 與細分隔線；section 為 20px 與黃色直條；允許自然換行，不能縮小字或截掉字。
 - `UiList as=div|ul|ol`、`UiListRow as=div|li`：單一細邊面板、交錯底色；列內最小操作槽 44px，標題、內容和 `#actions` 對齊。長內容換行，不能為等高刪減資訊。
 
@@ -243,6 +260,10 @@ RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱
 
 郎中已入座房間的超寬toolbar延伸至外層視窗；遊戲app保留原內容上限與置中，手機沿用既有換列，其他遊戲不套用。
 
+
+### 2026-10-24：新增遊戲宿主接入
+
+`RoomWaitingTemplate flow` 用於自然高度頁面；不套桌機固定高度的裁切／內捲動規則，摘要與開始列隨內容展開。原有固定高度遊戲維持預設模式。`UiButton` 自帶 icon-only 的可及文字隱藏樣式，`UiIcon` 自帶 20px 描邊圖示幾何；共用 controls 直接提供按鈕框線與圓角，讓新 Vue 文件不需額外載入舊 ui-primitives.css。
 
 ## 十一款房間共用場景（2026-10-24）
 
