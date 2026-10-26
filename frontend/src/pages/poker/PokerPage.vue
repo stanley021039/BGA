@@ -45,12 +45,12 @@ function status(player: RoomPlayer) {
   <GameRoomPage
     type="poker"
     title="德州撲克"
-    description="2–6 人 · 盲注 10／20 · 純娛樂虛擬籌碼"
+    description="2–8 人 · 盲注 10／20 · 純娛樂虛擬籌碼"
     :reader="readPokerSnapshot"
     :poll-ms="900"
     :phase="phases[state?.phase || 'waiting']"
     :round="state?.hand ? `第 ${state.hand} 手` : '等待發牌'"
-    :max-players="6"
+    :max-players="8"
     :status="status"
     :setup="poker.setup"
     :can-start="(state?.players.filter((p) => p.stack > 0).length || 0) >= 2"
@@ -76,7 +76,7 @@ function status(player: RoomPlayer) {
     <template #help
       ><ol
         ><li
-          >2–6 位玩家，起始 2,000 虛擬籌碼，盲注固定
+          >2–8 位玩家，起始 2,000 虛擬籌碼，盲注固定
           10／20。每手開始時重新隨機選莊；兩人局由莊家下小盲。可在本手進行中入座，下一手才拿牌。</li
         ><li
           >每人兩張私人底牌，五張公共牌依翻牌／轉牌／河牌公開。攤牌時用七張牌中的最佳五張比較；其他玩家棄牌時直接派彩，不公開其底牌。</li

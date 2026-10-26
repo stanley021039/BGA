@@ -6,6 +6,7 @@ import { readTrpgSnapshot } from '../../contracts/trpg';
 import type { RoomPlayer } from '../../contracts/room';
 import GameRoomPage from '../../components/GameRoomPage.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiField from '../../components/UiField.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import TrpgScene from './TrpgScene.vue';
 const trpg = useTrpgStore(),
@@ -73,11 +74,11 @@ onBeforeUnmount(() => {
   <GameRoomPage
     type="trpg"
     title="霧港跑團"
-    description="1–6 人合作冒險 · 六幕原創故事 · 規則主持，沒有倒數"
+    description="1–8 人合作冒險 · 六幕原創故事 · 規則主持，沒有倒數"
     :reader="readTrpgSnapshot"
     :phase="phase"
     :round="state?.round ? `第 ${state.round}／6 幕` : '準備出發'"
-    :max-players="6"
+    :max-players="8"
     :show-metrics="false"
     :status="status"
     :setup="trpg.setup"
@@ -89,12 +90,15 @@ onBeforeUnmount(() => {
     >
     <template #settings
       ><div v-if="trpg.setup" class="vue-trpg-role"
-        ><label for="trpgRole"
-          >你的角色<select id="trpgRole" v-model="trpg.role" :disabled="!trpg.roleEditable"
-            ><option v-for="(value, id) in state?.roles" :key="id" :value="id"
-              >{{ value.name }} · {{ value.description }}</option
-            ></select
-          ></label
+        ><UiField
+          id="trpgRole"
+          label="你的角色"
+          control="select"
+          v-model="trpg.role"
+          :disabled="!trpg.roleEditable"
+          ><option v-for="(value, id) in state?.roles" :key="id" :value="id"
+            >{{ value.name }} · {{ value.description }}</option
+          ></UiField
         ><UiButton
           label="選擇角色"
           icon="check"
@@ -119,7 +123,7 @@ onBeforeUnmount(() => {
     <template #help
       ><ol
         ><li
-          >1–6
+          >1–8
           人，六幕原創故事「霧港鐘聲」。每幕換一位領隊；第一位隨機決定，其後按入座順序輪替。角色可重複，沒有玩家淘汰。</li
         ><li
           >每人起始專注 3、隊伍補給 4。領隊選觀察（難度 6、補給 1）、交涉（難度 7、補給

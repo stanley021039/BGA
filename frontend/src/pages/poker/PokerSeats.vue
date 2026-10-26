@@ -12,6 +12,8 @@ const layouts: Record<number, readonly number[]> = {
   4: [0, 2, 3, 5],
   5: [0, 1, 2, 4, 5],
   6: [0, 1, 2, 3, 4, 5],
+  7: [0, 1, 2, 3, 5, 6, 7],
+  8: [0, 1, 2, 3, 4, 5, 6, 7],
 };
 const seats = computed(() => {
   const s = props.state,
@@ -31,7 +33,7 @@ const seats = computed(() => {
 });
 </script>
 <template>
-  <div class="vue-poker-seats" data-poker-seats>
+  <div class="vue-poker-seats" data-poker-seats :data-seat-count="state.players.length">
     <div class="vue-poker-felt" aria-hidden="true"></div>
     <div class="vue-poker-table-center"><slot /></div>
     <article

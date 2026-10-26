@@ -41,11 +41,11 @@ function status(player: RoomPlayer) {
   <GameRoomPage
     type="minimal"
     title="極簡畫家"
-    description="3–6 人 · 只用直線與封閉圓 · 由少筆畫開始猜"
+    description="3–8 人 · 只用直線與封閉圓 · 由少筆畫開始猜"
     :reader="readMinimalSnapshot"
     :phase="phase"
     :round="state?.round ? `第 ${state.round}／${state.roundLimit} 輪` : ''"
-    :max-players="6"
+    :max-players="8"
     :status="status"
     :setup="setup"
     :setup-target="setup ? '#minimal-setup-slot' : undefined"
@@ -55,7 +55,7 @@ function status(player: RoomPlayer) {
     ><MinimalScene v-if="state" :key="room.scope" /><section v-else class="vue-game-panel"
       ><h1>正在讀取極簡畫家房間…</h1></section
     ><template #settings
-      ><p>四人以下每人當兩次猜題者，五至六人各一次。每張最多 40 個直線或封閉圓。</p></template
+      ><p>四人以下每人當兩次猜題者，五至八人各一次。每張最多 40 個直線或封閉圓。</p></template
     ><template #help
       ><MinimalRules /><p
         >草稿僅保存在本分頁，伺服器重啟不續局。腳本夥伴不理解圖片或題目。</p

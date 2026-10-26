@@ -130,7 +130,7 @@ function result(value: unknown): TrpgResult {
   });
   if (
     !participants.length ||
-    participants.length > 6 ||
+    participants.length > 8 ||
     new Set(participants.map((p) => p.id)).size !== participants.length
   )
     return invalid();
@@ -164,7 +164,7 @@ export function readTrpgSnapshot(value: unknown): TrpgSnapshot {
     !integer(r.supplies, 0, 4) ||
     !integer(r.clues, 0, 12) ||
     !integer(r.danger, 0, 12) ||
-    !integer(r.readyCount, 0, 6) ||
+    !integer(r.readyCount, 0, 8) ||
     typeof r.canResolve !== 'boolean'
   )
     return invalid();
@@ -195,7 +195,7 @@ export function readTrpgSnapshot(value: unknown): TrpgSnapshot {
       offline: p.offline,
     };
   });
-  if (players.length > 6 || r.readyCount !== players.filter((p) => p.ready).length)
+  if (players.length > 8 || r.readyCount !== players.filter((p) => p.ready).length)
     return invalid();
   let scene: TrpgSnapshot['scene'] = null;
   if (r.scene !== null) {

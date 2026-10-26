@@ -19,7 +19,7 @@ const minimal = (n) => {
   r.start();
   return { r, p };
 };
-for (const n of [3, 4, 5, 6])
+for (const n of [3, 4, 5, 6, 7, 8])
   test('minimal ' + n + ' seats rotate guessers, score +2/+1 and finish expected rounds', () => {
     const { r, p } = minimal(n),
       rounds = n <= 4 ? n * 2 : n,

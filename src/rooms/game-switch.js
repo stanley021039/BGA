@@ -2,15 +2,15 @@
 const { HttpError } = require('../http/errors');
 
 const roomGames = [
-  ['poker', '德州撲克', 2, 6],
+  ['poker', '德州撲克', 2, 8],
   ['thunder', '雷霆之路', 2, 4],
   ['majority', '同頻俱樂部', 3, 12],
   ['gift', '送禮達人', 3, 8],
   ['draw', '你畫我猜', 2, 8],
-  ['trpg', '霧港跑團', 1, 6],
+  ['trpg', '霧港跑團', 1, 8],
   ['telephone', '傳情畫意', 3, 8],
   ['musicquiz', '猜歌挑戰', 1, 8],
-  ['minimal', '極簡畫家', 3, 6],
+  ['minimal', '極簡畫家', 3, 8],
   ['bluff', '瞎掰王', 3, 9],
   ['quacks', '郎中闖江湖', 2, 8],
 ].map(([type, name, min, max]) => Object.freeze({ type, name, min, max }));
