@@ -16,6 +16,7 @@ import RoomHeader from './RoomHeader.vue';
 import RoomLeaveButton from './RoomLeaveButton.vue';
 import UiButton from './UiButton.vue';
 import UiLink from './UiLink.vue';
+import { gamePath } from '../contracts/room';
 import UiDialog from './UiDialog.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/game-room.scss';
@@ -132,6 +133,10 @@ onMounted(() => {
             href="?watch=1"
             icon="play"
             label="以觀戰身分觀看這一桌"
+          /><UiLink
+            :href="'/' + gamePath(type) + '?learn=1'"
+            label="試玩教學"
+            icon="play"
           /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><slot
             name="entry-actions"
           /><a href="/">返回大廳</a></div
@@ -148,7 +153,11 @@ onMounted(() => {
     :class="{ 'is-header-integrated': headerIntegrated }"
     ><RoomHeader :title="title" :focused="focused" @integrated="headerIntegrated = $event"
       ><template v-if="$slots.toolbar" #game-actions><slot name="toolbar" /></template
-      ><UiButton
+      ><UiLink
+        :href="'/' + gamePath(type) + '?learn=1&amp;from=game&amp;room=' + room.code"
+        label="試玩教學"
+        icon="play"
+        variant="ghost" /><UiButton
         variant="ghost"
         icon="help"
         icon-only

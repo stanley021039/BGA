@@ -1,0 +1,56 @@
+.vue-tutorial {
+  display: grid;
+  gap: var(--stitch-space-24);
+  padding: var(--stitch-space-24);
+  min-inline-size: 0;
+  .vue-tutorial-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--stitch-space-16);
+    flex-wrap: wrap;
+  }
+  .vue-tutorial-modes,
+  .vue-tutorial-controls {
+    display: flex;
+    gap: var(--stitch-space-16);
+    flex-wrap: wrap;
+  }
+  .vue-tutorial-layout {
+    display: grid;
+    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+    gap: var(--stitch-space-24);
+    align-items: start;
+  }
+  .vue-tutorial-coach {
+    position: sticky;
+    inset-block-start: var(--stitch-space-16);
+  }
+  .vue-tutorial-board {
+    min-inline-size: 0;
+    overflow: auto;
+    max-block-size: calc(100dvh - 160px);
+  }
+  .vue-tutorial-board .vue-room-countdown {
+    display: none;
+  }
+  .vue-tutorial-canvas {
+    inline-size: 100%;
+    aspect-ratio: 2;
+    touch-action: none;
+    border: var(--stitch-border);
+    background: var(--stitch-surface);
+  }
+  @media (max-width: 900px) {
+    padding: var(--stitch-space-16);
+    .vue-tutorial-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .vue-tutorial-coach {
+      position: static;
+    }
+    .vue-tutorial-board {
+      max-block-size: none;
+    }
+  }
+}

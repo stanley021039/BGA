@@ -175,3 +175,7 @@ GitHub 的跳過標記適用於 `push`／`pull_request`，其他事件需另核�
 ## 前端模組邊界（#233）
 
 共用 JavaScript 放入前端模組圖，以 import／export 明確連接；`public/` 只交付素材與樣式，不新增可執行腳本或 classic HTML script entry。建置前的 `check-frontend-modules` 不得略過。首次繪製僅由既有 HTTP prepaint 讀取偏好，持久化及事件訂閱仍由模組 owner 負責；不要重新加入 `window` 共用 API。伺服器共用純計算模組及完整發布包邊界見 [Vue 前端遷移](docs/refactors/VUE-FRONTEND.md)。
+
+## 新遊戲試玩教學（#299）
+
+新增遊戲必須同時提供可發現的試玩教學入口、「自己手動操作」與「全自動演示」；教學使用獨立狀態並包含目標、操作提示、主要流程與揭曉說明。完成前須註冊前後端教學 adapter，驗證雙模式、暫停／重試／離開與桌機／手機；不得只加入說明文字就標完成。教學不得寫入正式成就、題庫或玩家分數。

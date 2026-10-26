@@ -445,6 +445,7 @@ function initializeApp(config, dataLock, acquired) {
     media.reconcile(mediaContext(room));
     return {
       ...view,
+      actionFeedback: require('./rooms/action-feedback').actionFeedback(room),
       type: room.type || 'poker',
       gameRevision: room.gameRevision || 0,
       roomGames,
@@ -928,6 +929,8 @@ function initializeApp(config, dataLock, acquired) {
     draw: DrawGuessRoom,
     lounge: LoungeRoom,
   };
+  const tutorials = require('./tutorials/runtime').createTutorials();
+  acquired.push(() => tutorials.clear());
   const roomsFile = config.roomsFile || config.dbFile + '.rooms';
   const TIMER_KEY = /^(deadline|.+At|.+Until)$/;
   // Timers that were running keep their remaining time across the downtime.
@@ -1260,7 +1263,9 @@ function initializeApp(config, dataLock, acquired) {
             );
           // Bounded private drawing submissions can exceed the small text-action body budget.
           const limit =
-            url.pathname === '/api/action' || url.pathname === '/api/telephone/draft'
+            url.pathname === '/api/action' ||
+            url.pathname === '/api/telephone/draft' ||
+            url.pathname === '/api/tutorial/action'
               ? 128 * 1024
               : url.pathname === '/api/market/images'
                 ? 3 * 1024 * 1024
@@ -1304,6 +1309,40 @@ function initializeApp(config, dataLock, acquired) {
           return send({ ok: true });
         }
         const user = auth.requireUser(req);
+        if (url.pathname.startsWith('/api/tutorial/')) {
+          const expected = new URL(config.publicUrl || 'http://' + req.headers.host).origin;
+          if (req.headers.origin && req.headers.origin !== expected)
+            throw new HttpError(403, 'CROSS_ORIGIN', '不允許跨站教學操作');
+          if (url.pathname === '/api/tutorial/catalog' && req.method === 'GET')
+            return send({ types: tutorials.types });
+          if (url.pathname === '/api/tutorial/state' && req.method === 'GET')
+            return send(tutorials.state(user.id, url.searchParams.get('id')));
+          if (req.method !== 'POST')
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作需使用 POST');
+          limitRate(roomRate, 'tutorial:' + user.id, 120);
+          if (url.pathname === '/api/tutorial/start')
+            return send(tutorials.start(user.id, data.type));
+          if (url.pathname === '/api/tutorial/close')
+            return send(tutorials.close(user.id, data.id));
+          if (url.pathname === '/api/tutorial/step') return send(tutorials.apply(user.id, data));
+          if (url.pathname === '/api/tutorial/perspective')
+            return send(tutorials.perspective(user.id, data));
+          if (url.pathname === '/api/tutorial/action')
+            return send(tutorials.apply(user.id, data, data.route));
+          throw new HttpError(404, 'NOT_FOUND', '找不到這個教學操作');
+        }
+        if (url.pathname === '/api/game-song-audio' && url.searchParams.has('tutorial')) {
+          if (req.method !== 'GET')
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '音訊僅提供 GET');
+          const clip = tutorials.audio(
+            user.id,
+            url.searchParams.get('tutorial'),
+            url.searchParams.get('roundId'),
+          );
+          res.setHeader('Content-Type', 'audio/wav');
+          res.setHeader('Cache-Control', 'no-store');
+          return res.end(clip);
+        }
         roomInvitations.touch(user);
         if (url.pathname === '/api/room-invitations' && req.method === 'GET') {
           expireRooms();

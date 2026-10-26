@@ -74,13 +74,15 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
       earned.value = items.filter((i) => !known!.has(i.id)).map((i) => i.title);
     known = new Set([...(known || []), ...items.map((i) => i.id)]);
   }
-  const dice = RaceDiceDialog?.mount({
-    onRolling: (cycle) => sounds?.rolling(cycle),
-    onAction: async (action, data) => {
-      if (!(await run(action, data)))
-        throw Error(model.notice || '目前無法操作，請依最新狀態再選擇。');
-    },
-  });
+  const dice = model.lessonInlineDice
+    ? undefined
+    : RaceDiceDialog?.mount({
+        onRolling: (cycle) => sounds?.rolling(cycle),
+        onAction: async (action, data) => {
+          if (!(await run(action, data)))
+            throw Error(model.notice || '目前無法操作，請依最新狀態再選擇。');
+        },
+      });
   const movement = RaceMovement?.mount({
     onCue: ({ events, duration }) => {
       if (!latest || document.hidden) return;
@@ -341,6 +343,6 @@ export function useRacePresentation(model: RaceDomain, svg: () => SVGSVGElement 
     stopFocus,
     run,
     skipCue: () => movement?.skipCue(),
-    ready: !!movement && !!dice && !!RacePaths,
+    ready: !!movement && (!!dice || model.lessonInlineDice === true) && !!RacePaths,
   };
 }

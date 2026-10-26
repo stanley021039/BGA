@@ -31,10 +31,13 @@ test('finished replay bypasses start validation and remounts the normal start co
   const cache = new Map();
   function load(file) {
     if (cache.has(file)) return cache.get(file);
-    const source = compileScript(
-      parse(fs.readFileSync(file, 'utf8'), { filename: file }).descriptor,
-      { id: path.basename(file), inlineTemplate: true },
-    ).content;
+    const raw = fs.readFileSync(file, 'utf8');
+    const source = file.endsWith('.vue')
+      ? compileScript(parse(raw, { filename: file }).descriptor, {
+          id: path.basename(file),
+          inlineTemplate: true,
+        }).content
+      : raw;
     const mod = { exports: {} };
     vm.runInNewContext(
       ts.transpileModule(source, {
@@ -66,6 +69,7 @@ test('finished replay bypasses start validation and remounts the normal start co
             return real.has(path.basename(id))
               ? load(path.resolve(path.dirname(file), id))
               : { default: { render: () => null } };
+          if (id.startsWith('.')) return load(path.resolve(path.dirname(file), id + '.ts'));
           return require(id);
         },
       },
