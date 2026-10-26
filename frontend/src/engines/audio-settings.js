@@ -271,6 +271,7 @@ let AudioSettings;
       confirm: ['/assets/gift-sounds/confirmation_001.wav', 10000],
       reveal: ['/assets/gift-sounds/open_001.wav', 10000],
       turn: ['/assets/game-sounds/turn.wav', 720],
+      invitation: ['/assets/game-sounds/turn.wav', 720],
       correct: ['/assets/game-sounds/correct-user.mp3', 3500],
       incorrect: ['/assets/game-sounds/incorrect-user.mp3', 1700],
       'dice-roll': ['/assets/game-sounds/dice-roll.wav', 650],
@@ -297,7 +298,7 @@ let AudioSettings;
           release?.();
           options.onStop?.();
         },
-        game: true,
+        game: kind !== 'invitation',
         maxStartDelayMs:
           kind === 'confirm' || kind === 'reveal'
             ? 10000

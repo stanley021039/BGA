@@ -5,6 +5,7 @@ import { ApiError, requestJson } from '../services/http';
 import { gamePath, readSeat, sessionKey } from '../contracts/room';
 import { readInvitations, readInviteCandidates } from '../contracts/invitations';
 import type { InviteCandidate, RoomInvitation } from '../contracts/invitations';
+import { createInvitationSound } from '../services/invitation-sound';
 
 export const useInvitationsStore = defineStore('invitations', () => {
   const session = useSessionStore(),
@@ -21,7 +22,9 @@ export const useInvitationsStore = defineStore('invitations', () => {
     candidateLoading = ref(false),
     candidateMessage = ref(''),
     candidateFailed = ref(false),
-    canInvite = ref(false);
+    canInvite = ref(false),
+    soundBlocked = ref(false);
+  let sound: ReturnType<typeof createInvitationSound> | null = null;
   let generation = 0,
     senderVersion = 0,
     disposed = false,
@@ -95,6 +98,7 @@ export const useInvitationsStore = defineStore('invitations', () => {
         const value = readInvitations(await request());
         if (!current(epoch)) return false;
         items.value = value;
+        sound?.observe(value);
         if (senderOpen.value) await loadCandidates();
         return true;
       } catch (cause) {
@@ -259,6 +263,9 @@ export const useInvitationsStore = defineStore('invitations', () => {
   }
   function reset() {
     generation++;
+    sound?.destroy();
+    sound = null;
+    soundBlocked.value = false;
     closeSender();
     for (const controller of controllers) controller.abort();
     controllers.clear();
@@ -277,7 +284,12 @@ export const useInvitationsStore = defineStore('invitations', () => {
     () => session.user?.id,
     () => {
       reset();
-      if (session.user) void poll();
+      if (session.user) {
+        sound = createInvitationSound(session.user.id, (value) => {
+          soundBlocked.value = value;
+        });
+        void poll();
+      }
     },
     { immediate: true, flush: 'sync' },
   );
@@ -307,6 +319,8 @@ export const useInvitationsStore = defineStore('invitations', () => {
     candidateMessage,
     candidateFailed,
     canInvite,
+    soundBlocked,
+    enableSound: () => sound?.enable(),
     poll,
     openSender,
     closeSender,
