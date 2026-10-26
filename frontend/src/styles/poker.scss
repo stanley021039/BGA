@@ -935,3 +935,74 @@ body.vue-poker-document .vue-room-player-status {
     }
   }
 }
+
+// Seven/eight-player tables reserve three rows around the community cards.
+:root
+  body.vue-poker-document[data-visual-theme]
+  .vue-poker-seats:is([data-seat-count='7'], [data-seat-count='8']) {
+  block-size: 600px;
+  .vue-poker-seat {
+    &[data-seat-slot='0'] {
+      left: 50%;
+      top: 86%;
+    }
+    &[data-seat-slot='1'] {
+      left: 18%;
+      top: 86%;
+    }
+    &[data-seat-slot='2'] {
+      left: 12%;
+      top: 50%;
+    }
+    &[data-seat-slot='3'] {
+      left: 18%;
+      top: 14%;
+    }
+    &[data-seat-slot='4'] {
+      left: 50%;
+      top: 14%;
+    }
+    &[data-seat-slot='5'] {
+      left: 82%;
+      top: 14%;
+    }
+    &[data-seat-slot='6'] {
+      left: 88%;
+      top: 50%;
+    }
+    &[data-seat-slot='7'] {
+      left: 82%;
+      top: 86%;
+    }
+  }
+  @media (max-width: 760px) {
+    block-size: auto;
+    .vue-poker-seat[data-seat-slot] {
+      inset: auto;
+      &[data-seat-slot='0'] {
+        grid-area: 5/1;
+      }
+      &[data-seat-slot='1'] {
+        grid-area: 4/1;
+      }
+      &[data-seat-slot='2'] {
+        grid-area: 2/1;
+      }
+      &[data-seat-slot='3'] {
+        grid-area: 1/1;
+      }
+      &[data-seat-slot='4'] {
+        grid-area: 1/2;
+      }
+      &[data-seat-slot='5'] {
+        grid-area: 2/2;
+      }
+      &[data-seat-slot='6'] {
+        grid-area: 4/2;
+      }
+      &[data-seat-slot='7'] {
+        grid-area: 5/2;
+      }
+    }
+  }
+}

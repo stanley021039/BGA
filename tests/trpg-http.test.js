@@ -88,7 +88,7 @@ test('TRPG authenticated create/join/action/reconnect/leave and finished history
   assert.equal(s.phase, 'finished');
   assert.equal(s.results.length, 6);
   const list = await fetch(base + '/api/rooms', { headers: { Cookie: owner } });
-  assert.equal((await list.json()).rooms.find((r) => r.code === code).maxPlayers, 6);
+  assert.equal((await list.json()).rooms.find((r) => r.code === code).maxPlayers, 8);
   await post('leave', peer, { code });
   assert.equal((await post('leave', owner, { code })).body.deleted, true);
 });

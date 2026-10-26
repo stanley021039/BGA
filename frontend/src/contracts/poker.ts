@@ -83,7 +83,7 @@ export function readPokerSnapshot(value: unknown): PokerSnapshot {
   });
   if (
     !players.length ||
-    players.length > 6 ||
+    players.length > 8 ||
     r.button >= players.length ||
     r.turn >= players.length ||
     !players.some((p) => p.id === base.me) ||
@@ -113,7 +113,7 @@ export function readPokerSnapshot(value: unknown): PokerSnapshot {
     if (!text(p.name) || !integer(p.amount) || !text(p.hand)) return invalid();
     return { name: text(p.name), amount: p.amount, hand: text(p.hand) };
   });
-  if (results.length > 6 || (base.phase !== 'showdown' && results.length)) return invalid();
+  if (results.length > 8 || (base.phase !== 'showdown' && results.length)) return invalid();
   const visible = [
     ...board,
     ...players.flatMap((p) => p.cards.filter((c): c is number => c !== null)),

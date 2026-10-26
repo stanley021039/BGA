@@ -262,7 +262,7 @@ registerTestAI('musicquiz', {
   },
 });
 registerTestAI('minimal', {
-  maxPlayers: 6,
+  maxPlayers: 8,
   plan(room, p) {
     const s = room.view(p.id),
       input = { roundId: s.roundId, requestId: randomUUID() };
@@ -308,7 +308,7 @@ registerTestAI('telephone', {
   },
 });
 registerTestAI('trpg', {
-  maxPlayers: 6,
+  maxPlayers: 8,
   plan(room, p) {
     const s = room.view(p.id),
       input = { sceneId: s.sceneId, requestId: randomUUID() };
@@ -328,7 +328,7 @@ registerTestAI('trpg', {
     return null;
   },
 });
-registerTestAI('poker', { maxPlayers: 6, plan: () => null }); // Existing poker scheduler handles these players.
+registerTestAI('poker', { maxPlayers: 8, plan: () => null }); // Existing poker scheduler handles these players.
 registerTestAI('majority', {
   maxPlayers: 12,
   plan(room, p) {
