@@ -157,3 +157,39 @@ test('toggle header remains collapsed by default and can expand', async () => {
     h.dispose();
   }
 });
+
+test('public actions render only as rows inside the chat message list alongside normal messages', async () => {
+  const f = harness();
+  try {
+    f.chat.messages = [
+      {
+        id: 'action:one',
+        name: '玩家甲',
+        message: '跟注',
+        at: Date.now(),
+        feedback: { id: 'one' },
+      },
+      f.chat.messages[0],
+      {
+        id: 'action:two',
+        name: '玩家乙',
+        message: '射擊 → 玩家甲',
+        at: Date.now(),
+        feedback: { id: 'two' },
+      },
+    ];
+    await vue.nextTick();
+    const list = f.host.querySelector('.vue-chat-messages');
+    assert.equal(list.querySelectorAll('[data-chat-action]').length, 2);
+    assert.ok(list.textContent.includes('玩家甲'));
+    assert.ok(list.textContent.includes('跟注'));
+    assert.ok(list.textContent.includes('聊天室測試'));
+    assert.ok(list.textContent.includes('玩家乙'));
+    assert.ok(list.textContent.includes('射擊 → 玩家甲'));
+    assert.equal(f.host.querySelectorAll('[data-chat-action]').length, 2);
+    assert.equal(document.querySelector('.vue-action-feedback'), null);
+    assert.equal(f.host.querySelector('dialog'), null);
+  } finally {
+    f.dispose();
+  }
+});

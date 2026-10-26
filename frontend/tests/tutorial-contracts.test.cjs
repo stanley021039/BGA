@@ -73,29 +73,53 @@ for (const type of types)
       s = runtime.apply('owner', { id: s.id, revision: s.revision, requestId: randomUUID() });
     }
   });
-const { createActionFeedbackQueue, readActionFeedback } = load(
+const { mergeChatTimeline, readActionFeedback } = load(
   path.resolve(__dirname, '../src/services/action-feedback.ts'),
 );
 const event = (id, at = 1000) => ({ id, at, actor: { id: 'a', name: '小明' }, action: '送出答案' });
-test('action feedback is queued by event ID, not actor name, and does not replay baseline, stale or cross-room events', () => {
-  const q = createActionFeedbackQueue();
-  q.update('room1', [event('old')], 1000);
-  assert.equal(q.next().length, 0);
-  q.update('room1', [event('old'), event('a'), event('b'), event('c'), event('d')], 1000);
+test('chat timeline interleaves public actions and messages once, with stable identities and public targets', () => {
+  const messages = [{ id: 'same', name: '聊天者', message: '你好', at: 1500 }];
+  const first = event('same', 1000),
+    last = {
+      ...event('last', 2000),
+      actor: { id: 'b', name: '小明' },
+      target: { id: 'c', name: '對象' },
+      item: { color: 'red', value: 2 },
+    };
+  const rows = mergeChatTimeline(messages, [first, first, last]);
   assert.deepEqual(
-    Array.from(q.next(), (e) => e.id),
-    ['a', 'b', 'c'],
+    Array.from(rows, (r) => r.id),
+    ['action:same', 'chat:same', 'action:last'],
   );
-  assert.deepEqual(
-    Array.from(q.next(), (e) => e.id),
-    ['d'],
+  assert.equal(rows[0].name, rows[2].name);
+  assert.equal(rows[0].feedback.actor.id, 'a');
+  assert.equal(rows[2].feedback.actor.id, 'b');
+  assert.equal(rows[2].message, '送出答案 → 對象');
+  assert.deepEqual({ ...rows[2].feedback.item }, { color: 'red', value: 2 });
+  assert.equal(messages[0].id, 'same', 'merging must not mutate the received chat');
+  assert.equal(
+    mergeChatTimeline(messages, [first, first, last]).length,
+    3,
+    'a snapshot refresh does not append duplicates',
   );
-  q.update('room1', [event('a'), event('stale', 0)], 20000);
-  assert.equal(q.next().length, 0);
-  q.update('room2', [event('next')], 1000);
-  assert.equal(q.next().length, 0);
-  q.update('room2', [event('hidden')], 1000, true);
-  assert.equal(q.next().length, 0);
+});
+test('chat action timeline is bounded and ignores malformed feedback without dropping normal chat', () => {
+  const messages = Array.from({ length: 70 }, (_, i) => ({
+    id: 'm' + i,
+    name: '朋友',
+    message: '聊天',
+    at: i,
+  }));
+  const events = Array.from({ length: 40 }, (_, i) => event('e' + i, i));
+  assert.equal(mergeChatTimeline(messages, events).length, 70);
+  const rows = mergeChatTimeline(messages, { invalid: true });
+  assert.equal(rows.length, 50);
+  assert.equal(rows[0].id, 'chat:m20');
+  assert.equal(
+    mergeChatTimeline([], []).length,
+    0,
+    'an empty room does not retain another room timeline',
+  );
   const malformed = readActionFeedback([{ id: 'bad', actor: null }, event('good')]);
   assert.deepEqual(
     Array.from(malformed, (e) => e.id),

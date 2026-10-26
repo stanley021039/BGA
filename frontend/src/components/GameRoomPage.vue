@@ -9,7 +9,6 @@ import RoomRoster from './RoomRoster.vue';
 import GameSettingsPanel from './GameSettingsPanel.vue';
 import RoomChat from './RoomChat.vue';
 import RoomEffects from './RoomEffects.vue';
-import RoomActionFeedback from './RoomActionFeedback.vue';
 import RoomMedia from './RoomMedia.vue';
 import RoomPings from './RoomPings.vue';
 import RoomManager from './RoomManager.vue';
@@ -164,9 +163,7 @@ onMounted(() => {
         icon-only
         label="遊戲說明"
         @click="help?.open()" /><RoomFullscreenToggle
-        @update:focused="
-          focused = $event
-        " /><RoomActionFeedback /><RoomManager /><RoomLeaveButton /></RoomHeader
+        @update:focused="focused = $event" /><RoomManager /><RoomLeaveButton /></RoomHeader
     ><div class="vue-game-room-feedback vue-room-status-row" :class="{ 'is-overlay': !phaseRow }"
       ><div v-if="phaseRow" class="vue-room-phase-slot"
         ><slot name="round-progress" /><span class="vue-room-phase">{{ phase }}</span

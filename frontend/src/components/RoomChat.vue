@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, useId, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useId,
+  watch,
+  defineAsyncComponent,
+} from 'vue';
 import { useChatStore } from '../stores/chat';
 import { useReactionsStore } from '../stores/reactions';
 import { useRoomStore } from '../stores/room';
 import ReactionPicker from './ReactionPicker.vue';
 import UiButton from './UiButton.vue';
+import UiBadge from './UiBadge.vue';
+import type { IngredientColor } from '../contracts/quacks';
+const QuacksGlyph = defineAsyncComponent(() => import('../pages/quacks/QuacksGlyph.vue'));
 import StatusSlot from './StatusSlot.vue';
 import '../styles/room-social.scss';
 const props = withDefaults(
@@ -170,20 +182,33 @@ defineExpose({ compose, focus: focusInput });
         ><li v-if="!chat.messages.length && (chat.loading || chat.status)" class="vue-chat-empty">{{
           chat.loading ? '正在載入…' : '聊天訊息暫時無法更新。'
         }}</li
-        ><li v-for="message in chat.messages" :key="message.id" class="vue-chat-message"
+        ><li
+          v-for="message in chat.messages"
+          :key="message.id"
+          class="vue-chat-message"
+          :data-chat-action="message.feedback?.id"
           ><div class="vue-chat-message-copy"
             ><div class="vue-chat-message-meta"
-              ><strong>{{ message.name }}</strong
+              ><UiBadge v-if="message.feedback" label="遊戲互動" /><strong>{{
+                message.name
+              }}</strong
               ><span aria-hidden="true">•</span
               ><time
                 :datetime="new Date(message.at).toISOString()"
                 :title="new Date(message.at).toLocaleString()"
                 >{{ time(message.at) }}</time
               ></div
-            ><p>{{ message.message }}</p></div
-          ></li
-        ></ol
-      >
+            ><p
+              >{{ message.message
+              }}<QuacksGlyph
+                v-if="message.feedback?.item"
+                class="vue-chat-action-item"
+                :chip="{
+                  color: message.feedback.item.color as IngredientColor,
+                  value: message.feedback.item.value,
+                }"
+                :size="28" /></p></div></li
+      ></ol>
       <div :id="prefix + '-status'" class="vue-chat-feedback"
         ><StatusSlot
           :persistent="chat.pending || chat.loading || reactions.pending || !!chat.status"
