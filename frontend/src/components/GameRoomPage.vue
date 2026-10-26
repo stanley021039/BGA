@@ -46,7 +46,7 @@ const props = withDefaults(
     // Without a match, the phase row is dropped and notices float over the main area (#277).
     phaseRow?: boolean;
   }>(),
-  { showMetrics: true, scoreLabel: '分', phaseRow: true },
+  { showMetrics: true, scoreLabel: '分', phaseRow: true, panelsOpen: true },
 );
 const emit = defineEmits<{ start: [] }>(),
   page = useRoomPage(props.type, props.reader, props.pollMs),

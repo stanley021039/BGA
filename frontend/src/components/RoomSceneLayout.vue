@@ -17,7 +17,7 @@ const props = withDefaults(
     panelsOpen?: boolean;
   }>(),
   {
-    panelsOpen: false,
+    panelsOpen: true,
     rosterClass: 'vue-game-roster-panel',
     mainClass: 'vue-game-main',
     sideClass: 'vue-game-side',
