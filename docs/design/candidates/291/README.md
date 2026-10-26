@@ -4,6 +4,8 @@
 
 ## 最新匯入狀態
 
+運動員接續：[A3桌機／互動／首張Figma保存](athlete-a3-review.md)、[A4手機12組成敗與A5未實際修正](athlete-a4-review.md)。首張運動員已鎖定候選為`2261:41597`，仍未核定；以下五張為CEO候選。
+
 - 經營F1已獨立保存於第三份「04｜預覽區」：[node 2249:6999](https://www.figma.com/design/swrZgTpIsRS4JSGBa4mQhq?node-id=2249-6999)，X93000／Y60000，1920×2116。已重新載入確認框架、尺寸及位置仍保留，實際Figma截圖保存於本機ignored證據區。
 - 最後一輪F1已獨立保存於同頁：[node 2252:6266](https://www.figma.com/design/swrZgTpIsRS4JSGBa4mQhq?node-id=2252-6266)，X96000／Y60000，1920×2119，已重開並保存Figma截圖。
 - 結算F1：[node 2253:6266](https://www.figma.com/design/swrZgTpIsRS4JSGBa4mQhq?node-id=2253-6266)，X99000／Y60000，1920×2362。
