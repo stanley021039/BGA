@@ -299,3 +299,9 @@ RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱
 各遊戲 `?learn=1` 入口使用 `TutorialPage` 的 `Ui*` 外殼、目前角色／下一步說明、手動／自動模式與暫停／重試／離開。十三款桌遊經各自真實引擎及原有 snapshot reader；畫猜提供簡化 SVG 練習筆刷，支援鍵盤及 ACK／重試保留筆跡，不取代正式作畫 renderer。股市使用獨立本機教學及正式計分函式。雷霆舊完整課程保留於 `?learn=1&detail=1`。
 
 教學透過 room store 的 scoped transport 僅呼叫 `/api/tutorial/*`；不保存正式座位，卸載後拒絕延遲請求。原有 domain store 自行採用操作回覆，transport 不提前更換 snapshot，以免將自身操作判定為中斷。新增遊戲須註冊規則、reader、兩種模式及契約測試，見 [本批規格與驗收](specs/INTERACTIONS-TUTORIALS-297-299.md)。
+
+## 房間邀請通知音效（#304，2026-10-27 候選）
+
+`InvitationInbox` 保留原邀請收件匣四列結構；拒播說明與「啟用邀請音效」按鈕放在介紹列，沿用 `StatusSlot` 的 persistent warning及`UiButton`。入口可讀名稱指出點開可啟用；不自動打開視窗、搶焦點或取代加入／婉拒。長提示縮短以維持手機可讀性，`invitation-inbox.scss`只負責介紹內的間距及排版。
+
+聲音由邀請store的單一owner處理，畫面重繪／開關收件匣不觸發；播放與拒播狀態不阻擋邀請回覆。沿用個人效果音設定，詳細行為與驗證見[本批紀錄](INVITATION-SOUND-304-PROGRESS.md)。

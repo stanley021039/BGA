@@ -5,6 +5,7 @@ import { gameTitles } from '../contracts/invitations';
 import UiButton from './UiButton.vue';
 import UiIcon from './UiIcon.vue';
 import '../styles/approved-lobby.scss';
+import '../styles/invitation-inbox.scss';
 import UiDialog from './UiDialog.vue';
 import StatusSlot from './StatusSlot.vue';
 const invites = useInvitationsStore(),
@@ -21,7 +22,11 @@ function open(source: HTMLElement) {
       icon="invite"
       icon-only
       caption="邀請"
-      :label="'房間邀請' + (invites.items.length ? '（' + invites.items.length + '）' : '')"
+      :label="
+        '房間邀請' +
+        (invites.items.length ? '（' + invites.items.length + '）' : '') +
+        (invites.soundBlocked ? '，點開可啟用通知音效' : '')
+      "
       @click="open($event.currentTarget as HTMLElement)"
     /><span v-if="invites.items.length" class="vue-invitation-count" aria-hidden="true">{{
       invites.items.length
@@ -34,7 +39,17 @@ function open(source: HTMLElement) {
     compact
     :dismissible="!invites.responding"
   >
-    <p class="vue-inbox-intro">好友邀請進桌通知</p>
+    <div>
+      <p class="vue-inbox-intro">好友邀請進桌通知</p>
+      <div v-if="invites.soundBlocked" class="vue-inbox-sound-help">
+        <StatusSlot
+          persistent
+          tone="warning"
+          message="瀏覽器可能需要先互動，請點下方啟用通知音效。邀請仍可正常處理。"
+        />
+        <UiButton icon="play" label="啟用邀請音效" @click="invites.enableSound()" />
+      </div>
+    </div>
     <StatusSlot
       :message="
         invites.responseMessage || invites.error || (invites.loading ? '正在取得邀請…' : '')
