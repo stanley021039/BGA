@@ -39,6 +39,14 @@ export const useRoomStore = defineStore('room', () => {
     clockOffset = ref(0),
     lastReceivedAt = ref(0);
   const requests = new Set<AbortController>();
+  let tutorialEpoch = 0;
+  let sandboxRequest:
+    | ((
+        route: string,
+        data?: Record<string, unknown>,
+        options?: RequestOptions,
+      ) => Promise<unknown>)
+    | null = null;
   let switchingGame = false,
     disposed = false,
     recovery: Promise<boolean> | null = null;
@@ -113,6 +121,7 @@ export const useRoomStore = defineStore('room', () => {
   ): Promise<unknown> {
     if (disposed || terminal.value) throw new DOMException('Room unavailable', 'AbortError');
     if (!/^[a-z][a-z0-9-]*(?:\/[a-z][a-z0-9-]*)*$/.test(route)) throw Error('房間操作路徑不正確');
+    if (sandboxRequest) return sandboxRequest(route, data, options);
     const epoch = scope.value,
       roomCode = code.value,
       controller = new AbortController();
@@ -343,9 +352,50 @@ export const useRoomStore = defineStore('room', () => {
     seat.value = null;
     cancelReads();
   }
+  function installTutorial(
+    nextType: GameType,
+    reader: (value: unknown) => RoomSnapshot,
+    transport: (
+      route: string,
+      data?: Record<string, unknown>,
+      options?: RequestOptions,
+    ) => Promise<unknown>,
+  ) {
+    cancelReads();
+    scope.value++;
+    type.value = nextType;
+    code.value = 'FEED00';
+    seat.value = { type: nextType, code: 'FEED00' };
+    snapshot.value = null;
+    terminal.value = null;
+    disconnected.value = false;
+    connecting.value = false;
+    busy.value = false;
+    error.value = '';
+    failed.value = false;
+    message.value = '';
+    readSnapshot = reader;
+    sandboxRequest = transport;
+    const epoch = ++tutorialEpoch;
+    return () => {
+      if (epoch !== tutorialEpoch) return;
+      tutorialEpoch++;
+      sandboxRequest = async () => {
+        throw new DOMException('教學已結束', 'AbortError');
+      };
+      cancelReads();
+      scope.value++;
+      code.value = '';
+      terminal.value = 'closed';
+      busy.value = false;
+      seat.value = null;
+      snapshot.value = null;
+    };
+  }
   const reconnect = () => open(code.value, type.value, readSnapshot);
   function dispose() {
     disposed = true;
+    sandboxRequest = null;
     scope.value++;
     cancelReads();
     recovery = null;
@@ -382,5 +432,6 @@ export const useRoomStore = defineStore('room', () => {
     invalidateIdentity,
     forget,
     dispose,
+    installTutorial,
   };
 });

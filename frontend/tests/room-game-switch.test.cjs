@@ -138,3 +138,44 @@ test('game commands carry their source game and generation', async () => {
     f.close();
   }
 });
+test('tutorial transport never persists a teaching seat or falls through to formal APIs after detach', async () => {
+  const f = await fixture();
+  try {
+    const calls = f.calls.length,
+      saved = new Map(f.storage),
+      requests = [];
+    f.store.busy = true;
+    const detach = f.store.installTutorial(
+      'poker',
+      (v) => v,
+      async (route, data) => {
+        requests.push({ route, data });
+        return { teaching: true };
+      },
+    );
+    assert.equal(f.store.busy, false);
+    assert.equal(f.store.code, 'FEED00');
+    assert.deepEqual(new Map(f.storage), saved);
+    assert.deepEqual(await f.store.request('action', { action: 'call' }), { teaching: true });
+    assert.equal(requests.length, 1);
+    assert.equal(f.calls.length, calls);
+    detach();
+    await assert.rejects(
+      f.store.request('action', { action: 'call' }),
+      (e) => e.name === 'AbortError',
+    );
+    assert.equal(f.calls.length, calls);
+    assert.deepEqual(new Map(f.storage), saved);
+    const next = f.store.installTutorial(
+      'minimal',
+      (v) => v,
+      async () => ({ second: true }),
+    );
+    detach();
+    assert.deepEqual(await f.store.request('state'), { second: true });
+    next();
+    assert.equal(f.calls.length, calls);
+  } finally {
+    f.close();
+  }
+});

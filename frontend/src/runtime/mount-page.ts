@@ -1,6 +1,6 @@
 import '../engines/entry-intro.js';
 import '../styles/noto-sans-tc.css';
-import { createApp, Fragment, h, Teleport } from 'vue';
+import { createApp, Fragment, h, Teleport, defineAsyncComponent } from 'vue';
 import type { App, Component } from 'vue';
 import { createPinia, disposePinia, type Pinia } from 'pinia';
 import { usePreferencesStore } from '../stores/preferences';
@@ -17,6 +17,29 @@ export function mountPage(
   selector: string,
   configure?: (app: App, pinia: Pinia) => void,
 ): void {
+  const tutorialPaths = [
+    'poker',
+    'race',
+    'majority',
+    'gift',
+    'draw',
+    'trpg',
+    'quacks',
+    'bluff',
+    'telephone',
+    'musicquiz',
+    'minimal',
+    'ceo',
+    'second-wind',
+  ];
+  if (
+    new URLSearchParams(location.search).get('learn') === '1' &&
+    !new URLSearchParams(location.search).has('detail') &&
+    tutorialPaths.includes(location.pathname.split('/')[1])
+  )
+    component = defineAsyncComponent(() => import('../pages/tutorial/TutorialPage.vue'));
+  if (new URLSearchParams(location.search).get('learn') === '1' && location.pathname === '/market')
+    component = defineAsyncComponent(() => import('../pages/tutorial/MarketTutorialPage.vue'));
   // Before any room media reads it: a reload of any page asks for video consent again.
   resetMediaConsentOnReload();
   let stop: (() => void) | undefined;

@@ -518,4 +518,8 @@ function runTestAIStep(
   }
   return false;
 }
-module.exports = { registerTestAI, botSupport, addTestBot, runTestAIStep };
+// The isolated tutorial runtime reuses the same legal-action planners; no scheduler or rewards.
+function planTutorialAction(room, player, cache = {}) {
+  return adapters.get(room.type || 'poker')?.plan(room, player, cache) || null;
+}
+module.exports = { registerTestAI, botSupport, addTestBot, runTestAIStep, planTutorialAction };

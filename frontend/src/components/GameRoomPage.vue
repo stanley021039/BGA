@@ -9,12 +9,15 @@ import RoomRoster from './RoomRoster.vue';
 import GameSettingsPanel from './GameSettingsPanel.vue';
 import RoomChat from './RoomChat.vue';
 import RoomEffects from './RoomEffects.vue';
+import RoomActionFeedback from './RoomActionFeedback.vue';
 import RoomMedia from './RoomMedia.vue';
 import RoomPings from './RoomPings.vue';
 import RoomManager from './RoomManager.vue';
 import RoomHeader from './RoomHeader.vue';
 import RoomLeaveButton from './RoomLeaveButton.vue';
 import UiButton from './UiButton.vue';
+import UiLink from './UiLink.vue';
+import { gamePath } from '../contracts/room';
 import UiDialog from './UiDialog.vue';
 import StatusSlot from './StatusSlot.vue';
 import '../styles/game-room.scss';
@@ -126,9 +129,11 @@ onMounted(() => {
             :pending="entryBusy || room.connecting"
             :disabled="['kicked', 'closed'].includes(room.terminal || '')"
             @click="page.enter()"
-          /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><slot
-            name="entry-actions"
-          /><a href="/">返回大廳</a></div
+          /><UiButton icon="help" label="遊戲說明" @click="help?.open()" /><UiLink
+            :href="'/' + gamePath(type) + '?learn=1'"
+            label="試玩教學"
+            icon="play"
+          /><slot name="entry-actions" /><a href="/">返回大廳</a></div
         ><StatusSlot
           persistent
           :message="entryError || room.error"
@@ -142,13 +147,19 @@ onMounted(() => {
     :class="{ 'is-header-integrated': headerIntegrated }"
     ><RoomHeader :title="title" :focused="focused" @integrated="headerIntegrated = $event"
       ><template v-if="$slots.toolbar" #game-actions><slot name="toolbar" /></template
-      ><UiButton
+      ><UiLink
+        :href="'/' + gamePath(type) + '?learn=1&amp;from=game&amp;room=' + room.code"
+        label="試玩教學"
+        icon="play"
+        variant="ghost" /><UiButton
         variant="ghost"
         icon="help"
         icon-only
         label="遊戲說明"
         @click="help?.open()" /><RoomFullscreenToggle
-        @update:focused="focused = $event" /><RoomManager /><RoomLeaveButton /></RoomHeader
+        @update:focused="
+          focused = $event
+        " /><RoomActionFeedback /><RoomManager /><RoomLeaveButton /></RoomHeader
     ><div class="vue-game-room-feedback vue-room-status-row" :class="{ 'is-overlay': !phaseRow }"
       ><div v-if="phaseRow" class="vue-room-phase-slot"
         ><slot name="round-progress" /><span class="vue-room-phase">{{ phase }}</span

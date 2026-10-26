@@ -5,6 +5,7 @@ import { useGameFocus } from '../../composables/game-focus';
 import { marketSigned, marketPoints, marketTime } from '../../contracts/market';
 import type { MarketImage, LegacyMarketRules } from '../../contracts/market';
 import UiButton from '../../components/UiButton.vue';
+import UiLink from '../../components/UiLink.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
 import MarketPrediction from './MarketPrediction.vue';
@@ -70,7 +71,7 @@ onMounted(() => market.start());
     ><div
       ><small>MARKET JINX / 每日預測</small><h1>股市冥燈</h1
       ><p>下一個交易日的台股，你看哪邊？</p></div
-    ><p>免費娛樂 · 無現金、無兌現</p
+    ><UiLink href="/market?learn=1" label="試玩教學" icon="play" /><p>免費娛樂 · 無現金、無兌現</p
     ><UiButton
       icon="expand"
       :label="focus.focused.value ? '退出專注全螢幕' : '專注全螢幕'"

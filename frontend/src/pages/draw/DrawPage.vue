@@ -21,6 +21,7 @@ import RoomSceneLayout from '../../components/RoomSceneLayout.vue';
 import RoomRoster from '../../components/RoomRoster.vue';
 import RoomChat from '../../components/RoomChat.vue';
 import RoomEffects from '../../components/RoomEffects.vue';
+import RoomActionFeedback from '../../components/RoomActionFeedback.vue';
 import RoomMedia from '../../components/RoomMedia.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import RoomManager from '../../components/RoomManager.vue';
@@ -29,6 +30,7 @@ import RoomHeader from '../../components/RoomHeader.vue';
 import RoomFullscreenToggle from '../../components/RoomFullscreenToggle.vue';
 import RoomCountdown from '../../components/RoomCountdown.vue';
 import UiButton from '../../components/UiButton.vue';
+import UiLink from '../../components/UiLink.vue';
 import UiDialog from '../../components/UiDialog.vue';
 import ConfirmDialog from '../../components/ConfirmDialog.vue';
 import StatusSlot from '../../components/StatusSlot.vue';
@@ -363,7 +365,7 @@ onBeforeUnmount(() => {
         label="遊戲說明"
         @click="help?.open()" /><RoomFullscreenToggle
         focus-class="vue-draw-focus"
-        @update:focused="focus = $event" /><RoomManager /><RoomLeaveButton
+        @update:focused="focus = $event" /><RoomActionFeedback /><RoomManager /><RoomLeaveButton
     /></RoomHeader>
     <div class="vue-draw-room-feedback vue-room-status-row"
       ><div class="vue-room-phase-slot"
