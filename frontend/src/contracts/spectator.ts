@@ -1,6 +1,7 @@
 import { isGameType, type GameType } from './room';
 import type { TelephoneStroke } from './telephone';
 import type { MusicQuizSnapshot } from './musicquiz';
+import { ingredientNames, type IngredientColor } from './quacks';
 import { record, text } from '../services/validation';
 
 export interface SpectatorShape {
@@ -70,7 +71,13 @@ export interface SpectatorSnapshot {
     name: string;
     hidden: boolean;
     position: number | null;
-    chips: { color: string; label: string; value: number; position?: number }[];
+    chips: {
+      color: IngredientColor;
+      label: string;
+      effect: string;
+      value: number;
+      position?: number;
+    }[];
   }[];
   clips: { key: string; label: string; playback: NonNullable<MusicQuizSnapshot['playback']> }[];
   images: { src: string; alt: string }[];
@@ -250,10 +257,11 @@ export function readSpectatorSnapshot(value: unknown): SpectatorSnapshot {
         position: p.position === null ? null : Number(p.position),
         chips: list(p.chips, 300).map((v) => {
           const c = record(v);
-          if (!finite(c.value)) return invalid();
+          if (!finite(c.value) || !Object.hasOwn(ingredientNames, text(c.color))) return invalid();
           return {
-            color: text(c.color),
+            color: text(c.color) as IngredientColor,
             label: text(c.label),
+            effect: text(c.effect),
             value: c.value,
             ...(finite(c.position) ? { position: c.position } : {}),
           };

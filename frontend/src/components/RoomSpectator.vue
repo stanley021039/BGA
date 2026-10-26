@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onBeforeUnmount, ref } from 'vue';
 import { requestJson, ApiError } from '../services/http';
 import { gamePath } from '../contracts/room';
 import { readSpectatorSnapshot, type SpectatorSnapshot } from '../contracts/spectator';
@@ -12,6 +12,7 @@ import SpectatorCanvas from './SpectatorCanvas.vue';
 import GameSongClip from './GameSongClip.vue';
 import RoomFullscreenToggle from './RoomFullscreenToggle.vue';
 import '../styles/spectator.scss';
+const QuacksGlyph = defineAsyncComponent(() => import('../pages/quacks/QuacksGlyph.vue'));
 const props = defineProps<{ code: string }>();
 const state = ref<SpectatorSnapshot | null>(null),
   error = ref('正在連接觀戰畫面…'),
@@ -202,8 +203,11 @@ onBeforeUnmount(() => {
             ><p>位置 {{ pot.position }}</p
             ><ol class="vue-spectator-chips"
               ><li v-for="(chip, j) in pot.chips" :key="j"
-                >{{ chip.label || chip.color }} {{ chip.value
-                }}<template v-if="chip.position !== undefined">
+                ><QuacksGlyph
+                  :chip="chip"
+                  :hint="chip.effect || (chip.label || chip.color) + ' ' + chip.value"
+                  :size="40"
+                /><template v-if="chip.position !== undefined">
                   · {{ chip.position }} 格</template
                 ></li
               ></ol

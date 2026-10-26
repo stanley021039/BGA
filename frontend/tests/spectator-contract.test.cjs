@@ -157,3 +157,48 @@ test('real engine/AI transitions keep every observed phase compatible with the s
     assert.ok(['finished', 'showdown'].includes(r.phase), type + ' reached its ending');
   }
 });
+
+test('new main eight-player poker, minimal and trpg retain every seat and their private boundaries', () => {
+  const { classes } = require('../../tools/qa/spectator-fixtures-296.cjs');
+  for (const type of ['poker', 'minimal', 'trpg']) {
+    const room = new classes[type]('ABCDEF', '八人觀戰');
+    for (let i = 0; i < 8; i++) room.add('八人測試' + i, true);
+    room.start();
+    const snapshot = readSpectatorSnapshot(spectatorView(room));
+    assert.equal(snapshot.players.length, 8);
+    assert.equal(new Set(snapshot.players.map((p) => p.id)).size, 8);
+    if (type === 'poker')
+      assert.ok(snapshot.players.every((p) => p.cards.every((card) => card === null)));
+    if (type === 'minimal') assert.deepEqual(snapshot.drawings, []);
+    if (type === 'trpg') assert.equal(Object.hasOwn(snapshot, 'myPlan'), false);
+  }
+});
+
+test('majority variants and expanded hidden-progress Quacks remain readable through their real phase transitions', () => {
+  const { create, advance } = require('../../tools/qa/spectator-fixtures-296.cjs');
+  for (const [type, options] of [
+    ['majority', { mode: 'music', bracketSize: 8, theme: 'all' }],
+    ['majority', { mode: 'scenario', bracketSize: 8, theme: 'work' }],
+    ['majority', { mode: 'cruel', rounds: 10 }],
+    ['quacks', { witches: true, alchemists: true, hiddenProgress: true, bookSet: 1 }],
+  ]) {
+    const room = create(type);
+    if (options.mode === 'cruel') room.add('第四位合成玩家', true);
+    room.configure(room.host, options);
+    room.start();
+    let complete = false;
+    for (let step = 1; step < 3500; step++) {
+      const snapshot = readSpectatorSnapshot(spectatorView(room));
+      assert.equal(snapshot.players.length, options.mode === 'cruel' ? 4 : 3);
+      if (type === 'quacks' && room.phase === 'brewing') {
+        for (const pot of snapshot.pots.filter((p) => p.hidden)) assert.deepEqual(pot.chips, []);
+      }
+      if (room.phase === 'finished') {
+        complete = true;
+        break;
+      }
+      advance(room, step);
+    }
+    assert.ok(complete, type + ' ' + JSON.stringify(options) + ' must complete');
+  }
+});

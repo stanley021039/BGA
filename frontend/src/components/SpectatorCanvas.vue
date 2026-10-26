@@ -62,7 +62,7 @@ function visibility() {
     renderer ||= StrokeCanvas.createDrawingRenderer(canvas.value, {
       separateMutable: true,
       atomicPresentation: true,
-      maxCheckpoints: 1,
+      maxCheckpoints: 2,
     });
     paint();
   }

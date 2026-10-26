@@ -109,6 +109,16 @@ test('draw includes accepted timed strokes but hides candidates, current answer 
   assert.equal(JSON.stringify(spectatorView(r)).includes(SECRET), true);
 });
 
+test('draw observation keeps the real choosing, drawing and reveal countdown durations', () => {
+  const room = make('draw', true);
+  assert.equal(spectatorView(room).duration, 15000);
+  room.choose(room.presenterId, room.candidates[0].id);
+  assert.equal(spectatorView(room).duration, room.options.seconds * 1000);
+  room.act(room.presenterId, 'skip', { round: room.round, canvasEpoch: room.canvas.epoch });
+  assert.equal(room.phase, 'reveal');
+  assert.equal(spectatorView(room).duration, 8000);
+});
+
 test('majority votes, gift assignments, minimal drafts, bluff roles and trpg plans remain private before reveal', () => {
   const majority = make('majority', true);
   majority.phase = 'answering';

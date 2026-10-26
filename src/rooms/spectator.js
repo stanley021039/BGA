@@ -220,7 +220,12 @@ function spectatorView(room, gameAudio) {
     case 'draw': {
       actor = room.presenterId;
       mark(room.guessedIds);
-      out.duration = num(room.options?.seconds, 90) * 1000;
+      out.duration =
+        room.phase === 'choosing'
+          ? 15000
+          : room.phase === 'reveal'
+            ? 8000
+            : num(room.options?.seconds, 90) * 1000;
       const revealed =
         ['reveal', 'finished'].includes(room.phase) &&
         room.result?.canvasEpoch === room.canvas.epoch;
@@ -504,6 +509,12 @@ function spectatorView(room, gameAudio) {
             ? rows(p.pot).map((chip) => ({
                 ...fields(chip, ['color', 'value', 'position']),
                 label: NAMES[chip.color] || str(chip.color),
+                effect:
+                  chip.color === 'white'
+                    ? '依數值前進；白色總數值超過爆炸門檻時爆炸。'
+                    : Object.hasOwn(NAMES, chip.color)
+                      ? str(room.bookFor(chip.color)?.effect)
+                      : '',
               }))
             : [],
         };

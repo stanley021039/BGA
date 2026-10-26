@@ -107,8 +107,8 @@
   gap: var(--stitch-gap-controls);
   align-items: center;
 }
-body.vue-spectator-focus {
-  .vue-site-header {
+:root body.vue-spectator-document.vue-spectator-focus[data-visual-theme] {
+  #site-header-app[data-site-header] {
     display: none;
   }
   .vue-room-spectator {

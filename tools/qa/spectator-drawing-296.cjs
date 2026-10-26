@@ -66,7 +66,8 @@ module.exports = async function drawingQA({
       canvasEpoch: selection.canvasEpoch,
       requestId: randomUUID(),
     });
-    await artist.waitForFunction(() => document.body.dataset.roomPhase === 'drawing');
+    await artist.getByText('禁止直接寫出答案', { exact: true }).waitFor();
+    await artist.getByRole('button', { name: '略過（本機不載入）', exact: true }).click();
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto(base + '/draw/' + code + '?watch=1');
     const visible = page.locator('.vue-spectator-canvas');
@@ -123,6 +124,16 @@ module.exports = async function drawingQA({
       artist.evaluate(() => window.__spectatorInk.frames.at(-1).ink),
       page.evaluate(() => window.__spectatorInk.frames.at(-1).ink),
     ]);
+    fs.writeFileSync(
+      path.join(root, 'draw-held-debug.json'),
+      JSON.stringify({
+        held,
+        state: await json(artistContext, 'state?code=' + code),
+        canonical: await json(artistContext, 'draw/canvas?code=' + code),
+      }),
+    );
+    await artist.screenshot({ path: path.join(root, 'draw-held-artist.png'), fullPage: true });
+    await page.screenshot({ path: path.join(root, 'draw-held-observer.png'), fullPage: true });
     assert.ok(
       held.every((n) => n > 0),
       'held pointer remains visible on artist and observer',
