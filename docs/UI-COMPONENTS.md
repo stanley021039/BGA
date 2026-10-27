@@ -8,6 +8,10 @@
 
 鍵盤及手機動作透過 `useSceneControls` 共用鎖、冷卻與換房失效；伺服器保持最終授權。配裝僅用既有 metadata，不載入動畫預覽或新素材。使用原共用元件外觀，本票未新增／修改 Figma 設計稿。完整範圍及驗收見 [#301 規格](specs/MOBILE-SCENE-CONTROLS-301.md)。
 
+## 大廳與設定頁導覽列（#310）
+
+`.club.vue-site-shell` 共用 SiteHeader C03 的外層邊距及透明頁首語意；桌機緊湊斷點（≥960px、≥560px高、fine pointer且非大字型）使用24px左右邊距，其餘沿用既有`.club`斷點。設定頁的主要內容獨立放在原`.club`容器，不能為了對齊導覽列一起更動內容欄寬。共用帳號按鈕保持`transform:none`，不受頁面通用hover上移影響。大廳背景檢視仍為大廳專屬，設定頁不增加無作用入口；特殊場景的頁首對比規則繼續由原場景契約決定。驗證與回歸指令見 [#310 規格](specs/SETTINGS-HEADER-310.md)。
+
 ## 快速對照
 
 `UiPanel` 的 `title-before`／`title-after` slot 將規則入口、補充資訊或單行順序置於標題同列，沿用共用 header 對齊；`actions` 仍保留在列尾。title-after 自適應剩餘寬度，內容可自行設單行省略，不以頁面覆寫標題位置。
