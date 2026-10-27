@@ -410,8 +410,6 @@ body.lobby-self-hover {
   body.vue-lobby-document:not(.ui-large-text) {
     .club {
       height: 100dvh;
-      max-width: none;
-      padding: 0 tokens.space(6);
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
     }
