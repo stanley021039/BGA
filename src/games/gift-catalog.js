@@ -1,5 +1,6 @@
 // Original gift prompts for Afterhours. No commercial card art or card text is used.
 const additions = require('./gift-additions');
+const { versionedAsset } = require('../http/asset-version');
 const adultPrompts = require('./gift-adult');
 const ADULT_CATEGORY = '成人派對';
 const categories = {
@@ -170,12 +171,14 @@ const legacySymbols = {
   ],
 };
 const notoImage = (symbol) =>
-  '/assets/gifts/noto/emoji_u' +
-  [...symbol]
-    .filter((char) => !['\ufe0f', '\ufe0e'].includes(char))
-    .map((char) => char.codePointAt(0).toString(16))
-    .join('_') +
-  '.png';
+  versionedAsset(
+    '/assets/gifts/noto/emoji_u' +
+      [...symbol]
+        .filter((char) => !['\ufe0f', '\ufe0e'].includes(char))
+        .map((char) => char.codePointAt(0).toString(16))
+        .join('_') +
+      '.png',
+  );
 const GIFTS = Object.entries(categories)
   .flatMap(([category, titles], group) => {
     const rows = [
@@ -190,7 +193,9 @@ const GIFTS = Object.entries(categories)
         category,
         title,
         image: number
-          ? `/assets/gifts/kenney/genericItem_color_${String(number).padStart(3, '0')}.png`
+          ? versionedAsset(
+              `/assets/gifts/kenney/genericItem_color_${String(number).padStart(3, '0')}.png`,
+            )
           : notoImage(symbol),
       };
     });

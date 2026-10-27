@@ -2,6 +2,10 @@
 
 版本管理從既有 `1.0.0` 基線開始；更早的功能與部署紀錄見 `docs/`，不追補未曾實際標記的發行版。
 
+## [3.11.2] - 2026-10-27
+
+- Images: thumbnails for avatars and custom gifts, a small bluff reaction photo, and content-versioned static images cached for good (#316).
+
 ## [3.11.1] - 2026-10-27
 
 - 設定頁導覽列與大廳共用邊距及透明外觀，保留設定內容布局（#310）

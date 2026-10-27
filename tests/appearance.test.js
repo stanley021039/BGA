@@ -16,8 +16,10 @@ test('ten bundled image characters have neutral art and optional expressions', (
   for (const character of builtinCharacters) {
     assert.deepEqual(validateAppearance(character.appearance), character.appearance);
     assert.ok(character.expressions.neutral);
-    for (const url of Object.values(character.expressions))
-      assert.ok(fs.existsSync(path.join(__dirname, '..', 'public', url)));
+    for (const url of Object.values(character.expressions)) {
+      assert.match(url, /\?v=[\w-]{12}$/);
+      assert.ok(fs.existsSync(path.join(__dirname, '..', 'public', url.split('?')[0])));
+    }
   }
   assert.ok(
     Object.keys(builtinCharacters[0].expressions).length >

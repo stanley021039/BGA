@@ -8,7 +8,7 @@ const publicGift = (row) => ({
   id: 'shared-' + row.id,
   title: row.title,
   category: row.category,
-  image: row.image_mime ? `/assets/gifts/shared/${row.id}` : null,
+  image: row.image_mime ? `/assets/gifts/shared/${row.id}?size=256` : null,
   author: row.author_name,
   shared: true,
   at: row.created_at,

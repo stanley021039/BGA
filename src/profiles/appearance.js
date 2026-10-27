@@ -1,4 +1,5 @@
 const { HttpError } = require('../http/errors');
+const { versionedAsset } = require('../http/asset-version');
 
 const expressionLabels = {
   neutral: '平常',
@@ -37,7 +38,9 @@ const builtinCharacters = slugs.map((slug, index) => {
   for (const expression of Object.keys(expressionLabels)) {
     if (index >= 6 && ['surprised', 'thinking'].includes(expression)) continue;
     const extension = expression === 'happy' ? 'gif' : 'png';
-    expressions[expression] = `/assets/characters/${slug}-${expression}.${extension}`;
+    expressions[expression] = versionedAsset(
+      `/assets/characters/${slug}-${expression}.${extension}`,
+    );
   }
   return {
     id: `builtin:${slug}`,

@@ -148,5 +148,8 @@ test('image routes serve thumbnails with the cache policy of the original URL', 
     redirect: 'manual',
   });
   assert.equal(avatar.status, 302);
-  assert.match(avatar.headers.get('location'), /^\/assets\/characters\/[\w./-]+\?size=128$/);
+  assert.match(
+    avatar.headers.get('location'),
+    /^\/assets\/characters\/[\w./-]+\?v=[\w-]{12}&size=128$/,
+  );
 });

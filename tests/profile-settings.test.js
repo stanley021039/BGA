@@ -140,7 +140,10 @@ test('independent avatar and character settings validate ownership, persist, and
       redirect: 'manual',
     });
     assert.equal(image.status, 302);
-    assert.equal(image.headers.get('location'), '/assets/characters/mage-neutral.png');
+    assert.match(
+      image.headers.get('location'),
+      /^\/assets\/characters\/mage-neutral\.png\?v=[\w-]{12}$/,
+    );
     const shared = (
       await post('profile/characters', host, {
         name: '分享角色',

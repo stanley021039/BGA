@@ -1,10 +1,11 @@
 'use strict';
 
 const { prepaint } = require('../../frontend/src/engines/prepaint.js');
+const { versionedAsset } = require('./asset-version');
 
 const markup = `<dialog id="entry-intro" data-ui-dialog-frame="true" open aria-label="網站開場" tabindex="-1">
   <div class="entry-intro-art">
-    <img data-entry-src="/assets/auth/login-864.webp" width="864" height="486" fetchpriority="high" alt="歡迎來到 Ave Mujica 的世界">
+    <img data-entry-src="${versionedAsset('/assets/auth/login-864.webp')}" width="864" height="486" fetchpriority="high" alt="歡迎來到 Ave Mujica 的世界">
     <span class="entry-intro-brand">302捉猶團</span>
   </div>
   <button class="entry-intro-skip" type="button" aria-label="略過開場動畫">略過開場 <span aria-hidden="true">→</span></button>
