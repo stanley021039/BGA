@@ -2,6 +2,10 @@
 
 版本管理從既有 `1.0.0` 基線開始；更早的功能與部署紀錄見 `docs/`，不追補未曾實際標記的發行版。
 
+## [3.12.1] - 2026-10-27
+
+- Lobby attacks share one canvas and lower their detail with load or on slow devices, sparks use a cached glow, and the lobby is pushed over an event stream instead of polled every 500 ms (#322).
+
 ## [3.12.0] - 2026-10-27
 
 - 新增九款多人奧義，依實際命中與攻擊分段結算傷害，加入貫穿、燃燒、定身、擊飛、下半身拾回與兵器／Ea連段。

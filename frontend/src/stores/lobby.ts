@@ -26,6 +26,10 @@ import { entranceEffect } from '../services/entrance-effects';
 type AttackSlot = 'q' | 'e';
 type Movement = { x: number; y: number } | { dx: number; dy: number };
 import { useLobbyBackgroundStore } from './lobby-background';
+// Lobby changes arrive over a server-sent stream (#322); polling slows to a
+// safety check while it is live and takes over whenever it is not.
+const STREAM_POLL_MS = 10000,
+  STREAM_RETRY_MS = 5000;
 
 export const useLobbyStore = defineStore('lobby', () => {
   const session = useSessionStore();
@@ -60,6 +64,9 @@ export const useLobbyStore = defineStore('lobby', () => {
     roomsTimer: ReturnType<typeof setTimeout> | null = null,
     queued: Movement | null = null,
     backoff = 500;
+  let stream: EventSource | null = null,
+    streamLive = false,
+    streamTried = 0;
   const controllers = new Set<AbortController>();
   const identity = computed(() => session.user?.id || '');
   function showSpeech(event: BarrageEvent): false | (() => void) {
@@ -177,6 +184,42 @@ export const useLobbyStore = defineStore('lobby', () => {
     }
     return false;
   }
+  function closeStream() {
+    stream?.close();
+    stream = null;
+    streamLive = false;
+  }
+  function openStream() {
+    if (stream || disposed || !identity.value || document.hidden) return;
+    if (typeof EventSource !== 'function' || Date.now() - streamTried < STREAM_RETRY_MS) return;
+    streamTried = Date.now();
+    const epoch = generation,
+      account = identity.value,
+      source = new EventSource(
+        '/api/lobby/events?entrance=' + encodeURIComponent(entranceEffect.value),
+      );
+    stream = source;
+    source.addEventListener('open', () => {
+      if (stream !== source) return;
+      streamLive = true;
+      if (!presenceJob) schedulePresence(STREAM_POLL_MS);
+    });
+    source.addEventListener('error', () => {
+      if (stream !== source) return;
+      streamLive = false;
+      // A refused stream (signed out, too many tabs) stays closed and polling carries on.
+      if (source.readyState === EventSource.CLOSED) stream = null;
+      if (!presenceJob) schedulePresence(backoff);
+    });
+    source.addEventListener('state', (event) => {
+      if (stream !== source || !current(epoch, account) || presenceJob) return;
+      try {
+        consume(JSON.parse((event as MessageEvent<string>).data));
+      } catch {
+        /* A malformed frame is skipped; the next push or poll replaces it. */
+      }
+    });
+  }
   function clearTimers() {
     if (presenceTimer) clearTimeout(presenceTimer);
     if (roomsTimer) clearTimeout(roomsTimer);
@@ -232,13 +275,18 @@ export const useLobbyStore = defineStore('lobby', () => {
       presenceJob = null;
       if (current(epoch, account)) {
         if (queued && connected.value) void sync();
-        else
+        else {
+          if (connected.value) openStream();
           schedulePresence(
-            connected.value &&
-              snapshot.value?.attacks.some((event) => event.hits?.some((hit) => hit.pending))
-              ? 200
-              : backoff,
+            !connected.value
+              ? backoff
+              : streamLive
+                ? STREAM_POLL_MS
+                : snapshot.value?.attacks.some((event) => event.hits?.some((hit) => hit.pending))
+                  ? 200
+                  : backoff,
           );
+        }
       }
     }
   }
@@ -487,6 +535,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     generation++;
     expressionRevision++;
     clearTimers();
+    closeStream();
     for (const controller of controllers) controller.abort();
     controllers.clear();
     presenceJob = null;
@@ -515,6 +564,7 @@ export const useLobbyStore = defineStore('lobby', () => {
   function visibility() {
     if (document.hidden) {
       clearTimers();
+      closeStream();
       queued = null;
       destination.value = null;
       connected.value = false;

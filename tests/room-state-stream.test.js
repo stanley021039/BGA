@@ -173,3 +173,21 @@ test('game changes rebind existing seats and a late old-room notification cannot
   assert.equal(b.events('state').at(-1).me, 'p2');
   stream.close();
 });
+
+test('a minimum gap holds back rapid changes until the gap has passed', async () => {
+  const { room, stream } = setup({ minGapMs: 40 }),
+    a = connection();
+  stream.subscribe(room, { ...a, user: { id: 'u1' }, playerId: 'p1' });
+  assert.equal(a.events('state').length, 1);
+  room.phase = 'playing';
+  stream.notify(room);
+  await tick();
+  assert.equal(a.events('state').length, 1, 'held back inside the gap');
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  stream.notify(room);
+  await tick();
+  const states = a.events('state');
+  assert.equal(states.length, 2);
+  assert.equal(states[1].phase, 'playing');
+  stream.close();
+});

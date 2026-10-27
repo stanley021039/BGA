@@ -7,8 +7,39 @@ import { motionAllowed, watchMotionCancellation } from './motion-lifetime.js';
 import { createStitchAttack } from './attack-stitch.js';
 import combatRules from '../../../public/shared/scene-rules.json';
 import attackTiming from '../../../public/shared/attack-timing.json';
-export function playAttackArtwork(surface, options) {
-  if (!motionAllowed()) return () => {};
+// Full detail for one attack on its own canvas; a shared stage lowers these by load.
+const FULL_DETAIL = { density: 1, glow: 1 };
+// Sparks draw a cached soft glow sprite instead of each paying for a shadowBlur pass.
+const glowSprites = new Map();
+function glowSprite(color) {
+  if (glowSprites.has(color)) return glowSprites.get(color);
+  const canvas =
+    typeof OffscreenCanvas === 'function'
+      ? new OffscreenCanvas(32, 32)
+      : globalThis.document?.createElement?.('canvas');
+  const g = canvas?.getContext?.('2d');
+  let sprite = null;
+  if (g) {
+    canvas.width = canvas.height = 32;
+    const fade = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+    fade.addColorStop(0, 'rgba(255,255,255,0.9)');
+    fade.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = fade;
+    g.fillRect(0, 0, 32, 32);
+    // Tint keeps the white gradient's alpha, so any colour format fades cleanly.
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = color;
+    g.fillRect(0, 0, 32, 32);
+    sprite = canvas;
+  }
+  if (glowSprites.size >= 48) glowSprites.clear();
+  glowSprites.set(color, sprite);
+  return sprite;
+}
+// One attack drawn into a context owned by the caller: draw(now) paints a frame
+// (without clearing) and returns false once the attack has finished.
+export function createAttackScene(ctx, options) {
+  const fx = options.fx || FULL_DETAIL;
   // Previews use the same phase schedule; real scenes only show server-settled hits.
   if (options.preview && !options.readHits && !['shield', 'sphere'].includes(options.effect)) {
     const area = attackEffects.find((effect) => effect.id === options.effect)?.area;
@@ -30,14 +61,8 @@ export function playAttackArtwork(surface, options) {
     );
     options = { ...options, readHits: () => hits };
   }
-  const ctx = surface.getContext('2d');
-  if (!ctx) return () => {};
   const width = options.width,
-    height = options.height,
-    quality = Math.min(1, 1280 / width, 900 / height);
-  surface.width = Math.max(1, Math.round(width * quality));
-  surface.height = Math.max(1, Math.round(height * quality));
-  ctx.setTransform(quality, 0, 0, quality, 0, 0);
+    height = options.height;
   const defensive = ['shield', 'sphere'].includes(options.effect),
     from = options.from,
     to = defensive ? from : options.to;
@@ -76,8 +101,7 @@ export function playAttackArtwork(surface, options) {
     '#ff007f',
     '#ff8800',
   ];
-  let stopped = false,
-    frame = 0;
+  let stopped = false;
   const timers = new Set();
   function later(callback, ms) {
     if (stopped) return;
@@ -163,7 +187,7 @@ export function playAttackArtwork(surface, options) {
   function spawnImpactSparks(x, y, count = 18, color = null) {
     if (!state.autoSparks) return;
     const col = color || getActiveColor();
-    for (let i = 0; i < count * state.density; i++) {
+    for (let i = 0; i < count * state.density * fx.density; i++) {
       const angle = Math.random() * Math.PI * 2;
       const speed = (Math.random() * 7 + 2) * state.speed;
       particles.push({
@@ -562,533 +586,676 @@ export function playAttackArtwork(surface, options) {
   if (!advanced) fireVfxNode(ids[options.effect], from.x, from.y, to.x, to.y);
   const start = performance.now() - Math.max(0, Math.min(4100, options.ageMs || 0));
   const emitted = new Set();
-  let last = -Infinity;
-  let releaseMotion = () => {};
+  const poolLimit = Math.round(220 * fx.density);
+  function dispose() {
+    if (stopped) return;
+    stopped = true;
+    for (const timer of timers) clearTimeout(timer);
+    timers.clear();
+  }
+  function draw(now) {
+    if (stopped) return false;
+    if (now - start > 4200) {
+      dispose();
+      return false;
+    }
+    for (const pool of [
+      particles,
+      projectiles,
+      floatingTexts,
+      shockwaves,
+      lightningBolts,
+      spaceCuts,
+    ])
+      if (pool.length > poolLimit) pool.splice(0, pool.length - poolLimit);
+    ctx.save();
+    advanced?.(now - start);
+    for (const hit of options.readHits?.() || []) {
+      const key = hit.toId + ':' + hit.phase;
+      if (emitted.has(key) || hit.pending || hit.missed || !hit.damage || now - start < hit.delayMs)
+        continue;
+      emitted.add(key);
+      triggerShockwave(hit.x, hit.y, 80, options.color, 4);
+      spawnImpactSparks(hit.x, hit.y, 8, options.color);
+      spawnDamageText(hit.x, hit.y, 1, hit.critical, null, hit);
+    }
+
+    // Apply Screen Shake
+
+    // 1. Render Target Dummy
+
+    for (let i = spaceCuts.length - 1; i >= 0; i--) {
+      const sc = spaceCuts[i];
+      sc.alpha -= sc.decay;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, sc.alpha);
+      ctx.shadowColor = sc.color;
+      ctx.shadowBlur = 18;
+      ctx.strokeStyle = sc.color;
+      ctx.lineWidth = sc.width * sc.alpha;
+      ctx.beginPath();
+      ctx.moveTo(sc.x1, sc.y1);
+      ctx.lineTo(sc.x2, sc.y2);
+      ctx.stroke();
+
+      ctx.strokeStyle = sc.coreColor;
+      ctx.lineWidth = Math.max(1, sc.width * sc.alpha * 0.6);
+      ctx.stroke();
+      ctx.restore();
+      if (sc.alpha <= 0) spaceCuts.splice(i, 1);
+    }
+
+    // 2. Render & Update Projectiles
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+      const p = projectiles[i];
+      p.life--;
+
+      ctx.save();
+      ctx.shadowBlur = state.bloom;
+      ctx.shadowColor = p.color || getActiveColor();
+
+      if (p.type === 'abyssal_crescent') {
+        // Reach the frozen target within 520ms regardless of screen size or FPS.
+        const travel = Math.min(1, Math.max(0, (now - p.bornAt) / 520));
+        p.x = p.originX + (p.targetX - p.originX) * travel;
+        p.y = p.originY + (p.targetY - p.originY) * travel;
+
+        p.ghosts.push({ x: p.x, y: p.y });
+        if (p.ghosts.length > 6) p.ghosts.shift();
+
+        for (let g = 0; g < p.ghosts.length; g++) {
+          const gh = p.ghosts[g];
+          const gAlpha = (g / p.ghosts.length) * 0.45;
+          drawCrescentArc(
+            gh.x,
+            gh.y,
+            p.angle,
+            p.radius * (0.88 + g * 0.02),
+            p.config,
+            gAlpha,
+            true,
+          );
+        }
+
+        drawCrescentArc(p.x, p.y, p.angle, p.radius, p.config, 1.0, false);
+
+        const dist = Math.hypot(p.x - state.dummy.x, p.y - state.dummy.y);
+        if (dist < state.dummy.radius + p.radius * 0.45 || p.life <= 0) {
+          triggerShockwave(p.x, p.y, 110, p.config.glowColor, 7);
+          spawnImpactSparks(p.x, p.y, 32, p.config.glowColor);
+          spawnDamageText(p.x, p.y, 168000, true);
+          spawnSpaceCut(
+            p.x - Math.cos(p.angle) * 70,
+            p.y - Math.sin(p.angle) * 70,
+            p.x + Math.cos(p.angle) * 90,
+            p.y + Math.sin(p.angle) * 90,
+            p.config.glowColor,
+            p.config.darkCore,
+          );
+
+          projectiles.splice(i, 1);
+        }
+      } else if (p.type === 'barrage') {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.trail.push({ x: p.x, y: p.y });
+        if (p.trail.length > 8) p.trail.shift();
+
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        for (let t = p.trail.length - 1; t >= 0; t--) {
+          ctx.lineTo(p.trail[t].x, p.trail[t].y);
+        }
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        const dist = Math.hypot(p.x - state.dummy.x, p.y - state.dummy.y);
+        if (dist < state.dummy.radius || p.life <= 0) {
+          spawnImpactSparks(p.x, p.y, 16, p.color);
+          spawnDamageText(p.x, p.y, 22000, Math.random() > 0.4);
+          projectiles.splice(i, 1);
+        }
+      } else if (p.type === 'deflect_bullet') {
+        p.x += p.vx;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+
+        // When hits hex shield barrier
+        if (p.x >= p.shieldX) {
+          triggerShockwave(p.x, p.y, 50, '#00f0ff', 3);
+          spawnImpactSparks(p.x, p.y, 15, '#7df4ff');
+          spawnDamageText(p.x, p.y, 0, false, 'DEFLECTED!');
+          projectiles.splice(i, 1);
+        } else if (p.life <= 0) {
+          projectiles.splice(i, 1);
+        }
+      } else if (p.type === 'specium_beam') {
+        const progress = 1 - p.life / p.maxLife;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.strokeStyle = '#ffffff';
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 24;
+        ctx.lineWidth = 4;
+        ctx.globalAlpha = Math.max(0, 1 - progress);
+        ctx.beginPath();
+        ctx.moveTo(-25, 0);
+        ctx.lineTo(25, 0);
+        ctx.moveTo(0, -38);
+        ctx.lineTo(0, 38);
+        ctx.stroke();
+        ctx.restore();
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 26 * Math.sin(progress * Math.PI);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.targetX, p.targetY);
+        ctx.stroke();
+
+        // Core hot-white line
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 8 * Math.sin(progress * Math.PI);
+        ctx.stroke();
+
+        // Double spiral electric overlay
+        ctx.strokeStyle = '#7df4ff';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        const beamDist = Math.hypot(p.targetX - p.x, p.targetY - p.y);
+        const beamAngle = Math.atan2(p.targetY - p.y, p.targetX - p.x);
+        for (let s = 0; s < beamDist; s += 14) {
+          const spiralY = Math.sin(s * 0.12 - now * 0.03) * 22;
+          const px = p.x + Math.cos(beamAngle) * s - Math.sin(beamAngle) * spiralY;
+          const py = p.y + Math.sin(beamAngle) * s + Math.cos(beamAngle) * spiralY;
+          if (s === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        if (p.life <= 0) projectiles.splice(i, 1);
+      } else if (p.type === 'orbital_pillar') {
+        const progress = Math.sin((1 - p.life / p.maxLife) * Math.PI);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = progress * 0.85;
+        ctx.fillRect(p.x - (p.width * progress) / 2, 0, p.width * progress, p.targetY);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(p.x - 12, 0, 24, p.targetY);
+        if (p.life <= 0) projectiles.splice(i, 1);
+      } else if (p.type === 'singularity_hole') {
+        p.rotation += 0.09;
+        const progress = p.life / p.maxLife;
+        const radius = 75 * Math.sin((1 - progress) * Math.PI);
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+
+        const grad = ctx.createRadialGradient(0, 0, radius * 0.4, 0, 0, radius * 1.5);
+        grad.addColorStop(0, '#000000');
+        grad.addColorStop(0.5, p.color);
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, radius * 1.35, radius * 0.4, 0.4, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+        if (p.life <= 0) projectiles.splice(i, 1);
+      } else if (p.type === 'crescent_slash') {
+        p.x += p.vx;
+        p.y += p.vy;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(0, 0, 56, -Math.PI / 3, Math.PI / 3);
+        ctx.stroke();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+        ctx.restore();
+
+        const dist = Math.hypot(p.x - state.dummy.x, p.y - state.dummy.y);
+        if (dist < state.dummy.radius || p.life <= 0) {
+          triggerShockwave(p.x, p.y, 90, p.color, 5);
+          spawnImpactSparks(p.x, p.y, 22, p.color);
+          spawnDamageText(p.x, p.y, 115000, true);
+          projectiles.splice(i, 1);
+        }
+      } else if (p.type === 'burning_bow') {
+        ctx.translate(p.x, p.y);
+        ctx.scale(Math.min(1, height / 240), Math.min(1, height / 240));
+        ctx.globalAlpha = Math.min(1, p.life / 12);
+        ctx.shadowColor = '#ff5a24';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(0, -42);
+        ctx.quadraticCurveTo(46, 0, 0, 42);
+        ctx.strokeStyle = '#7f1d1d';
+        ctx.lineWidth = 8;
+        ctx.stroke();
+        ctx.strokeStyle = '#ff5a24';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, -42);
+        ctx.lineTo(-12, 0);
+        ctx.lineTo(0, 42);
+        ctx.strokeStyle = '#fff1dc';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        if (p.life <= 0) projectiles.splice(i, 1);
+      } else if (p.type === 'sacred_arrow') {
+        const angle = Math.atan2(p.ty - p.y, p.tx - p.x);
+        p.x += Math.cos(angle) * p.speed;
+        p.y += Math.sin(angle) * p.speed;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        // Dark outline keeps the shaft, broad head and split fletching
+        // legible inside the orange-red glow.
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 9;
+        ctx.strokeStyle = '#7f1d1d';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(-44, 0);
+        ctx.lineTo(0, 0);
+        ctx.stroke();
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(-6, -6);
+        ctx.lineTo(-2, 0);
+        ctx.lineTo(-6, 6);
+        ctx.closePath();
+        ctx.fillStyle = '#fff1dc';
+        ctx.fill();
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.moveTo(-30, 0);
+          ctx.lineTo(-43, side * 7);
+          ctx.lineTo(-38, 0);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        }
+        ctx.restore();
+
+        const dist = Math.hypot(p.x - p.tx, p.y - p.ty);
+        if (dist < 18 || p.life <= 0) {
+          spawnImpactSparks(p.tx, p.ty, 14, p.color);
+          spawnDamageText(p.tx, p.ty, 48000, false);
+          projectiles.splice(i, 1);
+        }
+      } else if (p.type === 'inferno_vortex') {
+        const elapsed = 1 - p.life / p.maxLife,
+          growth = Math.min(1, elapsed * 3.5),
+          fade = Math.min(1, p.life / 16);
+        const tower = Math.min(230, height * 0.65, Math.max(35, p.y + 42 - 28)) * growth,
+          baseY = p.y + 42,
+          spin = elapsed * Math.PI * 11;
+        ctx.save();
+        const satelliteScale = p.scale || 1;
+        const orbitX = p.scale ? Math.cos(spin * 0.3 + p.orbit) * Math.min(110, width * 0.18) : 0;
+        const orbitY = p.scale ? Math.sin(spin * 0.3 + p.orbit) * 18 : 0;
+        ctx.translate(
+          Math.max(30, Math.min(width - 30, p.x + orbitX)),
+          Math.min(height - 8, baseY + orbitY),
+        );
+        ctx.scale(satelliteScale, satelliteScale);
+        ctx.globalAlpha = fade;
+        const glow = ctx.createRadialGradient(
+          0,
+          -tower * 0.45,
+          5,
+          0,
+          -tower * 0.45,
+          Math.max(10, tower * 0.65),
+        );
+        glow.addColorStop(0, 'rgba(255,190,30,0.22)');
+        glow.addColorStop(1, 'rgba(255,40,0,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(-120, -tower - 30, 240, tower + 70);
+        for (let strand = 0; strand < 5; strand++) {
+          ctx.beginPath();
+          for (let step = 0; step <= 60; step++) {
+            const t = step / 60,
+              radius = (18 + 65 * t) * growth,
+              phase = spin + strand * Math.PI * 0.4 + t * Math.PI * 6;
+            const x = Math.sin(phase) * radius,
+              y = -t * tower + Math.cos(phase) * radius * 0.18;
+            if (step === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.strokeStyle = strand % 2 ? p.color1 : p.color2;
+          ctx.shadowColor = ctx.strokeStyle;
+          ctx.shadowBlur = 18;
+          ctx.lineWidth = 5 + (strand % 2) * 2;
+          ctx.stroke();
+        }
+        for (let j = 0; j < 30; j++) {
+          const t = (elapsed * 1.8 + j / 30) % 1,
+            phase = spin + j * 2.4 + t * 8,
+            radius = (15 + 60 * t) * growth;
+          const x = Math.sin(phase) * radius,
+            y = -t * tower + Math.cos(phase) * 7;
+          ctx.fillStyle = j % 3 ? '#fb923c' : '#fff7b2';
+          ctx.shadowColor = '#ff6b00';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.ellipse(x, y, 2.5, 5 + (j % 3), phase, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+        if (p.life <= 0) projectiles.splice(i, 1);
+      }
+
+      ctx.restore();
+    }
+
+    // 3. Render Shockwaves & Shields
+    for (let i = shockwaves.length - 1; i >= 0; i--) {
+      const sw = shockwaves[i];
+      sw.radius += (sw.maxRadius - sw.radius) * 0.12;
+      sw.alpha -= sw.decay;
+
+      ctx.save();
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = sw.color;
+
+      if (sw.type === 'hex_shield') {
+        ctx.strokeStyle = sw.color;
+        ctx.lineWidth = 3.5;
+        ctx.globalAlpha = Math.max(0, sw.alpha);
+        ctx.save();
+        ctx.translate(sw.x, sw.y);
+        // 3D Hexagonal Honeycomb Matrix
+        for (let ring = 1; ring <= 3; ring++) {
+          ctx.beginPath();
+          const r = sw.radius * (ring * 0.4);
+          for (let k = 0; k < 6; k++) {
+            const a = (k / 6) * Math.PI * 2;
+            const px = Math.cos(a) * r;
+            const py = Math.sin(a) * r;
+            if (k === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else {
+        ctx.beginPath();
+        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = sw.color;
+        ctx.lineWidth = sw.width;
+        ctx.globalAlpha = Math.max(0, sw.alpha);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+      if (sw.alpha <= 0) shockwaves.splice(i, 1);
+    }
+
+    // 4. Render Lightning Bolts
+    for (let i = lightningBolts.length - 1; i >= 0; i--) {
+      const lb = lightningBolts[i];
+      lb.alpha -= 0.07;
+      ctx.save();
+      ctx.strokeStyle = lb.color;
+      ctx.lineWidth = lb.width;
+      ctx.globalAlpha = Math.max(0, lb.alpha);
+      ctx.shadowColor = lb.color;
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      lb.segments.forEach((seg) => {
+        ctx.moveTo(seg.x1, seg.y1);
+        ctx.lineTo(seg.x2, seg.y2);
+      });
+      ctx.stroke();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+      ctx.restore();
+      if (lb.alpha <= 0) lightningBolts.splice(i, 1);
+    }
+
+    // 5. Render Spark Particles
+    ctx.save();
+    ctx.shadowBlur = 0;
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const pt = particles[i];
+      pt.x += pt.vx;
+      pt.y += pt.vy;
+      pt.vx *= 0.94;
+      pt.vy *= 0.94;
+      pt.alpha -= pt.decay;
+
+      ctx.globalAlpha = Math.max(0, pt.alpha);
+      const sprite = glowSprite(pt.color);
+      if (sprite) {
+        const reach = pt.size * 3;
+        ctx.drawImage(sprite, pt.x - reach, pt.y - reach, reach * 2, reach * 2);
+      } else {
+        ctx.shadowColor = pt.color;
+        ctx.shadowBlur = 9;
+      }
+      ctx.fillStyle = pt.color;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (pt.alpha <= 0) particles.splice(i, 1);
+    }
+    ctx.restore();
+
+    // 6. Render Floating Damage Numbers
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+      const ft = floatingTexts[i];
+      ft.x += ft.vx;
+      ft.y += ft.vy;
+      ft.vy += 0.14;
+      ft.alpha -= 0.02;
+
+      ctx.save();
+      ctx.font = `bold ${Math.floor(18 * ft.scale)}px 'Space Grotesk', sans-serif`;
+      ctx.fillStyle = ft.color;
+      ctx.shadowColor = ft.color;
+      ctx.shadowBlur = 12;
+      ctx.globalAlpha = Math.max(0, ft.alpha);
+      const textWidth = ctx.measureText(ft.text)?.width || 0;
+      ctx.fillText(
+        ft.text,
+        Math.max(10, Math.min(width - textWidth - 10, ft.x)),
+        Math.max(28, Math.min(height - 12, ft.y)),
+      );
+      ctx.restore();
+
+      if (ft.alpha <= 0) floatingTexts.splice(i, 1);
+    }
+
+    // Update Particle Counter
+
+    ctx.restore();
+    return true;
+  }
+  return { draw, dispose };
+}
+
+// One attack on its own canvas (previews, game rooms without a stage).
+export function playAttackArtwork(surface, options) {
+  if (!motionAllowed()) return () => {};
+  const ctx = surface.getContext('2d');
+  if (!ctx) return () => {};
+  const { width, height } = options,
+    quality = Math.min(1, 1280 / width, 900 / height);
+  surface.width = Math.max(1, Math.round(width * quality));
+  surface.height = Math.max(1, Math.round(height * quality));
+  ctx.setTransform(quality, 0, 0, quality, 0, 0);
+  const scene = createAttackScene(ctx, options);
+  let stopped = false,
+    frame = 0,
+    last = -Infinity,
+    releaseMotion = () => {};
   function stop() {
     if (stopped) return;
     stopped = true;
     releaseMotion();
     cancelAnimationFrame(frame);
-    for (const timer of timers) clearTimeout(timer);
-    timers.clear();
+    scene.dispose();
     ctx.clearRect(0, 0, width, height);
   }
   function tick(now) {
     if (stopped) return;
-    if (document.hidden || now - start > 4200) {
-      stop();
-      return;
-    }
+    if (document.hidden) return stop();
     if (now - last >= 1000 / 60 - 1) {
       last = now;
-      for (const pool of [
-        particles,
-        projectiles,
-        floatingTexts,
-        shockwaves,
-        lightningBolts,
-        spaceCuts,
-      ])
-        if (pool.length > 220) pool.splice(0, pool.length - 220);
-      ctx.save();
       ctx.clearRect(0, 0, width, height);
-      advanced?.(now - start);
-      for (const hit of options.readHits?.() || []) {
-        const key = hit.toId + ':' + hit.phase;
-        if (
-          emitted.has(key) ||
-          hit.pending ||
-          hit.missed ||
-          !hit.damage ||
-          now - start < hit.delayMs
-        )
-          continue;
-        emitted.add(key);
-        triggerShockwave(hit.x, hit.y, 80, options.color, 4);
-        spawnImpactSparks(hit.x, hit.y, 8, options.color);
-        spawnDamageText(hit.x, hit.y, 1, hit.critical, null, hit);
-      }
-
-      // Apply Screen Shake
-
-      // 1. Render Target Dummy
-
-      for (let i = spaceCuts.length - 1; i >= 0; i--) {
-        const sc = spaceCuts[i];
-        sc.alpha -= sc.decay;
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, sc.alpha);
-        ctx.shadowColor = sc.color;
-        ctx.shadowBlur = 18;
-        ctx.strokeStyle = sc.color;
-        ctx.lineWidth = sc.width * sc.alpha;
-        ctx.beginPath();
-        ctx.moveTo(sc.x1, sc.y1);
-        ctx.lineTo(sc.x2, sc.y2);
-        ctx.stroke();
-
-        ctx.strokeStyle = sc.coreColor;
-        ctx.lineWidth = Math.max(1, sc.width * sc.alpha * 0.6);
-        ctx.stroke();
-        ctx.restore();
-        if (sc.alpha <= 0) spaceCuts.splice(i, 1);
-      }
-
-      // 2. Render & Update Projectiles
-      for (let i = projectiles.length - 1; i >= 0; i--) {
-        const p = projectiles[i];
-        p.life--;
-
-        ctx.save();
-        ctx.shadowBlur = state.bloom;
-        ctx.shadowColor = p.color || getActiveColor();
-
-        if (p.type === 'abyssal_crescent') {
-          // Reach the frozen target within 520ms regardless of screen size or FPS.
-          const travel = Math.min(1, Math.max(0, (now - p.bornAt) / 520));
-          p.x = p.originX + (p.targetX - p.originX) * travel;
-          p.y = p.originY + (p.targetY - p.originY) * travel;
-
-          p.ghosts.push({ x: p.x, y: p.y });
-          if (p.ghosts.length > 6) p.ghosts.shift();
-
-          for (let g = 0; g < p.ghosts.length; g++) {
-            const gh = p.ghosts[g];
-            const gAlpha = (g / p.ghosts.length) * 0.45;
-            drawCrescentArc(
-              gh.x,
-              gh.y,
-              p.angle,
-              p.radius * (0.88 + g * 0.02),
-              p.config,
-              gAlpha,
-              true,
-            );
-          }
-
-          drawCrescentArc(p.x, p.y, p.angle, p.radius, p.config, 1.0, false);
-
-          const dist = Math.hypot(p.x - state.dummy.x, p.y - state.dummy.y);
-          if (dist < state.dummy.radius + p.radius * 0.45 || p.life <= 0) {
-            triggerShockwave(p.x, p.y, 110, p.config.glowColor, 7);
-            spawnImpactSparks(p.x, p.y, 32, p.config.glowColor);
-            spawnDamageText(p.x, p.y, 168000, true);
-            spawnSpaceCut(
-              p.x - Math.cos(p.angle) * 70,
-              p.y - Math.sin(p.angle) * 70,
-              p.x + Math.cos(p.angle) * 90,
-              p.y + Math.sin(p.angle) * 90,
-              p.config.glowColor,
-              p.config.darkCore,
-            );
-
-            projectiles.splice(i, 1);
-          }
-        } else if (p.type === 'barrage') {
-          p.x += p.vx;
-          p.y += p.vy;
-          p.trail.push({ x: p.x, y: p.y });
-          if (p.trail.length > 8) p.trail.shift();
-
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          for (let t = p.trail.length - 1; t >= 0; t--) {
-            ctx.lineTo(p.trail[t].x, p.trail[t].y);
-          }
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 4;
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
-          ctx.fill();
-
-          const dist = Math.hypot(p.x - state.dummy.x, p.y - state.dummy.y);
-          if (dist < state.dummy.radius || p.life <= 0) {
-            spawnImpactSparks(p.x, p.y, 16, p.color);
-            spawnDamageText(p.x, p.y, 22000, Math.random() > 0.4);
-            projectiles.splice(i, 1);
-          }
-        } else if (p.type === 'deflect_bullet') {
-          p.x += p.vx;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-          ctx.fillStyle = p.color;
-          ctx.fill();
-
-          // When hits hex shield barrier
-          if (p.x >= p.shieldX) {
-            triggerShockwave(p.x, p.y, 50, '#00f0ff', 3);
-            spawnImpactSparks(p.x, p.y, 15, '#7df4ff');
-            spawnDamageText(p.x, p.y, 0, false, 'DEFLECTED!');
-            projectiles.splice(i, 1);
-          } else if (p.life <= 0) {
-            projectiles.splice(i, 1);
-          }
-        } else if (p.type === 'specium_beam') {
-          const progress = 1 - p.life / p.maxLife;
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.strokeStyle = '#ffffff';
-          ctx.shadowColor = p.color;
-          ctx.shadowBlur = 24;
-          ctx.lineWidth = 4;
-          ctx.globalAlpha = Math.max(0, 1 - progress);
-          ctx.beginPath();
-          ctx.moveTo(-25, 0);
-          ctx.lineTo(25, 0);
-          ctx.moveTo(0, -38);
-          ctx.lineTo(0, 38);
-          ctx.stroke();
-          ctx.restore();
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 26 * Math.sin(progress * Math.PI);
-          ctx.beginPath();
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p.targetX, p.targetY);
-          ctx.stroke();
-
-          // Core hot-white line
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 8 * Math.sin(progress * Math.PI);
-          ctx.stroke();
-
-          // Double spiral electric overlay
-          ctx.strokeStyle = '#7df4ff';
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          const beamDist = Math.hypot(p.targetX - p.x, p.targetY - p.y);
-          const beamAngle = Math.atan2(p.targetY - p.y, p.targetX - p.x);
-          for (let s = 0; s < beamDist; s += 14) {
-            const spiralY = Math.sin(s * 0.12 - now * 0.03) * 22;
-            const px = p.x + Math.cos(beamAngle) * s - Math.sin(beamAngle) * spiralY;
-            const py = p.y + Math.sin(beamAngle) * s + Math.cos(beamAngle) * spiralY;
-            if (s === 0) ctx.moveTo(px, py);
-            else ctx.lineTo(px, py);
-          }
-          ctx.stroke();
-
-          if (p.life <= 0) projectiles.splice(i, 1);
-        } else if (p.type === 'orbital_pillar') {
-          const progress = Math.sin((1 - p.life / p.maxLife) * Math.PI);
-          ctx.fillStyle = p.color;
-          ctx.globalAlpha = progress * 0.85;
-          ctx.fillRect(p.x - (p.width * progress) / 2, 0, p.width * progress, p.targetY);
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(p.x - 12, 0, 24, p.targetY);
-          if (p.life <= 0) projectiles.splice(i, 1);
-        } else if (p.type === 'singularity_hole') {
-          p.rotation += 0.09;
-          const progress = p.life / p.maxLife;
-          const radius = 75 * Math.sin((1 - progress) * Math.PI);
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rotation);
-
-          const grad = ctx.createRadialGradient(0, 0, radius * 0.4, 0, 0, radius * 1.5);
-          grad.addColorStop(0, '#000000');
-          grad.addColorStop(0.5, p.color);
-          grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(0, 0, radius * 1.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 3.5;
-          ctx.beginPath();
-          ctx.ellipse(0, 0, radius * 1.35, radius * 0.4, 0.4, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.fillStyle = '#000000';
-          ctx.beginPath();
-          ctx.arc(0, 0, radius * 0.5, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.restore();
-          if (p.life <= 0) projectiles.splice(i, 1);
-        } else if (p.type === 'crescent_slash') {
-          p.x += p.vx;
-          p.y += p.vy;
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.angle);
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 6;
-          ctx.beginPath();
-          ctx.arc(0, 0, 56, -Math.PI / 3, Math.PI / 3);
-          ctx.stroke();
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2.5;
-          ctx.stroke();
-          ctx.restore();
-
-          const dist = Math.hypot(p.x - state.dummy.x, p.y - state.dummy.y);
-          if (dist < state.dummy.radius || p.life <= 0) {
-            triggerShockwave(p.x, p.y, 90, p.color, 5);
-            spawnImpactSparks(p.x, p.y, 22, p.color);
-            spawnDamageText(p.x, p.y, 115000, true);
-            projectiles.splice(i, 1);
-          }
-        } else if (p.type === 'burning_bow') {
-          ctx.translate(p.x, p.y);
-          ctx.scale(Math.min(1, height / 240), Math.min(1, height / 240));
-          ctx.globalAlpha = Math.min(1, p.life / 12);
-          ctx.shadowColor = '#ff5a24';
-          ctx.shadowBlur = 10;
-          ctx.beginPath();
-          ctx.moveTo(0, -42);
-          ctx.quadraticCurveTo(46, 0, 0, 42);
-          ctx.strokeStyle = '#7f1d1d';
-          ctx.lineWidth = 8;
-          ctx.stroke();
-          ctx.strokeStyle = '#ff5a24';
-          ctx.lineWidth = 4;
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(0, -42);
-          ctx.lineTo(-12, 0);
-          ctx.lineTo(0, 42);
-          ctx.strokeStyle = '#fff1dc';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-          if (p.life <= 0) projectiles.splice(i, 1);
-        } else if (p.type === 'sacred_arrow') {
-          const angle = Math.atan2(p.ty - p.y, p.tx - p.x);
-          p.x += Math.cos(angle) * p.speed;
-          p.y += Math.sin(angle) * p.speed;
-
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(angle);
-          // Dark outline keeps the shaft, broad head and split fletching
-          // legible inside the orange-red glow.
-          ctx.shadowColor = p.color;
-          ctx.shadowBlur = 9;
-          ctx.strokeStyle = '#7f1d1d';
-          ctx.lineWidth = 6;
-          ctx.beginPath();
-          ctx.moveTo(-44, 0);
-          ctx.lineTo(0, 0);
-          ctx.stroke();
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 3;
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(10, 0);
-          ctx.lineTo(-6, -6);
-          ctx.lineTo(-2, 0);
-          ctx.lineTo(-6, 6);
-          ctx.closePath();
-          ctx.fillStyle = '#fff1dc';
-          ctx.fill();
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          for (const side of [-1, 1]) {
-            ctx.beginPath();
-            ctx.moveTo(-30, 0);
-            ctx.lineTo(-43, side * 7);
-            ctx.lineTo(-38, 0);
-            ctx.fillStyle = p.color;
-            ctx.fill();
-          }
-          ctx.restore();
-
-          const dist = Math.hypot(p.x - p.tx, p.y - p.ty);
-          if (dist < 18 || p.life <= 0) {
-            spawnImpactSparks(p.tx, p.ty, 14, p.color);
-            spawnDamageText(p.tx, p.ty, 48000, false);
-            projectiles.splice(i, 1);
-          }
-        } else if (p.type === 'inferno_vortex') {
-          const elapsed = 1 - p.life / p.maxLife,
-            growth = Math.min(1, elapsed * 3.5),
-            fade = Math.min(1, p.life / 16);
-          const tower = Math.min(230, height * 0.65, Math.max(35, p.y + 42 - 28)) * growth,
-            baseY = p.y + 42,
-            spin = elapsed * Math.PI * 11;
-          ctx.save();
-          const satelliteScale = p.scale || 1;
-          const orbitX = p.scale ? Math.cos(spin * 0.3 + p.orbit) * Math.min(110, width * 0.18) : 0;
-          const orbitY = p.scale ? Math.sin(spin * 0.3 + p.orbit) * 18 : 0;
-          ctx.translate(
-            Math.max(30, Math.min(width - 30, p.x + orbitX)),
-            Math.min(height - 8, baseY + orbitY),
-          );
-          ctx.scale(satelliteScale, satelliteScale);
-          ctx.globalAlpha = fade;
-          const glow = ctx.createRadialGradient(
-            0,
-            -tower * 0.45,
-            5,
-            0,
-            -tower * 0.45,
-            Math.max(10, tower * 0.65),
-          );
-          glow.addColorStop(0, 'rgba(255,190,30,0.22)');
-          glow.addColorStop(1, 'rgba(255,40,0,0)');
-          ctx.fillStyle = glow;
-          ctx.fillRect(-120, -tower - 30, 240, tower + 70);
-          for (let strand = 0; strand < 5; strand++) {
-            ctx.beginPath();
-            for (let step = 0; step <= 60; step++) {
-              const t = step / 60,
-                radius = (18 + 65 * t) * growth,
-                phase = spin + strand * Math.PI * 0.4 + t * Math.PI * 6;
-              const x = Math.sin(phase) * radius,
-                y = -t * tower + Math.cos(phase) * radius * 0.18;
-              if (step === 0) ctx.moveTo(x, y);
-              else ctx.lineTo(x, y);
-            }
-            ctx.strokeStyle = strand % 2 ? p.color1 : p.color2;
-            ctx.shadowColor = ctx.strokeStyle;
-            ctx.shadowBlur = 18;
-            ctx.lineWidth = 5 + (strand % 2) * 2;
-            ctx.stroke();
-          }
-          for (let j = 0; j < 30; j++) {
-            const t = (elapsed * 1.8 + j / 30) % 1,
-              phase = spin + j * 2.4 + t * 8,
-              radius = (15 + 60 * t) * growth;
-            const x = Math.sin(phase) * radius,
-              y = -t * tower + Math.cos(phase) * 7;
-            ctx.fillStyle = j % 3 ? '#fb923c' : '#fff7b2';
-            ctx.shadowColor = '#ff6b00';
-            ctx.shadowBlur = 12;
-            ctx.beginPath();
-            ctx.ellipse(x, y, 2.5, 5 + (j % 3), phase, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          ctx.restore();
-          if (p.life <= 0) projectiles.splice(i, 1);
-        }
-
-        ctx.restore();
-      }
-
-      // 3. Render Shockwaves & Shields
-      for (let i = shockwaves.length - 1; i >= 0; i--) {
-        const sw = shockwaves[i];
-        sw.radius += (sw.maxRadius - sw.radius) * 0.12;
-        sw.alpha -= sw.decay;
-
-        ctx.save();
-        ctx.shadowBlur = 14;
-        ctx.shadowColor = sw.color;
-
-        if (sw.type === 'hex_shield') {
-          ctx.strokeStyle = sw.color;
-          ctx.lineWidth = 3.5;
-          ctx.globalAlpha = Math.max(0, sw.alpha);
-          ctx.save();
-          ctx.translate(sw.x, sw.y);
-          // 3D Hexagonal Honeycomb Matrix
-          for (let ring = 1; ring <= 3; ring++) {
-            ctx.beginPath();
-            const r = sw.radius * (ring * 0.4);
-            for (let k = 0; k < 6; k++) {
-              const a = (k / 6) * Math.PI * 2;
-              const px = Math.cos(a) * r;
-              const py = Math.sin(a) * r;
-              if (k === 0) ctx.moveTo(px, py);
-              else ctx.lineTo(px, py);
-            }
-            ctx.closePath();
-            ctx.stroke();
-          }
-          ctx.restore();
-        } else {
-          ctx.beginPath();
-          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-          ctx.strokeStyle = sw.color;
-          ctx.lineWidth = sw.width;
-          ctx.globalAlpha = Math.max(0, sw.alpha);
-          ctx.stroke();
-        }
-
-        ctx.restore();
-        if (sw.alpha <= 0) shockwaves.splice(i, 1);
-      }
-
-      // 4. Render Lightning Bolts
-      for (let i = lightningBolts.length - 1; i >= 0; i--) {
-        const lb = lightningBolts[i];
-        lb.alpha -= 0.07;
-        ctx.save();
-        ctx.strokeStyle = lb.color;
-        ctx.lineWidth = lb.width;
-        ctx.globalAlpha = Math.max(0, lb.alpha);
-        ctx.shadowColor = lb.color;
-        ctx.shadowBlur = 20;
-        ctx.beginPath();
-        lb.segments.forEach((seg) => {
-          ctx.moveTo(seg.x1, seg.y1);
-          ctx.lineTo(seg.x2, seg.y2);
-        });
-        ctx.stroke();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.8;
-        ctx.stroke();
-        ctx.restore();
-        if (lb.alpha <= 0) lightningBolts.splice(i, 1);
-      }
-
-      // 5. Render Spark Particles
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const pt = particles[i];
-        pt.x += pt.vx;
-        pt.y += pt.vy;
-        pt.vx *= 0.94;
-        pt.vy *= 0.94;
-        pt.alpha -= pt.decay;
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, pt.alpha);
-        ctx.fillStyle = pt.color;
-        ctx.shadowColor = pt.color;
-        ctx.shadowBlur = 9;
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        if (pt.alpha <= 0) particles.splice(i, 1);
-      }
-
-      // 6. Render Floating Damage Numbers
-      for (let i = floatingTexts.length - 1; i >= 0; i--) {
-        const ft = floatingTexts[i];
-        ft.x += ft.vx;
-        ft.y += ft.vy;
-        ft.vy += 0.14;
-        ft.alpha -= 0.02;
-
-        ctx.save();
-        ctx.font = `bold ${Math.floor(18 * ft.scale)}px 'Space Grotesk', sans-serif`;
-        ctx.fillStyle = ft.color;
-        ctx.shadowColor = ft.color;
-        ctx.shadowBlur = 12;
-        ctx.globalAlpha = Math.max(0, ft.alpha);
-        const textWidth = ctx.measureText(ft.text)?.width || 0;
-        ctx.fillText(
-          ft.text,
-          Math.max(10, Math.min(width - textWidth - 10, ft.x)),
-          Math.max(28, Math.min(height - 12, ft.y)),
-        );
-        ctx.restore();
-
-        if (ft.alpha <= 0) floatingTexts.splice(i, 1);
-      }
-
-      // Update Particle Counter
-
-      ctx.restore();
+      if (!scene.draw(now)) return stop();
     }
     frame = requestAnimationFrame(tick);
   }
   releaseMotion = watchMotionCancellation(stop);
   if (!stopped) frame = requestAnimationFrame(tick);
   return stop;
+}
+
+// Detail by how many attacks play at once, and by how slow this device has proved.
+const LOAD_DETAIL = [
+  { density: 1, glow: 1 },
+  { density: 0.7, glow: 0.6 },
+  { density: 0.5, glow: 0 },
+];
+const DEVICE_DETAIL = [
+  { scale: 1, density: 1, glow: 1 },
+  { scale: 0.75, density: 0.8, glow: 0.5 },
+  { scale: 0.5, density: 0.6, glow: 0 },
+];
+const SLOW_FRAME_MS = 34,
+  SAMPLE_FRAMES = 30,
+  SLOW_FRAMES_TO_DROP = 5;
+// Every attack in a scene shares one canvas and one frame loop, so three
+// concurrent attacks cost one clear and one composited layer instead of three.
+export function createAttackStage(surface) {
+  const ctx = surface.getContext('2d');
+  const scenes = new Map(),
+    fx = { density: 1, glow: 1 };
+  let width = 0,
+    height = 0,
+    tier = 0,
+    frame = 0,
+    last = -Infinity,
+    previous = 0,
+    sampled = 0,
+    slow = 0,
+    releaseMotion = null;
+  // Glow (shadowBlur) is set by many drawing helpers; scaling it here covers them all.
+  const blur = ctx && Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ctx), 'shadowBlur');
+  if (blur?.get && blur.set)
+    Object.defineProperty(ctx, 'shadowBlur', {
+      configurable: true,
+      get: () => blur.get.call(ctx),
+      set: (value) => blur.set.call(ctx, value * fx.glow),
+    });
+  function fit() {
+    const quality = Math.min(1, 1280 / width, 900 / height) * DEVICE_DETAIL[tier].scale;
+    surface.width = Math.max(1, Math.round(width * quality));
+    surface.height = Math.max(1, Math.round(height * quality));
+    ctx.setTransform(quality, 0, 0, quality, 0, 0);
+  }
+  function settle(count = scenes.size) {
+    const load = LOAD_DETAIL[Math.min(LOAD_DETAIL.length, Math.max(1, count)) - 1],
+      device = DEVICE_DETAIL[tier];
+    fx.density = load.density * device.density;
+    fx.glow = load.glow * device.glow;
+  }
+  function idle() {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    releaseMotion?.();
+    releaseMotion = null;
+    if (ctx) ctx.clearRect(0, 0, width, height);
+  }
+  function clear() {
+    for (const scene of scenes.values()) scene.dispose();
+    scenes.clear();
+    idle();
+  }
+  // A device that keeps missing frames while attacks play draws them smaller from then on.
+  function measure(now) {
+    if (previous) {
+      sampled++;
+      if (now - previous > SLOW_FRAME_MS) slow++;
+    }
+    previous = now;
+    if (sampled < SAMPLE_FRAMES) return;
+    if (slow >= SLOW_FRAMES_TO_DROP && tier < DEVICE_DETAIL.length - 1) {
+      tier++;
+      fit();
+    }
+    sampled = slow = 0;
+  }
+  function tick(now) {
+    frame = 0;
+    if (document.hidden) return clear();
+    measure(now);
+    if (now - last >= 1000 / 60 - 1) {
+      last = now;
+      ctx.clearRect(0, 0, width, height);
+      for (const [id, scene] of scenes) if (!scene.draw(now)) scenes.delete(id);
+      settle();
+    }
+    if (scenes.size) frame = requestAnimationFrame(tick);
+    else idle();
+  }
+  function add(id, options) {
+    if (!ctx || !motionAllowed()) return false;
+    if (options.width !== width || options.height !== height) {
+      width = options.width;
+      height = options.height;
+      fit();
+    }
+    scenes.get(id)?.dispose();
+    scenes.delete(id);
+    settle(scenes.size + 1);
+    scenes.set(id, createAttackScene(ctx, { ...options, fx }));
+    if (!frame) {
+      previous = 0;
+      frame = requestAnimationFrame(tick);
+      releaseMotion ||= watchMotionCancellation(clear);
+    }
+    return true;
+  }
+  function remove(id) {
+    scenes.get(id)?.dispose();
+    scenes.delete(id);
+    settle();
+  }
+  return { add, remove, clear, detail: () => ({ ...fx, tier }) };
 }

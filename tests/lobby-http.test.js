@@ -348,3 +348,39 @@ test('lobby HTTP masks private character image and sound bytes from unrelated vi
     assert.equal((await f.media(route)).status, 401);
   }
 });
+
+test('the lobby event stream pushes the view on connect and again after a move', async (t) => {
+  const f = await fixture(t);
+  const refused = await f.media('/api/lobby/events');
+  assert.equal(refused.status, 401);
+  await refused.body?.cancel();
+  const response = await f.media('/api/lobby/events?entrance=classic', f.owner.cookie);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /^text\/event-stream/);
+  const reader = response.body.getReader(),
+    decoder = new TextDecoder();
+  let buffer = '';
+  async function nextState() {
+    for (;;) {
+      const frame = buffer.match(/event: state\ndata: (.*)\n\n/);
+      if (frame) {
+        buffer = buffer.slice(frame.index + frame[0].length);
+        return JSON.parse(frame[1]);
+      }
+      const { value, done } = await reader.read();
+      assert.equal(done, false);
+      buffer += decoder.decode(value, { stream: true });
+    }
+  }
+  const first = await nextState();
+  const own = first.visitors.find((visitor) => visitor.id === first.selfId);
+  assert.ok(own);
+  assert.equal(typeof first.stateTag, 'string');
+  const target = { x: own.x > 50 ? 20 : 80, y: 60 };
+  assert.equal((await f.post('/api/lobby/move', target)).status, 200);
+  let pushed;
+  do pushed = await nextState();
+  while (pushed.visitors.find((visitor) => visitor.id === first.selfId).targetX !== target.x);
+  assert.equal(pushed.selfId, first.selfId);
+  await reader.cancel();
+});
