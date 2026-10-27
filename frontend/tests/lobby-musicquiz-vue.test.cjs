@@ -21,7 +21,7 @@ function loader(mocks = {}) {
         : id.endsWith('.json')
           ? { default: require(path.resolve(path.dirname(file), id)) }
           : id.startsWith('.')
-            ? load(path.resolve(path.dirname(file), id + '.ts'))
+            ? load(path.resolve(path.dirname(file), /\.(js|ts)$/.test(id) ? id : id + '.ts'))
             : require(id);
     const source = fs.readFileSync(file, 'utf8'),
       code = ts.transpileModule(source, {
@@ -70,6 +70,21 @@ test('actual lobby messages survive the Vue contract, including older servers wi
     assert.equal(parsed.barrages[0].message, '看得到的彈幕');
     assert.equal(parsed.barrages[0].kind, 'barrage');
   }
+});
+
+test('server KDA and measured central passage survive the real Vue contract; old snapshots default to zero', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  const raw = createLobby(() => 1000).view({ id: 'a', display_name: 'A' });
+  raw.serverNow = 1000;
+  raw.visitors[0].kda = { kills: 12, deaths: 3, assists: 5 };
+  raw.visitors[0].passage = { left: 15.25, right: 84.75, top: 2, bottom: 98 };
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  assert.deepEqual(JSON.parse(JSON.stringify(read(raw).visitors[0].kda)), raw.visitors[0].kda);
+  assert.equal(read(raw).visitors[0].passage.right, 84.75);
+  delete raw.visitors[0].kda;
+  delete raw.visitors[0].passage;
+  assert.equal(read(raw).visitors[0].kda.kills, 0);
+  assert.equal(read(raw).visitors[0].passage, null);
 });
 test('new waiting rooms save through the real party action store with a null round token', async () => {
   const pinia = require('pinia'),
@@ -374,4 +389,114 @@ test('wrap destinations and cosmetic attacks survive the actual lobby contract w
   delete attacked.visitors[0].wrapId;
   assert.equal(read(attacked).attacks.length, 0);
   assert.equal(read(attacked).visitors[0].wrapId, 0);
+});
+
+test('authoritative area hits survive the Vue contract and reject malformed victim payloads', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  let now = 1000;
+  const lobby = createLobby(
+    () => now,
+    undefined,
+    () => 0.5,
+  );
+  const users = ['a', 'b', 'c'].map((id) => ({ id, display_name: id }));
+  users.forEach((user, index) => lobby.move(user, { x: 20 + index * 10, y: 50 }));
+  now += 10000;
+  users.forEach((user) => lobby.view(user));
+  const payload = {
+    ...lobby.attack(users[0], {
+      slot: 'q',
+      effect: 'dimension_cleave',
+      aspectRatio: 1,
+      requestId: 'contract-area-001',
+    }),
+    serverNow: now,
+  };
+  const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  assert.equal(read(payload).attacks[0].hits.length, 6);
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(read(payload).attacks[0].hits)),
+    payload.attacks[0].hits,
+  );
+  for (const corrupt of [
+    (event) => event.hits.push({ ...event.hits[0] }),
+    (event) => (event.hits[0].damage = -1),
+    (event) => (event.hits[0].damage = 1.5),
+    (event) => (event.hits[0].toX = 101),
+    (event) => (event.hits[0].toId = event.fromId),
+    (event) => (event.aspectRatio = Infinity),
+    (event) => (event.hits[0].critical = 'yes'),
+    (event) => (event.hits[0].phase = 'forged-phase'),
+  ]) {
+    const broken = structuredClone(payload);
+    corrupt(broken.attacks[0]);
+    assert.throws(() => read(broken));
+  }
+  const crowd = structuredClone(payload);
+  crowd.attacks[0].effect = 'guanyin_barrage';
+  crowd.attacks[0].hits = require('../../public/shared/attack-timing.json').guanyin_barrage.flatMap(
+    ([delayMs, , phase]) =>
+      Array.from({ length: 32 }, (_, i) => ({
+        ...payload.attacks[0].hits[0],
+        toId: 'victim-' + i,
+        phase,
+        delayMs,
+      })),
+  );
+  assert.equal(read(crowd).attacks[0].hits.length, 160);
+  crowd.attacks[0].hits.push({ ...crowd.attacks[0].hits[0], toId: 'overflow' });
+  assert.throws(() => read(crowd));
+});
+test('three-ray geometry and the owning combat status survive the contract, while malformed fields are rejected', () => {
+  const { createLobby } = require('../../src/rooms/lobby');
+  let now = 1000;
+  const lobby = createLobby(
+      () => now,
+      undefined,
+      () => 0.5,
+    ),
+    users = Array.from({ length: 7 }, (_, i) => ({ id: String(i), display_name: String(i) }));
+  users.forEach((user, i) => lobby.move(user, { x: 20 + i * 5, y: 50 }));
+  now += 10000;
+  users.forEach((user) => lobby.view(user));
+  const raw = lobby.attack(users[0], {
+      slot: 'q',
+      effect: 'bijuu_beam',
+      aspectRatio: 1,
+      requestId: 'bijuu-contract-001',
+    }),
+    read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
+  const decoded = read({ ...raw, serverNow: now });
+  assert.equal(decoded.attacks[0].rays.length, 3);
+  assert.equal(decoded.attacks[0].hits.length, 6);
+  assert.ok(decoded.visitors.find((v) => v.id === '0').combatStatus);
+  assert.ok(decoded.visitors.filter((v) => v.id !== '0').every((v) => !v.combatStatus));
+  const burning = structuredClone(raw);
+  Object.assign(burning.visitors.find((v) => v.id === '0').combatStatus, {
+    regenWaitMs: 5000,
+    regenBlockedMs: 5000,
+  });
+  assert.equal(
+    read({ ...burning, serverNow: now }).visitors.find((v) => v.id === '0').combatStatus
+      .regenBlockedMs,
+    5000,
+  );
+  delete burning.visitors.find((v) => v.id === '0').combatStatus.regenBlockedMs;
+  assert.equal(
+    read({ ...burning, serverNow: now }).visitors.find((v) => v.id === '0').combatStatus
+      .regenBlockedMs,
+    0,
+  );
+  for (const corrupt of [
+    (p) => p.attacks[0].rays.push({ x: 20, y: 20 }),
+    (p) => (p.attacks[0].rays[0].x = 101),
+    (p) => (p.visitors.find((v) => v.id === '0').combatStatus.guanyin = 'yes'),
+    (p) => (p.visitors.find((v) => v.id === '0').combatStatus.regenWaitMs = -1),
+    (p) => (p.visitors.find((v) => v.id === '0').combatStatus.regenBlockedMs = 5001),
+    (p) => (p.visitors.find((v) => v.id === '0').combatStatus.regenBlockedMs = '5000'),
+  ]) {
+    const broken = structuredClone(raw);
+    corrupt(broken);
+    assert.throws(() => read({ ...broken, serverNow: now }));
+  }
 });

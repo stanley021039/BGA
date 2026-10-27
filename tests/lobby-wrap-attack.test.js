@@ -58,7 +58,10 @@ test('directional walking wraps all four edges, keeps the other coordinate and p
     assert.equal(visitor.wrapId, 1);
     assert.equal(visitor.teleportId, 0);
     const peer = f.lobby.view(f.b).visitors.find((v) => v.id === 'a');
-    assert.deepEqual(peer, visitor);
+    const { combatStatus, ...publicVisitor } = visitor;
+    assert.ok(combatStatus);
+    assert.equal(peer.combatStatus, undefined);
+    assert.deepEqual(peer, publicVisitor);
     const teleported = f.lobby.teleport(f.a, 'sparks').visitors.find((v) => v.id === 'a');
     assert.equal(teleported.teleportId, 1);
     assert.equal(teleported.entrance, 'sparks');
@@ -117,7 +120,7 @@ test('attack requires presence, finds nearest other visitor, has cooldown and id
     event = first.attacks[0];
   assert.equal(event.fromId, 'a');
   assert.equal(event.toId, 'c');
-  assert.equal(event.until - event.at, 1800);
+  assert.equal(event.until - event.at, 4400);
   assert.deepEqual(
     first.visitors.find((v) => v.id === 'a'),
     before,
@@ -132,14 +135,15 @@ test('attack requires presence, finds nearest other visitor, has cooldown and id
     () => f.lobby.attack(f.a, { ...input, requestId: 'request-0002' }),
     (e) => e.code === 'ATTACK_COOLDOWN',
   );
-  f.tick(1800);
-  assert.equal(f.lobby.view(f.b).attacks.length, 0);
-  f.tick(199);
+  f.tick(1599);
   assert.throws(
     () => f.lobby.attack(f.a, { ...input, requestId: 'request-0002' }),
     (e) => e.code === 'ATTACK_COOLDOWN',
   );
-  f.tick(1);
+  f.tick(201);
+  assert.equal(f.lobby.view(f.b).attacks.length, 1);
+  f.tick(2600);
+  assert.equal(f.lobby.view(f.b).attacks.length, 0);
   assert.equal(f.lobby.attack(f.a, { ...input, requestId: 'request-0002' }).attacks.length, 1);
 });
 test('nearest attack uses viewport proportions, deterministic ties, validates targets and excludes expired visitors', () => {

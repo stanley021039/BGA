@@ -32,22 +32,32 @@ function rewardLabels(id) {
 function owned(store, userId) {
   const ids = new Set(store.find.all(userId).map((row) => row.achievement_id));
   const grants = require('./redemption').grants(store.db, userId);
+  const starter = require('./starter-rewards').receipt(store.db, userId)?.grants || {};
   return {
     attacks: require('./attack-rewards').ownedAttacks(store.db, userId),
     sounds: [
       ...new Set(
         pairs
           .filter(([id]) => grants.pings || ids.has(id))
-          .flatMap(([, , sounds]) => sounds.map((name) => 'ping-voice-' + name)),
+          .flatMap(([, , sounds]) => sounds.map((name) => 'ping-voice-' + name))
+          .concat(starter.sounds || []),
       ),
     ],
     entrances: require('./entrance-rewards')
-      .rewards.filter((reward) => grants.entrances || ids.has(reward.achievementId))
+      .rewards.filter(
+        (reward) =>
+          grants.entrances ||
+          ids.has(reward.achievementId) ||
+          starter.entrances?.includes(reward.id),
+      )
       .map((reward) => reward.id),
     backgrounds: require('../../public/shared/lobby-backgrounds.json')
       .filter(
         (background) =>
-          grants.other || !background.achievementId || ids.has(background.achievementId),
+          grants.other ||
+          !background.achievementId ||
+          ids.has(background.achievementId) ||
+          starter.backgrounds?.includes(background.id),
       )
       .map((background) => background.id),
     openings: [
@@ -71,7 +81,8 @@ function ownedSounds(db, userId) {
     ...new Set(
       pairs
         .filter(([id]) => all || ids.has(id))
-        .flatMap(([, , sounds]) => sounds.map((name) => 'ping-voice-' + name)),
+        .flatMap(([, , sounds]) => sounds.map((name) => 'ping-voice-' + name))
+        .concat(require('./starter-rewards').owned(db, userId, 'sounds')),
     ),
   ];
 }

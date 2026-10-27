@@ -11,22 +11,50 @@
     "criticalMultiplier": 1.5
   },
   "regeneration": {
-    "delayMs": 4000,
+    "delayMs": 2000,
     "perSecond": 4
   },
   "respawnMs": 3000,
   "attackRange": 50,
+  "areaAttackRange": 65,
+  "areaDamageMultiplier": 2,
   "unitScale": 10000,
   "shield": {
     "durationMs": 2000,
     "minimumPercent": 30,
     "maximumPercent": 40,
     "authorMinimumPercent": 40,
-    "authorMaximumPercent": 50
+    "authorMaximumPercent": 50,
+    "residualDurationMs": 3000,
+    "residualMultiplier": 0.5
   },
   "authorBonus": {
     "healthMultiplier": 1.5,
     "damageMultiplier": 1.15,
     "regenerationMultiplier": 1.5
+  },
+  "attackCooldownMs": 1600,
+  "maximumAreaTargets": 32,
+  "bijuuImmobilize": {
+    "chance": 0.2,
+    "durationMs": 1000
+  },
+  "phoenixHealingBlockMs": 5000,
+  "babylon": {
+    "authorComboMin": 828000,
+    "authorComboMax": 1112000,
+    "currentHealthCost": 0.3
+  },
+  "guanyinBonus": {
+    "durationMs": 2000,
+    "multiplier": 1.1
+  },
+  "excaliburGuard": {
+    "durationMs": 4100,
+    "reductionPercent": 20
+  },
+  "explosionRecovery": {
+    "delayMs": 4100,
+    "durationMs": 1000
   }
 }

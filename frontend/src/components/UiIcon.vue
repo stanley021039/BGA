@@ -61,6 +61,12 @@ const allowed = new Set([
   'mail',
   'sun',
   'moon',
+  'health-up',
+  'attack-up',
+  'regen-up',
+  'healing',
+  'shield',
+  'timer',
 ]);
 declare global {
   interface Window {

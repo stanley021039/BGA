@@ -30,8 +30,9 @@ test('defensive artwork targets its caster even in an otherwise empty lobby', ()
 
 test('both crescent variants are separate selectable persistent artwork IDs', () => {
   const effects = require('../public/shared/attack-effects.json');
-  assert.equal(effects.length, 16);
-  assert.equal(new Set(effects.map((e) => e.id)).size, 16);
+  assert.equal(effects.length, 23);
+  assert.equal(new Set(effects.map((e) => e.id)).size, 23);
+  assert.ok(!effects.some((e) => e.id === 'flame_kick'));
   assert.equal(effects.find((e) => e.id === 'blade_aura').label, '藍黑半月劍氣');
   assert.equal(effects.find((e) => e.id === 'blade_aura_crimson').label, '紅黑半月劍氣');
 });
@@ -110,11 +111,19 @@ test('account attack choices persist, preserve appearance changes, and determine
     post = (path, body) => request(path, { method: 'POST', body, cookie: owner.cookie });
   assert.deepEqual((await get('/api/profile/attacks')).body, { q: 'barrage', e: 'beam' });
   assert.equal((await post('/api/profile/attacks', { q: 'shield', e: 'beam' })).status, 403);
+  assert.equal(
+    (await post('/api/profile/attacks', { q: 'guanyin_barrage', e: 'bijuu_beam' })).status,
+    403,
+  );
   const initial = await get('/api/achievements');
   assert.deepEqual(initial.body.bonusRewards.attacks, ['barrage', 'beam']);
   const redeemed = await post('/api/achievements/redeem', { code: '我愛作者' });
   assert.equal(redeemed.status, 200);
-  assert.equal(redeemed.body.bonusRewards.attacks.length, 16);
+  assert.equal(redeemed.body.bonusRewards.attacks.length, 23);
+  assert.equal(
+    (await post('/api/profile/attacks', { q: 'guanyin_barrage', e: 'bijuu_beam' })).status,
+    200,
+  );
   assert.deepEqual(
     redeemed.body.achievements.map((a) => a.unlockedAt),
     initial.body.achievements.map((a) => a.unlockedAt),
@@ -215,7 +224,7 @@ test('earned achievements unlock only their mapped attack and stale locked loado
   const data = await fetch(base + '/api/achievements', { headers: { Cookie: cookie } }).then((r) =>
     r.json(),
   );
-  assert.deepEqual(data.bonusRewards.attacks, ['barrage', 'beam', 'shield']);
+  assert.deepEqual(data.bonusRewards.attacks, ['barrage', 'beam', 'shield', 'gate_of_babylon']);
   assert.deepEqual(
     await fetch(base + '/api/profile/attacks', { headers: { Cookie: cookie } }).then((r) =>
       r.json(),

@@ -3,6 +3,7 @@ import '../assets/entrance-stitch.css';
 import '../assets/entrance-stitch-repairs.css';
 import '../assets/entrance-purple-v2.css';
 import '../styles/sakura-fall.scss';
+import '../styles/entrance-refinements.scss';
 
 export const stitchEntrances = effects;
 let instance = 0;
@@ -17,6 +18,7 @@ export function playStitchEntrance(
   if (!effect) return () => {};
   const node = document.createElement('div');
   node.className = 'lobby-fx stitch-vfx';
+  node.dataset.entrance = id;
   if (id === 'stitch-purple') node.classList.add('stitch-purple-v2');
   node.setAttribute('aria-hidden', 'true');
   Object.assign(node.style, {

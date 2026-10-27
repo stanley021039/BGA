@@ -3,10 +3,16 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { usePreferencesStore } from '../stores/preferences';
 import { attackEffects } from '../stores/attack-loadout';
 import { playAttackArtwork } from '../services/attack-artwork';
+import type { LobbyAttackHit } from '../contracts/lobby';
 const props = defineProps<{
   effect: string;
+  ageMs?: number;
+  preview?: boolean;
   damage?: number;
   critical?: boolean;
+  hits?: LobbyAttackHit[];
+  rays?: { x: number; y: number }[];
+  aspectRatio?: number;
   playKey: string | number;
   from: { x: number; y: number };
   to: { x: number; y: number };
@@ -40,15 +46,44 @@ async function play() {
     return;
   const { width, height } = stage.value.getBoundingClientRect();
   if (!width || !height) return;
+  const fitPreview =
+    props.preview && !!attackEffects.find((effect) => effect.id === props.effect)?.area;
+  const unit = Math.min(width / 115, height / 100);
+  const from = fitPreview
+    ? { x: width * 0.22, y: height * 0.65 }
+    : { x: (props.from.x * width) / 100, y: (props.from.y * height) / 100 - 42 };
+  const to = fitPreview
+    ? { x: from.x + unit * 35, y: from.y }
+    : { x: (props.to.x * width) / 100, y: (props.to.y * height) / 100 - 42 };
   cleanup = playAttackArtwork(surface.value, {
+    ageMs: props.ageMs,
+    readHits: props.hits?.some((hit) => hit.phase)
+      ? () =>
+          (props.hits || []).map((hit) => ({
+            ...hit,
+            x: (hit.toX * width) / 100,
+            y: (hit.toY * height) / 100 - 42,
+            pathX: hit.aimX !== undefined ? (hit.aimX * width) / 100 : undefined,
+            pathY: hit.aimY !== undefined ? (hit.aimY * height) / 100 - 42 : undefined,
+          }))
+      : undefined,
+    preview: props.preview === true,
+    rays: props.rays?.map((ray) => ({ x: (ray.x * width) / 100, y: (ray.y * height) / 100 - 42 })),
     effect: props.effect,
     damage: props.damage,
     critical: props.critical,
+    aspectRatio: props.aspectRatio,
+    hits: props.hits?.map((hit) => ({
+      x: (hit.toX * width) / 100,
+      y: (hit.toY * height) / 100 - 42,
+      damage: hit.damage,
+      critical: hit.critical,
+    })),
     color: color.value,
     width,
     height,
-    from: { x: (props.from.x * width) / 100, y: (props.from.y * height) / 100 - 42 },
-    to: { x: (props.to.x * width) / 100, y: (props.to.y * height) / 100 - 42 },
+    from,
+    to,
   });
 }
 onMounted(() => {

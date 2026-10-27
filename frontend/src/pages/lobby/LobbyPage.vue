@@ -8,6 +8,7 @@ import { gamePath, isGameType, type GameType } from '../../contracts/room';
 import { gameCards, gameTitle, loungeCard } from './catalog';
 import GameCarousel from './GameCarousel.vue';
 import LobbyBackdrop from './LobbyBackdrop.vue';
+import SceneKda from '../../components/SceneKda.vue';
 import RoomPings from '../../components/RoomPings.vue';
 import UiButton from '../../components/UiButton.vue';
 import UiLink from '../../components/UiLink.vue';
@@ -17,6 +18,7 @@ import StatusSlot from '../../components/StatusSlot.vue';
 import '../../styles/lobby-create.scss';
 const lobby = useLobbyStore(),
   session = useSessionStore();
+const self = computed(() => lobby.snapshot?.visitors.find((v) => v.id === lobby.snapshot?.selfId));
 const entryNoticeKey = ref(0);
 watch(
   () => lobby.entryPending,
@@ -167,9 +169,15 @@ onBeforeUnmount(() => {
             :message="feedback"
             :error="!!lobby.entryStatus" /></div
       ></template>
+      <template #scene-stats
+        ><SceneKda :value="self?.kda" :self="self" :connected="lobby.connected"
+      /></template>
     </GameCarousel>
     <p class="version-note"><a href="/credits">素材來源與授權</a></p>
-    <LobbyBackdrop ref="backdrop" /><StatusSlot :message="lobby.attackStatus" />
+    <LobbyBackdrop ref="backdrop" /><StatusSlot
+      :message="lobby.attackStatus"
+      :error="!!lobby.attackStatus"
+    />
     <UiDialog ref="join" class="vue-lobby-join-dialog" title="找一桌加入"
       ><div class="vue-lobby-join"
         ><section class="vue-lobby-room-browser" data-ping-anchor="room-list" aria-label="目前房間"

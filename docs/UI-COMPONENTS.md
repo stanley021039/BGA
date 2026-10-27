@@ -148,6 +148,10 @@
 
 ### UiTabs、UiPopover、UiIcon
 
+戰鬥狀態圖示同樣使用 `UiIcon` 登錄表：`health-up` 生命上限、`attack-up` 攻擊、`regen-up` 回復加成、`healing` 正在回復、`shield` 減傷、`timer` 等待。圖示徽章使用 `UiBadge`，提供中文 `aria-label`、`title` 與鍵盤焦點；正常滿 HP 不顯示額外狀態文字。
+
+不死鳥燃燒禁回復期間，`healing` 徽章使用 `danger`，中文提示包含剩餘秒數；封鎖狀態優先於普通等待／回復。倒數由既有伺服器快照更新，不新增計時器。
+
 ```vue
 <UiTabs v-model="tab" :items="tabs" label="收藏分類" panel-prefix="collection-panel" />
 <UiPopover :id="id" ref="popover" title="自訂畫筆顏色" @closed="done">…</UiPopover>
@@ -291,7 +295,7 @@ RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱
 
 `has-room-space` 不套用舊 C00 整桌及側欄底板；收合時只留 32px 框邊，內容卡保留表面。畫猜的 display:contents 中央卡片必須各自高於互動背景，避免攔截作畫。
 
-場景提供 Q/E、R 與四向穿越；輸入、組字、對話框、畫布及 inert 區域不觸發快捷鍵。活著角色不顯示血條或生命數字，倒地顯示共用墓碑。背景檢視有獨立退出入口及 Esc，沿用原本遊戲專注模式。
+場景提供 Q/E、R 與四向穿越；輸入、組字、對話框、畫布及 inert 區域不觸發快捷鍵。依2026-10-27最新指示，活著角色腳下顯示細HP比例條，本體不寫生命數字；本人KDA下顯示HP數字與狀態圖示，倒地顯示共用墓碑。背景檢視有獨立退出入口及 Esc，沿用原本遊戲專注模式。
 
 
 ## 房間全螢幕與背景入口（#251）

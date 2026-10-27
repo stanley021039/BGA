@@ -24,47 +24,79 @@ onBeforeUnmount(() => clearInterval(timer));
 </script>
 <template>
   <div v-if="visitor.health === 0" class="scene-tombstone" role="status">
-    <img :src="tombstone" width="80" height="90" alt="" /><span class="scene-respawn-seconds">{{
-      seconds
-    }}</span
-    ><strong>{{ visitor.name }}</strong
-    ><small>{{ seconds }} 秒後重生</small>
+    <div class="scene-tombstone-caption">
+      <strong :title="visitor.name">{{ visitor.name }}</strong>
+      <small>{{ seconds }} 秒後重生</small>
+    </div>
+    <img :src="tombstone" width="80" height="90" alt="" />
+  </div>
+  <div
+    v-else-if="visitor.maxHealth && visitor.health !== undefined"
+    class="scene-health-bar"
+    role="progressbar"
+    :aria-label="visitor.name + '的HP'"
+    :aria-valuenow="visitor.health"
+    :aria-valuemax="visitor.maxHealth"
+    aria-valuemin="0"
+  >
+    <div
+      :style="{
+        width: Math.max(0, Math.min(100, (visitor.health / visitor.maxHealth) * 100)) + '%',
+      }"
+    />
   </div>
 </template>
 <style scoped>
+.scene-health-bar {
+  flex: none;
+  width: 42px;
+  height: 2px;
+  margin-block: 2px;
+  overflow: hidden;
+  background: var(--stitch-line);
+  border-radius: var(--stitch-radius-pill);
+}
+.scene-health-bar > div {
+  height: 100%;
+  background: var(--stitch-primary);
+}
 .scene-tombstone {
   position: relative;
   display: grid;
   justify-items: center;
   width: 80px;
-  min-height: 90px;
+  height: 90px;
 }
 .scene-tombstone > img {
   width: 80px;
   height: 90px;
 }
-.scene-tombstone .scene-respawn-seconds {
+.scene-tombstone-caption {
   position: absolute;
-  top: 0;
-  height: 20px;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
   display: grid;
-  place-items: center;
-  color: var(--stitch-artwork-preview-ink);
+  justify-items: center;
+  width: max-content;
+  max-width: 160px;
+  padding: var(--stitch-space-4) var(--stitch-space-8);
+  color: var(--stitch-ink);
+  background: var(--stitch-surface);
+  border-radius: var(--stitch-radius-control);
+  text-align: center;
   font-size: var(--stitch-text-label);
 }
 .scene-tombstone strong {
-  position: absolute;
-  top: 53px;
-  max-width: 60px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--stitch-artwork-preview-ink);
+  color: inherit;
   font-size: var(--stitch-text-label);
 }
 .scene-tombstone small {
-  color: var(--stitch-ink);
-  background: var(--stitch-surface);
+  color: inherit;
   font-size: var(--stitch-text-label);
 }
 </style>

@@ -43,10 +43,10 @@ const panels = [
   { id: 'character', label: '角色設定', saved: true },
   { id: 'pings', label: '房間標記', saved: true },
   { id: 'lobby', label: '大廳與開場', saved: false },
-  { id: 'attack', label: '攻擊特效', saved: false },
   { id: 'barrage', label: '彈幕', saved: false },
   { id: 'media', label: '播放器', saved: false },
   { id: 'entrance', label: '進場特效', saved: false },
+  { id: 'attack', label: '攻擊特效', saved: false },
 ] as const;
 type PanelId = (typeof panels)[number]['id'];
 const panelFromHash = (): PanelId =>

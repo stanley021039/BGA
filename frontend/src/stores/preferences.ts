@@ -102,7 +102,7 @@ declare global {
     };
     BarrageFrames?: {
       options: readonly FrameOption[];
-      canUse?(id: string): boolean;
+      canUse?(id: string, kind?: 'barrage' | 'media'): boolean;
       get(): FrameState;
       set(value: Partial<FrameState>): FrameState;
       subscribe(fn: (state: FrameState) => void): () => void;
@@ -176,10 +176,10 @@ export const usePreferencesStore = defineStore('preferences', () => {
     else MediaAppearance?.set(id);
   }
   return {
-    canUse: (id: string) => {
+    canUse: (id: string, kind: 'barrage' | 'media' = 'barrage') => {
       // Reward notifications share the barrage subscription, even for player-only views.
       void barrage.value;
-      return BarrageFrames?.canUse?.(id) !== false;
+      return BarrageFrames?.canUse?.(id, kind) !== false;
     },
     color,
     motion,

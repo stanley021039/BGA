@@ -1,14 +1,7 @@
 /* Stitch 14297655819267599636 / 092b55de5a37454086c03f4b02a12971.
  * Finite adaptation of the reviewed artwork. Uses the caller's canvas and clock;
  * no additional canvas, animation loop, timer, input handler or network asset. */
-const STITCH_EFFECTS = new Set([
-  'chains',
-  'sphere',
-  'funnel',
-  'explosion',
-  'frost_spikes',
-  'flame_kick',
-]);
+const STITCH_EFFECTS = new Set(['chains', 'sphere', 'funnel', 'explosion', 'frost_spikes']);
 const TAU = Math.PI * 2;
 const SPIKES = [
   [-90, 170, 50, -0.28, 0],
@@ -35,7 +28,7 @@ const BINDS = [
   [-28, 2],
   [-20, -18],
 ];
-const CHAIN_DELAYS = [0, 60, 150, 90, 210, 120, 30, 180];
+const CHAIN_DELAYS = [0, 560, 0, 560, 0, 560, 0, 560];
 const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
 const ease = (t) => 1 - (1 - clamp(t)) ** 3;
 
@@ -148,9 +141,9 @@ export function createStitchAttack(ctx, options, onImpact) {
         );
       }
     }
-    if (t >= 620) {
+    if (t >= 1080) {
       impact();
-      flare(target.x, target.y, clamp(1 - (t - 620) / 200));
+      flare(target.x, target.y, clamp(1 - (t - 1080) / 200));
     }
   }
   function drawDragoons(t) {
@@ -174,12 +167,12 @@ export function createStitchAttack(ctx, options, onImpact) {
           (1 - f) * (cx - sx) + f * (ex - cx),
         );
         line(x, y, x - Math.cos(angle) * 28 * size, y - Math.sin(angle) * 28 * size, '#00f0ff', 2);
-      } else if (t < 1950) {
+      } else if (t < 2550) {
         x = ex;
         y = ey;
         angle = Math.atan2(target.y - y, target.x - x);
       } else {
-        const f = ease((t - 1950) / 650);
+        const f = ease((t - 2550) / 500);
         x = ex + (sx - ex) * f;
         y = ey + (sy - ey) * f;
         angle = Math.atan2(sy - ey, sx - ex);
@@ -191,12 +184,13 @@ export function createStitchAttack(ctx, options, onImpact) {
         0,
         0,
         angle,
-        t < travel || t >= 1950 ? 1 : 0.2,
+        t < travel || t >= 2550 ? 1 : 0.2,
         t >= travel && t < fireStart,
         clamp((t - travel) / charge),
       );
       ctx.restore();
-      const firing = t - (fireStart + n * 65);
+      const shotTime = t < 2000 ? fireStart : fireStart + 800;
+      const firing = t - (shotTime + n * 65);
       if (firing >= 0 && firing < 190) {
         ctx.save();
         ctx.globalAlpha = clamp(1 - firing / 190);
@@ -276,6 +270,20 @@ export function createStitchAttack(ctx, options, onImpact) {
     ctx.ellipse(0, 0, 145 * size, 15 * size, 0, 0, TAU);
     ctx.fillStyle = 'rgba(2,132,199,.35)';
     ctx.fill();
+    // Fractures radiate across the ground before the tallest crystal rises.
+    for (let crack = 0; crack < 10; crack++) {
+      const a = (crack * TAU) / 10;
+      const r = Math.min(155 * size, t * 0.28);
+      const x = Math.cos(a) * r,
+        y = Math.sin(a) * r * 0.18;
+      ctx.strokeStyle = '#a5f3fc';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(x * 0.45, y + (crack % 2 ? 5 : -5) * size);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
     SPIKES.forEach(([x, h, w, tilt, delay]) => {
       const g = ease((t - delay) / 400);
       if (!g) return;
@@ -305,52 +313,32 @@ export function createStitchAttack(ctx, options, onImpact) {
       ctx.moveTo(0, tip);
       ctx.lineTo(half, 0);
       ctx.stroke();
+      // Contrasting facets, inner fractures and a smaller side crystal keep
+      // each spike readable instead of dissolving into a blue glow.
+      line(0, tip * 0.9, -half * 0.2, tip * 0.48, '#ffffff', 1.4);
+      line(-half * 0.2, tip * 0.48, half * 0.35, tip * 0.36, '#38bdf8', 1);
+      ctx.beginPath();
+      ctx.moveTo(half * 0.25, 0);
+      ctx.lineTo(half * 1.05, tip * 0.48);
+      ctx.lineTo(half * 1.55, 0);
+      ctx.closePath();
+      ctx.fillStyle = '#0c4a6e';
+      ctx.fill();
+      ctx.strokeStyle = '#cffafe';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
       ctx.restore();
     });
-  }
-  function drawKick(t) {
-    const angle = Math.atan2(target.y - from.y, target.x - from.x);
-    if (t < 650) {
-      const f = ease(t / 650),
-        x = from.x + (target.x - from.x) * f;
-      const y =
-        from.y + (target.y - from.y) * f - Math.sin(f * Math.PI) * Math.min(100, height * 0.22);
-      for (let k = 5; k >= 0; k--)
-        disc(
-          x - Math.cos(angle) * k * 10 * size,
-          y - Math.sin(angle) * k * 10 * size,
-          (16 - k * 2) * size,
-          k % 2 ? '#ffea00' : '#ff6600',
-        );
-      drawBurningBootPrint(ctx, x, y, angle, size, 0.95);
-      return;
+    for (let flake = 0; flake < 18; flake++) {
+      const a = flake * 2.4;
+      const progress = clamp((t - 400 - flake * 12) / 900);
+      if (!progress) continue;
+      const x = Math.cos(a) * 150 * size * progress;
+      const y = -Math.sin(progress * Math.PI) * (30 + (flake % 5) * 12) * size;
+      ctx.globalAlpha = clamp((2350 - t) / 500) * 0.7;
+      line(x - 2 * size, y, x + 2 * size, y, '#f0fdff', 1.2);
+      line(x, y - 2 * size, x, y + 2 * size, '#f0fdff', 1.2);
     }
-    impact();
-    const age = t - 650;
-    flare(target.x, target.y, clamp(1 - age / 300), '#ffea00');
-    const dx = Math.cos(angle),
-      dy = Math.sin(angle),
-      margin = 56 * size;
-    const roomX =
-      Math.abs(dx) < 0.001 ? Infinity : ((dx > 0 ? width - margin : margin) - target.x) / dx;
-    const roomY =
-      Math.abs(dy) < 0.001 ? Infinity : ((dy > 0 ? height - margin : margin) - target.y) / dy;
-    const advance = Math.max(0, Math.min(190 * size, width * 0.3, roomX, roomY)) * ease(age / 1100);
-    const x = target.x + Math.cos(angle) * advance,
-      y = target.y + Math.sin(angle) * advance;
-    const alpha = clamp((2050 - t) / 600);
-    for (let k = 1; k <= 5; k++) {
-      ctx.save();
-      ctx.globalAlpha = alpha * (1 - k / 6) * 0.65;
-      disc(
-        x - Math.cos(angle) * k * 12 * size,
-        y - Math.sin(angle) * k * 12 * size,
-        (18 - k * 2) * size,
-        k % 2 ? '#ffea00' : '#ff4400',
-      );
-      ctx.restore();
-    }
-    drawBurningBootPrint(ctx, x, y, angle, size * (1 + age / 3500), alpha);
   }
   function drawDragoonPod(
     x,
@@ -524,92 +512,8 @@ export function createStitchAttack(ctx, options, onImpact) {
 
     ctx.restore();
   }
-  function drawBurningBootPrint(ctx, x, y, angle, scale = 1.0, alpha = 1.0) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
-    ctx.scale(scale, scale);
-    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-
-    // 高溫熾烈烈焰輝光外層 (Bloom)
-    ctx.shadowBlur = 24;
-    ctx.shadowColor = '#ff3b00';
-
-    // 1. 戰靴輪廓外底 (熾熱金黃漸層到深赤紅)
-    const bootGrad = ctx.createLinearGradient(-34, -18, 38, 18);
-    bootGrad.addColorStop(0, '#ff1a00');
-    bootGrad.addColorStop(0.3, '#ff6600');
-    bootGrad.addColorStop(0.65, '#ffea00');
-    bootGrad.addColorStop(1, '#ffffff');
-
-    ctx.beginPath();
-    // 前掌前緣
-    ctx.moveTo(36, 0);
-    ctx.bezierCurveTo(36, -15, 24, -20, 8, -20); // 前掌外緣上
-    ctx.bezierCurveTo(-2, -20, -10, -14, -16, -11); // 足弓收腰
-    ctx.lineTo(-24, -13); // 鞋跟前緣上
-    ctx.bezierCurveTo(-34, -13, -34, 13, -24, 13); // 厚實鞋跟弧底
-    ctx.lineTo(-16, 11); // 鞋跟前緣下
-    ctx.bezierCurveTo(-10, 14, -2, 20, 8, 20); // 足弓收腰下
-    ctx.bezierCurveTo(24, 20, 36, 15, 36, 0); // 前掌外緣下
-    ctx.closePath();
-
-    ctx.fillStyle = bootGrad;
-    ctx.fill();
-    ctx.lineWidth = 2.2;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
-
-    // 2. 深刻防滑深刻齒紋 (Tread Grooves & Cross Lugs)
-    ctx.save();
-    ctx.strokeStyle = '#450a0a';
-    ctx.lineWidth = 2.4;
-    ctx.lineCap = 'round';
-
-    // 前掌橫向深刻人字防滑紋
-    for (let gx = 0; gx < 4; gx++) {
-      const lx = 4 + gx * 7.5;
-      ctx.beginPath();
-      ctx.moveTo(lx, -13 + gx * 1.5);
-      ctx.lineTo(lx + 4, 0);
-      ctx.lineTo(lx, 13 - gx * 1.5);
-      ctx.stroke();
-    }
-
-    // 足弓過渡段凹槽
-    ctx.beginPath();
-    ctx.moveTo(-14, -9);
-    ctx.lineTo(-14, 9);
-    ctx.stroke();
-
-    // 厚實鞋跟交錯防滑紋
-    ctx.beginPath();
-    ctx.moveTo(-22, -10);
-    ctx.lineTo(-22, 10);
-    ctx.moveTo(-29, -9);
-    ctx.lineTo(-29, 9);
-    ctx.moveTo(-31, 0);
-    ctx.lineTo(-20, 0);
-    ctx.stroke();
-    ctx.restore();
-
-    // 3. 內嵌白熾高溫核心
-    ctx.save();
-    ctx.shadowBlur = 14;
-    ctx.shadowColor = '#ffffff';
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(14, 0, 10, 4.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(-25, 0, 5, 3.5, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    ctx.restore();
-  }
   return (elapsed) => {
-    if (elapsed < 0 || elapsed > 2700) return;
+    if (elapsed < 0 || elapsed > 3100) return;
     ctx.save();
     switch (options.effect) {
       case 'sphere':
@@ -626,9 +530,6 @@ export function createStitchAttack(ctx, options, onImpact) {
         break;
       case 'frost_spikes':
         drawIce(elapsed);
-        break;
-      case 'flame_kick':
-        drawKick(elapsed);
         break;
     }
     ctx.restore();

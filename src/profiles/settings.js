@@ -106,6 +106,9 @@ function setProfileSettings(db, userId, data) {
       avatar,
       pings,
       attackLoadout: getAttackSettings(db, userId),
+      ...(savedProfile(db, userId).starterRewardPack
+        ? { starterRewardPack: savedProfile(db, userId).starterRewardPack }
+        : {}),
       ...(savedProfile(db, userId).entryIntroTheme
         ? { entryIntroTheme: savedProfile(db, userId).entryIntroTheme }
         : {}),
@@ -135,12 +138,14 @@ function preserveAvatar(db, userId, appearance) {
     achievementRewardCodeAt,
     achievementRewardCodes,
     attackLoadout,
+    starterRewardPack,
   } = savedProfile(db, userId);
   return {
     ...appearance,
     ...(avatar ? { avatar } : {}),
     ...(pings ? { pings } : {}),
     ...(attackLoadout ? { attackLoadout } : {}),
+    ...(starterRewardPack ? { starterRewardPack } : {}),
     ...(entryIntroTheme ? { entryIntroTheme } : {}),
     ...(achievementResetAt ? { achievementResetAt } : {}),
     ...(achievementRewardCodeAt ? { achievementRewardCodeAt } : {}),
