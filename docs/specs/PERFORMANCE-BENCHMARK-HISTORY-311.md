@@ -59,6 +59,12 @@ Server GPU 使用率及 GPU memory：VMware vmwgfx 未提供可讀 counter，所
 
 3.6.0 → 3.11.1：API p95 中位數 32.1 → 32.0ms；特效下載 16.9 → 17.2KiB／人／秒（+1.8%）；冷載十人合計 30.30 → 31.12MiB（+2.7%）。Client／server CPU 與記憶體維持相近範圍；本情境未觀察到持續累升的資源成本。同步延遲的波動與專屬遊戲負載仍按上述限制解讀。
 
+## 共用圖表與原始資料位置
+
+[Google 試算表：五版效能比較](https://docs.google.com/spreadsheets/d/1r5XVEMSVoY-4glURUqH9qAYbae7xhfx6SjKtMiSvzQI/edit) 已設為知道連結即可檢視，包含 8 張可編輯圖表、15 輪量測及中位數公式。匯入後已核對 90 個顯示數值；server GPU／VRAM 維持 n.a. 與原因。
+
+下列 `work/` JSON／截圖連結指向測試機上的 ignored 本機證據，未納入 Git；GitHub 可直接閱讀本文件的彙總及上述共用試算表。此批固定版本比較截止 3.11.1，不包含其後 main 的圖片快取修改。
+
 ## 版本與證據
 
 - 3.6.0，改動前基準，commit `b62a589b6e3e01cfa36086a8ad0f1cbccd793ccf`：[第 1 輪](../../work/benchmark/history-acceptance/b62a589b6e3e-1.json)／[截圖](../../work/benchmark/history-acceptance/b62a589b6e3e-1.png)、[第 2 輪](../../work/benchmark/history-acceptance/b62a589b6e3e-2.json)／[截圖](../../work/benchmark/history-acceptance/b62a589b6e3e-2.png)、[第 3 輪](../../work/benchmark/history-acceptance/b62a589b6e3e-3.json)／[截圖](../../work/benchmark/history-acceptance/b62a589b6e3e-3.png)
