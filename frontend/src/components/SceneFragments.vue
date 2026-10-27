@@ -13,7 +13,7 @@ defineProps<{ visitors: LobbyVisitor[] }>();
       :aria-label="owner.name + '的下半身，本人走近可拾回'"
     >
       <div class="scene-fragment-crop"
-        ><img :src="sizedImage(owner.image, 256)" alt="" draggable="false"
+        ><img :src="sizedImage(owner.image, 128)" alt="" draggable="false"
       /></div>
       <progress
         :value="owner.fragment.health"
