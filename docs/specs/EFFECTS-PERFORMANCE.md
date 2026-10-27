@@ -8,7 +8,7 @@
 - `compressed-manifest.json` 是來源對照，不是例外額度。每支交付音效最多 384 KiB，所有內建音效交付副本合計最多 2 MiB。不得引入未壓縮音效、遠端 CDN 或 base64 媒體繞過預算。必要提升須先取得使用者的具體授權並記錄原因。
 - 自訂表情的原 WAV 及權限保留在資料庫；96 kbps mono MP3 以內容 hash 存在可重建私有 cache。正式環境必須通過 ffmpeg 執行與實際編碼檢查；不能將缺少編碼器時的相容 fallback 當作壓縮完成。
 - 圖片使用現有 WebP／尺寸縮圖與 hash 去重。選單不拉原尺寸大圖；開場關閉、略過或選其他主題時，不預載用不到的預設圖。所有內建靜態圖片（含開場與 SVG）每張最多 256 KiB；原始來源區不作執行期交付。
-- Vite 內容 hash 腳本／樣式使用一年 immutable；其他可重驗靜態檔使用 `private, no-cache`＋ETag／304；HTML、API 與私有遊戲題庫音訊繼續 no-store。不能用時戳破壞穩定媒體網址，或將需驗權限的資源改為 public cache。
+- Vite 內容 hash 腳本／樣式，以及帶目前內容版本 `?v=` 的靜態圖片使用一年 immutable（圖片規則見 AGENTS.md「圖片交付」）；其他可重驗靜態檔及沒有或版本過期的圖片網址使用 `private, no-cache`＋ETag／304；HTML、API 與私有遊戲題庫音訊繼續 no-store。不能用時戳破壞穩定媒體網址，或將需驗權限的資源改為 public cache。
 - 新的遊戲階段資源補到 `game-assets.ts`；預載透過既有 warm／idle／URL 去重，Save-Data／slow-2g／2g／3g 時跳過。不全站無條件載入遊戲素材。
 
 ## 動態與生命週期
