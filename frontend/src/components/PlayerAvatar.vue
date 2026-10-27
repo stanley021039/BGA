@@ -6,8 +6,8 @@ const failed = ref(false),
     () =>
       props.avatar ||
       (props.bot
-        ? '/assets/characters/sunny-neutral.png'
-        : '/assets/characters/traveler-neutral.png'),
+        ? '/assets/characters/sunny-neutral.png?size=256'
+        : '/assets/characters/traveler-neutral.png?size=256'),
   );
 watch(source, () => {
   failed.value = false;

@@ -115,7 +115,7 @@ test('API errors distinguish unknown routes, missing rooms, and expired room ses
     const emoteOptions = await (await fetch(base + '/api/lobby/emotes', { headers })).json();
     assert.ok(
       emoteOptions.emotes.some(
-        (emote) => emote.expression === 'happy' && emote.image.endsWith('happy.gif'),
+        (emote) => emote.expression === 'happy' && emote.image.split('?')[0].endsWith('happy.gif'),
       ),
     );
     const lobbyEmote = await fetch(base + '/api/lobby/emote', {
