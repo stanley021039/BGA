@@ -13,7 +13,7 @@ const source = fs
   .replace(/^import .*attack-revision.js';\n/m, '')
   .replace(/^import attackEffects .*attack-effects.json';\n/m, '')
   .replace(/^import attackTiming .*attack-timing.json';\n/m, '')
-  .replace('export function playAttackArtwork', 'function playAttackArtwork');
+  .replace(/^export function /gm, 'function ');
 const lifetime = fs
   .readFileSync(path.join(__dirname, '../src/services/motion-lifetime.js'), 'utf8')
   .toString();
@@ -380,4 +380,156 @@ test('three explicit bijuu directions remain three beams even when many victims 
   const root = Math.atan2(140, 520);
   for (const direction of [-Math.PI / 2 - root, Math.PI / 2 - root])
     assert.ok(result.rotations.some((angle) => Math.abs(angle - direction) < 1e-8));
+});
+
+// Shared lobby stage (#322): a context whose shadowBlur is a prototype accessor, like the real one.
+function stageHarness() {
+  const callbacks = new Map(),
+    blurs = [],
+    clears = [];
+  let nextFrame = 0;
+  class FakeContext {
+    set shadowBlur(value) {
+      blurs.push(value);
+    }
+    get shadowBlur() {
+      return 0;
+    }
+  }
+  for (const name of [
+    'setTransform',
+    'translate',
+    'rotate',
+    'save',
+    'restore',
+    'fillText',
+    'arc',
+    'lineTo',
+    'moveTo',
+    'beginPath',
+    'closePath',
+    'fill',
+    'stroke',
+    'fillRect',
+    'strokeRect',
+    'ellipse',
+    'quadraticCurveTo',
+    'bezierCurveTo',
+    'scale',
+    'drawImage',
+    'rect',
+    'clip',
+    'setLineDash',
+  ])
+    FakeContext.prototype[name] = () => {};
+  FakeContext.prototype.clearRect = () => clears.push(1);
+  FakeContext.prototype.measureText = () => ({ width: 120 });
+  FakeContext.prototype.createRadialGradient = FakeContext.prototype.createLinearGradient = () => ({
+    addColorStop() {},
+  });
+  const context = new FakeContext(),
+    canvas = { width: 0, height: 0, getContext: () => context };
+  const sandbox = {
+    attackTiming: require('../../public/shared/attack-timing.json'),
+    combatRules: require('../../public/shared/scene-rules.json'),
+    attackEffects: require('../../public/shared/attack-effects.json'),
+    document: { hidden: false },
+    performance: { now: () => 0 },
+    requestAnimationFrame(fn) {
+      callbacks.set(++nextFrame, fn);
+      return nextFrame;
+    },
+    cancelAnimationFrame(id) {
+      callbacks.delete(id);
+    },
+    setTimeout: () => 0,
+    clearTimeout() {},
+    Math,
+    Date,
+  };
+  vm.createContext(withEngineImports(sandbox));
+  vm.runInContext(
+    fs.fixtureSource(lifetime) +
+      fs
+        .readFileSync(path.join(__dirname, '../src/services/attack-revision.js'), 'utf8')
+        .replace(/export function /g, 'function ') +
+      fs
+        .readFileSync(path.join(__dirname, '../src/services/attack-figures.js'), 'utf8')
+        .replace(/export function /g, 'function ') +
+      fs
+        .readFileSync(path.join(__dirname, '../src/services/attack-area.js'), 'utf8')
+        .replace(/^import .*attack-figures.js';\n/m, '')
+        .replace(/^import .*attack-revision.js';\n/m, '')
+        .replace('export function createAreaAttack', 'function createAreaAttack') +
+      fs
+        .readFileSync(path.join(__dirname, '../src/services/attack-stitch.js'), 'utf8')
+        .replace('export function createStitchAttack', 'function createStitchAttack') +
+      source,
+    sandbox,
+  );
+  const stage = sandbox.createAttackStage(canvas);
+  const attack = (effect) => ({
+    effect,
+    color: '#00f0ff',
+    width: 1440,
+    height: 900,
+    from: { x: 200, y: 500 },
+    to: { x: 1100, y: 500 },
+  });
+  function frame(now) {
+    const pending = [...callbacks.entries()];
+    callbacks.clear();
+    for (const [, fn] of pending) fn(now);
+    return pending.length;
+  }
+  return { stage, attack, frame, canvas, blurs, clears, callbacks };
+}
+
+test('three lobby attacks share one canvas, one frame loop and one clear per frame', () => {
+  const h = stageHarness();
+  for (const [id, effect] of [
+    ['a', 'barrage'],
+    ['b', 'flame_vortex'],
+    ['c', 'chain_lightning'],
+  ])
+    assert.equal(h.stage.add(id, h.attack(effect)), true);
+  assert.equal(h.callbacks.size, 1);
+  h.clears.length = 0;
+  for (let i = 1; i <= 5; i++) assert.equal(h.frame(i * 17), 1);
+  assert.equal(h.clears.length, 5);
+  h.stage.clear();
+  assert.equal(h.callbacks.size, 0);
+});
+
+test('the stage lowers spark density and glow as more attacks play at once', () => {
+  const h = stageHarness();
+  h.stage.add('a', h.attack('barrage'));
+  assert.deepEqual({ ...h.stage.detail() }, { density: 1, glow: 1, tier: 0 });
+  h.stage.add('b', h.attack('barrage'));
+  assert.deepEqual({ ...h.stage.detail() }, { density: 0.7, glow: 0.6, tier: 0 });
+  h.stage.add('c', h.attack('barrage'));
+  assert.deepEqual({ ...h.stage.detail() }, { density: 0.5, glow: 0, tier: 0 });
+  // Glow set by any drawing helper is scaled through the shared context.
+  h.blurs.length = 0;
+  h.frame(17);
+  assert.ok(h.blurs.length > 0);
+  assert.ok(h.blurs.every((value) => value === 0));
+  h.stage.remove('c');
+  h.stage.remove('b');
+  assert.deepEqual({ ...h.stage.detail() }, { density: 1, glow: 1, tier: 0 });
+  h.stage.clear();
+});
+
+test('a device that keeps missing frames draws attacks at a lower resolution', () => {
+  const h = stageHarness();
+  h.stage.add('a', h.attack('flame_vortex'));
+  const full = h.canvas.width;
+  // Smooth frames keep full detail.
+  for (let i = 1; i <= 40; i++) h.frame(i * 16);
+  assert.equal(h.stage.detail().tier, 0);
+  // Missed frames (50 ms apart) drop a tier and shrink the canvas.
+  for (let i = 1; i <= 31; i++) h.frame(640 + i * 50);
+  assert.equal(h.stage.detail().tier, 1);
+  assert.ok(h.canvas.width < full);
+  h.stage.clear();
 });

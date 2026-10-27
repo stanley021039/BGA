@@ -31,6 +31,7 @@ function createStateStream({
   heartbeatMs = 15000,
   roomLimit = 64,
   userLimit = 3,
+  minGapMs = 0,
 }) {
   const rooms = new Map(),
     pending = new Map();
@@ -51,15 +52,21 @@ function createStateStream({
   }
   function send(entry) {
     if (!valid(entry)) return entry.close();
+    // A busy channel can change faster than anyone needs to see: within the gap
+    // the view is not even built, and the next sweep sends what waited.
+    if (minGapMs && Date.now() - entry.sentAt < minGapMs) return;
     let view;
     try {
-      view = project(entry.room, entry.playerId);
+      view = project(entry.room, entry.playerId, entry);
     } catch {
       return entry.close();
     }
     const tag = stateTag(view);
     if (tag === entry.tag) return;
-    if (write(entry, event('state', JSON.stringify({ ...view, stateTag: tag })))) entry.tag = tag;
+    if (write(entry, event('state', JSON.stringify({ ...view, stateTag: tag })))) {
+      entry.tag = tag;
+      entry.sentAt = Date.now();
+    }
   }
   function flush() {
     scheduled = false;
@@ -128,7 +135,8 @@ function createStateStream({
       }
   }
 
-  function subscribe(room, { req, res, user, playerId }) {
+  // `context` is kept on the entry for project (the lobby's entrance effect).
+  function subscribe(room, { req, res, user, playerId, context = null }) {
     if (closed) return null;
     const set = rooms.get(room.code) || new Set();
     if (set.size >= roomLimit || [...set].filter((e) => e.userId === user.id).length >= userLimit)
@@ -140,7 +148,9 @@ function createStateStream({
       user,
       userId: user.id,
       playerId,
+      context,
       tag: null,
+      sentAt: 0,
       closed: false,
       close() {
         if (entry.closed) return;

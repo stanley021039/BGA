@@ -1122,6 +1122,23 @@ function initializeApp(config, dataLock, acquired) {
     expressionLabels,
     characterMedia,
   });
+  // Pushes each lobby visitor's view when the lobby changes (#322) instead of
+  // every client polling twice a second. Reading the view also keeps a visitor
+  // present, so the sweep doubles as presence; it runs often enough for hits
+  // the server settles over time to show promptly, while the gap keeps a busy
+  // lobby to about two views a second per visitor, like the old polling.
+  const LOBBY_CHANNEL = { code: '__LOBBY__' };
+  const lobbyStream = createStateStream({
+    project: (_channel, _playerId, entry) => lobbyHandlers.view(entry.user, entry.context),
+    valid: (entry) => !!auth.sessionFrom(entry.req),
+    sweepMs: 250,
+    minGapMs: 400,
+    roomLimit: 500,
+  });
+  const lobbyChanged = (view) => {
+    lobbyStream.notify(LOBBY_CHANNEL);
+    return view;
+  };
   const port = config.port,
     protocol = 'http';
   function limitAuth(req) {
@@ -1497,27 +1514,34 @@ function initializeApp(config, dataLock, acquired) {
         }
         if (['/api/market', '/api/market/vote'].includes(url.pathname))
           throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作不支援此方法');
+        if (url.pathname === '/api/lobby/events' && req.method === 'GET') {
+          limitRate(roomRate, 'lobby-events:' + user.id, 30);
+          const entrance = url.searchParams.get('entrance');
+          if (!lobbyStream.subscribe(LOBBY_CHANNEL, { req, res, user, context: entrance }))
+            throw new HttpError(429, 'STREAM_LIMIT', '大廳連線太多，請關閉舊分頁');
+          return lobbyChanged();
+        }
         if (url.pathname === '/api/lobby' && req.method === 'GET')
-          return send(lobbyHandlers.view(user, url.searchParams.get('entrance')));
+          return send(lobbyChanged(lobbyHandlers.view(user, url.searchParams.get('entrance'))));
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
-          return send(lobbyHandlers.move(user, data));
+          return send(lobbyChanged(lobbyHandlers.move(user, data)));
         if (url.pathname === '/api/lobby/attack' && req.method === 'POST') {
           limitRate(socialRate, 'lobby-attack:' + user.id, 80);
-          return send(lobbyHandlers.attack(user, data));
+          return send(lobbyChanged(lobbyHandlers.attack(user, data)));
         }
         if (url.pathname === '/api/lobby/teleport' && req.method === 'POST') {
           limitAccount(user);
-          return send(lobbyHandlers.teleport(user, data));
+          return send(lobbyChanged(lobbyHandlers.teleport(user, data)));
         }
         if (url.pathname === '/api/lobby/background' && req.method === 'POST')
-          return send(lobbyHandlers.background(user, data));
+          return send(lobbyChanged(lobbyHandlers.background(user, data)));
         if (url.pathname === '/api/lobby/emotes' && req.method === 'GET')
           return send(lobbyHandlers.emotes(user));
         if (url.pathname === '/api/lobby/emote' && req.method === 'POST')
-          return send(lobbyHandlers.emote(user, data));
+          return send(lobbyChanged(lobbyHandlers.emote(user, data)));
         if (url.pathname === '/api/lobby/barrage' && req.method === 'POST') {
           limitRate(socialRate, 'lobby-barrage:' + user.id, 30);
-          return send(lobbyHandlers.barrage(user, data));
+          return send(lobbyChanged(lobbyHandlers.barrage(user, data)));
         }
         if (url.pathname === '/api/music' && req.method === 'GET')
           return send({ tracks: musicStore.list(), me: user.id, admin: user.role === 'admin' });
@@ -3277,6 +3301,7 @@ function initializeApp(config, dataLock, acquired) {
       await attempt(() => mediaThumbnails.stop());
       await attempt(() => mediaAudio.stop());
       await attempt(() => stateStream.close());
+      await attempt(() => lobbyStream.close());
       await attempt(() => runtime.drainStreams());
       await serverClosed;
       for (const room of rooms.values()) await attempt(() => awardRoomAchievements(room));
