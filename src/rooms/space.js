@@ -1,5 +1,6 @@
 const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
 const combatRules = require('../../public/shared/scene-rules.json');
+const { versionedAsset } = require('../http/asset-version');
 const { HttpError } = require('../http/errors');
 const { randomBytes } = require('node:crypto');
 const { createSceneCombat } = require('./scene-combat');
@@ -98,7 +99,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
             wrapId: position.wrapId || 0,
             id: player.id,
             name: player.name,
-            image: player.avatar || '/assets/playful/game-quacks.svg',
+            image: player.avatar || versionedAsset('/assets/playful/game-quacks.svg'),
             x: position.x,
             y: position.y,
             targetX: position.targetX,

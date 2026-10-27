@@ -10,6 +10,10 @@
 - 場景新增KDA、本人HP與狀態圖示、角色腳下細血條；遊戲中央面板可穿越，素材授權保留右下位置。
 - 新增一次性「新手大禮包」隨機未擁有獎勵：進場／攻擊各五款，彈幕／播放器／語音／背景各三款；不代替實際成就。
 
+## [3.11.2] - 2026-10-27
+
+- Images: thumbnails for avatars and custom gifts, a small bluff reaction photo, and content-versioned static images cached for good (#316).
+
 ## [3.11.1] - 2026-10-27
 
 - 設定頁導覽列與大廳共用邊距及透明外觀，保留設定內容布局（#310）

@@ -10,6 +10,19 @@ import quacksArt from '../../assets/quacks/game-quacks.svg';
 import minimalArt from '../minimal/minimal-waiting.svg';
 import constructionArt from '../../assets/lobby/construction-800.webp?no-inline';
 import constructionThumb from '../../assets/lobby/construction-400.webp?no-inline';
+// Written out in full so the build can add each file's content version (#316).
+const gameArt: Record<string, string> = {
+  bluff: '/assets/playful/game-bluff.svg',
+  draw: '/assets/playful/game-draw.svg',
+  gift: '/assets/playful/game-gift.svg',
+  majority: '/assets/playful/game-majority.svg',
+  market: '/assets/playful/game-market.svg',
+  musicquiz: '/assets/playful/game-musicquiz.svg',
+  poker: '/assets/playful/game-poker.svg',
+  telephone: '/assets/playful/game-telephone.svg',
+  thunder: '/assets/playful/game-thunder.svg',
+  trpg: '/assets/playful/game-trpg.svg',
+};
 const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
@@ -206,7 +219,7 @@ onBeforeUnmount(() => {
                       ? quacksArt
                       : card.id === 'minimal'
                         ? minimalArt
-                        : '/assets/playful/game-' + card.art + '.svg'
+                        : gameArt[card.art] || '/assets/playful/game-' + card.art + '.svg'
               "
               :srcset="
                 card.art === 'construction'

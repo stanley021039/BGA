@@ -118,6 +118,7 @@ const {
   sendVersioned,
 } = require('./http/static-cache');
 const { MediaThumbnails, thumbnailSize } = require('./media/thumbnails');
+const { assetPath } = require('./http/asset-version');
 const { MediaAudio } = require('./media/audio');
 const { openDatabase } = require('./db/index');
 const { createAuth } = require('./auth/index');
@@ -617,8 +618,9 @@ function initializeApp(config, dataLock, acquired) {
       mime = row.mime;
       etag = etagFor(row.bytes);
     } else {
-      ({ bytes, etag } = readStatic(path.join(__dirname, '..', 'public', selected.url)));
-      mime = selected.url.endsWith('.gif') ? 'image/gif' : 'image/png';
+      const file = assetPath(selected.url);
+      ({ bytes, etag } = readStatic(path.join(__dirname, '..', 'public', file)));
+      mime = file.endsWith('.gif') ? 'image/gif' : 'image/png';
     }
     const version = createHash('sha256')
       .update(selected.url)
@@ -698,9 +700,13 @@ function initializeApp(config, dataLock, acquired) {
       ),
       artwork = db.prepare('SELECT bytes FROM user_artworks WHERE id=?');
     return [
-      ...[...new Set(builtinCharacters.flatMap((c) => Object.values(c.expressions)))].map(
-        (file) => () => readStatic(path.join(__dirname, '..', 'public', file)).bytes,
-      ),
+      ...[
+        ...new Set(builtinCharacters.flatMap((c) => Object.values(c.expressions).map(assetPath))),
+      ].map((file) => () => readStatic(path.join(__dirname, '..', 'public', file)).bytes),
+      ...db
+        .prepare('SELECT id FROM community_gifts WHERE image_bytes IS NOT NULL')
+        .all()
+        .map((row) => () => giftStore.image(row.id)?.bytes),
       ...db
         .prepare('SELECT character_id,expression FROM character_images')
         .all()
@@ -2793,11 +2799,10 @@ function initializeApp(config, dataLock, acquired) {
         auth.requireUser(req);
         const image = giftStore.image(sharedGift[1]);
         if (!image?.bytes) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到禮物圖片');
-        res.setHeader('Content-Type', image.mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return sendCached(req, res, image.bytes, { cacheControl: PRIVATE_REVALIDATE });
+        // A custom gift's image never changes under its id, so it is cached for good.
+        return sendImage(req, res, url, image, true);
       }
-      if (GIFTS.some((gift) => gift.image === url.pathname)) {
+      if (GIFTS.some((gift) => assetPath(gift.image) === url.pathname)) {
         auth.requireUser(req);
         res.setHeader('Content-Type', 'image/png');
         res.setHeader('Content-Security-Policy', "default-src 'none'");
@@ -2825,16 +2830,16 @@ function initializeApp(config, dataLock, acquired) {
       if (url.pathname.startsWith('/assets/characters/')) {
         auth.requireUser(req);
         const asset = builtinCharacters
-          .flatMap((character) => Object.values(character.expressions))
+          .flatMap((character) => Object.values(character.expressions).map(assetPath))
           .find((value) => value === url.pathname);
         if (!asset) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
-        const { bytes } = readStatic(path.join(__dirname, '..', 'public', asset));
+        const { bytes, version } = readStatic(path.join(__dirname, '..', 'public', asset));
         return sendImage(
           req,
           res,
           url,
           { bytes, mime: asset.endsWith('.gif') ? 'image/gif' : 'image/png' },
-          false,
+          url.searchParams.get('v') === version,
         );
       }
       const characterId = url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];
@@ -2853,6 +2858,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-push-user.wav': 'assets/game-sounds/quacks-push-user.wav',
         '/assets/game-sounds/quacks-decline-user.wav': 'assets/game-sounds/quacks-decline-user.wav',
         '/assets/bluff-reaction-photo.webp': 'assets/bluff-reaction-photo.webp',
+        '/assets/bluff-reaction-photo-144.webp': 'assets/bluff-reaction-photo-144.webp',
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/bluff-reaction-photo.png': 'assets/bluff-reaction-photo.webp',
         '/assets/game-sounds/quacks-settlement-user.wav':
