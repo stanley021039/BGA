@@ -32,6 +32,8 @@ function redeemedAt(db, userId, group) {
   return grants(db, userId)[group] || null;
 }
 function redeem(store, userId, code) {
+  if (typeof code === 'string' && code.length <= 80 && code.trim() === '新手大禮包')
+    return require('./starter-rewards').redeem(store, userId);
   const item =
     typeof code === 'string' && code.length <= 80
       ? codes.find((item) => item.code === code.trim())

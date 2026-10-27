@@ -232,7 +232,13 @@ export const useLobbyStore = defineStore('lobby', () => {
       presenceJob = null;
       if (current(epoch, account)) {
         if (queued && connected.value) void sync();
-        else schedulePresence(backoff);
+        else
+          schedulePresence(
+            connected.value &&
+              snapshot.value?.attacks.some((event) => event.hits?.some((hit) => hit.pending))
+              ? 200
+              : backoff,
+          );
       }
     }
   }
@@ -261,7 +267,6 @@ export const useLobbyStore = defineStore('lobby', () => {
       });
       if (current(epoch, account)) {
         consume(result);
-        attackStatus.value = '已向最近玩家發射特效';
         return true;
       }
     } catch (error) {

@@ -36,11 +36,19 @@ watch(
     const baseline = !initialized;
     initialized = true;
     for (const event of snapshot.attacks) {
-      if (seen.has(event.id)) continue;
+      if (seen.has(event.id)) {
+        active.value = active.value.map((item) =>
+          item.id === event.id ? { ...event, ageMs: item.ageMs } : item,
+        );
+        continue;
+      }
       seen.add(event.id);
       if (baseline || snapshot.serverNow - event.at > 1200 || event.at > snapshot.serverNow + 1000)
         continue;
-      active.value = [...active.value.slice(-2), event];
+      active.value = [
+        ...active.value.slice(-2),
+        { ...event, ageMs: Math.max(0, snapshot.serverNow - event.at) },
+      ];
       const timer = setTimeout(() => {
         active.value = active.value.filter((item) => item.id !== event.id);
         timers.delete(timer);
@@ -85,6 +93,10 @@ onBeforeUnmount(() => {
         :effect="event.effect"
         :damage="event.damage"
         :critical="event.critical"
+        :hits="event.hits"
+        :rays="event.rays"
+        :aspect-ratio="event.aspectRatio"
+        :age-ms="event.ageMs"
         :play-key="event.id"
         :from="{ x: event.fromX, y: event.fromY }"
         :to="{ x: event.toX, y: event.toY }"

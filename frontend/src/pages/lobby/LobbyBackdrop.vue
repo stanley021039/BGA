@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import MobileSceneControls from '../../components/MobileSceneControls.vue';
 import { sceneDirections, useSceneControls } from '../../services/scene-controls';
+import SceneFragments from '../../components/SceneFragments.vue';
 import ExpressionSounds from '../../engines/expression-sounds.js';
 import MotionPolicy from '../../engines/motion-policy.js';
 
@@ -338,7 +339,7 @@ defineExpose({ openChat });
         :snapshot="lobby.snapshot"
         :connected="lobby.connected" /><LobbyBackgroundArt :id="background.selected" /><div
         class="lobby-visitors"
-        ><LobbyVisitor
+        ><SceneFragments :visitors="lobby.snapshot?.visitors || []" /><LobbyVisitor
           v-for="visitor in lobby.snapshot?.visitors || []"
           :key="visitor.id"
           :visitor="visitor"

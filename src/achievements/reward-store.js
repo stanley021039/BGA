@@ -219,6 +219,7 @@ function earnedRewardId(store, userId, reward) {
 }
 function rewardList(store, userId) {
   const redemption = require('./redemption').redeemedAt(store.db, userId, 'frames');
+  const starter = require('./starter-rewards').receipt(store.db, userId);
   const claimed = new Map(
     store.db
       .prepare('SELECT frame_id,claimed_at FROM user_cosmetic_rewards WHERE user_id=?')
@@ -228,7 +229,14 @@ function rewardList(store, userId) {
   return rewards.map((r) => ({
     ...r,
     earned: !!redemption || !!earnedRewardId(store, userId, r),
-    claimedAt: claimed.get(r.frameId) || redemption || null,
+    claimedAt:
+      claimed.get(r.frameId) ||
+      redemption ||
+      (starter?.grants.frames.includes(r.frameId) ? starter.redeemedAt : null),
+    mediaClaimedAt:
+      claimed.get(r.frameId) ||
+      redemption ||
+      (starter?.grants.media.includes(r.frameId) ? starter.redeemedAt : null),
   }));
 }
 function assertFrame(store, userId, id) {
@@ -236,6 +244,7 @@ function assertFrame(store, userId, id) {
   if (
     reward &&
     !require('./redemption').redeemedAt(store.db, userId, 'frames') &&
+    !require('./starter-rewards').owned(store.db, userId, 'frames').includes(id) &&
     !store.db
       .prepare('SELECT 1 FROM user_cosmetic_rewards WHERE user_id=? AND frame_id=?')
       .get(userId, id)

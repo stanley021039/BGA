@@ -1,0 +1,83 @@
+{
+  "barrage": [
+    [450, 0.35, "hit1"],
+    [800, 0.35, "hit2"],
+    [1150, 0.3, "hit3"]
+  ],
+  "beam": [[450, 1, "impact"]],
+  "shield": [[0, 1, "shield"]],
+  "sphere": [[0, 1, "shield"]],
+  "chains": [
+    [420, 0.4, "hit1"],
+    [1000, 0.6, "hit2"]
+  ],
+  "orbital": [
+    [1000, 0.7, "hit1"],
+    [1400, 0.3, "hit2"]
+  ],
+  "funnel": [
+    [1320, 0.5, "shot1"],
+    [2120, 0.5, "shot2"]
+  ],
+  "singularity": [
+    [850, 0.3, "hit1"],
+    [1250, 0.7, "finish"]
+  ],
+  "explosion": [
+    [2750, 0.7, "hit1"],
+    [3500, 0.3, "finish"]
+  ],
+  "blade_aura": [[650, 1, "impact"]],
+  "blade_aura_crimson": [[650, 1, "impact"]],
+  "chain_lightning": [
+    [300, 0.35, "hit1"],
+    [475, 0.35, "hit2"],
+    [650, 0.3, "hit3"]
+  ],
+  "frost_spikes": [
+    [400, 0.25, "hit1"],
+    [680, 0.35, "hit2"],
+    [980, 0.4, "hit3"]
+  ],
+  "arrow_volley": [
+    [900, 0.4, "hit1"],
+    [1350, 0.35, "hit2"],
+    [1600, 0.25, "hit3"]
+  ],
+  "flame_vortex": [
+    [400, 0.4, "hit1"],
+    [800, 0.35, "hit2"],
+    [1200, 0.25, "hit3"]
+  ],
+  "guanyin_barrage": [
+    [1960, 0.2, "hit1"],
+    [2470, 0.2, "hit2"],
+    [2980, 0.2, "hit3"],
+    [3490, 0.2, "hit4"],
+    [4000, 0.2, "hit5"]
+  ],
+  "solar_phoenix": [
+    [3200, 1, "impact"],
+    [3000, 0.1, "burn1"],
+    [3900, 0.1, "burn2"]
+  ],
+  "dimension_cleave": [
+    [1800, 0.25, "hit1"],
+    [2450, 0.25, "hit2"],
+    [3500, 0.5, "finish"]
+  ],
+  "bijuu_beam": [[2460, 1, "impact"]],
+  "giga_drill": [[3520, 1, "impact"]],
+  "gate_of_babylon": [
+    [2400, 0.25, "volley1"],
+    [2640, 0.25, "volley2"],
+    [2880, 0.25, "volley3"],
+    [3120, 0.25, "volley4"],
+    [3880, 2, "ea"]
+  ],
+  "excalibur": [
+    [2810, 0.7, "hit1"],
+    [3450, 0.3, "finish"]
+  ],
+  "giant_orange_cat": [[2570, 1, "impact"]]
+}

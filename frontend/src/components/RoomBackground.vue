@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SceneFragments from './SceneFragments.vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import LobbyAttackLayer from '../pages/lobby/LobbyAttackLayer.vue';
 import { entranceEffect } from '../services/entrance-effects';
@@ -11,6 +12,7 @@ import LobbyVisitor from '../pages/lobby/LobbyVisitor.vue';
 import StatusSlot from './StatusSlot.vue';
 import MobileSceneControls from './MobileSceneControls.vue';
 import { sceneDirections, useSceneControls } from '../services/scene-controls';
+import { type Passage } from '../engines/scene-path.js';
 const props = defineProps<{ connected: boolean; focused: boolean; inert?: boolean }>();
 const room = useRoomStore(),
   stage = ref<HTMLElement | null>(null),
@@ -27,6 +29,47 @@ onMounted(() => {
   sizeObserver.observe(document.documentElement);
 });
 let markerTimer: ReturnType<typeof setTimeout> | undefined;
+// Measure at the moment of each command, so resizing, scrolling and game
+// phases cannot leave a stale invisible portal in the middle of the floor.
+function passage(): Passage | null {
+  if (
+    props.focused ||
+    !room.snapshot ||
+    ['waiting', 'finished', 'showdown'].includes(room.snapshot.phase)
+  )
+    return null;
+  const floor = stage.value?.getBoundingClientRect();
+  const main = stage.value?.parentElement?.querySelector<HTMLElement>(':scope > .vue-game-main');
+  if (!floor?.width || !floor.height || !main) return null;
+  // Drawing uses display:contents for its main; measure its painted children.
+  const rects = [...(getComputedStyle(main).display === 'contents' ? main.children : [main])]
+    .map((node) => node.getBoundingClientRect())
+    .filter((r) => r.width && r.height);
+  if (!rects.length) return null;
+  const avatar = stage.value?.querySelector<HTMLElement>('.lobby-avatar.is-self');
+  const halfWidth = (avatar?.offsetWidth || 100) / 2 + 8;
+  const avatarHeight = avatar?.offsetHeight || 110;
+  const clamp = (n: number) => Math.max(2, Math.min(98, n));
+  const box = {
+    left: clamp(
+      ((Math.min(...rects.map((r) => r.left)) - floor.left - halfWidth) / floor.width) * 100,
+    ),
+    right: clamp(
+      ((Math.max(...rects.map((r) => r.right)) - floor.left + halfWidth) / floor.width) * 100,
+    ),
+    top: clamp(
+      ((Math.min(...rects.map((r) => r.top)) - floor.top - avatarHeight * 0.22 - 8) /
+        floor.height) *
+        100,
+    ),
+    bottom: clamp(
+      ((Math.max(...rects.map((r) => r.bottom)) - floor.top + avatarHeight * 0.78 + 8) /
+        floor.height) *
+        100,
+    ),
+  };
+  return box.left < box.right && box.top < box.bottom ? box : null;
+}
 function openCharacter(trigger: HTMLElement) {
   if (props.connected && !props.focused) picker.value?.open(trigger);
 }
@@ -103,10 +146,14 @@ async function move(target: { x: number; y: number }) {
       const timeout = setTimeout(() => controller?.abort(), 10000);
       try {
         room.accept(
-          await room.request('room-space', next, {
-            signal: controller.signal,
-            affectsConnection: false,
-          }),
+          await room.request(
+            'room-space',
+            { ...next, passage: passage() },
+            {
+              signal: controller.signal,
+              affectsConnection: false,
+            },
+          ),
         );
         error.value = '';
       } finally {
@@ -203,7 +250,11 @@ async function sceneAction(input: Record<string, unknown>): Promise<boolean> {
   try {
     const result = await room.request(
       'room-space',
-      { ...input, entrance: entranceEffect.value },
+      {
+        ...input,
+        entrance: entranceEffect.value,
+        ...(input.action === 'step' ? { passage: passage() } : {}),
+      },
       { affectsConnection: false, signal: actionController.signal },
     );
     if (!disposed && scope === room.scope && code === room.code) {
@@ -257,6 +308,7 @@ onBeforeUnmount(() => {
     <LobbyAttackLayer :snapshot="snapshot" :connected="connected" />
     <UiMoveMarker v-if="destination" :key="markerKey" :point="destination" />
     <div class="lobby-visitors">
+      <SceneFragments :visitors="snapshot?.visitors || []" />
       <LobbyVisitor
         v-for="visitor in snapshot?.visitors || []"
         :key="visitor.id"

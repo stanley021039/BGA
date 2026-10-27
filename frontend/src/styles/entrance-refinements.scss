@@ -1,0 +1,11 @@
+.stitch-vfx[data-entrance='stitch-purple'] {
+  filter: brightness(0.8) saturate(0.85);
+  [style*='hollow-singularity-core'] {
+    opacity: 0.8;
+  }
+}
+.stitch-vfx[data-entrance='stitch-blue-eyes'] [style*='stitch-dragon-roar'] {
+  scale: 1.65;
+  translate: 0 -20px;
+  transform-origin: 50% 65%;
+}

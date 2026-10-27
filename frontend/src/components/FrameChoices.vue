@@ -37,7 +37,7 @@ function select(id: string) {
       :label="option.label"
       :aria-label="option.label + (kind === 'barrage' ? '彈幕框' : '播放器風格')"
       :selected="selected === option.id"
-      :disabled="!prefs.canUse(option.id)"
+      :disabled="!prefs.canUse(option.id, kind)"
       @click="select(option.id)"
       ><span class="vue-frame-preview-slot" aria-hidden="true"
         ><FramePreview
@@ -52,7 +52,7 @@ function select(id: string) {
         > </template
       ><template #selection
         ><span class="barrage-frame-selection ui-choice-state">{{
-          !prefs.canUse(option.id)
+          !prefs.canUse(option.id, kind)
             ? '成就尚未解鎖'
             : selected === option.id
               ? '✓ 使用中'

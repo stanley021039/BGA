@@ -26,6 +26,12 @@ test('active shields block inclusive 30–40% or author 40–50% on each incomin
       const hit = combat.hit(caster, target, 200);
       assert.equal(hit.damage, 200000 * (1 - percent / 100));
       assert.equal(target.health, before - hit.damage);
+      values = [0.5, 0.5, roll];
+      assert.equal(
+        combat.hit(caster, target, 2100).damage,
+        Math.round(200000 * (1 - percent / 200)),
+        'the residual stage halves the same inclusive mitigation range',
+      );
     }
 });
 
@@ -48,7 +54,7 @@ test('each protected hit rolls again and mitigation follows critical and author 
   assert.deepEqual(combat.hit(from, to, 300), { damage: 170775, critical: true });
 });
 
-test('recasting refreshes two seconds without stacking, expiry and death remove protection', () => {
+test('recasting refreshes two full seconds plus three half-strength seconds; death clears both', () => {
   const combat = createSceneCombat(() => 0.5),
     from = { x: 0, y: 0 },
     to = { x: 0, y: 0 };
@@ -58,15 +64,17 @@ test('recasting refreshes two seconds without stacking, expiry and death remove 
   combat.protect(to, 1500);
   assert.equal(to.shieldUntil, 3500);
   assert.equal(combat.hit(from, to, 3499).damage, 130000);
-  assert.equal(combat.hit(from, to, 3500).damage, 200000);
-  combat.protect(to, 3600);
+  assert.equal(combat.hit(from, to, 3500).damage, 165000);
+  assert.equal(combat.hit(from, to, 6499).damage, 165000);
+  assert.equal(combat.hit(from, to, 6500).damage, 200000);
+  combat.protect(to, 6600);
   to.health = 1;
-  combat.hit(from, to, 3700);
+  combat.hit(from, to, 6700);
   assert.equal(to.shieldUntil, 0);
-  assert.throws(() => combat.protect(to, 3800), { code: 'SCENE_RESPAWNING' });
-  combat.advance(to, 6700);
+  assert.throws(() => combat.protect(to, 6800), { code: 'SCENE_RESPAWNING' });
+  combat.advance(to, 9700);
   assert.equal(to.shieldUntil, 0);
-  assert.equal(combat.hit(from, to, 6701).damage, 200000);
+  assert.equal(combat.hit(from, to, 9701).damage, 200000);
 });
 
 for (const effect of ['shield', 'sphere'])
@@ -91,17 +99,23 @@ for (const effect of ['shield', 'sphere'])
       lobby.attack(b, defensive);
       const offense = { slot: 'q', effect: 'beam', aspectRatio: 1.6, requestId: 'shield-hit-001' };
       const event = lobby.attack(a, offense).attacks.at(-1);
+      assert.equal(event.damage, 0, 'no damage before beam arrival');
+      now += 450;
+      lobby.view(a);
       assert.equal(event.damage, author ? 110000 : 130000);
       now += 2100;
       const expired = lobby.attack(a, { ...offense, requestId: 'shield-hit-002' }).attacks.at(-1);
-      assert.equal(expired.damage, 200000);
+      now += 450;
+      lobby.view(a);
+      assert.equal(expired.damage, author ? 155000 : 165000);
       // Replaying the old cast must not grant another shield.
       lobby.attack(b, defensive);
-      assert.equal(
-        lobby.attack(a, { ...offense, slot: 'e', requestId: 'shield-hit-003' }).attacks.at(-1)
-          .damage,
-        200000,
-      );
+      const replayed = lobby
+        .attack(a, { ...offense, slot: 'e', requestId: 'shield-hit-003' })
+        .attacks.at(-1);
+      now += 450;
+      lobby.view(a);
+      assert.equal(replayed.damage, author ? 155000 : 165000);
 
       const space = createRoomSpace(
           () => now,
@@ -129,6 +143,7 @@ for (const effect of ['shield', 'sphere'])
         { action: 'attack', slot: 'q', aspectRatio: 1.6, requestId: 'room-hit-001' },
         'beam',
       );
+      now += 450;
       assert.equal(space.view(room, 'a').attacks.at(-1).damage, author ? 110000 : 130000);
       now += 2100;
       space.move(
@@ -137,6 +152,7 @@ for (const effect of ['shield', 'sphere'])
         { action: 'attack', slot: 'q', aspectRatio: 1.6, requestId: 'room-hit-002' },
         'beam',
       );
-      assert.equal(space.view(room, 'a').attacks.at(-1).damage, 200000);
+      now += 450;
+      assert.equal(space.view(room, 'a').attacks.at(-1).damage, author ? 155000 : 165000);
     });
   }

@@ -101,11 +101,12 @@ function play(id: string) {
       >
         <div class="attack-preview" :aria-label="slot.toUpperCase() + ' 鍵目前特效預覽'">
           <AttackArtwork
+            preview
             v-if="store.ready"
             :effect="store.loadout[slot]"
             :play-key="currentRevision[slot]"
-            :from="{ x: 18, y: 65 }"
-            :to="{ x: 78, y: 65 }"
+            :from="{ x: 25, y: 65 }"
+            :to="{ x: 65, y: 65 }"
           />
         </div>
         <UiButton
@@ -115,7 +116,7 @@ function play(id: string) {
           @click="currentRevision[slot]++"
         />
       </UiPanel> </div
-    ><p>在大廳按 Q、E 向最近玩家施放。兩鍵各冷卻 2 秒；所有效果與數字僅供視覺互動。</p
+    ><p>在場景按 Q、E 朝最近玩家施放，兩鍵各冷卻 1.6 秒；範圍技能可命中多人，不影響桌遊勝負。</p
     ><div class="attack-loadout"
       ><UiField
         v-for="slot in ['q', 'e'] as const"
@@ -152,10 +153,11 @@ function play(id: string) {
           @click="loadLoadout" /></div></div
     ><div class="attack-preview attack-preview-main" aria-label="攻擊特效預覽"
       ><AttackArtwork
+        preview
         :effect="preview"
         :play-key="revision"
-        :from="{ x: 18, y: 65 }"
-        :to="{ x: 78, y: 65 }"
+        :from="{ x: 25, y: 65 }"
+        :to="{ x: 65, y: 65 }"
       /><span class="attack-preview-label">{{
         attackEffects.find((e) => e.id === preview)?.label
       }}</span></div
