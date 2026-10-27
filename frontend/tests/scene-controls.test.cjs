@@ -42,7 +42,8 @@ function fixture(send = async () => true) {
     {
       module: loaded,
       exports: loaded.exports,
-      require: () => vue,
+      require: (id) =>
+        id === 'vue' ? vue : { default: require('../../public/shared/scene-rules.json') },
       document,
       Element,
       Date: { now: () => time },
@@ -83,13 +84,15 @@ function fixture(send = async () => true) {
     timers,
     listeners,
     async advance(ms) {
-      time += ms;
-      for (const [key, timer] of [...timers]) {
-        if (timer.at <= time) {
-          timers.delete(key);
-          timer.fn();
-        }
+      const end = time + ms;
+      while (true) {
+        const next = [...timers].sort((a, b) => a[1].at - b[1].at)[0];
+        if (!next || next[1].at > end) break;
+        time = next[1].at;
+        timers.delete(next[0]);
+        next[1].fn();
       }
+      time = end;
       await vue.nextTick();
     },
     dispose() {
@@ -116,7 +119,9 @@ test('one pending request per slot, independent slots and server cooldown after 
     await Promise.all([q, e]);
     assert.equal(f.controls.seconds('q'), 2);
     assert.equal(await f.controls.run('q'), false);
-    await f.advance(2000);
+    await f.advance(1599);
+    assert.equal(f.controls.disabled('q'), true);
+    await f.advance(1);
     assert.equal(f.controls.disabled('q'), false);
     assert.equal(f.timers.size, 0);
   } finally {
@@ -203,7 +208,9 @@ test('recent server attack recovers remaining cooldown; other players do not loc
     await vue.nextTick();
     assert.equal(f.controls.seconds('q'), 1);
     assert.equal(f.controls.seconds('e'), 0);
-    await f.advance(1000);
+    await f.advance(599);
+    assert.equal(f.controls.disabled('q'), true);
+    await f.advance(1);
     assert.equal(f.controls.disabled('q'), false);
   } finally {
     f.dispose();

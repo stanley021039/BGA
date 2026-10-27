@@ -1,5 +1,6 @@
 import { computed, onScopeDispose, reactive, ref, watch } from 'vue';
 import type { LobbySnapshot } from '../contracts/lobby';
+import combatRules from '../../../public/shared/scene-rules.json';
 
 export type SceneAction = 'q' | 'e' | 'r' | 'up' | 'down' | 'left' | 'right';
 export const sceneDirections = {
@@ -65,7 +66,7 @@ export function useSceneControls(options: {
       if (ok && epoch === generation && !disposed) {
         until[key] = Math.max(
           until[key] || 0,
-          Date.now() + (key === 'move' ? 200 : key === 'r' ? 1000 : 2000),
+          Date.now() + (key === 'move' ? 200 : key === 'r' ? 1000 : combatRules.attackCooldownMs),
         );
         tick();
       }
@@ -91,7 +92,13 @@ export function useSceneControls(options: {
       // Server timestamps also cover actions from another tab or keyboard.
       for (const event of snapshot.attacks) {
         if (event.fromId !== snapshot.selfId) continue;
-        const remaining = Math.max(0, Math.min(2000, event.at + 2000 - snapshot.serverNow));
+        const remaining = Math.max(
+          0,
+          Math.min(
+            combatRules.attackCooldownMs,
+            event.at + combatRules.attackCooldownMs - snapshot.serverNow,
+          ),
+        );
         if (remaining) until[event.slot] = Math.max(until[event.slot] || 0, Date.now() + remaining);
       }
       tick();
