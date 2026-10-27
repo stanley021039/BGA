@@ -1,3 +1,5 @@
+> 本文件保留第一批單版基準；後續已完成[五版各三輪比較](PERFORMANCE-BENCHMARK-HISTORY-311.md)，目前狀態以該份紀錄為準。
+
 # #311 測試站效能基準
 
 2026-10-27，測試站 v3.11.1，commit `f960b5146baf1808f3d5ff9a5663ac4ebabf60cc`。三輪相同情境，十個獨立登入 Chrome context（1920×1080）同時在線，動態開啟，兩波十人攻擊與移動。Chrome 156.0.8078.48；client 為 Windows／24 logical cores／RTX 3060 Ti，server 為 Linux VM／2 vCPU。
