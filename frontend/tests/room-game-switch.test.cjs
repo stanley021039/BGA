@@ -138,6 +138,35 @@ test('game commands carry their source game and generation', async () => {
     f.close();
   }
 });
+test('scene requests from the real store satisfy server movement and action validation', async () => {
+  const f = await fixture();
+  let time = 10000;
+  const space = require('../../src/rooms/space').createRoomSpace(
+    () => time,
+    () => 0.5,
+  );
+  const room = { code: 'ABCDEF', players: [{ id: 'p1', name: 'host' }] };
+  try {
+    for (const input of [
+      { x: 50, y: 60 },
+      { action: 'step', dx: 1, dy: -1 },
+      { action: 'teleport' },
+      { action: 'attack', slot: 'q', requestId: 'mobile-scene-regression', aspectRatio: 1 },
+    ]) {
+      time += 3000;
+      await f.store.request('room-space', input);
+      const body = f.calls.at(-1).options.body;
+      assert.equal(body.code, room.code);
+      assert.doesNotThrow(() => space.move(room, 'p1', body, 'shield', 'classic'));
+    }
+    const view = space.view(room, 'p1');
+    assert.equal(view.visitors[0].teleportId, 1);
+    assert.equal(view.attacks[0].slot, 'q');
+    assert.equal(view.attacks[0].toId, 'p1');
+  } finally {
+    f.close();
+  }
+});
 test('tutorial transport never persists a teaching seat or falls through to formal APIs after detach', async () => {
   const f = await fixture();
   try {

@@ -9,7 +9,9 @@ import { record } from '../services/validation';
 import { readLobbySnapshot } from '../contracts/lobby';
 import LobbyVisitor from '../pages/lobby/LobbyVisitor.vue';
 import StatusSlot from './StatusSlot.vue';
-const props = defineProps<{ connected: boolean; focused: boolean }>();
+import MobileSceneControls from './MobileSceneControls.vue';
+import { sceneDirections, useSceneControls } from '../services/scene-controls';
+const props = defineProps<{ connected: boolean; focused: boolean; inert?: boolean }>();
 const room = useRoomStore(),
   stage = ref<HTMLElement | null>(null),
   error = ref(''),
@@ -52,6 +54,28 @@ const projection = computed(() => {
   }
 });
 const snapshot = computed(() => projection.value.snapshot);
+const controls = useSceneControls({
+  context: () => room.code + ':' + room.scope,
+  enabled: () => props.connected && !props.focused && !props.inert && !!snapshot.value,
+  snapshot: () => snapshot.value,
+  send: async (action) => {
+    const rect = stage.value?.getBoundingClientRect();
+    if (action in sceneDirections) {
+      const [dx, dy] = sceneDirections[action as keyof typeof sceneDirections];
+      return sceneAction({ action: 'step', dx, dy });
+    }
+    return sceneAction(
+      action === 'r'
+        ? { action: 'teleport' }
+        : {
+            action: 'attack',
+            slot: action,
+            requestId: crypto.randomUUID(),
+            aspectRatio: Math.max(0.2, Math.min(5, (rect?.width || 1) / (rect?.height || 1))),
+          },
+    );
+  },
+});
 let lastSent = 0;
 let lastStep = -Infinity;
 let disposed = false,
@@ -59,6 +83,7 @@ let disposed = false,
   queued: { x: number; y: number } | null = null;
 let controller: AbortController | null = null,
   keyboardTarget: { x: number; y: number } | null = null;
+const actionControllers = new Set<AbortController>();
 async function move(target: { x: number; y: number }) {
   if (!props.connected || props.focused || !snapshot.value || disposed) return;
   queued = target;
@@ -138,17 +163,7 @@ function key(event: KeyboardEvent) {
   if (['q', 'e', 'r'].includes(action)) {
     if (event.repeat) return;
     event.preventDefault();
-    const rect = stage.value?.getBoundingClientRect();
-    void sceneAction(
-      action === 'r'
-        ? { action: 'teleport', entrance: entranceEffect.value }
-        : {
-            action: 'attack',
-            slot: action,
-            requestId: crypto.randomUUID(),
-            aspectRatio: Math.max(0.2, Math.min(5, (rect?.width || 1) / (rect?.height || 1))),
-          },
-    );
+    void controls.run(action as 'q' | 'e' | 'r');
     return;
   }
   if (![stage.value, document.body].includes(event.target as HTMLElement)) return;
@@ -178,23 +193,36 @@ function key(event: KeyboardEvent) {
   };
   void sceneAction({ action: 'step', dx: delta[0] / 5, dy: delta[1] / 5 });
 }
-async function sceneAction(input: Record<string, unknown>) {
+async function sceneAction(input: Record<string, unknown>): Promise<boolean> {
+  if (disposed || !props.connected || props.focused || !snapshot.value) return false;
   const scope = room.scope,
-    code = room.code;
+    code = room.code,
+    actionController = new AbortController();
+  actionControllers.add(actionController);
+  const timeout = setTimeout(() => actionController.abort(), 10000);
   try {
     const result = await room.request(
       'room-space',
       { ...input, entrance: entranceEffect.value },
-      { affectsConnection: false },
+      { affectsConnection: false, signal: actionController.signal },
     );
     if (!disposed && scope === room.scope && code === room.code) {
       room.accept(result);
       error.value = '';
+      return true;
     }
   } catch (cause) {
     if (!disposed && scope === room.scope)
-      error.value = cause instanceof Error ? cause.message : '操作失敗';
+      error.value = actionController.signal.aborted
+        ? '操作結果尚未確認，請查看目前狀態後重試。'
+        : cause instanceof Error
+          ? cause.message
+          : '操作失敗';
+  } finally {
+    clearTimeout(timeout);
+    actionControllers.delete(actionController);
   }
+  return false;
 }
 onMounted(() => document.addEventListener('keydown', key));
 onBeforeUnmount(() => {
@@ -204,12 +232,20 @@ onBeforeUnmount(() => {
   disposed = true;
   queued = null;
   controller?.abort();
+  for (const actionController of actionControllers) actionController.abort();
+  actionControllers.clear();
 });
 </script>
 <template>
+  <MobileSceneControls
+    :controls="controls"
+    :enabled="connected && !focused && !inert && !!snapshot"
+    :message="error"
+  />
   <div
     v-show="!focused"
     ref="stage"
+    :inert="inert"
     class="vue-room-background lobby-backdrop"
     :style="{ '--room-viewport-width': viewportWidth + 'px' }"
     tabindex="0"
