@@ -1176,13 +1176,12 @@ export function createAttackStage(surface) {
     slow = 0,
     releaseMotion = null;
   // Glow (shadowBlur) is set by many drawing helpers; scaling it here covers them all.
-  const blurSetter =
-    ctx && Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ctx), 'shadowBlur')?.set;
-  if (blurSetter)
+  const blur = ctx && Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ctx), 'shadowBlur');
+  if (blur?.get && blur.set)
     Object.defineProperty(ctx, 'shadowBlur', {
       configurable: true,
-      get: () => 0,
-      set: (value) => blurSetter.call(ctx, value * fx.glow),
+      get: () => blur.get.call(ctx),
+      set: (value) => blur.set.call(ctx, value * fx.glow),
     });
   function fit() {
     const quality = Math.min(1, 1280 / width, 900 / height) * DEVICE_DETAIL[tier].scale;
