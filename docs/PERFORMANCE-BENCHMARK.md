@@ -56,3 +56,5 @@ SSH 模式只將 loopback 服務轉送到本機；不重啟既有站台。測試
 ## 已完成的跨版本實測
 
 2026-10-27 已透過同一Windows Chrome client與SSH，在VM隔離測試站依序切換3.6.0、3.7.0、3.8.0、3.9.0、3.11.1，各三輪正／反／正序。十五輪來源及情境有效、投遞100%、非預期HTTP錯誤0；完整數值與同步輪詢波動限制見[近期版本比較](specs/PERFORMANCE-BENCHMARK-HISTORY-311.md)。此為實際跨版本測試站批次證據；單機`perf:history`命令及GitHub workflow尚未實際執行。
+
+[共用 Google 試算表與八張圖表](https://docs.google.com/spreadsheets/d/1r5XVEMSVoY-4glURUqH9qAYbae7xhfx6SjKtMiSvzQI/edit)（知道連結即可檢視），保留十五輪量測、公式與不可取得的 server GPU／VRAM 說明。
