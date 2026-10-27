@@ -47,7 +47,7 @@ Tab 邊界測試曾落到 body／瀏覽器焦點，無法證明最後一個控�
 
 向量依瀏覽器實際位置與可見文字匯出；字型基線約 1.16em、原生選單文字與箭頭另作向量近似，非逐像素保證。沒有 Component／Instance、auto-layout 或 Figma prototype 接線；目前主比較框只含五個閉合初始狀態，展開彈窗尚須獨立保存。PNG 匯出實際 1959×688，不能把根框 9792×3440 誤稱為 PNG 像素尺寸。
 
-已關閉並重開桌面文件，預覽頁可見同一根框；另從自己的內建瀏覽器以節點網址重新載入雲端文件，核對根層 0、尺寸 9792×3440、X135000／Y60000，再逐張選取上表十個子框確認尺寸。實際 UI 截圖與逐張量測保存在本機 ignored 證據。Bridge 在重開後出現 Unknown file／Disconnected，並未自動重連；本次匯入與首次讀回已成功，重開保存由獨立瀏覽器核對，不冒稱 Bridge 重連測試通過。本輪 Git 僅更新五份 Markdown，`npm run test:affected -- --base HEAD` 對準 `2b9644bf` 的文件差異，選取 0/241 檔，沒有執行自動測試，版號一致性仍通過 3.7.0；不冒稱本輪完整套件通過。`npm run format`／`npm run format:check` 均為 992 checked、0 formatted、115 unchanged legacy、0 failures，另核對 diff。前批新 SVG 的完整 2030/2030 證據仍依 B9 紀錄，不重述為本輪測試。未人工驗收、未啟動 CI、未合併／部署。
+已關閉並重開桌面文件，預覽頁可見同一根框；另從自己的內建瀏覽器以節點網址重新載入雲端文件，核對根層 0、尺寸 9792×3440、X135000／Y60000，再逐張選取上表十個子框確認尺寸。實際 UI 截圖與逐張量測保存在本機 ignored 證據。Bridge 在重開後初次顯示 Unknown file／Disconnected；重新選取既有候選框觸發文件狀態交換後已恢復。重新列檔取得新 session fileKey，再用 Bridge 讀回整個根框，完整序列化節點與關閉前快照完全一致；十框、文字、圖片及位置均保留。沒有把初次未自動重連的狀態記成一開始就通過。本輪 Git 僅更新五份 Markdown，`npm run test:affected -- --base HEAD` 對準 `2b9644bf` 的文件差異，選取 0/241 檔，沒有執行自動測試，版號一致性仍通過 3.7.0；不冒稱本輪完整套件通過。`npm run format`／`npm run format:check` 均為 992 checked、0 formatted、115 unchanged legacy、0 failures，另核對 diff。前批新 SVG 的完整 2030/2030 證據仍依 B9 紀錄，不重述為本輪測試。未人工驗收、未啟動 CI、未合併／部署。
 
 ## 後續範圍
 
