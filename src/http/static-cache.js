@@ -13,6 +13,17 @@ const PRIVATE_REVALIDATE = 'private, no-cache';
 
 const etagFor = (bytes) =>
   `"${crypto.createHash('sha256').update(bytes).digest('base64url').slice(0, 27)}"`;
+// A short content version: a URL carrying it (?v=) names these exact bytes.
+// The frontend build computes the same value for the paths it references.
+const versionFor = (bytes) =>
+  crypto.createHash('sha256').update(bytes).digest('base64url').slice(0, 12);
+function requestedVersion(req) {
+  try {
+    return new URL(req.url || '/', 'http://localhost').searchParams.get('v');
+  } catch {
+    return null;
+  }
+}
 
 function fresh(req, etag) {
   const header = req.headers['if-none-match'];
@@ -51,13 +62,23 @@ function readStatic(location) {
     known = files.get(location);
   if (known && known.mtimeMs === stat.mtimeMs && known.size === stat.size) return known;
   const bytes = fs.readFileSync(location),
-    entry = { bytes, etag: etagFor(bytes), mtimeMs: stat.mtimeMs, size: stat.size };
+    entry = {
+      bytes,
+      etag: etagFor(bytes),
+      version: versionFor(bytes),
+      mtimeMs: stat.mtimeMs,
+      size: stat.size,
+    };
   files.set(location, entry);
   return entry;
 }
 
 function sendStatic(req, res, location, cacheControl = PRIVATE_REVALIDATE) {
-  const { bytes, etag } = readStatic(location);
+  const { bytes, etag, version } = readStatic(location);
+  // A URL naming the current bytes never needs revalidation; a stale or missing
+  // version keeps the revalidated policy, so old URLs still pick up new files.
+  if (cacheControl === PRIVATE_REVALIDATE && requestedVersion(req) === version)
+    cacheControl = PRIVATE_IMMUTABLE;
   return sendCached(req, res, bytes, { cacheControl, etag });
 }
 
@@ -73,6 +94,8 @@ module.exports = {
   PRIVATE_IMMUTABLE,
   PRIVATE_REVALIDATE,
   etagFor,
+  versionFor,
+  requestedVersion,
   readStatic,
   sendCached,
   sendStatic,

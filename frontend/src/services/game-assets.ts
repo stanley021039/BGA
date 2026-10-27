@@ -27,7 +27,7 @@ const inGame: Partial<Record<GameType, readonly string[]>> = {
     sound('quacks-witch.wav'),
     sound('quacks-card.wav'),
   ],
-  bluff: ['/assets/bluff-reaction-photo.webp', sound('bluff-reaction.mp3')],
+  bluff: ['/assets/bluff-reaction-photo-144.webp', sound('bluff-reaction.mp3')],
   musicquiz: [sound('correct-user.mp3'), sound('incorrect-user.mp3')],
   thunder: [
     sound('dice-roll.wav'),

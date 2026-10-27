@@ -1,4 +1,5 @@
 'use strict';
+const { versionedAsset } = require('../http/asset-version');
 const { randomUUID } = require('node:crypto');
 const copy = (v) => JSON.parse(JSON.stringify(v)),
   MODES = new Set(['music', 'scenario']),
@@ -61,7 +62,7 @@ function pool(mode, theme) {
     bank: s.bank,
     videoId: s.videoId,
     source: s.source,
-    image: '/assets/playful/game-musicquiz.svg',
+    image: versionedAsset('/assets/playful/game-musicquiz.svg'),
   }));
 }
 function validate(mode, theme, size) {
