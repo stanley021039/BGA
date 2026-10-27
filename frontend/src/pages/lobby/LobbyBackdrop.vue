@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MobileSceneControls from '../../components/MobileSceneControls.vue';
+import { sceneDirections, useSceneControls } from '../../services/scene-controls';
 import ExpressionSounds from '../../engines/expression-sounds.js';
 import MotionPolicy from '../../engines/motion-policy.js';
 
@@ -30,6 +32,21 @@ const lobby = useLobbyStore(),
   opened = ref(false),
   selfHover = ref(false),
   arrivals = ref(new Set<string>());
+const controls = useSceneControls({
+  context: () => lobby.snapshot?.selfId || '',
+  enabled: () => lobby.connected,
+  snapshot: () => lobby.snapshot,
+  send: async (action) => {
+    if (action === 'q' || action === 'e') return lobby.attack(action);
+    if (action === 'r') {
+      closeDialogs();
+      return lobby.teleport();
+    }
+    const [dx, dy] = sceneDirections[action];
+    lobby.step(dx, dy);
+    return true;
+  },
+});
 const background = useLobbyBackgroundStore();
 const sounds = ExpressionSounds?.create();
 let disposed = false,
@@ -111,10 +128,6 @@ function arrived(id: string) {
 function closeDialogs() {
   dialog.value?.close();
   chat.value?.close();
-}
-function teleport() {
-  closeDialogs();
-  void lobby.teleport();
 }
 watch(
   () => lobby.emotePending,
@@ -240,11 +253,8 @@ function key(event: KeyboardEvent) {
   if (name === 'q' || name === 'e' || name === 'r') {
     if (event.repeat) return;
     event.preventDefault();
-    if (name === 'q' || name === 'e') void lobby.attack(name);
-    else {
-      held.clear();
-      teleport();
-    }
+    held.clear();
+    void controls.run(name);
     return;
   }
   if (
@@ -305,6 +315,14 @@ async function openChat() {
 defineExpose({ openChat });
 </script>
 <template>
+  <MobileSceneControls
+    :controls="controls"
+    :enabled="lobby.connected"
+    :message="
+      (lobby.attackStatus === '已向最近玩家發射特效' ? '' : lobby.attackStatus) ||
+      lobby.presenceStatus
+    "
+  />
   <Teleport to="body"
     ><div
       ref="stage"

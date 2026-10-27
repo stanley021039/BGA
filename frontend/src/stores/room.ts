@@ -145,8 +145,10 @@ export const useRoomStore = defineStore('room', () => {
                 body: {
                   ...data,
                   code: roomCode,
-                  gameType: type.value,
-                  gameRevision: snapshot.value?.gameRevision || 0,
+                  // Scene state survives game switches and has its own strict payload.
+                  ...(route === 'room-space'
+                    ? {}
+                    : { gameType: type.value, gameRevision: snapshot.value?.gameRevision || 0 }),
                 },
               }
             : {}),

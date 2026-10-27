@@ -2,6 +2,12 @@
 
 2026-10-23 起全站只有一種外觀：Stitch，依 Figma 第三份「BGA｜03 Stitch 最終設計・共用元件」頁面「00｜共用元件」（最新共用規範 R6 node `2179:11730`；Stitch source `e7a7b9d5e7de4aac884b16f2ed44fb0b`；未被 R6 取代的 C07／C05 專用元件仍沿用）。Vue 頁面（`frontend/src/pages/`）只用本頁列出的元件與 `--stitch-*` token；`npm run ui:check` 在 CI 擋下新增的原始色碼、頁面原生控制項與舊 token。
 
+## 手機角色操作（#301）
+
+`MobileSceneControls` 使用既有 Stitch `UiPanel tone="raised"`／`UiButton`，在 ≤1180px 或具粗指標的裝置顯示「角色操作」入口，預設收合。開啟後提供目前攻擊一／二的配裝名稱、獨立冷卻、隨機瞬移及四向移動。固定底部安全區，長內容／橫向在面板內捲動；事件不穿透背景。大廳及 `RoomBackground` 共用，包含休憩區；不掛到觀戰畫面。聊天輸入、原生彈窗／popover、手機側欄與隱藏分頁時隱藏，關閉後恢復；遊戲專注模式停用。背景檢視模式仍可用。
+
+鍵盤及手機動作透過 `useSceneControls` 共用鎖、冷卻與換房失效；伺服器保持最終授權。配裝僅用既有 metadata，不載入動畫預覽或新素材。使用原共用元件外觀，本票未新增／修改 Figma 設計稿。完整範圍及驗收見 [#301 規格](specs/MOBILE-SCENE-CONTROLS-301.md)。
+
 ## 快速對照
 
 `UiPanel` 的 `title-before`／`title-after` slot 將規則入口、補充資訊或單行順序置於標題同列，沿用共用 header 對齊；`actions` 仍保留在列尾。title-after 自適應剩餘寬度，內容可自行設單行省略，不以頁面覆寫標題位置。

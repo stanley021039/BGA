@@ -156,7 +156,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       destination.value = null;
   }
   async function teleport() {
-    if (!connected.value || teleportPending.value || disposed) return;
+    if (!connected.value || teleportPending.value || disposed) return false;
     teleportPending.value = true;
     queued = null;
     destination.value = null;
@@ -165,8 +165,9 @@ export const useLobbyStore = defineStore('lobby', () => {
       account = identity.value;
     try {
       await presenceJob;
-      if (!current(epoch, account)) return;
+      if (!current(epoch, account)) return false;
       consume(await request('/api/lobby/teleport', { entrance: entranceEffect.value }));
+      return current(epoch, account);
     } catch (error) {
       if (current(epoch, account))
         presenceStatus.value = error instanceof Error ? error.message : '暫時無法隨機移動';
@@ -174,6 +175,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       teleportPending.value = false;
       if (current(epoch, account)) schedulePresence(200);
     }
+    return false;
   }
   function clearTimers() {
     if (presenceTimer) clearTimeout(presenceTimer);
@@ -245,7 +247,7 @@ export const useLobbyStore = defineStore('lobby', () => {
     if (connected.value) void sync({ dx, dy });
   }
   async function attack(slot: AttackSlot = 'q') {
-    if (!connected.value || attackJobs.has(slot) || disposed || document.hidden) return;
+    if (!connected.value || attackJobs.has(slot) || disposed || document.hidden) return false;
     attackJobs.add(slot);
     attackPending.value = true;
     attackStatus.value = '';
@@ -260,6 +262,7 @@ export const useLobbyStore = defineStore('lobby', () => {
       if (current(epoch, account)) {
         consume(result);
         attackStatus.value = '已向最近玩家發射特效';
+        return true;
       }
     } catch (error) {
       if (current(epoch, account))
@@ -270,6 +273,7 @@ export const useLobbyStore = defineStore('lobby', () => {
         attackPending.value = attackJobs.size > 0;
       }
     }
+    return false;
   }
   async function warmExpressions() {
     if (!preloadAllowed()) return;
