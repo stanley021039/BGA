@@ -14,12 +14,13 @@ const { chromium } = require('playwright'),
       seed: (db) => createAuth(db).bootstrap('header_owner', 'synthetic-password'),
     },
   );
-  const b = await chromium.launch({
-    executablePath: process.env.BGA_CHROMIUM_PATH || '/usr/bin/chromium',
-    args: ['--no-sandbox'],
-  });
+  let b;
   const report = [];
   try {
+    b = await chromium.launch({
+      executablePath: process.env.BGA_CHROMIUM_PATH || '/usr/bin/chromium',
+      args: ['--no-sandbox'],
+    });
     for (const scenario of [
       { width: 1920, height: 1080 },
       { width: 1366, height: 1080 },
@@ -216,7 +217,7 @@ const { chromium } = require('playwright'),
         console.log('PAIR', width, height, touch ? 'touch' : 'mouse', color);
       }
   } finally {
-    await b.close();
+    await b?.close();
     await f.dispose();
     fs.writeFileSync('work/issue-310/' + phase + '.json', JSON.stringify(report, null, 2));
   }
