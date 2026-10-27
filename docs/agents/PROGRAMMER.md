@@ -1,3 +1,5 @@
+2026-10-27 #311 第一版效能 benchmark：新增十個獨立 Chrome context 的冷載／重載、閒置與 Q／E 特效情境；含 API／事件投遞延遲、encoded 流量、client CPU／private memory／WDDM GPU／VRAM、server CPU／RSS 與 unavailable 原因。固定3.11.1產品來源三輪皆有效、20次攻擊／200次投遞各100%、無非預期HTTP錯誤；四項報告邏輯回歸及fixture完整路徑通過。原共用測試站重建造成一輪資源遺失，已排除並加入來源／manifest前後指紋與失敗HTTP診斷。詳細數值、範圍及未驗項見[本批實測](../specs/PERFORMANCE-BENCHMARK-311.md)與[工具說明](../PERFORMANCE-BENCHMARK.md)。只建立目前版本基準，尚未逐版／全遊戲實測；歷史批次及GitHub workflow尚未執行。
+
 2026-10-27 #310候選3.11.1：設定頁與大廳共用vue-site-shell／透明頁首，桌機24px邊距與帳號hover固定；設定內容仍留原容器。後端2094／前端232通過，最終build 7視窗／指標×深淺色14組逐頁幾何／外觀一致、主內容還原原容器前後等尺寸，選單／分類／暱稱持久化通過。證據與初期hover／429測試修訂見[本批紀錄](../specs/SETTINGS-HEADER-310.md)。使用者已於2026-10-27回覆「可以pr了」，本次PR #312兩輪審查完成；最終head CI與合併結果以PR為準，未部署。
 
 2026-10-27 #301候選3.11.0：使用者澄清手機場景操作，新增共用可收合攻擊一／二、瞬移、四向控制，包含大廳／休憩及13款遊戲；鍵盤共用鎖與冷卻。實際驗收發現並修正room store自動附加遊戲版本欄位造成room-space嚴格驗證拒絕，保留遊戲指令版本防護。後端2094、前端232及固定build雙玩家矩陣／focused通過，實機手機未驗；證據與初期失敗界線見[本批紀錄](../specs/MOBILE-SCENE-CONTROLS-301.md)。使用者已於2026-10-27明確要求「幫我pr」，本次PR #309兩輪審查完成；最終head CI與合併狀態以PR為準，未部署。

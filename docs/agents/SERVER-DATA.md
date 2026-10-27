@@ -1,3 +1,5 @@
+2026-10-27 #311 量測資料隔離：現有測試站曾於執行中被另一批重新建置，該輪無效；改固定3.11.1來源的獨立QA服務完成三輪。每輪僅建立／清理本次十個合成帳號及session，確認剩餘benchmark帳號0；原有三個合成QA種子帳號保留。沒有操作正式資料或重啟原共用站。server由/proc量CPU／RSS／private bytes，VMware vmwgfx不提供GPU／VRAM counter，記null與原因，不能寫成0或已驗GPU效能。證據及未驗範圍見[本批實測](../specs/PERFORMANCE-BENCHMARK-311.md)。
+
 # Server／資料 agent 記憶
 
 2026-10-13夜間回補候選：原status KV新增有界nightWindow，最多七ISO時槽＋目標日＋最後實際開始時間；交易先領槽、再等待網路，原fetch／audit／ledger保留。validator保留舊14–16紀錄、接受新夜窗並拒偽造時槽；備份／還原應用本版，schema未升，不操作正式資料。取代未合併診斷方案，詳[夜間重試](../specs/MARKET-NIGHT-RETRY.md)。
