@@ -1,4 +1,6 @@
-2026-10-28 #291：運動員同格／能力／Twist／漩渦D3/D4九張候選已用Bridge匯入第三份04根框2313:11472，791個可編輯文字。24組三尺寸深淺色、36次modal鍵盤循環／Esc及八次專注退出已驗；桌面尺寸及完整再讀回通過，雲端重開未確認，不能稱完整同步。角色卡仍槽位、無Component／Instance或auto-layout，尚未核定／產品實作。fetch發現main已到3.12.1，接續整合與觀戰／共用外殼核對；本批參考為3.7.0，詳[D3／D4證據與限制](../design/candidates/291/athlete-d3-review.md)。
+2026-10-28 #291接續：已整合main4127a035／3.12.1，完整2155、前端254、build通過。新版觀戰真實元件＋公開投影12狀態48組重跑，修正fixture主題接錯後才算有效；僅合成參考，E1 Stitch／Figma待完成。D3／D4九框雲端重開仍未確認，不覆蓋原3.7.0來源。詳[E1證據](../design/candidates/291/spectator-e1-review.md)。
+
+2026-10-28 #291：運動員同格／能力／Twist／漩渦D3/D4九張候選已用Bridge匯入第三份04根框2313:11472，791個可編輯文字。24組三尺寸深淺色、36次modal鍵盤循環／Esc及八次專注退出已驗；桌面尺寸及完整再讀回通過，雲端重開未確認，不能稱完整同步。角色卡仍槽位、無Component／Instance或auto-layout，尚未核定／產品實作。fetch發現main已到3.12.1，後續整合與觀戰參考以上方E1為準；D3／D4參考為3.7.0，詳[D3／D4證據與限制](../design/candidates/291/athlete-d3-review.md)。
 
 2026-10-27 #291接續：運動員C3等待／設定五狀態各桌機／手機，十張已用Bridge保存第三份04根框2303:15246，雲端重開逐張尺寸通過。30組三尺寸深淺色與20次modal Esc返焦通過；Tab邊界仍待修／驗，無Component／Instance或完整展開稿。封面僅現有原圖重採樣，不是獨立新美術。無產品修改、CI或部署，詳[C3證據與缺口](../design/candidates/291/athlete-c3-review.md)。
 
