@@ -1,5 +1,8 @@
+const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
+const combatRules = require('../../public/shared/scene-rules.json');
 const { HttpError } = require('../http/errors');
-const { createSceneCombat, sceneDistance } = require('./scene-combat');
+const { createSceneCombat } = require('./scene-combat');
+const { createAttackTimeline } = require('./attack-timeline');
 const { randomBytes } = require('node:crypto');
 const { builtinFrameDescriptor } = require('../barrage/builtins');
 
@@ -33,22 +36,28 @@ function createLobby(
   authorBonus = () => false,
 ) {
   const combat = createSceneCombat(random, authorBonus);
+  const timeline = createAttackTimeline(combat);
   let background = { id: 'default', changedAt: now(), nextChangeAt: 0 };
   const visitors = new Map(),
     barrages = [],
     attacks = [],
     receipts = new Map();
   function clean(time) {
+    timeline.advance(attacks, visitors.values(), time, advance);
     for (const [id, visitor] of visitors)
       if (time - visitor.seenAt > PRESENCE_MS) visitors.delete(id);
-    while (attacks.length && time - attacks[0].at >= 1800) attacks.shift();
+    while (attacks.length && attacks[0].until < time) attacks.shift();
     while (barrages.length && time - barrages[0].at >= 8000) barrages.shift();
     for (const [key, value] of receipts) if (time - value.at > 60000) receipts.delete(key);
   }
   function advance(visitor, time) {
     combat.advance(visitor, time);
     if (!visitor.health) return;
-    const elapsed = Math.max(0, (time - visitor.updatedAt) / 1000);
+    const start = { x: visitor.x, y: visitor.y };
+    const elapsed = Math.max(
+      0,
+      (time - Math.max(visitor.updatedAt, visitor.immobileUntil || 0)) / 1000,
+    );
     const dx = visitor.targetX - visitor.x,
       dy = visitor.targetY - visitor.y;
     const duration = Math.hypot(dx / WALK_X_PER_SECOND, dy / WALK_Y_PER_SECOND);
@@ -63,6 +72,7 @@ function createLobby(
     visitor.targetY -= shiftY;
     if (shiftX || shiftY) visitor.wrapId = (visitor.wrapId || 0) + 1;
     visitor.updatedAt = time;
+    combat.collect(visitor, shiftX || shiftY ? undefined : start);
   }
   function enter(user, entrance) {
     const time = now();
@@ -99,11 +109,11 @@ function createLobby(
     for (const visitor of visitors.values()) advance(visitor, time);
     return {
       selfId: user.id,
-      attacks: attacks.filter((event) => time - event.at < 1800),
+      attacks: attacks.filter((event) => event.until > time),
       background: { ...background },
       barrages: barrages.filter((event) => time - event.at < 8000),
       visitors: [...visitors.values()].map((visitor) => ({
-        ...combat.view(visitor),
+        ...combat.view(visitor, visitor.id === user.id),
         id: visitor.id,
         name: visitor.name,
         x: visitor.x,
@@ -151,7 +161,7 @@ function createLobby(
     const visitor = enter(user),
       time = now();
     advance(visitor, time);
-    combat.alive(visitor);
+    combat.canMove(visitor, time);
     visitor.targetX = step ? visitor.x + input.dx * 5 : Math.max(MIN_X, Math.min(MAX_X, input.x));
     visitor.targetY = step ? visitor.y + input.dy * 5 : Math.max(MIN_Y, Math.min(MAX_Y, input.y));
     visitor.moveId += 1;
@@ -187,29 +197,36 @@ function createLobby(
         throw new HttpError(409, 'REQUEST_CONFLICT', '同一操作內容不一致');
       return view(user);
     }
-    if (self.lastAttacks?.[slot] !== undefined && time - self.lastAttacks[slot] < 2000)
-      throw new HttpError(429, 'ATTACK_COOLDOWN', slot.toUpperCase() + ' 攻擊冷卻中，請稍候 2 秒');
+    if (
+      self.lastAttacks?.[slot] !== undefined &&
+      time - self.lastAttacks[slot] < combatRules.attackCooldownMs
+    )
+      throw new HttpError(
+        429,
+        'ATTACK_COOLDOWN',
+        slot.toUpperCase() + ' 攻擊冷卻中，請稍候 1.6 秒',
+      );
     for (const visitor of visitors.values()) advance(visitor, time);
-    const distance = (v) => sceneDistance(self, v, input.aspectRatio);
-    const target = ['shield', 'sphere'].includes(effect)
-      ? self
-      : [...visitors.values()]
-          .filter(
-            (v) =>
-              v.id !== user.id &&
-              v.health > 0 &&
-              distance(v) <= require('../../public/shared/scene-rules.json').attackRange,
-          )
-          .sort((a, b) => distance(a) - distance(b) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
+    const targets = selectAttackTargets(
+      self,
+      combat.targets(visitors.values()),
+      effect,
+      input.aspectRatio,
+    );
+    if (attacks.length >= 40)
+      throw new HttpError(429, 'ATTACK_SCENE_BUSY', '場景特效較多，請稍候再試');
+    const target = targets[0];
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '目前沒有其他玩家可以互動');
     combat.alive(self);
-    const hit = target === self ? combat.protect(self, time) : combat.hit(self, target, time);
+    const defensive = target === self;
+    const hit = defensive ? combat.protect(self, time) : { damage: 0, critical: false };
     self.lastAttacks ||= {};
     self.lastAttacks[slot] = time;
-    attacks.push({
+    const event = {
       id: randomBytes(12).toString('hex'),
       fromId: self.id,
       ...hit,
+      aspectRatio: input.aspectRatio,
       slot,
       effect,
       toId: target.id,
@@ -221,7 +238,16 @@ function createLobby(
       toY: target.y,
       at: time,
       until: time + 1800,
-    });
+    };
+    combat.cast(self, effect, time);
+    if (!defensive)
+      timeline.prepare(
+        event,
+        self,
+        targets,
+        effect === 'bijuu_beam' ? combat.targets(visitors.values()) : targets,
+      );
+    attacks.push(event);
     if (attacks.length > 40) attacks.shift();
     receipts.set(key, { at: time, fingerprint });
     if (receipts.size > 4000) receipts.delete(receipts.keys().next().value);
@@ -300,7 +326,7 @@ function createLobby(
   function teleport(user, entrance) {
     const visitor = enter(user, entrance);
     combat.advance(visitor, now());
-    combat.alive(visitor);
+    combat.canMove(visitor, now());
     // Open gutters and the lower floor keep arrivals clear of the game carousel.
     const zones = [
       [6, 18, 45, 76],

@@ -1,0 +1,41 @@
+.mobile-scene-controls {
+  position: fixed;
+  inset-inline-end: max(var(--stitch-space-16), env(safe-area-inset-right));
+  inset-block-end: max(var(--stitch-space-16), env(safe-area-inset-bottom));
+  z-index: 1900;
+  max-inline-size: calc(100dvw - var(--stitch-space-32));
+  .ui-panel {
+    inline-size: min(22rem, calc(100dvw - var(--stitch-space-32)));
+    max-block-size: calc(
+      100dvh - var(--stitch-space-32) - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+    );
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+.mobile-scene-actions,
+.mobile-scene-directions {
+  display: grid;
+  gap: var(--stitch-space-16);
+  row-gap: var(--stitch-space-8);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  .vue-button {
+    min-inline-size: 0;
+  }
+}
+.mobile-scene-cooldown {
+  min-block-size: var(--stitch-space-20);
+  line-height: var(--stitch-space-20);
+  font-size: var(--stitch-text-label);
+  text-align: center;
+  white-space: nowrap;
+}
+.mobile-scene-directions {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.mobile-scene-loadout,
+.mobile-scene-hint {
+  font-size: var(--stitch-text-label);
+  overflow-wrap: anywhere;
+  margin: var(--stitch-space-8) 0;
+}

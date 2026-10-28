@@ -95,6 +95,7 @@ const { withEntryIntro } = require('./http/entry-intro');
 const { createRoomTransitions } = require('./rooms/transitions');
 const { returnToWaiting } = require('./rooms/rematch');
 const { roomGames, switchGame, assertGameContext } = require('./rooms/game-switch');
+const { spectatorView, observerAudioContext } = require('./rooms/spectator');
 const { createStateStream, stateTag } = require('./rooms/state-stream');
 const roomPersistence = require('./rooms/persistence');
 const { botSupport, addTestBot } = require('./ai');
@@ -117,6 +118,7 @@ const {
   sendVersioned,
 } = require('./http/static-cache');
 const { MediaThumbnails, thumbnailSize } = require('./media/thumbnails');
+const { assetPath } = require('./http/asset-version');
 const { MediaAudio } = require('./media/audio');
 const { openDatabase } = require('./db/index');
 const { createAuth } = require('./auth/index');
@@ -444,6 +446,7 @@ function initializeApp(config, dataLock, acquired) {
     media.reconcile(mediaContext(room));
     return {
       ...view,
+      actionFeedback: require('./rooms/action-feedback').actionFeedback(room),
       type: room.type || 'poker',
       gameRevision: room.gameRevision || 0,
       roomGames,
@@ -615,8 +618,9 @@ function initializeApp(config, dataLock, acquired) {
       mime = row.mime;
       etag = etagFor(row.bytes);
     } else {
-      ({ bytes, etag } = readStatic(path.join(__dirname, '..', 'public', selected.url)));
-      mime = selected.url.endsWith('.gif') ? 'image/gif' : 'image/png';
+      const file = assetPath(selected.url);
+      ({ bytes, etag } = readStatic(path.join(__dirname, '..', 'public', file)));
+      mime = file.endsWith('.gif') ? 'image/gif' : 'image/png';
     }
     const version = createHash('sha256')
       .update(selected.url)
@@ -696,9 +700,13 @@ function initializeApp(config, dataLock, acquired) {
       ),
       artwork = db.prepare('SELECT bytes FROM user_artworks WHERE id=?');
     return [
-      ...[...new Set(builtinCharacters.flatMap((c) => Object.values(c.expressions)))].map(
-        (file) => () => readStatic(path.join(__dirname, '..', 'public', file)).bytes,
-      ),
+      ...[
+        ...new Set(builtinCharacters.flatMap((c) => Object.values(c.expressions).map(assetPath))),
+      ].map((file) => () => readStatic(path.join(__dirname, '..', 'public', file)).bytes),
+      ...db
+        .prepare('SELECT id FROM community_gifts WHERE image_bytes IS NOT NULL')
+        .all()
+        .map((row) => () => giftStore.image(row.id)?.bytes),
       ...db
         .prepare('SELECT character_id,expression FROM character_images')
         .all()
@@ -927,6 +935,8 @@ function initializeApp(config, dataLock, acquired) {
     draw: DrawGuessRoom,
     lounge: LoungeRoom,
   };
+  const tutorials = require('./tutorials/runtime').createTutorials();
+  acquired.push(() => tutorials.clear());
   const roomsFile = config.roomsFile || config.dbFile + '.rooms';
   const TIMER_KEY = /^(deadline|.+At|.+Until)$/;
   // Timers that were running keep their remaining time across the downtime.
@@ -1112,6 +1122,23 @@ function initializeApp(config, dataLock, acquired) {
     expressionLabels,
     characterMedia,
   });
+  // Pushes each lobby visitor's view when the lobby changes (#322) instead of
+  // every client polling twice a second. Reading the view also keeps a visitor
+  // present, so the sweep doubles as presence; it runs often enough for hits
+  // the server settles over time to show promptly, while the gap keeps a busy
+  // lobby to about two views a second per visitor, like the old polling.
+  const LOBBY_CHANNEL = { code: '__LOBBY__' };
+  const lobbyStream = createStateStream({
+    project: (_channel, _playerId, entry) => lobbyHandlers.view(entry.user, entry.context),
+    valid: (entry) => !!auth.sessionFrom(entry.req),
+    sweepMs: 250,
+    minGapMs: 400,
+    roomLimit: 500,
+  });
+  const lobbyChanged = (view) => {
+    lobbyStream.notify(LOBBY_CHANNEL);
+    return view;
+  };
   const port = config.port,
     protocol = 'http';
   function limitAuth(req) {
@@ -1259,7 +1286,9 @@ function initializeApp(config, dataLock, acquired) {
             );
           // Bounded private drawing submissions can exceed the small text-action body budget.
           const limit =
-            url.pathname === '/api/action' || url.pathname === '/api/telephone/draft'
+            url.pathname === '/api/action' ||
+            url.pathname === '/api/telephone/draft' ||
+            url.pathname === '/api/tutorial/action'
               ? 128 * 1024
               : url.pathname === '/api/market/images'
                 ? 3 * 1024 * 1024
@@ -1303,6 +1332,40 @@ function initializeApp(config, dataLock, acquired) {
           return send({ ok: true });
         }
         const user = auth.requireUser(req);
+        if (url.pathname.startsWith('/api/tutorial/')) {
+          const expected = new URL(config.publicUrl || 'http://' + req.headers.host).origin;
+          if (req.headers.origin && req.headers.origin !== expected)
+            throw new HttpError(403, 'CROSS_ORIGIN', '不允許跨站教學操作');
+          if (url.pathname === '/api/tutorial/catalog' && req.method === 'GET')
+            return send({ types: tutorials.types });
+          if (url.pathname === '/api/tutorial/state' && req.method === 'GET')
+            return send(tutorials.state(user.id, url.searchParams.get('id')));
+          if (req.method !== 'POST')
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作需使用 POST');
+          limitRate(roomRate, 'tutorial:' + user.id, 120);
+          if (url.pathname === '/api/tutorial/start')
+            return send(tutorials.start(user.id, data.type));
+          if (url.pathname === '/api/tutorial/close')
+            return send(tutorials.close(user.id, data.id));
+          if (url.pathname === '/api/tutorial/step') return send(tutorials.apply(user.id, data));
+          if (url.pathname === '/api/tutorial/perspective')
+            return send(tutorials.perspective(user.id, data));
+          if (url.pathname === '/api/tutorial/action')
+            return send(tutorials.apply(user.id, data, data.route));
+          throw new HttpError(404, 'NOT_FOUND', '找不到這個教學操作');
+        }
+        if (url.pathname === '/api/game-song-audio' && url.searchParams.has('tutorial')) {
+          if (req.method !== 'GET')
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '音訊僅提供 GET');
+          const clip = tutorials.audio(
+            user.id,
+            url.searchParams.get('tutorial'),
+            url.searchParams.get('roundId'),
+          );
+          res.setHeader('Content-Type', 'audio/wav');
+          res.setHeader('Cache-Control', 'no-store');
+          return res.end(clip);
+        }
         roomInvitations.touch(user);
         if (url.pathname === '/api/room-invitations' && req.method === 'GET') {
           expireRooms();
@@ -1451,27 +1514,34 @@ function initializeApp(config, dataLock, acquired) {
         }
         if (['/api/market', '/api/market/vote'].includes(url.pathname))
           throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作不支援此方法');
+        if (url.pathname === '/api/lobby/events' && req.method === 'GET') {
+          limitRate(roomRate, 'lobby-events:' + user.id, 30);
+          const entrance = url.searchParams.get('entrance');
+          if (!lobbyStream.subscribe(LOBBY_CHANNEL, { req, res, user, context: entrance }))
+            throw new HttpError(429, 'STREAM_LIMIT', '大廳連線太多，請關閉舊分頁');
+          return lobbyChanged();
+        }
         if (url.pathname === '/api/lobby' && req.method === 'GET')
-          return send(lobbyHandlers.view(user, url.searchParams.get('entrance')));
+          return send(lobbyChanged(lobbyHandlers.view(user, url.searchParams.get('entrance'))));
         if (url.pathname === '/api/lobby/move' && req.method === 'POST')
-          return send(lobbyHandlers.move(user, data));
+          return send(lobbyChanged(lobbyHandlers.move(user, data)));
         if (url.pathname === '/api/lobby/attack' && req.method === 'POST') {
           limitRate(socialRate, 'lobby-attack:' + user.id, 80);
-          return send(lobbyHandlers.attack(user, data));
+          return send(lobbyChanged(lobbyHandlers.attack(user, data)));
         }
         if (url.pathname === '/api/lobby/teleport' && req.method === 'POST') {
           limitAccount(user);
-          return send(lobbyHandlers.teleport(user, data));
+          return send(lobbyChanged(lobbyHandlers.teleport(user, data)));
         }
         if (url.pathname === '/api/lobby/background' && req.method === 'POST')
-          return send(lobbyHandlers.background(user, data));
+          return send(lobbyChanged(lobbyHandlers.background(user, data)));
         if (url.pathname === '/api/lobby/emotes' && req.method === 'GET')
           return send(lobbyHandlers.emotes(user));
         if (url.pathname === '/api/lobby/emote' && req.method === 'POST')
-          return send(lobbyHandlers.emote(user, data));
+          return send(lobbyChanged(lobbyHandlers.emote(user, data)));
         if (url.pathname === '/api/lobby/barrage' && req.method === 'POST') {
           limitRate(socialRate, 'lobby-barrage:' + user.id, 30);
-          return send(lobbyHandlers.barrage(user, data));
+          return send(lobbyChanged(lobbyHandlers.barrage(user, data)));
         }
         if (url.pathname === '/api/music' && req.method === 'GET')
           return send({ tracks: musicStore.list(), me: user.id, admin: user.role === 'admin' });
@@ -2005,6 +2075,8 @@ function initializeApp(config, dataLock, acquired) {
             '/api/state',
             '/api/room-events',
             '/api/telephone/watch',
+            '/api/watch',
+            '/api/watch-audio',
             '/api/telephone/draft',
             '/api/bluff/caption',
             '/api/game-song-audio',
@@ -2043,6 +2115,17 @@ function initializeApp(config, dataLock, acquired) {
         if (!room) throw new HttpError(404, 'ROOM_NOT_FOUND', '找不到房間，請確認房間代碼');
         if (kickedUsers.get(room.code)?.has(user.id))
           throw new HttpError(403, 'KICKED', '你已被房主踢出房間');
+        if (['/api/watch', '/api/watch-audio'].includes(url.pathname)) {
+          const audio = url.pathname === '/api/watch-audio';
+          if (req.method !== 'GET' && !(audio && req.method === 'HEAD'))
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '觀戰只支援讀取');
+          limitRate(roomRate, (audio ? 'watch-audio:' : 'watch:') + user.id, audio ? 120 : 90);
+          if (seats.get(room.code)?.has(user.id))
+            throw new HttpError(409, 'ALREADY_SEATED', '已入座玩家請使用玩家畫面');
+          if (audio)
+            return gameAudio.serve(req, res, room, observerAudioContext(room), url.searchParams);
+          return send(spectatorView(room, gameAudio));
+        }
         if (url.pathname === '/api/telephone/watch') {
           if (req.method !== 'GET')
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '觀戰只支援讀取');
@@ -2740,11 +2823,10 @@ function initializeApp(config, dataLock, acquired) {
         auth.requireUser(req);
         const image = giftStore.image(sharedGift[1]);
         if (!image?.bytes) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到禮物圖片');
-        res.setHeader('Content-Type', image.mime);
-        res.setHeader('Content-Security-Policy', "default-src 'none'");
-        return sendCached(req, res, image.bytes, { cacheControl: PRIVATE_REVALIDATE });
+        // A custom gift's image never changes under its id, so it is cached for good.
+        return sendImage(req, res, url, image, true);
       }
-      if (GIFTS.some((gift) => gift.image === url.pathname)) {
+      if (GIFTS.some((gift) => assetPath(gift.image) === url.pathname)) {
         auth.requireUser(req);
         res.setHeader('Content-Type', 'image/png');
         res.setHeader('Content-Security-Policy', "default-src 'none'");
@@ -2772,16 +2854,16 @@ function initializeApp(config, dataLock, acquired) {
       if (url.pathname.startsWith('/assets/characters/')) {
         auth.requireUser(req);
         const asset = builtinCharacters
-          .flatMap((character) => Object.values(character.expressions))
+          .flatMap((character) => Object.values(character.expressions).map(assetPath))
           .find((value) => value === url.pathname);
         if (!asset) throw new HttpError(404, 'IMAGE_NOT_FOUND', '找不到角色圖片');
-        const { bytes } = readStatic(path.join(__dirname, '..', 'public', asset));
+        const { bytes, version } = readStatic(path.join(__dirname, '..', 'public', asset));
         return sendImage(
           req,
           res,
           url,
           { bytes, mime: asset.endsWith('.gif') ? 'image/gif' : 'image/png' },
-          false,
+          url.searchParams.get('v') === version,
         );
       }
       const characterId = url.pathname.match(/^\/characters\/([a-f0-9-]{36})(?:\.svg)?$/)?.[1];
@@ -2800,6 +2882,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-push-user.wav': 'assets/game-sounds/quacks-push-user.wav',
         '/assets/game-sounds/quacks-decline-user.wav': 'assets/game-sounds/quacks-decline-user.wav',
         '/assets/bluff-reaction-photo.webp': 'assets/bluff-reaction-photo.webp',
+        '/assets/bluff-reaction-photo-144.webp': 'assets/bluff-reaction-photo-144.webp',
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/bluff-reaction-photo.png': 'assets/bluff-reaction-photo.webp',
         '/assets/game-sounds/quacks-settlement-user.wav':
@@ -3218,6 +3301,7 @@ function initializeApp(config, dataLock, acquired) {
       await attempt(() => mediaThumbnails.stop());
       await attempt(() => mediaAudio.stop());
       await attempt(() => stateStream.close());
+      await attempt(() => lobbyStream.close());
       await attempt(() => runtime.drainStreams());
       await serverClosed;
       for (const room of rooms.values()) await attempt(() => awardRoomAchievements(room));

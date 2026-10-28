@@ -76,8 +76,10 @@ test('350 gifts keep all legacy IDs and have bundled PNG artwork', () => {
   assert.equal(GIFTS.find((gift) => gift.id === 'g1-01').title, '一年份早餐券');
   assert.equal(GIFTS.find((gift) => gift.id === 'g4-16').title, '與朋友完成一條長途步道');
   for (const gift of GIFTS) {
-    assert.match(gift.image, /^\/assets\/gifts\/(?:kenney|noto)\/[a-zA-Z0-9_]+\.png$/);
-    const bytes = fs.readFileSync(path.join(__dirname, '..', 'public', gift.image.slice(1)));
+    assert.match(gift.image, /^\/assets\/gifts\/(?:kenney|noto)\/[a-zA-Z0-9_]+\.png\?v=[\w-]{12}$/);
+    const bytes = fs.readFileSync(
+      path.join(__dirname, '..', 'public', gift.image.slice(1).split('?')[0]),
+    );
     assert.ok(bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), gift.id);
   }
 });

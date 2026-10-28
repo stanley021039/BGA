@@ -2,6 +2,16 @@
 
 2026-10-23 起全站只有一種外觀：Stitch，依 Figma 第三份「BGA｜03 Stitch 最終設計・共用元件」頁面「00｜共用元件」（最新共用規範 R6 node `2179:11730`；Stitch source `e7a7b9d5e7de4aac884b16f2ed44fb0b`；未被 R6 取代的 C07／C05 專用元件仍沿用）。Vue 頁面（`frontend/src/pages/`）只用本頁列出的元件與 `--stitch-*` token；`npm run ui:check` 在 CI 擋下新增的原始色碼、頁面原生控制項與舊 token。
 
+## 手機角色操作（#301）
+
+`MobileSceneControls` 使用既有 Stitch `UiPanel tone="raised"`／`UiButton`，在 ≤1180px 或具粗指標的裝置顯示「角色操作」入口，預設收合。開啟後提供目前攻擊一／二的配裝名稱、獨立冷卻、隨機瞬移及四向移動。固定底部安全區，長內容／橫向在面板內捲動；事件不穿透背景。大廳及 `RoomBackground` 共用，包含休憩區；不掛到觀戰畫面。聊天輸入、原生彈窗／popover、手機側欄與隱藏分頁時隱藏，關閉後恢復；遊戲專注模式停用。背景檢視模式仍可用。
+
+鍵盤及手機動作透過 `useSceneControls` 共用鎖、冷卻與換房失效；伺服器保持最終授權。配裝僅用既有 metadata，不載入動畫預覽或新素材。使用原共用元件外觀，本票未新增／修改 Figma 設計稿。完整範圍及驗收見 [#301 規格](specs/MOBILE-SCENE-CONTROLS-301.md)。
+
+## 大廳與設定頁導覽列（#310）
+
+`.club.vue-site-shell` 共用 SiteHeader C03 的外層邊距及透明頁首語意；桌機緊湊斷點（≥960px、≥560px高、fine pointer且非大字型）使用24px左右邊距，其餘沿用既有`.club`斷點。設定頁的主要內容獨立放在原`.club`容器，不能為了對齊導覽列一起更動內容欄寬。共用帳號按鈕保持`transform:none`，不受頁面通用hover上移影響。大廳背景檢視仍為大廳專屬，設定頁不增加無作用入口；特殊場景的頁首對比規則繼續由原場景契約決定。驗證與回歸指令見 [#310 規格](specs/SETTINGS-HEADER-310.md)。
+
 ## 快速對照
 
 `UiPanel` 的 `title-before`／`title-after` slot 將規則入口、補充資訊或單行順序置於標題同列，沿用共用 header 對齊；`actions` 仍保留在列尾。title-after 自適應剩餘寬度，內容可自行設單行省略，不以頁面覆寫標題位置。
@@ -138,6 +148,10 @@
 
 ### UiTabs、UiPopover、UiIcon
 
+戰鬥狀態圖示同樣使用 `UiIcon` 登錄表：`health-up` 生命上限、`attack-up` 攻擊、`regen-up` 回復加成、`healing` 正在回復、`shield` 減傷、`timer` 等待。圖示徽章使用 `UiBadge`，提供中文 `aria-label`、`title` 與鍵盤焦點；正常滿 HP 不顯示額外狀態文字。
+
+不死鳥燃燒禁回復期間，`healing` 徽章使用 `danger`，中文提示包含剩餘秒數；封鎖狀態優先於普通等待／回復。倒數由既有伺服器快照更新，不新增計時器。
+
 ```vue
 <UiTabs v-model="tab" :items="tabs" label="收藏分類" panel-prefix="collection-panel" />
 <UiPopover :id="id" ref="popover" title="自訂畫筆顏色" @closed="done">…</UiPopover>
@@ -267,13 +281,21 @@ RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱
 
 ## 十一款房間共用場景（2026-10-24）
 
+### 房間唯讀觀戰（#296，2026-10-26 候選）
+
+`RoomSpectator` 是各房間共用的觀戰宿主，從獨立公開契約讀取桌面，不掛載玩家控制器或恢復席位。入口使用 `UiLink`，等待、玩家、公開結果與錯誤沿用 `UiPanel`／`StatusSlot`／`RoomCountdown`。觀戰全螢幕沿用 `RoomFullscreenToggle`，僅隱藏周邊頁首，保留離開及退出入口。
+
+`SpectatorCanvas` 只呈現已被伺服器接受的向量與逐點時間，不接筆跡寫入；畫布離開視野或文件隱藏時釋放 backing/cache，回來由已接受快照重建。傳情畫意的故事畫布也使用這個元件；公開內容以各遊戲原有揭曉時機為準。新觀戰頁取代專用 `TelephoneSpectator`，原有玩家作畫宿主維持既有責任。
+
 `RoomSceneLayout` 統一背景、玩家側欄、聊天室、手機抽屜與 inert／焦點返回。一般遊戲經 `GameRoomPage` 使用；畫猜保留中央畫板版型，直接接同一元件。新遊戲依此契約繼承場景功能，不另複製快捷鍵或面板邏輯。股市頁本批不加入。
+
+2026-10-27 #305：GameRoomPage與RoomSceneLayout兩層 `panelsOpen` 預設皆為true。大於1180px初入房間左右展開；1180px以下仍收合抽屜，使用者已明確確認。手動左右切換、行動版單側開啟／Esc及同房狀態更新保留；重新載入／換房套用尺寸預設，既有明確prop仍優先。
 
 `RoomHeader` 的 `RoomGameSwitcher` 在等待室提供房主「更換遊戲」入口，沿用 `UiDialog`／`UiField`／`UiButton`。選擇與確認分開，人數上下限說明保留欄位槽，超限停用確認；一般狀態推播不關閉視窗，房主／階段變更才關閉。撲克攤牌後另提供返回等待室入口，再發一手仍保留原流程。房間 store 先辨識遊戲代次，再交給個別遊戲 contract；切換時自動導向同房號的新遊戲，避免舊草稿與延遲操作套用到新局。
 
 `has-room-space` 不套用舊 C00 整桌及側欄底板；收合時只留 32px 框邊，內容卡保留表面。畫猜的 display:contents 中央卡片必須各自高於互動背景，避免攔截作畫。
 
-場景提供 Q/E、R 與四向穿越；輸入、組字、對話框、畫布及 inert 區域不觸發快捷鍵。活著角色不顯示血條或生命數字，倒地顯示共用墓碑。背景檢視有獨立退出入口及 Esc，沿用原本遊戲專注模式。
+場景提供 Q/E、R 與四向穿越；輸入、組字、對話框、畫布及 inert 區域不觸發快捷鍵。依2026-10-27最新指示，活著角色腳下顯示細HP比例條，本體不寫生命數字；本人KDA下顯示HP數字與狀態圖示，倒地顯示共用墓碑。背景檢視有獨立退出入口及 Esc，沿用原本遊戲專注模式。
 
 
 ## 房間全螢幕與背景入口（#251）
@@ -283,3 +305,17 @@ RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱
 `SceneViewToggle` 的風景圖示是「背景：只顯示背景與角色」，沿用原本暫藏介面的行為，不要求原生全螢幕。房間內由 `RoomFullscreenToggle` 緊接在全螢幕右側渲染背景入口（全螢幕 ghost、背景 secondary 外框以示區別），站台頁首只在大廳顯示背景入口。手機收合的側欄抽屜把手維持在垂直中央，避免蓋住站台頁首。恢復介面按鈕及 Esc 可還原。兩個入口各自保留中文可讀名稱、44px 觸控區與鍵盤焦點；股市明燈沿用原控制。
 
 `RoomSidePanel` 的收合箭頭在面板上方，與標題同列；只在標題旁預留控制空間，內容區不預留整條控制欄。收合後仍在同一頂部高度提供展開入口；手機抽屜、未讀數及原始收合狀態保留。
+
+## 公開操作回饋與隔離教學（#297／#299）
+
+2026-10-26 使用者最新修訂：近期互動**只顯示在聊天室內**，不得另加浮動提示、頁首「近期互動」按鈕或獨立互動視窗。`useChatStore` 合併原聊天訊息與成功公開操作，`RoomChat` 在同一訊息清單依時間呈現玩家、動作及可公開對象，以「遊戲互動」標示來源。聊天與操作ID分開命名、按ID去重；保留最近50則聊天及20筆操作，收合時新操作計入未讀、展開歸零，換房不殘留上一桌。資料不送入彈幕動畫或另一個聊天頻道。郎中購買項目沿用lazy `QuacksGlyph` 藥材圖像，秘密答案、底牌、秘密送禮對象與私人草稿不進操作紀錄。此規則取代本批初版浮動提示／獨立歷史視窗。
+
+各遊戲 `?learn=1` 入口使用 `TutorialPage` 的 `Ui*` 外殼、目前角色／下一步說明、手動／自動模式與暫停／重試／離開。十三款桌遊經各自真實引擎及原有 snapshot reader；畫猜提供簡化 SVG 練習筆刷，支援鍵盤及 ACK／重試保留筆跡，不取代正式作畫 renderer。股市使用獨立本機教學及正式計分函式。雷霆舊完整課程保留於 `?learn=1&detail=1`。
+
+教學透過 room store 的 scoped transport 僅呼叫 `/api/tutorial/*`；不保存正式座位，卸載後拒絕延遲請求。原有 domain store 自行採用操作回覆，transport 不提前更換 snapshot，以免將自身操作判定為中斷。新增遊戲須註冊規則、reader、兩種模式及契約測試，見 [本批規格與驗收](specs/INTERACTIONS-TUTORIALS-297-299.md)。
+
+## 房間邀請通知音效（#304，2026-10-27 候選）
+
+`InvitationInbox` 保留原邀請收件匣四列結構；拒播說明與「啟用邀請音效」按鈕放在介紹列，沿用 `StatusSlot` 的 persistent warning及`UiButton`。入口可讀名稱指出點開可啟用；不自動打開視窗、搶焦點或取代加入／婉拒。長提示縮短以維持手機可讀性，`invitation-inbox.scss`只負責介紹內的間距及排版。
+
+聲音由邀請store的單一owner處理，畫面重繪／開關收件匣不觸發；播放與拒播狀態不阻擋邀請回覆。沿用個人效果音設定，詳細行為與驗證見[本批紀錄](INVITATION-SOUND-304-PROGRESS.md)。

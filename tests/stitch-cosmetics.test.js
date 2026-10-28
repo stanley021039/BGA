@@ -70,10 +70,10 @@ test('all twenty-four final imported entrance artworks have complete local anima
   }
 });
 
-test('Hollow Purple uses the approved outlined 茈 and MURASAKI artwork with isolated styles', () => {
+test('Hollow Purple retains outlined 茈, removes English fallback labels and isolates its styles', () => {
   const purple = effects.find((effect) => effect.id === 'stitch-purple');
   assert.match(purple.html, />茈<\/text>/);
-  assert.match(purple.html, /MURASAKI/);
+  assert.doesNotMatch(purple.html, />\s*(?:flare|MURASAKI|HOLLOW PURPLE)\s*</);
   assert.match(purple.html, /stroke="#ffffff"/);
   assert.match(purple.html, /purple-v2-hollow-red-spiral/);
   assert.match(purple.html, /purple-v2-hollow-blue-spiral/);
@@ -125,4 +125,12 @@ test('the exact nine selected dynamic card artworks are local and have animation
   );
   assert.match(css, /@keyframes lobby-live-/);
   assert.doesNotMatch(css, /@import|url\(https?:/i);
+});
+
+test('Bungee Gum keeps card ranks and suits but no decorative English labels', () => {
+  const gum = effects.find((e) => e.id === 'stitch-bungee-gum');
+  assert.doesNotMatch(gum.html, /TRUMP|DEUCE/);
+  assert.match(gum.html, /A♠/);
+  assert.match(gum.html, /K♥/);
+  assert.match(gum.html, /stitch-poker-trump-spade2/);
 });

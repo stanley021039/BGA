@@ -8,8 +8,9 @@ function ownedAttacks(db, userId) {
       .map((r) => r.achievement_id),
   );
   const all = !!require('./redemption').redeemedAt(db, userId, 'other');
+  const starter = new Set(require('./starter-rewards').owned(db, userId, 'attacks'));
   return effects
-    .filter((e) => !e.achievementId || all || ids.has(e.achievementId))
+    .filter((e) => !e.achievementId || all || ids.has(e.achievementId) || starter.has(e.id))
     .map((e) => e.id);
 }
 module.exports = { ownedAttacks };

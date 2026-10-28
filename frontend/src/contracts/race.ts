@@ -133,6 +133,7 @@ export interface RaceDomain {
   now: number;
   offset: number;
   lesson: boolean;
+  lessonInlineDice?: boolean;
   run(action: string, data?: Record<string, unknown>): Promise<boolean>;
   lessonGoal?: RacePoint | null;
   lessonAnnotations?: RaceAnnotation[];

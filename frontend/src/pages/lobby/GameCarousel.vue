@@ -10,6 +10,19 @@ import quacksArt from '../../assets/quacks/game-quacks.svg';
 import minimalArt from '../minimal/minimal-waiting.svg';
 import constructionArt from '../../assets/lobby/construction-800.webp?no-inline';
 import constructionThumb from '../../assets/lobby/construction-400.webp?no-inline';
+// Written out in full so the build can add each file's content version (#316).
+const gameArt: Record<string, string> = {
+  bluff: '/assets/playful/game-bluff.svg',
+  draw: '/assets/playful/game-draw.svg',
+  gift: '/assets/playful/game-gift.svg',
+  majority: '/assets/playful/game-majority.svg',
+  market: '/assets/playful/game-market.svg',
+  musicquiz: '/assets/playful/game-musicquiz.svg',
+  poker: '/assets/playful/game-poker.svg',
+  telephone: '/assets/playful/game-telephone.svg',
+  thunder: '/assets/playful/game-thunder.svg',
+  trpg: '/assets/playful/game-trpg.svg',
+};
 const props = defineProps<{ modelValue: string }>(),
   emit = defineEmits<{ 'update:modelValue': [value: string]; create: []; join: [] }>();
 const root = ref<HTMLElement | null>(null),
@@ -206,7 +219,7 @@ onBeforeUnmount(() => {
                       ? quacksArt
                       : card.id === 'minimal'
                         ? minimalArt
-                        : '/assets/playful/game-' + card.art + '.svg'
+                        : gameArt[card.art] || '/assets/playful/game-' + card.art + '.svg'
               "
               :srcset="
                 card.art === 'construction'
@@ -233,15 +246,21 @@ onBeforeUnmount(() => {
       </div>
       <div class="carousel-footer"
         ><div class="carousel-controls"
-          ><UiButton icon="previous" icon-only label="上一款遊戲" @click="select(index - 1)" /><span
-            class="vue-carousel-counter"
-            role="status"
-            aria-live="polite"
-            :aria-label="
-              chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'
-            "
-            >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
-          ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
+          ><div class="carousel-navigation"
+            ><UiButton
+              icon="previous"
+              icon-only
+              label="上一款遊戲"
+              @click="select(index - 1)" /><span
+              class="vue-carousel-counter"
+              role="status"
+              aria-live="polite"
+              :aria-label="
+                chosen.title + '，第 ' + (index + 1) + ' 款，共 ' + gameCards.length + ' 款'
+              "
+              >{{ String(index + 1).padStart(2, '0') }} / {{ gameCards.length }}</span
+            ><UiButton icon="next" icon-only label="下一款遊戲" @click="select(index + 1)" /></div
+          ><slot name="scene-stats" /></div
       ></div>
       <p class="carousel-hint">拖曳卡片，或用左右方向鍵挑選</p>
     </div>
@@ -267,3 +286,21 @@ onBeforeUnmount(() => {
     ></div>
   </section>
 </template>
+
+<style scoped>
+.game-carousel-section .carousel-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+}
+.carousel-navigation {
+  display: flex;
+  align-items: center;
+  gap: var(--stitch-space-8);
+}
+@media (max-width: 900px) {
+  .game-carousel-section .carousel-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+</style>

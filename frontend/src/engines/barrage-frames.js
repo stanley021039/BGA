@@ -303,18 +303,20 @@ let BarrageFrames;
     dialog = null,
     choices = [],
     entitlements = new Set(),
+    mediaEntitlements = new Set(),
     entitlementsLoaded = false;
-  function canUse(id) {
-    return !options.find((o) => o.id === id)?.achievementId || entitlements.has(id);
+  function canUse(id, kind = 'barrage') {
+    return (
+      !options.find((o) => o.id === id)?.achievementId ||
+      (kind === 'media' ? mediaEntitlements : entitlements).has(id)
+    );
   }
   async function refreshRewards() {
     try {
       const response = await fetch('/api/achievements');
       if (!response.ok) throw Error('load');
       const data = await response.json();
-      entitlements = new Set((data.rewards || []).filter((r) => r.claimedAt).map((r) => r.frameId));
-      entitlementsLoaded = true;
-      notify();
+      acceptRewards(data);
       return data;
     } catch {
       return null;
@@ -322,6 +324,11 @@ let BarrageFrames;
   }
   function acceptRewards(data) {
     entitlements = new Set((data?.rewards || []).filter((r) => r.claimedAt).map((r) => r.frameId));
+    mediaEntitlements = new Set(
+      (data?.rewards || [])
+        .filter((r) => ('mediaClaimedAt' in r ? r.mediaClaimedAt : r.claimedAt))
+        .map((r) => r.frameId),
+    );
     entitlementsLoaded = true;
     notify();
   }

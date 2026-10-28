@@ -76,7 +76,7 @@ test('DRAGOON pods travel and charge before crossfire, then return without repea
   f.draw(2200);
   assert.equal(f.impacts(), 1);
   f.reset();
-  f.draw(3000);
+  f.draw(3200);
   assert.equal(f.calls.length, 0);
 });
 test('ice crystals emerge in staggered sizes and mushroom cap follows the casting circle', () => {
@@ -94,32 +94,8 @@ test('ice crystals emerge in staggered sizes and mushroom cap follows the castin
   assert.ok(cloud.calls.filter((c) => c.name === 'arc').length >= 10);
   assert.equal(cloud.impacts(), 1);
 });
-test('the burning boot continues past the target after impact', () => {
-  const f = fixture('flame_kick');
-  f.draw(300);
-  assert.equal(f.impacts(), 0);
-  f.reset();
-  f.draw(1500);
-  assert.ok(f.calls.some((c) => c.name === 'translate' && c.args[0] > 640));
-  assert.ok(f.calls.some((c) => c.name === 'bezierCurveTo'));
-  f.draw(1700);
-  assert.equal(f.impacts(), 1);
-});
-
-test('the boot remains fully visible after passing a target near a small preview edge', () => {
-  const f = fixture('flame_kick', {
-    width: 340,
-    height: 180,
-    from: { x: 60, y: 90 },
-    to: { x: 265, y: 90 },
-  });
-  f.draw(1600);
-  const boot = f.calls.find((c) => c.name === 'translate');
-  assert.ok(boot.args[0] > 265);
-  assert.ok(boot.args[0] + 28 < 340);
-});
 test('all adapted effects render finite geometry throughout desktop and small preview lifetimes', () => {
-  for (const effect of ['chains', 'sphere', 'funnel', 'explosion', 'frost_spikes', 'flame_kick']) {
+  for (const effect of ['chains', 'sphere', 'funnel', 'explosion', 'frost_spikes']) {
     for (const [width, height] of [
       [1920, 1080],
       [340, 180],
@@ -138,4 +114,12 @@ test('all adapted effects render finite geometry throughout desktop and small pr
       assert.equal(f.impacts(), effect === 'sphere' ? 0 : 1);
     }
   }
+});
+
+test('staggered ice has internal fractures, side shards and a spreading cracked base', () => {
+  const f = fixture('frost_spikes');
+  f.draw(1000);
+  assert.equal(f.calls.filter((c) => c.name === 'rotate').length, 5);
+  assert.ok(f.calls.filter((c) => c.name === 'lineTo').length > 90);
+  assert.equal(f.impacts(), 1);
 });

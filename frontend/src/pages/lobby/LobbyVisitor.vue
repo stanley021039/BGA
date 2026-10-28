@@ -3,9 +3,11 @@ import MotionPolicy from '../../engines/motion-policy.js';
 import BarrageFrames from '../../engines/barrage-frames.js';
 
 import SceneHealth from '../../components/SceneHealth.vue';
+import { sceneWalk } from '../../engines/scene-path.js';
 import { sizedImage } from '../../services/image-size';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import type { LobbyVisitor } from '../../contracts/lobby';
+import { playKnockback } from '../../services/scene-knockback';
 import type { BarrageEvent } from '../../contracts/social';
 import { usePreferencesStore } from '../../stores/preferences';
 import { apparate, entranceDuration } from './apparition';
@@ -46,6 +48,38 @@ let disposed = false,
   frame = 0,
   observer: ResizeObserver | null = null,
   stopArrival: (() => void) | null = null;
+let stopKnockback: (() => void) | null = null;
+watch(
+  () => props.visitor.knockback?.id,
+  async (id) => {
+    if (!id) return;
+    stopKnockback?.();
+    stopKnockback = null;
+    if (still.value || !props.connected) return;
+    await nextTick();
+    if (
+      !disposed &&
+      node.value &&
+      props.visitor.knockback?.id === id &&
+      !still.value &&
+      props.connected
+    )
+      stopKnockback = playKnockback(node.value, props.visitor);
+  },
+);
+watch(
+  [
+    still,
+    () => props.connected,
+    () => props.visitor.moveId,
+    () => props.visitor.teleportId,
+    () => props.visitor.health === 0,
+  ],
+  () => {
+    stopKnockback?.();
+    stopKnockback = null;
+  },
+);
 watch(
   [() => props.arrive, () => props.visitor.teleportId],
   async ([value, id], previous) => {
@@ -149,11 +183,16 @@ watch(
     const tick = (time: number) => {
       moveFrame = 0;
       if (disposed || epoch !== revision || document.hidden || !props.connected) return;
-      const progress = Math.min(1, (time - started) / visitor.remainingMs);
-      left.value = wrap(visitor.x + (visitor.targetX - visitor.x) * progress);
-      top.value = wrap(visitor.y + (visitor.targetY - visitor.y) * progress);
+      const position = sceneWalk(
+        visitor,
+        { x: visitor.targetX, y: visitor.targetY },
+        time - started,
+        visitor.passage,
+      );
+      left.value = wrap(position.x);
+      top.value = wrap(position.y);
       if (hasSpeech.value) positionBubble();
-      if (progress < 1) moveFrame = requestAnimationFrame(tick);
+      if (position.remainingMs > 0) moveFrame = requestAnimationFrame(tick);
     };
     moveFrame = requestAnimationFrame(tick);
   },
@@ -193,6 +232,7 @@ function transition() {
 }
 onBeforeUnmount(() => {
   disposed = true;
+  stopKnockback?.();
   revision++;
   if (moveFrame) cancelAnimationFrame(moveFrame);
   observer?.disconnect();
@@ -257,12 +297,35 @@ window.addEventListener('resize', positionBubble);
       class="lobby-speech"
       :style="{ left: bubbleLeft, transform: 'translateX(-50%)' }"
       >{{ visitor.emote.label }}</div
-    ><SceneHealth v-if="visitor.maxHealth" :visitor="visitor" />
+    >
+    <div
+      v-if="visitor.dotPulse"
+      :key="visitor.dotPulse.id"
+      class="scene-dot-number"
+      aria-hidden="true"
+      >{{ visitor.dotPulse.damage.toLocaleString() }}</div
+    >
     <img
       v-show="visitor.health !== 0"
       :src="sizedImage(visitor.emote?.image || visitor.image, 256)"
+      :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
       alt=""
       draggable="false"
-    /><span>{{ shortName }}</span>
+    /><SceneHealth v-if="visitor.maxHealth" :visitor="visitor" /><span
+      v-if="visitor.health !== 0"
+      >{{ shortName }}</span
+    >
   </component>
 </template>
+<style scoped>
+.scene-dot-number {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  color: var(--stitch-danger-ink);
+  font-size: var(--stitch-text-section);
+  font-weight: 700;
+  pointer-events: none;
+  translate: -50% -12px;
+}
+</style>

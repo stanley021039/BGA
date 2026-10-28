@@ -659,7 +659,7 @@
 }
 /* ui-check-allow hex: Stitch 匯出類名的字元須與既有素材一致；實際繪製色彩已使用共用 token。 */
 .stitch-purple-v2 .drop-shadow-\[0_0_50px_\#a855f7\] {
-  --tw-drop-shadow: drop-shadow(0 0 50px var(--stitch-artwork-swatch-a855f7));
+  --tw-drop-shadow: drop-shadow(0 0 18px var(--stitch-artwork-swatch-a855f7));
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale)
     var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
@@ -687,7 +687,7 @@
   25% {
     transform: translate(35px, 8px) scale(1.1) rotate(180deg);
     opacity: 1;
-    filter: drop-shadow(0 0 20px var(--stitch-artwork-swatch-38bdf8)) brightness(2);
+    filter: drop-shadow(0 0 20px var(--stitch-artwork-swatch-38bdf8)) brightness(1.05);
   }
   42% {
     transform: translate(6px, 2px) scale(0.6) rotate(360deg);
@@ -708,7 +708,7 @@
   25% {
     transform: translate(-35px, -8px) scale(1.1) rotate(-180deg);
     opacity: 1;
-    filter: drop-shadow(0 0 20px var(--stitch-artwork-swatch-ef4444)) brightness(2);
+    filter: drop-shadow(0 0 20px var(--stitch-artwork-swatch-ef4444)) brightness(1.05);
   }
   42% {
     transform: translate(-6px, -2px) scale(0.6) rotate(-360deg);
@@ -729,18 +729,18 @@
   48% {
     transform: scale(0.3) rotate(45deg);
     opacity: 1;
-    filter: drop-shadow(0 0 35px var(--stitch-artwork-swatch-ffffff)) brightness(3);
+    filter: drop-shadow(0 0 18px var(--stitch-artwork-swatch-ffffff)) brightness(1.05);
   }
   58% {
     transform: scale(1.3) rotate(180deg);
     opacity: 1;
-    filter: drop-shadow(0 0 45px var(--stitch-artwork-swatch-c084fc))
+    filter: drop-shadow(0 0 18px var(--stitch-artwork-swatch-c084fc))
       drop-shadow(0 0 25px var(--stitch-artwork-swatch-3b0764));
   }
   78% {
     transform: scale(1.8) rotate(360deg);
     opacity: 0.95;
-    filter: drop-shadow(0 0 55px var(--stitch-artwork-swatch-a855f7)) blur(1px);
+    filter: drop-shadow(0 0 18px var(--stitch-artwork-swatch-a855f7)) blur(1px);
   }
   90% {
     transform: scale(2.8);
@@ -833,19 +833,19 @@
   48% {
     transform: scale(0.1) rotate(-15deg);
     opacity: 0;
-    filter: blur(10px) brightness(3);
+    filter: blur(10px) brightness(1.05);
   }
   54% {
     transform: scale(1.5) rotate(4deg);
     opacity: 1;
-    filter: drop-shadow(0 0 35px var(--stitch-artwork-swatch-ffffff))
-      drop-shadow(0 0 50px var(--stitch-artwork-swatch-a855f7)) brightness(2.2);
+    filter: drop-shadow(0 0 18px var(--stitch-artwork-swatch-ffffff))
+      drop-shadow(0 0 18px var(--stitch-artwork-swatch-a855f7)) brightness(1.05);
   }
   65% {
     transform: scale(1.2) rotate(0deg);
     opacity: 1;
     filter: drop-shadow(0 0 30px var(--stitch-artwork-swatch-c084fc))
-      drop-shadow(0 0 45px var(--stitch-artwork-swatch-7e22ce));
+      drop-shadow(0 0 18px var(--stitch-artwork-swatch-7e22ce));
   }
   82% {
     transform: scale(1.28) rotate(2deg);

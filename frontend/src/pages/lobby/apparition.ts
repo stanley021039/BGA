@@ -1,4 +1,5 @@
 import type { EntranceEffectId } from '../../services/entrance-effects';
+import { playEntranceBody } from '../../services/entrance-body';
 import {
   acquireEffectContext,
   motionAllowed,
@@ -370,6 +371,7 @@ export function apparate(
   anchor.dataset.entrance = kind;
   anchor.classList.add('is-apparating');
   const cancel = (effects[kind] || classic)(scene);
+  const cancelBody = playEntranceBody(anchor, img, kind, DURATION[kind] || DURATION.classic);
   let done = false,
     releaseMotion = () => {};
   const timer = setTimeout(finish, DURATION[kind] || DURATION.classic);
@@ -382,6 +384,7 @@ export function apparate(
     activeEntrances.delete(finish);
     releaseMotion();
     cancel();
+    cancelBody();
     anchor.classList.remove('is-apparating');
     delete anchor.dataset.entrance;
   }

@@ -2,13 +2,14 @@ import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useRoomStore } from './room';
 import { usePreferencesStore } from './preferences';
+import { mergeChatTimeline, readActionFeedback } from '../services/action-feedback';
 import { readChatReceipt } from '../contracts/social';
 import type { ChatMessage, ChatReceipt } from '../contracts/social';
 
 export const useChatStore = defineStore('chat', () => {
   const room = useRoomStore(),
     preferences = usePreferencesStore();
-  const messages = shallowRef<ChatMessage[]>([]),
+  const received = shallowRef<ChatMessage[]>([]),
     draft = ref(''),
     viewerId = ref<string | null>(null),
     visible = ref(true),
@@ -27,6 +28,27 @@ export const useChatStore = defineStore('chat', () => {
     return `${room.scope}:${room.code}:${room.snapshot.me}:${instance}`;
   });
   const enabled = computed(() => !!context.value && !identityChanged.value);
+  const messages = computed(() =>
+    mergeChatTimeline(received.value, enabled.value ? room.snapshot?.actionFeedback : undefined),
+  );
+  let feedbackContext = '',
+    feedbackSeen = new Set<string>();
+  watch(
+    () => [context.value, room.snapshot?.actionFeedback] as const,
+    () => {
+      const key = context.value || '',
+        events = readActionFeedback(room.snapshot?.actionFeedback);
+      if (key === feedbackContext && key && !visible.value) {
+        unread.value = Math.min(
+          50,
+          unread.value + events.filter((event) => !feedbackSeen.has(event.id)).length,
+        );
+      }
+      feedbackContext = key;
+      feedbackSeen = new Set(events.map((event) => event.id));
+    },
+    { immediate: true, flush: 'sync' },
+  );
   let generation = 0,
     pollEpoch = 0,
     disposed = false,
@@ -54,7 +76,7 @@ export const useChatStore = defineStore('chat', () => {
     cancelRead();
     posting?.abort();
     posting = null;
-    messages.value = [];
+    received.value = [];
     draft.value = '';
     viewerId.value = null;
     unread.value = 0;
@@ -78,14 +100,14 @@ export const useChatStore = defineStore('chat', () => {
       changedIdentity(value.viewerId);
       return false;
     }
-    const previous = new Set(messages.value.map((message) => message.id));
+    const previous = new Set(received.value.map((message) => message.id));
     if (initial && !visible.value)
       unread.value = Math.min(
         50,
         unread.value + value.messages.filter((message) => !previous.has(message.id)).length,
       );
     viewerId.value = value.viewerId;
-    messages.value = value.messages;
+    received.value = value.messages;
     initial = true;
     status.value = '';
     if (value.roomState) room.accept(value.roomState);

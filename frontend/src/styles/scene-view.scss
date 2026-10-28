@@ -20,7 +20,9 @@ body.scene-ui-hidden {
   inset-inline-end: var(--stitch-space-16);
   z-index: 3000;
 }
-:root body[data-visual-theme]:has(.lobby-backdrop) #site-header-app[data-site-header] {
+:root
+  body[data-visual-theme]:has(.lobby-backdrop, .vue-site-shell)
+  #site-header-app[data-site-header] {
   --stitch-header-ink: var(--stitch-ink);
   --stitch-header-hover: var(--stitch-surface-hover);
   --stitch-header-outline: transparent;

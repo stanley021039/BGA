@@ -493,3 +493,9 @@ body > .vue-social-popover {
     transform: translateX(var(--barrage-travel));
   }
 }
+
+.vue-chat-action-item {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-inline-start: var(--stitch-space-8);
+}

@@ -22,7 +22,7 @@ let MediaAppearance;
   }
   function get() {
     return options().some((option) => option.id === selected) &&
-      BarrageFrames?.canUse?.(selected) !== false
+      BarrageFrames?.canUse?.(selected, 'media') !== false
       ? selected
       : 'default';
   }
@@ -30,7 +30,7 @@ let MediaAppearance;
     for (const listener of listeners) listener(get());
   }
   function set(id) {
-    if (BarrageFrames?.canUse?.(id) === false) return get();
+    if (BarrageFrames?.canUse?.(id, 'media') === false) return get();
     selected = options().some((option) => option.id === id) ? id : 'default';
     try {
       localStorage.setItem(key, selected);
@@ -80,7 +80,7 @@ let MediaAppearance;
   function syncChoices() {
     if (!picker) return;
     for (const button of picker.querySelectorAll('[data-media-frame-choice]')) {
-      const locked = BarrageFrames?.canUse?.(button.dataset.mediaFrameChoice) === false;
+      const locked = BarrageFrames?.canUse?.(button.dataset.mediaFrameChoice, 'media') === false;
       button.classList.toggle('reward-locked', locked);
       button.setAttribute('aria-pressed', String(button.dataset.mediaFrameChoice === get()));
     }
@@ -117,7 +117,7 @@ let MediaAppearance;
           choice.append(hint);
         }
         choice.onclick = () => {
-          if (BarrageFrames?.canUse?.(option.id) === false) {
+          if (BarrageFrames?.canUse?.(option.id, 'media') === false) {
             location.href = '/achievements';
             return;
           }

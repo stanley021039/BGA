@@ -16,6 +16,7 @@ interface Reward {
   condition: string;
   earned: boolean;
   claimedAt: string | null;
+  mediaClaimedAt: string | null;
 }
 const prefs = usePreferencesStore(),
   mutation = useMutation(),
@@ -37,6 +38,7 @@ const prefs = usePreferencesStore(),
         condition: conditions.get(text(r.achievementId)) || '請至成就徽章查看完整條件。',
         earned: r.earned === true,
         claimedAt: typeof r.claimedAt === 'string' ? r.claimedAt : null,
+        mediaClaimedAt: typeof r.mediaClaimedAt === 'string' ? r.mediaClaimedAt : null,
       } as Reward;
     });
   });
@@ -79,7 +81,7 @@ function apply(kind: 'barrage' | 'media', id: string) {
         v-for="reward in resource.data.value || []"
         :key="reward.frameId"
         class="achievement-reward-card"
-        :class="{ unlocked: !!reward.claimedAt }"
+        :class="{ unlocked: !!reward.claimedAt || !!reward.mediaClaimedAt }"
         ><h3>{{ reward.label }}</h3
         ><p>達成「{{ reward.achievementTitle }}」</p
         ><p class="vue-reward-condition"><strong>解鎖條件：</strong>{{ reward.condition }}</p
@@ -90,17 +92,25 @@ function apply(kind: 'barrage' | 'media', id: string) {
           :frame="reward.frameId"
           kind="media"
           name="播放器"
-          message="歌曲外觀預覽" /><template v-if="reward.claimedAt"
-          ><p>已領取 · 彈幕與播放器皆可使用</p
+          message="歌曲外觀預覽" /><template v-if="reward.claimedAt || reward.mediaClaimedAt"
+          ><p>{{
+            reward.claimedAt && reward.mediaClaimedAt
+              ? '已領取 · 彈幕與播放器皆可使用'
+              : reward.claimedAt
+                ? '彈幕框已解鎖'
+                : '播放器已解鎖'
+          }}</p
           ><UiButton
+            v-if="reward.claimedAt"
             label="套用彈幕框"
             :aria-pressed="prefs.barrage?.selected === reward.frameId"
             @click="apply('barrage', reward.frameId)" /><UiButton
+            v-if="reward.mediaClaimedAt"
             label="套用播放器"
             :aria-pressed="prefs.media === reward.frameId"
             @click="apply('media', reward.frameId)" /></template
         ><UiButton
-          v-else
+          v-if="!(reward.claimedAt && reward.mediaClaimedAt)"
           :label="reward.earned ? '領取獎勵' : '尚未達成'"
           :disabled="!reward.earned || mutation.pending.value"
           @click="claim(reward.frameId)" /></article></div

@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { usePreferencesStore } from '../stores/preferences';
-import { attackEffects } from '../stores/attack-loadout';
 import { playAttackArtwork } from '../services/attack-artwork';
+import { attackColor, attackOptions } from '../services/attack-placement';
+import type { LobbyAttackHit } from '../contracts/lobby';
 const props = defineProps<{
   effect: string;
+  ageMs?: number;
+  preview?: boolean;
   damage?: number;
   critical?: boolean;
+  hits?: LobbyAttackHit[];
+  rays?: { x: number; y: number }[];
+  aspectRatio?: number;
   playKey: string | number;
   from: { x: number; y: number };
   to: { x: number; y: number };
@@ -15,9 +21,7 @@ const prefs = usePreferencesStore(),
   surface = ref<HTMLCanvasElement | null>(null),
   stage = ref<HTMLElement | null>(null);
 const still = computed(() => prefs.motion?.enabled === false || prefs.motion?.reduced === true);
-const color = computed(
-  () => attackEffects.find((e) => e.id === props.effect)?.color || attackEffects[0].color,
-);
+const color = computed(() => attackColor(props.effect));
 const target = computed(() =>
   ['shield', 'sphere'].includes(props.effect) ? props.from : props.to,
 );
@@ -40,16 +44,10 @@ async function play() {
     return;
   const { width, height } = stage.value.getBoundingClientRect();
   if (!width || !height) return;
-  cleanup = playAttackArtwork(surface.value, {
-    effect: props.effect,
-    damage: props.damage,
-    critical: props.critical,
-    color: color.value,
-    width,
-    height,
-    from: { x: (props.from.x * width) / 100, y: (props.from.y * height) / 100 - 42 },
-    to: { x: (props.to.x * width) / 100, y: (props.to.y * height) / 100 - 42 },
-  });
+  cleanup = playAttackArtwork(
+    surface.value,
+    attackOptions(props, width, height, () => props.hits),
+  );
 }
 onMounted(() => {
   mounted = true;

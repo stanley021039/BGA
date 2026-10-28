@@ -18,6 +18,7 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
     stopped = 0,
     sequence = 0;
   const subscriptions = new Set(),
+    bodyAnimations = [],
     timers = new Map();
   const root = {
     document: { hidden: false },
@@ -54,20 +55,40 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
         }
       : name.includes('stitch-entrances')
         ? {
-            stitchEntrances: [{ id: 'imported', duration: 2000 }],
+            stitchEntrances: [{ id: 'stitch-imported', duration: 2000 }],
             playStitchEntrance() {
               started++;
               return () => stopped++;
             },
           }
-        : {};
+        : name.includes('entrance-body')
+          ? { playEntranceBody: sandbox.playEntranceBody }
+          : {};
+  vm.runInContext(
+    fs
+      .readFileSync(path.join(__dirname, '../src/services/entrance-body.js'), 'utf8')
+      .replace('export function ', 'function '),
+    sandbox,
+  );
   vm.runInContext(code, sandbox);
   const anchors = [];
   const play = () => {
     const classes = new Set();
     const anchor = {
       dataset: {},
-      querySelector: () => null,
+      querySelector: () => ({
+        animate() {
+          const a = {
+            cancelled: 0,
+            cancel() {
+              this.cancelled++;
+            },
+          };
+          bodyAnimations.push(a);
+          return a;
+        },
+        getBoundingClientRect: () => ({ left: 0, top: 0, width: 72, height: 78, bottom: 78 }),
+      }),
       classList: { add: (c) => classes.add(c), remove: (c) => classes.delete(c) },
       getBoundingClientRect: () => ({ left: 0, top: 0, width: 72, height: 78, bottom: 78 }),
     };
@@ -75,7 +96,7 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
     return sandbox.exports.apparate(
       anchor,
       { getBoundingClientRect: () => ({ left: 0, top: 0 }) },
-      'imported',
+      'stitch-imported',
     );
   };
   for (let i = 0; i < 7; i++) play();
@@ -87,6 +108,8 @@ test('all imported entrances share mid-flight cancellation, finite concurrency a
   assert.equal(subscriptions.size, 0);
   assert.equal(timers.size, 0);
   assert.ok(anchors.every((a) => !a.classes.has('is-apparating')));
+  assert.equal(bodyAnimations.length, 12);
+  assert.ok(bodyAnimations.every((a) => a.cancelled === 1));
   play();
   assert.equal(started, 6);
   allowed = true;

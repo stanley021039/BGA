@@ -17,7 +17,7 @@
     "id": "shield",
     "label": "六角形能量護盾",
     "color": "#00f0ff",
-    "description": "自身展開2秒蜂巢護盾，每次受擊擋30～40%傷害；作者兌換加成為40～50%。",
+    "description": "六角能量護盾展開，先維持2秒完整減傷，再接3秒半幅減傷，重施只刷新時間。",
     "achievementId": "gift-first-gift"
   },
   {
@@ -31,7 +31,7 @@
     "id": "sphere",
     "label": "熾天覆七重圓環",
     "color": "#f472b6",
-    "description": "七層粉紫花瓣圓盾維持2秒，每次受擊擋30～40%傷害；作者兌換加成為40～50%。",
+    "description": "七重粉紫花瓣護盾，先維持2秒完整減傷，再接3秒半幅減傷，重施只刷新時間。",
     "achievementId": "minimal-first-match"
   },
   {
@@ -54,13 +54,6 @@
     "color": "#a855f7",
     "description": "超重力奇點引力渦旋、吞噬全場星塵碎屑與假人、崩壞超新星爆發。",
     "achievementId": "bluff-convincing"
-  },
-  {
-    "id": "explosion",
-    "label": "爆裂魔法",
-    "color": "#ff3366",
-    "description": "多重逆轉紅蓮魔法陣吟唱、全屏高熱閃光、核爆級蕈狀烈焰巨響。",
-    "achievementId": "quacks-double-explosion"
   },
   {
     "id": "blade_aura",
@@ -87,28 +80,121 @@
     "id": "frost_spikes",
     "label": "寒冰結晶／極地霜刺",
     "color": "#7df4ff",
-    "description": "五根大小不同的三稜冰川錯落破土，深藍暗面襯出白亮冰鋒。",
+    "description": "錯落冰川破地，深藍晶面襯出白亮冰鋒、裂紋與側生碎晶。",
     "achievementId": "telephone-first-match"
   },
   {
     "id": "arrow_volley",
     "label": "光輝天降箭雨",
-    "color": "#ffe08b",
-    "description": "金色光輝召喚射程結界、暴雨般流星光矢傾瀉、密集彈著爆炸。",
+    "color": "#ff5a24",
+    "description": "橘紅焰尾箭雨密集落下，白熱箭鏃、箭身與箭羽清楚可辨。",
     "achievementId": "minimal-three-shapes"
   },
   {
     "id": "flame_vortex",
     "label": "炎獄烈焰龍捲",
     "color": "#ff3366",
-    "description": "金紅火流從地面螺旋捲升，逐漸形成高聳烈焰龍捲與上升火星。",
+    "description": "一大三小烈焰龍捲錯落捲升，金紅火流環繞主風暴旋轉。",
     "achievementId": "quacks-fifty-points"
   },
   {
-    "id": "flame_kick",
-    "label": "烈焰疾風飛踢",
-    "color": "#ff8800",
-    "description": "烈焰凌空俯衝，命中爆開十字火光，熾熱戰靴印穿過目標。",
-    "achievementId": "thunder-first-drive"
+    "id": "explosion",
+    "label": "爆裂魔法・Explosion!",
+    "color": "#ff3366",
+    "description": "大範圍核爆與巨型蘑菇雲分段命中，傷害為其他多人招1.5倍；整段特效結束後自身定身1秒。",
+    "achievementId": "quacks-double-explosion",
+    "area": {
+      "shape": "burst",
+      "radius": 35
+    }
+  },
+  {
+    "id": "guanyin_barrage",
+    "label": "百式觀音・千掌鎮壓",
+    "color": "#ffd556",
+    "description": "觀音法相與五波巨拳鎮壓多人；施放後自身生命、攻擊、回血各提升10%，持續2秒。",
+    "achievementId": "quacks-double-explosion",
+    "area": {
+      "shape": "fan",
+      "angle": 138
+    }
+  },
+  {
+    "id": "solar_phoenix",
+    "label": "翼神龍・不死鳥型態",
+    "color": "#ff7b24",
+    "description": "金橘火焰神龍鳥橫掃多人，沿途留下火海；每次燃燒命中後5秒無法回復，再次燒到重新計時。",
+    "achievementId": "draw-first-correct",
+    "area": {
+      "shape": "rectangle",
+      "width": 26
+    }
+  },
+  {
+    "id": "dimension_cleave",
+    "label": "次元斬・千重裂界",
+    "color": "#ff3366",
+    "description": "密集次元斬將空間切開，命中後掉落可拾回的下半身；被摧毀時本體目前生命減半。",
+    "achievementId": "bluff-convincing",
+    "area": {
+      "shape": "rectangle",
+      "width": 45
+    }
+  },
+  {
+    "id": "bijuu_beam",
+    "label": "尾獸玉・超巨型噴射",
+    "color": "#a855f7",
+    "description": "九尾凝聚核心，朝三個方向以細射線貫穿多人；每位命中者各有20%機率定身1秒。",
+    "achievementId": "musicquiz-intro-streak",
+    "area": {
+      "shape": "targetRays",
+      "width": 7
+    }
+  },
+  {
+    "id": "giga_drill",
+    "label": "天元突破・巨鑽爆擊",
+    "color": "#2dd4bf",
+    "description": "翡翠巨鑽貫穿多人，命中將角色擊飛，之後每秒追加傷害，持續3秒。",
+    "achievementId": "majority-one-channel",
+    "area": {
+      "shape": "cone",
+      "angle": 64.39999999999999
+    }
+  },
+  {
+    "id": "gate_of_babylon",
+    "label": "王之財寶・乖離劍Ea",
+    "color": "#ffd556",
+    "description": "先消耗目前HP的30%，上方門陣兵器齊射後接Ea；Ea為兵器段兩倍，作者整套傷害82.8萬–111.2萬，未計暴擊、其他增益及減傷。",
+    "achievementId": "gift-first-gift",
+    "area": {
+      "shape": "fan",
+      "angle": 138
+    }
+  },
+  {
+    "id": "excalibur",
+    "label": "Excalibur・誓約勝利之劍",
+    "color": "#ffe89b",
+    "description": "風之結界剝離，白金光束橫貫場景分段命中；施放期間自身受到傷害減少20%。",
+    "achievementId": "poker-first-hand",
+    "area": {
+      "shape": "screenBeam",
+      "width": 27.5,
+      "blastRadius": 12.5
+    }
+  },
+  {
+    "id": "giant_orange_cat",
+    "label": "天降巨橘・泰山壓頂",
+    "color": "#ff9d36",
+    "description": "超巨大橘貓從天壓下，震波命中多人並讓受擊者不能移動1秒。",
+    "achievementId": "draw-soul-artist",
+    "area": {
+      "shape": "burst",
+      "radius": 22.5
+    }
   }
 ]

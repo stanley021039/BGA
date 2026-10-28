@@ -71,6 +71,11 @@ class CeoRoom extends PartyRoom {
         this.#game && this.#participants.has(id) && !this.interrupted ? this.#game.view(id) : null,
     };
   }
+  observerGame() {
+    return this.phase !== 'waiting' && this.#game && !this.interrupted
+      ? this.#game.observerView()
+      : null;
+  }
 }
 
 module.exports = { CeoRoom };

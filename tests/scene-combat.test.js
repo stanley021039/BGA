@@ -42,8 +42,8 @@ test('author redemption multiplies birth health, normal and critical damage, and
   assert.equal(combat.hit(ordinary, author, 1000).damage, 200000);
   combat.advance(author, 6000);
   combat.advance(ordinary, 6000);
-  assert.equal(author.health, 1660000);
-  assert.equal(ordinary.health, 1010000);
+  assert.equal(author.health, 1780000);
+  assert.equal(ordinary.health, 1090000);
   critical = true;
   assert.deepEqual(combat.hit(author, ordinary, 6500), { damage: 310500, critical: true });
 });
@@ -137,6 +137,7 @@ test('room targeting reaches half the longer screen dimension on landscape and p
     now += 10000;
     const input = { action: 'attack', slot: 'q', aspectRatio, requestId: 'half-screen-range-001' };
     assert.doesNotThrow(() => space.move(room, 'a', input, 'beam'));
+    now += 450;
     assert.equal(space.view(room, 'a').visitors.find((v) => v.id === 'b').health, 1000000);
     space.move(room, 'b', { x: aspectRatio > 1 ? 63 : 12, y: aspectRatio > 1 ? 38 : 89 });
     now += 10000;
@@ -146,19 +147,19 @@ test('room targeting reaches half the longer screen dimension on landscape and p
     );
   }
 });
-test('regeneration waits for four quiet seconds, is polling-independent and caps at maximum', () => {
+test('regeneration waits for two quiet seconds, is polling-independent and caps at maximum', () => {
   const combat = createSceneCombat(() => 0.5),
     actor = { x: 50, y: 50 };
   combat.advance(actor, 0);
   combat.hit({ health: 100 }, actor, 1000);
-  combat.advance(actor, 4999);
+  combat.advance(actor, 3999);
   assert.equal(actor.health, 1000000);
-  combat.advance(actor, 6000);
+  combat.advance(actor, 4000);
   assert.equal(actor.health, 1040000);
-  combat.advance(actor, 6000);
+  combat.advance(actor, 4000);
   assert.equal(actor.health, 1040000);
   combat.hit({ health: 100 }, actor, 6500);
-  combat.advance(actor, 10500);
+  combat.advance(actor, 8500);
   assert.equal(actor.health, 840000);
   combat.advance(actor, 20000);
   assert.equal(actor.health, 1200000);
@@ -198,6 +199,7 @@ test('room attacks obey range, cooldown and retry, while shields do not damage s
   space.move(room, 'b', { x: 15, y: 38 });
   now += 10000;
   space.move(room, 'a', attack, 'beam');
+  now += 450;
   let snapshot = space.view(room, 'a');
   assert.equal(snapshot.visitors[1].health, 1000000);
   space.move(room, 'a', attack, 'beam');

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { sizedImage } from '../services/image-size';
 defineProps<{
   title: string;
   image?: string;
@@ -11,7 +12,7 @@ defineProps<{
   <article class="collection-card ui-interactive-card" :data-selected="!!selected"
     ><img
       v-if="image"
-      :src="image"
+      :src="sizedImage(image, 256)"
       :alt="title"
       loading="lazy"
       class="collection-image"

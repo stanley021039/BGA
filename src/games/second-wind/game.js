@@ -1423,8 +1423,14 @@ class SecondWindGame {
     }
   }
   view(id) {
+    return this.#project(id, false);
+  }
+  observerView() {
+    return this.#project(null, true);
+  }
+  #project(id, observer) {
     if (!this.state) {
-      const draft = this.draft.view(id);
+      const draft = observer ? this.draft.observerView() : this.draft.view(id);
       return {
         ...draft,
         ...(['choosing', 'race-ready'].includes(draft.phase) ? { race: 1 } : {}),
@@ -1436,7 +1442,7 @@ class SecondWindGame {
       };
     }
     const s = this.state;
-    if (!s.players.includes(id)) fail('NOT_SEATED', '尚未入座', 403);
+    if (!observer && !s.players.includes(id)) fail('NOT_SEATED', '尚未入座', 403);
     return copy({
       type: 'second-wind',
       revision: s.revision,
@@ -1447,7 +1453,7 @@ class SecondWindGame {
       players: s.players,
       teams: s.teams,
       selectedIds: Object.keys(s.selections),
-      ownSelection: s.selections[id] || null,
+      ownSelection: id !== null ? s.selections[id] || null : null,
       scores: s.scores,
       racers: s.racers,
       catalog: this.catalog,
@@ -1468,8 +1474,9 @@ class SecondWindGame {
         ? {
             id: s.pending.id,
             playerId: s.pending.playerId,
-            title: s.pending.playerId === id ? s.pending.title : '等待玩家完成能力選擇',
-            options: s.pending.playerId === id ? s.pending.options : [],
+            title:
+              id !== null && s.pending.playerId === id ? s.pending.title : '等待玩家完成能力選擇',
+            options: id !== null && s.pending.playerId === id ? s.pending.options : [],
           }
         : null,
       events: s.events,

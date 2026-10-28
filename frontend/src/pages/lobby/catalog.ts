@@ -109,7 +109,7 @@ export const gameCards: GameCard[] = [
     seats: '2–8 人',
     category: '紙牌・心理戰',
     art: 'poker',
-    guide: '/rules?game=poker',
+    guide: '/poker?learn=1',
   },
   {
     id: 'thunder',
@@ -159,7 +159,7 @@ export const gameCards: GameCard[] = [
     seats: '每日預測',
     category: '免費・積分',
     art: 'market',
-    guide: '/market',
+    guide: '/market?learn=1',
   },
   loungeCard,
 ];

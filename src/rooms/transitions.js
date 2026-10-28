@@ -1,5 +1,6 @@
 'use strict';
 const { HttpError } = require('../http/errors');
+const { recordActionFeedback } = require('./action-feedback');
 const { leavePlayer } = require('./lifecycle');
 const { canKick } = require('./permissions');
 
@@ -18,7 +19,9 @@ function createRoomTransitions({
   }
   function transact(room, operation, run) {
     try {
-      return run();
+      const result = run();
+      recordActionFeedback(room, operation);
+      return result;
     } finally {
       completed(room);
     }

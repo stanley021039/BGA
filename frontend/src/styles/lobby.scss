@@ -156,6 +156,9 @@
   }
   .version-note {
     margin: 0;
+    justify-self: end;
+    text-align: end;
+    max-inline-size: 100%;
   }
 }
 body[data-visual-theme='playful'] .vue-lobby .game-library[data-card-carousel] {
@@ -410,8 +413,6 @@ body.lobby-self-hover {
   body.vue-lobby-document:not(.ui-large-text) {
     .club {
       height: 100dvh;
-      max-width: none;
-      padding: 0 tokens.space(6);
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
     }
@@ -582,12 +583,9 @@ body.lobby-self-hover {
     }
     .vue-lobby .version-note {
       grid-column: 1 / -1;
-      grid-row: 2;
-      align-self: end;
-      justify-self: start;
-      // Align with the right-hand resume text above its reserved feedback slot.
-      margin-block-end: calc(var(--stitch-control-height) + var(--stitch-gap-inline));
-      text-align: start;
+      grid-row: 3;
+      align-self: center;
+      margin: 0;
       @include tokens.type(p3);
     }
   }
@@ -870,7 +868,7 @@ body .lobby-backdrop[data-background='castle'] {
   font-size: var(--stitch-text-hint);
   color: var(--stitch-muted);
 }
-// The credits stay on the bottom-left; lounge artwork is now part of the carousel.
+// Navigation follows the cards; credits stay at the bottom-right.
 .vue-lobby .carousel-footer {
   justify-content: center;
 }

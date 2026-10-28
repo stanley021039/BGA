@@ -5,6 +5,23 @@ const fs = require('./helpers/browser-modules.cjs'),
   { createHash } = require('node:crypto'),
   vm = require('node:vm');
 const source = (file) => fs.readFileSync(path.join(__dirname, '../public/shared', file), 'utf8');
+test('invitation notifications share effect preferences and the global cap while leaving the two game slots unchanged', () => {
+  const ui = harness();
+  assert.ok(ui.api.playEffect('turn'));
+  assert.ok(ui.api.playEffect('dice-roll'));
+  assert.equal(ui.api.playEffect('turn'), undefined, 'game cap remains two');
+  const invitation = ui.api.playEffect('invitation');
+  assert.ok(invitation);
+  assert.equal(invitation.src, '/assets/game-sounds/turn.wav');
+  assert.equal(invitation.volume, 0.25);
+  assert.ok(ui.api.playEffect('invitation'));
+  assert.equal(ui.api.playEffect('invitation'), undefined, 'global cap remains four');
+  ui.api.set('effects', { enabled: false });
+  assert.ok(invitation.paused);
+  const created = ui.clips.length;
+  assert.equal(ui.api.playEffect('invitation'), undefined);
+  assert.equal(ui.clips.length, created, 'muted notifications never load audio');
+});
 function harness(saved = {}, blocked = false, storageBlocked = false, musicNetwork = {}) {
   const storage = new Map(Object.entries(saved)),
     listeners = new Map(),

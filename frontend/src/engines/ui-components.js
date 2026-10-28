@@ -26,6 +26,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
     chat: '<path d="M4 4h16v12H9l-5 4V4Z M8 8h8M8 12h5"/>',
     flag: '<path d="M5 22V3m0 1h8l2 3h5v10h-7l-2-3H5"/>',
     crown: '<path d="m3 6 4 5 5-8 5 8 4-5-2 14H5L3 6Z"/>',
+    'health-up':
+      '<path d="M12 20 4.4 12.4a4.8 4.8 0 0 1 6.8-6.8l.8.8.8-.8a4.8 4.8 0 0 1 6.8 6.8L12 20ZM19 2v7m-3-4 3-3 3 3"/>',
+    'attack-up': '<path d="m4 20 4-4m-3-3 6 6M8 16 18 6V3h-3L5 13m12 2h6m-3-3v6"/>',
+    'regen-up': '<path d="M20 8a8 8 0 1 0 0 8M20 3v5h-5M12 17V8m-3 3 3-3 3 3"/>',
+    healing: '<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6V3Z"/>',
+    shield: '<path d="M12 2 3 6v6c0 5 4 8 9 10 5-2 9-5 9-10V6l-9-4Zm-5 10 3 3 7-7"/>',
     more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
     brush: '<path d="m14 4 6 6M8 15 19 4a2.8 2.8 0 0 1 4 4L12 19M8 15c-4-1-5 2-5 6 4 0 7-1 7-4Z"/>',
     share:

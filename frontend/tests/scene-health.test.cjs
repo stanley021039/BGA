@@ -10,7 +10,7 @@ for (const key of ['window', 'document', 'Element', 'HTMLElement', 'SVGElement',
 const vue = require('vue'),
   ts = require('typescript'),
   { parse, compileScript } = require('vue/compiler-sfc');
-test('living characters have no health display; death and respawn still update the tombstone', async () => {
+test('thin living HP bars track health without visible numbers; death and respawn update the tombstone', async () => {
   const file = path.resolve(__dirname, '../src/components/SceneHealth.vue');
   const source = compileScript(
     parse(fs.readFileSync(file, 'utf8'), { filename: file }).descriptor,
@@ -47,13 +47,25 @@ test('living characters have no health display; death and respawn still update t
   const app = vue.createApp({ render: () => vue.h(mod.exports.default, { visitor }) });
   app.mount(host);
   try {
-    assert.equal(host.querySelector('meter'), null);
+    assert.equal(host.querySelector('[role=progressbar]').getAttribute('aria-valuenow'), '12000');
+    visitor.health = 6000;
+    await vue.nextTick();
+    assert.equal(host.querySelector('[role=progressbar]').getAttribute('aria-valuenow'), '6000');
+    assert.equal(host.querySelector('.scene-health-bar > div').style.width, '50%');
     assert.equal(host.textContent, '');
     assert.equal(timers.size, 0);
     Object.assign(visitor, { health: 0, respawnAt: 3000, respawnRemainingMs: 3000 });
     await vue.nextTick();
+    assert.equal(host.querySelector('[role=progressbar]'), null);
     assert.match(host.textContent, /測試玩家/);
     assert.match(host.textContent, /3 秒後重生/);
+    assert.equal(host.textContent.match(/測試玩家/g).length, 1);
+    assert.equal(host.textContent.match(/3 秒後重生/g).length, 1);
+    assert.equal(
+      host.querySelector('.scene-tombstone').firstElementChild.className,
+      'scene-tombstone-caption',
+    );
+    assert.equal(host.querySelector('.scene-respawn-seconds'), null);
     clock = 2000;
     timers.get(1)();
     await vue.nextTick();

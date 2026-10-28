@@ -11,6 +11,28 @@ function fixture(saved) {
   vm.runInContext(source, f.context);
   return { ...f, frames: f.window.BarrageFrames };
 }
+
+test('starter player and barrage entitlements remain independent and legacy dual claims stay usable', () => {
+  const { frames } = fixture();
+  frames.acceptRewards({
+    rewards: [
+      { frameId: 'vinyl', claimedAt: '2026-10-27', mediaClaimedAt: null },
+      { frameId: 'mic', claimedAt: null, mediaClaimedAt: '2026-10-27' },
+    ],
+  });
+  assert.equal(frames.canUse('vinyl'), true);
+  assert.equal(frames.canUse('vinyl', 'media'), false);
+  assert.equal(frames.canUse('mic'), false);
+  assert.equal(frames.canUse('mic', 'media'), true);
+  frames.set({ selected: 'vinyl' });
+  frames.set({ selected: 'mic' });
+  assert.equal(frames.get().selected, 'vinyl');
+  frames.acceptRewards({ rewards: [{ frameId: 'vinyl', claimedAt: '2026-10-27' }] });
+  assert.equal(frames.canUse('vinyl', 'media'), true);
+  frames.acceptRewards({ rewards: [] });
+  assert.equal(frames.canUse('vinyl', 'media'), false);
+  assert.equal(frames.get().selected, 'default');
+});
 test('frame settings normalize untrusted storage, persist and follow cross-tab changes independently of motion', () => {
   for (const saved of [
     'broken',
