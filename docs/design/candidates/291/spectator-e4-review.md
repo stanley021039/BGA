@@ -1,3 +1,5 @@
+2026-10-28接續：賽道方向鍵六組往返與四張右端候選已完成，見本檔「賽道右端補件」；取代下文較早的右端稿待補狀態。
+
 # #291 E4／E2 公開觀戰候選與 Bridge 保存核對
 
 2026-10-28。**未核定設計候選、無產品修改。** 本輪使用第三份 Figma 的「04｜預覽區」，不覆蓋共用元件或測試站／正式站畫面。前輪來源、工具失敗與限制保留於 [E1](spectator-e1-review.md)。
@@ -52,3 +54,13 @@ Ignored 證據包括 `spectator-e2-matrix.json`、`spectator-e2-interactions.jso
 觀戰其餘公開階段、賽道水平捲動後視圖、等待室完整展開、CEO等待／錯誤／未參與、中止／真實重連、完整共用元件及新版外殼核對仍待。#291不關閉；#284／#283／#288尚未開始。沿用Draft PR #294，未啟動CI／合併／部署。前批2155／前端254與build為main整合證據，沒有當作本輪重新執行。
 
 本輪Git僅上述六份Markdown；`npm run test:affected -- --base HEAD` 對準 `4799df96` 文件差異，選取0/257，沒有執行自動測試；3.12.1版號一致性通過。`npm run format`／`npm run format:check` 為1066 checked、0 formatted、111 unchanged legacy、0 failures；diff check通過。不把瀏覽器候選操作當成產品測試或遠端CI。
+
+## 賽道右端補件（2026-10-28）
+
+E4原稿沒有另加鍵盤script；原生可聚焦水平區域實際測1920／390／320各深淺色共六組，逐組方向鍵右移至最大值（容許小數取整差小於1px），第30格完整落在容器內，再以方向鍵左移回0；六組scrollTop均0，scrollHeight／clientHeight均232，頁面無橫向溢出。390px曾試End，不會跳到水平終點，不宣稱Home／End快捷鍵已支援；完整方向鍵往返證據為 `spectator-e4-keyboard-scroll.json`。
+
+在保留水平右端的同時，將焦點移到頁首入口並用Ctrl+Home還原外頁scrollY=0，再匯出桌機／手機深淺四張SVG；沒有以DOM寫入scrollLeft偽造互動。body本身不能直接取得鍵盤焦點的嘗試失敗，改用真實可聚焦入口。使用目前E4實際互動結果，沒有新Stitch稿或產品程式修改。
+
+Bridge在04新增[右端比較框2331:16217](https://www.figma.com/design/swrZgTpIsRS4JSGBa4mQhq?node-id=2331-16217)，3936×3183、X173000／Y60000；四框／196個可編輯文字、Component／Instance零。雲端獨立重開逐框尺寸4/4：淺桌機2331:16221、深桌機2331:16313（均1920×1252）；淺手機2331:16405、深手機2331:16488（均390×1675）。沿用原稿的向量近似、無auto-layout／prototype限制，不將靜態左右端稿當作Figma內可捲動原型。
+
+證據：`spectator-scroll-exports.json`、`figma-e-scroll-import-progress.json`、`figma-e-scroll-readback.json`、`figma-scroll-cloud-four-frames.json`及各SVG／PNG。本輪另開始CEO公開觀戰等待／進行／結算三狀態合成參考，仍為既有main4127a035／3.12.1公開投影；12組1920／390深淺色無頁面橫溢，沒有新增遊戲操作。CEO新候選的實際Stitch／Figma狀態另記，不借用本節四框證據。
