@@ -26,6 +26,16 @@
 
 本機 ignored 證據：`spectator-e1-public-fixtures.json`、`spectator-e1-matrix.json`、`spectator-e1-focus-error.json` 與 `spectator-e1-*-full.png`。沒有上傳本機偏好、憑證或私有音源。
 
+## E1 實際產出與初測，E2 修訂中
+
+Stitch 三張已生成，來源：能力等待 `b0d5cf6923db4f36ae3818f61259f979`、秘密選角 `b6313b2a4ed844d491a18ac9f4d10b3c`、連接失敗 `39cc998802c74af6bfc4e29f289efa13`，均在既有[運動員專案](https://stitch.withgoogle.com/projects/6540616740381984054)。已擷取實際預覽：能力等待的 iframe srcdoc 仍是載入 bootstrap，清理後只有56字，故改讀已渲染 iframe 的完整 DOM；另外兩頁 srcdoc 有完整內容。清理只還原原始 CSS viewport 單位及移除 Stitch injected 子樹，未修產品或默默補設計互動。
+
+三頁各 1920／390／320 共九組初測：尺寸相符、文件無橫向溢出、沒有 input／select／textarea；公開名冊、能力等待及秘密未公開提示保留。三頁320px專注進入後退出入口取得焦點，Esc還原並返焦原入口。錯誤重試實際 disabled／pending，再次觀察600ms後回原錯誤並返焦；中途尚未計時結束的觀察仍是 pending，沒有誤記成卡死。以上只驗當前瀏覽器主題，**E1候選本身深淺色未完成核對**，不沿用真元件48組結果。
+
+初測發現未通過項：頁內沿用「真實RoomSpectator」來源標籤，容易把Stitch候選誤稱產品；離開使用button＋confirm／console而非真實同房玩家入口連結；失敗說明自創「觀戰授權關閉」及結束不能看等原因，並誤稱返回大廳；全螢幕退出按鈕為12px。這些未匯入Figma，保留E1歷史。
+
+已送出 E2 三張獨立精準修訂，要求修正上述標記／離開href／失敗原因與R6小字，保留唯讀資料與有效互動；確認輸入框已清空。E2 實際HTML與複驗尚待，不只憑生成回覆當成完成。ignored 證據增加 `spectator-e1-stitch-screens.json`、`spectator-e1-candidate-first-matrix.json`、`spectator-e1-candidate-interactions.json`、`spectator-e1-candidate-retry-final.json` 及三張手機完整候選圖。
+
 ## 待完成
 
-已在既有運動員 Stitch 專案貼入桌機能力等待、手機能力等待及手機錯誤三張實際參考，送出 E1-01 能力等待／E1-02 秘密選角／E1-03 連接失敗的三張獨立候選需求，畫面已顯示 Thinking。實際生成 HTML、R6 規格核對與第三份 04 的可編輯匯入尚未完成；320px、所有側欄／抽屜與跨狀態穩定尺寸也未涵蓋。D3／D4 九框仍受 Figma reconnect／雲端重開未確認限制，詳 [D3／D4](athlete-d3-review.md)。本票其餘 CEO 等待／錯誤／未參與、等待室展開、中止／重連及共用元件化缺口仍保留；#291 不關閉，PR #294 保持 Draft，未啟動 CI、合併或部署。
+已在既有運動員 Stitch 專案貼入桌機能力等待、手機能力等待及手機錯誤三張實際參考，送出 E1-01 能力等待／E1-02 秘密選角／E1-03 連接失敗的三張獨立候選需求，E1實際HTML與三尺寸初測及缺陷以上節為準，E2複驗、R6規格核對與第三份04的可編輯匯入仍未完成；完整側欄／抽屜與跨狀態穩定尺寸也未涵蓋。D3／D4 九框仍受 Figma reconnect／雲端重開未確認限制，詳 [D3／D4](athlete-d3-review.md)。本票其餘 CEO 等待／錯誤／未參與、等待室展開、中止／重連及共用元件化缺口仍保留；#291 不關閉，PR #294 保持 Draft，未啟動 CI、合併或部署。
