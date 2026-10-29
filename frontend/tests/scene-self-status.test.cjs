@@ -60,7 +60,10 @@ test('own HUD reacts to health, regeneration and buff changes, without moving st
   });
   app.mount(host);
   try {
-    assert.match(host.textContent, /HP 1,000,000／1,200,000/);
+    assert.doesNotMatch(host.textContent, /HP|1,000,000|1,200,000|多人能量/);
+    assert.match(host.textContent, /K 2/);
+    assert.match(host.textContent, /D 1/);
+    assert.match(host.textContent, /A 3/);
     assert.match(
       host.querySelector('[data-status="timer"]').getAttribute('aria-label'),
       /等待回復 1.0 秒/,

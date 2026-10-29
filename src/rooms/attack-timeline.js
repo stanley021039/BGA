@@ -11,6 +11,8 @@ function createAttackTimeline(combat) {
     if (event.effect === 'bijuu_beam')
       event.rays = selectBijuuDirections(self, actors, event.aspectRatio);
     const source = {
+      energyActor: self,
+      energyLifeId: self.lifeId,
       id: self.id,
       health: 1,
       authorBonus: self.authorBonus,

@@ -1,4 +1,10 @@
 {
+  "energy": {
+    "maximum": 100,
+    "ordinaryHit": 10,
+    "receivedHit": 5,
+    "movementPerSecond": 1
+  },
   "health": {
     "base": 120,
     "min": 110,

@@ -44,7 +44,7 @@ test('Q/E loadout saves only after server acceptance and preserves the other slo
   const calls = [],
     f = fixture(async (route, options) => {
       calls.push({ route, ...options });
-      return options?.body || { q: 'barrage', e: 'beam' };
+      return options?.body || { q: 'barrage', e: 'beam', r: '' };
     });
   try {
     await f.store.load();
@@ -65,12 +65,12 @@ test('late responses cannot carry another account selections into the current lo
   try {
     const pending = f.store.load();
     f.session.user = { id: 'b' };
-    resolvers[0]({ q: 'explosion', e: 'chains' });
+    resolvers[0]({ q: 'barrage', e: 'chains', r: 'explosion' });
     await pending;
     assert.equal(f.store.ready, false);
     assert.equal(f.store.loadout.q, 'barrage');
     assert.equal(f.store.loadout.e, 'beam');
-    resolvers[1]({ q: 'shield', e: 'sphere' });
+    resolvers[1]({ q: 'shield', e: 'sphere', r: '' });
     await f.store.load();
     assert.equal(f.store.ready, true);
     assert.equal(f.store.loadout.q, 'shield');
@@ -82,12 +82,12 @@ test('save failures keep the accepted choices and expose the server message', as
   let fail = false;
   const f = fixture(async () => {
     if (fail) throw Error('儲存暫停');
-    return { q: 'shield', e: 'sphere' };
+    return { q: 'shield', e: 'sphere', r: '' };
   });
   try {
     await f.store.load();
     fail = true;
-    await f.store.choose('q', 'explosion');
+    await f.store.choose('r', 'explosion');
     assert.equal(f.store.loadout.q, 'shield');
     assert.equal(f.store.message, '儲存暫停');
     assert.equal(f.store.pending, false);

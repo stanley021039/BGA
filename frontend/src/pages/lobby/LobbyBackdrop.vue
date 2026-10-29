@@ -38,8 +38,8 @@ const controls = useSceneControls({
   enabled: () => lobby.connected,
   snapshot: () => lobby.snapshot,
   send: async (action) => {
-    if (action === 'q' || action === 'e') return lobby.attack(action);
-    if (action === 'r') {
+    if (action === 'q' || action === 'e' || action === 'r') return lobby.attack(action);
+    if (action === 'c') {
       closeDialogs();
       return lobby.teleport();
     }
@@ -251,7 +251,7 @@ function key(event: KeyboardEvent) {
   )
     return;
   const name = event.key.toLowerCase();
-  if (name === 'q' || name === 'e' || name === 'r') {
+  if (name === 'q' || name === 'e' || name === 'r' || name === 'c') {
     if (event.repeat) return;
     event.preventDefault();
     held.clear();
@@ -331,8 +331,8 @@ defineExpose({ openChat });
       :data-background="background.selected"
       :class="{ 'is-self-hover': selfHover }"
       tabindex="0"
-      aria-label="好友大廳：點擊頁面空白處移動角色，點自己的角色發表情，按對話按鈕輸入訊息；聚焦此處可用 WASD 或方向鍵移動，四邊可穿越，R 鍵隨機換位，Q、E 鍵向最近玩家發射不同特效"
-      aria-keyshortcuts="R Q E"
+      aria-label="好友大廳：點擊空白處或用 WASD、方向鍵移動，點自己的角色發表情；C 瞬移，Q、E 普通招式，能量滿後按 R 施放多人招式"
+      aria-keyshortcuts="Q E R C"
       data-ping-anchor="lobby-stage"
       :aria-busy="!lobby.connected"
       ><LobbyAttackLayer

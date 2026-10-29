@@ -1,5 +1,6 @@
 const { isAreaAttack, selectAttackTargets } = require('./attack-targets');
 const combatRules = require('../../public/shared/scene-rules.json');
+const energy = require('./scene-energy');
 const { versionedAsset } = require('../http/asset-version');
 const { HttpError } = require('../http/errors');
 const { randomBytes } = require('node:crypto');
@@ -23,6 +24,13 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     combat.advance(position, time);
     if (!position.health) return;
     const start = { x: position.x, y: position.y };
+    const elapsedMs = Math.max(0, time - Math.max(position.at, position.immobileUntil || 0));
+    const remainingMs = sceneWalk(
+      position,
+      { x: position.targetX, y: position.targetY },
+      0,
+      position.passage,
+    ).remainingMs;
     let wrapped = false;
     const step = sceneWalk(
       position,
@@ -31,6 +39,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       position.passage,
     );
     position.x = step.x;
+    energy.walk(position, Math.min(elapsedMs, remainingMs));
     position.y = step.y;
     if (step.crossed) position.wrapId = (position.wrapId || 0) + 1;
     for (const axis of ['x', 'y']) {
@@ -204,7 +213,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       return;
     }
     if (
-      !['q', 'e'].includes(input.slot) ||
+      !['q', 'e', 'r'].includes(input.slot) ||
       !Number.isFinite(input.aspectRatio) ||
       input.aspectRatio < 0.2 ||
       input.aspectRatio > 5 ||
@@ -220,6 +229,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
       time - self.lastAttacks[input.slot] < combatRules.attackCooldownMs
     )
       throw new HttpError(429, 'ATTACK_COOLDOWN', '攻擊冷卻中');
+    energy.check(self, input.slot, effect);
     const targets = selectAttackTargets(
       self,
       combat.targets(positions.values()),
@@ -232,6 +242,7 @@ function createRoomSpace(now = () => Date.now(), random = Math.random, authorBon
     if (!target) throw new HttpError(409, 'NO_ATTACK_TARGET', '攻擊範圍內沒有其他玩家');
     const toId = target.id;
     const defensive = target === self;
+    energy.spend(self, input.slot);
     const hit = defensive ? combat.protect(self, time) : { damage: 0, critical: false };
     const events = (attacks.get(room) || []).filter((e) => e.until > time);
     const event = {

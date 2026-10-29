@@ -683,7 +683,7 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
         ><UiPanel
           class="settings-attack-panel"
           title="攻擊特效"
-          description="設定 Q／E 快捷鍵使用的攻擊特效。"
+          description="設定 Q／E 普通招式與 R 多人招式。"
           note="選擇後立即套用"
           ><template #actions><a href="/collection?section=attack">前往收藏庫 ↗</a></template
           ><AttackChoices v-if="activePanel === 'attack'" show-current /></UiPanel></section

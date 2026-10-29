@@ -2,6 +2,12 @@
 
 版本管理從既有 `1.0.0` 基線開始；更早的功能與部署紀錄見 `docs/`，不追補未曾實際標記的發行版。
 
+## [3.13.0] - 2026-10-29
+
+- 普通招式 Q／E、多人招式 R 與 C 瞬移；新增伺服器同步能量條、逐段命中／受傷及實際移動回能，並按回能速度平衡單段／多段普通傷害（#329）
+
+- 能量細條改放本人角色血條下方，移除重複能量說明與HP數字列，保留戰績及增益圖示（#329）
+
 ## [3.12.1] - 2026-10-27
 
 - Lobby attacks share one canvas and lower their detail with load or on slow devices, sparks use a cached glow, and the lobby is pushed over an event stream instead of polled every 500 ms (#322).
