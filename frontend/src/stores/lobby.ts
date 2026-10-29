@@ -23,7 +23,7 @@ import {
 import type { InteractionSource } from '../services/interaction-source';
 import type { BarrageEvent } from '../contracts/social';
 import { entranceEffect } from '../services/entrance-effects';
-type AttackSlot = 'q' | 'e';
+type AttackSlot = 'q' | 'e' | 'r';
 type Movement = { x: number; y: number } | { dx: number; dy: number };
 import { useLobbyBackgroundStore } from './lobby-background';
 // Lobby changes arrive over a server-sent stream (#322); polling slows to a

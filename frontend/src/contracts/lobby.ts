@@ -38,6 +38,8 @@ export interface SceneCombatStatus {
   regenPerSecond: number;
 }
 export interface LobbyVisitor {
+  energy?: number;
+  energyMaximum?: number;
   combatStatus?: SceneCombatStatus;
   severed?: boolean;
   immobileUntil?: number;
@@ -87,7 +89,7 @@ export interface LobbyAttack {
   damage?: number;
   critical?: boolean;
   effect: string;
-  slot: 'q' | 'e';
+  slot: 'q' | 'e' | 'r';
   id: string;
   fromId: string;
   toId: string;
@@ -289,6 +291,8 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           regenPerSecond: Number(status.regenPerSecond),
         };
       })(),
+      energy: Math.min(100, counter(item.energy)),
+      energyMaximum: 100,
       health: finite(item.health) ? item.health : undefined,
       maxHealth: finite(item.maxHealth) ? item.maxHealth : undefined,
       respawnAt: finite(item.respawnAt) ? item.respawnAt : undefined,
@@ -419,7 +423,7 @@ export function readLobbySnapshot(value: unknown): LobbySnapshot {
           damage: finite(a.damage) ? Math.max(0, a.damage) : undefined,
           critical: a.critical === true,
           effect: attackEffects.some((e) => e.id === a.effect) ? String(a.effect) : 'barrage',
-          slot: a.slot === 'e' ? 'e' : 'q',
+          slot: a.slot === 'r' ? 'r' : a.slot === 'e' ? 'e' : 'q',
           id: text(a.id),
           fromId: text(a.fromId),
           toId: text(a.toId),

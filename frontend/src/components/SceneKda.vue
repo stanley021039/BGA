@@ -89,15 +89,7 @@ const indicators = computed(() => {
       >
       <span v-if="!connected">連線中</span>
     </div>
-    <div
-      v-if="self?.maxHealth"
-      class="scene-self-status"
-      role="group"
-      aria-label="自己的生命與增益"
-    >
-      <UiBadge :tone="!connected ? 'disabled' : !self.health ? 'danger' : 'neutral'"
-        >HP {{ number(self.health) }}／{{ number(self.maxHealth) }}</UiBadge
-      >
+    <div v-if="self?.maxHealth" class="scene-self-status" role="group" aria-label="自己的增益">
       <div class="scene-bonuses" aria-label="增益與回復狀態">
         <UiBadge
           v-for="item in indicators"

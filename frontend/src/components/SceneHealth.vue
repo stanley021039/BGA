@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue';
+import SceneEnergy from './SceneEnergy.vue';
 import tombstone from '../assets/scene-tombstone.svg?no-inline';
 import type { LobbyVisitor } from '../contracts/lobby';
-const props = defineProps<{ visitor: LobbyVisitor }>();
+const props = withDefaults(
+  defineProps<{ visitor: LobbyVisitor; self?: boolean; connected?: boolean }>(),
+  { self: false, connected: true },
+);
 const seconds = ref(3);
 let timer: ReturnType<typeof setInterval> | undefined;
 watch(
@@ -45,6 +49,11 @@ onBeforeUnmount(() => clearInterval(timer));
       }"
     />
   </div>
+  <SceneEnergy
+    v-if="self && visitor.maxHealth && visitor.health !== undefined && visitor.health > 0"
+    :visitor="visitor"
+    :connected="connected"
+  />
 </template>
 <style scoped>
 .scene-health-bar {

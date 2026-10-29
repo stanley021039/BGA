@@ -1,4 +1,5 @@
-'use strict';
+const { chargeScene } = require('./helpers/scene-charge.cjs');
+('use strict');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
@@ -155,7 +156,8 @@ test('lobby and shared rooms enforce successful bijuu movement and teleport lock
     move(b, { x: 40, y: 50 });
     now += 10000;
     view(a);
-    const input = { slot: 'q', aspectRatio: 1, requestId: 'bijuu-lock-once' };
+    chargeScene(scene, inRoom ? room : null, [a, b], 'a', (ms) => (now += ms));
+    const input = { slot: 'r', aspectRatio: 1, requestId: 'bijuu-lock-once' };
     if (inRoom) scene.move(room, 'a', { action: 'attack', ...input }, 'bijuu_beam');
     else scene.attack(a, { ...input, effect: 'bijuu_beam' });
     now += 2460;

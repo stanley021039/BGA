@@ -67,9 +67,15 @@ test('starter awards 5 entrances/attacks, 3 per other available category, withou
   assert.throws(() => store.assertFrame(a, unownedFrame.id), { code: 'FRAME_LOCKED' });
   assert.equal(first.rewards.filter((r) => r.claimedAt).length, 3);
   assert.equal(first.rewards.filter((r) => r.mediaClaimedAt).length, 3);
-  setAttackSettings(db, a, { q: pack.grants.attacks[0], e: pack.grants.attacks[1] });
+  const { fitsSlot } = require('../src/rooms/scene-energy');
+  const loadoutFor = (id) =>
+    fitsSlot('r', id) ? { q: 'barrage', e: 'beam', r: id } : { q: id, e: 'beam', r: '' };
+  for (const id of pack.grants.attacks) {
+    const loadout = loadoutFor(id);
+    assert.deepEqual(setAttackSettings(db, a, loadout), loadout);
+  }
   const unownedAttack = starter.catalog().attacks.find((r) => !pack.grants.attacks.includes(r.id));
-  assert.throws(() => setAttackSettings(db, a, { q: unownedAttack.id, e: 'beam' }), {
+  assert.throws(() => setAttackSettings(db, a, loadoutFor(unownedAttack.id)), {
     code: 'ATTACK_REWARD_LOCKED',
   });
   const profile = getProfileSettings(db, a);

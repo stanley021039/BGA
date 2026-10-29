@@ -1,4 +1,5 @@
-'use strict';
+const { chargeScene } = require('./helpers/scene-charge.cjs');
+('use strict');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
@@ -116,7 +117,8 @@ test('accepted lobby and room casts pay once; retry, cooldown rejection and miss
     move(b, 40);
     now += 10000;
     view();
-    const input = { action: 'attack', slot: 'q', aspectRatio: 1, requestId: 'babylon-cost-once' };
+    chargeScene(scene, roomMode ? room : null, [a, b], 'a', (ms) => (now += ms));
+    const input = { action: 'attack', slot: 'r', aspectRatio: 1, requestId: 'babylon-cost-once' };
     const cast = (data) => {
       if (roomMode) return scene.move(room, 'a', data, 'gate_of_babylon');
       const { action, ...payload } = data;
@@ -145,13 +147,14 @@ test('accepted lobby and room casts pay once; retry, cooldown rejection and miss
         );
     const empty = { players: [a] };
     const aloneView = () => (roomMode ? alone.view(empty, 'a') : alone.view(a));
+    chargeScene(alone, roomMode ? empty : null, [a], 'a', (ms) => (now += ms));
     const hp = aloneView().visitors[0].health;
     assert.throws(
       () =>
         roomMode
           ? alone.move(empty, 'a', input, 'gate_of_babylon')
           : alone.attack(a, {
-              slot: 'q',
+              slot: 'r',
               aspectRatio: 1,
               requestId: 'babylon-no-target',
               effect: 'gate_of_babylon',

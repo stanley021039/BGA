@@ -108,7 +108,7 @@ const controls = useSceneControls({
       return sceneAction({ action: 'step', dx, dy });
     }
     return sceneAction(
-      action === 'r'
+      action === 'c'
         ? { action: 'teleport' }
         : {
             action: 'attack',
@@ -207,10 +207,10 @@ function key(event: KeyboardEvent) {
   )
     return;
   const action = event.key.toLowerCase();
-  if (['q', 'e', 'r'].includes(action)) {
+  if (['q', 'e', 'r', 'c'].includes(action)) {
     if (event.repeat) return;
     event.preventDefault();
-    void controls.run(action as 'q' | 'e' | 'r');
+    void controls.run(action as 'q' | 'e' | 'r' | 'c');
     return;
   }
   if (![stage.value, document.body].includes(event.target as HTMLElement)) return;

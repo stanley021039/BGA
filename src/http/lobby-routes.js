@@ -28,10 +28,10 @@ function createLobbyHandlers({
       Object.keys(data).some((k) => !['requestId', 'aspectRatio', 'slot'].includes(k))
     )
       throw new HttpError(400, 'INVALID_ATTACK', '攻擊操作不正確');
-    return withLobbyMedia(
-      user,
-      lobby.attack(user, { ...data, effect: attackLoadout(user)[data.slot || 'q'] }),
-    );
+    const effect = attackLoadout(user)[data.slot || 'q'];
+    if (data.slot === 'r' && !effect)
+      throw new HttpError(409, 'NO_MULTI_ATTACK_LOADOUT', '請先在設定配裝 R 鍵多人招式');
+    return withLobbyMedia(user, lobby.attack(user, { ...data, effect }));
   }
   function teleport(user, data) {
     const entrance = entranceAllowed(user, data?.entrance) ? data?.entrance : 'classic';

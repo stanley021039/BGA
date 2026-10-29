@@ -42,10 +42,12 @@ export function createAttackScene(ctx, options) {
   const fx = options.fx || FULL_DETAIL;
   // Previews use the same phase schedule; real scenes only show server-settled hits.
   if (options.preview && !options.readHits && !['shield', 'sphere'].includes(options.effect)) {
-    const area = attackEffects.find((effect) => effect.id === options.effect)?.area;
+    const effect = attackEffects.find((effect) => effect.id === options.effect);
+    const area = effect?.area;
     const base =
       ((combatRules.damage.min + combatRules.damage.max) / 2) *
       combatRules.unitScale *
+      (effect?.damageMultiplier ?? 1) *
       (area ? combatRules.areaDamageMultiplier : 1) *
       (options.effect === 'explosion' ? 1.5 : 1);
     const points = options.hits?.length ? options.hits : [options.to];
@@ -160,6 +162,7 @@ export function createAttackScene(ctx, options) {
       ? authoritative.damage
       : Math.round(
           previewBase *
+            (attackEffects.find((effect) => effect.id === options.effect)?.damageMultiplier ?? 1) *
             (attackEffects.find((effect) => effect.id === options.effect)?.area
               ? combatRules.areaDamageMultiplier
               : 1) *
