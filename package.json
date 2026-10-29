@@ -20,7 +20,9 @@
     "prepare": "node tools/install-git-hooks.cjs",
     "ui:check": "node tools/ui-check.cjs --check",
     "ui:baseline": "node tools/ui-check.cjs --update",
-    "perf:check": "node tools/perf-check.cjs"
+    "perf:check": "node tools/perf-check.cjs",
+    "perf:benchmark": "node tools/benchmark/run.cjs",
+    "perf:history": "node tools/benchmark/history.cjs"
   },
   "engines": {
     "node": ">=22.13"
@@ -30,6 +32,7 @@
     "sharp": "0.35.5"
   },
   "devDependencies": {
+    "playwright": "1.62.1",
     "prettier": "3.9.10",
     "tar": "7.5.22"
   }

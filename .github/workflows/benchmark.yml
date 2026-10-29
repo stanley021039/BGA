@@ -1,0 +1,65 @@
+name: Performance benchmark
+on:
+  workflow_dispatch:
+    inputs:
+      before:
+        description: Baseline Git ref
+        required: true
+      after:
+        description: Candidate Git ref
+        default: main
+        required: true
+  push:
+    branches: [main]
+    paths: [package.json]
+permissions:
+  contents: read
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select revisions and detect a major or minor release
+        id: revisions
+        env:
+          BEFORE: ${{ inputs.before || github.event.before }}
+          AFTER: ${{ inputs.after || github.sha }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          node <<'NODE'
+          const cp = require('node:child_process'), fs = require('node:fs');
+          const resolve = (ref) => {
+            if (!ref || ref.startsWith('-')) throw Error('Invalid revision');
+            return cp.execFileSync('git', ['rev-parse', '--verify', ref + '^{commit}'], {encoding:'utf8'}).trim();
+          };
+          const before = resolve(process.env.BEFORE), after = resolve(process.env.AFTER);
+          const version = (sha) => JSON.parse(cp.execFileSync('git', ['show', sha + ':package.json'], {encoding:'utf8'})).version.split('.').slice(0,2).join('.');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `before=${before}\nafter=${after}\nrun=${process.env.EVENT === 'workflow_dispatch' || version(before) !== version(after)}\n`);
+          NODE
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        if: steps.revisions.outputs.run == 'true'
+        with:
+          node-version: '22.23.3'
+      - if: steps.revisions.outputs.run == 'true'
+        run: npm ci
+      - if: steps.revisions.outputs.run == 'true'
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Compare three alternating runs of each version
+        if: steps.revisions.outputs.run == 'true'
+        env:
+          BENCHMARK_BEFORE: ${{ steps.revisions.outputs.before }}
+          BENCHMARK_AFTER: ${{ steps.revisions.outputs.after }}
+        run: npm run perf:history -- --refs "$BENCHMARK_BEFORE,$BENCHMARK_AFTER" --runs 3 --out work/benchmark/ci
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always() && steps.revisions.outputs.run == 'true'
+        with:
+          name: performance-${{ github.sha }}
+          path: work/benchmark/ci/*.json
+          if-no-files-found: error
