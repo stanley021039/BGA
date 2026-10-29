@@ -25,6 +25,7 @@ export function mountPage(
     'gift',
     'draw',
     'trpg',
+    'coc',
     'quacks',
     'bluff',
     'telephone',

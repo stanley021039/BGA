@@ -1,3 +1,4 @@
+const { dropEmptyCocTables } = require('./helpers/coc-legacy-schema.cjs');
 const { test } = require('node:test'),
   assert = require('node:assert/strict'),
   fs = require('./helpers/browser-modules.cjs'),
@@ -537,6 +538,7 @@ test('genuine schema17 migration preserves all old rows and creates only empty n
   });
   f.setTime(after);
   settle(f, id, 2);
+  dropEmptyCocTables(f.db);
   f.db.exec('DROP TABLE market_curve_ledger; DROP TABLE market_forecasts; PRAGMA user_version=17');
   const tables = f.db
       .prepare(
@@ -571,6 +573,7 @@ for (const table of ['market_forecasts', 'market_curve_ledger'])
   });
 test('schema18 partial migration failure rolls back to untouched schema17', (t) => {
   const f = fixture(t);
+  dropEmptyCocTables(f.db);
   f.db.exec('DROP TABLE market_curve_ledger; DROP TABLE market_forecasts; PRAGMA user_version=17');
   const before = f.db.prepare('SELECT * FROM users ORDER BY id').all();
   f.db.close();

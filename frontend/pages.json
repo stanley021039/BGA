@@ -99,6 +99,7 @@
     "document": "majority.html",
     "route": "/majority"
   },
+  { "id": "coc", "document": "coc.html", "route": "/coc" },
   {
     "id": "trpg",
     "document": "trpg.html",

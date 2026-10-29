@@ -1,3 +1,4 @@
+const { dropEmptyCocTables } = require('./coc-legacy-schema.cjs');
 // Actual pre17 market definitions, independent of the current production SQL.
 // Tests must reconstruct the historical columns instead of merely relabeling a
 // current database and teaching the production validator to accept forged v16.
@@ -65,6 +66,7 @@ function legacyMarketSchema(db, { preserveAchievements = false } = {}) {
   const foreignKeys = db.prepare('PRAGMA foreign_keys').get().foreign_keys;
   db.exec('PRAGMA foreign_keys=OFF; BEGIN IMMEDIATE');
   try {
+    dropEmptyCocTables(db);
     dropEmptyCurveTables(db);
     if (!preserveAchievements)
       for (const table of ['achievement_progress', 'processed_unit_events'])

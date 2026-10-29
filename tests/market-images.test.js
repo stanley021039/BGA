@@ -9,7 +9,7 @@ const { randomUUID, randomBytes } = require('node:crypto'),
 const sharp = require('sharp'),
   { PNG } = require('pngjs'),
   { crc32 } = require('pngjs/lib/crc');
-const { openDatabase, transaction } = require('../src/db');
+const { openDatabase, transaction, SCHEMA_VERSION } = require('../src/db');
 const {
   MarketImageStore,
   validateMarketImagesDatabase,
@@ -920,7 +920,7 @@ test('new uploads generate bounded 512px proportional WebP thumbnails and measur
   t.diagnostic(
     `Synthetic 1280x720 noise fixture: original PNG ${original.bytes.length} bytes; 512x288 WebP ${thumb.bytes.length} bytes. No production latency inference.`,
   );
-  assert.equal(f.db.prepare('PRAGMA user_version').get().user_version, 20);
+  assert.equal(f.db.prepare('PRAGMA user_version').get().user_version, SCHEMA_VERSION);
 });
 test('cold thumbnails never decode on GET; bounded background cache resumes without re-encoding and removes stale derivatives', async (t) => {
   const f = fixture(t),

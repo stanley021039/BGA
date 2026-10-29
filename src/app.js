@@ -62,6 +62,8 @@ const { Room } = require('./games/poker'),
   { MajorityRoom } = require('./games/majority'),
   { GiftRoom } = require('./games/gift');
 const { TrpgRoom } = require('./games/trpg');
+const { CocRoom } = require('./games/coc');
+const { CocCampaignStore } = require('./coc/campaign-store');
 const { QuacksRoom } = require('./games/quacks');
 const { SecondWindRoom } = require('./games/second-wind/room');
 const { CeoRoom } = require('./games/ceo-room');
@@ -121,6 +123,9 @@ const { MediaThumbnails, thumbnailSize } = require('./media/thumbnails');
 const { assetPath } = require('./http/asset-version');
 const { MediaAudio } = require('./media/audio');
 const { openDatabase } = require('./db/index');
+const { CocKeyring } = require('./coc/keyring');
+const { probe: probeCocAi } = require('./coc/provider');
+const { CocLibrary } = require('./coc/library');
 const { createAuth } = require('./auth/index');
 const { BoardStore } = require('./community/board');
 const { createGitHubClient } = require('./integrations/github/client');
@@ -495,6 +500,22 @@ function initializeApp(config, dataLock, acquired) {
   community = new CommunityStore(config.communityDir);
   db = openDatabase(config.dbFile);
   acquired.push(() => db.close());
+  const cocKeyring = new CocKeyring(
+    db,
+    config.cocKeyFile || config.dbFile + '.coc-private/master.key',
+    config.cocAi,
+  );
+  const cocLibrary = new CocLibrary(db);
+  const cocCampaigns = new CocCampaignStore(db, cocLibrary, cocKeyring, {
+    enabled: config.cocAdventureEnabled !== false,
+    accounts: (room) => [...(seats.get(room.code) || [])],
+    findRoom: (code) => rooms.get(code),
+    changed: (room) => {
+      if (rooms.get(room.code) === room) stateStream.notify(room);
+    },
+  });
+  acquired.push(() => cocCampaigns.close());
+  acquired.push(() => cocKeyring.close());
   auth = createAuth(db, { secureCookies: config.publicUrl?.startsWith('https://') });
   marketStore = new MarketStore(db, config.marketClock || Date.now);
   marketAutomationStore = new MarketAutomationStore(db, marketStore, {
@@ -549,6 +570,7 @@ function initializeApp(config, dataLock, acquired) {
     const previous = seats.get(room.code)?.get(user.id);
     if (previous) {
       resumeSeat(room, user);
+      if (room.type === 'coc') cocCampaigns.rejoined(room, user);
       return { code: room.code, type: room.type || 'poker' };
     }
     limitRate(roomRate, 'join:' + user.id, 30);
@@ -573,6 +595,7 @@ function initializeApp(config, dataLock, acquired) {
     departed?.delete(user.id);
     p.avatar = portraitUrl(user.id);
     seats.get(room.code).set(user.id, p.id);
+    if (room.type === 'coc') cocCampaigns.rejoined(room, user);
     return { code: room.code, type: room.type || 'poker' };
   }
   mediaRooms.store = musicStore;
@@ -902,6 +925,14 @@ function initializeApp(config, dataLock, acquired) {
   // Store-backed providers a room needs, whether new or restored after a restart.
   function equipRoomProviders(room) {
     const type = room.type || 'poker';
+    if (type === 'coc')
+      Object.defineProperties(room, {
+        cocStart: { value: () => cocCampaigns.start(room) },
+        cocAct: { value: (id, action, data) => cocCampaigns.act(room, id, action, data) },
+        cocView: { value: (id) => cocCampaigns.project(room, id) },
+        cocLeave: { value: (id, leaving) => cocCampaigns.leave(room, id, leaving) },
+        cocTick: { value: () => cocCampaigns.tick(room) },
+      });
     if (type === 'bluff')
       Object.defineProperties(room, {
         questionExclusionProvider: { value: (id) => community.bluffBanned(id) },
@@ -927,6 +958,7 @@ function initializeApp(config, dataLock, acquired) {
     majority: MajorityRoom,
     gift: GiftRoom,
     trpg: TrpgRoom,
+    coc: CocRoom,
     quacks: QuacksRoom,
     bluff: BluffRoom,
     telephone: TelephoneRoom,
@@ -1332,6 +1364,120 @@ function initializeApp(config, dataLock, acquired) {
           return send({ ok: true });
         }
         const user = auth.requireUser(req);
+        if (url.pathname.startsWith('/api/coc/')) {
+          const expected = new URL(config.publicUrl || 'http://' + req.headers.host).origin;
+          if (
+            (req.headers.origin && req.headers.origin !== expected) ||
+            (req.headers['sec-fetch-site'] &&
+              !['same-origin', 'none'].includes(req.headers['sec-fetch-site']))
+          )
+            throw new HttpError(403, 'CROSS_ORIGIN', '不允許跨站操作 AI 與角色資料');
+          res.setHeader('Cache-Control', 'no-store');
+          const cocMedia = url.pathname.match(/^\/api\/coc\/media\/([a-f0-9-]{36})\/([a-z0-9-]+)$/);
+          if (cocMedia && req.method === 'GET') {
+            const size = url.searchParams.get('size') || '1024';
+            if (!['256', '512', '1024'].includes(size))
+              throw new HttpError(404, 'COC_MEDIA_NOT_FOUND', '找不到這份調查素材');
+            // Check current membership and reveal state even for conditional requests.
+            const file = cocCampaigns.mediaFile(user, cocMedia[1], cocMedia[2], size);
+            const image = await fs.promises.readFile(file);
+            const etag = '"' + createHash('sha256').update(image).digest('hex') + '"';
+            res.setHeader('Cache-Control', 'private, no-cache');
+            res.setHeader('Vary', 'Cookie');
+            res.setHeader('ETag', etag);
+            res.setHeader('Content-Type', 'image/webp');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+            if (req.headers['if-none-match'] === etag) {
+              res.statusCode = 304;
+              return res.end();
+            }
+            res.setHeader('Content-Length', image.length);
+            return res.end(image);
+          }
+          if (url.pathname === '/api/coc/ai/settings' && req.method === 'GET')
+            return send(cocKeyring.describe(user));
+          if (url.pathname === '/api/coc/campaigns' && req.method === 'GET')
+            return send(cocCampaigns.list(user));
+          if (url.pathname === '/api/coc/characters' && req.method === 'GET')
+            return send(cocLibrary.list(user));
+          if (req.method !== 'POST')
+            throw new HttpError(405, 'METHOD_NOT_ALLOWED', '此操作需使用 POST');
+          limitRate(roomRate, 'coc-settings:' + user.id, 20);
+          if (url.pathname === '/api/coc/campaigns/resume') {
+            const saved = cocCampaigns.resumeRecord(user, data.id);
+            let room = rooms.get(saved.row.room_code);
+            if (room?.type !== 'coc' || room.campaignId !== saved.row.id) {
+              if (rooms.size >= 100)
+                throw new HttpError(409, 'ROOM_LIMIT', '房間數已達上限，請稍後恢復');
+              let code = saved.row.room_code;
+              if (!/^[A-Fa-f0-9]{6}$/.test(code) || rooms.has(code)) {
+                do {
+                  code = randomBytes(3).toString('hex').toUpperCase();
+                } while (rooms.has(code));
+              }
+              room = new CocRoom(code, '克蘇魯的呼喚 · 存檔');
+              equipRoomProviders(room);
+              room.campaignId = saved.row.id;
+              const restoredSeats = new Map();
+              for (const member of saved.members) {
+                const p = room.add(member.display_name);
+                p.id = member.seat_id;
+                p.lastSeen = member.user_id === user.id ? Date.now() : Date.now() - 60000;
+                p.avatar = portraitUrl(member.user_id);
+                restoredSeats.set(member.user_id, p.id);
+              }
+              room.host = restoredSeats.get(saved.row.host_user_id) || restoredSeats.get(user.id);
+              seats.set(code, restoredSeats);
+              rooms.set(code, room);
+              attachAchievementHooks(room);
+              cocCampaigns.resumed(room, user);
+            } else {
+              const member = saved.members.find((m) => m.user_id === user.id);
+              let p = room.players.find((p) => p.id === member.seat_id);
+              if (!p) {
+                if (room.activePlayers().length >= 4)
+                  throw new HttpError(409, 'ROOM_FULL', '這份冒險已有四位在席玩家');
+                p = {
+                  id: member.seat_id,
+                  secret: randomBytes(24).toString('hex'),
+                  name: user.display_name,
+                  bot: false,
+                  kicked: false,
+                  score: 0,
+                  lastSeen: Date.now(),
+                  avatar: portraitUrl(user.id),
+                };
+                room.players.push(p);
+              }
+              if (p.kicked && room.activePlayers().length >= 4)
+                throw new HttpError(409, 'ROOM_FULL', '這份冒險已有四位在席玩家');
+              p.kicked = false;
+              p.lastSeen = Date.now();
+              if (!seats.has(room.code)) seats.set(room.code, new Map());
+              seats.get(room.code).set(user.id, p.id);
+              cocCampaigns.sync(room);
+              cocCampaigns.rejoined(room, user);
+            }
+            stateStream.notify(room);
+            return send({ code: room.code, type: 'coc' });
+          }
+          if (url.pathname === '/api/coc/characters/create')
+            return send(cocLibrary.create(user, data));
+          if (url.pathname === '/api/coc/characters/continue')
+            return send(cocCampaigns.exportCharacter(user, data));
+          if (url.pathname === '/api/coc/characters/save') return send(cocLibrary.save(user, data));
+          if (url.pathname === '/api/coc/characters/suggest')
+            return send(cocLibrary.suggest(user, data.id));
+          if (url.pathname === '/api/coc/ai/save') return send(cocKeyring.save(user, data));
+          if (url.pathname === '/api/coc/ai/remove') return send(cocKeyring.remove(user, data));
+          if (url.pathname === '/api/coc/ai/probe') {
+            limitRate(roomRate, 'coc-probe:' + user.id, 3);
+            if (data.scope === 'cli' && user.role === 'admin')
+              limitRate(roomRate, 'coc-cli-probe:station', 3);
+            return send(await probeCocAi(cocKeyring, user, data));
+          }
+          throw new HttpError(404, 'NOT_FOUND', '找不到這個跑團操作');
+        }
         if (url.pathname.startsWith('/api/tutorial/')) {
           const expected = new URL(config.publicUrl || 'http://' + req.headers.host).origin;
           if (req.headers.origin && req.headers.origin !== expected)
@@ -1628,7 +1774,7 @@ function initializeApp(config, dataLock, acquired) {
           const type = url.searchParams.get('type'),
             page = type === 'thunder' ? 'race' : type;
           if (
-            !/^(?:race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)$/.test(
+            !/^(?:race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)$/.test(
               page || '',
             )
           )
@@ -1925,6 +2071,7 @@ function initializeApp(config, dataLock, acquired) {
               'gift',
               'draw',
               'trpg',
+              'coc',
               'telephone',
               'musicquiz',
               'minimal',
@@ -1952,70 +2099,75 @@ function initializeApp(config, dataLock, acquired) {
             musicquiz = data.type === 'musicquiz',
             minimal = data.type === 'minimal',
             telephone = data.type === 'telephone',
+            coc = data.type === 'coc',
             trpg = data.type === 'trpg',
             thunder = data.type === 'thunder',
             majority = data.type === 'majority',
             gift = data.type === 'gift',
             lounge = data.type === 'lounge';
           const room = new (
-            lounge
-              ? LoungeRoom
-              : secondWind
-                ? SecondWindRoom
-                : ceo
-                  ? CeoRoom
-                  : quacks
-                    ? QuacksRoom
-                    : bluff
-                      ? BluffRoom
-                      : musicquiz
-                        ? MusicQuizRoom
-                        : minimal
-                          ? MinimalRoom
-                          : telephone
-                            ? TelephoneRoom
-                            : trpg
-                              ? TrpgRoom
-                              : draw
-                                ? DrawGuessRoom
-                                : gift
-                                  ? GiftRoom
-                                  : majority
-                                    ? MajorityRoom
-                                    : thunder
-                                      ? ThunderRoom
-                                      : Room
+            coc
+              ? CocRoom
+              : lounge
+                ? LoungeRoom
+                : secondWind
+                  ? SecondWindRoom
+                  : ceo
+                    ? CeoRoom
+                    : quacks
+                      ? QuacksRoom
+                      : bluff
+                        ? BluffRoom
+                        : musicquiz
+                          ? MusicQuizRoom
+                          : minimal
+                            ? MinimalRoom
+                            : telephone
+                              ? TelephoneRoom
+                              : trpg
+                                ? TrpgRoom
+                                : draw
+                                  ? DrawGuessRoom
+                                  : gift
+                                    ? GiftRoom
+                                    : majority
+                                      ? MajorityRoom
+                                      : thunder
+                                        ? ThunderRoom
+                                        : Room
           )(
             code,
             String(
               data.roomName ||
-                (lounge
-                  ? '場外休憩區'
-                  : secondWind
-                    ? '運動員 Second Wind'
-                    : ceo
-                      ? '王牌執行長好友局'
-                      : quacks
-                        ? '郎中闖江湖好友局'
-                        : bluff
-                          ? '瞎掰王好友局'
-                          : musicquiz
-                            ? '猜歌挑戰好友局'
-                            : minimal
-                              ? '極簡畫家好友局'
-                              : telephone
-                                ? '傳情畫意好友局'
-                                : trpg
-                                  ? '霧港鐘聲冒險隊'
-                                  : draw
-                                    ? '你畫我猜好友局'
-                                    : gift
-                                      ? '送禮達人好友局'
-                                      : majority
-                                        ? '同頻俱樂部'
-                                        : thunder
-                                          ? '末路狂飆好友局'
-                                          : '深夜好友局'),
+                (coc
+                  ? '克蘇魯的呼喚'
+                  : lounge
+                    ? '場外休憩區'
+                    : secondWind
+                      ? '運動員 Second Wind'
+                      : ceo
+                        ? '王牌執行長好友局'
+                        : quacks
+                          ? '郎中闖江湖好友局'
+                          : bluff
+                            ? '瞎掰王好友局'
+                            : musicquiz
+                              ? '猜歌挑戰好友局'
+                              : minimal
+                                ? '極簡畫家好友局'
+                                : telephone
+                                  ? '傳情畫意好友局'
+                                  : trpg
+                                    ? '霧港鐘聲冒險隊'
+                                    : draw
+                                      ? '你畫我猜好友局'
+                                      : gift
+                                        ? '送禮達人好友局'
+                                        : majority
+                                          ? '同頻俱樂部'
+                                          : thunder
+                                            ? '末路狂飆好友局'
+                                            : '深夜好友局'),
             ).slice(0, 24),
           );
           equipRoomProviders(room);
@@ -2041,7 +2193,7 @@ function initializeApp(config, dataLock, acquired) {
             }
           }
           // The lounge has no match for a test AI to play (#277).
-          if (!thunder && !lounge && !botSupport(room).supported)
+          if (!thunder && !lounge && !coc && !botSupport(room).supported)
             throw new HttpError(400, 'TEST_AI_REQUIRED', '新遊戲必須先提供測試 AI');
           attachAchievementHooks(room);
           const p = transitions.transact(
@@ -2057,6 +2209,7 @@ function initializeApp(config, dataLock, acquired) {
           p.avatar = portraitUrl(user.id);
           rooms.set(code, room);
           seats.set(code, new Map([[user.id, p.id]]));
+          if (coc) cocCampaigns.sync(room);
           return send({ code, type: room.type || 'poker' });
         }
         if (
@@ -2116,6 +2269,12 @@ function initializeApp(config, dataLock, acquired) {
         if (kickedUsers.get(room.code)?.has(user.id))
           throw new HttpError(403, 'KICKED', '你已被房主踢出房間');
         if (['/api/watch', '/api/watch-audio'].includes(url.pathname)) {
+          if (room.type === 'coc')
+            throw new HttpError(
+              403,
+              'COC_PRIVATE_CAMPAIGN',
+              '這份冒險只提供給在席參與者，不開放觀戰',
+            );
           const audio = url.pathname === '/api/watch-audio';
           if (req.method !== 'GET' && !(audio && req.method === 'HEAD'))
             throw new HttpError(405, 'METHOD_NOT_ALLOWED', '觀戰只支援讀取');
@@ -2689,7 +2848,13 @@ function initializeApp(config, dataLock, acquired) {
           events.set(room.code, roomEvents);
           return send(withSocial(room, room.view(p.id)));
         }
-        if (url.pathname === '/api/start') assertCanStartGame(room, p.id);
+        if (url.pathname === '/api/start') {
+          assertCanStartGame(room, p.id);
+          if (room.type === 'coc' && room.host !== p.id)
+            throw new HttpError(403, 'COC_HOST_ONLY', '只有房主可以啟動需要 AI 額度的冒險');
+        }
+        if (url.pathname === '/api/rematch' && room.type === 'coc')
+          throw new HttpError(409, 'COC_SAVE_PRESERVED', '原冒險存檔已保留；請回大廳另開新冒險');
         if (url.pathname === '/api/start' && pendingAchievementUnits.size >= 4096)
           throw new HttpError(
             503,
@@ -2913,6 +3078,7 @@ function initializeApp(config, dataLock, acquired) {
         '/lounge': 'lounge.html',
         '/telephone': 'telephone.html',
         '/trpg': 'trpg.html',
+        '/coc': 'coc.html',
         '/shared/playful-theme.css': 'shared/playful-theme.css',
         '/credits': 'credits.html',
         '/credits.css': 'credits.css',
@@ -2983,7 +3149,7 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/game-sounds/quacks-drink-real.mp3': 'assets/game-sounds/quacks-drink-real.mp3',
       };
       const roomPath = url.pathname.match(
-        /^\/(race|poker|majority|gift|draw|trpg|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)\/[A-Fa-f0-9]{6}\/?$/,
+        /^\/(race|poker|majority|gift|draw|trpg|coc|telephone|musicquiz|minimal|bluff|quacks|ceo|second-wind|lounge)\/[A-Fa-f0-9]{6}\/?$/,
       );
       for (const name of [
         'ux02-10.svg',
@@ -3131,6 +3297,7 @@ function initializeApp(config, dataLock, acquired) {
               roomPath ||
               file === 'market.html' ||
               file === 'trpg.html' ||
+              file === 'coc.html' ||
               file === 'telephone.html' ||
               file === 'musicquiz.html' ||
               file === 'minimal.html' ||
@@ -3311,6 +3478,8 @@ function initializeApp(config, dataLock, acquired) {
       await attempt(() => youtubeTitles.clear?.());
       await attempt(() => Promise.allSettled([...submissions.inFlight.values()]));
       await attempt(() => roomInvitations.close());
+      await attempt(() => cocCampaigns.close());
+      await attempt(() => cocKeyring.close());
       await attempt(() => db.close());
       await attempt(() => dataLock.release());
       if (errors.length === 1) throw errors[0];
