@@ -5,6 +5,7 @@ import { readRaceSnapshot } from '../../contracts/race';
 import { readMajoritySnapshot } from '../../contracts/majority';
 import { readGiftSnapshot } from '../../contracts/gift';
 import { readDrawSnapshot } from '../../contracts/drawing';
+import { readCocSnapshot } from '../../contracts/coc';
 import { readTrpgSnapshot } from '../../contracts/trpg';
 import { readQuacksSnapshot } from '../../contracts/quacks';
 import { readBluffSnapshot } from '../../contracts/bluff';
@@ -22,6 +23,17 @@ interface Lesson {
   scene: ReturnType<typeof defineAsyncComponent>;
 }
 export const lessons: Record<TutorialType, Lesson> = {
+  coc: {
+    title: '克蘇魯的呼喚',
+    goal: '在獨立教學桌練習取得基本線索、共同移動與非戰鬥檢定。',
+    points: [
+      '教學沿用正式 COC/Pulp 引擎，但使用記憶體資料，不改動你的角色庫或冒險。',
+      '選擇行動、確認全隊移動，並親自點擊擲百分骰；所有骰值由伺服器產生。',
+      '主持文字是明確標示的教學示範，不連接 AI、不使用 API 額度。正式冒險仍須設定 AI。',
+    ],
+    reader: readCocSnapshot,
+    scene: defineAsyncComponent(() => import('../coc/CocTable.vue')),
+  },
   poker: {
     title: '德州撲克',
     goal: '從盲注、輪流下注到攤牌分配底池。',

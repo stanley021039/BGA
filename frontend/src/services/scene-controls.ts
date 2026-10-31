@@ -2,7 +2,7 @@ import { computed, onScopeDispose, reactive, ref, watch } from 'vue';
 import type { LobbySnapshot } from '../contracts/lobby';
 import combatRules from '../../../public/shared/scene-rules.json';
 
-export type SceneAction = 'q' | 'e' | 'r' | 'up' | 'down' | 'left' | 'right';
+export type SceneAction = 'q' | 'e' | 'r' | 'c' | 'up' | 'down' | 'left' | 'right';
 export const sceneDirections = {
   up: [0, -1],
   down: [0, 1],
@@ -50,9 +50,17 @@ export function useSceneControls(options: {
     const own = snapshot?.visitors.find((v) => v.id === snapshot.selfId);
     return !!own && own.health === 0;
   });
+  const energy = computed(() => {
+    const snapshot = options.snapshot();
+    return snapshot?.visitors.find((v) => v.id === snapshot.selfId)?.energy || 0;
+  });
   function disabled(action: SceneAction) {
     return (
-      !options.enabled() || knockedOut.value || !!pending[group(action)] || seconds(action) > 0
+      !options.enabled() ||
+      knockedOut.value ||
+      !!pending[group(action)] ||
+      seconds(action) > 0 ||
+      (action === 'r' && energy.value < combatRules.energy.maximum)
     );
   }
   async function run(action: SceneAction) {
@@ -66,7 +74,7 @@ export function useSceneControls(options: {
       if (ok && epoch === generation && !disposed) {
         until[key] = Math.max(
           until[key] || 0,
-          Date.now() + (key === 'move' ? 200 : key === 'r' ? 1000 : combatRules.attackCooldownMs),
+          Date.now() + (key === 'move' ? 200 : key === 'c' ? 1000 : combatRules.attackCooldownMs),
         );
         tick();
       }
@@ -112,5 +120,5 @@ export function useSceneControls(options: {
     clearTimeout(timer);
     document.removeEventListener('visibilitychange', tick);
   });
-  return { run, pending, seconds, disabled, knockedOut };
+  return { run, pending, seconds, disabled, knockedOut, energy };
 }

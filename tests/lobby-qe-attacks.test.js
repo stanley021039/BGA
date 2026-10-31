@@ -109,10 +109,10 @@ test('account attack choices persist, preserve appearance changes, and determine
   });
   const get = (path) => request(path, { cookie: owner.cookie }),
     post = (path, body) => request(path, { method: 'POST', body, cookie: owner.cookie });
-  assert.deepEqual((await get('/api/profile/attacks')).body, { q: 'barrage', e: 'beam' });
+  assert.deepEqual((await get('/api/profile/attacks')).body, { q: 'barrage', e: 'beam', r: '' });
   assert.equal((await post('/api/profile/attacks', { q: 'shield', e: 'beam' })).status, 403);
   assert.equal(
-    (await post('/api/profile/attacks', { q: 'guanyin_barrage', e: 'bijuu_beam' })).status,
+    (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: 'bijuu_beam' })).status,
     403,
   );
   const initial = await get('/api/achievements');
@@ -121,7 +121,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.equal(redeemed.status, 200);
   assert.equal(redeemed.body.bonusRewards.attacks.length, 23);
   assert.equal(
-    (await post('/api/profile/attacks', { q: 'guanyin_barrage', e: 'bijuu_beam' })).status,
+    (await post('/api/profile/attacks', { q: 'barrage', e: 'beam', r: 'bijuu_beam' })).status,
     200,
   );
   assert.deepEqual(
@@ -136,6 +136,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.deepEqual((await get('/api/profile/attacks')).body, {
     q: 'blade_aura_crimson',
     e: 'blade_aura',
+    r: 'bijuu_beam',
   });
   for (const body of [
     { q: 'unknown', e: 'beam' },
@@ -153,6 +154,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.deepEqual((await get('/api/profile/attacks')).body, {
     q: 'blade_aura',
     e: 'chain_lightning',
+    r: 'bijuu_beam',
   });
   const invite = await post('/api/admin/invites', {}),
     peer = await request('/api/auth/register', {
@@ -168,6 +170,7 @@ test('account attack choices persist, preserve appearance changes, and determine
   assert.deepEqual((await request('/api/profile/attacks', { cookie: peer.cookie })).body, {
     q: 'barrage',
     e: 'beam',
+    r: '',
   });
   await get('/api/lobby');
   await request('/api/lobby', { cookie: peer.cookie });
@@ -210,7 +213,7 @@ test('earned achievements unlock only their mapped attack and stale locked loado
         'INSERT INTO user_achievements(user_id,achievement_id,source_key,unlocked_at) VALUES(?,?,?,?)',
       ).run(user.id, 'gift-first-gift', 'test:gift', new Date().toISOString());
       db.prepare('UPDATE users SET appearance=? WHERE id=?').run(
-        JSON.stringify({ attackLoadout: { q: 'blade_aura_crimson', e: 'flame_vortex' } }),
+        JSON.stringify({ attackLoadout: { q: 'gate_of_babylon', e: 'flame_vortex' } }),
         user.id,
       );
     },
@@ -229,7 +232,7 @@ test('earned achievements unlock only their mapped attack and stale locked loado
     await fetch(base + '/api/profile/attacks', { headers: { Cookie: cookie } }).then((r) =>
       r.json(),
     ),
-    { q: 'barrage', e: 'beam' },
+    { q: 'barrage', e: 'beam', r: 'gate_of_babylon' },
   );
   const effects = require('../public/shared/attack-effects.json'),
     { definitions } = require('../src/achievements/catalog');

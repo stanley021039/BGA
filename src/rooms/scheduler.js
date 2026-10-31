@@ -53,6 +53,14 @@ function startRoomScheduler({
     emptyTimer.unref();
     timer = setInterval(() => {
       for (const [code, r] of rooms) {
+        if (r.type === 'coc') {
+          try {
+            r.cocTick?.();
+          } catch (error) {
+            console.error('COC presence update failed', error.code || 'COC_STORAGE');
+          }
+          continue;
+        }
         if (Date.now() - Math.max(...r.players.map((p) => p.lastSeen)) > 86400000) {
           rooms.delete(code);
           onDelete(code);

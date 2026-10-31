@@ -1,0 +1,36 @@
+{
+  "walnut-dusk": {
+    "256": {
+      "file": "walnut-dusk-v1-256.webp",
+      "sha256": "04a2af97f754109a54b2b86597501b49a54f36ccccdb089de116cd03fdeff96e",
+      "bytes": 9572
+    },
+    "512": {
+      "file": "walnut-dusk-v1-512.webp",
+      "sha256": "82eadf4a364bf26b381af1ea355a472e198fe12fb24bec8432b1a224f583e658",
+      "bytes": 37170
+    },
+    "1024": {
+      "file": "walnut-dusk-v1-1024.webp",
+      "sha256": "94dabed736f9387507c1c049e9418fca733f4a29dc40cae9253536f2da302174",
+      "bytes": 136820
+    }
+  },
+  "soup-chamber": {
+    "256": {
+      "file": "soup-chamber-v1-256.webp",
+      "sha256": "1511d7fa8b72649a3c7adefca19678a3f02907163dbb60636eb9a5d0d578b102",
+      "bytes": 4486
+    },
+    "512": {
+      "file": "soup-chamber-v1-512.webp",
+      "sha256": "1906318c151d89bbbf14fc72d352c7fdb2e72d644dbd2f271d1449a4355bb57c",
+      "bytes": 15948
+    },
+    "1024": {
+      "file": "soup-chamber-v1-1024.webp",
+      "sha256": "b553e7dd01c128ecd3e65c114de21118dc973f53857b197187a8a1e376bee6cb",
+      "bytes": 60522
+    }
+  }
+}

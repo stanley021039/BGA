@@ -56,7 +56,8 @@ test('appearance follows system by default, reacts live and boots before styles 
         html: fs.readFileSync(path.join(directory, id, 'index.html'), 'utf8'),
       }))
       .filter((page) => page.html.includes('data-visual-theme="playful"'));
-  assert.equal(pages.length, 30); // Includes the lounge, CEO and Second Wind.
+  assert.equal(pages.length, 31); // Includes COC.
+  assert.ok(pages.some((page) => page.name === 'coc'));
   for (const { name, html } of pages) {
     const decorated = require('../src/http/entry-intro').withEntryIntro(html);
     assert.ok(decorated.indexOf('data-prepaint') < decorated.indexOf('rel="stylesheet"'), name);

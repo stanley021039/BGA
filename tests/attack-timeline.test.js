@@ -49,10 +49,10 @@ test('every current offensive attack has a bounded authoritative arrival, no eag
   }
   assert.deepEqual(Object.keys(timing).sort(), definitions.map((e) => e.id).sort());
 });
-test('Babylon/Ea has a double-strength second stage; the two dragoon salvos share the normal total', () => {
+test('Babylon/Ea has a double-strength second stage; the two dragoon salvos share the balanced combo total', () => {
   for (const [effect, first, last, total] of [
     ['gate_of_babylon', 2400, 3880, 843478],
-    ['funnel', 1320, 2120, 200000],
+    ['funnel', 1320, 2120, 180000],
   ]) {
     const f = fixture(effect);
     f.advance(first);

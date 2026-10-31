@@ -1,10 +1,13 @@
 const { HttpError } = require('../http/errors');
 const rules = require('../../public/shared/scene-rules.json');
+const energy = require('./scene-energy');
 const { passageTarget } = require('../../frontend/src/engines/scene-path.js');
+const attackEffects = require('../../public/shared/attack-effects.json');
 const areaEffects = new Set(
-  require('../../public/shared/attack-effects.json')
-    .filter((effect) => effect.area)
-    .map((effect) => effect.id),
+  attackEffects.filter((effect) => effect.area).map((effect) => effect.id),
+);
+const damageMultipliers = new Map(
+  attackEffects.map((effect) => [effect.id, effect.damageMultiplier ?? 1]),
 );
 
 // Radius as a percentage of the scene's longer edge, independent of aspect ratio.
@@ -20,6 +23,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     (actor.authorBonus ? rules.authorBonus.healthMultiplier : 1) *
     (actor.guanyinActive ? rules.guanyinBonus.multiplier : 1);
   function reset(actor, time) {
+    actor.energy ||= 0;
+    actor.energyWalkMs = 0;
     actor.lifeId = (actor.lifeId || 0) + 1;
     stats(actor);
     contributions.delete(actor);
@@ -265,6 +270,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
             (time < (from.guanyinUntil || 0) ? rules.guanyinBonus.multiplier : 1)
         : base *
             weight *
+            (damageMultipliers.get(effect) ?? 1) *
             (effect === 'explosion' ? 1.5 : 1) *
             (areaEffects.has(effect) ? rules.areaDamageMultiplier : 1) *
             (critical ? rules.damage.criticalMultiplier : 1) *
@@ -298,6 +304,7 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
     if (damage > 0 && from.id && from.id !== to.id) {
       helpers.set(from.id, { actor: from, at: time });
     }
+    energy.hit(from, to, effect, damage);
     to.health = Math.max(0, to.health - damage);
     to.lastHitAt = to.regenAt = time;
     if (!to.health) {
@@ -358,6 +365,8 @@ function createSceneCombat(random = Math.random, authorBonus = () => false) {
             },
           }
         : {}),
+      energy: actor.energy || 0,
+      energyMaximum: rules.energy.maximum,
       health: actor.health,
       maxHealth: actor.maxHealth,
       respawnAt: actor.respawnAt,

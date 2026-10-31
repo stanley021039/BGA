@@ -3,7 +3,8 @@ const path = require('node:path');
 const { DatabaseSync } = require('node:sqlite');
 const { ACHIEVEMENT_TABLES, ACHIEVEMENT_SQL } = require('../achievements/schema');
 const { REWARD_TABLES, REWARD_SQL } = require('../achievements/reward-schema');
-const SCHEMA_VERSION = 20;
+const { COC_TABLES, COC_SQL } = require('../coc/schema');
+const SCHEMA_VERSION = 21;
 const MARKET_CURVE_TABLES = ['market_forecasts', 'market_curve_ledger'];
 const MARKET_CURVE_SQL = [
   `CREATE TABLE IF NOT EXISTS market_forecasts(round_id TEXT NOT NULL REFERENCES market_rounds(id),user_id TEXT NOT NULL REFERENCES users(id),forecast_tick INTEGER NOT NULL CHECK(typeof(forecast_tick)='integer' AND forecast_tick BETWEEN -100 AND 100),revision INTEGER NOT NULL CHECK(revision>0),created_at TEXT NOT NULL,updated_at TEXT NOT NULL,PRIMARY KEY(round_id,user_id))`,
@@ -162,6 +163,13 @@ function validateFeatureSchema(db, version) {
     hasSound = tables.has('character_sounds'),
     hasImages = tables.has('market_images'),
     marketCount = MARKET_TABLES.filter((name) => tables.has(name)).length;
+  const cocCount = COC_TABLES.filter((name) => tables.has(name)).length;
+  if (
+    (cocCount && cocCount !== COC_TABLES.length) ||
+    (version >= 21 && cocCount !== COC_TABLES.length) ||
+    (version < 21 && cocCount)
+  )
+    throw Error('Invalid COC schema');
   const rewardCount = REWARD_TABLES.filter((name) => tables.has(name)).length;
   if (
     (rewardCount && rewardCount !== REWARD_TABLES.length) ||
@@ -219,7 +227,9 @@ function validateFeatureSchema(db, version) {
         ';' +
         ACHIEVEMENT_SQL.join(';') +
         ';' +
-        REWARD_SQL.join(';'),
+        REWARD_SQL.join(';') +
+        ';' +
+        COC_SQL.join(';'),
     );
     for (const name of [
       ...(hasSound ? ['character_sounds'] : []),
@@ -229,6 +239,7 @@ function validateFeatureSchema(db, version) {
       ...(curveCount ? MARKET_CURVE_TABLES : []),
       ...(achievementCount ? ACHIEVEMENT_TABLES : []),
       ...(rewardCount ? REWARD_TABLES : []),
+      ...(cocCount ? COC_TABLES : []),
     ]) {
       if (tableShape(db, name) !== tableShape(reference, name))
         throw Error(`Invalid ${name} schema`);
@@ -605,6 +616,16 @@ function openDatabase(file) {
     try {
       db.exec(REWARD_SQL.join(';') + '; PRAGMA user_version=20');
       validateFeatureSchema(db, 20);
+    } catch (error) {
+      db.exec('ROLLBACK; PRAGMA foreign_keys=ON');
+      db.close();
+      throw error;
+    }
+  }
+  if (version < 21) {
+    try {
+      db.exec(COC_SQL.join(';') + '; PRAGMA user_version=21');
+      validateFeatureSchema(db, 21);
     } catch (error) {
       db.exec('ROLLBACK; PRAGMA foreign_keys=ON');
       db.close();

@@ -264,7 +264,7 @@ window.addEventListener('resize', positionBubble);
       '--lobby-move-duration': duration + 'ms',
     }"
     :data-ping-player="visitor.id"
-    :aria-label="self ? visitor.name + '（你），點一下發表情，R 鍵隨機換位' : undefined"
+    :aria-label="self ? visitor.name + '（你），點一下發表情，C 鍵瞬移、R 鍵多人招式' : undefined"
     :aria-haspopup="self ? 'dialog' : undefined"
     :aria-expanded="self ? open : undefined"
     :disabled="self && !connected ? true : undefined"
@@ -311,10 +311,12 @@ window.addEventListener('resize', positionBubble);
       :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
       alt=""
       draggable="false"
-    /><SceneHealth v-if="visitor.maxHealth" :visitor="visitor" /><span
-      v-if="visitor.health !== 0"
-      >{{ shortName }}</span
-    >
+    /><SceneHealth
+      v-if="visitor.maxHealth"
+      :visitor="visitor"
+      :self="self"
+      :connected="connected"
+    /><span v-if="visitor.health !== 0">{{ shortName }}</span>
   </component>
 </template>
 <style scoped>

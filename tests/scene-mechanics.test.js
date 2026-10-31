@@ -1,3 +1,4 @@
+const { chargeScene } = require('./helpers/scene-charge.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
@@ -159,7 +160,7 @@ for (const kind of ['lobby', 'room'])
       move = (id) => lobby.move(users[id], { x: 70, y: 50 });
       teleport = (id) => lobby.teleport(users[id]);
       cast = (effect, id) =>
-        lobby.attack(users[0], { effect, slot: 'q', aspectRatio: 1, requestId: id });
+        lobby.attack(users[0], { effect, slot: 'r', aspectRatio: 1, requestId: id });
     } else {
       space.view(room, 'a');
       users.forEach((u, i) => space.move(room, u.id, { x: 20 + i * 20, y: 50 }));
@@ -170,29 +171,45 @@ for (const kind of ['lobby', 'room'])
         space.move(
           room,
           'a',
-          { action: 'attack', slot: 'q', aspectRatio: 1, requestId: id },
+          { action: 'attack', slot: 'r', aspectRatio: 1, requestId: id },
           effect,
         );
     }
     time = 10000;
     view();
+    chargeScene(
+      kind === 'lobby' ? lobby : space,
+      kind === 'room' ? room : null,
+      users,
+      'a',
+      (ms) => (time += ms),
+    );
+    const castAt = time;
     cast('explosion', 'explosion-cast-001');
-    time = 10999;
+    time = castAt + 999;
     assert.doesNotThrow(() => move(0));
-    time = 15099;
+    time = castAt + 5099;
     assert.throws(() => move(0), { code: 'SCENE_IMMOBILIZED' });
     assert.throws(() => teleport(0), { code: 'SCENE_IMMOBILIZED' });
-    time = 15100;
+    time = castAt + 5100;
     assert.doesNotThrow(() => move(0));
     // Keep the caster still before the next, independently aimed cast.
-    time = 18000;
+    time = castAt + 8000;
     view();
+    chargeScene(
+      kind === 'lobby' ? lobby : space,
+      kind === 'room' ? room : null,
+      users,
+      'a',
+      (ms) => (time += ms),
+    );
+    const catAt = time;
     cast('giant_orange_cat', 'cat-cast-000001');
-    time = 20570;
+    time = catAt + 2570;
     const hit = view().visitors.find((p) => p.id === 'b');
-    assert.equal(hit.immobileUntil, 21570);
-    time = 21569;
+    assert.equal(hit.immobileUntil, catAt + 3570);
+    time = catAt + 3569;
     assert.throws(() => move(1), { code: 'SCENE_IMMOBILIZED' });
-    time = 21570;
+    time = catAt + 3570;
     assert.doesNotThrow(() => move(1));
   });

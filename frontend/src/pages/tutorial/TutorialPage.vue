@@ -14,6 +14,7 @@ import UiHeading from '../../components/UiHeading.vue';
 import UiList from '../../components/UiList.vue';
 import UiListRow from '../../components/UiListRow.vue';
 import type { DrawSnapshot } from '../../contracts/drawing';
+import type { CocSnapshot } from '../../contracts/coc';
 import type { RoomSnapshot } from '../../contracts/room';
 import '../../styles/tutorial.scss';
 const type = tutorialType(location.pathname)!;
@@ -59,7 +60,11 @@ const outcomes = computed(() =>
     ? []
     : current.value.snapshot.players.flatMap((p) => {
         let value = '';
-        if (typeof p.giveScore === 'number' && typeof p.getScore === 'number')
+        if (type === 'coc') {
+          const snapshot = current.value!.snapshot as CocSnapshot;
+          const hero = snapshot.heroes.find((h) => h.seat === p.id);
+          value = `${snapshot.clues.length} 項已發現線索${hero ? ` · HP ${hero.hp}/${hero.maxHp} · SAN ${hero.san}` : ''}`;
+        } else if (typeof p.giveScore === 'number' && typeof p.getScore === 'number')
           value = `送禮 ${p.giveScore} 分 · 收禮 ${p.getScore} 分`;
         else if (typeof p.stack === 'number') value = p.stack.toLocaleString() + ' 籌碼';
         else if (type === 'musicquiz' && Array.isArray(p.timeline))
@@ -307,9 +312,11 @@ onBeforeUnmount(() => {
           :disabled="busy"
           @click="start('auto')"
       /></div>
-      <p
-        >手動模式使用原本遊戲的操作；教學夥伴的步驟可以逐步觀看。自動模式會示範一輪主要流程，隨時可暫停。</p
-      >
+      <p>{{
+        type === 'coc'
+          ? '手動模式使用正式遊戲的調查與檢定操作；也可逐步示範。自動模式會完成一次基本流程，隨時可暫停。'
+          : '手動模式使用原本遊戲的操作；教學夥伴的步驟可以逐步觀看。自動模式會示範一輪主要流程，隨時可暫停。'
+      }}</p>
       <UiLink
         v-if="type === 'thunder'"
         href="/race?learn=1&amp;detail=1"
@@ -319,6 +326,11 @@ onBeforeUnmount(() => {
     <UiNotice
       v-if="type === 'musicquiz'"
       message="使用自製教學旋律；卡片年份是假設範例，僅供年代排序練習。"
+      persistent
+    />
+    <UiNotice
+      v-if="type === 'coc'"
+      message="COC 獨立教學：沿用實際規則引擎；主持文字為教學示範，不連接 AI、不使用 API 額度。只有一位教學調查者，不加入 AI 隊友。"
       persistent
     />
     <UiNotice v-if="error" tone="danger" :message="error" persistent /><UiButton
@@ -368,7 +380,11 @@ onBeforeUnmount(() => {
           :options="current.snapshot.players.map((p) => ({ value: p.id, label: p.name }))"
           @change="changePlayer"
         />
-        <p v-if="mode === 'manual'">教學可切換角色；正式遊戲只能看自己的秘密資訊。</p
+        <p v-if="mode === 'manual'">{{
+          type === 'coc'
+            ? '正式冒險每人控制自己的調查者；已發現線索與房間角色卡會分享給同伴。'
+            : '教學可切換角色；正式遊戲只能看自己的秘密資訊。'
+        }}</p
         ><p role="status">{{ guide }}</p>
         <UiList v-if="outcomes.length" aria-label="本次教學結果"
           ><UiListRow v-for="row in outcomes" :key="row.id"
@@ -417,6 +433,12 @@ onBeforeUnmount(() => {
             ><strong>{{ event.actor }}</strong> · {{ event.action }}</UiListRow
           ></UiList
         >
+        <UiList v-if="type === 'coc' && current.done" aria-label="本次公開線索">
+          <UiListRow v-for="clue in (current.snapshot as CocSnapshot).clues" :key="clue.id"
+            ><strong>{{ clue.title }}</strong
+            ><p>{{ clue.text }}</p></UiListRow
+          >
+        </UiList>
       </UiPanel>
       <section
         class="vue-tutorial-board"

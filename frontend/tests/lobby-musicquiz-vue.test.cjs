@@ -1,3 +1,4 @@
+const { chargeScene } = require('../../tests/helpers/scene-charge.cjs');
 const { withEngineImports } = require('../../tests/helpers/browser-modules.cjs');
 ('use strict');
 const { test } = require('node:test'),
@@ -403,9 +404,10 @@ test('authoritative area hits survive the Vue contract and reject malformed vict
   users.forEach((user, index) => lobby.move(user, { x: 20 + index * 10, y: 50 }));
   now += 10000;
   users.forEach((user) => lobby.view(user));
+  chargeScene(lobby, null, users, users[0].id, (ms) => (now += ms));
   const payload = {
     ...lobby.attack(users[0], {
-      slot: 'q',
+      slot: 'r',
       effect: 'dimension_cleave',
       aspectRatio: 1,
       requestId: 'contract-area-001',
@@ -414,6 +416,8 @@ test('authoritative area hits survive the Vue contract and reject malformed vict
   };
   const read = loader()(path.join(__dirname, '../src/contracts/lobby.ts')).readLobbySnapshot;
   assert.equal(read(payload).attacks[0].hits.length, 6);
+  assert.equal(read(payload).attacks[0].slot, 'r');
+  assert.equal(read(payload).visitors.find((v) => v.id === users[0].id).energy, 0);
   assert.deepEqual(
     JSON.parse(JSON.stringify(read(payload).attacks[0].hits)),
     payload.attacks[0].hits,
@@ -459,8 +463,9 @@ test('three-ray geometry and the owning combat status survive the contract, whil
   users.forEach((user, i) => lobby.move(user, { x: 20 + i * 5, y: 50 }));
   now += 10000;
   users.forEach((user) => lobby.view(user));
+  chargeScene(lobby, null, users, users[0].id, (ms) => (now += ms));
   const raw = lobby.attack(users[0], {
-      slot: 'q',
+      slot: 'r',
       effect: 'bijuu_beam',
       aspectRatio: 1,
       requestId: 'bijuu-contract-001',

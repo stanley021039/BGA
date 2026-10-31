@@ -45,8 +45,9 @@ const props = withDefaults(
     mediaStage?: string;
     // Without a match, the phase row is dropped and notices float over the main area (#277).
     phaseRow?: boolean;
+    watchable?: boolean;
   }>(),
-  { showMetrics: true, scoreLabel: '分', phaseRow: true, panelsOpen: true },
+  { showMetrics: true, scoreLabel: '分', phaseRow: true, panelsOpen: true, watchable: true },
 );
 const emit = defineEmits<{ start: [] }>(),
   page = useRoomPage(props.type, props.reader, props.pollMs),
@@ -67,6 +68,11 @@ const botAllowed = computed(
     (props.type === 'thunder' ||
       !room.snapshot?.botSupport ||
       (room.snapshot.botSupport as Record<string, unknown>).canAdd !== false),
+);
+const botSupported = computed(
+  () =>
+    props.type === 'thunder' ||
+    (room.snapshot?.botSupport as Record<string, unknown> | undefined)?.supported !== false,
 );
 const entryArt = computed(() =>
   props.type === 'bluff'
@@ -129,7 +135,7 @@ onMounted(() => {
             :disabled="['kicked', 'closed'].includes(room.terminal || '')"
             @click="page.enter()"
           /><UiLink
-            v-if="entryCode"
+            v-if="entryCode && watchable"
             href="?watch=1"
             icon="play"
             label="以觀戰身分觀看這一桌"
@@ -188,7 +194,7 @@ onMounted(() => {
               ><slot name="player-metric" :player="player" /></template
             ><template #actions
               ><UiButton
-                v-if="room.host && setup"
+                v-if="room.host && setup && botSupported"
                 variant="secondary"
                 icon="add"
                 label="加入電腦玩家"

@@ -24,6 +24,7 @@ const documents: Plugin = {
             'telephone',
             'majority',
             'trpg',
+            'coc',
             'gift',
             'poker',
             'quacks',

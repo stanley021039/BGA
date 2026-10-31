@@ -3,22 +3,29 @@ import { defineStore } from 'pinia';
 import { useSessionStore } from './session';
 import { requestJson } from '../services/http';
 import effects from '../../../public/shared/attack-effects.json';
-export type AttackSlot = 'q' | 'e';
+export type AttackSlot = 'q' | 'e' | 'r';
 export const attackEffects = effects;
+export const fitsAttackSlot = (slot: AttackSlot, id: string) => {
+  const effect = effects.find((item) => item.id === id);
+  return !!effect && (slot === 'r') === ('area' in effect && !!effect.area);
+};
 export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
   const session = useSessionStore(),
     identity = computed(() => session.user?.id || '');
-  const loadout = ref({ q: 'barrage', e: 'beam' }),
+  const loadout = ref({ q: 'barrage', e: 'beam', r: '' }),
     ready = ref(false),
     pending = ref(false),
     message = ref('');
   let generation = 0,
     job: Promise<void> | null = null,
     controller: AbortController | null = null;
-  const valid = (v: unknown): v is { q: string; e: string } =>
+  const valid = (v: unknown): v is { q: string; e: string; r: string } =>
     !!v &&
     typeof v === 'object' &&
-    ['q', 'e'].every((k) => effects.some((e) => e.id === (v as Record<string, unknown>)[k]));
+    (['q', 'e', 'r'] as const).every((slot) => {
+      const id = (v as Record<string, unknown>)[slot];
+      return (slot === 'r' && id === '') || (typeof id === 'string' && fitsAttackSlot(slot, id));
+    });
   async function load() {
     if (ready.value || !identity.value) return;
     if (job) return job;
@@ -43,7 +50,12 @@ export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
     return job;
   }
   async function choose(slot: AttackSlot, effect: string) {
-    if (!ready.value || pending.value || !effects.some((e) => e.id === effect)) return;
+    if (
+      !ready.value ||
+      pending.value ||
+      !((slot === 'r' && effect === '') || fitsAttackSlot(slot, effect))
+    )
+      return;
     pending.value = true;
     message.value = '';
     const epoch = generation;
@@ -71,7 +83,7 @@ export const useAttackLoadoutStore = defineStore('attack-loadout', () => {
       job = null;
       ready.value = false;
       pending.value = false;
-      loadout.value = { q: 'barrage', e: 'beam' };
+      loadout.value = { q: 'barrage', e: 'beam', r: '' };
       message.value = '';
       if (identity.value) void load();
     },

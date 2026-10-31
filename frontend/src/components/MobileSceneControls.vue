@@ -30,8 +30,11 @@ const directions = [
   { action: 'down', label: '向下移動', caption: '下' },
   { action: 'right', label: '向右移動', caption: '右' },
 ] as const;
-function effect(slot: 'q' | 'e') {
-  return attackEffects.find((effect) => effect.id === loadout.loadout[slot])?.label || '載入配裝中';
+function effect(slot: 'q' | 'e' | 'r') {
+  return (
+    attackEffects.find((effect) => effect.id === loadout.loadout[slot])?.label ||
+    (loadout.ready ? '尚未配裝' : '載入配裝中')
+  );
 }
 function cooldown(action: SceneAction) {
   const seconds = props.controls.seconds(action);
@@ -103,31 +106,39 @@ onBeforeUnmount(() => {
         /></template>
         <div class="mobile-scene-actions">
           <UiButton
-            v-for="slot in ['q', 'e'] as const"
+            v-for="slot in ['q', 'e', 'r'] as const"
             :key="slot"
-            :label="`攻擊${slot === 'q' ? '一' : '二'}：${effect(slot)}`"
-            :caption="slot === 'q' ? '攻擊一' : '攻擊二'"
-            :disabled="!loadout.ready || controls.disabled(slot)"
+            :label="`${slot === 'r' ? '多人招式 R' : '普通攻擊 ' + slot.toUpperCase()}：${effect(slot)}`"
+            :caption="slot === 'r' ? '多人 R' : '普通 ' + slot.toUpperCase()"
+            :disabled="!loadout.ready || !loadout.loadout[slot] || controls.disabled(slot)"
             :pending="controls.pending[slot]"
             @click="controls.run(slot)"
           />
           <UiButton
             label="瞬移：隨機換位並播放進場特效"
-            caption="瞬移"
+            caption="瞬移 C"
             icon="refresh"
-            :disabled="controls.disabled('r')"
-            :pending="controls.pending.r"
-            @click="controls.run('r')"
+            :disabled="controls.disabled('c')"
+            :pending="controls.pending.c"
+            @click="controls.run('c')"
           />
           <span
-            v-for="action in ['q', 'e', 'r'] as const"
+            v-for="action in ['q', 'e', 'r', 'c'] as const"
             :key="action"
             class="mobile-scene-cooldown"
           >
-            {{ controls.pending[action] ? '送出中' : cooldown(action) }}
+            {{ action.toUpperCase() }}：{{
+              controls.pending[action]
+                ? '送出中'
+                : action === 'r' && controls.energy.value < 100
+                  ? `能量 ${controls.energy.value}／100`
+                  : cooldown(action)
+            }}
           </span>
         </div>
-        <p class="mobile-scene-loadout">一：{{ effect('q') }}<br />二：{{ effect('e') }}</p>
+        <p class="mobile-scene-loadout"
+          >Q：{{ effect('q') }}<br />E：{{ effect('e') }}<br />R：{{ effect('r') }}</p
+        >
         <div class="mobile-scene-directions" role="group" aria-label="角色移動">
           <UiButton
             v-for="direction in directions"

@@ -1,3 +1,4 @@
+const { chargeScene } = require('./helpers/scene-charge.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { selectAttackTargets } = require('../src/rooms/attack-targets');
@@ -7,7 +8,7 @@ const effects = require('../public/shared/attack-effects.json').filter((effect) 
 const rules = require('../public/shared/scene-rules.json');
 const { createSceneCombat } = require('../src/rooms/scene-combat');
 
-test('area damage is exactly twice normal before the existing author, critical and shield factors', () => {
+test('area damage is exactly twice single-hit normal before the existing author, critical and shield factors', () => {
   for (const author of [false, true])
     for (const critical of [false, true])
       for (const shield of [false, true]) {
@@ -22,7 +23,7 @@ test('area damage is exactly twice normal before the existing author, critical a
         combat.advance(victim, 0);
         if (shield) combat.protect(victim, 0);
         rolls = [0.5, critical ? 0.1 : 0.9, 0.5];
-        const normal = combat.hit(caster, victim, 100, 'barrage');
+        const normal = combat.hit(caster, victim, 100, 'beam');
         rolls = [0.5, critical ? 0.1 : 0.9, 0.5];
         const area = combat.hit(caster, victim, 100, 'giant_orange_cat');
         assert.equal(area.damage, normal.damage * 2, JSON.stringify({ author, critical, shield }));
@@ -107,7 +108,8 @@ for (const { id: effect } of effects)
     ])
       space.move(room, id, { x, y: id === 'back' ? 100 : 50 });
     now += 10000;
-    const input = { action: 'attack', slot: 'q', aspectRatio: 1, requestId: 'area-room-0001' };
+    chargeScene(space, room, room.players, 'a', (ms) => (now += ms));
+    const input = { action: 'attack', slot: 'r', aspectRatio: 1, requestId: 'area-room-0001' };
     space.move(room, 'a', input, effect);
     let snapshot = space.view(room, 'a');
     assert.equal(snapshot.attacks.length, 1, 'one cast, not one VFX canvas per victim');
@@ -120,7 +122,9 @@ for (const { id: effect } of effects)
       code: 'ATTACK_COOLDOWN',
     });
     now++;
-    space.move(room, 'a', { ...input, requestId: 'area-room-0002' }, effect);
+    assert.throws(() => space.move(room, 'a', { ...input, requestId: 'area-room-0002' }, effect), {
+      code: 'INSUFFICIENT_SCENE_ENERGY',
+    });
     now += 2500; // first cast age 4100; all five Guanyin stages have arrived.
     snapshot = space.view(room, 'a');
     for (const id of ['b', 'c']) {
@@ -158,6 +162,7 @@ test('lobby victims independently roll critical and author shield mitigation wit
   for (const [i, x] of [25, 35, 45, 10].entries()) lobby.move(users[i], { x, y: 50 });
   now += 10000;
   users.forEach((user) => lobby.view(user));
+  chargeScene(lobby, null, users, 'a', (ms) => (now += ms));
   lobby.attack(users[1], {
     slot: 'q',
     effect: 'shield',
@@ -166,7 +171,7 @@ test('lobby victims independently roll critical and author shield mitigation wit
   });
   rolls = [0.5, 0.1, 0.5, 0.5, 0.9];
   const input = {
-    slot: 'q',
+    slot: 'r',
     effect: 'guanyin_barrage',
     aspectRatio: 1,
     requestId: 'area-lobby-0001',

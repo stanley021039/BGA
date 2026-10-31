@@ -329,7 +329,7 @@ test('staged previews show the first partial hit promptly and preserve the large
   const before = run('barrage', '#00f0ff', 26, () => 0.5, { preview: true });
   assert.equal(before.texts.length, 0);
   const after = run('barrage', '#00f0ff', 29, () => 0.5, { preview: true });
-  assert.ok(after.texts.includes('70,000'));
+  assert.ok(after.texts.includes('56,000'));
   assert.ok(!after.texts.includes('200,000'));
   const gate = run('gate_of_babylon', '#ffd556', 245, () => 0.5, { preview: true });
   assert.ok(gate.texts.includes('100,000'));
