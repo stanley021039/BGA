@@ -323,3 +323,5 @@ RoomSidePanel提示只由滑鼠停留或鍵盤可見焦點觸發，4秒自動隱
 ## 場景多人能量（#329，3.13.0候選，最新修訂）
 
 SceneHealth只在活著的本人HP條下渲染共用SceneEnergy，兩條同寬42px／高2px，能量使用Stitch info ink。他人角色不顯示能量；條本身沒有可見標籤、數字或說明，保留progressbar及連線可及性。SceneKda只保留K／D／A和增益圖示，移除HP數字列；房間與大廳共用LobbyVisitor。此修訂取代最初大廳HUD與RoomHeader能量條位置。手機操作共用Q／E普通、R多人、C瞬移；AttackChoices分類／所有權及玩法說明沿用。驗證與界線見[本批紀錄](specs/SCENE-ENERGY-329.md)。
+
+UiField 的 `labelHidden`（預設 false）供具可見欄／列標題的密集表格使用；標籤仍以 ui-sr-only 保留名稱及欄位關聯。COC 技能配點表採用此變體，一般表單維持可見標籤。

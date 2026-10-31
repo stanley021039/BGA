@@ -7,6 +7,7 @@ export const gameTypes = [
   'gift',
   'draw',
   'trpg',
+  'coc',
   'telephone',
   'musicquiz',
   'minimal',

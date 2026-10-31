@@ -1,0 +1,67 @@
+{
+  "generatedWith": "built-in image_gen",
+  "assets": [
+    {
+      "date": "2026-10-29",
+      "prompt": "Use case: historical-scene. Asset type: original landscape illustration for a cooperative investigative tabletop website. Create a wide 16:9 ink-and-gouache illustration of a quiet fictional New England residential street in spring 1928 at dusk. Modest brick and timber apartment buildings, pavement receding and new period street lamps with very subtle pearlescent pale green light, investigative unease. No people, monsters, magical symbols, plot clues, readable signs, lettering, logos, watermark. Restrained charcoal/desaturated blue/warm paper/faint green, readable painterly. Spoiler-free Walnut Street for In A Different Light adaptation; don’t reproduce published illustration/map.",
+      "master": {
+        "file": "walnut-dusk-v1.png",
+        "sha256": "c5baf6d6fb99479eb4a3ad8d38fbb4c66da904e7bee233ac2f26026e1ac2e8c6",
+        "delivery": false
+      },
+      "variants": {
+        "256": {
+          "file": "walnut-dusk-v1-256.webp",
+          "sha256": "04a2af97f754109a54b2b86597501b49a54f36ccccdb089de116cd03fdeff96e",
+          "bytes": 9572
+        },
+        "512": {
+          "file": "walnut-dusk-v1-512.webp",
+          "sha256": "82eadf4a364bf26b381af1ea355a472e198fe12fb24bec8432b1a224f583e658",
+          "bytes": 37170
+        },
+        "1024": {
+          "file": "walnut-dusk-v1-1024.webp",
+          "sha256": "94dabed736f9387507c1c049e9418fca733f4a29dc40cae9253536f2da302174",
+          "bytes": 136820
+        }
+      }
+    },
+    {
+      "date": "2026-10-31",
+      "prompt": "Use case: illustration-story. Asset type: original landscape scene illustration for an investigative tabletop game website. Primary request: a spoiler-free central chamber for a dreamlike locked-room mystery. Wide 16:9 ink-and-gouache illustration, restrained charcoal grey, desaturated blue, warm paper and a tiny muted crimson accent. A plain square windowless chamber with pale grey walls, a simple wooden table with one bowl of dark red soup, a wooden chair with a small blank sheet of paper on its seat, and four closed doors implied by the four walls. One bare overhead bulb, quiet uneasy atmosphere. View from a raised corner so the room reads clearly. Do not depict hidden rooms, people, monsters, poison bottles, occult symbols, readable words, labels, blood splatter, gore, logos or watermarks. This is a new original visual, do not copy any published scenario illustration or map. It must be suitable to reveal at the very beginning of the game without giving away clues.",
+      "master": {
+        "file": "soup-chamber-v1.png",
+        "sha256": "d7b78c4e4b57ca27ef6775cde376caf57fe14b8c6544d52c9873b1fcd9eb1505",
+        "delivery": false
+      },
+      "variants": {
+        "256": {
+          "file": "soup-chamber-v1-256.webp",
+          "sha256": "1511d7fa8b72649a3c7adefca19678a3f02907163dbb60636eb9a5d0d578b102",
+          "bytes": 4486
+        },
+        "512": {
+          "file": "soup-chamber-v1-512.webp",
+          "sha256": "1906318c151d89bbbf14fc72d352c7fdb2e72d644dbd2f271d1449a4355bb57c",
+          "bytes": 15948
+        },
+        "1024": {
+          "file": "soup-chamber-v1-1024.webp",
+          "sha256": "b553e7dd01c128ecd3e65c114de21118dc973f53857b197187a8a1e376bee6cb",
+          "bytes": 60522
+        }
+      }
+    }
+  ],
+  "maps": {
+    "generatedWith": "server-owned scene graph rendered as SVG",
+    "note": "Only the revealed projection is sent to members. Not to scale."
+  },
+  "encoding": {
+    "format": "webp",
+    "quality": 80,
+    "widths": [256, 512, 1024],
+    "maxDeliveredBytes": 262144
+  }
+}

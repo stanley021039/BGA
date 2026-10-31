@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CocAiSettings from '../../components/CocAiSettings.vue';
+import CocCharacterLibrary from '../../components/CocCharacterLibrary.vue';
 import AudioSettings from '../../engines/audio-settings.js';
 import PingModel from '../../engines/ping-model.js';
 
@@ -41,6 +43,8 @@ import { entranceEffect, entranceEffects } from '../../services/entrance-effects
 // One settings group per panel; the URL hash keeps the open panel across reloads.
 const panels = [
   { id: 'character', label: '角色設定', saved: true },
+  { id: 'coc-ai', label: '跑團 AI', saved: false },
+  { id: 'coc-characters', label: '調查者角色庫', saved: false },
   { id: 'pings', label: '房間標記', saved: true },
   { id: 'lobby', label: '大廳與開場', saved: false },
   { id: 'barrage', label: '彈幕', saved: false },
@@ -426,11 +430,30 @@ onBeforeUnmount(() => window.removeEventListener('hashchange', syncPanel));
       ref="settingsPanels"
       class="settings-panels"
       :class="{
-        'settings-panels-auto': ['attack', 'barrage', 'media', 'entrance'].includes(activePanel),
+        'settings-panels-auto': [
+          'attack',
+          'barrage',
+          'media',
+          'entrance',
+          'coc-ai',
+          'coc-characters',
+        ].includes(activePanel),
       }"
       tabindex="0"
       role="region"
       aria-label="個人化設定內容"
+      ><section
+        v-if="activePanel === 'coc-ai'"
+        id="settings-panel-coc-ai"
+        class="settings-panel"
+        aria-labelledby="settings-tab-coc-ai"
+        ><CocAiSettings /></section
+      ><section
+        v-if="activePanel === 'coc-characters'"
+        id="settings-panel-coc-characters"
+        class="settings-panel"
+        aria-labelledby="settings-tab-coc-characters"
+        ><CocCharacterLibrary /></section
       ><section
         v-show="activePanel === 'character'"
         id="settings-panel-character"

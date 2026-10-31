@@ -9,6 +9,7 @@ const classes = {
   gift: require('../games/gift').GiftRoom,
   draw: require('../games/draw-guess').DrawGuessRoom,
   trpg: require('../games/trpg').TrpgRoom,
+  coc: require('../games/coc').CocRoom,
   quacks: require('../games/quacks').QuacksRoom,
   bluff: require('../games/bluff').BluffRoom,
   telephone: require('../games/telephone').TelephoneRoom,
@@ -81,7 +82,14 @@ function createTutorials({
   ttl = 30 * 60000,
 } = {}) {
   const sessions = new Map();
+  const coc = require('./coc').createCocTutorials({
+    now,
+    rng: (min, max) => (max === undefined ? rng(min) : min + rng(max - min)),
+    ttl,
+    maxSessions,
+  });
   function expire() {
+    coc.expire();
     for (const [id, s] of sessions) if (now() - s.touched >= ttl) sessions.delete(id);
   }
   function get(owner, id) {
@@ -204,7 +212,10 @@ function createTutorials({
     expire();
     if (!types.includes(type)) fail(400, 'INVALID_TUTORIAL', '這款遊戲尚未註冊教學');
     for (const [id, s] of sessions) if (s.owner === owner) sessions.delete(id);
-    if (sessions.size >= maxSessions) fail(429, 'TUTORIAL_BUSY', '教學桌暫時已滿，請稍後再試');
+    coc.closeOwner(owner);
+    if (sessions.size + coc.size() >= maxSessions)
+      fail(429, 'TUTORIAL_BUSY', '教學桌暫時已滿，請稍後再試');
+    if (type === 'coc') return coc.start(owner);
     const clock = { value: now() };
     const room = new classes[type]('FEED00', '獨立教學桌', rng, () => clock.value);
     for (const name of ['學員小明', '教學小晴', '教學阿哲'].slice(
@@ -238,6 +249,7 @@ function createTutorials({
     return view(s);
   }
   function apply(owner, data, route = 'step') {
+    if (coc.has(data.id)) return coc.apply(owner, data, route);
     const s = get(owner, data.id);
     if (typeof data.requestId !== 'string' || !/^[a-zA-Z0-9-]{8,80}$/.test(data.requestId))
       fail(400, 'INVALID_REQUEST_ID', '請重新送出教學操作');
@@ -295,6 +307,7 @@ function createTutorials({
     return view(s);
   }
   function perspective(owner, data) {
+    if (coc.has(data.id)) return coc.perspective(owner, data);
     const s = get(owner, data.id);
     if (data.revision !== s.revision) fail(409, 'STALE_TUTORIAL', '教學已更新，請讀取目前步驟');
     if (!s.room.players.some((p) => p.id === data.playerId && !p.kicked))
@@ -306,10 +319,11 @@ function createTutorials({
   return {
     types,
     start,
-    state: (owner, id) => view(get(owner, id)),
+    state: (owner, id) => (coc.has(id) ? coc.state(owner, id) : view(get(owner, id))),
     apply,
     perspective,
     close: (owner, id) => {
+      if (coc.has(id)) return coc.close(owner, id);
       get(owner, id);
       sessions.delete(id);
       return { ok: true };
@@ -323,10 +337,13 @@ function createTutorials({
         s.room.phase === 'intro' ? 8 : 30,
       );
     },
-    clear: () => sessions.clear(),
+    clear: () => {
+      coc.clear();
+      sessions.clear();
+    },
     size: () => {
       expire();
-      return sessions.size;
+      return sessions.size + coc.size();
     },
   };
 }

@@ -92,6 +92,16 @@ export const gameCards: GameCard[] = [
     guide: '/telephone?learn=1',
   },
   {
+    id: 'coc',
+    title: '克蘇魯的呼喚',
+    english: 'CALL OF CTHULHU',
+    description: 'AI 主持的合作調查。建立英雄、共享線索，保存冒險並分次繼續。',
+    seats: '1–4 位真人',
+    category: '合作・調查・Pulp',
+    art: 'trpg',
+    guide: '/coc?learn=1',
+  },
+  {
     id: 'trpg',
     title: '霧港跑團',
     english: 'FOGHARBOR ADVENTURE',

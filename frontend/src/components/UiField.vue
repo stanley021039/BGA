@@ -6,6 +6,7 @@ defineOptions({ inheritAttrs: false });
 const props = withDefaults(
   defineProps<{
     label: string;
+    labelHidden?: boolean;
     control?: 'input' | 'select' | 'textarea';
     options?: readonly { value: string | number; label: string; disabled?: boolean }[];
     hint?: string;
@@ -54,7 +55,7 @@ const controlAttrs = computed(() => {
     :for="fieldId"
     :data-control="control"
     :data-invalid="error ? '' : undefined"
-    ><span class="ui-field-label">{{ label }}</span
+    ><span class="ui-field-label" :class="{ 'ui-sr-only': labelHidden }">{{ label }}</span
     ><select v-if="control === 'select'" v-model="model" v-bind="controlAttrs"
       ><slot
         ><option

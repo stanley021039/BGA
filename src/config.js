@@ -24,6 +24,22 @@ function loadEnv(file = path.join(__dirname, '..', '.env'), env = process.env) {
   return env;
 }
 function settings(env = process.env) {
+  if (
+    env.COC_ADVENTURE_ENABLED !== undefined &&
+    !['true', 'false'].includes(env.COC_ADVENTURE_ENABLED)
+  )
+    throw Error('COC_ADVENTURE_ENABLED must be true or false');
+  if (env.COC_CLI_ENABLED !== undefined && !['true', 'false'].includes(env.COC_CLI_ENABLED))
+    throw Error('COC_CLI_ENABLED must be true or false');
+  if (env.COC_CLI_MODE !== undefined && !['native', 'ssh-worker'].includes(env.COC_CLI_MODE))
+    throw Error('COC_CLI_MODE must be native or ssh-worker');
+  const cocStationTokensPerDay = Number(env.COC_STATION_TOKENS_PER_DAY || 500000);
+  if (
+    !Number.isSafeInteger(cocStationTokensPerDay) ||
+    cocStationTokensPerDay < 10000 ||
+    cocStationTokensPerDay > 10000000
+  )
+    throw Error('COC_STATION_TOKENS_PER_DAY must be between 10000 and 10000000');
   const port = Number(env.PORT || 3000);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
     throw Error('PORT must be between 1 and 65535');
@@ -55,6 +71,22 @@ function settings(env = process.env) {
   if (!['true', 'false'].includes(marketAutomation))
     throw Error('MARKET_AUTOMATION_ENABLED must be true or false');
   return {
+    cocAdventureEnabled: env.COC_ADVENTURE_ENABLED !== 'false',
+    ...(env.FRONTEND_ROOT ? { frontendRoot: path.resolve(env.FRONTEND_ROOT) } : {}),
+    cocAi: {
+      openaiApiKey: env.OPENAI_API_KEY || '',
+      anthropicApiKey: env.ANTHROPIC_API_KEY || '',
+      openaiModel: env.COC_OPENAI_MODEL || '',
+      anthropicModel: env.COC_ANTHROPIC_MODEL || '',
+      cliEnabled: env.COC_CLI_ENABLED === 'true',
+      cliToolsRoot: env.COC_CLI_TOOLS_ROOT || '',
+      cliHome: env.COC_CLI_HOME || '',
+      cliWorkRoot: env.COC_CLI_WORK_ROOT || '',
+      cliModel: env.COC_CLI_MODEL || 'gpt-6.1-sol',
+      cliMode: env.COC_CLI_MODE || 'native',
+      cliQueueRoot: env.COC_CLI_QUEUE_ROOT || '',
+      stationTokensPerDay: cocStationTokensPerDay,
+    },
     frontendEnabled: frontendEnabled === 'true',
     achievementPurpose,
     port,
