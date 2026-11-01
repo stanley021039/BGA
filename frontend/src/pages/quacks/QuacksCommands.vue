@@ -36,7 +36,8 @@ const game = useQuacksStore(),
             label="還要爽爽 · 繼續抽藥"
             :disabled="!game.available"
             @click="game.command('draw', { step: s.step })"
-            ><template #icon><img src="/assets/quacks/draw-777.webp" alt="" /></template></UiButton
+            ><template #icon
+              ><img src="/assets/quacks/draw-777-200.webp" alt="" /></template></UiButton
           ><UiButton
             class="vue-quacks-stop-action"
             icon-only
@@ -47,7 +48,7 @@ const game = useQuacksStore(),
             @click="game.command('stop', { step: s.step })"
             ><template #icon
               ><img
-                src="/assets/quacks/stop-portrait-v1.webp"
+                src="/assets/quacks/stop-portrait-v1-192.webp"
                 alt="" /></template></UiButton></template
         ><span v-else>{{
           game.own?.stopped ? '你已停止，等待其他人。' : '已選擇，等待同步揭曉。'

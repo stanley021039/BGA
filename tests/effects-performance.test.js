@@ -45,7 +45,7 @@ test('gacha cues cache only the version matching their compressed bytes', async 
     assert.equal(stale.headers.get('cache-control'), 'private, no-cache');
   }
 });
-test('performance guard fails on new raw audio, modified compressed bytes, oversized art, embedded media and build output', (t) => {
+test('performance guard fails on new raw audio, modified compressed bytes, oversized art, raster images, embedded media and build output', (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bga-perf-check-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
   for (const rel of [
@@ -64,7 +64,7 @@ test('performance guard fails on new raw audio, modified compressed bytes, overs
         path.join(root, 'public/assets/game-sounds', f),
         path.join(dir, 'public/assets/game-sounds', f),
       );
-  for (const f of ['login-864.webp', 'home-family.jpg', 'soul-world.webp'])
+  for (const f of ['login-864.webp', 'home-family.webp', 'soul-world.webp'])
     fs.copyFileSync(
       path.join(root, 'public/assets/auth', f),
       path.join(dir, 'public/assets/auth', f),
@@ -100,6 +100,13 @@ test('performance guard fails on new raw audio, modified compressed bytes, overs
   );
   assert.ok(check(dir).errors.some((e) => /embedded/.test(e)));
   fs.writeFileSync(json, saved);
+  const component = path.join(dir, 'frontend/src/components/Card.vue');
+  fs.mkdirSync(path.dirname(component), { recursive: true });
+  fs.writeFileSync(component, '<img src="/assets/gifts/noto/emoji_u1f308.png" />');
+  assert.ok(check(dir).errors.some((e) => /Raster image .*Card\.vue/.test(e)));
+  fs.writeFileSync(component, '<img :src="sizedImage(\'/assets/characters/a.png\', 128)" />');
+  assert.deepEqual(check(dir).errors, []);
+  fs.rmSync(path.join(dir, 'frontend'), { recursive: true });
   assert.throws(() => check(dir, { build: true }), /Build frontend/);
   fs.mkdirSync(path.join(dir, 'frontend/dist/frontend-assets'), { recursive: true });
   fs.writeFileSync(

@@ -76,11 +76,16 @@ test('350 gifts keep all legacy IDs and have bundled PNG artwork', () => {
   assert.equal(GIFTS.find((gift) => gift.id === 'g1-01').title, '一年份早餐券');
   assert.equal(GIFTS.find((gift) => gift.id === 'g4-16').title, '與朋友完成一條長途步道');
   for (const gift of GIFTS) {
-    assert.match(gift.image, /^\/assets\/gifts\/(?:kenney|noto)\/[a-zA-Z0-9_]+\.png\?v=[\w-]{12}$/);
-    const bytes = fs.readFileSync(
-      path.join(__dirname, '..', 'public', gift.image.slice(1).split('?')[0]),
+    assert.match(
+      gift.image,
+      /^\/assets\/gifts\/(?:kenney|noto)\/[a-zA-Z0-9_]+\.webp\?v=[\w-]{12}$/,
     );
-    assert.ok(bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), gift.id);
+    const file = path.join(__dirname, '..', 'public', gift.image.slice(1).split('?')[0]),
+      bytes = fs.readFileSync(file);
+    assert.equal(bytes.subarray(0, 4).toString(), 'RIFF', gift.id);
+    assert.equal(bytes.subarray(8, 12).toString(), 'WEBP', gift.id);
+    // The PNG source stays for URLs saved before the switch, and is never smaller.
+    assert.ok(fs.statSync(file.replace(/\.webp$/, '.png')).size >= bytes.length / 2, gift.id);
   }
 });
 
@@ -603,7 +608,12 @@ test('authenticated players can create, join and reconnect to a gift room withou
     ]) {
       const image = await fetch(base + gift.image, { headers: { Cookie: host } });
       assert.equal(image.status, 200);
-      assert.match(image.headers.get('content-type'), /^image\/png/);
+      assert.match(image.headers.get('content-type'), /^image\/webp/);
+      const legacy = await fetch(base + gift.image.split('?')[0].replace(/\.webp$/, '.png'), {
+        headers: { Cookie: host },
+      });
+      assert.equal(legacy.status, 200);
+      assert.match(legacy.headers.get('content-type'), /^image\/png/);
     }
     assert.equal((await post('join', friend, { code, name: '不能覆蓋角色名稱' })).status, 200);
     assert.equal((await post('join', other, { code })).status, 200);

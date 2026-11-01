@@ -379,7 +379,7 @@ window.addEventListener('resize', positionBubble);
       />
       <img
         class="scene-avatar-image"
-        :src="sizedImage(visitor.emote?.image || visitor.image, 256)"
+        :src="sizedImage(visitor.emote?.image || visitor.image, 128)"
         :style="{ clipPath: visitor.severed ? 'inset(0 0 50% 0)' : undefined }"
         alt=""
         draggable="false"

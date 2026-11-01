@@ -42,8 +42,8 @@ export function warmNewSkillAssets(effect: string, width = 0, height = 0) {
 const inGame: Partial<Record<GameType, readonly string[]>> = {
   'second-wind': [athleteTrackPreview],
   quacks: [
-    '/assets/quacks/draw-777.webp',
-    '/assets/quacks/stop-portrait-v1.webp',
+    '/assets/quacks/draw-777-200.webp',
+    '/assets/quacks/stop-portrait-v1-192.webp',
     '/assets/quacks/explosion-reference-v1.webp',
     '/assets/quacks/fortune-back.svg',
     sound('quacks-push-user.wav'),
@@ -58,7 +58,7 @@ const inGame: Partial<Record<GameType, readonly string[]>> = {
     sound('quacks-witch.wav'),
     sound('quacks-card.wav'),
   ],
-  bluff: ['/assets/bluff-reaction-photo-144.webp', sound('bluff-reaction.mp3')],
+  bluff: ['/assets/bluff-reaction-photo-96.webp', sound('bluff-reaction.mp3')],
   musicquiz: [sound('correct-user.mp3'), sound('incorrect-user.mp3')],
   thunder: [
     sound('dice-roll.wav'),

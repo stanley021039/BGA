@@ -125,9 +125,19 @@ function check(base = root, { build = false } = {}) {
     }
   }
   if (total > 2176 * 1024) fail('Combined sounds exceed 2176 KiB');
-  for (const file of ['login-864.webp', 'home-family.jpg', 'soul-world.webp'])
+  for (const file of ['login-864.webp', 'home-family.webp', 'soul-world.webp'])
     if (fs.statSync(path.join(base, 'public/assets/auth', file)).size > 256 * 1024)
       fail('Opening image exceeds 256 KiB: ' + file);
+  // Fixed images are delivered as WebP copies sized for display (AGENTS.md
+  // 圖片交付). Character art is exempt: it goes through ?size= WebP thumbnails.
+  // src/app.js is not scanned: its static file map keeps legacy URLs reachable.
+  const raster = /\/assets\/(?!characters\/)[A-Za-z0-9_./-]+\.(?:png|jpe?g|gif)\b/g;
+  for (const dir of ['frontend/src', 'public/shared', 'src/games', 'src/rooms', 'src/http'])
+    if (fs.existsSync(path.join(base, dir)))
+      for (const file of files(path.join(base, dir)))
+        if (/\.(?:vue|ts|js|cjs|scss|css)$/.test(file))
+          for (const match of fs.readFileSync(file, 'utf8').matchAll(raster))
+            fail(`Raster image ${match[0]} in ${path.relative(base, file)}: use a WebP copy`);
   for (const [name, key] of [
     ['entrance-stitch', 'html'],
     ['lobby-background-live', 'svg'],

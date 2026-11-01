@@ -3298,9 +3298,16 @@ function initializeApp(config, dataLock, acquired) {
         // A custom gift's image never changes under its id, so it is cached for good.
         return sendImage(req, res, url, image, true);
       }
-      if (GIFTS.some((gift) => assetPath(gift.image) === url.pathname)) {
+      // Built-in gifts are WebP; the PNG they were made from stays reachable for
+      // URLs saved before the switch.
+      if (
+        GIFTS.some((gift) => {
+          const image = assetPath(gift.image);
+          return image === url.pathname || image.replace(/\.webp$/, '.png') === url.pathname;
+        })
+      ) {
         auth.requireUser(req);
-        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Type', url.pathname.endsWith('.webp') ? 'image/webp' : 'image/png');
         res.setHeader('Content-Security-Policy', "default-src 'none'");
         return sendStatic(
           req,
@@ -3399,14 +3406,19 @@ function initializeApp(config, dataLock, acquired) {
         '/assets/arena/pickup-sword.svg': 'assets/arena/pickup-sword.svg',
         '/assets/stitch/room-brand.svg': 'assets/stitch/room-brand.svg',
         '/assets/stitch/draw-waiting.jpg': 'assets/stitch/draw-waiting.jpg',
+        '/assets/stitch/draw-waiting.webp': 'assets/stitch/draw-waiting.webp',
+        '/assets/stitch/draw-waiting-160.webp': 'assets/stitch/draw-waiting-160.webp',
         '/assets/stitch/telephone-waiting.svg': 'assets/stitch/telephone-waiting.svg',
         '/assets/quacks/draw-777.webp': 'assets/quacks/draw-777.webp',
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/quacks/draw-777.png': 'assets/quacks/draw-777.webp',
+        '/assets/quacks/draw-777-200.webp': 'assets/quacks/draw-777-200.webp',
+        '/assets/quacks/stop-portrait-v1-192.webp': 'assets/quacks/stop-portrait-v1-192.webp',
         '/assets/game-sounds/quacks-push-user.wav': 'assets/game-sounds/quacks-push-user.wav',
         '/assets/game-sounds/quacks-decline-user.wav': 'assets/game-sounds/quacks-decline-user.wav',
         '/assets/bluff-reaction-photo.webp': 'assets/bluff-reaction-photo.webp',
         '/assets/bluff-reaction-photo-144.webp': 'assets/bluff-reaction-photo-144.webp',
+        '/assets/bluff-reaction-photo-96.webp': 'assets/bluff-reaction-photo-96.webp',
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/bluff-reaction-photo.png': 'assets/bluff-reaction-photo.webp',
         '/assets/game-sounds/quacks-settlement-user.wav':
@@ -3514,6 +3526,7 @@ function initializeApp(config, dataLock, acquired) {
         // Pre-2.26 pages and caches still ask for the PNG; serve the WebP.
         '/assets/quacks/explosion-reference-v1.png': 'assets/quacks/explosion-reference-v1.webp',
         '/assets/room-leave-thumbnail.jpg': 'assets/room-leave-thumbnail.jpg',
+        '/assets/room-leave-thumbnail.webp': 'assets/room-leave-thumbnail.webp',
         '/sound-library': 'sound-library.html',
         '/assets/game-sounds/correct-user.mp3': 'assets/game-sounds/correct-user.mp3',
         '/assets/game-sounds/incorrect-user.mp3': 'assets/game-sounds/incorrect-user.mp3',
@@ -3605,6 +3618,7 @@ function initializeApp(config, dataLock, acquired) {
         'login-864.webp',
         'soul-world.webp',
         'home-family.jpg',
+        'home-family.webp',
       ])
         files['/assets/auth/' + name] = 'assets/auth/' + name;
       for (const name of ['stanley021039', 'x55662306', 'azrael04'])
