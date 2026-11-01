@@ -658,3 +658,52 @@
     }
   }
 }
+
+// #335: the two newly implemented games use the confirmed R6 surface/type roles.
+:root
+  body[data-visual-theme]
+  .vue-room-waiting-template:is([data-waiting-game='ceo'], [data-waiting-game='second-wind']) {
+  padding: var(--stitch-space-24);
+  gap: var(--stitch-gap-section);
+  border: var(--stitch-border);
+  border-radius: var(--stitch-radius-panel);
+  font-size: var(--stitch-text-body);
+  .vue-waiting-hero {
+    padding: var(--stitch-space-24);
+    gap: var(--stitch-space-32);
+    border-radius: var(--stitch-radius-panel);
+    background: var(--stitch-selected-bg);
+    color: var(--stitch-selected-ink);
+    h1,
+    p {
+      color: var(--stitch-selected-ink);
+    }
+    h1 {
+      font-size: var(--stitch-text-page);
+    }
+  }
+  h2 {
+    font-size: var(--stitch-text-section);
+  }
+  .vue-waiting-summary,
+  .vue-waiting-settings {
+    padding: var(--stitch-space-24);
+    border: var(--stitch-border);
+    border-radius: var(--stitch-radius-panel);
+    background: var(--stitch-surface);
+    color: var(--stitch-ink);
+  }
+  .vue-waiting-summary-label,
+  dt,
+  .vue-waiting-notice {
+    font-size: var(--stitch-text-hint);
+  }
+  @media (max-width: 700px) {
+    padding: var(--stitch-space-16);
+    .vue-waiting-hero,
+    .vue-waiting-summary,
+    .vue-waiting-settings {
+      padding: var(--stitch-space-16);
+    }
+  }
+}

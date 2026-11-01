@@ -175,7 +175,7 @@ onMounted(() => {
         ><slot name="round-progress" /><span class="vue-room-phase">{{ phase }}</span
         ><span class="vue-room-round">{{ round || '等待開桌' }}</span></div
       ><StatusSlot
-        :persistent="!!connection || room.busy"
+        :persistent="!!connection || room.busy || room.failed || !!room.terminal"
         :message="connection || room.message"
         :error="!!room.terminal || room.disconnected || room.failed"
     /></div>

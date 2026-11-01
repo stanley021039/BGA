@@ -734,6 +734,14 @@
       "bytes": 110868,
       "sha256": "a28dc4a8e7ddccbed9411e9b34ee2b30d22eaef92120fc9c78eec6d01d830fb0",
       "origin": "4.png"
+    },
+    {
+      "file": "hero-384.webp",
+      "width": 384,
+      "height": 270,
+      "bytes": 19548,
+      "sha256": "e2d138d8073fa164b074a02c5a790c0e32199dedcd0929ed14ba5f867a781cd2",
+      "origin": "hero.webp, resized original celebration illustration from 規則.pdf physical page 9; #335 mobile delivery"
     }
   ]
 }

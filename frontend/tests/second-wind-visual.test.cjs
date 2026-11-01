@@ -13,6 +13,12 @@ const { racers } = require('../../src/games/second-wind/catalog');
 
 function fixture(component = 'AthleteScene.vue', initialGame = {}) {
   const calls = [];
+  const actions = vue.reactive({
+    notice: '',
+    pending: false,
+    canRetry: false,
+    retrySame: () => calls.push(['retrySame']),
+  });
   // The scene owns when to open; native dialog focus/top-layer behavior is
   // verified in Edge rather than emulated by linkedom.
   const dialogState = { opens: 0, close: () => {} };
@@ -91,7 +97,7 @@ function fixture(component = 'AthleteScene.vue', initialGame = {}) {
                 : id.includes('stores/second-wind')
                   ? { useAthleteStore: () => athlete }
                   : id.includes('stores/party-actions')
-                    ? { usePartyActionsStore: () => ({ notice: '', canRetry: false }) }
+                    ? { usePartyActionsStore: () => actions }
                     : id.includes('stores/room')
                       ? { useRoomStore: () => ({ host: false }) }
                       : id === './art'
@@ -124,6 +130,7 @@ function fixture(component = 'AthleteScene.vue', initialGame = {}) {
     host,
     game,
     calls,
+    actions,
     dialogState,
     props,
     dispose: () => {
@@ -138,7 +145,11 @@ test('illustrated draft retains its guarded action and own secret choice stays l
   try {
     const card = f.host.querySelector('button[aria-label="Understudy"]');
     assert.ok(card.querySelector('img').src.endsWith('/understudy-card.webp'));
-    assert.equal(card.parentElement.getAttribute('aria-label'), 'Understudy');
+    assert.equal(card.closest('.athlete-offer').querySelector('h3').textContent, 'Understudy');
+    assert.match(
+      card.closest('.athlete-offer').querySelector('details').textContent,
+      /完整能力說明/,
+    );
     assert.equal(card.textContent.trim(), '');
     assert.equal(card.getAttribute('data-image-only'), 'true');
     assert.equal(card.parentElement.querySelector('.ui-hover-info-help'), null);
@@ -229,6 +240,8 @@ test('Twist opens on the first observed trigger only, lists all cards and can be
     f.game.race = 2;
     f.game.phase = 'choosing';
     await vue.nextTick();
+    assert.equal(f.host.querySelector('.athlete-track'), null);
+    assert(!f.host.querySelector('.athlete-player-group').textContent.includes('出賽：'));
     f.game.phase = 'racing';
     f.game.twistCards = [];
     await vue.nextTick();
@@ -385,22 +398,21 @@ test('image failure retains its size and readable fallback, then recovers on a n
   }
 });
 
-test('score groups bind avatars, points and image-only remaining racers; roll buttons belong only to the local seat', async () => {
+test('score groups show names, points and original remaining racers; roll buttons belong only to the local seat', async () => {
   const f = fixture();
   try {
     const groups = [...f.host.querySelectorAll('.athlete-player-group')];
     assert.equal(groups.length, 3);
-    assert.ok(
-      groups.every(
-        (g) => g.querySelector('.athlete-player-avatar') && g.querySelector('.ui-stitch-badge'),
-      ),
-    );
-    assert.equal(groups[0].querySelector('.athlete-team').textContent.trim(), '');
-    assert.equal(groups[0].querySelector('.athlete-player-avatar').getAttribute('aria-label'), 'a');
-    assert.doesNotMatch(groups[0].textContent, /1 ·|Penguin/);
+    assert.ok(groups.every((g) => g.querySelector('h3') && g.querySelector('.ui-statistic')));
+    assert.match(groups[0].querySelector('.athlete-team').textContent, /Penguin/);
+    assert.equal(groups[0].querySelector('h3').textContent, 'a');
+    assert.match(groups[0].textContent, /備選跑者名冊/);
+    assert.equal(groups[0].querySelector('.ui-statistic strong').textContent, '0');
     f.game.phase = 'draft-rolloff';
     f.game.rolls = { b: 3 };
     await vue.nextTick();
+    assert.match(groups[1].textContent, /等待招募角色/);
+    assert.doesNotMatch(groups[1].textContent, /全部角色已出賽/);
     const rollers = [...f.host.querySelectorAll('.athlete-roll-player')];
     assert.equal(rollers.length, 3);
     assert.equal(rollers[0].querySelector('button').getAttribute('aria-label'), '擲骰');
@@ -453,6 +465,58 @@ test('header order follows the real draft and action seat, and racer details pre
     f.game.pending = { id: 'q', playerId: 'a', title: '選擇能力', options: [] };
     await vue.nextTick();
     assert.equal(f.host.querySelector('[aria-current="step"]').textContent, 'a');
+  } finally {
+    f.dispose();
+  }
+});
+
+test('pending and uncertain action notices persist and render a real same-operation retry without dropping the board', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const f = fixture('AthleteScene.vue', {
+    phase: 'racing',
+    race: 1,
+    racers: [
+      {
+        id: 'r',
+        racerId: 'penguin',
+        playerId: 'a',
+        position: 8,
+        copiedPowers: [],
+        tripped: false,
+        eliminated: false,
+        finished: false,
+        transformed: false,
+      },
+    ],
+  });
+  try {
+    f.actions.notice = '正在送出…';
+    f.actions.pending = true;
+    await vue.nextTick();
+    t.mock.timers.tick(5000);
+    await vue.nextTick();
+    const notice = f.host.querySelector('[data-density="action"] .ui-notice');
+    assert.equal(notice.hidden, false);
+    assert.match(notice.textContent, /正在送出/);
+    assert.match(f.host.querySelector('.athlete-position-list').textContent, /Penguin/);
+    f.actions.pending = false;
+    f.actions.canRetry = true;
+    f.actions.notice = '操作結果尚未確認';
+    await vue.nextTick();
+    t.mock.timers.tick(5000);
+    await vue.nextTick();
+    const retry = notice.querySelector('button[aria-label="重試同一操作"]');
+    assert(retry);
+    assert.equal(notice.tagName, 'DIV');
+    assert.equal(notice.hidden, false);
+    retry.click();
+    assert.deepEqual(f.calls.at(-1), ['retrySame']);
+    assert.equal(f.game.racers[0].position, 8);
+    f.actions.notice = '';
+    f.actions.canRetry = false;
+    await vue.nextTick();
+    assert.equal(notice.hidden, true);
+    assert.equal(notice.querySelector('button'), null);
   } finally {
     f.dispose();
   }
